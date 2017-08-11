@@ -1,6 +1,6 @@
 
 CXX=mpic++-mpich-clang
-CXXFLAGS=-std=c++14
+CXXFLAGS=-std=c++14 -g
 
 transport: transport.o collective.o runtime.o event.o
 	${CXX} -o $@  $^

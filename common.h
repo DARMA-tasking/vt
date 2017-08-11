@@ -25,6 +25,8 @@ constexpr int const scheduler_default_num_times = 1;
 static constexpr int const mpi_event_tag = 0;
 static constexpr int const normal_event_tag = 1;
 
+static constexpr node_t const broadcast_dest_sentinel = -1;
+
 } //end namespace runtime
 
 #endif /*__RUNTIME_TRANSPORT_EVENT_COMMON__*/

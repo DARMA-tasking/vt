@@ -26,6 +26,30 @@ struct Event {
   virtual void set_ready() = 0;
 };
 
+struct ParentEvent : Event {
+  virtual void set_ready() {
+    assert(0);
+  }
+
+  virtual bool test_ready();
+
+  virtual bool wait_ready() {
+    assert(0);
+    return true;
+  }
+
+  void add_event(event_t event) {
+    events.push_back(event);
+  }
+
+  ParentEvent(event_t const& in_event_id)
+    : Event(in_event_id, normal_event_tag)
+  { }
+
+private:
+  std::vector<event_t> events;
+};
+
 struct NormalEvent : Event {
   virtual void set_ready() {
     complete = true;
@@ -55,6 +79,7 @@ struct MPIEvent : Event {
   virtual void set_ready() { assert(0); }
 
   virtual bool test_ready() {
+    //printf("MPIEvent test_ready() id=%lld\n", event_id);
     MPI_Test(&req, &flag, &stat);
     return flag == 1;
   }
@@ -161,11 +186,16 @@ struct AsyncEvent {
 
   event_t
   create_normal_event_id(node_t const& node) {
-    auto const& evt = create_event_id<NormalEvent>(node);
+    return create_event_id<NormalEvent>(node);
+  }
+
+  event_t
+  create_parent_event_id(node_t const& node) {
+    auto const& evt = create_event_id<ParentEvent>(node);
     auto& holder = get_event_holder(evt);
-    // event_container[normal_event_tag].emplace_back(
-    //   &holder
-    // );
+    event_container[mpi_event_tag].emplace_back(
+      &holder
+    );
     return evt;
   }
 
@@ -173,10 +203,10 @@ struct AsyncEvent {
   get_event_holder(event_t const& event) {
     auto const& owning_node = get_owning_node(event);
 
-    // printf(
-    //   "the_event: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
-    //   the_context->get_node(), event, owning_node
-    // );
+    printf(
+      "the_event: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
+      the_context->get_node(), event, owning_node
+    );
 
     if (owning_node != the_context->get_node()) {
       assert(

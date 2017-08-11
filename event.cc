@@ -4,6 +4,21 @@
 
 namespace runtime {
 
+bool
+ParentEvent::test_ready() {
+  bool ready = true;
+  for (auto&& e : events) {
+    //DEBUG_PRINT("ParentEvent: test_ready() e=%lld\n", e);
+    ready &=
+      the_event->test_event_complete(e) ==
+      AsyncEvent::event_state_t::EventReady;
+  }
+  if (ready) {
+    events.clear();
+  }
+  return ready;
+}
+
 void
 AsyncEvent::EventHolder::make_ready_trigger() {
   //printf("make_ready_trigger\n");

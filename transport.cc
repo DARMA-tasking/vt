@@ -73,9 +73,9 @@ int main(int argc, char** argv) {
       this_node, msg.val, msg.val2
     );
 
-    if (this_node != 0) {
-      send_to_neighbor();
-    }
+    // if (this_node != 0) {
+    //   send_to_neighbor();
+    // }
   });
 
   test_msg_han2 = CollectiveOps::register_handler([](runtime::Message* in_msg){
@@ -92,7 +92,14 @@ int main(int argc, char** argv) {
   });
 
   if (this_node == 0) {
-    send_to_neighbor();
+    //send_to_neighbor();
+
+    TestMsg* msg = new TestMsg(this_node, num_nodes, -1);
+
+    the_msg->broadcast_msg(test_msg_han, msg, [=]{
+      //std::cout << "deleting msg" << std::endl;
+      delete msg;
+    });
   }
 
   while (1) {
