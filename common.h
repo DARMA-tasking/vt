@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <functional>
 
+#include "debug.h"
+
 namespace runtime {
 
 using node_t = int16_t;

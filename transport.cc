@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     );
 
     the_event->attach_action(msg.event, [=]{
-      printf("XXXXXXXXXXX triggering remote event\n");
+      printf("triggering remote event\n");
     });
   });
 

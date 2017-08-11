@@ -26,7 +26,7 @@ AsyncEvent::attach_action(event_t const& event, action_t callable) {
   auto const& event_state = test_event_complete(event);
   auto const& this_event_owning_node = get_owning_node(event_id);
 
-  printf(
+  DEBUG_PRINT(
     "the_event: event=%lld, newevent=%lld, state=%d, "
     "newevent_owning_node=%d, this_node=%d\n",
     event, event_id, event_state, this_event_owning_node, this_node
@@ -49,7 +49,7 @@ AsyncEvent::attach_action(event_t const& event, action_t callable) {
     auto const& owning_node = get_owning_node(event);
     auto msg = new EventCheckFinishedMsg(event, this_node, event_id);
 
-    printf(
+    DEBUG_PRINT(
       "the_event: event=%lld, newevent=%lld, state=%d sending msg, node=%d\n",
       event, event_id, event_state, this_node
     );

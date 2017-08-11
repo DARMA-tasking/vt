@@ -29,14 +29,15 @@ struct ActiveMessenger {
     msg->env.han = han;
     auto const& msg_size = sizeof(MessageT);
     node_t const& this_node = the_context->get_node();
-    //auto const event_id = the_event->template create_event_id<MPIEvent>(this_node);
     auto const event_id = the_event->create_mpi_event_id(this_node);
     auto& holder = the_event->get_event_holder(event_id);
     MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
-    // std::cout << "ActiveMessenger: sending, handler=" << han << ", "
-    //           << "dest=" << dest << ","
-    //           << "size=" << msg_size << ","
-    //           << std::endl;
+
+    DEBUG_PRINT(
+      "ActiveMessenger: sending: handler=%d, dest=%d, size=%d\n",
+      han, dest, msg_size
+    );
+
     MPI_Isend(
       msg, msg_size, MPI_BYTE, dest, 0, MPI_COMM_WORLD, mpi_event.get_request()
     );
@@ -48,7 +49,6 @@ struct ActiveMessenger {
 
   void
   perform_triggered_actions() {
-    //printf("perform_triggered_actions\n");
     the_event->test_events_trigger(mpi_event_tag);
     the_event->test_events_trigger(normal_event_tag);
   }
