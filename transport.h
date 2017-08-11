@@ -9,5 +9,6 @@
 #include "event.h"
 #include "registry.h"
 #include "active.h"
+#include "event_msgs.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

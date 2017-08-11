@@ -9,14 +9,16 @@
 #include <unordered_map>
 
 #include "common.h"
+#include "event_msgs.h"
 
 namespace runtime {
 
 struct Event {
-  event_t event_id;
+  event_t event_id = 0;
+  int event_tag = 0;
 
-  Event(event_t const& in_event_id)
-    : event_id(in_event_id)
+  Event(event_t const& in_event_id, int const& event_tag_in)
+    : event_id(in_event_id), event_tag(event_tag_in)
   { }
 
   virtual bool test_ready() = 0;
@@ -42,7 +44,7 @@ struct NormalEvent : Event {
   }
 
   NormalEvent(event_t const& in_event_id)
-    : Event(in_event_id)
+    : Event(in_event_id, normal_event_tag)
   { }
 
 private:
@@ -67,7 +69,7 @@ struct MPIEvent : Event {
   }
 
   MPIEvent(event_t const& in_event_id)
-    : Event(in_event_id)
+    : Event(in_event_id, mpi_event_tag)
   { }
 
 private:
@@ -105,10 +107,7 @@ struct AsyncEvent {
     }
 
     void
-    make_ready_trigger() {
-      event->set_ready();
-      execute_actions();
-    }
+    make_ready_trigger();
 
     void
     execute_actions() {
@@ -164,14 +163,27 @@ struct AsyncEvent {
   create_normal_event_id(node_t const& node) {
     auto const& evt = create_event_id<NormalEvent>(node);
     auto& holder = get_event_holder(evt);
-    event_container[normal_event_tag].emplace_back(
-      &holder
-    );
+    // event_container[normal_event_tag].emplace_back(
+    //   &holder
+    // );
     return evt;
   }
 
   event_holder_t&
   get_event_holder(event_t const& event) {
+    auto const& owning_node = get_owning_node(event);
+
+    printf(
+      "the_event: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
+      the_context->get_node(), event, owning_node
+    );
+
+    if (owning_node != the_context->get_node()) {
+      assert(
+        0 && "Event does not belong to this node"
+      );
+    }
+
     auto container_iter = container.find(event);
     assert(
       container_iter != container.end() and "Event must exist in container"
@@ -210,35 +222,7 @@ struct AsyncEvent {
   }
 
   event_t
-  attach_action(event_t const& event, action_t callable) {
-    auto const& this_node = the_context->get_node();
-    auto const& event_id = create_normal_event_id(this_node);
-    auto& holder = get_event_holder(event_id);
-    NormalEvent& norm_event = *static_cast<NormalEvent*>(holder.get_event());
-
-    auto trigger = [&]{
-      callable();
-      holder.make_ready_trigger();
-    };
-
-    auto const& event_state = test_event_complete(event);
-    switch (event_state) {
-    case event_state_t::EventReady:
-      trigger();
-      break;
-    case event_state_t::EventWaiting:
-      this->get_event_holder(event).attach_action(
-        trigger
-      );
-      break;
-    case event_state_t::EventRemote:
-      break;
-    default:
-      assert(0 && "This should be unreachable");
-      break;
-    }
-    return event_id;
-  }
+  attach_action(event_t const& event, action_t callable);
 
   void
   test_events_trigger(

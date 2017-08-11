@@ -33,10 +33,10 @@ struct ActiveMessenger {
     auto const event_id = the_event->create_mpi_event_id(this_node);
     auto& holder = the_event->get_event_holder(event_id);
     MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
-    std::cout << "ActiveMessenger: sending, handler=" << han << ", "
-              << "dest=" << dest << ","
-              << "size=" << msg_size << ","
-              << std::endl;
+    // std::cout << "ActiveMessenger: sending, handler=" << han << ", "
+    //           << "dest=" << dest << ","
+    //           << "size=" << msg_size << ","
+    //           << std::endl;
     MPI_Isend(
       msg, msg_size, MPI_BYTE, dest, 0, MPI_COMM_WORLD, mpi_event.get_request()
     );
@@ -48,6 +48,7 @@ struct ActiveMessenger {
 
   void
   perform_triggered_actions() {
+    //printf("perform_triggered_actions\n");
     the_event->test_events_trigger(mpi_event_tag);
     the_event->test_events_trigger(normal_event_tag);
   }
@@ -69,7 +70,7 @@ struct ActiveMessenger {
       );
       Message* msg = reinterpret_cast<Message*>(buf);
       auto handler = msg->env.han;
-      std::cout << "scheduler: handler=" << handler << std::endl;
+      //std::cout << "scheduler: handler=" << handler << std::endl;
       auto active_fun = the_registry->get_handler(handler);
       active_fun(msg);
       return true;
