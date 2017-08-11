@@ -37,7 +37,7 @@ private:
   register_count_t cur_empty_slot = 0;
 };
 
-std::unique_ptr<Registry> the_registry = std::make_unique<Registry>();
+extern std::unique_ptr<Registry> the_registry;
 
 } //end namespace runtime
 

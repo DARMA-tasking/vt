@@ -34,6 +34,12 @@ struct CollectiveOps {
     the_context = nullptr;
     MPI_Finalize();
   }
+
+  static void
+  initialize_runtime();
+
+  static void
+  finalize_runtime();
 };
 
 } //end namespace runtime

@@ -30,10 +30,18 @@ void send_to_neighbor() {
     std::cout << "deleting msg" << std::endl;
     delete msg;
   });
+
+  auto const& own_node = the_event->get_owning_node(evt);
+
+  std::cout << "this_node=" << this_node << ", "
+            << "event_id=" << evt << ", "
+            << "own_node=" << own_node
+            << std::endl;
 }
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
+  CollectiveOps::initialize_runtime();
 
   this_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();
@@ -64,5 +72,6 @@ int main(int argc, char** argv) {
     the_msg->scheduler();
   }
 
+  CollectiveOps::finalize_runtime();
   CollectiveOps::finalize_context();
 }

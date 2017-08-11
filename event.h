@@ -21,9 +21,36 @@ struct Event {
 
   virtual bool test_ready() = 0;
   virtual bool wait_ready() = 0;
+  virtual void set_ready() = 0;
+};
+
+struct NormalEvent : Event {
+  virtual void set_ready() {
+    complete = true;
+  }
+
+  virtual bool test_ready() {
+    return complete;
+  }
+
+  virtual bool wait_ready() {
+    while (!test_ready()) {
+      assert(0);
+      // TODO: call into scheduler
+    }
+    return true;
+  }
+
+  NormalEvent(event_t const& in_event_id)
+    : Event(in_event_id)
+  { }
+
+private:
+  bool complete = false;
 };
 
 struct MPIEvent : Event {
+  virtual void set_ready() { assert(0); }
 
   virtual bool test_ready() {
     MPI_Test(&req, &flag, &stat);
@@ -49,7 +76,14 @@ private:
   int flag = 0;
 };
 
+enum class EventState : int8_t {
+  EventReady = 1,
+  EventWaiting = 2,
+  EventRemote = 3
+};
+
 struct AsyncEvent {
+  using event_state_t = EventState;
   using event_wrapper_t = Event;
   using event_wrapper_ptr_t = std::unique_ptr<event_wrapper_t>;
 
@@ -71,6 +105,12 @@ struct AsyncEvent {
     }
 
     void
+    make_ready_trigger() {
+      event->set_ready();
+      execute_actions();
+    }
+
+    void
     execute_actions() {
       for (auto&& action : actions) {
         action();
@@ -86,7 +126,7 @@ struct AsyncEvent {
   using event_holder_t = EventHolder;
   using event_holder_ptr_t = EventHolder*;
   using event_container_t = std::unordered_map<event_t, event_holder_t>;
-  using mpi_event_container_t = std::list<event_holder_ptr_t>;
+  using typed_event_container_t = std::list<event_holder_ptr_t>;
 
   AsyncEvent() = default;
 
@@ -104,11 +144,27 @@ struct AsyncEvent {
     return event;
   }
 
+  node_t
+  get_owning_node(event_t const& event) {
+    node_t const node = event >> (64 - (sizeof(node_t) * 8));
+    return node;
+  }
+
   event_t
   create_mpi_event_id(node_t const& node) {
     auto const& evt = create_event_id<MPIEvent>(node);
     auto& holder = get_event_holder(evt);
-    mpi_event_container.emplace_back(
+    event_container[mpi_event_tag].emplace_back(
+      &holder
+    );
+    return evt;
+  }
+
+  event_t
+  create_normal_event_id(node_t const& node) {
+    auto const& evt = create_event_id<NormalEvent>(node);
+    auto& holder = get_event_holder(evt);
+    event_container[normal_event_tag].emplace_back(
       &holder
     );
     return evt;
@@ -123,30 +179,80 @@ struct AsyncEvent {
     return container_iter->second;
   }
 
+  bool
+  holder_exists(event_t const& event) {
+    auto container_iter = container.find(event);
+    return container_iter != container.end();
+  }
+
   template <typename EventT>
   EventT&
   get_event(event_t const& event) {
     return *static_cast<EventT*>(get_event_holder(event).get_event());
   }
 
-  void
+  event_state_t
+  test_event_complete(event_t const& event) {
+    if (holder_exists(event)) {
+      bool const is_ready = this->get_event_holder(event).get_event()->test_ready();
+      if (is_ready) {
+        return event_state_t::EventReady;
+      } else {
+        return event_state_t::EventWaiting;
+      }
+    } else {
+      if (get_owning_node(event) == the_context->get_node()) {
+        return event_state_t::EventReady;
+      } else {
+        return event_state_t::EventRemote;
+      }
+    }
+  }
+
+  event_t
   attach_action(event_t const& event, action_t callable) {
-    this->get_event_holder(event).attach_action(
-      callable
-    );
+    auto const& this_node = the_context->get_node();
+    auto const& event_id = create_normal_event_id(this_node);
+    auto& holder = get_event_holder(event_id);
+    NormalEvent& norm_event = *static_cast<NormalEvent*>(holder.get_event());
+
+    auto trigger = [&]{
+      callable();
+      holder.make_ready_trigger();
+    };
+
+    auto const& event_state = test_event_complete(event);
+    switch (event_state) {
+    case event_state_t::EventReady:
+      trigger();
+      break;
+    case event_state_t::EventWaiting:
+      this->get_event_holder(event).attach_action(
+        trigger
+      );
+      break;
+    case event_state_t::EventRemote:
+      break;
+    default:
+      assert(0 && "This should be unreachable");
+      break;
+    }
+    return event_id;
   }
 
   void
-  test_mpi_events_trigger(int const& num_events = num_check_actions) {
+  test_events_trigger(
+    int const& event_tag, int const& num_events = num_check_actions
+  ) {
     int cur = 0;
-    for (auto iter = mpi_event_container.begin();
-         cur < num_events && iter != mpi_event_container.end();
+    for (auto iter = event_container[event_tag].begin();
+         cur < num_events && iter != event_container[event_tag].end();
          ++iter) {
       auto const& holder = *iter;
       auto event = holder->get_event();
       if (event->test_ready()) {
         holder->execute_actions();
-        iter = mpi_event_container.erase(iter);
+        iter = event_container[event_tag].erase(iter);
         container.erase(event->event_id);
         return;
       }
@@ -157,12 +263,12 @@ struct AsyncEvent {
 private:
   event_t cur_event = 0;
 
-  mpi_event_container_t mpi_event_container;
+  typed_event_container_t event_container[2];
 
   event_container_t container;
 };
 
-std::unique_ptr<AsyncEvent> the_event = std::make_unique<AsyncEvent>();
+extern std::unique_ptr<AsyncEvent> the_event;
 
 } //end namespace runtime
 

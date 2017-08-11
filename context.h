@@ -20,7 +20,7 @@ private:
   node_t num_nodes = 0;
 };
 
-std::unique_ptr<Context> the_context = nullptr;
+extern std::unique_ptr<Context> the_context;
 
 } //end namespace runtime
 
