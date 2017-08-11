@@ -173,10 +173,10 @@ struct AsyncEvent {
   get_event_holder(event_t const& event) {
     auto const& owning_node = get_owning_node(event);
 
-    printf(
-      "the_event: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
-      the_context->get_node(), event, owning_node
-    );
+    // printf(
+    //   "the_event: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
+    //   the_context->get_node(), event, owning_node
+    // );
 
     if (owning_node != the_context->get_node()) {
       assert(

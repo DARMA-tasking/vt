@@ -15,18 +15,18 @@ CollectiveOps::initialize_runtime() {
       auto const& this_node = the_context->get_node();
       auto const& owning_node = the_event->get_owning_node(msg.event_back);
 
-      printf(
-        "event_finished_han:: event=%lld, owning_node=%d, "
-        "this_node=%d\n",
-        msg.event_back, owning_node, this_node
-      );
+      // printf(
+      //   "event_finished_han:: event=%lld, owning_node=%d, "
+      //   "this_node=%d\n",
+      //   msg.event_back, owning_node, this_node
+      // );
 
       auto const& complete = the_event->test_event_complete(msg.event_back);
       if (complete == AsyncEvent::event_state_t::EventWaiting) {
         auto& holder = the_event->get_event_holder(msg.event_back);
-        printf(
-          "event_finished_han:: CALLING TRIGGER\n"
-        );
+        // printf(
+        //   "event_finished_han:: CALLING TRIGGER\n"
+        // );
         holder.make_ready_trigger();
       }
     });
@@ -42,11 +42,11 @@ CollectiveOps::initialize_runtime() {
 
       auto const& this_node = the_context->get_node();
 
-      printf(
-        "check_event_finished_han:: event=%lld, event_back=%lld, "
-        "this_node=%d, sent_from_node=%d\n",
-        event, msg.event_back, this_node, msg.sent_from_node
-      );
+      // printf(
+      //   "check_event_finished_han:: event=%lld, event_back=%lld, "
+      //   "this_node=%d, sent_from_node=%d\n",
+      //   event, msg.event_back, this_node, msg.sent_from_node
+      // );
 
       auto send_back_fun = [=]{
         auto msg_send = new EventFinishedMsg(event, msg.event_back);
@@ -60,11 +60,11 @@ CollectiveOps::initialize_runtime() {
       };
       auto const& is_complete = the_event->test_event_complete(event);
 
-      printf(
-        "check_event_finished_han:: event=%lld, node=%lld, "
-        "this_node=%d, complete=%d, sent_from_node=%d\n",
-        event, node, this_node, is_complete, msg.sent_from_node
-      );
+      // printf(
+      //   "check_event_finished_han:: event=%lld, node=%lld, "
+      //   "this_node=%d, complete=%d, sent_from_node=%d\n",
+      //   event, node, this_node, is_complete, msg.sent_from_node
+      // );
 
       if (is_complete == AsyncEvent::event_state_t::EventReady) {
         send_back_fun();
