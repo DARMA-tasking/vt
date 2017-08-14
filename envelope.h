@@ -15,11 +15,17 @@ enum class EnvelopeType : envelope_datatype_t {
 using envelope_type_t = EnvelopeType;
 
 struct Envelope {
-  node_t dest = 0, broadcast_root = -1;
-  handler_t han = 0;
-  envelope_type_t type = envelope_type_t::Normal;
+  node_t dest : 16;
+  node_t broadcast_root : 16;
+  handler_t han : 16;
+  envelope_type_t type : 4;
 
-  Envelope() = default;
+  Envelope() {
+    dest = 0;
+    broadcast_root = -1;
+    han = 0;
+    type = envelope_type_t::Normal;
+  }
 
   Envelope(
     node_t const& in_dest, handler_t const& in_han,

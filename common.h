@@ -10,7 +10,7 @@
 namespace runtime {
 
 using node_t = int16_t;
-using handler_t = int32_t;
+using handler_t = int16_t;
 using envelope_datatype_t = int8_t;
 using event_t = uint64_t;
 
