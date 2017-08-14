@@ -76,6 +76,9 @@ CollectiveOps::initialize_runtime() {
         /*ignore return event*/ the_event->attach_action(event, send_back_fun);
       }
     });
+
+  term::TerminationDetector::register_termination_handlers();
+  term::TerminationDetector::register_default_termination_action();
 }
 
 /*static*/ void

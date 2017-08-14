@@ -5,10 +5,12 @@
 #include "common.h"
 #include "envelope.h"
 #include "message.h"
+#include "context.h"
 #include "collective.h"
 #include "event.h"
 #include "registry.h"
 #include "active.h"
 #include "event_msgs.h"
+#include "termination.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

@@ -3,6 +3,7 @@
 #define __RUNTIME_TRANSPORT_EVENT_MSGS__
 
 #include "common.h"
+#include "message.h"
 
 namespace runtime {
 
