@@ -137,6 +137,7 @@ struct ActiveMessenger {
     the_event->test_events_trigger(normal_event_tag);
   }
 
+
   bool
   try_process_incoming_message() {
     byte_t num_probe_bytes;
