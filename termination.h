@@ -10,13 +10,19 @@
 
 namespace runtime { namespace term {
 
-using term_counter_t = uint64_t;
+using term_counter_t = int64_t;
 
 struct TermState {
-  term_counter_t prod = 0, cons = 0;
+  // four-counter method
+  term_counter_t l_prod = 0, l_cons = 0;
+
+  term_counter_t g_prod1 = 0, g_cons1 = 0;
+  term_counter_t g_prod2 = 0, g_cons2 = 0;
 
   // when this is equal to num_children+1, ready to propgate
   int recv_event_count = 0, recv_wave_count = 0;
+
+  bool propagate = true;
 };
 
 static constexpr epoch_t const first_epoch = 1;
@@ -44,6 +50,10 @@ struct TerminationDetector {
   using term_state_t = TermState;
   using action_container_t = std::vector<action_t>;
 
+  TerminationDetector() {
+    any_epoch_state.recv_event_count = 1;
+  }
+
   template <typename T>
   using epoch_container_t = std::unordered_map<epoch_t, T>;
 
@@ -59,8 +69,11 @@ struct TerminationDetector {
 
   void
   produce_consume(epoch_t const& epoch = no_epoch, bool produce = true) {
-    if (produce) any_epoch_state.prod++;
-    else any_epoch_state.cons++;
+    if (produce) {
+      any_epoch_state.l_prod++;
+    } else {
+      any_epoch_state.l_cons++;
+    }
 
     if (epoch != no_epoch) {
       auto epoch_iter = epoch_state.find(epoch);
@@ -74,86 +87,144 @@ struct TerminationDetector {
       }
       epoch_iter = epoch_state.find(epoch);
 
-      if (produce) epoch_iter->second.prod++;
-      else epoch_iter->second.cons++;
+      if (produce) {
+        epoch_iter->second.l_prod++;
+      } else{
+        epoch_iter->second.l_cons++;
+      }
 
-      if (epoch_iter->second.cons == epoch_iter->second.prod) {
-        propagate_epoch(epoch, epoch_iter->second.prod, epoch_iter->second.cons);
+      if (epoch_iter->second.propagate) {
+        any_epoch_state.propagate = not propagate_epoch(epoch, epoch_iter->second);
       }
     }
 
-    if (any_epoch_state.prod == any_epoch_state.cons) {
-      propagate_epoch(epoch, any_epoch_state.prod, any_epoch_state.cons);
+    if (any_epoch_state.propagate) {
+      any_epoch_state.propagate = not propagate_epoch(epoch, any_epoch_state);
     }
   }
 
   void
   maybe_propagate() {
-    if (any_epoch_state.prod == any_epoch_state.cons) {
-      propagate_epoch(
-        no_epoch, any_epoch_state.prod, any_epoch_state.cons
-      );
+    if (any_epoch_state.propagate) {
+      any_epoch_state.propagate = not propagate_epoch(no_epoch, any_epoch_state);
     }
 
     for (auto&& e : epoch_state) {
-      if (e.second.prod == e.second.cons) {
-        propagate_epoch(
-          e.first, e.second.prod, e.second.cons
-        );
+      if (e.second.propagate) {
+        e.second.propagate = not propagate_epoch(e.first, e.second);
       }
     }
   }
 
   void
-  propagate_epoch(
+  propagate_epoch_external(
     epoch_t const& epoch, term_counter_t const& prod, term_counter_t const& cons
+  ) {
+    printf(
+      "%d: propagate_epoch_external: epoch=%d, prod=%lld, cons=%lld\n",
+      my_node, epoch, prod, cons
+    );
+
+    any_epoch_state.g_prod1 += prod;
+    any_epoch_state.g_cons1 += cons;
+
+    if (epoch != no_epoch) {
+      auto epoch_iter = epoch_state.find(epoch);
+      if (epoch_iter == epoch_state.end()) {
+        epoch_state.emplace(
+          std::piecewise_construct,
+          std::forward_as_tuple(epoch),
+          std::forward_as_tuple(term_state_t{})
+        );
+        epoch_iter = epoch_state.find(epoch);
+      }
+      epoch_iter->second.g_prod1 += prod;
+      epoch_iter->second.g_cons1 += cons;
+
+      epoch_iter->second.recv_event_count += 1;
+      propagate_epoch(epoch, epoch_iter->second);
+    }
+
+    any_epoch_state.recv_event_count += 1;
+    propagate_epoch(epoch, any_epoch_state);
+  }
+
+  bool
+  propagate_epoch(
+    epoch_t const& epoch, term_state_t& state
   ) {
     setup_tree();
 
-    auto epoch_iter = epoch_state.find(epoch);
+    auto const& event_count = state.recv_event_count;
 
-    if (epoch_iter == epoch_state.end()) {
-      epoch_state.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(epoch),
-        std::forward_as_tuple(term_state_t{})
+    bool const is_ready = event_count == num_children + 1;
+
+    if (is_ready) {
+      state.g_prod1 += state.l_prod;
+      state.g_cons1 += state.l_cons;
+
+      printf(
+        "%d: propagate_epoch: epoch=%d, l_prod=%lld, l_cons=%lld, "
+        "g_prod1=%lld, g_cons1=%lld, event_count=%d, num_children=%d\n",
+        my_node, epoch, state.l_prod, state.l_cons, state.g_prod1, state.g_cons1,
+        event_count, num_children
       );
-    }
-    epoch_iter = epoch_state.find(epoch);
 
-    if (epoch_iter != epoch_state.end()) {
-      auto const& event_count = epoch_iter->second.recv_event_count;
+      if (not is_root) {
+        auto msg = new EpochPropagateMsg(epoch, state.g_prod1, state.g_cons1);
 
-      // aggregate counts of events for epoch
-      epoch_iter->second.prod += prod;
-      epoch_iter->second.cons += cons;
-
-      if (not is_root and event_count == num_children + 1 and
-          epoch_iter->second.prod == epoch_iter->second.cons) {
-        auto msg = new EpochPropagateMsg(epoch, prod, cons);
         the_msg->set_term_message(msg);
         the_msg->send_msg(parent, propagate_epoch_han, msg, [=]{
           delete msg;
         });
-      } else if (is_root and event_count == num_children + 1) {
-        // four-counter method implementation
-        root_term_state2 = root_term_state1;
-        root_term_state1.prod = prod;
-        root_term_state1.cons = cons;
 
-        if (root_term_state1.prod == root_term_state1.cons and
-            root_term_state2.prod == root_term_state2.cons and
-            root_term_state1.prod == root_term_state2.prod
-           ) {
+        printf(
+          "%d: propagate_epoch: sending to parent: %d\n",
+        my_node, parent
+        );
+
+      } else /*if (is_root) */ {
+        // four-counter method implementation
+        printf(
+          "%d: propagate_epoch {root}: epoch=%d, g_prod1=%lld, g_cons1=%lld, "
+          "g_prod2=%lld, g_cons2=%lld\n",
+          my_node, epoch, state.g_prod1, state.g_cons1, state.g_prod2, state.g_cons2
+        );
+
+        if (state.g_prod1 == state.g_cons1 and
+            state.g_prod2 == state.g_cons2 and
+            state.g_prod1 == state.g_prod2) {
           auto msg = new EpochMsg(epoch);
+          the_msg->set_term_message(msg);
           the_msg->broadcast_msg(epoch_finished_han, msg, [=]{
             delete msg;
           });
 
           trigger_all_actions(epoch);
+        } else {
+          state.g_prod2 = state.g_prod1;
+          state.g_cons2 = state.g_cons1;
+          state.g_prod1 = state.g_cons1 = 0;
+
+          auto msg = new EpochMsg(epoch);
+          the_msg->set_term_message(msg);
+          the_msg->broadcast_msg(epoch_continue_han, msg, [=]{
+            delete msg;
+          });
+
+          if (num_children == 0) {
+            epoch_continue(epoch);
+          }
         }
       }
+
+      // reset counters
+      state.g_prod1 = state.g_cons1 = 0;
+      state.recv_event_count = 1;
     }
+
+
+    return is_ready;
   }
 
   void
@@ -163,6 +234,24 @@ struct TerminationDetector {
     if (first_resolved_epoch == epoch) {
       first_resolved_epoch++;
     }
+  }
+
+  void
+  epoch_continue(epoch_t const& epoch){
+    printf(
+      "%d: epoch_continue: epoch=%d\n", my_node, epoch
+    );
+
+    any_epoch_state.propagate = true;
+
+    if (epoch != no_epoch) {
+      auto epoch_iter = epoch_state.find(epoch);
+      if (epoch_iter != epoch_state.end()) {
+        epoch_iter->second.propagate = true;
+      }
+    }
+
+    maybe_propagate();
   }
 
   void
@@ -239,7 +328,7 @@ private:
       is_root = my_node == 0;
 
       if (not is_root) {
-        parent = my_node / 2;
+        parent = (my_node - 1) / 2;
       }
 
       set_up_tree = true;
@@ -312,6 +401,7 @@ private:
   handler_t propagate_epoch_han = uninitialized_handler;
   handler_t epoch_finished_han = uninitialized_handler;
   handler_t ready_epoch_han = uninitialized_handler;
+  handler_t epoch_continue_han = uninitialized_handler;
 
 private:
   epoch_t cur_epoch = no_epoch;
@@ -321,8 +411,6 @@ private:
 
   // global termination state
   term_state_t any_epoch_state;
-
-  term_state_t root_term_state1, root_term_state2;
 
   // epoch termination state
   epoch_container_t<term_state_t> epoch_state;

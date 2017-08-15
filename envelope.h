@@ -20,7 +20,7 @@ struct Envelope {
   handler_t han : 16;
   epoch_t epoch : 32;
   envelope_type_t type : 4;
-  int8_t is_term : 1;
+  bool is_term : 1;
 
   Envelope() {
     dest = 0;
