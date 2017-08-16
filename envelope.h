@@ -155,22 +155,6 @@ struct EpochTagEnvelope {
   tag_t tag : num_tag_bits;
 };
 
-inline void envelope_init_empty(EpochEnvelope& env) {
-  envelope_init(env);
-  set_epoch_type(env);
-}
-
-inline void envelope_init_empty(TagEnvelope& env) {
-  envelope_init(env);
-  set_tag_type(env);
-}
-
-inline void envelope_init_empty(EpochTagEnvelope& env) {
-  envelope_init(env);
-  set_epoch_type(env);
-  set_tag_type(env);
-}
-
 template <typename Env>
 inline epoch_t envelope_get_epoch(Env const& env) {
   if (envelope_is_epoch_type(env) and envelope_is_tag_type(env)) {
@@ -215,6 +199,25 @@ inline void envelope_set_tag(Env& env, tag_t const& tag) {
   }
 }
 
+inline void envelope_init_empty(EpochEnvelope& env) {
+  envelope_init(env);
+  set_epoch_type(env);
+  envelope_set_epoch(env, no_epoch);
+}
+
+inline void envelope_init_empty(TagEnvelope& env) {
+  envelope_init(env);
+  set_tag_type(env);
+  envelope_set_tag(env, no_tag);
+}
+
+inline void envelope_init_empty(EpochTagEnvelope& env) {
+  envelope_init(env);
+  set_epoch_type(env);
+  envelope_set_epoch(env, no_epoch);
+  set_tag_type(env);
+  envelope_set_tag(env, no_tag);
+}
 
 static_assert(std::is_pod<Envelope>(), "Envelope must be POD");
 static_assert(std::is_pod<EpochEnvelope>(), "EpochEnvelope must be POD");
