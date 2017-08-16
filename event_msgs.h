@@ -15,7 +15,7 @@ struct EventCheckFinishedMsg : Message {
     event_t const& event_in, node_t const& in_sent_from_node,
     event_t const& event_back_in
   )
-    : event(event_in), sent_from_node(in_sent_from_node),
+    : Message(), event(event_in), sent_from_node(in_sent_from_node),
       event_back(event_back_in)
   { }
 };
@@ -25,7 +25,7 @@ struct EventFinishedMsg : Message {
   event_t event_back = 0;
 
   EventFinishedMsg(event_t const& event_in, event_t const& event_back_in)
-    : event(event_in), event_back(event_back_in)
+    : Message(), event(event_in), event_back(event_back_in)
   { }
 };
 

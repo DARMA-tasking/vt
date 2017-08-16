@@ -8,6 +8,7 @@
 #include <mpi.h>
 
 #include "common.h"
+#include "function.h"
 #include "event.h"
 #include "registry.h"
 
@@ -21,7 +22,7 @@ struct ActiveMessenger {
   template <typename MessageT>
   void
   set_term_message(MessageT* const msg) {
-    msg->env.is_term = 1;
+    set_term_type(msg->env);
   }
 
   template <typename MessageT>
@@ -31,11 +32,7 @@ struct ActiveMessenger {
     action_t next_action = nullptr
   ) {
     // setup envelope
-    msg->env.dest = dest;
-    msg->env.han = han;
-    msg->env.type = envelope_type_t::Normal;
-    msg->env.epoch = no_epoch;
-
+    envelope_setup(msg->env, dest, han);
     return send_msg_direct(dest, han, msg, sizeof(MessageT));
   }
 
@@ -44,7 +41,8 @@ struct ActiveMessenger {
   broadcast_msg(
     handler_t const& han, MessageT* const msg, action_t next_action = nullptr
   ) {
-    return send_msg(-1, han, msg, next_action);
+    auto const& this_node = the_context->get_node();
+    return send_msg(this_node, han, msg, next_action);
   }
 
   event_t

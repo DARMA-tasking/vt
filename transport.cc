@@ -63,6 +63,10 @@ int main(int argc, char** argv) {
 
   std::cout << "this_node=" << this_node << std::endl;
 
+  printf("sizeof(Envelope)=%ld\n", sizeof(Envelope));
+  printf("sizeof(EpochEnvelope)=%ld\n", sizeof(EpochEnvelope));
+  printf("sizeof(EpochTagEnvelope)=%ld\n", sizeof(EpochTagEnvelope));
+
   //test_msg_han = CollectiveOps::register_handler(handle_test_msg);
 
   test_msg_han = CollectiveOps::register_handler([](runtime::Message* in_msg){

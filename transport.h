@@ -5,6 +5,7 @@
 #include "common.h"
 #include "envelope.h"
 #include "message.h"
+#include "function.h"
 #include "context.h"
 #include "collective.h"
 #include "event.h"

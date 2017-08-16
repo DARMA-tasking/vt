@@ -15,19 +15,19 @@ using handler_t = int16_t;
 using envelope_datatype_t = int8_t;
 using event_t = uint64_t;
 using epoch_t = int32_t;
-
-struct Message;
-
-using active_function_t = std::function<void(Message*)>;
-using action_t = std::function<void()>;
+using tag_t = int32_t;
 
 constexpr int const num_check_actions = 8;
 constexpr int const scheduler_default_num_times = 1;
 
 static constexpr int const mpi_event_tag = 0;
 static constexpr int const normal_event_tag = 1;
-static constexpr node_t const broadcast_dest_sentinel = -1;
+
 static constexpr epoch_t const no_epoch = -1;
+static constexpr tag_t const no_tag = -1;
+static constexpr event_t const no_event = -1;
+
+static constexpr node_t const uninitialized_destination = -1;
 static constexpr handler_t const uninitialized_handler = -1;
 
 } //end namespace runtime

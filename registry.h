@@ -6,6 +6,7 @@
 #include <cassert>
 
 #include "common.h"
+#include "function.h"
 
 namespace runtime {
 
