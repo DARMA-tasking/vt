@@ -33,7 +33,7 @@ struct ActiveMessenger {
   ) {
     // setup envelope
     envelope_setup(msg->env, dest, han);
-    return send_msg_direct(dest, han, msg, sizeof(MessageT));
+    return send_msg_direct(han, msg, sizeof(MessageT));
   }
 
   template <typename MessageT>
@@ -42,13 +42,14 @@ struct ActiveMessenger {
     handler_t const& han, MessageT* const msg, action_t next_action = nullptr
   ) {
     auto const& this_node = the_context->get_node();
+    set_broadcast_type(msg->env);
     return send_msg(this_node, han, msg, next_action);
   }
 
   event_t
   send_msg_direct(
-    node_t const& dest, handler_t const& han, BaseMessage* const msg,
-    int const& msg_size, action_t next_action = nullptr
+    handler_t const& han, BaseMessage* const msg, int const& msg_size,
+    action_t next_action = nullptr
   );
 
   void

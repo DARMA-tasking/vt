@@ -7,22 +7,23 @@ namespace runtime {
 
 event_t
 ActiveMessenger::send_msg_direct(
-  node_t const& dest, handler_t const& han, BaseMessage* const msg_base,
-  int const& msg_size, action_t next_action
+  handler_t const& han, BaseMessage* const msg_base, int const& msg_size,
+  action_t next_action
 ) {
   auto const& this_node = the_context->get_node();
 
-  DEBUG_PRINT(
-    "send_msg_direct: dest=%d, han=%d, msg=%p\n",
-    dest, han, msg
-  );
-
   auto msg = reinterpret_cast<ShortMessage* const>(msg_base);
 
+  auto const& dest = envelope_get_dest(msg->env);
   auto const& is_bcast = envelope_is_bcast(msg->env);
   auto const& is_term = envelope_is_term(msg->env);
   auto const& epoch =
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
+
+  DEBUG_PRINT(
+    "send_msg_direct: dest=%d, han=%d, msg=%p, epoch=%d\n",
+    dest, han, msg, epoch
+  );
 
   if (not is_bcast) {
     // non-broadcast message send
@@ -59,7 +60,7 @@ ActiveMessenger::send_msg_direct(
       return no_event;
     }
 
-    DEBUG_PRINT(
+    printf(
       "broadcast_msg: child1=%d, child2=%d, broadcast_root=%d, num_nodes=%d\n",
       child1, child2, dest, num_nodes
     );
@@ -155,7 +156,7 @@ ActiveMessenger::try_process_incoming_message() {
     // @todo: the broadcast forward should happen before running the active
     // function, but deallocation is a problem without reference counting
     if (is_bcast) {
-      send_msg_direct(-1, handler, msg, num_probe_bytes, [=]{
+      send_msg_direct(handler, msg, num_probe_bytes, [=]{
         delete [] buf;
       });
     }
