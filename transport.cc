@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
   //test_msg_han = CollectiveOps::register_handler(handle_test_msg);
 
-  test_msg_han = CollectiveOps::register_handler([](runtime::Message* in_msg){
+  test_msg_han = CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
     TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
     printf(
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     }
   });
 
-  test_msg_han2 = CollectiveOps::register_handler([](runtime::Message* in_msg){
+  test_msg_han2 = CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
     TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
     printf(

@@ -8,7 +8,7 @@
     printf("%d: " fmt, the_context->get_node(), ##arg);          \
   } while (0);
 #else
-#define DEBUG_PRINT(label, fmt, arg...)
+#define DEBUG_PRINT(fmt, arg...)
 #endif
 
 #endif /*__RUNTIME_TRANSPORT_DEBUG__*/

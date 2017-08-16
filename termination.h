@@ -27,22 +27,22 @@ struct TermState {
 
 static constexpr epoch_t const first_epoch = 1;
 
-struct EpochMsg : runtime::Message {
+struct EpochMsg : runtime::ShortMessage {
   epoch_t new_epoch = no_epoch;
 
   EpochMsg(epoch_t const& in_new_epoch)
-    : Message(), new_epoch(in_new_epoch)
+    : ShortMessage(), new_epoch(in_new_epoch)
   { }
 };
 
-struct EpochPropagateMsg : runtime::Message {
+struct EpochPropagateMsg : runtime::ShortMessage {
   epoch_t epoch = no_epoch;
   term_counter_t prod = 0, cons = 0;
 
   EpochPropagateMsg(
     epoch_t const& in_epoch, term_counter_t const& in_prod,
     term_counter_t const& in_cons
-  ) : Message(), epoch(in_epoch), prod(in_prod), cons(in_cons)
+  ) : ShortMessage(), epoch(in_epoch), prod(in_prod), cons(in_cons)
   { }
 };
 

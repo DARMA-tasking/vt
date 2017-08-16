@@ -10,7 +10,7 @@ handler_t check_event_finished_han = 0;
 /*static*/ void
 CollectiveOps::initialize_runtime() {
   event_finished_han =
-    CollectiveOps::register_handler([](runtime::Message* in_msg){
+    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
       EventFinishedMsg& msg = *static_cast<EventFinishedMsg*>(in_msg);
       auto const& this_node = the_context->get_node();
       auto const& owning_node = the_event->get_owning_node(msg.event_back);
@@ -32,7 +32,7 @@ CollectiveOps::initialize_runtime() {
     });
 
   check_event_finished_han =
-    CollectiveOps::register_handler([](runtime::Message* in_msg){
+    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
       EventCheckFinishedMsg& msg = *static_cast<EventCheckFinishedMsg*>(in_msg);
       auto const& event = msg.event;
       auto const& node = the_event->get_owning_node(event);

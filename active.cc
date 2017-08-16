@@ -7,7 +7,7 @@ namespace runtime {
 
 event_t
 ActiveMessenger::send_msg_direct(
-  node_t const& dest, handler_t const& han, Message* const msg,
+  node_t const& dest, handler_t const& han, BaseMessage* const msg_base,
   int const& msg_size, action_t next_action
 ) {
   auto const& this_node = the_context->get_node();
@@ -16,6 +16,8 @@ ActiveMessenger::send_msg_direct(
     "send_msg_direct: dest=%d, han=%d, msg=%p\n",
     dest, han, msg
   );
+
+  auto msg = reinterpret_cast<ShortMessage* const>(msg_base);
 
   auto const& is_bcast = envelope_is_bcast(msg->env);
   auto const& is_term = envelope_is_term(msg->env);

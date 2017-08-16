@@ -7,7 +7,7 @@
 
 namespace runtime {
 
-struct EventCheckFinishedMsg : Message {
+struct EventCheckFinishedMsg : ShortMessage {
   event_t event = 0, event_back = 0;
   node_t sent_from_node = 0;
 
@@ -15,17 +15,17 @@ struct EventCheckFinishedMsg : Message {
     event_t const& event_in, node_t const& in_sent_from_node,
     event_t const& event_back_in
   )
-    : Message(), event(event_in), sent_from_node(in_sent_from_node),
+    : ShortMessage(), event(event_in), sent_from_node(in_sent_from_node),
       event_back(event_back_in)
   { }
 };
 
-struct EventFinishedMsg : Message {
+struct EventFinishedMsg : ShortMessage {
   event_t event = 0;
   event_t event_back = 0;
 
   EventFinishedMsg(event_t const& event_in, event_t const& event_back_in)
-    : Message(), event(event_in), event_back(event_back_in)
+    : ShortMessage(), event(event_in), event_back(event_back_in)
   { }
 };
 

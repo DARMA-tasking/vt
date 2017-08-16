@@ -7,41 +7,21 @@
 
 namespace runtime {
 
-struct BaseMessage {
-  using envelope_t = Envelope;
+struct BaseMessage { };
+
+template <typename EnvelopeT>
+struct ActiveMessage : BaseMessage {
+  using envelope_t = EnvelopeT;
   envelope_t env;
 
-  BaseMessage() {
+  ActiveMessage() {
     envelope_init_empty(env);
   }
 };
 
-struct EpochMessage {
-  using envelope_t = EpochEnvelope;
-  envelope_t env;
-
-  EpochMessage() {
-    envelope_init_empty(env);
-  }
-};
-
-struct TagMessage {
-  using envelope_t = EpochEnvelope;
-  envelope_t env;
-
-  TagMessage() {
-    envelope_init_empty(env);
-  }
-};
-
-struct EpochTagMessage {
-  using envelope_t = EpochTagEnvelope;
-  envelope_t env;
-
-  EpochTagMessage() {
-    envelope_init_empty(env);
-  }
-};
+using ShortMessage = ActiveMessage<Envelope>;
+using EpochMessage = ActiveMessage<EpochEnvelope>;
+using EpochTagMessage = ActiveMessage<EpochTagEnvelope>;
 
 // default runtime::Message includes tag and epoch
 using Message = EpochTagMessage;

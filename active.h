@@ -47,7 +47,7 @@ struct ActiveMessenger {
 
   event_t
   send_msg_direct(
-    node_t const& dest, handler_t const& han, Message* const msg,
+    node_t const& dest, handler_t const& han, BaseMessage* const msg,
     int const& msg_size, action_t next_action = nullptr
   );
 
