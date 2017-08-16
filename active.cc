@@ -138,7 +138,7 @@ ActiveMessenger::try_process_incoming_message() {
       MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
 
-    Message* msg = reinterpret_cast<Message*>(buf);
+    ShortMessage* msg = reinterpret_cast<ShortMessage*>(buf);
 
     auto const& is_term = envelope_is_term(msg->env);
     auto const& is_bcast = envelope_is_bcast(msg->env);
