@@ -26,6 +26,18 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT>
+  void
+  set_epoch_message(MessageT* const msg, epoch_t const& epoch) {
+    envelope_set_epoch(msg->env, epoch);
+  }
+
+  template <typename MessageT>
+  void
+  set_tag_message(MessageT* const msg, tag_t const& tag) {
+    envelope_set_tag(msg->env, tag);
+  }
+
+  template <typename MessageT>
   event_t
   send_msg(
     node_t const& dest, handler_t const& han, MessageT* const msg,

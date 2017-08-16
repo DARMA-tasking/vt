@@ -120,16 +120,20 @@ inline void envelope_set_dest(Env& env, node_t const& dest) {
 }
 
 template <typename Env>
-inline void envelope_init_empty(Env& env) {
+inline void envelope_setup(Env& env, node_t const& dest, handler_t const& handler) {
+  envelope_set_dest(env, dest);
+  envelope_set_handler(env, handler);
+}
+
+template <typename Env>
+inline void envelope_init(Env& env) {
   set_normal_type(env);
   envelope_set_dest(env, uninitialized_destination);
   envelope_set_handler(env, uninitialized_handler);
 }
 
-template <typename Env>
-inline void envelope_setup(Env& env, node_t const& dest, handler_t const& handler) {
-  envelope_set_dest(env, dest);
-  envelope_set_handler(env, handler);
+inline void envelope_init_empty(Envelope& env) {
+  envelope_init(env);
 }
 
 constexpr static int const num_epoch_bits = 32;
@@ -150,6 +154,22 @@ struct EpochTagEnvelope {
   epoch_t epoch : num_epoch_bits;
   tag_t tag : num_tag_bits;
 };
+
+inline void envelope_init_empty(EpochEnvelope& env) {
+  envelope_init(env);
+  set_epoch_type(env);
+}
+
+inline void envelope_init_empty(TagEnvelope& env) {
+  envelope_init(env);
+  set_tag_type(env);
+}
+
+inline void envelope_init_empty(EpochTagEnvelope& env) {
+  envelope_init(env);
+  set_epoch_type(env);
+  set_tag_type(env);
+}
 
 template <typename Env>
 inline epoch_t envelope_get_epoch(Env const& env) {
