@@ -29,11 +29,7 @@ struct CollectiveOps {
   }
 
   static void
-  finalize_context() {
-    MPI_Barrier(MPI_COMM_WORLD);
-    the_context = nullptr;
-    MPI_Finalize();
-  }
+  finalize_context();
 
   static void
   initialize_runtime();

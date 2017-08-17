@@ -10,6 +10,7 @@ node_t this_node = -1;
 node_t num_nodes = -1;
 handler_t test_msg_han = 0;
 handler_t test_msg_han2 = 0;
+epoch_t test_epoch = -1;
 
 struct TestMsg : runtime::Message {
   int val;
@@ -28,6 +29,8 @@ void send_to_neighbor() {
   TestMsg* msg = new TestMsg(this_node, num_nodes, -1);
 
   int const next = this_node+1 < num_nodes ? this_node+1 : 0;
+
+  //the_msg->set_epoch_message(msg, test_epoch);
 
   event_t evt = the_msg->send_msg(next, test_msg_han, msg, [=]{
     //std::cout << "deleting msg" << std::endl;
@@ -67,7 +70,24 @@ int main(int argc, char** argv) {
   printf("sizeof(EpochEnvelope)=%ld\n", sizeof(EpochEnvelope));
   printf("sizeof(EpochTagEnvelope)=%ld\n", sizeof(EpochTagEnvelope));
 
+  printf("%d: calling wait_unnamed_barrier\n", this_node);
+  the_barrier->barrier();
+  printf("%d: out of wait_unnamed_barrier\n", this_node);
+
+  printf("%d: calling cont_unnamed_barrier\n", this_node);
+  the_barrier->barrier_then([=]{
+    printf("%d: out of cont_unnamed_barrier\n", this_node);
+  });
+
   //test_msg_han = CollectiveOps::register_handler(handle_test_msg);
+
+  // test_epoch = the_term->new_epoch();
+  // the_term->attach_epoch_term_action(test_epoch, [=]{
+  //   printf(
+  //     "%d: EPOCH: finished: test_epoch=%d\n",
+  //     the_context->get_node(), test_epoch
+  //   );
+  // });
 
   test_msg_han = CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
     TestMsg& msg = *static_cast<TestMsg*>(in_msg);
@@ -109,7 +129,4 @@ int main(int argc, char** argv) {
   while (1) {
     the_msg->scheduler();
   }
-
-  CollectiveOps::finalize_runtime();
-  CollectiveOps::finalize_context();
 }

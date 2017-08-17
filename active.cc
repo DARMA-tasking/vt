@@ -61,8 +61,8 @@ ActiveMessenger::send_msg_direct(
     }
 
     printf(
-      "broadcast_msg: child1=%d, child2=%d, broadcast_root=%d, num_nodes=%d\n",
-      child1, child2, dest, num_nodes
+      "%d: broadcast_msg: child1=%d, child2=%d, broadcast_root=%d, num_nodes=%d\n",
+      this_node, child1, child2, dest, num_nodes
     );
 
     auto const parent_event_id = the_event->create_parent_event_id(this_node);

@@ -3,6 +3,7 @@
 #define __RUNTIME_TRANSPORT__
 
 #include "common.h"
+#include "tree.h"
 #include "envelope.h"
 #include "message.h"
 #include "function.h"
@@ -13,5 +14,6 @@
 #include "active.h"
 #include "event_msgs.h"
 #include "termination.h"
+#include "barrier.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

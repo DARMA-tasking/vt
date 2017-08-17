@@ -83,5 +83,64 @@ AsyncEvent::attach_action(event_t const& event, action_t callable) {
   return event_id;
 }
 
+/*static*/ void
+AsyncEvent::register_event_handlers() {
+  the_event->event_finished_han =
+    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
+      EventFinishedMsg& msg = *static_cast<EventFinishedMsg*>(in_msg);
+
+      auto const& complete = the_event->test_event_complete(msg.event_back);
+
+      assert(
+        complete == AsyncEvent::event_state_t::EventWaiting and
+        "Event must be waiting since it depends on this finished event"
+      );
+
+      auto& holder = the_event->get_event_holder(msg.event_back);
+      holder.make_ready_trigger();
+    });
+
+  the_event->check_event_finished_han =
+    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
+      EventCheckFinishedMsg& msg = *static_cast<EventCheckFinishedMsg*>(in_msg);
+      auto const& event = msg.event;
+      auto const& node = the_event->get_owning_node(event);
+
+      assert(
+        node == the_context->get_node() and "Node must be identical"
+      );
+
+      auto const& this_node = the_context->get_node();
+
+      auto send_back_fun = [=]{
+        auto msg_send = new EventFinishedMsg(event, msg.event_back);
+        auto send_back = the_event->get_owning_node(msg.event_back);
+        assert(send_back == msg.sent_from_node);
+        the_msg->send_msg(
+          send_back, the_event->event_finished_han, msg_send, [=]{
+            delete msg_send;
+          }
+        );
+      };
+
+      auto const& is_complete = the_event->test_event_complete(event);
+
+      DEBUG_PRINT(
+        "check_event_finished_han:: event=%lld, node=%lld, "
+        "this_node=%d, complete=%d, sent_from_node=%d\n",
+        event, node, this_node, is_complete, msg.sent_from_node
+      );
+
+      if (is_complete == AsyncEvent::event_state_t::EventReady) {
+        send_back_fun();
+      } else {
+        assert(
+          is_complete == AsyncEvent::event_state_t::EventWaiting and
+          "Must be waiting if not ready"
+        );
+        /*ignore return event*/ the_event->attach_action(event, send_back_fun);
+      }
+    });
+}
 
 } //end namespace runtime
