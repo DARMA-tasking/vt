@@ -82,7 +82,14 @@ struct MPIEvent : Event {
   virtual bool test_ready() {
     //printf("MPIEvent test_ready() id=%lld\n", event_id);
     MPI_Test(&req, &flag, &stat);
-    return flag == 1;
+    bool const ready = flag == 1;
+
+    if (ready and msg != nullptr and is_shared_message(msg)) {
+      message_deref(msg);
+      msg = nullptr;
+    }
+
+    return ready;
   }
 
   virtual bool wait_ready() {
@@ -94,11 +101,17 @@ struct MPIEvent : Event {
     return &req;
   }
 
-  MPIEvent(event_t const& in_event_id)
-    : Event(in_event_id, mpi_event_tag)
+  MPIEvent(event_t const& in_event_id, ShortMessage* in_msg = nullptr)
+    : Event(in_event_id, mpi_event_tag), msg(in_msg)
   { }
 
+  void set_managed_message(ShortMessage* in_msg) {
+    msg = in_msg;
+    message_ref(msg);
+  }
+
 private:
+  ShortMessage* msg = nullptr;
   MPI_Status stat;
   MPI_Request req;
   int flag = 0;

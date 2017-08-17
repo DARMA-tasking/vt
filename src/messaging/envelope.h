@@ -27,6 +27,7 @@ enum EnvelopeType {
 constexpr static int const num_envelope_bits = 6;
 constexpr static int const num_handler_bits = 16;
 constexpr static int const num_node_bits = 16;
+constexpr static int const num_ref_bits = 16;
 
 using envelope_type_t = EnvelopeType;
 
@@ -34,6 +35,7 @@ struct Envelope {
   envelope_datatype_t type : num_envelope_bits;
   node_t dest : num_node_bits;
   handler_t han : num_handler_bits;
+  ref_t ref : num_ref_bits;
 };
 
 // Set the type of Envelope
@@ -119,6 +121,30 @@ inline void envelope_set_dest(Env& env, node_t const& dest) {
   reinterpret_cast<Envelope*>(&env)->dest = dest;
 }
 
+// Envelope reference counting functions for memory management
+
+template <typename Env>
+inline void envelope_set_ref(Env& env, ref_t const& ref = 0) {
+  reinterpret_cast<Envelope*>(&env)->ref = ref;
+}
+
+template <typename Env>
+inline ref_t envelope_get_ref(Env& env) {
+  return reinterpret_cast<Envelope*>(&env)->ref;
+}
+
+template <typename Env>
+inline void envelope_ref(Env& env) {
+  reinterpret_cast<Envelope*>(&env)->ref++;
+}
+
+template <typename Env>
+inline void envelope_deref(Env& env) {
+  reinterpret_cast<Envelope*>(&env)->ref--;
+}
+
+// Envelope setup functions
+
 template <typename Env>
 inline void envelope_setup(Env& env, node_t const& dest, handler_t const& handler) {
   envelope_set_dest(env, dest);
@@ -130,6 +156,7 @@ inline void envelope_init(Env& env) {
   set_normal_type(env);
   envelope_set_dest(env, uninitialized_destination);
   envelope_set_handler(env, uninitialized_handler);
+  envelope_set_ref(env, not_shared_message);
 }
 
 inline void envelope_init_empty(Envelope& env) {

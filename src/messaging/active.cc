@@ -19,6 +19,7 @@ ActiveMessenger::send_msg_direct(
   auto const& is_term = envelope_is_term(msg->env);
   auto const& epoch =
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
+  auto const& is_shared = is_shared_message(msg);
 
   debug_print_active(
     "send_msg_direct: dest=%d, han=%d, msg=%p, epoch=%d, type=%d\n",
@@ -32,6 +33,10 @@ ActiveMessenger::send_msg_direct(
     auto& holder = the_event->get_event_holder(event_id);
     MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
 
+    if (is_shared) {
+      mpi_event.set_managed_message(msg);
+    }
+
     if (not is_term) {
       the_term->produce(epoch);
     }
@@ -42,6 +47,10 @@ ActiveMessenger::send_msg_direct(
 
     if (next_action != nullptr) {
       holder.attach_action(next_action);
+    }
+
+    if (is_shared) {
+      message_deref(msg);
     }
 
     return event_id;
@@ -78,6 +87,10 @@ ActiveMessenger::send_msg_direct(
       auto& holder1 = the_event->get_event_holder(event_id1);
       MPIEvent& mpi_event1 = *static_cast<MPIEvent*>(holder1.get_event());
 
+      if (is_shared) {
+        mpi_event1.set_managed_message(msg);
+      }
+
       debug_print_active(
         "broadcast_msg: sending to child1=%d, child2=%d, broadcast_root=%d, "
         "event_id=%lld\n",
@@ -100,6 +113,10 @@ ActiveMessenger::send_msg_direct(
       auto& holder2 = the_event->get_event_holder(event_id2);
       MPIEvent& mpi_event2 = *static_cast<MPIEvent*>(holder2.get_event());
 
+      if (is_shared) {
+        mpi_event2.set_managed_message(msg);
+      }
+
       debug_print_active(
         "broadcast_msg: sending to child2=%d, child1=%d, broadcast_root=%d, "
         "event_id=%lld\n",
@@ -115,6 +132,10 @@ ActiveMessenger::send_msg_direct(
       );
 
       parent_event.add_event(event_id2);
+    }
+
+    if (is_shared) {
+      message_deref(msg);
     }
 
     return parent_event_id;
@@ -152,6 +173,10 @@ ActiveMessenger::try_process_incoming_message() {
     auto const& is_term = envelope_is_term(msg->env);
     auto const& is_bcast = envelope_is_bcast(msg->env);
 
+    // @todo: switch to shared message here
+    // message_convert_to_shared(msg);
+    message_set_unmanaged(msg);
+
     auto const& handler = envelope_get_handler(msg->env);
     auto const& epoch =
       envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
@@ -169,8 +194,6 @@ ActiveMessenger::try_process_incoming_message() {
       });
     }
 
-    // do not touch msg after this---unsafe may be deallocated
-
     debug_print_active(
       "%d: try_process_incoming_message: consume: msg=%p, is_term=%d\n",
       the_context->get_node(), msg, is_term
@@ -183,6 +206,9 @@ ActiveMessenger::try_process_incoming_message() {
     if (not is_bcast) {
       the_pool->dealloc(msg);
     }
+
+    // @todo: switch to shared message here
+    // message_deref(msg);
 
     return true;
   } else {

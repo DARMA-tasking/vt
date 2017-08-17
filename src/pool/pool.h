@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "envelope.h"
+#include "context.h"
 
 #include <vector>
 #include <cstdint>
@@ -55,6 +56,11 @@ struct MemoryPoolEqual {
       cur_slot-1 >= 0 and "Must be greater than zero"
     );
 
+    debug_print_pool(
+      "%d: dealloc t=%p, cur_slot=%lld\n",
+      the_context->get_node(), t, cur_slot
+    );
+
     void* const ptr_actual = static_cast<size_t*>(t) - 1;
 
     holder[--cur_slot] = ptr_actual;
@@ -100,15 +106,51 @@ struct Pool {
   size_is_large(size_t const& num_bytes);
 };
 
-template <typename MessageT, typename... Args>
-MessageT make_shared_message(Args&&... args) {
-}
-
 }} //end namespace runtime::pool
 
 namespace runtime {
 
 extern std::unique_ptr<pool::Pool> the_pool;
+
+template <typename MessageT, typename... Args>
+MessageT* make_shared_message(Args&&... args) {
+  MessageT* msg = new MessageT{args...};
+  envelope_set_ref(msg->env, 1);
+  return msg;
+}
+
+template <typename MessageT>
+bool is_shared_message(MessageT* msg) {
+  return envelope_get_ref(msg->env) != not_shared_message;
+}
+
+template <typename MessageT>
+void message_convert_to_shared(MessageT* msg) {
+  envelope_set_ref(msg->env, 1);
+}
+
+template <typename MessageT>
+void message_set_unmanaged(MessageT* msg) {
+  envelope_set_ref(msg->env, not_shared_message);
+}
+
+template <typename MessageT>
+void message_ref(MessageT* msg) {
+  envelope_ref(msg->env);
+}
+
+template <typename MessageT>
+void message_deref(MessageT* msg) {
+  envelope_deref(msg->env);
+
+  debug_print_pool(
+    "message_deref msg=%p, refs=%d\n", msg, envelope_get_ref(msg->env)
+  );
+
+  if (envelope_get_ref(msg->env) == 0) {
+    delete msg;
+  }
+}
 
 } //end namespace runtime
 

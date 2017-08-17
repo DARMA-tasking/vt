@@ -38,6 +38,10 @@ int main(int argc, char** argv) {
   if (my_node == 0) {
     HelloMsg* msg = new HelloMsg(my_node);
     the_msg->broadcast_msg(hello_world_han, msg, [=]{ delete msg; });
+
+    // Example of  to use a system managed message with transfer of control
+    // HelloMsg* msg = make_shared_message<HelloMsg>(my_node);
+    // the_msg->broadcast_msg(hello_world_han, msg);
   }
 
   while (1) {
