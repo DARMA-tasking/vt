@@ -21,8 +21,8 @@ ActiveMessenger::send_msg_direct(
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
 
   debug_print_active(
-    "send_msg_direct: dest=%d, han=%d, msg=%p, epoch=%d\n",
-    dest, han, msg, epoch
+    "send_msg_direct: dest=%d, han=%d, msg=%p, epoch=%d, type=%d\n",
+    dest, han, msg, epoch, msg->env.type
   );
 
   if (not is_bcast) {
@@ -140,7 +140,7 @@ ActiveMessenger::try_process_incoming_message() {
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    char* buf = new char[num_probe_bytes];
+    char* buf = static_cast<char*>(the_pool->alloc(num_probe_bytes));
 
     MPI_Recv(
       buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
@@ -165,7 +165,7 @@ ActiveMessenger::try_process_incoming_message() {
     // function, but deallocation is a problem without reference counting
     if (is_bcast) {
       send_msg_direct(handler, msg, num_probe_bytes, [=]{
-        delete [] buf;
+        the_pool->dealloc(msg);
       });
     }
 
@@ -181,7 +181,7 @@ ActiveMessenger::try_process_incoming_message() {
     }
 
     if (not is_bcast) {
-      delete [] buf;
+      the_pool->dealloc(msg);
     }
 
     return true;

@@ -1,0 +1,115 @@
+
+#if ! defined __RUNTIME_TRANSPORT_POOL__
+#define __RUNTIME_TRANSPORT_POOL__
+
+#include "common.h"
+#include "envelope.h"
+
+#include <vector>
+#include <cstdint>
+#include <cassert>
+
+namespace runtime { namespace pool {
+
+template <int64_t num_bytes_t>
+struct MemoryPoolEqual {
+  using container_t = std::vector<void*>;
+  using slot_t = int64_t;
+
+  static constexpr slot_t const fst_pool_slot = 0;
+  static constexpr slot_t const default_pool_size = 1024;
+
+  // MemoryPoolEqual(slot_t const& in_num_bytes, slot_t const& in_pool_size = default_pool_size)
+  //   : num_bytes(in_num_bytes), pool_size(in_pool_size)
+  // {
+  //   resize_pool();
+  // }
+
+  MemoryPoolEqual() {
+    resize_pool();
+  }
+
+  void* alloc(size_t const& sz) {
+    if (cur_slot+1 >= holder.size()) {
+      resize_pool();
+    }
+
+    assert(
+      cur_slot+1 < holder.size() and "Must be within pool size, add capability to grow"
+    );
+
+    auto const& slot = cur_slot;
+    void* const ptr = holder[slot];
+
+    *static_cast<size_t*>(ptr) = sz;
+
+    void* const ptr_ret = static_cast<size_t*>(ptr) + 1;
+
+    cur_slot++;
+
+    return ptr_ret;
+  }
+
+  void dealloc(void* const t) {
+    assert(
+      cur_slot-1 >= 0 and "Must be greater than zero"
+    );
+
+    void* const ptr_actual = static_cast<size_t*>(t) - 1;
+
+    holder[--cur_slot] = ptr_actual;
+  }
+
+  void resize_pool() {
+    slot_t const cur_size = holder.size();
+    slot_t const new_size = cur_size == 0 ? pool_size : cur_size * 2;
+
+    holder.resize(new_size);
+
+    for (auto i = cur_size; i < holder.size(); i++) {
+      holder[i] = static_cast<void*>(malloc(num_full_bytes));
+    }
+  }
+
+  slot_t get_num_bytes() const {
+    return num_bytes;
+  }
+
+private:
+  slot_t const num_bytes = num_bytes_t;
+  slot_t const num_full_bytes = num_bytes_t + sizeof(size_t);
+
+  slot_t pool_size = default_pool_size;
+  slot_t cur_slot = fst_pool_slot;
+
+  container_t holder;
+};
+
+struct Pool {
+  static constexpr size_t const small_msg_size_buf = sizeof(int64_t) * 4;
+
+  MemoryPoolEqual<sizeof(EpochTagEnvelope) + small_msg_size_buf> small_msg;
+
+  void*
+  alloc(size_t const& num_bytes);
+
+  void
+  dealloc(void* const buf);
+
+  bool
+  size_is_large(size_t const& num_bytes);
+};
+
+template <typename MessageT, typename... Args>
+MessageT make_shared_message(Args&&... args) {
+}
+
+}} //end namespace runtime::pool
+
+namespace runtime {
+
+extern std::unique_ptr<pool::Pool> the_pool;
+
+} //end namespace runtime
+
+#endif /*__RUNTIME_TRANSPORT_POOL__*/

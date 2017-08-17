@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "envelope.h"
+#include "pool.h"
 
 namespace runtime {
 
@@ -16,6 +17,16 @@ struct ActiveMessage : BaseMessage {
 
   ActiveMessage() {
     envelope_init_empty(env);
+  }
+
+  static void*
+  operator new(std::size_t sz) {
+    return the_pool->alloc(sz);
+  }
+
+  static void
+  operator delete(void* ptr) {
+    return the_pool->dealloc(ptr);
   }
 };
 

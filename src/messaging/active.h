@@ -45,7 +45,7 @@ struct ActiveMessenger {
   ) {
     // setup envelope
     envelope_setup(msg->env, dest, han);
-    return send_msg_direct(han, msg, sizeof(MessageT));
+    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
   }
 
   template <typename MessageT>

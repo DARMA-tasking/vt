@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "tree.h"
+#include "pool.h"
 #include "envelope.h"
 #include "message.h"
 #include "function.h"

@@ -40,7 +40,7 @@ struct Envelope {
 
 template <typename Env>
 inline void set_normal_type(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type = static_cast<EnvelopeType>(0);
+  reinterpret_cast<Envelope*>(&env)->type = 0;
 }
 
 template <typename Env>

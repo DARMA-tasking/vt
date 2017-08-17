@@ -11,5 +11,6 @@ std::unique_ptr<ActiveMessenger> the_msg = std::make_unique<ActiveMessenger>();
 std::unique_ptr<AsyncEvent> the_event = std::make_unique<AsyncEvent>();
 std::unique_ptr<term::TerminationDetector> the_term = std::make_unique<term::TerminationDetector>();
 std::unique_ptr<barrier::Barrier> the_barrier = std::make_unique<barrier::Barrier>();
+std::unique_ptr<pool::Pool> the_pool = std::make_unique<pool::Pool>();
 
 } //end namespace runtime
