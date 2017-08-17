@@ -12,39 +12,34 @@ endif (MPI_FOUND)
 
 set(CMAKE_CXX_STANDARD 14)
 
+set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set(SOURCE_FILES
-        active.cc
-        collective.cc
-        event.cc
-        runtime.cc
-        termination.cc
-        transport.cc
-        )
+file(
+  GLOB
+  HEADER_FILES
+  ${PROJECT_SOURCE_DIR}/*.h
+)
 
-set(HEADER_FILES
-        active.h
-        collective.h
-        common.h
-        context.h
-        debug.h
-        envelope.h
-        event.h
-        event_msgs.h
-        message.h
-        registry.h
-        termination.h
-        transport.h
-        virual_context.h
-        )
+file(
+  GLOB
+  SOURCE_FILES
+  ${PROJECT_SOURCE_DIR}/*.cc
+)
 
+add_executable(
+  vt_mpi
+  ${SOURCE_FILES}
+  ${HEADER_FILES}
+)
 
-add_executable(vt_mpi ${SOURCE_FILES} ${HEADER_FILES})
+target_link_libraries(
+  vt_mpi
+  PRIVATE
+  ${MPI_C_LIBRARIES}
+)
 
-target_link_libraries(vt_mpi
-        PRIVATE
-        ${MPI_C_LIBRARIES})
-
-target_include_directories(vt_mpi
-        PRIVATE
-        ${MPI_C_INCLUDE_PATH})
+target_include_directories(
+  vt_mpi
+  PRIVATE
+  ${MPI_C_INCLUDE_PATH}
+)
