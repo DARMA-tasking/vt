@@ -8,7 +8,7 @@ bool
 ParentEvent::test_ready() {
   bool ready = true;
   for (auto&& e : events) {
-    //DEBUG_PRINT("ParentEvent: test_ready() e=%lld\n", e);
+    //debug_print_event("ParentEvent: test_ready() e=%lld\n", e);
     ready &=
       the_event->test_event_complete(e) ==
       AsyncEvent::event_state_t::EventReady;
@@ -41,7 +41,7 @@ AsyncEvent::attach_action(event_t const& event, action_t callable) {
   auto const& event_state = test_event_complete(event);
   auto const& this_event_owning_node = get_owning_node(event_id);
 
-  DEBUG_PRINT(
+  debug_print_event(
     "the_event: event=%lld, newevent=%lld, state=%d, "
     "newevent_owning_node=%d, this_node=%d\n",
     event, event_id, event_state, this_event_owning_node, this_node
@@ -64,7 +64,7 @@ AsyncEvent::attach_action(event_t const& event, action_t callable) {
     auto const& owning_node = get_owning_node(event);
     auto msg = new EventCheckFinishedMsg(event, this_node, event_id);
 
-    DEBUG_PRINT(
+    debug_print_event(
       "the_event: event=%lld, newevent=%lld, state=%d sending msg, node=%d\n",
       event, event_id, event_state, this_node
     );
@@ -125,7 +125,7 @@ AsyncEvent::register_event_handlers() {
 
       auto const& is_complete = the_event->test_event_complete(event);
 
-      DEBUG_PRINT(
+      debug_print_event(
         "check_event_finished_han:: event=%lld, node=%lld, "
         "this_node=%d, complete=%d, sent_from_node=%d\n",
         event, node, this_node, is_complete, msg.sent_from_node

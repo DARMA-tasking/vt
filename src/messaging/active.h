@@ -65,6 +65,9 @@ struct ActiveMessenger {
   );
 
   void
+  check_term_single_node();
+
+  void
   perform_triggered_actions();
 
   bool

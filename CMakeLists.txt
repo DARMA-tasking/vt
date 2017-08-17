@@ -13,6 +13,7 @@ endif (MPI_FOUND)
 set(CMAKE_CXX_STANDARD 14)
 
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
 set(
   PROJECT_SUBDIRS_LIST
@@ -69,12 +70,6 @@ file(
   ${PROJECT_SOURCE_DIR}/*.h
 )
 
-file(
-  GLOB
-  TOP_SOURCE_FILES
-  ${PROJECT_SOURCE_DIR}/*.cc
-)
-
 list(
   APPEND
   HEADER_FILES
@@ -84,7 +79,7 @@ list(
 list(
   APPEND
   SOURCE_FILES
-  "${TOP_SOURCE_FILES}"
+  ${PROJECT_SOURCE_DIR}/runtime.cc
 )
 
 # message("Backend: Headers LST: ${HEADER_FILES}")
@@ -92,6 +87,14 @@ list(
 
 add_executable(
   vt_mpi
+  ${PROJECT_EXAMPLE_DIR}/transport.cc
+  ${SOURCE_FILES}
+  ${HEADER_FILES}
+)
+
+add_executable(
+  hello_world
+  ${PROJECT_EXAMPLE_DIR}/hello_world.cc
   ${SOURCE_FILES}
   ${HEADER_FILES}
 )

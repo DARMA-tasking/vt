@@ -20,7 +20,7 @@ ActiveMessenger::send_msg_direct(
   auto const& epoch =
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
 
-  DEBUG_PRINT(
+  debug_print_active(
     "send_msg_direct: dest=%d, han=%d, msg=%p, epoch=%d\n",
     dest, han, msg, epoch
   );
@@ -60,7 +60,7 @@ ActiveMessenger::send_msg_direct(
       return no_event;
     }
 
-    printf(
+    debug_print_active(
       "%d: broadcast_msg: child1=%d, child2=%d, broadcast_root=%d, num_nodes=%d\n",
       this_node, child1, child2, dest, num_nodes
     );
@@ -78,7 +78,7 @@ ActiveMessenger::send_msg_direct(
       auto& holder1 = the_event->get_event_holder(event_id1);
       MPIEvent& mpi_event1 = *static_cast<MPIEvent*>(holder1.get_event());
 
-      DEBUG_PRINT(
+      debug_print_active(
         "broadcast_msg: sending to child1=%d, child2=%d, broadcast_root=%d, "
         "event_id=%lld\n",
         child1, child2, dest, event_id1
@@ -100,7 +100,7 @@ ActiveMessenger::send_msg_direct(
       auto& holder2 = the_event->get_event_holder(event_id2);
       MPIEvent& mpi_event2 = *static_cast<MPIEvent*>(holder2.get_event());
 
-      DEBUG_PRINT(
+      debug_print_active(
         "broadcast_msg: sending to child2=%d, child1=%d, broadcast_root=%d, "
         "event_id=%lld\n",
         child2, child1, dest, event_id2
@@ -118,6 +118,14 @@ ActiveMessenger::send_msg_direct(
     }
 
     return parent_event_id;
+  }
+}
+
+void
+ActiveMessenger::check_term_single_node() {
+  auto const& num_nodes = the_context->get_num_nodes();
+  if (num_nodes == 1) {
+    the_term->maybe_propagate();
   }
 }
 
@@ -163,7 +171,7 @@ ActiveMessenger::try_process_incoming_message() {
 
     // do not touch msg after this---unsafe may be deallocated
 
-    DEBUG_PRINT(
+    debug_print_active(
       "%d: try_process_incoming_message: consume: msg=%p, is_term=%d\n",
       the_context->get_node(), msg, is_term
     );
@@ -182,13 +190,12 @@ ActiveMessenger::try_process_incoming_message() {
   }
 }
 
-
 void
 ActiveMessenger::scheduler(int const& num_times) {
   for (int i = 0; i < num_times; i++) {
     try_process_incoming_message();
     perform_triggered_actions();
-    //the_term->maybe_propagate();
+    check_term_single_node();
   }
 }
 

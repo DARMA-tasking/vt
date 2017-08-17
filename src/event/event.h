@@ -204,7 +204,7 @@ struct AsyncEvent {
   get_event_holder(event_t const& event) {
     auto const& owning_node = get_owning_node(event);
 
-    DEBUG_PRINT(
+    debug_print_event(
       "the_event: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
       the_context->get_node(), event, owning_node
     );

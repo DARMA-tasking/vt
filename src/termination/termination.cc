@@ -40,10 +40,11 @@ TerminationDetector::register_termination_handlers() {
 /*static*/ void
 TerminationDetector::register_default_termination_action() {
   the_term->attach_global_term_action([]{
-    DEBUG_PRINT("TD: terminating program\n");
+    debug_print_term("TD: terminating program\n");
 
     auto const& this_node = the_context->get_node();
-    printf(
+
+    debug_print_term(
       "%d: running registered default termination\n", this_node
     );
 
@@ -105,7 +106,7 @@ void
 TerminationDetector::propagate_epoch_external(
   epoch_t const& epoch, term_counter_t const& prod, term_counter_t const& cons
 ) {
-  printf(
+  debug_print_term(
     "%d: propagate_epoch_external: epoch=%d, prod=%lld, cons=%lld\n",
     my_node, epoch, prod, cons
   );
@@ -155,7 +156,7 @@ TerminationDetector::propagate_epoch(
     state.g_prod1 += state.l_prod;
     state.g_cons1 += state.l_cons;
 
-    printf(
+    debug_print_term(
       "%d: propagate_epoch: epoch=%d, l_prod=%lld, l_cons=%lld, "
       "g_prod1=%lld, g_cons1=%lld, event_count=%d, num_children=%d\n",
       my_node, epoch, state.l_prod, state.l_cons, state.g_prod1, state.g_cons1,
@@ -171,7 +172,7 @@ TerminationDetector::propagate_epoch(
         delete msg;
       });
 
-      printf(
+      debug_print_term(
         "%d: propagate_epoch: sending to parent: %d\n",
         my_node, parent
       );
@@ -183,7 +184,7 @@ TerminationDetector::propagate_epoch(
         state.g_prod2 == state.g_cons2 and
         state.g_prod1 == state.g_prod2;
       // four-counter method implementation
-      printf(
+      debug_print_term(
         "%d: propagate_epoch {root}: epoch=%d, g_prod1=%lld, g_cons1=%lld, "
         "g_prod2=%lld, g_cons2=%lld, detected_term=%d\n",
         my_node, epoch, state.g_prod1, state.g_cons1, state.g_prod2, state.g_cons2,
@@ -204,11 +205,7 @@ TerminationDetector::propagate_epoch(
         state.g_cons2 = state.g_cons1;
         state.g_prod1 = state.g_cons1 = 0;
 
-        static int count = 0;
-        count++;
-
         auto msg = new EpochMsg(epoch);
-        msg->wave = count;
         the_msg->set_term_message(msg);
         the_msg->broadcast_msg(epoch_continue_han, msg, [=]{
           delete msg;
@@ -229,7 +226,7 @@ TerminationDetector::propagate_epoch(
 
 void
 TerminationDetector::epoch_finished(epoch_t const& epoch){
-  printf(
+  debug_print_term(
     "%d: epoch_finished: epoch=%d\n", my_node, epoch
   );
   fflush(stdout);
@@ -244,7 +241,7 @@ TerminationDetector::epoch_finished(epoch_t const& epoch){
 
 void
 TerminationDetector::epoch_continue(epoch_t const& epoch, int const& wave){
-  printf(
+  debug_print_term(
     "%d: epoch_continue: epoch=%d, wave=%d\n", my_node, epoch, wave
   );
 
