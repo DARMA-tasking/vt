@@ -37,8 +37,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     HelloMsg* msg = new HelloMsg(my_node);
-    //the_msg->broadcast_msg(hello_world_han, msg, [=]{ delete msg; });
-    the_msg->send_msg(0, hello_world_han, msg, [=]{ delete msg; });
+    the_msg->broadcast_msg(hello_world_han, msg, [=]{ delete msg; });
   }
 
   while (1) {
