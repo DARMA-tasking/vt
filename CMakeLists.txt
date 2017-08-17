@@ -99,6 +99,13 @@ add_executable(
   ${HEADER_FILES}
 )
 
+add_executable(
+  ring
+  ${PROJECT_EXAMPLE_DIR}/ring.cc
+  ${SOURCE_FILES}
+  ${HEADER_FILES}
+)
+
 target_link_libraries(
   vt_mpi
   PRIVATE
