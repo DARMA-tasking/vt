@@ -170,7 +170,9 @@ RDMAManager::put_data(
 
     auto send_payload = [&](ActiveMessenger::send_fn_t send){
       auto ret = send(rdma_get_t{ptr, num_bytes}, put_node, no_tag, [=]{
-        cont();
+        if (cont != nullptr) {
+          cont();
+        }
       });
       msg->mpi_tag_to_recv = std::get<1>(ret);
     };
@@ -200,12 +202,18 @@ RDMAManager::put_data(
       );
     }
   } else {
-    // the_rdma->request_put_data(
-    //   nullptr, false, han, tag, no_byte, [cont](rdma_get_t data){
-    //     printf("local: data is ready\n");
-    //     cont(std::get<0>(data), std::get<1>(data));
-    //   }
-    // );
+    the_rdma->trigger_put_recv_data(
+      han, tag, ptr, num_bytes, [=](rdma_get_t){
+        printf("%d: put_data: local data is put\n", this_node);
+        printf("local: data is ready: put\n");
+        if (cont) {
+          cont();
+        }
+        if (action_after_put) {
+          action_after_put();
+        }
+      }
+    );
   }
 
 }
