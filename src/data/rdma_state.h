@@ -5,6 +5,7 @@
 #include "common.h"
 #include "rdma_common.h"
 #include "rdma_handle.h"
+#include "rdma_msg.h"
 
 #include <unordered_map>
 #include <vector>
@@ -24,8 +25,9 @@ struct RDMAInfo {
 
   RDMAInfo(
     rdma_type_t const& in_rdma_type, byte_t const& in_num_bytes = no_byte,
-    tag_t const& in_tag = no_tag
-  ) : rdma_type(in_rdma_type), num_bytes(in_num_bytes), tag(in_tag)
+    tag_t const& in_tag = no_tag, rdma_continuation_t in_cont = nullptr
+  ) : rdma_type(in_rdma_type), num_bytes(in_num_bytes), tag(in_tag),
+      cont(in_cont)
   { }
 };
 
@@ -62,8 +64,7 @@ struct RDMAState {
 
   void
   get_data(
-    GetMessage* msg, bool const& is_user_msg, rdma_info_t const& info,
-    rdma_continuation_t cont
+    GetMessage* msg, bool const& is_user_msg, rdma_info_t const& info
   );
 
   void

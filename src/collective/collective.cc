@@ -10,6 +10,7 @@ CollectiveOps::initialize_runtime() {
   term::TerminationDetector::register_default_termination_action();
   AsyncEvent::register_event_handlers();
   barrier::Barrier::register_barrier_handlers();
+  rdma::RDMAManager::register_all_rdma_handlers();
 
   // wait for all nodes to start up to initialize the runtime
   the_barrier->barrier();

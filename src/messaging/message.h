@@ -30,24 +30,9 @@ struct ActiveMessage : BaseMessage {
   }
 };
 
-template <typename EnvelopeT>
-struct GetActiveMessage : ActiveMessage<EnvelopeT> {
-
-  GetActiveMessage()
-    : ActiveMessage<EnvelopeT>()
-  { }
-
-  rdma_handle_t rdma_handle = no_rdma_handle;
-  rdma_handler_t rdma_handler = uninitialized_rdma_handler;
-  bool is_user_msg = false;
-};
-
 using ShortMessage = ActiveMessage<Envelope>;
 using EpochMessage = ActiveMessage<EpochEnvelope>;
 using EpochTagMessage = ActiveMessage<EpochTagEnvelope>;
-
-using GetMessage = GetActiveMessage<EpochTagEnvelope>;
-//using PutMessage = GetActiveMessage<EpochTagEnvelope>;
 
 // default runtime::Message includes tag and epoch
 using Message = EpochTagMessage;

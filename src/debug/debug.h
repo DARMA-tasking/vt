@@ -2,6 +2,8 @@
 #if ! defined __RUNTIME_TRANSPORT_DEBUG__
 #define __RUNTIME_TRANSPORT_DEBUG__
 
+#define print_bool(BOOL) ((BOOL) ? "true" : "false")
+
 #if DEBUG_ON
   #define debug_print(fmt, arg...)                                 \
     do {                                                           \

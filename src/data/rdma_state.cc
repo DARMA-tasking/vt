@@ -10,6 +10,10 @@ rdma_handler_t
 RDMAState::set_rdma_fn<
   RDMAState::rdma_type_t::Get, RDMAState::rdma_get_function_t
 >(rdma_get_function_t const& fn, tag_t const& tag) {
+
+  auto const& this_node = the_context->get_node();
+  printf("%d: set_rdma_fn: GET tag=%d, handle=%lld\n", this_node, tag, handle);
+
   rdma_handler_t const handler = make_rdma_handler(rdma_type_t::Get);
   if (tag == no_tag) {
     rdma_get_fn = fn;
@@ -49,14 +53,13 @@ bool
 RDMAState::test_ready_get_data(tag_t const& tag) {
   bool const not_ready =
     ((tag == no_tag and rdma_get_fn == nullptr) or
-     get_tag_holder.find(tag) == get_tag_holder.end());
+     (tag != no_tag and get_tag_holder.find(tag) == get_tag_holder.end()));
   return not not_ready;
 }
 
 void
 RDMAState::get_data(
-  GetMessage* msg, bool const& is_user_msg, rdma_info_t const& info,
-  rdma_continuation_t cont
+  GetMessage* msg, bool const& is_user_msg, rdma_info_t const& info
 ) {
   auto const& tag = info.tag;
 
@@ -66,14 +69,18 @@ RDMAState::get_data(
 
   bool const ready = test_ready_get_data(info.tag);
 
+  auto const& this_node = the_context->get_node();
+  printf(
+    "%d: get_data: msg=%p, tag=%d, ready=%s, handle=%lld\n",
+    this_node, msg, info.tag, print_bool(ready), handle
+  );
+
   if (ready) {
     rdma_get_function_t get_fn =
       tag == no_tag ? rdma_get_fn : get_tag_holder.find(tag)->second;
-    cont(get_fn(nullptr, info.num_bytes, info.tag));
+    info.cont(get_fn(nullptr, info.num_bytes, info.tag));
   } else {
-    rdma_info_t new_info{info};
-    new_info.cont = cont;
-    pending_tag_gets[tag].push_back(new_info);
+    pending_tag_gets[tag].push_back(info);
   }
 }
 
