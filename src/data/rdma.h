@@ -56,14 +56,15 @@ struct RDMAManager {
 
   void
   get_data(
-    rdma_handle_t const& rdma_handle, tag_t const& tag, rdma_recv_t cont
+    rdma_handle_t const& rdma_handle, tag_t const& tag, byte_t const& num_bytes,
+    rdma_recv_t cont
   );
 
   void
   get_data(
     rdma_handle_t const& rdma_handle, rdma_recv_t cont
   ) {
-    return get_data(rdma_handle, no_tag, cont);
+    return get_data(rdma_handle, no_tag, no_byte, cont);
   }
 
   void
@@ -149,7 +150,12 @@ struct RDMAManager {
   void
   trigger_put_recv_data(
     rdma_handle_t const& han, tag_t const& tag, rdma_ptr_t ptr,
-    byte_t const& num_bytes, rdma_continuation_t const& action
+    byte_t const& num_bytes, action_t const& action
+  );
+
+  rdma_ptr_t
+  try_put_ptr(
+    rdma_handle_t const& han, tag_t const& tag
   );
 
   void

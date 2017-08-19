@@ -81,6 +81,12 @@ struct ActiveMessenger {
     tag_t const& tag, bool const& enqueue, rdma_continuation_del_t next = nullptr
   );
 
+  bool
+  recv_data_msg_buffer(
+    void* const user_buf, tag_t const& tag, bool const& enqueue,
+    action_t dealloc_user_buf, rdma_continuation_del_t next = nullptr
+  );
+
   template <typename MessageT>
   event_t
   send_msg(

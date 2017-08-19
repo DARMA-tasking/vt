@@ -22,13 +22,14 @@ struct RDMAInfo {
   rdma_type_t rdma_type;
   rdma_ptr_t data_ptr = nullptr;
   rdma_continuation_t cont = nullptr;
+  action_t cont_action = nullptr;
 
   RDMAInfo(
     rdma_type_t const& in_rdma_type, byte_t const& in_num_bytes = no_byte,
     tag_t const& in_tag = no_tag, rdma_continuation_t in_cont = nullptr,
-    rdma_ptr_t const& in_data_ptr = nullptr
+    action_t in_cont_action = nullptr, rdma_ptr_t const& in_data_ptr = nullptr
   ) : rdma_type(in_rdma_type), num_bytes(in_num_bytes), tag(in_tag),
-      data_ptr(in_data_ptr), cont(in_cont)
+      data_ptr(in_data_ptr), cont(in_cont), cont_action(in_cont_action)
   { }
 };
 
@@ -104,6 +105,9 @@ struct RDMAState {
   default_put_handler_fn(
     BaseMessage* msg, rdma_ptr_t in_ptr, byte_t in_num_bytes, tag_t tag
   );
+
+  bool using_default_put_handler = false;
+  bool using_default_get_handler = false;
 
 private:
   rdma_handler_t this_rdma_get_handler = uninitialized_rdma_handler,

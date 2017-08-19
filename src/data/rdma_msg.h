@@ -26,9 +26,6 @@ struct GetActiveMessage : ActiveMessage<EnvelopeT> {
   bool is_user_msg = false;
 };
 
-using GetMessage = GetActiveMessage<EpochTagEnvelope>;
-//using PutMessage = GetActiveMessage<EpochTagEnvelope>;
-
 template <typename EnvelopeT>
 struct GetRecvMessage : ActiveMessage<EnvelopeT> {
   GetRecvMessage(
@@ -56,7 +53,9 @@ struct DataFinishedMessage : ActiveMessage<EnvelopeT> {
   rdma_op_t op_id = 0;
 };
 
+using GetMessage = GetActiveMessage<EpochTagEnvelope>;
 using GetBackMessage = GetRecvMessage<EpochTagEnvelope>;
+
 using PutMessage = GetRecvMessage<EpochTagEnvelope>;
 using PutBackMessage = DataFinishedMessage<EpochTagEnvelope>;
 

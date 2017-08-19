@@ -127,8 +127,8 @@ RDMAManager::trigger_put_back_data(rdma_op_t const& op) {
 
 void
 RDMAManager::trigger_put_recv_data(
-  rdma_handle_t const& han, tag_t const& tag, rdma_ptr_t ptr, byte_t const& num_bytes,
-  rdma_continuation_t const& action
+  rdma_handle_t const& han, tag_t const& tag, rdma_ptr_t ptr,
+  byte_t const& num_bytes, action_t const& action
 ) {
   auto const& this_node = the_context->get_node();
   auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
@@ -145,9 +145,33 @@ RDMAManager::trigger_put_recv_data(
   auto& state = holder_iter->second;
 
   bool const is_user_msg = false;
-  rdma_info_t info(rdma_type_t::Put, num_bytes, tag, action, ptr);
+  rdma_info_t info(rdma_type_t::Put, num_bytes, tag, nullptr, action, ptr);
 
   return state.put_data(nullptr, is_user_msg, info);
+}
+
+rdma_ptr_t
+RDMAManager::try_put_ptr(
+  rdma_handle_t const& han, tag_t const& tag
+) {
+  auto const& this_node = the_context->get_node();
+  auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
+
+  assert(
+    handler_node == this_node and "Handle must be local to this node"
+  );
+  auto holder_iter = holder.find(han);
+  assert(
+    holder_iter != holder.end() and "Holder for handler must exist here"
+  );
+
+  auto& state = holder_iter->second;
+
+  if (state.using_default_put_handler) {
+    return state.ptr;
+  } else {
+    return nullptr;
+  }
 }
 
 void
@@ -203,7 +227,7 @@ RDMAManager::put_data(
     }
   } else {
     the_rdma->trigger_put_recv_data(
-      han, tag, ptr, num_bytes, [=](rdma_get_t){
+      han, tag, ptr, num_bytes, [=](){
         printf("%d: put_data: local data is put\n", this_node);
         printf("local: data is ready: put\n");
         if (cont) {
@@ -220,7 +244,8 @@ RDMAManager::put_data(
 
 void
 RDMAManager::get_data(
-  rdma_handle_t const& han, tag_t const& tag, rdma_recv_t cont
+  rdma_handle_t const& han, tag_t const& tag, byte_t const& num_bytes,
+  rdma_recv_t cont
 ) {
   auto const& this_node = the_context->get_node();
   auto const get_node = rdma_handle_manager_t::get_rdma_node(han);
@@ -228,7 +253,7 @@ RDMAManager::get_data(
   if (get_node != this_node) {
     rdma_op_t const new_op = cur_op++;
 
-    GetMessage* msg = new GetMessage(new_op, this_node, han);
+    GetMessage* msg = new GetMessage(new_op, this_node, han, num_bytes);
     if (tag != no_tag) {
       envelope_set_tag(msg->env, tag);
     }
@@ -241,7 +266,7 @@ RDMAManager::get_data(
     );
   } else {
     the_rdma->request_get_data(
-      nullptr, false, han, tag, no_byte, [cont](rdma_get_t data){
+      nullptr, false, han, tag, num_bytes, [cont](rdma_get_t data){
         printf("local: data is ready\n");
         cont(std::get<0>(data), std::get<1>(data));
       }
@@ -351,13 +376,34 @@ RDMAManager::register_all_rdma_handlers() {
         recv_tag != no_tag and "PutMessage must have recv tag"
       );
 
-      the_msg->recv_data_msg(
-        recv_tag, [=](rdma_get_t ptr, action_t deleter){
-        printf("%d: put_data: after recv data trigger\n", this_node);
-        the_rdma->trigger_put_recv_data(
-          msg.rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
-          [=](rdma_get_t){
-            printf("%d: put_data: after put trigger\n", this_node);
+      // try to get early access to the ptr for a direct put into user buffer
+      auto const& put_ptr = the_rdma->try_put_ptr(msg.rdma_handle, msg_tag);
+
+      if (put_ptr == nullptr) {
+        the_msg->recv_data_msg(
+          recv_tag, [=](rdma_get_t ptr, action_t deleter){
+            printf("%d: put_data: after recv data trigger\n", this_node);
+            the_rdma->trigger_put_recv_data(
+              msg.rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
+              [=](){
+                printf("%d: put_data: after put trigger\n", this_node);
+                if (send_back) {
+                  PutBackMessage* new_msg = new PutBackMessage(op_id);
+                  the_msg->send_msg(
+                    send_back, the_rdma->put_back_msg_han, new_msg, [=]{
+                      delete new_msg;
+                    }
+                  );
+                }
+                deleter();
+              }
+            );
+          });
+      } else {
+        // do a direct recv into the user buffer
+        the_msg->recv_data_msg_buffer(
+          put_ptr, recv_tag, true, []{}, [=](rdma_get_t ptr, action_t deleter){
+            printf("%d: put_data: after recv put data trigger\n", this_node);
             if (send_back) {
               PutBackMessage* new_msg = new PutBackMessage(op_id);
               the_msg->send_msg(
@@ -369,7 +415,7 @@ RDMAManager::register_all_rdma_handlers() {
             deleter();
           }
         );
-      });
+      }
 
     });
 }

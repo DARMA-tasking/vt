@@ -27,9 +27,11 @@ RDMAState::set_default_handler() {
 
   auto f_get = std::bind(&RDMAState::default_get_handler_fn, this, _1, _2, _3);
   the_rdma->associate_get_function(handle, f_get, handle_any_tag);
+  using_default_get_handler = true;
 
   auto f_put = std::bind(&RDMAState::default_put_handler_fn, this, _1, _2, _3, _4);
   the_rdma->associate_put_function(handle, f_put, handle_any_tag);
+  using_default_put_handler = true;
 }
 
 void
@@ -40,6 +42,7 @@ RDMAState::unregister_rdma_handler(
     if (tag == no_tag or use_default) {
       this_rdma_get_handler = uninitialized_rdma_handler;
       rdma_get_fn = nullptr;
+      using_default_get_handler = false;
     } else {
       auto iter = get_tag_holder.find(tag);
       if (iter != get_tag_holder.end()) {
@@ -51,6 +54,7 @@ RDMAState::unregister_rdma_handler(
     if (tag == no_tag or use_default) {
       this_rdma_put_handler = uninitialized_rdma_handler;
       rdma_put_fn = nullptr;
+      using_default_put_handler = false;
     } else {
       auto iter = put_tag_holder.find(tag);
       if (iter != put_tag_holder.end()) {
@@ -68,10 +72,12 @@ RDMAState::unregister_rdma_handler(
     if (this_rdma_get_handler == handler) {
       this_rdma_get_handler = uninitialized_rdma_handler;
       rdma_get_fn = nullptr;
+      using_default_get_handler = false;
     }
     if (this_rdma_put_handler == handler) {
       this_rdma_put_handler = uninitialized_rdma_handler;
       rdma_put_fn = nullptr;
+      using_default_put_handler = false;
     }
   } else {
     auto p_get_iter = get_tag_holder.find(tag);
@@ -171,13 +177,13 @@ RDMAState::test_ready_get_data(tag_t const& tag) {
 
 rdma_get_t
 RDMAState::default_get_handler_fn(
-  BaseMessage* msg, byte_t in_num_bytes, tag_t tag
+  BaseMessage* msg, byte_t req_num_bytes, tag_t tag
 ) {
   auto const& this_node = the_context->get_node();
 
   printf(
-    "%d: default_get_handler_fn: msg=%p, in_num_bytes=%lld, tag=%d\n",
-    this_node, msg, in_num_bytes, tag
+    "%d: default_get_handler_fn: msg=%p, req_num_bytes=%lld, tag=%d\n",
+    this_node, msg, req_num_bytes, tag
   );
 
   assert(
@@ -185,18 +191,18 @@ RDMAState::default_get_handler_fn(
     "To use default handler ptr and bytes must be set"
   );
 
-  return rdma_get_t{ptr, num_bytes};
+  return rdma_get_t{ptr, req_num_bytes == no_byte ? num_bytes : req_num_bytes};
 }
 
 void
 RDMAState::default_put_handler_fn(
-  BaseMessage* msg, rdma_ptr_t in_ptr, byte_t in_num_bytes, tag_t tag
+  BaseMessage* msg, rdma_ptr_t in_ptr, byte_t req_num_bytes, tag_t tag
 ) {
   auto const& this_node = the_context->get_node();
 
   printf(
-    "%d: default_put_handler_fn: msg=%p, ptr=%p, in_num_bytes=%lld, tag=%d\n",
-    this_node, msg, ptr, in_num_bytes, tag
+    "%d: default_put_handler_fn: msg=%p, ptr=%p, req_num_bytes=%lld, tag=%d\n",
+    this_node, msg, ptr, req_num_bytes, tag
   );
 
   assert(
@@ -204,7 +210,7 @@ RDMAState::default_put_handler_fn(
     "To use default handler ptr and bytes must be set"
   );
 
-  std::memcpy(ptr, in_ptr, in_num_bytes);
+  std::memcpy(ptr, in_ptr, req_num_bytes);
 }
 
 void

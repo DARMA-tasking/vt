@@ -214,8 +214,9 @@ ActiveMessenger::process_data_msg_recv() {
 }
 
 bool
-ActiveMessenger::recv_data_msg(
-  tag_t const& tag, bool const& enqueue, rdma_continuation_del_t next
+ActiveMessenger::recv_data_msg_buffer(
+  void* const user_buf, tag_t const& tag, bool const& enqueue,
+  action_t dealloc_user_buf, rdma_continuation_del_t next
 ) {
   if (not enqueue) {
     byte_t num_probe_bytes;
@@ -227,20 +228,36 @@ ActiveMessenger::recv_data_msg(
     if (flag == 1) {
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-      char* buf = static_cast<char*>(the_pool->alloc(num_probe_bytes));
+      char* buf =
+        user_buf == nullptr ?
+        static_cast<char*>(the_pool->alloc(num_probe_bytes)) :
+        static_cast<char*>(user_buf);
 
       MPI_Recv(
         buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
         MPI_COMM_WORLD, MPI_STATUS_IGNORE
       );
 
+      auto dealloc_buf = [=]{
+        auto const& this_node = the_context->get_node();
+        printf(
+          "%d: recv_data_msg_buffer: continuation user_buf=%p, buf=%p, tag=%d\n",
+          this_node, user_buf, buf, tag
+        );
+
+        if (user_buf == nullptr) {
+          the_pool->dealloc(buf);
+        } else if (dealloc_user_buf != nullptr and user_buf != nullptr) {
+          dealloc_user_buf();
+        }
+      };
+
       if (next != nullptr) {
         next(rdma_get_t{buf,num_probe_bytes}, [=]{
-          the_pool->dealloc(buf);
+          dealloc_buf();
+          the_term->consume(no_epoch);
         });
       }
-
-      the_term->consume(no_epoch);
 
       return true;
     } else {
@@ -254,6 +271,13 @@ ActiveMessenger::recv_data_msg(
     );
     return false;
   }
+}
+
+bool
+ActiveMessenger::recv_data_msg(
+  tag_t const& tag, bool const& enqueue, rdma_continuation_del_t next
+) {
+  return recv_data_msg_buffer(nullptr, tag, enqueue, nullptr, next);
 }
 
 
