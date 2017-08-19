@@ -16,5 +16,6 @@
 #include "event_msgs.h"
 #include "termination.h"
 #include "barrier.h"
+#include "rdma.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

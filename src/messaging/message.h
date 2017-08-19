@@ -30,9 +30,20 @@ struct ActiveMessage : BaseMessage {
   }
 };
 
+template <typename EnvelopeT>
+struct GetActiveMessage : ActiveMessage<EnvelopeT> {
+
+  GetActiveMessage()
+    : ActiveMessage<EnvelopeT>()
+  { }
+
+};
+
 using ShortMessage = ActiveMessage<Envelope>;
 using EpochMessage = ActiveMessage<EpochEnvelope>;
 using EpochTagMessage = ActiveMessage<EpochTagEnvelope>;
+
+using GetShortMessage = GetActiveMessage<Envelope>;
 
 // default runtime::Message includes tag and epoch
 using Message = EpochTagMessage;
