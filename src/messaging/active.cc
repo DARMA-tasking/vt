@@ -217,39 +217,41 @@ bool
 ActiveMessenger::recv_data_msg(
   tag_t const& tag, bool const& enqueue, rdma_continuation_del_t next
 ) {
-  byte_t num_probe_bytes;
-  MPI_Status stat;
-  int flag;
+  if (not enqueue) {
+    byte_t num_probe_bytes;
+    MPI_Status stat;
+    int flag;
 
-  MPI_Iprobe(MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &flag, &stat);
+    MPI_Iprobe(MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &flag, &stat);
 
-  if (flag == 1) {
-    MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+    if (flag == 1) {
+      MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    char* buf = static_cast<char*>(the_pool->alloc(num_probe_bytes));
+      char* buf = static_cast<char*>(the_pool->alloc(num_probe_bytes));
 
-    MPI_Recv(
-      buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
-      MPI_COMM_WORLD, MPI_STATUS_IGNORE
-    );
-
-    if (next != nullptr) {
-      next(rdma_get_t{buf,num_probe_bytes}, [=]{
-        the_pool->dealloc(buf);
-      });
-    }
-
-    the_term->consume(no_epoch);
-
-    return true;
-  } else {
-    if (enqueue) {
-      pending_recvs.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(tag),
-        std::forward_as_tuple(next)
+      MPI_Recv(
+        buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE
       );
+
+      if (next != nullptr) {
+        next(rdma_get_t{buf,num_probe_bytes}, [=]{
+          the_pool->dealloc(buf);
+        });
+      }
+
+      the_term->consume(no_epoch);
+
+      return true;
+    } else {
+      return false;
     }
+  } else {
+    pending_recvs.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(tag),
+      std::forward_as_tuple(next)
+    );
     return false;
   }
 }

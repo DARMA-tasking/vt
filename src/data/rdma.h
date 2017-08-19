@@ -15,9 +15,14 @@ namespace runtime { namespace rdma {
 
 struct RDMAPending {
   rdma_recv_t cont = nullptr;
+  action_t cont2 = nullptr;
 
   RDMAPending(rdma_recv_t in_cont)
     : cont(in_cont)
+  { }
+
+  RDMAPending(action_t in_cont2)
+    : cont2(in_cont2)
   { }
 };
 
@@ -32,6 +37,22 @@ struct RDMAManager {
   using rdma_handle_manager_t = RDMAHandleManager;
   using rdma_get_function_t = rdma_state_t::rdma_get_function_t;
   using rdma_put_function_t = rdma_state_t::rdma_put_function_t;
+
+  void
+  put_data(
+    rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
+    byte_t const& num_bytes, tag_t const& tag, action_t cont = nullptr,
+    action_t action_after_put = nullptr
+  );
+
+  void
+  put_data(
+    rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
+    byte_t const& num_bytes, action_t cont = nullptr,
+    action_t action_after_put = nullptr
+  ) {
+    return put_data(rdma_handle, ptr, num_bytes, no_tag, cont, action_after_put);
+  }
 
   void
   get_data(
@@ -52,9 +73,32 @@ struct RDMAManager {
     rdma_continuation_t cont
   );
 
+  template <typename T>
+  rdma_handle_t
+  register_new_typed_rdma_handler(T ptr, byte_t const& num_elems) {
+    byte_t const num_bytes = sizeof(T)*num_elems;
+    printf("ptr=%p, bytes=%lld\n", ptr, num_bytes);
+    return register_new_rdma_handler(
+      true, static_cast<rdma_ptr_t>(ptr), num_bytes
+    );
+  }
+
   rdma_handle_t
   register_new_rdma_handler(
-    byte_t const& num_bytes = no_byte, bool const& is_collective = false
+    bool const& use_default = false, rdma_ptr_t const& ptr = nullptr,
+    byte_t const& num_bytes = no_byte
+  );
+
+  void
+  unregister_rdma_handler(
+    rdma_handle_t const& handle, rdma_type_t const& type = rdma_type_t::GetOrPut,
+    tag_t const& tag = no_tag, bool const& use_default = false
+  );
+
+  void
+  unregister_rdma_handler(
+    rdma_handle_t const& handle, rdma_handler_t const& handler,
+    tag_t const& tag = no_tag
   );
 
   template <RDMAManager::rdma_type_t rdma_type, typename FunctionT>
@@ -102,6 +146,15 @@ struct RDMAManager {
     byte_t const& num_bytes, action_t const& action = nullptr
   );
 
+  void
+  trigger_put_recv_data(
+    rdma_handle_t const& han, tag_t const& tag, rdma_ptr_t ptr,
+    byte_t const& num_bytes, rdma_continuation_t const& action
+  );
+
+  void
+  trigger_put_back_data(rdma_op_t const& op);
+
   rdma_handler_t
   allocate_new_rdma_handler();
 
@@ -110,6 +163,8 @@ struct RDMAManager {
 
   handler_t get_msg_han = uninitialized_handler;
   handler_t get_recv_msg_han = uninitialized_handler;
+  handler_t put_recv_msg_han = uninitialized_handler;
+  handler_t put_back_msg_han = uninitialized_handler;
 
 private:
   rdma_handler_t cur_rdma_handler = first_rdma_handler;

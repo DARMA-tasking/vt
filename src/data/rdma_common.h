@@ -33,13 +33,14 @@ enum RDMABits {
 
 enum RDMAType {
   Get = 0,
-  Put = 1
+  Put = 1,
+  GetOrPut = 2
 };
 
 using rdma_op_t = int64_t;
 
 using active_get_function_t = std::function<rdma_get_t(BaseMessage*, byte_t, tag_t)>;
-using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t)>;
+using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t, byte_t, tag_t)>;
 
 using rdma_ptr_continuation_t = std::function<void(rdma_ptr_t)>;
 using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;

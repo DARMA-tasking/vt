@@ -89,12 +89,13 @@ struct ActiveMessenger {
   ) {
     using namespace std::placeholders;
 
+    // must send first so action payload function runs before the send
+    auto f = std::bind(&ActiveMessenger::send_data, this, _1, _2, _3, _4);
+    send_payload_fn(f);
+
     // setup envelope
     envelope_setup(msg->env, dest, han);
     auto const& ret = send_msg_direct(han, msg, sizeof(MessageT), next_action);
-
-    auto f = std::bind(&ActiveMessenger::send_data, this, _1, _2, _3, _4);
-    send_payload_fn(f);
 
     return ret;
   }

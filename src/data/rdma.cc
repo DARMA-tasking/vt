@@ -6,31 +6,64 @@ namespace runtime { namespace rdma {
 
 rdma_handle_t
 RDMAManager::register_new_rdma_handler(
-  byte_t const& num_bytes, bool const& is_collective
+  bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes
 ) {
   auto const& this_node = the_context->get_node();
 
   rdma_handler_t new_handle = 0;
   rdma_identifier_t const& new_identifier = cur_ident++;
 
+  bool const is_collective = false;
+  bool const is_sized = false;
+
   rdma_handle_manager_t::set_is_collective(new_handle, is_collective);
-  rdma_handle_manager_t::set_is_sized(new_handle, is_collective);
+  rdma_handle_manager_t::set_is_sized(new_handle, is_sized);
   rdma_handle_manager_t::set_rdma_node(new_handle, this_node);
   rdma_handle_manager_t::set_rdma_identifier(new_handle, new_identifier);
 
   holder.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(new_handle),
-    std::forward_as_tuple(rdma_state_t{new_handle, num_bytes})
+    std::forward_as_tuple(rdma_state_t{new_handle, ptr, num_bytes, use_default})
   );
 
+  if (use_default) {
+    holder.find(new_handle)->second.set_default_handler();
+  }
+
   return new_handle;
+}
+
+void
+RDMAManager::unregister_rdma_handler(
+  rdma_handle_t const& han, rdma_type_t const& type, tag_t const& tag,
+  bool const& use_default
+) {
+  auto holder_iter = holder.find(han);
+  assert(
+    holder_iter != holder.end() and "Holder for handler must exist here"
+  );
+
+  auto& state = holder_iter->second;
+  state.unregister_rdma_handler(type, tag, use_default);
+}
+
+void
+RDMAManager::unregister_rdma_handler(
+  rdma_handle_t const& han, rdma_handler_t const& handler, tag_t const& tag
+) {
+  auto holder_iter = holder.find(han);
+  assert(
+    holder_iter != holder.end() and "Holder for handler must exist here"
+  );
+
+  auto& state = holder_iter->second;
+  state.unregister_rdma_handler(handler, tag);
 }
 
 rdma_handler_t
 RDMAManager::allocate_new_rdma_handler() {
   rdma_handler_t const handler = cur_rdma_handler++;
-
   return handler;
 }
 
@@ -77,6 +110,104 @@ RDMAManager::trigger_get_recv_data(
   if (action != nullptr) {
     action();
   }
+}
+
+void
+RDMAManager::trigger_put_back_data(rdma_op_t const& op) {
+  auto iter = pending_ops.find(op);
+
+  assert(
+    iter != pending_ops.end() and "Pending op must exist"
+  );
+
+  iter->second.cont2();
+
+  pending_ops.erase(iter);
+}
+
+void
+RDMAManager::trigger_put_recv_data(
+  rdma_handle_t const& han, tag_t const& tag, rdma_ptr_t ptr, byte_t const& num_bytes,
+  rdma_continuation_t const& action
+) {
+  auto const& this_node = the_context->get_node();
+  auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
+
+  assert(
+    handler_node == this_node and "Handle must be local to this node"
+  );
+
+  auto holder_iter = holder.find(han);
+  assert(
+    holder_iter != holder.end() and "Holder for handler must exist here"
+  );
+
+  auto& state = holder_iter->second;
+
+  bool const is_user_msg = false;
+  rdma_info_t info(rdma_type_t::Put, num_bytes, tag, action, ptr);
+
+  return state.put_data(nullptr, is_user_msg, info);
+}
+
+void
+RDMAManager::put_data(
+  rdma_handle_t const& han, rdma_ptr_t const& ptr, byte_t const& num_bytes,
+  tag_t const& tag, action_t cont, action_t action_after_put
+) {
+  auto const& this_node = the_context->get_node();
+  auto const put_node = rdma_handle_manager_t::get_rdma_node(han);
+
+  if (put_node != this_node) {
+    rdma_op_t const new_op = cur_op++;
+
+    tag_t recv_tag = no_tag;
+
+    PutMessage* msg = new PutMessage(
+      new_op, num_bytes, no_tag, han,
+      action_after_put ? this_node : uninitialized_destination
+    );
+
+    auto send_payload = [&](ActiveMessenger::send_fn_t send){
+      auto ret = send(rdma_get_t{ptr, num_bytes}, put_node, no_tag, [=]{
+        cont();
+      });
+      msg->mpi_tag_to_recv = std::get<1>(ret);
+    };
+
+    printf(
+      "%d: put_data: sending: ptr=%p, num_bytes=%lld, recv_tag=%d\n",
+      this_node, ptr, num_bytes, recv_tag
+    );
+
+    set_put_type(msg->env);
+
+    if (tag != no_tag) {
+      envelope_set_tag(msg->env, tag);
+    }
+
+    auto deleter = [=]{ delete msg; };
+
+    the_msg->send_msg(
+      put_node, the_rdma->put_recv_msg_han, msg, send_payload, deleter
+    );
+
+    if (action_after_put != nullptr) {
+      pending_ops.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(new_op),
+        std::forward_as_tuple(rdma_pending_t{action_after_put})
+      );
+    }
+  } else {
+    // the_rdma->request_put_data(
+    //   nullptr, false, han, tag, no_byte, [cont](rdma_get_t data){
+    //     printf("local: data is ready\n");
+    //     cont(std::get<0>(data), std::get<1>(data));
+    //   }
+    // );
+  }
+
 }
 
 void
@@ -174,6 +305,61 @@ RDMAManager::register_all_rdma_handlers() {
         msg.mpi_tag_to_recv, [=](rdma_get_t ptr, action_t deleter){
         the_rdma->trigger_get_recv_data(
           msg.op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
+        );
+      });
+    });
+
+  the_rdma->put_back_msg_han =
+    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
+      PutBackMessage& msg = *static_cast<PutBackMessage*>(in_msg);
+      auto const msg_tag = envelope_get_tag(msg.env);
+      auto const op_id = msg.op_id;
+
+      auto const& this_node = the_context->get_node();
+
+      printf(
+        "%d: put_back_msg_han: op=%lld\n", this_node, msg.op_id
+      );
+
+      the_rdma->trigger_put_back_data(op_id);
+    });
+
+  the_rdma->put_recv_msg_han =
+    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
+      PutMessage& msg = *static_cast<PutMessage*>(in_msg);
+      auto const msg_tag = envelope_get_tag(msg.env);
+      auto const op_id = msg.op_id;
+      auto const send_back = msg.send_back;
+      auto const recv_tag = msg.mpi_tag_to_recv;
+
+      auto const& this_node = the_context->get_node();
+
+      printf(
+        "%d: put_recv_msg_han: op=%lld, tag=%d, bytes=%lld, recv_tag=%d\n",
+        this_node, msg.op_id, msg_tag, msg.num_bytes, msg.mpi_tag_to_recv
+      );
+
+      assert(
+        recv_tag != no_tag and "PutMessage must have recv tag"
+      );
+
+      the_msg->recv_data_msg(
+        recv_tag, [=](rdma_get_t ptr, action_t deleter){
+        printf("%d: put_data: after recv data trigger\n", this_node);
+        the_rdma->trigger_put_recv_data(
+          msg.rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
+          [=](rdma_get_t){
+            printf("%d: put_data: after put trigger\n", this_node);
+            if (send_back) {
+              PutBackMessage* new_msg = new PutBackMessage(op_id);
+              the_msg->send_msg(
+                send_back, the_rdma->put_back_msg_han, new_msg, [=]{
+                  delete new_msg;
+                }
+              );
+            }
+            deleter();
+          }
         );
       });
 
