@@ -169,7 +169,7 @@ ActiveMessenger::send_data(
   auto& holder = the_event->get_event_holder(event_id);
   MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
 
-  printf(
+  debug_print_active(
     "%d: send_data: ptr=%p, num_bytes=%lld dest=%d, tag=%d, send_tag=%d\n",
     this_node, data_ptr, num_bytes, dest, tag, send_tag
   );
@@ -201,7 +201,10 @@ ActiveMessenger::process_data_msg_recv() {
   auto iter = pending_recvs.begin();
 
   for (; iter != pending_recvs.end(); ++iter) {
-    auto const& done = recv_data_msg(iter->first, false, iter->second);
+    auto const& done = recv_data_msg_buffer(
+      iter->second.user_buf, iter->first, false, iter->second.dealloc_user_buf,
+      iter->second.cont
+    );
     if (done) {
       erase = true;
       break;
@@ -240,7 +243,8 @@ ActiveMessenger::recv_data_msg_buffer(
 
       auto dealloc_buf = [=]{
         auto const& this_node = the_context->get_node();
-        printf(
+
+        debug_print_active(
           "%d: recv_data_msg_buffer: continuation user_buf=%p, buf=%p, tag=%d\n",
           this_node, user_buf, buf, tag
         );
@@ -267,7 +271,7 @@ ActiveMessenger::recv_data_msg_buffer(
     pending_recvs.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(tag),
-      std::forward_as_tuple(next)
+      std::forward_as_tuple(pending_recv_t{user_buf,next,dealloc_user_buf})
     );
     return false;
   }

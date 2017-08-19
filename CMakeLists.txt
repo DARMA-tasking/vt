@@ -114,6 +114,13 @@ add_executable(
   ${HEADER_FILES}
 )
 
+add_executable(
+  rdma_simple_put
+  ${PROJECT_EXAMPLE_DIR}/rdma_simple_put.cc
+  ${SOURCE_FILES}
+  ${HEADER_FILES}
+)
+
 target_link_libraries(
   vt_mpi
   PRIVATE

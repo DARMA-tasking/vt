@@ -101,7 +101,11 @@ RDMAState::set_rdma_fn<
 >(rdma_get_function_t const& fn, bool const& any_tag, tag_t const& tag) {
 
   auto const& this_node = the_context->get_node();
-  printf("%d: set_rdma_fn: GET tag=%d, handle=%lld\n", this_node, tag, handle);
+
+  debug_print_rdma(
+    "%d: set_rdma_fn: GET tag=%d, handle=%lld, any_tag=%s\n",
+    this_node, tag, handle, print_bool(any_tag)
+  );
 
   rdma_handler_t const handler = make_rdma_handler(rdma_type_t::Get);
 
@@ -131,7 +135,11 @@ RDMAState::set_rdma_fn<
   rdma_handler_t const handler = make_rdma_handler(rdma_type_t::Put);
 
   auto const& this_node = the_context->get_node();
-  printf("%d: set_rdma_fn: PUT tag=%d, handle=%lld\n", this_node, tag, handle);
+
+  debug_print_rdma(
+    "%d: set_rdma_fn: PUT tag=%d, handle=%lld, any_tag=%s\n",
+    this_node, tag, handle, print_bool(any_tag)
+  );
 
   if (any_tag) {
     assert(
@@ -175,13 +183,25 @@ RDMAState::test_ready_get_data(tag_t const& tag) {
   return not not_ready;
 }
 
+bool
+RDMAState::test_ready_put_data(tag_t const& tag) {
+  bool const not_ready = (
+    ((tag == no_tag or put_any_tag) and rdma_put_fn == nullptr) or (
+      tag != no_tag and
+      not get_any_tag and
+      put_tag_holder.find(tag) == put_tag_holder.end()
+    )
+  );
+  return not not_ready;
+}
+
 rdma_get_t
 RDMAState::default_get_handler_fn(
   BaseMessage* msg, byte_t req_num_bytes, tag_t tag
 ) {
   auto const& this_node = the_context->get_node();
 
-  printf(
+  debug_print_rdma(
     "%d: default_get_handler_fn: msg=%p, req_num_bytes=%lld, tag=%d\n",
     this_node, msg, req_num_bytes, tag
   );
@@ -200,7 +220,7 @@ RDMAState::default_put_handler_fn(
 ) {
   auto const& this_node = the_context->get_node();
 
-  printf(
+  debug_print_rdma(
     "%d: default_put_handler_fn: msg=%p, ptr=%p, req_num_bytes=%lld, tag=%d\n",
     this_node, msg, ptr, req_num_bytes, tag
   );
@@ -226,7 +246,7 @@ RDMAState::get_data(
   bool const ready = test_ready_get_data(info.tag);
 
   auto const& this_node = the_context->get_node();
-  printf(
+  debug_print_rdma(
     "%d: get_data: msg=%p, tag=%d, ready=%s, handle=%lld, get_any_tag=%s\n",
     this_node, msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag)
   );
@@ -251,10 +271,11 @@ RDMAState::put_data(
     not is_user_msg and "User-level get messages currently unsupported"
   );
 
-  bool const ready = test_ready_get_data(info.tag);
+  bool const ready = test_ready_put_data(info.tag);
 
   auto const& this_node = the_context->get_node();
-  printf(
+
+  debug_print_rdma(
     "%d: put_data: msg=%p, tag=%d, ptr=%p, num_bytes=%lld, "
     "ready=%s, handle=%lld, get_any_tag=%s\n",
     this_node, msg, info.tag, info.data_ptr, info.num_bytes, print_bool(ready),
@@ -266,7 +287,14 @@ RDMAState::put_data(
       tag == no_tag or put_any_tag ? rdma_put_fn :
       std::get<0>(put_tag_holder.find(tag)->second);
     put_fn(nullptr, info.data_ptr, info.num_bytes, info.tag);
-    info.cont(rdma_get_t{});
+
+    assert(
+      not info.cont and "Cont should not be set for a put"
+    );
+
+    if (info.cont_action) {
+      info.cont_action();
+    }
   } else {
     pending_tag_puts[tag].push_back(info);
   }

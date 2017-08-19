@@ -27,12 +27,25 @@ enum class MPITag : mpi_tag_t {
 
 static constexpr tag_t const starting_direct_buffer_tag = 1000;
 
+struct PendingRecv {
+  void* user_buf = nullptr;
+  rdma_continuation_del_t cont = nullptr;
+  action_t dealloc_user_buf = nullptr;
+
+  PendingRecv(
+    void* in_user_buf, rdma_continuation_del_t in_cont,
+    action_t in_dealloc_user_buf
+  ) : user_buf(in_user_buf), cont(in_cont), dealloc_user_buf(in_dealloc_user_buf)
+  { }
+};
+
 struct ActiveMessenger {
   using byte_t = int32_t;
+  using pending_recv_t = PendingRecv;
   using send_data_ret_t = std::tuple<event_t, tag_t>;
   using send_fn_t = std::function<send_data_ret_t(rdma_get_t,node_t,tag_t,action_t)>;
   using user_send_fn_t = std::function<void(send_fn_t)>;
-  using container_pending_t = std::unordered_map<tag_t, rdma_continuation_del_t>;
+  using container_pending_t = std::unordered_map<tag_t, pending_recv_t>;
 
   ActiveMessenger() = default;
 

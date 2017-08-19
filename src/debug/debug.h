@@ -17,5 +17,6 @@
 #define debug_print_term debug_print
 #define debug_print_event debug_print
 #define debug_print_pool debug_print
+#define debug_print_rdma debug_print
 
 #endif /*__RUNTIME_TRANSPORT_DEBUG__*/

@@ -80,6 +80,9 @@ struct RDMAState {
   bool
   test_ready_get_data(tag_t const& tag);
 
+  bool
+  test_ready_put_data(tag_t const& tag);
+
   void
   get_data(
     GetMessage* msg, bool const& is_user_msg, rdma_info_t const& info
