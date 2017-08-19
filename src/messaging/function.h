@@ -9,7 +9,6 @@
 namespace runtime {
 
 using active_function_t = std::function<void(BaseMessage*)>;
-using action_t = std::function<void()>;
 
 } //end namespace runtime
 

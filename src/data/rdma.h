@@ -3,6 +3,7 @@
 #define __RUNTIME_TRANSPORT_RDMA__
 
 #include "common.h"
+#include "function.h"
 #include "rdma_common.h"
 #include "rdma_state.h"
 #include "rdma_handle.h"
@@ -59,7 +60,8 @@ struct RDMAManager {
   template <RDMAManager::rdma_type_t rdma_type, typename FunctionT>
   rdma_handler_t
   associate_rdma_function(
-    rdma_handle_t const& han, FunctionT const& fn, tag_t const& tag
+    rdma_handle_t const& han, FunctionT const& fn, bool const& any_tag,
+    tag_t const& tag
   ) {
     auto const& this_node = the_context->get_node();
     auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
@@ -75,24 +77,30 @@ struct RDMAManager {
 
     auto& state = holder_iter->second;
 
-    return state.template set_rdma_fn<rdma_type, FunctionT>(fn, tag);
+    return state.template set_rdma_fn<rdma_type, FunctionT>(fn, any_tag, tag);
   }
 
   rdma_handler_t
   associate_get_function(
     rdma_handle_t const& han, rdma_get_function_t const& fn,
-    tag_t const& tag = no_tag
+    bool const& any_tag = false, tag_t const& tag = no_tag
   ) {
-    return associate_rdma_function<rdma_type_t::Get>(han, fn, tag);
+    return associate_rdma_function<rdma_type_t::Get>(han, fn, any_tag, tag);
   }
 
   rdma_handler_t
   associate_put_function(
     rdma_handle_t const& han, rdma_put_function_t const& fn,
-    tag_t const& tag = no_tag
+    bool const& any_tag = false, tag_t const& tag = no_tag
   ) {
-    return associate_rdma_function<rdma_type_t::Put>(han, fn, tag);
+    return associate_rdma_function<rdma_type_t::Put>(han, fn, any_tag, tag);
   }
+
+  void
+  trigger_get_recv_data(
+    rdma_op_t const& op, tag_t const& tag, rdma_ptr_t ptr,
+    byte_t const& num_bytes, action_t const& action = nullptr
+  );
 
   rdma_handler_t
   allocate_new_rdma_handler();
@@ -101,6 +109,7 @@ struct RDMAManager {
   register_all_rdma_handlers();
 
   handler_t get_msg_han = uninitialized_handler;
+  handler_t get_recv_msg_han = uninitialized_handler;
 
 private:
   rdma_handler_t cur_rdma_handler = first_rdma_handler;

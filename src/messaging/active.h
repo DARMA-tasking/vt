@@ -13,6 +13,8 @@
 #include "registry.h"
 
 #include <type_traits>
+#include <tuple>
+#include <unordered_map>
 
 namespace runtime {
 
@@ -23,8 +25,14 @@ enum class MPITag : mpi_tag_t {
   DataMsgTag = 2
 };
 
+static constexpr tag_t const starting_direct_buffer_tag = 1000;
+
 struct ActiveMessenger {
   using byte_t = int32_t;
+  using send_data_ret_t = std::tuple<event_t, tag_t>;
+  using send_fn_t = std::function<send_data_ret_t(rdma_get_t,node_t,tag_t,action_t)>;
+  using user_send_fn_t = std::function<void(send_fn_t)>;
+  using container_pending_t = std::unordered_map<tag_t, rdma_continuation_del_t>;
 
   ActiveMessenger() = default;
 
@@ -57,6 +65,40 @@ struct ActiveMessenger {
     return send_msg_direct(han, msg, sizeof(MessageT), next_action);
   }
 
+  send_data_ret_t
+  send_data(
+    rdma_get_t const& ptr, node_t const& dest, tag_t const& tag,
+    action_t next_action = nullptr
+  );
+
+  bool
+  recv_data_msg(
+    tag_t const& tag, rdma_continuation_del_t next = nullptr
+  );
+
+  bool
+  recv_data_msg(
+    tag_t const& tag, bool const& enqueue, rdma_continuation_del_t next = nullptr
+  );
+
+  template <typename MessageT>
+  event_t
+  send_msg(
+    node_t const& dest, handler_t const& han, MessageT* const msg,
+    user_send_fn_t send_payload_fn, action_t next_action = nullptr
+  ) {
+    using namespace std::placeholders;
+
+    // setup envelope
+    envelope_setup(msg->env, dest, han);
+    auto const& ret = send_msg_direct(han, msg, sizeof(MessageT), next_action);
+
+    auto f = std::bind(&ActiveMessenger::send_data, this, _1, _2, _3, _4);
+    send_payload_fn(f);
+
+    return ret;
+  }
+
   template <typename MessageT>
   event_t
   broadcast_msg(
@@ -83,8 +125,15 @@ struct ActiveMessenger {
   try_process_incoming_message();
 
   void
+  process_data_msg_recv();
+
+  void
   scheduler(int const& num_times = scheduler_default_num_times);
 
+private:
+  container_pending_t pending_recvs;
+
+  tag_t cur_direct_buffer_tag = starting_direct_buffer_tag;
 };
 
 extern std::unique_ptr<ActiveMessenger> the_msg;

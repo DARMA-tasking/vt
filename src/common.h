@@ -19,9 +19,13 @@ using tag_t = int32_t;
 using barrier_t = uint64_t;
 using ref_t = int16_t;
 using byte_t = uint64_t;
+using action_t = std::function<void()>;
 using rdma_ptr_t = void*;
 using rdma_handle_t = int64_t;
 using rdma_handler_t = int64_t;
+using rdma_get_t = std::tuple<rdma_ptr_t, byte_t>;
+using rdma_continuation_t = std::function<void(rdma_get_t)>;
+using rdma_continuation_del_t = std::function<void(rdma_get_t, action_t)>;
 
 constexpr int const num_check_actions = 8;
 constexpr int const scheduler_default_num_times = 1;

@@ -154,6 +154,107 @@ ActiveMessenger::check_term_single_node() {
   }
 }
 
+ActiveMessenger::send_data_ret_t
+ActiveMessenger::send_data(
+  rdma_get_t const& ptr, node_t const& dest, tag_t const& tag,
+  action_t next_action
+) {
+  auto const& this_node = the_context->get_node();
+
+  auto const& data_ptr = std::get<0>(ptr);
+  auto const& num_bytes = std::get<1>(ptr);
+  auto const send_tag = tag == no_tag ? cur_direct_buffer_tag++ : tag;
+
+  auto const event_id = the_event->create_mpi_event_id(this_node);
+  auto& holder = the_event->get_event_holder(event_id);
+  MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
+
+  printf(
+    "%d: send_data: ptr=%p, num_bytes=%lld dest=%d, tag=%d, send_tag=%d\n",
+    this_node, data_ptr, num_bytes, dest, tag, send_tag
+  );
+
+  MPI_Isend(
+    data_ptr, num_bytes, MPI_BYTE, dest, send_tag, MPI_COMM_WORLD,
+    mpi_event.get_request()
+  );
+
+  the_term->produce(no_epoch);
+
+  if (next_action != nullptr) {
+    holder.attach_action(next_action);
+  }
+
+  return send_data_ret_t{event_id,send_tag};
+}
+
+bool
+ActiveMessenger::recv_data_msg(
+  tag_t const& tag, rdma_continuation_del_t next
+) {
+  return recv_data_msg(tag, true, next);
+}
+
+void
+ActiveMessenger::process_data_msg_recv() {
+  bool erase = false;
+  auto iter = pending_recvs.begin();
+
+  for (; iter != pending_recvs.end(); ++iter) {
+    auto const& done = recv_data_msg(iter->first, false, iter->second);
+    if (done) {
+      erase = true;
+      break;
+    }
+  }
+
+  if (erase) {
+    pending_recvs.erase(iter);
+  }
+}
+
+bool
+ActiveMessenger::recv_data_msg(
+  tag_t const& tag, bool const& enqueue, rdma_continuation_del_t next
+) {
+  byte_t num_probe_bytes;
+  MPI_Status stat;
+  int flag;
+
+  MPI_Iprobe(MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &flag, &stat);
+
+  if (flag == 1) {
+    MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+
+    char* buf = static_cast<char*>(the_pool->alloc(num_probe_bytes));
+
+    MPI_Recv(
+      buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
+      MPI_COMM_WORLD, MPI_STATUS_IGNORE
+    );
+
+    if (next != nullptr) {
+      next(rdma_get_t{buf,num_probe_bytes}, [=]{
+        the_pool->dealloc(buf);
+      });
+    }
+
+    the_term->consume(no_epoch);
+
+    return true;
+  } else {
+    if (enqueue) {
+      pending_recvs.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(tag),
+        std::forward_as_tuple(next)
+      );
+    }
+    return false;
+  }
+}
+
+
 bool
 ActiveMessenger::try_process_incoming_message() {
   byte_t num_probe_bytes;
@@ -229,6 +330,7 @@ ActiveMessenger::scheduler(int const& num_times) {
     try_process_incoming_message();
     perform_triggered_actions();
     check_term_single_node();
+    process_data_msg_recv();
   }
 }
 

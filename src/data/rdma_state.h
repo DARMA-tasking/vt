@@ -54,7 +54,9 @@ struct RDMAState {
 
   template <rdma_type_t rdma_type, typename FunctionT>
   rdma_handler_t
-  set_rdma_fn(FunctionT const& fn, tag_t const& tag = no_tag);
+  set_rdma_fn(
+    FunctionT const& fn, bool const& any_tag = false, tag_t const& tag = no_tag
+  );
 
   rdma_handler_t
   make_rdma_handler(rdma_type_t const& rdma_type);
@@ -74,6 +76,9 @@ private:
   rdma_handler_t this_rdma_get_handler = uninitialized_rdma_handler,
                  this_rdma_put_handler = uninitialized_rdma_handler;
 
+  bool get_any_tag = false;
+  bool put_any_tag = false;
+
   rdma_get_function_t rdma_get_fn = nullptr;
   rdma_put_function_t rdma_put_fn = nullptr;
 
@@ -87,13 +92,13 @@ template<>
 rdma_handler_t
 RDMAState::set_rdma_fn<
   RDMAState::rdma_type_t::Put, RDMAState::rdma_put_function_t
->(rdma_put_function_t const& fn, tag_t const& tag);
+>(rdma_put_function_t const& fn, bool const& any_tag, tag_t const& tag);
 
 template<>
 rdma_handler_t
 RDMAState::set_rdma_fn<
   RDMAState::rdma_type_t::Get, RDMAState::rdma_get_function_t
->(rdma_get_function_t const& fn, tag_t const& tag);
+>(rdma_get_function_t const& fn, bool const& any_tag, tag_t const& tag);
 
 
 }} //end namespace runtime::rdma

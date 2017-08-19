@@ -36,20 +36,14 @@ enum RDMAType {
   Put = 1
 };
 
-using rdma_get_t = std::tuple<rdma_ptr_t, byte_t>;
 using rdma_op_t = int64_t;
 
 using active_get_function_t = std::function<rdma_get_t(BaseMessage*, byte_t, tag_t)>;
 using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t)>;
 
-using rdma_continuation_t = std::function<void(rdma_get_t)>;
 using rdma_ptr_continuation_t = std::function<void(rdma_ptr_t)>;
 using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;
 
 }} //end namespace runtime::rdma
-
-namespace runtime {
-using runtime::rdma::rdma_get_t;
-} //end namespace rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_COMMON__*/

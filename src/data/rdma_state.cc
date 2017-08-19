@@ -9,14 +9,22 @@ template<>
 rdma_handler_t
 RDMAState::set_rdma_fn<
   RDMAState::rdma_type_t::Get, RDMAState::rdma_get_function_t
->(rdma_get_function_t const& fn, tag_t const& tag) {
+>(rdma_get_function_t const& fn, bool const& any_tag, tag_t const& tag) {
 
   auto const& this_node = the_context->get_node();
   printf("%d: set_rdma_fn: GET tag=%d, handle=%lld\n", this_node, tag, handle);
 
   rdma_handler_t const handler = make_rdma_handler(rdma_type_t::Get);
+
+  if (any_tag) {
+    assert(
+      tag == no_tag and "If any tag, you must not have a tag set"
+    );
+  }
+
   if (tag == no_tag) {
     rdma_get_fn = fn;
+    get_any_tag = any_tag;
   } else {
     get_tag_holder[tag] = fn;
   }
@@ -27,10 +35,18 @@ template<>
 rdma_handler_t
 RDMAState::set_rdma_fn<
   RDMAState::rdma_type_t::Put, RDMAState::rdma_put_function_t
->(rdma_put_function_t const& fn, tag_t const& tag) {
+>(rdma_put_function_t const& fn, bool const& any_tag, tag_t const& tag) {
   rdma_handler_t const handler = make_rdma_handler(rdma_type_t::Put);
+
+  if (any_tag) {
+    assert(
+      tag == no_tag and "If any tag, you must not have a tag set"
+    );
+  }
+
   if (tag == no_tag) {
     rdma_put_fn = fn;
+    put_any_tag = any_tag;
   } else {
     put_tag_holder[tag] = fn;
   }
@@ -51,9 +67,13 @@ RDMAState::make_rdma_handler(rdma_type_t const& rdma_type) {
 
 bool
 RDMAState::test_ready_get_data(tag_t const& tag) {
-  bool const not_ready =
-    ((tag == no_tag and rdma_get_fn == nullptr) or
-     (tag != no_tag and get_tag_holder.find(tag) == get_tag_holder.end()));
+  bool const not_ready = (
+    ((tag == no_tag or get_any_tag) and rdma_get_fn == nullptr) or (
+      tag != no_tag and
+      not get_any_tag and
+      get_tag_holder.find(tag) == get_tag_holder.end()
+    )
+  );
   return not not_ready;
 }
 
@@ -71,13 +91,13 @@ RDMAState::get_data(
 
   auto const& this_node = the_context->get_node();
   printf(
-    "%d: get_data: msg=%p, tag=%d, ready=%s, handle=%lld\n",
-    this_node, msg, info.tag, print_bool(ready), handle
+    "%d: get_data: msg=%p, tag=%d, ready=%s, handle=%lld, get_any_tag=%s\n",
+    this_node, msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag)
   );
 
   if (ready) {
     rdma_get_function_t get_fn =
-      tag == no_tag ? rdma_get_fn : get_tag_holder.find(tag)->second;
+      tag == no_tag or get_any_tag ? rdma_get_fn : get_tag_holder.find(tag)->second;
     info.cont(get_fn(nullptr, info.num_bytes, info.tag));
   } else {
     pending_tag_gets[tag].push_back(info);

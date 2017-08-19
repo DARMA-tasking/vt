@@ -21,10 +21,15 @@ static void tell_handle(runtime::BaseMessage* in_msg) {
 
   printf("%d: handle=%lld\n", my_node, msg.han);
 
-  if (my_node == 1) {
+  if (my_node == 1 || my_node == 2) {
     printf("%d: requesting data\n", my_node);
-    the_rdma->get_data(msg.han, [](void* data, size_t num_bytes){
+    the_rdma->get_data(msg.han, my_node, [](void* data, size_t num_bytes){
+      double* const ptr = static_cast<double*>(data);
+      size_t const num_elems = num_bytes / sizeof(double);
       printf("%d: data arrived: data=%p, num_bytes=%zu\n", my_node, data, num_bytes);
+      for (auto i = 0; i < num_elems; i++) {
+        printf("\t: my_data[%d] = %f\n", i, ptr[i]);
+      }
     });
   }
 }
@@ -37,7 +42,7 @@ test_get_fn(BaseMessage* msg, byte_t num_bytes, tag_t tag) {
     "%d: running test_get_fn: msg=%p, num_bytes=%lld, tag=%d\n",
     my_node, msg, num_bytes, tag
   );
-  return rdma_get_t{my_data, sizeof(double)*2}; //std::make_tuple<rdma_ptr_t(my_data)
+  return rdma_get_t{my_data+tag, sizeof(double)*10};
 }
 
 int main(int argc, char** argv) {
@@ -50,10 +55,15 @@ int main(int argc, char** argv) {
   num_nodes = the_context->get_num_nodes();
 
   if (my_node == 0) {
-    my_data = new double[64];
+    auto const len = 64;
+    my_data = new double[len];
+
+    for (auto i = 0; i < len; i++) {
+      my_data[i] = i+1;
+    }
 
     my_handle = the_rdma->register_new_rdma_handler();
-    the_rdma->associate_get_function(my_handle, test_get_fn);
+    the_rdma->associate_get_function(my_handle, test_get_fn, true);
     printf("initializing my_handle=%lld\n", my_handle);
 
     TestMsg* msg = new TestMsg(my_node);
