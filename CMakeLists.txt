@@ -108,8 +108,8 @@ add_executable(
 )
 
 add_executable(
-  rdma_simple
-  ${PROJECT_EXAMPLE_DIR}/rdma_simple.cc
+  rdma_simple_get
+  ${PROJECT_EXAMPLE_DIR}/rdma_simple_get.cc
   ${SOURCE_FILES}
   ${HEADER_FILES}
 )
