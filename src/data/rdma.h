@@ -24,6 +24,12 @@ struct RDMAManager {
   // put_data(rdma_ptr_t* ptr, rdma_handler_t const& handle) {
   // }
 
+  void
+  request_get_data(
+    GetMessage* msg, bool const& is_user_msg,
+    rdma_handle_t const& rdma_handle, rdma_handler_t const& get_fn_handler
+  );
+
   rdma_handle_t
   register_new_rdma_handler(
     byte_t const& num_bytes = no_byte, bool const& is_collective = false
@@ -32,7 +38,7 @@ struct RDMAManager {
   template <rdma_type_t rdma_type, typename FunctionT>
   rdma_handler_t
   associate_rdma_function(
-    rdma_handle_t const& handler, FunctionT const& get_fn,
+    rdma_handle_t const& han, FunctionT const& get_fn,
     tag_t const& assoicated_tag
   );
 
@@ -63,6 +69,8 @@ struct RDMAManager {
 
   static void
   register_all_rdma_handlers();
+
+  handler_t get_msg_han = uninitialized_handler;
 
 private:
   rdma_handler_t cur_rdma_handler = first_rdma_handler;

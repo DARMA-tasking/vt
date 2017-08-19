@@ -11,6 +11,7 @@ ActiveMessenger::send_msg_direct(
   action_t next_action
 ) {
   auto const& this_node = the_context->get_node();
+  auto const& send_tag = static_cast<mpi_tag_t>(MPITag::ActiveMsgTag);
 
   auto msg = reinterpret_cast<ShortMessage* const>(msg_base);
 
@@ -42,7 +43,8 @@ ActiveMessenger::send_msg_direct(
     }
 
     MPI_Isend(
-      msg, msg_size, MPI_BYTE, dest, 0, MPI_COMM_WORLD, mpi_event.get_request()
+      msg, msg_size, MPI_BYTE, dest, send_tag, MPI_COMM_WORLD,
+      mpi_event.get_request()
     );
 
     if (next_action != nullptr) {
@@ -102,7 +104,8 @@ ActiveMessenger::send_msg_direct(
       }
 
       MPI_Isend(
-        msg, msg_size, MPI_BYTE, child1, 0, MPI_COMM_WORLD, mpi_event1.get_request()
+        msg, msg_size, MPI_BYTE, child1, send_tag, MPI_COMM_WORLD,
+        mpi_event1.get_request()
       );
 
       parent_event.add_event(event_id1);
@@ -128,7 +131,8 @@ ActiveMessenger::send_msg_direct(
       }
 
       MPI_Isend(
-        msg, msg_size, MPI_BYTE, child2, 0, MPI_COMM_WORLD, mpi_event2.get_request()
+        msg, msg_size, MPI_BYTE, child2, send_tag, MPI_COMM_WORLD,
+        mpi_event2.get_request()
       );
 
       parent_event.add_event(event_id2);
@@ -156,7 +160,10 @@ ActiveMessenger::try_process_incoming_message() {
   MPI_Status stat;
   int flag;
 
-  MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &stat);
+  MPI_Iprobe(
+    MPI_ANY_SOURCE, static_cast<mpi_tag_t>(MPITag::ActiveMsgTag),
+    MPI_COMM_WORLD, &flag, &stat
+  );
 
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);

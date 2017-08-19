@@ -30,23 +30,23 @@ RDMAManager::register_new_rdma_handler(
 template <RDMAManager::rdma_type_t rdma_type, typename FunctionT>
 rdma_handler_t
 RDMAManager::associate_rdma_function(
-  rdma_handle_t const& handler, FunctionT const& fn, tag_t const& tag
+  rdma_handle_t const& han, FunctionT const& fn, tag_t const& tag
 ) {
   auto const& this_node = the_context->get_node();
-  auto const handler_node = rdma_handle_manager_t::get_rdma_node(handler);
+  auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
 
   assert(
-    handler_node == this_node and "Handler must be local to this node"
+    handler_node == this_node and "Handle must be local to this node"
   );
 
-  auto holder_iter = holder.find(handler);
+  auto holder_iter = holder.find(han);
   assert(
     holder_iter != holder.end() and "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
 
-  return state.set_rdma_fn<rdma_type, FunctionT>(fn, tag);
+  return state.template set_rdma_fn<rdma_type, FunctionT>(fn, tag);
 }
 
 rdma_handler_t
@@ -56,9 +56,29 @@ RDMAManager::allocate_new_rdma_handler() {
   return handler;
 }
 
+void
+RDMAManager::request_get_data(
+  GetMessage* msg, bool const& is_user_msg,
+  rdma_handle_t const& rdma_handle, rdma_handler_t const& get_fn_handler
+) {
+  auto const& this_node = the_context->get_node();
+  auto const handler_node = rdma_handle_manager_t::get_rdma_node(rdma_handle);
+
+  assert(
+    handler_node == this_node and "Handle must be local to this node"
+  );
+
+}
+
 /*static*/ void
 RDMAManager::register_all_rdma_handlers() {
-
+  the_rdma->get_msg_han =
+    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
+      GetMessage& msg = *static_cast<GetMessage*>(in_msg);
+      the_rdma->request_get_data(
+        &msg, msg.is_user_msg, msg.rdma_handle, msg.rdma_handler
+      );
+    });
 }
 
 

@@ -12,7 +12,16 @@
 #include "event.h"
 #include "registry.h"
 
+#include <type_traits>
+
 namespace runtime {
+
+using mpi_tag_t = int;
+
+enum class MPITag : mpi_tag_t {
+  ActiveMsgTag = 1,
+  DataMsgTag = 2
+};
 
 struct ActiveMessenger {
   using byte_t = int32_t;

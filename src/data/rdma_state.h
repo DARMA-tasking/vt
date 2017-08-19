@@ -7,6 +7,7 @@
 #include "rdma_handle.h"
 
 #include <unordered_map>
+#include <vector>
 
 namespace runtime { namespace rdma {
 
@@ -18,6 +19,8 @@ struct RDMAInfo {
   byte_t num_bytes = no_byte;
   tag_t tag = no_tag;
   rdma_type_t rdma_type;
+
+  rdma_continuation_t cont = nullptr;
 
   RDMAInfo(
     rdma_type_t const& in_rdma_type, byte_t const& in_num_bytes = no_byte,
@@ -35,6 +38,9 @@ struct RDMAState {
   template <typename T>
   using tag_container_t = std::unordered_map<tag_t, T>;
 
+  template <typename T>
+  using container_t = std::vector<T>;
+
   rdma_handle_t handle;
   rdma_ptr_t ptr = nullptr;
   byte_t num_bytes = 0;
@@ -48,34 +54,20 @@ struct RDMAState {
   rdma_handler_t
   set_rdma_fn(FunctionT const& fn, tag_t const& tag = no_tag);
 
-  // rdma_handler_t
-  // set_rdma_get_fn(rdma_get_function_t const& fn, tag_t const& tag = no_tag) {
-  //   rdma_handler_t const& handler = make_rdma_handler(false);
-
-  //   if (tag == no_tag) {
-  //     rdma_get_fn = fn;
-  //   } else {
-  //     get_tag_holder[tag] = fn;
-  //   }
-
-  //   return handler;
-  // }
-
-  // rdma_handler_t
-  // set_rdma_put_fn(rdma_put_function_t const& fn, tag_t const& tag = no_tag) {
-  //   rdma_handler_t const& handler = make_rdma_handler(true);
-
-  //   if (tag == no_tag) {
-  //     rdma_put_fn = fn;
-  //   } else {
-  //     put_tag_holder[tag] = fn;
-  //   }
-
-  //   return handler;
-  // }
-
   rdma_handler_t
   make_rdma_handler(rdma_type_t const& rdma_type);
+
+  bool
+  test_ready_get_data(tag_t const& tag);
+
+  void
+  get_data(
+    GetMessage* msg, bool const& is_user_msg, rdma_info_t const& info,
+    rdma_continuation_t cont
+  );
+
+  void
+  process_pending_get(tag_t const& tag = no_tag);
 
 private:
   rdma_handler_t this_rdma_get_handler = uninitialized_rdma_handler,
@@ -87,7 +79,7 @@ private:
   tag_container_t<rdma_get_function_t> get_tag_holder;
   tag_container_t<rdma_put_function_t> put_tag_holder;
 
-  tag_container_t<rdma_info_t> pending_tag_gets, pending_tag_puts;
+  tag_container_t<container_t<rdma_info_t>> pending_tag_gets, pending_tag_puts;
 };
 
 template<>

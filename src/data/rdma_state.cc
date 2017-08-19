@@ -45,4 +45,53 @@ RDMAState::make_rdma_handler(rdma_type_t const& rdma_type) {
   return handler;
 }
 
+bool
+RDMAState::test_ready_get_data(tag_t const& tag) {
+  bool const not_ready =
+    ((tag == no_tag and rdma_get_fn == nullptr) or
+     get_tag_holder.find(tag) == get_tag_holder.end());
+  return not not_ready;
+}
+
+void
+RDMAState::get_data(
+  GetMessage* msg, bool const& is_user_msg, rdma_info_t const& info,
+  rdma_continuation_t cont
+) {
+  auto const& tag = info.tag;
+
+  assert(
+    not is_user_msg and "User-level get messages currently unsupported"
+  );
+
+  bool const ready = test_ready_get_data(info.tag);
+
+  if (ready) {
+    rdma_get_function_t get_fn =
+      tag == no_tag ? rdma_get_fn : get_tag_holder.find(tag)->second;
+    cont(get_fn(nullptr, info.num_bytes, info.tag));
+  } else {
+    rdma_info_t new_info{info};
+    new_info.cont = cont;
+    pending_tag_gets[tag].push_back(new_info);
+  }
+}
+
+void
+RDMAState::process_pending_get(tag_t const& tag) {
+  bool const ready = test_ready_get_data(tag);
+  assert(ready and "Must be ready to process pending");
+
+  rdma_get_function_t get_fn =
+    tag == no_tag ? rdma_get_fn : get_tag_holder.find(tag)->second;
+
+  auto pending_iter = pending_tag_gets.find(tag);
+  if (pending_iter != pending_tag_gets.end()) {
+    for (auto&& elm : pending_iter->second) {
+      elm.cont(get_fn(nullptr, elm.num_bytes, elm.tag));
+    }
+  }
+}
+
+
 }} //end namespace runtime::rdma
