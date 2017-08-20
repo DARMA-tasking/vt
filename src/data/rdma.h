@@ -124,14 +124,6 @@ struct RDMAManager {
     rdma_recv_t cont
   );
 
-  void
-  request_get_data(
-    GetMessage* msg, bool const& is_user_msg,
-    rdma_handle_t const& rdma_handle, tag_t const& tag, byte_t const& num_bytes,
-    rdma_ptr_t const& ptr = nullptr, rdma_continuation_t cont = no_action,
-    action_t next_action = no_action
-  );
-
   template <typename T>
   rdma_handle_t
   register_new_typed_rdma_handler(T ptr, byte_t const& num_elems) {
@@ -163,6 +155,23 @@ struct RDMAManager {
     tag_t const& tag = no_tag
   );
 
+  rdma_handler_t
+  associate_get_function(
+    rdma_handle_t const& han, rdma_get_function_t const& fn,
+    bool const& any_tag = false, tag_t const& tag = no_tag
+  ) {
+    return associate_rdma_function<rdma_type_t::Get>(han, fn, any_tag, tag);
+  }
+
+  rdma_handler_t
+  associate_put_function(
+    rdma_handle_t const& han, rdma_put_function_t const& fn,
+    bool const& any_tag = false, tag_t const& tag = no_tag
+  ) {
+    return associate_rdma_function<rdma_type_t::Put>(han, fn, any_tag, tag);
+  }
+
+private:
   template <RDMAManager::rdma_type_t rdma_type, typename FunctionT>
   rdma_handler_t
   associate_rdma_function(
@@ -186,21 +195,13 @@ struct RDMAManager {
     return state.template set_rdma_fn<rdma_type, FunctionT>(fn, any_tag, tag);
   }
 
-  rdma_handler_t
-  associate_get_function(
-    rdma_handle_t const& han, rdma_get_function_t const& fn,
-    bool const& any_tag = false, tag_t const& tag = no_tag
-  ) {
-    return associate_rdma_function<rdma_type_t::Get>(han, fn, any_tag, tag);
-  }
-
-  rdma_handler_t
-  associate_put_function(
-    rdma_handle_t const& han, rdma_put_function_t const& fn,
-    bool const& any_tag = false, tag_t const& tag = no_tag
-  ) {
-    return associate_rdma_function<rdma_type_t::Put>(han, fn, any_tag, tag);
-  }
+  void
+  request_get_data(
+    GetMessage* msg, bool const& is_user_msg,
+    rdma_handle_t const& rdma_handle, tag_t const& tag, byte_t const& num_bytes,
+    rdma_ptr_t const& ptr = nullptr, rdma_continuation_t cont = no_action,
+    action_t next_action = no_action
+  );
 
   void
   trigger_get_recv_data(
@@ -225,6 +226,7 @@ struct RDMAManager {
   void
   trigger_put_back_data(rdma_op_t const& op);
 
+public:
   rdma_handler_t
   allocate_new_rdma_handler();
 
