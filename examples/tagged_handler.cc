@@ -63,6 +63,7 @@ static void my_col_fn(runtime::BaseMessage* in_msg) {
   for (auto i = first_recv_tag; i < last_recv_tag; i++) {
     TestMsg* new_msg = make_shared_message<TestMsg>(my_node, uninitialized_handler);
     the_msg->send_msg(msg.callback_han, new_msg, i);
+    message_deref(new_msg);
   }
 }
 
@@ -86,8 +87,9 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    TestMsg* msg = new TestMsg(my_node, callback);
-    the_msg->broadcast_msg(my_col_han, msg, [=]{ delete msg; });
+    TestMsg* msg = make_shared_message<TestMsg>(my_node, callback);
+    the_msg->broadcast_msg(my_col_han, msg);
+    message_deref(msg);
   }
 
   while (1) {
