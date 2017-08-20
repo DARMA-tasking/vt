@@ -188,11 +188,53 @@ struct RDMAManager {
   );
 
   void
+  sync_local_get_channel(
+    rdma_handle_t const& han, action_t const& action = nullptr
+  ) {
+    bool const is_local = true;
+    return sync_get_channel(is_local, han, action);
+  }
+
+  void
+  sync_local_put_channel(
+    rdma_handle_t const& han, action_t const& action = nullptr
+  ) {
+    bool const is_local = true;
+    return sync_put_channel(is_local, han, action);
+  }
+
+  void
+  sync_remote_get_channel(
+    rdma_handle_t const& han, action_t const& action = nullptr
+  ) {
+    bool const is_local = false;
+    return sync_get_channel(is_local, han, action);
+  }
+
+  void
+  sync_remote_put_channel(
+    rdma_handle_t const& han, action_t const& action = nullptr
+  ) {
+    bool const is_local = false;
+    return sync_put_channel(is_local, han, action);
+  }
+
+  void
   remove_direct_channel(
     rdma_handle_t const& han, action_t const& action = nullptr
   );
 
 private:
+  void
+  sync_get_channel(
+    bool const& is_local, rdma_handle_t const& han, action_t const& action
+  );
+
+  void
+  sync_put_channel(
+    bool const& is_local, rdma_handle_t const& han, action_t const& action
+  );
+
   void
   setup_channel_with_remote(
     rdma_type_t const& type, rdma_handle_t const& han, node_t const& dest,

@@ -28,9 +28,11 @@ static void read_data_fn(runtime::BaseMessage* in_msg) {
 
   printf("%d: read_data_fn: handle=%lld\n", my_node, msg.han);
 
-  for (auto i = 0; i < put_len*2; i++) {
-    printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg.han, i, my_data[i]);
-  }
+  //the_rdma->sync_local_put_channel(msg.han, [=]{
+    for (auto i = 0; i < put_len*2; i++) {
+      printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg.han, i, my_data[i]);
+    }
+  //});
 }
 
 static void put_channel_setup(runtime::BaseMessage* in_msg) {
@@ -43,16 +45,26 @@ static void put_channel_setup(runtime::BaseMessage* in_msg) {
     the_rdma->create_put_channel(handle, [=]{
       int const num_elm = 2;
       the_rdma->put_typed_data(handle, my_data, num_elm);
-      TestMsg* back = make_shared_message<TestMsg>(handle);
-      the_msg->send_msg(0, test_han2, back);
+
+      the_rdma->sync_local_put_channel(handle, [=]{
+        TestMsg* back = make_shared_message<TestMsg>(handle);
+        the_msg->send_msg(0, test_han2, back);
+      });
     });
   }
   else if (my_node == 2) {
     the_rdma->create_get_channel(handle, [=]{
+      printf(
+        "%d: creating get channel complete\n", my_node
+      );
       int const num_elm = 2;
       the_rdma->get_typed_data_info_buf(handle, my_data, num_elm);
-      TestMsg* back = make_shared_message<TestMsg>(handle);
-      the_msg->send_msg(2, test_han2, back);
+      the_rdma->get_typed_data_info_buf(handle, my_data+2, num_elm);
+
+      the_rdma->sync_local_get_channel(handle, [=]{
+        TestMsg* back = make_shared_message<TestMsg>(handle);
+        the_msg->send_msg(2, test_han2, back);
+      });
     });
   }
 }
@@ -88,7 +100,7 @@ int main(int argc, char** argv) {
       "%d: initializing my_handle_1=%llx\n", my_node, my_handle_1
     );
 
-    if (0) {
+    if (1) {
       the_rdma->setup_put_channel_with_remote(my_handle_1, 1, [=]{
         TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
         the_msg->send_msg(1, put_channel_setup_han, msg1);

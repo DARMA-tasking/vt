@@ -207,6 +207,52 @@ RDMAManager::try_put_ptr(
 }
 
 void
+RDMAManager::sync_get_channel(
+  bool const& is_local, rdma_handle_t const& han, action_t const& action
+) {
+  rdma_type_t const& type = rdma_type_t::Get;
+  rdma_handle_t ch_han = han;
+  rdma_handle_manager_t::set_op_type(ch_han, type);
+
+  auto channel_iter = channels.find(ch_han);
+  if (channel_iter != channels.end()) {
+    Channel& channel = channel_iter->second;
+    if (is_local) {
+      channel.sync_channel_local();
+    } else {
+      channel.sync_channel_global();
+    }
+  }
+
+  if (action) {
+    action();
+  }
+}
+
+void
+RDMAManager::sync_put_channel(
+  bool const& is_local, rdma_handle_t const& han, action_t const& action
+) {
+  rdma_type_t const& type = rdma_type_t::Put;
+  rdma_handle_t ch_han = han;
+  rdma_handle_manager_t::set_op_type(ch_han, type);
+
+  auto channel_iter = channels.find(ch_han);
+  if (channel_iter != channels.end()) {
+    Channel& channel = channel_iter->second;
+    if (is_local) {
+      channel.sync_channel_local();
+    } else {
+      channel.sync_channel_global();
+    }
+  }
+
+  if (action) {
+    action();
+  }
+}
+
+void
 RDMAManager::send_data_channel(
   rdma_type_t const& type, rdma_handle_t const& han, rdma_ptr_t const& ptr,
   byte_t const& num_bytes, action_t cont, action_t action_after_put

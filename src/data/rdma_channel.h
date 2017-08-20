@@ -100,14 +100,67 @@ struct Channel {
 
   void
   sync_channel_local() {
-    auto const& ret = MPI_Win_flush_local(target, window);
+    printf(
+      "%d: channel: sync_channel_local: target=%d\n", my_node, target
+    );
+
+    auto const& ret = MPI_Win_flush_local(0,window);
     assert(ret == MPI_SUCCESS and "MPI_Win_flush_local: Should be successful");
   }
 
   void
   sync_channel_global() {
+    printf(
+      "%d: channel: sync_channel_global: target=%d\n", my_node, target
+    );
+
     auto const& ret = MPI_Win_flush(target, window);
     assert(ret == MPI_SUCCESS and "MPI_Win_flush: Should be successful");
+  }
+
+  void
+  lock_channel_for_op() {
+    assert(initialized and "Channel must be initialized");
+    assert(not target and "The target can not write to this channel");
+
+    if (not locked) {
+      constexpr int const mpi_win_lock_assert_arg = 0;
+
+      auto const& lock_type =
+        op_type == rdma_type_t::Get ? MPI_LOCK_SHARED : MPI_LOCK_EXCLUSIVE;
+
+      auto const ret = MPI_Win_lock(
+        lock_type, target, mpi_win_lock_assert_arg, window
+      );
+
+      assert(ret == MPI_SUCCESS and "MPI_Win_lock: Should be successful");
+
+      debug_print_rdma_channel(
+        "%d: lock_channel_for_op: target=%d, op_type=%s, lock_type=%d\n",
+        my_node, target, op_type == rdma_type_t::Get ? "GET" : "PUT",  lock_type
+      );
+
+      locked = true;
+    }
+  }
+
+  void
+  unlock_channel_for_op() {
+    assert(initialized and "Channel must be initialized");
+    assert(not target and "The target can not write to this channel");
+
+    if (locked) {
+      auto const& ret = MPI_Win_unlock(target, window);
+
+      assert(ret == MPI_SUCCESS and "MPI_Win_unlock: Should be successful");
+
+      debug_print_rdma_channel(
+        "%d: unlock_channel_for_op: target=%d, op_type=%s\n",
+        my_node, target, op_type == rdma_type_t::Get ? "GET" : "PUT"
+      );
+
+      locked = false;
+    }
   }
 
   void
@@ -115,24 +168,18 @@ struct Channel {
     assert(initialized and "Channel must be initialized");
     assert(not target and "The target can not write to this channel");
 
-    constexpr int const mpi_win_lock_assert_arg = 0;
     constexpr byte_t const mpi_target_disp = 0;
-
-    auto const& lock_type =
-      op_type == rdma_type_t::Get ? MPI_LOCK_SHARED : MPI_LOCK_EXCLUSIVE;
 
     debug_print_rdma_channel(
       "%d: write_data_to_channel: target=%d, ptr=%p, ptr_num_bytes=%lld, "
-      "num_bytes=%lld, op_type=%s, lock_type=%d\n",
+      "num_bytes=%lld, op_type=%s\n",
       my_node, target, ptr, ptr_num_bytes, num_bytes,
-      op_type == rdma_type_t::Get ? "GET" : "PUT",  lock_type
+      op_type == rdma_type_t::Get ? "GET" : "PUT"
     );
 
-    auto const ret = MPI_Win_lock(
-      lock_type, target, mpi_win_lock_assert_arg, window
-    );
-
-    assert(ret == MPI_SUCCESS and "MPI_Win_lock: Should be successful");
+    if (not locked) {
+      lock_channel_for_op();
+    }
 
     if (op_type == rdma_type_t::Get) {
       auto const& get_ret = MPI_Get(
@@ -149,13 +196,13 @@ struct Channel {
     } else {
       assert(0 and "op_type must be Get or Put");
     }
-
-    auto const& ret2 = MPI_Win_unlock(target, window);
-    assert(ret == MPI_SUCCESS and "MPI_Win_unlock: Should be successful");
   }
 
   void
   free_channel() {
+    if (locked) {
+      unlock_channel_for_op();
+    }
     if (initialized) {
       MPI_Win_free(&window);
       MPI_Group_free(&channel_group);
@@ -200,7 +247,7 @@ private:
 private:
   bool const is_target;
 
-  bool initialized = false;
+  bool initialized = false, locked = false, flushed = true;
   rdma_handle_t const rdma_handle = no_rdma_handle;
   node_t target = uninitialized_destination;
   node_t my_node = uninitialized_destination;
