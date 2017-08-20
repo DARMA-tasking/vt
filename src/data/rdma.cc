@@ -484,7 +484,7 @@ RDMAManager::create_direct_channel_finish(
     target_ptr = state.ptr;
     target_num_bytes = state.num_bytes;
 
-    printf(
+    debug_print_rdma_channel(
       "%d: create_direct_channel: han=%lld, is_target=%s, state ptr=%p, bytes=%lld\n",
       this_node, han, print_bool(is_target), target_ptr, target_num_bytes
     );
@@ -495,7 +495,7 @@ RDMAManager::create_direct_channel_finish(
 
   auto iter = channels.find(ch_han);
   if (iter == channels.end()) {
-    printf(
+    debug_print_rdma_channel(
       "%d: create_direct_channel: han=%lld, is_target=%s, creating\n",
       this_node, han, print_bool(is_target)
     );
@@ -560,7 +560,7 @@ RDMAManager::create_direct_channel_internal(
   rdma_handle_t ch_han = han;
   rdma_handle_manager_t::set_op_type(ch_han, type);
   if (channels.find(ch_han) != channels.end()) {
-    printf(
+    debug_print_rdma_channel(
       "%d: create_direct_channel: han=%lld, target=%d, already created!\n",
       this_node, han, target
     );
@@ -570,7 +570,7 @@ RDMAManager::create_direct_channel_internal(
     return;
   }
 
-  printf(
+  debug_print_rdma_channel(
     "%d: create_direct_channel: han=%lld, target=%d, op_type=%d, is_target=%s, "
     "channel_tag=%d\n",
     this_node, han, target, rdma_op_type, print_bool(is_target), channel_tag
@@ -583,7 +583,7 @@ RDMAManager::create_direct_channel_internal(
 
     auto const& unique_channel_tag = next_rdma_channel_tag();
 
-    printf(
+    debug_print_rdma_channel(
       "%d: create_direct_channel: generate unique tag: channel_tag=%d\n",
       this_node, unique_channel_tag
     );
@@ -856,7 +856,7 @@ RDMAManager::register_all_rdma_handlers() {
       CreateChannel& msg = *static_cast<CreateChannel*>(in_msg);
       auto const& this_node = the_context->get_node();
 
-      printf(
+      debug_print_rdma_channel(
         "%d: setup_channel_han: han=%lld, target=%d, non_target=%d, "
         "channel_tag=%d\n",
         this_node, msg.rdma_handle, msg.target, msg.non_target, msg.channel_tag
@@ -885,8 +885,13 @@ RDMAManager::register_all_rdma_handlers() {
       ChannelMessage& msg = *static_cast<ChannelMessage*>(in_msg);
       auto const& this_node = the_context->get_node();
       auto const target = rdma_handle_manager_t::get_rdma_node(msg.han);
-      printf("%d: remote_channel_han: target=%d, type=%d, han=%lld, tag=%d, bytes=%lld\n",
-             this_node, target, msg.type, msg.han, msg.channel_tag, msg.num_bytes);
+
+      debug_print_rdma_channel(
+        "%d: remote_channel_han: target=%d, type=%d, han=%lld, tag=%d, "
+        "bytes=%lld\n",
+        this_node, target, msg.type, msg.han, msg.channel_tag, msg.num_bytes
+      );
+
       the_rdma->create_direct_channel_internal(
         msg.type, msg.han, target, [=]{
           the_msg->send_callback(make_shared_message<CallbackMessage>());

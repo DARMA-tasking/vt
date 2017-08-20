@@ -50,7 +50,7 @@ struct Channel {
       num_bytes = rdma_empty_byte;
     }
 
-    printf(
+    debug_print_rdma_channel(
       "%d: channel: construct: target=%d, non_target=%d, my_node=%d, han=%lld, "
       "ptr=%p, bytes=%lld, is_target=%s\n",
       my_node, target, non_target, my_node, rdma_handle, ptr, num_bytes,
@@ -60,24 +60,54 @@ struct Channel {
 
   void
   init_channel_group() {
-    printf(
+    debug_print_rdma_channel(
       "%d: channel: init_channel_group: target=%d, my_node=%d, han=%lld\n",
       my_node, target, my_node, rdma_handle
     );
 
     MPI_Group world;
-    MPI_Comm_group(MPI_COMM_WORLD, &world);
+    auto const& group_create_ret = MPI_Comm_group(MPI_COMM_WORLD, &world);
+
+    assert(
+      group_create_ret == MPI_SUCCESS and
+      "MPI_Comm_group: Should be successful"
+    );
 
     int const channel_group_nodes[2] = {target, non_target};
-    MPI_Group_incl(world, 2, channel_group_nodes, &channel_group);
+    auto const& group_incl_ret = MPI_Group_incl(
+      world, 2, channel_group_nodes, &channel_group
+    );
 
-    MPI_Comm_create_group(
+    assert(
+      group_incl_ret == MPI_SUCCESS and "MPI_Group_incl: Should be successful"
+    );
+
+    auto const& comm_create_ret = MPI_Comm_create_group(
       MPI_COMM_WORLD, channel_group, channel_group_tag, &channel_comm
     );
 
-    printf("%d: channel: init_channel_group: finished\n", my_node);
+    assert(
+      comm_create_ret == MPI_SUCCESS and
+      "MPI_Comm_create_group: Should be successful"
+    );
+
+    debug_print_rdma_channel(
+      "%d: channel: init_channel_group: finished\n", my_node
+    );
 
     init_channel_window();
+  }
+
+  void
+  sync_channel_local() {
+    auto const& ret = MPI_Win_flush_local(target, window);
+    assert(ret == MPI_SUCCESS and "MPI_Win_flush_local: Should be successful");
+  }
+
+  void
+  sync_channel_global() {
+    auto const& ret = MPI_Win_flush(target, window);
+    assert(ret == MPI_SUCCESS and "MPI_Win_flush: Should be successful");
   }
 
   void
@@ -91,30 +121,37 @@ struct Channel {
     auto const& lock_type =
       op_type == rdma_type_t::Get ? MPI_LOCK_SHARED : MPI_LOCK_EXCLUSIVE;
 
-    printf(
+    debug_print_rdma_channel(
       "%d: write_data_to_channel: target=%d, ptr=%p, ptr_num_bytes=%lld, "
       "num_bytes=%lld, op_type=%s, lock_type=%d\n",
       my_node, target, ptr, ptr_num_bytes, num_bytes,
       op_type == rdma_type_t::Get ? "GET" : "PUT",  lock_type
     );
 
-    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, mpi_win_lock_assert_arg, window);
+    auto const ret = MPI_Win_lock(
+      lock_type, target, mpi_win_lock_assert_arg, window
+    );
+
+    assert(ret == MPI_SUCCESS and "MPI_Win_lock: Should be successful");
 
     if (op_type == rdma_type_t::Get) {
-      MPI_Get(
+      auto const& get_ret = MPI_Get(
         ptr, ptr_num_bytes, MPI_BYTE, target, mpi_target_disp,
         num_bytes, MPI_BYTE, window
       );
+      assert(get_ret == MPI_SUCCESS and "MPI_Get: Should be successful");
     } else if (op_type == rdma_type_t::Put) {
-      MPI_Put(
+      auto const& put_ret = MPI_Put(
         ptr, ptr_num_bytes, MPI_BYTE, target, mpi_target_disp,
         num_bytes, MPI_BYTE, window
       );
+      assert(put_ret == MPI_SUCCESS and "MPI_Put: Should be successful");
     } else {
       assert(0 and "op_type must be Get or Put");
     }
 
-    MPI_Win_unlock(target, window);
+    auto const& ret2 = MPI_Win_unlock(target, window);
+    assert(ret == MPI_SUCCESS and "MPI_Win_unlock: Should be successful");
   }
 
   void
@@ -133,20 +170,31 @@ struct Channel {
 private:
   void
   init_channel_window() {
-    printf("%d: channel: create window: num_bytes=%lld\n", my_node, num_bytes);
+    debug_print_rdma_channel(
+      "%d: channel: create window: num_bytes=%lld\n", my_node, num_bytes
+    );
+
+    int win_create_ret = 0;
 
     if (is_target) {
-      MPI_Win_create(
+      win_create_ret = MPI_Win_create(
         ptr, num_bytes, rdma_elm_size, MPI_INFO_NULL, channel_comm, &window
       );
     } else {
-      MPI_Win_create(
+      win_create_ret = MPI_Win_create(
         nullptr, 0, 1, MPI_INFO_NULL, channel_comm, &window
       );
     }
+
+    assert(
+      win_create_ret == MPI_SUCCESS and "MPI_Win_create: Should be successful"
+    );
+
     initialized = true;
 
-    printf("%d: channel: init_channel: finished creating window\n", my_node);
+    debug_print_rdma_channel(
+      "%d: channel: init_channel: finished creating window\n", my_node
+    );
   }
 
 private:
@@ -167,26 +215,6 @@ private:
   MPI_Group channel_group;
   MPI_Comm channel_comm;
 };
-
- // if (rank == 0) {
- //        /* Rank 0 will be the caller, so null window */
- //        MPI_Win_create(NULL,0,1,
- //            MPI_INFO_NULL,MPI_COMM_WORLD,&win);
- //        /* Request lock of process 1 */
- //        MPI_Win_lock(MPI_LOCK_SHARED,1,0,win);
- //        MPI_Put(buf,1,MPI_INT,1,0,1,MPI_INT,win);
- //        /* Block until put succeeds */
- //        MPI_Win_unlock(1,win);
- //        /* Free the window */
- //        MPI_Win_free(&win);
- //    }
- //    else {
- //        /* Rank 1 is the target process */
- //        MPI_Win_create(buf,2*sizeof(int),sizeof(int),
- //            MPI_INFO_NULL, MPI_COMM_WORLD, &win);
- //        /* No sync calls on the target process! */
- //        MPI_Win_free(&win);
- //    }
 
 }} //end namespace runtime::rdma
 
