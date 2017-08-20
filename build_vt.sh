@@ -6,6 +6,8 @@ then
     exit 1;
 fi
 
+BUILD_MODE=$1
+
 echo "Building virtual transport layer mode=$BUILD_MODE"
 
 SOURCE_BASE_DIR=../virtual-transport/
