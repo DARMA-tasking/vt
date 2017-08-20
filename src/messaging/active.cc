@@ -360,13 +360,11 @@ ActiveMessenger::try_process_incoming_message() {
     auto const& handler = envelope_get_handler(msg->env);
     auto const& is_bcast = envelope_is_bcast(msg->env);
 
-    deliver_active_msg(msg, true);
-
-    // @todo: the broadcast forward should happen before running the active
-    // function, but deallocation is a problem without reference counting
     if (is_bcast) {
       send_msg_direct(handler, msg, num_probe_bytes);
     }
+
+    deliver_active_msg(msg, true);
 
     return true;
   } else {
