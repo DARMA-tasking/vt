@@ -4,11 +4,14 @@
 
 #define print_bool(BOOL) ((BOOL) ? "true" : "false")
 
+#define debug_print_function(fmt, arg...)               \
+  do {                                                  \
+    printf("%d: " fmt, the_context->get_node(), ##arg); \
+  } while (0);
+
+
 #if DEBUG_ON
-  #define debug_print(fmt, arg...)                                 \
-    do {                                                           \
-      printf("%d: " fmt, the_context->get_node(), ##arg);          \
-    } while (0);
+  #define debug_print debug_print_function
 #else
   #define debug_print(fmt, arg...)
 #endif

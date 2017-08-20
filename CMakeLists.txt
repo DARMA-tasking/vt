@@ -115,6 +115,13 @@ add_executable(
 )
 
 add_executable(
+  rdma_simple_get_direct
+  ${PROJECT_EXAMPLE_DIR}/rdma_simple_get_direct.cc
+  ${SOURCE_FILES}
+  ${HEADER_FILES}
+)
+
+add_executable(
   rdma_simple_put
   ${PROJECT_EXAMPLE_DIR}/rdma_simple_put.cc
   ${SOURCE_FILES}

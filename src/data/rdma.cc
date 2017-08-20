@@ -340,6 +340,7 @@ RDMAManager::register_all_rdma_handlers() {
       auto const recv_node = msg.requesting;
 
       auto const& this_node = the_context->get_node();
+
       debug_print_rdma(
         "%d: get_msg_han: han=%lld, is_user=%s, tag=%d, bytes=%lld\n",
         this_node, msg.rdma_handle, msg.is_user_msg ? "true" : "false",

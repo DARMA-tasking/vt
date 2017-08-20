@@ -67,6 +67,18 @@ struct RDMAManager {
     action_t next_action = nullptr
   );
 
+  template <typename T>
+  void
+  get_typed_data_info_buf(
+    rdma_handle_t const& rdma_handle, T ptr, byte_t const& num_elems = no_byte,
+    tag_t const& tag = no_tag, action_t next_action = nullptr
+  ) {
+    byte_t const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
+    return get_data_info_buf(
+      rdma_handle, static_cast<rdma_ptr_t>(ptr), num_bytes, tag, next_action
+    );
+  }
+
   void
   get_data(
     rdma_handle_t const& rdma_handle, tag_t const& tag, byte_t const& num_bytes,
@@ -94,7 +106,7 @@ struct RDMAManager {
     byte_t const num_bytes = sizeof(T)*num_elems;
     debug_print_rdma(
       "%d: register_new_typed_rdma_handler ptr=%p, bytes=%lld\n",
-      ptr, num_bytes
+      the_context->get_node(), ptr, num_bytes
     );
     return register_new_rdma_handler(
       true, static_cast<rdma_ptr_t>(ptr), num_bytes
