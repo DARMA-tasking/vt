@@ -20,19 +20,6 @@ struct TestMsg : runtime::Message {
   { }
 };
 
-// static void callback_fn_2(runtime::BaseMessage* in_msg) {
-//   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
-
-//   printf("%d: callback_fn_2 handler node %d\n", the_context->get_node(), msg.from);
-// }
-
-// static void reinstate_fn(runtime::BaseMessage* in_msg) {
-//   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
-
-//   // register a new function for the handler to deliver the rest of the msgs
-//   the_msg->register_handler_fn(msg.callback_han, callback_fn_2);
-// }
-
 static void process_iter_msgs(runtime::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
@@ -53,7 +40,7 @@ static void process_iter_msgs(runtime::BaseMessage* in_msg) {
     count = 0;
 
     auto const& first_han = the_msg->get_current_handler();
-    the_msg->unregister_handler_fn(first_han, first_tag);
+    the_msg->unregister_handler_fn(first_han, cur_iter-1);
     the_msg->register_handler_fn(first_han, process_iter_msgs, cur_iter);
 
     printf(
