@@ -373,5 +373,14 @@ ActiveMessenger::perform_triggered_actions() {
   the_event->test_events_trigger(normal_event_tag);
 }
 
+handler_t
+ActiveMessenger::register_new_handler(active_function_t fn) {
+  return the_registry->register_new_handler(fn);
+}
+
+handler_t
+ActiveMessenger::collective_register_handler(active_function_t fn) {
+  return CollectiveOps::register_handler(fn);
+}
 
 } //end namespace runtime

@@ -72,8 +72,8 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  test_han = CollectiveOps::register_handler(put_data_fn);
-  test_han2 = CollectiveOps::register_handler(read_data_fn);
+  test_han = the_msg->collective_register_handler(put_data_fn);
+  test_han2 = the_msg->collective_register_handler(read_data_fn);
 
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();

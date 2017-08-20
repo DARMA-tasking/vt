@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  test_han = CollectiveOps::register_handler(tell_handle);
+  test_han = the_msg->collective_register_handler(tell_handle);
 
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();

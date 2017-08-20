@@ -121,6 +121,12 @@ add_executable(
   ${PROJECT_EXAMPLE_DIR}/rdma_simple_put_direct.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
+
+add_executable(
+  callback
+  ${PROJECT_EXAMPLE_DIR}/callback.cc ${SOURCE_FILES} ${HEADER_FILES}
+)
+
 target_link_libraries(
   vt_mpi
   PRIVATE

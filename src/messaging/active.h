@@ -78,6 +78,21 @@ struct ActiveMessenger {
     return send_msg_direct(han, msg, sizeof(MessageT), next_action);
   }
 
+  template <typename MessageT>
+  event_t
+  send_msg(
+    handler_t const& han, MessageT* const msg, action_t next_action = nullptr
+  ) {
+    auto const& dest = the_registry->get_handler_node(han);
+    assert(
+      dest != uninitialized_destination and
+      "Destination must be known in handler"
+    );
+    // setup envelope
+    envelope_setup(msg->env, dest, han);
+    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+  }
+
   send_data_ret_t
   send_data(
     rdma_get_t const& ptr, node_t const& dest, tag_t const& tag,
@@ -149,6 +164,12 @@ struct ActiveMessenger {
 
   void
   scheduler(int const& num_times = scheduler_default_num_times);
+
+  handler_t
+  register_new_handler(active_function_t fn);
+
+  handler_t
+  collective_register_handler(active_function_t fn);
 
 private:
   container_pending_t pending_recvs;

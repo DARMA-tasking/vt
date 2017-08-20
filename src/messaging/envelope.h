@@ -25,7 +25,7 @@ enum EnvelopeType {
 };
 
 constexpr static int const num_envelope_bits = 6;
-constexpr static int const num_handler_bits = 16;
+constexpr static int const num_handler_bits = 32;
 constexpr static int const num_node_bits = 16;
 constexpr static int const num_ref_bits = 16;
 

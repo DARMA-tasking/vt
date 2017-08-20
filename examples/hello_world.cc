@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  hello_world_han = CollectiveOps::register_handler(hello_world);
+  hello_world_han = the_msg->collective_register_handler(hello_world);
 
   auto const& my_node = the_context->get_node();
   auto const& num_nodes = the_context->get_num_nodes();

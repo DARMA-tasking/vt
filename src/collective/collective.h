@@ -21,11 +21,7 @@ struct CollectiveOps {
 
   static handler_t
   register_handler(active_function_t fn) {
-    auto han = the_registry->register_active_handler(
-      static_cast<active_function_t>(fn)
-    );
-    MPI_Barrier(MPI_COMM_WORLD);
-    return han;
+    return the_registry->register_active_handler(fn);
   }
 
   static void

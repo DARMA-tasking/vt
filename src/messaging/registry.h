@@ -3,6 +3,7 @@
 #define __RUNTIME_TRANSPORT_REGISTRY__
 
 #include <vector>
+#include <unordered_map>
 #include <cassert>
 
 #include "common.h"
@@ -10,32 +11,58 @@
 
 namespace runtime {
 
+using handler_identifier_t = int16_t;
+
+static constexpr handler_identifier_t const first_handle_identifier = 1;
+static constexpr handler_identifier_t const uninitialized_handle_identifier = -1;
+
+enum HandlerBits {
+  Identifier = 0,
+  Node = 16,
+};
+
 struct Registry {
-  using container_t = std::vector<active_function_t>;
+  using handler_bits_t = HandlerBits;
+  using container_t = std::unordered_map<handler_t, active_function_t>;
   using register_count_t = uint32_t;
 
   Registry() = default;
 
+  node_t
+  get_handler_node(handler_t const& han);
+
+  void
+  set_handler_node(handler_t& han, node_t const& node);
+
+  void
+  set_handler_identifier(handler_t& han, handler_identifier_t const& ident);
+
+  handler_identifier_t
+  get_handler_identifier(handler_t const& han);
+
+  handler_t
+  register_new_handler(active_function_t fn, bool const& is_collective = false);
+
   handler_t
   register_active_handler(active_function_t fn) {
-    registered.resize(cur_empty_slot+1);
-    registered.at(cur_empty_slot) = fn;
-    cur_empty_slot++;
-    return cur_empty_slot-1;
+    return register_new_handler(fn, true);
   }
 
   active_function_t
   get_handler(handler_t const& han) {
+    auto iter = registered.find(han);
     assert(
-      registered.size()-1 >= han and "Handler must be registered"
+      iter != registered.end() and "Handler must be registered"
     );
-    return registered.at(han);
+    return iter->second;
   }
 
 private:
   container_t registered;
 
-  register_count_t cur_empty_slot = 0;
+  handler_identifier_t cur_ident_collective = first_handle_identifier;
+
+  handler_identifier_t cur_ident = first_handle_identifier;
 };
 
 extern std::unique_ptr<Registry> the_registry;

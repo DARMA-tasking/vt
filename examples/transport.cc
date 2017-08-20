@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
     printf("%d: out of cont_unnamed_barrier\n", this_node);
   });
 
-  //test_msg_han = CollectiveOps::register_handler(handle_test_msg);
+  //test_msg_han = the_msg->collective_register_handler(handle_test_msg);
 
   // test_epoch = the_term->new_epoch();
   // the_term->attach_epoch_term_action(test_epoch, [=]{
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   //   );
   // });
 
-  test_msg_han = CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
+  test_msg_han = the_msg->collective_register_handler([](runtime::BaseMessage* in_msg){
     TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
     printf(
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
     }
   });
 
-  test_msg_han2 = CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
+  test_msg_han2 = the_msg->collective_register_handler([](runtime::BaseMessage* in_msg){
     TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
     printf(
