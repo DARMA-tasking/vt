@@ -246,6 +246,7 @@ RDMAState::get_data(
   bool const ready = test_ready_get_data(info.tag);
 
   auto const& this_node = the_context->get_node();
+
   debug_print_rdma(
     "%d: get_data: msg=%p, tag=%d, ready=%s, handle=%lld, get_any_tag=%s\n",
     this_node, msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag)
@@ -255,7 +256,15 @@ RDMAState::get_data(
     rdma_get_function_t get_fn =
       tag == no_tag or get_any_tag ? rdma_get_fn :
       std::get<0>(get_tag_holder.find(tag)->second);
-    info.cont(get_fn(nullptr, info.num_bytes, info.tag));
+    if (info.cont) {
+      info.cont(get_fn(nullptr, info.num_bytes, info.tag));
+    } else if (info.data_ptr) {
+      rdma_get_t get = get_fn(nullptr, info.num_bytes, info.tag);
+      memcpy(info.data_ptr, std::get<0>(get), std::get<1>(get));
+      if (info.cont_action) {
+        info.cont_action();
+      }
+    }
   } else {
     pending_tag_gets[tag].push_back(info);
   }

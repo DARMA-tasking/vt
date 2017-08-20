@@ -259,9 +259,12 @@ ActiveMessenger::recv_data_msg_buffer(
       if (next != nullptr) {
         next(rdma_get_t{buf,num_probe_bytes}, [=]{
           dealloc_buf();
-          the_term->consume(no_epoch);
         });
+      } else {
+        dealloc_buf();
       }
+
+      the_term->consume(no_epoch);
 
       return true;
     } else {

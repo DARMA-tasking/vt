@@ -71,7 +71,7 @@ void
 RDMAManager::request_get_data(
   GetMessage* msg, bool const& is_user_msg,
   rdma_handle_t const& han, tag_t const& tag, byte_t const& num_bytes,
-  rdma_continuation_t cont
+  rdma_ptr_t const& ptr, rdma_continuation_t cont, action_t next_action
 ) {
   auto const& this_node = the_context->get_node();
   auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
@@ -87,7 +87,7 @@ RDMAManager::request_get_data(
 
   auto& state = holder_iter->second;
 
-  rdma_info_t info(rdma_type_t::Get, num_bytes, tag, cont);
+  rdma_info_t info(rdma_type_t::Get, num_bytes, tag, cont, next_action, ptr);
 
   return state.get_data(msg, is_user_msg, info);
 }
@@ -103,12 +103,37 @@ RDMAManager::trigger_get_recv_data(
     iter != pending_ops.end() and "Pending op must exist"
   );
 
-  iter->second.cont(ptr, num_bytes);
+  if (iter->second.cont) {
+    iter->second.cont(ptr, num_bytes);
+  } else {
+    std::memcpy(iter->second.data_ptr, ptr, num_bytes);
+  }
 
   pending_ops.erase(iter);
 
   if (action != nullptr) {
     action();
+  }
+}
+
+RDMAManager::rdma_direct_t
+RDMAManager::try_get_data_ptr_direct(rdma_op_t const& op) {
+  auto iter = pending_ops.find(op);
+
+  assert(
+    iter != pending_ops.end() and "Pending op must exist"
+  );
+
+  if (iter->second.cont) {
+    return rdma_direct_t{nullptr,nullptr};
+  } else {
+    auto ptr = iter->second.data_ptr;
+    auto action = iter->second.cont2;
+    pending_ops.erase(iter);
+    assert(
+      ptr != nullptr and "ptr must be set"
+    );
+    return rdma_direct_t{ptr,action};
   }
 }
 
@@ -242,6 +267,38 @@ RDMAManager::put_data(
 }
 
 void
+RDMAManager::get_data_info_buf(
+  rdma_handle_t const& han, rdma_ptr_t const& ptr, byte_t const& num_bytes,
+  tag_t const& tag, action_t next_action
+) {
+  auto const& this_node = the_context->get_node();
+  auto const get_node = rdma_handle_manager_t::get_rdma_node(han);
+
+  if (get_node != this_node) {
+    rdma_op_t const new_op = cur_op++;
+
+    GetMessage* msg = new GetMessage(new_op, this_node, han, num_bytes);
+    if (tag != no_tag) {
+      envelope_set_tag(msg->env, tag);
+    }
+    the_msg->send_msg(get_node, get_msg_han, msg, [=]{ delete msg; });
+
+    pending_ops.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(new_op),
+      std::forward_as_tuple(rdma_pending_t{ptr, next_action})
+    );
+  } else {
+    debug_print_rdma(
+      "%d: get_data: local direct into buf, ptr=%p\n", this_node, ptr
+    );
+    the_rdma->request_get_data(
+      nullptr, false, han, tag, num_bytes, ptr, nullptr, next_action
+    );
+  }
+}
+
+void
 RDMAManager::get_data(
   rdma_handle_t const& han, tag_t const& tag, byte_t const& num_bytes,
   rdma_recv_t cont
@@ -265,7 +322,7 @@ RDMAManager::get_data(
     );
   } else {
     the_rdma->request_get_data(
-      nullptr, false, han, tag, num_bytes, [cont](rdma_get_t data){
+      nullptr, false, han, tag, num_bytes, nullptr, [cont](rdma_get_t data){
         debug_print_rdma("local: data is ready\n");
         cont(std::get<0>(data), std::get<1>(data));
       }
@@ -290,7 +347,7 @@ RDMAManager::register_all_rdma_handlers() {
       );
 
       the_rdma->request_get_data(
-        &msg, msg.is_user_msg, msg.rdma_handle, msg_tag, msg.num_bytes,
+        &msg, msg.is_user_msg, msg.rdma_handle, msg_tag, msg.num_bytes, nullptr,
         [msg_tag,op_id,recv_node](rdma_get_t data){
           auto const& this_node = the_context->get_node();
           debug_print_rdma("%d: data is ready\n", this_node);
@@ -301,14 +358,14 @@ RDMAManager::register_all_rdma_handlers() {
 
           tag_t recv_tag = no_tag;
 
-          auto send_payload = [&](ActiveMessenger::send_fn_t send){
-            auto ret = send(data, recv_node, no_tag, [=]{ });
-            recv_tag = std::get<1>(ret);
-          };
-
           GetBackMessage* new_msg = new GetBackMessage(
             op_id, std::get<1>(data), recv_tag
           );
+
+          auto send_payload = [&](ActiveMessenger::send_fn_t send){
+            auto ret = send(data, recv_node, no_tag, [=]{ });
+            new_msg->mpi_tag_to_recv = std::get<1>(ret);
+          };
 
           set_put_type(new_msg->env);
 
@@ -317,6 +374,8 @@ RDMAManager::register_all_rdma_handlers() {
           the_msg->send_msg(
             recv_node, the_rdma->get_recv_msg_han, new_msg, send_payload, deleter
           );
+
+          debug_print_rdma("%d: data is sent: recv_tag=%d\n", this_node, recv_tag);
         }
       );
     });
@@ -327,18 +386,36 @@ RDMAManager::register_all_rdma_handlers() {
       auto const msg_tag = envelope_get_tag(msg.env);
       auto const op_id = msg.op_id;
 
+      auto direct = the_rdma->try_get_data_ptr_direct(op_id);
+      auto get_ptr = std::get<0>(direct);
+      auto get_ptr_action = std::get<1>(direct);
+
       auto const& this_node = the_context->get_node();
       debug_print_rdma(
-        "%d: get_recv_msg_han: op=%lld, tag=%d, bytes=%lld\n",
-        this_node, msg.op_id, msg_tag, msg.num_bytes
+        "%d: get_recv_msg_han: op=%lld, tag=%d, bytes=%lld, get_ptr=%p, mpi_tag=%d\n",
+        this_node, msg.op_id, msg_tag, msg.num_bytes, get_ptr, msg.mpi_tag_to_recv
       );
 
-      the_msg->recv_data_msg(
-        msg.mpi_tag_to_recv, [=](rdma_get_t ptr, action_t deleter){
-        the_rdma->trigger_get_recv_data(
-          msg.op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
+      if (get_ptr == nullptr) {
+        the_msg->recv_data_msg(
+          msg.mpi_tag_to_recv, [=](rdma_get_t ptr, action_t deleter){
+            the_rdma->trigger_get_recv_data(
+              msg.op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
+            );
+          });
+      } else {
+        the_msg->recv_data_msg_buffer(
+          get_ptr, msg.mpi_tag_to_recv, true, [this_node,get_ptr_action]{
+            debug_print_rdma(
+              "%d: recv_data_msg_buffer finished\n",
+              this_node
+            );
+            if (get_ptr_action) {
+            get_ptr_action();
+            }
+          }
         );
-      });
+      }
     });
 
   the_rdma->put_back_msg_han =

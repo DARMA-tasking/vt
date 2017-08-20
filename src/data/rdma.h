@@ -16,6 +16,7 @@ namespace runtime { namespace rdma {
 struct RDMAPending {
   rdma_recv_t cont = nullptr;
   action_t cont2 = nullptr;
+  rdma_ptr_t data_ptr = nullptr;
 
   RDMAPending(rdma_recv_t in_cont)
     : cont(in_cont)
@@ -23,6 +24,10 @@ struct RDMAPending {
 
   RDMAPending(action_t in_cont2)
     : cont2(in_cont2)
+  { }
+
+  RDMAPending(rdma_ptr_t in_data_ptr, action_t in_cont2)
+    : data_ptr(in_data_ptr), cont2(in_cont2)
   { }
 };
 
@@ -37,6 +42,7 @@ struct RDMAManager {
   using rdma_handle_manager_t = RDMAHandleManager;
   using rdma_get_function_t = rdma_state_t::rdma_get_function_t;
   using rdma_put_function_t = rdma_state_t::rdma_put_function_t;
+  using rdma_direct_t = std::tuple<rdma_ptr_t, action_t>;
 
   void
   put_data(
@@ -55,6 +61,13 @@ struct RDMAManager {
   }
 
   void
+  get_data_info_buf(
+    rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
+    byte_t const& num_bytes, tag_t const& tag = no_tag,
+    action_t next_action = nullptr
+  );
+
+  void
   get_data(
     rdma_handle_t const& rdma_handle, tag_t const& tag, byte_t const& num_bytes,
     rdma_recv_t cont
@@ -71,7 +84,8 @@ struct RDMAManager {
   request_get_data(
     GetMessage* msg, bool const& is_user_msg,
     rdma_handle_t const& rdma_handle, tag_t const& tag, byte_t const& num_bytes,
-    rdma_continuation_t cont
+    rdma_ptr_t const& ptr = nullptr, rdma_continuation_t cont = nullptr,
+    action_t next_action = nullptr
   );
 
   template <typename T>
@@ -155,6 +169,9 @@ struct RDMAManager {
     rdma_handle_t const& han, tag_t const& tag, rdma_ptr_t ptr,
     byte_t const& num_bytes, action_t const& action
   );
+
+  rdma_direct_t
+  try_get_data_ptr_direct(rdma_op_t const& op);
 
   rdma_ptr_t
   try_put_ptr(
