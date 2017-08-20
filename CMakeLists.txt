@@ -127,6 +127,11 @@ add_executable(
 )
 
 add_executable(
+  rdma_channel_sync
+  ${PROJECT_EXAMPLE_DIR}/rdma_channel_sync.cc ${SOURCE_FILES} ${HEADER_FILES}
+)
+
+add_executable(
   callback
   ${PROJECT_EXAMPLE_DIR}/callback.cc ${SOURCE_FILES} ${HEADER_FILES}
 )

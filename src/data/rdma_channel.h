@@ -51,9 +51,9 @@ struct Channel {
     }
 
     debug_print_rdma_channel(
-      "%d: channel: construct: target=%d, non_target=%d, my_node=%d, han=%lld, "
+      "channel: construct: target=%d, non_target=%d, my_node=%d, han=%lld, "
       "ptr=%p, bytes=%lld, is_target=%s\n",
-      my_node, target, non_target, my_node, rdma_handle, ptr, num_bytes,
+      target, non_target, my_node, rdma_handle, ptr, num_bytes,
       print_bool(is_target)
     );
   }
@@ -61,8 +61,8 @@ struct Channel {
   void
   init_channel_group() {
     debug_print_rdma_channel(
-      "%d: channel: init_channel_group: target=%d, my_node=%d, han=%lld\n",
-      my_node, target, my_node, rdma_handle
+      "channel: init_channel_group: target=%d, my_node=%d, han=%lld\n",
+      target, my_node, rdma_handle
     );
 
     MPI_Group world;
@@ -92,7 +92,7 @@ struct Channel {
     );
 
     debug_print_rdma_channel(
-      "%d: channel: init_channel_group: finished\n", my_node
+      "channel: init_channel_group: finished\n"
     );
 
     init_channel_window();
@@ -100,9 +100,9 @@ struct Channel {
 
   void
   sync_channel_local() {
-    printf(
-      "%d: channel: sync_channel_local: target=%d, locked=%s\n",
-      my_node, target, print_bool(locked)
+    debug_print_rdma_channel(
+      "channel: sync_channel_local: target=%d, locked=%s starting\n",
+      target, print_bool(locked)
     );
 
     if (not locked) {
@@ -115,16 +115,29 @@ struct Channel {
     if (op_type == rdma_type_t::Put) {
       unlock_channel_for_op();
     }
+
+    debug_print_rdma_channel(
+      "channel: sync_channel_local: target=%d, locked=%s finished\n",
+      target, print_bool(locked)
+    );
   }
 
   void
   sync_channel_global() {
-    printf(
-      "%d: channel: sync_channel_global: target=%d\n", my_node, target
+    debug_print_rdma_channel(
+      "channel: sync_channel_global: target=%d starting\n", target
     );
 
     auto const& ret = MPI_Win_flush(target, window);
     assert(ret == MPI_SUCCESS and "MPI_Win_flush: Should be successful");
+
+    if (op_type == rdma_type_t::Put) {
+      unlock_channel_for_op();
+    }
+
+    debug_print_rdma_channel(
+      "channel: sync_channel_global: target=%d finished\n", target
+    );
   }
 
   void
@@ -136,12 +149,14 @@ struct Channel {
       constexpr int const mpi_win_lock_assert_arg = 0;
 
       auto const& lock_type =
-        op_type == rdma_type_t::Put ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
+        (not is_target) ?
+        (op_type == rdma_type_t::Put ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED) :
+        (op_type == rdma_type_t::Put ? MPI_LOCK_SHARED : MPI_LOCK_SHARED);
 
       debug_print_rdma_channel(
-        "%d: lock_channel_for_op: is_target=%s, target=%d, op_type=%s, "
+        "lock_channel_for_op: is_target=%s, target=%d, op_type=%s, "
         "lock_type=%d, exclusive=%d\n",
-        my_node, print_bool(is_target), target,
+        print_bool(is_target), target,
         op_type == rdma_type_t::Get ? "GET" : "PUT", lock_type, MPI_LOCK_EXCLUSIVE
       );
 
@@ -166,8 +181,8 @@ struct Channel {
       assert(ret == MPI_SUCCESS and "MPI_Win_unlock: Should be successful");
 
       debug_print_rdma_channel(
-        "%d: unlock_channel_for_op: target=%d, op_type=%s\n",
-        my_node, target, op_type == rdma_type_t::Get ? "GET" : "PUT"
+        "unlock_channel_for_op: target=%d, op_type=%s\n",
+        target, op_type == rdma_type_t::Get ? "GET" : "PUT"
       );
 
       locked = false;
@@ -184,9 +199,9 @@ struct Channel {
     byte_t const d_offset = offset == no_byte ? 0 : offset;
 
     debug_print_rdma_channel(
-      "%d: write_data_to_channel: target=%d, ptr=%p, ptr_num_bytes=%lld, "
+      "write_data_to_channel: target=%d, ptr=%p, ptr_num_bytes=%lld, "
       "num_bytes=%lld, op_type=%s, offset=%lld\n",
-      my_node, target, ptr, ptr_num_bytes, num_bytes,
+      target, ptr, ptr_num_bytes, num_bytes,
       op_type == rdma_type_t::Get ? "GET" : "PUT", offset
     );
 
@@ -229,7 +244,7 @@ private:
   void
   init_channel_window() {
     debug_print_rdma_channel(
-      "%d: channel: create window: num_bytes=%lld\n", my_node, num_bytes
+      "channel: create window: num_bytes=%lld\n", num_bytes
     );
 
     int win_create_ret = 0;
@@ -251,7 +266,7 @@ private:
     initialized = true;
 
     debug_print_rdma_channel(
-      "%d: channel: init_channel: finished creating window\n", my_node
+      "channel: init_channel: finished creating window\n"
     );
   }
 
