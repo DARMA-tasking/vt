@@ -20,14 +20,14 @@ struct RDMAInfo {
   byte_t num_bytes = no_byte;
   tag_t tag = no_tag;
   rdma_type_t rdma_type;
-  rdma_ptr_t data_ptr = nullptr;
-  rdma_continuation_t cont = nullptr;
-  action_t cont_action = nullptr;
+  rdma_ptr_t data_ptr = no_rdma_ptr;
+  rdma_continuation_t cont = no_action;
+  action_t cont_action = no_action;
 
   RDMAInfo(
     rdma_type_t const& in_rdma_type, byte_t const& in_num_bytes = no_byte,
-    tag_t const& in_tag = no_tag, rdma_continuation_t in_cont = nullptr,
-    action_t in_cont_action = nullptr, rdma_ptr_t const& in_data_ptr = nullptr
+    tag_t const& in_tag = no_tag, rdma_continuation_t in_cont = no_action,
+    action_t in_cont_action = no_action, rdma_ptr_t const& in_data_ptr = no_rdma_ptr
   ) : rdma_type(in_rdma_type), num_bytes(in_num_bytes), tag(in_tag),
       data_ptr(in_data_ptr), cont(in_cont), cont_action(in_cont_action)
   { }
@@ -47,13 +47,13 @@ struct RDMAState {
   template <typename T>
   using container_t = std::vector<T>;
 
-  rdma_handle_t handle;
-  rdma_ptr_t ptr = nullptr;
+  rdma_handle_t handle = no_rdma_handle;
+  rdma_ptr_t ptr = no_rdma_ptr;
   byte_t num_bytes = no_byte;
 
   RDMAState(
     rdma_handle_t const& in_handle,
-    rdma_ptr_t const& in_ptr = nullptr,
+    rdma_ptr_t const& in_ptr = no_rdma_ptr,
     byte_t const& in_num_bytes = no_byte,
     bool const& use_default_handler = false
   );
@@ -119,8 +119,8 @@ private:
   bool get_any_tag = false;
   bool put_any_tag = false;
 
-  rdma_get_function_t rdma_get_fn = nullptr;
-  rdma_put_function_t rdma_put_fn = nullptr;
+  rdma_get_function_t rdma_get_fn = no_action;
+  rdma_put_function_t rdma_put_fn = no_action;
 
   tag_container_t<rdma_tag_get_holder_t> get_tag_holder;
   tag_container_t<rdma_tag_put_holder_t> put_tag_holder;

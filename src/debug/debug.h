@@ -9,7 +9,6 @@
     printf("%d: " fmt, the_context->get_node(), ##arg); \
   } while (0);
 
-
 #if DEBUG_ON
   #define debug_print debug_print_function
 #else

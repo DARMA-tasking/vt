@@ -9,9 +9,9 @@
 namespace runtime { namespace rdma {
 
 template <typename EnvelopeT>
-struct GetActiveMessage : ActiveMessage<EnvelopeT> {
+struct RequestDataMessage : ActiveMessage<EnvelopeT> {
 
-  GetActiveMessage(
+  RequestDataMessage(
     rdma_op_t const& in_op, node_t const in_node, rdma_handle_t const& in_han,
     byte_t const& in_num_bytes = no_byte
   ) : ActiveMessage<EnvelopeT>(),
@@ -19,7 +19,7 @@ struct GetActiveMessage : ActiveMessage<EnvelopeT> {
       num_bytes(in_num_bytes)
   { }
 
-  rdma_op_t op_id;
+  rdma_op_t op_id = no_rdma_op;
   node_t requesting = uninitialized_destination;
   rdma_handle_t rdma_handle = no_rdma_handle;
   byte_t num_bytes = no_byte;
@@ -27,8 +27,8 @@ struct GetActiveMessage : ActiveMessage<EnvelopeT> {
 };
 
 template <typename EnvelopeT>
-struct GetRecvMessage : ActiveMessage<EnvelopeT> {
-  GetRecvMessage(
+struct SendDataMessage : ActiveMessage<EnvelopeT> {
+  SendDataMessage(
     rdma_op_t const& in_op, byte_t const& in_num_bytes, tag_t const& in_mpi_tag,
     rdma_handle_t const& in_han = no_rdma_handle,
     node_t const& back = uninitialized_destination
@@ -40,24 +40,24 @@ struct GetRecvMessage : ActiveMessage<EnvelopeT> {
   rdma_handle_t rdma_handle = no_rdma_handle;
   node_t send_back = uninitialized_destination;
   tag_t mpi_tag_to_recv = no_tag;
-  rdma_op_t op_id = 0;
+  rdma_op_t op_id = no_rdma_op;
   byte_t num_bytes = no_byte;
 };
 
 template <typename EnvelopeT>
-struct DataFinishedMessage : ActiveMessage<EnvelopeT> {
-  DataFinishedMessage(rdma_op_t const& in_op)
+struct RDMAOpFinishedMessage : ActiveMessage<EnvelopeT> {
+  RDMAOpFinishedMessage(rdma_op_t const& in_op)
     : ActiveMessage<EnvelopeT>(), op_id(in_op)
   { }
 
-  rdma_op_t op_id = 0;
+  rdma_op_t op_id = no_rdma_op;
 };
 
-using GetMessage = GetActiveMessage<EpochTagEnvelope>;
-using GetBackMessage = GetRecvMessage<EpochTagEnvelope>;
+using GetMessage = RequestDataMessage<EpochTagEnvelope>;
+using GetBackMessage = SendDataMessage<EpochTagEnvelope>;
 
-using PutMessage = GetRecvMessage<EpochTagEnvelope>;
-using PutBackMessage = DataFinishedMessage<EpochTagEnvelope>;
+using PutMessage = SendDataMessage<EpochTagEnvelope>;
+using PutBackMessage = RDMAOpFinishedMessage<EpochTagEnvelope>;
 
 }} //end namespace runtime::rdma
 

@@ -39,6 +39,8 @@ enum RDMAType {
 
 using rdma_op_t = int64_t;
 
+static constexpr rdma_op_t const no_rdma_op = -1;
+
 using active_get_function_t = std::function<rdma_get_t(BaseMessage*, byte_t, tag_t)>;
 using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t, byte_t, tag_t)>;
 

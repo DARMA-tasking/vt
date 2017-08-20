@@ -88,44 +88,37 @@ list(
 
 add_executable(
   vt_mpi
-  ${PROJECT_EXAMPLE_DIR}/transport.cc
-  ${SOURCE_FILES}
-  ${HEADER_FILES}
+  ${PROJECT_EXAMPLE_DIR}/transport.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
 add_executable(
   hello_world
-  ${PROJECT_EXAMPLE_DIR}/hello_world.cc
-  ${SOURCE_FILES}
-  ${HEADER_FILES}
+  ${PROJECT_EXAMPLE_DIR}/hello_world.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
 add_executable(
   ring
-  ${PROJECT_EXAMPLE_DIR}/ring.cc
-  ${SOURCE_FILES}
-  ${HEADER_FILES}
+  ${PROJECT_EXAMPLE_DIR}/ring.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
 add_executable(
   rdma_simple_get
-  ${PROJECT_EXAMPLE_DIR}/rdma_simple_get.cc
-  ${SOURCE_FILES}
-  ${HEADER_FILES}
+  ${PROJECT_EXAMPLE_DIR}/rdma_simple_get.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
 add_executable(
   rdma_simple_get_direct
-  ${PROJECT_EXAMPLE_DIR}/rdma_simple_get_direct.cc
-  ${SOURCE_FILES}
-  ${HEADER_FILES}
+  ${PROJECT_EXAMPLE_DIR}/rdma_simple_get_direct.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
 add_executable(
   rdma_simple_put
-  ${PROJECT_EXAMPLE_DIR}/rdma_simple_put.cc
-  ${SOURCE_FILES}
-  ${HEADER_FILES}
+  ${PROJECT_EXAMPLE_DIR}/rdma_simple_put.cc ${SOURCE_FILES} ${HEADER_FILES}
+)
+
+add_executable(
+  rdma_simple_put_direct
+  ${PROJECT_EXAMPLE_DIR}/rdma_simple_put_direct.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
 target_link_libraries(
