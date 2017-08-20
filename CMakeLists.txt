@@ -127,6 +127,11 @@ add_executable(
   ${PROJECT_EXAMPLE_DIR}/callback.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
+add_executable(
+  reinstate
+  ${PROJECT_EXAMPLE_DIR}/reinstate.cc ${SOURCE_FILES} ${HEADER_FILES}
+)
+
 target_link_libraries(
   vt_mpi
   PRIVATE

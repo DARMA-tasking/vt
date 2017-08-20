@@ -13,7 +13,7 @@ ActiveMessenger::send_msg_direct(
   auto const& this_node = the_context->get_node();
   auto const& send_tag = static_cast<mpi_tag_t>(MPITag::ActiveMsgTag);
 
-  auto msg = reinterpret_cast<ShortMessage* const>(msg_base);
+  auto msg = reinterpret_cast<message_t const>(msg_base);
 
   auto const& dest = envelope_get_dest(msg->env);
   auto const& is_bcast = envelope_is_bcast(msg->env);
@@ -287,6 +287,56 @@ ActiveMessenger::recv_data_msg(
   return recv_data_msg_buffer(nullptr, tag, enqueue, nullptr, next);
 }
 
+bool
+ActiveMessenger::deliver_active_msg(message_t msg) {
+  auto const& is_term = envelope_is_term(msg->env);
+  auto const& is_bcast = envelope_is_bcast(msg->env);
+  auto const& handler = envelope_get_handler(msg->env);
+  auto const& epoch =
+    envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
+
+  auto const& active_fun = the_registry->get_handler(handler);
+
+  bool const& has_action_handler = active_fun != no_action;
+
+  debug_print_active(
+    "%d: deliver_active_msg: consume: msg=%p, is_term=%d, has_action_handler=%s\n",
+    the_context->get_node(), msg, is_term, print_bool(has_action_handler)
+  );
+
+  if (has_action_handler) {
+    // set the current handler so the user can request it in the context of an
+    // active fun
+    current_hanlder_context = handler;
+
+    // run the active function
+    active_fun(msg);
+
+    // unset current handler
+    current_hanlder_context = uninitialized_handler;
+  } else {
+    auto iter = pending_handler_msgs.find(handler);
+    if (iter == pending_handler_msgs.end()) {
+      pending_handler_msgs.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(handler),
+        std::forward_as_tuple(msg_cont_t{msg})
+      );
+    } else {
+      iter->second.push_back(msg);
+    }
+  }
+
+  if (not is_term and has_action_handler) {
+    the_term->consume(epoch);
+  }
+
+  if (not is_bcast and has_action_handler) {
+    message_deref(msg);
+  }
+
+  return has_action_handler;
+}
 
 bool
 ActiveMessenger::try_process_incoming_message() {
@@ -309,47 +359,20 @@ ActiveMessenger::try_process_incoming_message() {
       MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
 
-    ShortMessage* msg = reinterpret_cast<ShortMessage*>(buf);
+    message_t msg = reinterpret_cast<message_t>(buf);
 
-    auto const& is_term = envelope_is_term(msg->env);
-    auto const& is_bcast = envelope_is_bcast(msg->env);
-
-    // @todo: switch to shared message here
-    // message_convert_to_shared(msg);
-    message_set_unmanaged(msg);
+    message_convert_to_shared(msg);
 
     auto const& handler = envelope_get_handler(msg->env);
-    auto const& epoch =
-      envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
+    auto const& is_bcast = envelope_is_bcast(msg->env);
 
-    auto const& active_fun = the_registry->get_handler(handler);
-
-    // run the active function
-    active_fun(msg);
+    deliver_active_msg(msg);
 
     // @todo: the broadcast forward should happen before running the active
     // function, but deallocation is a problem without reference counting
     if (is_bcast) {
-      send_msg_direct(handler, msg, num_probe_bytes, [=]{
-        the_pool->dealloc(msg);
-      });
+      send_msg_direct(handler, msg, num_probe_bytes);
     }
-
-    debug_print_active(
-      "%d: try_process_incoming_message: consume: msg=%p, is_term=%d\n",
-      the_context->get_node(), msg, is_term
-    );
-
-    if (not is_term) {
-      the_term->consume(epoch);
-    }
-
-    if (not is_bcast) {
-      the_pool->dealloc(msg);
-    }
-
-    // @todo: switch to shared message here
-    // message_deref(msg);
 
     return true;
   } else {
@@ -384,8 +407,42 @@ ActiveMessenger::collective_register_handler(active_function_t fn) {
 }
 
 void
-ActiveMessenger::swap_handler(handler_t const& han, active_function_t fn) {
-  return the_registry->swap_handler(han, fn);
+ActiveMessenger::swap_handler_fn(handler_t const& han, active_function_t fn) {
+  the_registry->swap_handler(han, fn);
+
+  if (fn != nullptr) {
+    deliver_pending_msgs_on_han(han);
+  }
+}
+
+void
+ActiveMessenger::deliver_pending_msgs_on_han(handler_t const& han) {
+  auto iter = pending_handler_msgs.find(han);
+  if (iter != pending_handler_msgs.end()) {
+    for (auto&& msg : iter->second) {
+      deliver_active_msg(msg);
+    }
+    pending_handler_msgs.erase(han);
+  }
+}
+
+void
+ActiveMessenger::register_handler_fn(handler_t const& han, active_function_t fn) {
+  swap_handler_fn(han, fn);
+
+  if (fn != nullptr) {
+    deliver_pending_msgs_on_han(han);
+  }
+}
+
+void
+ActiveMessenger::unregister_handler_fn(handler_t const& han) {
+  return the_registry->unregister_handler_fn(han);
+}
+
+handler_t
+ActiveMessenger::get_current_handler() {
+  return current_hanlder_context;
 }
 
 } //end namespace runtime

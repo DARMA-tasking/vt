@@ -44,6 +44,9 @@ struct Registry {
   register_new_handler(active_function_t fn, bool const& is_collective = false);
 
   void
+  unregister_handler_fn(handler_t const& han);
+
+  void
   swap_handler(handler_t const& han, active_function_t fn);
 
   handler_t

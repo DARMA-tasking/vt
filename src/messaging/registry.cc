@@ -60,6 +60,15 @@ Registry::swap_handler(handler_t const& han, active_function_t fn) {
   iter->second = fn;
 }
 
+void
+Registry::unregister_handler_fn(handler_t const& han) {
+  auto iter = registered.find(han);
+  assert(
+    iter != registered.end() and "Handler must be registered"
+  );
+  iter->second = nullptr;
+}
+
 handler_t
 Registry::register_active_handler(active_function_t fn) {
   return register_new_handler(fn, true);

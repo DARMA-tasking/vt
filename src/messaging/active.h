@@ -14,6 +14,7 @@
 
 #include <type_traits>
 #include <tuple>
+#include <vector>
 #include <unordered_map>
 
 namespace runtime {
@@ -40,12 +41,15 @@ struct PendingRecv {
 };
 
 struct ActiveMessenger {
+  using message_t = ShortMessage*;
   using byte_t = int32_t;
   using pending_recv_t = PendingRecv;
   using send_data_ret_t = std::tuple<event_t, tag_t>;
   using send_fn_t = std::function<send_data_ret_t(rdma_get_t,node_t,tag_t,action_t)>;
   using user_send_fn_t = std::function<void(send_fn_t)>;
   using container_pending_t = std::unordered_map<tag_t, pending_recv_t>;
+  using msg_cont_t = std::vector<message_t>;
+  using container_waiting_handler_t = std::unordered_map<handler_t, msg_cont_t>;
 
   ActiveMessenger() = default;
 
@@ -169,12 +173,31 @@ struct ActiveMessenger {
   register_new_handler(active_function_t fn);
 
   void
-  swap_handler(handler_t const& han, active_function_t fn);
+  swap_handler_fn(handler_t const& han, active_function_t fn);
+
+  void
+  unregister_handler_fn(handler_t const& han);
+
+  void
+  register_handler_fn(handler_t const& han, active_function_t fn);
 
   handler_t
   collective_register_handler(active_function_t fn);
 
+  handler_t
+  get_current_handler();
+
+  bool
+  deliver_active_msg(message_t msg);
+
+  void
+  deliver_pending_msgs_on_han(handler_t const& han);
+
 private:
+  handler_t current_hanlder_context = uninitialized_handler;
+
+  container_waiting_handler_t pending_handler_msgs;
+
   container_pending_t pending_recvs;
 
   tag_t cur_direct_buffer_tag = starting_direct_buffer_tag;
