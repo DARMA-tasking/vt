@@ -14,8 +14,8 @@ namespace runtime { namespace rdma {
 
 static constexpr rdma_handler_t const first_rdma_handler = 1;
 
-struct RDMAInfo {
-  using rdma_type_t = RDMAType;
+struct Info {
+  using rdma_type_t = Type;
 
   byte_t num_bytes = no_byte;
   tag_t tag = no_tag;
@@ -24,7 +24,7 @@ struct RDMAInfo {
   rdma_continuation_t cont = no_action;
   action_t cont_action = no_action;
 
-  RDMAInfo(
+  Info(
     rdma_type_t const& in_rdma_type, byte_t const& in_num_bytes = no_byte,
     tag_t const& in_tag = no_tag, rdma_continuation_t in_cont = no_action,
     action_t in_cont_action = no_action, rdma_ptr_t const& in_data_ptr = no_rdma_ptr
@@ -33,9 +33,9 @@ struct RDMAInfo {
   { }
 };
 
-struct RDMAState {
-  using rdma_info_t = RDMAInfo;
-  using rdma_type_t = RDMAType;
+struct State {
+  using rdma_info_t = Info;
+  using rdma_type_t = Type;
   using rdma_get_function_t = active_get_function_t;
   using rdma_put_function_t = active_put_function_t;
   using rdma_tag_get_holder_t = std::tuple<rdma_get_function_t, handler_t>;
@@ -51,7 +51,7 @@ struct RDMAState {
   rdma_ptr_t ptr = no_rdma_ptr;
   byte_t num_bytes = no_byte;
 
-  RDMAState(
+  State(
     rdma_handle_t const& in_handle,
     rdma_ptr_t const& in_ptr = no_rdma_ptr,
     byte_t const& in_num_bytes = no_byte,
@@ -130,14 +130,14 @@ private:
 
 template<>
 rdma_handler_t
-RDMAState::set_rdma_fn<
-  RDMAState::rdma_type_t::Put, RDMAState::rdma_put_function_t
+State::set_rdma_fn<
+  State::rdma_type_t::Put, State::rdma_put_function_t
 >(rdma_put_function_t const& fn, bool const& any_tag, tag_t const& tag);
 
 template<>
 rdma_handler_t
-RDMAState::set_rdma_fn<
-  RDMAState::rdma_type_t::Get, RDMAState::rdma_get_function_t
+State::set_rdma_fn<
+  State::rdma_type_t::Get, State::rdma_get_function_t
 >(rdma_get_function_t const& fn, bool const& any_tag, tag_t const& tag);
 
 

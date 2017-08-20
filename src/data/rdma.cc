@@ -330,6 +330,26 @@ RDMAManager::get_data(
   }
 }
 
+void
+RDMAManager::create_direct_channel(rdma_handle_t const& han) {
+  auto const& this_node = the_context->get_node();
+  auto const node = rdma_handle_manager_t::get_rdma_node(han);
+
+  if (node != this_node) {
+
+  }
+}
+
+void
+RDMAManager::remove_direct_channel(rdma_handle_t const& han) {
+  auto const& this_node = the_context->get_node();
+  auto const node = rdma_handle_manager_t::get_rdma_node(han);
+
+  if (node != this_node) {
+
+  }
+}
+
 /*static*/ void
 RDMAManager::register_all_rdma_handlers() {
   the_rdma->get_msg_han =

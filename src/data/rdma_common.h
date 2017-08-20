@@ -22,7 +22,7 @@ static constexpr rdma_identifier_t const uninitialized_rdma_identifier = -1;
 //   int64_t is_collective : 1 [1]
 //   int64_t is_sized : 1 [0]
 
-enum RDMABits {
+enum Bits {
   Sized = 0,
   Collective = 1,
   HandlerType = 2,
@@ -31,7 +31,7 @@ enum RDMABits {
   Identifier = 20
 };
 
-enum RDMAType {
+enum Type {
   Get = 0,
   Put = 1,
   GetOrPut = 2

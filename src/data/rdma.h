@@ -8,38 +8,22 @@
 #include "rdma_state.h"
 #include "rdma_handle.h"
 #include "rdma_msg.h"
+#include "rdma_pending.h"
+#include "rdma_channel.h"
 
 #include <unordered_map>
 
 namespace runtime { namespace rdma {
 
-struct RDMAPending {
-  rdma_recv_t cont = nullptr;
-  action_t cont2 = nullptr;
-  rdma_ptr_t data_ptr = nullptr;
-
-  RDMAPending(rdma_recv_t in_cont)
-    : cont(in_cont)
-  { }
-
-  RDMAPending(action_t in_cont2)
-    : cont2(in_cont2)
-  { }
-
-  RDMAPending(rdma_ptr_t in_data_ptr, action_t in_cont2)
-    : data_ptr(in_data_ptr), cont2(in_cont2)
-  { }
-};
-
 struct RDMAManager {
-  using rdma_bits_t = RDMABits;
-  using rdma_state_t = RDMAState;
-  using rdma_type_t = RDMAType;
-  using rdma_info_t = RDMAInfo;
-  using rdma_pending_t = RDMAPending;
+  using rdma_bits_t = Bits;
+  using rdma_state_t = State;
+  using rdma_type_t = Type;
+  using rdma_info_t = Info;
+  using rdma_pending_t = Pending;
   using rdma_container_t = std::unordered_map<rdma_handle_t, rdma_state_t>;
   using rdma_op_container_t = std::unordered_map<rdma_op_t, rdma_pending_t>;
-  using rdma_handle_manager_t = RDMAHandleManager;
+  using rdma_handle_manager_t = HandleManager;
   using rdma_get_function_t = rdma_state_t::rdma_get_function_t;
   using rdma_put_function_t = rdma_state_t::rdma_put_function_t;
   using rdma_direct_t = std::tuple<rdma_ptr_t, action_t>;
@@ -170,6 +154,12 @@ struct RDMAManager {
   ) {
     return associate_rdma_function<rdma_type_t::Put>(han, fn, any_tag, tag);
   }
+
+  void
+  create_direct_channel(rdma_handle_t const& han);
+
+  void
+  remove_direct_channel(rdma_handle_t const& han);
 
 private:
   template <RDMAManager::rdma_type_t rdma_type, typename FunctionT>

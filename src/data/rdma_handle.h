@@ -12,9 +12,9 @@ static_assert(
   "RDMA Handle and RDMA Handler IDs must be the same size"
 );
 
-struct RDMAHandleManager {
-  using rdma_bits_t = RDMABits;
-  using rdma_type_t = RDMAType;
+struct HandleManager {
+  using rdma_bits_t = Bits;
+  using rdma_type_t = Type;
   using universal_rdma_id_t = rdma_handle_t;
 
   static void
