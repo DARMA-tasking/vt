@@ -8,7 +8,6 @@ static node_t my_node = uninitialized_destination;
 static node_t num_nodes = uninitialized_destination;
 
 static rdma_handle_t my_handle_1 = no_rdma_handle;
-static rdma_handle_t my_handle_2 = no_rdma_handle;
 
 handler_t test_han = uninitialized_handler;
 handler_t test_han2 = uninitialized_handler;
@@ -42,8 +41,9 @@ static void put_data_fn(runtime::BaseMessage* in_msg) {
     );
 
     int const num_elm = 2;
-    the_rdma->put_typed_data(msg.han, my_data, num_elm, no_action, [=]{
-      printf("%d: after put: sending msg back to 0\n", my_node);
+    int const offset = num_elm*(my_node-1);
+    the_rdma->put_typed_data(msg.han, my_data, num_elm, offset, no_action, [=]{
+      printf("%d: after put: sending msg back to 0: offset=%d\n", my_node, offset);
 
       TestMsg* back = make_shared_message<TestMsg>(msg.han);
       the_msg->send_msg(0, test_han2, back);
@@ -70,16 +70,14 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     my_handle_1 = the_rdma->register_new_typed_rdma_handler(my_data, put_len);
-    my_handle_2 = the_rdma->register_new_typed_rdma_handler(my_data+put_len, put_len);
 
     printf(
-      "%d: initializing my_handle_1=%lld, my_handle_2=%lld\n",
-      my_node, my_handle_1, my_handle_2
+      "%d: initializing my_handle_1=%lld\n",
+      my_node, my_handle_1
     );
 
     TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
-    TestMsg* msg2 = make_shared_message<TestMsg>(my_handle_2);
-
+    TestMsg* msg2 = make_shared_message<TestMsg>(my_handle_1);
     the_msg->send_msg(1, test_han, msg1);
     the_msg->send_msg(2, test_han, msg2);
   }

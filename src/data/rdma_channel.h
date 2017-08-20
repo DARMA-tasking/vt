@@ -175,17 +175,19 @@ struct Channel {
   }
 
   void
-  write_data_to_channel(rdma_ptr_t const& ptr, byte_t const& ptr_num_bytes) {
+  write_data_to_channel(
+    rdma_ptr_t const& ptr, byte_t const& ptr_num_bytes, byte_t const& offset
+  ) {
     assert(initialized and "Channel must be initialized");
     assert(not target and "The target can not write to this channel");
 
-    constexpr byte_t const mpi_target_disp = 0;
+    byte_t const d_offset = offset == no_byte ? 0 : offset;
 
     debug_print_rdma_channel(
       "%d: write_data_to_channel: target=%d, ptr=%p, ptr_num_bytes=%lld, "
-      "num_bytes=%lld, op_type=%s\n",
+      "num_bytes=%lld, op_type=%s, offset=%lld\n",
       my_node, target, ptr, ptr_num_bytes, num_bytes,
-      op_type == rdma_type_t::Get ? "GET" : "PUT"
+      op_type == rdma_type_t::Get ? "GET" : "PUT", offset
     );
 
     if (not locked) {
@@ -194,14 +196,12 @@ struct Channel {
 
     if (op_type == rdma_type_t::Get) {
       auto const& get_ret = MPI_Get(
-        ptr, ptr_num_bytes, MPI_BYTE, target, mpi_target_disp,
-        num_bytes, MPI_BYTE, window
+        ptr, ptr_num_bytes, MPI_BYTE, target, d_offset, num_bytes, MPI_BYTE, window
       );
       assert(get_ret == MPI_SUCCESS and "MPI_Get: Should be successful");
     } else if (op_type == rdma_type_t::Put) {
       auto const& put_ret = MPI_Put(
-        ptr, ptr_num_bytes, MPI_BYTE, target, mpi_target_disp,
-        num_bytes, MPI_BYTE, window
+        ptr, ptr_num_bytes, MPI_BYTE, target, d_offset, num_bytes, MPI_BYTE, window
       );
       assert(put_ret == MPI_SUCCESS and "MPI_Put: Should be successful");
     } else {

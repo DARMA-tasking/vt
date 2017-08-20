@@ -24,7 +24,7 @@ static void tell_handle(runtime::BaseMessage* in_msg) {
   if (my_node != 0) {
     printf("%d: handle=%lld, requesting data\n", my_node, msg.han);
     int const num_elm = 2;
-    the_rdma->get_typed_data_info_buf(msg.han, my_data, num_elm, no_tag, [=]{
+    the_rdma->get_typed_data_info_buf(msg.han, my_data, num_elm, no_byte, no_tag, [=]{
       for (auto i = 0; i < num_elm; i++) {
         printf("node %d: \t: my_data[%d] = %f\n", my_node, i, my_data[i]);
       }
