@@ -51,4 +51,29 @@ Registry::register_new_handler(
   return new_handle;
 }
 
+void
+Registry::swap_handler(handler_t const& han, active_function_t fn) {
+  auto iter = registered.find(han);
+  assert(
+    iter != registered.end() and "Handler must be registered"
+  );
+  iter->second = fn;
+}
+
+handler_t
+Registry::register_active_handler(active_function_t fn) {
+  return register_new_handler(fn, true);
+}
+
+active_function_t
+Registry::get_handler(handler_t const& han) {
+  auto iter = registered.find(han);
+  assert(
+    iter != registered.end() and "Handler must be registered"
+  );
+  return iter->second;
+}
+
+
+
 } // end namespace runtime

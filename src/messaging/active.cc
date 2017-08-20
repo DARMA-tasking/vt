@@ -383,4 +383,9 @@ ActiveMessenger::collective_register_handler(active_function_t fn) {
   return CollectiveOps::register_handler(fn);
 }
 
+void
+ActiveMessenger::swap_handler(handler_t const& han, active_function_t fn) {
+  return the_registry->swap_handler(han, fn);
+}
+
 } //end namespace runtime

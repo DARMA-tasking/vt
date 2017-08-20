@@ -168,6 +168,9 @@ struct ActiveMessenger {
   handler_t
   register_new_handler(active_function_t fn);
 
+  void
+  swap_handler(handler_t const& han, active_function_t fn);
+
   handler_t
   collective_register_handler(active_function_t fn);
 

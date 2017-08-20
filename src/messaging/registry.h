@@ -43,19 +43,14 @@ struct Registry {
   handler_t
   register_new_handler(active_function_t fn, bool const& is_collective = false);
 
+  void
+  swap_handler(handler_t const& han, active_function_t fn);
+
   handler_t
-  register_active_handler(active_function_t fn) {
-    return register_new_handler(fn, true);
-  }
+  register_active_handler(active_function_t fn);
 
   active_function_t
-  get_handler(handler_t const& han) {
-    auto iter = registered.find(han);
-    assert(
-      iter != registered.end() and "Handler must be registered"
-    );
-    return iter->second;
-  }
+  get_handler(handler_t const& han);
 
 private:
   container_t registered;
