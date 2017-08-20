@@ -121,6 +121,10 @@ add_executable(
   ${PROJECT_EXAMPLE_DIR}/rdma_simple_put_direct.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
+add_executable(
+  rdma_simple_channel
+  ${PROJECT_EXAMPLE_DIR}/rdma_simple_channel.cc ${SOURCE_FILES} ${HEADER_FILES}
+)
 
 add_executable(
   callback

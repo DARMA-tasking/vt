@@ -53,11 +53,57 @@ struct RDMAOpFinishedMessage : ActiveMessage<EnvelopeT> {
   rdma_op_t op_id = no_rdma_op;
 };
 
+struct CreateChannel : runtime::CallbackMessage {
+  using rdma_type_t = Type;
+
+  CreateChannel(
+    rdma_type_t const& in_type, rdma_handle_t const& in_han,
+    tag_t const& in_channel_tag, node_t const& in_target,
+    node_t const& in_non_target
+  ) : CallbackMessage(), type(in_type), rdma_handle(in_han),
+      target(in_target), non_target(in_non_target),
+      channel_tag(in_channel_tag)
+  { }
+
+  bool has_bytes = false;
+  tag_t channel_tag = no_tag;
+  rdma_handle_t rdma_handle = no_rdma_handle;
+  rdma_type_t type = uninitialized_rdma_type;
+  node_t target = uninitialized_destination;
+  node_t non_target = uninitialized_destination;
+};
+
+struct GetInfoChannel : runtime::CallbackMessage {
+  GetInfoChannel(byte_t const& in_num_bytes)
+    : CallbackMessage(), num_bytes(in_num_bytes)
+  { }
+
+  byte_t num_bytes = no_byte;
+};
+
+struct ChannelMessage : runtime::CallbackMessage {
+  using rdma_type_t = Type;
+
+  ChannelMessage(
+    rdma_type_t const& in_type, rdma_handle_t const& in_han,
+    byte_t const& in_num_bytes, tag_t const& in_channel_tag
+  ) : CallbackMessage(), type(in_type), han(in_han), num_bytes(in_num_bytes),
+      channel_tag(in_channel_tag)
+  { }
+
+  tag_t channel_tag = no_tag;
+  rdma_type_t type = uninitialized_rdma_type;
+  rdma_handle_t han = no_rdma_handle;
+  byte_t num_bytes = no_byte;
+};
+
 using GetMessage = RequestDataMessage<EpochTagEnvelope>;
 using GetBackMessage = SendDataMessage<EpochTagEnvelope>;
 
 using PutMessage = SendDataMessage<EpochTagEnvelope>;
 using PutBackMessage = RDMAOpFinishedMessage<EpochTagEnvelope>;
+
+using DestroyChannel = ChannelMessage;
 
 }} //end namespace runtime::rdma
 

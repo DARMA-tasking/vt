@@ -13,6 +13,7 @@ using rdma_identifier_t = int32_t;
 
 static constexpr rdma_identifier_t const first_rdma_identifier = 1;
 static constexpr rdma_identifier_t const uninitialized_rdma_identifier = -1;
+static constexpr tag_t const first_rdma_channel_tag = 1;
 
 // 64 bits: RDMA handle
 //   int64_t handle/handler : [20..52]
@@ -22,19 +23,22 @@ static constexpr rdma_identifier_t const uninitialized_rdma_identifier = -1;
 //   int64_t is_collective : 1 [1]
 //   int64_t is_sized : 1 [0]
 
+enum Type {
+  Get = 0,
+  Put = 1,
+  GetOrPut = 2,
+  Uninitialized = 3
+};
+
+static constexpr int const rdma_type_num_bis = 3;
+
 enum Bits {
   Sized = 0,
   Collective = 1,
   HandlerType = 2,
   OpType = 3,
-  Node = 4,
-  Identifier = 20
-};
-
-enum Type {
-  Get = 0,
-  Put = 1,
-  GetOrPut = 2
+  Node = Bits::OpType + rdma_type_num_bis,
+  Identifier = Bits::Node + node_num_bits
 };
 
 using rdma_op_t = int64_t;
@@ -46,6 +50,8 @@ using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t, byte_
 
 using rdma_ptr_continuation_t = std::function<void(rdma_ptr_t)>;
 using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;
+
+static constexpr Type uninitialized_rdma_type = Type::Uninitialized;
 
 }} //end namespace runtime::rdma
 

@@ -291,6 +291,9 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
   auto const& is_tag = envelope_is_tag_type(msg->env);
   auto const& tag = is_tag ? envelope_get_tag(msg->env) : no_tag;
+  auto const& callback =
+    envelope_is_callback_type(msg->env) ?
+    get_callback_message(msg) : uninitialized_handler;
 
   auto const& active_fun = the_registry->get_handler(handler, tag);
 
@@ -299,13 +302,15 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
   if (has_action_handler) {
     // set the current handler so the user can request it in the context of an
     // active fun
-    current_hanlder_context = handler;
+    current_handler_context = handler;
+    current_callback_context = callback;
 
     // run the active function
     active_fun(msg);
 
     // unset current handler
-    current_hanlder_context = uninitialized_handler;
+    current_handler_context = uninitialized_handler;
+    current_callback_context = uninitialized_handler;
   } else {
     if (insert) {
       auto iter = pending_handler_msgs.find(handler);
@@ -457,7 +462,12 @@ ActiveMessenger::unregister_handler_fn(
 
 handler_t
 ActiveMessenger::get_current_handler() {
-  return current_hanlder_context;
+  return current_handler_context;
+}
+
+handler_t
+ActiveMessenger::get_current_callback() {
+  return current_callback_context;
 }
 
 } //end namespace runtime

@@ -158,6 +158,25 @@ struct ActiveMessenger {
     action_t next_action = nullptr
   );
 
+  template <typename MessageT>
+  void
+  send_msg_callback(
+    handler_t const& han, node_t const& dest, MessageT* const msg,
+    active_function_t fn
+  ) {
+    handler_t const& this_han = register_new_handler(fn, no_tag);
+    auto cb = static_cast<CallbackMessage*>(msg);
+    cb->set_callback(this_han);
+    send_msg(dest, han, msg);
+  }
+
+  template <typename MessageT>
+  void
+  send_callback(MessageT* const msg) {
+    auto const& han_callback = get_current_callback();
+    send_msg(han_callback, msg);
+  }
+
   void
   check_term_single_node();
 
@@ -195,6 +214,9 @@ struct ActiveMessenger {
   handler_t
   get_current_handler();
 
+  handler_t
+  get_current_callback();
+
   bool
   deliver_active_msg(message_t msg, bool insert);
 
@@ -205,7 +227,8 @@ struct ActiveMessenger {
   process_maybe_ready_han_tag();
 
 private:
-  handler_t current_hanlder_context = uninitialized_handler;
+  handler_t current_handler_context = uninitialized_handler;
+  handler_t current_callback_context = uninitialized_handler;
 
   maybe_ready_t maybe_ready_tag_han;
 

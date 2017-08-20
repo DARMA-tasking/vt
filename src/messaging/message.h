@@ -37,6 +37,24 @@ using EpochTagMessage = ActiveMessage<EpochTagEnvelope>;
 // default runtime::Message includes tag and epoch
 using Message = EpochTagMessage;
 
+struct CallbackMessage : runtime::Message {
+  CallbackMessage() : Message() {
+    set_callback_type(env);
+  }
+
+  void
+  set_callback(handler_t const& han) {
+    callback = han;
+  }
+
+  handler_t callback = uninitialized_handler;
+};
+
+inline handler_t
+get_callback_message(ShortMessage* msg) {
+  return reinterpret_cast<CallbackMessage*>(msg)->callback;
+}
+
 } //end namespace runtime
 
 #endif /*__RUNTIME_TRANSPORT_MESSAGE__*/

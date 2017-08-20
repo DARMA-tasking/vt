@@ -39,8 +39,8 @@ HandleManager::set_is_handler(
 HandleManager::set_op_type(
   universal_rdma_id_t& handle, rdma_type_t const& rdma_type
 ) {
-  bool const op_set = rdma_type == rdma_type_t::Put;
-  set_rdma_bit(handle, op_set, rdma_bits_t::OpType);
+  handle = 0xFFFFFFC7 & handle;
+  handle |= rdma_type << rdma_bits_t::OpType;
 }
 
 /*static*/ void
@@ -88,12 +88,20 @@ HandleManager::is_handler(universal_rdma_id_t const& handle) {
 
 /*static*/ HandleManager::rdma_type_t
 HandleManager::get_op_type(universal_rdma_id_t const& handle) {
-  if ((1 << rdma_bits_t::OpType) & (handle == rdma_type_t::Put)) {
-    return rdma_type_t::Put;
-  } else {
-    return rdma_type_t::Get;
-  }
+  rdma_type_t const type = static_cast<rdma_type_t>(
+    (0x00000038 & handle) >> rdma_bits_t::OpType
+  );
+  return type;
 }
+
+/*static*/ HandleManager::universal_rdma_id_t
+HandleManager::create_new_handler() {
+  rdma_type_t const& type = rdma_type_t::Uninitialized;
+  rdma_handle_t handle = 0;
+  set_op_type(handle, type);
+  return handle;
+}
+
 
 }} // end namespace runtime::rdma
 

@@ -63,6 +63,9 @@ struct HandleManager {
 
   static rdma_type_t
   get_op_type(universal_rdma_id_t const& handle);
+
+  static HandleManager::universal_rdma_id_t
+  create_new_handler();
 };
 
 }} //end namespace runtime::rdma

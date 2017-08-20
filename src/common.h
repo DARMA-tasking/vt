@@ -47,6 +47,12 @@ static constexpr handler_t const uninitialized_handler = -1;
 static constexpr rdma_handler_t const uninitialized_rdma_handler = -1;
 static constexpr ref_t const not_shared_message = -1000;
 
+static constexpr int const node_num_bits = 16;
+static constexpr int const handler_num_bits = 32;
+static constexpr int const ref_num_bits = 16;
+static constexpr int const epoch_num_bits = 32;
+static constexpr int const tag_num_bits = 32;
+
 } //end namespace runtime
 
 #endif /*__RUNTIME_TRANSPORT_EVENT_COMMON__*/

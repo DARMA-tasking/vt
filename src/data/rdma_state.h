@@ -6,6 +6,7 @@
 #include "rdma_common.h"
 #include "rdma_handle.h"
 #include "rdma_msg.h"
+#include "rdma_channel.h"
 
 #include <unordered_map>
 #include <vector>

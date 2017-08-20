@@ -21,21 +21,19 @@ enum EnvelopeType {
   Term = 2,
   Broadcast = 3,
   EpochType = 4,
-  TagType = 5
+  TagType = 5,
+  Callback = 6
 };
 
-constexpr static int const num_envelope_bits = 6;
-constexpr static int const num_handler_bits = 32;
-constexpr static int const num_node_bits = 16;
-constexpr static int const num_ref_bits = 16;
+constexpr static int const envelope_num_bits = 7;
 
 using envelope_type_t = EnvelopeType;
 
 struct Envelope {
-  envelope_datatype_t type : num_envelope_bits;
-  node_t dest : num_node_bits;
-  handler_t han : num_handler_bits;
-  ref_t ref : num_ref_bits;
+  envelope_datatype_t type : envelope_num_bits;
+  node_t dest : node_num_bits;
+  handler_t han : handler_num_bits;
+  ref_t ref : ref_num_bits;
 };
 
 // Set the type of Envelope
@@ -75,6 +73,11 @@ inline void set_tag_type(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type |= 1 << EnvelopeType::TagType;
 }
 
+template <typename Env>
+inline void set_callback_type(Env& env) {
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << EnvelopeType::Callback;
+}
+
 // Test the type of Envelope
 
 template <typename Env>
@@ -95,6 +98,11 @@ inline bool envelope_is_epoch_type(Env const& env) {
 template <typename Env>
 inline bool envelope_is_tag_type(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type & (1 << EnvelopeType::TagType);
+}
+
+template <typename Env>
+inline bool envelope_is_callback_type(Env const& env) {
+  return reinterpret_cast<Envelope const*>(&env)->type & (1 << EnvelopeType::Callback);
 }
 
 // Get fields of Envelope
@@ -163,23 +171,20 @@ inline void envelope_init_empty(Envelope& env) {
   envelope_init(env);
 }
 
-constexpr static int const num_epoch_bits = 32;
-constexpr static int const num_tag_bits = 32;
-
 struct EpochEnvelope {
   Envelope env;
-  epoch_t epoch : num_epoch_bits;
+  epoch_t epoch : epoch_num_bits;
 };
 
 struct TagEnvelope {
   Envelope env;
-  tag_t tag : num_tag_bits;
+  tag_t tag : tag_num_bits;
 };
 
 struct EpochTagEnvelope {
   Envelope env;
-  epoch_t epoch : num_epoch_bits;
-  tag_t tag : num_tag_bits;
+  epoch_t epoch : epoch_num_bits;
+  tag_t tag : tag_num_bits;
 };
 
 template <typename Env>
