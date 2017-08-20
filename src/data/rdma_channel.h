@@ -101,11 +101,20 @@ struct Channel {
   void
   sync_channel_local() {
     printf(
-      "%d: channel: sync_channel_local: target=%d\n", my_node, target
+      "%d: channel: sync_channel_local: target=%d, locked=%s\n",
+      my_node, target, print_bool(locked)
     );
+
+    if (not locked) {
+      lock_channel_for_op();
+    }
 
     auto const& ret = MPI_Win_flush_local(0,window);
     assert(ret == MPI_SUCCESS and "MPI_Win_flush_local: Should be successful");
+
+    if (op_type == rdma_type_t::Put) {
+      unlock_channel_for_op();
+    }
   }
 
   void
@@ -127,18 +136,20 @@ struct Channel {
       constexpr int const mpi_win_lock_assert_arg = 0;
 
       auto const& lock_type =
-        op_type == rdma_type_t::Get ? MPI_LOCK_SHARED : MPI_LOCK_EXCLUSIVE;
+        op_type == rdma_type_t::Put ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
+
+      debug_print_rdma_channel(
+        "%d: lock_channel_for_op: is_target=%s, target=%d, op_type=%s, "
+        "lock_type=%d, exclusive=%d\n",
+        my_node, print_bool(is_target), target,
+        op_type == rdma_type_t::Get ? "GET" : "PUT", lock_type, MPI_LOCK_EXCLUSIVE
+      );
 
       auto const ret = MPI_Win_lock(
         lock_type, target, mpi_win_lock_assert_arg, window
       );
 
       assert(ret == MPI_SUCCESS and "MPI_Win_lock: Should be successful");
-
-      debug_print_rdma_channel(
-        "%d: lock_channel_for_op: target=%d, op_type=%s, lock_type=%d\n",
-        my_node, target, op_type == rdma_type_t::Get ? "GET" : "PUT",  lock_type
-      );
 
       locked = true;
     }
