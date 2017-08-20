@@ -31,7 +31,7 @@ Registry::set_handler_identifier(handler_t& han, handler_identifier_t const& ide
 
 handler_t
 Registry::register_new_handler(
-  active_function_t fn, bool const& is_collective
+  active_function_t fn, tag_t const& tag, bool const& is_collective
 ) {
   auto const& this_node = the_context->get_node();
 
@@ -42,45 +42,76 @@ Registry::register_new_handler(
   set_handler_node(new_handle, is_collective ? uninitialized_destination : this_node);
   set_handler_identifier(new_handle, new_identifier);
 
-  registered.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(new_handle),
-    std::forward_as_tuple(fn)
-  );
+  if (tag == no_tag) {
+    registered[new_handle] = fn;
+  } else {
+    tagged_registered[new_handle][tag] = fn;
+  }
 
   return new_handle;
 }
 
 void
-Registry::swap_handler(handler_t const& han, active_function_t fn) {
-  auto iter = registered.find(han);
-  assert(
-    iter != registered.end() and "Handler must be registered"
-  );
-  iter->second = fn;
+Registry::swap_handler(
+  handler_t const& han, active_function_t fn, tag_t const& tag
+) {
+  if (tag == no_tag) {
+    auto iter = registered.find(han);
+    assert(
+      iter != registered.end() and "Handler must be registered"
+    );
+    iter->second = fn;
+  } else {
+    if (fn == nullptr) {
+      auto tag_iter = tagged_registered[han].find(tag);
+      if (tag_iter != tagged_registered[han].end()) {
+        tagged_registered[han].erase(tag_iter);
+        if (tagged_registered[han].size() == 0) {
+          tagged_registered.erase(tagged_registered.find(han));
+        }
+      }
+    } else {
+      tagged_registered[han][tag] = fn;
+    }
+  }
 }
 
 void
-Registry::unregister_handler_fn(handler_t const& han) {
-  auto iter = registered.find(han);
-  assert(
-    iter != registered.end() and "Handler must be registered"
-  );
-  iter->second = nullptr;
+Registry::unregister_handler_fn(handler_t const& han, tag_t const& tag) {
+  swap_handler(han, nullptr, tag);
 }
 
 handler_t
-Registry::register_active_handler(active_function_t fn) {
-  return register_new_handler(fn, true);
+Registry::register_active_handler(active_function_t fn, tag_t const& tag) {
+  return register_new_handler(fn, tag, true);
 }
 
 active_function_t
-Registry::get_handler(handler_t const& han) {
+Registry::get_handler_no_tag(handler_t const& han) {
   auto iter = registered.find(han);
   assert(
     iter != registered.end() and "Handler must be registered"
   );
   return iter->second;
+}
+
+active_function_t
+Registry::get_handler(handler_t const& han, tag_t const& tag) {
+  if (tag == no_tag) {
+    return get_handler_no_tag(han);
+  } else {
+    auto tag_iter = tagged_registered.find(han);
+    if (tag_iter == tagged_registered.end()) {
+      return get_handler_no_tag(han);
+    } else {
+      auto iter = tag_iter->second.find(tag);
+      if (iter == tag_iter->second.end()) {
+        return iter->second;
+      } else {
+        return get_handler_no_tag(han);
+      }
+    }
+  }
 }
 
 

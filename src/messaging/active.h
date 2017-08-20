@@ -48,7 +48,7 @@ struct ActiveMessenger {
   using send_fn_t = std::function<send_data_ret_t(rdma_get_t,node_t,tag_t,action_t)>;
   using user_send_fn_t = std::function<void(send_fn_t)>;
   using container_pending_t = std::unordered_map<tag_t, pending_recv_t>;
-  using msg_cont_t = std::vector<message_t>;
+  using msg_cont_t = std::list<message_t>;
   using container_waiting_handler_t = std::unordered_map<handler_t, msg_cont_t>;
 
   ActiveMessenger() = default;
@@ -170,28 +170,32 @@ struct ActiveMessenger {
   scheduler(int const& num_times = scheduler_default_num_times);
 
   handler_t
-  register_new_handler(active_function_t fn);
+  register_new_handler(active_function_t fn, tag_t const& tag = no_tag);
 
   void
-  swap_handler_fn(handler_t const& han, active_function_t fn);
+  swap_handler_fn(
+    handler_t const& han, active_function_t fn, tag_t const& tag = no_tag
+  );
 
   void
-  unregister_handler_fn(handler_t const& han);
+  unregister_handler_fn(handler_t const& han, tag_t const& tag = no_tag);
 
   void
-  register_handler_fn(handler_t const& han, active_function_t fn);
+  register_handler_fn(
+    handler_t const& han, active_function_t fn, tag_t const& tag = no_tag
+  );
 
   handler_t
-  collective_register_handler(active_function_t fn);
+  collective_register_handler(active_function_t fn, tag_t const& tag = no_tag);
 
   handler_t
   get_current_handler();
 
   bool
-  deliver_active_msg(message_t msg);
+  deliver_active_msg(message_t msg, bool insert);
 
   void
-  deliver_pending_msgs_on_han(handler_t const& han);
+  deliver_pending_msgs_on_han(handler_t const& han, tag_t const& tag = no_tag);
 
 private:
   handler_t current_hanlder_context = uninitialized_handler;

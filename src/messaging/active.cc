@@ -288,14 +288,16 @@ ActiveMessenger::recv_data_msg(
 }
 
 bool
-ActiveMessenger::deliver_active_msg(message_t msg) {
+ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
   auto const& is_term = envelope_is_term(msg->env);
   auto const& is_bcast = envelope_is_bcast(msg->env);
   auto const& handler = envelope_get_handler(msg->env);
   auto const& epoch =
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
+  auto const& tag =
+    envelope_is_tag_type(msg->env) ? envelope_get_tag(msg->env) : no_tag;
 
-  auto const& active_fun = the_registry->get_handler(handler);
+  auto const& active_fun = the_registry->get_handler(handler, tag);
 
   bool const& has_action_handler = active_fun != no_action;
 
@@ -315,15 +317,17 @@ ActiveMessenger::deliver_active_msg(message_t msg) {
     // unset current handler
     current_hanlder_context = uninitialized_handler;
   } else {
-    auto iter = pending_handler_msgs.find(handler);
-    if (iter == pending_handler_msgs.end()) {
-      pending_handler_msgs.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(handler),
-        std::forward_as_tuple(msg_cont_t{msg})
-      );
-    } else {
-      iter->second.push_back(msg);
+    if (insert) {
+      auto iter = pending_handler_msgs.find(handler);
+      if (iter == pending_handler_msgs.end()) {
+        pending_handler_msgs.emplace(
+          std::piecewise_construct,
+          std::forward_as_tuple(handler),
+          std::forward_as_tuple(msg_cont_t{msg})
+        );
+      } else {
+        iter->second.push_back(msg);
+      }
     }
   }
 
@@ -366,7 +370,7 @@ ActiveMessenger::try_process_incoming_message() {
     auto const& handler = envelope_get_handler(msg->env);
     auto const& is_bcast = envelope_is_bcast(msg->env);
 
-    deliver_active_msg(msg);
+    deliver_active_msg(msg, true);
 
     // @todo: the broadcast forward should happen before running the active
     // function, but deallocation is a problem without reference counting
@@ -397,47 +401,61 @@ ActiveMessenger::perform_triggered_actions() {
 }
 
 handler_t
-ActiveMessenger::register_new_handler(active_function_t fn) {
-  return the_registry->register_new_handler(fn);
+ActiveMessenger::register_new_handler(active_function_t fn, tag_t const& tag) {
+  return the_registry->register_new_handler(fn, tag);
 }
 
 handler_t
-ActiveMessenger::collective_register_handler(active_function_t fn) {
-  return CollectiveOps::register_handler(fn);
+ActiveMessenger::collective_register_handler(
+  active_function_t fn, tag_t const& tag
+) {
+  return the_registry->register_active_handler(fn, tag);
 }
 
 void
-ActiveMessenger::swap_handler_fn(handler_t const& han, active_function_t fn) {
-  the_registry->swap_handler(han, fn);
+ActiveMessenger::swap_handler_fn(
+  handler_t const& han, active_function_t fn, tag_t const& tag
+) {
+  the_registry->swap_handler(han, fn, tag);
 
   if (fn != nullptr) {
-    deliver_pending_msgs_on_han(han);
+    deliver_pending_msgs_on_han(han, tag);
   }
 }
 
 void
-ActiveMessenger::deliver_pending_msgs_on_han(handler_t const& han) {
+ActiveMessenger::deliver_pending_msgs_on_han(
+  handler_t const& han, tag_t const& tag
+) {
   auto iter = pending_handler_msgs.find(han);
   if (iter != pending_handler_msgs.end()) {
-    for (auto&& msg : iter->second) {
-      deliver_active_msg(msg);
+    if (iter->second.size() > 0) {
+      auto msg = iter->second.back();
+      if (deliver_active_msg(msg, false)) {
+        iter->second.pop_back();
+      }
+    } else {
+      pending_handler_msgs.erase(iter);
     }
-    pending_handler_msgs.erase(han);
   }
 }
 
 void
-ActiveMessenger::register_handler_fn(handler_t const& han, active_function_t fn) {
-  swap_handler_fn(han, fn);
+ActiveMessenger::register_handler_fn(
+  handler_t const& han, active_function_t fn, tag_t const& tag
+) {
+  swap_handler_fn(han, fn, tag);
 
   if (fn != nullptr) {
-    deliver_pending_msgs_on_han(han);
+    deliver_pending_msgs_on_han(han, tag);
   }
 }
 
 void
-ActiveMessenger::unregister_handler_fn(handler_t const& han) {
-  return the_registry->unregister_handler_fn(han);
+ActiveMessenger::unregister_handler_fn(
+  handler_t const& han, tag_t const& tag
+) {
+  return the_registry->unregister_handler_fn(han, tag);
 }
 
 handler_t
