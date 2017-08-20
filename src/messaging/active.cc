@@ -22,11 +22,6 @@ ActiveMessenger::send_msg_direct(
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
   auto const& is_shared = is_shared_message(msg);
 
-  debug_print_active(
-    "send_msg_direct: dest=%d, han=%d, msg=%p, epoch=%d, type=%d\n",
-    dest, han, msg, epoch, msg->env.type
-  );
-
   if (not is_bcast) {
     // non-broadcast message send
 
@@ -294,17 +289,12 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
   auto const& handler = envelope_get_handler(msg->env);
   auto const& epoch =
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
-  auto const& tag =
-    envelope_is_tag_type(msg->env) ? envelope_get_tag(msg->env) : no_tag;
+  auto const& is_tag = envelope_is_tag_type(msg->env);
+  auto const& tag = is_tag ? envelope_get_tag(msg->env) : no_tag;
 
   auto const& active_fun = the_registry->get_handler(handler, tag);
 
   bool const& has_action_handler = active_fun != no_action;
-
-  debug_print_active(
-    "%d: deliver_active_msg: consume: msg=%p, is_term=%d, has_action_handler=%s\n",
-    the_context->get_node(), msg, is_term, print_bool(has_action_handler)
-  );
 
   if (has_action_handler) {
     // set the current handler so the user can request it in the context of an
@@ -391,6 +381,14 @@ ActiveMessenger::scheduler(int const& num_times) {
     perform_triggered_actions();
     check_term_single_node();
     process_data_msg_recv();
+    process_maybe_ready_han_tag();
+  }
+}
+
+void
+ActiveMessenger::process_maybe_ready_han_tag() {
+  for (auto&& x : maybe_ready_tag_han) {
+    deliver_pending_msgs_on_han(std::get<0>(x), std::get<1>(x));
   }
 }
 
@@ -419,7 +417,7 @@ ActiveMessenger::swap_handler_fn(
   the_registry->swap_handler(han, fn, tag);
 
   if (fn != nullptr) {
-    deliver_pending_msgs_on_han(han, tag);
+    maybe_ready_tag_han.push_back(ready_han_tag_t{han,tag});
   }
 }
 
@@ -430,9 +428,10 @@ ActiveMessenger::deliver_pending_msgs_on_han(
   auto iter = pending_handler_msgs.find(han);
   if (iter != pending_handler_msgs.end()) {
     if (iter->second.size() > 0) {
-      auto msg = iter->second.back();
-      if (deliver_active_msg(msg, false)) {
-        iter->second.pop_back();
+      for (auto cur = iter->second.begin(); cur != iter->second.end(); ++cur) {
+        if (deliver_active_msg(*cur, false)) {
+          cur = iter->second.erase(cur);
+        }
       }
     } else {
       pending_handler_msgs.erase(iter);
@@ -447,7 +446,7 @@ ActiveMessenger::register_handler_fn(
   swap_handler_fn(han, fn, tag);
 
   if (fn != nullptr) {
-    deliver_pending_msgs_on_han(han, tag);
+    maybe_ready_tag_han.push_back(ready_han_tag_t{han,tag});
   }
 }
 

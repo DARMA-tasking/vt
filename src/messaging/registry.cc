@@ -89,10 +89,11 @@ Registry::register_active_handler(active_function_t fn, tag_t const& tag) {
 active_function_t
 Registry::get_handler_no_tag(handler_t const& han) {
   auto iter = registered.find(han);
-  assert(
-    iter != registered.end() and "Handler must be registered"
-  );
-  return iter->second;
+  if (iter != registered.end()) {
+    return iter->second;
+  } else {
+    return nullptr;
+  }
 }
 
 active_function_t
@@ -105,7 +106,7 @@ Registry::get_handler(handler_t const& han, tag_t const& tag) {
       return get_handler_no_tag(han);
     } else {
       auto iter = tag_iter->second.find(tag);
-      if (iter == tag_iter->second.end()) {
+      if (iter != tag_iter->second.end()) {
         return iter->second;
       } else {
         return get_handler_no_tag(han);

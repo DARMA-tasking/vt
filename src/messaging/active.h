@@ -50,6 +50,8 @@ struct ActiveMessenger {
   using container_pending_t = std::unordered_map<tag_t, pending_recv_t>;
   using msg_cont_t = std::list<message_t>;
   using container_waiting_handler_t = std::unordered_map<handler_t, msg_cont_t>;
+  using ready_han_tag_t = std::tuple<handler_t, tag_t>;
+  using maybe_ready_t = std::vector<ready_han_tag_t>;
 
   ActiveMessenger() = default;
 
@@ -85,7 +87,8 @@ struct ActiveMessenger {
   template <typename MessageT>
   event_t
   send_msg(
-    handler_t const& han, MessageT* const msg, action_t next_action = nullptr
+    handler_t const& han, MessageT* const msg, tag_t const& tag = no_tag,
+    action_t next_action = nullptr
   ) {
     auto const& dest = the_registry->get_handler_node(han);
     assert(
@@ -94,6 +97,7 @@ struct ActiveMessenger {
     );
     // setup envelope
     envelope_setup(msg->env, dest, han);
+    envelope_set_tag(msg->env, tag);
     return send_msg_direct(han, msg, sizeof(MessageT), next_action);
   }
 
@@ -197,8 +201,13 @@ struct ActiveMessenger {
   void
   deliver_pending_msgs_on_han(handler_t const& han, tag_t const& tag = no_tag);
 
+  void
+  process_maybe_ready_han_tag();
+
 private:
   handler_t current_hanlder_context = uninitialized_handler;
+
+  maybe_ready_t maybe_ready_tag_han;
 
   container_waiting_handler_t pending_handler_msgs;
 

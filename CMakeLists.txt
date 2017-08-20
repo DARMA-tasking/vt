@@ -132,6 +132,11 @@ add_executable(
   ${PROJECT_EXAMPLE_DIR}/reinstate.cc ${SOURCE_FILES} ${HEADER_FILES}
 )
 
+add_executable(
+  tagged_handler
+  ${PROJECT_EXAMPLE_DIR}/tagged_handler.cc ${SOURCE_FILES} ${HEADER_FILES}
+)
+
 target_link_libraries(
   vt_mpi
   PRIVATE
