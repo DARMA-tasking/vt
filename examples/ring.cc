@@ -5,7 +5,6 @@
 using namespace runtime;
 
 static node_t next_node = uninitialized_destination;
-
 static node_t my_node = uninitialized_destination;
 static node_t num_nodes = uninitialized_destination;
 
@@ -43,8 +42,9 @@ int main(int argc, char** argv) {
 
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();
-
   next_node = my_node+1 >= num_nodes ? 0 : my_node+1;
+
+  printf("%d: my_node = %d here\n",the_context->get_node(),my_node);
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");

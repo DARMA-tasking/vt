@@ -5,37 +5,32 @@
 namespace runtime { namespace term {
 
 /*static*/ void
-TerminationDetector::register_termination_handlers() {
-  the_term->new_epoch_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      EpochMsg& msg = *static_cast<EpochMsg*>(in_msg);
-      the_term->propagate_new_epoch(msg.new_epoch);
-    });
-
-  the_term->ready_epoch_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      EpochMsg& msg = *static_cast<EpochMsg*>(in_msg);
-      the_term->ready_new_epoch(msg.new_epoch);
-    });
-
-  the_term->propagate_epoch_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      EpochPropagateMsg& msg = *static_cast<EpochPropagateMsg*>(in_msg);
-      the_term->propagate_epoch_external(msg.epoch, msg.prod, msg.cons);
-    });
-
-  the_term->epoch_finished_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      EpochMsg& msg = *static_cast<EpochMsg*>(in_msg);
-      the_term->epoch_finished(msg.new_epoch);
-    });
-
-  the_term->epoch_continue_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      EpochMsg& msg = *static_cast<EpochMsg*>(in_msg);
-      the_term->epoch_continue(msg.new_epoch, msg.wave);
-    });
+new_epoch_msg(EpochMsg* msg) {
+  the_term->propagate_new_epoch(msg->new_epoch);
 }
+
+/*static*/ void
+ready_epoch_msg(EpochMsg* msg) {
+  the_term->ready_new_epoch(msg->new_epoch);
+}
+
+/*static*/ void
+propagate_epoch_msg(EpochPropagateMsg* msg) {
+  the_term->propagate_epoch_external(msg->epoch, msg->prod, msg->cons);
+}
+
+/*static*/ void
+epoch_finished_msg(EpochMsg* msg) {
+  the_term->epoch_finished(msg->new_epoch);
+}
+
+/*static*/ void
+epoch_continue_msg(EpochMsg* msg) {
+  the_term->epoch_continue(msg->new_epoch, msg->wave);
+}
+
+/*static*/ void
+TerminationDetector::register_termination_handlers() { }
 
 /*static*/ void
 TerminationDetector::register_default_termination_action() {
@@ -150,6 +145,11 @@ TerminationDetector::propagate_epoch(
   bool const is_ready = event_count == num_children + 1;
   bool prop_continue = false;
 
+  debug_print_term(
+    "%d: propagate_epoch: epoch=%d, l_prod=%lld, l_cons=%lld, ec=%d, nc=%d\n",
+    my_node, epoch, state.l_prod, state.l_cons, event_count, num_children
+  );
+
   if (is_ready) {
     assert(state.propagate);
 
@@ -168,9 +168,9 @@ TerminationDetector::propagate_epoch(
       auto msg = new EpochPropagateMsg(epoch, state.g_prod1, state.g_cons1);
 
       the_msg->set_term_message(msg);
-      the_msg->send_msg(parent, propagate_epoch_han, msg, [=]{
-        delete msg;
-      });
+      the_msg->send_msg<EpochPropagateMsg, propagate_epoch_msg>(
+        parent, msg, [=]{ delete msg; }
+      );
 
       debug_print_term(
         "%d: propagate_epoch: sending to parent: %d\n",
@@ -195,7 +195,7 @@ TerminationDetector::propagate_epoch(
       if (is_term) {
         auto msg = new EpochMsg(epoch);
         the_msg->set_term_message(msg);
-        the_msg->broadcast_msg(epoch_finished_han, msg, [=]{
+        the_msg->broadcast_msg<EpochMsg, epoch_finished_msg>(msg, [=]{
           delete msg;
         });
 
@@ -207,7 +207,7 @@ TerminationDetector::propagate_epoch(
 
         auto msg = new EpochMsg(epoch);
         the_msg->set_term_message(msg);
-        the_msg->broadcast_msg(epoch_continue_han, msg, [=]{
+        the_msg->broadcast_msg<EpochMsg, epoch_continue_msg>(msg, [=]{
           delete msg;
         });
 
@@ -356,16 +356,15 @@ TerminationDetector::propagate_new_epoch(epoch_t const& new_epoch) {
     // propagate up the tree
     auto msg = new EpochMsg(new_epoch);
     the_msg->set_term_message(msg);
-    the_msg->send_msg(parent, new_epoch_han, msg, [=]{
-      delete msg;
-    });
+
+    the_msg->send_msg<EpochMsg, new_epoch_msg>(parent, msg, [=]{ delete msg; });
   } else if (is_ready and is_root) {
     // broadcast ready to all
     auto msg = new EpochMsg(new_epoch);
     the_msg->set_term_message(msg);
-    the_msg->broadcast_msg(ready_epoch_han, msg, [=]{
-      delete msg;
-    });
+
+    the_msg->broadcast_msg<EpochMsg, ready_epoch_msg>(msg, [=]{ delete msg; });
+
     ready_new_epoch(new_epoch);
   }
 }
@@ -380,6 +379,7 @@ TerminationDetector::ready_new_epoch(epoch_t const& new_epoch) {
     last_resolved_epoch = std::max(new_epoch, last_resolved_epoch);
   }
 }
+
 
 
 }} //end namespace runtime::term

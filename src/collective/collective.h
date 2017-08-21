@@ -17,6 +17,7 @@ struct CollectiveOps {
     MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
     MPI_Comm_rank(MPI_COMM_WORLD, &this_node);
     the_context = std::make_unique<Context>(this_node, num_nodes);
+    //MPI_Barrier(MPI_COMM_WORLD);
   }
 
   static handler_t

@@ -108,11 +108,15 @@ struct ActiveMessenger {
     MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
-    handler_t han = get_handler_active_function_expand(action_basic_function_t, f);
-    Registry::set_handler_auto(han, true);
+    handler_t new_han = 0;
+    handler_t const id = get_handler_active_function_expand(
+      action_any_function_t<MessageT>, f
+    );
+    Registry::set_handler_auto(new_han, true);
+    the_registry->set_handler_identifier(new_han, id);
     auto const& this_node = the_context->get_node();
     set_broadcast_type(msg->env);
-    return send_msg(this_node, han, msg, next_action);
+    return send_msg(this_node, new_han, msg, next_action);
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
@@ -121,13 +125,15 @@ struct ActiveMessenger {
     MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
-    handler_t han = get_handler_active_function_expand(
+    handler_t new_han = 0;
+    handler_t const id = get_handler_active_function_expand(
       action_any_function_t<MessageT>, f
     );
-    Registry::set_handler_auto(han, true);
+    Registry::set_handler_auto(new_han, true);
+    the_registry->set_handler_identifier(new_han, id);
     auto const& this_node = the_context->get_node();
     set_broadcast_type(msg->env);
-    return send_msg(this_node, han, msg, next_action);
+    return send_msg(this_node, new_han, msg, next_action);
   }
 
   template <action_basic_function_t* f, typename MessageT>
@@ -148,13 +154,15 @@ struct ActiveMessenger {
     node_t const& dest, MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
-    handler_t han = get_handler_active_function_expand(
+    handler_t new_han = 0;
+    handler_t const id = get_handler_active_function_expand(
       action_any_function_t<MessageT>, f
     );
-    Registry::set_handler_auto(han, true);
+    Registry::set_handler_auto(new_han, true);
+    the_registry->set_handler_identifier(new_han, id);
     //setup envelope
-    envelope_setup(msg->env, dest, han);
-    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+    envelope_setup(msg->env, dest, new_han);
+    return send_msg_direct(new_han, msg, sizeof(MessageT), next_action);
   }
 
   template <action_basic_function_t* f, typename MessageT>
@@ -163,13 +171,15 @@ struct ActiveMessenger {
     node_t const& dest, MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
-    handler_t han = get_handler_active_function_expand(
+    handler_t new_han = 0;
+    handler_t const id = get_handler_active_function_expand(
       action_basic_function_t, f
     );
-    Registry::set_handler_auto(han, true);
+    Registry::set_handler_auto(new_han, true);
+    the_registry->set_handler_identifier(new_han, id);
     //setup envelope
-    envelope_setup(msg->env, dest, han);
-    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+    envelope_setup(msg->env, dest, new_han);
+    return send_msg_direct(new_han, msg, sizeof(MessageT), next_action);
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>

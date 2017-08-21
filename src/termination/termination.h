@@ -79,7 +79,6 @@ struct TerminationDetector : Tree {
   static void
   register_default_termination_action();
 
-private:
   void
   setup_new_epoch(epoch_t const& new_epoch);
 
@@ -88,12 +87,6 @@ private:
 
   void
   ready_new_epoch(epoch_t const& new_epoch);
-
-  handler_t new_epoch_han = uninitialized_handler;
-  handler_t propagate_epoch_han = uninitialized_handler;
-  handler_t epoch_finished_han = uninitialized_handler;
-  handler_t ready_epoch_han = uninitialized_handler;
-  handler_t epoch_continue_han = uninitialized_handler;
 
 private:
   epoch_t cur_epoch = no_epoch;
@@ -113,6 +106,21 @@ private:
   // action container for each epoch
   epoch_container_t<action_container_t> epoch_actions;
 };
+
+  void
+  new_epoch_msg(EpochMsg* msg);
+
+  void
+  ready_epoch_msg(EpochMsg* msg);
+
+  void
+  propagate_epoch_msg(EpochPropagateMsg* msg);
+
+  void
+  epoch_finished_msg(EpochMsg* msg);
+
+  void
+  epoch_continue_msg(EpochMsg* msg);
 
 }} //end namespace runtime::term
 

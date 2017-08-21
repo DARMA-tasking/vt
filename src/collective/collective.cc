@@ -13,7 +13,7 @@ CollectiveOps::initialize_runtime() {
   rdma::RDMAManager::register_all_rdma_handlers();
 
   // wait for all nodes to start up to initialize the runtime
-  the_barrier->barrier();
+  //the_barrier->barrier();
 }
 
 /*static*/ void

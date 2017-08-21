@@ -40,8 +40,9 @@ struct Registrar {
 inline active_function_t
 get_auto_handler(ShortMessage* const msg) {
   handler_t handler = envelope_get_handler(msg->env);
-  Registry::set_handler_auto(handler, false);
-  return get_auto_registry().at(handler);
+  auto id = the_registry->get_handler_identifier(handler);
+  //printf("get_auto_handler:id=%d\n",id);
+  return get_auto_registry().at(id);
 }
 
 template <typename ActiveFnT>
