@@ -53,7 +53,7 @@ template <typename ActiveFnT>
 auto_handler_t
 register_active_fn() {
   auto const& idx = RegistrarWrapper<ActiveFnT>().registrar.index;
-  printf("idx=%d\n",idx);
+  //printf("idx=%d\n",idx);
   return idx;
 }
 
@@ -81,7 +81,7 @@ struct Runnable {
   }
 
   Runnable() {
-    printf("Runnable: idx=%d\n",idx);
+    //printf("Runnable: idx=%d\n",idx);
   }
 };
 
