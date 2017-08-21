@@ -82,6 +82,12 @@ struct State {
   void
   set_default_handler();
 
+  void
+  set_collective_map(rdma_collective_map_t const& map);
+
+  node_t
+  get_node(rdma_elm_t const& elm);
+
   rdma_get_t
   default_get_handler_fn(
     BaseMessage* msg, byte_t num_bytes, tag_t tag
@@ -109,6 +115,8 @@ private:
   tag_container_t<rdma_tag_put_holder_t> put_tag_holder;
 
   tag_container_t<container_t<rdma_info_t>> pending_tag_gets, pending_tag_puts;
+
+  rdma_collective_map_t collective_map = nullptr;
 };
 
 template<>

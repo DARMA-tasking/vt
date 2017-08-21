@@ -68,6 +68,8 @@ struct HandleManager {
   create_new_handler();
 };
 
+using rdma_handle_manager_t = HandleManager;
+
 }} //end namespace runtime::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMAHANDLER__*/

@@ -26,7 +26,6 @@ struct RDMAManager {
   using rdma_container_t = std::unordered_map<rdma_handle_t, rdma_state_t>;
   using rdma_live_channels_t = std::unordered_map<rdma_handle_t, rdma_channel_t>;
   using rdma_op_container_t = std::unordered_map<rdma_op_t, rdma_pending_t>;
-  using rdma_handle_manager_t = HandleManager;
   using rdma_get_function_t = rdma_state_t::rdma_get_function_t;
   using rdma_put_function_t = rdma_state_t::rdma_put_function_t;
   using rdma_direct_t = std::tuple<rdma_ptr_t, action_t>;
@@ -80,6 +79,13 @@ struct RDMAManager {
   get_data_info_buf(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
     byte_t const& num_bytes, byte_t const& offset, tag_t const& tag = no_tag,
+    action_t next_action = no_action
+  );
+
+  void
+  get_data_into_buf_collective(
+    rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
+    byte_t const& num_bytes, byte_t const& offset,
     action_t next_action = no_action
   );
 
@@ -234,6 +240,12 @@ struct RDMAManager {
   void
   remove_direct_channel(
     rdma_handle_t const& han, action_t const& action = nullptr
+  );
+
+  rdma_handle_t
+  register_new_collective(
+    bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes,
+    rdma_collective_map_t const& map
   );
 
 private:

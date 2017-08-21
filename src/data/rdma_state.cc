@@ -325,5 +325,23 @@ State::process_pending_get(tag_t const& tag) {
   }
 }
 
+void
+State::set_collective_map(rdma_collective_map_t const& map) {
+  assert(
+    rdma_handle_manager_t::is_collective(handle) and "Must be collective handle"
+  );
+
+  collective_map = map;
+}
+
+node_t
+State::get_node(rdma_elm_t const& elm) {
+  assert(
+    collective_map != nullptr and rdma_handle_manager_t::is_collective(handle)
+    and "Must be collective and have map assigned"
+  );
+
+  return collective_map(elm);
+}
 
 }} //end namespace runtime::rdma

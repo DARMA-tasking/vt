@@ -56,6 +56,10 @@ using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t, byte_
 using rdma_ptr_continuation_t = std::function<void(rdma_ptr_t)>;
 using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;
 
+using rdma_num_elems_t = int64_t;
+using rdma_elm_t = int64_t;
+using rdma_collective_map_t = std::function<node_t(rdma_elm_t)>;
+
 static constexpr Type uninitialized_rdma_type = Type::Uninitialized;
 
 }} //end namespace runtime::rdma

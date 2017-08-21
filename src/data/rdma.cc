@@ -5,6 +5,24 @@
 namespace runtime { namespace rdma {
 
 rdma_handle_t
+RDMAManager::register_new_collective(
+  bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes,
+  rdma_collective_map_t const& map
+) {
+  auto const& han =register_new_rdma_handler(use_default, ptr, num_bytes, true);
+
+  auto iter = holder.find(han);
+  assert(
+    iter != holder.end() and "Handler must exist"
+  );
+
+  auto& state = iter->second;
+  state.set_collective_map(map);
+
+  return han;
+}
+
+rdma_handle_t
 RDMAManager::register_new_rdma_handler(
   bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes,
   bool const& is_collective
