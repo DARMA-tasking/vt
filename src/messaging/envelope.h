@@ -195,6 +195,7 @@ inline epoch_t envelope_get_epoch(Env const& env) {
     return reinterpret_cast<EpochEnvelope const*>(&env)->epoch;
   } else {
     assert(0 and "Envelope must be able to hold an epoch");
+    return no_epoch;
   }
 }
 
@@ -217,6 +218,7 @@ inline tag_t envelope_get_tag(Env const& env) {
     return reinterpret_cast<TagEnvelope const*>(&env)->tag;
   } else {
     assert(0 and "Envelope must be able to hold an tag");
+    return no_tag;
   }
 }
 
