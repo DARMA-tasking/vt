@@ -30,15 +30,20 @@ enum Type {
   Uninitialized = 3
 };
 
-static constexpr int const rdma_type_num_bis = 3;
+static constexpr bit_count_t const rdma_type_num_bits = 3;
+static constexpr bit_count_t const rdma_identifier_num_bits = sizeof(rdma_identifier_t)*8;
+static constexpr bit_count_t const rdma_sized_num_bits = 1;
+static constexpr bit_count_t const rdma_collective_num_bits = 1;
+static constexpr bit_count_t const rdma_hander_type_num_bits = 1;
+static constexpr bit_count_t const rdma_op_type_num_bits = 1;
 
 enum Bits {
-  Sized = 0,
-  Collective = 1,
-  HandlerType = 2,
-  OpType = 3,
-  Node = Bits::OpType + rdma_type_num_bis,
-  Identifier = Bits::Node + node_num_bits
+  Sized       = 0,
+  Collective  = Bits::Sized       + rdma_sized_num_bits,
+  HandlerType = Bits::Collective  + rdma_collective_num_bits,
+  OpType      = Bits::HandlerType + rdma_hander_type_num_bits,
+  Identifier  = Bits::OpType      + rdma_type_num_bits,
+  Node        = Bits::Identifier  + rdma_identifier_num_bits
 };
 
 using rdma_op_t = int64_t;

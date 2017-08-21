@@ -47,14 +47,14 @@ HandleManager::set_op_type(
 HandleManager::set_rdma_node(
   universal_rdma_id_t& handle, node_t const& node
 ) {
-  handle |= node << rdma_bits_t::Node;
+  handle |= (universal_rdma_id_t)node << rdma_bits_t::Node;
 }
 
 /*static*/ void
 HandleManager::set_rdma_identifier(
   universal_rdma_id_t& handle, rdma_identifier_t const& ident
 ) {
-  handle |= ident << rdma_bits_t::Identifier;
+  handle |= (universal_rdma_id_t)ident << rdma_bits_t::Identifier;
 }
 
 /*static*/ node_t

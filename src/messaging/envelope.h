@@ -25,7 +25,7 @@ enum EnvelopeType {
   Callback = 6
 };
 
-constexpr static int const envelope_num_bits = 7;
+static constexpr bit_count_t const envelope_num_bits = 7;
 
 using envelope_type_t = EnvelopeType;
 

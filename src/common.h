@@ -19,6 +19,7 @@ using tag_t = int32_t;
 using barrier_t = uint64_t;
 using ref_t = int16_t;
 using byte_t = uint64_t;
+using bit_count_t = int32_t;
 using action_t = std::function<void()>;
 using rdma_ptr_t = void*;
 using rdma_handle_t = int64_t;
@@ -48,11 +49,11 @@ static constexpr handler_t const uninitialized_handler = -1;
 static constexpr rdma_handler_t const uninitialized_rdma_handler = -1;
 static constexpr ref_t const not_shared_message = -1000;
 
-static constexpr int const node_num_bits = 16;
-static constexpr int const handler_num_bits = 32;
-static constexpr int const ref_num_bits = 16;
-static constexpr int const epoch_num_bits = 32;
-static constexpr int const tag_num_bits = 32;
+static constexpr bit_count_t const node_num_bits = sizeof(node_t)*8;
+static constexpr bit_count_t const handler_num_bits = sizeof(handler_t)*8;
+static constexpr bit_count_t const ref_num_bits = sizeof(int16_t)*8;
+static constexpr bit_count_t const epoch_num_bits = sizeof(epoch_t)*8;
+static constexpr bit_count_t const tag_num_bits = sizeof(tag_t)*8;
 
 } //end namespace runtime
 

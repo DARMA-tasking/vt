@@ -16,9 +16,11 @@ using handler_identifier_t = int16_t;
 static constexpr handler_identifier_t const first_handle_identifier = 1;
 static constexpr handler_identifier_t const uninitialized_handle_identifier = -1;
 
+static constexpr bit_count_t const handler_id_num_bits = sizeof(handler_identifier_t)*8;
+
 enum HandlerBits {
   Identifier = 0,
-  Node = 16,
+  Node       = HandlerBits::Identifier + handler_id_num_bits,
 };
 
 struct Registry {
