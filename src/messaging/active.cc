@@ -295,7 +295,15 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
     envelope_is_callback_type(msg->env) ?
     get_callback_message(msg) : uninitialized_handler;
 
-  auto const& active_fun = the_registry->get_handler(handler, tag);
+  active_function_t active_fun = nullptr;
+
+  if (Registry::is_handler_auto(handler)) {
+    handler_t auto_han = handler;
+    Registry::set_handler_auto(auto_han, false);
+    active_fun = auto_registry::get_auto_handler(msg);
+  } else {
+    active_fun = the_registry->get_handler(handler, tag);
+  }
 
   bool const& has_action_handler = active_fun != no_action;
 

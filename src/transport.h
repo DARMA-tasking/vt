@@ -17,5 +17,6 @@
 #include "termination.h"
 #include "barrier.h"
 #include "rdma.h"
+#include "auto_registry.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

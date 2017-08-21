@@ -51,6 +51,20 @@ Registry::register_new_handler(
   return new_handle;
 }
 
+/*static*/ void
+Registry::set_handler_auto(handler_t& han, bool const& is_auto) {
+  if (is_auto) {
+    han |= 1 << handler_bits_t::Auto;
+  } else {
+    han &= 0xFFFFFFFE;
+  }
+}
+
+/*static*/ bool
+Registry::is_handler_auto(handler_t const& han) {
+  return han & 0x00000001;
+}
+
 void
 Registry::swap_handler(
   handler_t const& han, active_function_t fn, tag_t const& tag

@@ -54,7 +54,6 @@ static constexpr bit_count_t const handler_num_bits = sizeof(handler_t)*8;
 static constexpr bit_count_t const ref_num_bits = sizeof(int16_t)*8;
 static constexpr bit_count_t const epoch_num_bits = sizeof(epoch_t)*8;
 static constexpr bit_count_t const tag_num_bits = sizeof(tag_t)*8;
-
 } //end namespace runtime
 
 #endif /*__RUNTIME_TRANSPORT_EVENT_COMMON__*/

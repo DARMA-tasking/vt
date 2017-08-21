@@ -4,7 +4,6 @@
 
 using namespace runtime;
 
-static handler_t ring_han = uninitialized_handler;
 static node_t next_node = uninitialized_destination;
 
 static node_t my_node = uninitialized_destination;
@@ -21,28 +20,26 @@ struct RingMsg : runtime::Message {
   { }
 };
 
-static void send_to_next() {
-  RingMsg* msg = new RingMsg(my_node);
-  the_msg->send_msg(next_node, ring_han, msg, [=]{ delete msg; });
-}
+static void send_to_next();
 
-static void ring(runtime::BaseMessage* in_msg) {
-  RingMsg& msg = *static_cast<RingMsg*>(in_msg);
-
-  printf("%d: Hello from node %d: num_times=%d\n", my_node, msg.from, num_times);
+static void ring(RingMsg* msg) {
+  printf("%d: Hello from node %d: num_times=%d\n", my_node, msg->from, num_times);
 
   num_times++;
 
-  if (msg.from != num_nodes-1 or num_times < num_total_rings) {
+  if (msg->from != num_nodes-1 or num_times < num_total_rings) {
     send_to_next();
   }
+}
+
+static void send_to_next() {
+  RingMsg* msg = new RingMsg(my_node);
+  the_msg->send_msg<RingMsg, ring>(next_node, msg, [=]{ delete msg; });
 }
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
-
-  ring_han = the_msg->collective_register_handler(ring);
 
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();

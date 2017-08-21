@@ -17,9 +17,11 @@ static constexpr handler_identifier_t const first_handle_identifier = 1;
 static constexpr handler_identifier_t const uninitialized_handle_identifier = -1;
 
 static constexpr bit_count_t const handler_id_num_bits = sizeof(handler_identifier_t)*8;
+static constexpr bit_count_t const auto_num_bits = 1;
 
 enum HandlerBits {
-  Identifier = 0,
+  Auto       = 0,
+  Identifier = HandlerBits::Auto       + auto_num_bits,
   Node       = HandlerBits::Identifier + handler_id_num_bits,
 };
 
@@ -67,6 +69,12 @@ struct Registry {
 
   active_function_t
   get_handler_no_tag(handler_t const& han);
+
+  static void
+  set_handler_auto(handler_t& han, bool const& is_auto);
+
+  static bool
+  is_handler_auto(handler_t const& han);
 
 private:
   container_t registered;
