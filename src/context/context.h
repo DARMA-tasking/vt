@@ -4,6 +4,8 @@
 
 #include "common.h"
 
+#include <memory>
+
 namespace runtime {
 
 struct Context {

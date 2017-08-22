@@ -297,9 +297,7 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
 
   active_function_t active_fun = nullptr;
 
-  if (Registry::is_handler_auto(handler)) {
-    //handler_t auto_han = handler;
-    //Registry::set_handler_auto(auto_han, false);
+  if (handler_manager_t::is_handler_auto(handler)) {
     active_fun = auto_registry::get_auto_handler(msg);
   } else {
     active_fun = the_registry->get_handler(handler, tag);

@@ -8,44 +8,19 @@
 
 #include "common.h"
 #include "function.h"
+#include "handler.h"
 
 namespace runtime {
 
-using handler_identifier_t = int16_t;
-
-static constexpr handler_identifier_t const first_handle_identifier = 1;
-static constexpr handler_identifier_t const uninitialized_handle_identifier = -1;
-
-static constexpr bit_count_t const handler_id_num_bits = sizeof(handler_identifier_t)*8;
-static constexpr bit_count_t const auto_num_bits = 1;
-
-enum HandlerBits {
-  Auto       = 0,
-  Identifier = HandlerBits::Auto       + auto_num_bits,
-  Node       = HandlerBits::Identifier + handler_id_num_bits,
-};
-
 struct Registry {
+  using handler_manager_t = HandlerManager;
   using handler_bits_t = HandlerBits;
   using tagged_handler_t = std::tuple<tag_t, handler_t>;
   using container_t = std::unordered_map<handler_t, active_function_t>;
   using tag_container_t = std::unordered_map<tag_t, active_function_t>;
   using han_tag_container_t = std::unordered_map<handler_t, tag_container_t>;
-  using register_count_t = uint32_t;
 
   Registry() = default;
-
-  node_t
-  get_handler_node(handler_t const& han);
-
-  void
-  set_handler_node(handler_t& han, node_t const& node);
-
-  void
-  set_handler_identifier(handler_t& han, handler_identifier_t const& ident);
-
-  handler_identifier_t
-  get_handler_identifier(handler_t const& han);
 
   handler_t
   register_new_handler(
@@ -69,12 +44,6 @@ struct Registry {
 
   active_function_t
   get_handler_no_tag(handler_t const& han);
-
-  static void
-  set_handler_auto(handler_t& han, bool const& is_auto);
-
-  static bool
-  is_handler_auto(handler_t const& han);
 
 private:
   container_t registered;

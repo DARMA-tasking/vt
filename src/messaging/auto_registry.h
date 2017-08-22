@@ -1,5 +1,4 @@
 
-
 #if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY__
 #define __RUNTIME_TRANSPORT_AUTO_REGISTRY__
 
@@ -16,34 +15,25 @@ namespace runtime { namespace auto_registry {
 using auto_active_t = active_function_t;
 using auto_active_container_t = std::vector<auto_active_t>;
 using auto_handler_t = int32_t;
+using handler_manager_t = runtime::HandlerManager;
 
 template <typename = void>
 auto_active_container_t&
-get_auto_registry()  {
-  static auto_active_container_t reg;
-  return reg;
-}
+get_auto_registry();
 
 template <typename ActiveFnT>
 struct Registrar {
   auto_handler_t index;
 
-  Registrar() {
-    auto_active_container_t& reg = get_auto_registry<>();
-    index = reg.size();
-    //printf("obj=%p, index=%d\n",this,index);
-    auto fn = ActiveFnT::get_function();
-    reg.emplace_back(reinterpret_cast<action_basic_function_t*>(fn));
-  }
+  Registrar();
 };
 
-inline active_function_t
-get_auto_handler(ShortMessage* const msg) {
-  handler_t handler = envelope_get_handler(msg->env);
-  auto id = the_registry->get_handler_identifier(handler);
-  //printf("get_auto_handler:id=%d\n",id);
-  return get_auto_registry().at(id);
-}
+active_function_t
+get_auto_handler(ShortMessage* const msg);
+
+template <typename MessageT, action_any_function_t<MessageT>* f>
+handler_t
+make_auto_handler(MessageT* const msg);
 
 template <typename ActiveFnT>
 struct RegistrarWrapper {
@@ -52,11 +42,7 @@ struct RegistrarWrapper {
 
 template <typename ActiveFnT>
 auto_handler_t
-register_active_fn() {
-  auto const& idx = RegistrarWrapper<ActiveFnT>().registrar.index;
-  //printf("idx=%d\n",idx);
-  return idx;
-}
+register_active_fn();
 
 template <typename F, F* f>
 struct FunctorAdapter {
@@ -77,13 +63,9 @@ struct Runnable {
   static auto_handler_t const idx;
 
   static constexpr function_ptr_type*
-  get_function() {
-    return Callable::get_function();
-  }
+  get_function();
 
-  Runnable() {
-    //printf("Runnable: idx=%d\n",idx);
-  }
+  Runnable() = default;
 };
 
 template <typename ActiveFnT>
@@ -106,6 +88,5 @@ auto_handler_t const Runnable<ActiveFnT>::idx = register_active_fn<Runnable<Acti
 
 #define get_handler_active_function(F)                                  \
   get_handler_active_function_expand(decltype(F), std::addressof(F))
-
 
 #endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY__*/

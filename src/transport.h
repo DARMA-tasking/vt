@@ -18,5 +18,6 @@
 #include "barrier.h"
 #include "rdma.h"
 #include "auto_registry.h"
+#include "auto_registry_impl.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/
