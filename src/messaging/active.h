@@ -216,6 +216,16 @@ struct ActiveMessenger {
     return ret;
   }
 
+  template <typename MessageT, action_any_function_t<MessageT>* f>
+  event_t
+  send_msg(
+    node_t const& dest, MessageT* const msg, user_send_fn_t send_payload_fn,
+    action_t next_action = nullptr
+  ) {
+    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
+    return send_msg<MessageT>(dest, han, msg, send_payload_fn, next_action);
+  }
+
   template <typename MessageT>
   event_t
   broadcast_msg(
@@ -231,6 +241,30 @@ struct ActiveMessenger {
     handler_t const& han, BaseMessage* const msg, int const& msg_size,
     action_t next_action = nullptr
   );
+
+  // template <
+  //   typename SendMsgT, action_any_function_t<SendMsgT>* f_s,
+  //   typename RecvMsgT, action_any_function_t<RecvMsgT>* f_r
+  // >
+  // event_t
+  // send_msg_callback(
+  //   node_t const& dest, SendMsgT* const send_msg
+  // ) {
+  //   handler_t const& hr = auto_registry::make_auto_handler<RecvMsgT,f_r>(msg);
+  //   send_msg->set_callback(hr);
+  //   return send_msg<SendMsgT,f_x>(dest,msg,no_tag,nullptr);
+  // }
+
+  template <typename MessageT, action_any_function_t<MessageT>* f>
+  event_t
+  send_msg_callback(
+    node_t const& dest, MessageT* const msg, active_function_t fn
+  ) {
+    handler_t const& this_han = register_new_handler(fn, no_tag);
+    auto cb = static_cast<CallbackMessage*>(msg);
+    cb->set_callback(this_han);
+    return send_msg<MessageT,f>(dest, msg, no_tag, nullptr);
+  }
 
   template <typename MessageT>
   void

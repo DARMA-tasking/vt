@@ -8,6 +8,7 @@
 #include "function.h"
 #include "message.h"
 #include "tree.h"
+#include "barrier_msg.h"
 
 namespace runtime { namespace barrier {
 
@@ -15,34 +16,6 @@ namespace runtime { namespace barrier {
 // struct GroupBarrier { };
 
 constexpr barrier_t const fst_barrier = 1;
-
-struct BarrierMsg : runtime::ShortMessage {
-  bool is_named, is_wait, skip_term = false;
-  barrier_t barrier;
-
-  BarrierMsg(
-    bool const& in_is_named, barrier_t const& in_barrier, bool const& in_is_wait
-  )
-    : ShortMessage(), is_named(in_is_named), is_wait(in_is_wait),
-      barrier(in_barrier), skip_term(false)
-  { }
-};
-
-struct BarrierState {
-  barrier_t barrier;
-
-  int recv_event_count = 0;
-  bool is_wait = false;
-  bool is_named = false;
-  bool released = false;
-
-  action_t cont_action = nullptr;
-
-  BarrierState(
-    bool const& in_is_named, barrier_t const& in_barrier, bool const& in_is_wait
-  ) : is_named(in_is_named), is_wait(in_is_wait), barrier(in_barrier)
-  { }
-};
 
 struct Barrier : Tree {
   using barrier_state_t = BarrierState;
@@ -103,10 +76,10 @@ struct Barrier : Tree {
   }
 
   static void
-  register_barrier_handlers();
+  barrier_up(BarrierMsg* msg);
 
-  handler_t barrier_up_han = uninitialized_handler;
-  handler_t barrier_down_han = uninitialized_handler;
+  static void
+  barrier_down(BarrierMsg* msg);
 
 private:
 
@@ -128,7 +101,6 @@ private:
 
   container_t<barrier_state_t> named_barrier_state, unnamed_barrier_state;
 };
-
 
 }} //end namespace runtime::barrier
 

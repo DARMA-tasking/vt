@@ -5,32 +5,29 @@
 namespace runtime { namespace term {
 
 /*static*/ void
-new_epoch_msg(EpochMsg* msg) {
+TerminationDetector::propagate_new_epoch(EpochMsg* msg) {
   the_term->propagate_new_epoch(msg->new_epoch);
 }
 
 /*static*/ void
-ready_epoch_msg(EpochMsg* msg) {
+TerminationDetector::ready_epoch(EpochMsg* msg) {
   the_term->ready_new_epoch(msg->new_epoch);
 }
 
 /*static*/ void
-propagate_epoch_msg(EpochPropagateMsg* msg) {
+TerminationDetector::propagate_epoch(EpochPropagateMsg* msg) {
   the_term->propagate_epoch_external(msg->epoch, msg->prod, msg->cons);
 }
 
 /*static*/ void
-epoch_finished_msg(EpochMsg* msg) {
+TerminationDetector::epoch_finished(EpochMsg* msg) {
   the_term->epoch_finished(msg->new_epoch);
 }
 
 /*static*/ void
-epoch_continue_msg(EpochMsg* msg) {
+TerminationDetector::epoch_continue(EpochMsg* msg) {
   the_term->epoch_continue(msg->new_epoch, msg->wave);
 }
-
-/*static*/ void
-TerminationDetector::register_termination_handlers() { }
 
 /*static*/ void
 TerminationDetector::register_default_termination_action() {
@@ -168,7 +165,7 @@ TerminationDetector::propagate_epoch(
       auto msg = new EpochPropagateMsg(epoch, state.g_prod1, state.g_cons1);
 
       the_msg->set_term_message(msg);
-      the_msg->send_msg<EpochPropagateMsg, propagate_epoch_msg>(
+      the_msg->send_msg<EpochPropagateMsg, propagate_epoch>(
         parent, msg, [=]{ delete msg; }
       );
 
@@ -195,7 +192,7 @@ TerminationDetector::propagate_epoch(
       if (is_term) {
         auto msg = new EpochMsg(epoch);
         the_msg->set_term_message(msg);
-        the_msg->broadcast_msg<EpochMsg, epoch_finished_msg>(msg, [=]{
+        the_msg->broadcast_msg<EpochMsg, epoch_finished>(msg, [=]{
           delete msg;
         });
 
@@ -207,7 +204,7 @@ TerminationDetector::propagate_epoch(
 
         auto msg = new EpochMsg(epoch);
         the_msg->set_term_message(msg);
-        the_msg->broadcast_msg<EpochMsg, epoch_continue_msg>(msg, [=]{
+        the_msg->broadcast_msg<EpochMsg, epoch_continue>(msg, [=]{
           delete msg;
         });
 
@@ -357,13 +354,13 @@ TerminationDetector::propagate_new_epoch(epoch_t const& new_epoch) {
     auto msg = new EpochMsg(new_epoch);
     the_msg->set_term_message(msg);
 
-    the_msg->send_msg<EpochMsg, new_epoch_msg>(parent, msg, [=]{ delete msg; });
+    the_msg->send_msg<EpochMsg, propagate_new_epoch>(parent, msg, [=]{ delete msg; });
   } else if (is_ready and is_root) {
     // broadcast ready to all
     auto msg = new EpochMsg(new_epoch);
     the_msg->set_term_message(msg);
 
-    the_msg->broadcast_msg<EpochMsg, ready_epoch_msg>(msg, [=]{ delete msg; });
+    the_msg->broadcast_msg<EpochMsg, ready_epoch>(msg, [=]{ delete msg; });
 
     ready_new_epoch(new_epoch);
   }

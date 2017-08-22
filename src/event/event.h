@@ -289,10 +289,10 @@ struct AsyncEvent {
   }
 
   static void
-  register_event_handlers();
+  event_finished(EventFinishedMsg* msg);
 
-  handler_t event_finished_han = uninitialized_handler;
-  handler_t check_event_finished_han = uninitialized_handler;
+  static void
+  check_event_finished(EventCheckFinishedMsg* msg);
 
 private:
   event_t cur_event = 0;

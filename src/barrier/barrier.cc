@@ -4,6 +4,18 @@
 
 namespace runtime { namespace barrier {
 
+/*static*/ void
+Barrier::barrier_up(BarrierMsg* msg) {
+  the_barrier->barrier_up(
+    msg->is_named, msg->is_wait, msg->barrier, msg->skip_term
+  );
+}
+
+/*static*/ void
+Barrier::barrier_down(BarrierMsg* msg) {
+  the_barrier->barrier_down(msg->is_named, msg->is_wait, msg->barrier);
+}
+
 Barrier::barrier_state_t&
 Barrier::insert_find_barrier(
   bool const& is_named, bool const& is_wait, barrier_t const& barrier,
@@ -124,7 +136,7 @@ Barrier::barrier_up(
       if (skip_term) {
         the_msg->set_term_message(msg);
       }
-      the_msg->send_msg(parent, barrier_up_han, msg, [=]{
+      the_msg->send_msg<BarrierMsg, barrier_up>(parent, msg, [=]{
         delete msg;
       });
     } else {
@@ -133,30 +145,12 @@ Barrier::barrier_up(
       if (skip_term) {
         the_msg->set_term_message(msg);
       }
-      the_msg->broadcast_msg(barrier_down_han, msg, [=]{
+      the_msg->broadcast_msg<BarrierMsg, barrier_down>(msg, [=]{
         delete msg;
       });
       barrier_down(is_named, is_wait, barrier);
     }
   }
 }
-
-/*static*/ void
-Barrier::register_barrier_handlers() {
-  the_barrier->barrier_up_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      BarrierMsg& msg = *static_cast<BarrierMsg*>(in_msg);
-      the_barrier->barrier_up(
-        msg.is_named, msg.is_wait, msg.barrier, msg.skip_term
-      );
-    });
-
-  the_barrier->barrier_down_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      BarrierMsg& msg = *static_cast<BarrierMsg*>(in_msg);
-      the_barrier->barrier_down(msg.is_named, msg.is_wait, msg.barrier);
-    });
-}
-
 
 }} //end namespace runtime::barrier

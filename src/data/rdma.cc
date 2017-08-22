@@ -4,6 +4,223 @@
 
 namespace runtime { namespace rdma {
 
+/*static*/ void
+RDMAManager::get_msg(GetMessage* msg) {
+  auto const msg_tag = envelope_get_tag(msg->env);
+  auto const op_id = msg->op_id;
+  auto const recv_node = msg->requesting;
+
+  auto const& this_node = the_context->get_node();
+
+  debug_print_rdma(
+    "get_msg: han=%lld, is_user=%s, tag=%d, bytes=%lld\n",
+    msg->rdma_handle, msg->is_user_msg ? "true" : "false",
+    msg_tag, msg->num_bytes
+  );
+
+  the_rdma->request_get_data(
+    msg, msg->is_user_msg, msg->rdma_handle, msg_tag, msg->num_bytes, msg->offset,
+    nullptr, [msg_tag,op_id,recv_node](rdma_get_t data){
+      auto const& this_node = the_context->get_node();
+      debug_print_rdma("data is ready\n", this_node);
+      // @todo send the data here
+
+      // auto const& data_ptr = std::get<0>(data);
+      // auto const& num_bytes = std::get<1>(data);
+
+      tag_t recv_tag = no_tag;
+
+      GetBackMessage* new_msg = new GetBackMessage(
+        op_id, std::get<1>(data), recv_tag, 0
+      );
+
+      auto send_payload = [&](ActiveMessenger::send_fn_t send){
+        auto ret = send(data, recv_node, no_tag, [=]{ });
+        new_msg->mpi_tag_to_recv = std::get<1>(ret);
+      };
+
+      set_put_type(new_msg->env);
+
+      auto deleter = [=]{ delete new_msg; };
+
+      the_msg->send_msg<GetBackMessage, get_recv_msg>(
+        recv_node, new_msg, send_payload, deleter
+      );
+
+      debug_print_rdma("data is sent: recv_tag=%d\n", recv_tag);
+    }
+  );
+}
+
+/*static*/ void
+RDMAManager::get_recv_msg(GetBackMessage* msg) {
+  auto const msg_tag = envelope_get_tag(msg->env);
+  auto const op_id = msg->op_id;
+
+  auto direct = the_rdma->try_get_data_ptr_direct(op_id);
+  auto get_ptr = std::get<0>(direct);
+  auto get_ptr_action = std::get<1>(direct);
+
+  auto const& this_node = the_context->get_node();
+  debug_print_rdma(
+    "get_recv_msg: op=%lld, tag=%d, bytes=%lld, get_ptr=%p, mpi_tag=%d\n",
+    msg->op_id, msg_tag, msg->num_bytes, get_ptr, msg->mpi_tag_to_recv
+  );
+
+  if (get_ptr == nullptr) {
+    the_msg->recv_data_msg(
+      msg->mpi_tag_to_recv, [=](rdma_get_t ptr, action_t deleter){
+        the_rdma->trigger_get_recv_data(
+          msg->op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
+        );
+      });
+  } else {
+    the_msg->recv_data_msg_buffer(
+      get_ptr, msg->mpi_tag_to_recv, true, [this_node,get_ptr_action]{
+        debug_print_rdma(
+          "recv_data_msg_buffer finished\n",
+          this_node
+        );
+        if (get_ptr_action) {
+          get_ptr_action();
+        }
+      }
+    );
+  }
+}
+
+/*static*/ void
+RDMAManager::put_back_msg(PutBackMessage* msg) {
+  auto const msg_tag = envelope_get_tag(msg->env);
+  auto const op_id = msg->op_id;
+
+  auto const& this_node = the_context->get_node();
+
+  debug_print_rdma(
+    "put_back_msg: op=%lld\n", msg->op_id
+  );
+
+  the_rdma->trigger_put_back_data(op_id);
+}
+
+/*static*/ void
+RDMAManager::put_recv_msg(PutMessage* msg) {
+  auto const msg_tag = envelope_get_tag(msg->env);
+  auto const op_id = msg->op_id;
+  auto const send_back = msg->send_back;
+  auto const recv_tag = msg->mpi_tag_to_recv;
+
+  auto const& this_node = the_context->get_node();
+
+  debug_print_rdma(
+    "put_recv_msg: op=%lld, tag=%d, bytes=%lld, recv_tag=%d\n",
+    msg->op_id, msg_tag, msg->num_bytes, msg->mpi_tag_to_recv
+  );
+
+  assert(
+    recv_tag != no_tag and "PutMessage must have recv tag"
+  );
+
+  // try to get early access to the ptr for a direct put into user buffer
+  auto const& put_ptr = the_rdma->try_put_ptr(msg->rdma_handle, msg_tag);
+
+  debug_print_rdma(
+    "put_recv_msg: bytes=%lld, recv_tag=%d, put_ptr=%p\n",
+    msg->num_bytes, msg->mpi_tag_to_recv, put_ptr
+  );
+
+  if (put_ptr == nullptr) {
+    the_msg->recv_data_msg(
+      recv_tag, [=](rdma_get_t ptr, action_t deleter){
+        debug_print_rdma(
+          "put_data: after recv data trigger\n", this_node
+        );
+        the_rdma->trigger_put_recv_data(
+          msg->rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
+          msg->offset, [=](){
+            debug_print_rdma(
+              "put_data: after put trigger: send_back=%d\n",
+              send_back
+            );
+            if (send_back != uninitialized_destination) {
+              PutBackMessage* new_msg = new PutBackMessage(op_id);
+              the_msg->send_msg<PutBackMessage, put_back_msg>(
+                send_back, new_msg, [=]{ delete new_msg; }
+              );
+            }
+            deleter();
+          }
+        );
+      });
+  } else {
+    auto const& put_ptr_offset =
+      msg->offset != no_byte ? static_cast<char*>(put_ptr) + msg->offset : put_ptr;
+
+    // do a direct recv into the user buffer
+    the_msg->recv_data_msg_buffer(
+      put_ptr_offset, recv_tag, true, []{}, [=](rdma_get_t ptr, action_t deleter){
+        debug_print_rdma(
+          "put_data: recv_data_msg_buffer DIRECT: offset=%lld\n",
+          msg->offset
+        );
+        if (send_back) {
+          PutBackMessage* new_msg = new PutBackMessage(op_id);
+          the_msg->send_msg<PutBackMessage, put_back_msg>(
+            send_back, new_msg, [=]{ delete new_msg; }
+          );
+        }
+        deleter();
+      }
+    );
+  }
+}
+
+/*static*/ void
+RDMAManager::setup_channel(CreateChannel* msg) {
+  auto const& this_node = the_context->get_node();
+
+  debug_print_rdma_channel(
+    "setup_channel: han=%lld, target=%d, non_target=%d, "
+    "channel_tag=%d\n",
+    msg->rdma_handle, msg->target, msg->non_target, msg->channel_tag
+  );
+
+  auto const& num_bytes = the_rdma->lookup_bytes_handler(msg->rdma_handle);
+
+  if (not msg->has_bytes) {
+    the_msg->send_callback(make_shared_message<GetInfoChannel>(num_bytes));
+  }
+
+  the_rdma->create_direct_channel_internal(
+    msg->type, msg->rdma_handle, msg->non_target, nullptr, msg->channel_tag
+  );
+}
+
+/*static*/ void
+RDMAManager::remove_channel(DestroyChannel* msg) {
+  the_rdma->remove_direct_channel(msg->han);
+  the_msg->send_callback(make_shared_message<CallbackMessage>());
+}
+
+/*static*/ void
+RDMAManager::remote_channel(ChannelMessage* msg) {
+  auto const& this_node = the_context->get_node();
+  auto const target = rdma_handle_manager_t::get_rdma_node(msg->han);
+
+  debug_print_rdma_channel(
+    "remote_channel_han: target=%d, type=%d, han=%lld, tag=%d, "
+    "bytes=%lld\n",
+    target, msg->type, msg->han, msg->channel_tag, msg->num_bytes
+  );
+
+  the_rdma->create_direct_channel_internal(
+    msg->type, msg->han, target, [=]{
+      the_msg->send_callback(make_shared_message<CallbackMessage>());
+    },
+    msg->channel_tag, msg->num_bytes
+  );
+}
+
 rdma_handle_t
 RDMAManager::register_new_collective(
   bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes,
@@ -369,8 +586,8 @@ RDMAManager::put_data(
 
       auto deleter = [=]{ delete msg; };
 
-      the_msg->send_msg(
-        put_node, the_rdma->put_recv_msg_han, msg, send_payload, deleter
+      the_msg->send_msg<PutMessage, put_recv_msg>(
+        put_node, msg, send_payload, deleter
       );
 
       if (action_after_put != nullptr) {
@@ -423,7 +640,7 @@ RDMAManager::get_data_info_buf(
       if (tag != no_tag) {
         envelope_set_tag(msg->env, tag);
       }
-      the_msg->send_msg(get_node, get_msg_han, msg, [=]{ delete msg; });
+      the_msg->send_msg<GetMessage, get_msg>(get_node, msg, [=]{ delete msg; });
 
       pending_ops.emplace(
         std::piecewise_construct,
@@ -456,7 +673,7 @@ RDMAManager::get_data(
     if (tag != no_tag) {
       envelope_set_tag(msg->env, tag);
     }
-    the_msg->send_msg(get_node, get_msg_han, msg, [=]{ delete msg; });
+    the_msg->send_msg<GetMessage, get_msg>(get_node, msg, [=]{ delete msg; });
 
     pending_ops.emplace(
       std::piecewise_construct,
@@ -522,8 +739,8 @@ RDMAManager::setup_channel_with_remote(
       type, han, num_bytes, tag
     );
 
-    the_msg->send_msg_callback(
-      remote_channel_han, other_node, msg, [=](runtime::BaseMessage* in_msg){
+    the_msg->send_msg_callback<ChannelMessage, remote_channel>(
+      other_node, msg, [=](runtime::BaseMessage*){
         action();
       }
     );
@@ -684,8 +901,8 @@ RDMAManager::create_direct_channel_internal(
       type, han, unique_channel_tag, target, this_node
     );
 
-    the_msg->send_msg_callback(
-      setup_channel_han, target, msg, [=](runtime::BaseMessage* in_msg){
+    the_msg->send_msg_callback<CreateChannel, setup_channel>(
+      target, msg, [=](runtime::BaseMessage* in_msg){
         GetInfoChannel& info = *static_cast<GetInfoChannel*>(in_msg);
         auto const& num_bytes = info.num_bytes;
         create_direct_channel_finish(
@@ -693,11 +910,6 @@ RDMAManager::create_direct_channel_internal(
         );
       }
     );
-    // msg->has_bytes = true;
-    // the_msg->send_msg(setup_channel_han, target, msg);
-    // create_direct_channel_finish(
-    //   type, han, non_target, action, unique_channel_tag, is_target, num_bytes
-    // );
   } else {
     return create_direct_channel_finish(
       type, han, non_target, action, channel_tag, is_target, num_bytes
@@ -724,11 +936,11 @@ RDMAManager::remove_direct_channel(
   auto const target = rdma_handle_manager_t::get_rdma_node(han);
 
   if (this_node != target) {
-    the_msg->send_msg_callback(
-      remove_channel_han, target, make_shared_message<DestroyChannel>(
-        rdma_type_t::Get, han, no_byte, no_tag
-      ),
-      [=](runtime::BaseMessage* in_msg){
+    DestroyChannel* msg = make_shared_message<DestroyChannel>(
+      rdma_type_t::Get, han, no_byte, no_tag
+    );
+    the_msg->send_msg_callback<DestroyChannel, remove_channel>(
+      target, msg, [=](runtime::BaseMessage* in_msg){
         rdma_handle_t ch_han = han;
         rdma_handle_manager_t::set_op_type(ch_han, rdma_type_t::Put);
         auto iter = channels.find(ch_han);
@@ -760,238 +972,5 @@ RDMAManager::next_rdma_channel_tag() {
   tag_t const& ret = (this_node << 16) | next_tag;
   return ret;
 }
-
-/*static*/ void
-RDMAManager::register_all_rdma_handlers() {
-  the_rdma->get_msg_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      GetMessage& msg = *static_cast<GetMessage*>(in_msg);
-      auto const msg_tag = envelope_get_tag(msg.env);
-      auto const op_id = msg.op_id;
-      auto const recv_node = msg.requesting;
-
-      auto const& this_node = the_context->get_node();
-
-      debug_print_rdma(
-        "get_msg_han: han=%lld, is_user=%s, tag=%d, bytes=%lld\n",
-        msg.rdma_handle, msg.is_user_msg ? "true" : "false",
-        msg_tag, msg.num_bytes
-      );
-
-      the_rdma->request_get_data(
-        &msg, msg.is_user_msg, msg.rdma_handle, msg_tag, msg.num_bytes, msg.offset,
-        nullptr, [msg_tag,op_id,recv_node](rdma_get_t data){
-          auto const& this_node = the_context->get_node();
-          debug_print_rdma("data is ready\n", this_node);
-          // @todo send the data here
-
-          // auto const& data_ptr = std::get<0>(data);
-          // auto const& num_bytes = std::get<1>(data);
-
-          tag_t recv_tag = no_tag;
-
-          GetBackMessage* new_msg = new GetBackMessage(
-            op_id, std::get<1>(data), recv_tag, 0
-          );
-
-          auto send_payload = [&](ActiveMessenger::send_fn_t send){
-            auto ret = send(data, recv_node, no_tag, [=]{ });
-            new_msg->mpi_tag_to_recv = std::get<1>(ret);
-          };
-
-          set_put_type(new_msg->env);
-
-          auto deleter = [=]{ delete new_msg; };
-
-          the_msg->send_msg(
-            recv_node, the_rdma->get_recv_msg_han, new_msg, send_payload, deleter
-          );
-
-          debug_print_rdma("data is sent: recv_tag=%d\n", recv_tag);
-        }
-      );
-    });
-
-  the_rdma->get_recv_msg_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      GetBackMessage& msg = *static_cast<GetBackMessage*>(in_msg);
-      auto const msg_tag = envelope_get_tag(msg.env);
-      auto const op_id = msg.op_id;
-
-      auto direct = the_rdma->try_get_data_ptr_direct(op_id);
-      auto get_ptr = std::get<0>(direct);
-      auto get_ptr_action = std::get<1>(direct);
-
-      auto const& this_node = the_context->get_node();
-      debug_print_rdma(
-        "get_recv_msg_han: op=%lld, tag=%d, bytes=%lld, get_ptr=%p, mpi_tag=%d\n",
-        msg.op_id, msg_tag, msg.num_bytes, get_ptr, msg.mpi_tag_to_recv
-      );
-
-      if (get_ptr == nullptr) {
-        the_msg->recv_data_msg(
-          msg.mpi_tag_to_recv, [=](rdma_get_t ptr, action_t deleter){
-            the_rdma->trigger_get_recv_data(
-              msg.op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
-            );
-          });
-      } else {
-        the_msg->recv_data_msg_buffer(
-          get_ptr, msg.mpi_tag_to_recv, true, [this_node,get_ptr_action]{
-            debug_print_rdma(
-              "recv_data_msg_buffer finished\n",
-              this_node
-            );
-            if (get_ptr_action) {
-              get_ptr_action();
-            }
-          }
-        );
-      }
-    });
-
-  the_rdma->put_back_msg_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      PutBackMessage& msg = *static_cast<PutBackMessage*>(in_msg);
-      auto const msg_tag = envelope_get_tag(msg.env);
-      auto const op_id = msg.op_id;
-
-      auto const& this_node = the_context->get_node();
-
-      debug_print_rdma(
-        "put_back_msg_han: op=%lld\n", msg.op_id
-      );
-
-      the_rdma->trigger_put_back_data(op_id);
-    });
-
-  the_rdma->put_recv_msg_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      PutMessage& msg = *static_cast<PutMessage*>(in_msg);
-      auto const msg_tag = envelope_get_tag(msg.env);
-      auto const op_id = msg.op_id;
-      auto const send_back = msg.send_back;
-      auto const recv_tag = msg.mpi_tag_to_recv;
-
-      auto const& this_node = the_context->get_node();
-
-      debug_print_rdma(
-        "put_recv_msg_han: op=%lld, tag=%d, bytes=%lld, recv_tag=%d\n",
-        msg.op_id, msg_tag, msg.num_bytes, msg.mpi_tag_to_recv
-      );
-
-      assert(
-        recv_tag != no_tag and "PutMessage must have recv tag"
-      );
-
-      // try to get early access to the ptr for a direct put into user buffer
-      auto const& put_ptr = the_rdma->try_put_ptr(msg.rdma_handle, msg_tag);
-
-      debug_print_rdma(
-        "put_recv_msg_han: bytes=%lld, recv_tag=%d, put_ptr=%p\n",
-        msg.num_bytes, msg.mpi_tag_to_recv, put_ptr
-      );
-
-      if (put_ptr == nullptr) {
-        the_msg->recv_data_msg(
-          recv_tag, [=](rdma_get_t ptr, action_t deleter){
-            debug_print_rdma(
-              "put_data: after recv data trigger\n", this_node
-            );
-            the_rdma->trigger_put_recv_data(
-              msg.rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
-              msg.offset, [=](){
-                debug_print_rdma(
-                  "put_data: after put trigger: send_back=%d\n",
-                  send_back
-                );
-                if (send_back != uninitialized_destination) {
-                  PutBackMessage* new_msg = new PutBackMessage(op_id);
-                  the_msg->send_msg(
-                    send_back, the_rdma->put_back_msg_han, new_msg, [=]{
-                      delete new_msg;
-                    }
-                  );
-                }
-                deleter();
-              }
-            );
-          });
-      } else {
-        auto const& put_ptr_offset =
-          msg.offset != no_byte ? static_cast<char*>(put_ptr) + msg.offset : put_ptr;
-
-        // do a direct recv into the user buffer
-        the_msg->recv_data_msg_buffer(
-          put_ptr_offset, recv_tag, true, []{}, [=](rdma_get_t ptr, action_t deleter){
-            debug_print_rdma(
-              "put_data: recv_data_msg_buffer DIRECT: offset=%lld\n",
-              msg.offset
-            );
-            if (send_back) {
-              PutBackMessage* new_msg = new PutBackMessage(op_id);
-              the_msg->send_msg(
-                send_back, the_rdma->put_back_msg_han, new_msg, [=]{
-                  delete new_msg;
-                }
-              );
-            }
-            deleter();
-          }
-        );
-      }
-    });
-
-  the_rdma->setup_channel_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      CreateChannel& msg = *static_cast<CreateChannel*>(in_msg);
-      auto const& this_node = the_context->get_node();
-
-      debug_print_rdma_channel(
-        "setup_channel_han: han=%lld, target=%d, non_target=%d, "
-        "channel_tag=%d\n",
-        msg.rdma_handle, msg.target, msg.non_target, msg.channel_tag
-      );
-
-      auto const& num_bytes = the_rdma->lookup_bytes_handler(msg.rdma_handle);
-
-      if (not msg.has_bytes) {
-        the_msg->send_callback(make_shared_message<GetInfoChannel>(num_bytes));
-      }
-
-      the_rdma->create_direct_channel_internal(
-        msg.type, msg.rdma_handle, msg.non_target, nullptr, msg.channel_tag
-      );
-    });
-
-  the_rdma->remove_channel_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      DestroyChannel& msg = *static_cast<DestroyChannel*>(in_msg);
-      the_rdma->remove_direct_channel(msg.han);
-      the_msg->send_callback(make_shared_message<CallbackMessage>());
-    });
-
-  the_rdma->remote_channel_han =
-    CollectiveOps::register_handler([](runtime::BaseMessage* in_msg){
-      ChannelMessage& msg = *static_cast<ChannelMessage*>(in_msg);
-      auto const& this_node = the_context->get_node();
-      auto const target = rdma_handle_manager_t::get_rdma_node(msg.han);
-
-      debug_print_rdma_channel(
-        "remote_channel_han: target=%d, type=%d, han=%lld, tag=%d, "
-        "bytes=%lld\n",
-        target, msg.type, msg.han, msg.channel_tag, msg.num_bytes
-      );
-
-      the_rdma->create_direct_channel_internal(
-        msg.type, msg.han, target, [=]{
-          the_msg->send_callback(make_shared_message<CallbackMessage>());
-        },
-        msg.channel_tag, msg.num_bytes
-      );
-    });
-
-}
-
 
 }} // end namespace runtime::rdma

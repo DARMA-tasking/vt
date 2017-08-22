@@ -74,9 +74,6 @@ struct TerminationDetector : Tree {
   attach_epoch_term_action(epoch_t const& epoch, action_t action);
 
   static void
-  register_termination_handlers();
-
-  static void
   register_default_termination_action();
 
   void
@@ -87,6 +84,21 @@ struct TerminationDetector : Tree {
 
   void
   ready_new_epoch(epoch_t const& new_epoch);
+
+  static void
+  propagate_new_epoch(EpochMsg* msg);
+
+  static void
+  ready_epoch(EpochMsg* msg);
+
+  static void
+  propagate_epoch(EpochPropagateMsg* msg);
+
+  static void
+  epoch_finished(EpochMsg* msg);
+
+  static void
+  epoch_continue(EpochMsg* msg);
 
 private:
   epoch_t cur_epoch = no_epoch;
