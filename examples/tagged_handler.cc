@@ -4,7 +4,6 @@
 
 using namespace runtime;
 
-static handler_t my_col_han = uninitialized_handler;
 static handler_t my_reinstate_fn = uninitialized_handler;
 static tag_t const first_recv_tag = 10;
 static tag_t const last_recv_tag = 15;
@@ -50,19 +49,17 @@ static void process_iter_msgs(runtime::BaseMessage* in_msg) {
   }
 }
 
-static void my_col_fn(runtime::BaseMessage* in_msg) {
-  TestMsg& msg = *static_cast<TestMsg*>(in_msg);
-
+static void my_col_fn(TestMsg* msg) {
   auto const& my_node = the_context->get_node();
 
   printf(
     "%d: my_col_fn from=%d, callback=%d: tag=%d, sending, tag=[%d,%d]\n",
-    my_node, msg.from, msg.callback_han, first_recv_tag, first_recv_tag, last_recv_tag
+    my_node, msg->from, msg->callback_han, first_recv_tag, first_recv_tag, last_recv_tag
   );
 
   for (auto i = first_recv_tag; i < last_recv_tag; i++) {
     TestMsg* new_msg = make_shared_message<TestMsg>(my_node, uninitialized_handler);
-    the_msg->send_msg(msg.callback_han, new_msg, i);
+    the_msg->send_msg(msg->callback_han, new_msg, i);
     message_deref(new_msg);
   }
 }
@@ -75,8 +72,6 @@ int main(int argc, char** argv) {
     process_iter_msgs, cur_iter
   );
 
-  my_col_han = the_msg->collective_register_handler(my_col_fn);
-
   auto const& my_node = the_context->get_node();
   auto const& num_nodes = the_context->get_num_nodes();
 
@@ -88,7 +83,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     TestMsg* msg = make_shared_message<TestMsg>(my_node, callback);
-    the_msg->broadcast_msg(my_col_han, msg);
+    the_msg->broadcast_msg<TestMsg, my_col_fn>(msg);
     message_deref(msg);
   }
 

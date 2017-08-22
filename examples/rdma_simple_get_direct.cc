@@ -8,7 +8,6 @@ static node_t my_node = uninitialized_destination;
 static node_t num_nodes = uninitialized_destination;
 
 static rdma_handle_t my_handle = no_rdma_handle;
-static handler_t test_han = uninitialized_handler;
 
 static int const my_data_len = 8;
 static double* my_data = nullptr;
@@ -18,13 +17,11 @@ struct TestMsg : runtime::Message {
   TestMsg(rdma_handle_t const& in_han) : Message(), han(in_han) { }
 };
 
-static void tell_handle(runtime::BaseMessage* in_msg) {
-  TestMsg& msg = *static_cast<TestMsg*>(in_msg);
-
+static void tell_handle(TestMsg* msg) {
   if (my_node != 0) {
-    printf("%d: handle=%lld, requesting data\n", my_node, msg.han);
+    printf("%d: handle=%lld, requesting data\n", my_node, msg->han);
     int const num_elm = 2;
-    the_rdma->get_typed_data_info_buf(msg.han, my_data, num_elm, no_byte, no_tag, [=]{
+    the_rdma->get_typed_data_info_buf(msg->han, my_data, num_elm, no_byte, no_tag, [=]{
       for (auto i = 0; i < num_elm; i++) {
         printf("node %d: \t: my_data[%d] = %f\n", my_node, i, my_data[i]);
       }
@@ -35,8 +32,6 @@ static void tell_handle(runtime::BaseMessage* in_msg) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
-
-  test_han = the_msg->collective_register_handler(tell_handle);
 
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();
@@ -53,7 +48,7 @@ int main(int argc, char** argv) {
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;
-    the_msg->broadcast_msg(test_han, msg, [=]{ delete msg; });
+    the_msg->broadcast_msg<TestMsg, tell_handle>(msg, [=]{ delete msg; });
   }
 
   while (1) {

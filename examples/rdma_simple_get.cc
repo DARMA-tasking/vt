@@ -9,21 +9,17 @@ static node_t num_nodes = uninitialized_destination;
 
 static rdma_handle_t my_handle = no_rdma_handle;
 
-handler_t test_han = uninitialized_handler;
-
 struct TestMsg : runtime::Message {
   rdma_handle_t han;
   TestMsg(rdma_handle_t const& in_han) : Message(), han(in_han) { }
 };
 
-static void tell_handle(runtime::BaseMessage* in_msg) {
-  TestMsg& msg = *static_cast<TestMsg*>(in_msg);
-
-  printf("%d: handle=%lld\n", my_node, msg.han);
+static void tell_handle(TestMsg* msg) {
+  printf("%d: handle=%lld\n", my_node, msg->han);
 
   if (my_node == 1 || my_node == 2) {
     printf("%d: requesting data\n", my_node);
-    the_rdma->get_data(msg.han, my_node, sizeof(double)*3, no_byte, [](void* data, size_t num_bytes){
+    the_rdma->get_data(msg->han, my_node, sizeof(double)*3, no_byte, [](void* data, size_t num_bytes){
       double* const ptr = static_cast<double*>(data);
       size_t const num_elems = num_bytes / sizeof(double);
       printf("%d: data arrived: data=%p, num_bytes=%zu\n", my_node, data, num_bytes);
@@ -51,8 +47,6 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  test_han = the_msg->collective_register_handler(tell_handle);
-
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();
 
@@ -70,7 +64,7 @@ int main(int argc, char** argv) {
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;
-    the_msg->broadcast_msg(test_han, msg, [=]{ delete msg; });
+    the_msg->broadcast_msg<TestMsg, tell_handle>(msg, [=]{ delete msg; });
   }
 
   while (1) {

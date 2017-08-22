@@ -9,9 +9,6 @@ static node_t num_nodes = uninitialized_destination;
 
 static rdma_handle_t my_handle_1 = no_rdma_handle;
 
-handler_t test_han2 = uninitialized_handler;
-handler_t put_channel_setup_han = uninitialized_handler;
-
 static int const put_len = 2;
 static int const my_data_len = 8;
 static double* my_data = nullptr;
@@ -21,27 +18,24 @@ struct TestMsg : runtime::Message {
   TestMsg(rdma_handle_t const& in_han) : Message(), han(in_han) { }
 };
 
-static void read_data_fn(runtime::BaseMessage* in_msg) {
-  TestMsg& msg = *static_cast<TestMsg*>(in_msg);
-
-  printf("%d: read_data_fn: handle=%lld\n", my_node, msg.han);
+static void read_data_fn(TestMsg* msg) {
+  printf("%d: read_data_fn: handle=%lld\n", my_node, msg->han);
 
   for (auto i = 0; i < put_len*2; i++) {
-    printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg.han, i, my_data[i]);
+    printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg->han, i, my_data[i]);
   }
 }
 
-static void put_channel_setup(runtime::BaseMessage* in_msg) {
-  TestMsg& msg = *static_cast<TestMsg*>(in_msg);
-  auto const& handle = msg.han;
+static void put_channel_setup(TestMsg* msg) {
+  auto const& handle = msg->han;
 
-  printf("%d: put_channel_setup: handle=%lld\n", my_node, msg.han);
+  printf("%d: put_channel_setup: handle=%lld\n", my_node, msg->han);
 
   if (my_node == 1) {
     int const num_elm = 2;
     the_rdma->put_typed_data(handle, my_data, num_elm, no_byte, no_tag, [=]{
       TestMsg* back = make_shared_message<TestMsg>(handle);
-      the_msg->send_msg(0, test_han2, back);
+      the_msg->send_msg<TestMsg, read_data_fn>(0, back);
     });
   }
 }
@@ -49,9 +43,6 @@ static void put_channel_setup(runtime::BaseMessage* in_msg) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
-
-  test_han2 = the_msg->collective_register_handler(read_data_fn);
-  put_channel_setup_han = the_msg->collective_register_handler(put_channel_setup);
 
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();
@@ -75,7 +66,7 @@ int main(int argc, char** argv) {
 
     the_rdma->setup_put_channel_with_remote(my_handle_1, 1, [=]{
       TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
-      the_msg->send_msg(1, put_channel_setup_han, msg1);
+      the_msg->send_msg<TestMsg, put_channel_setup>(1, msg1);
     });
   }
 

@@ -9,9 +9,6 @@ static node_t num_nodes = uninitialized_destination;
 
 static rdma_handle_t my_handle = no_rdma_handle;
 
-handler_t test_han = uninitialized_handler;
-handler_t test_han2 = uninitialized_handler;
-
 struct TestMsg : runtime::Message {
   rdma_handle_t han;
   TestMsg(rdma_handle_t const& in_han) : Message(), han(in_han) { }
@@ -19,10 +16,8 @@ struct TestMsg : runtime::Message {
 
 static double* my_data = nullptr;
 
-static void read_data_fn(runtime::BaseMessage* in_msg) {
-  TestMsg& msg = *static_cast<TestMsg*>(in_msg);
-
-  printf("%d: read_data_fn: handle=%lld\n", my_node, msg.han);
+static void read_data_fn(TestMsg* msg) {
+  printf("%d: read_data_fn: handle=%lld\n", my_node, msg->han);
 
   if (my_node == 0) {
     int const len = 10;
@@ -32,10 +27,8 @@ static void read_data_fn(runtime::BaseMessage* in_msg) {
   }
 }
 
-static void put_data_fn(runtime::BaseMessage* in_msg) {
-  TestMsg& msg = *static_cast<TestMsg*>(in_msg);
-
-  printf("%d: put_data_fn: handle=%lld\n", my_node, msg.han);
+static void put_data_fn(TestMsg* msg) {
+  printf("%d: put_data_fn: handle=%lld\n", my_node, msg->han);
 
   if (my_node == 1) {
     printf("%d: putting data\n", my_node);
@@ -45,13 +38,13 @@ static void put_data_fn(runtime::BaseMessage* in_msg) {
     for (auto i = 0; i < local_data_len; i++) {
       local_data[i] = (i+1)*1000*(my_node+1);
     }
-    the_rdma->put_data(msg.han, local_data, sizeof(double)*local_data_len, [=]{
+    the_rdma->put_data(msg->han, local_data, sizeof(double)*local_data_len, [=]{
       delete [] local_data;
     }, [=]{
       printf("%d: after put: sending msg back to 0\n", my_node);
       TestMsg* msg = new TestMsg(my_node);
       msg->han = my_handle;
-      the_msg->send_msg(0, test_han2, msg, [=]{ delete msg; });
+      the_msg->send_msg<TestMsg,read_data_fn>(0, msg, [=]{ delete msg; });
     });
   }
 }
@@ -72,9 +65,6 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  test_han = the_msg->collective_register_handler(put_data_fn);
-  test_han2 = the_msg->collective_register_handler(read_data_fn);
-
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();
 
@@ -93,8 +83,8 @@ int main(int argc, char** argv) {
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;
-    the_msg->broadcast_msg(test_han, msg, [=]{ delete msg; });
-    //the_msg->send_msg(0, test_han, msg, [=]{ delete msg; });
+    the_msg->broadcast_msg<TestMsg,put_data_fn>(msg, [=]{ delete msg; });
+    //the_msg->send_msg<TestMsg,put_data_fn>(0, msg, [=]{ delete msg; });
   }
 
   while (1) {
