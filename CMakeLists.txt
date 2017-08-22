@@ -137,6 +137,11 @@ add_executable(
 )
 
 add_executable(
+  callback_new
+  ${PROJECT_EXAMPLE_DIR}/callback_new.cc ${SOURCE_FILES} ${HEADER_FILES}
+)
+
+add_executable(
   reinstate
   ${PROJECT_EXAMPLE_DIR}/reinstate.cc ${SOURCE_FILES} ${HEADER_FILES}
 )

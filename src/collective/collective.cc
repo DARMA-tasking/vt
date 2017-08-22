@@ -8,8 +8,12 @@ namespace runtime {
 CollectiveOps::initialize_runtime() {
   term::TerminationDetector::register_default_termination_action();
 
+  MPI_Barrier(MPI_COMM_WORLD);
+
   // wait for all nodes to start up to initialize the runtime
-  the_barrier->barrier();
+  the_barrier->barrier_then([]{
+    MPI_Barrier(MPI_COMM_WORLD);
+  });
 }
 
 /*static*/ void
