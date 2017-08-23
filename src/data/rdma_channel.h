@@ -52,6 +52,12 @@ struct Channel {
 
   virtual ~Channel();
 
+  node_t
+  get_target() const;
+
+  node_t
+  get_non_target() const;
+
 private:
   void
   init_channel_window();

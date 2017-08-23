@@ -79,7 +79,8 @@ struct RDMAManager {
   put_data(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
     byte_t const& num_bytes, byte_t const& offset, tag_t const& tag,
-    action_t cont = no_action, action_t action_after_put = no_action
+    action_t cont = no_action, action_t action_after_put = no_action,
+    node_t const& collective_node = uninitialized_destination
   );
 
   void
@@ -304,7 +305,8 @@ private:
   void
   setup_channel_with_remote(
     rdma_type_t const& type, rdma_handle_t const& han, node_t const& dest,
-    action_t const& action
+    action_t const& action,
+    node_t const& override_target = uninitialized_destination
   );
 
   void
@@ -317,21 +319,24 @@ private:
   void
   create_direct_channel(
     rdma_type_t const& type, rdma_handle_t const& han,
-    action_t const& action = nullptr
+    action_t const& action = nullptr,
+    node_t const& override_target = uninitialized_destination
   );
 
   void
   create_direct_channel_internal(
     rdma_type_t const& type, rdma_handle_t const& han, node_t const& non_target,
-    action_t const& action = nullptr, tag_t const& channel_tag = no_tag,
-    byte_t const& num_bytes = no_byte
+    action_t const& action = nullptr,
+    node_t const& override_target = uninitialized_destination,
+    tag_t const& channel_tag = no_tag, byte_t const& num_bytes = no_byte
   );
 
   void
   create_direct_channel_finish(
     rdma_type_t const& type, rdma_handle_t const& han, node_t const& non_target,
     action_t const& action, tag_t const& channel_tag, bool const& is_target,
-    byte_t const& num_bytes
+    byte_t const& num_bytes,
+    node_t const& override_target = uninitialized_destination
   );
 
   template <RDMAManager::rdma_type_t rdma_type, typename FunctionT>

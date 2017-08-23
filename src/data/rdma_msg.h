@@ -91,15 +91,20 @@ struct ChannelMessage : runtime::CallbackMessage {
 
   ChannelMessage(
     rdma_type_t const& in_type, rdma_handle_t const& in_han,
-    byte_t const& in_num_bytes, tag_t const& in_channel_tag
+    byte_t const& in_num_bytes, tag_t const& in_channel_tag,
+    node_t const& in_non_target = uninitialized_destination,
+    node_t const& in_override_target = uninitialized_destination
   ) : CallbackMessage(), type(in_type), han(in_han), num_bytes(in_num_bytes),
-      channel_tag(in_channel_tag)
+      channel_tag(in_channel_tag), non_target(in_non_target),
+      override_target(in_override_target)
   { }
 
   tag_t channel_tag = no_tag;
   rdma_type_t type = uninitialized_rdma_type;
   rdma_handle_t han = no_rdma_handle;
   byte_t num_bytes = no_byte;
+  node_t non_target = uninitialized_destination;
+  node_t override_target = uninitialized_destination;
 };
 
 using GetMessage = RequestDataMessage<EpochTagEnvelope>;

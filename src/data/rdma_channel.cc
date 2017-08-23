@@ -252,4 +252,14 @@ Channel::init_channel_window() {
   );
 }
 
+node_t
+Channel::get_target() const {
+  return target;
+}
+
+node_t
+Channel::get_non_target() const {
+  return non_target;
+}
+
 }} //end namespace runtime::rdma

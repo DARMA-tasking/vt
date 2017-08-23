@@ -33,6 +33,7 @@ static void announce(TestMsg* msg) {
 
       for (int i = 0; i < local_data_len; i++) {
         printf("%d: \t local_data[%d] = %f\n", my_node, i, local_data[i]);
+        assert(local_data[i] == 5.0+i);
       }
     });
   }
@@ -76,13 +77,11 @@ int main(int argc, char** argv) {
   printf("%d: handle=%lld, create handle\n", my_node, my_handle);
 
   if (my_node == 0) {
-    //my_handle = the_rdma->register_new_typed_rdma_handler(my_data, my_data_len);
-
-    //the_rdma->setup_get_channel_with_remote(my_handle, 1, [=]{
+    the_rdma->setup_get_channel_with_remote(my_handle, 1, [=]{
       TestMsg* msg = make_shared_message<TestMsg>(my_node);
       msg->han = my_handle;
       the_msg->broadcast_msg<TestMsg, announce>(msg);
-      //});
+    });
   }
 
   while (1) {
