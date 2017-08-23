@@ -26,7 +26,7 @@ static void read_data_fn(TestMsg* msg) {
   printf("%d: read_data_fn: handle=%lld\n", my_node, msg->han);
 
   if (my_node == 0) {
-    the_rdma->sync_local_put_channel(msg->han, [=]{
+    the_rdma->sync_local_put_channel(msg->han, 1, [=]{
       for (auto i = 0; i < put_len*2; i++) {
         printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg->han, i, my_data[i]);
       }

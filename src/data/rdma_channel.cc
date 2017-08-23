@@ -6,32 +6,31 @@ namespace runtime { namespace rdma {
 
 Channel::Channel(
   rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
-  bool const& in_is_target, tag_t const& in_channel_group_tag,
+  node_t const& in_target, tag_t const& in_channel_group_tag,
   node_t const& in_non_target, rdma_ptr_t const& in_ptr, byte_t const& in_num_bytes
-) : rdma_handle(in_rdma_handle), op_type(in_op_type),is_target(in_is_target),
+) : rdma_handle(in_rdma_handle), op_type(in_op_type),target(in_target),
     channel_group_tag(in_channel_group_tag), non_target(in_non_target),
     ptr(in_ptr), num_bytes(in_num_bytes)
 {
-  target = rdma_handle_manager_t::get_rdma_node(rdma_handle);
-  my_node = the_context->get_node();
+  auto const& my_node = the_context->get_node();
+
+  is_target = target == my_node;
+
+  assert(target != non_target);
 
   assert(
-    (target != my_node or is_target) and
-    "A RDMA Channel can not be created within the same node"
+    non_target != uninitialized_destination and
+    target != uninitialized_destination and
+    "Channel must know both target and non_target"
   );
-
-  if (target != my_node) {
-    non_target = my_node;
-  } else {
-    assert(
-      non_target != uninitialized_destination and
-      "Target must know other destination (non-target)"
-    );
-  }
 
   if (in_num_bytes == no_byte) {
     num_bytes = rdma_empty_byte;
   }
+
+  // set positions in local group
+  target_pos = 0;
+  non_target_pos = 1;
 
   debug_print_rdma_channel(
     "channel: construct: target=%d, non_target=%d, my_node=%d, han=%lld, "
@@ -44,8 +43,8 @@ Channel::Channel(
 void
 Channel::init_channel_group() {
   debug_print_rdma_channel(
-    "channel: init_channel_group: target=%d, my_node=%d, han=%lld\n",
-    target, my_node, rdma_handle
+    "channel: init_channel_group: target=%d, non_target=%d, my_node=%d, han=%lld\n",
+    target, non_target, my_node, rdma_handle
   );
 
   MPI_Group world;
@@ -56,7 +55,11 @@ Channel::init_channel_group() {
     "MPI_Comm_group: Should be successful"
   );
 
-  int const channel_group_nodes[2] = {target, non_target};
+  int channel_group_nodes[2] = {};
+
+  channel_group_nodes[target_pos] = target;
+  channel_group_nodes[non_target_pos] = non_target;
+
   auto const& group_incl_ret = MPI_Group_incl(
     world, 2, channel_group_nodes, &channel_group
   );
@@ -92,7 +95,7 @@ Channel::sync_channel_local() {
     lock_channel_for_op();
   }
 
-  auto const& ret = MPI_Win_flush_local(0,window);
+  auto const& ret = MPI_Win_flush_local(non_target_pos, window);
   assert(ret == MPI_SUCCESS and "MPI_Win_flush_local: Should be successful");
 
   if (op_type == rdma_type_t::Put) {
@@ -111,7 +114,7 @@ Channel::sync_channel_global() {
     "channel: sync_channel_global: target=%d starting\n", target
   );
 
-  auto const& ret = MPI_Win_flush(target, window);
+  auto const& ret = MPI_Win_flush(target_pos, window);
   assert(ret == MPI_SUCCESS and "MPI_Win_flush: Should be successful");
 
   if (op_type == rdma_type_t::Put) {
@@ -126,7 +129,6 @@ Channel::sync_channel_global() {
 void
 Channel::lock_channel_for_op() {
   assert(initialized and "Channel must be initialized");
-  assert(not target and "The target can not write to this channel");
 
   if (not locked) {
     constexpr int const mpi_win_lock_assert_arg = 0;
@@ -144,7 +146,7 @@ Channel::lock_channel_for_op() {
     );
 
     auto const ret = MPI_Win_lock(
-      lock_type, target, mpi_win_lock_assert_arg, window
+      lock_type, target_pos, mpi_win_lock_assert_arg, window
     );
 
     assert(ret == MPI_SUCCESS and "MPI_Win_lock: Should be successful");
@@ -156,10 +158,9 @@ Channel::lock_channel_for_op() {
 void
 Channel::unlock_channel_for_op() {
   assert(initialized and "Channel must be initialized");
-  assert(not target and "The target can not write to this channel");
 
   if (locked) {
-    auto const& ret = MPI_Win_unlock(target, window);
+    auto const& ret = MPI_Win_unlock(target_pos, window);
 
     assert(ret == MPI_SUCCESS and "MPI_Win_unlock: Should be successful");
 
@@ -177,7 +178,7 @@ Channel::write_data_to_channel(
   rdma_ptr_t const& ptr, byte_t const& ptr_num_bytes, byte_t const& offset
 ) {
   assert(initialized and "Channel must be initialized");
-  assert(not target and "The target can not write to this channel");
+  assert(not is_target and "The target can not write to this channel");
 
   byte_t const d_offset = offset == no_byte ? 0 : offset;
 
@@ -194,12 +195,12 @@ Channel::write_data_to_channel(
 
   if (op_type == rdma_type_t::Get) {
     auto const& get_ret = MPI_Get(
-      ptr, ptr_num_bytes, MPI_BYTE, target, d_offset, num_bytes, MPI_BYTE, window
+      ptr, ptr_num_bytes, MPI_BYTE, target_pos, d_offset, num_bytes, MPI_BYTE, window
     );
     assert(get_ret == MPI_SUCCESS and "MPI_Get: Should be successful");
   } else if (op_type == rdma_type_t::Put) {
     auto const& put_ret = MPI_Put(
-      ptr, ptr_num_bytes, MPI_BYTE, target, d_offset, num_bytes, MPI_BYTE, window
+      ptr, ptr_num_bytes, MPI_BYTE, target_pos, d_offset, num_bytes, MPI_BYTE, window
     );
     assert(put_ret == MPI_SUCCESS and "MPI_Put: Should be successful");
   } else {

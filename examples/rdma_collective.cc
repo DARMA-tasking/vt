@@ -28,25 +28,26 @@ static void announce(TestMsg* msg) {
 
   if (my_node == 1) {
     //the_rdma->get_typed_data_info_buf(rdma_handle, local_data, 16, no_byte, no_tag, [=]{
-    the_rdma->get_region(rdma_handle, local_data, rdma::Region{5,5+local_data_len}, [=]{
-      printf("%d: handle=%lld, finished getting data\n", my_node, rdma_handle);
+    the_rdma->create_get_channel(rdma_handle, 2, [=]{
+      printf("set up channel with 2\n");
 
-      for (int i = 0; i < local_data_len; i++) {
-        printf("%d: \t local_data[%d] = %f\n", my_node, i, local_data[i]);
-        assert(local_data[i] == 5.0+i);
-      }
+      the_rdma->get_typed_data_info_buf(rdma_handle, local_data, local_data_len, 5, no_tag, [=]{
+        printf("%d: handle=%lld, finished getting data\n", my_node, rdma_handle);
+        for (int i = 0; i < local_data_len; i++) {
+          printf("%d: \t local_data[%d] = %f\n", my_node, i, local_data[i]);
+          assert(local_data[i] == 5.0+i);
+        }
+      });
     });
-  }
+    // the_rdma->get_region(rdma_handle, local_data, rdma::Region{5,5+local_data_len}, [=]{
+    //   printf("%d: handle=%lld, finished getting data\n", my_node, rdma_handle);
 
-  // if (my_node != 0) {
-  //   printf("%d: handle=%lld, requesting data\n", my_node, msg->han);
-  //   int const num_elm = 2;
-  //   the_rdma->get_typed_data_info_buf(msg->han, my_data, num_elm, no_byte, no_tag, [=]{
-  //     for (auto i = 0; i < num_elm; i++) {
-  //       printf("node %d: \t: my_data[%d] = %f\n", my_node, i, my_data[i]);
-  //     }
-  //   });
-  // }
+    //   for (int i = 0; i < local_data_len; i++) {
+    //     printf("%d: \t local_data[%d] = %f\n", my_node, i, local_data[i]);
+    //     assert(local_data[i] == 5.0+i);
+    //   }
+    // });
+  }
 }
 
 int main(int argc, char** argv) {

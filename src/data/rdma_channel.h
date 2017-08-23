@@ -5,6 +5,7 @@
 #include "common.h"
 #include "function.h"
 #include "rdma_common.h"
+#include "rdma_channel_lookup.h"
 #include "rdma_handle.h"
 
 #include <mpi.h>
@@ -19,10 +20,13 @@ static constexpr byte_t const rdma_empty_byte = 0;
 struct Channel {
   using rdma_handle_manager_t = HandleManager;
   using rdma_type_t = Type;
+  using rdma_group_pos_t = int;
+
+  static constexpr rdma_group_pos_t const no_group_pos = -1;
 
   Channel(
     rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
-    bool const& in_is_target, tag_t const& in_channel_group_tag,
+    node_t const& in_target, tag_t const& in_channel_group_tag,
     node_t const& in_non_target = uninitialized_destination,
     rdma_ptr_t const& in_ptr = nullptr, byte_t const& in_num_bytes = no_byte
   );
@@ -63,10 +67,12 @@ private:
   init_channel_window();
 
 private:
-  bool const is_target;
+  bool is_target = false;
 
   bool initialized = false, locked = false, flushed = true;
   rdma_handle_t const rdma_handle = no_rdma_handle;
+  rdma_group_pos_t target_pos = no_group_pos;
+  rdma_group_pos_t non_target_pos = no_group_pos;
   node_t target = uninitialized_destination;
   node_t my_node = uninitialized_destination;
   node_t non_target = uninitialized_destination;

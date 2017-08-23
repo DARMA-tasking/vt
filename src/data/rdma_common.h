@@ -66,4 +66,16 @@ static constexpr byte_t rdma_default_byte_size = sizeof(char);
 
 }} //end namespace runtime::rdma
 
+#define print_channel_type(rdma_op_type) (                              \
+  rdma_op_type == runtime::rdma::Type::Get ? "rdma::Get" : (            \
+    rdma_op_type == runtime::rdma::Type::Put ? "rdma::Put" : (          \
+      rdma_op_type == runtime::rdma::Type::GetOrPut ? "rdma::GetorPut"  \
+      : (                                                               \
+        rdma_op_type == runtime::rdma::Type::Uninitialized ?            \
+        "rdma::Uninitialized" : "Error: unknown rdma::Type"             \
+      )                                                                 \
+    )                                                                   \
+  )                                                                     \
+)
+
 #endif /*__RUNTIME_TRANSPORT_RDMA_COMMON__*/
