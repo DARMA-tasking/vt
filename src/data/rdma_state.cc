@@ -25,11 +25,11 @@ State::set_default_handler() {
 
   bool const handle_any_tag = true;
 
-  auto f_get = std::bind(&State::default_get_handler_fn, this, _1, _2, _3);
+  auto f_get = std::bind(&State::default_get_handler_fn, this, _1, _2, _3, _4);
   the_rdma->associate_get_function(handle, f_get, handle_any_tag);
   using_default_get_handler = true;
 
-  auto f_put = std::bind(&State::default_put_handler_fn, this, _1, _2, _3, _4);
+  auto f_put = std::bind(&State::default_put_handler_fn, this, _1, _2, _3, _4, _5);
   the_rdma->associate_put_function(handle, f_put, handle_any_tag);
   using_default_put_handler = true;
 }
@@ -197,7 +197,7 @@ State::test_ready_put_data(tag_t const& tag) {
 
 rdma_get_t
 State::default_get_handler_fn(
-  BaseMessage* msg, byte_t req_num_bytes, tag_t tag
+  BaseMessage* msg, byte_t req_num_bytes, byte_t req_offset, tag_t tag
 ) {
   auto const& this_node = the_context->get_node();
 
@@ -211,12 +211,16 @@ State::default_get_handler_fn(
     "To use default handler ptr and bytes must be set"
   );
 
-  return rdma_get_t{ptr, req_num_bytes == no_byte ? num_bytes : req_num_bytes};
+  return rdma_get_t{
+    static_cast<char*>(ptr) + req_offset,
+    req_num_bytes == no_byte ? num_bytes : req_num_bytes
+  };
 }
 
 void
 State::default_put_handler_fn(
-  BaseMessage* msg, rdma_ptr_t in_ptr, byte_t req_num_bytes, tag_t tag
+  BaseMessage* msg, rdma_ptr_t in_ptr, byte_t req_num_bytes,
+  byte_t req_offset, tag_t tag
 ) {
   auto const& this_node = the_context->get_node();
 
@@ -230,7 +234,7 @@ State::default_put_handler_fn(
     "To use default handler ptr and bytes must be set"
   );
 
-  std::memcpy(ptr, in_ptr, req_num_bytes);
+  std::memcpy(static_cast<char*>(ptr) + req_offset, in_ptr, req_num_bytes);
 }
 
 void
@@ -252,14 +256,16 @@ State::get_data(
     this_node, msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag)
   );
 
+  auto const& offset = info.offset;
+
   if (ready) {
     rdma_get_function_t get_fn =
       tag == no_tag or get_any_tag ? rdma_get_fn :
       std::get<0>(get_tag_holder.find(tag)->second);
     if (info.cont) {
-      info.cont(get_fn(nullptr, info.num_bytes, info.tag));
+      info.cont(get_fn(nullptr, info.num_bytes, offset, info.tag));
     } else if (info.data_ptr) {
-      rdma_get_t get = get_fn(nullptr, info.num_bytes, info.tag);
+      rdma_get_t get = get_fn(nullptr, info.num_bytes, offset, info.tag);
       memcpy(info.data_ptr, std::get<0>(get), std::get<1>(get));
       if (info.cont_action) {
         info.cont_action();
@@ -295,7 +301,7 @@ State::put_data(
     rdma_put_function_t put_fn =
       tag == no_tag or put_any_tag ? rdma_put_fn :
       std::get<0>(put_tag_holder.find(tag)->second);
-    put_fn(nullptr, info.data_ptr, info.num_bytes, info.tag);
+    put_fn(nullptr, info.data_ptr, info.num_bytes, info.offset, info.tag);
 
     assert(
       not info.cont and "Cont should not be set for a put"
@@ -320,28 +326,34 @@ State::process_pending_get(tag_t const& tag) {
   auto pending_iter = pending_tag_gets.find(tag);
   if (pending_iter != pending_tag_gets.end()) {
     for (auto&& elm : pending_iter->second) {
-      elm.cont(get_fn(nullptr, elm.num_bytes, elm.tag));
+      elm.cont(get_fn(nullptr, elm.num_bytes, elm.offset, elm.tag));
     }
   }
 }
 
-void
-State::set_collective_map(rdma_collective_map_t const& map) {
-  assert(
-    rdma_handle_manager_t::is_collective(handle) and "Must be collective handle"
-  );
+// void
+// State::set_collective_map(rdma_map_t const& map) {
+//   assert(
+//     rdma_handle_manager_t::is_collective(handle) and "Must be collective handle"
+//   );
 
-  collective_map = map;
-}
+//   collective_map = map;
+// }
 
-node_t
-State::get_node(rdma_elm_t const& elm) {
-  assert(
-    collective_map != nullptr and rdma_handle_manager_t::is_collective(handle)
-    and "Must be collective and have map assigned"
-  );
+// rdma_map_t
+// State::get_collective_map() {
+//   return collective_map;
+// }
 
-  return collective_map(elm);
-}
+
+// node_t
+// State::get_node(rdma_elm_t const& elm) {
+//   assert(
+//     collective_map != nullptr and rdma_handle_manager_t::is_collective(handle)
+//     and "Must be collective and have map assigned"
+//   );
+
+//   return collective_map(elm);
+// }
 
 }} //end namespace runtime::rdma

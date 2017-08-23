@@ -22,6 +22,8 @@ using byte_t = uint64_t;
 using bit_count_t = int32_t;
 using action_t = std::function<void()>;
 using rdma_ptr_t = void*;
+using rdma_elm_t = int64_t;
+using rdma_block_t = int64_t;
 using rdma_handle_t = int64_t;
 using rdma_handler_t = int64_t;
 using rdma_get_t = std::tuple<rdma_ptr_t, byte_t>;
@@ -48,6 +50,8 @@ static constexpr node_t const uninitialized_destination = -1;
 static constexpr handler_t const uninitialized_handler = -1;
 static constexpr rdma_handler_t const uninitialized_rdma_handler = -1;
 static constexpr ref_t const not_shared_message = -1000;
+static constexpr rdma_elm_t const no_rdma_elm = -1;
+static constexpr rdma_block_t const no_rdma_block = -1;
 
 static constexpr bit_count_t const node_num_bits = sizeof(node_t)*8;
 static constexpr bit_count_t const handler_num_bits = sizeof(handler_t)*8;

@@ -224,9 +224,9 @@ RDMAManager::remote_channel(ChannelMessage* msg) {
 rdma_handle_t
 RDMAManager::register_new_collective(
   bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes,
-  rdma_collective_map_t const& map
+  byte_t const& num_total_bytes, byte_t const& elm_size, rdma_map_t const& map
 ) {
-  auto const& han =register_new_rdma_handler(use_default, ptr, num_bytes, true);
+  auto const& han = register_new_rdma_handler(use_default, ptr, num_bytes, true);
 
   auto iter = holder.find(han);
   assert(
@@ -234,7 +234,10 @@ RDMAManager::register_new_collective(
   );
 
   auto& state = iter->second;
-  state.set_collective_map(map);
+
+  state.group_info = std::make_unique<rdma_group_t>(
+    map, num_bytes / elm_size, the_context->get_num_nodes(), elm_size
+  );
 
   return han;
 }
@@ -260,8 +263,11 @@ RDMAManager::register_new_rdma_handler(
   rdma_handle_manager_t::set_op_type(new_handle, rdma_type_t::GetOrPut);
   rdma_handle_manager_t::set_is_collective(new_handle, is_collective);
   rdma_handle_manager_t::set_is_sized(new_handle, is_sized);
-  rdma_handle_manager_t::set_rdma_node(new_handle, this_node);
   rdma_handle_manager_t::set_rdma_identifier(new_handle, new_identifier);
+
+  if (not is_collective) {
+    rdma_handle_manager_t::set_rdma_node(new_handle, this_node);
+  }
 
   holder.emplace(
     std::piecewise_construct,
@@ -317,9 +323,11 @@ RDMAManager::request_get_data(
 ) {
   auto const& this_node = the_context->get_node();
   auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
+  auto const& is_collective = rdma_handle_manager_t::is_collective(han);
 
   assert(
-    handler_node == this_node and "Handle must be local to this node"
+    (is_collective or handler_node == this_node)
+    and "Handle must be local to this node"
   );
 
   auto holder_iter = holder.find(han);
@@ -542,13 +550,15 @@ RDMAManager::put_data(
 ) {
   auto const& this_node = the_context->get_node();
   auto const put_node = rdma_handle_manager_t::get_rdma_node(han);
+  auto const& is_collective = rdma_handle_manager_t::is_collective(han);
 
   if (put_node != this_node) {
     rdma_handle_t ch_han = han;
     rdma_handle_manager_t::set_op_type(ch_han, rdma_type_t::Put);
 
     bool const send_via_channel =
-      channels.find(ch_han) != channels.end() and tag == no_tag;
+      channels.find(ch_han) != channels.end() and tag == no_tag and
+      not is_collective;
 
     if (send_via_channel) {
       return send_data_channel(
@@ -611,50 +621,153 @@ RDMAManager::put_data(
       }
     );
   }
-
 }
 
 void
-RDMAManager::get_data_info_buf(
-  rdma_handle_t const& han, rdma_ptr_t const& ptr, byte_t const& num_bytes,
-  byte_t const& offset, tag_t const& tag, action_t next_action
+RDMAManager::get_region_typeless(
+  rdma_handle_t const& han, rdma_ptr_t const& ptr, rdma_region_t const& region,
+  action_t next_action
 ) {
   auto const& this_node = the_context->get_node();
-  auto const get_node = rdma_handle_manager_t::get_rdma_node(han);
+  auto const& is_collective = rdma_handle_manager_t::is_collective(han);
 
-  if (get_node != this_node) {
-    rdma_handle_t ch_han = han;
-    rdma_handle_manager_t::set_op_type(ch_han, rdma_type_t::Get);
+  if (is_collective) {
+    printf(
+      "%d: get_region_typeless: han=%lld, ptr=%p, region=%s\n",
+      this_node,han,ptr,region.region_to_buf().c_str()
+    );
 
-    bool const send_via_channel =
-      channels.find(ch_han) != channels.end() and tag == no_tag;
+    auto holder_iter = holder.find(han);
+    assert(
+      holder_iter != holder.end() and "Holder for handler must exist here"
+    );
 
-    if (send_via_channel) {
-      return send_data_channel(
-        rdma_type_t::Get, han, ptr, num_bytes, offset, nullptr, next_action
+    auto& state = holder_iter->second;
+
+    assert(state.group_info != nullptr);
+
+    auto group = state.group_info.get();
+
+    auto action = new Action(1, next_action);
+
+    group->walk_region(region, [&](
+      node_t node, rdma_block_elm_range_t rng, rdma_elm_t lo, rdma_elm_t hi
+    ) {
+      auto const& blk = std::get<0>(rng);
+      auto const& blk_lo = std::get<1>(rng);
+      auto const& blk_hi = std::get<2>(rng);
+      auto const& elm_size = region.elm_size;
+      auto const& rlo = region.lo;
+      auto const& rhi = region.hi;
+      auto const& roffset = lo - rlo;
+      auto const& ptr_offset = static_cast<char*>(ptr) + (roffset * elm_size);
+      auto const& block_offset = (lo - blk_lo) * elm_size;
+
+      printf(
+        "\t: node=%d, lo=%lld, hi=%lld, blk=%lld, blk_lo=%lld, blk_hi=%lld, "
+        "block_offset=%lld, ptr_offset={%lld,%lld}\n",
+        node, lo, hi, blk, blk_lo, blk_hi, block_offset, roffset, roffset*elm_size
       );
-    } else {
-      rdma_op_t const new_op = cur_op++;
 
-      GetMessage* msg = new GetMessage(new_op, this_node, han, num_bytes, offset);
-      if (tag != no_tag) {
-        envelope_set_tag(msg->env, tag);
+      action->add_dep();
+
+      get_data_into_buf(
+        han, ptr_offset, (hi-lo)*elm_size, block_offset, no_tag, [=]{
+          action->release();
+        }, elm_size, node
+      );
+    });
+
+    action->release();
+  } else {
+    assert(
+      is_collective and "Getting regions only works with collective handles"
+    );
+  }
+}
+
+
+void
+RDMAManager::get_data_into_buf_collective(
+  rdma_handle_t const& han, rdma_ptr_t const& ptr, byte_t const& num_bytes,
+  byte_t const& elm_size, byte_t const& offset, action_t next_action
+) {
+  auto const& this_node = the_context->get_node();
+
+  printf(
+    "%d: get_data_into_buf_collective: han=%lld, ptr=%p, bytes=%lld, offset=%lld\n",
+    this_node,han,ptr,num_bytes,offset
+  );
+
+  auto const& num_elems = num_bytes / (elm_size / rdma_default_byte_size);
+
+  auto const& a_offset = offset == no_offset ? 0 : offset;
+  rdma_region_t const region(
+    a_offset / elm_size, (a_offset + num_bytes)/elm_size, 1, elm_size
+  );
+
+  return get_region_typeless(han, ptr, region, next_action);
+}
+
+void
+RDMAManager::get_data_into_buf(
+  rdma_handle_t const& han, rdma_ptr_t const& ptr, byte_t const& num_bytes,
+  byte_t const& offset, tag_t const& tag, action_t next_action,
+  byte_t const& elm_size, node_t const& collective_node
+) {
+  auto const& this_node = the_context->get_node();
+  auto const& handle_get_node = rdma_handle_manager_t::get_rdma_node(han);
+  auto const& is_collective = rdma_handle_manager_t::is_collective(han);
+
+  printf(
+    "%d: get_data_into_buf: han=%lld, is_collective=%s, get_node=%d, "
+    "elm_size=%lld, num_bytes=%lld, offset=%lld\n",
+    this_node,han,print_bool(is_collective),handle_get_node,elm_size,num_bytes,offset
+  );
+
+  auto const& get_node = is_collective ? collective_node : handle_get_node;
+
+  if (is_collective and collective_node == uninitialized_destination) {
+    return get_data_into_buf_collective(
+      han, ptr, num_bytes, elm_size, offset, next_action
+    );
+  } else {
+    // non-collective get
+    if (get_node != this_node) {
+      rdma_handle_t ch_han = han;
+      rdma_handle_manager_t::set_op_type(ch_han, rdma_type_t::Get);
+
+      bool const send_via_channel =
+        channels.find(ch_han) != channels.end() and tag == no_tag and
+        not is_collective;
+
+      if (send_via_channel) {
+        return send_data_channel(
+          rdma_type_t::Get, han, ptr, num_bytes, offset, nullptr, next_action
+        );
+      } else {
+        rdma_op_t const new_op = cur_op++;
+
+        GetMessage* msg = new GetMessage(new_op, this_node, han, num_bytes, offset);
+        if (tag != no_tag) {
+          envelope_set_tag(msg->env, tag);
+        }
+        the_msg->send_msg<GetMessage, get_msg>(get_node, msg, [=]{ delete msg; });
+
+        pending_ops.emplace(
+          std::piecewise_construct,
+          std::forward_as_tuple(new_op),
+          std::forward_as_tuple(rdma_pending_t{ptr, next_action})
+        );
       }
-      the_msg->send_msg<GetMessage, get_msg>(get_node, msg, [=]{ delete msg; });
-
-      pending_ops.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(new_op),
-        std::forward_as_tuple(rdma_pending_t{ptr, next_action})
+    } else {
+      debug_print_rdma(
+        "get_data: local direct into buf, ptr=%p\n", ptr
+      );
+      the_rdma->request_get_data(
+        nullptr, false, han, tag, num_bytes, offset, ptr, nullptr, next_action
       );
     }
-  } else {
-    debug_print_rdma(
-      "get_data: local direct into buf, ptr=%p\n", ptr
-    );
-    the_rdma->request_get_data(
-      nullptr, false, han, tag, num_bytes, offset, ptr, nullptr, next_action
-    );
   }
 }
 

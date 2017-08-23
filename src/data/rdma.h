@@ -5,12 +5,15 @@
 #include "common.h"
 #include "function.h"
 #include "rdma_common.h"
+#include "rdma_map.h"
+#include "rdma_region.h"
 #include "rdma_state.h"
 #include "rdma_handle.h"
 #include "rdma_msg.h"
 #include "rdma_pending.h"
 #include "rdma_channel.h"
-#include "rdma_collective.h"
+#include "rdma_group.h"
+#include "rdma_action.h"
 
 #include <unordered_map>
 
@@ -23,6 +26,10 @@ struct RDMAManager {
   using rdma_info_t = Info;
   using rdma_pending_t = Pending;
   using rdma_channel_t = Channel;
+  using rdma_region_t = Region;
+  using rdma_map_t = Map;
+  using rdma_group_t = Group;
+  using rdma_action_t = Action;
   using rdma_container_t = std::unordered_map<rdma_handle_t, rdma_state_t>;
   using rdma_live_channels_t = std::unordered_map<rdma_handle_t, rdma_channel_t>;
   using rdma_op_container_t = std::unordered_map<rdma_op_t, rdma_pending_t>;
@@ -38,7 +45,7 @@ struct RDMAManager {
     action_t cont = no_action, action_t action_after_put = no_action
   ) {
     byte_t const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
-    byte_t const byte_offset = offset == no_byte ? no_byte : sizeof(T)*offset;
+    byte_t const byte_offset = offset == no_byte ? 0 : sizeof(T)*offset;
     return put_data(
       rdma_handle, static_cast<rdma_ptr_t>(ptr), num_bytes, byte_offset, tag, cont,
       action_after_put
@@ -76,18 +83,39 @@ struct RDMAManager {
   );
 
   void
-  get_data_info_buf(
+  get_data_into_buf(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
-    byte_t const& num_bytes, byte_t const& offset, tag_t const& tag = no_tag,
-    action_t next_action = no_action
+    byte_t const& num_bytes, byte_t const& offset,
+    tag_t const& tag = no_tag, action_t next_action = no_action,
+    byte_t const& elm_size = rdma_default_byte_size,
+    node_t const& collective_node = uninitialized_destination
   );
 
   void
   get_data_into_buf_collective(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
-    byte_t const& num_bytes, byte_t const& offset,
+    byte_t const& num_bytes, byte_t const& elm_size, byte_t const& offset,
     action_t next_action = no_action
   );
+
+  void
+  get_region_typeless(
+    rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
+    rdma_region_t const& region, action_t next_action
+  );
+
+  template <typename T>
+  void
+  get_region(
+    rdma_handle_t const& rdma_handle, T ptr, rdma_region_t const& region,
+    action_t next_action = no_action
+  ) {
+    rdma_region_t new_region{region};
+    if (not new_region.has_elm_size()) {
+      new_region.set_elm_size(sizeof(T));
+    }
+    return get_region_typeless(rdma_handle, ptr, new_region, next_action);
+  }
 
   template <typename T>
   void
@@ -97,11 +125,11 @@ struct RDMAManager {
     action_t next_action = no_action
   ) {
     byte_t const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
-    byte_t const byte_offset = elm_offset == no_byte ? no_byte : sizeof(T)*elm_offset;
+    byte_t const byte_offset = elm_offset == no_byte ? 0 : sizeof(T)*elm_offset;
 
-    return get_data_info_buf(
+    return get_data_into_buf(
       rdma_handle, static_cast<rdma_ptr_t>(ptr), num_bytes, byte_offset, tag,
-      next_action
+      next_action, sizeof(T)
     );
   }
 
@@ -154,6 +182,26 @@ struct RDMAManager {
   ) {
     return register_new_rdma_handler(use_default, ptr, num_bytes, true);
   }
+
+  template <typename T>
+  rdma_handle_t
+  register_collective_typed(
+    T ptr, byte_t const& num_total_elems,
+    byte_t const& num_elems, rdma_map_t const& map = default_map
+  ) {
+    byte_t const num_bytes = sizeof(T)*num_elems;
+    byte_t const num_total_bytes = sizeof(T)*num_total_elems;
+    return register_new_collective(
+      true, ptr, num_bytes, num_total_bytes, sizeof(T), map
+    );
+  }
+
+  rdma_handle_t
+  register_new_collective(
+    bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes,
+    byte_t const& num_total_bytes, byte_t const& elm_size = rdma_default_byte_size,
+    rdma_map_t const& map = default_map
+  );
 
   void
   unregister_rdma_handler(
@@ -242,12 +290,6 @@ struct RDMAManager {
     rdma_handle_t const& han, action_t const& action = nullptr
   );
 
-  rdma_handle_t
-  register_new_collective(
-    bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes,
-    rdma_collective_map_t const& map
-  );
-
 private:
   void
   sync_get_channel(
@@ -300,9 +342,11 @@ private:
   ) {
     auto const& this_node = the_context->get_node();
     auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
+    auto const& is_collective = rdma_handle_manager_t::is_collective(han);
 
     assert(
-      handler_node == this_node and "Handle must be local to this node"
+      (is_collective or handler_node == this_node)
+      and "Handle must be local to this node"
     );
 
     auto holder_iter = holder.find(han);

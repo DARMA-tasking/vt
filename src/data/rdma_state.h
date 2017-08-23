@@ -4,10 +4,12 @@
 
 #include "common.h"
 #include "rdma_common.h"
+#include "rdma_map.h"
 #include "rdma_handle.h"
 #include "rdma_msg.h"
 #include "rdma_channel.h"
 #include "rdma_info.h"
+#include "rdma_group.h"
 
 #include <unordered_map>
 #include <vector>
@@ -19,6 +21,8 @@ static constexpr rdma_handler_t const first_rdma_handler = 1;
 struct State {
   using rdma_info_t = Info;
   using rdma_type_t = Type;
+  using rdma_map_t = Map;
+  using rdma_group_t = Group;
   using rdma_get_function_t = active_get_function_t;
   using rdma_put_function_t = active_put_function_t;
   using rdma_tag_get_holder_t = std::tuple<rdma_get_function_t, handler_t>;
@@ -82,24 +86,21 @@ struct State {
   void
   set_default_handler();
 
-  void
-  set_collective_map(rdma_collective_map_t const& map);
-
-  node_t
-  get_node(rdma_elm_t const& elm);
-
   rdma_get_t
   default_get_handler_fn(
-    BaseMessage* msg, byte_t num_bytes, tag_t tag
+    BaseMessage* msg, byte_t num_bytes, byte_t req_offset, tag_t tag
   );
 
   void
   default_put_handler_fn(
-    BaseMessage* msg, rdma_ptr_t in_ptr, byte_t in_num_bytes, tag_t tag
+    BaseMessage* msg, rdma_ptr_t in_ptr, byte_t in_num_bytes,
+    byte_t req_offset, tag_t tag
   );
 
   bool using_default_put_handler = false;
   bool using_default_get_handler = false;
+
+  std::unique_ptr<rdma_group_t> group_info = nullptr;
 
 private:
   rdma_handler_t this_rdma_get_handler = uninitialized_rdma_handler,
@@ -115,8 +116,6 @@ private:
   tag_container_t<rdma_tag_put_holder_t> put_tag_holder;
 
   tag_container_t<container_t<rdma_info_t>> pending_tag_gets, pending_tag_puts;
-
-  rdma_collective_map_t collective_map = nullptr;
 };
 
 template<>
