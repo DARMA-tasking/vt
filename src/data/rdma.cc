@@ -9,6 +9,7 @@ RDMAManager::get_msg(GetMessage* msg) {
   auto const msg_tag = envelope_get_tag(msg->env);
   auto const op_id = msg->op_id;
   auto const recv_node = msg->requesting;
+  auto const handle = msg->rdma_handle;
 
   auto const& this_node = the_context->get_node();
 
@@ -20,18 +21,16 @@ RDMAManager::get_msg(GetMessage* msg) {
 
   the_rdma->request_get_data(
     msg, msg->is_user_msg, msg->rdma_handle, msg_tag, msg->num_bytes, msg->offset,
-    nullptr, [msg_tag,op_id,recv_node](rdma_get_t data){
+    nullptr, [msg_tag,op_id,recv_node,handle](rdma_get_t data){
       auto const& this_node = the_context->get_node();
-      debug_print_rdma("data is ready\n", this_node);
+      debug_print_rdma("data is ready\n");
       // @todo send the data here
 
       // auto const& data_ptr = std::get<0>(data);
       // auto const& num_bytes = std::get<1>(data);
 
-      tag_t recv_tag = no_tag;
-
       GetBackMessage* new_msg = new GetBackMessage(
-        op_id, std::get<1>(data), recv_tag, 0
+        op_id, std::get<1>(data), 0, no_tag, handle, this_node
       );
 
       auto send_payload = [&](ActiveMessenger::send_fn_t send){
@@ -47,7 +46,7 @@ RDMAManager::get_msg(GetMessage* msg) {
         recv_node, new_msg, send_payload, deleter
       );
 
-      debug_print_rdma("data is sent: recv_tag=%d\n", recv_tag);
+      debug_print_rdma("data is sent: recv_tag=%d\n", new_msg->mpi_tag_to_recv);
     }
   );
 }
@@ -63,24 +62,21 @@ RDMAManager::get_recv_msg(GetBackMessage* msg) {
 
   auto const& this_node = the_context->get_node();
   debug_print_rdma(
-    "get_recv_msg: op=%lld, tag=%d, bytes=%lld, get_ptr=%p, mpi_tag=%d\n",
-    msg->op_id, msg_tag, msg->num_bytes, get_ptr, msg->mpi_tag_to_recv
+    "get_recv_msg: op=%lld, tag=%d, bytes=%lld, get_ptr=%p, mpi_tag=%d, send_back=%d\n",
+    msg->op_id, msg_tag, msg->num_bytes, get_ptr, msg->mpi_tag_to_recv, msg->send_back
   );
 
   if (get_ptr == nullptr) {
     the_msg->recv_data_msg(
-      msg->mpi_tag_to_recv, [=](rdma_get_t ptr, action_t deleter){
+      msg->mpi_tag_to_recv, msg->send_back, [=](rdma_get_t ptr, action_t deleter){
         the_rdma->trigger_get_recv_data(
           msg->op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
         );
       });
   } else {
     the_msg->recv_data_msg_buffer(
-      get_ptr, msg->mpi_tag_to_recv, true, [this_node,get_ptr_action]{
-        debug_print_rdma(
-          "recv_data_msg_buffer finished\n",
-          this_node
-        );
+      get_ptr, msg->mpi_tag_to_recv, msg->send_back, true, [this_node,get_ptr_action]{
+        debug_print_rdma("recv_data_msg_buffer finished\n");
         if (get_ptr_action) {
           get_ptr_action();
         }
@@ -108,6 +104,7 @@ RDMAManager::put_recv_msg(PutMessage* msg) {
   auto const msg_tag = envelope_get_tag(msg->env);
   auto const op_id = msg->op_id;
   auto const send_back = msg->send_back;
+  auto const recv_node = msg->recv_node;
   auto const recv_tag = msg->mpi_tag_to_recv;
 
   auto const& this_node = the_context->get_node();
@@ -131,10 +128,8 @@ RDMAManager::put_recv_msg(PutMessage* msg) {
 
   if (put_ptr == nullptr) {
     the_msg->recv_data_msg(
-      recv_tag, [=](rdma_get_t ptr, action_t deleter){
-        debug_print_rdma(
-          "put_data: after recv data trigger\n", this_node
-        );
+      recv_tag, recv_node, [=](rdma_get_t ptr, action_t deleter){
+        debug_print_rdma("put_data: after recv data trigger\n");
         the_rdma->trigger_put_recv_data(
           msg->rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
           msg->offset, [=](){
@@ -158,7 +153,8 @@ RDMAManager::put_recv_msg(PutMessage* msg) {
 
     // do a direct recv into the user buffer
     the_msg->recv_data_msg_buffer(
-      put_ptr_offset, recv_tag, true, []{}, [=](rdma_get_t ptr, action_t deleter){
+      put_ptr_offset, recv_tag, recv_node, true, []{},
+      [=](rdma_get_t ptr, action_t deleter){
         debug_print_rdma(
           "put_data: recv_data_msg_buffer DIRECT: offset=%lld\n",
           msg->offset
@@ -571,7 +567,8 @@ RDMAManager::put_data(
 
       PutMessage* msg = new PutMessage(
         new_op, num_bytes, offset, no_tag, han,
-        action_after_put ? this_node : uninitialized_destination
+        action_after_put ? this_node : uninitialized_destination,
+        this_node
       );
 
       auto send_payload = [&](ActiveMessenger::send_fn_t send){
@@ -611,7 +608,7 @@ RDMAManager::put_data(
   } else {
     the_rdma->trigger_put_recv_data(
       han, tag, ptr, num_bytes, offset, [=](){
-        debug_print_rdma("put_data: local data is put\n", this_node);
+        debug_print_rdma("put_data: local data is put\n");
         if (cont) {
           cont();
         }

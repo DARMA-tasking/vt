@@ -33,11 +33,13 @@ struct PendingRecv {
   void* user_buf = nullptr;
   rdma_continuation_del_t cont = nullptr;
   action_t dealloc_user_buf = nullptr;
+  node_t recv_node = uninitialized_destination;
 
   PendingRecv(
     void* in_user_buf, rdma_continuation_del_t in_cont,
-    action_t in_dealloc_user_buf
-  ) : user_buf(in_user_buf), cont(in_cont), dealloc_user_buf(in_dealloc_user_buf)
+    action_t in_dealloc_user_buf, node_t node
+  ) : user_buf(in_user_buf), cont(in_cont), dealloc_user_buf(in_dealloc_user_buf),
+      recv_node(node)
   { }
 };
 
@@ -183,17 +185,19 @@ struct ActiveMessenger {
 
   bool
   recv_data_msg(
-    tag_t const& tag, rdma_continuation_del_t next = nullptr
+    tag_t const& tag, node_t const& node, rdma_continuation_del_t next = nullptr
   );
 
   bool
   recv_data_msg(
-    tag_t const& tag, bool const& enqueue, rdma_continuation_del_t next = nullptr
+    tag_t const& tag, node_t const& recv_node, bool const& enqueue,
+    rdma_continuation_del_t next = nullptr
   );
 
   bool
   recv_data_msg_buffer(
-    void* const user_buf, tag_t const& tag, bool const& enqueue,
+    void* const user_buf, tag_t const& tag,
+    node_t const& node = uninitialized_destination, bool const& enqueue = true,
     action_t dealloc_user_buf = nullptr, rdma_continuation_del_t next = nullptr
   );
 

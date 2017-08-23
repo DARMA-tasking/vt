@@ -32,14 +32,17 @@ struct SendDataMessage : ActiveMessage<EnvelopeT> {
   SendDataMessage(
     rdma_op_t const& in_op, byte_t const& in_num_bytes, byte_t const& in_offset,
     tag_t const& in_mpi_tag, rdma_handle_t const& in_han = no_rdma_handle,
-    node_t const& back = uninitialized_destination
+    node_t const& back = uninitialized_destination,
+    node_t const& in_recv_node = uninitialized_destination
   ) : ActiveMessage<EnvelopeT>(),
     op_id(in_op), num_bytes(in_num_bytes), rdma_handle(in_han),
-    mpi_tag_to_recv(in_mpi_tag), send_back(back), offset(in_offset)
+    mpi_tag_to_recv(in_mpi_tag), send_back(back), offset(in_offset),
+    recv_node(in_recv_node)
   { }
 
   rdma_handle_t rdma_handle = no_rdma_handle;
   node_t send_back = uninitialized_destination;
+  node_t recv_node = uninitialized_destination;
   tag_t mpi_tag_to_recv = no_tag;
   rdma_op_t op_id = no_rdma_op;
   byte_t num_bytes = no_byte;

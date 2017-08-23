@@ -185,9 +185,9 @@ ActiveMessenger::send_data(
 
 bool
 ActiveMessenger::recv_data_msg(
-  tag_t const& tag, rdma_continuation_del_t next
+  tag_t const& tag, node_t const& node, rdma_continuation_del_t next
 ) {
-  return recv_data_msg(tag, true, next);
+  return recv_data_msg(tag, node, true, next);
 }
 
 void
@@ -197,8 +197,8 @@ ActiveMessenger::process_data_msg_recv() {
 
   for (; iter != pending_recvs.end(); ++iter) {
     auto const& done = recv_data_msg_buffer(
-      iter->second.user_buf, iter->first, false, iter->second.dealloc_user_buf,
-      iter->second.cont
+      iter->second.user_buf, iter->first, iter->second.recv_node,
+      false, iter->second.dealloc_user_buf, iter->second.cont
     );
     if (done) {
       erase = true;
@@ -213,15 +213,18 @@ ActiveMessenger::process_data_msg_recv() {
 
 bool
 ActiveMessenger::recv_data_msg_buffer(
-  void* const user_buf, tag_t const& tag, bool const& enqueue,
-  action_t dealloc_user_buf, rdma_continuation_del_t next
+  void* const user_buf, tag_t const& tag, node_t const& node,
+  bool const& enqueue, action_t dealloc_user_buf, rdma_continuation_del_t next
 ) {
   if (not enqueue) {
     byte_t num_probe_bytes;
     MPI_Status stat;
     int flag;
 
-    MPI_Iprobe(MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &flag, &stat);
+    MPI_Iprobe(
+      node == uninitialized_destination ? MPI_ANY_SOURCE : node,
+      tag, MPI_COMM_WORLD, &flag, &stat
+    );
 
     if (flag == 1) {
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
@@ -266,10 +269,15 @@ ActiveMessenger::recv_data_msg_buffer(
       return false;
     }
   } else {
+    printf(
+      "%d: recv_data_msg_buffer: node=%d, tag=%d, enqueue=%s\n",
+      the_context->get_node(), node, tag, print_bool(enqueue)
+    );
+
     pending_recvs.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(tag),
-      std::forward_as_tuple(pending_recv_t{user_buf,next,dealloc_user_buf})
+      std::forward_as_tuple(pending_recv_t{user_buf,next,dealloc_user_buf,node})
     );
     return false;
   }
@@ -277,9 +285,10 @@ ActiveMessenger::recv_data_msg_buffer(
 
 bool
 ActiveMessenger::recv_data_msg(
-  tag_t const& tag, bool const& enqueue, rdma_continuation_del_t next
+  tag_t const& tag, node_t const& recv_node, bool const& enqueue,
+  rdma_continuation_del_t next
 ) {
-  return recv_data_msg_buffer(nullptr, tag, enqueue, nullptr, next);
+  return recv_data_msg_buffer(nullptr, tag, recv_node, enqueue, nullptr, next);
 }
 
 bool
