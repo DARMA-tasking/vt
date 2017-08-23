@@ -5,6 +5,7 @@
 #include "common.h"
 #include "function.h"
 #include "rdma_common.h"
+#include "rdma_types.h"
 #include "rdma_map.h"
 #include "rdma_region.h"
 #include "rdma_state.h"
@@ -32,6 +33,7 @@ struct RDMAManager {
   using rdma_group_t = Group;
   using rdma_action_t = Action;
   using rdma_channel_lookup_t = ChannelLookup;
+  using rdma_endpoint_t = Endpoint;
   using rdma_container_t = std::unordered_map<rdma_handle_t, rdma_state_t>;
   using rdma_live_channels_t = std::unordered_map<rdma_channel_lookup_t, rdma_channel_t>;
   using rdma_op_container_t = std::unordered_map<rdma_op_t, rdma_pending_t>;
@@ -235,30 +237,68 @@ struct RDMAManager {
   }
 
   void
-  create_put_channel(
-    rdma_handle_t const& han, action_t const& action = nullptr
+  new_channel(
+    rdma_type_t const& type, rdma_handle_t const& han, node_t const& target,
+    node_t const& non_target, action_t const& action
   );
 
   void
-  setup_put_channel_with_remote(
-    rdma_handle_t const& han, node_t const& dest,
-    action_t const& action = nullptr
-  );
+  new_get_channel(
+    rdma_handle_t const& han, rdma_endpoint_t const& target,
+    rdma_endpoint_t const& non_target, action_t const& action = nullptr
+  ) {
+    return new_channel(
+      rdma_type_t::Get, han, target.get(), non_target.get(), action
+    );
+  }
 
   void
-  setup_get_channel_with_remote(
-    rdma_handle_t const& han, node_t const& dest,
-    action_t const& action = nullptr
-  );
-
-  void
-  create_get_channel(rdma_handle_t const& han, action_t const& action = nullptr);
-
-  void
-  create_get_channel(
+  new_get_channel(
     rdma_handle_t const& han, node_t const& target,
-    action_t const& action = nullptr
-  );
+    node_t const& non_target, action_t const& action = nullptr
+  ) {
+    return new_channel(
+      rdma_type_t::Get, han, target, non_target, action
+    );
+  }
+
+  // void
+  // new_get_channel(
+  //   rdma_handle_t const& han, rdma_endpoint_t const& endpt,
+  //   action_t const& action = nullptr
+  // ) {
+  //   node_t const& target =
+  //     endpt.target() ? endpt.get() : uninitialized_destination;
+  //   node_t const& non_target =
+  //     not endpt.target() ? endpt.get() : uninitialized_destination;
+  //   return new_channel(
+  //     rdma_type_t::Get, han, target, non_target, action
+  //   );
+  // }
+
+  // void
+  // new_put_channel(
+  //   rdma_handle_t const& han, rdma_endpoint_t const& endpt,
+  //   action_t const& action = nullptr
+  // ) {
+  //   node_t const& target =
+  //     endpt.target() ? endpt.get() : uninitialized_destination;
+  //   node_t const& non_target =
+  //     not endpt.target() ? endpt.get() : uninitialized_destination;
+  //   return new_channel(
+  //     rdma_type_t::Get, han, target, non_target, action
+  //   );
+  // }
+
+  void
+  new_put_channel(
+    rdma_handle_t const& han, node_t const& target,
+    node_t const& non_target, action_t const& action = nullptr
+  ) {
+    return new_channel(
+      rdma_type_t::Put, han, target, non_target, action
+    );
+  }
 
   void
   sync_local_get_channel(

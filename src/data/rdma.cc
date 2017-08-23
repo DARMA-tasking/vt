@@ -775,45 +775,86 @@ RDMAManager::get_data(
   }
 }
 
-void
-RDMAManager::create_get_channel(
-  rdma_handle_t const& han, action_t const& action
-) {
-  return create_direct_channel(rdma_type_t::Get, han, action);
-}
+// void
+// RDMAManager::create_get_channel(
+//   rdma_handle_t const& han, action_t const& action
+// ) {
+//   return create_direct_channel(rdma_type_t::Get, han, action);
+// }
+
+// void
+// RDMAManager::create_get_channel(
+//   rdma_handle_t const& han, node_t const& target, action_t const& action
+// ) {
+//   return create_direct_channel(rdma_type_t::Get, han, action, target);
+// }
+
+// void
+// RDMAManager::create_put_channel(
+//   rdma_handle_t const& han, action_t const& action
+// ) {
+//   return create_direct_channel(rdma_type_t::Put, han, action);
+// }
+
+// void
+// RDMAManager::setup_get_channel_with_remote(
+//   rdma_handle_t const& han, node_t const& dest, action_t const& action
+// ) {
+//   auto const target = get_target(han, the_context->get_node());
+//   return setup_channel_with_remote(
+//     rdma_type_t::Get, han, dest, action, target
+//   );
+// }
+
+// void
+// RDMAManager::setup_put_channel_with_remote(
+//   rdma_handle_t const& han, node_t const& dest, action_t const& action
+// ) {
+//   auto const target = get_target(han, the_context->get_node());
+//   return setup_channel_with_remote(
+//     rdma_type_t::Put, han, dest, action, target
+//   );
+// }
 
 void
-RDMAManager::create_get_channel(
-  rdma_handle_t const& han, node_t const& target, action_t const& action
+RDMAManager::new_channel(
+  rdma_type_t const& type, rdma_handle_t const& han, node_t const& spec_target,
+  node_t const& in_non_target, action_t const& action
 ) {
-  return create_direct_channel(rdma_type_t::Get, han, action, target);
-}
+  auto const& this_node = the_context->get_node();
+  auto const target = get_target(han, spec_target);
+  auto const non_target =
+    in_non_target == uninitialized_destination ? this_node : in_non_target;
 
-void
-RDMAManager::create_put_channel(
-  rdma_handle_t const& han, action_t const& action
-) {
-  return create_direct_channel(rdma_type_t::Put, han, action);
-}
+  printf("target=%d,non_target=%d\n", target, non_target);
 
-void
-RDMAManager::setup_get_channel_with_remote(
-  rdma_handle_t const& han, node_t const& dest, action_t const& action
-) {
-  auto const target = get_target(han, the_context->get_node());
-  return setup_channel_with_remote(
-    rdma_type_t::Get, han, dest, action, target
+  assert(
+    (target == spec_target or spec_target == uninitialized_destination)
+    and "Target must match handle"
   );
-}
 
-void
-RDMAManager::setup_put_channel_with_remote(
-  rdma_handle_t const& han, node_t const& dest, action_t const& action
-) {
-  auto const target = get_target(han, the_context->get_node());
-  return setup_channel_with_remote(
-    rdma_type_t::Put, han, dest, action, target
+  assert(
+    target != non_target and "Target and non-target must be different"
   );
+
+  /*
+   *               **type == rdma_type_t::Get**
+   * target:     the processor getting data from
+   * non_target: the processor where the data will arrive
+   *
+   *               **type == rdma_type_t::Put**
+   * target:     the processor putting data to
+   * non_target: the processor that performs the put from buffer
+   *
+   */
+
+  if (target == this_node) {
+    return setup_channel_with_remote(
+      type, han, non_target, action, spec_target
+    );
+  } else {
+    return create_direct_channel(type, han, action, spec_target);
+  }
 }
 
 void

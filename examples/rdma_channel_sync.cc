@@ -31,7 +31,7 @@ static void read_data_fn(TestMsg* msg) {
         printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg->han, i, my_data[i]);
       }
 
-      the_rdma->setup_get_channel_with_remote(my_handle_1, 2, [=]{
+      the_rdma->new_get_channel(my_handle_1, 0, 2, [=]{
         TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
         the_msg->send_msg<TestMsg, put_channel_setup>(2, msg1);
       });
@@ -51,7 +51,7 @@ static void put_channel_setup(TestMsg* msg) {
   printf("%d: put_channel_setup: handle=%lld\n", my_node, msg->han);
 
   if (my_node == 1) {
-    the_rdma->create_put_channel(handle, [=]{
+    the_rdma->new_put_channel(handle, 0, 1, [=]{
       int const num_elm = 2;
 
       if (use_paired_sync) {
@@ -69,7 +69,7 @@ static void put_channel_setup(TestMsg* msg) {
     });
   }
   else if (my_node == 2) {
-    the_rdma->create_get_channel(handle, [=]{
+    the_rdma->new_get_channel(handle, 0, 2, [=]{
       printf(
         "%d: creating get channel complete\n", my_node
       );
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
       "%d: initializing my_handle_1=%llx\n", my_node, my_handle_1
     );
 
-    the_rdma->setup_put_channel_with_remote(my_handle_1, 1, [=]{
+    the_rdma->new_put_channel(my_handle_1, 0, 1, [=]{
       TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
       the_msg->send_msg<TestMsg, put_channel_setup>(1, msg1);
     });

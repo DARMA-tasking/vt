@@ -27,8 +27,7 @@ static void announce(TestMsg* msg) {
   printf("%d: handle=%lld, requesting data\n", my_node, rdma_handle);
 
   if (my_node == 1) {
-    //the_rdma->get_typed_data_info_buf(rdma_handle, local_data, 16, no_byte, no_tag, [=]{
-    the_rdma->create_get_channel(rdma_handle, 2, [=]{
+    the_rdma->new_get_channel(my_handle, 2, 1, [=]{
       printf("set up channel with 2\n");
 
       the_rdma->get_typed_data_info_buf(rdma_handle, local_data, local_data_len, 5, no_tag, [=]{
@@ -39,14 +38,6 @@ static void announce(TestMsg* msg) {
         }
       });
     });
-    // the_rdma->get_region(rdma_handle, local_data, rdma::Region{5,5+local_data_len}, [=]{
-    //   printf("%d: handle=%lld, finished getting data\n", my_node, rdma_handle);
-
-    //   for (int i = 0; i < local_data_len; i++) {
-    //     printf("%d: \t local_data[%d] = %f\n", my_node, i, local_data[i]);
-    //     assert(local_data[i] == 5.0+i);
-    //   }
-    // });
   }
 }
 
@@ -78,7 +69,7 @@ int main(int argc, char** argv) {
   printf("%d: handle=%lld, create handle\n", my_node, my_handle);
 
   if (my_node == 0) {
-    the_rdma->setup_get_channel_with_remote(my_handle, 1, [=]{
+    the_rdma->new_get_channel(my_handle, 0, 1, [=]{
       TestMsg* msg = make_shared_message<TestMsg>(my_node);
       msg->han = my_handle;
       the_msg->broadcast_msg<TestMsg, announce>(msg);

@@ -5,6 +5,8 @@
 #include "common.h"
 #include "message.h"
 
+#include "rdma_types.h"
+
 #include <tuple>
 
 namespace runtime { namespace rdma {
