@@ -6,7 +6,7 @@
 #include <functional>
 #include <cassert>
 
-#include "debug.h"
+#include "debug_runtime.h"
 
 namespace runtime {
 

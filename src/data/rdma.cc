@@ -2,6 +2,8 @@
 #include "rdma.h"
 #include "transport.h"
 
+#include <cstring>
+
 namespace runtime { namespace rdma {
 
 /*static*/ void

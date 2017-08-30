@@ -3,6 +3,8 @@
 #include "rdma_state.h"
 #include "transport.h"
 
+#include <cstring>
+
 namespace runtime { namespace rdma {
 
 State::State(
