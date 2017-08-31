@@ -48,12 +48,23 @@ static void data_message_handler(DataMsg<Tuple>* msg) {
   get_fn_sig(msg->tup, fn);
 }
 
+template <bool...> struct bool_pack;
+template <bool... bs>
+using all_true = std::is_same<bool_pack<bs..., true>, bool_pack<true, bs...>>;
+
 struct Param {
   template <typename T, T value, typename... Args>
   event_t send_data_helper(
     node_t const& dest, void (*fn)(Args...), std::tuple<Args...> tup,
     NonType<T, value>
   ) {
+    using cond = all_true<std::is_trivial<Args>::value...>;
+
+    static_assert(
+      std::is_same<typename cond::type,std::true_type>::value == true,
+      "All types passed for parameterization must be trivially copyable"
+    );
+
     auto const& han = auto_registry::make_auto_handler<T,value>();
     using tuple_type = decltype(tup);
     DataMsg<tuple_type>* m = new DataMsg<tuple_type>(tup, han);
