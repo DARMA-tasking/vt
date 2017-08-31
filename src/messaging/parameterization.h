@@ -58,7 +58,7 @@ struct Param {
     node_t const& dest, void (*fn)(Args...), std::tuple<Args...> tup,
     NonType<T, value>
   ) {
-    using cond = all_true<std::is_trivial<Args>::value...>;
+    using cond = all_true<std::is_trivially_copyable<Args>::value...>;
 
     static_assert(
       std::is_same<typename cond::type,std::true_type>::value == true,
