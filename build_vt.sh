@@ -13,8 +13,8 @@ echo "Building virtual transport layer mode=$BUILD_MODE"
 SOURCE_BASE_DIR=../virtual-transport/
 MAKE_VERBOSE=off
 
-CXX_COMPILER=mpic++-mpich-clang #mpic++-mpich-gcc5
-CC_COMPILER=mpicc-mpich-clang #mpicc-mpich-gcc5
+CXX_COMPILER=mpic++-mpich-clang39 #/opt/local/bin/mpic++-mpich-devel-gcc6
+CC_COMPILER=mpicc-mpich-clang39 #/opt/local/bin/mpicc-mpich-devel-gcc6
 
 cmake ${SOURCE_BASE_DIR} \
       -DCMAKE_INSTALL_PREFIX=`pwd` \

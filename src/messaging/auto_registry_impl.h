@@ -25,18 +25,31 @@ make_auto_handler(MessageT* const msg) {
   return handler_manager_t::make_handler(true, id);
 }
 
+template <typename T, T value>
+inline handler_t
+make_auto_handler() {
+  handler_t const id = get_handler_active_function_expand(T, value);
+  return handler_manager_t::make_handler(true, id);
+}
+
 template <typename ActiveFnT>
 Registrar<ActiveFnT>::Registrar() {
   auto_active_container_t& reg = get_auto_registry<>();
   index = reg.size();
-  //printf("obj=%p, index=%d\n",this,index);
   auto fn = ActiveFnT::get_function();
+  //printf("obj=%p, index=%d, fn=%p\n",this,index,fn);
   reg.emplace_back(reinterpret_cast<action_basic_function_t*>(fn));
 }
 
-inline active_function_t
+inline auto_active_t
 get_auto_handler(ShortMessage* const msg) {
   handler_t handler = envelope_get_handler(msg->env);
+  auto const& han_id = handler_manager_t::get_handler_identifier(handler);
+  return get_auto_registry().at(han_id);
+}
+
+inline auto_active_t
+get_auto_handler(handler_t const& handler) {
   auto const& han_id = handler_manager_t::get_handler_identifier(handler);
   return get_auto_registry().at(han_id);
 }
@@ -44,7 +57,7 @@ get_auto_handler(ShortMessage* const msg) {
 template <typename ActiveFnT>
 auto_handler_t
 register_active_fn() {
-  auto const& idx = RegistrarWrapper<ActiveFnT>().registrar.index;
+  auto idx = RegistrarWrapper<ActiveFnT>().registrar.index;
   //printf("idx=%d\n",idx);
   return idx;
 }

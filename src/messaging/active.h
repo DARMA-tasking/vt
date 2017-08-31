@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <iostream>
 #include <mpi.h>
 
 #include "common.h"
@@ -151,6 +150,14 @@ struct ActiveMessenger {
     //setup envelope
     envelope_setup(msg->env, dest, han);
     return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+  }
+
+  template <typename MessageT, action_any_function_t<MessageT>* f>
+  void
+  trigger(std::function<void(runtime::BaseMessage*)> fn) {
+    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(nullptr);
+    printf("trigger: han=%d\n", han);
+    the_registry->save_trigger(han, /*reinterpret_cast<active_function_t>(*/fn);
   }
 
   template <action_basic_function_t* f, typename MessageT>

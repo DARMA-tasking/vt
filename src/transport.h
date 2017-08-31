@@ -13,6 +13,7 @@
 #include "event.h"
 #include "registry.h"
 #include "active.h"
+#include "parameterization.h"
 #include "event_msgs.h"
 #include "termination.h"
 #include "barrier.h"

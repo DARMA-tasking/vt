@@ -323,6 +323,11 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
     // run the active function
     active_fun(msg);
 
+    auto trigger = the_registry->get_trigger(handler);
+    if (trigger) {
+      trigger(msg);
+    }
+
     // unset current handler
     current_handler_context = uninitialized_handler;
     current_callback_context = uninitialized_handler;

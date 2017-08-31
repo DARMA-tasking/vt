@@ -75,6 +75,22 @@ Registry::get_handler_no_tag(handler_t const& han) {
 }
 
 active_function_t
+Registry::get_trigger(handler_t const& han) {
+  auto iter = triggers.find(han);
+  if (iter != triggers.end()) {
+    return iter->second;
+  } else {
+    return nullptr;
+  }
+}
+
+void
+Registry::save_trigger(handler_t const& han, active_function_t fn) {
+  printf("save_trigger: han=%d\n", han);
+  triggers[han] = fn;
+}
+
+active_function_t
 Registry::get_handler(handler_t const& han, tag_t const& tag) {
   if (tag == no_tag) {
     return get_handler_no_tag(han);

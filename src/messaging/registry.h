@@ -45,7 +45,15 @@ struct Registry {
   active_function_t
   get_handler_no_tag(handler_t const& han);
 
+  active_function_t
+  get_trigger(handler_t const& han);
+
+  void
+  save_trigger(handler_t const& han, active_function_t fn);
+
 private:
+  container_t triggers;
+
   container_t registered;
 
   han_tag_container_t tagged_registered;

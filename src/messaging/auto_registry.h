@@ -12,7 +12,7 @@
 
 namespace runtime { namespace auto_registry {
 
-using auto_active_t = active_function_t;
+using auto_active_t = simple_function_t;
 using auto_active_container_t = std::vector<auto_active_t>;
 using auto_handler_t = int32_t;
 using handler_manager_t = runtime::HandlerManager;
@@ -28,12 +28,19 @@ struct Registrar {
   Registrar();
 };
 
-active_function_t
+auto_active_t
 get_auto_handler(ShortMessage* const msg);
+
+auto_active_t
+get_auto_handler(handler_t const& handler);
 
 template <typename MessageT, action_any_function_t<MessageT>* f>
 handler_t
 make_auto_handler(MessageT* const msg);
+
+template <typename T, T value>
+inline handler_t
+make_auto_handler();
 
 template <typename ActiveFnT>
 struct RegistrarWrapper {
