@@ -4,8 +4,6 @@
 
 #include "auto_registry_common.h"
 #include "common.h"
-#include "envelope.h"
-#include "message.h"
 #include "registry.h"
 
 #include <vector>

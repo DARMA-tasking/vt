@@ -8,9 +8,9 @@
 
 #include "common.h"
 #include "function.h"
-#include "message.h"
 #include "tree.h"
 #include "term_state.h"
+#include "term_msgs.h"
 #include "epoch.h"
 
 namespace runtime { namespace term {
@@ -56,7 +56,7 @@ struct TerminationDetector : Tree {
   epoch_finished(epoch_t const& epoch);
 
   void
-  epoch_continue(epoch_t const& epoch, int const& wave);
+  epoch_continue(epoch_t const& epoch);
 
   void
   trigger_all_epoch_actions(epoch_t const& epoch);
@@ -86,19 +86,19 @@ struct TerminationDetector : Tree {
   ready_new_epoch(epoch_t const& new_epoch);
 
   static void
-  propagate_new_epoch(EpochMsg* msg);
+  propagate_new_epoch_handler(TermMsg* msg);
 
   static void
-  ready_epoch(EpochMsg* msg);
+  ready_epoch_handler(TermMsg* msg);
 
   static void
-  propagate_epoch(EpochPropagateMsg* msg);
+  propagate_epoch_handler(TermCounterMsg* msg);
 
   static void
-  epoch_finished(EpochMsg* msg);
+  epoch_finished_handler(TermMsg* msg);
 
   static void
-  epoch_continue(EpochMsg* msg);
+  epoch_continue_handler(TermMsg* msg);
 
 private:
   epoch_t cur_epoch = no_epoch;
@@ -118,21 +118,6 @@ private:
   // action container for each epoch
   epoch_container_t<action_container_t> epoch_actions;
 };
-
-  void
-  new_epoch_msg(EpochMsg* msg);
-
-  void
-  ready_epoch_msg(EpochMsg* msg);
-
-  void
-  propagate_epoch_msg(EpochPropagateMsg* msg);
-
-  void
-  epoch_finished_msg(EpochMsg* msg);
-
-  void
-  epoch_continue_msg(EpochMsg* msg);
 
 }} //end namespace runtime::term
 

@@ -6,28 +6,28 @@
 namespace runtime { namespace term {
 
 /*static*/ void
-TerminationDetector::propagate_new_epoch(EpochMsg* msg) {
+TerminationDetector::propagate_new_epoch_handler(TermMsg* msg) {
   the_term->propagate_new_epoch(msg->new_epoch);
 }
 
 /*static*/ void
-TerminationDetector::ready_epoch(EpochMsg* msg) {
+TerminationDetector::ready_epoch_handler(TermMsg* msg) {
   the_term->ready_new_epoch(msg->new_epoch);
 }
 
 /*static*/ void
-TerminationDetector::propagate_epoch(EpochPropagateMsg* msg) {
+TerminationDetector::propagate_epoch_handler(TermCounterMsg* msg) {
   the_term->propagate_epoch_external(msg->epoch, msg->prod, msg->cons);
 }
 
 /*static*/ void
-TerminationDetector::epoch_finished(EpochMsg* msg) {
+TerminationDetector::epoch_finished_handler(TermMsg* msg) {
   the_term->epoch_finished(msg->new_epoch);
 }
 
 /*static*/ void
-TerminationDetector::epoch_continue(EpochMsg* msg) {
-  the_term->epoch_continue(msg->new_epoch, msg->wave);
+TerminationDetector::epoch_continue_handler(TermMsg* msg) {
+  the_term->epoch_continue(msg->new_epoch);
 }
 
 /*static*/ void
@@ -163,10 +163,10 @@ TerminationDetector::propagate_epoch(
     fflush(stdout);
 
     if (not is_root) {
-      auto msg = new EpochPropagateMsg(epoch, state.g_prod1, state.g_cons1);
+      auto msg = new TermCounterMsg(epoch, state.g_prod1, state.g_cons1);
 
       the_msg->set_term_message(msg);
-      the_msg->send_msg<EpochPropagateMsg, propagate_epoch>(
+      the_msg->send_msg<TermCounterMsg, propagate_epoch_handler>(
         parent, msg, [=]{ delete msg; }
       );
 
@@ -191,9 +191,9 @@ TerminationDetector::propagate_epoch(
       fflush(stdout);
 
       if (is_term) {
-        auto msg = new EpochMsg(epoch);
+        auto msg = new TermMsg(epoch);
         the_msg->set_term_message(msg);
-        the_msg->broadcast_msg<EpochMsg, epoch_finished>(msg, [=]{
+        the_msg->broadcast_msg<TermMsg, epoch_finished_handler>(msg, [=]{
           delete msg;
         });
 
@@ -203,9 +203,9 @@ TerminationDetector::propagate_epoch(
         state.g_cons2 = state.g_cons1;
         state.g_prod1 = state.g_cons1 = 0;
 
-        auto msg = new EpochMsg(epoch);
+        auto msg = new TermMsg(epoch);
         the_msg->set_term_message(msg);
-        the_msg->broadcast_msg<EpochMsg, epoch_continue>(msg, [=]{
+        the_msg->broadcast_msg<TermMsg, epoch_continue_handler>(msg, [=]{
           delete msg;
         });
 
@@ -238,9 +238,9 @@ TerminationDetector::epoch_finished(epoch_t const& epoch){
 }
 
 void
-TerminationDetector::epoch_continue(epoch_t const& epoch, int const& wave){
+TerminationDetector::epoch_continue(epoch_t const& epoch){
   debug_print_term(
-    "%d: epoch_continue: epoch=%d, wave=%d\n", my_node, epoch, wave
+    "%d: epoch_continue: epoch=%d\n", my_node, epoch
   );
 
   if (epoch == no_epoch) {
@@ -352,16 +352,16 @@ TerminationDetector::propagate_new_epoch(epoch_t const& new_epoch) {
 
   if (is_ready and not is_root) {
     // propagate up the tree
-    auto msg = new EpochMsg(new_epoch);
+    auto msg = new TermMsg(new_epoch);
     the_msg->set_term_message(msg);
 
-    the_msg->send_msg<EpochMsg, propagate_new_epoch>(parent, msg, [=]{ delete msg; });
+    the_msg->send_msg<TermMsg, propagate_new_epoch_handler>(parent, msg, [=]{ delete msg; });
   } else if (is_ready and is_root) {
     // broadcast ready to all
-    auto msg = new EpochMsg(new_epoch);
+    auto msg = new TermMsg(new_epoch);
     the_msg->set_term_message(msg);
 
-    the_msg->broadcast_msg<EpochMsg, ready_epoch>(msg, [=]{ delete msg; });
+    the_msg->broadcast_msg<TermMsg, ready_epoch_handler>(msg, [=]{ delete msg; });
 
     ready_new_epoch(new_epoch);
   }

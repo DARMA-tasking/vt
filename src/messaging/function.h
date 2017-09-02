@@ -3,7 +3,6 @@
 #define __RUNTIME_TRANSPORT_FUNCTION__
 
 #include "common.h"
-#include "envelope.h"
 #include "message.h"
 
 namespace runtime {
