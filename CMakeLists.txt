@@ -30,12 +30,12 @@ file(
 )
 
 foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
-  message(
-    "virtual-transport: adding header of subdirectory >>>>> ${SUB_DIR}\n"
-    "\tsource=${CMAKE_CURRENT_SOURCE_DIR}\n"
-    "\theader=${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.h\n"
-    "\tsource=${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.cc"
-  )
+  # message(
+  #   "virtual-transport: adding header of subdirectory >>>>> ${SUB_DIR}\n"
+  #   "\tsource=${CMAKE_CURRENT_SOURCE_DIR}\n"
+  #   "\theader=${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.h\n"
+  #   "\tsource=${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.cc"
+  # )
 
   file(
     GLOB
@@ -109,7 +109,7 @@ add_library(
 )
 
 foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
-  message("Example: building example >>>>> ${EXAMPLE}")
+  # message("Example: building example >>>>> ${EXAMPLE}")
 
   add_executable(
     ${EXAMPLE}
