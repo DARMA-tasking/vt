@@ -11,11 +11,6 @@
 
 namespace runtime { namespace auto_registry {
 
-using auto_active_t = simple_function_t;
-using auto_active_container_t = std::vector<auto_active_t>;
-using auto_handler_t = int32_t;
-using handler_manager_t = runtime::HandlerManager;
-
 template <typename = void>
 auto_active_container_t& get_auto_registry();
 
