@@ -2,7 +2,6 @@
 #include "common.h"
 #include "rdma_common.h"
 #include "rdma_group.h"
-#include "transport.h"
 
 #include <unordered_map>
 

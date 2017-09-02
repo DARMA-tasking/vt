@@ -1,6 +1,7 @@
 
 #include "collective.h"
-#include "transport.h"
+#include "termination.h"
+#include "barrier.h"
 
 namespace runtime {
 

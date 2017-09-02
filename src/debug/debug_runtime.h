@@ -22,5 +22,6 @@
 #define debug_print_rdma debug_print
 #define debug_print_rdma_channel debug_print
 #define debug_print_param debug_print
+#define debug_print_handler debug_print
 
 #endif /*__RUNTIME_TRANSPORT_DEBUG__*/

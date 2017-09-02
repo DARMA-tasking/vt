@@ -1,7 +1,7 @@
 
 #include "common.h"
+#include "rdma.h"
 #include "rdma_state.h"
-#include "transport.h"
 
 #include <cstring>
 

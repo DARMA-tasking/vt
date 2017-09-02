@@ -8,6 +8,8 @@
 #include <functional>
 #include <unordered_map>
 
+#include <mpi.h>
+
 #include "common.h"
 #include "event_msgs.h"
 #include "context.h"

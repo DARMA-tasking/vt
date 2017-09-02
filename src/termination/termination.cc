@@ -1,6 +1,7 @@
 
 #include "termination.h"
-#include "transport.h"
+#include "active.h"
+#include "collective.h"
 
 namespace runtime { namespace term {
 

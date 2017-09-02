@@ -11,6 +11,7 @@
 #include "event.h"
 #include "registry.h"
 #include "auto_registry.h"
+#include "auto_registry_impl.h"
 
 #include <type_traits>
 #include <tuple>

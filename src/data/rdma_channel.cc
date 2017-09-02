@@ -1,6 +1,5 @@
 
 #include "rdma_channel.h"
-#include "transport.h"
 
 namespace runtime { namespace rdma {
 

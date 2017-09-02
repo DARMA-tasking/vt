@@ -1,6 +1,6 @@
 
 #include "barrier.h"
-#include "transport.h"
+#include "active.h"
 
 namespace runtime { namespace barrier {
 

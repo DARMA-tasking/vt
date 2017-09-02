@@ -30,7 +30,12 @@ file(
 )
 
 foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
-  #message("Backend: Adding header of subdirectory >>>>> ${SUB_DIR}")
+  message(
+    "virtual-transport: adding header of subdirectory >>>>> ${SUB_DIR}\n"
+    "\tsource=${CMAKE_CURRENT_SOURCE_DIR}\n"
+    "\theader=${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.h\n"
+    "\tsource=${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.cc"
+  )
 
   file(
     GLOB
@@ -86,89 +91,34 @@ list(
 # message("Backend: Headers LST: ${HEADER_FILES}")
 # message("Backend: Source LST: ${SOURCE_FILES}")
 
-add_executable(
-  vt_mpi
-  ${PROJECT_EXAMPLE_DIR}/transport.cc ${SOURCE_FILES} ${HEADER_FILES}
+set(
+  PROJECT_EXAMPLES_LIST
+  vt_mpi hello_world ring rdma_simple_get rdma_simple_get_direct rdma_simple_put
+  rdma_simple_put_direct rdma_simple_channel rdma_channel_sync rdma_collective
+  callback callback_new reinstate tagged_handler param
 )
 
-add_executable(
-  hello_world
-  ${PROJECT_EXAMPLE_DIR}/hello_world.cc ${SOURCE_FILES} ${HEADER_FILES}
+#message("HEADER_FILES=${HEADER_FILES}")
+
+set(VIRTUAL_TRANSPORT_LIBRARY virtual-transport)
+
+add_library(
+  ${VIRTUAL_TRANSPORT_LIBRARY}
+  STATIC
+  ${HEADER_FILES} ${SOURCE_FILES}
 )
 
-add_executable(
-  ring
-  ${PROJECT_EXAMPLE_DIR}/ring.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
+foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
+  message("Example: building example >>>>> ${EXAMPLE}")
 
-add_executable(
-  rdma_simple_get
-  ${PROJECT_EXAMPLE_DIR}/rdma_simple_get.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
+  add_executable(
+    ${EXAMPLE}
+    ${PROJECT_EXAMPLE_DIR}/${EXAMPLE}.cc
+  )
 
-add_executable(
-  rdma_simple_get_direct
-  ${PROJECT_EXAMPLE_DIR}/rdma_simple_get_direct.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
+  target_link_libraries(
+    ${EXAMPLE}
+    ${VIRTUAL_TRANSPORT_LIBRARY}
+  )
 
-add_executable(
-  rdma_simple_put
-  ${PROJECT_EXAMPLE_DIR}/rdma_simple_put.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-add_executable(
-  rdma_simple_put_direct
-  ${PROJECT_EXAMPLE_DIR}/rdma_simple_put_direct.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-add_executable(
-  rdma_simple_channel
-  ${PROJECT_EXAMPLE_DIR}/rdma_simple_channel.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-add_executable(
-  rdma_channel_sync
-  ${PROJECT_EXAMPLE_DIR}/rdma_channel_sync.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-add_executable(
-  rdma_collective
-  ${PROJECT_EXAMPLE_DIR}/rdma_collective.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-add_executable(
-  callback
-  ${PROJECT_EXAMPLE_DIR}/callback.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-add_executable(
-  callback_new
-  ${PROJECT_EXAMPLE_DIR}/callback_new.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-add_executable(
-  reinstate
-  ${PROJECT_EXAMPLE_DIR}/reinstate.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-add_executable(
-  tagged_handler
-  ${PROJECT_EXAMPLE_DIR}/tagged_handler.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-add_executable(
-  param
-  ${PROJECT_EXAMPLE_DIR}/param.cc ${SOURCE_FILES} ${HEADER_FILES}
-)
-
-target_link_libraries(
-  vt_mpi
-  PRIVATE
-  ${MPI_C_LIBRARIES}
-)
-
-target_include_directories(
-  vt_mpi
-  PRIVATE
-  ${MPI_C_INCLUDE_PATH}
-)
+endforeach()

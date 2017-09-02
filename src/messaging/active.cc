@@ -1,7 +1,7 @@
 
 #include "common.h"
 #include "active.h"
-#include "transport.h"
+#include "termination.h"
 
 namespace runtime {
 
@@ -269,9 +269,9 @@ ActiveMessenger::recv_data_msg_buffer(
       return false;
     }
   } else {
-    printf(
-      "%d: recv_data_msg_buffer: node=%d, tag=%d, enqueue=%s\n",
-      the_context->get_node(), node, tag, print_bool(enqueue)
+    debug_print_active(
+      "recv_data_msg_buffer: node=%d, tag=%d, enqueue=%s\n",
+      node, tag, print_bool(enqueue)
     );
 
     pending_recvs.emplace(
