@@ -19,10 +19,12 @@ static constexpr handler_t const blank_handler = 0;
 
 static constexpr bit_count_t const handler_id_num_bits = sizeof(handler_identifier_t)*8;
 static constexpr bit_count_t const auto_num_bits = 1;
+static constexpr bit_count_t const functor_num_bits = 1;
 
 enum HandlerBits {
   Auto       = 0,
-  Identifier = HandlerBits::Auto       + auto_num_bits,
+  Functor    = HandlerBits::Auto       + auto_num_bits,
+  Identifier = HandlerBits::Functor    + functor_num_bits,
   Node       = HandlerBits::Identifier + handler_id_num_bits,
 };
 
@@ -32,7 +34,9 @@ struct HandlerManager {
   HandlerManager() = default;
 
   static handler_t
-  make_handler(bool const& is_auto, handler_identifier_t const& id);
+  make_handler(
+    bool const& is_auto, bool const& is_functor, handler_identifier_t const& id
+  );
 
   static node_t
   get_handler_node(handler_t const& han);
@@ -49,8 +53,14 @@ struct HandlerManager {
   static void
   set_handler_auto(handler_t& han, bool const& is_auto);
 
+  static void
+  set_handler_functor(handler_t& han, bool const& is_functor);
+
   static bool
   is_handler_auto(handler_t const& han);
+
+  static bool
+  is_handler_functor(handler_t const& han);
 };
 
 } //end namespace runtime

@@ -22,6 +22,11 @@ ActiveMessenger::send_msg_direct(
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
   auto const& is_shared = is_shared_message(msg);
 
+  debug_print_active(
+    "send_msg_direct: dest=%d, handler=%d, is_bcast=%s\n",
+    dest, envelope_get_handler(msg->env), print_bool(is_bcast)
+  );
+
   if (not is_bcast) {
     // non-broadcast message send
 
@@ -306,8 +311,18 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
 
   active_function_t active_fun = nullptr;
 
-  if (handler_manager_t::is_handler_auto(handler)) {
-    active_fun = auto_registry::get_auto_handler(msg);
+  bool const& is_auto = handler_manager_t::is_handler_auto(handler);
+  bool const& is_functor = handler_manager_t::is_handler_functor(handler);
+
+  debug_print_active(
+    "deliver_active_msg: handler=%d, is_auto=%s, is_functor=%s\n",
+    handler, print_bool(is_auto), print_bool(is_functor)
+  );
+
+  if (is_auto and is_functor) {
+    active_fun = auto_registry::get_auto_handler_functor(handler);
+  } else if (is_auto) {
+    active_fun = auto_registry::get_auto_handler(handler);
   } else {
     active_fun = the_registry->get_handler(handler, tag);
   }

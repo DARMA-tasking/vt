@@ -16,20 +16,34 @@ get_auto_registry()  {
   return reg;
 }
 
+template <typename>
+inline auto_active_functor_container_t&
+get_auto_registry_functor()  {
+  static auto_active_functor_container_t reg;
+  return reg;
+}
+
 template <typename MessageT, action_any_function_t<MessageT>* f>
 inline handler_t
 make_auto_handler(MessageT* const msg) {
   handler_t const id = get_handler_active_function_expand(
     action_any_function_t<MessageT>, f
   );
-  return handler_manager_t::make_handler(true, id);
+  return handler_manager_t::make_handler(true, false, id);
 }
 
 template <typename T, T value>
 inline handler_t
 make_auto_handler() {
   handler_t const id = get_handler_active_function_expand(T, value);
-  return handler_manager_t::make_handler(true, id);
+  return handler_manager_t::make_handler(true, false, id);
+}
+
+template <typename T>
+inline handler_t
+make_auto_handler_functor() {
+  handler_t const id = get_handler_active_function_functor(T);
+  return handler_manager_t::make_handler(true, true, id);
 }
 
 template <typename ActiveFnT>
@@ -41,25 +55,62 @@ Registrar<ActiveFnT>::Registrar() {
   reg.emplace_back(reinterpret_cast<action_basic_function_t*>(fn));
 }
 
-inline auto_active_t
-get_auto_handler(ShortMessage* const msg) {
-  handler_t handler = envelope_get_handler(msg->env);
-  auto const& han_id = handler_manager_t::get_handler_identifier(handler);
-  return get_auto_registry().at(han_id);
+template <typename RunnableFunctorT>
+RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
+  auto_active_functor_container_t& reg = get_auto_registry_functor<>();
+  index = reg.size();
+  typename RunnableFunctorT::functor_t instance;
+  reg.emplace_back(instance);
 }
 
 inline auto_active_t
 get_auto_handler(handler_t const& handler) {
   auto const& han_id = handler_manager_t::get_handler_identifier(handler);
+
+  bool const& is_auto = handler_manager_t::is_handler_auto(handler);
+  bool const& is_functor = handler_manager_t::is_handler_functor(handler);
+
+  debug_print_handler(
+    "get_auto_handler: handler=%d, id=%d, is_auto=%s, is_functor=%s\n",
+    handler, han_id, print_bool(is_auto), print_bool(is_functor)
+  );
+
+  assert(
+    not is_functor and is_auto and "Handler should not be a functor, but auto"
+  );
+
   return get_auto_registry().at(han_id);
+}
+
+inline auto_active_functor_t
+get_auto_handler_functor(handler_t const& handler) {
+  auto const& han_id = handler_manager_t::get_handler_identifier(handler);
+
+  bool const& is_auto = handler_manager_t::is_handler_auto(handler);
+  bool const& is_functor = handler_manager_t::is_handler_functor(handler);
+
+  debug_print_handler(
+    "get_auto_handler: handler=%d, id=%d, is_auto=%s, is_functor=%s\n",
+    handler, han_id, print_bool(is_auto), print_bool(is_functor)
+  );
+
+  assert(
+    is_functor and is_auto and "Handler should be a auto functor"
+  );
+
+  return get_auto_registry_functor().at(han_id);
 }
 
 template <typename ActiveFnT>
 auto_handler_t
 register_active_fn() {
-  auto idx = RegistrarWrapper<ActiveFnT>().registrar.index;
-  //printf("idx=%d\n",idx);
-  return idx;
+  return RegistrarWrapper<ActiveFnT>().registrar.index;
+}
+
+template <typename FunctorT>
+auto_handler_t
+register_active_functor() {
+  return RegistrarWrapperFunctor<FunctorT>().registrar.index;
 }
 
 template <typename Callable>
