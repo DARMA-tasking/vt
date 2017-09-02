@@ -10,8 +10,7 @@
 #include "function.h"
 #include "event.h"
 #include "registry.h"
-#include "auto_registry.h"
-#include "auto_registry_impl.h"
+#include "auto_registry_interface.h"
 
 #include <type_traits>
 #include <tuple>

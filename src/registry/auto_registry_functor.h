@@ -54,7 +54,10 @@ auto_handler_t const RunnableFunctor<FunctorT>::idx =
 
 }} // end namespace runtime::auto_registry
 
-#define get_handler_active_function_functor(TYPE_F)                     \
+// convenience macro for registration
+#define get_handler_active_functor(TYPE_F)                              \
   runtime::auto_registry::RunnableFunctor<TYPE_F>::idx;
+
+#include "auto_registry_functor_impl.h"
 
 #endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_FUNCTOR__*/

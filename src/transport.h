@@ -18,8 +18,6 @@
 #include "termination.h"
 #include "barrier.h"
 #include "rdma.h"
-#include "auto_registry.h"
-#include "auto_registry_functor.h"
-#include "auto_registry_impl.h"
+#include "auto_registry_interface.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

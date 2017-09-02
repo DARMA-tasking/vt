@@ -5,6 +5,7 @@
 #include "common.h"
 #include "message.h"
 #include "active.h"
+#include "auto_registry_interface.h"
 
 namespace runtime { namespace param {
 

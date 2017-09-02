@@ -72,20 +72,13 @@ auto_handler_t const Runnable<ActiveFnT>::idx =
 
 }} // end namespace runtime::auto_registry
 
-#define register_active_function(F)                                     \
-  do {                                                                  \
-    runtime::auto_registry::Runnable<decltype(                          \
-      runtime::auto_registry::FunctorAdapter<decltype(F),&F>()          \
-    )>::idx;                                                            \
-  } while (0);
-
+// convenience macro for registration
 #define get_handler_active_function_expand(TYPE_F, ADD_F)               \
   runtime::auto_registry::Runnable<                                     \
     decltype(                                                           \
       runtime::auto_registry::FunctorAdapter<TYPE_F, ADD_F>()           \
     )>::idx;                                                            \
 
-#define get_handler_active_function(F)                                  \
-  get_handler_active_function_expand(decltype(F), std::addressof(F))
+#include "auto_registry_impl.h"
 
 #endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY__*/
