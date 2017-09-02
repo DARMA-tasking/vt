@@ -2,7 +2,9 @@
 #define __RUNTIME_TRANSPORT_AUTO_REGISTRY_IMPL__
 
 #include "common.h"
+#include "auto_registry_common.h"
 #include "auto_registry.h"
+#include "auto_registry_functor.h"
 
 #include <vector>
 #include <memory>
