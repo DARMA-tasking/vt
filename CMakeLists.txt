@@ -18,7 +18,7 @@ set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 set(
   PROJECT_SUBDIRS_LIST
   barrier collective context debug event messaging termination tree
-  virtualization pool data registry
+  virtualization pool data registry parameterization
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
