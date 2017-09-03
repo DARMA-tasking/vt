@@ -39,7 +39,7 @@ Registrar<ActiveFnT>::Registrar() {
   index = reg.size();
   auto fn = ActiveFnT::get_function();
   //printf("obj=%p, index=%d, fn=%p\n",this,index,fn);
-  reg.emplace_back(reinterpret_cast<action_basic_function_t*>(fn));
+  reg.emplace_back(reinterpret_cast<active_basic_function_t*>(fn));
 }
 
 inline auto_active_t

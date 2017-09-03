@@ -59,37 +59,49 @@ struct ActiveMessenger {
   ActiveMessenger() = default;
 
   template <typename MessageT>
-  void
-  set_term_message(MessageT* const msg) {
+  void set_term_message(MessageT* const msg) {
     set_term_type(msg->env);
   }
 
   template <typename MessageT>
-  void
-  set_epoch_message(MessageT* const msg, epoch_t const& epoch) {
+  void set_epoch_message(MessageT* const msg, epoch_t const& epoch) {
     envelope_set_epoch(msg->env, epoch);
   }
 
   template <typename MessageT>
-  void
-  set_tag_message(MessageT* const msg, tag_t const& tag) {
+  void set_tag_message(MessageT* const msg, tag_t const& tag) {
     envelope_set_tag(msg->env, tag);
   }
 
+  /*----------------------------------------------------------------------------
+   *            Basic Active Message Send with Pre-Registered Handler
+   *----------------------------------------------------------------------------
+   *
+   * Send message  to pre-registered active message handler.
+   *
+   *   void my_handler(MyMsg* msg) {
+   *     // do work ...
+   *   }
+   *
+   *   handler_t const han = register_new_handler(my_handler);
+   *
+   *   MyMsg* msg = make_shared_message<MyMsg>(156);
+   *   the_msg->send_msg(29, han, msg);
+   *
+   *----------------------------------------------------------------------------
+   */
+
   template <typename MessageT>
-  event_t
-  send_msg(
+  event_t send_msg(
     node_t const& dest, handler_t const& han, MessageT* const msg,
     action_t next_action = nullptr
   ) {
-    // setup envelope
     envelope_setup(msg->env, dest, han);
     return send_msg_direct(han, msg, sizeof(MessageT), next_action);
   }
 
   template <typename MessageT>
-  event_t
-  send_msg(
+  event_t send_msg(
     handler_t const& han, MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
@@ -98,119 +110,208 @@ struct ActiveMessenger {
       dest != uninitialized_destination and
       "Destination must be known in handler"
     );
-    // setup envelope
     envelope_setup(msg->env, dest, han);
-    envelope_set_tag(msg->env, tag);
+    if (tag != no_tag) {
+      envelope_set_tag(msg->env, tag);
+    }
     return send_msg_direct(han, msg, sizeof(MessageT), next_action);
   }
 
-  template <action_basic_function_t* f, typename MessageT>
-  event_t
-  broadcast_msg(
-    MessageT* const msg, tag_t const& tag = no_tag,
-    action_t next_action = nullptr
+  /*
+   *----------------------------------------------------------------------------
+   *          End Basic Active Message Send with Pre-Registered Handler
+   *----------------------------------------------------------------------------
+   */
+
+  /*----------------------------------------------------------------------------
+   *              Send Message Active Function (type-safe handler)
+   *----------------------------------------------------------------------------
+   *
+   * Send message using a type-safe function handler. This is the predominant
+   * way that the messenger is expected to be used.
+   *
+   *   void my_handler(MyMsg* msg) {
+   *     // do work ...
+   *   }
+   *
+   *  the_msg->send_msg<MyMsg, my_handler>(1, msg);
+   *
+   *----------------------------------------------------------------------------
+   */
+
+  template <typename MessageT, action_any_function_t<MessageT>* f>
+  event_t broadcast_msg(
+    MessageT* const msg, tag_t const& tag = no_tag, action_t next_action = nullptr
   ) {
     handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     auto const& this_node = the_context->get_node();
     set_broadcast_type(msg->env);
+    if (tag != no_tag) {
+      envelope_set_tag(msg->env, tag);
+    }
     return send_msg(this_node, han, msg, next_action);
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t
-  broadcast_msg(
-    MessageT* const msg, tag_t const& tag = no_tag,
-    action_t next_action = nullptr
-  ) {
-    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    auto const& this_node = the_context->get_node();
-    set_broadcast_type(msg->env);
-    return send_msg(this_node, han, msg, next_action);
-  }
-
-  template <action_basic_function_t* f, typename MessageT>
-  event_t
-  broadcast_msg(MessageT* const msg, action_t act) {
-    return broadcast_msg<f,MessageT>(msg,no_tag,act);
-  }
-
-  template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t
-  broadcast_msg(MessageT* const msg, action_t act) {
+  event_t broadcast_msg(MessageT* const msg, action_t act) {
     return broadcast_msg<MessageT,f>(msg,no_tag,act);
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t
-  send_msg(
+  event_t send_msg(
     node_t const& dest, MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
     handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    //setup envelope
     envelope_setup(msg->env, dest, han);
+    if (tag != no_tag) {
+      envelope_set_tag(msg->env, tag);
+    }
     return send_msg_direct(han, msg, sizeof(MessageT), next_action);
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  void
-  trigger(std::function<void(runtime::BaseMessage*)> fn) {
-    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(nullptr);
-    printf("trigger: han=%d\n", han);
-    the_registry->save_trigger(han, /*reinterpret_cast<active_function_t>(*/fn);
-  }
-
-  template <action_basic_function_t* f, typename MessageT>
-  event_t
-  send_msg(
-    node_t const& dest, MessageT* const msg, tag_t const& tag = no_tag,
-    action_t next_action = nullptr
-  ) {
-    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    //setup envelope
-    envelope_setup(msg->env, dest, han);
-    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
-  }
-
-  template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t
-  send_msg(node_t const& dest, MessageT* const msg, action_t act) {
+  event_t send_msg(node_t const& dest, MessageT* const msg, action_t act) {
     return send_msg<MessageT,f>(dest,msg,no_tag,act);
   }
 
-  template <action_basic_function_t* f, typename MessageT>
-  event_t
-  send_msg(node_t const& dest, MessageT* const msg, action_t act) {
+  /*
+   *----------------------------------------------------------------------------
+   *             End Send Message Active Function (type-safe handler)
+   *----------------------------------------------------------------------------
+   */
+
+  /*----------------------------------------------------------------------------
+   *                 Send Message BASIC Active Function (deprecated?)
+   *----------------------------------------------------------------------------
+   *
+   * Send message using basic function handler. These handlers are NOT type-safe
+   * and require the user to cast their message to the correct type as so:
+   *
+   *   void basic_handler(runtime::BaseMessage* msg_in) {
+   *     MyMsg* msg = static_cast<MyMsg*>(msg_in);
+   *     ...
+   *   }
+   *
+   *  the_msg->send_msg<basic_handler, MyMsg>(1, msg);
+   *
+   * Most likely this will be deprecated unless there is a use for this, since
+   * type safety does not cost anything in terms of overhead (either at runtime
+   * or compile-time).
+   *
+   *----------------------------------------------------------------------------
+   */
+
+  template <active_basic_function_t* f, typename MessageT>
+  event_t broadcast_msg(
+    MessageT* const msg, tag_t const& tag = no_tag, action_t next_action = nullptr
+  ) {
+    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
+    auto const& this_node = the_context->get_node();
+    set_broadcast_type(msg->env);
+    if (tag != no_tag) {
+      envelope_set_tag(msg->env, tag);
+    }
+    return send_msg(this_node, han, msg, next_action);
+  }
+
+  template <active_basic_function_t* f, typename MessageT>
+  event_t broadcast_msg(MessageT* const msg, action_t act) {
+    return broadcast_msg<f,MessageT>(msg,no_tag,act);
+  }
+
+  template <active_basic_function_t* f, typename MessageT>
+  event_t send_msg(
+    node_t const& dest, MessageT* const msg, tag_t const& tag = no_tag,
+    action_t next_action = nullptr
+  ) {
+    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
+    envelope_setup(msg->env, dest, han);
+    if (tag != no_tag) {
+      envelope_set_tag(msg->env, tag);
+    }
+    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+  }
+
+  template <active_basic_function_t* f, typename MessageT>
+  event_t send_msg(node_t const& dest, MessageT* const msg, action_t act) {
     return send_msg<f,MessageT>(dest,msg,no_tag,act);
   }
 
-  send_data_ret_t
-  send_data(
-    rdma_get_t const& ptr, node_t const& dest, tag_t const& tag,
+  /*
+   *----------------------------------------------------------------------------
+   *              End Send Message BASIC Active Function (deprecated?)
+   *----------------------------------------------------------------------------
+   */
+
+  /*----------------------------------------------------------------------------
+   *                       Send Message Functor Variants
+   *----------------------------------------------------------------------------
+   *
+   * Send message Functor variants that cause an active message to trigger a
+   * user-defined functor such as:
+   *
+   *   struct X {
+   *     void operator()(MyMsg* msg) const { ... };
+   *   };
+   *
+   *----------------------------------------------------------------------------
+   */
+
+  template <typename FunctorT, typename MessageT>
+  event_t broadcast_msg(
+    MessageT* const msg, tag_t const& tag = no_tag, action_t next_action = nullptr
+  ) {
+    handler_t const& han =
+      auto_registry::make_auto_handler_functor<FunctorT, MessageT>();
+    set_broadcast_type(msg->env);
+    if (tag != no_tag) {
+      envelope_set_tag(msg->env, tag);
+    }
+    return send_msg(the_context->get_node(), han, msg, next_action);
+  }
+
+  template <typename FunctorT, typename MessageT>
+  event_t broadcast_msg(MessageT* const msg, action_t act) {
+    return broadcast_msg<FunctorT,MessageT>(msg,no_tag,act);
+  }
+
+  template <typename FunctorT, typename MessageT>
+  event_t send_msg(
+    node_t const& dest, MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
-  );
+  ) {
+    handler_t const& han =
+      auto_registry::make_auto_handler_functor<FunctorT, MessageT>();
+    envelope_setup(msg->env, dest, han);
+    if (tag != no_tag) {
+      envelope_set_tag(msg->env, tag);
+    }
+    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+  }
 
-  bool
-  recv_data_msg(
-    tag_t const& tag, node_t const& node, rdma_continuation_del_t next = nullptr
-  );
+  template <typename FunctorT, typename MessageT>
+  event_t send_msg(node_t const& dest, MessageT* const msg, action_t act) {
+    return send_msg<FunctorT,MessageT>(dest,msg,no_tag,act);
+  }
 
-  bool
-  recv_data_msg(
-    tag_t const& tag, node_t const& recv_node, bool const& enqueue,
-    rdma_continuation_del_t next = nullptr
-  );
+  /*
+   *----------------------------------------------------------------------------
+   *                      End Send Message Functor Variants
+   *----------------------------------------------------------------------------
+   */
 
-  bool
-  recv_data_msg_buffer(
-    void* const user_buf, tag_t const& tag,
-    node_t const& node = uninitialized_destination, bool const& enqueue = true,
-    action_t dealloc_user_buf = nullptr, rdma_continuation_del_t next = nullptr
-  );
-
+  /*----------------------------------------------------------------------------
+   *                     Send Data Message (includes payload)
+   *----------------------------------------------------------------------------
+   *
+   * Send message that includes a payload that can be arbitrary data that is
+   * coordinated by the system
+   *
+   *----------------------------------------------------------------------------
+   */
   template <typename MessageT>
-  event_t
-  send_msg(
+  event_t send_msg(
     node_t const& dest, handler_t const& han, MessageT* const msg,
     user_send_fn_t send_payload_fn, action_t next_action = nullptr
   ) {
@@ -228,8 +329,7 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t
-  send_msg(
+  event_t send_msg(
     node_t const& dest, MessageT* const msg, user_send_fn_t send_payload_fn,
     action_t next_action = nullptr
   ) {
@@ -237,9 +337,28 @@ struct ActiveMessenger {
     return send_msg<MessageT>(dest, han, msg, send_payload_fn, next_action);
   }
 
+  send_data_ret_t send_data(
+    rdma_get_t const& ptr, node_t const& dest, tag_t const& tag,
+    action_t next_action = nullptr
+  );
+
+  bool recv_data_msg(
+    tag_t const& tag, node_t const& node, rdma_continuation_del_t next = nullptr
+  );
+
+  bool recv_data_msg(
+    tag_t const& tag, node_t const& recv_node, bool const& enqueue,
+    rdma_continuation_del_t next = nullptr
+  );
+
+  bool recv_data_msg_buffer(
+    void* const user_buf, tag_t const& tag,
+    node_t const& node = uninitialized_destination, bool const& enqueue = true,
+    action_t dealloc_user_buf = nullptr, rdma_continuation_del_t next = nullptr
+  );
+
   template <typename MessageT>
-  event_t
-  broadcast_msg(
+  event_t broadcast_msg(
     handler_t const& han, MessageT* const msg, action_t next_action = nullptr
   ) {
     auto const& this_node = the_context->get_node();
@@ -247,28 +366,28 @@ struct ActiveMessenger {
     return send_msg(this_node, han, msg, next_action);
   }
 
-  event_t
-  send_msg_direct(
+  event_t send_msg_direct(
     handler_t const& han, BaseMessage* const msg, int const& msg_size,
     action_t next_action = nullptr
   );
 
-  // template <
-  //   typename SendMsgT, action_any_function_t<SendMsgT>* f_s,
-  //   typename RecvMsgT, action_any_function_t<RecvMsgT>* f_r
-  // >
-  // event_t
-  // send_msg_callback(
-  //   node_t const& dest, SendMsgT* const send_msg
-  // ) {
-  //   handler_t const& hr = auto_registry::make_auto_handler<RecvMsgT,f_r>(msg);
-  //   send_msg->set_callback(hr);
-  //   return send_msg<SendMsgT,f_x>(dest,msg,no_tag,nullptr);
-  // }
+  /*
+   *----------------------------------------------------------------------------
+   *                           End Send Data Message
+   *----------------------------------------------------------------------------
+   */
 
+   /*----------------------------------------------------------------------------
+   *                            Send Message Callback
+   *----------------------------------------------------------------------------
+   *
+   * Send message *callback* variants (automatically allow user to callback upon
+   * message arrival)
+   *
+   *----------------------------------------------------------------------------
+   */
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t
-  send_msg_callback(
+  event_t send_msg_callback(
     node_t const& dest, MessageT* const msg, active_function_t fn
   ) {
     handler_t const& this_han = register_new_handler(fn, no_tag);
@@ -278,8 +397,7 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT>
-  void
-  send_msg_callback(
+  void send_msg_callback(
     handler_t const& han, node_t const& dest, MessageT* const msg,
     active_function_t fn
   ) {
@@ -290,10 +408,22 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT>
-  void
-  send_callback(MessageT* const msg) {
+  void send_callback(MessageT* const msg) {
     auto const& han_callback = get_current_callback();
     send_msg(han_callback, msg);
+  }
+
+  /*
+   *----------------------------------------------------------------------------
+   *                        End Send Message Callback
+   *----------------------------------------------------------------------------
+   */
+
+  template <typename MessageT, action_any_function_t<MessageT>* f>
+  void trigger(std::function<void(runtime::BaseMessage*)> fn) {
+    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(nullptr);
+    printf("trigger: han=%d\n", han);
+    the_registry->save_trigger(han, /*reinterpret_cast<active_function_t>(*/fn);
   }
 
   void

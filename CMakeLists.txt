@@ -95,7 +95,7 @@ set(
   PROJECT_EXAMPLES_LIST
   vt_mpi hello_world ring rdma_simple_get rdma_simple_get_direct rdma_simple_put
   rdma_simple_put_direct rdma_simple_channel rdma_channel_sync rdma_collective
-  callback callback_new reinstate tagged_handler param
+  callback callback_new reinstate tagged_handler param hello_world_functor
 )
 
 #message("HEADER_FILES=${HEADER_FILES}")
