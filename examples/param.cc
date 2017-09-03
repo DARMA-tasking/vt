@@ -39,8 +39,8 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    std::tuple<int,int,bool> data = build_data(10, 20, false);
-    std::tuple<int,double> data2 = build_data(10, 70.0);
+    auto data = build_data(10, 20, false);
+    auto data2 = build_data(10, 70.0);
 
     the_param->send_data(1, data, param_function_rhs(fn_test));
     the_param->send_data(1, param_function_rhs(fn_test), 50, 29, false);

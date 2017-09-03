@@ -23,7 +23,7 @@ inline handler_t make_auto_handler_functor() {
 }
 
 template <typename RunnableFunctorT, typename... Args>
-static void functor_handler_wrapper(Args... args) {
+static void functor_handler_wrapper(Args&&... args) {
   typename RunnableFunctorT::functor_t instance;
   return instance.operator ()(std::forward<Args>(args)...);
 }

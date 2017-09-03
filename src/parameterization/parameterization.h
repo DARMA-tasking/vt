@@ -36,7 +36,7 @@ struct DataMsg : runtime::Message {
 };
 
 template <typename Function, typename Tuple, size_t... I>
-auto call(Function f, Tuple&& t, std::index_sequence<I...>) {
+static auto call(Function f, Tuple&& t, std::index_sequence<I...>) {
   return f(
     std::forward<typename std::tuple_element<I,Tuple>::type>(
       std::get<I>(t)
@@ -45,26 +45,40 @@ auto call(Function f, Tuple&& t, std::index_sequence<I...>) {
 }
 
 template <typename FnT, typename... Args>
-void get_fn_sig(std::tuple<Args...>&& tup, FnT fn) {
+static void get_fn_sig(std::tuple<Args...>&& tup, FnT fn, bool const& is_functor) {
   using tuple_type_t = typename std::decay<decltype(tup)>::type;
   static constexpr auto size = std::tuple_size<tuple_type_t>::value;
-  auto typed_fn = reinterpret_cast<multi_param_t<Args...>>(fn);
-  call(typed_fn, std::forward<std::tuple<Args...>>(tup), std::make_index_sequence<size>{});
+  if (is_functor) {
+    // be careful: functor version takes a r-value ref as `Args' and forwards
+    auto typed_fn = reinterpret_cast<multi_param_t<Args&&...>>(fn);
+    call(
+      typed_fn, std::forward<std::tuple<Args...>>(tup),
+      std::make_index_sequence<size>{}
+    );
+  } else {
+    // be careful: non-fuctor version takes a l-value as `Args'
+    auto typed_fn = reinterpret_cast<multi_param_t<Args...>>(fn);
+    call(
+      typed_fn, std::forward<std::tuple<Args...>>(tup),
+      std::make_index_sequence<size>{}
+    );
+  }
 }
 
 template <typename Tuple>
 static void data_message_handler(DataMsg<Tuple>* msg) {
+  debug_print(
+    param, node,
+    "data_message_handler: id=%d\n", msg->sub_han
+  );
+
   if (handler_manager_t::is_handler_functor(msg->sub_han)) {
     auto fn = auto_registry::get_auto_handler_functor(msg->sub_han);
-    get_fn_sig(std::forward<Tuple>(msg->tup), fn);
+    get_fn_sig(std::forward<Tuple>(msg->tup), fn, true);
   } else {
     // regular active function
     auto fn = auto_registry::get_auto_handler(msg->sub_han);
-    debug_print(
-      param, node,
-      "data_message_handler: id=%d, fn=%p\n", msg->sub_han, fn
-    );
-    get_fn_sig(std::forward<Tuple>(msg->tup), fn);
+    get_fn_sig(std::forward<Tuple>(msg->tup), fn, false);
   }
 }
 
@@ -117,6 +131,16 @@ struct Param {
   }
 
   template <typename T, T value, typename... Args>
+  event_t send_data(
+    node_t const& dest, DataMsg<std::tuple<Args...>>* msg,
+    NonType<T, value> non = NonType<T,value>()
+  ) {
+    auto const& han = auto_registry::make_auto_handler<T,value>();
+    msg->sub_han = han;
+    return send_data_msg(dest, han, msg);
+  }
+
+  template <typename T, T value, typename... Args>
   event_t send_data(node_t const& dest, NonType<T, value> non, Args&&... a) {
     auto const& han = auto_registry::make_auto_handler<T,value>();
 
@@ -154,6 +178,17 @@ struct Param {
     return send_data_helper_functor<FunctorT>(dest, std::forward<Tuple>(tup));
   }
 
+
+  template <typename FunctorT, typename... Args>
+  event_t send_data(node_t const& dest, DataMsg<std::tuple<Args...>>* msg) {
+    static_check_copyable<Args...>();
+
+    auto const& han = auto_registry::make_auto_handler_functor<FunctorT,Args...>();
+    msg->sub_han = han;
+
+    return send_data_msg(dest, han, msg);
+  }
+
   template <typename FunctorT, typename... Args>
   event_t send_data(node_t const& dest, Args&&... a) {
     static_check_copyable<Args...>();
@@ -177,8 +212,10 @@ namespace runtime {
 extern std::unique_ptr<param::Param> the_param;
 
 template <typename... Args>
-std::tuple<Args...> build_data(Args&&... a) {
-  return std::tuple<Args...>(std::forward<Args>(a)...);
+param::DataMsg<std::tuple<Args...>>* build_data(Args&&... a) {
+  return new param::DataMsg<std::tuple<Args...>>(
+    uninitialized_handler, std::forward<Args>(a)...
+  );
 }
 
 } //end namespace runtime
