@@ -14,7 +14,7 @@ handler_t make_auto_handler(MessageT* const msg);
 template <typename T, T value>
 handler_t make_auto_handler();
 
-template <typename T, typename... Args>
+template <typename T, bool is_msg, typename... Args>
 handler_t make_auto_handler_functor();
 
 auto_active_t get_auto_handler(handler_t const& handler);

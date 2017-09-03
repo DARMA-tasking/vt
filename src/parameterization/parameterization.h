@@ -169,7 +169,9 @@ struct Param {
     node_t const& dest, std::tuple<Args...>&& tup
   ) {
     using message_t = runtime::BaseMessage;
-    auto const& han = auto_registry::make_auto_handler_functor<FunctorT,Args...>();
+    auto const& han = auto_registry::make_auto_handler_functor<
+      FunctorT, false, Args...
+    >();
     return send_data_tuple(dest, han, std::forward<std::tuple<Args...>>(tup));
   }
 
@@ -183,7 +185,9 @@ struct Param {
   event_t send_data(node_t const& dest, DataMsg<std::tuple<Args...>>* msg) {
     static_check_copyable<Args...>();
 
-    auto const& han = auto_registry::make_auto_handler_functor<FunctorT,Args...>();
+    auto const& han = auto_registry::make_auto_handler_functor<
+      FunctorT, false, Args...
+    >();
     msg->sub_han = han;
 
     return send_data_msg(dest, han, msg);
@@ -193,7 +197,9 @@ struct Param {
   event_t send_data(node_t const& dest, Args&&... a) {
     static_check_copyable<Args...>();
 
-    auto const& han = auto_registry::make_auto_handler_functor<FunctorT,Args...>();
+    auto const& han = auto_registry::make_auto_handler_functor<
+      FunctorT, false, Args...
+    >();
 
     using tuple_type_t = std::tuple<Args...>;
 

@@ -16,31 +16,45 @@ inline auto_active_functor_container_t& get_auto_registry_functor()  {
   return reg;
 }
 
-template <typename FunctorT, typename... Args>
+template <typename FunctorT, bool is_msg, typename... Args>
 inline handler_t make_auto_handler_functor() {
-  handler_t const id = get_handler_active_functor(FunctorT, Args);
+  handler_t const id = get_handler_active_functor(FunctorT, is_msg, Args);
   return handler_manager_t::make_handler(true, true, id);
 }
 
 template <typename RunnableFunctorT, typename... Args>
-static void functor_handler_wrapper(Args&&... args) {
+static inline void functor_handler_wrapper_rval(Args&&... args) {
   typename RunnableFunctorT::functor_t instance;
   return instance.operator ()(std::forward<Args>(args)...);
 }
 
 template <typename RunnableFunctorT, typename... Args>
-inline void pull_apart(
-  auto_active_functor_container_t& reg, pack<Args...> packed_args
+static inline void functor_handler_wrapper_reg(Args... args) {
+  typename RunnableFunctorT::functor_t instance;
+  return instance.operator ()(args...);
+}
+
+template <typename RunnableFunctorT, typename... Args>
+static inline void pull_apart(
+  auto_active_functor_container_t& reg, bool const& is_msg,
+  pack<Args...> packed_args
 ) {
-  auto fn_ptr = functor_handler_wrapper<RunnableFunctorT, Args...>;
-  reg.emplace_back(reinterpret_cast<simple_function_t>(fn_ptr));
+  if (is_msg) {
+    auto fn_ptr = functor_handler_wrapper_reg<RunnableFunctorT, Args...>;
+    reg.emplace_back(reinterpret_cast<simple_function_t>(fn_ptr));
+  } else {
+    auto fn_ptr = functor_handler_wrapper_rval<RunnableFunctorT, Args...>;
+    reg.emplace_back(reinterpret_cast<simple_function_t>(fn_ptr));
+  }
 }
 
 template <typename RunnableFunctorT>
 RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
   auto_active_functor_container_t& reg = get_auto_registry_functor<>();
   index = reg.size();
-  pull_apart<RunnableFunctorT>(reg, typename RunnableFunctorT::packed_args_t());
+  pull_apart<RunnableFunctorT>(
+    reg, RunnableFunctorT::is_msg_t, typename RunnableFunctorT::packed_args_t()
+  );
 }
 
 inline auto_active_functor_t get_auto_handler_functor(handler_t const& handler) {
