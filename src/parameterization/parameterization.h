@@ -109,10 +109,10 @@ struct Param {
   void static_check_copyable() {
     using cond = all_true<std::is_trivially_copyable<Args>::value...>;
 
-    // static_assert(
-    //   std::is_same<typename cond::type,std::true_type>::value == true,
-    //   "All types passed for parameterization must be trivially copyable"
-    // );
+    static_assert(
+      std::is_same<typename cond::type,std::true_type>::value == true,
+      "All types passed for parameterization must be trivially copyable"
+    );
   }
 
   template <typename DataMsg>
