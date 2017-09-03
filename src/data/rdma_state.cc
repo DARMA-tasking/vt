@@ -105,8 +105,8 @@ State::set_rdma_fn<
   auto const& this_node = the_context->get_node();
 
   debug_print_rdma(
-    "%d: set_rdma_fn: GET tag=%d, handle=%lld, any_tag=%s\n",
-    this_node, tag, handle, print_bool(any_tag)
+    "set_rdma_fn: GET tag=%d, handle=%lld, any_tag=%s\n",
+    tag, handle, print_bool(any_tag)
   );
 
   rdma_handler_t const handler = make_rdma_handler(rdma_type_t::Get);
@@ -139,8 +139,8 @@ State::set_rdma_fn<
   auto const& this_node = the_context->get_node();
 
   debug_print_rdma(
-    "%d: set_rdma_fn: PUT tag=%d, handle=%lld, any_tag=%s\n",
-    this_node, tag, handle, print_bool(any_tag)
+    "set_rdma_fn: PUT tag=%d, handle=%lld, any_tag=%s\n",
+    tag, handle, print_bool(any_tag)
   );
 
   if (any_tag) {

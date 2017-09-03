@@ -112,8 +112,8 @@ RDMAManager::put_recv_msg(PutMessage* msg) {
   auto const& this_node = the_context->get_node();
 
   debug_print_rdma(
-    "put_recv_msg: op=%lld, tag=%d, bytes=%lld, recv_tag=%d\n",
-    msg->op_id, msg_tag, msg->num_bytes, msg->mpi_tag_to_recv
+    "put_recv_msg: op=%lld, tag=%d, bytes=%lld, recv_tag=%d, han=%lld\n",
+    msg->op_id, msg_tag, msg->num_bytes, msg->mpi_tag_to_recv, msg->rdma_handle
   );
 
   assert(
@@ -122,6 +122,8 @@ RDMAManager::put_recv_msg(PutMessage* msg) {
 
   // try to get early access to the ptr for a direct put into user buffer
   auto const& put_ptr = the_rdma->try_put_ptr(msg->rdma_handle, msg_tag);
+  auto const rdma_handle = msg->rdma_handle;
+  auto const offset = msg->offset;
 
   debug_print_rdma(
     "put_recv_msg: bytes=%lld, recv_tag=%d, put_ptr=%p\n",
@@ -131,13 +133,15 @@ RDMAManager::put_recv_msg(PutMessage* msg) {
   if (put_ptr == nullptr) {
     the_msg->recv_data_msg(
       recv_tag, recv_node, [=](rdma_get_t ptr, action_t deleter){
-        debug_print_rdma("put_data: after recv data trigger\n");
+        debug_print_rdma(
+          "put_data: after recv data trigger: recv_tag=%d, recv_node=%d\n",
+          recv_tag, recv_node
+        );
         the_rdma->trigger_put_recv_data(
-          msg->rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
-          msg->offset, [=](){
+          rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
+          offset, [=]{
             debug_print_rdma(
-              "put_data: after put trigger: send_back=%d\n",
-              send_back
+              "put_data: after put trigger: send_back=%d\n", send_back
             );
             if (send_back != uninitialized_destination) {
               PutBackMessage* new_msg = new PutBackMessage(op_id);
@@ -409,6 +413,11 @@ RDMAManager::trigger_put_recv_data(
   auto const& this_node = the_context->get_node();
   auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
 
+  debug_print_rdma(
+    "trigger_put_recv_data: han=%lld, tag=%d, holder.size=%ld\n",
+    han, tag, holder.size()
+  );
+
   assert(
     handler_node == this_node and "Handle must be local to this node"
   );
@@ -533,8 +542,6 @@ RDMAManager::put_data(
     } else {
       rdma_op_t const new_op = cur_op++;
 
-      tag_t recv_tag = no_tag;
-
       PutMessage* msg = new PutMessage(
         new_op, num_bytes, offset, no_tag, han,
         action_after_put ? this_node : uninitialized_destination,
@@ -550,11 +557,6 @@ RDMAManager::put_data(
         msg->mpi_tag_to_recv = std::get<1>(ret);
       };
 
-      debug_print_rdma(
-        "put_data: sending: ptr=%p, num_bytes=%lld, recv_tag=%d, offset=%lld\n",
-        ptr, num_bytes, recv_tag, offset
-      );
-
       set_put_type(msg->env);
 
       if (tag != no_tag) {
@@ -565,6 +567,11 @@ RDMAManager::put_data(
 
       the_msg->send_msg<PutMessage, put_recv_msg>(
         put_node, msg, send_payload, deleter
+      );
+
+      debug_print_rdma(
+        "put_data: sending: ptr=%p, num_bytes=%lld, recv_tag=%d, offset=%lld\n",
+        ptr, num_bytes, msg->mpi_tag_to_recv, offset
       );
 
       if (action_after_put != nullptr) {

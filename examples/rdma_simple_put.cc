@@ -84,12 +84,11 @@ int main(int argc, char** argv) {
     //my_handle = the_rdma->register_new_typed_rdma_handler(my_data, 10);
     my_handle = the_rdma->register_new_rdma_handler();
     the_rdma->associate_put_function(my_handle, put_handler_fn, false);
-    printf("initializing my_handle=%lld\n", my_handle);
+    printf("%d: initializing my_handle=%lld\n", my_node, my_handle);
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;
     the_msg->broadcast_msg<TestMsg,put_data_fn>(msg, [=]{ delete msg; });
-    //the_msg->send_msg<TestMsg,put_data_fn>(0, msg, [=]{ delete msg; });
   }
 
   while (1) {
