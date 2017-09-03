@@ -19,5 +19,6 @@
 #include "barrier.h"
 #include "rdma.h"
 #include "auto_registry_interface.h"
+#include "sequencer.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

@@ -24,6 +24,7 @@
     rdma_state,            "RDMA State",                                \
     param,                 "parameterization",                          \
     handler,               "handler",                                   \
+    sequence,              "sequencer"                                  \
   )
 
 #define debug_list_debug_options                                        \

@@ -22,6 +22,7 @@ set(
   PROJECT_SUBDIRS_LIST
   barrier collective context debug event messaging termination tree
   virtualization pool data registry parameterization handler features meld
+  sequence
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
@@ -96,6 +97,7 @@ set(
   hello_world ring rdma_simple_get rdma_simple_get_direct rdma_simple_put
   rdma_simple_put_direct rdma_simple_channel rdma_channel_sync rdma_collective
   callback callback_new reinstate tagged_handler param hello_world_functor
+  test_seq
 )
 
 set(MPI_RUN_COMMAND "mpirun-mpich-clang")

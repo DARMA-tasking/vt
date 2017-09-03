@@ -14,5 +14,6 @@ std::unique_ptr<barrier::Barrier> the_barrier = std::make_unique<barrier::Barrie
 std::unique_ptr<pool::Pool> the_pool = std::make_unique<pool::Pool>();
 std::unique_ptr<rdma::RDMAManager> the_rdma = std::make_unique<rdma::RDMAManager>();
 std::unique_ptr<param::Param> the_param = std::make_unique<param::Param>();
+std::unique_ptr<seq::Sequencer> the_seq = std::make_unique<seq::Sequencer>();
 
 } //end namespace runtime
