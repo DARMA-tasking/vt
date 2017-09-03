@@ -67,6 +67,14 @@ struct TaggedSequencer {
     return attach_next(seq_id,fn);
   }
 
+  void
+  sequenced_block(user_seq_fun_t const& fn) {
+    assert(
+      stateful_seq != no_seq and "Must be in a valid sequence"
+    );
+    return attach_next(stateful_seq,fn);
+  };
+
   seq_t
   get_current_seq() const {
     return stateful_seq;

@@ -32,7 +32,10 @@ static void my_seq(seq_t const& seq_id) {
 
   the_seq->wait<EmptyMsg, action1>(10, [](EmptyMsg* msg){
     PRINT_SEQUENCE("action1 WAIT-1 triggered\n");
+  });
 
+  the_seq->sequenced_block([]{
+    PRINT_SEQUENCE("action1 sequenced_block triggered\n");
     auto const& my_node = the_context->get_node();
     the_msg->send_msg<EmptyMsg, action1>(
       my_node, make_shared_message<EmptyMsg>(), 20
