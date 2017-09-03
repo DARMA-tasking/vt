@@ -18,7 +18,7 @@
 
 namespace runtime { namespace seq {
 
-template <typename SeqTag, template<class> class SeqTrigger>
+template <typename SeqTag, template <typename> class SeqTrigger>
 struct TaggedSequencer {
   using seq_t = SeqTag;
   using seq_list_t = SeqList;
@@ -264,7 +264,7 @@ public:
         iter->second.pop_front();
         if (iter->second.size() == 0) {
           tagged_lst.erase(iter);
-        }
+         }
         found_matching = true;
       }
     }
