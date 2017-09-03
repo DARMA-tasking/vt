@@ -39,12 +39,9 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    auto data = build_data(10, 20, false);
-    auto data2 = build_data(10, 70.0);
-
-    the_param->send_data(1, data, param_function_rhs(fn_test));
+    the_param->send_data(1, build_data(10, 20, false), param_function_rhs(fn_test));
     the_param->send_data(1, param_function_rhs(fn_test), 50, 29, false);
-    the_param->send_data<param_function(fn_test)>(1, data);
+    the_param->send_data<param_function(fn_test)>(1, build_data(10, 20, false));
     the_param->send_data<param_function(fn_test)>(1, 45, 23, true);
 
     the_param->send_data<param_function(fn_test2)>(1, 20, 10);
@@ -52,7 +49,7 @@ int main(int argc, char** argv) {
 
     the_param->send_data<FunctorTest1>(1, build_data(20, 50.0));
     the_param->send_data<FunctorTest1>(1, 20, 100.0);
-    the_param->send_data<FunctorTest1>(1, data2);
+    the_param->send_data<FunctorTest1>(1, build_data(10, 70.0));
   }
 
   while (1) {
