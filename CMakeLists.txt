@@ -15,6 +15,9 @@ set(CMAKE_CXX_STANDARD 14)
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
+include (CTest)
+enable_testing()
+
 set(
   PROJECT_SUBDIRS_LIST
   barrier collective context debug event messaging termination tree
@@ -88,17 +91,32 @@ list(
   ${PROJECT_SOURCE_DIR}/runtime.cc
 )
 
-# message("Backend: Headers LST: ${HEADER_FILES}")
-# message("Backend: Source LST: ${SOURCE_FILES}")
-
 set(
   PROJECT_EXAMPLES_LIST
-  vt_mpi hello_world ring rdma_simple_get rdma_simple_get_direct rdma_simple_put
+  hello_world ring rdma_simple_get rdma_simple_get_direct rdma_simple_put
   rdma_simple_put_direct rdma_simple_channel rdma_channel_sync rdma_collective
   callback callback_new reinstate tagged_handler param hello_world_functor
 )
 
-#message("HEADER_FILES=${HEADER_FILES}")
+set(MPI_RUN_COMMAND "mpirun-mpich-clang")
+set(MPI_NUMPROC_FLAG "-n")
+
+set(PROC_TEST_LIST 2 4 8)
+
+macro(add_test_for_example test_name test_exec)
+  foreach(PROC ${PROC_TEST_LIST})
+    add_test(
+      ${test_name}_${PROC}
+      ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
+      ${test_exec} ${ARGN}
+    )
+
+    set_tests_properties(
+      ${test_name}_${PROC}
+      PROPERTIES TIMEOUT 300 FAIL_REGULAR_EXPRESSION "FAILED;WARNING"
+    )
+  endforeach()
+endmacro()
 
 set(VIRTUAL_TRANSPORT_LIBRARY virtual-transport)
 
@@ -114,6 +132,11 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
   add_executable(
     ${EXAMPLE}
     ${PROJECT_EXAMPLE_DIR}/${EXAMPLE}.cc
+  )
+
+  add_test_for_example(
+    ${EXAMPLE}
+    ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
   )
 
   target_link_libraries(

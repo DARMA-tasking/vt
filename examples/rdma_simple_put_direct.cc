@@ -51,6 +51,11 @@ int main(int argc, char** argv) {
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();
 
+  if (num_nodes < 4) {
+    fprintf(stderr, "requires at least 4 nodes\n");
+    return 0;
+  }
+
   my_data = new double[my_data_len];
 
   // initialize my_data buffer, all but node 0 get -1.0

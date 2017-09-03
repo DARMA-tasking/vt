@@ -68,6 +68,11 @@ int main(int argc, char** argv) {
   my_node = the_context->get_node();
   num_nodes = the_context->get_num_nodes();
 
+  if (num_nodes != 4) {
+    fprintf(stderr, "requires exactly 4 nodes\n");
+    return 0;
+  }
+
   if (my_node == 0) {
     auto const len = 64;
     my_data = new double[len];
