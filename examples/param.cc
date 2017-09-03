@@ -19,6 +19,12 @@ static void fn_test3(int x, double y) {
   printf("fn3: x=%d,y=%f\n",x,y);
 }
 
+struct FunctorTest1 {
+  void operator()(int x, double y) const {
+    printf("FunctorTest1: x=%d,y=%f\n",x,y);
+  }
+};
+
 int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
@@ -34,6 +40,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     std::tuple<int,int,bool> data = build_data(10, 20, false);
+    std::tuple<int,double> data2 = build_data(10, 70.0);
 
     the_param->send_data(1, data, param_function_rhs(fn_test));
     the_param->send_data(1, param_function_rhs(fn_test), 50, 29, false);
@@ -42,6 +49,10 @@ int main(int argc, char** argv) {
 
     the_param->send_data<param_function(fn_test2)>(1, 20, 10);
     the_param->send_data<param_function(fn_test3)>(1, 20, 50.0);
+
+    the_param->send_data<FunctorTest1>(1, build_data(20, 50.0));
+    the_param->send_data<FunctorTest1>(1, 20, 100.0);
+    the_param->send_data<FunctorTest1>(1, data2);
   }
 
   while (1) {

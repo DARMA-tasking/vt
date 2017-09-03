@@ -263,7 +263,7 @@ struct ActiveMessenger {
     MessageT* const msg, tag_t const& tag = no_tag, action_t next_action = nullptr
   ) {
     handler_t const& han =
-      auto_registry::make_auto_handler_functor<FunctorT, MessageT>();
+      auto_registry::make_auto_handler_functor<FunctorT, MessageT*>();
     set_broadcast_type(msg->env);
     if (tag != no_tag) {
       envelope_set_tag(msg->env, tag);
@@ -282,7 +282,7 @@ struct ActiveMessenger {
     action_t next_action = nullptr
   ) {
     handler_t const& han =
-      auto_registry::make_auto_handler_functor<FunctorT, MessageT>();
+      auto_registry::make_auto_handler_functor<FunctorT, MessageT*>();
     envelope_setup(msg->env, dest, han);
     if (tag != no_tag) {
       envelope_set_tag(msg->env, tag);

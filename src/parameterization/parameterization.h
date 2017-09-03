@@ -44,12 +44,18 @@ void get_fn_sig(std::tuple<Args...> tup, FnT fn) {
 
 template <typename Tuple>
 static void data_message_handler(DataMsg<Tuple>* msg) {
-  auto fn = auto_registry::get_auto_handler(msg->sub_han);
-  debug_print(
-    param, node,
-    "data_message_handler: id=%d, fn=%p\n", msg->sub_han, fn
-  );
-  get_fn_sig(msg->tup, fn);
+  if (handler_manager_t::is_handler_functor(msg->sub_han)) {
+    auto fn = auto_registry::get_auto_handler_functor(msg->sub_han);
+    get_fn_sig(msg->tup, fn);
+  } else {
+    // regular active function
+    auto fn = auto_registry::get_auto_handler(msg->sub_han);
+    debug_print(
+      param, node,
+      "data_message_handler: id=%d, fn=%p\n", msg->sub_han, fn
+    );
+    get_fn_sig(msg->tup, fn);
+  }
 }
 
 template <bool...> struct bool_pack;
@@ -57,10 +63,10 @@ template <bool... bs>
 using all_true = std::is_same<bool_pack<bs..., true>, bool_pack<true, bs...>>;
 
 struct Param {
-  template <typename T, T value, typename... Args>
-  event_t send_data_helper(
-    node_t const& dest, void (*fn)(Args...), std::tuple<Args...> tup,
-    NonType<T, value>
+
+  template <typename... Args>
+  event_t send_data_tuple(
+    node_t const& dest, handler_t const& han, std::tuple<Args...> tup
   ) {
     using cond = all_true<std::is_trivially_copyable<Args>::value...>;
 
@@ -69,12 +75,20 @@ struct Param {
       "All types passed for parameterization must be trivially copyable"
     );
 
-    auto const& han = auto_registry::make_auto_handler<T,value>();
     using tuple_type = decltype(tup);
     DataMsg<tuple_type>* m = new DataMsg<tuple_type>(tup, han);
     return the_msg->send_msg<DataMsg<tuple_type>, data_message_handler>(
       dest, m, [=]{ delete m; }
     );
+  }
+
+  template <typename T, T value, typename... Args>
+  event_t send_data_helper(
+    node_t const& dest, void (*fn)(Args...), std::tuple<Args...> tup,
+    NonType<T, value>
+  ) {
+    auto const& han = auto_registry::make_auto_handler<T,value>();
+    return send_data_tuple(dest, han, tup);
   }
 
   template <typename T, T value, typename Tuple>
@@ -95,6 +109,31 @@ struct Param {
   event_t send_data(node_t const& dest, Args&&... a) {
     return send_data_helper(
       dest, value, std::make_tuple(std::forward<Args>(a)...), NonType<T,value>()
+    );
+  }
+
+  /*
+   * Functor variants
+   */
+
+  template <typename FunctorT, typename... Args>
+  event_t send_data_helper_functor(
+    node_t const& dest, std::tuple<Args...> tup
+  ) {
+    using message_t = runtime::BaseMessage;
+    auto const& han = auto_registry::make_auto_handler_functor<FunctorT,Args...>();
+    return send_data_tuple(dest, han, tup);
+  }
+
+  template <typename FunctorT, typename Tuple>
+  event_t send_data(node_t const& dest, Tuple tup) {
+    return send_data_helper_functor<FunctorT>(dest, tup);
+  }
+
+  template <typename FunctorT, typename... Args>
+  event_t send_data(node_t const& dest, Args&&... a) {
+    return send_data_helper_functor<FunctorT>(
+      dest, std::make_tuple(std::forward<Args>(a)...)
     );
   }
 };

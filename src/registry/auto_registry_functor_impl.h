@@ -16,27 +16,31 @@ inline auto_active_functor_container_t& get_auto_registry_functor()  {
   return reg;
 }
 
-template <typename FunctorT, typename MessageT>
+template <typename FunctorT, typename... Args>
 inline handler_t make_auto_handler_functor() {
-  handler_t const id = get_handler_active_functor(FunctorT, MessageT);
+  handler_t const id = get_handler_active_functor(FunctorT, Args);
   return handler_manager_t::make_handler(true, true, id);
 }
 
-template <typename RunnableFunctorT>
-static void functor_handler_wrapper(runtime::BaseMessage* msg) {
-  using MessageT = typename RunnableFunctorT::message_t;
-
+template <typename RunnableFunctorT, typename... Args>
+static void functor_handler_wrapper(Args... args) {
   typename RunnableFunctorT::functor_t instance;
-  return instance.operator ()(reinterpret_cast<MessageT*>(msg));
+  return instance.operator ()(std::forward<Args>(args)...);
+}
+
+template <typename RunnableFunctorT, typename... Args>
+inline void pull_apart(
+  auto_active_functor_container_t& reg, pack<Args...> packed_args
+) {
+  auto fn_ptr = functor_handler_wrapper<RunnableFunctorT, Args...>;
+  reg.emplace_back(reinterpret_cast<simple_function_t>(fn_ptr));
 }
 
 template <typename RunnableFunctorT>
 RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
   auto_active_functor_container_t& reg = get_auto_registry_functor<>();
   index = reg.size();
-  // typename RunnableFunctorT::functor_t instance;
-  auto fn_ptr = functor_handler_wrapper<RunnableFunctorT>;
-  reg.emplace_back(reinterpret_cast<simple_function_t>(fn_ptr));
+  pull_apart<RunnableFunctorT>(reg, typename RunnableFunctorT::packed_args_t());
 }
 
 inline auto_active_functor_t get_auto_handler_functor(handler_t const& handler) {
