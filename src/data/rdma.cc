@@ -76,10 +76,11 @@ RDMAManager::get_recv_msg(GetBackMessage* msg) {
   );
 
   if (get_ptr == nullptr) {
+    auto const op_id = msg->op_id;
     the_msg->recv_data_msg(
       msg->mpi_tag_to_recv, msg->send_back, [=](rdma_get_t ptr, action_t deleter){
         the_rdma->trigger_get_recv_data(
-          msg->op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
+          op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
         );
       });
   } else {
