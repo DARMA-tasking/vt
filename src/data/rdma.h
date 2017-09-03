@@ -166,9 +166,9 @@ struct RDMAManager {
   rdma_handle_t
   register_new_typed_rdma_handler(T ptr, byte_t const& num_elems) {
     byte_t const num_bytes = sizeof(T)*num_elems;
-    debug_print_rdma(
-      "%d: register_new_typed_rdma_handler ptr=%p, bytes=%lld\n",
-      the_context->get_node(), ptr, num_bytes
+    debug_print(
+      rdma, node,
+      "register_new_typed_rdma_handler ptr=%p, bytes=%lld\n", ptr, num_bytes
     );
     return register_new_rdma_handler(
       true, static_cast<rdma_ptr_t>(ptr), num_bytes

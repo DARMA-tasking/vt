@@ -4,6 +4,8 @@
 
 #include "common.h"
 
+#include <cassert>
+
 namespace runtime {
 
 /*

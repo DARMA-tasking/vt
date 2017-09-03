@@ -12,7 +12,8 @@ HandlerManager::make_handler(
   HandlerManager::set_handler_functor(new_han, is_functor);
   HandlerManager::set_handler_identifier(new_han, id);
 
-  debug_print_handler(
+  debug_print(
+    handler, node,
     "HandlerManager::make_handler: is_functor=%s, is_auto=%s, id=%d, han=%d\n",
     print_bool(is_functor), print_bool(is_auto), id, new_han
   );

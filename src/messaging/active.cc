@@ -22,7 +22,8 @@ ActiveMessenger::send_msg_direct(
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
   auto const& is_shared = is_shared_message(msg);
 
-  debug_print_active(
+  debug_print(
+    active, node,
     "send_msg_direct: dest=%d, handler=%d, is_bcast=%s\n",
     dest, envelope_get_handler(msg->env), print_bool(is_bcast)
   );
@@ -71,7 +72,8 @@ ActiveMessenger::send_msg_direct(
       return no_event;
     }
 
-    debug_print_active(
+    debug_print(
+      active, node,
       "%d: broadcast_msg: child1=%d, child2=%d, broadcast_root=%d, num_nodes=%d\n",
       this_node, child1, child2, dest, num_nodes
     );
@@ -93,7 +95,8 @@ ActiveMessenger::send_msg_direct(
         mpi_event1.set_managed_message(msg);
       }
 
-      debug_print_active(
+      debug_print(
+        active, node,
         "broadcast_msg: sending to child1=%d, child2=%d, broadcast_root=%d, "
         "event_id=%lld\n",
         child1, child2, dest, event_id1
@@ -120,7 +123,8 @@ ActiveMessenger::send_msg_direct(
         mpi_event2.set_managed_message(msg);
       }
 
-      debug_print_active(
+      debug_print(
+        active, node,
         "broadcast_msg: sending to child2=%d, child1=%d, broadcast_root=%d, "
         "event_id=%lld\n",
         child2, child1, dest, event_id2
@@ -169,7 +173,8 @@ ActiveMessenger::send_data(
   auto& holder = the_event->get_event_holder(event_id);
   MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
 
-  debug_print_active(
+  debug_print(
+    active, node,
     "%d: send_data: ptr=%p, num_bytes=%lld dest=%d, tag=%d, send_tag=%d\n",
     this_node, data_ptr, num_bytes, dest, tag, send_tag
   );
@@ -247,7 +252,8 @@ ActiveMessenger::recv_data_msg_buffer(
       auto dealloc_buf = [=]{
         auto const& this_node = the_context->get_node();
 
-        debug_print_active(
+        debug_print(
+          active, node,
           "%d: recv_data_msg_buffer: continuation user_buf=%p, buf=%p, tag=%d\n",
           this_node, user_buf, buf, tag
         );
@@ -274,7 +280,8 @@ ActiveMessenger::recv_data_msg_buffer(
       return false;
     }
   } else {
-    debug_print_active(
+    debug_print(
+      active, node,
       "recv_data_msg_buffer: node=%d, tag=%d, enqueue=%s\n",
       node, tag, print_bool(enqueue)
     );
@@ -314,7 +321,8 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
   bool const& is_auto = handler_manager_t::is_handler_auto(handler);
   bool const& is_functor = handler_manager_t::is_handler_functor(handler);
 
-  debug_print_active(
+  debug_print(
+    active, node,
     "deliver_active_msg: handler=%d, is_auto=%s, is_functor=%s\n",
     handler, print_bool(is_auto), print_bool(is_functor)
   );

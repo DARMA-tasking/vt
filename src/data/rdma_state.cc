@@ -104,7 +104,8 @@ State::set_rdma_fn<
 
   auto const& this_node = the_context->get_node();
 
-  debug_print_rdma(
+  debug_print(
+    rdma_state, node,
     "set_rdma_fn: GET tag=%d, handle=%lld, any_tag=%s\n",
     tag, handle, print_bool(any_tag)
   );
@@ -138,7 +139,8 @@ State::set_rdma_fn<
 
   auto const& this_node = the_context->get_node();
 
-  debug_print_rdma(
+  debug_print(
+    rdma_state, node,
     "set_rdma_fn: PUT tag=%d, handle=%lld, any_tag=%s\n",
     tag, handle, print_bool(any_tag)
   );
@@ -203,7 +205,8 @@ State::default_get_handler_fn(
 ) {
   auto const& this_node = the_context->get_node();
 
-  debug_print_rdma(
+  debug_print(
+    rdma_state, node,
     "%d: default_get_handler_fn: msg=%p, req_num_bytes=%lld, tag=%d\n",
     this_node, msg, req_num_bytes, tag
   );
@@ -226,7 +229,8 @@ State::default_put_handler_fn(
 ) {
   auto const& this_node = the_context->get_node();
 
-  debug_print_rdma(
+  debug_print(
+    rdma_state, node,
     "%d: default_put_handler_fn: msg=%p, ptr=%p, req_num_bytes=%lld, tag=%d\n",
     this_node, msg, ptr, req_num_bytes, tag
   );
@@ -253,7 +257,8 @@ State::get_data(
 
   auto const& this_node = the_context->get_node();
 
-  debug_print_rdma(
+  debug_print(
+    rdma_state, node,
     "%d: get_data: msg=%p, tag=%d, ready=%s, handle=%lld, get_any_tag=%s\n",
     this_node, msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag)
   );
@@ -292,7 +297,8 @@ State::put_data(
 
   auto const& this_node = the_context->get_node();
 
-  debug_print_rdma(
+  debug_print(
+    rdma_state, node,
     "%d: put_data: msg=%p, tag=%d, ptr=%p, num_bytes=%lld, "
     "ready=%s, handle=%lld, get_any_tag=%s\n",
     this_node, msg, info.tag, info.data_ptr, info.num_bytes, print_bool(ready),

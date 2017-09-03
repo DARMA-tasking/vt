@@ -45,7 +45,10 @@ void get_fn_sig(std::tuple<Args...> tup, FnT fn) {
 template <typename Tuple>
 static void data_message_handler(DataMsg<Tuple>* msg) {
   auto fn = auto_registry::get_auto_handler(msg->sub_han);
-  debug_print_param("data_message_handler: id=%d, fn=%p\n", msg->sub_han, fn);
+  debug_print(
+    param, node,
+    "data_message_handler: id=%d, fn=%p\n", msg->sub_han, fn
+  );
   get_fn_sig(msg->tup, fn);
 }
 

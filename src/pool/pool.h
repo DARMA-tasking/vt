@@ -56,7 +56,8 @@ struct MemoryPoolEqual {
       cur_slot-1 >= 0 and "Must be greater than zero"
     );
 
-    debug_print_pool(
+    debug_print(
+      pool, node,
       "%d: dealloc t=%p, cur_slot=%lld\n",
       the_context->get_node(), t, cur_slot
     );
@@ -143,7 +144,8 @@ template <typename MessageT>
 void message_deref(MessageT* msg) {
   envelope_deref(msg->env);
 
-  debug_print_pool(
+  debug_print(
+    pool, node,
     "message_deref msg=%p, refs=%d\n", msg, envelope_get_ref(msg->env)
   );
 

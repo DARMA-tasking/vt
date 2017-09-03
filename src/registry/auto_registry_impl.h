@@ -49,7 +49,8 @@ get_auto_handler(handler_t const& handler) {
   bool const& is_auto = handler_manager_t::is_handler_auto(handler);
   bool const& is_functor = handler_manager_t::is_handler_functor(handler);
 
-  debug_print_handler(
+  debug_print(
+    handler, node,
     "get_auto_handler: handler=%d, id=%d, is_auto=%s, is_functor=%s\n",
     handler, han_id, print_bool(is_auto), print_bool(is_functor)
   );

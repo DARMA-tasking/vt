@@ -2,11 +2,10 @@
 #if ! defined __RUNTIME_TRANSPORT_COMMON__
 #define __RUNTIME_TRANSPORT_COMMON__
 
+#include "config.h"
+
 #include <cstdint>
 #include <functional>
-#include <cassert>
-
-#include "debug_runtime.h"
 
 namespace runtime {
 

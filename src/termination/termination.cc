@@ -33,11 +33,15 @@ TerminationDetector::epoch_continue_handler(TermMsg* msg) {
 /*static*/ void
 TerminationDetector::register_default_termination_action() {
   the_term->attach_global_term_action([]{
-    debug_print_term("TD: terminating program\n");
+    debug_print(
+      term, node,
+      "TD: terminating program\n"
+    );
 
     auto const& this_node = the_context->get_node();
 
-    debug_print_term(
+    debug_print(
+      term, node,
       "%d: running registered default termination\n", this_node
     );
 
@@ -99,7 +103,8 @@ void
 TerminationDetector::propagate_epoch_external(
   epoch_t const& epoch, term_counter_t const& prod, term_counter_t const& cons
 ) {
-  debug_print_term(
+  debug_print(
+    term, node,
     "%d: propagate_epoch_external: epoch=%d, prod=%lld, cons=%lld\n",
     my_node, epoch, prod, cons
   );
@@ -143,7 +148,8 @@ TerminationDetector::propagate_epoch(
   bool const is_ready = event_count == num_children + 1;
   bool prop_continue = false;
 
-  debug_print_term(
+  debug_print(
+    term, node,
     "%d: propagate_epoch: epoch=%d, l_prod=%lld, l_cons=%lld, ec=%d, nc=%d\n",
     my_node, epoch, state.l_prod, state.l_cons, event_count, num_children
   );
@@ -154,7 +160,8 @@ TerminationDetector::propagate_epoch(
     state.g_prod1 += state.l_prod;
     state.g_cons1 += state.l_cons;
 
-    debug_print_term(
+    debug_print(
+      term, node,
       "%d: propagate_epoch: epoch=%d, l_prod=%lld, l_cons=%lld, "
       "g_prod1=%lld, g_cons1=%lld, event_count=%d, num_children=%d\n",
       my_node, epoch, state.l_prod, state.l_cons, state.g_prod1, state.g_cons1,
@@ -170,7 +177,8 @@ TerminationDetector::propagate_epoch(
         parent, msg, [=]{ delete msg; }
       );
 
-      debug_print_term(
+      debug_print(
+        term, node,
         "%d: propagate_epoch: sending to parent: %d\n",
         my_node, parent
       );
@@ -182,7 +190,8 @@ TerminationDetector::propagate_epoch(
         state.g_prod2 == state.g_cons2 and
         state.g_prod1 == state.g_prod2;
       // four-counter method implementation
-      debug_print_term(
+      debug_print(
+        term, node,
         "%d: propagate_epoch {root}: epoch=%d, g_prod1=%lld, g_cons1=%lld, "
         "g_prod2=%lld, g_cons2=%lld, detected_term=%d\n",
         my_node, epoch, state.g_prod1, state.g_cons1, state.g_prod2, state.g_cons2,
@@ -224,7 +233,8 @@ TerminationDetector::propagate_epoch(
 
 void
 TerminationDetector::epoch_finished(epoch_t const& epoch){
-  debug_print_term(
+  debug_print(
+    term, node,
     "%d: epoch_finished: epoch=%d\n", my_node, epoch
   );
   fflush(stdout);
@@ -239,7 +249,8 @@ TerminationDetector::epoch_finished(epoch_t const& epoch){
 
 void
 TerminationDetector::epoch_continue(epoch_t const& epoch){
-  debug_print_term(
+  debug_print(
+    term, node,
     "%d: epoch_continue: epoch=%d\n", my_node, epoch
   );
 
