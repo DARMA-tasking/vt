@@ -39,12 +39,33 @@ static inline void pull_apart(
   auto_active_functor_container_t& reg, bool const& is_msg,
   pack<Args...> packed_args
 ) {
+  #if backend_check_enabled(trace_enabled)
+  auto const& name = trace::DemanglerUtils::get_demangled_type<RunnableFunctorT>();
+  auto const& parsed_names =
+    trace::ActiveFunctorDemangler::parse_active_functor_name(name);
+  auto const& namespace_name = std::get<0>(parsed_names);
+  auto const& function_name = std::get<1>(parsed_names);
+  auto const& trace_ep = trace::TraceRegistry::register_event_hashed(
+    namespace_name, function_name
+  );
+  #endif
+
   if (is_msg) {
     auto fn_ptr = functor_handler_wrapper_reg<RunnableFunctorT, Args...>;
-    reg.emplace_back(reinterpret_cast<simple_function_t>(fn_ptr));
+    reg.emplace_back(auto_reg_info_t<auto_active_functor_t>{
+      reinterpret_cast<simple_function_t>(fn_ptr)
+        #if backend_check_enabled(trace_enabled)
+        , trace_ep
+        #endif
+    });
   } else {
     auto fn_ptr = functor_handler_wrapper_rval<RunnableFunctorT, Args...>;
-    reg.emplace_back(reinterpret_cast<simple_function_t>(fn_ptr));
+    reg.emplace_back(auto_reg_info_t<auto_active_functor_t>{
+      reinterpret_cast<simple_function_t>(fn_ptr)
+        #if backend_check_enabled(trace_enabled)
+        , trace_ep
+        #endif
+    });
   }
 }
 
@@ -52,6 +73,7 @@ template <typename RunnableFunctorT>
 RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
   auto_active_functor_container_t& reg = get_auto_registry_functor<>();
   index = reg.size();
+
   pull_apart<RunnableFunctorT>(
     reg, RunnableFunctorT::is_msg_t, typename RunnableFunctorT::packed_args_t()
   );
@@ -73,7 +95,7 @@ inline auto_active_functor_t get_auto_handler_functor(handler_t const& handler) 
     is_functor and is_auto and "Handler should be a auto functor"
   );
 
-  return get_auto_registry_functor().at(han_id);
+  return get_auto_registry_functor().at(han_id).get_fun();
 }
 
 template <typename RunnableFunctorT>

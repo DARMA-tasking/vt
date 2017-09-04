@@ -88,6 +88,14 @@ struct ActiveFunctionDemangler {
   parse_active_function_name(std::string const& str);
 };
 
+struct ActiveFunctorDemangler {
+  using str_parsed_out_t = std::tuple<std::string, std::string>;
+  using util_t = DemanglerUtils;
+
+  static str_parsed_out_t
+  parse_active_functor_name(std::string const& str);
+};
+
 }} //end namespace runtime::trace
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_DEMANGLE__*/

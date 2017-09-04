@@ -13,15 +13,16 @@ namespace runtime { namespace auto_registry {
 using auto_active_t = simple_function_t;
 using auto_active_functor_t = simple_function_t;
 
+template <typename FnT>
 struct AutoRegInfo {
-  auto_active_t active_fun_t;
+  FnT active_fun_t;
 
   #if backend_check_enabled(trace_enabled)
 
   trace::trace_ep_t event_id;
 
   AutoRegInfo(
-    auto_active_t const& in_active_fun_t,
+    FnT const& in_active_fun_t,
     trace::trace_ep_t const& in_event_id
   ) : active_fun_t(in_active_fun_t), event_id(in_event_id)
   { }
@@ -33,21 +34,22 @@ struct AutoRegInfo {
   #else
 
   AutoRegInfo(
-    auto_active_t const& in_active_fun_t
+    FnT const& in_active_fun_t
   ) : active_fun_t(in_active_fun_t)
   { }
 
   #endif
 
-  auto_active_t get_fun() const {
+  FnT get_fun() const {
     return active_fun_t;
   }
 };
 
-using auto_reg_info_t = AutoRegInfo;
+template <typename Fn>
+using auto_reg_info_t = AutoRegInfo<Fn>;
 
-using auto_active_container_t = std::vector<auto_reg_info_t>;
-using auto_active_functor_container_t = std::vector<auto_active_functor_t>;
+using auto_active_container_t = std::vector<auto_reg_info_t<auto_active_t>>;
+using auto_active_functor_container_t = std::vector<auto_reg_info_t<auto_active_functor_t>>;
 
 using auto_handler_t = int32_t;
 

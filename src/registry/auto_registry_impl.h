@@ -49,11 +49,11 @@ Registrar<ActiveFnT>::Registrar() {
     namespace_name, function_name
   );
 
-  reg.emplace_back(auto_reg_info_t{
+  reg.emplace_back(auto_reg_info_t<auto_active_t>{
     reinterpret_cast<active_basic_function_t*>(fn), trace_ep
   });
   #else
-  reg.emplace_back(auto_reg_info_t{
+  reg.emplace_back(auto_reg_info_t<auto_active_t>{
     reinterpret_cast<active_basic_function_t*>(fn)
   });
   #endif
