@@ -55,6 +55,16 @@ struct DemanglerUtils {
     split_string(str, delim, std::back_inserter(elems));
     return elems;
   }
+
+  static inline std::string
+  remove_spaces(std::string const& str) {
+    str_container_t const& str_split = split_string(str, ' ');
+    std::stringstream clean;
+    for (auto&& x : str_split) {
+      clean << x;
+    }
+    return clean.str();
+  }
 };
 
 /*

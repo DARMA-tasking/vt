@@ -48,7 +48,7 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
 
   int cur = 0, len = only_namespace_elems.size();
   std::stringstream clean_namespace;
-  std::stringstream clean_function_name;
+  std::stringstream clean_function_name_space;
 
   for (auto&& e : only_namespace_elems) {
     if (cur < len-2) {
@@ -56,7 +56,7 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
     } else if (cur == len-2) {
       clean_namespace << e;
     } else if (cur == len-1) {
-      clean_function_name << e;
+      clean_function_name_space << e;
     }
     cur++;
   }
@@ -65,11 +65,14 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
     int cur = 0;
     for (auto&& x : namespace_no_temp) {
       if (cur != 0) {
-        clean_function_name << "<" << x;
+        clean_function_name_space << "<" << x;
       }
       cur++;
     }
   }
+
+  std::stringstream clean_function_name;
+  clean_function_name << util_t::remove_spaces(clean_function_name_space.str());
 
   str_container_t const& args = util_t::split_string(last_elem, '(');
 
@@ -79,8 +82,11 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
 
   auto args_only = args.at(2).substr(0, args.at(2).size() - 5);
 
+  std::stringstream args_space;
+  args_space << "(" << args_only << ")";
+
   std::stringstream clean_args;
-  clean_args << "(" << args_only << ")";
+  clean_args << util_t::remove_spaces(args_space.str());
 
   // std::cout << "\t namespace: \"" << clean_namespace.str() << "\"" << std::endl;
   // std::cout << "\t fun_name: \"" << clean_function_name.str() << "\"" << std::endl;
