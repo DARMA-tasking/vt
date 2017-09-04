@@ -32,11 +32,11 @@ Scheduler::scheduler_impl() {
 
   scheduled_work = msg_sch or event_sch or seq_sch;
 
-  return scheduled_work;
-
-  if (not scheduled_work) {
-    // idle
+  if (scheduled_work) {
+    is_idle = false;
   }
+
+  return scheduled_work;
 }
 
 void
@@ -45,7 +45,8 @@ Scheduler::scheduler() {
   bool const scheduled_work1 = scheduler_impl();
   bool const scheduled_work2 = scheduler_impl();
 
-  if (not scheduled_work1 and not scheduled_work2) {
+  if (not scheduled_work1 and not scheduled_work2 and not is_idle) {
+    is_idle = true;
     // idle
     trigger_event(scheduler_event_t::BeginIdle);
   }
@@ -57,14 +58,14 @@ Scheduler::trigger_event(scheduler_event_t const& event) {
     event_triggers.size() >= event and "Must be large enough to hold this event"
   );
 
-  for (auto&& t : event_triggers[event]) {
+  for (auto& t : event_triggers[event]) {
     t();
   }
 }
 
 void
 Scheduler::register_trigger(
-  scheduler_event_t const& event, trigger_t const& trigger
+  scheduler_event_t const& event, trigger_t trigger
 ) {
   assert(
     event_triggers.size() >= event and "Must be large enough to hold this event"

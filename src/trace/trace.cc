@@ -1,6 +1,7 @@
 
 #include "common.h"
 #include "trace.h"
+#include "scheduler.h"
 
 namespace runtime { namespace trace {
 
@@ -15,9 +16,27 @@ Trace::Trace() {
   initialize();
 }
 
+/*static*/ void
+Trace::trace_begin_idle_trigger() {
+  printf("trace_begin_idle_trigger\n");
+  if (not the_trace->in_idle_event()) {
+    printf("trace_begin_idle_trigger begin idle\n");
+    the_trace->begin_idle();
+  }
+}
+
 void
 Trace::initialize() {
   traces.reserve(trace_reserve_count);
+
+  the_sched->register_trigger(
+    sched::SchedulerEvent::BeginIdle, trace_begin_idle_trigger
+  );
+}
+
+bool
+Trace::in_idle_event() const {
+  return idle_begun;
 }
 
 void
@@ -34,13 +53,13 @@ Trace::~Trace() {
   write_traces_file();
 }
 
-Trace::log_ptr_t
+void
 Trace::begin_processing(
   trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
   node_t const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::BeginProcessing;
-  log_ptr_t log = std::make_shared<log_t>(time, ep, type);
+  log_ptr_t log = new log_t(time, ep, type);
 
   debug_print(
     trace, node,
@@ -52,17 +71,15 @@ Trace::begin_processing(
   log->event = event;
 
   log_event(log);
-
-  return log;
 }
 
-Trace::log_ptr_t
+void
 Trace::end_processing(
   trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
   node_t const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::EndProcessing;
-  log_ptr_t log = std::make_shared<log_t>(time, ep, type);
+  log_ptr_t log = new log_t(time, ep, type);
 
   debug_print(
     trace, node,
@@ -74,63 +91,65 @@ Trace::end_processing(
   log->event = event;
 
   log_event(log);
-
-  return log;
 }
 
-Trace::log_ptr_t
+void
 Trace::begin_idle(double const& time) {
   auto const& type = trace_type_t::BeginIdle;
-  log_ptr_t log = std::make_shared<log_t>(time, no_trace_ep, type);
+  log_ptr_t log = new log_t(time, no_trace_ep, type);
+
+  debug_print(
+    trace, node, "begin_idle: time=%f\n", time
+  );
 
   log->node = the_context->get_node();
 
   log_event(log);
 
-  return log;
+  idle_begun = true;
 }
 
-Trace::log_ptr_t
+void
 Trace::end_idle(double const& time) {
-  auto const& type = trace_type_t::EndProcessing;
-  log_ptr_t log = std::make_shared<log_t>(time, no_trace_ep, type);
+  auto const& type = trace_type_t::EndIdle;
+  log_ptr_t log = new log_t(time, no_trace_ep, type);
+
+  debug_print(
+    trace, node, "end_idle: time=%f\n", time
+  );
 
   log->node = the_context->get_node();
 
   log_event(log);
 
-  return log;
+  idle_begun = false;
 }
 
-Trace::log_ptr_t
+trace_event_t
 Trace::message_creation(
   trace_ep_t const& ep, trace_msg_len_t const& len,
   double const& time
 ) {
   auto const& type = trace_type_t::Creation;
-  log_ptr_t log = std::make_shared<log_t>(time, ep, type);
+  log_ptr_t log = new log_t(time, ep, type);
 
   log->node = the_context->get_node();
   log->msg_len = len;
 
-  log_event(log);
-
-  return log;
+  return log_event(log);
 }
 
-Trace::log_ptr_t
+trace_event_t
 Trace::message_recv(
   trace_ep_t const& ep, trace_msg_len_t const& len, node_t const& from_node,
   double const& time
 ) {
   auto const& type = trace_type_t::MessageRecv;
-  log_ptr_t log = std::make_shared<log_t>(time, ep, type);
+  log_ptr_t log = new log_t(time, ep, type);
 
   log->node = from_node;
 
-  log_event(log);
-
-  return log;
+  return log_event(log);
 }
 
 trace_event_t
@@ -139,10 +158,17 @@ Trace::log_event(log_ptr_t log) {
     return 0;
   }
 
+  // close any idle event as soon as we encounter any other type of event
+  if (idle_begun and
+      log->type != trace_type_t::BeginIdle and
+      log->type != trace_type_t::EndIdle) {
+    end_idle();
+  }
+
   auto grouped_begin = [&]() -> trace_event_t {
     if (not open_events.empty()) {
       traces.push_back(
-        std::make_shared<log_t>(
+        new log_t(
           log->time, open_events.top()->event, trace_type_t::EndProcessing
         )
       );
@@ -176,7 +202,7 @@ Trace::log_event(log_ptr_t log) {
 
     if (not open_events.empty()) {
       traces.push_back(
-        std::make_shared<log_t>(
+        new log_t(
           log->time, open_events.top()->event, trace_type_t::BeginProcessing
         )
       );
@@ -276,14 +302,13 @@ Trace::write_log_file(std::ofstream& file, trace_container_t const& traces) {
     auto event_iter = trace_cont_t::event_container.find(log->ep);
 
     assert(
+      log->ep == no_trace_ep or
       event_iter != trace_cont_t::event_container.end() and
       "Event must exist that was logged"
     );
 
-    auto const& event_seq_id = event_iter->second.get_event_seq();
-
-    //1 5 69 88335 2 2 96 0
-    //2 5 17 145864 10 7 240 0 0 0 0 0 144455
+    auto const& event_seq_id = log->ep == no_trace_ep ?
+      no_trace_ep : event_iter->second.get_event_seq();
 
     switch (log->type) {
     case trace_type_t::BeginProcessing:
@@ -303,6 +328,18 @@ Trace::write_log_file(std::ofstream& file, trace_container_t const& traces) {
            << log->event << " "
            << log->node << " "
            << "0 0 0 0 0 0 0 0\n";
+      break;
+    case trace_type_t::BeginIdle:
+      file << type << " "
+           << converted_time << " "
+           << log->node
+           << "\n";
+      break;
+    case trace_type_t::EndIdle:
+      file << type << " "
+           << converted_time << " "
+           << log->node
+           << "\n";
       break;
     case trace_type_t::Creation:
       file << type << " "
@@ -327,6 +364,8 @@ Trace::write_log_file(std::ofstream& file, trace_container_t const& traces) {
     default:
       assert(0);
     }
+
+    delete log;
   }
 
   traces.empty();

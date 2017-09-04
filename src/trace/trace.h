@@ -32,9 +32,9 @@ struct Trace {
   using trace_type_t = TraceConstants;
   using trace_cont_t = TraceContainers<void>;
   using time_int_t = int64_t;
-  using log_ptr_t = std::shared_ptr<log_t>;
+  using log_ptr_t = log_t*;
   using trace_container_t = std::vector<log_ptr_t>;
-  using trace_atack_t = std::stack<log_ptr_t>;
+  using trace_stack_t = std::stack<log_ptr_t>;
 
   Trace();
 
@@ -52,31 +52,31 @@ struct Trace {
 
   virtual ~Trace();
 
-  log_ptr_t
+  void
   begin_processing(
     trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
     node_t const& from_node, double const& time = get_current_time()
   );
 
-  log_ptr_t
+  void
   end_processing(
     trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
     node_t const& from_node, double const& time = get_current_time()
   );
 
-  log_ptr_t
+  void
   begin_idle(double const& time = get_current_time());
 
-  log_ptr_t
+  void
   end_idle(double const& time = get_current_time());
 
-  log_ptr_t
+  trace_event_t
   message_creation(
     trace_ep_t const& ep, trace_msg_len_t const& len,
     double const& time = get_current_time()
   );
 
-  log_ptr_t
+  trace_event_t
   message_recv(
     trace_ep_t const& ep, trace_msg_len_t const& len, node_t const& from_node,
     double const& time = get_current_time()
@@ -97,6 +97,9 @@ struct Trace {
   void
   write_log_file(std::ofstream& file, trace_container_t const& traces);
 
+  bool
+  in_idle_event() const;
+
   static double
   get_current_time();
 
@@ -112,10 +115,13 @@ struct Trace {
   static time_int_t
   time_to_int(double const& time);
 
+  static void
+  trace_begin_idle_trigger();
+
 private:
   trace_container_t traces;
 
-  std::stack<log_ptr_t> open_events;
+  trace_stack_t open_events;
 
   bool enabled = true;
 
@@ -124,6 +130,8 @@ private:
   double start_time = 0.0;
 
   trace_event_t cur_event = 1;
+
+  bool idle_begun = false;
 };
 
 }} //end namespace runtime::trace

@@ -28,9 +28,9 @@ ActiveMessenger::send_msg_direct(
       bool const& is_auto = handler_manager_t::is_handler_auto(handler);
       bool const& is_functor = handler_manager_t::is_handler_functor(handler);
       if (is_auto and not is_functor) {
-        trace::trace_ep_t trace_id = auto_registry::get_trace_id(handler);
-        trace::Trace::log_ptr_t log = the_trace->message_creation(trace_id, msg_size);
-        envelope_set_trace_event(msg->env, log->event);
+        trace::trace_ep_t ep = auto_registry::get_trace_id(handler);
+        trace::trace_event_t event = the_trace->message_creation(ep, msg_size);
+        envelope_set_trace_event(msg->env, event);
       }
     }
   );
