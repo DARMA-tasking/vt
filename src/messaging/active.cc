@@ -28,8 +28,9 @@ ActiveMessenger::send_msg_direct(
       bool const& is_auto = handler_manager_t::is_handler_auto(handler);
       bool const& is_functor = handler_manager_t::is_handler_functor(handler);
       if (is_auto and not is_functor) {
-        trace::trace_event_id_t trace_id = auto_registry::get_trace_id(handler);
-        the_trace->message_creation(trace_id);
+        trace::trace_ep_t trace_id = auto_registry::get_trace_id(handler);
+        trace::Trace::log_ptr_t log = the_trace->message_creation(trace_id, msg_size);
+        envelope_set_trace_event(msg->env, log->event);
       }
     }
   );
@@ -316,7 +317,9 @@ ActiveMessenger::recv_data_msg(
 }
 
 bool
-ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
+ActiveMessenger::deliver_active_msg(
+  message_t msg, node_t const& from_node, bool insert
+) {
   auto const& is_term = envelope_is_term(msg->env);
   auto const& is_bcast = envelope_is_bcast(msg->env);
   auto const& handler = envelope_get_handler(msg->env);
@@ -335,7 +338,8 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
 
   backend_enable_if(
     trace_enabled,
-    trace::trace_event_id_t trace_id = trace::no_trace_event;
+    trace::trace_ep_t trace_id = trace::no_trace_ep;
+    trace::trace_event_t trace_event = trace::no_trace_event;
   );
 
   debug_print(
@@ -365,9 +369,15 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
     current_handler_context = handler;
     current_callback_context = callback;
 
+    backend_enable_if(
+      trace_enabled,
+      trace_event = envelope_get_trace_event(msg->env);
+    );
+
     // begin trace of this active message
     backend_enable_if(
-      trace_enabled, the_trace->begin_processing(trace_id);
+      trace_enabled,
+      the_trace->begin_processing(trace_id, sizeof(*msg), trace_event, from_node);
     );
 
     // run the active function
@@ -375,7 +385,8 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
 
     // end trace of this active message
     backend_enable_if(
-      trace_enabled, the_trace->end_processing(trace_id);
+      trace_enabled,
+      the_trace->end_processing(trace_id, sizeof(*msg), trace_event, from_node);
     );
 
     auto trigger = the_registry->get_trigger(handler);
@@ -393,10 +404,10 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
         pending_handler_msgs.emplace(
           std::piecewise_construct,
           std::forward_as_tuple(handler),
-          std::forward_as_tuple(msg_cont_t{msg})
+          std::forward_as_tuple(msg_cont_t{buffered_msg_t{msg,from_node}})
         );
       } else {
-        iter->second.push_back(msg);
+        iter->second.push_back(buffered_msg_t{msg,from_node});
       }
     }
   }
@@ -428,8 +439,10 @@ ActiveMessenger::try_process_incoming_message() {
 
     char* buf = static_cast<char*>(the_pool->alloc(num_probe_bytes));
 
+    node_t const& msg_from_node = stat.MPI_SOURCE;
+
     MPI_Recv(
-      buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
+      buf, num_probe_bytes, MPI_BYTE, msg_from_node, stat.MPI_TAG,
       MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
 
@@ -444,7 +457,7 @@ ActiveMessenger::try_process_incoming_message() {
       send_msg_direct(handler, msg, num_probe_bytes);
     }
 
-    deliver_active_msg(msg, true);
+    deliver_active_msg(msg, msg_from_node, true);
 
     return true;
   } else {
@@ -507,7 +520,7 @@ ActiveMessenger::deliver_pending_msgs_on_han(
   if (iter != pending_handler_msgs.end()) {
     if (iter->second.size() > 0) {
       for (auto cur = iter->second.begin(); cur != iter->second.end(); ++cur) {
-        if (deliver_active_msg(*cur, false)) {
+        if (deliver_active_msg(cur->buffered_msg, cur->from_node, false)) {
           cur = iter->second.erase(cur);
         }
       }

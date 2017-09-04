@@ -18,15 +18,15 @@ struct AutoRegInfo {
 
   #if backend_check_enabled(trace_enabled)
 
-  trace::trace_event_id_t event_id;
+  trace::trace_ep_t event_id;
 
   AutoRegInfo(
     auto_active_t const& in_active_fun_t,
-    trace::trace_event_id_t const& in_event_id
+    trace::trace_ep_t const& in_event_id
   ) : active_fun_t(in_active_fun_t), event_id(in_event_id)
   { }
 
-  trace::trace_event_id_t get_trace_id() const {
+  trace::trace_ep_t get_trace_id() const {
     return event_id;
   }
 

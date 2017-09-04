@@ -42,7 +42,20 @@ struct PendingRecv {
   { }
 };
 
+struct BufferedActiveMsg {
+  using message_t = ShortMessage*;
+
+  message_t buffered_msg;
+  node_t from_node;
+
+  BufferedActiveMsg(
+    message_t const& in_buffered_msg, node_t const& in_from_node
+  ) : buffered_msg(in_buffered_msg), from_node(in_from_node)
+  { }
+};
+
 struct ActiveMessenger {
+  using buffered_msg_t = BufferedActiveMsg;
   using message_t = ShortMessage*;
   using byte_t = int32_t;
   using pending_recv_t = PendingRecv;
@@ -50,7 +63,7 @@ struct ActiveMessenger {
   using send_fn_t = std::function<send_data_ret_t(rdma_get_t,node_t,tag_t,action_t)>;
   using user_send_fn_t = std::function<void(send_fn_t)>;
   using container_pending_t = std::unordered_map<tag_t, pending_recv_t>;
-  using msg_cont_t = std::list<message_t>;
+  using msg_cont_t = std::list<buffered_msg_t>;
   using container_waiting_handler_t = std::unordered_map<handler_t, msg_cont_t>;
   using ready_han_tag_t = std::tuple<handler_t, tag_t>;
   using maybe_ready_t = std::vector<ready_han_tag_t>;
@@ -467,7 +480,7 @@ struct ActiveMessenger {
   get_current_callback();
 
   bool
-  deliver_active_msg(message_t msg, bool insert);
+  deliver_active_msg(message_t msg, node_t const& from_node, bool insert);
 
   void
   deliver_pending_msgs_on_han(handler_t const& han, tag_t const& tag = no_tag);

@@ -40,6 +40,29 @@ enum class TraceConstants : int32_t {
   UserStat = 32
 };
 
+enum TraceEnvelopeTypes {
+  NewChareMsg = 1,
+  NewVChareMsg = 2,
+  BocInitMsg = 3,
+  ForChareMsg = 4,
+  ForBocMsg = 5,
+  ForVidMsg = 6,
+  FillVidMsg = 7,
+  DeleteVidMsg = 8,
+  RODataMsg = 9,
+  ROMsgMsg = 10,
+  StartExitMsg = 11,
+  ExitMsg = 12,
+  ReqStatMsg = 13,
+  StatMsg = 14,
+  StatDoneMsg = 15,
+  NodeBocInitMsg = 16,
+  ForNodeBocMsg = 17,
+  ArrayEltInitMsg = 18,
+  ForArrayEltMsg = 19,
+  ForIDedObjMsg = 20,
+};
+
 }} //end namespace runtime::trace
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_CONSTANTS__*/

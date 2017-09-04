@@ -12,13 +12,16 @@ namespace runtime { namespace trace {
 
 static constexpr uint32_t const trace_flush_size = 100000;
 
-using trace_event_id_t = std::hash<std::string>::result_type;
-using trace_log_id_t = int64_t;
+using trace_ep_t = std::hash<std::string>::result_type;
+using trace_event_t = uint32_t;
+using trace_msg_len_t = size_t;
 
-static constexpr trace_event_id_t const no_trace_event = -1;
-static constexpr trace_log_id_t const no_log_id = -1;
+static constexpr trace_ep_t const no_trace_ep = -1;
+static constexpr trace_event_t const no_trace_event = -1;
 static constexpr node_t const designated_root_node = 0;
 static constexpr int64_t const trace_reserve_count = 1048576;
+
+static constexpr bit_count_t const trace_event_num_bits = 32;
 
 }} //end namespace runtime::trace
 

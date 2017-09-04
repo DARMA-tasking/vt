@@ -4,6 +4,10 @@
 
 #include "common.h"
 
+#if backend_check_enabled(trace_enabled)
+# include "trace_common.h"
+#endif
+
 #include <cassert>
 
 namespace runtime {
@@ -36,7 +40,23 @@ struct Envelope {
   node_t dest : node_num_bits;
   handler_t han : handler_num_bits;
   ref_t ref : ref_num_bits;
+
+  #if backend_check_enabled(trace_enabled)
+  trace::trace_event_t trace_event : trace::trace_event_num_bits;
+  #endif
 };
+
+#if backend_check_enabled(trace_enabled)
+template <typename Env>
+inline void envelope_set_trace_event(Env& env, trace::trace_event_t const& evt) {
+  reinterpret_cast<Envelope*>(&env)->trace_event = evt;
+}
+
+template <typename Env>
+inline trace::trace_event_t envelope_get_trace_event(Env& env) {
+  return reinterpret_cast<Envelope*>(&env)->trace_event;
+}
+#endif
 
 // Set the type of Envelope
 

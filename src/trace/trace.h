@@ -60,7 +60,7 @@ struct Trace {
     write_traces_file();
   }
 
-  static trace_event_id_t
+  static trace_ep_t
   register_event_hashed(
     std::string const& event_type_name, std::string const& event_name
   ) {
@@ -72,7 +72,7 @@ struct Trace {
     );
     #endif
 
-    trace_event_id_t event_type_seq = no_trace_event;
+    trace_ep_t event_type_seq = no_trace_ep;
     event_type_t new_event_type(event_type_name);
 
     auto type_iter = trace_cont_t::event_type_container.find(
@@ -92,7 +92,7 @@ struct Trace {
       event_type_seq = type_iter->second.get_event_seq();
     }
 
-    trace_event_id_t event_seq = no_trace_event;
+    trace_ep_t event_seq = no_trace_ep;
     event_t new_event(event_name, new_event_type.get_event_id());
 
     new_event.set_event_type_seq(event_type_seq);
@@ -118,16 +118,21 @@ struct Trace {
   }
 
   log_ptr_t
-  begin_processing(trace_event_id_t const& event, double const& time = MPI_Wtime()) {
+  begin_processing(
+    trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+    node_t const& from_node, double const& time = MPI_Wtime()
+  ) {
     auto const& type = trace_type_t::BeginProcessing;
-    log_ptr_t log = std::make_shared<log_t>(time, event, type);
+    log_ptr_t log = std::make_shared<log_t>(time, ep, type);
 
     debug_print(
       trace, node,
-      "event_start: event=%lu, time=%f\n", event, time
+      "event_start: pe=%lu, event=%d, time=%f\n", ep, event, time
     );
 
-    log->node = the_context->get_node();
+    log->node = from_node;
+    log->msg_len = len;
+    log->event = event;
 
     log_event(log);
 
@@ -135,16 +140,21 @@ struct Trace {
   }
 
   log_ptr_t
-  end_processing(trace_event_id_t const& event, double const& time = MPI_Wtime()) {
+  end_processing(
+    trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+    node_t const& from_node, double const& time = MPI_Wtime()
+  ) {
     auto const& type = trace_type_t::EndProcessing;
-    log_ptr_t log = std::make_shared<log_t>(time, event, type);
+    log_ptr_t log = std::make_shared<log_t>(time, ep, type);
 
     debug_print(
       trace, node,
-      "event_stop: event=%lu, time=%f\n", event, time
+      "event_stop: ep=%lu, event=%d, time=%f\n", ep, event, time
     );
 
-    log->node = the_context->get_node();
+    log->node = from_node;
+    log->msg_len = len;
+    log->event = event;
 
     log_event(log);
 
@@ -152,26 +162,43 @@ struct Trace {
   }
 
   log_ptr_t
-  message_creation(trace_event_id_t const& event, double const& time = MPI_Wtime()) {
+  message_creation(
+    trace_ep_t const& ep, trace_msg_len_t const& len,
+    double const& time = MPI_Wtime()
+  ) {
     auto const& type = trace_type_t::Creation;
-    log_ptr_t log = std::make_shared<log_t>(time, event, type);
+    log_ptr_t log = std::make_shared<log_t>(time, ep, type);
 
     log->node = the_context->get_node();
+    log->msg_len = len;
 
-    if (not open_events.empty()) {
-      log_event(log);
-    }
+    log_event(log);
 
     return log;
   }
 
-  trace_log_id_t
+  log_ptr_t
+  message_recv(
+    trace_ep_t const& ep, trace_msg_len_t const& len, node_t const& from_node,
+    double const& time = MPI_Wtime()
+  ) {
+    auto const& type = trace_type_t::MessageRecv;
+    log_ptr_t log = std::make_shared<log_t>(time, ep, type);
+
+    log->node = from_node;
+
+    log_event(log);
+
+    return log;
+  }
+
+  trace_event_t
   log_event(log_ptr_t log) {
     if (not enabled) {
       return 0;
     }
 
-    auto grouped_begin = [&]() -> trace_log_id_t {
+    auto grouped_begin = [&]() -> trace_event_t {
       if (not open_events.empty()) {
         traces.push_back(
           std::make_shared<log_t>(
@@ -184,26 +211,22 @@ struct Trace {
       open_events.push(log);
       traces.push_back(log);
 
-      trace_log_id_t const& id = traces.size() - 1;
-
-      log->log_id = id;
-
-      return id;
+      return log->event;
     };
 
-    auto grouped_end = [&]() -> trace_log_id_t {
+    auto grouped_end = [&]() -> trace_event_t {
       assert(
         not open_events.empty() and "Stack should be empty"
       );
 
       assert(
-        open_events.top()->event == log->event and
+        open_events.top()->ep == log->ep and
         open_events.top()->type == trace_type_t::BeginProcessing and
         "Top event should be correct type and event"
       );
 
       // match event with the one that this ends
-      log->log_id = open_events.top()->log_id;
+      log->event = open_events.top()->event;
 
       // set up begin/end links
       open_events.top()->end = log;
@@ -220,16 +243,15 @@ struct Trace {
         );
       }
 
-      return log->log_id;
+      return log->event;
     };
 
-    auto dep_create = [&]() -> trace_log_id_t {
+    auto dep_create = [&]() -> trace_event_t {
       traces.push_back(log);
 
-      trace_log_id_t const& id = traces.size() - 1;
-      log->log_id = id;
+      log->event = cur_event++;
 
-      return id;
+      return log->event;
     };
 
     switch (log->type) {
@@ -240,6 +262,7 @@ struct Trace {
       return grouped_end();
       break;
     case trace_type_t::Creation:
+    case trace_type_t::MessageRecv:
       return dep_create();
       break;
     default:
@@ -299,7 +322,7 @@ struct Trace {
         std::underlying_type<decltype(log->type)>::type
       >(log->type);
 
-      auto event_iter = trace_cont_t::event_container.find(log->event);
+      auto event_iter = trace_cont_t::event_container.find(log->ep);
 
       assert(
         event_iter != trace_cont_t::event_container.end() and
@@ -309,31 +332,46 @@ struct Trace {
       auto const& event_seq_id = event_iter->second.get_event_seq();
 
       //1 5 69 88335 2 2 96 0
+      //2 5 17 145864 10 7 240 0 0 0 0 0 144455
 
       switch (log->type) {
       case trace_type_t::BeginProcessing:
-        file << type << " 0 "
+        file << type << " "
+             << TraceEnvelopeTypes::ForChareMsg << " "
              << event_seq_id << " "
              << converted_time << " "
-             << log->log_id << " "
+             << log->event << " "
              << log->node << " "
              << "0 0 0 0 0 0 0\n";
         break;
       case trace_type_t::EndProcessing:
-        file << type << " 0 "
+        file << type << " "
+             << TraceEnvelopeTypes::ForChareMsg << " "
              << event_seq_id << " "
              << converted_time << " "
-             << log->log_id << " "
+             << log->event << " "
              << log->node << " "
              << "0 0 0 0 0 0 0 0\n";
         break;
       case trace_type_t::Creation:
-        file << type << " 0 "
+        file << type << " "
+             << TraceEnvelopeTypes::ForChareMsg << " "
              << event_seq_id << " "
              << converted_time << " "
-             << log->log_id << " "
+             << log->event << " "
              << log->node << " "
-             << "0 0 0 0 0 0 0 0\n";
+             << log->msg_len << " "
+             << "0" << "\n";
+        break;
+      case trace_type_t::MessageRecv:
+        file << type << " "
+             << TraceEnvelopeTypes::ForChareMsg << " "
+             << event_seq_id << " "
+             << converted_time << " "
+             << log->event << " "
+             << log->node << " "
+             << log->msg_len << " "
+             << "0 0 0 0 0 0 0\n";
         break;
       default:
         assert(0);
@@ -444,6 +482,8 @@ private:
   std::string prog_name, trace_name;
 
   double start_time = 0.0;
+
+  trace_event_t cur_event = 0;
 };
 
 }} //end namespace runtime::trace
