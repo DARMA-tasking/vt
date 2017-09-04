@@ -7,7 +7,7 @@ namespace runtime { namespace trace {
 /*static*/
 ActiveFunctionDemangler::str_parsed_out_t
 ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
-  std::cout << "parse_active_function_name: str=" << str << std::endl;
+  //std::cout << "parse_active_function_name: str=" << str << std::endl;
 
   str_container_t const& elems = util_t::split_string(str, '&');
   assert(elems.size() == 2);
@@ -15,18 +15,18 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
 
   std::regex fun_type("\\(([^(]*)", std::regex::extended);
 
-  std::cout << "searching str:" << last_elem << std::endl;
+  //std::cout << "searching str:" << last_elem << std::endl;
   std::smatch m;
   std::regex_search(last_elem, m, fun_type);
 
   std::string m0 = m[0];
 
   if (m0.substr(0, 5) == std::string("(void")) {
-    std::cout << "substr: \"" << m0.substr(0, 5) << "\"" << std::endl;
-    m0 = m0.substr(5, m0.size());
+    //std::cout << "substr: \"" << m0.substr(0, 5) << "\"" << std::endl;
+    m0 = m0.substr(6, m0.size());
   }
 
-  std::cout << "match: \"" << m0 << "\"" << std::endl;
+  //std::cout << "match: \"" << m0 << "\"" << std::endl;
 
   str_container_t const& namespace_no_temp = util_t::split_string(m0, '<');
   str_container_t const& namespace_elems = util_t::split_string(
@@ -82,9 +82,9 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
   std::stringstream clean_args;
   clean_args << "(" << args_only << ")";
 
-  std::cout << "\t namespace: \"" << clean_namespace.str() << "\"" << std::endl;
-  std::cout << "\t fun_name: \"" << clean_function_name.str() << "\"" << std::endl;
-  std::cout << "\t args: \"" << clean_args.str() << "\"" << std::endl;
+  // std::cout << "\t namespace: \"" << clean_namespace.str() << "\"" << std::endl;
+  // std::cout << "\t fun_name: \"" << clean_function_name.str() << "\"" << std::endl;
+  // std::cout << "\t args: \"" << clean_args.str() << "\"" << std::endl;
 
   #if backend_check_enabled(trace_enabled) && backend_check_enabled(trace)
   std::cout << "Parsed Active Fn: " << "\t"
