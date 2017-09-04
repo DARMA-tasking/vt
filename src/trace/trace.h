@@ -160,6 +160,20 @@ struct Trace {
     return log;
   }
 
+  void
+  register_new_dep_current(log_ptr_t const& new_dep) {
+    debug_print(
+      trace, node,
+      "register_new_dep_current: open_events.size=%ld\n", open_events.size()
+    );
+
+    if (not open_events.empty()) {
+      //auto const& top = open_events.top();
+      //top->add_dep(new_dep);
+      log_event(new_dep);
+    }
+  }
+
   trace_log_id_t
   log_event(log_ptr_t log) {
     if (not enabled) {

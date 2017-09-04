@@ -22,6 +22,19 @@ ActiveMessenger::send_msg_direct(
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
   auto const& is_shared = is_shared_message(msg);
 
+  backend_enable_if(
+    trace_enabled, {
+      auto const& handler = envelope_get_handler(msg->env);
+      bool const& is_auto = handler_manager_t::is_handler_auto(handler);
+      bool const& is_functor = handler_manager_t::is_handler_functor(handler);
+      if (is_auto and not is_functor) {
+        trace::trace_event_id_t trace_id = auto_registry::get_trace_id(handler);
+        auto dep_log = the_trace->create_new_dep(trace_id);
+        the_trace->register_new_dep_current(dep_log);
+      }
+    }
+  );
+
   debug_print(
     active, node,
     "send_msg_direct: dest=%d, handler=%d, is_bcast=%s\n",
