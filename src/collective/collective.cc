@@ -2,6 +2,7 @@
 #include "collective.h"
 #include "termination.h"
 #include "barrier.h"
+#include "trace.h"
 
 namespace runtime {
 
@@ -15,6 +16,14 @@ CollectiveOps::initialize_runtime() {
   the_barrier->barrier_then([]{
     MPI_Barrier(MPI_COMM_WORLD);
   });
+
+  backend_enable_if(
+    trace_enabled, {
+      std::string name = "prog";
+      auto const& node = the_context->get_node();
+      the_trace->setup_names(name, name + "." + std::to_string(node) + ".log");
+    }
+  );
 }
 
 /*static*/ void
@@ -22,6 +31,13 @@ CollectiveOps::finalize_runtime() {
   // wait for all nodes to wind down to finalize the runtime
   the_barrier->system_meta_barrier_cont([]{
     ///MPI_Finalize();
+
+    // set trace to nullptr to write out to disk
+    backend_enable_if(
+      trace_enabled, the_trace = nullptr;
+    );
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     // exit the program
     exit(0);

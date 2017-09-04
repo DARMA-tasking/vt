@@ -10,6 +10,7 @@
 
 // backend features, add any new ones to this list
 #define debug_dummy_feature(x) x
+#define debug_trace_enabled(x) x
 
 // distinct modes for debug
 #define debug_none(x) x
@@ -24,6 +25,7 @@
 #define debug_param(x) x
 #define debug_handler(x) x
 #define debug_sequence(x) x
+#define debug_trace(x) x
 
 // contextual modes for debug
 #define debug_node(x) x

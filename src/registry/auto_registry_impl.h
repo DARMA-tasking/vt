@@ -38,8 +38,25 @@ Registrar<ActiveFnT>::Registrar() {
   auto_active_container_t& reg = get_auto_registry<>();
   index = reg.size();
   auto fn = ActiveFnT::get_function();
-  //printf("obj=%p, index=%d, fn=%p\n",this,index,fn);
-  reg.emplace_back(reinterpret_cast<active_basic_function_t*>(fn));
+
+  #if backend_check_enabled(trace_enabled)
+  auto const& name = trace::DemanglerUtils::get_demangled_type<ActiveFnT>();
+  auto const& parsed_names =
+    trace::ActiveFunctionDemangler::parse_active_function_name(name);
+  auto const& namespace_name = std::get<0>(parsed_names);
+  auto const& function_name = std::get<1>(parsed_names);
+  auto const& trace_event_id = trace::Trace::register_event_hashed(
+    namespace_name, function_name
+  );
+
+  reg.emplace_back(auto_reg_info_t{
+      reinterpret_cast<active_basic_function_t*>(fn), trace_event_id
+  });
+  #else
+  reg.emplace_back(auto_reg_info_t{
+    reinterpret_cast<active_basic_function_t*>(fn)
+  });
+  #endif
 }
 
 inline auto_active_t
@@ -59,8 +76,16 @@ get_auto_handler(handler_t const& handler) {
     not is_functor and is_auto and "Handler should not be a functor, but auto"
   );
 
-  return get_auto_registry().at(han_id);
+  return get_auto_registry().at(han_id).get_fun();
 }
+
+#if backend_check_enabled(trace_enabled)
+inline trace::trace_event_id_t
+get_trace_id(handler_t const& handler) {
+  auto const& han_id = handler_manager_t::get_handler_identifier(handler);
+  return get_auto_registry().at(han_id).get_trace_id();
+}
+#endif
 
 template <typename ActiveFnT>
 auto_handler_t

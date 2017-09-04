@@ -321,6 +321,11 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
   bool const& is_auto = handler_manager_t::is_handler_auto(handler);
   bool const& is_functor = handler_manager_t::is_handler_functor(handler);
 
+  backend_enable_if(
+    trace_enabled,
+    trace::trace_event_id_t trace_id = trace::no_trace_event;
+  );
+
   debug_print(
     active, node,
     "deliver_active_msg: handler=%d, is_auto=%s, is_functor=%s\n",
@@ -331,6 +336,11 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
     active_fun = auto_registry::get_auto_handler_functor(handler);
   } else if (is_auto) {
     active_fun = auto_registry::get_auto_handler(handler);
+
+    backend_enable_if(
+      trace_enabled,
+      trace_id = auto_registry::get_trace_id(handler);
+    );
   } else {
     active_fun = the_registry->get_handler(handler, tag);
   }
@@ -343,8 +353,18 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
     current_handler_context = handler;
     current_callback_context = callback;
 
+    // begin trace of this active message
+    backend_enable_if(
+      trace_enabled, the_trace->event_start(trace_id);
+    );
+
     // run the active function
     active_fun(msg);
+
+    // end trace of this active message
+    backend_enable_if(
+      trace_enabled, the_trace->event_stop(trace_id);
+    );
 
     auto trigger = the_registry->get_trigger(handler);
     if (trigger) {

@@ -24,7 +24,8 @@
     rdma_state,            "RDMA State",                                \
     param,                 "parameterization",                          \
     handler,               "handler",                                   \
-    sequence,              "sequencer"                                  \
+    sequence,              "sequencer",                                 \
+    trace,                 "trace"                                      \
   )
 
 #define debug_list_debug_options                                        \
@@ -38,6 +39,7 @@
 #define debug_list_features                                             \
   debug_list_holder(                                                    \
     dummy_feature,         "No features yet",                           \
+    trace_enabled,         "Trace"                                      \
   )
 
 #define debug_list_contexts                                             \
