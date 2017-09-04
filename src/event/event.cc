@@ -135,4 +135,16 @@ AsyncEvent::check_event_finished(EventCheckFinishedMsg* msg) {
   }
 }
 
+bool
+AsyncEvent::scheduler() {
+  the_event->test_events_trigger(mpi_event_tag);
+  the_event->test_events_trigger(normal_event_tag);
+  return false;
+}
+
+bool
+AsyncEvent::is_local_term() {
+  return event_container[mpi_event_tag].size() == 0;
+}
+
 } //end namespace runtime

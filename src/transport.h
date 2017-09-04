@@ -21,5 +21,6 @@
 #include "auto_registry_interface.h"
 #include "sequencer.h"
 #include "trace.h"
+#include "scheduler.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

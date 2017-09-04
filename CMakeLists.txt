@@ -22,7 +22,7 @@ set(
   PROJECT_SUBDIRS_LIST
   barrier collective context debug event messaging termination tree
   virtualization pool data registry parameterization handler features meld
-  sequence trace
+  sequence trace scheduler
 )
 
 include_directories(${PROJECT_SOURCE_DIR})

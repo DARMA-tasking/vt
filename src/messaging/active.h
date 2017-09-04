@@ -440,19 +440,19 @@ struct ActiveMessenger {
   }
 
   void
-  check_term_single_node();
-
-  void
   perform_triggered_actions();
 
   bool
   try_process_incoming_message();
 
-  void
+  bool
   process_data_msg_recv();
 
-  void
-  scheduler(int const& num_times = scheduler_default_num_times);
+  bool
+  scheduler();
+
+  bool
+  is_local_term();
 
   handler_t
   register_new_handler(active_function_t fn, tag_t const& tag = no_tag);

@@ -291,6 +291,12 @@ struct AsyncEvent {
     }
   }
 
+  bool
+  scheduler();
+
+  bool
+  is_local_term();
+
   static void
   event_finished(EventFinishedMsg* msg);
 

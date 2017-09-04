@@ -81,8 +81,7 @@ int main(int argc, char** argv) {
   }
 
   while (1) {
-    the_msg->scheduler();
-    the_seq->scheduler();
+    run_scheduler();
   }
 
   return 0;

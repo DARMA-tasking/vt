@@ -80,11 +80,22 @@ struct TaggedSequencer {
     return stateful_seq;
   }
 
-  void
+  bool
   scheduler() {
     for (auto&& live_seq : seq_lookup) {
       live_seq.second.progress();
     }
+    return false;
+  }
+
+  bool
+  is_local_term() {
+    for (auto&& live_seq : seq_lookup) {
+      if (live_seq.second.lst.size() > 0) {
+        return false;
+      }
+    }
+    return true;
   }
 
   template <

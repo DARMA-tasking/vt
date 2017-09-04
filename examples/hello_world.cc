@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
   }
 
   while (1) {
-    the_msg->scheduler();
+    run_scheduler();
   }
 
   return 0;

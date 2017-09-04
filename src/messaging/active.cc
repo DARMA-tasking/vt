@@ -163,14 +163,6 @@ ActiveMessenger::send_msg_direct(
   }
 }
 
-void
-ActiveMessenger::check_term_single_node() {
-  auto const& num_nodes = the_context->get_num_nodes();
-  if (num_nodes == 1) {
-    the_term->maybe_propagate();
-  }
-}
-
 ActiveMessenger::send_data_ret_t
 ActiveMessenger::send_data(
   rdma_get_t const& ptr, node_t const& dest, tag_t const& tag,
@@ -213,7 +205,7 @@ ActiveMessenger::recv_data_msg(
   return recv_data_msg(tag, node, true, next);
 }
 
-void
+bool
 ActiveMessenger::process_data_msg_recv() {
   bool erase = false;
   auto iter = pending_recvs.begin();
@@ -231,6 +223,9 @@ ActiveMessenger::process_data_msg_recv() {
 
   if (erase) {
     pending_recvs.erase(iter);
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -465,15 +460,22 @@ ActiveMessenger::try_process_incoming_message() {
   }
 }
 
-void
-ActiveMessenger::scheduler(int const& num_times) {
-  for (int i = 0; i < num_times; i++) {
-    try_process_incoming_message();
-    perform_triggered_actions();
-    check_term_single_node();
-    process_data_msg_recv();
-    process_maybe_ready_han_tag();
-  }
+bool
+ActiveMessenger::scheduler() {
+  bool scheduled_work = false;
+
+  scheduled_work = scheduled_work or try_process_incoming_message();
+  scheduled_work = scheduled_work or process_data_msg_recv();
+  process_maybe_ready_han_tag();
+
+  return scheduled_work;
+}
+
+bool
+ActiveMessenger::is_local_term() {
+  bool const no_pending_msgs = pending_handler_msgs.size() == 0;
+  bool const no_pending_recvs = pending_recvs.size() == 0;
+  return no_pending_msgs and no_pending_recvs;
 }
 
 void
@@ -481,12 +483,6 @@ ActiveMessenger::process_maybe_ready_han_tag() {
   for (auto&& x : maybe_ready_tag_han) {
     deliver_pending_msgs_on_han(std::get<0>(x), std::get<1>(x));
   }
-}
-
-void
-ActiveMessenger::perform_triggered_actions() {
-  the_event->test_events_trigger(mpi_event_tag);
-  the_event->test_events_trigger(normal_event_tag);
 }
 
 handler_t
