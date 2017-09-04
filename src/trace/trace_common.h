@@ -17,7 +17,7 @@ using trace_event_t = uint32_t;
 using trace_msg_len_t = size_t;
 
 static constexpr trace_ep_t const no_trace_ep = -1;
-static constexpr trace_event_t const no_trace_event = -1;
+static constexpr trace_event_t const no_trace_event = 0;
 static constexpr node_t const designated_root_node = 0;
 static constexpr int64_t const trace_reserve_count = 1048576;
 
