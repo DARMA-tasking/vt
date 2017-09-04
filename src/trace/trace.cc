@@ -18,9 +18,7 @@ Trace::Trace() {
 
 /*static*/ void
 Trace::trace_begin_idle_trigger() {
-  printf("trace_begin_idle_trigger\n");
   if (not the_trace->in_idle_event()) {
-    printf("trace_begin_idle_trigger begin idle\n");
     the_trace->begin_idle();
   }
 }
