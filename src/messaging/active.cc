@@ -29,9 +29,26 @@ ActiveMessenger::send_msg_direct(
       bool const& is_functor = handler_manager_t::is_handler_functor(handler);
       if (is_auto and not is_functor) {
         trace::trace_ep_t ep = auto_registry::get_trace_id(handler);
-        trace::trace_event_t event = the_trace->message_creation(ep, msg_size);
-        envelope_set_trace_event(msg->env, event);
+        if (not is_bcast) {
+          trace::trace_event_t event = the_trace->message_creation(ep, msg_size);
+          envelope_set_trace_event(msg->env, event);
+        } else if (is_bcast and dest == this_node) {
+          trace::trace_event_t event = the_trace->message_creation_bcast(
+            ep, msg_size
+          );
+          printf(
+            "setting event for bcast: node=%d, dest=%d, event=%d\n",
+            this_node, dest, event
+          );
+          envelope_set_trace_event(msg->env, event);
+        } else  if (is_bcast) {
+
+        }
       }
+
+      auto ret = envelope_get_trace_event(msg->env);
+
+      printf("setting event for bcast: node=%d, event=%d\n", this_node, ret);
     }
   );
 
@@ -313,10 +330,11 @@ ActiveMessenger::recv_data_msg(
 
 bool
 ActiveMessenger::deliver_active_msg(
-  message_t msg, node_t const& from_node, bool insert
+  message_t msg, node_t const& in_from_node, bool insert
 ) {
   auto const& is_term = envelope_is_term(msg->env);
   auto const& is_bcast = envelope_is_bcast(msg->env);
+  auto const& dest = envelope_get_dest(msg->env);
   auto const& handler = envelope_get_handler(msg->env);
   auto const& epoch =
     envelope_is_epoch_type(msg->env) ? envelope_get_epoch(msg->env) : no_epoch;
@@ -325,6 +343,7 @@ ActiveMessenger::deliver_active_msg(
   auto const& callback =
     envelope_is_callback_type(msg->env) ?
     get_callback_message(msg) : uninitialized_handler;
+  auto const& from_node = is_bcast ? dest : in_from_node;
 
   active_function_t active_fun = nullptr;
 

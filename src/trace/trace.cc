@@ -138,6 +138,20 @@ Trace::message_creation(
 }
 
 trace_event_t
+Trace::message_creation_bcast(
+  trace_ep_t const& ep, trace_msg_len_t const& len,
+  double const& time
+) {
+  auto const& type = trace_type_t::CreationBcast;
+  log_ptr_t log = new log_t(time, ep, type);
+
+  log->node = the_context->get_node();
+  log->msg_len = len;
+
+  return log_event(log);
+}
+
+trace_event_t
 Trace::message_recv(
   trace_ep_t const& ep, trace_msg_len_t const& len, node_t const& from_node,
   double const& time
@@ -233,6 +247,7 @@ Trace::log_event(log_ptr_t log) {
     return grouped_end();
     break;
   case trace_type_t::Creation:
+  case trace_type_t::CreationBcast:
   case trace_type_t::MessageRecv:
     return basic_new_event_create();
     break;
@@ -308,6 +323,8 @@ Trace::write_log_file(std::ofstream& file, trace_container_t const& traces) {
     auto const& event_seq_id = log->ep == no_trace_ep ?
       no_trace_ep : event_iter->second.get_event_seq();
 
+    auto const& num_nodes = the_context->get_num_nodes();
+
     switch (log->type) {
     case trace_type_t::BeginProcessing:
       file << type << " "
@@ -337,6 +354,18 @@ Trace::write_log_file(std::ofstream& file, trace_container_t const& traces) {
       file << type << " "
            << converted_time << " "
            << log->node
+           << "\n";
+      break;
+    case trace_type_t::CreationBcast:
+      file << type << " "
+           << TraceEnvelopeTypes::ForChareMsg << " "
+           << event_seq_id << " "
+           << converted_time << " "
+           << log->event << " "
+           << log->node << " "
+           << log->msg_len << " "
+           << "0" << " "
+           << num_nodes << " "
            << "\n";
       break;
     case trace_type_t::Creation:

@@ -77,6 +77,12 @@ struct Trace {
   );
 
   trace_event_t
+  message_creation_bcast(
+    trace_ep_t const& ep, trace_msg_len_t const& len,
+    double const& time = get_current_time()
+  );
+
+  trace_event_t
   message_recv(
     trace_ep_t const& ep, trace_msg_len_t const& len, node_t const& from_node,
     double const& time = get_current_time()
