@@ -45,12 +45,12 @@ Registrar<ActiveFnT>::Registrar() {
     trace::ActiveFunctionDemangler::parse_active_function_name(name);
   auto const& namespace_name = std::get<0>(parsed_names);
   auto const& function_name = std::get<1>(parsed_names);
-  auto const& trace_event_id = trace::TraceRegistry::register_event_hashed(
+  auto const& trace_ep = trace::TraceRegistry::register_event_hashed(
     namespace_name, function_name
   );
 
   reg.emplace_back(auto_reg_info_t{
-      reinterpret_cast<active_basic_function_t*>(fn), trace_event_id
+    reinterpret_cast<active_basic_function_t*>(fn), trace_ep
   });
   #else
   reg.emplace_back(auto_reg_info_t{

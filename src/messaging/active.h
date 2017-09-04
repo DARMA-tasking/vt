@@ -479,6 +479,9 @@ struct ActiveMessenger {
   handler_t
   get_current_callback();
 
+  node_t
+  get_from_node_current_handler();
+
   bool
   deliver_active_msg(message_t msg, node_t const& from_node, bool insert);
 
@@ -491,6 +494,7 @@ struct ActiveMessenger {
 private:
   handler_t current_handler_context = uninitialized_handler;
   handler_t current_callback_context = uninitialized_handler;
+  node_t current_node_context = uninitialized_destination;
 
   maybe_ready_t maybe_ready_tag_han;
 

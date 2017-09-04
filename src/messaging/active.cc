@@ -318,6 +318,11 @@ ActiveMessenger::recv_data_msg(
   return recv_data_msg_buffer(nullptr, tag, recv_node, enqueue, nullptr, next);
 }
 
+node_t
+ActiveMessenger::get_from_node_current_handler() {
+  return current_node_context;
+}
+
 bool
 ActiveMessenger::deliver_active_msg(
   message_t msg, node_t const& in_from_node, bool insert
@@ -372,6 +377,7 @@ ActiveMessenger::deliver_active_msg(
     // active fun
     current_handler_context = handler;
     current_callback_context = callback;
+    current_node_context = from_node;
 
     backend_enable_if(
       trace_enabled,
@@ -401,6 +407,7 @@ ActiveMessenger::deliver_active_msg(
     // unset current handler
     current_handler_context = uninitialized_handler;
     current_callback_context = uninitialized_handler;
+    current_node_context = uninitialized_destination;
   } else {
     if (insert) {
       auto iter = pending_handler_msgs.find(handler);

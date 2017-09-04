@@ -61,7 +61,7 @@ Trace::begin_processing(
 
   debug_print(
     trace, node,
-    "event_start: pe=%lu, event=%d, time=%f\n", ep, event, time
+    "event_start: ep=%lu, event=%d, time=%f\n", ep, event, time
   );
 
   log->node = from_node;
@@ -181,7 +181,7 @@ Trace::log_event(log_ptr_t log) {
     if (not open_events.empty()) {
       traces.push_back(
         new log_t(
-          log->time, open_events.top()->event, trace_type_t::EndProcessing
+          log->time, open_events.top()->ep, trace_type_t::EndProcessing
         )
       );
     }
@@ -215,7 +215,7 @@ Trace::log_event(log_ptr_t log) {
     if (not open_events.empty()) {
       traces.push_back(
         new log_t(
-          log->time, open_events.top()->event, trace_type_t::BeginProcessing
+          log->time, open_events.top()->ep, trace_type_t::BeginProcessing
         )
       );
     }
