@@ -6,6 +6,7 @@
 #include "context.h"
 
 #include "trace_common.h"
+#include "trace_constants.h"
 #include "trace_event.h"
 #include "trace_containers.h"
 #include "trace_log.h"
@@ -27,7 +28,7 @@ namespace runtime { namespace trace {
 
 struct Trace {
   using log_t = Log;
-  using trace_type_t = TraceType;
+  using trace_type_t = TraceConstants;
   using trace_cont_t = TraceContainers<void>;
   using time_int_t = int64_t;
   using log_ptr_t = std::shared_ptr<log_t>;
@@ -117,8 +118,8 @@ struct Trace {
   }
 
   log_ptr_t
-  event_start(trace_event_id_t const& event, double const& time = MPI_Wtime()) {
-    auto const& type = trace_type_t::TraceGroupedBegin;
+  begin_processing(trace_event_id_t const& event, double const& time = MPI_Wtime()) {
+    auto const& type = trace_type_t::BeginProcessing;
     log_ptr_t log = std::make_shared<log_t>(time, event, type);
 
     debug_print(
@@ -134,8 +135,8 @@ struct Trace {
   }
 
   log_ptr_t
-  event_stop(trace_event_id_t const& event, double const& time = MPI_Wtime()) {
-    auto const& type = trace_type_t::TraceGroupedEnd;
+  end_processing(trace_event_id_t const& event, double const& time = MPI_Wtime()) {
+    auto const& type = trace_type_t::EndProcessing;
     log_ptr_t log = std::make_shared<log_t>(time, event, type);
 
     debug_print(
@@ -151,27 +152,17 @@ struct Trace {
   }
 
   log_ptr_t
-  create_new_dep(trace_event_id_t const& event, double const& time = MPI_Wtime()) {
-    auto const& type = trace_type_t::TraceDepCreate;
+  message_creation(trace_event_id_t const& event, double const& time = MPI_Wtime()) {
+    auto const& type = trace_type_t::Creation;
     log_ptr_t log = std::make_shared<log_t>(time, event, type);
 
     log->node = the_context->get_node();
 
-    return log;
-  }
-
-  void
-  register_new_dep_current(log_ptr_t const& new_dep) {
-    debug_print(
-      trace, node,
-      "register_new_dep_current: open_events.size=%ld\n", open_events.size()
-    );
-
     if (not open_events.empty()) {
-      //auto const& top = open_events.top();
-      //top->add_dep(new_dep);
-      log_event(new_dep);
+      log_event(log);
     }
+
+    return log;
   }
 
   trace_log_id_t
@@ -184,7 +175,7 @@ struct Trace {
       if (not open_events.empty()) {
         traces.push_back(
           std::make_shared<log_t>(
-            log->time, open_events.top()->event, trace_type_t::TraceGroupedEnd
+            log->time, open_events.top()->event, trace_type_t::EndProcessing
           )
         );
       }
@@ -207,7 +198,7 @@ struct Trace {
 
       assert(
         open_events.top()->event == log->event and
-        open_events.top()->type == trace_type_t::TraceGroupedBegin and
+        open_events.top()->type == trace_type_t::BeginProcessing and
         "Top event should be correct type and event"
       );
 
@@ -224,7 +215,7 @@ struct Trace {
       if (not open_events.empty()) {
         traces.push_back(
           std::make_shared<log_t>(
-            log->time, open_events.top()->event, trace_type_t::TraceGroupedBegin
+            log->time, open_events.top()->event, trace_type_t::BeginProcessing
           )
         );
       }
@@ -242,13 +233,13 @@ struct Trace {
     };
 
     switch (log->type) {
-    case trace_type_t::TraceGroupedBegin:
+    case trace_type_t::BeginProcessing:
       return grouped_begin();
       break;
-    case trace_type_t::TraceGroupedEnd:
+    case trace_type_t::EndProcessing:
       return grouped_end();
       break;
-    case trace_type_t::TraceDepCreate:
+    case trace_type_t::Creation:
       return dep_create();
       break;
     default:
@@ -317,8 +308,10 @@ struct Trace {
 
       auto const& event_seq_id = event_iter->second.get_event_seq();
 
+      //1 5 69 88335 2 2 96 0
+
       switch (log->type) {
-      case trace_type_t::TraceGroupedBegin:
+      case trace_type_t::BeginProcessing:
         file << type << " 0 "
              << event_seq_id << " "
              << converted_time << " "
@@ -326,7 +319,7 @@ struct Trace {
              << log->node << " "
              << "0 0 0 0 0 0 0\n";
         break;
-      case trace_type_t::TraceGroupedEnd:
+      case trace_type_t::EndProcessing:
         file << type << " 0 "
              << event_seq_id << " "
              << converted_time << " "
@@ -334,7 +327,7 @@ struct Trace {
              << log->node << " "
              << "0 0 0 0 0 0 0 0\n";
         break;
-      case trace_type_t::TraceDepCreate:
+      case trace_type_t::Creation:
         file << type << " 0 "
              << event_seq_id << " "
              << converted_time << " "
@@ -346,10 +339,10 @@ struct Trace {
         assert(0);
       }
 
-      // recursive call to unfold trace structure
-      if (log->deps.size() > 0) {
-        write_log_file(file, log->deps);
-      }
+      // // recursive call to unfold trace structure
+      // if (log->deps.size() > 0) {
+      //   write_log_file(file, log->deps);
+      // }
     }
 
     traces.empty();

@@ -29,8 +29,7 @@ ActiveMessenger::send_msg_direct(
       bool const& is_functor = handler_manager_t::is_handler_functor(handler);
       if (is_auto and not is_functor) {
         trace::trace_event_id_t trace_id = auto_registry::get_trace_id(handler);
-        auto dep_log = the_trace->create_new_dep(trace_id);
-        the_trace->register_new_dep_current(dep_log);
+        the_trace->message_creation(trace_id);
       }
     }
   );
@@ -368,7 +367,7 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
 
     // begin trace of this active message
     backend_enable_if(
-      trace_enabled, the_trace->event_start(trace_id);
+      trace_enabled, the_trace->begin_processing(trace_id);
     );
 
     // run the active function
@@ -376,7 +375,7 @@ ActiveMessenger::deliver_active_msg(message_t msg, bool insert) {
 
     // end trace of this active message
     backend_enable_if(
-      trace_enabled, the_trace->event_stop(trace_id);
+      trace_enabled, the_trace->end_processing(trace_id);
     );
 
     auto trigger = the_registry->get_trigger(handler);

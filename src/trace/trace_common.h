@@ -20,14 +20,6 @@ static constexpr trace_log_id_t const no_log_id = -1;
 static constexpr node_t const designated_root_node = 0;
 static constexpr int64_t const trace_reserve_count = 1048576;
 
-enum class TraceType : int32_t {
-  InvalidTraceType = -1,
-  TraceNonGrouped = 0,
-  TraceDepCreate = 1,
-  TraceGroupedBegin = 2,
-  TraceGroupedEnd = 3
-};
-
 }} //end namespace runtime::trace
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_COMMON__*/

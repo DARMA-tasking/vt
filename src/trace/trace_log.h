@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "trace_common.h"
+#include "trace_constants.h"
 
 #include <cstdint>
 #include <vector>
@@ -14,7 +15,7 @@ namespace runtime { namespace trace {
 struct Log {
   using log_ptr_t = std::shared_ptr<Log>;
   using log_container_t = std::vector<log_ptr_t>;
-  using trace_type_t = TraceType;
+  using trace_type_t = TraceConstants;
 
   double time = 0.0;
   trace_event_id_t event = no_trace_event;
@@ -26,7 +27,7 @@ struct Log {
 
   Log(
     double const& in_time, /*trace_log_id_t const& in_log_id,*/
-    trace_event_id_t const& in_event, TraceType const& in_type
+    trace_event_id_t const& in_event, trace_type_t const& in_type
   ) : time(in_time), /*log_id(in_log_id),*/ event(in_event), type(in_type)
   { }
 
