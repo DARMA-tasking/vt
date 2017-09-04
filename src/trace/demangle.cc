@@ -7,18 +7,31 @@ namespace runtime { namespace trace {
 /*static*/
 ActiveFunctionDemangler::str_parsed_out_t
 ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
+  std::cout << "parse_active_function_name: str=" << str << std::endl;
+
   str_container_t const& elems = util_t::split_string(str, '&');
   assert(elems.size() == 2);
   auto const& last_elem = elems.at(1);
 
-  std::regex fun_type("\\(([a-zA-Z0-9_:]*)", std::regex::extended);
+  std::regex fun_type("\\(([^(]*)", std::regex::extended);
 
-  //std::cout << "searching str:" << last_elem << std::endl;
+  std::cout << "searching str:" << last_elem << std::endl;
   std::smatch m;
   std::regex_search(last_elem, m, fun_type);
-  //std::cout << "match: \"" << m[0] << "\"" << std::endl;
 
-  str_container_t const& namespace_elems = util_t::split_string(m[0], ':');
+  std::string m0 = m[0];
+
+  if (m0.substr(0, 5) == std::string("(void")) {
+    std::cout << "substr: \"" << m0.substr(0, 5) << "\"" << std::endl;
+    m0 = m0.substr(5, m0.size());
+  }
+
+  std::cout << "match: \"" << m0 << "\"" << std::endl;
+
+  str_container_t const& namespace_no_temp = util_t::split_string(m0, '<');
+  str_container_t const& namespace_elems = util_t::split_string(
+    namespace_no_temp.at(0), ':'
+  );
 
   str_container_t only_namespace_elems;
 
@@ -48,26 +61,30 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
     cur++;
   }
 
+  if (namespace_no_temp.size() > 1) {
+    int cur = 0;
+    for (auto&& x : namespace_no_temp) {
+      if (cur != 0) {
+        clean_function_name << "<" << x;
+      }
+      cur++;
+    }
+  }
+
   str_container_t const& args = util_t::split_string(last_elem, '(');
 
   assert(
     args.size() >= 3 and "args parsed must be at least 3"
   );
 
-  str_container_t const& args_clean = util_t::split_string(args.at(2), '>');
-
-  assert(
-    args.size() >= 0 and "args parsed must be at least 0"
-  );
-
-  str_container_t const& args_clean_no_paran = util_t::split_string(args_clean.at(0), ')');
+  auto args_only = args.at(2).substr(0, args.at(2).size() - 5);
 
   std::stringstream clean_args;
-  clean_args << "(" << args_clean_no_paran.at(0) << ")";
+  clean_args << "(" << args_only << ")";
 
-  // std::cout << "namespace: \"" << clean_namespace.str() << "\"" << std::endl;
-  // std::cout << "fun_name: \"" << clean_function_name.str() << "\"" << std::endl;
-  // std::cout << "args: \"" << clean_args.str() << "\"" << std::endl;
+  std::cout << "\t namespace: \"" << clean_namespace.str() << "\"" << std::endl;
+  std::cout << "\t fun_name: \"" << clean_function_name.str() << "\"" << std::endl;
+  std::cout << "\t args: \"" << clean_args.str() << "\"" << std::endl;
 
   #if backend_check_enabled(trace_enabled) && backend_check_enabled(trace)
   std::cout << "Parsed Active Fn: " << "\t"
