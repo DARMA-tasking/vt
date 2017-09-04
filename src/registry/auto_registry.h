@@ -25,10 +25,6 @@ struct Registrar {
 
 auto_active_t get_auto_handler(handler_t const& handler);
 
-#if backend_check_enabled(trace_enabled)
-trace::trace_ep_t get_trace_id(handler_t const& handler);
-#endif
-
 template <typename MessageT, action_any_function_t<MessageT>* f>
 handler_t make_auto_handler(MessageT* const msg);
 

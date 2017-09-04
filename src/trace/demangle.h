@@ -93,7 +93,7 @@ struct ActiveFunctorDemangler {
   using util_t = DemanglerUtils;
 
   static str_parsed_out_t
-  parse_active_functor_name(std::string const& str);
+  parse_active_functor_name(std::string const& name, std::string const& args);
 };
 
 }} //end namespace runtime::trace

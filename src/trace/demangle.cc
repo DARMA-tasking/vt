@@ -7,7 +7,7 @@ namespace runtime { namespace trace {
 /*static*/
 ActiveFunctionDemangler::str_parsed_out_t
 ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
-  std::cout << "parse_active_function_name: str=" << str << std::endl;
+  //std::cout << "parse_active_function_name: str=" << str << std::endl;
 
   str_container_t const& elems = util_t::split_string(str, '&');
   assert(elems.size() == 2);
@@ -107,8 +107,25 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
 
 /*static*/
 ActiveFunctorDemangler::str_parsed_out_t
-ActiveFunctorDemangler::parse_active_functor_name(std::string const& str) {
-  return std::make_tuple("","");
+ActiveFunctorDemangler::parse_active_functor_name(
+  std::string const& name, std::string const& args
+) {
+  std::cout << "parse_active_functor_name:"
+            << "name=" << name << ", "
+            << "args=" << args
+            << std::endl;
+
+  auto args_clean = args.substr(29, args.size()-30);
+
+  std::stringstream args_ret;
+  args_ret << "operator()(";
+  args_ret << args_clean;
+  args_ret << ")";
+
+  std::stringstream args_no_space;
+  args_no_space << util_t::remove_spaces(args_ret.str());
+
+  return std::make_tuple(name,args_no_space.str());
 }
 
 

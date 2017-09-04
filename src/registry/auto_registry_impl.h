@@ -79,14 +79,6 @@ get_auto_handler(handler_t const& handler) {
   return get_auto_registry().at(han_id).get_fun();
 }
 
-#if backend_check_enabled(trace_enabled)
-inline trace::trace_ep_t
-get_trace_id(handler_t const& handler) {
-  auto const& han_id = handler_manager_t::get_handler_identifier(handler);
-  return get_auto_registry().at(han_id).get_trace_id();
-}
-#endif
-
 template <typename ActiveFnT>
 auto_handler_t
 register_active_fn() {

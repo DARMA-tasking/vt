@@ -72,30 +72,29 @@ static void data_message_handler(DataMsg<Tuple>* msg) {
     "data_message_handler: id=%d\n", msg->sub_han
   );
 
+#if backend_check_enabled(trace_enabled)
+  trace::trace_ep_t ep = auto_registry::get_trace_id(msg->sub_han);
+  trace::trace_event_t event = envelope_get_trace_event(msg->env);
+
+  printf("data_message_handler: id=%d, ep=%lu\n", msg->sub_han, ep);
+
+  node_t const& from_node = the_msg->get_from_node_current_handler();
+
+  the_trace->begin_processing(ep, sizeof(*msg), event, from_node);
+#endif
+
   if (handler_manager_t::is_handler_functor(msg->sub_han)) {
     auto fn = auto_registry::get_auto_handler_functor(msg->sub_han);
     get_fn_sig(std::forward<Tuple>(msg->tup), fn, true);
   } else {
     // regular active function
     auto fn = auto_registry::get_auto_handler(msg->sub_han);
-
-    #if backend_check_enabled(trace_enabled)
-    trace::trace_ep_t ep = auto_registry::get_trace_id(msg->sub_han);
-    trace::trace_event_t event = envelope_get_trace_event(msg->env);
-
-    printf("data_message_handler: id=%d, ep=%lu\n", msg->sub_han, ep);
-
-    node_t const& from_node = the_msg->get_from_node_current_handler();
-
-    the_trace->begin_processing(ep, sizeof(*msg), event, from_node);
-    #endif
-
     get_fn_sig(std::forward<Tuple>(msg->tup), fn, false);
-
-    #if backend_check_enabled(trace_enabled)
-    the_trace->end_processing(ep, sizeof(*msg), event, from_node);
-    #endif
   }
+
+#if backend_check_enabled(trace_enabled)
+  the_trace->end_processing(ep, sizeof(*msg), event, from_node);
+#endif
 }
 
 template <bool...> struct bool_pack;

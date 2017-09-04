@@ -26,8 +26,7 @@ ActiveMessenger::send_msg_direct(
     trace_enabled, {
       auto const& handler = envelope_get_handler(msg->env);
       bool const& is_auto = handler_manager_t::is_handler_auto(handler);
-      bool const& is_functor = handler_manager_t::is_handler_functor(handler);
-      if (is_auto and not is_functor) {
+      if (is_auto) {
         trace::trace_ep_t ep = auto_registry::get_trace_id(handler);
         if (not is_bcast) {
           trace::trace_event_t event = the_trace->message_creation(ep, msg_size);
@@ -361,14 +360,16 @@ ActiveMessenger::deliver_active_msg(
     active_fun = auto_registry::get_auto_handler_functor(handler);
   } else if (is_auto) {
     active_fun = auto_registry::get_auto_handler(handler);
-
-    backend_enable_if(
-      trace_enabled,
-      trace_id = auto_registry::get_trace_id(handler);
-    );
   } else {
     active_fun = the_registry->get_handler(handler, tag);
   }
+
+  backend_enable_if(
+    trace_enabled,
+    if (is_auto) {
+      trace_id = auto_registry::get_trace_id(handler);
+    }
+  );
 
   bool const& has_action_handler = active_fun != no_action;
 
