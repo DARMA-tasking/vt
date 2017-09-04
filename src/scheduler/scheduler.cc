@@ -6,7 +6,7 @@
 #include "termination.h"
 #include "sequencer.h"
 
-namespace runtime { namespace scheduler {
+namespace runtime { namespace sched {
 
 /*static*/ void
 Scheduler::check_term_single_node() {
@@ -16,21 +16,63 @@ Scheduler::check_term_single_node() {
   }
 }
 
-/*static*/ void
-Scheduler::scheduler() {
+Scheduler::Scheduler() {
+  event_triggers.resize(scheduler_event_t::SchedulerEventSize + 1);
+}
+
+bool
+Scheduler::scheduler_impl() {
   bool scheduled_work = false;
 
-  scheduled_work = scheduled_work or the_msg->scheduler();
-  scheduled_work = scheduled_work or the_seq->scheduler();
-  scheduled_work = scheduled_work or the_event->scheduler();
+  bool const msg_sch = the_msg->scheduler();
+  bool const event_sch = the_event->scheduler();
+  bool const seq_sch = the_seq->scheduler();
+
   check_term_single_node();
+
+  scheduled_work = msg_sch or event_sch or seq_sch;
+
+  return scheduled_work;
 
   if (not scheduled_work) {
     // idle
   }
 }
 
-/*static*/ void
+void
+Scheduler::scheduler() {
+
+  bool const scheduled_work1 = scheduler_impl();
+  bool const scheduled_work2 = scheduler_impl();
+
+  if (not scheduled_work1 and not scheduled_work2) {
+    // idle
+    trigger_event(scheduler_event_t::BeginIdle);
+  }
+}
+
+void
+Scheduler::trigger_event(scheduler_event_t const& event) {
+  assert(
+    event_triggers.size() >= event and "Must be large enough to hold this event"
+  );
+
+  for (auto&& t : event_triggers[event]) {
+    t();
+  }
+}
+
+void
+Scheduler::register_trigger(
+  scheduler_event_t const& event, trigger_t const& trigger
+) {
+  assert(
+    event_triggers.size() >= event and "Must be large enough to hold this event"
+  );
+  event_triggers[event].push_back(trigger);
+}
+
+void
 Scheduler::scheduler_forever() {
   while (true) {
     scheduler();
@@ -43,7 +85,7 @@ namespace runtime {
 
 void
 run_scheduler() {
-  scheduler::Scheduler::scheduler();
+  the_sched->scheduler();
 }
 
 } //end namespace runtime

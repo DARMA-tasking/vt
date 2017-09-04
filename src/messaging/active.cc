@@ -462,13 +462,11 @@ ActiveMessenger::try_process_incoming_message() {
 
 bool
 ActiveMessenger::scheduler() {
-  bool scheduled_work = false;
-
-  scheduled_work = scheduled_work or try_process_incoming_message();
-  scheduled_work = scheduled_work or process_data_msg_recv();
+  bool const processed = try_process_incoming_message();
+  bool const processed_data_msg = process_data_msg_recv();
   process_maybe_ready_han_tag();
 
-  return scheduled_work;
+  return processed or processed_data_msg;
 }
 
 bool
