@@ -36,19 +36,9 @@ ActiveMessenger::send_msg_direct(
           trace::trace_event_t event = the_trace->message_creation_bcast(
             ep, msg_size
           );
-          printf(
-            "setting event for bcast: node=%d, dest=%d, event=%d\n",
-            this_node, dest, event
-          );
           envelope_set_trace_event(msg->env, event);
-        } else  if (is_bcast) {
-
         }
       }
-
-      auto ret = envelope_get_trace_event(msg->env);
-
-      printf("setting event for bcast: node=%d, event=%d\n", this_node, ret);
     }
   );
 
