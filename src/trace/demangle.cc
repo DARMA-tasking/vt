@@ -110,10 +110,10 @@ ActiveFunctorDemangler::str_parsed_out_t
 ActiveFunctorDemangler::parse_active_functor_name(
   std::string const& name, std::string const& args
 ) {
-  std::cout << "parse_active_functor_name:"
-            << "name=" << name << ", "
-            << "args=" << args
-            << std::endl;
+  // std::cout << "parse_active_functor_name:"
+  //           << "name=" << name << ", "
+  //           << "args=" << args
+  //           << std::endl;
 
   auto args_clean = args.substr(29, args.size()-30);
 
