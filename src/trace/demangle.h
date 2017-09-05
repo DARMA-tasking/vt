@@ -12,6 +12,7 @@
 #include <regex>
 #include <cstdlib>
 #include <cxxabi.h>
+#include <assert.h>
 
 namespace runtime { namespace trace {
 
