@@ -24,6 +24,7 @@
 #include <fstream>
 
 #include <mpi.h>
+#include <zlib.h>
 
 namespace runtime { namespace trace {
 
@@ -101,7 +102,7 @@ struct Trace {
   write_traces_file();
 
   void
-  write_log_file(std::ofstream& file, trace_container_t const& traces);
+  write_log_file(gzFile file, trace_container_t const& traces);
 
   bool
   in_idle_event() const;
@@ -113,10 +114,10 @@ struct Trace {
   output_control_file(std::ofstream& file);
 
   static void
-  output_header(node_t const& node, double const& start, std::ofstream& file);
+  output_header(node_t const& node, double const& start, gzFile file);
 
   static void
-  output_footer(node_t const& node, double const& start, std::ofstream& file);
+  output_footer(node_t const& node, double const& start, gzFile file);
 
   static time_int_t
   time_to_int(double const& time);

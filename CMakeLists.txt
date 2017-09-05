@@ -18,6 +18,14 @@ set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 include (CTest)
 enable_testing()
 
+find_package(ZLIB REQUIRED)
+
+if (ZLIB_FOUND)
+  include_directories(${ZLIB_INCLUDE_DIRS})
+else()
+  message("zlib is required for tracing")
+endif (ZLIB_FOUND)
+
 set(
   PROJECT_SUBDIRS_LIST
   barrier collective context debug event messaging termination tree
@@ -144,6 +152,7 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
   target_link_libraries(
     ${EXAMPLE}
     ${VIRTUAL_TRANSPORT_LIBRARY}
+    ${ZLIB_LIBRARIES}
   )
 
 endforeach()

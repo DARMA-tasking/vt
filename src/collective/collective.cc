@@ -21,7 +21,7 @@ CollectiveOps::initialize_runtime() {
     trace_enabled, {
       std::string name = "prog";
       auto const& node = the_context->get_node();
-      the_trace->setup_names(name, name + "." + std::to_string(node) + ".log");
+      the_trace->setup_names(name, name + "." + std::to_string(node) + ".log.gz");
     }
   );
 }

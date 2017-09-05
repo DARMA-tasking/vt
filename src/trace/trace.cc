@@ -3,6 +3,8 @@
 #include "trace.h"
 #include "scheduler.h"
 
+#include <zlib.h>
+
 namespace runtime { namespace trace {
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
@@ -286,13 +288,11 @@ Trace::write_traces_file() {
     trace_cont_t::event_container.size()
   );
 
-  std::ofstream file;
-  file.open(trace_name);
+  gzFile file = gzopen(trace_name.c_str(), "wb");
   output_header(node, start_time, file);
   write_log_file(file, traces);
   output_footer(node, start_time, file);
-  file.flush();
-  file.close();
+  gzclose(file);
 
   if (node == designated_root_node) {
     std::ofstream file;
@@ -304,7 +304,7 @@ Trace::write_traces_file() {
 }
 
 void
-Trace::write_log_file(std::ofstream& file, trace_container_t const& traces) {
+Trace::write_log_file(gzFile file, trace_container_t const& traces) {
   for (auto&& log : traces) {
     auto const& converted_time = time_to_int(log->time - start_time);
 
@@ -327,66 +327,77 @@ Trace::write_log_file(std::ofstream& file, trace_container_t const& traces) {
 
     switch (log->type) {
     case trace_type_t::BeginProcessing:
-      file << type << " "
-           << TraceEnvelopeTypes::ForChareMsg << " "
-           << event_seq_id << " "
-           << converted_time << " "
-           << log->event << " "
-           << log->node << " "
-           << "0 0 0 0 0 0 0\n";
+      gzprintf(
+        file,
+        "%d %d %lu %lld %d %d 0 0 0 0 0 0 0\n",
+        type,
+        TraceEnvelopeTypes::ForChareMsg,
+        event_seq_id,
+        converted_time,
+        log->event,
+        log->node
+      );
       break;
     case trace_type_t::EndProcessing:
-      file << type << " "
-           << TraceEnvelopeTypes::ForChareMsg << " "
-           << event_seq_id << " "
-           << converted_time << " "
-           << log->event << " "
-           << log->node << " "
-           << "0 0 0 0 0 0 0 0\n";
+      gzprintf(
+        file,
+        "%d %d %lu %lld %d %d 0 0 0 0 0 0 0\n",
+        type,
+        TraceEnvelopeTypes::ForChareMsg,
+        event_seq_id,
+        converted_time,
+        log->event,
+        log->node
+      );
       break;
     case trace_type_t::BeginIdle:
-      file << type << " "
-           << converted_time << " "
-           << log->node
-           << "\n";
+      gzprintf(
+        file,
+        "%d %lld %d\n",
+        type,
+        converted_time,
+        log->node
+      );
       break;
     case trace_type_t::EndIdle:
-      file << type << " "
-           << converted_time << " "
-           << log->node
-           << "\n";
+      gzprintf(
+        file,
+        "%d %lld %d\n",
+        type,
+        converted_time,
+        log->node
+      );
       break;
     case trace_type_t::CreationBcast:
-      file << type << " "
-           << TraceEnvelopeTypes::ForChareMsg << " "
-           << event_seq_id << " "
-           << converted_time << " "
-           << log->event << " "
-           << log->node << " "
-           << log->msg_len << " "
-           << "0" << " "
-           << num_nodes << " "
-           << "\n";
+      gzprintf(
+        file,
+        "%d %d %lu %lld %d %d %d %d %d\n",
+        type,
+        TraceEnvelopeTypes::ForChareMsg,
+        event_seq_id,
+        converted_time,
+        log->event,
+        log->node,
+        log->msg_len,
+        0,
+        num_nodes
+      );
       break;
     case trace_type_t::Creation:
-      file << type << " "
-           << TraceEnvelopeTypes::ForChareMsg << " "
-           << event_seq_id << " "
-           << converted_time << " "
-           << log->event << " "
-           << log->node << " "
-           << log->msg_len << " "
-           << "0" << "\n";
+      gzprintf(
+        file,
+        "%d %d %lu %lld %d %d %d 0\n",
+        type,
+        TraceEnvelopeTypes::ForChareMsg,
+        event_seq_id,
+        converted_time,
+        log->event,
+        log->node,
+        log->msg_len
+      );
       break;
     case trace_type_t::MessageRecv:
-      file << type << " "
-           << TraceEnvelopeTypes::ForChareMsg << " "
-           << event_seq_id << " "
-           << converted_time << " "
-           << log->event << " "
-           << log->node << " "
-           << log->msg_len << " "
-           << "0 0 0 0 0 0 0\n";
+      assert(0);
       break;
     default:
       assert(0);
@@ -471,21 +482,21 @@ Trace::output_control_file(std::ofstream& file) {
 
 /*static*/ void
 Trace::output_header(
-  node_t const& node, double const& start, std::ofstream& file
+  node_t const& node, double const& start, gzFile file
 ) {
   // Output header for projections file
-  file << "PROJECTIONS-RECORD 0" << std::endl;
+  gzprintf(file, "PROJECTIONS-RECORD 0\n");
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
-  file << "6 " << 0 << std::endl;
+  gzprintf(file, "6 0\n");
 }
 
 /*static*/ void
 Trace::output_footer(
-  node_t const& node, double const& start, std::ofstream& file
+  node_t const& node, double const& start, gzFile file
 ) {
   // Output footer for projections file, '7' means COMPUTATION_END to
   // Projections
-  file << "7 " << time_to_int(get_current_time() - start) << std::endl;
+  gzprintf(file, "7 %lld\n", time_to_int(get_current_time() - start));
 }
 
 /*static*/ Trace::time_int_t
