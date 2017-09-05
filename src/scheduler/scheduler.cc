@@ -18,6 +18,7 @@ Scheduler::check_term_single_node() {
 
 Scheduler::Scheduler() {
   event_triggers.resize(scheduler_event_t::SchedulerEventSize + 1);
+  event_triggers_once.resize(scheduler_event_t::SchedulerEventSize + 1);
 }
 
 bool
@@ -61,6 +62,11 @@ Scheduler::trigger_event(scheduler_event_t const& event) {
   for (auto& t : event_triggers[event]) {
     t();
   }
+
+  for (auto& t : event_triggers_once[event]) {
+    t();
+  }
+  event_triggers_once[event].clear();
 }
 
 void
@@ -71,6 +77,16 @@ Scheduler::register_trigger(
     event_triggers.size() >= event and "Must be large enough to hold this event"
   );
   event_triggers[event].push_back(trigger);
+}
+
+void
+Scheduler::register_trigger_once(
+  scheduler_event_t const& event, trigger_t trigger
+) {
+  assert(
+    event_triggers.size() >= event and "Must be large enough to hold this event"
+  );
+  event_triggers_once[event].push_back(trigger);
 }
 
 void

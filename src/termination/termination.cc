@@ -2,6 +2,7 @@
 #include "termination.h"
 #include "active.h"
 #include "collective.h"
+#include "scheduler.h"
 
 namespace runtime { namespace term {
 
@@ -263,7 +264,9 @@ TerminationDetector::epoch_continue(epoch_t const& epoch){
     }
   }
 
-  maybe_propagate();
+  //the_sched->register_trigger_once(sched::SchedulerEvent::BeginIdle, []{
+  the_term->maybe_propagate();
+  //});
 }
 
 void

@@ -41,12 +41,17 @@ struct Scheduler {
   register_trigger(scheduler_event_t const& event, trigger_t trigger);
 
   void
+  register_trigger_once(scheduler_event_t const& event, trigger_t trigger);
+
+  void
   trigger_event(scheduler_event_t const& event);
 
 private:
   bool is_idle = false;
 
   event_trigger_cont_t event_triggers;
+
+  event_trigger_cont_t event_triggers_once;
 };
 
 }} //end namespace runtime::scheduler
