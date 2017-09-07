@@ -1,5 +1,6 @@
 
 #include "handler.h"
+#include "bit_common.h"
 
 namespace runtime {
 
@@ -23,56 +24,48 @@ HandlerManager::make_handler(
 
 /*static*/ node_t
 HandlerManager::get_handler_node(handler_t const& han) {
-  node_t const node = static_cast<node_t>(han >> handler_bits_t::Node);
-  return node;
+  return bit_packer_t::get_field<handler_bits_t::Node, node_num_bits, node_t>(han);
 }
 
 /*static*/ handler_identifier_t
 HandlerManager::get_handler_identifier(handler_t const& han) {
-  handler_identifier_t const id = static_cast<handler_identifier_t>(
-    han >> handler_bits_t::Identifier
-  );
-  return id;
+  return bit_packer_t::get_field<
+    handler_bits_t::Identifier, handler_id_num_bits, handler_identifier_t
+  >(han);
 }
 
 /*static*/ void
 HandlerManager::set_handler_node(handler_t& han, node_t const& node) {
-  han |= node << handler_bits_t::Node;
+  bit_packer_t::set_field<handler_bits_t::Node, node_num_bits>(han, node);
 }
 
 /*static*/ void
 HandlerManager::set_handler_identifier(
-  handler_t& han, handler_identifier_t const& ident
+  handler_t& han, handler_identifier_t const& id
 ) {
-  han |= ident << handler_bits_t::Identifier;
+  bit_packer_t::set_field<handler_bits_t::Identifier, handler_id_num_bits>(
+    han, id
+  );
 }
 
 /*static*/ void
 HandlerManager::set_handler_auto(handler_t& han, bool const& is_auto) {
-  if (is_auto) {
-    han |= 1 << handler_bits_t::Auto;
-  } else {
-    han &= ~(1 << handler_bits_t::Auto);
-  }
+  bit_packer_t::bool_set_field<handler_bits_t::Auto>(han, is_auto);
 }
 
 /*static*/ void
 HandlerManager::set_handler_functor(handler_t& han, bool const& is_functor) {
-  if (is_functor) {
-    han |= 1 << handler_bits_t::Functor;
-  } else {
-    han &= ~(1 << handler_bits_t::Functor);
-  }
+  bit_packer_t::bool_set_field<handler_bits_t::Functor>(han, is_functor);
 }
 
 /*static*/ bool
 HandlerManager::is_handler_auto(handler_t const& han) {
-  return (han >> handler_bits_t::Auto) & 1;
+  return bit_packer_t::bool_get_field<handler_bits_t::Auto>(han);
 }
 
 /*static*/ bool
 HandlerManager::is_handler_functor(handler_t const& han) {
-  return (han >> handler_bits_t::Functor) & 1;
+  return bit_packer_t::bool_get_field<handler_bits_t::Functor>(han);
 }
 
 } // end namespace runtime

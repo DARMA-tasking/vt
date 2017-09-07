@@ -4,58 +4,9 @@
 
 #include "config.h"
 
-#include <cstdint>
-#include <functional>
-
-namespace runtime {
-
-using node_t = int16_t;
-using handler_t = int32_t;
-using envelope_datatype_t = int8_t;
-using event_t = uint64_t;
-using epoch_t = int32_t;
-using tag_t = int32_t;
-using barrier_t = uint64_t;
-using ref_t = int16_t;
-using byte_t = uint64_t;
-using bit_count_t = int32_t;
-using action_t = std::function<void()>;
-using rdma_ptr_t = void*;
-using rdma_elm_t = int64_t;
-using rdma_block_t = int64_t;
-using rdma_handle_t = int64_t;
-using rdma_handler_t = int64_t;
-using rdma_get_t = std::tuple<rdma_ptr_t, byte_t>;
-using rdma_continuation_t = std::function<void(rdma_get_t)>;
-using rdma_continuation_del_t = std::function<void(rdma_get_t, action_t)>;
-
-constexpr int const num_check_actions = 8;
-
-static constexpr int const mpi_event_tag = 0;
-static constexpr int const normal_event_tag = 1;
-
-static constexpr epoch_t const no_epoch = -1;
-static constexpr tag_t const no_tag = -1;
-static constexpr event_t const no_event = -1;
-static constexpr barrier_t const no_barrier = -1;
-static constexpr rdma_handle_t const no_rdma_handle = -1;
-static constexpr byte_t const no_byte = -1;
-static constexpr byte_t const no_offset = -1;
-static constexpr auto no_action = nullptr;
-static constexpr rdma_ptr_t const no_rdma_ptr = nullptr;
-
-static constexpr node_t const uninitialized_destination = -1;
-static constexpr handler_t const uninitialized_handler = -1;
-static constexpr rdma_handler_t const uninitialized_rdma_handler = -1;
-static constexpr ref_t const not_shared_message = -1000;
-static constexpr rdma_elm_t const no_rdma_elm = -1;
-static constexpr rdma_block_t const no_rdma_block = -1;
-
-static constexpr bit_count_t const node_num_bits = sizeof(node_t)*8;
-static constexpr bit_count_t const handler_num_bits = sizeof(handler_t)*8;
-static constexpr bit_count_t const ref_num_bits = sizeof(int16_t)*8;
-static constexpr bit_count_t const epoch_num_bits = sizeof(epoch_t)*8;
-static constexpr bit_count_t const tag_num_bits = sizeof(tag_t)*8;
-} //end namespace runtime
+// Include common types, their sizes, and sentinel values
+#include "common_types.h"
+#include "common_type_sizes.h"
+#include "common_type_sentinels.h"
 
 #endif /*__RUNTIME_TRANSPORT_EVENT_COMMON__*/

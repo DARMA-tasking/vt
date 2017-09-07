@@ -1,97 +1,87 @@
 
 #include "rdma_handle.h"
+#include "bit_common.h"
 
 namespace runtime { namespace rdma {
-
-/*static*/ void
-HandleManager::set_rdma_bit(
-  universal_rdma_id_t& handle, bool const& set, rdma_bits_t const& bit
-) {
-  if (set) {
-    handle |= 1 << bit;
-  } else {
-    handle &= ~(1 << bit);
-  }
-}
 
 /*static*/ void
 HandleManager::set_is_sized(
   universal_rdma_id_t& handle, bool const& is_sized
 ) {
-  return set_rdma_bit(handle, is_sized, rdma_bits_t::Sized);
+  bit_packer_t::bool_set_field<rdma_bits_t::Sized>(handle, is_sized);
 }
 
 /*static*/ void
 HandleManager::set_is_collective(
   universal_rdma_id_t& handle, bool const& is_collective
 ) {
-  return set_rdma_bit(handle, is_collective, rdma_bits_t::Collective);
+  bit_packer_t::bool_set_field<rdma_bits_t::Collective>(handle, is_collective);
 }
 
 /*static*/ void
 HandleManager::set_is_handler(
   universal_rdma_id_t& handle, bool const& is_handler
 ) {
-  return set_rdma_bit(handle, is_handler, rdma_bits_t::HandlerType);
+  bit_packer_t::bool_set_field<rdma_bits_t::HandlerType>(handle, is_handler);
 }
 
 /*static*/ void
 HandleManager::set_op_type(
   universal_rdma_id_t& handle, rdma_type_t const& rdma_type
 ) {
-  handle = 0xFFFFFFC7 & handle;
-  handle |= rdma_type << rdma_bits_t::OpType;
+  bit_packer_t::set_field<rdma_bits_t::OpType, rdma_type_num_bits>(
+    handle, rdma_type
+  );
 }
 
 /*static*/ void
 HandleManager::set_rdma_node(
   universal_rdma_id_t& handle, node_t const& node
 ) {
-  handle |= (universal_rdma_id_t)node << rdma_bits_t::Node;
+  bit_packer_t::set_field<rdma_bits_t::Node, node_num_bits>(handle, node);
 }
 
 /*static*/ void
 HandleManager::set_rdma_identifier(
   universal_rdma_id_t& handle, rdma_identifier_t const& ident
 ) {
-  handle |= (universal_rdma_id_t)ident << rdma_bits_t::Identifier;
+  bit_packer_t::set_field<rdma_bits_t::Identifier, rdma_identifier_num_bits>(
+    handle, ident
+  );
 }
 
 /*static*/ node_t
 HandleManager::get_rdma_node(universal_rdma_id_t const& handle) {
-  node_t const rdma_node = static_cast<node_t>(handle >> rdma_bits_t::Node);
-  return rdma_node;
+  return bit_packer_t::get_field<rdma_bits_t::Node, node_num_bits, node_t>(handle);
 }
 
 /*static*/ rdma_identifier_t
 HandleManager::get_rdma_identifier(universal_rdma_id_t const& handle) {
-  rdma_identifier_t const ident = static_cast<rdma_identifier_t>(
-    handle >> rdma_bits_t::Identifier
-  );
-  return ident;
+  return bit_packer_t::get_field<
+    rdma_bits_t::Identifier, rdma_identifier_num_bits, rdma_identifier_t
+  >(handle);
 }
 
 /*static*/ bool
 HandleManager::is_sized(universal_rdma_id_t const& handle) {
-  return (1 << rdma_bits_t::Sized) & handle;
+  return bit_packer_t::bool_get_field<rdma_bits_t::Sized>(handle);
 }
 
 /*static*/ bool
 HandleManager::is_collective(universal_rdma_id_t const& handle) {
-  return (1 << rdma_bits_t::Collective) & handle;
+  return bit_packer_t::bool_get_field<rdma_bits_t::Collective>(handle);
 }
 
 /*static*/ bool
 HandleManager::is_handler(universal_rdma_id_t const& handle) {
-  return (1 << rdma_bits_t::HandlerType) & handle;
+  return bit_packer_t::bool_get_field<rdma_bits_t::HandlerType>(handle);
 }
 
 /*static*/ HandleManager::rdma_type_t
 HandleManager::get_op_type(universal_rdma_id_t const& handle) {
-  rdma_type_t const type = static_cast<rdma_type_t>(
-    (0x00000038 & handle) >> rdma_bits_t::OpType
-  );
-  return type;
+  return bit_packer_t::get_field<
+    rdma_bits_t::OpType, rdma_type_num_bits, rdma_type_t
+  >(handle);
 }
 
 /*static*/ HandleManager::universal_rdma_id_t

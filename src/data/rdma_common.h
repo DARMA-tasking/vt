@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "message.h"
+#include "bit_common.h"
 
 #include "rdma_types.h"
 
@@ -18,9 +19,9 @@ static constexpr rdma_identifier_t const uninitialized_rdma_identifier = -1;
 static constexpr tag_t const first_rdma_channel_tag = 1;
 
 // 64 bits: RDMA handle
-//   int64_t handle/handler : [20..52]
-//   int64_t node : 16 [4..19]
-//   int64_t op_type : 1 [3]
+//   int64_t handle/handler : [24..56]
+//   int64_t node : 16 [7..23]
+//   int64_t op_type : 4 [3]
 //   int64_t is_handler_type : 1 [2]
 //   int64_t is_collective : 1 [1]
 //   int64_t is_sized : 1 [0]
@@ -32,12 +33,12 @@ enum Type {
   Uninitialized = 3
 };
 
-static constexpr bit_count_t const rdma_type_num_bits = 3;
-static constexpr bit_count_t const rdma_identifier_num_bits = sizeof(rdma_identifier_t)*8;
+static constexpr bit_count_t const rdma_type_num_bits = 4;
 static constexpr bit_count_t const rdma_sized_num_bits = 1;
 static constexpr bit_count_t const rdma_collective_num_bits = 1;
 static constexpr bit_count_t const rdma_hander_type_num_bits = 1;
-static constexpr bit_count_t const rdma_op_type_num_bits = 1;
+static constexpr bit_count_t const rdma_identifier_num_bits =
+  bit_counter_t<rdma_identifier_t>::value;
 
 enum Bits {
   Sized       = 0,

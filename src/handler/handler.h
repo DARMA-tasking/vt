@@ -7,6 +7,7 @@
 #include <cassert>
 
 #include "common.h"
+#include "bit_common.h"
 #include "function.h"
 
 namespace runtime {
@@ -17,9 +18,10 @@ static constexpr handler_identifier_t const first_handle_identifier = 1;
 static constexpr handler_identifier_t const uninitialized_handle_identifier = -1;
 static constexpr handler_t const blank_handler = 0;
 
-static constexpr bit_count_t const handler_id_num_bits = sizeof(handler_identifier_t)*8;
 static constexpr bit_count_t const auto_num_bits = 1;
 static constexpr bit_count_t const functor_num_bits = 1;
+static constexpr bit_count_t const handler_id_num_bits =
+  bit_counter_t<handler_identifier_t>::value;
 
 enum HandlerBits {
   Auto       = 0,

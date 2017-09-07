@@ -34,11 +34,6 @@ struct HandleManager {
   );
 
   static void
-  set_rdma_bit(
-    universal_rdma_id_t& handle, bool const& set, rdma_bits_t const& bit
-  );
-
-  static void
   set_rdma_node(universal_rdma_id_t& handle, node_t const& node);
 
   static void
