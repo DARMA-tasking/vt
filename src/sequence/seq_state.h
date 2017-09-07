@@ -33,16 +33,16 @@ template <typename MessageT, action_any_function_t<MessageT>* f>
 using seq_state_t = SeqMsgState<MessageT, f>;
 
 template <typename MessageT, action_any_function_t<MessageT>* f>
-typename seq_state_t<MessageT, f>::action_container_t seq_state_t<MessageT, f>::seq_action;
+typename seq_state_t<MessageT, f>::action_container_t SeqMsgState<MessageT, f>::seq_action;
 
 template <typename MessageT, action_any_function_t<MessageT>* f>
-typename seq_state_t<MessageT, f>::tagged_action_container_t seq_state_t<MessageT, f>::seq_action_tagged;
+typename seq_state_t<MessageT, f>::tagged_action_container_t SeqMsgState<MessageT, f>::seq_action_tagged;
 
 template <typename MessageT, action_any_function_t<MessageT>* f>
-typename seq_state_t<MessageT, f>::msg_container_t seq_state_t<MessageT, f>::seq_msg;
+typename seq_state_t<MessageT, f>::msg_container_t SeqMsgState<MessageT, f>::seq_msg;
 
 template <typename MessageT, action_any_function_t<MessageT>* f>
-typename seq_state_t<MessageT, f>::tagged_msg_container_t seq_state_t<MessageT, f>::seq_msg_tagged;
+typename seq_state_t<MessageT, f>::tagged_msg_container_t SeqMsgState<MessageT, f>::seq_msg_tagged;
 
 }} //end namespace runtime::seq
 
