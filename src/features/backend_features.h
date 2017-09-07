@@ -38,6 +38,7 @@
 
 #define debug_list_features                                             \
   debug_list_holder(                                                    \
+    no_feature,            "No feature",                                \
     bit_check_overflow,    "Check bitfield overflow",                   \
     trace_enabled,         "Trace"                                      \
   )

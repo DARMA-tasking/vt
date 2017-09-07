@@ -16,12 +16,12 @@
 #define backend_debug_modes backend_options_on(none)
 #else
 #define backend_debug_modes backend_options_on(                         \
-    label, flush                                                        \
+    flush                                                               \
 )
 #endif
 
 #define backend_features backend_options_on(    \
-    dummy_feature                               \
+    no_feature                                  \
 )
 
 #define backend_debug_contexts backend_options_on(              \

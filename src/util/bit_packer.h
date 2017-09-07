@@ -2,9 +2,20 @@
 #if ! defined __RUNTIME_TRANSPORT_BIT_PACKER__
 #define __RUNTIME_TRANSPORT_BIT_PACKER__
 
+#include <cassert>
+
 namespace runtime { namespace util {
 
 struct BitPacker {
+
+  template <typename BitField>
+  static inline uint8_t
+  get_msb_bit(BitField const& field) {
+    uint64_t field_copy = static_cast<uint64_t>(field);
+    uint8_t r = 0;
+    while (field_copy >>= 1) { r++; }
+    return r;
+  }
 
   template <int8_t start, int8_t len, typename BitSegment, typename BitField>
   static inline void
@@ -23,6 +34,15 @@ struct BitPacker {
   template <int8_t start, int8_t len, typename BitSegment, typename BitField>
   static inline void
   set_field(BitField& field, BitSegment const& segment) {
+    #if backend_check_enabled(bit_check_overflow)
+    auto const& seg_msb_bit = get_msb_bit(segment);
+    //printf("size=%d, high bit=%d\n", sizeof(BitSegment)*8, seg_msb_bit);
+    assert(
+      seg_msb_bit <= len and
+      "bit_check_overflow: value in segment overflows specified bit length"
+    );
+    #endif
+
     field = field & ~(gen_bit_mask(len) << start);
     field = field | (static_cast<BitField>(segment) << start);
   }
