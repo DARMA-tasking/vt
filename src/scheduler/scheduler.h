@@ -8,6 +8,7 @@
 #include <vector>
 #include <list>
 #include <functional>
+#include <memory>
 
 namespace runtime { namespace sched {
 
