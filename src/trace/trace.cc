@@ -20,9 +20,13 @@ Trace::Trace() {
 
 /*static*/ void
 Trace::trace_begin_idle_trigger() {
-  if (not the_trace->in_idle_event()) {
-    the_trace->begin_idle();
-  }
+  backend_enable_if(
+    trace_enabled, {
+      if (not the_trace->in_idle_event()) {
+        the_trace->begin_idle();
+      }
+    }
+  );
 }
 
 void
