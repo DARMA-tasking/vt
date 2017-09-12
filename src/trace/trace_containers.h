@@ -14,10 +14,16 @@
 
 namespace runtime { namespace trace {
 
+template <typename T, typename U>
+using EventLookupType = std::unordered_map<T, U>;
+
+template <typename T, typename U, typename Comp>
+using EventSortedType = std::map<T, U, Comp>;
+
 using TraceEventType = Event;
 using EventClassType = EventClass;
-using TraceContainerEventType = std::unordered_map<TraceEntryIDType, TraceEventType>;
-using TraceContainerEventClassType = std::unordered_map<TraceEntryIDType, EventClassType>;
+using TraceContainerEventType = EventLookupType<TraceEntryIDType, TraceEventType>;
+using TraceContainerEventClassType = EventLookupType<TraceEntryIDType, EventClassType>;
 
 // Use static template initialization pattern to deal with ordering issues with
 // auto-registry
@@ -43,11 +49,13 @@ struct TraceEventSeqCompare {
 template <typename T>
 using EventCompareType = TraceEventSeqCompare<T>;
 
-using container_event_sorted_t =
-  std::map<TraceContainerEventType::mapped_type*, bool, EventCompareType<TraceEventType>>;
+using container_event_sorted_t = EventSortedType<
+  TraceContainerEventType::mapped_type*, bool, EventCompareType<TraceEventType>
+>;
 
-using container_event_type_sorted_t =
-  std::map<TraceContainerEventClassType::mapped_type*, bool, EventCompareType<EventClassType>>;
+using container_event_type_sorted_t = EventSortedType<
+  TraceContainerEventClassType::mapped_type*, bool, EventCompareType<EventClassType>
+>;
 
 }} //end namespace runtime::trace
 
