@@ -33,8 +33,6 @@ enum eEnvelopeType {
 
 static constexpr bit_count_t const envelope_num_bits = 7;
 
-using envelope_type_t = eEnvelopeType;
-
 struct Envelope {
   EnvelopeDataType type : envelope_num_bits;
   NodeType dest : node_num_bits;
