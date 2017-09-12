@@ -26,64 +26,64 @@ struct TerminationDetector : Tree {
   }
 
   template <typename T>
-  using epoch_container_t = std::unordered_map<epoch_t, T>;
+  using epoch_container_t = std::unordered_map<EpochType, T>;
 
   inline void
-  produce(epoch_t const& epoch = no_epoch) {
+  produce(EpochType const& epoch = no_epoch) {
     produce_consume(epoch, true);
   }
 
   inline void
-  consume(epoch_t const& epoch = no_epoch) {
+  consume(EpochType const& epoch = no_epoch) {
     produce_consume(epoch, false);
   }
 
   void
-  produce_consume(epoch_t const& epoch = no_epoch, bool produce = true);
+  produce_consume(EpochType const& epoch = no_epoch, bool produce = true);
 
   void
   maybe_propagate();
 
   void
   propagate_epoch_external(
-    epoch_t const& epoch, term_counter_t const& prod, term_counter_t const& cons
+    EpochType const& epoch, term_counter_t const& prod, term_counter_t const& cons
   );
 
   bool
-  propagate_epoch(epoch_t const& epoch, term_state_t& state);
+  propagate_epoch(EpochType const& epoch, term_state_t& state);
 
   void
-  epoch_finished(epoch_t const& epoch);
+  epoch_finished(EpochType const& epoch);
 
   void
-  epoch_continue(epoch_t const& epoch);
+  epoch_continue(EpochType const& epoch);
 
   void
-  trigger_all_epoch_actions(epoch_t const& epoch);
+  trigger_all_epoch_actions(EpochType const& epoch);
 
   void
-  trigger_all_actions(epoch_t const& epoch);
+  trigger_all_actions(EpochType const& epoch);
 
-  epoch_t
+  EpochType
   new_epoch();
 
   void
   attach_global_term_action(action_t action);
 
   void
-  attach_epoch_term_action(epoch_t const& epoch, action_t action);
+  attach_epoch_term_action(EpochType const& epoch, action_t action);
 
   static void
   register_default_termination_action();
 
   void
-  setup_new_epoch(epoch_t const& new_epoch);
+  setup_new_epoch(EpochType const& new_epoch);
 
   void
-  propagate_new_epoch(epoch_t const& new_epoch);
+  propagate_new_epoch(EpochType const& new_epoch);
 
   void
-  ready_new_epoch(epoch_t const& new_epoch);
+  ready_new_epoch(EpochType const& new_epoch);
 
   static void
   propagate_new_epoch_handler(TermMsg* msg);
@@ -101,10 +101,10 @@ struct TerminationDetector : Tree {
   epoch_continue_handler(TermMsg* msg);
 
 private:
-  epoch_t cur_epoch = no_epoch;
+  EpochType cur_epoch = no_epoch;
 
   // the epoch window [fst, lst]
-  epoch_t first_resolved_epoch = no_epoch, last_resolved_epoch = no_epoch;
+  EpochType first_resolved_epoch = no_epoch, last_resolved_epoch = no_epoch;
 
   // global termination state
   term_state_t any_epoch_state;

@@ -77,7 +77,7 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT>
-  void set_epoch_message(MessageT* const msg, epoch_t const& epoch) {
+  void set_epoch_message(MessageT* const msg, EpochType const& epoch) {
     envelope_set_epoch(msg->env, epoch);
   }
 

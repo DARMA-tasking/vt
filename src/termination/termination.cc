@@ -52,7 +52,7 @@ TerminationDetector::register_default_termination_action() {
 }
 
 void
-TerminationDetector::produce_consume(epoch_t const& epoch, bool produce) {
+TerminationDetector::produce_consume(EpochType const& epoch, bool produce) {
   if (produce) {
     any_epoch_state.l_prod++;
   } else {
@@ -102,7 +102,7 @@ TerminationDetector::maybe_propagate() {
 
 void
 TerminationDetector::propagate_epoch_external(
-  epoch_t const& epoch, term_counter_t const& prod, term_counter_t const& cons
+  EpochType const& epoch, term_counter_t const& prod, term_counter_t const& cons
 ) {
   debug_print(
     term, node,
@@ -140,7 +140,7 @@ TerminationDetector::propagate_epoch_external(
 
 bool
 TerminationDetector::propagate_epoch(
-  epoch_t const& epoch, term_state_t& state
+  EpochType const& epoch, term_state_t& state
 ) {
   setup_tree();
 
@@ -233,7 +233,7 @@ TerminationDetector::propagate_epoch(
 }
 
 void
-TerminationDetector::epoch_finished(epoch_t const& epoch){
+TerminationDetector::epoch_finished(EpochType const& epoch){
   debug_print(
     term, node,
     "%d: epoch_finished: epoch=%d\n", my_node, epoch
@@ -249,7 +249,7 @@ TerminationDetector::epoch_finished(epoch_t const& epoch){
 }
 
 void
-TerminationDetector::epoch_continue(epoch_t const& epoch){
+TerminationDetector::epoch_continue(EpochType const& epoch){
   debug_print(
     term, node,
     "%d: epoch_continue: epoch=%d\n", my_node, epoch
@@ -270,7 +270,7 @@ TerminationDetector::epoch_continue(epoch_t const& epoch){
 }
 
 void
-TerminationDetector::trigger_all_epoch_actions(epoch_t const& epoch) {
+TerminationDetector::trigger_all_epoch_actions(EpochType const& epoch) {
   auto action_iter = epoch_actions.find(epoch);
   if (action_iter != epoch_actions.end()) {
     for (auto&& action : action_iter->second) {
@@ -281,7 +281,7 @@ TerminationDetector::trigger_all_epoch_actions(epoch_t const& epoch) {
 }
 
 void
-TerminationDetector::trigger_all_actions(epoch_t const& epoch) {
+TerminationDetector::trigger_all_actions(EpochType const& epoch) {
   if (epoch == no_epoch) {
     for (auto&& state : epoch_state) {
       trigger_all_epoch_actions(state.first);
@@ -297,13 +297,13 @@ TerminationDetector::trigger_all_actions(epoch_t const& epoch) {
   }
 }
 
-epoch_t
+EpochType
 TerminationDetector::new_epoch() {
   if (cur_epoch == no_epoch) {
     cur_epoch = first_epoch;
   }
 
-  epoch_t const cur = cur_epoch;
+  EpochType const cur = cur_epoch;
   cur_epoch++;
 
   propagate_new_epoch(cur);
@@ -318,7 +318,7 @@ TerminationDetector::attach_global_term_action(action_t action) {
 
 void
 TerminationDetector::attach_epoch_term_action(
-  epoch_t const& epoch, action_t action
+  EpochType const& epoch, action_t action
 ) {
   auto epoch_iter = epoch_actions.find(epoch);
   if (epoch_iter == epoch_actions.end()) {
@@ -335,7 +335,7 @@ TerminationDetector::attach_epoch_term_action(
 }
 
 void
-TerminationDetector::setup_new_epoch(epoch_t const& new_epoch) {
+TerminationDetector::setup_new_epoch(EpochType const& new_epoch) {
   auto epoch_iter = epoch_state.find(new_epoch);
   if (epoch_iter == epoch_state.end()) {
     assert(
@@ -354,7 +354,7 @@ TerminationDetector::setup_new_epoch(epoch_t const& new_epoch) {
 }
 
 void
-TerminationDetector::propagate_new_epoch(epoch_t const& new_epoch) {
+TerminationDetector::propagate_new_epoch(EpochType const& new_epoch) {
   setup_tree();
 
   setup_new_epoch(new_epoch);
@@ -382,7 +382,7 @@ TerminationDetector::propagate_new_epoch(epoch_t const& new_epoch) {
 }
 
 void
-TerminationDetector::ready_new_epoch(epoch_t const& new_epoch) {
+TerminationDetector::ready_new_epoch(EpochType const& new_epoch) {
   if (first_resolved_epoch == no_epoch) {
     assert(last_resolved_epoch == no_epoch);
     first_resolved_epoch = 0;

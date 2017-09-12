@@ -6,7 +6,7 @@
 
 namespace runtime { namespace epoch {
 
-static constexpr epoch_t const first_epoch = 1;
+static constexpr EpochType const first_epoch = 1;
 
 }} //end namespace runtime::epoch
 

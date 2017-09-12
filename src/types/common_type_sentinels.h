@@ -12,7 +12,7 @@ static constexpr int const num_check_actions = 8;
 static constexpr int const mpi_event_tag = 0;
 static constexpr int const normal_event_tag = 1;
 
-static constexpr epoch_t const no_epoch = -1;
+static constexpr EpochType const no_epoch = -1;
 static constexpr tag_t const no_tag = -1;
 static constexpr event_t const no_event = -1;
 static constexpr barrier_t const no_barrier = -1;
