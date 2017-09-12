@@ -32,7 +32,7 @@ struct Trace {
   using log_t = Log;
   using TraceConstantsType = TraceConstants;
   using TraceContainersType = TraceContainers<void>;
-  using time_int_t = int64_t;
+  using TimeIntegerType = int64_t;
   using log_ptr_t = log_t*;
   using trace_container_t = std::vector<log_ptr_t>;
   using trace_stack_t = std::stack<log_ptr_t>;
@@ -121,7 +121,7 @@ struct Trace {
   static void
   output_footer(NodeType const& node, double const& start, gzFile file);
 
-  static time_int_t
+  static TimeIntegerType
   time_to_int(double const& time);
 
   static void

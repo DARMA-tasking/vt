@@ -504,9 +504,9 @@ Trace::output_footer(
   gzprintf(file, "7 %lld\n", time_to_int(get_current_time() - start));
 }
 
-/*static*/ Trace::time_int_t
+/*static*/ Trace::TimeIntegerType
 Trace::time_to_int(double const& time) {
-  return static_cast<time_int_t>(time * 1e6);
+  return static_cast<TimeIntegerType>(time * 1e6);
 }
 
 }} //end namespace runtime::trace
