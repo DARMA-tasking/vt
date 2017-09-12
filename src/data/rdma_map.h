@@ -20,14 +20,16 @@ struct Map {
     : block_map(in_block_map), elm_map(in_elm_map)
   { }
 
-  static NodeType
-  default_block_map(RDMA_BlockType block, RDMA_BlockType num_blocks) {
+  static NodeType default_block_map(
+    RDMA_BlockType block, RDMA_BlockType __attribute__((unused)) num_blocks
+  ) {
     auto const& num_nodes = the_context->get_num_nodes();
     return block % num_nodes;
   };
 
-  static RDMA_BlockElmRangeType
-  default_elm_map(RDMA_ElmType elm, RDMA_ElmType num_elms, RDMA_BlockType num_blocks) {
+  static RDMA_BlockElmRangeType default_elm_map(
+    RDMA_ElmType elm, RDMA_ElmType num_elms, RDMA_BlockType num_blocks
+  ) {
     auto const& block_size = num_elms / num_blocks;
     auto const& block = elm / block_size;
     return RDMA_BlockElmRangeType{block, (block)*block_size, (block+1)*block_size};
