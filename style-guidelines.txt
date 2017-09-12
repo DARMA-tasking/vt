@@ -15,8 +15,13 @@ struct MyClassName : OtherClass {
     int my_local_count = 0;
   }
 
+  // if function returns bool, it should start with "is" or "has"
+  bool isValid();
+  bool hasValue();
+
 private:
   int my_data_;
+  bool is_coll; // if data is boolean, it should start with "is" or "has"
 };
 
 enum eMyEnum {
