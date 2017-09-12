@@ -17,8 +17,8 @@ struct Group {
   Group(
     rdma_map_t const& in_map, RDMA_ElmType const& in_total_elms,
     RDMA_BlockType const& in_num_blocks, ByteType const& in_elm_size
-  ) : map(in_map), num_total_elems(in_total_elms),
-      num_blocks(in_num_blocks), elm_size(in_elm_size)
+  ) : map(in_map), elm_size(in_elm_size), num_total_elems(in_total_elms),
+      num_blocks(in_num_blocks)
   { }
 
   void

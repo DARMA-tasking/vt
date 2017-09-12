@@ -22,7 +22,7 @@ struct Pending {
   { }
 
   Pending(RDMA_PtrType in_data_ptr, ActionType in_cont2)
-    : data_ptr(in_data_ptr), cont2(in_cont2)
+    : cont2(in_cont2), data_ptr(in_data_ptr)
   { }
 };
 
