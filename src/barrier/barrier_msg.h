@@ -3,6 +3,7 @@
 #define __RUNTIME_TRANSPORT_BARRIER_MSGS__
 
 #include "common.h"
+#include "message.h"
 
 namespace vt { namespace barrier {
 
@@ -14,7 +15,7 @@ struct BarrierMsg : vt::ShortMessage {
     bool const& in_is_named, BarrierType const& in_barrier, bool const& in_is_wait
   )
     : ShortMessage(), is_named(in_is_named), is_wait(in_is_wait),
-      barrier(in_barrier), skip_term(false)
+      skip_term(false), barrier(in_barrier)
   { }
 };
 
@@ -30,7 +31,7 @@ struct BarrierState {
 
   BarrierState(
     bool const& in_is_named, BarrierType const& in_barrier, bool const& in_is_wait
-  ) : is_named(in_is_named), is_wait(in_is_wait), barrier(in_barrier)
+  ) : barrier(in_barrier), is_wait(in_is_wait), is_named(in_is_named)
   { }
 };
 
