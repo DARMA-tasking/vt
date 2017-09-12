@@ -14,7 +14,7 @@ static constexpr uint32_t const trace_flush_size = 100000;
 
 using TraceEntryType = std::hash<std::string>::result_type;
 using TraceEventType = uint32_t;
-using trace_msg_len_t = size_t;
+using TraceMsgLenType = size_t;
 
 static constexpr TraceEntryType const no_trace_ep = -1;
 static constexpr TraceEventType const no_trace_event = 0;
