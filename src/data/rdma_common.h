@@ -33,11 +33,11 @@ enum Type {
   Uninitialized = 3
 };
 
-static constexpr bit_count_t const rdma_type_num_bits = 4;
-static constexpr bit_count_t const rdma_sized_num_bits = 1;
-static constexpr bit_count_t const rdma_collective_num_bits = 1;
-static constexpr bit_count_t const rdma_hander_type_num_bits = 1;
-static constexpr bit_count_t const rdma_identifier_num_bits =
+static constexpr BitCountType const rdma_type_num_bits = 4;
+static constexpr BitCountType const rdma_sized_num_bits = 1;
+static constexpr BitCountType const rdma_collective_num_bits = 1;
+static constexpr BitCountType const rdma_hander_type_num_bits = 1;
+static constexpr BitCountType const rdma_identifier_num_bits =
   bit_counter_t<rdma_identifier_t>::value;
 
 enum Bits {

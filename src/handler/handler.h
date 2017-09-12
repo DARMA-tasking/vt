@@ -18,9 +18,9 @@ static constexpr handler_identifier_t const first_handle_identifier = 1;
 static constexpr handler_identifier_t const uninitialized_handle_identifier = -1;
 static constexpr HandlerType const blank_handler = 0;
 
-static constexpr bit_count_t const auto_num_bits = 1;
-static constexpr bit_count_t const functor_num_bits = 1;
-static constexpr bit_count_t const handler_id_num_bits =
+static constexpr BitCountType const auto_num_bits = 1;
+static constexpr BitCountType const functor_num_bits = 1;
+static constexpr BitCountType const handler_id_num_bits =
   bit_counter_t<handler_identifier_t>::value;
 
 enum HandlerBits {

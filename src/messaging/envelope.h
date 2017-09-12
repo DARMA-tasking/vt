@@ -30,7 +30,7 @@ enum eEnvelopeType {
   EnvCallback = 6
 };
 
-static constexpr bit_count_t const envelope_num_bits = 7;
+static constexpr BitCountType const envelope_num_bits = 7;
 
 struct Envelope {
   EnvelopeDataType type : envelope_num_bits;

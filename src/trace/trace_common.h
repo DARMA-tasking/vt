@@ -21,7 +21,7 @@ static constexpr TraceEventIDType const no_trace_event = 0;
 static constexpr NodeType const designated_root_node = 0;
 static constexpr int64_t const trace_reserve_count = 1048576;
 
-static constexpr bit_count_t const trace_event_num_bits = 32;
+static constexpr BitCountType const trace_event_num_bits = 32;
 
 }} //end namespace runtime::trace
 

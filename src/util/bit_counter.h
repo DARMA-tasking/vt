@@ -6,7 +6,7 @@ namespace runtime { namespace util {
 
 template <typename BitField>
 struct BitCounter {
-  static constexpr bit_count_t const value = sizeof(BitField) * 8;
+  static constexpr BitCountType const value = sizeof(BitField) * 8;
 };
 
 }} //end namespace runtime::util
