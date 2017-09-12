@@ -6,7 +6,7 @@ namespace runtime { namespace rdma {
 Channel::Channel(
   rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
   NodeType const& in_target, TagType const& in_channel_group_tag,
-  NodeType const& in_non_target, rdma_ptr_t const& in_ptr, ByteType const& in_num_bytes
+  NodeType const& in_non_target, RDMA_PtrType const& in_ptr, ByteType const& in_num_bytes
 ) : rdma_handle(in_rdma_handle), op_type(in_op_type),target(in_target),
     channel_group_tag(in_channel_group_tag), non_target(in_non_target),
     ptr(in_ptr), num_bytes(in_num_bytes)
@@ -183,7 +183,7 @@ Channel::unlock_channel_for_op() {
 
 void
 Channel::write_data_to_channel(
-  rdma_ptr_t const& ptr, ByteType const& ptr_num_bytes, ByteType const& offset
+  RDMA_PtrType const& ptr, ByteType const& ptr_num_bytes, ByteType const& offset
 ) {
   assert(initialized and "Channel must be initialized");
   assert(not is_target and "The target can not write to this channel");

@@ -20,7 +20,7 @@ static constexpr rdma_handle_t const no_rdma_handle = -1;
 static constexpr ByteType const no_byte = -1;
 static constexpr ByteType const no_offset = -1;
 static constexpr auto no_action = nullptr;
-static constexpr rdma_ptr_t const no_rdma_ptr = nullptr;
+static constexpr RDMA_PtrType const no_rdma_ptr = nullptr;
 
 static constexpr NodeType const uninitialized_destination = 0xFFFF;
 static constexpr HandlerType const uninitialized_handler = -1;

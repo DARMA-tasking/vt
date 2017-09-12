@@ -28,7 +28,7 @@ struct Channel {
     rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
     NodeType const& in_target, TagType const& in_channel_group_tag,
     NodeType const& in_non_target = uninitialized_destination,
-    rdma_ptr_t const& in_ptr = nullptr, ByteType const& in_num_bytes = no_byte
+    RDMA_PtrType const& in_ptr = nullptr, ByteType const& in_num_bytes = no_byte
   );
 
   void
@@ -48,7 +48,7 @@ struct Channel {
 
   void
   write_data_to_channel(
-    rdma_ptr_t const& ptr, ByteType const& ptr_num_bytes, ByteType const& offset
+    RDMA_PtrType const& ptr, ByteType const& ptr_num_bytes, ByteType const& offset
   );
 
   void
@@ -77,7 +77,7 @@ private:
   NodeType my_node = uninitialized_destination;
   NodeType non_target = uninitialized_destination;
   ByteType num_bytes = no_byte;
-  rdma_ptr_t ptr = no_rdma_ptr;
+  RDMA_PtrType ptr = no_rdma_ptr;
   rdma_type_t op_type = uninitialized_rdma_type;
 
   TagType channel_group_tag = no_tag;

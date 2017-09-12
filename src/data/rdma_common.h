@@ -54,9 +54,9 @@ using rdma_op_t = int64_t;
 static constexpr rdma_op_t const no_rdma_op = -1;
 
 using active_get_function_t = std::function<rdma_get_t(BaseMessage*, ByteType, ByteType, TagType)>;
-using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t, ByteType, ByteType, TagType)>;
+using active_put_function_t = std::function<void(BaseMessage*, RDMA_PtrType, ByteType, ByteType, TagType)>;
 
-using rdma_ptr_continuation_t = std::function<void(rdma_ptr_t)>;
+using rdma_ptr_continuation_t = std::function<void(RDMA_PtrType)>;
 using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;
 
 using rdma_num_elems_t = int64_t;

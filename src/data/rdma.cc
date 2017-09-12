@@ -245,7 +245,7 @@ RDMAManager::remote_channel(ChannelMessage* msg) {
 
 rdma_handle_t
 RDMAManager::register_new_collective(
-  bool const& use_default, rdma_ptr_t const& ptr, ByteType const& num_bytes,
+  bool const& use_default, RDMA_PtrType const& ptr, ByteType const& num_bytes,
   ByteType const& num_total_bytes, ByteType const& elm_size, rdma_map_t const& map
 ) {
   auto const& han = register_new_rdma_handler(use_default, ptr, num_bytes, true);
@@ -266,7 +266,7 @@ RDMAManager::register_new_collective(
 
 rdma_handle_t
 RDMAManager::register_new_rdma_handler(
-  bool const& use_default, rdma_ptr_t const& ptr, ByteType const& num_bytes,
+  bool const& use_default, RDMA_PtrType const& ptr, ByteType const& num_bytes,
   bool const& is_collective
 ) {
   auto const& this_node = the_context->get_node();
@@ -342,7 +342,7 @@ void
 RDMAManager::request_get_data(
   GetMessage* msg, bool const& is_user_msg, rdma_handle_t const& han,
   TagType const& tag, ByteType const& num_bytes, ByteType const& offset,
-  rdma_ptr_t const& ptr, rdma_continuation_t cont, ActionType next_action
+  RDMA_PtrType const& ptr, rdma_continuation_t cont, ActionType next_action
 ) {
   auto const& this_node = the_context->get_node();
   auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
@@ -369,7 +369,7 @@ RDMAManager::request_get_data(
 
 void
 RDMAManager::trigger_get_recv_data(
-  rdma_op_t const& op, TagType const& tag, rdma_ptr_t ptr, ByteType const& num_bytes,
+  rdma_op_t const& op, TagType const& tag, RDMA_PtrType ptr, ByteType const& num_bytes,
   ActionType const& action
 ) {
   auto iter = pending_ops.find(op);
@@ -427,7 +427,7 @@ RDMAManager::trigger_put_back_data(rdma_op_t const& op) {
 
 void
 RDMAManager::trigger_put_recv_data(
-  rdma_handle_t const& han, TagType const& tag, rdma_ptr_t ptr,
+  rdma_handle_t const& han, TagType const& tag, RDMA_PtrType ptr,
   ByteType const& num_bytes, ByteType const& offset, ActionType const& action
 ) {
   auto const& this_node = the_context->get_node();
@@ -459,7 +459,7 @@ RDMAManager::trigger_put_recv_data(
   return state.put_data(nullptr, is_user_msg, info);
 }
 
-rdma_ptr_t
+RDMA_PtrType
 RDMAManager::try_put_ptr(
   rdma_handle_t const& han, TagType const& tag
 ) {
@@ -512,7 +512,7 @@ RDMAManager::sync_channel(
 
 void
 RDMAManager::send_data_channel(
-  rdma_type_t const& type, rdma_handle_t const& han, rdma_ptr_t const& ptr,
+  rdma_type_t const& type, rdma_handle_t const& han, RDMA_PtrType const& ptr,
   ByteType const& num_bytes, ByteType const& offset, NodeType const& target,
   NodeType const& non_target, ActionType cont, ActionType action_after_remote_op
 ) {
@@ -537,7 +537,7 @@ RDMAManager::send_data_channel(
 
 void
 RDMAManager::put_data(
-  rdma_handle_t const& han, rdma_ptr_t const& ptr, ByteType const& num_bytes,
+  rdma_handle_t const& han, RDMA_PtrType const& ptr, ByteType const& num_bytes,
   ByteType const& offset, TagType const& tag, ActionType cont,
   ActionType action_after_put, NodeType const& collective_node
 ) {
@@ -625,7 +625,7 @@ RDMAManager::put_data(
 
 void
 RDMAManager::get_region_typeless(
-  rdma_handle_t const& han, rdma_ptr_t const& ptr, rdma_region_t const& region,
+  rdma_handle_t const& han, RDMA_PtrType const& ptr, rdma_region_t const& region,
   ActionType next_action
 ) {
   auto const& this_node = the_context->get_node();
@@ -689,7 +689,7 @@ RDMAManager::get_region_typeless(
 
 void
 RDMAManager::get_data_into_buf_collective(
-  rdma_handle_t const& han, rdma_ptr_t const& ptr, ByteType const& num_bytes,
+  rdma_handle_t const& han, RDMA_PtrType const& ptr, ByteType const& num_bytes,
   ByteType const& elm_size, ByteType const& offset, ActionType next_action
 ) {
   auto const& this_node = the_context->get_node();
@@ -711,7 +711,7 @@ RDMAManager::get_data_into_buf_collective(
 
 void
 RDMAManager::get_data_into_buf(
-  rdma_handle_t const& han, rdma_ptr_t const& ptr, ByteType const& num_bytes,
+  rdma_handle_t const& han, RDMA_PtrType const& ptr, ByteType const& num_bytes,
   ByteType const& offset, TagType const& tag, ActionType next_action,
   ByteType const& elm_size, NodeType const& collective_node
 ) {
@@ -967,7 +967,7 @@ RDMAManager::create_direct_channel_finish(
   auto const& this_node = the_context->get_node();
   auto const target = get_target(han, override_target);
 
-  rdma_ptr_t target_ptr = no_rdma_ptr;
+  RDMA_PtrType target_ptr = no_rdma_ptr;
   ByteType target_num_bytes = num_bytes;
 
   if (is_target) {

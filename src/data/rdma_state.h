@@ -35,12 +35,12 @@ struct State {
   using container_t = std::vector<T>;
 
   rdma_handle_t handle = no_rdma_handle;
-  rdma_ptr_t ptr = no_rdma_ptr;
+  RDMA_PtrType ptr = no_rdma_ptr;
   ByteType num_bytes = no_byte;
 
   State(
     rdma_handle_t const& in_handle,
-    rdma_ptr_t const& in_ptr = no_rdma_ptr,
+    RDMA_PtrType const& in_ptr = no_rdma_ptr,
     ByteType const& in_num_bytes = no_byte,
     bool const& use_default_handler = false
   );
@@ -93,7 +93,7 @@ struct State {
 
   void
   default_put_handler_fn(
-    BaseMessage* msg, rdma_ptr_t in_ptr, ByteType in_num_bytes,
+    BaseMessage* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes,
     ByteType req_offset, TagType tag
   );
 
