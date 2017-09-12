@@ -59,8 +59,8 @@ Trace::~Trace() {
 
 void
 Trace::begin_processing(
-  TraceEntryType const& ep, TraceMsgLenType const& len,
-  TraceEventType const& event, NodeType const& from_node, double const& time
+  TraceEntryIDType const& ep, TraceMsgLenType const& len,
+  TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::BeginProcessing;
   log_ptr_t log = new log_t(time, ep, type);
@@ -79,8 +79,8 @@ Trace::begin_processing(
 
 void
 Trace::end_processing(
-  TraceEntryType const& ep, TraceMsgLenType const& len,
-  TraceEventType const& event, NodeType const& from_node, double const& time
+  TraceEntryIDType const& ep, TraceMsgLenType const& len,
+  TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::EndProcessing;
   log_ptr_t log = new log_t(time, ep, type);
@@ -100,7 +100,7 @@ Trace::end_processing(
 void
 Trace::begin_idle(double const& time) {
   auto const& type = trace_type_t::BeginIdle;
-  log_ptr_t log = new log_t(time, no_trace_ep, type);
+  log_ptr_t log = new log_t(time, no_trace_entry_id, type);
 
   debug_print(
     trace, node, "begin_idle: time=%f\n", time
@@ -116,7 +116,7 @@ Trace::begin_idle(double const& time) {
 void
 Trace::end_idle(double const& time) {
   auto const& type = trace_type_t::EndIdle;
-  log_ptr_t log = new log_t(time, no_trace_ep, type);
+  log_ptr_t log = new log_t(time, no_trace_entry_id, type);
 
   debug_print(
     trace, node, "end_idle: time=%f\n", time
@@ -129,9 +129,9 @@ Trace::end_idle(double const& time) {
   idle_begun = false;
 }
 
-TraceEventType
+TraceEventIDType
 Trace::message_creation(
-  TraceEntryType const& ep, TraceMsgLenType const& len, double const& time
+  TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
   auto const& type = trace_type_t::Creation;
   log_ptr_t log = new log_t(time, ep, type);
@@ -142,9 +142,9 @@ Trace::message_creation(
   return log_event(log);
 }
 
-TraceEventType
+TraceEventIDType
 Trace::message_creation_bcast(
-  TraceEntryType const& ep, TraceMsgLenType const& len, double const& time
+  TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
   auto const& type = trace_type_t::CreationBcast;
   log_ptr_t log = new log_t(time, ep, type);
@@ -155,9 +155,9 @@ Trace::message_creation_bcast(
   return log_event(log);
 }
 
-TraceEventType
+TraceEventIDType
 Trace::message_recv(
-  TraceEntryType const& ep, TraceMsgLenType const& len,
+  TraceEntryIDType const& ep, TraceMsgLenType const& len,
   NodeType const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::MessageRecv;
@@ -168,7 +168,7 @@ Trace::message_recv(
   return log_event(log);
 }
 
-TraceEventType
+TraceEventIDType
 Trace::log_event(log_ptr_t log) {
   if (not enabled) {
     return 0;
@@ -181,7 +181,7 @@ Trace::log_event(log_ptr_t log) {
     end_idle();
   }
 
-  auto grouped_begin = [&]() -> TraceEventType {
+  auto grouped_begin = [&]() -> TraceEventIDType {
     if (not open_events.empty()) {
       traces.push_back(
         new log_t(
@@ -197,7 +197,7 @@ Trace::log_event(log_ptr_t log) {
     return log->event;
   };
 
-  auto grouped_end = [&]() -> TraceEventType {
+  auto grouped_end = [&]() -> TraceEventIDType {
     assert(
       not open_events.empty() and "Stack should be empty"
     );
@@ -227,7 +227,7 @@ Trace::log_event(log_ptr_t log) {
     return log->event;
   };
 
-  auto basic_new_event_create = [&]() -> TraceEventType {
+  auto basic_new_event_create = [&]() -> TraceEventIDType {
     traces.push_back(log);
 
     log->event = cur_event++;
@@ -235,7 +235,7 @@ Trace::log_event(log_ptr_t log) {
     return log->event;
   };
 
-  auto basic_no_event_create = [&]() -> TraceEventType {
+  auto basic_no_event_create = [&]() -> TraceEventIDType {
     traces.push_back(log);
 
     log->event = no_trace_event;
@@ -317,13 +317,13 @@ Trace::write_log_file(gzFile file, trace_container_t const& traces) {
     auto event_iter = trace_cont_t::event_container.find(log->ep);
 
     assert(
-      log->ep == no_trace_ep or
+      log->ep == no_trace_entry_id or
       event_iter != trace_cont_t::event_container.end() and
       "Event must exist that was logged"
     );
 
-    auto const& event_seq_id = log->ep == no_trace_ep ?
-      no_trace_ep : event_iter->second.get_event_seq();
+    auto const& event_seq_id = log->ep == no_trace_entry_id ?
+      no_trace_entry_id : event_iter->second.get_event_seq();
 
     auto const& num_nodes = the_context->get_num_nodes();
 

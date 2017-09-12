@@ -22,12 +22,12 @@ struct EventClass {
 
   EventClass(EventClass const&) = default;
 
-  TraceEntryType
+  TraceEntryIDType
   get_event_id() const {
     return this_event;
   }
 
-  TraceEntryType
+  TraceEntryIDType
   get_event_seq_id() const {
     return this_event_seq;
   }
@@ -38,25 +38,25 @@ struct EventClass {
   }
 
   void
-  set_event_seq(TraceEntryType const& seq) {
+  set_event_seq(TraceEntryIDType const& seq) {
     this_event_seq = seq;
   }
 
-  TraceEntryType
+  TraceEntryIDType
   get_event_seq() const {
     return this_event_seq;
   }
 
 private:
-  TraceEntryType this_event = no_trace_ep;
+  TraceEntryIDType this_event = no_trace_entry_id;
 
-  TraceEntryType this_event_seq = no_trace_ep;
+  TraceEntryIDType this_event_seq = no_trace_entry_id;
 
   std::string event;
 };
 
 struct Event : EventClass {
-  Event(std::string const& in_event, TraceEntryType const& in_event_type)
+  Event(std::string const& in_event, TraceEntryIDType const& in_event_type)
     : EventClass(in_event), this_event_type(in_event_type)
   {
     auto const& event_hash =  std::hash<std::string>{}(in_event);
@@ -65,25 +65,25 @@ struct Event : EventClass {
 
   Event(Event const&) = default;
 
-  TraceEntryType
+  TraceEntryIDType
   get_event_type_id() const {
     return this_event_type;
   }
 
   void
-  set_event_type_seq(TraceEntryType const& seq) {
+  set_event_type_seq(TraceEntryIDType const& seq) {
     this_event_type_seq = seq;
   }
 
-  TraceEntryType
+  TraceEntryIDType
   get_event_type_seq() const {
     return this_event_type_seq;
   }
 
 private:
-  TraceEntryType this_event_type = no_trace_ep;
+  TraceEntryIDType this_event_type = no_trace_entry_id;
 
-  TraceEntryType this_event_type_seq = no_trace_ep;
+  TraceEntryIDType this_event_type_seq = no_trace_entry_id;
 };
 
 }} //end namespace runtime::trace

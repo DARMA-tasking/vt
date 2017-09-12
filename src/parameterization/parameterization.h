@@ -73,8 +73,8 @@ static void data_message_handler(DataMsg<Tuple>* msg) {
   );
 
 #if backend_check_enabled(trace_enabled)
-  trace::trace_ep_t ep = auto_registry::get_trace_id(msg->sub_han);
-  trace::trace_event_t event = envelope_get_trace_event(msg->env);
+  trace::TraceEntryIDType ep = auto_registry::get_trace_id(msg->sub_han);
+  trace::TraceEventIDType event = envelope_get_trace_event(msg->env);
 
   printf("data_message_handler: id=%d, ep=%lu\n", msg->sub_han, ep);
 

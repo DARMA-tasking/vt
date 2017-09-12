@@ -7,7 +7,7 @@
 namespace runtime { namespace auto_registry {
 
 #if backend_check_enabled(trace_enabled)
-trace::trace_ep_t
+trace::TraceEntryIDType
 get_trace_id(HandlerType const& handler) {
   auto const& han_id = handler_manager_t::get_handler_identifier(handler);
 

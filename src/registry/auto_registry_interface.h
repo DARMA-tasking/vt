@@ -22,7 +22,7 @@ auto_active_t get_auto_handler(HandlerType const& handler);
 auto_active_functor_t get_auto_handler_functor(HandlerType const& handler);
 
 #if backend_check_enabled(trace_enabled)
-trace::trace_ep_t get_trace_id(HandlerType const& handler);
+trace::TraceEntryIDType get_trace_id(HandlerType const& handler);
 #endif
 
 }} // end namespace runtime::auto_registry

@@ -13,19 +13,19 @@
 namespace runtime { namespace trace {
 
 struct Log {
-  using log_ptr_t = std::shared_ptr<Log>;
-  using trace_type_t = TraceConstants;
+  using LogPtrType = std::shared_ptr<Log>;
+  using TraceConstantsType = TraceConstants;
 
   double time = 0.0;
-  TraceEntryType ep = no_trace_ep;
-  trace_type_t type = trace_type_t::InvalidTraceType;
-  TraceEventType event = no_trace_event;
+  TraceEntryIDType ep = no_trace_entry_id;
+  TraceConstantsType type = TraceConstantsType::InvalidTraceType;
+  TraceEventIDType event = no_trace_event;
   TraceMsgLenType msg_len = 0;
   NodeType node = uninitialized_destination;
 
   Log(
-    double const& in_time, TraceEntryType const& in_ep,
-    trace_type_t const& in_type, TraceMsgLenType const& in_msg_len = 0
+    double const& in_time, TraceEntryIDType const& in_ep,
+    TraceConstantsType const& in_type, TraceMsgLenType const& in_msg_len = 0
   ) : time(in_time), ep(in_ep), type(in_type), msg_len(in_msg_len)
   { }
 };

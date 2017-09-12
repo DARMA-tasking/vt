@@ -27,12 +27,12 @@ ActiveMessenger::send_msg_direct(
       auto const& handler = envelope_get_handler(msg->env);
       bool const& is_auto = handler_manager_t::is_handler_auto(handler);
       if (is_auto) {
-        trace::trace_ep_t ep = auto_registry::get_trace_id(handler);
+        trace::TraceEntryIDType ep = auto_registry::get_trace_id(handler);
         if (not is_bcast) {
-          trace::trace_event_t event = the_trace->message_creation(ep, msg_size);
+          trace::TraceEventIDType event = the_trace->message_creation(ep, msg_size);
           envelope_set_trace_event(msg->env, event);
         } else if (is_bcast and dest == this_node) {
-          trace::trace_event_t event = the_trace->message_creation_bcast(
+          trace::TraceEventIDType event = the_trace->message_creation_bcast(
             ep, msg_size
           );
           envelope_set_trace_event(msg->env, event);
@@ -346,8 +346,8 @@ ActiveMessenger::deliver_active_msg(
 
   backend_enable_if(
     trace_enabled,
-    trace::trace_ep_t trace_id = trace::no_trace_ep;
-    trace::trace_event_t trace_event = trace::no_trace_event;
+    trace::TraceEntryIDType trace_id = trace::no_trace_entry_id;
+    trace::TraceEventIDType trace_event = trace::no_trace_event;
   );
 
   debug_print(

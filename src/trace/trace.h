@@ -55,15 +55,15 @@ struct Trace {
 
   void
   begin_processing(
-    TraceEntryType const& ep, TraceMsgLenType const& len,
-    TraceEventType const& event, NodeType const& from_node,
+    TraceEntryIDType const& ep, TraceMsgLenType const& len,
+    TraceEventIDType const& event, NodeType const& from_node,
     double const& time = get_current_time()
   );
 
   void
   end_processing(
-    TraceEntryType const& ep, TraceMsgLenType const& len,
-    TraceEventType const& event, NodeType const& from_node,
+    TraceEntryIDType const& ep, TraceMsgLenType const& len,
+    TraceEventIDType const& event, NodeType const& from_node,
     double const& time = get_current_time()
   );
 
@@ -73,25 +73,25 @@ struct Trace {
   void
   end_idle(double const& time = get_current_time());
 
-  TraceEventType
+  TraceEventIDType
   message_creation(
-    TraceEntryType const& ep, TraceMsgLenType const& len,
+    TraceEntryIDType const& ep, TraceMsgLenType const& len,
     double const& time = get_current_time()
   );
 
-  TraceEventType
+  TraceEventIDType
   message_creation_bcast(
-    TraceEntryType const& ep, TraceMsgLenType const& len,
+    TraceEntryIDType const& ep, TraceMsgLenType const& len,
     double const& time = get_current_time()
   );
 
-  TraceEventType
+  TraceEventIDType
   message_recv(
-    TraceEntryType const& ep, TraceMsgLenType const& len,
+    TraceEntryIDType const& ep, TraceMsgLenType const& len,
     NodeType const& from_node, double const& time = get_current_time()
   );
 
-  TraceEventType
+  TraceEventIDType
   log_event(log_ptr_t log);
 
   void
@@ -138,7 +138,7 @@ private:
 
   double start_time = 0.0;
 
-  TraceEventType cur_event = 1;
+  TraceEventIDType cur_event = 1;
 
   bool idle_begun = false;
 };
