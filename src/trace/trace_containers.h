@@ -16,8 +16,8 @@ namespace runtime { namespace trace {
 
 using event_t = Event;
 using event_class_t = EventClass;
-using container_event_t = std::unordered_map<trace_ep_t, event_t>;
-using container_event_class_t = std::unordered_map<trace_ep_t, event_class_t>;
+using container_event_t = std::unordered_map<TraceEntryType, event_t>;
+using container_event_class_t = std::unordered_map<TraceEntryType, event_class_t>;
 
 // Use static template initialization pattern to deal with ordering issues with
 // auto-registry

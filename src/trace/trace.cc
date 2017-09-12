@@ -59,7 +59,7 @@ Trace::~Trace() {
 
 void
 Trace::begin_processing(
-  trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+  TraceEntryType const& ep, trace_msg_len_t const& len, trace_event_t const& event,
   NodeType const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::BeginProcessing;
@@ -79,7 +79,7 @@ Trace::begin_processing(
 
 void
 Trace::end_processing(
-  trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+  TraceEntryType const& ep, trace_msg_len_t const& len, trace_event_t const& event,
   NodeType const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::EndProcessing;
@@ -131,7 +131,7 @@ Trace::end_idle(double const& time) {
 
 trace_event_t
 Trace::message_creation(
-  trace_ep_t const& ep, trace_msg_len_t const& len,
+  TraceEntryType const& ep, trace_msg_len_t const& len,
   double const& time
 ) {
   auto const& type = trace_type_t::Creation;
@@ -145,7 +145,7 @@ Trace::message_creation(
 
 trace_event_t
 Trace::message_creation_bcast(
-  trace_ep_t const& ep, trace_msg_len_t const& len,
+  TraceEntryType const& ep, trace_msg_len_t const& len,
   double const& time
 ) {
   auto const& type = trace_type_t::CreationBcast;
@@ -159,7 +159,7 @@ Trace::message_creation_bcast(
 
 trace_event_t
 Trace::message_recv(
-  trace_ep_t const& ep, trace_msg_len_t const& len, NodeType const& from_node,
+  TraceEntryType const& ep, trace_msg_len_t const& len, NodeType const& from_node,
   double const& time
 ) {
   auto const& type = trace_type_t::MessageRecv;

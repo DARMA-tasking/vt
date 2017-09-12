@@ -55,13 +55,13 @@ struct Trace {
 
   void
   begin_processing(
-    trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+    TraceEntryType const& ep, trace_msg_len_t const& len, trace_event_t const& event,
     NodeType const& from_node, double const& time = get_current_time()
   );
 
   void
   end_processing(
-    trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+    TraceEntryType const& ep, trace_msg_len_t const& len, trace_event_t const& event,
     NodeType const& from_node, double const& time = get_current_time()
   );
 
@@ -73,19 +73,19 @@ struct Trace {
 
   trace_event_t
   message_creation(
-    trace_ep_t const& ep, trace_msg_len_t const& len,
+    TraceEntryType const& ep, trace_msg_len_t const& len,
     double const& time = get_current_time()
   );
 
   trace_event_t
   message_creation_bcast(
-    trace_ep_t const& ep, trace_msg_len_t const& len,
+    TraceEntryType const& ep, trace_msg_len_t const& len,
     double const& time = get_current_time()
   );
 
   trace_event_t
   message_recv(
-    trace_ep_t const& ep, trace_msg_len_t const& len, NodeType const& from_node,
+    TraceEntryType const& ep, trace_msg_len_t const& len, NodeType const& from_node,
     double const& time = get_current_time()
   );
 

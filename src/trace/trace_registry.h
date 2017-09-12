@@ -14,7 +14,7 @@ namespace runtime { namespace trace {
 struct TraceRegistry {
   using trace_cont_t = TraceContainers<void>;
 
-  static trace_ep_t
+  static TraceEntryType
   register_event_hashed(
     std::string const& event_type_name, std::string const& event_name
   ) {
@@ -28,7 +28,7 @@ struct TraceRegistry {
     );
     #endif
 
-    trace_ep_t event_type_seq = no_trace_ep;
+    TraceEntryType event_type_seq = no_trace_ep;
     event_class_t new_event_type(event_type_name);
 
     auto type_iter = trace_cont_t::event_type_container.find(
@@ -48,7 +48,7 @@ struct TraceRegistry {
       event_type_seq = type_iter->second.get_event_seq();
     }
 
-    trace_ep_t event_seq = no_trace_ep;
+    TraceEntryType event_seq = no_trace_ep;
     event_t new_event(event_name, new_event_type.get_event_id());
 
     new_event.set_event_type_seq(event_type_seq);
