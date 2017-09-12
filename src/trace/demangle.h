@@ -82,18 +82,18 @@ struct DemanglerUtils {
  */
 
 struct ActiveFunctionDemangler {
-  using str_parsed_out_t = std::tuple<std::string, std::string>;
+  using StrParsedOutType = std::tuple<std::string, std::string>;
   using util_t = DemanglerUtils;
 
-  static str_parsed_out_t
+  static StrParsedOutType
   parse_active_function_name(std::string const& str);
 };
 
 struct ActiveFunctorDemangler {
-  using str_parsed_out_t = std::tuple<std::string, std::string>;
+  using StrParsedOutType = std::tuple<std::string, std::string>;
   using util_t = DemanglerUtils;
 
-  static str_parsed_out_t
+  static StrParsedOutType
   parse_active_functor_name(std::string const& name, std::string const& args);
 };
 

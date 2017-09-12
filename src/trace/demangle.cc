@@ -5,7 +5,7 @@
 namespace runtime { namespace trace {
 
 /*static*/
-ActiveFunctionDemangler::str_parsed_out_t
+ActiveFunctionDemangler::StrParsedOutType
 ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
   //std::cout << "parse_active_function_name: str=" << str << std::endl;
 
@@ -106,7 +106,7 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
 }
 
 /*static*/
-ActiveFunctorDemangler::str_parsed_out_t
+ActiveFunctorDemangler::StrParsedOutType
 ActiveFunctorDemangler::parse_active_functor_name(
   std::string const& name, std::string const& args
 ) {
