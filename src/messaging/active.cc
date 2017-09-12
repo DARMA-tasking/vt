@@ -24,7 +24,7 @@ EventType ActiveMessenger::send_msg_direct(
   backend_enable_if(
     trace_enabled, {
       auto const& handler = envelope_get_handler(msg->env);
-      bool const& is_auto = handler_manager_t::is_handler_auto(handler);
+      bool const& is_auto = HandlerManagerType::is_handler_auto(handler);
       if (is_auto) {
         trace::TraceEntryIDType ep = auto_registry::get_trace_id(handler);
         if (not is_bcast) {

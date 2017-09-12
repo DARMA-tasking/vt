@@ -9,9 +9,9 @@ namespace vt { namespace auto_registry {
 #if backend_check_enabled(trace_enabled)
 trace::TraceEntryIDType
 get_trace_id(HandlerType const& handler) {
-  auto const& han_id = handler_manager_t::get_handler_identifier(handler);
+  auto const& han_id = HandlerManagerType::get_handler_identifier(handler);
 
-  bool const& is_functor = handler_manager_t::is_handler_functor(handler);
+  bool const& is_functor = HandlerManagerType::is_handler_functor(handler);
 
   if (not is_functor) {
     return get_auto_registry().at(han_id).get_trace_id();

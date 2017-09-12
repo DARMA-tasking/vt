@@ -47,8 +47,8 @@ Registrar<ActiveFnT>::Registrar() {
     namespace_name, function_name
   );
 
-  reg.emplace_back(AutoRegInfoType<auto_active_t>{
-    reinterpret_cast<active_basic_function_t*>(fn), trace_ep
+  reg.emplace_back(AutoRegInfoType<AutoActiveType>{
+    reinterpret_cast<ActiveBasicFunctionType*>(fn), trace_ep
   });
   #else
   reg.emplace_back(AutoRegInfoType<AutoActiveType>{
