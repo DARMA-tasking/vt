@@ -59,7 +59,7 @@ Trace::~Trace() {
 
 void
 Trace::begin_processing(
-  TraceEntryType const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+  TraceEntryType const& ep, trace_msg_len_t const& len, TraceEventType const& event,
   NodeType const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::BeginProcessing;
@@ -79,7 +79,7 @@ Trace::begin_processing(
 
 void
 Trace::end_processing(
-  TraceEntryType const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+  TraceEntryType const& ep, trace_msg_len_t const& len, TraceEventType const& event,
   NodeType const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::EndProcessing;
@@ -129,7 +129,7 @@ Trace::end_idle(double const& time) {
   idle_begun = false;
 }
 
-trace_event_t
+TraceEventType
 Trace::message_creation(
   TraceEntryType const& ep, trace_msg_len_t const& len,
   double const& time
@@ -143,7 +143,7 @@ Trace::message_creation(
   return log_event(log);
 }
 
-trace_event_t
+TraceEventType
 Trace::message_creation_bcast(
   TraceEntryType const& ep, trace_msg_len_t const& len,
   double const& time
@@ -157,7 +157,7 @@ Trace::message_creation_bcast(
   return log_event(log);
 }
 
-trace_event_t
+TraceEventType
 Trace::message_recv(
   TraceEntryType const& ep, trace_msg_len_t const& len, NodeType const& from_node,
   double const& time
@@ -170,7 +170,7 @@ Trace::message_recv(
   return log_event(log);
 }
 
-trace_event_t
+TraceEventType
 Trace::log_event(log_ptr_t log) {
   if (not enabled) {
     return 0;
@@ -183,7 +183,7 @@ Trace::log_event(log_ptr_t log) {
     end_idle();
   }
 
-  auto grouped_begin = [&]() -> trace_event_t {
+  auto grouped_begin = [&]() -> TraceEventType {
     if (not open_events.empty()) {
       traces.push_back(
         new log_t(
@@ -199,7 +199,7 @@ Trace::log_event(log_ptr_t log) {
     return log->event;
   };
 
-  auto grouped_end = [&]() -> trace_event_t {
+  auto grouped_end = [&]() -> TraceEventType {
     assert(
       not open_events.empty() and "Stack should be empty"
     );
@@ -229,7 +229,7 @@ Trace::log_event(log_ptr_t log) {
     return log->event;
   };
 
-  auto basic_new_event_create = [&]() -> trace_event_t {
+  auto basic_new_event_create = [&]() -> TraceEventType {
     traces.push_back(log);
 
     log->event = cur_event++;
@@ -237,7 +237,7 @@ Trace::log_event(log_ptr_t log) {
     return log->event;
   };
 
-  auto basic_no_event_create = [&]() -> trace_event_t {
+  auto basic_no_event_create = [&]() -> TraceEventType {
     traces.push_back(log);
 
     log->event = no_trace_event;

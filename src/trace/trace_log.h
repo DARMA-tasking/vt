@@ -19,7 +19,7 @@ struct Log {
   double time = 0.0;
   TraceEntryType ep = no_trace_ep;
   trace_type_t type = trace_type_t::InvalidTraceType;
-  trace_event_t event = no_trace_event;
+  TraceEventType event = no_trace_event;
   trace_msg_len_t msg_len = 0;
   NodeType node = uninitialized_destination;
 

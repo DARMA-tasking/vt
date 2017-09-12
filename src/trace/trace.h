@@ -55,13 +55,13 @@ struct Trace {
 
   void
   begin_processing(
-    TraceEntryType const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+    TraceEntryType const& ep, trace_msg_len_t const& len, TraceEventType const& event,
     NodeType const& from_node, double const& time = get_current_time()
   );
 
   void
   end_processing(
-    TraceEntryType const& ep, trace_msg_len_t const& len, trace_event_t const& event,
+    TraceEntryType const& ep, trace_msg_len_t const& len, TraceEventType const& event,
     NodeType const& from_node, double const& time = get_current_time()
   );
 
@@ -71,25 +71,25 @@ struct Trace {
   void
   end_idle(double const& time = get_current_time());
 
-  trace_event_t
+  TraceEventType
   message_creation(
     TraceEntryType const& ep, trace_msg_len_t const& len,
     double const& time = get_current_time()
   );
 
-  trace_event_t
+  TraceEventType
   message_creation_bcast(
     TraceEntryType const& ep, trace_msg_len_t const& len,
     double const& time = get_current_time()
   );
 
-  trace_event_t
+  TraceEventType
   message_recv(
     TraceEntryType const& ep, trace_msg_len_t const& len, NodeType const& from_node,
     double const& time = get_current_time()
   );
 
-  trace_event_t
+  TraceEventType
   log_event(log_ptr_t log);
 
   void
@@ -136,7 +136,7 @@ private:
 
   double start_time = 0.0;
 
-  trace_event_t cur_event = 1;
+  TraceEventType cur_event = 1;
 
   bool idle_begun = false;
 };
