@@ -36,7 +36,7 @@ struct Envelope {
   EnvelopeDataType type : envelope_num_bits;
   NodeType dest : node_num_bits;
   HandlerType han : handler_num_bits;
-  ref_t ref : ref_num_bits;
+  RefType ref : ref_num_bits;
 
   #if backend_check_enabled(trace_enabled)
   trace::TraceEventIDType trace_event : trace::trace_event_num_bits;
@@ -156,12 +156,12 @@ inline void envelope_set_dest(Env& env, NodeType const& dest) {
 // Envelope reference counting functions for memory management
 
 template <typename Env>
-inline void envelope_set_ref(Env& env, ref_t const& ref = 0) {
+inline void envelope_set_ref(Env& env, RefType const& ref = 0) {
   reinterpret_cast<Envelope*>(&env)->ref = ref;
 }
 
 template <typename Env>
-inline ref_t envelope_get_ref(Env& env) {
+inline RefType envelope_get_ref(Env& env) {
   return reinterpret_cast<Envelope*>(&env)->ref;
 }
 
