@@ -111,8 +111,11 @@ void Barrier::barrier_up(
   bool const& is_named, bool const& is_wait, BarrierType const& barrier,
   bool const& skip_term
 ) {
+  // ToDo: Why setup again? Setup should be once per processor
   setup_tree();
 
+  // ToDo: Why we call this function again? (if you come from contBarrier,
+  // ToDo: this is already called)
   auto& barrier_state = insert_find_barrier(is_named, is_wait, barrier);
 
   barrier_state.recv_event_count += 1;
