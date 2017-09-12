@@ -14,8 +14,7 @@ namespace runtime { namespace trace {
 struct TraceRegistry {
   using TraceContainersType = TraceContainers<void>;
 
-  static TraceEntryIDType
-  register_event_hashed(
+  static TraceEntryIDType register_event_hashed(
     std::string const& event_type_name, std::string const& event_name
   ) {
     // must use this old-style of print because context may not be initialized
