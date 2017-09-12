@@ -21,14 +21,13 @@ namespace runtime {
  */
 
 enum eEnvelopeType {
-  /*Normal = 0*/
-  Get = 0,
-  Put = 1,
-  Term = 2,
-  Broadcast = 3,
-  EpochType = 4,
-  TagType = 5,
-  Callback = 6
+  EnvGet = 0,
+  EnvPut = 1,
+  EnvTerm = 2,
+  EnvBroadcast = 3,
+  EnvEpochType = 4,
+  EnvTagType = 5,
+  EnvCallback = 6
 };
 
 static constexpr bit_count_t const envelope_num_bits = 7;
@@ -65,64 +64,69 @@ inline void set_normal_type(Env& env) {
 
 template <typename Env>
 inline void set_get_type(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::Get;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvGet;
 }
 
 template <typename Env>
 inline void set_put_type(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::Put;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvPut;
 }
 
 template <typename Env>
 inline void set_term_type(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::Term;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvTerm;
 }
 
 template <typename Env>
 inline void set_broadcast_type(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::Broadcast;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvBroadcast;
 }
 
 template <typename Env>
 inline void set_epoch_type(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EpochType;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvEpochType;
 }
 
 template <typename Env>
 inline void set_tag_type(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::TagType;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvTagType;
 }
 
 template <typename Env>
 inline void set_callback_type(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::Callback;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvCallback;
 }
 
 // Test the type of Envelope
 
 template <typename Env>
 inline bool envelope_is_term(Env const& env) {
-  return reinterpret_cast<Envelope const*>(&env)->type & (1 << eEnvelopeType::Term);
+  return reinterpret_cast<Envelope const*>(&env)->type &
+    (1 << eEnvelopeType::EnvTerm);
 }
 
 template <typename Env>
 inline bool envelope_is_bcast(Env const& env) {
-  return reinterpret_cast<Envelope const*>(&env)->type & (1 << eEnvelopeType::Broadcast);
+  return reinterpret_cast<Envelope const*>(&env)->type &
+    (1 << eEnvelopeType::EnvBroadcast);
 }
 
 template <typename Env>
 inline bool envelope_is_epoch_type(Env const& env) {
-  return reinterpret_cast<Envelope const*>(&env)->type & (1 << eEnvelopeType::EpochType);
+  return reinterpret_cast<Envelope const*>(&env)->type &
+    (1 << eEnvelopeType::EnvEpochType);
 }
 
 template <typename Env>
 inline bool envelope_is_tag_type(Env const& env) {
-  return reinterpret_cast<Envelope const*>(&env)->type & (1 << eEnvelopeType::TagType);
+  return reinterpret_cast<Envelope const*>(&env)->type &
+    (1 << eEnvelopeType::EnvTagType);
 }
 
 template <typename Env>
 inline bool envelope_is_callback_type(Env const& env) {
-  return reinterpret_cast<Envelope const*>(&env)->type & (1 << eEnvelopeType::Callback);
+  return reinterpret_cast<Envelope const*>(&env)->type &
+    (1 << eEnvelopeType::EnvCallback);
 }
 
 // Get fields of Envelope
