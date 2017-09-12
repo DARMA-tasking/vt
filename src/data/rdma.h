@@ -376,9 +376,9 @@ private:
       and "Handle must be local to this node"
     );
 
-    auto holder_iter = holder.find(han);
+    auto holder_iter = holder_.find(han);
     assert(
-      holder_iter != holder.end() and "Holder for handler must exist here"
+      holder_iter != holder_.end() and "Holder for handler must exist here"
     );
 
     auto& state = holder_iter->second;
@@ -442,27 +442,27 @@ public:
 
 private:
   // next local rdma handler (used by State)
-  RDMA_HandlerType cur_rdma_handler = first_rdma_handler;
+  RDMA_HandlerType cur_rdma_handler_ = first_rdma_handler;
 
   // next local rdma identifier
-  RDMA_IdentifierType cur_ident = first_rdma_identifier;
+  RDMA_IdentifierType cur_ident_ = first_rdma_identifier;
 
   // next collective rdma identifier
-  RDMA_IdentifierType cur_collective_ident = first_rdma_identifier;
+  RDMA_IdentifierType cur_collective_ident_ = first_rdma_identifier;
 
   // rdma state container
-  RDMA_ContainerType holder;
+  RDMA_ContainerType holder_;
 
   // rdma unique remote operation identifier
-  RDMA_OpType cur_op = 0;
+  RDMA_OpType cur_op_ = 0;
 
   // operations that are pending remote interaction
-  RDMA_OpContainerType pending_ops;
+  RDMA_OpContainerType pending_ops_;
 
   // Live channels that can be used to hardware-level get/put ops
-  RDMA_LiveChannelsType channels;
+  RDMA_LiveChannelsType channels_;
 
-  TagType next_channel_tag = first_rdma_channel_tag;
+  TagType next_channel_tag_ = first_rdma_channel_tag;
 };
 
 }} //end namespace runtime::rdma

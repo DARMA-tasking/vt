@@ -242,9 +242,9 @@ RDMA_HandleType RDMAManager::register_new_collective(
 ) {
   auto const& han = register_new_rdma_handler(use_default, ptr, num_bytes, true);
 
-  auto iter = holder.find(han);
+  auto iter = holder_.find(han);
   assert(
-    iter != holder.end() and "Handler must exist"
+    iter != holder_.end() and "Handler must exist"
   );
 
   auto& state = iter->second;
@@ -264,7 +264,7 @@ RDMA_HandleType RDMAManager::register_new_rdma_handler(
 
   RDMA_HandlerType new_handle = RDMA_HandleManagerType::create_new_handler();
   RDMA_IdentifierType const& new_identifier =
-    is_collective ? cur_collective_ident : cur_ident++;
+    is_collective ? cur_collective_ident_ : cur_ident_++;
 
   bool const is_sized = false;
 
@@ -283,14 +283,14 @@ RDMA_HandleType RDMAManager::register_new_rdma_handler(
     RDMA_HandleManagerType::set_rdma_node(new_handle, this_node);
   }
 
-  holder.emplace(
+  holder_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(new_handle),
     std::forward_as_tuple(RDMA_StateType{new_handle, ptr, num_bytes, use_default})
   );
 
   if (use_default) {
-    holder.find(new_handle)->second.set_default_handler();
+    holder_.find(new_handle)->second.set_default_handler();
   }
 
   return new_handle;
@@ -300,9 +300,9 @@ void RDMAManager::unregister_rdma_handler(
   RDMA_HandleType const& han, RDMA_TypeType const& type, TagType const& tag,
   bool const& use_default
 ) {
-  auto holder_iter = holder.find(han);
+  auto holder_iter = holder_.find(han);
   assert(
-    holder_iter != holder.end() and "Holder for handler must exist here"
+    holder_iter != holder_.end() and "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -312,9 +312,9 @@ void RDMAManager::unregister_rdma_handler(
 void RDMAManager::unregister_rdma_handler(
   RDMA_HandleType const& han, RDMA_HandlerType const& handler, TagType const& tag
 ) {
-  auto holder_iter = holder.find(han);
+  auto holder_iter = holder_.find(han);
   assert(
-    holder_iter != holder.end() and "Holder for handler must exist here"
+    holder_iter != holder_.end() and "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -323,7 +323,7 @@ void RDMAManager::unregister_rdma_handler(
 
 RDMA_HandlerType
 RDMAManager::allocate_new_rdma_handler() {
-  RDMA_HandlerType const handler = cur_rdma_handler++;
+  RDMA_HandlerType const handler = cur_rdma_handler_++;
   return handler;
 }
 
@@ -341,9 +341,9 @@ void RDMAManager::request_get_data(
     and "Handle must be local to this node"
   );
 
-  auto holder_iter = holder.find(han);
+  auto holder_iter = holder_.find(han);
   assert(
-    holder_iter != holder.end() and "Holder for handler must exist here"
+    holder_iter != holder_.end() and "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -359,10 +359,10 @@ void RDMAManager::trigger_get_recv_data(
   RDMA_OpType const& op, TagType const& tag, RDMA_PtrType ptr, ByteType const& num_bytes,
   ActionType const& action
 ) {
-  auto iter = pending_ops.find(op);
+  auto iter = pending_ops_.find(op);
 
   assert(
-    iter != pending_ops.end() and "Pending op must exist"
+    iter != pending_ops_.end() and "Pending op must exist"
   );
 
   if (iter->second.cont) {
@@ -371,7 +371,7 @@ void RDMAManager::trigger_get_recv_data(
     std::memcpy(iter->second.data_ptr, ptr, num_bytes);
   }
 
-  pending_ops.erase(iter);
+  pending_ops_.erase(iter);
 
   if (action != nullptr) {
     action();
@@ -381,10 +381,10 @@ void RDMAManager::trigger_get_recv_data(
 RDMAManager::RDMA_DirectType RDMAManager::try_get_data_ptr_direct(
   RDMA_OpType const& op
 ) {
-  auto iter = pending_ops.find(op);
+  auto iter = pending_ops_.find(op);
 
   assert(
-    iter != pending_ops.end() and "Pending op must exist"
+    iter != pending_ops_.end() and "Pending op must exist"
   );
 
   if (iter->second.cont) {
@@ -392,7 +392,7 @@ RDMAManager::RDMA_DirectType RDMAManager::try_get_data_ptr_direct(
   } else {
     auto ptr = iter->second.data_ptr;
     auto action = iter->second.cont2;
-    pending_ops.erase(iter);
+    pending_ops_.erase(iter);
     assert(
       ptr != nullptr and "ptr must be set"
     );
@@ -401,15 +401,15 @@ RDMAManager::RDMA_DirectType RDMAManager::try_get_data_ptr_direct(
 }
 
 void RDMAManager::trigger_put_back_data(RDMA_OpType const& op) {
-  auto iter = pending_ops.find(op);
+  auto iter = pending_ops_.find(op);
 
   assert(
-    iter != pending_ops.end() and "Pending op must exist"
+    iter != pending_ops_.end() and "Pending op must exist"
   );
 
   iter->second.cont2();
 
-  pending_ops.erase(iter);
+  pending_ops_.erase(iter);
 }
 
 void RDMAManager::trigger_put_recv_data(
@@ -429,9 +429,9 @@ void RDMAManager::trigger_put_recv_data(
     handler_node == this_node and "Handle must be local to this node"
   );
 
-  auto holder_iter = holder.find(han);
+  auto holder_iter = holder_.find(han);
   assert(
-    holder_iter != holder.end() and "Holder for handler must exist here"
+    holder_iter != holder_.end() and "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -455,9 +455,9 @@ RDMAManager::try_put_ptr(
   assert(
     handler_node == this_node and "Handle must be local to this node"
   );
-  auto holder_iter = holder.find(han);
+  auto holder_iter = holder_.find(han);
   assert(
-    holder_iter != holder.end() and "Holder for handler must exist here"
+    holder_iter != holder_.end() and "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -545,7 +545,7 @@ void RDMAManager::put_data(
         cont, action_after_put
       );
     } else {
-      RDMA_OpType const new_op = cur_op++;
+      RDMA_OpType const new_op = cur_op_++;
 
       PutMessage* msg = new PutMessage(
         new_op, num_bytes, offset, no_tag, han,
@@ -581,7 +581,7 @@ void RDMAManager::put_data(
       );
 
       if (action_after_put != nullptr) {
-        pending_ops.emplace(
+        pending_ops_.emplace(
           std::piecewise_construct,
           std::forward_as_tuple(new_op),
           std::forward_as_tuple(RDMA_PendingType{action_after_put})
@@ -619,9 +619,9 @@ void RDMAManager::get_region_typeless(
       this_node,han,ptr,region.region_to_buf().c_str()
     );
 
-    auto holder_iter = holder.find(han);
+    auto holder_iter = holder_.find(han);
     assert(
-      holder_iter != holder.end() and "Holder for handler must exist here"
+      holder_iter != holder_.end() and "Holder for handler must exist here"
     );
 
     auto& state = holder_iter->second;
@@ -733,7 +733,7 @@ void RDMAManager::get_data_into_buf(
           nullptr, next_action
         );
       } else {
-        RDMA_OpType const new_op = cur_op++;
+        RDMA_OpType const new_op = cur_op_++;
 
         GetMessage* msg = new GetMessage(new_op, this_node, han, num_bytes, offset);
         if (tag != no_tag) {
@@ -741,7 +741,7 @@ void RDMAManager::get_data_into_buf(
         }
         the_msg->send_msg<GetMessage, get_msg>(get_node, msg, [=]{ delete msg; });
 
-        pending_ops.emplace(
+        pending_ops_.emplace(
           std::piecewise_construct,
           std::forward_as_tuple(new_op),
           std::forward_as_tuple(RDMA_PendingType{ptr, next_action})
@@ -767,7 +767,7 @@ void RDMAManager::get_data(
   auto const get_node = RDMA_HandleManagerType::get_rdma_node(han);
 
   if (get_node != this_node) {
-    RDMA_OpType const new_op = cur_op++;
+    RDMA_OpType const new_op = cur_op_++;
 
     GetMessage* msg = new GetMessage(new_op, this_node, han, num_bytes, offset);
     if (tag != no_tag) {
@@ -775,7 +775,7 @@ void RDMAManager::get_data(
     }
     the_msg->send_msg<GetMessage, get_msg>(get_node, msg, [=]{ delete msg; });
 
-    pending_ops.emplace(
+    pending_ops_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(new_op),
       std::forward_as_tuple(RDMA_PendingType{cont})
@@ -905,9 +905,9 @@ void RDMAManager::create_direct_channel_finish(
   ByteType target_num_bytes = num_bytes;
 
   if (is_target) {
-    auto holder_iter = holder.find(han);
+    auto holder_iter = holder_.find(han);
     assert(
-      holder_iter != holder.end() and "Holder for handler must exist here"
+      holder_iter != holder_.end() and "Holder for handler must exist here"
     );
 
     auto& state = holder_iter->second;
@@ -934,7 +934,7 @@ void RDMAManager::create_direct_channel_finish(
     );
 
     // create a new rdma channel
-    channels.emplace(
+    channels_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(make_channel_lookup(han,type,target,non_target)),
       std::forward_as_tuple(RDMA_ChannelType{
@@ -969,13 +969,13 @@ RDMAManager::RDMA_ChannelType* RDMAManager::find_channel(
   RDMA_HandleType const& han, RDMA_TypeType const& rdma_op_type, NodeType const& target,
   NodeType const& non_target, bool const& should_insert, bool const& must_exist
 ) {
-  auto chan_iter = channels.find(
+  auto chan_iter = channels_.find(
     make_channel_lookup(han,rdma_op_type,target,non_target)
   );
-  if (chan_iter == channels.end()) {
+  if (chan_iter == channels_.end()) {
     if (must_exist) {
       assert(
-        chan_iter != channels.end() and "Channel must exist"
+        chan_iter != channels_.end() and "Channel must exist"
       );
       debug_print(
         rdma_channel, node,
@@ -1078,9 +1078,9 @@ void RDMAManager::create_direct_channel_internal(
 }
 
 ByteType RDMAManager::lookup_bytes_handler(RDMA_HandleType const& han) {
-  auto holder_iter = holder.find(han);
+  auto holder_iter = holder_.find(han);
   assert(
-    holder_iter != holder.end() and "Holder for handler must exist here"
+    holder_iter != holder_.end() and "Holder for handler must exist here"
   );
   auto& state = holder_iter->second;
   auto const& num_bytes = state.num_bytes;
@@ -1099,12 +1099,12 @@ void RDMAManager::remove_direct_channel(
     );
     the_msg->send_msg_callback<DestroyChannel, remove_channel>(
       target, msg, [=](runtime::BaseMessage* in_msg){
-        auto iter = channels.find(
+        auto iter = channels_.find(
           make_channel_lookup(han,RDMA_TypeType::Put,target,this_node)
         );
-        if (iter != channels.end()) {
+        if (iter != channels_.end()) {
           iter->second.free_channel();
-          channels.erase(iter);
+          channels_.erase(iter);
         }
         if (action) {
           action();
@@ -1112,19 +1112,19 @@ void RDMAManager::remove_direct_channel(
       }
     );
   } else {
-    auto iter = channels.find(
+    auto iter = channels_.find(
       make_channel_lookup(han,RDMA_TypeType::Get,target,this_node)
     );
-    if (iter != channels.end()) {
+    if (iter != channels_.end()) {
       iter->second.free_channel();
-      channels.erase(iter);
+      channels_.erase(iter);
     }
   }
 
 }
 
 TagType RDMAManager::next_rdma_channel_tag() {
-  TagType next_tag = next_channel_tag++;
+  TagType next_tag = next_channel_tag_++;
   NodeType this_node = the_context->get_node();
   TagType const& ret = (this_node << 16) | next_tag;
   return ret;
