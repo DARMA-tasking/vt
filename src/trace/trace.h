@@ -35,7 +35,7 @@ struct Trace {
   using TimeIntegerType = int64_t;
   using LogPtrType = LogType*;
   using TraceContainerType = std::vector<LogPtrType>;
-  using trace_stack_t = std::stack<LogPtrType>;
+  using TraceStackType = std::stack<LogPtrType>;
 
   Trace();
 
@@ -130,7 +130,7 @@ struct Trace {
 private:
   TraceContainerType traces;
 
-  trace_stack_t open_events;
+  TraceStackType open_events;
 
   bool enabled = true;
 
