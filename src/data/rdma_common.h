@@ -61,7 +61,7 @@ using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;
 
 using rdma_num_elems_t = int64_t;
 using rdma_block_elm_range_t = std::tuple<rdma_block_t,rdma_elm_t,rdma_elm_t>;
-using rdma_block_map_t = std::function<node_t(rdma_block_t,rdma_block_t)>;
+using rdma_block_map_t = std::function<NodeType(rdma_block_t,rdma_block_t)>;
 using rdma_elm_map_t = std::function<rdma_block_elm_range_t(rdma_elm_t,rdma_elm_t,rdma_block_t)>;
 
 static constexpr Type uninitialized_rdma_type = Type::Uninitialized;

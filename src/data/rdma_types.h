@@ -9,33 +9,33 @@
 
 namespace runtime { namespace rdma {
 
-using underlying_node_t = node_t;
+using underlying_NodeType = NodeType;
 
 struct Endpoint {
   Endpoint(
-    bool const& in_is_target, underlying_node_t const& in_node
+    bool const& in_is_target, underlying_NodeType const& in_node
   ) : is_target(in_is_target), value(in_node)
   { }
 
-  operator underlying_node_t() const { return get(); }
+  operator underlying_NodeType() const { return get(); }
 
-  underlying_node_t get() const { return value; }
+  underlying_NodeType get() const { return value; }
 
   bool target() const { return is_target; }
 
 private:
   bool is_target = false;
-  underlying_node_t value = uninitialized_destination;
+  underlying_NodeType value = uninitialized_destination;
 };
 
 struct Target : Endpoint {
-  explicit Target(underlying_node_t const& in_node)
+  explicit Target(underlying_NodeType const& in_node)
     : Endpoint(true, in_node)
   { }
 };
 
 struct NonTarget : Endpoint {
-  explicit NonTarget(underlying_node_t const& in_node)
+  explicit NonTarget(underlying_NodeType const& in_node)
     : Endpoint(false, in_node)
   { }
 };
@@ -48,13 +48,13 @@ using rdma_target_t = rdma::Target;
 using rdma_nontarget_t = rdma::NonTarget;
 
 struct from_s {
-  rdma_target_t operator=(rdma::underlying_node_t val) {
+  rdma_target_t operator=(rdma::underlying_NodeType val) {
     return rdma_target_t(val);
   }
 };
 
 struct to_s {
-  rdma_nontarget_t operator=(rdma::underlying_node_t val) {
+  rdma_nontarget_t operator=(rdma::underlying_NodeType val) {
     return rdma_nontarget_t(val);
   }
 };

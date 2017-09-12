@@ -56,13 +56,13 @@ struct Trace {
   void
   begin_processing(
     trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
-    node_t const& from_node, double const& time = get_current_time()
+    NodeType const& from_node, double const& time = get_current_time()
   );
 
   void
   end_processing(
     trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
-    node_t const& from_node, double const& time = get_current_time()
+    NodeType const& from_node, double const& time = get_current_time()
   );
 
   void
@@ -85,7 +85,7 @@ struct Trace {
 
   trace_event_t
   message_recv(
-    trace_ep_t const& ep, trace_msg_len_t const& len, node_t const& from_node,
+    trace_ep_t const& ep, trace_msg_len_t const& len, NodeType const& from_node,
     double const& time = get_current_time()
   );
 
@@ -114,10 +114,10 @@ struct Trace {
   output_control_file(std::ofstream& file);
 
   static void
-  output_header(node_t const& node, double const& start, gzFile file);
+  output_header(NodeType const& node, double const& start, gzFile file);
 
   static void
-  output_footer(node_t const& node, double const& start, gzFile file);
+  output_footer(NodeType const& node, double const& start, gzFile file);
 
   static time_int_t
   time_to_int(double const& time);

@@ -171,7 +171,7 @@ ActiveMessenger::send_msg_direct(
 
 ActiveMessenger::send_data_ret_t
 ActiveMessenger::send_data(
-  rdma_get_t const& ptr, node_t const& dest, tag_t const& tag,
+  rdma_get_t const& ptr, NodeType const& dest, tag_t const& tag,
   action_t next_action
 ) {
   auto const& this_node = the_context->get_node();
@@ -206,7 +206,7 @@ ActiveMessenger::send_data(
 
 bool
 ActiveMessenger::recv_data_msg(
-  tag_t const& tag, node_t const& node, rdma_continuation_del_t next
+  tag_t const& tag, NodeType const& node, rdma_continuation_del_t next
 ) {
   return recv_data_msg(tag, node, true, next);
 }
@@ -237,7 +237,7 @@ ActiveMessenger::process_data_msg_recv() {
 
 bool
 ActiveMessenger::recv_data_msg_buffer(
-  void* const user_buf, tag_t const& tag, node_t const& node,
+  void* const user_buf, tag_t const& tag, NodeType const& node,
   bool const& enqueue, action_t dealloc_user_buf, rdma_continuation_del_t next
 ) {
   if (not enqueue) {
@@ -311,20 +311,20 @@ ActiveMessenger::recv_data_msg_buffer(
 
 bool
 ActiveMessenger::recv_data_msg(
-  tag_t const& tag, node_t const& recv_node, bool const& enqueue,
+  tag_t const& tag, NodeType const& recv_node, bool const& enqueue,
   rdma_continuation_del_t next
 ) {
   return recv_data_msg_buffer(nullptr, tag, recv_node, enqueue, nullptr, next);
 }
 
-node_t
+NodeType
 ActiveMessenger::get_from_node_current_handler() {
   return current_node_context;
 }
 
 bool
 ActiveMessenger::deliver_active_msg(
-  message_t msg, node_t const& in_from_node, bool insert
+  message_t msg, NodeType const& in_from_node, bool insert
 ) {
   auto const& is_term = envelope_is_term(msg->env);
   auto const& is_bcast = envelope_is_bcast(msg->env);
@@ -451,7 +451,7 @@ ActiveMessenger::try_process_incoming_message() {
 
     char* buf = static_cast<char*>(the_pool->alloc(num_probe_bytes));
 
-    node_t const& msg_from_node = stat.MPI_SOURCE;
+    NodeType const& msg_from_node = stat.MPI_SOURCE;
 
     MPI_Recv(
       buf, num_probe_bytes, MPI_BYTE, msg_from_node, stat.MPI_TAG,

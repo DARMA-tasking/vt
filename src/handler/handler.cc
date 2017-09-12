@@ -22,9 +22,9 @@ HandlerManager::make_handler(
   return new_han;
 }
 
-/*static*/ node_t
+/*static*/ NodeType
 HandlerManager::get_handler_node(handler_t const& han) {
-  return bit_packer_t::get_field<handler_bits_t::Node, node_num_bits, node_t>(han);
+  return bit_packer_t::get_field<handler_bits_t::Node, node_num_bits, NodeType>(han);
 }
 
 /*static*/ handler_identifier_t
@@ -35,7 +35,7 @@ HandlerManager::get_handler_identifier(handler_t const& han) {
 }
 
 /*static*/ void
-HandlerManager::set_handler_node(handler_t& han, node_t const& node) {
+HandlerManager::set_handler_node(handler_t& han, NodeType const& node) {
   bit_packer_t::set_field<handler_bits_t::Node, node_num_bits>(han, node);
 }
 

@@ -36,7 +36,7 @@ HandleManager::set_op_type(
 
 /*static*/ void
 HandleManager::set_rdma_node(
-  universal_rdma_id_t& handle, node_t const& node
+  universal_rdma_id_t& handle, NodeType const& node
 ) {
   bit_packer_t::set_field<rdma_bits_t::Node, node_num_bits>(handle, node);
 }
@@ -50,9 +50,9 @@ HandleManager::set_rdma_identifier(
   );
 }
 
-/*static*/ node_t
+/*static*/ NodeType
 HandleManager::get_rdma_node(universal_rdma_id_t const& handle) {
-  return bit_packer_t::get_field<rdma_bits_t::Node, node_num_bits, node_t>(handle);
+  return bit_packer_t::get_field<rdma_bits_t::Node, node_num_bits, NodeType>(handle);
 }
 
 /*static*/ rdma_identifier_t

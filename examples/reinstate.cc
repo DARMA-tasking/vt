@@ -8,10 +8,10 @@ static handler_t my_col_han = uninitialized_handler;
 static handler_t my_reinstate_fn = uninitialized_handler;
 
 struct TestMsg : runtime::Message {
-  node_t from;
+  NodeType from;
   handler_t callback_han;
 
-  TestMsg(node_t const& in_from, handler_t const& in_callback_han)
+  TestMsg(NodeType const& in_from, handler_t const& in_callback_han)
     : Message(), from(in_from), callback_han(in_callback_han)
   { }
 };

@@ -4,8 +4,8 @@
 
 using namespace runtime;
 
-static node_t my_node = uninitialized_destination;
-static node_t num_nodes = uninitialized_destination;
+static NodeType my_node = uninitialized_destination;
+static NodeType num_nodes = uninitialized_destination;
 
 static rdma_handle_t my_handle = no_rdma_handle;
 

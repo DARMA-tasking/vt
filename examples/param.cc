@@ -4,8 +4,8 @@
 
 using namespace runtime;
 
-static node_t my_node = uninitialized_destination;
-static node_t num_nodes = uninitialized_destination;
+static NodeType my_node = uninitialized_destination;
+static NodeType num_nodes = uninitialized_destination;
 
 static void fn_test(int a, int b, bool x) {
   printf("fn: a=%d, b=%d, x=%s\n", a, b, x ? "true" : "false");

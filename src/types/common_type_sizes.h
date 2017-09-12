@@ -8,7 +8,7 @@
 
 namespace runtime {
 
-static constexpr bit_count_t const node_num_bits = bit_counter_t<node_t>::value;
+static constexpr bit_count_t const node_num_bits = bit_counter_t<NodeType>::value;
 static constexpr bit_count_t const handler_num_bits = bit_counter_t<handler_t>::value;
 static constexpr bit_count_t const ref_num_bits = bit_counter_t<ref_t>::value;
 static constexpr bit_count_t const epoch_num_bits = bit_counter_t<epoch_t>::value;

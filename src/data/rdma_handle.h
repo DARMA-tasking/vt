@@ -34,14 +34,14 @@ struct HandleManager {
   );
 
   static void
-  set_rdma_node(universal_rdma_id_t& handle, node_t const& node);
+  set_rdma_node(universal_rdma_id_t& handle, NodeType const& node);
 
   static void
   set_rdma_identifier(
     universal_rdma_id_t& handle, rdma_identifier_t const& ident
   );
 
-  static node_t
+  static NodeType
   get_rdma_node(universal_rdma_id_t const& handle);
 
   static rdma_identifier_t

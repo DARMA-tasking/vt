@@ -4,9 +4,9 @@
 
 using namespace runtime;
 
-static node_t next_node = uninitialized_destination;
-static node_t my_node = uninitialized_destination;
-static node_t num_nodes = uninitialized_destination;
+static NodeType next_node = uninitialized_destination;
+static NodeType my_node = uninitialized_destination;
+static NodeType num_nodes = uninitialized_destination;
 
 static int num_total_rings = 2;
 static int num_times = 0;

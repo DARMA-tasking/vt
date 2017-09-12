@@ -5,8 +5,8 @@ namespace runtime { namespace rdma {
 
 Channel::Channel(
   rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
-  node_t const& in_target, tag_t const& in_channel_group_tag,
-  node_t const& in_non_target, rdma_ptr_t const& in_ptr, byte_t const& in_num_bytes
+  NodeType const& in_target, tag_t const& in_channel_group_tag,
+  NodeType const& in_non_target, rdma_ptr_t const& in_ptr, byte_t const& in_num_bytes
 ) : rdma_handle(in_rdma_handle), op_type(in_op_type),target(in_target),
     channel_group_tag(in_channel_group_tag), non_target(in_non_target),
     ptr(in_ptr), num_bytes(in_num_bytes)
@@ -264,12 +264,12 @@ Channel::init_channel_window() {
   );
 }
 
-node_t
+NodeType
 Channel::get_target() const {
   return target;
 }
 
-node_t
+NodeType
 Channel::get_non_target() const {
   return non_target;
 }

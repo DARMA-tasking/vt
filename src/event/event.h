@@ -172,8 +172,8 @@ struct AsyncEvent {
 
   template <typename EventT>
   event_t
-  create_event_id(node_t const& node) {
-    event_t const event = (event_t)node << (64 - (sizeof(node_t) * 8)) | cur_event;
+  create_event_id(NodeType const& node) {
+    event_t const event = (event_t)node << (64 - (sizeof(NodeType) * 8)) | cur_event;
     cur_event++;
     std::unique_ptr<EventT> et = std::make_unique<EventT>(event);
     container.emplace(
@@ -184,14 +184,14 @@ struct AsyncEvent {
     return event;
   }
 
-  node_t
+  NodeType
   get_owning_node(event_t const& event) {
-    node_t const node = event >> (64 - (sizeof(node_t) * 8));
+    NodeType const node = event >> (64 - (sizeof(NodeType) * 8));
     return node;
   }
 
   event_t
-  create_mpi_event_id(node_t const& node) {
+  create_mpi_event_id(NodeType const& node) {
     auto const& evt = create_event_id<MPIEvent>(node);
     auto& holder = get_event_holder(evt);
     event_container[mpi_event_tag].emplace_back(
@@ -201,12 +201,12 @@ struct AsyncEvent {
   }
 
   event_t
-  create_normal_event_id(node_t const& node) {
+  create_normal_event_id(NodeType const& node) {
     return create_event_id<NormalEvent>(node);
   }
 
   event_t
-  create_parent_event_id(node_t const& node) {
+  create_parent_event_id(NodeType const& node) {
     auto const& evt = create_event_id<ParentEvent>(node);
     auto& holder = get_event_holder(evt);
     event_container[mpi_event_tag].emplace_back(

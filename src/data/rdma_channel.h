@@ -26,8 +26,8 @@ struct Channel {
 
   Channel(
     rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
-    node_t const& in_target, tag_t const& in_channel_group_tag,
-    node_t const& in_non_target = uninitialized_destination,
+    NodeType const& in_target, tag_t const& in_channel_group_tag,
+    NodeType const& in_non_target = uninitialized_destination,
     rdma_ptr_t const& in_ptr = nullptr, byte_t const& in_num_bytes = no_byte
   );
 
@@ -56,10 +56,10 @@ struct Channel {
 
   virtual ~Channel();
 
-  node_t
+  NodeType
   get_target() const;
 
-  node_t
+  NodeType
   get_non_target() const;
 
 private:
@@ -73,9 +73,9 @@ private:
   rdma_handle_t const rdma_handle = no_rdma_handle;
   rdma_group_pos_t target_pos = no_group_pos;
   rdma_group_pos_t non_target_pos = no_group_pos;
-  node_t target = uninitialized_destination;
-  node_t my_node = uninitialized_destination;
-  node_t non_target = uninitialized_destination;
+  NodeType target = uninitialized_destination;
+  NodeType my_node = uninitialized_destination;
+  NodeType non_target = uninitialized_destination;
   byte_t num_bytes = no_byte;
   rdma_ptr_t ptr = no_rdma_ptr;
   rdma_type_t op_type = uninitialized_rdma_type;

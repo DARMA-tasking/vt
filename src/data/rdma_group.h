@@ -34,7 +34,7 @@ struct Group {
     rdma_elm_t hi = region.hi;
     rdma_elm_t elm_lo, elm_hi = lo;
     rdma_block_t blk_lo;
-    node_t cur_node;
+    NodeType cur_node;
 
     assert(map.elm_map != nullptr);
     assert(map.block_map != nullptr);

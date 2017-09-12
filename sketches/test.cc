@@ -7,7 +7,7 @@ using namespace runtime;
 struct ParticleCollection : runtime::VirtualCollectionContext {
   std::vector<Particle> particles;
 
-  node_t initial_map_to_node(index i) {
+  NodeType initial_map_to_node(index i) {
     
   }
 };

@@ -22,7 +22,7 @@ static constexpr byte_t const no_offset = -1;
 static constexpr auto no_action = nullptr;
 static constexpr rdma_ptr_t const no_rdma_ptr = nullptr;
 
-static constexpr node_t const uninitialized_destination = 0xFFFF;
+static constexpr NodeType const uninitialized_destination = 0xFFFF;
 static constexpr handler_t const uninitialized_handler = -1;
 static constexpr rdma_handler_t const uninitialized_rdma_handler = -1;
 static constexpr ref_t const not_shared_message = -1000;

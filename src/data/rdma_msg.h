@@ -12,7 +12,7 @@ template <typename EnvelopeT>
 struct RequestDataMessage : ActiveMessage<EnvelopeT> {
 
   RequestDataMessage(
-    rdma_op_t const& in_op, node_t const in_node, rdma_handle_t const& in_han,
+    rdma_op_t const& in_op, NodeType const in_node, rdma_handle_t const& in_han,
     byte_t const& in_num_bytes = no_byte, byte_t const& in_offset = no_byte
   ) : ActiveMessage<EnvelopeT>(),
       op_id(in_op), requesting(in_node), rdma_handle(in_han),
@@ -20,7 +20,7 @@ struct RequestDataMessage : ActiveMessage<EnvelopeT> {
   { }
 
   rdma_op_t op_id = no_rdma_op;
-  node_t requesting = uninitialized_destination;
+  NodeType requesting = uninitialized_destination;
   rdma_handle_t rdma_handle = no_rdma_handle;
   byte_t num_bytes = no_byte;
   byte_t offset = no_byte;
@@ -32,8 +32,8 @@ struct SendDataMessage : ActiveMessage<EnvelopeT> {
   SendDataMessage(
     rdma_op_t const& in_op, byte_t const& in_num_bytes, byte_t const& in_offset,
     tag_t const& in_mpi_tag, rdma_handle_t const& in_han = no_rdma_handle,
-    node_t const& back = uninitialized_destination,
-    node_t const& in_recv_node = uninitialized_destination
+    NodeType const& back = uninitialized_destination,
+    NodeType const& in_recv_node = uninitialized_destination
   ) : ActiveMessage<EnvelopeT>(),
     op_id(in_op), num_bytes(in_num_bytes), rdma_handle(in_han),
     mpi_tag_to_recv(in_mpi_tag), send_back(back), offset(in_offset),
@@ -41,8 +41,8 @@ struct SendDataMessage : ActiveMessage<EnvelopeT> {
   { }
 
   rdma_handle_t rdma_handle = no_rdma_handle;
-  node_t send_back = uninitialized_destination;
-  node_t recv_node = uninitialized_destination;
+  NodeType send_back = uninitialized_destination;
+  NodeType recv_node = uninitialized_destination;
   tag_t mpi_tag_to_recv = no_tag;
   rdma_op_t op_id = no_rdma_op;
   byte_t num_bytes = no_byte;
@@ -63,8 +63,8 @@ struct CreateChannel : runtime::CallbackMessage {
 
   CreateChannel(
     rdma_type_t const& in_type, rdma_handle_t const& in_han,
-    tag_t const& in_channel_tag, node_t const& in_target,
-    node_t const& in_non_target
+    tag_t const& in_channel_tag, NodeType const& in_target,
+    NodeType const& in_non_target
   ) : CallbackMessage(), type(in_type), rdma_handle(in_han),
       target(in_target), non_target(in_non_target),
       channel_tag(in_channel_tag)
@@ -74,8 +74,8 @@ struct CreateChannel : runtime::CallbackMessage {
   tag_t channel_tag = no_tag;
   rdma_handle_t rdma_handle = no_rdma_handle;
   rdma_type_t type = uninitialized_rdma_type;
-  node_t target = uninitialized_destination;
-  node_t non_target = uninitialized_destination;
+  NodeType target = uninitialized_destination;
+  NodeType non_target = uninitialized_destination;
 };
 
 struct GetInfoChannel : runtime::CallbackMessage {
@@ -92,8 +92,8 @@ struct ChannelMessage : runtime::CallbackMessage {
   ChannelMessage(
     rdma_type_t const& in_type, rdma_handle_t const& in_han,
     byte_t const& in_num_bytes, tag_t const& in_channel_tag,
-    node_t const& in_non_target = uninitialized_destination,
-    node_t const& in_override_target = uninitialized_destination
+    NodeType const& in_non_target = uninitialized_destination,
+    NodeType const& in_override_target = uninitialized_destination
   ) : CallbackMessage(), type(in_type), han(in_han), num_bytes(in_num_bytes),
       channel_tag(in_channel_tag), non_target(in_non_target),
       override_target(in_override_target)
@@ -103,8 +103,8 @@ struct ChannelMessage : runtime::CallbackMessage {
   rdma_type_t type = uninitialized_rdma_type;
   rdma_handle_t han = no_rdma_handle;
   byte_t num_bytes = no_byte;
-  node_t non_target = uninitialized_destination;
-  node_t override_target = uninitialized_destination;
+  NodeType non_target = uninitialized_destination;
+  NodeType override_target = uninitialized_destination;
 };
 
 using GetMessage = RequestDataMessage<EpochTagEnvelope>;

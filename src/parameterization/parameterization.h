@@ -78,7 +78,7 @@ static void data_message_handler(DataMsg<Tuple>* msg) {
 
   printf("data_message_handler: id=%d, ep=%lu\n", msg->sub_han, ep);
 
-  node_t const& from_node = the_msg->get_from_node_current_handler();
+  NodeType const& from_node = the_msg->get_from_node_current_handler();
 
   the_trace->begin_processing(ep, sizeof(*msg), event, from_node);
 #endif
@@ -105,7 +105,7 @@ struct Param {
 
   template <typename... Args>
   event_t send_data_tuple(
-    node_t const& dest, handler_t const& han, std::tuple<Args...>&& tup
+    NodeType const& dest, handler_t const& han, std::tuple<Args...>&& tup
   ) {
     static_check_copyable<Args...>();
 
@@ -131,7 +131,7 @@ struct Param {
   }
 
   template <typename DataMsg>
-  event_t send_data_msg(node_t const& dest, handler_t const& han, DataMsg* m) {
+  event_t send_data_msg(NodeType const& dest, handler_t const& han, DataMsg* m) {
     return the_msg->send_msg<DataMsg, data_message_handler>(
       dest, m, [=]{ delete m; }
     );
@@ -139,7 +139,7 @@ struct Param {
 
   template <typename T, T value, typename Tuple>
   event_t send_data(
-    node_t const& dest, Tuple tup, NonType<T, value> non = NonType<T,value>()
+    NodeType const& dest, Tuple tup, NonType<T, value> non = NonType<T,value>()
   ) {
     auto const& han = auto_registry::make_auto_handler<T,value>();
     return send_data_tuple(dest, han, std::forward<Tuple>(tup));
@@ -147,7 +147,7 @@ struct Param {
 
   template <typename T, T value, typename... Args>
   event_t send_data(
-    node_t const& dest, DataMsg<std::tuple<Args...>>* msg,
+    NodeType const& dest, DataMsg<std::tuple<Args...>>* msg,
     NonType<T, value> non = NonType<T,value>()
   ) {
     auto const& han = auto_registry::make_auto_handler<T,value>();
@@ -156,7 +156,7 @@ struct Param {
   }
 
   template <typename T, T value, typename... Args>
-  event_t send_data(node_t const& dest, NonType<T, value> non, Args&&... a) {
+  event_t send_data(NodeType const& dest, NonType<T, value> non, Args&&... a) {
     auto const& han = auto_registry::make_auto_handler<T,value>();
 
     static_check_copyable<Args...>();
@@ -171,7 +171,7 @@ struct Param {
   }
 
   template <typename T, T value, typename... Args>
-  event_t send_data(node_t const& dest, Args&&... a) {
+  event_t send_data(NodeType const& dest, Args&&... a) {
     return send_data(dest, NonType<T,value>(), std::forward<Args>(a)...);
   }
 
@@ -181,7 +181,7 @@ struct Param {
 
   template <typename FunctorT, typename... Args>
   event_t send_data_helper_functor(
-    node_t const& dest, std::tuple<Args...>&& tup
+    NodeType const& dest, std::tuple<Args...>&& tup
   ) {
     using message_t = runtime::BaseMessage;
     auto const& han = auto_registry::make_auto_handler_functor<
@@ -191,13 +191,13 @@ struct Param {
   }
 
   template <typename FunctorT, typename Tuple>
-  event_t send_data(node_t const& dest, Tuple tup) {
+  event_t send_data(NodeType const& dest, Tuple tup) {
     return send_data_helper_functor<FunctorT>(dest, std::forward<Tuple>(tup));
   }
 
 
   template <typename FunctorT, typename... Args>
-  event_t send_data(node_t const& dest, DataMsg<std::tuple<Args...>>* msg) {
+  event_t send_data(NodeType const& dest, DataMsg<std::tuple<Args...>>* msg) {
     static_check_copyable<Args...>();
 
     auto const& han = auto_registry::make_auto_handler_functor<
@@ -209,7 +209,7 @@ struct Param {
   }
 
   template <typename FunctorT, typename... Args>
-  event_t send_data(node_t const& dest, Args&&... a) {
+  event_t send_data(NodeType const& dest, Args&&... a) {
     static_check_copyable<Args...>();
 
     auto const& han = auto_registry::make_auto_handler_functor<

@@ -20,7 +20,7 @@ struct Map {
     : block_map(in_block_map), elm_map(in_elm_map)
   { }
 
-  static node_t
+  static NodeType
   default_block_map(rdma_block_t block, rdma_block_t num_blocks) {
     auto const& num_nodes = the_context->get_num_nodes();
     return block % num_nodes;

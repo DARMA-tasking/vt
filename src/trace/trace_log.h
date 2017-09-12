@@ -21,7 +21,7 @@ struct Log {
   trace_type_t type = trace_type_t::InvalidTraceType;
   trace_event_t event = no_trace_event;
   trace_msg_len_t msg_len = 0;
-  node_t node = uninitialized_destination;
+  NodeType node = uninitialized_destination;
 
   Log(
     double const& in_time, trace_ep_t const& in_ep,

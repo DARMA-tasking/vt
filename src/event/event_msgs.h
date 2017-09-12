@@ -9,10 +9,10 @@ namespace runtime {
 
 struct EventCheckFinishedMsg : ShortMessage {
   event_t event = 0, event_back = 0;
-  node_t sent_from_node = 0;
+  NodeType sent_from_node = 0;
 
   EventCheckFinishedMsg(
-    event_t const& event_in, node_t const& in_sent_from_node,
+    event_t const& event_in, NodeType const& in_sent_from_node,
     event_t const& event_back_in
   )
     : ShortMessage(), event(event_in), sent_from_node(in_sent_from_node),

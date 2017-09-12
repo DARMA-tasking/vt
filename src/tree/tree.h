@@ -10,8 +10,8 @@ struct Tree {
   void setup_tree();
 
   bool set_up_tree = false;
-  node_t c1 = -1, c2 = -1, parent = -1;
-  node_t num_children = 0, my_node = 0, num_nodes = 0;
+  NodeType c1 = -1, c2 = -1, parent = -1;
+  NodeType num_children = 0, my_node = 0, num_nodes = 0;
   bool has_c1 = false, has_c2 = false, is_root = false;
 };
 

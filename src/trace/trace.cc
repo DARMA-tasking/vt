@@ -60,7 +60,7 @@ Trace::~Trace() {
 void
 Trace::begin_processing(
   trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
-  node_t const& from_node, double const& time
+  NodeType const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::BeginProcessing;
   log_ptr_t log = new log_t(time, ep, type);
@@ -80,7 +80,7 @@ Trace::begin_processing(
 void
 Trace::end_processing(
   trace_ep_t const& ep, trace_msg_len_t const& len, trace_event_t const& event,
-  node_t const& from_node, double const& time
+  NodeType const& from_node, double const& time
 ) {
   auto const& type = trace_type_t::EndProcessing;
   log_ptr_t log = new log_t(time, ep, type);
@@ -159,7 +159,7 @@ Trace::message_creation_bcast(
 
 trace_event_t
 Trace::message_recv(
-  trace_ep_t const& ep, trace_msg_len_t const& len, node_t const& from_node,
+  trace_ep_t const& ep, trace_msg_len_t const& len, NodeType const& from_node,
   double const& time
 ) {
   auto const& type = trace_type_t::MessageRecv;
@@ -486,7 +486,7 @@ Trace::output_control_file(std::ofstream& file) {
 
 /*static*/ void
 Trace::output_header(
-  node_t const& node, double const& start, gzFile file
+  NodeType const& node, double const& start, gzFile file
 ) {
   // Output header for projections file
   gzprintf(file, "PROJECTIONS-RECORD 0\n");
@@ -496,7 +496,7 @@ Trace::output_header(
 
 /*static*/ void
 Trace::output_footer(
-  node_t const& node, double const& start, gzFile file
+  NodeType const& node, double const& start, gzFile file
 ) {
   // Output footer for projections file, '7' means COMPUTATION_END to
   // Projections

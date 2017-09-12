@@ -354,7 +354,7 @@ State::process_pending_get(tag_t const& tag) {
 // }
 
 
-// node_t
+// NodeType
 // State::get_node(rdma_elm_t const& elm) {
 //   assert(
 //     collective_map != nullptr and rdma_handle_manager_t::is_collective(handle)

@@ -40,11 +40,11 @@ struct HandlerManager {
     bool const& is_auto, bool const& is_functor, handler_identifier_t const& id
   );
 
-  static node_t
+  static NodeType
   get_handler_node(handler_t const& han);
 
   static void
-  set_handler_node(handler_t& han, node_t const& node);
+  set_handler_node(handler_t& han, NodeType const& node);
 
   static void
   set_handler_identifier(handler_t& han, handler_identifier_t const& ident);
