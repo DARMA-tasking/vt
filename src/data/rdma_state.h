@@ -25,8 +25,8 @@ struct State {
   using rdma_group_t = Group;
   using rdma_get_function_t = active_get_function_t;
   using rdma_put_function_t = active_put_function_t;
-  using rdma_tag_get_holder_t = std::tuple<rdma_get_function_t, handler_t>;
-  using rdma_tag_put_holder_t = std::tuple<rdma_put_function_t, handler_t>;
+  using rdma_tag_get_holder_t = std::tuple<rdma_get_function_t, rdma_handler_t>;
+  using rdma_tag_put_holder_t = std::tuple<rdma_put_function_t, rdma_handler_t>;
 
   template <typename T>
   using tag_container_t = std::unordered_map<tag_t, T>;
