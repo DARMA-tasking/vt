@@ -12,7 +12,7 @@
 namespace runtime { namespace trace {
 
 struct TraceRegistry {
-  using trace_cont_t = TraceContainers<void>;
+  using TraceContainersType = TraceContainers<void>;
 
   static TraceEntryIDType
   register_event_hashed(
@@ -24,22 +24,22 @@ struct TraceRegistry {
       "register_event_hashed: event_type_name=%s, event_name=%s, "
       "event_type_container.size=%ld\n",
       event_type_name.c_str(), event_name.c_str(),
-      trace_cont_t::event_type_container.size()
+      TraceContainersType::event_type_container.size()
     );
     #endif
 
     TraceEntryIDType event_type_seq = no_trace_entry_id;
     EventClassType new_event_type(event_type_name);
 
-    auto type_iter = trace_cont_t::event_type_container.find(
+    auto type_iter = TraceContainersType::event_type_container.find(
       new_event_type.get_event_id()
     );
 
-    if (type_iter == trace_cont_t::event_type_container.end()) {
-      event_type_seq = trace_cont_t::event_type_container.size();
+    if (type_iter == TraceContainersType::event_type_container.end()) {
+      event_type_seq = TraceContainersType::event_type_container.size();
       new_event_type.set_event_seq(event_type_seq);
 
-      trace_cont_t::event_type_container.emplace(
+      TraceContainersType::event_type_container.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(new_event_type.get_event_id()),
         std::forward_as_tuple(new_event_type)
@@ -53,15 +53,15 @@ struct TraceRegistry {
 
     new_event.set_event_type_seq(event_type_seq);
 
-    auto event_iter = trace_cont_t::event_container.find(
+    auto event_iter = TraceContainersType::event_container.find(
       new_event.get_event_id()
     );
 
-    if (event_iter == trace_cont_t::event_container.end()) {
-      event_seq = trace_cont_t::event_container.size();
+    if (event_iter == TraceContainersType::event_container.end()) {
+      event_seq = TraceContainersType::event_container.size();
       new_event.set_event_seq(event_seq);
 
-      trace_cont_t::event_container.emplace(
+      TraceContainersType::event_container.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(new_event.get_event_id()),
         std::forward_as_tuple(new_event)

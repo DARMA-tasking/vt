@@ -286,8 +286,8 @@ Trace::write_traces_file() {
     "write_traces_file: traces.size=%ld, "
     "event_type_container.size=%ld, event_container.size=%ld\n",
     traces.size(),
-    trace_cont_t::event_type_container.size(),
-    trace_cont_t::event_container.size()
+    TraceContainersType::event_type_container.size(),
+    TraceContainersType::event_container.size()
   );
 
   gzFile file = gzopen(trace_name.c_str(), "wb");
@@ -314,11 +314,11 @@ Trace::write_log_file(gzFile file, trace_container_t const& traces) {
       std::underlying_type<decltype(log->type)>::type
         >(log->type);
 
-    auto event_iter = trace_cont_t::event_container.find(log->ep);
+    auto event_iter = TraceContainersType::event_container.find(log->ep);
 
     assert(
       log->ep == no_trace_entry_id or
-      event_iter != trace_cont_t::event_container.end() and
+      event_iter != TraceContainersType::event_container.end() and
       "Event must exist that was logged"
     );
 
@@ -421,13 +421,16 @@ Trace::output_control_file(std::ofstream& file) {
   auto const& node = the_context->get_node();
   auto const& num_nodes = the_context->get_num_nodes();
 
+  auto const& num_event_types = TraceContainersType::event_type_container.size();
+  auto const& num_events = TraceContainersType::event_container.size();
+
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
        << "TOTAL_PHASES 1\n"
        << "MACHINE unknown\n"
        << "PROCESSORS " << num_nodes << "\n"
-       << "TOTAL_CHARES " << trace_cont_t::event_type_container.size() << "\n"
-       << "TOTAL_EPS " << trace_cont_t::event_container.size() << "\n"
+       << "TOTAL_CHARES " << num_event_types << "\n"
+       << "TOTAL_EPS " << num_events << "\n"
        << "TOTAL_MSGS 0\n"
        << "TOTAL_PSEUDOS 0\n"
        << "TOTAL_EVENTS 0"
@@ -436,7 +439,7 @@ Trace::output_control_file(std::ofstream& file) {
   container_event_sorted_t sorted_event;
   container_event_type_sorted_t sorted_event_type;
 
-  for (auto&& elem : trace_cont_t::event_container) {
+  for (auto&& elem : TraceContainersType::event_container) {
     sorted_event.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),
@@ -444,7 +447,7 @@ Trace::output_control_file(std::ofstream& file) {
     );
   }
 
-  for (auto&& elem : trace_cont_t::event_type_container) {
+  for (auto&& elem : TraceContainersType::event_type_container) {
     sorted_event_type.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),
