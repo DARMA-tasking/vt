@@ -17,11 +17,11 @@ get_auto_registry()  {
   return reg;
 }
 
-template <typename MessageT, action_any_function_t<MessageT>* f>
+template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 inline HandlerType
 make_auto_handler(MessageT* const msg) {
   HandlerType const id = get_handler_active_function_expand(
-    action_any_function_t<MessageT>, f
+    ActiveAnyFunctionType<MessageT>, f
   );
   return handler_manager_t::make_handler(true, false, id);
 }
@@ -54,7 +54,7 @@ Registrar<ActiveFnT>::Registrar() {
   });
   #else
   reg.emplace_back(auto_reg_info_t<auto_active_t>{
-    reinterpret_cast<active_basic_function_t*>(fn)
+    reinterpret_cast<ActiveBasicFunctionType*>(fn)
   });
   #endif
 }

@@ -6,7 +6,7 @@ namespace runtime {
 
 HandlerType
 Registry::register_new_handler(
-  active_function_t fn, TagType const& tag, bool const& is_collective
+  ActiveFunctionType fn, TagType const& tag, bool const& is_collective
 ) {
   auto const& this_node = the_context->get_node();
 
@@ -30,7 +30,7 @@ Registry::register_new_handler(
 
 void
 Registry::swap_handler(
-  HandlerType const& han, active_function_t fn, TagType const& tag
+  HandlerType const& han, ActiveFunctionType fn, TagType const& tag
 ) {
   if (tag == no_tag) {
     auto iter = registered.find(han);
@@ -59,11 +59,11 @@ Registry::unregister_handler_fn(HandlerType const& han, TagType const& tag) {
 }
 
 HandlerType
-Registry::register_active_handler(active_function_t fn, TagType const& tag) {
+Registry::register_active_handler(ActiveFunctionType fn, TagType const& tag) {
   return register_new_handler(fn, tag, true);
 }
 
-active_function_t
+ActiveFunctionType
 Registry::get_handler_no_tag(HandlerType const& han) {
   auto iter = registered.find(han);
   if (iter != registered.end()) {
@@ -73,7 +73,7 @@ Registry::get_handler_no_tag(HandlerType const& han) {
   }
 }
 
-active_function_t
+ActiveFunctionType
 Registry::get_trigger(HandlerType const& han) {
   auto iter = triggers.find(han);
   if (iter != triggers.end()) {
@@ -84,12 +84,12 @@ Registry::get_trigger(HandlerType const& han) {
 }
 
 void
-Registry::save_trigger(HandlerType const& han, active_function_t fn) {
+Registry::save_trigger(HandlerType const& han, ActiveFunctionType fn) {
   printf("save_trigger: han=%d\n", han);
   triggers[han] = fn;
 }
 
-active_function_t
+ActiveFunctionType
 Registry::get_handler(HandlerType const& han, TagType const& tag) {
   if (tag == no_tag) {
     return get_handler_no_tag(han);

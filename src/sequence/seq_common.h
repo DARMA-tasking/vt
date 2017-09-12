@@ -12,7 +12,7 @@ template <typename MessageT>
 using seq_non_migratable_trigger_t = std::function<void(MessageT*)>;
 
 template <typename MessageT>
-using seq_migratable_trigger_t = action_any_function_t<MessageT>;
+using seq_migratable_trigger_t = ActiveAnyFunctionType<MessageT>;
 
 using seq_callable_t = std::function<bool()>;
 

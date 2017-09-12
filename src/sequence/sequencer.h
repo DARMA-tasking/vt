@@ -100,8 +100,8 @@ struct TaggedSequencer {
 
   template <
     typename MessageT,
-    action_any_function_t<MessageT>* f,
-    action_any_function_t<MessageT>* trigger
+    ActiveAnyFunctionType<MessageT>* f,
+    ActiveAnyFunctionType<MessageT>* trigger
   >
   void wait(TagType const& tag = no_tag) {
     /*
@@ -116,13 +116,13 @@ struct TaggedSequencer {
     return wait<MessageT,f>(tag,trigger);
   }
 
-  template <typename MessageT, action_any_function_t<MessageT>* f>
+  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void
   wait(seq_trigger_type_t<MessageT> trigger) {
     return wait<MessageT, f>(no_tag, trigger);
   }
 
-  template <typename MessageT, action_any_function_t<MessageT>* f>
+  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void
   wait(TagType const& tag, seq_trigger_type_t<MessageT> trigger) {
     /*
@@ -247,7 +247,7 @@ private:
   }
 
 public:
-  template <typename MessageT, action_any_function_t<MessageT>* f>
+  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void sequence_msg(MessageT* msg) {
     bool found_matching = false;
 

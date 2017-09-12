@@ -56,7 +56,7 @@ static inline void pull_apart(
   if (is_msg) {
     auto fn_ptr = functor_handler_wrapper_reg<RunnableFunctorT, Args...>;
     reg.emplace_back(auto_reg_info_t<auto_active_functor_t>{
-      reinterpret_cast<simple_function_t>(fn_ptr)
+      reinterpret_cast<SimpleFunctionType>(fn_ptr)
         #if backend_check_enabled(trace_enabled)
         , trace_ep
         #endif
@@ -64,7 +64,7 @@ static inline void pull_apart(
   } else {
     auto fn_ptr = functor_handler_wrapper_rval<RunnableFunctorT, Args...>;
     reg.emplace_back(auto_reg_info_t<auto_active_functor_t>{
-      reinterpret_cast<simple_function_t>(fn_ptr)
+      reinterpret_cast<SimpleFunctionType>(fn_ptr)
         #if backend_check_enabled(trace_enabled)
         , trace_ep
         #endif

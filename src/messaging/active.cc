@@ -5,8 +5,7 @@
 
 namespace runtime {
 
-EventType
-ActiveMessenger::send_msg_direct(
+EventType ActiveMessenger::send_msg_direct(
   HandlerType const& han, BaseMessage* const msg_base, int const& msg_size,
   ActionType next_action
 ) {
@@ -169,8 +168,7 @@ ActiveMessenger::send_msg_direct(
   }
 }
 
-ActiveMessenger::SendDataRetType
-ActiveMessenger::send_data(
+ActiveMessenger::SendDataRetType ActiveMessenger::send_data(
   RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
   ActionType next_action
 ) {
@@ -204,15 +202,13 @@ ActiveMessenger::send_data(
   return SendDataRetType{event_id,send_tag};
 }
 
-bool
-ActiveMessenger::recv_data_msg(
+bool ActiveMessenger::recv_data_msg(
   TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next
 ) {
   return recv_data_msg(tag, node, true, next);
 }
 
-bool
-ActiveMessenger::process_data_msg_recv() {
+bool ActiveMessenger::process_data_msg_recv() {
   bool erase = false;
   auto iter = pending_recvs_.begin();
 
@@ -235,10 +231,10 @@ ActiveMessenger::process_data_msg_recv() {
   }
 }
 
-bool
-ActiveMessenger::recv_data_msg_buffer(
+bool ActiveMessenger::recv_data_msg_buffer(
   void* const user_buf, TagType const& tag, NodeType const& node,
-  bool const& enqueue, ActionType dealloc_user_buf, RDMA_ContinuationDeleteType next
+  bool const& enqueue, ActionType dealloc_user_buf,
+  RDMA_ContinuationDeleteType next
 ) {
   if (not enqueue) {
     CountType num_probe_bytes;
@@ -309,21 +305,18 @@ ActiveMessenger::recv_data_msg_buffer(
   }
 }
 
-bool
-ActiveMessenger::recv_data_msg(
+bool ActiveMessenger::recv_data_msg(
   TagType const& tag, NodeType const& recv_node, bool const& enqueue,
   RDMA_ContinuationDeleteType next
 ) {
   return recv_data_msg_buffer(nullptr, tag, recv_node, enqueue, nullptr, next);
 }
 
-NodeType
-ActiveMessenger::get_from_node_current_handler() {
+NodeType ActiveMessenger::get_from_node_current_handler() {
   return current_node_context_;
 }
 
-bool
-ActiveMessenger::deliver_active_msg(
+bool ActiveMessenger::deliver_active_msg(
   MessageType msg, NodeType const& in_from_node, bool insert
 ) {
   auto const& is_term = envelope_is_term(msg->env);
@@ -339,7 +332,7 @@ ActiveMessenger::deliver_active_msg(
     get_callback_message(msg) : uninitialized_handler;
   auto const& from_node = is_bcast ? dest : in_from_node;
 
-  active_function_t active_fun = nullptr;
+  ActiveFunctionType active_fun = nullptr;
 
   bool const& is_auto = HandlerManagerType::is_handler_auto(handler);
   bool const& is_functor = HandlerManagerType::is_handler_functor(handler);
@@ -435,8 +428,7 @@ ActiveMessenger::deliver_active_msg(
   return has_action_handler;
 }
 
-bool
-ActiveMessenger::try_process_incoming_message() {
+bool ActiveMessenger::try_process_incoming_message() {
   CountType num_probe_bytes;
   MPI_Status stat;
   int flag;
@@ -477,8 +469,7 @@ ActiveMessenger::try_process_incoming_message() {
   }
 }
 
-bool
-ActiveMessenger::scheduler() {
+bool ActiveMessenger::scheduler() {
   bool const processed = try_process_incoming_message();
   bool const processed_data_msg = process_data_msg_recv();
   process_maybe_ready_han_tag();
@@ -486,35 +477,32 @@ ActiveMessenger::scheduler() {
   return processed or processed_data_msg;
 }
 
-bool
-ActiveMessenger::is_local_term() {
+bool ActiveMessenger::is_local_term() {
   bool const no_pending_msgs = pending_handler_msgs_.size() == 0;
   bool const no_pending_recvs = pending_recvs_.size() == 0;
   return no_pending_msgs and no_pending_recvs;
 }
 
-void
-ActiveMessenger::process_maybe_ready_han_tag() {
+void ActiveMessenger::process_maybe_ready_han_tag() {
   for (auto&& x : maybe_ready_tag_han_) {
     deliver_pending_msgs_on_han(std::get<0>(x), std::get<1>(x));
   }
 }
 
-HandlerType
-ActiveMessenger::register_new_handler(active_function_t fn, TagType const& tag) {
+HandlerType ActiveMessenger::register_new_handler(
+  ActiveFunctionType fn, TagType const& tag
+) {
   return the_registry->register_new_handler(fn, tag);
 }
 
-HandlerType
-ActiveMessenger::collective_register_handler(
-  active_function_t fn, TagType const& tag
+HandlerType ActiveMessenger::collective_register_handler(
+  ActiveFunctionType fn, TagType const& tag
 ) {
   return the_registry->register_active_handler(fn, tag);
 }
 
-void
-ActiveMessenger::swap_handler_fn(
-  HandlerType const& han, active_function_t fn, TagType const& tag
+void ActiveMessenger::swap_handler_fn(
+  HandlerType const& han, ActiveFunctionType fn, TagType const& tag
 ) {
   the_registry->swap_handler(han, fn, tag);
 
@@ -523,8 +511,7 @@ ActiveMessenger::swap_handler_fn(
   }
 }
 
-void
-ActiveMessenger::deliver_pending_msgs_on_han(
+void ActiveMessenger::deliver_pending_msgs_on_han(
   HandlerType const& han, TagType const& tag
 ) {
   auto iter = pending_handler_msgs_.find(han);
@@ -541,9 +528,8 @@ ActiveMessenger::deliver_pending_msgs_on_han(
   }
 }
 
-void
-ActiveMessenger::register_handler_fn(
-  HandlerType const& han, active_function_t fn, TagType const& tag
+void ActiveMessenger::register_handler_fn(
+  HandlerType const& han, ActiveFunctionType fn, TagType const& tag
 ) {
   swap_handler_fn(han, fn, tag);
 
@@ -552,20 +538,17 @@ ActiveMessenger::register_handler_fn(
   }
 }
 
-void
-ActiveMessenger::unregister_handler_fn(
+void ActiveMessenger::unregister_handler_fn(
   HandlerType const& han, TagType const& tag
 ) {
   return the_registry->unregister_handler_fn(han, tag);
 }
 
-HandlerType
-ActiveMessenger::get_current_handler() {
+HandlerType ActiveMessenger::get_current_handler() {
   return current_handler_context_;
 }
 
-HandlerType
-ActiveMessenger::get_current_callback() {
+HandlerType ActiveMessenger::get_current_callback() {
   return current_callback_context_;
 }
 

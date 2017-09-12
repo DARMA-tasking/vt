@@ -22,7 +22,7 @@ struct CollectiveOps {
   }
 
   static HandlerType
-  register_handler(active_function_t fn) {
+  register_handler(ActiveFunctionType fn) {
     return the_registry->register_active_handler(fn);
   }
 

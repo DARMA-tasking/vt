@@ -10,8 +10,8 @@
 
 namespace runtime { namespace auto_registry {
 
-using auto_active_t = simple_function_t;
-using auto_active_functor_t = simple_function_t;
+using auto_active_t = SimpleFunctionType;
+using auto_active_functor_t = SimpleFunctionType;
 
 template <typename FnT>
 struct AutoRegInfo {

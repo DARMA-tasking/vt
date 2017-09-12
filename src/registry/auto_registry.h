@@ -25,7 +25,7 @@ struct Registrar {
 
 auto_active_t get_auto_handler(HandlerType const& handler);
 
-template <typename MessageT, action_any_function_t<MessageT>* f>
+template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 HandlerType make_auto_handler(MessageT* const msg);
 
 template <typename T, T value>

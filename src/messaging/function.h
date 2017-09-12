@@ -7,12 +7,12 @@
 
 namespace runtime {
 
-using active_function_t = std::function<void(runtime::BaseMessage*)>;
-using active_basic_function_t = void(runtime::BaseMessage *);
-using simple_function_t = void(*)(runtime::BaseMessage *);
+using ActiveFunctionType = std::function<void(runtime::BaseMessage*)>;
+using ActiveBasicFunctionType = void(runtime::BaseMessage *);
+using SimpleFunctionType = void(*)(runtime::BaseMessage *);
 
 template <typename MessageT>
-using action_any_function_t = void(MessageT *);
+using ActiveAnyFunctionType = void(MessageT *);
 
 } //end namespace runtime
 
