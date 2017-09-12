@@ -13,54 +13,29 @@ static_assert(
 );
 
 struct HandleManager {
-  using rdma_bits_t = Bits;
+  using RDMA_BitsType = Bits;
   using RDMA_TypeType = Type;
-  using universal_rdma_id_t = RDMA_HandleType;
+  using RDMA_UniversalIdType = RDMA_HandleType;
 
-  static void
-  set_is_sized(universal_rdma_id_t& handle, bool const& is_sized);
-
-  static void
-  set_is_collective(universal_rdma_id_t& handle, bool const& is_collective);
-
-  static void
-  set_is_handler(
-    universal_rdma_id_t& handle, bool const& is_handler
+  static void set_is_sized(RDMA_UniversalIdType& handle, bool const& is_sized);
+  static void set_is_collective(RDMA_UniversalIdType& handle, bool const& is_collective);
+  static void set_is_handler(
+    RDMA_UniversalIdType& handle, bool const& is_handler
   );
-
-  static void
-  set_op_type(
-    universal_rdma_id_t& handle, RDMA_TypeType const& rdma_type
+  static void set_op_type(
+    RDMA_UniversalIdType& handle, RDMA_TypeType const& rdma_type
   );
-
-  static void
-  set_rdma_node(universal_rdma_id_t& handle, NodeType const& node);
-
-  static void
-  set_rdma_identifier(
-    universal_rdma_id_t& handle, RDMA_IdentifierType const& ident
+  static void set_rdma_node(RDMA_UniversalIdType& handle, NodeType const& node);
+  static void set_rdma_identifier(
+    RDMA_UniversalIdType& handle, RDMA_IdentifierType const& ident
   );
-
-  static NodeType
-  get_rdma_node(universal_rdma_id_t const& handle);
-
-  static RDMA_IdentifierType
-  get_rdma_identifier(universal_rdma_id_t const& handle);
-
-  static bool
-  is_sized(universal_rdma_id_t const& handle);
-
-  static bool
-  is_collective(universal_rdma_id_t const& handle);
-
-  static bool
-  is_handler(universal_rdma_id_t const& handle);
-
-  static RDMA_TypeType
-  get_op_type(universal_rdma_id_t const& handle);
-
-  static universal_rdma_id_t
-  create_new_handler();
+  static NodeType get_rdma_node(RDMA_UniversalIdType const& handle);
+  static RDMA_IdentifierType get_rdma_identifier(RDMA_UniversalIdType const& handle);
+  static bool is_sized(RDMA_UniversalIdType const& handle);
+  static bool is_collective(RDMA_UniversalIdType const& handle);
+  static bool is_handler(RDMA_UniversalIdType const& handle);
+  static RDMA_TypeType get_op_type(RDMA_UniversalIdType const& handle);
+  static RDMA_UniversalIdType create_new_handler();
 };
 
 using RDMA_HandleManagerType = HandleManager;

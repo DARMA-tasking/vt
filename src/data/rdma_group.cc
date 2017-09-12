@@ -8,11 +8,11 @@
 namespace runtime { namespace rdma {
 
 void
-Group::set_map(rdma_map_t const& in_map) {
+Group::set_map(RDMA_MapType const& in_map) {
   map = in_map;
 }
 
-Group::rdma_map_t
+Group::RDMA_MapType
 Group::get_map() const {
   return map;
 }

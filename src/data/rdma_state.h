@@ -25,8 +25,10 @@ struct State {
   using RDMA_GroupType = Group;
   using RDMA_GetFunctionType = ActiveGetFunctionType;
   using RDMA_PutFunctionType = ActivePutFunctionType;
-  using RDMA_TagGetHolderType = std::tuple<RDMA_GetFunctionType, RDMA_HandlerType>;
-  using RDMA_TagPutHolderType = std::tuple<RDMA_PutFunctionType, RDMA_HandlerType>;
+  using RDMA_TagGetHolderType =
+    std::tuple<RDMA_GetFunctionType, RDMA_HandlerType>;
+  using RDMA_TagPutHolderType =
+    std::tuple<RDMA_PutFunctionType, RDMA_HandlerType>;
 
   template <typename T>
   using tag_container_t = std::unordered_map<TagType, T>;
@@ -39,60 +41,46 @@ struct State {
   ByteType num_bytes = no_byte;
 
   State(
-    RDMA_HandleType const& in_handle,
-    RDMA_PtrType const& in_ptr = no_rdma_ptr,
+    RDMA_HandleType const& in_handle, RDMA_PtrType const& in_ptr = no_rdma_ptr,
     ByteType const& in_num_bytes = no_byte,
     bool const& use_default_handler = false
   );
 
   template <RDMA_TypeType rdma_type, typename FunctionT>
-  RDMA_HandlerType
-  set_rdma_fn(
-    FunctionT const& fn, bool const& any_tag = false, TagType const& tag = no_tag
+  RDMA_HandlerType set_rdma_fn(
+    FunctionT const& fn, bool const& any_tag = false,
+    TagType const& tag = no_tag
   );
 
-  void
-  unregister_rdma_handler(
+  void unregister_rdma_handler(
     RDMA_TypeType const& type, TagType const& tag, bool const& use_default
   );
 
-  void
-  unregister_rdma_handler(
+  void unregister_rdma_handler(
     RDMA_HandlerType const& handler, TagType const& tag
   );
 
-  RDMA_HandlerType
-  make_rdma_handler(RDMA_TypeType const& rdma_type);
+  RDMA_HandlerType make_rdma_handler(RDMA_TypeType const& rdma_type);
 
-  bool
-  test_ready_get_data(TagType const& tag);
+  bool test_ready_get_data(TagType const& tag);
+  bool test_ready_put_data(TagType const& tag);
 
-  bool
-  test_ready_put_data(TagType const& tag);
-
-  void
-  get_data(
+  void get_data(
     GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
   );
 
-  void
-  put_data(
+  void put_data(
     PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
   );
 
-  void
-  process_pending_get(TagType const& tag = no_tag);
+  void process_pending_get(TagType const& tag = no_tag);
+  void set_default_handler();
 
-  void
-  set_default_handler();
-
-  RDMA_GetType
-  default_get_handler_fn(
+  RDMA_GetType default_get_handler_fn(
     BaseMessage* msg, ByteType num_bytes, ByteType req_offset, TagType tag
   );
 
-  void
-  default_put_handler_fn(
+  void default_put_handler_fn(
     BaseMessage* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes,
     ByteType req_offset, TagType tag
   );
@@ -103,8 +91,8 @@ struct State {
   std::unique_ptr<RDMA_GroupType> group_info = nullptr;
 
 private:
-  RDMA_HandlerType this_rdma_get_handler = uninitialized_rdma_handler,
-                 this_rdma_put_handler = uninitialized_rdma_handler;
+  RDMA_HandlerType this_rdma_get_handler = uninitialized_rdma_handler;
+  RDMA_HandlerType this_rdma_put_handler = uninitialized_rdma_handler;
 
   bool get_any_tag = false;
   bool put_any_tag = false;

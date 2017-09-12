@@ -32,7 +32,9 @@ struct Map {
   ) {
     auto const& block_size = num_elms / num_blocks;
     auto const& block = elm / block_size;
-    return RDMA_BlockElmRangeType{block, (block)*block_size, (block+1)*block_size};
+    return RDMA_BlockElmRangeType{
+      block, block * block_size, (block + 1) * block_size
+    };
   }
 };
 

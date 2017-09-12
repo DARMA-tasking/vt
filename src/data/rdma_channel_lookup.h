@@ -41,8 +41,7 @@ namespace std {
 
   template <>
   struct hash<rdma_channel_lookup_t> {
-    size_t
-    operator()(rdma_channel_lookup_t const& in) const {
+    size_t operator()(rdma_channel_lookup_t const& in) const {
       auto const& combined =
         std::hash<runtime::RDMA_HandleType>()(in.handle) ^
         std::hash<runtime::NodeType>()(in.target) ^

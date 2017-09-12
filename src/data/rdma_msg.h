@@ -12,8 +12,9 @@ template <typename EnvelopeT>
 struct RequestDataMessage : ActiveMessage<EnvelopeT> {
 
   RequestDataMessage(
-    RDMA_OpType const& in_op, NodeType const in_node, RDMA_HandleType const& in_han,
-    ByteType const& in_num_bytes = no_byte, ByteType const& in_offset = no_byte
+    RDMA_OpType const& in_op, NodeType const in_node,
+    RDMA_HandleType const& in_han, ByteType const& in_num_bytes = no_byte,
+    ByteType const& in_offset = no_byte
   ) : ActiveMessage<EnvelopeT>(),
       op_id(in_op), requesting(in_node), rdma_handle(in_han),
       num_bytes(in_num_bytes), offset(in_offset)
@@ -30,8 +31,9 @@ struct RequestDataMessage : ActiveMessage<EnvelopeT> {
 template <typename EnvelopeT>
 struct SendDataMessage : ActiveMessage<EnvelopeT> {
   SendDataMessage(
-    RDMA_OpType const& in_op, ByteType const& in_num_bytes, ByteType const& in_offset,
-    TagType const& in_mpi_tag, RDMA_HandleType const& in_han = no_rdma_handle,
+    RDMA_OpType const& in_op, ByteType const& in_num_bytes,
+    ByteType const& in_offset, TagType const& in_mpi_tag,
+    RDMA_HandleType const& in_han = no_rdma_handle,
     NodeType const& back = uninitialized_destination,
     NodeType const& in_recv_node = uninitialized_destination
   ) : ActiveMessage<EnvelopeT>(),

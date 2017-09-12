@@ -8,10 +8,8 @@
 namespace runtime { namespace rdma {
 
 State::State(
-  RDMA_HandleType const& in_handle,
-  RDMA_PtrType const& in_ptr,
-  ByteType const& in_num_bytes,
-  bool const& use_default_handler
+  RDMA_HandleType const& in_handle, RDMA_PtrType const& in_ptr,
+  ByteType const& in_num_bytes, bool const& use_default_handler
 ) : handle(in_handle), ptr(in_ptr), num_bytes(in_num_bytes) {
   if (use_default_handler) {
     assert(
@@ -21,8 +19,7 @@ State::State(
   }
 }
 
-void
-State::set_default_handler() {
+void State::set_default_handler() {
   using namespace std::placeholders;
 
   bool const handle_any_tag = true;
@@ -36,8 +33,7 @@ State::set_default_handler() {
   using_default_put_handler = true;
 }
 
-void
-State::unregister_rdma_handler(
+void State::unregister_rdma_handler(
   RDMA_TypeType const& type, TagType const& tag, bool const& use_default
 ) {
   if (type == RDMA_TypeType::Get or type == RDMA_TypeType::GetOrPut) {
@@ -66,8 +62,7 @@ State::unregister_rdma_handler(
   }
 }
 
-void
-State::unregister_rdma_handler(
+void State::unregister_rdma_handler(
   RDMA_HandlerType const& handler, TagType const& tag
 ) {
   if (tag == no_tag) {
@@ -96,9 +91,8 @@ State::unregister_rdma_handler(
   }
 }
 
-template<>
-RDMA_HandlerType
-State::set_rdma_fn<
+template <>
+RDMA_HandlerType State::set_rdma_fn<
   State::RDMA_TypeType::Get, State::RDMA_GetFunctionType
 >(RDMA_GetFunctionType const& fn, bool const& any_tag, TagType const& tag) {
 
@@ -130,8 +124,7 @@ State::set_rdma_fn<
   return handler;
 }
 
-template<>
-RDMA_HandlerType
+template <> RDMA_HandlerType
 State::set_rdma_fn<
   State::RDMA_TypeType::Put, State::RDMA_PutFunctionType
 >(RDMA_PutFunctionType const& fn, bool const& any_tag, TagType const& tag) {
@@ -163,8 +156,7 @@ State::set_rdma_fn<
   return handler;
 }
 
-RDMA_HandlerType
-State::make_rdma_handler(RDMA_TypeType const& rdma_type) {
+RDMA_HandlerType State::make_rdma_handler(RDMA_TypeType const& rdma_type) {
   RDMA_HandlerType& handler =
     rdma_type == RDMA_TypeType::Put ? this_rdma_put_handler : this_rdma_get_handler;
 
@@ -175,8 +167,7 @@ State::make_rdma_handler(RDMA_TypeType const& rdma_type) {
   return handler;
 }
 
-bool
-State::test_ready_get_data(TagType const& tag) {
+bool State::test_ready_get_data(TagType const& tag) {
   bool const not_ready = (
     ((tag == no_tag or get_any_tag) and rdma_get_fn == nullptr) or (
       tag != no_tag and
@@ -187,8 +178,7 @@ State::test_ready_get_data(TagType const& tag) {
   return not not_ready;
 }
 
-bool
-State::test_ready_put_data(TagType const& tag) {
+bool State::test_ready_put_data(TagType const& tag) {
   bool const not_ready = (
     ((tag == no_tag or put_any_tag) and rdma_put_fn == nullptr) or (
       tag != no_tag and
@@ -199,8 +189,7 @@ State::test_ready_put_data(TagType const& tag) {
   return not not_ready;
 }
 
-RDMA_GetType
-State::default_get_handler_fn(
+RDMA_GetType State::default_get_handler_fn(
   BaseMessage* msg, ByteType req_num_bytes, ByteType req_offset, TagType tag
 ) {
   auto const& this_node = the_context->get_node();
@@ -222,8 +211,7 @@ State::default_get_handler_fn(
   };
 }
 
-void
-State::default_put_handler_fn(
+void State::default_put_handler_fn(
   BaseMessage* msg, RDMA_PtrType in_ptr, ByteType req_num_bytes,
   ByteType req_offset, TagType tag
 ) {
@@ -243,8 +231,7 @@ State::default_put_handler_fn(
   std::memcpy(static_cast<char*>(ptr) + req_offset, in_ptr, req_num_bytes);
 }
 
-void
-State::get_data(
+void State::get_data(
   GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
 ) {
   auto const& tag = info.tag;
@@ -283,8 +270,7 @@ State::get_data(
   }
 }
 
-void
-State::put_data(
+void State::put_data(
   PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
 ) {
   auto const& tag = info.tag;
@@ -323,8 +309,7 @@ State::put_data(
   }
 }
 
-void
-State::process_pending_get(TagType const& tag) {
+void State::process_pending_get(TagType const& tag) {
   bool const ready = test_ready_get_data(tag);
   assert(ready and "Must be ready to process pending");
 

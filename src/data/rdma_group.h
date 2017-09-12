@@ -11,25 +11,21 @@
 namespace runtime { namespace rdma {
 
 struct Group {
-  using rdma_map_t = Map;
-  using rdma_region_t = Region;
+  using RDMA_MapType = Map;
+  using RDMA_RegionType = Region;
 
   Group(
-    rdma_map_t const& in_map, RDMA_ElmType const& in_total_elms,
+    RDMA_MapType const& in_map, RDMA_ElmType const& in_total_elms,
     RDMA_BlockType const& in_num_blocks, ByteType const& in_elm_size
   ) : map(in_map), elm_size(in_elm_size), num_total_elems(in_total_elms),
       num_blocks(in_num_blocks)
   { }
 
-  void
-  set_map(rdma_map_t const& map);
-
-  rdma_map_t
-  get_map() const;
+  void set_map(RDMA_MapType const& map);
+  RDMA_MapType get_map() const;
 
   template <typename Walker>
-  void
-  walk_region(rdma_region_t const& region, Walker&& walk) {
+  void walk_region(RDMA_RegionType const& region, Walker&& walk) {
     RDMA_ElmType lo = region.lo;
     RDMA_ElmType hi = region.hi;
     RDMA_ElmType elm_lo, elm_hi = lo;
@@ -52,7 +48,7 @@ struct Group {
     }
   }
 
-  rdma_map_t map;
+  RDMA_MapType map;
 
   ByteType elm_size;
   RDMA_ElmType num_total_elems = no_rdma_elm;
