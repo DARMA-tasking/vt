@@ -41,13 +41,13 @@ struct TraceEventSeqCompare {
 };
 
 template <typename T>
-using event_compare_t = TraceEventSeqCompare<T>;
+using EventCompareType = TraceEventSeqCompare<T>;
 
 using container_event_sorted_t =
-  std::map<TraceContainerEventType::mapped_type*, bool, event_compare_t<TraceEventType>>;
+  std::map<TraceContainerEventType::mapped_type*, bool, EventCompareType<TraceEventType>>;
 
 using container_event_type_sorted_t =
-  std::map<TraceContainerEventClassType::mapped_type*, bool, event_compare_t<EventClassType>>;
+  std::map<TraceContainerEventClassType::mapped_type*, bool, EventCompareType<EventClassType>>;
 
 }} //end namespace runtime::trace
 
