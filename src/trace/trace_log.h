@@ -14,7 +14,7 @@ namespace runtime { namespace trace {
 
 struct Log {
   using LogPtrType = std::shared_ptr<Log>;
-  using TraceConstantsType = TraceConstants;
+  using TraceConstantsType = eTraceConstants;
 
   double time = 0.0;
   TraceEntryIDType ep = no_trace_entry_id;

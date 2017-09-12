@@ -4,7 +4,7 @@
 
 namespace runtime { namespace trace {
 
-enum class TraceConstants : int32_t {
+enum class eTraceConstants : int32_t {
   InvalidTraceType = -1,
   Creation = 1,
   BeginProcessing = 2,
@@ -40,7 +40,7 @@ enum class TraceConstants : int32_t {
   UserStat = 32
 };
 
-enum TraceEnvelopeTypes {
+enum eTraceEnvelopeTypes {
   NewChareMsg = 1,
   NewVChareMsg = 2,
   BocInitMsg = 3,

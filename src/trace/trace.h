@@ -30,7 +30,7 @@ namespace runtime { namespace trace {
 
 struct Trace {
   using LogType = Log;
-  using TraceConstantsType = TraceConstants;
+  using TraceConstantsType = eTraceConstants;
   using TraceContainersType = TraceContainers<void>;
   using TimeIntegerType = int64_t;
   using LogPtrType = LogType*;
