@@ -83,13 +83,6 @@
     unknown,               unknown                                      \
   )
 
-// old context from prev implementation
-// uid,                   uid,                                          \
-// processor,             regular,                                      \
-// array_elm,             array,                                        \
-// array_oth,             aoth,                                         \
-// locale,                locale,                                       \
-
 #define debug_check_context(ctx1, ctx2)         \
   meld_token_compare(ctx1, ctx2)
 
