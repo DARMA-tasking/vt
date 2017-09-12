@@ -199,7 +199,7 @@ State::test_ready_put_data(TagType const& tag) {
   return not not_ready;
 }
 
-rdma_get_t
+RDMA_GetType
 State::default_get_handler_fn(
   BaseMessage* msg, ByteType req_num_bytes, ByteType req_offset, TagType tag
 ) {
@@ -216,7 +216,7 @@ State::default_get_handler_fn(
     "To use default handler ptr and bytes must be set"
   );
 
-  return rdma_get_t{
+  return RDMA_GetType{
     static_cast<char*>(ptr) + req_offset,
     req_num_bytes == no_byte ? num_bytes : req_num_bytes
   };
@@ -272,7 +272,7 @@ State::get_data(
     if (info.cont) {
       info.cont(get_fn(nullptr, info.num_bytes, offset, info.tag));
     } else if (info.data_ptr) {
-      rdma_get_t get = get_fn(nullptr, info.num_bytes, offset, info.tag);
+      RDMA_GetType get = get_fn(nullptr, info.num_bytes, offset, info.tag);
       memcpy(info.data_ptr, std::get<0>(get), std::get<1>(get));
       if (info.cont_action) {
         info.cont_action();

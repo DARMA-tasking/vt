@@ -86,7 +86,7 @@ struct State {
   void
   set_default_handler();
 
-  rdma_get_t
+  RDMA_GetType
   default_get_handler_fn(
     BaseMessage* msg, ByteType num_bytes, ByteType req_offset, TagType tag
   );

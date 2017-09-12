@@ -24,7 +24,7 @@ RDMAManager::get_msg(GetMessage* msg) {
 
   the_rdma->request_get_data(
     msg, msg->is_user_msg, msg->rdma_handle, msg_tag, msg->num_bytes, msg->offset,
-    nullptr, [msg_tag,op_id,recv_node,handle](rdma_get_t data){
+    nullptr, [msg_tag,op_id,recv_node,handle](RDMA_GetType data){
       auto const& this_node = the_context->get_node();
       debug_print(
         rdma, node, "data is ready\n"
@@ -78,7 +78,7 @@ RDMAManager::get_recv_msg(GetBackMessage* msg) {
   if (get_ptr == nullptr) {
     auto const op_id = msg->op_id;
     the_msg->recv_data_msg(
-      msg->mpi_tag_to_recv, msg->send_back, [=](rdma_get_t ptr, ActionType deleter){
+      msg->mpi_tag_to_recv, msg->send_back, [=](RDMA_GetType ptr, ActionType deleter){
         the_rdma->trigger_get_recv_data(
           op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
         );
@@ -146,7 +146,7 @@ RDMAManager::put_recv_msg(PutMessage* msg) {
 
   if (put_ptr == nullptr) {
     the_msg->recv_data_msg(
-      recv_tag, recv_node, [=](rdma_get_t ptr, ActionType deleter){
+      recv_tag, recv_node, [=](RDMA_GetType ptr, ActionType deleter){
         debug_print(
           rdma, node,
           "put_data: after recv data trigger: recv_tag=%d, recv_node=%d\n",
@@ -176,7 +176,7 @@ RDMAManager::put_recv_msg(PutMessage* msg) {
     // do a direct recv into the user buffer
     the_msg->recv_data_msg_buffer(
       put_ptr_offset, recv_tag, recv_node, true, []{},
-      [=](rdma_get_t ptr, ActionType deleter){
+      [=](RDMA_GetType ptr, ActionType deleter){
         debug_print(
           rdma, node,
           "put_data: recv_data_msg_buffer DIRECT: offset=%lld\n",
@@ -571,7 +571,7 @@ RDMAManager::put_data(
       );
 
       auto send_payload = [&](ActiveMessenger::send_fn_t send){
-        auto ret = send(rdma_get_t{ptr, num_bytes}, put_node, no_tag, [=]{
+        auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag, [=]{
           if (cont != nullptr) {
             cont();
           }
@@ -803,7 +803,7 @@ RDMAManager::get_data(
     );
   } else {
     the_rdma->request_get_data(
-      nullptr, false, han, tag, num_bytes, offset, nullptr, [cont](rdma_get_t data){
+      nullptr, false, han, tag, num_bytes, offset, nullptr, [cont](RDMA_GetType data){
         debug_print(
           rdma, node,
           "local: data is ready\n"

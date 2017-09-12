@@ -60,7 +60,7 @@ struct ActiveMessenger {
   using CountType = int32_t;
   using pending_recv_t = PendingRecv;
   using send_data_ret_t = std::tuple<EventType, TagType>;
-  using send_fn_t = std::function<send_data_ret_t(rdma_get_t,NodeType,TagType,ActionType)>;
+  using send_fn_t = std::function<send_data_ret_t(RDMA_GetType,NodeType,TagType,ActionType)>;
   using user_send_fn_t = std::function<void(send_fn_t)>;
   using container_pending_t = std::unordered_map<TagType, pending_recv_t>;
   using msg_cont_t = std::list<buffered_msg_t>;
@@ -351,7 +351,7 @@ struct ActiveMessenger {
   }
 
   send_data_ret_t send_data(
-    rdma_get_t const& ptr, NodeType const& dest, TagType const& tag,
+    RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
     ActionType next_action = nullptr
   );
 

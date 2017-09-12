@@ -32,13 +32,13 @@ static void tell_handle(TestMsg* msg) {
 
 static double* my_data = nullptr;
 
-static rdma_get_t
+static RDMA_GetType
 test_get_fn(BaseMessage* msg, ByteType num_bytes, ByteType offset, TagType tag) {
   printf(
     "%d: running test_get_fn: msg=%p, num_bytes=%lld, tag=%d\n",
     my_node, msg, num_bytes, tag
   );
-  return rdma_get_t{
+  return RDMA_GetType{
     my_data+tag, num_bytes == no_byte ? sizeof(double)*10 : num_bytes
   };
 }

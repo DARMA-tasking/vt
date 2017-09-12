@@ -171,7 +171,7 @@ ActiveMessenger::send_msg_direct(
 
 ActiveMessenger::send_data_ret_t
 ActiveMessenger::send_data(
-  rdma_get_t const& ptr, NodeType const& dest, TagType const& tag,
+  RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
   ActionType next_action
 ) {
   auto const& this_node = the_context->get_node();
@@ -280,7 +280,7 @@ ActiveMessenger::recv_data_msg_buffer(
       };
 
       if (next != nullptr) {
-        next(rdma_get_t{buf,num_probe_bytes}, [=]{
+        next(RDMA_GetType{buf,num_probe_bytes}, [=]{
           dealloc_buf();
         });
       } else {

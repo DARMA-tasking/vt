@@ -53,7 +53,7 @@ using rdma_op_t = int64_t;
 
 static constexpr rdma_op_t const no_rdma_op = -1;
 
-using active_get_function_t = std::function<rdma_get_t(BaseMessage*, ByteType, ByteType, TagType)>;
+using active_get_function_t = std::function<RDMA_GetType(BaseMessage*, ByteType, ByteType, TagType)>;
 using active_put_function_t = std::function<void(BaseMessage*, RDMA_PtrType, ByteType, ByteType, TagType)>;
 
 using rdma_ptr_continuation_t = std::function<void(RDMA_PtrType)>;
