@@ -7,7 +7,7 @@ namespace vt {
 HandlerType Registry::register_new_handler(
   ActiveFunctionType fn, TagType const& tag, bool const& is_collective
 ) {
-  auto const& this_node = the_context->get_node();
+  auto const& this_node = theContext->get_node();
 
   HandlerType new_handle = 0;
   HandlerIdentifierType const& new_identifier =

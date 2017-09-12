@@ -121,7 +121,7 @@ struct TaggedSequencer {
      * non-registration of trigger
      */
 
-    the_term->produce();
+    theTerm->produce();
 
     debug_print(
       sequence, node,
@@ -307,14 +307,14 @@ using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
 
 #define sequence_register_handler(message, handler)                     \
   static void handler(message* m) {                                     \
-    the_seq->sequence_msg<message, handler>(m);                         \
+    theSeq->sequence_msg<message, handler>(m);                         \
   }
 
 }} //end namespace vt::seq
 
 namespace vt {
 
-extern std::unique_ptr<seq::Sequencer> the_seq;
+extern std::unique_ptr<seq::Sequencer> theSeq;
 
 //using SequenceMessage = seq::SeqMsg;
 

@@ -50,7 +50,7 @@ namespace vt {
 
 void run_scheduler();
 
-extern std::unique_ptr<sched::Scheduler> the_sched;
+extern std::unique_ptr<sched::Scheduler> theSched;
 
 }  //end namespace vt
 

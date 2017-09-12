@@ -25,7 +25,7 @@ struct VirtualLocCollection {
 
 struct VirtualLocCollectionManager {
   static CollectionProxyType create_virtual_loc(CollectionSizeType col_size) {
-    auto const& node = the_context->get_node();
+    auto const& node = theContext->get_node();
     return (CollectionProxyType)node << (64 - (sizeof() * 8)) | cur_col_id;
   }
 

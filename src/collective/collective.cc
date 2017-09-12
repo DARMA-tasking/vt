@@ -13,15 +13,15 @@ CollectiveOps::initialize_runtime() {
   MPI_Barrier(MPI_COMM_WORLD);
 
   // wait for all nodes to start up to initialize the runtime
-  the_barrier->barrier_then([]{
+  theBarrier->barrier_then([]{
     MPI_Barrier(MPI_COMM_WORLD);
   });
 
   backend_enable_if(
     trace_enabled, {
       std::string name = "prog";
-      auto const& node = the_context->get_node();
-      the_trace->setup_names(name, name + "." + std::to_string(node) + ".log.gz");
+      auto const& node = theContext->get_node();
+      theTrace->setup_names(name, name + "." + std::to_string(node) + ".log.gz");
     }
   );
 }
@@ -29,12 +29,12 @@ CollectiveOps::initialize_runtime() {
 /*static*/ void
 CollectiveOps::finalize_runtime() {
   // wait for all nodes to wind down to finalize the runtime
-  the_barrier->system_meta_barrier_cont([]{
+  theBarrier->system_meta_barrier_cont([]{
     ///MPI_Finalize();
 
     // set trace to nullptr to write out to disk
     backend_enable_if(
-      trace_enabled, the_trace = nullptr;
+      trace_enabled, theTrace = nullptr;
     );
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -49,16 +49,16 @@ CollectiveOps::finalize_context() {
   // int buf = 0, buf2 = 0, flag = 0;
   // MPI_Request req;
   // MPI_Status stat;
-  // auto const& node = the_context->get_node();
+  // auto const& node = theContext->get_node();
   // fflush(stdout);
   // printf("%d: MPI_Iallreduce\n", node);
   // MPI_Iallreduce(&buf, &buf2, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD, &req);
   // do {
   //   MPI_Test(&req, &flag, &stat);
-  //   the_msg->scheduler();
+  //   theMsg->scheduler();
   // } while (not flag);
   // MPI_Barrier(MPI_COMM_WORLD);
-  // the_context = nullptr;
+  // theContext = nullptr;
   //
 }
 

@@ -59,7 +59,7 @@ struct MemoryPoolEqual {
     debug_print(
       pool, node,
       "%d: dealloc t=%p, cur_slot=%lld\n",
-      the_context->get_node(), t, cur_slot
+      theContext->get_node(), t, cur_slot
     );
 
     void* const ptr_actual = static_cast<size_t*>(t) - 1;
@@ -111,7 +111,7 @@ struct Pool {
 
 namespace vt {
 
-extern std::unique_ptr<pool::Pool> the_pool;
+extern std::unique_ptr<pool::Pool> thePool;
 
 template <typename MessageT, typename... Args>
 MessageT* make_shared_message(Args&&... args) {

@@ -9,7 +9,7 @@ EventType ActiveMessenger::send_msg_direct(
   HandlerType const& han, BaseMessage* const msg_base, int const& msg_size,
   ActionType next_action
 ) {
-  auto const& this_node = the_context->get_node();
+  auto const& this_node = theContext->get_node();
   auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
   auto msg = reinterpret_cast<MessageType const>(msg_base);
@@ -28,10 +28,10 @@ EventType ActiveMessenger::send_msg_direct(
       if (is_auto) {
         trace::TraceEntryIDType ep = auto_registry::get_trace_id(handler);
         if (not is_bcast) {
-          trace::TraceEventIDType event = the_trace->message_creation(ep, msg_size);
+          trace::TraceEventIDType event = theTrace->message_creation(ep, msg_size);
           envelope_set_trace_event(msg->env, event);
         } else if (is_bcast and dest == this_node) {
-          trace::TraceEventIDType event = the_trace->message_creation_bcast(
+          trace::TraceEventIDType event = theTrace->message_creation_bcast(
             ep, msg_size
           );
           envelope_set_trace_event(msg->env, event);
@@ -49,8 +49,8 @@ EventType ActiveMessenger::send_msg_direct(
   if (not is_bcast) {
     // non-broadcast message send
 
-    auto const event_id = the_event->create_mpi_event_id(this_node);
-    auto& holder = the_event->get_event_holder(event_id);
+    auto const event_id = theEvent->create_mpi_event_id(this_node);
+    auto& holder = theEvent->get_event_holder(event_id);
     MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
 
     if (is_shared) {
@@ -58,7 +58,7 @@ EventType ActiveMessenger::send_msg_direct(
     }
 
     if (not is_term) {
-      the_term->produce(epoch);
+      theTerm->produce(epoch);
     }
 
     MPI_Isend(
@@ -81,7 +81,7 @@ EventType ActiveMessenger::send_msg_direct(
     auto const& child1 = (this_node - dest)*2+1;
     auto const& child2 = (this_node - dest)*2+2;
 
-    auto const& num_nodes = the_context->get_num_nodes();
+    auto const& num_nodes = theContext->get_num_nodes();
 
     if (child1 >= num_nodes && child2 >= num_nodes) {
       if (next_action != nullptr) {
@@ -96,8 +96,8 @@ EventType ActiveMessenger::send_msg_direct(
       this_node, child1, child2, dest, num_nodes
     );
 
-    auto const parent_event_id = the_event->create_parent_event_id(this_node);
-    auto& parent_holder = the_event->get_event_holder(parent_event_id);
+    auto const parent_event_id = theEvent->create_parent_event_id(this_node);
+    auto& parent_holder = theEvent->get_event_holder(parent_event_id);
     ParentEvent& parent_event = *static_cast<ParentEvent*>(parent_holder.get_event());
 
     if (next_action != nullptr) {
@@ -105,8 +105,8 @@ EventType ActiveMessenger::send_msg_direct(
     }
 
     if (child1 < num_nodes) {
-      auto const event_id1 = the_event->create_mpi_event_id(this_node);
-      auto& holder1 = the_event->get_event_holder(event_id1);
+      auto const event_id1 = theEvent->create_mpi_event_id(this_node);
+      auto& holder1 = theEvent->get_event_holder(event_id1);
       MPIEvent& mpi_event1 = *static_cast<MPIEvent*>(holder1.get_event());
 
       if (is_shared) {
@@ -121,7 +121,7 @@ EventType ActiveMessenger::send_msg_direct(
       );
 
       if (not is_term) {
-        the_term->produce(epoch);
+        theTerm->produce(epoch);
       }
 
       MPI_Isend(
@@ -133,8 +133,8 @@ EventType ActiveMessenger::send_msg_direct(
     }
 
     if (child2 < num_nodes) {
-      auto const event_id2 = the_event->create_mpi_event_id(this_node);
-      auto& holder2 = the_event->get_event_holder(event_id2);
+      auto const event_id2 = theEvent->create_mpi_event_id(this_node);
+      auto& holder2 = theEvent->get_event_holder(event_id2);
       MPIEvent& mpi_event2 = *static_cast<MPIEvent*>(holder2.get_event());
 
       if (is_shared) {
@@ -149,7 +149,7 @@ EventType ActiveMessenger::send_msg_direct(
       );
 
       if (not is_term) {
-        the_term->produce(epoch);
+        theTerm->produce(epoch);
       }
 
       MPI_Isend(
@@ -172,14 +172,14 @@ ActiveMessenger::SendDataRetType ActiveMessenger::send_data(
   RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
   ActionType next_action
 ) {
-  auto const& this_node = the_context->get_node();
+  auto const& this_node = theContext->get_node();
 
   auto const& data_ptr = std::get<0>(ptr);
   auto const& num_bytes = std::get<1>(ptr);
   auto const send_tag = tag == no_tag ? cur_direct_buffer_tag_++ : tag;
 
-  auto const event_id = the_event->create_mpi_event_id(this_node);
-  auto& holder = the_event->get_event_holder(event_id);
+  auto const event_id = theEvent->create_mpi_event_id(this_node);
+  auto& holder = theEvent->get_event_holder(event_id);
   MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
 
   debug_print(
@@ -193,7 +193,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::send_data(
     mpi_event.get_request()
   );
 
-  the_term->produce(no_epoch);
+  theTerm->produce(no_epoch);
 
   if (next_action != nullptr) {
     holder.attach_action(next_action);
@@ -251,7 +251,7 @@ bool ActiveMessenger::recv_data_msg_buffer(
 
       char* buf =
         user_buf == nullptr ?
-        static_cast<char*>(the_pool->alloc(num_probe_bytes)) :
+        static_cast<char*>(thePool->alloc(num_probe_bytes)) :
         static_cast<char*>(user_buf);
 
       MPI_Recv(
@@ -260,7 +260,7 @@ bool ActiveMessenger::recv_data_msg_buffer(
       );
 
       auto dealloc_buf = [=]{
-        auto const& this_node = the_context->get_node();
+        auto const& this_node = theContext->get_node();
 
         debug_print(
           active, node,
@@ -269,7 +269,7 @@ bool ActiveMessenger::recv_data_msg_buffer(
         );
 
         if (user_buf == nullptr) {
-          the_pool->dealloc(buf);
+          thePool->dealloc(buf);
         } else if (dealloc_user_buf != nullptr and user_buf != nullptr) {
           dealloc_user_buf();
         }
@@ -283,7 +283,7 @@ bool ActiveMessenger::recv_data_msg_buffer(
         dealloc_buf();
       }
 
-      the_term->consume(no_epoch);
+      theTerm->consume(no_epoch);
 
       return true;
     } else {
@@ -354,7 +354,7 @@ bool ActiveMessenger::deliver_active_msg(
   } else if (is_auto) {
     active_fun = auto_registry::get_auto_handler(handler);
   } else {
-    active_fun = the_registry->get_handler(handler, tag);
+    active_fun = theRegistry->get_handler(handler, tag);
   }
 
   backend_enable_if(
@@ -381,7 +381,7 @@ bool ActiveMessenger::deliver_active_msg(
     // begin trace of this active message
     backend_enable_if(
       trace_enabled,
-      the_trace->begin_processing(trace_id, sizeof(*msg), trace_event, from_node);
+      theTrace->begin_processing(trace_id, sizeof(*msg), trace_event, from_node);
     );
 
     // run the active function
@@ -390,10 +390,10 @@ bool ActiveMessenger::deliver_active_msg(
     // end trace of this active message
     backend_enable_if(
       trace_enabled,
-      the_trace->end_processing(trace_id, sizeof(*msg), trace_event, from_node);
+      theTrace->end_processing(trace_id, sizeof(*msg), trace_event, from_node);
     );
 
-    auto trigger = the_registry->get_trigger(handler);
+    auto trigger = theRegistry->get_trigger(handler);
     if (trigger) {
       trigger(msg);
     }
@@ -418,7 +418,7 @@ bool ActiveMessenger::deliver_active_msg(
   }
 
   if (not is_term and has_action_handler) {
-    the_term->consume(epoch);
+    theTerm->consume(epoch);
   }
 
   if (not is_bcast and has_action_handler) {
@@ -441,7 +441,7 @@ bool ActiveMessenger::try_process_incoming_message() {
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    char* buf = static_cast<char*>(the_pool->alloc(num_probe_bytes));
+    char* buf = static_cast<char*>(thePool->alloc(num_probe_bytes));
 
     NodeType const& msg_from_node = stat.MPI_SOURCE;
 
@@ -492,19 +492,19 @@ void ActiveMessenger::process_maybe_ready_han_tag() {
 HandlerType ActiveMessenger::register_new_handler(
   ActiveFunctionType fn, TagType const& tag
 ) {
-  return the_registry->register_new_handler(fn, tag);
+  return theRegistry->register_new_handler(fn, tag);
 }
 
 HandlerType ActiveMessenger::collective_register_handler(
   ActiveFunctionType fn, TagType const& tag
 ) {
-  return the_registry->register_active_handler(fn, tag);
+  return theRegistry->register_active_handler(fn, tag);
 }
 
 void ActiveMessenger::swap_handler_fn(
   HandlerType const& han, ActiveFunctionType fn, TagType const& tag
 ) {
-  the_registry->swap_handler(han, fn, tag);
+  theRegistry->swap_handler(han, fn, tag);
 
   if (fn != nullptr) {
     maybe_ready_tag_han_.push_back(ReadyHanTagType{han,tag});
@@ -541,7 +541,7 @@ void ActiveMessenger::register_handler_fn(
 void ActiveMessenger::unregister_handler_fn(
   HandlerType const& han, TagType const& tag
 ) {
-  return the_registry->unregister_handler_fn(han, tag);
+  return theRegistry->unregister_handler_fn(han, tag);
 }
 
 HandlerType ActiveMessenger::get_current_handler() {

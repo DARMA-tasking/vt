@@ -38,13 +38,13 @@ static void put_data_fn(TestMsg* msg) {
     for (auto i = 0; i < local_data_len; i++) {
       local_data[i] = (i+1)*1000*(my_node+1);
     }
-    the_rdma->put_data(msg->han, local_data, sizeof(double)*local_data_len, [=]{
+    theRDMA->put_data(msg->han, local_data, sizeof(double)*local_data_len, [=]{
       delete [] local_data;
     }, [=]{
       printf("%d: after put: sending msg back to 0\n", my_node);
       TestMsg* msg = new TestMsg(my_node);
       msg->han = my_handle;
-      the_msg->send_msg<TestMsg,read_data_fn>(0, msg, [=]{ delete msg; });
+      theMsg->send_msg<TestMsg,read_data_fn>(0, msg, [=]{ delete msg; });
     });
   }
 }
@@ -65,8 +65,8 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  my_node = the_context->get_node();
-  num_nodes = the_context->get_num_nodes();
+  my_node = theContext->get_node();
+  num_nodes = theContext->get_num_nodes();
 
   if (num_nodes != 4) {
     fprintf(stderr, "requires exactly 4 nodes\n");
@@ -81,14 +81,14 @@ int main(int argc, char** argv) {
       my_data[i] = i+1;
     }
 
-    //my_handle = the_rdma->register_new_typed_rdma_handler(my_data, 10);
-    my_handle = the_rdma->register_new_rdma_handler();
-    the_rdma->associate_put_function(my_handle, put_handler_fn, false);
+    //my_handle = theRDMA->register_new_typed_rdma_handler(my_data, 10);
+    my_handle = theRDMA->register_new_rdma_handler();
+    theRDMA->associate_put_function(my_handle, put_handler_fn, false);
     printf("%d: initializing my_handle=%lld\n", my_node, my_handle);
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;
-    the_msg->broadcast_msg<TestMsg,put_data_fn>(msg, [=]{ delete msg; });
+    theMsg->broadcast_msg<TestMsg,put_data_fn>(msg, [=]{ delete msg; });
   }
 
   while (1) {

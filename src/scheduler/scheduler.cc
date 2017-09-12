@@ -9,9 +9,9 @@
 namespace vt { namespace sched {
 
 /*static*/ void Scheduler::check_term_single_node() {
-  auto const& num_nodes = the_context->get_num_nodes();
+  auto const& num_nodes = theContext->get_num_nodes();
   if (num_nodes == 1) {
-    the_term->maybe_propagate();
+    theTerm->maybe_propagate();
   }
 }
 
@@ -23,9 +23,9 @@ Scheduler::Scheduler() {
 bool Scheduler::scheduler_impl() {
   bool scheduled_work = false;
 
-  bool const msg_sch = the_msg->scheduler();
-  bool const event_sch = the_event->scheduler();
-  bool const seq_sch = the_seq->scheduler();
+  bool const msg_sch = theMsg->scheduler();
+  bool const event_sch = theEvent->scheduler();
+  bool const seq_sch = theSeq->scheduler();
 
   check_term_single_node();
 
@@ -94,7 +94,7 @@ void Scheduler::scheduler_forever() {
 namespace vt {
 
 void run_scheduler() {
-  the_sched->scheduler();
+  theSched->scheduler();
 }
 
 } //end namespace vt

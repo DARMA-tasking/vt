@@ -86,7 +86,7 @@ private:
 
 namespace vt {
 
-extern std::unique_ptr<term::TerminationDetector> the_term;
+extern std::unique_ptr<term::TerminationDetector> theTerm;
 
 } // end namespace vt
 

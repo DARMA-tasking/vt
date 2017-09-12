@@ -78,9 +78,9 @@ static void data_message_handler(DataMsg<Tuple>* msg) {
 
   printf("data_message_handler: id=%d, ep=%lu\n", msg->sub_han, ep);
 
-  NodeType const& from_node = the_msg->get_from_node_current_handler();
+  NodeType const& from_node = theMsg->get_from_node_current_handler();
 
-  the_trace->begin_processing(ep, sizeof(*msg), event, from_node);
+  theTrace->begin_processing(ep, sizeof(*msg), event, from_node);
 #endif
 
   if (HandlerManagerType::is_handler_functor(msg->sub_han)) {
@@ -93,7 +93,7 @@ static void data_message_handler(DataMsg<Tuple>* msg) {
   }
 
 #if backend_check_enabled(trace_enabled)
-  the_trace->end_processing(ep, sizeof(*msg), event, from_node);
+  theTrace->end_processing(ep, sizeof(*msg), event, from_node);
 #endif
 }
 
@@ -115,7 +115,7 @@ struct Param {
       han, std::forward<std::tuple<Args...>>(tup)
     );
 
-    return the_msg->send_msg<DataMsg<TupleType>, data_message_handler>(
+    return theMsg->send_msg<DataMsg<TupleType>, data_message_handler>(
       dest, m, [=]{ delete m; }
     );
   }
@@ -132,7 +132,7 @@ struct Param {
 
   template <typename DataMsg>
   EventType send_data_msg(NodeType const& dest, HandlerType const& han, DataMsg* m) {
-    return the_msg->send_msg<DataMsg, data_message_handler>(
+    return theMsg->send_msg<DataMsg, data_message_handler>(
       dest, m, [=]{ delete m; }
     );
   }
@@ -230,7 +230,7 @@ struct Param {
 
 namespace vt {
 
-extern std::unique_ptr<param::Param> the_param;
+extern std::unique_ptr<param::Param> theParam;
 
 template <typename... Args>
 param::DataMsg<std::tuple<Args...>>* build_data(Args&&... a) {

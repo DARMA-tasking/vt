@@ -29,8 +29,8 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  my_node = the_context->get_node();
-  num_nodes = the_context->get_num_nodes();
+  my_node = theContext->get_node();
+  num_nodes = theContext->get_num_nodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -39,17 +39,17 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    the_param->send_data(1, build_data(10, 20, false), param_function_rhs(fn_test));
-    the_param->send_data(1, param_function_rhs(fn_test), 50, 29, false);
-    the_param->send_data<param_function(fn_test)>(1, build_data(10, 20, false));
-    the_param->send_data<param_function(fn_test)>(1, 45, 23, true);
+    theParam->send_data(1, build_data(10, 20, false), param_function_rhs(fn_test));
+    theParam->send_data(1, param_function_rhs(fn_test), 50, 29, false);
+    theParam->send_data<param_function(fn_test)>(1, build_data(10, 20, false));
+    theParam->send_data<param_function(fn_test)>(1, 45, 23, true);
 
-    the_param->send_data<param_function(fn_test2)>(1, 20, 10);
-    the_param->send_data<param_function(fn_test3)>(1, 20, 50.0);
+    theParam->send_data<param_function(fn_test2)>(1, 20, 10);
+    theParam->send_data<param_function(fn_test3)>(1, 20, 50.0);
 
-    the_param->send_data<FunctorTest1>(1, build_data(20, 50.0));
-    the_param->send_data<FunctorTest1>(1, 20, 100.0);
-    the_param->send_data<FunctorTest1>(1, build_data(10, 70.0));
+    theParam->send_data<FunctorTest1>(1, build_data(20, 50.0));
+    theParam->send_data<FunctorTest1>(1, 20, 100.0);
+    theParam->send_data<FunctorTest1>(1, build_data(10, 70.0));
   }
 
   while (1) {

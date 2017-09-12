@@ -17,13 +17,13 @@ struct CollectiveOps {
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
     MPI_Comm_rank(MPI_COMM_WORLD, &this_node);
-    the_context = std::make_unique<Context>(this_node, num_nodes);
+    theContext = std::make_unique<Context>(this_node, num_nodes);
     MPI_Barrier(MPI_COMM_WORLD);
   }
 
   static HandlerType
   register_handler(ActiveFunctionType fn) {
-    return the_registry->register_active_handler(fn);
+    return theRegistry->register_active_handler(fn);
   }
 
   static void

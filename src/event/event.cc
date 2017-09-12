@@ -8,7 +8,7 @@ bool ParentEvent::test_ready() {
   bool ready = true;
   for (auto&& e : events) {
     ready &=
-      the_event->test_event_complete(e) ==
+      theEvent->test_event_complete(e) ==
       AsyncEvent::EventStateType::EventReady;
   }
   if (ready) {
@@ -21,11 +21,11 @@ void AsyncEvent::EventHolder::make_ready_trigger() {
   //printf("make_ready_trigger\n");
   event->set_ready();
   execute_actions();
-  the_event->container_.erase(event->event_id);
+  theEvent->container_.erase(event->event_id);
 }
 
 EventType AsyncEvent::attach_action(EventType const& event, ActionType callable) {
-  auto const& this_node = the_context->get_node();
+  auto const& this_node = theContext->get_node();
   auto const& event_id = create_normal_event_id(this_node);
   auto& holder = get_event_holder(event_id);
   NormalEvent& norm_event = *static_cast<NormalEvent*>(holder.get_event());
@@ -39,7 +39,7 @@ EventType AsyncEvent::attach_action(EventType const& event, ActionType callable)
 
   debug_print(
     event, node,
-    "the_event: event=%lld, newevent=%lld, state=%d, "
+    "theEvent: event=%lld, newevent=%lld, state=%d, "
     "newevent_owning_node=%d, this_node=%d\n",
     event, event_id, event_state, this_event_owning_node, this_node
   );
@@ -63,11 +63,11 @@ EventType AsyncEvent::attach_action(EventType const& event, ActionType callable)
 
     debug_print(
       event, node,
-      "the_event: event=%lld, newevent=%lld, state=%d sending msg, node=%d\n",
+      "theEvent: event=%lld, newevent=%lld, state=%d sending msg, node=%d\n",
       event, event_id, event_state, this_node
     );
 
-    the_msg->send_msg<EventCheckFinishedMsg, check_event_finished>(
+    theMsg->send_msg<EventCheckFinishedMsg, check_event_finished>(
       owning_node, msg, [=]{ delete msg; }
     );
   }
@@ -80,35 +80,35 @@ EventType AsyncEvent::attach_action(EventType const& event, ActionType callable)
 }
 
 /*static*/ void AsyncEvent::event_finished(EventFinishedMsg* msg) {
-  auto const& complete = the_event->test_event_complete(msg->event_back_);
+  auto const& complete = theEvent->test_event_complete(msg->event_back_);
 
   assert(
     complete == AsyncEvent::EventStateType::EventWaiting and
     "Event must be waiting since it depends on this finished event"
   );
 
-  auto& holder = the_event->get_event_holder(msg->event_back_);
+  auto& holder = theEvent->get_event_holder(msg->event_back_);
   holder.make_ready_trigger();
 }
 
 /*static*/ void AsyncEvent::check_event_finished(EventCheckFinishedMsg* msg) {
   auto const& event = msg->event_;
-  auto const& node = the_event->get_owning_node(event);
+  auto const& node = theEvent->get_owning_node(event);
 
   assert(
-    node == the_context->get_node() and "Node must be identical"
+    node == theContext->get_node() and "Node must be identical"
   );
 
   auto send_back_fun = [=]{
     auto msg_send = new EventFinishedMsg(event, msg->event_back_);
-    auto send_back = the_event->get_owning_node(msg->event_back_);
+    auto send_back = theEvent->get_owning_node(msg->event_back_);
     assert(send_back == msg->sent_from_node_);
-    the_msg->send_msg<EventFinishedMsg, event_finished>(
+    theMsg->send_msg<EventFinishedMsg, event_finished>(
       send_back, msg_send, [=]{ delete msg_send; }
     );
   };
 
-  auto const& is_complete = the_event->test_event_complete(event);
+  auto const& is_complete = theEvent->test_event_complete(event);
 
   debug_print(
     event, node,
@@ -124,13 +124,13 @@ EventType AsyncEvent::attach_action(EventType const& event, ActionType callable)
       is_complete == AsyncEvent::EventStateType::EventWaiting and
       "Must be waiting if not ready"
     );
-    /*ignore return event*/ the_event->attach_action(event, send_back_fun);
+    /*ignore return event*/ theEvent->attach_action(event, send_back_fun);
   }
 }
 
 bool AsyncEvent::scheduler() {
-  the_event->test_events_trigger(mpi_event_tag);
-  the_event->test_events_trigger(normal_event_tag);
+  theEvent->test_events_trigger(mpi_event_tag);
+  theEvent->test_events_trigger(normal_event_tag);
   return false;
 }
 

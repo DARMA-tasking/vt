@@ -37,8 +37,8 @@ void main_function() {
 
 //   hello_world_han = CollectiveOps::register_handler(hello_world);
 
-//   auto const& my_node = the_context->get_node();
-//   auto const& num_nodes = the_context->get_num_nodes();
+//   auto const& my_node = theContext->get_node();
+//   auto const& num_nodes = theContext->get_num_nodes();
 
 //   if (num_nodes == 1) {
 //     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -48,15 +48,15 @@ void main_function() {
 
 //   if (my_node == 0) {
 //     HelloMsg* msg = new HelloMsg(my_node);
-//     the_msg->broadcast_msg(hello_world_han, msg, [=]{ delete msg; });
+//     theMsg->broadcast_msg(hello_world_han, msg, [=]{ delete msg; });
 
 //     // Example of  to use a system managed message with transfer of control
 //     // HelloMsg* msg = make_shared_message<HelloMsg>(my_node);
-//     // the_msg->broadcast_msg(hello_world_han, msg);
+//     // theMsg->broadcast_msg(hello_world_han, msg);
 //   }
 
 //   while (1) {
-//     the_msg->scheduler();
+//     theMsg->scheduler();
 //   }
 
 //   return 0;
@@ -111,7 +111,7 @@ void my_register_virtual_context() {
   // MyHelloContext* hello_context = new MyHelloContext();
   // vc_proxy_t hello_proxy = the_virtual->make_virtual_context<MyHelloContext>(8);
 
-  //the_msg->send_msg(10, handler, msg);
+  //theMsg->send_msg(10, handler, msg);
 
   // vc_proxy_t: 64-bits: (32 id) (16 node) (few other control bits)
 }

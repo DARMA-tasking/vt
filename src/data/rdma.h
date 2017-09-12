@@ -255,7 +255,7 @@ struct RDMAManager {
     RDMA_HandleType const& han, NodeType const& in_target,
     ActionType const& action = nullptr
   ) {
-    auto const& this_node = the_context->get_node();
+    auto const& this_node = theContext->get_node();
     auto const& target = get_target(han, in_target);
     bool const is_local = true;
     assert(
@@ -283,7 +283,7 @@ struct RDMAManager {
     RDMA_HandleType const& han, NodeType const& in_target = uninitialized_destination,
     ActionType const& action = nullptr
   ) {
-    auto const& this_node = the_context->get_node();
+    auto const& this_node = theContext->get_node();
     auto const& target = get_target(han, in_target);
     bool const is_local = false;
     assert(
@@ -302,7 +302,7 @@ struct RDMAManager {
     RDMA_HandleType const& han, NodeType const& in_target,
     ActionType const& action = nullptr
   ) {
-    auto const& this_node = the_context->get_node();
+    auto const& this_node = theContext->get_node();
     auto const& target = get_target(han, in_target);
     bool const is_local = false;
     assert(
@@ -367,7 +367,7 @@ private:
     RDMA_HandleType const& han, FunctionT const& fn, bool const& any_tag,
     TagType const& tag
   ) {
-    auto const& this_node = the_context->get_node();
+    auto const& this_node = theContext->get_node();
     auto const handler_node = RDMA_HandleManagerType::get_rdma_node(han);
     auto const& is_collective = RDMA_HandleManagerType::is_collective(han);
 
@@ -469,7 +469,7 @@ private:
 
 namespace vt {
 
-extern std::unique_ptr<rdma::RDMAManager> the_rdma;
+extern std::unique_ptr<rdma::RDMAManager> theRDMA;
 
 } //end namespace vt
 

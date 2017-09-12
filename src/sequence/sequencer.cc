@@ -10,7 +10,7 @@ namespace vt { namespace seq {
 void contextual_execution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 ) {
-  the_seq->execute_in_context(
+  theSeq->execute_in_context(
     seq, is_sequenced, std::forward<SeqCallableType>(callable)
   );
 }

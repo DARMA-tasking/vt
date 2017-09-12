@@ -5,13 +5,13 @@
 namespace vt { namespace barrier {
 
 /*static*/ void Barrier::barrier_up(BarrierMsg* msg) {
-  the_barrier->barrier_up(
+  theBarrier->barrier_up(
     msg->is_named, msg->is_wait, msg->barrier, msg->skip_term
   );
 }
 
 /*static*/ void Barrier::barrier_down(BarrierMsg* msg) {
-  the_barrier->barrier_down(msg->is_named, msg->is_wait, msg->barrier);
+  theBarrier->barrier_down(msg->is_named, msg->is_wait, msg->barrier);
 }
 
 Barrier::BarrierStateType& Barrier::insert_find_barrier(
@@ -74,7 +74,7 @@ void Barrier::wait_barrier(BarrierType const& barrier, bool const skip_term) {
   barrier_up(is_named, is_wait, next_barrier, skip_term);
 
   while (not barrier_state.released) {
-    the_msg->scheduler();
+    theMsg->scheduler();
   }
 
   remove_barrier(is_named, is_wait, next_barrier);
@@ -124,18 +124,18 @@ void Barrier::barrier_up(
       auto msg = new BarrierMsg(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol
       if (skip_term) {
-        the_msg->set_term_message(msg);
+        theMsg->set_term_message(msg);
       }
-      the_msg->send_msg<BarrierMsg, barrier_up>(parent_, msg, [=]{
+      theMsg->send_msg<BarrierMsg, barrier_up>(parent_, msg, [=]{
         delete msg;
       });
     } else {
       auto msg = new BarrierMsg(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol
       if (skip_term) {
-        the_msg->set_term_message(msg);
+        theMsg->set_term_message(msg);
       }
-      the_msg->broadcast_msg<BarrierMsg, barrier_down>(msg, [=]{
+      theMsg->broadcast_msg<BarrierMsg, barrier_down>(msg, [=]{
         delete msg;
       });
       barrier_down(is_named, is_wait, barrier);

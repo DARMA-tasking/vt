@@ -212,11 +212,11 @@ struct AsyncEvent {
 
     debug_print(
       event, node,
-      "the_event: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
-      the_context->get_node(), event, owning_node
+      "theEvent: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
+      theContext->get_node(), event, owning_node
     );
 
-    if (owning_node != the_context->get_node()) {
+    if (owning_node != theContext->get_node()) {
       assert(
         0 && "Event does not belong to this node"
       );
@@ -248,7 +248,7 @@ struct AsyncEvent {
         return EventStateType::EventWaiting;
       }
     } else {
-      if (get_owning_node(event) == the_context->get_node()) {
+      if (get_owning_node(event) == theContext->get_node()) {
         return EventStateType::EventReady;
       } else {
         return EventStateType::EventRemote;
@@ -292,7 +292,7 @@ private:
   EventContainerType container_;
 };
 
-extern std::unique_ptr<AsyncEvent> the_event;
+extern std::unique_ptr<AsyncEvent> theEvent;
 
 } //end namespace vt
 

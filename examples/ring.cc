@@ -33,18 +33,18 @@ static void ring(RingMsg* msg) {
 
 static void send_to_next() {
   RingMsg* msg = new RingMsg(my_node);
-  the_msg->send_msg<RingMsg, ring>(next_node, msg, [=]{ delete msg; });
+  theMsg->send_msg<RingMsg, ring>(next_node, msg, [=]{ delete msg; });
 }
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  my_node = the_context->get_node();
-  num_nodes = the_context->get_num_nodes();
+  my_node = theContext->get_node();
+  num_nodes = theContext->get_num_nodes();
   next_node = my_node+1 >= num_nodes ? 0 : my_node+1;
 
-  printf("%d: my_node = %d here\n",the_context->get_node(),my_node);
+  printf("%d: my_node = %d here\n",theContext->get_node(),my_node);
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");

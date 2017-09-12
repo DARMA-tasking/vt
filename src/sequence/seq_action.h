@@ -21,7 +21,7 @@ struct Action {
 
   void run_action(MessageT* msg) const {
     auto const callable = [this, msg]() -> bool {
-      the_term->consume();
+      theTerm->consume();
       action(msg);
       return false;
     };

@@ -20,11 +20,11 @@ struct ActiveMessage : BaseMessage {
   }
 
   static void* operator new(std::size_t sz) {
-    return the_pool->alloc(sz);
+    return thePool->alloc(sz);
   }
 
   static void operator delete(void* ptr) {
-    return the_pool->dealloc(ptr);
+    return thePool->dealloc(ptr);
   }
 };
 

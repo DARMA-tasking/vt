@@ -11,7 +11,7 @@ Channel::Channel(
     non_target_(in_non_target), num_bytes_(in_num_bytes), ptr_(in_ptr),
     op_type_(in_op_type), channel_group_tag_(in_channel_group_tag)
 {
-  auto const& my_node = the_context->get_node();
+  auto const& my_node = theContext->get_node();
 
   is_target_ = target_ == my_node;
 

@@ -33,9 +33,9 @@ static void put_channel_setup(TestMsg* msg) {
 
   if (my_node == 1) {
     int const num_elm = 2;
-    the_rdma->put_typed_data(handle, my_data, num_elm, no_byte, no_tag, [=]{
+    theRDMA->put_typed_data(handle, my_data, num_elm, no_byte, no_tag, [=]{
       TestMsg* back = make_shared_message<TestMsg>(handle);
-      the_msg->send_msg<TestMsg, read_data_fn>(0, back);
+      theMsg->send_msg<TestMsg, read_data_fn>(0, back);
     });
   }
 }
@@ -44,8 +44,8 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  my_node = the_context->get_node();
-  num_nodes = the_context->get_num_nodes();
+  my_node = theContext->get_node();
+  num_nodes = theContext->get_num_nodes();
 
   my_data = new double[my_data_len];
 
@@ -58,15 +58,15 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    my_handle_1 = the_rdma->register_new_typed_rdma_handler(my_data, put_len);
+    my_handle_1 = theRDMA->register_new_typed_rdma_handler(my_data, put_len);
 
     printf(
       "%d: initializing my_handle_1=%llx\n", my_node, my_handle_1
     );
 
-    the_rdma->new_put_channel(my_handle_1, 0, 1, [=]{
+    theRDMA->new_put_channel(my_handle_1, 0, 1, [=]{
       TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
-      the_msg->send_msg<TestMsg, put_channel_setup>(1, msg1);
+      theMsg->send_msg<TestMsg, put_channel_setup>(1, msg1);
     });
   }
 

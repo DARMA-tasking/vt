@@ -13,15 +13,15 @@ struct HelloMsg : vt::Message {
 };
 
 static void hello_world(HelloMsg* msg) {
-  printf("%d: Hello from node %d\n", the_context->get_node(), msg->from);
+  printf("%d: Hello from node %d\n", theContext->get_node(), msg->from);
 }
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  auto const& my_node = the_context->get_node();
-  auto const& num_nodes = the_context->get_num_nodes();
+  auto const& my_node = theContext->get_node();
+  auto const& num_nodes = theContext->get_num_nodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     HelloMsg* msg = new HelloMsg(my_node);
-    the_msg->broadcast_msg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
+    theMsg->broadcast_msg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
   }
 
   while (1) {

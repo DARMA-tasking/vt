@@ -22,7 +22,7 @@ private:
   NodeType num_nodes = 0;
 };
 
-extern std::unique_ptr<Context> the_context;
+extern std::unique_ptr<Context> theContext;
 
 } //end namespace vt
 

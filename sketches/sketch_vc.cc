@@ -39,8 +39,8 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  auto const& my_node = the_context->get_node();
-  auto const& num_nodes = the_context->get_num_nodes();
+  auto const& my_node = theContext->get_node();
+  auto const& num_nodes = theContext->get_num_nodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
   }
 
   while (1) {
-    the_msg->scheduler();
+    theMsg->scheduler();
   }
 
   return 0;

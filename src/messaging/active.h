@@ -99,7 +99,7 @@ struct ActiveMessenger {
    *   HandlerType const han = register_new_handler(my_handler);
    *
    *   MyMsg* msg = make_shared_message<MyMsg>(156);
-   *   the_msg->send_msg(29, han, msg);
+   *   theMsg->send_msg(29, han, msg);
    *
    *----------------------------------------------------------------------------
    */
@@ -147,7 +147,7 @@ struct ActiveMessenger {
    *     // do work ...
    *   }
    *
-   *  the_msg->send_msg<MyMsg, my_handler>(1, msg);
+   *  theMsg->send_msg<MyMsg, my_handler>(1, msg);
    *
    *----------------------------------------------------------------------------
    */
@@ -157,7 +157,7 @@ struct ActiveMessenger {
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    auto const& this_node = the_context->get_node();
+    auto const& this_node = theContext->get_node();
     set_broadcast_type(msg->env);
     if (tag != no_tag) {
       envelope_set_tag(msg->env, tag);
@@ -206,7 +206,7 @@ struct ActiveMessenger {
    *     ...
    *   }
    *
-   *  the_msg->send_msg<basic_handler, MyMsg>(1, msg);
+   *  theMsg->send_msg<basic_handler, MyMsg>(1, msg);
    *
    * Most likely this will be deprecated unless there is a use for this, since
    * type safety does not cost anything in terms of overhead (either at runtime
@@ -220,7 +220,7 @@ struct ActiveMessenger {
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    auto const& this_node = the_context->get_node();
+    auto const& this_node = theContext->get_node();
     set_broadcast_type(msg->env);
     if (tag != no_tag) {
       envelope_set_tag(msg->env, tag);
@@ -281,7 +281,7 @@ struct ActiveMessenger {
     if (tag != no_tag) {
       envelope_set_tag(msg->env, tag);
     }
-    return send_msg(the_context->get_node(), han, msg, next_action);
+    return send_msg(theContext->get_node(), han, msg, next_action);
   }
 
   template <typename FunctorT, typename MessageT>
@@ -374,7 +374,7 @@ struct ActiveMessenger {
   EventType broadcast_msg(
     HandlerType const& han, MessageT* const msg, ActionType next_action = nullptr
   ) {
-    auto const& this_node = the_context->get_node();
+    auto const& this_node = theContext->get_node();
     set_broadcast_type(msg->env);
     return send_msg(this_node, han, msg, next_action);
   }
@@ -436,7 +436,7 @@ struct ActiveMessenger {
   void trigger(std::function<void(vt::BaseMessage*)> fn) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(nullptr);
     printf("trigger: han=%d\n", han);
-    the_registry->save_trigger(han, /*reinterpret_cast<active_function_t>(*/fn);
+    theRegistry->save_trigger(han, /*reinterpret_cast<active_function_t>(*/fn);
   }
 
   void perform_triggered_actions();
@@ -474,7 +474,7 @@ private:
   TagType cur_direct_buffer_tag_ = starting_direct_buffer_tag;
 };
 
-extern std::unique_ptr<ActiveMessenger> the_msg;
+extern std::unique_ptr<ActiveMessenger> theMsg;
 
 } //end namespace vt
 

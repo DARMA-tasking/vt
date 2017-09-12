@@ -23,7 +23,7 @@ struct Map {
   static NodeType default_block_map(
     RDMA_BlockType block, RDMA_BlockType __attribute__((unused)) num_blocks
   ) {
-    auto const& num_nodes = the_context->get_num_nodes();
+    auto const& num_nodes = theContext->get_num_nodes();
     return block % num_nodes;
   };
 

@@ -21,8 +21,8 @@ Trace::Trace() {
 /*static*/ void Trace::trace_begin_idle_trigger() {
   backend_enable_if(
     trace_enabled, {
-      if (not the_trace->in_idle_event()) {
-        the_trace->begin_idle();
+      if (not theTrace->in_idle_event()) {
+        theTrace->begin_idle();
       }
     }
   );
@@ -31,7 +31,7 @@ Trace::Trace() {
 void Trace::initialize() {
   traces_.reserve(trace_reserve_count);
 
-  the_sched->register_trigger(
+  theSched->register_trigger(
     sched::SchedulerEvent::BeginIdle, trace_begin_idle_trigger
   );
 }
@@ -98,7 +98,7 @@ void Trace::begin_idle(double const& time) {
     trace, node, "begin_idle: time=%f\n", time
   );
 
-  log->node = the_context->get_node();
+  log->node = theContext->get_node();
 
   log_event(log);
 
@@ -113,7 +113,7 @@ void Trace::end_idle(double const& time) {
     trace, node, "end_idle: time=%f\n", time
   );
 
-  log->node = the_context->get_node();
+  log->node = theContext->get_node();
 
   log_event(log);
 
@@ -126,7 +126,7 @@ TraceEventIDType Trace::message_creation(
   auto const& type = TraceConstantsType::Creation;
   LogPtrType log = new LogType(time, ep, type);
 
-  log->node = the_context->get_node();
+  log->node = theContext->get_node();
   log->msg_len = len;
 
   return log_event(log);
@@ -138,7 +138,7 @@ TraceEventIDType Trace::message_creation_bcast(
   auto const& type = TraceConstantsType::CreationBcast;
   LogPtrType log = new LogType(time, ep, type);
 
-  log->node = the_context->get_node();
+  log->node = theContext->get_node();
   log->msg_len = len;
 
   return log_event(log);
@@ -262,8 +262,8 @@ void Trace::disable_tracing() {
 };
 
 void Trace::write_traces_file() {
-  auto const& node = the_context->get_node();
-  auto const& num_nodes = the_context->get_num_nodes();
+  auto const& node = theContext->get_node();
+  auto const& num_nodes = theContext->get_num_nodes();
 
   debug_print(
     trace, node,
@@ -308,7 +308,7 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
     auto const& event_seq_id = log->ep == no_trace_entry_id ?
       no_trace_entry_id : event_iter->second.get_event_seq();
 
-    auto const& num_nodes = the_context->get_num_nodes();
+    auto const& num_nodes = theContext->get_num_nodes();
 
     switch (log->type) {
     case TraceConstantsType::BeginProcessing:
@@ -399,8 +399,8 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
 }
 
 /*static*/ void Trace::output_control_file(std::ofstream& file) {
-  auto const& node = the_context->get_node();
-  auto const& num_nodes = the_context->get_num_nodes();
+  auto const& node = theContext->get_node();
+  auto const& num_nodes = theContext->get_num_nodes();
 
   auto const& num_event_types = TraceContainersType::event_type_container.size();
   auto const& num_events = TraceContainersType::event_container.size();

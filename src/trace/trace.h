@@ -116,7 +116,7 @@ namespace vt {
 
 backend_enable_if(
   trace_enabled,
-  extern std::unique_ptr<trace::Trace> the_trace;
+  extern std::unique_ptr<trace::Trace> theTrace;
 );
 
 }
