@@ -16,7 +16,7 @@ struct Group {
 
   Group(
     rdma_map_t const& in_map, rdma_elm_t const& in_total_elms,
-    rdma_block_t const& in_num_blocks, byte_t const& in_elm_size
+    rdma_block_t const& in_num_blocks, ByteType const& in_elm_size
   ) : map(in_map), num_total_elems(in_total_elms),
       num_blocks(in_num_blocks), elm_size(in_elm_size)
   { }
@@ -54,7 +54,7 @@ struct Group {
 
   rdma_map_t map;
 
-  byte_t elm_size;
+  ByteType elm_size;
   rdma_elm_t num_total_elems = no_rdma_elm;
   rdma_block_t num_blocks = no_rdma_block;
 };

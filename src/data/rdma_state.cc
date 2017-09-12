@@ -10,7 +10,7 @@ namespace runtime { namespace rdma {
 State::State(
   rdma_handle_t const& in_handle,
   rdma_ptr_t const& in_ptr,
-  byte_t const& in_num_bytes,
+  ByteType const& in_num_bytes,
   bool const& use_default_handler
 ) : handle(in_handle), ptr(in_ptr), num_bytes(in_num_bytes) {
   if (use_default_handler) {
@@ -201,7 +201,7 @@ State::test_ready_put_data(TagType const& tag) {
 
 rdma_get_t
 State::default_get_handler_fn(
-  BaseMessage* msg, byte_t req_num_bytes, byte_t req_offset, TagType tag
+  BaseMessage* msg, ByteType req_num_bytes, ByteType req_offset, TagType tag
 ) {
   auto const& this_node = the_context->get_node();
 
@@ -224,8 +224,8 @@ State::default_get_handler_fn(
 
 void
 State::default_put_handler_fn(
-  BaseMessage* msg, rdma_ptr_t in_ptr, byte_t req_num_bytes,
-  byte_t req_offset, TagType tag
+  BaseMessage* msg, rdma_ptr_t in_ptr, ByteType req_num_bytes,
+  ByteType req_offset, TagType tag
 ) {
   auto const& this_node = the_context->get_node();
 

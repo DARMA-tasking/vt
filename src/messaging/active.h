@@ -57,7 +57,7 @@ struct BufferedActiveMsg {
 struct ActiveMessenger {
   using buffered_msg_t = BufferedActiveMsg;
   using message_t = ShortMessage*;
-  using byte_t = int32_t;
+  using CountType = int32_t;
   using pending_recv_t = PendingRecv;
   using send_data_ret_t = std::tuple<EventType, TagType>;
   using send_fn_t = std::function<send_data_ret_t(rdma_get_t,NodeType,TagType,ActionType)>;

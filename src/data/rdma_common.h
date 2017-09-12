@@ -53,8 +53,8 @@ using rdma_op_t = int64_t;
 
 static constexpr rdma_op_t const no_rdma_op = -1;
 
-using active_get_function_t = std::function<rdma_get_t(BaseMessage*, byte_t, byte_t, TagType)>;
-using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t, byte_t, byte_t, TagType)>;
+using active_get_function_t = std::function<rdma_get_t(BaseMessage*, ByteType, ByteType, TagType)>;
+using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t, ByteType, ByteType, TagType)>;
 
 using rdma_ptr_continuation_t = std::function<void(rdma_ptr_t)>;
 using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;
@@ -65,7 +65,7 @@ using rdma_block_map_t = std::function<NodeType(rdma_block_t,rdma_block_t)>;
 using rdma_elm_map_t = std::function<rdma_block_elm_range_t(rdma_elm_t,rdma_elm_t,rdma_block_t)>;
 
 static constexpr Type uninitialized_rdma_type = Type::Uninitialized;
-static constexpr byte_t rdma_default_byte_size = sizeof(char);
+static constexpr ByteType rdma_default_byte_size = sizeof(char);
 
 }} //end namespace runtime::rdma
 

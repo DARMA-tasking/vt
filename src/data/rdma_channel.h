@@ -14,8 +14,8 @@
 
 namespace runtime { namespace rdma {
 
-static constexpr byte_t const rdma_elm_size = sizeof(char);
-static constexpr byte_t const rdma_empty_byte = 0;
+static constexpr ByteType const rdma_elm_size = sizeof(char);
+static constexpr ByteType const rdma_empty_byte = 0;
 
 struct Channel {
   using rdma_handle_manager_t = HandleManager;
@@ -28,7 +28,7 @@ struct Channel {
     rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
     NodeType const& in_target, TagType const& in_channel_group_tag,
     NodeType const& in_non_target = uninitialized_destination,
-    rdma_ptr_t const& in_ptr = nullptr, byte_t const& in_num_bytes = no_byte
+    rdma_ptr_t const& in_ptr = nullptr, ByteType const& in_num_bytes = no_byte
   );
 
   void
@@ -48,7 +48,7 @@ struct Channel {
 
   void
   write_data_to_channel(
-    rdma_ptr_t const& ptr, byte_t const& ptr_num_bytes, byte_t const& offset
+    rdma_ptr_t const& ptr, ByteType const& ptr_num_bytes, ByteType const& offset
   );
 
   void
@@ -76,7 +76,7 @@ private:
   NodeType target = uninitialized_destination;
   NodeType my_node = uninitialized_destination;
   NodeType non_target = uninitialized_destination;
-  byte_t num_bytes = no_byte;
+  ByteType num_bytes = no_byte;
   rdma_ptr_t ptr = no_rdma_ptr;
   rdma_type_t op_type = uninitialized_rdma_type;
 

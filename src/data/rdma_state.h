@@ -36,12 +36,12 @@ struct State {
 
   rdma_handle_t handle = no_rdma_handle;
   rdma_ptr_t ptr = no_rdma_ptr;
-  byte_t num_bytes = no_byte;
+  ByteType num_bytes = no_byte;
 
   State(
     rdma_handle_t const& in_handle,
     rdma_ptr_t const& in_ptr = no_rdma_ptr,
-    byte_t const& in_num_bytes = no_byte,
+    ByteType const& in_num_bytes = no_byte,
     bool const& use_default_handler = false
   );
 
@@ -88,13 +88,13 @@ struct State {
 
   rdma_get_t
   default_get_handler_fn(
-    BaseMessage* msg, byte_t num_bytes, byte_t req_offset, TagType tag
+    BaseMessage* msg, ByteType num_bytes, ByteType req_offset, TagType tag
   );
 
   void
   default_put_handler_fn(
-    BaseMessage* msg, rdma_ptr_t in_ptr, byte_t in_num_bytes,
-    byte_t req_offset, TagType tag
+    BaseMessage* msg, rdma_ptr_t in_ptr, ByteType in_num_bytes,
+    ByteType req_offset, TagType tag
   );
 
   bool using_default_put_handler = false;

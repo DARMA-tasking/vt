@@ -241,7 +241,7 @@ ActiveMessenger::recv_data_msg_buffer(
   bool const& enqueue, ActionType dealloc_user_buf, rdma_continuation_del_t next
 ) {
   if (not enqueue) {
-    byte_t num_probe_bytes;
+    CountType num_probe_bytes;
     MPI_Status stat;
     int flag;
 
@@ -437,7 +437,7 @@ ActiveMessenger::deliver_active_msg(
 
 bool
 ActiveMessenger::try_process_incoming_message() {
-  byte_t num_probe_bytes;
+  CountType num_probe_bytes;
   MPI_Status stat;
   int flag;
 

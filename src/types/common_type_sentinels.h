@@ -17,8 +17,8 @@ static constexpr TagType const no_tag = -1;
 static constexpr EventType const no_event = -1;
 static constexpr BarrierType const no_barrier = -1;
 static constexpr rdma_handle_t const no_rdma_handle = -1;
-static constexpr byte_t const no_byte = -1;
-static constexpr byte_t const no_offset = -1;
+static constexpr ByteType const no_byte = -1;
+static constexpr ByteType const no_offset = -1;
 static constexpr auto no_action = nullptr;
 static constexpr rdma_ptr_t const no_rdma_ptr = nullptr;
 

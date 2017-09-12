@@ -45,11 +45,11 @@ struct RDMAManager {
   void
   put_typed_data(
     rdma_handle_t const& rdma_handle, T ptr,
-    byte_t const& num_elems, byte_t const& offset, TagType const& tag,
+    ByteType const& num_elems, ByteType const& offset, TagType const& tag,
     ActionType cont = no_action, ActionType action_after_put = no_action
   ) {
-    byte_t const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
-    byte_t const byte_offset = offset == no_byte ? 0 : sizeof(T)*offset;
+    ByteType const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
+    ByteType const byte_offset = offset == no_byte ? 0 : sizeof(T)*offset;
     return put_data(
       rdma_handle, static_cast<rdma_ptr_t>(ptr), num_bytes, byte_offset, tag, cont,
       action_after_put
@@ -59,8 +59,8 @@ struct RDMAManager {
   template <typename T>
   void
   put_typed_data(
-    rdma_handle_t const& han, T ptr, byte_t const& num_elems = no_byte,
-    byte_t const& offset = no_byte, ActionType cont = no_action,
+    rdma_handle_t const& han, T ptr, ByteType const& num_elems = no_byte,
+    ByteType const& offset = no_byte, ActionType cont = no_action,
     ActionType action_after_put = no_action
   ) {
     return put_typed_data<T>(
@@ -71,7 +71,7 @@ struct RDMAManager {
   void
   put_data(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
-    byte_t const& num_bytes, ActionType cont = no_action,
+    ByteType const& num_bytes, ActionType cont = no_action,
     ActionType action_after_put = no_action
   ) {
     return put_data(
@@ -82,7 +82,7 @@ struct RDMAManager {
   void
   put_data(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
-    byte_t const& num_bytes, byte_t const& offset, TagType const& tag,
+    ByteType const& num_bytes, ByteType const& offset, TagType const& tag,
     ActionType cont = no_action, ActionType action_after_put = no_action,
     NodeType const& collective_node = uninitialized_destination
   );
@@ -90,16 +90,16 @@ struct RDMAManager {
   void
   get_data_into_buf(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
-    byte_t const& num_bytes, byte_t const& offset,
+    ByteType const& num_bytes, ByteType const& offset,
     TagType const& tag = no_tag, ActionType next_action = no_action,
-    byte_t const& elm_size = rdma_default_byte_size,
+    ByteType const& elm_size = rdma_default_byte_size,
     NodeType const& collective_node = uninitialized_destination
   );
 
   void
   get_data_into_buf_collective(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
-    byte_t const& num_bytes, byte_t const& elm_size, byte_t const& offset,
+    ByteType const& num_bytes, ByteType const& elm_size, ByteType const& offset,
     ActionType next_action = no_action
   );
 
@@ -125,12 +125,12 @@ struct RDMAManager {
   template <typename T>
   void
   get_typed_data_info_buf(
-    rdma_handle_t const& rdma_handle, T ptr, byte_t const& num_elems,
-    byte_t const& elm_offset = no_byte, TagType const& tag = no_tag,
+    rdma_handle_t const& rdma_handle, T ptr, ByteType const& num_elems,
+    ByteType const& elm_offset = no_byte, TagType const& tag = no_tag,
     ActionType next_action = no_action
   ) {
-    byte_t const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
-    byte_t const byte_offset = elm_offset == no_byte ? 0 : sizeof(T)*elm_offset;
+    ByteType const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
+    ByteType const byte_offset = elm_offset == no_byte ? 0 : sizeof(T)*elm_offset;
 
     return get_data_into_buf(
       rdma_handle, static_cast<rdma_ptr_t>(ptr), num_bytes, byte_offset, tag,
@@ -141,7 +141,7 @@ struct RDMAManager {
   template <typename T>
   void
   get_typed_data_info_buf(
-    rdma_handle_t const& rdma_handle, T ptr, byte_t const& num_elems,
+    rdma_handle_t const& rdma_handle, T ptr, ByteType const& num_elems,
     ActionType na
   ) {
     return get_typed_data_info_buf<T>(
@@ -158,14 +158,14 @@ struct RDMAManager {
 
   void
   get_data(
-    rdma_handle_t const& rdma_handle, TagType const& tag, byte_t const& num_bytes,
-    byte_t const& offset, rdma_recv_t cont
+    rdma_handle_t const& rdma_handle, TagType const& tag, ByteType const& num_bytes,
+    ByteType const& offset, rdma_recv_t cont
   );
 
   template <typename T>
   rdma_handle_t
-  register_new_typed_rdma_handler(T ptr, byte_t const& num_elems) {
-    byte_t const num_bytes = sizeof(T)*num_elems;
+  register_new_typed_rdma_handler(T ptr, ByteType const& num_elems) {
+    ByteType const num_bytes = sizeof(T)*num_elems;
     debug_print(
       rdma, node,
       "register_new_typed_rdma_handler ptr=%p, bytes=%lld\n", ptr, num_bytes
@@ -178,12 +178,12 @@ struct RDMAManager {
   rdma_handle_t
   register_new_rdma_handler(
     bool const& use_default = false, rdma_ptr_t const& ptr = nullptr,
-    byte_t const& num_bytes = no_byte, bool const& is_collective = false
+    ByteType const& num_bytes = no_byte, bool const& is_collective = false
   );
 
   rdma_handle_t
   collective_register_rdma_handler(
-    bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes
+    bool const& use_default, rdma_ptr_t const& ptr, ByteType const& num_bytes
   ) {
     return register_new_rdma_handler(use_default, ptr, num_bytes, true);
   }
@@ -191,11 +191,11 @@ struct RDMAManager {
   template <typename T>
   rdma_handle_t
   register_collective_typed(
-    T ptr, byte_t const& num_total_elems,
-    byte_t const& num_elems, rdma_map_t const& map = default_map
+    T ptr, ByteType const& num_total_elems,
+    ByteType const& num_elems, rdma_map_t const& map = default_map
   ) {
-    byte_t const num_bytes = sizeof(T)*num_elems;
-    byte_t const num_total_bytes = sizeof(T)*num_total_elems;
+    ByteType const num_bytes = sizeof(T)*num_elems;
+    ByteType const num_total_bytes = sizeof(T)*num_total_elems;
     return register_new_collective(
       true, ptr, num_bytes, num_total_bytes, sizeof(T), map
     );
@@ -203,8 +203,8 @@ struct RDMAManager {
 
   rdma_handle_t
   register_new_collective(
-    bool const& use_default, rdma_ptr_t const& ptr, byte_t const& num_bytes,
-    byte_t const& num_total_bytes, byte_t const& elm_size = rdma_default_byte_size,
+    bool const& use_default, rdma_ptr_t const& ptr, ByteType const& num_bytes,
+    ByteType const& num_total_bytes, ByteType const& elm_size = rdma_default_byte_size,
     rdma_map_t const& map = default_map
   );
 
@@ -403,7 +403,7 @@ private:
   void
   send_data_channel(
     rdma_type_t const& type, rdma_handle_t const& han, rdma_ptr_t const& ptr,
-    byte_t const& num_bytes, byte_t const& offset, NodeType const& target,
+    ByteType const& num_bytes, ByteType const& offset, NodeType const& target,
     NodeType const& non_target, ActionType cont, ActionType action_after_put
   );
 
@@ -419,14 +419,14 @@ private:
     rdma_type_t const& type, rdma_handle_t const& han, NodeType const& non_target,
     ActionType const& action = nullptr,
     NodeType const& override_target = uninitialized_destination,
-    TagType const& channel_tag = no_tag, byte_t const& num_bytes = no_byte
+    TagType const& channel_tag = no_tag, ByteType const& num_bytes = no_byte
   );
 
   void
   create_direct_channel_finish(
     rdma_type_t const& type, rdma_handle_t const& han, NodeType const& non_target,
     ActionType const& action, TagType const& channel_tag, bool const& is_target,
-    byte_t const& num_bytes,
+    ByteType const& num_bytes,
     NodeType const& override_target = uninitialized_destination
   );
 
@@ -458,21 +458,21 @@ private:
   void
   request_get_data(
     GetMessage* msg, bool const& is_user_msg,
-    rdma_handle_t const& rdma_handle, TagType const& tag, byte_t const& num_bytes,
-    byte_t const& offset, rdma_ptr_t const& ptr = nullptr,
+    rdma_handle_t const& rdma_handle, TagType const& tag, ByteType const& num_bytes,
+    ByteType const& offset, rdma_ptr_t const& ptr = nullptr,
     rdma_continuation_t cont = no_action, ActionType next_action = no_action
   );
 
   void
   trigger_get_recv_data(
     rdma_op_t const& op, TagType const& tag, rdma_ptr_t ptr,
-    byte_t const& num_bytes, ActionType const& action = no_action
+    ByteType const& num_bytes, ActionType const& action = no_action
   );
 
   void
   trigger_put_recv_data(
     rdma_handle_t const& han, TagType const& tag, rdma_ptr_t ptr,
-    byte_t const& num_bytes, byte_t const& offset, ActionType const& action
+    ByteType const& num_bytes, ByteType const& offset, ActionType const& action
   );
 
   rdma_direct_t
@@ -489,7 +489,7 @@ private:
   TagType
   next_rdma_channel_tag();
 
-  byte_t
+  ByteType
   lookup_bytes_handler(rdma_handle_t const& han);
 
   rdma_channel_lookup_t
