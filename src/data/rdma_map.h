@@ -27,7 +27,7 @@ struct Map {
   };
 
   static rdma_block_elm_range_t
-  default_elm_map(rdma_elm_t elm, rdma_elm_t num_elms, rdma_block_t num_blocks) {
+  default_elm_map(RDMA_ElmType elm, RDMA_ElmType num_elms, rdma_block_t num_blocks) {
     auto const& block_size = num_elms / num_blocks;
     auto const& block = elm / block_size;
     return rdma_block_elm_range_t{block, (block)*block_size, (block+1)*block_size};

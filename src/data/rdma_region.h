@@ -14,17 +14,17 @@ using region_elm_size_t = int32_t;
 static constexpr region_elm_size_t const no_elm_size = -1;
 
 struct Region {
-  rdma_elm_t lo = no_rdma_elm;
-  rdma_elm_t hi = no_rdma_elm;
-  rdma_elm_t sd = 1;
+  RDMA_ElmType lo = no_rdma_elm;
+  RDMA_ElmType hi = no_rdma_elm;
+  RDMA_ElmType sd = 1;
 
   region_elm_size_t elm_size = no_elm_size;
 
   Region(Region const&) = default;
 
   Region(
-    rdma_elm_t const& in_lo, rdma_elm_t const& in_hi,
-    rdma_elm_t const& in_sd = 1,
+    RDMA_ElmType const& in_lo, RDMA_ElmType const& in_hi,
+    RDMA_ElmType const& in_sd = 1,
     region_elm_size_t const& in_elm_size = no_elm_size
   ) : lo(in_lo), hi(in_hi), sd(in_sd), elm_size(in_elm_size)
   {
@@ -43,7 +43,7 @@ struct Region {
     elm_size = size;
   }
 
-  rdma_elm_t
+  RDMA_ElmType
   get_size() const {
     return (hi-lo)/sd;
   }

@@ -15,7 +15,7 @@ struct Group {
   using rdma_region_t = Region;
 
   Group(
-    rdma_map_t const& in_map, rdma_elm_t const& in_total_elms,
+    rdma_map_t const& in_map, RDMA_ElmType const& in_total_elms,
     rdma_block_t const& in_num_blocks, ByteType const& in_elm_size
   ) : map(in_map), num_total_elems(in_total_elms),
       num_blocks(in_num_blocks), elm_size(in_elm_size)
@@ -30,9 +30,9 @@ struct Group {
   template <typename Walker>
   void
   walk_region(rdma_region_t const& region, Walker&& walk) {
-    rdma_elm_t lo = region.lo;
-    rdma_elm_t hi = region.hi;
-    rdma_elm_t elm_lo, elm_hi = lo;
+    RDMA_ElmType lo = region.lo;
+    RDMA_ElmType hi = region.hi;
+    RDMA_ElmType elm_lo, elm_hi = lo;
     rdma_block_t blk_lo;
     NodeType cur_node;
 
@@ -55,7 +55,7 @@ struct Group {
   rdma_map_t map;
 
   ByteType elm_size;
-  rdma_elm_t num_total_elems = no_rdma_elm;
+  RDMA_ElmType num_total_elems = no_rdma_elm;
   rdma_block_t num_blocks = no_rdma_block;
 };
 

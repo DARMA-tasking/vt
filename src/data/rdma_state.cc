@@ -355,7 +355,7 @@ State::process_pending_get(TagType const& tag) {
 
 
 // NodeType
-// State::get_node(rdma_elm_t const& elm) {
+// State::get_node(RDMA_ElmType const& elm) {
 //   assert(
 //     collective_map != nullptr and rdma_handle_manager_t::is_collective(handle)
 //     and "Must be collective and have map assigned"

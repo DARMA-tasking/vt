@@ -651,7 +651,7 @@ RDMAManager::get_region_typeless(
     auto action = new Action(1, next_action);
 
     group->walk_region(region, [&](
-      NodeType node, rdma_block_elm_range_t rng, rdma_elm_t lo, rdma_elm_t hi
+      NodeType node, rdma_block_elm_range_t rng, RDMA_ElmType lo, RDMA_ElmType hi
     ) {
       auto const& blk = std::get<0>(rng);
       auto const& blk_lo = std::get<1>(rng);
