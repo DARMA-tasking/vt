@@ -11,9 +11,9 @@ ActiveMessenger::send_msg_direct(
   ActionType next_action
 ) {
   auto const& this_node = the_context->get_node();
-  auto const& send_tag = static_cast<mpi_tag_t>(MPITag::ActiveMsgTag);
+  auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
-  auto msg = reinterpret_cast<message_t const>(msg_base);
+  auto msg = reinterpret_cast<MessageType const>(msg_base);
 
   auto const& dest = envelope_get_dest(msg->env);
   auto const& is_bcast = envelope_is_bcast(msg->env);
@@ -169,7 +169,7 @@ ActiveMessenger::send_msg_direct(
   }
 }
 
-ActiveMessenger::send_data_ret_t
+ActiveMessenger::SendDataRetType
 ActiveMessenger::send_data(
   RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
   ActionType next_action
@@ -178,7 +178,7 @@ ActiveMessenger::send_data(
 
   auto const& data_ptr = std::get<0>(ptr);
   auto const& num_bytes = std::get<1>(ptr);
-  auto const send_tag = tag == no_tag ? cur_direct_buffer_tag++ : tag;
+  auto const send_tag = tag == no_tag ? cur_direct_buffer_tag_++ : tag;
 
   auto const event_id = the_event->create_mpi_event_id(this_node);
   auto& holder = the_event->get_event_holder(event_id);
@@ -201,7 +201,7 @@ ActiveMessenger::send_data(
     holder.attach_action(next_action);
   }
 
-  return send_data_ret_t{event_id,send_tag};
+  return SendDataRetType{event_id,send_tag};
 }
 
 bool
@@ -214,9 +214,9 @@ ActiveMessenger::recv_data_msg(
 bool
 ActiveMessenger::process_data_msg_recv() {
   bool erase = false;
-  auto iter = pending_recvs.begin();
+  auto iter = pending_recvs_.begin();
 
-  for (; iter != pending_recvs.end(); ++iter) {
+  for (; iter != pending_recvs_.end(); ++iter) {
     auto const& done = recv_data_msg_buffer(
       iter->second.user_buf, iter->first, iter->second.recv_node,
       false, iter->second.dealloc_user_buf, iter->second.cont
@@ -228,7 +228,7 @@ ActiveMessenger::process_data_msg_recv() {
   }
 
   if (erase) {
-    pending_recvs.erase(iter);
+    pending_recvs_.erase(iter);
     return true;
   } else {
     return false;
@@ -300,10 +300,10 @@ ActiveMessenger::recv_data_msg_buffer(
       node, tag, print_bool(enqueue)
     );
 
-    pending_recvs.emplace(
+    pending_recvs_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(tag),
-      std::forward_as_tuple(pending_recv_t{user_buf,next,dealloc_user_buf,node})
+      std::forward_as_tuple(PendingRecvType{user_buf,next,dealloc_user_buf,node})
     );
     return false;
   }
@@ -319,12 +319,12 @@ ActiveMessenger::recv_data_msg(
 
 NodeType
 ActiveMessenger::get_from_node_current_handler() {
-  return current_node_context;
+  return current_node_context_;
 }
 
 bool
 ActiveMessenger::deliver_active_msg(
-  message_t msg, NodeType const& in_from_node, bool insert
+  MessageType msg, NodeType const& in_from_node, bool insert
 ) {
   auto const& is_term = envelope_is_term(msg->env);
   auto const& is_bcast = envelope_is_bcast(msg->env);
@@ -341,8 +341,8 @@ ActiveMessenger::deliver_active_msg(
 
   active_function_t active_fun = nullptr;
 
-  bool const& is_auto = handler_manager_t::is_handler_auto(handler);
-  bool const& is_functor = handler_manager_t::is_handler_functor(handler);
+  bool const& is_auto = HandlerManagerType::is_handler_auto(handler);
+  bool const& is_functor = HandlerManagerType::is_handler_functor(handler);
 
   backend_enable_if(
     trace_enabled,
@@ -376,9 +376,9 @@ ActiveMessenger::deliver_active_msg(
   if (has_action_handler) {
     // set the current handler so the user can request it in the context of an
     // active fun
-    current_handler_context = handler;
-    current_callback_context = callback;
-    current_node_context = from_node;
+    current_handler_context_ = handler;
+    current_callback_context_ = callback;
+    current_node_context_ = from_node;
 
     backend_enable_if(
       trace_enabled,
@@ -406,20 +406,20 @@ ActiveMessenger::deliver_active_msg(
     }
 
     // unset current handler
-    current_handler_context = uninitialized_handler;
-    current_callback_context = uninitialized_handler;
-    current_node_context = uninitialized_destination;
+    current_handler_context_ = uninitialized_handler;
+    current_callback_context_ = uninitialized_handler;
+    current_node_context_ = uninitialized_destination;
   } else {
     if (insert) {
-      auto iter = pending_handler_msgs.find(handler);
-      if (iter == pending_handler_msgs.end()) {
-        pending_handler_msgs.emplace(
+      auto iter = pending_handler_msgs_.find(handler);
+      if (iter == pending_handler_msgs_.end()) {
+        pending_handler_msgs_.emplace(
           std::piecewise_construct,
           std::forward_as_tuple(handler),
-          std::forward_as_tuple(msg_cont_t{buffered_msg_t{msg,from_node}})
+          std::forward_as_tuple(MsgContType{BufferedMsgType{msg,from_node}})
         );
       } else {
-        iter->second.push_back(buffered_msg_t{msg,from_node});
+        iter->second.push_back(BufferedMsgType{msg,from_node});
       }
     }
   }
@@ -442,7 +442,7 @@ ActiveMessenger::try_process_incoming_message() {
   int flag;
 
   MPI_Iprobe(
-    MPI_ANY_SOURCE, static_cast<mpi_tag_t>(MPITag::ActiveMsgTag),
+    MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
     MPI_COMM_WORLD, &flag, &stat
   );
 
@@ -458,7 +458,7 @@ ActiveMessenger::try_process_incoming_message() {
       MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
 
-    message_t msg = reinterpret_cast<message_t>(buf);
+    MessageType msg = reinterpret_cast<MessageType>(buf);
 
     message_convert_to_shared(msg);
 
@@ -488,14 +488,14 @@ ActiveMessenger::scheduler() {
 
 bool
 ActiveMessenger::is_local_term() {
-  bool const no_pending_msgs = pending_handler_msgs.size() == 0;
-  bool const no_pending_recvs = pending_recvs.size() == 0;
+  bool const no_pending_msgs = pending_handler_msgs_.size() == 0;
+  bool const no_pending_recvs = pending_recvs_.size() == 0;
   return no_pending_msgs and no_pending_recvs;
 }
 
 void
 ActiveMessenger::process_maybe_ready_han_tag() {
-  for (auto&& x : maybe_ready_tag_han) {
+  for (auto&& x : maybe_ready_tag_han_) {
     deliver_pending_msgs_on_han(std::get<0>(x), std::get<1>(x));
   }
 }
@@ -519,7 +519,7 @@ ActiveMessenger::swap_handler_fn(
   the_registry->swap_handler(han, fn, tag);
 
   if (fn != nullptr) {
-    maybe_ready_tag_han.push_back(ready_han_tag_t{han,tag});
+    maybe_ready_tag_han_.push_back(ReadyHanTagType{han,tag});
   }
 }
 
@@ -527,8 +527,8 @@ void
 ActiveMessenger::deliver_pending_msgs_on_han(
   HandlerType const& han, TagType const& tag
 ) {
-  auto iter = pending_handler_msgs.find(han);
-  if (iter != pending_handler_msgs.end()) {
+  auto iter = pending_handler_msgs_.find(han);
+  if (iter != pending_handler_msgs_.end()) {
     if (iter->second.size() > 0) {
       for (auto cur = iter->second.begin(); cur != iter->second.end(); ++cur) {
         if (deliver_active_msg(cur->buffered_msg, cur->from_node, false)) {
@@ -536,7 +536,7 @@ ActiveMessenger::deliver_pending_msgs_on_han(
         }
       }
     } else {
-      pending_handler_msgs.erase(iter);
+      pending_handler_msgs_.erase(iter);
     }
   }
 }
@@ -548,7 +548,7 @@ ActiveMessenger::register_handler_fn(
   swap_handler_fn(han, fn, tag);
 
   if (fn != nullptr) {
-    maybe_ready_tag_han.push_back(ready_han_tag_t{han,tag});
+    maybe_ready_tag_han_.push_back(ReadyHanTagType{han,tag});
   }
 }
 
@@ -561,12 +561,12 @@ ActiveMessenger::unregister_handler_fn(
 
 HandlerType
 ActiveMessenger::get_current_handler() {
-  return current_handler_context;
+  return current_handler_context_;
 }
 
 HandlerType
 ActiveMessenger::get_current_callback() {
-  return current_callback_context;
+  return current_callback_context_;
 }
 
 } //end namespace runtime

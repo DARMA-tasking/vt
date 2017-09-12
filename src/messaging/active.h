@@ -19,9 +19,9 @@
 
 namespace runtime {
 
-using mpi_tag_t = int;
+using MPI_TagType = int;
 
-enum class MPITag : mpi_tag_t {
+enum class MPITag : MPI_TagType {
   ActiveMsgTag = 1,
   DataMsgTag = 2
 };
@@ -43,31 +43,31 @@ struct PendingRecv {
 };
 
 struct BufferedActiveMsg {
-  using message_t = ShortMessage*;
+  using MessageType = ShortMessage*;
 
-  message_t buffered_msg;
+  MessageType buffered_msg;
   NodeType from_node;
 
   BufferedActiveMsg(
-    message_t const& in_buffered_msg, NodeType const& in_from_node
+    MessageType const& in_buffered_msg, NodeType const& in_from_node
   ) : buffered_msg(in_buffered_msg), from_node(in_from_node)
   { }
 };
 
 struct ActiveMessenger {
-  using buffered_msg_t = BufferedActiveMsg;
-  using message_t = ShortMessage*;
+  using BufferedMsgType = BufferedActiveMsg;
+  using MessageType = ShortMessage*;
   using CountType = int32_t;
-  using pending_recv_t = PendingRecv;
-  using send_data_ret_t = std::tuple<EventType, TagType>;
-  using send_fn_t = std::function<send_data_ret_t(RDMA_GetType,NodeType,TagType,ActionType)>;
-  using user_send_fn_t = std::function<void(send_fn_t)>;
-  using container_pending_t = std::unordered_map<TagType, pending_recv_t>;
-  using msg_cont_t = std::list<buffered_msg_t>;
-  using container_waiting_HandlerType = std::unordered_map<HandlerType, msg_cont_t>;
-  using ready_han_tag_t = std::tuple<HandlerType, TagType>;
-  using maybe_ready_t = std::vector<ready_han_tag_t>;
-  using handler_manager_t = HandlerManager;
+  using PendingRecvType = PendingRecv;
+  using SendDataRetType = std::tuple<EventType, TagType>;
+  using SendFnType = std::function<SendDataRetType(RDMA_GetType,NodeType,TagType,ActionType)>;
+  using UserSendFnType = std::function<void(SendFnType)>;
+  using ContainerPendingType = std::unordered_map<TagType, PendingRecvType>;
+  using MsgContType = std::list<BufferedMsgType>;
+  using ContainerWaitingHandlerType = std::unordered_map<HandlerType, MsgContType>;
+  using ReadyHanTagType = std::tuple<HandlerType, TagType>;
+  using MaybeReadyType = std::vector<ReadyHanTagType>;
+  using HandlerManagerType = HandlerManager;
 
   ActiveMessenger() = default;
 
@@ -118,7 +118,7 @@ struct ActiveMessenger {
     HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   ) {
-    auto const& dest = handler_manager_t::get_handler_node(han);
+    auto const& dest = HandlerManagerType::get_handler_node(han);
     assert(
       dest != uninitialized_destination and
       "Destination must be known in handler"
@@ -326,7 +326,7 @@ struct ActiveMessenger {
   template <typename MessageT>
   EventType send_msg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    user_send_fn_t send_payload_fn, ActionType next_action = nullptr
+    UserSendFnType send_payload_fn, ActionType next_action = nullptr
   ) {
     using namespace std::placeholders;
 
@@ -343,14 +343,14 @@ struct ActiveMessenger {
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
   EventType send_msg(
-    NodeType const& dest, MessageT* const msg, user_send_fn_t send_payload_fn,
+    NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn,
     ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     return send_msg<MessageT>(dest, han, msg, send_payload_fn, next_action);
   }
 
-  send_data_ret_t send_data(
+  SendDataRetType send_data(
     RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
     ActionType next_action = nullptr
   );
@@ -439,70 +439,39 @@ struct ActiveMessenger {
     the_registry->save_trigger(han, /*reinterpret_cast<active_function_t>(*/fn);
   }
 
-  void
-  perform_triggered_actions();
+  void perform_triggered_actions();
+  bool try_process_incoming_message();
+  bool process_data_msg_recv();
+  bool scheduler();
+  bool is_local_term();
 
-  bool
-  try_process_incoming_message();
-
-  bool
-  process_data_msg_recv();
-
-  bool
-  scheduler();
-
-  bool
-  is_local_term();
-
-  HandlerType
-  register_new_handler(active_function_t fn, TagType const& tag = no_tag);
-
-  void
-  swap_handler_fn(
+  HandlerType register_new_handler(active_function_t fn, TagType const& tag = no_tag);
+  void swap_handler_fn(
     HandlerType const& han, active_function_t fn, TagType const& tag = no_tag
   );
-
-  void
-  unregister_handler_fn(HandlerType const& han, TagType const& tag = no_tag);
-
-  void
-  register_handler_fn(
+  void unregister_handler_fn(HandlerType const& han, TagType const& tag = no_tag);
+  void register_handler_fn(
     HandlerType const& han, active_function_t fn, TagType const& tag = no_tag
   );
+  HandlerType collective_register_handler(active_function_t fn, TagType const& tag = no_tag);
 
-  HandlerType
-  collective_register_handler(active_function_t fn, TagType const& tag = no_tag);
+  HandlerType get_current_handler();
+  HandlerType get_current_callback();
+  NodeType get_from_node_current_handler();
 
-  HandlerType
-  get_current_handler();
-
-  HandlerType
-  get_current_callback();
-
-  NodeType
-  get_from_node_current_handler();
-
-  bool
-  deliver_active_msg(message_t msg, NodeType const& from_node, bool insert);
-
-  void
-  deliver_pending_msgs_on_han(HandlerType const& han, TagType const& tag = no_tag);
-
-  void
-  process_maybe_ready_han_tag();
+  bool deliver_active_msg(MessageType msg, NodeType const& from_node, bool insert);
+  void deliver_pending_msgs_on_han(HandlerType const& han, TagType const& tag = no_tag);
+  void process_maybe_ready_han_tag();
 
 private:
-  HandlerType current_handler_context = uninitialized_handler;
-  HandlerType current_callback_context = uninitialized_handler;
-  NodeType current_node_context = uninitialized_destination;
+  HandlerType current_handler_context_ = uninitialized_handler;
+  HandlerType current_callback_context_ = uninitialized_handler;
+  NodeType current_node_context_ = uninitialized_destination;
 
-  maybe_ready_t maybe_ready_tag_han;
-
-  container_waiting_HandlerType pending_handler_msgs;
-
-  container_pending_t pending_recvs;
-
-  TagType cur_direct_buffer_tag = starting_direct_buffer_tag;
+  MaybeReadyType maybe_ready_tag_han_;
+  ContainerWaitingHandlerType pending_handler_msgs_;
+  ContainerPendingType pending_recvs_;
+  TagType cur_direct_buffer_tag_ = starting_direct_buffer_tag;
 };
 
 extern std::unique_ptr<ActiveMessenger> the_msg;

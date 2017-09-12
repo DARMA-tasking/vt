@@ -12,20 +12,18 @@ struct BaseMessage { };
 
 template <typename EnvelopeT>
 struct ActiveMessage : BaseMessage {
-  using envelope_t = EnvelopeT;
-  envelope_t env;
+  using EnvelopeType = EnvelopeT;
+  EnvelopeType env;
 
   ActiveMessage() {
     envelope_init_empty(env);
   }
 
-  static void*
-  operator new(std::size_t sz) {
+  static void* operator new(std::size_t sz) {
     return the_pool->alloc(sz);
   }
 
-  static void
-  operator delete(void* ptr) {
+  static void operator delete(void* ptr) {
     return the_pool->dealloc(ptr);
   }
 };
@@ -42,16 +40,14 @@ struct CallbackMessage : runtime::Message {
     set_callback_type(env);
   }
 
-  void
-  set_callback(HandlerType const& han) {
+  void set_callback(HandlerType const& han) {
     callback = han;
   }
 
   HandlerType callback = uninitialized_handler;
 };
 
-inline HandlerType
-get_callback_message(ShortMessage* msg) {
+inline HandlerType get_callback_message(ShortMessage* msg) {
   return reinterpret_cast<CallbackMessage*>(msg)->callback;
 }
 

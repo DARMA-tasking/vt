@@ -37,7 +37,7 @@ namespace runtime { namespace rdma {
         op_id, std::get<1>(data), 0, no_tag, handle, this_node
       );
 
-      auto send_payload = [&](ActiveMessenger::send_fn_t send){
+      auto send_payload = [&](ActiveMessenger::SendFnType send){
         auto ret = send(data, recv_node, no_tag, [=]{ });
         new_msg->mpi_tag_to_recv = std::get<1>(ret);
       };
@@ -553,7 +553,7 @@ void RDMAManager::put_data(
         this_node
       );
 
-      auto send_payload = [&](ActiveMessenger::send_fn_t send){
+      auto send_payload = [&](ActiveMessenger::SendFnType send){
         auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag, [=]{
           if (cont != nullptr) {
             cont();
