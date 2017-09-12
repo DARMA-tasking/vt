@@ -14,7 +14,7 @@
 #include <cxxabi.h>
 #include <assert.h>
 
-namespace runtime { namespace trace {
+namespace runtime { namespace demangle {
 
 using StrContainerType = std::vector<std::string>;
 
@@ -95,6 +95,6 @@ struct ActiveFunctorDemangler {
   );
 };
 
-}} //end namespace runtime::trace
+}} //end namespace runtime::demangle
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_DEMANGLE__*/

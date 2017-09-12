@@ -40,9 +40,9 @@ Registrar<ActiveFnT>::Registrar() {
   auto fn = ActiveFnT::get_function();
 
   #if backend_check_enabled(trace_enabled)
-  auto const& name = trace::DemanglerUtils::get_demangled_type<ActiveFnT>();
+  auto const& name = demangle::DemanglerUtils::get_demangled_type<ActiveFnT>();
   auto const& parsed_names =
-    trace::ActiveFunctionDemangler::parse_active_function_name(name);
+    demangle::ActiveFunctionDemangler::parse_active_function_name(name);
   auto const& namespace_name = std::get<0>(parsed_names);
   auto const& function_name = std::get<1>(parsed_names);
   auto const& trace_ep = trace::TraceRegistry::register_event_hashed(
