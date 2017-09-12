@@ -9,7 +9,7 @@ ActiveFunctionDemangler::str_parsed_out_t
 ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
   //std::cout << "parse_active_function_name: str=" << str << std::endl;
 
-  str_container_t const& elems = util_t::split_string(str, '&');
+  StrContainerType const& elems = util_t::split_string(str, '&');
   assert(elems.size() == 2);
   auto const& last_elem = elems.at(1);
 
@@ -28,19 +28,19 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
 
   //std::cout << "match: \"" << m0 << "\"" << std::endl;
 
-  str_container_t const& namespace_no_temp = util_t::split_string(m0, '<');
-  str_container_t const& namespace_elems = util_t::split_string(
+  StrContainerType const& namespace_no_temp = util_t::split_string(m0, '<');
+  StrContainerType const& namespace_elems = util_t::split_string(
     namespace_no_temp.at(0), ':'
   );
 
-  str_container_t only_namespace_elems;
+  StrContainerType only_namespace_elems;
 
   for (auto&& e : namespace_elems) {
     if (e != "") {
       if (e[0] != '(') {
         only_namespace_elems.push_back(e);
       } else {
-        str_container_t const& non_paren = util_t::split_string(e, '(');
+        StrContainerType const& non_paren = util_t::split_string(e, '(');
         only_namespace_elems.push_back(non_paren.at(1));
       }
     }
@@ -74,7 +74,7 @@ ActiveFunctionDemangler::parse_active_function_name(std::string const& str) {
   std::stringstream clean_function_name;
   clean_function_name << util_t::remove_spaces(clean_function_name_space.str());
 
-  str_container_t const& args = util_t::split_string(last_elem, '(');
+  StrContainerType const& args = util_t::split_string(last_elem, '(');
 
   assert(
     args.size() >= 3 and "args parsed must be at least 3"
