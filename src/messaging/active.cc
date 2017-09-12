@@ -206,7 +206,7 @@ ActiveMessenger::send_data(
 
 bool
 ActiveMessenger::recv_data_msg(
-  TagType const& tag, NodeType const& node, rdma_continuation_del_t next
+  TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next
 ) {
   return recv_data_msg(tag, node, true, next);
 }
@@ -238,7 +238,7 @@ ActiveMessenger::process_data_msg_recv() {
 bool
 ActiveMessenger::recv_data_msg_buffer(
   void* const user_buf, TagType const& tag, NodeType const& node,
-  bool const& enqueue, ActionType dealloc_user_buf, rdma_continuation_del_t next
+  bool const& enqueue, ActionType dealloc_user_buf, RDMA_ContinuationDeleteType next
 ) {
   if (not enqueue) {
     CountType num_probe_bytes;
@@ -312,7 +312,7 @@ ActiveMessenger::recv_data_msg_buffer(
 bool
 ActiveMessenger::recv_data_msg(
   TagType const& tag, NodeType const& recv_node, bool const& enqueue,
-  rdma_continuation_del_t next
+  RDMA_ContinuationDeleteType next
 ) {
   return recv_data_msg_buffer(nullptr, tag, recv_node, enqueue, nullptr, next);
 }

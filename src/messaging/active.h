@@ -30,12 +30,12 @@ static constexpr TagType const starting_direct_buffer_tag = 1000;
 
 struct PendingRecv {
   void* user_buf = nullptr;
-  rdma_continuation_del_t cont = nullptr;
+  RDMA_ContinuationDeleteType cont = nullptr;
   ActionType dealloc_user_buf = nullptr;
   NodeType recv_node = uninitialized_destination;
 
   PendingRecv(
-    void* in_user_buf, rdma_continuation_del_t in_cont,
+    void* in_user_buf, RDMA_ContinuationDeleteType in_cont,
     ActionType in_dealloc_user_buf, NodeType node
   ) : user_buf(in_user_buf), cont(in_cont), dealloc_user_buf(in_dealloc_user_buf),
       recv_node(node)
@@ -356,18 +356,18 @@ struct ActiveMessenger {
   );
 
   bool recv_data_msg(
-    TagType const& tag, NodeType const& node, rdma_continuation_del_t next = nullptr
+    TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next = nullptr
   );
 
   bool recv_data_msg(
     TagType const& tag, NodeType const& recv_node, bool const& enqueue,
-    rdma_continuation_del_t next = nullptr
+    RDMA_ContinuationDeleteType next = nullptr
   );
 
   bool recv_data_msg_buffer(
     void* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
-    ActionType dealloc_user_buf = nullptr, rdma_continuation_del_t next = nullptr
+    ActionType dealloc_user_buf = nullptr, RDMA_ContinuationDeleteType next = nullptr
   );
 
   template <typename MessageT>
