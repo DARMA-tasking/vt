@@ -1,0 +1,62 @@
+Language: Cpp
+ColumnLimit: 80
+
+UseTab: Never
+IndentWidth: 2
+AccessModifierOffset: -4
+NamespaceIndentation: None
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlignAfterOpenBracket: AlwaysBreak
+ContinuationIndentWidth: 2
+PenaltyReturnTypeOnItsOwnLine: 100
+
+# CompactNamespaces: true
+# BraceWrapping: AfterFunction
+
+#BinPackArguments: false
+#BinPackParameters: false
+# AllowAllParametersOfDeclarationOnNextLine: true
+
+# BreakBeforeBraces: Attach
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction : false
+  AfterClass : false
+  AfterEnum : false
+  IndentBraces: false
+
+AlwaysBreakTemplateDeclarations: true
+BreakConstructorInitializersBeforeComma: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+AllowShortBlocksOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortLoopsOnASingleLine: true
+IndentWrappedFunctionNames: false
+
+PointerAlignment: Left
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignOperands: false
+AlignTrailingComments: true
+
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+BreakBeforeTernaryOperators: false
+SpaceInEmptyParentheses: false
+SpacesInAngles: false
+SpacesInContainerLiterals: false
+SpaceBeforeParens: ControlStatements
+MaxEmptyLinesToKeep: 2
+IndentCaseLabels: false
+
+# BreakBeforeInheritanceComma: false
+ConstructorInitializerIndentWidth: 2
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+BreakConstructorInitializersBeforeComma: false
+
+# ExperimentalAutoDetectBinPacking: true

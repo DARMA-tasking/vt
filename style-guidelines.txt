@@ -1,0 +1,25 @@
+
+=== Example Code Following Style ===
+
+using NodeType = uint16_t;
+
+struct MyClassName : OtherClass {
+  // if it is above 80 cols, wrap to next line with regular identing
+  static inline typename Abc<T,X>::type my_simple_method(
+    int a, int b, int c, int d
+  );
+
+  static void my_test(int a) {
+    int a;
+    int tmp;
+    int my_local_count = 0;
+  }
+
+private:
+  int my_data_;
+};
+
+enum eMyEnum {
+  ConstantOne = 0,
+  ConstantTwo = 1,
+};
