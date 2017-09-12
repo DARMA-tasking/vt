@@ -38,9 +38,9 @@ State::set_default_handler() {
 
 void
 State::unregister_rdma_handler(
-  rdma_type_t const& type, TagType const& tag, bool const& use_default
+  RDMA_TypeType const& type, TagType const& tag, bool const& use_default
 ) {
-  if (type == rdma_type_t::Get or type == rdma_type_t::GetOrPut) {
+  if (type == RDMA_TypeType::Get or type == RDMA_TypeType::GetOrPut) {
     if (tag == no_tag or use_default) {
       this_rdma_get_handler = uninitialized_rdma_handler;
       rdma_get_fn = nullptr;
@@ -52,7 +52,7 @@ State::unregister_rdma_handler(
       }
     }
   }
-  if (type == rdma_type_t::Put or type == rdma_type_t::GetOrPut) {
+  if (type == RDMA_TypeType::Put or type == RDMA_TypeType::GetOrPut) {
     if (tag == no_tag or use_default) {
       this_rdma_put_handler = uninitialized_rdma_handler;
       rdma_put_fn = nullptr;
@@ -99,8 +99,8 @@ State::unregister_rdma_handler(
 template<>
 RDMA_HandlerType
 State::set_rdma_fn<
-  State::rdma_type_t::Get, State::rdma_get_function_t
->(rdma_get_function_t const& fn, bool const& any_tag, TagType const& tag) {
+  State::RDMA_TypeType::Get, State::RDMA_GetFunctionType
+>(RDMA_GetFunctionType const& fn, bool const& any_tag, TagType const& tag) {
 
   auto const& this_node = the_context->get_node();
 
@@ -110,7 +110,7 @@ State::set_rdma_fn<
     tag, handle, print_bool(any_tag)
   );
 
-  RDMA_HandlerType const handler = make_rdma_handler(rdma_type_t::Get);
+  RDMA_HandlerType const handler = make_rdma_handler(RDMA_TypeType::Get);
 
   if (any_tag) {
     assert(
@@ -124,7 +124,7 @@ State::set_rdma_fn<
     rdma_get_fn = fn;
     get_any_tag = any_tag;
   } else {
-    get_tag_holder[tag] = rdma_tag_get_holder_t{fn,handler};
+    get_tag_holder[tag] = RDMA_TagGetHolderType{fn,handler};
   }
 
   return handler;
@@ -133,9 +133,9 @@ State::set_rdma_fn<
 template<>
 RDMA_HandlerType
 State::set_rdma_fn<
-  State::rdma_type_t::Put, State::rdma_put_function_t
->(rdma_put_function_t const& fn, bool const& any_tag, TagType const& tag) {
-  RDMA_HandlerType const handler = make_rdma_handler(rdma_type_t::Put);
+  State::RDMA_TypeType::Put, State::RDMA_PutFunctionType
+>(RDMA_PutFunctionType const& fn, bool const& any_tag, TagType const& tag) {
+  RDMA_HandlerType const handler = make_rdma_handler(RDMA_TypeType::Put);
 
   auto const& this_node = the_context->get_node();
 
@@ -157,16 +157,16 @@ State::set_rdma_fn<
     rdma_put_fn = fn;
     put_any_tag = any_tag;
   } else {
-    put_tag_holder[tag] = rdma_tag_put_holder_t{fn,handler};
+    put_tag_holder[tag] = RDMA_TagPutHolderType{fn,handler};
   }
 
   return handler;
 }
 
 RDMA_HandlerType
-State::make_rdma_handler(rdma_type_t const& rdma_type) {
+State::make_rdma_handler(RDMA_TypeType const& rdma_type) {
   RDMA_HandlerType& handler =
-    rdma_type == rdma_type_t::Put ? this_rdma_put_handler : this_rdma_get_handler;
+    rdma_type == RDMA_TypeType::Put ? this_rdma_put_handler : this_rdma_get_handler;
 
   if (handler == uninitialized_rdma_handler) {
     handler = the_rdma->allocate_new_rdma_handler();
@@ -245,7 +245,7 @@ State::default_put_handler_fn(
 
 void
 State::get_data(
-  GetMessage* msg, bool const& is_user_msg, rdma_info_t const& info
+  GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
 ) {
   auto const& tag = info.tag;
 
@@ -266,7 +266,7 @@ State::get_data(
   auto const& offset = info.offset;
 
   if (ready) {
-    rdma_get_function_t get_fn =
+    RDMA_GetFunctionType get_fn =
       tag == no_tag or get_any_tag ? rdma_get_fn :
       std::get<0>(get_tag_holder.find(tag)->second);
     if (info.cont) {
@@ -285,7 +285,7 @@ State::get_data(
 
 void
 State::put_data(
-  PutMessage* msg, bool const& is_user_msg, rdma_info_t const& info
+  PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
 ) {
   auto const& tag = info.tag;
 
@@ -306,7 +306,7 @@ State::put_data(
   );
 
   if (ready) {
-    rdma_put_function_t put_fn =
+    RDMA_PutFunctionType put_fn =
       tag == no_tag or put_any_tag ? rdma_put_fn :
       std::get<0>(put_tag_holder.find(tag)->second);
     put_fn(nullptr, info.data_ptr, info.num_bytes, info.offset, info.tag);
@@ -328,7 +328,7 @@ State::process_pending_get(TagType const& tag) {
   bool const ready = test_ready_get_data(tag);
   assert(ready and "Must be ready to process pending");
 
-  rdma_get_function_t get_fn =
+  RDMA_GetFunctionType get_fn =
     tag == no_tag ? rdma_get_fn : std::get<0>(get_tag_holder.find(tag)->second);
 
   auto pending_iter = pending_tag_gets.find(tag);
@@ -342,7 +342,7 @@ State::process_pending_get(TagType const& tag) {
 // void
 // State::set_collective_map(rdma_map_t const& map) {
 //   assert(
-//     rdma_handle_manager_t::is_collective(handle) and "Must be collective handle"
+//     RDMA_HandleManagerType::is_collective(handle) and "Must be collective handle"
 //   );
 
 //   collective_map = map;
@@ -357,7 +357,7 @@ State::process_pending_get(TagType const& tag) {
 // NodeType
 // State::get_node(RDMA_ElmType const& elm) {
 //   assert(
-//     collective_map != nullptr and rdma_handle_manager_t::is_collective(handle)
+//     collective_map != nullptr and RDMA_HandleManagerType::is_collective(handle)
 //     and "Must be collective and have map assigned"
 //   );
 

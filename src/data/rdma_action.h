@@ -11,13 +11,13 @@
 namespace runtime { namespace rdma {
 
 struct Action {
-  using action_count_t = int;
+  using ActionCountType = int;
 
-  action_count_t num_waiting = 0;
+  ActionCountType num_waiting = 0;
   ActionType action_to_trigger = nullptr;
 
   Action(
-    action_count_t const& num_waiting_in, ActionType in_action_to_trigger
+    ActionCountType const& num_waiting_in, ActionType in_action_to_trigger
   ) : num_waiting(num_waiting_in), action_to_trigger(in_action_to_trigger)
   { }
 

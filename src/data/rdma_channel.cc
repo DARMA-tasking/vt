@@ -4,7 +4,7 @@
 namespace runtime { namespace rdma {
 
 Channel::Channel(
-  RDMA_HandleType const& in_rdma_handle, rdma_type_t const& in_op_type,
+  RDMA_HandleType const& in_rdma_handle, RDMA_TypeType const& in_op_type,
   NodeType const& in_target, TagType const& in_channel_group_tag,
   NodeType const& in_non_target, RDMA_PtrType const& in_ptr, ByteType const& in_num_bytes
 ) : rdma_handle(in_rdma_handle), op_type(in_op_type),target(in_target),
@@ -101,7 +101,7 @@ Channel::sync_channel_local() {
   auto const& ret = MPI_Win_flush_local(non_target_pos, window);
   assert(ret == MPI_SUCCESS and "MPI_Win_flush_local: Should be successful");
 
-  if (op_type == rdma_type_t::Put) {
+  if (op_type == RDMA_TypeType::Put) {
     unlock_channel_for_op();
   }
 
@@ -122,7 +122,7 @@ Channel::sync_channel_global() {
   auto const& ret = MPI_Win_flush(target_pos, window);
   assert(ret == MPI_SUCCESS and "MPI_Win_flush: Should be successful");
 
-  if (op_type == rdma_type_t::Put) {
+  if (op_type == RDMA_TypeType::Put) {
     unlock_channel_for_op();
   }
 
@@ -141,15 +141,15 @@ Channel::lock_channel_for_op() {
 
     auto const& lock_type =
       (not is_target) ?
-      (op_type == rdma_type_t::Put ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED) :
-      (op_type == rdma_type_t::Put ? MPI_LOCK_SHARED : MPI_LOCK_SHARED);
+      (op_type == RDMA_TypeType::Put ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED) :
+      (op_type == RDMA_TypeType::Put ? MPI_LOCK_SHARED : MPI_LOCK_SHARED);
 
     debug_print(
       rdma_channel, node,
       "lock_channel_for_op: is_target=%s, target=%d, op_type=%s, "
       "lock_type=%d, exclusive=%d\n",
       print_bool(is_target), target,
-      op_type == rdma_type_t::Get ? "GET" : "PUT", lock_type, MPI_LOCK_EXCLUSIVE
+      op_type == RDMA_TypeType::Get ? "GET" : "PUT", lock_type, MPI_LOCK_EXCLUSIVE
     );
 
     auto const ret = MPI_Win_lock(
@@ -174,7 +174,7 @@ Channel::unlock_channel_for_op() {
     debug_print(
       rdma_channel, node,
       "unlock_channel_for_op: target=%d, op_type=%s\n",
-      target, op_type == rdma_type_t::Get ? "GET" : "PUT"
+      target, op_type == RDMA_TypeType::Get ? "GET" : "PUT"
     );
 
     locked = false;
@@ -195,19 +195,19 @@ Channel::write_data_to_channel(
     "write_data_to_channel: target=%d, ptr=%p, ptr_num_bytes=%lld, "
     "num_bytes=%lld, op_type=%s, offset=%lld\n",
     target, ptr, ptr_num_bytes, num_bytes,
-    op_type == rdma_type_t::Get ? "GET" : "PUT", offset
+    op_type == RDMA_TypeType::Get ? "GET" : "PUT", offset
   );
 
   if (not locked) {
     lock_channel_for_op();
   }
 
-  if (op_type == rdma_type_t::Get) {
+  if (op_type == RDMA_TypeType::Get) {
     auto const& get_ret = MPI_Get(
       ptr, ptr_num_bytes, MPI_BYTE, target_pos, d_offset, num_bytes, MPI_BYTE, window
     );
     assert(get_ret == MPI_SUCCESS and "MPI_Get: Should be successful");
-  } else if (op_type == rdma_type_t::Put) {
+  } else if (op_type == RDMA_TypeType::Put) {
     auto const& put_ret = MPI_Put(
       ptr, ptr_num_bytes, MPI_BYTE, target_pos, d_offset, num_bytes, MPI_BYTE, window
     );

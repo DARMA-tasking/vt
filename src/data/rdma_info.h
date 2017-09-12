@@ -11,18 +11,18 @@
 namespace runtime { namespace rdma {
 
 struct Info {
-  using rdma_type_t = Type;
+  using RDMA_TypeType = Type;
 
+  RDMA_TypeType rdma_type;
   ByteType num_bytes = no_byte;
   TagType tag = no_tag;
-  rdma_type_t rdma_type;
   RDMA_PtrType data_ptr = no_rdma_ptr;
   RDMA_ContinuationType cont = no_action;
   ActionType cont_action = no_action;
   ByteType offset = no_byte;
 
   Info(
-    rdma_type_t const& in_rdma_type, ByteType const& in_num_bytes = no_byte,
+    RDMA_TypeType const& in_rdma_type, ByteType const& in_num_bytes = no_byte,
     ByteType const& in_offset = no_byte, TagType const& in_tag = no_tag,
     RDMA_ContinuationType in_cont = no_action, ActionType in_cont_action = no_action,
     RDMA_PtrType const& in_data_ptr = no_rdma_ptr

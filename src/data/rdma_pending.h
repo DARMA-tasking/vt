@@ -9,11 +9,11 @@
 namespace runtime { namespace rdma {
 
 struct Pending {
-  rdma_recv_t cont = nullptr;
+  RDMA_RecvType cont = nullptr;
   ActionType cont2 = nullptr;
   RDMA_PtrType data_ptr = nullptr;
 
-  Pending(rdma_recv_t in_cont)
+  Pending(RDMA_RecvType in_cont)
     : cont(in_cont)
   { }
 

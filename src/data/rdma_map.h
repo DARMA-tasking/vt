@@ -11,12 +11,12 @@
 namespace runtime { namespace rdma {
 
 struct Map {
-  rdma_block_map_t block_map = nullptr;
-  rdma_elm_map_t elm_map = nullptr;
+  RDMA_BlockMapType block_map = nullptr;
+  RDMA_ElmMapType elm_map = nullptr;
 
   Map()  = default;
 
-  Map(rdma_block_map_t in_block_map, rdma_elm_map_t in_elm_map)
+  Map(RDMA_BlockMapType in_block_map, RDMA_ElmMapType in_elm_map)
     : block_map(in_block_map), elm_map(in_elm_map)
   { }
 
@@ -26,11 +26,11 @@ struct Map {
     return block % num_nodes;
   };
 
-  static rdma_block_elm_range_t
+  static RDMA_BlockElmRangeType
   default_elm_map(RDMA_ElmType elm, RDMA_ElmType num_elms, RDMA_BlockType num_blocks) {
     auto const& block_size = num_elms / num_blocks;
     auto const& block = elm / block_size;
-    return rdma_block_elm_range_t{block, (block)*block_size, (block+1)*block_size};
+    return RDMA_BlockElmRangeType{block, (block)*block_size, (block+1)*block_size};
   }
 };
 

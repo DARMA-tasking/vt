@@ -19,14 +19,14 @@ namespace runtime { namespace rdma {
 static constexpr RDMA_HandlerType const first_rdma_handler = 1;
 
 struct State {
-  using rdma_info_t = Info;
-  using rdma_type_t = Type;
-  using rdma_map_t = Map;
-  using rdma_group_t = Group;
-  using rdma_get_function_t = active_get_function_t;
-  using rdma_put_function_t = active_put_function_t;
-  using rdma_tag_get_holder_t = std::tuple<rdma_get_function_t, RDMA_HandlerType>;
-  using rdma_tag_put_holder_t = std::tuple<rdma_put_function_t, RDMA_HandlerType>;
+  using RDMA_InfoType = Info;
+  using RDMA_TypeType = Type;
+  using RDMA_MapType = Map;
+  using RDMA_GroupType = Group;
+  using RDMA_GetFunctionType = ActiveGetFunctionType;
+  using RDMA_PutFunctionType = ActivePutFunctionType;
+  using RDMA_TagGetHolderType = std::tuple<RDMA_GetFunctionType, RDMA_HandlerType>;
+  using RDMA_TagPutHolderType = std::tuple<RDMA_PutFunctionType, RDMA_HandlerType>;
 
   template <typename T>
   using tag_container_t = std::unordered_map<TagType, T>;
@@ -45,7 +45,7 @@ struct State {
     bool const& use_default_handler = false
   );
 
-  template <rdma_type_t rdma_type, typename FunctionT>
+  template <RDMA_TypeType rdma_type, typename FunctionT>
   RDMA_HandlerType
   set_rdma_fn(
     FunctionT const& fn, bool const& any_tag = false, TagType const& tag = no_tag
@@ -53,7 +53,7 @@ struct State {
 
   void
   unregister_rdma_handler(
-    rdma_type_t const& type, TagType const& tag, bool const& use_default
+    RDMA_TypeType const& type, TagType const& tag, bool const& use_default
   );
 
   void
@@ -62,7 +62,7 @@ struct State {
   );
 
   RDMA_HandlerType
-  make_rdma_handler(rdma_type_t const& rdma_type);
+  make_rdma_handler(RDMA_TypeType const& rdma_type);
 
   bool
   test_ready_get_data(TagType const& tag);
@@ -72,12 +72,12 @@ struct State {
 
   void
   get_data(
-    GetMessage* msg, bool const& is_user_msg, rdma_info_t const& info
+    GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
   );
 
   void
   put_data(
-    PutMessage* msg, bool const& is_user_msg, rdma_info_t const& info
+    PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
   );
 
   void
@@ -100,7 +100,7 @@ struct State {
   bool using_default_put_handler = false;
   bool using_default_get_handler = false;
 
-  std::unique_ptr<rdma_group_t> group_info = nullptr;
+  std::unique_ptr<RDMA_GroupType> group_info = nullptr;
 
 private:
   RDMA_HandlerType this_rdma_get_handler = uninitialized_rdma_handler,
@@ -109,26 +109,26 @@ private:
   bool get_any_tag = false;
   bool put_any_tag = false;
 
-  rdma_get_function_t rdma_get_fn = no_action;
-  rdma_put_function_t rdma_put_fn = no_action;
+  RDMA_GetFunctionType rdma_get_fn = no_action;
+  RDMA_PutFunctionType rdma_put_fn = no_action;
 
-  tag_container_t<rdma_tag_get_holder_t> get_tag_holder;
-  tag_container_t<rdma_tag_put_holder_t> put_tag_holder;
+  tag_container_t<RDMA_TagGetHolderType> get_tag_holder;
+  tag_container_t<RDMA_TagPutHolderType> put_tag_holder;
 
-  tag_container_t<container_t<rdma_info_t>> pending_tag_gets, pending_tag_puts;
+  tag_container_t<container_t<RDMA_InfoType>> pending_tag_gets, pending_tag_puts;
 };
 
 template<>
 RDMA_HandlerType
 State::set_rdma_fn<
-  State::rdma_type_t::Put, State::rdma_put_function_t
->(rdma_put_function_t const& fn, bool const& any_tag, TagType const& tag);
+  State::RDMA_TypeType::Put, State::RDMA_PutFunctionType
+>(RDMA_PutFunctionType const& fn, bool const& any_tag, TagType const& tag);
 
 template<>
 RDMA_HandlerType
 State::set_rdma_fn<
-  State::rdma_type_t::Get, State::rdma_get_function_t
->(rdma_get_function_t const& fn, bool const& any_tag, TagType const& tag);
+  State::RDMA_TypeType::Get, State::RDMA_GetFunctionType
+>(RDMA_GetFunctionType const& fn, bool const& any_tag, TagType const& tag);
 
 
 }} //end namespace runtime::rdma

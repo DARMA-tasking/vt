@@ -12,10 +12,10 @@
 
 namespace runtime { namespace rdma {
 
-using rdma_identifier_t = int32_t;
+using RDMA_IdentifierType = int32_t;
 
-static constexpr rdma_identifier_t const first_rdma_identifier = 1;
-static constexpr rdma_identifier_t const uninitialized_rdma_identifier = -1;
+static constexpr RDMA_IdentifierType const first_rdma_identifier = 1;
+static constexpr RDMA_IdentifierType const uninitialized_rdma_identifier = -1;
 static constexpr TagType const first_rdma_channel_tag = 1;
 
 // 64 bits: RDMA handle
@@ -38,7 +38,7 @@ static constexpr BitCountType const rdma_sized_num_bits = 1;
 static constexpr BitCountType const rdma_collective_num_bits = 1;
 static constexpr BitCountType const rdma_hander_type_num_bits = 1;
 static constexpr BitCountType const rdma_identifier_num_bits =
-  bit_counter_t<rdma_identifier_t>::value;
+  bit_counter_t<RDMA_IdentifierType>::value;
 
 enum Bits {
   Sized       = 0,
@@ -49,20 +49,20 @@ enum Bits {
   Node        = Bits::Identifier  + rdma_identifier_num_bits
 };
 
-using rdma_op_t = int64_t;
+using RDMA_OpType = int64_t;
 
-static constexpr rdma_op_t const no_rdma_op = -1;
+static constexpr RDMA_OpType const no_rdma_op = -1;
 
-using active_get_function_t = std::function<RDMA_GetType(BaseMessage*, ByteType, ByteType, TagType)>;
-using active_put_function_t = std::function<void(BaseMessage*, RDMA_PtrType, ByteType, ByteType, TagType)>;
+using ActiveGetFunctionType = std::function<RDMA_GetType(BaseMessage*, ByteType, ByteType, TagType)>;
+using ActivePutFunctionType = std::function<void(BaseMessage*, RDMA_PtrType, ByteType, ByteType, TagType)>;
 
-using rdma_ptr_continuation_t = std::function<void(RDMA_PtrType)>;
-using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;
+using RDMA_PtrContinuationType = std::function<void(RDMA_PtrType)>;
+using RDMA_RecvType = std::function<void(void* ptr, size_t num_bytes)>;
 
-using rdma_num_elems_t = int64_t;
-using rdma_block_elm_range_t = std::tuple<RDMA_BlockType,RDMA_ElmType,RDMA_ElmType>;
-using rdma_block_map_t = std::function<NodeType(RDMA_BlockType,RDMA_BlockType)>;
-using rdma_elm_map_t = std::function<rdma_block_elm_range_t(RDMA_ElmType,RDMA_ElmType,RDMA_BlockType)>;
+using RDMA_NumElemsType = int64_t;
+using RDMA_BlockElmRangeType = std::tuple<RDMA_BlockType,RDMA_ElmType,RDMA_ElmType>;
+using RDMA_BlockMapType = std::function<NodeType(RDMA_BlockType,RDMA_BlockType)>;
+using RDMA_ElmMapType = std::function<RDMA_BlockElmRangeType(RDMA_ElmType,RDMA_ElmType,RDMA_BlockType)>;
 
 static constexpr Type uninitialized_rdma_type = Type::Uninitialized;
 static constexpr ByteType rdma_default_byte_size = sizeof(char);

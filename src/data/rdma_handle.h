@@ -14,7 +14,7 @@ static_assert(
 
 struct HandleManager {
   using rdma_bits_t = Bits;
-  using rdma_type_t = Type;
+  using RDMA_TypeType = Type;
   using universal_rdma_id_t = RDMA_HandleType;
 
   static void
@@ -30,7 +30,7 @@ struct HandleManager {
 
   static void
   set_op_type(
-    universal_rdma_id_t& handle, rdma_type_t const& rdma_type
+    universal_rdma_id_t& handle, RDMA_TypeType const& rdma_type
   );
 
   static void
@@ -38,13 +38,13 @@ struct HandleManager {
 
   static void
   set_rdma_identifier(
-    universal_rdma_id_t& handle, rdma_identifier_t const& ident
+    universal_rdma_id_t& handle, RDMA_IdentifierType const& ident
   );
 
   static NodeType
   get_rdma_node(universal_rdma_id_t const& handle);
 
-  static rdma_identifier_t
+  static RDMA_IdentifierType
   get_rdma_identifier(universal_rdma_id_t const& handle);
 
   static bool
@@ -56,14 +56,14 @@ struct HandleManager {
   static bool
   is_handler(universal_rdma_id_t const& handle);
 
-  static rdma_type_t
+  static RDMA_TypeType
   get_op_type(universal_rdma_id_t const& handle);
 
   static universal_rdma_id_t
   create_new_handler();
 };
 
-using rdma_handle_manager_t = HandleManager;
+using RDMA_HandleManagerType = HandleManager;
 
 }} //end namespace runtime::rdma
 
