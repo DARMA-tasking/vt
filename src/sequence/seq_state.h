@@ -9,12 +9,12 @@ namespace runtime { namespace seq {
 
 template <typename MessageT, action_any_function_t<MessageT>* f>
 struct SeqMsgState {
-  using action_t = Action<MessageT>;
+  using ActionType = Action<MessageT>;
 
   template <typename T>
   using tag_container_t = std::unordered_map<TagType, T>;
 
-  using action_container_t = std::list<action_t>;
+  using action_container_t = std::list<ActionType>;
   using tagged_action_container_t = tag_container_t<action_container_t>;
 
   using msg_container_t = std::list<MessageT*>;

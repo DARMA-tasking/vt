@@ -131,7 +131,7 @@ struct AsyncEvent {
   using event_wrapper_ptr_t = std::unique_ptr<event_wrapper_t>;
 
   struct EventHolder {
-    using action_container_t = std::vector<action_t>;
+    using action_container_t = std::vector<ActionType>;
 
     EventHolder(event_wrapper_ptr_t in_event)
       : event(std::move(in_event))
@@ -143,7 +143,7 @@ struct AsyncEvent {
     }
 
     void
-    attach_action(action_t action) {
+    attach_action(ActionType action) {
       actions.emplace_back(action);
     }
 
@@ -269,7 +269,7 @@ struct AsyncEvent {
   }
 
   event_t
-  attach_action(event_t const& event, action_t callable);
+  attach_action(event_t const& event, ActionType callable);
 
   void
   test_events_trigger(

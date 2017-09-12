@@ -31,12 +31,12 @@ static constexpr TagType const starting_direct_buffer_tag = 1000;
 struct PendingRecv {
   void* user_buf = nullptr;
   rdma_continuation_del_t cont = nullptr;
-  action_t dealloc_user_buf = nullptr;
+  ActionType dealloc_user_buf = nullptr;
   NodeType recv_node = uninitialized_destination;
 
   PendingRecv(
     void* in_user_buf, rdma_continuation_del_t in_cont,
-    action_t in_dealloc_user_buf, NodeType node
+    ActionType in_dealloc_user_buf, NodeType node
   ) : user_buf(in_user_buf), cont(in_cont), dealloc_user_buf(in_dealloc_user_buf),
       recv_node(node)
   { }
@@ -60,7 +60,7 @@ struct ActiveMessenger {
   using byte_t = int32_t;
   using pending_recv_t = PendingRecv;
   using send_data_ret_t = std::tuple<event_t, TagType>;
-  using send_fn_t = std::function<send_data_ret_t(rdma_get_t,NodeType,TagType,action_t)>;
+  using send_fn_t = std::function<send_data_ret_t(rdma_get_t,NodeType,TagType,ActionType)>;
   using user_send_fn_t = std::function<void(send_fn_t)>;
   using container_pending_t = std::unordered_map<TagType, pending_recv_t>;
   using msg_cont_t = std::list<buffered_msg_t>;
@@ -107,7 +107,7 @@ struct ActiveMessenger {
   template <typename MessageT>
   event_t send_msg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    action_t next_action = nullptr
+    ActionType next_action = nullptr
   ) {
     envelope_setup(msg->env, dest, han);
     return send_msg_direct(han, msg, sizeof(MessageT), next_action);
@@ -116,7 +116,7 @@ struct ActiveMessenger {
   template <typename MessageT>
   event_t send_msg(
     HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag,
-    action_t next_action = nullptr
+    ActionType next_action = nullptr
   ) {
     auto const& dest = handler_manager_t::get_handler_node(han);
     assert(
@@ -154,7 +154,7 @@ struct ActiveMessenger {
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
   event_t broadcast_msg(
-    MessageT* const msg, TagType const& tag = no_tag, action_t next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     auto const& this_node = the_context->get_node();
@@ -166,14 +166,14 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t broadcast_msg(MessageT* const msg, action_t act) {
+  event_t broadcast_msg(MessageT* const msg, ActionType act) {
     return broadcast_msg<MessageT,f>(msg,no_tag,act);
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
   event_t send_msg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
-    action_t next_action = nullptr
+    ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     envelope_setup(msg->env, dest, han);
@@ -184,7 +184,7 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t send_msg(NodeType const& dest, MessageT* const msg, action_t act) {
+  event_t send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
     return send_msg<MessageT,f>(dest,msg,no_tag,act);
   }
 
@@ -217,7 +217,7 @@ struct ActiveMessenger {
 
   template <active_basic_function_t* f, typename MessageT>
   event_t broadcast_msg(
-    MessageT* const msg, TagType const& tag = no_tag, action_t next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     auto const& this_node = the_context->get_node();
@@ -229,14 +229,14 @@ struct ActiveMessenger {
   }
 
   template <active_basic_function_t* f, typename MessageT>
-  event_t broadcast_msg(MessageT* const msg, action_t act) {
+  event_t broadcast_msg(MessageT* const msg, ActionType act) {
     return broadcast_msg<f,MessageT>(msg,no_tag,act);
   }
 
   template <active_basic_function_t* f, typename MessageT>
   event_t send_msg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
-    action_t next_action = nullptr
+    ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     envelope_setup(msg->env, dest, han);
@@ -247,7 +247,7 @@ struct ActiveMessenger {
   }
 
   template <active_basic_function_t* f, typename MessageT>
-  event_t send_msg(NodeType const& dest, MessageT* const msg, action_t act) {
+  event_t send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
     return send_msg<f,MessageT>(dest,msg,no_tag,act);
   }
 
@@ -273,7 +273,7 @@ struct ActiveMessenger {
 
   template <typename FunctorT, typename MessageT>
   event_t broadcast_msg(
-    MessageT* const msg, TagType const& tag = no_tag, action_t next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
     HandlerType const& han =
       auto_registry::make_auto_handler_functor<FunctorT, true, MessageT*>();
@@ -285,14 +285,14 @@ struct ActiveMessenger {
   }
 
   template <typename FunctorT, typename MessageT>
-  event_t broadcast_msg(MessageT* const msg, action_t act) {
+  event_t broadcast_msg(MessageT* const msg, ActionType act) {
     return broadcast_msg<FunctorT,MessageT>(msg,no_tag,act);
   }
 
   template <typename FunctorT, typename MessageT>
   event_t send_msg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
-    action_t next_action = nullptr
+    ActionType next_action = nullptr
   ) {
     HandlerType const& han =
       auto_registry::make_auto_handler_functor<FunctorT, true, MessageT*>();
@@ -304,7 +304,7 @@ struct ActiveMessenger {
   }
 
   template <typename FunctorT, typename MessageT>
-  event_t send_msg(NodeType const& dest, MessageT* const msg, action_t act) {
+  event_t send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
     return send_msg<FunctorT,MessageT>(dest,msg,no_tag,act);
   }
 
@@ -326,7 +326,7 @@ struct ActiveMessenger {
   template <typename MessageT>
   event_t send_msg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    user_send_fn_t send_payload_fn, action_t next_action = nullptr
+    user_send_fn_t send_payload_fn, ActionType next_action = nullptr
   ) {
     using namespace std::placeholders;
 
@@ -344,7 +344,7 @@ struct ActiveMessenger {
   template <typename MessageT, action_any_function_t<MessageT>* f>
   event_t send_msg(
     NodeType const& dest, MessageT* const msg, user_send_fn_t send_payload_fn,
-    action_t next_action = nullptr
+    ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     return send_msg<MessageT>(dest, han, msg, send_payload_fn, next_action);
@@ -352,7 +352,7 @@ struct ActiveMessenger {
 
   send_data_ret_t send_data(
     rdma_get_t const& ptr, NodeType const& dest, TagType const& tag,
-    action_t next_action = nullptr
+    ActionType next_action = nullptr
   );
 
   bool recv_data_msg(
@@ -367,12 +367,12 @@ struct ActiveMessenger {
   bool recv_data_msg_buffer(
     void* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
-    action_t dealloc_user_buf = nullptr, rdma_continuation_del_t next = nullptr
+    ActionType dealloc_user_buf = nullptr, rdma_continuation_del_t next = nullptr
   );
 
   template <typename MessageT>
   event_t broadcast_msg(
-    HandlerType const& han, MessageT* const msg, action_t next_action = nullptr
+    HandlerType const& han, MessageT* const msg, ActionType next_action = nullptr
   ) {
     auto const& this_node = the_context->get_node();
     set_broadcast_type(msg->env);
@@ -381,7 +381,7 @@ struct ActiveMessenger {
 
   event_t send_msg_direct(
     HandlerType const& han, BaseMessage* const msg, int const& msg_size,
-    action_t next_action = nullptr
+    ActionType next_action = nullptr
   );
 
   /*

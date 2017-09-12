@@ -312,13 +312,13 @@ TerminationDetector::new_epoch() {
 }
 
 void
-TerminationDetector::attach_global_term_action(action_t action) {
+TerminationDetector::attach_global_term_action(ActionType action) {
   global_term_actions.emplace_back(action);
 }
 
 void
 TerminationDetector::attach_epoch_term_action(
-  EpochType const& epoch, action_t action
+  EpochType const& epoch, ActionType action
 ) {
   auto epoch_iter = epoch_actions.find(epoch);
   if (epoch_iter == epoch_actions.end()) {

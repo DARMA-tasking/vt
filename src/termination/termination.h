@@ -19,7 +19,7 @@ using namespace runtime::epoch;
 
 struct TerminationDetector : Tree {
   using term_state_t = TermState;
-  using action_container_t = std::vector<action_t>;
+  using action_container_t = std::vector<ActionType>;
 
   TerminationDetector() {
     any_epoch_state.recv_event_count = 1;
@@ -68,10 +68,10 @@ struct TerminationDetector : Tree {
   new_epoch();
 
   void
-  attach_global_term_action(action_t action);
+  attach_global_term_action(ActionType action);
 
   void
-  attach_epoch_term_action(EpochType const& epoch, action_t action);
+  attach_epoch_term_action(EpochType const& epoch, ActionType action);
 
   static void
   register_default_termination_action();

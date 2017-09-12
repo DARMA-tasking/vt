@@ -8,7 +8,7 @@ namespace runtime {
 event_t
 ActiveMessenger::send_msg_direct(
   HandlerType const& han, BaseMessage* const msg_base, int const& msg_size,
-  action_t next_action
+  ActionType next_action
 ) {
   auto const& this_node = the_context->get_node();
   auto const& send_tag = static_cast<mpi_tag_t>(MPITag::ActiveMsgTag);
@@ -172,7 +172,7 @@ ActiveMessenger::send_msg_direct(
 ActiveMessenger::send_data_ret_t
 ActiveMessenger::send_data(
   rdma_get_t const& ptr, NodeType const& dest, TagType const& tag,
-  action_t next_action
+  ActionType next_action
 ) {
   auto const& this_node = the_context->get_node();
 
@@ -238,7 +238,7 @@ ActiveMessenger::process_data_msg_recv() {
 bool
 ActiveMessenger::recv_data_msg_buffer(
   void* const user_buf, TagType const& tag, NodeType const& node,
-  bool const& enqueue, action_t dealloc_user_buf, rdma_continuation_del_t next
+  bool const& enqueue, ActionType dealloc_user_buf, rdma_continuation_del_t next
 ) {
   if (not enqueue) {
     byte_t num_probe_bytes;

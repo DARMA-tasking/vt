@@ -19,7 +19,7 @@ Barrier::barrier_down(BarrierMsg* msg) {
 Barrier::barrier_state_t&
 Barrier::insert_find_barrier(
   bool const& is_named, bool const& is_wait, BarrierType const& barrier,
-  action_t cont_action
+  ActionType cont_action
 ) {
   auto& state = is_named ? named_barrier_state : unnamed_barrier_state;
 
@@ -89,7 +89,7 @@ Barrier::wait_barrier(BarrierType const& barrier, bool const skip_term) {
 
 void
 Barrier::cont_barrier(
-  action_t fn, BarrierType const& barrier, bool const skip_term
+  ActionType fn, BarrierType const& barrier, bool const skip_term
 ) {
   setup_tree();
 

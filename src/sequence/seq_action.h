@@ -9,13 +9,13 @@ namespace runtime { namespace seq {
 
 template <typename MessageT>
 struct Action {
-  using action_t = std::function<void(MessageT*)>;
+  using ActionType = std::function<void(MessageT*)>;
   using callable_t = std::function<bool()>;
 
   seq_t const seq_id;
-  action_t const action;
+  ActionType const action;
 
-  Action(seq_t const& in_seq_id, action_t const& in_action)
+  Action(seq_t const& in_seq_id, ActionType const& in_action)
     : seq_id(in_seq_id), action(in_action)
   { }
 

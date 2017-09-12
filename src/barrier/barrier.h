@@ -26,7 +26,7 @@ struct Barrier : Tree {
   barrier_state_t&
   insert_find_barrier(
     bool const& is_named, bool const& is_wait, BarrierType const& barrier,
-    action_t cont_action = nullptr
+    ActionType cont_action = nullptr
   );
 
   void
@@ -54,12 +54,12 @@ struct Barrier : Tree {
   }
 
   inline void
-  barrier_then(action_t fn) {
+  barrier_then(ActionType fn) {
     return cont_barrier(fn);
   }
 
   inline void
-  barrier_then(BarrierType const& barrier, action_t fn) {
+  barrier_then(BarrierType const& barrier, ActionType fn) {
     return cont_barrier(fn, barrier);
   }
 
@@ -70,7 +70,7 @@ struct Barrier : Tree {
   }
 
   inline void
-  system_meta_barrier_cont(action_t fn) {
+  system_meta_barrier_cont(ActionType fn) {
     bool const skip_term = true;
     return cont_barrier(fn, no_barrier, skip_term);
   }
@@ -90,7 +90,7 @@ private:
 
   void
   cont_barrier(
-    action_t fn, BarrierType const& barrier = no_barrier,
+    ActionType fn, BarrierType const& barrier = no_barrier,
     bool const skip_term = false
   );
 

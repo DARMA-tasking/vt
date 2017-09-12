@@ -26,7 +26,7 @@ struct BarrierState {
   bool is_named = false;
   bool released = false;
 
-  action_t cont_action = nullptr;
+  ActionType cont_action = nullptr;
 
   BarrierState(
     bool const& in_is_named, BarrierType const& in_barrier, bool const& in_is_wait
