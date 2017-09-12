@@ -8,7 +8,7 @@
 
 #include <unordered_map>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 struct Group {
   using RDMA_MapType = Map;
@@ -55,6 +55,6 @@ struct Group {
   RDMA_BlockType num_blocks = no_rdma_block;
 };
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_GROUP__*/

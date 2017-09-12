@@ -2,9 +2,9 @@
 #include "transport.h"
 #include <cstdlib>
 
-using namespace runtime;
+using namespace vt;
 
-struct ParticleCollection : runtime::VirtualCollectionContext {
+struct ParticleCollection : vt::VirtualCollectionContext {
   std::vector<Particle> particles;
 
   NodeType initial_map_to_node(index i) {
@@ -12,12 +12,12 @@ struct ParticleCollection : runtime::VirtualCollectionContext {
   }
 };
 
-struct MainContext : runtime::VirtualContext {
+struct MainContext : vt::VirtualContext {
   int some_info;
 };
 
 void initialize_particles(
-  runtime::BaseMessage* in_msg, IndexedVirtualContext* virtual_ctx
+  vt::BaseMessage* in_msg, IndexedVirtualContext* virtual_ctx
 ) {
   // adds ome parties to virtual_ctx
 }
@@ -84,11 +84,11 @@ struct VirtualContext {
   vc_proxy_t context_proxy;
 };
 
-struct MyHelloContext : runtime::VirtualContext {
+struct MyHelloContext : vt::VirtualContext {
   int some_info;
 };
 
-static void hello_world_virtual(runtime::BaseMessage* in_msg, VirtualContext* virtual_ctx) {
+static void hello_world_virtual(vt::BaseMessage* in_msg, VirtualContext* virtual_ctx) {
   HelloMsg& msg = *static_cast<HelloMsg*>(in_msg);
   MyHelloContext& hello_context = *static_cast<MyHelloContext*>(virtual_ctx);
 

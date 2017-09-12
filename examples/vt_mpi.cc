@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstdio>
 
-using namespace runtime;
+using namespace vt;
 
 NodeType this_node = -1;
 NodeType num_nodes = -1;
@@ -12,7 +12,7 @@ HandlerType test_msg_han = 0;
 HandlerType test_msg_han2 = 0;
 EpochType test_epoch = -1;
 
-struct TestMsg : runtime::Message {
+struct TestMsg : vt::Message {
   int val;
   int val2;
   EventType event;
@@ -22,7 +22,7 @@ struct TestMsg : runtime::Message {
   { }
 };
 
-void handle_test_msg(runtime::Message* in_msg) {
+void handle_test_msg(vt::Message* in_msg) {
 }
 
 void send_to_neighbor() {
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   //   );
   // });
 
-  test_msg_han = the_msg->collective_register_handler([](runtime::BaseMessage* in_msg){
+  test_msg_han = the_msg->collective_register_handler([](vt::BaseMessage* in_msg){
     TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
     printf(
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
     }
   });
 
-  test_msg_han2 = the_msg->collective_register_handler([](runtime::BaseMessage* in_msg){
+  test_msg_han2 = the_msg->collective_register_handler([](vt::BaseMessage* in_msg){
     TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
     printf(

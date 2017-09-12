@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <functional>
 
-namespace runtime {
+namespace vt {
 
 using NodeType = uint16_t;
 using HandlerType = int32_t;
@@ -21,6 +21,6 @@ using ByteType = uint64_t;
 using BitCountType = int32_t;
 using ActionType = std::function<void()>;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_EVENT_COMMON_TYPES__*/

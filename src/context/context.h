@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace runtime {
+namespace vt {
 
 struct Context {
   Context(
@@ -24,6 +24,6 @@ private:
 
 extern std::unique_ptr<Context> the_context;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_CONTEXT__*/

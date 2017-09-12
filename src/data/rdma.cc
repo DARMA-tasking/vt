@@ -4,7 +4,7 @@
 
 #include <cstring>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 /*static*/ void RDMAManager::get_msg(GetMessage* msg) {
   auto const msg_tag = envelope_get_tag(msg->env);
@@ -863,7 +863,7 @@ void RDMAManager::setup_channel_with_remote(
     );
 
     the_msg->send_msg_callback<ChannelMessage, remote_channel>(
-      other_node, msg, [=](runtime::BaseMessage*){
+      other_node, msg, [=](vt::BaseMessage*){
         action();
       }
     );
@@ -1060,7 +1060,7 @@ void RDMAManager::create_direct_channel_internal(
     );
 
     the_msg->send_msg_callback<CreateChannel, setup_channel>(
-      target, msg, [=](runtime::BaseMessage* in_msg){
+      target, msg, [=](vt::BaseMessage* in_msg){
         GetInfoChannel& info = *static_cast<GetInfoChannel*>(in_msg);
         auto const& num_bytes = info.num_bytes;
         create_direct_channel_finish(
@@ -1098,7 +1098,7 @@ void RDMAManager::remove_direct_channel(
       RDMA_TypeType::Get, han, no_byte, no_tag
     );
     the_msg->send_msg_callback<DestroyChannel, remove_channel>(
-      target, msg, [=](runtime::BaseMessage* in_msg){
+      target, msg, [=](vt::BaseMessage* in_msg){
         auto iter = channels_.find(
           make_channel_lookup(han,RDMA_TypeType::Put,target,this_node)
         );
@@ -1130,4 +1130,4 @@ TagType RDMAManager::next_rdma_channel_tag() {
   return ret;
 }
 
-}} // end namespace runtime::rdma
+}} // end namespace vt::rdma

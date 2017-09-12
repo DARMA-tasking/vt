@@ -4,9 +4,9 @@
 
 #include "common.h"
 
-namespace runtime { namespace barrier {
+namespace vt { namespace barrier {
 
-struct BarrierMsg : runtime::ShortMessage {
+struct BarrierMsg : vt::ShortMessage {
   bool is_named, is_wait, skip_term = false;
   BarrierType barrier;
 
@@ -34,6 +34,6 @@ struct BarrierState {
   { }
 };
 
-}} //end namespace runtime::barrier
+}} //end namespace vt::barrier
 
 #endif /*__RUNTIME_TRANSPORT_BARRIER_MSGS__*/

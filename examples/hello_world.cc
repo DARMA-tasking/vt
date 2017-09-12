@@ -2,9 +2,9 @@
 #include "transport.h"
 #include <cstdlib>
 
-using namespace runtime;
+using namespace vt;
 
-struct HelloMsg : runtime::Message {
+struct HelloMsg : vt::Message {
   int from;
 
   HelloMsg(int const& in_from)

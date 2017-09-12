@@ -1,6 +1,6 @@
 
 // runtime
-struct MyMainContext : runtime::VirtualContextMessage {
+struct MyMainContext : vt::VirtualContextMessage {
   int argc;
   char** argv;
 };

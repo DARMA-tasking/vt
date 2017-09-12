@@ -5,7 +5,7 @@
 #include "common.h"
 #include "message.h"
 
-namespace runtime {
+namespace vt {
 
 struct EventCheckFinishedMsg : ShortMessage {
   EventType event_ = 0, event_back_ = 0;
@@ -32,6 +32,6 @@ struct EventFinishedMsg : ShortMessage {
 extern HandlerType event_finished_han;
 extern HandlerType check_event_finished_han;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_EVENT_MSGS__*/

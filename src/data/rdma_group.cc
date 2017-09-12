@@ -5,7 +5,7 @@
 
 #include <unordered_map>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 void
 Group::set_map(RDMA_MapType const& in_map) {
@@ -17,4 +17,4 @@ Group::get_map() const {
   return map;
 }
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma

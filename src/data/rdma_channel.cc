@@ -1,7 +1,7 @@
 
 #include "rdma_channel.h"
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 Channel::Channel(
   RDMA_HandleType const& in_rdma_handle, RDMA_TypeType const& in_op_type,
@@ -274,4 +274,4 @@ Channel::get_non_target() const {
   return non_target_;
 }
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma

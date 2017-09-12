@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace runtime { namespace trace {
+namespace vt { namespace trace {
 
 EventClass::EventClass(std::string const& in_event)
   : event(in_event)
@@ -51,4 +51,4 @@ TraceEntryIDType Event::get_event_type_seq() const {
   return this_event_type_seq;
 }
 
-}} //end namespace runtime::trace
+}} //end namespace vt::trace

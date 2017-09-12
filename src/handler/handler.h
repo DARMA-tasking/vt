@@ -10,7 +10,7 @@
 #include "bit_common.h"
 #include "function.h"
 
-namespace runtime {
+namespace vt {
 
 using HandlerIdentifierType = int16_t;
 
@@ -50,6 +50,6 @@ struct HandlerManager {
   static bool is_handler_functor(HandlerType const& han);
 };
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_REGISTRY__*/

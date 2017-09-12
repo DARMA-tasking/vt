@@ -2,12 +2,12 @@
 #include "transport.h"
 #include <cstdlib>
 
-using namespace runtime;
+using namespace vt;
 
 static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
 
-struct EmptyMsg : runtime::Message {
+struct EmptyMsg : vt::Message {
   EmptyMsg() : Message() { }
 };
 

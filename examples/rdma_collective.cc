@@ -2,7 +2,7 @@
 #include "transport.h"
 #include <cstdlib>
 
-using namespace runtime;
+using namespace vt;
 
 static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
@@ -15,7 +15,7 @@ static int const local_data_len = 24;
 static double* my_data = nullptr;
 static double* local_data = nullptr;
 
-struct TestMsg : runtime::Message {
+struct TestMsg : vt::Message {
   RDMA_HandleType han;
 
   TestMsg(RDMA_HandleType const& in_han) : Message(), han(in_han) { }

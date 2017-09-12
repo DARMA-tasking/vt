@@ -7,7 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 using UnderlyingNodeType = NodeType;
 
@@ -40,9 +40,9 @@ struct NonTarget : Endpoint {
   { }
 };
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
-namespace runtime {
+namespace vt {
 
 using RDMA_TargetType = rdma::Target;
 using RDMA_NonTargetType = rdma::NonTarget;
@@ -62,6 +62,6 @@ struct to_s {
 extern from_s rdma_from;
 extern to_s rdma_to;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_TYPES__*/

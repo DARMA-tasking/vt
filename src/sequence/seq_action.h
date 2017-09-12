@@ -5,7 +5,7 @@
 #include "seq_common.h"
 #include "termination.h"
 
-namespace runtime { namespace seq {
+namespace vt { namespace seq {
 
 template <typename MessageT>
 struct Action {
@@ -37,6 +37,6 @@ struct Action {
   }
 };
 
-}} //end namespace runtime::seq
+}} //end namespace vt::seq
 
 #endif /* __RUNTIME_TRANSPORT_SEQ_ACTION__*/

@@ -2,12 +2,12 @@
 #include "transport.h"
 #include <cstdlib>
 
-using namespace runtime;
+using namespace vt;
 
 static HandlerType my_col_han = uninitialized_handler;
 static HandlerType my_reinstate_fn = uninitialized_handler;
 
-struct TestMsg : runtime::Message {
+struct TestMsg : vt::Message {
   NodeType from;
   HandlerType callback_han;
 
@@ -16,20 +16,20 @@ struct TestMsg : runtime::Message {
   { }
 };
 
-static void callback_fn_2(runtime::BaseMessage* in_msg) {
+static void callback_fn_2(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   printf("%d: callback_fn_2 handler node %d\n", the_context->get_node(), msg.from);
 }
 
-static void reinstate_fn(runtime::BaseMessage* in_msg) {
+static void reinstate_fn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   // register a new function for the handler to deliver the rest of the msgs
   the_msg->register_handler_fn(msg.callback_han, callback_fn_2);
 }
 
-static void callback_fn(runtime::BaseMessage* in_msg) {
+static void callback_fn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   HandlerType const& han = the_msg->get_current_handler();
@@ -40,7 +40,7 @@ static void callback_fn(runtime::BaseMessage* in_msg) {
   printf("%d: callback_fn handler node %d\n", the_context->get_node(), msg.from);
 }
 
-static void my_col_fn(runtime::BaseMessage* in_msg) {
+static void my_col_fn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   auto const& my_node = the_context->get_node();

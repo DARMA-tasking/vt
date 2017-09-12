@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <cassert>
 
-namespace runtime { namespace pool {
+namespace vt { namespace pool {
 
 template <int64_t num_bytes_t>
 struct MemoryPoolEqual {
@@ -107,9 +107,9 @@ struct Pool {
   size_is_large(size_t const& num_bytes);
 };
 
-}} //end namespace runtime::pool
+}} //end namespace vt::pool
 
-namespace runtime {
+namespace vt {
 
 extern std::unique_ptr<pool::Pool> the_pool;
 
@@ -154,6 +154,6 @@ void message_deref(MessageT* msg) {
   }
 }
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_POOL__*/

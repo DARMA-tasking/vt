@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_TRACE_CONSTANTS__
 #define __RUNTIME_TRANSPORT_TRACE_CONSTANTS__
 
-namespace runtime { namespace trace {
+namespace vt { namespace trace {
 
 enum class eTraceConstants : int32_t {
   InvalidTraceType = -1,
@@ -63,6 +63,6 @@ enum eTraceEnvelopeTypes {
   ForIDedObjMsg = 20,
 };
 
-}} //end namespace runtime::trace
+}} //end namespace vt::trace
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_CONSTANTS__*/

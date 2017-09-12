@@ -5,7 +5,7 @@
 #include "config.h"
 #include "common_types.h"
 
-namespace runtime {
+namespace vt {
 
 static constexpr int const num_check_actions = 8;
 
@@ -29,6 +29,6 @@ static constexpr RefType const not_shared_message = -1000;
 static constexpr RDMA_ElmType const no_rdma_elm = -1;
 static constexpr RDMA_BlockType const no_rdma_block = -1;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_EVENT_COMMON_TYPE_SENTINELS__*/

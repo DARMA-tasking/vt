@@ -4,10 +4,10 @@
 
 #include "common.h"
 
-namespace runtime { namespace epoch {
+namespace vt { namespace epoch {
 
 static constexpr EpochType const first_epoch = 1;
 
-}} //end namespace runtime::epoch
+}} //end namespace vt::epoch
 
 #endif /*__RUNTIME_TRANSPORT_EPOCH__*/

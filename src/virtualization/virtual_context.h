@@ -5,7 +5,7 @@
 #include "common.h"
 #include "message.h"
 
-namespace runtime {
+namespace vt {
 
 using CollectionSizeType = uint32_t;
 using CollectionIDType = uint32_t;
@@ -34,6 +34,6 @@ private:
 };
 
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_CONTEXT__*/

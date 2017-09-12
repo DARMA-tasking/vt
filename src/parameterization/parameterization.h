@@ -7,9 +7,9 @@
 #include "active.h"
 #include "auto_registry_interface.h"
 
-namespace runtime { namespace param {
+namespace vt { namespace param {
 
-using HandlerManagerType = runtime::HandlerManager;
+using HandlerManagerType = vt::HandlerManager;
 
 template <typename... Args>
 using MultiParamType = void(*)(Args...);
@@ -17,11 +17,11 @@ using MultiParamType = void(*)(Args...);
 template<typename T, T value>
 struct NonType {};
 
-#define param_function_rhs(value) runtime::param::NonType<decltype(value),(value)>()
+#define param_function_rhs(value) vt::param::NonType<decltype(value),(value)>()
 #define param_function(value) decltype(value),(value)
 
 template <typename Tuple>
-struct DataMsg : runtime::Message {
+struct DataMsg : vt::Message {
   Tuple tup;
   HandlerType sub_han = uninitialized_handler;
 
@@ -183,7 +183,7 @@ struct Param {
   EventType send_data_helper_functor(
     NodeType const& dest, std::tuple<Args...>&& tup
   ) {
-    using MessageType = runtime::BaseMessage;
+    using MessageType = vt::BaseMessage;
     auto const& han = auto_registry::make_auto_handler_functor<
       FunctorT, false, Args...
     >();
@@ -226,9 +226,9 @@ struct Param {
   }
 };
 
-}} //end namespace runtime::param
+}} //end namespace vt::param
 
-namespace runtime {
+namespace vt {
 
 extern std::unique_ptr<param::Param> the_param;
 
@@ -239,6 +239,6 @@ param::DataMsg<std::tuple<Args...>>* build_data(Args&&... a) {
   );
 }
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_PARAMETERIZATION__*/

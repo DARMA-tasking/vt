@@ -14,7 +14,7 @@
 #include <cxxabi.h>
 #include <assert.h>
 
-namespace runtime { namespace demangle {
+namespace vt { namespace demangle {
 
 using StrContainerType = std::vector<std::string>;
 
@@ -69,11 +69,11 @@ struct DemanglerUtils {
 /*
  *                   Example Format for active message function:
  *
- *  runtime::auto_registry::Runnable<
- *    runtime::auto_registry::FunctorAdapter<
- *      void (runtime::term::TermCounterMsg*),
- *      &(runtime::term::TerminationDetector::propagate_epoch_handler(
- *        runtime::term::TermCounterMsg*)
+ *  vt::auto_registry::Runnable<
+ *    vt::auto_registry::FunctorAdapter<
+ *      void (vt::term::TermCounterMsg*),
+ *      &(vt::term::TerminationDetector::propagate_epoch_handler(
+ *        vt::term::TermCounterMsg*)
  *       )
  *    >
  *  >
@@ -95,6 +95,6 @@ struct ActiveFunctorDemangler {
   );
 };
 
-}} //end namespace runtime::demangle
+}} //end namespace vt::demangle
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_DEMANGLE__*/

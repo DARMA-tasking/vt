@@ -2,7 +2,7 @@
 #include "transport.h"
 #include <cstdlib>
 
-using namespace runtime;
+using namespace vt;
 
 static HandlerType my_reinstate_fn = uninitialized_handler;
 static TagType const first_recv_tag = 10;
@@ -10,7 +10,7 @@ static TagType const last_recv_tag = 15;
 static TagType cur_iter = first_recv_tag;
 static int count = 0;
 
-struct TestMsg : runtime::Message {
+struct TestMsg : vt::Message {
   NodeType from;
   HandlerType callback_han;
 
@@ -19,7 +19,7 @@ struct TestMsg : runtime::Message {
   { }
 };
 
-static void process_iter_msgs(runtime::BaseMessage* in_msg) {
+static void process_iter_msgs(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   auto const& first_tag = envelope_get_tag(msg.env);

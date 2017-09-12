@@ -1,6 +1,6 @@
 
 #include "parameterization.h"
 
-namespace runtime { namespace param {
+namespace vt { namespace param {
 
-}} //end namespace runtime::param
+}} //end namespace vt::param

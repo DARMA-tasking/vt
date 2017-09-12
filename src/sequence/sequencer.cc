@@ -5,7 +5,7 @@
 #include "seq_common.h"
 #include "sequencer.h"
 
-namespace runtime { namespace seq {
+namespace vt { namespace seq {
 
 void contextual_execution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
@@ -15,4 +15,4 @@ void contextual_execution(
   );
 }
 
-}} //end namespace runtime::seq
+}} //end namespace vt::seq

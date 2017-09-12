@@ -11,7 +11,7 @@
 #include <vector>
 #include <memory>
 
-namespace runtime { namespace auto_registry {
+namespace vt { namespace auto_registry {
 
 template <typename = void>
 AutoActiveContainerType& get_auto_registry();
@@ -67,13 +67,13 @@ template <typename ActiveFnT>
 AutoHandlerType const Runnable<ActiveFnT>::idx =
   register_active_fn<Runnable<ActiveFnT>>();
 
-}} // end namespace runtime::auto_registry
+}} // end namespace vt::auto_registry
 
 // convenience macro for registration
 #define get_handler_active_function_expand(TYPE_F, ADD_F)               \
-  runtime::auto_registry::Runnable<                                     \
+  vt::auto_registry::Runnable<                                     \
     decltype(                                                           \
-      runtime::auto_registry::FunctorAdapter<TYPE_F, ADD_F>()           \
+      vt::auto_registry::FunctorAdapter<TYPE_F, ADD_F>()           \
     )>::idx;                                                            \
 
 #include "auto_registry_impl.h"

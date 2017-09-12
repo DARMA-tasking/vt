@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iostream>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 struct Action {
   using ActionCountType = int;
@@ -36,6 +36,6 @@ struct Action {
   }
 };
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_ACTION__*/

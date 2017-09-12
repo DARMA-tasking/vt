@@ -14,7 +14,7 @@
 #include "event_msgs.h"
 #include "context.h"
 
-namespace runtime {
+namespace vt {
 
 struct Event {
   EventType event_id = 0;
@@ -294,6 +294,6 @@ private:
 
 extern std::unique_ptr<AsyncEvent> the_event;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_EVENT__*/

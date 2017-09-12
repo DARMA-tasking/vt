@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_SEQ_COMMON__
 #define __RUNTIME_TRANSPORT_SEQ_COMMON__
 
-namespace runtime { namespace seq {
+namespace vt { namespace seq {
 
 using SeqType = int32_t;
 using UserSeqFunType = std::function<void()>;
@@ -24,14 +24,14 @@ void contextual_execution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 );
 
-}} //end namespace runtime::seq
+}} //end namespace vt::seq
 
-namespace runtime {
+namespace vt {
 
 using SeqType = seq::SeqType;
 using UserSeqFunType = seq::UserSeqFunType;
 using UserSeqFunWithIDType = seq::UserSeqFunWithIDType;
 
-} // end namespace runtime
+} // end namespace vt
 
 #endif /* __RUNTIME_TRANSPORT_SEQ_COMMON__*/

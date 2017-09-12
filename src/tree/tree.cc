@@ -2,7 +2,7 @@
 #include "tree.h"
 #include "context.h"
 
-namespace runtime {
+namespace vt {
 
 void
 Tree::setup_tree() {
@@ -26,5 +26,5 @@ Tree::setup_tree() {
   }
 }
 
-} //end namespace runtime
+} //end namespace vt
 

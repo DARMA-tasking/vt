@@ -6,7 +6,7 @@
 #include "common.h"
 #include "registry.h"
 
-namespace runtime { namespace auto_registry {
+namespace vt { namespace auto_registry {
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 HandlerType make_auto_handler(MessageT* const msg);
@@ -25,7 +25,7 @@ AutoActiveFunctorType get_auto_handler_functor(HandlerType const& handler);
 trace::TraceEntryIDType get_trace_id(HandlerType const& handler);
 #endif
 
-}} // end namespace runtime::auto_registry
+}} // end namespace vt::auto_registry
 
 #include "auto_registry.h"
 #include "auto_registry_functor.h"

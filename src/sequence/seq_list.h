@@ -5,7 +5,7 @@
 #include "common.h"
 #include "seq_common.h"
 
-namespace runtime { namespace seq {
+namespace vt { namespace seq {
 
 struct SeqList {
   using SeqFunType = std::function<bool()>;
@@ -47,6 +47,6 @@ private:
   std::list<SeqFunType> lst_;
 };
 
-}} //end namespace runtime::seq
+}} //end namespace vt::seq
 
 #endif /* __RUNTIME_TRANSPORT_SEQ_LIST__*/

@@ -10,7 +10,7 @@
 #include <functional>
 #include <memory>
 
-namespace runtime { namespace sched {
+namespace vt { namespace sched {
 
 enum SchedulerEvent {
   BeginIdle = 0,
@@ -44,14 +44,14 @@ private:
   EventTriggerContType event_triggers_once;
 };
 
-}} //end namespace runtime::scheduler
+}} //end namespace vt::scheduler
 
-namespace runtime {
+namespace vt {
 
 void run_scheduler();
 
 extern std::unique_ptr<sched::Scheduler> the_sched;
 
-}  //end namespace runtime
+}  //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_SCHEDULER__*/

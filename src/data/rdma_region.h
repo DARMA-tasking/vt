@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iostream>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 using RegionElmSizeType = int32_t;
 static constexpr RegionElmSizeType const no_elm_size = -1;
@@ -60,6 +60,6 @@ struct Region {
   }
 };
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_COMMON__*/

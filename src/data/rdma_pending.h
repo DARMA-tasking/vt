@@ -6,7 +6,7 @@
 #include "function.h"
 #include "rdma_common.h"
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 struct Pending {
   RDMA_RecvType cont = nullptr;
@@ -27,6 +27,6 @@ struct Pending {
 };
 
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_PENDING__*/

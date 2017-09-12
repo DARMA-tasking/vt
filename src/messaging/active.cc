@@ -3,7 +3,7 @@
 #include "active.h"
 #include "termination.h"
 
-namespace runtime {
+namespace vt {
 
 EventType ActiveMessenger::send_msg_direct(
   HandlerType const& han, BaseMessage* const msg_base, int const& msg_size,
@@ -552,4 +552,4 @@ HandlerType ActiveMessenger::get_current_callback() {
   return current_callback_context_;
 }
 
-} //end namespace runtime
+} //end namespace vt

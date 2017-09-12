@@ -14,7 +14,7 @@
 #include "trace.h"
 #include "scheduler.h"
 
-namespace runtime {
+namespace vt {
 
 std::unique_ptr<Context> the_context = nullptr;
 std::unique_ptr<Registry> the_registry = std::make_unique<Registry>();
@@ -33,4 +33,4 @@ backend_enable_if(
   std::unique_ptr<trace::Trace> the_trace = std::make_unique<trace::Trace>();
 );
 
-} //end namespace runtime
+} //end namespace vt

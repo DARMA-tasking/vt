@@ -8,7 +8,7 @@
 #include <vector>
 #include <memory>
 
-namespace runtime { namespace auto_registry {
+namespace vt { namespace auto_registry {
 
 template <typename>
 inline AutoActiveFunctorContainerType& get_auto_registry_functor()  {
@@ -106,6 +106,6 @@ AutoHandlerType register_active_functor() {
   return RegistrarWrapperFunctor<RunnableFunctorT>().registrar.index;
 }
 
-}} // end namespace runtime::auto_registry
+}} // end namespace vt::auto_registry
 
 #endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_FUNCTOR_IMPL__*/

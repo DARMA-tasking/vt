@@ -12,7 +12,7 @@
 
 #include <unordered_map>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 constexpr ByteType const rdma_elm_size = sizeof(char);
 constexpr ByteType const rdma_empty_byte = 0;
@@ -71,6 +71,6 @@ private:
   MPI_Comm channel_comm_;
 };
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_CHANNEL__*/

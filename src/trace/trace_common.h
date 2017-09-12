@@ -8,7 +8,7 @@
 #include <functional>
 #include <string>
 
-namespace runtime { namespace trace {
+namespace vt { namespace trace {
 
 static constexpr uint32_t const trace_flush_size = 100000;
 
@@ -23,6 +23,6 @@ static constexpr int64_t const trace_reserve_count = 1048576;
 
 static constexpr BitCountType const trace_event_num_bits = 32;
 
-}} //end namespace runtime::trace
+}} //end namespace vt::trace
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_COMMON__*/

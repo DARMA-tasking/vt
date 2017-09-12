@@ -10,7 +10,7 @@
 #include <vector>
 #include <memory>
 
-namespace runtime { namespace trace {
+namespace vt { namespace trace {
 
 struct Log {
   using LogPtrType = std::shared_ptr<Log>;
@@ -30,6 +30,6 @@ struct Log {
   { }
 };
 
-}} //end namespace runtime::trace
+}} //end namespace vt::trace
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_LOG__*/

@@ -8,7 +8,7 @@
 #include <vector>
 #include <memory>
 
-namespace runtime { namespace auto_registry {
+namespace vt { namespace auto_registry {
 
 template <typename>
 inline AutoActiveContainerType&
@@ -87,6 +87,6 @@ Runnable<Callable>::get_function() {
   return Callable::get_function();
 }
 
-}} // end namespace runtime::auto_registry
+}} // end namespace vt::auto_registry
 
 #endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_IMPL__*/

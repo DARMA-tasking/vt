@@ -8,7 +8,7 @@
 
 #include <mpi.h>
 
-namespace runtime {
+namespace vt {
 
 struct CollectiveOps {
   static void
@@ -36,6 +36,6 @@ struct CollectiveOps {
   finalize_runtime();
 };
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_COLLECTIVE__*/

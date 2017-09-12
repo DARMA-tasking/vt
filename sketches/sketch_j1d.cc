@@ -12,21 +12,21 @@ struct VirutalContextCollection {
 
 // define some messages, these should go away with the DARMA front-end which
 // will provide parameterization
-struct HanMsg : runtime::Message {
+struct HanMsg : vt::Message {
   RDMA_HandleType han;
   HanMsg(RDMA_HandleType const& in_han) : Message(), han(in_han) { }
 };
 
-struct WorkMsg : runtime::Message {
+struct WorkMsg : vt::Message {
   WorkMsg() : Message() { }
 };
 
-struct SizeMsg : runtime::Message {
+struct SizeMsg : vt::Message {
   int size;
   SizeMsg(int const& in_size) : Message(), size(in_size) { }
 };
 
-struct FinishedMsg : runtime::Message {
+struct FinishedMsg : vt::Message {
   bool fin;
   FinishedMsg(bool in_fin) : Message(), fin(in_fin) { }
 };

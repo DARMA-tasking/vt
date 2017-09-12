@@ -26,7 +26,7 @@
 #include <mpi.h>
 #include <zlib.h>
 
-namespace runtime { namespace trace {
+namespace vt { namespace trace {
 
 struct Trace {
   using LogType = Log;
@@ -110,9 +110,9 @@ private:
   double start_time_ = 0.0;
 };
 
-}} //end namespace runtime::trace
+}} //end namespace vt::trace
 
-namespace runtime {
+namespace vt {
 
 backend_enable_if(
   trace_enabled,

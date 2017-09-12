@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 struct Info {
   using RDMA_TypeType = Type;
@@ -32,6 +32,6 @@ struct Info {
   { }
 };
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_INFO__*/

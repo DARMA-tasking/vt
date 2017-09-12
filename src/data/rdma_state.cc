@@ -5,7 +5,7 @@
 
 #include <cstring>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 State::State(
   RDMA_HandleType const& in_handle, RDMA_PtrType const& in_ptr,
@@ -349,4 +349,4 @@ void State::process_pending_get(TagType const& tag) {
 //   return collective_map(elm);
 // }
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma

@@ -5,7 +5,7 @@
 #include "common.h"
 #include "rdma_common.h"
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 static_assert(
   sizeof(RDMA_HandleType) == sizeof(RDMA_HandlerType),
@@ -40,6 +40,6 @@ struct HandleManager {
 
 using RDMA_HandleManagerType = HandleManager;
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMAHANDLER__*/

@@ -6,7 +6,7 @@
 #include "termination.h"
 #include "sequencer.h"
 
-namespace runtime { namespace sched {
+namespace vt { namespace sched {
 
 /*static*/ void Scheduler::check_term_single_node() {
   auto const& num_nodes = the_context->get_num_nodes();
@@ -89,12 +89,12 @@ void Scheduler::scheduler_forever() {
   }
 }
 
-}} //end namespace runtime::scheduler
+}} //end namespace vt::scheduler
 
-namespace runtime {
+namespace vt {
 
 void run_scheduler() {
   the_sched->scheduler();
 }
 
-} //end namespace runtime
+} //end namespace vt

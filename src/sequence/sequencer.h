@@ -16,7 +16,7 @@
 #include <list>
 #include <cassert>
 
-namespace runtime { namespace seq {
+namespace vt { namespace seq {
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 struct TaggedSequencer {
@@ -310,15 +310,15 @@ using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
     the_seq->sequence_msg<message, handler>(m);                         \
   }
 
-}} //end namespace runtime::seq
+}} //end namespace vt::seq
 
-namespace runtime {
+namespace vt {
 
 extern std::unique_ptr<seq::Sequencer> the_seq;
 
 //using SequenceMessage = seq::SeqMsg;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_SEQUENCE__*/
 

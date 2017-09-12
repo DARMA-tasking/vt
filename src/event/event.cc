@@ -2,7 +2,7 @@
 #include "event.h"
 #include "active.h"
 
-namespace runtime {
+namespace vt {
 
 bool ParentEvent::test_ready() {
   bool ready = true;
@@ -138,4 +138,4 @@ bool AsyncEvent::is_local_term() {
   return event_container_[mpi_event_tag].size() == 0;
 }
 
-} //end namespace runtime
+} //end namespace vt

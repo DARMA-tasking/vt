@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-namespace runtime { namespace term {
+namespace vt { namespace term {
 
 using TermCounterType = int64_t;
 
@@ -21,6 +21,6 @@ struct TermState {
   bool propagate = true;
 };
 
-}} //end namespace runtime::term
+}} //end namespace vt::term
 
 #endif /*__RUNTIME_TRANSPORT_TERM_STATE__*/

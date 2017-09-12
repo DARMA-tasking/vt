@@ -2,7 +2,7 @@
 #include "barrier.h"
 #include "active.h"
 
-namespace runtime { namespace barrier {
+namespace vt { namespace barrier {
 
 /*static*/ void Barrier::barrier_up(BarrierMsg* msg) {
   the_barrier->barrier_up(
@@ -143,4 +143,4 @@ void Barrier::barrier_up(
   }
 }
 
-}} //end namespace runtime::barrier
+}} //end namespace vt::barrier

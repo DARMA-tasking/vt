@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 static constexpr RDMA_HandlerType const first_rdma_handler = 1;
 
@@ -118,6 +118,6 @@ State::set_rdma_fn<
 >(RDMA_GetFunctionType const& fn, bool const& any_tag, TagType const& tag);
 
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMASTATE__*/

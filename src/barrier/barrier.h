@@ -10,7 +10,7 @@
 #include "tree.h"
 #include "barrier_msg.h"
 
-namespace runtime { namespace barrier {
+namespace vt { namespace barrier {
 
 // struct ProcessGroup { };
 // struct GroupBarrier { };
@@ -86,12 +86,12 @@ private:
   ContainerType<BarrierStateType> named_barrier_state_, unnamed_barrier_state_;
 };
 
-}} //end namespace runtime::barrier
+}} //end namespace vt::barrier
 
-namespace runtime {
+namespace vt {
 
 extern std::unique_ptr<barrier::Barrier> the_barrier;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_BARRIER__*/

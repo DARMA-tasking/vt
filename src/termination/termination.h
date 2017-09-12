@@ -13,9 +13,9 @@
 #include "term_state.h"
 #include "tree.h"
 
-namespace runtime { namespace term {
+namespace vt { namespace term {
 
-using namespace runtime::epoch;
+using namespace vt::epoch;
 
 struct TerminationDetector : Tree {
   using TermStateType = TermState;
@@ -82,12 +82,12 @@ private:
   EpochContainerType<ActionContainerType> epoch_actions_;
 };
 
-}} // end namespace runtime::term
+}} // end namespace vt::term
 
-namespace runtime {
+namespace vt {
 
 extern std::unique_ptr<term::TerminationDetector> the_term;
 
-} // end namespace runtime
+} // end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_EVENT_TERMINATION__*/

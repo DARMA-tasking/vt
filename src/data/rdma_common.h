@@ -10,7 +10,7 @@
 
 #include <tuple>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 using RDMA_IdentifierType = int32_t;
 
@@ -67,14 +67,14 @@ using RDMA_ElmMapType = std::function<RDMA_BlockElmRangeType(RDMA_ElmType,RDMA_E
 static constexpr Type uninitialized_rdma_type = Type::Uninitialized;
 static constexpr ByteType rdma_default_byte_size = sizeof(char);
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #define print_channel_type(rdma_op_type) (                              \
-  rdma_op_type == runtime::rdma::Type::Get ? "rdma::Get" : (            \
-    rdma_op_type == runtime::rdma::Type::Put ? "rdma::Put" : (          \
-      rdma_op_type == runtime::rdma::Type::GetOrPut ? "rdma::GetorPut"  \
+  rdma_op_type == vt::rdma::Type::Get ? "rdma::Get" : (            \
+    rdma_op_type == vt::rdma::Type::Put ? "rdma::Put" : (          \
+      rdma_op_type == vt::rdma::Type::GetOrPut ? "rdma::GetorPut"  \
       : (                                                               \
-        rdma_op_type == runtime::rdma::Type::Uninitialized ?            \
+        rdma_op_type == vt::rdma::Type::Uninitialized ?            \
         "rdma::Uninitialized" : "Error: unknown rdma::Type"             \
       )                                                                 \
     )                                                                   \

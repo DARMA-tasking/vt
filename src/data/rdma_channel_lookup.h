@@ -8,7 +8,7 @@
 
 #include <functional>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 struct ChannelLookup {
   RDMA_HandleType handle = no_rdma_handle;
@@ -34,18 +34,18 @@ operator==(ChannelLookup const& c1, ChannelLookup const& c2) {
     c1.non_target == c2.non_target;
 }
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 namespace std {
-  using RDMA_ChannelLookupType = runtime::rdma::ChannelLookup;
+  using RDMA_ChannelLookupType = vt::rdma::ChannelLookup;
 
   template <>
   struct hash<RDMA_ChannelLookupType> {
     size_t operator()(RDMA_ChannelLookupType const& in) const {
       auto const& combined =
-        std::hash<runtime::RDMA_HandleType>()(in.handle) ^
-        std::hash<runtime::NodeType>()(in.target) ^
-        std::hash<runtime::NodeType>()(in.non_target);
+        std::hash<vt::RDMA_HandleType>()(in.handle) ^
+        std::hash<vt::NodeType>()(in.target) ^
+        std::hash<vt::NodeType>()(in.non_target);
       return combined;
     }
   };

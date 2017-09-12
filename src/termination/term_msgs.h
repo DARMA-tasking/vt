@@ -6,9 +6,9 @@
 #include "message.h"
 #include "term_state.h"
 
-namespace runtime { namespace term {
+namespace vt { namespace term {
 
-struct TermMsg : runtime::ShortMessage {
+struct TermMsg : vt::ShortMessage {
   EpochType new_epoch = no_epoch;
 
   explicit TermMsg(EpochType const& in_new_epoch)
@@ -16,7 +16,7 @@ struct TermMsg : runtime::ShortMessage {
   { }
 };
 
-struct TermCounterMsg : runtime::ShortMessage {
+struct TermCounterMsg : vt::ShortMessage {
   EpochType epoch = no_epoch;
   TermCounterType prod = 0, cons = 0;
 
@@ -27,6 +27,6 @@ struct TermCounterMsg : runtime::ShortMessage {
   { }
 };
 
-}} //end namespace runtime::term
+}} //end namespace vt::term
 
 #endif /*__RUNTIME_TRANSPORT_TERMINATION_MSGS__*/

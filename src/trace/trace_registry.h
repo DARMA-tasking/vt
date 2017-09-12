@@ -9,7 +9,7 @@
 #include "trace_event.h"
 #include "trace_containers.h"
 
-namespace runtime { namespace trace {
+namespace vt { namespace trace {
 
 struct TraceRegistry {
   using TraceContainersType = TraceContainers<void>;
@@ -74,6 +74,6 @@ struct TraceRegistry {
 
 };
 
-}} //end namespace runtime::trace
+}} //end namespace vt::trace
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_REGISTRY__*/

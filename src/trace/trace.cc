@@ -5,7 +5,7 @@
 
 #include <zlib.h>
 
-namespace runtime { namespace trace {
+namespace vt { namespace trace {
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
@@ -487,4 +487,4 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
   return static_cast<TimeIntegerType>(time * 1e6);
 }
 
-}} //end namespace runtime::trace
+}} //end namespace vt::trace

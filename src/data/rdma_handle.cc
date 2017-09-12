@@ -2,7 +2,7 @@
 #include "rdma_handle.h"
 #include "bit_common.h"
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 /*static*/ void HandleManager::set_is_sized(
   RDMA_UniversalIdType& handle, bool const& is_sized
@@ -86,5 +86,5 @@ HandleManager::create_new_handler() {
   return handle;
 }
 
-}} // end namespace runtime::rdma
+}} // end namespace vt::rdma
 

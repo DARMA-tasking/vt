@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-namespace runtime {
+namespace vt {
 
 struct Tree {
   void setup_tree();
@@ -15,6 +15,6 @@ struct Tree {
   bool has_c1_ = false, has_c2_ = false, is_root_ = false;
 };
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_TREE__*/

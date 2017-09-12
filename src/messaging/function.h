@@ -5,15 +5,15 @@
 #include "common.h"
 #include "message.h"
 
-namespace runtime {
+namespace vt {
 
-using ActiveFunctionType = std::function<void(runtime::BaseMessage*)>;
-using ActiveBasicFunctionType = void(runtime::BaseMessage *);
-using SimpleFunctionType = void(*)(runtime::BaseMessage *);
+using ActiveFunctionType = std::function<void(vt::BaseMessage*)>;
+using ActiveBasicFunctionType = void(vt::BaseMessage *);
+using SimpleFunctionType = void(*)(vt::BaseMessage *);
 
 template <typename MessageT>
 using ActiveAnyFunctionType = void(MessageT *);
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_FUNCTION__*/

@@ -4,7 +4,7 @@
 #include "scheduler.h"
 #include "termination.h"
 
-namespace runtime { namespace term {
+namespace vt { namespace term {
 
 /*static*/ void TerminationDetector::propagate_new_epoch_handler(TermMsg* msg) {
   the_term->propagate_new_epoch(msg->new_epoch);
@@ -360,4 +360,4 @@ void TerminationDetector::ready_new_epoch(EpochType const& new_epoch) {
   }
 }
 }
-} // end namespace runtime::term
+} // end namespace vt::term

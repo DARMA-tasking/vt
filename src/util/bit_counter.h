@@ -2,13 +2,13 @@
 #if ! defined __RUNTIME_TRANSPORT_BIT_COUNTER__
 #define __RUNTIME_TRANSPORT_BIT_COUNTER__
 
-namespace runtime { namespace util {
+namespace vt { namespace util {
 
 template <typename BitField>
 struct BitCounter {
   static constexpr BitCountType const value = sizeof(BitField) * 8;
 };
 
-}} //end namespace runtime::util
+}} //end namespace vt::util
 
 #endif /*__RUNTIME_TRANSPORT_BIT_COUNTER__*/

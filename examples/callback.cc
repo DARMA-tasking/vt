@@ -2,9 +2,9 @@
 #include "transport.h"
 #include <cstdlib>
 
-using namespace runtime;
+using namespace vt;
 
-struct TestMsg : runtime::Message {
+struct TestMsg : vt::Message {
   NodeType from;
   HandlerType callback_han;
 
@@ -13,7 +13,7 @@ struct TestMsg : runtime::Message {
   { }
 };
 
-static void callback_fn(runtime::BaseMessage* in_msg) {
+static void callback_fn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   printf("%d: local handler node %d\n", the_context->get_node(), msg.from);

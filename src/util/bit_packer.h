@@ -4,7 +4,7 @@
 
 #include <cassert>
 
-namespace runtime { namespace util {
+namespace vt { namespace util {
 
 struct BitPacker {
 
@@ -59,6 +59,6 @@ struct BitPacker {
 
 };
 
-}} //end namespace runtime::util
+}} //end namespace vt::util
 
 #endif /*__RUNTIME_TRANSPORT_BIT_PACKER__*/

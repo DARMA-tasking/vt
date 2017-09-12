@@ -10,7 +10,7 @@
 
 #include <cassert>
 
-namespace runtime {
+namespace vt {
 
 /*
  *  Envelope Type Bits:
@@ -282,6 +282,6 @@ static_assert(std::is_pod<EpochEnvelope>(), "EpochEnvelope must be POD");
 static_assert(std::is_pod<TagEnvelope>(), "TagEnvelope must be POD");
 static_assert(std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD");
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_EVENT_ENVELOPE__*/

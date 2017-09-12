@@ -1,9 +1,9 @@
 
 #include "rdma_types.h"
 
-namespace runtime {
+namespace vt {
 
 from_s rdma_from;
 to_s rdma_to;
 
-} //end namespace runtime
+} //end namespace vt

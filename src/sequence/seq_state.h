@@ -5,7 +5,7 @@
 #include "seq_common.h"
 #include "seq_action.h"
 
-namespace runtime { namespace seq {
+namespace vt { namespace seq {
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 struct SeqMsgState {
@@ -44,6 +44,6 @@ typename SeqStateType<MessageT, f>::MsgContainerType SeqMsgState<MessageT, f>::s
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 typename SeqStateType<MessageT, f>::tagged_MsgContainerType SeqMsgState<MessageT, f>::seq_msg_tagged;
 
-}} //end namespace runtime::seq
+}} //end namespace vt::seq
 
 #endif /* __RUNTIME_TRANSPORT_SEQ_STATE__*/

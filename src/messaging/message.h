@@ -6,7 +6,7 @@
 #include "envelope.h"
 #include "pool.h"
 
-namespace runtime {
+namespace vt {
 
 struct BaseMessage { };
 
@@ -32,10 +32,10 @@ using ShortMessage = ActiveMessage<Envelope>;
 using EpochMessage = ActiveMessage<EpochEnvelope>;
 using EpochTagMessage = ActiveMessage<EpochTagEnvelope>;
 
-// default runtime::Message includes tag and epoch
+// default vt::Message includes tag and epoch
 using Message = EpochTagMessage;
 
-struct CallbackMessage : runtime::Message {
+struct CallbackMessage : vt::Message {
   CallbackMessage() : Message() {
     set_callback_type(env);
   }
@@ -51,6 +51,6 @@ inline HandlerType get_callback_message(ShortMessage* msg) {
   return reinterpret_cast<CallbackMessage*>(msg)->callback;
 }
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_MESSAGE__*/

@@ -17,7 +17,7 @@
 #include <vector>
 #include <unordered_map>
 
-namespace runtime {
+namespace vt {
 
 using MPI_TagType = int;
 
@@ -201,7 +201,7 @@ struct ActiveMessenger {
    * Send message using basic function handler. These handlers are NOT type-safe
    * and require the user to cast their message to the correct type as so:
    *
-   *   void basic_handler(runtime::BaseMessage* msg_in) {
+   *   void basic_handler(vt::BaseMessage* msg_in) {
    *     MyMsg* msg = static_cast<MyMsg*>(msg_in);
    *     ...
    *   }
@@ -433,7 +433,7 @@ struct ActiveMessenger {
    */
 
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-  void trigger(std::function<void(runtime::BaseMessage*)> fn) {
+  void trigger(std::function<void(vt::BaseMessage*)> fn) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(nullptr);
     printf("trigger: han=%d\n", han);
     the_registry->save_trigger(han, /*reinterpret_cast<active_function_t>(*/fn);
@@ -476,6 +476,6 @@ private:
 
 extern std::unique_ptr<ActiveMessenger> the_msg;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_ACTIVE__*/

@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <map>
 
-namespace runtime { namespace trace {
+namespace vt { namespace trace {
 
 template <typename T, typename U>
 using EventLookupType = std::unordered_map<T, U>;
@@ -57,6 +57,6 @@ using ContainerEventTypeSortedType = EventSortedType<
   TraceContainerEventClassType::mapped_type*, bool, EventCompareType<EventClassType>
 >;
 
-}} //end namespace runtime::trace
+}} //end namespace vt::trace
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_CONTAINERS__*/

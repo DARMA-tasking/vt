@@ -10,7 +10,7 @@
 #include <string>
 #include <functional>
 
-namespace runtime { namespace trace {
+namespace vt { namespace trace {
 
 struct EventClass {
   EventClass(std::string const& in_event);
@@ -43,6 +43,6 @@ private:
   TraceEntryIDType this_event_type_seq = no_trace_entry_id;
 };
 
-}} //end namespace runtime::trace
+}} //end namespace vt::trace
 
 #endif /*__RUNTIME_TRANSPORT_TRACE_EVENT__*/

@@ -2,7 +2,7 @@
 #include "transport.h"
 #include <cstdlib>
 
-using namespace runtime;
+using namespace vt;
 
 static NodeType next_node = uninitialized_destination;
 static NodeType my_node = uninitialized_destination;
@@ -13,7 +13,7 @@ static constexpr int64_t const kernel_weight = 10000000;
 static int num_total_rings = 10;
 static int num_times = 0;
 
-struct RingMsg : runtime::Message {
+struct RingMsg : vt::Message {
   NodeType from;
   RingMsg(NodeType const& in_from) : Message(), from(in_from) { }
 };

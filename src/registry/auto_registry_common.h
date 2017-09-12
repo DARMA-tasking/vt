@@ -8,7 +8,7 @@
 #include "registry.h"
 #include "trace.h"
 
-namespace runtime { namespace auto_registry {
+namespace vt { namespace auto_registry {
 
 using AutoActiveType = SimpleFunctionType;
 using AutoActiveFunctorType = SimpleFunctionType;
@@ -48,8 +48,8 @@ using AutoRegInfoType = AutoRegInfo<Fn>;
 using AutoActiveContainerType = std::vector<AutoRegInfoType<AutoActiveType>>;
 using AutoActiveFunctorContainerType = std::vector<AutoRegInfoType<AutoActiveFunctorType>>;
 using AutoHandlerType = int32_t;
-using HandlerManagerType = runtime::HandlerManager;
+using HandlerManagerType = vt::HandlerManager;
 
-}} // end namespace runtime::auto_registry
+}} // end namespace vt::auto_registry
 
 #endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_COMMON__*/

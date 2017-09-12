@@ -10,7 +10,7 @@
 #include "function.h"
 #include "handler.h"
 
-namespace runtime {
+namespace vt {
 
 struct Registry {
   using HandlerManagerType = HandlerManager;
@@ -54,6 +54,6 @@ private:
 
 extern std::unique_ptr<Registry> the_registry;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_REGISTRY__*/

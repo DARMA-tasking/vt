@@ -1,7 +1,7 @@
 
 #include "pool.h"
 
-namespace runtime { namespace pool {
+namespace vt { namespace pool {
 
 bool Pool::size_is_large(size_t const& num_bytes) {
   return num_bytes > small_msg.get_num_bytes();
@@ -52,5 +52,5 @@ void Pool::dealloc(void* const buf) {
   }
 };
 
-}} //end namespace runtime::pool
+}} //end namespace vt::pool
 

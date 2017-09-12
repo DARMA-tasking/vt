@@ -2,7 +2,7 @@
 #include "common.h"
 #include "registry.h"
 
-namespace runtime {
+namespace vt {
 
 HandlerType Registry::register_new_handler(
   ActiveFunctionType fn, TagType const& tag, bool const& is_collective
@@ -106,4 +106,4 @@ ActiveFunctionType Registry::get_handler(
   }
 }
 
-} // end namespace runtime
+} // end namespace vt

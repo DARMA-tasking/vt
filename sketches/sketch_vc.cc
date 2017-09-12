@@ -7,7 +7,7 @@ struct VirtualContext {
   virtual_context_id_t get_virtual_context_id();
 };
 
-struct VirtualContextMessage : runtime::Message {
+struct VirtualContextMessage : vt::Message {
 
 };
 
@@ -18,7 +18,7 @@ struct MyContext : VirtualContext {
   MyContext() = default;
 };
 
-struct MyMsg : runtime::VirtualContextMessage {
+struct MyMsg : vt::VirtualContextMessage {
   int size, info;
 };
 
@@ -27,7 +27,7 @@ MyContext* my_handler(MyMsg* msg) {
 }
 
 // work msg for MyContext
-struct MyWorkMsg : runtime::VirtualContextMessage {
+struct MyWorkMsg : vt::VirtualContextMessage {
   int work_info;
 };
 

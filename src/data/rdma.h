@@ -19,7 +19,7 @@
 
 #include <unordered_map>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 struct RDMAManager {
   using RDMA_BitsType = Bits;
@@ -465,12 +465,12 @@ private:
   TagType next_channel_tag_ = first_rdma_channel_tag;
 };
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
-namespace runtime {
+namespace vt {
 
 extern std::unique_ptr<rdma::RDMAManager> the_rdma;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_RDMA__*/

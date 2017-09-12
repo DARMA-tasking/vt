@@ -4,7 +4,7 @@
 #include "common.h"
 #include "registry.h"
 
-namespace runtime { namespace auto_registry {
+namespace vt { namespace auto_registry {
 
 #if backend_check_enabled(trace_enabled)
 trace::TraceEntryIDType
@@ -21,4 +21,4 @@ get_trace_id(HandlerType const& handler) {
 }
 #endif
 
-}} // end namespace runtime::auto_registry
+}} // end namespace vt::auto_registry

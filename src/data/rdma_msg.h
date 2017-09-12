@@ -6,7 +6,7 @@
 #include "message.h"
 #include "rdma_common.h"
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 template <typename EnvelopeT>
 struct RequestDataMessage : ActiveMessage<EnvelopeT> {
@@ -60,7 +60,7 @@ struct RDMAOpFinishedMessage : ActiveMessage<EnvelopeT> {
   RDMA_OpType op_id = no_rdma_op;
 };
 
-struct CreateChannel : runtime::CallbackMessage {
+struct CreateChannel : vt::CallbackMessage {
   using RDMA_TypeType = Type;
 
   CreateChannel(
@@ -79,7 +79,7 @@ struct CreateChannel : runtime::CallbackMessage {
   NodeType non_target = uninitialized_destination;
 };
 
-struct GetInfoChannel : runtime::CallbackMessage {
+struct GetInfoChannel : vt::CallbackMessage {
   explicit GetInfoChannel(ByteType const& in_num_bytes)
     : CallbackMessage(), num_bytes(in_num_bytes)
   { }
@@ -87,7 +87,7 @@ struct GetInfoChannel : runtime::CallbackMessage {
   ByteType num_bytes = no_byte;
 };
 
-struct ChannelMessage : runtime::CallbackMessage {
+struct ChannelMessage : vt::CallbackMessage {
   using RDMA_TypeType = Type;
 
   ChannelMessage(
@@ -116,6 +116,6 @@ using PutBackMessage = RDMAOpFinishedMessage<EpochTagEnvelope>;
 
 using DestroyChannel = ChannelMessage;
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_COMMON__*/

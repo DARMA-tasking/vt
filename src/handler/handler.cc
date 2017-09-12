@@ -2,7 +2,7 @@
 #include "handler.h"
 #include "bit_common.h"
 
-namespace runtime {
+namespace vt {
 
 /*static*/ HandlerType HandlerManager::make_handler(
   bool const& is_auto, bool const& is_functor, HandlerIdentifierType const& id
@@ -67,4 +67,4 @@ namespace runtime {
   return BitPackerType::bool_get_field<HandlerBitsType::Functor>(han);
 }
 
-} // end namespace runtime
+} // end namespace vt

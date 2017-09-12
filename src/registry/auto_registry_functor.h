@@ -9,7 +9,7 @@
 #include <vector>
 #include <memory>
 
-namespace runtime { namespace auto_registry {
+namespace vt { namespace auto_registry {
 
 template <typename = void>
 AutoActiveFunctorContainerType& get_auto_registry_functor();
@@ -56,11 +56,11 @@ AutoHandlerType const RunnableFunctor<FunctorT, is_msg, Args...>::idx =
 template <typename FunctorT, bool is_msg, typename... Args>
 bool const RunnableFunctor<FunctorT, is_msg, Args...>::is_msg_t;
 
-}} // end namespace runtime::auto_registry
+}} // end namespace vt::auto_registry
 
 // convenience macro for registration
 #define get_handler_active_functor(FunctorT, is_msg, Args)          \
-  runtime::auto_registry::RunnableFunctor<FunctorT, is_msg, Args...>::idx;
+  vt::auto_registry::RunnableFunctor<FunctorT, is_msg, Args...>::idx;
 
 #include "auto_registry_functor_impl.h"
 

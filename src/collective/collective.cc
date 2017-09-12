@@ -4,7 +4,7 @@
 #include "barrier.h"
 #include "trace.h"
 
-namespace runtime {
+namespace vt {
 
 /*static*/ void
 CollectiveOps::initialize_runtime() {
@@ -62,4 +62,4 @@ CollectiveOps::finalize_context() {
   //
 }
 
-} //end namespace runtime
+} //end namespace vt

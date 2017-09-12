@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iostream>
 
-namespace runtime { namespace rdma {
+namespace vt { namespace rdma {
 
 struct Map {
   RDMA_BlockMapType block_map = nullptr;
@@ -40,6 +40,6 @@ struct Map {
 
 static Map default_map = Map(Map::default_block_map, Map::default_elm_map);
 
-}} //end namespace runtime::rdma
+}} //end namespace vt::rdma
 
 #endif /*__RUNTIME_TRANSPORT_RDMA_MAP__*/

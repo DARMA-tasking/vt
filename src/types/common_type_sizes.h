@@ -6,7 +6,7 @@
 #include "common_types.h"
 #include "bit_common.h"
 
-namespace runtime {
+namespace vt {
 
 static constexpr BitCountType const node_num_bits = BitCounterType<NodeType>::value;
 static constexpr BitCountType const handler_num_bits = BitCounterType<HandlerType>::value;
@@ -14,6 +14,6 @@ static constexpr BitCountType const ref_num_bits = BitCounterType<RefType>::valu
 static constexpr BitCountType const epoch_num_bits = BitCounterType<EpochType>::value;
 static constexpr BitCountType const tag_num_bits = BitCounterType<TagType>::value;
 
-} //end namespace runtime
+} //end namespace vt
 
 #endif /*__RUNTIME_TRANSPORT_COMMON_TYPE_SIZES__*/
