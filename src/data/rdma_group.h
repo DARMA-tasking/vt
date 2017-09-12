@@ -16,7 +16,7 @@ struct Group {
 
   Group(
     rdma_map_t const& in_map, RDMA_ElmType const& in_total_elms,
-    rdma_block_t const& in_num_blocks, ByteType const& in_elm_size
+    RDMA_BlockType const& in_num_blocks, ByteType const& in_elm_size
   ) : map(in_map), num_total_elems(in_total_elms),
       num_blocks(in_num_blocks), elm_size(in_elm_size)
   { }
@@ -33,7 +33,7 @@ struct Group {
     RDMA_ElmType lo = region.lo;
     RDMA_ElmType hi = region.hi;
     RDMA_ElmType elm_lo, elm_hi = lo;
-    rdma_block_t blk_lo;
+    RDMA_BlockType blk_lo;
     NodeType cur_node;
 
     assert(map.elm_map != nullptr);
@@ -56,7 +56,7 @@ struct Group {
 
   ByteType elm_size;
   RDMA_ElmType num_total_elems = no_rdma_elm;
-  rdma_block_t num_blocks = no_rdma_block;
+  RDMA_BlockType num_blocks = no_rdma_block;
 };
 
 }} //end namespace runtime::rdma

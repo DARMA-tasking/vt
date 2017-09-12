@@ -60,9 +60,9 @@ using rdma_ptr_continuation_t = std::function<void(RDMA_PtrType)>;
 using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;
 
 using rdma_num_elems_t = int64_t;
-using rdma_block_elm_range_t = std::tuple<rdma_block_t,RDMA_ElmType,RDMA_ElmType>;
-using rdma_block_map_t = std::function<NodeType(rdma_block_t,rdma_block_t)>;
-using rdma_elm_map_t = std::function<rdma_block_elm_range_t(RDMA_ElmType,RDMA_ElmType,rdma_block_t)>;
+using rdma_block_elm_range_t = std::tuple<RDMA_BlockType,RDMA_ElmType,RDMA_ElmType>;
+using rdma_block_map_t = std::function<NodeType(RDMA_BlockType,RDMA_BlockType)>;
+using rdma_elm_map_t = std::function<rdma_block_elm_range_t(RDMA_ElmType,RDMA_ElmType,RDMA_BlockType)>;
 
 static constexpr Type uninitialized_rdma_type = Type::Uninitialized;
 static constexpr ByteType rdma_default_byte_size = sizeof(char);

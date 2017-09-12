@@ -27,7 +27,7 @@ static constexpr HandlerType const uninitialized_handler = -1;
 static constexpr rdma_handler_t const uninitialized_rdma_handler = -1;
 static constexpr RefType const not_shared_message = -1000;
 static constexpr RDMA_ElmType const no_rdma_elm = -1;
-static constexpr rdma_block_t const no_rdma_block = -1;
+static constexpr RDMA_BlockType const no_rdma_block = -1;
 
 } //end namespace runtime
 
