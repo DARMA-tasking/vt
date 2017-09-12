@@ -216,11 +216,11 @@ struct RDMAManager {
 
   void
   unregister_rdma_handler(
-    rdma_handle_t const& handle, rdma_handler_t const& handler,
+    rdma_handle_t const& handle, RDMA_HandlerType const& handler,
     TagType const& tag = no_tag
   );
 
-  rdma_handler_t
+  RDMA_HandlerType
   associate_get_function(
     rdma_handle_t const& han, rdma_get_function_t const& fn,
     bool const& any_tag = false, TagType const& tag = no_tag
@@ -228,7 +228,7 @@ struct RDMAManager {
     return associate_rdma_function<rdma_type_t::Get>(han, fn, any_tag, tag);
   }
 
-  rdma_handler_t
+  RDMA_HandlerType
   associate_put_function(
     rdma_handle_t const& han, rdma_put_function_t const& fn,
     bool const& any_tag = false, TagType const& tag = no_tag
@@ -431,7 +431,7 @@ private:
   );
 
   template <RDMAManager::rdma_type_t rdma_type, typename FunctionT>
-  rdma_handler_t
+  RDMA_HandlerType
   associate_rdma_function(
     rdma_handle_t const& han, FunctionT const& fn, bool const& any_tag,
     TagType const& tag
@@ -506,7 +506,7 @@ private:
   );
 
 public:
-  rdma_handler_t
+  RDMA_HandlerType
   allocate_new_rdma_handler();
 
   // handler functions for managing rdma operations
@@ -537,7 +537,7 @@ public:
 
 private:
   // next local rdma handler (used by State)
-  rdma_handler_t cur_rdma_handler = first_rdma_handler;
+  RDMA_HandlerType cur_rdma_handler = first_rdma_handler;
 
   // next local rdma identifier
   rdma_identifier_t cur_ident = first_rdma_identifier;

@@ -68,7 +68,7 @@ State::unregister_rdma_handler(
 
 void
 State::unregister_rdma_handler(
-  rdma_handler_t const& handler, TagType const& tag
+  RDMA_HandlerType const& handler, TagType const& tag
 ) {
   if (tag == no_tag) {
     if (this_rdma_get_handler == handler) {
@@ -97,7 +97,7 @@ State::unregister_rdma_handler(
 }
 
 template<>
-rdma_handler_t
+RDMA_HandlerType
 State::set_rdma_fn<
   State::rdma_type_t::Get, State::rdma_get_function_t
 >(rdma_get_function_t const& fn, bool const& any_tag, TagType const& tag) {
@@ -110,7 +110,7 @@ State::set_rdma_fn<
     tag, handle, print_bool(any_tag)
   );
 
-  rdma_handler_t const handler = make_rdma_handler(rdma_type_t::Get);
+  RDMA_HandlerType const handler = make_rdma_handler(rdma_type_t::Get);
 
   if (any_tag) {
     assert(
@@ -131,11 +131,11 @@ State::set_rdma_fn<
 }
 
 template<>
-rdma_handler_t
+RDMA_HandlerType
 State::set_rdma_fn<
   State::rdma_type_t::Put, State::rdma_put_function_t
 >(rdma_put_function_t const& fn, bool const& any_tag, TagType const& tag) {
-  rdma_handler_t const handler = make_rdma_handler(rdma_type_t::Put);
+  RDMA_HandlerType const handler = make_rdma_handler(rdma_type_t::Put);
 
   auto const& this_node = the_context->get_node();
 
@@ -163,9 +163,9 @@ State::set_rdma_fn<
   return handler;
 }
 
-rdma_handler_t
+RDMA_HandlerType
 State::make_rdma_handler(rdma_type_t const& rdma_type) {
-  rdma_handler_t& handler =
+  RDMA_HandlerType& handler =
     rdma_type == rdma_type_t::Put ? this_rdma_put_handler : this_rdma_get_handler;
 
   if (handler == uninitialized_rdma_handler) {

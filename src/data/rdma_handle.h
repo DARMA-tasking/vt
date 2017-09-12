@@ -8,7 +8,7 @@
 namespace runtime { namespace rdma {
 
 static_assert(
-  sizeof(rdma_handle_t) == sizeof(rdma_handler_t),
+  sizeof(rdma_handle_t) == sizeof(RDMA_HandlerType),
   "RDMA Handle and RDMA Handler IDs must be the same size"
 );
 

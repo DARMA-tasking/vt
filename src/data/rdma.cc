@@ -271,7 +271,7 @@ RDMAManager::register_new_rdma_handler(
 ) {
   auto const& this_node = the_context->get_node();
 
-  rdma_handler_t new_handle = rdma_handle_manager_t::create_new_handler();
+  RDMA_HandlerType new_handle = rdma_handle_manager_t::create_new_handler();
   rdma_identifier_t const& new_identifier =
     is_collective ? cur_collective_ident : cur_ident++;
 
@@ -321,7 +321,7 @@ RDMAManager::unregister_rdma_handler(
 
 void
 RDMAManager::unregister_rdma_handler(
-  rdma_handle_t const& han, rdma_handler_t const& handler, TagType const& tag
+  rdma_handle_t const& han, RDMA_HandlerType const& handler, TagType const& tag
 ) {
   auto holder_iter = holder.find(han);
   assert(
@@ -332,9 +332,9 @@ RDMAManager::unregister_rdma_handler(
   state.unregister_rdma_handler(handler, tag);
 }
 
-rdma_handler_t
+RDMA_HandlerType
 RDMAManager::allocate_new_rdma_handler() {
-  rdma_handler_t const handler = cur_rdma_handler++;
+  RDMA_HandlerType const handler = cur_rdma_handler++;
   return handler;
 }
 
