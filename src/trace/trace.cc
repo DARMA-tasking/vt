@@ -306,7 +306,7 @@ Trace::write_traces_file() {
 }
 
 void
-Trace::write_log_file(gzFile file, trace_container_t const& traces) {
+Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
   for (auto&& log : traces) {
     auto const& converted_time = time_to_int(log->time - start_time);
 

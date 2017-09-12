@@ -34,7 +34,7 @@ struct Trace {
   using TraceContainersType = TraceContainers<void>;
   using TimeIntegerType = int64_t;
   using LogPtrType = LogType*;
-  using trace_container_t = std::vector<LogPtrType>;
+  using TraceContainerType = std::vector<LogPtrType>;
   using trace_stack_t = std::stack<LogPtrType>;
 
   Trace();
@@ -104,7 +104,7 @@ struct Trace {
   write_traces_file();
 
   void
-  write_log_file(gzFile file, trace_container_t const& traces);
+  write_log_file(gzFile file, TraceContainerType const& traces);
 
   bool
   in_idle_event() const;
@@ -128,7 +128,7 @@ struct Trace {
   trace_begin_idle_trigger();
 
 private:
-  trace_container_t traces;
+  TraceContainerType traces;
 
   trace_stack_t open_events;
 
