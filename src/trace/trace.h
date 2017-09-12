@@ -29,13 +29,13 @@
 namespace runtime { namespace trace {
 
 struct Trace {
-  using log_t = Log;
+  using LogType = Log;
   using TraceConstantsType = TraceConstants;
   using TraceContainersType = TraceContainers<void>;
   using TimeIntegerType = int64_t;
-  using log_ptr_t = log_t*;
-  using trace_container_t = std::vector<log_ptr_t>;
-  using trace_stack_t = std::stack<log_ptr_t>;
+  using LogPtrType = LogType*;
+  using trace_container_t = std::vector<LogPtrType>;
+  using trace_stack_t = std::stack<LogPtrType>;
 
   Trace();
 
@@ -92,7 +92,7 @@ struct Trace {
   );
 
   TraceEventIDType
-  log_event(log_ptr_t log);
+  log_event(LogPtrType log);
 
   void
   enable_tracing();

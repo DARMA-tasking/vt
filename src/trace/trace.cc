@@ -63,7 +63,7 @@ Trace::begin_processing(
   TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
   auto const& type = TraceConstantsType::BeginProcessing;
-  log_ptr_t log = new log_t(time, ep, type);
+  LogPtrType log = new LogType(time, ep, type);
 
   debug_print(
     trace, node,
@@ -83,7 +83,7 @@ Trace::end_processing(
   TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
   auto const& type = TraceConstantsType::EndProcessing;
-  log_ptr_t log = new log_t(time, ep, type);
+  LogPtrType log = new LogType(time, ep, type);
 
   debug_print(
     trace, node,
@@ -100,7 +100,7 @@ Trace::end_processing(
 void
 Trace::begin_idle(double const& time) {
   auto const& type = TraceConstantsType::BeginIdle;
-  log_ptr_t log = new log_t(time, no_trace_entry_id, type);
+  LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(
     trace, node, "begin_idle: time=%f\n", time
@@ -116,7 +116,7 @@ Trace::begin_idle(double const& time) {
 void
 Trace::end_idle(double const& time) {
   auto const& type = TraceConstantsType::EndIdle;
-  log_ptr_t log = new log_t(time, no_trace_entry_id, type);
+  LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(
     trace, node, "end_idle: time=%f\n", time
@@ -134,7 +134,7 @@ Trace::message_creation(
   TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
   auto const& type = TraceConstantsType::Creation;
-  log_ptr_t log = new log_t(time, ep, type);
+  LogPtrType log = new LogType(time, ep, type);
 
   log->node = the_context->get_node();
   log->msg_len = len;
@@ -147,7 +147,7 @@ Trace::message_creation_bcast(
   TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
   auto const& type = TraceConstantsType::CreationBcast;
-  log_ptr_t log = new log_t(time, ep, type);
+  LogPtrType log = new LogType(time, ep, type);
 
   log->node = the_context->get_node();
   log->msg_len = len;
@@ -161,7 +161,7 @@ Trace::message_recv(
   NodeType const& from_node, double const& time
 ) {
   auto const& type = TraceConstantsType::MessageRecv;
-  log_ptr_t log = new log_t(time, ep, type);
+  LogPtrType log = new LogType(time, ep, type);
 
   log->node = from_node;
 
@@ -169,7 +169,7 @@ Trace::message_recv(
 }
 
 TraceEventIDType
-Trace::log_event(log_ptr_t log) {
+Trace::log_event(LogPtrType log) {
   if (not enabled) {
     return 0;
   }
@@ -184,7 +184,7 @@ Trace::log_event(log_ptr_t log) {
   auto grouped_begin = [&]() -> TraceEventIDType {
     if (not open_events.empty()) {
       traces.push_back(
-        new log_t(
+        new LogType(
           log->time, open_events.top()->ep, TraceConstantsType::EndProcessing
         )
       );
@@ -218,7 +218,7 @@ Trace::log_event(log_ptr_t log) {
 
     if (not open_events.empty()) {
       traces.push_back(
-        new log_t(
+        new LogType(
           log->time, open_events.top()->ep, TraceConstantsType::BeginProcessing
         )
       );
