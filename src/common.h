@@ -6,6 +6,7 @@
 
 // Include common types, their sizes, and sentinel values
 #include "common_types.h"
+#include "common_rdma_types.h"
 #include "common_type_sizes.h"
 #include "common_type_sentinels.h"
 
