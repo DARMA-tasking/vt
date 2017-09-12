@@ -26,8 +26,8 @@ AsyncEvent::EventHolder::make_ready_trigger() {
   the_event->container.erase(event->event_id);
 }
 
-event_t
-AsyncEvent::attach_action(event_t const& event, ActionType callable) {
+EventType
+AsyncEvent::attach_action(EventType const& event, ActionType callable) {
   auto const& this_node = the_context->get_node();
   auto const& event_id = create_normal_event_id(this_node);
   auto& holder = get_event_holder(event_id);

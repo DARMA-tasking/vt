@@ -14,9 +14,9 @@ EpochType test_epoch = -1;
 struct TestMsg : runtime::Message {
   int val;
   int val2;
-  event_t event;
+  EventType event;
 
-  TestMsg(int const& in_val, int const& in_val2, event_t const& in_event)
+  TestMsg(int const& in_val, int const& in_val2, EventType const& in_event)
     : val(in_val), val2(in_val2), event(in_event)
   { }
 };
@@ -31,14 +31,14 @@ void send_to_neighbor() {
 
   //the_msg->set_epoch_message(msg, test_epoch);
 
-  event_t evt = the_msg->send_msg(next, test_msg_han, msg, [=]{
+  EventType evt = the_msg->send_msg(next, test_msg_han, msg, [=]{
     //std::cout << "deleting msg" << std::endl;
     delete msg;
   });
 
   TestMsg* msg2 = new TestMsg(this_node, num_nodes, evt);
 
-  event_t evt2 = the_msg->send_msg(next, test_msg_han2, msg2, [=]{
+  EventType evt2 = the_msg->send_msg(next, test_msg_han2, msg2, [=]{
     //std::cout << "deleting msg" << std::endl;
     delete msg2;
   });

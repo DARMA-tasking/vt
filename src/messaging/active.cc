@@ -5,7 +5,7 @@
 
 namespace runtime {
 
-event_t
+EventType
 ActiveMessenger::send_msg_direct(
   HandlerType const& han, BaseMessage* const msg_base, int const& msg_size,
   ActionType next_action

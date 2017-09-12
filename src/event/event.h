@@ -17,10 +17,10 @@
 namespace runtime {
 
 struct Event {
-  event_t event_id = 0;
+  EventType event_id = 0;
   int event_tag = 0;
 
-  Event(event_t const& in_event_id, int const& event_tag_in)
+  Event(EventType const& in_event_id, int const& event_tag_in)
     : event_id(in_event_id), event_tag(event_tag_in)
   { }
 
@@ -41,16 +41,16 @@ struct ParentEvent : Event {
     return true;
   }
 
-  void add_event(event_t event) {
+  void add_event(EventType event) {
     events.push_back(event);
   }
 
-  ParentEvent(event_t const& in_event_id)
+  ParentEvent(EventType const& in_event_id)
     : Event(in_event_id, normal_event_tag)
   { }
 
 private:
-  std::vector<event_t> events;
+  std::vector<EventType> events;
 };
 
 struct NormalEvent : Event {
@@ -70,7 +70,7 @@ struct NormalEvent : Event {
     return true;
   }
 
-  NormalEvent(event_t const& in_event_id)
+  NormalEvent(EventType const& in_event_id)
     : Event(in_event_id, normal_event_tag)
   { }
 
@@ -103,7 +103,7 @@ struct MPIEvent : Event {
     return &req;
   }
 
-  MPIEvent(event_t const& in_event_id, ShortMessage* in_msg = nullptr)
+  MPIEvent(EventType const& in_event_id, ShortMessage* in_msg = nullptr)
     : Event(in_event_id, mpi_event_tag), msg(in_msg)
   { }
 
@@ -165,15 +165,15 @@ struct AsyncEvent {
 
   using event_holder_t = EventHolder;
   using event_holder_ptr_t = EventHolder*;
-  using event_container_t = std::unordered_map<event_t, event_holder_t>;
+  using event_container_t = std::unordered_map<EventType, event_holder_t>;
   using typed_event_container_t = std::list<event_holder_ptr_t>;
 
   AsyncEvent() = default;
 
   template <typename EventT>
-  event_t
+  EventType
   create_event_id(NodeType const& node) {
-    event_t const event = (event_t)node << (64 - (sizeof(NodeType) * 8)) | cur_event;
+    EventType const event = (EventType)node << (64 - (sizeof(NodeType) * 8)) | cur_event;
     cur_event++;
     std::unique_ptr<EventT> et = std::make_unique<EventT>(event);
     container.emplace(
@@ -185,12 +185,12 @@ struct AsyncEvent {
   }
 
   NodeType
-  get_owning_node(event_t const& event) {
+  get_owning_node(EventType const& event) {
     NodeType const node = event >> (64 - (sizeof(NodeType) * 8));
     return node;
   }
 
-  event_t
+  EventType
   create_mpi_event_id(NodeType const& node) {
     auto const& evt = create_event_id<MPIEvent>(node);
     auto& holder = get_event_holder(evt);
@@ -200,12 +200,12 @@ struct AsyncEvent {
     return evt;
   }
 
-  event_t
+  EventType
   create_normal_event_id(NodeType const& node) {
     return create_event_id<NormalEvent>(node);
   }
 
-  event_t
+  EventType
   create_parent_event_id(NodeType const& node) {
     auto const& evt = create_event_id<ParentEvent>(node);
     auto& holder = get_event_holder(evt);
@@ -216,7 +216,7 @@ struct AsyncEvent {
   }
 
   event_holder_t&
-  get_event_holder(event_t const& event) {
+  get_event_holder(EventType const& event) {
     auto const& owning_node = get_owning_node(event);
 
     debug_print(
@@ -239,19 +239,19 @@ struct AsyncEvent {
   }
 
   bool
-  holder_exists(event_t const& event) {
+  holder_exists(EventType const& event) {
     auto container_iter = container.find(event);
     return container_iter != container.end();
   }
 
   template <typename EventT>
   EventT&
-  get_event(event_t const& event) {
+  get_event(EventType const& event) {
     return *static_cast<EventT*>(get_event_holder(event).get_event());
   }
 
   event_state_t
-  test_event_complete(event_t const& event) {
+  test_event_complete(EventType const& event) {
     if (holder_exists(event)) {
       bool const is_ready = this->get_event_holder(event).get_event()->test_ready();
       if (is_ready) {
@@ -268,8 +268,8 @@ struct AsyncEvent {
     }
   }
 
-  event_t
-  attach_action(event_t const& event, ActionType callable);
+  EventType
+  attach_action(EventType const& event, ActionType callable);
 
   void
   test_events_trigger(
@@ -304,7 +304,7 @@ struct AsyncEvent {
   check_event_finished(EventCheckFinishedMsg* msg);
 
 private:
-  event_t cur_event = 0;
+  EventType cur_event = 0;
 
   typed_event_container_t event_container[2];
 

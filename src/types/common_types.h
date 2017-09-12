@@ -12,7 +12,7 @@ namespace runtime {
 using NodeType = uint16_t;
 using HandlerType = int32_t;
 using EnvelopeDataType = int8_t;
-using event_t = uint64_t;
+using EventType = uint64_t;
 using EpochType = int32_t;
 using TagType = int32_t;
 using BarrierType = uint64_t;

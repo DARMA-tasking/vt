@@ -59,7 +59,7 @@ struct ActiveMessenger {
   using message_t = ShortMessage*;
   using byte_t = int32_t;
   using pending_recv_t = PendingRecv;
-  using send_data_ret_t = std::tuple<event_t, TagType>;
+  using send_data_ret_t = std::tuple<EventType, TagType>;
   using send_fn_t = std::function<send_data_ret_t(rdma_get_t,NodeType,TagType,ActionType)>;
   using user_send_fn_t = std::function<void(send_fn_t)>;
   using container_pending_t = std::unordered_map<TagType, pending_recv_t>;
@@ -105,7 +105,7 @@ struct ActiveMessenger {
    */
 
   template <typename MessageT>
-  event_t send_msg(
+  EventType send_msg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
     ActionType next_action = nullptr
   ) {
@@ -114,7 +114,7 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT>
-  event_t send_msg(
+  EventType send_msg(
     HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   ) {
@@ -153,7 +153,7 @@ struct ActiveMessenger {
    */
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t broadcast_msg(
+  EventType broadcast_msg(
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
@@ -166,12 +166,12 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t broadcast_msg(MessageT* const msg, ActionType act) {
+  EventType broadcast_msg(MessageT* const msg, ActionType act) {
     return broadcast_msg<MessageT,f>(msg,no_tag,act);
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t send_msg(
+  EventType send_msg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   ) {
@@ -184,7 +184,7 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
+  EventType send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
     return send_msg<MessageT,f>(dest,msg,no_tag,act);
   }
 
@@ -216,7 +216,7 @@ struct ActiveMessenger {
    */
 
   template <active_basic_function_t* f, typename MessageT>
-  event_t broadcast_msg(
+  EventType broadcast_msg(
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
     HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
@@ -229,12 +229,12 @@ struct ActiveMessenger {
   }
 
   template <active_basic_function_t* f, typename MessageT>
-  event_t broadcast_msg(MessageT* const msg, ActionType act) {
+  EventType broadcast_msg(MessageT* const msg, ActionType act) {
     return broadcast_msg<f,MessageT>(msg,no_tag,act);
   }
 
   template <active_basic_function_t* f, typename MessageT>
-  event_t send_msg(
+  EventType send_msg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   ) {
@@ -247,7 +247,7 @@ struct ActiveMessenger {
   }
 
   template <active_basic_function_t* f, typename MessageT>
-  event_t send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
+  EventType send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
     return send_msg<f,MessageT>(dest,msg,no_tag,act);
   }
 
@@ -272,7 +272,7 @@ struct ActiveMessenger {
    */
 
   template <typename FunctorT, typename MessageT>
-  event_t broadcast_msg(
+  EventType broadcast_msg(
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
     HandlerType const& han =
@@ -285,12 +285,12 @@ struct ActiveMessenger {
   }
 
   template <typename FunctorT, typename MessageT>
-  event_t broadcast_msg(MessageT* const msg, ActionType act) {
+  EventType broadcast_msg(MessageT* const msg, ActionType act) {
     return broadcast_msg<FunctorT,MessageT>(msg,no_tag,act);
   }
 
   template <typename FunctorT, typename MessageT>
-  event_t send_msg(
+  EventType send_msg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   ) {
@@ -304,7 +304,7 @@ struct ActiveMessenger {
   }
 
   template <typename FunctorT, typename MessageT>
-  event_t send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
+  EventType send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
     return send_msg<FunctorT,MessageT>(dest,msg,no_tag,act);
   }
 
@@ -324,7 +324,7 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
   template <typename MessageT>
-  event_t send_msg(
+  EventType send_msg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
     user_send_fn_t send_payload_fn, ActionType next_action = nullptr
   ) {
@@ -342,7 +342,7 @@ struct ActiveMessenger {
   }
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t send_msg(
+  EventType send_msg(
     NodeType const& dest, MessageT* const msg, user_send_fn_t send_payload_fn,
     ActionType next_action = nullptr
   ) {
@@ -371,7 +371,7 @@ struct ActiveMessenger {
   );
 
   template <typename MessageT>
-  event_t broadcast_msg(
+  EventType broadcast_msg(
     HandlerType const& han, MessageT* const msg, ActionType next_action = nullptr
   ) {
     auto const& this_node = the_context->get_node();
@@ -379,7 +379,7 @@ struct ActiveMessenger {
     return send_msg(this_node, han, msg, next_action);
   }
 
-  event_t send_msg_direct(
+  EventType send_msg_direct(
     HandlerType const& han, BaseMessage* const msg, int const& msg_size,
     ActionType next_action = nullptr
   );
@@ -400,7 +400,7 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
   template <typename MessageT, action_any_function_t<MessageT>* f>
-  event_t send_msg_callback(
+  EventType send_msg_callback(
     NodeType const& dest, MessageT* const msg, active_function_t fn
   ) {
     HandlerType const& this_han = register_new_handler(fn, no_tag);
