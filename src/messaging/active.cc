@@ -171,7 +171,7 @@ ActiveMessenger::send_msg_direct(
 
 ActiveMessenger::send_data_ret_t
 ActiveMessenger::send_data(
-  rdma_get_t const& ptr, NodeType const& dest, tag_t const& tag,
+  rdma_get_t const& ptr, NodeType const& dest, TagType const& tag,
   action_t next_action
 ) {
   auto const& this_node = the_context->get_node();
@@ -206,7 +206,7 @@ ActiveMessenger::send_data(
 
 bool
 ActiveMessenger::recv_data_msg(
-  tag_t const& tag, NodeType const& node, rdma_continuation_del_t next
+  TagType const& tag, NodeType const& node, rdma_continuation_del_t next
 ) {
   return recv_data_msg(tag, node, true, next);
 }
@@ -237,7 +237,7 @@ ActiveMessenger::process_data_msg_recv() {
 
 bool
 ActiveMessenger::recv_data_msg_buffer(
-  void* const user_buf, tag_t const& tag, NodeType const& node,
+  void* const user_buf, TagType const& tag, NodeType const& node,
   bool const& enqueue, action_t dealloc_user_buf, rdma_continuation_del_t next
 ) {
   if (not enqueue) {
@@ -311,7 +311,7 @@ ActiveMessenger::recv_data_msg_buffer(
 
 bool
 ActiveMessenger::recv_data_msg(
-  tag_t const& tag, NodeType const& recv_node, bool const& enqueue,
+  TagType const& tag, NodeType const& recv_node, bool const& enqueue,
   rdma_continuation_del_t next
 ) {
   return recv_data_msg_buffer(nullptr, tag, recv_node, enqueue, nullptr, next);
@@ -501,20 +501,20 @@ ActiveMessenger::process_maybe_ready_han_tag() {
 }
 
 HandlerType
-ActiveMessenger::register_new_handler(active_function_t fn, tag_t const& tag) {
+ActiveMessenger::register_new_handler(active_function_t fn, TagType const& tag) {
   return the_registry->register_new_handler(fn, tag);
 }
 
 HandlerType
 ActiveMessenger::collective_register_handler(
-  active_function_t fn, tag_t const& tag
+  active_function_t fn, TagType const& tag
 ) {
   return the_registry->register_active_handler(fn, tag);
 }
 
 void
 ActiveMessenger::swap_handler_fn(
-  HandlerType const& han, active_function_t fn, tag_t const& tag
+  HandlerType const& han, active_function_t fn, TagType const& tag
 ) {
   the_registry->swap_handler(han, fn, tag);
 
@@ -525,7 +525,7 @@ ActiveMessenger::swap_handler_fn(
 
 void
 ActiveMessenger::deliver_pending_msgs_on_han(
-  HandlerType const& han, tag_t const& tag
+  HandlerType const& han, TagType const& tag
 ) {
   auto iter = pending_handler_msgs.find(han);
   if (iter != pending_handler_msgs.end()) {
@@ -543,7 +543,7 @@ ActiveMessenger::deliver_pending_msgs_on_han(
 
 void
 ActiveMessenger::register_handler_fn(
-  HandlerType const& han, active_function_t fn, tag_t const& tag
+  HandlerType const& han, active_function_t fn, TagType const& tag
 ) {
   swap_handler_fn(han, fn, tag);
 
@@ -554,7 +554,7 @@ ActiveMessenger::register_handler_fn(
 
 void
 ActiveMessenger::unregister_handler_fn(
-  HandlerType const& han, tag_t const& tag
+  HandlerType const& han, TagType const& tag
 ) {
   return the_registry->unregister_handler_fn(han, tag);
 }

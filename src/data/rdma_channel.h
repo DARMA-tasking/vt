@@ -26,7 +26,7 @@ struct Channel {
 
   Channel(
     rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
-    NodeType const& in_target, tag_t const& in_channel_group_tag,
+    NodeType const& in_target, TagType const& in_channel_group_tag,
     NodeType const& in_non_target = uninitialized_destination,
     rdma_ptr_t const& in_ptr = nullptr, byte_t const& in_num_bytes = no_byte
   );
@@ -80,7 +80,7 @@ private:
   rdma_ptr_t ptr = no_rdma_ptr;
   rdma_type_t op_type = uninitialized_rdma_type;
 
-  tag_t channel_group_tag = no_tag;
+  TagType channel_group_tag = no_tag;
 
   MPI_Win window;
   MPI_Group channel_group;

@@ -5,9 +5,9 @@
 using namespace runtime;
 
 static HandlerType my_reinstate_fn = uninitialized_handler;
-static tag_t const first_recv_tag = 10;
-static tag_t const last_recv_tag = 15;
-static tag_t cur_iter = first_recv_tag;
+static TagType const first_recv_tag = 10;
+static TagType const last_recv_tag = 15;
+static TagType cur_iter = first_recv_tag;
 static int count = 0;
 
 struct TestMsg : runtime::Message {

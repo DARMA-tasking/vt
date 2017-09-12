@@ -202,13 +202,13 @@ struct EpochEnvelope {
 
 struct TagEnvelope {
   Envelope env;
-  tag_t tag : tag_num_bits;
+  TagType tag : tag_num_bits;
 };
 
 struct EpochTagEnvelope {
   Envelope env;
   EpochType epoch : epoch_num_bits;
-  tag_t tag : tag_num_bits;
+  TagType tag : tag_num_bits;
 };
 
 template <typename Env>
@@ -235,7 +235,7 @@ inline void envelope_set_epoch(Env& env, EpochType const& epoch) {
 }
 
 template <typename Env>
-inline tag_t envelope_get_tag(Env const& env) {
+inline TagType envelope_get_tag(Env const& env) {
   if (envelope_is_epoch_type(env) and envelope_is_tag_type(env)) {
     return reinterpret_cast<EpochTagEnvelope const*>(&env)->tag;
   } else if (envelope_is_tag_type(env)) {
@@ -247,7 +247,7 @@ inline tag_t envelope_get_tag(Env const& env) {
 }
 
 template <typename Env>
-inline void envelope_set_tag(Env& env, tag_t const& tag) {
+inline void envelope_set_tag(Env& env, TagType const& tag) {
   if (envelope_is_epoch_type(env) and envelope_is_tag_type(env)) {
     reinterpret_cast<EpochTagEnvelope*>(&env)->tag = tag;
   } else if (envelope_is_tag_type(env)) {

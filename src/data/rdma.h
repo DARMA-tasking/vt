@@ -45,7 +45,7 @@ struct RDMAManager {
   void
   put_typed_data(
     rdma_handle_t const& rdma_handle, T ptr,
-    byte_t const& num_elems, byte_t const& offset, tag_t const& tag,
+    byte_t const& num_elems, byte_t const& offset, TagType const& tag,
     action_t cont = no_action, action_t action_after_put = no_action
   ) {
     byte_t const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
@@ -82,7 +82,7 @@ struct RDMAManager {
   void
   put_data(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
-    byte_t const& num_bytes, byte_t const& offset, tag_t const& tag,
+    byte_t const& num_bytes, byte_t const& offset, TagType const& tag,
     action_t cont = no_action, action_t action_after_put = no_action,
     NodeType const& collective_node = uninitialized_destination
   );
@@ -91,7 +91,7 @@ struct RDMAManager {
   get_data_into_buf(
     rdma_handle_t const& rdma_handle, rdma_ptr_t const& ptr,
     byte_t const& num_bytes, byte_t const& offset,
-    tag_t const& tag = no_tag, action_t next_action = no_action,
+    TagType const& tag = no_tag, action_t next_action = no_action,
     byte_t const& elm_size = rdma_default_byte_size,
     NodeType const& collective_node = uninitialized_destination
   );
@@ -126,7 +126,7 @@ struct RDMAManager {
   void
   get_typed_data_info_buf(
     rdma_handle_t const& rdma_handle, T ptr, byte_t const& num_elems,
-    byte_t const& elm_offset = no_byte, tag_t const& tag = no_tag,
+    byte_t const& elm_offset = no_byte, TagType const& tag = no_tag,
     action_t next_action = no_action
   ) {
     byte_t const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
@@ -158,7 +158,7 @@ struct RDMAManager {
 
   void
   get_data(
-    rdma_handle_t const& rdma_handle, tag_t const& tag, byte_t const& num_bytes,
+    rdma_handle_t const& rdma_handle, TagType const& tag, byte_t const& num_bytes,
     byte_t const& offset, rdma_recv_t cont
   );
 
@@ -211,19 +211,19 @@ struct RDMAManager {
   void
   unregister_rdma_handler(
     rdma_handle_t const& handle, rdma_type_t const& type = rdma_type_t::GetOrPut,
-    tag_t const& tag = no_tag, bool const& use_default = false
+    TagType const& tag = no_tag, bool const& use_default = false
   );
 
   void
   unregister_rdma_handler(
     rdma_handle_t const& handle, rdma_handler_t const& handler,
-    tag_t const& tag = no_tag
+    TagType const& tag = no_tag
   );
 
   rdma_handler_t
   associate_get_function(
     rdma_handle_t const& han, rdma_get_function_t const& fn,
-    bool const& any_tag = false, tag_t const& tag = no_tag
+    bool const& any_tag = false, TagType const& tag = no_tag
   ) {
     return associate_rdma_function<rdma_type_t::Get>(han, fn, any_tag, tag);
   }
@@ -231,7 +231,7 @@ struct RDMAManager {
   rdma_handler_t
   associate_put_function(
     rdma_handle_t const& han, rdma_put_function_t const& fn,
-    bool const& any_tag = false, tag_t const& tag = no_tag
+    bool const& any_tag = false, TagType const& tag = no_tag
   ) {
     return associate_rdma_function<rdma_type_t::Put>(han, fn, any_tag, tag);
   }
@@ -419,13 +419,13 @@ private:
     rdma_type_t const& type, rdma_handle_t const& han, NodeType const& non_target,
     action_t const& action = nullptr,
     NodeType const& override_target = uninitialized_destination,
-    tag_t const& channel_tag = no_tag, byte_t const& num_bytes = no_byte
+    TagType const& channel_tag = no_tag, byte_t const& num_bytes = no_byte
   );
 
   void
   create_direct_channel_finish(
     rdma_type_t const& type, rdma_handle_t const& han, NodeType const& non_target,
-    action_t const& action, tag_t const& channel_tag, bool const& is_target,
+    action_t const& action, TagType const& channel_tag, bool const& is_target,
     byte_t const& num_bytes,
     NodeType const& override_target = uninitialized_destination
   );
@@ -434,7 +434,7 @@ private:
   rdma_handler_t
   associate_rdma_function(
     rdma_handle_t const& han, FunctionT const& fn, bool const& any_tag,
-    tag_t const& tag
+    TagType const& tag
   ) {
     auto const& this_node = the_context->get_node();
     auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);
@@ -458,20 +458,20 @@ private:
   void
   request_get_data(
     GetMessage* msg, bool const& is_user_msg,
-    rdma_handle_t const& rdma_handle, tag_t const& tag, byte_t const& num_bytes,
+    rdma_handle_t const& rdma_handle, TagType const& tag, byte_t const& num_bytes,
     byte_t const& offset, rdma_ptr_t const& ptr = nullptr,
     rdma_continuation_t cont = no_action, action_t next_action = no_action
   );
 
   void
   trigger_get_recv_data(
-    rdma_op_t const& op, tag_t const& tag, rdma_ptr_t ptr,
+    rdma_op_t const& op, TagType const& tag, rdma_ptr_t ptr,
     byte_t const& num_bytes, action_t const& action = no_action
   );
 
   void
   trigger_put_recv_data(
-    rdma_handle_t const& han, tag_t const& tag, rdma_ptr_t ptr,
+    rdma_handle_t const& han, TagType const& tag, rdma_ptr_t ptr,
     byte_t const& num_bytes, byte_t const& offset, action_t const& action
   );
 
@@ -480,13 +480,13 @@ private:
 
   rdma_ptr_t
   try_put_ptr(
-    rdma_handle_t const& han, tag_t const& tag
+    rdma_handle_t const& han, TagType const& tag
   );
 
   void
   trigger_put_back_data(rdma_op_t const& op);
 
-  tag_t
+  TagType
   next_rdma_channel_tag();
 
   byte_t
@@ -557,7 +557,7 @@ private:
   // Live channels that can be used to hardware-level get/put ops
   rdma_live_channels_t channels;
 
-  tag_t next_channel_tag = first_rdma_channel_tag;
+  TagType next_channel_tag = first_rdma_channel_tag;
 };
 
 }} //end namespace runtime::rdma

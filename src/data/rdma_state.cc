@@ -38,7 +38,7 @@ State::set_default_handler() {
 
 void
 State::unregister_rdma_handler(
-  rdma_type_t const& type, tag_t const& tag, bool const& use_default
+  rdma_type_t const& type, TagType const& tag, bool const& use_default
 ) {
   if (type == rdma_type_t::Get or type == rdma_type_t::GetOrPut) {
     if (tag == no_tag or use_default) {
@@ -68,7 +68,7 @@ State::unregister_rdma_handler(
 
 void
 State::unregister_rdma_handler(
-  rdma_handler_t const& handler, tag_t const& tag
+  rdma_handler_t const& handler, TagType const& tag
 ) {
   if (tag == no_tag) {
     if (this_rdma_get_handler == handler) {
@@ -100,7 +100,7 @@ template<>
 rdma_handler_t
 State::set_rdma_fn<
   State::rdma_type_t::Get, State::rdma_get_function_t
->(rdma_get_function_t const& fn, bool const& any_tag, tag_t const& tag) {
+>(rdma_get_function_t const& fn, bool const& any_tag, TagType const& tag) {
 
   auto const& this_node = the_context->get_node();
 
@@ -134,7 +134,7 @@ template<>
 rdma_handler_t
 State::set_rdma_fn<
   State::rdma_type_t::Put, State::rdma_put_function_t
->(rdma_put_function_t const& fn, bool const& any_tag, tag_t const& tag) {
+>(rdma_put_function_t const& fn, bool const& any_tag, TagType const& tag) {
   rdma_handler_t const handler = make_rdma_handler(rdma_type_t::Put);
 
   auto const& this_node = the_context->get_node();
@@ -176,7 +176,7 @@ State::make_rdma_handler(rdma_type_t const& rdma_type) {
 }
 
 bool
-State::test_ready_get_data(tag_t const& tag) {
+State::test_ready_get_data(TagType const& tag) {
   bool const not_ready = (
     ((tag == no_tag or get_any_tag) and rdma_get_fn == nullptr) or (
       tag != no_tag and
@@ -188,7 +188,7 @@ State::test_ready_get_data(tag_t const& tag) {
 }
 
 bool
-State::test_ready_put_data(tag_t const& tag) {
+State::test_ready_put_data(TagType const& tag) {
   bool const not_ready = (
     ((tag == no_tag or put_any_tag) and rdma_put_fn == nullptr) or (
       tag != no_tag and
@@ -201,7 +201,7 @@ State::test_ready_put_data(tag_t const& tag) {
 
 rdma_get_t
 State::default_get_handler_fn(
-  BaseMessage* msg, byte_t req_num_bytes, byte_t req_offset, tag_t tag
+  BaseMessage* msg, byte_t req_num_bytes, byte_t req_offset, TagType tag
 ) {
   auto const& this_node = the_context->get_node();
 
@@ -225,7 +225,7 @@ State::default_get_handler_fn(
 void
 State::default_put_handler_fn(
   BaseMessage* msg, rdma_ptr_t in_ptr, byte_t req_num_bytes,
-  byte_t req_offset, tag_t tag
+  byte_t req_offset, TagType tag
 ) {
   auto const& this_node = the_context->get_node();
 
@@ -324,7 +324,7 @@ State::put_data(
 }
 
 void
-State::process_pending_get(tag_t const& tag) {
+State::process_pending_get(TagType const& tag) {
   bool const ready = test_ready_get_data(tag);
   assert(ready and "Must be ready to process pending");
 

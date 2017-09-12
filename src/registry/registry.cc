@@ -6,7 +6,7 @@ namespace runtime {
 
 HandlerType
 Registry::register_new_handler(
-  active_function_t fn, tag_t const& tag, bool const& is_collective
+  active_function_t fn, TagType const& tag, bool const& is_collective
 ) {
   auto const& this_node = the_context->get_node();
 
@@ -30,7 +30,7 @@ Registry::register_new_handler(
 
 void
 Registry::swap_handler(
-  HandlerType const& han, active_function_t fn, tag_t const& tag
+  HandlerType const& han, active_function_t fn, TagType const& tag
 ) {
   if (tag == no_tag) {
     auto iter = registered.find(han);
@@ -54,12 +54,12 @@ Registry::swap_handler(
 }
 
 void
-Registry::unregister_handler_fn(HandlerType const& han, tag_t const& tag) {
+Registry::unregister_handler_fn(HandlerType const& han, TagType const& tag) {
   swap_handler(han, nullptr, tag);
 }
 
 HandlerType
-Registry::register_active_handler(active_function_t fn, tag_t const& tag) {
+Registry::register_active_handler(active_function_t fn, TagType const& tag) {
   return register_new_handler(fn, tag, true);
 }
 
@@ -90,7 +90,7 @@ Registry::save_trigger(HandlerType const& han, active_function_t fn) {
 }
 
 active_function_t
-Registry::get_handler(HandlerType const& han, tag_t const& tag) {
+Registry::get_handler(HandlerType const& han, TagType const& tag) {
   if (tag == no_tag) {
     return get_handler_no_tag(han);
   } else {

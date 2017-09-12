@@ -29,7 +29,7 @@ struct State {
   using rdma_tag_put_holder_t = std::tuple<rdma_put_function_t, rdma_handler_t>;
 
   template <typename T>
-  using tag_container_t = std::unordered_map<tag_t, T>;
+  using tag_container_t = std::unordered_map<TagType, T>;
 
   template <typename T>
   using container_t = std::vector<T>;
@@ -48,27 +48,27 @@ struct State {
   template <rdma_type_t rdma_type, typename FunctionT>
   rdma_handler_t
   set_rdma_fn(
-    FunctionT const& fn, bool const& any_tag = false, tag_t const& tag = no_tag
+    FunctionT const& fn, bool const& any_tag = false, TagType const& tag = no_tag
   );
 
   void
   unregister_rdma_handler(
-    rdma_type_t const& type, tag_t const& tag, bool const& use_default
+    rdma_type_t const& type, TagType const& tag, bool const& use_default
   );
 
   void
   unregister_rdma_handler(
-    rdma_handler_t const& handler, tag_t const& tag
+    rdma_handler_t const& handler, TagType const& tag
   );
 
   rdma_handler_t
   make_rdma_handler(rdma_type_t const& rdma_type);
 
   bool
-  test_ready_get_data(tag_t const& tag);
+  test_ready_get_data(TagType const& tag);
 
   bool
-  test_ready_put_data(tag_t const& tag);
+  test_ready_put_data(TagType const& tag);
 
   void
   get_data(
@@ -81,20 +81,20 @@ struct State {
   );
 
   void
-  process_pending_get(tag_t const& tag = no_tag);
+  process_pending_get(TagType const& tag = no_tag);
 
   void
   set_default_handler();
 
   rdma_get_t
   default_get_handler_fn(
-    BaseMessage* msg, byte_t num_bytes, byte_t req_offset, tag_t tag
+    BaseMessage* msg, byte_t num_bytes, byte_t req_offset, TagType tag
   );
 
   void
   default_put_handler_fn(
     BaseMessage* msg, rdma_ptr_t in_ptr, byte_t in_num_bytes,
-    byte_t req_offset, tag_t tag
+    byte_t req_offset, TagType tag
   );
 
   bool using_default_put_handler = false;
@@ -122,13 +122,13 @@ template<>
 rdma_handler_t
 State::set_rdma_fn<
   State::rdma_type_t::Put, State::rdma_put_function_t
->(rdma_put_function_t const& fn, bool const& any_tag, tag_t const& tag);
+>(rdma_put_function_t const& fn, bool const& any_tag, TagType const& tag);
 
 template<>
 rdma_handler_t
 State::set_rdma_fn<
   State::rdma_type_t::Get, State::rdma_get_function_t
->(rdma_get_function_t const& fn, bool const& any_tag, tag_t const& tag);
+>(rdma_get_function_t const& fn, bool const& any_tag, TagType const& tag);
 
 
 }} //end namespace runtime::rdma

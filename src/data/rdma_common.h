@@ -16,7 +16,7 @@ using rdma_identifier_t = int32_t;
 
 static constexpr rdma_identifier_t const first_rdma_identifier = 1;
 static constexpr rdma_identifier_t const uninitialized_rdma_identifier = -1;
-static constexpr tag_t const first_rdma_channel_tag = 1;
+static constexpr TagType const first_rdma_channel_tag = 1;
 
 // 64 bits: RDMA handle
 //   int64_t handle/handler : [24..56]
@@ -53,8 +53,8 @@ using rdma_op_t = int64_t;
 
 static constexpr rdma_op_t const no_rdma_op = -1;
 
-using active_get_function_t = std::function<rdma_get_t(BaseMessage*, byte_t, byte_t, tag_t)>;
-using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t, byte_t, byte_t, tag_t)>;
+using active_get_function_t = std::function<rdma_get_t(BaseMessage*, byte_t, byte_t, TagType)>;
+using active_put_function_t = std::function<void(BaseMessage*, rdma_ptr_t, byte_t, byte_t, TagType)>;
 
 using rdma_ptr_continuation_t = std::function<void(rdma_ptr_t)>;
 using rdma_recv_t = std::function<void(void* ptr, size_t num_bytes)>;

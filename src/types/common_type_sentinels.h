@@ -13,7 +13,7 @@ static constexpr int const mpi_event_tag = 0;
 static constexpr int const normal_event_tag = 1;
 
 static constexpr EpochType const no_epoch = -1;
-static constexpr tag_t const no_tag = -1;
+static constexpr TagType const no_tag = -1;
 static constexpr event_t const no_event = -1;
 static constexpr barrier_t const no_barrier = -1;
 static constexpr rdma_handle_t const no_rdma_handle = -1;

@@ -33,7 +33,7 @@ static void tell_handle(TestMsg* msg) {
 static double* my_data = nullptr;
 
 static rdma_get_t
-test_get_fn(BaseMessage* msg, byte_t num_bytes, byte_t offset, tag_t tag) {
+test_get_fn(BaseMessage* msg, byte_t num_bytes, byte_t offset, TagType tag) {
   printf(
     "%d: running test_get_fn: msg=%p, num_bytes=%lld, tag=%d\n",
     my_node, msg, num_bytes, tag

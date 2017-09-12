@@ -15,32 +15,32 @@ namespace runtime {
 struct Registry {
   using handler_manager_t = HandlerManager;
   using handler_bits_t = HandlerBits;
-  using tagged_HandlerType = std::tuple<tag_t, HandlerType>;
+  using tagged_HandlerType = std::tuple<TagType, HandlerType>;
   using container_t = std::unordered_map<HandlerType, active_function_t>;
-  using tag_container_t = std::unordered_map<tag_t, active_function_t>;
+  using tag_container_t = std::unordered_map<TagType, active_function_t>;
   using han_tag_container_t = std::unordered_map<HandlerType, tag_container_t>;
 
   Registry() = default;
 
   HandlerType
   register_new_handler(
-    active_function_t fn, tag_t const& tag = no_tag,
+    active_function_t fn, TagType const& tag = no_tag,
     bool const& is_collective = false
   );
 
   void
-  unregister_handler_fn(HandlerType const& han, tag_t const& tag = no_tag);
+  unregister_handler_fn(HandlerType const& han, TagType const& tag = no_tag);
 
   void
   swap_handler(
-    HandlerType const& han, active_function_t fn, tag_t const& tag = no_tag
+    HandlerType const& han, active_function_t fn, TagType const& tag = no_tag
   );
 
   HandlerType
-  register_active_handler(active_function_t fn, tag_t const& tag = no_tag);
+  register_active_handler(active_function_t fn, TagType const& tag = no_tag);
 
   active_function_t
-  get_handler(HandlerType const& han, tag_t const& tag = no_tag);
+  get_handler(HandlerType const& han, TagType const& tag = no_tag);
 
   active_function_t
   get_handler_no_tag(HandlerType const& han);

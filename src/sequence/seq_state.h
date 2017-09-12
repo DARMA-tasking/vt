@@ -12,7 +12,7 @@ struct SeqMsgState {
   using action_t = Action<MessageT>;
 
   template <typename T>
-  using tag_container_t = std::unordered_map<tag_t, T>;
+  using tag_container_t = std::unordered_map<TagType, T>;
 
   using action_container_t = std::list<action_t>;
   using tagged_action_container_t = tag_container_t<action_container_t>;

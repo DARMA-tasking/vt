@@ -103,7 +103,7 @@ struct TaggedSequencer {
     action_any_function_t<MessageT>* f,
     action_any_function_t<MessageT>* trigger
   >
-  void wait(tag_t const& tag = no_tag) {
+  void wait(TagType const& tag = no_tag) {
     /*
      * Overload for a migratable variant---for now just forward to
      * non-migratable
@@ -124,7 +124,7 @@ struct TaggedSequencer {
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
   void
-  wait(tag_t const& tag, seq_trigger_type_t<MessageT> trigger) {
+  wait(TagType const& tag, seq_trigger_type_t<MessageT> trigger) {
     /*
      * Migratablity---this wait variant is not migratable, due to the
      * non-registration of trigger
@@ -253,7 +253,7 @@ public:
 
     auto const& is_tag_type = envelope_is_tag_type(msg->env);
 
-    tag_t const& msg_tag = is_tag_type ? envelope_get_tag(msg->env) : no_tag;
+    TagType const& msg_tag = is_tag_type ? envelope_get_tag(msg->env) : no_tag;
 
     // try to find a matching action that is posted for this tag
     if (msg_tag == no_tag) {
