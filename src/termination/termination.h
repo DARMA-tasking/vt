@@ -18,15 +18,15 @@ namespace runtime { namespace term {
 using namespace runtime::epoch;
 
 struct TerminationDetector : Tree {
-  using term_state_t = TermState;
-  using action_container_t = std::vector<ActionType>;
+  using TermStateType = TermState;
+  using ActionContainerType = std::vector<ActionType>;
 
   TerminationDetector() {
-    any_epoch_state.recv_event_count = 1;
+    any_epoch_state_.recv_event_count = 1;
   }
 
   template <typename T>
-  using epoch_container_t = std::unordered_map<EpochType, T>;
+  using EpochContainerType = std::unordered_map<EpochType, T>;
 
   inline void
   produce(EpochType const& epoch = no_epoch) {
@@ -50,7 +50,7 @@ struct TerminationDetector : Tree {
   );
 
   bool
-  propagate_epoch(EpochType const& epoch, term_state_t& state);
+  propagate_epoch(EpochType const& epoch, TermStateType& state);
 
   void
   epoch_finished(EpochType const& epoch);
@@ -101,22 +101,22 @@ struct TerminationDetector : Tree {
   epoch_continue_handler(TermMsg* msg);
 
 private:
-  EpochType cur_epoch = no_epoch;
+  EpochType cur_epoch_ = no_epoch;
 
   // the epoch window [fst, lst]
-  EpochType first_resolved_epoch = no_epoch, last_resolved_epoch = no_epoch;
+  EpochType first_resolved_epoch_ = no_epoch, last_resolved_epoch_ = no_epoch;
 
   // global termination state
-  term_state_t any_epoch_state;
+  TermStateType any_epoch_state_;
 
   // epoch termination state
-  epoch_container_t<term_state_t> epoch_state;
+  EpochContainerType<TermStateType> epoch_state_;
 
   // action container for global termination
-  action_container_t global_term_actions;
+  ActionContainerType global_term_actions_;
 
   // action container for each epoch
-  epoch_container_t<action_container_t> epoch_actions;
+  EpochContainerType<ActionContainerType> epoch_actions_;
 };
 
 }} //end namespace runtime::term

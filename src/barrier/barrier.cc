@@ -4,31 +4,28 @@
 
 namespace runtime { namespace barrier {
 
-/*static*/ void
-Barrier::barrier_up(BarrierMsg* msg) {
+/*static*/ void Barrier::barrier_up(BarrierMsg* msg) {
   the_barrier->barrier_up(
     msg->is_named, msg->is_wait, msg->barrier, msg->skip_term
   );
 }
 
-/*static*/ void
-Barrier::barrier_down(BarrierMsg* msg) {
+/*static*/ void Barrier::barrier_down(BarrierMsg* msg) {
   the_barrier->barrier_down(msg->is_named, msg->is_wait, msg->barrier);
 }
 
-Barrier::barrier_state_t&
-Barrier::insert_find_barrier(
+Barrier::BarrierStateType& Barrier::insert_find_barrier(
   bool const& is_named, bool const& is_wait, BarrierType const& barrier,
   ActionType cont_action
 ) {
-  auto& state = is_named ? named_barrier_state : unnamed_barrier_state;
+  auto& state = is_named ? named_barrier_state_ : unnamed_barrier_state_;
 
   auto iter = state.find(barrier);
   if (iter == state.end()) {
     state.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(barrier),
-      std::forward_as_tuple(barrier_state_t{is_named, barrier, is_wait})
+      std::forward_as_tuple(BarrierStateType{is_named, barrier, is_wait})
     );
     iter = state.find(barrier);
   }
@@ -45,11 +42,10 @@ Barrier::insert_find_barrier(
   return iter->second;
 }
 
-void
-Barrier::remove_barrier(
+void Barrier::remove_barrier(
   bool const& is_named, bool const& is_wait, BarrierType const& barrier
 ) {
-  auto& state = is_named ? named_barrier_state : unnamed_barrier_state;
+  auto& state = is_named ? named_barrier_state_ : unnamed_barrier_state_;
 
   auto iter = state.find(barrier);
   assert(
@@ -59,22 +55,19 @@ Barrier::remove_barrier(
   state.erase(iter);
 }
 
-BarrierType
-Barrier::new_named_barrier() {
+BarrierType Barrier::new_named_barrier() {
   setup_tree();
-  BarrierType const next_barrier = cur_named_barrier++;
+  BarrierType const next_barrier = cur_named_barrier_++;
   return next_barrier;
 }
 
-
-void
-Barrier::wait_barrier(BarrierType const& barrier, bool const skip_term) {
+void Barrier::wait_barrier(BarrierType const& barrier, bool const skip_term) {
   setup_tree();
 
   bool const is_wait = true;
   bool const is_named = barrier != no_barrier;
 
-  BarrierType const next_barrier = is_named ? barrier : cur_unnamed_barrier++;
+  BarrierType const next_barrier = is_named ? barrier : cur_unnamed_barrier_++;
 
   auto& barrier_state = insert_find_barrier(is_named, is_wait, next_barrier);
 
@@ -87,8 +80,7 @@ Barrier::wait_barrier(BarrierType const& barrier, bool const skip_term) {
   remove_barrier(is_named, is_wait, next_barrier);
 }
 
-void
-Barrier::cont_barrier(
+void Barrier::cont_barrier(
   ActionType fn, BarrierType const& barrier, bool const skip_term
 ) {
   setup_tree();
@@ -96,15 +88,14 @@ Barrier::cont_barrier(
   bool const is_wait = false;
   bool const is_named = barrier != no_barrier;
 
-  BarrierType const next_barrier = is_named ? barrier : cur_unnamed_barrier++;
+  BarrierType const next_barrier = is_named ? barrier : cur_unnamed_barrier_++;
 
   auto& barrier_state = insert_find_barrier(is_named, is_wait, next_barrier, fn);
 
   barrier_up(is_named, is_wait, next_barrier, skip_term);
 }
 
-void
-Barrier::barrier_down(
+void Barrier::barrier_down(
   bool const& is_named, bool const& is_wait, BarrierType const& barrier
 ) {
   auto& barrier_state = insert_find_barrier(is_named, is_wait, barrier);
@@ -116,8 +107,7 @@ Barrier::barrier_down(
   }
 }
 
-void
-Barrier::barrier_up(
+void Barrier::barrier_up(
   bool const& is_named, bool const& is_wait, BarrierType const& barrier,
   bool const& skip_term
 ) {
