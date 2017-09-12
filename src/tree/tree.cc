@@ -6,23 +6,23 @@ namespace runtime {
 
 void
 Tree::setup_tree() {
-  if (not set_up_tree) {
-    my_node = the_context->get_node();
-    num_nodes = the_context->get_num_nodes();
+  if (not set_up_tree_) {
+    my_node_ = the_context->get_node();
+    num_nodes_ = the_context->get_num_nodes();
 
-    c1 = my_node*2+1;
-    c2 = my_node*2+2;
-    has_c1 = c1 < num_nodes;
-    has_c2 = c2 < num_nodes;
-    num_children = has_c1 + has_c2;
+    c1_ = my_node_*2+1;
+    c2_ = my_node_*2+2;
+    has_c1_ = c1_ < num_nodes_;
+    has_c2_ = c2_ < num_nodes_;
+    num_children_ = has_c1_ + has_c2_;
 
-    is_root = my_node == 0;
+    is_root_ = my_node_ == 0;
 
-    if (not is_root) {
-      parent = (my_node - 1) / 2;
+    if (not is_root_) {
+      parent_ = (my_node_ - 1) / 2;
     }
 
-    set_up_tree = true;
+    set_up_tree_ = true;
   }
 }
 

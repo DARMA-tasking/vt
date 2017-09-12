@@ -38,7 +38,7 @@ static constexpr BitCountType const rdma_sized_num_bits = 1;
 static constexpr BitCountType const rdma_collective_num_bits = 1;
 static constexpr BitCountType const rdma_hander_type_num_bits = 1;
 static constexpr BitCountType const rdma_identifier_num_bits =
-  bit_counter_t<RDMA_IdentifierType>::value;
+  BitCounterType<RDMA_IdentifierType>::value;
 
 enum Bits {
   Sized       = 0,

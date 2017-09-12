@@ -10,8 +10,8 @@
 
 namespace runtime { namespace auto_registry {
 
-using auto_active_t = SimpleFunctionType;
-using auto_active_functor_t = SimpleFunctionType;
+using AutoActiveType = SimpleFunctionType;
+using AutoActiveFunctorType = SimpleFunctionType;
 
 template <typename FnT>
 struct AutoRegInfo {
@@ -22,8 +22,7 @@ struct AutoRegInfo {
   trace::TraceEntryIDType event_id;
 
   AutoRegInfo(
-    FnT const& in_active_fun_t,
-    trace::TraceEntryIDType const& in_event_id
+    FnT const& in_active_fun_t, trace::TraceEntryIDType const& in_event_id
   ) : active_fun_t(in_active_fun_t), event_id(in_event_id)
   { }
 
@@ -33,10 +32,8 @@ struct AutoRegInfo {
 
   #else
 
-  AutoRegInfo(
-    FnT const& in_active_fun_t
-  ) : active_fun_t(in_active_fun_t)
-  { }
+  AutoRegInfo(FnT const& in_active_fun_t)
+    : active_fun_t(in_active_fun_t) { }
 
   #endif
 
@@ -46,14 +43,12 @@ struct AutoRegInfo {
 };
 
 template <typename Fn>
-using auto_reg_info_t = AutoRegInfo<Fn>;
+using AutoRegInfoType = AutoRegInfo<Fn>;
 
-using auto_active_container_t = std::vector<auto_reg_info_t<auto_active_t>>;
-using auto_active_functor_container_t = std::vector<auto_reg_info_t<auto_active_functor_t>>;
-
-using auto_HandlerType = int32_t;
-
-using handler_manager_t = runtime::HandlerManager;
+using AutoActiveContainerType = std::vector<AutoRegInfoType<AutoActiveType>>;
+using AutoActiveFunctorContainerType = std::vector<AutoRegInfoType<AutoActiveFunctorType>>;
+using AutoHandlerType = int32_t;
+using HandlerManagerType = runtime::HandlerManager;
 
 }} // end namespace runtime::auto_registry
 

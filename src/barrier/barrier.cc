@@ -117,16 +117,16 @@ void Barrier::barrier_up(
 
   barrier_state.recv_event_count += 1;
 
-  bool const is_ready = barrier_state.recv_event_count == num_children + 1;
+  bool const is_ready = barrier_state.recv_event_count == num_children_ + 1;
 
   if (is_ready) {
-    if (not is_root) {
+    if (not is_root_) {
       auto msg = new BarrierMsg(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol
       if (skip_term) {
         the_msg->set_term_message(msg);
       }
-      the_msg->send_msg<BarrierMsg, barrier_up>(parent, msg, [=]{
+      the_msg->send_msg<BarrierMsg, barrier_up>(parent_, msg, [=]{
         delete msg;
       });
     } else {

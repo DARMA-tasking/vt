@@ -17,9 +17,9 @@ HandlerType make_auto_handler();
 template <typename T, bool is_msg, typename... Args>
 HandlerType make_auto_handler_functor();
 
-auto_active_t get_auto_handler(HandlerType const& handler);
+AutoActiveType get_auto_handler(HandlerType const& handler);
 
-auto_active_functor_t get_auto_handler_functor(HandlerType const& handler);
+AutoActiveFunctorType get_auto_handler_functor(HandlerType const& handler);
 
 #if backend_check_enabled(trace_enabled)
 trace::TraceEntryIDType get_trace_id(HandlerType const& handler);

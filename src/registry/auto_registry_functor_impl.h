@@ -11,15 +11,15 @@
 namespace runtime { namespace auto_registry {
 
 template <typename>
-inline auto_active_functor_container_t& get_auto_registry_functor()  {
-  static auto_active_functor_container_t reg;
+inline AutoActiveFunctorContainerType& get_auto_registry_functor()  {
+  static AutoActiveFunctorContainerType reg;
   return reg;
 }
 
 template <typename FunctorT, bool is_msg, typename... Args>
 inline HandlerType make_auto_handler_functor() {
   HandlerType const id = get_handler_active_functor(FunctorT, is_msg, Args);
-  return handler_manager_t::make_handler(true, true, id);
+  return HandlerManagerType::make_handler(true, true, id);
 }
 
 template <typename RunnableFunctorT, typename... Args>
@@ -36,7 +36,7 @@ static inline void functor_handler_wrapper_reg(Args... args) {
 
 template <typename RunnableFunctorT, typename... Args>
 static inline void pull_apart(
-  auto_active_functor_container_t& reg, bool const& is_msg,
+  AutoActiveFunctorContainerType& reg, bool const& is_msg,
   pack<Args...> packed_args
 ) {
   #if backend_check_enabled(trace_enabled)
@@ -55,7 +55,7 @@ static inline void pull_apart(
 
   if (is_msg) {
     auto fn_ptr = functor_handler_wrapper_reg<RunnableFunctorT, Args...>;
-    reg.emplace_back(auto_reg_info_t<auto_active_functor_t>{
+    reg.emplace_back(AutoRegInfoType<AutoActiveFunctorType>{
       reinterpret_cast<SimpleFunctionType>(fn_ptr)
         #if backend_check_enabled(trace_enabled)
         , trace_ep
@@ -63,7 +63,7 @@ static inline void pull_apart(
     });
   } else {
     auto fn_ptr = functor_handler_wrapper_rval<RunnableFunctorT, Args...>;
-    reg.emplace_back(auto_reg_info_t<auto_active_functor_t>{
+    reg.emplace_back(AutoRegInfoType<AutoActiveFunctorType>{
       reinterpret_cast<SimpleFunctionType>(fn_ptr)
         #if backend_check_enabled(trace_enabled)
         , trace_ep
@@ -74,7 +74,7 @@ static inline void pull_apart(
 
 template <typename RunnableFunctorT>
 RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
-  auto_active_functor_container_t& reg = get_auto_registry_functor<>();
+  AutoActiveFunctorContainerType& reg = get_auto_registry_functor<>();
   index = reg.size();
 
   pull_apart<RunnableFunctorT>(
@@ -82,11 +82,11 @@ RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
   );
 }
 
-inline auto_active_functor_t get_auto_handler_functor(HandlerType const& handler) {
-  auto const& han_id = handler_manager_t::get_handler_identifier(handler);
+inline AutoActiveFunctorType get_auto_handler_functor(HandlerType const& handler) {
+  auto const& han_id = HandlerManagerType::get_handler_identifier(handler);
 
-  bool const& is_auto = handler_manager_t::is_handler_auto(handler);
-  bool const& is_functor = handler_manager_t::is_handler_functor(handler);
+  bool const& is_auto = HandlerManagerType::is_handler_auto(handler);
+  bool const& is_functor = HandlerManagerType::is_handler_functor(handler);
 
   debug_print(
     handler, node,
@@ -102,7 +102,7 @@ inline auto_active_functor_t get_auto_handler_functor(HandlerType const& handler
 }
 
 template <typename RunnableFunctorT>
-auto_HandlerType register_active_functor() {
+AutoHandlerType register_active_functor() {
   return RegistrarWrapperFunctor<RunnableFunctorT>().registrar.index;
 }
 

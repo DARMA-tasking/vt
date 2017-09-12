@@ -9,8 +9,8 @@
 namespace runtime {
 
 template <typename T>
-using bit_counter_t = util::BitCounter<T>;
-using bit_packer_t = util::BitPacker;
+using BitCounterType = util::BitCounter<T>;
+using BitPackerType = util::BitPacker;
 
 } // end namespace runtime
 

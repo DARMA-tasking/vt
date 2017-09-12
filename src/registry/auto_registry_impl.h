@@ -11,31 +11,29 @@
 namespace runtime { namespace auto_registry {
 
 template <typename>
-inline auto_active_container_t&
+inline AutoActiveContainerType&
 get_auto_registry()  {
-  static auto_active_container_t reg;
+  static AutoActiveContainerType reg;
   return reg;
 }
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-inline HandlerType
-make_auto_handler(MessageT* const msg) {
+inline HandlerType make_auto_handler(MessageT* const msg) {
   HandlerType const id = get_handler_active_function_expand(
     ActiveAnyFunctionType<MessageT>, f
   );
-  return handler_manager_t::make_handler(true, false, id);
+  return HandlerManagerType::make_handler(true, false, id);
 }
 
 template <typename T, T value>
-inline HandlerType
-make_auto_handler() {
+inline HandlerType make_auto_handler() {
   HandlerType const id = get_handler_active_function_expand(T, value);
-  return handler_manager_t::make_handler(true, false, id);
+  return HandlerManagerType::make_handler(true, false, id);
 }
 
 template <typename ActiveFnT>
 Registrar<ActiveFnT>::Registrar() {
-  auto_active_container_t& reg = get_auto_registry<>();
+  AutoActiveContainerType& reg = get_auto_registry<>();
   index = reg.size();
   auto fn = ActiveFnT::get_function();
 
@@ -49,22 +47,21 @@ Registrar<ActiveFnT>::Registrar() {
     namespace_name, function_name
   );
 
-  reg.emplace_back(auto_reg_info_t<auto_active_t>{
+  reg.emplace_back(AutoRegInfoType<auto_active_t>{
     reinterpret_cast<active_basic_function_t*>(fn), trace_ep
   });
   #else
-  reg.emplace_back(auto_reg_info_t<auto_active_t>{
+  reg.emplace_back(AutoRegInfoType<AutoActiveType>{
     reinterpret_cast<ActiveBasicFunctionType*>(fn)
   });
   #endif
 }
 
-inline auto_active_t
-get_auto_handler(HandlerType const& handler) {
-  auto const& han_id = handler_manager_t::get_handler_identifier(handler);
+inline AutoActiveType get_auto_handler(HandlerType const& handler) {
+  auto const& han_id = HandlerManagerType::get_handler_identifier(handler);
 
-  bool const& is_auto = handler_manager_t::is_handler_auto(handler);
-  bool const& is_functor = handler_manager_t::is_handler_functor(handler);
+  bool const& is_auto = HandlerManagerType::is_handler_auto(handler);
+  bool const& is_functor = HandlerManagerType::is_handler_functor(handler);
 
   debug_print(
     handler, node,
@@ -80,8 +77,7 @@ get_auto_handler(HandlerType const& handler) {
 }
 
 template <typename ActiveFnT>
-auto_HandlerType
-register_active_fn() {
+AutoHandlerType register_active_fn() {
   return RegistrarWrapper<ActiveFnT>().registrar.index;
 }
 

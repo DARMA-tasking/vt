@@ -8,11 +8,11 @@
 
 namespace runtime {
 
-static constexpr BitCountType const node_num_bits = bit_counter_t<NodeType>::value;
-static constexpr BitCountType const handler_num_bits = bit_counter_t<HandlerType>::value;
-static constexpr BitCountType const ref_num_bits = bit_counter_t<RefType>::value;
-static constexpr BitCountType const epoch_num_bits = bit_counter_t<EpochType>::value;
-static constexpr BitCountType const tag_num_bits = bit_counter_t<TagType>::value;
+static constexpr BitCountType const node_num_bits = BitCounterType<NodeType>::value;
+static constexpr BitCountType const handler_num_bits = BitCounterType<HandlerType>::value;
+static constexpr BitCountType const ref_num_bits = BitCounterType<RefType>::value;
+static constexpr BitCountType const epoch_num_bits = BitCounterType<EpochType>::value;
+static constexpr BitCountType const tag_num_bits = BitCounterType<TagType>::value;
 
 } //end namespace runtime
 

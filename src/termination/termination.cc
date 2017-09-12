@@ -132,7 +132,7 @@ bool TerminationDetector::propagate_epoch(
 
   auto const& event_count = state.recv_event_count;
 
-  bool const is_ready = event_count == num_children + 1;
+  bool const is_ready = event_count == num_children_ + 1;
   bool prop_continue = false;
 
   debug_print(
@@ -155,12 +155,12 @@ bool TerminationDetector::propagate_epoch(
       event_count, num_children
     );
 
-    if (not is_root) {
+    if (not is_root_) {
       auto msg = new TermCounterMsg(epoch, state.g_prod1, state.g_cons1);
 
       the_msg->set_term_message(msg);
       the_msg->send_msg<TermCounterMsg, propagate_epoch_handler>(
-        parent, msg, [=] { delete msg; }
+        parent_, msg, [=] { delete msg; }
       );
 
       debug_print(
@@ -327,17 +327,17 @@ void TerminationDetector::propagate_new_epoch(EpochType const& new_epoch) {
   auto epoch_iter = epoch_state_.find(new_epoch);
   auto const& event_count = epoch_iter->second.recv_event_count;
 
-  bool const& is_ready = event_count == num_children + 1;
+  bool const& is_ready = event_count == num_children_ + 1;
 
-  if (is_ready and not is_root) {
+  if (is_ready and not is_root_) {
     // propagate up the tree
     auto msg = new TermMsg(new_epoch);
     the_msg->set_term_message(msg);
 
     the_msg->send_msg<TermMsg, propagate_new_epoch_handler>(
-      parent, msg, [=] { delete msg; }
+      parent_, msg, [=] { delete msg; }
     );
-  } else if (is_ready and is_root) {
+  } else if (is_ready and is_root_) {
     // broadcast ready to all
     auto msg = new TermMsg(new_epoch);
     the_msg->set_term_message(msg);
