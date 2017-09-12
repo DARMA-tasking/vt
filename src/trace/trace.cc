@@ -8,8 +8,8 @@
 namespace runtime { namespace trace {
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
-  : prog_name(in_prog_name), trace_name(in_trace_name),
-    start_time(get_current_time())
+  : prog_name_(in_prog_name), trace_name_(in_trace_name),
+    start_time_(get_current_time())
 {
   initialize();
 }
@@ -18,8 +18,7 @@ Trace::Trace() {
   initialize();
 }
 
-/*static*/ void
-Trace::trace_begin_idle_trigger() {
+/*static*/ void Trace::trace_begin_idle_trigger() {
   backend_enable_if(
     trace_enabled, {
       if (not the_trace->in_idle_event()) {
@@ -29,36 +28,31 @@ Trace::trace_begin_idle_trigger() {
   );
 }
 
-void
-Trace::initialize() {
-  traces.reserve(trace_reserve_count);
+void Trace::initialize() {
+  traces_.reserve(trace_reserve_count);
 
   the_sched->register_trigger(
     sched::SchedulerEvent::BeginIdle, trace_begin_idle_trigger
   );
 }
 
-bool
-Trace::in_idle_event() const {
-  return idle_begun;
+bool Trace::in_idle_event() const {
+  return idle_begun_;
 }
 
-void
-Trace::setup_names(
+void Trace::setup_names(
   std::string const& in_prog_name, std::string const& in_trace_name
 ) {
-  prog_name = in_prog_name;
-  trace_name = in_trace_name;
-  start_time = get_current_time();
+  prog_name_ = in_prog_name;
+  trace_name_ = in_trace_name;
+  start_time_ = get_current_time();
 }
 
-/*virtual*/
-Trace::~Trace() {
+/*virtual*/ Trace::~Trace() {
   write_traces_file();
 }
 
-void
-Trace::begin_processing(
+void Trace::begin_processing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
@@ -77,8 +71,7 @@ Trace::begin_processing(
   log_event(log);
 }
 
-void
-Trace::end_processing(
+void Trace::end_processing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
@@ -97,8 +90,7 @@ Trace::end_processing(
   log_event(log);
 }
 
-void
-Trace::begin_idle(double const& time) {
+void Trace::begin_idle(double const& time) {
   auto const& type = TraceConstantsType::BeginIdle;
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
@@ -110,11 +102,10 @@ Trace::begin_idle(double const& time) {
 
   log_event(log);
 
-  idle_begun = true;
+  idle_begun_ = true;
 }
 
-void
-Trace::end_idle(double const& time) {
+void Trace::end_idle(double const& time) {
   auto const& type = TraceConstantsType::EndIdle;
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
@@ -126,11 +117,10 @@ Trace::end_idle(double const& time) {
 
   log_event(log);
 
-  idle_begun = false;
+  idle_begun_ = false;
 }
 
-TraceEventIDType
-Trace::message_creation(
+TraceEventIDType Trace::message_creation(
   TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
   auto const& type = TraceConstantsType::Creation;
@@ -142,8 +132,7 @@ Trace::message_creation(
   return log_event(log);
 }
 
-TraceEventIDType
-Trace::message_creation_bcast(
+TraceEventIDType Trace::message_creation_bcast(
   TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
   auto const& type = TraceConstantsType::CreationBcast;
@@ -155,8 +144,7 @@ Trace::message_creation_bcast(
   return log_event(log);
 }
 
-TraceEventIDType
-Trace::message_recv(
+TraceEventIDType Trace::message_recv(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   NodeType const& from_node, double const& time
 ) {
@@ -168,58 +156,57 @@ Trace::message_recv(
   return log_event(log);
 }
 
-TraceEventIDType
-Trace::log_event(LogPtrType log) {
-  if (not enabled) {
+TraceEventIDType Trace::log_event(LogPtrType log) {
+  if (not enabled_) {
     return 0;
   }
 
   // close any idle event as soon as we encounter any other type of event
-  if (idle_begun and
+  if (idle_begun_ and
       log->type != TraceConstantsType::BeginIdle and
       log->type != TraceConstantsType::EndIdle) {
     end_idle();
   }
 
   auto grouped_begin = [&]() -> TraceEventIDType {
-    if (not open_events.empty()) {
-      traces.push_back(
+    if (not open_events_.empty()) {
+      traces_.push_back(
         new LogType(
-          log->time, open_events.top()->ep, TraceConstantsType::EndProcessing
+          log->time, open_events_.top()->ep, TraceConstantsType::EndProcessing
         )
       );
     }
 
     // push on open stack.
-    open_events.push(log);
-    traces.push_back(log);
+    open_events_.push(log);
+    traces_.push_back(log);
 
     return log->event;
   };
 
   auto grouped_end = [&]() -> TraceEventIDType {
     assert(
-      not open_events.empty() and "Stack should be empty"
+      not open_events_.empty() and "Stack should be empty"
     );
 
     assert(
-      open_events.top()->ep == log->ep and
-      open_events.top()->type == TraceConstantsType::BeginProcessing and
+      open_events_.top()->ep == log->ep and
+      open_events_.top()->type == TraceConstantsType::BeginProcessing and
       "Top event should be correct type and event"
     );
 
     // match event with the one that this ends
-    log->event = open_events.top()->event;
+    log->event = open_events_.top()->event;
 
     // set up begin/end links
-    open_events.pop();
+    open_events_.pop();
 
-    traces.push_back(log);
+    traces_.push_back(log);
 
-    if (not open_events.empty()) {
-      traces.push_back(
+    if (not open_events_.empty()) {
+      traces_.push_back(
         new LogType(
-          log->time, open_events.top()->ep, TraceConstantsType::BeginProcessing
+          log->time, open_events_.top()->ep, TraceConstantsType::BeginProcessing
         )
       );
     }
@@ -228,15 +215,15 @@ Trace::log_event(LogPtrType log) {
   };
 
   auto basic_new_event_create = [&]() -> TraceEventIDType {
-    traces.push_back(log);
+    traces_.push_back(log);
 
-    log->event = cur_event++;
+    log->event = cur_event_++;
 
     return log->event;
   };
 
   auto basic_no_event_create = [&]() -> TraceEventIDType {
-    traces.push_back(log);
+    traces_.push_back(log);
 
     log->event = no_trace_event;
 
@@ -266,18 +253,15 @@ Trace::log_event(LogPtrType log) {
   }
 }
 
-void
-Trace::enable_tracing() {
-  enabled = true;
+void Trace::enable_tracing() {
+  enabled_ = true;
 };
 
-void
-Trace::disable_tracing() {
-  enabled = false;
+void Trace::disable_tracing() {
+  enabled_ = false;
 };
 
-void
-Trace::write_traces_file() {
+void Trace::write_traces_file() {
   auto const& node = the_context->get_node();
   auto const& num_nodes = the_context->get_num_nodes();
 
@@ -285,30 +269,29 @@ Trace::write_traces_file() {
     trace, node,
     "write_traces_file: traces.size=%ld, "
     "event_type_container.size=%ld, event_container.size=%ld\n",
-    traces.size(),
+    traces_.size(),
     TraceContainersType::event_type_container.size(),
     TraceContainersType::event_container.size()
   );
 
-  gzFile file = gzopen(trace_name.c_str(), "wb");
-  output_header(node, start_time, file);
-  write_log_file(file, traces);
-  output_footer(node, start_time, file);
+  gzFile file = gzopen(trace_name_.c_str(), "wb");
+  output_header(node, start_time_, file);
+  write_log_file(file, traces_);
+  output_footer(node, start_time_, file);
   gzclose(file);
 
   if (node == designated_root_node) {
     std::ofstream file;
-    file.open(prog_name + ".sts");
+    file.open(prog_name_ + ".sts");
     output_control_file(file);
     file.flush();
     file.close();
   }
 }
 
-void
-Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
+void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
   for (auto&& log : traces) {
-    auto const& converted_time = time_to_int(log->time - start_time);
+    auto const& converted_time = time_to_int(log->time - start_time_);
 
     auto const& type = static_cast<
       std::underlying_type<decltype(log->type)>::type
@@ -411,13 +394,11 @@ Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
   traces.empty();
 }
 
-/*static*/ double
-Trace::get_current_time() {
+/*static*/ double Trace::get_current_time() {
   return MPI_Wtime();
 }
 
-/*static*/ void
-Trace::output_control_file(std::ofstream& file) {
+/*static*/ void Trace::output_control_file(std::ofstream& file) {
   auto const& node = the_context->get_node();
   auto const& num_nodes = the_context->get_num_nodes();
 
@@ -485,8 +466,7 @@ Trace::output_control_file(std::ofstream& file) {
        << std::endl;
 }
 
-/*static*/ void
-Trace::output_header(
+/*static*/ void Trace::output_header(
   NodeType const& node, double const& start, gzFile file
 ) {
   // Output header for projections file
@@ -495,8 +475,7 @@ Trace::output_header(
   gzprintf(file, "6 0\n");
 }
 
-/*static*/ void
-Trace::output_footer(
+/*static*/ void Trace::output_footer(
   NodeType const& node, double const& start, gzFile file
 ) {
   // Output footer for projections file, '7' means COMPUTATION_END to
@@ -504,8 +483,7 @@ Trace::output_footer(
   gzprintf(file, "7 %lld\n", time_to_int(get_current_time() - start));
 }
 
-/*static*/ Trace::TimeIntegerType
-Trace::time_to_int(double const& time) {
+/*static*/ Trace::TimeIntegerType Trace::time_to_int(double const& time) {
   return static_cast<TimeIntegerType>(time * 1e6);
 }
 

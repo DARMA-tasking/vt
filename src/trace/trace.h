@@ -38,109 +38,76 @@ struct Trace {
   using TraceStackType = std::stack<LogPtrType>;
 
   Trace();
-
   Trace(std::string const& in_prog_name, std::string const& in_trace_name);
-
-  void
-  initialize();
-
-  friend struct Log;
-
-  void
-  setup_names(
-    std::string const& in_prog_name, std::string const& in_trace_name
-  );
 
   virtual ~Trace();
 
-  void
-  begin_processing(
+  void initialize();
+
+  friend struct Log;
+
+  void setup_names(
+    std::string const& in_prog_name, std::string const& in_trace_name
+  );
+
+  void begin_processing(
     TraceEntryIDType const& ep, TraceMsgLenType const& len,
     TraceEventIDType const& event, NodeType const& from_node,
     double const& time = get_current_time()
   );
 
-  void
-  end_processing(
+  void end_processing(
     TraceEntryIDType const& ep, TraceMsgLenType const& len,
     TraceEventIDType const& event, NodeType const& from_node,
     double const& time = get_current_time()
   );
 
-  void
-  begin_idle(double const& time = get_current_time());
+  void begin_idle(double const& time = get_current_time());
 
-  void
-  end_idle(double const& time = get_current_time());
+  void end_idle(double const& time = get_current_time());
 
-  TraceEventIDType
-  message_creation(
+  TraceEventIDType message_creation(
     TraceEntryIDType const& ep, TraceMsgLenType const& len,
     double const& time = get_current_time()
   );
 
-  TraceEventIDType
-  message_creation_bcast(
+  TraceEventIDType message_creation_bcast(
     TraceEntryIDType const& ep, TraceMsgLenType const& len,
     double const& time = get_current_time()
   );
 
-  TraceEventIDType
-  message_recv(
+  TraceEventIDType message_recv(
     TraceEntryIDType const& ep, TraceMsgLenType const& len,
     NodeType const& from_node, double const& time = get_current_time()
   );
 
-  TraceEventIDType
-  log_event(LogPtrType log);
+  TraceEventIDType log_event(LogPtrType log);
 
-  void
-  enable_tracing();
+  void enable_tracing();
+  void disable_tracing();
 
-  void
-  disable_tracing();
+  void write_traces_file();
+  void write_log_file(gzFile file, TraceContainerType const& traces);
 
-  void
-  write_traces_file();
+  bool in_idle_event() const;
 
-  void
-  write_log_file(gzFile file, TraceContainerType const& traces);
-
-  bool
-  in_idle_event() const;
-
-  static double
-  get_current_time();
-
-  static void
-  output_control_file(std::ofstream& file);
-
-  static void
-  output_header(NodeType const& node, double const& start, gzFile file);
-
-  static void
-  output_footer(NodeType const& node, double const& start, gzFile file);
-
-  static TimeIntegerType
-  time_to_int(double const& time);
-
-  static void
-  trace_begin_idle_trigger();
+  static double get_current_time();
+  static void output_control_file(std::ofstream& file);
+  static void output_header(NodeType const& node, double const& start, gzFile file);
+  static void output_footer(NodeType const& node, double const& start, gzFile file);
+  static TimeIntegerType time_to_int(double const& time);
+  static void trace_begin_idle_trigger();
 
 private:
-  TraceContainerType traces;
+  TraceContainerType traces_;
+  TraceStackType open_events_;
+  TraceEventIDType cur_event_ = 1;
 
-  TraceStackType open_events;
+  std::string prog_name_, trace_name_;
 
-  bool enabled = true;
+  bool enabled_ = true, idle_begun_ = false;
 
-  std::string prog_name, trace_name;
-
-  double start_time = 0.0;
-
-  TraceEventIDType cur_event = 1;
-
-  bool idle_begun = false;
+  double start_time_ = 0.0;
 };
 
 }} //end namespace runtime::trace
