@@ -18,7 +18,7 @@ Barrier::barrier_down(BarrierMsg* msg) {
 
 Barrier::barrier_state_t&
 Barrier::insert_find_barrier(
-  bool const& is_named, bool const& is_wait, barrier_t const& barrier,
+  bool const& is_named, bool const& is_wait, BarrierType const& barrier,
   action_t cont_action
 ) {
   auto& state = is_named ? named_barrier_state : unnamed_barrier_state;
@@ -47,7 +47,7 @@ Barrier::insert_find_barrier(
 
 void
 Barrier::remove_barrier(
-  bool const& is_named, bool const& is_wait, barrier_t const& barrier
+  bool const& is_named, bool const& is_wait, BarrierType const& barrier
 ) {
   auto& state = is_named ? named_barrier_state : unnamed_barrier_state;
 
@@ -59,22 +59,22 @@ Barrier::remove_barrier(
   state.erase(iter);
 }
 
-barrier_t
+BarrierType
 Barrier::new_named_barrier() {
   setup_tree();
-  barrier_t const next_barrier = cur_named_barrier++;
+  BarrierType const next_barrier = cur_named_barrier++;
   return next_barrier;
 }
 
 
 void
-Barrier::wait_barrier(barrier_t const& barrier, bool const skip_term) {
+Barrier::wait_barrier(BarrierType const& barrier, bool const skip_term) {
   setup_tree();
 
   bool const is_wait = true;
   bool const is_named = barrier != no_barrier;
 
-  barrier_t const next_barrier = is_named ? barrier : cur_unnamed_barrier++;
+  BarrierType const next_barrier = is_named ? barrier : cur_unnamed_barrier++;
 
   auto& barrier_state = insert_find_barrier(is_named, is_wait, next_barrier);
 
@@ -89,14 +89,14 @@ Barrier::wait_barrier(barrier_t const& barrier, bool const skip_term) {
 
 void
 Barrier::cont_barrier(
-  action_t fn, barrier_t const& barrier, bool const skip_term
+  action_t fn, BarrierType const& barrier, bool const skip_term
 ) {
   setup_tree();
 
   bool const is_wait = false;
   bool const is_named = barrier != no_barrier;
 
-  barrier_t const next_barrier = is_named ? barrier : cur_unnamed_barrier++;
+  BarrierType const next_barrier = is_named ? barrier : cur_unnamed_barrier++;
 
   auto& barrier_state = insert_find_barrier(is_named, is_wait, next_barrier, fn);
 
@@ -105,7 +105,7 @@ Barrier::cont_barrier(
 
 void
 Barrier::barrier_down(
-  bool const& is_named, bool const& is_wait, barrier_t const& barrier
+  bool const& is_named, bool const& is_wait, BarrierType const& barrier
 ) {
   auto& barrier_state = insert_find_barrier(is_named, is_wait, barrier);
 
@@ -118,7 +118,7 @@ Barrier::barrier_down(
 
 void
 Barrier::barrier_up(
-  bool const& is_named, bool const& is_wait, barrier_t const& barrier,
+  bool const& is_named, bool const& is_wait, BarrierType const& barrier,
   bool const& skip_term
 ) {
   setup_tree();

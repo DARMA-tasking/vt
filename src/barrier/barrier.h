@@ -15,41 +15,41 @@ namespace runtime { namespace barrier {
 // struct ProcessGroup { };
 // struct GroupBarrier { };
 
-constexpr barrier_t const fst_barrier = 1;
+constexpr BarrierType const fst_barrier = 1;
 
 struct Barrier : Tree {
   using barrier_state_t = BarrierState;
 
   template <typename T>
-  using container_t = std::unordered_map<barrier_t, T>;
+  using container_t = std::unordered_map<BarrierType, T>;
 
   barrier_state_t&
   insert_find_barrier(
-    bool const& is_named, bool const& is_wait, barrier_t const& barrier,
+    bool const& is_named, bool const& is_wait, BarrierType const& barrier,
     action_t cont_action = nullptr
   );
 
   void
   remove_barrier(
-    bool const& is_named, bool const& is_wait, barrier_t const& barrier
+    bool const& is_named, bool const& is_wait, BarrierType const& barrier
   );
 
-  barrier_t
+  BarrierType
   new_named_barrier();
 
   void
   barrier_up(
-    bool const& is_named, bool const& is_wait, barrier_t const& barrier,
+    bool const& is_named, bool const& is_wait, BarrierType const& barrier,
     bool const& skip_term
   );
 
   void
   barrier_down(
-    bool const& is_named, bool const& is_wait, barrier_t const& barrier
+    bool const& is_named, bool const& is_wait, BarrierType const& barrier
   );
 
   inline void
-  barrier(barrier_t const& barrier = no_barrier) {
+  barrier(BarrierType const& barrier = no_barrier) {
     return wait_barrier(barrier);
   }
 
@@ -59,7 +59,7 @@ struct Barrier : Tree {
   }
 
   inline void
-  barrier_then(barrier_t const& barrier, action_t fn) {
+  barrier_then(BarrierType const& barrier, action_t fn) {
     return cont_barrier(fn, barrier);
   }
 
@@ -85,19 +85,19 @@ private:
 
   void
   wait_barrier(
-    barrier_t const& barrier = no_barrier, bool const skip_term = false
+    BarrierType const& barrier = no_barrier, bool const skip_term = false
   );
 
   void
   cont_barrier(
-    action_t fn, barrier_t const& barrier = no_barrier,
+    action_t fn, BarrierType const& barrier = no_barrier,
     bool const skip_term = false
   );
 
 private:
 
-  barrier_t cur_named_barrier = fst_barrier;
-  barrier_t cur_unnamed_barrier = fst_barrier;
+  BarrierType cur_named_barrier = fst_barrier;
+  BarrierType cur_unnamed_barrier = fst_barrier;
 
   container_t<barrier_state_t> named_barrier_state, unnamed_barrier_state;
 };
