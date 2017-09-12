@@ -4,34 +4,33 @@
 
 namespace runtime { namespace seq {
 
-using seq_t = int32_t;
-using user_seq_fun_t = std::function<void()>;
-using user_seq_fun_with_id_t = std::function<void(seq_t const&)>;
+using SeqType = int32_t;
+using UserSeqFunType = std::function<void()>;
+using UserSeqFunWithIDType = std::function<void(SeqType const&)>;
 
 template <typename MessageT>
-using seq_non_migratable_trigger_t = std::function<void(MessageT*)>;
+using SeqNonMigratableTriggerType = std::function<void(MessageT*)>;
 
 template <typename MessageT>
-using seq_migratable_trigger_t = ActiveAnyFunctionType<MessageT>;
+using SeqMigratableTriggerType = ActiveAnyFunctionType<MessageT>;
 
-using seq_callable_t = std::function<bool()>;
+using SeqCallableType = std::function<bool()>;
 
-static constexpr seq_t const initial_seq = 0;
-static seq_t next_seq_id = initial_seq;
-static constexpr seq_t const no_seq = -1;
+static constexpr SeqType const initial_seq = 0;
+static SeqType next_seq_id = initial_seq;
+static constexpr SeqType const no_seq = -1;
 
-void
-contextual_execution(
-  seq_t const& seq, bool const& is_sequenced, seq_callable_t&& callable
+void contextual_execution(
+  SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 );
 
 }} //end namespace runtime::seq
 
 namespace runtime {
 
-using seq_t = seq::seq_t;
-using user_seq_fun_t = seq::user_seq_fun_t;
-using user_seq_fun_with_id_t = seq::user_seq_fun_with_id_t;
+using SeqType = seq::SeqType;
+using UserSeqFunType = seq::UserSeqFunType;
+using UserSeqFunWithIDType = seq::UserSeqFunWithIDType;
 
 } // end namespace runtime
 

@@ -7,12 +7,12 @@
 
 namespace runtime {
 
-using collection_size_t = uint32_t;
-using collection_id_t = uint32_t;
-using collection_proxy_t = uint64_t;
+using CollectionSizeType = uint32_t;
+using CollectionIDType = uint32_t;
+using CollectionProxyType = uint64_t;
 
 struct VirtualLocMessage : Message {
-  collection_id_t col_id = 0;
+  CollectionIDType col_id = 0;
 };
 
 struct VirutalLoc {
@@ -20,19 +20,17 @@ struct VirutalLoc {
 };
 
 struct VirtualLocCollection {
-  collection_size_t col_size;
+  CollectionSizeType col_size;
 };
 
 struct VirtualLocCollectionManager {
-  static
-  collection_proxy_t
-  create_virtual_loc(collection_size_t col_size) {
+  static CollectionProxyType create_virtual_loc(CollectionSizeType col_size) {
     auto const& node = the_context->get_node();
-    return (collection_proxy_t)node << (64 - (sizeof() * 8)) | cur_col_id;
+    return (CollectionProxyType)node << (64 - (sizeof() * 8)) | cur_col_id;
   }
 
 private:
-  collection_id_t cur_col_id;
+  CollectionIDType cur_col_id;
 };
 
 

@@ -3,13 +3,11 @@
 
 namespace runtime { namespace pool {
 
-bool
-Pool::size_is_large(size_t const& num_bytes) {
+bool Pool::size_is_large(size_t const& num_bytes) {
   return num_bytes > small_msg.get_num_bytes();
 }
 
-void*
-Pool::alloc(size_t const& num_bytes) {
+void* Pool::alloc(size_t const& num_bytes) {
   auto const& small_bytes = small_msg.get_num_bytes();
 
   void* ret = nullptr;
@@ -33,8 +31,7 @@ Pool::alloc(size_t const& num_bytes) {
   return ret;
 }
 
-void
-Pool::dealloc(void* const buf) {
+void Pool::dealloc(void* const buf) {
   auto const& small_bytes = small_msg.get_num_bytes();
 
   void* const ptr_actual = static_cast<size_t*>(buf) - 1;

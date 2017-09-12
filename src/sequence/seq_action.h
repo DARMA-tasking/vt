@@ -10,12 +10,12 @@ namespace runtime { namespace seq {
 template <typename MessageT>
 struct Action {
   using ActionType = std::function<void(MessageT*)>;
-  using callable_t = std::function<bool()>;
+  using CallableType = std::function<bool()>;
 
-  seq_t const seq_id;
+  SeqType const seq_id;
   ActionType const action;
 
-  Action(seq_t const& in_seq_id, ActionType const& in_action)
+  Action(SeqType const& in_seq_id, ActionType const& in_action)
     : seq_id(in_seq_id), action(in_action)
   { }
 
@@ -29,7 +29,7 @@ struct Action {
     contextual_execution(seq_id, false, callable);
   }
 
-  callable_t generate_callable(MessageT* msg) const {
+  CallableType generate_callable(MessageT* msg) const {
     return [msg,this](){
       run_action(msg);
       return false;

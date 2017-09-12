@@ -9,10 +9,10 @@
 
 namespace runtime { namespace param {
 
-using handler_manager_t = runtime::HandlerManager;
+using HandlerManagerType = runtime::HandlerManager;
 
 template <typename... Args>
-using multi_param_t = void(*)(Args...);
+using MultiParamType = void(*)(Args...);
 
 template<typename T, T value>
 struct NonType {};
@@ -46,18 +46,18 @@ static auto call(Function f, Tuple&& t, std::index_sequence<I...>) {
 
 template <typename FnT, typename... Args>
 static void get_fn_sig(std::tuple<Args...>&& tup, FnT fn, bool const& is_functor) {
-  using tuple_type_t = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<tuple_type_t>::value;
+  using TupleType = typename std::decay<decltype(tup)>::type;
+  static constexpr auto size = std::tuple_size<TupleType>::value;
   if (is_functor) {
     // be careful: functor version takes a r-value ref as `Args' and forwards
-    auto typed_fn = reinterpret_cast<multi_param_t<Args&&...>>(fn);
+    auto typed_fn = reinterpret_cast<MultiParamType<Args&&...>>(fn);
     call(
       typed_fn, std::forward<std::tuple<Args...>>(tup),
       std::make_index_sequence<size>{}
     );
   } else {
     // be careful: non-fuctor version takes a l-value as `Args'
-    auto typed_fn = reinterpret_cast<multi_param_t<Args...>>(fn);
+    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
     call(
       typed_fn, std::forward<std::tuple<Args...>>(tup),
       std::make_index_sequence<size>{}
@@ -83,7 +83,7 @@ static void data_message_handler(DataMsg<Tuple>* msg) {
   the_trace->begin_processing(ep, sizeof(*msg), event, from_node);
 #endif
 
-  if (handler_manager_t::is_handler_functor(msg->sub_han)) {
+  if (HandlerManagerType::is_handler_functor(msg->sub_han)) {
     auto fn = auto_registry::get_auto_handler_functor(msg->sub_han);
     get_fn_sig(std::forward<Tuple>(msg->tup), fn, true);
   } else {
@@ -109,13 +109,13 @@ struct Param {
   ) {
     static_check_copyable<Args...>();
 
-    using tuple_type_t = typename std::decay<decltype(tup)>::type;
+    using TupleType = typename std::decay<decltype(tup)>::type;
 
-    DataMsg<tuple_type_t>* m = new DataMsg<tuple_type_t>(
+    DataMsg<TupleType>* m = new DataMsg<TupleType>(
       han, std::forward<std::tuple<Args...>>(tup)
     );
 
-    return the_msg->send_msg<DataMsg<tuple_type_t>, data_message_handler>(
+    return the_msg->send_msg<DataMsg<TupleType>, data_message_handler>(
       dest, m, [=]{ delete m; }
     );
   }
@@ -161,9 +161,9 @@ struct Param {
 
     static_check_copyable<Args...>();
 
-    using tuple_type_t = std::tuple<Args...>;
+    using TupleType = std::tuple<Args...>;
 
-    DataMsg<tuple_type_t>* m = new DataMsg<tuple_type_t>(
+    DataMsg<TupleType>* m = new DataMsg<TupleType>(
       han, std::forward<Args>(a)...
     );
 
@@ -183,7 +183,7 @@ struct Param {
   EventType send_data_helper_functor(
     NodeType const& dest, std::tuple<Args...>&& tup
   ) {
-    using message_t = runtime::BaseMessage;
+    using MessageType = runtime::BaseMessage;
     auto const& han = auto_registry::make_auto_handler_functor<
       FunctorT, false, Args...
     >();
@@ -216,9 +216,9 @@ struct Param {
       FunctorT, false, Args...
     >();
 
-    using tuple_type_t = std::tuple<Args...>;
+    using TupleType = std::tuple<Args...>;
 
-    DataMsg<tuple_type_t>* m = new DataMsg<tuple_type_t>(
+    DataMsg<TupleType>* m = new DataMsg<TupleType>(
       han, std::forward<Args>(a)...
     );
 

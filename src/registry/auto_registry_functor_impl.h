@@ -24,13 +24,13 @@ inline HandlerType make_auto_handler_functor() {
 
 template <typename RunnableFunctorT, typename... Args>
 static inline void functor_handler_wrapper_rval(Args&&... args) {
-  typename RunnableFunctorT::functor_t instance;
+  typename RunnableFunctorT::FunctorType instance;
   return instance.operator ()(std::forward<Args>(args)...);
 }
 
 template <typename RunnableFunctorT, typename... Args>
 static inline void functor_handler_wrapper_reg(Args... args) {
-  typename RunnableFunctorT::functor_t instance;
+  typename RunnableFunctorT::FunctorType instance;
   return instance.operator ()(args...);
 }
 
@@ -41,7 +41,7 @@ static inline void pull_apart(
 ) {
   #if backend_check_enabled(trace_enabled)
   auto const& name = demangle::DemanglerUtils::get_demangled_type<
-    typename RunnableFunctorT::functor_t
+    typename RunnableFunctorT::FunctorType
   >();
   auto const& args = demangle::DemanglerUtils::get_demangled_type<pack<Args...>>();
   auto const& parsed_names =
@@ -78,7 +78,7 @@ RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
   index = reg.size();
 
   pull_apart<RunnableFunctorT>(
-    reg, RunnableFunctorT::is_msg_t, typename RunnableFunctorT::packed_args_t()
+    reg, RunnableFunctorT::is_msg_t, typename RunnableFunctorT::PackedArgsType()
   );
 }
 

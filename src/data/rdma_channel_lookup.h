@@ -37,11 +37,11 @@ operator==(ChannelLookup const& c1, ChannelLookup const& c2) {
 }} //end namespace runtime::rdma
 
 namespace std {
-  using rdma_channel_lookup_t = runtime::rdma::ChannelLookup;
+  using RDMA_ChannelLookupType = runtime::rdma::ChannelLookup;
 
   template <>
-  struct hash<rdma_channel_lookup_t> {
-    size_t operator()(rdma_channel_lookup_t const& in) const {
+  struct hash<RDMA_ChannelLookupType> {
+    size_t operator()(RDMA_ChannelLookupType const& in) const {
       auto const& combined =
         std::hash<runtime::RDMA_HandleType>()(in.handle) ^
         std::hash<runtime::NodeType>()(in.target) ^

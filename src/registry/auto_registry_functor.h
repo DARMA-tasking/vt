@@ -39,8 +39,8 @@ struct pack { };
 
 template <typename FunctorT, bool is_msg, typename... Args>
 struct RunnableFunctor {
-  using functor_t = FunctorT;
-  using packed_args_t = pack<Args...>;
+  using FunctorType = FunctorT;
+  using PackedArgsType = pack<Args...>;
 
   static constexpr bool const is_msg_t = is_msg;
 

@@ -31,10 +31,10 @@ struct State {
     std::tuple<RDMA_PutFunctionType, RDMA_HandlerType>;
 
   template <typename T>
-  using tag_container_t = std::unordered_map<TagType, T>;
+  using TagContainerType = std::unordered_map<TagType, T>;
 
   template <typename T>
-  using container_t = std::vector<T>;
+  using ContainerType = std::vector<T>;
 
   RDMA_HandleType handle = no_rdma_handle;
   RDMA_PtrType ptr = no_rdma_ptr;
@@ -100,10 +100,9 @@ private:
   RDMA_GetFunctionType rdma_get_fn = no_action;
   RDMA_PutFunctionType rdma_put_fn = no_action;
 
-  tag_container_t<RDMA_TagGetHolderType> get_tag_holder;
-  tag_container_t<RDMA_TagPutHolderType> put_tag_holder;
-
-  tag_container_t<container_t<RDMA_InfoType>> pending_tag_gets, pending_tag_puts;
+  TagContainerType<RDMA_TagGetHolderType> get_tag_holder;
+  TagContainerType<RDMA_TagPutHolderType> put_tag_holder;
+  TagContainerType<ContainerType<RDMA_InfoType>> pending_tag_gets, pending_tag_puts;
 };
 
 template<>

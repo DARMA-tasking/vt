@@ -126,32 +126,28 @@ enum class EventState : int8_t {
 };
 
 struct AsyncEvent {
-  using event_state_t = EventState;
-  using event_wrapper_t = Event;
-  using event_wrapper_ptr_t = std::unique_ptr<event_wrapper_t>;
+  using EventStateType = EventState;
+  using EventWrapperType = Event;
+  using EventWrapperPtrType = std::unique_ptr<EventWrapperType>;
 
   struct EventHolder {
-    using action_container_t = std::vector<ActionType>;
+    using ActionContainerType = std::vector<ActionType>;
 
-    EventHolder(event_wrapper_ptr_t in_event)
+    EventHolder(EventWrapperPtrType in_event)
       : event(std::move(in_event))
     { }
 
-    event_wrapper_t*
-    get_event() const {
+    EventWrapperType* get_event() const {
       return event.get();
     }
 
-    void
-    attach_action(ActionType action) {
+    void attach_action(ActionType action) {
       actions.emplace_back(action);
     }
 
-    void
-    make_ready_trigger();
+    void make_ready_trigger();
 
-    void
-    execute_actions() {
+    void execute_actions() {
       for (auto&& action : actions) {
         action();
       }
@@ -159,64 +155,59 @@ struct AsyncEvent {
     }
 
   private:
-    event_wrapper_ptr_t event = nullptr;
-    action_container_t actions;
+    EventWrapperPtrType event = nullptr;
+    ActionContainerType actions;
   };
 
-  using event_holder_t = EventHolder;
-  using event_holder_ptr_t = EventHolder*;
-  using event_container_t = std::unordered_map<EventType, event_holder_t>;
-  using typed_event_container_t = std::list<event_holder_ptr_t>;
+  using EventHolderType = EventHolder;
+  using EventHolderPtrType = EventHolder*;
+  using EventContainerType = std::unordered_map<EventType, EventHolderType>;
+  using TypedEventContainerType = std::list<EventHolderPtrType>;
 
   AsyncEvent() = default;
 
   template <typename EventT>
-  EventType
-  create_event_id(NodeType const& node) {
-    EventType const event = (EventType)node << (64 - (sizeof(NodeType) * 8)) | cur_event;
-    cur_event++;
+  EventType create_event_id(NodeType const& node) {
+    EventType const event =
+      (EventType)node << (64 - (sizeof(NodeType) * 8)) | cur_event_;
+    cur_event_++;
     std::unique_ptr<EventT> et = std::make_unique<EventT>(event);
-    container.emplace(
+    container_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(event),
-      std::forward_as_tuple(event_holder_t(std::move(et)))
+      std::forward_as_tuple(EventHolderType(std::move(et)))
     );
     return event;
   }
 
-  NodeType
-  get_owning_node(EventType const& event) {
+  NodeType get_owning_node(EventType const& event) {
     NodeType const node = event >> (64 - (sizeof(NodeType) * 8));
     return node;
   }
 
-  EventType
-  create_mpi_event_id(NodeType const& node) {
+  EventType create_mpi_event_id(NodeType const& node) {
     auto const& evt = create_event_id<MPIEvent>(node);
     auto& holder = get_event_holder(evt);
-    event_container[mpi_event_tag].emplace_back(
+    event_container_[mpi_event_tag].emplace_back(
       &holder
     );
     return evt;
   }
 
-  EventType
-  create_normal_event_id(NodeType const& node) {
+  EventType create_normal_event_id(NodeType const& node) {
     return create_event_id<NormalEvent>(node);
   }
 
-  EventType
-  create_parent_event_id(NodeType const& node) {
+  EventType create_parent_event_id(NodeType const& node) {
     auto const& evt = create_event_id<ParentEvent>(node);
     auto& holder = get_event_holder(evt);
-    event_container[mpi_event_tag].emplace_back(
+    event_container_[mpi_event_tag].emplace_back(
       &holder
     );
     return evt;
   }
 
-  event_holder_t&
-  get_event_holder(EventType const& event) {
+  EventHolderType& get_event_holder(EventType const& event) {
     auto const& owning_node = get_owning_node(event);
 
     debug_print(
@@ -231,84 +222,74 @@ struct AsyncEvent {
       );
     }
 
-    auto container_iter = container.find(event);
+    auto container_iter = container_.find(event);
     assert(
-      container_iter != container.end() and "Event must exist in container"
+      container_iter != container_.end() and "Event must exist in container"
     );
     return container_iter->second;
   }
 
-  bool
-  holder_exists(EventType const& event) {
-    auto container_iter = container.find(event);
-    return container_iter != container.end();
+  bool holder_exists(EventType const& event) {
+    auto container_iter = container_.find(event);
+    return container_iter != container_.end();
   }
 
   template <typename EventT>
-  EventT&
-  get_event(EventType const& event) {
+  EventT& get_event(EventType const& event) {
     return *static_cast<EventT*>(get_event_holder(event).get_event());
   }
 
-  event_state_t
-  test_event_complete(EventType const& event) {
+  EventStateType test_event_complete(EventType const& event) {
     if (holder_exists(event)) {
       bool const is_ready = this->get_event_holder(event).get_event()->test_ready();
       if (is_ready) {
-        return event_state_t::EventReady;
+        return EventStateType::EventReady;
       } else {
-        return event_state_t::EventWaiting;
+        return EventStateType::EventWaiting;
       }
     } else {
       if (get_owning_node(event) == the_context->get_node()) {
-        return event_state_t::EventReady;
+        return EventStateType::EventReady;
       } else {
-        return event_state_t::EventRemote;
+        return EventStateType::EventRemote;
       }
     }
   }
 
-  EventType
-  attach_action(EventType const& event, ActionType callable);
+  EventType attach_action(EventType const& event, ActionType callable);
 
-  void
-  test_events_trigger(
+  void test_events_trigger(
     int const& event_tag, int const& num_events = num_check_actions
   ) {
     int cur = 0;
-    for (auto iter = event_container[event_tag].begin();
-         cur < num_events && iter != event_container[event_tag].end();
+    for (auto iter = event_container_[event_tag].begin();
+         cur < num_events && iter != event_container_[event_tag].end();
          ++iter) {
       auto const& holder = *iter;
       auto event = holder->get_event();
       if (event->test_ready()) {
         holder->execute_actions();
-        iter = event_container[event_tag].erase(iter);
-        container.erase(event->event_id);
+        iter = event_container_[event_tag].erase(iter);
+        container_.erase(event->event_id);
         return;
       }
       cur++;
     }
   }
 
-  bool
-  scheduler();
+  bool scheduler();
 
-  bool
-  is_local_term();
+  bool is_local_term();
 
-  static void
-  event_finished(EventFinishedMsg* msg);
-
-  static void
-  check_event_finished(EventCheckFinishedMsg* msg);
+  static void event_finished(EventFinishedMsg* msg);
+  static void check_event_finished(EventCheckFinishedMsg* msg);
 
 private:
-  EventType cur_event = 0;
+  EventType cur_event_ = 0;
 
-  typed_event_container_t event_container[2];
+  TypedEventContainerType event_container_[2];
 
-  event_container_t container;
+  EventContainerType container_;
 };
 
 extern std::unique_ptr<AsyncEvent> the_event;

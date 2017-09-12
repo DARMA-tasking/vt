@@ -14,11 +14,11 @@ namespace runtime { namespace pool {
 
 template <int64_t num_bytes_t>
 struct MemoryPoolEqual {
-  using container_t = std::vector<void*>;
-  using slot_t = int64_t;
+  using ContainerType = std::vector<void*>;
+  using SlotType = int64_t;
 
-  static constexpr slot_t const fst_pool_slot = 0;
-  static constexpr slot_t const default_pool_size = 1024;
+  static constexpr SlotType const fst_pool_slot = 0;
+  static constexpr SlotType const default_pool_size = 1024;
 
   // MemoryPoolEqual(slot_t const& in_num_bytes, slot_t const& in_pool_size = default_pool_size)
   //   : num_bytes(in_num_bytes), pool_size(in_pool_size)
@@ -31,29 +31,29 @@ struct MemoryPoolEqual {
   }
 
   void* alloc(size_t const& sz) {
-    if (cur_slot+1 >= holder.size()) {
+    if (cur_slot_+1 >= holder_.size()) {
       resize_pool();
     }
 
     assert(
-      cur_slot+1 < holder.size() and "Must be within pool size, add capability to grow"
+      cur_slot_+1 < holder_.size() and "Must be within pool size, add capability to grow"
     );
 
-    auto const& slot = cur_slot;
-    void* const ptr = holder[slot];
+    auto const& slot = cur_slot_;
+    void* const ptr = holder_[slot];
 
     *static_cast<size_t*>(ptr) = sz;
 
     void* const ptr_ret = static_cast<size_t*>(ptr) + 1;
 
-    cur_slot++;
+    cur_slot_++;
 
     return ptr_ret;
   }
 
   void dealloc(void* const t) {
     assert(
-      cur_slot-1 >= 0 and "Must be greater than zero"
+      cur_slot_-1 >= 0 and "Must be greater than zero"
     );
 
     debug_print(
@@ -64,32 +64,32 @@ struct MemoryPoolEqual {
 
     void* const ptr_actual = static_cast<size_t*>(t) - 1;
 
-    holder[--cur_slot] = ptr_actual;
+    holder_[--cur_slot_] = ptr_actual;
   }
 
   void resize_pool() {
-    slot_t const cur_size = holder.size();
-    slot_t const new_size = cur_size == 0 ? pool_size : cur_size * 2;
+    SlotType const cur_size = holder_.size();
+    SlotType const new_size = cur_size == 0 ? pool_size_ : cur_size * 2;
 
-    holder.resize(new_size);
+    holder_.resize(new_size);
 
-    for (auto i = cur_size; i < holder.size(); i++) {
-      holder[i] = static_cast<void*>(malloc(num_full_bytes));
+    for (auto i = cur_size; i < holder_.size(); i++) {
+      holder_[i] = static_cast<void*>(malloc(num_full_bytes_));
     }
   }
 
-  slot_t get_num_bytes() const {
-    return num_bytes;
+  SlotType get_num_bytes() const {
+    return num_bytes_;
   }
 
 private:
-  slot_t const num_bytes = num_bytes_t;
-  slot_t const num_full_bytes = num_bytes_t + sizeof(size_t);
+  SlotType const num_bytes_ = num_bytes_t;
+  SlotType const num_full_bytes_ = num_bytes_t + sizeof(size_t);
 
-  slot_t pool_size = default_pool_size;
-  slot_t cur_slot = fst_pool_slot;
+  SlotType pool_size_ = default_pool_size;
+  SlotType cur_slot_ = fst_pool_slot;
 
-  container_t holder;
+  ContainerType holder_;
 };
 
 struct Pool {

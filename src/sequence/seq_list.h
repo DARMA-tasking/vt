@@ -8,25 +8,25 @@
 namespace runtime { namespace seq {
 
 struct SeqList {
-  using seq_fun_t = std::function<bool()>;
+  using SeqFunType = std::function<bool()>;
 
-  SeqList(seq_t const& this_seq_in)
-    : this_seq(this_seq_in)
+  SeqList(SeqType const& this_seq_in)
+    : this_seq_(this_seq_in)
   { }
 
-  void add_action(seq_fun_t const& fn) {
-    lst.push_back(fn);
+  void add_action(SeqFunType const& fn) {
+    lst_.push_back(fn);
   }
 
   void progress() {
     bool performed_action = true;
-    while (ready and performed_action) {
-      if (lst.size() > 0) {
-        auto x = lst.front();
-        lst.pop_front();
+    while (ready_ and performed_action) {
+      if (lst_.size() > 0) {
+        auto x = lst_.front();
+        lst_.pop_front();
         bool const should_block = x();
         if (should_block) {
-          ready = false;
+          ready_ = false;
         }
         performed_action = true;
       } else {
@@ -36,15 +36,15 @@ struct SeqList {
   }
 
   void make_ready() {
-    ready = true;
+    ready_ = true;
   }
 
 private:
-  seq_t this_seq = no_seq;
+  SeqType this_seq_ = no_seq;
 
-  bool ready = true;
+  bool ready_ = true;
 
-  std::list<seq_fun_t> lst;
+  std::list<SeqFunType> lst_;
 };
 
 }} //end namespace runtime::seq

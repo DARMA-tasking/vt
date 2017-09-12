@@ -7,12 +7,11 @@
 
 namespace runtime { namespace seq {
 
-void
-contextual_execution(
-  seq_t const& seq, bool const& is_sequenced, seq_callable_t&& callable
+void contextual_execution(
+  SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 ) {
   the_seq->execute_in_context(
-    seq, is_sequenced, std::forward<seq_callable_t>(callable)
+    seq, is_sequenced, std::forward<SeqCallableType>(callable)
   );
 }
 

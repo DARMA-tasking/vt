@@ -19,48 +19,36 @@ enum SchedulerEvent {
 };
 
 struct Scheduler {
-  using scheduler_event_t = SchedulerEvent;
-  using trigger_t = std::function<void()>;
-  using trigger_container_t = std::list<trigger_t>;
-  using event_trigger_cont_t = std::vector<trigger_container_t>;
+  using SchedulerEventType = SchedulerEvent;
+  using TriggerType = std::function<void()>;
+  using TriggerContainerType = std::list<TriggerType>;
+  using EventTriggerContType = std::vector<TriggerContainerType>;
 
   Scheduler();
 
-  static void
-  check_term_single_node();
+  static void check_term_single_node();
 
-  void
-  scheduler();
-
-  bool
-  scheduler_impl();
-
-  void
-  scheduler_forever();
-
-  void
-  register_trigger(scheduler_event_t const& event, trigger_t trigger);
-
-  void
-  register_trigger_once(scheduler_event_t const& event, trigger_t trigger);
-
-  void
-  trigger_event(scheduler_event_t const& event);
+  void scheduler();
+  bool scheduler_impl();
+  void scheduler_forever();
+  void register_trigger(SchedulerEventType const& event, TriggerType trigger);
+  void register_trigger_once(
+    SchedulerEventType const& event, TriggerType trigger
+  );
+  void trigger_event(SchedulerEventType const& event);
 
 private:
   bool is_idle = false;
 
-  event_trigger_cont_t event_triggers;
-
-  event_trigger_cont_t event_triggers_once;
+  EventTriggerContType event_triggers;
+  EventTriggerContType event_triggers_once;
 };
 
 }} //end namespace runtime::scheduler
 
 namespace runtime {
 
-void
-run_scheduler();
+void run_scheduler();
 
 extern std::unique_ptr<sched::Scheduler> the_sched;
 

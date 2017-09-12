@@ -27,7 +27,7 @@ struct EmptyMsg : runtime::Message {
 
 sequence_register_handler(EmptyMsg, action1);
 
-static void my_seq(seq_t const& seq_id) {
+static void my_seq(SeqType const& seq_id) {
   PRINT_SEQUENCE("my_seq: executing sequence\n");
 
   the_seq->wait<EmptyMsg, action1>(10, [](EmptyMsg* msg){
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    seq_t const& seq_id = the_seq->next_seq();
+    SeqType const& seq_id = the_seq->next_seq();
     the_seq->sequenced(seq_id, my_seq);
 
     the_msg->send_msg<EmptyMsg, action1>(1, make_shared_message<EmptyMsg>(), 30);
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
     the_msg->send_msg<EmptyMsg, action1>(0, make_shared_message<EmptyMsg>(), 30);
     the_msg->send_msg<EmptyMsg, action1>(0, make_shared_message<EmptyMsg>(), 10);
   } else if (my_node == 1) {
-    seq_t const& seq_id2 = the_seq->next_seq();
+    SeqType const& seq_id2 = the_seq->next_seq();
     the_seq->sequenced(seq_id2, my_seq);
   }
 

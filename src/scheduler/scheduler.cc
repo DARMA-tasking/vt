@@ -8,8 +8,7 @@
 
 namespace runtime { namespace sched {
 
-/*static*/ void
-Scheduler::check_term_single_node() {
+/*static*/ void Scheduler::check_term_single_node() {
   auto const& num_nodes = the_context->get_num_nodes();
   if (num_nodes == 1) {
     the_term->maybe_propagate();
@@ -17,12 +16,11 @@ Scheduler::check_term_single_node() {
 }
 
 Scheduler::Scheduler() {
-  event_triggers.resize(scheduler_event_t::SchedulerEventSize + 1);
-  event_triggers_once.resize(scheduler_event_t::SchedulerEventSize + 1);
+  event_triggers.resize(SchedulerEventType::SchedulerEventSize + 1);
+  event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
 }
 
-bool
-Scheduler::scheduler_impl() {
+bool Scheduler::scheduler_impl() {
   bool scheduled_work = false;
 
   bool const msg_sch = the_msg->scheduler();
@@ -40,8 +38,7 @@ Scheduler::scheduler_impl() {
   return scheduled_work;
 }
 
-void
-Scheduler::scheduler() {
+void Scheduler::scheduler() {
 
   bool const scheduled_work1 = scheduler_impl();
   bool const scheduled_work2 = scheduler_impl();
@@ -49,12 +46,11 @@ Scheduler::scheduler() {
   if (not scheduled_work1 and not scheduled_work2 and not is_idle) {
     is_idle = true;
     // idle
-    trigger_event(scheduler_event_t::BeginIdle);
+    trigger_event(SchedulerEventType::BeginIdle);
   }
 }
 
-void
-Scheduler::trigger_event(scheduler_event_t const& event) {
+void Scheduler::trigger_event(SchedulerEventType const& event) {
   assert(
     event_triggers.size() >= event and "Must be large enough to hold this event"
   );
@@ -69,9 +65,8 @@ Scheduler::trigger_event(scheduler_event_t const& event) {
   event_triggers_once[event].clear();
 }
 
-void
-Scheduler::register_trigger(
-  scheduler_event_t const& event, trigger_t trigger
+void Scheduler::register_trigger(
+  SchedulerEventType const& event, TriggerType trigger
 ) {
   assert(
     event_triggers.size() >= event and "Must be large enough to hold this event"
@@ -79,9 +74,8 @@ Scheduler::register_trigger(
   event_triggers[event].push_back(trigger);
 }
 
-void
-Scheduler::register_trigger_once(
-  scheduler_event_t const& event, trigger_t trigger
+void Scheduler::register_trigger_once(
+  SchedulerEventType const& event, TriggerType trigger
 ) {
   assert(
     event_triggers.size() >= event and "Must be large enough to hold this event"
@@ -89,8 +83,7 @@ Scheduler::register_trigger_once(
   event_triggers_once[event].push_back(trigger);
 }
 
-void
-Scheduler::scheduler_forever() {
+void Scheduler::scheduler_forever() {
   while (true) {
     scheduler();
   }
@@ -100,8 +93,7 @@ Scheduler::scheduler_forever() {
 
 namespace runtime {
 
-void
-run_scheduler() {
+void run_scheduler() {
   the_sched->scheduler();
 }
 

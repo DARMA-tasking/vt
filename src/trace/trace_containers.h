@@ -49,11 +49,11 @@ struct TraceEventSeqCompare {
 template <typename T>
 using EventCompareType = TraceEventSeqCompare<T>;
 
-using container_event_sorted_t = EventSortedType<
+using ContainerEventSortedType = EventSortedType<
   TraceContainerEventType::mapped_type*, bool, EventCompareType<TraceEventType>
 >;
 
-using container_event_type_sorted_t = EventSortedType<
+using ContainerEventTypeSortedType = EventSortedType<
   TraceContainerEventClassType::mapped_type*, bool, EventCompareType<EventClassType>
 >;
 

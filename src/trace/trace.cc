@@ -417,8 +417,8 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
        << "TOTAL_EVENTS 0"
        << std::endl;
 
-  container_event_sorted_t sorted_event;
-  container_event_type_sorted_t sorted_event_type;
+  ContainerEventSortedType sorted_event;
+  ContainerEventTypeSortedType sorted_event_type;
 
   for (auto&& elem : TraceContainersType::event_container) {
     sorted_event.emplace(

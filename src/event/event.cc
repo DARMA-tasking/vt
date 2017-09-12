@@ -4,13 +4,12 @@
 
 namespace runtime {
 
-bool
-ParentEvent::test_ready() {
+bool ParentEvent::test_ready() {
   bool ready = true;
   for (auto&& e : events) {
     ready &=
       the_event->test_event_complete(e) ==
-      AsyncEvent::event_state_t::EventReady;
+      AsyncEvent::EventStateType::EventReady;
   }
   if (ready) {
     events.clear();
@@ -18,16 +17,14 @@ ParentEvent::test_ready() {
   return ready;
 }
 
-void
-AsyncEvent::EventHolder::make_ready_trigger() {
+void AsyncEvent::EventHolder::make_ready_trigger() {
   //printf("make_ready_trigger\n");
   event->set_ready();
   execute_actions();
-  the_event->container.erase(event->event_id);
+  the_event->container_.erase(event->event_id);
 }
 
-EventType
-AsyncEvent::attach_action(EventType const& event, ActionType callable) {
+EventType AsyncEvent::attach_action(EventType const& event, ActionType callable) {
   auto const& this_node = the_context->get_node();
   auto const& event_id = create_normal_event_id(this_node);
   auto& holder = get_event_holder(event_id);
@@ -48,16 +45,16 @@ AsyncEvent::attach_action(EventType const& event, ActionType callable) {
   );
 
   switch (event_state) {
-  case event_state_t::EventReady:
+  case EventStateType::EventReady:
     trigger();
     break;
-  case event_state_t::EventWaiting:
+  case EventStateType::EventWaiting:
     this->get_event_holder(event).attach_action(
       trigger
     );
     holder.make_ready_trigger();
     break;
-  case event_state_t::EventRemote: {
+  case EventStateType::EventRemote: {
     // attach event to new id
     holder.attach_action(trigger);
 
@@ -82,34 +79,30 @@ AsyncEvent::attach_action(EventType const& event, ActionType callable) {
   return event_id;
 }
 
-/*static*/ void
-AsyncEvent::event_finished(EventFinishedMsg* msg) {
-  auto const& complete = the_event->test_event_complete(msg->event_back);
+/*static*/ void AsyncEvent::event_finished(EventFinishedMsg* msg) {
+  auto const& complete = the_event->test_event_complete(msg->event_back_);
 
   assert(
-    complete == AsyncEvent::event_state_t::EventWaiting and
+    complete == AsyncEvent::EventStateType::EventWaiting and
     "Event must be waiting since it depends on this finished event"
   );
 
-  auto& holder = the_event->get_event_holder(msg->event_back);
+  auto& holder = the_event->get_event_holder(msg->event_back_);
   holder.make_ready_trigger();
 }
 
-/*static*/ void
-AsyncEvent::check_event_finished(EventCheckFinishedMsg* msg) {
-  auto const& event = msg->event;
+/*static*/ void AsyncEvent::check_event_finished(EventCheckFinishedMsg* msg) {
+  auto const& event = msg->event_;
   auto const& node = the_event->get_owning_node(event);
 
   assert(
     node == the_context->get_node() and "Node must be identical"
   );
 
-  auto const& this_node = the_context->get_node();
-
   auto send_back_fun = [=]{
-    auto msg_send = new EventFinishedMsg(event, msg->event_back);
-    auto send_back = the_event->get_owning_node(msg->event_back);
-    assert(send_back == msg->sent_from_node);
+    auto msg_send = new EventFinishedMsg(event, msg->event_back_);
+    auto send_back = the_event->get_owning_node(msg->event_back_);
+    assert(send_back == msg->sent_from_node_);
     the_msg->send_msg<EventFinishedMsg, event_finished>(
       send_back, msg_send, [=]{ delete msg_send; }
     );
@@ -124,27 +117,25 @@ AsyncEvent::check_event_finished(EventCheckFinishedMsg* msg) {
     event, node, this_node, is_complete, msg->sent_from_node
   );
 
-  if (is_complete == AsyncEvent::event_state_t::EventReady) {
+  if (is_complete == AsyncEvent::EventStateType::EventReady) {
     send_back_fun();
   } else {
     assert(
-      is_complete == AsyncEvent::event_state_t::EventWaiting and
+      is_complete == AsyncEvent::EventStateType::EventWaiting and
       "Must be waiting if not ready"
     );
     /*ignore return event*/ the_event->attach_action(event, send_back_fun);
   }
 }
 
-bool
-AsyncEvent::scheduler() {
+bool AsyncEvent::scheduler() {
   the_event->test_events_trigger(mpi_event_tag);
   the_event->test_events_trigger(normal_event_tag);
   return false;
 }
 
-bool
-AsyncEvent::is_local_term() {
-  return event_container[mpi_event_tag].size() == 0;
+bool AsyncEvent::is_local_term() {
+  return event_container_[mpi_event_tag].size() == 0;
 }
 
 } //end namespace runtime
