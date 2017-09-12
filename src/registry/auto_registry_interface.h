@@ -9,20 +9,20 @@
 namespace runtime { namespace auto_registry {
 
 template <typename MessageT, action_any_function_t<MessageT>* f>
-handler_t make_auto_handler(MessageT* const msg);
+HandlerType make_auto_handler(MessageT* const msg);
 
 template <typename T, T value>
-handler_t make_auto_handler();
+HandlerType make_auto_handler();
 
 template <typename T, bool is_msg, typename... Args>
-handler_t make_auto_handler_functor();
+HandlerType make_auto_handler_functor();
 
-auto_active_t get_auto_handler(handler_t const& handler);
+auto_active_t get_auto_handler(HandlerType const& handler);
 
-auto_active_functor_t get_auto_handler_functor(handler_t const& handler);
+auto_active_functor_t get_auto_handler_functor(HandlerType const& handler);
 
 #if backend_check_enabled(trace_enabled)
-trace::trace_ep_t get_trace_id(handler_t const& handler);
+trace::trace_ep_t get_trace_id(HandlerType const& handler);
 #endif
 
 }} // end namespace runtime::auto_registry

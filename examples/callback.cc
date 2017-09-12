@@ -6,9 +6,9 @@ using namespace runtime;
 
 struct TestMsg : runtime::Message {
   NodeType from;
-  handler_t callback_han;
+  HandlerType callback_han;
 
-  TestMsg(NodeType const& in_from, handler_t const& in_callback_han)
+  TestMsg(NodeType const& in_from, HandlerType const& in_callback_han)
     : Message(), from(in_from), callback_han(in_callback_han)
   { }
 };
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  handler_t const callback = the_msg->register_new_handler(callback_fn);
+  HandlerType const callback = the_msg->register_new_handler(callback_fn);
 
   auto const& my_node = the_context->get_node();
   auto const& num_nodes = the_context->get_num_nodes();

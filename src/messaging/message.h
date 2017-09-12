@@ -43,14 +43,14 @@ struct CallbackMessage : runtime::Message {
   }
 
   void
-  set_callback(handler_t const& han) {
+  set_callback(HandlerType const& han) {
     callback = han;
   }
 
-  handler_t callback = uninitialized_handler;
+  HandlerType callback = uninitialized_handler;
 };
 
-inline handler_t
+inline HandlerType
 get_callback_message(ShortMessage* msg) {
   return reinterpret_cast<CallbackMessage*>(msg)->callback;
 }

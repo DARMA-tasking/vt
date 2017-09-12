@@ -64,8 +64,8 @@ struct ActiveMessenger {
   using user_send_fn_t = std::function<void(send_fn_t)>;
   using container_pending_t = std::unordered_map<tag_t, pending_recv_t>;
   using msg_cont_t = std::list<buffered_msg_t>;
-  using container_waiting_handler_t = std::unordered_map<handler_t, msg_cont_t>;
-  using ready_han_tag_t = std::tuple<handler_t, tag_t>;
+  using container_waiting_HandlerType = std::unordered_map<HandlerType, msg_cont_t>;
+  using ready_han_tag_t = std::tuple<HandlerType, tag_t>;
   using maybe_ready_t = std::vector<ready_han_tag_t>;
   using handler_manager_t = HandlerManager;
 
@@ -96,7 +96,7 @@ struct ActiveMessenger {
    *     // do work ...
    *   }
    *
-   *   handler_t const han = register_new_handler(my_handler);
+   *   HandlerType const han = register_new_handler(my_handler);
    *
    *   MyMsg* msg = make_shared_message<MyMsg>(156);
    *   the_msg->send_msg(29, han, msg);
@@ -106,7 +106,7 @@ struct ActiveMessenger {
 
   template <typename MessageT>
   event_t send_msg(
-    NodeType const& dest, handler_t const& han, MessageT* const msg,
+    NodeType const& dest, HandlerType const& han, MessageT* const msg,
     action_t next_action = nullptr
   ) {
     envelope_setup(msg->env, dest, han);
@@ -115,7 +115,7 @@ struct ActiveMessenger {
 
   template <typename MessageT>
   event_t send_msg(
-    handler_t const& han, MessageT* const msg, tag_t const& tag = no_tag,
+    HandlerType const& han, MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
     auto const& dest = handler_manager_t::get_handler_node(han);
@@ -156,7 +156,7 @@ struct ActiveMessenger {
   event_t broadcast_msg(
     MessageT* const msg, tag_t const& tag = no_tag, action_t next_action = nullptr
   ) {
-    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
+    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     auto const& this_node = the_context->get_node();
     set_broadcast_type(msg->env);
     if (tag != no_tag) {
@@ -175,7 +175,7 @@ struct ActiveMessenger {
     NodeType const& dest, MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
-    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
+    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     envelope_setup(msg->env, dest, han);
     if (tag != no_tag) {
       envelope_set_tag(msg->env, tag);
@@ -219,7 +219,7 @@ struct ActiveMessenger {
   event_t broadcast_msg(
     MessageT* const msg, tag_t const& tag = no_tag, action_t next_action = nullptr
   ) {
-    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
+    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     auto const& this_node = the_context->get_node();
     set_broadcast_type(msg->env);
     if (tag != no_tag) {
@@ -238,7 +238,7 @@ struct ActiveMessenger {
     NodeType const& dest, MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
-    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
+    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     envelope_setup(msg->env, dest, han);
     if (tag != no_tag) {
       envelope_set_tag(msg->env, tag);
@@ -275,7 +275,7 @@ struct ActiveMessenger {
   event_t broadcast_msg(
     MessageT* const msg, tag_t const& tag = no_tag, action_t next_action = nullptr
   ) {
-    handler_t const& han =
+    HandlerType const& han =
       auto_registry::make_auto_handler_functor<FunctorT, true, MessageT*>();
     set_broadcast_type(msg->env);
     if (tag != no_tag) {
@@ -294,7 +294,7 @@ struct ActiveMessenger {
     NodeType const& dest, MessageT* const msg, tag_t const& tag = no_tag,
     action_t next_action = nullptr
   ) {
-    handler_t const& han =
+    HandlerType const& han =
       auto_registry::make_auto_handler_functor<FunctorT, true, MessageT*>();
     envelope_setup(msg->env, dest, han);
     if (tag != no_tag) {
@@ -325,7 +325,7 @@ struct ActiveMessenger {
    */
   template <typename MessageT>
   event_t send_msg(
-    NodeType const& dest, handler_t const& han, MessageT* const msg,
+    NodeType const& dest, HandlerType const& han, MessageT* const msg,
     user_send_fn_t send_payload_fn, action_t next_action = nullptr
   ) {
     using namespace std::placeholders;
@@ -346,7 +346,7 @@ struct ActiveMessenger {
     NodeType const& dest, MessageT* const msg, user_send_fn_t send_payload_fn,
     action_t next_action = nullptr
   ) {
-    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
+    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
     return send_msg<MessageT>(dest, han, msg, send_payload_fn, next_action);
   }
 
@@ -372,7 +372,7 @@ struct ActiveMessenger {
 
   template <typename MessageT>
   event_t broadcast_msg(
-    handler_t const& han, MessageT* const msg, action_t next_action = nullptr
+    HandlerType const& han, MessageT* const msg, action_t next_action = nullptr
   ) {
     auto const& this_node = the_context->get_node();
     set_broadcast_type(msg->env);
@@ -380,7 +380,7 @@ struct ActiveMessenger {
   }
 
   event_t send_msg_direct(
-    handler_t const& han, BaseMessage* const msg, int const& msg_size,
+    HandlerType const& han, BaseMessage* const msg, int const& msg_size,
     action_t next_action = nullptr
   );
 
@@ -403,7 +403,7 @@ struct ActiveMessenger {
   event_t send_msg_callback(
     NodeType const& dest, MessageT* const msg, active_function_t fn
   ) {
-    handler_t const& this_han = register_new_handler(fn, no_tag);
+    HandlerType const& this_han = register_new_handler(fn, no_tag);
     auto cb = static_cast<CallbackMessage*>(msg);
     cb->set_callback(this_han);
     return send_msg<MessageT,f>(dest, msg, no_tag, nullptr);
@@ -411,10 +411,10 @@ struct ActiveMessenger {
 
   template <typename MessageT>
   void send_msg_callback(
-    handler_t const& han, NodeType const& dest, MessageT* const msg,
+    HandlerType const& han, NodeType const& dest, MessageT* const msg,
     active_function_t fn
   ) {
-    handler_t const& this_han = register_new_handler(fn, no_tag);
+    HandlerType const& this_han = register_new_handler(fn, no_tag);
     auto cb = static_cast<CallbackMessage*>(msg);
     cb->set_callback(this_han);
     send_msg(dest, han, msg);
@@ -434,7 +434,7 @@ struct ActiveMessenger {
 
   template <typename MessageT, action_any_function_t<MessageT>* f>
   void trigger(std::function<void(runtime::BaseMessage*)> fn) {
-    handler_t const& han = auto_registry::make_auto_handler<MessageT,f>(nullptr);
+    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(nullptr);
     printf("trigger: han=%d\n", han);
     the_registry->save_trigger(han, /*reinterpret_cast<active_function_t>(*/fn);
   }
@@ -454,29 +454,29 @@ struct ActiveMessenger {
   bool
   is_local_term();
 
-  handler_t
+  HandlerType
   register_new_handler(active_function_t fn, tag_t const& tag = no_tag);
 
   void
   swap_handler_fn(
-    handler_t const& han, active_function_t fn, tag_t const& tag = no_tag
+    HandlerType const& han, active_function_t fn, tag_t const& tag = no_tag
   );
 
   void
-  unregister_handler_fn(handler_t const& han, tag_t const& tag = no_tag);
+  unregister_handler_fn(HandlerType const& han, tag_t const& tag = no_tag);
 
   void
   register_handler_fn(
-    handler_t const& han, active_function_t fn, tag_t const& tag = no_tag
+    HandlerType const& han, active_function_t fn, tag_t const& tag = no_tag
   );
 
-  handler_t
+  HandlerType
   collective_register_handler(active_function_t fn, tag_t const& tag = no_tag);
 
-  handler_t
+  HandlerType
   get_current_handler();
 
-  handler_t
+  HandlerType
   get_current_callback();
 
   NodeType
@@ -486,19 +486,19 @@ struct ActiveMessenger {
   deliver_active_msg(message_t msg, NodeType const& from_node, bool insert);
 
   void
-  deliver_pending_msgs_on_han(handler_t const& han, tag_t const& tag = no_tag);
+  deliver_pending_msgs_on_han(HandlerType const& han, tag_t const& tag = no_tag);
 
   void
   process_maybe_ready_han_tag();
 
 private:
-  handler_t current_handler_context = uninitialized_handler;
-  handler_t current_callback_context = uninitialized_handler;
+  HandlerType current_handler_context = uninitialized_handler;
+  HandlerType current_callback_context = uninitialized_handler;
   NodeType current_node_context = uninitialized_destination;
 
   maybe_ready_t maybe_ready_tag_han;
 
-  container_waiting_handler_t pending_handler_msgs;
+  container_waiting_HandlerType pending_handler_msgs;
 
   container_pending_t pending_recvs;
 

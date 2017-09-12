@@ -21,7 +21,7 @@ struct CollectiveOps {
     MPI_Barrier(MPI_COMM_WORLD);
   }
 
-  static handler_t
+  static HandlerType
   register_handler(active_function_t fn) {
     return the_registry->register_active_handler(fn);
   }

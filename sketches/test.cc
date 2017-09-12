@@ -99,7 +99,7 @@ static void hello_world_virtual(runtime::BaseMessage* in_msg, VirtualContext* vi
 void my_register_virtual_context() {
   MyHelloContext* hello_context = new MyHelloContext();
   vc_proxy_t hello_proxy = the_virtual->register_virtual_context(hello_context);
-  vc_proxy_handler_t virtual_han = the_virtual->register_virtual_handler(hello_world_virtual);
+  vc_proxy_HandlerType virtual_han = the_virtual->register_virtual_handler(hello_world_virtual);
   HelloMsg* msg = new HelloMsg(my_node);
 
   the_virtual->send_msg(hello_proxy, virtual_han, msg);

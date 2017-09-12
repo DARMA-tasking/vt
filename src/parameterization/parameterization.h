@@ -23,14 +23,14 @@ struct NonType {};
 template <typename Tuple>
 struct DataMsg : runtime::Message {
   Tuple tup;
-  handler_t sub_han = uninitialized_handler;
+  HandlerType sub_han = uninitialized_handler;
 
-  DataMsg(handler_t const& in_sub_han, Tuple&& a)
+  DataMsg(HandlerType const& in_sub_han, Tuple&& a)
     : Message(), tup(std::forward<Tuple>(a)), sub_han(in_sub_han)
   { }
 
   template <typename... Args>
-  DataMsg(handler_t const& in_sub_han, Args&&... a)
+  DataMsg(HandlerType const& in_sub_han, Args&&... a)
     : Message(), tup(std::forward<Args>(a)...), sub_han(in_sub_han)
   { }
 };
@@ -105,7 +105,7 @@ struct Param {
 
   template <typename... Args>
   event_t send_data_tuple(
-    NodeType const& dest, handler_t const& han, std::tuple<Args...>&& tup
+    NodeType const& dest, HandlerType const& han, std::tuple<Args...>&& tup
   ) {
     static_check_copyable<Args...>();
 
@@ -131,7 +131,7 @@ struct Param {
   }
 
   template <typename DataMsg>
-  event_t send_data_msg(NodeType const& dest, handler_t const& han, DataMsg* m) {
+  event_t send_data_msg(NodeType const& dest, HandlerType const& han, DataMsg* m) {
     return the_msg->send_msg<DataMsg, data_message_handler>(
       dest, m, [=]{ delete m; }
     );

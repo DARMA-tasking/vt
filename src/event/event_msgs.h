@@ -29,8 +29,8 @@ struct EventFinishedMsg : ShortMessage {
   { }
 };
 
-extern handler_t event_finished_han;
-extern handler_t check_event_finished_han;
+extern HandlerType event_finished_han;
+extern HandlerType check_event_finished_han;
 
 } //end namespace runtime
 

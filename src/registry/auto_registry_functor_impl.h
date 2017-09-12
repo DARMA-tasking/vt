@@ -17,8 +17,8 @@ inline auto_active_functor_container_t& get_auto_registry_functor()  {
 }
 
 template <typename FunctorT, bool is_msg, typename... Args>
-inline handler_t make_auto_handler_functor() {
-  handler_t const id = get_handler_active_functor(FunctorT, is_msg, Args);
+inline HandlerType make_auto_handler_functor() {
+  HandlerType const id = get_handler_active_functor(FunctorT, is_msg, Args);
   return handler_manager_t::make_handler(true, true, id);
 }
 
@@ -82,7 +82,7 @@ RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
   );
 }
 
-inline auto_active_functor_t get_auto_handler_functor(handler_t const& handler) {
+inline auto_active_functor_t get_auto_handler_functor(HandlerType const& handler) {
   auto const& han_id = handler_manager_t::get_handler_identifier(handler);
 
   bool const& is_auto = handler_manager_t::is_handler_auto(handler);
@@ -102,7 +102,7 @@ inline auto_active_functor_t get_auto_handler_functor(handler_t const& handler) 
 }
 
 template <typename RunnableFunctorT>
-auto_handler_t register_active_functor() {
+auto_HandlerType register_active_functor() {
   return RegistrarWrapperFunctor<RunnableFunctorT>().registrar.index;
 }
 

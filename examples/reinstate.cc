@@ -4,14 +4,14 @@
 
 using namespace runtime;
 
-static handler_t my_col_han = uninitialized_handler;
-static handler_t my_reinstate_fn = uninitialized_handler;
+static HandlerType my_col_han = uninitialized_handler;
+static HandlerType my_reinstate_fn = uninitialized_handler;
 
 struct TestMsg : runtime::Message {
   NodeType from;
-  handler_t callback_han;
+  HandlerType callback_han;
 
-  TestMsg(NodeType const& in_from, handler_t const& in_callback_han)
+  TestMsg(NodeType const& in_from, HandlerType const& in_callback_han)
     : Message(), from(in_from), callback_han(in_callback_han)
   { }
 };
@@ -32,7 +32,7 @@ static void reinstate_fn(runtime::BaseMessage* in_msg) {
 static void callback_fn(runtime::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-  handler_t const& han = the_msg->get_current_handler();
+  HandlerType const& han = the_msg->get_current_handler();
   the_msg->unregister_handler_fn(han);
 
   the_msg->send_msg(my_reinstate_fn, make_shared_message<TestMsg>(0, han));
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  handler_t const callback = the_msg->register_new_handler(callback_fn);
+  HandlerType const callback = the_msg->register_new_handler(callback_fn);
   my_reinstate_fn = the_msg->register_new_handler(reinstate_fn);
 
   my_col_han = the_msg->collective_register_handler(my_col_fn);

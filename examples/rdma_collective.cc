@@ -8,7 +8,7 @@ static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
 
 static rdma_handle_t my_handle = no_rdma_handle;
-static handler_t test_han = uninitialized_handler;
+static HandlerType test_han = uninitialized_handler;
 
 static int const my_data_len = 8;
 static int const local_data_len = 24;

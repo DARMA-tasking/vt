@@ -4,7 +4,7 @@
 
 using namespace runtime;
 
-static handler_t my_reinstate_fn = uninitialized_handler;
+static HandlerType my_reinstate_fn = uninitialized_handler;
 static tag_t const first_recv_tag = 10;
 static tag_t const last_recv_tag = 15;
 static tag_t cur_iter = first_recv_tag;
@@ -12,9 +12,9 @@ static int count = 0;
 
 struct TestMsg : runtime::Message {
   NodeType from;
-  handler_t callback_han;
+  HandlerType callback_han;
 
-  TestMsg(NodeType const& in_from, handler_t const& in_callback_han)
+  TestMsg(NodeType const& in_from, HandlerType const& in_callback_han)
     : Message(), from(in_from), callback_han(in_callback_han)
   { }
 };
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  handler_t const callback = the_msg->register_new_handler(
+  HandlerType const callback = the_msg->register_new_handler(
     process_iter_msgs, cur_iter
   );
 

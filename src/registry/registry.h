@@ -15,41 +15,41 @@ namespace runtime {
 struct Registry {
   using handler_manager_t = HandlerManager;
   using handler_bits_t = HandlerBits;
-  using tagged_handler_t = std::tuple<tag_t, handler_t>;
-  using container_t = std::unordered_map<handler_t, active_function_t>;
+  using tagged_HandlerType = std::tuple<tag_t, HandlerType>;
+  using container_t = std::unordered_map<HandlerType, active_function_t>;
   using tag_container_t = std::unordered_map<tag_t, active_function_t>;
-  using han_tag_container_t = std::unordered_map<handler_t, tag_container_t>;
+  using han_tag_container_t = std::unordered_map<HandlerType, tag_container_t>;
 
   Registry() = default;
 
-  handler_t
+  HandlerType
   register_new_handler(
     active_function_t fn, tag_t const& tag = no_tag,
     bool const& is_collective = false
   );
 
   void
-  unregister_handler_fn(handler_t const& han, tag_t const& tag = no_tag);
+  unregister_handler_fn(HandlerType const& han, tag_t const& tag = no_tag);
 
   void
   swap_handler(
-    handler_t const& han, active_function_t fn, tag_t const& tag = no_tag
+    HandlerType const& han, active_function_t fn, tag_t const& tag = no_tag
   );
 
-  handler_t
+  HandlerType
   register_active_handler(active_function_t fn, tag_t const& tag = no_tag);
 
   active_function_t
-  get_handler(handler_t const& han, tag_t const& tag = no_tag);
+  get_handler(HandlerType const& han, tag_t const& tag = no_tag);
 
   active_function_t
-  get_handler_no_tag(handler_t const& han);
+  get_handler_no_tag(HandlerType const& han);
 
   active_function_t
-  get_trigger(handler_t const& han);
+  get_trigger(HandlerType const& han);
 
   void
-  save_trigger(handler_t const& han, active_function_t fn);
+  save_trigger(HandlerType const& han, active_function_t fn);
 
 private:
   container_t triggers;

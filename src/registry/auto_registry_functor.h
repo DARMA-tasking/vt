@@ -16,15 +16,15 @@ auto_active_functor_container_t& get_auto_registry_functor();
 
 template <typename FunctorT>
 struct RegistrarFunctor {
-  auto_handler_t index;
+  auto_HandlerType index;
 
   RegistrarFunctor();
 };
 
-auto_active_functor_t get_auto_handler_functor(handler_t const& handler);
+auto_active_functor_t get_auto_handler_functor(HandlerType const& handler);
 
 template <typename T, bool is_msg, typename... Args>
-handler_t make_auto_handler_functor();
+HandlerType make_auto_handler_functor();
 
 template <typename RunnableFunctorT>
 struct RegistrarWrapperFunctor {
@@ -32,7 +32,7 @@ struct RegistrarWrapperFunctor {
 };
 
 template <typename RunnableFunctorT>
-auto_handler_t register_active_functor();
+auto_HandlerType register_active_functor();
 
 template <typename... Args>
 struct pack { };
@@ -44,13 +44,13 @@ struct RunnableFunctor {
 
   static constexpr bool const is_msg_t = is_msg;
 
-  static auto_handler_t const idx;
+  static auto_HandlerType const idx;
 
   RunnableFunctor() = default;
 };
 
 template <typename FunctorT, bool is_msg, typename... Args>
-auto_handler_t const RunnableFunctor<FunctorT, is_msg, Args...>::idx =
+auto_HandlerType const RunnableFunctor<FunctorT, is_msg, Args...>::idx =
   register_active_functor<RunnableFunctor<FunctorT, is_msg, Args...>>();
 
 template <typename FunctorT, bool is_msg, typename... Args>

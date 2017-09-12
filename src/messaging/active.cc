@@ -7,7 +7,7 @@ namespace runtime {
 
 event_t
 ActiveMessenger::send_msg_direct(
-  handler_t const& han, BaseMessage* const msg_base, int const& msg_size,
+  HandlerType const& han, BaseMessage* const msg_base, int const& msg_size,
   action_t next_action
 ) {
   auto const& this_node = the_context->get_node();
@@ -500,12 +500,12 @@ ActiveMessenger::process_maybe_ready_han_tag() {
   }
 }
 
-handler_t
+HandlerType
 ActiveMessenger::register_new_handler(active_function_t fn, tag_t const& tag) {
   return the_registry->register_new_handler(fn, tag);
 }
 
-handler_t
+HandlerType
 ActiveMessenger::collective_register_handler(
   active_function_t fn, tag_t const& tag
 ) {
@@ -514,7 +514,7 @@ ActiveMessenger::collective_register_handler(
 
 void
 ActiveMessenger::swap_handler_fn(
-  handler_t const& han, active_function_t fn, tag_t const& tag
+  HandlerType const& han, active_function_t fn, tag_t const& tag
 ) {
   the_registry->swap_handler(han, fn, tag);
 
@@ -525,7 +525,7 @@ ActiveMessenger::swap_handler_fn(
 
 void
 ActiveMessenger::deliver_pending_msgs_on_han(
-  handler_t const& han, tag_t const& tag
+  HandlerType const& han, tag_t const& tag
 ) {
   auto iter = pending_handler_msgs.find(han);
   if (iter != pending_handler_msgs.end()) {
@@ -543,7 +543,7 @@ ActiveMessenger::deliver_pending_msgs_on_han(
 
 void
 ActiveMessenger::register_handler_fn(
-  handler_t const& han, active_function_t fn, tag_t const& tag
+  HandlerType const& han, active_function_t fn, tag_t const& tag
 ) {
   swap_handler_fn(han, fn, tag);
 
@@ -554,17 +554,17 @@ ActiveMessenger::register_handler_fn(
 
 void
 ActiveMessenger::unregister_handler_fn(
-  handler_t const& han, tag_t const& tag
+  HandlerType const& han, tag_t const& tag
 ) {
   return the_registry->unregister_handler_fn(han, tag);
 }
 
-handler_t
+HandlerType
 ActiveMessenger::get_current_handler() {
   return current_handler_context;
 }
 
-handler_t
+HandlerType
 ActiveMessenger::get_current_callback() {
   return current_callback_context;
 }

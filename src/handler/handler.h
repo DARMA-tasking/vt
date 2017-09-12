@@ -16,7 +16,7 @@ using handler_identifier_t = int16_t;
 
 static constexpr handler_identifier_t const first_handle_identifier = 1;
 static constexpr handler_identifier_t const uninitialized_handle_identifier = -1;
-static constexpr handler_t const blank_handler = 0;
+static constexpr HandlerType const blank_handler = 0;
 
 static constexpr bit_count_t const auto_num_bits = 1;
 static constexpr bit_count_t const functor_num_bits = 1;
@@ -35,34 +35,34 @@ struct HandlerManager {
 
   HandlerManager() = default;
 
-  static handler_t
+  static HandlerType
   make_handler(
     bool const& is_auto, bool const& is_functor, handler_identifier_t const& id
   );
 
   static NodeType
-  get_handler_node(handler_t const& han);
+  get_handler_node(HandlerType const& han);
 
   static void
-  set_handler_node(handler_t& han, NodeType const& node);
+  set_handler_node(HandlerType& han, NodeType const& node);
 
   static void
-  set_handler_identifier(handler_t& han, handler_identifier_t const& ident);
+  set_handler_identifier(HandlerType& han, handler_identifier_t const& ident);
 
   static handler_identifier_t
-  get_handler_identifier(handler_t const& han);
+  get_handler_identifier(HandlerType const& han);
 
   static void
-  set_handler_auto(handler_t& han, bool const& is_auto);
+  set_handler_auto(HandlerType& han, bool const& is_auto);
 
   static void
-  set_handler_functor(handler_t& han, bool const& is_functor);
+  set_handler_functor(HandlerType& han, bool const& is_functor);
 
   static bool
-  is_handler_auto(handler_t const& han);
+  is_handler_auto(HandlerType const& han);
 
   static bool
-  is_handler_functor(handler_t const& han);
+  is_handler_functor(HandlerType const& han);
 };
 
 } //end namespace runtime

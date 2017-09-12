@@ -51,7 +51,7 @@ using auto_reg_info_t = AutoRegInfo<Fn>;
 using auto_active_container_t = std::vector<auto_reg_info_t<auto_active_t>>;
 using auto_active_functor_container_t = std::vector<auto_reg_info_t<auto_active_functor_t>>;
 
-using auto_handler_t = int32_t;
+using auto_HandlerType = int32_t;
 
 using handler_manager_t = runtime::HandlerManager;
 

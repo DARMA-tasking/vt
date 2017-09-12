@@ -18,18 +18,18 @@ auto_active_container_t& get_auto_registry();
 
 template <typename ActiveFnT>
 struct Registrar {
-  auto_handler_t index;
+  auto_HandlerType index;
 
   Registrar();
 };
 
-auto_active_t get_auto_handler(handler_t const& handler);
+auto_active_t get_auto_handler(HandlerType const& handler);
 
 template <typename MessageT, action_any_function_t<MessageT>* f>
-handler_t make_auto_handler(MessageT* const msg);
+HandlerType make_auto_handler(MessageT* const msg);
 
 template <typename T, T value>
-handler_t make_auto_handler();
+HandlerType make_auto_handler();
 
 template <typename ActiveFnT>
 struct RegistrarWrapper {
@@ -37,7 +37,7 @@ struct RegistrarWrapper {
 };
 
 template <typename ActiveFnT>
-auto_handler_t register_active_fn();
+auto_HandlerType register_active_fn();
 
 template <typename F, F* f>
 struct FunctorAdapter {
@@ -55,7 +55,7 @@ template <typename Callable>
 struct Runnable {
   using function_ptr_type = typename Callable::function_ptr_type;
 
-  static auto_handler_t const idx;
+  static auto_HandlerType const idx;
 
   static constexpr function_ptr_type*
   get_function();
@@ -64,7 +64,7 @@ struct Runnable {
 };
 
 template <typename ActiveFnT>
-auto_handler_t const Runnable<ActiveFnT>::idx =
+auto_HandlerType const Runnable<ActiveFnT>::idx =
   register_active_fn<Runnable<ActiveFnT>>();
 
 }} // end namespace runtime::auto_registry

@@ -7,8 +7,8 @@ using namespace runtime;
 
 NodeType this_node = -1;
 NodeType num_nodes = -1;
-handler_t test_msg_han = 0;
-handler_t test_msg_han2 = 0;
+HandlerType test_msg_han = 0;
+HandlerType test_msg_han2 = 0;
 epoch_t test_epoch = -1;
 
 struct TestMsg : runtime::Message {

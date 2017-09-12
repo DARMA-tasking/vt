@@ -38,7 +38,7 @@ using envelope_type_t = EnvelopeType;
 struct Envelope {
   envelope_datatype_t type : envelope_num_bits;
   NodeType dest : node_num_bits;
-  handler_t han : handler_num_bits;
+  HandlerType han : handler_num_bits;
   ref_t ref : ref_num_bits;
 
   #if backend_check_enabled(trace_enabled)
@@ -130,7 +130,7 @@ inline bool envelope_is_callback_type(Env const& env) {
 // Get fields of Envelope
 
 template <typename Env>
-inline handler_t envelope_get_handler(Env const& env) {
+inline HandlerType envelope_get_handler(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->han;
 }
 
@@ -142,7 +142,7 @@ inline NodeType envelope_get_dest(Env const& env) {
 // Set fields of Envelope
 
 template <typename Env>
-inline void envelope_set_handler(Env& env, handler_t const& handler) {
+inline void envelope_set_handler(Env& env, HandlerType const& handler) {
   reinterpret_cast<Envelope*>(&env)->han = handler;
 }
 
@@ -176,7 +176,7 @@ inline void envelope_deref(Env& env) {
 // Envelope setup functions
 
 template <typename Env>
-inline void envelope_setup(Env& env, NodeType const& dest, handler_t const& handler) {
+inline void envelope_setup(Env& env, NodeType const& dest, HandlerType const& handler) {
   envelope_set_dest(env, dest);
   envelope_set_handler(env, handler);
 }

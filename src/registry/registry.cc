@@ -4,13 +4,13 @@
 
 namespace runtime {
 
-handler_t
+HandlerType
 Registry::register_new_handler(
   active_function_t fn, tag_t const& tag, bool const& is_collective
 ) {
   auto const& this_node = the_context->get_node();
 
-  handler_t new_handle = 0;
+  HandlerType new_handle = 0;
   handler_identifier_t const& new_identifier =
     is_collective ? cur_ident_collective++ : cur_ident++;
 
@@ -30,7 +30,7 @@ Registry::register_new_handler(
 
 void
 Registry::swap_handler(
-  handler_t const& han, active_function_t fn, tag_t const& tag
+  HandlerType const& han, active_function_t fn, tag_t const& tag
 ) {
   if (tag == no_tag) {
     auto iter = registered.find(han);
@@ -54,17 +54,17 @@ Registry::swap_handler(
 }
 
 void
-Registry::unregister_handler_fn(handler_t const& han, tag_t const& tag) {
+Registry::unregister_handler_fn(HandlerType const& han, tag_t const& tag) {
   swap_handler(han, nullptr, tag);
 }
 
-handler_t
+HandlerType
 Registry::register_active_handler(active_function_t fn, tag_t const& tag) {
   return register_new_handler(fn, tag, true);
 }
 
 active_function_t
-Registry::get_handler_no_tag(handler_t const& han) {
+Registry::get_handler_no_tag(HandlerType const& han) {
   auto iter = registered.find(han);
   if (iter != registered.end()) {
     return iter->second;
@@ -74,7 +74,7 @@ Registry::get_handler_no_tag(handler_t const& han) {
 }
 
 active_function_t
-Registry::get_trigger(handler_t const& han) {
+Registry::get_trigger(HandlerType const& han) {
   auto iter = triggers.find(han);
   if (iter != triggers.end()) {
     return iter->second;
@@ -84,13 +84,13 @@ Registry::get_trigger(handler_t const& han) {
 }
 
 void
-Registry::save_trigger(handler_t const& han, active_function_t fn) {
+Registry::save_trigger(HandlerType const& han, active_function_t fn) {
   printf("save_trigger: han=%d\n", han);
   triggers[han] = fn;
 }
 
 active_function_t
-Registry::get_handler(handler_t const& han, tag_t const& tag) {
+Registry::get_handler(HandlerType const& han, tag_t const& tag) {
   if (tag == no_tag) {
     return get_handler_no_tag(han);
   } else {

@@ -8,7 +8,7 @@ namespace runtime { namespace auto_registry {
 
 #if backend_check_enabled(trace_enabled)
 trace::trace_ep_t
-get_trace_id(handler_t const& handler) {
+get_trace_id(HandlerType const& handler) {
   auto const& han_id = handler_manager_t::get_handler_identifier(handler);
 
   bool const& is_functor = handler_manager_t::is_handler_functor(handler);

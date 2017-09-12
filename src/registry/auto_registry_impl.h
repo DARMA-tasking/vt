@@ -18,18 +18,18 @@ get_auto_registry()  {
 }
 
 template <typename MessageT, action_any_function_t<MessageT>* f>
-inline handler_t
+inline HandlerType
 make_auto_handler(MessageT* const msg) {
-  handler_t const id = get_handler_active_function_expand(
+  HandlerType const id = get_handler_active_function_expand(
     action_any_function_t<MessageT>, f
   );
   return handler_manager_t::make_handler(true, false, id);
 }
 
 template <typename T, T value>
-inline handler_t
+inline HandlerType
 make_auto_handler() {
-  handler_t const id = get_handler_active_function_expand(T, value);
+  HandlerType const id = get_handler_active_function_expand(T, value);
   return handler_manager_t::make_handler(true, false, id);
 }
 
@@ -60,7 +60,7 @@ Registrar<ActiveFnT>::Registrar() {
 }
 
 inline auto_active_t
-get_auto_handler(handler_t const& handler) {
+get_auto_handler(HandlerType const& handler) {
   auto const& han_id = handler_manager_t::get_handler_identifier(handler);
 
   bool const& is_auto = handler_manager_t::is_handler_auto(handler);
@@ -80,7 +80,7 @@ get_auto_handler(handler_t const& handler) {
 }
 
 template <typename ActiveFnT>
-auto_handler_t
+auto_HandlerType
 register_active_fn() {
   return RegistrarWrapper<ActiveFnT>().registrar.index;
 }

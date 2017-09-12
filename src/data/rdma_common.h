@@ -22,7 +22,7 @@ static constexpr tag_t const first_rdma_channel_tag = 1;
 //   int64_t handle/handler : [24..56]
 //   int64_t node : 16 [7..23]
 //   int64_t op_type : 4 [3]
-//   int64_t is_handler_type : 1 [2]
+//   int64_t is_HandlerTypeype : 1 [2]
 //   int64_t is_collective : 1 [1]
 //   int64_t is_sized : 1 [0]
 

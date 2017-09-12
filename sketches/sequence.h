@@ -27,12 +27,12 @@ struct MyContext : SequencedContext {
   void sequence() {
     for_sequence_builder(0, num_iters, []{
       auto cur_iter = get_current_iter();
-      when_handler(handler_type_1, cur_iter, []{
+      when_handler(HandlerTypeype_1, cur_iter, []{
 
       });
-      when_handler(handler_type_2, tag, []{
+      when_handler(HandlerTypeype_2, tag, []{
 
-      }).next_hanlder(handler_type_3, tag, []{
+      }).next_hanlder(HandlerTypeype_3, tag, []{
 
       });
     });
