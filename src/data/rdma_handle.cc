@@ -87,7 +87,7 @@ HandleManager::get_op_type(universal_rdma_id_t const& handle) {
 /*static*/ HandleManager::universal_rdma_id_t
 HandleManager::create_new_handler() {
   rdma_type_t const& type = rdma_type_t::Uninitialized;
-  rdma_handle_t handle = 0;
+  RDMA_HandleType handle = 0;
   set_op_type(handle, type);
   return handle;
 }

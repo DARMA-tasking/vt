@@ -8,7 +8,7 @@
 namespace runtime { namespace rdma {
 
 State::State(
-  rdma_handle_t const& in_handle,
+  RDMA_HandleType const& in_handle,
   RDMA_PtrType const& in_ptr,
   ByteType const& in_num_bytes,
   bool const& use_default_handler

@@ -25,7 +25,7 @@ struct Channel {
   static constexpr rdma_group_pos_t const no_group_pos = -1;
 
   Channel(
-    rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
+    RDMA_HandleType const& in_rdma_handle, rdma_type_t const& in_op_type,
     NodeType const& in_target, TagType const& in_channel_group_tag,
     NodeType const& in_non_target = uninitialized_destination,
     RDMA_PtrType const& in_ptr = nullptr, ByteType const& in_num_bytes = no_byte
@@ -70,7 +70,7 @@ private:
   bool is_target = false;
 
   bool initialized = false, locked = false, flushed = true;
-  rdma_handle_t const rdma_handle = no_rdma_handle;
+  RDMA_HandleType const rdma_handle = no_rdma_handle;
   rdma_group_pos_t target_pos = no_group_pos;
   rdma_group_pos_t non_target_pos = no_group_pos;
   NodeType target = uninitialized_destination;

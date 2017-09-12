@@ -13,8 +13,8 @@ struct VirutalContextCollection {
 // define some messages, these should go away with the DARMA front-end which
 // will provide parameterization
 struct HanMsg : runtime::Message {
-  rdma_handle_t han;
-  HanMsg(rdma_handle_t const& in_han) : Message(), han(in_han) { }
+  RDMA_HandleType han;
+  HanMsg(RDMA_HandleType const& in_han) : Message(), han(in_han) { }
 };
 
 struct WorkMsg : runtime::Message {
@@ -41,8 +41,8 @@ struct Jacobi1D : VirutalContextCollection<Index1D<int>> {
 
   Index1D<int> left_neigh, right_neigh;
 
-  rdma_handle_t my_lb_h = no_rdma_handle, my_rb_h = no_rdma_handle;
-  rdma_handle_t n_lb_h = no_rdma_handle, n_rb_h = no_rdma_handle;
+  RDMA_HandleType my_lb_h = no_rdma_handle, my_rb_h = no_rdma_handle;
+  RDMA_HandleType n_lb_h = no_rdma_handle, n_rb_h = no_rdma_handle;
 
   Jacobi1D(int const& in_size) : size(in_size) {
     v1 = new double[size];

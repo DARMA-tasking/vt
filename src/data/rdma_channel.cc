@@ -4,7 +4,7 @@
 namespace runtime { namespace rdma {
 
 Channel::Channel(
-  rdma_handle_t const& in_rdma_handle, rdma_type_t const& in_op_type,
+  RDMA_HandleType const& in_rdma_handle, rdma_type_t const& in_op_type,
   NodeType const& in_target, TagType const& in_channel_group_tag,
   NodeType const& in_non_target, RDMA_PtrType const& in_ptr, ByteType const& in_num_bytes
 ) : rdma_handle(in_rdma_handle), op_type(in_op_type),target(in_target),

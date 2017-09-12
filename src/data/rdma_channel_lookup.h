@@ -11,12 +11,12 @@
 namespace runtime { namespace rdma {
 
 struct ChannelLookup {
-  rdma_handle_t handle = no_rdma_handle;
+  RDMA_HandleType handle = no_rdma_handle;
   NodeType target = uninitialized_destination;
   NodeType non_target = uninitialized_destination;
 
   ChannelLookup(
-    rdma_handle_t const& han, NodeType const& in_target,
+    RDMA_HandleType const& han, NodeType const& in_target,
     NodeType const& in_non_target
   ) : handle(han), target(in_target), non_target(in_non_target)
   {
@@ -44,7 +44,7 @@ namespace std {
     size_t
     operator()(rdma_channel_lookup_t const& in) const {
       auto const& combined =
-        std::hash<runtime::rdma_handle_t>()(in.handle) ^
+        std::hash<runtime::RDMA_HandleType>()(in.handle) ^
         std::hash<runtime::NodeType>()(in.target) ^
         std::hash<runtime::NodeType>()(in.non_target);
       return combined;

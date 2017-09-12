@@ -8,14 +8,14 @@
 namespace runtime { namespace rdma {
 
 static_assert(
-  sizeof(rdma_handle_t) == sizeof(RDMA_HandlerType),
+  sizeof(RDMA_HandleType) == sizeof(RDMA_HandlerType),
   "RDMA Handle and RDMA Handler IDs must be the same size"
 );
 
 struct HandleManager {
   using rdma_bits_t = Bits;
   using rdma_type_t = Type;
-  using universal_rdma_id_t = rdma_handle_t;
+  using universal_rdma_id_t = RDMA_HandleType;
 
   static void
   set_is_sized(universal_rdma_id_t& handle, bool const& is_sized);

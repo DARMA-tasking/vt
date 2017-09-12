@@ -34,12 +34,12 @@ struct State {
   template <typename T>
   using container_t = std::vector<T>;
 
-  rdma_handle_t handle = no_rdma_handle;
+  RDMA_HandleType handle = no_rdma_handle;
   RDMA_PtrType ptr = no_rdma_ptr;
   ByteType num_bytes = no_byte;
 
   State(
-    rdma_handle_t const& in_handle,
+    RDMA_HandleType const& in_handle,
     RDMA_PtrType const& in_ptr = no_rdma_ptr,
     ByteType const& in_num_bytes = no_byte,
     bool const& use_default_handler = false
