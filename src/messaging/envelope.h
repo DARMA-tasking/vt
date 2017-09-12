@@ -36,7 +36,7 @@ static constexpr bit_count_t const envelope_num_bits = 7;
 using envelope_type_t = EnvelopeType;
 
 struct Envelope {
-  envelope_datatype_t type : envelope_num_bits;
+  EnvelopeDataType type : envelope_num_bits;
   NodeType dest : node_num_bits;
   HandlerType han : handler_num_bits;
   ref_t ref : ref_num_bits;
