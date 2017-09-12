@@ -51,7 +51,7 @@ struct SendDataMessage : ActiveMessage<EnvelopeT> {
 
 template <typename EnvelopeT>
 struct RDMAOpFinishedMessage : ActiveMessage<EnvelopeT> {
-  RDMAOpFinishedMessage(rdma_op_t const& in_op)
+  explicit RDMAOpFinishedMessage(rdma_op_t const& in_op)
     : ActiveMessage<EnvelopeT>(), op_id(in_op)
   { }
 
@@ -65,9 +65,8 @@ struct CreateChannel : runtime::CallbackMessage {
     rdma_type_t const& in_type, RDMA_HandleType const& in_han,
     TagType const& in_channel_tag, NodeType const& in_target,
     NodeType const& in_non_target
-  ) : CallbackMessage(), type(in_type), rdma_handle(in_han),
-      target(in_target), non_target(in_non_target),
-      channel_tag(in_channel_tag)
+  ) : CallbackMessage(), channel_tag(in_channel_tag), rdma_handle(in_han),
+      type(in_type), target(in_target), non_target(in_non_target)
   { }
 
   bool has_bytes = false;
@@ -79,7 +78,7 @@ struct CreateChannel : runtime::CallbackMessage {
 };
 
 struct GetInfoChannel : runtime::CallbackMessage {
-  GetInfoChannel(ByteType const& in_num_bytes)
+  explicit GetInfoChannel(ByteType const& in_num_bytes)
     : CallbackMessage(), num_bytes(in_num_bytes)
   { }
 
@@ -94,8 +93,8 @@ struct ChannelMessage : runtime::CallbackMessage {
     ByteType const& in_num_bytes, TagType const& in_channel_tag,
     NodeType const& in_non_target = uninitialized_destination,
     NodeType const& in_override_target = uninitialized_destination
-  ) : CallbackMessage(), type(in_type), han(in_han), num_bytes(in_num_bytes),
-      channel_tag(in_channel_tag), non_target(in_non_target),
+  ) : CallbackMessage(), channel_tag(in_channel_tag), type(in_type),
+      han(in_han), num_bytes(in_num_bytes), non_target(in_non_target),
       override_target(in_override_target)
   { }
 
