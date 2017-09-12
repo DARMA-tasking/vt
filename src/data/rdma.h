@@ -460,7 +460,7 @@ private:
     GetMessage* msg, bool const& is_user_msg,
     RDMA_HandleType const& rdma_handle, TagType const& tag, ByteType const& num_bytes,
     ByteType const& offset, RDMA_PtrType const& ptr = nullptr,
-    rdma_continuation_t cont = no_action, ActionType next_action = no_action
+    RDMA_ContinuationType cont = no_action, ActionType next_action = no_action
   );
 
   void

@@ -342,7 +342,7 @@ void
 RDMAManager::request_get_data(
   GetMessage* msg, bool const& is_user_msg, RDMA_HandleType const& han,
   TagType const& tag, ByteType const& num_bytes, ByteType const& offset,
-  RDMA_PtrType const& ptr, rdma_continuation_t cont, ActionType next_action
+  RDMA_PtrType const& ptr, RDMA_ContinuationType cont, ActionType next_action
 ) {
   auto const& this_node = the_context->get_node();
   auto const handler_node = rdma_handle_manager_t::get_rdma_node(han);

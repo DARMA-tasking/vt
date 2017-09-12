@@ -26,7 +26,7 @@ using RDMA_BlockType = int64_t;
 using RDMA_HandleType = int64_t;
 using RDMA_HandlerType = int64_t;
 using RDMA_GetType = std::tuple<RDMA_PtrType, ByteType>;
-using rdma_continuation_t = std::function<void(RDMA_GetType)>;
+using RDMA_ContinuationType = std::function<void(RDMA_GetType)>;
 using rdma_continuation_del_t = std::function<void(RDMA_GetType, ActionType)>;
 
 } //end namespace runtime
