@@ -29,7 +29,7 @@ struct TraceRegistry {
     #endif
 
     trace_ep_t event_type_seq = no_trace_ep;
-    event_type_t new_event_type(event_type_name);
+    event_class_t new_event_type(event_type_name);
 
     auto type_iter = trace_cont_t::event_type_container.find(
       new_event_type.get_event_id()

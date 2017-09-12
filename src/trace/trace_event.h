@@ -12,15 +12,15 @@
 
 namespace runtime { namespace trace {
 
-struct EventType {
-  EventType(std::string const& in_event)
+struct EventClass {
+  EventClass(std::string const& in_event)
     : event(in_event)
   {
     auto const& event_hash =  std::hash<std::string>{}(in_event);
     this_event = event_hash;
   }
 
-  EventType(EventType const&) = default;
+  EventClass(EventClass const&) = default;
 
   trace_ep_t
   get_event_id() const {
@@ -55,9 +55,9 @@ private:
   std::string event;
 };
 
-struct Event : EventType {
+struct Event : EventClass {
   Event(std::string const& in_event, trace_ep_t const& in_event_type)
-    : EventType(in_event), this_event_type(in_event_type)
+    : EventClass(in_event), this_event_type(in_event_type)
   {
     auto const& event_hash =  std::hash<std::string>{}(in_event);
     this_event_type = event_hash;
