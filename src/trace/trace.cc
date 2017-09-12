@@ -62,7 +62,7 @@ Trace::begin_processing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
-  auto const& type = trace_type_t::BeginProcessing;
+  auto const& type = TraceConstantsType::BeginProcessing;
   log_ptr_t log = new log_t(time, ep, type);
 
   debug_print(
@@ -82,7 +82,7 @@ Trace::end_processing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
-  auto const& type = trace_type_t::EndProcessing;
+  auto const& type = TraceConstantsType::EndProcessing;
   log_ptr_t log = new log_t(time, ep, type);
 
   debug_print(
@@ -99,7 +99,7 @@ Trace::end_processing(
 
 void
 Trace::begin_idle(double const& time) {
-  auto const& type = trace_type_t::BeginIdle;
+  auto const& type = TraceConstantsType::BeginIdle;
   log_ptr_t log = new log_t(time, no_trace_entry_id, type);
 
   debug_print(
@@ -115,7 +115,7 @@ Trace::begin_idle(double const& time) {
 
 void
 Trace::end_idle(double const& time) {
-  auto const& type = trace_type_t::EndIdle;
+  auto const& type = TraceConstantsType::EndIdle;
   log_ptr_t log = new log_t(time, no_trace_entry_id, type);
 
   debug_print(
@@ -133,7 +133,7 @@ TraceEventIDType
 Trace::message_creation(
   TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
-  auto const& type = trace_type_t::Creation;
+  auto const& type = TraceConstantsType::Creation;
   log_ptr_t log = new log_t(time, ep, type);
 
   log->node = the_context->get_node();
@@ -146,7 +146,7 @@ TraceEventIDType
 Trace::message_creation_bcast(
   TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
-  auto const& type = trace_type_t::CreationBcast;
+  auto const& type = TraceConstantsType::CreationBcast;
   log_ptr_t log = new log_t(time, ep, type);
 
   log->node = the_context->get_node();
@@ -160,7 +160,7 @@ Trace::message_recv(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   NodeType const& from_node, double const& time
 ) {
-  auto const& type = trace_type_t::MessageRecv;
+  auto const& type = TraceConstantsType::MessageRecv;
   log_ptr_t log = new log_t(time, ep, type);
 
   log->node = from_node;
@@ -176,8 +176,8 @@ Trace::log_event(log_ptr_t log) {
 
   // close any idle event as soon as we encounter any other type of event
   if (idle_begun and
-      log->type != trace_type_t::BeginIdle and
-      log->type != trace_type_t::EndIdle) {
+      log->type != TraceConstantsType::BeginIdle and
+      log->type != TraceConstantsType::EndIdle) {
     end_idle();
   }
 
@@ -185,7 +185,7 @@ Trace::log_event(log_ptr_t log) {
     if (not open_events.empty()) {
       traces.push_back(
         new log_t(
-          log->time, open_events.top()->ep, trace_type_t::EndProcessing
+          log->time, open_events.top()->ep, TraceConstantsType::EndProcessing
         )
       );
     }
@@ -204,7 +204,7 @@ Trace::log_event(log_ptr_t log) {
 
     assert(
       open_events.top()->ep == log->ep and
-      open_events.top()->type == trace_type_t::BeginProcessing and
+      open_events.top()->type == TraceConstantsType::BeginProcessing and
       "Top event should be correct type and event"
     );
 
@@ -219,7 +219,7 @@ Trace::log_event(log_ptr_t log) {
     if (not open_events.empty()) {
       traces.push_back(
         new log_t(
-          log->time, open_events.top()->ep, trace_type_t::BeginProcessing
+          log->time, open_events.top()->ep, TraceConstantsType::BeginProcessing
         )
       );
     }
@@ -244,19 +244,19 @@ Trace::log_event(log_ptr_t log) {
   };
 
   switch (log->type) {
-  case trace_type_t::BeginProcessing:
+  case TraceConstantsType::BeginProcessing:
     return grouped_begin();
     break;
-  case trace_type_t::EndProcessing:
+  case TraceConstantsType::EndProcessing:
     return grouped_end();
     break;
-  case trace_type_t::Creation:
-  case trace_type_t::CreationBcast:
-  case trace_type_t::MessageRecv:
+  case TraceConstantsType::Creation:
+  case TraceConstantsType::CreationBcast:
+  case TraceConstantsType::MessageRecv:
     return basic_new_event_create();
     break;
-  case trace_type_t::BeginIdle:
-  case trace_type_t::EndIdle:
+  case TraceConstantsType::BeginIdle:
+  case TraceConstantsType::EndIdle:
     return basic_no_event_create();
     break;
   default:
@@ -328,7 +328,7 @@ Trace::write_log_file(gzFile file, trace_container_t const& traces) {
     auto const& num_nodes = the_context->get_num_nodes();
 
     switch (log->type) {
-    case trace_type_t::BeginProcessing:
+    case TraceConstantsType::BeginProcessing:
       gzprintf(
         file,
         "%d %d %lu %lld %d %d 0 0 0 0 0 0 0\n",
@@ -340,7 +340,7 @@ Trace::write_log_file(gzFile file, trace_container_t const& traces) {
         log->node
       );
       break;
-    case trace_type_t::EndProcessing:
+    case TraceConstantsType::EndProcessing:
       gzprintf(
         file,
         "%d %d %lu %lld %d %d 0 0 0 0 0 0 0\n",
@@ -352,7 +352,7 @@ Trace::write_log_file(gzFile file, trace_container_t const& traces) {
         log->node
       );
       break;
-    case trace_type_t::BeginIdle:
+    case TraceConstantsType::BeginIdle:
       gzprintf(
         file,
         "%d %lld %d\n",
@@ -361,7 +361,7 @@ Trace::write_log_file(gzFile file, trace_container_t const& traces) {
         log->node
       );
       break;
-    case trace_type_t::EndIdle:
+    case TraceConstantsType::EndIdle:
       gzprintf(
         file,
         "%d %lld %d\n",
@@ -370,7 +370,7 @@ Trace::write_log_file(gzFile file, trace_container_t const& traces) {
         log->node
       );
       break;
-    case trace_type_t::CreationBcast:
+    case TraceConstantsType::CreationBcast:
       gzprintf(
         file,
         "%d %d %lu %lld %d %d %d %d %d\n",
@@ -385,7 +385,7 @@ Trace::write_log_file(gzFile file, trace_container_t const& traces) {
         num_nodes
       );
       break;
-    case trace_type_t::Creation:
+    case TraceConstantsType::Creation:
       gzprintf(
         file,
         "%d %d %lu %lld %d %d %d 0\n",
@@ -398,7 +398,7 @@ Trace::write_log_file(gzFile file, trace_container_t const& traces) {
         log->msg_len
       );
       break;
-    case trace_type_t::MessageRecv:
+    case TraceConstantsType::MessageRecv:
       assert(0);
       break;
     default:
