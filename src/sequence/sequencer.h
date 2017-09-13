@@ -174,7 +174,7 @@ struct TaggedSequencer {
       if (not found_matching) {
         auto ready_trigger = [lst_ptr,trigger](MessageT* msg){
           trigger(msg);
-          lst_ptr->make_ready();
+          lst_ptr->makeReady();
         };
 
         if (tag == no_tag) {
@@ -199,7 +199,7 @@ struct TaggedSequencer {
       stateful_seq_ != no_seq and "Must be in an active sequence context"
     );
 
-    lst.add_action([=]() -> bool {
+    lst.addAction([=]() -> bool {
       bool const in_seq = true;
       return executeInContext(stateful_seq_, in_seq, deferred_wait_action);
     });
@@ -207,7 +207,8 @@ struct TaggedSequencer {
 
   template <typename Callable>
   auto executeInContext(
-    SeqType const& context, bool const& in_sequence, Callable&& c
+    SeqType const& context, bool const& __attribute__((unused)) in_sequence,
+    Callable&& c
   ) {
     stateful_seq_ = context;
     auto const& ret = c();
@@ -228,7 +229,7 @@ private:
       fn();
       return false;
     };
-    lst.add_action([=]() -> bool {
+    lst.addAction([=]() -> bool {
       bool const in_seq = true;
       return executeInContext(seq_id, in_seq, fn_wrapper);
     });

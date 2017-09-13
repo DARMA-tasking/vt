@@ -131,7 +131,10 @@ struct Param {
   }
 
   template <typename DataMsg>
-  EventType sendDataMsg(NodeType const& dest, HandlerType const& han, DataMsg* m) {
+  EventType sendDataMsg(
+    NodeType const& dest, HandlerType const& __attribute__((unused)) han,
+    DataMsg* m
+  ) {
     return theMsg->sendMsg<DataMsg, dataMessageHandler>(
       dest, m, [=]{ delete m; }
     );
@@ -139,7 +142,8 @@ struct Param {
 
   template <typename T, T value, typename Tuple>
   EventType sendData(
-    NodeType const& dest, Tuple tup, NonType<T, value> non = NonType<T,value>()
+    NodeType const& dest, Tuple tup,
+    NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
     auto const& han = auto_registry::makeAutoHandler<T,value>();
     return sendDataTuple(dest, han, std::forward<Tuple>(tup));
@@ -148,7 +152,7 @@ struct Param {
   template <typename T, T value, typename... Args>
   EventType sendData(
     NodeType const& dest, DataMsg<std::tuple<Args...>>* msg,
-    NonType<T, value> non = NonType<T,value>()
+    NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
     auto const& han = auto_registry::makeAutoHandler<T,value>();
     msg->sub_han = han;
@@ -156,7 +160,10 @@ struct Param {
   }
 
   template <typename T, T value, typename... Args>
-  EventType sendData(NodeType const& dest, NonType<T, value> non, Args&&... a) {
+  EventType sendData(
+    NodeType const& dest, NonType<T, value> __attribute__((unused)) non,
+    Args&&... a
+  ) {
     auto const& han = auto_registry::makeAutoHandler<T,value>();
 
     staticCheckCopyable<Args...>();
@@ -183,7 +190,6 @@ struct Param {
   EventType sendDataHelperFunctor(
     NodeType const& dest, std::tuple<Args...>&& tup
   ) {
-    using MessageType = vt::BaseMessage;
     auto const& han = auto_registry::makeAutoHandlerFunctor<
       FunctorT, false, Args...
     >();

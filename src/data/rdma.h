@@ -18,6 +18,7 @@
 #include "rdma_action.h"
 
 #include <unordered_map>
+#include <cassert>
 
 namespace vt { namespace rdma {
 

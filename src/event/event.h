@@ -45,7 +45,7 @@ struct ParentEvent : Event {
     events.push_back(event);
   }
 
-  ParentEvent(EventType const& in_event_id)
+  explicit ParentEvent(EventType const& in_event_id)
     : Event(in_event_id, normal_event_tag)
   { }
 
@@ -70,7 +70,7 @@ struct NormalEvent : Event {
     return true;
   }
 
-  NormalEvent(EventType const& in_event_id)
+  explicit NormalEvent(EventType const& in_event_id)
     : Event(in_event_id, normal_event_tag)
   { }
 
@@ -133,7 +133,7 @@ struct AsyncEvent {
   struct EventHolder {
     using ActionContainerType = std::vector<ActionType>;
 
-    EventHolder(EventWrapperPtrType in_event)
+    explicit EventHolder(EventWrapperPtrType in_event)
       : event(std::move(in_event))
     { }
 

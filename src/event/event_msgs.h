@@ -15,8 +15,8 @@ struct EventCheckFinishedMsg : ShortMessage {
     EventType const& event_in, NodeType const& in_sent_from_node,
     EventType const& event_back_in
   )
-    : ShortMessage(), event_(event_in), sent_from_node_(in_sent_from_node),
-      event_back_(event_back_in)
+    : ShortMessage(), event_(event_in), event_back_(event_back_in),
+      sent_from_node_(in_sent_from_node)
   { }
 };
 

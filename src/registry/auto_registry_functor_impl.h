@@ -85,7 +85,6 @@ RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
 inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler) {
   auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
 
-  #if backend_check_enabled(handler)
   bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
@@ -94,7 +93,6 @@ inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler) {
     "get_auto_handler: handler=%d, id=%d, is_auto=%s, is_functor=%s\n",
     handler, han_id, print_bool(is_auto), print_bool(is_functor)
   );
-  #endif
 
   assert(
     is_functor and is_auto and "Handler should be a auto functor"

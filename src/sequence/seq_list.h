@@ -2,6 +2,8 @@
 #if ! defined __RUNTIME_TRANSPORT_SEQ_LIST__
 #define __RUNTIME_TRANSPORT_SEQ_LIST__
 
+#include <list>
+
 #include "common.h"
 #include "seq_common.h"
 
@@ -14,7 +16,7 @@ struct SeqList {
     : this_seq_(this_seq_in)
   { }
 
-  void add_action(SeqFunType const& fn) {
+  void addAction(SeqFunType const& fn) {
     lst_.push_back(fn);
   }
 
@@ -35,8 +37,12 @@ struct SeqList {
     }
   }
 
-  void make_ready() {
+  void makeReady() {
     ready_ = true;
+  }
+
+  SeqType getSeq() const {
+    return this_seq_;
   }
 
 private:

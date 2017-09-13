@@ -2,6 +2,11 @@
 #if ! defined __RUNTIME_TRANSPORT_SEQ_COMMON__
 #define __RUNTIME_TRANSPORT_SEQ_COMMON__
 
+#include <cstdint>
+#include <functional>
+
+#include "function.h"
+
 namespace vt { namespace seq {
 
 using SeqType = int32_t;
