@@ -17,7 +17,7 @@ inline AutoActiveContainerType& getAutoRegistry()  {
 }
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-inline HandlerType makeAutoHandler(MessageT* const msg) {
+inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) {
   HandlerType const id = GET_HANDLER_ACTIVE_FUNCTION_EXPAND(
     ActiveAnyFunctionType<MessageT>, f
   );
@@ -59,6 +59,7 @@ Registrar<ActiveFnT>::Registrar() {
 inline AutoActiveType getAutoHandler(HandlerType const& handler) {
   auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
 
+  #if backend_check_enabled(handler)
   bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
@@ -67,6 +68,7 @@ inline AutoActiveType getAutoHandler(HandlerType const& handler) {
     "get_auto_handler: handler=%d, id=%d, is_auto=%s, is_functor=%s\n",
     handler, han_id, print_bool(is_auto), print_bool(is_functor)
   );
+  #endif
 
   assert(
     not is_functor and is_auto and "Handler should not be a functor, but auto"
