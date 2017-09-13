@@ -2,11 +2,11 @@
 #if ! defined __DEBUG_CONFIG__
 #define __DEBUG_CONFIG__
 
-#include "meld.h"
-#include "backend_features.h"
-#include "backend_feature_defines.h"
-#include "backend_meta_features.h"
-#include "backend_enable_if.h"
+#include "vte/vtem/vtem_meld.h"
+#include "vte/vtef/vtef_featureswitch.h"
+#include "vte/vtef/vtef_defines.h"
+#include "vte/vtef/vtef_metafeatures.h"
+#include "vte/vtef/vtef_enableif.h"
 #include "debug_print_const.h"
 
 /* Printers for configurations */

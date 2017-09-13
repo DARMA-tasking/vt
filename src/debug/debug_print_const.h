@@ -2,7 +2,7 @@
 #if ! defined __DEBUG_PRINT_CONST__
 #define __DEBUG_PRINT_CONST__
 
-#include "meld.h"
+#include "vte/vtem/vtem_meld.h"
 
 /*
  * Specific convienence methods for printing
