@@ -20,7 +20,7 @@ static constexpr SeqType const initial_seq = 0;
 static SeqType next_seq_id = initial_seq;
 static constexpr SeqType const no_seq = -1;
 
-void contextual_execution(
+void contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 );
 

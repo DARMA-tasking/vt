@@ -36,7 +36,7 @@ struct TaggedSequencer {
 
   TaggedSequencer() = default;
 
-  SeqType next_seq() {
+  SeqType nextSeq() {
     auto const cur_id = next_seq_id;
 
     auto seq_iter = seq_lookup_.find(cur_id);
@@ -57,18 +57,18 @@ struct TaggedSequencer {
   }
 
   void sequenced(SeqType const& seq_id, UserSeqFunWithIDType const& fn) {
-    return attach_next(seq_id,fn);
+    return attachNext(seq_id,fn);
   }
 
   void sequenced(SeqType const& seq_id, UserSeqFunType const& fn) {
-    return attach_next(seq_id,fn);
+    return attachNext(seq_id,fn);
   }
 
-  void sequenced_block(UserSeqFunType const& fn) {
+  void sequencedBlock(UserSeqFunType const& fn) {
     assert(
       stateful_seq_ != no_seq and "Must be in a valid sequence"
     );
-    return attach_next(stateful_seq_,fn);
+    return attachNext(stateful_seq_,fn);
   };
 
   SeqType get_current_seq() const {
@@ -82,7 +82,7 @@ struct TaggedSequencer {
     return false;
   }
 
-  bool is_local_term() {
+  bool isLocalTerm() {
     for (auto&& live_seq : seq_lookup_) {
       if (live_seq.second.lst.size() > 0) {
         return false;
@@ -132,7 +132,7 @@ struct TaggedSequencer {
       stateful_seq_ != no_seq and "Must have valid seq now"
     );
 
-    SeqListType& lst = get_seq_list(stateful_seq_);
+    SeqListType& lst = getSeqList(stateful_seq_);
     SeqListType* const lst_ptr = &lst;
 
     auto const cur_seq_id = stateful_seq_;
@@ -152,8 +152,8 @@ struct TaggedSequencer {
         if (lst.size() > 0) {
           auto msg = lst.front();
           lst.pop_front();
-          action.run_action(msg);
-          message_deref(msg);
+          action.runAction(msg);
+          messageDeref(msg);
           found_matching = true;
         }
       } else {
@@ -161,8 +161,8 @@ struct TaggedSequencer {
         auto iter = tagged_lst.find(tag);
         if (iter != tagged_lst.end()) {
           auto msg = iter->second.front();
-          action.run_action(msg);
-          message_deref(msg);
+          action.runAction(msg);
+          messageDeref(msg);
           iter->second.pop_front();
           if (iter->second.size() == 0) {
             tagged_lst.erase(iter);
@@ -201,12 +201,12 @@ struct TaggedSequencer {
 
     lst.add_action([=]() -> bool {
       bool const in_seq = true;
-      return execute_in_context(stateful_seq_, in_seq, deferred_wait_action);
+      return executeInContext(stateful_seq_, in_seq, deferred_wait_action);
     });
   }
 
   template <typename Callable>
-  auto execute_in_context(
+  auto executeInContext(
     SeqType const& context, bool const& in_sequence, Callable&& c
   ) {
     stateful_seq_ = context;
@@ -216,27 +216,27 @@ struct TaggedSequencer {
   }
 
 private:
-  void attach_next(SeqType const& seq_id, UserSeqFunWithIDType const& fn) {
-    return attach_next(seq_id, [seq_id,fn]{
+  void attachNext(SeqType const& seq_id, UserSeqFunWithIDType const& fn) {
+    return attachNext(seq_id, [seq_id,fn]{
       return fn(seq_id);
     });
   }
 
-  void attach_next(SeqType const& seq_id, UserSeqFunType const& fn) {
-    SeqListType& lst = get_seq_list(seq_id);
+  void attachNext(SeqType const& seq_id, UserSeqFunType const& fn) {
+    SeqListType& lst = getSeqList(seq_id);
     auto fn_wrapper = [=]() -> bool {
       fn();
       return false;
     };
     lst.add_action([=]() -> bool {
       bool const in_seq = true;
-      return execute_in_context(seq_id, in_seq, fn_wrapper);
+      return executeInContext(seq_id, in_seq, fn_wrapper);
     });
   }
 
 public:
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-  void sequence_msg(MessageT* msg) {
+  void sequenceMsg(MessageT* msg) {
     bool found_matching = false;
 
     auto const& is_tag_type = envelopeIsTagType(msg->env);
@@ -249,7 +249,7 @@ public:
 
       if (lst.size() > 0) {
         auto action = lst.front();
-        execute_in_context(action.seq_id, false, action.generate_callable(msg));
+        executeInContext(action.seq_id, false, action.generateCallable(msg));
         lst.pop_front();
         found_matching = true;
       }
@@ -259,7 +259,7 @@ public:
       auto iter = tagged_lst.find(msg_tag);
       if (iter != tagged_lst.end()) {
         auto action = iter->second.front();
-        execute_in_context(action.seq_id, false, action.generate_callable(msg));
+        executeInContext(action.seq_id, false, action.generateCallable(msg));
         iter->second.pop_front();
         if (iter->second.size() == 0) {
           tagged_lst.erase(iter);
@@ -272,7 +272,7 @@ public:
     // being posted
     if (not found_matching) {
       // reference the arrival message to keep it alive past normal lifetime
-      message_ref(msg);
+      messageRef(msg);
 
       if (msg_tag == no_tag) {
         SeqStateType<MessageT, f>::seq_msg.push_back(msg);
@@ -283,13 +283,13 @@ public:
 
     debug_print(
       sequence, node,
-      "sequence_msg: arriving: msg=%p, found_matching=%s, tag=%d\n",
+      "sequenceMsg: arriving: msg=%p, found_matching=%s, tag=%d\n",
       msg, print_bool(found_matching), msg_tag
     );
   }
 
 private:
-  SeqListType& get_seq_list(SeqType const& seq_id) {
+  SeqListType& getSeqList(SeqType const& seq_id) {
     auto seq_iter = seq_lookup_.find(seq_id);
     assert(
       seq_iter != seq_lookup_.end() and "This seq_id must exit"
@@ -305,9 +305,9 @@ private:
 
 using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
 
-#define sequence_register_handler(message, handler)                     \
+#define SEQUENCE_REGISTER_HANDLER(message, handler)                     \
   static void handler(message* m) {                                     \
-    theSeq->sequence_msg<message, handler>(m);                         \
+    theSeq->sequenceMsg<message, handler>(m);                         \
   }
 
 }} //end namespace vt::seq

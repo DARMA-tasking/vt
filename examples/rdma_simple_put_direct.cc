@@ -18,15 +18,15 @@ struct TestMsg : vt::Message {
   TestMsg(RDMA_HandleType const& in_han) : Message(), han(in_han) { }
 };
 
-static void read_data_fn(TestMsg* msg) {
-  printf("%d: read_data_fn: handle=%lld\n", my_node, msg->han);
+static void readDataFn(TestMsg* msg) {
+  printf("%d: readDataFn: handle=%lld\n", my_node, msg->han);
 
   for (auto i = 0; i < put_len*2; i++) {
     printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg->han, i, my_data[i]);
   }
 }
 
-static void put_data_fn(TestMsg* msg) {
+static void putDataFn(TestMsg* msg) {
   if (my_node == 1 or my_node == 2) {
     printf(
       "%d: putting data, handle=%lld, my_data=%p\n",
@@ -38,8 +38,8 @@ static void put_data_fn(TestMsg* msg) {
     theRDMA->putTypedData(msg->han, my_data, num_elm, offset, no_action, [=]{
       printf("%d: after put: sending msg back to 0: offset=%d\n", my_node, offset);
 
-      TestMsg* back = make_shared_message<TestMsg>(msg->han);
-      theMsg->sendMsg<TestMsg, read_data_fn>(0, back);
+      TestMsg* back = makeSharedMessage<TestMsg>(msg->han);
+      theMsg->sendMsg<TestMsg, readDataFn>(0, back);
     });
   }
 }
@@ -71,14 +71,14 @@ int main(int argc, char** argv) {
       my_node, my_handle_1
     );
 
-    TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
-    TestMsg* msg2 = make_shared_message<TestMsg>(my_handle_1);
-    theMsg->sendMsg<TestMsg, put_data_fn>(1, msg1);
-    theMsg->sendMsg<TestMsg, put_data_fn>(2, msg2);
+    TestMsg* msg1 = makeSharedMessage<TestMsg>(my_handle_1);
+    TestMsg* msg2 = makeSharedMessage<TestMsg>(my_handle_1);
+    theMsg->sendMsg<TestMsg, putDataFn>(1, msg1);
+    theMsg->sendMsg<TestMsg, putDataFn>(2, msg2);
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

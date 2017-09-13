@@ -8,7 +8,7 @@
 
 namespace vt { namespace sched {
 
-/*static*/ void Scheduler::check_term_single_node() {
+/*static*/ void Scheduler::checkTermSingleNode() {
   auto const& num_nodes = theContext->getNumNodes();
   if (num_nodes == 1) {
     theTerm->maybePropagate();
@@ -20,14 +20,14 @@ Scheduler::Scheduler() {
   event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
 }
 
-bool Scheduler::scheduler_impl() {
+bool Scheduler::schedulerImpl() {
   bool scheduled_work = false;
 
   bool const msg_sch = theMsg->scheduler();
   bool const event_sch = theEvent->scheduler();
   bool const seq_sch = theSeq->scheduler();
 
-  check_term_single_node();
+  checkTermSingleNode();
 
   scheduled_work = msg_sch or event_sch or seq_sch;
 
@@ -40,17 +40,17 @@ bool Scheduler::scheduler_impl() {
 
 void Scheduler::scheduler() {
 
-  bool const scheduled_work1 = scheduler_impl();
-  bool const scheduled_work2 = scheduler_impl();
+  bool const scheduled_work1 = schedulerImpl();
+  bool const scheduled_work2 = schedulerImpl();
 
   if (not scheduled_work1 and not scheduled_work2 and not is_idle) {
     is_idle = true;
     // idle
-    trigger_event(SchedulerEventType::BeginIdle);
+    triggerEvent(SchedulerEventType::BeginIdle);
   }
 }
 
-void Scheduler::trigger_event(SchedulerEventType const& event) {
+void Scheduler::triggerEvent(SchedulerEventType const& event) {
   assert(
     event_triggers.size() >= event and "Must be large enough to hold this event"
   );
@@ -65,7 +65,7 @@ void Scheduler::trigger_event(SchedulerEventType const& event) {
   event_triggers_once[event].clear();
 }
 
-void Scheduler::register_trigger(
+void Scheduler::registerTrigger(
   SchedulerEventType const& event, TriggerType trigger
 ) {
   assert(
@@ -74,7 +74,7 @@ void Scheduler::register_trigger(
   event_triggers[event].push_back(trigger);
 }
 
-void Scheduler::register_trigger_once(
+void Scheduler::registerTriggerOnce(
   SchedulerEventType const& event, TriggerType trigger
 ) {
   assert(
@@ -83,7 +83,7 @@ void Scheduler::register_trigger_once(
   event_triggers_once[event].push_back(trigger);
 }
 
-void Scheduler::scheduler_forever() {
+void Scheduler::schedulerForever() {
   while (true) {
     scheduler();
   }
@@ -93,7 +93,7 @@ void Scheduler::scheduler_forever() {
 
 namespace vt {
 
-void run_scheduler() {
+void runScheduler() {
   theSched->scheduler();
 }
 

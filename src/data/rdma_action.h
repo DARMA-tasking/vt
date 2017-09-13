@@ -21,7 +21,7 @@ struct Action {
   ) : num_waiting(num_waiting_in), action_to_trigger(in_action_to_trigger)
   { }
 
-  void add_dep() {
+  void addDep() {
     num_waiting++;
   }
 

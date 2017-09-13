@@ -26,16 +26,16 @@ struct Scheduler {
 
   Scheduler();
 
-  static void check_term_single_node();
+  static void checkTermSingleNode();
 
   void scheduler();
-  bool scheduler_impl();
-  void scheduler_forever();
-  void register_trigger(SchedulerEventType const& event, TriggerType trigger);
-  void register_trigger_once(
+  bool schedulerImpl();
+  void schedulerForever();
+  void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
+  void registerTriggerOnce(
     SchedulerEventType const& event, TriggerType trigger
   );
-  void trigger_event(SchedulerEventType const& event);
+  void triggerEvent(SchedulerEventType const& event);
 
 private:
   bool is_idle = false;
@@ -48,7 +48,7 @@ private:
 
 namespace vt {
 
-void run_scheduler();
+void runScheduler();
 
 extern std::unique_ptr<sched::Scheduler> theSched;
 

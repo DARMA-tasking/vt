@@ -32,12 +32,12 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    HelloMsg* msg = make_shared_message<HelloMsg>(my_node);
+    HelloMsg* msg = makeSharedMessage<HelloMsg>(my_node);
     theMsg->broadcastMsg<HelloWorld>(msg);
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

@@ -425,16 +425,16 @@ public:
   RDMA_HandlerType allocateNewRdmaHandler();
 
   // handler functions for managing rdma operations
-  static void get_msg(GetMessage* msg);
-  static void get_recv_msg(GetBackMessage* msg);
-  static void put_back_msg(PutBackMessage* msg);
-  static void put_recv_msg(PutMessage* msg);
+  static void getMsg(GetMessage* msg);
+  static void getRecvMsg(GetBackMessage* msg);
+  static void putBackMsg(PutBackMessage* msg);
+  static void putRecvMsg(PutMessage* msg);
 
   // handler functions for managing direct rdma channels
-  static void setup_channel(CreateChannel* msg);
-  static void remove_channel(DestroyChannel* msg);
-  static void remote_channel(ChannelMessage* msg);
-  static void get_info_channel(GetInfoChannel* msg);
+  static void setupChannel(CreateChannel* msg);
+  static void removeChannel(DestroyChannel* msg);
+  static void remoteChannel(ChannelMessage* msg);
+  static void getInfoChannel(GetInfoChannel* msg);
 
 private:
   // next local rdma handler (used by State)

@@ -75,14 +75,14 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     theRDMA->newGetChannel(my_handle, 0, 1, [=]{
-      TestMsg* msg = make_shared_message<TestMsg>(my_node);
+      TestMsg* msg = makeSharedMessage<TestMsg>(my_node);
       msg->han = my_handle;
       theMsg->broadcastMsg<TestMsg, announce>(msg);
     });
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

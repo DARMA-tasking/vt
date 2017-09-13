@@ -31,7 +31,7 @@ Trace::Trace() {
 void Trace::initialize() {
   traces_.reserve(trace_reserve_count);
 
-  theSched->register_trigger(
+  theSched->registerTrigger(
     sched::SchedulerEvent::BeginIdle, trace_begin_idle_trigger
   );
 }

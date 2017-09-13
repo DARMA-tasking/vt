@@ -92,13 +92,13 @@ struct ActiveMessenger {
    *
    * Send message  to pre-registered active message handler.
    *
-   *   void my_handler(MyMsg* msg) {
+   *   void myHandler(MyMsg* msg) {
    *     // do work ...
    *   }
    *
-   *   HandlerType const han = register_new_handler(my_handler);
+   *   HandlerType const han = registerNewHandler(my_handler);
    *
-   *   MyMsg* msg = make_shared_message<MyMsg>(156);
+   *   MyMsg* msg = makeSharedMessage<MyMsg>(156);
    *   theMsg->sendMsg(29, han, msg);
    *
    *----------------------------------------------------------------------------
@@ -143,11 +143,11 @@ struct ActiveMessenger {
    * Send message using a type-safe function handler. This is the predominant
    * way that the messenger is expected to be used.
    *
-   *   void my_handler(MyMsg* msg) {
+   *   void myHandler(MyMsg* msg) {
    *     // do work ...
    *   }
    *
-   *  theMsg->sendMsg<MyMsg, my_handler>(1, msg);
+   *  theMsg->sendMsg<MyMsg, myHandler>(1, msg);
    *
    *----------------------------------------------------------------------------
    */
@@ -201,12 +201,12 @@ struct ActiveMessenger {
    * Send message using basic function handler. These handlers are NOT type-safe
    * and require the user to cast their message to the correct type as so:
    *
-   *   void basic_handler(vt::BaseMessage* msg_in) {
+   *   void basicHandler(vt::BaseMessage* msg_in) {
    *     MyMsg* msg = static_cast<MyMsg*>(msg_in);
    *     ...
    *   }
    *
-   *  theMsg->sendMsg<basic_handler, MyMsg>(1, msg);
+   *  theMsg->sendMsg<basicHandler, MyMsg>(1, msg);
    *
    * Most likely this will be deprecated unless there is a use for this, since
    * type safety does not cost anything in terms of overhead (either at runtime

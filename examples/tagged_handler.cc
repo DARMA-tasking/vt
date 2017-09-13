@@ -19,7 +19,7 @@ struct TestMsg : vt::Message {
   { }
 };
 
-static void process_iter_msgs(vt::BaseMessage* in_msg) {
+static void processIterMsgs(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   auto const& first_tag = envelopeGetTag(msg.env);
@@ -40,7 +40,7 @@ static void process_iter_msgs(vt::BaseMessage* in_msg) {
 
     auto const& first_han = theMsg->getCurrentHandler();
     theMsg->unregisterHandlerFn(first_han, cur_iter-1);
-    theMsg->registerHandlerFn(first_han, process_iter_msgs, cur_iter);
+    theMsg->registerHandlerFn(first_han, processIterMsgs, cur_iter);
 
     printf(
       "%d: updating to NEXT iteration node %d: count=%d, cur_iter=%d\n",
@@ -49,7 +49,7 @@ static void process_iter_msgs(vt::BaseMessage* in_msg) {
   }
 }
 
-static void my_col_fn(TestMsg* msg) {
+static void myColFn(TestMsg* msg) {
   auto const& my_node = theContext->getNode();
 
   printf(
@@ -58,9 +58,9 @@ static void my_col_fn(TestMsg* msg) {
   );
 
   for (auto i = first_recv_tag; i < last_recv_tag; i++) {
-    TestMsg* new_msg = make_shared_message<TestMsg>(my_node, uninitialized_handler);
+    TestMsg* new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
     theMsg->sendMsg(msg->callback_han, new_msg, i);
-    message_deref(new_msg);
+    messageDeref(new_msg);
   }
 }
 
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
   CollectiveOps::initializeRuntime();
 
   HandlerType const callback = theMsg->registerNewHandler(
-    process_iter_msgs, cur_iter
+    processIterMsgs, cur_iter
   );
 
   auto const& my_node = theContext->getNode();
@@ -82,13 +82,13 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    TestMsg* msg = make_shared_message<TestMsg>(my_node, callback);
-    theMsg->broadcastMsg<TestMsg, my_col_fn>(msg);
-    message_deref(msg);
+    TestMsg* msg = makeSharedMessage<TestMsg>(my_node, callback);
+    theMsg->broadcastMsg<TestMsg, myColFn>(msg);
+    messageDeref(msg);
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

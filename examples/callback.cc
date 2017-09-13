@@ -27,7 +27,7 @@ static void my_col_fn(TestMsg* msg) {
     my_node, msg->from, msg->callback_han
   );
 
-  TestMsg* new_msg = make_shared_message<TestMsg>(my_node, uninitialized_handler);
+  TestMsg* new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
   theMsg->sendMsg(msg->callback_han, new_msg);
 }
 
@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

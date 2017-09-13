@@ -7,15 +7,15 @@ using namespace vt;
 static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
 
-static void fn_test(int a, int b, bool x) {
+static void fnTest(int a, int b, bool x) {
   printf("fn: a=%d, b=%d, x=%s\n", a, b, x ? "true" : "false");
 }
 
-static void fn_test2(int x, int y) {
+static void fnTest2(int x, int y) {
   printf("fn2: x=%d,y=%d\n",x,y);
 }
 
-static void fn_test3(int x, double y) {
+static void fnTest3(int x, double y) {
   printf("fn3: x=%d,y=%f\n",x,y);
 }
 
@@ -39,21 +39,21 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    theParam->send_data(1, build_data(10, 20, false), param_function_rhs(fn_test));
-    theParam->send_data(1, param_function_rhs(fn_test), 50, 29, false);
-    theParam->send_data<param_function(fn_test)>(1, build_data(10, 20, false));
-    theParam->send_data<param_function(fn_test)>(1, 45, 23, true);
+    theParam->sendData(1, buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
+    theParam->sendData(1, PARAM_FUNCTION_RHS(fnTest), 50, 29, false);
+    theParam->sendData<PARAM_FUNCTION(fnTest)>(1, buildData(10, 20, false));
+    theParam->sendData<PARAM_FUNCTION(fnTest)>(1, 45, 23, true);
 
-    theParam->send_data<param_function(fn_test2)>(1, 20, 10);
-    theParam->send_data<param_function(fn_test3)>(1, 20, 50.0);
+    theParam->sendData<PARAM_FUNCTION(fnTest2)>(1, 20, 10);
+    theParam->sendData<PARAM_FUNCTION(fnTest3)>(1, 20, 50.0);
 
-    theParam->send_data<FunctorTest1>(1, build_data(20, 50.0));
-    theParam->send_data<FunctorTest1>(1, 20, 100.0);
-    theParam->send_data<FunctorTest1>(1, build_data(10, 70.0));
+    theParam->sendData<FunctorTest1>(1, buildData(20, 50.0));
+    theParam->sendData<FunctorTest1>(1, 20, 100.0);
+    theParam->sendData<FunctorTest1>(1, buildData(10, 70.0));
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

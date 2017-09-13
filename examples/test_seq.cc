@@ -25,20 +25,20 @@ struct EmptyMsg : vt::Message {
 #define PRINT_SEQUENCE
 #endif
 
-sequence_register_handler(EmptyMsg, action1);
+SEQUENCE_REGISTER_HANDLER(EmptyMsg, action1);
 
-static void my_seq(SeqType const& seq_id) {
-  PRINT_SEQUENCE("my_seq: executing sequence\n");
+static void mySeq(SeqType const& seq_id) {
+  PRINT_SEQUENCE("mySeq: executing sequence\n");
 
   theSeq->wait<EmptyMsg, action1>(10, [](EmptyMsg* msg){
     PRINT_SEQUENCE("action1 WAIT-1 triggered\n");
   });
 
-  theSeq->sequenced_block([]{
+  theSeq->sequencedBlock([]{
     PRINT_SEQUENCE("action1 sequenced_block triggered\n");
     auto const& my_node = theContext->getNode();
     theMsg->sendMsg<EmptyMsg, action1>(
-      my_node, make_shared_message<EmptyMsg>(), 20
+      my_node, makeSharedMessage<EmptyMsg>(), 20
     );
   });
 
@@ -67,21 +67,21 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    SeqType const& seq_id = theSeq->next_seq();
-    theSeq->sequenced(seq_id, my_seq);
+    SeqType const& seq_id = theSeq->nextSeq();
+    theSeq->sequenced(seq_id, mySeq);
 
-    theMsg->sendMsg<EmptyMsg, action1>(1, make_shared_message<EmptyMsg>(), 30);
-    theMsg->sendMsg<EmptyMsg, action1>(1, make_shared_message<EmptyMsg>(), 10);
+    theMsg->sendMsg<EmptyMsg, action1>(1, makeSharedMessage<EmptyMsg>(), 30);
+    theMsg->sendMsg<EmptyMsg, action1>(1, makeSharedMessage<EmptyMsg>(), 10);
 
-    theMsg->sendMsg<EmptyMsg, action1>(0, make_shared_message<EmptyMsg>(), 30);
-    theMsg->sendMsg<EmptyMsg, action1>(0, make_shared_message<EmptyMsg>(), 10);
+    theMsg->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>(), 30);
+    theMsg->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>(), 10);
   } else if (my_node == 1) {
-    SeqType const& seq_id2 = theSeq->next_seq();
-    theSeq->sequenced(seq_id2, my_seq);
+    SeqType const& seq_id2 = theSeq->nextSeq();
+    theSeq->sequenced(seq_id2, mySeq);
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

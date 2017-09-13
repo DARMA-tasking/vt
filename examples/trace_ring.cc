@@ -18,7 +18,7 @@ struct RingMsg : vt::Message {
   RingMsg(NodeType const& in_from) : Message(), from(in_from) { }
 };
 
-static void send_to_next();
+static void sendToNext();
 
 static double kernel(NodeType const& from_node) {
   double my_val = 19.234;
@@ -41,11 +41,11 @@ static void ring(RingMsg* msg) {
   );
 
   if (ring_from_node != num_nodes-1 or num_times < num_total_rings) {
-    send_to_next();
+    sendToNext();
   }
 }
 
-static void send_to_next() {
+static void sendToNext() {
   RingMsg* msg = new RingMsg(my_node);
   theMsg->sendMsg<RingMsg, ring>(next_node, msg, [=]{ delete msg; });
 }
@@ -67,11 +67,11 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    send_to_next();
+    sendToNext();
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

@@ -19,19 +19,19 @@ struct Action {
     : seq_id(in_seq_id), action(in_action)
   { }
 
-  void run_action(MessageT* msg) const {
+  void runAction(MessageT* msg) const {
     auto const callable = [this, msg]() -> bool {
       theTerm->consume();
       action(msg);
       return false;
     };
 
-    contextual_execution(seq_id, false, callable);
+    contextualExecution(seq_id, false, callable);
   }
 
-  CallableType generate_callable(MessageT* msg) const {
+  CallableType generateCallable(MessageT* msg) const {
     return [msg,this](){
-      run_action(msg);
+      runAction(msg);
       return false;
     };
   }

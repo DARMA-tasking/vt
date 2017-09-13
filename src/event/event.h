@@ -86,8 +86,8 @@ struct MPIEvent : Event {
     MPI_Test(&req, &flag, &stat);
     bool const ready = flag == 1;
 
-    if (ready and msg != nullptr and is_shared_message(msg)) {
-      message_deref(msg);
+    if (ready and msg != nullptr and isSharedMessage(msg)) {
+      messageDeref(msg);
       msg = nullptr;
     }
 
@@ -109,7 +109,7 @@ struct MPIEvent : Event {
 
   void setManagedMessage(ShortMessage* in_msg) {
     msg = in_msg;
-    message_ref(msg);
+    messageRef(msg);
   }
 
 private:

@@ -16,7 +16,7 @@ struct TestMsg : CallbackMessage {
 static void test_msg_recv(TestMsg* msg) {
   printf("%d: sending callback %d\n", theContext->getNode(), msg->from);
 
-  TestMsg* sendMsg = make_shared_message<TestMsg>(my_node);
+  TestMsg* sendMsg = makeSharedMessage<TestMsg>(my_node);
   theMsg->sendCallback(sendMsg);
 }
 
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     for (int cur_node = 0; cur_node < num_nodes; cur_node++) {
-      TestMsg* msg = make_shared_message<TestMsg>(my_node);
+      TestMsg* msg = makeSharedMessage<TestMsg>(my_node);
       theMsg->sendDataCallback<TestMsg, test_msg_recv>(
         cur_node, msg, [=](BaseMessage* in_msg){
           TestMsg* msg = static_cast<TestMsg*>(in_msg);
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

@@ -32,7 +32,7 @@ static void read_data_fn(TestMsg* msg) {
       }
 
       theRDMA->newGetChannel(my_handle_1, 0, 2, [=]{
-        TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
+        TestMsg* msg1 = makeSharedMessage<TestMsg>(my_handle_1);
         theMsg->sendMsg<TestMsg, put_channel_setup>(2, msg1);
       });
     });
@@ -56,13 +56,13 @@ static void put_channel_setup(TestMsg* msg) {
 
       if (use_paired_sync) {
         theRDMA->putTypedData(handle, my_data, num_elm, no_byte, no_action, [=]{
-          TestMsg* back = make_shared_message<TestMsg>(handle);
+          TestMsg* back = makeSharedMessage<TestMsg>(handle);
           theMsg->sendMsg<TestMsg, read_data_fn>(0, back);
         });
       } else {
         theRDMA->putTypedData(handle, my_data, num_elm);
         theRDMA->syncRemotePutChannel(handle, [=]{
-          TestMsg* back = make_shared_message<TestMsg>(handle);
+          TestMsg* back = makeSharedMessage<TestMsg>(handle);
           theMsg->sendMsg<TestMsg, read_data_fn>(0, back);
         });
       }
@@ -77,14 +77,14 @@ static void put_channel_setup(TestMsg* msg) {
 
       if (use_paired_sync) {
         theRDMA->getTypedDataInfoBuf(handle, my_data, num_elm, [=]{
-          TestMsg* back = make_shared_message<TestMsg>(handle);
+          TestMsg* back = makeSharedMessage<TestMsg>(handle);
           theMsg->sendMsg<TestMsg, read_data_fn>(2, back);
         });
       } else {
         theRDMA->getTypedDataInfoBuf(handle, my_data, num_elm);
         // theRDMA->get_typed_data_info_buf(handle, my_data+2, num_elm);
         theRDMA->syncLocalGetChannel(handle, [=]{
-          TestMsg* back = make_shared_message<TestMsg>(handle);
+          TestMsg* back = makeSharedMessage<TestMsg>(handle);
           theMsg->sendMsg<TestMsg, read_data_fn>(2, back);
         });
       }
@@ -122,13 +122,13 @@ int main(int argc, char** argv) {
     );
 
     theRDMA->newPutChannel(my_handle_1, 0, 1, [=]{
-      TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
+      TestMsg* msg1 = makeSharedMessage<TestMsg>(my_handle_1);
       theMsg->sendMsg<TestMsg, put_channel_setup>(1, msg1);
     });
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

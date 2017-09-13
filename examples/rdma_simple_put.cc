@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

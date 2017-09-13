@@ -19,7 +19,7 @@ struct RingMsg : vt::Message {
   { }
 };
 
-static void send_to_next();
+static void sendToNext();
 
 static void ring(RingMsg* msg) {
   printf("%d: Hello from node %d: num_times=%d\n", my_node, msg->from, num_times);
@@ -27,11 +27,11 @@ static void ring(RingMsg* msg) {
   num_times++;
 
   if (msg->from != num_nodes-1 or num_times < num_total_rings) {
-    send_to_next();
+    sendToNext();
   }
 }
 
-static void send_to_next() {
+static void sendToNext() {
   RingMsg* msg = new RingMsg(my_node);
   theMsg->sendMsg<RingMsg, ring>(next_node, msg, [=]{ delete msg; });
 }
@@ -53,11 +53,11 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    send_to_next();
+    sendToNext();
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

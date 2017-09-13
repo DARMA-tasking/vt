@@ -27,12 +27,12 @@ struct MemoryPoolEqual {
   // }
 
   MemoryPoolEqual() {
-    resize_pool();
+    resizePool();
   }
 
   void* alloc(size_t const& sz) {
     if (cur_slot_+1 >= holder_.size()) {
-      resize_pool();
+      resizePool();
     }
 
     assert(
@@ -67,7 +67,7 @@ struct MemoryPoolEqual {
     holder_[--cur_slot_] = ptr_actual;
   }
 
-  void resize_pool() {
+  void resizePool() {
     SlotType const cur_size = holder_.size();
     SlotType const new_size = cur_size == 0 ? pool_size_ : cur_size * 2;
 
@@ -78,7 +78,7 @@ struct MemoryPoolEqual {
     }
   }
 
-  SlotType get_num_bytes() const {
+  SlotType getNumBytes() {
     return num_bytes_;
   }
 
@@ -97,14 +97,9 @@ struct Pool {
 
   MemoryPoolEqual<sizeof(EpochTagEnvelope) + small_msg_size_buf> small_msg;
 
-  void*
-  alloc(size_t const& num_bytes);
-
-  void
-  dealloc(void* const buf);
-
-  bool
-  size_is_large(size_t const& num_bytes);
+  void* alloc(size_t const& num_bytes);
+  void dealloc(void* const buf);
+  bool sizeIsLarge(size_t const& num_bytes);
 };
 
 }} //end namespace vt::pool
@@ -114,34 +109,34 @@ namespace vt {
 extern std::unique_ptr<pool::Pool> thePool;
 
 template <typename MessageT, typename... Args>
-MessageT* make_shared_message(Args&&... args) {
+MessageT* makeSharedMessage(Args&&... args) {
   MessageT* msg = new MessageT{args...};
   envelopeSetRef(msg->env, 1);
   return msg;
 }
 
 template <typename MessageT>
-bool is_shared_message(MessageT* msg) {
+bool isSharedMessage(MessageT* msg) {
   return envelopeGetRef(msg->env) != not_shared_message;
 }
 
 template <typename MessageT>
-void message_convert_to_shared(MessageT* msg) {
+void messageConvertToShared(MessageT* msg) {
   envelopeSetRef(msg->env, 1);
 }
 
 template <typename MessageT>
-void message_set_unmanaged(MessageT* msg) {
+void messageSetUnmanaged(MessageT* msg) {
   envelopeSetRef(msg->env, not_shared_message);
 }
 
 template <typename MessageT>
-void message_ref(MessageT* msg) {
+void messageRef(MessageT* msg) {
   envelopeRef(msg->env);
 }
 
 template <typename MessageT>
-void message_deref(MessageT* msg) {
+void messageDeref(MessageT* msg) {
   envelopeDeref(msg->env);
 
   debug_print(

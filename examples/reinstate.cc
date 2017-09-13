@@ -16,41 +16,41 @@ struct TestMsg : vt::Message {
   { }
 };
 
-static void callback_fn_2(vt::BaseMessage* in_msg) {
+static void callbackFn2(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-  printf("%d: callback_fn_2 handler node %d\n", theContext->getNode(), msg.from);
+  printf("%d: callbackFn2 handler node %d\n", theContext->getNode(), msg.from);
 }
 
-static void reinstate_fn(vt::BaseMessage* in_msg) {
+static void reinstateFn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   // register a new function for the handler to deliver the rest of the msgs
-  theMsg->registerHandlerFn(msg.callback_han, callback_fn_2);
+  theMsg->registerHandlerFn(msg.callback_han, callbackFn2);
 }
 
-static void callback_fn(vt::BaseMessage* in_msg) {
+static void callbackFn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   HandlerType const& han = theMsg->getCurrentHandler();
   theMsg->unregisterHandlerFn(han);
 
-  theMsg->sendMsg(my_reinstate_fn, make_shared_message<TestMsg>(0, han));
+  theMsg->sendMsg(my_reinstate_fn, makeSharedMessage<TestMsg>(0, han));
 
-  printf("%d: callback_fn handler node %d\n", theContext->getNode(), msg.from);
+  printf("%d: callbackFn handler node %d\n", theContext->getNode(), msg.from);
 }
 
-static void my_col_fn(vt::BaseMessage* in_msg) {
+static void myColFn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   auto const& my_node = theContext->getNode();
 
   printf(
-    "%d: my_col_fn from=%d, callback=%d: sending\n",
+    "%d: myColFn from=%d, callback=%d: sending\n",
     my_node, msg.from, msg.callback_han
   );
 
-  TestMsg* new_msg = make_shared_message<TestMsg>(my_node, uninitialized_handler);
+  TestMsg* new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
   theMsg->sendMsg(msg.callback_han, new_msg);
 }
 
@@ -58,10 +58,10 @@ int main(int argc, char** argv) {
   CollectiveOps::initializeContext(argc, argv);
   CollectiveOps::initializeRuntime();
 
-  HandlerType const callback = theMsg->registerNewHandler(callback_fn);
-  my_reinstate_fn = theMsg->registerNewHandler(reinstate_fn);
+  HandlerType const callback = theMsg->registerNewHandler(callbackFn);
+  my_reinstate_fn = theMsg->registerNewHandler(reinstateFn);
 
-  my_col_han = theMsg->collectiveRegisterHandler(my_col_fn);
+  my_col_han = theMsg->collectiveRegisterHandler(myColFn);
 
   auto const& my_node = theContext->getNode();
   auto const& num_nodes = theContext->getNumNodes();
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

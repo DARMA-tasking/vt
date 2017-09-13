@@ -19,7 +19,7 @@ EventType ActiveMessenger::sendDataDirect(
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& epoch =
     envelopeIsEpochType(msg->env) ? envelopeGetEpoch(msg->env) : no_epoch;
-  auto const& is_shared = is_shared_message(msg);
+  auto const& is_shared = isSharedMessage(msg);
 
   backend_enable_if(
     trace_enabled, {
@@ -71,7 +71,7 @@ EventType ActiveMessenger::sendDataDirect(
     }
 
     if (is_shared) {
-      message_deref(msg);
+      messageDeref(msg);
     }
 
     return event_id;
@@ -161,7 +161,7 @@ EventType ActiveMessenger::sendDataDirect(
     }
 
     if (is_shared) {
-      message_deref(msg);
+      messageDeref(msg);
     }
 
     return parent_event_id;
@@ -422,7 +422,7 @@ bool ActiveMessenger::deliverActiveMsg(
   }
 
   if (not is_bcast and has_action_handler) {
-    message_deref(msg);
+    messageDeref(msg);
   }
 
   return has_action_handler;
@@ -452,7 +452,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
     MessageType msg = reinterpret_cast<MessageType>(buf);
 
-    message_convert_to_shared(msg);
+    messageConvertToShared(msg);
 
     auto const& handler = envelopeGetHandler(msg->env);
     auto const& is_bcast = envelopeIsBcast(msg->env);

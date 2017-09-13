@@ -6,7 +6,7 @@
 
 namespace vt { namespace rdma {
 
-/*static*/ void RDMAManager::get_msg(GetMessage* msg) {
+/*static*/ void RDMAManager::getMsg(GetMessage* msg) {
   auto const msg_tag = envelopeGetTag(msg->env);
   auto const op_id = msg->op_id;
   auto const recv_node = msg->requesting;
@@ -46,7 +46,7 @@ namespace vt { namespace rdma {
 
       auto deleter = [=]{ delete new_msg; };
 
-      theMsg->sendMsg<GetBackMessage, get_recv_msg>(
+      theMsg->sendMsg<GetBackMessage, getRecvMsg>(
         recv_node, new_msg, send_payload, deleter
       );
 
@@ -58,7 +58,7 @@ namespace vt { namespace rdma {
   );
 }
 
-/*static*/ void RDMAManager::get_recv_msg(GetBackMessage* msg) {
+/*static*/ void RDMAManager::getRecvMsg(GetBackMessage* msg) {
   auto const msg_tag = envelopeGetTag(msg->env);
   auto const op_id = msg->op_id;
 
@@ -96,7 +96,7 @@ namespace vt { namespace rdma {
   }
 }
 
-/*static*/ void RDMAManager::put_back_msg(PutBackMessage* msg) {
+/*static*/ void RDMAManager::putBackMsg(PutBackMessage* msg) {
   auto const msg_tag = envelopeGetTag(msg->env);
   auto const op_id = msg->op_id;
 
@@ -110,7 +110,7 @@ namespace vt { namespace rdma {
   theRDMA->triggerPutBackData(op_id);
 }
 
-/*static*/ void RDMAManager::put_recv_msg(PutMessage* msg) {
+/*static*/ void RDMAManager::putRecvMsg(PutMessage* msg) {
   auto const msg_tag = envelopeGetTag(msg->env);
   auto const op_id = msg->op_id;
   auto const send_back = msg->send_back;
@@ -157,7 +157,7 @@ namespace vt { namespace rdma {
             );
             if (send_back != uninitialized_destination) {
               PutBackMessage* new_msg = new PutBackMessage(op_id);
-              theMsg->sendMsg<PutBackMessage, put_back_msg>(
+              theMsg->sendMsg<PutBackMessage, putBackMsg>(
                 send_back, new_msg, [=]{ delete new_msg; }
               );
             }
@@ -180,7 +180,7 @@ namespace vt { namespace rdma {
         );
         if (send_back) {
           PutBackMessage* new_msg = new PutBackMessage(op_id);
-          theMsg->sendMsg<PutBackMessage, put_back_msg>(
+          theMsg->sendMsg<PutBackMessage, putBackMsg>(
             send_back, new_msg, [=]{ delete new_msg; }
           );
         }
@@ -190,7 +190,7 @@ namespace vt { namespace rdma {
   }
 }
 
-/*static*/ void RDMAManager::setup_channel(CreateChannel* msg) {
+/*static*/ void RDMAManager::setupChannel(CreateChannel* msg) {
   auto const& this_node = theContext->getNode();
 
   debug_print(
@@ -203,7 +203,7 @@ namespace vt { namespace rdma {
   auto const& num_bytes = theRDMA->lookupBytesHandler(msg->rdma_handle);
 
   if (not msg->has_bytes) {
-    theMsg->sendCallback(make_shared_message<GetInfoChannel>(num_bytes));
+    theMsg->sendCallback(makeSharedMessage<GetInfoChannel>(num_bytes));
   }
 
   theRDMA->createDirectChannelInternal(
@@ -212,12 +212,12 @@ namespace vt { namespace rdma {
   );
 }
 
-/*static*/ void RDMAManager::remove_channel(DestroyChannel* msg) {
+/*static*/ void RDMAManager::removeChannel(DestroyChannel* msg) {
   theRDMA->removeDirectChannel(msg->han);
-  theMsg->sendCallback(make_shared_message<CallbackMessage>());
+  theMsg->sendCallback(makeSharedMessage<CallbackMessage>());
 }
 
-/*static*/ void RDMAManager::remote_channel(ChannelMessage* msg) {
+/*static*/ void RDMAManager::remoteChannel(ChannelMessage* msg) {
   auto const& this_node = theContext->getNode();
   auto const target = getTarget(msg->han, msg->override_target);
 
@@ -230,7 +230,7 @@ namespace vt { namespace rdma {
 
   theRDMA->createDirectChannelInternal(
     msg->type, msg->han, msg->non_target, [=]{
-      theMsg->sendCallback(make_shared_message<CallbackMessage>());
+      theMsg->sendCallback(makeSharedMessage<CallbackMessage>());
     },
     target, msg->channel_tag, msg->num_bytes
   );
@@ -570,7 +570,7 @@ void RDMAManager::putData(
 
       auto deleter = [=]{ delete msg; };
 
-      theMsg->sendMsg<PutMessage, put_recv_msg>(
+      theMsg->sendMsg<PutMessage, putRecvMsg>(
         put_node, msg, send_payload, deleter
       );
 
@@ -651,7 +651,7 @@ void RDMAManager::getRegionTypeless(
         node, lo, hi, blk, blk_lo, blk_hi, block_offset, roffset, roffset*elm_size
       );
 
-      action->add_dep();
+      action->addDep();
 
       getDataIntoBuf(
         han, ptr_offset, (hi-lo)*elm_size, block_offset, no_tag, [=]{
@@ -739,7 +739,7 @@ void RDMAManager::getDataIntoBuf(
         if (tag != no_tag) {
           envelopeSetTag(msg->env, tag);
         }
-        theMsg->sendMsg<GetMessage, get_msg>(getNode, msg, [=]{ delete msg; });
+        theMsg->sendMsg<GetMessage, getMsg>(getNode, msg, [=]{ delete msg; });
 
         pending_ops_.emplace(
           std::piecewise_construct,
@@ -773,7 +773,7 @@ void RDMAManager::getData(
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
     }
-    theMsg->sendMsg<GetMessage, get_msg>(getNode, msg, [=]{ delete msg; });
+    theMsg->sendMsg<GetMessage, getMsg>(getNode, msg, [=]{ delete msg; });
 
     pending_ops_.emplace(
       std::piecewise_construct,
@@ -858,11 +858,11 @@ void RDMAManager::setupChannelWithRemote(
       han, dest, override_target, target
     );
 
-    auto msg = make_shared_message<ChannelMessage>(
+    auto msg = makeSharedMessage<ChannelMessage>(
       type, han, num_bytes, tag, dest, override_target
     );
 
-    theMsg->sendDataCallback<ChannelMessage, remote_channel>(
+    theMsg->sendDataCallback<ChannelMessage, remoteChannel>(
       other_node, msg, [=](vt::BaseMessage*){
         action();
       }
@@ -1055,11 +1055,11 @@ void RDMAManager::createDirectChannelInternal(
       "Should not have a tag assigned at this point"
     );
 
-    auto msg = make_shared_message<CreateChannel>(
+    auto msg = makeSharedMessage<CreateChannel>(
       type, han, unique_channel_tag, target, this_node
     );
 
-    theMsg->sendDataCallback<CreateChannel, setup_channel>(
+    theMsg->sendDataCallback<CreateChannel, setupChannel>(
       target, msg, [=](vt::BaseMessage* in_msg){
         GetInfoChannel& info = *static_cast<GetInfoChannel*>(in_msg);
         auto const& num_bytes = info.num_bytes;
@@ -1094,10 +1094,10 @@ void RDMAManager::removeDirectChannel(
   auto const target = getTarget(han, override_target);
 
   if (this_node != target) {
-    DestroyChannel* msg = make_shared_message<DestroyChannel>(
+    DestroyChannel* msg = makeSharedMessage<DestroyChannel>(
       RDMA_TypeType::Get, han, no_byte, no_tag
     );
-    theMsg->sendDataCallback<DestroyChannel, remove_channel>(
+    theMsg->sendDataCallback<DestroyChannel, removeChannel>(
       target, msg, [=](vt::BaseMessage* in_msg){
         auto iter = channels_.find(
           makeChannelLookup(han,RDMA_TypeType::Put,target,this_node)

@@ -34,7 +34,7 @@ static void put_channel_setup(TestMsg* msg) {
   if (my_node == 1) {
     int const num_elm = 2;
     theRDMA->putTypedData(handle, my_data, num_elm, no_byte, no_tag, [=]{
-      TestMsg* back = make_shared_message<TestMsg>(handle);
+      TestMsg* back = makeSharedMessage<TestMsg>(handle);
       theMsg->sendMsg<TestMsg, read_data_fn>(0, back);
     });
   }
@@ -65,13 +65,13 @@ int main(int argc, char** argv) {
     );
 
     theRDMA->newPutChannel(my_handle_1, 0, 1, [=]{
-      TestMsg* msg1 = make_shared_message<TestMsg>(my_handle_1);
+      TestMsg* msg1 = makeSharedMessage<TestMsg>(my_handle_1);
       theMsg->sendMsg<TestMsg, put_channel_setup>(1, msg1);
     });
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

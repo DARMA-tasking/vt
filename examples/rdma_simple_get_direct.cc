@@ -17,7 +17,7 @@ struct TestMsg : vt::Message {
   TestMsg(RDMA_HandleType const& in_han) : Message(), han(in_han) { }
 };
 
-static void tell_handle(TestMsg* msg) {
+static void tellHandle(TestMsg* msg) {
   if (my_node != 0) {
     printf("%d: handle=%lld, requesting data\n", my_node, msg->han);
     int const num_elm = 2;
@@ -48,11 +48,11 @@ int main(int argc, char** argv) {
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;
-    theMsg->broadcastMsg<TestMsg, tell_handle>(msg, [=]{ delete msg; });
+    theMsg->broadcastMsg<TestMsg, tellHandle>(msg, [=]{ delete msg; });
   }
 
   while (1) {
-    run_scheduler();
+    runScheduler();
   }
 
   return 0;

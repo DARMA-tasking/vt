@@ -3,16 +3,16 @@
 
 namespace vt { namespace pool {
 
-bool Pool::size_is_large(size_t const& num_bytes) {
-  return num_bytes > small_msg.get_num_bytes();
+bool Pool::sizeIsLarge(size_t const& num_bytes) {
+  return num_bytes > small_msg.getNumBytes();
 }
 
 void* Pool::alloc(size_t const& num_bytes) {
-  auto const& small_bytes = small_msg.get_num_bytes();
+  auto const& small_bytes = small_msg.getNumBytes();
 
   void* ret = nullptr;
 
-  bool const is_large = size_is_large(num_bytes);
+  bool const is_large = sizeIsLarge(num_bytes);
 
   if (not is_large) {
     ret = small_msg.alloc(num_bytes);
@@ -32,12 +32,12 @@ void* Pool::alloc(size_t const& num_bytes) {
 }
 
 void Pool::dealloc(void* const buf) {
-  auto const& small_bytes = small_msg.get_num_bytes();
+  auto const& small_bytes = small_msg.getNumBytes();
 
   void* const ptr_actual = static_cast<size_t*>(buf) - 1;
   auto const& actual_alloc_size = *static_cast<size_t*>(ptr_actual);
 
-  bool const is_large = size_is_large(actual_alloc_size);
+  bool const is_large = sizeIsLarge(actual_alloc_size);
 
   debug_print(
     pool, node,
