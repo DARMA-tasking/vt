@@ -26,12 +26,12 @@ EventType ActiveMessenger::sendDataDirect(
       auto const& handler = envelopeGetHandler(msg->env);
       bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
       if (is_auto) {
-        trace::TraceEntryIDType ep = auto_registry::get_trace_id(handler);
+        trace::TraceEntryIDType ep = auto_registry::getTraceID(handler);
         if (not is_bcast) {
-          trace::TraceEventIDType event = theTrace->message_creation(ep, msg_size);
+          trace::TraceEventIDType event = theTrace->messageCreation(ep, msg_size);
           envelope_set_trace_event(msg->env, event);
         } else if (is_bcast and dest == this_node) {
-          trace::TraceEventIDType event = theTrace->message_creation_bcast(
+          trace::TraceEventIDType event = theTrace->messageCreationBcast(
             ep, msg_size
           );
           envelope_set_trace_event(msg->env, event);
@@ -360,7 +360,7 @@ bool ActiveMessenger::deliverActiveMsg(
   backend_enable_if(
     trace_enabled,
     if (is_auto) {
-      trace_id = auto_registry::get_trace_id(handler);
+      trace_id = auto_registry::getTraceID(handler);
     }
   );
 
@@ -381,7 +381,7 @@ bool ActiveMessenger::deliverActiveMsg(
     // begin trace of this active message
     backend_enable_if(
       trace_enabled,
-      theTrace->begin_processing(trace_id, sizeof(*msg), trace_event, from_node);
+      theTrace->beginProcessing(trace_id, sizeof(*msg), trace_event, from_node);
     );
 
     // run the active function
@@ -390,7 +390,7 @@ bool ActiveMessenger::deliverActiveMsg(
     // end trace of this active message
     backend_enable_if(
       trace_enabled,
-      theTrace->end_processing(trace_id, sizeof(*msg), trace_event, from_node);
+      theTrace->endProcessing(trace_id, sizeof(*msg), trace_event, from_node);
     );
 
     auto trigger = theRegistry->getTrigger(handler);

@@ -48,7 +48,7 @@ static inline void pullApart(
     demangle::ActiveFunctorDemangler::parseActiveFunctorName(name, args);
   auto const& namespace_name = std::get<0>(parsed_names);
   auto const& function_name = std::get<1>(parsed_names);
-  auto const& trace_ep = trace::TraceRegistry::register_event_hashed(
+  auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
     namespace_name, function_name
   );
   #endif
@@ -98,7 +98,7 @@ inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler) {
     is_functor and is_auto and "Handler should be a auto functor"
   );
 
-  return getAutoRegistryFunctor().at(han_id).get_fun();
+  return getAutoRegistryFunctor().at(han_id).getFun();
 }
 
 template <typename RunnableFunctorT>

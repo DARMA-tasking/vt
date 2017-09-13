@@ -15,7 +15,7 @@ using AutoActiveFunctorType = SimpleFunctionType;
 
 template <typename FnT>
 struct AutoRegInfo {
-  FnT active_fun_t;
+  FnT activeFunT;
 
   #if backend_check_enabled(trace_enabled)
 
@@ -23,22 +23,22 @@ struct AutoRegInfo {
 
   AutoRegInfo(
     FnT const& in_active_fun_t, trace::TraceEntryIDType const& in_event_id
-  ) : active_fun_t(in_active_fun_t), event_id(in_event_id)
+  ) : activeFunT(in_active_fun_t), event_id(in_event_id)
   { }
 
-  trace::TraceEntryIDType get_trace_id() const {
+  trace::TraceEntryIDType getTraceID() const {
     return event_id;
   }
 
   #else
 
   AutoRegInfo(FnT const& in_active_fun_t)
-    : active_fun_t(in_active_fun_t) { }
+    : activeFunT(in_active_fun_t) { }
 
   #endif
 
-  FnT get_fun() const {
-    return active_fun_t;
+  FnT getFun() const {
+    return activeFunT;
   }
 };
 

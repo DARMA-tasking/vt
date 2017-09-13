@@ -16,16 +16,16 @@ struct EventClass {
   EventClass(std::string const& in_event);
   EventClass(EventClass const&) = default;
 
-  TraceEntryIDType get_event_id() const;
-  TraceEntryIDType get_event_seq_id() const;
+  TraceEntryIDType getEventId() const;
+  TraceEntryIDType getEventSeqId() const;
 
-  std::string get_event_name() const;
-  void set_event_seq(TraceEntryIDType const& seq);
-  TraceEntryIDType get_event_seq() const;
+  std::string getEventName() const;
+  void setEventSeq(TraceEntryIDType const& seq);
+  TraceEntryIDType getEventSeq() const;
 
 private:
-  TraceEntryIDType this_event = no_trace_entry_id;
-  TraceEntryIDType this_event_seq = no_trace_entry_id;
+  TraceEntryIDType this_event_ = no_trace_entry_id;
+  TraceEntryIDType this_event_seq_ = no_trace_entry_id;
 
   std::string event;
 };
@@ -34,13 +34,13 @@ struct Event : EventClass {
   Event(std::string const& in_event, TraceEntryIDType const& in_event_type);
   Event(Event const&) = default;
 
-  TraceEntryIDType get_event_type_id() const;
-  void set_event_type_seq(TraceEntryIDType const& seq);
-  TraceEntryIDType get_event_type_seq() const;
+  TraceEntryIDType getEventTypeId() const;
+  void setEventTypeSeq(TraceEntryIDType const& seq);
+  TraceEntryIDType getEventTypeSeq() const;
 
 private:
-  TraceEntryIDType this_event_type = no_trace_entry_id;
-  TraceEntryIDType this_event_type_seq = no_trace_entry_id;
+  TraceEntryIDType this_event_type_ = no_trace_entry_id;
+  TraceEntryIDType this_event_type_seq_ = no_trace_entry_id;
 };
 
 }} //end namespace vt::trace

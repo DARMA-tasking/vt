@@ -20,7 +20,7 @@ namespace vt {
     trace_enabled, {
       std::string name = "prog";
       auto const& node = theContext->getNode();
-      theTrace->setup_names(name, name + "." + std::to_string(node) + ".log.gz");
+      theTrace->setupNames(name, name + "." + std::to_string(node) + ".log.gz");
     }
   );
 }

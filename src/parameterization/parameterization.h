@@ -73,14 +73,14 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   );
 
 #if backend_check_enabled(trace_enabled)
-  trace::TraceEntryIDType ep = auto_registry::get_trace_id(msg->sub_han);
-  trace::TraceEventIDType event = envelope_get_trace_event(msg->env);
+  trace::TraceEntryIDType ep = auto_registry::getTraceID(msg->sub_han);
+  trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
 
   printf("dataMessageHandler: id=%d, ep=%lu\n", msg->sub_han, ep);
 
   NodeType const& from_node = theMsg->getFromNodeCurrentHandler();
 
-  theTrace->begin_processing(ep, sizeof(*msg), event, from_node);
+  theTrace->beginProcessing(ep, sizeof(*msg), event, from_node);
 #endif
 
   if (HandlerManagerType::isHandlerFunctor(msg->sub_han)) {
@@ -93,7 +93,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   }
 
 #if backend_check_enabled(trace_enabled)
-  theTrace->end_processing(ep, sizeof(*msg), event, from_node);
+  theTrace->endProcessing(ep, sizeof(*msg), event, from_node);
 #endif
 }
 

@@ -14,7 +14,7 @@ namespace vt { namespace trace {
 struct TraceRegistry {
   using TraceContainersType = TraceContainers<void>;
 
-  static TraceEntryIDType register_event_hashed(
+  static TraceEntryIDType registerEventHashed(
     std::string const& event_type_name, std::string const& event_name
   ) {
     // must use this old-style of print because context may not be initialized
@@ -31,45 +31,45 @@ struct TraceRegistry {
     EventClassType new_event_type(event_type_name);
 
     auto type_iter = TraceContainersType::event_type_container.find(
-      new_event_type.get_event_id()
+      new_event_type.getEventId()
     );
 
     if (type_iter == TraceContainersType::event_type_container.end()) {
       event_type_seq = TraceContainersType::event_type_container.size();
-      new_event_type.set_event_seq(event_type_seq);
+      new_event_type.setEventSeq(event_type_seq);
 
       TraceContainersType::event_type_container.emplace(
         std::piecewise_construct,
-        std::forward_as_tuple(new_event_type.get_event_id()),
+        std::forward_as_tuple(new_event_type.getEventId()),
         std::forward_as_tuple(new_event_type)
       );
     } else {
-      event_type_seq = type_iter->second.get_event_seq();
+      event_type_seq = type_iter->second.getEventSeq();
     }
 
     TraceEntryIDType event_seq = no_trace_entry_id;
-    TraceEventType new_event(event_name, new_event_type.get_event_id());
+    TraceEventType new_event(event_name, new_event_type.getEventId());
 
-    new_event.set_event_type_seq(event_type_seq);
+    new_event.setEventTypeSeq(event_type_seq);
 
     auto event_iter = TraceContainersType::event_container.find(
-      new_event.get_event_id()
+      new_event.getEventId()
     );
 
     if (event_iter == TraceContainersType::event_container.end()) {
       event_seq = TraceContainersType::event_container.size();
-      new_event.set_event_seq(event_seq);
+      new_event.setEventSeq(event_seq);
 
       TraceContainersType::event_container.emplace(
         std::piecewise_construct,
-        std::forward_as_tuple(new_event.get_event_id()),
+        std::forward_as_tuple(new_event.getEventId()),
         std::forward_as_tuple(new_event)
       );
     } else {
-      event_seq = event_iter->second.get_event_seq();
+      event_seq = event_iter->second.getEventSeq();
     }
 
-    return new_event.get_event_id();
+    return new_event.getEventId();
   }
 
 };

@@ -9,7 +9,7 @@ namespace vt { namespace trace {
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
-    start_time_(get_current_time())
+    start_time_(getCurrentTime())
 {
   initialize();
 }
@@ -18,11 +18,11 @@ Trace::Trace() {
   initialize();
 }
 
-/*static*/ void Trace::trace_begin_idle_trigger() {
+/*static*/ void Trace::traceBeginIdleTrigger() {
   backend_enable_if(
     trace_enabled, {
-      if (not theTrace->in_idle_event()) {
-        theTrace->begin_idle();
+      if (not theTrace->inIdleEvent()) {
+        theTrace->beginIdle();
       }
     }
   );
@@ -32,27 +32,27 @@ void Trace::initialize() {
   traces_.reserve(trace_reserve_count);
 
   theSched->registerTrigger(
-    sched::SchedulerEvent::BeginIdle, trace_begin_idle_trigger
+    sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
   );
 }
 
-bool Trace::in_idle_event() const {
+bool Trace::inIdleEvent() const {
   return idle_begun_;
 }
 
-void Trace::setup_names(
+void Trace::setupNames(
   std::string const& in_prog_name, std::string const& in_trace_name
 ) {
   prog_name_ = in_prog_name;
   trace_name_ = in_trace_name;
-  start_time_ = get_current_time();
+  start_time_ = getCurrentTime();
 }
 
 /*virtual*/ Trace::~Trace() {
-  write_traces_file();
+  writeTracesFile();
 }
 
-void Trace::begin_processing(
+void Trace::beginProcessing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
@@ -68,10 +68,10 @@ void Trace::begin_processing(
   log->msg_len = len;
   log->event = event;
 
-  log_event(log);
+  logEvent(log);
 }
 
-void Trace::end_processing(
+void Trace::endProcessing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   TraceEventIDType const& event, NodeType const& from_node, double const& time
 ) {
@@ -87,10 +87,10 @@ void Trace::end_processing(
   log->msg_len = len;
   log->event = event;
 
-  log_event(log);
+  logEvent(log);
 }
 
-void Trace::begin_idle(double const& time) {
+void Trace::beginIdle(double const& time) {
   auto const& type = TraceConstantsType::BeginIdle;
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
@@ -100,12 +100,12 @@ void Trace::begin_idle(double const& time) {
 
   log->node = theContext->getNode();
 
-  log_event(log);
+  logEvent(log);
 
   idle_begun_ = true;
 }
 
-void Trace::end_idle(double const& time) {
+void Trace::endIdle(double const& time) {
   auto const& type = TraceConstantsType::EndIdle;
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
@@ -115,12 +115,12 @@ void Trace::end_idle(double const& time) {
 
   log->node = theContext->getNode();
 
-  log_event(log);
+  logEvent(log);
 
   idle_begun_ = false;
 }
 
-TraceEventIDType Trace::message_creation(
+TraceEventIDType Trace::messageCreation(
   TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
   auto const& type = TraceConstantsType::Creation;
@@ -129,10 +129,10 @@ TraceEventIDType Trace::message_creation(
   log->node = theContext->getNode();
   log->msg_len = len;
 
-  return log_event(log);
+  return logEvent(log);
 }
 
-TraceEventIDType Trace::message_creation_bcast(
+TraceEventIDType Trace::messageCreationBcast(
   TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
 ) {
   auto const& type = TraceConstantsType::CreationBcast;
@@ -141,10 +141,10 @@ TraceEventIDType Trace::message_creation_bcast(
   log->node = theContext->getNode();
   log->msg_len = len;
 
-  return log_event(log);
+  return logEvent(log);
 }
 
-TraceEventIDType Trace::message_recv(
+TraceEventIDType Trace::messageRecv(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   NodeType const& from_node, double const& time
 ) {
@@ -153,10 +153,10 @@ TraceEventIDType Trace::message_recv(
 
   log->node = from_node;
 
-  return log_event(log);
+  return logEvent(log);
 }
 
-TraceEventIDType Trace::log_event(LogPtrType log) {
+TraceEventIDType Trace::logEvent(LogPtrType log) {
   if (not enabled_) {
     return 0;
   }
@@ -165,7 +165,7 @@ TraceEventIDType Trace::log_event(LogPtrType log) {
   if (idle_begun_ and
       log->type != TraceConstantsType::BeginIdle and
       log->type != TraceConstantsType::EndIdle) {
-    end_idle();
+    endIdle();
   }
 
   auto grouped_begin = [&]() -> TraceEventIDType {
@@ -253,15 +253,15 @@ TraceEventIDType Trace::log_event(LogPtrType log) {
   }
 }
 
-void Trace::enable_tracing() {
+void Trace::enableTracing() {
   enabled_ = true;
 };
 
-void Trace::disable_tracing() {
+void Trace::disableTracing() {
   enabled_ = false;
 };
 
-void Trace::write_traces_file() {
+void Trace::writeTracesFile() {
   auto const& node = theContext->getNode();
   auto const& num_nodes = theContext->getNumNodes();
 
@@ -275,23 +275,23 @@ void Trace::write_traces_file() {
   );
 
   gzFile file = gzopen(trace_name_.c_str(), "wb");
-  output_header(node, start_time_, file);
-  write_log_file(file, traces_);
-  output_footer(node, start_time_, file);
+  outputHeader(node, start_time_, file);
+  writeLogFile(file, traces_);
+  outputFooter(node, start_time_, file);
   gzclose(file);
 
   if (node == designated_root_node) {
     std::ofstream file;
     file.open(prog_name_ + ".sts");
-    output_control_file(file);
+    outputControlFile(file);
     file.flush();
     file.close();
   }
 }
 
-void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
+void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   for (auto&& log : traces) {
-    auto const& converted_time = time_to_int(log->time - start_time_);
+    auto const& converted_time = timeToInt(log->time - start_time_);
 
     auto const& type = static_cast<
       std::underlying_type<decltype(log->type)>::type
@@ -306,7 +306,7 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
     );
 
     auto const& event_seq_id = log->ep == no_trace_entry_id ?
-      no_trace_entry_id : event_iter->second.get_event_seq();
+      no_trace_entry_id : event_iter->second.getEventSeq();
 
     auto const& num_nodes = theContext->getNumNodes();
 
@@ -394,11 +394,11 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
   traces.empty();
 }
 
-/*static*/ double Trace::get_current_time() {
+/*static*/ double Trace::getCurrentTime() {
   return MPI_Wtime();
 }
 
-/*static*/ void Trace::output_control_file(std::ofstream& file) {
+/*static*/ void Trace::outputControlFile(std::ofstream& file) {
   auto const& node = theContext->getNode();
   auto const& num_nodes = theContext->getNumNodes();
 
@@ -437,8 +437,8 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
   }
 
   for (auto&& event : sorted_event_type) {
-    auto const& name = event.first->get_event_name();
-    auto const& id = event.first->get_event_seq();
+    auto const& name = event.first->getEventName();
+    auto const& id = event.first->getEventSeq();
 
     auto const& out_name = std::string("::" + name);
 
@@ -449,9 +449,9 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
   }
 
   for (auto&& event : sorted_event) {
-    auto const& name = event.first->get_event_name();
-    auto const& type = event.first->get_event_type_seq();
-    auto const& id = event.first->get_event_seq();
+    auto const& name = event.first->getEventName();
+    auto const& type = event.first->getEventTypeSeq();
+    auto const& id = event.first->getEventSeq();
 
     file << "ENTRY CHARE "
          << id << " "
@@ -466,7 +466,7 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
        << std::endl;
 }
 
-/*static*/ void Trace::output_header(
+/*static*/ void Trace::outputHeader(
   NodeType const& node, double const& start, gzFile file
 ) {
   // Output header for projections file
@@ -475,15 +475,15 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
   gzprintf(file, "6 0\n");
 }
 
-/*static*/ void Trace::output_footer(
+/*static*/ void Trace::outputFooter(
   NodeType const& node, double const& start, gzFile file
 ) {
   // Output footer for projections file, '7' means COMPUTATION_END to
   // Projections
-  gzprintf(file, "7 %lld\n", time_to_int(get_current_time() - start));
+  gzprintf(file, "7 %lld\n", timeToInt(getCurrentTime() - start));
 }
 
-/*static*/ Trace::TimeIntegerType Trace::time_to_int(double const& time) {
+/*static*/ Trace::TimeIntegerType Trace::timeToInt(double const& time) {
   return static_cast<TimeIntegerType>(time * 1e6);
 }
 

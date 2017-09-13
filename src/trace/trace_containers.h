@@ -42,7 +42,7 @@ TraceContainerEventType TraceContainers<T>::event_container = {};
 template <typename EventT>
 struct TraceEventSeqCompare {
   bool operator()(EventT* const a, EventT* const b) const {
-    return a->get_event_seq() < b->get_event_seq();
+    return a->getEventSeq() < b->getEventSeq();
   }
 };
 
