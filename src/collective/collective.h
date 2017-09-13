@@ -11,8 +11,7 @@
 namespace vt {
 
 struct CollectiveOps {
-  static void
-  initialize_context(int argc, char** argv) {
+  static void initializeContext(int argc, char** argv) {
     int num_nodes = 0, this_node = 0;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
@@ -21,19 +20,13 @@ struct CollectiveOps {
     MPI_Barrier(MPI_COMM_WORLD);
   }
 
-  static HandlerType
-  register_handler(ActiveFunctionType fn) {
-    return theRegistry->register_active_handler(fn);
+  static HandlerType registerHandler(ActiveFunctionType fn) {
+    return theRegistry->registerActiveHandler(fn);
   }
 
-  static void
-  finalize_context();
-
-  static void
-  initialize_runtime();
-
-  static void
-  finalize_runtime();
+  static void finalizeContext();
+  static void initializeRuntime();
+  static void finalizeRuntime();
 };
 
 } //end namespace vt

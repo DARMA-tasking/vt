@@ -33,22 +33,22 @@ struct Channel {
 
   virtual ~Channel();
 
-  void init_channel_group();
-  void sync_channel_local();
-  void sync_channel_global();
-  void lock_channel_for_op();
-  void unlock_channel_for_op();
-  void free_channel();
+  void initChannelGroup();
+  void syncChannelLocal();
+  void syncChannelGlobal();
+  void lockChannelForOp();
+  void unlockChannelForOp();
+  void freeChannel();
 
-  void write_data_to_channel(
+  void writeDataToChannel(
     RDMA_PtrType const& ptr, ByteType const& ptr_num_bytes, ByteType const& offset
   );
 
-  NodeType get_target() const;
-  NodeType get_non_target() const;
+  NodeType getTarget() const;
+  NodeType getNonTarget() const;
 
 private:
-  void init_channel_window();
+  void initChannelWindow();
 
 private:
   bool is_target_ = false;

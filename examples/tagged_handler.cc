@@ -22,35 +22,35 @@ struct TestMsg : vt::Message {
 static void process_iter_msgs(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-  auto const& first_tag = envelope_get_tag(msg.env);
+  auto const& first_tag = envelopeGetTag(msg.env);
 
   count++;
 
   printf(
     "%d: process iteration node %d: count=%d, tag=%d, iteration=%d\n",
-    theContext->get_node(), msg.from, count, first_tag, cur_iter
+    theContext->getNode(), msg.from, count, first_tag, cur_iter
   );
 
   assert(first_tag == cur_iter);
 
   // received all for this iteration
-  if (count == theContext->get_num_nodes() - 1) {
+  if (count == theContext->getNumNodes() - 1) {
     cur_iter++;
     count = 0;
 
-    auto const& first_han = theMsg->get_current_handler();
-    theMsg->unregister_handler_fn(first_han, cur_iter-1);
-    theMsg->register_handler_fn(first_han, process_iter_msgs, cur_iter);
+    auto const& first_han = theMsg->getCurrentHandler();
+    theMsg->unregisterHandlerFn(first_han, cur_iter-1);
+    theMsg->registerHandlerFn(first_han, process_iter_msgs, cur_iter);
 
     printf(
       "%d: updating to NEXT iteration node %d: count=%d, cur_iter=%d\n",
-      theContext->get_node(), msg.from, count, cur_iter
+      theContext->getNode(), msg.from, count, cur_iter
     );
   }
 }
 
 static void my_col_fn(TestMsg* msg) {
-  auto const& my_node = theContext->get_node();
+  auto const& my_node = theContext->getNode();
 
   printf(
     "%d: my_col_fn from=%d, callback=%d: tag=%d, sending, tag=[%d,%d]\n",
@@ -59,21 +59,21 @@ static void my_col_fn(TestMsg* msg) {
 
   for (auto i = first_recv_tag; i < last_recv_tag; i++) {
     TestMsg* new_msg = make_shared_message<TestMsg>(my_node, uninitialized_handler);
-    theMsg->send_msg(msg->callback_han, new_msg, i);
+    theMsg->sendMsg(msg->callback_han, new_msg, i);
     message_deref(new_msg);
   }
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize_context(argc, argv);
-  CollectiveOps::initialize_runtime();
+  CollectiveOps::initializeContext(argc, argv);
+  CollectiveOps::initializeRuntime();
 
-  HandlerType const callback = theMsg->register_new_handler(
+  HandlerType const callback = theMsg->registerNewHandler(
     process_iter_msgs, cur_iter
   );
 
-  auto const& my_node = theContext->get_node();
-  auto const& num_nodes = theContext->get_num_nodes();
+  auto const& my_node = theContext->getNode();
+  auto const& num_nodes = theContext->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     TestMsg* msg = make_shared_message<TestMsg>(my_node, callback);
-    theMsg->broadcast_msg<TestMsg, my_col_fn>(msg);
+    theMsg->broadcastMsg<TestMsg, my_col_fn>(msg);
     message_deref(msg);
   }
 

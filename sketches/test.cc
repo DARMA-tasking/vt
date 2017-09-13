@@ -37,7 +37,7 @@ void main_function() {
 
 //   hello_world_han = CollectiveOps::register_handler(hello_world);
 
-//   auto const& my_node = theContext->get_node();
+//   auto const& my_node = theContext->getNode();
 //   auto const& num_nodes = theContext->get_num_nodes();
 
 //   if (num_nodes == 1) {
@@ -69,12 +69,12 @@ struct VirtualContextCollection {
 void my_register_virtual_context_collection() {
   vc_proxy_collection_t hello_proxy = the_virtual->make_vc_collection_collective(1000);
 
-  the_virtual->send_msg(hello_proxy, virtual_han, msg);
+  the_virtual->sendMsg(hello_proxy, virtual_han, msg);
 }
 
 struct VirtualContextManager {
   void
-  send_msg(..);
+  sendMsg(..);
 
 private:
   std::unordered_map<vc_proxy_t, VirtualContext*> local_contexts;
@@ -102,7 +102,7 @@ void my_register_virtual_context() {
   vc_proxy_HandlerType virtual_han = the_virtual->register_virtual_handler(hello_world_virtual);
   HelloMsg* msg = new HelloMsg(my_node);
 
-  the_virtual->send_msg(hello_proxy, virtual_han, msg);
+  the_virtual->sendMsg(hello_proxy, virtual_han, msg);
 
 
   // MyHelloContext* hello_context = new MyHelloContext();
@@ -111,7 +111,7 @@ void my_register_virtual_context() {
   // MyHelloContext* hello_context = new MyHelloContext();
   // vc_proxy_t hello_proxy = the_virtual->make_virtual_context<MyHelloContext>(8);
 
-  //theMsg->send_msg(10, handler, msg);
+  //theMsg->sendMsg(10, handler, msg);
 
   // vc_proxy_t: 64-bits: (32 id) (16 node) (few other control bits)
 }

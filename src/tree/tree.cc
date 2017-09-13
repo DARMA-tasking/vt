@@ -5,10 +5,10 @@
 namespace vt {
 
 void
-Tree::setup_tree() {
+Tree::setupTree() {
   if (not set_up_tree_) {
-    my_node_ = theContext->get_node();
-    num_nodes_ = theContext->get_num_nodes();
+    my_node_ = theContext->getNode();
+    num_nodes_ = theContext->getNumNodes();
 
     c1_ = my_node_*2+1;
     c2_ = my_node_*2+2;

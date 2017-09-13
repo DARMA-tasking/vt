@@ -4,11 +4,11 @@
 
 namespace vt {
 
-bool ParentEvent::test_ready() {
+bool ParentEvent::testReady() {
   bool ready = true;
   for (auto&& e : events) {
     ready &=
-      theEvent->test_event_complete(e) ==
+      theEvent->testEventComplete(e) ==
       AsyncEvent::EventStateType::EventReady;
   }
   if (ready) {
@@ -17,25 +17,25 @@ bool ParentEvent::test_ready() {
   return ready;
 }
 
-void AsyncEvent::EventHolder::make_ready_trigger() {
+void AsyncEvent::EventHolder::makeReadyTrigger() {
   //printf("make_ready_trigger\n");
-  event->set_ready();
-  execute_actions();
+  event->setReady();
+  executeActions();
   theEvent->container_.erase(event->event_id);
 }
 
-EventType AsyncEvent::attach_action(EventType const& event, ActionType callable) {
-  auto const& this_node = theContext->get_node();
-  auto const& event_id = create_normal_event_id(this_node);
-  auto& holder = get_event_holder(event_id);
+EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
+  auto const& this_node = theContext->getNode();
+  auto const& event_id = createNormalEventId(this_node);
+  auto& holder = getEventHolder(event_id);
   NormalEvent& norm_event = *static_cast<NormalEvent*>(holder.get_event());
 
   auto trigger = [=]{
     callable();
   };
 
-  auto const& event_state = test_event_complete(event);
-  auto const& this_event_owning_node = get_owning_node(event_id);
+  auto const& event_state = testEventComplete(event);
+  auto const& this_event_owning_node = getOwningNode(event_id);
 
   debug_print(
     event, node,
@@ -49,16 +49,16 @@ EventType AsyncEvent::attach_action(EventType const& event, ActionType callable)
     trigger();
     break;
   case EventStateType::EventWaiting:
-    this->get_event_holder(event).attach_action(
+    this->getEventHolder(event).attachAction(
       trigger
     );
-    holder.make_ready_trigger();
+    holder.makeReadyTrigger();
     break;
   case EventStateType::EventRemote: {
     // attach event to new id
-    holder.attach_action(trigger);
+    holder.attachAction(trigger);
 
-    auto const& owning_node = get_owning_node(event);
+    auto const& owning_node = getOwningNode(event);
     auto msg = new EventCheckFinishedMsg(event, this_node, event_id);
 
     debug_print(
@@ -67,7 +67,7 @@ EventType AsyncEvent::attach_action(EventType const& event, ActionType callable)
       event, event_id, event_state, this_node
     );
 
-    theMsg->send_msg<EventCheckFinishedMsg, check_event_finished>(
+    theMsg->sendMsg<EventCheckFinishedMsg, checkEventFinished>(
       owning_node, msg, [=]{ delete msg; }
     );
   }
@@ -79,40 +79,40 @@ EventType AsyncEvent::attach_action(EventType const& event, ActionType callable)
   return event_id;
 }
 
-/*static*/ void AsyncEvent::event_finished(EventFinishedMsg* msg) {
-  auto const& complete = theEvent->test_event_complete(msg->event_back_);
+/*static*/ void AsyncEvent::eventFinished(EventFinishedMsg* msg) {
+  auto const& complete = theEvent->testEventComplete(msg->event_back_);
 
   assert(
     complete == AsyncEvent::EventStateType::EventWaiting and
     "Event must be waiting since it depends on this finished event"
   );
 
-  auto& holder = theEvent->get_event_holder(msg->event_back_);
-  holder.make_ready_trigger();
+  auto& holder = theEvent->getEventHolder(msg->event_back_);
+  holder.makeReadyTrigger();
 }
 
-/*static*/ void AsyncEvent::check_event_finished(EventCheckFinishedMsg* msg) {
+/*static*/ void AsyncEvent::checkEventFinished(EventCheckFinishedMsg* msg) {
   auto const& event = msg->event_;
-  auto const& node = theEvent->get_owning_node(event);
+  auto const& node = theEvent->getOwningNode(event);
 
   assert(
-    node == theContext->get_node() and "Node must be identical"
+    node == theContext->getNode() and "Node must be identical"
   );
 
   auto send_back_fun = [=]{
     auto msg_send = new EventFinishedMsg(event, msg->event_back_);
-    auto send_back = theEvent->get_owning_node(msg->event_back_);
+    auto send_back = theEvent->getOwningNode(msg->event_back_);
     assert(send_back == msg->sent_from_node_);
-    theMsg->send_msg<EventFinishedMsg, event_finished>(
+    theMsg->sendMsg<EventFinishedMsg, eventFinished>(
       send_back, msg_send, [=]{ delete msg_send; }
     );
   };
 
-  auto const& is_complete = theEvent->test_event_complete(event);
+  auto const& is_complete = theEvent->testEventComplete(event);
 
   debug_print(
     event, node,
-    "check_event_finished_han:: event=%lld, node=%lld, "
+    "checkEventFinishedHan:: event=%lld, node=%lld, "
     "this_node=%d, complete=%d, sent_from_node=%d\n",
     event, node, this_node, is_complete, msg->sent_from_node
   );
@@ -124,17 +124,17 @@ EventType AsyncEvent::attach_action(EventType const& event, ActionType callable)
       is_complete == AsyncEvent::EventStateType::EventWaiting and
       "Must be waiting if not ready"
     );
-    /*ignore return event*/ theEvent->attach_action(event, send_back_fun);
+    /*ignore return event*/ theEvent->attachAction(event, send_back_fun);
   }
 }
 
 bool AsyncEvent::scheduler() {
-  theEvent->test_events_trigger(mpi_event_tag);
-  theEvent->test_events_trigger(normal_event_tag);
+  theEvent->testEventsTrigger(mpi_event_tag);
+  theEvent->testEventsTrigger(normal_event_tag);
   return false;
 }
 
-bool AsyncEvent::is_local_term() {
+bool AsyncEvent::isLocalTerm() {
   return event_container_[mpi_event_tag].size() == 0;
 }
 

@@ -27,41 +27,41 @@ struct TerminationDetector : Tree {
   using EpochContainerType = std::unordered_map<EpochType, T>;
 
   inline void produce(EpochType const& epoch = no_epoch) {
-    produce_consume(epoch, true);
+    produceConsume(epoch, true);
   }
 
   inline void consume(EpochType const& epoch = no_epoch) {
-    produce_consume(epoch, false);
+    produceConsume(epoch, false);
   }
 
-  EpochType new_epoch();
+  EpochType newEpoch();
 
-  void produce_consume(EpochType const& epoch = no_epoch, bool produce = true);
-  void maybe_propagate();
+  void produceConsume(EpochType const& epoch = no_epoch, bool produce = true);
+  void maybePropagate();
 
-  void propagate_epoch_external(
+  void propagateEpochExternal(
     EpochType const& epoch, TermCounterType const& prod,
     TermCounterType const& cons
   );
 
-  bool propagate_epoch(EpochType const& epoch, TermStateType& state);
+  bool propagateEpoch(EpochType const& epoch, TermStateType& state);
 
-  void epoch_finished(EpochType const& epoch);
-  void epoch_continue(EpochType const& epoch);
-  void trigger_all_epoch_actions(EpochType const& epoch);
-  void trigger_all_actions(EpochType const& epoch);
-  void attach_global_term_action(ActionType action);
-  void attach_epoch_term_action(EpochType const& epoch, ActionType action);
-  void setup_new_epoch(EpochType const& new_epoch);
-  void propagate_new_epoch(EpochType const& new_epoch);
-  void ready_new_epoch(EpochType const& new_epoch);
+  void epochFinished(EpochType const& epoch);
+  void epochContinue(EpochType const& epoch);
+  void triggerAllEpochActions(EpochType const& epoch);
+  void triggerAllActions(EpochType const& epoch);
+  void attachGlobalTermAction(ActionType action);
+  void attachEpochTermAction(EpochType const& epoch, ActionType action);
+  void setupNewEpoch(EpochType const& new_epoch);
+  void propagateNewEpoch(EpochType const& new_epoch);
+  void readyNewEpoch(EpochType const& new_epoch);
 
-  static void register_default_termination_action();
-  static void propagate_new_epoch_handler(TermMsg* msg);
-  static void ready_epoch_handler(TermMsg* msg);
-  static void propagate_epoch_handler(TermCounterMsg* msg);
-  static void epoch_finished_handler(TermMsg* msg);
-  static void epoch_continue_handler(TermMsg* msg);
+  static void registerDefaultTerminationAction();
+  static void propagateNewEpochHandler(TermMsg* msg);
+  static void readyEpochHandler(TermMsg* msg);
+  static void propagateEpochHandler(TermCounterMsg* msg);
+  static void epochFinishedHandler(TermMsg* msg);
+  static void epochContinueHandler(TermMsg* msg);
 
 private:
   EpochType cur_epoch_ = no_epoch;

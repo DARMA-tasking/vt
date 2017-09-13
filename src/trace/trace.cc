@@ -98,7 +98,7 @@ void Trace::begin_idle(double const& time) {
     trace, node, "begin_idle: time=%f\n", time
   );
 
-  log->node = theContext->get_node();
+  log->node = theContext->getNode();
 
   log_event(log);
 
@@ -113,7 +113,7 @@ void Trace::end_idle(double const& time) {
     trace, node, "end_idle: time=%f\n", time
   );
 
-  log->node = theContext->get_node();
+  log->node = theContext->getNode();
 
   log_event(log);
 
@@ -126,7 +126,7 @@ TraceEventIDType Trace::message_creation(
   auto const& type = TraceConstantsType::Creation;
   LogPtrType log = new LogType(time, ep, type);
 
-  log->node = theContext->get_node();
+  log->node = theContext->getNode();
   log->msg_len = len;
 
   return log_event(log);
@@ -138,7 +138,7 @@ TraceEventIDType Trace::message_creation_bcast(
   auto const& type = TraceConstantsType::CreationBcast;
   LogPtrType log = new LogType(time, ep, type);
 
-  log->node = theContext->get_node();
+  log->node = theContext->getNode();
   log->msg_len = len;
 
   return log_event(log);
@@ -262,8 +262,8 @@ void Trace::disable_tracing() {
 };
 
 void Trace::write_traces_file() {
-  auto const& node = theContext->get_node();
-  auto const& num_nodes = theContext->get_num_nodes();
+  auto const& node = theContext->getNode();
+  auto const& num_nodes = theContext->getNumNodes();
 
   debug_print(
     trace, node,
@@ -308,7 +308,7 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
     auto const& event_seq_id = log->ep == no_trace_entry_id ?
       no_trace_entry_id : event_iter->second.get_event_seq();
 
-    auto const& num_nodes = theContext->get_num_nodes();
+    auto const& num_nodes = theContext->getNumNodes();
 
     switch (log->type) {
     case TraceConstantsType::BeginProcessing:
@@ -399,8 +399,8 @@ void Trace::write_log_file(gzFile file, TraceContainerType const& traces) {
 }
 
 /*static*/ void Trace::output_control_file(std::ofstream& file) {
-  auto const& node = theContext->get_node();
-  auto const& num_nodes = theContext->get_num_nodes();
+  auto const& node = theContext->getNode();
+  auto const& num_nodes = theContext->getNumNodes();
 
   auto const& num_event_types = TraceContainersType::event_type_container.size();
   auto const& num_events = TraceContainersType::event_container.size();

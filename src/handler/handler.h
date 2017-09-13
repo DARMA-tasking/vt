@@ -35,19 +35,19 @@ struct HandlerManager {
 
   HandlerManager() = default;
 
-  static HandlerType make_handler(
+  static HandlerType makeHandler(
     bool const& is_auto, bool const& is_functor, HandlerIdentifierType const& id
   );
-  static NodeType get_handler_node(HandlerType const& han);
-  static void set_handler_node(HandlerType& han, NodeType const& node);
-  static void set_handler_identifier(
+  static NodeType getHandlerNode(HandlerType const& han);
+  static void setHandlerNode(HandlerType& han, NodeType const& node);
+  static void setHandlerIdentifier(
     HandlerType& han, HandlerIdentifierType const& ident
   );
-  static HandlerIdentifierType get_handler_identifier(HandlerType const& han);
-  static void set_handler_auto(HandlerType& han, bool const& is_auto);
-  static void set_handler_functor(HandlerType& han, bool const& is_functor);
-  static bool is_handler_auto(HandlerType const& han);
-  static bool is_handler_functor(HandlerType const& han);
+  static HandlerIdentifierType getHandlerIdentifier(HandlerType const& han);
+  static void setHandlerAuto(HandlerType& han, bool const& is_auto);
+  static void setHandlerFunctor(HandlerType& han, bool const& is_functor);
+  static bool isHandlerAuto(HandlerType const& han);
+  static bool isHandlerFunctor(HandlerType const& han);
 };
 
 } //end namespace vt

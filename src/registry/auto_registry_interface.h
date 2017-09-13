@@ -9,17 +9,17 @@
 namespace vt { namespace auto_registry {
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-HandlerType make_auto_handler(MessageT* const msg);
+HandlerType makeAutoHandler(MessageT* const msg);
 
 template <typename T, T value>
-HandlerType make_auto_handler();
+HandlerType makeAutoHandler();
 
 template <typename T, bool is_msg, typename... Args>
-HandlerType make_auto_handler_functor();
+HandlerType makeAutoHandlerFunctor();
 
-AutoActiveType get_auto_handler(HandlerType const& handler);
+AutoActiveType getAutoHandler(HandlerType const& handler);
 
-AutoActiveFunctorType get_auto_handler_functor(HandlerType const& handler);
+AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
 
 #if backend_check_enabled(trace_enabled)
 trace::TraceEntryIDType get_trace_id(HandlerType const& handler);

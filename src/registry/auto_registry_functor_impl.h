@@ -11,41 +11,41 @@
 namespace vt { namespace auto_registry {
 
 template <typename>
-inline AutoActiveFunctorContainerType& get_auto_registry_functor()  {
+inline AutoActiveFunctorContainerType& getAutoRegistryFunctor()  {
   static AutoActiveFunctorContainerType reg;
   return reg;
 }
 
 template <typename FunctorT, bool is_msg, typename... Args>
-inline HandlerType make_auto_handler_functor() {
-  HandlerType const id = get_handler_active_functor(FunctorT, is_msg, Args);
-  return HandlerManagerType::make_handler(true, true, id);
+inline HandlerType makeAutoHandlerFunctor() {
+  HandlerType const id = GET_HANDLER_ACTIVE_FUNCTOR(FunctorT, is_msg, Args);
+  return HandlerManagerType::makeHandler(true, true, id);
 }
 
 template <typename RunnableFunctorT, typename... Args>
-static inline void functor_handler_wrapper_rval(Args&&... args) {
+static inline void functorHandlerWrapperRval(Args&&... args) {
   typename RunnableFunctorT::FunctorType instance;
   return instance.operator ()(std::forward<Args>(args)...);
 }
 
 template <typename RunnableFunctorT, typename... Args>
-static inline void functor_handler_wrapper_reg(Args... args) {
+static inline void functorHandlerWrapperReg(Args... args) {
   typename RunnableFunctorT::FunctorType instance;
   return instance.operator ()(args...);
 }
 
 template <typename RunnableFunctorT, typename... Args>
-static inline void pull_apart(
+static inline void pullApart(
   AutoActiveFunctorContainerType& reg, bool const& is_msg,
   pack<Args...> packed_args
 ) {
   #if backend_check_enabled(trace_enabled)
-  auto const& name = demangle::DemanglerUtils::get_demangled_type<
+  auto const& name = demangle::DemanglerUtils::getDemangledType<
     typename RunnableFunctorT::FunctorType
   >();
-  auto const& args = demangle::DemanglerUtils::get_demangled_type<pack<Args...>>();
+  auto const& args = demangle::DemanglerUtils::getDemangledType<pack<Args...>>();
   auto const& parsed_names =
-    demangle::ActiveFunctorDemangler::parse_active_functor_name(name, args);
+    demangle::ActiveFunctorDemangler::parseActiveFunctorName(name, args);
   auto const& namespace_name = std::get<0>(parsed_names);
   auto const& function_name = std::get<1>(parsed_names);
   auto const& trace_ep = trace::TraceRegistry::register_event_hashed(
@@ -54,7 +54,7 @@ static inline void pull_apart(
   #endif
 
   if (is_msg) {
-    auto fn_ptr = functor_handler_wrapper_reg<RunnableFunctorT, Args...>;
+    auto fn_ptr = functorHandlerWrapperReg<RunnableFunctorT, Args...>;
     reg.emplace_back(AutoRegInfoType<AutoActiveFunctorType>{
       reinterpret_cast<SimpleFunctionType>(fn_ptr)
         #if backend_check_enabled(trace_enabled)
@@ -62,7 +62,7 @@ static inline void pull_apart(
         #endif
     });
   } else {
-    auto fn_ptr = functor_handler_wrapper_rval<RunnableFunctorT, Args...>;
+    auto fn_ptr = functorHandlerWrapperRval<RunnableFunctorT, Args...>;
     reg.emplace_back(AutoRegInfoType<AutoActiveFunctorType>{
       reinterpret_cast<SimpleFunctionType>(fn_ptr)
         #if backend_check_enabled(trace_enabled)
@@ -74,19 +74,19 @@ static inline void pull_apart(
 
 template <typename RunnableFunctorT>
 RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
-  AutoActiveFunctorContainerType& reg = get_auto_registry_functor<>();
+  AutoActiveFunctorContainerType& reg = getAutoRegistryFunctor<>();
   index = reg.size();
 
-  pull_apart<RunnableFunctorT>(
-    reg, RunnableFunctorT::is_msg_t, typename RunnableFunctorT::PackedArgsType()
+  pullApart<RunnableFunctorT>(
+    reg, RunnableFunctorT::IsMsgType, typename RunnableFunctorT::PackedArgsType()
   );
 }
 
-inline AutoActiveFunctorType get_auto_handler_functor(HandlerType const& handler) {
-  auto const& han_id = HandlerManagerType::get_handler_identifier(handler);
+inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler) {
+  auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
 
-  bool const& is_auto = HandlerManagerType::is_handler_auto(handler);
-  bool const& is_functor = HandlerManagerType::is_handler_functor(handler);
+  bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
+  bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
   debug_print(
     handler, node,
@@ -98,11 +98,11 @@ inline AutoActiveFunctorType get_auto_handler_functor(HandlerType const& handler
     is_functor and is_auto and "Handler should be a auto functor"
   );
 
-  return get_auto_registry_functor().at(han_id).get_fun();
+  return getAutoRegistryFunctor().at(han_id).get_fun();
 }
 
 template <typename RunnableFunctorT>
-AutoHandlerType register_active_functor() {
+AutoHandlerType registerActiveFunctor() {
   return RegistrarWrapperFunctor<RunnableFunctorT>().registrar.index;
 }
 

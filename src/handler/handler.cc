@@ -4,13 +4,13 @@
 
 namespace vt {
 
-/*static*/ HandlerType HandlerManager::make_handler(
+/*static*/ HandlerType HandlerManager::makeHandler(
   bool const& is_auto, bool const& is_functor, HandlerIdentifierType const& id
 ) {
   HandlerType new_han = blank_handler;
-  HandlerManager::set_handler_auto(new_han, is_auto);
-  HandlerManager::set_handler_functor(new_han, is_functor);
-  HandlerManager::set_handler_identifier(new_han, id);
+  HandlerManager::setHandlerAuto(new_han, is_auto);
+  HandlerManager::setHandlerFunctor(new_han, is_functor);
+  HandlerManager::setHandlerIdentifier(new_han, id);
 
   debug_print(
     handler, node,
@@ -21,50 +21,50 @@ namespace vt {
   return new_han;
 }
 
-/*static*/ NodeType HandlerManager::get_handler_node(HandlerType const& han) {
-  return BitPackerType::get_field<HandlerBitsType::Node, node_num_bits, NodeType>(han);
+/*static*/ NodeType HandlerManager::getHandlerNode(HandlerType const& han) {
+  return BitPackerType::getField<HandlerBitsType::Node, node_num_bits, NodeType>(han);
 }
 
-/*static*/ HandlerIdentifierType HandlerManager::get_handler_identifier(
+/*static*/ HandlerIdentifierType HandlerManager::getHandlerIdentifier(
   HandlerType const& han
 ) {
-  return BitPackerType::get_field<
+  return BitPackerType::getField<
     HandlerBitsType::Identifier, handler_id_num_bits, HandlerIdentifierType
   >(han);
 }
 
-/*static*/ void HandlerManager::set_handler_node(
+/*static*/ void HandlerManager::setHandlerNode(
   HandlerType& han, NodeType const& node
 ) {
-  BitPackerType::set_field<HandlerBitsType::Node, node_num_bits>(han, node);
+  BitPackerType::setField<HandlerBitsType::Node, node_num_bits>(han, node);
 }
 
-/*static*/ void HandlerManager::set_handler_identifier(
+/*static*/ void HandlerManager::setHandlerIdentifier(
   HandlerType& han, HandlerIdentifierType const& id
 ) {
-  BitPackerType::set_field<HandlerBitsType::Identifier, handler_id_num_bits>(
+  BitPackerType::setField<HandlerBitsType::Identifier, handler_id_num_bits>(
     han, id
   );
 }
 
-/*static*/ void HandlerManager::set_handler_auto(
+/*static*/ void HandlerManager::setHandlerAuto(
   HandlerType& han, bool const& is_auto
 ) {
-  BitPackerType::bool_set_field<HandlerBitsType::Auto>(han, is_auto);
+  BitPackerType::boolSetField<HandlerBitsType::Auto>(han, is_auto);
 }
 
-/*static*/ void HandlerManager::set_handler_functor(
+/*static*/ void HandlerManager::setHandlerFunctor(
   HandlerType& han, bool const& is_functor
 ) {
-  BitPackerType::bool_set_field<HandlerBitsType::Functor>(han, is_functor);
+  BitPackerType::boolSetField<HandlerBitsType::Functor>(han, is_functor);
 }
 
-/*static*/ bool HandlerManager::is_handler_auto(HandlerType const& han) {
-  return BitPackerType::bool_get_field<HandlerBitsType::Auto>(han);
+/*static*/ bool HandlerManager::isHandlerAuto(HandlerType const& han) {
+  return BitPackerType::boolGetField<HandlerBitsType::Auto>(han);
 }
 
-/*static*/ bool HandlerManager::is_handler_functor(HandlerType const& han) {
-  return BitPackerType::bool_get_field<HandlerBitsType::Functor>(han);
+/*static*/ bool HandlerManager::isHandlerFunctor(HandlerType const& han) {
+  return BitPackerType::boolGetField<HandlerBitsType::Functor>(han);
 }
 
 } // end namespace vt

@@ -47,40 +47,40 @@ struct State {
   );
 
   template <RDMA_TypeType rdma_type, typename FunctionT>
-  RDMA_HandlerType set_rdma_fn(
+  RDMA_HandlerType setRDMAFn(
     FunctionT const& fn, bool const& any_tag = false,
     TagType const& tag = no_tag
   );
 
-  void unregister_rdma_handler(
+  void unregisterRdmaHandler(
     RDMA_TypeType const& type, TagType const& tag, bool const& use_default
   );
 
-  void unregister_rdma_handler(
+  void unregisterRdmaHandler(
     RDMA_HandlerType const& handler, TagType const& tag
   );
 
-  RDMA_HandlerType make_rdma_handler(RDMA_TypeType const& rdma_type);
+  RDMA_HandlerType makeRdmaHandler(RDMA_TypeType const& rdma_type);
 
-  bool test_ready_get_data(TagType const& tag);
-  bool test_ready_put_data(TagType const& tag);
+  bool testReadyGetData(TagType const& tag);
+  bool testReadyPutData(TagType const& tag);
 
-  void get_data(
+  void getData(
     GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
   );
 
-  void put_data(
+  void putData(
     PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
   );
 
-  void process_pending_get(TagType const& tag = no_tag);
-  void set_default_handler();
+  void processPendingGet(TagType const& tag = no_tag);
+  void setDefaultHandler();
 
-  RDMA_GetType default_get_handler_fn(
+  RDMA_GetType defaultGetHandlerFn(
     BaseMessage* msg, ByteType num_bytes, ByteType req_offset, TagType tag
   );
 
-  void default_put_handler_fn(
+  void defaultPutHandlerFn(
     BaseMessage* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes,
     ByteType req_offset, TagType tag
   );
@@ -107,13 +107,13 @@ private:
 
 template<>
 RDMA_HandlerType
-State::set_rdma_fn<
+State::setRDMAFn<
   State::RDMA_TypeType::Put, State::RDMA_PutFunctionType
 >(RDMA_PutFunctionType const& fn, bool const& any_tag, TagType const& tag);
 
 template<>
 RDMA_HandlerType
-State::set_rdma_fn<
+State::setRDMAFn<
   State::RDMA_TypeType::Get, State::RDMA_GetFunctionType
 >(RDMA_GetFunctionType const& fn, bool const& any_tag, TagType const& tag);
 

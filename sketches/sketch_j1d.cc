@@ -62,10 +62,10 @@ struct Jacobi1D : VirutalContextCollection<Index1D<int>> {
     my_rb_h = register_new_typed_rdma_handler(&rb, 1);
 
     parallel([]{
-      send_msg<HanMsg, recv_han_left>(
+      sendMsg<HanMsg, recv_han_left>(
         get_id(left_neigh), make_shared_message<HanMsg>(my_rb_h)
       );
-      send_msg<HanMsg, recv_han_right>(
+      sendMsg<HanMsg, recv_han_right>(
         get_id(right_neigh), make_shared_message<HanMsg>(my_lb_h)
       );
       wait<HanMsg, recv_han_left>([](HanMsg* m){
@@ -139,7 +139,7 @@ void darma_main_task(std::vector<std::string>> args) {
   VirtualContextID jcid = create_vc_collection<SizeMsg, Jacobi1D, create_han>(
     num_elm, m
   );
-  send_msg<WorkMsg, do_jacobi_work>(
+  sendMsg<WorkMsg, do_jacobi_work>(
     jcid, make_shared_message<WorkMsg>()
   );
 }

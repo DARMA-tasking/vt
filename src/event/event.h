@@ -24,19 +24,19 @@ struct Event {
     : event_id(in_event_id), event_tag(event_tag_in)
   { }
 
-  virtual bool test_ready() = 0;
-  virtual bool wait_ready() = 0;
-  virtual void set_ready() = 0;
+  virtual bool testReady() = 0;
+  virtual bool waitReady() = 0;
+  virtual void setReady() = 0;
 };
 
 struct ParentEvent : Event {
-  virtual void set_ready() {
+  virtual void setReady() {
     assert(0);
   }
 
-  virtual bool test_ready();
+  virtual bool testReady();
 
-  virtual bool wait_ready() {
+  virtual bool waitReady() {
     assert(0);
     return true;
   }
@@ -54,16 +54,16 @@ private:
 };
 
 struct NormalEvent : Event {
-  virtual void set_ready() {
+  virtual void setReady() {
     complete = true;
   }
 
-  virtual bool test_ready() {
+  virtual bool testReady() {
     return complete;
   }
 
-  virtual bool wait_ready() {
-    while (!test_ready()) {
+  virtual bool waitReady() {
+    while (!testReady()) {
       assert(0);
       // TODO: call into scheduler
     }
@@ -79,10 +79,10 @@ private:
 };
 
 struct MPIEvent : Event {
-  virtual void set_ready() { assert(0); }
+  virtual void setReady() { assert(0); }
 
-  virtual bool test_ready() {
-    //printf("MPIEvent test_ready() id=%lld\n", event_id);
+  virtual bool testReady() {
+    //printf("MPIEvent testReady() id=%lld\n", event_id);
     MPI_Test(&req, &flag, &stat);
     bool const ready = flag == 1;
 
@@ -94,12 +94,12 @@ struct MPIEvent : Event {
     return ready;
   }
 
-  virtual bool wait_ready() {
-    while (!test_ready()) ;
+  virtual bool waitReady() {
+    while (!testReady()) ;
     return true;
   }
 
-  MPI_Request* get_request() {
+  MPI_Request* getRequest() {
     return &req;
   }
 
@@ -107,7 +107,7 @@ struct MPIEvent : Event {
     : Event(in_event_id, mpi_event_tag), msg(in_msg)
   { }
 
-  void set_managed_message(ShortMessage* in_msg) {
+  void setManagedMessage(ShortMessage* in_msg) {
     msg = in_msg;
     message_ref(msg);
   }
@@ -141,13 +141,13 @@ struct AsyncEvent {
       return event.get();
     }
 
-    void attach_action(ActionType action) {
+    void attachAction(ActionType action) {
       actions.emplace_back(action);
     }
 
-    void make_ready_trigger();
+    void makeReadyTrigger();
 
-    void execute_actions() {
+    void executeActions() {
       for (auto&& action : actions) {
         action();
       }
@@ -167,7 +167,7 @@ struct AsyncEvent {
   AsyncEvent() = default;
 
   template <typename EventT>
-  EventType create_event_id(NodeType const& node) {
+  EventType createEventId(NodeType const& node) {
     EventType const event =
       (EventType)node << (64 - (sizeof(NodeType) * 8)) | cur_event_;
     cur_event_++;
@@ -180,43 +180,43 @@ struct AsyncEvent {
     return event;
   }
 
-  NodeType get_owning_node(EventType const& event) {
+  NodeType getOwningNode(EventType const& event) {
     NodeType const node = event >> (64 - (sizeof(NodeType) * 8));
     return node;
   }
 
-  EventType create_mpi_event_id(NodeType const& node) {
-    auto const& evt = create_event_id<MPIEvent>(node);
-    auto& holder = get_event_holder(evt);
+  EventType createMpiEventId(NodeType const& node) {
+    auto const& evt = createEventId<MPIEvent>(node);
+    auto& holder = getEventHolder(evt);
     event_container_[mpi_event_tag].emplace_back(
       &holder
     );
     return evt;
   }
 
-  EventType create_normal_event_id(NodeType const& node) {
-    return create_event_id<NormalEvent>(node);
+  EventType createNormalEventId(NodeType const& node) {
+    return createEventId<NormalEvent>(node);
   }
 
-  EventType create_parent_event_id(NodeType const& node) {
-    auto const& evt = create_event_id<ParentEvent>(node);
-    auto& holder = get_event_holder(evt);
+  EventType createParentEventId(NodeType const& node) {
+    auto const& evt = createEventId<ParentEvent>(node);
+    auto& holder = getEventHolder(evt);
     event_container_[mpi_event_tag].emplace_back(
       &holder
     );
     return evt;
   }
 
-  EventHolderType& get_event_holder(EventType const& event) {
-    auto const& owning_node = get_owning_node(event);
+  EventHolderType& getEventHolder(EventType const& event) {
+    auto const& owning_node = getOwningNode(event);
 
     debug_print(
       event, node,
       "theEvent: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
-      theContext->get_node(), event, owning_node
+      theContext->getNode(), event, owning_node
     );
 
-    if (owning_node != theContext->get_node()) {
+    if (owning_node != theContext->getNode()) {
       assert(
         0 && "Event does not belong to this node"
       );
@@ -229,26 +229,26 @@ struct AsyncEvent {
     return container_iter->second;
   }
 
-  bool holder_exists(EventType const& event) {
+  bool holderExists(EventType const& event) {
     auto container_iter = container_.find(event);
     return container_iter != container_.end();
   }
 
   template <typename EventT>
-  EventT& get_event(EventType const& event) {
-    return *static_cast<EventT*>(get_event_holder(event).get_event());
+  EventT& getEvent(EventType const& event) {
+    return *static_cast<EventT*>(getEventHolder(event).get_event());
   }
 
-  EventStateType test_event_complete(EventType const& event) {
-    if (holder_exists(event)) {
-      bool const is_ready = this->get_event_holder(event).get_event()->test_ready();
+  EventStateType testEventComplete(EventType const& event) {
+    if (holderExists(event)) {
+      bool const is_ready = this->getEventHolder(event).get_event()->testReady();
       if (is_ready) {
         return EventStateType::EventReady;
       } else {
         return EventStateType::EventWaiting;
       }
     } else {
-      if (get_owning_node(event) == theContext->get_node()) {
+      if (getOwningNode(event) == theContext->getNode()) {
         return EventStateType::EventReady;
       } else {
         return EventStateType::EventRemote;
@@ -256,9 +256,9 @@ struct AsyncEvent {
     }
   }
 
-  EventType attach_action(EventType const& event, ActionType callable);
+  EventType attachAction(EventType const& event, ActionType callable);
 
-  void test_events_trigger(
+  void testEventsTrigger(
     int const& event_tag, int const& num_events = num_check_actions
   ) {
     int cur = 0;
@@ -267,8 +267,8 @@ struct AsyncEvent {
          ++iter) {
       auto const& holder = *iter;
       auto event = holder->get_event();
-      if (event->test_ready()) {
-        holder->execute_actions();
+      if (event->testReady()) {
+        holder->executeActions();
         iter = event_container_[event_tag].erase(iter);
         container_.erase(event->event_id);
         return;
@@ -279,10 +279,10 @@ struct AsyncEvent {
 
   bool scheduler();
 
-  bool is_local_term();
+  bool isLocalTerm();
 
-  static void event_finished(EventFinishedMsg* msg);
-  static void check_event_finished(EventCheckFinishedMsg* msg);
+  static void eventFinished(EventFinishedMsg* msg);
+  static void checkEventFinished(EventCheckFinishedMsg* msg);
 
 private:
   EventType cur_event_ = 0;

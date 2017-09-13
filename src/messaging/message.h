@@ -16,7 +16,7 @@ struct ActiveMessage : BaseMessage {
   EnvelopeType env;
 
   ActiveMessage() {
-    envelope_init_empty(env);
+    envelopeInitEmpty(env);
   }
 
   static void* operator new(std::size_t sz) {
@@ -37,17 +37,17 @@ using Message = EpochTagMessage;
 
 struct CallbackMessage : vt::Message {
   CallbackMessage() : Message() {
-    set_callback_type(env);
+    setCallbackType(env);
   }
 
-  void set_callback(HandlerType const& han) {
+  void setCallback(HandlerType const& han) {
     callback = han;
   }
 
   HandlerType callback = uninitialized_handler;
 };
 
-inline HandlerType get_callback_message(ShortMessage* msg) {
+inline HandlerType getCallbackMessage(ShortMessage* msg) {
   return reinterpret_cast<CallbackMessage*>(msg)->callback;
 }
 

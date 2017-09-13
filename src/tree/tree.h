@@ -7,7 +7,7 @@
 namespace vt {
 
 struct Tree {
-  void setup_tree();
+  void setupTree();
 
   bool set_up_tree_ = false;
   NodeType c1_ = -1, c2_ = -1, parent_ = -1;

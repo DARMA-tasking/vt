@@ -4,19 +4,19 @@
 
 namespace vt {
 
-HandlerType Registry::register_new_handler(
+HandlerType Registry::registerNewHandler(
   ActiveFunctionType fn, TagType const& tag, bool const& is_collective
 ) {
-  auto const& this_node = theContext->get_node();
+  auto const& this_node = theContext->getNode();
 
   HandlerType new_handle = 0;
   HandlerIdentifierType const& new_identifier =
     is_collective ? cur_ident_collective_++ : cur_ident_++;
 
-  HandlerManagerType::set_handler_node(
+  HandlerManagerType::setHandlerNode(
     new_handle, is_collective ? uninitialized_destination : this_node
   );
-  HandlerManagerType::set_handler_identifier(new_handle, new_identifier);
+  HandlerManagerType::setHandlerIdentifier(new_handle, new_identifier);
 
   if (tag == no_tag) {
     registered_[new_handle] = fn;
@@ -27,7 +27,7 @@ HandlerType Registry::register_new_handler(
   return new_handle;
 }
 
-void Registry::swap_handler(
+void Registry::swapHandler(
   HandlerType const& han, ActiveFunctionType fn, TagType const& tag
 ) {
   if (tag == no_tag) {
@@ -51,19 +51,19 @@ void Registry::swap_handler(
   }
 }
 
-void Registry::unregister_handler_fn(
+void Registry::unregisterHandlerFn(
   HandlerType const& han, TagType const& tag
 ) {
-  swap_handler(han, nullptr, tag);
+  swapHandler(han, nullptr, tag);
 }
 
-HandlerType Registry::register_active_handler(
+HandlerType Registry::registerActiveHandler(
   ActiveFunctionType fn, TagType const& tag
 ) {
-  return register_new_handler(fn, tag, true);
+  return registerNewHandler(fn, tag, true);
 }
 
-ActiveFunctionType Registry::get_handler_no_tag(HandlerType const& han) {
+ActiveFunctionType Registry::getHandlerNoTag(HandlerType const& han) {
   auto iter = registered_.find(han);
   if (iter != registered_.end()) {
     return iter->second;
@@ -72,7 +72,7 @@ ActiveFunctionType Registry::get_handler_no_tag(HandlerType const& han) {
   }
 }
 
-ActiveFunctionType Registry::get_trigger(HandlerType const& han) {
+ActiveFunctionType Registry::getTrigger(HandlerType const& han) {
   auto iter = triggers_.find(han);
   if (iter != triggers_.end()) {
     return iter->second;
@@ -81,26 +81,26 @@ ActiveFunctionType Registry::get_trigger(HandlerType const& han) {
   }
 }
 
-void Registry::save_trigger(HandlerType const& han, ActiveFunctionType fn) {
+void Registry::saveTrigger(HandlerType const& han, ActiveFunctionType fn) {
   printf("save_trigger: han=%d\n", han);
   triggers_[han] = fn;
 }
 
-ActiveFunctionType Registry::get_handler(
+ActiveFunctionType Registry::getHandler(
   HandlerType const& han, TagType const& tag
 ) {
   if (tag == no_tag) {
-    return get_handler_no_tag(han);
+    return getHandlerNoTag(han);
   } else {
     auto tag_iter = tagged_registered_.find(han);
     if (tag_iter == tagged_registered_.end()) {
-      return get_handler_no_tag(han);
+      return getHandlerNoTag(han);
     } else {
       auto iter = tag_iter->second.find(tag);
       if (iter != tag_iter->second.end()) {
         return iter->second;
       } else {
-        return get_handler_no_tag(han);
+        return getHandlerNoTag(han);
       }
     }
   }

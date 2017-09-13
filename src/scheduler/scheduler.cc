@@ -9,9 +9,9 @@
 namespace vt { namespace sched {
 
 /*static*/ void Scheduler::check_term_single_node() {
-  auto const& num_nodes = theContext->get_num_nodes();
+  auto const& num_nodes = theContext->getNumNodes();
   if (num_nodes == 1) {
-    theTerm->maybe_propagate();
+    theTerm->maybePropagate();
   }
 }
 

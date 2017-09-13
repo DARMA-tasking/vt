@@ -19,31 +19,31 @@ struct TestMsg : vt::Message {
 static void callback_fn_2(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-  printf("%d: callback_fn_2 handler node %d\n", theContext->get_node(), msg.from);
+  printf("%d: callback_fn_2 handler node %d\n", theContext->getNode(), msg.from);
 }
 
 static void reinstate_fn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
   // register a new function for the handler to deliver the rest of the msgs
-  theMsg->register_handler_fn(msg.callback_han, callback_fn_2);
+  theMsg->registerHandlerFn(msg.callback_han, callback_fn_2);
 }
 
 static void callback_fn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-  HandlerType const& han = theMsg->get_current_handler();
-  theMsg->unregister_handler_fn(han);
+  HandlerType const& han = theMsg->getCurrentHandler();
+  theMsg->unregisterHandlerFn(han);
 
-  theMsg->send_msg(my_reinstate_fn, make_shared_message<TestMsg>(0, han));
+  theMsg->sendMsg(my_reinstate_fn, make_shared_message<TestMsg>(0, han));
 
-  printf("%d: callback_fn handler node %d\n", theContext->get_node(), msg.from);
+  printf("%d: callback_fn handler node %d\n", theContext->getNode(), msg.from);
 }
 
 static void my_col_fn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-  auto const& my_node = theContext->get_node();
+  auto const& my_node = theContext->getNode();
 
   printf(
     "%d: my_col_fn from=%d, callback=%d: sending\n",
@@ -51,20 +51,20 @@ static void my_col_fn(vt::BaseMessage* in_msg) {
   );
 
   TestMsg* new_msg = make_shared_message<TestMsg>(my_node, uninitialized_handler);
-  theMsg->send_msg(msg.callback_han, new_msg);
+  theMsg->sendMsg(msg.callback_han, new_msg);
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize_context(argc, argv);
-  CollectiveOps::initialize_runtime();
+  CollectiveOps::initializeContext(argc, argv);
+  CollectiveOps::initializeRuntime();
 
-  HandlerType const callback = theMsg->register_new_handler(callback_fn);
-  my_reinstate_fn = theMsg->register_new_handler(reinstate_fn);
+  HandlerType const callback = theMsg->registerNewHandler(callback_fn);
+  my_reinstate_fn = theMsg->registerNewHandler(reinstate_fn);
 
-  my_col_han = theMsg->collective_register_handler(my_col_fn);
+  my_col_han = theMsg->collectiveRegisterHandler(my_col_fn);
 
-  auto const& my_node = theContext->get_node();
-  auto const& num_nodes = theContext->get_num_nodes();
+  auto const& my_node = theContext->getNode();
+  auto const& num_nodes = theContext->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     TestMsg* msg = new TestMsg(my_node, callback);
-    theMsg->broadcast_msg(my_col_han, msg, [=]{ delete msg; });
+    theMsg->broadcastMsg(my_col_han, msg, [=]{ delete msg; });
   }
 
   while (1) {

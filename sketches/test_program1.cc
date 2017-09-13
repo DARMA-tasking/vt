@@ -31,14 +31,14 @@ void send_to_neighbor() {
 
   //theMsg->set_epoch_message(msg, test_epoch);
 
-  EventType evt = theMsg->send_msg(next, test_msg_han, msg, [=]{
+  EventType evt = theMsg->sendMsg(next, test_msg_han, msg, [=]{
     //std::cout << "deleting msg" << std::endl;
     delete msg;
   });
 
   TestMsg* msg2 = new TestMsg(this_node, num_nodes, evt);
 
-  EventType evt2 = theMsg->send_msg(next, test_msg_han2, msg2, [=]{
+  EventType evt2 = theMsg->sendMsg(next, test_msg_han2, msg2, [=]{
     //std::cout << "deleting msg" << std::endl;
     delete msg2;
   });
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  this_node = theContext->get_node();
+  this_node = theContext->getNode();
   num_nodes = theContext->get_num_nodes();
 
   std::cout << "this_node=" << this_node << std::endl;
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
   // theTerm->attach_epoch_term_action(test_epoch, [=]{
   //   printf(
   //     "%d: EPOCH: finished: test_epoch=%d\n",
-  //     theContext->get_node(), test_epoch
+  //     theContext->getNode(), test_epoch
   //   );
   // });
 

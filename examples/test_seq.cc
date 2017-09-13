@@ -17,7 +17,7 @@ struct EmptyMsg : vt::Message {
 #define PRINT_SEQUENCE(fmt, arg...)                                     \
   do {                                                                  \
     printf(                                                             \
-      "%d: seq_id=%d: " fmt, theContext->get_node(),                   \
+      "%d: seq_id=%d: " fmt, theContext->getNode(),                   \
       theSeq->get_current_seq(), ##arg                                 \
     );                                                                  \
   } while (0);
@@ -36,8 +36,8 @@ static void my_seq(SeqType const& seq_id) {
 
   theSeq->sequenced_block([]{
     PRINT_SEQUENCE("action1 sequenced_block triggered\n");
-    auto const& my_node = theContext->get_node();
-    theMsg->send_msg<EmptyMsg, action1>(
+    auto const& my_node = theContext->getNode();
+    theMsg->sendMsg<EmptyMsg, action1>(
       my_node, make_shared_message<EmptyMsg>(), 20
     );
   });
@@ -54,11 +54,11 @@ static void my_seq(SeqType const& seq_id) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize_context(argc, argv);
-  CollectiveOps::initialize_runtime();
+  CollectiveOps::initializeContext(argc, argv);
+  CollectiveOps::initializeRuntime();
 
-  my_node = theContext->get_node();
-  num_nodes = theContext->get_num_nodes();
+  my_node = theContext->getNode();
+  num_nodes = theContext->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -70,11 +70,11 @@ int main(int argc, char** argv) {
     SeqType const& seq_id = theSeq->next_seq();
     theSeq->sequenced(seq_id, my_seq);
 
-    theMsg->send_msg<EmptyMsg, action1>(1, make_shared_message<EmptyMsg>(), 30);
-    theMsg->send_msg<EmptyMsg, action1>(1, make_shared_message<EmptyMsg>(), 10);
+    theMsg->sendMsg<EmptyMsg, action1>(1, make_shared_message<EmptyMsg>(), 30);
+    theMsg->sendMsg<EmptyMsg, action1>(1, make_shared_message<EmptyMsg>(), 10);
 
-    theMsg->send_msg<EmptyMsg, action1>(0, make_shared_message<EmptyMsg>(), 30);
-    theMsg->send_msg<EmptyMsg, action1>(0, make_shared_message<EmptyMsg>(), 10);
+    theMsg->sendMsg<EmptyMsg, action1>(0, make_shared_message<EmptyMsg>(), 30);
+    theMsg->sendMsg<EmptyMsg, action1>(0, make_shared_message<EmptyMsg>(), 10);
   } else if (my_node == 1) {
     SeqType const& seq_id2 = theSeq->next_seq();
     theSeq->sequenced(seq_id2, my_seq);

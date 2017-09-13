@@ -21,7 +21,7 @@ static void tell_handle(TestMsg* msg) {
   if (my_node != 0) {
     printf("%d: handle=%lld, requesting data\n", my_node, msg->han);
     int const num_elm = 2;
-    theRDMA->get_typed_data_info_buf(msg->han, my_data, num_elm, no_byte, no_tag, [=]{
+    theRDMA->getTypedDataInfoBuf(msg->han, my_data, num_elm, no_byte, no_tag, [=]{
       for (auto i = 0; i < num_elm; i++) {
         printf("node %d: \t: my_data[%d] = %f\n", my_node, i, my_data[i]);
       }
@@ -30,11 +30,11 @@ static void tell_handle(TestMsg* msg) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize_context(argc, argv);
-  CollectiveOps::initialize_runtime();
+  CollectiveOps::initializeContext(argc, argv);
+  CollectiveOps::initializeRuntime();
 
-  my_node = theContext->get_node();
-  num_nodes = theContext->get_num_nodes();
+  my_node = theContext->getNode();
+  num_nodes = theContext->getNumNodes();
 
   my_data = new double[my_data_len];
 
@@ -44,11 +44,11 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    my_handle = theRDMA->register_new_typed_rdma_handler(my_data, my_data_len);
+    my_handle = theRDMA->registerNewTypedRdmaHandler(my_data, my_data_len);
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;
-    theMsg->broadcast_msg<TestMsg, tell_handle>(msg, [=]{ delete msg; });
+    theMsg->broadcastMsg<TestMsg, tell_handle>(msg, [=]{ delete msg; });
   }
 
   while (1) {

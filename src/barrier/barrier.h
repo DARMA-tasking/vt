@@ -23,58 +23,58 @@ struct Barrier : Tree {
   template <typename T>
   using ContainerType = std::unordered_map<BarrierType, T>;
 
-  BarrierStateType& insert_find_barrier(
+  BarrierStateType& insertFindBarrier(
     bool const& is_named, bool const& is_wait, BarrierType const& barrier,
     ActionType cont_action = nullptr
   );
 
-  void remove_barrier(
+  void removeBarrier(
     bool const& is_named, bool const& is_wait, BarrierType const& barrier
   );
 
-  BarrierType new_named_barrier();
+  BarrierType newNamedBarrier();
 
-  void barrier_up(
+  void barrierUp(
     bool const& is_named, bool const& is_wait, BarrierType const& barrier,
     bool const& skip_term
   );
 
-  void barrier_down(
+  void barrierDown(
     bool const& is_named, bool const& is_wait, BarrierType const& barrier
   );
 
   inline void barrier(BarrierType const& barrier = no_barrier) {
-    return wait_barrier(barrier);
+    return waitBarrier(barrier);
   }
 
-  inline void barrier_then(ActionType fn) {
-    return cont_barrier(fn);
+  inline void barrierThen(ActionType fn) {
+    return contBarrier(fn);
   }
 
-  inline void barrier_then(BarrierType const& barrier, ActionType fn) {
-    return cont_barrier(fn, barrier);
+  inline void barrierThen(BarrierType const& barrier, ActionType fn) {
+    return contBarrier(fn, barrier);
   }
 
-  inline void system_meta_barrier() {
+  inline void systemMetaBarrier() {
     bool const skip_term = true;
-    return wait_barrier(no_barrier, skip_term);
+    return waitBarrier(no_barrier, skip_term);
   }
 
-  inline void system_meta_barrier_cont(ActionType fn) {
+  inline void systemMetaBarrierCont(ActionType fn) {
     bool const skip_term = true;
-    return cont_barrier(fn, no_barrier, skip_term);
+    return contBarrier(fn, no_barrier, skip_term);
   }
 
-  static void barrier_up(BarrierMsg* msg);
-  static void barrier_down(BarrierMsg* msg);
+  static void barrierUp(BarrierMsg* msg);
+  static void barrierDown(BarrierMsg* msg);
 
 private:
 
-  void wait_barrier(
+  void waitBarrier(
     BarrierType const& barrier = no_barrier, bool const skip_term = false
   );
 
-  void cont_barrier(
+  void contBarrier(
     ActionType fn, BarrierType const& barrier = no_barrier,
     bool const skip_term = false
   );

@@ -12,7 +12,7 @@
 namespace vt { namespace auto_registry {
 
 template <typename = void>
-AutoActiveFunctorContainerType& get_auto_registry_functor();
+AutoActiveFunctorContainerType& getAutoRegistryFunctor();
 
 template <typename FunctorT>
 struct RegistrarFunctor {
@@ -21,10 +21,10 @@ struct RegistrarFunctor {
   RegistrarFunctor();
 };
 
-AutoActiveFunctorType get_auto_handler_functor(HandlerType const& handler);
+AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
 
-template <typename T, bool is_msg, typename... Args>
-HandlerType make_auto_handler_functor();
+template <typename FunctorT, bool is_msg, typename... Args>
+HandlerType makeAutoHandlerFunctor();
 
 template <typename RunnableFunctorT>
 struct RegistrarWrapperFunctor {
@@ -32,7 +32,7 @@ struct RegistrarWrapperFunctor {
 };
 
 template <typename RunnableFunctorT>
-AutoHandlerType register_active_functor();
+AutoHandlerType registerActiveFunctor();
 
 template <typename... Args>
 struct pack { };
@@ -42,7 +42,7 @@ struct RunnableFunctor {
   using FunctorType = FunctorT;
   using PackedArgsType = pack<Args...>;
 
-  static constexpr bool const is_msg_t = is_msg;
+  static constexpr bool const IsMsgType = is_msg;
 
   static AutoHandlerType const idx;
 
@@ -51,15 +51,15 @@ struct RunnableFunctor {
 
 template <typename FunctorT, bool is_msg, typename... Args>
 AutoHandlerType const RunnableFunctor<FunctorT, is_msg, Args...>::idx =
-  register_active_functor<RunnableFunctor<FunctorT, is_msg, Args...>>();
+  registerActiveFunctor<RunnableFunctor<FunctorT, is_msg, Args...>>();
 
 template <typename FunctorT, bool is_msg, typename... Args>
-bool const RunnableFunctor<FunctorT, is_msg, Args...>::is_msg_t;
+bool const RunnableFunctor<FunctorT, is_msg, Args...>::IsMsgType;
 
 }} // end namespace vt::auto_registry
 
 // convenience macro for registration
-#define get_handler_active_functor(FunctorT, is_msg, Args)          \
+#define GET_HANDLER_ACTIVE_FUNCTOR(FunctorT, is_msg, Args)          \
   vt::auto_registry::RunnableFunctor<FunctorT, is_msg, Args...>::idx;
 
 #include "auto_registry_functor_impl.h"

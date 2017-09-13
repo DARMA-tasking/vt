@@ -31,25 +31,21 @@ struct Region {
     assert(sd == 1);
   }
 
-  bool
-  has_elm_size() const {
+  bool hasElmSize() const {
     return elm_size != no_elm_size;
   }
 
-  void
-  set_elm_size(RegionElmSizeType const& size) {
+  void setElmSize(RegionElmSizeType const& size) {
     printf("setting region size to %d\n", size);
 
     elm_size = size;
   }
 
-  RDMA_ElmType
-  get_size() const {
+  RDMA_ElmType getSize() const {
     return (hi-lo)/sd;
   }
 
-  std::string
-  region_to_buf() const {
+  std::string regionToBuf() const {
     std::stringstream buf;
     buf << "[" << lo << ":" << hi << ":" << sd << "]" << std::endl;
     // char const* const print_format = "[%lld:%lld:%lld]";

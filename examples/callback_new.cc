@@ -14,18 +14,18 @@ struct TestMsg : CallbackMessage {
 };
 
 static void test_msg_recv(TestMsg* msg) {
-  printf("%d: sending callback %d\n", theContext->get_node(), msg->from);
+  printf("%d: sending callback %d\n", theContext->getNode(), msg->from);
 
-  TestMsg* send_msg = make_shared_message<TestMsg>(my_node);
-  theMsg->send_callback(send_msg);
+  TestMsg* sendMsg = make_shared_message<TestMsg>(my_node);
+  theMsg->sendCallback(sendMsg);
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize_context(argc, argv);
-  CollectiveOps::initialize_runtime();
+  CollectiveOps::initializeContext(argc, argv);
+  CollectiveOps::initializeRuntime();
 
-  my_node = theContext->get_node();
-  num_nodes = theContext->get_num_nodes();
+  my_node = theContext->getNode();
+  num_nodes = theContext->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -36,10 +36,10 @@ int main(int argc, char** argv) {
   if (my_node == 0) {
     for (int cur_node = 0; cur_node < num_nodes; cur_node++) {
       TestMsg* msg = make_shared_message<TestMsg>(my_node);
-      theMsg->send_msg_callback<TestMsg, test_msg_recv>(
+      theMsg->sendDataCallback<TestMsg, test_msg_recv>(
         cur_node, msg, [=](BaseMessage* in_msg){
           TestMsg* msg = static_cast<TestMsg*>(in_msg);
-          printf("%d: callback received from %d\n", theContext->get_node(), msg->from);
+          printf("%d: callback received from %d\n", theContext->getNode(), msg->from);
         }
       );
     }

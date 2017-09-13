@@ -16,11 +16,11 @@ struct TestMsg : vt::Message {
 static void callback_fn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-  printf("%d: local handler node %d\n", theContext->get_node(), msg.from);
+  printf("%d: local handler node %d\n", theContext->getNode(), msg.from);
 }
 
 static void my_col_fn(TestMsg* msg) {
-  auto const& my_node = theContext->get_node();
+  auto const& my_node = theContext->getNode();
 
   printf(
     "%d: my_col_fn from=%d, callback=%d: sending\n",
@@ -28,17 +28,17 @@ static void my_col_fn(TestMsg* msg) {
   );
 
   TestMsg* new_msg = make_shared_message<TestMsg>(my_node, uninitialized_handler);
-  theMsg->send_msg(msg->callback_han, new_msg);
+  theMsg->sendMsg(msg->callback_han, new_msg);
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize_context(argc, argv);
-  CollectiveOps::initialize_runtime();
+  CollectiveOps::initializeContext(argc, argv);
+  CollectiveOps::initializeRuntime();
 
-  HandlerType const callback = theMsg->register_new_handler(callback_fn);
+  HandlerType const callback = theMsg->registerNewHandler(callback_fn);
 
-  auto const& my_node = theContext->get_node();
-  auto const& num_nodes = theContext->get_num_nodes();
+  auto const& my_node = theContext->getNode();
+  auto const& num_nodes = theContext->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     TestMsg* msg = new TestMsg(my_node, callback);
-    theMsg->broadcast_msg<TestMsg, my_col_fn>(msg, [=]{ delete msg; });
+    theMsg->broadcastMsg<TestMsg, my_col_fn>(msg, [=]{ delete msg; });
   }
 
   while (1) {

@@ -72,18 +72,18 @@ struct ActiveMessenger {
   ActiveMessenger() = default;
 
   template <typename MessageT>
-  void set_term_message(MessageT* const msg) {
-    set_term_type(msg->env);
+  void setTermMessage(MessageT* const msg) {
+    setTermType(msg->env);
   }
 
   template <typename MessageT>
-  void set_epoch_message(MessageT* const msg, EpochType const& epoch) {
-    envelope_set_epoch(msg->env, epoch);
+  void setEpochMessage(MessageT* const msg, EpochType const& epoch) {
+    envelopeSetEpoch(msg->env, epoch);
   }
 
   template <typename MessageT>
-  void set_tag_message(MessageT* const msg, TagType const& tag) {
-    envelope_set_tag(msg->env, tag);
+  void setTagMessage(MessageT* const msg, TagType const& tag) {
+    envelopeSetTag(msg->env, tag);
   }
 
   /*----------------------------------------------------------------------------
@@ -99,35 +99,35 @@ struct ActiveMessenger {
    *   HandlerType const han = register_new_handler(my_handler);
    *
    *   MyMsg* msg = make_shared_message<MyMsg>(156);
-   *   theMsg->send_msg(29, han, msg);
+   *   theMsg->sendMsg(29, han, msg);
    *
    *----------------------------------------------------------------------------
    */
 
   template <typename MessageT>
-  EventType send_msg(
+  EventType sendMsg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
     ActionType next_action = nullptr
   ) {
-    envelope_setup(msg->env, dest, han);
-    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+    envelopeSetup(msg->env, dest, han);
+    return sendDataDirect(han, msg, sizeof(MessageT), next_action);
   }
 
   template <typename MessageT>
-  EventType send_msg(
+  EventType sendMsg(
     HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   ) {
-    auto const& dest = HandlerManagerType::get_handler_node(han);
+    auto const& dest = HandlerManagerType::getHandlerNode(han);
     assert(
       dest != uninitialized_destination and
       "Destination must be known in handler"
     );
-    envelope_setup(msg->env, dest, han);
+    envelopeSetup(msg->env, dest, han);
     if (tag != no_tag) {
-      envelope_set_tag(msg->env, tag);
+      envelopeSetTag(msg->env, tag);
     }
-    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+    return sendDataDirect(han, msg, sizeof(MessageT), next_action);
   }
 
   /*
@@ -147,45 +147,45 @@ struct ActiveMessenger {
    *     // do work ...
    *   }
    *
-   *  theMsg->send_msg<MyMsg, my_handler>(1, msg);
+   *  theMsg->sendMsg<MyMsg, my_handler>(1, msg);
    *
    *----------------------------------------------------------------------------
    */
 
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-  EventType broadcast_msg(
+  EventType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
-    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    auto const& this_node = theContext->get_node();
-    set_broadcast_type(msg->env);
+    HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+    auto const& this_node = theContext->getNode();
+    setBroadcastType(msg->env);
     if (tag != no_tag) {
-      envelope_set_tag(msg->env, tag);
+      envelopeSetTag(msg->env, tag);
     }
-    return send_msg(this_node, han, msg, next_action);
+    return sendMsg(this_node, han, msg, next_action);
   }
 
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-  EventType broadcast_msg(MessageT* const msg, ActionType act) {
-    return broadcast_msg<MessageT,f>(msg,no_tag,act);
+  EventType broadcastMsg(MessageT* const msg, ActionType act) {
+    return broadcastMsg<MessageT,f>(msg,no_tag,act);
   }
 
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-  EventType send_msg(
+  EventType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   ) {
-    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    envelope_setup(msg->env, dest, han);
+    HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+    envelopeSetup(msg->env, dest, han);
     if (tag != no_tag) {
-      envelope_set_tag(msg->env, tag);
+      envelopeSetTag(msg->env, tag);
     }
-    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+    return sendDataDirect(han, msg, sizeof(MessageT), next_action);
   }
 
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-  EventType send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
-    return send_msg<MessageT,f>(dest,msg,no_tag,act);
+  EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act) {
+    return sendMsg<MessageT,f>(dest,msg,no_tag,act);
   }
 
   /*
@@ -206,7 +206,7 @@ struct ActiveMessenger {
    *     ...
    *   }
    *
-   *  theMsg->send_msg<basic_handler, MyMsg>(1, msg);
+   *  theMsg->sendMsg<basic_handler, MyMsg>(1, msg);
    *
    * Most likely this will be deprecated unless there is a use for this, since
    * type safety does not cost anything in terms of overhead (either at runtime
@@ -216,39 +216,39 @@ struct ActiveMessenger {
    */
 
   template <ActiveBasicFunctionType* f, typename MessageT>
-  EventType broadcast_msg(
+  EventType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
-    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    auto const& this_node = theContext->get_node();
-    set_broadcast_type(msg->env);
+    HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+    auto const& this_node = theContext->getNode();
+    setBroadcastType(msg->env);
     if (tag != no_tag) {
-      envelope_set_tag(msg->env, tag);
+      envelopeSetTag(msg->env, tag);
     }
-    return send_msg(this_node, han, msg, next_action);
+    return sendMsg(this_node, han, msg, next_action);
   }
 
   template <ActiveBasicFunctionType* f, typename MessageT>
-  EventType broadcast_msg(MessageT* const msg, ActionType act) {
-    return broadcast_msg<f,MessageT>(msg,no_tag,act);
+  EventType broadcastMsg(MessageT* const msg, ActionType act) {
+    return broadcastMsg<f,MessageT>(msg,no_tag,act);
   }
 
   template <ActiveBasicFunctionType* f, typename MessageT>
-  EventType send_msg(
+  EventType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   ) {
-    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    envelope_setup(msg->env, dest, han);
+    HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+    envelopeSetup(msg->env, dest, han);
     if (tag != no_tag) {
-      envelope_set_tag(msg->env, tag);
+      envelopeSetTag(msg->env, tag);
     }
-    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+    return sendDataDirect(han, msg, sizeof(MessageT), next_action);
   }
 
   template <ActiveBasicFunctionType* f, typename MessageT>
-  EventType send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
-    return send_msg<f,MessageT>(dest,msg,no_tag,act);
+  EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act) {
+    return sendMsg<f,MessageT>(dest,msg,no_tag,act);
   }
 
   /*
@@ -272,40 +272,40 @@ struct ActiveMessenger {
    */
 
   template <typename FunctorT, typename MessageT>
-  EventType broadcast_msg(
+  EventType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
     HandlerType const& han =
-      auto_registry::make_auto_handler_functor<FunctorT, true, MessageT*>();
-    set_broadcast_type(msg->env);
+      auto_registry::makeAutoHandlerFunctor<FunctorT, true, MessageT*>();
+    setBroadcastType(msg->env);
     if (tag != no_tag) {
-      envelope_set_tag(msg->env, tag);
+      envelopeSetTag(msg->env, tag);
     }
-    return send_msg(theContext->get_node(), han, msg, next_action);
+    return sendMsg(theContext->getNode(), han, msg, next_action);
   }
 
   template <typename FunctorT, typename MessageT>
-  EventType broadcast_msg(MessageT* const msg, ActionType act) {
-    return broadcast_msg<FunctorT,MessageT>(msg,no_tag,act);
+  EventType broadcastMsg(MessageT* const msg, ActionType act) {
+    return broadcastMsg<FunctorT,MessageT>(msg,no_tag,act);
   }
 
   template <typename FunctorT, typename MessageT>
-  EventType send_msg(
+  EventType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   ) {
     HandlerType const& han =
-      auto_registry::make_auto_handler_functor<FunctorT, true, MessageT*>();
-    envelope_setup(msg->env, dest, han);
+      auto_registry::makeAutoHandlerFunctor<FunctorT, true, MessageT*>();
+    envelopeSetup(msg->env, dest, han);
     if (tag != no_tag) {
-      envelope_set_tag(msg->env, tag);
+      envelopeSetTag(msg->env, tag);
     }
-    return send_msg_direct(han, msg, sizeof(MessageT), next_action);
+    return sendDataDirect(han, msg, sizeof(MessageT), next_action);
   }
 
   template <typename FunctorT, typename MessageT>
-  EventType send_msg(NodeType const& dest, MessageT* const msg, ActionType act) {
-    return send_msg<FunctorT,MessageT>(dest,msg,no_tag,act);
+  EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act) {
+    return sendMsg<FunctorT,MessageT>(dest,msg,no_tag,act);
   }
 
   /*
@@ -324,62 +324,62 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
   template <typename MessageT>
-  EventType send_msg(
+  EventType sendMsg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
     UserSendFnType send_payload_fn, ActionType next_action = nullptr
   ) {
     using namespace std::placeholders;
 
     // must send first so action payload function runs before the send
-    auto f = std::bind(&ActiveMessenger::send_data, this, _1, _2, _3, _4);
+    auto f = std::bind(&ActiveMessenger::sendData, this, _1, _2, _3, _4);
     send_payload_fn(f);
 
     // setup envelope
-    envelope_setup(msg->env, dest, han);
-    auto const& ret = send_msg_direct(han, msg, sizeof(MessageT), next_action);
+    envelopeSetup(msg->env, dest, han);
+    auto const& ret = sendDataDirect(han, msg, sizeof(MessageT), next_action);
 
     return ret;
   }
 
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-  EventType send_msg(
+  EventType sendMsg(
     NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn,
     ActionType next_action = nullptr
   ) {
-    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(msg);
-    return send_msg<MessageT>(dest, han, msg, send_payload_fn, next_action);
+    HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+    return sendMsg<MessageT>(dest, han, msg, send_payload_fn, next_action);
   }
 
-  SendDataRetType send_data(
+  SendDataRetType sendData(
     RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
     ActionType next_action = nullptr
   );
 
-  bool recv_data_msg(
+  bool recvDataMsg(
     TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next = nullptr
   );
 
-  bool recv_data_msg(
+  bool recvDataMsg(
     TagType const& tag, NodeType const& recv_node, bool const& enqueue,
     RDMA_ContinuationDeleteType next = nullptr
   );
 
-  bool recv_data_msg_buffer(
+  bool recvDataMsgBuffer(
     void* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr, RDMA_ContinuationDeleteType next = nullptr
   );
 
   template <typename MessageT>
-  EventType broadcast_msg(
+  EventType broadcastMsg(
     HandlerType const& han, MessageT* const msg, ActionType next_action = nullptr
   ) {
-    auto const& this_node = theContext->get_node();
-    set_broadcast_type(msg->env);
-    return send_msg(this_node, han, msg, next_action);
+    auto const& this_node = theContext->getNode();
+    setBroadcastType(msg->env);
+    return sendMsg(this_node, han, msg, next_action);
   }
 
-  EventType send_msg_direct(
+  EventType sendDataDirect(
     HandlerType const& han, BaseMessage* const msg, int const& msg_size,
     ActionType next_action = nullptr
   );
@@ -400,30 +400,30 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-  EventType send_msg_callback(
+  EventType sendDataCallback(
     NodeType const& dest, MessageT* const msg, ActiveFunctionType fn
   ) {
-    HandlerType const& this_han = register_new_handler(fn, no_tag);
+    HandlerType const& this_han = registerNewHandler(fn, no_tag);
     auto cb = static_cast<CallbackMessage*>(msg);
-    cb->set_callback(this_han);
-    return send_msg<MessageT,f>(dest, msg, no_tag, nullptr);
+    cb->setCallback(this_han);
+    return sendMsg<MessageT,f>(dest, msg, no_tag, nullptr);
   }
 
   template <typename MessageT>
-  void send_msg_callback(
+  void sendDataCallback(
     HandlerType const& han, NodeType const& dest, MessageT* const msg,
     ActiveFunctionType fn
   ) {
-    HandlerType const& this_han = register_new_handler(fn, no_tag);
+    HandlerType const& this_han = registerNewHandler(fn, no_tag);
     auto cb = static_cast<CallbackMessage*>(msg);
-    cb->set_callback(this_han);
-    send_msg(dest, han, msg);
+    cb->setCallback(this_han);
+    sendMsg(dest, han, msg);
   }
 
   template <typename MessageT>
-  void send_callback(MessageT* const msg) {
-    auto const& han_callback = get_current_callback();
-    send_msg(han_callback, msg);
+  void sendCallback(MessageT* const msg) {
+    auto const& han_callback = getCurrentCallback();
+    sendMsg(han_callback, msg);
   }
 
   /*
@@ -434,34 +434,34 @@ struct ActiveMessenger {
 
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void trigger(std::function<void(vt::BaseMessage*)> fn) {
-    HandlerType const& han = auto_registry::make_auto_handler<MessageT,f>(nullptr);
+    HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
     printf("trigger: han=%d\n", han);
-    theRegistry->save_trigger(han, /*reinterpret_cast<active_function_t>(*/fn);
+    theRegistry->saveTrigger(han, /*reinterpret_cast<active_function_t>(*/fn);
   }
 
-  void perform_triggered_actions();
-  bool try_process_incoming_message();
-  bool process_data_msg_recv();
+  void performTriggeredActions();
+  bool tryProcessIncomingMessage();
+  bool processDataMsgRecv();
   bool scheduler();
-  bool is_local_term();
+  bool isLocalTerm();
 
-  HandlerType register_new_handler(ActiveFunctionType fn, TagType const& tag = no_tag);
-  void swap_handler_fn(
+  HandlerType registerNewHandler(ActiveFunctionType fn, TagType const& tag = no_tag);
+  void swapHandlerFn(
     HandlerType const& han, ActiveFunctionType fn, TagType const& tag = no_tag
   );
-  void unregister_handler_fn(HandlerType const& han, TagType const& tag = no_tag);
-  void register_handler_fn(
+  void unregisterHandlerFn(HandlerType const& han, TagType const& tag = no_tag);
+  void registerHandlerFn(
     HandlerType const& han, ActiveFunctionType fn, TagType const& tag = no_tag
   );
-  HandlerType collective_register_handler(ActiveFunctionType fn, TagType const& tag = no_tag);
+  HandlerType collectiveRegisterHandler(ActiveFunctionType fn, TagType const& tag = no_tag);
 
-  HandlerType get_current_handler();
-  HandlerType get_current_callback();
-  NodeType get_from_node_current_handler();
+  HandlerType getCurrentHandler();
+  HandlerType getCurrentCallback();
+  NodeType getFromNodeCurrentHandler();
 
-  bool deliver_active_msg(MessageType msg, NodeType const& from_node, bool insert);
-  void deliver_pending_msgs_on_han(HandlerType const& han, TagType const& tag = no_tag);
-  void process_maybe_ready_han_tag();
+  bool deliverActiveMsg(MessageType msg, NodeType const& from_node, bool insert);
+  void deliverPendingMsgsHandler(HandlerType const& han, TagType const& tag = no_tag);
+  void processMaybeReadyHanTag();
 
 private:
   HandlerType current_handler_context_ = uninitialized_handler;

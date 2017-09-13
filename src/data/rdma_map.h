@@ -20,14 +20,14 @@ struct Map {
     : block_map(in_block_map), elm_map(in_elm_map)
   { }
 
-  static NodeType default_block_map(
+  static NodeType defaultBlockMap(
     RDMA_BlockType block, RDMA_BlockType __attribute__((unused)) num_blocks
   ) {
-    auto const& num_nodes = theContext->get_num_nodes();
+    auto const& num_nodes = theContext->getNumNodes();
     return block % num_nodes;
   };
 
-  static RDMA_BlockElmRangeType default_elm_map(
+  static RDMA_BlockElmRangeType defaultElmMap(
     RDMA_ElmType elm, RDMA_ElmType num_elms, RDMA_BlockType num_blocks
   ) {
     auto const& block_size = num_elms / num_blocks;
@@ -38,7 +38,7 @@ struct Map {
   }
 };
 
-static Map default_map = Map(Map::default_block_map, Map::default_elm_map);
+static Map default_map = Map(Map::defaultBlockMap, Map::defaultElmMap);
 
 }} //end namespace vt::rdma
 

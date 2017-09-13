@@ -14,8 +14,8 @@ struct Context {
   ) : this_node(in_this_node), num_nodes(in_num_nodes)
   { }
 
-  inline NodeType get_node() const { return this_node; }
-  inline NodeType get_num_nodes() const { return num_nodes; }
+  inline NodeType getNode() const { return this_node; }
+  inline NodeType getNumNodes() const { return num_nodes; }
 
 private:
   NodeType this_node = 0;

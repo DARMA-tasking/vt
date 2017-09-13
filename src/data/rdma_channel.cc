@@ -11,7 +11,7 @@ Channel::Channel(
     non_target_(in_non_target), num_bytes_(in_num_bytes), ptr_(in_ptr),
     op_type_(in_op_type), channel_group_tag_(in_channel_group_tag)
 {
-  auto const& my_node = theContext->get_node();
+  auto const& my_node = theContext->getNode();
 
   is_target_ = target_ == my_node;
 
@@ -41,7 +41,7 @@ Channel::Channel(
 }
 
 void
-Channel::init_channel_group() {
+Channel::initChannelGroup() {
   debug_print(
     rdma_channel, node,
     "channel: init_channel_group: target=%d, non_target=%d, my_node=%d, han=%lld\n",
@@ -83,11 +83,11 @@ Channel::init_channel_group() {
     "channel: init_channel_group: finished\n"
   );
 
-  init_channel_window();
+  initChannelWindow();
 }
 
 void
-Channel::sync_channel_local() {
+Channel::syncChannelLocal() {
   debug_print(
     rdma_channel, node,
     "channel: sync_channel_local: target=%d, locked=%s starting\n",
@@ -95,14 +95,14 @@ Channel::sync_channel_local() {
   );
 
   if (not locked_) {
-    lock_channel_for_op();
+    lockChannelForOp();
   }
 
   auto const& ret = MPI_Win_flush_local(non_target_pos_, window_);
   assert(ret == MPI_SUCCESS and "MPI_Win_flush_local: Should be successful");
 
   if (op_type_ == RDMA_TypeType::Put) {
-    unlock_channel_for_op();
+    unlockChannelForOp();
   }
 
   debug_print(
@@ -113,7 +113,7 @@ Channel::sync_channel_local() {
 }
 
 void
-Channel::sync_channel_global() {
+Channel::syncChannelGlobal() {
   debug_print(
     rdma_channel, node,
     "channel: sync_channel_global: target=%d starting\n", target
@@ -123,7 +123,7 @@ Channel::sync_channel_global() {
   assert(ret == MPI_SUCCESS and "MPI_Win_flush: Should be successful");
 
   if (op_type_ == RDMA_TypeType::Put) {
-    unlock_channel_for_op();
+    unlockChannelForOp();
   }
 
   debug_print(
@@ -133,7 +133,7 @@ Channel::sync_channel_global() {
 }
 
 void
-Channel::lock_channel_for_op() {
+Channel::lockChannelForOp() {
   assert(initialized_ and "Channel must be initialized");
 
   if (not locked_) {
@@ -163,7 +163,7 @@ Channel::lock_channel_for_op() {
 }
 
 void
-Channel::unlock_channel_for_op() {
+Channel::unlockChannelForOp() {
   assert(initialized_ and "Channel must be initialized");
 
   if (locked_) {
@@ -182,7 +182,7 @@ Channel::unlock_channel_for_op() {
 }
 
 void
-Channel::write_data_to_channel(
+Channel::writeDataToChannel(
   RDMA_PtrType const& ptr, ByteType const& ptr_num_bytes, ByteType const& offset
 ) {
   assert(initialized_ and "Channel must be initialized");
@@ -199,7 +199,7 @@ Channel::write_data_to_channel(
   );
 
   if (not locked_) {
-    lock_channel_for_op();
+    lockChannelForOp();
   }
 
   if (op_type_ == RDMA_TypeType::Get) {
@@ -218,9 +218,9 @@ Channel::write_data_to_channel(
 }
 
 void
-Channel::free_channel() {
+Channel::freeChannel() {
   if (locked_) {
-    unlock_channel_for_op();
+    unlockChannelForOp();
   }
   if (initialized_) {
     MPI_Win_free(&window_);
@@ -230,11 +230,11 @@ Channel::free_channel() {
 }
 
 Channel::~Channel() {
-  free_channel();
+  freeChannel();
 }
 
 void
-Channel::init_channel_window() {
+Channel::initChannelWindow() {
   debug_print(
     rdma_channel, node,
     "channel: create window: num_bytes=%lld\n", num_bytes
@@ -265,12 +265,12 @@ Channel::init_channel_window() {
 }
 
 NodeType
-Channel::get_target() const {
+Channel::getTarget() const {
   return target_;
 }
 
 NodeType
-Channel::get_non_target() const {
+Channel::getNonTarget() const {
   return non_target_;
 }
 

@@ -6,40 +6,40 @@
 
 namespace vt { namespace term {
 
-/*static*/ void TerminationDetector::propagate_new_epoch_handler(TermMsg* msg) {
-  theTerm->propagate_new_epoch(msg->new_epoch);
+/*static*/ void TerminationDetector::propagateNewEpochHandler(TermMsg* msg) {
+  theTerm->propagateNewEpoch(msg->new_epoch);
 }
 
-/*static*/ void TerminationDetector::ready_epoch_handler(TermMsg* msg) {
-  theTerm->ready_new_epoch(msg->new_epoch);
+/*static*/ void TerminationDetector::readyEpochHandler(TermMsg* msg) {
+  theTerm->readyNewEpoch(msg->new_epoch);
 }
 
 /*static*/ void
-TerminationDetector::propagate_epoch_handler(TermCounterMsg* msg) {
-  theTerm->propagate_epoch_external(msg->epoch, msg->prod, msg->cons);
+TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
+  theTerm->propagateEpochExternal(msg->epoch, msg->prod, msg->cons);
 }
 
-/*static*/ void TerminationDetector::epoch_finished_handler(TermMsg* msg) {
-  theTerm->epoch_finished(msg->new_epoch);
+/*static*/ void TerminationDetector::epochFinishedHandler(TermMsg* msg) {
+  theTerm->epochFinished(msg->new_epoch);
 }
 
-/*static*/ void TerminationDetector::epoch_continue_handler(TermMsg* msg) {
-  theTerm->epoch_continue(msg->new_epoch);
+/*static*/ void TerminationDetector::epochContinueHandler(TermMsg* msg) {
+  theTerm->epochContinue(msg->new_epoch);
 }
 
-/*static*/ void TerminationDetector::register_default_termination_action() {
-  theTerm->attach_global_term_action([] {
+/*static*/ void TerminationDetector::registerDefaultTerminationAction() {
+  theTerm->attachGlobalTermAction([] {
     debug_print(
       term, node,
       "running registered default termination\n",
     );
 
-    CollectiveOps::finalize_context();
-    CollectiveOps::finalize_runtime();
+    CollectiveOps::finalizeContext();
+    CollectiveOps::finalizeRuntime();
   });
 }
 
-void TerminationDetector::produce_consume(
+void TerminationDetector::produceConsume(
   EpochType const& epoch, bool produce) {
   if (produce) {
     any_epoch_state_.l_prod++;
@@ -66,28 +66,28 @@ void TerminationDetector::produce_consume(
     }
 
     if (epoch_iter->second.propagate) {
-      propagate_epoch(epoch, epoch_iter->second);
+      propagateEpoch(epoch, epoch_iter->second);
     }
   }
 
   if (any_epoch_state_.propagate) {
-    propagate_epoch(epoch, any_epoch_state_);
+    propagateEpoch(epoch, any_epoch_state_);
   }
 }
 
-void TerminationDetector::maybe_propagate() {
+void TerminationDetector::maybePropagate() {
   if (any_epoch_state_.propagate) {
-    propagate_epoch(no_epoch, any_epoch_state_);
+    propagateEpoch(no_epoch, any_epoch_state_);
   }
 
   for (auto&& e : epoch_state_) {
     if (e.second.propagate) {
-      propagate_epoch(e.first, e.second);
+      propagateEpoch(e.first, e.second);
     }
   }
 }
 
-void TerminationDetector::propagate_epoch_external(
+void TerminationDetector::propagateEpochExternal(
   EpochType const& epoch, TermCounterType const& prod,
   TermCounterType const& cons
 ) {
@@ -115,20 +115,20 @@ void TerminationDetector::propagate_epoch_external(
 
     epoch_iter->second.recv_event_count += 1;
     if (epoch_iter->second.propagate) {
-      propagate_epoch(epoch, epoch_iter->second);
+      propagateEpoch(epoch, epoch_iter->second);
     }
   }
 
   any_epoch_state_.recv_event_count += 1;
   if (any_epoch_state_.propagate) {
-    propagate_epoch(epoch, any_epoch_state_);
+    propagateEpoch(epoch, any_epoch_state_);
   }
 }
 
-bool TerminationDetector::propagate_epoch(
+bool TerminationDetector::propagateEpoch(
   EpochType const& epoch, TermStateType& state
 ) {
-  setup_tree();
+  setupTree();
 
   auto const& event_count = state.recv_event_count;
 
@@ -158,8 +158,8 @@ bool TerminationDetector::propagate_epoch(
     if (not is_root_) {
       auto msg = new TermCounterMsg(epoch, state.g_prod1, state.g_cons1);
 
-      theMsg->set_term_message(msg);
-      theMsg->send_msg<TermCounterMsg, propagate_epoch_handler>(
+      theMsg->setTermMessage(msg);
+      theMsg->sendMsg<TermCounterMsg, propagateEpochHandler>(
         parent_, msg, [=] { delete msg; }
       );
 
@@ -183,20 +183,20 @@ bool TerminationDetector::propagate_epoch(
 
       if (is_term) {
         auto msg = new TermMsg(epoch);
-        theMsg->set_term_message(msg);
-        theMsg->broadcast_msg<TermMsg, epoch_finished_handler>(
+        theMsg->setTermMessage(msg);
+        theMsg->broadcastMsg<TermMsg, epochFinishedHandler>(
           msg, [=] { delete msg; }
         );
 
-        epoch_finished(epoch);
+        epochFinished(epoch);
       } else {
         state.g_prod2 = state.g_prod1;
         state.g_cons2 = state.g_cons1;
         state.g_prod1 = state.g_cons1 = 0;
 
         auto msg = new TermMsg(epoch);
-        theMsg->set_term_message(msg);
-        theMsg->broadcast_msg<TermMsg, epoch_continue_handler>(
+        theMsg->setTermMessage(msg);
+        theMsg->broadcastMsg<TermMsg, epochContinueHandler>(
           msg, [=] { delete msg; }
         );
 
@@ -213,14 +213,14 @@ bool TerminationDetector::propagate_epoch(
   return is_ready;
 }
 
-void TerminationDetector::epoch_finished(EpochType const& epoch) {
+void TerminationDetector::epochFinished(EpochType const& epoch) {
   debug_print(
     term, node,
     "%d: epoch_finished: epoch=%d\n",
     my_node, epoch
   );
 
-  trigger_all_actions(epoch);
+  triggerAllActions(epoch);
 
   // close the epoch window
   if (first_resolved_epoch_ == epoch) {
@@ -228,7 +228,7 @@ void TerminationDetector::epoch_finished(EpochType const& epoch) {
   }
 }
 
-void TerminationDetector::epoch_continue(EpochType const& epoch) {
+void TerminationDetector::epochContinue(EpochType const& epoch) {
   debug_print(
     term, node,
     "%d: epoch_continue: epoch=%d\n",
@@ -245,11 +245,11 @@ void TerminationDetector::epoch_continue(EpochType const& epoch) {
   }
 
   // theSched->register_trigger_once(sched::SchedulerEvent::BeginIdle, []{
-  theTerm->maybe_propagate();
+  theTerm->maybePropagate();
   //});
 }
 
-void TerminationDetector::trigger_all_epoch_actions(EpochType const& epoch) {
+void TerminationDetector::triggerAllEpochActions(EpochType const& epoch) {
   auto action_iter = epoch_actions_.find(epoch);
   if (action_iter != epoch_actions_.end()) {
     for (auto&& action : action_iter->second) {
@@ -259,10 +259,10 @@ void TerminationDetector::trigger_all_epoch_actions(EpochType const& epoch) {
   }
 }
 
-void TerminationDetector::trigger_all_actions(EpochType const& epoch) {
+void TerminationDetector::triggerAllActions(EpochType const& epoch) {
   if (epoch == no_epoch) {
     for (auto&& state : epoch_state_) {
-      trigger_all_epoch_actions(state.first);
+      triggerAllEpochActions(state.first);
     }
 
     for (auto&& action : global_term_actions_) {
@@ -271,11 +271,11 @@ void TerminationDetector::trigger_all_actions(EpochType const& epoch) {
 
     global_term_actions_.clear();
   } else {
-    trigger_all_epoch_actions(epoch);
+    triggerAllEpochActions(epoch);
   }
 }
 
-EpochType TerminationDetector::new_epoch() {
+EpochType TerminationDetector::newEpoch() {
   if (cur_epoch_ == no_epoch) {
     cur_epoch_ = first_epoch;
   }
@@ -283,16 +283,16 @@ EpochType TerminationDetector::new_epoch() {
   EpochType const cur = cur_epoch_;
   cur_epoch_++;
 
-  propagate_new_epoch(cur);
+  propagateNewEpoch(cur);
 
   return cur;
 }
 
-void TerminationDetector::attach_global_term_action(ActionType action) {
+void TerminationDetector::attachGlobalTermAction(ActionType action) {
   global_term_actions_.emplace_back(action);
 }
 
-void TerminationDetector::attach_epoch_term_action(
+void TerminationDetector::attachEpochTermAction(
   EpochType const& epoch, ActionType action) {
   auto epoch_iter = epoch_actions_.find(epoch);
   if (epoch_iter == epoch_actions_.end()) {
@@ -304,7 +304,7 @@ void TerminationDetector::attach_epoch_term_action(
   }
 }
 
-void TerminationDetector::setup_new_epoch(EpochType const& new_epoch) {
+void TerminationDetector::setupNewEpoch(EpochType const& new_epoch) {
   auto epoch_iter = epoch_state_.find(new_epoch);
   if (epoch_iter == epoch_state_.end()) {
     assert(
@@ -319,10 +319,10 @@ void TerminationDetector::setup_new_epoch(EpochType const& new_epoch) {
   epoch_iter->second.recv_event_count += 1;
 }
 
-void TerminationDetector::propagate_new_epoch(EpochType const& new_epoch) {
-  setup_tree();
+void TerminationDetector::propagateNewEpoch(EpochType const& new_epoch) {
+  setupTree();
 
-  setup_new_epoch(new_epoch);
+  setupNewEpoch(new_epoch);
 
   auto epoch_iter = epoch_state_.find(new_epoch);
   auto const& event_count = epoch_iter->second.recv_event_count;
@@ -332,25 +332,25 @@ void TerminationDetector::propagate_new_epoch(EpochType const& new_epoch) {
   if (is_ready and not is_root_) {
     // propagate up the tree
     auto msg = new TermMsg(new_epoch);
-    theMsg->set_term_message(msg);
+    theMsg->setTermMessage(msg);
 
-    theMsg->send_msg<TermMsg, propagate_new_epoch_handler>(
+    theMsg->sendMsg<TermMsg, propagateNewEpochHandler>(
       parent_, msg, [=] { delete msg; }
     );
   } else if (is_ready and is_root_) {
     // broadcast ready to all
     auto msg = new TermMsg(new_epoch);
-    theMsg->set_term_message(msg);
+    theMsg->setTermMessage(msg);
 
-    theMsg->broadcast_msg<TermMsg, ready_epoch_handler>(
+    theMsg->broadcastMsg<TermMsg, readyEpochHandler>(
       msg, [=] { delete msg; }
     );
 
-    ready_new_epoch(new_epoch);
+    readyNewEpoch(new_epoch);
   }
 }
 
-void TerminationDetector::ready_new_epoch(EpochType const& new_epoch) {
+void TerminationDetector::readyNewEpoch(EpochType const& new_epoch) {
   if (first_resolved_epoch_ == no_epoch) {
     assert(last_resolved_epoch_ == no_epoch);
     first_resolved_epoch_ = 0;

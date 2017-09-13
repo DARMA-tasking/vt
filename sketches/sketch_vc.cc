@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  auto const& my_node = theContext->get_node();
+  auto const& my_node = theContext->getNode();
   auto const& num_nodes = theContext->get_num_nodes();
 
   if (num_nodes == 1) {
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
     >(msg);
 
     MyWorkMsg* msg = make_shared_message<MyWorkMsg>();
-    the_virtual->send_msg<MyContext, MyWorkMsg, my_work_handler>(my_id, work_msg);
+    the_virtual->sendMsg<MyContext, MyWorkMsg, my_work_handler>(my_id, work_msg);
   }
 
   while (1) {

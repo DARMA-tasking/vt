@@ -27,10 +27,10 @@ static void announce(TestMsg* msg) {
   printf("%d: handle=%lld, requesting data\n", my_node, rdma_handle);
 
   if (my_node == 1) {
-    theRDMA->new_get_channel(my_handle, 2, 1, [=]{
+    theRDMA->newGetChannel(my_handle, 2, 1, [=]{
       printf("set up channel with 2\n");
 
-      theRDMA->get_typed_data_info_buf(rdma_handle, local_data, local_data_len, 5, no_tag, [=]{
+      theRDMA->getTypedDataInfoBuf(rdma_handle, local_data, local_data_len, 5, no_tag, [=]{
         printf("%d: handle=%lld, finished getting data\n", my_node, rdma_handle);
         for (int i = 0; i < local_data_len; i++) {
           printf("%d: \t local_data[%d] = %f\n", my_node, i, local_data[i]);
@@ -42,11 +42,11 @@ static void announce(TestMsg* msg) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize_context(argc, argv);
-  CollectiveOps::initialize_runtime();
+  CollectiveOps::initializeContext(argc, argv);
+  CollectiveOps::initializeRuntime();
 
-  my_node = theContext->get_node();
-  num_nodes = theContext->get_num_nodes();
+  my_node = theContext->getNode();
+  num_nodes = theContext->getNumNodes();
 
   if (num_nodes < 4) {
     fprintf(stderr, "requires at least 4 nodes\n");
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     local_data[i] = 0.0;
   }
 
-  my_handle = theRDMA->register_collective_typed(
+  my_handle = theRDMA->registerCollectiveTyped(
     my_data, my_data_len, my_data_len*num_nodes
   );
 
@@ -74,10 +74,10 @@ int main(int argc, char** argv) {
   printf("%d: handle=%lld, create handle\n", my_node, my_handle);
 
   if (my_node == 0) {
-    theRDMA->new_get_channel(my_handle, 0, 1, [=]{
+    theRDMA->newGetChannel(my_handle, 0, 1, [=]{
       TestMsg* msg = make_shared_message<TestMsg>(my_node);
       msg->han = my_handle;
-      theMsg->broadcast_msg<TestMsg, announce>(msg);
+      theMsg->broadcastMsg<TestMsg, announce>(msg);
     });
   }
 

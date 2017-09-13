@@ -59,7 +59,7 @@ struct MemoryPoolEqual {
     debug_print(
       pool, node,
       "%d: dealloc t=%p, cur_slot=%lld\n",
-      theContext->get_node(), t, cur_slot
+      theContext->getNode(), t, cur_slot
     );
 
     void* const ptr_actual = static_cast<size_t*>(t) - 1;
@@ -116,40 +116,40 @@ extern std::unique_ptr<pool::Pool> thePool;
 template <typename MessageT, typename... Args>
 MessageT* make_shared_message(Args&&... args) {
   MessageT* msg = new MessageT{args...};
-  envelope_set_ref(msg->env, 1);
+  envelopeSetRef(msg->env, 1);
   return msg;
 }
 
 template <typename MessageT>
 bool is_shared_message(MessageT* msg) {
-  return envelope_get_ref(msg->env) != not_shared_message;
+  return envelopeGetRef(msg->env) != not_shared_message;
 }
 
 template <typename MessageT>
 void message_convert_to_shared(MessageT* msg) {
-  envelope_set_ref(msg->env, 1);
+  envelopeSetRef(msg->env, 1);
 }
 
 template <typename MessageT>
 void message_set_unmanaged(MessageT* msg) {
-  envelope_set_ref(msg->env, not_shared_message);
+  envelopeSetRef(msg->env, not_shared_message);
 }
 
 template <typename MessageT>
 void message_ref(MessageT* msg) {
-  envelope_ref(msg->env);
+  envelopeRef(msg->env);
 }
 
 template <typename MessageT>
 void message_deref(MessageT* msg) {
-  envelope_deref(msg->env);
+  envelopeDeref(msg->env);
 
   debug_print(
     pool, node,
     "message_deref msg=%p, refs=%d\n", msg, envelope_get_ref(msg->env)
   );
 
-  if (envelope_get_ref(msg->env) == 0) {
+  if (envelopeGetRef(msg->env) == 0) {
     delete msg;
   }
 }

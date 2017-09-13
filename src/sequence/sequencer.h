@@ -239,9 +239,9 @@ public:
   void sequence_msg(MessageT* msg) {
     bool found_matching = false;
 
-    auto const& is_tag_type = envelope_is_tag_type(msg->env);
+    auto const& is_tag_type = envelopeIsTagType(msg->env);
 
-    TagType const& msg_tag = is_tag_type ? envelope_get_tag(msg->env) : no_tag;
+    TagType const& msg_tag = is_tag_type ? envelopeGetTag(msg->env) : no_tag;
 
     // try to find a matching action that is posted for this tag
     if (msg_tag == no_tag) {

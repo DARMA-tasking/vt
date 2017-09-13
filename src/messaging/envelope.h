@@ -58,73 +58,73 @@ inline trace::TraceEventIDType envelope_get_trace_event(Env& env) {
 // Set the type of Envelope
 
 template <typename Env>
-inline void set_normal_type(Env& env) {
+inline void setNormalType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type = 0;
 }
 
 template <typename Env>
-inline void set_get_type(Env& env) {
+inline void setGetType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvGet;
 }
 
 template <typename Env>
-inline void set_put_type(Env& env) {
+inline void setPutType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvPut;
 }
 
 template <typename Env>
-inline void set_term_type(Env& env) {
+inline void setTermType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvTerm;
 }
 
 template <typename Env>
-inline void set_broadcast_type(Env& env) {
+inline void setBroadcastType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvBroadcast;
 }
 
 template <typename Env>
-inline void set_epoch_type(Env& env) {
+inline void setEpochType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvEpochType;
 }
 
 template <typename Env>
-inline void set_tag_type(Env& env) {
+inline void setTagType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvTagType;
 }
 
 template <typename Env>
-inline void set_callback_type(Env& env) {
+inline void setCallbackType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvCallback;
 }
 
 // Test the type of Envelope
 
 template <typename Env>
-inline bool envelope_is_term(Env const& env) {
+inline bool envelopeIsTerm(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
     (1 << eEnvelopeType::EnvTerm);
 }
 
 template <typename Env>
-inline bool envelope_is_bcast(Env const& env) {
+inline bool envelopeIsBcast(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
     (1 << eEnvelopeType::EnvBroadcast);
 }
 
 template <typename Env>
-inline bool envelope_is_epoch_type(Env const& env) {
+inline bool envelopeIsEpochType(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
     (1 << eEnvelopeType::EnvEpochType);
 }
 
 template <typename Env>
-inline bool envelope_is_tag_type(Env const& env) {
+inline bool envelopeIsTagType(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
     (1 << eEnvelopeType::EnvTagType);
 }
 
 template <typename Env>
-inline bool envelope_is_callback_type(Env const& env) {
+inline bool envelopeIsCallbackType(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
     (1 << eEnvelopeType::EnvCallback);
 }
@@ -132,67 +132,67 @@ inline bool envelope_is_callback_type(Env const& env) {
 // Get fields of Envelope
 
 template <typename Env>
-inline HandlerType envelope_get_handler(Env const& env) {
+inline HandlerType envelopeGetHandler(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->han;
 }
 
 template <typename Env>
-inline NodeType envelope_get_dest(Env const& env) {
+inline NodeType envelopeGetDest(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->dest;
 }
 
 // Set fields of Envelope
 
 template <typename Env>
-inline void envelope_set_handler(Env& env, HandlerType const& handler) {
+inline void envelopeSetHandler(Env& env, HandlerType const& handler) {
   reinterpret_cast<Envelope*>(&env)->han = handler;
 }
 
 template <typename Env>
-inline void envelope_set_dest(Env& env, NodeType const& dest) {
+inline void envelopeSetDest(Env& env, NodeType const& dest) {
   reinterpret_cast<Envelope*>(&env)->dest = dest;
 }
 
 // Envelope reference counting functions for memory management
 
 template <typename Env>
-inline void envelope_set_ref(Env& env, RefType const& ref = 0) {
+inline void envelopeSetRef(Env& env, RefType const& ref = 0) {
   reinterpret_cast<Envelope*>(&env)->ref = ref;
 }
 
 template <typename Env>
-inline RefType envelope_get_ref(Env& env) {
+inline RefType envelopeGetRef(Env& env) {
   return reinterpret_cast<Envelope*>(&env)->ref;
 }
 
 template <typename Env>
-inline void envelope_ref(Env& env) {
+inline void envelopeRef(Env& env) {
   reinterpret_cast<Envelope*>(&env)->ref++;
 }
 
 template <typename Env>
-inline void envelope_deref(Env& env) {
+inline void envelopeDeref(Env& env) {
   reinterpret_cast<Envelope*>(&env)->ref--;
 }
 
 // Envelope setup functions
 
 template <typename Env>
-inline void envelope_setup(Env& env, NodeType const& dest, HandlerType const& handler) {
-  envelope_set_dest(env, dest);
-  envelope_set_handler(env, handler);
+inline void envelopeSetup(Env& env, NodeType const& dest, HandlerType const& handler) {
+  envelopeSetDest(env, dest);
+  envelopeSetHandler(env, handler);
 }
 
 template <typename Env>
-inline void envelope_init(Env& env) {
-  set_normal_type(env);
-  envelope_set_dest(env, uninitialized_destination);
-  envelope_set_handler(env, uninitialized_handler);
-  envelope_set_ref(env, not_shared_message);
+inline void envelopeInit(Env& env) {
+  setNormalType(env);
+  envelopeSetDest(env, uninitialized_destination);
+  envelopeSetHandler(env, uninitialized_handler);
+  envelopeSetRef(env, not_shared_message);
 }
 
-inline void envelope_init_empty(Envelope& env) {
-  envelope_init(env);
+inline void envelopeInitEmpty(Envelope& env) {
+  envelopeInit(env);
 }
 
 struct EpochEnvelope {
@@ -212,10 +212,10 @@ struct EpochTagEnvelope {
 };
 
 template <typename Env>
-inline EpochType envelope_get_epoch(Env const& env) {
-  if (envelope_is_epoch_type(env) and envelope_is_tag_type(env)) {
+inline EpochType envelopeGetEpoch(Env const& env) {
+  if (envelopeIsEpochType(env) and envelopeIsTagType(env)) {
     return reinterpret_cast<EpochTagEnvelope const*>(&env)->epoch;
-  } else if (envelope_is_epoch_type(env)) {
+  } else if (envelopeIsEpochType(env)) {
     return reinterpret_cast<EpochEnvelope const*>(&env)->epoch;
   } else {
     assert(0 and "Envelope must be able to hold an epoch");
@@ -224,10 +224,10 @@ inline EpochType envelope_get_epoch(Env const& env) {
 }
 
 template <typename Env>
-inline void envelope_set_epoch(Env& env, EpochType const& epoch) {
-  if (envelope_is_epoch_type(env) and envelope_is_tag_type(env)) {
+inline void envelopeSetEpoch(Env& env, EpochType const& epoch) {
+  if (envelopeIsEpochType(env) and envelopeIsTagType(env)) {
     reinterpret_cast<EpochTagEnvelope*>(&env)->epoch = epoch;
-  } else if (envelope_is_epoch_type(env)) {
+  } else if (envelopeIsEpochType(env)) {
     reinterpret_cast<EpochEnvelope*>(&env)->epoch = epoch;
   } else {
     assert(0 and "Envelope must be able to hold an epoch");
@@ -235,10 +235,10 @@ inline void envelope_set_epoch(Env& env, EpochType const& epoch) {
 }
 
 template <typename Env>
-inline TagType envelope_get_tag(Env const& env) {
-  if (envelope_is_epoch_type(env) and envelope_is_tag_type(env)) {
+inline TagType envelopeGetTag(Env const& env) {
+  if (envelopeIsEpochType(env) and envelopeIsTagType(env)) {
     return reinterpret_cast<EpochTagEnvelope const*>(&env)->tag;
-  } else if (envelope_is_tag_type(env)) {
+  } else if (envelopeIsTagType(env)) {
     return reinterpret_cast<TagEnvelope const*>(&env)->tag;
   } else {
     assert(0 and "Envelope must be able to hold an tag");
@@ -247,34 +247,34 @@ inline TagType envelope_get_tag(Env const& env) {
 }
 
 template <typename Env>
-inline void envelope_set_tag(Env& env, TagType const& tag) {
-  if (envelope_is_epoch_type(env) and envelope_is_tag_type(env)) {
+inline void envelopeSetTag(Env& env, TagType const& tag) {
+  if (envelopeIsEpochType(env) and envelopeIsTagType(env)) {
     reinterpret_cast<EpochTagEnvelope*>(&env)->tag = tag;
-  } else if (envelope_is_tag_type(env)) {
+  } else if (envelopeIsTagType(env)) {
     reinterpret_cast<TagEnvelope*>(&env)->tag = tag;
   } else {
     assert(0 and "Envelope must be able to hold an tag");
   }
 }
 
-inline void envelope_init_empty(EpochEnvelope& env) {
-  envelope_init(env);
-  set_epoch_type(env);
-  envelope_set_epoch(env, no_epoch);
+inline void envelopeInitEmpty(EpochEnvelope& env) {
+  envelopeInit(env);
+  setEpochType(env);
+  envelopeSetEpoch(env, no_epoch);
 }
 
-inline void envelope_init_empty(TagEnvelope& env) {
-  envelope_init(env);
-  set_tag_type(env);
-  envelope_set_tag(env, no_tag);
+inline void envelopeInitEmpty(TagEnvelope& env) {
+  envelopeInit(env);
+  setTagType(env);
+  envelopeSetTag(env, no_tag);
 }
 
-inline void envelope_init_empty(EpochTagEnvelope& env) {
-  envelope_init(env);
-  set_epoch_type(env);
-  envelope_set_epoch(env, no_epoch);
-  set_tag_type(env);
-  envelope_set_tag(env, no_tag);
+inline void envelopeInitEmpty(EpochTagEnvelope& env) {
+  envelopeInit(env);
+  setEpochType(env);
+  envelopeSetEpoch(env, no_epoch);
+  setTagType(env);
+  envelopeSetTag(env, no_tag);
 }
 
 static_assert(std::is_pod<Envelope>(), "Envelope must be POD");

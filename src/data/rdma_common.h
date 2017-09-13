@@ -69,7 +69,7 @@ static constexpr ByteType rdma_default_byte_size = sizeof(char);
 
 }} //end namespace vt::rdma
 
-#define print_channel_type(rdma_op_type) (                              \
+#define PRINT_CHANNEL_TYPE(rdma_op_type) (                              \
   rdma_op_type == vt::rdma::Type::Get ? "rdma::Get" : (            \
     rdma_op_type == vt::rdma::Type::Put ? "rdma::Put" : (          \
       rdma_op_type == vt::rdma::Type::GetOrPut ? "rdma::GetorPut"  \

@@ -22,27 +22,27 @@ struct Registry {
 
   Registry() = default;
 
-  HandlerType register_new_handler(
+  HandlerType registerNewHandler(
     ActiveFunctionType fn, TagType const& tag = no_tag,
     bool const& is_collective = false
   );
 
-  void unregister_handler_fn(
+  void unregisterHandlerFn(
     HandlerType const& han, TagType const& tag = no_tag
   );
-  void swap_handler(
+  void swapHandler(
     HandlerType const& han, ActiveFunctionType fn, TagType const& tag = no_tag
   );
-  HandlerType register_active_handler(
+  HandlerType registerActiveHandler(
     ActiveFunctionType fn, TagType const& tag = no_tag
   );
-  ActiveFunctionType get_handler(
+  ActiveFunctionType getHandler(
     HandlerType const& han, TagType const& tag = no_tag
   );
-  ActiveFunctionType get_handler_no_tag(HandlerType const& han);
-  ActiveFunctionType get_trigger(HandlerType const& han);
+  ActiveFunctionType getHandlerNoTag(HandlerType const& han);
+  ActiveFunctionType getTrigger(HandlerType const& han);
 
-  void save_trigger(HandlerType const& han, ActiveFunctionType fn);
+  void saveTrigger(HandlerType const& han, ActiveFunctionType fn);
 
 private:
   ContainerType triggers_;

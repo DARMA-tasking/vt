@@ -14,7 +14,7 @@
 namespace vt { namespace auto_registry {
 
 template <typename = void>
-AutoActiveContainerType& get_auto_registry();
+AutoActiveContainerType& getAutoRegistry();
 
 template <typename ActiveFnT>
 struct Registrar {
@@ -23,13 +23,13 @@ struct Registrar {
   Registrar();
 };
 
-AutoActiveType get_auto_handler(HandlerType const& handler);
+AutoActiveType getAutoHandler(HandlerType const& handler);
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-HandlerType make_auto_handler(MessageT* const msg);
+HandlerType makeAutoHandler(MessageT* const msg);
 
 template <typename T, T value>
-HandlerType make_auto_handler();
+HandlerType makeAutoHandler();
 
 template <typename ActiveFnT>
 struct RegistrarWrapper {
@@ -37,13 +37,13 @@ struct RegistrarWrapper {
 };
 
 template <typename ActiveFnT>
-AutoHandlerType register_active_fn();
+AutoHandlerType registerActiveFn();
 
 template <typename F, F* f>
 struct FunctorAdapter {
-  using function_ptr_type = F;
+  using FunctionPtrType = F;
 
-  static constexpr F* get_function() { return f; }
+  static constexpr F* getFunction() { return f; }
 
   template <typename... A>
   auto operator()(A&&... a) -> decltype(f(std::forward<A>(a)...)) {
@@ -53,24 +53,23 @@ struct FunctorAdapter {
 
 template <typename Callable>
 struct Runnable {
-  using function_ptr_type = typename Callable::function_ptr_type;
+  using FunctionPtrType = typename Callable::FunctionPtrType;
 
   static AutoHandlerType const idx;
 
-  static constexpr function_ptr_type*
-  get_function();
+  static constexpr FunctionPtrType* getFunction();
 
   Runnable() = default;
 };
 
 template <typename ActiveFnT>
 AutoHandlerType const Runnable<ActiveFnT>::idx =
-  register_active_fn<Runnable<ActiveFnT>>();
+  registerActiveFn<Runnable<ActiveFnT>>();
 
 }} // end namespace vt::auto_registry
 
 // convenience macro for registration
-#define get_handler_active_function_expand(TYPE_F, ADD_F)               \
+#define GET_HANDLER_ACTIVE_FUNCTION_EXPAND(TYPE_F, ADD_F)               \
   vt::auto_registry::Runnable<                                     \
     decltype(                                                           \
       vt::auto_registry::FunctorAdapter<TYPE_F, ADD_F>()           \
