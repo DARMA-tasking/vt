@@ -32,6 +32,17 @@ void EntityLocationCoord<EntityID>::registerEntity(EntityID const& id) {
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
+  auto rec_iter = recs_.find(id);
+
+  assert(
+    rec_iter != recs_.end() and "Entity must exist"
+  );
+
+  recs_.erase(rec_iter);
+}
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityMigrated(
   EntityID const& id, NodeType const& new_node
 ) {

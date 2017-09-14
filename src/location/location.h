@@ -22,6 +22,7 @@ struct EntityLocationCoord {
   using LocMsgType = LocationMsg<EntityID>;
 
   void registerEntity(EntityID const& id);
+  void unregisterEntity(EntityID const& id);
   void entityMigrated(EntityID const& id, NodeType const& new_node);
   void getLocation(
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
