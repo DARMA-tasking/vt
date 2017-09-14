@@ -2,11 +2,11 @@
 #if ! defined __DEBUG_CONFIG__
 #define __DEBUG_CONFIG__
 
-#include "vte/vtem/vtem_meld.h"
-#include "vte/vtef/vtef_featureswitch.h"
-#include "vte/vtef/vtef_defines.h"
-#include "vte/vtef/vtef_metafeatures.h"
-#include "vte/vtef/vtef_enableif.h"
+#include "tpl/meld/meld.h"
+#include "configs/features/featureswitch.h"
+#include "configs/features/defines.h"
+#include "configs/features/metafeatures.h"
+#include "configs/features/enableif.h"
 #include "debug_print_const.h"
 
 /* Printers for configurations */
