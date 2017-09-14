@@ -32,4 +32,4 @@
     startup                                                     \
 )
 
-#endif /*INCLUDED_DEBUG_MASTER_CONFIG*/
+#endif  /*INCLUDED_DEBUG_MASTER_CONFIG*/
