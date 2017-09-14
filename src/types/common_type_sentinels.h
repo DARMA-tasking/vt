@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_COMMON_TYPE_SENTINELS__
 #define __RUNTIME_TRANSPORT_COMMON_TYPE_SENTINELS__
 
-#include "config.h"
+#include "utils/debug/debug_masterconfig.h"
 #include "common_types.h"
 
 namespace vt {

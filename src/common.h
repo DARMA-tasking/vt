@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_COMMON__
 #define __RUNTIME_TRANSPORT_COMMON__
 
-#include "config.h"
+#include "utils/debug/debug_masterconfig.h"
 
 // Include common types, their sizes, and sentinel values
 #include "common_types.h"

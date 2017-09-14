@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_COMMON_TYPES__
 #define __RUNTIME_TRANSPORT_COMMON_TYPES__
 
-#include "config.h"
+#include "utils/debug/debug_masterconfig.h"
 
 #include <cstdint>
 #include <functional>

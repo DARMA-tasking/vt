@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_COMMON_TYPE_SIZES__
 #define __RUNTIME_TRANSPORT_COMMON_TYPE_SIZES__
 
-#include "config.h"
+#include "utils/debug/debug_masterconfig.h"
 #include "common_types.h"
 #include "bit_common.h"
 

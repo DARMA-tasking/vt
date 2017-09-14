@@ -1,6 +1,6 @@
 
-#if ! defined __DEBUG_CONFIGURATION__
-#define __DEBUG_CONFIGURATION__
+#if !defined INCLUDED_DEBUG_MASTER_CONFIG
+#define INCLUDED_DEBUG_MASTER_CONFIG
 
 /*
  * Define the compile-time configuration options. Eventually this will be
@@ -12,7 +12,7 @@
 
 #include "utils/debug/debug_print.h"
 
-#if ! debug_enabled
+#if !debug_enabled
 #define backend_debug_modes backend_options_on(none)
 #else
 #define backend_debug_modes backend_options_on(                         \
