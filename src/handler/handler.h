@@ -7,7 +7,7 @@
 #include <cassert>
 
 #include "common.h"
-#include "bit_common.h"
+#include "utils/bits/bits_common.h"
 #include "function.h"
 
 namespace vt {

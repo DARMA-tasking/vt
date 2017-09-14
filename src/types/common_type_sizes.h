@@ -4,7 +4,7 @@
 
 #include "utils/debug/debug_masterconfig.h"
 #include "common_types.h"
-#include "bit_common.h"
+#include "utils/bits/bits_common.h"
 
 namespace vt {
 
