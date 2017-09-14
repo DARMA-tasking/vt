@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_TRACE_DEMANGLE__
 #define __RUNTIME_TRANSPORT_TRACE_DEMANGLE__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 
 #include <string>
 #include <sstream>

@@ -1,5 +1,5 @@
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "demangle.h"
 
 namespace vt { namespace demangle {

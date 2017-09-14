@@ -4,7 +4,7 @@
 
 #include "trace_event.h"
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "registry.h"
 #include "trace.h"
 

@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_LOCATION_RECORD__
 #define __RUNTIME_TRANSPORT_LOCATION_RECORD__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "context.h"
 
 namespace vt { namespace location {

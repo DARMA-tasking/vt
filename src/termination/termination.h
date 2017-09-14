@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "epoch.h"
 #include "function.h"
 #include "term_msgs.h"

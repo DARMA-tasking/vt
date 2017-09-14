@@ -4,7 +4,7 @@
 
 #include <unordered_map>
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "function.h"
 #include "message.h"
 #include "tree.h"

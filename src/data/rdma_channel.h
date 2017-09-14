@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_RDMA_CHANNEL__
 #define __RUNTIME_TRANSPORT_RDMA_CHANNEL__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "function.h"
 #include "rdma_common.h"
 #include "rdma_channel_lookup.h"

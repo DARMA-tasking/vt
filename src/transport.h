@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT__
 #define __RUNTIME_TRANSPORT__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "tree.h"
 #include "pool.h"
 #include "envelope.h"

@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_ENVELOPE__
 #define __RUNTIME_TRANSPORT_ENVELOPE__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 
 #if backend_check_enabled(trace_enabled)
 # include "trace_common.h"

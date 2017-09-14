@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_LOCATION__
 #define __RUNTIME_TRANSPORT_LOCATION__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "context.h"
 #include "location_common.h"
 #include "location_msg.h"

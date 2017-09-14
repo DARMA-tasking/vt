@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_MESSAGE__
 #define __RUNTIME_TRANSPORT_MESSAGE__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "envelope.h"
 #include "pool.h"
 

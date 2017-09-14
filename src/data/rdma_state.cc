@@ -1,5 +1,5 @@
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "rdma.h"
 #include "rdma_state.h"
 

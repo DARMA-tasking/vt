@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_RDMA_COMMON__
 #define __RUNTIME_TRANSPORT_RDMA_COMMON__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "message.h"
 #include "utils/bits/bits_common.h"
 

@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_AUTO_REGISTRY__
 
 #include "auto_registry_common.h"
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "registry.h"
 #include "demangle.h"
 #include "trace.h"

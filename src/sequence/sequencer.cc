@@ -1,5 +1,5 @@
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "function.h"
 
 #include "seq_common.h"

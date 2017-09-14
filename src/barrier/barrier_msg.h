@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_BARRIER_MSGS__
 #define __RUNTIME_TRANSPORT_BARRIER_MSGS__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "message.h"
 
 namespace vt { namespace barrier {

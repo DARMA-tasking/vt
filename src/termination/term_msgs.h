@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_TERMINATION_MSGS__
 #define __RUNTIME_TRANSPORT_TERMINATION_MSGS__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 #include "message.h"
 #include "term_state.h"
 

@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_EPOCH__
 #define __RUNTIME_TRANSPORT_EPOCH__
 
-#include "common.h"
+#include "configs/types/types_common.h"
 
 namespace vt { namespace epoch {
 
