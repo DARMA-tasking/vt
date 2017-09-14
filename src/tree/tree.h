@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_TREE__
 #define __RUNTIME_TRANSPORT_TREE__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 
 namespace vt {
 

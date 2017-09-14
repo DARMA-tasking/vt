@@ -1,5 +1,5 @@
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "rdma_common.h"
 #include "rdma_group.h"
 

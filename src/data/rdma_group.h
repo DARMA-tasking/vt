@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_RDMA_GROUP__
 #define __RUNTIME_TRANSPORT_RDMA_GROUP__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "rdma_map.h"
 #include "rdma_region.h"
 

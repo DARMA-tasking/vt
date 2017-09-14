@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_TRACE_REGISTRY__
 #define __RUNTIME_TRANSPORT_TRACE_REGISTRY__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "context.h"
 
 #include "trace_common.h"

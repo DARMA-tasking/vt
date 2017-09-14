@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <cassert>
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "utils/bits/bits_common.h"
 #include "function.h"
 

@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_FUNCTION__
 #define __RUNTIME_TRANSPORT_FUNCTION__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "message.h"
 
 namespace vt {

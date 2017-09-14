@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_RDMA_ACTION__
 #define __RUNTIME_TRANSPORT_RDMA_ACTION__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "rdma_common.h"
 
 #include <sstream>

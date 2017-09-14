@@ -6,7 +6,7 @@
 #include <memory>
 #include <mpi.h>
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "function.h"
 #include "event.h"
 #include "registry.h"

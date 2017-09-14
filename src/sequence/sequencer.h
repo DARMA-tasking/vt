@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_SEQUENCE__
 #define __RUNTIME_TRANSPORT_SEQUENCE__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "message.h"
 #include "active.h"
 #include "termination.h"

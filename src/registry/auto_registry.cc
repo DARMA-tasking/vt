@@ -1,7 +1,7 @@
 
 #include "auto_registry_common.h"
 #include "auto_registry_interface.h"
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "registry.h"
 
 namespace vt { namespace auto_registry {

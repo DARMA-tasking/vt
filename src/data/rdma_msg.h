@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_RDMA_MSG__
 #define __RUNTIME_TRANSPORT_RDMA_MSG__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "message.h"
 #include "rdma_common.h"
 

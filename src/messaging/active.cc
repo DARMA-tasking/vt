@@ -1,5 +1,5 @@
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "active.h"
 #include "termination.h"
 

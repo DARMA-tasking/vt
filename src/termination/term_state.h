@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_TERM_STATE__
 #define __RUNTIME_TRANSPORT_TERM_STATE__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 
 namespace vt { namespace term {
 

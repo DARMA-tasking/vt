@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_POOL__
 #define __RUNTIME_TRANSPORT_POOL__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "envelope.h"
 #include "context.h"
 

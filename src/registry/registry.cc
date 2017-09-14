@@ -1,5 +1,5 @@
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "registry.h"
 
 namespace vt {

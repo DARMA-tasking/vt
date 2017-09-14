@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <cassert>
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "function.h"
 #include "handler.h"
 

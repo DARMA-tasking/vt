@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_PARAMETERIZATION__
 #define __RUNTIME_TRANSPORT_PARAMETERIZATION__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "message.h"
 #include "active.h"
 #include "auto_registry_interface.h"

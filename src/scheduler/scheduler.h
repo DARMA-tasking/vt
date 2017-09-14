@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_SCHEDULER__
 #define __RUNTIME_TRANSPORT_SCHEDULER__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 
 #include <cassert>
 #include <vector>

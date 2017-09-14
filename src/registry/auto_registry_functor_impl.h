@@ -1,7 +1,7 @@
 #if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_FUNCTOR_IMPL__
 #define __RUNTIME_TRANSPORT_AUTO_REGISTRY_FUNCTOR_IMPL__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "auto_registry_common.h"
 #include "auto_registry_functor.h"
 

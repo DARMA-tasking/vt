@@ -4,7 +4,7 @@
 
 #include <list>
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "seq_common.h"
 
 namespace vt { namespace seq {

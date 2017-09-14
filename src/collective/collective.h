@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_COLLECTIVE__
 #define __RUNTIME_TRANSPORT_COLLECTIVE__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "context.h"
 #include "registry.h"
 

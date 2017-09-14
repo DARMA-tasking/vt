@@ -2,7 +2,7 @@
 #if !defined INCLUDED_BITS_COMMON
 #define INCLUDED_BITS_COMMON
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "bits_counter.h"
 #include "bits_packer.h"
 

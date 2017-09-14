@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_RDMAHANDLER__
 #define __RUNTIME_TRANSPORT_RDMAHANDLER__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "rdma_common.h"
 
 namespace vt { namespace rdma {

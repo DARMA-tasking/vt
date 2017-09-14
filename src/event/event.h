@@ -10,7 +10,7 @@
 
 #include <mpi.h>
 
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "event_msgs.h"
 #include "context.h"
 

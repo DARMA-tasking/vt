@@ -2,7 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_CONTEXT__
 #define __RUNTIME_TRANSPORT_CONTEXT__
 
-#include "configs/types/types_common.h"
+#include "config.h"
 
 #include <memory>
 

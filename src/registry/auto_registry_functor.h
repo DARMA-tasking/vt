@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_AUTO_REGISTRY_FUNCTOR__
 
 #include "auto_registry_common.h"
-#include "configs/types/types_common.h"
+#include "config.h"
 #include "registry.h"
 
 #include <vector>
