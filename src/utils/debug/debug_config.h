@@ -102,4 +102,4 @@
     opt, meld_eval_2(debug_list_contexts_printfn_kv)  \
   )(feature, arg)
 
-#endif
+#endif /*INCLUDED_DEBUG_CONFIG*/

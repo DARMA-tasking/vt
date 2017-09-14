@@ -10,4 +10,4 @@
 
 #define print_bool(BOOL) ((BOOL) ? "true" : "false")
 
-#endif
+#endif  /*INCLUDED_DEBUG_PRINT_CONST*/
