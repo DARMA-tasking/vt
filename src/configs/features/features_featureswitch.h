@@ -25,7 +25,8 @@
     param,                 "parameterization",                          \
     handler,               "handler",                                   \
     sequence,              "sequencer",                                 \
-    trace,                 "trace"                                      \
+    trace,                 "trace",                                     \
+    location,              "location"                                   \
   )
 
 #define debug_list_debug_options                                        \

@@ -24,6 +24,11 @@ void EntityLocationCoord<EntityID>::registerEntity(EntityID const& id) {
 
   auto const& this_node = theContext->getNode();
 
+  debug_print(
+    location, node,
+    "EntityLocationCoord: registerEntity: id=%d\n", id
+  );
+
   recs_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(id),
@@ -37,6 +42,11 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
 
   assert(
     rec_iter != recs_.end() and "Entity must exist"
+  );
+
+  debug_print(
+    location, node,
+    "EntityLocationCoord: unregisterEntity: id=%d\n", id
   );
 
   recs_.erase(rec_iter);
@@ -66,7 +76,15 @@ void EntityLocationCoord<EntityID>::getLocation(
 
   auto rec_iter = recs_.find(id);
 
-  if (rec_iter == recs_.end()) {
+  auto const& no_record = rec_iter == recs_.end();
+
+  debug_print(
+    location, node,
+    "EntityLocationCoord: getLocation: id=%d, home_node=%d, no_record=%s\n",
+    id, home_node, print_bool(no_record)
+  );
+
+  if (no_record) {
     if (home_node != this_node) {
       auto const& event_id = fst_location_event_id++;
       auto msg = new LocMsgType(
@@ -80,8 +98,18 @@ void EntityLocationCoord<EntityID>::getLocation(
       // this is the home node and there is no record on this entity
     }
   } else if (rec_iter->second.isLocal()) {
+    debug_print(
+      location, node,
+      "EntityLocationCoord: getLocation: id=%d, is_local true\n", id
+    );
+
     action(this_node);
   } else if (rec_iter->second.isRemote()) {
+    debug_print(
+      location, node,
+      "EntityLocationCoord: getLocation: id=%d, is_remote true\n", id
+    );
+
     action(rec_iter->second.getRemoteNode());
   }
 }
@@ -103,7 +131,7 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
 
 template <typename EntityID>
 /*static*/ void EntityLocationCoord<EntityID>::getLocationHandler(LocMsgType* msg) {
-  auto const& event_id = msg->event_id;
+  auto const& event_id = msg->loc_event;
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
   auto const& home_node = msg->home_node;
@@ -111,11 +139,11 @@ template <typename EntityID>
 
   if (inst == LocManInstType::VirtualLocManInst) {
     auto const& loc = theLocMan->virtual_loc;
-    loc.getLocation(entity, home_node, [](NodeType node) {
+    loc->getLocation(entity, home_node, [=](NodeType node) {
       auto msg = new LocMsgType(
         LocManInstType::VirtualLocManInst, entity, event_id, ask_node, home_node
       );
-      msg->setResolved_node(node);
+      msg->setResolvedNode(node);
       theMsg->sendMsg<LocMsgType, updateLocation>(
         ask_node, msg, [=]{ delete msg; }
       );
@@ -125,13 +153,13 @@ template <typename EntityID>
 
 template <typename EntityID>
 /*static*/ void EntityLocationCoord<EntityID>::updateLocation(LocMsgType* msg) {
-  auto const& event_id = msg->event_id;
+  auto const& event_id = msg->loc_event;
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
 
   if (inst == LocManInstType::VirtualLocManInst) {
     auto const& loc = theLocMan->virtual_loc;
-    loc.updatePendingRequest(event_id, msg->resolved_node);
+    loc->updatePendingRequest(event_id, msg->resolved_node);
   }
 }
 

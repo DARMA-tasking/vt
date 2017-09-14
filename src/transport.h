@@ -22,5 +22,6 @@
 #include "sequencer.h"
 #include "trace.h"
 #include "scheduler.h"
+#include "location.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/
