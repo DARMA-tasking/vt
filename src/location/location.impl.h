@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "context.h"
+#include "active.h"
 #include "location_common.h"
 #include "location.h"
 

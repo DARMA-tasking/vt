@@ -3,6 +3,7 @@
 #define __RUNTIME_TRANSPORT_LOCATION_RECORD__
 
 #include "common.h"
+#include "context.h"
 
 namespace vt { namespace location {
 
