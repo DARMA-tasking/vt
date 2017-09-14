@@ -10,4 +10,4 @@
 #include "meld_compare.h"
 #include "meld_map.h"
 
-#endif
+#endif  /*INCLUDED_TPL_MELD_MELD*/

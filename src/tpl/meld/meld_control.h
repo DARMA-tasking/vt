@@ -92,4 +92,4 @@
 // #define meld_name_value(var) #var "=" meld_value(var)
 // #pragma message(meld_name_value(##debug_mode))
 
-#endif
+#endif  /*INCLUDED_TPL_MELD_CONTROL*/

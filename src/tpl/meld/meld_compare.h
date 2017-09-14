@@ -26,4 +26,4 @@
 // Interface for meld compare
 #define meld_token_compare _meld_token_compare
 
-#endif
+#endif  /*INCLUDED_TPL_MELD_COMPARE*/

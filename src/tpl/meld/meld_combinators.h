@@ -42,4 +42,4 @@
 #define meld_defer_3 _meld_defer_3
 #define meld_defer_4 _meld_defer_4
 
-#endif
+#endif  /*INCLUDED_TPL_MELD_COMBINATORS*/
