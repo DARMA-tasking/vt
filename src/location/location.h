@@ -22,6 +22,7 @@ struct EntityLocationCoord {
   using LocMsgType = LocationMsg<EntityID>;
 
   void registerEntity(EntityID const& id);
+  void unregisterEntity(EntityID const& id);
   void entityMigrated(EntityID const& id, NodeType const& new_node);
   void getLocation(
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
@@ -42,7 +43,7 @@ struct LocationManager {
   // @todo: something like this with the type for virtual context
   using VirtualLocMan = EntityLocationCoord<int32_t>;
 
-  VirtualLocMan virtual_loc;
+  std::unique_ptr<VirtualLocMan> virtual_loc = std::make_unique<VirtualLocMan>();
 };
 
 }} // end namespace vt::location

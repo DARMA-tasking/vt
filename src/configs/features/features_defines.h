@@ -27,6 +27,7 @@
 #define debug_handler(x) x
 #define debug_sequence(x) x
 #define debug_trace(x) x
+#define debug_location(x) x
 
 // contextual modes for debug
 #define debug_node(x) x
