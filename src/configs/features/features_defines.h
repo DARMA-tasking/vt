@@ -38,4 +38,4 @@
 #define debug_line_file(x) x
 #define debug_function(x) x
 
-#endif
+#endif  /*INCLUDED_FEATURES_DEFINES*/

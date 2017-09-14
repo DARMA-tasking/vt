@@ -13,4 +13,4 @@
 // @todo: needed anymore?
 #define debug_sentinel_token       debug_sentinel_token
 
-#endif
+#endif  /*INCLUDED_FEATURES_META_FEATURES*/

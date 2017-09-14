@@ -98,4 +98,4 @@
 // #define backend_enable_lambda(feature)                      \
 //   debug_test(feature, feature ## true  , feature ## false)
 
-#endif
+#endif  /*INCLUDED_FEATURES_ENABLE_IF*/
