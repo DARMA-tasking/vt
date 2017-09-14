@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <functional>
 
-#include "utils/debug/debug_masterconfig.h"
+#include "configs/debug/debug_masterconfig.h"
 
 namespace vt {
 

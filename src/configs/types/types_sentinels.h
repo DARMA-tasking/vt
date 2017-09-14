@@ -2,7 +2,7 @@
 #if !defined INCLUDED_TYPES_SENTINELS
 #define INCLUDED_TYPES_SENTINELS
 
-#include "utils/debug/debug_masterconfig.h"
+#include "configs/debug/debug_masterconfig.h"
 #include "types_type.h"
 
 namespace vt {
