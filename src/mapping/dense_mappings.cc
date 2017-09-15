@@ -9,29 +9,34 @@
 
 namespace vt { namespace mapping {
 
-NodeType dense1DRoundRobinMap(
-  Index1D const& idx, Index1D const&, NodeType const& num_nodes
-) {
-  return idx.x() % num_nodes;
+// Default round robin mappings
+NodeType dense1DRoundRobinMap(Idx1DRef idx, Idx1DRef max_idx, NodeRef nnodes) {
+  return idx.x() % nnodes;
 }
 
-
-NodeType dense1DBlockMap(
-  Index1D const& idx, Index1D const& max_idx, NodeType const& num_nodes
-) {
-  return denseBlockMap<Index1D, 1>(idx, max_idx, num_nodes);
+NodeType dense2DRoundRobinMap(Idx2DRef idx, Idx2DRef max_idx, NodeRef nnodes) {
+  using IndexElmType = typename Index2D::DenseIndexType;
+  auto const& lin_idx = linearizeDenseIndex<IndexElmType, 2>(idx, max_idx);
+  return lin_idx % nnodes;
 }
 
-NodeType dense3DBlockMap(
-  Index2D const& idx, Index2D const& max_idx, NodeType const& num_nodes
-) {
-  return denseBlockMap<Index2D, 2>(idx, max_idx, num_nodes);
+NodeType dense3DRoundRobinMap(Idx3DRef idx, Idx3DRef max_idx, NodeRef nnodes) {
+  using IndexElmType = typename Index3D::DenseIndexType;
+  auto const& lin_idx = linearizeDenseIndex<IndexElmType, 3>(idx, max_idx);
+  return lin_idx % nnodes;
 }
 
-NodeType dense2DBlockMap(
-  Index3D const& idx, Index3D const& max_idx, NodeType const& num_nodes
-) {
-  return denseBlockMap<Index3D, 3>(idx, max_idx, num_nodes);
+// Default block mappings
+NodeType dense1DBlockMap(Idx1DRef idx, Idx1DRef max_idx, NodeRef nnodes) {
+  return denseBlockMap<Index1D, 1>(idx, max_idx, nnodes);
+}
+
+NodeType dense2DBlockMap(Idx2DRef idx, Idx2DRef max_idx, NodeRef nnodes) {
+  return denseBlockMap<Index2D, 2>(idx, max_idx, nnodes);
+}
+
+NodeType dense3DBlockMap(Idx3DRef idx, Idx3DRef max_idx, NodeRef nnodes) {
+  return denseBlockMap<Index3D, 3>(idx, max_idx, nnodes);
 }
 
 

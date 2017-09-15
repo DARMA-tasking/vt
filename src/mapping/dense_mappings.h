@@ -16,31 +16,32 @@ NodeType blockMapDenseFlatIndex(
   PhysicalType const& num_resources
 );
 
-template <typename IndexType, typename IndexElmType>
-IndexElmType flattenIndexND(IndexType const& idx, IndexType const& max);
-
-NodeType dense1DRoundRobinMap(Index1D const& idx, NodeType const& num_nodes);
-NodeType defaultDenseIndex1DMap(Index1D const& idx, NodeType const& num_nodes);
-
-NodeType dense1DRoundRobinMap(
-  Index1D const& idx, Index1D const&, NodeType const& num_nodes
+template <typename Idx, index::NumDimensionsType ndim>
+Idx linearizeDenseIndex(
+  DenseIndex<Idx, ndim> const& idx, DenseIndex<Idx, ndim> const& max_idx
 );
 
-template <typename Index, index::NumDimensionsType ndim>
-NodeType denseBlockMap(
-  Index const& idx, Index const& max_idx, NodeType const& num_nodes
-);
+template <typename Index>
+using IdxRef = Index const&;
+using Idx1DRef = Index1D const&;
+using Idx2DRef = Index2D const&;
+using Idx3DRef = Index3D const&;
+using NodeRef = NodeType const&;
 
-NodeType dense1DBlockMap(
-  Index1D const& idx, Index1D const& max_idx, NodeType const& num_nodes
-);
-NodeType dense3DBlockMap(
-  Index2D const& idx, Index2D const& max_idx, NodeType const& num_nodes
-);
-NodeType dense2DBlockMap(
-  Index3D const& idx, Index3D const& max_idx, NodeType const& num_nodes
-);
+template <typename Idx, index::NumDimensionsType ndim>
+NodeType denseBlockMap(IdxRef<Idx> idx, IdxRef<Idx> max_idx, NodeRef nnodes);
 
+NodeType defaultDenseIndex1DMap(Idx1DRef idx, Idx1DRef max_idx, NodeRef nnodes);
+NodeType defaultDenseIndex2DMap(Idx2DRef idx, Idx2DRef max_idx, NodeRef nnodes);
+NodeType defaultDenseIndex3DMap(Idx3DRef idx, Idx3DRef max_idx, NodeRef nnodes);
+
+NodeType dense1DRoundRobinMap(Idx1DRef idx, Idx1DRef max_idx, NodeRef nnodes);
+NodeType dense2DRoundRobinMap(Idx2DRef idx, Idx2DRef max_idx, NodeRef nnodes);
+NodeType dense3DRoundRobinMap(Idx3DRef idx, Idx3DRef max_idx, NodeRef nnodes);
+
+NodeType dense1DBlockMap(Idx1DRef idx, Idx1DRef max_idx, NodeRef nnodes);
+NodeType dense2DBlockMap(Idx2DRef idx, Idx2DRef max_idx, NodeRef nnodes);
+NodeType dense3DBlockMap(Idx3DRef idx, Idx3DRef max_idx, NodeRef nnodes);
 
 }} // end namespace vt::location
 

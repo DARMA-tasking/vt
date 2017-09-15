@@ -46,17 +46,15 @@ Idx linearizeDenseIndex(
   return val;
 }
 
-template <typename Index, index::NumDimensionsType ndim>
-NodeType denseBlockMap(
-  Index const& idx, Index const& max_idx, NodeType const& num_nodes
-) {
-  using IndexElmType = typename Index::DenseIndexType;
+template <typename Idx, index::NumDimensionsType ndim>
+NodeType denseBlockMap(IdxRef<Idx> idx, IdxRef<Idx> max_idx, NodeRef nnodes) {
+  using IndexElmType = typename Idx::DenseIndexType;
 
   auto const& total_elems = max_idx.getSize();
   auto const& flat_idx = linearizeDenseIndex<IndexElmType, ndim>(idx, max_idx);
 
   return blockMapDenseFlatIndex<IndexElmType, NodeType>(
-    flat_idx, total_elems, num_nodes
+    flat_idx, total_elems, nnodes
   );
 }
 
