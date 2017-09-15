@@ -11,8 +11,11 @@ namespace vt { namespace index {
 struct BaseIndex {
   using IndexSizeType = size_t;
 
+  // An index must have a default constructor
+  BaseIndex() = default;
+
   // An index must have a copy constructor
-  BaseIndex(BaseIndex const&);
+  BaseIndex(BaseIndex const&) = default;
 
   // An index must have equality defined
   bool operator==(BaseIndex const& other) const;

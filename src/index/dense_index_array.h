@@ -20,6 +20,7 @@ struct DenseIndexArray : BaseIndex {
 
   using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
   using DenseArraySizeType = uint64_t;
+  using DenseIndexType = IndexType;
 
   std::array<IndexType, ndim> dims = {};
 
@@ -28,9 +29,9 @@ struct DenseIndexArray : BaseIndex {
   DenseIndexArray(DenseIndexArray&&) = default;
 
   template <typename... Idxs>
-  explicit DenseIndexArray(Idxs&&... init) : dims({init...}) { }
+  explicit DenseIndexArray(Idxs&&... init) : BaseIndex(), dims({init...}) { }
 
-  DenseIndexArray(dense_single_value_tag, IndexType const& init_value) {
+  DenseIndexArray(dense_single_value_tag, IndexType const& init_value) : BaseIndex() {
     for (int i = 0; i < ndim; i++) {
       dims[i] = init_value;
     }

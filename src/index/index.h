@@ -15,4 +15,15 @@ using Index3D = DenseIndexArray<int32_t, 3>;
 
 }} // end namespace vt::index
 
+namespace vt {
+
+template <typename IndexType, index::NumDimensionsType ndim>
+using DenseIndex = index::DenseIndexArray<IndexType, ndim>;
+
+using Index1D = index::Index1D;
+using Index2D = index::Index2D;
+using Index3D = index::Index3D;
+
+}
+
 #endif /*__RUNTIME_TRANSPORT_INDEX__*/
