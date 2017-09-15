@@ -45,13 +45,19 @@ struct EntityLocationCoord {
   void printCurrentCache() const;
 
   template <typename MessageT>
-  void routeMsgEager(
-    EntityID const& id, NodeType const& home_node, MessageT* msg
-  );
-
-  template <typename MessageT>
   void routeMsg(
     EntityID const& id, NodeType const& home_node, MessageT* m
+  );
+
+private:
+  template <typename MessageT>
+  static void msgHandler(MessageT* msg);
+  static void getLocationHandler(LocMsgType* msg);
+  static void updateLocation(LocMsgType* msg);
+
+  template <typename MessageT>
+  void routeMsgEager(
+    EntityID const& id, NodeType const& home_node, MessageT* msg
   );
 
   template <typename MessageT>
@@ -60,12 +66,6 @@ struct EntityLocationCoord {
     MessageT* msg
   );
 
-  template <typename MessageT>
-  static void msgHandler(MessageT* msg);
-  static void getLocationHandler(LocMsgType* msg);
-  static void updateLocation(LocMsgType* msg);
-
-private:
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
   void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
 
