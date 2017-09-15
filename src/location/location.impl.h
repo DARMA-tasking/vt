@@ -183,7 +183,7 @@ void EntityLocationCoord<EntityID>::getLocation(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
-  EntityID const& id, NodeType const& home_node, EntityMsgType<MessageT>* msg
+  EntityID const& id, NodeType const& home_node, MessageT* msg
 ) {
   // set field for location routed message
   msg->entity_id = id;
@@ -191,13 +191,20 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
   auto const& msg_size = sizeof(*msg);
 
+  debug_print(
+    location, node,
+    "routeMsg: id=%d, home_node=%d, msg=%p, msg_size=%ld\n",
+    id, home_node, msg, msg_size
+  );
+
   if (true or msg_size > small_msg_max_size) {
     // non-eager protocol: get location first then send message after resolution
     getLocation(id, home_node, [=](NodeType node) {
       auto const& this_node = theContext->getNode();
       if (node != this_node) {
+        auto entity_msg = static_cast<EntityMsgType<MessageT>*>(msg);
         // send to the node discovered by the location manager
-        theMsg->sendMsg<EntityMsgType<MessageT>, msgHandler>(node, msg);
+        theMsg->sendMsg<MessageT, msgHandler>(node, entity_msg);
       } else {
         auto trigger_msg_handler_action = [=](EntityID const& id){
           auto reg_han_iter = local_registered_msg_han_.find(id);
@@ -258,11 +265,12 @@ void EntityLocationCoord<EntityID>::printCurrentCache() const {
 
 template <typename EntityID>
 template <typename MessageT>
-/*static*/ void EntityLocationCoord<EntityID>::msgHandler(
-  EntityMsgType<MessageT>* msg
-) {
+/*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT* msg) {
   auto const& entity_id = msg->entity_id;
   auto const& home_node = msg->home_node;
+
+  // increase the reference count
+  messageRef(msg);
 
   auto const& loc = theLocMan->virtual_loc;
   loc->routeMsg(entity_id, home_node, msg);

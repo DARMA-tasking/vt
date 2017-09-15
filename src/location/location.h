@@ -42,22 +42,21 @@ struct EntityLocationCoord {
   void getLocation(
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
   );
-  void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
   void printCurrentCache() const;
 
   template <typename MessageT>
   void routeMsg(
-    EntityID const& id, NodeType const& home_node, EntityMsgType<MessageT>* m
+    EntityID const& id, NodeType const& home_node, MessageT* m
   );
 
+  template <typename MessageT>
+  static void msgHandler(MessageT* msg);
   static void getLocationHandler(LocMsgType* msg);
   static void updateLocation(LocMsgType* msg);
 
-  template <typename MessageT>
-  static void msgHandler(EntityMsgType<MessageT>* msg);
-
 private:
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
+  void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
 
 private:
   // message handlers for local registrations
