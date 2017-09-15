@@ -42,7 +42,7 @@ EventType ActiveMessenger::sendDataDirect(
 
   debug_print(
     active, node,
-    "send_msg_direct: dest=%d, handler=%d, is_bcast=%s\n",
+    "sendMsgDirect: dest=%d, handler=%d, is_bcast=%s\n",
     dest, envelopeGetHandler(msg->env), print_bool(is_bcast)
   );
 
@@ -115,9 +115,9 @@ EventType ActiveMessenger::sendDataDirect(
 
       debug_print(
         active, node,
-        "broadcast_msg: sending to child1=%d, child2=%d, broadcast_root=%d, "
+        "broadcastMsg: sending to c1=%d, c2=%d, bcast_root=%d, handler=%d, "
         "event_id=%lld\n",
-        child1, child2, dest, event_id1
+        child1, child2, dest, envelopeGetHandler(msg->env), event_id1
       );
 
       if (not is_term) {
@@ -143,9 +143,9 @@ EventType ActiveMessenger::sendDataDirect(
 
       debug_print(
         active, node,
-        "broadcast_msg: sending to child2=%d, child1=%d, broadcast_root=%d, "
+        "broadcastMsg: sending to c2=%d, c1=%d, bcast_root=%d, handler=%d, "
         "event_id=%lld\n",
-        child2, child1, dest, event_id2
+        child2, child1, dest, envelopeGetHandler(msg->env), event_id2
       );
 
       if (not is_term) {
@@ -184,8 +184,8 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   debug_print(
     active, node,
-    "%d: send_data: ptr=%p, num_bytes=%lld dest=%d, tag=%d, send_tag=%d\n",
-    this_node, data_ptr, num_bytes, dest, tag, send_tag
+    "sendData: ptr=%p, num_bytes=%lld dest=%d, tag=%d, send_tag=%d\n",
+    data_ptr, num_bytes, dest, tag, send_tag
   );
 
   MPI_Isend(
@@ -264,8 +264,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
         debug_print(
           active, node,
-          "%d: recv_data_msg_buffer: continuation user_buf=%p, buf=%p, tag=%d\n",
-          this_node, user_buf, buf, tag
+          "recvDataMsgBuffer: continuation user_buf=%p, buf=%p, tag=%d\n",
+          user_buf, buf, tag
         );
 
         if (user_buf == nullptr) {
@@ -292,7 +292,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
   } else {
     debug_print(
       active, node,
-      "recv_data_msg_buffer: node=%d, tag=%d, enqueue=%s\n",
+      "recvDataMsgBuffer: node=%d, tag=%d, enqueue=%s\n",
       node, tag, print_bool(enqueue)
     );
 
@@ -345,7 +345,7 @@ bool ActiveMessenger::deliverActiveMsg(
 
   debug_print(
     active, node,
-    "deliver_active_msg: handler=%d, is_auto=%s, is_functor=%s\n",
+    "deliverActiveMsg: handler=%d, is_auto=%s, is_functor=%s\n",
     handler, print_bool(is_auto), print_bool(is_functor)
   );
 
