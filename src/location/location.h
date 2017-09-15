@@ -7,19 +7,27 @@
 #include "location_common.h"
 #include "location_msg.h"
 #include "location_record.h"
+#include "location_cache.h"
+#include "location_pending.h"
 
 #include <cstdint>
 #include <memory>
-#include <unordered_map>
+#include <unordered_set>
 
 namespace vt { namespace location {
 
 template <typename EntityID>
 struct EntityLocationCoord {
-  using LocRecType = LocRecord;
-  using RecContainerType = std::unordered_map<EntityID, LocRecType>;
-  using ActionContainerType = std::unordered_map<LocEventID, NodeActionType>;
+  using LocRecType = LocRecord<EntityID>;
+  using LocCacheType = LocationCache<EntityID, LocRecType>;
+  using LocalRegisteredContType = std::unordered_set<EntityID>;
+  using ActionListType = std::list<NodeActionType>;
+  using PendingType = PendingLocationLookup<EntityID>;
+  using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
+  using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
   using LocMsgType = LocationMsg<EntityID>;
+
+  EntityLocationCoord() : recs_(default_max_cache_size) { }
 
   void registerEntity(EntityID const& id);
   void unregisterEntity(EntityID const& id);
@@ -28,15 +36,22 @@ struct EntityLocationCoord {
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
   );
   void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
+  void printCurrentCache() const;
 
   static void getLocationHandler(LocMsgType* msg);
   static void updateLocation(LocMsgType* msg);
 
 private:
-  // @todo: this should be only allowed to grow so large
-  RecContainerType recs_;
+  LocalRegisteredContType local_registered_;
 
+  // the cached location records
+  LocCacheType recs_;
+
+  // hold pending actions that this location manager is waiting on
   ActionContainerType pending_actions_;
+
+  // pending lookup requests where this manager is the home node
+  PendingLocLookupsType pending_lookups_;
 };
 
 struct LocationManager {

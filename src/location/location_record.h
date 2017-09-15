@@ -5,19 +5,28 @@
 #include "config.h"
 #include "context.h"
 
+#include <iostream>
+
 namespace vt { namespace location {
 
-enum class eLocState : int8_t {
+enum class eLocState : int32_t {
   Local = 1,
   Remote = 2,
   Invalid = -1
 };
 
+#define PRINT_LOC_STATE(state)                          \
+  ((state) == eLocState::Local ? "eLocState::Local" :   \
+   ((state) == eLocState::Remote ? "eLocState::Remote" : \
+    "eLocState::Invalid"))
+
+template <typename EntityID>
 struct LocRecord {
   using LocStateType = eLocState;
 
-  LocRecord(LocStateType const& in_state, NodeType const& in_node)
-    : state_(in_state), cur_node_(in_node)
+  LocRecord(
+    EntityID const& in_id, LocStateType const& in_state, NodeType const& in_node
+  ) : id_(in_id), state_(in_state), cur_node_(in_node)
   { }
 
   void updateNode(NodeType const& new_node) {
@@ -42,10 +51,33 @@ struct LocRecord {
     return cur_node_;
   }
 
+  EntityID getEntityID() const {
+    return id_;
+  }
+
+  template <typename U>
+  friend std::ostream& operator<<(std::ostream& os, LocRecord<U> const& rec);
+
 private:
+  EntityID id_;
   LocStateType state_ = eLocState::Invalid;
   NodeType cur_node_ = uninitialized_destination;
 };
+
+template <typename EntityID>
+std::ostream& operator<<(std::ostream& os, LocRecord<EntityID> const& rec) {
+  auto state_val = (int32_t)rec.state_;
+  os << "id=" << rec.id_<< ", "
+     << "state=" << rec.state_ << ", "
+     << "state=" << state_val << ", "
+     << "cur_node_=" << rec.cur_node_;
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, eLocState const& state) {
+  os << PRINT_LOC_STATE(state);
+  return os;
+}
 
 }} // end namespace vt::location
 

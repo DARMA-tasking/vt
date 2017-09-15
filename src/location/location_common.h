@@ -17,6 +17,9 @@ enum class eLocationManagerInst : int8_t {
   InvalidLocManInst = -1
 };
 
+using LocationSizeType = size_t;
+static constexpr LocationSizeType const default_max_cache_size = 128;
+
 using LocManInstType = eLocationManagerInst;
 
 }} // end namespace vt::location
