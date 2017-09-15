@@ -9,10 +9,12 @@
 #include "location_record.h"
 #include "location_cache.h"
 #include "location_pending.h"
+#include "location_entity.h"
 
 #include <cstdint>
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 
 namespace vt { namespace location {
 
@@ -20,16 +22,21 @@ template <typename EntityID>
 struct EntityLocationCoord {
   using LocRecType = LocRecord<EntityID>;
   using LocCacheType = LocationCache<EntityID, LocRecType>;
+  using LocEntityMsg = LocEntity<EntityID>;
   using LocalRegisteredContType = std::unordered_set<EntityID>;
+  using LocalRegisteredMsgContType = std::unordered_map<EntityID, LocEntityMsg>;
   using ActionListType = std::list<NodeActionType>;
   using PendingType = PendingLocationLookup<EntityID>;
   using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
   using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
   using LocMsgType = LocationMsg<EntityID>;
 
+  template <typename MessageT>
+  using EntityMsgType = EntityMsg<EntityID, MessageT>;
+
   EntityLocationCoord() : recs_(default_max_cache_size) { }
 
-  void registerEntity(EntityID const& id);
+  void registerEntity(EntityID const& id, LocMsgActionType msg_action = nullptr);
   void unregisterEntity(EntityID const& id);
   void entityMigrated(EntityID const& id, NodeType const& new_node);
   void getLocation(
@@ -38,10 +45,25 @@ struct EntityLocationCoord {
   void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
   void printCurrentCache() const;
 
+  template <typename MessageT>
+  void routeMsg(
+    EntityID const& id, NodeType const& home_node, EntityMsgType<MessageT>* m
+  );
+
   static void getLocationHandler(LocMsgType* msg);
   static void updateLocation(LocMsgType* msg);
 
+  template <typename MessageT>
+  static void msgHandler(EntityMsgType<MessageT>* msg);
+
 private:
+  void insertPendingEntityAction(EntityID const& id, NodeActionType action);
+
+private:
+  // message handlers for local registrations
+  LocalRegisteredMsgContType local_registered_msg_han_;
+
+  // registered entities
   LocalRegisteredContType local_registered_;
 
   // the cached location records

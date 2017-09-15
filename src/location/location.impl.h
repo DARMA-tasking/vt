@@ -6,6 +6,7 @@
 #include "context.h"
 #include "active.h"
 #include "location_common.h"
+#include "location_entity.h"
 #include "location.h"
 
 #include <cstdint>
@@ -15,7 +16,9 @@
 namespace vt { namespace location {
 
 template <typename EntityID>
-void EntityLocationCoord<EntityID>::registerEntity(EntityID const& id) {
+void EntityLocationCoord<EntityID>::registerEntity(
+  EntityID const& id, LocMsgActionType msg_action
+) {
   auto const& this_node = theContext->getNode();
   auto reg_iter = local_registered_.find(id);
 
@@ -32,6 +35,28 @@ void EntityLocationCoord<EntityID>::registerEntity(EntityID const& id) {
   local_registered_.insert(id);
 
   recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+
+  if (msg_action != nullptr) {
+    assert(
+      local_registered_msg_han_.find(id) == local_registered_msg_han_.end() and
+      "Entitiy should not exist in local registered msg handler"
+    );
+    local_registered_msg_han_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(id),
+      std::forward_as_tuple(LocEntityMsg{id,msg_action})
+    );
+  }
+
+  // trigger any pending actions upon registration
+  auto pending_lookup_iter =  pending_lookups_.find(id);
+
+  if (pending_lookup_iter != pending_lookups_.end()) {
+    for (auto&& pending_action : pending_lookup_iter->second) {
+      pending_action(id);
+    }
+    pending_lookups_.erase(pending_lookup_iter);
+  }
 }
 
 template <typename EntityID>
@@ -54,6 +79,11 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
   if (rec_exists) {
     recs_.remove(id);
   }
+
+  auto reg_msg_han_iter = local_registered_msg_han_.find(id);
+  if (reg_msg_han_iter != local_registered_msg_han_.end()) {
+    local_registered_msg_han_.erase(reg_msg_han_iter);
+  }
 }
 
 template <typename EntityID>
@@ -67,6 +97,24 @@ void EntityLocationCoord<EntityID>::entityMigrated(
   }
 
   recs_.insert(id, LocRecType{id, eLocState::Remote, new_node});
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::insertPendingEntityAction(
+  EntityID const& id, NodeActionType action
+) {
+  // this is the home node and there is no record on this entity
+  auto pending_iter = pending_lookups_.find(id);
+  if (pending_iter != pending_lookups_.end()) {
+    pending_iter->second.push_back(action);
+  } else {
+    pending_lookups_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(id),
+      std::forward_as_tuple(ActionListType{action})
+    );
+  }
+
 }
 
 template <typename EntityID>
@@ -112,16 +160,7 @@ void EntityLocationCoord<EntityID>::getLocation(
         );
       } else {
         // this is the home node and there is no record on this entity
-        auto pending_iter = pending_lookups_.find(id);
-        if (pending_iter != pending_lookups_.end()) {
-          pending_iter->second.push_back(action);
-        } else {
-          pending_lookups_.emplace(
-            std::piecewise_construct,
-            std::forward_as_tuple(id),
-            std::forward_as_tuple(ActionListType{action})
-          );
-        }
+        insertPendingEntityAction(id, action);
       }
     } else {
       auto const& rec = recs_.get(id);
@@ -138,6 +177,51 @@ void EntityLocationCoord<EntityID>::getLocation(
         action(rec.getRemoteNode());
       }
     }
+  }
+}
+
+template <typename EntityID>
+template <typename MessageT>
+void EntityLocationCoord<EntityID>::routeMsg(
+  EntityID const& id, NodeType const& home_node, EntityMsgType<MessageT>* msg
+) {
+  // set field for location routed message
+  msg->entity_id = id;
+  msg->home_node = home_node;
+
+  auto const& msg_size = sizeof(*msg);
+
+  if (true or msg_size > small_msg_max_size) {
+    // non-eager protocol: get location first then send message after resolution
+    getLocation(id, home_node, [=](NodeType node) {
+      auto const& this_node = theContext->getNode();
+      if (node != this_node) {
+        // send to the node discovered by the location manager
+        theMsg->sendMsg<EntityMsgType<MessageT>, msgHandler>(node, msg);
+      } else {
+        auto trigger_msg_handler_action = [=](EntityID const& id){
+          auto reg_han_iter = local_registered_msg_han_.find(id);
+          assert(
+            reg_han_iter != local_registered_msg_han_.end() and
+            "Message handler must exist for location manager routed msg"
+          );
+          reg_han_iter->second.applyRegisteredActionMsg(msg);
+        };
+
+        auto reg_iter = local_registered_.find(id);
+        if (reg_iter != local_registered_.end()) {
+          trigger_msg_handler_action(id);
+        } else {
+          // buffer the message here, the entity will be registered in the future
+          insertPendingEntityAction(id, [=](NodeType) {
+            trigger_msg_handler_action(id);
+          });
+        }
+      }
+    });
+  } else {
+    // @todo implement the eager protocol
+    assert(0 and "Not implemented yet");
   }
 }
 
@@ -170,6 +254,18 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::printCurrentCache() const {
   recs_.printCache();
+}
+
+template <typename EntityID>
+template <typename MessageT>
+/*static*/ void EntityLocationCoord<EntityID>::msgHandler(
+  EntityMsgType<MessageT>* msg
+) {
+  auto const& entity_id = msg->entity_id;
+  auto const& home_node = msg->home_node;
+
+  auto const& loc = theLocMan->virtual_loc;
+  loc->routeMsg(entity_id, home_node, msg);
 }
 
 template <typename EntityID>

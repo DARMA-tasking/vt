@@ -30,6 +30,16 @@ struct LocationMsg : vt::Message {
   }
 };
 
+template <typename EntityID, typename ActiveMessageT>
+struct EntityMsg : ActiveMessageT {
+  EntityID entity_id;
+  NodeType home_node = uninitialized_destination;
+
+  explicit EntityMsg(EntityID const& in_entity_id, NodeType const& in_home_node)
+    : ActiveMessageT(), entity_id(in_entity_id), home_node(in_home_node)
+  { }
+};
+
 }} // end namespace vt::location
 
 #endif /*__RUNTIME_TRANSPORT_LOCATION_MSG__*/
