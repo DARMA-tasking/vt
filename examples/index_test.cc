@@ -1,4 +1,6 @@
 
+#include <cassert>
+
 #include "transport.h"
 
 using namespace vt;
@@ -9,12 +11,6 @@ int main(int argc, char** argv) {
 
   auto const& my_node = theContext->getNode();
   auto const& num_nodes = theContext->getNumNodes();
-
-  if (num_nodes == 1) {
-    fprintf(stderr, "Please run with at least two ranks!\n");
-    fprintf(stderr, "\t mpirun-mpich-clang -n 2 %s\n", argv[0]);
-    exit(1);
-  }
 
   index::Index2D idx(2, 3);
   index::Index2D idx2(5, 10);
@@ -29,6 +25,33 @@ int main(int argc, char** argv) {
     "idx=%s, idx2=%s, idx3=%s, size=%ld, node=%d\n",
     idx.toString().c_str(), idx2.toString().c_str(), idx3.toString().c_str(),
     sizeof(idx), node
+  );
+
+  int const dim1 = 4, dim2 = 5;
+  index::Index2D idx_a(2, 2);
+  index::Index2D idx_a_max(dim1, dim2);
+
+  auto node_a = mapping::dense2DBlockMap(idx_a, idx_a_max, num_nodes);
+
+  int cur_val = 0;
+  for (int i = 0; i < dim1; i++) {
+    for (int j = 0; j < dim2; j++) {
+      auto cur_idx = index::Index2D(i,j);
+      auto lin_idx = mapping::linearizeDenseIndex(cur_idx, idx_a_max);
+      printf(
+        "idx=%s, max=%s, lin=%d\n",
+        cur_idx.toString().c_str(), idx_a_max.toString().c_str(), lin_idx
+      );
+      assert(lin_idx == cur_val);
+      cur_val++;
+    }
+  }
+
+  auto const& idx_a_str = idx_a.toString().c_str();
+  auto const& idx_a_max_str = idx_a_max.toString().c_str();
+
+  printf(
+    "idx_a=%s, indx_a_max=%s, node=%d\n", idx_a_str, idx_a_max_str, node_a
   );
 
   while (1) {
