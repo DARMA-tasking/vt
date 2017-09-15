@@ -114,7 +114,48 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
       std::forward_as_tuple(ActionListType{action})
     );
   }
+}
 
+template <typename EntityID>
+template <typename MessageT>
+void EntityLocationCoord<EntityID>::routeMsgEager(
+  EntityID const& id, NodeType const& home_node, MessageT* msg
+) {
+  auto const& this_node = theContext->getNode();
+
+  NodeType route_to_node = uninitialized_destination;
+
+  auto reg_iter = local_registered_.find(id);
+
+  if (reg_iter != local_registered_.end()) {
+    recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+    route_to_node = this_node;
+  } else {
+    bool const& rec_exists = recs_.exists(id);
+
+    if (not rec_exists) {
+      if (home_node != this_node) {
+        route_to_node = home_node;
+      } else {
+        route_to_node = this_node;
+      }
+    } else {
+      auto const& rec = recs_.get(id);
+
+      if (rec.isLocal()) {
+        route_to_node = this_node;
+      } else if (rec.isRemote()) {
+        route_to_node = rec.getRemoteNode();
+      }
+    }
+  }
+
+  assert(
+    route_to_node != uninitialized_destination and
+    "Node to route to must be set by this point"
+  );
+
+  return routeMsgNode<MessageT>(id, home_node, route_to_node, msg);
 }
 
 template <typename EntityID>
@@ -182,6 +223,39 @@ void EntityLocationCoord<EntityID>::getLocation(
 
 template <typename EntityID>
 template <typename MessageT>
+void EntityLocationCoord<EntityID>::routeMsgNode(
+  EntityID const& id, NodeType const& home_node, NodeType const& to_node,
+  MessageT* msg
+) {
+  auto const& this_node = theContext->getNode();
+  if (to_node != this_node) {
+    auto entity_msg = static_cast<EntityMsgType<MessageT>*>(msg);
+    // send to the node discovered by the location manager
+    theMsg->sendMsg<MessageT, msgHandler>(to_node, entity_msg);
+  } else {
+    auto trigger_msg_handler_action = [=](EntityID const& id){
+      auto reg_han_iter = local_registered_msg_han_.find(id);
+      assert(
+        reg_han_iter != local_registered_msg_han_.end() and
+        "Message handler must exist for location manager routed msg"
+      );
+      reg_han_iter->second.applyRegisteredActionMsg(msg);
+    };
+
+    auto reg_iter = local_registered_.find(id);
+    if (reg_iter != local_registered_.end()) {
+      trigger_msg_handler_action(id);
+    } else {
+      // buffer the message here, the entity will be registered in the future
+      insertPendingEntityAction(id, [=](NodeType) {
+        trigger_msg_handler_action(id);
+      });
+    }
+  }
+}
+
+template <typename EntityID>
+template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
   EntityID const& id, NodeType const& home_node, MessageT* msg
 ) {
@@ -190,45 +264,22 @@ void EntityLocationCoord<EntityID>::routeMsg(
   msg->home_node = home_node;
 
   auto const& msg_size = sizeof(*msg);
+  bool const& is_large_msg = msg_size > small_msg_max_size;
+  bool const& use_eager = not is_large_msg;
 
   debug_print(
     location, node,
-    "routeMsg: id=%d, home_node=%d, msg=%p, msg_size=%ld\n",
-    id, home_node, msg, msg_size
+    "routeMsg: id=%d, home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
+    id, home_node, msg_size, print_bool(is_large_msg), print_bool(use_eager)
   );
 
-  if (true or msg_size > small_msg_max_size) {
+  if (use_eager) {
+    routeMsgEager<MessageT>(id, home_node, msg);
+  } else {
     // non-eager protocol: get location first then send message after resolution
     getLocation(id, home_node, [=](NodeType node) {
-      auto const& this_node = theContext->getNode();
-      if (node != this_node) {
-        auto entity_msg = static_cast<EntityMsgType<MessageT>*>(msg);
-        // send to the node discovered by the location manager
-        theMsg->sendMsg<MessageT, msgHandler>(node, entity_msg);
-      } else {
-        auto trigger_msg_handler_action = [=](EntityID const& id){
-          auto reg_han_iter = local_registered_msg_han_.find(id);
-          assert(
-            reg_han_iter != local_registered_msg_han_.end() and
-            "Message handler must exist for location manager routed msg"
-          );
-          reg_han_iter->second.applyRegisteredActionMsg(msg);
-        };
-
-        auto reg_iter = local_registered_.find(id);
-        if (reg_iter != local_registered_.end()) {
-          trigger_msg_handler_action(id);
-        } else {
-          // buffer the message here, the entity will be registered in the future
-          insertPendingEntityAction(id, [=](NodeType) {
-            trigger_msg_handler_action(id);
-          });
-        }
-      }
+      routeMsgNode<MessageT>(id, home_node, node, msg);
     });
-  } else {
-    // @todo implement the eager protocol
-    assert(0 and "Not implemented yet");
   }
 }
 

@@ -45,8 +45,19 @@ struct EntityLocationCoord {
   void printCurrentCache() const;
 
   template <typename MessageT>
+  void routeMsgEager(
+    EntityID const& id, NodeType const& home_node, MessageT* msg
+  );
+
+  template <typename MessageT>
   void routeMsg(
     EntityID const& id, NodeType const& home_node, MessageT* m
+  );
+
+  template <typename MessageT>
+  void routeMsgNode(
+    EntityID const& id, NodeType const& home_node, NodeType const& to_node,
+    MessageT* msg
   );
 
   template <typename MessageT>
