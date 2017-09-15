@@ -1,8 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TRACE_DEMANGLE__
-#define __RUNTIME_TRANSPORT_TRACE_DEMANGLE__
-
-#include "config.h"
+#if !defined INCLUDED_DEMANGLE
+#define INCLUDED_DEMANGLE
 
 #include <string>
 #include <sstream>
@@ -14,31 +12,35 @@
 #include <cxxabi.h>
 #include <assert.h>
 
-namespace vt { namespace demangle {
+#include "config.h"
+
+
+namespace vt {
+namespace demangle {
 
 using StrContainerType = std::vector<std::string>;
 
 struct DemanglerUtils {
-  template <class T>
+  template<class T>
   static inline std::string getTypeName() {
     return typeid(T).name();
   }
 
   static inline std::string demangle(std::string const& name) {
     int status = -1;
-    char* result = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
+    char *result = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
     return status == 0 ? std::string(result) : name;
   }
 
-  template <typename T>
+  template<typename T>
   static inline std::string getDemangledType() {
     auto const& type = getTypeName<T>();
     return demangle(type);
   }
 
-  template <typename StringOut>
+  template<typename StringOut>
   static inline void splitString(
-    std::string const& s, char delim, StringOut result
+      std::string const& s, char delim, StringOut result
   ) {
     std::stringstream ss;
     ss.str(s);
@@ -49,7 +51,7 @@ struct DemanglerUtils {
   }
 
   static inline StrContainerType splitString(
-    std::string const& str, char delim
+      std::string const& str, char delim
   ) {
     StrContainerType elems;
     splitString(str, delim, std::back_inserter(elems));
@@ -91,10 +93,11 @@ struct ActiveFunctorDemangler {
   using UtilType = DemanglerUtils;
 
   static StrParsedOutType parseActiveFunctorName(
-    std::string const& name, std::string const& args
+      std::string const& name, std::string const& args
   );
 };
 
-}} //end namespace vt::demangle
+}  // end namespace demangle
+}  // end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_TRACE_DEMANGLE__*/
+#endif  /*INCLUDED_DEMANGLE*/

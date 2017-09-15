@@ -2,7 +2,8 @@
 #include "config.h"
 #include "demangle.h"
 
-namespace vt { namespace demangle {
+namespace vt {
+namespace demangle {
 
 /*static*/ ActiveFunctionDemangler::StrParsedOutType
 ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
@@ -29,7 +30,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
   StrContainerType const& namespace_no_temp = UtilType::splitString(m0, '<');
   StrContainerType const& namespace_elems = UtilType::splitString(
-    namespace_no_temp.at(0), ':'
+      namespace_no_temp.at(0), ':'
   );
 
   StrContainerType only_namespace_elems;
@@ -50,11 +51,11 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   std::stringstream clean_function_name_space;
 
   for (auto&& e : only_namespace_elems) {
-    if (cur < len-2) {
+    if (cur < len - 2) {
       clean_namespace << e << "::";
-    } else if (cur == len-2) {
+    } else if (cur == len - 2) {
       clean_namespace << e;
-    } else if (cur == len-1) {
+    } else if (cur == len - 1) {
       clean_function_name_space << e;
     }
     cur++;
@@ -71,12 +72,13 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   }
 
   std::stringstream clean_function_name;
-  clean_function_name << UtilType::removeSpaces(clean_function_name_space.str());
+  clean_function_name
+      << UtilType::removeSpaces(clean_function_name_space.str());
 
   StrContainerType const& args = UtilType::splitString(last_elem, '(');
 
   assert(
-    args.size() >= 3 and "args parsed must be at least 3"
+      args.size() >= 3 and "args parsed must be at least 3"
   );
 
   auto args_only = args.at(2).substr(0, args.at(2).size() - 5);
@@ -106,14 +108,14 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
 /*static*/ ActiveFunctorDemangler::StrParsedOutType
 ActiveFunctorDemangler::parseActiveFunctorName(
-  std::string const& name, std::string const& args
+    std::string const& name, std::string const& args
 ) {
   // std::cout << "parse_active_functor_name:"
   //           << "name=" << name << ", "
   //           << "args=" << args
   //           << std::endl;
 
-  auto args_clean = args.substr(29, args.size()-30);
+  auto args_clean = args.substr(29, args.size() - 30);
 
   std::stringstream args_ret;
   args_ret << "operator()(";
@@ -123,7 +125,8 @@ ActiveFunctorDemangler::parseActiveFunctorName(
   std::stringstream args_no_space;
   args_no_space << UtilType::removeSpaces(args_ret.str());
 
-  return std::make_tuple(name,args_no_space.str());
+  return std::make_tuple(name, args_no_space.str());
 }
 
-}} //end namespace vt::demangle
+}  // end namespace demangle
+}  // end namespace vt
