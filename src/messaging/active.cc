@@ -42,7 +42,7 @@ EventType ActiveMessenger::sendDataDirect(
 
   debug_print(
     active, node,
-    "send_msg_direct: dest=%d, handler=%d, is_bcast=%s\n",
+    "sendMsgDirect: dest=%d, handler=%d, is_bcast=%s\n",
     dest, envelopeGetHandler(msg->env), print_bool(is_bcast)
   );
 
@@ -77,24 +77,25 @@ EventType ActiveMessenger::sendDataDirect(
     return event_id;
   } else {
     // broadcast message send
-
-    auto const& child1 = (this_node - dest)*2+1;
-    auto const& child2 = (this_node - dest)*2+2;
-
     auto const& num_nodes = theContext->getNumNodes();
+    auto const& rel_node = (this_node + num_nodes - dest) % num_nodes;
+    auto const& abs_child1 = rel_node*2 + 1;
+    auto const& abs_child2 = rel_node*2 + 2;
+    auto const& child1 = (abs_child1 + dest) % num_nodes;
+    auto const& child2 = (abs_child2 + dest) % num_nodes;
 
-    if (child1 >= num_nodes && child2 >= num_nodes) {
+    debug_print(
+      active, node,
+      "broadcastMsg: rel_node=%d, child=[%d,%d], root=%d, nodes=%d, handler=%d\n",
+      rel_node, child1, child2, dest, num_nodes, envelopeGetHandler(msg->env)
+    );
+
+    if (abs_child1 >= num_nodes && abs_child2 >= num_nodes) {
       if (next_action != nullptr) {
         next_action();
       }
       return no_event;
     }
-
-    debug_print(
-      active, node,
-      "%d: broadcast_msg: child1=%d, child2=%d, broadcast_root=%d, num_nodes=%d\n",
-      this_node, child1, child2, dest, num_nodes
-    );
 
     auto const parent_event_id = theEvent->createParentEventId(this_node);
     auto& parent_holder = theEvent->getEventHolder(parent_event_id);
@@ -104,7 +105,7 @@ EventType ActiveMessenger::sendDataDirect(
       parent_holder.attachAction(next_action);
     }
 
-    if (child1 < num_nodes) {
+    if (abs_child1 < num_nodes) {
       auto const event_id1 = theEvent->createMpiEventId(this_node);
       auto& holder1 = theEvent->getEventHolder(event_id1);
       MPIEvent& mpi_event1 = *static_cast<MPIEvent*>(holder1.get_event());
@@ -115,9 +116,9 @@ EventType ActiveMessenger::sendDataDirect(
 
       debug_print(
         active, node,
-        "broadcast_msg: sending to child1=%d, child2=%d, broadcast_root=%d, "
+        "broadcastMsg: sending to c1=%d, c2=%d, bcast_root=%d, handler=%d, "
         "event_id=%lld\n",
-        child1, child2, dest, event_id1
+        child1, child2, dest, envelopeGetHandler(msg->env), event_id1
       );
 
       if (not is_term) {
@@ -132,7 +133,7 @@ EventType ActiveMessenger::sendDataDirect(
       parent_event.add_event(event_id1);
     }
 
-    if (child2 < num_nodes) {
+    if (abs_child2 < num_nodes) {
       auto const event_id2 = theEvent->createMpiEventId(this_node);
       auto& holder2 = theEvent->getEventHolder(event_id2);
       MPIEvent& mpi_event2 = *static_cast<MPIEvent*>(holder2.get_event());
@@ -143,9 +144,9 @@ EventType ActiveMessenger::sendDataDirect(
 
       debug_print(
         active, node,
-        "broadcast_msg: sending to child2=%d, child1=%d, broadcast_root=%d, "
+        "broadcastMsg: sending to c2=%d, c1=%d, bcast_root=%d, handler=%d, "
         "event_id=%lld\n",
-        child2, child1, dest, event_id2
+        child2, child1, dest, envelopeGetHandler(msg->env), event_id2
       );
 
       if (not is_term) {
@@ -184,8 +185,8 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   debug_print(
     active, node,
-    "%d: send_data: ptr=%p, num_bytes=%lld dest=%d, tag=%d, send_tag=%d\n",
-    this_node, data_ptr, num_bytes, dest, tag, send_tag
+    "sendData: ptr=%p, num_bytes=%lld dest=%d, tag=%d, send_tag=%d\n",
+    data_ptr, num_bytes, dest, tag, send_tag
   );
 
   MPI_Isend(
@@ -264,8 +265,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
         debug_print(
           active, node,
-          "%d: recv_data_msg_buffer: continuation user_buf=%p, buf=%p, tag=%d\n",
-          this_node, user_buf, buf, tag
+          "recvDataMsgBuffer: continuation user_buf=%p, buf=%p, tag=%d\n",
+          user_buf, buf, tag
         );
 
         if (user_buf == nullptr) {
@@ -292,7 +293,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
   } else {
     debug_print(
       active, node,
-      "recv_data_msg_buffer: node=%d, tag=%d, enqueue=%s\n",
+      "recvDataMsgBuffer: node=%d, tag=%d, enqueue=%s\n",
       node, tag, print_bool(enqueue)
     );
 
@@ -345,7 +346,7 @@ bool ActiveMessenger::deliverActiveMsg(
 
   debug_print(
     active, node,
-    "deliver_active_msg: handler=%d, is_auto=%s, is_functor=%s\n",
+    "deliverActiveMsg: handler=%d, is_auto=%s, is_functor=%s\n",
     handler, print_bool(is_auto), print_bool(is_functor)
   );
 
@@ -456,12 +457,16 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
     auto const& handler = envelopeGetHandler(msg->env);
     auto const& is_bcast = envelopeIsBcast(msg->env);
+    auto const& dest = envelopeGetDest(msg->env);
+    auto const& this_node = theContext->getNode();
 
     if (is_bcast) {
       sendDataDirect(handler, msg, num_probe_bytes);
     }
 
-    deliverActiveMsg(msg, msg_from_node, true);
+    if (not is_bcast or (is_bcast and dest != this_node)) {
+      deliverActiveMsg(msg, msg_from_node, true);
+    }
 
     return true;
   } else {

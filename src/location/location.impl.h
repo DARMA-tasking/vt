@@ -16,32 +16,31 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(EntityID const& id) {
-  auto rec_iter = recs_.find(id);
+  auto const& this_node = theContext->getNode();
+  auto reg_iter = local_registered_.find(id);
 
   assert(
-    rec_iter == recs_.end() and "EntityLocationCoord entity should not exist"
+    reg_iter == local_registered_.end() and
+    "EntityLocationCoord entity should not already be registered"
   );
-
-  auto const& this_node = theContext->getNode();
 
   debug_print(
     location, node,
     "EntityLocationCoord: registerEntity: id=%d\n", id
   );
 
-  recs_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(id),
-    std::forward_as_tuple(LocRecType{eLocState::Local, this_node})
-  );
+  local_registered_.insert(id);
+
+  recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
 }
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
-  auto rec_iter = recs_.find(id);
+  auto reg_iter = local_registered_.find(id);
 
   assert(
-    rec_iter != recs_.end() and "Entity must exist"
+    reg_iter != local_registered_.end() and
+    "EntityLocationCoord entity must be registered"
   );
 
   debug_print(
@@ -49,23 +48,25 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
     "EntityLocationCoord: unregisterEntity: id=%d\n", id
   );
 
-  recs_.erase(rec_iter);
+  local_registered_.erase(reg_iter);
+
+  bool const& rec_exists = recs_.exists(id);
+  if (rec_exists) {
+    recs_.remove(id);
+  }
 }
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityMigrated(
   EntityID const& id, NodeType const& new_node
 ) {
-  auto rec_iter = recs_.find(id);
-  if (rec_iter == recs_.end()) {
-    recs_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(id),
-      std::forward_as_tuple(LocRecType{eLocState::Remote, new_node})
-    );
-  } else {
-    rec_iter->second.updateNode(new_node);
+  auto reg_iter = local_registered_.find(id);
+
+  if (reg_iter != local_registered_.end()) {
+    local_registered_.erase(reg_iter);
   }
+
+  recs_.insert(id, LocRecType{id, eLocState::Remote, new_node});
 }
 
 template <typename EntityID>
@@ -74,43 +75,69 @@ void EntityLocationCoord<EntityID>::getLocation(
 ) {
   auto const& this_node = theContext->getNode();
 
-  auto rec_iter = recs_.find(id);
+  auto reg_iter = local_registered_.find(id);
 
-  auto const& no_record = rec_iter == recs_.end();
-
-  debug_print(
-    location, node,
-    "EntityLocationCoord: getLocation: id=%d, home_node=%d, no_record=%s\n",
-    id, home_node, print_bool(no_record)
-  );
-
-  if (no_record) {
-    if (home_node != this_node) {
-      auto const& event_id = fst_location_event_id++;
-      auto msg = new LocMsgType(
-        LocManInstType::VirtualLocManInst, id, event_id, this_node, home_node
-      );
-      theMsg->sendMsg<LocMsgType, getLocationHandler>(
-        home_node, msg, [=]{ delete msg; }
-      );
-      pending_actions_[event_id] = action;
-    } else {
-      // this is the home node and there is no record on this entity
-    }
-  } else if (rec_iter->second.isLocal()) {
+  if (reg_iter != local_registered_.end()) {
     debug_print(
       location, node,
-      "EntityLocationCoord: getLocation: id=%d, is_local true\n", id
+      "EntityLocationCoord: getLocation: id=%d, entity is local\n", id
     );
 
     action(this_node);
-  } else if (rec_iter->second.isRemote()) {
+    recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+    return;
+  } else {
+    bool const& rec_exists = recs_.exists(id);
+
     debug_print(
       location, node,
-      "EntityLocationCoord: getLocation: id=%d, is_remote true\n", id
+      "EntityLocationCoord: getLocation: id=%d, home_node=%d, rec_exists=%s\n",
+      id, home_node, print_bool(rec_exists)
     );
 
-    action(rec_iter->second.getRemoteNode());
+    if (not rec_exists) {
+      if (home_node != this_node) {
+        auto const& event_id = fst_location_event_id++;
+        auto msg = new LocMsgType(
+          LocManInstType::VirtualLocManInst, id, event_id, this_node, home_node
+        );
+        theMsg->sendMsg<LocMsgType, getLocationHandler>(
+          home_node, msg, [=]{ delete msg; }
+        );
+        // save a pending action when information about location arrives
+        pending_actions_.emplace(
+          std::piecewise_construct,
+          std::forward_as_tuple(event_id),
+          std::forward_as_tuple(PendingType{id,action})
+        );
+      } else {
+        // this is the home node and there is no record on this entity
+        auto pending_iter = pending_lookups_.find(id);
+        if (pending_iter != pending_lookups_.end()) {
+          pending_iter->second.push_back(action);
+        } else {
+          pending_lookups_.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(id),
+            std::forward_as_tuple(ActionListType{action})
+          );
+        }
+      }
+    } else {
+      auto const& rec = recs_.get(id);
+
+      if (rec.isLocal()) {
+        assert(0 and "Should be registered if this is the case!");
+        action(this_node);
+      } else if (rec.isRemote()) {
+        debug_print(
+          location, node,
+          "EntityLocationCoord: getLocation: id=%d, entity is remote\n", id
+        );
+
+        action(rec.getRemoteNode());
+      }
+    }
   }
 }
 
@@ -124,9 +151,25 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
     pending_iter != pending_actions_.end() and "Event must exist in pending"
   );
 
-  pending_iter->second(node);
+  auto const& entity = pending_iter->second.entity;
+
+  debug_print(
+    location, node,
+    "EntityLocationCoord: updatePendingRequest: event_id=%lld, entity=%d, "
+    "node=%d\n",
+    event_id, entity, node
+  );
+
+  recs_.insert(entity, LocRecType{entity, eLocState::Remote, node});
+
+  pending_iter->second.applyNodeAction(node);
 
   pending_actions_.erase(pending_iter);
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::printCurrentCache() const {
+  recs_.printCache();
 }
 
 template <typename EntityID>

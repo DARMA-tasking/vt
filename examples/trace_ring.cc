@@ -8,7 +8,7 @@ static NodeType next_node = uninitialized_destination;
 static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
 
-static constexpr int64_t const kernel_weight = 10000000;
+static int64_t kernel_weight = 1000;
 
 static int num_total_rings = 10;
 static int num_times = 0;
@@ -64,6 +64,10 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Please run with at least two ranks!\n");
     fprintf(stderr, "\t mpirun-mpich-clang -n 2 %s\n", argv[0]);
     exit(1);
+  }
+
+  if (argc > 1) {
+    kernel_weight = atoi(argv[1]);
   }
 
   if (my_node == 0) {

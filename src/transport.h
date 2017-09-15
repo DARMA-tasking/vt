@@ -23,5 +23,7 @@
 #include "trace.h"
 #include "scheduler.h"
 #include "location.h"
+#include "index.h"
+#include "mapping_headers.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/
