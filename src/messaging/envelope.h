@@ -45,12 +45,12 @@ struct Envelope {
 
 #if backend_check_enabled(trace_enabled)
 template <typename Env>
-inline void envelope_set_trace_event(Env& env, trace::TraceEventIDType const& evt) {
+inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt) {
   reinterpret_cast<Envelope*>(&env)->trace_event = evt;
 }
 
 template <typename Env>
-inline trace::TraceEventIDType envelope_get_trace_event(Env& env) {
+inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env) {
   return reinterpret_cast<Envelope*>(&env)->trace_event;
 }
 #endif

@@ -30,7 +30,8 @@ set(
   PROJECT_SUBDIRS_LIST
   barrier collective context debug event messaging termination tree
   virtualization pool data registry parameterization handler features meld
-  sequence trace scheduler util types demangle location index mapping
+  sequence trace scheduler utils/demangle utils/bits types demangle location
+  index mapping
 )
 
 include_directories(${PROJECT_SOURCE_DIR})

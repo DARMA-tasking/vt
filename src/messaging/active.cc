@@ -29,12 +29,12 @@ EventType ActiveMessenger::sendDataDirect(
         trace::TraceEntryIDType ep = auto_registry::getTraceID(handler);
         if (not is_bcast) {
           trace::TraceEventIDType event = theTrace->messageCreation(ep, msg_size);
-          envelope_set_trace_event(msg->env, event);
+          envelopeSetTraceEvent(msg->env, event);
         } else if (is_bcast and dest == this_node) {
           trace::TraceEventIDType event = theTrace->messageCreationBcast(
             ep, msg_size
           );
-          envelope_set_trace_event(msg->env, event);
+          envelopeSetTraceEvent(msg->env, event);
         }
       }
     }
@@ -376,7 +376,7 @@ bool ActiveMessenger::deliverActiveMsg(
 
     backend_enable_if(
       trace_enabled,
-      trace_event = envelope_get_trace_event(msg->env);
+      trace_event = envelopeGetTraceEvent(msg->env);
     );
 
     // begin trace of this active message
