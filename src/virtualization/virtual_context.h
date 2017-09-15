@@ -4,33 +4,46 @@
 
 #include "config.h"
 #include "message.h"
+#include "utils/bits/bits_common.h"
 
 namespace vt {
 
-using CollectionSizeType = uint32_t;
-using CollectionIDType = uint32_t;
-using CollectionProxyType = uint64_t;
+static constexpr BitCountType const num_bool_bits = 1;
 
-struct VirtualLocMessage : Message {
-  CollectionIDType col_id = 0;
+enum eVrtLocBits {
+  Auto       = 0,
+  Collection = eVrtLocBits::Auto       + num_bool_bits,
+  Migratable = eVrtLocBits::Collection + num_bool_bits,
+  Node       = eVrtLocBits::Migratable + node_num_bits,
+  ID         =
 };
 
-struct VirutalLoc {
-  VirtualContext() = default;
+struct VrtContext {
+  using VrtContextType = eVrtLocBits;
+
+
 };
 
-struct VirtualLocCollection {
-  CollectionSizeType col_size;
+struct VrtContextManager {
+  using VrtContextType = eVrtLocBits;
+  using VrtContextContainerType = std::vector<VrtContextType>;
+
+
 };
 
-struct VirtualLocCollectionManager {
-  static CollectionProxyType create_virtual_loc(CollectionSizeType col_size) {
-    auto const& node = theContext->getNode();
-    return (CollectionProxyType)node << (64 - (sizeof() * 8)) | cur_col_id;
-  }
 
-private:
-  CollectionIDType cur_col_id;
+struct VrtContextCollection {
+  using VrtContextType = eVrtLocBits;
+  using VrtContextContainerType = std::vector<VrtContextType>;
+
+
+};
+
+struct VrtContextCollectionManager {
+  using VrtContextType = eVrtLocBits;
+  using VrtContextContainerType = std::vector<VrtContextType>;
+
+
 };
 
 
