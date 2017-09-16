@@ -55,8 +55,7 @@ static void myColFn(vt::BaseMessage* in_msg) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initializeContext(argc, argv);
-  CollectiveOps::initializeRuntime();
+  CollectiveOps::initialize(argc, argv);
 
   HandlerType const callback = theMsg->registerNewHandler(callbackFn);
   my_reinstate_fn = theMsg->registerNewHandler(reinstateFn);
@@ -77,9 +76,11 @@ int main(int argc, char** argv) {
     theMsg->broadcastMsg(my_col_han, msg, [=]{ delete msg; });
   }
 
-  while (1) {
+  while (vtIsWorking) {
     runScheduler();
   }
+
+  CollectiveOps::finalize();
 
   return 0;
 }

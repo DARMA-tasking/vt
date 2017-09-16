@@ -31,8 +31,7 @@ static void bcastTest(Msg* msg) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initializeContext(argc, argv);
-  CollectiveOps::initializeRuntime();
+  CollectiveOps::initialize(argc, argv);
 
   my_node = theContext->getNode();
 
@@ -65,9 +64,11 @@ int main(int argc, char** argv) {
     }
   }
 
-  while (1) {
+  while (vtIsWorking) {
     runScheduler();
   }
+
+  CollectiveOps::finalize();
 
   return 0;
 }

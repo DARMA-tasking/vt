@@ -6,8 +6,7 @@
 using namespace vt;
 
 int main(int argc, char** argv) {
-  CollectiveOps::initializeContext(argc, argv);
-  CollectiveOps::initializeRuntime();
+  CollectiveOps::initialize(argc, argv);
 
   auto const& my_node = theContext->getNode();
   auto const& num_nodes = theContext->getNumNodes();
@@ -54,9 +53,11 @@ int main(int argc, char** argv) {
     "idx_a=%s, indx_a_max=%s, node=%d\n", idx_a_str, idx_a_max_str, node_a
   );
 
-  while (1) {
+  while (vtIsWorking) {
     runScheduler();
   }
+
+  CollectiveOps::finalize();
 
   return 0;
 }

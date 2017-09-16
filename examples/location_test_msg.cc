@@ -43,8 +43,7 @@ static void entityTestHandler(EntityMsg* msg) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initializeContext(argc, argv);
-  CollectiveOps::initializeRuntime();
+  CollectiveOps::initialize(argc, argv);
 
   auto const& my_node = theContext->getNode();
   auto const& num_nodes = theContext->getNumNodes();
@@ -77,9 +76,11 @@ int main(int argc, char** argv) {
     );
   }
 
-  while (1) {
+  while (vtIsWorking) {
     runScheduler();
   }
+
+  CollectiveOps::finalize();
 
   return 0;
 }

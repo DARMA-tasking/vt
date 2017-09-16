@@ -51,8 +51,7 @@ static void sendToNext() {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initializeContext(argc, argv);
-  CollectiveOps::initializeRuntime();
+  CollectiveOps::initialize(argc, argv);
 
   my_node = theContext->getNode();
   num_nodes = theContext->getNumNodes();
@@ -74,9 +73,11 @@ int main(int argc, char** argv) {
     sendToNext();
   }
 
-  while (1) {
+  while (vtIsWorking) {
     runScheduler();
   }
+
+  CollectiveOps::finalize();
 
   return 0;
 }

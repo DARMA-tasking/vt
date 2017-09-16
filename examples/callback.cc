@@ -32,8 +32,7 @@ static void my_col_fn(TestMsg* msg) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initializeContext(argc, argv);
-  CollectiveOps::initializeRuntime();
+  CollectiveOps::initialize(argc, argv);
 
   HandlerType const callback = theMsg->registerNewHandler(callback_fn);
 
@@ -51,9 +50,11 @@ int main(int argc, char** argv) {
     theMsg->broadcastMsg<TestMsg, my_col_fn>(msg, [=]{ delete msg; });
   }
 
-  while (1) {
+  while (vtIsWorking) {
     runScheduler();
   }
+
+  CollectiveOps::finalize();
 
   return 0;
 }

@@ -126,7 +126,11 @@ int main(int argc, char** argv) {
     // });
   }
 
-  while (1) {
-    run_scheduler();
+  while (vtIsWorking) {
+    runScheduler();
   }
+
+  CollectiveOps::finalize();
+
+  return 0;
 }

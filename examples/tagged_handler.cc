@@ -65,8 +65,7 @@ static void myColFn(TestMsg* msg) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initializeContext(argc, argv);
-  CollectiveOps::initializeRuntime();
+  CollectiveOps::initialize(argc, argv);
 
   HandlerType const callback = theMsg->registerNewHandler(
     processIterMsgs, cur_iter
@@ -87,9 +86,11 @@ int main(int argc, char** argv) {
     messageDeref(msg);
   }
 
-  while (1) {
+  while (vtIsWorking) {
     runScheduler();
   }
+
+  CollectiveOps::finalize();
 
   return 0;
 }
