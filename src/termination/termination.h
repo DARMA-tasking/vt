@@ -51,6 +51,7 @@ struct TerminationDetector : Tree {
   void triggerAllEpochActions(EpochType const& epoch);
   void triggerAllActions(EpochType const& epoch);
   void attachGlobalTermAction(ActionType action);
+  void forceGlobalTermAction(ActionType action);
   void attachEpochTermAction(EpochType const& epoch, ActionType action);
   void setupNewEpoch(EpochType const& new_epoch);
   void propagateNewEpoch(EpochType const& new_epoch);

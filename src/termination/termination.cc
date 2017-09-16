@@ -292,6 +292,11 @@ void TerminationDetector::attachGlobalTermAction(ActionType action) {
   global_term_actions_.emplace_back(action);
 }
 
+void TerminationDetector::forceGlobalTermAction(ActionType action) {
+  global_term_actions_.clear();
+  global_term_actions_.emplace_back(action);
+}
+
 void TerminationDetector::attachEpochTermAction(
   EpochType const& epoch, ActionType action) {
   auto epoch_iter = epoch_actions_.find(epoch);
