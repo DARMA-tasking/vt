@@ -8,6 +8,7 @@
 #include <string>
 
 #include "test_config.h"
+#include "data_message.h"
 
 struct TestHarness : testing::Test {
   virtual void SetUp() {

@@ -227,6 +227,8 @@ else()
 
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${GTEST_DIR}/lib")
 
+  set(UNIT_TEST_PROC_TEST_LIST 2 4 8)
+
   foreach (UNIT_TEST_FILE ${UNIT_TEST_SOURCE_FILES})
     GET_FILENAME_COMPONENT(
       UNIT_TEST
@@ -249,17 +251,20 @@ else()
       gtest gmock
     )
 
-    add_test(
-      ${UNIT_TEST}
-      ${CMAKE_CURRENT_BINARY_DIR}/${UNIT_TEST}
-    )
+    foreach(PROC ${UNIT_TEST_PROC_TEST_LIST})
+      add_test(
+        ${UNIT_TEST}_${PROC}
+        ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
+        ${CMAKE_CURRENT_BINARY_DIR}/${UNIT_TEST}
+      )
+      set_tests_properties(
+        ${UNIT_TEST}_${PROC}
+        PROPERTIES TIMEOUT 60
+        FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
+        PASS_REGULAR_EXPRESSION "PASSED"
+      )
+    endforeach()
 
-    set_tests_properties(
-      ${UNIT_TEST}
-      PROPERTIES TIMEOUT 60
-      FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
-      PASS_REGULAR_EXPRESSION "PASSED"
-    )
   endforeach()
 endif()
 
