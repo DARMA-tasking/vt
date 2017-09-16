@@ -108,8 +108,7 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initializeContext(argc, argv);
-  CollectiveOps::initializeRuntime();
+  CollectiveOps::initialize(argc, argv);
 
   auto const& my_node = theContext->getNode();
   auto const& num_nodes = theContext->getNumNodes();
@@ -131,9 +130,11 @@ int main(int argc, char** argv) {
     theMsg->sendMsg<PingMsg<min_bytes>, pingPong>(pong_node, m, [=]{ delete m; });
   }
 
-  while (1) {
+  while (vtIsWorking) {
     runScheduler();
   }
+
+  CollectiveOps::finalize();
 
   return 0;
 }
