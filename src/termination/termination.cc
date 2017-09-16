@@ -34,8 +34,7 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
       "running registered default termination\n",
     );
 
-    CollectiveOps::finalizeContext();
-    CollectiveOps::finalizeRuntime();
+    CollectiveOps::setInactiveState();
   });
 }
 
