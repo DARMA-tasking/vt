@@ -31,12 +31,13 @@ struct MemoryPoolEqual {
   }
 
   void* alloc(size_t const& sz) {
-    if (cur_slot_+1 >= holder_.size()) {
+    if (cur_slot_ + 1 >= holder_.size()) {
       resizePool();
     }
 
     assert(
-      cur_slot_+1 < holder_.size() and "Must be within pool size, add capability to grow"
+      cur_slot_+1 < holder_.size() and
+      "Must be within pool size, add capability to grow"
     );
 
     auto const& slot = cur_slot_;
@@ -53,7 +54,7 @@ struct MemoryPoolEqual {
 
   void dealloc(void* const t) {
     assert(
-      cur_slot_-1 >= 0 and "Must be greater than zero"
+      cur_slot_ - 1 >= 0 and "Must be greater than zero"
     );
 
     debug_print(
