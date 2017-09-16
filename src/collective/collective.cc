@@ -71,6 +71,7 @@ bool vtIsWorking = true;
 /*static*/ void
 CollectiveOps::finalizeRuntime() {
   MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
 }
 
 /*static*/ void CollectiveOps::finalizeContext() {
