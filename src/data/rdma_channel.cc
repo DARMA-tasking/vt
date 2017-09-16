@@ -110,7 +110,7 @@ Channel::syncChannelLocal() {
   debug_print(
     rdma_channel, node,
     "channel: sync_channel_local: target=%d, locked=%s finished\n",
-    target_, print_bool_(locked_)
+    target_, print_bool(locked_)
   );
 }
 
@@ -151,7 +151,7 @@ Channel::lockChannelForOp() {
       "lock_channel_for_op: is_target=%s, target=%d, op_type=%s, "
       "lock_type=%d, exclusive=%d\n",
       print_bool(is_target_), target_, PRINT_RDMA_OP_TYPE(op_type_),
-      MPI_LOCK_EXCLUSIVE
+      lock_type, MPI_LOCK_EXCLUSIVE
     );
 
     auto const ret = MPI_Win_lock(

@@ -271,7 +271,7 @@ RDMA_HandleType RDMAManager::registerNewRdmaHandler(
   debug_print(
     rdma, node,
     "register_new_rdma_handler: my_handle=%llx, op=%d\n",
-    new_handle, RDMA_HandleManagerType::get_op_type(new_handle)
+    new_handle, RDMA_HandleManagerType::getOpType(new_handle)
   );
 
   RDMA_HandleManagerType::setOpType(new_handle, RDMA_TypeType::GetOrPut);
@@ -422,7 +422,7 @@ void RDMAManager::triggerPutRecvData(
   debug_print(
     rdma, node,
     "trigger_put_recv_data: han=%lld, tag=%d, holder.size=%ld\n",
-    han, tag, holder.size()
+    han, tag, holder_.size()
   );
 
   assert(

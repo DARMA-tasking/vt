@@ -41,7 +41,8 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     event, node,
     "theEvent: event=%lld, newevent=%lld, state=%d, "
     "newevent_owning_node=%d, this_node=%d\n",
-    event, event_id, event_state, this_event_owning_node, this_node
+    event, event_id, static_cast<int>(event_state), this_event_owning_node,
+    this_node
   );
 
   switch (event_state) {
@@ -64,7 +65,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     debug_print(
       event, node,
       "theEvent: event=%lld, newevent=%lld, state=%d sending msg, node=%d\n",
-      event, event_id, event_state, this_node
+      event, event_id, static_cast<int>(event_state), this_node
     );
 
     theMsg->sendMsg<EventCheckFinishedMsg, checkEventFinished>(
@@ -112,9 +113,10 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 
   debug_print(
     event, node,
-    "checkEventFinishedHan:: event=%lld, node=%lld, "
+    "checkEventFinishedHan:: event=%lld, node=%d, "
     "this_node=%d, complete=%d, sent_from_node=%d\n",
-    event, node, this_node, is_complete, msg->sent_from_node
+    event, node, theContext->getNode(), static_cast<int>(is_complete),
+    msg->sent_from_node_
   );
 
   if (is_complete == AsyncEvent::EventStateType::EventReady) {
