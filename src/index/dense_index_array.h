@@ -41,6 +41,10 @@ struct DenseIndexArray : BaseIndex {
     return dims[index];
   }
 
+  IndexType get(IndexType const& index) const {
+    return dims[index];
+  }
+
   IndexSizeType packedSize() const {
     return ndim * sizeof(IndexType);
   }
