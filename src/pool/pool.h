@@ -142,7 +142,7 @@ void messageDeref(MessageT* msg) {
 
   debug_print(
     pool, node,
-    "message_deref msg=%p, refs=%d\n", msg, envelope_get_ref(msg->env)
+    "messageDeref msg=%p, refs=%d\n", msg, envelopeGetRef(msg->env)
   );
 
   if (envelopeGetRef(msg->env) == 0) {
