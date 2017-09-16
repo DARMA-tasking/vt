@@ -60,7 +60,7 @@ struct MemoryPoolEqual {
     debug_print(
       pool, node,
       "%d: dealloc t=%p, cur_slot=%lld\n",
-      theContext->getNode(), t, cur_slot
+      theContext->getNode(), t, cur_slot_
     );
 
     void* const ptr_actual = static_cast<size_t*>(t) - 1;
