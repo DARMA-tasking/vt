@@ -17,12 +17,14 @@ struct CollectiveOps {
   static void finalize();
 
   static void initializeContext(int argc, char** argv);
-  static void setInactiveState();
-  static void finalizeSingletons();
-  static HandlerType registerHandler(ActiveFunctionType fn);
-  static void finalizeContext();
   static void initializeRuntime();
+  static void initializeSingletons();
+  static void finalizeContext();
   static void finalizeRuntime();
+  static void finalizeSingletons();
+
+  static void setInactiveState();
+  static HandlerType registerHandler(ActiveFunctionType fn);
 };
 
 } //end namespace vt

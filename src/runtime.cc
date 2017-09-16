@@ -18,21 +18,20 @@
 namespace vt {
 
 std::unique_ptr<Context> theContext = nullptr;
-std::unique_ptr<Registry> theRegistry = std::make_unique<Registry>();
-std::unique_ptr<ActiveMessenger> theMsg = std::make_unique<ActiveMessenger>();
-std::unique_ptr<AsyncEvent> theEvent = std::make_unique<AsyncEvent>();
-std::unique_ptr<term::TerminationDetector> theTerm = std::make_unique<term::TerminationDetector>();
-std::unique_ptr<barrier::Barrier> theBarrier = std::make_unique<barrier::Barrier>();
-std::unique_ptr<pool::Pool> thePool = std::make_unique<pool::Pool>();
-std::unique_ptr<rdma::RDMAManager> theRDMA = std::make_unique<rdma::RDMAManager>();
-std::unique_ptr<param::Param> theParam = std::make_unique<param::Param>();
-std::unique_ptr<seq::Sequencer> theSeq = std::make_unique<seq::Sequencer>();
-std::unique_ptr<sched::Scheduler> theSched = std::make_unique<sched::Scheduler>();
-std::unique_ptr<location::LocationManager> theLocMan = std::make_unique<location::LocationManager>();
+std::unique_ptr<Registry> theRegistry = nullptr;
+std::unique_ptr<ActiveMessenger> theMsg = nullptr;
+std::unique_ptr<AsyncEvent> theEvent = nullptr;
+std::unique_ptr<term::TerminationDetector> theTerm = nullptr;
+std::unique_ptr<barrier::Barrier> theBarrier = nullptr;
+std::unique_ptr<pool::Pool> thePool = nullptr;
+std::unique_ptr<rdma::RDMAManager> theRDMA = nullptr;
+std::unique_ptr<param::Param> theParam = nullptr;
+std::unique_ptr<seq::Sequencer> theSeq = nullptr;
+std::unique_ptr<sched::Scheduler> theSched = nullptr;
+std::unique_ptr<location::LocationManager> theLocMan = nullptr;
 
-backend_enable_if(
-  trace_enabled,
-  std::unique_ptr<trace::Trace> theTrace = std::make_unique<trace::Trace>();
-);
+#if backend_check_enabled(trace_enabled)
+  std::unique_ptr<trace::Trace> theTrace = nullptr
+#endif
 
 } //end namespace vt

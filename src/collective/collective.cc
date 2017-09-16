@@ -13,6 +13,12 @@ bool vtIsWorking = true;
 
 /*static*/ void CollectiveOps::initialize(int argc, char** argv) {
   initializeContext(argc, argv);
+  initializeSingletons();
+
+  // wait for all singletons to be initialized
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  // start up runtime
   initializeRuntime();
 }
 
@@ -64,11 +70,6 @@ bool vtIsWorking = true;
 
 /*static*/ void
 CollectiveOps::finalizeRuntime() {
-  // set trace to nullptr to write out to disk
-  backend_enable_if(
-    trace_enabled, theTrace = nullptr;
-  );
-
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
@@ -89,6 +90,24 @@ CollectiveOps::finalizeRuntime() {
   //
 }
 
+/*static*/ void CollectiveOps::initializeSingletons() {
+  theRegistry = std::make_unique<Registry>();
+  theMsg = std::make_unique<ActiveMessenger>();
+  theEvent = std::make_unique<AsyncEvent>();
+  theTerm = std::make_unique<term::TerminationDetector>();
+  theBarrier = std::make_unique<barrier::Barrier>();
+  thePool = std::make_unique<pool::Pool>();
+  theRDMA = std::make_unique<rdma::RDMAManager>();
+  theParam = std::make_unique<param::Param>();
+  theSeq = std::make_unique<seq::Sequencer>();
+  theSched = std::make_unique<sched::Scheduler>();
+  theLocMan = std::make_unique<location::LocationManager>();
+
+  backend_enable_if(
+    trace_enabled, theTrace = std::make_unique<trace::Trace>();
+  );
+}
+
 /*static*/ void CollectiveOps::finalizeSingletons() {
   theParam = nullptr;
   theSeq = nullptr;
@@ -103,6 +122,11 @@ CollectiveOps::finalizeRuntime() {
   theRegistry = nullptr;
   theEvent = nullptr;
   thePool = nullptr;
+
+  // set trace to nullptr to write out to disk
+  backend_enable_if(
+    trace_enabled, theTrace = nullptr;
+  );
 }
 
 } //end namespace vt
