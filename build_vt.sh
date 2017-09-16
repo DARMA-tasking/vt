@@ -29,10 +29,15 @@ else
     CC_COMPILER=mpicc-mpich-devel-gcc6
 fi
 
+gtest_directory=/Users/jliffla/codes/gtest-tree/build-clang
+
 cmake ${SOURCE_BASE_DIR} \
       -DCMAKE_INSTALL_PREFIX=`pwd` \
       -DCMAKE_CXX_FLAGS="-std=c++1y" \
       -DCMAKE_BUILD_TYPE=${build_mode} \
       -DCMAKE_VERBOSE_MAKEFILE:BOOL=$MAKE_VERBOSE \
       -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
+      -DGTEST_DIR=${gtest_directory} \
       -DCMAKE_C_COMPILER=${CC_COMPILER}
+
+

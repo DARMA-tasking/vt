@@ -111,6 +111,11 @@ set(
   test_seq trace_ring location_test location_test_msg broadcast_test index_test
 )
 
+set(
+  PROJECT_PERF_TESTS
+  ping_pong
+)
+
 set(MPI_RUN_COMMAND "mpirun-mpich-clang")
 set(MPI_NUMPROC_FLAG "-n")
 
@@ -154,6 +159,24 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
 
   target_link_libraries(
     ${EXAMPLE}
+    ${VIRTUAL_TRANSPORT_LIBRARY}
+    ${ZLIB_LIBRARIES}
+  )
+endforeach()
+
+foreach(PERF_TEST ${PROJECT_PERF_TESTS})
+  add_executable(
+    ${PERF_TEST}
+    ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
+  )
+
+  # add_test_for_example(
+  #   ${PERF_TEST}
+  #   ${CMAKE_CURRENT_BINARY_DIR}/${PERF_TEST}
+  # )
+
+  target_link_libraries(
+    ${PERF_TEST}
     ${VIRTUAL_TRANSPORT_LIBRARY}
     ${ZLIB_LIBRARIES}
   )
