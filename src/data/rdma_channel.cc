@@ -1,6 +1,8 @@
 
 #include "rdma_channel.h"
 
+#define PRINT_RDMA_OP_TYPE(OP) ((OP) == RDMA_TypeType::Get ? "GET" : "PUT")
+
 namespace vt { namespace rdma {
 
 Channel::Channel(
@@ -148,8 +150,7 @@ Channel::lockChannelForOp() {
       rdma_channel, node,
       "lock_channel_for_op: is_target=%s, target=%d, op_type=%s, "
       "lock_type=%d, exclusive=%d\n",
-      print_bool(is_target_), target_,
-      op_type_ == RDMA_TypeType::Get ? "GET" : "PUT", lock_type,
+      print_bool(is_target_), target_, PRINT_RDMA_OP_TYPE(op_type_),
       MPI_LOCK_EXCLUSIVE
     );
 
@@ -175,7 +176,7 @@ Channel::unlockChannelForOp() {
     debug_print(
       rdma_channel, node,
       "unlock_channel_for_op: target=%d, op_type=%s\n",
-      target_, op_type_ == RDMA_TypeType::Get ? "GET" : "PUT"
+      target_, PRINT_RDMA_OP_TYPE(op_type_)
     );
 
     locked_ = false;
@@ -195,8 +196,7 @@ Channel::writeDataToChannel(
     rdma_channel, node,
     "write_data_to_channel: target=%d, ptr=%p, ptr_num_bytes=%lld, "
     "num_bytes=%lld, op_type=%s, offset=%lld\n",
-    target_, ptr, ptr_num_bytes, num_bytes_,
-    op_type_ == RDMA_TypeType::Get ? "GET" : "PUT", offset
+    target_, ptr, ptr_num_bytes, num_bytes_, PRINT_RDMA_OP_TYPE(op_type_), offset
   );
 
   if (not locked_) {
@@ -205,12 +205,14 @@ Channel::writeDataToChannel(
 
   if (op_type_ == RDMA_TypeType::Get) {
     auto const& get_ret = MPI_Get(
-      ptr, ptr_num_bytes, MPI_BYTE, target_pos_, d_offset, num_bytes_, MPI_BYTE, window_
+      ptr, ptr_num_bytes, MPI_BYTE, target_pos_, d_offset, num_bytes_,
+      MPI_BYTE, window_
     );
     assert(get_ret == MPI_SUCCESS and "MPI_Get: Should be successful");
   } else if (op_type_ == RDMA_TypeType::Put) {
     auto const& put_ret = MPI_Put(
-      ptr, ptr_num_bytes, MPI_BYTE, target_pos_, d_offset, num_bytes_, MPI_BYTE, window_
+      ptr, ptr_num_bytes, MPI_BYTE, target_pos_, d_offset, num_bytes_,
+      MPI_BYTE, window_
     );
     assert(put_ret == MPI_SUCCESS and "MPI_Put: Should be successful");
   } else {
@@ -276,3 +278,5 @@ Channel::getNonTarget() const {
 }
 
 }} //end namespace vt::rdma
+
+#undef PRINT_RDMA_OP_TYPE
