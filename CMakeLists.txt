@@ -186,14 +186,9 @@ endforeach()
 #                              CMake for gtests                                #
 ################################################################################
 
-# set(
-#   PROJECT_UNIT_TEST_LIST
-#   test_index
-# )
-
 set(
   UNIT_TEST_SUBDIRS_LIST
-  index active
+  index active pool
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
@@ -260,21 +255,11 @@ else()
     )
 
     set_tests_properties(
-      ${UNIT_TST}
+      ${UNIT_TEST}
       PROPERTIES TIMEOUT 60
       FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
       PASS_REGULAR_EXPRESSION "PASSED"
     )
-    # add_test_for_example(
-    #   ${EXAMPLE}
-    #   ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
-    # )
-
-    # target_link_libraries(
-    #   ${EXAMPLE}
-    #   ${VIRTUAL_TRANSPORT_LIBRARY}
-    #   ${ZLIB_LIBRARIES}
-    # )
   endforeach()
 endif()
 
