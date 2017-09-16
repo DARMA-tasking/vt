@@ -5,20 +5,14 @@
 #include <gmock/gmock.h>
 
 #include "test_harness.h"
+#include "test_parallel_harness.h"
 
 #include "transport.h"
 
-class TestPool : public TestHarness {
-  virtual void SetUp() {
-    TestHarness::SetUp();
-  }
+struct TestPoolSimple : TestHarness { };
+struct TestPool : TestParallelHarness { };
 
-  virtual void TearDown() {
-    TestHarness::TearDown();
-  }
-};
-
-TEST_F(TestPool, pool_alloc) {
+TEST_F(TestPoolSimple, pool_alloc) {
   using namespace vt;
 
   using CharType = unsigned char;
@@ -40,7 +34,7 @@ TEST_F(TestPool, pool_alloc) {
   }
 }
 
-namespace pool_message_alloc_test {
+namespace pool_message_alloc_ns {
 
 static constexpr int64_t const min_bytes = 1;
 static constexpr int64_t const max_bytes = 16384;
@@ -64,15 +58,21 @@ template <>
 void testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) {
 }
 
-} // end namespace pool_message_alloc_test
+} // end namespace pool_message_alloc_ns
 
 TEST_F(TestPool, pool_message_alloc) {
   using namespace vt;
-  using namespace pool_message_alloc_test;
+  using namespace pool_message_alloc_ns;
 
-  std::unique_ptr<pool::Pool> testPool = std::make_unique<pool::Pool>();
+  auto const& my_node = theContext->getNode();
 
-  auto msg = new TestMsg<min_bytes>();
-  testPoolFun<min_bytes>(msg);
-  delete msg;
+  if (my_node == 0) {
+    auto msg = new TestMsg<min_bytes>();
+    testPoolFun<min_bytes>(msg);
+    delete msg;
+  }
+
+  theTerm->forceGlobalTermAction([=]{
+    finished = true;
+  });
 }

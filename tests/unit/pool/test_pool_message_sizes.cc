@@ -1,0 +1,78 @@
+
+#include <cstring>
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include "test_harness.h"
+#include "test_parallel_harness.h"
+#include "data_message.h"
+
+#include "transport.h"
+
+using namespace vt;
+using namespace vt::tests::unit;
+
+struct TestPoolMessageSizes : TestParallelHarness { };
+
+namespace pool_message_sizes_alloc_ns {
+
+template <int64_t num_bytes>
+using TestMsg = TestStaticBytesShortMsg<num_bytes>;
+
+static NodeType from_node = 0, to_node = 1;
+static constexpr int64_t const min_bytes = 1;
+static constexpr int64_t const max_bytes = 16384;
+
+static constexpr int const max_test_count = 1024;
+static int count = 0;
+
+template <int64_t num_bytes>
+static void testPoolFun(TestMsg<num_bytes>* prev_msg) {
+  auto const& this_node = theContext->getNode();
+
+  #if DEBUG_TEST_HARNESS_PRINT
+    printf("%d: test: bytes=%lld, cnt=%d\n", this_node, num_bytes, count);
+  #endif
+
+  count++;
+
+  NodeType const next =
+    this_node == from_node ? to_node : from_node;
+
+  if (count < max_test_count) {
+    auto msg = new TestMsg<num_bytes>();
+    theMsg->sendMsg<TestMsg<num_bytes>, testPoolFun>(
+      next, msg, [=]{ delete msg; }
+    );
+  } else {
+    auto msg = new TestMsg<num_bytes * 2>();
+    theMsg->sendMsg<TestMsg<num_bytes * 2>, testPoolFun>(
+      next, msg, [=]{ delete msg; }
+    );
+    count = 0;
+  }
+}
+
+template <>
+void testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
+
+} // end namespace pool_message_alloc_ns
+
+TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
+  using namespace vt;
+  using namespace pool_message_sizes_alloc_ns;
+
+  auto const& my_node = theContext->getNode();
+
+  if (my_node == 0) {
+    auto msg = new TestMsg<min_bytes>();
+    theMsg->sendMsg<TestMsg<min_bytes>, testPoolFun>(
+      to_node, msg, [=]{ delete msg; }
+    );
+  }
+
+  theTerm->forceGlobalTermAction([=]{
+    finished = true;
+  });
+}
