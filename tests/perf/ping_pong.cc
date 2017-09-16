@@ -10,7 +10,7 @@
 using namespace vt;
 
 static constexpr int64_t const min_bytes = 1;
-static constexpr int64_t const max_bytes = 16;
+static constexpr int64_t const max_bytes = 16384;
 
 static int64_t num_pings = 1024;
 
@@ -73,11 +73,13 @@ void finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
 
 template <int64_t num_bytes>
 static void pingPong(PingMsg<num_bytes>* in_msg) {
-  auto const& my_node = theContext->getNode();
   auto const& cnt = in_msg->count;
 
   #if DEBUG_PING_PONG
-    printf("%d: pingPong: cnt=%lld, bytes=%lld\n", my_node, cnt, num_bytes);
+    printf(
+      "%d: pingPong: cnt=%lld, bytes=%lld\n",
+      theContext->getNode(), cnt, num_bytes
+    );
   #endif
 
   #if REUSE_MESSAGE_PING_PONG
@@ -88,13 +90,16 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
   if (cnt >= num_pings) {
     auto msg = new FinishedPingMsg<num_bytes>(num_bytes);
     theMsg->sendMsg<FinishedPingMsg<num_bytes>, finishedPing>(
-      0, msg, [=]{ delete in_msg; }
+      0, msg, [=]{ delete msg; }
     );
   } else {
     NodeType const next =
       theContext->getNode() == ping_node ? pong_node : ping_node;
     #if REUSE_MESSAGE_PING_PONG
-      theMsg->sendMsg<PingMsg<num_bytes>, pingPong>(next, in_msg, [=]{ delete in_msg; });
+      // @todo: fix this memory allocation problem
+      theMsg->sendMsg<PingMsg<num_bytes>, pingPong>(
+        next, in_msg, [=]{ /*delete in_msg;*/ }
+      );
     #else
       auto m = new PingMsg<num_bytes>(cnt + 1);
       theMsg->sendMsg<PingMsg<num_bytes>, pingPong>(next, m, [=]{ delete m; });
