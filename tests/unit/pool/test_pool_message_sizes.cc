@@ -13,22 +13,38 @@
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct TestPoolMessageSizes : TestParallelHarness { };
-
-namespace pool_message_sizes_alloc_ns {
-
-template <int64_t num_bytes>
-using TestMsg = TestStaticBytesShortMsg<num_bytes>;
-
-static NodeType from_node = 0, to_node = 1;
 static constexpr int64_t const min_bytes = 1;
 static constexpr int64_t const max_bytes = 16384;
-
 static constexpr int const max_test_count = 1024;
-static int count = 0;
+static constexpr NodeType const from_node = 0;
+static constexpr NodeType const to_node = 1;
+
+struct TestPoolMessageSizes : TestParallelHarness {
+  static int count;
+
+  virtual void SetUp() {
+    TestParallelHarness::SetUp();
+    count = 0;
+  }
+
+  template <int64_t num_bytes>
+  using TestMsg = TestStaticBytesShortMsg<num_bytes>;
+
+  template <int64_t num_bytes>
+  static void testPoolFun(TestMsg<num_bytes>* msg);
+
+  template <int64_t num_bytes>
+  void initData(TestMsg<num_bytes>* msg, vt::tests::unit::ByteType const& val) {
+    for (auto& elm : msg->payload) {
+      elm = val;
+    }
+  }
+};
+
+/*static*/ int TestPoolMessageSizes::count;
 
 template <int64_t num_bytes>
-static void testPoolFun(TestMsg<num_bytes>* prev_msg) {
+void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
   auto const& this_node = theContext->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
@@ -55,13 +71,10 @@ static void testPoolFun(TestMsg<num_bytes>* prev_msg) {
 }
 
 template <>
-void testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
-
-} // end namespace pool_message_alloc_ns
+void TestPoolMessageSizes::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
 
 TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
   using namespace vt;
-  using namespace pool_message_sizes_alloc_ns;
 
   auto const& my_node = theContext->getNode();
 
@@ -71,8 +84,4 @@ TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
       to_node, msg, [=]{ delete msg; }
     );
   }
-
-  theTerm->forceGlobalTermAction([=]{
-    finished = true;
-  });
 }

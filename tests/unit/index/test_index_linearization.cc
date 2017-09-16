@@ -36,7 +36,7 @@ TEST_F(TestIndex, test_index_1d_linearization) {
       printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
     #endif
 
-    ASSERT_TRUE(lin_idx == cur_val);
+    EXPECT_EQ(lin_idx, cur_val);
 
     cur_val++;
   }
@@ -69,7 +69,7 @@ TEST_F(TestIndex, test_index_2d_linearization) {
         printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
       #endif
 
-      ASSERT_TRUE(lin_idx == cur_val);
+      EXPECT_EQ(lin_idx, cur_val);
 
       cur_val++;
     }
@@ -104,7 +104,7 @@ TEST_F(TestIndex, test_index_3d_linearization) {
           printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
         #endif
 
-        ASSERT_TRUE(lin_idx == cur_val);
+        EXPECT_EQ(lin_idx, cur_val);
 
         cur_val++;
       }

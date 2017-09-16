@@ -10,46 +10,63 @@
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct TestActiveBroadcast : TestParallelHarness { };
+struct TestActiveBroadcast : TestParameterHarnessNode {
+  using TestMsg = TestStaticBytesShortMsg<4>;
 
-namespace test_type_safe_active_fn_bcast_ns {
+  static int handler_count;
+  static int num_msg_sent;
 
-using TestMsg = TestStaticBytesShortMsg<4>;
+  virtual void SetUp() {
+    TestParameterHarnessNode::SetUp();
 
-static NodeType root_node = 0;
-static int handler_count = 0;
-static int num_msg_sent = 16;
+    handler_count = 0;
+    num_msg_sent = 16;
+  }
 
-static void test_handler(TestMsg* msg) {
-  auto const& this_node = theContext->getNode();
+  virtual void TearDown() {
+    TestParameterHarnessNode::TearDown();
+  }
 
-  #if DEBUG_TEST_HARNESS_PRINT
-    printf("%d: test_handler: cnt=%d\n", this_node, handler_count);
-  #endif
+  static void test_handler(TestMsg* msg) {
+    #if DEBUG_TEST_HARNESS_PRINT
+      auto const& this_node = theContext->getNode();
+      printf("%d: test_handler: cnt=%d\n", this_node, handler_count);
+    #endif
 
-  handler_count++;
-}
+      handler_count++;
+  }
+};
 
-}
+/*static*/ int TestActiveBroadcast::handler_count;
+/*static*/ int TestActiveBroadcast::num_msg_sent;
 
-TEST_F(TestActiveBroadcast, test_type_safe_active_fn_bcast) {
-  using namespace test_type_safe_active_fn_bcast_ns;
-
+TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
   auto const& my_node = theContext->getNode();
+  auto const& num_nodes = theContext->getNumNodes();
+
+  NodeType const& root = GetParam();
 
   #if DEBUG_TEST_HARNESS_PRINT
-    printf("test_type_safe_active_fn_bcast: node=%d\n", my_node);
+    printf("test_type_safe_active_fn_bcast: node=%d, root=%d\n", my_node, root);
   #endif
 
-  if (my_node == root_node) {
-    for (int i = 0; i < num_msg_sent; i++) {
-      auto msg = new TestMsg();
-      theMsg->broadcastMsg<TestMsg, test_handler>(msg, [=]{ delete msg; });
+  if (root < num_nodes) {
+    if (my_node == root) {
+      for (int i = 0; i < num_msg_sent; i++) {
+        auto msg = new TestMsg();
+        theMsg->broadcastMsg<TestMsg, test_handler>(msg, [=]{ delete msg; });
+      }
     }
-  } else if (my_node != root_node) {
-    theTerm->forceGlobalTermAction([=]{
-      ASSERT_TRUE(handler_count == num_msg_sent);
-      finished = true;
+
+    theTerm->attachGlobalTermAction([=]{
+      if (my_node != root) {
+        ASSERT_TRUE(handler_count == num_msg_sent);
+      }
     });
   }
 }
+
+INSTANTIATE_TEST_CASE_P(
+  InstantiationName, TestActiveBroadcast,
+  ::testing::Range(static_cast<NodeType>(0), static_cast<NodeType>(16), 1)
+);

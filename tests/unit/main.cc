@@ -6,7 +6,7 @@
 
 #include "test_harness.h"
 
-std::vector<std::string> TestHarness::orig_args_;
+//std::vector<std::string> TestHarness::orig_args_;
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

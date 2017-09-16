@@ -13,36 +13,55 @@
 
 #include "transport.h"
 
-struct TestParallelHarness : TestHarness {
-  bool finished = false;
+static bool mpi_is_initialized = false;
 
+template <typename TestBase>
+struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
   virtual void SetUp() {
     using namespace vt;
 
-    TestHarness::SetUp();
+    TestHarnessAny<TestBase>::SetUp();
 
-    CollectiveOps::initializeContext(0, nullptr);
+    if (not mpi_is_initialized) {
+      CollectiveOps::initializeContext(0, nullptr);
+      mpi_is_initialized = true;
+    }
+
+    CollectiveOps::initializeSingletons();
     CollectiveOps::initializeRuntime();
 
-    auto const& my_node = theContext->getNode();
-    auto const& num_nodes = theContext->getNumNodes();
-
     #if DEBUG_TEST_HARNESS_PRINT
+      auto const& my_node = theContext->getNode();
+      auto const& num_nodes = theContext->getNumNodes();
       printf("my_node=%d, num_nodes=%d\n", my_node, num_nodes);
     #endif
-
-    finished = false;
   }
 
   virtual void TearDown() {
     using namespace vt;
 
-    while (not finished) {
+    while (vtIsWorking) {
       runScheduler();
     }
 
-    TestHarness::TearDown();
+    #if DEBUG_TEST_HARNESS_PRINT
+      auto const& my_node = theContext->getNode();
+      printf("my_node=%d, tearing down runtime\n", my_node);
+    #endif
+
+    CollectiveOps::finalize();
+
+    TestHarnessAny<TestBase>::TearDown();
   }
 };
+
+using TestParallelHarness = TestParallelHarnessAny<testing::Test>;
+
+template <typename ParamT>
+using TestParallelHarnessParam = TestParallelHarnessAny<
+  testing::TestWithParam<ParamT>
+>;
+
+using TestParameterHarnessNode = TestParallelHarnessParam<vt::NodeType>;
 
 #endif /* __VIRTUAL_TRANSPORT_TEST_PARALLEL_HARNESS__ */

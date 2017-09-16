@@ -10,32 +10,44 @@
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct TestActiveSend : TestParallelHarness { };
+struct TestActiveSend : TestParallelHarness {
+  using TestMsg = TestStaticBytesShortMsg<4>;
 
-namespace test_type_safe_active_fn_send_ns {
+  static NodeType from_node;
+  static NodeType to_node;
 
-using TestMsg = TestStaticBytesShortMsg<4>;
+  static int handler_count;
+  static int num_msg_sent;
 
-static NodeType from_node = 0, to_node = 1;
-static int handler_count = 0;
-static int num_msg_sent = 16;
+  virtual void SetUp() {
+    TestParallelHarness::SetUp();
 
-static void test_handler(TestMsg* msg) {
-  auto const& this_node = theContext->getNode();
+    handler_count = 0;
+    num_msg_sent = 16;
 
-  #if DEBUG_TEST_HARNESS_PRINT
-    printf("%d: test_handler: cnt=%d\n", this_node, handler_count);
-  #endif
+    from_node = 0;
+    to_node = 1;
+  }
 
-  handler_count++;
-  ASSERT_TRUE(this_node == to_node);
-}
+  static void test_handler(TestMsg* msg) {
+    auto const& this_node = theContext->getNode();
 
-}
+    #if DEBUG_TEST_HARNESS_PRINT
+      printf("%d: test_handler: cnt=%d\n", this_node, handler_count);
+    #endif
+
+    handler_count++;
+
+    EXPECT_EQ(this_node, to_node);
+  }
+};
+
+/*static*/ NodeType TestActiveSend::from_node;
+/*static*/ NodeType TestActiveSend::to_node;
+/*static*/ int TestActiveSend::handler_count;
+/*static*/ int TestActiveSend::num_msg_sent;
 
 TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
-  using namespace test_type_safe_active_fn_send_ns;
-
   auto const& my_node = theContext->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
@@ -48,9 +60,8 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
       theMsg->sendMsg<TestMsg, test_handler>(1, msg, [=]{ delete msg; });
     }
   } else if (my_node == to_node) {
-    theTerm->forceGlobalTermAction([=]{
-      ASSERT_TRUE(handler_count == num_msg_sent);
-      finished = true;
+    theTerm->attachGlobalTermAction([=]{
+      EXPECT_EQ(handler_count, num_msg_sent);
     });
   }
 }

@@ -23,10 +23,10 @@ TEST_F(TestIndex, test_index_1d) {
 
   index::Index1D idx(val);
 
-  ASSERT_TRUE(idx[0] == val);
-  ASSERT_TRUE(idx.x() == val);
-  ASSERT_TRUE(idx.getSize() == val);
-  ASSERT_TRUE(idx.get(0) == val);
+  EXPECT_EQ(idx[0], val);
+  EXPECT_EQ(idx.x(), val);
+  EXPECT_EQ(idx.getSize(), val);
+  EXPECT_EQ(idx.get(0), val);
 }
 
 TEST_F(TestIndex, test_index_2d) {
@@ -37,10 +37,15 @@ TEST_F(TestIndex, test_index_2d) {
 
   index::Index2D idx(val1, val2);
 
-  ASSERT_TRUE(idx[0] == val1 and idx[1] == val2);
-  ASSERT_TRUE(idx.x() == val1 and idx.y() == val2);
-  ASSERT_TRUE(idx.get(0) == val1 and idx.get(1) == val2);
-  ASSERT_TRUE(idx.getSize() == val1 * val2);
+  EXPECT_EQ(idx[0], val1);
+  EXPECT_EQ(idx.x(), val1);
+  EXPECT_EQ(idx.get(0), val1);
+
+  EXPECT_EQ(idx[1], val2);
+  EXPECT_EQ(idx.y(), val2);
+  EXPECT_EQ(idx.get(1), val2);
+
+  EXPECT_EQ(idx.getSize(), val1 * val2);
 }
 
 TEST_F(TestIndex, test_index_3d) {
@@ -52,8 +57,17 @@ TEST_F(TestIndex, test_index_3d) {
 
   index::Index3D idx(val1, val2, val3);
 
-  ASSERT_TRUE(idx[0] == val1 and idx[1] == val2 and idx[2] == val3);
-  ASSERT_TRUE(idx.x() == val1 and idx.y() == val2 and idx.z() == val3);
-  ASSERT_TRUE(idx.get(0) == val1 and idx.get(1) == val2 and idx.get(2) == val3);
-  ASSERT_TRUE(idx.getSize() == val1 * val2 * val3);
+  EXPECT_EQ(idx[0], val1);
+  EXPECT_EQ(idx.x(), val1);
+  EXPECT_EQ(idx.get(0), val1);
+
+  EXPECT_EQ(idx[1], val2);
+  EXPECT_EQ(idx.y(), val2);
+  EXPECT_EQ(idx.get(1), val2);
+
+  EXPECT_EQ(idx[2], val3);
+  EXPECT_EQ(idx.z(), val3);
+  EXPECT_EQ(idx.get(2), val3);
+
+  EXPECT_EQ(idx.getSize(), val1 * val2 * val3);
 }

@@ -9,8 +9,9 @@
 
 #include "transport.h"
 
+using namespace vt::tests::unit;
+
 struct TestPoolSimple : TestHarness { };
-struct TestPool : TestParallelHarness { };
 
 TEST_F(TestPoolSimple, pool_alloc) {
   using namespace vt;
@@ -26,28 +27,31 @@ TEST_F(TestPoolSimple, pool_alloc) {
     void* ptr = testPool->alloc(cur_bytes);
     std::memset(ptr, init_val, cur_bytes);
     //printf("alloc %ld bytes, ptr=%p\n", cur_bytes, ptr);
-    ASSERT_TRUE(ptr != nullptr);
+    EXPECT_NE(ptr, nullptr);
     for (size_t i = 0; i < cur_bytes; i++) {
-      ASSERT_TRUE(static_cast<CharType*>(ptr)[i] == init_val);
+      EXPECT_EQ(static_cast<CharType*>(ptr)[i], init_val);
     }
     testPool->dealloc(ptr);
   }
 }
 
-namespace pool_message_alloc_ns {
-
 static constexpr int64_t const min_bytes = 1;
 static constexpr int64_t const max_bytes = 16384;
 
-template <int64_t num_bytes>
-struct TestMsg : vt::ShortMessage {
-  std::array<char, num_bytes> _;
-  TestMsg() : vt::ShortMessage() { }
+struct TestPool : TestParallelHarness {
+  template <int64_t num_bytes>
+  using TestMsg = TestStaticBytesShortMsg<num_bytes>;
+
+  template <int64_t num_bytes>
+  static void testPoolFun(TestMsg<num_bytes>* prev_msg);
+
 };
 
 template <int64_t num_bytes>
-static void testPoolFun(TestMsg<num_bytes>* prev_msg) {
-  printf("testPoolFun: num_bytes=%lld\n", num_bytes);
+void TestPool::testPoolFun(TestMsg<num_bytes>* prev_msg) {
+  #if DEBUG_TEST_HARNESS_PRINT
+    printf("testPoolFun: num_bytes=%lld\n", num_bytes);
+  #endif
 
   auto msg = new TestMsg<num_bytes * 2>();
   testPoolFun<num_bytes * 2>(msg);
@@ -55,14 +59,10 @@ static void testPoolFun(TestMsg<num_bytes>* prev_msg) {
 }
 
 template <>
-void testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) {
-}
-
-} // end namespace pool_message_alloc_ns
+void TestPool::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
 
 TEST_F(TestPool, pool_message_alloc) {
   using namespace vt;
-  using namespace pool_message_alloc_ns;
 
   auto const& my_node = theContext->getNode();
 
@@ -71,8 +71,4 @@ TEST_F(TestPool, pool_message_alloc) {
     testPoolFun<min_bytes>(msg);
     delete msg;
   }
-
-  theTerm->forceGlobalTermAction([=]{
-    finished = true;
-  });
 }

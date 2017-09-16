@@ -10,7 +10,8 @@
 #include "test_config.h"
 #include "data_message.h"
 
-struct TestHarness : testing::Test {
+template <typename TestBase>
+struct TestHarnessAny : TestBase {
   virtual void SetUp() {
     argc_ = orig_args_.size();
     argv_ = new char*[argc_];
@@ -39,5 +40,10 @@ struct TestHarness : testing::Test {
   int argc_ = 0;
   char** argv_ = nullptr;
 };
+
+template <typename TestBase>
+std::vector<std::string> TestHarnessAny<TestBase>::orig_args_;
+
+using TestHarness = TestHarnessAny<testing::Test>;
 
 #endif /* __VIRTUAL_TRANSPORT_TEST_HARNESS__ */
