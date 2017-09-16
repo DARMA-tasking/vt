@@ -3,10 +3,47 @@
 #include "termination.h"
 #include "barrier.h"
 #include "trace.h"
+#include "transport.h"
+
+#include <mpi.h>
 
 namespace vt {
 
+bool vtIsWorking = true;
+
+/*static*/ void CollectiveOps::initialize(int argc, char** argv) {
+  initializeContext(argc, argv);
+  initializeRuntime();
+}
+
+/*static*/ void CollectiveOps::finalize() {
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  finalizeSingletons();
+  finalizeContext();
+  finalizeRuntime();
+}
+
+/*static*/ void CollectiveOps::setInactiveState() {
+  vtIsWorking = false;
+}
+
+/*static*/ void CollectiveOps::initializeContext(int argc, char** argv) {
+  int num_nodes = 0, this_node = 0;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
+  MPI_Comm_rank(MPI_COMM_WORLD, &this_node);
+  theContext = std::make_unique<Context>(this_node, num_nodes);
+  MPI_Barrier(MPI_COMM_WORLD);
+}
+
+/*static*/ HandlerType CollectiveOps::registerHandler(ActiveFunctionType fn) {
+  return theRegistry->registerActiveHandler(fn);
+}
+
 /*static*/ void CollectiveOps::initializeRuntime() {
+  vtIsWorking = true;
+
   term::TerminationDetector::registerDefaultTerminationAction();
 
   MPI_Barrier(MPI_COMM_WORLD);
@@ -27,20 +64,12 @@ namespace vt {
 
 /*static*/ void
 CollectiveOps::finalizeRuntime() {
-  // wait for all nodes to wind down to finalize the runtime
-  theBarrier->systemMetaBarrierCont([]{
-    ///MPI_Finalize();
+  // set trace to nullptr to write out to disk
+  backend_enable_if(
+    trace_enabled, theTrace = nullptr;
+  );
 
-    // set trace to nullptr to write out to disk
-    backend_enable_if(
-      trace_enabled, theTrace = nullptr;
-    );
-
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    // exit the program
-    exit(0);
-  });
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 /*static*/ void CollectiveOps::finalizeContext() {
@@ -58,6 +87,22 @@ CollectiveOps::finalizeRuntime() {
   // MPI_Barrier(MPI_COMM_WORLD);
   // theContext = nullptr;
   //
+}
+
+/*static*/ void CollectiveOps::finalizeSingletons() {
+  theParam = nullptr;
+  theSeq = nullptr;
+  theLocMan = nullptr;
+
+  theTerm = nullptr;
+  theBarrier = nullptr;
+
+  theRDMA = nullptr;
+  theSched = nullptr;
+  theMsg = nullptr;
+  theRegistry = nullptr;
+  theEvent = nullptr;
+  thePool = nullptr;
 }
 
 } //end namespace vt

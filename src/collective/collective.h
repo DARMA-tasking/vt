@@ -10,20 +10,16 @@
 
 namespace vt {
 
+extern bool vtIsWorking;
+
 struct CollectiveOps {
-  static void initializeContext(int argc, char** argv) {
-    int num_nodes = 0, this_node = 0;
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
-    MPI_Comm_rank(MPI_COMM_WORLD, &this_node);
-    theContext = std::make_unique<Context>(this_node, num_nodes);
-    MPI_Barrier(MPI_COMM_WORLD);
-  }
+  static void initialize(int argc, char** argv);
+  static void finalize();
 
-  static HandlerType registerHandler(ActiveFunctionType fn) {
-    return theRegistry->registerActiveHandler(fn);
-  }
-
+  static void initializeContext(int argc, char** argv);
+  static void setInactiveState();
+  static void finalizeSingletons();
+  static HandlerType registerHandler(ActiveFunctionType fn);
   static void finalizeContext();
   static void initializeRuntime();
   static void finalizeRuntime();
