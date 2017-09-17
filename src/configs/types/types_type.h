@@ -21,7 +21,7 @@ using RefType = int16_t;
 using ByteType = uint64_t;
 using BitCountType = int32_t;
 using ActionType = std::function<void()>;
-using VrtContextProxyType = uint64_t;
+using VrtContextType = int64_t;
 
 }  // end namespace vt
 
