@@ -4,15 +4,13 @@
 
 #include "config.h"
 
-namespace vt {
-namespace utils {
+namespace vt { namespace utils {
 
-template<typename BitField>
+template <typename BitField>
 struct BitCounter {
   static constexpr BitCountType const value = sizeof(BitField) * 8;
 };
 
-}  // end namespace utils
-}  // end namespace vt
+}}  // end namespace vt::utils
 
 #endif  /*INCLUDED_BITS_COUNTER*/

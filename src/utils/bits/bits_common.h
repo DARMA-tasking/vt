@@ -8,7 +8,7 @@
 
 namespace vt {
 
-template<typename T>
+template <typename T>
 using BitCounterType = utils::BitCounter<T>;
 using BitPackerType = utils::BitPacker;
 

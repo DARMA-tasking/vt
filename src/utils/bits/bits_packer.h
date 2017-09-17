@@ -4,12 +4,11 @@
 
 #include <cassert>
 
-namespace vt {
-namespace utils {
+namespace vt { namespace utils {
 
 struct BitPacker {
 
-  template<typename BitField>
+  template <typename BitField>
   static inline uint8_t getMsbBit(BitField const& field) {
     uint64_t field_copy = static_cast<uint64_t>(field);
     uint8_t r = 0;
@@ -19,19 +18,19 @@ struct BitPacker {
     return r;
   }
 
-  template<int8_t start, int8_t len, typename BitSegment, typename BitField>
+  template <int8_t start, int8_t len, typename BitSegment, typename BitField>
   static inline void bitorSetField(BitField& field, BitSegment const& segment) {
     field |= segment << start;
   }
 
   #define gen_bit_mask(len) ((static_cast<uint64_t>(1) << (len)) - 1)
 
-  template<int8_t start, int8_t len, typename BitSegment, typename BitField>
+  template <int8_t start, int8_t len, typename BitSegment, typename BitField>
   static inline BitSegment getField(BitField const& field) {
     return static_cast<BitSegment>((field >> start) & gen_bit_mask(len));
   }
 
-  template<int8_t start, int8_t len, typename BitSegment, typename BitField>
+  template <int8_t start, int8_t len, typename BitSegment, typename BitField>
   static inline void setField(BitField& field, BitSegment const& segment) {
     #if backend_check_enabled(bit_check_overflow)
     auto const& seg_msb_bit = get_msb_bit(segment);
@@ -46,7 +45,7 @@ struct BitPacker {
     field = field | (static_cast<BitField>(segment) << start);
   }
 
-  template<int8_t start, int8_t len = 1, typename BitField>
+  template <int8_t start, int8_t len = 1, typename BitField>
   static inline void boolSetField(BitField& field, bool const& set_value) {
     if (set_value) {
       field |= 1 << start;
@@ -55,14 +54,13 @@ struct BitPacker {
     }
   }
 
-  template<int8_t start, int8_t len = 1, typename BitField>
+  template <int8_t start, int8_t len = 1, typename BitField>
   static inline bool boolGetField(BitField& field) {
     return field & (1 << start);
   }
 
 };
 
-}  // end namespace utils
-}  // end namespace vt
+}}  // end namespace vt::utils
 
 #endif  /*INCLUDED_BITS_PACKER*/

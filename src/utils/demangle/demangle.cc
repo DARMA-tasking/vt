@@ -2,8 +2,7 @@
 #include "config.h"
 #include "demangle.h"
 
-namespace vt {
-namespace demangle {
+namespace vt { namespace demangle {
 
 /*static*/ ActiveFunctionDemangler::StrParsedOutType
 ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
@@ -128,5 +127,4 @@ ActiveFunctorDemangler::parseActiveFunctorName(
   return std::make_tuple(name, args_no_space.str());
 }
 
-}  // end namespace demangle
-}  // end namespace vt
+}}  // end namespace vt::demangle

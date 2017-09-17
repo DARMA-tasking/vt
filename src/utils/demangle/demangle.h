@@ -14,14 +14,12 @@
 
 #include "config.h"
 
-
-namespace vt {
-namespace demangle {
+namespace vt { namespace demangle {
 
 using StrContainerType = std::vector<std::string>;
 
 struct DemanglerUtils {
-  template<class T>
+  template <typename T>
   static inline std::string getTypeName() {
     return typeid(T).name();
   }
@@ -32,13 +30,13 @@ struct DemanglerUtils {
     return status == 0 ? std::string(result) : name;
   }
 
-  template<typename T>
+  template <typename T>
   static inline std::string getDemangledType() {
     auto const& type = getTypeName<T>();
     return demangle(type);
   }
 
-  template<typename StringOut>
+  template <typename StringOut>
   static inline void splitString(
       std::string const& s, char delim, StringOut result
   ) {
@@ -97,7 +95,6 @@ struct ActiveFunctorDemangler {
   );
 };
 
-}  // end namespace demangle
-}  // end namespace vt
+}}  // end namespace vt::demangle
 
 #endif  /*INCLUDED_DEMANGLE*/

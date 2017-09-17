@@ -28,3 +28,24 @@ enum eMyEnum {
   ConstantOne = 0,
   ConstantTwo = 1,
 };
+
+
+template <typename T>
+struct A {
+ 
+};
+
+
+Suggestion:
+ 
+-    Use a space in between template and the bracket.
+-    Use “typename” instead of “class” for all possible cases (the only time you have to use “class” is when you have a “template template”).
+ 
+Namespaces:
+ 
+-    Do not indent code under a namespace.
+-    Always combine multiple nested namespaces in one line (makes it easier to identify the full namespace path)
+ 
+namespace X { namespace Y {
+ 
+}} // end namespace X::Y
