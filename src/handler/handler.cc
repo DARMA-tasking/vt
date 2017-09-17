@@ -14,7 +14,7 @@ namespace vt {
 
   debug_print(
     handler, node,
-    "HandlerManager::make_handler: is_functor=%s, is_auto=%s, id=%d, han=%d\n",
+    "HandlerManager::makeHandler: is_functor=%s, is_auto=%s, id=%d, han=%d\n",
     print_bool(is_functor), print_bool(is_auto), id, new_han
   );
 

@@ -33,7 +33,7 @@ struct TestActiveBroadcast : TestParameterHarnessNode {
       printf("%d: test_handler: cnt=%d\n", this_node, handler_count);
     #endif
 
-      handler_count++;
+    handler_count++;
   }
 };
 

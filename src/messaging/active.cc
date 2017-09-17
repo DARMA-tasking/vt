@@ -49,12 +49,12 @@ EventType ActiveMessenger::sendDataDirect(
   if (not is_bcast) {
     // non-broadcast message send
 
-    auto const event_id = theEvent->createMpiEventId(this_node);
+    auto const event_id = theEvent->createMPIEvent(this_node);
     auto& holder = theEvent->getEventHolder(event_id);
-    MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
+    auto mpi_event = holder.get_event();
 
     if (is_shared) {
-      mpi_event.setManagedMessage(msg);
+      mpi_event->setManagedMessage(msg);
     }
 
     if (not is_term) {
@@ -63,7 +63,7 @@ EventType ActiveMessenger::sendDataDirect(
 
     MPI_Isend(
       msg, msg_size, MPI_BYTE, dest, send_tag, MPI_COMM_WORLD,
-      mpi_event.getRequest()
+      mpi_event->getRequest()
     );
 
     if (next_action != nullptr) {
@@ -97,21 +97,21 @@ EventType ActiveMessenger::sendDataDirect(
       return no_event;
     }
 
-    auto const parent_event_id = theEvent->createParentEventId(this_node);
+    auto const parent_event_id = theEvent->createParentEvent(this_node);
     auto& parent_holder = theEvent->getEventHolder(parent_event_id);
-    ParentEvent& parent_event = *static_cast<ParentEvent*>(parent_holder.get_event());
+    auto parent_event = parent_holder.get_event();
 
     if (next_action != nullptr) {
       parent_holder.attachAction(next_action);
     }
 
     if (abs_child1 < num_nodes) {
-      auto const event_id1 = theEvent->createMpiEventId(this_node);
+      auto const event_id1 = theEvent->createMPIEvent(this_node);
       auto& holder1 = theEvent->getEventHolder(event_id1);
-      MPIEvent& mpi_event1 = *static_cast<MPIEvent*>(holder1.get_event());
+      auto mpi_event1 = holder1.get_event();
 
       if (is_shared) {
-        mpi_event1.setManagedMessage(msg);
+        mpi_event1->setManagedMessage(msg);
       }
 
       debug_print(
@@ -127,19 +127,19 @@ EventType ActiveMessenger::sendDataDirect(
 
       MPI_Isend(
         msg, msg_size, MPI_BYTE, child1, send_tag, MPI_COMM_WORLD,
-        mpi_event1.getRequest()
+        mpi_event1->getRequest()
       );
 
-      parent_event.add_event(event_id1);
+      parent_event->addEventToList(event_id1);
     }
 
     if (abs_child2 < num_nodes) {
-      auto const event_id2 = theEvent->createMpiEventId(this_node);
+      auto const event_id2 = theEvent->createMPIEvent(this_node);
       auto& holder2 = theEvent->getEventHolder(event_id2);
-      MPIEvent& mpi_event2 = *static_cast<MPIEvent*>(holder2.get_event());
+      auto mpi_event2 = holder2.get_event();
 
       if (is_shared) {
-        mpi_event2.setManagedMessage(msg);
+        mpi_event2->setManagedMessage(msg);
       }
 
       debug_print(
@@ -155,10 +155,10 @@ EventType ActiveMessenger::sendDataDirect(
 
       MPI_Isend(
         msg, msg_size, MPI_BYTE, child2, send_tag, MPI_COMM_WORLD,
-        mpi_event2.getRequest()
+        mpi_event2->getRequest()
       );
 
-      parent_event.add_event(event_id2);
+      parent_event->addEventToList(event_id2);
     }
 
     if (is_shared) {
@@ -179,9 +179,9 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   auto const& num_bytes = std::get<1>(ptr);
   auto const send_tag = tag == no_tag ? cur_direct_buffer_tag_++ : tag;
 
-  auto const event_id = theEvent->createMpiEventId(this_node);
+  auto const event_id = theEvent->createMPIEvent(this_node);
   auto& holder = theEvent->getEventHolder(event_id);
-  MPIEvent& mpi_event = *static_cast<MPIEvent*>(holder.get_event());
+  auto mpi_event = holder.get_event();
 
   debug_print(
     active, node,
@@ -191,7 +191,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   MPI_Isend(
     data_ptr, num_bytes, MPI_BYTE, dest, send_tag, MPI_COMM_WORLD,
-    mpi_event.getRequest()
+    mpi_event->getRequest()
   );
 
   theTerm->produce(no_epoch);

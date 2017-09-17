@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <cassert>
+#include <cstdint>
 
 #include "config.h"
 #include "utils/bits/bits_common.h"

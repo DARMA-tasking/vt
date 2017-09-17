@@ -25,9 +25,9 @@ bool vtIsWorking = true;
 /*static*/ void CollectiveOps::finalize() {
   MPI_Barrier(MPI_COMM_WORLD);
 
+  finalizeRuntime();
   finalizeSingletons();
   finalizeContext();
-  finalizeRuntime();
 }
 
 /*static*/ void CollectiveOps::setInactiveState() {
@@ -70,11 +70,11 @@ bool vtIsWorking = true;
 
 /*static*/ void
 CollectiveOps::finalizeRuntime() {
-  MPI_Barrier(MPI_COMM_WORLD);
-  MPI_Finalize();
 }
 
 /*static*/ void CollectiveOps::finalizeContext() {
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
   // int buf = 0, buf2 = 0, flag = 0;
   // MPI_Request req;
   // MPI_Status stat;
@@ -94,7 +94,7 @@ CollectiveOps::finalizeRuntime() {
 /*static*/ void CollectiveOps::initializeSingletons() {
   theRegistry = std::make_unique<Registry>();
   theMsg = std::make_unique<ActiveMessenger>();
-  theEvent = std::make_unique<AsyncEvent>();
+  theEvent = std::make_unique<event::AsyncEvent>();
   theTerm = std::make_unique<term::TerminationDetector>();
   theBarrier = std::make_unique<barrier::Barrier>();
   thePool = std::make_unique<pool::Pool>();
@@ -121,7 +121,7 @@ CollectiveOps::finalizeRuntime() {
   theSched = nullptr;
   theMsg = nullptr;
   theRegistry = nullptr;
-  theEvent = nullptr;
+  theEvent->cleanup(); theEvent = nullptr;
   thePool = nullptr;
 
   // set trace to nullptr to write out to disk

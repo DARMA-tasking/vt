@@ -20,7 +20,7 @@ namespace vt {
 std::unique_ptr<Context> theContext = nullptr;
 std::unique_ptr<Registry> theRegistry = nullptr;
 std::unique_ptr<ActiveMessenger> theMsg = nullptr;
-std::unique_ptr<AsyncEvent> theEvent = nullptr;
+std::unique_ptr<event::AsyncEvent> theEvent = nullptr;
 std::unique_ptr<term::TerminationDetector> theTerm = nullptr;
 std::unique_ptr<barrier::Barrier> theBarrier = nullptr;
 std::unique_ptr<pool::Pool> thePool = nullptr;

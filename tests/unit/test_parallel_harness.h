@@ -49,7 +49,8 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
       printf("my_node=%d, tearing down runtime\n", my_node);
     #endif
 
-    CollectiveOps::finalize();
+    CollectiveOps::finalizeRuntime();
+    CollectiveOps::finalizeSingletons();
 
     TestHarnessAny<TestBase>::TearDown();
   }

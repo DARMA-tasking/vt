@@ -8,10 +8,6 @@
 namespace vt {
 
 static constexpr int const num_check_actions = 8;
-
-static constexpr int const mpi_event_tag = 0;
-static constexpr int const normal_event_tag = 1;
-
 static constexpr EpochType const no_epoch = -1;
 static constexpr TagType const no_tag = -1;
 static constexpr EventType const no_event = -1;
