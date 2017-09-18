@@ -46,7 +46,8 @@ struct EntityLocationCoord {
 
   template <typename MessageT>
   void routeMsg(
-    EntityID const& id, NodeType const& home_node, MessageT* m
+    EntityID const& id, NodeType const& home_node, MessageT* m,
+    ActionType action = nullptr
   );
 
 private:
@@ -57,13 +58,14 @@ private:
 
   template <typename MessageT>
   void routeMsgEager(
-    EntityID const& id, NodeType const& home_node, MessageT* msg
+    EntityID const& id, NodeType const& home_node, MessageT* msg,
+    ActionType action = nullptr
   );
 
   template <typename MessageT>
   void routeMsgNode(
     EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-    MessageT* msg
+    MessageT* msg, ActionType action = nullptr
   );
 
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);

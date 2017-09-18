@@ -39,7 +39,9 @@ static void entityTestHandler(EntityMsg* msg) {
   );
 
   MyTestMsg* test_msg = new MyTestMsg(magic_number + node, node);
-  theLocMan->virtual_loc->routeMsg(msg->entity, msg->home, test_msg);
+  theLocMan->virtual_loc->routeMsg(
+    msg->entity, msg->home, test_msg, [=]{ delete test_msg; }
+  );
 }
 
 int main(int argc, char** argv) {

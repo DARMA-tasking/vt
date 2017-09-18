@@ -33,6 +33,8 @@ struct EventRecord {
 
   EventRecord() = default;
 
+  virtual ~EventRecord();
+
   EventRecord(EventRecordType const& type, EventType const& id);
 
   bool testMPIEventReady();

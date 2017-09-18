@@ -119,7 +119,8 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
-  EntityID const& id, NodeType const& home_node, MessageT* msg
+  EntityID const& id, NodeType const& home_node, MessageT* msg,
+  ActionType action
 ) {
   auto const& this_node = theContext->getNode();
 
@@ -155,7 +156,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
     "Node to route to must be set by this point"
   );
 
-  return routeMsgNode<MessageT>(id, home_node, route_to_node, msg);
+  return routeMsgNode<MessageT>(id, home_node, route_to_node, msg, action);
 }
 
 template <typename EntityID>
@@ -225,13 +226,13 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
   EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-  MessageT* msg
+  MessageT* msg, ActionType action
 ) {
   auto const& this_node = theContext->getNode();
   if (to_node != this_node) {
     auto entity_msg = static_cast<EntityMsgType<MessageT>*>(msg);
     // send to the node discovered by the location manager
-    theMsg->sendMsg<MessageT, msgHandler>(to_node, entity_msg);
+    theMsg->sendMsg<MessageT, msgHandler>(to_node, entity_msg, action);
   } else {
     auto trigger_msg_handler_action = [=](EntityID const& id){
       auto reg_han_iter = local_registered_msg_han_.find(id);
@@ -245,10 +246,16 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     auto reg_iter = local_registered_.find(id);
     if (reg_iter != local_registered_.end()) {
       trigger_msg_handler_action(id);
+      if (action) {
+        action();
+      }
     } else {
       // buffer the message here, the entity will be registered in the future
       insertPendingEntityAction(id, [=](NodeType) {
         trigger_msg_handler_action(id);
+        if (action) {
+          action();
+        }
       });
     }
   }
@@ -257,7 +264,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
-  EntityID const& id, NodeType const& home_node, MessageT* msg
+  EntityID const& id, NodeType const& home_node, MessageT* msg, ActionType act
 ) {
   // set field for location routed message
   msg->entity_id = id;
@@ -274,11 +281,11 @@ void EntityLocationCoord<EntityID>::routeMsg(
   );
 
   if (use_eager) {
-    routeMsgEager<MessageT>(id, home_node, msg);
+    routeMsgEager<MessageT>(id, home_node, msg, act);
   } else {
     // non-eager protocol: get location first then send message after resolution
     getLocation(id, home_node, [=](NodeType node) {
-      routeMsgNode<MessageT>(id, home_node, node, msg);
+      routeMsgNode<MessageT>(id, home_node, node, msg, act);
     });
   }
 }
@@ -320,8 +327,11 @@ template <typename MessageT>
   auto const& entity_id = msg->entity_id;
   auto const& home_node = msg->home_node;
 
-  // increase the reference count
-  messageRef(msg);
+  debug_print(
+    location, node,
+    "msgHandler: msg=%p, ref=%d\n",
+    msg, envelopeGetRef(msg->env)
+  );
 
   auto const& loc = theLocMan->virtual_loc;
   loc->routeMsg(entity_id, home_node, msg);

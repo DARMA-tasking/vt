@@ -148,7 +148,8 @@ NodeType AsyncEvent::getOwningNode(EventType const& event) {
 }
 
 bool AsyncEvent::needsPolling(EventRecordTypeType const& type) {
-  return type == EventRecordTypeType::MPI_EventRecord;
+  return type == EventRecordTypeType::MPI_EventRecord or
+         type == EventRecordTypeType::ParentEventRecord;
 }
 
 EventType AsyncEvent::createEvent(

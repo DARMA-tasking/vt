@@ -434,7 +434,12 @@ bool ActiveMessenger::deliverActiveMsg(
     theTerm->consume(epoch);
   }
 
-  if (not is_bcast and has_action_handler) {
+  if (has_action_handler) {
+    debug_print(
+      active, node,
+      "deliverActiveMsg: deref msg=%p, ref=%d, is_bcast=%s, dest=%d\n",
+      msg, envelopeGetRef(msg->env), print_bool(is_bcast), dest
+    );
     messageDeref(msg);
   }
 

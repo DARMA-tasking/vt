@@ -30,6 +30,17 @@ struct MemoryPoolEqual {
     resizePool();
   }
 
+  virtual ~MemoryPoolEqual() {
+    debug_print(
+      pool, node,
+      "cur_slot_=%lld\n", cur_slot_
+    );
+
+    for (auto&& elm : holder_) {
+      free(elm);
+    }
+  }
+
   void* alloc(size_t const& sz) {
     if (cur_slot_ + 1 >= holder_.size()) {
       resizePool();
@@ -150,7 +161,7 @@ void messageDeref(MessageT* msg) {
   );
 
   if (envelopeGetRef(msg->env) == 0) {
-    delete msg;
+    thePool->dealloc(msg);
   }
 }
 

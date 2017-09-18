@@ -27,6 +27,11 @@ EventRecord::EventRecord(EventRecordType const& type, EventType const& id)
 
 }
 
+/*virtual*/ EventRecord::~EventRecord() {
+  if (type_ == EventRecordType::ParentEventRecord) {
+    delete event_union_.event_list;
+  }
+}
 
 bool EventRecord::testMPIEventReady() {
   int flag = 0;
