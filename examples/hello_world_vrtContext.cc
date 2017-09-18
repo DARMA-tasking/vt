@@ -4,6 +4,7 @@
 
 #include "transport.h"
 #include "vrt/vrt_context.h"
+#include "vrt/vrt_contextmanager.h"
 
 using namespace vt;
 using namespace vt::vrt;
@@ -34,10 +35,16 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
 
-    VrtContext my_vrtc;
+    VrtContext my_vrtc(0, 2);
     my_vrtc.setIsCollection(false);
 
-    std::cout << my_vrtc.vrtC_UID << std::endl;
+    std::unique_ptr<vrt::VrtContextManager> theVrtCManager_ =
+        std::make_unique<vrt::VrtContextManager>();
+
+    theVrtCManager_->newVrtContext();
+    std::cout << theVrtCManager_->newVrtContext() << std::endl;
+
+    std::cout << my_vrtc.getVrtContextUId() << std::endl;
     std::cout << my_vrtc.isCollection() << std::endl;
 
     HelloMsg* msg = new HelloMsg(my_node);
