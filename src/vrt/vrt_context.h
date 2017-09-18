@@ -23,54 +23,74 @@ enum eVrtContextBits {
   Identifier = eVrtContextBits::Node + vrtCntx_identifier_num_bits
 };
 
+
 struct VrtContext {
   using VrtContext_BitsType = eVrtContextBits;
   using VrtContext_UniversalIdType = VrtContextType;
-  VrtContext_UniversalIdType vrtC_UID;
 
-  VrtContext() = default;
+//  VrtContext() = default;
+  VrtContext(
+      NodeType const& node, VrtContext_IdentifierType const& iden,
+      bool const& is_coll = false, bool const& is_migratable = false
+  ) {
+    BitPackerType::boolSetField<VrtContext_BitsType::Collection>
+        (vrtC_UID_, is_coll);
+    BitPackerType::boolSetField<VrtContext_BitsType::Migratable>
+        (vrtC_UID_, is_migratable);
+    BitPackerType::setField<VrtContext_BitsType::Node,
+                            vrtCntx_node_num_bits>(vrtC_UID_, node);
+    BitPackerType::setField<VrtContext_BitsType::Identifier,
+                            vrtCntx_identifier_num_bits>(vrtC_UID_, iden);
+  }
 
   inline void setIsCollection(bool const& is_coll) {
     BitPackerType::boolSetField<VrtContext_BitsType::Collection>
-        (vrtC_UID, is_coll);
+        (vrtC_UID_, is_coll);
   }
 
   inline void setIsMigratable(bool const& is_migratable) {
     BitPackerType::boolSetField<VrtContext_BitsType::Migratable>
-        (vrtC_UID, is_migratable);
+        (vrtC_UID_, is_migratable);
   }
 
   inline void setVrtContextNode(NodeType const& node) {
     BitPackerType::setField<VrtContext_BitsType::Node,
-                            vrtCntx_node_num_bits>(vrtC_UID, node);
+                            vrtCntx_node_num_bits>(vrtC_UID_, node);
   }
 
   inline void setVrtContextIdentifier(VrtContext_IdentifierType const& iden) {
     BitPackerType::setField<VrtContext_BitsType::Identifier,
-                            vrtCntx_identifier_num_bits>(vrtC_UID, iden);
+                            vrtCntx_identifier_num_bits>(vrtC_UID_, iden);
   }
 
-  inline bool isCollection() {
+  inline bool isCollection() const {
     return BitPackerType::boolGetField<VrtContext_BitsType::Collection>
-        (vrtC_UID);
+        (vrtC_UID_);
   }
 
-  inline bool isMigratable() {
+  inline bool isMigratable() const {
     return BitPackerType::boolGetField<VrtContext_BitsType::Migratable>
-        (vrtC_UID);
+        (vrtC_UID_);
   }
 
-  inline NodeType getVrtContextNode() {
+  inline NodeType getVrtContextNode() const {
     return BitPackerType::getField<VrtContext_BitsType::Node,
                                    vrtCntx_node_num_bits,
-                                   NodeType>(vrtC_UID);
+                                   NodeType>(vrtC_UID_);
   }
 
-  inline VrtContext_IdentifierType getVrtContextIdentifier() {
+  inline VrtContext_IdentifierType getVrtContextIdentifier() const {
     return BitPackerType::getField<VrtContext_BitsType::Identifier,
                                    vrtCntx_identifier_num_bits,
-                                   VrtContext_IdentifierType>(vrtC_UID);
+                                   VrtContext_IdentifierType>(vrtC_UID_);
   }
+
+  inline VrtContext_UniversalIdType getVrtContextUId() const {
+    return vrtC_UID_;
+  }
+
+ private:
+  VrtContext_UniversalIdType vrtC_UID_;
 };
 
 }}  // end namespace vt::vrt
