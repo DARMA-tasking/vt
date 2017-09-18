@@ -41,6 +41,8 @@ bool vtIsWorking = true;
   MPI_Comm_rank(MPI_COMM_WORLD, &this_node);
   theContext = std::make_unique<Context>(this_node, num_nodes);
   MPI_Barrier(MPI_COMM_WORLD);
+
+  debug_print(gen, node, "initializeContext\n");
 }
 
 /*static*/ HandlerType CollectiveOps::registerHandler(ActiveFunctionType fn) {
@@ -48,6 +50,8 @@ bool vtIsWorking = true;
 }
 
 /*static*/ void CollectiveOps::initializeRuntime() {
+  debug_print(gen, node, "initializeRuntime\n");
+
   vtIsWorking = true;
 
   term::TerminationDetector::registerDefaultTerminationAction();
@@ -92,6 +96,8 @@ CollectiveOps::finalizeRuntime() {
 }
 
 /*static*/ void CollectiveOps::initializeSingletons() {
+  debug_print(gen, node, "initializeSingletons\n");
+
   theRegistry = std::make_unique<Registry>();
   theMsg = std::make_unique<ActiveMessenger>();
   theEvent = std::make_unique<event::AsyncEvent>();
@@ -107,6 +113,8 @@ CollectiveOps::finalizeRuntime() {
   backend_enable_if(
     trace_enabled, theTrace = std::make_unique<trace::Trace>();
   );
+
+  debug_print(gen, node, "initializeSingletons finished\n");
 }
 
 /*static*/ void CollectiveOps::finalizeSingletons() {

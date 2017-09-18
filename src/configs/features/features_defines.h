@@ -17,7 +17,8 @@
 #define debug_none(x) x
 #define debug_gen(x) x
 #define debug_active(x) x
-#define debug_termination(x) x
+#define debug_term(x) x
+#define debug_barrier(x) x
 #define debug_event(x) x
 #define debug_pool(x) x
 #define debug_rdma(x) x

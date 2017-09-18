@@ -47,6 +47,11 @@ struct MemoryPoolEqual {
 
     void* const ptr_ret = static_cast<size_t*>(ptr) + 1;
 
+    debug_print(
+      pool, node,
+      "alloc ptr=%p, ptr_ret=%p cur_slot=%lld\n", ptr, ptr_ret, cur_slot_
+    );
+
     cur_slot_++;
 
     return ptr_ret;
@@ -59,8 +64,7 @@ struct MemoryPoolEqual {
 
     debug_print(
       pool, node,
-      "%d: dealloc t=%p, cur_slot=%lld\n",
-      theContext->getNode(), t, cur_slot_
+      "dealloc t=%p, cur_slot=%lld\n", t, cur_slot_
     );
 
     void* const ptr_actual = static_cast<size_t*>(t) - 1;

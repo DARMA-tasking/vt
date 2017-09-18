@@ -20,7 +20,6 @@ enum struct eEventRecord : int8_t {
 };
 
 using EventListType = std::vector<EventType>;
-//using EventListUniquePtrType = std::unique_ptr<EventListType>;
 using EventListPtrType = EventListType*;
 
 union uEventPayload {

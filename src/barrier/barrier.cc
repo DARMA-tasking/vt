@@ -129,6 +129,10 @@ void Barrier::barrierUp(
       if (skip_term) {
         theMsg->setTermMessage(msg);
       }
+      debug_print(
+        barrier, node,
+        "barrierUp: barrier=%llu\n", barrier
+      );
       theMsg->sendMsg<BarrierMsg, barrierUp>(parent_, msg, [=]{
         delete msg;
       });
@@ -138,6 +142,10 @@ void Barrier::barrierUp(
       if (skip_term) {
         theMsg->setTermMessage(msg);
       }
+      debug_print(
+        barrier, node,
+        "barrierDown: barrier=%llu\n", barrier
+      );
       theMsg->broadcastMsg<BarrierMsg, barrierDown>(msg, [=]{
         delete msg;
       });

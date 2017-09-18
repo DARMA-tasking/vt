@@ -86,6 +86,12 @@ EventType ActiveMessenger::sendDataDirect(
 
     debug_print(
       active, node,
+      "broadcastMsg: msg=%p, is_shared=%s, refs=%d\n",
+      msg, print_bool(is_shared), envelopeGetRef(msg->env)
+    );
+
+    debug_print(
+      active, node,
       "broadcastMsg: rel_node=%d, child=[%d,%d], root=%d, nodes=%d, handler=%d\n",
       rel_node, child1, child2, dest, num_nodes, envelopeGetHandler(msg->env)
     );
@@ -342,6 +348,12 @@ bool ActiveMessenger::deliverActiveMsg(
     trace_enabled,
     trace::TraceEntryIDType trace_id = trace::no_trace_entry_id;
     trace::TraceEventIDType trace_event = trace::no_trace_event;
+  );
+
+  debug_print(
+    active, node,
+    "deliverActiveMsg: msg=%p, ref=%d, is_bcast=%s\n",
+    msg, envelopeGetRef(msg->env), print_bool(is_bcast)
   );
 
   debug_print(

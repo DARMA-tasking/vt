@@ -29,7 +29,7 @@
 )
 
 #define backend_defaults backend_options_on(                    \
-    startup                                                     \
+   startup                                                      \
 )
 
 #endif  /*INCLUDED_DEBUG_MASTER_CONFIG*/

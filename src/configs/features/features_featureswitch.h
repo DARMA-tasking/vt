@@ -16,7 +16,8 @@
   debug_list_holder(                                                    \
     gen,                   "general",                                   \
     active,                "active",                                    \
-    termination,           "termination",                               \
+    term,                  "termination",                               \
+    barrier,               "barrier",                                   \
     event,                 "event",                                     \
     pool,                  "pool",                                      \
     rdma,                  "RDMA",                                      \

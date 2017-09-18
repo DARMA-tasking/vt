@@ -92,8 +92,8 @@ void TerminationDetector::propagateEpochExternal(
 ) {
   debug_print(
     term, node,
-    "%d: propagate_epoch_external: epoch=%d, prod=%lld, cons=%lld\n",
-    my_node, epoch, prod, cons
+    "propagateEpochExternal: epoch=%d, prod=%lld, cons=%lld\n",
+    epoch, prod, cons
   );
 
   any_epoch_state_.g_prod1 += prod;
@@ -136,8 +136,8 @@ bool TerminationDetector::propagateEpoch(
 
   debug_print(
     term, node,
-    "%d: propagate_epoch: epoch=%d, l_prod=%lld, l_cons=%lld, ec=%d, nc=%d\n",
-    my_node, epoch, state.l_prod, state.l_cons, event_count, num_children
+    "propagateEpoch: epoch=%d, l_prod=%lld, l_cons=%lld, ec=%d, nc=%d\n",
+    epoch, state.l_prod, state.l_cons, event_count, num_children_
   );
 
   if (is_ready) {
@@ -148,23 +148,22 @@ bool TerminationDetector::propagateEpoch(
 
     debug_print(
       term, node,
-      "%d: propagate_epoch: epoch=%d, l_prod=%lld, l_cons=%lld, "
+      "propagateEpoch: epoch=%d, l_prod=%lld, l_cons=%lld, "
       "g_prod1=%lld, g_cons1=%lld, event_count=%d, num_children=%d\n",
-      my_node, epoch, state.l_prod, state.l_cons, state.g_prod1, state.g_cons1,
-      event_count, num_children
+      epoch, state.l_prod, state.l_cons, state.g_prod1, state.g_cons1,
+      event_count, num_children_
     );
 
     if (not is_root_) {
       auto msg = new TermCounterMsg(epoch, state.g_prod1, state.g_cons1);
-
       theMsg->setTermMessage(msg);
       theMsg->sendMsg<TermCounterMsg, propagateEpochHandler>(
         parent_, msg, [=] { delete msg; }
       );
 
       debug_print(
-        term, node, "%d: propagate_epoch: sending to parent: %d\n", my_node,
-        parent
+        term, node,
+        "propagateEpoch: sending to parent: %d, msg=%p\n", parent_, msg
       );
 
     } else /*if (is_root) */ {
@@ -174,9 +173,9 @@ bool TerminationDetector::propagateEpoch(
       // four-counter method implementation
       debug_print(
         term, node,
-        "%d: propagate_epoch {root}: epoch=%d, g_prod1=%lld, g_cons1=%lld, "
+        "propagateEpoch {root}: epoch=%d, g_prod1=%lld, g_cons1=%lld, "
         "g_prod2=%lld, g_cons2=%lld, detected_term=%d\n",
-        my_node, epoch, state.g_prod1, state.g_cons1, state.g_prod2,
+        epoch, state.g_prod1, state.g_cons1, state.g_prod2,
         state.g_cons2, is_term
       );
 
@@ -185,6 +184,11 @@ bool TerminationDetector::propagateEpoch(
         theMsg->setTermMessage(msg);
         theMsg->broadcastMsg<TermMsg, epochFinishedHandler>(
           msg, [=] { delete msg; }
+        );
+
+        debug_print(
+          term, node,
+          "propagateEpoch: is_term msg=%p\n", msg
         );
 
         epochFinished(epoch);
@@ -197,6 +201,11 @@ bool TerminationDetector::propagateEpoch(
         theMsg->setTermMessage(msg);
         theMsg->broadcastMsg<TermMsg, epochContinueHandler>(
           msg, [=] { delete msg; }
+        );
+
+        debug_print(
+          term, node,
+          "propagateEpoch: not is_term msg=%p\n", msg
         );
 
         prop_continue = true;
@@ -215,8 +224,7 @@ bool TerminationDetector::propagateEpoch(
 void TerminationDetector::epochFinished(EpochType const& epoch) {
   debug_print(
     term, node,
-    "%d: epoch_finished: epoch=%d\n",
-    my_node, epoch
+    "epochFinished: epoch=%d\n", epoch
   );
 
   triggerAllActions(epoch);
@@ -230,8 +238,7 @@ void TerminationDetector::epochFinished(EpochType const& epoch) {
 void TerminationDetector::epochContinue(EpochType const& epoch) {
   debug_print(
     term, node,
-    "%d: epoch_continue: epoch=%d\n",
-    my_node, epoch
+    "epochContinue: epoch=%d\n", epoch
   );
 
   if (epoch == no_epoch) {
@@ -338,6 +345,11 @@ void TerminationDetector::propagateNewEpoch(EpochType const& new_epoch) {
     auto msg = new TermMsg(new_epoch);
     theMsg->setTermMessage(msg);
 
+    debug_print(
+      term, node,
+      "propagateNewEpoch: not root is_ready msg=%p\n", msg
+    );
+
     theMsg->sendMsg<TermMsg, propagateNewEpochHandler>(
       parent_, msg, [=] { delete msg; }
     );
@@ -345,6 +357,11 @@ void TerminationDetector::propagateNewEpoch(EpochType const& new_epoch) {
     // broadcast ready to all
     auto msg = new TermMsg(new_epoch);
     theMsg->setTermMessage(msg);
+
+    debug_print(
+      term, node,
+      "propagateNewEpoch: root is_ready msg=%p\n", msg
+    );
 
     theMsg->broadcastMsg<TermMsg, readyEpochHandler>(
       msg, [=] { delete msg; }

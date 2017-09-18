@@ -194,7 +194,7 @@ AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) 
 
   debug_print(
     event, node,
-    "theEvent: get_event_holder: node=%d, event=%lld, owning_node=%d\n",
+    "theEvent: getEventHolder: node=%d, event=%lld, owning_node=%d\n",
     theContext->getNode(), event, owning_node
   );
 
