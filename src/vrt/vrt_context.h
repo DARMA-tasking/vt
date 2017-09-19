@@ -8,7 +8,7 @@
 
 namespace vt { namespace vrt {
 
-using VrtContext_IdentifierType = int32_t;
+using VrtContext_IdentifierType = uint32_t;
 static constexpr BitCountType const vrtCntx_collection_num_bits = 1;
 static constexpr BitCountType const vrtCntx_migratable_num_bits = 1;
 static constexpr BitCountType const vrtCntx_node_num_bits =
@@ -23,27 +23,24 @@ enum eVrtContextBits {
   Identifier = eVrtContextBits::Node       + vrtCntx_node_num_bits
 };
 
-
 struct VrtContext {
   using VrtContext_BitsType = eVrtContextBits;
   using VrtContext_UniversalIdType = VrtContextType;
 
   VrtContext() = default;
-  VrtContext(
-      NodeType const& node, VrtContext_IdentifierType const& iden,
-      bool const& is_coll = false, bool const& is_migratable = false
-  );
+  VrtContext(NodeType const& node, VrtContext_IdentifierType const& iden,
+             bool const& is_coll = false, bool const& is_migratable = false);
 
   void setIsCollection(bool const& is_coll);
   void setIsMigratable(bool const& is_migratable);
   void setVrtContextNode(NodeType const& node);
   void setVrtContextIdentifier(VrtContext_IdentifierType const& iden);
 
-  bool isCollection() const ;
+  void printVrtContext() const;
+  bool isCollection() const;
   bool isMigratable() const;
   NodeType getVrtContextNode() const;
   VrtContext_IdentifierType getVrtContextIdentifier() const;
-  void printVrtContext() const;
 
   inline VrtContext_UniversalIdType getVrtContextUId() const {
     return vrtC_UID_;

@@ -1,5 +1,4 @@
 
-
 #include "vrt_context.h"
 
 namespace vt { namespace vrt {
