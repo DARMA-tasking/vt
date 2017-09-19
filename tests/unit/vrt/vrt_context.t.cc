@@ -3,7 +3,6 @@
 #include <gmock/gmock.h>
 
 #include "test_harness.h"
-
 #include "vrt/vrt_context.h"
 
 class TestVrtContext : public TestHarness {
@@ -63,4 +62,16 @@ TEST_F(TestVrtContext, public_API) {
   EXPECT_EQ(vrtc.isMigratable(), true);
   EXPECT_EQ(vrtc.getVrtContextNode(), 100);
   EXPECT_EQ(vrtc.getVrtContextIdentifier(), 200);
+
+  vrt::VrtContext vrtc3(20, 30, true, false);
+  vrt::VrtContext vrtc4(20, 30, true, false);
+  EXPECT_EQ(vrtc3.getVrtContextUId(), vrtc4.getVrtContextUId());
+
+  vrt::VrtContext vrtc5(20, 30, false, true);
+  vrt::VrtContext vrtc6(20, 30, false, true);
+  EXPECT_EQ(vrtc5.getVrtContextUId(), vrtc6.getVrtContextUId());
+
+  vrt::VrtContext vrtc7(20, 30, true, true);
+  vrt::VrtContext vrtc8(20, 30, true, true);
+  EXPECT_EQ(vrtc7.getVrtContextUId(), vrtc8.getVrtContextUId());
 }
