@@ -10,32 +10,42 @@
 #include "config.h"
 #include "utils/bits/bits_common.h"
 #include "configs/types/types_headers.h"
-#include "transport.h"
+#include "context.h"
 
 namespace vt { namespace vrt {
 
 struct VrtContextManager {
-  using VrtContext_Type = VrtContext;
-  using VrtContext_UniversalIdType = VrtContextType;
-  using VrtContextManager_ContainerType = std::vector<VrtContext_Type>;
+  using VrtContextManager_ContainerType = std::vector<VrtContext>;
 
-  VrtContextManager() {
-    curIdent_ = 0;
-    myNode_ = theContext->getNode();
+  VrtContextManager();
+
+  VrtContext newVrtContext();
+
+  template <typename VrtCntxt>
+  VrtContext newVrtContext(VrtCntxt* vrtc) {
+    VrtContext& temp_vrtc = *static_cast<VrtContext*>(vrtc);
+    temp_vrtc.setVrtContextNode(myNode_);
+    temp_vrtc.setVrtContextIdentifier(curIdent_);
+    holder_.push_back(temp_vrtc);
+    return holder_[curIdent_++];
   }
 
-  inline VrtContext_UniversalIdType newVrtContext() {
-    holder_.emplace_back(VrtContext(myNode_, curIdent_));
-    return curIdent_++;
-  }
+  NodeType                  getNode() const;
+  VrtContext_IdentifierType getCurrentIdent() const;
+
 
   inline void newRemoteVrtContext(
       NodeType const& node, bool const& is_coll = false,
       bool const& is_migratable = false) {}
 
+  /*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
+
+//  inline
+
+
  private:
   VrtContextManager_ContainerType holder_;
-  VrtContext_UniversalIdType curIdent_;
+  VrtContext_IdentifierType curIdent_;
   NodeType myNode_;
 };
 
