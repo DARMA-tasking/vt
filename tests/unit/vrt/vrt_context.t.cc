@@ -3,6 +3,7 @@
 #include <gmock/gmock.h>
 
 #include "test_harness.h"
+
 #include "vrt/vrt_context.h"
 
 class TestVrtContext : public TestHarness {
