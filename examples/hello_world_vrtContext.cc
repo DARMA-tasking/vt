@@ -12,16 +12,22 @@ using namespace vt::vrt;
 struct HelloMsg : vt::Message {
   int from;
 
-  HelloMsg(int const& in_from)
-      : Message(), from(in_from)
-  { }
+  explicit HelloMsg(int const& in_from)
+      : Message(), from(in_from) {}
 };
 
-static void hello_world(HelloMsg* msg) {
+struct HelloVrtContext : VrtContext {
+  int from;
+
+  explicit HelloVrtContext(int const& in_from)
+      : VrtContext(), from(in_from) {}
+};
+
+static void hello_world(HelloMsg *msg) {
   printf("%d: Hello from node %d\n", theContext->getNode(), msg->from);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   CollectiveOps::initialize(argc, argv);
 
   auto const& my_node = theContext->getNode();
@@ -33,22 +39,41 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
+  std::unique_ptr<vrt::VrtContextManager> theVrtCManager_ =
+      std::make_unique<vrt::VrtContextManager>();
+
   if (my_node == 0) {
 
-    VrtContext my_vrtc(0, 2);
-    my_vrtc.setIsCollection(false);
+    auto vrtc = theVrtCManager_->newVrtContext();
+    auto vrtc1 = theVrtCManager_->newVrtContext();
 
-    std::unique_ptr<vrt::VrtContextManager> theVrtCManager_ =
-        std::make_unique<vrt::VrtContextManager>();
+    vrtc.printVrtContext();
+    vrtc1.printVrtContext();
 
-    theVrtCManager_->newVrtContext();
-    std::cout << theVrtCManager_->newVrtContext() << std::endl;
+    HelloVrtContext my_vrtc(20);
 
-    std::cout << my_vrtc.getVrtContextUId() << std::endl;
-    std::cout << my_vrtc.isCollection() << std::endl;
+    my_vrtc.printVrtContext();
 
-    HelloMsg* msg = new HelloMsg(my_node);
-    theMsg->broadcastMsg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
+    auto myHelloVrtC_proxy =
+        theVrtCManager_->newVrtContext<HelloVrtContext>(&my_vrtc);
+
+    my_vrtc.printVrtContext();
+    std::cout << my_vrtc.from << std::endl;
+
+
+//    my_vrtc.printVrtContext();
+//    theVrtCManager->newVrtContext(my_vrtc);
+//    my_vrtc.printVrtContext();
+//    vrtc.printVrtContext();
+//    vrtc1.printVrtContext();
+////    std::cout << "My node: " << vrtc.getVrtContextNode() << std::endl;
+////    std::cout << theVrtCManager_->newVrtContext() << std::endl;
+//
+//    std::cout << my_vrtc.getVrtContextUId() << std::endl;
+//    std::cout << my_vrtc.isCollection() << std::endl;
+
+    HelloMsg *msg = new HelloMsg(my_node);
+    theMsg->broadcastMsg<HelloMsg, hello_world>(msg, [=] { delete msg; });
   }
 
   while (vtIsWorking) {

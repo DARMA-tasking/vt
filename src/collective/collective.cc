@@ -4,6 +4,8 @@
 #include "barrier.h"
 #include "trace.h"
 #include "transport.h"
+#include "vrt/vrt_contextmanager.h"
+
 
 #include <mpi.h>
 
@@ -109,6 +111,7 @@ CollectiveOps::finalizeRuntime() {
   theSeq = std::make_unique<seq::Sequencer>();
   theSched = std::make_unique<sched::Scheduler>();
   theLocMan = std::make_unique<location::LocationManager>();
+  theVrtCManager = std::make_unique<vrt::VrtContextManager>();
 
   backend_enable_if(
     trace_enabled, theTrace = std::make_unique<trace::Trace>();
@@ -131,6 +134,8 @@ CollectiveOps::finalizeRuntime() {
   theRegistry = nullptr;
   theEvent->cleanup(); theEvent = nullptr;
   thePool = nullptr;
+
+//  theVrtCManager = nullptr;
 
   // set trace to nullptr to write out to disk
   backend_enable_if(

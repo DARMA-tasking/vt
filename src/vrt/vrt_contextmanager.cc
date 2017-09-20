@@ -21,4 +21,9 @@ VrtContext_IdentifierType VrtContextManager::getCurrentIdent() const {
   return curIdent_;
 }
 
-}} // end namespace vt::vrt
+
+}
+
+std::unique_ptr<vrt::VrtContextManager> theVrtCManager;
+
+} // end namespace vt::vrt
