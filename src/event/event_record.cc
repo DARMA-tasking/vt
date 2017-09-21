@@ -4,6 +4,8 @@
 #include "event.h"
 #include "event_record.h"
 
+#include <mpi.h>
+
 namespace vt { namespace event {
 
 EventRecord::EventRecord(EventRecordType const& type, EventType const& id)
@@ -109,6 +111,7 @@ bool EventRecord::testReady() {
   default:
     assert(0 and "Should be impossible to reach this case");
   }
+  return false;
 }
 
 MPI_Request* EventRecord::getRequest() {
