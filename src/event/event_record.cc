@@ -109,6 +109,7 @@ bool EventRecord::testReady() {
   default:
     assert(0 and "Should be impossible to reach this case");
   }
+  return false;
 }
 
 MPI_Request* EventRecord::getRequest() {
