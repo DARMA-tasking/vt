@@ -4,6 +4,8 @@
 #include "event.h"
 #include "event_record.h"
 
+#include <mpi.h>
+
 namespace vt { namespace event {
 
 EventRecord::EventRecord(EventRecordType const& type, EventType const& id)
