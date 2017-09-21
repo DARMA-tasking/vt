@@ -29,7 +29,7 @@ else
     CC_COMPILER=mpicc-mpich-devel-gcc6
 fi
 
-gtest_directory=/Users/jliffla/codes/gtest-tree/build-clang
+gtest_directory=/Users/jliffla/codes/gtest/gtest-build
 
 cmake ${SOURCE_BASE_DIR} \
       -DCMAKE_INSTALL_PREFIX=`pwd` \
