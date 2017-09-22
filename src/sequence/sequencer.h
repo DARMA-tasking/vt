@@ -8,9 +8,12 @@
 #include "termination.h"
 
 #include "seq_common.h"
+#include "seq_node.h"
 #include "seq_list.h"
 #include "seq_state.h"
+#include "seq_matcher.h"
 #include "seq_action.h"
+#include "seq_parallel.h"
 
 #include <unordered_map>
 #include <list>
@@ -22,17 +25,16 @@ template <typename SeqTag, template <typename> class SeqTrigger>
 struct TaggedSequencer {
   using SeqType = SeqTag;
   using SeqListType = SeqList;
-
+  using SeqParallelType = SeqParallel;
   template <typename MessageT>
   using SeqActionType = Action<MessageT>;
-
   template <typename MessageT>
   using SeqTriggerType = SeqTrigger<MessageT>;
-
   template <typename T>
   using SeqIDContainerType = std::unordered_map<SeqType, T>;
-
   using SeqFunType = SeqListType::SeqFunType;
+  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  using SeqStateMatcherType = SeqMatcher<MessageT, f>;
 
   TaggedSequencer() = default;
 
@@ -56,12 +58,8 @@ struct TaggedSequencer {
     return cur_id;
   }
 
-  void sequenced(SeqType const& seq_id, UserSeqFunWithIDType const& fn) {
-    return attachNext(seq_id,fn);
-  }
-
-  void sequenced(SeqType const& seq_id, UserSeqFunType const& fn) {
-    return attachNext(seq_id,fn);
+  static SeqFunType convertSeqFun(UserSeqFunType const& fn) {
+    return [=]() -> bool { return fn(), true; };
   }
 
   void sequencedBlock(UserSeqFunType const& fn) {
@@ -70,6 +68,37 @@ struct TaggedSequencer {
     );
     return attachNext(stateful_seq_,fn);
   };
+
+  void sequenced(SeqType const& seq_id, UserSeqFunWithIDType const& fn) {
+    auto sfn = [=]{ fn(seq_id); };
+    return sequenced(seq_id, fn);
+  }
+
+  void sequenced(SeqType const& seq_id, UserSeqFunType const& fn) {
+    SeqListType& lst = getSeqList(seq_id);
+    lst.addAction(convertSeqFun(fn));
+  }
+
+  void parallel(
+    SeqType const& seq_id, UserSeqFunType const& fn1, UserSeqFunType const& fn2
+  ) {
+    SeqListType& lst = getSeqList(seq_id);
+    lst.addNode(
+      SeqNode::makeParallelNode(convertSeqFun(fn2), convertSeqFun(fn2))
+    );
+
+    // auto fn_wrapper = [=]() -> bool {
+    //   SeqParallelType seq_par(nullptr, fn1, fn2);
+    //   seq_par.unravelParallelRegion();
+    //   return false;
+    // };
+
+    // SeqListType& lst = getSeqList(seq_id);
+
+    // lst.addAction([=]() -> bool {
+    //   return executeInContext(seq_id, false, fn_wrapper);
+    // });
+  }
 
   SeqType get_current_seq() const {
     return stateful_seq_;
@@ -125,7 +154,8 @@ struct TaggedSequencer {
 
     debug_print(
       sequence, node,
-      "wait called with tag=%d\n", tag
+      "wait called with tag=%d: is_expanding_sequenced_=%s\n",
+      tag, print_bool(is_expanding_sequenced_)
     );
 
     assert(
@@ -139,58 +169,38 @@ struct TaggedSequencer {
 
     auto action = SeqActionType<MessageT>{cur_seq_id,trigger};
 
-    auto deferred_wait_action = [tag,trigger,lst_ptr,cur_seq_id,action]() -> bool {
+    bool const cur_seq = is_expanding_sequenced_;
+
+    auto deferred_wait_action =
+      [tag,trigger,lst_ptr,cur_seq_id,action,cur_seq]() -> bool {
+
       debug_print(
         sequence, node,
-        "wait registered for tag=%d\n", tag
+        "wait registered for tag=%d: cur_seq=%s\n", tag, print_bool(cur_seq)
       );
 
-      bool found_matching = false;
+      auto apply_func = [=](MessageT* msg){
+        action.runAction(msg);
+        messageDeref(msg);
+      };
 
-      if (tag == no_tag) {
-        auto& lst = SeqStateType<MessageT,f>::seq_msg;
-        if (lst.size() > 0) {
-          auto msg = lst.front();
-          lst.pop_front();
-          action.runAction(msg);
-          messageDeref(msg);
-          found_matching = true;
-        }
-      } else {
-        auto& tagged_lst = SeqStateType<MessageT, f>::seq_msg_tagged;
-        auto iter = tagged_lst.find(tag);
-        if (iter != tagged_lst.end()) {
-          auto msg = iter->second.front();
-          action.runAction(msg);
-          messageDeref(msg);
-          iter->second.pop_front();
-          if (iter->second.size() == 0) {
-            tagged_lst.erase(iter);
-          }
-          found_matching = true;
-        }
-      }
+      bool const has_match =
+        SeqStateMatcherType<MessageT, f>::findMatchingMsg(apply_func, tag);
 
-      if (not found_matching) {
+      if (not has_match) {
         auto ready_trigger = [lst_ptr,trigger](MessageT* msg){
           trigger(msg);
           lst_ptr->makeReady();
         };
 
-        if (tag == no_tag) {
-          auto& lst = SeqStateType<MessageT,f>::seq_action;
-          lst.emplace_back(
-            SeqActionType<MessageT>{cur_seq_id,ready_trigger}
-          );
-        } else {
-          auto& tagged_lst = SeqStateType<MessageT,f>::seq_action_tagged;
-          tagged_lst[tag].emplace_back(
-            SeqActionType<MessageT>{cur_seq_id,ready_trigger}
-          );
-        }
+        // buffer the action because there is not a matching message to trigger
+        // the message
+        SeqStateMatcherType<MessageT, f>::bufferUnmatchedAction(
+          ready_trigger, cur_seq_id, tag
+        );
       }
 
-      bool const should_block = not found_matching;
+      bool const should_block = not has_match and cur_seq;
 
       return should_block;
     };
@@ -200,19 +210,24 @@ struct TaggedSequencer {
     );
 
     lst.addAction([=]() -> bool {
-      bool const in_seq = true;
-      return executeInContext(stateful_seq_, in_seq, deferred_wait_action);
+      return executeInContext(stateful_seq_, cur_seq, deferred_wait_action);
     });
   }
 
   template <typename Callable>
   auto executeInContext(
-    SeqType const& context, bool const& __attribute__((unused)) in_sequence,
-    Callable&& c
+    SeqType const& context, bool const& in_sequence, Callable&& c
   ) {
+    bool prev_val = is_expanding_sequenced_;
+    // set up context for execution
+    is_expanding_sequenced_ = in_sequence;
     stateful_seq_ = context;
+
     auto const& ret = c();
+
+    // return context back to previous form
     stateful_seq_ = no_seq;
+    is_expanding_sequenced_ = prev_val;
     return ret;
   }
 
@@ -238,54 +253,32 @@ private:
 public:
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void sequenceMsg(MessageT* msg) {
-    bool found_matching = false;
-
     auto const& is_tag_type = envelopeIsTagType(msg->env);
 
     TagType const& msg_tag = is_tag_type ? envelopeGetTag(msg->env) : no_tag;
 
-    // try to find a matching action that is posted for this tag
-    if (msg_tag == no_tag) {
-      auto& lst = SeqStateType<MessageT, f>::seq_action;
+    auto apply_func = [=](Action<MessageT>& action){
+      executeInContext(action.seq_id, false, action.generateCallable(msg));
+    };
 
-      if (lst.size() > 0) {
-        auto action = lst.front();
-        executeInContext(action.seq_id, false, action.generateCallable(msg));
-        lst.pop_front();
-        found_matching = true;
-      }
-    } else {
-      auto& tagged_lst = SeqStateType<MessageT, f>::seq_action_tagged;
-
-      auto iter = tagged_lst.find(msg_tag);
-      if (iter != tagged_lst.end()) {
-        auto action = iter->second.front();
-        executeInContext(action.seq_id, false, action.generateCallable(msg));
-        iter->second.pop_front();
-        if (iter->second.size() == 0) {
-          tagged_lst.erase(iter);
-         }
-        found_matching = true;
-      }
-    }
+    bool const has_match =
+      SeqStateMatcherType<MessageT, f>::findMatchingAction(apply_func, msg_tag);
 
     // nothing was found so the message must be buffered and wait an action
     // being posted
-    if (not found_matching) {
+    if (not has_match) {
       // reference the arrival message to keep it alive past normal lifetime
       messageRef(msg);
 
-      if (msg_tag == no_tag) {
-        SeqStateType<MessageT, f>::seq_msg.push_back(msg);
-      } else {
-        SeqStateType<MessageT, f>::seq_msg_tagged[msg_tag].push_back(msg);
-      }
+      // buffer the unmatched messaged until a trigger is posted for it that
+      // matches
+      SeqStateMatcherType<MessageT, f>::bufferUnmatchedMessage(msg, msg_tag);
     }
 
     debug_print(
       sequence, node,
-      "sequenceMsg: arriving: msg=%p, found_matching=%s, tag=%d\n",
-      msg, print_bool(found_matching), msg_tag
+      "sequenceMsg: arriving: msg=%p, has_match=%s, tag=%d\n",
+      msg, print_bool(has_match), msg_tag
     );
   }
 
@@ -299,6 +292,8 @@ private:
   }
 
 private:
+  bool is_expanding_sequenced_ = true;
+
   SeqType stateful_seq_ = no_seq;
 
   SeqIDContainerType<SeqListType> seq_lookup_;
@@ -308,7 +303,7 @@ using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
 
 #define SEQUENCE_REGISTER_HANDLER(message, handler)                     \
   static void handler(message* m) {                                     \
-    theSeq->sequenceMsg<message, handler>(m);                         \
+    theSeq->sequenceMsg<message, handler>(m);                           \
   }
 
 }} //end namespace vt::seq

@@ -2,6 +2,10 @@
 #if ! defined __RUNTIME_TRANSPORT_SEQ_STATE__
 #define __RUNTIME_TRANSPORT_SEQ_STATE__
 
+#include <list>
+#include <unordered_map>
+
+#include "config.h"
 #include "seq_common.h"
 #include "seq_action.h"
 
@@ -14,11 +18,14 @@ struct SeqMsgState {
   template <typename T>
   using TagContainerType = std::unordered_map<TagType, T>;
 
-  using ActionContainerType = std::list<ActionType>;
+  template <typename T>
+  using ContainerType = std::list<T>;
+
+  using ActionContainerType = ContainerType<ActionType>;
   using TaggedActionContainerType = TagContainerType<ActionContainerType>;
 
-  using MsgContainerType = std::list<MessageT*>;
-  using tagged_MsgContainerType = TagContainerType<std::list<MessageT*>>;
+  using MsgContainerType = ContainerType<MessageT*>;
+  using TaggedMsgContainerType = TagContainerType<std::list<MessageT*>>;
 
   // waiting actions on matching message arrival
   static ActionContainerType seq_action;
@@ -26,7 +33,7 @@ struct SeqMsgState {
 
   // waiting messages on matching action arrival
   static MsgContainerType seq_msg;
-  static tagged_MsgContainerType seq_msg_tagged;
+  static TaggedMsgContainerType seq_msg_tagged;
 };
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
@@ -42,7 +49,7 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 typename SeqStateType<MessageT, f>::MsgContainerType SeqMsgState<MessageT, f>::seq_msg;
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-typename SeqStateType<MessageT, f>::tagged_MsgContainerType SeqMsgState<MessageT, f>::seq_msg_tagged;
+typename SeqStateType<MessageT, f>::TaggedMsgContainerType SeqMsgState<MessageT, f>::seq_msg_tagged;
 
 }} //end namespace vt::seq
 

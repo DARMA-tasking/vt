@@ -6,35 +6,42 @@
 
 #include "config.h"
 #include "seq_common.h"
+#include "seq_node.h"
 
 namespace vt { namespace seq {
 
 struct SeqList {
   using SeqFunType = std::function<bool()>;
+  using SeqNodeType = SeqNode;
 
-  SeqList(SeqType const& this_seq_in)
-    : this_seq_(this_seq_in)
+  explicit SeqList(SeqType const& this_seq_in)
+    : this_seq_(this_seq_in), ready_(true),
+      node_(seq_node_parent_tag_t)
   { }
 
   void addAction(SeqFunType const& fn) {
-    lst_.push_back(fn);
+    node_.addSequencedChild(SeqNodeType::makeNode(fn));
+  }
+
+  void addNode(SeqNodePtrType node) {
+    node_.addSequencedChild(std::move(node));
   }
 
   void progress() {
-    bool performed_action = true;
-    while (ready_ and performed_action) {
-      if (lst_.size() > 0) {
-        auto x = lst_.front();
-        lst_.pop_front();
-        bool const should_block = x();
-        if (should_block) {
-          ready_ = false;
-        }
-        performed_action = true;
-      } else {
-        performed_action = false;
-      }
-    }
+    // bool performed_action = true;
+    // while (ready_ and performed_action) {
+    //   if (lst_.size() > 0) {
+    //     auto x = lst_.front();
+    //     lst_.pop_front();
+    //     bool const should_block = x();
+    //     if (should_block) {
+    //       ready_ = false;
+    //     }
+    //     performed_action = true;
+    //   } else {
+    //     performed_action = false;
+    //   }
+    // }
   }
 
   void makeReady() {
@@ -50,7 +57,7 @@ private:
 
   bool ready_ = true;
 
-  std::list<SeqFunType> lst_;
+  SeqNode node_;
 };
 
 }} //end namespace vt::seq

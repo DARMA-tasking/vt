@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <functional>
 
+#include "config.h"
 #include "function.h"
 
 namespace vt { namespace seq {
