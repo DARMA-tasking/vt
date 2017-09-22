@@ -7,12 +7,22 @@
 
 namespace vt { namespace seq {
 
-void contextualExecution(
+bool contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 ) {
-  theSeq->executeInContext(
+  return theSeq->executeInContext(
     seq, is_sequenced, std::forward<SeqCallableType>(callable)
   );
 }
+
+// template <typename SeqTag, template <typename> class SeqTrigger>
+// /*static*/
+// typename TaggedSequencer<SeqTag, SeqTrigger>::SeqFunType
+// TaggedSequencer<SeqTag, SeqTrigger>::convertSeqFun(
+//   SeqType const& id, UserSeqFunType fn
+// ) {
+//   return [=]() -> bool { return executeInContext(id, true, fn); };
+// }
+
 
 }} //end namespace vt::seq

@@ -6,8 +6,10 @@
 #include "message.h"
 #include "active.h"
 #include "termination.h"
+#include "concurrent_deque.h"
 
 #include "seq_common.h"
+#include "seq_context.h"
 #include "seq_node.h"
 #include "seq_list.h"
 #include "seq_state.h"
@@ -22,17 +24,35 @@
 namespace vt { namespace seq {
 
 template <typename SeqTag, template <typename> class SeqTrigger>
+struct TaggedSequencer;
+
+} // end namespace seq
+
+extern std::unique_ptr<seq::TaggedSequencer<SeqType, seq::SeqMigratableTriggerType>> theSeq;
+
+}  // end namespace vt
+
+namespace vt { namespace seq {
+
+template <typename SeqTag, template <typename> class SeqTrigger>
 struct TaggedSequencer {
   using SeqType = SeqTag;
   using SeqListType = SeqList;
+  using SeqContextType = SeqContext;
   using SeqParallelType = SeqParallel;
+  using SeqFunType = SeqListType::SeqFunType;
+  using SeqContextPtrType = SeqContextType*;
+  using SeqContextContainerType = std::unordered_map<SeqType, SeqContextPtrType>;
+
   template <typename MessageT>
   using SeqActionType = Action<MessageT>;
+
   template <typename MessageT>
   using SeqTriggerType = SeqTrigger<MessageT>;
+
   template <typename T>
   using SeqIDContainerType = std::unordered_map<SeqType, T>;
-  using SeqFunType = SeqListType::SeqFunType;
+
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   using SeqStateMatcherType = SeqMatcher<MessageT, f>;
 
@@ -58,56 +78,80 @@ struct TaggedSequencer {
     return cur_id;
   }
 
-  static SeqFunType convertSeqFun(UserSeqFunType const& fn) {
-    return [=]() -> bool { return fn(), true; };
+  static SeqFunType convertSeqFun(SeqType const& id, UserSeqFunType fn)  {
+    return [=]() -> bool {
+      return theSeq->executeInContext(id, true, fn);
+    };
+  }
+
+  void assertValidContext() const {
+    assert(context_ != nullptr and "Must be in a valid sequence");
   }
 
   void sequencedBlock(UserSeqFunType const& fn) {
-    assert(
-      stateful_seq_ != no_seq and "Must be in a valid sequence"
-    );
-    return attachNext(stateful_seq_,fn);
+    assertValidContext();
+    return attachNext(context_->getSeq(), fn);
   };
 
   void sequenced(SeqType const& seq_id, UserSeqFunWithIDType const& fn) {
+    debug_print(
+      sequence, node,
+      "sequenced (UserSeqFunWithIDType) seq_id=%d\n", seq_id
+    );
+
     auto sfn = [=]{ fn(seq_id); };
-    return sequenced(seq_id, fn);
+    return sequenced(seq_id, sfn);
   }
 
   void sequenced(SeqType const& seq_id, UserSeqFunType const& fn) {
+    debug_print(
+      sequence, node,
+      "sequenced (UserSeqFunType) seq_id=%d\n", seq_id
+    );
+
     SeqListType& lst = getSeqList(seq_id);
-    lst.addAction(convertSeqFun(fn));
+    lst.addAction(convertSeqFun(seq_id, fn));
+    checkReadySeqList(seq_id);
   }
 
   void parallel(
     SeqType const& seq_id, UserSeqFunType const& fn1, UserSeqFunType const& fn2
   ) {
-    SeqListType& lst = getSeqList(seq_id);
-    lst.addNode(
-      SeqNode::makeParallelNode(convertSeqFun(fn2), convertSeqFun(fn2))
+    debug_print(
+      sequence, node,
+      "parallel seq_id=%d\n", seq_id
     );
 
-    // auto fn_wrapper = [=]() -> bool {
-    //   SeqParallelType seq_par(nullptr, fn1, fn2);
-    //   seq_par.unravelParallelRegion();
-    //   return false;
-    // };
-
-    // SeqListType& lst = getSeqList(seq_id);
-
-    // lst.addAction([=]() -> bool {
-    //   return executeInContext(seq_id, false, fn_wrapper);
-    // });
+    SeqListType& lst = getSeqList(seq_id);
+    lst.addNode(
+      SeqNode::makeParallelNode(
+        seq_id, convertSeqFun(seq_id, fn2), convertSeqFun(seq_id, fn2)
+      )
+    );
+    checkReadySeqList(seq_id);
   }
 
-  SeqType get_current_seq() const {
-    return stateful_seq_;
+  void checkReadySeqList(SeqType const& seq_id) {
+    SeqListType& lst = getSeqList(seq_id);
+    if (lst.isReady()) {
+      lst.expandNextNode();
+    }
+  }
+
+  void activeNextSeq(SeqType const& seq_id) {
+    // SeqListType& lst = getSeqList(seq_id);
+    // lst.expandNextNode();
+  }
+
+  SeqType getCurrentSeq() const {
+    assertValidContext();
+    return context_->getSeq();
   }
 
   bool scheduler() {
-    for (auto&& live_seq : seq_lookup_) {
-      live_seq.second.progress();
-    }
+    // for (auto&& live_seq : seq_lookup_) {
+    //   live_seq.second.progress();
+    // }
     return false;
   }
 
@@ -118,6 +162,31 @@ struct TaggedSequencer {
       }
     }
     return true;
+  }
+
+  void setNode(SeqType const& id, SeqNodePtrType node) {
+    auto iter = context_lookup_.find(id);
+    if (iter == context_lookup_.end()) {
+      context_lookup_[id] = new SeqContext(id);
+      iter = context_lookup_.find(id);
+    }
+    iter->second->setNode(node);
+  }
+
+  SeqNodePtrType getNode(SeqType const& id) const {
+    auto iter = context_lookup_.find(id);
+    return iter == context_lookup_.end() ? nullptr : iter->second->getNode();
+  }
+
+  bool getSeqReady(SeqType const& id) {
+    auto const& node = getNode(id);
+    return node ? node->isReady() : (assert(0), false);
+  }
+
+  void setSeqReady(SeqType const& id, bool const& ready) {
+    auto const& node = getNode(id);
+    assert(node != nullptr and "Node must exist");
+    node->setReady(ready);
   }
 
   template <
@@ -152,33 +221,24 @@ struct TaggedSequencer {
 
     theTerm->produce();
 
+    assertValidContext();
+
+    SeqType const seq_id = context_->getSeq();
+    SeqNodePtrType node = getNode(seq_id);
+    bool const seq_ready = getSeqReady(seq_id);
+    bool const cur_seq = true;
+
     debug_print(
       sequence, node,
-      "wait called with tag=%d: is_expanding_sequenced_=%s\n",
-      tag, print_bool(is_expanding_sequenced_)
+      "Sequencer: wait: f=%p tag=%d: context seq id=%d, node=%p, blocked=%s, "
+      "ready=%s\n",
+      f, tag, seq_id, PRINT_SEQ_NODE_PTR(node),
+      print_bool(node->isBlockedNode()), print_bool(seq_ready)
     );
 
-    assert(
-      stateful_seq_ != no_seq and "Must have valid seq now"
-    );
+    auto action = SeqActionType<MessageT>{seq_id,trigger};
 
-    SeqListType& lst = getSeqList(stateful_seq_);
-    SeqListType* const lst_ptr = &lst;
-
-    auto const cur_seq_id = stateful_seq_;
-
-    auto action = SeqActionType<MessageT>{cur_seq_id,trigger};
-
-    bool const cur_seq = is_expanding_sequenced_;
-
-    auto deferred_wait_action =
-      [tag,trigger,lst_ptr,cur_seq_id,action,cur_seq]() -> bool {
-
-      debug_print(
-        sequence, node,
-        "wait registered for tag=%d: cur_seq=%s\n", tag, print_bool(cur_seq)
-      );
-
+    auto deferred_wait_action = [tag,trigger,node,seq_id,action,cur_seq]() -> bool {
       auto apply_func = [=](MessageT* msg){
         action.runAction(msg);
         messageDeref(msg);
@@ -187,48 +247,72 @@ struct TaggedSequencer {
       bool const has_match =
         SeqStateMatcherType<MessageT, f>::findMatchingMsg(apply_func, tag);
 
+      auto const is_blocked = node->isBlockedNode();
+
+      debug_print(
+        sequence, node,
+        "Sequencer: wait registered: tag=%d: cur_seq=%s, node=%p, "
+        "has_match=%s, is_blocked=%s\n",
+        tag, print_bool(cur_seq), PRINT_SEQ_NODE_PTR(node),
+        print_bool(has_match), print_bool(is_blocked)
+      );
+
       if (not has_match) {
-        auto ready_trigger = [lst_ptr,trigger](MessageT* msg){
+        auto ready_trigger = [node,seq_id,trigger](MessageT* msg){
+          auto is_blocked = node->isBlockedNode();
+
+          debug_print(
+            sequence, node,
+            "Sequencer: ready trigger: seq_id=%d, node=%p, is_blocked=%s\n",
+            seq_id, PRINT_SEQ_NODE_PTR(node), print_bool(is_blocked)
+          );
+
           trigger(msg);
-          lst_ptr->makeReady();
+
+          assert(node != nullptr and "node must not be nullptr");
+
+          node->setBlockedOnNode(eSeqConstructType::WaitConstruct, false);
+          node->activate();
         };
 
         // buffer the action because there is not a matching message to trigger
         // the message
         SeqStateMatcherType<MessageT, f>::bufferUnmatchedAction(
-          ready_trigger, cur_seq_id, tag
+          ready_trigger, seq_id, tag
         );
       }
 
       bool const should_block = not has_match and cur_seq;
 
+      node->setBlockedOnNode(eSeqConstructType::WaitConstruct, should_block);
+
       return should_block;
     };
 
-    assert(
-      stateful_seq_ != no_seq and "Must be in an active sequence context"
-    );
+    if (seq_ready) {
+      // run it here, right now
+      bool const has_match = not deferred_wait_action();
 
-    lst.addAction([=]() -> bool {
-      return executeInContext(stateful_seq_, cur_seq, deferred_wait_action);
-    });
+      debug_print(
+        sequence, node,
+        "Sequencer: executed wait: has_match=%s: seq_id=%d\n",
+        print_bool(has_match), seq_id
+      );
+    } else {
+      node->addSequencedWait(deferred_wait_action);
+    }
   }
 
+  // should be made thread-safe and thread-local
   template <typename Callable>
-  auto executeInContext(
-    SeqType const& context, bool const& in_sequence, Callable&& c
+  bool executeInContext(
+    SeqType const& id, bool const& in_sequence, Callable&& c
   ) {
-    bool prev_val = is_expanding_sequenced_;
-    // set up context for execution
-    is_expanding_sequenced_ = in_sequence;
-    stateful_seq_ = context;
-
-    auto const& ret = c();
-
-    // return context back to previous form
-    stateful_seq_ = no_seq;
-    is_expanding_sequenced_ = prev_val;
-    return ret;
+    SeqContextType local_context(id);
+    context_ = &local_context;
+    c();
+    context_ = nullptr;
+    return true;
   }
 
 private:
@@ -264,6 +348,12 @@ public:
     bool const has_match =
       SeqStateMatcherType<MessageT, f>::findMatchingAction(apply_func, msg_tag);
 
+    debug_print(
+      sequence, node,
+      "sequenceMsg: arriving: msg=%p, has_match=%s, tag=%d\n",
+      msg, print_bool(has_match), msg_tag
+    );
+
     // nothing was found so the message must be buffered and wait an action
     // being posted
     if (not has_match) {
@@ -273,13 +363,9 @@ public:
       // buffer the unmatched messaged until a trigger is posted for it that
       // matches
       SeqStateMatcherType<MessageT, f>::bufferUnmatchedMessage(msg, msg_tag);
+    } else {
+      // trigger the next continuation
     }
-
-    debug_print(
-      sequence, node,
-      "sequenceMsg: arriving: msg=%p, has_match=%s, tag=%d\n",
-      msg, print_bool(has_match), msg_tag
-    );
   }
 
 private:
@@ -292,12 +378,27 @@ private:
   }
 
 private:
-  bool is_expanding_sequenced_ = true;
+  SeqContextContainerType context_lookup_;
 
-  SeqType stateful_seq_ = no_seq;
+  SeqContext* context_ = nullptr;
 
   SeqIDContainerType<SeqListType> seq_lookup_;
+
+  util::container::ConcurrentDeque<ActionType> work_deque_;
 };
+
+
+inline void setNode(SeqType const& id, SeqNodePtrType node) {
+  theSeq->setNode(id, node);
+}
+
+inline void seqProgress(SeqType const& id) {
+  theSeq->checkReadySeqList(id);
+}
+
+inline void setSeqReady(SeqType const& id, bool const& ready) {
+  theSeq->setSeqReady(id, ready);
+}
 
 using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
 
@@ -311,8 +412,6 @@ using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
 namespace vt {
 
 extern std::unique_ptr<seq::Sequencer> theSeq;
-
-//using SequenceMessage = seq::SeqMsg;
 
 } //end namespace vt
 

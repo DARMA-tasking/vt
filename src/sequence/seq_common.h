@@ -20,15 +20,35 @@ using SeqNonMigratableTriggerType = std::function<void(MessageT*)>;
 template <typename MessageT>
 using SeqMigratableTriggerType = ActiveAnyFunctionType<MessageT>;
 
+using SeqContinuation = std::function<void()>;
+
+enum class eSeqConstructType : int8_t {
+  WaitConstruct = 1,
+  ParallelConstruct = 2,
+  InvalidConstruct = -1
+};
+
+//using SeqConstructListenerFun = std::function<void(eSeqConstructType,bool)>;
+
+#define PRINT_SEQ_CONSTRUCT_TYPE(NODE)                                  \
+  ((NODE) == eSeqConstructType::WaitConstruct ? "WaitConstruct" :       \
+   ((NODE) == eSeqConstructType::ParallelConstruct ? "ParallelConstruct" : \
+    ((NODE) == eSeqConstructType::InvalidConstruct ? "InvalidConstruct" : "???") \
+   )                                                                    \
+  )
+
 using SeqCallableType = std::function<bool()>;
 
 static constexpr SeqType const initial_seq = 0;
 static SeqType next_seq_id = initial_seq;
 static constexpr SeqType const no_seq = -1;
 
-void contextualExecution(
+bool contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 );
+
+void seqProgress(SeqType const& id);
+void setSeqReady(SeqType const& id, bool const& ready);
 
 }} //end namespace vt::seq
 
