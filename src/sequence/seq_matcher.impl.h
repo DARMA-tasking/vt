@@ -17,7 +17,7 @@ namespace vt { namespace seq {
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 template <typename T, typename FnT>
-/*static*/ bool SeqMatcher<MessageT, f>::findMatchingNoTag(SeqStateContType<T>& lst, FnT func) {
+/*static*/ bool SeqMatcher<MessageT, f>::applyActionFirstElem(T& lst, FnT func) {
   bool applied_action = false;
   if (lst.size() > 0) {
     auto elm = lst.front();
@@ -30,19 +30,24 @@ template <typename T, typename FnT>
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 template <typename T, typename FnT>
+/*static*/ bool SeqMatcher<MessageT, f>::findMatchingNoTag(
+  SeqStateContType<T>& lst, FnT func
+) {
+  return applyActionFirstElem(lst, func);
+}
+
+template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename T, typename FnT>
 /*static*/ bool SeqMatcher<MessageT, f>::findMatchingTagged(
   SeqStateTaggedContType<T>& tagged_lst, FnT func, TagType const& tag
 ) {
   bool applied_action = false;
   auto iter = tagged_lst.find(tag);
   if (iter != tagged_lst.end()) {
-    auto elm = iter->second.front();
-    func(elm);
-    iter->second.pop_front();
+    applied_action = applyActionFirstElem(iter->second, func);
     if (iter->second.size() == 0) {
       tagged_lst.erase(iter);
     }
-    applied_action = true;
   }
   return applied_action;
 }

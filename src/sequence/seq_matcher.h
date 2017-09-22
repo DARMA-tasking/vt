@@ -28,6 +28,9 @@ struct SeqMatcher {
   using SeqStateTaggedContType = typename SeqMsgStateType::template TagContainerType<T>;
 
   template <typename T, typename FnT>
+  static bool applyActionFirstElem(T& lst, FnT func);
+
+  template <typename T, typename FnT>
   static bool findMatchingNoTag(SeqStateContType<T>& lst, FnT func);
 
   template <typename T, typename FnT>
