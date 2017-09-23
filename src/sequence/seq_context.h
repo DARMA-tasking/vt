@@ -12,32 +12,13 @@
 namespace vt { namespace seq {
 
 struct SeqContext {
-  SeqContext(SeqType const& in_seq_id, SeqNodePtrType in_node)
-    : node_(in_node), seq_id(in_seq_id) {
-    debug_print(
-      sequence, node,
-      "SeqContext: construct: node=%p, id=%d\n", PRINT_SEQ_NODE_PTR(node_), seq_id
-    );
-  }
-  SeqContext(SeqType const& in_seq_id) : seq_id(in_seq_id) { }
+  SeqContext(SeqType const& in_seq_id, SeqNodePtrType in_node);
+  SeqContext(SeqType const& in_seq_id);
   SeqContext(SeqContext const&) = delete;
 
-  SeqType getSeq() const {
-    return seq_id;
-  }
-
-  SeqNodePtrType getNode() const {
-    return node_;
-  }
-
-  void setNode(SeqNodePtrType node) {
-    debug_print(
-      sequence, node,
-      "SeqContext: setNode: node=%p, id=%d\n", PRINT_SEQ_NODE_PTR(node), seq_id
-    );
-
-    node_ = node;
-  }
+  SeqType getSeq() const;
+  SeqNodePtrType getNode() const;
+  void setNode(SeqNodePtrType node);
 
 private:
   SeqNodePtrType node_ = nullptr;
