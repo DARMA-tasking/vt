@@ -57,13 +57,23 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
   }
 }
 
-void SeqParallel::join() {
+bool SeqParallel::join() {
   auto const& old_val = num_funcs_completed_.fetch_add(1);
+
+  debug_print(
+    sequence, node,
+    "SeqParallel: join: old_val=%d, num_funcs=%d\n", old_val, num_funcs_
+  );
 
   if (old_val == num_funcs_ - 1) {
     if (triggered_action_ != nullptr) {
       triggered_action_();
     }
+    return true;
+  } else if (old_val > num_funcs_ - 1) {
+    return true;
+  } else {
+    return false;
   }
 }
 

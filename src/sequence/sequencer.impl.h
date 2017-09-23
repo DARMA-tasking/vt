@@ -115,12 +115,13 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel(
   );
 
   SeqNodePtrType par_node = SeqNode::makeParallelNode(
-    seq_id, convertSeqFun(seq_id, fn2), convertSeqFun(seq_id, fn2)
+    seq_id, convertSeqFun(seq_id, fn1), convertSeqFun(seq_id, fn2)
   );
 
   if (has_context) {
     // add to current inner node context container for sequence
     SeqNodePtrType node = getNode(seq_id);
+    par_node->setParent(node);
     node->addSequencedParallelClosure(par_node);
   } else {
     // add to outer scope container for sequence
@@ -150,6 +151,11 @@ template <typename SeqTag, template <typename> class SeqTrigger>
 bool TaggedSequencer<SeqTag, SeqTrigger>::scheduler() {
   bool found = false;
   if (work_deque_.size() > 0) {
+    debug_print(
+      sequence, node, "Sequencer: scheduler executing size=%ld\n",
+      work_deque_.size()
+    );
+
     auto work_unit = work_deque_.front();
     work_deque_.popFront();
     work_unit();
@@ -357,6 +363,10 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 void TaggedSequencer<SeqTag, SeqTrigger>::enqueue(ActionType const& action) {
+  debug_print(
+    sequence, node, "Sequencer: enqueue item\n"
+  );
+
   work_deque_.pushBack(action);
 }
 

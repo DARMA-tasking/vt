@@ -31,7 +31,7 @@ struct SeqParallel {
   SeqFuncLen getNumFuncsCompleted() const;
   SeqFuncLen getSize() const;
   eSeqNodeState expandParallelNode(SeqNodePtrType this_node);
-  void join();
+  bool join();
 
 private:
   SeqType seq_id_ = no_seq;

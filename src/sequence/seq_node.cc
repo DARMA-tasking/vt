@@ -98,14 +98,16 @@ SeqNode::SizeType SeqNode::getSize() const {
 }
 
 void SeqNode::setBlockedOnNode(eSeqConstructType cons, bool const& is_blocked) {
-  blocked_on_node_ = is_blocked;
-  ready_ = not is_blocked;
+  if (type_ != TypeEnum::ParallelNode) {
+    blocked_on_node_ = is_blocked;
+    ready_ = not is_blocked;
 
-  debug_print(
-    sequence, node,
-    "SeqNode: (%p) blockedOnNode blocked_on_node_=%s\n",
-    this, print_bool(blocked_on_node_)
-  );
+    debug_print(
+      sequence, node,
+      "SeqNode: (%p) blockedOnNode blocked_on_node_=%s\n",
+      this, print_bool(blocked_on_node_)
+    );
+  }
 }
 
 SeqNodeStateEnumType SeqNode::expandLeafNode() {
@@ -226,8 +228,14 @@ void SeqNode::activate() {
     "SeqNode: activate (%p) type=%s\n", this, PRINT_SEQ_NODE_TYPE(type_)
   );
 
-  if (type_ == TypeEnum::ParallelNode) {
-  } else {
+  bool const type_is_parallel = type_ == TypeEnum::ParallelNode;
+  bool finished_parallel = false;
+
+  if (type_is_parallel) {
+    finished_parallel = payload_.parallel->join();
+  }
+
+  if (not type_is_parallel or finished_parallel) {
     auto const& unexpanded_size = this->getSize();
     bool const has_unexpanded_nodes = unexpanded_size != 0;
     bool const has_sequenced_closures = sequenced_closures_.size() != 0;
