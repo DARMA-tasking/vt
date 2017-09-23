@@ -215,7 +215,6 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(
   assert(node != nullptr and "Must have node from context");
 
   bool const seq_ready = node->isReady();
-  bool const cur_seq = true;
 
   debug_print(
     sequence, node,
@@ -227,33 +226,30 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(
 
   auto action = SeqActionType<MessageT>{seq_id,trigger};
 
-  auto deferred_wait_action = [tag,trigger,node,seq_id,action,cur_seq]() -> bool {
+  auto deferred_wait_action = [tag,trigger,node,seq_id,action]() -> bool {
     auto apply_func = [=](MessageT* msg){
       action.runAction(msg);
       messageDeref(msg);
     };
 
     bool const has_match =
-    SeqStateMatcherType<MessageT, f>::findMatchingMsg(apply_func, tag);
-
-    auto const is_blocked = node->isBlockedNode();
+      SeqStateMatcherType<MessageT, f>::findMatchingMsg(apply_func, tag);
 
     debug_print(
       sequence, node,
-      "Sequencer: wait registered: tag=%d: cur_seq=%s, node=%p, "
-      "has_match=%s, is_blocked=%s\n",
-      tag, print_bool(cur_seq), PRINT_SEQ_NODE_PTR(node),
-      print_bool(has_match), print_bool(is_blocked)
+      "Sequencer: wait registered: tag=%d: node=%p, has_match=%s, "
+      "is_blocked=%s\n",
+      tag, PRINT_SEQ_NODE_PTR(node), print_bool(has_match),
+      print_bool(node->isBlockedNode())
     );
 
     if (not has_match) {
       auto msg_recv_trigger = [node,seq_id,trigger](MessageT* msg){
-        auto is_blocked = node->isBlockedNode();
-
         debug_print(
           sequence, node,
           "Sequencer: msg_recv_trigger: seq=%d, node=%p, blocked=%s, msg=%p\n",
-          seq_id, PRINT_SEQ_NODE_PTR(node), print_bool(is_blocked), msg
+          seq_id, PRINT_SEQ_NODE_PTR(node), print_bool(node->isBlockedNode()),
+          msg
         );
 
         trigger(msg);
@@ -271,9 +267,13 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(
       );
     }
 
-    bool const should_block = not has_match and cur_seq;
+    bool const should_block = not has_match;
 
     node->setBlockedOnNode(eSeqConstructType::WaitConstruct, should_block);
+
+    if (has_match) {
+      node->activate();
+    }
 
     return should_block;
   };

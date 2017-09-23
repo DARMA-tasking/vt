@@ -44,6 +44,11 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
       }
     } else {
       auto defer_work = [=]{
+        debug_print(
+          sequence, node,
+          "SeqParallel: parallel node: expand deferred: id=%d\n", seq_id_
+        );
+
         executeSeqExpandContext(seq_id_, this_node, par_fn);
       };
       enqueue_action(defer_work);
