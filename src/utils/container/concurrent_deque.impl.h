@@ -21,6 +21,18 @@ void ConcurrentDeque<T>::emplaceFront(T&& elm) {
 }
 
 template <typename T>
+void ConcurrentDeque<T>::pushBack(T const& elm) {
+  std::lock_guard<std::mutex> guard(container_mutex_);
+  container_.push_back(elm);
+}
+
+template <typename T>
+void ConcurrentDeque<T>::pushFront(T const& elm) {
+  std::lock_guard<std::mutex> guard(container_mutex_);
+  container_.push_front(elm);
+}
+
+template <typename T>
 typename ConcurrentDeque<T>::TConstRef ConcurrentDeque<T>::front() const {
   std::lock_guard<std::mutex> guard(container_mutex_);
   return container_.front();

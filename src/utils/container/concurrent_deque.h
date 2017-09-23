@@ -30,6 +30,8 @@ struct ConcurrentDeque {
 
   void emplaceBack(T&& elm);
   void emplaceFront(T&& elm);
+  void pushBack(T const& elm);
+  void pushFront(T const& elm);
 
   TConstRef front() const;
   TConstRef back() const;
