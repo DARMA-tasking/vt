@@ -39,27 +39,7 @@ struct SeqContext {
     node_ = node;
   }
 
-  void setSeqReady(bool const& ready) {
-    assert(node_ != nullptr and "Node must not be nullptr");
-    node_->setReady(ready);
-  }
-
-  bool getSeqReady() const {
-    assert(node_ != nullptr and "Node must not be nullptr");
-    return node_->isReady();
-  }
-
-  // bool isBlocked() const {
-  //   return contextual_blocked_fn_;
-  // }
-
-  // void setBlocked(bool const& blocked) {
-  //   contextual_blocked_fn_ = blocked;
-  // }
-
 private:
-  // bool contextual_blocked_fn_ = false;
-
   SeqNodePtrType node_ = nullptr;
 
   SeqType seq_id = no_seq;

@@ -30,7 +30,7 @@ enum class eSeqConstructType : int8_t {
 };
 
 #define PRINT_SEQ_CONSTRUCT_TYPE(NODE)                                  \
-  ((NODE) == eSeqConstructType::WaitConstruct ? "WaitConstruct" :       \
+  ((NODE) == eSeqConstructType::WaitConstruct ?"WaitConstruct" :        \
    ((NODE) == eSeqConstructType::ParallelConstruct ? "ParallelConstruct" : \
     ((NODE) == eSeqConstructType::InvalidConstruct ? "InvalidConstruct" : "???") \
    )                                                                    \
@@ -45,9 +45,6 @@ static constexpr SeqType const no_seq = -1;
 bool contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 );
-
-void seqProgress(SeqType const& id);
-void setSeqReady(SeqType const& id, bool const& ready);
 
 }} //end namespace vt::seq
 
