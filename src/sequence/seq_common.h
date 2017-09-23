@@ -45,6 +45,9 @@ static constexpr SeqType const no_seq = -1;
 bool contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 );
+void enqueue_action(ActionType const& action);
+
+static constexpr bool const seq_skip_queue = false;
 
 }} //end namespace vt::seq
 

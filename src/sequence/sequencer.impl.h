@@ -106,18 +106,29 @@ template <typename SeqTag, template <typename> class SeqTrigger>
 void TaggedSequencer<SeqTag, SeqTrigger>::parallel(
   SeqType const& seq_id, UserSeqFunType const& fn1, UserSeqFunType const& fn2
 ) {
+  bool const has_context = hasContext();
+
   debug_print(
     sequence, node,
-    "Sequencer: parallel seq_id=%d\n", seq_id
+    "Sequencer: parallel seq_id=%d: has_context=%s\n",
+    seq_id, print_bool(has_context)
   );
 
-  SeqListType& lst = getSeqList(seq_id);
-  lst.addNode(
-    SeqNode::makeParallelNode(
-      seq_id, convertSeqFun(seq_id, fn2), convertSeqFun(seq_id, fn2)
-    )
+  SeqNodePtrType par_node = SeqNode::makeParallelNode(
+    seq_id, convertSeqFun(seq_id, fn2), convertSeqFun(seq_id, fn2)
   );
-  checkReadySeqList(seq_id);
+
+  if (has_context) {
+    // add to current inner node context container for sequence
+    SeqNodePtrType node = getNode(seq_id);
+    node->addSequencedParallelClosure(par_node);
+  } else {
+    // add to outer scope container for sequence
+    SeqListType& lst = getSeqList(seq_id);
+    lst.addNode(par_node);
+    checkReadySeqList(seq_id);
+  }
+
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
@@ -364,11 +375,10 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
     lookupContextExecute(action.seq_id, action.generateCallable(msg));
   };
 
-  bool const apply_action_immediately = true;
   bool has_match = false;
 
   // skip the work queue and directly execute
-  if (apply_action_immediately) {
+  if (seq_skip_queue) {
     has_match = SeqStateMatcherType<MessageT, f>::findMatchingAction(
       apply_func, msg_tag
     );
@@ -415,6 +425,10 @@ TaggedSequencer<SeqTag, SeqTrigger>::getSeqList(SeqType const& seq_id) {
 template <typename Fn>
 bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn) {
   return theSeq->executeInNodeContext(id, node, fn);
+}
+
+inline void enqueue_action(ActionType const& action) {
+  theSeq->enqueue(action);
 }
 
 }} //end namespace vt::seq
