@@ -10,10 +10,26 @@ namespace vt { namespace seq {
 bool contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 ) {
-  return theSeq->executeInContext(
-    seq, is_sequenced, std::forward<SeqCallableType>(callable)
-  );
+  theSeq->lookupContextExecute(seq, std::forward<SeqCallableType>(callable));
+  return true;
 }
+
+SeqNodeStateEnumType SeqClosure::execute() {
+  debug_print(
+    sequence, node,
+    "SeqClosure: execute is_leaf=%s\n", print_bool(is_leaf)
+  );
+
+  if (is_leaf) {
+    bool const should_block = leaf_closure();
+    return should_block ?
+      SeqNodeStateEnumType::WaitingNextState :
+      SeqNodeStateEnumType::KeepExpandingState;
+  } else {
+    return child_closure->expandNext();
+  }
+}
+
 
 // template <typename SeqTag, template <typename> class SeqTrigger>
 // /*static*/

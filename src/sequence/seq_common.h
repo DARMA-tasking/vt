@@ -12,6 +12,7 @@ namespace vt { namespace seq {
 
 using SeqType = int32_t;
 using UserSeqFunType = std::function<void()>;
+using SystemSeqFunType = std::function<bool()>;
 using UserSeqFunWithIDType = std::function<void(SeqType const&)>;
 
 template <typename MessageT>
@@ -27,8 +28,6 @@ enum class eSeqConstructType : int8_t {
   ParallelConstruct = 2,
   InvalidConstruct = -1
 };
-
-//using SeqConstructListenerFun = std::function<void(eSeqConstructType,bool)>;
 
 #define PRINT_SEQ_CONSTRUCT_TYPE(NODE)                                  \
   ((NODE) == eSeqConstructType::WaitConstruct ? "WaitConstruct" :       \

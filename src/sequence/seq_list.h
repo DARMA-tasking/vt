@@ -11,7 +11,7 @@
 namespace vt { namespace seq {
 
 struct SeqList {
-  using SeqFunType = std::function<bool()>;
+  using SeqFunType = SystemSeqFunType;
   using SeqNodeType = SeqNode;
   using SeqNodeStateEnumType = eSeqNodeState;
 

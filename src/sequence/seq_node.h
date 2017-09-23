@@ -60,7 +60,8 @@ using SeqNodeContainerType = std::list<T>;
 using SeqNodePtrType = std::shared_ptr<SeqNode>;
 using SeqNodeEnumType = eSeqNodeType;
 using SeqNodeOrderEnumType = eSeqNodeOrderType;
-using SeqExpandFunType = std::function<bool()>;
+using SeqExpandFunType = std::function<void()>;
+using SeqLeafClosureType = std::function<bool()>;
 
 union uSeqNodePayload {
   SeqNodeContainerType<SeqExpandFunType>* funcs;
@@ -74,14 +75,36 @@ struct SeqNode;
 
 void setNode(SeqType const& id, SeqNodePtrType node);
 
+template <typename Fn>
+bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn);
+
+using SeqNodeStateEnumType = eSeqNodeState;
+
+struct SeqClosure {
+  SeqNodePtrType child_closure = nullptr;
+  SeqLeafClosureType leaf_closure = nullptr;
+  bool is_leaf = false;
+
+  explicit SeqClosure(SeqNodePtrType in_child)
+    : child_closure(in_child), is_leaf(false)
+  { }
+
+  explicit SeqClosure(SeqLeafClosureType in_leaf)
+    : leaf_closure(in_leaf), is_leaf(true)
+  { }
+
+  // @todo move out of sequencer.cc
+  SeqNodeStateEnumType execute();
+};
+
+using SeqExpandedClosureType = SeqClosure;
+
 struct SeqNode : std::enable_shared_from_this<SeqNode> {
   using SizeType = uint64_t;
   using SeqNodePayloadUnion = uSeqNodePayload;
-  using SeqNodeStateEnumType = eSeqNodeState;
   using OrderEnum = SeqNodeOrderEnumType;
   using TypeEnum = SeqNodeEnumType;
-  using WaitFunType = std::function<void()>;
-  using WaitContainer = std::list<WaitFunType>;
+  using ExpandedClosureContainerType = std::list<SeqExpandedClosureType>;
 
   template <typename... Args>
   static SeqNodePtrType makeNode(
@@ -99,7 +122,7 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
 
   SeqNode(SeqNodeParentTag, SeqType const& id)
     : order_type_(OrderEnum::SequencedOrder), type_(TypeEnum::ParentNode),
-      seq_id(id) {
+      seq_id_(id) {
     payload_.children = new SeqNodeContainerType<SeqNodePtrType>{};
 
     debug_print(
@@ -113,7 +136,7 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
 
   SeqNode(SeqNodeLeafTag, SeqType const& id)
     : order_type_(OrderEnum::SequencedOrder), type_(TypeEnum::LeafNode),
-      seq_id(id) {
+      seq_id_(id) {
     payload_.funcs = new SeqNodeContainerType<SeqExpandFunType>{};
 
     debug_print(
@@ -124,9 +147,9 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
     );
   }
 
-  SeqNode(SeqType const& id, SeqNodePtrType in_parent, SeqExpandFunType const& fn)
+  SeqNode(SeqType const& id, SeqNodePtrType parent, SeqExpandFunType const& fn)
     : SeqNode(seq_node_leaf_tag_t, id) {
-    parent_node_ = in_parent;
+    parent_node_ = parent;
     addSequencedFunction(fn);
   }
 
@@ -190,6 +213,7 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
     );
 
     if (payload_.funcs != nullptr) {
+      auto this_node = this->shared_from_this();
       SeqNodeStateEnumType cur_state = SeqNodeStateEnumType::KeepExpandingState;
 
       auto& funcs = *payload_.funcs;
@@ -202,26 +226,24 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
           PRINT_SEQ_NODE_STATE(cur_state)
         );
 
-        if (funcs.size() > 0) {
-          auto elm = funcs.front();
-          funcs.pop_front();
+        if (funcs.size() == 0) {
+          break;
+        }
 
-          setNode(seq_id, this->shared_from_this());
+        auto elm = funcs.front();
+        funcs.pop_front();
 
-          // run the function
-          elm();
+        // run the function in this node context
+        executeSeqExpandContext(seq_id_, this_node, elm);
 
-          setNode(seq_id, nullptr);
+        debug_print(
+          sequence, node,
+          "SeqNode: (%p) after running elm (ready_=%s): blocked_on_node_=%s\n",
+          this, print_bool(ready_), print_bool(blocked_on_node_)
+        );
 
-          debug_print(
-            sequence, node,
-            "SeqNode: (%p) after running elm (ready_=%s): blocked_on_node_=%s\n",
-            this, print_bool(ready_), print_bool(blocked_on_node_)
-          );
-
-          if (blocked_on_node_) {
-            cur_state = SeqNodeStateEnumType::WaitingNextState;
-          }
+        if (blocked_on_node_) {
+          cur_state = SeqNodeStateEnumType::WaitingNextState;
         }
       } while (cur_state == SeqNodeStateEnumType::KeepExpandingState);
 
@@ -262,29 +284,74 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
     return cur_state;
   }
 
-  void activate() {
-    bool const has_sequenced_waits = sequenced_waits_.size() != 0;
+  void executeClosuresUntilBlocked() {
+    do {
+      if (sequenced_closures_.size() != 0) {
+        debug_print(
+          sequence, node,
+          "SeqNode: executeClosuresUntilBlocked (%p) execute closure: num=%ld\n",
+          this, sequenced_closures_.size()
+        );
+
+        auto closure = sequenced_closures_.front();
+        sequenced_closures_.pop_front();
+        auto const& status = closure.execute();
+
+        if (status == SeqNodeStateEnumType::WaitingNextState or blocked_on_node_) {
+          // closure.addTriggeredAction([=]{
+          //   setBlockedOnNode(eSeqConstructType::WaitConstruct, false);
+          // });
+          break;
+        }
+      }
+    } while (sequenced_closures_.size() != 0);
 
     debug_print(
       sequence, node,
-      "SeqNode: activate (%p) next=%s, parent=%s, blocked_on_node_=%s, "
-      "has_sequenced_waits=%s\n",
+      "SeqNode: executeClosuresUntilBlocked (%p): num=%ld: blocked=%s\n",
+      this, sequenced_closures_.size(), print_bool(blocked_on_node_)
+    );
+  }
+
+  void activate() {
+    auto const& unexpanded_size = this->getSize();
+    bool const has_unexpanded_nodes = unexpanded_size != 0;
+    bool const has_sequenced_closures = sequenced_closures_.size() != 0;
+
+    debug_print(
+      sequence, node,
+      "SeqNode: activate (%p) next=%s, parent=%s, blocked=%s, "
+      "has_sequenced_closures=%s, num closures=%ld, num unexpanded nodes=%lld\n",
       this, print_bool(next_node_), print_bool(parent_node_),
-      print_bool(blocked_on_node_), print_bool(has_sequenced_waits)
+      print_bool(blocked_on_node_), print_bool(has_sequenced_closures),
+      sequenced_closures_.size(), unexpanded_size
     );
 
     assert(
-      blocked_on_node_ == false and ready_ == true and "Must be ready, unblocked"
+      blocked_on_node_ == false and ready_ == true and "Must be ready+unblocked"
     );
 
-    if (has_sequenced_waits) {
-      auto fn = sequenced_waits_.front();
-      sequenced_waits_.pop_front();
-      fn();
+    if (has_sequenced_closures) {
+      // Wait on all sequenced closures that have not been executed
+      executeClosuresUntilBlocked();
+    } else if (has_unexpanded_nodes) {
+      // If all sequenced closures are executed, expand the next node
+      expandNext();
     } else {
+      // This node is finished, execute the next sibling or the parent
       auto const& next = next_node_ != nullptr ? next_node_ : parent_node_;
+
+      debug_print(
+        sequence, node,
+        "SeqNode: activate (%p) next=%p, parent=%p, selected=%p\n",
+        this, PRINT_SEQ_NODE_PTR(next_node_), PRINT_SEQ_NODE_PTR(parent_node_),
+        PRINT_SEQ_NODE_PTR(next)
+      );
+
       if (next != nullptr) {
-        next->expandNext();
+        // @todo: is this correct?
+        next->setBlockedOnNode(eSeqConstructType::WaitConstruct, false);
+        next->activate();
       } else {
         debug_print(
           sequence, node,
@@ -383,18 +450,34 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
     return blocked_on_node_;
   }
 
-  void addSequencedWait(WaitFunType fn) {
-    sequenced_waits_.push_back(fn);
+  void addSequencedClosure(SeqLeafClosureType cl, bool const& is_leaf = true) {
+    if (is_leaf) {
+      sequenced_closures_.push_back(SeqClosure{cl});
+    } else {
+      auto node = this->shared_from_this();
+      sequenced_closures_.emplace_back(
+        SeqClosure{SeqNode::makeNode(seq_id_, node, cl)}
+      );
+    }
 
     debug_print(
       sequence, node,
-      "SeqNode: addSequencedWait (%p) (type=%s): waits.size()=%ld\n",
-      this, PRINT_SEQ_NODE_TYPE(type_), sequenced_waits_.size()
+      "SeqNode: addSequencedClosure (%p) (type=%s): num closures=%ld\n",
+      this, PRINT_SEQ_NODE_TYPE(type_), sequenced_closures_.size()
     );
+
+    bool const is_ready = not isBlockedNode();
+    if (is_ready) {
+      executeClosuresUntilBlocked();
+    }
+  }
+
+  SeqType getSeqID() const {
+    return seq_id_;
   }
 
 private:
-  WaitContainer sequenced_waits_;
+  ExpandedClosureContainerType sequenced_closures_;
 
   bool ready_ = true;
   bool blocked_on_node_ = false;
@@ -405,7 +488,7 @@ private:
 
   TypeEnum type_ = TypeEnum::InvalidNode;
 
-  SeqType seq_id = no_seq;
+  SeqType seq_id_ = no_seq;
 
   SeqNodePtrType parent_node_ = nullptr;
   SeqNodePtrType next_node_ = nullptr;

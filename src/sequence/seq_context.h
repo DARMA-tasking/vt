@@ -12,6 +12,13 @@
 namespace vt { namespace seq {
 
 struct SeqContext {
+  SeqContext(SeqType const& in_seq_id, SeqNodePtrType in_node)
+    : node_(in_node), seq_id(in_seq_id) {
+    debug_print(
+      sequence, node,
+      "SeqContext: construct: node=%p, id=%d\n", PRINT_SEQ_NODE_PTR(node_), seq_id
+    );
+  }
   SeqContext(SeqType const& in_seq_id) : seq_id(in_seq_id) { }
   SeqContext(SeqContext const&) = delete;
 
@@ -42,7 +49,17 @@ struct SeqContext {
     return node_->isReady();
   }
 
+  // bool isBlocked() const {
+  //   return contextual_blocked_fn_;
+  // }
+
+  // void setBlocked(bool const& blocked) {
+  //   contextual_blocked_fn_ = blocked;
+  // }
+
 private:
+  // bool contextual_blocked_fn_ = false;
+
   SeqNodePtrType node_ = nullptr;
 
   SeqType seq_id = no_seq;

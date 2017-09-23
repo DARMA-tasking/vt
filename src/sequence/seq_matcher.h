@@ -27,15 +27,32 @@ struct SeqMatcher {
   template <typename T>
   using SeqStateTaggedContType = typename SeqMsgStateType::template TagContainerType<T>;
 
+
   template <typename T, typename FnT>
   static bool applyActionFirstElem(T& lst, FnT func);
+  template <typename T>
+  static bool hasActionFirstElem(T& lst);
+  template <typename T>
+  static SeqActionType getActionFirstElem(T& lst);
 
   template <typename T, typename FnT>
   static bool findMatchingNoTag(SeqStateContType<T>& lst, FnT func);
+  template <typename T>
+  static bool hasMatchingNoTag(SeqStateContType<T>& lst);
+  template <typename T>
+  static SeqActionType getMatchingNoTag(SeqStateContType<T>& lst);
 
   template <typename T, typename FnT>
   static bool findMatchingTagged(
     SeqStateTaggedContType<T>& tagged_lst, FnT func, TagType const& tag
+  );
+  template <typename T>
+  static bool hasMatchingTagged(
+    SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
+  );
+  template <typename T>
+  static SeqActionType getMatchingTagged(
+    SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
   );
 
   template <typename FnT>
@@ -43,6 +60,11 @@ struct SeqMatcher {
 
   template <typename FnT>
   static bool findMatchingAction(FnT func, TagType const& tag);
+  static bool hasMatchingAction(TagType const& tag);
+  static SeqActionType getMatchingAction(TagType const& tag);
+
+  template <typename FnT>
+  static SeqActionType getMatchingAction(FnT func, TagType const& tag);
 
   static void bufferUnmatchedMessage(MessageT* msg, TagType const& tag);
 
