@@ -1,4 +1,7 @@
 
+#if ! defined __RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE_IMPL__
+#define __RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE_IMPL__
+
 #include "config.h"
 #include "concurrent_deque.h"
 
@@ -83,10 +86,11 @@ void ConcurrentDeque<T>::popBack() {
 }
 
 template <typename T>
-typename ConcurrentDeque<T>::SizeType ConcurrentDeque<T>::size() const {
-  std::lock_guard<std::mutex> guard(container_mutex_);
+typename ConcurrentDeque<T>::SizeType ConcurrentDeque<T>::size() {
+  std::lock_guard<std::mutex> guard{container_mutex_};
   return container_.size();
 }
 
 }}} //end namespace vt::util::container
 
+#endif /*__RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE_IMPL__*/

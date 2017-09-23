@@ -137,10 +137,14 @@ TaggedSequencer<SeqTag, SeqTrigger>::getCurrentSeq() const {
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 bool TaggedSequencer<SeqTag, SeqTrigger>::scheduler() {
-  // for (auto&& live_seq : seq_lookup_) {
-  //   live_seq.second.progress();
-  // }
-  return false;
+  bool found = false;
+  if (work_deque_.size() > 0) {
+    auto work_unit = work_deque_.front();
+    work_deque_.popFront();
+    work_unit();
+    found = true;
+  }
+  return found;
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>

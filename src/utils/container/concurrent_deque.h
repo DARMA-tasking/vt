@@ -45,10 +45,10 @@ struct ConcurrentDeque {
   void popFront();
   void popBack();
 
-  SizeType size() const;
+  SizeType size();
 
 private:
-  std::mutex container_mutex_;
+  std::mutex container_mutex_{};
 
   ContainerType container_;
 };

@@ -167,12 +167,14 @@ SeqNodeStateEnumType SeqNode::expandParentNode() {
   return cur_state;
 }
 
-void SeqNode::executeClosuresUntilBlocked() {
+bool SeqNode::executeClosuresUntilBlocked() {
   debug_print(
     sequence, node,
     "SeqNode: executeClosuresUntilBlocked (%p): num=%ld: blocked=%s\n",
     this, sequenced_closures_.size(), print_bool(blocked_on_node_)
   );
+
+  bool blocked = false;
 
   do {
     if (sequenced_closures_.size() != 0) {
@@ -186,11 +188,16 @@ void SeqNode::executeClosuresUntilBlocked() {
       sequenced_closures_.pop_front();
       auto const& status = closure.execute();
 
-      if (status == SeqNodeStateEnumType::WaitingNextState or blocked_on_node_) {
+      bool const is_waiting = status == SeqNodeStateEnumType::WaitingNextState;
+      blocked = is_waiting or blocked_on_node_;
+
+      if (blocked) {
         break;
       }
     }
   } while (sequenced_closures_.size() != 0);
+
+  return blocked;
 }
 
 void SeqNode::activate() {
@@ -211,13 +218,24 @@ void SeqNode::activate() {
     blocked_on_node_ == false and ready_ == true and "Must be ready+unblocked"
   );
 
+  bool blocked = false;
+  // Wait on all sequenced closures that have not been executed
   if (has_sequenced_closures) {
-    // Wait on all sequenced closures that have not been executed
-    executeClosuresUntilBlocked();
-  } else if (has_unexpanded_nodes) {
-    // If all sequenced closures are executed, expand the next node
-    expandNext();
-  } else {
+    blocked = executeClosuresUntilBlocked();
+  }
+
+  SeqNodeStateEnumType state_ret = SeqNodeStateEnumType::InvalidState;
+
+  // If all sequenced closures are executed, expand the next node
+  if (not blocked and has_unexpanded_nodes) {
+    state_ret = expandNext();
+  }
+
+  bool const expanded_all_nodes =
+    not has_unexpanded_nodes or
+    state_ret == SeqNodeStateEnumType::KeepExpandingState;
+
+  if (not blocked and expanded_all_nodes) {
     // This node is finished, execute the next sibling or the parent
     auto const& next = next_node_ != nullptr ? next_node_ : parent_node_;
 

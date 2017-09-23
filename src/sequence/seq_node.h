@@ -43,7 +43,7 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
   SizeType getSize() const;
 
   void setBlockedOnNode(eSeqConstructType cons, bool const& is_blocked);
-  void executeClosuresUntilBlocked();
+  bool executeClosuresUntilBlocked();
   void activate();
 
   SeqNodeStateEnumType expandLeafNode();
