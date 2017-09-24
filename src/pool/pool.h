@@ -36,8 +36,8 @@ struct MemoryPoolEqual {
       "cur_slot_=%lld\n", cur_slot_
     );
 
-    for (auto&& elm : holder_) {
-      free(elm);
+    for (int i = cur_slot_; i < holder_.size(); i++) {
+      free(holder_.at(i));
     }
   }
 
