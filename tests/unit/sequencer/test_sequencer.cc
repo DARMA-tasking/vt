@@ -38,6 +38,11 @@ struct TestSequencer : TestParallelHarness {
       printf("testSingleWaitFn seq_id=%d\n", seq_id);
     #endif
 
+    if (seq_id == -1) {
+      EXPECT_EQ(seq_ordering_++, 2);
+      return;
+    }
+
     EXPECT_EQ(seq_ordering_++, 0);
 
     theSeq->wait<TestMsg, testSeqHan>([](TestMsg* msg){
@@ -52,6 +57,11 @@ struct TestSequencer : TestParallelHarness {
   static void testSingleTaggedWaitFn(SeqType const& seq_id) {
     static std::atomic<OrderType> seq_ordering_{};
 
+    if (seq_id == -1) {
+      EXPECT_EQ(seq_ordering_++, 2);
+      return;
+    }
+
     EXPECT_EQ(seq_ordering_++, 0);
 
     theSeq->wait<TestMsg, testSeqTaggedHan>(single_tag, [](TestMsg* msg){
@@ -61,6 +71,11 @@ struct TestSequencer : TestParallelHarness {
 
   static void testMultiWaitFn(SeqType const& seq_id) {
     static std::atomic<OrderType> seq_ordering_{};
+
+    if (seq_id == -1) {
+      EXPECT_EQ(seq_ordering_++, 3);
+      return;
+    }
 
     EXPECT_EQ(seq_ordering_++, 0);
 
@@ -76,6 +91,11 @@ struct TestSequencer : TestParallelHarness {
 
   static void testMultiTaggedWaitFn(SeqType const& seq_id) {
     static std::atomic<OrderType> seq_ordering_{};
+
+    if (seq_id == -1) {
+      EXPECT_EQ(seq_ordering_++, 3);
+      return;
+    }
 
     EXPECT_EQ(seq_ordering_++, 0);
 
@@ -103,6 +123,10 @@ TEST_F(TestSequencer, test_single_wait) {
     theSeq->sequenced(seq_id, testSingleWaitFn);
 
     theMsg->sendMsg<TestMsg, testSeqHan>(my_node, makeSharedMessage<TestMsg>());
+
+    theTerm->attachGlobalTermAction([=]{
+      testSingleWaitFn(-1);
+    });
   }
 }
 
@@ -116,6 +140,10 @@ TEST_F(TestSequencer, test_single_wait_tagged) {
     theMsg->sendMsg<TestMsg, testSeqTaggedHan>(
       my_node, makeSharedMessage<TestMsg>(), single_tag
     );
+
+    theTerm->attachGlobalTermAction([=]{
+      testSingleTaggedWaitFn(-1);
+    });
   }
 }
 
@@ -132,6 +160,10 @@ TEST_F(TestSequencer, test_multi_wait) {
     theMsg->sendMsg<TestMsg, testSeqMultiHan>(
       my_node, makeSharedMessage<TestMsg>()
     );
+
+    theTerm->attachGlobalTermAction([=]{
+      testMultiWaitFn(-1);
+    });
   }
 }
 
@@ -148,5 +180,9 @@ TEST_F(TestSequencer, test_multi_wait_tagged) {
     theMsg->sendMsg<TestMsg, testSeqMultiTaggedHan>(
       my_node, makeSharedMessage<TestMsg>(), single_tag_2
     );
+
+    theTerm->attachGlobalTermAction([=]{
+      testMultiTaggedWaitFn(-1);
+    });
   }
 }
