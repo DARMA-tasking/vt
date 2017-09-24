@@ -40,6 +40,7 @@ void SeqList::expandNextNode() {
 
   switch (state) {
   case SeqNodeStateEnumType::WaitingNextState:
+  case SeqNodeStateEnumType::NoMoreExpansionsState:
     return;
     break;
   case SeqNodeStateEnumType::KeepExpandingState:

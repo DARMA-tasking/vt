@@ -61,7 +61,7 @@ struct TaggedSequencer {
     SeqType const& seq_id, UserSeqFunType const& fn1, UserSeqFunType const& fn2
   );
 
-  void checkReadySeqList(SeqType const& seq_id);
+  void enqueueSeqList(SeqType const& seq_id);
   SeqType getCurrentSeq() const;
   bool scheduler();
   bool isLocalTerm();

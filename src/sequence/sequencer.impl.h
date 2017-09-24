@@ -98,7 +98,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(
     // add to outer scope container for sequence
     SeqListType& lst = getSeqList(seq_id);
     lst.addAction(converted_fn);
-    checkReadySeqList(seq_id);
+    enqueueSeqList(seq_id);
   }
 }
 
@@ -127,16 +127,22 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel(
     // add to outer scope container for sequence
     SeqListType& lst = getSeqList(seq_id);
     lst.addNode(par_node);
-    checkReadySeqList(seq_id);
+    enqueueSeqList(seq_id);
   }
 
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-void TaggedSequencer<SeqTag, SeqTrigger>::checkReadySeqList(SeqType const& seq_id) {
+void TaggedSequencer<SeqTag, SeqTrigger>::enqueueSeqList(SeqType const& seq_id) {
   SeqListType& lst = getSeqList(seq_id);
   if (lst.isReady()) {
-    lst.expandNextNode();
+    auto run_list = [this,seq_id]{
+      SeqListType& lst = getSeqList(seq_id);
+      if (lst.isReady()) {
+        lst.expandNextNode();
+      }
+    };
+    enqueue(run_list);
   }
 }
 

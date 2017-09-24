@@ -29,6 +29,7 @@ enum class eSeqNodeOrderType : int8_t {
 enum class eSeqNodeState : int8_t {
   WaitingNextState = 1,
   KeepExpandingState = 2,
+  NoMoreExpansionsState = 3,
   InvalidState = -1
 };
 
@@ -51,7 +52,9 @@ enum class eSeqNodeState : int8_t {
 #define PRINT_SEQ_NODE_STATE(NODE)                                      \
   ((NODE) == eSeqNodeState::WaitingNextState ? "WaitingNextState" :     \
    ((NODE) == eSeqNodeState::KeepExpandingState ? "KeepExpandingState" : \
-    ((NODE) == eSeqNodeState::InvalidState ? "InvalidState" : "???")    \
+    ((NODE) == eSeqNodeState::NoMoreExpansionsState ? "NoMoreExpansionsState" : \
+     ((NODE) == eSeqNodeState::InvalidState ? "InvalidState" : "???")   \
+    )                                                                   \
    )                                                                    \
   )
 

@@ -181,6 +181,7 @@ SeqNodeStateEnumType SeqNode::expandParentNode() {
         children.pop_front();
         cur_state = child->expandNext();
       } else {
+        cur_state = SeqNodeStateEnumType::NoMoreExpansionsState;
         break;
       }
     } while (cur_state == SeqNodeStateEnumType::KeepExpandingState);
