@@ -4,7 +4,7 @@
 
 #include "test_parallel_harness.h"
 
-#include "vrt/vrt_contextmanager.h"
+#include "context/context_vrtmanager.h"
 
 
 class TestVrtContextManager : public TestParallelHarness {

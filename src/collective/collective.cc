@@ -4,7 +4,7 @@
 #include "barrier.h"
 #include "trace.h"
 #include "transport.h"
-#include "vrt/vrt_contextmanager.h"
+#include "context/context_vrtmanager.h"
 
 
 #include <mpi.h>

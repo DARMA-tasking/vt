@@ -3,8 +3,8 @@
 #include <iostream>
 
 #include "transport.h"
-#include "vrt/vrt_context.h"
-#include "vrt/vrt_contextmanager.h"
+#include "context/context_vrt.h"
+#include "context/context_vrtmanager.h"
 
 using namespace vt;
 using namespace vt::vrt;

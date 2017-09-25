@@ -1,13 +1,13 @@
 
-#if !defined INCLUDED_VRT_CONTEXT_MANAGER
-#define INCLUDED_VRT_CONTEXT_MANAGER
+#if !defined INCLUDED_CONTEXT_VRT_MANAGER
+#define INCLUDED_CONTEXT_VRT_MANAGER
 
 #include <unordered_map>
 
 #include "config.h"
 #include "utils/bits/bits_common.h"
 #include "context.h"
-#include "vrt_context.h"
+#include "context_vrt.h"
 
 namespace vt { namespace vrt {
 
@@ -47,4 +47,4 @@ extern std::unique_ptr<vrt::VrtContextManager> theVrtCManager;
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_VRT_CONTEXT_MANAGER*/
+#endif  /*INCLUDED_CONTEXT_VRT_MANAGER*/

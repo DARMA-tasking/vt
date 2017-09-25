@@ -1,29 +1,27 @@
 
-#if ! defined __RUNTIME_TRANSPORT_CONTEXT__
-#define __RUNTIME_TRANSPORT_CONTEXT__
-
-#include "config.h"
+#if !defined INCLUDED_CONTEXT
+#define INCLUDED_CONTEXT
 
 #include <memory>
+
+#include "config.h"
 
 namespace vt {
 
 struct Context {
-  Context(
-    NodeType const& in_this_node, NodeType const& in_num_nodes
-  ) : this_node(in_this_node), num_nodes(in_num_nodes)
-  { }
+  Context(NodeType const& in_this_node, NodeType const& in_num_nodes)
+      : thisNode_(in_this_node), numNodes_(in_num_nodes) {}
 
-  inline NodeType getNode() const { return this_node; }
-  inline NodeType getNumNodes() const { return num_nodes; }
+  inline NodeType getNode() const { return thisNode_; }
+  inline NodeType getNumNodes() const { return numNodes_; }
 
-private:
-  NodeType this_node = 0;
-  NodeType num_nodes = 0;
+ private:
+  NodeType thisNode_ = 0;
+  NodeType numNodes_ = 0;
 };
 
 extern std::unique_ptr<Context> theContext;
 
-} //end namespace vt
+}  // end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_CONTEXT__*/
+#endif /*INCLUDED_CONTEXT*/

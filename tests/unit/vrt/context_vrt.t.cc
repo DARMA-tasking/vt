@@ -4,7 +4,7 @@
 
 #include "test_harness.h"
 
-#include "vrt/vrt_context.h"
+#include "context/context_vrt.h"
 
 class TestVrtContext : public TestHarness {
   virtual void SetUp() {

@@ -17,8 +17,8 @@
 
 
 
-#if !defined INCLUDED_VRT_CONTEXT_MESSAGE
-#define INCLUDED_VRT_CONTEXT_MESSAGE
+#if !defined INCLUDED_CONTEXT_VRT_MESSAGE
+#define INCLUDED_CONTEXT_VRT_MESSAGE
 
 //#include <vector>
 //
@@ -40,4 +40,4 @@ struct VrtContextMessageShort: ShortMessage {
 
 
 
-#endif  /*INCLUDED_VRT_CONTEXT_MESSAGE*/
+#endif  /*INCLUDED_CONTEXT_VRT_MESSAGE*/
