@@ -39,26 +39,68 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  std::unique_ptr<vrt::VrtContextManager> theVrtCManager_ =
-      std::make_unique<vrt::VrtContextManager>();
 
-  if (my_node == 0) {
 
-    auto vrtc = theVrtCManager_->newVrtContext();
-    auto vrtc1 = theVrtCManager_->newVrtContext();
+  if (my_node == 1) {
 
-    vrtc.printVrtContext();
-    vrtc1.printVrtContext();
+    auto vrtc1 = theVrtCManager->constructVrtContext<HelloVrtContext>(10);
+    auto vrtc2 = theVrtCManager->constructVrtContext<HelloVrtContext>(20);
 
-    HelloVrtContext my_vrtc(20);
+    auto temp1 = theVrtCManager->getVrtContextByID(vrtc1);
+    auto hello1 = static_cast<HelloVrtContext*>(temp1);
 
-    my_vrtc.printVrtContext();
+    theVrtCManager->destroyVrtContextByID(vrtc1);
+    auto temp1_ = theVrtCManager->getVrtContextByID(vrtc1);
+    auto hello1_ = static_cast<HelloVrtContext*>(temp1);
 
-    auto myHelloVrtC_proxy =
-        theVrtCManager_->newVrtContext<HelloVrtContext>(&my_vrtc);
+    if (temp1_ != nullptr) {
+      std::cout << "Boom "<<std::endl;
+    }
 
-    my_vrtc.printVrtContext();
-    std::cout << my_vrtc.from << std::endl;
+    auto temp2 = theVrtCManager->getVrtContextByID(vrtc2);
+    auto hello2 = static_cast<HelloVrtContext*>(temp2);
+
+    if (temp2 != nullptr) {
+      std::cout << "Boom "<<std::endl;
+    }
+
+    std::cout<< hello2->getVrtContextNode() << std::endl;
+
+//    std::cout <<
+//
+//    std::cout << vrtc1 << std::endl;
+//
+//    VrtContext_IdType id1 = 5;
+//    VrtContext_IdType id2 = 0;
+//    auto temp1 = theVrtCManager->getVrtContextByID(id1);
+////    auto temp2 = reinterpret_cast<HelloVrtContext*>(theVrtCManager->find(id2));
+//
+//    if (temp1 == nullptr) {
+//      std::cout << "Cool" << std::endl;
+//    }
+//
+//    auto temping = theVrtCManager->getVrtContextByID(id2);
+//
+//    auto temp2 = static_cast<HelloVrtContext*>(temping);
+//
+////    if (temp2 != nullptr) {
+//      std::cout << temp2->getVrtContextNode() << std::endl;
+////    }
+//
+//    auto vrtc1 = theVrtCManager->newVrtContext();
+
+//    vrtc.printVrtContext();
+//    vrtc1.printVrtContext();
+//
+//    HelloVrtContext my_vrtc(20);
+//
+//    my_vrtc.printVrtContext();
+//
+//    auto myHelloVrtC_proxy =
+//        theVrtCManager->newVrtContext<HelloVrtContext>(&my_vrtc);
+//
+//    my_vrtc.printVrtContext();
+//    std::cout << my_vrtc.from << std::endl;
 
 
 //    my_vrtc.printVrtContext();
