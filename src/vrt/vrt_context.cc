@@ -46,7 +46,7 @@ NodeType VrtContext::getVrtContextNode() const {
 }
 
 void VrtContext::printVrtContext() const {
-  printf("Virtual context id: %lld \n", vrtC_);
+  printf("Virtual context id: %u \n", vrtC_);
   printf("   |---- Node      : %hu \n", getVrtContextNode());
   printf("   |---- Migratable: %d \n", isMigratable());
   printf("   |---- Collection: %d \n", isCollection());

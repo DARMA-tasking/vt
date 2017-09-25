@@ -22,8 +22,6 @@ struct VrtContext {
   using VrtContext_BitsType = eVrtContextBits;
   using VrtContext_Type = uint32_t;
 
-//  using VrtContext_ID = uint32_t;
-
   VrtContext() = default;
   explicit VrtContext(NodeType const& node, bool const& is_coll = false,
                       bool const& is_migratable = false);
@@ -36,8 +34,6 @@ struct VrtContext {
   bool isCollection() const;
   bool isMigratable() const;
   NodeType getVrtContextNode() const;
-
-//  VrtContext_ProxyType lookupID(this)
 
  private:
   VrtContext_Type vrtC_;
