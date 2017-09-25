@@ -7,12 +7,11 @@
 
 namespace vt { namespace seq {
 
-void contextualExecution(
+bool contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 ) {
-  theSeq->executeInContext(
-    seq, is_sequenced, std::forward<SeqCallableType>(callable)
-  );
+  theSeq->lookupContextExecute(seq, std::forward<SeqCallableType>(callable));
+  return true;
 }
 
 }} //end namespace vt::seq

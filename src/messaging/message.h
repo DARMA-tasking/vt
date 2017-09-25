@@ -5,6 +5,7 @@
 #include "config.h"
 #include "envelope.h"
 #include "pool.h"
+#include "shared_message.h"
 
 namespace vt {
 

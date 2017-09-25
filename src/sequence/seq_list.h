@@ -6,51 +6,30 @@
 
 #include "config.h"
 #include "seq_common.h"
+#include "seq_node.h"
 
 namespace vt { namespace seq {
 
 struct SeqList {
-  using SeqFunType = std::function<bool()>;
+  using SeqFunType = SystemSeqFunType;
+  using SeqNodeType = SeqNode;
+  using SeqNodeStateEnumType = eSeqNodeState;
 
-  SeqList(SeqType const& this_seq_in)
-    : this_seq_(this_seq_in)
-  { }
+  explicit SeqList(SeqType const& seq_id_in);
 
-  void addAction(SeqFunType const& fn) {
-    lst_.push_back(fn);
-  }
-
-  void progress() {
-    bool performed_action = true;
-    while (ready_ and performed_action) {
-      if (lst_.size() > 0) {
-        auto x = lst_.front();
-        lst_.pop_front();
-        bool const should_block = x();
-        if (should_block) {
-          ready_ = false;
-        }
-        performed_action = true;
-      } else {
-        performed_action = false;
-      }
-    }
-  }
-
-  void makeReady() {
-    ready_ = true;
-  }
-
-  SeqType getSeq() const {
-    return this_seq_;
-  }
+  void addAction(SeqFunType const& fn);
+  void addNode(SeqNodePtrType node);
+  void expandNextNode();
+  void makeReady();
+  bool isReady() const;
+  SeqType getSeq() const;
 
 private:
-  SeqType this_seq_ = no_seq;
+  SeqType seq_id_ = no_seq;
 
   bool ready_ = true;
 
-  std::list<SeqFunType> lst_;
+  SeqNodePtrType node_ = nullptr;
 };
 
 }} //end namespace vt::seq

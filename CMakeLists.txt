@@ -33,7 +33,7 @@ set(
   barrier collective configs/debug configs/features configs/types context
   event messaging pool data registry parameterization handler sequence
   termination tpl/meld trace tree scheduler utils/demangle utils/bits demangle
-  location index mapping vrt
+  location index mapping vrt utils/container
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
@@ -189,7 +189,7 @@ endforeach()
 
 set(
   UNIT_TEST_SUBDIRS_LIST
-  index active pool vrt
+  index active pool vrt sequencer
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})

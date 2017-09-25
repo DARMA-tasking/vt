@@ -1,0 +1,47 @@
+
+#if ! defined __RUNTIME_TRANSPORT_MEMORY_POOL_EQUAL__
+#define __RUNTIME_TRANSPORT_MEMORY_POOL_EQUAL__
+
+#include "config.h"
+#include "envelope.h"
+#include "context.h"
+
+#include <vector>
+#include <cstdint>
+
+namespace vt { namespace pool {
+
+static constexpr size_t const small_msg_size_buf = sizeof(int64_t) * 4;
+static constexpr size_t const memory_pool_env_size =
+  sizeof(EpochTagEnvelope) + small_msg_size_buf;
+
+template <int64_t num_bytes_t>
+struct MemoryPoolEqual {
+  using ContainerType = std::vector<void*>;
+  using SlotType = int64_t;
+
+  static constexpr SlotType const fst_pool_slot = 0;
+  static constexpr SlotType const default_pool_size = 1024;
+
+  MemoryPoolEqual();
+
+  virtual ~MemoryPoolEqual();
+
+  void* alloc(size_t const& sz);
+  void dealloc(void* const t);
+  void resizePool();
+  SlotType getNumBytes();
+
+private:
+  SlotType const num_bytes_ = num_bytes_t;
+  SlotType const num_full_bytes_ = num_bytes_t + sizeof(size_t);
+
+  SlotType pool_size_ = default_pool_size;
+  SlotType cur_slot_ = fst_pool_slot;
+
+  ContainerType holder_;
+};
+
+}} //end namespace vt::pool
+
+#endif /*__RUNTIME_TRANSPORT_MEMORY_POOL_EQUAL__*/

@@ -2,6 +2,7 @@
 #if ! defined __RUNTIME_TRANSPORT_SEQ_ACTION__
 #define __RUNTIME_TRANSPORT_SEQ_ACTION__
 
+#include "config.h"
 #include "seq_common.h"
 #include "termination.h"
 
@@ -15,28 +16,14 @@ struct Action {
   SeqType const seq_id;
   ActionType const action;
 
-  Action(SeqType const& in_seq_id, ActionType const& in_action)
-    : seq_id(in_seq_id), action(in_action)
-  { }
+  Action(SeqType const& in_seq_id, ActionType const& in_action);
 
-  void runAction(MessageT* msg) const {
-    auto const callable = [this, msg]() -> bool {
-      theTerm->consume();
-      action(msg);
-      return false;
-    };
-
-    contextualExecution(seq_id, false, callable);
-  }
-
-  CallableType generateCallable(MessageT* msg) const {
-    return [msg,this](){
-      runAction(msg);
-      return false;
-    };
-  }
+  void runAction(MessageT* msg) const;
+  CallableType generateCallable(MessageT* msg) const;
 };
 
 }} //end namespace vt::seq
+
+#include "seq_action.impl.h"
 
 #endif /* __RUNTIME_TRANSPORT_SEQ_ACTION__*/
