@@ -39,11 +39,12 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
 }
 
 void TerminationDetector::produceConsume(
-  EpochType const& epoch, bool produce) {
+  EpochType const& epoch, TermCounterType const& num_units, bool produce
+) {
   if (produce) {
-    any_epoch_state_.l_prod++;
+    any_epoch_state_.l_prod += num_units;
   } else {
-    any_epoch_state_.l_cons++;
+    any_epoch_state_.l_cons += num_units;
   }
 
   if (epoch != no_epoch) {
@@ -59,9 +60,9 @@ void TerminationDetector::produceConsume(
     }
 
     if (produce) {
-      epoch_iter->second.l_prod++;
+      epoch_iter->second.l_prod += num_units;
     } else {
-      epoch_iter->second.l_cons++;
+      epoch_iter->second.l_cons += num_units;
     }
 
     if (epoch_iter->second.propagate) {

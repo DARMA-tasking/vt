@@ -26,17 +26,24 @@ struct TerminationDetector : Tree {
   template <typename T>
   using EpochContainerType = std::unordered_map<EpochType, T>;
 
-  inline void produce(EpochType const& epoch = no_epoch) {
-    produceConsume(epoch, true);
+  inline void produce(
+    EpochType const& epoch = no_epoch, TermCounterType const& num_units = 1
+  ) {
+    produceConsume(epoch, num_units, true);
   }
 
-  inline void consume(EpochType const& epoch = no_epoch) {
-    produceConsume(epoch, false);
+  inline void consume(
+    EpochType const& epoch = no_epoch, TermCounterType const& num_units = 1
+  ) {
+    produceConsume(epoch, num_units, false);
   }
 
   EpochType newEpoch();
 
-  void produceConsume(EpochType const& epoch = no_epoch, bool produce = true);
+  void produceConsume(
+    EpochType const& epoch = no_epoch, TermCounterType const& num_units = 1,
+    bool produce = true
+  );
   void maybePropagate();
 
   void propagateEpochExternal(
