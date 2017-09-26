@@ -196,7 +196,7 @@ struct TestSequencerParallel : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 4);
+      EXPECT_EQ(seq_ordering_++, 5);
       return;
     }
 
@@ -252,10 +252,9 @@ TEST_F(TestSequencerParallel, test_parallel_2) {
   }
 }
 
-// @todo: this test is broken
-// TEST_F(TestSequencerParallel, test_parallel_3) {
-//   auto const& node = theContext->getNode();
-//   if (node == 0) {
-//     PAR_TEST(seqParHan3, seqParFn3, node, TestMsg, 4, false);
-//   }
-// }
+TEST_F(TestSequencerParallel, test_parallel_3) {
+  auto const& node = theContext->getNode();
+  if (node == 0) {
+    PAR_TEST(seqParHan3, seqParFn3, node, TestMsg, 4, false);
+  }
+}
