@@ -243,19 +243,35 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(
 
     debug_print(
       sequence, node,
-      "Sequencer: wait registered: tag=%d: node=%p, has_match=%s, "
+      "Sequencer: %s: tag=%d: node=%p, has_match=%s, "
       "is_blocked=%s\n",
-      tag, PRINT_SEQ_NODE_PTR(node), print_bool(has_match),
+      has_match ? "wait ran *immediately*" : "wait registered", tag,
+      PRINT_SEQ_NODE_PTR(node), print_bool(has_match),
       print_bool(node->isBlockedNode())
     );
 
-    if (not has_match) {
-      auto msg_recv_trigger = [node,seq_id,trigger](MessageT* msg){
+    bool const should_block = not has_match;
+
+    node->setBlockedOnNode(eSeqConstructType::WaitConstruct, should_block);
+
+    if (has_match) {
+      debug_print(
+        sequence, node,
+        "Sequencer: activating next node: seq=%d, node=%p, blocked=%s\n",
+        seq_id, PRINT_SEQ_NODE_PTR(node), print_bool(node->isBlockedNode())
+      );
+
+      node->activate();
+    } else {
+      // buffer the action to wait for a matching message
+
+      auto msg_recv_trigger = [node,seq_id,trigger,tag](MessageT* msg){
         debug_print(
           sequence, node,
-          "Sequencer: msg_recv_trigger: seq=%d, node=%p, blocked=%s, msg=%p\n",
-          seq_id, PRINT_SEQ_NODE_PTR(node), print_bool(node->isBlockedNode()),
-          msg
+          "Sequencer: msg_recv_trigger: seq=%d, tag=%d, node=%p, blocked=%s, "
+          "msg=%p\n",
+          seq_id, tag, PRINT_SEQ_NODE_PTR(node),
+          print_bool(node->isBlockedNode()), msg
         );
 
         trigger(msg);
@@ -271,14 +287,6 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(
       SeqStateMatcherType<MessageT, f>::bufferUnmatchedAction(
         msg_recv_trigger, seq_id, tag
       );
-    }
-
-    bool const should_block = not has_match;
-
-    node->setBlockedOnNode(eSeqConstructType::WaitConstruct, should_block);
-
-    if (has_match) {
-      node->activate();
     }
 
     return should_block;
