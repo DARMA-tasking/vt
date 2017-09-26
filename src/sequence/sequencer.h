@@ -58,8 +58,10 @@ struct TaggedSequencer {
   void sequenced(SeqType const& seq_id, FuncIDType const& fn);
   void sequenced(SeqType const& seq_id, FuncType const& fn);
 
-  void parallel(FuncType fn1, FuncType fn2);
-  void parallel(SeqType const& seq_id, FuncType fn1, FuncType fn2);
+  template <typename... FnT>
+  void parallel(FnT&&... fns);
+  template <typename... FnT>
+  void parallel(SeqType const& seq_id, FnT&&... fns);
 
   void enqueueSeqList(SeqType const& seq_id);
   SeqType getCurrentSeq() const;

@@ -103,32 +103,34 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-void TaggedSequencer<SeqTag, SeqTrigger>::parallel(FuncType fn1, FuncType fn2) {
+template <typename... FnT>
+void TaggedSequencer<SeqTag, SeqTrigger>::parallel(FnT&&... fns) {
   assertValidContext();
 
   debug_print(
     sequence, node,
-    "Sequencer: parallel: fn: context_=%p\n", context_
+    "Sequencer: parallel: fn: context_=%p: num fns=%ld\n",
+    context_, sizeof...(fns)
   );
 
-  return parallel(context_->getSeq(), fn1, fn2);
-
+  return parallel(context_->getSeq(), std::forward<FnT>(fns)...);
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
+template <typename... FnT>
 void TaggedSequencer<SeqTag, SeqTrigger>::parallel(
-  SeqType const& seq_id, FuncType fn1, FuncType fn2
+  SeqType const& seq_id, FnT&&... fns
 ) {
   bool const has_context = hasContext();
 
   debug_print(
     sequence, node,
-    "Sequencer: parallel seq_id=%d: has_context=%s\n",
-    seq_id, print_bool(has_context)
+    "Sequencer: parallel: seq_id=%d, has_context=%s, num fns=%ld\n",
+    seq_id, print_bool(has_context), sizeof...(fns)
   );
 
   SeqNodePtrType par_node = SeqNode::makeParallelNode(
-    seq_id, convertSeqFun(seq_id, fn1), convertSeqFun(seq_id, fn2)
+    seq_id, convertSeqFun(seq_id, fns)...
   );
 
   if (has_context) {
@@ -142,7 +144,6 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel(
     lst.addNode(par_node);
     enqueueSeqList(seq_id);
   }
-
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
