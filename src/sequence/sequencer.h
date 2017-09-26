@@ -54,12 +54,12 @@ struct TaggedSequencer {
   void assertValidContext() const;
   bool hasContext() const;
 
-  void sequenced(UserSeqFunType const& fn);
-  void sequenced(SeqType const& seq_id, UserSeqFunWithIDType const& fn);
-  void sequenced(SeqType const& seq_id, UserSeqFunType const& fn);
-  void parallel(
-    SeqType const& seq_id, UserSeqFunType const& fn1, UserSeqFunType const& fn2
-  );
+  void sequenced(FuncType const& fn);
+  void sequenced(SeqType const& seq_id, FuncIDType const& fn);
+  void sequenced(SeqType const& seq_id, FuncType const& fn);
+
+  void parallel(FuncType fn1, FuncType fn2);
+  void parallel(SeqType const& seq_id, FuncType fn1, FuncType fn2);
 
   void enqueueSeqList(SeqType const& seq_id);
   SeqType getCurrentSeq() const;

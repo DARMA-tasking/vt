@@ -103,8 +103,21 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
+void TaggedSequencer<SeqTag, SeqTrigger>::parallel(FuncType fn1, FuncType fn2) {
+  assertValidContext();
+
+  debug_print(
+    sequence, node,
+    "Sequencer: parallel: fn: context_=%p\n", context_
+  );
+
+  return parallel(context_->getSeq(), fn1, fn2);
+
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
 void TaggedSequencer<SeqTag, SeqTrigger>::parallel(
-  SeqType const& seq_id, UserSeqFunType const& fn1, UserSeqFunType const& fn2
+  SeqType const& seq_id, FuncType fn1, FuncType fn2
 ) {
   bool const has_context = hasContext();
 

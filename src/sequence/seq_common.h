@@ -12,8 +12,10 @@ namespace vt { namespace seq {
 
 using SeqType = int32_t;
 using UserSeqFunType = std::function<void()>;
+using FuncType = UserSeqFunType;
 using SystemSeqFunType = std::function<bool()>;
 using UserSeqFunWithIDType = std::function<void(SeqType const&)>;
+using FuncIDType = UserSeqFunWithIDType;
 
 template <typename MessageT>
 using SeqNonMigratableTriggerType = std::function<void(MessageT*)>;
