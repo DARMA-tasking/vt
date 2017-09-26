@@ -14,9 +14,11 @@ Action<MessageT>::Action(SeqType const& in_seq_id, ActionType const& in_action)
 { }
 
 template <typename MessageT>
-void Action<MessageT>::runAction(MessageT* msg) const {
-  auto const callable = [this, msg]() -> bool {
-    theTerm->consume();
+void Action<MessageT>::runAction(MessageT* msg, bool consume) const {
+  auto const callable = [this, consume, msg]() -> bool {
+    if (consume) {
+      theTerm->consume();
+    }
     action(msg);
     return false;
   };

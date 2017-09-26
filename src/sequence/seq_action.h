@@ -18,7 +18,7 @@ struct Action {
 
   Action(SeqType const& in_seq_id, ActionType const& in_action);
 
-  void runAction(MessageT* msg) const;
+  void runAction(MessageT* msg, bool const consume = true) const;
   CallableType generateCallable(MessageT* msg) const;
 };
 

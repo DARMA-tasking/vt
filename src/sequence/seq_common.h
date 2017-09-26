@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <vector>
 
 #include "config.h"
 #include "function.h"
@@ -12,8 +13,11 @@ namespace vt { namespace seq {
 
 using SeqType = int32_t;
 using UserSeqFunType = std::function<void()>;
+using FuncType = UserSeqFunType;
 using SystemSeqFunType = std::function<bool()>;
 using UserSeqFunWithIDType = std::function<void(SeqType const&)>;
+using FuncIDType = UserSeqFunWithIDType;
+using SeqFuncContainerType = std::vector<FuncType>;
 
 template <typename MessageT>
 using SeqNonMigratableTriggerType = std::function<void(MessageT*)>;

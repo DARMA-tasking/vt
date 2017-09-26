@@ -9,8 +9,8 @@
 namespace vt { namespace seq {
 
 SeqNode::SeqNode(SeqNodeParentTag, SeqType const& id)
-  : order_type_(OrderEnum::SequencedOrder), type_(TypeEnum::ParentNode),
-    seq_id_(id)
+  : SeqNode(seq_node_universal_tag_t, id, OrderEnum::SequencedOrder,
+            TypeEnum::ParentNode)
 {
   payload_.children = new SeqNodeContainerType<SeqNodePtrType>{};
 
@@ -24,8 +24,8 @@ SeqNode::SeqNode(SeqNodeParentTag, SeqType const& id)
 }
 
 SeqNode::SeqNode(SeqNodeLeafTag, SeqType const& id)
-  : order_type_(OrderEnum::SequencedOrder), type_(TypeEnum::LeafNode),
-    seq_id_(id)
+  : SeqNode(seq_node_universal_tag_t, id, OrderEnum::SequencedOrder,
+            TypeEnum::LeafNode)
 {
   payload_.funcs = new SeqNodeContainerType<SeqExpandFunType>{};
 
@@ -38,8 +38,8 @@ SeqNode::SeqNode(SeqNodeLeafTag, SeqType const& id)
 }
 
 SeqNode::SeqNode(SeqNodeParallelTag, SeqType const& id, SeqParallelPtrType par)
-  : order_type_(OrderEnum::ParallelOrder), type_(TypeEnum::ParallelNode),
-    seq_id_(id)
+  : SeqNode(seq_node_universal_tag_t, id, OrderEnum::ParallelOrder,
+            TypeEnum::ParallelNode)
 {
   payload_.parallel = par;
 
@@ -57,6 +57,13 @@ SeqNode::SeqNode(
 {
   parent_node_ = parent;
   addSequencedFunction(fn);
+}
+
+SeqNode::SeqNode(
+  SeqNodeUniversalTag, SeqType const& id, OrderEnum const& order,
+  TypeEnum const& type
+) : order_type_(order), type_(type), seq_id_(id)
+{
 }
 
 /*virtual*/ SeqNode::~SeqNode() {
@@ -193,7 +200,7 @@ SeqNodeStateEnumType SeqNode::expandParentNode() {
 bool SeqNode::executeClosuresUntilBlocked() {
   debug_print(
     sequence, node,
-    "SeqNode: executeClosuresUntilBlocked (%p): num=%ld: blocked=%s\n",
+    "SeqNode: executeClosuresUntilBlocked (begin) (%p): num=%ld: blocked=%s\n",
     this, sequenced_closures_.size(), print_bool(blocked_on_node_)
   );
 
@@ -207,6 +214,12 @@ bool SeqNode::executeClosuresUntilBlocked() {
         this, sequenced_closures_.size()
       );
 
+      // @todo: implement deferred execution here
+      // auto execute_ready_closure = [=]{
+      //   closure.execute();
+      // };
+      // theSeq->enqueue(execute_ready_closure);
+
       auto closure = sequenced_closures_.front();
       sequenced_closures_.pop_front();
       auto const& status = closure.execute();
@@ -214,26 +227,49 @@ bool SeqNode::executeClosuresUntilBlocked() {
       bool const is_waiting = status == SeqNodeStateEnumType::WaitingNextState;
       blocked = is_waiting or blocked_on_node_;
 
-      if (blocked) {
-        break;
-      }
+      debug_print(
+        sequence, node,
+        "SeqNode: executeClosuresUntilBlocked (%p) execute closure: status=%s, "
+        "is_waiting=%s, blocked=%s\n",
+        this, PRINT_SEQ_NODE_STATE(status), print_bool(is_waiting),
+        print_bool(blocked)
+      );
     }
-  } while (sequenced_closures_.size() != 0);
+  } while (sequenced_closures_.size() != 0 and not blocked);
+
+
+  if (blocked) {
+    setBlockedOnNode(eSeqConstructType::WaitConstruct, blocked);
+  }
+
+  debug_print(
+    sequence, node,
+    "SeqNode: executeClosuresUntilBlocked (end) (%p): num=%ld: "
+    "blocked_on_node_=%s, blocked=%s\n",
+    this, sequenced_closures_.size(), print_bool(blocked_on_node_),
+    print_bool(blocked)
+  );
 
   return blocked;
 }
 
 void SeqNode::activate() {
-  debug_print(
-    sequence, node,
-    "SeqNode: activate (%p) type=%s\n", this, PRINT_SEQ_NODE_TYPE(type_)
-  );
-
   bool const type_is_parallel = type_ == TypeEnum::ParallelNode;
   bool finished_parallel = false;
 
+  debug_print(
+    sequence, node,
+    "SeqNode: activate (%p), type=%s, type_is_parallel=%s\n",
+    this, PRINT_SEQ_NODE_TYPE(type_), print_bool(type_is_parallel)
+  );
+
   if (type_is_parallel) {
     finished_parallel = payload_.parallel->join();
+
+    debug_print(
+      sequence, node,
+      "SeqNode: activate finished__parallel=%s\n", print_bool(finished_parallel)
+    );
   }
 
   if (not type_is_parallel or finished_parallel) {
@@ -299,8 +335,7 @@ void SeqNode::activate() {
 SeqNodeStateEnumType SeqNode::expandNext() {
   debug_print(
     sequence, node,
-    "SeqNode: expandNext (%p) (type=%s)\n",
-    this, PRINT_SEQ_NODE_TYPE(type_)
+    "SeqNode: expandNext (%p) (type=%s)\n", this, PRINT_SEQ_NODE_TYPE(type_)
   );
 
   switch (type_) {
@@ -401,6 +436,13 @@ void SeqNode::addSequencedParallelClosure(SeqNodePtrType par_node) {
 }
 
 void SeqNode::addSequencedClosure(SeqLeafClosureType cl, bool const& is_leaf) {
+  debug_print(
+    sequence, node,
+    "SeqNode: addSequencedClosure (%p) (type=%s): num closures=%ld, is_leaf=%s\n",
+    this, PRINT_SEQ_NODE_TYPE(type_), sequenced_closures_.size(),
+    print_bool(is_leaf)
+  );
+
   if (is_leaf) {
     sequenced_closures_.push_back(SeqClosure{cl});
   } else {
@@ -421,6 +463,14 @@ void SeqNode::addSequencedClosure(SeqLeafClosureType cl, bool const& is_leaf) {
 
 void SeqNode::executeIfReady() {
   bool const is_ready = not isBlockedNode();
+
+  debug_print(
+    sequence, node,
+    "SeqNode: executeIfReady (%p) (type=%s): num closures=%ld: is_ready=%s\n",
+    this, PRINT_SEQ_NODE_TYPE(type_), sequenced_closures_.size(),
+    print_bool(is_ready)
+  );
+
   if (is_ready) {
     executeClosuresUntilBlocked();
   }

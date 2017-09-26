@@ -24,6 +24,12 @@ struct SeqParallel {
       triggered_action_(in_action)
   { }
 
+  SeqParallel(
+    SeqType const& in_seq, ActionType in_action, SeqParallelFuncType funcs
+  ) : seq_id_(in_seq), num_funcs_(funcs.size()), par_funcs_(funcs),
+      triggered_action_(in_action)
+  { }
+
   SeqParallel() = default;
 
   void setTriggeredAction(ActionType action);
