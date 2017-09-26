@@ -18,7 +18,7 @@ using namespace vt::tests::unit;
     auto seq_id = theSeq->getCurrentSeq();                              \
     printf(                                                             \
       "testSeqDeepNested: seq_id=%d, ordering=%d -- cur=%d --\n",       \
-      seq_id (ORDER).load(), (CUR)                                      \
+      seq_id, (ORDER).load(), (CUR)                                     \
     );                                                                  \
   } while (false);
 #else
@@ -237,14 +237,6 @@ TEST_F(TestSequencerNested, test_simple_nested_wait) {
 
   if (my_node == 0) {
     SEQ_TEST(testSeqNested, testNestedWaitFn, my_node, TestMsg, 1, false);
-    // SeqType const& seq_id = theSeq->nextSeq();
-    // theSeq->sequenced(seq_id, testNestedWaitFn);
-    // theMsg->sendMsg<TestMsg, testSeqNested>(
-    //   my_node, makeSharedMessage<TestMsg>()
-    // );
-    // theTerm->attachGlobalTermAction([=]{
-    //   testNestedWaitFn(-1);
-    // });
   }
 }
 
