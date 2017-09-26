@@ -77,6 +77,12 @@ struct TaggedSequencer {
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void wait(TagType const& tag, SeqTriggerType<MessageT> trigger);
 
+  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  void wait_closure(TagType const& tag, SeqNonMigratableTriggerType<MessageT> trigger);
+
+  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  void wait_closure(SeqNonMigratableTriggerType<MessageT> trigger);
+
   // @todo: should be made thread-safe and thread-local
   template <typename Callable>
   bool lookupContextExecute(SeqType const& id, Callable&& c);

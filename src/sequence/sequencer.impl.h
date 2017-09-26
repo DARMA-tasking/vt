@@ -217,6 +217,22 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(SeqTriggerType<MessageT> trigger)
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+void TaggedSequencer<SeqTag, SeqTrigger>::wait_closure(
+  SeqNonMigratableTriggerType<MessageT> trigger
+) {
+  return wait(no_tag, trigger);
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
+template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+void TaggedSequencer<SeqTag, SeqTrigger>::wait_closure(
+  TagType const& tag, SeqNonMigratableTriggerType<MessageT> trigger
+) {
+  return wait(tag, trigger);
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
+template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait(
   TagType const& tag, SeqTriggerType<MessageT> trigger
 ) {
