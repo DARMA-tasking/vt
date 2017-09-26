@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_RDMA__
 
 #include "config.h"
-#include "function.h"
+#include "registry_function.h"
 #include "rdma_common.h"
 #include "rdma_types.h"
 #include "rdma_map.h"

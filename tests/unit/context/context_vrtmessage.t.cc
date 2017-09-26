@@ -5,9 +5,10 @@
 #include "test_parallel_harness.h"
 
 #include "context/context_vrtmanager.h"
+#include "context/context_vrtmessage.h"
 
 
-class TestVrtContextManager : public TestParallelHarness {
+class TestVrtContextMessage : public TestParallelHarness {
   virtual void SetUp() {
     TestParallelHarness::SetUp();
   }
@@ -24,14 +25,31 @@ struct HelloVrtContext : vt::vrt::VrtContext {
       : VrtContext(), from(in_from) {}
 };
 
+struct MyHelloMsg : vt::vrt::VrtContextMessage {
+  int from;
 
-TEST_F(TestVrtContextManager, Construction_and_API) {
+  MyHelloMsg(int const& in_from)
+      : vt::vrt::VrtContextMessage(), from(in_from) {}
+
+};
+
+void myWorkHandler (MyHelloMsg* msg, HelloVrtContext* context) {
+  // do some work
+}
+
+
+TEST_F(TestVrtContextMessage, Construction_and_API) {
   using namespace vt;
 
-  EXPECT_EQ(theVrtCManager->getNode(), theContext->getNode());
-  EXPECT_EQ(theVrtCManager->getCurrentIdent(), 0);
+  auto const& my_node = theContext->getNode();
 
   auto vrtc1 = theVrtCManager->constructVrtContext<HelloVrtContext>(10);
+  MyHelloMsg* msg = new MyHelloMsg(my_node);
+
+  theVrtCManager->sendMsg<HelloVrtContext, MyHelloMsg, myWorkHandler>
+      (my_node, makeSharedMessage<TestMsg>());
+
+
   EXPECT_EQ(theVrtCManager->getCurrentIdent(), 1);
 
   auto temp1 = theVrtCManager->getVrtContextByID(vrtc1);

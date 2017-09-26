@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "config.h"
-#include "function.h"
+#include "registry_function.h"
 
 namespace vt { namespace seq {
 

@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 #include "config.h"
-#include "function.h"
+#include "registry_function.h"
 #include "message.h"
 #include "tree.h"
 #include "barrier_msg.h"

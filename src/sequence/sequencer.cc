@@ -1,6 +1,6 @@
 
 #include "config.h"
-#include "function.h"
+#include "registry_function.h"
 
 #include "seq_common.h"
 #include "sequencer.h"

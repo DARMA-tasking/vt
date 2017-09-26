@@ -8,6 +8,9 @@
 #include "utils/demangle/demangle.h"
 #include "trace.h"
 
+#include "registry_function.h"
+#include "context/context_vrt.h"
+
 #include <vector>
 #include <memory>
 

@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_RDMA_PENDING__
 
 #include "config.h"
-#include "function.h"
+#include "registry_function.h"
 #include "rdma_common.h"
 
 namespace vt { namespace rdma {

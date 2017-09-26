@@ -7,7 +7,7 @@
 #include <mpi.h>
 
 #include "config.h"
-#include "function.h"
+#include "registry_function.h"
 #include "event.h"
 #include "registry.h"
 #include "auto_registry_interface.h"

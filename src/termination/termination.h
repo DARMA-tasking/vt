@@ -8,7 +8,7 @@
 
 #include "config.h"
 #include "epoch.h"
-#include "function.h"
+#include "registry_function.h"
 #include "term_msgs.h"
 #include "term_state.h"
 #include "tree.h"

@@ -7,7 +7,7 @@
 #include <cassert>
 
 #include "config.h"
-#include "function.h"
+#include "registry_function.h"
 #include "handler.h"
 
 namespace vt {
