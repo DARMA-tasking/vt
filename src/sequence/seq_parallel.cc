@@ -76,7 +76,7 @@ bool SeqParallel::join() {
     "SeqParallel: join: old_val=%d, num_funcs=%d\n", old_val, num_funcs_
   );
 
-  // // Inform the termination detector that a child is consumed
+  // Inform the termination detector that a child is consumed
   theTerm->consume(no_epoch, 1);
 
   if (old_val == num_funcs_ - 1) {

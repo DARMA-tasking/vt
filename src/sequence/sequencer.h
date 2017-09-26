@@ -19,6 +19,7 @@
 
 #include <unordered_map>
 #include <list>
+#include <vector>
 #include <cassert>
 
 namespace vt { namespace seq {
@@ -32,6 +33,7 @@ struct TaggedSequencer {
   using SeqFunType = SeqListType::SeqFunType;
   using SeqContextPtrType = SeqContextType*;
   using SeqContextContainerType = std::unordered_map<SeqType, SeqNodePtrType>;
+  using SeqFuncContainerType = std::vector<FuncType>;
 
   template <typename MessageT>
   using SeqActionType = Action<MessageT>;
@@ -58,10 +60,19 @@ struct TaggedSequencer {
   void sequenced(SeqType const& seq_id, FuncIDType const& fn);
   void sequenced(SeqType const& seq_id, FuncType const& fn);
 
+  // compile-time list of parallel functions
   template <typename... FnT>
   void parallel(FnT&&... fns);
   template <typename... FnT>
   void parallel(SeqType const& seq_id, FnT&&... fns);
+
+  // runtime dynamic list of parallel functions
+  void parallel_lst(SeqFuncContainerType const& fn_list);
+  void parallel_lst(SeqType const& seq_id, SeqFuncContainerType const& fn_list);
+
+  void dispatch_parallel(
+    bool const& has_context, SeqType const& seq_id, SeqNodePtrType par_node
+  );
 
   void enqueueSeqList(SeqType const& seq_id);
   SeqType getCurrentSeq() const;
@@ -71,15 +82,20 @@ struct TaggedSequencer {
   SeqNodePtrType getNode(SeqType const& id) const;
   SeqType getSeqID() const;
 
+  // the general wait function
+  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  void wait_on_trigger(TagType const& tag, SeqActionType<MessageT> action);
+
+  // Wait functions that do not have state (they can be easily migrated if they
+  // are registered)
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void wait(SeqTriggerType<MessageT> trigger);
-
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void wait(TagType const& tag, SeqTriggerType<MessageT> trigger);
 
+  // Closure-based wait functions that have state and cannot be migrated easily
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void wait_closure(TagType const& tag, SeqNonMigratableTriggerType<MessageT> trigger);
-
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   void wait_closure(SeqNonMigratableTriggerType<MessageT> trigger);
 

@@ -36,6 +36,10 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
   template <typename... Args>
   static SeqNodePtrType makeParallelNode(SeqType const& id, Args&&... args);
 
+  static SeqNodePtrType makeParallelNode(
+    SeqType const& id, SeqFuncContainerType const& funcs
+  );
+
   template <typename... FnT>
   SeqNode(SeqType const& id, SeqNodeLeafTag, FnT&&... fns);
   SeqNode(SeqNodeParentTag, SeqType const& id);

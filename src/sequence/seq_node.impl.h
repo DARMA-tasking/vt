@@ -31,6 +31,14 @@ template <typename... Args>
   return std::make_shared<SeqNode>(seq_node_parallel_tag_t, id, par);
 }
 
+/*static*/ inline SeqNodePtrType SeqNode::makeParallelNode(
+  SeqType const& id, SeqFuncContainerType const& funcs
+) {
+  ActionType const act = nullptr;
+  auto par = new SeqParallel(id, act, funcs);
+  return std::make_shared<SeqNode>(seq_node_parallel_tag_t, id, par);
+}
+
 template <typename... FnT>
 SeqNode::SeqNode(SeqType const& id, SeqNodeLeafTag, FnT&&... fns)
   : SeqNode(seq_node_leaf_tag_t, id)

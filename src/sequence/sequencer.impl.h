@@ -103,6 +103,37 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
+void TaggedSequencer<SeqTag, SeqTrigger>::parallel_lst(
+  SeqFuncContainerType const& fn_list
+) {
+  assertValidContext();
+  return parallel_lst(context_->getSeq(), fn_list);
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
+void TaggedSequencer<SeqTag, SeqTrigger>::parallel_lst(
+  SeqType const& seq_id, SeqFuncContainerType const& fn_list
+) {
+  bool const has_context = hasContext();
+
+  debug_print(
+    sequence, node,
+    "Sequencer: parallel: seq_id=%d, has_context=%s, num fns=%ld\n",
+    seq_id, print_bool(has_context), fn_list.size()
+  );
+
+  SeqFuncContainerType new_fn_list;
+
+  for (auto&& elm : fn_list) {
+    new_fn_list.emplace_back(convertSeqFun(seq_id, elm));
+  }
+
+  SeqNodePtrType par_node = SeqNode::makeParallelNode(seq_id, new_fn_list);
+
+  return dispatch_parallel(has_context, seq_id, par_node);
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
 template <typename... FnT>
 void TaggedSequencer<SeqTag, SeqTrigger>::parallel(FnT&&... fns) {
   assertValidContext();
@@ -133,6 +164,13 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel(
     seq_id, convertSeqFun(seq_id, fns)...
   );
 
+  return dispatch_parallel(has_context, seq_id, par_node);
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
+void TaggedSequencer<SeqTag, SeqTrigger>::dispatch_parallel(
+  bool const& has_context, SeqType const& seq_id, SeqNodePtrType par_node
+) {
   if (has_context) {
     // add to current inner node context container for sequence
     SeqNodePtrType node = getNode(seq_id);
@@ -211,16 +249,10 @@ TaggedSequencer<SeqTag, SeqTrigger>::getSeqID() const {
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-void TaggedSequencer<SeqTag, SeqTrigger>::wait(SeqTriggerType<MessageT> trigger) {
-  return wait<MessageT, f>(no_tag, trigger);
-}
-
-template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait_closure(
   SeqNonMigratableTriggerType<MessageT> trigger
 ) {
-  return wait(no_tag, trigger);
+  return wait_closure(no_tag, trigger);
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
@@ -228,19 +260,35 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait_closure(
   TagType const& tag, SeqNonMigratableTriggerType<MessageT> trigger
 ) {
-  return wait(tag, trigger);
+  assertValidContext();
+  return wait_on_trigger<MessageT, f>(
+    tag, SeqActionType<MessageT>{getSeqID(),trigger}
+  );
 }
+
+template <typename SeqTag, template <typename> class SeqTrigger>
+template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+void TaggedSequencer<SeqTag, SeqTrigger>::wait(SeqTriggerType<MessageT> trigger) {
+  return wait<MessageT, f>(no_tag, trigger);
+}
+
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait(
   TagType const& tag, SeqTriggerType<MessageT> trigger
 ) {
-  /*
-   * Migratablity---this wait variant is not migratable, due to the
-   * non-registration of trigger
-   */
+  assertValidContext();
+  return wait_on_trigger<MessageT, f>(
+    tag, SeqActionType<MessageT>{getSeqID(),trigger}
+  );
+}
 
+template <typename SeqTag, template <typename> class SeqTrigger>
+template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
+  TagType const& tag, SeqActionType<MessageT> action
+) {
   theTerm->produce();
 
   assertValidContext();
@@ -254,15 +302,13 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(
 
   debug_print(
     sequence, node,
-    "Sequencer: wait: f=%p tag=%d: context seq id=%d, node=%p, blocked=%s, "
+    "Sequencer: wait: tag=%d: context seq id=%d, node=%p, blocked=%s, "
     "ready=%s\n",
-    f, tag, seq_id, PRINT_SEQ_NODE_PTR(node),
+    tag, seq_id, PRINT_SEQ_NODE_PTR(node),
     print_bool(node->isBlockedNode()), print_bool(seq_ready)
   );
 
-  auto action = SeqActionType<MessageT>{seq_id,trigger};
-
-  auto deferred_wait_action = [tag,trigger,node,seq_id,action]() -> bool {
+  auto deferred_wait_action = [tag,action,node,seq_id]() -> bool {
     auto apply_func = [=](MessageT* msg){
       action.runAction(msg);
       messageDeref(msg);
@@ -295,7 +341,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(
     } else {
       // buffer the action to wait for a matching message
 
-      auto msg_recv_trigger = [node,seq_id,trigger,tag](MessageT* msg){
+      auto msg_recv_trigger = [node,seq_id,action,tag](MessageT* msg){
         debug_print(
           sequence, node,
           "Sequencer: msg_recv_trigger: seq=%d, tag=%d, node=%p, blocked=%s, "
@@ -304,7 +350,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(
           print_bool(node->isBlockedNode()), msg
         );
 
-        trigger(msg);
+        action.runAction(msg, false);
 
         assert(node != nullptr and "node must not be nullptr");
 
