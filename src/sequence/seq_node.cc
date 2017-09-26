@@ -9,8 +9,8 @@
 namespace vt { namespace seq {
 
 SeqNode::SeqNode(SeqNodeParentTag, SeqType const& id)
-  : order_type_(OrderEnum::SequencedOrder), type_(TypeEnum::ParentNode),
-    seq_id_(id)
+  : SeqNode(seq_node_universal_tag_t, id, OrderEnum::SequencedOrder,
+            TypeEnum::ParentNode)
 {
   payload_.children = new SeqNodeContainerType<SeqNodePtrType>{};
 
@@ -24,8 +24,8 @@ SeqNode::SeqNode(SeqNodeParentTag, SeqType const& id)
 }
 
 SeqNode::SeqNode(SeqNodeLeafTag, SeqType const& id)
-  : order_type_(OrderEnum::SequencedOrder), type_(TypeEnum::LeafNode),
-    seq_id_(id)
+  : SeqNode(seq_node_universal_tag_t, id, OrderEnum::SequencedOrder,
+            TypeEnum::LeafNode)
 {
   payload_.funcs = new SeqNodeContainerType<SeqExpandFunType>{};
 
@@ -38,8 +38,8 @@ SeqNode::SeqNode(SeqNodeLeafTag, SeqType const& id)
 }
 
 SeqNode::SeqNode(SeqNodeParallelTag, SeqType const& id, SeqParallelPtrType par)
-  : order_type_(OrderEnum::ParallelOrder), type_(TypeEnum::ParallelNode),
-    seq_id_(id)
+  : SeqNode(seq_node_universal_tag_t, id, OrderEnum::ParallelOrder,
+            TypeEnum::ParallelNode)
 {
   payload_.parallel = par;
 
@@ -57,6 +57,13 @@ SeqNode::SeqNode(
 {
   parent_node_ = parent;
   addSequencedFunction(fn);
+}
+
+SeqNode::SeqNode(
+  SeqNodeUniversalTag, SeqType const& id, OrderEnum const& order,
+  TypeEnum const& type
+) : order_type_(order), type_(type), seq_id_(id)
+{
 }
 
 /*virtual*/ SeqNode::~SeqNode() {

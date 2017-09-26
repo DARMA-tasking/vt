@@ -19,6 +19,7 @@ namespace vt { namespace seq {
 static struct SeqNodeParentTag { } seq_node_parent_tag_t { };
 static struct SeqNodeLeafTag { } seq_node_leaf_tag_t { };
 static struct SeqNodeParallelTag { } seq_node_parallel_tag_t { };
+static struct SeqNodeUniversalTag { } seq_node_universal_tag_t { };
 
 struct SeqNode : std::enable_shared_from_this<SeqNode> {
   using SizeType = uint64_t;
@@ -41,6 +42,12 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
   SeqNode(SeqNodeLeafTag, SeqType const& id);
   SeqNode(SeqNodeParallelTag, SeqType const& id, SeqParallelPtrType par);
   SeqNode(SeqType const& id, SeqNodePtrType parent, SeqExpandFunType const& fn);
+
+  // all other constructors must call this universal constructor
+  SeqNode(
+    SeqNodeUniversalTag, SeqType const& id, OrderEnum const& order,
+    TypeEnum const& type
+  );
 
   virtual ~SeqNode();
 
