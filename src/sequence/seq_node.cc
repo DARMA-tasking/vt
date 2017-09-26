@@ -254,16 +254,22 @@ bool SeqNode::executeClosuresUntilBlocked() {
 }
 
 void SeqNode::activate() {
-  debug_print(
-    sequence, node,
-    "SeqNode: activate (%p) type=%s\n", this, PRINT_SEQ_NODE_TYPE(type_)
-  );
-
   bool const type_is_parallel = type_ == TypeEnum::ParallelNode;
   bool finished_parallel = false;
 
+  debug_print(
+    sequence, node,
+    "SeqNode: activate (%p), type=%s, type_is_parallel=%s\n",
+    this, PRINT_SEQ_NODE_TYPE(type_), print_bool(type_is_parallel)
+  );
+
   if (type_is_parallel) {
     finished_parallel = payload_.parallel->join();
+
+    debug_print(
+      sequence, node,
+      "SeqNode: activate finished__parallel=%s\n", print_bool(finished_parallel)
+    );
   }
 
   if (not type_is_parallel or finished_parallel) {
