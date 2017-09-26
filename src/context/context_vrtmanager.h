@@ -9,9 +9,12 @@
 #include "context.h"
 #include "context_vrt.h"
 
-namespace vt { namespace vrt {
+#include "location/location.h"
 
-using VrtContext_IdType = uint32_t;
+#include "context_vrtproxy.h"
+
+
+namespace vt { namespace vrt {
 
 struct VrtContextManager {
   using VrtContextManager_ContainerType
@@ -20,17 +23,36 @@ struct VrtContextManager {
   VrtContextManager();
 
   template <typename VrtContextT, typename... Args>
-  VrtContext_IdType constructVrtContext(Args&& ... args) {
+  VrtContext_ProxyType constructVrtContext(Args&& ... args) {
     holder_[curIdent_] = new VrtContextT{args...};
-    holder_[curIdent_]->setVrtContextNode(myNode_);
-    return curIdent_++;
-  };
+
+//    theLocMan->vrtContextLoc->registerEntity();
+//    theLocMan->virtual_loc->registerEntity()
+
+    curIdent_++;
+    return VrtContextProxy::createNewProxy(curIdent_ - 1, myNode_);
+  }
 
   VrtContext* getVrtContextByID(VrtContext_IdType const& lookupID);
+  VrtContext* getVrtContextByProxy(VrtContext_ProxyType const& proxy);
   void destroyVrtContextByID(VrtContext_IdType const& lookupID);
+  void destroyVrtContextByProxy(VrtContext_ProxyType const& proxy);
 
   NodeType getNode() const;
   VrtContext_IdType getCurrentIdent() const;
+
+//  template <typename VrtCntxT, typename MsgT, ActiveAnyFunctionType<MsgT>* f>
+//  EventType sendMsg(MsgT* const msg,
+//                    TagType const& tag = no_tag,
+//                    ActionType next_action = nullptr) {
+//    HandlerType const& han = auto_registry::makeAutoHandler<MsgT,f>(msg);
+//    auto const& this_node = theContext->getNode();
+//    setBroadcastType(msg->env);
+//    if (tag != no_tag) {
+//      envelopeSetTag(msg->env, tag);
+//    }
+//    return sendMsg(this_node, han, msg, next_action);
+//  }
 
 
  private:

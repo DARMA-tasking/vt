@@ -9,19 +9,41 @@ VrtContextManager::VrtContextManager() {
   myNode_ = theContext->getNode();
 }
 
-VrtContext*VrtContextManager::getVrtContextByID
-    (VrtContext_IdType const& lookupID) {
+VrtContext*VrtContextManager::getVrtContextByID(
+    VrtContext_IdType const& lookupID) {
   VrtContextManager_ContainerType::const_iterator got = holder_.find(lookupID);
-  if (got == holder_.end()) {
-    return nullptr;
+  VrtContext* answer = nullptr;
+  if (got != holder_.end()) {
+    answer = got->second;
   } else {
-    return got->second;
+    // upps not found
   }
+  return answer;
 }
 
-void VrtContextManager::destroyVrtContextByID
-    (VrtContext_IdType const& lookupID) {
+VrtContext* VrtContextManager::getVrtContextByProxy(
+    VrtContext_ProxyType const& proxy) {
+  VrtContext* answer = nullptr;
+  if (VrtContextProxy::getVrtContextNode(proxy) == myNode_) {
+    answer = getVrtContextByID(VrtContextProxy::getVrtContextId(proxy));
+  } else {
+    // this proxy is not on this node
+  }
+  return answer;
+}
+
+void VrtContextManager::destroyVrtContextByID(
+    VrtContext_IdType const& lookupID) {
   holder_.erase(holder_.find(lookupID));
+}
+
+void VrtContextManager::destroyVrtContextByProxy(
+    VrtContext_ProxyType const& proxy) {
+  if (VrtContextProxy::getVrtContextNode(proxy) == myNode_) {
+    destroyVrtContextByID(VrtContextProxy::getVrtContextId(proxy));
+  } else {
+    // this proxy is not on this node
+  }
 }
 
 NodeType VrtContextManager::getNode() const {

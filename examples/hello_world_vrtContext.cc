@@ -64,7 +64,6 @@ int main(int argc, char **argv) {
       std::cout << "Boom "<<std::endl;
     }
 
-    std::cout<< hello2->getVrtContextNode() << std::endl;
 
 //    std::cout <<
 //

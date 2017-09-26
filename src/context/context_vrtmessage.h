@@ -1,43 +1,18 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #if !defined INCLUDED_CONTEXT_VRT_MESSAGE
 #define INCLUDED_CONTEXT_VRT_MESSAGE
 
-//#include <vector>
-//
-//#include "vrt_context.h"
-//
-//#include "config.h"
-//#include "utils/bits/bits_common.h"
-//#include "configs/types/types_headers.h"
-#include "transport.h"
-
+#include "messaging/message.h"
+#include "config.h"
 
 namespace vt { namespace vrt {
 
-struct VrtContextMessageShort: ShortMessage {
+struct VrtContextMessage : vt::Message {
+  VrtContext_IdType to;
 
+  VrtContextMessage() : Message() {}
 };
 
 }}  // end namespace vt::vrt
-
-
 
 #endif  /*INCLUDED_CONTEXT_VRT_MESSAGE*/
