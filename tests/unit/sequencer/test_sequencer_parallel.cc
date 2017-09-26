@@ -125,6 +125,7 @@ struct TestSequencerParallel : TestParallelHarness {
   SEQUENCE_REGISTER_HANDLER(TestSequencerParallel::TestMsg, seqParHan1);
   SEQUENCE_REGISTER_HANDLER(TestSequencerParallel::TestMsg, seqParHan2);
   SEQUENCE_REGISTER_HANDLER(TestSequencerParallel::TestMsg, seqParHan3);
+  SEQUENCE_REGISTER_HANDLER(TestSequencerParallel::TestMsg, seqParHan4);
 
   static void seqParFn1(SeqType const& seq_id) {
     static std::atomic<OrderType> seq_ordering_{};
@@ -219,6 +220,37 @@ struct TestSequencerParallel : TestParallelHarness {
       EXPECT_EQ(seq_ordering_++, 4);
     });
   }
+
+  static void seqParFn4(SeqType const& seq_id) {
+    static std::atomic<OrderType> seq_ordering_{};
+
+    if (seq_id == -1) {
+      EXPECT_EQ(seq_ordering_++, 5);
+      return;
+    }
+
+    DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
+
+    EXPECT_EQ(seq_ordering_++, 0);
+
+    theSeq->wait<TestMsg, seqParHan4>([](TestMsg* msg){
+      EXPECT_EQ(seq_ordering_++, 1);
+    });
+
+    theSeq->sequenced([]{
+      SeqType const seq_id = theSeq->getCurrentSeq();
+
+      std::atomic<OrderType>* order_ptr = &seq_ordering_;
+      auto fn1 = std::bind(waitParNum<TestMsg, seqParHan4>, order_ptr, 1, 2, 2);
+      auto fn2 = std::bind(waitParNum<TestMsg, seqParHan4>, order_ptr, 2, 2, 2);
+
+      theSeq->parallel(seq_id, fn1, fn2);
+    });
+
+    theSeq->wait<TestMsg, seqParHan4>([](TestMsg* msg){
+      EXPECT_EQ(seq_ordering_++, 4);
+    });
+  }
 };
 
 #define PAR_TEST(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, NUM_MSGS, IS_TAG)   \
@@ -256,5 +288,12 @@ TEST_F(TestSequencerParallel, test_parallel_3) {
   auto const& node = theContext->getNode();
   if (node == 0) {
     PAR_TEST(seqParHan3, seqParFn3, node, TestMsg, 4, false);
+  }
+}
+
+TEST_F(TestSequencerParallel, test_parallel_4) {
+  auto const& node = theContext->getNode();
+  if (node == 0) {
+    PAR_TEST(seqParHan4, seqParFn4, node, TestMsg, 4, false);
   }
 }
