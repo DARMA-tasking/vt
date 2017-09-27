@@ -91,7 +91,7 @@ private:
 struct LocationManager {
   // @todo: something like this with the type for virtual context
   using VirtualLocMan = EntityLocationCoord<int32_t>;
-  using VirtualContextLocMan = EntityLocationCoord<VrtContext_IdType>;
+  using VirtualContextLocMan = EntityLocationCoord<VrtContext_ProxyType>;
 
   std::unique_ptr<VirtualLocMan> virtual_loc = std::make_unique<VirtualLocMan>();
   std::unique_ptr<VirtualContextLocMan> vrtContextLoc

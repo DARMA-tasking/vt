@@ -7,10 +7,12 @@
 
 namespace vt { namespace vrt {
 
-struct VrtContextMessage : vt::Message {
-  VrtContext_IdType to;
+template <typename MessageT>
+using RoutedMessageType = LocationRoutedMsg<VrtContext_ProxyType, MessageT>;
 
-  VrtContextMessage() : Message() {}
+template <typename MessageT>
+struct VrtContextMessage : RoutedMessageType<MessageT> {
+  VrtContextMessage() = default;
 };
 
 }}  // end namespace vt::vrt

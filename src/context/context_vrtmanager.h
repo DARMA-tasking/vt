@@ -25,12 +25,15 @@ struct VrtContextManager {
   template <typename VrtContextT, typename... Args>
   VrtContext_ProxyType constructVrtContext(Args&& ... args) {
     holder_[curIdent_] = new VrtContextT{args...};
+    holder_[curIdent_]->myProxy_ =
+        VrtContextProxy::createNewProxy(curIdent_, myNode_);
 
-//    theLocMan->vrtContextLoc->registerEntity();
-//    theLocMan->virtual_loc->registerEntity()
+    theLocMan->vrtContextLoc->registerEntity(
+        holder_[curIdent_]->myProxy_, [](BaseMessage *in_msg) {
+          //TODO: perform action
+        });
 
-    curIdent_++;
-    return VrtContextProxy::createNewProxy(curIdent_ - 1, myNode_);
+    return holder_[curIdent_++]->myProxy_;
   }
 
   VrtContext* getVrtContextByID(VrtContext_IdType const& lookupID);
@@ -40,6 +43,17 @@ struct VrtContextManager {
 
   NodeType getNode() const;
   VrtContext_IdType getCurrentIdent() const;
+
+//  theVrtCManager->sendMsg<MyHelloMsg, myWorkHandler>
+//  (proxy1, proxy_on_node1, makeSharedMessage<MyHelloMsg>(100));
+
+  template <typename MsgT, ActiveAnyFunctionType <MsgT> *f>
+  EventType sendMsg(VrtContext_ProxyType const& toProxy,
+                    MsgT *const in_msg, ActionType act) {
+
+    auto to_node = VrtContextProxy::getVrtContextNode(toProxy);
+    theLocMan->vrtContextLoc->routeMsg(toProxy, to_node, in_msg, act);
+  }
 
 //  template <typename VrtCntxT, typename MsgT, ActiveAnyFunctionType<MsgT>* f>
 //  EventType sendMsg(MsgT* const msg,

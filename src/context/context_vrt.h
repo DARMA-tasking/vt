@@ -10,7 +10,9 @@
 namespace vt { namespace vrt {
 
 struct VrtContext {
+  VrtContext_ProxyType myProxy_;
 
+  VrtContext() = default;
 };
 
 }}  // end namespace vt::vrt
