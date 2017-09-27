@@ -6,7 +6,6 @@
 
 #include "context/context_vrtmanager.h"
 
-
 class TestVrtContextManager : public TestParallelHarness {
   virtual void SetUp() {
     TestParallelHarness::SetUp();
@@ -21,47 +20,48 @@ struct HelloVrtContext : vt::vrt::VrtContext {
   int from;
 
   explicit HelloVrtContext(int const& in_from)
-      : VrtContext(), from(in_from) {}
+      : from(in_from) {}
 };
-
 
 TEST_F(TestVrtContextManager, Construction_and_API) {
   using namespace vt;
+  using namespace vt::vrt;
 
   EXPECT_EQ(theVrtCManager->getNode(), theContext->getNode());
   EXPECT_EQ(theVrtCManager->getCurrentIdent(), 0);
 
-  auto vrtc1 = theVrtCManager->constructVrtContext<HelloVrtContext>(10);
+  auto proxy1 = theVrtCManager->constructVrtContext<HelloVrtContext>(10);
   EXPECT_EQ(theVrtCManager->getCurrentIdent(), 1);
 
-  auto temp1 = theVrtCManager->getVrtContextByID(vrtc1);
-  auto hello1 = static_cast<HelloVrtContext*>(temp1);
-
-  auto temp2 = theVrtCManager->getVrtContextByID(vrtc1);
-  auto hello2 = static_cast<HelloVrtContext*>(temp2);
-
+  auto temp1 = theVrtCManager->getVrtContextByProxy(proxy1);
+  auto hello1 = static_cast<HelloVrtContext *>(temp1);
   EXPECT_EQ(hello1->from, 10);
-  EXPECT_EQ(hello1->getVrtContextNode(), theVrtCManager->getNode());
+  EXPECT_EQ(theVrtCManager->getVrtContextByID(1), nullptr);
+  auto proxy3 = proxy1;
+  VrtContextProxy::setVrtContextId(proxy3, 5);
+  EXPECT_EQ(theVrtCManager->getVrtContextByProxy(proxy3), nullptr);
 
-  hello1->setIsCollection(true);
-  EXPECT_EQ(hello2->isCollection(), true);
+  auto temp2 = theVrtCManager->getVrtContextByProxy(proxy1);
+  auto hello2 = static_cast<HelloVrtContext *>(temp2);
+  EXPECT_EQ(hello2->from, 10);
 
-  hello2->setIsCollection(false);
-  EXPECT_EQ(hello1->isCollection(), false);
+  EXPECT_EQ(VrtContextProxy::getVrtContextNode(proxy1),
+            theVrtCManager->getNode());
+  EXPECT_EQ(VrtContextProxy::getVrtContextId(proxy1), 0);
+  EXPECT_EQ(VrtContextProxy::isCollection(proxy1), false);
+  EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), false);
 
-  ////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////
 
-  theVrtCManager->destroyVrtContextByID(vrtc1);
-  EXPECT_EQ(theVrtCManager->getVrtContextByID(vrtc1), nullptr);
+  auto proxy2 = theVrtCManager->constructVrtContext<HelloVrtContext>(100);
+  EXPECT_EQ(theVrtCManager->getCurrentIdent(), 2);
 
-  auto vrtc2 = theVrtCManager->constructVrtContext<HelloVrtContext>(20);
-  auto temp21 = theVrtCManager->getVrtContextByID(vrtc2);
-  auto hello21 = static_cast<HelloVrtContext*>(temp21);
+  auto temp3 = theVrtCManager->getVrtContextByProxy(proxy2);
+  auto hello3 = static_cast<HelloVrtContext *>(temp3);
+  EXPECT_EQ(hello3->from, 100);
 
-  auto vrtc3 = 20;
-  EXPECT_EQ(theVrtCManager->getVrtContextByID(vrtc3), nullptr);
+  theVrtCManager->destroyVrtContextByProxy(proxy1);
 
-  EXPECT_EQ(hello21->from, 20);
-  EXPECT_EQ(hello21->getVrtContextNode(), theVrtCManager->getNode());
+  EXPECT_EQ(theVrtCManager->getVrtContextByProxy(proxy1), nullptr);
 }
 
