@@ -40,6 +40,10 @@ struct EntityMsg : ActiveMessageT {
   explicit EntityMsg(EntityID const& in_entity_id, NodeType const& in_home_node)
     : ActiveMessageT(), entity_id(in_entity_id), home_node(in_home_node)
   { }
+
+  EntityID getEntity() const {
+    return entity_id;
+  }
 };
 
 }} // end namespace vt::location

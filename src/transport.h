@@ -25,5 +25,7 @@
 #include "location.h"
 #include "index.h"
 #include "mapping_headers.h"
+#include "context_vrtmessage.h"
+#include "context_vrtmanager.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

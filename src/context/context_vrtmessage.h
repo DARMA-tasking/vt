@@ -2,17 +2,34 @@
 #if !defined INCLUDED_CONTEXT_VRT_MESSAGE
 #define INCLUDED_CONTEXT_VRT_MESSAGE
 
-#include "messaging/message.h"
 #include "config.h"
+#include "messaging/message.h"
+#include "location/location_msg.h"
+
+
+#include <cassert>
 
 namespace vt { namespace vrt {
 
 template <typename MessageT>
 using RoutedMessageType = LocationRoutedMsg<VrtContext_ProxyType, MessageT>;
 
-template <typename MessageT>
-struct VrtContextMessage : RoutedMessageType<MessageT> {
+struct VrtContextMessage : RoutedMessageType<vt::Message> {
   VrtContextMessage() = default;
+
+  void setHandler(HandlerType const& in_handler) {
+    vt_sub_handler = in_handler;
+  }
+
+  HandlerType getHandler() const {
+    assert(
+      vt_sub_handler != uninitialized_handler and "Must have a valid handler"
+    );
+    return vt_sub_handler;
+  }
+
+private:
+  HandlerType vt_sub_handler = uninitialized_handler;
 };
 
 }}  // end namespace vt::vrt

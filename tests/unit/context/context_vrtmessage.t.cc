@@ -48,7 +48,7 @@ TEST_F(TestVrtContextMessage, Construction_and_API) {
   MyHelloMsg* msg = new MyHelloMsg(my_node);
 
   theVrtCManager->sendMsg<HelloVrtContext, MyHelloMsg, myWorkHandler>
-      (my_node, makeSharedMessage<TestMsg>());
+    (my_node, makeSharedMessage<MyHelloMsg>());
 
 
   EXPECT_EQ(theVrtCManager->getCurrentIdent(), 1);
