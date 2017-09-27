@@ -14,6 +14,8 @@
 
 #include "transport.h"
 
+namespace vt { namespace tests { namespace unit {
+
 using namespace vt;
 using namespace vt::tests::unit;
 
@@ -298,3 +300,5 @@ TEST_F(TestSequencerParallel, test_parallel_4) {
     PAR_TEST(seqParHan4, seqParFn4, node, TestMsg, 4, false);
   }
 }
+
+}}} // end namespace vt::tests::unit

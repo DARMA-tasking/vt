@@ -7,6 +7,8 @@
 
 #include "transport.h"
 
+namespace vt { namespace tests { namespace unit {
+
 using namespace vt;
 using namespace vt::tests::unit;
 
@@ -65,3 +67,5 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
     });
   }
 }
+
+}}} // end namespace vt::tests::unit

@@ -13,6 +13,8 @@
 
 #include "transport.h"
 
+namespace vt { namespace tests { namespace unit {
+
 static bool mpi_is_initialized = false;
 
 template <typename TestBase>
@@ -64,5 +66,7 @@ using TestParallelHarnessParam = TestParallelHarnessAny<
 >;
 
 using TestParameterHarnessNode = TestParallelHarnessParam<vt::NodeType>;
+
+}}} // end namespace vt::tests::unit
 
 #endif /* __VIRTUAL_TRANSPORT_TEST_PARALLEL_HARNESS__ */
