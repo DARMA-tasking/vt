@@ -1,6 +1,6 @@
 
-#if ! defined __VIRTUAL_TRANSPORT_TEST_MSG__
-#define __VIRTUAL_TRANSPORT_TEST_MSG__
+#if ! defined __VIRTUAL_TRANSPORT_DATA_MESSAGE__
+#define __VIRTUAL_TRANSPORT_DATA_MESSAGE__
 
 #include "transport.h"
 
@@ -36,6 +36,19 @@ using TestStaticBytesNormalMsg = TestStaticBytesMsg<vt::Message, num_bytes>;
 template <NumBytesType num_bytes>
 using TestStaticBytesShortMsg = TestStaticBytesMsg<vt::ShortMessage, num_bytes>;
 
+template <typename MessageT, typename T, int len>
+struct WaitInfoMsg : MessageT {
+  T info[len];
+
+  explicit WaitInfoMsg(T in_info[len]) : MessageT() {
+    for (int i = 0; i < len; i++) {
+      info[i] = in_info[i];
+    }
+  }
+};
+
+using NumWaitsMsg = WaitInfoMsg<vt::ShortMessage, uint32_t, 3>;
+
 }}} // end namespace vt::tests::unit
 
-#endif /* __VIRTUAL_TRANSPORT_TEST_MSG__ */
+#endif /* __VIRTUAL_TRANSPORT_DATA_MESSAGE__*/

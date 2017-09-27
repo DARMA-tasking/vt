@@ -268,6 +268,7 @@ struct TestSequencerParallel : TestParallelHarness {
     });                                                               \
   } while (false);
 
+
 TEST_F(TestSequencerParallel, test_parallel_1) {
   auto const& node = theContext->getNode();
 
