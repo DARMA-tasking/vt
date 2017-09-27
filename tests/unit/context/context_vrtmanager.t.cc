@@ -6,6 +6,8 @@
 
 #include "context/context_vrtmanager.h"
 
+namespace vt { namespace tests { namespace unit {
+
 class TestVrtContextManager : public TestParallelHarness {
   virtual void SetUp() {
     TestParallelHarness::SetUp();
@@ -65,3 +67,4 @@ TEST_F(TestVrtContextManager, Construction_and_API) {
   EXPECT_EQ(theVrtCManager->getVrtContextByProxy(proxy1), nullptr);
 }
 
+}}} // end namespace vt::tests::unit

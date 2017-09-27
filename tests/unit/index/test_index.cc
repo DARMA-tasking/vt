@@ -6,6 +6,8 @@
 
 #include "transport.h"
 
+namespace vt { namespace tests { namespace unit {
+
 class TestIndex : public TestHarness {
   virtual void SetUp() {
     TestHarness::SetUp();
@@ -71,3 +73,5 @@ TEST_F(TestIndex, test_index_3d) {
 
   EXPECT_EQ(idx.getSize(), val1 * val2 * val3);
 }
+
+}}} // end namespace vt::tests::unit

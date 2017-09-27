@@ -10,6 +10,8 @@
 #include "test_config.h"
 #include "data_message.h"
 
+namespace vt { namespace tests { namespace unit {
+
 template <typename TestBase>
 struct TestHarnessAny : TestBase {
   virtual void SetUp() {
@@ -45,5 +47,7 @@ template <typename TestBase>
 std::vector<std::string> TestHarnessAny<TestBase>::orig_args_;
 
 using TestHarness = TestHarnessAny<testing::Test>;
+
+}}} // end namespace vt::tests::unit
 
 #endif /* __VIRTUAL_TRANSPORT_TEST_HARNESS__ */

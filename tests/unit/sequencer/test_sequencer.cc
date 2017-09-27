@@ -9,6 +9,8 @@
 
 #include "transport.h"
 
+namespace vt { namespace tests { namespace unit {
+
 using namespace vt;
 using namespace vt::tests::unit;
 
@@ -186,3 +188,5 @@ TEST_F(TestSequencer, test_multi_wait_tagged) {
     });
   }
 }
+
+}}} // end namespace vt::tests::unit

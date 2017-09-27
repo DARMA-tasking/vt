@@ -7,6 +7,7 @@
 #include "context/context_vrtmanager.h"
 #include "context/context_vrtmessage.h"
 
+namespace vt { namespace tests { namespace unit {
 
 class TestVrtContextMessage : public TestParallelHarness {
   virtual void SetUp() {
@@ -82,3 +83,5 @@ TEST_F(TestVrtContextMessage, Construction_and_API) {
   EXPECT_EQ(hello21->from, 20);
   EXPECT_EQ(hello21->getVrtContextNode(), theVrtCManager->getNode());
 }
+
+}}} // end namespace vt::tests::unit

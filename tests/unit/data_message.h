@@ -47,8 +47,6 @@ struct WaitInfoMsg : MessageT {
   }
 };
 
-using NumWaitsMsg = WaitInfoMsg<vt::ShortMessage, uint32_t, 3>;
-
 }}} // end namespace vt::tests::unit
 
 #endif /* __VIRTUAL_TRANSPORT_DATA_MESSAGE__*/

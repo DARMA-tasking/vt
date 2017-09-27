@@ -7,6 +7,8 @@
 
 #include "transport.h"
 
+namespace vt { namespace tests { namespace unit {
+
 using namespace vt;
 using namespace vt::tests::unit;
 
@@ -70,3 +72,5 @@ INSTANTIATE_TEST_CASE_P(
   InstantiationName, TestActiveBroadcast,
   ::testing::Range(static_cast<NodeType>(0), static_cast<NodeType>(16), 1)
 );
+
+}}} // end namespace vt::tests::unit

@@ -6,6 +6,8 @@
 
 #include "context/context_vrt.h"
 
+namespace vt { namespace tests { namespace unit {
+
 class TestVrtContext : public TestHarness {
   virtual void SetUp() {
     TestHarness::SetUp();
@@ -54,3 +56,5 @@ class TestVrtContext : public TestHarness {
 //  EXPECT_EQ(vrtc.isMigratable(), true);
 //  EXPECT_EQ(vrtc.getVrtContextNode(), 100);
 //}
+
+}}} // end namespace vt::tests::unit

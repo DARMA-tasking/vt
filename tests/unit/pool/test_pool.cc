@@ -9,6 +9,8 @@
 
 #include "transport.h"
 
+namespace vt { namespace tests { namespace unit {
+
 using namespace vt::tests::unit;
 
 struct TestPoolSimple : TestHarness { };
@@ -72,3 +74,5 @@ TEST_F(TestPool, pool_message_alloc) {
     delete msg;
   }
 }
+
+}}} // end namespace vt::tests::unit
