@@ -8,7 +8,7 @@
 #include "utils/bits/bits_common.h"
 #include "context.h"
 #include "context_vrt.h"
-#include "function.h"
+#include "registry_function.h"
 #include "context_vrtmessage.h"
 #include "auto_registry_vc.h"
 

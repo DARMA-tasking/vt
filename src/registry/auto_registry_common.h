@@ -5,7 +5,7 @@
 #include "trace_event.h"
 
 #include "config.h"
-#include "function.h"
+#include "registry_function.h"
 #include "registry.h"
 #include "trace.h"
 #include "context_vrt_fwd.h"
