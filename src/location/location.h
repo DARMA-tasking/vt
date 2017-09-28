@@ -42,6 +42,16 @@ struct EntityLocationCoord : LocationCoord {
 
   EntityLocationCoord();
 
+  /*
+   * The `registerEntity' method allows an external component to locally
+   * register an entity as existing on this node. If the entity is deleted,
+   * unregisterEntity should be called; if the entity is migrated,
+   * `entityMigrated' should be invoked where the registration occurred. The
+   * function `msg_action' gets triggered when a message arrives that is
+   * designated for the entity `id' that is registered. A message may arrive for
+   * the entity by a location coordinator calling `routeMsg' to the associated
+   * entity.
+   */
   void registerEntity(EntityID const& id, LocMsgActionType msg_action = nullptr);
   void unregisterEntity(EntityID const& id);
   void entityMigrated(EntityID const& id, NodeType const& new_node);
