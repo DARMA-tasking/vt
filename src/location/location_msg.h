@@ -10,7 +10,7 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 struct LocationMsg : vt::Message {
-  LocManInstType loc_man_inst = LocManInstType::InvalidLocManInst;
+  LocInstType loc_man_inst = 0;
   EntityID entity{};
   LocEventID loc_event = no_location_event_id;
   NodeType ask_node = uninitialized_destination;
@@ -18,7 +18,7 @@ struct LocationMsg : vt::Message {
   NodeType resolved_node = uninitialized_destination;
 
   LocationMsg(
-    LocManInstType const& in_loc_man_inst, EntityID const& in_entity,
+    LocInstType const& in_loc_man_inst, EntityID const& in_entity,
     LocEventID const& in_loc_event, NodeType const& in_ask_node,
     NodeType in_home_node
   ) : loc_man_inst(in_loc_man_inst), entity(in_entity), loc_event(in_loc_event),
@@ -34,6 +34,7 @@ template <typename EntityID, typename ActiveMessageT>
 struct EntityMsg : ActiveMessageT {
   EntityID entity_id{};
   NodeType home_node = uninitialized_destination;
+  LocInstType loc_man_inst = no_loc_inst;
 
   EntityMsg() = default;
 
@@ -43,6 +44,14 @@ struct EntityMsg : ActiveMessageT {
 
   EntityID getEntity() const {
     return entity_id;
+  }
+
+  void setLocInst(LocInstType const& inst) {
+    loc_man_inst = inst;
+  }
+
+  LocInstType getLocInst() const {
+    return loc_man_inst;
   }
 };
 

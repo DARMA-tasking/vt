@@ -16,6 +16,13 @@
 namespace vt { namespace location {
 
 template <typename EntityID>
+EntityLocationCoord<EntityID>::EntityLocationCoord() :
+  this_inst(cur_loc_inst++), recs_(default_max_cache_size)
+{
+  LocationManager::insertInstance(this_inst, static_cast<LocationCoord*>(this));
+}
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
   EntityID const& id, LocMsgActionType msg_action
 ) {
@@ -123,12 +130,17 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   ActionType action
 ) {
   auto const& this_node = theContext->getNode();
-
   NodeType route_to_node = uninitialized_destination;
 
   auto reg_iter = local_registered_.find(id);
+  bool const found = reg_iter != local_registered_.end();
 
-  if (reg_iter != local_registered_.end()) {
+  debug_print(
+    location, node,
+    "EntityLocationCoord: routeMsgEager: found=%s\n", print_bool(found)
+  );
+
+  if (found) {
     recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
     route_to_node = this_node;
   } else {
@@ -154,6 +166,12 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   assert(
     route_to_node != uninitialized_destination and
     "Node to route to must be set by this point"
+  );
+
+  debug_print(
+    location, node,
+    "EntityLocationCoord: routeMsgEager: id=%d, home_node=%d, route_node=%d\n",
+    id, home_node, route_to_node
   );
 
   return routeMsgNode<MessageT>(id, home_node, route_to_node, msg, action);
@@ -188,9 +206,7 @@ void EntityLocationCoord<EntityID>::getLocation(
     if (not rec_exists) {
       if (home_node != this_node) {
         auto const& event_id = fst_location_event_id++;
-        auto msg = new LocMsgType(
-          LocManInstType::VirtualLocManInst, id, event_id, this_node, home_node
-        );
+        auto msg = new LocMsgType(this_inst, id, event_id, this_node, home_node);
         theMsg->sendMsg<LocMsgType, getLocationHandler>(
           home_node, msg, [=]{ delete msg; }
         );
@@ -229,8 +245,17 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   MessageT* msg, ActionType action
 ) {
   auto const& this_node = theContext->getNode();
+
+  debug_print(
+    location, node,
+    "EntityLocationCoord: routeMsgNode: id=%d, to_node=%d, node=%d: inst=%d\n",
+    id, to_node, this_node, this_inst
+  );
+
   if (to_node != this_node) {
     auto entity_msg = static_cast<EntityMsgType<MessageT>*>(msg);
+    // set the instance on the message to deliver to the correct manager
+    entity_msg->setLocInst(this_inst);
     // send to the node discovered by the location manager
     theMsg->sendMsg<MessageT, msgHandler>(to_node, entity_msg, action);
   } else {
@@ -244,12 +269,29 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     };
 
     auto reg_iter = local_registered_.find(id);
+
+    debug_print(
+      location, node,
+      "EntityLocationCoord: routeMsgNode: id=%d: size=%ld\n",
+      id, local_registered_.size()
+    );
+
     if (reg_iter != local_registered_.end()) {
+      debug_print(
+        location, node,
+        "EntityLocationCoord: routeMsgNode: id=%d: running actions\n", id
+      );
+
       trigger_msg_handler_action(id);
       if (action) {
         action();
       }
     } else {
+      debug_print(
+        location, node,
+        "EntityLocationCoord: routeMsgNode: id=%d: buffering\n", id
+      );
+
       // buffer the message here, the entity will be registered in the future
       insertPendingEntityAction(id, [=](NodeType) {
         trigger_msg_handler_action(id);
@@ -279,6 +321,8 @@ void EntityLocationCoord<EntityID>::routeMsg(
     "routeMsg: id=%d, home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
     id, home_node, msg_size, print_bool(is_large_msg), print_bool(use_eager)
   );
+
+  msg->setLocInst(this_inst);
 
   if (use_eager) {
     routeMsgEager<MessageT>(id, home_node, msg, act);
@@ -326,15 +370,17 @@ template <typename MessageT>
 /*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT* msg) {
   auto const& entity_id = msg->entity_id;
   auto const& home_node = msg->home_node;
+  auto const& inst = msg->loc_man_inst;
 
   debug_print(
     location, node,
-    "msgHandler: msg=%p, ref=%d\n",
-    msg, envelopeGetRef(msg->env)
+    "msgHandler: msg=%p, ref=%d, loc_inst=%d\n",
+    msg, envelopeGetRef(msg->env), inst
   );
 
-  auto const& loc = theLocMan->virtual_loc;
-  loc->routeMsg(entity_id, home_node, msg);
+  LocationCoord* loc = LocationManager::getInstance(inst);
+  auto loc_entity = static_cast<EntityLocationCoord<EntityID>*>(loc);
+  loc_entity->routeMsg(entity_id, home_node, msg);
 }
 
 template <typename EntityID>
@@ -345,18 +391,16 @@ template <typename EntityID>
   auto const& home_node = msg->home_node;
   auto const& ask_node = msg->ask_node;
 
-  if (inst == LocManInstType::VirtualLocManInst) {
-    auto const& loc = theLocMan->virtual_loc;
-    loc->getLocation(entity, home_node, [=](NodeType node) {
-      auto msg = new LocMsgType(
-        LocManInstType::VirtualLocManInst, entity, event_id, ask_node, home_node
-      );
-      msg->setResolvedNode(node);
-      theMsg->sendMsg<LocMsgType, updateLocation>(
-        ask_node, msg, [=]{ delete msg; }
-      );
-    });
-  }
+  LocationCoord* loc_coord = LocationManager::getInstance(inst);
+  auto loc = static_cast<EntityLocationCoord<EntityID>*>(loc_coord);
+
+  loc->getLocation(entity, home_node, [=](NodeType node) {
+    auto msg = new LocMsgType(inst, entity, event_id, ask_node, home_node);
+    msg->setResolvedNode(node);
+    theMsg->sendMsg<LocMsgType, updateLocation>(
+      ask_node, msg, [=]{ delete msg; }
+    );
+  });
 }
 
 template <typename EntityID>
@@ -365,10 +409,9 @@ template <typename EntityID>
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
 
-  if (inst == LocManInstType::VirtualLocManInst) {
-    auto const& loc = theLocMan->virtual_loc;
-    loc->updatePendingRequest(event_id, msg->resolved_node);
-  }
+  LocationCoord* loc_coord = LocationManager::getInstance(inst);
+  auto loc = static_cast<EntityLocationCoord<EntityID>*>(loc_coord);
+  loc->updatePendingRequest(event_id, msg->resolved_node);
 }
 
 }} // end namespace vt::location

@@ -27,6 +27,7 @@
     handler,               "handler",                                   \
     sequence,              "sequencer",                                 \
     trace,                 "trace",                                     \
+    vrt,                   "virtual-context",                           \
     location,              "location"                                   \
   )
 

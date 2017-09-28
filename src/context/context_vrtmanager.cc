@@ -14,6 +14,12 @@ VrtContextManager::VrtContextManager() {
   auto const entity_proxy = vc_msg->getEntity();
   auto const vc_ptr = theVrtCManager->getVrtContextByProxy(entity_proxy);
 
+  debug_print(
+    vrt, node,
+    "handleVCMsg: msg=%p, entity_proxy=%lld, vc_ptr=%p\n",
+    msg, entity_proxy, vc_ptr
+  );
+
   if (vc_ptr) {
     // invoke the user's handler function here
     auto const& sub_handler = vc_msg->getHandler();
@@ -31,7 +37,7 @@ VrtContext*VrtContextManager::getVrtContextByID(
   VrtContextManager_ContainerType::const_iterator got = holder_.find(lookupID);
   VrtContext* answer = nullptr;
   if (got != holder_.end()) {
-    answer = got->second;
+    answer = got->second.get();
   } else {
     // upps not found
   }

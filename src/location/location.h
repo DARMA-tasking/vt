@@ -13,13 +13,19 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 #include <unordered_set>
 #include <unordered_map>
 
 namespace vt { namespace location {
 
+// General base class for the location coords to erase templated types
+struct LocationCoord {
+  int data;
+};
+
 template <typename EntityID>
-struct EntityLocationCoord {
+struct EntityLocationCoord : LocationCoord {
   using LocRecType = LocRecord<EntityID>;
   using LocCacheType = LocationCache<EntityID, LocRecType>;
   using LocEntityMsg = LocEntity<EntityID>;
@@ -34,7 +40,7 @@ struct EntityLocationCoord {
   template <typename MessageT>
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
 
-  EntityLocationCoord() : recs_(default_max_cache_size) { }
+  EntityLocationCoord();
 
   void registerEntity(EntityID const& id, LocMsgActionType msg_action = nullptr);
   void unregisterEntity(EntityID const& id);
@@ -73,6 +79,8 @@ private:
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
 
 private:
+  LocInstType this_inst = no_loc_inst;
+
   // message handlers for local registrations
   LocalRegisteredMsgContType local_registered_msg_han_;
 
@@ -90,14 +98,20 @@ private:
 };
 
 struct LocationManager {
-  // @todo: something like this with the type for virtual context
+  using LocCoordPtrType = LocationCoord*;
+  using LocInstContainerType = std::vector<LocCoordPtrType>;
   using VirtualLocMan = EntityLocationCoord<int32_t>;
   using VirtualContextLocMan = EntityLocationCoord<VrtContext_ProxyType>;
 
   std::unique_ptr<VirtualLocMan> virtual_loc = std::make_unique<VirtualLocMan>();
-  std::unique_ptr<VirtualContextLocMan> vrtContextLoc
-      = std::make_unique<VirtualContextLocMan>();
+  std::unique_ptr<VirtualContextLocMan> vrtContextLoc =
+    std::make_unique<VirtualContextLocMan>();
 
+  static void insertInstance(int const i, LocCoordPtrType const& ptr);
+  static LocCoordPtrType getInstance(int const inst);
+
+private:
+  static LocInstContainerType loc_insts;
 };
 
 }} // end namespace vt::location
