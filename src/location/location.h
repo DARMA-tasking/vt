@@ -45,16 +45,33 @@ struct EntityLocationCoord : LocationCoord {
   /*
    * The `registerEntity' method allows an external component to locally
    * register an entity as existing on this node. If the entity is deleted,
-   * unregisterEntity should be called; if the entity is migrated,
-   * `entityMigrated' should be invoked where the registration occurred. The
-   * function `msg_action' gets triggered when a message arrives that is
-   * designated for the entity `id' that is registered. A message may arrive for
-   * the entity by a location coordinator calling `routeMsg' to the associated
-   * entity.
+   * `unregisterEntity' should be called; if the entity is migrated,
+   * `entityMigrated' should be invoked on the node where the entity is
+   * migrating from. The function `msg_action' gets triggered when a message
+   * arrives that is designated for the entity `id' that is registered. A
+   * message may arrive for the entity by a location coordinator calling
+   * `routeMsg' to the associated entity.
    */
   void registerEntity(EntityID const& id, LocMsgActionType msg_action = nullptr);
   void unregisterEntity(EntityID const& id);
   void entityMigrated(EntityID const& id, NodeType const& new_node);
+
+  /*
+   * Get the location of a entity: the `action' is triggered when the location
+   * of the entity is resolved. This is an asynchronous call that may send
+   * messages to discover the location of the entity `id'. To resolve the
+   * location the method uses the following algorithm:
+   *
+   *   1) Check locally for the entity's existence
+   *.  2) If not local, search for a cache entry with location info
+   *   3) If no cache information available, send resolution message to home node.
+   *     a) The home node applies the same algorithm, starting with (1)
+   *. .  b) On step 3, if no information is known, the manager buffers the
+   *.       request, waiting to the entity to be registered in the future.
+   *
+   * Note: migrations may make this information inaccurate; the node delivered
+   * to `action' reflects the current known state, which may be remote.
+   */
   void getLocation(
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
   );
