@@ -60,6 +60,16 @@ struct TaggedSequencer {
   void sequenced(SeqType const& seq_id, FuncIDType const& fn);
   void sequenced(SeqType const& seq_id, FuncType const& fn);
 
+  void for_loop(
+    ForIndex const& begin, ForIndex const& end, ForIndex const& stride,
+    FuncIndexType fn
+  );
+
+  // void forall_loop(
+  //   ForIndex const& begin, ForIndex const& end, ForIndex const& stride,
+  //   FuncIndexType fn
+  // );
+
   // compile-time list of parallel functions
   template <typename... FnT>
   void parallel(FnT&&... fns);

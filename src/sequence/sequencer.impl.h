@@ -52,6 +52,21 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::hasContext() const {
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
+void TaggedSequencer<SeqTag, SeqTrigger>::for_loop(
+  ForIndex const& begin, ForIndex const& end, ForIndex const& stride,
+  FuncIndexType fn
+) {
+  if (begin < end) {
+    sequenced([=]{
+      fn(begin);
+      sequenced([=]{
+        for_loop(begin+stride, end, stride, fn);
+      });
+    });
+  }
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
 void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(UserSeqFunType const& fn) {
   assertValidContext();
 

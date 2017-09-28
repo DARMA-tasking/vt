@@ -97,6 +97,18 @@ static void mySeqParallel(SeqType const& seq_id) {
   });
 }
 
+static void mySeqFor(SeqType const& seq_id) {
+  PRINT_SEQUENCE("mySeqParallel: executing sequence\n");
+
+  theSeq->for_loop(0, 10, 1, [](vt::seq::ForIndex i) {
+    PRINT_SEQUENCE("for loop: i=%d\n", i);
+    theSeq->wait<EmptyMsg, action1>([](EmptyMsg* msg){
+      PRINT_SEQUENCE("action1 triggered\n");
+      theMsg->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>());
+    });
+  });
+}
+
 static void mySeqSingleNode(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeqSingleNode: executing sequence\n");
 
@@ -200,7 +212,8 @@ int main(int argc, char** argv) {
   num_nodes = theContext->getNumNodes();
 
   //#define SIMPLE_SEQ_MULTI_NODE 1
-  #define SIMPLE_SEQ_PARALLEL 1
+  //#define SIMPLE_SEQ_PARALLEL 1
+  #define SIMPLE_SEQ_FOR 1
 
   #if SIMPLE_SEQ_MULTI_NODE
   if (num_nodes == 1) {
@@ -259,6 +272,14 @@ int main(int argc, char** argv) {
     SeqType const& seq_id = theSeq->nextSeq();
     theSeq->sequenced(seq_id, mySeqParallel);
     theMsg->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>(), 10);
+  }
+  #endif
+
+  #if SIMPLE_SEQ_FOR
+  if (my_node == 0) {
+    SeqType const& seq_id = theSeq->nextSeq();
+    theSeq->sequenced(seq_id, mySeqFor);
+    theMsg->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>());
   }
   #endif
 

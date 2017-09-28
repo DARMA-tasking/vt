@@ -18,6 +18,9 @@ using SystemSeqFunType = std::function<bool()>;
 using UserSeqFunWithIDType = std::function<void(SeqType const&)>;
 using FuncIDType = UserSeqFunWithIDType;
 using SeqFuncContainerType = std::vector<FuncType>;
+using ForIndex = int32_t;
+using UserSeqFunIndexType = std::function<void(ForIndex idx)>;
+using FuncIndexType = UserSeqFunIndexType;
 
 template <typename MessageT>
 using SeqNonMigratableTriggerType = std::function<void(MessageT*)>;
