@@ -10,7 +10,7 @@
 #include "context_vrt.h"
 #include "function.h"
 #include "context_vrtmessage.h"
-#include "auto_registry.h"
+#include "auto_registry_vc.h"
 
 #include "location/location.h"
 
@@ -37,24 +37,7 @@ struct VrtContextManager {
 
   VrtContextManager();
 
-  static void handleVCMsg(BaseMessage* msg) {
-    auto const vc_msg = static_cast<VrtContextMessage*>(msg);
-    auto const entity_proxy = vc_msg->getEntity();
-    auto const vc_ptr = theVrtCManager->getVrtContextByProxy(entity_proxy);
-
-    if (vc_ptr) {
-      // invoke the user's handler function here
-      auto const& sub_handler = vc_msg->getHandler();
-      auto const& fn = auto_registry::getAutoHandler(sub_handler);
-      auto vc_active_fn =
-        reinterpret_cast<ActiveVCFunctionType<VrtContextMessage, VrtContext>*>(fn);
-      // execute the user's handler with the message and VC ptr
-      vc_active_fn(static_cast<VrtContextMessage*>(msg), vc_ptr);
-    } else {
-      // the VC does not exist here?
-      assert(0 and "This should never happen");
-    }
-  }
+  static void handleVCMsg(BaseMessage* msg);
 
   template <typename VrtContextT, typename... Args>
   VrtContext_ProxyType constructVrtContext(Args&& ... args) {
@@ -77,23 +60,21 @@ struct VrtContextManager {
   NodeType getNode() const;
   VrtContext_IdType getCurrentIdent() const;
 
-//  theVrtCManager->sendMsg<MyHelloMsg, myWorkHandler>
-//  (proxy1, proxy_on_node1, makeSharedMessage<MyHelloMsg>(100));
-
   template <
-    typename VirtualContextT,
+    typename VirtualT,
     typename MsgT,
-    ActiveVCFunctionType<MsgT, VirtualContextT> *f
+    ActiveVCFunctionType<MsgT, VirtualT> *f
   >
-  EventType sendMsg(
-    VrtContext_ProxyType const& toProxy, MsgT *const in_msg,
+  void sendMsg(
+    VrtContext_ProxyType const& toProxy, MsgT *const msg,
     ActionType act = nullptr
   ) {
-    auto home_node = VrtContextProxy::getVrtContextNode(toProxy);
-    //auto f2 = reinterpret_cast<ActiveAnyFunctionType<MsgT>*>(f);
-    HandlerType const& han = auto_registry::makeAutoHandler<MsgT,f>(in_msg);
-    in_msg->setHandler(han);
-    theLocMan->vrtContextLoc->routeMsg(toProxy, home_node, in_msg, act);
+    NodeType const& home_node = VrtContextProxy::getVrtContextNode(toProxy);
+    // register the user's handler
+    HandlerType const& han = auto_registry::makeAutoHandlerVC<VirtualT,MsgT,f>(msg);
+    // save the user's handler in the message
+    msg->setHandler(han);
+    theLocMan->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
   }
 
 //  template <typename VrtCntxT, typename MsgT, ActiveAnyFunctionType<MsgT>* f>

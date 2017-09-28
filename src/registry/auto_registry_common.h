@@ -5,12 +5,15 @@
 #include "trace_event.h"
 
 #include "config.h"
+#include "function.h"
 #include "registry.h"
 #include "trace.h"
+#include "context_vrt_fwd.h"
 
 namespace vt { namespace auto_registry {
 
 using AutoActiveType = SimpleFunctionType;
+using AutoActiveVCType = SimpleVCFunctionType;
 using AutoActiveFunctorType = SimpleFunctionType;
 
 template <typename FnT>
@@ -46,6 +49,7 @@ template <typename Fn>
 using AutoRegInfoType = AutoRegInfo<Fn>;
 
 using AutoActiveContainerType = std::vector<AutoRegInfoType<AutoActiveType>>;
+using AutoActiveVCContainerType = std::vector<AutoRegInfoType<AutoActiveVCType>>;
 using AutoActiveFunctorContainerType = std::vector<AutoRegInfoType<AutoActiveFunctorType>>;
 using AutoHandlerType = int32_t;
 using HandlerManagerType = vt::HandlerManager;

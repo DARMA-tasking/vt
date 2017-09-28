@@ -2,11 +2,13 @@
 #if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY__
 #define __RUNTIME_TRANSPORT_AUTO_REGISTRY__
 
-#include "auto_registry_common.h"
 #include "config.h"
+#include "auto_registry_common.h"
+#include "auto_registry_general.h"
 #include "registry.h"
-#include "utils/demangle/demangle.h"
+
 #include "trace.h"
+#include "utils/demangle/demangle.h"
 
 #include "registry_function.h"
 #include "context/context_vrt.h"
@@ -41,18 +43,6 @@ struct RegistrarWrapper {
 
 template <typename ActiveFnT>
 AutoHandlerType registerActiveFn();
-
-template <typename F, F* f>
-struct FunctorAdapter {
-  using FunctionPtrType = F;
-
-  static constexpr F* getFunction() { return f; }
-
-  template <typename... A>
-  auto operator()(A&&... a) -> decltype(f(std::forward<A>(a)...)) {
-    return f(std::forward<A>(a)...);
-   }
-};
 
 template <typename Callable>
 struct Runnable {

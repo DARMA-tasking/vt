@@ -50,6 +50,8 @@ struct EntityLocationCoord {
     ActionType action = nullptr
   );
 
+  void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
+
 private:
   template <typename MessageT>
   static void msgHandler(MessageT* msg);
@@ -69,7 +71,6 @@ private:
   );
 
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
-  void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
 
 private:
   // message handlers for local registrations

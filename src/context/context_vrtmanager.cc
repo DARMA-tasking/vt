@@ -9,6 +9,23 @@ VrtContextManager::VrtContextManager() {
   myNode_ = theContext->getNode();
 }
 
+/*static*/ void VrtContextManager::handleVCMsg(BaseMessage* msg) {
+  auto const vc_msg = static_cast<VrtContextMessage*>(msg);
+  auto const entity_proxy = vc_msg->getEntity();
+  auto const vc_ptr = theVrtCManager->getVrtContextByProxy(entity_proxy);
+
+  if (vc_ptr) {
+    // invoke the user's handler function here
+    auto const& sub_handler = vc_msg->getHandler();
+    auto const& vc_active_fn = auto_registry::getAutoHandlerVC(sub_handler);
+    // execute the user's handler with the message and VC ptr
+    vc_active_fn(static_cast<VrtContextMessage*>(msg), vc_ptr);
+  } else {
+    // the VC does not exist here?
+    assert(false && "A virtual context must exist to invoke user handler");
+  }
+}
+
 VrtContext*VrtContextManager::getVrtContextByID(
     VrtContext_IdType const& lookupID) {
   VrtContextManager_ContainerType::const_iterator got = holder_.find(lookupID);
