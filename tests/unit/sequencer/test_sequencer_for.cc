@@ -14,6 +14,8 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::tests::unit;
 
+static constexpr vt::seq::ForIndex const end_range = 10;
+
 struct TestSequencerFor : TestParallelHarness {
   using TestMsg = TestStaticBytesNormalMsg<4>;
   using OrderType = uint32_t;
@@ -34,7 +36,7 @@ struct TestSequencerFor : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->for_loop(0, 10, 1, [](vt::seq::ForIndex i) {
+    theSeq->for_loop(0, end_range, 1, [](vt::seq::ForIndex i) {
       theSeq->wait_closure<TestMsg, testSeqForHan>(no_tag, [=](TestMsg* msg){
         #if DEBUG_TEST_HARNESS_PRINT
           printf("testSeqForFn running wait\n");
@@ -57,7 +59,7 @@ TEST_F(TestSequencerFor, test_for) {
     SeqType const& seq_id = theSeq->nextSeq();
     theSeq->sequenced(seq_id, testSeqForFn);
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < end_range; i++) {
       theMsg->sendMsg<TestMsg, testSeqForHan>(
         my_node, makeSharedMessage<TestMsg>()
       );
