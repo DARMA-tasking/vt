@@ -57,6 +57,19 @@ struct EntityLocationCoord : LocationCoord {
   void entityMigrated(EntityID const& id, NodeType const& new_node);
 
   /*
+   * Should be called after the entity is migrated when it arrived on the new
+   * node: order of operations:
+   *
+   *   1) Node 0: registerEntity(my_id, ...);
+   *   2) Node 0: entityMigrated(my_id, 1);
+   *   3) Node 1: registerEntityMigrated(my_id, 0, ...);
+   */
+  void registerEntityMigrated(
+    EntityID const& id, NodeType const& __attribute__((unused)) from,
+    LocMsgActionType msg_action = nullptr
+  );
+
+  /*
    * Get the location of a entity: the `action' is triggered when the location
    * of the entity is resolved. This is an asynchronous call that may send
    * messages to discover the location of the entity `id'. To resolve the

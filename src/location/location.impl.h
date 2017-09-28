@@ -107,6 +107,16 @@ void EntityLocationCoord<EntityID>::entityMigrated(
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::registerEntityMigrated(
+  EntityID const& id, NodeType const& from, LocMsgActionType msg_action
+) {
+  // @todo: currently `from' is unused, but is passed to this method in case we
+  // need it in the future
+  return registerMigrated(id, msg_action);
+}
+
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::insertPendingEntityAction(
   EntityID const& id, NodeActionType action
 ) {
