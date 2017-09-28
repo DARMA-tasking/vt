@@ -75,7 +75,6 @@ struct EntityLocationCoord : LocationCoord {
   void getLocation(
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
   );
-  void printCurrentCache() const;
 
   template <typename MessageT>
   void routeMsg(
@@ -84,6 +83,7 @@ struct EntityLocationCoord : LocationCoord {
   );
 
   void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
+  void printCurrentCache() const;
 
 private:
   template <typename MessageT>
