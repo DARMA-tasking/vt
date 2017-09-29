@@ -2,13 +2,11 @@ cmake_minimum_required(VERSION 3.8)
 project(virtual_transport_mpi)
 
 find_package(MPI REQUIRED)
-if (MPI_FOUND)
-    #        set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
-    #        set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
-    include_directories(MPI_INCLUDE_PATH)
-else (MPI_FOUND)
-    message(SEND_ERROR "This application cannot compile without MPI")
-endif (MPI_FOUND)
+
+# set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+# set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+
+include_directories(${MPI_C_INCLUDE_PATH})
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -162,6 +160,7 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
     ${EXAMPLE}
     ${VIRTUAL_TRANSPORT_LIBRARY}
     ${ZLIB_LIBRARIES}
+    ${MPI_C_LIBRARIES}
   )
 endforeach()
 
@@ -180,6 +179,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     ${PERF_TEST}
     ${VIRTUAL_TRANSPORT_LIBRARY}
     ${ZLIB_LIBRARIES}
+    ${MPI_C_LIBRARIES}
   )
 endforeach()
 
@@ -249,6 +249,7 @@ else()
       ${UNIT_TEST}
       ${VIRTUAL_TRANSPORT_LIBRARY}
       ${ZLIB_LIBRARIES}
+      ${MPI_C_LIBRARIES}
       gtest gmock
     )
 

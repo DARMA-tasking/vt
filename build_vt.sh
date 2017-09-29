@@ -22,12 +22,17 @@ MAKE_VERBOSE=off
 
 if test $compiler = "clang"
 then
-    CXX_COMPILER=mpic++-mpich-clang39
-    CC_COMPILER=mpicc-mpich-clang39
+    CXX_COMPILER=clang++-mp-3.9 # mpic++-mpich-clang39
+    CC_COMPILER=clang-mp-3.9 #mpicc-mpich-clang39
 else
     CXX_COMPILER=mpic++-mpich-devel-gcc6
     CC_COMPILER=mpicc-mpich-devel-gcc6
 fi
+
+MPI_PATH=/opt/local/lib/mpich-clang39/libmpi.dylib
+MPI_INC_PATH=/opt/local/include/mpich-clang39/
+MPI_CXX_PATH=/opt/local/lib/mpich-clang39/libmpicxx.dylib
+MPI_CXX_INC_PATH=/opt/local/include/mpich-clang39/mpicxx.h
 
 gtest_directory=/Users/jliffla/codes/gtest/gtest-build
 
@@ -37,6 +42,10 @@ cmake ${SOURCE_BASE_DIR} \
       -DCMAKE_BUILD_TYPE=${build_mode} \
       -DCMAKE_VERBOSE_MAKEFILE:BOOL=$MAKE_VERBOSE \
       -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
+      -DMPI_C_LIBRARIES=${MPI_PATH} \
+      -DMPI_C_INCLUDE_PATH=${MPI_INC_PATH} \
+      -DMPI_CXX_LIBRARIES=${MPI_CXX_PATH} \
+      -DMPI_CXX_INCLUDE_PATH=${MPI_CXX_INC_PATH} \
       -DGTEST_DIR=${gtest_directory} \
       -DCMAKE_C_COMPILER=${CC_COMPILER}
 
