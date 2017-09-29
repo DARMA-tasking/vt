@@ -33,7 +33,7 @@ set(
   barrier collective configs/debug configs/features configs/types context
   event messaging pool data registry parameterization handler sequence
   termination tpl/meld trace tree scheduler utils/demangle utils/bits demangle
-  location index mapping utils/container
+  location index mapping utils/container utils/detector
 )
 
 include_directories(${PROJECT_SOURCE_DIR})

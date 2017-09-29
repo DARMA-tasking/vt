@@ -12,6 +12,7 @@
 #define debug_no_feature(x) x
 #define debug_bit_check_overflow(x) x
 #define debug_trace_enabled(x) x
+#define debug_detector(x) x
 
 // distinct modes for debug
 #define debug_none(x) x
