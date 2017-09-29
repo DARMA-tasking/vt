@@ -4,7 +4,7 @@
 #include "active.h"
 #include "event.h"
 #include "termination.h"
-#include "sequencer.h"
+#include "sequencer_headers.h"
 
 namespace vt { namespace sched {
 
@@ -26,10 +26,11 @@ bool Scheduler::schedulerImpl() {
   bool const msg_sch = theMsg->scheduler();
   bool const event_sch = theEvent->scheduler();
   bool const seq_sch = theSeq->scheduler();
+  bool const vrt_seq_sch = theVrtSeq->scheduler();
 
   checkTermSingleNode();
 
-  scheduled_work = msg_sch or event_sch or seq_sch;
+  scheduled_work = msg_sch or event_sch or seq_sch or vrt_seq_sch;
 
   if (scheduled_work) {
     is_idle = false;

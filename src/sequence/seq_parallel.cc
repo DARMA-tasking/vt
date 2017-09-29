@@ -57,7 +57,7 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
 
         executeSeqExpandContext(seq_id_, this_node, par_fn);
       };
-      enqueue_action(defer_work);
+      enqueueAction(seq_id_, defer_work);
     }
   }
 

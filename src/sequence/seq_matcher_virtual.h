@@ -1,0 +1,67 @@
+
+#if ! defined __RUNTIME_TRANSPORT_SEQ_MATCHER_VIRTUAL__
+#define __RUNTIME_TRANSPORT_SEQ_MATCHER_VIRTUAL__
+
+#include "config.h"
+#include "registry_function.h"
+#include "message.h"
+#include "seq_common.h"
+#include "seq_action.h"
+#include "seq_state_virtual.h"
+#include "seq_action_virtual.h"
+
+#include <list>
+#include <unordered_map>
+
+namespace vt { namespace seq {
+
+template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+struct SeqMatcherVirtual {
+  using SeqActionType = ActionVirtual<MsgT, VcT>;
+  using MatchFuncType = ActiveVCFunctionType<MsgT, VcT>;
+  using SeqMsgStateType = SeqMsgStateVirtual<VcT, MsgT, f>;
+
+  template <typename T>
+  using SeqStateContType = typename SeqMsgStateType::template ContainerType<T>;
+
+  template <typename T>
+  using SeqStateTaggedContType = typename SeqMsgStateType::template TagContainerType<T>;
+
+  template <typename T>
+  static bool hasFirstElem(T& lst);
+  template <typename T>
+  static auto getFirstElem(T& lst);
+
+  template <typename T>
+  static bool hasMatchingAnyNoTag(SeqStateContType<T>& lst);
+  template <typename T>
+  static auto getMatchingAnyNoTag(SeqStateContType<T>& lst);
+
+  template <typename T>
+  static bool hasMatchingAnyTagged(
+    SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
+  );
+  template <typename T>
+  static auto getMatchingAnyTagged(
+    SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
+  );
+
+  static bool hasMatchingAction(TagType const& tag);
+  static SeqActionType getMatchingAction(TagType const& tag);
+
+  static bool hasMatchingMsg(TagType const& tag);
+  static MsgT* getMatchingMsg(TagType const& tag);
+
+  // Buffer messages and actions that do not match
+  static void bufferUnmatchedMessage(MsgT* msg, TagType const& tag);
+  template <typename FnT>
+  static void bufferUnmatchedAction(
+    FnT action, SeqType const& seq_id, TagType const& tag
+  );
+};
+
+}} //end namespace vt::seq
+
+#include "seq_matcher_virtual.impl.h"
+
+#endif /* __RUNTIME_TRANSPORT_SEQ_MATCHER_VIRTUAL__*/

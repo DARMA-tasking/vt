@@ -5,7 +5,7 @@
 #include "trace.h"
 #include "transport.h"
 #include "context/context_vrtmanager.h"
-
+#include "sequence/sequencer_headers.h"
 
 #include <mpi.h>
 
@@ -109,6 +109,7 @@ CollectiveOps::finalizeRuntime() {
   theRDMA = std::make_unique<rdma::RDMAManager>();
   theParam = std::make_unique<param::Param>();
   theSeq = std::make_unique<seq::Sequencer>();
+  theVrtSeq = std::make_unique<seq::SequencerVirtual>();
   theSched = std::make_unique<sched::Scheduler>();
   theLocMan = std::make_unique<location::LocationManager>();
   theVrtCManager = std::make_unique<vrt::VrtContextManager>();

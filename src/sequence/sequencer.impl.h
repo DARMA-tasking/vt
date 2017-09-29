@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "seq_common.h"
-#include "sequencer.h"
+#include "sequencer_headers.h"
 
 namespace vt { namespace seq {
 
@@ -15,9 +15,15 @@ TaggedSequencer<SeqTag, SeqTrigger>::createSeq() {
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
+/*virtual*/ typename TaggedSequencer<SeqTag, SeqTrigger>::SeqType
+TaggedSequencer<SeqTag, SeqTrigger>::getNextID() {
+  return seq_manager->nextSeqID(false);
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
 typename TaggedSequencer<SeqTag, SeqTrigger>::SeqType
 TaggedSequencer<SeqTag, SeqTrigger>::nextSeq() {
-  auto const cur_id = next_seq_id;
+  auto const cur_id = getNextID();
 
   auto seq_iter = seq_lookup_.find(cur_id);
 
@@ -31,20 +37,7 @@ TaggedSequencer<SeqTag, SeqTrigger>::nextSeq() {
     std::forward_as_tuple(SeqListType{cur_id})
   );
 
-  next_seq_id++;
-
   return cur_id;
-}
-
-template <typename SeqTag, template <typename> class SeqTrigger>
-/*static*/
-typename TaggedSequencer<SeqTag, SeqTrigger>::SeqFunType
-TaggedSequencer<SeqTag, SeqTrigger>::convertSeqFun(
-  SeqType const& id, UserSeqFunType fn
-)  {
-  return [=]() -> bool {
-    return theSeq->lookupContextExecute(id, fn);
-  };
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
@@ -536,14 +529,11 @@ TaggedSequencer<SeqTag, SeqTrigger>::getSeqList(SeqType const& seq_id) {
   return seq_iter->second;
 }
 
-template <typename Fn>
-bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn) {
-  return theSeq->executeInNodeContext(id, node, fn);
-}
-
-inline void enqueue_action(ActionType const& action) {
-  theSeq->enqueue(action);
-}
+// Give the static manager declaration linkage
+template <typename SeqTag, template <typename> class SeqTrigger>
+/*static*/ std::unique_ptr<typename TaggedSequencer<SeqTag, SeqTrigger>::SeqManagerType>
+  TaggedSequencer<SeqTag, SeqTrigger>::seq_manager =
+    std::make_unique<typename TaggedSequencer<SeqTag, SeqTrigger>::SeqManagerType>();
 
 }} //end namespace vt::seq
 

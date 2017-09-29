@@ -3,7 +3,7 @@
 #include "registry_function.h"
 
 #include "seq_common.h"
-#include "sequencer.h"
+#include "sequencer_headers.h"
 
 namespace vt { namespace seq {
 
@@ -11,6 +11,13 @@ bool contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 ) {
   theSeq->lookupContextExecute(seq, std::forward<SeqCallableType>(callable));
+  return true;
+}
+
+bool contextualExecutionVirtual(
+  SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
+) {
+  theVrtSeq->lookupContextExecute(seq, std::forward<SeqCallableType>(callable));
   return true;
 }
 

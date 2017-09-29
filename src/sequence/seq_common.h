@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "registry_function.h"
+#include "context/context_vrt_fwd.h"
 
 namespace vt { namespace seq {
 
@@ -22,11 +23,17 @@ using ForIndex = int32_t;
 using UserSeqFunIndexType = std::function<void(ForIndex idx)>;
 using FuncIndexType = UserSeqFunIndexType;
 
+// Regular sequence triggers for active message handlers
 template <typename MessageT>
 using SeqNonMigratableTriggerType = std::function<void(MessageT*)>;
-
 template <typename MessageT>
 using SeqMigratableTriggerType = ActiveAnyFunctionType<MessageT>;
+
+// Specialized virtual context sequence triggers for VC active message handlers
+template <typename MessageT, typename VcT>
+using SeqNonMigratableVrtTriggerType = std::function<void(MessageT*, VcT*)>;
+template <typename MessageT, typename VcT>
+using SeqMigratableVrtTriggerType = ActiveVCFunctionType<MessageT, VcT>;
 
 using SeqContinuation = std::function<void()>;
 
@@ -46,13 +53,15 @@ enum class eSeqConstructType : int8_t {
 using SeqCallableType = std::function<bool()>;
 
 static constexpr SeqType const initial_seq = 0;
-static SeqType next_seq_id = initial_seq;
 static constexpr SeqType const no_seq = -1;
 
 bool contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 );
-void enqueue_action(ActionType const& action);
+bool contextualExecutionVirtual(
+  SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
+);
+void enqueueAction(SeqType const& id, ActionType const& action);
 
 static constexpr bool const seq_skip_queue = false;
 

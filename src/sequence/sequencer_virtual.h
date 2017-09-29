@@ -1,0 +1,68 @@
+
+#if ! defined __RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL__
+#define __RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL__
+
+#include "config.h"
+#include "sequencer.h"
+#include "seq_virtual_info.h"
+#include "seq_matcher_virtual.h"
+#include "seq_action_virtual.h"
+#include "seq_state_virtual.h"
+#include "context/context_vrt.h"
+
+namespace vt { namespace seq {
+
+template <typename SeqTag, template <typename> class SeqTrigger>
+struct TaggedSequencerVrt : TaggedSequencer<SeqTag, SeqTrigger> {
+  using SeqType = SeqTag;
+  using Base = TaggedSequencer<SeqTag,SeqTrigger>;
+  using VirtualInfoType = VirtualInfo;
+
+  template <typename MessageT, typename VcT>
+  using SeqTriggerType = SeqMigratableVrtTriggerType<MessageT, VcT>;
+
+  template <typename MessageT, typename VcT>
+  using SeqActionType = ActionVirtual<MessageT, VcT>;
+
+  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  using SeqStateMatcherType = SeqMatcherVirtual<VcT, MsgT, f>;
+
+  SeqType createSeqVrtContext(VrtContext_ProxyType const& proxy);
+  VrtContext_ProxyType getCurrentVrtProxy();
+
+  virtual SeqType getNextID() override;
+
+  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  void sequenceVrtMsg(MsgT* msg, VcT* vrt_context);
+
+  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  void wait(TagType const& tag, SeqTriggerType<MsgT, VcT> trigger);
+
+  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  void wait(SeqTriggerType<MsgT, VcT> trigger);
+
+  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  void wait_on_trigger(TagType const& tag, SeqActionType<MsgT, VcT> action);
+
+private:
+  typename Base::template SeqIDContainerType<VirtualInfoType> seq_vrt_lookup_;
+};
+
+#define SEQUENCE_REGISTER_VRT_HANDLER(vrtcontext, message, handler)     \
+  static void handler(message* m, vrtcontext* vc) {                     \
+    theVrtSeq->sequenceVrtMsg<vrtcontext, message, handler>(m, vc);     \
+  }
+
+using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
+
+}} //end namespace vt::seq
+
+namespace vt {
+
+extern std::unique_ptr<seq::SequencerVirtual> theVrtSeq;
+
+} //end namespace vt
+
+#include "sequencer_virtual.impl.h"
+
+#endif /*__RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL__*/

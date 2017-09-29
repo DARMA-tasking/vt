@@ -8,6 +8,7 @@
 #include "termination.h"
 #include "concurrent_deque.h"
 
+#include "sequencer_manager.h"
 #include "seq_common.h"
 #include "seq_context.h"
 #include "seq_node.h"
@@ -20,6 +21,7 @@
 #include <unordered_map>
 #include <list>
 #include <vector>
+#include <memory>
 #include <cassert>
 
 namespace vt { namespace seq {
@@ -47,7 +49,14 @@ struct TaggedSequencer {
   template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   using SeqStateMatcherType = SeqMatcher<MessageT, f>;
 
+  using SeqManagerType = SeqManager<SeqTag, SeqTrigger>;
+
+  static std::unique_ptr<SeqManagerType> seq_manager;
+
   TaggedSequencer() = default;
+
+  // Get the correct ID based on the type
+  virtual SeqType getNextID();
 
   SeqType nextSeq();
   SeqType createSeq();
@@ -128,10 +137,11 @@ public:
 private:
   SeqListType& getSeqList(SeqType const& seq_id);
 
+protected:
+  SeqContext* context_ = nullptr;
+
 private:
   SeqContextContainerType node_lookup_;
-
-  SeqContext* context_ = nullptr;
 
   SeqIDContainerType<SeqListType> seq_lookup_;
 

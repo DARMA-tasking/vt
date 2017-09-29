@@ -28,6 +28,7 @@
 #define debug_param(x) x
 #define debug_handler(x) x
 #define debug_sequence(x) x
+#define debug_sequence_vrt(x) x
 #define debug_trace(x) x
 #define debug_location(x) x
 #define debug_vrt(x) x

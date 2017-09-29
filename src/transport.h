@@ -19,7 +19,7 @@
 #include "barrier.h"
 #include "rdma.h"
 #include "auto_registry_interface.h"
-#include "sequencer.h"
+#include "sequencer_headers.h"
 #include "trace.h"
 #include "scheduler.h"
 #include "location.h"

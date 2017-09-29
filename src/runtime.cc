@@ -10,7 +10,7 @@
 #include "pool.h"
 #include "rdma.h"
 #include "parameterization.h"
-#include "sequencer.h"
+#include "sequence/sequencer_headers.h"
 #include "trace.h"
 #include "scheduler.h"
 #include "location.h"
@@ -27,6 +27,7 @@ std::unique_ptr<pool::Pool> thePool = nullptr;
 std::unique_ptr<rdma::RDMAManager> theRDMA = nullptr;
 std::unique_ptr<param::Param> theParam = nullptr;
 std::unique_ptr<seq::Sequencer> theSeq = nullptr;
+std::unique_ptr<seq::SequencerVirtual> theVrtSeq = nullptr;
 std::unique_ptr<sched::Scheduler> theSched = nullptr;
 std::unique_ptr<location::LocationManager> theLocMan = nullptr;
 

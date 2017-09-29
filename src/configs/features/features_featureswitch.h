@@ -26,6 +26,7 @@
     param,                 "parameterization",                          \
     handler,               "handler",                                   \
     sequence,              "sequencer",                                 \
+    sequence_vrt,          "sequencer-vrt",                             \
     trace,                 "trace",                                     \
     vrt,                   "virtual-context",                           \
     location,              "location"                                   \
