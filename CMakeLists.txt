@@ -189,7 +189,7 @@ endforeach()
 
 set(
   UNIT_TEST_SUBDIRS_LIST
-  index active pool context sequencer
+  index active pool sequencer
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
