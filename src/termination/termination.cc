@@ -309,8 +309,10 @@ void TerminationDetector::attachEpochTermAction(
   auto epoch_iter = epoch_actions_.find(epoch);
   if (epoch_iter == epoch_actions_.end()) {
     epoch_actions_.emplace(
-      std::piecewise_construct, std::forward_as_tuple(epoch),
-      std::forward_as_tuple(ActionContainerType{action}));
+      std::piecewise_construct,
+      std::forward_as_tuple(epoch),
+      std::forward_as_tuple(ActionContainerType{action})
+    );
   } else {
     epoch_iter->second.emplace_back(action);
   }
@@ -321,10 +323,13 @@ void TerminationDetector::setupNewEpoch(EpochType const& new_epoch) {
   if (epoch_iter == epoch_state_.end()) {
     assert(
       epoch_iter == epoch_state_.end() and
-      "Epoch should not have been created yet");
+      "Epoch should not have been created yet"
+    );
     epoch_state_.emplace(
-      std::piecewise_construct, std::forward_as_tuple(new_epoch),
-      std::forward_as_tuple(TermStateType{}));
+      std::piecewise_construct,
+      std::forward_as_tuple(new_epoch),
+      std::forward_as_tuple(TermStateType{})
+    );
     epoch_iter = epoch_state_.find(new_epoch);
   }
 
