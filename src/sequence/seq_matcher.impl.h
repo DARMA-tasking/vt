@@ -8,7 +8,6 @@
 #include "seq_common.h"
 #include "seq_action.h"
 #include "seq_state.h"
-#include "seq_action.h"
 
 #include <list>
 #include <unordered_map>
@@ -16,126 +15,82 @@
 namespace vt { namespace seq {
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-template <typename T, typename FnT>
-/*static*/ bool SeqMatcher<MessageT, f>::applyActionFirstElem(T& lst, FnT func) {
-  bool applied_action = false;
-  if (lst.size() > 0) {
-    auto elm = lst.front();
-    lst.pop_front();
-    func(elm);
-    applied_action = true;
-  }
-  return applied_action;
+template <typename T>
+/*static*/ bool SeqMatcher<MessageT, f>::hasFirstElem(T& lst) {
+  return lst.size() > 0;
 }
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 template <typename T>
-/*static*/ typename SeqMatcher<MessageT, f>::SeqActionType
-SeqMatcher<MessageT, f>::getActionFirstElem(T& lst) {
+/*static*/ auto SeqMatcher<MessageT, f>::getFirstElem(T& lst) {
   if (lst.size() > 0) {
     auto elm = lst.front();
     lst.pop_front();
     return elm;
   } else {
-    assert(0 and "Must have action");
+    assert(0 and "Must have element");
   }
 }
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 template <typename T>
-/*static*/ bool SeqMatcher<MessageT, f>::hasActionFirstElem(T& lst) {
-  return lst.size() > 0;
-}
-
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-template <typename T, typename FnT>
-/*static*/ bool SeqMatcher<MessageT, f>::findMatchingNoTag(
-  SeqStateContType<T>& lst, FnT func
-) {
-  return applyActionFirstElem(lst, func);
-}
-
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-template <typename T>
-/*static*/ bool SeqMatcher<MessageT, f>::hasMatchingNoTag(
+/*static*/ bool SeqMatcher<MessageT, f>::hasMatchingAnyNoTag(
   SeqStateContType<T>& lst
 ) {
-  return hasActionFirstElem(lst);
+  return hasFirstElem(lst);
 }
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 template <typename T>
-/*static*/ typename SeqMatcher<MessageT, f>::SeqActionType
-SeqMatcher<MessageT, f>::getMatchingNoTag(
+/*static*/ auto SeqMatcher<MessageT, f>::getMatchingAnyNoTag(
   SeqStateContType<T>& lst
 ) {
-  return getActionFirstElem(lst);
-}
-
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-template <typename T, typename FnT>
-/*static*/ bool SeqMatcher<MessageT, f>::findMatchingTagged(
-  SeqStateTaggedContType<T>& tagged_lst, FnT func, TagType const& tag
-) {
-  bool applied_action = false;
-  auto iter = tagged_lst.find(tag);
-  if (iter != tagged_lst.end()) {
-    applied_action = applyActionFirstElem(iter->second, func);
-    if (iter->second.size() == 0) {
-      tagged_lst.erase(iter);
-    }
-  }
-  return applied_action;
+  return getFirstElem(lst);
 }
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 template <typename T>
-/*static*/ bool SeqMatcher<MessageT, f>::hasMatchingTagged(
+/*static*/ bool SeqMatcher<MessageT, f>::hasMatchingAnyTagged(
   SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
 ) {
   auto iter = tagged_lst.find(tag);
-  return iter != tagged_lst.end() ? hasActionFirstElem(iter->second) : false;
+  return iter != tagged_lst.end() ? hasFirstElem(iter->second) : false;
 }
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 template <typename T>
-/*static*/ typename SeqMatcher<MessageT, f>::SeqActionType
-SeqMatcher<MessageT, f>::getMatchingTagged(
+/*static*/ auto SeqMatcher<MessageT, f>::getMatchingAnyTagged(
   SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
 ) {
-  assert(hasMatchingTagged(tagged_lst, tag) and "Must have matching action");
+  assert(hasMatchingAnyTagged(tagged_lst, tag) and "Must have matching elem");
 
   auto iter = tagged_lst.find(tag);
-  auto action = getActionFirstElem(iter->second);
+  auto elm = getFirstElem(iter->second);
   if (iter->second.size() == 0) {
     tagged_lst.erase(iter);
   }
-  return action;
+  return elm;
 }
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-template <typename FnT>
-/*static*/ bool SeqMatcher<MessageT, f>::findMatchingMsg(FnT func, TagType const& tag) {
+/*static*/ bool SeqMatcher<MessageT, f>::hasMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
     auto& lst = SeqStateType<MessageT,f>::seq_msg;
-    return findMatchingNoTag(lst, func);
+    return hasMatchingAnyNoTag(lst);
   } else {
     auto& tagged_lst = SeqStateType<MessageT, f>::seq_msg_tagged;
-    return findMatchingTagged(tagged_lst, func, tag);
+    return hasMatchingAnyTagged(tagged_lst, tag);
   }
 }
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
-template <typename FnT>
-/*static*/ bool SeqMatcher<MessageT, f>::findMatchingAction(
-  FnT func, TagType const& tag
-) {
+/*static*/ MessageT* SeqMatcher<MessageT, f>::getMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
-    auto& lst = SeqStateType<MessageT, f>::seq_action;
-    return findMatchingNoTag(lst, func);
+    auto& lst = SeqStateType<MessageT, f>::seq_msg;
+    return getMatchingAnyNoTag(lst);
   } else {
-    auto& tagged_lst = SeqStateType<MessageT, f>::seq_action_tagged;
-    return findMatchingTagged(tagged_lst, func, tag);
+    auto& tagged_lst = SeqStateType<MessageT, f>::seq_msg_tagged;
+    return getMatchingAnyTagged(tagged_lst, tag);
   }
 }
 
@@ -143,10 +98,10 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 /*static*/ bool SeqMatcher<MessageT, f>::hasMatchingAction(TagType const& tag) {
   if (tag == no_tag) {
     auto& lst = SeqStateType<MessageT, f>::seq_action;
-    return hasMatchingNoTag(lst);
+    return hasMatchingAnyNoTag(lst);
   } else {
     auto& tagged_lst = SeqStateType<MessageT, f>::seq_action_tagged;
-    return hasMatchingTagged(tagged_lst, tag);
+    return hasMatchingAnyTagged(tagged_lst, tag);
   }
 }
 
@@ -157,10 +112,10 @@ SeqMatcher<MessageT, f>::getMatchingAction(TagType const& tag) {
 
   if (tag == no_tag) {
     auto& lst = SeqStateType<MessageT, f>::seq_action;
-    return getMatchingNoTag(lst);
+    return getMatchingAnyNoTag(lst);
   } else {
     auto& tagged_lst = SeqStateType<MessageT, f>::seq_action_tagged;
-    return getMatchingTagged(tagged_lst, tag);
+    return getMatchingAnyTagged(tagged_lst, tag);
   }
 }
 

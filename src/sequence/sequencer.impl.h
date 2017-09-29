@@ -330,13 +330,13 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
   );
 
   auto deferred_wait_action = [tag,action,node,seq_id]() -> bool {
-    auto apply_func = [=](MessageT* msg){
+    bool const has_match = SeqStateMatcherType<MessageT,f>::hasMatchingMsg(tag);
+
+    if (has_match) {
+      auto msg = SeqStateMatcherType<MessageT, f>::getMatchingMsg(tag);
       action.runAction(msg);
       messageDeref(msg);
-    };
-
-    bool const has_match =
-      SeqStateMatcherType<MessageT, f>::findMatchingMsg(apply_func, tag);
+    }
 
     debug_print(
       sequence, node,
@@ -492,28 +492,8 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
     "sequenceMsg: arrived: msg=%p, tag=%d\n", msg, msg_tag
   );
 
-  auto apply_func = [=](Action<MessageT>& action){
-    lookupContextExecute(action.seq_id, action.generateCallable(msg));
-  };
-
-  bool has_match = false;
-
-  // skip the work queue and directly execute
-  if (seq_skip_queue) {
-    has_match = SeqStateMatcherType<MessageT, f>::findMatchingAction(
-      apply_func, msg_tag
-    );
-  } else {
-    has_match = SeqStateMatcherType<MessageT, f>::hasMatchingAction(msg_tag);
-
-    if (has_match) {
-      auto match = SeqStateMatcherType<MessageT, f>::getMatchingAction(msg_tag);
-      auto handle_msg_action = [=]{
-        lookupContextExecute(match.seq_id, match.generateCallable(msg));
-      };
-      theSeq->enqueue(handle_msg_action);
-    }
-  }
+  bool const has_match =
+    SeqStateMatcherType<MessageT, f>::hasMatchingAction(msg_tag);
 
   debug_print(
     sequence, node,
@@ -521,9 +501,22 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
     msg, print_bool(has_match), msg_tag
   );
 
-  // nothing was found so the message must be buffered and wait an action
-  // being posted
-  if (not has_match) {
+  if (has_match) {
+    auto action = SeqStateMatcherType<MessageT, f>::getMatchingAction(msg_tag);
+    auto handle_msg_action = [this,action,msg]{
+      lookupContextExecute(action.seq_id, action.generateCallable(msg));
+    };
+
+    // skip the work queue and directly execute
+    if (seq_skip_queue) {
+      handle_msg_action();
+    } else {
+      theSeq->enqueue(handle_msg_action);
+    }
+  } else {
+    // nothing was found so the message must be buffered and wait an action
+    // being posted
+
     // reference the arrival message to keep it alive past normal lifetime
     messageRef(msg);
 
