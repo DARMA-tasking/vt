@@ -3,7 +3,10 @@
 #define __RUNTIME_TRANSPORT_DENSE_INDEX_ARRAY__
 
 #include "config.h"
-#include "base_index.h"
+
+#if backend_check_enabled(detector)
+  #include "index/index_traits.h"
+#endif
 
 #include <array>
 #include <string>
@@ -15,7 +18,9 @@ namespace vt { namespace index {
 using NumDimensionsType = int8_t;
 
 template <typename IndexType, NumDimensionsType ndim = 1>
-struct DenseIndexArray : BaseIndex {
+struct DenseIndexArray {
+  using IndexSizeType = size_t;
+
   struct dense_single_value_tag { };
 
   using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
@@ -29,9 +34,9 @@ struct DenseIndexArray : BaseIndex {
   DenseIndexArray(DenseIndexArray&&) = default;
 
   template <typename... Idxs>
-  explicit DenseIndexArray(Idxs&&... init) : BaseIndex(), dims({init...}) { }
+  explicit DenseIndexArray(Idxs&&... init) : dims({init...}) { }
 
-  DenseIndexArray(dense_single_value_tag, IndexType const& init_value) : BaseIndex() {
+  DenseIndexArray(dense_single_value_tag, IndexType const& init_value) {
     for (int i = 0; i < ndim; i++) {
       dims[i] = init_value;
     }
@@ -127,6 +132,13 @@ struct DenseIndexArray : BaseIndex {
   >
   IndexType z() const { return dims[2]; }
 };
+
+#if backend_check_enabled(detector)
+  static_assert(
+    vt::index::IndexTraits<DenseIndexArray<int, 10>>::is_index,
+    "DenseIndexArray must follow the index concept"
+  );
+#endif
 
 }} // end namespace vt::index
 
