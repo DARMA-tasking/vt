@@ -10,6 +10,12 @@ namespace vt { namespace seq {
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 typename TaggedSequencer<SeqTag, SeqTrigger>::SeqType
+TaggedSequencer<SeqTag, SeqTrigger>::createSeq() {
+  return nextSeq();
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
+typename TaggedSequencer<SeqTag, SeqTrigger>::SeqType
 TaggedSequencer<SeqTag, SeqTrigger>::nextSeq() {
   auto const cur_id = next_seq_id;
 

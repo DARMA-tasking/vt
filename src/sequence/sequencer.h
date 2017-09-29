@@ -50,6 +50,7 @@ struct TaggedSequencer {
   TaggedSequencer() = default;
 
   SeqType nextSeq();
+  SeqType createSeq();
 
   static SeqFunType convertSeqFun(SeqType const& id, UserSeqFunType fn);
 
