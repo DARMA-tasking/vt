@@ -35,13 +35,12 @@ struct TestSequencerVrt : TestParallelHarness {
   using VrtType = TestVrt;
 
   static VrtType* test_vrt_ptr;
+  static VrtType* test_vrt_ptr_a;
+  static VrtType* test_vrt_ptr_b;
 
-  SEQUENCE_REGISTER_VRT_HANDLER(
-    TestSequencerVrt::VrtType, TestSequencerVrt::TestMsg, testSeqHan1
-  );
-  SEQUENCE_REGISTER_VRT_HANDLER(
-    TestSequencerVrt::VrtType, TestSequencerVrt::TestMsg, testSeqHan2
-  );
+  SEQUENCE_REGISTER_VRT_HANDLER(VrtType, TestMsg, testSeqHan1);
+  SEQUENCE_REGISTER_VRT_HANDLER(VrtType, TestMsg, testSeqHan2);
+  SEQUENCE_REGISTER_VRT_HANDLER(VrtType, TestMsg, testSeqHan3);
 
   static void testSeqFn1(SeqType const& seq_id) {
     static std::atomic<OrderType> seq_ordering_{};
@@ -82,9 +81,45 @@ struct TestSequencerVrt : TestParallelHarness {
       EXPECT_EQ(seq_ordering_++, 2);
     });
   }
+
+  static void testSeqFn3a(SeqType const& seq_id) {
+    static std::atomic<OrderType> seq_ordering_{};
+
+    if (seq_id == FinalizeAtomicValue) {
+      EXPECT_EQ(seq_ordering_++, 2);
+      return;
+    }
+
+    EXPECT_EQ(seq_ordering_++, 0);
+
+    theVrtSeq->wait<VrtType, TestMsg, testSeqHan3>([](TestMsg* msg, VrtType* vrt){
+      printf("wait is triggered for a: msg=%p, vrt=%p\n", msg, vrt);
+      EXPECT_EQ(vrt, test_vrt_ptr_a);
+      EXPECT_EQ(seq_ordering_++, 1);
+    });
+  }
+
+  static void testSeqFn3b(SeqType const& seq_id) {
+    static std::atomic<OrderType> seq_ordering_{};
+
+    if (seq_id == FinalizeAtomicValue) {
+      EXPECT_EQ(seq_ordering_++, 2);
+      return;
+    }
+
+    EXPECT_EQ(seq_ordering_++, 0);
+
+    theVrtSeq->wait<VrtType, TestMsg, testSeqHan3>([](TestMsg* msg, VrtType* vrt){
+      printf("wait is triggered for b: msg=%p, vrt=%p\n", msg, vrt);
+      EXPECT_EQ(vrt, test_vrt_ptr_b);
+      EXPECT_EQ(seq_ordering_++, 1);
+    });
+  }
 };
 
 /*static*/ TestSequencerVrt::TestVrt* TestSequencerVrt::test_vrt_ptr = nullptr;
+/*static*/ TestSequencerVrt::TestVrt* TestSequencerVrt::test_vrt_ptr_a = nullptr;
+/*static*/ TestSequencerVrt::TestVrt* TestSequencerVrt::test_vrt_ptr_b = nullptr;
 
 TEST_F(TestSequencerVrt, test_seq_vc_1) {
   auto const& my_node = theContext->getNode();
@@ -129,6 +164,39 @@ TEST_F(TestSequencerVrt, test_seq_vc_2) {
 
     theTerm->attachGlobalTermAction([=]{
       testSeqFn2(FinalizeAtomicValue);
+    });
+  }
+}
+
+TEST_F(TestSequencerVrt, test_seq_vc_distinct_inst_3) {
+  auto const& my_node = theContext->getNode();
+
+  if (my_node == 0) {
+    auto proxy_a = theVrtCManager->constructVrtContext<VrtType>(85);
+    SeqType const& seq_id_a = theVrtSeq->createSeqVrtContext(proxy_a);
+    auto vrt_ptr_a = theVrtCManager->getVrtContextByProxy(proxy_a);
+    test_vrt_ptr_a = static_cast<VrtType*>(vrt_ptr_a);
+
+    auto proxy_b = theVrtCManager->constructVrtContext<VrtType>(23);
+    SeqType const& seq_id_b = theVrtSeq->createSeqVrtContext(proxy_b);
+    auto vrt_ptr_b = theVrtCManager->getVrtContextByProxy(proxy_b);
+    test_vrt_ptr_b = static_cast<VrtType*>(vrt_ptr_b);
+
+    theVrtSeq->sequenced(seq_id_a, testSeqFn3a);
+    theVrtSeq->sequenced(seq_id_b, testSeqFn3b);
+
+    theVrtCManager->sendMsg<VrtType, TestMsg, testSeqHan3>(
+      proxy_a, makeSharedMessage<TestMsg>()
+    );
+    theVrtCManager->sendMsg<VrtType, TestMsg, testSeqHan3>(
+      proxy_b, makeSharedMessage<TestMsg>()
+    );
+
+    // @todo: fix this it is getting triggered early (a termination detector
+    // bug?)
+    theTerm->attachGlobalTermAction([=]{
+      // testSeqFn3a(FinalizeAtomicValue);
+      // testSeqFn3b(FinalizeAtomicValue);
     });
   }
 }
