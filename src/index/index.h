@@ -20,7 +20,7 @@ using Index3D = DenseIndexArray<int32_t, 3>;
 
 #if backend_check_enabled(detector)
   static_assert(
-    vt::index::IndexTraits<Index1D>::is_index, "Index1D must be an index"
+    vt::index::IndexTraits<Index1D>::is_index, "Index1D must follow index concept"
   );
   static_assert(
     vt::index::IndexTraits<Index2D>::is_index, "Index2D must be an index"
