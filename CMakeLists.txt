@@ -11,6 +11,7 @@ include_directories(${MPI_C_INCLUDE_PATH})
 set(CMAKE_CXX_STANDARD 14)
 
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(PROJECT_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 set(PROJECT_TEST_UNIT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
 set(PROJECT_TEST_PERF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests/perf)
@@ -30,11 +31,12 @@ set(
   PROJECT_SUBDIRS_LIST
   barrier collective configs/debug configs/features configs/types context
   event messaging pool data registry parameterization handler sequence
-  termination tpl/meld trace tree scheduler utils/demangle utils/bits demangle
+  termination trace tree scheduler utils/demangle utils/bits demangle
   location index mapping utils/container utils/detector serialization
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_LIB_DIR})
 
 file(
   GLOB

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_FEATURES_ENABLE_IF
 #define INCLUDED_FEATURES_ENABLE_IF
 
-#include "tpl/meld/meld_headers.h"
+#include "meld/meld_headers.h"
 #include "features_featureswitch.h"
 #include "features_defines.h"
 
