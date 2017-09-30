@@ -50,7 +50,7 @@ set(
   event messaging pool data registry parameterization handler sequence
   termination trace tree scheduler utils/demangle utils/bits demangle
   topos/location topos/mapping topos/index utils/container utils/detector
-  serialization
+  serialization worker
 )
 
 include_directories(${PROJECT_SOURCE_DIR})

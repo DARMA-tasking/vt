@@ -36,6 +36,9 @@ struct ConcurrentDeque {
   TConstRef front() const;
   TConstRef back() const;
 
+  T popGetFront();
+  T popGetBack();
+
   TRef at(SizeType const& pos);
   TConstRef at(SizeType const& pos) const;
 

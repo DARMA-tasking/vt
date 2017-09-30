@@ -6,6 +6,7 @@
 #include "transport.h"
 #include "context/context_vrtmanager.h"
 #include "sequence/sequencer_headers.h"
+#include "worker/worker_headers.h"
 
 #include <mpi.h>
 
@@ -113,6 +114,7 @@ CollectiveOps::finalizeRuntime() {
   theSched = std::make_unique<sched::Scheduler>();
   theLocMan = std::make_unique<location::LocationManager>();
   theVrtCManager = std::make_unique<vrt::VrtContextManager>();
+  theWorkerGrp = std::make_unique<worker::WorkerGroup>();
 
   backend_enable_if(
     trace_enabled, theTrace = std::make_unique<trace::Trace>();

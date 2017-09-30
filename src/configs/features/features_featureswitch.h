@@ -29,6 +29,7 @@
     sequence_vrt,          "sequencer-vrt",                             \
     trace,                 "trace",                                     \
     vrt,                   "virtual-context",                           \
+    worker,                "worker",                                    \
     location,              "location"                                   \
   )
 
