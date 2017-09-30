@@ -36,7 +36,7 @@ struct ExampleIndex {
 }} // end namespace vt::index
 
 #if backend_check_enabled(detector)
-#include "topos_index_traits.h"
+  #include "topos_index_traits.h"
 
   namespace vt { namespace index {
 
@@ -46,7 +46,6 @@ struct ExampleIndex {
   );
 
   }} // end namespace vt::index
-
 #endif
 
 #endif  /*INCLUDED_TOPOS_INDEX_EXAMPLE*/
