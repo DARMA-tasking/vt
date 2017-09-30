@@ -14,6 +14,7 @@
 #include "trace.h"
 #include "scheduler.h"
 #include "location.h"
+#include "context/context_vrtmanager.h"
 
 namespace vt {
 
@@ -30,6 +31,7 @@ std::unique_ptr<seq::Sequencer> theSeq = nullptr;
 std::unique_ptr<seq::SequencerVirtual> theVrtSeq = nullptr;
 std::unique_ptr<sched::Scheduler> theSched = nullptr;
 std::unique_ptr<location::LocationManager> theLocMan = nullptr;
+std::unique_ptr<vrt::VrtContextManager> theVrtCManager;
 
 #if backend_check_enabled(trace_enabled)
   std::unique_ptr<trace::Trace> theTrace = nullptr
