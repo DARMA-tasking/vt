@@ -79,6 +79,4 @@ VrtContext_IdType VrtContextManager::getCurrentIdent() const {
 
 }
 
-std::unique_ptr<vrt::VrtContextManager> theVrtCManager;
-
 } // end namespace vt::vrt
