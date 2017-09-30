@@ -33,15 +33,19 @@ struct ExampleIndex {
   bool isByteCopyable() const;
 };
 
+}} // end namespace vt::index
+
 #if backend_check_enabled(detector)
   #include "index/index_traits.h"
 
-  static_assert(
-    vt::index::IndexTraits<ExampleIndex>::is_index,
-    "vt::index::ExampleIndex must follow the Index concept"
-  );
-#endif
+  namespace vt { namespace index {
 
-}} // end namespace vt::index
+  static_assert(
+    IndexTraits<ExampleIndex>::is_index,
+    "ExampleIndex must follow the Index concept"
+  );
+
+  }} // end namespace vt::index
+#endif
 
 #endif /*__RUNTIME_TRANSPORT_EXAMPLE_INDEX__*/
