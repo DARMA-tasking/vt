@@ -32,6 +32,7 @@
 #define debug_trace(x) x
 #define debug_location(x) x
 #define debug_vrt(x) x
+#define debug_worker(x) x
 
 // contextual modes for debug
 #define debug_node(x) x

@@ -48,6 +48,22 @@ typename ConcurrentDeque<T>::TConstRef ConcurrentDeque<T>::back() const {
 }
 
 template <typename T>
+T ConcurrentDeque<T>::popGetFront() {
+  std::lock_guard<std::mutex> guard(container_mutex_);
+  auto elm = container_.front();
+  container_.pop_front();
+  return elm;
+}
+
+template <typename T>
+T ConcurrentDeque<T>::popGetBack() {
+  std::lock_guard<std::mutex> guard(container_mutex_);
+  auto elm = container_.back();
+  container_.pop_back();
+  return elm;
+}
+
+template <typename T>
 typename ConcurrentDeque<T>::TRef ConcurrentDeque<T>::at(SizeType const& pos) {
   std::lock_guard<std::mutex> guard(container_mutex_);
   return container_.at(pos);
