@@ -32,8 +32,7 @@ set(
   barrier collective configs/debug configs/features configs/types context
   event messaging pool data registry parameterization handler sequence
   termination trace tree scheduler utils/demangle utils/bits demangle
-  topos/location topos/mapping topos/index utils/container utils/detector
-  serialization
+  location index mapping utils/container utils/detector worker serialization
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
