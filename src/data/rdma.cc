@@ -614,9 +614,10 @@ void RDMAManager::getRegionTypeless(
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 
   if (is_collective) {
-    printf(
-      "%d: get_region_typeless: han=%lld, ptr=%p, region=%s\n",
-      this_node,han,ptr,region.regionToBuf().c_str()
+    debug_print(
+      rdma, node,
+      "getRegionTypeless: han=%lld, ptr=%p, region=%s\n",
+      han,ptr,region.regionToBuf().c_str()
     );
 
     auto holder_iter = holder_.find(han);
@@ -645,7 +646,8 @@ void RDMAManager::getRegionTypeless(
       auto const& ptr_offset = static_cast<char*>(ptr) + (roffset * elm_size);
       auto const& block_offset = (lo - blk_lo) * elm_size;
 
-      printf(
+      debug_print(
+        rdma, node,
         "\t: node=%d, lo=%lld, hi=%lld, blk=%lld, blk_lo=%lld, blk_hi=%lld, "
         "block_offset=%lld, ptr_offset={%lld,%lld}\n",
         node, lo, hi, blk, blk_lo, blk_hi, block_offset, roffset, roffset*elm_size
@@ -673,11 +675,10 @@ void RDMAManager::getDataIntoBufCollective(
   RDMA_HandleType const& han, RDMA_PtrType const& ptr, ByteType const& num_bytes,
   ByteType const& elm_size, ByteType const& offset, ActionType next_action
 ) {
-  auto const& this_node = theContext->getNode();
-
-  printf(
-    "%d: getDataIntoBufCollective: han=%lld, ptr=%p, bytes=%lld, offset=%lld\n",
-    this_node,han,ptr,num_bytes,offset
+  debug_print(
+    rdma, node,
+    "getDataIntoBufCollective: han=%lld, ptr=%p, bytes=%lld, offset=%lld\n",
+    han,ptr,num_bytes,offset
   );
 
   auto const& num_elems = num_bytes / (elm_size / rdma_default_byte_size);
@@ -699,10 +700,11 @@ void RDMAManager::getDataIntoBuf(
   auto const& handle_getNode = RDMA_HandleManagerType::getRdmaNode(han);
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 
-  printf(
-    "%d: getDataIntoBuf: han=%lld, is_collective=%s, getNode=%d, "
+  debug_print(
+    rdma, node,
+    "getDataIntoBuf: han=%lld, is_collective=%s, getNode=%d, "
     "elm_size=%lld, num_bytes=%lld, offset=%lld\n",
-    this_node,han,print_bool(is_collective),handle_getNode,elm_size,num_bytes,offset
+    han,print_bool(is_collective),handle_getNode,elm_size,num_bytes,offset
   );
 
   auto const& getNode = is_collective ? collective_node : handle_getNode;
@@ -719,7 +721,8 @@ void RDMAManager::getDataIntoBuf(
         han, RDMA_TypeType::Get, getNode, non_target, false, false
       );
 
-      printf(
+      debug_print(
+        rdma, node,
         "getDataIntoBuf: han=%lld, target=%d, non_target=%d, channel=%p\n",
         han, getNode, non_target, channel
       );
@@ -802,7 +805,10 @@ void RDMAManager::newChannel(
   auto const non_target =
     in_non_target == uninitialized_destination ? this_node : in_non_target;
 
-  printf("target=%d,non_target=%d\n", target, non_target);
+  debug_print(
+    rdma, node,
+    "target=%d,non_target=%d\n", target, non_target
+  );
 
   assert(
     (target == spec_target or spec_target == uninitialized_destination)
