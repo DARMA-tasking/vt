@@ -16,7 +16,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "get_msg: han=%lld, is_user=%s, tag=%d, bytes=%lld\n",
+    "getMsg: han=%lld, is_user=%s, tag=%d, bytes=%lld\n",
     msg->rdma_handle, msg->is_user_msg ? "true" : "false",
     msg_tag, msg->num_bytes
   );
@@ -69,7 +69,7 @@ namespace vt { namespace rdma {
   auto const& this_node = theContext->getNode();
   debug_print(
     rdma, node,
-    "get_recv_msg: op=%lld, tag=%d, bytes=%lld, get_ptr=%p, mpi_tag=%d, send_back=%d\n",
+    "getRecvMsg: op=%lld, tag=%d, bytes=%lld, get_ptr=%p, mpi_tag=%d, send_back=%d\n",
     msg->op_id, msg_tag, msg->num_bytes, get_ptr, msg->mpi_tag_to_recv, msg->send_back
   );
 
@@ -104,7 +104,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "put_back_msg: op=%lld\n", msg->op_id
+    "putBackMsg: op=%lld\n", msg->op_id
   );
 
   theRDMA->triggerPutBackData(op_id);
@@ -121,7 +121,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "put_recv_msg: op=%lld, tag=%d, bytes=%lld, recv_tag=%d, han=%lld\n",
+    "putRecvMsg: op=%lld, tag=%d, bytes=%lld, recv_tag=%d, han=%lld\n",
     msg->op_id, msg_tag, msg->num_bytes, msg->mpi_tag_to_recv, msg->rdma_handle
   );
 
@@ -136,7 +136,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "put_recv_msg: bytes=%lld, recv_tag=%d, put_ptr=%p\n",
+    "putRecvMsg: bytes=%lld, recv_tag=%d, put_ptr=%p\n",
     msg->num_bytes, msg->mpi_tag_to_recv, put_ptr
   );
 
@@ -145,7 +145,7 @@ namespace vt { namespace rdma {
       recv_tag, recv_node, [=](RDMA_GetType ptr, ActionType deleter){
         debug_print(
           rdma, node,
-          "put_data: after recv data trigger: recv_tag=%d, recv_node=%d\n",
+          "putData: after recv data trigger: recv_tag=%d, recv_node=%d\n",
           recv_tag, recv_node
         );
         theRDMA->triggerPutRecvData(
@@ -175,7 +175,7 @@ namespace vt { namespace rdma {
       [=](RDMA_GetType ptr, ActionType deleter){
         debug_print(
           rdma, node,
-          "put_data: recv_data_msg_buffer DIRECT: offset=%lld\n",
+          "putData: recv_data_msg_buffer DIRECT: offset=%lld\n",
           msg->offset
         );
         if (send_back) {
@@ -195,7 +195,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma_channel, node,
-    "setup_channel: han=%lld, target=%d, non_target=%d, "
+    "setupChannel: han=%lld, target=%d, non_target=%d, "
     "channel_tag=%d\n",
     msg->rdma_handle, msg->target, msg->non_target, msg->channel_tag
   );
@@ -223,7 +223,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma_channel, node,
-    "remote_channel: target=%d, type=%d, han=%lld, tag=%d, "
+    "remoteChannel: target=%d, type=%d, han=%lld, tag=%d, "
     "bytes=%lld\n",
     target, msg->type, msg->han, msg->channel_tag, msg->num_bytes
   );
@@ -270,7 +270,7 @@ RDMA_HandleType RDMAManager::registerNewRdmaHandler(
 
   debug_print(
     rdma, node,
-    "register_new_rdma_handler: my_handle=%llx, op=%d\n",
+    "registerNewRdmaHandler: my_handle=%llx, op=%d\n",
     new_handle, RDMA_HandleManagerType::getOpType(new_handle)
   );
 
@@ -421,7 +421,7 @@ void RDMAManager::triggerPutRecvData(
 
   debug_print(
     rdma, node,
-    "trigger_put_recv_data: han=%lld, tag=%d, holder.size=%ld\n",
+    "triggerPutRecvData: han=%lld, tag=%d, holder.size=%ld\n",
     han, tag, holder_.size()
   );
 
@@ -477,7 +477,7 @@ void RDMAManager::syncChannel(
 
   debug_print(
     rdma_channel, node,
-    "sync_channel: is_local=%s, han=%lld, target=%d, non_target=%d, type=%s\n",
+    "syncChannel: is_local=%s, han=%lld, target=%d, non_target=%d, type=%s\n",
     print_bool(is_local), han, target, non_target, PRINT_CHANNEL_TYPE(type)
   );
 
@@ -576,7 +576,7 @@ void RDMAManager::putData(
 
       debug_print(
         rdma, node,
-        "put_data: sending: ptr=%p, num_bytes=%lld, recv_tag=%d, offset=%lld\n",
+        "putData: sending: ptr=%p, num_bytes=%lld, recv_tag=%d, offset=%lld\n",
         ptr, num_bytes, msg->mpi_tag_to_recv, offset
       );
 
@@ -593,7 +593,7 @@ void RDMAManager::putData(
       han, tag, ptr, num_bytes, offset, [=](){
         debug_print(
           rdma, node,
-          "put_data: local data is put\n"
+          "putData: local data is put\n"
         );
         if (cont) {
           cont();
@@ -676,7 +676,7 @@ void RDMAManager::getDataIntoBufCollective(
   auto const& this_node = theContext->getNode();
 
   printf(
-    "%d: get_data_into_buf_collective: han=%lld, ptr=%p, bytes=%lld, offset=%lld\n",
+    "%d: getDataIntoBufCollective: han=%lld, ptr=%p, bytes=%lld, offset=%lld\n",
     this_node,han,ptr,num_bytes,offset
   );
 
@@ -700,7 +700,7 @@ void RDMAManager::getDataIntoBuf(
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 
   printf(
-    "%d: get_data_into_buf: han=%lld, is_collective=%s, getNode=%d, "
+    "%d: getDataIntoBuf: han=%lld, is_collective=%s, getNode=%d, "
     "elm_size=%lld, num_bytes=%lld, offset=%lld\n",
     this_node,han,print_bool(is_collective),handle_getNode,elm_size,num_bytes,offset
   );
@@ -720,7 +720,7 @@ void RDMAManager::getDataIntoBuf(
       );
 
       printf(
-        "get_data_into_buf: han=%lld, target=%d, non_target=%d, channel=%p\n",
+        "getDataIntoBuf: han=%lld, target=%d, non_target=%d, channel=%p\n",
         han, getNode, non_target, channel
       );
 
@@ -750,7 +750,7 @@ void RDMAManager::getDataIntoBuf(
     } else {
       debug_print(
         rdma, node,
-        "get_data: local direct into buf, ptr=%p\n", ptr
+        "getData: local direct into buf, ptr=%p\n", ptr
       );
       theRDMA->requestGetData(
         nullptr, false, han, tag, num_bytes, offset, ptr, nullptr, next_action
@@ -843,7 +843,7 @@ void RDMAManager::setupChannelWithRemote(
 
   debug_print(
     rdma_channel, node,
-    "setup_channel_with_remote: han=%lld, dest=%d, target=%d, channel=%p\n",
+    "setupChannelWithRemote: han=%lld, dest=%d, target=%d, channel=%p\n",
     han, dest, target, channel
   );
 
@@ -854,7 +854,7 @@ void RDMAManager::setupChannelWithRemote(
 
     debug_print(
       rdma_channel, node,
-      "setup_channel_with_remote: han=%lld, dest=%d, override_target=%d, target=%d\n",
+      "setupChannelWithRemote: han=%lld, dest=%d, override_target=%d, target=%d\n",
       han, dest, override_target, target
     );
 
@@ -917,7 +917,7 @@ void RDMAManager::createDirectChannelFinish(
 
     debug_print(
       rdma_channel, node,
-      "create_direct_channel_finish: han=%lld, is_target=%s, state ptr=%p, "
+      "createDirectChannelFinish: han=%lld, is_target=%s, state ptr=%p, "
       "bytes=%lld, target=%d, non_target=%d\n",
       han, print_bool(is_target), target_ptr, target_num_bytes, target,
       non_target
@@ -929,7 +929,7 @@ void RDMAManager::createDirectChannelFinish(
   if (channel == nullptr) {
     debug_print(
       rdma_channel, node,
-      "create_direct_channel_finish: han=%lld, target=%d, non_target=%d, creating\n",
+      "createDirectChannelFinish: han=%lld, target=%d, non_target=%d, creating\n",
       han, target, non_target
     );
 
@@ -979,7 +979,7 @@ RDMAManager::RDMA_ChannelType* RDMAManager::findChannel(
       );
       debug_print(
         rdma_channel, node,
-        "find_channel: han=%lld, target=%d, op=%s\n", han, target,
+        "findChannel: han=%lld, target=%d, op=%s\n", han, target,
         PRINT_CHANNEL_TYPE(rdma_op_type)
       );
     }
@@ -1020,7 +1020,7 @@ void RDMAManager::createDirectChannelInternal(
   if (channel != nullptr) {
     debug_print(
       rdma_channel, node,
-      "create_direct_channel_internal: han=%lld, target=%d, already created!\n",
+      "createDirectChannelInternal: han=%lld, target=%d, already created!\n",
       han, target
     );
     if (action) {
@@ -1031,7 +1031,7 @@ void RDMAManager::createDirectChannelInternal(
 
   debug_print(
     rdma_channel, node,
-    "create_direct_channel_internal: han=%lld, target=%d, op_type=%d, is_target=%s, "
+    "createDirectChannelInternal: han=%lld, target=%d, op_type=%d, is_target=%s, "
     "channel_tag=%d, non_target=%d\n",
     han, target, rdma_op_type, print_bool(is_target), channel_tag,
     non_target
@@ -1046,7 +1046,7 @@ void RDMAManager::createDirectChannelInternal(
 
     debug_print(
       rdma_channel, node,
-      "create_direct_channel_internal: generate unique tag: channel_tag=%d\n",
+      "createDirectChannelInternal: generate unique tag: channel_tag=%d\n",
       unique_channel_tag
     );
 
