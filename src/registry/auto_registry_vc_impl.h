@@ -6,7 +6,6 @@
 #include "auto_registry.h"
 
 #include <vector>
-#include <memory>
 
 namespace vt { namespace auto_registry {
 
