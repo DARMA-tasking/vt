@@ -154,7 +154,7 @@ struct RDMAManager {
     ByteType const num_bytes = sizeof(T)*num_elems;
     debug_print(
       rdma, node,
-      "register_new_typed_rdma_handler ptr=%p, bytes=%lld\n", ptr, num_bytes
+      "registerNewTypedRdmaHandler ptr=%p, bytes=%lld\n", ptr, num_bytes
     );
     return registerNewRdmaHandler(
       true, static_cast<RDMA_PtrType>(ptr), num_bytes

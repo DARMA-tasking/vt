@@ -100,7 +100,7 @@ RDMA_HandlerType State::setRDMAFn<
 
   debug_print(
     rdma_state, node,
-    "set_rdma_fn: GET tag=%d, handle=%lld, any_tag=%s\n",
+    "setRdmaFn: GET tag=%d, handle=%lld, any_tag=%s\n",
     tag, handle, print_bool(any_tag)
   );
 
@@ -134,7 +134,7 @@ RDMA_HandlerType State::setRDMAFn<
 
   debug_print(
     rdma_state, node,
-    "set_rdma_fn: PUT tag=%d, handle=%lld, any_tag=%s\n",
+    "setRdmaFn: PUT tag=%d, handle=%lld, any_tag=%s\n",
     tag, handle, print_bool(any_tag)
   );
 
@@ -196,7 +196,7 @@ RDMA_GetType State::defaultGetHandlerFn(
 
   debug_print(
     rdma_state, node,
-    "%d: default_get_handler_fn: msg=%p, req_num_bytes=%lld, tag=%d\n",
+    "%d: defaultGetHandlerFn: msg=%p, req_num_bytes=%lld, tag=%d\n",
     this_node, msg, req_num_bytes, tag
   );
 
@@ -219,7 +219,7 @@ void State::defaultPutHandlerFn(
 
   debug_print(
     rdma_state, node,
-    "%d: default_put_handler_fn: msg=%p, ptr=%p, req_num_bytes=%lld, tag=%d\n",
+    "%d: defaultPutHandlerFn: msg=%p, ptr=%p, req_num_bytes=%lld, tag=%d\n",
     this_node, msg, ptr, req_num_bytes, tag
   );
 
