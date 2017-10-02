@@ -11,9 +11,6 @@
 #include "context/context_vrt.h"
 #include "context_vrt_fwd.h"
 
-#include <vector>
-#include <memory>
-
 namespace vt { namespace auto_registry {
 
 template <typename = void>
