@@ -32,8 +32,8 @@ static void foo(fcontext_transfer_t t) {
 }
 
 int main(int argc, char** argv) {
-  ContextStackPtr s = fcontext::createStack(16 * 1024);
-  ContextStackPtr s2 = createStack();
+  ContextStackPtr s = createStack(16 * 1024);
+  ContextStackPtr s2 = createStack(0, true);
 
   ctx = makeContext(s->stack.sptr, s->stack.ssize, foo);
   ctx2 = makeContext(s2->stack.sptr, s2->stack.ssize, bar);

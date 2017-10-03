@@ -26,16 +26,16 @@ struct ContextTransfer {
 };
 
 struct ContextStack {
+  bool page_alloced = false;
   fcontext_stack_t stack;
 
   ContextStack(fcontext_stack_t in_stack)
     : stack(in_stack)
   { }
 
-  ContextStack(void* in_ptr, size_t in_size) {
-    stack.sptr = in_ptr;
-    stack.ssize = in_size;
-  }
+  ContextStack(void* in_ptr, size_t in_size, bool const in_page_alloced)
+    : page_alloced(in_page_alloced), stack{in_ptr, in_size}
+  { }
 };
 
 using ContextStackPtr = std::unique_ptr<ContextStack>;

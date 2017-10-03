@@ -12,7 +12,7 @@ namespace fcontext {
 ContextStackPtr allocateMallocStack(size_t const size_in);
 ContextStackPtr allocatePageSizedStack(size_t const size_in);
 
-ContextStackPtr createStack(size_t size = 0);
+ContextStackPtr createStack(size_t size = 0, bool page_sized = false);
 void destroyStack(ContextStackPtr stack);
 
 } /* end namespace fcontext */
