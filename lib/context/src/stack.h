@@ -7,6 +7,8 @@
 #include <memory>
 #include <cstdlib>
 
+#define DEBUG_PRINT 0
+
 namespace fcontext {
 
 ContextStackPtr allocateMallocStack(size_t const size_in);
