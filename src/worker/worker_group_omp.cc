@@ -22,9 +22,6 @@ WorkerGroupOMP::WorkerGroupOMP(WorkerCountType const& in_num_workers)
 
 void WorkerGroupOMP::initialize() {
   worker_state_.resize(num_workers_);
-  initialized_ = true;
-
-  spawnWorkers();
 }
 
 /*virtual*/ WorkerGroupOMP::~WorkerGroupOMP() {
@@ -37,6 +34,8 @@ void WorkerGroupOMP::spawnWorkers() {
     "Worker group OMP: launching num worker threads=%d, num comm threads=%d\n",
     num_workers_, num_default_comm
   );
+
+  initialized_ = true;
 
   #pragma omp parallel num_threads(num_workers_)
   {
