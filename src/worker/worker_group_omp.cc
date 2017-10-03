@@ -37,6 +37,9 @@ void WorkerGroupOMP::spawnWorkers() {
 
   initialized_ = true;
 
+  // @todo: should the total threads be used here?
+  // auto const total_threads = num_workers_ + num_default_comm;
+
   #pragma omp parallel num_threads(num_workers_)
   {
     WorkerIDType const thd = omp_get_thread_num();
@@ -47,8 +50,11 @@ void WorkerGroupOMP::spawnWorkers() {
       "Worker group OMP: thd=%d, num threads=%d\n", thd, nthds
     );
 
+    // if (thd == total_threads - 1) {
+    // } else {
     worker_state_[thd] = std::make_unique<WorkerStateType>(thd, nthds);
     worker_state_[thd]->spawn();
+    //}
   }
 }
 
