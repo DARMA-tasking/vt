@@ -34,11 +34,13 @@ ContextStackPtr allocatePageSizedStack(size_t const size_in) {
   size_t const default_size = SysPageInfo::getDefaultPageSize();
   size_t alloc_size = size_in;
 
+  #if DEBUG_PRINT
   printf(
     "max_page_size=%ld, min_page_size=%ld, sys_page_size=%ld, "
     "default size=%ld, size_in=%ld\n",
     max_page_size, min_page_size, sys_page_size, default_size, size_in
   );
+  #endif
 
   if (alloc_size == 0) {
     alloc_size = default_size;
@@ -58,7 +60,9 @@ ContextStackPtr allocatePageSizedStack(size_t const size_in) {
 
   size_t const alloc_size_page = num_pages * sys_page_size;
 
+  #if DEBUG_PRINT
   printf("num_pages=%ld, alloc_size_page=%ld\n", num_pages, alloc_size_page);
+  #endif
 
   void* const mem_ptr = mmap(
     0, alloc_size_page, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0
