@@ -21,7 +21,7 @@ ContextStackPtr allocateMallocStack(size_t const size) {
   assert(mem_ptr != nullptr && "Malloc failed to allocate memory");
 
   auto stack = std::make_unique<ContextStack>(
-    static_cast<char*>(mem_ptr) + size, size
+    static_cast<char*>(mem_ptr) + size, size, false
   );
 
   return stack;
@@ -72,20 +72,28 @@ ContextStackPtr allocatePageSizedStack(size_t const size_in) {
   mprotect(mem_ptr, sys_page_size, PROT_NONE);
 
   auto stack = std::make_unique<ContextStack>(
-    static_cast<char*>(mem_ptr) + alloc_size_page, alloc_size_page
+    static_cast<char*>(mem_ptr) + alloc_size_page, alloc_size_page, true
   );
 
   return stack;
 }
 
-ContextStackPtr createStack(size_t size) {
-  //assert(size > 0);
-  return allocateMallocStack(size == 0 ? 1024 : size);
+ContextStackPtr createStack(size_t size, bool page_sized) {
+  if (not page_sized) {
+    return allocateMallocStack(size == 0 ? 1024 : size);
+  } else {
+    return allocatePageSizedStack(size);
+  }
 }
 
-void destroyStack(ContextStackPtr stack) {
-  assert(stack != nullptr);
-  free(stack.get());
+void destroyStack(ContextStackPtr ctx) {
+  assert(ctx != nullptr);
+
+  if (ctx->page_alloced) {
+    munmap(ctx->stack.sptr, ctx->stack.ssize);
+  } else {
+    free(ctx->stack.sptr);
+  }
 }
 
 }  /* end namespace fcontext */
