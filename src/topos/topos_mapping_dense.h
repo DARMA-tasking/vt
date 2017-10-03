@@ -1,24 +1,24 @@
 
-#if ! defined __RUNTIME_TRANSPORT_DENSE_MAPPING__
-#define __RUNTIME_TRANSPORT_DENSE_MAPPING__
+#if !defined INCLUDED_TOPOS_MAPPING_DENSE
+#define INCLUDED_TOPOS_MAPPING_DENSE
+
+#include <functional>
 
 #include "config.h"
 #include "topos_index.h"
-#include "mapping.h"
-
-#include <functional>
+#include "topos_mapping.h"
 
 namespace vt { namespace mapping {
 
 template <typename IndexElmType, typename PhysicalType>
 NodeType blockMapDenseFlatIndex(
-  IndexElmType const& flat_idx, IndexElmType const& num_elems,
-  PhysicalType const& num_resources
+    IndexElmType const& flat_idx, IndexElmType const& num_elems,
+    PhysicalType const& num_resources
 );
 
 template <typename Idx, index::NumDimensionsType ndim>
 Idx linearizeDenseIndex(
-  DenseIndex<Idx, ndim> const& idx, DenseIndex<Idx, ndim> const& max_idx
+    DenseIndex<Idx, ndim> const& idx, DenseIndex<Idx, ndim> const& max_idx
 );
 
 template <typename Index>
@@ -43,8 +43,8 @@ NodeType dense1DBlockMap(Idx1DRef idx, Idx1DRef max_idx, NodeRef nnodes);
 NodeType dense2DBlockMap(Idx2DRef idx, Idx2DRef max_idx, NodeRef nnodes);
 NodeType dense3DBlockMap(Idx3DRef idx, Idx3DRef max_idx, NodeRef nnodes);
 
-}} // end namespace vt::location
+}}  // end namespace vt::location
 
-#include "dense_mappings.impl.h"
+#include "topos_mapping_dense.impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_DENSE_MAPPING__*/
+#endif /*INCLUDED_TOPOS_MAPPING_DENSE*/

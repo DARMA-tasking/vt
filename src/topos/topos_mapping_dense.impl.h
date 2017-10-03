@@ -1,19 +1,19 @@
 
-#if ! defined __RUNTIME_TRANSPORT_DENSE_MAPPING_IMPL__
-#define __RUNTIME_TRANSPORT_DENSE_MAPPING_IMPL__
+#if !defined INCLUDED_TOPOS_MAPPING_DENSE_IMPL
+#define INCLUDED_TOPOS_MAPPING_DENSE_IMPL
+
+#include <cmath>
 
 #include "config.h"
 #include "topos_index.h"
-#include "mapping.h"
-
-#include <cmath>
+#include "topos_mapping.h"
 
 namespace vt { namespace mapping {
 
 template <typename IndexElmType, typename PhysicalType>
 inline NodeType blockMapDenseFlatIndex(
-  IndexElmType const& flat_idx, IndexElmType const& num_elems,
-  PhysicalType const& num_resources
+    IndexElmType const& flat_idx, IndexElmType const& num_elems,
+    PhysicalType const& num_resources
 ) {
   double const& elms_as_dbl = static_cast<double>(num_elems);
   double const& res_as_dbl = static_cast<double>(num_resources);
@@ -35,11 +35,11 @@ inline NodeType blockMapDenseFlatIndex(
 
 template <typename Idx, index::NumDimensionsType ndim>
 Idx linearizeDenseIndex(
-  DenseIndex<Idx,ndim> const& idx, DenseIndex<Idx,ndim> const& max_idx
+    DenseIndex <Idx, ndim> const& idx, DenseIndex <Idx, ndim> const& max_idx
 ) {
   Idx val = 0;
   Idx dim_size = 1;
-  for (auto i = ndim-1; i >= 0; i--) {
+  for (auto i = ndim - 1; i >= 0; i--) {
     val += dim_size * idx.dims[i];
     dim_size *= max_idx.dims[i];
   }
@@ -47,17 +47,17 @@ Idx linearizeDenseIndex(
 }
 
 template <typename Idx, index::NumDimensionsType ndim>
-NodeType denseBlockMap(IdxRef<Idx> idx, IdxRef<Idx> max_idx, NodeRef nnodes) {
+NodeType denseBlockMap(IdxRef <Idx> idx, IdxRef <Idx> max_idx, NodeRef nnodes) {
   using IndexElmType = typename Idx::DenseIndexType;
 
   auto const& total_elems = max_idx.getSize();
   auto const& flat_idx = linearizeDenseIndex<IndexElmType, ndim>(idx, max_idx);
 
   return blockMapDenseFlatIndex<IndexElmType, NodeType>(
-    flat_idx, total_elems, nnodes
+      flat_idx, total_elems, nnodes
   );
 }
 
-}} // end namespace vt::location
+}}  // end namespace vt::location
 
-#endif /*__RUNTIME_TRANSPORT_DENSE_MAPPING_IMPL__*/
+#endif /*INCLUDED_TOPOS_MAPPING_DENSE_IMPL*/

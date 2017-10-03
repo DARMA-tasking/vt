@@ -24,7 +24,7 @@
 #include "scheduler.h"
 #include "location.h"
 #include "topos/topos_index.h"
-#include "topos/mapping_headers.h"
+#include "topos/topos_mapping_headers.h"
 #include "context_vrtheaders.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/

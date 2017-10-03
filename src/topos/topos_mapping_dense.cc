@@ -1,11 +1,7 @@
 
 #include "config.h"
-#include "context.h"
 #include "topos_index.h"
-#include "mapping.h"
-#include "dense_mappings.h"
-
-#include <cmath>
+#include "topos_mapping_dense.h"
 
 namespace vt { namespace mapping {
 
@@ -39,6 +35,5 @@ NodeType dense3DBlockMap(Idx3DRef idx, Idx3DRef max_idx, NodeRef nnodes) {
   return denseBlockMap<Index3D, 3>(idx, max_idx, nnodes);
 }
 
-
-}} // end namespace vt::location
+}}  // end namespace vt::location
 
