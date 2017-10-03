@@ -10,7 +10,7 @@
 #include "config.h"
 
 #if backend_check_enabled(detector)
-#include "topos_index_traits.h"
+#include "index_traits.h"
 #endif
 
 namespace vt { namespace index {

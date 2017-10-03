@@ -1,6 +1,6 @@
 
 #include "config.h"
-#include "topos_index.h"
+#include "topos/index/index.h"
 #include "topos_mapping_dense.h"
 
 namespace vt { namespace mapping {

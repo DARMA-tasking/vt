@@ -5,7 +5,7 @@
 #include <functional>
 
 #include "config.h"
-#include "topos_index.h"
+#include "topos/index/index.h"
 
 namespace vt { namespace mapping {
 
