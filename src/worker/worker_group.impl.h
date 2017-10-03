@@ -34,7 +34,6 @@ WorkerGroupAny<WorkerT>::WorkerGroupAny(WorkerCountType const& in_num_workers)
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::initialize() {
   workers_.resize(num_workers_);
-  spawnWorkers();
 }
 
 template <typename WorkerT>
