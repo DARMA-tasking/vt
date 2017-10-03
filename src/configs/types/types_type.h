@@ -24,7 +24,7 @@ using ActionType = std::function<void()>;
 using VrtContext_IdType = uint32_t;
 using VrtContext_ProxyType = uint64_t;
 using SerialByteType = char;
-using WorkerCountType = uint16_t;
+using WorkerCountType = int32_t;
 
 }  // end namespace vt
 

@@ -25,7 +25,9 @@ struct WorkerTraits {
   template <typename U, typename... Vs>
   using constructor_t = decltype(U(std::declval<Vs>()...));
   using worker_id_t = WorkerIDType const&;
-  using has_constructor = detection::is_detected<constructor_t, T, worker_id_t>;
+  using has_constructor = detection::is_detected<
+    constructor_t, T, worker_id_t, worker_id_t
+  >;
 
   template <typename U>
   using copy_constructor_t = decltype(U(std::declval<U const&>()));

@@ -23,6 +23,7 @@ struct WorkerGroupAny {
 
   virtual ~WorkerGroupAny();
 
+  void initialize();
   void spawnWorkers();
   void joinWorkers();
 
