@@ -10,6 +10,23 @@ include_directories(${MPI_C_INCLUDE_PATH})
 
 set(CMAKE_CXX_STANDARD 14)
 
+# OpenMP support
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
+include(${CMAKE_MODULE_PATH}/FindOpenMP.cmake)
+
+if (OpenMP_FOUND)
+  message("OpenMP has been found: ")
+  message("\t Linker flags: ${OpenMP_EXE_LINKER_FLAGS}")
+  message("\t C_FLAGS=${OpenMP_C_FLAGS}")
+  message("\t CXX_FLAGS=${OpenMP_CXX_FLAGS}")
+
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+else()
+  message("OpenMP not found: must use std::thread for workers.")
+endif (OpenMP_FOUND)
+
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(PROJECT_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
