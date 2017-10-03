@@ -1,14 +1,14 @@
 
-#if ! defined __RUNTIME_TRANSPORT_INDEX_TRAITS__
-#define __RUNTIME_TRANSPORT_INDEX_TRAITS__
+#if !defined INCLUDED_TOPOS_INDEX_TRAITS
+#define INCLUDED_TOPOS_INDEX_TRAITS
+
+#include <cstdint>
 
 #include "config.h"
 
 #if backend_check_enabled(detector)
-  #include "utils/detector/detector_headers.h"
-#endif /*backend_check_enabled(detector)*/
-
-#include <cstdint>
+#include "utils/detector/detector_headers.h"
+#endif  /*backend_check_enabled(detector)*/
 
 #if backend_check_enabled(detector)
 
@@ -54,8 +54,8 @@ struct IndexTraits {
     has_packedSize::value and has_isByteCopyable::value;
 };
 
-}} // end namespace vt::index
+}}  // end namespace vt::index
 
-#endif /*backend_check_enabled(detector)*/
+#endif  /*backend_check_enabled(detector)*/
 
-#endif /*__RUNTIME_TRANSPORT_INDEX_TRAITS__*/
+#endif  /*INCLUDED_TOPOS_INDEX_TRAITS*/

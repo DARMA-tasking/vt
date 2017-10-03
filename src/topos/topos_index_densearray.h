@@ -1,17 +1,17 @@
 
-#if ! defined __RUNTIME_TRANSPORT_DENSE_INDEX_ARRAY__
-#define __RUNTIME_TRANSPORT_DENSE_INDEX_ARRAY__
-
-#include "config.h"
-
-#if backend_check_enabled(detector)
-  #include "index/index_traits.h"
-#endif
+#if !defined INCLUDED_TOPOS_INDEX_DENSE_ARRAY
+#define INCLUDED_TOPOS_INDEX_DENSE_ARRAY
 
 #include <array>
 #include <string>
 #include <sstream>
 #include <cstdint>
+
+#include "config.h"
+
+#if backend_check_enabled(detector)
+#include "topos_index_traits.h"
+#endif
 
 namespace vt { namespace index {
 
@@ -21,7 +21,7 @@ template <typename IndexType, NumDimensionsType ndim = 1>
 struct DenseIndexArray {
   using IndexSizeType = size_t;
 
-  struct dense_single_value_tag { };
+  struct dense_single_value_tag {};
 
   using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
   using DenseArraySizeType = uint64_t;
@@ -34,7 +34,7 @@ struct DenseIndexArray {
   DenseIndexArray(DenseIndexArray&&) = default;
 
   template <typename... Idxs>
-  explicit DenseIndexArray(Idxs&&... init) : dims({init...}) { }
+  explicit DenseIndexArray(Idxs&& ... init) : dims({init...}) {}
 
   DenseIndexArray(dense_single_value_tag, IndexType const& init_value) {
     for (int i = 0; i < ndim; i++) {
@@ -70,14 +70,14 @@ struct DenseIndexArray {
     std::stringstream stream;
     stream << "[";
     for (int i = 0; i < ndim; i++) {
-      stream << dims[i] << (i != ndim-1 ? "," : "");
+      stream << dims[i] << (i != ndim - 1 ? "," : "");
     }
     stream << "]";
     return stream.str();
   }
 
   bool operator==(DenseIndexArrayType const& other) const {
-    for (int i = ndim-1; i >= 0; i--) {
+    for (int i = ndim - 1; i >= 0; i--) {
       if (dims[i] != other.dims[i]) {
         return false;
       }
@@ -86,7 +86,7 @@ struct DenseIndexArray {
   }
 
   bool operator<(DenseIndexArrayType const& other) const {
-    for (int i = ndim-1; i >= 0; i--) {
+    for (int i = ndim - 1; i >= 0; i--) {
       if (dims[i] < other.dims[i]) {
         return true;
       } else if (dims[i] > other.dims[i]) {
@@ -115,31 +115,31 @@ struct DenseIndexArray {
 
   // special accessors (x,y,z) enabled depending on the number of dimensions
   template <
-    typename T = void,
-    typename = typename std::enable_if<ndim >= 1, T>::type
+      typename T = void,
+      typename = typename std::enable_if<ndim >= 1, T>::type
   >
   IndexType x() const { return dims[0]; }
 
   template <
-    typename T = void,
-    typename = typename std::enable_if<ndim >= 2, T>::type
+      typename T = void,
+      typename = typename std::enable_if<ndim >= 2, T>::type
   >
   IndexType y() const { return dims[1]; }
 
   template <
-    typename T = void,
-    typename = typename std::enable_if<ndim >= 3, T>::type
+      typename T = void,
+      typename = typename std::enable_if<ndim >= 3, T>::type
   >
   IndexType z() const { return dims[2]; }
 };
 
 #if backend_check_enabled(detector)
-  static_assert(
-    vt::index::IndexTraits<DenseIndexArray<int, 10>>::is_index,
-    "DenseIndexArray must follow the index concept"
-  );
+static_assert(
+  vt::index::IndexTraits<DenseIndexArray<int, 10>>::is_index,
+  "DenseIndexArray must follow the index concept"
+);
 #endif
 
-}} // end namespace vt::index
+}}  // end namespace vt::index
 
-#endif /*__RUNTIME_TRANSPORT_DENSE_INDEX_ARRAY__*/
+#endif  /*INCLUDED_TOPOS_INDEX_DENSE_ARRAY*/

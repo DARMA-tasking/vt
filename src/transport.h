@@ -23,7 +23,7 @@
 #include "trace.h"
 #include "scheduler.h"
 #include "location.h"
-#include "topos/index.h"
+#include "topos/topos_index.h"
 #include "topos/mapping_headers.h"
 #include "context_vrtheaders.h"
 

@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_MAPPING__
 
 #include "config.h"
-#include "index.h"
+#include "topos_index.h"
 
 #include <functional>
 

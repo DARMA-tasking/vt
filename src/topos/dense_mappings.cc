@@ -1,7 +1,7 @@
 
 #include "config.h"
 #include "context.h"
-#include "index.h"
+#include "topos_index.h"
 #include "mapping.h"
 #include "dense_mappings.h"
 

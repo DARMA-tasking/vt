@@ -1,10 +1,10 @@
 
-#if ! defined __RUNTIME_TRANSPORT_EXAMPLE_INDEX__
-#define __RUNTIME_TRANSPORT_EXAMPLE_INDEX__
-
-#include "config.h"
+#if !defined INCLUDED_TOPOS_INDEX_EXAMPLE
+#define INCLUDED_TOPOS_INDEX_EXAMPLE
 
 #include <cstdint>
+
+#include "config.h"
 
 namespace vt { namespace index {
 
@@ -34,14 +34,14 @@ struct ExampleIndex {
 };
 
 #if backend_check_enabled(detector)
-  #include "index/index_traits.h"
+#include "topos_index_traits.h"
 
-  static_assert(
-    vt::index::IndexTraits<ExampleIndex>::is_index,
-    "vt::index::ExampleIndex must follow the Index concept"
-  );
+static_assert(
+  vt::index::IndexTraits<ExampleIndex>::is_index,
+  "vt::index::ExampleIndex must follow the Index concept"
+);
 #endif
 
-}} // end namespace vt::index
+}}  // end namespace vt::index
 
-#endif /*__RUNTIME_TRANSPORT_EXAMPLE_INDEX__*/
+#endif  /*INCLUDED_TOPOS_INDEX_EXAMPLE*/

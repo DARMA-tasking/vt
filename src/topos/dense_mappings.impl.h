@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_DENSE_MAPPING_IMPL__
 
 #include "config.h"
-#include "index.h"
+#include "topos_index.h"
 #include "mapping.h"
 
 #include <cmath>
