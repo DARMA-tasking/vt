@@ -109,7 +109,7 @@ set(
   rdma_simple_put_direct rdma_simple_channel rdma_channel_sync rdma_collective
   callback callback_new reinstate tagged_handler param hello_world_functor
   test_seq trace_ring location_test location_test_msg broadcast_test index_test
-  hello_world_vrtContext hello_world_vc jacobi1d_node
+  hello_world_vrtContext hello_world_vc jacobi1d_recur_vc jacobi1d_node
 )
 
 set(
