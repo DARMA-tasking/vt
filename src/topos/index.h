@@ -3,8 +3,8 @@
 #define __RUNTIME_TRANSPORT_INDEX__
 
 #include "config.h"
-#include "index/example_index.h"
-#include "index/dense_index_array.h"
+#include "topos/example_index.h"
+#include "topos/dense_index_array.h"
 
 #if backend_check_enabled(detector)
   #include "index/index_traits.h"
