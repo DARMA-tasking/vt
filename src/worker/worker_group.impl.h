@@ -15,7 +15,12 @@ namespace vt { namespace worker {
 
 template <typename WorkerT>
 WorkerGroupAny<WorkerT>::WorkerGroupAny()
-  : num_workers_(num_default_workers)
+  : WorkerGroupAny(num_default_workers)
+{ }
+
+template <typename WorkerT>
+WorkerGroupAny<WorkerT>::WorkerGroupAny(WorkerCountType const& in_num_workers)
+  : num_workers_(in_num_workers)
 {
   debug_print(
     worker, node,
@@ -23,13 +28,14 @@ WorkerGroupAny<WorkerT>::WorkerGroupAny()
     num_workers_
   );
 
-  spawnWorkers();
+  initialize();
 }
 
 template <typename WorkerT>
-WorkerGroupAny<WorkerT>::WorkerGroupAny(WorkerCountType const& in_num_workers)
-  : num_workers_(in_num_workers)
-{ }
+void WorkerGroupAny<WorkerT>::initialize() {
+  workers_.resize(num_workers_);
+  spawnWorkers();
+}
 
 template <typename WorkerT>
 /*virtual*/ WorkerGroupAny<WorkerT>::~WorkerGroupAny() {
@@ -71,9 +77,11 @@ void WorkerGroupAny<WorkerT>::spawnWorkers() {
     "WorkerGroup: spawnWorkers: num_workers_=%u\n", num_workers_
   );
 
+  assert(workers_.size() >= num_workers_ and "Must be correct size");
+
   for (int i = 0; i < num_workers_; i++) {
     WorkerIDType const worker_id = i;
-    workers_.emplace_back(std::make_unique<WorkerT>(worker_id));
+    workers_[i] = std::make_unique<WorkerT>(worker_id);
   }
 
   for (auto&& elm : workers_) {

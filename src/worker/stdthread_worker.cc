@@ -10,8 +10,9 @@
 
 namespace vt { namespace worker {
 
-StdThreadWorker::StdThreadWorker(WorkerIDType const& in_worker_id_)
-  : worker_id_(in_worker_id_)
+StdThreadWorker::StdThreadWorker(
+  WorkerIDType const& in_worker_id_, WorkerIDType const& in_num_thds
+) : worker_id_(in_worker_id_), num_thds_(in_num_thds)
 { }
 
 void StdThreadWorker::enqueue(WorkUnitType const& work_unit) {
