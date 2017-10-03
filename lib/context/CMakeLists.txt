@@ -63,3 +63,13 @@ target_link_libraries(
   test_fcontext
   ${FCONTEXT_LIBRARY}
 )
+
+add_executable(
+  test_fcontext_cpp
+  ${PROJECT_TEST_DIR}/test_fcontext_cpp.cc
+)
+
+target_link_libraries(
+  test_fcontext_cpp
+  ${FCONTEXT_LIBRARY}
+)

@@ -9,8 +9,6 @@
 
 namespace fcontext {
 
-using ContextStackPtr = std::unique_ptr<ContextStack>;
-
 ContextStackPtr allocateMallocStack(size_t const size_in);
 ContextStackPtr allocatePageSizedStack(size_t const size_in);
 
