@@ -36,18 +36,25 @@ struct WorkerGroupAny {
 private:
   bool initialized_ = false;
   WorkerCountType num_workers_ = 0;
-  WorkerContainerType workers_{};
+  WorkerContainerType workers_;
 };
 
-using WorkerGroup = WorkerGroupAny<StdThreadWorker>;
+using WorkerGroupStd = WorkerGroupAny<StdThreadWorker>;
 
 }} /* end namespace vt::worker */
 
-namespace vt {
+#if backend_check_enabled(detector)
+  #include "worker/worker_group_traits.h"
 
-extern std::unique_ptr<worker::WorkerGroup> theWorkerGrp;
+  namespace vt { namespace worker {
 
-} /* end namespace vt */
+  static_assert(
+    WorkerGroupTraits<WorkerGroupStd>::is_worker,
+    "WorkerGroupStd must follow the WorkerGroup concept"
+  );
+
+  }} /* end namespace vt::worker */
+#endif
 
 #include "worker/worker_group.impl.h"
 

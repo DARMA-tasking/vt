@@ -13,6 +13,7 @@
 #define debug_bit_check_overflow(x) x
 #define debug_trace_enabled(x) x
 #define debug_detector(x) x
+#define debug_openmp(x) x
 
 // distinct modes for debug
 #define debug_none(x) x
