@@ -79,8 +79,8 @@ ContextStackPtr allocatePageSizedStack(size_t const size_in) {
 }
 
 ContextStackPtr createStack(size_t size) {
-  assert(size > 0);
-  return allocateMallocStack(size);
+  //assert(size > 0);
+  return allocateMallocStack(size == 0 ? 1024 : size);
 }
 
 void destroyStack(ContextStackPtr stack) {

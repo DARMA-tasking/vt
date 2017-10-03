@@ -3,6 +3,7 @@
 #define __RUNTIME_TRANSPORT_CONTEXT_WRAPPER__
 
 #include <cstdlib>
+#include <memory>
 
 #include "fcontext.h"
 
@@ -14,6 +15,8 @@ struct Context {
   Context(fcontext_t const& in_ctx)
     : ctx(in_ctx)
   { }
+
+  Context() = default;
 };
 
 using FContext = void*;
@@ -34,6 +37,8 @@ struct ContextStack {
     stack.ssize = in_size;
   }
 };
+
+using ContextStackPtr = std::unique_ptr<ContextStack>;
 
 // using ContextCallbackFn = void (*)(FContextTransfer);
 // using ContextTransferFn = FContextTransfer(*)(FContextTransfer);
