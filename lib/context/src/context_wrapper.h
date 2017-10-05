@@ -41,12 +41,28 @@ struct ULTContext {
   ULTContext(ULTContext&&) = default;
 };
 
-inline ContextTransfer jumpContext(Context const to, void* vp) {
+using ContextTransferFn = void (*)(ContextTransfer);
+
+inline ContextTransfer jumpContext(Context const to, void* vp = nullptr) {
   return ContextTransfer{jump_fcontext(to.ctx, vp)};
+}
+
+inline ContextTransfer jumpContext(ContextTransfer to) {
+  return ContextTransfer{jump_fcontext(to.transfer.ctx, nullptr)};
 }
 
 inline Context makeContext(void* sp, size_t size, pfn_fcontext callback) {
   return Context{make_fcontext(sp, size, callback)};
+}
+
+inline Context makeContext(ULTContext ctx, pfn_fcontext callback) {
+  return Context{make_fcontext(ctx.stack.sptr, ctx.stack.ssize, callback)};
+}
+
+inline Context makeContext(ULTContext ctx, ContextTransferFn fn) {
+  return Context{make_fcontext(
+    ctx.stack.sptr, ctx.stack.ssize, reinterpret_cast<pfn_fcontext>(fn)
+  )};
 }
 
 inline ContextTransfer pushContext(Context const to, void* vp, tfn_fcontext fn) {

@@ -153,12 +153,27 @@ foreach(EXAMPLE_FULL ${PROJECT_C_EXAMPLES})
   )
 endforeach()
 
-# add_executable(
-#   test_fcontext_cpp
-#   ${PROJECT_TEST_DIR}/test_fcontext_cpp.cc
-# )
+foreach(EXAMPLE_FULL ${PROJECT_CXX_EXAMPLES})
+  GET_FILENAME_COMPONENT(
+    EXAMPLE
+    ${EXAMPLE_FULL}
+    NAME_WE
+  )
 
-# target_link_libraries(
-#   test_fcontext_cpp
-#   ${FCONTEXT_LIBRARY}
-# )
+  add_executable(
+    ${EXAMPLE}
+    ${PROJECT_EXAMPLE_CXX_DIR}/${EXAMPLE}.cc
+    ${PROJECT_EXAMPLE_TOP_HEADER_FILES}
+    ${PROJECT_EXAMPLE_TOP_IMPL_FILES}
+  )
+
+  add_test_for_example(
+    ${EXAMPLE}
+    ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
+  )
+
+  target_link_libraries(
+    ${EXAMPLE}
+    ${FCONTEXT_LIBRARY}
+  )
+endforeach()

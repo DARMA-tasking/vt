@@ -1,45 +1,55 @@
 
+#include "context_wrapper.h"
+#include "fcontext.h"
+#include "stack.h"
+#include "util.h"
+
 #include <time.h>
 #include <cstdio>
 
-#include "fcontext.h"
+using namespace fcontext;
+using namespace fcontext::examples;
 
-static fcontext_t ctx1;
-static fcontext_t ctx2;
+static Context ctx1;
+static Context ctx2;
 
-inline void sleep(uint32_t _ms) {
-  timespec req = { (time_t)_ms / 1000, (long)((_ms % 1000) * 1000000) };
-  timespec rem = { 0, 0 };
-  nanosleep(&req, &rem);
+static void fn1(ContextTransfer t) {
+  puts("fn1 1");
+  sleep(1000);
+  jumpContext(t);
+  puts("fn1 2");
+  sleep(1000);
+  jumpContext(t);
 }
 
-static void fn1(fcontext_transfer_t t) {
-  puts("fn1");
+static void fn2(ContextTransfer t) {
+  puts("fn2 1");
   sleep(1000);
-  jump_fcontext(t.ctx, nullptr);
-}
-
-static void fn2(fcontext_transfer_t t) {
-  puts("fn2");
-  sleep(1000);
-  jump_fcontext(ctx2, nullptr);
+  jumpContext(t);
   puts("fn2 2");
   sleep(1000);
-  jump_fcontext(t.ctx, nullptr);
+  jumpContext(t);
 }
 
 int main(int argc, char** argv) {
-  fcontext_stack_t s1 = create_fcontext_stack();
-  fcontext_stack_t s2 = create_fcontext_stack();
+  ULTContextType s1 = createStack();
+  ULTContextType s2 = createStack();
 
-  ctx1 = make_fcontext_stack(s1, foo);
-  ctx2 = make_fcontext_stack(s2, bar);
+  ctx1 = makeContext(s1, fn1);
+  ctx2 = makeContext(s2, fn2);
 
-  jump_fcontext(ctx, nullptr);
+  puts("main 1");
+  auto t1 = jumpContext(ctx1);
+  puts("main 2");
+  auto t2 = jumpContext(ctx2);
+  puts("main 3");
+  jumpContext(t1);
+  puts("main 4");
+  jumpContext(t2);
   puts("END");
 
-  destroy_fcontext_stack(&s);
-  destroy_fcontext_stack(&s2);
+  destroyStack(s1);
+  destroyStack(s2);
 
   return 0;
 }
