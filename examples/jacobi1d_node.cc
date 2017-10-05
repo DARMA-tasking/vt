@@ -28,9 +28,10 @@ static constexpr double bound_l_val[1] = { 1.0 };
 static constexpr double bound_r_val[1] = { -1.0 };
 static double* local_resid_buf = nullptr;
 static double resid_val = 0.0;
+static double max_resid_val = 0.0;
 
-static constexpr JacobiSizeType const total_size = 1024;
-static constexpr JacobiSizeType const max_iterations = 128;
+static JacobiSizeType total_size = 1024;
+static JacobiSizeType max_iterations = 128;
 static constexpr double const error_tolerance = 0.01;
 
 static int cur_iter = 0;
@@ -75,16 +76,18 @@ static void calcResid(ActionBoolType action) {
     // obviously very unscalable, but just for the sake of testing
     theRDMA->getTypedDataInfoBuf(
       jac_resid, local_resid_buf, num_nodes, 0, no_tag, [=]{
+        bool found_greater = false;
+        max_resid_val = 0.0;
         for (int i = 0; i < num_nodes; i++) {
           #if DEBUG_JACOBI
           printf("%d: resid:i=%d:val=%f:iter=%d\n", my_node, i, local_resid_buf[i], cur_iter);
           #endif
+          max_resid_val = std::max(max_resid_val, local_resid_buf[i]);
           if (local_resid_buf[i] > error_tolerance) {
-            action(false);
-            return;
+            found_greater = true;
           }
         }
-        action(true);
+        action(!found_greater);
       }
     );
   } else {
@@ -184,6 +187,10 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
   );
   #endif
 
+  if (my_node == 0) {
+    printf("iter=%d: starting: max_residual=%f\n", cur_iter, max_resid_val);
+  }
+
   if (cur_iter == 0) {
     if (my_node == 0) {
       t1[0] = t2[0] = bound_l_val[0];
@@ -219,14 +226,40 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
   });
 }
 
+static int exitEarly(NodeType node, int exit_code, char* reason) {
+  if (node == 0) {
+    fprintf(stderr, "%s\n", reason);
+    fflush(stderr);
+  }
+
+  CollectiveOps::finalize();
+  return exit_code;
+}
+
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
   my_node = theContext->getNode();
   num_nodes = theContext->getNumNodes();
 
+  if (argc != 3) {
+    char buf[256];
+    sprintf(buf, "usage: %s <total-num-elements> <max-iterations>", argv[0]);
+    return exitEarly(my_node, 1, buf);
+  }
+
+  if (num_nodes == 1) {
+    char buf[256];
+    sprintf(buf, "Need >= 2 ranks:\n mpirun-mpich-clang -n 2 %s", argv[0]);
+    return exitEarly(my_node, 1, buf);
+  }
+
+  total_size = atoi(argv[1]);
+  max_iterations = atoi(argv[2]);
+
   blk_size = total_size / num_nodes;
 
+  assert(blk_size * num_nodes == total_size);
   assert(blk_size * num_nodes == total_size);
 
   t1 = new double[blk_size + 2];
