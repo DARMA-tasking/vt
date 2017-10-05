@@ -25,23 +25,21 @@ struct ContextTransfer {
   fcontext_transfer_t transfer;
 };
 
-struct ContextStack {
+struct ULTContext {
   bool page_alloced = false;
   fcontext_stack_t stack;
 
-  ContextStack(fcontext_stack_t in_stack)
-    : stack(in_stack)
+  ULTContext(fcontext_stack_t in_stack, bool const in_page_alloced)
+    : page_alloced(in_page_alloced), stack(in_stack)
   { }
 
-  ContextStack(void* in_ptr, size_t in_size, bool const in_page_alloced)
+  ULTContext(void* in_ptr, size_t in_size, bool const in_page_alloced)
     : page_alloced(in_page_alloced), stack{in_ptr, in_size}
   { }
+
+  ULTContext(ULTContext const&) = default;
+  ULTContext(ULTContext&&) = default;
 };
-
-using ContextStackPtr = std::unique_ptr<ContextStack>;
-
-// using ContextCallbackFn = void (*)(FContextTransfer);
-// using ContextTransferFn = FContextTransfer(*)(FContextTransfer);
 
 inline ContextTransfer jumpContext(Context const to, void* vp) {
   return ContextTransfer{jump_fcontext(to.ctx, vp)};
