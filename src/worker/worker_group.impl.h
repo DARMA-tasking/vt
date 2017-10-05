@@ -81,7 +81,7 @@ void WorkerGroupAny<WorkerT>::spawnWorkers() {
 
   for (int i = 0; i < num_workers_; i++) {
     WorkerIDType const worker_id = i;
-    workers_[i] = std::make_unique<WorkerT>(worker_id);
+    workers_[i] = std::make_unique<WorkerT>(worker_id, num_workers_);
   }
 
   for (auto&& elm : workers_) {
