@@ -7,7 +7,7 @@
 #include <memory>
 #include <cstdlib>
 
-#define DEBUG_PRINT 0
+#define DEBUG_PRINT 1
 
 namespace fcontext {
 
