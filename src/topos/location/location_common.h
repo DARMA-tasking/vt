@@ -1,17 +1,17 @@
 
-#if ! defined __RUNTIME_TRANSPORT_LOCATION_COMMON__
-#define __RUNTIME_TRANSPORT_LOCATION_COMMON__
-
-#include "config.h"
-#include "message.h"
+#if !defined INCLUDED_TOPOS_LOCATION_COMMON
+#define INCLUDED_TOPOS_LOCATION_COMMON
 
 #include <functional>
 #include <cstdint>
 
+#include "config.h"
+#include "message.h"
+
 namespace vt { namespace location {
 
 using NodeActionType = std::function<void(NodeType)>;
-using LocMsgActionType = std::function<void(BaseMessage*)>;
+using LocMsgActionType = std::function<void(BaseMessage * )>;
 using LocEventID = int64_t;
 
 static constexpr LocEventID const no_location_event_id = -1;
@@ -27,6 +27,6 @@ using LocInstType = int16_t;
 static constexpr LocInstType const no_loc_inst = -1;
 static LocInstType cur_loc_inst = 0;
 
-}} // end namespace vt::location
+}}  // end namespace vt::location
 
-#endif /*__RUNTIME_TRANSPORT_LOCATION_COMMON__*/
+#endif  /*INCLUDED_TOPOS_LOCATION_COMMON*/

@@ -1,6 +1,10 @@
 
-#if ! defined __RUNTIME_TRANSPORT_LOCATION_IMPL__
-#define __RUNTIME_TRANSPORT_LOCATION_IMPL__
+#if !defined INCLUDED_TOPOS_LOCATION_IMP
+#define INCLUDED_TOPOS_LOCATION_IMP
+
+#include <cstdint>
+#include <memory>
+#include <unordered_map>
 
 #include "config.h"
 #include "context.h"
@@ -9,34 +13,30 @@
 #include "location_entity.h"
 #include "location.h"
 
-#include <cstdint>
-#include <memory>
-#include <unordered_map>
-
 namespace vt { namespace location {
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord() :
-  this_inst(cur_loc_inst++), recs_(default_max_cache_size)
-{
-  LocationManager::insertInstance(this_inst, static_cast<LocationCoord*>(this));
+    this_inst(cur_loc_inst++), recs_(default_max_cache_size) {
+  LocationManager::insertInstance(this_inst,
+                                  static_cast<LocationCoord *>(this));
 }
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
-  EntityID const& id, LocMsgActionType msg_action
+    EntityID const& id, LocMsgActionType msg_action
 ) {
   auto const& this_node = theContext->getNode();
   auto reg_iter = local_registered_.find(id);
 
   assert(
-    reg_iter == local_registered_.end() and
-    "EntityLocationCoord entity should not already be registered"
+      reg_iter == local_registered_.end() and
+          "EntityLocationCoord entity should not already be registered"
   );
 
   debug_print(
-    location, node,
-    "EntityLocationCoord: registerEntity: id=%d\n", id
+      location, node,
+      "EntityLocationCoord: registerEntity: id=%d\n", id
   );
 
   local_registered_.insert(id);
@@ -45,18 +45,19 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   if (msg_action != nullptr) {
     assert(
-      local_registered_msg_han_.find(id) == local_registered_msg_han_.end() and
-      "Entitiy should not exist in local registered msg handler"
+        local_registered_msg_han_.find(id) == local_registered_msg_han_.end()
+            and
+                "Entitiy should not exist in local registered msg handler"
     );
     local_registered_msg_han_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(id),
-      std::forward_as_tuple(LocEntityMsg{id,msg_action})
+        std::piecewise_construct,
+        std::forward_as_tuple(id),
+        std::forward_as_tuple(LocEntityMsg{id, msg_action})
     );
   }
 
   // trigger any pending actions upon registration
-  auto pending_lookup_iter =  pending_lookups_.find(id);
+  auto pending_lookup_iter = pending_lookups_.find(id);
 
   if (pending_lookup_iter != pending_lookups_.end()) {
     for (auto&& pending_action : pending_lookup_iter->second) {
@@ -71,13 +72,13 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
   auto reg_iter = local_registered_.find(id);
 
   assert(
-    reg_iter != local_registered_.end() and
-    "EntityLocationCoord entity must be registered"
+      reg_iter != local_registered_.end() and
+          "EntityLocationCoord entity must be registered"
   );
 
   debug_print(
-    location, node,
-    "EntityLocationCoord: unregisterEntity: id=%d\n", id
+      location, node,
+      "EntityLocationCoord: unregisterEntity: id=%d\n", id
   );
 
   local_registered_.erase(reg_iter);
@@ -95,7 +96,7 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityMigrated(
-  EntityID const& id, NodeType const& new_node
+    EntityID const& id, NodeType const& new_node
 ) {
   auto reg_iter = local_registered_.find(id);
 
@@ -108,17 +109,16 @@ void EntityLocationCoord<EntityID>::entityMigrated(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntityMigrated(
-  EntityID const& id, NodeType const& from, LocMsgActionType msg_action
+    EntityID const& id, NodeType const& from, LocMsgActionType msg_action
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future
   return registerMigrated(id, msg_action);
 }
 
-
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::insertPendingEntityAction(
-  EntityID const& id, NodeActionType action
+    EntityID const& id, NodeActionType action
 ) {
   // this is the home node and there is no record on this entity
   auto pending_iter = pending_lookups_.find(id);
@@ -126,9 +126,9 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
     pending_iter->second.push_back(action);
   } else {
     pending_lookups_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(id),
-      std::forward_as_tuple(ActionListType{action})
+        std::piecewise_construct,
+        std::forward_as_tuple(id),
+        std::forward_as_tuple(ActionListType{action})
     );
   }
 }
@@ -136,8 +136,8 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
-  EntityID const& id, NodeType const& home_node, MessageT* msg,
-  ActionType action
+    EntityID const& id, NodeType const& home_node, MessageT *msg,
+    ActionType action
 ) {
   auto const& this_node = theContext->getNode();
   NodeType route_to_node = uninitialized_destination;
@@ -146,8 +146,8 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   bool const found = reg_iter != local_registered_.end();
 
   debug_print(
-    location, node,
-    "EntityLocationCoord: routeMsgEager: found=%s\n", print_bool(found)
+      location, node,
+      "EntityLocationCoord: routeMsgEager: found=%s\n", print_bool(found)
   );
 
   if (found) {
@@ -174,14 +174,14 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   }
 
   assert(
-    route_to_node != uninitialized_destination and
-    "Node to route to must be set by this point"
+      route_to_node != uninitialized_destination and
+          "Node to route to must be set by this point"
   );
 
   debug_print(
-    location, node,
-    "EntityLocationCoord: routeMsgEager: id=%d, home_node=%d, route_node=%d\n",
-    id, home_node, route_to_node
+      location, node,
+      "EntityLocationCoord: routeMsgEager: id=%d, home_node=%d, route_node=%d\n",
+      id, home_node, route_to_node
   );
 
   return routeMsgNode<MessageT>(id, home_node, route_to_node, msg, action);
@@ -189,7 +189,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::getLocation(
-  EntityID const& id, NodeType const& home_node, NodeActionType const& action
+    EntityID const& id, NodeType const& home_node, NodeActionType const& action
 ) {
   auto const& this_node = theContext->getNode();
 
@@ -197,8 +197,8 @@ void EntityLocationCoord<EntityID>::getLocation(
 
   if (reg_iter != local_registered_.end()) {
     debug_print(
-      location, node,
-      "EntityLocationCoord: getLocation: id=%d, entity is local\n", id
+        location, node,
+        "EntityLocationCoord: getLocation: id=%d, entity is local\n", id
     );
 
     action(this_node);
@@ -208,9 +208,9 @@ void EntityLocationCoord<EntityID>::getLocation(
     bool const& rec_exists = recs_.exists(id);
 
     debug_print(
-      location, node,
-      "EntityLocationCoord: getLocation: id=%d, home_node=%d, rec_exists=%s\n",
-      id, home_node, print_bool(rec_exists)
+        location, node,
+        "EntityLocationCoord: getLocation: id=%d, home_node=%d, rec_exists=%s\n",
+        id, home_node, print_bool(rec_exists)
     );
 
     if (not rec_exists) {
@@ -218,13 +218,13 @@ void EntityLocationCoord<EntityID>::getLocation(
         auto const& event_id = fst_location_event_id++;
         auto msg = new LocMsgType(this_inst, id, event_id, this_node, home_node);
         theMsg->sendMsg<LocMsgType, getLocationHandler>(
-          home_node, msg, [=]{ delete msg; }
+            home_node, msg, [=] { delete msg; }
         );
         // save a pending action when information about location arrives
         pending_actions_.emplace(
-          std::piecewise_construct,
-          std::forward_as_tuple(event_id),
-          std::forward_as_tuple(PendingType{id,action})
+            std::piecewise_construct,
+            std::forward_as_tuple(event_id),
+            std::forward_as_tuple(PendingType{id, action})
         );
       } else {
         // this is the home node and there is no record on this entity
@@ -238,8 +238,8 @@ void EntityLocationCoord<EntityID>::getLocation(
         action(this_node);
       } else if (rec.isRemote()) {
         debug_print(
-          location, node,
-          "EntityLocationCoord: getLocation: id=%d, entity is remote\n", id
+            location, node,
+            "EntityLocationCoord: getLocation: id=%d, entity is remote\n", id
         );
 
         action(rec.getRemoteNode());
@@ -251,29 +251,29 @@ void EntityLocationCoord<EntityID>::getLocation(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
-  EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-  MessageT* msg, ActionType action
+    EntityID const& id, NodeType const& home_node, NodeType const& to_node,
+    MessageT *msg, ActionType action
 ) {
   auto const& this_node = theContext->getNode();
 
   debug_print(
-    location, node,
-    "EntityLocationCoord: routeMsgNode: id=%d, to_node=%d, node=%d: inst=%d\n",
-    id, to_node, this_node, this_inst
+      location, node,
+      "EntityLocationCoord: routeMsgNode: id=%d, to_node=%d, node=%d: inst=%d\n",
+      id, to_node, this_node, this_inst
   );
 
   if (to_node != this_node) {
-    auto entity_msg = static_cast<EntityMsgType<MessageT>*>(msg);
+    auto entity_msg = static_cast<EntityMsgType <MessageT> *>(msg);
     // set the instance on the message to deliver to the correct manager
     entity_msg->setLocInst(this_inst);
     // send to the node discovered by the location manager
     theMsg->sendMsg<MessageT, msgHandler>(to_node, entity_msg, action);
   } else {
-    auto trigger_msg_handler_action = [=](EntityID const& id){
+    auto trigger_msg_handler_action = [=](EntityID const& id) {
       auto reg_han_iter = local_registered_msg_han_.find(id);
       assert(
-        reg_han_iter != local_registered_msg_han_.end() and
-        "Message handler must exist for location manager routed msg"
+          reg_han_iter != local_registered_msg_han_.end() and
+              "Message handler must exist for location manager routed msg"
       );
       reg_han_iter->second.applyRegisteredActionMsg(msg);
     };
@@ -281,15 +281,15 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     auto reg_iter = local_registered_.find(id);
 
     debug_print(
-      location, node,
-      "EntityLocationCoord: routeMsgNode: id=%d: size=%ld\n",
-      id, local_registered_.size()
+        location, node,
+        "EntityLocationCoord: routeMsgNode: id=%d: size=%ld\n",
+        id, local_registered_.size()
     );
 
     if (reg_iter != local_registered_.end()) {
       debug_print(
-        location, node,
-        "EntityLocationCoord: routeMsgNode: id=%d: running actions\n", id
+          location, node,
+          "EntityLocationCoord: routeMsgNode: id=%d: running actions\n", id
       );
 
       trigger_msg_handler_action(id);
@@ -298,8 +298,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       }
     } else {
       debug_print(
-        location, node,
-        "EntityLocationCoord: routeMsgNode: id=%d: buffering\n", id
+          location, node,
+          "EntityLocationCoord: routeMsgNode: id=%d: buffering\n", id
       );
 
       // buffer the message here, the entity will be registered in the future
@@ -316,7 +316,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
-  EntityID const& id, NodeType const& home_node, MessageT* msg, ActionType act
+    EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act
 ) {
   // set field for location routed message
   msg->entity_id = id;
@@ -327,9 +327,9 @@ void EntityLocationCoord<EntityID>::routeMsg(
   bool const& use_eager = not is_large_msg;
 
   debug_print(
-    location, node,
-    "routeMsg: id=%d, home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
-    id, home_node, msg_size, print_bool(is_large_msg), print_bool(use_eager)
+      location, node,
+      "routeMsg: id=%d, home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
+      id, home_node, msg_size, print_bool(is_large_msg), print_bool(use_eager)
   );
 
   msg->setLocInst(this_inst);
@@ -346,21 +346,21 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::updatePendingRequest(
-  LocEventID const& event_id, NodeType const& node
+    LocEventID const& event_id, NodeType const& node
 ) {
   auto pending_iter = pending_actions_.find(event_id);
 
   assert(
-    pending_iter != pending_actions_.end() and "Event must exist in pending"
+      pending_iter != pending_actions_.end() and "Event must exist in pending"
   );
 
   auto const& entity = pending_iter->second.entity;
 
   debug_print(
-    location, node,
-    "EntityLocationCoord: updatePendingRequest: event_id=%lld, entity=%d, "
-    "node=%d\n",
-    event_id, entity, node
+      location, node,
+      "EntityLocationCoord: updatePendingRequest: event_id=%lld, entity=%d, "
+          "node=%d\n",
+      event_id, entity, node
   );
 
   recs_.insert(entity, LocRecType{entity, eLocState::Remote, node});
@@ -377,53 +377,53 @@ void EntityLocationCoord<EntityID>::printCurrentCache() const {
 
 template <typename EntityID>
 template <typename MessageT>
-/*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT* msg) {
+/*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT *msg) {
   auto const& entity_id = msg->entity_id;
   auto const& home_node = msg->home_node;
   auto const& inst = msg->loc_man_inst;
 
   debug_print(
-    location, node,
-    "msgHandler: msg=%p, ref=%d, loc_inst=%d\n",
-    msg, envelopeGetRef(msg->env), inst
+      location, node,
+      "msgHandler: msg=%p, ref=%d, loc_inst=%d\n",
+      msg, envelopeGetRef(msg->env), inst
   );
 
-  LocationCoord* loc = LocationManager::getInstance(inst);
-  auto loc_entity = static_cast<EntityLocationCoord<EntityID>*>(loc);
+  LocationCoord *loc = LocationManager::getInstance(inst);
+  auto loc_entity = static_cast<EntityLocationCoord<EntityID> *>(loc);
   loc_entity->routeMsg(entity_id, home_node, msg);
 }
 
 template <typename EntityID>
-/*static*/ void EntityLocationCoord<EntityID>::getLocationHandler(LocMsgType* msg) {
+/*static*/ void EntityLocationCoord<EntityID>::getLocationHandler(LocMsgType *msg) {
   auto const& event_id = msg->loc_event;
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
   auto const& home_node = msg->home_node;
   auto const& ask_node = msg->ask_node;
 
-  LocationCoord* loc_coord = LocationManager::getInstance(inst);
-  auto loc = static_cast<EntityLocationCoord<EntityID>*>(loc_coord);
+  LocationCoord *loc_coord = LocationManager::getInstance(inst);
+  auto loc = static_cast<EntityLocationCoord<EntityID> *>(loc_coord);
 
   loc->getLocation(entity, home_node, [=](NodeType node) {
     auto msg = new LocMsgType(inst, entity, event_id, ask_node, home_node);
     msg->setResolvedNode(node);
     theMsg->sendMsg<LocMsgType, updateLocation>(
-      ask_node, msg, [=]{ delete msg; }
+        ask_node, msg, [=] { delete msg; }
     );
   });
 }
 
 template <typename EntityID>
-/*static*/ void EntityLocationCoord<EntityID>::updateLocation(LocMsgType* msg) {
+/*static*/ void EntityLocationCoord<EntityID>::updateLocation(LocMsgType *msg) {
   auto const& event_id = msg->loc_event;
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
 
-  LocationCoord* loc_coord = LocationManager::getInstance(inst);
-  auto loc = static_cast<EntityLocationCoord<EntityID>*>(loc_coord);
+  LocationCoord *loc_coord = LocationManager::getInstance(inst);
+  auto loc = static_cast<EntityLocationCoord<EntityID> *>(loc_coord);
   loc->updatePendingRequest(event_id, msg->resolved_node);
 }
 
-}} // end namespace vt::location
+}}  // end namespace vt::location
 
-#endif /*__RUNTIME_TRANSPORT_LOCATION_IMPL__*/
+#endif  /*INCLUDED_TOPOS_LOCATION_IMP*/

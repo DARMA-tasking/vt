@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_LOCATION_PENDING__
-#define __RUNTIME_TRANSPORT_LOCATION_PENDING__
+#if !defined INCLUDED_TOPOS_LOCATION_PENDING
+#define INCLUDED_TOPOS_LOCATION_PENDING
 
 #include "config.h"
 #include "location_common.h"
@@ -13,15 +13,14 @@ struct PendingLocationLookup {
   NodeActionType action = nullptr;
 
   PendingLocationLookup(
-    EntityID const& in_entity, NodeActionType const& in_action
-  ) : entity(in_entity), action(in_action)
-  { }
+      EntityID const& in_entity, NodeActionType const& in_action
+  ) : entity(in_entity), action(in_action) {}
 
   void applyNodeAction(NodeType const& node) {
     action(node);
   }
 };
 
-}} // end namespace vt::location
+}}  // end namespace vt::location
 
-#endif /*__RUNTIME_TRANSPORT_LOCATION_PENDING__*/
+#endif  /*INCLUDED_TOPOS_LOCATION_PENDING*/

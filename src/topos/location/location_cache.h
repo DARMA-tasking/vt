@@ -1,10 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_LOCATION_CACHE__
-#define __RUNTIME_TRANSPORT_LOCATION_CACHE__
-
-#include "config.h"
-#include "context.h"
-#include "location_common.h"
+#if !defined INCLUDED_TOPOS_LOCATION_CACHE
+#define INCLUDED_TOPOS_LOCATION_CACHE
 
 #include <cstdint>
 #include <memory>
@@ -13,6 +9,10 @@
 #include <unordered_map>
 #include <iostream>
 #include <sstream>
+
+#include "config.h"
+#include "context.h"
+#include "location_common.h"
 
 namespace vt { namespace location {
 
@@ -24,8 +24,7 @@ struct LocationCache {
   using LookupContainerType = std::unordered_map<KeyT, ValueIter>;
 
   explicit LocationCache(LocationSizeType const& in_max_size)
-    : max_size_(in_max_size)
-  { }
+      : max_size_(in_max_size) {}
 
   bool exists(KeyT const& key) const {
     auto iter = lookup_.find(key);
@@ -58,9 +57,9 @@ struct LocationCache {
     auto iter = lookup_.find(key);
 
     debug_print(
-      location, node,
-      "location cache: insert: found=%s, size=%ld\n",
-      print_bool(iter != lookup_.end()), lookup_.size()
+        location, node,
+        "location cache: insert: found=%s, size=%ld\n",
+        print_bool(iter != lookup_.end()), lookup_.size()
     );
 
     if (iter == lookup_.end()) {
@@ -73,12 +72,11 @@ struct LocationCache {
       cache_.push_front(std::make_tuple(key, value));
 
       lookup_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(key),
-        std::forward_as_tuple(cache_.begin())
+          std::piecewise_construct,
+          std::forward_as_tuple(key),
+          std::forward_as_tuple(cache_.begin())
       );
-    }
-    else {
+    } else {
       iter->second->second = value;
       cache_.splice(cache_.cbegin(), cache_, iter->second);
     }
@@ -103,11 +101,11 @@ struct LocationCache {
     }
 
     debug_print(
-      location, node, "printing cache: %s", stream.str().c_str()
+        location, node, "printing cache: %s", stream.str().c_str()
     );
   }
 
-private:
+ private:
   // container for quick lookup
   LookupContainerType lookup_;
 
@@ -118,6 +116,6 @@ private:
   LocationSizeType max_size_;
 };
 
-}} // end namespace vt::location
+}}  // end namespace vt::location
 
-#endif /*__RUNTIME_TRANSPORT_LOCATION__*/
+#endif  /*INCLUDED_TOPOS_LOCATION_CACHE*/

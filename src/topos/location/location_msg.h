@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_LOCATION_MSG__
-#define __RUNTIME_TRANSPORT_LOCATION_MSG__
+#if !defined INCLUDED_TOPOS_LOCATION_MSG
+#define INCLUDED_TOPOS_LOCATION_MSG
 
 #include "config.h"
 #include "message.h"
@@ -18,12 +18,11 @@ struct LocationMsg : vt::Message {
   NodeType resolved_node = uninitialized_destination;
 
   LocationMsg(
-    LocInstType const& in_loc_man_inst, EntityID const& in_entity,
-    LocEventID const& in_loc_event, NodeType const& in_ask_node,
-    NodeType in_home_node
+      LocInstType const& in_loc_man_inst, EntityID const& in_entity,
+      LocEventID const& in_loc_event, NodeType const& in_ask_node,
+      NodeType in_home_node
   ) : loc_man_inst(in_loc_man_inst), entity(in_entity), loc_event(in_loc_event),
-      ask_node(in_ask_node), home_node(in_home_node)
-  { }
+      ask_node(in_ask_node), home_node(in_home_node) {}
 
   void setResolvedNode(NodeType const& node) {
     resolved_node = node;
@@ -39,8 +38,7 @@ struct EntityMsg : ActiveMessageT {
   EntityMsg() = default;
 
   explicit EntityMsg(EntityID const& in_entity_id, NodeType const& in_home_node)
-    : ActiveMessageT(), entity_id(in_entity_id), home_node(in_home_node)
-  { }
+      : ActiveMessageT(), entity_id(in_entity_id), home_node(in_home_node) {}
 
   EntityID getEntity() const {
     return entity_id;
@@ -55,13 +53,13 @@ struct EntityMsg : ActiveMessageT {
   }
 };
 
-}} // end namespace vt::location
+}}  // end namespace vt::location
 
 namespace vt {
 
 template <typename EntityID, typename ActiveMessageT>
 using LocationRoutedMsg = location::EntityMsg<EntityID, ActiveMessageT>;
 
-} // end namespace::vt
+}  // end namespace::vt
 
-#endif /*__RUNTIME_TRANSPORT_LOCATION_MSG__*/
+#endif  /*INCLUDED_TOPOS_LOCATION_MSG*/

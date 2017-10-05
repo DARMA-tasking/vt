@@ -13,7 +13,7 @@
 #include "context_vrtmessage.h"
 #include "auto_registry_vc.h"
 
-#include "location/location.h"
+#include "topos/location/location.h"
 
 #include "context_vrtproxy.h"
 

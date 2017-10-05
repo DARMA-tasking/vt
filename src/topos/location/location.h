@@ -1,6 +1,12 @@
 
-#if ! defined __RUNTIME_TRANSPORT_LOCATION__
-#define __RUNTIME_TRANSPORT_LOCATION__
+#if !defined INCLUDED_TOPOS_LOCATION
+#define INCLUDED_TOPOS_LOCATION
+
+#include <cstdint>
+#include <memory>
+#include <vector>
+#include <unordered_set>
+#include <unordered_map>
 
 #include "config.h"
 #include "context.h"
@@ -10,12 +16,6 @@
 #include "location_cache.h"
 #include "location_pending.h"
 #include "location_entity.h"
-
-#include <cstdint>
-#include <memory>
-#include <vector>
-#include <unordered_set>
-#include <unordered_map>
 
 namespace vt { namespace location {
 
@@ -65,8 +65,8 @@ struct EntityLocationCoord : LocationCoord {
    *   3) Node 1: registerEntityMigrated(my_id, 0, ...);
    */
   void registerEntityMigrated(
-    EntityID const& id, NodeType const& __attribute__((unused)) from,
-    LocMsgActionType msg_action = nullptr
+      EntityID const& id, NodeType const& __attribute__((unused)) from,
+      LocMsgActionType msg_action = nullptr
   );
 
   /*
@@ -86,39 +86,41 @@ struct EntityLocationCoord : LocationCoord {
    * to `action' reflects the current known state, which may be remote.
    */
   void getLocation(
-    EntityID const& id, NodeType const& home_node, NodeActionType const& action
+      EntityID const& id,
+      NodeType const& home_node,
+      NodeActionType const& action
   );
 
   template <typename MessageT>
   void routeMsg(
-    EntityID const& id, NodeType const& home_node, MessageT* m,
-    ActionType action = nullptr
+      EntityID const& id, NodeType const& home_node, MessageT *m,
+      ActionType action = nullptr
   );
 
   void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
   void printCurrentCache() const;
 
-private:
+ private:
   template <typename MessageT>
-  static void msgHandler(MessageT* msg);
-  static void getLocationHandler(LocMsgType* msg);
-  static void updateLocation(LocMsgType* msg);
+  static void msgHandler(MessageT *msg);
+  static void getLocationHandler(LocMsgType *msg);
+  static void updateLocation(LocMsgType *msg);
 
   template <typename MessageT>
   void routeMsgEager(
-    EntityID const& id, NodeType const& home_node, MessageT* msg,
-    ActionType action = nullptr
+      EntityID const& id, NodeType const& home_node, MessageT *msg,
+      ActionType action = nullptr
   );
 
   template <typename MessageT>
   void routeMsgNode(
-    EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-    MessageT* msg, ActionType action = nullptr
+      EntityID const& id, NodeType const& home_node, NodeType const& to_node,
+      MessageT *msg, ActionType action = nullptr
   );
 
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
 
-private:
+ private:
   LocInstType this_inst = no_loc_inst;
 
   // message handlers for local registrations
@@ -138,30 +140,31 @@ private:
 };
 
 struct LocationManager {
-  using LocCoordPtrType = LocationCoord*;
+  using LocCoordPtrType = LocationCoord *;
   using LocInstContainerType = std::vector<LocCoordPtrType>;
   using VirtualLocMan = EntityLocationCoord<int32_t>;
   using VirtualContextLocMan = EntityLocationCoord<VrtContext_ProxyType>;
 
-  std::unique_ptr<VirtualLocMan> virtual_loc = std::make_unique<VirtualLocMan>();
+  std::unique_ptr<VirtualLocMan>
+      virtual_loc = std::make_unique<VirtualLocMan>();
   std::unique_ptr<VirtualContextLocMan> vrtContextLoc =
-    std::make_unique<VirtualContextLocMan>();
+      std::make_unique<VirtualContextLocMan>();
 
   static void insertInstance(int const i, LocCoordPtrType const& ptr);
   static LocCoordPtrType getInstance(int const inst);
 
-private:
+ private:
   static LocInstContainerType loc_insts;
 };
 
-}} // end namespace vt::location
+}}  // end namespace vt::location
 
 namespace vt {
 
 extern std::unique_ptr<location::LocationManager> theLocMan;
 
-}
+}  // end namespace vt
 
 #include "location.impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_LOCATION__*/
+#endif  /*INCLUDED_TOPOS_LOCATION*/

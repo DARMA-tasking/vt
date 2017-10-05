@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "messaging/message.h"
-#include "location/location_msg.h"
+#include "topos/location/location_msg.h"
 
 
 #include <cassert>
