@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <cstdio>
+#include <cstring>
 #include <functional>
 #include <memory>
 
@@ -242,10 +243,18 @@ int main(int argc, char** argv) {
   my_node = theContext->getNode();
   num_nodes = theContext->getNumNodes();
 
-  if (argc != 3) {
-    char buf[256];
-    sprintf(buf, "usage: %s <total-num-elements> <max-iterations>", argv[0]);
-    return exitEarly(my_node, 1, buf);
+  if (argc == 2 && strncmp(argv[1], "gtest", 5) == 0) {
+    total_size = 1024;
+    max_iterations = 64;
+  } else {
+    if (argc != 3) {
+      char buf[256];
+      sprintf(buf, "usage: %s <total-num-elements> <max-iterations>", argv[0]);
+      return exitEarly(my_node, 1, buf);
+    }
+
+    total_size = atoi(argv[1]);
+    max_iterations = atoi(argv[2]);
   }
 
   if (num_nodes == 1) {
@@ -253,9 +262,6 @@ int main(int argc, char** argv) {
     sprintf(buf, "Need >= 2 ranks:\n mpirun-mpich-clang -n 2 %s", argv[0]);
     return exitEarly(my_node, 1, buf);
   }
-
-  total_size = atoi(argv[1]);
-  max_iterations = atoi(argv[2]);
 
   blk_size = total_size / num_nodes;
 

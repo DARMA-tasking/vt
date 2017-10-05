@@ -156,6 +156,7 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
   add_test_for_example(
     ${EXAMPLE}
     ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
+    gtest
   )
 
   target_link_libraries(
