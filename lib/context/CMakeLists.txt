@@ -5,7 +5,12 @@ set(CMAKE_CXX_STANDARD 14)
 
 enable_language(CXX ASM)
 
+include (CTest)
+enable_testing()
+
+
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 set(PROJECT_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 file(
@@ -54,22 +59,106 @@ install(FILES ${HEADER_FILES} DESTINATION include)
 
 include_directories(${PROJECT_SOURCE_DIR})
 
-add_executable(
-  test_fcontext
-  ${PROJECT_TEST_DIR}/test_fcontext.cc
+set(PROJECT_EXAMPLE_C_DIR ${PROJECT_EXAMPLE_DIR}/c_interface)
+set(PROJECT_EXAMPLE_CXX_DIR ${PROJECT_EXAMPLE_DIR}/cxx_interface)
+
+file(
+  GLOB
+  PROJECT_C_EXAMPLES
+  RELATIVE
+  "${PROJECT_EXAMPLE_C_DIR}"
+  "${PROJECT_EXAMPLE_C_DIR}/*.cc"
 )
 
-target_link_libraries(
-  test_fcontext
-  ${FCONTEXT_LIBRARY}
+file(
+  GLOB
+  PROJECT_CXX_EXAMPLES
+  RELATIVE
+  "${PROJECT_EXAMPLE_CXX_DIR}"
+  "${PROJECT_EXAMPLE_CXX_DIR}/*.cc"
 )
 
-add_executable(
-  test_fcontext_cpp
-  ${PROJECT_TEST_DIR}/test_fcontext_cpp.cc
+file(
+  GLOB
+  PROJECT_EXAMPLE_TOP_HEADERS
+  RELATIVE
+  "${PROJECT_EXAMPLE_DIR}"
+  "${PROJECT_EXAMPLE_DIR}/*.h"
 )
 
-target_link_libraries(
-  test_fcontext_cpp
-  ${FCONTEXT_LIBRARY}
+file(
+  GLOB
+  PROJECT_EXAMPLE_TOP_IMPL
+  RELATIVE
+  "${PROJECT_EXAMPLE_DIR}"
+  "${PROJECT_EXAMPLE_DIR}/*.cc"
 )
+
+include_directories(${PROJECT_EXAMPLE_DIR})
+
+message("PROJECT_EXAMPLE_DIR=${PROJECT_EXAMPLE_DIR}")
+message("PROJECT_EXAMPLE_TOP_HEADERS=${PROJECT_EXAMPLE_TOP_HEADERS}")
+message("PROJECT_EXAMPLE_TOP_IMPL=${PROJECT_EXAMPLE_TOP_IMPL}")
+message("PROJECT_EXAMPLE_C_DIR=${PROJECT_EXAMPLE_C_DIR}")
+message("PROJECT_EXAMPLE_CXX_DIR=${PROJECT_EXAMPLE_CXX_DIR}")
+
+macro(add_test_for_example test_name test_exec)
+  foreach(PROC ${PROC_TEST_LIST})
+    add_test(
+      ${test_name}_${PROC}
+      # ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
+      ${test_exec} ${ARGN}
+    )
+
+    set_tests_properties(
+      ${test_name}_${PROC}
+      PROPERTIES TIMEOUT 300 FAIL_REGULAR_EXPRESSION "FAILED;WARNING"
+    )
+  endforeach()
+endmacro()
+
+set(PROJECT_EXAMPLE_TOP_IMPL_FILES )
+set(PROJECT_EXAMPLE_TOP_HEADER_FILES )
+
+foreach(FILE ${PROJECT_EXAMPLE_TOP_IMPL})
+  list(APPEND PROJECT_EXAMPLE_TOP_IMPL_FILES "${PROJECT_EXAMPLE_DIR}/${FILE}")
+endforeach()
+
+foreach(FILE ${PROJECT_EXAMPLE_TOP_HEADERS})
+  list(APPEND PROJECT_EXAMPLE_TOP_HEADER_FILES "${PROJECT_EXAMPLE_DIR}/${FILE}")
+endforeach()
+
+foreach(EXAMPLE_FULL ${PROJECT_C_EXAMPLES})
+  GET_FILENAME_COMPONENT(
+    EXAMPLE
+    ${EXAMPLE_FULL}
+    NAME_WE
+  )
+
+  add_executable(
+    ${EXAMPLE}
+    ${PROJECT_EXAMPLE_C_DIR}/${EXAMPLE}.cc
+    ${PROJECT_EXAMPLE_TOP_HEADER_FILES}
+    ${PROJECT_EXAMPLE_TOP_IMPL_FILES}
+  )
+
+  add_test_for_example(
+    ${EXAMPLE}
+    ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
+  )
+
+  target_link_libraries(
+    ${EXAMPLE}
+    ${FCONTEXT_LIBRARY}
+  )
+endforeach()
+
+# add_executable(
+#   test_fcontext_cpp
+#   ${PROJECT_TEST_DIR}/test_fcontext_cpp.cc
+# )
+
+# target_link_libraries(
+#   test_fcontext_cpp
+#   ${FCONTEXT_LIBRARY}
+# )
