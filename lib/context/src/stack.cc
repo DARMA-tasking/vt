@@ -11,11 +11,17 @@
 
 #include <memory>
 
+#define DEBUG_PRINT 1
+
 namespace fcontext {
 
 FContextStackType allocateMallocStackInner(size_t const size_in) {
   size_t const size = size_in == 0 ? default_malloc_stack_size : size_in;
   void* const mem_ptr = malloc(size);
+
+  #if DEBUG_PRINT
+  printf("allocateMallocStackInner: mem_ptr=%p, size=%ld\n", mem_ptr, size);
+  #endif
 
   assert(mem_ptr != nullptr && "malloc failed to allocate memory");
 
@@ -91,10 +97,15 @@ ULTContextType createStack(size_t size, bool page_sized) {
 
 void destroyStackInner(fcontext_stack_t stack, bool is_page_alloced) {
   if (stack.sptr != nullptr) {
+
+    #if DEBUG_PRINT
+    printf("ptr=%p: is_page_alloced=%s\n", stack.sptr, is_page_alloced ? "true" : "false");
+    #endif
+
     if (is_page_alloced) {
       munmap(stack.sptr, stack.ssize);
     } else {
-      free(stack.sptr);
+      free(static_cast<char*>(stack.sptr) - stack.ssize);
     }
   }
 }

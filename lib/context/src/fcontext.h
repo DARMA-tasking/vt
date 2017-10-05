@@ -23,8 +23,10 @@ extern "C" {
   /**
    * Callback definition for context (coroutine)
    */
-  typedef void (*pfn_fcontext)(fcontext_transfer_t);
-  typedef fcontext_transfer_t(*tfn_fcontext)(fcontext_transfer_t);
+  using pfn_fcontext = void (*)(fcontext_transfer_t);
+  using tfn_fcontext = fcontext_transfer_t(*)(fcontext_transfer_t);
+  // typedef void (*pfn_fcontext)(fcontext_transfer_t);
+  // typedef fcontext_transfer_t(*tfn_fcontext)(fcontext_transfer_t);
 
   /**
    * Switches to another context
