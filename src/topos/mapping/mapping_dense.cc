@@ -1,7 +1,7 @@
 
 #include "config.h"
 #include "topos/index/index.h"
-#include "topos_mapping_dense.h"
+#include "mapping_dense.h"
 
 namespace vt { namespace mapping {
 
