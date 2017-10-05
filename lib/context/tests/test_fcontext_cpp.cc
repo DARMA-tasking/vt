@@ -7,7 +7,7 @@
 
 using namespace fcontext;
 
-static Context ctx;
+static Context ctx1;
 static Context ctx2;
 
 inline void sleep(uint32_t _ms) {
@@ -32,13 +32,13 @@ static void foo(fcontext_transfer_t t) {
 }
 
 int main(int argc, char** argv) {
-  ContextStackPtr s = createStack(16 * 1024);
-  ContextStackPtr s2 = createStack(0, true);
+  ULTContextType s1 = createStack(16 * 1024);
+  ULTContextType s2 = createStack(0, true);
 
-  ctx = makeContext(s->stack.sptr, s->stack.ssize, foo);
-  ctx2 = makeContext(s2->stack.sptr, s2->stack.ssize, bar);
+  ctx1 = makeContext(s1.stack.sptr, s1.stack.ssize, foo);
+  ctx2 = makeContext(s2.stack.sptr, s2.stack.ssize, bar);
 
-  jumpContext(ctx, NULL);
+  jumpContext(ctx1, NULL);
   puts("END");
 
   return 0;

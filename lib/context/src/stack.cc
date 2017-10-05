@@ -13,21 +13,20 @@
 
 namespace fcontext {
 
-ContextStackPtr allocateMallocStack(size_t const size) {
-  assert(size != 0 && "Size must be greater than zero");
+FContextStackType allocateMallocStackInner(size_t const size_in) {
+  size_t const size = size_in == 0 ? default_malloc_stack_size : size_in;
+  void* const mem_ptr = malloc(size);
 
-  void* mem_ptr = malloc(size);
+  assert(mem_ptr != nullptr && "malloc failed to allocate memory");
 
-  assert(mem_ptr != nullptr && "Malloc failed to allocate memory");
-
-  auto stack = std::make_unique<ContextStack>(
-    static_cast<char*>(mem_ptr) + size, size, false
-  );
-
-  return stack;
+  return FContextStackType{static_cast<char*>(mem_ptr) + size, size};
 }
 
-ContextStackPtr allocatePageSizedStack(size_t const size_in) {
+ULTContextType allocateMallocStack(size_t const size) {
+  return ULTContextType{allocateMallocStackInner(size), false};
+}
+
+FContextStackType allocatePageSizedStackInner(size_t const size_in) {
   size_t const min_page_size = SysPageInfo::getMinStackSize();
   size_t const max_page_size = SysPageInfo::getMaxStackSize();
   size_t const sys_page_size = SysPageInfo::getPageSize();
@@ -58,31 +57,31 @@ ContextStackPtr allocatePageSizedStack(size_t const size_in) {
 
   assert(num_pages >= 2 && "Num pages must be greater than 2");
 
-  size_t const alloc_size_page = num_pages * sys_page_size;
+  size_t const size_page = num_pages * sys_page_size;
 
   #if DEBUG_PRINT
-  printf("num_pages=%ld, alloc_size_page=%ld\n", num_pages, alloc_size_page);
+  printf("num_pages=%ld, size_page=%ld\n", num_pages, size_page);
   #endif
 
   void* const mem_ptr = mmap(
-    0, alloc_size_page, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0
+    0, size_page, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0
   );
 
   // failure to allocate, return nullptr
   if (mem_ptr == MAP_FAILED) {
-    return nullptr;
+    return FContextStackType{nullptr, 0};
   }
 
   mprotect(mem_ptr, sys_page_size, PROT_NONE);
 
-  auto stack = std::make_unique<ContextStack>(
-    static_cast<char*>(mem_ptr) + alloc_size_page, alloc_size_page, true
-  );
-
-  return stack;
+  return FContextStackType{static_cast<char*>(mem_ptr) + size_page, size_page};
 }
 
-ContextStackPtr createStack(size_t size, bool page_sized) {
+ULTContextType allocatePageSizedStack(size_t const size) {
+  return ULTContextType{allocatePageSizedStackInner(size), true};
+}
+
+ULTContextType createStack(size_t size, bool page_sized) {
   if (not page_sized) {
     return allocateMallocStack(size == 0 ? 1024 : size);
   } else {
@@ -90,14 +89,18 @@ ContextStackPtr createStack(size_t size, bool page_sized) {
   }
 }
 
-void destroyStack(ContextStackPtr ctx) {
-  assert(ctx != nullptr);
-
-  if (ctx->page_alloced) {
-    munmap(ctx->stack.sptr, ctx->stack.ssize);
-  } else {
-    free(ctx->stack.sptr);
+void destroyStackInner(fcontext_stack_t stack, bool is_page_alloced) {
+  if (stack.sptr != nullptr) {
+    if (is_page_alloced) {
+      munmap(stack.sptr, stack.ssize);
+    } else {
+      free(stack.sptr);
+    }
   }
+}
+
+void destroyStack(ULTContextType ctx) {
+  return destroyStackInner(ctx.stack, ctx.page_alloced);
 }
 
 }  /* end namespace fcontext */
