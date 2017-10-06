@@ -11,7 +11,7 @@
 
 #include <memory>
 
-#define DEBUG_PRINT 1
+#define DEBUG_PRINT_STACK_CONTEXT 1
 
 namespace fcontext {
 
@@ -19,7 +19,7 @@ FContextStackType allocateMallocStackInner(size_t const size_in) {
   size_t const size = size_in == 0 ? default_malloc_stack_size : size_in;
   void* const mem_ptr = malloc(size);
 
-  #if DEBUG_PRINT
+  #if DEBUG_PRINT_STACK_CONTEXT
   printf("allocateMallocStackInner: mem_ptr=%p, size=%ld\n", mem_ptr, size);
   #endif
 
@@ -39,7 +39,7 @@ FContextStackType allocatePageSizedStackInner(size_t const size_in) {
   size_t const default_size = SysPageInfo::getDefaultPageSize();
   size_t alloc_size = size_in;
 
-  #if DEBUG_PRINT
+  #if DEBUG_PRINT_STACK_CONTEXT
   printf(
     "max_page_size=%ld, min_page_size=%ld, sys_page_size=%ld, "
     "default size=%ld, size_in=%ld\n",
@@ -65,7 +65,7 @@ FContextStackType allocatePageSizedStackInner(size_t const size_in) {
 
   size_t const size_page = num_pages * sys_page_size;
 
-  #if DEBUG_PRINT
+  #if DEBUG_PRINT_STACK_CONTEXT
   printf("num_pages=%ld, size_page=%ld\n", num_pages, size_page);
   #endif
 
@@ -98,7 +98,7 @@ ULTContextType createStack(size_t size, bool page_sized) {
 void destroyStackInner(fcontext_stack_t stack, bool is_page_alloced) {
   if (stack.sptr != nullptr) {
 
-    #if DEBUG_PRINT
+    #if DEBUG_PRINT_STACK_CONTEXT
     printf("ptr=%p: is_page_alloced=%s\n", stack.sptr, is_page_alloced ? "true" : "false");
     #endif
 

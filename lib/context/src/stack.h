@@ -7,8 +7,6 @@
 #include <memory>
 #include <cstdlib>
 
-#define DEBUG_PRINT 1
-
 namespace fcontext {
 
 static constexpr size_t const default_malloc_stack_size = 16384;
