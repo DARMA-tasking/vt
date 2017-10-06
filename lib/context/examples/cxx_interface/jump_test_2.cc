@@ -37,9 +37,9 @@ int main(int argc, char** argv) {
   ctx2 = fcontext::functor::makeContext<Fn2>(s2, 30);
 
   puts("main 1");
-  fcontext::functor::jumpContext(ctx1);
+  fcontext::functor::jumpContextFunc(ctx1);
   puts("main 2");
-  fcontext::functor::jumpContext(ctx2);
+  fcontext::functor::jumpContextFunc(ctx2);
   puts("main END");
 
   destroyStack(s1);

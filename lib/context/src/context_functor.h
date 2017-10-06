@@ -65,9 +65,9 @@ static void context_functor_handler(fcontext_transfer_t t) {
 }
 
 template <typename CtxFuncT>
-void jumpContext(CtxFuncT ctx_func) {
+auto jumpContextFunc(CtxFuncT ctx_func) {
   auto const& ult_ctx = ctx_func.ctx;
-  jump_fcontext(ult_ctx.ctx, static_cast<void*>(ctx_func.holder));
+  return jump_fcontext(ult_ctx.ctx, static_cast<void*>(ctx_func.holder));
 }
 
 template <typename FunctorT, typename... Args>
