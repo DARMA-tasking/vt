@@ -15,6 +15,10 @@ SeqContext::SeqContext(
     "SeqContext: construct: node=%p, id=%d, suspendable=%s\n",
     PRINT_SEQ_NODE_PTR(node_), seq_id, print_bool(suspendable_)
   );
+
+  if (suspendable_) {
+    seq_ult = std::make_unique<SeqContextULTType>();
+  }
 }
 SeqContext::SeqContext(SeqType const& in_seq_id) : seq_id(in_seq_id) { }
 
