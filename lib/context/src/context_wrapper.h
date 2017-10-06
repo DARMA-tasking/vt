@@ -41,6 +41,8 @@ struct ULTContext {
   ULTContext(ULTContext&&) = default;
 };
 
+using ContextFunctionParam = pfn_fcontext;
+using ContextFuncTransfer = fcontext_transfer_t;
 using ContextTransferFn = void (*)(ContextTransfer);
 
 inline ContextTransfer jumpContext(Context const to, void* vp = nullptr) {
