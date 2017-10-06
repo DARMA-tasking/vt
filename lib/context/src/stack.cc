@@ -11,7 +11,7 @@
 
 #include <memory>
 
-#define DEBUG_PRINT_STACK_CONTEXT 1
+#define DEBUG_PRINT_STACK_CONTEXT 0
 
 namespace fcontext {
 
