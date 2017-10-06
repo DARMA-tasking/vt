@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_SEQ_CONTEXT__
 
 #include <list>
-#include <cassert>
+#include <memory>
 
 #include "config.h"
 #include "seq_common.h"
@@ -13,6 +13,9 @@
 namespace vt { namespace seq {
 
 struct SeqContext {
+  using SeqContextULTType = SeqULTContext;
+  using SeqContextULTPtrType = std::unique_ptr<SeqULTContext>;
+
   SeqContext(
     SeqType const& in_seq_id, SeqNodePtrType in_node, bool is_suspendable = false
   );
@@ -24,6 +27,8 @@ struct SeqContext {
   void setNode(SeqNodePtrType node);
   bool isSuspendable() const;
   void setSuspendable(bool const is_suspendable);
+
+  SeqContextULTPtrType seq_ult = nullptr;
 
 private:
   bool suspendable_ = false;

@@ -24,6 +24,8 @@ struct SeqULTContext {
 
   explicit SeqULTContext(SeqULTConstTag);
 
+  SeqULTContext() : SeqULTContext(seq_ult_cons_tag_t) { }
+
   void initialize(ULTContextFuncType func);
   void initialize(ULTContextStatefulFnType stateful_func);
   bool initialized() const;
