@@ -33,6 +33,7 @@ struct TermState {
   TermWaveType cur_wave = 0, submitted_wave = -1;
 
   void notifyChildReceive();
+  bool isTerminated() const;
   void setTerminated();
   void activate();
   void notifyLocalReady();

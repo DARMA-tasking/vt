@@ -22,7 +22,7 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
 }
 
 /*static*/ void TerminationDetector::epochFinishedHandler(TermMsg* msg) {
-  theTerm->epochFinished(msg->new_epoch);
+  theTerm->epochFinished(msg->new_epoch, true);
 }
 
 /*static*/ void TerminationDetector::epochContinueHandler(TermMsg* msg) {
@@ -206,7 +206,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         state.setTerminated();
 
-        epochFinished(state.epoch);
+        epochFinished(state.epoch, false);
       } else {
         state.g_prod2 = state.g_prod1;
         state.g_cons2 = state.g_cons1;
@@ -236,12 +236,26 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     // reset counters
     state.g_prod1 = state.g_cons1 = 0;
     state.submitToParent(is_root_);
+
+    if (state.isTerminated()) {
+      cleanupEpoch(state.epoch);
+    }
   }
 
   return is_ready;
 }
 
-void TerminationDetector::epochFinished(EpochType const& epoch) {
+void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
+  if (epoch != any_epoch_sentinel) {
+    auto epoch_iter = epoch_state_.find(epoch);
+    assert(epoch_iter != epoch_state_.end() and "Must exist");
+    epoch_state_.erase(epoch_iter);
+  }
+}
+
+void TerminationDetector::epochFinished(
+  EpochType const& epoch, bool const cleanup
+) {
   debug_print(
     term, node,
     "epochFinished: epoch=%d\n", epoch
@@ -249,10 +263,8 @@ void TerminationDetector::epochFinished(EpochType const& epoch) {
 
   triggerAllActions(epoch);
 
-  if (epoch != any_epoch_sentinel) {
-    auto epoch_iter = epoch_state_.find(epoch);
-    assert(epoch_iter != epoch_state_.end() and "Must exist");
-    epoch_state_.erase(epoch_iter);
+  if (cleanup) {
+    cleanupEpoch(epoch);
   }
 
   // close the epoch window

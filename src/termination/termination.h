@@ -48,7 +48,7 @@ struct TerminationDetector : Tree {
 
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
   EpochType newEpoch();
-
+  void cleanupEpoch(EpochType const& epoch);
   void produceConsumeState(
     TermStateType& state, TermCounterType const& num_units, bool produce
   );
@@ -68,7 +68,7 @@ struct TerminationDetector : Tree {
 
   bool propagateEpoch(TermStateType& state);
 
-  void epochFinished(EpochType const& epoch);
+  void epochFinished(EpochType const& epoch, bool const cleanup);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void triggerAllEpochActions(EpochType const& epoch);
   void triggerAllActions(EpochType const& epoch);

@@ -21,6 +21,10 @@ void TermState::setTerminated() {
   termination_detected = true;
 }
 
+bool TermState::isTerminated() const {
+  return termination_detected;
+}
+
 void TermState::activate() {
   epoch_is_active = true;
 }
