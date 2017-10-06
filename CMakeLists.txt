@@ -56,6 +56,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_LIB_DIR})
 
 add_subdirectory(${PROJECT_LIB_DIR}/context)
+set(FCONTEXT_LIBRARY fcontext)
 
 file(
   GLOB
@@ -182,6 +183,7 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
     ${VIRTUAL_TRANSPORT_LIBRARY}
     ${ZLIB_LIBRARIES}
     ${MPI_C_LIBRARIES}
+    ${FCONTEXT_LIBRARY}
   )
 endforeach()
 
@@ -201,6 +203,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     ${VIRTUAL_TRANSPORT_LIBRARY}
     ${ZLIB_LIBRARIES}
     ${MPI_C_LIBRARIES}
+    ${FCONTEXT_LIBRARY}
   )
 endforeach()
 
@@ -271,6 +274,7 @@ else()
       ${VIRTUAL_TRANSPORT_LIBRARY}
       ${ZLIB_LIBRARIES}
       ${MPI_C_LIBRARIES}
+      ${FCONTEXT_LIBRARY}
       gtest gmock
     )
 
