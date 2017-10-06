@@ -9,6 +9,7 @@
 #include "config.h"
 #include "epoch.h"
 #include "registry_function.h"
+#include "term_common.h"
 #include "term_msgs.h"
 #include "term_state.h"
 #include "tree.h"
@@ -21,47 +22,61 @@ struct TerminationDetector : Tree {
   using TermStateType = TermState;
   using ActionContainerType = std::vector<ActionType>;
 
-  TerminationDetector() { any_epoch_state_.recv_event_count = 1; }
+  TerminationDetector()
+    : Tree(tree_cons_tag_t),
+      any_epoch_state_(any_epoch_sentinel, getNumChildren())
+  { }
 
   template <typename T>
   using EpochContainerType = std::unordered_map<EpochType, T>;
 
   inline void produce(
-    EpochType const& epoch = no_epoch, TermCounterType const& num_units = 1
+    EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   ) {
-    produceConsume(epoch, num_units, true);
+    debug_print(term, node, "y1: produce: epoch=%d\n",epoch);
+    auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
+    return produceConsume(in_epoch, num_units, true);
   }
 
   inline void consume(
-    EpochType const& epoch = no_epoch, TermCounterType const& num_units = 1
+    EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   ) {
-    produceConsume(epoch, num_units, false);
+    debug_print(term, node, "y1: consume: epoch=%d\n",epoch);
+    auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
+    return produceConsume(in_epoch, num_units, false);
   }
 
+  TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
   EpochType newEpoch();
 
+  void produceConsumeState(
+    TermStateType& state, TermCounterType const& num_units, bool produce
+  );
   void produceConsume(
-    EpochType const& epoch = no_epoch, TermCounterType const& num_units = 1,
-    bool produce = true
+    EpochType const& epoch = any_epoch_sentinel,
+    TermCounterType const& num_units = 1, bool produce = true
   );
   void maybePropagate();
 
+  void propagateEpochExternalState(
+    TermStateType& state, TermCounterType const& prod, TermCounterType const& cons
+  );
   void propagateEpochExternal(
     EpochType const& epoch, TermCounterType const& prod,
     TermCounterType const& cons
   );
 
-  bool propagateEpoch(EpochType const& epoch, TermStateType& state);
+  bool propagateEpoch(TermStateType& state);
 
   void epochFinished(EpochType const& epoch);
-  void epochContinue(EpochType const& epoch);
+  void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void triggerAllEpochActions(EpochType const& epoch);
   void triggerAllActions(EpochType const& epoch);
   void attachGlobalTermAction(ActionType action);
   void forceGlobalTermAction(ActionType action);
   void attachEpochTermAction(EpochType const& epoch, ActionType action);
-  void setupNewEpoch(EpochType const& new_epoch);
-  void propagateNewEpoch(EpochType const& new_epoch);
+  void setupNewEpoch(EpochType const& new_epoch, bool const from_child);
+  void propagateNewEpoch(EpochType const& new_epoch, bool const from_child);
   void readyNewEpoch(EpochType const& new_epoch);
 
   static void registerDefaultTerminationAction();

@@ -3,7 +3,7 @@
 #include "seq_common.h"
 #include "seq_parallel.h"
 #include "sequencer.h"
-#include "termination.h"
+#include "term_headers.h"
 
 namespace vt { namespace seq {
 
@@ -35,7 +35,7 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
   // Inform the termination detector to produce children nodes---ensures that
   // deferred execution of these does not cause termination be reached
   // incorrectly if the wait execution is delayed
-  theTerm->produce(no_epoch, par_funcs_.size());
+  theTerm->produce(term::any_epoch_sentinel, par_funcs_.size());
 
   for (auto&& par_fn : par_funcs_) {
     debug_print(
@@ -77,7 +77,7 @@ bool SeqParallel::join() {
   );
 
   // Inform the termination detector that a child is consumed
-  theTerm->consume(no_epoch, 1);
+  theTerm->consume(term::any_epoch_sentinel, 1);
 
   if (old_val == num_funcs_ - 1) {
     if (triggered_action_ != nullptr) {

@@ -10,9 +10,10 @@ namespace vt { namespace term {
 
 struct TermMsg : vt::ShortMessage {
   EpochType new_epoch = no_epoch;
+  TermCounterType wave = -1;
 
-  explicit TermMsg(EpochType const& in_new_epoch)
-    : ShortMessage(), new_epoch(in_new_epoch)
+  explicit TermMsg(EpochType const& in_new_epoch, TermCounterType in_wave = -1)
+    : ShortMessage(), new_epoch(in_new_epoch), wave(in_wave)
   { }
 };
 

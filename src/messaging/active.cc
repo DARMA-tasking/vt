@@ -1,7 +1,7 @@
 
 #include "config.h"
 #include "active.h"
-#include "termination.h"
+#include "term_headers.h"
 
 namespace vt {
 
@@ -17,8 +17,8 @@ EventType ActiveMessenger::sendDataDirect(
   auto const& dest = envelopeGetDest(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
   auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& epoch =
-    envelopeIsEpochType(msg->env) ? envelopeGetEpoch(msg->env) : no_epoch;
+  auto const& epoch = envelopeIsEpochType(msg->env) ?
+    envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
   auto const& is_shared = isSharedMessage(msg);
 
   backend_enable_if(
@@ -200,7 +200,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     mpi_event->getRequest()
   );
 
-  theTerm->produce(no_epoch);
+  theTerm->produce(term::any_epoch_sentinel);
 
   if (next_action != nullptr) {
     holder.attachAction(next_action);
@@ -290,7 +290,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
         dealloc_buf();
       }
 
-      theTerm->consume(no_epoch);
+      theTerm->consume(term::any_epoch_sentinel);
 
       return true;
     } else {
@@ -330,8 +330,8 @@ bool ActiveMessenger::deliverActiveMsg(
   auto const& is_bcast = envelopeIsBcast(msg->env);
   auto const& dest = envelopeGetDest(msg->env);
   auto const& handler = envelopeGetHandler(msg->env);
-  auto const& epoch =
-    envelopeIsEpochType(msg->env) ? envelopeGetEpoch(msg->env) : no_epoch;
+  auto const& epoch = envelopeIsEpochType(msg->env) ?
+    envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
   auto const& is_tag = envelopeIsTagType(msg->env);
   auto const& tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
   auto const& callback =
