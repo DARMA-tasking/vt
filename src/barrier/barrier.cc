@@ -4,6 +4,8 @@
 
 namespace vt { namespace barrier {
 
+Barrier::Barrier() : Tree(tree_cons_tag_t) { }
+
 /*static*/ void Barrier::barrierUp(BarrierMsg* msg) {
   theBarrier->barrierUp(
     msg->is_named, msg->is_wait, msg->barrier, msg->skip_term
@@ -111,6 +113,10 @@ void Barrier::barrierUp(
   bool const& is_named, bool const& is_wait, BarrierType const& barrier,
   bool const& skip_term
 ) {
+  auto const& num_children_ = getNumChildren();
+  bool const& is_root_ = isRoot();
+  auto const& parent_ = getParent();
+
   // ToDo: Why setup again? Setup should be once per processor
   setupTree();
 

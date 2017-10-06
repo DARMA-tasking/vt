@@ -4,6 +4,22 @@
 
 namespace vt {
 
+Tree::Tree(TreeConstructTag) {
+  setupTree();
+}
+
+NodeType Tree::getParent() const {
+  return parent_;
+}
+
+NodeType Tree::getNumChildren() const {
+  return num_children_;
+}
+
+bool Tree::isRoot() const {
+  return is_root_;
+}
+
 void
 Tree::setupTree() {
   if (not set_up_tree_) {

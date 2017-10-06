@@ -20,6 +20,8 @@ constexpr BarrierType const fst_barrier = 1;
 struct Barrier : Tree {
   using BarrierStateType = BarrierState;
 
+  Barrier();
+
   template <typename T>
   using ContainerType = std::unordered_map<BarrierType, T>;
 
