@@ -8,6 +8,7 @@
 #include "config.h"
 #include "seq_common.h"
 #include "seq_node.h"
+#include "seq_ult_context.h"
 
 namespace vt { namespace seq {
 
