@@ -13,21 +13,21 @@ using namespace fcontext::examples;
 static Context ctx1;
 static Context ctx2;
 
-static void fn1(ContextTransfer t) {
+static void fn1(fcontext_transfer_t t) {
   puts("fn1 1");
-  sleep(1000);
+  sleep(100);
   jumpContext(t);
   puts("fn1 2");
-  sleep(1000);
+  sleep(100);
   jumpContext(t);
 }
 
-static void fn2(ContextTransfer t) {
+static void fn2(fcontext_transfer_t t) {
   puts("fn2 1");
-  sleep(1000);
+  sleep(100);
   jumpContext(t);
   puts("fn2 2");
-  sleep(1000);
+  sleep(100);
   jumpContext(t);
 }
 
@@ -43,9 +43,9 @@ int main(int argc, char** argv) {
   puts("main 2");
   auto t2 = jumpContext(ctx2);
   puts("main 3");
-  jumpContext(t1);
+  jumpContext(t1.transfer);
   puts("main 4");
-  jumpContext(t2);
+  jumpContext(t2.transfer);
   puts("END");
 
   destroyStack(s1);
