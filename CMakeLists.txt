@@ -55,6 +55,8 @@ set(
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_LIB_DIR})
 
+add_subdirectory(${PROJECT_LIB_DIR}/context)
+
 file(
   GLOB
   HEADER_FILES
