@@ -126,7 +126,13 @@ struct TaggedSequencer {
   void storeNodeContext(SeqType const& id, SeqNodePtrType node);
 
   template <typename Fn>
-  bool executeInNodeContext(SeqType const& id, SeqNodePtrType node, Fn&& c);
+  bool executeInNodeContext(
+    SeqType const& id, SeqNodePtrType node, Fn&& c,
+    bool const suspendable = false
+  );
+
+  template <typename Fn>
+  bool executeSuspendableContext(SeqType const& id, SeqNodePtrType node, Fn&& c);
 
 public:
   void enqueue(ActionType const& action);
