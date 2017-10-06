@@ -439,8 +439,16 @@ void TaggedSequencer<SeqTag, SeqTrigger>::storeNodeContext(
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 template <typename Fn>
-bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
+bool TaggedSequencer<SeqTag, SeqTrigger>::executeSuspendableContext(
   SeqType const& id, SeqNodePtrType node, Fn&& c
+) {
+  return executeInNodeContext(id, node, std::forward<Fn>(c), true);
+}
+
+template <typename SeqTag, template <typename> class SeqTrigger>
+template <typename Fn>
+bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
+  SeqType const& id, SeqNodePtrType node, Fn&& c, bool const suspendable
 ) {
   SeqContextType* prev_context = context_;
 
@@ -452,7 +460,7 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
   // save this node related to `id' for later execution in this context
   storeNodeContext(id, node);
 
-  SeqContextType new_context(id, node);
+  SeqContextType new_context(id, node, suspendable);
   context_ = &new_context;
   c();
   context_ = prev_context;
