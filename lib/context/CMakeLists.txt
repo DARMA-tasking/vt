@@ -103,18 +103,14 @@ message("PROJECT_EXAMPLE_C_DIR=${PROJECT_EXAMPLE_C_DIR}")
 message("PROJECT_EXAMPLE_CXX_DIR=${PROJECT_EXAMPLE_CXX_DIR}")
 
 macro(add_test_for_example test_name test_exec)
-  foreach(PROC ${PROC_TEST_LIST})
-    add_test(
-      ${test_name}_${PROC}
-      # ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
-      ${test_exec} ${ARGN}
-    )
+  add_test(
+    ${test_name} ${test_exec} ${ARGN}
+  )
 
-    set_tests_properties(
-      ${test_name}_${PROC}
-      PROPERTIES TIMEOUT 300 FAIL_REGULAR_EXPRESSION "FAILED;WARNING"
-    )
-  endforeach()
+  set_tests_properties(
+    ${test_name}
+    PROPERTIES TIMEOUT 300 FAIL_REGULAR_EXPRESSION "FAILED;WARNING"
+  )
 endmacro()
 
 set(PROJECT_EXAMPLE_TOP_IMPL_FILES )
