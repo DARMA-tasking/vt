@@ -28,6 +28,7 @@ struct SeqULTContext {
 
   void initialize(ULTContextFuncType func);
   void initialize(ULTContextStatefulFnType stateful_func);
+  void startExecution();
   bool initialized() const;
   bool isContextActive() const;
   void runStateFunc(fcontext::ContextFuncTransfer* state);
