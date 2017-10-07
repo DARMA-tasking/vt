@@ -18,16 +18,6 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename = void>
-AutoActiveContainerType& getAutoRegistry();
-
-template <typename ActiveFnT>
-struct Registrar {
-  AutoHandlerType index;
-
-  Registrar();
-};
-
 AutoActiveType getAutoHandler(HandlerType const& handler);
 
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
@@ -36,37 +26,15 @@ HandlerType makeAutoHandler(MessageT* const msg);
 template <typename T, T value>
 HandlerType makeAutoHandler();
 
-template <typename ActiveFnT>
-struct RegistrarWrapper {
-  Registrar<ActiveFnT> registrar;
-};
-
-template <typename ActiveFnT>
-AutoHandlerType registerActiveFn();
-
-template <typename Callable>
-struct Runnable {
-  using FunctionPtrType = typename Callable::FunctionPtrType;
-
-  static AutoHandlerType const idx;
-
-  static constexpr FunctionPtrType* getFunction();
-
-  Runnable() = default;
-};
-
-template <typename ActiveFnT>
-AutoHandlerType const Runnable<ActiveFnT>::idx =
-  registerActiveFn<Runnable<ActiveFnT>>();
-
 }} // end namespace vt::auto_registry
 
 // convenience macro for registration
 #define GET_HANDLER_ACTIVE_FUNCTION_EXPAND(TYPE_F, ADD_F)               \
-  vt::auto_registry::Runnable<                                     \
-    decltype(                                                           \
-      vt::auto_registry::FunctorAdapter<TYPE_F, ADD_F>()           \
-    )>::idx;                                                            \
+  vt::auto_registry::RunnableGen<                                       \
+   decltype(vt::auto_registry::FunctorAdapter<TYPE_F, ADD_F>()),        \
+   AutoActiveContainerType, AutoRegInfoType<AutoActiveType>,            \
+   SimpleFunctionType                                                   \
+  >::idx;
 
 #include "auto_registry_impl.h"
 

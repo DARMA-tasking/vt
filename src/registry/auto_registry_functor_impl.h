@@ -10,12 +10,6 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename>
-inline AutoActiveFunctorContainerType& getAutoRegistryFunctor()  {
-  static AutoActiveFunctorContainerType reg;
-  return reg;
-}
-
 template <typename FunctorT, bool is_msg, typename... Args>
 inline HandlerType makeAutoHandlerFunctor() {
   HandlerType const id = GET_HANDLER_ACTIVE_FUNCTOR(FunctorT, is_msg, Args);
@@ -74,7 +68,8 @@ static inline void pullApart(
 
 template <typename RunnableFunctorT>
 RegistrarFunctor<RunnableFunctorT>::RegistrarFunctor() {
-  AutoActiveFunctorContainerType& reg = getAutoRegistryFunctor<>();
+  AutoActiveFunctorContainerType& reg =
+    getAutoRegistryGen<AutoActiveFunctorContainerType>();
   index = reg.size();
 
   pullApart<RunnableFunctorT>(
@@ -98,7 +93,7 @@ inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler) {
     is_functor and is_auto and "Handler should be a auto functor"
   );
 
-  return getAutoRegistryFunctor().at(han_id).getFun();
+  return getAutoRegistryGen<AutoActiveFunctorContainerType>().at(han_id).getFun();
 }
 
 template <typename RunnableFunctorT>

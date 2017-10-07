@@ -10,12 +10,6 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename>
-inline AutoActiveContainerType& getAutoRegistry()  {
-  static AutoActiveContainerType reg;
-  return reg;
-}
-
 template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
 inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) {
   HandlerType const id = GET_HANDLER_ACTIVE_FUNCTION_EXPAND(
@@ -28,32 +22,6 @@ template <typename T, T value>
 inline HandlerType makeAutoHandler() {
   HandlerType const id = GET_HANDLER_ACTIVE_FUNCTION_EXPAND(T, value);
   return HandlerManagerType::makeHandler(true, false, id);
-}
-
-template <typename ActiveFnT>
-Registrar<ActiveFnT>::Registrar() {
-  AutoActiveContainerType& reg = getAutoRegistry<>();
-  index = reg.size();
-  auto fn = ActiveFnT::getFunction();
-
-  #if backend_check_enabled(trace_enabled)
-  auto const& name = demangle::DemanglerUtils::getDemangledType<ActiveFnT>();
-  auto const& parsed_names =
-    demangle::ActiveFunctionDemangler::parseActiveFunctionName(name);
-  auto const& namespace_name = std::get<0>(parsed_names);
-  auto const& function_name = std::get<1>(parsed_names);
-  auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
-    namespace_name, function_name
-  );
-
-  reg.emplace_back(AutoRegInfoType<AutoActiveType>{
-    reinterpret_cast<ActiveBasicFunctionType*>(fn), trace_ep
-  });
-  #else
-  reg.emplace_back(AutoRegInfoType<AutoActiveType>{
-    reinterpret_cast<ActiveBasicFunctionType*>(fn)
-  });
-  #endif
 }
 
 inline AutoActiveType getAutoHandler(HandlerType const& handler) {
@@ -72,18 +40,7 @@ inline AutoActiveType getAutoHandler(HandlerType const& handler) {
     not is_functor and is_auto and "Handler should not be a functor, but auto"
   );
 
-  return getAutoRegistry().at(han_id).getFun();
-}
-
-template <typename ActiveFnT>
-AutoHandlerType registerActiveFn() {
-  return RegistrarWrapper<ActiveFnT>().registrar.index;
-}
-
-template <typename Callable>
-/*static*/ constexpr typename Runnable<Callable>::FunctionPtrType*
-Runnable<Callable>::getFunction() {
-  return Callable::getFunction();
+  return getAutoRegistryGen<AutoActiveContainerType>().at(han_id).getFun();
 }
 
 }} // end namespace vt::auto_registry

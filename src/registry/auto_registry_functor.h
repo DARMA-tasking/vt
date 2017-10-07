@@ -11,9 +11,6 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename = void>
-AutoActiveFunctorContainerType& getAutoRegistryFunctor();
-
 template <typename FunctorT>
 struct RegistrarFunctor {
   AutoHandlerType index;
