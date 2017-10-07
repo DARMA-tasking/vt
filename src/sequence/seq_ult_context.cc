@@ -12,7 +12,7 @@ void seq_context_fn(fcontext::ContextFuncTransfer t) {
   void* data = t.data;
   SeqULTContext* ctx = reinterpret_cast<SeqULTContext*>(data);
   ctx->runStateFunc(&t);
-  ctx->finishedExecution();
+  ctx->finish();
   fcontext::jumpContext(t);
 }
 
@@ -35,16 +35,16 @@ bool SeqULTContext::initialized() const {
   return context_initialized;
 }
 
-void SeqULTContext::startExecution() {
-  has_valid_context_state_ = true;
-  transfer_holder_ctx_ = fcontext::jumpContext(fctx, static_cast<void*>(this));
-}
-
 bool SeqULTContext::isContextActive() const {
   return has_valid_context_state_;
 }
 
 void SeqULTContext::runStateFunc(fcontext::ContextFuncTransfer* state) {
+  debug_print_force(
+    sequence, node,
+    "SeqULTContext: runStateFunc: state=%p\n", state
+  );
+
   assert(state_fn_ != nullptr and "Must have valid state fn");
   setCurTransferState(state);
   state_fn_();
@@ -58,19 +58,36 @@ void SeqULTContext::clearCurTransferState() {
   cur_transfer_main_state_ = nullptr;
 }
 
+void SeqULTContext::start() {
+  debug_print_force(
+    sequence, node,
+    "SeqULTContext: start\n"
+  );
+
+  has_valid_context_state_ = true;
+  transfer_holder_ctx_ = fcontext::jumpContext(fctx, static_cast<void*>(this));
+}
+
 void SeqULTContext::suspend() {
   assert(cur_transfer_main_state_ != nullptr and "Must have valid state");
   has_valid_context_state_ = true;
+
+  debug_print_force(
+    sequence, node,
+    "SeqULTContext: suspend: cur_transfer_main_state=%p\n",
+    cur_transfer_main_state_
+  );
+
   transfer_holder_main_ = fcontext::jumpContext(cur_transfer_main_state_->ctx);
   cur_transfer_main_state_ = &transfer_holder_main_.transfer;
 }
 
-void SeqULTContext::continueExecution() {
+void SeqULTContext::resume() {
   assert(has_valid_context_state_ and "Must have valid context state");
   transfer_holder_ctx_ = fcontext::jumpContext(transfer_holder_ctx_.transfer);
 }
 
-void SeqULTContext::finishedExecution() {
+void SeqULTContext::finish() {
   assert(has_valid_context_state_ and "Must have valid context state");
   has_valid_context_state_ = false;
   cur_transfer_main_state_ = nullptr;

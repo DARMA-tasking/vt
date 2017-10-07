@@ -30,9 +30,9 @@ void SeqContext::suspend() {
   seq_ult->suspend();
 }
 
-void SeqContext::contineuExecution() {
+void SeqContext::resume() {
   assert(seq_ult != nullptr and "Seq ULT must be live");
-  seq_ult->continueExecution();
+  seq_ult->resume();
 }
 
 SeqType SeqContext::getSeq() const {
