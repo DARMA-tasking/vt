@@ -36,7 +36,8 @@ bool SeqULTContext::initialized() const {
 }
 
 void SeqULTContext::startExecution() {
-  fcontext::jumpContext(fctx);
+  has_valid_context_state_ = true;
+  transfer_holder_ctx_ = fcontext::jumpContext(fctx, static_cast<void*>(this));
 }
 
 bool SeqULTContext::isContextActive() const {
@@ -50,28 +51,29 @@ void SeqULTContext::runStateFunc(fcontext::ContextFuncTransfer* state) {
 }
 
 void SeqULTContext::setCurTransferState(fcontext::ContextFuncTransfer* state) {
-  cur_transfer_state_ = state;
+  cur_transfer_main_state_ = state;
 }
 
 void SeqULTContext::clearCurTransferState() {
-  cur_transfer_state_ = nullptr;
+  cur_transfer_main_state_ = nullptr;
 }
 
 void SeqULTContext::suspend() {
-  assert(cur_transfer_state_ != nullptr and "Must have valid state");
+  assert(cur_transfer_main_state_ != nullptr and "Must have valid state");
   has_valid_context_state_ = true;
-  transfer_holder_ = fcontext::jumpContext(cur_transfer_state_->ctx);
+  transfer_holder_main_ = fcontext::jumpContext(cur_transfer_main_state_->ctx);
+  cur_transfer_main_state_ = &transfer_holder_main_.transfer;
 }
 
 void SeqULTContext::continueExecution() {
   assert(has_valid_context_state_ and "Must have valid context state");
-  fcontext::jumpContext(transfer_holder_.transfer);
+  transfer_holder_ctx_ = fcontext::jumpContext(transfer_holder_ctx_.transfer);
 }
 
 void SeqULTContext::finishedExecution() {
   assert(has_valid_context_state_ and "Must have valid context state");
   has_valid_context_state_ = false;
-  cur_transfer_state_ = nullptr;
+  cur_transfer_main_state_ = nullptr;
 }
 
 
