@@ -9,7 +9,7 @@
 
 namespace vt { namespace mapping {
 
-CoreType randomSeedMapCore(SeedType seed, CoreType nnodes);
+CoreType randomSeedMapCore(SeedType seed, CoreType ncores);
 NodeType randomSeedMapNode(SeedType seed, NodeType nnodes);
 
 }} /* end namespace vt::mapping */
