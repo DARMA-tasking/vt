@@ -36,6 +36,7 @@ struct TaggedSequencer {
   using SeqContextPtrType = SeqContextType*;
   using SeqContextContainerType = std::unordered_map<SeqType, SeqNodePtrType>;
   using SeqFuncContainerType = std::vector<FuncType>;
+  using SeqCtxFunctionType = std::function<void()>;
 
   template <typename MessageT>
   using SeqActionType = Action<MessageT>;
@@ -120,19 +121,17 @@ struct TaggedSequencer {
   void wait_closure(SeqNonMigratableTriggerType<MessageT> trigger);
 
   // @todo: should be made thread-safe and thread-local
-  template <typename Callable>
-  bool lookupContextExecute(SeqType const& id, Callable&& c);
+  bool lookupContextExecute(SeqType const& id, SeqCtxFunctionType c);
 
   void storeNodeContext(SeqType const& id, SeqNodePtrType node);
 
-  template <typename Fn>
   bool executeInNodeContext(
-    SeqType const& id, SeqNodePtrType node, Fn&& c,
+    SeqType const& id, SeqNodePtrType node, SeqCtxFunctionType c,
     bool const suspendable = false
   );
-
-  template <typename Fn>
-  bool executeSuspendableContext(SeqType const& id, SeqNodePtrType node, Fn&& c);
+  bool executeSuspendableContext(
+    SeqType const& id, SeqNodePtrType node, SeqCtxFunctionType c
+  );
 
 public:
   void enqueue(ActionType const& action);
