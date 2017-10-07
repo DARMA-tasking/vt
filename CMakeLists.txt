@@ -216,7 +216,7 @@ endforeach()
 
 set(
   UNIT_TEST_SUBDIRS_LIST
-  index active pool sequencer
+  index active pool sequencer mapping
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
