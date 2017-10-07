@@ -9,11 +9,13 @@
 #include "registry.h"
 #include "trace.h"
 #include "context_vrt_fwd.h"
+#include "mapping_function.h"
 
 namespace vt { namespace auto_registry {
 
 using AutoActiveType = SimpleFunctionType;
 using AutoActiveVCType = SimpleVCFunctionType;
+using AutoActiveMapType = mapping::SimpleMapFunctionType;
 using AutoActiveFunctorType = SimpleFunctionType;
 
 template <typename FnT>
@@ -50,6 +52,7 @@ using AutoRegInfoType = AutoRegInfo<Fn>;
 
 using AutoActiveContainerType = std::vector<AutoRegInfoType<AutoActiveType>>;
 using AutoActiveVCContainerType = std::vector<AutoRegInfoType<AutoActiveVCType>>;
+using AutoActiveMapContainerType = std::vector<AutoRegInfoType<AutoActiveMapType>>;
 using AutoActiveFunctorContainerType = std::vector<AutoRegInfoType<AutoActiveFunctorType>>;
 using AutoHandlerType = int32_t;
 using HandlerManagerType = vt::HandlerManager;
