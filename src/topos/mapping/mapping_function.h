@@ -7,10 +7,12 @@
 
 namespace vt { namespace mapping {
 
-using SimpleMapFunctionType = NodeType(*)(index::BaseIndex*, NodeType, NodeType);
+using SimpleMapFunctionType = NodeType(*)(
+  index::BaseIndex*, index::BaseIndex*, NodeType
+);
 
 template <typename IndexT>
-using ActiveMapFunctionType = NodeType(*)(IndexT*, NodeType, NodeType);
+using ActiveMapFunctionType = NodeType(IndexT*, IndexT*, NodeType);
 
 }} /* end namespace vt::mapping */
 
