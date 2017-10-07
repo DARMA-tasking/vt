@@ -41,9 +41,10 @@ struct SeqULTContext {
 private:
   bool has_valid_context_state_ = false;
 
-  fcontext::ContextTransfer transfer_holder_;
+  fcontext::ContextTransfer transfer_holder_main_;
+  fcontext::ContextTransfer transfer_holder_ctx_;
 
-  fcontext::ContextFuncTransfer* cur_transfer_state_ = nullptr;
+  fcontext::ContextFuncTransfer* cur_transfer_main_state_ = nullptr;
 
   ULTContextStatefulFnType state_fn_ = nullptr;
 

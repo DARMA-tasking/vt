@@ -3,6 +3,9 @@
 #include "seq_common.h"
 #include "seq_node.h"
 #include "seq_context.h"
+#include "seq_ult_context.h"
+
+#include <cassert>
 
 namespace vt { namespace seq {
 
@@ -21,6 +24,16 @@ SeqContext::SeqContext(
   }
 }
 SeqContext::SeqContext(SeqType const& in_seq_id) : seq_id(in_seq_id) { }
+
+void SeqContext::suspend() {
+  assert(seq_ult != nullptr and "Seq ULT must be live");
+  seq_ult->suspend();
+}
+
+void SeqContext::contineuExecution() {
+  assert(seq_ult != nullptr and "Seq ULT must be live");
+  seq_ult->continueExecution();
+}
 
 SeqType SeqContext::getSeq() const {
   return seq_id;

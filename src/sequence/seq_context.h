@@ -27,6 +27,8 @@ struct SeqContext {
   void setNode(SeqNodePtrType node);
   bool isSuspendable() const;
   void setSuspendable(bool const is_suspendable);
+  void suspend();
+  void contineuExecution();
 
   SeqContextULTPtrType seq_ult = nullptr;
 
