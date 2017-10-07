@@ -35,6 +35,10 @@ bool SeqULTContext::initialized() const {
   return context_initialized;
 }
 
+void SeqULTContext::startExecution() {
+  fcontext::jumpContext(fctx);
+}
+
 bool SeqULTContext::isContextActive() const {
   return has_valid_context_state_;
 }
