@@ -30,6 +30,14 @@ using DenseNodeMapType = DenseMapType<NodeType, IndexType>;
 template <typename IndexType>
 using DenseCoreMapType = DenseMapType<CoreType, IndexType>;
 
+using SeedType = int64_t;
+
+template <typename PhysicalType>
+using SeedMapType = PhysicalType(*)(SeedType seed, PhysicalType nres);
+
+using NodeSeedMapType = SeedMapType<NodeType>;
+using CoreSeedMapType = SeedMapType<CoreType>;
+
 }}  // end namespace vt::location
 
 #endif  /*INCLUDED_TOPOS_MAPPING*/
