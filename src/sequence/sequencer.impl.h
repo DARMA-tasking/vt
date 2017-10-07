@@ -382,6 +382,8 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
     return should_block;
   };
 
+  bool should_suspend = false;
+
   if (seq_ready) {
     // run it here, right now
     bool const has_match = not deferred_wait_action();
@@ -391,16 +393,33 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
       "Sequencer: executed wait: has_match=%s: seq_id=%d\n",
       print_bool(has_match), seq_id
     );
+    should_suspend = not has_match;
   } else {
+    should_suspend = true;
+
+    debug_print(
+      sequence, node,
+      "Sequencer: deferring wait: seq_id=%d\n", seq_id
+    );
+
     node->addSequencedClosure(deferred_wait_action);
+  }
+
+  if (should_suspend and context_->isSuspendable()) {
+    debug_print(
+      sequence, node,
+      "Sequencer: should suspend: seq_id=%d, context suspendable=%s\n",
+      seq_id, print_bool(context_->isSuspendable())
+    );
+
+    context_->suspend();
   }
 }
 
 // should be made thread-safe and thread-local
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename Callable>
 bool TaggedSequencer<SeqTag, SeqTrigger>::lookupContextExecute(
-  SeqType const& id, Callable&& c
+  SeqType const& id, SeqCtxFunctionType c
 ) {
   auto node_iter = node_lookup_.find(id);
   assert(node_iter != node_lookup_.end() and "Must have valid node context");
@@ -438,17 +457,16 @@ void TaggedSequencer<SeqTag, SeqTrigger>::storeNodeContext(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename Fn>
 bool TaggedSequencer<SeqTag, SeqTrigger>::executeSuspendableContext(
-  SeqType const& id, SeqNodePtrType node, Fn&& c
+  SeqType const& id, SeqNodePtrType node, SeqCtxFunctionType fn
 ) {
-  return executeInNodeContext(id, node, std::forward<Fn>(c), true);
+  return executeInNodeContext(id, node, fn, true);
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename Fn>
 bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
-  SeqType const& id, SeqNodePtrType node, Fn&& c, bool const suspendable
+  SeqType const& id, SeqNodePtrType node, SeqCtxFunctionType c,
+  bool const suspendable
 ) {
   SeqContextType* prev_context = context_;
 
@@ -462,7 +480,12 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
 
   SeqContextType new_context(id, node, suspendable);
   context_ = &new_context;
-  c();
+  if (suspendable) {
+    new_context.seq_ult->initialize(c);
+    new_context.seq_ult->start();
+  } else {
+    c();
+  }
   context_ = prev_context;
 
   debug_print(
