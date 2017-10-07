@@ -34,7 +34,13 @@ VrtContext_ProxyType VrtContextManager::constructVrtContext(Args&& ... args) {
   );
 
   // insert into the holder at the current slot, and increment slot
-  holder_.emplace(curIdent_++, std::move(new_vc));
+  holder_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(curIdent_),
+    std::forward_as_tuple(VrtInfoType{std::move(new_vc)})
+  );
+
+  curIdent_++;
 
   return proxy;
 }

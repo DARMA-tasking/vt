@@ -11,6 +11,7 @@
 #include "context_vrt.h"
 #include "registry_function.h"
 #include "context_vrtmessage.h"
+#include "context_vrtinfo.h"
 #include "auto_registry_vc.h"
 
 #include "topos/location/location.h"
@@ -21,8 +22,9 @@ namespace vt { namespace vrt {
 
 struct VrtContextManager {
   using VrtContextPtrType = std::unique_ptr<VrtContext>;
+  using VrtInfoType = VrtInfo;
   using VrtContextManager_ContainerType = std::unordered_map<
-    VrtContext_IdType, VrtContextPtrType
+    VrtContext_IdType, VrtInfoType
   >;
 
   VrtContextManager();
