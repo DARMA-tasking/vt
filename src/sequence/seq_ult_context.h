@@ -28,15 +28,16 @@ struct SeqULTContext {
 
   void initialize(ULTContextFuncType func);
   void initialize(ULTContextStatefulFnType stateful_func);
-  void startExecution();
   bool initialized() const;
   bool isContextActive() const;
   void runStateFunc(fcontext::ContextFuncTransfer* state);
   void setCurTransferState(fcontext::ContextFuncTransfer* state);
   void clearCurTransferState();
+
+  void start();
   void suspend();
-  void continueExecution();
-  void finishedExecution();
+  void resume();
+  void finish();
 
 private:
   bool has_valid_context_state_ = false;
