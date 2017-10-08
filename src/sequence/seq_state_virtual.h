@@ -11,6 +11,8 @@
 
 namespace vt { namespace seq {
 
+using namespace vrt;
+
 template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
 struct SeqMsgStateVirtual {
   using ActionType = ActionVirtual<MsgT, VcT>;

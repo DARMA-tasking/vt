@@ -8,7 +8,7 @@
 
 #include "config.h"
 #include "registry_function.h"
-#include "context/context_vrt_fwd.h"
+#include "context/context_vrtheaders.h"
 
 namespace vt { namespace seq {
 
@@ -33,7 +33,7 @@ using SeqMigratableTriggerType = ActiveAnyFunctionType<MessageT>;
 template <typename MessageT, typename VcT>
 using SeqNonMigratableVrtTriggerType = std::function<void(MessageT*, VcT*)>;
 template <typename MessageT, typename VcT>
-using SeqMigratableVrtTriggerType = ActiveVCFunctionType<MessageT, VcT>;
+using SeqMigratableVrtTriggerType = vrt::ActiveVCFunctionType<MessageT, VcT>;
 
 using SeqContinuation = std::function<void()>;
 

@@ -8,7 +8,7 @@
 #include "registry_function.h"
 #include "registry.h"
 #include "trace.h"
-#include "context_vrt_fwd.h"
+#include "context/context_vrt_funcs.h"
 #include "mapping_function.h"
 
 namespace vt { namespace auto_registry {

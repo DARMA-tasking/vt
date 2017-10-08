@@ -35,7 +35,7 @@ struct Jacobi1D : vt::vrt::VrtContext {
   }
 
   void create_children() {
-    auto proxy = myProxy_;
+    auto proxy = getProxy();
     auto const size = hi - lo;
     auto const mid = size / 2 + lo;
 

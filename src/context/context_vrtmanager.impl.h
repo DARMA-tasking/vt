@@ -4,6 +4,8 @@
 
 #include "config.h"
 #include "context_vrtmanager.h"
+#include "topos/location/location.h"
+#include "auto_registry_vc.h"
 
 #include <cassert>
 #include <memory>
@@ -25,7 +27,7 @@ VrtContext_ProxyType VrtContextManager::constructVrtContext(Args&& ... args) {
   theLocMan->vrtContextLoc->registerEntity(proxy, handleVCMsg);
 
   // save the proxy in the virtual context for reference later
-  new_vc->myProxy_ = proxy;
+  new_vc->proxy_ = proxy;
 
   debug_print(
     vrt, node,
@@ -37,7 +39,7 @@ VrtContext_ProxyType VrtContextManager::constructVrtContext(Args&& ... args) {
   holder_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(curIdent_),
-    std::forward_as_tuple(VrtInfoType{std::move(new_vc)})
+    std::forward_as_tuple(VrtInfoType{std::move(new_vc), proxy})
   );
 
   curIdent_++;

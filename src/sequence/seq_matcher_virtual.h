@@ -9,11 +9,14 @@
 #include "seq_action.h"
 #include "seq_state_virtual.h"
 #include "seq_action_virtual.h"
+#include "context/context_vrtheaders.h"
 
 #include <list>
 #include <unordered_map>
 
 namespace vt { namespace seq {
+
+using namespace vrt;
 
 template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
 struct SeqMatcherVirtual {

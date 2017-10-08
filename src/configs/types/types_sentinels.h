@@ -17,7 +17,7 @@ static constexpr ByteType const no_byte = -1;
 static constexpr ByteType const no_offset = -1;
 static constexpr auto no_action = nullptr;
 static constexpr RDMA_PtrType const no_rdma_ptr = nullptr;
-
+static constexpr VrtContext_ProxyType const no_vrt_proxy = 0xFFFFFFFF;
 static constexpr NodeType const uninitialized_destination = 0xFFFF;
 static constexpr HandlerType const uninitialized_handler = -1;
 static constexpr RDMA_HandlerType const uninitialized_rdma_handler = -1;

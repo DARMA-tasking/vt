@@ -13,8 +13,8 @@ namespace vt { namespace vrt {
 struct VrtInfo {
   using VrtContextPtrType = std::unique_ptr<VrtContext>;
 
-  VrtInfo(VrtContextPtrType in_vrt_ptr)
-    : vrt_ptr_(std::move(in_vrt_ptr))
+  VrtInfo(VrtContextPtrType in_vrt_ptr, VrtContext_ProxyType const& proxy_in)
+    : proxy_(proxy_in), vrt_ptr_(std::move(in_vrt_ptr))
   { }
   VrtInfo(VrtInfo&&) = default;
   VrtInfo(VrtInfo const&) = delete;
@@ -32,8 +32,14 @@ struct VrtInfo {
     return default_core_;
   }
 
+  VrtContext_ProxyType getProxy() const {
+    return proxy_;
+  }
+
 private:
   CoreType default_core_ = uninitialized_destination;
+
+  VrtContext_ProxyType proxy_ = no_vrt_proxy;
 
   VrtContextPtrType vrt_ptr_ = nullptr;
 };

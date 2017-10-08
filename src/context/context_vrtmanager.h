@@ -6,17 +6,15 @@
 #include <memory>
 
 #include "config.h"
-#include "utils/bits/bits_common.h"
 #include "context.h"
 #include "context_vrt.h"
-#include "registry_function.h"
+#include "context_vrt_funcs.h"
 #include "context_vrtmessage.h"
 #include "context_vrtinfo.h"
-#include "auto_registry_vc.h"
-
-#include "topos/location/location.h"
-
 #include "context_vrtproxy.h"
+
+#include "utils/bits/bits_common.h"
+#include "registry_function.h"
 
 namespace vt { namespace vrt {
 

@@ -6,12 +6,11 @@
 #include "message.h"
 #include "context_vrt.h"
 
-using SimpleVCFunctionType = void(*)(vt::BaseMessage *, vt::vrt::VrtContext*);
+namespace vt { namespace vrt {
 
-//using ActiveVCBasicFunctionType = void(vt::BaseMessage *);
+struct VrtContextManager;
 
-template <typename MessageT, typename VirtualContextT>
-using ActiveVCFunctionType = void(MessageT*, VirtualContextT*);
+}}  // end namespace vt::vrt
 
 #endif /*INCLUDED_CONTEXT_VRT_FWD*/
 
