@@ -11,32 +11,32 @@
 
 namespace vt { namespace mapping {
 
-// General map function type: contains only the index and number of nodes
-template <typename PhysicalType, typename IndexType>
-using MapType = PhysicalType(*)(IndexType*, NodeType);
+// General mapping functions: maps indexed collections to hardware
+template <typename IndexType>
+using MapType = PhysicalResourceType(*)(IndexType*, PhysicalResourceType);
 
 template <typename IndexType>
-using NodeMapType = MapType<NodeType, IndexType>;
+using NodeMapType = MapType<IndexType>;
 template <typename IndexType>
-using CoreMapType = MapType<CoreType, IndexType>;
+using CoreMapType = MapType<IndexType>;
 
-
-// Dense index map function type: contains index and size of dense region
-template <typename PhysicalType, typename IndexType>
-using DenseMapType = PhysicalType(*)(IndexType*, IndexType*, NodeType);
+// Dense index mapping functions: maps dense index, with dense regions size, to
+// hardware
+template <typename IndexType>
+using DenseMapType = PhysicalResourceType(*)(
+  IndexType*, IndexType*, PhysicalResourceType
+);
 
 template <typename IndexType>
-using DenseNodeMapType = DenseMapType<NodeType, IndexType>;
+using DenseNodeMapType = DenseMapType<IndexType>;
 template <typename IndexType>
-using DenseCoreMapType = DenseMapType<CoreType, IndexType>;
+using DenseCoreMapType = DenseMapType<IndexType>;
 
-using SeedType = int64_t;
+// Seed mapping functions for singleton mapping to hardware
+using SeedMapType = PhysicalResourceType(*)(SeedType, PhysicalResourceType);
 
-template <typename PhysicalType>
-using SeedMapType = PhysicalType(*)(SeedType seed, PhysicalType nres);
-
-using NodeSeedMapType = SeedMapType<NodeType>;
-using CoreSeedMapType = SeedMapType<CoreType>;
+using NodeSeedMapType = SeedMapType;
+using CoreSeedMapType = SeedMapType;
 
 }}  // end namespace vt::location
 

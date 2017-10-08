@@ -9,8 +9,10 @@
 
 namespace vt {
 
-using NodeType = uint16_t;
-using CoreType = uint16_t;
+using PhysicalResourceType = uint16_t;
+using NodeType = PhysicalResourceType;
+using CoreType = PhysicalResourceType;
+using SeedType = int64_t;
 using HandlerType = int32_t;
 using EnvelopeDataType = int8_t;
 using EventType = uint64_t;

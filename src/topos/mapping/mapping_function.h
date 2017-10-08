@@ -14,6 +14,9 @@ using SimpleMapFunctionType = NodeType(*)(
 template <typename IndexT>
 using ActiveMapFunctionType = NodeType(IndexT*, IndexT*, NodeType);
 
+using SimpleSeedMapFunctionType = NodeType(*)(SeedType, NodeType);
+using ActiveSeedMapFunctionType = NodeType(SeedType, NodeType);
+
 }} /* end namespace vt::mapping */
 
 #endif /*__RUNTIME_TRANSPORT_MAPPING_FUNCTION__*/

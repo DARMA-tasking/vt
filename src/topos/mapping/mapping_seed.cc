@@ -7,10 +7,11 @@
 
 namespace vt { namespace mapping {
 
-template <typename PhysicalT>
-PhysicalT randomSeedMap(SeedType seed, PhysicalT nres) {
+PhysicalResourceType randomSeedMap(SeedType seed, PhysicalResourceType nres) {
+  // @todo: use C++ random number generator instead, these are not thread-safe
+  // This must run only on the communication thread
   srand48(seed);
-  auto const& map_to = static_cast<PhysicalT>(drand48() * nres);
+  auto const& map_to = static_cast<PhysicalResourceType>(drand48() * nres);
   return map_to;
 }
 
