@@ -15,6 +15,7 @@
 
 #include "utils/bits/bits_common.h"
 #include "registry_function.h"
+#include "mapping_function.h"
 
 namespace vt { namespace vrt {
 
@@ -31,6 +32,9 @@ struct VrtContextManager {
 
   template <typename VrtContextT, typename... Args>
   VrtContext_ProxyType constructVrtContext(Args&& ... args);
+
+  template <typename VrtContextT, mapping::ActiveSeedMapFunctionType fn, typename... Args>
+  VrtContext_ProxyType constructVrtContextWorkerMap(Args&& ... args);
 
   VrtContext* getVrtContextByProxy(VrtContext_ProxyType const& proxy);
   void destroyVrtContextByProxy(VrtContext_ProxyType const& proxy);

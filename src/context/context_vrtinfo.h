@@ -37,6 +37,9 @@ struct VrtInfo {
   }
 
 private:
+  HandlerType core_map_handle_ = uninitialized_handler;
+  HandlerType node_map_handle_ = uninitialized_handler;
+
   CoreType default_core_ = uninitialized_destination;
 
   VrtContext_ProxyType proxy_ = no_vrt_proxy;

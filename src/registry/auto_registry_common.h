@@ -19,6 +19,7 @@ using AutoActiveType = SimpleFunctionType;
 using AutoActiveFunctorType = SimpleFunctionType;
 using AutoActiveVCType = vrt::SimpleVCFunctionType;
 using AutoActiveMapType = mapping::SimpleMapFunctionType;
+using AutoActiveSeedMapType = mapping::SimpleSeedMapFunctionType;
 
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;
@@ -61,6 +62,7 @@ using AutoRegistryContainerType = std::vector<AutoRegInfoType<RegInfoT>>;
 using AutoActiveContainerType = AutoRegistryContainerType<AutoActiveType>;
 using AutoActiveVCContainerType = AutoRegistryContainerType<AutoActiveVCType>;
 using AutoActiveMapContainerType = AutoRegistryContainerType<AutoActiveMapType>;
+using AutoActiveSeedMapContainerType = AutoRegistryContainerType<AutoActiveSeedMapType>;
 using AutoActiveFunctorContainerType = AutoRegistryContainerType<AutoActiveFunctorType>;
 
 }} // end namespace vt::auto_registry

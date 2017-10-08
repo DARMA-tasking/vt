@@ -6,6 +6,7 @@
 #include "context_vrtmanager.h"
 #include "topos/location/location.h"
 #include "auto_registry_vc.h"
+#include "auto_registry_map.h"
 
 #include <cassert>
 #include <memory>
@@ -45,6 +46,22 @@ VrtContext_ProxyType VrtContextManager::constructVrtContext(Args&& ... args) {
   curIdent_++;
 
   return proxy;
+}
+
+template <typename VrtContextT, mapping::ActiveSeedMapFunctionType fn, typename... Args>
+VrtContext_ProxyType VrtContextManager::constructVrtContextWorkerMap(
+  Args&& ... args
+) {
+  auto const& core_map_handle = auto_registry::makeAutoHandlerSeedMap<fn>();
+  auto const& proxy = constructVrtContext<VrtContextT, Args...>(
+    std::forward<Args>(args)...
+  );
+  auto const& vrt_id = VrtContextProxy::getVrtContextId(proxy);
+  auto holder_iter = holder_.find(vrt_id);
+  assert(holder_iter != holder_.end() && "Proxy ID Must exist here");
+  auto& info = holder_iter->second;
+  info.core_map_handler_ = core_map_handle;
+  // @todo: do the actual mapping
 }
 
 template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
