@@ -4,23 +4,20 @@
 #include "config.h"
 #include "auto_registry_common.h"
 #include "auto_registry.h"
+#include "context/context_vrt_funcs.h"
 
 #include <vector>
 
 namespace vt { namespace auto_registry {
 
-template <
-  typename VirtualContextT,
-  typename MessageT,
-  ActiveVCFunctionType<MessageT, VirtualContextT>* f
->
-inline HandlerType makeAutoHandlerVC(MessageT* const __attribute__((unused)) msg) {
-  HandlerType const id = RunnableGen<
-    decltype(vt::auto_registry::FunctorAdapter<
-      ActiveVCFunctionType<MessageT, VirtualContextT>, f
+template <typename VrtCtxT, typename MsgT, vrt::ActiveVCFunctionType<MsgT, VrtCtxT>* f>
+inline HandlerType makeAutoHandlerVC(MsgT* const __attribute__((unused)) msg) {
+  HandlerType const id = RunnableGen<decltype(vt::auto_registry::FunctorAdapter<
+      vrt::ActiveVCFunctionType<MsgT, VrtCtxT>, f
     >()),
-    AutoActiveVCContainerType, AutoRegInfoType<AutoActiveVCType>,
-    SimpleVCFunctionType
+    AutoActiveVCContainerType,
+    AutoRegInfoType<AutoActiveVCType>,
+    vrt::SimpleVCFunctionType
   >::idx;
 
   return id;

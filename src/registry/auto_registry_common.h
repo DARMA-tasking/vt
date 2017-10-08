@@ -11,12 +11,17 @@
 #include "context/context_vrt_funcs.h"
 #include "mapping_function.h"
 
+#include <vector>
+
 namespace vt { namespace auto_registry {
 
 using AutoActiveType = SimpleFunctionType;
-using AutoActiveVCType = SimpleVCFunctionType;
-using AutoActiveMapType = mapping::SimpleMapFunctionType;
 using AutoActiveFunctorType = SimpleFunctionType;
+using AutoActiveVCType = vrt::SimpleVCFunctionType;
+using AutoActiveMapType = mapping::SimpleMapFunctionType;
+
+using HandlerManagerType = vt::HandlerManager;
+using AutoHandlerType = int32_t;
 
 template <typename FnT>
 struct AutoRegInfo {
@@ -50,12 +55,13 @@ struct AutoRegInfo {
 template <typename Fn>
 using AutoRegInfoType = AutoRegInfo<Fn>;
 
-using AutoActiveContainerType = std::vector<AutoRegInfoType<AutoActiveType>>;
-using AutoActiveVCContainerType = std::vector<AutoRegInfoType<AutoActiveVCType>>;
-using AutoActiveMapContainerType = std::vector<AutoRegInfoType<AutoActiveMapType>>;
-using AutoActiveFunctorContainerType = std::vector<AutoRegInfoType<AutoActiveFunctorType>>;
-using AutoHandlerType = int32_t;
-using HandlerManagerType = vt::HandlerManager;
+template <typename RegInfoT>
+using AutoRegistryContainerType = std::vector<AutoRegInfoType<RegInfoT>>;
+
+using AutoActiveContainerType = AutoRegistryContainerType<AutoActiveType>;
+using AutoActiveVCContainerType = AutoRegistryContainerType<AutoActiveVCType>;
+using AutoActiveMapContainerType = AutoRegistryContainerType<AutoActiveMapType>;
+using AutoActiveFunctorContainerType = AutoRegistryContainerType<AutoActiveFunctorType>;
 
 }} // end namespace vt::auto_registry
 

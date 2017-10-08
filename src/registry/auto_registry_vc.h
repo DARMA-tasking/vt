@@ -6,21 +6,15 @@
 #include "auto_registry_common.h"
 #include "auto_registry_general.h"
 #include "registry.h"
-
 #include "registry_function.h"
-#include "context/context_vrt.h"
-#include "context_vrt_fwd.h"
+#include "context/context_vrt_funcs.h"
 
 namespace vt { namespace auto_registry {
 
 AutoActiveVCType getAutoHandlerVC(HandlerType const& handler);
 
-template <
-  typename VirtualContextT,
-  typename MessageT,
-  ActiveVCFunctionType<MessageT, VirtualContextT>* f
->
-HandlerType makeAutoHandlerVC(MessageT* const msg);
+template <typename VrtCtxT, typename MsgT, vrt::ActiveVCFunctionType<MsgT, VrtCtxT>* f>
+HandlerType makeAutoHandlerVC(MsgT* const msg);
 
 }} // end namespace vt::auto_registry
 
