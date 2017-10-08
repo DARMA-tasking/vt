@@ -32,19 +32,20 @@ struct VrtContextManager {
   template <typename VrtContextT, typename... Args>
   VrtContext_ProxyType constructVrtContext(Args&& ... args);
 
-  VrtContext* getVrtContextByID(VrtContext_IdType const& lookupID);
   VrtContext* getVrtContextByProxy(VrtContext_ProxyType const& proxy);
-  void destroyVrtContextByID(VrtContext_IdType const& lookupID);
   void destroyVrtContextByProxy(VrtContext_ProxyType const& proxy);
-
-  NodeType getNode() const;
-  VrtContext_IdType getCurrentIdent() const;
 
   template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
   void sendMsg(
     VrtContext_ProxyType const& toProxy, MsgT *const msg,
     ActionType act = nullptr
   );
+
+private:
+  NodeType getNode() const;
+  VrtContext* getVrtContextByID(VrtContext_IdType const& lookupID);
+  void destroyVrtContextByID(VrtContext_IdType const& lookupID);
+  VrtContext_IdType getCurrentIdent() const;
 
  private:
   VrtContextManager_ContainerType holder_;
