@@ -46,23 +46,23 @@ int main(int argc, char **argv) {
     auto vrtc1 = theVrtCManager->constructVrtContext<HelloVrtContext>(10);
     auto vrtc2 = theVrtCManager->constructVrtContext<HelloVrtContext>(20);
 
-    auto temp1 = theVrtCManager->getVrtContextByID(vrtc1);
-    auto hello1 = static_cast<HelloVrtContext*>(temp1);
+    // auto temp1 = theVrtCManager->getVrtContextByID(vrtc1);
+    // auto hello1 = static_cast<HelloVrtContext*>(temp1);
 
-    theVrtCManager->destroyVrtContextByID(vrtc1);
-    auto temp1_ = theVrtCManager->getVrtContextByID(vrtc1);
-    auto hello1_ = static_cast<HelloVrtContext*>(temp1);
+    // theVrtCManager->destroyVrtContextByID(vrtc1);
+    // auto temp1_ = theVrtCManager->getVrtContextByID(vrtc1);
+    // auto hello1_ = static_cast<HelloVrtContext*>(temp1);
 
-    if (temp1_ != nullptr) {
-      std::cout << "Boom "<<std::endl;
-    }
+    // if (temp1_ != nullptr) {
+    //   std::cout << "Boom "<<std::endl;
+    // }
 
-    auto temp2 = theVrtCManager->getVrtContextByID(vrtc2);
-    auto hello2 = static_cast<HelloVrtContext*>(temp2);
+    // auto temp2 = theVrtCManager->getVrtContextByID(vrtc2);
+    // auto hello2 = static_cast<HelloVrtContext*>(temp2);
 
-    if (temp2 != nullptr) {
-      std::cout << "Boom "<<std::endl;
-    }
+    // if (temp2 != nullptr) {
+    //   std::cout << "Boom "<<std::endl;
+    // }
 
 
 //    std::cout <<
