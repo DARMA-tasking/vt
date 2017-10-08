@@ -23,8 +23,7 @@ using RefType = int16_t;
 using ByteType = uint64_t;
 using BitCountType = int32_t;
 using ActionType = std::function<void()>;
-using VrtContext_IdType = uint32_t;
-using VrtContext_ProxyType = uint64_t;
+using VirtualProxyType = uint64_t;
 using SerialByteType = char;
 using WorkerCountType = int32_t;
 

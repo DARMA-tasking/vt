@@ -4,15 +4,14 @@
 namespace vt {
 namespace vrt {
 
-VrtContextManager::VrtContextManager() {
-  curIdent_ = 0;
-  myNode_ = theContext->getNode();
-}
+VirtualContextManager::VirtualContextManager()
+  : curIdent_(0), myNode_(theContext->getNode())
+{ }
 
-/*static*/ void VrtContextManager::handleVCMsg(BaseMessage* msg) {
-  auto const vc_msg = static_cast<VrtContextMessage*>(msg);
+/*static*/ void VirtualContextManager::virtualMsgHandler(BaseMessage* msg) {
+  auto const vc_msg = static_cast<VirtualMessage*>(msg);
   auto const entity_proxy = vc_msg->getEntity();
-  auto const vc_ptr = theVrtCManager->getVrtContextByProxy(entity_proxy);
+  auto const vc_ptr = theVirtualManager->getVirtualByProxy(entity_proxy);
 
   debug_print(
     vrt, node,
@@ -25,17 +24,17 @@ VrtContextManager::VrtContextManager() {
     auto const& sub_handler = vc_msg->getHandler();
     auto const& vc_active_fn = auto_registry::getAutoHandlerVC(sub_handler);
     // execute the user's handler with the message and VC ptr
-    vc_active_fn(static_cast<VrtContextMessage*>(msg), vc_ptr);
+    vc_active_fn(static_cast<VirtualMessage*>(msg), vc_ptr);
   } else {
     // the VC does not exist here?
     assert(false && "A virtual context must exist to invoke user handler");
   }
 }
 
-VrtContext*VrtContextManager::getVrtContextByID(
-    VrtContext_IdType const& lookupID) {
-  VrtContextManager_ContainerType::const_iterator got = holder_.find(lookupID);
-  VrtContext* answer = nullptr;
+VirtualContext*VirtualContextManager::getVirtualByID(
+    VirtualIDType const& lookupID) {
+  ContainerType::const_iterator got = holder_.find(lookupID);
+  VirtualContext* answer = nullptr;
   if (got != holder_.end()) {
     answer = got->second.get();
   } else {
@@ -44,36 +43,36 @@ VrtContext*VrtContextManager::getVrtContextByID(
   return answer;
 }
 
-VrtContext* VrtContextManager::getVrtContextByProxy(
-    VrtContext_ProxyType const& proxy) {
-  VrtContext* answer = nullptr;
-  if (VrtContextProxy::getVrtContextNode(proxy) == myNode_) {
-    answer = getVrtContextByID(VrtContextProxy::getVrtContextId(proxy));
+VirtualContext* VirtualContextManager::getVirtualByProxy(
+    VirtualProxyType const& proxy) {
+  VirtualContext* answer = nullptr;
+  if (VirtualProxyBuilder::getVirtualNode(proxy) == myNode_) {
+    answer = getVirtualByID(VirtualProxyBuilder::getVirtualID(proxy));
   } else {
     // this proxy is not on this node
   }
   return answer;
 }
 
-void VrtContextManager::destroyVrtContextByID(
-    VrtContext_IdType const& lookupID) {
+void VirtualContextManager::destroyVirtualByID(
+    VirtualIDType const& lookupID) {
   holder_.erase(holder_.find(lookupID));
 }
 
-void VrtContextManager::destroyVrtContextByProxy(
-    VrtContext_ProxyType const& proxy) {
-  if (VrtContextProxy::getVrtContextNode(proxy) == myNode_) {
-    destroyVrtContextByID(VrtContextProxy::getVrtContextId(proxy));
+void VirtualContextManager::destoryVirtualByProxy(
+    VirtualProxyType const& proxy) {
+  if (VirtualProxyBuilder::getVirtualNode(proxy) == myNode_) {
+    destroyVirtualByID(VirtualProxyBuilder::getVirtualID(proxy));
   } else {
     // this proxy is not on this node
   }
 }
 
-NodeType VrtContextManager::getNode() const {
+NodeType VirtualContextManager::getNode() const {
   return myNode_;
 }
 
-VrtContext_IdType VrtContextManager::getCurrentIdent() const {
+VirtualIDType VirtualContextManager::getCurrentID() const {
   return curIdent_;
 }
 

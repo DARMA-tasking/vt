@@ -26,7 +26,7 @@ bool Scheduler::schedulerImpl() {
   bool const msg_sch = theMsg->scheduler();
   bool const event_sch = theEvent->scheduler();
   bool const seq_sch = theSeq->scheduler();
-  bool const vrt_seq_sch = theVrtSeq->scheduler();
+  bool const vrt_seq_sch = theVirtualSeq->scheduler();
 
   checkTermSingleNode();
 

@@ -6,22 +6,22 @@ using namespace vt;
 using namespace vt::vrt;
 
 struct HelloMsg : vt::Message {
-  VrtContext_ProxyType proxy;
+  VirtualProxyType proxy;
 
-  HelloMsg(VrtContext_ProxyType const& in_proxy)
+  HelloMsg(VirtualProxyType const& in_proxy)
     : Message(), proxy(in_proxy)
   { }
 };
 
-struct TestMsg : vt::vrt::VrtContextMessage {
+struct TestMsg : vt::vrt::VirtualMessage {
   int from = 0;
 
   TestMsg(int const& in_from)
-    : VrtContextMessage(), from(in_from)
+    : VirtualMessage(), from(in_from)
   { }
 };
 
-struct MyVC : vt::vrt::VrtContext {
+struct MyVC : vt::vrt::VirtualContext {
   int my_data = 10;
 
   MyVC(int const& my_data_in) : my_data(my_data_in) { }
@@ -35,12 +35,12 @@ static void my_han(TestMsg* msg, MyVC* vc) {
   );
 }
 
-static void sendMsgToProxy(VrtContext_ProxyType const& proxy) {
+static void sendMsgToProxy(VirtualProxyType const& proxy) {
   auto this_node = theContext->getNode();
   printf("%d: sendMsgToProxy: proxy=%llu\n", this_node, proxy);
 
   auto m = new TestMsg(this_node + 32);
-  theVrtCManager->sendMsg<MyVC, TestMsg, my_han>(proxy, m, [=]{ delete m; });
+  theVirtualManager->sendMsg<MyVC, TestMsg, my_han>(proxy, m, [=]{ delete m; });
 }
 
 static void hello_world(HelloMsg* msg) {
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    auto proxy = theVrtCManager->constructVrtContext<MyVC>(29);
+    auto proxy = theVirtualManager->makeVirtual<MyVC>(29);
     sendMsgToProxy(proxy);
 
     // send out the proxy to all the nodes

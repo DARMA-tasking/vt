@@ -9,11 +9,11 @@
 namespace vt { namespace seq {
 
 struct VirtualInfo {
-  VirtualInfo(VrtContext_ProxyType const& in_proxy)
+  VirtualInfo(VirtualProxyType const& in_proxy)
     : proxy(in_proxy)
   { }
 
-  VrtContext_ProxyType proxy;
+  VirtualProxyType proxy;
 };
 
 }} //end namespace vt::seq

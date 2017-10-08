@@ -29,10 +29,10 @@ std::unique_ptr<pool::Pool> thePool = nullptr;
 std::unique_ptr<rdma::RDMAManager> theRDMA = nullptr;
 std::unique_ptr<param::Param> theParam = nullptr;
 std::unique_ptr<seq::Sequencer> theSeq = nullptr;
-std::unique_ptr<seq::SequencerVirtual> theVrtSeq = nullptr;
+std::unique_ptr<seq::SequencerVirtual> theVirtualSeq = nullptr;
 std::unique_ptr<sched::Scheduler> theSched = nullptr;
 std::unique_ptr<location::LocationManager> theLocMan = nullptr;
-std::unique_ptr<vrt::VrtContextManager> theVrtCManager;
+std::unique_ptr<vrt::VirtualContextManager> theVirtualManager;
 std::unique_ptr<worker::WorkerGroup> theWorkerGrp = nullptr;
 
 #if backend_check_enabled(trace_enabled)

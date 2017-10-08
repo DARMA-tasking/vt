@@ -11,7 +11,7 @@ namespace vt { namespace seq {
 template <typename Fn>
 bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn) {
   if (theSeq->seq_manager->isVirtual(id)) {
-    return theVrtSeq->executeInNodeContext(id, node, fn);
+    return theVirtualSeq->executeInNodeContext(id, node, fn);
   } else {
     return theSeq->executeInNodeContext(id, node, fn);
   }
@@ -19,7 +19,7 @@ bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn) {
 
 inline void enqueueAction(SeqType const& id, ActionType const& action) {
   if (theSeq->seq_manager->isVirtual(id)) {
-    return theVrtSeq->enqueue(action);
+    return theVirtualSeq->enqueue(action);
   } else {
     return theSeq->enqueue(action);
   }
@@ -33,7 +33,7 @@ TaggedSequencer<SeqTag, SeqTrigger>::convertSeqFun(
 )  {
   return [=]() -> bool {
     if (theSeq->seq_manager->isVirtual(id)) {
-      return theVrtSeq->lookupContextExecute(id, fn);
+      return theVirtualSeq->lookupContextExecute(id, fn);
     } else {
       return theSeq->lookupContextExecute(id, fn);
     }

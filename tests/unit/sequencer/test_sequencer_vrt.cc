@@ -18,29 +18,29 @@ using namespace vt::tests::unit;
 static constexpr SeqType const FinalizeAtomicValue = -1;
 
 template <NumBytesType num_bytes>
-using TestVCMsg = TestStaticBytesMsg<vt::vrt::VrtContextMessage, num_bytes>;
+using TestVCMsg = TestStaticBytesMsg<vt::vrt::VirtualMessage, num_bytes>;
 
-struct TestSequencerVrt : TestParallelHarness {
+struct TestSequencerVirtual : TestParallelHarness {
   using TestMsg = TestVCMsg<4>;
   using OrderType = uint32_t;
 
-  struct TestVrt : VrtContext {
+  struct TestVirtual : VirtualContext {
     int test_data = 10;
 
-    TestVrt(int const& test_data_in)
+    TestVirtual(int const& test_data_in)
       : test_data(test_data_in)
     { }
   };
 
-  using VrtType = TestVrt;
+  using VirtualType = TestVirtual;
 
-  static VrtType* test_vrt_ptr;
-  static VrtType* test_vrt_ptr_a;
-  static VrtType* test_vrt_ptr_b;
+  static VirtualType* test_vrt_ptr;
+  static VirtualType* test_vrt_ptr_a;
+  static VirtualType* test_vrt_ptr_b;
 
-  SEQUENCE_REGISTER_VRT_HANDLER(VrtType, TestMsg, testSeqHan1);
-  SEQUENCE_REGISTER_VRT_HANDLER(VrtType, TestMsg, testSeqHan2);
-  SEQUENCE_REGISTER_VRT_HANDLER(VrtType, TestMsg, testSeqHan3);
+  SEQUENCE_REGISTER_VRT_HANDLER(VirtualType, TestMsg, testSeqHan1);
+  SEQUENCE_REGISTER_VRT_HANDLER(VirtualType, TestMsg, testSeqHan2);
+  SEQUENCE_REGISTER_VRT_HANDLER(VirtualType, TestMsg, testSeqHan3);
 
   static void testSeqFn1(SeqType const& seq_id) {
     static std::atomic<OrderType> seq_ordering_{};
@@ -52,7 +52,9 @@ struct TestSequencerVrt : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theVrtSeq->wait<VrtType, TestMsg, testSeqHan1>([](TestMsg* msg, VrtType* vrt){
+    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan1>([](
+      TestMsg* msg, VirtualType* vrt
+    ){
       //printf("wait is triggered: msg=%p, vrt=%p\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr);
       EXPECT_EQ(seq_ordering_++, 1);
@@ -69,13 +71,17 @@ struct TestSequencerVrt : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theVrtSeq->wait<VrtType, TestMsg, testSeqHan2>([](TestMsg* msg, VrtType* vrt){
+    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan2>([](
+      TestMsg* msg, VirtualType* vrt
+    ){
       //printf("wait is triggered: msg=%p, vrt=%p\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr);
       EXPECT_EQ(seq_ordering_++, 1);
     });
 
-    theVrtSeq->wait<VrtType, TestMsg, testSeqHan2>([](TestMsg* msg, VrtType* vrt){
+    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan2>([](
+      TestMsg* msg, VirtualType* vrt
+    ){
       //printf("wait is triggered: msg=%p, vrt=%p\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr);
       EXPECT_EQ(seq_ordering_++, 2);
@@ -92,7 +98,9 @@ struct TestSequencerVrt : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theVrtSeq->wait<VrtType, TestMsg, testSeqHan3>([](TestMsg* msg, VrtType* vrt){
+    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan3>([](
+      TestMsg* msg, VirtualType* vrt
+    ){
       printf("wait is triggered for a: msg=%p, vrt=%p\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr_a);
       EXPECT_EQ(seq_ordering_++, 1);
@@ -109,7 +117,9 @@ struct TestSequencerVrt : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theVrtSeq->wait<VrtType, TestMsg, testSeqHan3>([](TestMsg* msg, VrtType* vrt){
+    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan3>([](
+      TestMsg* msg, VirtualType* vrt
+    ){
       printf("wait is triggered for b: msg=%p, vrt=%p\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr_b);
       EXPECT_EQ(seq_ordering_++, 1);
@@ -117,24 +127,24 @@ struct TestSequencerVrt : TestParallelHarness {
   }
 };
 
-/*static*/ TestSequencerVrt::TestVrt* TestSequencerVrt::test_vrt_ptr = nullptr;
-/*static*/ TestSequencerVrt::TestVrt* TestSequencerVrt::test_vrt_ptr_a = nullptr;
-/*static*/ TestSequencerVrt::TestVrt* TestSequencerVrt::test_vrt_ptr_b = nullptr;
+/*static*/ TestSequencerVirtual::TestVirtual* TestSequencerVirtual::test_vrt_ptr = nullptr;
+/*static*/ TestSequencerVirtual::TestVirtual* TestSequencerVirtual::test_vrt_ptr_a = nullptr;
+/*static*/ TestSequencerVirtual::TestVirtual* TestSequencerVirtual::test_vrt_ptr_b = nullptr;
 
-TEST_F(TestSequencerVrt, test_seq_vc_1) {
+TEST_F(TestSequencerVirtual, test_seq_vc_1) {
   auto const& my_node = theContext->getNode();
 
   if (my_node == 0) {
-    auto proxy = theVrtCManager->constructVrtContext<VrtType>(29);
-    SeqType const& seq_id = theVrtSeq->createSeqVrtContext(proxy);
-    auto vrt_ptr = theVrtCManager->getVrtContextByProxy(proxy);
+    auto proxy = theVirtualManager->makeVirtual<VirtualType>(29);
+    SeqType const& seq_id = theVirtualSeq->createVirtualSeq(proxy);
+    auto vrt_ptr = theVirtualManager->getVirtualByProxy(proxy);
 
-    test_vrt_ptr = static_cast<VrtType*>(vrt_ptr);
+    test_vrt_ptr = static_cast<VirtualType*>(vrt_ptr);
     //printf("vrt ptr=%p\n", test_vrt_ptr);
 
-    theVrtSeq->sequenced(seq_id, testSeqFn1);
+    theVirtualSeq->sequenced(seq_id, testSeqFn1);
 
-    theVrtCManager->sendMsg<VrtType, TestMsg, testSeqHan1>(
+    theVirtualManager->sendMsg<VirtualType, TestMsg, testSeqHan1>(
       proxy, makeSharedMessage<TestMsg>()
     );
 
@@ -144,20 +154,20 @@ TEST_F(TestSequencerVrt, test_seq_vc_1) {
   }
 }
 
-TEST_F(TestSequencerVrt, test_seq_vc_2) {
+TEST_F(TestSequencerVirtual, test_seq_vc_2) {
   auto const& my_node = theContext->getNode();
 
   if (my_node == 0) {
-    auto proxy = theVrtCManager->constructVrtContext<VrtType>(85);
-    SeqType const& seq_id = theVrtSeq->createSeqVrtContext(proxy);
-    auto vrt_ptr = theVrtCManager->getVrtContextByProxy(proxy);
+    auto proxy = theVirtualManager->makeVirtual<VirtualType>(85);
+    SeqType const& seq_id = theVirtualSeq->createVirtualSeq(proxy);
+    auto vrt_ptr = theVirtualManager->getVirtualByProxy(proxy);
 
-    test_vrt_ptr = static_cast<VrtType*>(vrt_ptr);
+    test_vrt_ptr = static_cast<VirtualType*>(vrt_ptr);
 
-    theVrtSeq->sequenced(seq_id, testSeqFn2);
+    theVirtualSeq->sequenced(seq_id, testSeqFn2);
 
     for (int i = 0; i < 2; i++) {
-      theVrtCManager->sendMsg<VrtType, TestMsg, testSeqHan2>(
+      theVirtualManager->sendMsg<VirtualType, TestMsg, testSeqHan2>(
         proxy, makeSharedMessage<TestMsg>()
       );
     }
@@ -168,27 +178,27 @@ TEST_F(TestSequencerVrt, test_seq_vc_2) {
   }
 }
 
-TEST_F(TestSequencerVrt, test_seq_vc_distinct_inst_3) {
+TEST_F(TestSequencerVirtual, test_seq_vc_distinct_inst_3) {
   auto const& my_node = theContext->getNode();
 
   if (my_node == 0) {
-    auto proxy_a = theVrtCManager->constructVrtContext<VrtType>(85);
-    SeqType const& seq_id_a = theVrtSeq->createSeqVrtContext(proxy_a);
-    auto vrt_ptr_a = theVrtCManager->getVrtContextByProxy(proxy_a);
-    test_vrt_ptr_a = static_cast<VrtType*>(vrt_ptr_a);
+    auto proxy_a = theVirtualManager->makeVirtual<VirtualType>(85);
+    SeqType const& seq_id_a = theVirtualSeq->createVirtualSeq(proxy_a);
+    auto vrt_ptr_a = theVirtualManager->getVirtualByProxy(proxy_a);
+    test_vrt_ptr_a = static_cast<VirtualType*>(vrt_ptr_a);
 
-    auto proxy_b = theVrtCManager->constructVrtContext<VrtType>(23);
-    SeqType const& seq_id_b = theVrtSeq->createSeqVrtContext(proxy_b);
-    auto vrt_ptr_b = theVrtCManager->getVrtContextByProxy(proxy_b);
-    test_vrt_ptr_b = static_cast<VrtType*>(vrt_ptr_b);
+    auto proxy_b = theVirtualManager->makeVirtual<VirtualType>(23);
+    SeqType const& seq_id_b = theVirtualSeq->createVirtualSeq(proxy_b);
+    auto vrt_ptr_b = theVirtualManager->getVirtualByProxy(proxy_b);
+    test_vrt_ptr_b = static_cast<VirtualType*>(vrt_ptr_b);
 
-    theVrtSeq->sequenced(seq_id_a, testSeqFn3a);
-    theVrtSeq->sequenced(seq_id_b, testSeqFn3b);
+    theVirtualSeq->sequenced(seq_id_a, testSeqFn3a);
+    theVirtualSeq->sequenced(seq_id_b, testSeqFn3b);
 
-    theVrtCManager->sendMsg<VrtType, TestMsg, testSeqHan3>(
+    theVirtualManager->sendMsg<VirtualType, TestMsg, testSeqHan3>(
       proxy_a, makeSharedMessage<TestMsg>()
     );
-    theVrtCManager->sendMsg<VrtType, TestMsg, testSeqHan3>(
+    theVirtualManager->sendMsg<VirtualType, TestMsg, testSeqHan3>(
       proxy_b, makeSharedMessage<TestMsg>()
     );
 

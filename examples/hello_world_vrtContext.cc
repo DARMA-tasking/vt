@@ -16,11 +16,11 @@ struct HelloMsg : vt::Message {
       : Message(), from(in_from) {}
 };
 
-struct HelloVrtContext : VrtContext {
+struct HelloVrtContext : VirtualContext {
   int from;
 
   explicit HelloVrtContext(int const& in_from)
-      : VrtContext(), from(in_from) {}
+      : VirtualContext(), from(in_from) {}
 };
 
 static void hello_world(HelloMsg *msg) {
@@ -43,8 +43,8 @@ int main(int argc, char **argv) {
 
   if (my_node == 1) {
 
-    auto vrtc1 = theVrtCManager->constructVrtContext<HelloVrtContext>(10);
-    auto vrtc2 = theVrtCManager->constructVrtContext<HelloVrtContext>(20);
+    auto vrtc1 = theVirtualManager->makeVirtual<HelloVrtContext>(10);
+    auto vrtc2 = theVirtualManager->makeVirtual<HelloVrtContext>(20);
 
     // auto temp1 = theVrtCManager->getVrtContextByID(vrtc1);
     // auto hello1 = static_cast<HelloVrtContext*>(temp1);

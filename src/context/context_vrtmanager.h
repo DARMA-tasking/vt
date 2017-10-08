@@ -19,41 +19,50 @@
 
 namespace vt { namespace vrt {
 
-struct VrtContextManager {
-  using VrtContextPtrType = std::unique_ptr<VrtContext>;
-  using VrtInfoType = VrtInfo;
-  using VrtContextManager_ContainerType = std::unordered_map<
-    VrtContext_IdType, VrtInfoType
-  >;
+struct VirtualContextManager {
+  using VirtualPtrType = std::unique_ptr<VirtualContext>;
+  using VirtualInfoType = VirtualInfo;
+  using ContainerType = std::unordered_map<VirtualIDType, VirtualInfoType>;
 
-  VrtContextManager();
-
-  static void handleVCMsg(BaseMessage* msg);
+  VirtualContextManager();
 
   template <typename VrtContextT, typename... Args>
-  VrtContext_ProxyType constructVrtContext(Args&& ... args);
+  VirtualProxyType makeVirtual(Args&& ... args);
+
+  template <typename VrtContextT, typename MessageT>
+  VirtualProxyType makeVirtualMsg(NodeType const& node, MessageT* m);
 
   template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
-  VrtContext_ProxyType constructVrtContextWorkerMap(Args&& ... args);
+  VirtualProxyType makeVirtualMap(Args&& ... args);
 
-  VrtContext* getVrtContextByProxy(VrtContext_ProxyType const& proxy);
-  void destroyVrtContextByProxy(VrtContext_ProxyType const& proxy);
+  VirtualContext* getVirtualByProxy(VirtualProxyType const& proxy);
+  void destoryVirtualByProxy(VirtualProxyType const& proxy);
 
   template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   void sendMsg(
-    VrtContext_ProxyType const& toProxy, MsgT *const msg,
-    ActionType act = nullptr
+    VirtualProxyType const& toProxy, MsgT *const msg, ActionType act = nullptr
   );
 
 private:
+  // All messages directed to a virtual context are routed through this handler
+  // so the user's handler can be invoked with the pointer to the virtual
+  // context
+  static void virtualMsgHandler(BaseMessage* msg);
+
+  VirtualContext* getVirtualByID(VirtualIDType const& lookupID);
+  void destroyVirtualByID(VirtualIDType const& lookupID);
+  VirtualIDType getCurrentID() const;
   NodeType getNode() const;
-  VrtContext* getVrtContextByID(VrtContext_IdType const& lookupID);
-  void destroyVrtContextByID(VrtContext_IdType const& lookupID);
-  VrtContext_IdType getCurrentIdent() const;
 
  private:
-  VrtContextManager_ContainerType holder_;
-  VrtContext_IdType curIdent_;
+  // Holder for local virtual contexts that are mapped to this node; VirtualInfo
+  // holds a pointer to the virtual along with other meta-information about it
+  ContainerType holder_;
+
+  // The current identifier (node-local) for this manager
+  VirtualIDType curIdent_;
+
+  // Cache of the node for the virtual context manager
   NodeType myNode_;
 };
 
@@ -61,7 +70,7 @@ private:
 
 namespace vt {
 
-extern std::unique_ptr<vrt::VrtContextManager> theVrtCManager;
+extern std::unique_ptr<vrt::VirtualContextManager> theVirtualManager;
 
 }  // end namespace vt
 

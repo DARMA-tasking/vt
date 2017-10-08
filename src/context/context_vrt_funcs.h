@@ -8,7 +8,7 @@
 
 namespace vt { namespace vrt {
 
-using ActiveVrtFnPtrType = void(*)(vt::BaseMessage *, vt::vrt::VrtContext*);
+using ActiveVirtualFnPtrType = void(*)(vt::BaseMessage *, vt::vrt::VirtualContext*);
 
 template <typename MessageT, typename VirtualContextT>
 using ActiveVrtTypedFnType = void(MessageT*, VirtualContextT*);

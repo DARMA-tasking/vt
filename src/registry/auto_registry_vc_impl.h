@@ -19,7 +19,7 @@ inline HandlerType makeAutoHandlerVC(MsgT* const __attribute__((unused)) msg) {
     >()),
     AutoActiveVCContainerType,
     AutoRegInfoType<AutoActiveVCType>,
-    ActiveVrtFnPtrType
+    ActiveVirtualFnPtrType
   >::idx;
 
   return id;

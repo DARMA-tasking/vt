@@ -12,10 +12,10 @@
 namespace vt { namespace vrt {
 
 template <typename MessageT>
-using RoutedMessageType = LocationRoutedMsg<VrtContext_ProxyType, MessageT>;
+using RoutedMessageType = LocationRoutedMsg<VirtualProxyType, MessageT>;
 
-struct VrtContextMessage : RoutedMessageType<vt::Message> {
-  VrtContextMessage() = default;
+struct VirtualMessage : RoutedMessageType<vt::Message> {
+  VirtualMessage() = default;
 
   void setHandler(HandlerType const& in_handler) {
     vt_sub_handler = in_handler;

@@ -8,27 +8,27 @@ using namespace vt::vrt;
 static constexpr int64_t const total_size = 1024;
 static constexpr int64_t const block_size = 64;
 
-struct CreateJacobi1DMsg : vt::vrt::VrtContextMessage {
-  VrtContext_ProxyType parent;
+struct CreateJacobi1DMsg : vt::vrt::VirtualMessage {
+  VirtualProxyType parent;
   int64_t lo = 0, hi = 0;
 
   CreateJacobi1DMsg(
-    int64_t const& in_lo, int64_t const& in_hi, VrtContext_ProxyType in_parent
-  ) : VrtContextMessage(), parent(in_parent), lo(in_lo), hi(in_hi)
+    int64_t const& in_lo, int64_t const& in_hi, VirtualProxyType in_parent
+  ) : VirtualMessage(), parent(in_parent), lo(in_lo), hi(in_hi)
   { }
 };
 
 struct Jacobi1D;
 static void create_jacobi1d(CreateJacobi1DMsg* msg, Jacobi1D* j1d);
 
-struct Jacobi1D : vt::vrt::VrtContext {
+struct Jacobi1D : vt::vrt::VirtualContext {
   bool has_parent = false;
-  VrtContext_ProxyType parent;
-  VrtContext_ProxyType c1, c2;
+  VirtualProxyType parent;
+  VirtualProxyType c1, c2;
   int64_t lo = 0, hi = 0;
 
   Jacobi1D(
-    int64_t const& in_lo, int64_t const& in_hi, VrtContext_ProxyType in_parent
+    int64_t const& in_lo, int64_t const& in_hi, VirtualProxyType in_parent
   ) : parent(in_parent), lo(in_lo), hi(in_hi)
   {
     printf("construct: lo=%lld, hi=%lld, parent=%lld\n", lo, hi, parent);
@@ -44,19 +44,19 @@ struct Jacobi1D : vt::vrt::VrtContext {
       lo, mid, hi, size
     );
 
-    c1 = theVrtCManager->constructVrtContext<Jacobi1D>(lo, mid, proxy);
-    c2 = theVrtCManager->constructVrtContext<Jacobi1D>(mid, hi, proxy);
+    c1 = theVirtualManager->makeVirtual<Jacobi1D>(lo, mid, proxy);
+    c2 = theVirtualManager->makeVirtual<Jacobi1D>(mid, hi, proxy);
 
     {
       CreateJacobi1DMsg* msg = new CreateJacobi1DMsg(lo, mid, proxy);
-      theVrtCManager->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
+      theVirtualManager->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
         c1, msg, [=]{ delete msg; }
       );
     }
 
     {
       CreateJacobi1DMsg* msg = new CreateJacobi1DMsg(mid, hi, proxy);
-      theVrtCManager->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
+      theVirtualManager->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
         c2, msg, [=]{ delete msg; }
       );
     }
@@ -86,10 +86,10 @@ int main(int argc, char** argv) {
   auto const& num_nodes = theContext->getNumNodes();
 
   if (my_node == 0) {
-    auto root = theVrtCManager->constructVrtContext<Jacobi1D>(0, total_size, -1);
+    auto root = theVirtualManager->makeVirtual<Jacobi1D>(0, total_size, -1);
 
     //CreateJacobi1DMsg* msg = new CreateJacobi1DMsg(0, total_size, root);
-    theVrtCManager->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
+    theVirtualManager->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
       root, makeSharedMessage<CreateJacobi1DMsg>(0, total_size, root)
     );
   }

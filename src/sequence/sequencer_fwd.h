@@ -22,7 +22,7 @@ using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
 namespace vt {
 
 extern std::unique_ptr<seq::Sequencer> theSeq;
-extern std::unique_ptr<seq::SequencerVirtual> theVrtSeq;
+extern std::unique_ptr<seq::SequencerVirtual> theVirtualSeq;
 
 } // end namespace vt
 

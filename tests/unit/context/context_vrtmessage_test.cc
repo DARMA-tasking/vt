@@ -9,7 +9,7 @@
 
 namespace vt { namespace tests { namespace unit {
 
-class TestVrtContextMessage : public TestParallelHarness {
+class TestVirtualContextMessage : public TestParallelHarness {
   virtual void SetUp() {
     TestParallelHarness::SetUp();
   }
@@ -19,48 +19,48 @@ class TestVrtContextMessage : public TestParallelHarness {
   }
 };
 
-struct HelloVrtContext : vt::vrt::VrtContext {
+struct HelloVirtualContext : vt::vrt::VirtualContext {
   int from;
 
-  explicit HelloVrtContext(int const& in_from)
-      : VrtContext(), from(in_from) {}
+  explicit HelloVirtualContext(int const& in_from)
+      : VirtualContext(), from(in_from) {}
 };
 
-struct MyHelloMsg : vt::vrt::VrtContextMessage {
+struct MyHelloMsg : vt::vrt::VirtualContextMessage {
   int from;
 
   MyHelloMsg(int const& in_from)
-      : vt::vrt::VrtContextMessage(), from(in_from) {}
+      : vt::vrt::VirtualContextMessage(), from(in_from) {}
 
 };
 
-void myWorkHandler (MyHelloMsg* msg, HelloVrtContext* context) {
+void myWorkHandler (MyHelloMsg* msg, HelloVirtualContext* context) {
   // do some work
 }
 
 
-TEST_F(TestVrtContextMessage, Construction_and_API) {
+TEST_F(TestVirtualContextMessage, Construction_and_API) {
   using namespace vt;
 
   auto const& my_node = theContext->getNode();
 
-  auto vrtc1 = theVrtCManager->constructVrtContext<HelloVrtContext>(10);
+  auto vrtc1 = theVirtualManager->makeVirtual<HelloVirtualContext>(10);
   MyHelloMsg* msg = new MyHelloMsg(my_node);
 
-  theVrtCManager->sendMsg<HelloVrtContext, MyHelloMsg, myWorkHandler>
+  theVirtualManager->sendMsg<HelloVirtualContext, MyHelloMsg, myWorkHandler>
     (my_node, makeSharedMessage<MyHelloMsg>());
 
 
-  EXPECT_EQ(theVrtCManager->getCurrentIdent(), 1);
+  EXPECT_EQ(theVirtualManager->getCurrentIdent(), 1);
 
-  auto temp1 = theVrtCManager->getVrtContextByID(vrtc1);
-  auto hello1 = static_cast<HelloVrtContext*>(temp1);
+  auto temp1 = theVirtualManager->getVirtualByID(vrtc1);
+  auto hello1 = static_cast<HelloVirtualContext*>(temp1);
 
-  auto temp2 = theVrtCManager->getVrtContextByID(vrtc1);
-  auto hello2 = static_cast<HelloVrtContext*>(temp2);
+  auto temp2 = theVirtualManager->getVirtualByID(vrtc1);
+  auto hello2 = static_cast<HelloVirtualContext*>(temp2);
 
   EXPECT_EQ(hello1->from, 10);
-  EXPECT_EQ(hello1->getVrtContextNode(), theVrtCManager->getNode());
+  EXPECT_EQ(hello1->getVirtualContextNode(), theVirtualManager->getNode());
 
   hello1->setIsCollection(true);
   EXPECT_EQ(hello2->isCollection(), true);
@@ -70,18 +70,18 @@ TEST_F(TestVrtContextMessage, Construction_and_API) {
 
   ////////////////////////////////////////////////////////////////////
 
-  theVrtCManager->destroyVrtContextByID(vrtc1);
-  EXPECT_EQ(theVrtCManager->getVrtContextByID(vrtc1), nullptr);
+  theVirtualManager->destroyVirtualContextByID(vrtc1);
+  EXPECT_EQ(theVirtualManager->getVirtualByID(vrtc1), nullptr);
 
-  auto vrtc2 = theVrtCManager->constructVrtContext<HelloVrtContext>(20);
-  auto temp21 = theVrtCManager->getVrtContextByID(vrtc2);
-  auto hello21 = static_cast<HelloVrtContext*>(temp21);
+  auto vrtc2 = theVirtualManager->makeVirtual<HelloVirtualContext>(20);
+  auto temp21 = theVirtualManager->getVirtualByID(vrtc2);
+  auto hello21 = static_cast<HelloVirtualContext*>(temp21);
 
   auto vrtc3 = 20;
-  EXPECT_EQ(theVrtCManager->getVrtContextByID(vrtc3), nullptr);
+  EXPECT_EQ(theVirtualManager->getVirtualByID(vrtc3), nullptr);
 
   EXPECT_EQ(hello21->from, 20);
-  EXPECT_EQ(hello21->getVrtContextNode(), theVrtCManager->getNode());
+  EXPECT_EQ(hello21->getVirtualContextNode(), theVirtualManager->getNode());
 }
 
 }}} // end namespace vt::tests::unit

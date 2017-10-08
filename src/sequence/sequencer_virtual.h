@@ -27,8 +27,8 @@ struct TaggedSequencerVrt : TaggedSequencer<SeqTag, SeqTrigger> {
   template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   using SeqStateMatcherType = SeqMatcherVirtual<VcT, MsgT, f>;
 
-  SeqType createSeqVrtContext(VrtContext_ProxyType const& proxy);
-  VrtContext_ProxyType getCurrentVrtProxy();
+  SeqType createVirtualSeq(VirtualProxyType const& proxy);
+  VirtualProxyType getCurrentVirtualProxy();
 
   virtual SeqType getNextID() override;
 
@@ -50,7 +50,7 @@ private:
 
 #define SEQUENCE_REGISTER_VRT_HANDLER(vrtcontext, message, handler)     \
   static void handler(message* m, vrtcontext* vc) {                     \
-    theVrtSeq->sequenceVrtMsg<vrtcontext, message, handler>(m, vc);     \
+    theVirtualSeq->sequenceVrtMsg<vrtcontext, message, handler>(m, vc); \
   }
 
 using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
@@ -59,7 +59,7 @@ using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
 
 namespace vt {
 
-extern std::unique_ptr<seq::SequencerVirtual> theVrtSeq;
+extern std::unique_ptr<seq::SequencerVirtual> theVirtualSeq;
 
 } //end namespace vt
 

@@ -9,17 +9,17 @@
 
 namespace vt { namespace vrt {
 
-struct VrtContext {
-  VrtContext() = default;
+struct VirtualContext {
+  VirtualContext() = default;
 
-  VrtContext_ProxyType getProxy() const {
+  VirtualProxyType getProxy() const {
     return proxy_;
   }
 
-  friend struct VrtContextManager;
+  friend struct VirtualContextManager;
 
 private:
-  VrtContext_ProxyType proxy_ = no_vrt_proxy;
+  VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
 }}  // end namespace vt::vrt

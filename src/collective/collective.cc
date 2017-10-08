@@ -110,10 +110,10 @@ CollectiveOps::finalizeRuntime() {
   theRDMA = std::make_unique<rdma::RDMAManager>();
   theParam = std::make_unique<param::Param>();
   theSeq = std::make_unique<seq::Sequencer>();
-  theVrtSeq = std::make_unique<seq::SequencerVirtual>();
+  theVirtualSeq = std::make_unique<seq::SequencerVirtual>();
   theSched = std::make_unique<sched::Scheduler>();
   theLocMan = std::make_unique<location::LocationManager>();
-  theVrtCManager = std::make_unique<vrt::VrtContextManager>();
+  theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theWorkerGrp = std::make_unique<worker::WorkerGroup>();
 
   backend_enable_if(
@@ -138,7 +138,7 @@ CollectiveOps::finalizeRuntime() {
   theEvent->cleanup(); theEvent = nullptr;
   thePool = nullptr;
 
-//  theVrtCManager = nullptr;
+//  theVirtualManager = nullptr;
 
   // set trace to nullptr to write out to disk
   backend_enable_if(

@@ -8,7 +8,9 @@
 
 namespace vt { namespace vrt {
 
-struct VrtContextManager;
+using VirtualIDType = uint32_t;
+
+struct VirtualContextManager;
 
 }}  // end namespace vt::vrt
 

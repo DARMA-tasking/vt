@@ -25,3 +25,4 @@ extern std::unique_ptr<Context> theContext;
 }  // end namespace vt
 
 #endif /*INCLUDED_CONTEXT*/
+

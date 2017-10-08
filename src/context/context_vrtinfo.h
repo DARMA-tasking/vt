@@ -10,20 +10,20 @@
 
 namespace vt { namespace vrt {
 
-struct VrtInfo {
-  using VrtContextPtrType = std::unique_ptr<VrtContext>;
+struct VirtualInfo {
+  using VirtualPtrType = std::unique_ptr<VirtualContext>;
 
-  VrtInfo(VrtContextPtrType in_vrt_ptr, VrtContext_ProxyType const& proxy_in)
+  VirtualInfo(VirtualPtrType in_vrt_ptr, VirtualProxyType const& proxy_in)
     : proxy_(proxy_in), vrt_ptr_(std::move(in_vrt_ptr))
   { }
-  VrtInfo(VrtInfo&&) = default;
-  VrtInfo(VrtInfo const&) = delete;
+  VirtualInfo(VirtualInfo&&) = default;
+  VirtualInfo(VirtualInfo const&) = delete;
 
   void mapToCore(CoreType const& core) {
     default_core_ = core;
   }
 
-  VrtContext* get() const {
+  VirtualContext* get() const {
     assert(vrt_ptr_ != nullptr and "Must have a valid context");
     return vrt_ptr_.get();
   }
@@ -32,7 +32,7 @@ struct VrtInfo {
     return default_core_;
   }
 
-  VrtContext_ProxyType getProxy() const {
+  VirtualProxyType getProxy() const {
     return proxy_;
   }
 
@@ -42,9 +42,9 @@ private:
 
   CoreType default_core_ = uninitialized_destination;
 
-  VrtContext_ProxyType proxy_ = no_vrt_proxy;
+  VirtualProxyType proxy_ = no_vrt_proxy;
 
-  VrtContextPtrType vrt_ptr_ = nullptr;
+  VirtualPtrType vrt_ptr_ = nullptr;
 };
 
 }} /* end namespace vt::vrt */

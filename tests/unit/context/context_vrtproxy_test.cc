@@ -20,11 +20,11 @@ TEST_F(TestVrtContextProxy, Construction_AND_API) {
   using namespace vt;
   using namespace vt::vrt;
 
-  VrtContext_ProxyType proxy1 = VrtContextProxy::createNewProxy(200, 20);
+  VrtContext_ProxyType proxy1 = VrtContextProxy::createProxy(200, 20);
   EXPECT_EQ(VrtContextProxy::isCollection(proxy1), false);
   EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), false);
-  EXPECT_EQ(VrtContextProxy::getVrtContextNode(proxy1), 20);
-  EXPECT_EQ(VrtContextProxy::getVrtContextId(proxy1), 200);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy1), 20);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy1), 200);
 
   VrtContextProxy::setIsCollection(proxy1, true);
   EXPECT_EQ(VrtContextProxy::isCollection(proxy1), true);
@@ -33,29 +33,29 @@ TEST_F(TestVrtContextProxy, Construction_AND_API) {
   EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), true);
 
   VrtContextProxy::setVrtContextNode(proxy1, 2000);
-  EXPECT_EQ(VrtContextProxy::getVrtContextNode(proxy1), 2000);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy1), 2000);
 
   VrtContextProxy::setVrtContextId(proxy1, 3000);
-  EXPECT_EQ(VrtContextProxy::getVrtContextId(proxy1), 3000);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy1), 3000);
 
   EXPECT_EQ(VrtContextProxy::isCollection(proxy1), true);
   EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), true);
-  EXPECT_EQ(VrtContextProxy::getVrtContextNode(proxy1), 2000);
-  EXPECT_EQ(VrtContextProxy::getVrtContextId(proxy1), 3000);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy1), 2000);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy1), 3000);
 
   VrtContext_ProxyType proxy2
-      = VrtContextProxy::createNewProxy(200, 20, true);
+      = VrtContextProxy::createProxy(200, 20, true);
   EXPECT_EQ(VrtContextProxy::isCollection(proxy2), true);
   EXPECT_EQ(VrtContextProxy::isMigratable(proxy2), false);
-  EXPECT_EQ(VrtContextProxy::getVrtContextNode(proxy2), 20);
-  EXPECT_EQ(VrtContextProxy::getVrtContextId(proxy2), 200);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy2), 20);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy2), 200);
 
   VrtContext_ProxyType proxy3 =
-      VrtContextProxy::createNewProxy(200, 20, true, true);
+      VrtContextProxy::createProxy(200, 20, true, true);
   EXPECT_EQ(VrtContextProxy::isCollection(proxy3), true);
   EXPECT_EQ(VrtContextProxy::isMigratable(proxy3), true);
-  EXPECT_EQ(VrtContextProxy::getVrtContextNode(proxy3), 20);
-  EXPECT_EQ(VrtContextProxy::getVrtContextId(proxy3), 200);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy3), 20);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy3), 200);
 }
 
 }}} // end namespace vt::tests::unit

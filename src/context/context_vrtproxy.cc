@@ -3,67 +3,74 @@
 
 namespace vt {namespace vrt {
 
-/*static*/ VrtContext_ProxyType VrtContextProxy::createNewProxy(
-    VrtContext_IdType const& id, NodeType const& node,
-    const bool& is_coll, const bool& is_migratable) {
-  VrtContext_ProxyType myProxy;
+/*static*/ VirtualProxyType VirtualProxyBuilder::createProxy(
+  VirtualIDType const& id, NodeType const& node, bool const& is_coll,
+  bool const& is_migratable
+) {
+  VirtualProxyType new_proxy = 0;
 
-  setIsCollection(myProxy, is_coll);
-  setIsMigratable(myProxy, is_migratable);
-  setVrtContextNode(myProxy, node);
-  setVrtContextId(myProxy, id);
+  setIsCollection(new_proxy, is_coll);
+  setIsMigratable(new_proxy, is_migratable);
+  setVirtualNode(new_proxy, node);
+  setVirtualID(new_proxy, id);
 
-  return myProxy;
+  return new_proxy;
 }
 
-/*static*/ void VrtContextProxy::setIsCollection(
-    VrtContext_ProxyType& proxy, bool const& is_coll) {
-  BitPackerType::boolSetField<eVrtContextProxyBits::Collection>
-      (proxy, is_coll);
+/*static*/ void VirtualProxyBuilder::setIsCollection(
+  VirtualProxyType& proxy, bool const& is_coll
+) {
+  BitPackerType::boolSetField<eVirtualProxyBits::Collection>(proxy, is_coll);
 }
 
-/*static*/ void VrtContextProxy::setIsMigratable(
-    VrtContext_ProxyType& proxy, bool const& is_migratable) {
-  BitPackerType::boolSetField<eVrtContextProxyBits::Migratable>
-      (proxy, is_migratable);
+/*static*/ void VirtualProxyBuilder::setIsMigratable(
+  VirtualProxyType& proxy, bool const& is_mig
+) {
+  BitPackerType::boolSetField<eVirtualProxyBits::Migratable>(proxy, is_mig);
 }
 
-/*static*/ void VrtContextProxy::setVrtContextNode(
-    VrtContext_ProxyType& proxy, NodeType const& node) {
-  BitPackerType::setField<eVrtContextProxyBits::Node,
-                          vrtCntx_node_num_bits>(proxy, node);
+/*static*/ void VirtualProxyBuilder::setVirtualNode(
+  VirtualProxyType& proxy, NodeType const& node
+) {
+  BitPackerType::setField<eVirtualProxyBits::Node, virtual_node_num_bits>(
+    proxy, node
+  );
 }
 
-/*static*/ void VrtContextProxy::setVrtContextId(
-    VrtContext_ProxyType& proxy, VrtContext_IdType const& id) {
-  BitPackerType::setField<eVrtContextProxyBits::ID,
-                          vrtCntx_id_num_bits>(proxy, id);
+/*static*/ void VirtualProxyBuilder::setVirtualID(
+  VirtualProxyType& proxy, VirtualIDType const& id
+) {
+  BitPackerType::setField<eVirtualProxyBits::ID, virtual_id_num_bits>(
+    proxy, id
+  );
 }
 
-/*static*/ bool VrtContextProxy::isCollection(
-    VrtContext_ProxyType const& proxy) {
-  return BitPackerType::boolGetField<eVrtContextProxyBits::Collection>
-      (proxy);
+/*static*/ bool VirtualProxyBuilder::isCollection(
+  VirtualProxyType const& proxy
+) {
+  return BitPackerType::boolGetField<eVirtualProxyBits::Collection>(proxy);
 }
 
-/*static*/ bool VrtContextProxy::isMigratable(
-    VrtContext_ProxyType const& proxy) {
-  return BitPackerType::boolGetField<eVrtContextProxyBits::Migratable>
-      (proxy);
+/*static*/ bool VirtualProxyBuilder::isMigratable(
+  VirtualProxyType const& proxy
+) {
+  return BitPackerType::boolGetField<eVirtualProxyBits::Migratable>(proxy);
 }
 
-/*static*/ NodeType VrtContextProxy::getVrtContextNode(
-    VrtContext_ProxyType const& proxy) {
-  return BitPackerType::getField<eVrtContextProxyBits::Node,
-                                 vrtCntx_node_num_bits,
-                                 NodeType>(proxy);
+/*static*/ NodeType VirtualProxyBuilder::getVirtualNode(
+  VirtualProxyType const& proxy
+) {
+  return BitPackerType::getField<
+    eVirtualProxyBits::Node, virtual_node_num_bits, NodeType
+  >(proxy);
 }
 
-/*static*/ VrtContext_IdType VrtContextProxy::getVrtContextId(
-    VrtContext_ProxyType const& proxy) {
-  return BitPackerType::getField<eVrtContextProxyBits::ID,
-                                 vrtCntx_id_num_bits,
-                                 VrtContext_IdType>(proxy);
+/*static*/ VirtualIDType VirtualProxyBuilder::getVirtualID(
+  VirtualProxyType const& proxy
+) {
+  return BitPackerType::getField<
+    eVirtualProxyBits::ID, virtual_id_num_bits, VirtualIDType
+  >(proxy);
 }
 
 }}  // end namespace vt::vrt

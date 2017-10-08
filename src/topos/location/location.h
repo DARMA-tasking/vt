@@ -143,7 +143,7 @@ struct LocationManager {
   using LocCoordPtrType = LocationCoord *;
   using LocInstContainerType = std::vector<LocCoordPtrType>;
   using VirtualLocMan = EntityLocationCoord<int32_t>;
-  using VirtualContextLocMan = EntityLocationCoord<VrtContext_ProxyType>;
+  using VirtualContextLocMan = EntityLocationCoord<VirtualProxyType>;
 
   std::unique_ptr<VirtualLocMan>
       virtual_loc = std::make_unique<VirtualLocMan>();

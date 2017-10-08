@@ -17,7 +17,9 @@ bool contextualExecution(
 bool contextualExecutionVirtual(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 ) {
-  theVrtSeq->lookupContextExecute(seq, std::forward<SeqCallableType>(callable));
+  theVirtualSeq->lookupContextExecute(
+    seq, std::forward<SeqCallableType>(callable)
+  );
   return true;
 }
 

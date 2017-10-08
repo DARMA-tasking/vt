@@ -14,7 +14,7 @@
 namespace vt { namespace vrt {
 
 template <typename VrtContextT, typename... Args>
-VrtContext_ProxyType VrtContextManager::constructVrtContext(Args&& ... args) {
+VirtualProxyType VirtualContextManager::makeVirtual(Args&& ... args) {
   auto holder_iter = holder_.find(curIdent_);
   assert(
     holder_iter == holder_.end() &&
@@ -22,10 +22,10 @@ VrtContext_ProxyType VrtContextManager::constructVrtContext(Args&& ... args) {
   );
 
   auto new_vc = std::make_unique<VrtContextT>(std::forward<Args>(args)...);
-  auto const& proxy = VrtContextProxy::createNewProxy(curIdent_, myNode_);
+  auto const& proxy = VirtualProxyBuilder::createProxy(curIdent_, myNode_);
 
   // registry the proxy with location manager
-  theLocMan->vrtContextLoc->registerEntity(proxy, handleVCMsg);
+  theLocMan->vrtContextLoc->registerEntity(proxy, virtualMsgHandler);
 
   // save the proxy in the virtual context for reference later
   new_vc->proxy_ = proxy;
@@ -40,7 +40,7 @@ VrtContext_ProxyType VrtContextManager::constructVrtContext(Args&& ... args) {
   holder_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(curIdent_),
-    std::forward_as_tuple(VrtInfoType{std::move(new_vc), proxy})
+    std::forward_as_tuple(VirtualInfoType{std::move(new_vc), proxy})
   );
 
   curIdent_++;
@@ -48,15 +48,22 @@ VrtContext_ProxyType VrtContextManager::constructVrtContext(Args&& ... args) {
   return proxy;
 }
 
+template <typename VrtContextT, typename MessageT>
+VirtualProxyType VirtualContextManager::makeVirtualMsg(
+  NodeType const& node, MessageT* m
+) {
+  return VirtualProxyType{};
+}
+
 template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
-VrtContext_ProxyType VrtContextManager::constructVrtContextWorkerMap(
+VirtualProxyType VirtualContextManager::makeVirtualMap(
   Args&& ... args
 ) {
   auto const& core_map_handle = auto_registry::makeAutoHandlerSeedMap<fn>();
-  auto const& proxy = constructVrtContext<VrtContextT, Args...>(
+  auto const& proxy = makeVirtual<VrtContextT, Args...>(
     std::forward<Args>(args)...
   );
-  auto const& vrt_id = VrtContextProxy::getVrtContextId(proxy);
+  auto const& vrt_id = VirtualProxyBuilder::getVirtualID(proxy);
   auto holder_iter = holder_.find(vrt_id);
   assert(holder_iter != holder_.end() && "Proxy ID Must exist here");
   auto& info = holder_iter->second;
@@ -65,12 +72,12 @@ VrtContext_ProxyType VrtContextManager::constructVrtContextWorkerMap(
 }
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-void VrtContextManager::sendMsg(
-  VrtContext_ProxyType const& toProxy, MsgT *const msg, ActionType act
+void VirtualContextManager::sendMsg(
+  VirtualProxyType const& toProxy, MsgT *const msg, ActionType act
 ) {
   // @todo: implement the action `act' after the routing is finished
 
-  NodeType const& home_node = VrtContextProxy::getVrtContextNode(toProxy);
+  NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
   // register the user's handler
   HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
   // save the user's handler in the message
