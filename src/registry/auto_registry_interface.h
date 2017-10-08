@@ -8,7 +8,7 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 HandlerType makeAutoHandler(MessageT* const msg);
 
 template <typename T, T value>

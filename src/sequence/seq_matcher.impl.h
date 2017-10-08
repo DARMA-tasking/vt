@@ -14,13 +14,13 @@
 
 namespace vt { namespace seq {
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename T>
 /*static*/ bool SeqMatcher<MessageT, f>::hasFirstElem(T& lst) {
   return lst.size() > 0;
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename T>
 /*static*/ auto SeqMatcher<MessageT, f>::getFirstElem(T& lst) {
   if (lst.size() > 0) {
@@ -32,7 +32,7 @@ template <typename T>
   }
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename T>
 /*static*/ bool SeqMatcher<MessageT, f>::hasMatchingAnyNoTag(
   SeqStateContType<T>& lst
@@ -40,7 +40,7 @@ template <typename T>
   return hasFirstElem(lst);
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename T>
 /*static*/ auto SeqMatcher<MessageT, f>::getMatchingAnyNoTag(
   SeqStateContType<T>& lst
@@ -48,7 +48,7 @@ template <typename T>
   return getFirstElem(lst);
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename T>
 /*static*/ bool SeqMatcher<MessageT, f>::hasMatchingAnyTagged(
   SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
@@ -57,7 +57,7 @@ template <typename T>
   return iter != tagged_lst.end() ? hasFirstElem(iter->second) : false;
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename T>
 /*static*/ auto SeqMatcher<MessageT, f>::getMatchingAnyTagged(
   SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
@@ -72,7 +72,7 @@ template <typename T>
   return elm;
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ bool SeqMatcher<MessageT, f>::hasMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
     auto& lst = SeqStateType<MessageT,f>::seq_msg;
@@ -83,7 +83,7 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   }
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ MessageT* SeqMatcher<MessageT, f>::getMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
     auto& lst = SeqStateType<MessageT, f>::seq_msg;
@@ -94,7 +94,7 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   }
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ bool SeqMatcher<MessageT, f>::hasMatchingAction(TagType const& tag) {
   if (tag == no_tag) {
     auto& lst = SeqStateType<MessageT, f>::seq_action;
@@ -105,7 +105,7 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   }
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ typename SeqMatcher<MessageT, f>::SeqActionType
 SeqMatcher<MessageT, f>::getMatchingAction(TagType const& tag) {
   assert(hasMatchingAction(tag) and "Must have matching action");
@@ -119,7 +119,7 @@ SeqMatcher<MessageT, f>::getMatchingAction(TagType const& tag) {
   }
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ void SeqMatcher<MessageT, f>::bufferUnmatchedMessage(
   MessageT* msg, TagType const& tag
 ) {
@@ -130,7 +130,7 @@ template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
   }
 }
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename FnT>
 /*static*/ void SeqMatcher<MessageT, f>::bufferUnmatchedAction(
   FnT action, SeqType const& seq_id, TagType const& tag

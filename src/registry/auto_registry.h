@@ -20,7 +20,7 @@ namespace vt { namespace auto_registry {
 
 AutoActiveType getAutoHandler(HandlerType const& handler);
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 HandlerType makeAutoHandler(MessageT* const msg);
 
 template <typename T, T value>
@@ -33,7 +33,7 @@ HandlerType makeAutoHandler();
   vt::auto_registry::RunnableGen<                                       \
    decltype(vt::auto_registry::FunctorAdapter<TYPE_F, ADD_F>()),        \
    AutoActiveContainerType, AutoRegInfoType<AutoActiveType>,            \
-   SimpleFunctionType                                                   \
+   ActiveFnPtrType                                                         \
   >::idx;
 
 #include "auto_registry_impl.h"

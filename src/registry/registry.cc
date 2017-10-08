@@ -5,7 +5,7 @@
 namespace vt {
 
 HandlerType Registry::registerNewHandler(
-  ActiveFunctionType fn, TagType const& tag, bool const& is_collective
+  ActiveClosureFnType fn, TagType const& tag, bool const& is_collective
 ) {
   auto const& this_node = theContext->getNode();
 
@@ -28,7 +28,7 @@ HandlerType Registry::registerNewHandler(
 }
 
 void Registry::swapHandler(
-  HandlerType const& han, ActiveFunctionType fn, TagType const& tag
+  HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
 ) {
   if (tag == no_tag) {
     auto iter = registered_.find(han);
@@ -58,12 +58,12 @@ void Registry::unregisterHandlerFn(
 }
 
 HandlerType Registry::registerActiveHandler(
-  ActiveFunctionType fn, TagType const& tag
+  ActiveClosureFnType fn, TagType const& tag
 ) {
   return registerNewHandler(fn, tag, true);
 }
 
-ActiveFunctionType Registry::getHandlerNoTag(HandlerType const& han) {
+ActiveClosureFnType Registry::getHandlerNoTag(HandlerType const& han) {
   auto iter = registered_.find(han);
   if (iter != registered_.end()) {
     return iter->second;
@@ -72,7 +72,7 @@ ActiveFunctionType Registry::getHandlerNoTag(HandlerType const& han) {
   }
 }
 
-ActiveFunctionType Registry::getTrigger(HandlerType const& han) {
+ActiveClosureFnType Registry::getTrigger(HandlerType const& han) {
   auto iter = triggers_.find(han);
   if (iter != triggers_.end()) {
     return iter->second;
@@ -81,12 +81,12 @@ ActiveFunctionType Registry::getTrigger(HandlerType const& han) {
   }
 }
 
-void Registry::saveTrigger(HandlerType const& han, ActiveFunctionType fn) {
+void Registry::saveTrigger(HandlerType const& han, ActiveClosureFnType fn) {
   printf("save_trigger: han=%d\n", han);
   triggers_[han] = fn;
 }
 
-ActiveFunctionType Registry::getHandler(
+ActiveClosureFnType Registry::getHandler(
   HandlerType const& han, TagType const& tag
 ) {
   if (tag == no_tag) {

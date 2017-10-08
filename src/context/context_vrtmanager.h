@@ -33,13 +33,13 @@ struct VrtContextManager {
   template <typename VrtContextT, typename... Args>
   VrtContext_ProxyType constructVrtContext(Args&& ... args);
 
-  template <typename VrtContextT, mapping::ActiveSeedMapFunctionType fn, typename... Args>
+  template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
   VrtContext_ProxyType constructVrtContextWorkerMap(Args&& ... args);
 
   VrtContext* getVrtContextByProxy(VrtContext_ProxyType const& proxy);
   void destroyVrtContextByProxy(VrtContext_ProxyType const& proxy);
 
-  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   void sendMsg(
     VrtContext_ProxyType const& toProxy, MsgT *const msg,
     ActionType act = nullptr

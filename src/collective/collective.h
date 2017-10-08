@@ -24,7 +24,7 @@ struct CollectiveOps {
   static void finalizeSingletons();
 
   static void setInactiveState();
-  static HandlerType registerHandler(ActiveFunctionType fn);
+  static HandlerType registerHandler(ActiveClosureFnType fn);
 };
 
 } //end namespace vt

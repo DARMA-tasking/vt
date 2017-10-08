@@ -262,7 +262,7 @@ TaggedSequencer<SeqTag, SeqTrigger>::getSeqID() const {
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait_closure(
   SeqNonMigratableTriggerType<MessageT> trigger
 ) {
@@ -270,7 +270,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_closure(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait_closure(
   TagType const& tag, SeqNonMigratableTriggerType<MessageT> trigger
 ) {
@@ -281,14 +281,14 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_closure(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait(SeqTriggerType<MessageT> trigger) {
   return wait<MessageT, f>(no_tag, trigger);
 }
 
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait(
   TagType const& tag, SeqTriggerType<MessageT> trigger
 ) {
@@ -299,7 +299,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
   TagType const& tag, SeqActionType<MessageT> action
 ) {
@@ -506,7 +506,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::enqueue(ActionType const& action) {
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ void TaggedSequencer<SeqTag, SeqTrigger>::sequenceMsg(MessageT* msg) {
   auto const& is_tag_type = envelopeIsTagType(msg->env);
   TagType const& msg_tag = is_tag_type ? envelopeGetTag(msg->env) : no_tag;

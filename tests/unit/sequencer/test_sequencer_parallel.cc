@@ -49,7 +49,7 @@ struct TestSequencerParallelParam : TestParallelHarnessParam<CountType> {
     TestParallelHarnessParam<CountType>::SetUp();
   }
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   static void waitParNum(
     std::atomic<OrderType>* order, int wait_n, int num_pars, int start_order
   ) {
@@ -156,7 +156,7 @@ struct TestSequencerParallel : TestParallelHarness {
     });
   }
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   static void waitParNum(
     std::atomic<OrderType>* order, int wait_n, int num_pars, int start_order
   ) {

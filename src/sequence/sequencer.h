@@ -47,7 +47,7 @@ struct TaggedSequencer {
   template <typename T>
   using SeqIDContainerType = std::unordered_map<SeqType, T>;
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   using SeqStateMatcherType = SeqMatcher<MessageT, f>;
 
   using SeqManagerType = SeqManager<SeqTag, SeqTrigger>;
@@ -104,20 +104,20 @@ struct TaggedSequencer {
   SeqType getSeqID() const;
 
   // the general wait function
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void wait_on_trigger(TagType const& tag, SeqActionType<MessageT> action);
 
   // Wait functions that do not have state (they can be easily migrated if they
   // are registered)
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void wait(SeqTriggerType<MessageT> trigger);
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void wait(TagType const& tag, SeqTriggerType<MessageT> trigger);
 
   // Closure-based wait functions that have state and cannot be migrated easily
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void wait_closure(TagType const& tag, SeqNonMigratableTriggerType<MessageT> trigger);
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void wait_closure(SeqNonMigratableTriggerType<MessageT> trigger);
 
   // @todo: should be made thread-safe and thread-local
@@ -136,7 +136,7 @@ struct TaggedSequencer {
 public:
   void enqueue(ActionType const& action);
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void sequenceMsg(MessageT* msg);
 
 private:

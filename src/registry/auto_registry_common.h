@@ -15,11 +15,11 @@
 
 namespace vt { namespace auto_registry {
 
-using AutoActiveType = SimpleFunctionType;
-using AutoActiveFunctorType = SimpleFunctionType;
-using AutoActiveVCType = vrt::SimpleVCFunctionType;
-using AutoActiveMapType = mapping::SimpleMapFunctionType;
-using AutoActiveSeedMapType = mapping::SimpleSeedMapFunctionType;
+using AutoActiveType = ActiveFnPtrType;
+using AutoActiveFunctorType = ActiveFnPtrType;
+using AutoActiveVCType = vrt::ActiveVrtFnPtrType;
+using AutoActiveMapType = mapping::ActiveMapFnPtrType;
+using AutoActiveSeedMapType = mapping::ActiveSeedMapFnPtrType;
 
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;

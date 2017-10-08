@@ -18,10 +18,10 @@ namespace vt { namespace seq {
 
 using namespace vrt;
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 struct SeqMatcherVirtual {
   using SeqActionType = ActionVirtual<MsgT, VcT>;
-  using MatchFuncType = ActiveVCFunctionType<MsgT, VcT>;
+  using MatchFuncType = ActiveVrtTypedFnType<MsgT, VcT>;
   using SeqMsgStateType = SeqMsgStateVirtual<VcT, MsgT, f>;
 
   template <typename T>

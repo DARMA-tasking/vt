@@ -7,12 +7,12 @@
 
 namespace vt {
 
-using ActiveFunctionType = std::function<void(vt::BaseMessage*)>;
-using ActiveBasicFunctionType = void(vt::BaseMessage *);
-using SimpleFunctionType = void(*)(vt::BaseMessage *);
+using ActiveClosureFnType = std::function<void(vt::BaseMessage*)>;
+using ActiveFnType = void(vt::BaseMessage *);
+using ActiveFnPtrType = void(*)(vt::BaseMessage *);
 
 template <typename MessageT>
-using ActiveAnyFunctionType = void(MessageT *);
+using ActiveTypedFnType = void(MessageT *);
 
 }  // end namespace vt
 

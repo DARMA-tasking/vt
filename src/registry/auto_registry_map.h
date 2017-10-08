@@ -16,13 +16,13 @@ using namespace mapping;
 // Registration for collection index mapping functions
 AutoActiveMapType getAutoHandlerMap(HandlerType const& handler);
 
-template <typename IndexT, ActiveMapFunctionType<IndexT>* f>
+template <typename IndexT, ActiveMapTypedFnType<IndexT>* f>
 HandlerType makeAutoHandlerMap();
 
 // Registration for seed mapping singletons
 AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const& handler);
 
-template <ActiveSeedMapFunctionType* f>
+template <ActiveSeedMapFnType* f>
 HandlerType makeAutoHandlerSeedMap();
 
 }} // end namespace vt::auto_registry

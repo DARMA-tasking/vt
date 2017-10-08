@@ -10,10 +10,10 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) {
   HandlerType const id = GET_HANDLER_ACTIVE_FUNCTION_EXPAND(
-    ActiveAnyFunctionType<MessageT>, f
+    ActiveTypedFnType<MessageT>, f
   );
   return HandlerManagerType::makeHandler(true, false, id);
 }

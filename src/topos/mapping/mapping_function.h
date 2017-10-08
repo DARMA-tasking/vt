@@ -7,15 +7,14 @@
 
 namespace vt { namespace mapping {
 
-using SimpleMapFunctionType = NodeType(*)(
+template <typename IndexT>
+using ActiveMapTypedFnType = NodeType(IndexT*, IndexT*, NodeType);
+using ActiveMapFnPtrType = NodeType(*)(
   index::BaseIndex*, index::BaseIndex*, NodeType
 );
 
-template <typename IndexT>
-using ActiveMapFunctionType = NodeType(IndexT*, IndexT*, NodeType);
-
-using SimpleSeedMapFunctionType = NodeType(*)(SeedType, NodeType);
-using ActiveSeedMapFunctionType = NodeType(SeedType, NodeType);
+using ActiveSeedMapFnType = NodeType(SeedType, NodeType);
+using ActiveSeedMapFnPtrType = ActiveSeedMapFnType*;
 
 }} /* end namespace vt::mapping */
 

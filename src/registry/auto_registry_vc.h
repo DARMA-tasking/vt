@@ -11,9 +11,11 @@
 
 namespace vt { namespace auto_registry {
 
+using namespace vrt;
+
 AutoActiveVCType getAutoHandlerVC(HandlerType const& handler);
 
-template <typename VrtCtxT, typename MsgT, vrt::ActiveVCFunctionType<MsgT, VrtCtxT>* f>
+template <typename VrtT, typename MsgT, ActiveVrtTypedFnType<MsgT, VrtT>* f>
 HandlerType makeAutoHandlerVC(MsgT* const msg);
 
 }} // end namespace vt::auto_registry

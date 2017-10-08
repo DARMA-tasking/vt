@@ -24,7 +24,7 @@ struct TaggedSequencerVrt : TaggedSequencer<SeqTag, SeqTrigger> {
   template <typename MessageT, typename VcT>
   using SeqActionType = ActionVirtual<MessageT, VcT>;
 
-  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   using SeqStateMatcherType = SeqMatcherVirtual<VcT, MsgT, f>;
 
   SeqType createSeqVrtContext(VrtContext_ProxyType const& proxy);
@@ -32,16 +32,16 @@ struct TaggedSequencerVrt : TaggedSequencer<SeqTag, SeqTrigger> {
 
   virtual SeqType getNextID() override;
 
-  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   void sequenceVrtMsg(MsgT* msg, VcT* vrt_context);
 
-  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   void wait(TagType const& tag, SeqTriggerType<MsgT, VcT> trigger);
 
-  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   void wait(SeqTriggerType<MsgT, VcT> trigger);
 
-  template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+  template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   void wait_on_trigger(TagType const& tag, SeqActionType<MsgT, VcT> action);
 
 private:

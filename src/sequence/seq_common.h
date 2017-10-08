@@ -27,13 +27,13 @@ using FuncIndexType = UserSeqFunIndexType;
 template <typename MessageT>
 using SeqNonMigratableTriggerType = std::function<void(MessageT*)>;
 template <typename MessageT>
-using SeqMigratableTriggerType = ActiveAnyFunctionType<MessageT>;
+using SeqMigratableTriggerType = ActiveTypedFnType<MessageT>;
 
 // Specialized virtual context sequence triggers for VC active message handlers
 template <typename MessageT, typename VcT>
 using SeqNonMigratableVrtTriggerType = std::function<void(MessageT*, VcT*)>;
 template <typename MessageT, typename VcT>
-using SeqMigratableVrtTriggerType = vrt::ActiveVCFunctionType<MessageT, VcT>;
+using SeqMigratableVrtTriggerType = vrt::ActiveVrtTypedFnType<MessageT, VcT>;
 
 using SeqContinuation = std::function<void()>;
 

@@ -8,11 +8,10 @@
 
 namespace vt { namespace vrt {
 
-using SimpleVCFunctionType = void(*)(vt::BaseMessage *, vt::vrt::VrtContext*);
+using ActiveVrtFnPtrType = void(*)(vt::BaseMessage *, vt::vrt::VrtContext*);
 
 template <typename MessageT, typename VirtualContextT>
-using ActiveVCFunctionType = void(MessageT*, VirtualContextT*);
-
+using ActiveVrtTypedFnType = void(MessageT*, VirtualContextT*);
 
 }} /* end namespace vt::context */
 

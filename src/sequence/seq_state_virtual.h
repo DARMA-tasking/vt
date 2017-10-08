@@ -13,7 +13,7 @@ namespace vt { namespace seq {
 
 using namespace vrt;
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 struct SeqMsgStateVirtual {
   using ActionType = ActionVirtual<MsgT, VcT>;
 
@@ -38,22 +38,22 @@ struct SeqMsgStateVirtual {
   static TaggedMsgContainerType seq_msg_tagged;
 };
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 using SeqStateVirtualType = SeqMsgStateVirtual<VcT, MsgT, f>;
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 typename SeqStateVirtualType<VcT, MsgT, f>::ActionContainerType
   SeqMsgStateVirtual<VcT, MsgT, f>::seq_action;
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 typename SeqStateVirtualType<VcT, MsgT, f>::TaggedActionContainerType
   SeqMsgStateVirtual<VcT, MsgT, f>::seq_action_tagged;
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 typename SeqStateVirtualType<VcT, MsgT, f>::MsgContainerType
   SeqMsgStateVirtual<VcT, MsgT, f>::seq_msg;
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 typename SeqStateVirtualType<VcT, MsgT, f>::TaggedMsgContainerType
   SeqMsgStateVirtual<VcT, MsgT, f>::seq_msg_tagged;
 

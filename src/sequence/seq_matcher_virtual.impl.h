@@ -17,13 +17,13 @@ namespace vt { namespace seq {
 
 using namespace vrt;
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename T>
 /*static*/ bool SeqMatcherVirtual<VcT, MsgT, f>::hasFirstElem(T& lst) {
   return lst.size() > 0;
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename T>
 /*static*/ auto SeqMatcherVirtual<VcT, MsgT, f>::getFirstElem(T& lst) {
   if (lst.size() > 0) {
@@ -35,7 +35,7 @@ template <typename T>
   }
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename T>
 /*static*/ bool SeqMatcherVirtual<VcT, MsgT, f>::hasMatchingAnyNoTag(
   SeqStateContType<T>& lst
@@ -43,7 +43,7 @@ template <typename T>
   return hasFirstElem(lst);
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename T>
 /*static*/ auto SeqMatcherVirtual<VcT, MsgT, f>::getMatchingAnyNoTag(
   SeqStateContType<T>& lst
@@ -51,7 +51,7 @@ template <typename T>
   return getFirstElem(lst);
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename T>
 /*static*/ bool SeqMatcherVirtual<VcT, MsgT, f>::hasMatchingAnyTagged(
   SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
@@ -60,7 +60,7 @@ template <typename T>
   return iter != tagged_lst.end() ? hasFirstElem(iter->second) : false;
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename T>
 /*static*/ auto SeqMatcherVirtual<VcT, MsgT, f>::getMatchingAnyTagged(
   SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
@@ -75,7 +75,7 @@ template <typename T>
   return elm;
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ bool SeqMatcherVirtual<VcT, MsgT, f>::hasMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
     auto& lst = SeqStateVirtualType<VcT, MsgT, f>::seq_msg;
@@ -86,7 +86,7 @@ template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
   }
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ MsgT* SeqMatcherVirtual<VcT, MsgT, f>::getMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
     auto& lst = SeqStateVirtualType<VcT, MsgT, f>::seq_msg;
@@ -97,7 +97,7 @@ template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
   }
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ bool SeqMatcherVirtual<VcT, MsgT, f>::hasMatchingAction(TagType const& tag) {
   if (tag == no_tag) {
     auto& lst = SeqStateVirtualType<VcT, MsgT, f>::seq_action;
@@ -108,7 +108,7 @@ template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
   }
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ typename SeqMatcherVirtual<VcT, MsgT, f>::SeqActionType
 SeqMatcherVirtual<VcT, MsgT, f>::getMatchingAction(TagType const& tag) {
   assert(hasMatchingAction(tag) and "Must have matching action");
@@ -122,7 +122,7 @@ SeqMatcherVirtual<VcT, MsgT, f>::getMatchingAction(TagType const& tag) {
   }
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ void SeqMatcherVirtual<VcT, MsgT, f>::bufferUnmatchedMessage(
   MsgT* msg, TagType const& tag
 ) {
@@ -133,7 +133,7 @@ template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
   }
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename FnT>
 /*static*/ void SeqMatcherVirtual<VcT, MsgT, f>::bufferUnmatchedAction(
   FnT action, SeqType const& seq_id, TagType const& tag

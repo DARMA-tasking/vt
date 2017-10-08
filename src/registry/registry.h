@@ -16,14 +16,14 @@ struct Registry {
   using HandlerManagerType = HandlerManager;
   using HandlerBitsType = eHandlerBits;
   using TaggerHandlerType = std::tuple<TagType, HandlerType>;
-  using ContainerType = std::unordered_map<HandlerType, ActiveFunctionType>;
-  using TagContainerType = std::unordered_map<TagType, ActiveFunctionType>;
+  using ContainerType = std::unordered_map<HandlerType, ActiveClosureFnType>;
+  using TagContainerType = std::unordered_map<TagType, ActiveClosureFnType>;
   using HanTagContainerType = std::unordered_map<HandlerType, TagContainerType>;
 
   Registry() = default;
 
   HandlerType registerNewHandler(
-    ActiveFunctionType fn, TagType const& tag = no_tag,
+    ActiveClosureFnType fn, TagType const& tag = no_tag,
     bool const& is_collective = false
   );
 
@@ -31,18 +31,18 @@ struct Registry {
     HandlerType const& han, TagType const& tag = no_tag
   );
   void swapHandler(
-    HandlerType const& han, ActiveFunctionType fn, TagType const& tag = no_tag
+    HandlerType const& han, ActiveClosureFnType fn, TagType const& tag = no_tag
   );
   HandlerType registerActiveHandler(
-    ActiveFunctionType fn, TagType const& tag = no_tag
+    ActiveClosureFnType fn, TagType const& tag = no_tag
   );
-  ActiveFunctionType getHandler(
+  ActiveClosureFnType getHandler(
     HandlerType const& han, TagType const& tag = no_tag
   );
-  ActiveFunctionType getHandlerNoTag(HandlerType const& han);
-  ActiveFunctionType getTrigger(HandlerType const& han);
+  ActiveClosureFnType getHandlerNoTag(HandlerType const& han);
+  ActiveClosureFnType getTrigger(HandlerType const& han);
 
-  void saveTrigger(HandlerType const& han, ActiveFunctionType fn);
+  void saveTrigger(HandlerType const& han, ActiveClosureFnType fn);
 
 private:
   ContainerType triggers_;

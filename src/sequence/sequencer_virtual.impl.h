@@ -83,7 +83,7 @@ VrtContext_ProxyType TaggedSequencerVrt<SeqTag, SeqTrigger>::getCurrentVrtProxy(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void TaggedSequencerVrt<SeqTag, SeqTrigger>::sequenceVrtMsg(
   MsgT* msg, VcT* vrt
 ) {
@@ -132,7 +132,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::sequenceVrtMsg(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait(
   TagType const& tag, SeqTriggerType<MsgT, VcT> trigger
 ) {
@@ -143,7 +143,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait(
   SeqTriggerType<MsgT, VcT> trigger
 ) {
@@ -151,7 +151,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait(
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
   TagType const& tag, SeqActionType<MsgT, VcT> action
 ) {

@@ -48,7 +48,7 @@ VrtContext_ProxyType VrtContextManager::constructVrtContext(Args&& ... args) {
   return proxy;
 }
 
-template <typename VrtContextT, mapping::ActiveSeedMapFunctionType fn, typename... Args>
+template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
 VrtContext_ProxyType VrtContextManager::constructVrtContextWorkerMap(
   Args&& ... args
 ) {
@@ -64,7 +64,7 @@ VrtContext_ProxyType VrtContextManager::constructVrtContextWorkerMap(
   // @todo: do the actual mapping
 }
 
-template <typename VcT, typename MsgT, ActiveVCFunctionType<MsgT, VcT> *f>
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void VrtContextManager::sendMsg(
   VrtContext_ProxyType const& toProxy, MsgT *const msg, ActionType act
 ) {

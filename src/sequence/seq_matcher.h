@@ -15,10 +15,10 @@
 
 namespace vt { namespace seq {
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 struct SeqMatcher {
   using SeqActionType = Action<MessageT>;
-  using MatchFuncType = ActiveAnyFunctionType<MessageT>;
+  using MatchFuncType = ActiveTypedFnType<MessageT>;
   using SeqMsgStateType = SeqMsgState<MessageT, f>;
 
   template <typename T>

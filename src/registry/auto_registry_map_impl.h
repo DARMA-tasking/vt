@@ -13,14 +13,14 @@ namespace vt { namespace auto_registry {
 
 using namespace mapping;
 
-template <typename IndexT, ActiveMapFunctionType<IndexT>* f>
+template <typename IndexT, ActiveMapTypedFnType<IndexT>* f>
 inline HandlerType makeAutoHandlerMap() {
   HandlerType const id = RunnableGen<
     decltype(vt::auto_registry::FunctorAdapter<
-      ActiveMapFunctionType<IndexT>, f
+      ActiveMapTypedFnType<IndexT>, f
     >()),
     AutoActiveMapContainerType, AutoRegInfoType<AutoActiveMapType>,
-    SimpleMapFunctionType
+    ActiveMapFnPtrType
   >::idx;
 
   return id;
@@ -30,14 +30,14 @@ inline AutoActiveMapType getAutoHandlerMap(HandlerType const& handler) {
   return getAutoRegistryGen<AutoActiveMapContainerType>().at(handler).getFun();
 }
 
-template <ActiveSeedMapFunctionType* f>
+template <ActiveSeedMapFnType* f>
 inline HandlerType makeAutoHandlerSeedMap() {
   HandlerType const id = RunnableGen<
     decltype(vt::auto_registry::FunctorAdapter<
-      ActiveSeedMapFunctionType, f
+      ActiveSeedMapFnType, f
     >()),
     AutoActiveSeedMapContainerType, AutoRegInfoType<AutoActiveSeedMapType>,
-    SimpleSeedMapFunctionType
+    ActiveSeedMapFnPtrType
   >::idx;
 
   return id;

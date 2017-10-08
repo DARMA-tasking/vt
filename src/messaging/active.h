@@ -152,7 +152,7 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
@@ -165,12 +165,12 @@ struct ActiveMessenger {
     return sendMsg(this_node, han, msg, next_action);
   }
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType broadcastMsg(MessageT* const msg, ActionType act) {
     return broadcastMsg<MessageT,f>(msg,no_tag,act);
   }
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
@@ -183,7 +183,7 @@ struct ActiveMessenger {
     return sendDataDirect(han, msg, sizeof(MessageT), next_action);
   }
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act) {
     return sendMsg<MessageT,f>(dest,msg,no_tag,act);
   }
@@ -215,7 +215,7 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
 
-  template <ActiveBasicFunctionType* f, typename MessageT>
+  template <ActiveFnType* f, typename MessageT>
   EventType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
   ) {
@@ -228,12 +228,12 @@ struct ActiveMessenger {
     return sendMsg(this_node, han, msg, next_action);
   }
 
-  template <ActiveBasicFunctionType* f, typename MessageT>
+  template <ActiveFnType* f, typename MessageT>
   EventType broadcastMsg(MessageT* const msg, ActionType act) {
     return broadcastMsg<f,MessageT>(msg,no_tag,act);
   }
 
-  template <ActiveBasicFunctionType* f, typename MessageT>
+  template <ActiveFnType* f, typename MessageT>
   EventType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
@@ -246,7 +246,7 @@ struct ActiveMessenger {
     return sendDataDirect(han, msg, sizeof(MessageT), next_action);
   }
 
-  template <ActiveBasicFunctionType* f, typename MessageT>
+  template <ActiveFnType* f, typename MessageT>
   EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act) {
     return sendMsg<f,MessageT>(dest,msg,no_tag,act);
   }
@@ -341,7 +341,7 @@ struct ActiveMessenger {
     return ret;
   }
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendMsg(
     NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn,
     ActionType next_action = nullptr
@@ -399,9 +399,9 @@ struct ActiveMessenger {
    *
    *----------------------------------------------------------------------------
    */
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendDataCallback(
-    NodeType const& dest, MessageT* const msg, ActiveFunctionType fn
+    NodeType const& dest, MessageT* const msg, ActiveClosureFnType fn
   ) {
     HandlerType const& this_han = registerNewHandler(fn, no_tag);
     auto cb = static_cast<CallbackMessage*>(msg);
@@ -412,7 +412,7 @@ struct ActiveMessenger {
   template <typename MessageT>
   void sendDataCallback(
     HandlerType const& han, NodeType const& dest, MessageT* const msg,
-    ActiveFunctionType fn
+    ActiveClosureFnType fn
   ) {
     HandlerType const& this_han = registerNewHandler(fn, no_tag);
     auto cb = static_cast<CallbackMessage*>(msg);
@@ -432,7 +432,7 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
 
-  template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void trigger(std::function<void(vt::BaseMessage*)> fn) {
     HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
     printf("trigger: han=%d\n", han);
@@ -445,15 +445,15 @@ struct ActiveMessenger {
   bool scheduler();
   bool isLocalTerm();
 
-  HandlerType registerNewHandler(ActiveFunctionType fn, TagType const& tag = no_tag);
+  HandlerType registerNewHandler(ActiveClosureFnType fn, TagType const& tag = no_tag);
   void swapHandlerFn(
-    HandlerType const& han, ActiveFunctionType fn, TagType const& tag = no_tag
+    HandlerType const& han, ActiveClosureFnType fn, TagType const& tag = no_tag
   );
   void unregisterHandlerFn(HandlerType const& han, TagType const& tag = no_tag);
   void registerHandlerFn(
-    HandlerType const& han, ActiveFunctionType fn, TagType const& tag = no_tag
+    HandlerType const& han, ActiveClosureFnType fn, TagType const& tag = no_tag
   );
-  HandlerType collectiveRegisterHandler(ActiveFunctionType fn, TagType const& tag = no_tag);
+  HandlerType collectiveRegisterHandler(ActiveClosureFnType fn, TagType const& tag = no_tag);
 
   HandlerType getCurrentHandler();
   HandlerType getCurrentCallback();

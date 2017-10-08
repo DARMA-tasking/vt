@@ -339,7 +339,7 @@ bool ActiveMessenger::deliverActiveMsg(
     getCallbackMessage(msg) : uninitialized_handler;
   auto const& from_node = is_bcast ? dest : in_from_node;
 
-  ActiveFunctionType active_fun = nullptr;
+  ActiveClosureFnType active_fun = nullptr;
 
   bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
@@ -512,19 +512,19 @@ void ActiveMessenger::processMaybeReadyHanTag() {
 }
 
 HandlerType ActiveMessenger::registerNewHandler(
-  ActiveFunctionType fn, TagType const& tag
+  ActiveClosureFnType fn, TagType const& tag
 ) {
   return theRegistry->registerNewHandler(fn, tag);
 }
 
 HandlerType ActiveMessenger::collectiveRegisterHandler(
-  ActiveFunctionType fn, TagType const& tag
+  ActiveClosureFnType fn, TagType const& tag
 ) {
   return theRegistry->registerActiveHandler(fn, tag);
 }
 
 void ActiveMessenger::swapHandlerFn(
-  HandlerType const& han, ActiveFunctionType fn, TagType const& tag
+  HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
 ) {
   theRegistry->swapHandler(han, fn, tag);
 
@@ -551,7 +551,7 @@ void ActiveMessenger::deliverPendingMsgsHandler(
 }
 
 void ActiveMessenger::registerHandlerFn(
-  HandlerType const& han, ActiveFunctionType fn, TagType const& tag
+  HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
 ) {
   swapHandlerFn(han, fn, tag);
 

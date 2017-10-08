@@ -10,14 +10,16 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename VrtCtxT, typename MsgT, vrt::ActiveVCFunctionType<MsgT, VrtCtxT>* f>
+using namespace vrt;
+
+template <typename VrtT, typename MsgT, ActiveVrtTypedFnType<MsgT, VrtT>* f>
 inline HandlerType makeAutoHandlerVC(MsgT* const __attribute__((unused)) msg) {
   HandlerType const id = RunnableGen<decltype(vt::auto_registry::FunctorAdapter<
-      vrt::ActiveVCFunctionType<MsgT, VrtCtxT>, f
+      ActiveVrtTypedFnType<MsgT, VrtT>, f
     >()),
     AutoActiveVCContainerType,
     AutoRegInfoType<AutoActiveVCType>,
-    vrt::SimpleVCFunctionType
+    ActiveVrtFnPtrType
   >::idx;
 
   return id;

@@ -11,7 +11,7 @@
 
 namespace vt { namespace seq {
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 struct SeqMsgState {
   using ActionType = Action<MessageT>;
 
@@ -36,19 +36,19 @@ struct SeqMsgState {
   static TaggedMsgContainerType seq_msg_tagged;
 };
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 using SeqStateType = SeqMsgState<MessageT, f>;
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 typename SeqStateType<MessageT, f>::ActionContainerType SeqMsgState<MessageT, f>::seq_action;
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 typename SeqStateType<MessageT, f>::TaggedActionContainerType SeqMsgState<MessageT, f>::seq_action_tagged;
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 typename SeqStateType<MessageT, f>::MsgContainerType SeqMsgState<MessageT, f>::seq_msg;
 
-template <typename MessageT, ActiveAnyFunctionType<MessageT>* f>
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 typename SeqStateType<MessageT, f>::TaggedMsgContainerType SeqMsgState<MessageT, f>::seq_msg_tagged;
 
 }} //end namespace vt::seq

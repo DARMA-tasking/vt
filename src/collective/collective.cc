@@ -48,7 +48,7 @@ bool vtIsWorking = true;
   debug_print(gen, node, "initializeContext\n");
 }
 
-/*static*/ HandlerType CollectiveOps::registerHandler(ActiveFunctionType fn) {
+/*static*/ HandlerType CollectiveOps::registerHandler(ActiveClosureFnType fn) {
   return theRegistry->registerActiveHandler(fn);
 }
 
