@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_SEQ_MATCHER_VIRTUAL_IMPL__
 
 #include "config.h"
-#include "registry_function.h"
+#include "activefn/activefn.h"
 #include "message.h"
 #include "seq_common.h"
 #include "seq_action_virtual.h"

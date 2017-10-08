@@ -9,7 +9,7 @@
 
 #include "config.h"
 #include "utils/bits/bits_common.h"
-#include "registry_function.h"
+#include "activefn/activefn.h"
 
 namespace vt {
 

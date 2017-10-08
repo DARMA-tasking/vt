@@ -10,7 +10,7 @@
 #include "trace.h"
 #include "utils/demangle/demangle.h"
 
-#include "registry_function.h"
+#include "activefn/activefn.h"
 #include "context/context_vrt.h"
 
 #include <vector>

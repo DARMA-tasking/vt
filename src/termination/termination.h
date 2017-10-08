@@ -8,7 +8,7 @@
 
 #include "config.h"
 #include "epoch.h"
-#include "registry_function.h"
+#include "activefn/activefn.h"
 #include "term_common.h"
 #include "term_msgs.h"
 #include "term_state.h"

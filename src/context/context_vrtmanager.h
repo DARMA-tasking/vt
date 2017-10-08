@@ -14,7 +14,7 @@
 #include "context_vrtproxy.h"
 
 #include "utils/bits/bits_common.h"
-#include "registry_function.h"
+#include "activefn/activefn.h"
 #include "mapping_function.h"
 
 namespace vt { namespace vrt {

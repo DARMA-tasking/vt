@@ -7,7 +7,7 @@
 #include <cassert>
 
 #include "config.h"
-#include "registry_function.h"
+#include "activefn/activefn.h"
 #include "handler.h"
 
 namespace vt {
