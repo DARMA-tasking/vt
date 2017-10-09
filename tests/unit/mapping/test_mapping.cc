@@ -54,9 +54,9 @@ TEST_F(TestMapping, test_mapping_block_2d) {
 
   using IndexType = index::Index2D::DenseIndexType;
 
-  std::vector<std::tuple<IndexType, IndexType>> sizes{
-    {16,16}, {4,64}, {64,4}, {8,32}, {32,8}
-  };
+  std::array<std::array<IndexType, 2>, 5> sizes{{
+    {{16,16}}, {{4,64}}, {{64,4}}, {{8,32}}, {{32,8}}
+  }};
 
   for (auto&& elm : sizes) {
     index::Index2D::DenseIndexType max0 = std::get<0>(elm);
@@ -100,10 +100,11 @@ TEST_F(TestMapping, test_mapping_block_3d) {
 
   using IndexType = index::Index2D::DenseIndexType;
 
-  std::vector<std::tuple<IndexType, IndexType, IndexType>> sizes{
-    {4,8,8}, {8,8,4}, {8,4,8}, {2,16,8}, {8,16*2}, {1,32,8}, {32,1,8}, {32,8,1},
-    {1,64,4}, {64,1,4}, {4,64,1}, {1,1,256}, {256,1,1}, {1,256,1}
-  };
+  std::array<std::array<IndexType, 3>, 14> sizes{{
+    {{4,8,8}}, {{8,8,4}}, {{8,4,8}}, {{2,16,8}}, {{8,16*2}}, {{1,32,8}},
+    {{32,1,8}}, {{32,8,1}}, {{1,64,4}}, {{64,1,4}}, {{4,64,1}}, {{1,1,256}},
+    {{256,1,1}}, {{1,256,1}}
+  }};
 
   for (auto&& elm : sizes) {
     index::Index3D::DenseIndexType max0 = std::get<0>(elm);
