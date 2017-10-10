@@ -11,7 +11,7 @@
 #include "utils/demangle/demangle.h"
 
 #include "activefn/activefn.h"
-#include "context/context_vrt.h"
+#include "vrt/context/context_vrt.h"
 
 #include <vector>
 #include <memory>

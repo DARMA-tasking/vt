@@ -8,7 +8,7 @@
 #include "seq_matcher_virtual.h"
 #include "seq_action_virtual.h"
 #include "seq_state_virtual.h"
-#include "context/context_vrt.h"
+#include "vrt/context/context_vrt.h"
 
 namespace vt { namespace seq {
 

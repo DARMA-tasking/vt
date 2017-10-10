@@ -7,7 +7,7 @@
 #include "auto_registry_general.h"
 #include "registry.h"
 #include "activefn/activefn.h"
-#include "context/context_vrt_funcs.h"
+#include "vrt/context/context_vrt_funcs.h"
 
 namespace vt { namespace auto_registry {
 

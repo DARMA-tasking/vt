@@ -8,7 +8,7 @@
 
 #include "config.h"
 #include "activefn/activefn.h"
-#include "context/context_vrtheaders.h"
+#include "vrt/context/context_vrtheaders.h"
 
 namespace vt { namespace seq {
 

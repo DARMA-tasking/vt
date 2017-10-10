@@ -14,7 +14,7 @@
 #include "trace.h"
 #include "scheduler.h"
 #include "location.h"
-#include "context/context_vrtmanager.h"
+#include "vrt/context/context_vrtmanager.h"
 #include "worker_headers.h"
 
 namespace vt {

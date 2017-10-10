@@ -8,7 +8,7 @@
 #include "activefn/activefn.h"
 #include "registry.h"
 #include "trace.h"
-#include "context/context_vrt_funcs.h"
+#include "vrt/context/context_vrt_funcs.h"
 #include "mapping_function.h"
 
 #include <vector>

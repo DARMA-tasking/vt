@@ -8,7 +8,7 @@
 #include "seq_common.h"
 #include "seq_action_virtual.h"
 #include "seq_state_virtual.h"
-#include "context/context_vrtheaders.h"
+#include "vrt/context/context_vrtheaders.h"
 
 #include <list>
 #include <unordered_map>

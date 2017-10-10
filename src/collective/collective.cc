@@ -4,7 +4,7 @@
 #include "barrier.h"
 #include "trace.h"
 #include "transport.h"
-#include "context/context_vrtmanager.h"
+#include "vrt/context/context_vrtmanager.h"
 #include "sequence/sequencer_headers.h"
 #include "worker/worker_headers.h"
 

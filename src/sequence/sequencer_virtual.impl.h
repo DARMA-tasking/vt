@@ -4,8 +4,8 @@
 
 #include "config.h"
 #include "sequencer.h"
-#include "context/context_vrt.h"
-#include "context/context_vrtmanager.h"
+#include "vrt/context/context_vrt.h"
+#include "vrt/context/context_vrtmanager.h"
 
 #include <cassert>
 #include <cstdint>

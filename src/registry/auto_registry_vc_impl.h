@@ -4,7 +4,7 @@
 #include "config.h"
 #include "auto_registry_common.h"
 #include "auto_registry.h"
-#include "context/context_vrt_funcs.h"
+#include "vrt/context/context_vrt_funcs.h"
 
 #include <vector>
 
