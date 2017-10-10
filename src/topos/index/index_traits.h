@@ -7,14 +7,12 @@
 #include "config.h"
 
 #if backend_check_enabled(detector)
-#include "utils/detector/detector_headers.h"
+#include "detector_headers.h"
 #endif  /*backend_check_enabled(detector)*/
 
 #if backend_check_enabled(detector)
 
 namespace vt { namespace index {
-
-using namespace vt::util;
 
 template <typename T>
 struct IndexTraits {

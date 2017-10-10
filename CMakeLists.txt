@@ -59,6 +59,9 @@ include_directories(${PROJECT_LIB_DIR})
 add_subdirectory(${PROJECT_LIB_DIR}/context)
 set(FCONTEXT_LIBRARY fcontext)
 
+add_subdirectory(${PROJECT_LIB_DIR}/detector)
+include_directories(${PROJECT_LIB_DIR}/detector/src)
+
 if(NOT CMAKE_SERIALIZATION_PATH)
   message("Serialization library not found")
   set(SERIALIZATION_LIBRARY)
