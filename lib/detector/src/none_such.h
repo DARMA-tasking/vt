@@ -1,12 +1,10 @@
 
-#if ! defined __RUNTIME_TRANSPORT_UTILS_NONE_SUCH__
-#define __RUNTIME_TRANSPORT_UTILS_NONE_SUCH__
+#if !defined INCLUDED_DETECTOR_LIB_NONE_SUCH
+#define INCLUDED_DETECTOR_LIB_NONE_SUCH
 
-#include "config.h"
+#include "detector_common.h"
 
-#if backend_check_enabled(detector)
-
-namespace vt { namespace util { namespace detection {
+namespace detection {
 
 /*
  * Implementation of `NoneSuch': a placeholder class commonly used for template
@@ -22,8 +20,6 @@ struct NoneSuch final {
 
 using NoneSuchType = NoneSuch;
 
-}}}  // end vt::util::detection
+}  // end detection
 
-#endif /* backend_check_enabled(detector) */
-
-#endif /*__RUNTIME_TRANSPORT_UTILS_NONE_SUCH__*/
+#endif /*INCLUDED_DETECTOR_LIB_NONE_SUCH*/
