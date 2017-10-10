@@ -2,12 +2,11 @@
 #if !defined INCLUDED_CONTEXT_VRT_MESSAGE
 #define INCLUDED_CONTEXT_VRT_MESSAGE
 
+#include <cassert>
+
 #include "config.h"
 #include "messaging/message.h"
 #include "topos/location/location_msg.h"
-
-
-#include <cassert>
 
 namespace vt { namespace vrt {
 
@@ -22,13 +21,11 @@ struct VirtualMessage : RoutedMessageType<vt::Message> {
   }
 
   HandlerType getHandler() const {
-    assert(
-      vt_sub_handler != uninitialized_handler and "Must have a valid handler"
-    );
+    assert(vt_sub_handler != uninitialized_handler and "Must have a valid handler");
     return vt_sub_handler;
   }
 
-private:
+ private:
   HandlerType vt_sub_handler = uninitialized_handler;
 };
 
