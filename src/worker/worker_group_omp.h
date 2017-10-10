@@ -8,7 +8,7 @@
 
 #include "worker/worker_common.h"
 #include "worker/worker_types.h"
-#include "worker/openmp_worker.h"
+#include "worker/worker_openmp.h"
 
 #include <vector>
 #include <memory>

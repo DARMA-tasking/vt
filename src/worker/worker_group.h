@@ -5,7 +5,7 @@
 #include "config.h"
 #include "worker/worker_common.h"
 #include "worker/worker.h"
-#include "worker/stdthread_worker.h"
+#include "worker/worker_stdthread.h"
 
 #include <vector>
 #include <memory>

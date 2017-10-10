@@ -2,7 +2,7 @@
 #include "config.h"
 #include "context.h"
 #include "worker/worker_common.h"
-#include "worker/stdthread_worker.h"
+#include "worker/worker_stdthread.h"
 
 #include <thread>
 #include <memory>

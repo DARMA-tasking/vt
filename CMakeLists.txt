@@ -47,7 +47,7 @@ endif (ZLIB_FOUND)
 set(
   PROJECT_SUBDIRS_LIST
   barrier collective configs/debug configs/features configs/types vrt/context
-  event messaging pool data registry parameterization handler sequence
+  event messaging pool rdma registry parameterization handler sequence
   termination trace tree scheduler utils/demangle utils/bits demangle
   topos/location topos/mapping topos/index utils/container utils/detector
   serialization worker utils/mutex
