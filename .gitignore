@@ -1,6 +1,6 @@
 *o
 *~
 transport
-lib/context-build
+lib/*-build
 .emacs.desktop
 project/*
