@@ -1,7 +1,7 @@
 
 #include "config.h"
 #include "trace.h"
-#include "scheduler.h"
+#include "scheduler/scheduler.h"
 
 #include <zlib.h>
 

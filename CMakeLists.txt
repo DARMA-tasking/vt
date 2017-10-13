@@ -89,10 +89,6 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
     "${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.cc"
   )
 
-  include_directories(
-    ${PROJECT_SOURCE_DIR}/${SUB_DIR}
-  )
-
   list(
     APPEND
     HEADER_FILES

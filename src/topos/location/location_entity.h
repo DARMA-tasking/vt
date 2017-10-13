@@ -3,7 +3,7 @@
 #define INCLUDED_TOPOS_LOCATION_ENTITY
 
 #include "config.h"
-#include "message.h"
+#include "messaging/message.h"
 #include "location_common.h"
 
 namespace vt { namespace location {

@@ -3,9 +3,9 @@
 #define __RUNTIME_TRANSPORT_PARAMETERIZATION__
 
 #include "config.h"
-#include "message.h"
-#include "active.h"
-#include "auto_registry_interface.h"
+#include "messaging/message.h"
+#include "messaging/active.h"
+#include "registry/auto_registry_interface.h"
 
 namespace vt { namespace param {
 

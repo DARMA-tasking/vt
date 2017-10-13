@@ -3,10 +3,10 @@
 #define __RUNTIME_TRANSPORT_SEQUENCE__
 
 #include "config.h"
-#include "message.h"
-#include "active.h"
-#include "termination.h"
-#include "concurrent_deque.h"
+#include "messaging/message.h"
+#include "messaging/active.h"
+#include "termination/termination.h"
+#include "utils/container/concurrent_deque.h"
 
 #include "sequencer_manager.h"
 #include "seq_common.h"

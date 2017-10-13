@@ -3,8 +3,8 @@
 #define __RUNTIME_TRANSPORT_MEMORY_POOL_EQUAL__
 
 #include "config.h"
-#include "envelope.h"
-#include "context.h"
+#include "messaging/envelope.h"
+#include "context/context.h"
 
 #include <vector>
 #include <cstdint>

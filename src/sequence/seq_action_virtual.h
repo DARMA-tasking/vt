@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "seq_common.h"
-#include "termination.h"
+#include "termination/termination.h"
 
 namespace vt { namespace seq {
 

@@ -3,7 +3,7 @@
 #include "seq_common.h"
 #include "seq_parallel.h"
 #include "sequencer.h"
-#include "term_headers.h"
+#include "termination/term_headers.h"
 
 namespace vt { namespace seq {
 

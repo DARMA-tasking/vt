@@ -1,9 +1,9 @@
 
 #include "term_common.h"
 #include "termination.h"
-#include "active.h"
-#include "collective.h"
-#include "scheduler.h"
+#include "messaging/active.h"
+#include "collective/collective.h"
+#include "scheduler/scheduler.h"
 
 namespace vt { namespace term {
 

@@ -1,6 +1,6 @@
 
 #include "config.h"
-#include "context.h"
+#include "context/context.h"
 #include "worker/worker_common.h"
 #include "worker/worker_openmp.h"
 

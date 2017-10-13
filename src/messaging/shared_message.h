@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_SHARED_MESSAGE__
 
 #include "config.h"
-#include "envelope.h"
+#include "messaging/envelope.h"
 
 namespace vt {
 

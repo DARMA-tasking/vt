@@ -11,7 +11,7 @@
 #include <mpi.h>
 
 #include "config.h"
-#include "context.h"
+#include "context/context.h"
 #include "event_record.h"
 #include "event_id.h"
 #include "event_holder.h"

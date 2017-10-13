@@ -1,8 +1,8 @@
 
 #include "collective.h"
-#include "termination.h"
-#include "barrier.h"
-#include "trace.h"
+#include "termination/termination.h"
+#include "barrier/barrier.h"
+#include "trace/trace.h"
 #include "transport.h"
 #include "vrt/context/context_vrtmanager.h"
 #include "sequence/sequencer_headers.h"

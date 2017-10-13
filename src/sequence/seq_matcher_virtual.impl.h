@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "activefn/activefn.h"
-#include "message.h"
+#include "messaging/message.h"
 #include "seq_common.h"
 #include "seq_action_virtual.h"
 #include "seq_state_virtual.h"

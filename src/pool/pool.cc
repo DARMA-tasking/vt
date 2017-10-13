@@ -1,5 +1,5 @@
 
-#include "pool.h"
+#include "pool/pool.h"
 
 namespace vt { namespace pool {
 

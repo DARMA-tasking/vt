@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_RDMA_COMMON__
 
 #include "config.h"
-#include "message.h"
+#include "messaging/message.h"
 #include "utils/bits/bits_common.h"
 
 #include "rdma_types.h"

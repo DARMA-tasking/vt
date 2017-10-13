@@ -3,8 +3,8 @@
 #define __RUNTIME_TRANSPORT_COLLECTIVE__
 
 #include "config.h"
-#include "context.h"
-#include "registry.h"
+#include "context/context.h"
+#include "registry/registry.h"
 
 #include <mpi.h>
 

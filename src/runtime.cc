@@ -1,21 +1,21 @@
 
 #include <memory>
 
-#include "context.h"
-#include "registry.h"
-#include "active.h"
-#include "event.h"
-#include "termination.h"
-#include "barrier.h"
-#include "pool.h"
-#include "rdma.h"
-#include "parameterization.h"
+#include "context/context.h"
+#include "registry/registry.h"
+#include "messaging/active.h"
+#include "event/event.h"
+#include "termination/termination.h"
+#include "barrier/barrier.h"
+#include "pool/pool.h"
+#include "rdma/rdma.h"
+#include "parameterization/parameterization.h"
 #include "sequence/sequencer_headers.h"
-#include "trace.h"
-#include "scheduler.h"
-#include "location.h"
+#include "trace/trace.h"
+#include "scheduler/scheduler.h"
+#include "topos/location/location.h"
 #include "vrt/context/context_vrtmanager.h"
-#include "worker_headers.h"
+#include "worker/worker_headers.h"
 
 namespace vt {
 

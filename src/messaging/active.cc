@@ -1,7 +1,7 @@
 
 #include "config.h"
-#include "active.h"
-#include "term_headers.h"
+#include "messaging/active.h"
+#include "termination/term_headers.h"
 
 namespace vt {
 

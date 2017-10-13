@@ -8,7 +8,7 @@
 
 #include "config.h"
 #include "activefn/activefn.h"
-#include "handler.h"
+#include "handler/handler.h"
 
 namespace vt {
 

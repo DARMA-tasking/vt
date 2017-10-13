@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 #include "config.h"
-#include "context.h"
+#include "context/context.h"
 #include "location_common.h"
 #include "location_msg.h"
 #include "location_record.h"

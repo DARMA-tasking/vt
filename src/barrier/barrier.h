@@ -6,8 +6,8 @@
 
 #include "config.h"
 #include "activefn/activefn.h"
-#include "message.h"
-#include "tree.h"
+#include "messaging/message.h"
+#include "tree/tree.h"
 #include "barrier_msg.h"
 
 namespace vt { namespace barrier {

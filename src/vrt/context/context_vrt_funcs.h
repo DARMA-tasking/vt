@@ -3,7 +3,7 @@
 #define INCLUDED_CONTEXT_VRT_FUNCTIONS
 
 #include "config.h"
-#include "message.h"
+#include "messaging/message.h"
 #include "context_vrt.h"
 
 namespace vt { namespace vrt {

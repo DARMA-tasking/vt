@@ -3,12 +3,12 @@
 #define __RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE__
 
 #include "config.h"
-#include "mutex.h"
+#include "utils/mutex/mutex.h"
 #include "concurrent_deque_locked.h"
 
 #if backend_check_enabled(openmp)
 #include <omp.h>
-#include "omp_mutex.h"
+#include "utils/mutex/omp_mutex.h"
 #endif
 
 #include <mutex>

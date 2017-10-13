@@ -1,6 +1,6 @@
 
-#include "tree.h"
-#include "context.h"
+#include "tree/tree.h"
+#include "context/context.h"
 
 namespace vt {
 

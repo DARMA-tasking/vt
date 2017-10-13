@@ -11,7 +11,7 @@
 #include <sstream>
 
 #include "config.h"
-#include "context.h"
+#include "context/context.h"
 #include "location_common.h"
 
 namespace vt { namespace location {

@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_TERM_STATE__
 
 #include "config.h"
-#include "context.h"
+#include "context/context.h"
 #include "term_common.h"
 
 #include <cstdlib>

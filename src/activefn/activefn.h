@@ -3,7 +3,7 @@
 #define INCLUDED_REGISTRY_FUNCTION
 
 #include "config.h"
-#include "message.h"
+#include "messaging/message.h"
 
 namespace vt {
 

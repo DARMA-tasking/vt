@@ -7,7 +7,7 @@
 #include "config.h"
 #include "topos/index/index.h"
 #include "mapping_function.h"
-#include "auto_registry_map.h"
+#include "registry/auto_registry_map.h"
 
 namespace vt { namespace mapping {
 

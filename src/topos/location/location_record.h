@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "config.h"
-#include "context.h"
+#include "context/context.h"
 
 namespace vt { namespace location {
 

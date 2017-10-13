@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_TRACE_REGISTRY__
 
 #include "config.h"
-#include "context.h"
+#include "context/context.h"
 
 #include "trace_common.h"
 #include "trace_event.h"

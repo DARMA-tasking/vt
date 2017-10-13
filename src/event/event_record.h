@@ -8,7 +8,7 @@
 #include <mpi.h>
 
 #include "config.h"
-#include "message.h"
+#include "messaging/message.h"
 
 namespace vt { namespace event {
 

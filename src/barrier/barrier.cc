@@ -1,6 +1,6 @@
 
 #include "barrier.h"
-#include "active.h"
+#include "messaging/active.h"
 
 namespace vt { namespace barrier {
 

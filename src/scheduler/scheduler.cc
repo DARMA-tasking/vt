@@ -1,10 +1,10 @@
 
 #include "config.h"
 #include "scheduler.h"
-#include "active.h"
-#include "event.h"
-#include "termination.h"
-#include "sequencer_headers.h"
+#include "messaging/active.h"
+#include "event/event.h"
+#include "termination/termination.h"
+#include "sequence/sequencer_headers.h"
 
 namespace vt { namespace sched {
 

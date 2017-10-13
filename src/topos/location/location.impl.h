@@ -7,8 +7,8 @@
 #include <unordered_map>
 
 #include "config.h"
-#include "context.h"
-#include "active.h"
+#include "context/context.h"
+#include "messaging/active.h"
 #include "location_common.h"
 #include "location_entity.h"
 #include "location.h"

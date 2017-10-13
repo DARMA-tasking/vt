@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_TERM_COMMON__
 
 #include "config.h"
-#include "epoch.h"
+#include "messaging/epoch.h"
 
 namespace vt { namespace term {
 

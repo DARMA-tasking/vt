@@ -7,7 +7,7 @@
 #include "auto_registry_general.h"
 #include "registry.h"
 
-#include "trace.h"
+#include "trace/trace.h"
 #include "utils/demangle/demangle.h"
 
 #include "activefn/activefn.h"

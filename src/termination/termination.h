@@ -7,12 +7,12 @@
 #include <vector>
 
 #include "config.h"
-#include "epoch.h"
+#include "messaging/epoch.h"
 #include "activefn/activefn.h"
 #include "term_common.h"
 #include "term_msgs.h"
 #include "term_state.h"
-#include "tree.h"
+#include "tree/tree.h"
 
 namespace vt { namespace term {
 

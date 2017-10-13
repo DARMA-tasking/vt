@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_TERMINATION_MSGS__
 
 #include "config.h"
-#include "message.h"
+#include "messaging/message.h"
 #include "term_state.h"
 
 namespace vt { namespace term {

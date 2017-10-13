@@ -2,14 +2,14 @@
 #if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_COMMON__
 #define __RUNTIME_TRANSPORT_AUTO_REGISTRY_COMMON__
 
-#include "trace_event.h"
+#include "trace/trace_event.h"
 
 #include "config.h"
 #include "activefn/activefn.h"
 #include "registry.h"
-#include "trace.h"
+#include "trace/trace.h"
 #include "vrt/context/context_vrt_funcs.h"
-#include "mapping_function.h"
+#include "topos/mapping/mapping_function.h"
 
 #include <vector>
 

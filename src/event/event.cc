@@ -1,6 +1,6 @@
 
 #include "event.h"
-#include "active.h"
+#include "messaging/active.h"
 
 namespace vt { namespace event {
 

@@ -7,7 +7,7 @@
 #include "auto_registry_general.h"
 #include "registry.h"
 
-#include "mapping_function.h"
+#include "topos/mapping/mapping_function.h"
 
 namespace vt { namespace auto_registry {
 

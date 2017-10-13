@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_EVENT_MSGS__
 
 #include "config.h"
-#include "message.h"
+#include "messaging/message.h"
 
 namespace vt {
 

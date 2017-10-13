@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "config.h"
-#include "context.h"
+#include "context/context.h"
 #include "context_vrt.h"
 #include "context_vrt_funcs.h"
 #include "context_vrtmessage.h"
@@ -15,7 +15,7 @@
 
 #include "utils/bits/bits_common.h"
 #include "activefn/activefn.h"
-#include "mapping_function.h"
+#include "topos/mapping/mapping_function.h"
 
 namespace vt { namespace vrt {
 

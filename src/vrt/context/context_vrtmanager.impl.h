@@ -5,8 +5,8 @@
 #include "config.h"
 #include "context_vrtmanager.h"
 #include "topos/location/location.h"
-#include "auto_registry_vc.h"
-#include "auto_registry_map.h"
+#include "registry/auto_registry_vc.h"
+#include "registry/auto_registry_map.h"
 
 #include <cassert>
 #include <memory>

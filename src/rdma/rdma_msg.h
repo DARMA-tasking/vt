@@ -3,7 +3,7 @@
 #define __RUNTIME_TRANSPORT_RDMA_MSG__
 
 #include "config.h"
-#include "message.h"
+#include "messaging/message.h"
 #include "rdma_common.h"
 
 namespace vt { namespace rdma {
