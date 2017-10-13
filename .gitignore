@@ -3,3 +3,4 @@
 transport
 lib/context-build
 .emacs.desktop
+project/*

@@ -59,6 +59,17 @@ include_directories(${PROJECT_LIB_DIR})
 add_subdirectory(${PROJECT_LIB_DIR}/context)
 set(FCONTEXT_LIBRARY fcontext)
 
+if(NOT CMAKE_SERIALIZATION_PATH)
+  message("Serialization library not found")
+  set(SERIALIZATION_LIBRARY)
+else()
+  add_compile_options(-DHAS_SERIALIZATION_LIBRARY=1)
+  add_subdirectory(${CMAKE_SERIALIZATION_PATH} ${CMAKE_CURRENT_BINARY_DIR}/serialization)
+  include_directories(${CMAKE_SERIALIZATION_PATH}/src/)
+  set(SERIALIZATION_LIBRARY serialization)
+  message("Serialization library found: ${CMAKE_SERIALIZATION_PATH}")
+endif()
+
 file(
   GLOB
   HEADER_FILES
@@ -127,7 +138,7 @@ set(
   callback callback_new reinstate tagged_handler param hello_world_functor
   test_seq trace_ring location_test location_test_msg broadcast_test index_test
   hello_world_vrtContext hello_world_vc jacobi1d_recur_vc jacobi1d_node
-  term_epoch
+  term_epoch serialize_example
 )
 
 set(
@@ -183,6 +194,7 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
     ${ZLIB_LIBRARIES}
     ${MPI_C_LIBRARIES}
     ${FCONTEXT_LIBRARY}
+    ${SERIALIZATION_LIBRARY}
   )
 endforeach()
 
@@ -203,6 +215,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     ${ZLIB_LIBRARIES}
     ${MPI_C_LIBRARIES}
     ${FCONTEXT_LIBRARY}
+    ${SERIALIZATION_LIBRARY}
   )
 endforeach()
 
@@ -274,6 +287,7 @@ else()
       ${ZLIB_LIBRARIES}
       ${MPI_C_LIBRARIES}
       ${FCONTEXT_LIBRARY}
+      ${SERIALIZATION_LIBRARY}
       gtest gmock
     )
 

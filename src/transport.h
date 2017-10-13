@@ -26,5 +26,6 @@
 #include "topos/index/index.h"
 #include "topos/mapping/mapping_headers.h"
 #include "vrt/context/context_vrtheaders.h"
+#include "serialization/serialization.h"
 
 #endif /*__RUNTIME_TRANSPORT__*/
