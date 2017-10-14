@@ -117,7 +117,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
     info = std::make_unique<RemoteVrtInfo>(this_node, next_req);
   }
 
-  SerializedMessenger::sendSerialVirualMsg<
+  SerializedMessenger::sendSerialVirtualMsg<
     VrtContextT, VirtualConstructDataMsg<TupleType>,
     remoteConstructVrt<TupleType, VrtContextT>
   >(dest, TupleType{ArgsTupleType{std::forward<Args>(args)...}, *info.get()});

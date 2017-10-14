@@ -54,7 +54,7 @@ struct SerializedMessenger {
     auto_registry::ActiveVrtTypedFnType<MsgT, VcT> *f,
     typename... Args
   >
-  static void sendSerialVirualMsg(NodeType const& dest, std::tuple<Args...>&& tup) {
+  static void sendSerialVirtualMsg(NodeType const& dest, std::tuple<Args...>&& tup) {
     HandlerType const& typed_handler =
       auto_registry::makeAutoHandlerVC<VcT, MsgT, f>(nullptr);
 
