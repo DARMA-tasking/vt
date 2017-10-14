@@ -104,57 +104,79 @@ struct SerializationTraits {
   using arith = typename std::is_arithmetic<U>;
 
   template <typename U>
-  using is_tuple = isTuple<typename std::decay<U>::type>;
+  using tuple = isTuple<typename std::decay<U>::type>;
 
   template <typename U>
-  using is_vector = isVector<typename std::decay<U>::type>;
+  using vector = isVector<typename std::decay<U>::type>;
 
-  static constexpr auto const is_byte_copyable =
-    is_tuple<T>::value or arith<T>::value or hasByteCopyTrait<T>::value;
+  static constexpr auto const is_byte_cp =
+    arith<T>::value or hasByteCopyTrait<T>::value;
 
-  static constexpr auto const is_not_byte_copyable =
-    not is_tuple<T>::value and
+  static constexpr auto const is_not_byte_cp =
+    not tuple<T>::value and
     not arith<T>::value and
     not hasByteCopyTrait<T>::value and
-    not is_vector<T>::value;
+    not vector<T>::value;
 
-  static constexpr auto const is_vec =
-    is_vector<T>::value and not is_byte_copyable;
+  static constexpr auto const is_tuple = tuple<T>::value and not is_byte_cp;
+  static constexpr auto const is_vec = vector<T>::value and not is_byte_cp;
 };
 
 
-template <typename T, typename BufferT>
+template <typename BufferT, typename T>
 struct ByteCopyableTraits {
   using BufferPtrType = std::unique_ptr<BufferT>;
 
   template <typename U>
   using isByteCopyType =
-  typename std::enable_if<SerializationTraits<U>::is_byte_copyable, T>::type;
+  typename std::enable_if<SerializationTraits<U>::is_byte_cp, T>::type;
 
   template <typename U>
   using isVecType =
   typename std::enable_if<SerializationTraits<U>::is_vec, T>::type;
 
   template <typename U>
+  using isTupleType =
+  typename std::enable_if<SerializationTraits<U>::is_tuple, T>::type;
+
+  template <typename U>
   using isNotByteCopyType =
-  typename std::enable_if<SerializationTraits<U>::is_not_byte_copyable, T>::type;
+  typename std::enable_if<SerializationTraits<U>::is_not_byte_cp, T>::type;
+
+  template <typename... Vs>
+  static void tupleStaticCheck(std::tuple<Vs...>& tup) {
+    using cond = all_true<SerializationTraits<Vs>::is_byte_cp...>;
+
+    static_assert(
+      std::is_same<typename cond::type,std::true_type>::value == true,
+      "All tuple elms must be byte copyable"
+    );
+  }
 
   template <typename U = T>
-  BufferPtrType operator()(T* val, SizeType num, isByteCopyType<U>* x = nullptr) {
+  static BufferPtrType apply(T* val, SizeType num, isByteCopyType<U>* x = nullptr) {
     return serializeByte<T, BufferT>(val);
   }
 
   // Hack to make mock serializer work with vectors
   template <typename U = T>
-  BufferPtrType operator()(T* val, SizeType num, isVecType<U>* x = nullptr) {
+  static BufferPtrType apply(T* val, SizeType num, isVecType<U>* x = nullptr) {
     using ValueType = typename T::value_type;
     return serializeByte<ValueType, BufferT>(
       &(*val)[0], true, val->size()*sizeof(typename T::value_type)
     );
   }
 
+  // Specialize std::tuple type so that the elements can be checked for
+  // byte-wise serializability
   template <typename U = T>
-  BufferPtrType operator()(T* val, SizeType num, isNotByteCopyType<U>* x = nullptr) {
+  static BufferPtrType apply(T* val, SizeType num, isTupleType<U>* x = nullptr) {
+    tupleStaticCheck(*val);
+    return serializeByte<T, BufferT>(val);
+  }
+
+  template <typename U = T>
+  static BufferPtrType apply(T* val, SizeType num, isNotByteCopyType<U>* x = nullptr) {
     assert(false and "Non-byte copyable serialization not implemented");
   }
 };
@@ -190,8 +212,7 @@ using namespace ::vt::serialization;
 template <typename T>
 SerializedReturnType serialize(T& target, BufferCallbackType fn) {
   auto const& size = sizeof(T);
-  ByteCopyableTraits<T, ByteSerializedBuffer> byte;
-  auto buf = byte(&target, 1);
+  auto buf = ByteCopyableTraits<ByteSerializedBuffer, T>::apply(&target, 1);
   if (fn != nullptr) {
     auto user_buf = fn(size);
     std::memcpy(user_buf, buf->getBuffer(), size);
