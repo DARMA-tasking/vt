@@ -6,9 +6,20 @@
 #include <cstdio>
 #include <vector>
 #include <tuple>
+#include <type_traits>
 
 using namespace vt;
 using namespace ::serialization::interface;
+
+struct MyTest3ByteSerializable {
+  using isByteCopyable = std::true_type;
+
+  int c = 41, d = 29;
+
+  void print() {
+    printf("\t MyTest3ByteSerializable: c=%d, d=%d\n", c, d);
+  }
+};
 
 struct MyTest2 {
   int c = 41;
@@ -83,6 +94,26 @@ void testSerializeUserClass() {
   t.print();
 }
 
+void testSerializeByteUserClass() {
+  using Type = MyTest3ByteSerializable;
+
+  Type my_test_inst;
+
+  my_test_inst.print();
+
+  auto serialized = serialize<Type>(my_test_inst);
+
+  auto const& buf = serialized->getBuffer();
+  auto const& buf_size = serialized->getSize();
+
+  printf("ptr=%p, size=%ld\n", buf, buf_size);
+
+  auto* tptr1 = deserialize<Type>(buf, buf_size);
+  auto& t = *tptr1;
+
+  t.print();
+}
+
 void testSerializeTuple() {
   // Tuple test
   using serial_type_t = std::tuple<int, int>;
@@ -116,9 +147,10 @@ int main(int argc, char** argv) {
   auto const& num_nodes = theContext->getNumNodes();
 
   testSerializeVector();
+  testSerializeTuple();
+  testSerializeByteUserClass();
 
   #if HAS_SERIALIZATION_LIBRARY
-    testSerializeTuple();
     testSerializeUserClass();
   #endif
 
