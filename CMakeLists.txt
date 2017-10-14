@@ -141,7 +141,7 @@ set(
   callback callback_new reinstate tagged_handler param hello_world_functor
   test_seq trace_ring location_test location_test_msg broadcast_test index_test
   hello_world_vrtContext hello_world_vc jacobi1d_recur_vc jacobi1d_node
-  term_epoch serialize_example
+  term_epoch serialize_example hello_world_vc_remote
 )
 
 set(
