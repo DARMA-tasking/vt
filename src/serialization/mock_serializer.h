@@ -111,6 +111,7 @@ struct SerializationTraits {
 
   static constexpr auto const is_byte_cp =
     arith<T>::value or hasByteCopyTrait<T>::value;
+  static constexpr auto const is_byte_cp_tuple = is_byte_cp or tuple<T>::value;
 
   static constexpr auto const is_not_byte_cp =
     not tuple<T>::value and
@@ -145,7 +146,8 @@ struct ByteCopyableTraits {
 
   template <typename... Vs>
   static void tupleStaticCheck(std::tuple<Vs...>& tup) {
-    using cond = all_true<SerializationTraits<Vs>::is_byte_cp...>;
+    // @todo: do recursive check of tuple for byte-copyability
+    using cond = all_true<SerializationTraits<Vs>::is_byte_cp_tuple...>;
 
     static_assert(
       std::is_same<typename cond::type,std::true_type>::value == true,
@@ -171,7 +173,7 @@ struct ByteCopyableTraits {
   // byte-wise serializability
   template <typename U = T>
   static BufferPtrType apply(T* val, SizeType num, isTupleType<U>* x = nullptr) {
-    tupleStaticCheck(*val);
+    //tupleStaticCheck(*val);
     return serializeByte<T, BufferT>(val);
   }
 
