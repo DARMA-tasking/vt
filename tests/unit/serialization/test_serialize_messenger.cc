@@ -27,9 +27,13 @@ struct TestSerialMessenger : TestParallelHarness {
 
   template <typename Tuple>
   static void testHandler(DataMsg<Tuple>* msg) {
-    EXPECT_EQ(std::get<0>(*msg->tup), val1);
-    EXPECT_EQ(std::get<1>(*msg->tup)[0], val2);
-    EXPECT_EQ(std::get<1>(*msg->tup)[1], val3);
+    auto tup = *msg->tup;
+    auto const& v1 = std::get<0>(tup);
+    auto const& v2 = std::get<1>(tup);
+    auto const& v3 = std::get<2>(tup);
+    EXPECT_EQ(v1, val1);
+    EXPECT_EQ(v2, val2);
+    EXPECT_EQ(v3, val3);
   }
 };
 
@@ -37,11 +41,11 @@ TEST_F(TestSerialMessenger, test_serial_messenger_1) {
   auto const& my_node = theContext->getNode();
 
   if (my_node == 0) {
-    using TupleType = std::tuple<int, std::vector<int>>;
+    using TupleType = std::tuple<int, int, int>;
 
     SerializedMessenger::sendSerialMsg<
       DataMsg<TupleType>, testHandler<TupleType>
-    >(1, TupleType{val1,std::vector<int>{val2,val3}});
+    >(1, TupleType{val1,val2,val3});
   }
 }
 
