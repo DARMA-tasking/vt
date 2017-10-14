@@ -140,6 +140,32 @@ void testSerializeTuple() {
   printf("{{ %d, %d }}\n", std::get<0>(t1), std::get<1>(t1));
 }
 
+void testSerializeTupleVector() {
+  // Tuple test
+  using serial_type_t = std::tuple<int, std::vector<int>>;
+
+  serial_type_t tup{10,{20,30}};
+
+  printf("{{ %d, %d }}\n", std::get<0>(tup), std::get<1>(tup)[0]);
+
+  auto s1 = serialize(tup);
+
+  auto const& buf2 = s1;
+
+  printf(
+    "ptr=%p, val=%d, size=%ld\n",
+    buf2->getBuffer(), *reinterpret_cast<int*>(buf2->getBuffer()),
+    s1->getSize()
+  );
+
+  auto tptr = deserialize<serial_type_t>(
+    buf2->getBuffer(), s1->getSize()
+  );
+  auto& t1 = *tptr;
+
+  printf("{{ %d, %d }}\n", std::get<0>(t1), std::get<1>(t1)[0]);
+}
+
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
@@ -151,6 +177,7 @@ int main(int argc, char** argv) {
   testSerializeByteUserClass();
 
   #if HAS_SERIALIZATION_LIBRARY
+    testSerializeTupleVector();
     testSerializeUserClass();
   #endif
 
