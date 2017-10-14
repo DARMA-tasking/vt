@@ -9,7 +9,7 @@ namespace vt {
 
 template <typename MessageT, typename... Args>
 MessageT* makeSharedMessage(Args&&... args) {
-  MessageT* msg = new MessageT{args...};
+  MessageT* msg = new MessageT{std::forward<Args>(args)...};
   envelopeSetRef(msg->env, 1);
   return msg;
 }

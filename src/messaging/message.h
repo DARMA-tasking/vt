@@ -24,6 +24,10 @@ struct ActiveMessage : BaseMessage {
     return thePool->alloc(sz);
   }
 
+  static void* operator new(std::size_t, void* mem) {
+    return mem;
+  }
+
   static void operator delete(void* ptr) {
     return thePool->dealloc(ptr);
   }
