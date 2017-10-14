@@ -313,6 +313,15 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::routeNonEagerAction(
+  EntityID const& id, NodeType const& home_node, ActionNodeType action
+) {
+  getLocation(id, home_node, [=](NodeType node) {
+    action(node);
+  });
+}
+
+template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
     EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act

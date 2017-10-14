@@ -97,6 +97,10 @@ struct EntityLocationCoord : LocationCoord {
       ActionType action = nullptr
   );
 
+  void routeNonEagerAction(
+      EntityID const& id, NodeType const& home_node, ActionNodeType action
+  );
+
   void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
   void printCurrentCache() const;
 
