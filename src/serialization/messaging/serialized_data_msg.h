@@ -16,6 +16,7 @@ struct SerializedDataMsg : ShortMessage {
   HandlerType handler = uninitialized_handler;
   TagType data_recv_tag = no_tag;
   NodeType from_node = uninitialized_destination;
+  bool is_virtual = false;
 };
 
 }} /* end namespace vt::serialization */
