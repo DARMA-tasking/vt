@@ -6,6 +6,7 @@
 #include "messaging/message.h"
 #include "messaging/active.h"
 #include "registry/auto_registry_interface.h"
+#include "utils/static_checks/all_true.h"
 #include "param_meta.h"
 
 #include <tuple>
@@ -14,6 +15,8 @@
 #include <type_traits>
 
 namespace vt { namespace param {
+
+using namespace ::vt::util;
 
 using HandlerManagerType = vt::HandlerManager;
 

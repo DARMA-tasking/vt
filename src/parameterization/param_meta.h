@@ -48,10 +48,6 @@ void invokeCallableTuple(std::tuple<Args...>&& tup, FnT fn, bool const& is_funct
   }
 }
 
-template <bool...> struct BoolPack;
-template <bool... bs>
-using all_true = std::is_same<BoolPack<bs..., true>, BoolPack<true, bs...>>;
-
 }} /* end namespace vt::param */
 
 #endif /*__RUNTIME_TRANSPORT_PARAM_META__*/

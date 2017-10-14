@@ -3,6 +3,7 @@
 #define __RUNTIME_TRANSPORT_MOCK_SERIALIZER__
 
 #include "config.h"
+#include "utils/static_checks/all_true.h"
 
 #include <cstdlib>
 #include <functional>
@@ -23,6 +24,7 @@
 namespace vt { namespace serialization {
 
 using namespace ::serialization::interface;
+using namespace ::vt::util;
 
 struct ByteSerializedBuffer : SerializedInfo {
   using ByteType = SerialByteType[];
