@@ -103,9 +103,9 @@ void VirtualContextManager::sendSerialMsg(
   );
 
   // route the message to the destination using the location manager
-  SerializedMessenger::sendSerialMsg<MsgT, f>(
+  SerializedMessenger::sendSerialMsg<MsgT, f, VirtualMessage>(
     msg,
-    [=](SerializedEagerMsg<MsgT>* msg){
+    [=](SerializedEagerMsg<MsgT, VirtualMessage>* msg){
       theLocMan->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
     },
     [=](ActionNodeType action){

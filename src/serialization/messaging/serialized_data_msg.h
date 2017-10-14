@@ -14,14 +14,17 @@ static constexpr SizeType const serialized_msg_eager_size = 128;
 
 struct NoneVrt { };
 
-template <typename T>
-struct SerializedDataMsg : ShortMessage {
-  SerializedDataMsg() : ShortMessage() { }
+template <typename T, typename MessageT>
+struct SerializedDataMsgAny : MessageT {
+  SerializedDataMsgAny() : MessageT() { }
 
   HandlerType handler = uninitialized_handler;
   TagType data_recv_tag = no_tag;
   NodeType from_node = uninitialized_destination;
 };
+
+template <typename T>
+using SerializedDataMsg = SerializedDataMsgAny<T, ShortMessage>;
 
 using NumBytesType = int64_t;
 
@@ -43,9 +46,10 @@ struct SerialPayloadMsg : MessageT {
   { }
 };
 
-template <typename UserMsgT>
+template <typename UserMsgT, typename BaseEagerMsgT>
 using SerialEagerPayloadMsg = SerialPayloadMsg<
-  UserMsgT, SerializedDataMsg<UserMsgT>, serialized_msg_eager_size
+  UserMsgT, SerializedDataMsgAny<UserMsgT, BaseEagerMsgT>,
+  serialized_msg_eager_size
 >;
 
 }} /* end namespace vt::serialization */
