@@ -8,6 +8,9 @@
 #include <functional>
 #include <cstring>
 #include <cassert>
+#include <type_traits>
+#include <vector>
+#include <tuple>
 
 /*
  * Mock serializer that implements the serialization interface for
@@ -82,13 +85,21 @@ template<typename U>
 struct isVector<std::vector<U>> : std::true_type { };
 
 template <typename T>
+struct hasByteCopyTrait {
+  template <typename C, typename = typename C::isByteCopyable>
+  static typename C::isByteCopyable test(int);
+
+  template <typename C>
+  static std::false_type test(...);
+
+  static constexpr bool value = decltype(test<T>(0))::value;
+};
+
+template <typename T>
 struct SerializationTraits {
 
   template <typename U>
-  using byte_copy = typename std::is_arithmetic<U>;
-
-  // template <typename U>
-  // using byte_copy_trait = typename std::is_arithmetic<U::byte_copy>;
+  using arith = typename std::is_arithmetic<U>;
 
   template <typename U>
   using is_tuple = isTuple<typename std::decay<U>::type>;
@@ -97,15 +108,16 @@ struct SerializationTraits {
   using is_vector = isVector<typename std::decay<U>::type>;
 
   static constexpr auto const is_byte_copyable =
-    is_tuple<T>::value or byte_copy<T>::value;
+    is_tuple<T>::value or arith<T>::value or hasByteCopyTrait<T>::value;
 
   static constexpr auto const is_not_byte_copyable =
     not is_tuple<T>::value and
-    not byte_copy<T>::value and
+    not arith<T>::value and
+    not hasByteCopyTrait<T>::value and
     not is_vector<T>::value;
 
   static constexpr auto const is_vec =
-    is_vector<T>::value and not byte_copy<T>::value;
+    is_vector<T>::value and not is_byte_copyable;
 };
 
 
