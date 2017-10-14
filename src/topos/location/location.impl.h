@@ -263,11 +263,10 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   );
 
   if (to_node != this_node) {
-    auto entity_msg = static_cast<EntityMsgType <MessageT> *>(msg);
     // set the instance on the message to deliver to the correct manager
-    entity_msg->setLocInst(this_inst);
+    msg->setLocInst(this_inst);
     // send to the node discovered by the location manager
-    theMsg->sendMsg<MessageT, msgHandler>(to_node, entity_msg, action);
+    theMsg->sendMsg<MessageT, msgHandler>(to_node, msg, action);
   } else {
     auto trigger_msg_handler_action = [=](EntityID const& id) {
       auto reg_han_iter = local_registered_msg_han_.find(id);
