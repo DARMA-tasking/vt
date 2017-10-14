@@ -4,6 +4,11 @@
 
 #include "config.h"
 
+#include <tuple>
+#include <utility>
+#include <functional>
+#include <type_traits>
+
 namespace vt { namespace param {
 
 template <typename... Args>

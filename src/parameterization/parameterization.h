@@ -8,6 +8,11 @@
 #include "registry/auto_registry_interface.h"
 #include "param_meta.h"
 
+#include <tuple>
+#include <utility>
+#include <functional>
+#include <type_traits>
+
 namespace vt { namespace param {
 
 using HandlerManagerType = vt::HandlerManager;
