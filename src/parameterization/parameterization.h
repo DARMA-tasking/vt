@@ -6,19 +6,11 @@
 #include "messaging/message.h"
 #include "messaging/active.h"
 #include "registry/auto_registry_interface.h"
+#include "param_meta.h"
 
 namespace vt { namespace param {
 
 using HandlerManagerType = vt::HandlerManager;
-
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
-
-template<typename T, T value>
-struct NonType {};
-
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(value),(value)>()
-#define PARAM_FUNCTION(value) decltype(value),(value)
 
 template <typename Tuple>
 struct DataMsg : vt::Message {
@@ -35,35 +27,6 @@ struct DataMsg : vt::Message {
   { }
 };
 
-template <typename Function, typename Tuple, size_t... I>
-static auto call(Function f, Tuple&& t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
-}
-
-template <typename FnT, typename... Args>
-static void getFnSig(std::tuple<Args...>&& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    // be careful: functor version takes a r-value ref as `Args' and forwards
-    auto typed_fn = reinterpret_cast<MultiParamType<Args&&...>>(fn);
-    call(
-      typed_fn, std::forward<std::tuple<Args...>>(tup),
-      std::make_index_sequence<size>{}
-    );
-  } else {
-    // be careful: non-fuctor version takes a l-value as `Args'
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    call(
-      typed_fn, std::forward<std::tuple<Args...>>(tup),
-      std::make_index_sequence<size>{}
-    );
-  }
-}
 
 template <typename Tuple>
 static void dataMessageHandler(DataMsg<Tuple>* msg) {
@@ -85,21 +48,17 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
 
   if (HandlerManagerType::isHandlerFunctor(msg->sub_han)) {
     auto fn = auto_registry::getAutoHandlerFunctor(msg->sub_han);
-    getFnSig(std::forward<Tuple>(msg->tup), fn, true);
+    invokeCallableTuple(std::forward<Tuple>(msg->tup), fn, true);
   } else {
     // regular active function
     auto fn = auto_registry::getAutoHandler(msg->sub_han);
-    getFnSig(std::forward<Tuple>(msg->tup), fn, false);
+    invokeCallableTuple(std::forward<Tuple>(msg->tup), fn, false);
   }
 
 #if backend_check_enabled(trace_enabled)
   theTrace->endProcessing(ep, sizeof(*msg), event, from_node);
 #endif
 }
-
-template <bool...> struct BoolPack;
-template <bool... bs>
-using all_true = std::is_same<BoolPack<bs..., true>, BoolPack<true, bs...>>;
 
 struct Param {
 
