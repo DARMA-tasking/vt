@@ -50,7 +50,7 @@ set(
   event messaging pool rdma registry parameterization handler sequence context
   termination trace tree scheduler utils/demangle utils/bits demangle
   topos/location topos/mapping topos/index utils/container utils/detector
-  serialization worker utils/mutex
+  serialization serialization/messaging worker utils/mutex
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
