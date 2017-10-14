@@ -9,6 +9,10 @@
 namespace vt { namespace vrt {
 
 using VirtualIDType = uint32_t;
+using VirtualRemoteIDType = uint16_t;
+using VirtualRequestIDType = int64_t;
+
+static constexpr VirtualRequestIDType const no_request_id = -1;
 
 struct VirtualContextManager;
 

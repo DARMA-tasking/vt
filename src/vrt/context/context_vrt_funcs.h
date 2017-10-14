@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_CONTEXT_VRT_FUNCTIONS
-#define INCLUDED_CONTEXT_VRT_FUNCTIONS
+#if !defined __RUNTIME_TRANSPORT_CONTEXT_VRT_FUNCS__
+#define __RUNTIME_TRANSPORT_CONTEXT_VRT_FUNCS__
 
 #include "config.h"
 #include "messaging/message.h"
@@ -8,12 +8,11 @@
 
 namespace vt { namespace vrt {
 
-using ActiveVirtualFnPtrType = void (*)(vt::BaseMessage *,
-                                        vt::vrt::VirtualContext *);
+using ActiveVirtualFnPtrType = void(*)(vt::BaseMessage *, vt::vrt::VirtualContext*);
 
 template <typename MessageT, typename VirtualContextT>
-using ActiveVrtTypedFnType = void(MessageT *, VirtualContextT *);
+using ActiveVrtTypedFnType = void(MessageT*, VirtualContextT*);
 
-}}  // end namespace vt::context
+}} /* end namespace vt::context */
 
-#endif  /*INCLUDED_CONTEXT_VRT_FUNCTIONS*/
+#endif /*__RUNTIME_TRANSPORT_CONTEXT_VRT_FUNCS__*/

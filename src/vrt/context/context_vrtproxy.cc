@@ -11,8 +11,28 @@ namespace vt {namespace vrt {
 
   setIsCollection(new_proxy, is_coll);
   setIsMigratable(new_proxy, is_migratable);
+  setIsRemote(new_proxy, false);
   setVirtualNode(new_proxy, node);
   setVirtualID(new_proxy, id);
+
+  return new_proxy;
+}
+
+/*static*/ VirtualProxyType VirtualProxyBuilder::createRemoteProxy(
+  VirtualRemoteIDType const& id, NodeType const& this_node,
+  NodeType const& target_node, bool const& is_coll, bool const& is_migratable
+) {
+  VirtualProxyType new_proxy = 0;
+
+  setIsCollection(new_proxy, is_coll);
+  setIsMigratable(new_proxy, is_migratable);
+  setIsRemote(new_proxy, true);
+  setVirtualNode(new_proxy, target_node);
+  setVirtualRemoteID(new_proxy, id);
+  setVirtualRemoteNode(new_proxy, this_node);
+
+  auto const& id1 = VirtualProxyBuilder::getVirtualID(new_proxy);
+  printf("%d:id=%d\n", this_node,(int)id1);
 
   return new_proxy;
 }
@@ -27,6 +47,12 @@ namespace vt {namespace vrt {
   VirtualProxyType& proxy, bool const& is_mig
 ) {
   BitPackerType::boolSetField<eVirtualProxyBits::Migratable>(proxy, is_mig);
+}
+
+/*static*/ void VirtualProxyBuilder::setIsRemote(
+  VirtualProxyType& proxy, bool const& is_remote
+) {
+  BitPackerType::boolSetField<eVirtualProxyBits::Remote>(proxy, is_remote);
 }
 
 /*static*/ void VirtualProxyBuilder::setVirtualNode(
@@ -45,6 +71,22 @@ namespace vt {namespace vrt {
   );
 }
 
+/*static*/ void VirtualProxyBuilder::setVirtualRemoteNode(
+  VirtualProxyType& proxy, NodeType const& node
+) {
+  BitPackerType::setField<
+    eVirtualProxyRemoteBits::RemoteNode, virtual_node_num_bits
+  >(proxy, node);
+}
+
+/*static*/ void VirtualProxyBuilder::setVirtualRemoteID(
+  VirtualProxyType& proxy, VirtualRemoteIDType const& id
+) {
+  BitPackerType::setField<
+    eVirtualProxyRemoteBits::RemoteID, virtual_remote_id_num_bits
+  >(proxy, id);
+}
+
 /*static*/ bool VirtualProxyBuilder::isCollection(
   VirtualProxyType const& proxy
 ) {
@@ -55,6 +97,12 @@ namespace vt {namespace vrt {
   VirtualProxyType const& proxy
 ) {
   return BitPackerType::boolGetField<eVirtualProxyBits::Migratable>(proxy);
+}
+
+/*static*/ bool VirtualProxyBuilder::isRemote(
+  VirtualProxyType const& proxy
+) {
+  return BitPackerType::boolGetField<eVirtualProxyBits::Remote>(proxy);
 }
 
 /*static*/ NodeType VirtualProxyBuilder::getVirtualNode(

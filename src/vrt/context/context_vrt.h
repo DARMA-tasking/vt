@@ -19,6 +19,7 @@ struct VirtualContext {
   friend struct VirtualContextManager;
 
 private:
+  SeedType seed_ = 0;
   VirtualProxyType proxy_ = no_vrt_proxy;
 };
 

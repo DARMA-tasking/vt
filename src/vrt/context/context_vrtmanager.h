@@ -12,25 +12,43 @@
 #include "context_vrtmessage.h"
 #include "context_vrtinfo.h"
 #include "context_vrtproxy.h"
+#include "context_vrt_internal_msgs.h"
 
 #include "utils/bits/bits_common.h"
 #include "activefn/activefn.h"
 #include "topos/mapping/mapping_function.h"
+#include "serialization/serialization.h"
 
 namespace vt { namespace vrt {
 
+using namespace ::vt::serialization;
+
+struct PendingRequest {
+  VirtualRequestIDType req_id = no_request_id;
+
+  ActionProxyType action = nullptr;
+
+  PendingRequest(
+    VirtualRequestIDType const& in_req_id, ActionProxyType in_action
+  ) : req_id(in_req_id), action(in_action)
+  { }
+};
+
 struct VirtualContextManager {
   using VirtualPtrType = std::unique_ptr<VirtualContext>;
+  using PendingRequestType = PendingRequest;
   using VirtualInfoType = VirtualInfo;
   using ContainerType = std::unordered_map<VirtualIDType, VirtualInfoType>;
+  using ContainerRemoteType = std::unordered_map<VirtualIDType, VirtualInfoType>;
+  using PendingContainerType = std::unordered_map<VirtualRequestIDType, PendingRequest>;
 
   VirtualContextManager();
 
   template <typename VrtContextT, typename... Args>
   VirtualProxyType makeVirtual(Args&& ... args);
 
-  template <typename VrtContextT, typename MessageT>
-  VirtualProxyType makeVirtualMsg(NodeType const& node, MessageT* m);
+  template <typename VrtContextT, typename... Args>
+  VirtualProxyType makeVirtualNode(NodeType const& node, Args&& ... args);
 
   template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
   VirtualProxyType makeVirtualMap(Args&& ... args);
@@ -44,13 +62,40 @@ struct VirtualContextManager {
   );
 
 private:
+  template <typename VrtContextT, typename... Args>
+  VirtualProxyType makeVirtualRemote(
+    NodeType const& node, bool isImmediate, ActionProxyType action,
+    Args&&... args
+  );
+
+  void insertVirtualContext(VirtualPtrType new_vc, VirtualProxyType proxy);
+
+  VirtualProxyType generateNewProxy();
+  VirtualRemoteIDType generateNewRemoteID(NodeType const& node);
+
   // All messages directed to a virtual context are routed through this handler
   // so the user's handler can be invoked with the pointer to the virtual
   // context
   static void virtualMsgHandler(BaseMessage* msg);
 
-  VirtualContext* getVirtualByID(VirtualIDType const& lookupID);
-  void destroyVirtualByID(VirtualIDType const& lookupID);
+  // Handler to send back a generated proxy to a requesting node
+  static void sendBackVirtualProxyHan(VirtualProxyRequestMsg* msg);
+
+  // Handler to send back a generated proxy to a requesting node
+  static void userConstructHan(VirtualMessage* msg);
+
+  template <typename VrtCtxT, typename Tuple, size_t... I>
+  static VirtualPtrType runConstructor(Tuple* tup, std::index_sequence<I...>);
+
+  template <typename SystemTuple, typename VrtContextT>
+  static void remoteConstructVrt(
+    VirtualConstructDataMsg<SystemTuple>* msg, VrtContextT* ctx
+  );
+
+  void recvVirtualProxy(VirtualRequestIDType id, VirtualProxyType proxy);
+
+  VirtualContext* getVirtualByID(VirtualIDType const& lookupID, bool const is_remote);
+  void destroyVirtualByID(VirtualIDType const& lookupID, bool const is_remote);
   VirtualIDType getCurrentID() const;
   NodeType getNode() const;
 
@@ -58,12 +103,23 @@ private:
   // Holder for local virtual contexts that are mapped to this node; VirtualInfo
   // holds a pointer to the virtual along with other meta-information about it
   ContainerType holder_;
+  ContainerRemoteType remote_holder_;
+
+  SeedType cur_seed_ = 0;
 
   // The current identifier (node-local) for this manager
   VirtualIDType curIdent_;
 
+  // The current identifier (for remote nodes) for this manager
+  std::unordered_map<NodeType, VirtualRemoteIDType> curRemoteID_;
+
   // Cache of the node for the virtual context manager
   NodeType myNode_;
+
+  // The current request identifier, used to track remote transactions
+  VirtualRequestIDType cur_request_id = 0;
+
+  PendingContainerType pending_request_;
 };
 
 }}  // end namespace vt::vrt

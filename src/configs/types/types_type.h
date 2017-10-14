@@ -24,6 +24,7 @@ using ByteType = uint64_t;
 using BitCountType = int32_t;
 using ActionType = std::function<void()>;
 using VirtualProxyType = uint64_t;
+using ActionProxyType = std::function<void(VirtualProxyType)>;
 using SerialByteType = char;
 using WorkerCountType = int32_t;
 

@@ -4,9 +4,12 @@
 
 #include "config.h"
 #include "context_vrtmanager.h"
+#include "context_vrt_internal_msgs.h"
+#include "context_vrt_remoteinfo.h"
 #include "topos/location/location.h"
 #include "registry/auto_registry_vc.h"
 #include "registry/auto_registry_map.h"
+#include "serialization/serialization.h"
 
 #include <cassert>
 #include <memory>
@@ -15,50 +18,119 @@ namespace vt { namespace vrt {
 
 template <typename VrtContextT, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtual(Args&& ... args) {
-  auto holder_iter = holder_.find(curIdent_);
-  assert(
-    holder_iter == holder_.end() &&
-    "Holder must not contain curIdent_: should be impossible"
-  );
-
   auto new_vc = std::make_unique<VrtContextT>(std::forward<Args>(args)...);
-  auto const& proxy = VirtualProxyBuilder::createProxy(curIdent_, myNode_);
-
-  // registry the proxy with location manager
-  theLocMan->vrtContextLoc->registerEntity(proxy, virtualMsgHandler);
-
-  // save the proxy in the virtual context for reference later
-  new_vc->proxy_ = proxy;
-
-  debug_print(
-    vrt, node,
-    "inserting new VC into holder_: ident=%d, proxy=%lld, ptr=%p\n",
-    curIdent_, proxy, new_vc.get()
-  );
-
-  // insert into the holder at the current slot, and increment slot
-  holder_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(curIdent_),
-    std::forward_as_tuple(VirtualInfoType{std::move(new_vc), proxy})
-  );
-
-  curIdent_++;
-
+  auto const& proxy = generateNewProxy();
+  insertVirtualContext(std::move(new_vc), proxy);
   return proxy;
 }
 
-template <typename VrtContextT, typename MessageT>
-VirtualProxyType VirtualContextManager::makeVirtualMsg(
-  NodeType const& node, MessageT* m
+using namespace ::vt::serialization;
+
+template <typename VrtCtxT, typename Tuple, size_t... I>
+/*static*/ typename VirtualContextManager::VirtualPtrType
+VirtualContextManager::runConstructor(
+  Tuple* tup, std::index_sequence<I...>
 ) {
-  return VirtualProxyType{};
+  return std::make_unique<VrtCtxT>(
+    std::forward<typename std::tuple_element<I,Tuple>::type>(
+      std::get<I>(*tup)
+    )...
+  );
+}
+
+template <typename SystemTuple, typename VrtContextT>
+/*static*/ void VirtualContextManager::remoteConstructVrt(
+  VirtualConstructDataMsg<SystemTuple>* msg, VrtContextT* ctx
+) {
+  printf("remoteConstructVrt: unwind tuple and construct\n");
+
+  using Args = typename std::tuple_element<0, SystemTuple>::type;
+  static constexpr auto size = std::tuple_size<Args>::value;
+  auto new_vc = VirtualContextManager::runConstructor<VrtContextT>(
+    &std::get<0>(*msg->tup), std::make_index_sequence<size>{}
+  );
+
+  auto const& info = std::get<1>(*msg->tup);
+  VirtualProxyType new_proxy = info.proxy;
+
+  if (info.isImmediate) {
+    // nothing to do here?
+  } else {
+    auto const& cons_node = theContext->getNode();
+    auto const& req_node = info.from_node;
+    auto const& request_id = info.req_id;
+
+    new_proxy = theVirtualManager->generateNewProxy();
+    auto send_msg = makeSharedMessage<VirtualProxyRequestMsg>(
+      cons_node, req_node, request_id, new_proxy
+    );
+    theMsg->sendMsg<VirtualProxyRequestMsg, sendBackVirtualProxyHan>(
+      req_node, send_msg
+    );
+  }
+
+  theVirtualManager->insertVirtualContext(std::move(new_vc), new_proxy);
+}
+
+template <typename VrtContextT, typename... Args>
+VirtualProxyType VirtualContextManager::makeVirtualNode(
+  NodeType const& node, Args&& ... args
+) {
+  auto const& this_node = theContext->getNode();
+  if (node != this_node) {
+    return makeVirtualRemote<VrtContextT>(
+      node, true, nullptr, std::forward<Args>(args)...
+    );
+  } else {
+    return makeVirtual<VrtContextT>(std::forward<Args>(args)...);
+  }
+}
+
+template <typename VrtContextT, typename... Args>
+VirtualProxyType VirtualContextManager::makeVirtualRemote(
+  NodeType const& dest, bool isImmediate, ActionProxyType action, Args&&... args
+) {
+  using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
+  using SystemTupleType = std::tuple<ArgsTupleType, RemoteVrtInfo>;
+  using TupleType = SystemTupleType;
+
+  auto const& this_node = theContext->getNode();
+  std::unique_ptr<RemoteVrtInfo> info = nullptr;
+  VirtualProxyType return_proxy = no_vrt_proxy;
+
+  if (isImmediate) {
+    auto const& remote_id = generateNewRemoteID(dest);
+    return_proxy = VirtualProxyBuilder::createRemoteProxy(
+      remote_id, myNode_, dest, false, false
+    );
+    info = std::make_unique<RemoteVrtInfo>(this_node, return_proxy);
+  } else {
+    auto next_req = cur_request_id++;
+
+    // insert a pending request to trigger the action
+    pending_request_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(next_req),
+      std::forward_as_tuple(PendingRequestType{next_req, action})
+    );
+
+    info = std::make_unique<RemoteVrtInfo>(this_node, next_req);
+  }
+
+  SerializedMessenger::sendSerialVirualMsg<
+    VrtContextT, VirtualConstructDataMsg<TupleType>,
+    remoteConstructVrt<TupleType, VrtContextT>
+  >(dest, TupleType{ArgsTupleType{std::forward<Args>(args)...}, *info.get()});
+
+  return return_proxy;
 }
 
 template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualMap(
   Args&& ... args
 ) {
+  auto const next_seed = cur_seed_++;
+  //auto mapped_core = fn(next_seed, num_nodes);
   auto const& core_map_handle = auto_registry::makeAutoHandlerSeedMap<fn>();
   auto const& proxy = makeVirtual<VrtContextT, Args...>(
     std::forward<Args>(args)...
@@ -68,7 +140,10 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(
   assert(holder_iter != holder_.end() && "Proxy ID Must exist here");
   auto& info = holder_iter->second;
   info.core_map_handler_ = core_map_handle;
-  // @todo: do the actual mapping
+  // @todo: actually do the mapping
+  auto vrt = getVirtualByProxy(proxy);
+  vrt->seed_ = next_seed;
+  return proxy;
 }
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
