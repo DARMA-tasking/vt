@@ -23,6 +23,7 @@ using RefType = int16_t;
 using ByteType = uint64_t;
 using BitCountType = int32_t;
 using ActionType = std::function<void()>;
+using ActionNodeType = std::function<void(NodeType)>;
 using VirtualProxyType = uint64_t;
 using ActionProxyType = std::function<void(VirtualProxyType)>;
 using SerialByteType = char;

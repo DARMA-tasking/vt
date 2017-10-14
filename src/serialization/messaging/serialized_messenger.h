@@ -17,114 +17,121 @@ using namespace ::serialization::interface;
 
 namespace vt { namespace serialization {
 
+template <typename MsgT>
+using SerializedEagerMsg = SerialEagerPayloadMsg<MsgT>;
+template <typename MsgT>
+using ActionEagerSend = std::function<void(SerializedEagerMsg<MsgT>* msg)>;
+using ActionDataSend = std::function<void(ActionNodeType)>;
+
 struct SerializedMessenger {
-  template <typename Vrt, typename T, typename UserMsgT>
-  using VrtMsgType = SerializedDataMsg<T, UserMsgT, Vrt>;
+  template <typename UserMsgT>
+  using SerialWrapperMsgType = SerializedDataMsg<UserMsgT>;
 
-  template <typename T, typename UserMsgT>
-  using MsgType = SerializedDataMsg<T, UserMsgT>;
-
-  template <typename Vrt, typename Tuple, typename UserMsgT>
-  static void serialMsgHandler(VrtMsgType<Vrt, Tuple, UserMsgT>* msg) {
-    auto const handler = msg->handler;
-    auto const is_virtual = msg->is_virtual;
-    auto const& recv_tag = msg->data_recv_tag;
+  template <typename UserMsgT>
+  static void serialMsgHandler(SerialWrapperMsgType<UserMsgT>* sys_msg) {
+    auto const handler = sys_msg->handler;
+    auto const& recv_tag = sys_msg->data_recv_tag;
     theMsg->recvDataMsg(
-      recv_tag, msg->from_node, [handler,is_virtual](RDMA_GetType ptr, ActionType){
+      recv_tag, sys_msg->from_node, [handler](RDMA_GetType ptr, ActionType){
         // be careful here not to use "msg", it is no longer valid
         auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
         auto ptr_size = std::get<1>(ptr);
-        auto tptr = deserialize<Tuple>(raw_ptr, ptr_size, nullptr);
-        UserMsgT user_msg(tptr);
+        UserMsgT* msg = new UserMsgT;
+        auto tptr = deserialize<UserMsgT>(raw_ptr, ptr_size, msg);
 
-        if (is_virtual) {
-          auto vc_active_fn = auto_registry::getAutoHandlerVC(handler);
-          vc_active_fn(&user_msg, nullptr);
-        } else {
-          auto active_fn = auto_registry::getAutoHandler(handler);
-          active_fn(&user_msg);
-        }
+        auto active_fn = auto_registry::getAutoHandler(handler);
+        active_fn(reinterpret_cast<BaseMessage*>(tptr));
       }
     );
   }
 
-  template <
-    typename VcT,
-    typename MsgT,
-    auto_registry::ActiveVrtTypedFnType<MsgT, VcT> *f,
-    typename... Args
-  >
-  static void sendSerialVirtualMsg(NodeType const& dest, std::tuple<Args...>&& tup) {
-    HandlerType const& typed_handler =
-      auto_registry::makeAutoHandlerVC<VcT, MsgT, f>(nullptr);
+  template <typename UserMsgT>
+  static void payloadMsgHandler(SerialEagerPayloadMsg<UserMsgT>* sys_msg) {
+    auto const handler = sys_msg->handler;
 
-    using TupleType = typename std::decay<decltype(tup)>::type;
-    auto meta_typed_data_msg = new VrtMsgType<VcT, TupleType, MsgT>();
-    meta_typed_data_msg->is_virtual = true;
-
-    SerialByteType* ptr = nullptr;
-    SizeType ptr_size = 0;
-
-    auto serialized = serialize(
-      tup, [&](SizeType size) -> SerialByteType* {
-        ptr_size = size;
-        ptr = static_cast<SerialByteType*>(malloc(size));
-        return ptr;
-      }
+    UserMsgT* user_msg = new UserMsgT;
+    auto tptr = deserialize<UserMsgT>(
+      sys_msg->payload.data(), sys_msg->bytes, user_msg
     );
 
-    auto send_serialized = [&](ActiveMessenger::SendFnType send){
-      auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag, no_action);
-      meta_typed_data_msg->data_recv_tag = std::get<1>(ret);
+    auto active_fn = auto_registry::getAutoHandler(handler);
+    active_fn(reinterpret_cast<BaseMessage*>(tptr));
+  }
+
+  template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+  static void sendSerialMsg(
+    NodeType dest, MsgT* msg, ActionEagerSend<MsgT> eager_sender = nullptr
+  ) {
+    auto eager_default_send = [=](SerializedEagerMsg<MsgT>* m){
+      theMsg->sendMsg<SerialEagerPayloadMsg<MsgT>,payloadMsgHandler>(dest, m);
     };
-
-    meta_typed_data_msg->handler = typed_handler;
-    meta_typed_data_msg->from_node = theContext->getNode();
-
-    setPutType(meta_typed_data_msg->env);
-
-    auto deleter = [=]{ delete meta_typed_data_msg; };
-
-    theMsg->sendMsg<VrtMsgType<VcT, TupleType, MsgT>, serialMsgHandler>(
-      dest, meta_typed_data_msg, send_serialized, deleter
-    );
+    auto eager = eager_sender ? eager_sender : eager_default_send;
+    return sendSerialMsg<MsgT,f>(msg, eager, [=](ActionNodeType action) {
+      action(dest);
+    });
   }
 
-  template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename... Args>
-  static void sendSerialMsg(NodeType const& dest, std::tuple<Args...>&& tup) {
+  template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+  static void sendSerialMsg(
+    MsgT* msg, ActionEagerSend<MsgT> eager_sender, ActionDataSend data_sender
+  ) {
     HandlerType const& typed_handler =
       auto_registry::makeAutoHandler<MsgT, f>(nullptr);
 
-    using TupleType = typename std::decay<decltype(tup)>::type;
-    auto meta_typed_data_msg = new MsgType<TupleType, MsgT>();
-    meta_typed_data_msg->is_virtual = false;
-
+    SerialEagerPayloadMsg<MsgT>* payload_msg = nullptr;
     SerialByteType* ptr = nullptr;
     SizeType ptr_size = 0;
 
-    auto serialized = serialize(
-      tup, [&](SizeType size) -> SerialByteType* {
+    auto serialized_msg = serialize(
+      *msg, [&](SizeType size) -> SerialByteType* {
         ptr_size = size;
-        ptr = static_cast<SerialByteType*>(malloc(size));
-        return ptr;
+
+        if (size > serialized_msg_eager_size) {
+          ptr = static_cast<SerialByteType*>(malloc(size));
+          return ptr;
+        } else {
+          payload_msg = makeSharedMessage<SerialEagerPayloadMsg<MsgT>>(ptr_size);
+          return payload_msg->payload.data();
+        }
       }
     );
 
-    auto send_serialized = [&](ActiveMessenger::SendFnType send){
-      auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag, no_action);
-      meta_typed_data_msg->data_recv_tag = std::get<1>(ret);
-    };
+    printf("ptr_size=%ld\n", ptr_size);
 
-    meta_typed_data_msg->handler = typed_handler;
-    meta_typed_data_msg->from_node = theContext->getNode();
+    if (ptr_size > serialized_msg_eager_size) {
+      auto sys_msg = makeSharedMessage<SerialWrapperMsgType<MsgT>>();
+      // move serialized msg envelope to system envelope to preserve info
+      sys_msg->env = msg->env;
 
-    setPutType(meta_typed_data_msg->env);
+      assert(payload_msg == nullptr and data_sender != nullptr);
 
-    auto deleter = [=]{ delete meta_typed_data_msg; };
+      auto send_data = [=](NodeType dest){
+        auto send_serialized = [&](ActiveMessenger::SendFnType send){
+          auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag, no_action);
+          sys_msg->data_recv_tag = std::get<1>(ret);
+        };
 
-    theMsg->sendMsg<MsgType<TupleType, MsgT>, serialMsgHandler>(
-      dest, meta_typed_data_msg, send_serialized, deleter
-    );
+        sys_msg->handler = typed_handler;
+        sys_msg->from_node = theContext->getNode();
+
+        setPutType(sys_msg->env);
+
+        theMsg->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
+          dest, sys_msg, send_serialized
+        );
+      };
+
+      data_sender(send_data);
+    } else {
+      assert(payload_msg != nullptr and eager_sender != nullptr);
+
+      // move serialized msg envelope to system envelope to preserve info
+      payload_msg->env = msg->env;
+      payload_msg->handler = typed_handler;
+      payload_msg->from_node = theContext->getNode();
+
+      eager_sender(payload_msg);
+    }
   }
 };
 

@@ -213,11 +213,10 @@ using namespace ::vt::serialization;
 
 template <typename T>
 SerializedReturnType serialize(T& target, BufferCallbackType fn) {
-  auto const& size = sizeof(T);
   auto buf = ByteCopyableTraits<ByteSerializedBuffer, T>::apply(&target, 1);
   if (fn != nullptr) {
-    auto user_buf = fn(size);
-    std::memcpy(user_buf, buf->getBuffer(), size);
+    auto user_buf = fn(buf->getSize());
+    std::memcpy(user_buf, buf->getBuffer(), buf->getSize());
   }
   std::unique_ptr<SerializedInfo> base_ptr(
     static_cast<SerializedInfo*>(buf.release())

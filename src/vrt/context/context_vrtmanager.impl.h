@@ -38,19 +38,19 @@ VirtualContextManager::runConstructor(
   );
 }
 
-template <typename SystemTuple, typename VrtContextT>
-/*static*/ void VirtualContextManager::remoteConstructVrt(
-  VirtualConstructDataMsg<SystemTuple>* msg, VrtContextT* ctx
-) {
+template <typename SysMsgT>
+/*static*/ void VirtualContextManager::remoteConstructVrt(SysMsgT* msg) {
+  using VrtContextT = typename SysMsgT::VirtualContextType;
+  using Args = typename SysMsgT::ArgsTupleType;
+
   printf("remoteConstructVrt: unwind tuple and construct\n");
 
-  using Args = typename std::tuple_element<0, SystemTuple>::type;
   static constexpr auto size = std::tuple_size<Args>::value;
   auto new_vc = VirtualContextManager::runConstructor<VrtContextT>(
-    &std::get<0>(*msg->tup), std::make_index_sequence<size>{}
+    &std::get<0>(msg->tup), std::make_index_sequence<size>{}
   );
 
-  auto const& info = std::get<1>(*msg->tup);
+  auto const& info = msg->info;
   VirtualProxyType new_proxy = info.proxy;
 
   if (info.isImmediate) {
@@ -86,13 +86,43 @@ VirtualProxyType VirtualContextManager::makeVirtualNode(
   }
 }
 
+template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
+void VirtualContextManager::sendSerialMsg(
+  VirtualProxyType const& toProxy, MsgT *const msg, ActionType act
+) {
+  NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
+  // register the user's handler
+  HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
+  // save the user's handler in the message
+  msg->setHandler(han);
+
+  debug_print(
+    vrt, node,
+    "sending serialized msg to VC: msg=%p, han=%d, home_node=%d\n",
+    msg, han, home_node
+  );
+
+  // route the message to the destination using the location manager
+  SerializedMessenger::sendSerialMsg<MsgT, f>(
+    msg,
+    [=](SerializedEagerMsg<MsgT>* msg){
+      theLocMan->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
+    },
+    [=](ActionNodeType action){
+      theLocMan->vrtContextLoc->routeNonEagerAction(toProxy, home_node, action);
+    }
+  );
+}
+
 template <typename VrtContextT, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualRemote(
   NodeType const& dest, bool isImmediate, ActionProxyType action, Args&&... args
 ) {
   using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
-  using SystemTupleType = std::tuple<ArgsTupleType, RemoteVrtInfo>;
-  using TupleType = SystemTupleType;
+  using MsgType = VrtConstructMsg<RemoteVrtInfo, ArgsTupleType, VrtContextT>;
+
+  auto sys_msg =
+    makeSharedMessage<MsgType>(ArgsTupleType{std::forward<Args>(args)...});
 
   auto const& this_node = theContext->getNode();
   std::unique_ptr<RemoteVrtInfo> info = nullptr;
@@ -117,10 +147,11 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
     info = std::make_unique<RemoteVrtInfo>(this_node, next_req);
   }
 
-  SerializedMessenger::sendSerialVirtualMsg<
-    VrtContextT, VirtualConstructDataMsg<TupleType>,
-    remoteConstructVrt<TupleType, VrtContextT>
-  >(dest, TupleType{ArgsTupleType{std::forward<Args>(args)...}, *info.get()});
+  sys_msg->info = info.get();
+
+  SerializedMessenger::sendSerialMsg<MsgType, remoteConstructVrt<MsgType>>(
+    dest, sys_msg
+  );
 
   return return_proxy;
 }

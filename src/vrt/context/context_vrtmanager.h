@@ -61,6 +61,11 @@ struct VirtualContextManager {
     VirtualProxyType const& toProxy, MsgT *const msg, ActionType act = nullptr
   );
 
+  template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
+  void sendSerialMsg(
+    VirtualProxyType const& toProxy, MsgT *const msg, ActionType act = nullptr
+  );
+
 private:
   template <typename VrtContextT, typename... Args>
   VirtualProxyType makeVirtualRemote(
@@ -87,10 +92,8 @@ private:
   template <typename VrtCtxT, typename Tuple, size_t... I>
   static VirtualPtrType runConstructor(Tuple* tup, std::index_sequence<I...>);
 
-  template <typename SystemTuple, typename VrtContextT>
-  static void remoteConstructVrt(
-    VirtualConstructDataMsg<SystemTuple>* msg, VrtContextT* ctx
-  );
+  template <typename SysMsgT>
+  static void remoteConstructVrt(SysMsgT* msg);
 
   void recvVirtualProxy(VirtualRequestIDType id, VirtualProxyType proxy);
 

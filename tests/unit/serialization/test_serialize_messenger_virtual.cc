@@ -14,24 +14,44 @@ using namespace vt::tests::unit;
 
 static constexpr int const val1 = 20;
 static constexpr int const val2 = 21;
+static constexpr int const val3 = 22;
+static constexpr int const test_val = 129;
 
 struct TestCtx : ::vt::vrt::VirtualContext {
   TestCtx() = default;
 };
 
-template <typename Tuple>
-struct DataMsg : ShortMessage {
-  Tuple* tup = nullptr;
-  DataMsg(Tuple* in_tup) : ShortMessage(), tup(in_tup) { }
+struct DataMsg : vt::vrt::VirtualMessage {
+  int test = 0;
+  std::vector<int> vec;
+
+  void init() {
+    vec = std::vector<int>{val1,val2};
+    test = test_val;
+  }
+
+  void check() {
+    EXPECT_EQ(test, test_val);
+    EXPECT_EQ(vec[0], val1);
+    EXPECT_EQ(vec[1], val2);
+
+    for (auto&& elm: vec) {
+      printf("elm=%d\n",elm);
+    }
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | vec;
+    s | test;
+  }
 };
 
 struct TestSerialMessengerVirtual : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
-  template <typename Tuple, typename VirtualContextT>
-  static void testHandler(DataMsg<Tuple>* msg, VirtualContextT* ctx) {
-    EXPECT_EQ(std::get<0>(*msg->tup), val1);
-    EXPECT_EQ(std::get<1>(*msg->tup), val2);
+  static void testHandler(DataMsg* msg, TestCtx* ctx) {
+    msg->check();
   }
 };
 
@@ -41,9 +61,10 @@ TEST_F(TestSerialMessengerVirtual, test_serial_messenger_1) {
   if (my_node == 0) {
     using TupleType = std::tuple<int, int>;
 
-    SerializedMessenger::sendSerialVirtualMsg<
-      TestCtx, DataMsg<TupleType>, testHandler<TupleType, TestCtx>
-    >(1, TupleType{val1,val2});
+    auto proxy = theVirtualManager->makeVirtual<TestCtx>();
+    auto msg = makeSharedMessage<DataMsg>();
+    msg->init();
+    theVirtualManager->sendSerialMsg<TestCtx, DataMsg, testHandler>(proxy, msg);
   }
 }
 

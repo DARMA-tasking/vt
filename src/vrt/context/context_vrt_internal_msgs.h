@@ -12,10 +12,17 @@
 
 namespace vt { namespace vrt {
 
-template <typename Tuple>
-struct VirtualConstructDataMsg : ShortMessage {
-  Tuple* tup = nullptr;
-  VirtualConstructDataMsg(Tuple* in_tup) : ShortMessage(), tup(in_tup) { }
+template <typename RemoteInfo, typename ArgsTuple, typename VirtualContextT>
+struct VrtConstructMsg : ShortMessage {
+  using VirtualContextType = VirtualContextT;
+  using ArgsTupleType = ArgsTuple;
+
+  RemoteInfo info;
+  ArgsTuple tup;
+
+  VrtConstructMsg(ArgsTuple&& in_tup)
+    : ShortMessage(), tup(std::forward<ArgsTuple>(in_tup))
+  { }
 };
 
 struct VirtualProxyRequestMsg : ShortMessage {
