@@ -11,6 +11,7 @@ namespace vt { namespace vrt {
 
 struct VirtualContext {
   VirtualContext() = default;
+  VirtualContext(bool const in_is_main) : is_main(in_is_main) { }
 
   VirtualProxyType getProxy() const {
     return proxy_;
@@ -19,8 +20,13 @@ struct VirtualContext {
   friend struct VirtualContextManager;
 
 private:
+  bool is_main = false;
   SeedType seed_ = 0;
   VirtualProxyType proxy_ = no_vrt_proxy;
+};
+
+struct MainVirtualContext : VirtualContext {
+  MainVirtualContext() : VirtualContext(true) { }
 };
 
 }}  // end namespace vt::vrt

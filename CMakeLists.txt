@@ -51,6 +51,7 @@ set(
   termination trace tree scheduler utils/demangle utils/bits demangle
   topos/location topos/mapping topos/index utils/container utils/detector
   serialization serialization/messaging worker utils/mutex utils/static_checks
+  standalone
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
