@@ -89,9 +89,6 @@ private:
   // Handler to send back a generated proxy to a requesting node
   static void sendBackVirtualProxyHan(VirtualProxyRequestMsg* msg);
 
-  // Handler to send back a generated proxy to a requesting node
-  static void userConstructHan(VirtualMessage* msg);
-
   template <typename VrtCtxT, typename Tuple, size_t... I>
   static VirtualPtrType runConstructor(Tuple* tup, std::index_sequence<I...>);
 

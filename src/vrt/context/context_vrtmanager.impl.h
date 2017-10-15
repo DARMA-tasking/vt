@@ -47,7 +47,7 @@ template <typename SysMsgT>
 
   static constexpr auto size = std::tuple_size<Args>::value;
   auto new_vc = VirtualContextManager::runConstructor<VrtContextT>(
-    &std::get<0>(msg->tup), std::make_index_sequence<size>{}
+    &msg->tup, std::make_index_sequence<size>{}
   );
 
   auto const& info = msg->info;
@@ -99,7 +99,7 @@ void VirtualContextManager::sendSerialMsg(
   // register the user's handler
   HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
   // save the user's handler in the message
-  msg->setHandler(han);
+  msg->setVrtHandler(han);
 
   debug_print(
     vrt, node,
@@ -160,7 +160,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
     info = std::make_unique<RemoteVrtInfo>(this_node, next_req);
   }
 
-  sys_msg->info = info.get();
+  sys_msg->info = *info.get();
 
   SerializedMessenger::sendSerialMsg<MsgType, remoteConstructVrt<MsgType>>(
     dest, sys_msg
@@ -200,7 +200,7 @@ void VirtualContextManager::sendMsg(
   // register the user's handler
   HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
   // save the user's handler in the message
-  msg->setHandler(han);
+  msg->setVrtHandler(han);
 
   debug_print(
     vrt, node,

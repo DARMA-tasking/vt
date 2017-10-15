@@ -13,16 +13,23 @@
 namespace vt { namespace vrt {
 
 template <typename RemoteInfo, typename ArgsTuple, typename VirtualContextT>
-struct VrtConstructMsg : ShortMessage {
+struct VrtConstructMsg : Message {
   using VirtualContextType = VirtualContextT;
   using ArgsTupleType = ArgsTuple;
 
   RemoteInfo info;
   ArgsTuple tup;
 
+  VrtConstructMsg() = default;
+
   VrtConstructMsg(ArgsTuple&& in_tup)
-    : ShortMessage(), tup(std::forward<ArgsTuple>(in_tup))
+    : Message(), tup(std::forward<ArgsTuple>(in_tup))
   { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | info | tup;
+  }
 };
 
 struct VirtualProxyRequestMsg : ShortMessage {

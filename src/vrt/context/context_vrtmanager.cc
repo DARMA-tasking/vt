@@ -57,10 +57,6 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
   return iter->second++;
 }
 
-/*static*/ void VirtualContextManager::userConstructHan(VirtualMessage* msg) {
-  //auto const& request_id = msg->request_id;
-}
-
 /*static*/ void VirtualContextManager::virtualMsgHandler(BaseMessage* msg) {
   auto const vc_msg = static_cast<VirtualMessage*>(msg);
   auto const entity_proxy = vc_msg->getEntity();
@@ -74,7 +70,7 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
 
   if (vc_ptr) {
     // invoke the user's handler function here
-    auto const& sub_handler = vc_msg->getHandler();
+    auto const& sub_handler = vc_msg->getVrtHandler();
     auto const& vc_active_fn = auto_registry::getAutoHandlerVC(sub_handler);
     // execute the user's handler with the message and VC ptr
     vc_active_fn(static_cast<VirtualMessage*>(msg), vc_ptr);

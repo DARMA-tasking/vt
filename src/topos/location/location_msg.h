@@ -63,7 +63,7 @@ struct EntityMsg : ActiveMessageT {
   }
 
   bool hasHandler() const {
-    return handler != uninitialized_destination;
+    return handler != uninitialized_handler;
   }
 
   HandlerType getHandler() const {

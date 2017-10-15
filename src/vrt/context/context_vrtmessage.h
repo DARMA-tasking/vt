@@ -16,11 +16,11 @@ using RoutedMessageType = LocationRoutedMsg<VirtualProxyType, MessageT>;
 struct VirtualMessage : RoutedMessageType<vt::Message> {
   VirtualMessage() = default;
 
-  void setHandler(HandlerType const& in_handler) {
+  void setVrtHandler(HandlerType const& in_handler) {
     vt_sub_handler = in_handler;
   }
 
-  HandlerType getHandler() const {
+  HandlerType getVrtHandler() const {
     assert(vt_sub_handler != uninitialized_handler and "Must have a valid handler");
     return vt_sub_handler;
   }
