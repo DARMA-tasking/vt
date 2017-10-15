@@ -14,7 +14,8 @@ extern bool vtIsWorking;
 
 struct CollectiveOps {
   static void initialize(
-    int argc, char** argv, bool is_interop = false, MPI_Comm* comm = nullptr
+    int argc, char** argv, WorkerCountType const num_workers = no_workers,
+    bool is_interop = false, MPI_Comm* comm = nullptr
   );
   static void finalize();
 
@@ -22,10 +23,12 @@ struct CollectiveOps {
     int argc, char** argv, bool is_interop = false, MPI_Comm* comm = nullptr
   );
   static void initializeRuntime();
-  static void initializeSingletons();
+  static void initializeComponents();
+  static void initializeWorkers(WorkerCountType const num_workers = no_workers);
   static void finalizeContext(bool is_interop = false);
   static void finalizeRuntime();
-  static void finalizeSingletons();
+  static void finalizeComponents();
+  static void finalizeWorkers();
 
   static void setInactiveState();
   static HandlerType registerHandler(ActiveClosureFnType fn);

@@ -19,9 +19,14 @@ struct Context {
   inline MPI_Comm getComm() const { return communicator_; }
   inline bool isCommWorld() const { return is_comm_world_; }
 
+  inline void setNumWorkers(WorkerCountType w) { numWorkers_ = w; }
+  inline WorkerCountType getNumWorkers() const { return numWorkers_; }
+  inline bool hasWorkers() const { return numWorkers_ != no_workers; }
+
  private:
   NodeType thisNode_ = uninitialized_destination;
   NodeType numNodes_ = uninitialized_destination;
+  WorkerCountType numWorkers_ = no_workers;
 
   bool is_comm_world_ = true;
   MPI_Comm communicator_ = MPI_COMM_WORLD;

@@ -19,10 +19,12 @@ bool vtIsWorking = true;
 }
 
 /*static*/ void CollectiveOps::initialize(
-  int argc, char** argv, bool is_interop, MPI_Comm* comm
+  int argc, char** argv, WorkerCountType const num_workers,
+  bool is_interop, MPI_Comm* comm
 ) {
   initializeContext(argc, argv, is_interop, comm);
-  initializeSingletons();
+  initializeComponents();
+  initializeWorkers(num_workers);
 
   // wait for all singletons to be initialized
   MPI_Barrier(theContext->getComm());
@@ -35,7 +37,8 @@ bool vtIsWorking = true;
   MPI_Barrier(theContext->getComm());
 
   finalizeRuntime();
-  finalizeSingletons();
+  finalizeWorkers();
+  finalizeComponents();
   finalizeContext();
 }
 
@@ -90,7 +93,7 @@ CollectiveOps::finalizeRuntime() {
   }
 }
 
-/*static*/ void CollectiveOps::initializeSingletons() {
+/*static*/ void CollectiveOps::initializeComponents() {
   debug_print(gen, node, "initializeSingletons\n");
 
   theRegistry = std::make_unique<Registry>();
@@ -115,7 +118,23 @@ CollectiveOps::finalizeRuntime() {
   debug_print(gen, node, "initializeSingletons finished\n");
 }
 
-/*static*/ void CollectiveOps::finalizeSingletons() {
+/*static*/ void CollectiveOps::initializeWorkers(
+  WorkerCountType const num_workers
+) {
+  debug_print(gen, node, "initializeWorkers\n");
+
+  if (num_workers != no_workers) {
+    theContext->setNumWorkers(num_workers);
+    theWorkerGrp = std::make_unique<worker::WorkerGroup>();
+  }
+}
+
+/*static*/ void CollectiveOps::finalizeWorkers() {
+  debug_print(gen, node, "finalizeWorkers\n");
+  theWorkerGrp = nullptr;
+}
+
+/*static*/ void CollectiveOps::finalizeComponents() {
   theParam = nullptr;
   theSeq = nullptr;
   theLocMan = nullptr;

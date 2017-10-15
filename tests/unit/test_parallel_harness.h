@@ -29,7 +29,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
       mpi_is_initialized = true;
     }
 
-    CollectiveOps::initializeSingletons();
+    CollectiveOps::initializeComponents();
     CollectiveOps::initializeRuntime();
 
     #if DEBUG_TEST_HARNESS_PRINT
@@ -52,7 +52,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     #endif
 
     CollectiveOps::finalizeRuntime();
-    CollectiveOps::finalizeSingletons();
+    CollectiveOps::finalizeComponents();
 
     TestHarnessAny<TestBase>::TearDown();
   }

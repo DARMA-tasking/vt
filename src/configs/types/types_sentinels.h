@@ -24,6 +24,7 @@ static constexpr RDMA_HandlerType const uninitialized_rdma_handler = -1;
 static constexpr RefType const not_shared_message = -1000;
 static constexpr RDMA_ElmType const no_rdma_elm = -1;
 static constexpr RDMA_BlockType const no_rdma_block = -1;
+static constexpr WorkerCountType const no_workers = -1;
 
 }  // end namespace vt
 
