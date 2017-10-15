@@ -83,6 +83,9 @@ private:
   // context
   static void virtualMsgHandler(BaseMessage* msg);
 
+  template <typename MsgT>
+  static void virtualTypedMsgHandler(MsgT* msg);
+
   // Handler to send back a generated proxy to a requesting node
   static void sendBackVirtualProxyHan(VirtualProxyRequestMsg* msg);
 

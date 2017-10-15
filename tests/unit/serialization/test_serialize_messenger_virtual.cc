@@ -35,13 +35,14 @@ struct DataMsg : vt::vrt::VirtualMessage {
     EXPECT_EQ(vec[0], val1);
     EXPECT_EQ(vec[1], val2);
 
-    for (auto&& elm: vec) {
-      printf("elm=%d\n",elm);
-    }
+    // for (auto&& elm: vec) {
+    //   printf("elm=%d\n",elm);
+    // }
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    VirtualMessage::serialize(s);
     s | vec;
     s | test;
   }

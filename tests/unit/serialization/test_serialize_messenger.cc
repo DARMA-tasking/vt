@@ -20,7 +20,7 @@ static constexpr int const val2 = 21;
 static constexpr int const val3 = 22;
 static constexpr int const test_val = 129;
 
-struct MyDataMsg : ShortMessage {
+struct MyDataMsg : Message {
   int test = 0;
   std::vector<int> vec;
 
@@ -52,15 +52,13 @@ static void myDataMsgHan(MyDataMsg* msg) {
 }
 
 template <typename Tuple>
-struct DataMsg : ShortMessage {
+struct DataMsg : Message {
   using isByteCopyable = std::true_type;
 
   Tuple tup;
 
   DataMsg() = default;
-  DataMsg(Tuple&& in_tup)
-    : ShortMessage(), tup(std::forward<Tuple>(in_tup))
-  { }
+  DataMsg(Tuple&& in_tup) : Message(), tup(std::forward<Tuple>(in_tup)) { }
 };
 
 struct TestSerialMessenger : TestParallelHarness {

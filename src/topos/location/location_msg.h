@@ -34,8 +34,14 @@ struct EntityMsg : ActiveMessageT {
   EntityID entity_id{};
   NodeType home_node = uninitialized_destination;
   LocInstType loc_man_inst = no_loc_inst;
+  HandlerType handler = uninitialized_handler;
 
   EntityMsg() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | entity_id | home_node | loc_man_inst | handler;
+  }
 
   explicit EntityMsg(EntityID const& in_entity_id, NodeType const& in_home_node)
       : ActiveMessageT(), entity_id(in_entity_id), home_node(in_home_node) {}
@@ -50,6 +56,18 @@ struct EntityMsg : ActiveMessageT {
 
   LocInstType getLocInst() const {
     return loc_man_inst;
+  }
+
+  void setHandler(HandlerType const& han) {
+    handler = han;
+  }
+
+  bool hasHandler() const {
+    return handler != uninitialized_destination;
+  }
+
+  HandlerType getHandler() const {
+    return handler;
   }
 };
 

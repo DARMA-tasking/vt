@@ -10,6 +10,7 @@
 
 #include "config.h"
 #include "context/context.h"
+#include "activefn/activefn.h"
 #include "location_common.h"
 #include "location_msg.h"
 #include "location_record.h"
@@ -89,6 +90,12 @@ struct EntityLocationCoord : LocationCoord {
       EntityID const& id,
       NodeType const& home_node,
       NodeActionType const& action
+  );
+
+  template <typename MessageT, ActiveTypedFnType<MessageT> *f>
+  void routeMsgHandler(
+      EntityID const& id, NodeType const& home_node, MessageT *m,
+      ActionType action = nullptr
   );
 
   template <typename MessageT>

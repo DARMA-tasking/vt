@@ -86,6 +86,11 @@ VirtualProxyType VirtualContextManager::makeVirtualNode(
   }
 }
 
+template <typename MsgT>
+/*static*/ void VirtualContextManager::virtualTypedMsgHandler(MsgT* msg) {
+  VirtualContextManager::virtualMsgHandler(reinterpret_cast<BaseMessage*>(msg));
+}
+
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void VirtualContextManager::sendSerialMsg(
   VirtualProxyType const& toProxy, MsgT *const msg, ActionType act
@@ -102,12 +107,20 @@ void VirtualContextManager::sendSerialMsg(
     msg, han, home_node
   );
 
+  using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
+
   // route the message to the destination using the location manager
-  SerializedMessenger::sendSerialMsg<MsgT, f, VirtualMessage>(
+  SerializedMessenger::sendSerialMsg<
+    MsgT, virtualTypedMsgHandler<MsgT>, VirtualMessage
+  >(
     msg,
-    [=](SerializedEagerMsg<MsgT, VirtualMessage>* msg){
-      theLocMan->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
+    // custom send lambda to route the message
+    [=](SerialMsgT* msg){
+      theLocMan->vrtContextLoc->routeMsgHandler<
+        SerialMsgT, SerializedMessenger::payloadMsgHandler
+      >(toProxy, home_node, msg, act);
     },
+    // custom data transfer lambda if above the eager threshold
     [=](ActionNodeType action){
       theLocMan->vrtContextLoc->routeNonEagerAction(toProxy, home_node, action);
     }

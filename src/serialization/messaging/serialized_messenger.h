@@ -107,12 +107,12 @@ struct SerializedMessenger {
       }
     );
 
-    printf("ptr_size=%ld\n", ptr_size);
+    //printf("ptr_size=%ld\n", ptr_size);
 
     if (ptr_size > serialized_msg_eager_size) {
       auto sys_msg = makeSharedMessage<SerialWrapperMsgType<MsgT>>();
       // move serialized msg envelope to system envelope to preserve info
-      sys_msg->env = msg->env;
+      //sys_msg->env = msg->env;
 
       assert(payload_msg == nullptr and data_sender != nullptr);
 

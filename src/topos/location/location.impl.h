@@ -257,9 +257,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   auto const& this_node = theContext->getNode();
 
   debug_print(
-      location, node,
-      "EntityLocationCoord: routeMsgNode: id=%d, to_node=%d, node=%d: inst=%d\n",
-      id, to_node, this_node, this_inst
+    location, node,
+    "EntityLocationCoord: routeMsgNode: id=%d, to_node=%d, node=%d: inst=%d\n",
+    id, to_node, this_node, this_inst
   );
 
   if (to_node != this_node) {
@@ -268,46 +268,52 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     // send to the node discovered by the location manager
     theMsg->sendMsg<MessageT, msgHandler>(to_node, msg, action);
   } else {
-    auto trigger_msg_handler_action = [=](EntityID const& id) {
-      auto reg_han_iter = local_registered_msg_han_.find(id);
-      assert(
+    if (msg->hasHandler()) {
+      auto const& handler = msg->getHandler();
+      auto active_fn = auto_registry::getAutoHandler(handler);
+      active_fn(reinterpret_cast<BaseMessage*>(msg));
+    } else {
+      auto trigger_msg_handler_action = [=](EntityID const& id) {
+        auto reg_han_iter = local_registered_msg_han_.find(id);
+        assert(
           reg_han_iter != local_registered_msg_han_.end() and
-              "Message handler must exist for location manager routed msg"
-      );
-      reg_han_iter->second.applyRegisteredActionMsg(msg);
-    };
+          "Message handler must exist for location manager routed msg"
+        );
+        reg_han_iter->second.applyRegisteredActionMsg(msg);
+      };
 
-    auto reg_iter = local_registered_.find(id);
+      auto reg_iter = local_registered_.find(id);
 
-    debug_print(
+      debug_print(
         location, node,
         "EntityLocationCoord: routeMsgNode: id=%d: size=%ld\n",
         id, local_registered_.size()
-    );
+      );
 
-    if (reg_iter != local_registered_.end()) {
-      debug_print(
+      if (reg_iter != local_registered_.end()) {
+        debug_print(
           location, node,
           "EntityLocationCoord: routeMsgNode: id=%d: running actions\n", id
-      );
+        );
 
-      trigger_msg_handler_action(id);
-      if (action) {
-        action();
-      }
-    } else {
-      debug_print(
-          location, node,
-          "EntityLocationCoord: routeMsgNode: id=%d: buffering\n", id
-      );
-
-      // buffer the message here, the entity will be registered in the future
-      insertPendingEntityAction(id, [=](NodeType) {
         trigger_msg_handler_action(id);
         if (action) {
           action();
         }
-      });
+      } else {
+        debug_print(
+          location, node,
+          "EntityLocationCoord: routeMsgNode: id=%d: buffering\n", id
+        );
+
+        // buffer the message here, the entity will be registered in the future
+        insertPendingEntityAction(id, [=](NodeType) {
+          trigger_msg_handler_action(id);
+          if (action) {
+            action();
+          }
+        });
+      }
     }
   }
 }
@@ -319,6 +325,16 @@ void EntityLocationCoord<EntityID>::routeNonEagerAction(
   getLocation(id, home_node, [=](NodeType node) {
     action(node);
   });
+}
+
+template <typename EntityID>
+template <typename MessageT, ActiveTypedFnType<MessageT> *f>
+void EntityLocationCoord<EntityID>::routeMsgHandler(
+  EntityID const& id, NodeType const& home_node, MessageT *m, ActionType action
+) {
+  HandlerType const& han = auto_registry::makeAutoHandler<MessageT, f>(nullptr);
+  m->setHandler(han);
+  return routeMsg<MessageT>(id, home_node, m, action);
 }
 
 template <typename EntityID>

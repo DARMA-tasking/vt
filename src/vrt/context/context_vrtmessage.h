@@ -25,6 +25,12 @@ struct VirtualMessage : RoutedMessageType<vt::Message> {
     return vt_sub_handler;
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    RoutedMessageType<vt::Message>::serialize(s);
+    s | vt_sub_handler;
+  }
+
  private:
   HandlerType vt_sub_handler = uninitialized_handler;
 };
