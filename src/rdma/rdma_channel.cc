@@ -51,7 +51,7 @@ Channel::initChannelGroup() {
   );
 
   MPI_Group world;
-  auto const& group_create_ret = MPI_Comm_group(MPI_COMM_WORLD, &world);
+  auto const& group_create_ret = MPI_Comm_group(theContext->getComm(), &world);
 
   assert(
     group_create_ret == MPI_SUCCESS and
@@ -72,7 +72,7 @@ Channel::initChannelGroup() {
   );
 
   auto const& comm_create_ret = MPI_Comm_create_group(
-    MPI_COMM_WORLD, channel_group_, channel_group_tag_, &channel_comm_
+    theContext->getComm(), channel_group_, channel_group_tag_, &channel_comm_
   );
 
   assert(

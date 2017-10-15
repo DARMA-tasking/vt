@@ -3,26 +3,37 @@
 #define INCLUDED_CONTEXT
 
 #include <memory>
+#include <mpi.h>
 
 #include "config.h"
 
-namespace vt {
+namespace vt {  namespace ctx {
 
 struct Context {
-  Context(NodeType const& in_this_node, NodeType const& in_num_nodes)
-      : thisNode_(in_this_node), numNodes_(in_num_nodes) {}
+  Context(int argc, char** argv, bool const interop, MPI_Comm* comm = nullptr);
+  Context(bool const interop, MPI_Comm* comm = nullptr);
 
   inline NodeType getNode() const { return thisNode_; }
   inline NodeType getNumNodes() const { return numNodes_; }
 
+  inline MPI_Comm getComm() const { return communicator_; }
+  inline bool isCommWorld() const { return is_comm_world_; }
+
  private:
-  NodeType thisNode_ = 0;
-  NodeType numNodes_ = 0;
+  NodeType thisNode_ = uninitialized_destination;
+  NodeType numNodes_ = uninitialized_destination;
+
+  bool is_comm_world_ = true;
+  MPI_Comm communicator_ = MPI_COMM_WORLD;
 };
 
-extern std::unique_ptr<Context> theContext;
+}} // end namespace vt::ctx
 
-}  // end namespace vt
+namespace vt {
+
+extern std::unique_ptr<ctx::Context> theContext;
+
+} // end namespace vt
 
 #endif /*INCLUDED_CONTEXT*/
 

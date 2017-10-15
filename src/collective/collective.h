@@ -13,13 +13,17 @@ namespace vt {
 extern bool vtIsWorking;
 
 struct CollectiveOps {
-  static void initialize(int argc, char** argv);
+  static void initialize(
+    int argc, char** argv, bool is_interop = false, MPI_Comm* comm = nullptr
+  );
   static void finalize();
 
-  static void initializeContext(int argc, char** argv);
+  static void initializeContext(
+    int argc, char** argv, bool is_interop = false, MPI_Comm* comm = nullptr
+  );
   static void initializeRuntime();
   static void initializeSingletons();
-  static void finalizeContext();
+  static void finalizeContext(bool is_interop = false);
   static void finalizeRuntime();
   static void finalizeSingletons();
 

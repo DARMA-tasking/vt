@@ -19,7 +19,7 @@
 
 namespace vt {
 
-std::unique_ptr<Context> theContext = nullptr;
+std::unique_ptr<ctx::Context> theContext = nullptr;
 std::unique_ptr<Registry> theRegistry = nullptr;
 std::unique_ptr<ActiveMessenger> theMsg = nullptr;
 std::unique_ptr<event::AsyncEvent> theEvent = nullptr;

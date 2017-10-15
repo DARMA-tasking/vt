@@ -14,19 +14,25 @@ namespace vt {
 
 bool vtIsWorking = true;
 
-/*static*/ void CollectiveOps::initialize(int argc, char** argv) {
-  initializeContext(argc, argv);
+/*static*/ void finalizeInterop() {
+
+}
+
+/*static*/ void CollectiveOps::initialize(
+  int argc, char** argv, bool is_interop, MPI_Comm* comm
+) {
+  initializeContext(argc, argv, is_interop, comm);
   initializeSingletons();
 
   // wait for all singletons to be initialized
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(theContext->getComm());
 
   // start up runtime
   initializeRuntime();
 }
 
 /*static*/ void CollectiveOps::finalize() {
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(theContext->getComm());
 
   finalizeRuntime();
   finalizeSingletons();
@@ -37,13 +43,10 @@ bool vtIsWorking = true;
   vtIsWorking = false;
 }
 
-/*static*/ void CollectiveOps::initializeContext(int argc, char** argv) {
-  int num_nodes = 0, this_node = 0;
-  MPI_Init(&argc, &argv);
-  MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
-  MPI_Comm_rank(MPI_COMM_WORLD, &this_node);
-  theContext = std::make_unique<Context>(this_node, num_nodes);
-  MPI_Barrier(MPI_COMM_WORLD);
+/*static*/ void CollectiveOps::initializeContext(
+  int argc, char** argv, bool is_interop, MPI_Comm* comm
+) {
+  theContext = std::make_unique<ctx::Context>(argc, argv, is_interop, comm);
 
   debug_print(gen, node, "initializeContext\n");
 }
@@ -59,11 +62,11 @@ bool vtIsWorking = true;
 
   term::TerminationDetector::registerDefaultTerminationAction();
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(theContext->getComm());
 
   // wait for all nodes to start up to initialize the runtime
   theBarrier->barrierThen([]{
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(theContext->getComm());
   });
 
   backend_enable_if(
@@ -79,23 +82,12 @@ bool vtIsWorking = true;
 CollectiveOps::finalizeRuntime() {
 }
 
-/*static*/ void CollectiveOps::finalizeContext() {
-  MPI_Barrier(MPI_COMM_WORLD);
-  MPI_Finalize();
-  // int buf = 0, buf2 = 0, flag = 0;
-  // MPI_Request req;
-  // MPI_Status stat;
-  // auto const& node = theContext->getNode();
-  // fflush(stdout);
-  // printf("%d: MPI_Iallreduce\n", node);
-  // MPI_Iallreduce(&buf, &buf2, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD, &req);
-  // do {
-  //   MPI_Test(&req, &flag, &stat);
-  //   theMsg->scheduler();
-  // } while (not flag);
-  // MPI_Barrier(MPI_COMM_WORLD);
-  // theContext = nullptr;
-  //
+/*static*/ void CollectiveOps::finalizeContext(bool is_interop) {
+  MPI_Barrier(theContext->getComm());
+
+  if (not is_interop) {
+    MPI_Finalize();
+  }
 }
 
 /*static*/ void CollectiveOps::initializeSingletons() {

@@ -25,7 +25,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     TestHarnessAny<TestBase>::SetUp();
 
     if (not mpi_is_initialized) {
-      CollectiveOps::initializeContext(0, nullptr);
+      CollectiveOps::initializeContext(this->argc_, this->argv_);
       mpi_is_initialized = true;
     }
 

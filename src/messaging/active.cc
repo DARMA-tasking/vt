@@ -62,7 +62,7 @@ EventType ActiveMessenger::sendDataDirect(
     }
 
     MPI_Isend(
-      msg, msg_size, MPI_BYTE, dest, send_tag, MPI_COMM_WORLD,
+      msg, msg_size, MPI_BYTE, dest, send_tag, theContext->getComm(),
       mpi_event->getRequest()
     );
 
@@ -132,7 +132,7 @@ EventType ActiveMessenger::sendDataDirect(
       }
 
       MPI_Isend(
-        msg, msg_size, MPI_BYTE, child1, send_tag, MPI_COMM_WORLD,
+        msg, msg_size, MPI_BYTE, child1, send_tag, theContext->getComm(),
         mpi_event1->getRequest()
       );
 
@@ -160,7 +160,7 @@ EventType ActiveMessenger::sendDataDirect(
       }
 
       MPI_Isend(
-        msg, msg_size, MPI_BYTE, child2, send_tag, MPI_COMM_WORLD,
+        msg, msg_size, MPI_BYTE, child2, send_tag, theContext->getComm(),
         mpi_event2->getRequest()
       );
 
@@ -196,7 +196,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   );
 
   MPI_Isend(
-    data_ptr, num_bytes, MPI_BYTE, dest, send_tag, MPI_COMM_WORLD,
+    data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext->getComm(),
     mpi_event->getRequest()
   );
 
@@ -250,7 +250,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
     MPI_Iprobe(
       node == uninitialized_destination ? MPI_ANY_SOURCE : node,
-      tag, MPI_COMM_WORLD, &flag, &stat
+      tag, theContext->getComm(), &flag, &stat
     );
 
     if (flag == 1) {
@@ -263,7 +263,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
       MPI_Recv(
         buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
-        MPI_COMM_WORLD, MPI_STATUS_IGNORE
+        theContext->getComm(), MPI_STATUS_IGNORE
       );
 
       auto dealloc_buf = [=]{
@@ -453,7 +453,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
   MPI_Iprobe(
     MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
-    MPI_COMM_WORLD, &flag, &stat
+    theContext->getComm(), &flag, &stat
   );
 
   if (flag == 1) {
@@ -465,7 +465,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
     MPI_Recv(
       buf, num_probe_bytes, MPI_BYTE, msg_from_node, stat.MPI_TAG,
-      MPI_COMM_WORLD, MPI_STATUS_IGNORE
+      theContext->getComm(), MPI_STATUS_IGNORE
     );
 
     MessageType msg = reinterpret_cast<MessageType>(buf);
