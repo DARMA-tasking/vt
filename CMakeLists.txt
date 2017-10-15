@@ -154,18 +154,26 @@ set(MPI_NUMPROC_FLAG "-n")
 
 set(PROC_TEST_LIST 2 4 8)
 
+add_custom_target(examples)
+add_custom_target(unit_tests)
+add_custom_target(perf_tests)
+
 macro(add_test_for_example test_name test_exec)
   foreach(PROC ${PROC_TEST_LIST})
-    add_test(
-      ${test_name}_${PROC}
-      ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
-      ${test_exec} ${ARGN}
-    )
+    if(CMAKE_NO_BUILD_TESTS)
+      message("Skipping test: ${test_name}_${PROC}")
+    else()
+      add_test(
+        ${test_name}_${PROC}
+        ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
+        ${test_exec} ${ARGN}
+      )
 
-    set_tests_properties(
-      ${test_name}_${PROC}
-      PROPERTIES TIMEOUT 300 FAIL_REGULAR_EXPRESSION "FAILED;WARNING"
-    )
+      set_tests_properties(
+        ${test_name}_${PROC}
+        PROPERTIES TIMEOUT 300 FAIL_REGULAR_EXPRESSION "FAILED;WARNING"
+      )
+    endif()
   endforeach()
 endmacro()
 
@@ -180,32 +188,40 @@ add_library(
 foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
   # message("Example: building example >>>>> ${EXAMPLE}")
 
-  add_executable(
-    ${EXAMPLE}
-    ${PROJECT_EXAMPLE_DIR}/${EXAMPLE}.cc
-  )
+  if(CMAKE_NO_BUILD_EXAMPLES)
+    message("Skipping example: ${EXAMPLE}")
+  else()
+    add_executable(
+      ${EXAMPLE}
+      ${PROJECT_EXAMPLE_DIR}/${EXAMPLE}.cc
+    )
 
-  add_test_for_example(
-    ${EXAMPLE}
-    ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
-    gtest
-  )
+    add_dependencies(examples ${EXAMPLE})
 
-  target_link_libraries(
-    ${EXAMPLE}
-    ${VIRTUAL_TRANSPORT_LIBRARY}
-    ${ZLIB_LIBRARIES}
-    ${MPI_C_LIBRARIES}
-    ${FCONTEXT_LIBRARY}
-    ${SERIALIZATION_LIBRARY}
-  )
+    add_test_for_example(
+      ${EXAMPLE}
+      ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
+      gtest
+    )
+
+    target_link_libraries(
+      ${EXAMPLE}
+      ${VIRTUAL_TRANSPORT_LIBRARY}
+      ${ZLIB_LIBRARIES}
+      ${MPI_C_LIBRARIES}
+      ${FCONTEXT_LIBRARY}
+      ${SERIALIZATION_LIBRARY}
+    )
+  endif()
 endforeach()
 
 foreach(PERF_TEST ${PROJECT_PERF_TESTS})
   add_executable(
     ${PERF_TEST}
     ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
-  )
+    )
+
+  add_dependencies(perf_tests ${PERF_TEST})
 
   # add_test_for_example(
   #   ${PERF_TEST}
@@ -278,36 +294,41 @@ else()
 
     #message("Build unit test >>>> test=${UNIT_TEST}, path=${UNIT_TEST_FILE}")
 
-    add_executable(
-      ${UNIT_TEST}
-      ${TEST_SOURCE_FILES} ${TEST_HEADER_FILES}
-      ${PROJECT_TEST_UNIT_DIR}/${UNIT_TEST_FILE}
-    )
+    if(CMAKE_NO_BUILD_TESTS)
+      message("Skipping test: ${UNIT_TEST}_${PROC}")
+    else()
+      add_executable(
+        ${UNIT_TEST}
+        ${TEST_SOURCE_FILES} ${TEST_HEADER_FILES}
+        ${PROJECT_TEST_UNIT_DIR}/${UNIT_TEST_FILE}
+        )
 
-    target_link_libraries(
-      ${UNIT_TEST}
-      ${VIRTUAL_TRANSPORT_LIBRARY}
-      ${ZLIB_LIBRARIES}
-      ${MPI_C_LIBRARIES}
-      ${FCONTEXT_LIBRARY}
-      ${SERIALIZATION_LIBRARY}
-      gtest gmock
-    )
+      add_dependencies(unit_tests ${UNIT_TEST})
 
-    foreach(PROC ${UNIT_TEST_PROC_TEST_LIST})
-      add_test(
-        ${UNIT_TEST}_${PROC}
-        ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
-        ${CMAKE_CURRENT_BINARY_DIR}/${UNIT_TEST}
-      )
-      set_tests_properties(
-        ${UNIT_TEST}_${PROC}
-        PROPERTIES TIMEOUT 60
-        FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
-        PASS_REGULAR_EXPRESSION "PASSED"
-      )
-    endforeach()
+      target_link_libraries(
+        ${UNIT_TEST}
+        ${VIRTUAL_TRANSPORT_LIBRARY}
+        ${ZLIB_LIBRARIES}
+        ${MPI_C_LIBRARIES}
+        ${FCONTEXT_LIBRARY}
+        ${SERIALIZATION_LIBRARY}
+        gtest gmock
+        )
 
+      foreach(PROC ${UNIT_TEST_PROC_TEST_LIST})
+        add_test(
+          ${UNIT_TEST}_${PROC}
+          ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
+          ${CMAKE_CURRENT_BINARY_DIR}/${UNIT_TEST}
+          )
+        set_tests_properties(
+          ${UNIT_TEST}_${PROC}
+          PROPERTIES TIMEOUT 60
+          FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
+          PASS_REGULAR_EXPRESSION "PASSED"
+        )
+      endforeach()
+    endif()
   endforeach()
 endif()
 

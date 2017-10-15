@@ -2,7 +2,7 @@
 
 if test $# -lt 1
 then
-    echo "usage $0 <build-mode> <compiler> <has-serialization>"
+    echo "usage $0 <build-mode> <compiler> <has-serialization> <all>"
     exit 1;
 fi
 
@@ -20,6 +20,22 @@ then
     has_serial=$3
 else
     has_serial=1
+fi
+
+if test $# -gt 3
+then
+    has_all=$4
+else
+    has_all=1
+fi
+
+echo "has_all=${has_all} has_serial=${has_serial} compiler=${compiler}"
+
+if test ${has_serial} -gt 0
+then
+    serialization_path=/Users/jliffla/codes/serialization
+else
+    serialization_path=
 fi
 
 echo "Building virtual transport layer mode=$build_mode"
@@ -47,11 +63,12 @@ gtest_directory=/Users/jliffla/codes/gtest/gtest-build
 #   detector_path=/Users/jliffla/codes/vt/virtual-transport/lib/detector
 #   -DCMAKE_DETECTOR_PATH=${detector_path}
 
-if test ${has_serial} -gt 0
+if test ${has_all} -gt 0
 then
-    serialization_path=/Users/jliffla/codes/serialization
+    build_all=""
 else
-    serialization_path=
+    echo "Setting no build all for ${has_all}"
+    build_all="-DCMAKE_NO_BUILD_TESTS=1 -DCMAKE_NO_BUILD_EXAMPLES=1"
 fi
 
 cmake ${SOURCE_BASE_DIR} \
@@ -63,6 +80,7 @@ cmake ${SOURCE_BASE_DIR} \
       -DMPI_C_LIBRARIES=${MPI_PATH} \
       -DMPI_C_INCLUDE_PATH=${MPI_INC_PATH} \
       -DMPI_CXX_LIBRARIES=${MPI_CXX_PATH} \
+      ${build_all} \
       -DMPI_CXX_INCLUDE_PATH=${MPI_CXX_INC_PATH} \
       -DCMAKE_SERIALIZATION_PATH=${serialization_path} \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true \
