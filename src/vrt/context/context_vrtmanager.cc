@@ -14,8 +14,6 @@ void VirtualContextManager::insertVirtualContext(
   auto const& is_remote = VirtualProxyBuilder::isRemote(proxy);
   auto const& id = VirtualProxyBuilder::getVirtualID(proxy);
 
-  printf("%d:id=%d:proxy=%llx:is_remote=%s\n", myNode_,(int)id,proxy,print_bool(is_remote));
-
   auto holder_iter = holder_.find(id);
   assert(holder_iter == holder_.end() && "Holder must not contain id");
 
@@ -59,7 +57,7 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
 
 /*static*/ void VirtualContextManager::virtualMsgHandler(BaseMessage* msg) {
   auto const vc_msg = static_cast<VirtualMessage*>(msg);
-  auto const entity_proxy = vc_msg->getEntity();
+  auto const entity_proxy = vc_msg->to_proxy;
   auto const vc_ptr = theVirtualManager->getVirtualByProxy(entity_proxy);
 
   debug_print(

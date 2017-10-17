@@ -70,6 +70,20 @@ void WorkerGroupAny<WorkerT>::enqueueAllWorkers(WorkUnitType const& work_unit) {
 }
 
 template <typename WorkerT>
+void WorkerGroupAny<WorkerT>::spawnWorkersBlock(WorkerCommFnType comm_fn) {
+  debug_print(
+    worker, node,
+    "WorkerGroup: spawnWorkersBlock: num_workers_=%u\n", num_workers_
+  );
+
+  // spawn the workers
+  spawnWorkers();
+
+  // block the comm thread on the passed function
+  comm_fn();
+}
+
+template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::spawnWorkers() {
   debug_print(
     worker, node,

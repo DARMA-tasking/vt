@@ -31,6 +31,12 @@ struct WorkerGroupTraits {
   using has_spawnWorkers = detection::is_detected<spawnWorkers_t, T>;
 
   template <typename U>
+  using spawnWorkersBlock_t = decltype(std::declval<U>().spawnWorkersBlock(
+                                         std::declval<WorkerCommFnType>()
+                                       ));
+  using has_spawnWorkersBlock = detection::is_detected<spawnWorkersBlock_t, T>;
+
+  template <typename U>
   using joinWorkers_t = decltype(std::declval<U>().joinWorkers());
   using has_joinWorkers = detection::is_detected<joinWorkers_t, T>;
 
@@ -62,11 +68,11 @@ struct WorkerGroupTraits {
     has_constructor::value and has_default_constructor::value and
     // using WorkerType
     has_WorkerType::value and
-    // methods: spawnWorkers, joinWorkers, enqueueAnyWorker,
+    // methods: spawnWorkers, spawnWorkersBlock, joinWorkers, enqueueAnyWorker,
     //          enqueueForWorker, enqueueAllWorkers
-    has_spawnWorkers::value and has_joinWorkers::value and
-    has_enqueueAnyWorker::value and has_enqueueForWorker::value and
-    has_enqueueAllWorkers::value;
+    has_spawnWorkers::value and has_spawnWorkersBlock::value and
+    has_joinWorkers::value and has_enqueueAnyWorker::value and
+    has_enqueueForWorker::value and has_enqueueAllWorkers::value;
 };
 
 }} /* end namespace vt::worker */

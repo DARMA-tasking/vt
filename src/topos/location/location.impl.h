@@ -36,7 +36,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   debug_print(
       location, node,
-      "EntityLocationCoord: registerEntity: id=%d\n", id
+      "EntityLocationCoord: registerEntity: id=%llu\n", id
   );
 
   local_registered_.insert(id);
@@ -334,6 +334,7 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 ) {
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT, f>(nullptr);
   m->setHandler(han);
+
   return routeMsg<MessageT>(id, home_node, m, action);
 }
 

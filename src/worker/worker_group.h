@@ -25,6 +25,7 @@ struct WorkerGroupAny {
 
   void initialize();
   void spawnWorkers();
+  void spawnWorkersBlock(WorkerCommFnType fn);
   void joinWorkers();
 
   void enqueueAnyWorker(WorkUnitType const& work_unit);

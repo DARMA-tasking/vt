@@ -27,7 +27,8 @@ struct VirtualInfo {
   CoreType getCore() const { return default_core_; }
   VirtualProxyType getProxy() const { return proxy_; }
   void mapToCore(CoreType const& core) { default_core_ = core; }
-
+  void setCoreMap(HandlerType const han) { core_map_handle_ = han; }
+  void setNodeMap(HandlerType const han) { node_map_handle_ = han; }
 
  private:
   HandlerType core_map_handle_ = uninitialized_handler;

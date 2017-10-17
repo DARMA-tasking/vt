@@ -43,8 +43,6 @@ template <typename SysMsgT>
   using VrtContextT = typename SysMsgT::VirtualContextType;
   using Args = typename SysMsgT::ArgsTupleType;
 
-  printf("remoteConstructVrt: unwind tuple and construct\n");
-
   static constexpr auto size = std::tuple_size<Args>::value;
   auto new_vc = VirtualContextManager::runConstructor<VrtContextT>(
     &msg->tup, std::make_index_sequence<size>{}
@@ -100,11 +98,12 @@ void VirtualContextManager::sendSerialMsg(
   HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
   // save the user's handler in the message
   msg->setVrtHandler(han);
+  msg->to_proxy = toProxy;
 
   debug_print(
     vrt, node,
-    "sending serialized msg to VC: msg=%p, han=%d, home_node=%d\n",
-    msg, han, home_node
+    "sending serialized msg to VC: msg=%p, han=%d, home_node=%d, toProxy=%lld\n",
+    msg, han, home_node, toProxy
   );
 
   using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
@@ -116,6 +115,7 @@ void VirtualContextManager::sendSerialMsg(
     msg,
     // custom send lambda to route the message
     [=](SerialMsgT* msg){
+      msg->to_proxy = toProxy;
       theLocMan->vrtContextLoc->routeMsgHandler<
         SerialMsgT, SerializedMessenger::payloadMsgHandler
       >(toProxy, home_node, msg, act);
@@ -173,20 +173,34 @@ template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Arg
 VirtualProxyType VirtualContextManager::makeVirtualMap(
   Args&& ... args
 ) {
-  auto const next_seed = cur_seed_++;
-  //auto mapped_core = fn(next_seed, num_nodes);
-  auto const& core_map_handle = auto_registry::makeAutoHandlerSeedMap<fn>();
   auto const& proxy = makeVirtual<VrtContextT, Args...>(
     std::forward<Args>(args)...
   );
-  auto const& vrt_id = VirtualProxyBuilder::getVirtualID(proxy);
-  auto holder_iter = holder_.find(vrt_id);
-  assert(holder_iter != holder_.end() && "Proxy ID Must exist here");
-  auto& info = holder_iter->second;
-  info.core_map_handler_ = core_map_handle;
-  // @todo: actually do the mapping
-  auto vrt = getVirtualByProxy(proxy);
-  vrt->seed_ = next_seed;
+
+  if (theContext->hasWorkers()) {
+    // save the seed for mapping
+    auto const next_seed = cur_seed_++;
+    auto vrt = getVirtualByProxy(proxy);
+    vrt->seed_ = next_seed;
+
+    auto const& core_map_handle = auto_registry::makeAutoHandlerSeedMap<fn>();
+
+    auto const& vrt_id = VirtualProxyBuilder::getVirtualID(proxy);
+    auto holder_iter = holder_.find(vrt_id);
+    assert(holder_iter != holder_.end() && "Proxy ID Must exist here");
+
+    auto& info = holder_iter->second;
+    info.setCoreMap(core_map_handle);
+
+    auto const& mapped_core = fn(vrt->seed_, theContext->getNumWorkers());
+    info.mapToCore(mapped_core);
+
+    debug_print(
+      vrt, node,
+      "seed=%lld, mapped_core=%d\n", next_seed, mapped_core
+    );
+  }
+
   return proxy;
 }
 
@@ -201,6 +215,7 @@ void VirtualContextManager::sendMsg(
   HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
   // save the user's handler in the message
   msg->setVrtHandler(han);
+  msg->to_proxy = toProxy;
 
   debug_print(
     vrt, node,

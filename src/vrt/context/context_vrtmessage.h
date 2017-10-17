@@ -29,9 +29,12 @@ struct VirtualMessage : RoutedMessageType<vt::Message> {
   void serialize(SerializerT& s) {
     RoutedMessageType<vt::Message>::serialize(s);
     s | vt_sub_handler;
+    s | to_proxy;
   }
 
- private:
+  VirtualProxyType to_proxy = no_vrt_proxy;
+
+private:
   HandlerType vt_sub_handler = uninitialized_handler;
 };
 

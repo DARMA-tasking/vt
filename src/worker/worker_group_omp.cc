@@ -28,7 +28,7 @@ void WorkerGroupOMP::initialize() {
   worker_state_.clear();
 }
 
-void WorkerGroupOMP::spawnWorkers() {
+void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
   debug_print(
     worker, node,
     "Worker group OMP: launching num worker threads=%d, num comm threads=%d\n",
@@ -37,7 +37,12 @@ void WorkerGroupOMP::spawnWorkers() {
 
   initialized_ = true;
 
-  #pragma omp parallel num_threads(num_workers_)
+  debug_print(
+    worker, node,
+    "worker group OMP spawning=%d\n", num_workers_ + 1
+  );
+
+  #pragma omp parallel num_threads(num_workers_ + 1)
   {
     WorkerIDType const thd = omp_get_thread_num();
     WorkerIDType const nthds = omp_get_num_threads();
@@ -47,9 +52,24 @@ void WorkerGroupOMP::spawnWorkers() {
       "Worker group OMP: thd=%d, num threads=%d\n", thd, nthds
     );
 
-    worker_state_[thd] = std::make_unique<WorkerStateType>(thd, nthds);
-    worker_state_[thd]->spawn();
+    if (thd < num_workers_) {
+      worker_state_[thd] = std::make_unique<WorkerStateType>(thd, nthds);
+      worker_state_[thd]->spawn();
+    } else {
+      // launch comm function on the main communication thread
+      comm_fn();
+
+      // once the comm function exits the program is terminated
+      for (auto thd = 0; thd < num_workers_; thd++) {
+        debug_print( worker, node, "comm: calling join thd=%d\n", thd );
+        worker_state_[thd]->join();
+      }
+    }
   }
+}
+
+void WorkerGroupOMP::spawnWorkers() {
+  assert(0 and "Not supported on OMP workers");
 }
 
 void WorkerGroupOMP::joinWorkers() {

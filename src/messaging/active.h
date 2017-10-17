@@ -435,7 +435,6 @@ struct ActiveMessenger {
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void trigger(std::function<void(vt::BaseMessage*)> fn) {
     HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
-    printf("trigger: han=%d\n", han);
     theRegistry->saveTrigger(han, /*reinterpret_cast<active_function_t>(*/fn);
   }
 

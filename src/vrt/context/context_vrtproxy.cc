@@ -32,7 +32,6 @@ namespace vt {namespace vrt {
   setVirtualRemoteNode(new_proxy, this_node);
 
   auto const& id1 = VirtualProxyBuilder::getVirtualID(new_proxy);
-  printf("%d:id=%d\n", this_node,(int)id1);
 
   return new_proxy;
 }
