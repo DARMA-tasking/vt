@@ -118,32 +118,44 @@ void VirtualContextManager::recvVirtualProxy(
   pending_request_.erase(pending_iter);
 }
 
-VirtualContext*VirtualContextManager::getVirtualByID(
+VirtualContextManager::VirtualInfoType*
+VirtualContextManager::getVirtualInfoByID(
   VirtualIDType const& lookupID, bool const is_remote
 ) {
   auto& holder = is_remote ? remote_holder_ : holder_;
-  ContainerType::const_iterator got = holder.find(lookupID);
-  VirtualContext* answer = nullptr;
-  if (got != holder.end()) {
-    answer = got->second.get();
+  auto iter = holder.find(lookupID);
+  if (iter == holder.end()) {
+    assert(0 && "Virtual entity could not be found locally: invalid ID!");
+    return nullptr;
   } else {
-    // upps not found
+    return &iter->second;
   }
-  return answer;
+}
+
+VirtualContext* VirtualContextManager::getVirtualByID(
+  VirtualIDType const& lookupID, bool const is_remote
+) {
+  return getVirtualInfoByID(lookupID, is_remote)->get();
+}
+
+VirtualContextManager::VirtualInfoType*
+VirtualContextManager::getVirtualInfoByProxy(VirtualProxyType const& proxy) {
+  auto const& is_remote = VirtualProxyBuilder::isRemote(proxy);
+  if (VirtualProxyBuilder::getVirtualNode(proxy) == myNode_) {
+    auto const& id = VirtualProxyBuilder::getVirtualID(proxy);
+    auto info = getVirtualInfoByID(id, is_remote);
+    return info;
+  } else {
+    // this proxy is not on this node
+    assert(0 && "Proxy must be on this node");
+    return nullptr;
+  }
 }
 
 VirtualContext* VirtualContextManager::getVirtualByProxy(
     VirtualProxyType const& proxy
 ) {
-  auto const& is_remote = VirtualProxyBuilder::isRemote(proxy);
-  VirtualContext* answer = nullptr;
-  if (VirtualProxyBuilder::getVirtualNode(proxy) == myNode_) {
-    answer = getVirtualByID(VirtualProxyBuilder::getVirtualID(proxy), is_remote);
-  } else {
-    // this proxy is not on this node
-    assert(0 && "Proxy must be on this node");
-  }
-  return answer;
+  return getVirtualInfoByProxy(proxy)->get();
 }
 
 void VirtualContextManager::destroyVirtualByID(

@@ -54,6 +54,7 @@ struct VirtualContextManager {
   VirtualProxyType makeVirtualMap(Args&& ... args);
 
   VirtualContext* getVirtualByProxy(VirtualProxyType const& proxy);
+  VirtualInfoType* getVirtualInfoByProxy(VirtualProxyType const& proxy);
   void destoryVirtualByProxy(VirtualProxyType const& proxy);
 
   template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
@@ -98,6 +99,9 @@ private:
   void recvVirtualProxy(VirtualRequestIDType id, VirtualProxyType proxy);
 
   VirtualContext* getVirtualByID(VirtualIDType const& lookupID, bool const is_remote);
+  VirtualInfoType* getVirtualInfoByID(
+    VirtualIDType const& lookupID, bool const is_remote
+  );
   void destroyVirtualByID(VirtualIDType const& lookupID, bool const is_remote);
   VirtualIDType getCurrentID() const;
   NodeType getNode() const;
