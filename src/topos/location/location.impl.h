@@ -344,8 +344,8 @@ void EntityLocationCoord<EntityID>::routeMsg(
     EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act
 ) {
   // set field for location routed message
-  msg->entity_id = id;
-  msg->home_node = home_node;
+  msg->setEntity(id);
+  msg->setHomeNode(home_node);
 
   auto const& msg_size = sizeof(*msg);
   bool const& is_large_msg = msg_size > small_msg_max_size;
@@ -403,9 +403,9 @@ void EntityLocationCoord<EntityID>::printCurrentCache() const {
 template <typename EntityID>
 template <typename MessageT>
 /*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT *msg) {
-  auto const& entity_id = msg->entity_id;
-  auto const& home_node = msg->home_node;
-  auto const& inst = msg->loc_man_inst;
+  auto const& entity_id = msg->getEntity();
+  auto const& home_node = msg->getHomeNode();
+  auto const& inst = msg->getLocInst();
 
   debug_print(
       location, node,
