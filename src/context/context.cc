@@ -3,12 +3,18 @@
 
 #include <mpi.h>
 
+// This cannot use the normal debug_print macros because they rely on context
+// being live to print contextual information
+#define DEBUG_VT_CONTEXT 0
+
 namespace vt { namespace ctx {
 
 Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
-  printf(
-    "Context::Context is_interop=%s, comm=%p\n", print_bool(is_interop), comm
-  );
+  #if DEBUG_VT_CONTEXT
+    printf(
+      "Context::Context is_interop=%s, comm=%p\n", print_bool(is_interop), comm
+    );
+  #endif
 
   if (not is_interop) {
     MPI_Init(&argc, &argv);
@@ -41,3 +47,5 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
 }
 
 }}  // end namespace vt::ctx
+
+#undef DEBUG_VT_CONTEXT
