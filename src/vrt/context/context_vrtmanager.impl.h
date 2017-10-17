@@ -98,7 +98,7 @@ void VirtualContextManager::sendSerialMsg(
   HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
   // save the user's handler in the message
   msg->setVrtHandler(han);
-  msg->to_proxy = toProxy;
+  msg->setProxy(toProxy);
 
   debug_print(
     vrt, node,
@@ -115,7 +115,7 @@ void VirtualContextManager::sendSerialMsg(
     msg,
     // custom send lambda to route the message
     [=](SerialMsgT* msg){
-      msg->to_proxy = toProxy;
+      msg->setProxy(toProxy);
       theLocMan()->vrtContextLoc->routeMsgHandler<
         SerialMsgT, SerializedMessenger::payloadMsgHandler
       >(toProxy, home_node, msg, act);
@@ -215,7 +215,7 @@ void VirtualContextManager::sendMsg(
   HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
   // save the user's handler in the message
   msg->setVrtHandler(han);
-  msg->to_proxy = toProxy;
+  msg->setProxy(toProxy);
 
   debug_print(
     vrt, node,

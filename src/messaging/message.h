@@ -31,6 +31,13 @@ struct ActiveMessage : BaseMessage {
   static void operator delete(void* ptr) {
     return thePool()->dealloc(ptr);
   }
+
+  // Explicitly write serialize so derived messages can contain non-byte
+  // serialization. Envelopes, by default, are required to be byte serializable.
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | env;
+  }
 };
 
 using ShortMessage = ActiveMessage<Envelope>;
@@ -45,16 +52,24 @@ struct CallbackMessage : vt::Message {
     setCallbackType(env);
   }
 
-  void setCallback(HandlerType const& han) {
-    callback = han;
+  void setCallback(HandlerType const& han) { callback_ = han; }
+  HandlerType getCallback() const { return callback_; }
+
+  // Explicitly write serialize so derived messages can contain non-byte
+  // serialization. Envelopes, by default, are required to be byte serializable.
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    Message::serialize(s);
+    s | callback_;
   }
 
-  HandlerType callback = uninitialized_handler;
-};
+  static inline HandlerType getCallbackMessage(ShortMessage* msg) {
+    return reinterpret_cast<CallbackMessage*>(msg)->getCallback();
+  }
 
-inline HandlerType getCallbackMessage(ShortMessage* msg) {
-  return reinterpret_cast<CallbackMessage*>(msg)->callback;
-}
+private:
+  HandlerType callback_ = uninitialized_handler;
+};
 
 } //end namespace vt
 

@@ -336,7 +336,7 @@ bool ActiveMessenger::deliverActiveMsg(
   auto const& tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
   auto const& callback =
     envelopeIsCallbackType(msg->env) ?
-    getCallbackMessage(msg) : uninitialized_handler;
+    CallbackMessage::getCallbackMessage(msg) : uninitialized_handler;
   auto const& from_node = is_bcast ? dest : in_from_node;
 
   ActiveClosureFnType active_fun = nullptr;

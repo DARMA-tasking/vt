@@ -33,6 +33,8 @@ enum eEnvelopeType {
 static constexpr BitCountType const envelope_num_bits = 7;
 
 struct Envelope {
+  using isByteCopyable = std::true_type;
+
   EnvelopeDataType type : envelope_num_bits;
   NodeType dest : node_num_bits;
   HandlerType han : handler_num_bits;
@@ -196,16 +198,22 @@ inline void envelopeInitEmpty(Envelope& env) {
 }
 
 struct EpochEnvelope {
+  using isByteCopyable = std::true_type;
+
   Envelope env;
   EpochType epoch : epoch_num_bits;
 };
 
 struct TagEnvelope {
+  using isByteCopyable = std::true_type;
+
   Envelope env;
   TagType tag : tag_num_bits;
 };
 
 struct EpochTagEnvelope {
+  using isByteCopyable = std::true_type;
+
   Envelope env;
   EpochType epoch : epoch_num_bits;
   TagType tag : tag_num_bits;

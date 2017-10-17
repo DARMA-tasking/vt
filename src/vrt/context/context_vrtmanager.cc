@@ -57,21 +57,30 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
 
 /*static*/ void VirtualContextManager::virtualMsgHandler(BaseMessage* msg) {
   auto const vc_msg = static_cast<VirtualMessage*>(msg);
-  auto const entity_proxy = vc_msg->to_proxy;
-  auto const vc_ptr = theVirtualManager()->getVirtualByProxy(entity_proxy);
+
+  auto const entity_proxy = vc_msg->getProxy();
+
+  auto vc_info = theVirtualManager()->getVirtualInfoByProxy(entity_proxy);
+
+  auto const vc_ptr = vc_info->get();
 
   debug_print(
     vrt, node,
-    "handleVCMsg: msg=%p, entity_proxy=%lld, vc_ptr=%p\n",
+    "virtualMsgHandler: msg=%p, entity_proxy=%lld, vc_ptr=%p\n",
     msg, entity_proxy, vc_ptr
   );
 
   if (vc_ptr) {
-    // invoke the user's handler function here
-    auto const& sub_handler = vc_msg->getVrtHandler();
-    auto const& vc_active_fn = auto_registry::getAutoHandlerVC(sub_handler);
-    // execute the user's handler with the message and VC ptr
-    vc_active_fn(static_cast<VirtualMessage*>(msg), vc_ptr);
+    if (vc_info->hasCoreMap()) {
+
+    } else {
+      // invoke the user's handler function immediately from the communication
+      // thread
+      auto const& sub_handler = vc_msg->getVrtHandler();
+      auto const& vc_active_fn = auto_registry::getAutoHandlerVC(sub_handler);
+      // execute the user's handler with the message and VC ptr
+      vc_active_fn(static_cast<VirtualMessage*>(msg), vc_ptr);
+    }
   } else {
     // the VC does not exist here?
     assert(false && "A virtual context must exist to invoke user handler");

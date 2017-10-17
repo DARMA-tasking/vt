@@ -24,17 +24,22 @@ struct VirtualInfo {
     return vrt_ptr_.get();
   }
 
-  CoreType getCore() const { return default_core_; }
   VirtualProxyType getProxy() const { return proxy_; }
+
+  CoreType getCore() const { return default_core_; }
+  NodeType getNode() const { return default_node_; }
   void mapToCore(CoreType const& core) { default_core_ = core; }
   void setCoreMap(HandlerType const han) { core_map_handle_ = han; }
   void setNodeMap(HandlerType const han) { node_map_handle_ = han; }
+  bool hasCoreMap() const { return core_map_handle_ != uninitialized_handler; }
+  bool hasNodeMap() const { return node_map_handle_ != uninitialized_handler; }
 
  private:
   HandlerType core_map_handle_ = uninitialized_handler;
   HandlerType node_map_handle_ = uninitialized_handler;
 
   CoreType default_core_ = uninitialized_destination;
+  NodeType default_node_ = uninitialized_destination;
   VirtualProxyType proxy_ = no_vrt_proxy;
   VirtualPtrType vrt_ptr_ = nullptr;
 };
