@@ -40,9 +40,20 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
   theTerm()->attachGlobalTermAction(default_action);
 }
 
+void TerminationDetector::setLocalTerminated(bool const local_terminated) {
+  any_epoch_state_.notifyLocalTerminated(local_terminated);
+
+  if (local_terminated) {
+    theTerm()->maybePropagate();
+  }
+}
+
 TerminationDetector::TermStateType&
 TerminationDetector::findOrCreateState(EpochType const& epoch, bool is_ready) {
   auto const& num_children_ = getNumChildren();
+
+  bool const local_term = is_ready;
+  bool const epoch_active = is_ready;
 
   assert(epoch != any_epoch_sentinel and "Should not be any epoch");
 
@@ -52,7 +63,9 @@ TerminationDetector::findOrCreateState(EpochType const& epoch, bool is_ready) {
     epoch_state_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(epoch),
-      std::forward_as_tuple(TermStateType{epoch, is_ready, num_children_})
+      std::forward_as_tuple(
+        TermStateType{epoch, epoch_active, local_term, num_children_}
+      )
     );
     epoch_iter = epoch_state_.find(epoch);
   }
@@ -70,7 +83,7 @@ void TerminationDetector::produceConsumeState(
     term, node,
     "produceConsumeState: epoch=%d, event_count=%d, l_prod=%lld, l_cons=%lld, "
     "num_units=%lld, produce=%s\n",
-    state.epoch, state.recv_from_child, state.l_prod, state.l_cons, num_units,
+    state.getEpoch(), state.getRecvChildCount(), state.l_prod, state.l_cons, num_units,
     print_bool(produce)
   );
 
@@ -115,7 +128,7 @@ void TerminationDetector::propagateEpochExternalState(
     term, node,
     "propagateEpochExternalState: epoch=%d, prod=%lld, cons=%lld, "
     "event_count=%d\n",
-    state.epoch, prod, cons, state.recv_from_child
+    state.getEpoch(), prod, cons, state.getRecvChildCount()
   );
 
   state.g_prod1 += prod;
@@ -155,8 +168,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     term, node,
     "propagateEpoch: epoch=%d, l_prod=%lld, l_cons=%lld, event_count=%d, "
     "children=%d, is_ready=%s\n",
-    state.epoch, state.l_prod, state.l_cons, state.recv_from_child,
-    state.num_children, print_bool(is_ready)
+    state.getEpoch(), state.l_prod, state.l_cons, state.getRecvChildCount(),
+    state.getNumChildren(), print_bool(is_ready)
   );
 
   if (is_ready) {
@@ -167,12 +180,12 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       term, node,
       "propagateEpoch: epoch=%d, l_prod=%lld, l_cons=%lld, "
       "g_prod1=%lld, g_cons1=%lld, event_count=%d, children=%d\n",
-      state.epoch, state.l_prod, state.l_cons, state.g_prod1, state.g_cons1,
-      state.recv_from_child, state.num_children
+      state.getEpoch(), state.l_prod, state.l_cons, state.g_prod1, state.g_cons1,
+      state.getRecvChildCount(), state.getNumChildren()
     );
 
     if (not is_root_) {
-      auto msg = new TermCounterMsg(state.epoch, state.g_prod1, state.g_cons1);
+      auto msg = new TermCounterMsg(state.getEpoch(), state.g_prod1, state.g_cons1);
       theMsg()->setTermMessage(msg);
       theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(
         parent_, msg, [=] { delete msg; }
@@ -181,7 +194,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       debug_print(
         term, node,
         "propagateEpoch: sending to parent: %d, msg=%p, epoch=%d, wave=%lld\n",
-        parent_, msg, state.epoch, state.cur_wave
+        parent_, msg, state.getEpoch(), state.getCurWave()
       );
 
     } else /*if (is_root) */ {
@@ -193,12 +206,12 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         term, node,
         "propagateEpoch {root}: epoch=%d, g_prod1=%lld, g_cons1=%lld, "
         "g_prod2=%lld, g_cons2=%lld, detected_term=%d\n",
-        state.epoch, state.g_prod1, state.g_cons1, state.g_prod2,
+        state.getEpoch(), state.g_prod1, state.g_cons1, state.g_prod2,
         state.g_cons2, is_term
       );
 
       if (is_term) {
-        auto msg = new TermMsg(state.epoch);
+        auto msg = new TermMsg(state.getEpoch());
         theMsg()->setTermMessage(msg);
         theMsg()->broadcastMsg<TermMsg, epochFinishedHandler>(
           msg, [=] { delete msg; }
@@ -206,20 +219,20 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         state.setTerminated();
 
-        epochFinished(state.epoch, false);
+        epochFinished(state.getEpoch(), false);
       } else {
         state.g_prod2 = state.g_prod1;
         state.g_cons2 = state.g_cons1;
         state.g_prod1 = state.g_cons1 = 0;
-        state.cur_wave++;
+        state.setCurWave(state.getCurWave() + 1);
 
         debug_print(
           term, node,
           "propagateEpoch {root}: epoch=%d, wave=%lld, continue\n",
-          state.epoch, state.cur_wave
+          state.getEpoch(), state.getCurWave()
         );
 
-        auto msg = new TermMsg(state.epoch, state.cur_wave);
+        auto msg = new TermMsg(state.getEpoch(), state.getCurWave());
         theMsg()->setTermMessage(msg);
         theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(
           msg, [=] { delete msg; }
@@ -230,7 +243,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     debug_print(
       term, node,
       "propagateEpoch: epoch=%d, is_root=%s: reset counters\n",
-      state.epoch, print_bool(is_root_)
+      state.getEpoch(), print_bool(is_root_)
     );
 
     // reset counters
@@ -238,7 +251,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     state.submitToParent(is_root_);
 
     if (state.isTerminated()) {
-      cleanupEpoch(state.epoch);
+      cleanupEpoch(state.getEpoch());
     }
   }
 
@@ -374,7 +387,7 @@ void TerminationDetector::setupNewEpoch(
     term, node,
     "setupNewEpoch: new_epoch=%d, found=%s, count=%d\n",
     new_epoch, print_bool(found),
-    (found ? epoch_iter->second.recv_from_child : -1)
+    (found ? epoch_iter->second.getRecvChildCount() : -1)
   );
 
   auto& state = findOrCreateState(new_epoch, false);
@@ -382,7 +395,7 @@ void TerminationDetector::setupNewEpoch(
   if (from_child) {
     state.notifyChildReceive();
   } else {
-    state.notifyLocalReady();
+    state.notifyLocalTerminated();
   }
 }
 
@@ -401,8 +414,8 @@ void TerminationDetector::propagateNewEpoch(
     term, node,
     "propagateNewEpoch: is_ready=%s, is_root_=%s, epoch=%d, event_count=%d, "
     "children=%d\n",
-    print_bool(is_ready), print_bool(is_root_), new_epoch, state.recv_from_child,
-    state.num_children
+    print_bool(is_ready), print_bool(is_root_), new_epoch,
+    state.getRecvChildCount(), state.getNumChildren()
   );
 
   if (is_ready) {
@@ -442,7 +455,7 @@ void TerminationDetector::readyNewEpoch(EpochType const& new_epoch) {
   }
 
   auto& state = findOrCreateState(new_epoch, true);
-  state.activate();
+  state.activateEpoch();
 
   debug_print(
     term, node,

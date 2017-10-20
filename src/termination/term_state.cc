@@ -3,84 +3,107 @@
 
 namespace vt { namespace term {
 
+TermWaveType TermState::getCurWave() const {
+  return cur_wave_;
+}
+
+void TermState::setCurWave(TermWaveType const& wave) {
+  cur_wave_ = wave;
+}
+
+NodeType TermState::getNumChildren() const {
+  return num_children_;
+}
+
+EpochType TermState::getEpoch() const {
+  return epoch_;
+}
+
+TermState::EventCountType TermState::getRecvChildCount() const {
+  return recv_child_count_;
+}
+
 void TermState::notifyChildReceive() {
-  recv_from_child++;
+  recv_child_count_++;
 
   debug_print(
     term, node,
     "notifyChildReceive: epoch=%d, active=%s, local_ready=%s, "
     "submitted_wave=%lld, recv=%d, children=%d\n",
-    epoch, print_bool(epoch_is_active), print_bool(local_ready), submitted_wave,
-    recv_from_child, num_children
+    epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
+    submitted_wave_, recv_child_count_, num_children_
   );
 
-  assert(recv_from_child <= num_children and "Must be <= than num children");
+  assert(recv_child_count_ <= num_children_ and "Must be <= than num children");
 }
 
 void TermState::setTerminated() {
-  termination_detected = true;
+  term_detected_ = true;
 }
 
 bool TermState::isTerminated() const {
-  return termination_detected;
+  return term_detected_;
 }
 
-void TermState::activate() {
-  epoch_is_active = true;
+void TermState::activateEpoch() {
+  epoch_active_ = true;
 }
 
-void TermState::notifyLocalReady() {
-  local_ready = true;
+void TermState::notifyLocalTerminated(bool const terminated) {
+  local_terminated_ = terminated;
 }
 
-void TermState::submitToParent(bool const is_root, bool const setup) {
+void TermState::submitToParent(bool const, bool const setup) {
   if (not setup) {
-    submitted_wave++;
+    submitted_wave_++;
   }
-  recv_from_child = 0;
+  recv_child_count_ = 0;
 }
 
 void TermState::receiveContinueSignal(TermWaveType const& wave) {
-  assert(cur_wave == wave - 1 and "Wave must monotonically increase");
-  cur_wave = wave;
+  assert(cur_wave_ == wave - 1 and "Wave must monotonically increase");
+  cur_wave_ = wave;
 }
 
 bool TermState::readySubmitParent(bool const needs_active) const {
   assert(
-    num_children != uninitialized_destination and "Children must be valid"
+    num_children_ != uninitialized_destination and "Children must be valid"
   );
 
   debug_print(
     term, node,
     "readySubmitParent: epoch=%d, active=%s, local_ready=%s, "
     "submitted_wave=%lld, recv=%d, children=%d\n",
-    epoch, print_bool(epoch_is_active), print_bool(local_ready), submitted_wave,
-    recv_from_child, num_children
+    epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
+    submitted_wave_, recv_child_count_, num_children_
   );
 
-  return (epoch_is_active or not needs_active) and
-    recv_from_child == num_children and local_ready and
-    submitted_wave == cur_wave - 1 and not termination_detected;
+  return (epoch_active_ or not needs_active) and
+    recv_child_count_ == num_children_ and local_terminated_ and
+    submitted_wave_ == cur_wave_ - 1 and not term_detected_;
 }
 
 TermState::TermState(
-  EpochType const& in_epoch, bool const active, NodeType const& children
+  EpochType const& in_epoch, bool const in_local_terminated, bool const active,
+  NodeType const& children
 )
-  : num_children(children), local_ready(active), epoch_is_active(active),
-    epoch(in_epoch)
+  : local_terminated_(in_local_terminated), epoch_active_(active),
+    num_children_(children), epoch_(in_epoch)
 {
   debug_print(
     term, node,
-    "TermState: constructor: epoch=%d\n", epoch
+    "TermState: constructor: epoch=%d, num_children=%d, active=%s, "
+    "local_terminated=%s\n",
+    epoch_, num_children_, print_bool(epoch_active_), print_bool(local_terminated_)
   );
 }
 
 TermState::TermState(EpochType const& in_epoch, NodeType const& children)
-  : num_children(children), epoch(in_epoch)
+  : num_children_(children), epoch_(in_epoch)
 {
   debug_print(
     term, node,
-    "TermState: constructor: epoch=%d, event=%d\n", epoch, recv_from_child
+    "TermState: constructor: epoch=%d, event=%d\n", epoch_, recv_child_count_
   );
 }
 

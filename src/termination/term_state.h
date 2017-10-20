@@ -14,37 +14,43 @@ namespace vt { namespace term {
 struct TermState {
   using EventCountType = int32_t;
 
+  void notifyChildReceive();
+  bool isTerminated() const;
+  void setTerminated();
+  void activateEpoch();
+  void notifyLocalTerminated(bool const terminated = true);
+  void submitToParent(bool const is_root, bool const setup = false);
+  void receiveContinueSignal(TermWaveType const& wave);
+  bool readySubmitParent(bool const needs_active = true) const;
+  EventCountType getRecvChildCount() const;
+  EpochType getEpoch() const;
+  TermWaveType getCurWave() const;
+  void setCurWave(TermWaveType const& wave);
+  NodeType getNumChildren() const;
+
+  TermState(
+    EpochType const& in_epoch, bool const in_local_terminated, bool const active,
+    NodeType const& children
+  );
+  TermState(EpochType const& in_epoch, NodeType const& children);
+
   // four-counter method
   TermCounterType l_prod = 0, l_cons = 0;
   TermCounterType g_prod1 = 0, g_cons1 = 0;
   TermCounterType g_prod2 = 0, g_cons2 = 0;
 
-  EventCountType recv_from_child = 0;
-  NodeType num_children = uninitialized_destination;
+private:
+  // Boolean local_terminated is for future optimization to disable propagation
+  // when its known that global termination is impossible because locally the
+  // system has not terminated
+  bool local_terminated_ = true;
+  bool epoch_active_ = true;
+  bool term_detected_ = false;
 
-  // Boolean local_ready is for future optimization to disable propagation when
-  // its known termination is impossible
-  bool local_ready = true;
-  bool epoch_is_active = true;
-  bool termination_detected = false;
-
-  EpochType const epoch = no_epoch;
-
-  TermWaveType cur_wave = 0, submitted_wave = -1;
-
-  void notifyChildReceive();
-  bool isTerminated() const;
-  void setTerminated();
-  void activate();
-  void notifyLocalReady();
-  void submitToParent(bool const is_root, bool const setup = false);
-  void receiveContinueSignal(TermWaveType const& wave);
-  bool readySubmitParent(bool const needs_active = true) const;
-
-  TermState(
-    EpochType const& in_epoch, bool const active, NodeType const& children
-  );
-  TermState(EpochType const& in_epoch, NodeType const& children);
+  EventCountType recv_child_count_ = 0;
+  NodeType num_children_ = uninitialized_destination;
+  EpochType const epoch_ = no_epoch;
+  TermWaveType cur_wave_ = 0, submitted_wave_ = -1;
 };
 
 }} //end namespace vt::term

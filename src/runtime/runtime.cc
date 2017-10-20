@@ -206,6 +206,11 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   if (has_workers) {
     theContext->setNumWorkers(num_workers);
     theWorkerGrp = std::make_unique<worker::WorkerGroupType>();
+  } else {
+    // Without workers running on the node, the termination detector should
+    // assume its locally ready to propagate instead of waiting for them to
+    // become idle.
+    theTerm->setLocalTerminated(true);
   }
 
   debug_print(runtime, node, "end: initializeWorkers\n");

@@ -24,7 +24,7 @@ struct TerminationDetector : Tree {
 
   TerminationDetector()
     : Tree(tree_cons_tag_t),
-      any_epoch_state_(any_epoch_sentinel, getNumChildren())
+      any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren())
   { }
 
   template <typename T>
@@ -33,7 +33,7 @@ struct TerminationDetector : Tree {
   inline void produce(
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   ) {
-    debug_print(term, node, "y1: produce: epoch=%d\n",epoch);
+    debug_print(term, node, "Termination: produce: epoch=%d\n",epoch);
     auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
     return produceConsume(in_epoch, num_units, true);
   }
@@ -41,7 +41,7 @@ struct TerminationDetector : Tree {
   inline void consume(
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   ) {
-    debug_print(term, node, "y1: consume: epoch=%d\n",epoch);
+    debug_print(term, node, "Termination: consume: epoch=%d\n",epoch);
     auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
     return produceConsume(in_epoch, num_units, false);
   }
@@ -57,6 +57,7 @@ struct TerminationDetector : Tree {
     TermCounterType const& num_units = 1, bool produce = true
   );
   void maybePropagate();
+  void setLocalTerminated(bool const terminated);
 
   void propagateEpochExternalState(
     TermStateType& state, TermCounterType const& prod, TermCounterType const& cons
