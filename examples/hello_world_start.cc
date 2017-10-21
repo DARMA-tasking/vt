@@ -78,7 +78,7 @@ struct TestVC : vt::vrt::VirtualContext {
       for (auto i = 0; i < my_index + 29; i++) {
         msg->work_vec.push_back(static_cast<double>(work_amt));
       }
-      theVirtualManager->sendSerialMsg<TestVC, WorkMsg, doWorkRight>(
+      theVirtualManager()->sendSerialMsg<TestVC, WorkMsg, doWorkRight>(
         right_proxy, msg
       );
     }
@@ -122,7 +122,7 @@ struct MainVC : vt::vrt::MainVirtualContext {
     std::vector<VirtualProxyType> proxies;
 
     for (auto i = 0; i < my_data; i++) {
-      auto proxy = theVirtualManager->makeVirtualMap<TestVC, randomSeedMapCore>(
+      auto proxy = theVirtualManager()->makeVirtualMap<TestVC, randomSeedMapCore>(
         i, i * 82773
       );
       proxies.push_back(proxy);
@@ -131,7 +131,7 @@ struct MainVC : vt::vrt::MainVirtualContext {
     for (auto&& elm : proxies) {
       ProxyMsg* msg = makeSharedMessage<ProxyMsg>(proxies);
       printf("sending to proxy %lld\n", elm);
-      theVirtualManager->sendSerialMsg<TestVC, ProxyMsg, proxyHan>(elm, msg);
+      theVirtualManager()->sendSerialMsg<TestVC, ProxyMsg, proxyHan>(elm, msg);
     }
   }
 };

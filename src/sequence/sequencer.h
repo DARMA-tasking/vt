@@ -160,14 +160,14 @@ using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
 
 #define SEQUENCE_REGISTER_HANDLER(message, handler)                     \
   static void handler(message* m) {                                     \
-    theSeq->sequenceMsg<message, handler>(m);                           \
+    theSeq()->sequenceMsg<message, handler>(m);                           \
   }
 
 }} //end namespace vt::seq
 
 namespace vt {
 
-extern std::unique_ptr<seq::Sequencer> theSeq;
+extern seq::Sequencer* theSeq();
 
 } //end namespace vt
 

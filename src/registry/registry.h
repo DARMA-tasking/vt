@@ -52,7 +52,7 @@ private:
   HandlerIdentifierType cur_ident_ = first_handle_identifier;
 };
 
-extern std::unique_ptr<Registry> theRegistry;
+extern Registry* theRegistry();
 
 } //end namespace vt
 

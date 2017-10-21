@@ -29,21 +29,21 @@ void send_to_neighbor() {
 
   int const next = this_node+1 < num_nodes ? this_node+1 : 0;
 
-  //theMsg->set_epoch_message(msg, test_epoch);
+  //theMsg()->set_epoch_message(msg, test_epoch);
 
-  EventType evt = theMsg->sendMsg(next, test_msg_han, msg, [=]{
+  EventType evt = theMsg()->sendMsg(next, test_msg_han, msg, [=]{
     //std::cout << "deleting msg" << std::endl;
     delete msg;
   });
 
   TestMsg* msg2 = new TestMsg(this_node, num_nodes, evt);
 
-  EventType evt2 = theMsg->sendMsg(next, test_msg_han2, msg2, [=]{
+  EventType evt2 = theMsg()->sendMsg(next, test_msg_han2, msg2, [=]{
     //std::cout << "deleting msg" << std::endl;
     delete msg2;
   });
 
-  auto const& own_node = theEvent->get_owning_node(evt);
+  auto const& own_node = vtheEvent->get_owning_node(evt);
 
   printf(
     "this_node=%d, event_id=%lld, own_node=%d\n",
@@ -60,8 +60,8 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize_context(argc, argv);
   CollectiveOps::initialize_runtime();
 
-  this_node = theContext->getNode();
-  num_nodes = theContext->get_num_nodes();
+  this_node = theContext()->getNode();
+  num_nodes = theContext()->get_num_nodes();
 
   std::cout << "this_node=" << this_node << std::endl;
 
@@ -70,21 +70,21 @@ int main(int argc, char** argv) {
   printf("sizeof(EpochTagEnvelope)=%ld\n", sizeof(EpochTagEnvelope));
 
   printf("%d: calling wait_unnamed_barrier\n", this_node);
-  theBarrier->barrier();
+  theBarrier()->barrier();
   printf("%d: out of wait_unnamed_barrier\n", this_node);
 
   printf("%d: calling cont_unnamed_barrier\n", this_node);
-  theBarrier->barrier_then([=]{
+  theBarrier()->barrier_then([=]{
     printf("%d: out of cont_unnamed_barrier\n", this_node);
   });
 
   //test_msg_han = CollectiveOps::register_handler(handle_test_msg);
 
-  // test_epoch = theTerm->new_epoch();
-  // theTerm->attach_epoch_term_action(test_epoch, [=]{
+  // test_epoch = theTerm()->new_epoch();
+  // theTerm()->attach_epoch_term_action(test_epoch, [=]{
   //   printf(
   //     "%d: EPOCH: finished: test_epoch=%d\n",
-  //     theContext->getNode(), test_epoch
+  //     theContext()->getNode(), test_epoch
   //   );
   // });
 
@@ -106,10 +106,10 @@ int main(int argc, char** argv) {
 
     printf(
       "this_node=%d, evt=%lld, owner=%d\n",
-      this_node, msg.event, theEvent->get_owning_node(msg.event)
+      this_node, msg.event, vttheEvent->get_owning_node(msg.event)
     );
 
-    theEvent->attach_action(msg.event, [=]{
+    vt-theEvent->attach_action(msg.event, [=]{
       printf("triggering remote event\n");
     });
   });
@@ -119,13 +119,13 @@ int main(int argc, char** argv) {
 
     TestMsg* msg = new TestMsg(this_node, num_nodes, -1);
 
-    // theMsg->broadcast_msg(test_msg_han, msg, [=]{
+    // theMsg()->broadcast_msg(test_msg_han, msg, [=]{
     //   //std::cout << "deleting msg" << std::endl;
     //   delete msg;
     // });
   }
 
   while (1) {
-    theMsg->scheduler();
+    theMsg()->scheduler();
   }
 }

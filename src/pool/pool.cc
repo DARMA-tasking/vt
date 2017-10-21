@@ -53,4 +53,3 @@ void Pool::dealloc(void* const buf) {
 };
 
 }} //end namespace vt::pool
-

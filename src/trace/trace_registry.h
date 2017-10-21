@@ -31,7 +31,7 @@ struct TraceRegistry {
     EventClassType new_event_type(event_type_name);
 
     auto type_iter = TraceContainersType::event_type_container.find(
-      new_event_type.getEventId()
+      new_event_type.theEventId()
     );
 
     if (type_iter == TraceContainersType::event_type_container.end()) {
@@ -40,20 +40,20 @@ struct TraceRegistry {
 
       TraceContainersType::event_type_container.emplace(
         std::piecewise_construct,
-        std::forward_as_tuple(new_event_type.getEventId()),
+        std::forward_as_tuple(new_event_type.theEventId()),
         std::forward_as_tuple(new_event_type)
       );
     } else {
-      event_type_seq = type_iter->second.getEventSeq();
+      event_type_seq = type_iter->second.theEventSeq();
     }
 
     TraceEntryIDType event_seq = no_trace_entry_id;
-    TraceEventType new_event(event_name, new_event_type.getEventId());
+    TraceEventType new_event(event_name, new_event_type.theEventId());
 
     new_event.setEventTypeSeq(event_type_seq);
 
     auto event_iter = TraceContainersType::event_container.find(
-      new_event.getEventId()
+      new_event.theEventId()
     );
 
     if (event_iter == TraceContainersType::event_container.end()) {
@@ -62,14 +62,14 @@ struct TraceRegistry {
 
       TraceContainersType::event_container.emplace(
         std::piecewise_construct,
-        std::forward_as_tuple(new_event.getEventId()),
+        std::forward_as_tuple(new_event.theEventId()),
         std::forward_as_tuple(new_event)
       );
     } else {
-      event_seq = event_iter->second.getEventSeq();
+      event_seq = event_iter->second.theEventSeq();
     }
 
-    return new_event.getEventId();
+    return new_event.theEventId();
   }
 
 };

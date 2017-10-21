@@ -31,7 +31,7 @@ struct TestActiveBroadcast : TestParameterHarnessNode {
 
   static void test_handler(TestMsg* msg) {
     #if DEBUG_TEST_HARNESS_PRINT
-      auto const& this_node = theContext->getNode();
+      auto const& this_node = theContext()->getNode();
       printf("%d: test_handler: cnt=%d\n", this_node, handler_count);
     #endif
 
@@ -43,8 +43,8 @@ struct TestActiveBroadcast : TestParameterHarnessNode {
 /*static*/ int TestActiveBroadcast::num_msg_sent;
 
 TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
-  auto const& my_node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& my_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   NodeType const& root = GetParam();
 
@@ -56,11 +56,11 @@ TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
     if (my_node == root) {
       for (int i = 0; i < num_msg_sent; i++) {
         auto msg = new TestMsg();
-        theMsg->broadcastMsg<TestMsg, test_handler>(msg, [=]{ delete msg; });
+        theMsg()->broadcastMsg<TestMsg, test_handler>(msg, [=]{ delete msg; });
       }
     }
 
-    theTerm->attachGlobalTermAction([=]{
+    theTerm()->attachGlobalTermAction([=]{
       if (my_node != root) {
         ASSERT_TRUE(handler_count == num_msg_sent);
       }

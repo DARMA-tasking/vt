@@ -218,7 +218,7 @@ bool SeqNode::executeClosuresUntilBlocked() {
       // auto execute_ready_closure = [=]{
       //   closure.execute();
       // };
-      // theSeq->enqueue(execute_ready_closure);
+      // theSeq()->enqueue(execute_ready_closure);
 
       auto closure = sequenced_closures_.front();
       sequenced_closures_.pop_front();

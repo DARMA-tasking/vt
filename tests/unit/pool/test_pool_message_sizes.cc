@@ -47,7 +47,7 @@ struct TestPoolMessageSizes : TestParallelHarness {
 
 template <int64_t num_bytes>
 void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
     printf("%d: test: bytes=%lld, cnt=%d\n", this_node, num_bytes, count);
@@ -60,12 +60,12 @@ void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
 
   if (count < max_test_count) {
     auto msg = new TestMsg<num_bytes>();
-    theMsg->sendMsg<TestMsg<num_bytes>, testPoolFun>(
+    theMsg()->sendMsg<TestMsg<num_bytes>, testPoolFun>(
       next, msg, [=]{ delete msg; }
     );
   } else {
     auto msg = new TestMsg<num_bytes * 2>();
-    theMsg->sendMsg<TestMsg<num_bytes * 2>, testPoolFun>(
+    theMsg()->sendMsg<TestMsg<num_bytes * 2>, testPoolFun>(
       next, msg, [=]{ delete msg; }
     );
     count = 0;
@@ -78,11 +78,11 @@ void TestPoolMessageSizes::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
 TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
   using namespace vt;
 
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
     auto msg = new TestMsg<min_bytes>();
-    theMsg->sendMsg<TestMsg<min_bytes>, testPoolFun>(
+    theMsg()->sendMsg<TestMsg<min_bytes>, testPoolFun>(
       to_node, msg, [=]{ delete msg; }
     );
   }

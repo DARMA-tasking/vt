@@ -14,17 +14,17 @@ struct TestMsg : CallbackMessage {
 };
 
 static void test_msg_recv(TestMsg* msg) {
-  printf("%d: sending callback %d\n", theContext->getNode(), msg->from);
+  printf("%d: sending callback %d\n", theContext()->getNode(), msg->from);
 
   TestMsg* sendMsg = makeSharedMessage<TestMsg>(my_node);
-  theMsg->sendCallback(sendMsg);
+  theMsg()->sendCallback(sendMsg);
 }
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  my_node = theContext->getNode();
-  num_nodes = theContext->getNumNodes();
+  my_node = theContext()->getNode();
+  num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -35,16 +35,16 @@ int main(int argc, char** argv) {
   if (my_node == 0) {
     for (int cur_node = 0; cur_node < num_nodes; cur_node++) {
       TestMsg* msg = makeSharedMessage<TestMsg>(my_node);
-      theMsg->sendDataCallback<TestMsg, test_msg_recv>(
+      theMsg()->sendDataCallback<TestMsg, test_msg_recv>(
         cur_node, msg, [=](BaseMessage* in_msg){
           TestMsg* msg = static_cast<TestMsg*>(in_msg);
-          printf("%d: callback received from %d\n", theContext->getNode(), msg->from);
+          printf("%d: callback received from %d\n", theContext()->getNode(), msg->from);
         }
       );
     }
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

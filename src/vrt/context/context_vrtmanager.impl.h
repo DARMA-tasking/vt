@@ -54,27 +54,27 @@ template <typename SysMsgT>
   if (info.isImmediate) {
     // nothing to do here?
   } else {
-    auto const& cons_node = theContext->getNode();
+    auto const& cons_node = theContext()->getNode();
     auto const& req_node = info.from_node;
     auto const& request_id = info.req_id;
 
-    new_proxy = theVirtualManager->generateNewProxy();
+    new_proxy = theVirtualManager()->generateNewProxy();
     auto send_msg = makeSharedMessage<VirtualProxyRequestMsg>(
       cons_node, req_node, request_id, new_proxy
     );
-    theMsg->sendMsg<VirtualProxyRequestMsg, sendBackVirtualProxyHan>(
+    theMsg()->sendMsg<VirtualProxyRequestMsg, sendBackVirtualProxyHan>(
       req_node, send_msg
     );
   }
 
-  theVirtualManager->insertVirtualContext(std::move(new_vc), new_proxy);
+  theVirtualManager()->insertVirtualContext(std::move(new_vc), new_proxy);
 }
 
 template <typename VrtContextT, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualNode(
   NodeType const& node, Args&& ... args
 ) {
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
   if (node != this_node) {
     return makeVirtualRemote<VrtContextT>(
       node, true, nullptr, std::forward<Args>(args)...
@@ -116,13 +116,13 @@ void VirtualContextManager::sendSerialMsg(
     // custom send lambda to route the message
     [=](SerialMsgT* msg){
       msg->to_proxy = toProxy;
-      theLocMan->vrtContextLoc->routeMsgHandler<
+      theLocMan()->vrtContextLoc->routeMsgHandler<
         SerialMsgT, SerializedMessenger::payloadMsgHandler
       >(toProxy, home_node, msg, act);
     },
     // custom data transfer lambda if above the eager threshold
     [=](ActionNodeType action){
-      theLocMan->vrtContextLoc->routeNonEagerAction(toProxy, home_node, action);
+      theLocMan()->vrtContextLoc->routeNonEagerAction(toProxy, home_node, action);
     }
   );
 }
@@ -137,7 +137,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
   auto sys_msg =
     makeSharedMessage<MsgType>(ArgsTupleType{std::forward<Args>(args)...});
 
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
   std::unique_ptr<RemoteVrtInfo> info = nullptr;
   VirtualProxyType return_proxy = no_vrt_proxy;
 
@@ -177,7 +177,7 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(
     std::forward<Args>(args)...
   );
 
-  if (theContext->hasWorkers()) {
+  if (theContext()->hasWorkers()) {
     // save the seed for mapping
     auto const next_seed = cur_seed_++;
     auto vrt = getVirtualByProxy(proxy);
@@ -192,7 +192,7 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(
     auto& info = holder_iter->second;
     info.setCoreMap(core_map_handle);
 
-    auto const& mapped_core = fn(vrt->seed_, theContext->getNumWorkers());
+    auto const& mapped_core = fn(vrt->seed_, theContext()->getNumWorkers());
     info.mapToCore(mapped_core);
 
     debug_print(
@@ -223,7 +223,7 @@ void VirtualContextManager::sendMsg(
   );
 
   // route the message to the destination using the location manager
-  theLocMan->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
+  theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
 }
 
 }}  // end namespace vt::vrt

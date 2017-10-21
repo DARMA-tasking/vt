@@ -28,29 +28,29 @@ static void processIterMsgs(vt::BaseMessage* in_msg) {
 
   printf(
     "%d: process iteration node %d: count=%d, tag=%d, iteration=%d\n",
-    theContext->getNode(), msg.from, count, first_tag, cur_iter
+    theContext()->getNode(), msg.from, count, first_tag, cur_iter
   );
 
   assert(first_tag == cur_iter);
 
   // received all for this iteration
-  if (count == theContext->getNumNodes() - 1) {
+  if (count == theContext()->getNumNodes() - 1) {
     cur_iter++;
     count = 0;
 
-    auto const& first_han = theMsg->getCurrentHandler();
-    theMsg->unregisterHandlerFn(first_han, cur_iter-1);
-    theMsg->registerHandlerFn(first_han, processIterMsgs, cur_iter);
+    auto const& first_han = theMsg()->getCurrentHandler();
+    theMsg()->unregisterHandlerFn(first_han, cur_iter-1);
+    theMsg()->registerHandlerFn(first_han, processIterMsgs, cur_iter);
 
     printf(
       "%d: updating to NEXT iteration node %d: count=%d, cur_iter=%d\n",
-      theContext->getNode(), msg.from, count, cur_iter
+      theContext()->getNode(), msg.from, count, cur_iter
     );
   }
 }
 
 static void myColFn(TestMsg* msg) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   printf(
     "%d: my_col_fn from=%d, callback=%d: tag=%d, sending, tag=[%d,%d]\n",
@@ -59,7 +59,7 @@ static void myColFn(TestMsg* msg) {
 
   for (auto i = first_recv_tag; i < last_recv_tag; i++) {
     TestMsg* new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
-    theMsg->sendMsg(msg->callback_han, new_msg, i);
+    theMsg()->sendMsg(msg->callback_han, new_msg, i);
     messageDeref(new_msg);
   }
 }
@@ -67,12 +67,12 @@ static void myColFn(TestMsg* msg) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  HandlerType const callback = theMsg->registerNewHandler(
+  HandlerType const callback = theMsg()->registerNewHandler(
     processIterMsgs, cur_iter
   );
 
-  auto const& my_node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& my_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -82,11 +82,11 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     TestMsg* msg = makeSharedMessage<TestMsg>(my_node, callback);
-    theMsg->broadcastMsg<TestMsg, myColFn>(msg);
+    theMsg()->broadcastMsg<TestMsg, myColFn>(msg);
     messageDeref(msg);
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

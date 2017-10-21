@@ -19,11 +19,4 @@ using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
 
 }} // end namespace vt::seq
 
-namespace vt {
-
-extern std::unique_ptr<seq::Sequencer> theSeq;
-extern std::unique_ptr<seq::SequencerVirtual> theVirtualSeq;
-
-} // end namespace vt
-
 #endif /* INCLUDED_SEQUENCE_SEQUENCER_FWD_H*/

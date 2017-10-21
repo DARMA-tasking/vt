@@ -7,7 +7,7 @@
 
 // Meta-features and debug and turn combinations on
 #define debug_meta_all                                                  \
-  gen, active, term, barrier, event, pool, rdma, rdma_channel,          \
+  gen, runtime, active, term, barrier, event, pool, rdma, rdma_channel, \
   rdma_state, handler, flush
 
 // @todo: needed anymore?

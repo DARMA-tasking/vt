@@ -47,7 +47,7 @@ struct TestSequencer : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->wait<TestMsg, testSeqHan>([](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqHan>([](TestMsg* msg){
       #if DEBUG_TEST_HARNESS_PRINT
         printf("testSingleWaitFn running wait\n");
       #endif
@@ -66,7 +66,7 @@ struct TestSequencer : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->wait<TestMsg, testSeqTaggedHan>(single_tag, [](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqTaggedHan>(single_tag, [](TestMsg* msg){
       EXPECT_EQ(seq_ordering_++, 1);
     });
   }
@@ -81,11 +81,11 @@ struct TestSequencer : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->wait<TestMsg, testSeqMultiHan>([](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqMultiHan>([](TestMsg* msg){
       EXPECT_TRUE(seq_ordering_ == 1 or seq_ordering_ == 2);
       seq_ordering_++;
     });
-    theSeq->wait<TestMsg, testSeqMultiHan>([](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqMultiHan>([](TestMsg* msg){
       EXPECT_TRUE(seq_ordering_ == 1 or seq_ordering_ == 2);
       seq_ordering_++;
     });
@@ -101,10 +101,10 @@ struct TestSequencer : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->wait<TestMsg, testSeqMultiTaggedHan>(single_tag, [](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqMultiTaggedHan>(single_tag, [](TestMsg* msg){
       EXPECT_EQ(seq_ordering_++, 1);
     });
-    theSeq->wait<TestMsg, testSeqMultiTaggedHan>(single_tag_2, [](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqMultiTaggedHan>(single_tag_2, [](TestMsg* msg){
       EXPECT_EQ(seq_ordering_++, 2);
     });
   }
@@ -114,76 +114,76 @@ struct TestSequencer : TestParallelHarness {
 /*static*/ TagType TestSequencer::single_tag_2;
 
 TEST_F(TestSequencer, test_single_wait) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
     printf("test_seq_handler: node=%d\n", my_node);
   #endif
 
   if (my_node == 0) {
-    SeqType const& seq_id = theSeq->nextSeq();
-    theSeq->sequenced(seq_id, testSingleWaitFn);
+    SeqType const& seq_id = theSeq()->nextSeq();
+    theSeq()->sequenced(seq_id, testSingleWaitFn);
 
-    theMsg->sendMsg<TestMsg, testSeqHan>(my_node, makeSharedMessage<TestMsg>());
+    theMsg()->sendMsg<TestMsg, testSeqHan>(my_node, makeSharedMessage<TestMsg>());
 
-    theTerm->attachGlobalTermAction([=]{
+    theTerm()->attachGlobalTermAction([=]{
       testSingleWaitFn(-1);
     });
   }
 }
 
 TEST_F(TestSequencer, test_single_wait_tagged) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    SeqType const& seq_id = theSeq->nextSeq();
-    theSeq->sequenced(seq_id, testSingleTaggedWaitFn);
+    SeqType const& seq_id = theSeq()->nextSeq();
+    theSeq()->sequenced(seq_id, testSingleTaggedWaitFn);
 
-    theMsg->sendMsg<TestMsg, testSeqTaggedHan>(
+    theMsg()->sendMsg<TestMsg, testSeqTaggedHan>(
       my_node, makeSharedMessage<TestMsg>(), single_tag
     );
 
-    theTerm->attachGlobalTermAction([=]{
+    theTerm()->attachGlobalTermAction([=]{
       testSingleTaggedWaitFn(-1);
     });
   }
 }
 
 TEST_F(TestSequencer, test_multi_wait) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    SeqType const& seq_id = theSeq->nextSeq();
-    theSeq->sequenced(seq_id, testMultiWaitFn);
+    SeqType const& seq_id = theSeq()->nextSeq();
+    theSeq()->sequenced(seq_id, testMultiWaitFn);
 
-    theMsg->sendMsg<TestMsg, testSeqMultiHan>(
+    theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
       my_node, makeSharedMessage<TestMsg>()
     );
-    theMsg->sendMsg<TestMsg, testSeqMultiHan>(
+    theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
       my_node, makeSharedMessage<TestMsg>()
     );
 
-    theTerm->attachGlobalTermAction([=]{
+    theTerm()->attachGlobalTermAction([=]{
       testMultiWaitFn(-1);
     });
   }
 }
 
 TEST_F(TestSequencer, test_multi_wait_tagged) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    SeqType const& seq_id = theSeq->nextSeq();
-    theSeq->sequenced(seq_id, testMultiTaggedWaitFn);
+    SeqType const& seq_id = theSeq()->nextSeq();
+    theSeq()->sequenced(seq_id, testMultiTaggedWaitFn);
 
-    theMsg->sendMsg<TestMsg, testSeqMultiTaggedHan>(
+    theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
       my_node, makeSharedMessage<TestMsg>(), single_tag
     );
-    theMsg->sendMsg<TestMsg, testSeqMultiTaggedHan>(
+    theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
       my_node, makeSharedMessage<TestMsg>(), single_tag_2
     );
 
-    theTerm->attachGlobalTermAction([=]{
+    theTerm()->attachGlobalTermAction([=]{
       testMultiTaggedWaitFn(-1);
     });
   }

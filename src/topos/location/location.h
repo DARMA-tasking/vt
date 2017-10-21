@@ -172,7 +172,7 @@ struct LocationManager {
 
 namespace vt {
 
-extern std::unique_ptr<location::LocationManager> theLocMan;
+extern location::LocationManager* theLocMan();
 
 }  // end namespace vt
 

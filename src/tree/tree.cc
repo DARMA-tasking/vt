@@ -23,8 +23,8 @@ bool Tree::isRoot() const {
 void
 Tree::setupTree() {
   if (not set_up_tree_) {
-    my_node_ = theContext->getNode();
-    num_nodes_ = theContext->getNumNodes();
+    my_node_ = theContext()->getNode();
+    num_nodes_ = theContext()->getNumNodes();
 
     c1_ = my_node_*2+1;
     c2_ = my_node_*2+2;

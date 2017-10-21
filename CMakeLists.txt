@@ -80,6 +80,12 @@ file(
   ${PROJECT_SOURCE_DIR}/*.h
 )
 
+file(
+  GLOB
+  SOURCE_FILES
+  ${PROJECT_SOURCE_DIR}/*.cc
+)
+
 foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
   # message(
   #   "virtual-transport: adding header of subdirectory >>>>> ${SUB_DIR}\n"

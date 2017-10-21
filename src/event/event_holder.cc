@@ -17,7 +17,7 @@ void EventHolder::makeReadyTrigger() {
   //printf("make_ready_trigger\n");
   event_->setReady();
   executeActions();
-  theEvent->removeEventID(event_->getEventID());
+  theEvent()->removeEventID(event_->getEventID());
 }
 
 void EventHolder::executeActions() {

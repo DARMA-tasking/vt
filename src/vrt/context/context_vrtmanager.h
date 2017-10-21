@@ -129,7 +129,7 @@ private:
 
 namespace vt {
 
-extern std::unique_ptr<vrt::VirtualContextManager> theVirtualManager;
+extern vrt::VirtualContextManager* theVirtualManager();
 
 }  // end namespace vt
 

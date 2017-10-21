@@ -54,12 +54,12 @@ static void sendMsgEpoch(EpochType const& epoch, TTLType const& ttl) {
   }
 
   if (epoch != no_epoch) {
-    theMsg->setEpochMessage(msg, epoch);
+    theMsg()->setEpochMessage(msg, epoch);
   }
 
   printf("%d: sending msg: epoch=%d, ttl=%d\n", my_node, epoch, msg->life_time);
 
-  theMsg->sendMsg<PropagateMsg, propagate_handler>(random_node, msg);
+  theMsg()->sendMsg<PropagateMsg, propagate_handler>(random_node, msg);
 
   printf(
     "%d: sendMsgEpoch: epoch=%d, node=%d, ttl-%d\n",
@@ -78,14 +78,14 @@ static void next_epoch() {
   printf("%d: cur_epoch=%d\n", my_node, cur_epoch);
 
   if (use_epoch) {
-    cur_epoch = theTerm->newEpoch();
+    cur_epoch = theTerm()->newEpoch();
 
     if (cur_epoch < max_epochs) {
       printf("%d: new cur_epoch=%d\n", my_node, cur_epoch);
 
       sendStartEpoch(cur_epoch);
 
-      theTerm->attachEpochTermAction(cur_epoch, []{
+      theTerm()->attachEpochTermAction(cur_epoch, []{
         printf("%d: running attached action: cur_epoch=%d\n", my_node, cur_epoch);
         next_epoch();
       });
@@ -98,8 +98,8 @@ static void next_epoch() {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  my_node = theContext->getNode();
-  num_nodes = theContext->getNumNodes();
+  my_node = theContext()->getNode();
+  num_nodes = theContext()->getNumNodes();
 
   if (argc > 1) {
     use_epoch = atoi(argv[1]) == 1 ? true : false;
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
 
   next_epoch();
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

@@ -44,14 +44,14 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   );
 
 #if backend_check_enabled(trace_enabled)
-  trace::TraceEntryIDType ep = auto_registry::getTraceID(msg->sub_han);
+  trace::TraceEntryIDType ep = auto_registry::theTraceID(msg->sub_han);
   trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
 
   printf("dataMessageHandler: id=%d, ep=%lu\n", msg->sub_han, ep);
 
-  NodeType const& from_node = theMsg->getFromNodeCurrentHandler();
+  NodeType const& from_node = theMsg()->getFromNodeCurrentHandler();
 
-  theTrace->beginProcessing(ep, sizeof(*msg), event, from_node);
+  theTrace()->beginProcessing(ep, sizeof(*msg), event, from_node);
 #endif
 
   if (HandlerManagerType::isHandlerFunctor(msg->sub_han)) {
@@ -64,7 +64,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   }
 
 #if backend_check_enabled(trace_enabled)
-  theTrace->endProcessing(ep, sizeof(*msg), event, from_node);
+  theTrace()->endProcessing(ep, sizeof(*msg), event, from_node);
 #endif
 }
 
@@ -82,7 +82,7 @@ struct Param {
       han, std::forward<std::tuple<Args...>>(tup)
     );
 
-    return theMsg->sendMsg<DataMsg<TupleType>, dataMessageHandler>(
+    return theMsg()->sendMsg<DataMsg<TupleType>, dataMessageHandler>(
       dest, m, [=]{ delete m; }
     );
   }
@@ -102,7 +102,7 @@ struct Param {
     NodeType const& dest, HandlerType const& __attribute__((unused)) han,
     DataMsg* m
   ) {
-    return theMsg->sendMsg<DataMsg, dataMessageHandler>(
+    return theMsg()->sendMsg<DataMsg, dataMessageHandler>(
       dest, m, [=]{ delete m; }
     );
   }
@@ -202,7 +202,7 @@ struct Param {
 
 namespace vt {
 
-extern std::unique_ptr<param::Param> theParam;
+extern param::Param* theParam();
 
 template <typename... Args>
 param::DataMsg<std::tuple<Args...>>* buildData(Args&&... a) {

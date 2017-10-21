@@ -18,6 +18,7 @@
 // distinct modes for debug
 #define debug_none(x) x
 #define debug_gen(x) x
+#define debug_runtime(x) x
 #define debug_active(x) x
 #define debug_term(x) x
 #define debug_barrier(x) x

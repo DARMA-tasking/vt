@@ -46,6 +46,10 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
   thisNode_ = static_cast<NodeType>(thisNodeLocal);
 }
 
+Context::Context(bool const interop, MPI_Comm* comm)
+  : Context(0, nullptr, interop, comm)
+{ }
+
 }}  // end namespace vt::ctx
 
 #undef DEBUG_VT_CONTEXT

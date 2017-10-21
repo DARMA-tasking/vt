@@ -23,7 +23,7 @@ struct Pool {
 
 namespace vt {
 
-extern std::unique_ptr<pool::Pool> thePool;
+extern pool::Pool* thePool();
 
 } //end namespace vt
 

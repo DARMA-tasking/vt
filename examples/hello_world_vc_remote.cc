@@ -28,8 +28,8 @@ static void testHan(TestMsg* msg, MyVC* vc) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& my_node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& my_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -38,12 +38,12 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    auto proxy = theVirtualManager->makeVirtualNode<MyVC>(1, 45);
+    auto proxy = theVirtualManager()->makeVirtualNode<MyVC>(1, 45);
     auto msg = new TestMsg(my_node);
-    theVirtualManager->sendMsg<MyVC, TestMsg, testHan>(proxy, msg);
+    theVirtualManager()->sendMsg<MyVC, TestMsg, testHan>(proxy, msg);
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

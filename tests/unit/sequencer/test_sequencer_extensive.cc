@@ -15,7 +15,7 @@ using namespace vt::tests::unit;
 #if DEBUG_TEST_HARNESS_PRINT
 #define DEBUG_PRINT_SEQ(ORDER, CUR, LABEL)                              \
   do {                                                                  \
-    auto seq_id = theSeq->getCurrentSeq();                              \
+    auto seq_id = theSeq()->getCurrentSeq();                              \
     printf(                                                             \
       "debug (%s): seq_id=%d, ordering=%d -- cur=%d --\n",              \
       (LABEL), seq_id, (ORDER).load(), (CUR)                            \
@@ -49,7 +49,7 @@ static constexpr CountType const max_seq_depth = 8;
 
 #define TEST_CALL(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, ___, IS_TAG)         \
   do {                                                                  \
-    auto const& node = theContext->getNode();                           \
+    auto const& node = theContext()->getNode();                         \
     auto param = GetParam();                                            \
     CountType const& wait_cnt = std::get<0>(param);                     \
     CountType const& wait_pre = std::get<1>(param);                     \
@@ -57,24 +57,24 @@ static constexpr CountType const max_seq_depth = 8;
     CountType const& seg_cnt = std::get<3>(param);                      \
     CountType const& depth = std::get<4>(param);                        \
     if (node == (NODE)) {                                               \
-      SeqType const& seq_id = theSeq->nextSeq();                        \
+      SeqType const& seq_id = theSeq()->nextSeq();                      \
       SEQ_FN(ResetAtomicValue);                                         \
-      theSeq->sequenced(seq_id, (SEQ_FN));                              \
+      theSeq()->sequenced(seq_id, (SEQ_FN));                            \
       CountType in[param_size] = {                                      \
         wait_cnt, wait_pre, wait_post, seg_cnt, depth                   \
       };                                                                \
       auto msg = new NumWaitsMsg(in);                                   \
-      theMsg->sendMsg<NumWaitsMsg, numWaitHan>(                         \
+      theMsg()->sendMsg<NumWaitsMsg, numWaitHan>(                       \
         (NODE), msg, [=]{ delete msg; }                                 \
       );                                                                \
       auto const total = (wait_cnt * seg_cnt) + wait_pre + wait_post;   \
       for (int i = 0; i < total; i++) {                                 \
         TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
-        theMsg->sendMsg<MSG_TYPE, SEQ_HAN>(                             \
+        theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                           \
           (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
         );                                                              \
       }                                                                 \
-      theTerm->attachGlobalTermAction([=]{                              \
+      theTerm()->attachGlobalTermAction([=]{                            \
         SEQ_FN(FinalizeAtomicValue);                                    \
       });                                                               \
     }                                                                   \
@@ -110,7 +110,7 @@ static constexpr CountType const max_seq_depth = 8;
                                                                         \
     EXPECT_EQ(seq_ordering_++, 0);                                      \
                                                                         \
-    theSeq->wait_closure<NumWaitsMsg, numWaitHan>(                      \
+    theSeq()->wait_closure<NumWaitsMsg, numWaitHan>(                    \
       no_tag, [](NumWaitsMsg* m){                                       \
         EXPECT_EQ(seq_ordering_++, 1);                                  \
         num_waits = m->info[0];                                         \
@@ -122,7 +122,7 @@ static constexpr CountType const max_seq_depth = 8;
     );                                                                  \
                                                                         \
     for (int wb = 0; wb < nwaits_pre; wb++) {                           \
-      theSeq->wait_closure<MSG_TYPE, SEQ_HAN>(                          \
+      theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                        \
         no_tag, [=](MSG_TYPE* msg){                                     \
           CountType const this_wait = wb + nwait_offset;                \
           EXPECT_EQ(seq_ordering_++, this_wait);                        \
@@ -132,12 +132,12 @@ static constexpr CountType const max_seq_depth = 8;
     }                                                                   \
                                                                         \
     for (int nseg = 0; nseg < num_segs; nseg++) {                       \
-      theSeq->sequenced([=]{                                            \
+      theSeq()->sequenced([=]{                                          \
         DEBUG_PRINT("nseg=%d:num_waits=%d\n",nseg,num_waits);           \
         DEBUG_PRINT_SEQ(seq_ordering_, 0, "start-sequenced");           \
         seqDepth(depth, [=]{                                            \
           for (int w = 0; w < num_waits; w++) {                         \
-            theSeq->wait_closure<MSG_TYPE, SEQ_HAN>(                    \
+            theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                  \
               no_tag, [=](MSG_TYPE* msg){                               \
                 CountType const this_wait =                             \
                   (nseg * num_waits) + w + nwaits_pre + nwait_offset;   \
@@ -151,7 +151,7 @@ static constexpr CountType const max_seq_depth = 8;
     }                                                                   \
                                                                         \
     for (int wa = 0; wa < nwaits_post; wa++) {                          \
-      theSeq->wait_closure<MSG_TYPE, SEQ_HAN>(                          \
+      theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                        \
         no_tag, [=](MSG_TYPE* msg){                                     \
           CountType const this_wait =                                   \
             (num_segs * num_waits) + nwaits_pre + wa + nwait_offset;    \
@@ -198,7 +198,7 @@ struct TestSequencerExtensive : TestParallelHarnessParam<ParamType> {
     if (depth == 0) {
       fn();
     } else {
-      theSeq->sequenced([=]{
+      theSeq()->sequenced([=]{
         return seqDepth(depth-1, fn);
       });
     }

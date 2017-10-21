@@ -92,7 +92,7 @@ private:
 
 namespace vt {
 
-extern std::unique_ptr<barrier::Barrier> theBarrier;
+extern barrier::Barrier* theBarrier();
 
 } //end namespace vt
 

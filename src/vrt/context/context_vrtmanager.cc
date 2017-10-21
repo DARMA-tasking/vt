@@ -5,7 +5,7 @@ namespace vt {
 namespace vrt {
 
 VirtualContextManager::VirtualContextManager()
-  : curIdent_(0), myNode_(theContext->getNode())
+  : curIdent_(0), myNode_(theContext()->getNode())
 { }
 
 void VirtualContextManager::insertVirtualContext(
@@ -18,7 +18,7 @@ void VirtualContextManager::insertVirtualContext(
   assert(holder_iter == holder_.end() && "Holder must not contain id");
 
   // registry the proxy with location manager
-  theLocMan->vrtContextLoc->registerEntity(proxy, virtualMsgHandler);
+  theLocMan()->vrtContextLoc->registerEntity(proxy, virtualMsgHandler);
 
   // save the proxy in the virtual context for reference later
   new_vc->proxy_ = proxy;
@@ -58,7 +58,7 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
 /*static*/ void VirtualContextManager::virtualMsgHandler(BaseMessage* msg) {
   auto const vc_msg = static_cast<VirtualMessage*>(msg);
   auto const entity_proxy = vc_msg->to_proxy;
-  auto const vc_ptr = theVirtualManager->getVirtualByProxy(entity_proxy);
+  auto const vc_ptr = theVirtualManager()->getVirtualByProxy(entity_proxy);
 
   debug_print(
     vrt, node,
@@ -91,7 +91,7 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
     cons_node, req_node, request_id
   );
 
-  theVirtualManager->recvVirtualProxy(request_id, msg->proxy);
+  theVirtualManager()->recvVirtualProxy(request_id, msg->proxy);
 }
 
 void VirtualContextManager::recvVirtualProxy(

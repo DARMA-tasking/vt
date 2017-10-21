@@ -21,7 +21,7 @@ struct TestMsg : vt::ShortMessage {
 
 struct TestMappingRegistry : TestParallelHarness {
   static void test_handler(TestMsg* msg) {
-    auto const& this_node = theContext->getNode();
+    auto const& this_node = theContext()->getNode();
     //printf("%d: test_handler: han=%d\n", this_node, msg->han);
     auto fn = auto_registry::getAutoHandlerMap(msg->han);
 
@@ -61,7 +61,7 @@ static NodeType map_fn2(
 }
 
 TEST_F(TestMappingRegistry, test_mapping_block_1d_registry) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
     printf("test_type_safe_active_fn_send: node=%d\n", my_node);
@@ -71,11 +71,11 @@ TEST_F(TestMappingRegistry, test_mapping_block_1d_registry) {
     auto map_han = auto_registry::makeAutoHandlerMap<index::Index1D, map_fn>();
     auto msg = new TestMsg(map_han);
     msg->is_block = true;
-    theMsg->broadcastMsg<TestMsg, test_handler>(msg, [=]{ delete msg; });
+    theMsg()->broadcastMsg<TestMsg, test_handler>(msg, [=]{ delete msg; });
 
     auto map_han2 = auto_registry::makeAutoHandlerMap<index::Index1D, map_fn2>();
     auto msg2 = new TestMsg(map_han2);
-    theMsg->broadcastMsg<TestMsg, test_handler>(msg2, [=]{ delete msg2; });
+    theMsg()->broadcastMsg<TestMsg, test_handler>(msg2, [=]{ delete msg2; });
   }
 }
 

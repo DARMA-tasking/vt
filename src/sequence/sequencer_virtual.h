@@ -50,7 +50,7 @@ private:
 
 #define SEQUENCE_REGISTER_VRT_HANDLER(vrtcontext, message, handler)     \
   static void handler(message* m, vrtcontext* vc) {                     \
-    theVirtualSeq->sequenceVrtMsg<vrtcontext, message, handler>(m, vc); \
+    theVirtualSeq()->sequenceVrtMsg<vrtcontext, message, handler>(m, vc); \
   }
 
 using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
@@ -59,7 +59,7 @@ using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
 
 namespace vt {
 
-extern std::unique_ptr<seq::SequencerVirtual> theVirtualSeq;
+extern seq::SequencerVirtual* theVirtualSeq();
 
 } //end namespace vt
 

@@ -8,7 +8,7 @@ namespace vt { namespace event {
 //   bool ready = true;
 //   for (auto&& e : events) {
 //     ready &=
-//       theEvent->testEventComplete(e) ==
+//       theEvent()->testEventComplete(e) ==
 //       AsyncEvent::EventStateType::EventReady;
 //   }
 //   if (ready) {
@@ -19,7 +19,7 @@ namespace vt { namespace event {
 
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
   auto const& event_id = createNormalEvent(this_node);
   auto& holder = getEventHolder(event_id);
   EventRecordType& norm_event = *holder.get_event();
@@ -62,7 +62,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
       event, event_id, static_cast<int>(event_state), this_node
     );
 
-    theMsg->sendMsg<EventCheckFinishedMsg, checkEventFinished>(
+    theMsg()->sendMsg<EventCheckFinishedMsg, checkEventFinished>(
       owning_node, msg, [=]{ delete msg; }
     );
   }
@@ -75,41 +75,41 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 }
 
 /*static*/ void AsyncEvent::eventFinished(EventFinishedMsg* msg) {
-  auto const& complete = theEvent->testEventComplete(msg->event_back_);
+  auto const& complete = theEvent()->testEventComplete(msg->event_back_);
 
   assert(
     complete == AsyncEvent::EventStateType::EventWaiting and
     "Event must be waiting since it depends on this finished event"
   );
 
-  auto& holder = theEvent->getEventHolder(msg->event_back_);
+  auto& holder = theEvent()->getEventHolder(msg->event_back_);
   holder.makeReadyTrigger();
 }
 
 /*static*/ void AsyncEvent::checkEventFinished(EventCheckFinishedMsg* msg) {
   auto const& event = msg->event_;
-  auto const& node = theEvent->getOwningNode(event);
+  auto const& node = theEvent()->getOwningNode(event);
 
   assert(
-    node == theContext->getNode() and "Node must be identical"
+    node == theContext()->getNode() and "Node must be identical"
   );
 
   auto send_back_fun = [=]{
     auto msg_send = new EventFinishedMsg(event, msg->event_back_);
-    auto send_back = theEvent->getOwningNode(msg->event_back_);
+    auto send_back = theEvent()->getOwningNode(msg->event_back_);
     assert(send_back == msg->sent_from_node_);
-    theMsg->sendMsg<EventFinishedMsg, eventFinished>(
+    theMsg()->sendMsg<EventFinishedMsg, eventFinished>(
       send_back, msg_send, [=]{ delete msg_send; }
     );
   };
 
-  auto const& is_complete = theEvent->testEventComplete(event);
+  auto const& is_complete = theEvent()->testEventComplete(event);
 
   debug_print(
     event, node,
     "checkEventFinishedHan:: event=%lld, node=%d, "
     "this_node=%d, complete=%d, sent_from_node=%d\n",
-    event, node, theContext->getNode(), static_cast<int>(is_complete),
+    event, node, theContext()->getNode(), static_cast<int>(is_complete),
     msg->sent_from_node_
   );
 
@@ -120,7 +120,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
       is_complete == AsyncEvent::EventStateType::EventWaiting and
       "Must be waiting if not ready"
     );
-    /*ignore return event*/ theEvent->attachAction(event, send_back_fun);
+    /*ignore return event*/ theEvent()->attachAction(event, send_back_fun);
   }
 }
 
@@ -128,14 +128,14 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 
 void AsyncEvent::cleanup() {
   while (polling_event_container_.size() > 0) {
-    theEvent->testEventsTrigger();
+    theEvent()->testEventsTrigger();
   }
   lookup_container_.clear();
   event_container_.clear();
 }
 
 bool AsyncEvent::scheduler() {
-  theEvent->testEventsTrigger();
+  theEvent()->testEventsTrigger();
   return false;
 }
 
@@ -195,11 +195,11 @@ AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) 
 
   debug_print(
     event, node,
-    "theEvent: getEventHolder: node=%d, event=%lld, owning_node=%d\n",
-    theContext->getNode(), event, owning_node
+    "theEvent: theEventHolder: node=%d, event=%lld, owning_node=%d\n",
+    theContext()->getNode(), event, owning_node
   );
 
-  if (owning_node != theContext->getNode()) {
+  if (owning_node != theContext()->getNode()) {
     assert(0 && "Event does not belong to this node");
   }
 
@@ -225,7 +225,7 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
       return EventStateType::EventWaiting;
     }
   } else {
-    if (getOwningNode(event) == theContext->getNode()) {
+    if (getOwningNode(event) == theContext()->getNode()) {
       return EventStateType::EventReady;
     } else {
       return EventStateType::EventRemote;

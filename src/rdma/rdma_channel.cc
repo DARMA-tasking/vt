@@ -13,7 +13,7 @@ Channel::Channel(
     non_target_(in_non_target), num_bytes_(in_num_bytes), ptr_(in_ptr),
     op_type_(in_op_type), channel_group_tag_(in_channel_group_tag)
 {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   is_target_ = target_ == my_node;
 
@@ -51,7 +51,7 @@ Channel::initChannelGroup() {
   );
 
   MPI_Group world;
-  auto const& group_create_ret = MPI_Comm_group(theContext->getComm(), &world);
+  auto const& group_create_ret = MPI_Comm_group(theContext()->getComm(), &world);
 
   assert(
     group_create_ret == MPI_SUCCESS and
@@ -72,7 +72,7 @@ Channel::initChannelGroup() {
   );
 
   auto const& comm_create_ret = MPI_Comm_create_group(
-    theContext->getComm(), channel_group_, channel_group_tag_, &channel_comm_
+    theContext()->getComm(), channel_group_, channel_group_tag_, &channel_comm_
   );
 
   assert(

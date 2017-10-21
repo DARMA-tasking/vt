@@ -66,7 +66,7 @@ void TestPool::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
 TEST_F(TestPool, pool_message_alloc) {
   using namespace vt;
 
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
     auto msg = new TestMsg<min_bytes>();

@@ -303,7 +303,7 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
   TagType const& tag, SeqActionType<MessageT> action
 ) {
-  theTerm->produce();
+  theTerm()->produce();
 
   assertValidContext();
 
@@ -535,7 +535,7 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
     if (seq_skip_queue) {
       handle_msg_action();
     } else {
-      theSeq->enqueue(handle_msg_action);
+      theSeq()->enqueue(handle_msg_action);
     }
   } else {
     // nothing was found so the message must be buffered and wait an action

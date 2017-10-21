@@ -36,7 +36,7 @@ struct Context {
 
 namespace vt {
 
-extern std::unique_ptr<ctx::Context> theContext;
+extern ctx::Context* theContext();
 
 } // end namespace vt
 

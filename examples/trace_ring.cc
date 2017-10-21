@@ -47,17 +47,17 @@ static void ring(RingMsg* msg) {
 
 static void sendToNext() {
   RingMsg* msg = new RingMsg(my_node);
-  theMsg->sendMsg<RingMsg, ring>(next_node, msg, [=]{ delete msg; });
+  theMsg()->sendMsg<RingMsg, ring>(next_node, msg, [=]{ delete msg; });
 }
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  my_node = theContext->getNode();
-  num_nodes = theContext->getNumNodes();
+  my_node = theContext()->getNode();
+  num_nodes = theContext()->getNumNodes();
   next_node = my_node+1 >= num_nodes ? 0 : my_node+1;
 
-  printf("%d: my_node = %d here\n",theContext->getNode(),my_node);
+  printf("%d: my_node = %d here\n",theContext()->getNode(),my_node);
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     sendToNext();
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

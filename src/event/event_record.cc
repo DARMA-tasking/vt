@@ -61,7 +61,7 @@ bool EventRecord::testParentEventReady() {
   auto events = getEventList();
   for (auto&& e : *events) {
     ready &=
-      theEvent->testEventComplete(e) == AsyncEvent::EventStateType::EventReady;
+      theEvent()->testEventComplete(e) == AsyncEvent::EventStateType::EventReady;
   }
   if (ready) {
     events->clear();

@@ -12,15 +12,15 @@ EventClass::EventClass(std::string const& in_event)
   this_event_ = event_hash;
 }
 
-TraceEntryIDType EventClass::getEventId() const {
+TraceEntryIDType EventClass::theEventId() const {
   return this_event_;
 }
 
-TraceEntryIDType EventClass::getEventSeqId() const {
+TraceEntryIDType EventClass::theEventSeqId() const {
   return this_event_seq_;
 }
 
-std::string EventClass::getEventName() const {
+std::string EventClass::theEventName() const {
   return event;
 }
 
@@ -28,7 +28,7 @@ void EventClass::setEventSeq(TraceEntryIDType const& seq) {
   this_event_seq_ = seq;
 }
 
-TraceEntryIDType EventClass::getEventSeq() const {
+TraceEntryIDType EventClass::theEventSeq() const {
   return this_event_seq_;
 }
 
@@ -39,7 +39,7 @@ Event::Event(std::string const& in_event, TraceEntryIDType const& in_event_type)
   this_event_type_ = event_hash;
 }
 
-TraceEntryIDType Event::getEventTypeId() const {
+TraceEntryIDType Event::theEventTypeId() const {
   return this_event_type_;
 }
 
@@ -47,7 +47,7 @@ void Event::setEventTypeSeq(TraceEntryIDType const& seq) {
   this_event_type_seq_ = seq;
 }
 
-TraceEntryIDType Event::getEventTypeSeq() const {
+TraceEntryIDType Event::theEventTypeSeq() const {
   return this_event_type_seq_;
 }
 

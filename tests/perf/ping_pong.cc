@@ -50,7 +50,7 @@ static void printTiming(int64_t const& num_bytes) {
 
   printf(
     "%d: Finished num_pings=%lld, bytes=%lld, total time=%f, time/msg=%f\n",
-    theContext->getNode(), num_pings, num_bytes, total, total/num_pings
+    theContext()->getNode(), num_pings, num_bytes, total, total/num_pings
   );
 }
 
@@ -60,7 +60,7 @@ static void finishedPing(FinishedPingMsg<num_bytes>* msg) {
 
   if (num_bytes != max_bytes) {
     auto msg = new PingMsg<num_bytes * 2>();
-    theMsg->sendMsg<PingMsg<num_bytes * 2>, pingPong>(
+    theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong>(
       pong_node, msg, [=]{ delete msg; }
     );
   }
@@ -78,7 +78,7 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
   #if DEBUG_PING_PONG
     printf(
       "%d: pingPong: cnt=%lld, bytes=%lld\n",
-      theContext->getNode(), cnt, num_bytes
+      theContext()->getNode(), cnt, num_bytes
     );
   #endif
 
@@ -89,20 +89,20 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
 
   if (cnt >= num_pings) {
     auto msg = new FinishedPingMsg<num_bytes>(num_bytes);
-    theMsg->sendMsg<FinishedPingMsg<num_bytes>, finishedPing>(
+    theMsg()->sendMsg<FinishedPingMsg<num_bytes>, finishedPing>(
       0, msg, [=]{ delete msg; }
     );
   } else {
     NodeType const next =
-      theContext->getNode() == ping_node ? pong_node : ping_node;
+      theContext()->getNode() == ping_node ? pong_node : ping_node;
     #if REUSE_MESSAGE_PING_PONG
       // @todo: fix this memory allocation problem
-      theMsg->sendMsg<PingMsg<num_bytes>, pingPong>(
+      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong>(
         next, in_msg, [=]{ /*delete in_msg;*/ }
       );
     #else
       auto m = new PingMsg<num_bytes>(cnt + 1);
-      theMsg->sendMsg<PingMsg<num_bytes>, pingPong>(next, m, [=]{ delete m; });
+      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong>(next, m, [=]{ delete m; });
     #endif
   }
 }
@@ -110,8 +110,8 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& my_node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& my_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -127,10 +127,10 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     auto m = new PingMsg<min_bytes>();
-    theMsg->sendMsg<PingMsg<min_bytes>, pingPong>(pong_node, m, [=]{ delete m; });
+    theMsg()->sendMsg<PingMsg<min_bytes>, pingPong>(pong_node, m, [=]{ delete m; });
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

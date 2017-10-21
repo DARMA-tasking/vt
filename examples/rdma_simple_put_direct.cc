@@ -35,11 +35,11 @@ static void putDataFn(TestMsg* msg) {
 
     int const num_elm = 2;
     int const offset = num_elm*(my_node-1);
-    theRDMA->putTypedData(msg->han, my_data, num_elm, offset, no_action, [=]{
+    theRDMA()->putTypedData(msg->han, my_data, num_elm, offset, no_action, [=]{
       printf("%d: after put: sending msg back to 0: offset=%d\n", my_node, offset);
 
       TestMsg* back = makeSharedMessage<TestMsg>(msg->han);
-      theMsg->sendMsg<TestMsg, readDataFn>(0, back);
+      theMsg()->sendMsg<TestMsg, readDataFn>(0, back);
     });
   }
 }
@@ -47,8 +47,8 @@ static void putDataFn(TestMsg* msg) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  my_node = theContext->getNode();
-  num_nodes = theContext->getNumNodes();
+  my_node = theContext()->getNode();
+  num_nodes = theContext()->getNumNodes();
 
   if (num_nodes < 4) {
     fprintf(stderr, "requires at least 4 nodes\n");
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    my_handle_1 = theRDMA->registerNewTypedRdmaHandler(my_data, put_len);
+    my_handle_1 = theRDMA()->registerNewTypedRdmaHandler(my_data, put_len);
 
     printf(
       "%d: initializing my_handle_1=%lld\n",
@@ -72,11 +72,11 @@ int main(int argc, char** argv) {
 
     TestMsg* msg1 = makeSharedMessage<TestMsg>(my_handle_1);
     TestMsg* msg2 = makeSharedMessage<TestMsg>(my_handle_1);
-    theMsg->sendMsg<TestMsg, putDataFn>(1, msg1);
-    theMsg->sendMsg<TestMsg, putDataFn>(2, msg2);
+    theMsg()->sendMsg<TestMsg, putDataFn>(1, msg1);
+    theMsg()->sendMsg<TestMsg, putDataFn>(2, msg2);
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

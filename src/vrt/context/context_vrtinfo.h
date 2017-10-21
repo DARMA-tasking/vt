@@ -14,7 +14,7 @@ struct VirtualInfo {
   using VirtualPtrType = std::unique_ptr<VirtualContext>;
 
   VirtualInfo(VirtualPtrType in_vrt_ptr, VirtualProxyType const& proxy_in)
-      : proxy_(proxy_in), vrt_ptr_(std::move(in_vrt_ptr)) {}
+    : proxy_(proxy_in), vrt_ptr_(std::move(in_vrt_ptr)) {}
 
   VirtualInfo(VirtualInfo&&) = default;
   VirtualInfo(VirtualInfo const&) = delete;

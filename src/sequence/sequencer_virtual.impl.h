@@ -28,7 +28,7 @@ TaggedSequencerVrt<SeqTag, SeqTrigger>::createVirtualSeq(
     "SequencerVirtual: createSeqVrtContextt\n"
   );
 
-  auto vrt_context = theVirtualManager->getVirtualByProxy(proxy);
+  auto vrt_context = theVirtualManager()->getVirtualByProxy(proxy);
 
   debug_print(
     sequence_vrt, node,
@@ -116,7 +116,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::sequenceVrtMsg(
     if (seq_skip_queue) {
       handle_msg_action();
     } else {
-      theVirtualSeq->enqueue(handle_msg_action);
+      theVirtualSeq()->enqueue(handle_msg_action);
     }
   } else {
     // nothing was found so the message must be buffered and wait an action
@@ -155,7 +155,7 @@ template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
   TagType const& tag, SeqActionType<MsgT, VcT> action
 ) {
-  theTerm->produce();
+  theTerm()->produce();
 
   this->assertValidContext();
 
@@ -180,8 +180,8 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
     if (has_match) {
       auto msg = SeqStateMatcherType<VcT, MsgT, f>::getMatchingMsg(tag);
 
-      auto const& cur_proxy = theVirtualSeq->getCurrentVirtualProxy();
-      auto vrt_context = theVirtualManager->getVirtualByProxy(cur_proxy);
+      auto const& cur_proxy = theVirtualSeq()->getCurrentVirtualProxy();
+      auto vrt_context = theVirtualManager()->getVirtualByProxy(cur_proxy);
       action.runAction(static_cast<VcT*>(vrt_context), msg);
       messageDeref(msg);
     }

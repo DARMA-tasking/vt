@@ -25,11 +25,11 @@ void State::setDefaultHandler() {
   bool const handle_any_tag = true;
 
   auto f_get = std::bind(&State::defaultGetHandlerFn, this, _1, _2, _3, _4);
-  theRDMA->associateGetFunction(handle, f_get, handle_any_tag);
+  theRDMA()->associateGetFunction(handle, f_get, handle_any_tag);
   using_default_get_handler = true;
 
   auto f_put = std::bind(&State::defaultPutHandlerFn, this, _1, _2, _3, _4, _5);
-  theRDMA->associatePutFunction(handle, f_put, handle_any_tag);
+  theRDMA()->associatePutFunction(handle, f_put, handle_any_tag);
   using_default_put_handler = true;
 }
 
@@ -96,7 +96,7 @@ RDMA_HandlerType State::setRDMAFn<
   State::RDMA_TypeType::Get, State::RDMA_GetFunctionType
 >(RDMA_GetFunctionType const& fn, bool const& any_tag, TagType const& tag) {
 
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
 
   debug_print(
     rdma_state, node,
@@ -130,7 +130,7 @@ RDMA_HandlerType State::setRDMAFn<
 >(RDMA_PutFunctionType const& fn, bool const& any_tag, TagType const& tag) {
   RDMA_HandlerType const handler = makeRdmaHandler(RDMA_TypeType::Put);
 
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
 
   debug_print(
     rdma_state, node,
@@ -161,7 +161,7 @@ RDMA_HandlerType State::makeRdmaHandler(RDMA_TypeType const& rdma_type) {
     rdma_type == RDMA_TypeType::Put ? this_rdma_put_handler : this_rdma_get_handler;
 
   if (handler == uninitialized_rdma_handler) {
-    handler = theRDMA->allocateNewRdmaHandler();
+    handler = theRDMA()->allocateNewRdmaHandler();
   }
 
   return handler;
@@ -192,7 +192,7 @@ bool State::testReadyPutData(TagType const& tag) {
 RDMA_GetType State::defaultGetHandlerFn(
   BaseMessage* msg, ByteType req_num_bytes, ByteType req_offset, TagType tag
 ) {
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
 
   debug_print(
     rdma_state, node,
@@ -215,7 +215,7 @@ void State::defaultPutHandlerFn(
   BaseMessage* msg, RDMA_PtrType in_ptr, ByteType req_num_bytes,
   ByteType req_offset, TagType tag
 ) {
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
 
   debug_print(
     rdma_state, node,
@@ -242,7 +242,7 @@ void State::getData(
 
   bool const ready = testReadyGetData(info.tag);
 
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
 
   debug_print(
     rdma_state, node,
@@ -281,7 +281,7 @@ void State::putData(
 
   bool const ready = testReadyPutData(info.tag);
 
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
 
   debug_print(
     rdma_state, node,

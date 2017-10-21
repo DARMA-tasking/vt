@@ -28,7 +28,7 @@ struct MyVC : vt::vrt::VirtualContext {
 };
 
 static void my_han(TestMsg* msg, MyVC* vc) {
-  auto this_node = theContext->getNode();
+  auto this_node = theContext()->getNode();
   printf(
     "%d: vc=%p: msg->from=%d, vc->my_data=%d\n",
     this_node, vc, msg->from, vc->my_data
@@ -36,15 +36,15 @@ static void my_han(TestMsg* msg, MyVC* vc) {
 }
 
 static void sendMsgToProxy(VirtualProxyType const& proxy) {
-  auto this_node = theContext->getNode();
+  auto this_node = theContext()->getNode();
   printf("%d: sendMsgToProxy: proxy=%llu\n", this_node, proxy);
 
   auto m = new TestMsg(this_node + 32);
-  theVirtualManager->sendMsg<MyVC, TestMsg, my_han>(proxy, m, [=]{ delete m; });
+  theVirtualManager()->sendMsg<MyVC, TestMsg, my_han>(proxy, m, [=]{ delete m; });
 }
 
 static void hello_world(HelloMsg* msg) {
-  auto this_node = theContext->getNode();
+  auto this_node = theContext()->getNode();
   printf("%d: hello: proxy=%llu\n", this_node, msg->proxy);
   sendMsgToProxy(msg->proxy);
 }
@@ -52,8 +52,8 @@ static void hello_world(HelloMsg* msg) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& my_node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& my_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -62,15 +62,15 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    auto proxy = theVirtualManager->makeVirtual<MyVC>(29);
+    auto proxy = theVirtualManager()->makeVirtual<MyVC>(29);
     sendMsgToProxy(proxy);
 
     // send out the proxy to all the nodes
     HelloMsg* msg = new HelloMsg(proxy);
-    theMsg->broadcastMsg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
+    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

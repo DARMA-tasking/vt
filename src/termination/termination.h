@@ -79,7 +79,7 @@ struct TerminationDetector : Tree {
   void propagateNewEpoch(EpochType const& new_epoch, bool const from_child);
   void readyNewEpoch(EpochType const& new_epoch);
 
-  static void registerDefaultTerminationAction();
+  static void registerDefaultTerminationAction(ActionType default_action);
   static void propagateNewEpochHandler(TermMsg* msg);
   static void readyEpochHandler(TermMsg* msg);
   static void propagateEpochHandler(TermCounterMsg* msg);
@@ -109,7 +109,7 @@ private:
 
 namespace vt {
 
-extern std::unique_ptr<term::TerminationDetector> theTerm;
+extern term::TerminationDetector* theTerm();
 
 } // end namespace vt
 

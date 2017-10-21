@@ -81,7 +81,7 @@ namespace vt {
 
 using EventRecordType = event::EventRecord;
 
-extern std::unique_ptr<event::AsyncEvent> theEvent;
+extern event::AsyncEvent* theEvent();
 
 } //end namespace vt
 

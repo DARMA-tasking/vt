@@ -17,7 +17,7 @@ using namespace vt::tests::unit;
 #if DEBUG_TEST_HARNESS_PRINT
 #define DEBUG_PRINT_SEQ_NESTED(ORDER, CUR)                              \
   do {                                                                  \
-    auto seq_id = theSeq->getCurrentSeq();                              \
+    auto seq_id = theSeq()->getCurrentSeq();                              \
     printf(                                                             \
       "testSeqDeepNested: seq_id=%d, ordering=%d -- cur=%d --\n",       \
       seq_id, (ORDER).load(), (CUR)                                     \
@@ -57,8 +57,8 @@ struct TestSequencerNested : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->sequenced([]{
-      theSeq->wait<TestMsg, testSeqNested>([](TestMsg* msg){
+    theSeq()->sequenced([]{
+      theSeq()->wait<TestMsg, testSeqNested>([](TestMsg* msg){
         EXPECT_EQ(seq_ordering_++, 1);
       });
     });
@@ -74,12 +74,12 @@ struct TestSequencerNested : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->wait<TestMsg, testSeqNestedMulti>([](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqNestedMulti>([](TestMsg* msg){
       EXPECT_EQ(seq_ordering_++, 1);
     });
 
-    theSeq->sequenced([]{
-      theSeq->wait<TestMsg, testSeqNestedMulti>([](TestMsg* msg){
+    theSeq()->sequenced([]{
+      theSeq()->wait<TestMsg, testSeqNestedMulti>([](TestMsg* msg){
         EXPECT_EQ(seq_ordering_++, 2);
       });
     });
@@ -95,21 +95,21 @@ struct TestSequencerNested : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->wait<TestMsg, testSeqNestedSingleHan>([](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqNestedSingleHan>([](TestMsg* msg){
       EXPECT_EQ(seq_ordering_++, 1);
     });
 
-    theSeq->sequenced([]{
-      theSeq->sequenced([]{
-        theSeq->sequenced([]{
-          theSeq->wait<TestMsg, testSeqNestedSingleHan>([](TestMsg* msg){
+    theSeq()->sequenced([]{
+      theSeq()->sequenced([]{
+        theSeq()->sequenced([]{
+          theSeq()->wait<TestMsg, testSeqNestedSingleHan>([](TestMsg* msg){
             EXPECT_EQ(seq_ordering_++, 2);
           });
         });
       });
     });
 
-    theSeq->wait<TestMsg, testSeqNestedSingleHan>([](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqNestedSingleHan>([](TestMsg* msg){
       EXPECT_EQ(seq_ordering_++, 3);
     });
   }
@@ -124,31 +124,31 @@ struct TestSequencerNested : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
       EXPECT_EQ(seq_ordering_++, 1);
     });
 
-    theSeq->sequenced([]{
-      theSeq->sequenced([]{
-        theSeq->sequenced([]{
-          theSeq->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
+    theSeq()->sequenced([]{
+      theSeq()->sequenced([]{
+        theSeq()->sequenced([]{
+          theSeq()->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
             EXPECT_EQ(seq_ordering_++, 2);
           });
         });
       });
     });
 
-    theSeq->sequenced([]{
-      theSeq->sequenced([]{
-        theSeq->sequenced([]{
-          theSeq->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
+    theSeq()->sequenced([]{
+      theSeq()->sequenced([]{
+        theSeq()->sequenced([]{
+          theSeq()->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
             EXPECT_EQ(seq_ordering_++, 3);
           });
         });
       });
     });
 
-    theSeq->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
       EXPECT_EQ(seq_ordering_++, 4);
     });
   }
@@ -167,48 +167,48 @@ struct TestSequencerNested : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->wait<TestMsg, testSeqDeepNestedHan>(1, [](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqDeepNestedHan>(1, [](TestMsg* msg){
       DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 1);
       EXPECT_EQ(seq_ordering_++, 1);
     });
 
-    theSeq->sequenced([]{
-      theSeq->wait<TestMsg, testSeqDeepNestedHan>(2, [](TestMsg* msg){
+    theSeq()->sequenced([]{
+      theSeq()->wait<TestMsg, testSeqDeepNestedHan>(2, [](TestMsg* msg){
         DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 2);
         EXPECT_EQ(seq_ordering_++, 2);
       });
 
-      theSeq->wait<TestMsg, testSeqDeepNestedHan>(3, [](TestMsg* msg){
+      theSeq()->wait<TestMsg, testSeqDeepNestedHan>(3, [](TestMsg* msg){
         DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 3);
         EXPECT_EQ(seq_ordering_++, 3);
       });
 
-      theSeq->sequenced([]{
-        theSeq->wait<TestMsg, testSeqDeepNestedHan>(4, [](TestMsg* msg){
+      theSeq()->sequenced([]{
+        theSeq()->wait<TestMsg, testSeqDeepNestedHan>(4, [](TestMsg* msg){
           DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 4);
           EXPECT_EQ(seq_ordering_++, 4);
         });
 
-        theSeq->sequenced([]{
-          theSeq->wait<TestMsg, testSeqDeepNestedHan>(5, [](TestMsg* msg){
+        theSeq()->sequenced([]{
+          theSeq()->wait<TestMsg, testSeqDeepNestedHan>(5, [](TestMsg* msg){
             DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 5);
             EXPECT_EQ(seq_ordering_++, 5);
           });
         });
 
-        theSeq->wait<TestMsg, testSeqDeepNestedHan>(6, [](TestMsg* msg){
+        theSeq()->wait<TestMsg, testSeqDeepNestedHan>(6, [](TestMsg* msg){
           DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 6);
           EXPECT_EQ(seq_ordering_++, 6);
         });
       });
 
-      theSeq->wait<TestMsg, testSeqDeepNestedHan>(7, [](TestMsg* msg){
+      theSeq()->wait<TestMsg, testSeqDeepNestedHan>(7, [](TestMsg* msg){
         DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 7);
         EXPECT_EQ(seq_ordering_++, 7);
       });
     });
 
-    theSeq->wait<TestMsg, testSeqDeepNestedHan>(8, [](TestMsg* msg){
+    theSeq()->wait<TestMsg, testSeqDeepNestedHan>(8, [](TestMsg* msg){
       DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 8);
       EXPECT_EQ(seq_ordering_++, 8);
     });
@@ -221,21 +221,21 @@ struct TestSequencerNested : TestParallelHarness {
 
 #define SEQ_TEST(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, NUM_MSGS, IS_TAG)   \
   do {                                                                \
-    SeqType const& seq_id = theSeq->nextSeq();                        \
-    theSeq->sequenced(seq_id, (SEQ_FN));                              \
+    SeqType const& seq_id = theSeq()->nextSeq();                        \
+    theSeq()->sequenced(seq_id, (SEQ_FN));                              \
     for (int i = 0; i < (NUM_MSGS); i++) {                            \
       TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
-      theMsg->sendMsg<MSG_TYPE, SEQ_HAN>(                             \
+      theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                             \
         (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
       );                                                              \
     }                                                                 \
-    theTerm->attachGlobalTermAction([=]{                              \
+    theTerm()->attachGlobalTermAction([=]{                              \
       SEQ_FN(-1);                                                     \
     });                                                               \
   } while (false);
 
 TEST_F(TestSequencerNested, test_simple_nested_wait) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
     SEQ_TEST(testSeqNested, testNestedWaitFn, my_node, TestMsg, 1, false);
@@ -243,7 +243,7 @@ TEST_F(TestSequencerNested, test_simple_nested_wait) {
 }
 
 TEST_F(TestSequencerNested, test_multi_nested_wait) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
     SEQ_TEST(
@@ -253,7 +253,7 @@ TEST_F(TestSequencerNested, test_multi_nested_wait) {
 }
 
 TEST_F(TestSequencerNested, test_multi_nested_single_wait) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
     SEQ_TEST(
@@ -263,7 +263,7 @@ TEST_F(TestSequencerNested, test_multi_nested_single_wait) {
 }
 
 TEST_F(TestSequencerNested, test_multi_nested_single2_wait) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
     SEQ_TEST(
@@ -273,7 +273,7 @@ TEST_F(TestSequencerNested, test_multi_nested_single2_wait) {
 }
 
 TEST_F(TestSequencerNested, test_multi_deep_nested_wait) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
     SEQ_TEST(

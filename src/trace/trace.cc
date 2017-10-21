@@ -21,8 +21,8 @@ Trace::Trace() {
 /*static*/ void Trace::traceBeginIdleTrigger() {
   backend_enable_if(
     trace_enabled, {
-      if (not theTrace->inIdleEvent()) {
-        theTrace->beginIdle();
+      if (not theTrace()->inIdleEvent()) {
+        theTrace()->beginIdle();
       }
     }
   );
@@ -31,7 +31,7 @@ Trace::Trace() {
 void Trace::initialize() {
   traces_.reserve(trace_reserve_count);
 
-  theSched->registerTrigger(
+  theSched()->registerTrigger(
     sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
   );
 }
@@ -98,7 +98,7 @@ void Trace::beginIdle(double const& time) {
     trace, node, "begin_idle: time=%f\n", time
   );
 
-  log->node = theContext->getNode();
+  log->node = theContext()->getNode();
 
   logEvent(log);
 
@@ -113,7 +113,7 @@ void Trace::endIdle(double const& time) {
     trace, node, "end_idle: time=%f\n", time
   );
 
-  log->node = theContext->getNode();
+  log->node = theContext()->getNode();
 
   logEvent(log);
 
@@ -126,7 +126,7 @@ TraceEventIDType Trace::messageCreation(
   auto const& type = TraceConstantsType::Creation;
   LogPtrType log = new LogType(time, ep, type);
 
-  log->node = theContext->getNode();
+  log->node = theContext()->getNode();
   log->msg_len = len;
 
   return logEvent(log);
@@ -138,7 +138,7 @@ TraceEventIDType Trace::messageCreationBcast(
   auto const& type = TraceConstantsType::CreationBcast;
   LogPtrType log = new LogType(time, ep, type);
 
-  log->node = theContext->getNode();
+  log->node = theContext()->getNode();
   log->msg_len = len;
 
   return logEvent(log);
@@ -262,8 +262,8 @@ void Trace::disableTracing() {
 };
 
 void Trace::writeTracesFile() {
-  auto const& node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   debug_print(
     trace, node,
@@ -306,9 +306,9 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     );
 
     auto const& event_seq_id = log->ep == no_trace_entry_id ?
-      no_trace_entry_id : event_iter->second.getEventSeq();
+      no_trace_entry_id : event_iter->second.theEventSeq();
 
-    auto const& num_nodes = theContext->getNumNodes();
+    auto const& num_nodes = theContext()->getNumNodes();
 
     switch (log->type) {
     case TraceConstantsType::BeginProcessing:
@@ -399,8 +399,8 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
 }
 
 /*static*/ void Trace::outputControlFile(std::ofstream& file) {
-  auto const& node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   auto const& num_event_types = TraceContainersType::event_type_container.size();
   auto const& num_events = TraceContainersType::event_container.size();
@@ -437,8 +437,8 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   }
 
   for (auto&& event : sorted_event_type) {
-    auto const& name = event.first->getEventName();
-    auto const& id = event.first->getEventSeq();
+    auto const& name = event.first->theEventName();
+    auto const& id = event.first->theEventSeq();
 
     auto const& out_name = std::string("::" + name);
 
@@ -449,9 +449,9 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   }
 
   for (auto&& event : sorted_event) {
-    auto const& name = event.first->getEventName();
-    auto const& type = event.first->getEventTypeSeq();
-    auto const& id = event.first->getEventSeq();
+    auto const& name = event.first->theEventName();
+    auto const& type = event.first->theEventTypeSeq();
+    auto const& id = event.first->theEventSeq();
 
     file << "ENTRY CHARE "
          << id << " "

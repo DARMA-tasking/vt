@@ -9,35 +9,35 @@ namespace vt { namespace term {
 
 /*static*/ void TerminationDetector::propagateNewEpochHandler(TermMsg* msg) {
   bool const from_child = true;
-  theTerm->propagateNewEpoch(msg->new_epoch, from_child);
+  theTerm()->propagateNewEpoch(msg->new_epoch, from_child);
 }
 
 /*static*/ void TerminationDetector::readyEpochHandler(TermMsg* msg) {
-  theTerm->readyNewEpoch(msg->new_epoch);
+  theTerm()->readyNewEpoch(msg->new_epoch);
 }
 
 /*static*/ void
 TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
-  theTerm->propagateEpochExternal(msg->epoch, msg->prod, msg->cons);
+  theTerm()->propagateEpochExternal(msg->epoch, msg->prod, msg->cons);
 }
 
 /*static*/ void TerminationDetector::epochFinishedHandler(TermMsg* msg) {
-  theTerm->epochFinished(msg->new_epoch, true);
+  theTerm()->epochFinished(msg->new_epoch, true);
 }
 
 /*static*/ void TerminationDetector::epochContinueHandler(TermMsg* msg) {
-  theTerm->epochContinue(msg->new_epoch, msg->wave);
+  theTerm()->epochContinue(msg->new_epoch, msg->wave);
 }
 
-/*static*/ void TerminationDetector::registerDefaultTerminationAction() {
-  theTerm->attachGlobalTermAction([] {
-    debug_print(
-      term, node,
-      "running registered default termination\n",
-    );
+/*static*/ void TerminationDetector::registerDefaultTerminationAction(
+  ActionType default_action
+) {
+  debug_print(
+    term, node,
+    "registering default termination action\n",
+  );
 
-    CollectiveOps::setInactiveState();
-  });
+  theTerm()->attachGlobalTermAction(default_action);
 }
 
 TerminationDetector::TermStateType&
@@ -173,8 +173,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
     if (not is_root_) {
       auto msg = new TermCounterMsg(state.epoch, state.g_prod1, state.g_cons1);
-      theMsg->setTermMessage(msg);
-      theMsg->sendMsg<TermCounterMsg, propagateEpochHandler>(
+      theMsg()->setTermMessage(msg);
+      theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(
         parent_, msg, [=] { delete msg; }
       );
 
@@ -199,8 +199,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
       if (is_term) {
         auto msg = new TermMsg(state.epoch);
-        theMsg->setTermMessage(msg);
-        theMsg->broadcastMsg<TermMsg, epochFinishedHandler>(
+        theMsg()->setTermMessage(msg);
+        theMsg()->broadcastMsg<TermMsg, epochFinishedHandler>(
           msg, [=] { delete msg; }
         );
 
@@ -220,8 +220,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         );
 
         auto msg = new TermMsg(state.epoch, state.cur_wave);
-        theMsg->setTermMessage(msg);
-        theMsg->broadcastMsg<TermMsg, epochContinueHandler>(
+        theMsg()->setTermMessage(msg);
+        theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(
           msg, [=] { delete msg; }
         );
       }
@@ -291,7 +291,7 @@ void TerminationDetector::epochContinue(
     }
   }
 
-  theTerm->maybePropagate();
+  theTerm()->maybePropagate();
 }
 
 void TerminationDetector::triggerAllEpochActions(EpochType const& epoch) {
@@ -409,17 +409,17 @@ void TerminationDetector::propagateNewEpoch(
     if (is_root_) {
       // broadcast ready to all
       auto msg = new TermMsg(new_epoch);
-      theMsg->setTermMessage(msg);
+      theMsg()->setTermMessage(msg);
 
-      theMsg->broadcastMsg<TermMsg, readyEpochHandler>(
+      theMsg()->broadcastMsg<TermMsg, readyEpochHandler>(
         msg, [=] { delete msg; }
       );
     } else {
       // propagate up the tree
       auto msg = new TermMsg(new_epoch);
-      theMsg->setTermMessage(msg);
+      theMsg()->setTermMessage(msg);
 
-      theMsg->sendMsg<TermMsg, propagateNewEpochHandler>(
+      theMsg()->sendMsg<TermMsg, propagateNewEpochHandler>(
         parent_, msg, [=] { delete msg; }
       );
     }

@@ -73,7 +73,7 @@ struct JacobiData : IndexedState<Index<int>> {
   ) : block_size(block), num_elems(elems);
 
   NodeType node_map(Index<int> i) {
-    return i.get() % theContext->get_num_nodes();
+    return i.get() % theContext()->get_num_nodes();
   }
 
   void initialize(size_t const& block_size) {

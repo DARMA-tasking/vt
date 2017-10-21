@@ -10,18 +10,18 @@ namespace vt { namespace seq {
 
 template <typename Fn>
 bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn) {
-  if (theSeq->seq_manager->isVirtual(id)) {
-    return theVirtualSeq->executeInNodeContext(id, node, fn);
+  if (theSeq()->seq_manager->isVirtual(id)) {
+    return theVirtualSeq()->executeInNodeContext(id, node, fn);
   } else {
-    return theSeq->executeInNodeContext(id, node, fn);
+    return theSeq()->executeInNodeContext(id, node, fn);
   }
 }
 
 inline void enqueueAction(SeqType const& id, ActionType const& action) {
-  if (theSeq->seq_manager->isVirtual(id)) {
-    return theVirtualSeq->enqueue(action);
+  if (theSeq()->seq_manager->isVirtual(id)) {
+    return theVirtualSeq()->enqueue(action);
   } else {
-    return theSeq->enqueue(action);
+    return theSeq()->enqueue(action);
   }
 }
 
@@ -32,10 +32,10 @@ TaggedSequencer<SeqTag, SeqTrigger>::convertSeqFun(
   SeqType const& id, UserSeqFunType fn
 )  {
   return [=]() -> bool {
-    if (theSeq->seq_manager->isVirtual(id)) {
-      return theVirtualSeq->lookupContextExecute(id, fn);
+    if (theSeq()->seq_manager->isVirtual(id)) {
+      return theVirtualSeq()->lookupContextExecute(id, fn);
     } else {
-      return theSeq->lookupContextExecute(id, fn);
+      return theSeq()->lookupContextExecute(id, fn);
     }
   };
 }

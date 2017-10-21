@@ -17,7 +17,7 @@ template <typename MessageT>
 void Action<MessageT>::runAction(MessageT* msg, bool consume) const {
   auto const callable = [this, consume, msg]() -> bool {
     if (consume) {
-      theTerm->consume();
+      theTerm()->consume();
     }
     action(msg);
     return false;

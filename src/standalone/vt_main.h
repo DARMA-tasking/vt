@@ -3,6 +3,8 @@
 #define INCLUDED_STANDALONE_VT_MAIN_H
 
 #include "config.h"
+#include "context/context.h"
+#include "runtime_inst.h"
 #include "worker/worker_headers.h"
 
 #include <cassert>
@@ -15,7 +17,7 @@ static constexpr WorkerCountType const default_vt_num_workers = 4;
 inline void vt_main_scheduler() {
   debug_print(gen, node, "vt_main: running main scheduler\n");
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 }
@@ -26,8 +28,8 @@ int vt_main(
 ) {
   CollectiveOps::initialize(argc, argv, workers);
 
-  if (theContext->getNode() == main_node) {
-    theVirtualManager->makeVirtual<VrtContextT>();
+  if (theContext()->getNode() == main_node) {
+    theVirtualManager()->makeVirtual<VrtContextT>();
   }
 
   debug_print(gen, node, "vt_main: initialized workers=%d\n", workers);
@@ -35,8 +37,8 @@ int vt_main(
   if (workers == no_workers) {
     vt_main_scheduler();
   } else {
-    assert(theWorkerGrp != nullptr and "Must have valid worker group");
-    theWorkerGrp->spawnWorkersBlock(vt_main_scheduler);
+    assert(theWorkerGrp() != nullptr and "Must have valid worker group");
+    theWorkerGrp()->spawnWorkersBlock(vt_main_scheduler);
   }
 
   debug_print(gen, node, "vt_main: calling finalize workers=%d\n", workers);

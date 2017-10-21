@@ -44,19 +44,19 @@ struct Jacobi1D : vt::vrt::VirtualContext {
       lo, mid, hi, size
     );
 
-    c1 = theVirtualManager->makeVirtual<Jacobi1D>(lo, mid, proxy);
-    c2 = theVirtualManager->makeVirtual<Jacobi1D>(mid, hi, proxy);
+    c1 = theVirtualManager()->makeVirtual<Jacobi1D>(lo, mid, proxy);
+    c2 = theVirtualManager()->makeVirtual<Jacobi1D>(mid, hi, proxy);
 
     {
       CreateJacobi1DMsg* msg = new CreateJacobi1DMsg(lo, mid, proxy);
-      theVirtualManager->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
+      theVirtualManager()->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
         c1, msg, [=]{ delete msg; }
       );
     }
 
     {
       CreateJacobi1DMsg* msg = new CreateJacobi1DMsg(mid, hi, proxy);
-      theVirtualManager->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
+      theVirtualManager()->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
         c2, msg, [=]{ delete msg; }
       );
     }
@@ -64,7 +64,7 @@ struct Jacobi1D : vt::vrt::VirtualContext {
 };
 
 static void create_jacobi1d(CreateJacobi1DMsg* msg, Jacobi1D* j1d) {
-  auto const this_node = theContext->getNode();
+  auto const this_node = theContext()->getNode();
   auto const lo = msg->lo;
   auto const hi = msg->hi;
   auto const size = hi - lo;
@@ -82,19 +82,19 @@ static void create_jacobi1d(CreateJacobi1DMsg* msg, Jacobi1D* j1d) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& my_node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& my_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   if (my_node == 0) {
-    auto root = theVirtualManager->makeVirtual<Jacobi1D>(0, total_size, -1);
+    auto root = theVirtualManager()->makeVirtual<Jacobi1D>(0, total_size, -1);
 
     //CreateJacobi1DMsg* msg = new CreateJacobi1DMsg(0, total_size, root);
-    theVirtualManager->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
+    theVirtualManager()->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
       root, makeSharedMessage<CreateJacobi1DMsg>(0, total_size, root)
     );
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

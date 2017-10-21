@@ -77,9 +77,9 @@ struct TestSerialMessenger : TestParallelHarness {
 };
 
 TEST_F(TestSerialMessenger, test_serial_messenger_1) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
-  if (theContext->getNumNodes() > 1) {
+  if (theContext()->getNumNodes() > 1) {
     if (my_node == 0) {
       using TupleType = std::tuple<int, int, int>;
 
@@ -93,9 +93,9 @@ TEST_F(TestSerialMessenger, test_serial_messenger_1) {
 
 #if HAS_SERIALIZATION_LIBRARY
 TEST_F(TestSerialMessenger, test_serial_messenger_2) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
-  if (theContext->getNumNodes() > 1) {
+  if (theContext()->getNumNodes() > 1) {
     if (my_node == 0) {
       auto msg = makeSharedMessage<MyDataMsg>();
       msg->init();

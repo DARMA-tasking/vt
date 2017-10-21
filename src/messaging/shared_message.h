@@ -44,7 +44,7 @@ void messageDeref(MessageT* msg) {
   );
 
   if (envelopeGetRef(msg->env) == 0) {
-    thePool->dealloc(msg);
+    thePool()->dealloc(msg);
   }
 }
 

@@ -26,7 +26,7 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
     EntityID const& id, LocMsgActionType msg_action
 ) {
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
   auto reg_iter = local_registered_.find(id);
 
   assert(
@@ -139,7 +139,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
     EntityID const& id, NodeType const& home_node, MessageT *msg,
     ActionType action
 ) {
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
   NodeType route_to_node = uninitialized_destination;
 
   auto reg_iter = local_registered_.find(id);
@@ -191,7 +191,7 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::getLocation(
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
 ) {
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
 
   auto reg_iter = local_registered_.find(id);
 
@@ -217,7 +217,7 @@ void EntityLocationCoord<EntityID>::getLocation(
       if (home_node != this_node) {
         auto const& event_id = fst_location_event_id++;
         auto msg = new LocMsgType(this_inst, id, event_id, this_node, home_node);
-        theMsg->sendMsg<LocMsgType, getLocationHandler>(
+        theMsg()->sendMsg<LocMsgType, getLocationHandler>(
             home_node, msg, [=] { delete msg; }
         );
         // save a pending action when information about location arrives
@@ -254,7 +254,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     EntityID const& id, NodeType const& home_node, NodeType const& to_node,
     MessageT *msg, ActionType action
 ) {
-  auto const& this_node = theContext->getNode();
+  auto const& this_node = theContext()->getNode();
 
   debug_print(
     location, node,
@@ -266,7 +266,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     // set the instance on the message to deliver to the correct manager
     msg->setLocInst(this_inst);
     // send to the node discovered by the location manager
-    theMsg->sendMsg<MessageT, msgHandler>(to_node, msg, action);
+    theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg, action);
   } else {
     if (msg->hasHandler()) {
       auto const& handler = msg->getHandler();
@@ -432,7 +432,7 @@ template <typename EntityID>
   loc->getLocation(entity, home_node, [=](NodeType node) {
     auto msg = new LocMsgType(inst, entity, event_id, ask_node, home_node);
     msg->setResolvedNode(node);
-    theMsg->sendMsg<LocMsgType, updateLocation>(
+    theMsg()->sendMsg<LocMsgType, updateLocation>(
         ask_node, msg, [=] { delete msg; }
     );
   });

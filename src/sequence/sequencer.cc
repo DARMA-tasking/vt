@@ -10,14 +10,14 @@ namespace vt { namespace seq {
 bool contextualExecution(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 ) {
-  theSeq->lookupContextExecute(seq, std::forward<SeqCallableType>(callable));
+  theSeq()->lookupContextExecute(seq, std::forward<SeqCallableType>(callable));
   return true;
 }
 
 bool contextualExecutionVirtual(
   SeqType const& seq, bool const& is_sequenced, SeqCallableType&& callable
 ) {
-  theVirtualSeq->lookupContextExecute(
+  theVirtualSeq()->lookupContextExecute(
     seq, std::forward<SeqCallableType>(callable)
   );
   return true;

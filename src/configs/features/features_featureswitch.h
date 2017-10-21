@@ -15,6 +15,7 @@
 #define debug_list_debug_modes                                          \
   debug_list_holder(                                                    \
     gen,                   "general",                                   \
+    runtime,               "runtime",                                   \
     active,                "active",                                    \
     term,                  "termination",                               \
     barrier,               "barrier",                                   \

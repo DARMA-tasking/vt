@@ -28,8 +28,8 @@ struct FunctorTest1 {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  my_node = theContext->getNode();
-  num_nodes = theContext->getNumNodes();
+  my_node = theContext()->getNode();
+  num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -38,20 +38,20 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    theParam->sendData(1, buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
-    theParam->sendData(1, PARAM_FUNCTION_RHS(fnTest), 50, 29, false);
-    theParam->sendData<PARAM_FUNCTION(fnTest)>(1, buildData(10, 20, false));
-    theParam->sendData<PARAM_FUNCTION(fnTest)>(1, 45, 23, true);
+    theParam()->sendData(1, buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
+    theParam()->sendData(1, PARAM_FUNCTION_RHS(fnTest), 50, 29, false);
+    theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, buildData(10, 20, false));
+    theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, 45, 23, true);
 
-    theParam->sendData<PARAM_FUNCTION(fnTest2)>(1, 20, 10);
-    theParam->sendData<PARAM_FUNCTION(fnTest3)>(1, 20, 50.0);
+    theParam()->sendData<PARAM_FUNCTION(fnTest2)>(1, 20, 10);
+    theParam()->sendData<PARAM_FUNCTION(fnTest3)>(1, 20, 50.0);
 
-    theParam->sendData<FunctorTest1>(1, buildData(20, 50.0));
-    theParam->sendData<FunctorTest1>(1, 20, 100.0);
-    theParam->sendData<FunctorTest1>(1, buildData(10, 70.0));
+    theParam()->sendData<FunctorTest1>(1, buildData(20, 50.0));
+    theParam()->sendData<FunctorTest1>(1, 20, 100.0);
+    theParam()->sendData<FunctorTest1>(1, buildData(10, 70.0));
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

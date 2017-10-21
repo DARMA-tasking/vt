@@ -37,7 +37,7 @@ struct AutoRegInfo {
   ) : activeFunT(in_active_fun_t), event_id(in_event_id)
   { }
 
-  trace::TraceEntryIDType getTraceID() const {
+  trace::TraceEntryIDType theTraceID() const {
     return event_id;
   }
 

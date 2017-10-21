@@ -24,14 +24,14 @@ struct HelloVrtContext : VirtualContext {
 };
 
 static void hello_world(HelloMsg *msg) {
-  printf("%d: Hello from node %d\n", theContext->getNode(), msg->from);
+  printf("%d: Hello from node %d\n", theContext()->getNode(), msg->from);
 }
 
 int main(int argc, char **argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& my_node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& my_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -43,8 +43,8 @@ int main(int argc, char **argv) {
 
   if (my_node == 1) {
 
-    auto vrtc1 = theVirtualManager->makeVirtual<HelloVrtContext>(10);
-    auto vrtc2 = theVirtualManager->makeVirtual<HelloVrtContext>(20);
+    auto vrtc1 = theVirtualManager()->makeVirtual<HelloVrtContext>(10);
+    auto vrtc2 = theVirtualManager()->makeVirtual<HelloVrtContext>(20);
 
     // auto temp1 = theVrtCManager->getVrtContextByID(vrtc1);
     // auto hello1 = static_cast<HelloVrtContext*>(temp1);
@@ -114,10 +114,10 @@ int main(int argc, char **argv) {
 //    std::cout << my_vrtc.isCollection() << std::endl;
 
     HelloMsg *msg = new HelloMsg(my_node);
-    theMsg->broadcastMsg<HelloMsg, hello_world>(msg, [=] { delete msg; });
+    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg, [=] { delete msg; });
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

@@ -8,8 +8,8 @@ using namespace vt;
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& my_node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& my_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   index::Index2D idx(2, 3);
   index::Index2D idx2(5, 10);
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     "idx_a=%s, indx_a_max=%s, node=%d\n", idx_a_str, idx_a_max_str, node_a
   );
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

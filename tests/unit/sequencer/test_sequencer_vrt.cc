@@ -52,7 +52,7 @@ struct TestSequencerVirtual : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan1>([](
+    theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan1>([](
       TestMsg* msg, VirtualType* vrt
     ){
       //printf("wait is triggered: msg=%p, vrt=%p\n", msg, vrt);
@@ -71,7 +71,7 @@ struct TestSequencerVirtual : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan2>([](
+    theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan2>([](
       TestMsg* msg, VirtualType* vrt
     ){
       //printf("wait is triggered: msg=%p, vrt=%p\n", msg, vrt);
@@ -79,7 +79,7 @@ struct TestSequencerVirtual : TestParallelHarness {
       EXPECT_EQ(seq_ordering_++, 1);
     });
 
-    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan2>([](
+    theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan2>([](
       TestMsg* msg, VirtualType* vrt
     ){
       //printf("wait is triggered: msg=%p, vrt=%p\n", msg, vrt);
@@ -98,7 +98,7 @@ struct TestSequencerVirtual : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan3>([](
+    theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan3>([](
       TestMsg* msg, VirtualType* vrt
     ){
       printf("wait is triggered for a: msg=%p, vrt=%p\n", msg, vrt);
@@ -117,7 +117,7 @@ struct TestSequencerVirtual : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theVirtualSeq->wait<VirtualType, TestMsg, testSeqHan3>([](
+    theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan3>([](
       TestMsg* msg, VirtualType* vrt
     ){
       printf("wait is triggered for b: msg=%p, vrt=%p\n", msg, vrt);
@@ -132,79 +132,79 @@ struct TestSequencerVirtual : TestParallelHarness {
 /*static*/ TestSequencerVirtual::TestVirtual* TestSequencerVirtual::test_vrt_ptr_b = nullptr;
 
 TEST_F(TestSequencerVirtual, test_seq_vc_1) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    auto proxy = theVirtualManager->makeVirtual<VirtualType>(29);
-    SeqType const& seq_id = theVirtualSeq->createVirtualSeq(proxy);
-    auto vrt_ptr = theVirtualManager->getVirtualByProxy(proxy);
+    auto proxy = theVirtualManager()->makeVirtual<VirtualType>(29);
+    SeqType const& seq_id = theVirtualSeq()->createVirtualSeq(proxy);
+    auto vrt_ptr = theVirtualManager()->getVirtualByProxy(proxy);
 
     test_vrt_ptr = static_cast<VirtualType*>(vrt_ptr);
     //printf("vrt ptr=%p\n", test_vrt_ptr);
 
-    theVirtualSeq->sequenced(seq_id, testSeqFn1);
+    theVirtualSeq()->sequenced(seq_id, testSeqFn1);
 
-    theVirtualManager->sendMsg<VirtualType, TestMsg, testSeqHan1>(
+    theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan1>(
       proxy, makeSharedMessage<TestMsg>()
     );
 
-    theTerm->attachGlobalTermAction([=]{
+    theTerm()->attachGlobalTermAction([=]{
       testSeqFn1(FinalizeAtomicValue);
     });
   }
 }
 
 TEST_F(TestSequencerVirtual, test_seq_vc_2) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    auto proxy = theVirtualManager->makeVirtual<VirtualType>(85);
-    SeqType const& seq_id = theVirtualSeq->createVirtualSeq(proxy);
-    auto vrt_ptr = theVirtualManager->getVirtualByProxy(proxy);
+    auto proxy = theVirtualManager()->makeVirtual<VirtualType>(85);
+    SeqType const& seq_id = theVirtualSeq()->createVirtualSeq(proxy);
+    auto vrt_ptr = theVirtualManager()->getVirtualByProxy(proxy);
 
     test_vrt_ptr = static_cast<VirtualType*>(vrt_ptr);
 
-    theVirtualSeq->sequenced(seq_id, testSeqFn2);
+    theVirtualSeq()->sequenced(seq_id, testSeqFn2);
 
     for (int i = 0; i < 2; i++) {
-      theVirtualManager->sendMsg<VirtualType, TestMsg, testSeqHan2>(
+      theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan2>(
         proxy, makeSharedMessage<TestMsg>()
       );
     }
 
-    theTerm->attachGlobalTermAction([=]{
+    theTerm()->attachGlobalTermAction([=]{
       testSeqFn2(FinalizeAtomicValue);
     });
   }
 }
 
 TEST_F(TestSequencerVirtual, test_seq_vc_distinct_inst_3) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    auto proxy_a = theVirtualManager->makeVirtual<VirtualType>(85);
-    SeqType const& seq_id_a = theVirtualSeq->createVirtualSeq(proxy_a);
-    auto vrt_ptr_a = theVirtualManager->getVirtualByProxy(proxy_a);
+    auto proxy_a = theVirtualManager()->makeVirtual<VirtualType>(85);
+    SeqType const& seq_id_a = theVirtualSeq()->createVirtualSeq(proxy_a);
+    auto vrt_ptr_a = theVirtualManager()->getVirtualByProxy(proxy_a);
     test_vrt_ptr_a = static_cast<VirtualType*>(vrt_ptr_a);
 
-    auto proxy_b = theVirtualManager->makeVirtual<VirtualType>(23);
-    SeqType const& seq_id_b = theVirtualSeq->createVirtualSeq(proxy_b);
-    auto vrt_ptr_b = theVirtualManager->getVirtualByProxy(proxy_b);
+    auto proxy_b = theVirtualManager()->makeVirtual<VirtualType>(23);
+    SeqType const& seq_id_b = theVirtualSeq()->createVirtualSeq(proxy_b);
+    auto vrt_ptr_b = theVirtualManager()->getVirtualByProxy(proxy_b);
     test_vrt_ptr_b = static_cast<VirtualType*>(vrt_ptr_b);
 
-    theVirtualSeq->sequenced(seq_id_a, testSeqFn3a);
-    theVirtualSeq->sequenced(seq_id_b, testSeqFn3b);
+    theVirtualSeq()->sequenced(seq_id_a, testSeqFn3a);
+    theVirtualSeq()->sequenced(seq_id_b, testSeqFn3b);
 
-    theVirtualManager->sendMsg<VirtualType, TestMsg, testSeqHan3>(
+    theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan3>(
       proxy_a, makeSharedMessage<TestMsg>()
     );
-    theVirtualManager->sendMsg<VirtualType, TestMsg, testSeqHan3>(
+    theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan3>(
       proxy_b, makeSharedMessage<TestMsg>()
     );
 
     // @todo: fix this it is getting triggered early (a termination detector
     // bug?)
-    theTerm->attachGlobalTermAction([=]{
+    theTerm()->attachGlobalTermAction([=]{
       // testSeqFn3a(FinalizeAtomicValue);
       // testSeqFn3b(FinalizeAtomicValue);
     });

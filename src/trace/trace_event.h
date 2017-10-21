@@ -16,12 +16,12 @@ struct EventClass {
   EventClass(std::string const& in_event);
   EventClass(EventClass const&) = default;
 
-  TraceEntryIDType getEventId() const;
-  TraceEntryIDType getEventSeqId() const;
+  TraceEntryIDType theEventId() const;
+  TraceEntryIDType theEventSeqId() const;
 
-  std::string getEventName() const;
+  std::string theEventName() const;
   void setEventSeq(TraceEntryIDType const& seq);
-  TraceEntryIDType getEventSeq() const;
+  TraceEntryIDType theEventSeq() const;
 
 private:
   TraceEntryIDType this_event_ = no_trace_entry_id;
@@ -34,9 +34,9 @@ struct Event : EventClass {
   Event(std::string const& in_event, TraceEntryIDType const& in_event_type);
   Event(Event const&) = default;
 
-  TraceEntryIDType getEventTypeId() const;
+  TraceEntryIDType theEventTypeId() const;
   void setEventTypeSeq(TraceEntryIDType const& seq);
-  TraceEntryIDType getEventTypeSeq() const;
+  TraceEntryIDType theEventTypeSeq() const;
 
 private:
   TraceEntryIDType this_event_type_ = no_trace_entry_id;

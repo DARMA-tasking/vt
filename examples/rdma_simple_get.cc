@@ -19,7 +19,7 @@ static void tell_handle(TestMsg* msg) {
 
   if (my_node == 1 || my_node == 2) {
     printf("%d: requesting data\n", my_node);
-    theRDMA->getData(msg->han, my_node, sizeof(double)*3, no_byte, [](void* data, size_t num_bytes){
+    theRDMA()->getData(msg->han, my_node, sizeof(double)*3, no_byte, [](void* data, size_t num_bytes){
       double* const ptr = static_cast<double*>(data);
       size_t const num_elems = num_bytes / sizeof(double);
       printf("%d: data arrived: data=%p, num_bytes=%zu\n", my_node, data, num_bytes);
@@ -46,8 +46,8 @@ test_get_fn(BaseMessage* msg, ByteType num_bytes, ByteType offset, TagType tag) 
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  my_node = theContext->getNode();
-  num_nodes = theContext->getNumNodes();
+  my_node = theContext()->getNode();
+  num_nodes = theContext()->getNumNodes();
 
   if (my_node == 0) {
     auto const len = 64;
@@ -57,16 +57,16 @@ int main(int argc, char** argv) {
       my_data[i] = i+1;
     }
 
-    my_handle = theRDMA->registerNewRdmaHandler();
-    theRDMA->associateGetFunction(my_handle, test_get_fn, true);
+    my_handle = theRDMA()->registerNewRdmaHandler();
+    theRDMA()->associateGetFunction(my_handle, test_get_fn, true);
     printf("initializing my_handle=%lld\n", my_handle);
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;
-    theMsg->broadcastMsg<TestMsg, tell_handle>(msg, [=]{ delete msg; });
+    theMsg()->broadcastMsg<TestMsg, tell_handle>(msg, [=]{ delete msg; });
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

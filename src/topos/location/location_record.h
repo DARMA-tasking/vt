@@ -31,7 +31,7 @@ struct LocRecord {
   ) : id_(in_id), state_(in_state), cur_node_(in_node) {}
 
   void updateNode(NodeType const& new_node) {
-    if (new_node == theContext->getNode()) {
+    if (new_node == theContext()->getNode()) {
       state_ = eLocState::Local;
     } else {
       state_ = eLocState::Remote;

@@ -20,7 +20,7 @@ void ActionVirtual<MessageT, VcT>::runAction(
 ) const {
   auto const callable = [this, consume, msg, vc]() -> bool {
     if (consume) {
-      theTerm->consume();
+      theTerm()->consume();
     }
     action(msg, vc);
     return false;

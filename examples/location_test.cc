@@ -17,20 +17,20 @@ struct EntityMsg : vt::Message {
 
 static void entityTestHandler(EntityMsg* msg) {
   printf(
-    "%d: entityTestHandler entity=%d\n", theContext->getNode(), msg->entity
+    "%d: entityTestHandler entity=%d\n", theContext()->getNode(), msg->entity
   );
 
-  theLocMan->virtual_loc->getLocation(msg->entity, msg->home, [](NodeType node){
-    printf("%d: entityTestHandler: location=%d\n", theContext->getNode(), node);
-    theLocMan->virtual_loc->printCurrentCache();
+  theLocMan()->virtual_loc->getLocation(msg->entity, msg->home, [](NodeType node){
+    printf("%d: entityTestHandler: location=%d\n", theContext()->getNode(), node);
+    theLocMan()->virtual_loc->printCurrentCache();
   });
 }
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& my_node = theContext->getNode();
-  auto const& num_nodes = theContext->getNumNodes();
+  auto const& my_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     fprintf(stderr, "Please run with at least two ranks!\n");
@@ -41,26 +41,26 @@ int main(int argc, char** argv) {
   int32_t entity = 10, entity2 = 11, entity3 = 12;
 
   if (my_node == 0) {
-    theLocMan->virtual_loc->registerEntity(entity);
-    theLocMan->virtual_loc->registerEntity(entity2);
+    theLocMan()->virtual_loc->registerEntity(entity);
+    theLocMan()->virtual_loc->registerEntity(entity2);
   } else if (my_node == 1) {
-    theLocMan->virtual_loc->registerEntity(entity3);
+    theLocMan()->virtual_loc->registerEntity(entity3);
   }
 
   if (my_node == 0) {
-    theMsg->broadcastMsg<EntityMsg, entityTestHandler>(
+    theMsg()->broadcastMsg<EntityMsg, entityTestHandler>(
       makeSharedMessage<EntityMsg>(entity, my_node)
     );
-    theMsg->broadcastMsg<EntityMsg, entityTestHandler>(
+    theMsg()->broadcastMsg<EntityMsg, entityTestHandler>(
       makeSharedMessage<EntityMsg>(entity2, my_node)
     );
   } else if (my_node == 1) {
-    theMsg->broadcastMsg<EntityMsg, entityTestHandler>(
+    theMsg()->broadcastMsg<EntityMsg, entityTestHandler>(
       makeSharedMessage<EntityMsg>(entity3, my_node)
     );
   }
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 

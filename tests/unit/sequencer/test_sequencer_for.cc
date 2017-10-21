@@ -36,8 +36,8 @@ struct TestSequencerFor : TestParallelHarness {
 
     EXPECT_EQ(seq_ordering_++, 0);
 
-    theSeq->for_loop(0, end_range, 1, [](vt::seq::ForIndex i) {
-      theSeq->wait_closure<TestMsg, testSeqForHan>(no_tag, [=](TestMsg* msg){
+    theSeq()->for_loop(0, end_range, 1, [](vt::seq::ForIndex i) {
+      theSeq()->wait_closure<TestMsg, testSeqForHan>(no_tag, [=](TestMsg* msg){
         #if DEBUG_TEST_HARNESS_PRINT
           printf("testSeqForFn running wait\n");
         #endif
@@ -49,23 +49,23 @@ struct TestSequencerFor : TestParallelHarness {
 };
 
 TEST_F(TestSequencerFor, test_for) {
-  auto const& my_node = theContext->getNode();
+  auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
     printf("test_seq_handler: node=%d\n", my_node);
   #endif
 
   if (my_node == 0) {
-    SeqType const& seq_id = theSeq->nextSeq();
-    theSeq->sequenced(seq_id, testSeqForFn);
+    SeqType const& seq_id = theSeq()->nextSeq();
+    theSeq()->sequenced(seq_id, testSeqForFn);
 
     for (int i = 0; i < end_range; i++) {
-      theMsg->sendMsg<TestMsg, testSeqForHan>(
+      theMsg()->sendMsg<TestMsg, testSeqForHan>(
         my_node, makeSharedMessage<TestMsg>()
       );
     }
 
-    theTerm->attachGlobalTermAction([=]{
+    theTerm()->attachGlobalTermAction([=]{
       testSeqForFn(-1);
     });
   }

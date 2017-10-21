@@ -31,7 +31,7 @@ struct SerializedMessengerParam {
   static void serializedMsgHandler(MsgType<Tuple>* msg) {
     auto fn = auto_registry::getAutoHandler(msg->handler);
     auto const& recv_tag = msg->data_recv_tag;
-    theMsg->recvDataMsg(
+    theMsg()->recvDataMsg(
       recv_tag, msg->from_node, [=](RDMA_GetType ptr, ActionType){
         auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
         auto ptr_size = std::get<1>(ptr);
@@ -67,12 +67,12 @@ struct SerializedMessengerParam {
     };
 
     meta_typed_data_msg->handler = typed_handler;
-    meta_typed_data_msg->from_node = theContext->getNode();
+    meta_typed_data_msg->from_node = theContext()->getNode();
     setPutType(meta_typed_data_msg->env);
 
     auto deleter = [=]{ delete meta_typed_data_msg; };
 
-    theMsg->sendMsg<MsgType<TupleType>, serializedMsgHandler>(
+    theMsg()->sendMsg<MsgType<TupleType>, serializedMsgHandler>(
       dest, meta_typed_data_msg, send_serialized, deleter
     );
   }

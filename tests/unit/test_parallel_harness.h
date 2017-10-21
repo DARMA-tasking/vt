@@ -13,6 +13,8 @@
 
 #include "transport.h"
 
+#include <mpi.h>
+
 namespace vt { namespace tests { namespace unit {
 
 static bool mpi_is_initialized = false;
@@ -25,16 +27,15 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     TestHarnessAny<TestBase>::SetUp();
 
     if (not mpi_is_initialized) {
-      CollectiveOps::initializeContext(this->argc_, this->argv_);
+      MPI_Init(&this->argc_, &this->argv_);
       mpi_is_initialized = true;
     }
 
-    CollectiveOps::initializeComponents();
-    CollectiveOps::initializeRuntime();
+    CollectiveOps::initialize(this->argc_, this->argv_, no_workers, true);
 
     #if DEBUG_TEST_HARNESS_PRINT
-      auto const& my_node = theContext->getNode();
-      auto const& num_nodes = theContext->getNumNodes();
+      auto const& my_node = theContext()->getNode();
+      auto const& num_nodes = theContext()->getNumNodes();
       printf("my_node=%d, num_nodes=%d\n", my_node, num_nodes);
     #endif
   }
@@ -42,17 +43,16 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
   virtual void TearDown() {
     using namespace vt;
 
-    while (vtIsWorking) {
+    while (!rt->isTerminated()) {
       runScheduler();
     }
 
     #if DEBUG_TEST_HARNESS_PRINT
-      auto const& my_node = theContext->getNode();
+      auto const& my_node = theContext()->getNode();
       printf("my_node=%d, tearing down runtime\n", my_node);
     #endif
 
-    CollectiveOps::finalizeRuntime();
-    CollectiveOps::finalizeComponents();
+    CollectiveOps::finalize();
 
     TestHarnessAny<TestBase>::TearDown();
   }

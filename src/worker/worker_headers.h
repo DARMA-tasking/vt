@@ -19,7 +19,7 @@ namespace vt { namespace worker {
 
 namespace vt {
 
-extern std::unique_ptr<worker::WorkerGroup> theWorkerGrp;
+extern worker::WorkerGroup* theWorkerGrp();
 
 } /* end namespace vt */
 

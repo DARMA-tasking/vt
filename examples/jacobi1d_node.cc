@@ -75,7 +75,7 @@ static double kernel(int const iter) {
 static void calcResid(ActionBoolType action) {
   if (resid_val < error_tolerance) {
     // obviously very unscalable, but just for the sake of testing
-    theRDMA->getTypedDataInfoBuf(
+    theRDMA()->getTypedDataInfoBuf(
       jac_resid, local_resid_buf, num_nodes, 0, no_tag, [=]{
         bool found_greater = false;
         max_resid_val = 0.0;
@@ -113,8 +113,8 @@ static void boundaryFinished(bool const is_left) {
   if (wait_count == 0) {
     resid_val = kernel(cur_iter);
 
-    theRDMA->putTypedData(jac_resid, &resid_val, 1, my_node, no_tag, no_action, []{
-      theBarrier->barrierThen([]{
+    theRDMA()->putTypedData(jac_resid, &resid_val, 1, my_node, no_tag, no_action, []{
+      theBarrier()->barrierThen([]{
         if (cur_iter >= max_iterations) {
           finished();
         } else {
@@ -122,7 +122,7 @@ static void boundaryFinished(bool const is_left) {
 
           if (my_node == 0) {
             calcResid([](bool has_converged){
-              theMsg->broadcastMsg<StartWorkMsg, startJacobi1dHandler>(
+              theMsg()->broadcastMsg<StartWorkMsg, startJacobi1dHandler>(
                 makeSharedMessage<StartWorkMsg>(has_converged)
               );
 
@@ -165,7 +165,7 @@ static void doKernel(JacobiKernelMsg* msg) {
       printf("%d: doKernel: iter=%d, get left wait_count=%d\n", my_node, iter, wait_count);
       #endif
       auto fn = std::bind(boundaryFinished, true);
-      theRDMA->getTypedDataInfoBuf(jac_t1_han, c1, 1, l_bound, no_tag, fn);
+      theRDMA()->getTypedDataInfoBuf(jac_t1_han, c1, 1, l_bound, no_tag, fn);
     }
 
     if (my_node != num_nodes - 1) {
@@ -173,7 +173,7 @@ static void doKernel(JacobiKernelMsg* msg) {
       printf("%d: doKernel: iter=%d, get right wait_count=%d\n", my_node, iter, wait_count);
       #endif
       auto fn = std::bind(boundaryFinished, false);
-      theRDMA->getTypedDataInfoBuf(jac_t1_han, c1, 1, r_bound, no_tag, fn);
+      theRDMA()->getTypedDataInfoBuf(jac_t1_han, c1, 1, r_bound, no_tag, fn);
     }
   }
 }
@@ -201,7 +201,7 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
     }
   }
 
-  theBarrier->barrierThen([=]{
+  theBarrier()->barrierThen([=]{
     #if DEBUG_JACOBI
     printf(
       "%d: jacobi1d: barrierThen next iter=%d: converged=%s\n",
@@ -215,7 +215,7 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
       #endif
 
       if (my_node == 0) {
-        theMsg->broadcastMsg<JacobiKernelMsg, doKernel>(
+        theMsg()->broadcastMsg<JacobiKernelMsg, doKernel>(
           makeSharedMessage<JacobiKernelMsg>(cur_iter)
         );
         JacobiKernelMsg msg(cur_iter);
@@ -240,8 +240,8 @@ static int exitEarly(NodeType node, int exit_code, char* reason) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  my_node = theContext->getNode();
-  num_nodes = theContext->getNumNodes();
+  my_node = theContext()->getNode();
+  num_nodes = theContext()->getNumNodes();
 
   if (argc == 2 && strncmp(argv[1], "gtest", 5) == 0) {
     total_size = 1024;
@@ -279,13 +279,13 @@ int main(int argc, char** argv) {
 
   printf("%d: total_size=%lld, blk_size=%lld\n", my_node, total_size, blk_size);
 
-  jac_t1_han = theRDMA->registerCollectiveTyped(t1 + 1, blk_size, total_size);
-  jac_t2_han = theRDMA->registerCollectiveTyped(t2 + 1, blk_size, total_size);
-  jac_resid = theRDMA->registerCollectiveTyped(&resid_val, 1, num_nodes);
+  jac_t1_han = theRDMA()->registerCollectiveTyped(t1 + 1, blk_size, total_size);
+  jac_t2_han = theRDMA()->registerCollectiveTyped(t2 + 1, blk_size, total_size);
+  jac_resid = theRDMA()->registerCollectiveTyped(&resid_val, 1, num_nodes);
 
-  theBarrier->barrierThen([]{
+  theBarrier()->barrierThen([]{
     if (my_node == 0) {
-      theMsg->broadcastMsg<StartWorkMsg, startJacobi1dHandler>(
+      theMsg()->broadcastMsg<StartWorkMsg, startJacobi1dHandler>(
         makeSharedMessage<StartWorkMsg>(false)
       );
       auto msg = std::make_unique<StartWorkMsg>(false);
@@ -293,7 +293,7 @@ int main(int argc, char** argv) {
     }
   });
 
-  while (vtIsWorking) {
+  while (!rt->isTerminated()) {
     runScheduler();
   }
 
