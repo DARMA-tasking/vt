@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_CONTEXT_EXAMPLES_UTIL__
-#define __RUNTIME_TRANSPORT_CONTEXT_EXAMPLES_UTIL__
+#if !defined INCLUDED_CONTEXT_EXAMPLES_UTIL_H
+#define INCLUDED_CONTEXT_EXAMPLES_UTIL_H
 
 #include <time.h>
 #include <cstdlib>
@@ -11,4 +11,4 @@ void sleep(uint32_t ms);
 
 }} // end namespace fcontext::examples
 
-#endif /*__RUNTIME_TRANSPORT_CONTEXT_EXAMPLES_UTIL__*/
+#endif /*INCLUDED_CONTEXT_EXAMPLES_UTIL_H*/

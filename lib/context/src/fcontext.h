@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_FCONTEXT__
-#define __RUNTIME_TRANSPORT_FCONTEXT__
+#if !defined INCLUDED_CONTEXT_SRC_FCONTEXT_H
+#define INCLUDED_CONTEXT_SRC_FCONTEXT_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -52,4 +52,4 @@ extern "C" {
 }
 #endif
 
-#endif /*__RUNTIME_TRANSPORT_FCONTEXT__*/
+#endif /*INCLUDED_CONTEXT_SRC_FCONTEXT_H*/

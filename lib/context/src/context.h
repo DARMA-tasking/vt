@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_CONTEXT__
-#define __RUNTIME_TRANSPORT_CONTEXT__
+#if !defined INCLUDED_CONTEXT_SRC_CONTEXT_H
+#define INCLUDED_CONTEXT_SRC_CONTEXT_H
 
 #include "context_wrapper.h"
 #include "context_functor.h"
@@ -8,4 +8,4 @@
 #include "stack.h"
 #include "page.h"
 
-#endif /*__RUNTIME_TRANSPORT_CONTEXT__*/
+#endif /*INCLUDED_CONTEXT_SRC_CONTEXT_H*/

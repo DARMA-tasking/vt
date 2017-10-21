@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_PAGE__
-#define __RUNTIME_TRANSPORT_PAGE__
+#if !defined INCLUDED_CONTEXT_SRC_PAGE_H
+#define INCLUDED_CONTEXT_SRC_PAGE_H
 
 #include <cstdlib>
 
@@ -15,4 +15,4 @@ struct SysPageInfo {
 
 } /* end namespace fcontext */
 
-#endif /*__RUNTIME_TRANSPORT_PAGE__*/
+#endif /*INCLUDED_CONTEXT_SRC_PAGE_H*/

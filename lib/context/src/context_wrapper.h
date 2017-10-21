@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_CONTEXT_WRAPPER__
-#define __RUNTIME_TRANSPORT_CONTEXT_WRAPPER__
+#if !defined INCLUDED_CONTEXT_SRC_CONTEXT_WRAPPER_H
+#define INCLUDED_CONTEXT_SRC_CONTEXT_WRAPPER_H
 
 #include <cstdlib>
 #include <memory>
@@ -81,4 +81,4 @@ inline ContextTransfer pushContext(Context const to, void* vp, tfn_fcontext fn) 
 
 } /* end namespace fcontext */
 
-#endif /*__RUNTIME_TRANSPORT_CONTEXT_WRAPPER___*/
+#endif /*INCLUDED_CONTEXT_SRC_CONTEXT_WRAPPER_H_*/

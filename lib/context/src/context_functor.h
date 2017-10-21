@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_CONTEXT_FUNCTOR__
-#define __RUNTIME_TRANSPORT_CONTEXT_FUNCTOR__
+#if !defined INCLUDED_CONTEXT_SRC_CONTEXT_FUNCTOR_H
+#define INCLUDED_CONTEXT_SRC_CONTEXT_FUNCTOR_H
 
 #include "fcontext.h"
 #include "context_wrapper.h"
@@ -89,4 +89,4 @@ using Context = ContextFunctor<FunctorT, std::tuple<Args...>>;
 
 }} /* end namespace fcontext::functor */
 
-#endif /*__RUNTIME_TRANSPORT_CONTEXT_FUNCTOR__*/
+#endif /*INCLUDED_CONTEXT_SRC_CONTEXT_FUNCTOR_H*/

@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_STACK__
-#define __RUNTIME_TRANSPORT_STACK__
+#if !defined INCLUDED_CONTEXT_SRC_STACK_H
+#define INCLUDED_CONTEXT_SRC_STACK_H
 
 #include "context_wrapper.h"
 
@@ -27,4 +27,4 @@ void destroyStack(ULTContextType stack);
 
 } /* end namespace fcontext */
 
-#endif /*__RUNTIME_TRANSPORT_STACK__*/
+#endif /*INCLUDED_CONTEXT_SRC_STACK_H*/
