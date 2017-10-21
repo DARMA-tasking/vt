@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_MAP__
-#define __RUNTIME_TRANSPORT_RDMA_MAP__
+#if !defined INCLUDED_RDMA_RDMA_MAP_H
+#define INCLUDED_RDMA_RDMA_MAP_H
 
 #include "config.h"
 #include "rdma_common.h"
@@ -42,4 +42,4 @@ static Map default_map = Map(Map::defaultBlockMap, Map::defaultElmMap);
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_MAP__*/
+#endif /*INCLUDED_RDMA_RDMA_MAP_H*/

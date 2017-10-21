@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMASTATE__
-#define __RUNTIME_TRANSPORT_RDMASTATE__
+#if !defined INCLUDED_RDMA_RDMA_STATE_H
+#define INCLUDED_RDMA_RDMA_STATE_H
 
 #include "config.h"
 #include "rdma_common.h"
@@ -120,4 +120,4 @@ State::setRDMAFn<
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMASTATE__*/
+#endif /*INCLUDED_RDMA_RDMA_STATE_H*/

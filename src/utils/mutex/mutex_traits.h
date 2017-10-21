@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_MUTEX_TRAITS__
-#define __RUNTIME_TRANSPORT_MUTEX_TRAITS__
+#if !defined INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H
+#define INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H
 
 #include "config.h"
 
@@ -47,4 +47,4 @@ struct MutexTraits {
 
 #endif /*backend_check_enabled(detector)*/
 
-#endif /*__RUNTIME_TRANSPORT_MUTEX_TRAITS__*/
+#endif /*INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H*/

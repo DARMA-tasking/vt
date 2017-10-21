@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_EVENT__
-#define __RUNTIME_TRANSPORT_EVENT__
+#if !defined INCLUDED_EVENT_EVENT_H
+#define INCLUDED_EVENT_EVENT_H
 
 #include <memory>
 #include <vector>
@@ -85,4 +85,4 @@ extern std::unique_ptr<event::AsyncEvent> theEvent;
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_EVENT__*/
+#endif /*INCLUDED_EVENT_EVENT_H*/

@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_OMP_MUTEX__
-#define __RUNTIME_TRANSPORT_OMP_MUTEX__
+#if !defined INCLUDED_UTILS_MUTEX_OMP_MUTEX_H
+#define INCLUDED_UTILS_MUTEX_OMP_MUTEX_H
 
 #include "config.h"
 
@@ -40,4 +40,4 @@ struct OMPMutex {
 
 #endif
 
-#endif /*__RUNTIME_TRANSPORT_OMP_MUTEX__*/
+#endif /*INCLUDED_UTILS_MUTEX_OMP_MUTEX_H*/

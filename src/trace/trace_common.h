@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TRACE_COMMON__
-#define __RUNTIME_TRANSPORT_TRACE_COMMON__
+#if !defined INCLUDED_TRACE_TRACE_COMMON_H
+#define INCLUDED_TRACE_TRACE_COMMON_H
 
 #include "config.h"
 
@@ -25,4 +25,4 @@ static constexpr BitCountType const trace_event_num_bits = 32;
 
 }} //end namespace vt::trace
 
-#endif /*__RUNTIME_TRANSPORT_TRACE_COMMON__*/
+#endif /*INCLUDED_TRACE_TRACE_COMMON_H*/

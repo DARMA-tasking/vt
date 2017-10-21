@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL_INFO__
-#define __RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL_INFO__
+#if !defined INCLUDED_SEQUENCE_SEQ_VIRTUAL_INFO_H
+#define INCLUDED_SEQUENCE_SEQ_VIRTUAL_INFO_H
 
 #include "config.h"
 #include "vrt/context/context_vrt.h"
@@ -18,4 +18,4 @@ struct VirtualInfo {
 
 }} //end namespace vt::seq
 
-#endif /*__RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL_INFO__*/
+#endif /*INCLUDED_SEQUENCE_SEQ_VIRTUAL_INFO_H*/

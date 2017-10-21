@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SHARED_MESSAGE__
-#define __RUNTIME_TRANSPORT_SHARED_MESSAGE__
+#if !defined INCLUDED_MESSAGING_SHARED_MESSAGE_H
+#define INCLUDED_MESSAGING_SHARED_MESSAGE_H
 
 #include "config.h"
 #include "messaging/envelope.h"
@@ -50,4 +50,4 @@ void messageDeref(MessageT* msg) {
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_SHARED_MESSAGE__*/
+#endif /*INCLUDED_MESSAGING_SHARED_MESSAGE_H*/

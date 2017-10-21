@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_CONTEXT_VRT_FUNCS__
-#define __RUNTIME_TRANSPORT_CONTEXT_VRT_FUNCS__
+#if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H
+#define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -15,4 +15,4 @@ using ActiveVrtTypedFnType = void(MessageT*, VirtualContextT*);
 
 }} /* end namespace vt::context */
 
-#endif /*__RUNTIME_TRANSPORT_CONTEXT_VRT_FUNCS__*/
+#endif /*INCLUDED_VRT_CONTEXT/CONTEXT_VRT_FUNCS_H*/

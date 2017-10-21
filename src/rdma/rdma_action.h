@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_ACTION__
-#define __RUNTIME_TRANSPORT_RDMA_ACTION__
+#if !defined INCLUDED_RDMA_RDMA_ACTION_H
+#define INCLUDED_RDMA_RDMA_ACTION_H
 
 #include "config.h"
 #include "rdma_common.h"
@@ -38,4 +38,4 @@ struct Action {
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_ACTION__*/
+#endif /*INCLUDED_RDMA_RDMA_ACTION_H*/

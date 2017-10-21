@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_MAP__
-#define __RUNTIME_TRANSPORT_AUTO_REGISTRY_MAP__
+#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_MAP_H
+#define INCLUDED_REGISTRY_AUTO_REGISTRY_MAP_H
 
 #include "config.h"
 #include "auto_registry_common.h"
@@ -29,4 +29,4 @@ HandlerType makeAutoHandlerSeedMap();
 
 #include "auto_registry_map_impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_MAP__*/
+#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_MAP_H*/

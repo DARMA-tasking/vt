@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_REGION__
-#define __RUNTIME_TRANSPORT_RDMA_REGION__
+#if !defined INCLUDED_RDMA_RDMA_REGION_H
+#define INCLUDED_RDMA_RDMA_REGION_H
 
 #include "config.h"
 #include "rdma_common.h"
@@ -58,4 +58,4 @@ struct Region {
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_COMMON__*/
+#endif /*INCLUDED_RDMA_RDMA_REGION_H*/

@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_WORKER_TYPES__
-#define __RUNTIME_TRANSPORT_WORKER_TYPES__
+#if !defined INCLUDED_WORKER_WORKER_TYPES_H
+#define INCLUDED_WORKER_WORKER_TYPES_H
 
 #include "config.h"
 
@@ -12,4 +12,4 @@ using WorkUnitType = std::function<void()>;
 
 }} /* end namespace vt::worker */
 
-#endif /*__RUNTIME_TRANSPORT_WORKER_TYPES__*/
+#endif /*INCLUDED_WORKER_WORKER_TYPES_H*/

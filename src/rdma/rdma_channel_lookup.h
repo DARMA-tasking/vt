@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_CHANNEL_LOOKUP__
-#define __RUNTIME_TRANSPORT_RDMA_CHANNEL_LOOKUP__
+#if !defined INCLUDED_RDMA_RDMA_CHANNEL_LOOKUP_H
+#define INCLUDED_RDMA_RDMA_CHANNEL_LOOKUP_H
 
 #include "config.h"
 #include "rdma_common.h"
@@ -51,4 +51,4 @@ namespace std {
   };
 }
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_CHANNEL_LOOKUP__*/
+#endif /*INCLUDED_RDMA_RDMA_CHANNEL_LOOKUP_H*/

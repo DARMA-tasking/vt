@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_CHANNEL__
-#define __RUNTIME_TRANSPORT_RDMA_CHANNEL__
+#if !defined INCLUDED_RDMA_RDMA_CHANNEL_H
+#define INCLUDED_RDMA_RDMA_CHANNEL_H
 
 #include "config.h"
 #include "activefn/activefn.h"
@@ -73,4 +73,4 @@ private:
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_CHANNEL__*/
+#endif /*INCLUDED_RDMA_RDMA_CHANNEL_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_MEMORY_POOL_EQUAL__
-#define __RUNTIME_TRANSPORT_MEMORY_POOL_EQUAL__
+#if !defined INCLUDED_POOL_MEMORY_POOL_EQUAL_H
+#define INCLUDED_POOL_MEMORY_POOL_EQUAL_H
 
 #include "config.h"
 #include "messaging/envelope.h"
@@ -44,4 +44,4 @@ private:
 
 }} //end namespace vt::pool
 
-#endif /*__RUNTIME_TRANSPORT_MEMORY_POOL_EQUAL__*/
+#endif /*INCLUDED_POOL_MEMORY_POOL_EQUAL_H*/

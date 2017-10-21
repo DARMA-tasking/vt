@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_MSG__
-#define __RUNTIME_TRANSPORT_RDMA_MSG__
+#if !defined INCLUDED_RDMA_RDMA_MSG_H
+#define INCLUDED_RDMA_RDMA_MSG_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -118,4 +118,4 @@ using DestroyChannel = ChannelMessage;
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_COMMON__*/
+#endif /*INCLUDED_RDMA_RDMA_MSG_H*/

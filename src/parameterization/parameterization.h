@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_PARAMETERIZATION__
-#define __RUNTIME_TRANSPORT_PARAMETERIZATION__
+#if !defined INCLUDED_PARAMETERIZATION_PARAMETERIZATION_H
+#define INCLUDED_PARAMETERIZATION_PARAMETERIZATION_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -213,4 +213,4 @@ param::DataMsg<std::tuple<Args...>>* buildData(Args&&... a) {
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_PARAMETERIZATION__*/
+#endif /*INCLUDED_PARAMETERIZATION_PARAMETERIZATION_H*/

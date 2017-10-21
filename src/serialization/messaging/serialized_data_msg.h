@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_SERIALIZED_DATA_MSG__
-#define __RUNTIME_TRANSPORT_SERIALIZED_DATA_MSG__
+#if !defined INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H
+#define INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -54,4 +54,4 @@ using SerialEagerPayloadMsg = SerialPayloadMsg<
 
 }} /* end namespace vt::serialization */
 
-#endif /*__RUNTIME_TRANSPORT_SERIALIZED_DATA_MSG__*/
+#endif /*INCLUDED_SERIALIZATION_MESSAGING/SERIALIZED_DATA_MSG_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_NODE_FWD__
-#define __RUNTIME_TRANSPORT_SEQ_NODE_FWD__
+#if !defined INCLUDED_SEQUENCE_SEQ_NODE_FWD_H
+#define INCLUDED_SEQUENCE_SEQ_NODE_FWD_H
 
 #include "config.h"
 #include "seq_common.h"
@@ -16,5 +16,5 @@ bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn);
 
 }} //end namespace vt::seq
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_NODE_FWD__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_NODE_FWD_H*/
 

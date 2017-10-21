@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_FUNCTOR__
-#define __RUNTIME_TRANSPORT_AUTO_REGISTRY_FUNCTOR__
+#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_FUNCTOR_H
+#define INCLUDED_REGISTRY_AUTO_REGISTRY_FUNCTOR_H
 
 #include "auto_registry_common.h"
 #include "config.h"
@@ -61,4 +61,4 @@ bool const RunnableFunctor<FunctorT, is_msg, Args...>::IsMsgType;
 
 #include "auto_registry_functor_impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_FUNCTOR__*/
+#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_FUNCTOR_H*/

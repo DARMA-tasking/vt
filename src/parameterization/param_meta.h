@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_PARAM_META__
-#define __RUNTIME_TRANSPORT_PARAM_META__
+#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
+#define INCLUDED_PARAMETERIZATION_PARAM_META_H
 
 #include "config.h"
 
@@ -50,4 +50,4 @@ void invokeCallableTuple(std::tuple<Args...>&& tup, FnT fn, bool const& is_funct
 
 }} /* end namespace vt::param */
 
-#endif /*__RUNTIME_TRANSPORT_PARAM_META__*/
+#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/

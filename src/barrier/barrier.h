@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_BARRIER__
-#define __RUNTIME_TRANSPORT_BARRIER__
+#if !defined INCLUDED_BARRIER_BARRIER_H
+#define INCLUDED_BARRIER_BARRIER_H
 
 #include <unordered_map>
 
@@ -96,4 +96,4 @@ extern std::unique_ptr<barrier::Barrier> theBarrier;
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_BARRIER__*/
+#endif /*INCLUDED_BARRIER_BARRIER_H*/

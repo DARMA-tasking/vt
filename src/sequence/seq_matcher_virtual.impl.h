@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_MATCHER_VIRTUAL_IMPL__
-#define __RUNTIME_TRANSPORT_SEQ_MATCHER_VIRTUAL_IMPL__
+#if !defined INCLUDED_SEQUENCE_SEQ_MATCHER_VIRTUAL_IMPL_H
+#define INCLUDED_SEQUENCE_SEQ_MATCHER_VIRTUAL_IMPL_H
 
 #include "config.h"
 #include "activefn/activefn.h"
@@ -154,4 +154,4 @@ template <typename FnT>
 
 }} //end namespace vt::seq
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_MATCHER_VIRTUAL_IMPL__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_MATCHER_VIRTUAL_IMPL_H*/

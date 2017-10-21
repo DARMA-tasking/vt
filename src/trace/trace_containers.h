@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TRACE_CONTAINERS__
-#define __RUNTIME_TRANSPORT_TRACE_CONTAINERS__
+#if !defined INCLUDED_TRACE_TRACE_CONTAINERS_H
+#define INCLUDED_TRACE_TRACE_CONTAINERS_H
 
 #include "config.h"
 #include "trace_common.h"
@@ -59,4 +59,4 @@ using ContainerEventTypeSortedType = EventSortedType<
 
 }} //end namespace vt::trace
 
-#endif /*__RUNTIME_TRANSPORT_TRACE_CONTAINERS__*/
+#endif /*INCLUDED_TRACE_TRACE_CONTAINERS_H*/

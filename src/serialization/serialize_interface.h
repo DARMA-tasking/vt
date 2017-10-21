@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_SERIALIZE_INTERFACE__
-#define __RUNTIME_TRANSPORT_SERIALIZE_INTERFACE__
+#if !defined INCLUDED_SERIALIZATION_SERIALIZE_INTERFACE_H
+#define INCLUDED_SERIALIZATION_SERIALIZE_INTERFACE_H
 
 #include <cstdlib>
 #include <functional>
@@ -38,5 +38,5 @@ T* deserialize(SerialByteType* buf, SizeType size, T* user_buf = nullptr);
 
 #endif
 
-#endif /*__RUNTIME_TRANSPORT_SERIALIZE_INTERFACE__*/
+#endif /*INCLUDED_SERIALIZATION_SERIALIZE_INTERFACE_H*/
 

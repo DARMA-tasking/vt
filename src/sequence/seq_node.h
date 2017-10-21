@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_NODE__
-#define __RUNTIME_TRANSPORT_SEQ_NODE__
+#if !defined INCLUDED_SEQUENCE_SEQ_NODE_H
+#define INCLUDED_SEQUENCE_SEQ_NODE_H
 
 #include <list>
 #include <memory>
@@ -103,4 +103,4 @@ private:
 
 #include "seq_node.impl.h"
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_NODE__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_NODE_H*/

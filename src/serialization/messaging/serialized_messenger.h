@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_SERIALIZED_MSG__
-#define __RUNTIME_TRANSPORT_SERIALIZED_MSG__
+#if !defined INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_MESSENGER_H
+#define INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_MESSENGER_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -154,4 +154,4 @@ using SerializedMessenger = ::vt::serialization::SerializedMessenger;
 
 } /* end namespace vt */
 
-#endif /*__RUNTIME_TRANSPORT_SERIALIZED_MSG__*/
+#endif /*INCLUDED_SERIALIZATION_MESSAGING/SERIALIZED_MESSENGER_H*/

@@ -1,9 +1,9 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQUENCER_HEADERS__
-#define __RUNTIME_TRANSPORT_SEQUENCER_HEADERS__
+#if !defined INCLUDED_SEQUENCE_SEQUENCER_HEADERS_H
+#define INCLUDED_SEQUENCE_SEQUENCER_HEADERS_H
 
 #include "sequencer.h"
 #include "sequencer_virtual.h"
 #include "sequencer_all.impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_SEQUENCER_HEADERS__*/
+#endif /*INCLUDED_SEQUENCE_SEQUENCER_HEADERS_H*/

@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_WORKER_GROUP_OMP__
-#define __RUNTIME_TRANSPORT_WORKER_GROUP_OMP__
+#if !defined INCLUDED_WORKER_WORKER_GROUP_OMP_H
+#define INCLUDED_WORKER_WORKER_GROUP_OMP_H
 
 #include "config.h"
 
@@ -63,4 +63,4 @@ private:
 
 #endif
 
-#endif /*__RUNTIME_TRANSPORT_WORKER_GROUP_OMP__*/
+#endif /*INCLUDED_WORKER_WORKER_GROUP_OMP_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_TYPES__
-#define __RUNTIME_TRANSPORT_SEQ_TYPES__
+#if !defined INCLUDED_SEQUENCE_SEQ_TYPES_H
+#define INCLUDED_SEQUENCE_SEQ_TYPES_H
 
 #include <list>
 #include <memory>
@@ -62,4 +62,4 @@ enum class eSeqNodeState : int8_t {
 
 }} //end namespace vt::seq
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_TYPES__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_TYPES_H*/

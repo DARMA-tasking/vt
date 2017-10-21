@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_CONTEXT_VRT_INTERNAL_MSGS__
-#define __RUNTIME_TRANSPORT_CONTEXT_VRT_INTERNAL_MSGS__
+#if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H
+#define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H
 
 #include "config.h"
 #include "context_vrtproxy.h"
@@ -50,4 +50,4 @@ struct VirtualProxyRequestMsg : ShortMessage {
 
 }} /* end namespace vt::vrt */
 
-#endif /*__RUNTIME_TRANSPORT_CONTEXT_VRT_INTERNAL_MSGS__*/
+#endif /*INCLUDED_VRT_CONTEXT/CONTEXT_VRT_INTERNAL_MSGS_H*/

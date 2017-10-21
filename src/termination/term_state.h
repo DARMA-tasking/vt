@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TERM_STATE__
-#define __RUNTIME_TRANSPORT_TERM_STATE__
+#if !defined INCLUDED_TERMINATION_TERM_STATE_H
+#define INCLUDED_TERMINATION_TERM_STATE_H
 
 #include "config.h"
 #include "context/context.h"
@@ -49,4 +49,4 @@ struct TermState {
 
 }} //end namespace vt::term
 
-#endif /*__RUNTIME_TRANSPORT_TERM_STATE__*/
+#endif /*INCLUDED_TERMINATION_TERM_STATE_H*/

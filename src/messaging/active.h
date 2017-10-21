@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_ACTIVE__
-#define __RUNTIME_TRANSPORT_ACTIVE__
+#if !defined INCLUDED_MESSAGING_ACTIVE_H
+#define INCLUDED_MESSAGING_ACTIVE_H
 
 #include <cstdint>
 #include <memory>
@@ -477,4 +477,4 @@ extern std::unique_ptr<ActiveMessenger> theMsg;
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_ACTIVE__*/
+#endif /*INCLUDED_MESSAGING_ACTIVE_H*/

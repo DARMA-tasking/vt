@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_ENVELOPE__
-#define __RUNTIME_TRANSPORT_ENVELOPE__
+#if !defined INCLUDED_MESSAGING_ENVELOPE_H
+#define INCLUDED_MESSAGING_ENVELOPE_H
 
 #include "config.h"
 
@@ -284,4 +284,4 @@ static_assert(std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD");
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_EVENT_ENVELOPE__*/
+#endif /*INCLUDED_MESSAGING_ENVELOPE_H*/

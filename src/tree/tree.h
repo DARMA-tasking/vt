@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TREE__
-#define __RUNTIME_TRANSPORT_TREE__
+#if !defined INCLUDED_TREE_TREE_H
+#define INCLUDED_TREE_TREE_H
 
 #include "config.h"
 
@@ -25,4 +25,4 @@ private:
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_TREE__*/
+#endif /*INCLUDED_TREE_TREE_H*/

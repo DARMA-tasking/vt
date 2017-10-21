@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE_LOCKED_IMPL__
-#define __RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE_LOCKED_IMPL__
+#if !defined INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H
+#define INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H
 
 #include "config.h"
 #include "concurrent_deque_locked.h"
@@ -133,4 +133,4 @@ typename ConcurrentDequeLocked<T,LockT>::SizeType ConcurrentDequeLocked<T,LockT>
 
 }}} //end namespace vt::util::container
 
-#endif /*__RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE_LOCKED_IMPL__*/
+#endif /*INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H*/

@@ -1,8 +1,8 @@
 
-#if !defined __RUNTIME_TRANSPORT_TERM_HEADERS__
-#define __RUNTIME_TRANSPORT_TERM_HEADERS__
+#if !defined INCLUDED_TERMINATION_TERM_HEADERS_H
+#define INCLUDED_TERMINATION_TERM_HEADERS_H
 
 #include "term_common.h"
 #include "termination.h"
 
-#endif /*__RUNTIME_TRANSPORT_TERM_HEADERS__*/
+#endif /*INCLUDED_TERMINATION_TERM_HEADERS_H*/

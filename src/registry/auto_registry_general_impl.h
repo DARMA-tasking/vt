@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_GENERAL_IMPL__
-#define __RUNTIME_TRANSPORT_AUTO_REGISTRY_GENERAL_IMPL__
+#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H
+#define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H
 
 #include "config.h"
 #include "auto_registry_common.h"
@@ -49,4 +49,4 @@ AutoHandlerType const RunnableGen<ActFnT, RegT, InfoT, FnT>::idx =
 
 }} /* end namespace vt::auto_registry */
 
-#endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_GENERAL_IMPL__*/
+#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H*/

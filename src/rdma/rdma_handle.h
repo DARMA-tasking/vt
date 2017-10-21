@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMAHANDLER__
-#define __RUNTIME_TRANSPORT_RDMAHANDLER__
+#if !defined INCLUDED_RDMA_RDMA_HANDLE_H
+#define INCLUDED_RDMA_RDMA_HANDLE_H
 
 #include "config.h"
 #include "rdma_common.h"
@@ -42,4 +42,4 @@ using RDMA_HandleManagerType = HandleManager;
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMAHANDLER__*/
+#endif /*INCLUDED_RDMA_RDMA_HANDLE_H*/

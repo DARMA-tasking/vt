@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TRACE_EVENT__
-#define __RUNTIME_TRANSPORT_TRACE_EVENT__
+#if !defined INCLUDED_TRACE_TRACE_EVENT_H
+#define INCLUDED_TRACE_TRACE_EVENT_H
 
 #include "config.h"
 #include "trace_common.h"
@@ -45,4 +45,4 @@ private:
 
 }} //end namespace vt::trace
 
-#endif /*__RUNTIME_TRANSPORT_TRACE_EVENT__*/
+#endif /*INCLUDED_TRACE_TRACE_EVENT_H*/

@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_SERIALIZATION__
-#define __RUNTIME_TRANSPORT_SERIALIZATION__
+#if !defined INCLUDED_SERIALIZATION_SERIALIZATION_H
+#define INCLUDED_SERIALIZATION_SERIALIZATION_H
 
 #include "config.h"
 #include "serialization/serialize_interface.h"
@@ -13,5 +13,5 @@ using SerialByteType = ::serialization::interface::SerialByteType;
 
 }} /* end namespace vt::serialization */
 
-#endif /*__RUNTIME_TRANSPORT_SERIALIZATION__*/
+#endif /*INCLUDED_SERIALIZATION_SERIALIZATION_H*/
 

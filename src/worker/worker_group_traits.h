@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_WORKER_GROUP_TRAITS__
-#define __RUNTIME_TRANSPORT_WORKER_GROUP_TRAITS__
+#if !defined INCLUDED_WORKER_WORKER_GROUP_TRAITS_H
+#define INCLUDED_WORKER_WORKER_GROUP_TRAITS_H
 
 #include "config.h"
 #include "worker/worker_common.h"
@@ -79,4 +79,4 @@ struct WorkerGroupTraits {
 
 #endif /*backend_check_enabled(detector)*/
 
-#endif /*__RUNTIME_TRANSPORT_WORKER_GROUP_TRAITS__*/
+#endif /*INCLUDED_WORKER_WORKER_GROUP_TRAITS_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_REGISTRY__
-#define __RUNTIME_TRANSPORT_REGISTRY__
+#if !defined INCLUDED_REGISTRY_REGISTRY_H
+#define INCLUDED_REGISTRY_REGISTRY_H
 
 #include <vector>
 #include <unordered_map>
@@ -56,4 +56,4 @@ extern std::unique_ptr<Registry> theRegistry;
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_REGISTRY__*/
+#endif /*INCLUDED_REGISTRY_REGISTRY_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_EPOCH__
-#define __RUNTIME_TRANSPORT_EPOCH__
+#if !defined INCLUDED_MESSAGING_EPOCH_H
+#define INCLUDED_MESSAGING_EPOCH_H
 
 #include "config.h"
 
@@ -10,4 +10,4 @@ static constexpr EpochType const first_epoch = 1;
 
 }} //end namespace vt::epoch
 
-#endif /*__RUNTIME_TRANSPORT_EPOCH__*/
+#endif /*INCLUDED_MESSAGING_EPOCH_H*/

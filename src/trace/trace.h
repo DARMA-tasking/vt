@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TRACE__
-#define __RUNTIME_TRANSPORT_TRACE__
+#if !defined INCLUDED_TRACE_TRACE_H
+#define INCLUDED_TRACE_TRACE_H
 
 #include "config.h"
 #include "context/context.h"
@@ -118,4 +118,4 @@ backend_enable_if(
 
 }
 
-#endif /*__RUNTIME_TRANSPORT_TRACE__*/
+#endif /*INCLUDED_TRACE_TRACE_H*/

@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_STD_MUTEX__
-#define __RUNTIME_TRANSPORT_STD_MUTEX__
+#if !defined INCLUDED_UTILS_MUTEX_STD_MUTEX_H
+#define INCLUDED_UTILS_MUTEX_STD_MUTEX_H
 
 #include "config.h"
 
@@ -19,4 +19,4 @@
   }}} // end namespace vt::util::mutex
 #endif
 
-#endif /*__RUNTIME_TRANSPORT_STD_MUTEX__*/
+#endif /*INCLUDED_UTILS_MUTEX_STD_MUTEX_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_ACTION_IMPL__
-#define __RUNTIME_TRANSPORT_SEQ_ACTION_IMPL__
+#if !defined INCLUDED_SEQUENCE_SEQ_ACTION_IMPL_H
+#define INCLUDED_SEQUENCE_SEQ_ACTION_IMPL_H
 
 #include "config.h"
 #include "seq_common.h"
@@ -37,4 +37,4 @@ Action<MessageT>::generateCallable(MessageT* msg) const {
 
 }} //end namespace vt::seq
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_ACTION_IMPL__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_ACTION_IMPL_H*/

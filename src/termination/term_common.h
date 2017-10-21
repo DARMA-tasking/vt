@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_TERM_COMMON__
-#define __RUNTIME_TRANSPORT_TERM_COMMON__
+#if !defined INCLUDED_TERMINATION_TERM_COMMON_H
+#define INCLUDED_TERMINATION_TERM_COMMON_H
 
 #include "config.h"
 #include "messaging/epoch.h"
@@ -16,4 +16,4 @@ using TermWaveType = int64_t;
 
 }} /* end namespace vt::term */
 
-#endif /*__RUNTIME_TRANSPORT_TERM_COMMON__*/
+#endif /*INCLUDED_TERMINATION_TERM_COMMON_H*/

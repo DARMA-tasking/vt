@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TRACE_REGISTRY__
-#define __RUNTIME_TRANSPORT_TRACE_REGISTRY__
+#if !defined INCLUDED_TRACE_TRACE_REGISTRY_H
+#define INCLUDED_TRACE_TRACE_REGISTRY_H
 
 #include "config.h"
 #include "context/context.h"
@@ -76,4 +76,4 @@ struct TraceRegistry {
 
 }} //end namespace vt::trace
 
-#endif /*__RUNTIME_TRANSPORT_TRACE_REGISTRY__*/
+#endif /*INCLUDED_TRACE_TRACE_REGISTRY_H*/

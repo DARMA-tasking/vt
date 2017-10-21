@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_ACTION_VIRTUAL__
-#define __RUNTIME_TRANSPORT_SEQ_ACTION_VIRTUAL__
+#if !defined INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_H
+#define INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_H
 
 #include "config.h"
 #include "seq_common.h"
@@ -26,4 +26,4 @@ struct ActionVirtual {
 
 #include "seq_action_virtual.impl.h"
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_ACTION_VIRTUAL__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQUENCE__
-#define __RUNTIME_TRANSPORT_SEQUENCE__
+#if !defined INCLUDED_SEQUENCE_SEQUENCER_H
+#define INCLUDED_SEQUENCE_SEQUENCER_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -173,5 +173,5 @@ extern std::unique_ptr<seq::Sequencer> theSeq;
 
 #include "sequencer.impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_SEQUENCE__*/
+#endif /*INCLUDED_SEQUENCE_SEQUENCER_H*/
 

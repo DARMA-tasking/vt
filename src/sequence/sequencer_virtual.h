@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL__
-#define __RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL__
+#if !defined INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_H
+#define INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_H
 
 #include "config.h"
 #include "sequencer.h"
@@ -65,4 +65,4 @@ extern std::unique_ptr<seq::SequencerVirtual> theVirtualSeq;
 
 #include "sequencer_virtual.impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL__*/
+#endif /*INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_H*/

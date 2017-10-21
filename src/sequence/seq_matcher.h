@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_MATCHER__
-#define __RUNTIME_TRANSPORT_SEQ_MATCHER__
+#if !defined INCLUDED_SEQUENCE_SEQ_MATCHER_H
+#define INCLUDED_SEQUENCE_SEQ_MATCHER_H
 
 #include "config.h"
 #include "activefn/activefn.h"
@@ -64,4 +64,4 @@ struct SeqMatcher {
 
 #include "seq_matcher.impl.h"
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_MATCHER__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_MATCHER_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_HELPERS__
-#define __RUNTIME_TRANSPORT_SEQ_HELPERS__
+#if !defined INCLUDED_SEQUENCE_SEQ_HELPERS_H
+#define INCLUDED_SEQUENCE_SEQ_HELPERS_H
 
 #include <list>
 #include <memory>
@@ -34,4 +34,4 @@ union uSeqNodePayload {
 
 }} //end namespace vt::seq
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_HELPERS__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_HELPERS_H*/

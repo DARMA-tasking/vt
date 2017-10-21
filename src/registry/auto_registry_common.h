@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_COMMON__
-#define __RUNTIME_TRANSPORT_AUTO_REGISTRY_COMMON__
+#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_COMMON_H
+#define INCLUDED_REGISTRY_AUTO_REGISTRY_COMMON_H
 
 #include "trace/trace_event.h"
 
@@ -67,4 +67,4 @@ using AutoActiveFunctorContainerType = AutoRegistryContainerType<AutoActiveFunct
 
 }} // end namespace vt::auto_registry
 
-#endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_COMMON__*/
+#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_COMMON_H*/

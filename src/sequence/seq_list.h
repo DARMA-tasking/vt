@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_LIST__
-#define __RUNTIME_TRANSPORT_SEQ_LIST__
+#if !defined INCLUDED_SEQUENCE_SEQ_LIST_H
+#define INCLUDED_SEQUENCE_SEQ_LIST_H
 
 #include <list>
 
@@ -34,4 +34,4 @@ private:
 
 }} //end namespace vt::seq
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_LIST__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_LIST_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TRACE_LOG__
-#define __RUNTIME_TRANSPORT_TRACE_LOG__
+#if !defined INCLUDED_TRACE_TRACE_LOG_H
+#define INCLUDED_TRACE_TRACE_LOG_H
 
 #include "config.h"
 #include "trace_common.h"
@@ -32,4 +32,4 @@ struct Log {
 
 }} //end namespace vt::trace
 
-#endif /*__RUNTIME_TRANSPORT_TRACE_LOG__*/
+#endif /*INCLUDED_TRACE_TRACE_LOG_H*/

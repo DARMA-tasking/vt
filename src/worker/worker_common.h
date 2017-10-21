@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_WORKER_COMMON__
-#define __RUNTIME_TRANSPORT_WORKER_COMMON__
+#if !defined INCLUDED_WORKER_WORKER_COMMON_H
+#define INCLUDED_WORKER_WORKER_COMMON_H
 
 #include "config.h"
 
@@ -20,4 +20,4 @@ using WorkerCommFnType = std::function<void()>;
 
 }} /* end namespace vt::worker */
 
-#endif /*__RUNTIME_TRANSPORT_WORKER_COMMON__*/
+#endif /*INCLUDED_WORKER_WORKER_COMMON_H*/

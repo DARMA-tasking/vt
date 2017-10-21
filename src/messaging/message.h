@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_MESSAGE__
-#define __RUNTIME_TRANSPORT_MESSAGE__
+#if !defined INCLUDED_MESSAGING_MESSAGE_H
+#define INCLUDED_MESSAGING_MESSAGE_H
 
 #include "config.h"
 #include "messaging/envelope.h"
@@ -58,4 +58,4 @@ inline HandlerType getCallbackMessage(ShortMessage* msg) {
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_MESSAGE__*/
+#endif /*INCLUDED_MESSAGING_MESSAGE_H*/

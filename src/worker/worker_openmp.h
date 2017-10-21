@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_OPENMP_WORKER__
-#define __RUNTIME_TRANSPORT_OPENMP_WORKER__
+#if !defined INCLUDED_WORKER_WORKER_OPENMP_H
+#define INCLUDED_WORKER_WORKER_OPENMP_H
 
 #include "config.h"
 #include "worker/worker_common.h"
@@ -55,4 +55,4 @@ private:
   }} /* end namespace vt::worker */
 #endif
 
-#endif /*__RUNTIME_TRANSPORT_OPENMP_WORKER__*/
+#endif /*INCLUDED_WORKER_WORKER_OPENMP_H*/

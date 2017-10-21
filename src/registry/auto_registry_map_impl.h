@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_MAP_IMPL__
-#define __RUNTIME_TRANSPORT_AUTO_REGISTRY_MAP_IMPL__
+#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_MAP_IMPL_H
+#define INCLUDED_REGISTRY_AUTO_REGISTRY_MAP_IMPL_H
 
 #include "config.h"
 #include "auto_registry_common.h"
@@ -50,4 +50,4 @@ inline AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const& handler) {
 
 }} /* end namespace vt::auto_registry */
 
-#endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_MAP_IMPL__*/
+#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_MAP_IMPL_H*/

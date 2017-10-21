@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_VC__
-#define __RUNTIME_TRANSPORT_AUTO_REGISTRY_VC__
+#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_VC_H
+#define INCLUDED_REGISTRY_AUTO_REGISTRY_VC_H
 
 #include "config.h"
 #include "auto_registry_common.h"
@@ -22,4 +22,4 @@ HandlerType makeAutoHandlerVC(MsgT* const msg);
 
 #include "auto_registry_vc_impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_VC__*/
+#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_VC_H*/

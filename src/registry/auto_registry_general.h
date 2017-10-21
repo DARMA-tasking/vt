@@ -1,5 +1,5 @@
-#if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_GENERAL__
-#define __RUNTIME_TRANSPORT_AUTO_REGISTRY_GENERAL__
+#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H
+#define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H
 
 #include "config.h"
 #include "auto_registry_common.h"
@@ -56,4 +56,4 @@ struct RunnableGen {
 
 #include "auto_registry_general_impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_GENERAL__*/
+#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H*/

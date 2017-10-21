@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_EVENT_MSGS__
-#define __RUNTIME_TRANSPORT_EVENT_MSGS__
+#if !defined INCLUDED_EVENT_EVENT_MSGS_H
+#define INCLUDED_EVENT_EVENT_MSGS_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -34,4 +34,4 @@ extern HandlerType check_event_finished_han;
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_EVENT_MSGS__*/
+#endif /*INCLUDED_EVENT_EVENT_MSGS_H*/

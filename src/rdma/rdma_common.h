@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_COMMON__
-#define __RUNTIME_TRANSPORT_RDMA_COMMON__
+#if !defined INCLUDED_RDMA_RDMA_COMMON_H
+#define INCLUDED_RDMA_RDMA_COMMON_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -81,4 +81,4 @@ static constexpr ByteType rdma_default_byte_size = sizeof(char);
   )                                                                     \
 )
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_COMMON__*/
+#endif /*INCLUDED_RDMA_RDMA_COMMON_H*/

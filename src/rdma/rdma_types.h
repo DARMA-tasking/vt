@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_TYPES__
-#define __RUNTIME_TRANSPORT_RDMA_TYPES__
+#if !defined INCLUDED_RDMA_RDMA_TYPES_H
+#define INCLUDED_RDMA_RDMA_TYPES_H
 
 #include "config.h"
 
@@ -64,4 +64,4 @@ extern to_s rdma_to;
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_TYPES__*/
+#endif /*INCLUDED_RDMA_RDMA_TYPES_H*/

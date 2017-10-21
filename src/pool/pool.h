@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_POOL__
-#define __RUNTIME_TRANSPORT_POOL__
+#if !defined INCLUDED_POOL_POOL_H
+#define INCLUDED_POOL_POOL_H
 
 #include "config.h"
 #include "memory_pool_equal.h"
@@ -27,4 +27,4 @@ extern std::unique_ptr<pool::Pool> thePool;
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_POOL__*/
+#endif /*INCLUDED_POOL_POOL_H*/

@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_WORKER__
-#define __RUNTIME_TRANSPORT_WORKER__
+#if !defined INCLUDED_WORKER_WORKER_H
+#define INCLUDED_WORKER_WORKER_H
 
 #include "config.h"
 #include "worker/worker_common.h"
@@ -37,4 +37,4 @@ struct Worker {
   }} /* end namespace vt::worker */
 #endif
 
-#endif /*__RUNTIME_TRANSPORT_WORKER__*/
+#endif /*INCLUDED_WORKER_WORKER_H*/

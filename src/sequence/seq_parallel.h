@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_PARALLEL__
-#define __RUNTIME_TRANSPORT_SEQ_PARALLEL__
+#if !defined INCLUDED_SEQUENCE_SEQ_PARALLEL_H
+#define INCLUDED_SEQUENCE_SEQ_PARALLEL_H
 
 #include <vector>
 #include <cstdint>
@@ -53,4 +53,4 @@ private:
 
 }} //end namespace vt::seq
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_PARALLEL__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_PARALLEL_H*/

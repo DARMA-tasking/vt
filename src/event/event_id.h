@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_EVENT_ID__
-#define __RUNTIME_TRANSPORT_EVENT_ID__
+#if !defined INCLUDED_EVENT_EVENT_ID_H
+#define INCLUDED_EVENT_EVENT_ID_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -31,4 +31,4 @@ struct EventIDManager {
 
 }} //end namespace vt::event
 
-#endif /*__RUNTIME_TRANSPORT_EVENT_ID__*/
+#endif /*INCLUDED_EVENT_EVENT_ID_H*/

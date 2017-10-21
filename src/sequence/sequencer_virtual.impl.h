@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL_IMPL__
-#define __RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL_IMPL__
+#if !defined INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H
+#define INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H
 
 #include "config.h"
 #include "sequencer.h"
@@ -253,4 +253,4 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
 
 }} //end namespace vt::seq
 
-#endif /*__RUNTIME_TRANSPORT_SEQUENCER_VIRTUAL_IMPL__*/
+#endif /*INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H*/

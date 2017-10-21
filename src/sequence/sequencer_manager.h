@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQUENCE_MANAGER__
-#define __RUNTIME_TRANSPORT_SEQUENCE_MANAGER__
+#if !defined INCLUDED_SEQUENCE_SEQUENCER_MANAGER_H
+#define INCLUDED_SEQUENCE_SEQUENCER_MANAGER_H
 
 #include "config.h"
 #include "seq_common.h"
@@ -29,4 +29,4 @@ private:
 
 #include "sequencer_manager.impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_SEQUENCE_MANAGER__*/
+#endif /*INCLUDED_SEQUENCE_SEQUENCER_MANAGER_H*/

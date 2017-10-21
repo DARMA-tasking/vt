@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQUENCE_FWD__
-#define __RUNTIME_TRANSPORT_SEQUENCE_FWD__
+#if !defined INCLUDED_SEQUENCE_SEQUENCER_FWD_H
+#define INCLUDED_SEQUENCE_SEQUENCER_FWD_H
 
 #include "config.h"
 #include "seq_common.h"
@@ -26,4 +26,4 @@ extern std::unique_ptr<seq::SequencerVirtual> theVirtualSeq;
 
 } // end namespace vt
 
-#endif /* __RUNTIME_TRANSPORT_SEQUENCE_FWD__*/
+#endif /* INCLUDED_SEQUENCE_SEQUENCER_FWD_H*/

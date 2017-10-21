@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TRACE_CONSTANTS__
-#define __RUNTIME_TRANSPORT_TRACE_CONSTANTS__
+#if !defined INCLUDED_TRACE_TRACE_CONSTANTS_H
+#define INCLUDED_TRACE_TRACE_CONSTANTS_H
 
 namespace vt { namespace trace {
 
@@ -65,4 +65,4 @@ enum eTraceEnvelopeTypes {
 
 }} //end namespace vt::trace
 
-#endif /*__RUNTIME_TRANSPORT_TRACE_CONSTANTS__*/
+#endif /*INCLUDED_TRACE_TRACE_CONSTANTS_H*/

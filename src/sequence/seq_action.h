@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_ACTION__
-#define __RUNTIME_TRANSPORT_SEQ_ACTION__
+#if !defined INCLUDED_SEQUENCE_SEQ_ACTION_H
+#define INCLUDED_SEQUENCE_SEQ_ACTION_H
 
 #include "config.h"
 #include "seq_common.h"
@@ -26,4 +26,4 @@ struct Action {
 
 #include "seq_action.impl.h"
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_ACTION__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_ACTION_H*/

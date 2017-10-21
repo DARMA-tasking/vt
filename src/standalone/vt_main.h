@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_VT_MAIN__
-#define __RUNTIME_TRANSPORT_VT_MAIN__
+#if !defined INCLUDED_STANDALONE_VT_MAIN_H
+#define INCLUDED_STANDALONE_VT_MAIN_H
 
 #include "config.h"
 #include "worker/worker_headers.h"
@@ -53,4 +53,4 @@ int vt_main(
     return vt::standalone::vt_main<MAIN_VT_TYPE>(argc, argv);  \
   }
 
-#endif /*__RUNTIME_TRANSPORT_VT_MAIN__*/
+#endif /*INCLUDED_STANDALONE_VT_MAIN_H*/

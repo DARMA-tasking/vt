@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_WORKER_HEADERS__
-#define __RUNTIME_TRANSPORT_WORKER_HEADERS__
+#if !defined INCLUDED_WORKER_WORKER_HEADERS_H
+#define INCLUDED_WORKER_WORKER_HEADERS_H
 
 #include "worker/worker.h"
 #include "worker/worker_group.h"
@@ -23,4 +23,4 @@ extern std::unique_ptr<worker::WorkerGroup> theWorkerGrp;
 
 } /* end namespace vt */
 
-#endif /*__RUNTIME_TRANSPORT_WORKER_HEADERS__*/
+#endif /*INCLUDED_WORKER_WORKER_HEADERS_H*/

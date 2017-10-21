@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_MAPPING_FUNCTION__
-#define __RUNTIME_TRANSPORT_MAPPING_FUNCTION__
+#if !defined INCLUDED_TOPOS_MAPPING_MAPPING_FUNCTION_H
+#define INCLUDED_TOPOS_MAPPING_MAPPING_FUNCTION_H
 
 #include "config.h"
 #include "topos/index/index.h"
@@ -18,4 +18,4 @@ using ActiveSeedMapFnPtrType = ActiveSeedMapFnType*;
 
 }} /* end namespace vt::mapping */
 
-#endif /*__RUNTIME_TRANSPORT_MAPPING_FUNCTION__*/
+#endif /*INCLUDED_TOPOS_MAPPING/MAPPING_FUNCTION_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SCHEDULER__
-#define __RUNTIME_TRANSPORT_SCHEDULER__
+#if !defined INCLUDED_SCHEDULER_SCHEDULER_H
+#define INCLUDED_SCHEDULER_SCHEDULER_H
 
 #include "config.h"
 
@@ -54,4 +54,4 @@ extern std::unique_ptr<sched::Scheduler> theSched;
 
 }  //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_SCHEDULER__*/
+#endif /*INCLUDED_SCHEDULER_SCHEDULER_H*/

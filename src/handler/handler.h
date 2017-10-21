@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_HANDLER__
-#define __RUNTIME_TRANSPORT_HANDLER__
+#if !defined INCLUDED_HANDLER_HANDLER_H
+#define INCLUDED_HANDLER_HANDLER_H
 
 #include <vector>
 #include <unordered_map>
@@ -53,4 +53,4 @@ struct HandlerManager {
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_REGISTRY__*/
+#endif /*INCLUDED_HANDLER_HANDLER_H*/

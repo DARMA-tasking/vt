@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_WORKER_GROUP__
-#define __RUNTIME_TRANSPORT_WORKER_GROUP__
+#if !defined INCLUDED_WORKER_WORKER_GROUP_H
+#define INCLUDED_WORKER_WORKER_GROUP_H
 
 #include "config.h"
 #include "worker/worker_common.h"
@@ -59,4 +59,4 @@ using WorkerGroupStd = WorkerGroupAny<StdThreadWorker>;
 
 #include "worker/worker_group.impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_WORKER_GROUP__*/
+#endif /*INCLUDED_WORKER_WORKER_GROUP_H*/

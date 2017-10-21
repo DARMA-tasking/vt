@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_MAPPING_SEED__
-#define __RUNTIME_TRANSPORT_MAPPING_SEED__
+#if !defined INCLUDED_TOPOS_MAPPING_MAPPING_SEED_H
+#define INCLUDED_TOPOS_MAPPING_MAPPING_SEED_H
 
 #include "config.h"
 #include "mapping.h"
@@ -14,4 +14,4 @@ NodeType randomSeedMapNode(SeedType seed, NodeType nnodes);
 
 }} /* end namespace vt::mapping */
 
-#endif /*__RUNTIME_TRANSPORT_MAPPING_SEED__*/
+#endif /*INCLUDED_TOPOS_MAPPING/MAPPING_SEED_H*/

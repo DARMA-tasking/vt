@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_MOCK_SERIALIZER__
-#define __RUNTIME_TRANSPORT_MOCK_SERIALIZER__
+#if !defined INCLUDED_SERIALIZATION_MOCK_SERIALIZER_H
+#define INCLUDED_SERIALIZATION_MOCK_SERIALIZER_H
 
 #include "config.h"
 #include "utils/static_checks/all_true.h"
@@ -240,4 +240,4 @@ T* deserialize(SerialByteType* buf, SizeType size, T* allocBuf) {
 
 #endif
 
-#endif /*__RUNTIME_TRANSPORT_MOCK_SERIALIZER__*/
+#endif /*INCLUDED_SERIALIZATION_MOCK_SERIALIZER_H*/

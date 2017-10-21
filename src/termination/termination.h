@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TERMINATION__
-#define __RUNTIME_TRANSPORT_TERMINATION__
+#if !defined INCLUDED_TERMINATION_TERMINATION_H
+#define INCLUDED_TERMINATION_TERMINATION_H
 
 #include <cstdint>
 #include <unordered_map>
@@ -113,4 +113,4 @@ extern std::unique_ptr<term::TerminationDetector> theTerm;
 
 } // end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_EVENT_TERMINATION__*/
+#endif /*INCLUDED_TERMINATION_TERMINATION_H*/

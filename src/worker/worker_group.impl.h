@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_WORKER_GROUP_IMPL__
-#define __RUNTIME_TRANSPORT_WORKER_GROUP_IMPL__
+#if !defined INCLUDED_WORKER_WORKER_GROUP_IMPL_H
+#define INCLUDED_WORKER_WORKER_GROUP_IMPL_H
 
 #include "config.h"
 #include "context/context.h"
@@ -122,4 +122,4 @@ void WorkerGroupAny<WorkerT>::joinWorkers() {
 
 }} /* end namespace vt::worker */
 
-#endif /*__RUNTIME_TRANSPORT_WORKER_GROUP_IMPL__*/
+#endif /*INCLUDED_WORKER_WORKER_GROUP_IMPL_H*/

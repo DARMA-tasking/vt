@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_STATE_VIRTUAL__
-#define __RUNTIME_TRANSPORT_SEQ_STATE_VIRTUAL__
+#if !defined INCLUDED_SEQUENCE_SEQ_STATE_VIRTUAL_H
+#define INCLUDED_SEQUENCE_SEQ_STATE_VIRTUAL_H
 
 #include <list>
 #include <unordered_map>
@@ -59,4 +59,4 @@ typename SeqStateVirtualType<VcT, MsgT, f>::TaggedMsgContainerType
 
 }} //end namespace vt::seq
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_STATE_VIRTUAL__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_STATE_VIRTUAL_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_COLLECTIVE__
-#define __RUNTIME_TRANSPORT_COLLECTIVE__
+#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_H
+#define INCLUDED_COLLECTIVE_COLLECTIVE_H
 
 #include "config.h"
 #include "context/context.h"
@@ -36,4 +36,4 @@ struct CollectiveOps {
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_COLLECTIVE__*/
+#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_H*/

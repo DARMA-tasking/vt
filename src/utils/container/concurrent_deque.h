@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE__
-#define __RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE__
+#if !defined INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_H
+#define INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_H
 
 #include "config.h"
 #include "utils/mutex/mutex.h"
@@ -32,5 +32,5 @@ using ConcurrentDeque = ConcurrentDequeLocked<T, vt::util::mutex::MutexType>;
 
 }}} //end namespace vt::util::container
 
-#endif /*__RUNTIME_TRANSPORT_UTILS_CONCURRENT_DEQUE__*/
+#endif /*INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_H*/
 

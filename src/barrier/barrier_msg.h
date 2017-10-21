@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_BARRIER_MSGS__
-#define __RUNTIME_TRANSPORT_BARRIER_MSGS__
+#if !defined INCLUDED_BARRIER_BARRIER_MSG_H
+#define INCLUDED_BARRIER_BARRIER_MSG_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -37,4 +37,4 @@ struct BarrierState {
 
 }} //end namespace vt::barrier
 
-#endif /*__RUNTIME_TRANSPORT_BARRIER_MSGS__*/
+#endif /*INCLUDED_BARRIER_BARRIER_MSG_H*/

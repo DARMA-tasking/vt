@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY__
-#define __RUNTIME_TRANSPORT_AUTO_REGISTRY__
+#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_H
+#define INCLUDED_REGISTRY_AUTO_REGISTRY_H
 
 #include "config.h"
 #include "auto_registry_common.h"
@@ -38,4 +38,4 @@ HandlerType makeAutoHandler();
 
 #include "auto_registry_impl.h"
 
-#endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY__*/
+#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_H*/

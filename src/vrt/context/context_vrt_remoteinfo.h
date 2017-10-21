@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_CONTEXT_VRT_REMOTEINFO__
-#define __RUNTIME_TRANSPORT_CONTEXT_VRT_REMOTEINFO__
+#if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_REMOTEINFO_H
+#define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_REMOTEINFO_H
 
 #include "config.h"
 #include "context_vrt_fwd.h"
@@ -35,4 +35,4 @@ struct RemoteVrtInfo {
 
 }} /* end namespace vt::vrt */
 
-#endif /*__RUNTIME_TRANSPORT_CONTEXT_VRT_REMOTEINFO__*/
+#endif /*INCLUDED_VRT_CONTEXT/CONTEXT_VRT_REMOTEINFO_H*/

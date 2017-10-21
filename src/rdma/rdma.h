@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA__
-#define __RUNTIME_TRANSPORT_RDMA__
+#if !defined INCLUDED_RDMA_RDMA_H
+#define INCLUDED_RDMA_RDMA_H
 
 #include "config.h"
 #include "activefn/activefn.h"
@@ -483,4 +483,4 @@ extern std::unique_ptr<rdma::RDMAManager> theRDMA;
 
 } //end namespace vt
 
-#endif /*__RUNTIME_TRANSPORT_RDMA__*/
+#endif /*INCLUDED_RDMA_RDMA_H*/

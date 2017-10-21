@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_AUTO_REGISTRY_INTERFACE__
-#define __RUNTIME_TRANSPORT_AUTO_REGISTRY_INTERFACE__
+#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
+#define INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
 
 #include "auto_registry_common.h"
 #include "config.h"
@@ -30,4 +30,4 @@ trace::TraceEntryIDType getTraceID(HandlerType const& handler);
 #include "auto_registry.h"
 #include "auto_registry_functor.h"
 
-#endif /*__RUNTIME_TRANSPORT_AUTO_REGISTRY_INTERFACE__*/
+#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H*/

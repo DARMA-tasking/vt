@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_PENDING__
-#define __RUNTIME_TRANSPORT_RDMA_PENDING__
+#if !defined INCLUDED_RDMA_RDMA_PENDING_H
+#define INCLUDED_RDMA_RDMA_PENDING_H
 
 #include "config.h"
 #include "activefn/activefn.h"
@@ -29,4 +29,4 @@ struct Pending {
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_PENDING__*/
+#endif /*INCLUDED_RDMA_RDMA_PENDING_H*/

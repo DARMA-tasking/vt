@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_EVENT_HOLDER__
-#define __RUNTIME_TRANSPORT_EVENT_HOLDER__
+#if !defined INCLUDED_EVENT_EVENT_HOLDER_H
+#define INCLUDED_EVENT_EVENT_HOLDER_H
 
 #include <memory>
 #include <vector>
@@ -35,4 +35,4 @@ private:
 
 }} //end namespace vt::event
 
-#endif /*__RUNTIME_TRANSPORT_EVENT_HOLDER__*/
+#endif /*INCLUDED_EVENT_EVENT_HOLDER_H*/

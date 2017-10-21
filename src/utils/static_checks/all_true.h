@@ -1,6 +1,6 @@
 
-#if !defined __RUNTIME_TRANSPORT_ALL_TRUE__
-#define __RUNTIME_TRANSPORT_ALL_TRUE__
+#if !defined INCLUDED_UTILS_STATIC_CHECKS_ALL_TRUE_H
+#define INCLUDED_UTILS_STATIC_CHECKS_ALL_TRUE_H
 
 #include "config.h"
 
@@ -12,4 +12,4 @@ using all_true = std::is_same<BoolPack<bs..., true>, BoolPack<true, bs...>>;
 
 }} /* end namespace vt::util */
 
-#endif /*__RUNTIME_TRANSPORT_ALL_TRUE__*/
+#endif /*INCLUDED_UTILS_STATIC_CHECKS/ALL_TRUE_H*/

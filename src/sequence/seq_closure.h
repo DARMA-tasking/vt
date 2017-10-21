@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_CLOSURE__
-#define __RUNTIME_TRANSPORT_SEQ_CLOSURE__
+#if !defined INCLUDED_SEQUENCE_SEQ_CLOSURE_H
+#define INCLUDED_SEQUENCE_SEQ_CLOSURE_H
 
 #include <list>
 #include <memory>
@@ -28,4 +28,4 @@ using SeqExpandedClosureType = SeqClosure;
 
 }} //end namespace vt::seq
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_CLOSURE__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_CLOSURE_H*/

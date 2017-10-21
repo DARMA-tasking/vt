@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_EVENT_RECORD__
-#define __RUNTIME_TRANSPORT_EVENT_RECORD__
+#if !defined INCLUDED_EVENT_EVENT_RECORD_H
+#define INCLUDED_EVENT_EVENT_RECORD_H
 
 #include <memory>
 #include <vector>
@@ -65,4 +65,4 @@ private:
 
 }} //end namespace vt::event
 
-#endif /*__RUNTIME_TRANSPORT_EVENT_RECORD__*/
+#endif /*INCLUDED_EVENT_EVENT_RECORD_H*/

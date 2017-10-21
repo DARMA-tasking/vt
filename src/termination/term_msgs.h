@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_TERMINATION_MSGS__
-#define __RUNTIME_TRANSPORT_TERMINATION_MSGS__
+#if !defined INCLUDED_TERMINATION_TERM_MSGS_H
+#define INCLUDED_TERMINATION_TERM_MSGS_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -30,4 +30,4 @@ struct TermCounterMsg : vt::ShortMessage {
 
 }} //end namespace vt::term
 
-#endif /*__RUNTIME_TRANSPORT_TERMINATION_MSGS__*/
+#endif /*INCLUDED_TERMINATION_TERM_MSGS_H*/

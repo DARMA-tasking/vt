@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT__
-#define __RUNTIME_TRANSPORT__
+#if !defined INCLUDED_TRANSPORT_H
+#define INCLUDED_TRANSPORT_H
 
 #include "config.h"
 #include "tree/tree.h"
@@ -29,4 +29,4 @@
 #include "serialization/serialization.h"
 #include "standalone/vt_main.h"
 
-#endif /*__RUNTIME_TRANSPORT__*/
+#endif /*INCLUDED_TRANSPORT_H*/

@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_INFO__
-#define __RUNTIME_TRANSPORT_RDMA_INFO__
+#if !defined INCLUDED_RDMA_RDMA_INFO_H
+#define INCLUDED_RDMA_RDMA_INFO_H
 
 #include "config.h"
 #include "rdma_common.h"
@@ -34,4 +34,4 @@ struct Info {
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_INFO__*/
+#endif /*INCLUDED_RDMA_RDMA_INFO_H*/

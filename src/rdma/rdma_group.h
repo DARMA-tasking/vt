@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_RDMA_GROUP__
-#define __RUNTIME_TRANSPORT_RDMA_GROUP__
+#if !defined INCLUDED_RDMA_RDMA_GROUP_H
+#define INCLUDED_RDMA_RDMA_GROUP_H
 
 #include "config.h"
 #include "rdma_map.h"
@@ -57,4 +57,4 @@ struct Group {
 
 }} //end namespace vt::rdma
 
-#endif /*__RUNTIME_TRANSPORT_RDMA_GROUP__*/
+#endif /*INCLUDED_RDMA_RDMA_GROUP_H*/

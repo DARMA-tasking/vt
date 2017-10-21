@@ -1,6 +1,6 @@
 
-#if ! defined __RUNTIME_TRANSPORT_SEQ_COMMON__
-#define __RUNTIME_TRANSPORT_SEQ_COMMON__
+#if !defined INCLUDED_SEQUENCE_SEQ_COMMON_H
+#define INCLUDED_SEQUENCE_SEQ_COMMON_H
 
 #include <cstdint>
 #include <functional>
@@ -75,4 +75,4 @@ using UserSeqFunWithIDType = seq::UserSeqFunWithIDType;
 
 } // end namespace vt
 
-#endif /* __RUNTIME_TRANSPORT_SEQ_COMMON__*/
+#endif /* INCLUDED_SEQUENCE_SEQ_COMMON_H*/
