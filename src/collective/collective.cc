@@ -1,7 +1,7 @@
 
 #include "collective.h"
-#include "runtime.h"
-#include "runtime_inst.h"
+#include "runtime/runtime.h"
+#include "runtime/runtime_inst.h"
 
 #include <memory>
 #include <mpi.h>

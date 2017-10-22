@@ -51,7 +51,7 @@ set(
   termination trace tree scheduler utils/demangle utils/bits demangle
   topos/location topos/mapping topos/index utils/container utils/detector
   serialization serialization/messaging worker utils/mutex utils/static_checks
-  standalone
+  standalone runtime
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
@@ -133,12 +133,6 @@ list(
   APPEND
   HEADER_FILES
   "${TOP_HEADER_FILES}"
-)
-
-list(
-  APPEND
-  SOURCE_FILES
-  ${PROJECT_SOURCE_DIR}/runtime.cc
 )
 
 set(

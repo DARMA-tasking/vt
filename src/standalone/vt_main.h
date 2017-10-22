@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "context/context.h"
-#include "runtime_inst.h"
+#include "runtime/runtime_inst.h"
 #include "worker/worker_headers.h"
 
 #include <cassert>
