@@ -1,5 +1,6 @@
 
 #include "config.h"
+#include "context/context.h"
 
 #if backend_check_enabled(openmp)
 
