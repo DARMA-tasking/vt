@@ -121,46 +121,47 @@ static constexpr CountType const max_seq_depth = 8;
       }                                                                 \
     );                                                                  \
                                                                         \
-    for (int wb = 0; wb < nwaits_pre; wb++) {                           \
-      theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                        \
-        no_tag, [=](MSG_TYPE* msg){                                     \
-          CountType const this_wait = wb + nwait_offset;                \
-          EXPECT_EQ(seq_ordering_++, this_wait);                        \
-          DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-pre");         \
-        }                                                               \
-      );                                                                \
-    }                                                                   \
-                                                                        \
-    for (int nseg = 0; nseg < num_segs; nseg++) {                       \
-      theSeq()->sequenced([=]{                                          \
-        DEBUG_PRINT("nseg=%d:num_waits=%d\n",nseg,num_waits);           \
-        DEBUG_PRINT_SEQ(seq_ordering_, 0, "start-sequenced");           \
-        seqDepth(depth, [=]{                                            \
-          for (int w = 0; w < num_waits; w++) {                         \
-            theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                  \
-              no_tag, [=](MSG_TYPE* msg){                               \
-                CountType const this_wait =                             \
-                  (nseg * num_waits) + w + nwaits_pre + nwait_offset;   \
-                EXPECT_EQ(seq_ordering_++, this_wait);                  \
-                DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-main");  \
-              }                                                         \
-            );                                                          \
+    theSeq()->sequenced([=]{                                            \
+      for (int wb = 0; wb < nwaits_pre; wb++) {                         \
+        theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                      \
+          no_tag, [=](MSG_TYPE* msg){                                   \
+            CountType const this_wait = wb + nwait_offset;              \
+            EXPECT_EQ(seq_ordering_++, this_wait);                      \
+            DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-pre");       \
           }                                                             \
+        );                                                              \
+      }                                                                 \
+                                                                        \
+      for (int nseg = 0; nseg < num_segs; nseg++) {                     \
+        theSeq()->sequenced([=]{                                        \
+          DEBUG_PRINT("nseg=%d:num_waits=%d\n",nseg,num_waits);         \
+          DEBUG_PRINT_SEQ(seq_ordering_, 0, "start-sequenced");         \
+          seqDepth(depth, [=]{                                          \
+            for (int w = 0; w < num_waits; w++) {                       \
+              theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                \
+                no_tag, [=](MSG_TYPE* msg){                             \
+                  CountType const this_wait =                           \
+                    (nseg * num_waits) + w + nwaits_pre + nwait_offset; \
+                  EXPECT_EQ(seq_ordering_++, this_wait);                \
+                  DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-main"); \
+                }                                                       \
+              );                                                        \
+            }                                                           \
+          });                                                           \
         });                                                             \
-      });                                                               \
-    }                                                                   \
+      }                                                                 \
                                                                         \
-    for (int wa = 0; wa < nwaits_post; wa++) {                          \
-      theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                        \
-        no_tag, [=](MSG_TYPE* msg){                                     \
-          CountType const this_wait =                                   \
-            (num_segs * num_waits) + nwaits_pre + wa + nwait_offset;    \
-          EXPECT_EQ(seq_ordering_++, this_wait);                        \
-          DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-post");        \
-        }                                                               \
-      );                                                                \
-    }                                                                   \
-                                                                        \
+      for (int wa = 0; wa < nwaits_post; wa++) {                        \
+        theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                      \
+          no_tag, [=](MSG_TYPE* msg){                                   \
+            CountType const this_wait =                                 \
+              (num_segs * num_waits) + nwaits_pre + wa + nwait_offset;  \
+            EXPECT_EQ(seq_ordering_++, this_wait);                      \
+            DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-post");      \
+          }                                                             \
+        );                                                              \
+      }                                                                 \
+    });                                                                 \
   }                                                                     \
 
 
