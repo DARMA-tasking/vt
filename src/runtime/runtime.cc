@@ -137,9 +137,7 @@ void Runtime::initializeOptionalComponents() {
     theTrace = std::make_unique<trace::Trace>();
   );
 
-  backend_enable_if(
-    worker_threads, initializeWorkers(num_workers_);
-  );
+  initializeWorkers(num_workers_);
 
   debug_print(runtime, node, "end: initializeOptionalComponents\n");
 }

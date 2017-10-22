@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "context/context.h"
+#include "collective/collective.h"
 #include "runtime/runtime_inst.h"
 #include "worker/worker_headers.h"
 
