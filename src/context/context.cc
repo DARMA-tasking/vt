@@ -44,11 +44,15 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
 
   numNodes_ = static_cast<NodeType>(numNodesLocal);
   thisNode_ = static_cast<NodeType>(thisNodeLocal);
+
+  setWorker(worker_id_comm_thread);
 }
 
 Context::Context(bool const interop, MPI_Comm* comm)
   : Context(0, nullptr, interop, comm)
 { }
+
+DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id);
 
 }}  // end namespace vt::ctx
 

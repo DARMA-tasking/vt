@@ -90,7 +90,7 @@ public:
   ComponentPtr<vrt::VirtualContextManager> theVirtualManager;
 
   // Node-level worker-based components for vt (these are optional)
-  ComponentPtr<worker::WorkerGroup> theWorkerGrp;
+  ComponentPtr<worker::WorkerGroupType> theWorkerGrp;
 
   // Optional components
   #if backend_check_enabled(trace_enabled)

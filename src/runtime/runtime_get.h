@@ -35,7 +35,7 @@ extern term::TerminationDetector*  theTerm();
 extern location::LocationManager*  theLocMan();
 extern vrt::VirtualContextManager* theVirtualManager();
 extern pool::Pool*                 thePool();
-extern worker::WorkerGroup*        theWorkerGrp();
+extern worker::WorkerGroupType*    theWorkerGrp();
 
 #if backend_check_enabled(trace_enabled)
 extern trace::Trace*               theTrace();

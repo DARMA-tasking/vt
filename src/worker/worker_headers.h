@@ -10,16 +10,22 @@
 namespace vt { namespace worker {
 
 #if backend_check_enabled(openmp)
-  using WorkerGroup = WorkerGroupOMP;
+  using WorkerGroupType = WorkerGroupOMP;
 #else
-  using WorkerGroup = WorkerGroupSTD;
+  using WorkerGroupType = WorkerGroupSTD;
+#endif
+
+#if backend_check_enabled(openmp)
+  using WorkerType = OMPWorker;
+#else
+  using WorkerType = StdThreadWorker;
 #endif
 
 }} /* end namespace vt::worker */
 
 namespace vt {
 
-extern worker::WorkerGroup* theWorkerGrp();
+extern worker::WorkerGroupType* theWorkerGrp();
 
 } /* end namespace vt */
 

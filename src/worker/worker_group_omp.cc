@@ -58,6 +58,8 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
       // For now, all workers to have direct access to the runtime
       // TODO: this needs to change
       CollectiveOps::setCurrentRuntimeTLS();
+      //ctx::ContextAttorney::setWorker(thd);
+
       worker_state_[thd] = std::make_unique<WorkerStateType>(thd, nthds);
       worker_state_[thd]->spawn();
     } else {

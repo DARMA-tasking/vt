@@ -187,7 +187,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
 
   if (has_workers) {
     theContext->setNumWorkers(num_workers);
-    theWorkerGrp = std::make_unique<worker::WorkerGroup>();
+    theWorkerGrp = std::make_unique<worker::WorkerGroupType>();
   }
 
   debug_print(runtime, node, "end: initializeWorkers\n");

@@ -28,6 +28,7 @@ using VirtualProxyType = uint64_t;
 using ActionProxyType = std::function<void(VirtualProxyType)>;
 using SerialByteType = char;
 using WorkerCountType = int32_t;
+using WorkerIDType = int32_t;
 
 }  // end namespace vt
 
