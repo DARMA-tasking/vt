@@ -7,11 +7,14 @@
 #include <atomic>
 
 #include "config.h"
+#include "utils/atomic/atomic.h"
 #include "seq_common.h"
 #include "seq_types.h"
 #include "seq_node_fwd.h"
 
 namespace vt { namespace seq {
+
+using ::vt::util::atomic::AtomicType;
 
 struct SeqParallel {
   using SeqFuncLen = uint32_t;
@@ -44,7 +47,7 @@ private:
 
   SeqFuncLen num_funcs_ = 0;
 
-  std::atomic<SeqFuncLen> num_funcs_completed_ = {0};
+  AtomicType<SeqFuncLen> num_funcs_completed_ = {0};
 
   SeqParallelFuncType par_funcs_;
 
