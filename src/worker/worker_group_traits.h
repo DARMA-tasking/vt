@@ -74,6 +74,18 @@ struct WorkerGroupTraits {
                                        ));
   using has_enqueueAllWorkers = detection::is_detected<enqueueAllWorkers_t, T>;
 
+  template <typename U>
+  using enqueueCommThread_t = decltype(std::declval<U>().enqueueCommThread(
+                                        std::declval<work_unit_t>())
+                                     );
+  using has_enqueueCommThread = detection::is_detected<enqueueCommThread_t, T>;
+
+  template <typename U>
+  using commScheduler_t = decltype(std::declval<U>().commScheduler());
+  using has_commScheduler = detection::is_detected_convertible<
+    bool, commScheduler_t, T
+  >;
+
   // This defines what it means to be an `Worker'
   static constexpr auto const is_worker =
     // default constructor and copy constructor
@@ -81,11 +93,12 @@ struct WorkerGroupTraits {
     // using WorkerType
     has_WorkerType::value and
     // methods: spawnWorkers, spawnWorkersBlock, joinWorkers, enqueueAnyWorker,
-    //          enqueueForWorker, enqueueAllWorkers
+    //          enqueueForWorker, enqueueAllWorkers, enqueueCommThread
     has_spawnWorkers::value and has_spawnWorkersBlock::value and
     has_joinWorkers::value and has_enqueueAnyWorker::value and
     has_enqueueForWorker::value and has_enqueueAllWorkers::value and
-    has_progress::value and has_finished::value;
+    has_progress::value and has_finished::value and has_commScheduler::value and
+    has_enqueueCommThread::value;
 };
 
 }} /* end namespace vt::worker */

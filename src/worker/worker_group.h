@@ -6,6 +6,7 @@
 #include "worker/worker_common.h"
 #include "worker/worker.h"
 #include "worker/worker_group_counter.h"
+#include "worker/worker_group_comm.h"
 #include "utils/atomic/atomic.h"
 
 #if backend_check_enabled(stdthread)
@@ -22,7 +23,7 @@ namespace vt { namespace worker {
 using ::vt::util::atomic::AtomicType;
 
 template <typename WorkerT>
-struct WorkerGroupAny : WorkerGroupCounter {
+struct WorkerGroupAny : WorkerGroupCounter, WorkerGroupComm {
   using WorkerType = WorkerT;
   using WorkerPtrType = std::unique_ptr<WorkerT>;
   using WorkerContainerType = std::vector<WorkerPtrType>;

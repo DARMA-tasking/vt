@@ -29,10 +29,14 @@ bool Scheduler::schedulerImpl() {
   bool const vrt_seq_sch = theVirtualSeq()->scheduler();
   bool const worker_sch =
     theContext()->hasWorkers() ? theWorkerGrp()->progress(),false : false;
+  bool const worker_comm_sch =
+    theContext()->hasWorkers() ? theWorkerGrp()->commScheduler() : false;
 
   checkTermSingleNode();
 
-  scheduled_work = msg_sch or event_sch or seq_sch or vrt_seq_sch;
+  scheduled_work =
+    msg_sch or event_sch or seq_sch or vrt_seq_sch or
+    worker_sch or worker_comm_sch;
 
   if (scheduled_work) {
     is_idle = false;
