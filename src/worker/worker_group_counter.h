@@ -26,11 +26,13 @@ struct WorkerGroupCounter {
 
 protected:
   void triggerListeners(eWorkerGroupEvent event);
+  void updateConsumedTerm();
 
 private:
   AtomicType<WorkUnitCountType> num_enqueued_ = {0};
   AtomicType<WorkUnitCountType> num_finished_ = {0};
   AtomicType<bool> maybe_idle_= {false};
+  WorkUnitCountType num_consumed_ = 0;
   IdleListenerContainerType listeners_;
   eWorkerGroupEvent last_event_ = eWorkerGroupEvent::InvalidEvent;
 };

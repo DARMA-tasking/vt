@@ -6,10 +6,12 @@
 #include "context_vrtmanager.h"
 #include "context_vrt_internal_msgs.h"
 #include "context_vrt_remoteinfo.h"
+#include "context_vrt_make_closure.h"
 #include "topos/location/location.h"
 #include "registry/auto_registry_vc.h"
 #include "registry/auto_registry_map.h"
 #include "serialization/serialization.h"
+#include "worker/worker_headers.h"
 
 #include <cassert>
 #include <memory>
@@ -169,39 +171,73 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
   return return_proxy;
 }
 
-template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
-VirtualProxyType VirtualContextManager::makeVirtualMap(
-  Args&& ... args
+inline void VirtualContextManager::setupMappedVirutalContext(
+  VirtualProxyType const& proxy, SeedType const& seed, CoreType const& core,
+  HandlerType const& map_handle
+) {
+  auto vrt_info = getVirtualInfoByProxy(proxy);
+  vrt_info->setSeed(seed);
+  vrt_info->setCoreMap(map_handle);
+  vrt_info->mapToCore(core);
+}
+
+template <typename VrtContextT, typename... Args>
+VirtualProxyType VirtualContextManager::makeVirtualMapComm(
+  SeedType const& seed, HandlerType const& map_handle, Args&& ... args
 ) {
   auto const& proxy = makeVirtual<VrtContextT, Args...>(
     std::forward<Args>(args)...
   );
+  setupMappedVirutalContext(proxy, seed, worker_id_comm_thread, map_handle);
+  return proxy;
+}
 
-  if (theContext()->hasWorkers()) {
-    // save the seed for mapping
-    auto const next_seed = cur_seed_++;
-    auto vrt = getVirtualByProxy(proxy);
-    vrt->seed_ = next_seed;
+template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
+VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
+  SeedType next_seed = no_seed;
+  HandlerType core_map_handle = uninitialized_handler;
+  bool const& has_workers = theContext()->hasWorkers();
 
-    auto const& core_map_handle = auto_registry::makeAutoHandlerSeedMap<fn>();
+  debug_print(
+    vrt, node,
+    "makeVirtualMap: has_workers=%s\n", print_bool(has_workers)
+  );
 
-    auto const& vrt_id = VirtualProxyBuilder::getVirtualID(proxy);
-    auto holder_iter = holder_.find(vrt_id);
-    assert(holder_iter != holder_.end() && "Proxy ID Must exist here");
+  if (has_workers) {
+    next_seed = cur_seed_++;
+    core_map_handle = auto_registry::makeAutoHandlerSeedMap<fn>();
 
-    auto& info = holder_iter->second;
-    info.setCoreMap(core_map_handle);
-
-    auto const& mapped_core = fn(vrt->seed_, theContext()->getNumWorkers());
-    info.mapToCore(mapped_core);
+    auto const& num_workers = theContext()->getNumWorkers();
+    auto const& mapped_core = fn(next_seed, num_workers);
 
     debug_print(
       vrt, node,
-      "seed=%lld, mapped_core=%d\n", next_seed, mapped_core
+      "seed=%lld, mapped_core=%d, num_workers=%d\n",
+      next_seed, mapped_core, num_workers
     );
+
+    if (mapped_core != worker_id_comm_thread) {
+      using TupleType = std::tuple<Args...>;
+
+      auto proxy = makeVirtualPlaceholder();
+      auto vrt_info = getVirtualInfoByProxy(proxy);
+      setupMappedVirutalContext(proxy, next_seed, mapped_core, core_map_handle);
+
+      auto cl = new VirtualMakeClosure<VrtContextT, Args...>(
+        TupleType{std::forward<Args>(args)...}, proxy, vrt_info
+      );
+
+      // work to defer to the worker thread
+      auto work_unit = [=]{ cl->make(); delete cl; };
+      theWorkerGrp()->enqueueForWorker(mapped_core, work_unit);
+
+      return proxy;
+    }
   }
 
-  return proxy;
+  return makeVirtualMapComm<VrtContextT>(
+    next_seed, core_map_handle, std::forward<Args>(args)...
+  );
 }
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>

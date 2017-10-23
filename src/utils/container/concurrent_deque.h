@@ -9,7 +9,7 @@
 namespace vt { namespace util { namespace container {
 
 template <typename T>
-using ConcurrentDeque = ConcurrentDequeLocked<T, vt::util::mutex::MutexType>;
+using ConcurrentDeque = ConcurrentDequeLocked<T>;
 
 }}} //end namespace vt::util::container
 

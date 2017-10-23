@@ -32,7 +32,15 @@ WorkerGroupAny<WorkerT>::WorkerGroupAny(WorkerCountType const& in_num_workers)
 
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::initialize() {
+  using namespace std::placeholders;
+  finished_fn_ = std::bind(&WorkerGroupAny::finished, this, _1, _2);
+
   workers_.resize(num_workers_);
+}
+
+template <typename WorkerT>
+bool WorkerGroupAny<WorkerT>::commScheduler() {
+  return WorkerGroupComm::schedulerComm(finished_fn_);
 }
 
 template <typename WorkerT>
@@ -40,6 +48,13 @@ template <typename WorkerT>
   if (workers_.size() > 0) {
     joinWorkers();
   }
+}
+
+template <typename WorkerT>
+void WorkerGroupAny<WorkerT>::enqueueCommThread(WorkUnitType const& work_unit) {
+  assert(initialized_ and "Must be initialized to enqueue");
+  this->enqueued();
+  WorkerGroupComm::enqueueComm(work_unit);
 }
 
 template <typename WorkerT>
@@ -58,7 +73,7 @@ void WorkerGroupAny<WorkerT>::enqueueForWorker(
   assert(worker_id < workers_.size() and "Worker ID must be valid");
 
   this->enqueued();
-  workers_[worker_id].enqueue(work_unit);
+  workers_[worker_id]->enqueue(work_unit);
 }
 
 template <typename WorkerT>
@@ -106,11 +121,11 @@ void WorkerGroupAny<WorkerT>::spawnWorkers() {
 
   assert(workers_.size() >= num_workers_ and "Must be correct size");
 
-  auto finished = std::bind(&WorkerGroupAny::finished, this, _1, _2);
-
   for (int i = 0; i < num_workers_; i++) {
     WorkerIDType const worker_id = i;
-    workers_[i] = std::make_unique<WorkerT>(worker_id, num_workers_, finished);
+    workers_[i] = std::make_unique<WorkerT>(
+      worker_id, num_workers_, finished_fn_
+    );
   }
 
   for (auto&& elm : workers_) {

@@ -38,8 +38,9 @@ struct VirtualContextManager {
   using VirtualPtrType = std::unique_ptr<VirtualContext>;
   using PendingRequestType = PendingRequest;
   using VirtualInfoType = VirtualInfo;
-  using ContainerType = std::unordered_map<VirtualIDType, VirtualInfoType>;
-  using ContainerRemoteType = std::unordered_map<VirtualIDType, VirtualInfoType>;
+  using VirtualInfoPtrType = std::unique_ptr<VirtualInfoType>;
+  using ContainerType = std::unordered_map<VirtualIDType, VirtualInfoPtrType>;
+  using ContainerRemoteType = std::unordered_map<VirtualIDType, VirtualInfoPtrType>;
   using PendingContainerType = std::unordered_map<VirtualRequestIDType, PendingRequest>;
 
   VirtualContextManager();
@@ -51,7 +52,7 @@ struct VirtualContextManager {
   VirtualProxyType makeVirtualNode(NodeType const& node, Args&& ... args);
 
   template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
-  VirtualProxyType makeVirtualMap(Args&& ... args);
+  VirtualProxyType makeVirtualMap(Args ... args);
 
   VirtualContext* getVirtualByProxy(VirtualProxyType const& proxy);
   VirtualInfoType* getVirtualInfoByProxy(VirtualProxyType const& proxy);
@@ -68,6 +69,21 @@ struct VirtualContextManager {
   );
 
 private:
+  // For delayed construction, e.g., when the virtual context is mapped to a
+  // different core, create a proxy as a placeholder and delay construction
+  // until the worker executes it
+  VirtualProxyType makeVirtualPlaceholder();
+
+  void setupMappedVirutalContext(
+    VirtualProxyType const& proxy, SeedType const& seed, CoreType const& core,
+    HandlerType const& map_handle
+  );
+
+  template <typename VrtContextT, typename... Args>
+  VirtualProxyType makeVirtualMapComm(
+    SeedType const& seed, HandlerType const& map_handle, Args&& ... args
+  );
+
   template <typename VrtContextT, typename... Args>
   VirtualProxyType makeVirtualRemote(
     NodeType const& node, bool isImmediate, ActionProxyType action,

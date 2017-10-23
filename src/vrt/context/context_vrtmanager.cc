@@ -1,5 +1,6 @@
 
 #include "context_vrtmanager.h"
+#include "context_vrt_attorney.h"
 
 namespace vt {
 namespace vrt {
@@ -7,6 +8,12 @@ namespace vrt {
 VirtualContextManager::VirtualContextManager()
   : curIdent_(0), myNode_(theContext()->getNode())
 { }
+
+VirtualProxyType VirtualContextManager::makeVirtualPlaceholder() {
+  auto const& proxy = generateNewProxy();
+  insertVirtualContext(nullptr, proxy);
+  return proxy;
+}
 
 void VirtualContextManager::insertVirtualContext(
   typename VirtualContextManager::VirtualPtrType new_vc, VirtualProxyType proxy
@@ -20,22 +27,31 @@ void VirtualContextManager::insertVirtualContext(
   // registry the proxy with location manager
   theLocMan()->vrtContextLoc->registerEntity(proxy, virtualMsgHandler);
 
-  // save the proxy in the virtual context for reference later
-  new_vc->proxy_ = proxy;
+  bool const is_constructed = new_vc != nullptr;
+
+  if (is_constructed) {
+    // save the proxy in the virtual context for reference later
+    VirtualContextAttorney::setProxy(new_vc.get(), proxy);
+  }
 
   debug_print(
     vrt, node,
-    "inserting new VC into holder_: id=%d, proxy=%lld, ptr=%p\n",
-    id, proxy, new_vc.get()
+    "inserting new VC into holder_: id=%d, proxy=%lld, construct=%s, ptr=%p\n",
+    id, proxy, print_bool(is_constructed),
+    is_constructed ? new_vc.get() : nullptr
   );
 
   auto& holder = is_remote ? remote_holder_ : holder_;
 
-  // insert into the holder at the current slot, and increment slot
+  auto info = std::make_unique<VirtualInfoType>(
+    is_constructed ? std::move(new_vc) : nullptr, proxy, !is_constructed
+  );
+
+  // insert into the holder at the current slot
   holder.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(id),
-    std::forward_as_tuple(VirtualInfoType{std::move(new_vc), proxy})
+    std::forward_as_tuple(std::move(info))
   );
 }
 
@@ -57,34 +73,21 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
 
 /*static*/ void VirtualContextManager::virtualMsgHandler(BaseMessage* msg) {
   auto const vc_msg = static_cast<VirtualMessage*>(msg);
-
   auto const entity_proxy = vc_msg->getProxy();
 
   auto vc_info = theVirtualManager()->getVirtualInfoByProxy(entity_proxy);
 
-  auto const vc_ptr = vc_info->get();
+  assert(
+    vc_info != nullptr && "A virtual context must exist to invoke user handler"
+  );
 
   debug_print(
     vrt, node,
-    "virtualMsgHandler: msg=%p, entity_proxy=%lld, vc_ptr=%p\n",
-    msg, entity_proxy, vc_ptr
+    "virtualMsgHandler: msg=%p, entity_proxy=%lld\n",
+    msg, entity_proxy
   );
 
-  if (vc_ptr) {
-    if (vc_info->hasCoreMap()) {
-
-    } else {
-      // invoke the user's handler function immediately from the communication
-      // thread
-      auto const& sub_handler = vc_msg->getVrtHandler();
-      auto const& vc_active_fn = auto_registry::getAutoHandlerVC(sub_handler);
-      // execute the user's handler with the message and VC ptr
-      vc_active_fn(static_cast<VirtualMessage*>(msg), vc_ptr);
-    }
-  } else {
-    // the VC does not exist here?
-    assert(false && "A virtual context must exist to invoke user handler");
-  }
+  vc_info->tryEnqueueWorkUnit(static_cast<VirtualMessage*>(msg));
 }
 
 /*static*/ void VirtualContextManager::sendBackVirtualProxyHan(
@@ -128,7 +131,7 @@ VirtualContextManager::getVirtualInfoByID(
     assert(0 && "Virtual entity could not be found locally: invalid ID!");
     return nullptr;
   } else {
-    return &iter->second;
+    return iter->second.get();
   }
 }
 
@@ -162,7 +165,9 @@ void VirtualContextManager::destroyVirtualByID(
   VirtualIDType const& lookupID, bool const is_remote
 ) {
   auto& holder = is_remote ? remote_holder_ : holder_;
-  holder_.erase(holder_.find(lookupID));
+  auto iter = holder.find(lookupID);
+  assert(iter != holder.end() and "Virtual ID must exist");
+  holder.erase(iter);
 }
 
 void VirtualContextManager::destoryVirtualByProxy(

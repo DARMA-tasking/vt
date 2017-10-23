@@ -47,6 +47,12 @@ TermCounterType TerminationDetector::getNumUnits() const {
 void TerminationDetector::setLocalTerminated(
   bool const local_terminated, bool const no_local
 ) {
+  debug_print(
+    term, node,
+    "setLocalTerminated: is_term=%s, no_local_workers=%s\n",
+    print_bool(local_terminated), print_bool(no_local)
+  );
+
   any_epoch_state_.notifyLocalTerminated(local_terminated);
 
   if (local_terminated && !no_local) {
@@ -116,9 +122,9 @@ void TerminationDetector::produceConsume(
 }
 
 void TerminationDetector::maybePropagate() {
-  debug_print(term, node, "maybePropagate: invoked\n");
+  bool const ready = any_epoch_state_.readySubmitParent();
 
-  if (any_epoch_state_.readySubmitParent()) {
+  if (ready) {
     propagateEpoch(any_epoch_state_);
   }
 

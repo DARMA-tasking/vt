@@ -16,6 +16,9 @@ static constexpr VirtualRequestIDType const no_request_id = -1;
 
 struct VirtualContextManager;
 
+template <typename VrtContextT, typename... Args>
+struct VirtualMakeClosure;
+
 }}  // end namespace vt::vrt
 
 #endif /*INCLUDED_CONTEXT_VRT_FWD*/

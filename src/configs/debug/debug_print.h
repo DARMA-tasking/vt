@@ -60,7 +60,11 @@
 #define ctx_true 1
 #define ctx_false 0
 
-#define print_ctx_node ::vt::theContext()->getNode()
+#define print_ctx_node   ::vt::theContext()->getNode()
+#define print_ctx_worker ::vt::theContext()->getWorker()
+#define print_ctx_comm_worker                                       \
+  (print_ctx_worker == worker_id_comm_thread) ? comm_debug_print :  \
+  print_ctx_worker
 
 #define debug_virtual(\
   debug_type, \
@@ -143,8 +147,11 @@
 //   debug_virtual_ctx_1(debug_type, "idx=%d", this_index, main_fmt, main_arg)
 
 #define debug_print_node(debug_type, main_fmt, main_arg...)             \
-  debug_virtual_ctx_1(                                                  \
-    debug_type, "node=%d", print_ctx_node, main_fmt, main_arg           \
+  debug_virtual_ctx_2(                                                  \
+    debug_type,                                                         \
+    "node=%d",   print_ctx_node,                                        \
+    "worker=%d", print_ctx_comm_worker,                                 \
+    main_fmt, main_arg                                                  \
   )
 
 #define debug_print_unknown(debug_type, main_fmt, main_arg...)  \

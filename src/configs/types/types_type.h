@@ -9,11 +9,16 @@
 
 namespace vt {
 
-using PhysicalResourceType = uint16_t;
+// Physical identifier types (nodes, cores, workers, etc.)
+using PhysicalResourceType = int16_t;
 using NodeType = PhysicalResourceType;
 using CoreType = PhysicalResourceType;
-using SeedType = int64_t;
+using WorkerCountType = PhysicalResourceType;
+using WorkerIDType = PhysicalResourceType;
+
+// Runtime system entity types
 using HandlerType = int32_t;
+using SeedType = int64_t;
 using EnvelopeDataType = int8_t;
 using EventType = uint64_t;
 using EpochType = int32_t;
@@ -22,14 +27,14 @@ using BarrierType = uint64_t;
 using RefType = int16_t;
 using ByteType = uint64_t;
 using BitCountType = int32_t;
-using ActionType = std::function<void()>;
-using ActionNodeType = std::function<void(NodeType)>;
-using VirtualProxyType = uint64_t;
-using ActionProxyType = std::function<void(VirtualProxyType)>;
 using SerialByteType = char;
-using WorkerCountType = int32_t;
-using WorkerIDType = int32_t;
 using ErrorCodeType = int32_t;
+using VirtualProxyType = uint64_t;
+
+// Action types for attaching a closure to a runtime function
+using ActionType = std::function<void()>;
+using ActionProxyType = std::function<void(VirtualProxyType)>;
+using ActionNodeType = std::function<void(NodeType)>;
 
 }  // end namespace vt
 

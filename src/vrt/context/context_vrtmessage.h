@@ -38,6 +38,11 @@ struct VirtualMessage : RoutedMessageType<vt::Message> {
   }
   void setProxy(VirtualProxyType const& in_proxy) { to_proxy_ = in_proxy; }
 
+  // Force the message to always execute on the communication thread regardless
+  // of the mapping of the virtual context to a core. Used for system messages.
+  bool getExecuteCommThread() const { return execute_comm_thd_; }
+  void setExecuteCommThread(bool const comm) { execute_comm_thd_ = comm; }
+
   // Explicitly write a serializer so derived user messages can contain non-byte
   // serialization
   template <typename SerializerT>
@@ -45,9 +50,11 @@ struct VirtualMessage : RoutedMessageType<vt::Message> {
     RoutedMessageType<vt::Message>::serialize(s);
     s | vt_sub_handler_;
     s | to_proxy_;
+    s | execute_comm_thd_;
   }
 
 private:
+  bool execute_comm_thd_ = false;
   VirtualProxyType to_proxy_ = no_vrt_proxy;
   HandlerType vt_sub_handler_ = uninitialized_handler;
 };

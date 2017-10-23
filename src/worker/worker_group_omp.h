@@ -37,6 +37,8 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
   void joinWorkers();
   void progress();
 
+  bool commScheduler();
+  void enqueueCommThread(WorkUnitType const& work_unit);
   void enqueueAnyWorker(WorkUnitType const& work_unit);
   void enqueueForWorker(
     WorkerIDType const& worker_id, WorkUnitType const& work_unit
@@ -44,6 +46,7 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
   void enqueueAllWorkers(WorkUnitType const& work_unit);
 
 private:
+  WorkerFinishedFnType finished_fn_ = nullptr;
   AtomicType<WorkerCountType> ready_ = {0};
   bool initialized_ = false;
   WorkerCountType num_workers_ = 0;

@@ -13,6 +13,8 @@
 
 #include <omp.h>
 
+#define WORKER_OMP_VERBOSE 0
+
 namespace vt { namespace worker {
 
 WorkerGroupOMP::WorkerGroupOMP()
@@ -26,7 +28,14 @@ WorkerGroupOMP::WorkerGroupOMP(WorkerCountType const& in_num_workers)
 }
 
 void WorkerGroupOMP::initialize() {
+  using namespace std::placeholders;
+  finished_fn_ = std::bind(&WorkerGroupOMP::finished, this, _1, _2);
+
   worker_state_.resize(num_workers_);
+}
+
+bool WorkerGroupOMP::commScheduler() {
+  return WorkerGroupComm::schedulerComm(finished_fn_);
 }
 
 void WorkerGroupOMP::progress() {
@@ -37,8 +46,12 @@ void WorkerGroupOMP::progress() {
   worker_state_.clear();
 }
 
+void WorkerGroupOMP::enqueueCommThread(WorkUnitType const& work_unit) {
+  this->enqueued();
+  WorkerGroupComm::enqueueComm(work_unit);
+}
+
 void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
-  using namespace std::placeholders;
   using ::vt::ctx::ContextAttorney;
 
   debug_print(
@@ -53,8 +66,6 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
     worker, node,
     "worker group OMP spawning=%d\n", num_workers_ + 1
   );
-
-  auto finished_fn = std::bind(&WorkerGroupOMP::finished, this, _1, _2);
 
   #pragma omp parallel num_threads(num_workers_ + 1)
   {
@@ -75,7 +86,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
       );
 
       worker_state_[thd] = std::make_unique<WorkerStateType>(
-        thd, nthds, finished_fn
+        thd, nthds, finished_fn_
       );
       ready_++;
       worker_state_[thd]->spawn();
@@ -121,6 +132,10 @@ void WorkerGroupOMP::joinWorkers() {
 void WorkerGroupOMP::enqueueAnyWorker(WorkUnitType const& work_unit) {
   assert(initialized_ and "Must be initialized to enqueue");
 
+  #if WORKER_OMP_VERBOSE
+  debug_print(worker, node, "WorkerGroupOMP: enqueue any worker\n");
+  #endif
+
   this->enqueued();
   worker_state_[0]->enqueue(work_unit);
 }
@@ -131,12 +146,20 @@ void WorkerGroupOMP::enqueueForWorker(
   assert(initialized_ and "Must be initialized to enqueue");
   assert(worker_id < worker_state_.size() and "Worker ID must be valid");
 
+  #if WORKER_OMP_VERBOSE
+  debug_print(worker, node, "WorkerGroupOMP: enqueue for id=%d\n", worker_id);
+  #endif
+
   this->enqueued();
   worker_state_[worker_id]->enqueue(work_unit);
 }
 
 void WorkerGroupOMP::enqueueAllWorkers(WorkUnitType const& work_unit) {
   assert(initialized_ and "Must be initialized to enqueue");
+
+  #if WORKER_OMP_VERBOSE
+  debug_print(worker, node, "WorkerGroupOMP: enqueue all workers\n");
+  #endif
 
   this->enqueued(num_workers_);
   for (auto&& elm : worker_state_) {

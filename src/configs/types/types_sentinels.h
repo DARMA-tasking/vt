@@ -7,6 +7,14 @@
 
 namespace vt {
 
+// Physical identifier sentinel values (nodes, cores, workers, etc.)
+static constexpr NodeType const uninitialized_destination = 0xFFFF;
+static constexpr WorkerCountType const no_workers = 0xFFFF;
+static constexpr WorkerIDType const no_worker_id = 0xFFFE;
+static constexpr WorkerIDType const worker_id_comm_thread = 0xFEED;
+static constexpr WorkerIDType const comm_debug_print = -1;
+
+// Runtime identifier sentinel values
 static constexpr int const num_check_actions = 8;
 static constexpr EpochType const no_epoch = -1;
 static constexpr TagType const no_tag = -1;
@@ -18,15 +26,12 @@ static constexpr ByteType const no_offset = -1;
 static constexpr auto no_action = nullptr;
 static constexpr RDMA_PtrType const no_rdma_ptr = nullptr;
 static constexpr VirtualProxyType const no_vrt_proxy = 0xFFFFFFFF;
-static constexpr NodeType const uninitialized_destination = 0xFFFF;
 static constexpr HandlerType const uninitialized_handler = -1;
 static constexpr RDMA_HandlerType const uninitialized_rdma_handler = -1;
 static constexpr RefType const not_shared_message = -1000;
 static constexpr RDMA_ElmType const no_rdma_elm = -1;
 static constexpr RDMA_BlockType const no_rdma_block = -1;
-static constexpr WorkerCountType const no_workers = -1;
-static constexpr WorkerIDType const no_worker_id = -1;
-static constexpr WorkerIDType const worker_id_comm_thread = 0xFEEDFEED;
+static constexpr SeedType const no_seed = -1;
 
 }  // end namespace vt
 

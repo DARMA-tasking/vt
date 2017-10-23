@@ -12,6 +12,8 @@
 
 #include <omp.h>
 
+#define DEBUG_OMP_WORKER_SCHEDULER 0
+
 namespace vt { namespace worker {
 
 OMPWorker::OMPWorker(
@@ -32,6 +34,13 @@ void OMPWorker::scheduler() {
   bool should_term_local = false;
   do {
     if (work_queue_.size() > 0) {
+      #if DEBUG_OMP_WORKER_SCHEDULER
+      debug_print(
+        worker, node,
+        "OMPWorker: scheduler: size=%ld\n", work_queue_.size()
+      );
+      #endif
+
       auto elm = work_queue_.popGetBack();
       elm();
       finished_fn_(worker_id_, 1);
@@ -45,6 +54,8 @@ void OMPWorker::scheduler() {
 void OMPWorker::sendTerminateSignal() {
   #pragma omp atomic write
   should_terminate_ = true;
+
+  debug_print(worker, node, "OMPWorker: sendTerminateSignal\n");
 }
 
 void OMPWorker::spawn() {

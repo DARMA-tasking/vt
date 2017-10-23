@@ -12,8 +12,8 @@ namespace vt { namespace worker {
 using ::vt::util::container::ConcurrentDeque;
 
 struct WorkerGroupComm {
-  void enqueueCommThread(WorkUnitType const& work_unit);
-  bool commScheduler();
+  void enqueueComm(WorkUnitType const& work_unit);
+  bool schedulerComm(WorkerFinishedFnType finished_fn);
 
 protected:
   ConcurrentDeque<WorkUnitType> comm_work_deque_;

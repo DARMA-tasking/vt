@@ -16,8 +16,16 @@ namespace vt { namespace standalone {
 static constexpr NodeType const main_node = 0;
 static constexpr WorkerCountType const default_vt_num_workers = 4;
 
-inline void vt_main_scheduler() {
-  debug_print(gen, node, "vt_main: running main scheduler\n");
+template <typename VrtContextT>
+inline void vrLaunchMainContext() {
+  if (theContext()->getNode() == main_node) {
+    debug_print(gen, node, "vrLaunchMainContext: launching main context\n");
+    theVirtualManager()->makeVirtual<VrtContextT>();
+  }
+}
+
+inline void vtMainScheduler() {
+  debug_print(gen, node, "vtMainScheduler: running main scheduler\n");
 
   while (!rt->isTerminated()) {
     rt->runScheduler();
@@ -25,28 +33,29 @@ inline void vt_main_scheduler() {
 }
 
 template <typename VrtContextT>
+inline void vrCommThreadWork() {
+  vrLaunchMainContext<VrtContextT>();
+  vtMainScheduler();
+}
+
+template <typename VrtContextT>
 int vt_main(
   int argc, char** argv, WorkerCountType workers = default_vt_num_workers
 ) {
   auto rt = CollectiveOps::initialize(argc, argv, workers);
-
-  if (theContext()->getNode() == main_node) {
-    theVirtualManager()->makeVirtual<VrtContextT>();
-  }
-
   debug_print(gen, node, "vt_main: initialized workers=%d\n", workers);
 
+  auto comm_fn = vrCommThreadWork<VrtContextT>;
+
   if (workers == no_workers) {
-    vt_main_scheduler();
+    comm_fn();
   } else {
     assert(theWorkerGrp() != nullptr and "Must have valid worker group");
-    theWorkerGrp()->spawnWorkersBlock(vt_main_scheduler);
+    theWorkerGrp()->spawnWorkersBlock(comm_fn);
   }
 
   debug_print(gen, node, "vt_main: calling finalize workers=%d\n", workers);
-
   CollectiveOps::finalize(std::move(rt));
-
   return 0;
 }
 

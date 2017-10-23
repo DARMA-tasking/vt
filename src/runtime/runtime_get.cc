@@ -4,6 +4,8 @@
 #include "runtime_inst.h"
 #include "utils/tls/tls.h"
 
+#include <cassert>
+
 namespace vt {
 
 /*

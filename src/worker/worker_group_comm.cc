@@ -6,11 +6,16 @@
 
 namespace vt { namespace worker {
 
-void WorkerGroupComm::enqueueCommThread(WorkUnitType const& work_unit) {
+void WorkerGroupComm::enqueueComm(WorkUnitType const& work_unit) {
+  debug_print(
+    worker, node,
+    "WorkerGroupComm: enqueue comm thread size=%ld\n", comm_work_deque_.size()
+  );
+
   comm_work_deque_.pushBack(work_unit);
 }
 
-bool WorkerGroupComm::commScheduler() {
+bool WorkerGroupComm::schedulerComm(WorkerFinishedFnType finished_fn) {
   bool found = false;
   if (comm_work_deque_.size() > 0) {
     debug_print(
@@ -22,6 +27,10 @@ bool WorkerGroupComm::commScheduler() {
     comm_work_deque_.popFront();
     work_unit();
     found = true;
+
+    if (finished_fn) {
+      finished_fn(worker_id_comm_thread, 1);
+    }
   }
   return found;
 }

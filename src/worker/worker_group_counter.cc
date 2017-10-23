@@ -3,12 +3,22 @@
 #include "context/context.h"
 #include "worker/worker_common.h"
 #include "worker/worker_group_counter.h"
+#include "termination/term_headers.h"
+
+#include <cassert>
 
 #define WORKER_COUNTER_VERBOSE 0
 
 namespace vt { namespace worker {
 
 void WorkerGroupCounter::enqueued(WorkUnitCountType num) {
+  theTerm()->produce(term::any_epoch_sentinel, num);
+
+  assert(
+    theContext()->getWorker() == worker_id_comm_thread &&
+    "This must only run on the communication thread"
+  );
+
   num_enqueued_ += num;
   maybe_idle_.store(false);
 
@@ -21,7 +31,7 @@ void WorkerGroupCounter::finished(WorkerIDType id, WorkUnitCountType num) {
   #if WORKER_COUNTER_VERBOSE
   debug_print(
     worker, node,
-    "WorkerGroupCounter: finished: id=%d, num=%lld\n", id, num
+    "WorkerGroupCounter: completed: id=%d, num=%lld\n", id, num
   );
   #endif
 
@@ -41,6 +51,11 @@ void WorkerGroupCounter::registerIdleListener(IdleListenerType listener) {
 void WorkerGroupCounter::progress() {
   bool const cur_maybe_idle = maybe_idle_.load();
   bool const last_event_idle = last_event_ == eWorkerGroupEvent::WorkersIdle;
+
+  assert(
+    theContext()->getWorker() == worker_id_comm_thread &&
+    "This must only run on the communication thread"
+  );
 
   if (cur_maybe_idle || last_event_idle) {
     auto const cur_finished = num_finished_.load();
@@ -65,8 +80,26 @@ void WorkerGroupCounter::progress() {
         triggerListeners(eWorkerGroupEvent::WorkersBusy);
       }
       maybe_idle_.store(is_idle);
+    } else if (is_idle && num_finished_.load() > num_consumed_) {
+      updateConsumedTerm();
     }
   }
+}
+
+void WorkerGroupCounter::updateConsumedTerm() {
+  auto const cur_finished = num_finished_.load();
+  auto const cur_consumed = num_consumed_;
+  auto const num_to_consume = cur_finished - cur_consumed;
+
+  num_consumed_ += num_to_consume;
+
+  debug_print(
+    worker, node,
+    "WorkerGroupCounter: updating: num_fin=%lld, num_con=%lld, num_sub=%lld\n",
+    cur_finished, cur_consumed, num_to_consume
+  );
+
+  theTerm()->consume(term::any_epoch_sentinel, num_to_consume);
 }
 
 void WorkerGroupCounter::triggerListeners(eWorkerGroupEvent event) {
@@ -77,6 +110,10 @@ void WorkerGroupCounter::triggerListeners(eWorkerGroupEvent event) {
     WORKER_GROUP_EVENT_STR(event)
   );
   #endif
+
+  if (event == eWorkerGroupEvent::WorkersIdle) {
+    updateConsumedTerm();
+  }
 
   last_event_ = event;
 

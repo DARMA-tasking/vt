@@ -3,6 +3,7 @@
 #define INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H
 
 #include "config.h"
+#include "utils/mutex/mutex.h"
 #include "concurrent_deque_locked.h"
 
 #include <deque>
@@ -10,124 +11,117 @@
 
 namespace vt { namespace util { namespace container {
 
-template <typename T, typename LockT>
-void ConcurrentDequeLocked<T,LockT>::emplaceBack(T&& elm) {
-  if (needs_lock_) container_mutex_.lock();
+using ::vt::util::mutex::LockGuardPtrType;
+using ::vt::util::mutex::MutexType;
+
+template <typename T>
+MutexType* ConcurrentDequeLocked<T>::getMutex() {
+  return needs_lock_ ? &container_mutex_: nullptr;
+}
+
+template <typename T>
+void ConcurrentDequeLocked<T>::emplaceBack(T&& elm) {
+  LockGuardPtrType lock(getMutex());
   container_.emplace_back(std::forward<T>(elm));
-  if (needs_lock_) container_mutex_.unlock();
 }
 
-template <typename T, typename LockT>
-void ConcurrentDequeLocked<T,LockT>::emplaceFront(T&& elm) {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+void ConcurrentDequeLocked<T>::emplaceFront(T&& elm) {
+  LockGuardPtrType lock(getMutex());
   container_.emplace_front(std::forward<T>(elm));
-  if (needs_lock_) container_mutex_.unlock();
 }
 
-template <typename T, typename LockT>
-void ConcurrentDequeLocked<T,LockT>::pushBack(T const& elm) {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+void ConcurrentDequeLocked<T>::pushBack(T const& elm) {
+  LockGuardPtrType lock(getMutex());
   container_.push_back(elm);
-  if (needs_lock_) container_mutex_.unlock();
 }
 
-template <typename T, typename LockT>
-void ConcurrentDequeLocked<T,LockT>::pushFront(T const& elm) {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+void ConcurrentDequeLocked<T>::pushFront(T const& elm) {
+  LockGuardPtrType lock(getMutex());
   container_.push_front(elm);
-  if (needs_lock_) container_mutex_.unlock();
 }
 
-template <typename T, typename LockT>
-typename ConcurrentDequeLocked<T,LockT>::TConstRef
-ConcurrentDequeLocked<T,LockT>::front() const {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+typename ConcurrentDequeLocked<T>::TConstRef
+ConcurrentDequeLocked<T>::front() const {
+  LockGuardPtrType lock(getMutex());
   auto const& val = container_.front();
-  if (needs_lock_) container_mutex_.unlock();
   return val;
 }
 
-template <typename T, typename LockT>
-typename ConcurrentDequeLocked<T,LockT>::TConstRef
-ConcurrentDequeLocked<T,LockT>::back() const {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+typename ConcurrentDequeLocked<T>::TConstRef
+ConcurrentDequeLocked<T>::back() const {
+  LockGuardPtrType lock(getMutex());
   auto const& val = container_.back();
-  if (needs_lock_) container_mutex_.unlock();
   return val;
 }
 
-template <typename T, typename LockT>
-T ConcurrentDequeLocked<T,LockT>::popGetFront() {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+T ConcurrentDequeLocked<T>::popGetFront() {
+  LockGuardPtrType lock(getMutex());
   auto elm = container_.front();
   container_.pop_front();
-  if (needs_lock_) container_mutex_.unlock();
   return elm;
 }
 
-template <typename T, typename LockT>
-T ConcurrentDequeLocked<T,LockT>::popGetBack() {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+T ConcurrentDequeLocked<T>::popGetBack() {
+  LockGuardPtrType lock(getMutex());
   auto elm = container_.back();
   container_.pop_back();
-  if (needs_lock_) container_mutex_.unlock();
   return elm;
 }
 
-template <typename T, typename LockT>
-typename ConcurrentDequeLocked<T,LockT>::TRef
-ConcurrentDequeLocked<T,LockT>::at(SizeType const& pos) {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+typename ConcurrentDequeLocked<T>::TRef
+ConcurrentDequeLocked<T>::at(SizeType const& pos) {
+  LockGuardPtrType lock(getMutex());
   auto& val = container_.at(pos);
-  if (needs_lock_) container_mutex_.unlock();
   return val;
 }
 
-template <typename T, typename LockT>
-typename ConcurrentDequeLocked<T,LockT>::TConstRef ConcurrentDequeLocked<T,LockT>::at(
+template <typename T>
+typename ConcurrentDequeLocked<T>::TConstRef ConcurrentDequeLocked<T>::at(
   SizeType const& pos
 ) const {
-  if (needs_lock_) container_mutex_.lock();
+  LockGuardPtrType lock(getMutex());
   auto const& val = container_.at(pos);
-  if (needs_lock_) container_mutex_.unlock();
   return val;
 }
 
-template <typename T, typename LockT>
-typename ConcurrentDequeLocked<T,LockT>::TRef ConcurrentDequeLocked<T,LockT>::front() {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+typename ConcurrentDequeLocked<T>::TRef ConcurrentDequeLocked<T>::front() {
+  LockGuardPtrType lock(getMutex());
   auto& val = container_.front();
-  if (needs_lock_) container_mutex_.unlock();
   return val;
 }
 
-template <typename T, typename LockT>
-typename ConcurrentDequeLocked<T,LockT>::TRef ConcurrentDequeLocked<T,LockT>::back() {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+typename ConcurrentDequeLocked<T>::TRef ConcurrentDequeLocked<T>::back() {
+  LockGuardPtrType lock(getMutex());
   auto& val = container_.back();
-  if (needs_lock_) container_mutex_.unlock();
   return val;
 }
 
-template <typename T, typename LockT>
-void ConcurrentDequeLocked<T,LockT>::popFront() {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+void ConcurrentDequeLocked<T>::popFront() {
+  LockGuardPtrType lock(getMutex());
   container_.pop_front();
-  if (needs_lock_) container_mutex_.unlock();
 }
 
-template <typename T, typename LockT>
-void ConcurrentDequeLocked<T,LockT>::popBack() {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+void ConcurrentDequeLocked<T>::popBack() {
+  LockGuardPtrType lock(getMutex());
   container_.pop_back();
-  if (needs_lock_) container_mutex_.unlock();
 }
 
-template <typename T, typename LockT>
-typename ConcurrentDequeLocked<T,LockT>::SizeType ConcurrentDequeLocked<T,LockT>::size() {
-  if (needs_lock_) container_mutex_.lock();
+template <typename T>
+typename ConcurrentDequeLocked<T>::SizeType ConcurrentDequeLocked<T>::size() {
+  LockGuardPtrType lock(getMutex());
   auto const& val = container_.size();
-  if (needs_lock_) container_mutex_.unlock();
   return val;
 }
 

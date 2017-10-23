@@ -31,7 +31,9 @@ namespace vt { namespace util { namespace mutex {
 #endif
 
 using NullMutexType = NullMutex;
+
 using LockGuardType = LockGuardAnyType<MutexType>;
+using LockGuardPtrType = LockGuardAnyPtrType<MutexType>;
 
 }}} /* end namespace vt::util::mutex */
 

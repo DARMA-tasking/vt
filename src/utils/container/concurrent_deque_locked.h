@@ -4,12 +4,16 @@
 
 #include "config.h"
 #include "context/context.h"
+#include "utils/mutex/mutex.h"
 
 #include <deque>
 #include <mutex>
+#include <functional>
 #include <cassert>
 
 namespace vt { namespace util { namespace container {
+
+using ::vt::util::mutex::MutexType;
 
 /*
  * Implement a very simple concurrent deque that just uses std::mutex for access
@@ -17,7 +21,7 @@ namespace vt { namespace util { namespace container {
  * this enables programming to a consistent interface
  */
 
-template <typename T, typename LockT>
+template <typename T>
 struct ConcurrentDequeLocked {
   using ContainerType = std::deque<T>;
   using SizeType = typename ContainerType::size_type;
@@ -57,8 +61,11 @@ struct ConcurrentDequeLocked {
   SizeType size();
 
 private:
+  MutexType* getMutex();
+
+private:
   bool needs_lock_ = true;
-  LockT container_mutex_{};
+  MutexType container_mutex_{};
   ContainerType container_;
 };
 

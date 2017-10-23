@@ -13,11 +13,12 @@ struct VirtualContext {
   VirtualContext() = default;
   VirtualContext(bool const in_is_main) : is_main(in_is_main) { }
 
-  VirtualProxyType getProxy() const {
-    return proxy_;
-  }
+  friend struct VirtualContextAttorney;
 
-  friend struct VirtualContextManager;
+  VirtualProxyType getProxy() const { return proxy_; }
+
+private:
+  void setProxy(VirtualProxyType const& in_proxy) { proxy_ = in_proxy; }
 
 private:
   bool is_main = false;
