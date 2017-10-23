@@ -37,16 +37,45 @@ Runtime::Runtime(
   finalize();
 }
 
-bool Runtime::initialize() {
+bool Runtime::tryInitialize() {
   bool const init_now = !initialized_ && !finalized_;
 
   debug_print(
     runtime, unknown,
-    "Runtime: initialize: initialized_=%s, finalized_=%s, init_now=%s\n",
+    "Runtime: tryInitialize: initialized_=%s, finalized_=%s, init_now=%s\n",
     print_bool(initialized_), print_bool(finalized_), print_bool(init_now)
   );
 
   if (init_now) {
+    initialize(true);
+  }
+  return init_now;
+}
+
+bool Runtime::tryFinalize() {
+  bool const rt_live = !finalized_ && initialized_;
+  bool const has_run_sched = hasSchedRun();
+  bool const finalize_now = rt_live && has_run_sched;
+
+  debug_print(
+    runtime, unknown,
+    "Runtime: tryFinalize: initialized_=%s, finalized_=%s, rt_live=%s, sched=%s, "
+    "finalize_now=%s\n",
+    print_bool(initialized_), print_bool(finalized_), print_bool(rt_live),
+    print_bool(has_run_sched), print_bool(finalize_now)
+  );
+
+  if (finalize_now) {
+    finalize(true);
+  } else {
+    finalize_on_term_ = true;
+  }
+
+  return finalize_now;
+}
+
+bool Runtime::initialize(bool const force_now) {
+  if (force_now) {
     initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();
     initializeOptionalComponents();
@@ -54,8 +83,23 @@ bool Runtime::initialize() {
     setup();
     sync();
     initialized_ = true;
+    return true;
+  } else {
+    return tryInitialize();
   }
-  return init_now;
+}
+
+bool Runtime::finalize(bool const force_now) {
+  if (force_now) {
+    sync();
+    finalizeOptionalComponents();
+    finalizeComponents();
+    finalizeContext();
+    finalized_ = true;
+    return true;
+  } else {
+    return tryFinalize();
+  }
 }
 
 void Runtime::sync() {
@@ -64,32 +108,6 @@ void Runtime::sync() {
 
 void Runtime::runScheduler() {
   theSched->scheduler();
-}
-
-bool Runtime::finalize() {
-  bool const rt_live = !finalized_ && initialized_;
-  bool const has_run_sched = hasSchedRun();
-  bool const finalize_now = rt_live && has_run_sched;
-
-  debug_print(
-    runtime, unknown,
-    "Runtime: finalize: initialized_=%s, finalized_=%s, rt_live=%s, sched=%s, "
-    "finalize_now=%s\n",
-    print_bool(initialized_), print_bool(finalized_), print_bool(rt_live),
-    print_bool(has_run_sched), print_bool(finalize_now)
-  );
-
-  if (finalize_now) {
-    sync();
-    finalizeOptionalComponents();
-    finalizeComponents();
-    finalizeContext();
-    finalized_ = true;
-  } else {
-    finalize_on_term_ = true;
-  }
-
-  return finalize_now;
 }
 
 void Runtime::terminationHandler() {

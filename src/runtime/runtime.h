@@ -50,8 +50,8 @@ struct Runtime {
   bool isInitialized() const { return initialized_; }
   bool isFinalized() const { return finalized_; }
   bool hasSchedRun() const { return theSched ? theSched->hasSchedRun() : false; }
-  bool initialize();
-  bool finalize();
+  bool initialize(bool const force_now = false);
+  bool finalize(bool const force_now = false);
   void terminationHandler();
   void runScheduler();
 
@@ -61,6 +61,9 @@ private:
   RuntimeInstType const instance_;
 
 protected:
+  bool tryInitialize();
+  bool tryFinalize();
+
   void initializeContext(int argc, char** argv, MPI_Comm* comm);
   void initializeComponents();
   void initializeOptionalComponents();
