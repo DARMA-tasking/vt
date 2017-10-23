@@ -1,6 +1,10 @@
 
 #include "config.h"
+
+#if backend_check_enabled(stdthread)
+
 #include "context/context.h"
+#include "context/context_attorney.h"
 #include "collective/collective.h"
 #include "worker/worker_common.h"
 #include "worker/worker_stdthread.h"
@@ -21,9 +25,14 @@ void StdThreadWorker::enqueue(WorkUnitType const& work_unit) {
 }
 
 void StdThreadWorker::scheduler() {
+  using ::vt::ctx::ContextAttorney;
+
   // For now, all workers to have direct access to the runtime
   // TODO: this needs to change
   CollectiveOps::setCurrentRuntimeTLS();
+
+  // Set the thread-local worker in the Context
+  ContextAttorney::setWorker(worker_id_comm_thread);
 
   while (not should_terminate_.load()) {
     if (work_queue_.size() > 0) {
@@ -65,3 +74,5 @@ void StdThreadWorker::dispatch(WorkerFunType fun) {
 }
 
 }} /* end namespace vt::worker */
+
+#endif /*backend_check_enabled(stdthread)*/

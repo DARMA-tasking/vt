@@ -1,12 +1,16 @@
 
 #include "config.h"
+
+#if backend_check_enabled(openmp)
+
 #include "context/context.h"
 #include "worker/worker_common.h"
 #include "worker/worker_openmp.h"
 
-#include <thread>
 #include <memory>
 #include <functional>
+
+#include <omp.h>
 
 namespace vt { namespace worker {
 
@@ -61,3 +65,5 @@ void OMPWorker::dispatch(WorkerFunType fun) {
 }
 
 }} /* end namespace vt::worker */
+
+#endif /*backend_check_enabled(openmp)*/

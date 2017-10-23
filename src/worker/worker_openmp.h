@@ -3,14 +3,15 @@
 #define INCLUDED_WORKER_WORKER_OPENMP_H
 
 #include "config.h"
+
+#if backend_check_enabled(openmp)
+
 #include "worker/worker_common.h"
 #include "worker/worker_types.h"
 #include "utils/container/concurrent_deque.h"
 
-#include <thread>
-#include <functional>
+#include <omp.h>
 #include <memory>
-#include <atomic>
 
 namespace vt { namespace worker {
 
@@ -51,5 +52,7 @@ private:
 
   }} /* end namespace vt::worker */
 #endif
+
+#endif /*backend_check_enabled(openmp)*/
 
 #endif /*INCLUDED_WORKER_WORKER_OPENMP_H*/

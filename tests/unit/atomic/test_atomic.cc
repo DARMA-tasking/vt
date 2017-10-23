@@ -111,7 +111,7 @@ TEST_F(TestAtomic, basic_atomic_fetch_add_multi_thd) {
   #if backend_check_enabled(openmp)
     #pragma omp parallel num_threads(num_workers)
     testAtomicMulti();
-  #else
+  #elif backend_check_enabled(stdthread)
     std::vector<std::thread> thds;
     for (auto i = 0; i < num_workers; i++) {
       thds.emplace_back(std::thread(testAtomicMulti));
@@ -136,7 +136,7 @@ TEST_F(TestAtomic, basic_atomic_cas_multi_thd) {
   #if backend_check_enabled(openmp)
     #pragma omp parallel num_threads(num_workers)
     testAtomicMultiCAS();
-  #else
+  #elif backend_check_enabled(stdthread)
     std::vector<std::thread> thds;
     for (auto i = 0; i < num_workers; i++) {
       thds.emplace_back(std::thread(testAtomicMultiCAS));

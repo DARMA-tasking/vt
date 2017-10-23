@@ -40,11 +40,13 @@ private:
   WorkerContainerType workers_;
 };
 
-using WorkerGroupSTD = WorkerGroupAny<StdThreadWorker>;
+#if backend_check_enabled(stdthread)
+  using WorkerGroupSTD = WorkerGroupAny<StdThreadWorker>;
+#endif /*backend_check_enabled(stdthread)*/
 
 }} /* end namespace vt::worker */
 
-#if backend_check_enabled(detector)
+#if backend_check_enabled(detector) && backend_check_enabled(stdthread)
   #include "worker/worker_group_traits.h"
 
   namespace vt { namespace worker {
@@ -55,7 +57,7 @@ using WorkerGroupSTD = WorkerGroupAny<StdThreadWorker>;
   );
 
   }} /* end namespace vt::worker */
-#endif
+#endif /*backend_check_enabled(detector) && backend_check_enabled(stdthread)*/
 
 #include "worker/worker_group.impl.h"
 

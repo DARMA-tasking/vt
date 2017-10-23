@@ -61,6 +61,6 @@ private:
   }} /* end namespace vt::worker */
 #endif
 
-#endif
+#endif /*backend_check_enabled(openmp)*/
 
 #endif /*INCLUDED_WORKER_WORKER_GROUP_OMP_H*/

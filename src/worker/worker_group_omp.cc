@@ -1,6 +1,7 @@
 
 #include "config.h"
 #include "context/context.h"
+#include "context/context_attorney.h"
 #include "collective/collective.h"
 
 #if backend_check_enabled(openmp)
@@ -31,6 +32,8 @@ void WorkerGroupOMP::initialize() {
 }
 
 void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
+  using ::vt::ctx::ContextAttorney;
+
   debug_print(
     worker, node,
     "Worker group OMP: launching num worker threads=%d, num comm threads=%d\n",
@@ -54,16 +57,19 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
       "Worker group OMP: thd=%d, num threads=%d\n", thd, nthds
     );
 
+    // For now, all workers to have direct access to the runtime
+    // TODO: this needs to change
+    CollectiveOps::setCurrentRuntimeTLS();
+
     if (thd < num_workers_) {
-      // For now, all workers to have direct access to the runtime
-      // TODO: this needs to change
-      CollectiveOps::setCurrentRuntimeTLS();
-      //ctx::ContextAttorney::setWorker(thd);
+      // Set the thread-local worker in Context
+      ContextAttorney::setWorker(worker_id_comm_thread);
 
       worker_state_[thd] = std::make_unique<WorkerStateType>(thd, nthds);
       worker_state_[thd]->spawn();
     } else {
-      CollectiveOps::setCurrentRuntimeTLS();
+      // Set the thread-local worker in Context
+      ContextAttorney::setWorker(worker_id_comm_thread);
 
       // launch comm function on the main communication thread
       comm_fn();

@@ -5,10 +5,9 @@
 #include "config.h"
 
 #if backend_check_enabled(openmp)
-#include <omp.h>
-#include "utils/atomic/omp_atomic.h"
-#else
-#include "utils/atomic/std_atomic.h"
+  #include "utils/atomic/omp_atomic.h"
+#elif backend_check_enabled(stdthread)
+  #include "utils/atomic/std_atomic.h"
 #endif
 
 namespace vt { namespace util { namespace atomic {

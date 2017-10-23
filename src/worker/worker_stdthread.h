@@ -3,6 +3,9 @@
 #define INCLUDED_WORKER_WORKER_STDTHREAD_H
 
 #include "config.h"
+
+#if backend_check_enabled(stdthread)
+
 #include "worker/worker_common.h"
 #include "worker/worker_types.h"
 #include "utils/container/concurrent_deque.h"
@@ -56,5 +59,7 @@ private:
 
   }} /* end namespace vt::worker */
 #endif
+
+#endif /*backend_check_enabled(stdthread)*/
 
 #endif /*INCLUDED_WORKER_WORKER_STDTHREAD_H*/

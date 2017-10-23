@@ -7,17 +7,16 @@
 #include <mutex>
 
 #if backend_check_enabled(openmp)
-#include <omp.h>
-#include "omp_mutex.h"
-#else
-#include "std_mutex.h"
+  #include "omp_mutex.h"
+#elif backend_check_enabled(stdthread)
+  #include "std_mutex.h"
 #endif
 
 namespace vt { namespace util { namespace mutex {
 
 #if backend_check_enabled(openmp)
   using MutexType = OMPMutex;
-#else
+#elif backend_check_enabled(stdthread)
   using MutexType = std::mutex;
 #endif
 

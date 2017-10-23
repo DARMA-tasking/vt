@@ -48,7 +48,8 @@
     bit_check_overflow,    "Check bitfield overflow",                   \
     trace_enabled,         "Trace",                                     \
     detector,              "Detector",                                  \
-    openmp,                "OpenMP"                                     \
+    openmp,                "OpenMP",                                    \
+    stdthread,             "std::thread"                                \
   )
 
 #define debug_list_contexts                                             \

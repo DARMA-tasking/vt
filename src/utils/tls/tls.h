@@ -5,9 +5,8 @@
 #include "config.h"
 
 #if backend_check_enabled(openmp)
-  #include <omp.h>
   #include "utils/tls/omp_tls.h"
-#else
+#elif backend_check_enabled(stdthread)
   #include "utils/tls/std_tls.h"
 #endif
 

@@ -11,13 +11,13 @@ namespace vt { namespace worker {
 
 #if backend_check_enabled(openmp)
   using WorkerGroupType = WorkerGroupOMP;
-#else
+#elif backend_check_enabled(stdthread)
   using WorkerGroupType = WorkerGroupSTD;
 #endif
 
 #if backend_check_enabled(openmp)
   using WorkerType = OMPWorker;
-#else
+#elif backend_check_enabled(stdthread)
   using WorkerType = StdThreadWorker;
 #endif
 

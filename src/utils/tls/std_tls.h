@@ -4,6 +4,8 @@
 
 #include "config.h"
 
+#if backend_check_enabled(stdthread)
+
 namespace vt { namespace util { namespace tls {
 
 template <typename T, char const* tag, T val = T{}>
@@ -21,5 +23,7 @@ thread_local
 typename ThreadLocalSTD<T,tag,val>::TypeT ThreadLocalSTD<T,tag,val>::value_ = {val};
 
 }}} /* end namespace vt::util::tls */
+
+#endif /*backend_check_enabled(stdthread)*/
 
 #endif /*INCLUDED_UTILS_TLS_STD_TLS_H*/

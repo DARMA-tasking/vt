@@ -7,7 +7,6 @@
 #include "worker_common.h"
 #include "worker_group.h"
 
-#include <thread>
 #include <functional>
 #include <cstdint>
 

@@ -7,6 +7,7 @@
 namespace vt { namespace ctx {
 
 /*static*/ void ContextAttorney::setWorker(WorkerIDType const worker) {
+  printf("setting worker: worker=%d\n", worker);
   theContext()->setWorker(worker);
 }
 

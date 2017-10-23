@@ -4,6 +4,7 @@
 
 #include "config.h"
 
+#if backend_check_enabled(stdthread)
 #include <mutex>
 
 #if backend_check_enabled(detector)
@@ -18,5 +19,7 @@
 
   }}} // end namespace vt::util::mutex
 #endif
+
+#endif /*backend_check_enabled(stdthread)*/
 
 #endif /*INCLUDED_UTILS_MUTEX_STD_MUTEX_H*/
