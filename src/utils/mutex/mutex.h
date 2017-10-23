@@ -3,6 +3,8 @@
 #define INCLUDED_UTILS_MUTEX_MUTEX_H
 
 #include "config.h"
+#include "utils/mutex/lock_guard.h"
+#include "utils/mutex/null_mutex.h"
 
 #include <mutex>
 
@@ -27,6 +29,9 @@ namespace vt { namespace util { namespace mutex {
 #else
   backend_static_assert_unreachable
 #endif
+
+using NullMutexType = NullMutex;
+using LockGuardType = LockGuardAnyType<MutexType>;
 
 }}} /* end namespace vt::util::mutex */
 

@@ -4,8 +4,6 @@
 
 #include "config.h"
 
-#if backend_no_threading
-
 namespace vt { namespace util { namespace mutex {
 
 struct NullMutex {
@@ -20,7 +18,5 @@ struct NullMutex {
 };
 
 }}} /* end namespace vt::util::mutex */
-
-#endif /*backend_no_threading*/
 
 #endif /*INCLUDED_UTILS_MUTEX_NULL_MUTEX_H*/
