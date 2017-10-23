@@ -5,6 +5,7 @@
 #include "utils/tls/tls.h"
 
 #include <memory>
+#include <cstdlib>
 #include <mpi.h>
 
 namespace vt {
@@ -80,6 +81,19 @@ void CollectiveAnyOps<instance>::finalize(RuntimePtrType in_rt) {
 
   if (in_rt) {
     in_rt = nullptr;
+  }
+}
+
+template <RuntimeInstType instance>
+void CollectiveAnyOps<instance>::abort(
+  std::string const str, ErrorCodeType const code
+) {
+  auto tls_rt = AccessTLS(curRT);
+  auto rt = tls_rt ? tls_rt : ::vt::rt;
+  if (rt) {
+    rt->abort(str, code);
+  } else {
+    std::exit(code);
   }
 }
 

@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
   num_nodes = theContext()->getNumNodes();
 
   if (num_nodes < 4) {
-    fprintf(stderr, "requires at least 4 nodes\n");
+    CollectiveOps::abort("requires exactly 4 nodes", 0);
     return 0;
   }
 

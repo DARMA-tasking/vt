@@ -66,9 +66,9 @@ int main(int argc, char** argv) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    fprintf(stderr, "Please run with at least two ranks!\n");
-    fprintf(stderr, "\t mpirun-mpich-clang -n 2 %s\n", argv[0]);
-    exit(1);
+    CollectiveOps::abort("At least 2 ranks required");
+    
+
   }
 
   if (my_node == 0) {

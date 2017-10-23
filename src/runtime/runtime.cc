@@ -19,6 +19,11 @@
 #include "worker/worker_headers.h"
 
 #include <memory>
+#include <functional>
+#include <string>
+#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
 
 namespace vt { namespace runtime {
 
@@ -31,10 +36,12 @@ Runtime::Runtime(
 { }
 
 /*virtual*/ Runtime::~Runtime() {
-  while (runtime_active_) {
+  while (runtime_active_ && !aborted_) {
     runScheduler();
   }
-  finalize();
+  if (!aborted_) {
+    finalize();
+  }
 }
 
 bool Runtime::tryInitialize() {
@@ -108,6 +115,19 @@ void Runtime::sync() {
 
 void Runtime::runScheduler() {
   theSched->scheduler();
+}
+
+void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
+  aborted_ = true;
+
+  NodeType const node = theContext ? theContext->getNode() : -1;
+  std::string sep = "--------------";
+  auto csep = sep.c_str();
+  fprintf(stderr, "%s Node %d Exiting: abort() invoked %s\n", csep, node, csep);
+  fprintf(stderr, "Error code: %d\n", code);
+  fprintf(stderr, "Reason: \"%s\"\n", abort_str.c_str());
+
+  std::exit(code);
 }
 
 void Runtime::terminationHandler() {

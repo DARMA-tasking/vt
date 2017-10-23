@@ -4,7 +4,6 @@
 
 #include "config.h"
 #include "runtime/runtime_common.h"
-
 #include "context/context.h"
 #include "registry/registry.h"
 #include "messaging/active.h"
@@ -20,10 +19,12 @@
 #include "topos/location/location.h"
 #include "vrt/context/context_vrtmanager.h"
 #include "worker/worker_headers.h"
-
 #include "runtime_get.h"
 
 #include <memory>
+#include <functional>
+#include <string>
+
 #include <mpi.h>
 
 namespace vt { namespace runtime {
@@ -50,10 +51,11 @@ struct Runtime {
   bool isInitialized() const { return initialized_; }
   bool isFinalized() const { return finalized_; }
   bool hasSchedRun() const { return theSched ? theSched->hasSchedRun() : false; }
+
   bool initialize(bool const force_now = false);
   bool finalize(bool const force_now = false);
-  void terminationHandler();
   void runScheduler();
+  void abort(std::string const abort_str, ErrorCodeType const code);
 
   RuntimeInstType getInstanceID() const { return instance_; }
 
@@ -75,6 +77,7 @@ protected:
 
   void sync();
   void setup();
+  void terminationHandler();
 
 public:
   ComponentPtr<Registry> theRegistry;
@@ -102,7 +105,7 @@ public:
 
 protected:
   bool finalize_on_term_ = false;
-  bool initialized_ = false, finalized_ = false;
+  bool initialized_ = false, finalized_ = false, aborted_ = false;
   bool runtime_active_ = false;
   bool is_interop_ = false;
   WorkerCountType num_workers_ = no_workers;

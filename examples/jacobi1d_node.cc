@@ -229,8 +229,7 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
 
 static int exitEarly(NodeType node, int exit_code, char* reason) {
   if (node == 0) {
-    fprintf(stderr, "%s\n", reason);
-    fflush(stderr);
+    CollectiveOps::abort(std::string(reason), exit_code);
   }
 
   CollectiveOps::finalize();

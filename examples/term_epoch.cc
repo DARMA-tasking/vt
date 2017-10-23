@@ -108,9 +108,7 @@ int main(int argc, char** argv) {
   printf("%d:use_epoch=%s\n", my_node, print_bool(use_epoch));
 
   if (num_nodes == 1) {
-    fprintf(stderr, "Please run with at least two ranks!\n");
-    fprintf(stderr, "\t mpirun-mpich-clang -n 2 %s\n", argv[0]);
-    exit(1);
+    CollectiveOps::abort("At least 2 ranks required");
   }
 
   next_epoch();
