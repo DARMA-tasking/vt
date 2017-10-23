@@ -36,8 +36,10 @@ struct Scheduler {
     SchedulerEventType const& event, TriggerType trigger
   );
   void triggerEvent(SchedulerEventType const& event);
+  bool hasSchedRun() const { return has_executed_; }
 
 private:
+  bool has_executed_ = false;
   bool is_idle = false;
 
   EventTriggerContType event_triggers;

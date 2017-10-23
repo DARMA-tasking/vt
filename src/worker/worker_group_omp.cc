@@ -1,6 +1,7 @@
 
 #include "config.h"
 #include "context/context.h"
+#include "collective/collective.h"
 
 #if backend_check_enabled(openmp)
 
@@ -54,9 +55,14 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
     );
 
     if (thd < num_workers_) {
+      // For now, all workers to have direct access to the runtime
+      // TODO: this needs to change
+      CollectiveOps::setCurrentRuntimeTLS();
       worker_state_[thd] = std::make_unique<WorkerStateType>(thd, nthds);
       worker_state_[thd]->spawn();
     } else {
+      CollectiveOps::setCurrentRuntimeTLS();
+
       // launch comm function on the main communication thread
       comm_fn();
 

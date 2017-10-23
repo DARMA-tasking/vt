@@ -40,7 +40,6 @@ bool Scheduler::schedulerImpl() {
 }
 
 void Scheduler::scheduler() {
-
   bool const scheduled_work1 = schedulerImpl();
   bool const scheduled_work2 = schedulerImpl();
 
@@ -49,6 +48,8 @@ void Scheduler::scheduler() {
     // idle
     triggerEvent(SchedulerEventType::BeginIdle);
   }
+
+  has_executed_ = true;
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {

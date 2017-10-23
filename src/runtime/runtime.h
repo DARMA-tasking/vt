@@ -3,6 +3,7 @@
 #define INCLUDED_RUNTIME_H
 
 #include "config.h"
+#include "runtime/runtime_common.h"
 
 #include "context/context.h"
 #include "registry/registry.h"
@@ -34,7 +35,8 @@ struct Runtime {
   Runtime(
     int argc = 0, char** argv = nullptr,
     WorkerCountType in_num_workers = no_workers, bool const interop_mode = false,
-    MPI_Comm* in_comm = nullptr
+    MPI_Comm* in_comm = nullptr,
+    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
   );
 
   Runtime(Runtime const&) = delete;
@@ -43,12 +45,20 @@ struct Runtime {
 
   virtual ~Runtime();
 
-  bool isTerminated();
-  void initialize();
-  void sync();
-  void finalize();
+  bool isTerminated() const { return not runtime_active_; }
+  bool isFinializeble() const { return initialized_ and not finalized_; }
+  bool isInitialized() const { return initialized_; }
+  bool isFinalized() const { return finalized_; }
+  bool hasSchedRun() const { return theSched ? theSched->hasSchedRun() : false; }
+  bool initialize();
+  bool finalize();
   void terminationHandler();
-  void setup();
+  void runScheduler();
+
+  RuntimeInstType getInstanceID() const { return instance_; }
+
+private:
+  RuntimeInstType const instance_;
 
 protected:
   void initializeContext(int argc, char** argv, MPI_Comm* comm);
@@ -59,6 +69,9 @@ protected:
   void finalizeContext();
   void finalizeComponents();
   void finalizeOptionalComponents();
+
+  void sync();
+  void setup();
 
 public:
   ComponentPtr<Registry> theRegistry;
@@ -85,6 +98,8 @@ public:
   #endif
 
 protected:
+  bool finalize_on_term_ = false;
+  bool initialized_ = false, finalized_ = false;
   bool runtime_active_ = false;
   bool is_interop_ = false;
   WorkerCountType num_workers_ = no_workers;
@@ -94,7 +109,5 @@ protected:
 };
 
 }} /* end namespace vt::runtime */
-
-#include "runtime.impl.h"
 
 #endif /*INCLUDED_RUNTIME_H*/

@@ -1,6 +1,7 @@
 
 #include "config.h"
 #include "context/context.h"
+#include "collective/collective.h"
 #include "worker/worker_common.h"
 #include "worker/worker_stdthread.h"
 
@@ -20,6 +21,10 @@ void StdThreadWorker::enqueue(WorkUnitType const& work_unit) {
 }
 
 void StdThreadWorker::scheduler() {
+  // For now, all workers to have direct access to the runtime
+  // TODO: this needs to change
+  CollectiveOps::setCurrentRuntimeTLS();
+
   while (not should_terminate_.load()) {
     if (work_queue_.size() > 0) {
       auto elm = work_queue_.popGetBack();

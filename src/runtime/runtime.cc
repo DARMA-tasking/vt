@@ -24,38 +24,72 @@ namespace vt { namespace runtime {
 
 Runtime::Runtime(
   int argc, char** argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm* in_comm
-)  : runtime_active_(false), is_interop_(interop_mode),
+  bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
+)  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
      user_argv_(argv)
 { }
 
 /*virtual*/ Runtime::~Runtime() {
+  while (runtime_active_) {
+    runScheduler();
+  }
   finalize();
 }
 
-void Runtime::initialize() {
-  initializeContext(user_argc_, user_argv_, communicator_);
-  initializeComponents();
-  initializeOptionalComponents();
-  sync();
-  setup();
-  sync();
+bool Runtime::initialize() {
+  bool const init_now = !initialized_ && !finalized_;
+
+  debug_print(
+    runtime, unknown,
+    "Runtime: initialize: initialized_=%s, finalized_=%s, init_now=%s\n",
+    print_bool(initialized_), print_bool(finalized_), print_bool(init_now)
+  );
+
+  if (init_now) {
+    initializeContext(user_argc_, user_argv_, communicator_);
+    initializeComponents();
+    initializeOptionalComponents();
+    sync();
+    setup();
+    sync();
+    initialized_ = true;
+  }
+  return init_now;
 }
 
 void Runtime::sync() {
   MPI_Barrier(theContext->getComm());
 }
 
-void Runtime::finalize() {
-  sync();
-  finalizeOptionalComponents();
-  finalizeComponents();
-  finalizeContext();
+void Runtime::runScheduler() {
+  theSched->scheduler();
 }
 
-bool Runtime::isTerminated() {
-  return not runtime_active_;
+bool Runtime::finalize() {
+  bool const rt_live = !finalized_ && initialized_;
+  bool const has_run_sched = hasSchedRun();
+  bool const finalize_now = rt_live && has_run_sched;
+
+  debug_print(
+    runtime, unknown,
+    "Runtime: finalize: initialized_=%s, finalized_=%s, rt_live=%s, sched=%s, "
+    "finalize_now=%s\n",
+    print_bool(initialized_), print_bool(finalized_), print_bool(rt_live),
+    print_bool(has_run_sched), print_bool(finalize_now)
+  );
+
+  if (finalize_now) {
+    sync();
+    finalizeOptionalComponents();
+    finalizeComponents();
+    finalizeContext();
+    finalized_ = true;
+  } else {
+    finalize_on_term_ = true;
+  }
+
+  return finalize_now;
 }
 
 void Runtime::terminationHandler() {
@@ -65,12 +99,14 @@ void Runtime::terminationHandler() {
   );
 
   runtime_active_ = false;
+
+  if (finalize_on_term_) {
+    finalize();
+  }
 }
 
 void Runtime::setup() {
   debug_print(runtime, node, "begin: setup\n");
-
-  rt = RuntimeInst<eRuntimeInstance::DefaultInstance>::rt.get();
 
   runtime_active_ = true;
 

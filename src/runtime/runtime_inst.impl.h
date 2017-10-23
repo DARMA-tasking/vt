@@ -11,7 +11,7 @@
 namespace vt { namespace runtime {
 
 template <eRuntimeInstance instance>
-/*static*/ std::unique_ptr<Runtime> RuntimeInst<instance>::rt = nullptr;
+/*static*/ typename RuntimeInst<instance>::RuntimePtrType RuntimeInst<instance>::rt = nullptr;
 
 }} /* end namespace vt::runtime */
 

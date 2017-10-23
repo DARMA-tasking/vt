@@ -5,10 +5,11 @@
 #include "config.h"
 #include "context/context.h"
 #include "collective/collective.h"
-#include "runtime/runtime_inst.h"
+#include "runtime/runtime_headers.h"
 #include "worker/worker_headers.h"
 
 #include <cassert>
+#include <functional>
 
 namespace vt { namespace standalone {
 
@@ -19,7 +20,7 @@ inline void vt_main_scheduler() {
   debug_print(gen, node, "vt_main: running main scheduler\n");
 
   while (!rt->isTerminated()) {
-    runScheduler();
+    rt->runScheduler();
   }
 }
 
@@ -27,7 +28,7 @@ template <typename VrtContextT>
 int vt_main(
   int argc, char** argv, WorkerCountType workers = default_vt_num_workers
 ) {
-  CollectiveOps::initialize(argc, argv, workers);
+  auto rt = CollectiveOps::initialize(argc, argv, workers);
 
   if (theContext()->getNode() == main_node) {
     theVirtualManager()->makeVirtual<VrtContextT>();
@@ -44,7 +45,7 @@ int vt_main(
 
   debug_print(gen, node, "vt_main: calling finalize workers=%d\n", workers);
 
-  CollectiveOps::finalize();
+  CollectiveOps::finalize(std::move(rt));
 
   return 0;
 }
