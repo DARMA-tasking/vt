@@ -3,6 +3,7 @@
 #define INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_H
 
 #include "config.h"
+#include "context/context.h"
 
 #include <deque>
 #include <mutex>
@@ -23,7 +24,12 @@ struct ConcurrentDequeLocked {
   using TConstRef = typename ContainerType::const_reference;
   using TRef = typename ContainerType::reference;
 
-  ConcurrentDequeLocked() = default;
+  ConcurrentDequeLocked()
+    : ConcurrentDequeLocked(theContext() ? theContext()->hasWorkers() : true)
+  { }
+  explicit ConcurrentDequeLocked(bool in_needs_lock)
+    : needs_lock_(in_needs_lock)
+  { }
   ConcurrentDequeLocked(ConcurrentDequeLocked const&) = delete;
 
   virtual ~ConcurrentDequeLocked() { }
@@ -51,8 +57,8 @@ struct ConcurrentDequeLocked {
   SizeType size();
 
 private:
+  bool needs_lock_ = true;
   LockT container_mutex_{};
-
   ContainerType container_;
 };
 
