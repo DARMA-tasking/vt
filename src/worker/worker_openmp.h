@@ -16,11 +16,9 @@ namespace vt { namespace worker {
 
 struct OMPWorker {
   using WorkerFunType = std::function<void()>;
-  using ThreadType = std::thread;
-  using ThreadPtrType = std::unique_ptr<ThreadType>;
   using WorkUnitContainerType = util::container::ConcurrentDeque<WorkUnitType>;
 
-  OMPWorker(WorkerIDType const& in_worker_id_, WorkerIDType const& in_num_thds);
+  OMPWorker(WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds);
   OMPWorker(OMPWorker const&) = delete;
 
   void spawn();
@@ -35,9 +33,8 @@ private:
 private:
   bool should_terminate_= false;
   WorkerIDType worker_id_ = no_worker_id;
-  WorkerIDType num_thds_ = no_worker_id;
+  WorkerCountType num_thds_ = no_workers;
   WorkUnitContainerType work_queue_;
-  ThreadPtrType thd_ = nullptr;
 };
 
 }} /* end namespace vt::worker */

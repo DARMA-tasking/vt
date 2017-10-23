@@ -21,7 +21,7 @@ struct StdThreadWorker {
   using WorkUnitContainerType = util::container::ConcurrentDeque<WorkUnitType>;
 
   StdThreadWorker(
-    WorkerIDType const& in_worker_id_, WorkerIDType const& in_num_thds
+    WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds
   );
   StdThreadWorker(StdThreadWorker const&) = delete;
 
@@ -37,7 +37,7 @@ private:
 private:
   std::atomic<bool> should_terminate_ = {false};
   WorkerIDType worker_id_ = no_worker_id;
-  WorkerIDType num_thds_ = no_worker_id;
+  WorkerCountType num_thds_ = no_workers;
   WorkUnitContainerType work_queue_;
   ThreadPtrType thd_ = nullptr;
 };

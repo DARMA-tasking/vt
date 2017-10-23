@@ -23,8 +23,9 @@ struct WorkerTraits {
   template <typename U, typename... Vs>
   using constructor_t = decltype(U(std::declval<Vs>()...));
   using worker_id_t = WorkerIDType const&;
+  using worker_count_t = WorkerCountType const&;
   using has_constructor = detection::is_detected<
-    constructor_t, T, worker_id_t, worker_id_t
+    constructor_t, T, worker_id_t, worker_count_t
   >;
 
   template <typename U>
