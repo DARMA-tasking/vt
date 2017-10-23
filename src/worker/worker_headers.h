@@ -12,7 +12,7 @@ namespace vt { namespace worker {
 #if backend_check_enabled(openmp)
   using WorkerGroup = WorkerGroupOMP;
 #else
-  using WorkerGroup = WorkerGroupStd;
+  using WorkerGroup = WorkerGroupSTD;
 #endif
 
 }} /* end namespace vt::worker */

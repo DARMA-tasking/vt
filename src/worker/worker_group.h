@@ -40,7 +40,7 @@ private:
   WorkerContainerType workers_;
 };
 
-using WorkerGroupStd = WorkerGroupAny<StdThreadWorker>;
+using WorkerGroupSTD = WorkerGroupAny<StdThreadWorker>;
 
 }} /* end namespace vt::worker */
 
@@ -50,8 +50,8 @@ using WorkerGroupStd = WorkerGroupAny<StdThreadWorker>;
   namespace vt { namespace worker {
 
   static_assert(
-    WorkerGroupTraits<WorkerGroupStd>::is_worker,
-    "WorkerGroupStd must follow the WorkerGroup concept"
+    WorkerGroupTraits<WorkerGroupSTD>::is_worker,
+    "WorkerGroupSTD must follow the WorkerGroup concept"
   );
 
   }} /* end namespace vt::worker */
