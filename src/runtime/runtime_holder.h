@@ -52,7 +52,7 @@ private:
   }
 
   void release() {
-    if (owner_ && rt && rt_->isFinializeble() && rt_->hasSchedRun()) {
+    if (owner_ && rt_ && rt_->isFinializeble() && rt_->hasSchedRun()) {
       rt_->finalize();
     }
     rt_ = nullptr;
