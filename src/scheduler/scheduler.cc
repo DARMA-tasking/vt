@@ -4,7 +4,7 @@
 #include "messaging/active.h"
 #include "event/event.h"
 #include "termination/termination.h"
-#include "sequence/sequencer_headers.h"
+#include "runtime/runtime_get.h"
 
 namespace vt { namespace sched {
 
@@ -27,6 +27,8 @@ bool Scheduler::schedulerImpl() {
   bool const event_sch = theEvent()->scheduler();
   bool const seq_sch = theSeq()->scheduler();
   bool const vrt_seq_sch = theVirtualSeq()->scheduler();
+  bool const worker_sch =
+    theContext()->hasWorkers() ? theWorkerGrp()->progress(),false : false;
 
   checkTermSingleNode();
 

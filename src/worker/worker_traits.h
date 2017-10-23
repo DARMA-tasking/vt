@@ -29,6 +29,10 @@ struct WorkerTraits {
   >;
 
   template <typename U>
+  using progress_t = decltype(std::declval<U>().progress());
+  using has_progress = detection::is_detected<progress_t, T>;
+
+  template <typename U>
   using copy_constructor_t = decltype(U(std::declval<U const&>()));
   using has_copy_constructor = detection::is_detected<copy_constructor_t, T>;
 
@@ -58,8 +62,9 @@ struct WorkerTraits {
     has_constructor::value and not has_copy_constructor::value and
     // using WorkerFunType
     has_WorkerFunType::value and
-    // methods: spawn(), join(), dispatch(WorkerFunType), enqueue(WorkUnitType)
-    has_spawn::value and has_join::value and
+    // methods: spawn(), join(), dispatch(WorkerFunType), enqueue(WorkUnitType),
+    //          progress()
+    has_spawn::value and has_join::value and has_progress::value and
     has_dispatch::value and has_enqueue::value;
 };
 

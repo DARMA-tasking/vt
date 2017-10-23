@@ -27,6 +27,10 @@ void WorkerGroupOMP::initialize() {
   worker_state_.resize(num_workers_);
 }
 
+void WorkerGroupOMP::progress() {
+  // Noop
+}
+
 /*virtual*/ WorkerGroupOMP::~WorkerGroupOMP() {
   worker_state_.clear();
 }
@@ -52,24 +56,29 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
     WorkerIDType const thd = omp_get_thread_num();
     WorkerIDType const nthds = omp_get_num_threads();
 
-    debug_print(
-      worker, node,
-      "Worker group OMP: thd=%d, num threads=%d\n", thd, nthds
-    );
-
     // For now, all workers to have direct access to the runtime
     // TODO: this needs to change
     CollectiveOps::setCurrentRuntimeTLS();
 
     if (thd < num_workers_) {
       // Set the thread-local worker in Context
-      ContextAttorney::setWorker(worker_id_comm_thread);
+      ContextAttorney::setWorker(thd);
+
+      debug_print(
+        worker, node,
+        "Worker group OMP: (worker) thd=%d, num threads=%d\n", thd, nthds
+      );
 
       worker_state_[thd] = std::make_unique<WorkerStateType>(thd, nthds);
       worker_state_[thd]->spawn();
     } else {
       // Set the thread-local worker in Context
       ContextAttorney::setWorker(worker_id_comm_thread);
+
+      debug_print(
+        worker, node,
+        "Worker group OMP: (comm) thd=%d, num threads=%d\n", thd, nthds
+      );
 
       // launch comm function on the main communication thread
       comm_fn();

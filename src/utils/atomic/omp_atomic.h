@@ -121,6 +121,6 @@ private:
 
 }}} /* end namespace vt::util::atomic */
 
-#endif
+#endif /*backend_check_enabled(openmp)*/
 
 #endif /*INCLUDED_UTILS_ATOMIC_OMP_ATOMIC_H*/

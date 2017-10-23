@@ -23,6 +23,10 @@ void OMPWorker::enqueue(WorkUnitType const& work_unit) {
   work_queue_.pushBack(work_unit);
 }
 
+void OMPWorker::progress() {
+  // Noop
+}
+
 void OMPWorker::scheduler() {
   bool should_term_local = false;
   do {

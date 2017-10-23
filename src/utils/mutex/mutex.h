@@ -7,9 +7,13 @@
 #include <mutex>
 
 #if backend_check_enabled(openmp)
-  #include "omp_mutex.h"
+  #include "utils/mutex/omp_mutex.h"
 #elif backend_check_enabled(stdthread)
-  #include "std_mutex.h"
+  #include "utils/mutex/std_mutex.h"
+#elif backend_no_threading
+  #include "utils/mutex/null_mutex.h"
+#else
+  backend_static_assert_unreachable
 #endif
 
 namespace vt { namespace util { namespace mutex {
@@ -17,7 +21,11 @@ namespace vt { namespace util { namespace mutex {
 #if backend_check_enabled(openmp)
   using MutexType = OMPMutex;
 #elif backend_check_enabled(stdthread)
-  using MutexType = std::mutex;
+  using MutexType = STDMutex;
+#elif backend_no_threading
+  using MutexType = NullMutex;
+#else
+  backend_static_assert_unreachable
 #endif
 
 }}} /* end namespace vt::util::mutex */

@@ -1,26 +1,27 @@
 
-#if !defined INCLUDED_WORKER_WORKER_OPENMP_H
-#define INCLUDED_WORKER_WORKER_OPENMP_H
+#if !defined INCLUDED_WORKER_WORKER_SEQ_H
+#define INCLUDED_WORKER_WORKER_SEQ_H
 
 #include "config.h"
 
-#if backend_check_enabled(openmp)
+#if backend_no_threading
 
 #include "worker/worker_common.h"
 #include "worker/worker_types.h"
 #include "utils/container/concurrent_deque.h"
 
-#include <omp.h>
-#include <memory>
+#include "context/src/fcontext.h"
+
+#include <functional>
 
 namespace vt { namespace worker {
 
-struct OMPWorker {
+struct WorkerSeq {
   using WorkerFunType = std::function<void()>;
   using WorkUnitContainerType = util::container::ConcurrentDeque<WorkUnitType>;
 
-  OMPWorker(WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds);
-  OMPWorker(OMPWorker const&) = delete;
+  WorkerSeq(WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds);
+  WorkerSeq(WorkerSeq const&) = delete;
 
   void spawn();
   void join();
@@ -30,13 +31,20 @@ struct OMPWorker {
   void progress();
 
 private:
-  void scheduler();
+  void startScheduler();
+  void continueScheduler();
+
+  static void workerSeqSched(fcontext_transfer_t t);
 
 private:
-  bool should_terminate_= false;
+  bool should_terminate_ = false;
   WorkerIDType worker_id_ = no_worker_id;
   WorkerCountType num_thds_ = no_workers;
   WorkUnitContainerType work_queue_;
+
+  fcontext_stack_t stack;
+  fcontext_t fctx;
+  fcontext_transfer_t live;
 };
 
 }} /* end namespace vt::worker */
@@ -47,13 +55,13 @@ private:
   namespace vt { namespace worker {
 
   static_assert(
-    WorkerTraits<OMPWorker>::is_worker,
+    WorkerTraits<WorkerSeq>::is_worker,
     "vt::worker::Worker must follow the Worker concept"
   );
 
   }} /* end namespace vt::worker */
 #endif /*backend_check_enabled(detector)*/
 
-#endif /*backend_check_enabled(openmp)*/
+#endif /*backend_no_threading*/
 
-#endif /*INCLUDED_WORKER_WORKER_OPENMP_H*/
+#endif /*INCLUDED_WORKER_WORKER_SEQ_H*/

@@ -8,6 +8,10 @@
   #include "utils/tls/omp_tls.h"
 #elif backend_check_enabled(stdthread)
   #include "utils/tls/std_tls.h"
+#elif backend_no_threading
+  #include "utils/tls/null_tls.h"
+#else
+  backend_static_assert_unreachable
 #endif
 
 namespace vt { namespace util { namespace tls {
@@ -15,9 +19,14 @@ namespace vt { namespace util { namespace tls {
 #if backend_check_enabled(openmp)
   template <typename T, char const* tag, T val = T{}>
   using ThreadLocalType = ThreadLocalOMP<T,tag,val>;
-#else
+#elif backend_check_enabled(stdthread)
   template <typename T, char const* tag, T val = T{}>
   using ThreadLocalType = ThreadLocalSTD<T,tag,val>;
+#elif backend_no_threading
+  template <typename T, char const* tag, T val = T{}>
+  using ThreadLocalType = ThreadLocalNull<T,tag,val>;
+#else
+  backend_static_assert_unreachable
 #endif
 
 // Declare and extern TLS variable with initializer

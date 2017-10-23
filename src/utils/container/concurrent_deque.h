@@ -6,26 +6,6 @@
 #include "utils/mutex/mutex.h"
 #include "concurrent_deque_locked.h"
 
-#if backend_check_enabled(openmp)
-  #include "utils/mutex/omp_mutex.h"
-#elif backend_check_enabled(stdthread)
-  #include "utils/mutex/std_mutex.h"
-#endif
-
-#include <mutex>
-
-namespace vt { namespace util { namespace container {
-
-#if backend_check_enabled(openmp)
-  template <typename T>
-  using ConcurrentDequeOMP = ConcurrentDequeLocked<T, mutex::OMPMutex>;
-#elif backend_check_enabled(stdthread)
-  template <typename T>
-  using ConcurrentDequeSTD = ConcurrentDequeLocked<T, std::mutex>;
-#endif
-
-}}} //end namespace vt::util::container
-
 namespace vt { namespace util { namespace container {
 
 template <typename T>

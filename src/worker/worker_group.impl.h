@@ -69,6 +69,13 @@ void WorkerGroupAny<WorkerT>::enqueueAllWorkers(WorkUnitType const& work_unit) {
 }
 
 template <typename WorkerT>
+void WorkerGroupAny<WorkerT>::progress() {
+  for (auto&& elm : workers_) {
+    elm->progress();
+  }
+}
+
+template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::spawnWorkersBlock(WorkerCommFnType comm_fn) {
   debug_print(
     worker, node,

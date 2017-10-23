@@ -32,4 +32,8 @@
    startup                                                      \
 )
 
+#define backend_no_threading                                        \
+  !backend_check_enabled(openmp) &&                                 \
+  !backend_check_enabled(stdthread)
+
 #endif  /*INCLUDED_DEBUG_MASTER_CONFIG*/

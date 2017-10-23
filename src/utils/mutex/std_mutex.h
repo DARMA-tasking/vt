@@ -7,14 +7,20 @@
 #if backend_check_enabled(stdthread)
 #include <mutex>
 
+namespace vt { namespace util { namespace mutex {
+
+using STDMutex = std::mutex;
+
+}}} // end namespace vt::util::mutex
+
 #if backend_check_enabled(detector)
   #include "mutex_traits.h"
 
   namespace vt { namespace util { namespace mutex {
 
   static_assert(
-    MutexTraits<std::mutex>::is_mutex,
-    "std::mutex should follow the mutex concept"
+    MutexTraits<STDMutex>::is_mutex,
+    "STDMutex should follow the mutex concept"
   );
 
   }}} // end namespace vt::util::mutex

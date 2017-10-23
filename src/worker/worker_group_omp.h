@@ -33,6 +33,7 @@ struct WorkerGroupOMP {
   void spawnWorkers();
   void spawnWorkersBlock(WorkerCommFnType fn);
   void joinWorkers();
+  void progress();
 
   void enqueueAnyWorker(WorkUnitType const& work_unit);
   void enqueueForWorker(
@@ -59,7 +60,7 @@ private:
   );
 
   }} /* end namespace vt::worker */
-#endif
+#endif /*backend_check_enabled(detector)*/
 
 #endif /*backend_check_enabled(openmp)*/
 

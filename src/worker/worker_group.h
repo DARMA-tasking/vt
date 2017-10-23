@@ -5,7 +5,12 @@
 #include "config.h"
 #include "worker/worker_common.h"
 #include "worker/worker.h"
-#include "worker/worker_stdthread.h"
+
+#if backend_check_enabled(stdthread)
+  #include "worker/worker_stdthread.h"
+#elif backend_no_threading
+  #include "worker/worker_seq.h"
+#endif
 
 #include <vector>
 #include <memory>
@@ -27,6 +32,7 @@ struct WorkerGroupAny {
   void spawnWorkers();
   void spawnWorkersBlock(WorkerCommFnType fn);
   void joinWorkers();
+  void progress();
 
   void enqueueAnyWorker(WorkUnitType const& work_unit);
   void enqueueForWorker(
@@ -42,6 +48,8 @@ private:
 
 #if backend_check_enabled(stdthread)
   using WorkerGroupSTD = WorkerGroupAny<StdThreadWorker>;
+#elif backend_no_threading
+  using WorkerGroupSeq = WorkerGroupAny<WorkerSeq>;
 #endif /*backend_check_enabled(stdthread)*/
 
 }} /* end namespace vt::worker */

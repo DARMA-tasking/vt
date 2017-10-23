@@ -6,6 +6,9 @@
 #include "features_featureswitch.h"
 #include "features_defines.h"
 
+#define backend_static_assert_unreachable       \
+  static_assert(false, "Configuration error: This should be unreachable");
+
 #define debug_options_build(options...) options
 #define debug_local_options_on(options...) options
 
