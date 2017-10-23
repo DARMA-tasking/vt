@@ -77,6 +77,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
       worker_state_[thd] = std::make_unique<WorkerStateType>(
         thd, nthds, finished_fn
       );
+      ready_++;
       worker_state_[thd]->spawn();
     } else {
       // Set the thread-local worker in Context
@@ -86,6 +87,14 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
         worker, node,
         "Worker group OMP: (comm) thd=%d, num threads=%d\n", thd, nthds
       );
+
+      // Wait until all the workers are created and have filled the
+      // worker_state_ vector
+      while (ready_.load() < num_workers_) ;
+
+      // Enqueue an initial work unit for termination purposes
+      auto initial_work_unit = []{};
+      enqueueAllWorkers(initial_work_unit);
 
       // launch comm function on the main communication thread
       comm_fn();

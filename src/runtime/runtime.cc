@@ -3,6 +3,7 @@
 #include "runtime.h"
 
 #include "context/context.h"
+#include "context/context_attorney.h"
 #include "registry/registry.h"
 #include "messaging/active.h"
 #include "event/event.h"
@@ -217,6 +218,8 @@ void Runtime::initializeOptionalComponents() {
 }
 
 void Runtime::initializeWorkers(WorkerCountType const num_workers) {
+  using ::vt::ctx::ContextAttorney;
+
   debug_print(
     runtime, node, "begin: initializeWorkers: workers=%d\n", num_workers
   );
@@ -224,8 +227,19 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   bool const has_workers = num_workers != no_workers;
 
   if (has_workers) {
-    theContext->setNumWorkers(num_workers);
+    ContextAttorney::setNumWorkers(num_workers);
+
     theWorkerGrp = std::make_unique<worker::WorkerGroupType>();
+
+    auto localTermFn = [](worker::eWorkerGroupEvent event){
+      bool const no_local_workers = false;
+      bool const is_idle = event == worker::eWorkerGroupEvent::WorkersIdle;
+      bool const is_busy = event == worker::eWorkerGroupEvent::WorkersBusy;
+      if (is_idle || is_busy) {
+        ::vt::theTerm()->setLocalTerminated(is_idle, no_local_workers);
+      }
+    };
+    theWorkerGrp->registerIdleListener(localTermFn);
   } else {
     // Without workers running on the node, the termination detector should
     // assume its locally ready to propagate instead of waiting for them to

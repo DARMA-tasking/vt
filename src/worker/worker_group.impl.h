@@ -68,7 +68,7 @@ void WorkerGroupAny<WorkerT>::enqueueAllWorkers(WorkUnitType const& work_unit) {
   this->enqueued(num_workers_);
 
   for (auto&& elm : workers_) {
-    elm.enqueue(work_unit);
+    elm->enqueue(work_unit);
   }
 }
 
@@ -118,6 +118,10 @@ void WorkerGroupAny<WorkerT>::spawnWorkers() {
   }
 
   initialized_ = true;
+
+  // Give every worker at least one work unit (for termination purposes)
+  auto initial_work_unit = []{};
+  enqueueAllWorkers(initial_work_unit);
 }
 
 template <typename WorkerT>

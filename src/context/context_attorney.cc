@@ -10,4 +10,8 @@ namespace vt { namespace ctx {
   theContext()->setWorker(worker);
 }
 
+/*static*/ void ContextAttorney::setNumWorkers(WorkerCountType const nworkers) {
+  theContext()->setNumWorkers(nworkers);
+}
+
 }} /* end namespace vt::ctx */

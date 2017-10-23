@@ -4,6 +4,8 @@
 #include "worker/worker_common.h"
 #include "worker/worker_group_counter.h"
 
+#define WORKER_COUNTER_VERBOSE 0
+
 namespace vt { namespace worker {
 
 void WorkerGroupCounter::enqueued(WorkUnitCountType num) {
@@ -16,10 +18,12 @@ void WorkerGroupCounter::enqueued(WorkUnitCountType num) {
 }
 
 void WorkerGroupCounter::finished(WorkerIDType id, WorkUnitCountType num) {
+  #if WORKER_COUNTER_VERBOSE
   debug_print(
     worker, node,
     "WorkerGroupCounter: finished: id=%d, num=%lld\n", id, num
   );
+  #endif
 
   // This method may be called from multiple threads
   auto const cur_finished = num_finished_.fetch_add(num) + num;
@@ -43,6 +47,7 @@ void WorkerGroupCounter::progress() {
     auto const cur_enqueued = num_enqueued_.load();
     bool const is_idle = cur_finished == cur_enqueued;
 
+    #if WORKER_COUNTER_VERBOSE
     debug_print(
       worker, node,
       "WorkerGroupCounter: progress: fin=%lld, enq=%lld, is_idle=%s, "
@@ -50,6 +55,7 @@ void WorkerGroupCounter::progress() {
       cur_finished, cur_enqueued, print_bool(is_idle),
       WORKER_GROUP_EVENT_STR(last_event_), print_bool(last_event_idle)
     );
+    #endif
 
     if (is_idle && !last_event_idle) {
       // trigger listeners
@@ -64,11 +70,13 @@ void WorkerGroupCounter::progress() {
 }
 
 void WorkerGroupCounter::triggerListeners(eWorkerGroupEvent event) {
+  #if WORKER_COUNTER_VERBOSE
   debug_print(
     worker, node,
     "WorkerGroupCounter: triggering listeners: event=%s\n",
     WORKER_GROUP_EVENT_STR(event)
   );
+  #endif
 
   last_event_ = event;
 

@@ -44,6 +44,7 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
   void enqueueAllWorkers(WorkUnitType const& work_unit);
 
 private:
+  AtomicType<WorkerCountType> ready_ = {0};
   bool initialized_ = false;
   WorkerCountType num_workers_ = 0;
   WorkerStateContainerType worker_state_;
