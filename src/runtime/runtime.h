@@ -78,6 +78,8 @@ protected:
   void sync();
   void setup();
   void terminationHandler();
+  void printStartupBanner();
+  void printShutdownBanner();
 
 public:
   ComponentPtr<Registry> theRegistry;

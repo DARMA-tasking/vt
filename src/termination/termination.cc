@@ -40,6 +40,10 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
   theTerm()->attachGlobalTermAction(default_action);
 }
 
+TermCounterType TerminationDetector::getNumUnits() const {
+  return any_epoch_state_.g_cons2;
+}
+
 void TerminationDetector::setLocalTerminated(
   bool const local_terminated, bool const no_local
 ) {

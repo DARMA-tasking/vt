@@ -82,12 +82,47 @@ bool Runtime::tryFinalize() {
   return finalize_now;
 }
 
+void Runtime::printStartupBanner() {
+  NodeType const nodes = theContext->getNumNodes();
+  WorkerCountType const workers = theContext->getNumWorkers();
+  bool const has_workers = theContext->hasWorkers();
+
+  std::string init = "Runtime initializing";
+  std::string mode = std::string("mode: ") +
+    std::string(num_workers_ == no_workers ? "single" : "multi") +
+    std::string("-threaded");
+  std::string thd = !has_workers ? std::string("") :
+    std::string(", worker threading: ") +
+    std::string(
+      backend_enable_if_else(
+        openmp, "OpenMP", backend_enable_if_else(stdthread, "std::thread", "")
+      )
+   );
+  std::string worker_cnt = !has_workers ? std::string("") :
+    (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
+
+  auto const& stream = stdout;
+  fprintf(stream, "VT: %s: %s%s\n", init.c_str(), mode.c_str(), thd.c_str());
+  fprintf(stream, "VT: Running on %d nodes%s\n", nodes, worker_cnt.c_str());
+}
+
+void Runtime::printShutdownBanner() {
+  auto const num_units = theTerm->getNumUnits();
+  std::string fin = "Runtime finalizing";
+  std::string units = std::to_string(num_units);
+  auto const& stream = stdout;
+  fprintf(stream, "VT: %s: %s msgs processed\n", fin.c_str(), units.c_str());
+}
+
 bool Runtime::initialize(bool const force_now) {
   if (force_now) {
     initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();
     initializeOptionalComponents();
     sync();
+    if (theContext->getNode() == 0) {
+      printStartupBanner();
+    }
     setup();
     sync();
     initialized_ = true;
@@ -101,6 +136,9 @@ bool Runtime::finalize(bool const force_now) {
   if (force_now) {
     sync();
     finalizeOptionalComponents();
+    if (theContext->getNode() == 0) {
+      printShutdownBanner();
+    }
     finalizeComponents();
     finalizeContext();
     finalized_ = true;
@@ -124,6 +162,7 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   NodeType const node = theContext ? theContext->getNode() : -1;
   std::string sep = "--------------";
   auto csep = sep.c_str();
+  fprintf(stderr, "VT: runtime error: system aborting\n");
   fprintf(stderr, "%s Node %d Exiting: abort() invoked %s\n", csep, node, csep);
   fprintf(stderr, "Error code: %d\n", code);
   fprintf(stderr, "Reason: \"%s\"\n", abort_str.c_str());
