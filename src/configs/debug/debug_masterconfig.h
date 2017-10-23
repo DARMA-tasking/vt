@@ -21,7 +21,7 @@
 #endif
 
 #define backend_features backend_options_on(      \
-    detector, openmp                              \
+    detector, openmp, no_feature                  \
 )
 
 #define backend_debug_contexts backend_options_on(              \

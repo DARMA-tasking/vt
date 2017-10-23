@@ -16,8 +16,9 @@
 namespace vt { namespace worker {
 
 StdThreadWorker::StdThreadWorker(
-  WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds
-) : worker_id_(in_worker_id_), num_thds_(in_num_thds)
+  WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds,
+  WorkerFinishedFnType finished_fn
+) : worker_id_(in_worker_id_), num_thds_(in_num_thds), finished_fn_(finished_fn)
 { }
 
 void StdThreadWorker::enqueue(WorkUnitType const& work_unit) {
@@ -38,6 +39,7 @@ void StdThreadWorker::scheduler() {
     if (work_queue_.size() > 0) {
       auto elm = work_queue_.popGetBack();
       elm();
+      finished_fn_(worker_id_, 1);
     }
   }
 }

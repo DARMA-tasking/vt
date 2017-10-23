@@ -9,6 +9,7 @@
 #include "worker/worker_common.h"
 #include "worker/worker_types.h"
 #include "worker/worker_openmp.h"
+#include "worker/worker_group_counter.h"
 
 #include <vector>
 #include <memory>
@@ -16,7 +17,7 @@
 
 namespace vt { namespace worker {
 
-struct WorkerGroupOMP {
+struct WorkerGroupOMP : WorkerGroupCounter {
   using WorkerType = OMPWorker;
   using WorkerStateType = WorkerType;
   using WorkerStatePtrType = std::unique_ptr<WorkerStateType>;

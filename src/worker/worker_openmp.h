@@ -19,7 +19,10 @@ struct OMPWorker {
   using WorkerFunType = std::function<void()>;
   using WorkUnitContainerType = util::container::ConcurrentDeque<WorkUnitType>;
 
-  OMPWorker(WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds);
+  OMPWorker(
+    WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds,
+    WorkerFinishedFnType finished_fn
+  );
   OMPWorker(OMPWorker const&) = delete;
 
   void spawn();
@@ -37,6 +40,7 @@ private:
   WorkerIDType worker_id_ = no_worker_id;
   WorkerCountType num_thds_ = no_workers;
   WorkUnitContainerType work_queue_;
+  WorkerFinishedFnType finished_fn_ = nullptr;
 };
 
 }} /* end namespace vt::worker */

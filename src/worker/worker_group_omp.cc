@@ -9,6 +9,8 @@
 #include "worker/worker_common.h"
 #include "worker/worker_group_omp.h"
 
+#include <functional>
+
 #include <omp.h>
 
 namespace vt { namespace worker {
@@ -28,7 +30,7 @@ void WorkerGroupOMP::initialize() {
 }
 
 void WorkerGroupOMP::progress() {
-  // Noop
+  WorkerGroupCounter::progress();
 }
 
 /*virtual*/ WorkerGroupOMP::~WorkerGroupOMP() {
@@ -36,6 +38,7 @@ void WorkerGroupOMP::progress() {
 }
 
 void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
+  using namespace std::placeholders;
   using ::vt::ctx::ContextAttorney;
 
   debug_print(
@@ -50,6 +53,8 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
     worker, node,
     "worker group OMP spawning=%d\n", num_workers_ + 1
   );
+
+  auto finished_fn = std::bind(&WorkerGroupOMP::finished, this, _1, _2);
 
   #pragma omp parallel num_threads(num_workers_ + 1)
   {
@@ -69,7 +74,9 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
         "Worker group OMP: (worker) thd=%d, num threads=%d\n", thd, nthds
       );
 
-      worker_state_[thd] = std::make_unique<WorkerStateType>(thd, nthds);
+      worker_state_[thd] = std::make_unique<WorkerStateType>(
+        thd, nthds, finished_fn
+      );
       worker_state_[thd]->spawn();
     } else {
       // Set the thread-local worker in Context
@@ -105,6 +112,7 @@ void WorkerGroupOMP::joinWorkers() {
 void WorkerGroupOMP::enqueueAnyWorker(WorkUnitType const& work_unit) {
   assert(initialized_ and "Must be initialized to enqueue");
 
+  this->enqueued();
   worker_state_[0]->enqueue(work_unit);
 }
 
@@ -114,12 +122,14 @@ void WorkerGroupOMP::enqueueForWorker(
   assert(initialized_ and "Must be initialized to enqueue");
   assert(worker_id < worker_state_.size() and "Worker ID must be valid");
 
+  this->enqueued();
   worker_state_[worker_id]->enqueue(work_unit);
 }
 
 void WorkerGroupOMP::enqueueAllWorkers(WorkUnitType const& work_unit) {
   assert(initialized_ and "Must be initialized to enqueue");
 
+  this->enqueued(num_workers_);
   for (auto&& elm : worker_state_) {
     elm->enqueue(work_unit);
   }

@@ -21,8 +21,9 @@ namespace vt { namespace worker {
 using namespace fcontext;
 
 WorkerSeq::WorkerSeq(
-  WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds
-) : worker_id_(in_worker_id_), num_thds_(in_num_thds),
+  WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds,
+  WorkerFinishedFnType finished_fn
+) : worker_id_(in_worker_id_), num_thds_(in_num_thds), finished_fn_(finished_fn),
     stack(create_fcontext_stack())
 { }
 
@@ -56,6 +57,7 @@ void WorkerSeq::progress() {
     if (seq->work_queue_.size() > 0) {
       auto elm = seq->work_queue_.popGetBack();
       elm();
+      seq->finished_fn_(seq->worker_id_, 1);
     }
 
     #if WORKER_SEQ_VERBOSE

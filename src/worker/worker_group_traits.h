@@ -46,6 +46,14 @@ struct WorkerGroupTraits {
 
   using worker_id_t = WorkerIDType const&;
   using work_unit_t = WorkUnitType const&;
+  using work_unit_cnt_t = WorkUnitCountType;
+
+  template <typename U>
+  using finished_t = decltype(std::declval<U>().finished(
+                                std::declval<worker_id_t>(),
+                                std::declval<work_unit_cnt_t>()
+                              ));
+  using has_finished = detection::is_detected<finished_t, T>;
 
   template <typename U>
   using enqueueAnyWorker_t = decltype(std::declval<U>().enqueueAnyWorker(
@@ -77,7 +85,7 @@ struct WorkerGroupTraits {
     has_spawnWorkers::value and has_spawnWorkersBlock::value and
     has_joinWorkers::value and has_enqueueAnyWorker::value and
     has_enqueueForWorker::value and has_enqueueAllWorkers::value and
-    has_progress::value;
+    has_progress::value and has_finished::value;
 };
 
 }} /* end namespace vt::worker */

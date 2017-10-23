@@ -46,6 +46,7 @@ template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::enqueueAnyWorker(WorkUnitType const& work_unit) {
   assert(initialized_ and "Must be initialized to enqueue");
 
+  this->enqueued();
   workers_[0].enqueue(work_unit);
 }
 
@@ -56,12 +57,15 @@ void WorkerGroupAny<WorkerT>::enqueueForWorker(
   assert(initialized_ and "Must be initialized to enqueue");
   assert(worker_id < workers_.size() and "Worker ID must be valid");
 
+  this->enqueued();
   workers_[worker_id].enqueue(work_unit);
 }
 
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::enqueueAllWorkers(WorkUnitType const& work_unit) {
   assert(initialized_ and "Must be initialized to enqueue");
+
+  this->enqueued(num_workers_);
 
   for (auto&& elm : workers_) {
     elm.enqueue(work_unit);
@@ -73,6 +77,8 @@ void WorkerGroupAny<WorkerT>::progress() {
   for (auto&& elm : workers_) {
     elm->progress();
   }
+
+  WorkerGroupCounter::progress();
 }
 
 template <typename WorkerT>
@@ -91,6 +97,8 @@ void WorkerGroupAny<WorkerT>::spawnWorkersBlock(WorkerCommFnType comm_fn) {
 
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::spawnWorkers() {
+  using namespace std::placeholders;
+
   debug_print(
     worker, node,
     "WorkerGroup: spawnWorkers: num_workers_=%u\n", num_workers_
@@ -98,9 +106,11 @@ void WorkerGroupAny<WorkerT>::spawnWorkers() {
 
   assert(workers_.size() >= num_workers_ and "Must be correct size");
 
+  auto finished = std::bind(&WorkerGroupAny::finished, this, _1, _2);
+
   for (int i = 0; i < num_workers_; i++) {
     WorkerIDType const worker_id = i;
-    workers_[i] = std::make_unique<WorkerT>(worker_id, num_workers_);
+    workers_[i] = std::make_unique<WorkerT>(worker_id, num_workers_, finished);
   }
 
   for (auto&& elm : workers_) {

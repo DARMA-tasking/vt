@@ -13,7 +13,10 @@ namespace vt { namespace worker {
 struct Worker {
   using WorkerFunType = std::function<void()>;
 
-  Worker(WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds);
+  Worker(
+    WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds,
+    WorkerFinishedFnType finished_fn
+  );
   Worker(Worker const&) = delete;
 
   void spawn();
