@@ -60,6 +60,8 @@
 #define ctx_true 1
 #define ctx_false 0
 
+#define print_ctx_node ::vt::theContext()->getNode()
+
 #define debug_virtual(\
   debug_type, \
   has_c1, c1_fmt, c1_arg, \
@@ -67,7 +69,7 @@
   main_fmt, main_arg...                                                 \
 )                                                                       \
   debug_virtual_pe(                                                     \
-    debug_type, theContext()->getNode(),                                \
+    debug_type, print_ctx_node,                                         \
     has_c1, c1_fmt, c1_arg,                                             \
     has_c2, c2_fmt, c2_arg,                                             \
     main_fmt, ##main_arg                                                \
@@ -127,7 +129,7 @@
   main_fmt, main_arg...                                                 \
 )                                                                       \
   debug_virtual_proc_ctx_none(                                          \
-    debug_type, theContext()->getNode(), main_fmt, ##main_arg           \
+    debug_type, print_ctx_node, main_fmt, ##main_arg                    \
   )
 
 // define a set of debug print variants that are each unsed by some set of modes
@@ -142,7 +144,7 @@
 
 #define debug_print_node(debug_type, main_fmt, main_arg...)             \
   debug_virtual_ctx_1(                                                  \
-    debug_type, "node=%d", theContext()->getNode(), main_fmt, main_arg  \
+    debug_type, "node=%d", print_ctx_node, main_fmt, main_arg           \
   )
 
 #define debug_print_unknown(debug_type, main_fmt, main_arg...)  \
