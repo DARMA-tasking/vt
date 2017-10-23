@@ -121,6 +121,7 @@ TEST_F(TestAtomic, basic_atomic_fetch_add_multi_thd) {
     }
   #endif
 
+  #if !backend_no_threading
   test_mutex.lock();
   for (auto&& elm : count) {
     EXPECT_EQ(elm, true);
@@ -128,6 +129,7 @@ TEST_F(TestAtomic, basic_atomic_fetch_add_multi_thd) {
   EXPECT_EQ(atomic_num.load(), 1);
   EXPECT_EQ(atomic_test_val.load(), num_workers);
   test_mutex.unlock();
+  #endif
 }
 
 TEST_F(TestAtomic, basic_atomic_cas_multi_thd) {
@@ -146,8 +148,10 @@ TEST_F(TestAtomic, basic_atomic_cas_multi_thd) {
     }
   #endif
 
+  #if !backend_no_threading
   EXPECT_EQ(atomic_test_slot.load(), num_workers);
   EXPECT_EQ(atomic_test_cas.load(), num_workers);
+  #endif
 }
 
 }}} // end namespace vt::tests::unit
