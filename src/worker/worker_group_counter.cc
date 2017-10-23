@@ -22,7 +22,7 @@ void WorkerGroupCounter::finished(WorkerIDType id, WorkUnitCountType num) {
   );
 
   // This method may be called from multiple threads
-  auto const cur_finished = num_finished_.add_fetch(num);
+  auto const cur_finished = num_finished_.fetch_add(num) + num;
   auto const cur_enqueued = num_enqueued_.load();
   bool const is_idle = cur_finished == cur_enqueued;
   if (is_idle) {
