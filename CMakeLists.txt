@@ -51,7 +51,7 @@ set(
   termination trace tree scheduler utils/demangle utils/bits demangle
   topos/location topos/mapping topos/index utils/container utils/detector
   serialization serialization/messaging worker utils/mutex utils/static_checks
-  standalone runtime
+  standalone runtime utils/tls
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
@@ -245,7 +245,7 @@ endforeach()
 
 set(
   UNIT_TEST_SUBDIRS_LIST
-  index active pool sequencer mapping serialization
+  index active pool sequencer mapping serialization tls
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})

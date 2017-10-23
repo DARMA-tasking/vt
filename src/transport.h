@@ -28,5 +28,6 @@
 #include "vrt/context/context_vrtheaders.h"
 #include "serialization/serialization.h"
 #include "standalone/vt_main.h"
+#include "utils/tls/tls.h"
 
 #endif /*INCLUDED_TRANSPORT_H*/
