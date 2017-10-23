@@ -34,6 +34,7 @@ struct StdThreadWorker {
   void dispatch(WorkerFunType fun);
   void enqueue(WorkUnitType const& work_unit);
   void sendTerminateSignal();
+  void progress();
 
 private:
   void scheduler();

@@ -25,6 +25,10 @@ void StdThreadWorker::enqueue(WorkUnitType const& work_unit) {
   work_queue_.pushBack(work_unit);
 }
 
+void StdThreadWorker::progress() {
+  // Noop
+}
+
 void StdThreadWorker::scheduler() {
   using ::vt::ctx::ContextAttorney;
 
