@@ -70,17 +70,21 @@ bool TermState::readySubmitParent(bool const needs_active) const {
     num_children_ != uninitialized_destination and "Children must be valid"
   );
 
+  auto const ret = (epoch_active_ or not needs_active) and
+    recv_child_count_ == num_children_ and local_terminated_ and
+    submitted_wave_ == cur_wave_ - 1 and not term_detected_;
+
   debug_print(
     term, node,
     "readySubmitParent: epoch=%d, active=%s, local_ready=%s, "
-    "submitted_wave=%lld, recv=%d, children=%d\n",
+    "sub_wave=%lld, cur_wave_=%lld, recv_child=%d, num_child=%d, term=%s:"
+    " ret=%s\n",
     epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
-    submitted_wave_, recv_child_count_, num_children_
+    submitted_wave_, cur_wave_, recv_child_count_, num_children_,
+    print_bool(term_detected_), print_bool(ret)
   );
 
-  return (epoch_active_ or not needs_active) and
-    recv_child_count_ == num_children_ and local_terminated_ and
-    submitted_wave_ == cur_wave_ - 1 and not term_detected_;
+  return ret;
 }
 
 TermState::TermState(

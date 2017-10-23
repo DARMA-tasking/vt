@@ -57,7 +57,7 @@ struct TerminationDetector : Tree {
     TermCounterType const& num_units = 1, bool produce = true
   );
   void maybePropagate();
-  void setLocalTerminated(bool const terminated);
+  void setLocalTerminated(bool const terminated, bool const no_local = true);
 
   void propagateEpochExternalState(
     TermStateType& state, TermCounterType const& prod, TermCounterType const& cons

@@ -40,10 +40,12 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
   theTerm()->attachGlobalTermAction(default_action);
 }
 
-void TerminationDetector::setLocalTerminated(bool const local_terminated) {
+void TerminationDetector::setLocalTerminated(
+  bool const local_terminated, bool const no_local
+) {
   any_epoch_state_.notifyLocalTerminated(local_terminated);
 
-  if (local_terminated) {
+  if (local_terminated && !no_local) {
     theTerm()->maybePropagate();
   }
 }
@@ -110,6 +112,8 @@ void TerminationDetector::produceConsume(
 }
 
 void TerminationDetector::maybePropagate() {
+  debug_print(term, node, "maybePropagate: invoked\n");
+
   if (any_epoch_state_.readySubmitParent()) {
     propagateEpoch(any_epoch_state_);
   }
