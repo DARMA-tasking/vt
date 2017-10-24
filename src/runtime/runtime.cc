@@ -111,7 +111,7 @@ void Runtime::printShutdownBanner() {
   std::string fin = "Runtime finalizing";
   std::string units = std::to_string(num_units);
   auto const& stream = stdout;
-  fprintf(stream, "VT: %s: %s msgs processed\n", fin.c_str(), units.c_str());
+  fprintf(stream, "VT: %s: %s work units processed\n", fin.c_str(), units.c_str());
 }
 
 bool Runtime::initialize(bool const force_now) {
