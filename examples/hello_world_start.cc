@@ -1,5 +1,6 @@
 
 #include "transport.h"
+#include "utils/tls/tls.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -9,13 +10,21 @@ using namespace vt;
 using namespace vt::vrt;
 using namespace vt::mapping;
 
-#define DEBUG_PRINT_START(str, args...)                                 \
+#define DEBUG_START_EXAMPLE 0
+
+#define DEBUG_PRINTER_START(str, args...)                               \
   do{                                                                   \
     printf(                                                             \
       "node=%d,worker=%d: " str,                                        \
       theContext()->getNode(), theContext()->getWorker(), args          \
     );                                                                  \
   } while (false);
+
+#if DEBUG_START_EXAMPLE
+  #define DEBUG_PRINT_START(str, args...) DEBUG_PRINTER_START
+#else
+  #define DEBUG_PRINT_START(str, args...)
+#endif
 
 struct ProxyMsg : vt::vrt::VirtualMessage {
   std::vector<VirtualProxyType> proxies;
@@ -47,6 +56,10 @@ struct WorkMsg : vt::vrt::VirtualMessage {
 struct TestVC;
 static void doWorkRight(WorkMsg* msg, TestVC* vc);
 
+static ::vt::util::atomic::AtomicType<int> num_work_finished = {0};
+
+DeclareInitTLS(int, tls_work, 0);
+
 struct TestVC : vt::vrt::VirtualContext {
   VirtualProxyType my_proxy = no_vrt_proxy;
   VirtualProxyType right_proxy = no_vrt_proxy;
@@ -58,7 +71,7 @@ struct TestVC : vt::vrt::VirtualContext {
   TestVC(int const in_my_index, int const in_work_amt)
     : my_index(in_my_index), work_amt(in_work_amt)
   {
-    printf(
+    DEBUG_PRINT_START(
       "node=%d, worker=%d: %p: constructing TestVC: my_index=%d, work amt=%d\n",
       theContext()->getNode(), theContext()->getWorker(), this, my_index,
       work_amt
@@ -120,6 +133,9 @@ struct TestVC : vt::vrt::VirtualContext {
     }
     stored_val = val;
 
+    num_work_finished++;
+    AccessTLS(tls_work)++;
+
     DEBUG_PRINT_START(
       "my_proxy=%lld, finished work val=%f\n", my_proxy, stored_val
     );
@@ -151,6 +167,16 @@ struct MainVC : vt::vrt::MainVirtualContext {
       auto msg = makeSharedMessage<MakeMainMsg>();
       theMsg()->broadcastMsg<MakeMainMsg, makeMain>(msg);
     }
+
+    theTerm()->attachGlobalTermAction([]{
+      auto const num_work_units = num_work_finished.load();
+      DEBUG_PRINTER_START("num_work_units=%d\n", num_work_units);
+
+      theWorkerGrp()->enqueueAllWorkers([]{
+        auto const num_work_units = AccessTLS(tls_work);
+        DEBUG_PRINTER_START("tls work_units=%d\n", num_work_units);
+      });
+    });
 
     std::vector<VirtualProxyType> proxies;
 
