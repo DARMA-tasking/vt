@@ -49,9 +49,6 @@ struct VirtualMakeClosure {
     );
 
     VirtualContextAttorney::setProxy(vc_ptr.get(), proxy);
-
-    printf("vc_ptr=%p, proxy=%lld\n", vc_ptr.get(), proxy);
-
     info->setVirtualContextPtr(std::move(vc_ptr));
   }
 };
