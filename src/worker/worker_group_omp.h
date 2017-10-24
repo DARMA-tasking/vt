@@ -36,8 +36,12 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
   void spawnWorkersBlock(WorkerCommFnType fn);
   void joinWorkers();
   void progress();
-
   bool commScheduler();
+
+  // // thread-safe comm thread enqueue
+  // void enqueueCommThreadSafe(WorkUnitType const& work_unit);
+
+  // non-thread-safe comm and worker thread enqueue
   void enqueueCommThread(WorkUnitType const& work_unit);
   void enqueueAnyWorker(WorkUnitType const& work_unit);
   void enqueueForWorker(

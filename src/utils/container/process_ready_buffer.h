@@ -3,6 +3,7 @@
 #define INCLUDED_UTILS_CONTAINER_PROCESS_READY_BUFFER_H
 
 #include "config.h"
+#include "context/context.h"
 #include "utils/mutex/mutex.h"
 
 #include <list>
@@ -20,21 +21,25 @@ struct ProcessBuffer {
   void push(T const& elm) {
     LockGuardPtrType lock(getMutex());
     buffer_.push_back(elm);
-    if (process_fn_) apply(process_fn_, true);
+    progressEngine(true);
   }
 
   void emplace(T&& elm) {
     LockGuardPtrType lock(getMutex());
     buffer_.emplace_back(std::forward<T>(elm));
-    if (process_fn_) apply(process_fn_, true);
+    progressEngine(true);
   }
 
-  void attach(ProcessFnType fn) {
+  void attach(ProcessFnType fn, WorkerIDType worker = no_worker_id) {
     LockGuardPtrType lock(getMutex());
     process_fn_ = fn;
-    apply(fn, true);
+    worker_ = worker;
+    progressEngine(true);
   }
 
+  inline void progress() { progressEngine(false); }
+
+private:
   void apply(ProcessFnType fn, bool locked) {
     bool found = true;
     T elm_out;
@@ -57,14 +62,19 @@ struct ProcessBuffer {
   }
 
 private:
-  MutexType* getMutex() {
-    return needs_lock_ ? &mutex_: nullptr;
+  inline void progressEngine(bool has_lock) {
+    if (process_fn_ && isProcessWorker()) { apply(process_fn_, has_lock); }
   }
+  inline bool isProcessWorker() const {
+    return worker_ == no_worker_id || worker_ == ::vt::theContext()->getWorker();
+  }
+  inline MutexType* getMutex() { return needs_lock_ ? &mutex_: nullptr; }
 
 private:
   std::list<T> buffer_;
   bool needs_lock_ = true;
   MutexType mutex_{};
+  WorkerIDType worker_ = no_worker_id;
   ProcessFnType process_fn_ = nullptr;
 };
 

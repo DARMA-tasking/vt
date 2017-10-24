@@ -6,18 +6,31 @@
 #include "termination/term_headers.h"
 
 #include <cassert>
+#include <functional>
 
 #define WORKER_COUNTER_VERBOSE 0
 
 namespace vt { namespace worker {
 
-void WorkerGroupCounter::enqueued(WorkUnitCountType num) {
-  theTerm()->produce(term::any_epoch_sentinel, num);
+void WorkerGroupCounter::attachEnqueueProgressFn() {
+  using std::placeholders::_1;
+  auto fn = std::bind(&WorkerGroupCounter::enqueued, this, _1);
+  enqueued_count_.attach(fn, worker_id_comm_thread);
+}
 
-  assert(
-    theContext()->getWorker() == worker_id_comm_thread &&
-    "This must only run on the communication thread"
-  );
+void WorkerGroupCounter::enqueued(WorkUnitCountType num) {
+  auto const is_comm = theContext()->getWorker() == worker_id_comm_thread;
+  if (is_comm) {
+    enqueuedComm(num);
+  } else {
+    enqueued_count_.push(num);
+  }
+}
+
+void WorkerGroupCounter::enqueuedComm(WorkUnitCountType num) {
+  assertCommThread();
+
+  theTerm()->produce(term::any_epoch_sentinel, num);
 
   num_enqueued_ += num;
   maybe_idle_.store(false);
@@ -44,7 +57,17 @@ void WorkerGroupCounter::finished(WorkerIDType id, WorkUnitCountType num) {
   }
 }
 
+void WorkerGroupCounter::assertCommThread() {
+  // Sanity check to ensure single-threaded methods are only called by the
+  // communication thread
+  assert(
+    theContext()->getWorker() == worker_id_comm_thread &&
+    "This must only run on the communication thread"
+  );
+}
+
 void WorkerGroupCounter::registerIdleListener(IdleListenerType listener) {
+  assertCommThread();
   listeners_.push_back(listener);
 }
 
@@ -52,10 +75,9 @@ void WorkerGroupCounter::progress() {
   bool const cur_maybe_idle = maybe_idle_.load();
   bool const last_event_idle = last_event_ == eWorkerGroupEvent::WorkersIdle;
 
-  assert(
-    theContext()->getWorker() == worker_id_comm_thread &&
-    "This must only run on the communication thread"
-  );
+  assertCommThread();
+
+  enqueued_count_.progress();
 
   if (cur_maybe_idle || last_event_idle) {
     auto const cur_finished = num_finished_.load();

@@ -5,26 +5,36 @@
 #include "config.h"
 #include "worker/worker_common.h"
 #include "utils/atomic/atomic.h"
+#include "utils/container/process_ready_buffer.h"
 
 #include <list>
 
 namespace vt { namespace worker {
 
 using ::vt::util::atomic::AtomicType;
+using ::vt::util::container::ProcessBuffer;
 
 struct WorkerGroupCounter {
   using IdleListenerType = std::function<void(eWorkerGroupEvent)>;
   using IdleListenerContainerType = std::list<IdleListenerType>;
+  using EnqueueCountContainerType = ProcessBuffer<WorkUnitCountType>;
+
+  WorkerGroupCounter() {
+    attachEnqueueProgressFn();
+  }
 
   // This method may be called from multiple threads
+  void enqueued(WorkUnitCountType num = 1);
   void finished(WorkerIDType id, WorkUnitCountType num = 1);
 
   // These methods should only be called by a single thread (i.e., comm thread)
-  void enqueued(WorkUnitCountType num = 1);
+  void enqueuedComm(WorkUnitCountType num = 1);
   void registerIdleListener(IdleListenerType listener);
   void progress();
 
 protected:
+  void assertCommThread();
+  void attachEnqueueProgressFn();
   void triggerListeners(eWorkerGroupEvent event);
   void updateConsumedTerm();
 
@@ -35,6 +45,7 @@ private:
   WorkUnitCountType num_consumed_ = 0;
   IdleListenerContainerType listeners_;
   eWorkerGroupEvent last_event_ = eWorkerGroupEvent::InvalidEvent;
+  EnqueueCountContainerType enqueued_count_;
 };
 
 
