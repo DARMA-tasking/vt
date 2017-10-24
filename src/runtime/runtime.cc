@@ -226,17 +226,22 @@ void Runtime::finalizeContext() {
 void Runtime::initializeComponents() {
   debug_print(runtime, node, "begin: initializeComponents\n");
 
+  // Helper components: not allowed to send messages during construction
   theRegistry = std::make_unique<Registry>();
-  theMsg = std::make_unique<ActiveMessenger>();
   theEvent = std::make_unique<event::AsyncEvent>();
+  thePool = std::make_unique<pool::Pool>();
+
+  // Core components: enables more complex subsequent initialization
+  theMsg = std::make_unique<ActiveMessenger>();
+  theSched = std::make_unique<sched::Scheduler>();
   theTerm = std::make_unique<term::TerminationDetector>();
   theBarrier = std::make_unique<barrier::Barrier>();
-  thePool = std::make_unique<pool::Pool>();
+
+  // Advanced runtime components: not required for basic messaging
   theRDMA = std::make_unique<rdma::RDMAManager>();
   theParam = std::make_unique<param::Param>();
   theSeq = std::make_unique<seq::Sequencer>();
   theVirtualSeq = std::make_unique<seq::SequencerVirtual>();
-  theSched = std::make_unique<sched::Scheduler>();
   theLocMan = std::make_unique<location::LocationManager>();
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
 
@@ -292,14 +297,24 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
 void Runtime::finalizeComponents() {
   debug_print(runtime, node, "begin: finalizeComponents\n");
 
-  theParam = nullptr;
-  theSeq = nullptr;
+  // Reverse order destruction of runtime components.
+
+  // Advanced components: may communicate during destruction
+  theVirtualManager = nullptr;
   theLocMan = nullptr;
-  theTerm = nullptr;
-  theBarrier = nullptr;
+  theVirtualSeq = nullptr;
+  theSeq = nullptr;
+  theParam = nullptr;
   theRDMA = nullptr;
+
+  // Core components
+  theBarrier = nullptr;
+  theTerm = nullptr;
   theSched = nullptr;
   theMsg = nullptr;
+
+  // Helper components: thePool the last to be destructed because it handles
+  // memory allocations
   theRegistry = nullptr;
   theEvent->cleanup(); theEvent = nullptr;
   thePool = nullptr;
