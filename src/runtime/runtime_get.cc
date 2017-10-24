@@ -22,7 +22,20 @@ namespace vt {
  * performance. If so, we may need to redesign this.
  *
  */
+
+static runtime::Runtime* no_rt = nullptr;
+
 #define CUR_RT AccessTLS(curRT)
+#define IS_COMM_THREAD ::vt::theContext()->getWorker() == worker_id_comm_thread
+#define CUR_RT_UNSAFE (IS_COMM_THREAD ? AccessTLS(curRT) : no_rt)
+
+#define CHECK_THD                                                       \
+  do {                                                                  \
+    bool const check = IS_COMM_THREAD;                                  \
+    std::string str("Only comm thread can access this component");      \
+    assert(check && str.c_str());                                       \
+    if (!check) { CUR_RT->abort(str, 29); }                             \
+  } while (0);
 
 ctx::Context*               theContext()        { return CUR_RT->theContext.get();        }
 barrier::Barrier*           theBarrier()        { return CUR_RT->theBarrier.get();        }
