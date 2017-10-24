@@ -9,6 +9,14 @@ using namespace vt;
 using namespace vt::vrt;
 using namespace vt::mapping;
 
+#define DEBUG_PRINT_START(str, args...)                                 \
+  do{                                                                   \
+    printf(                                                             \
+      "node=%d,worker=%d: " str,                                        \
+      theContext()->getNode(), theContext()->getWorker(), args          \
+    );                                                                  \
+  } while (false);
+
 struct ProxyMsg : vt::vrt::VirtualMessage {
   std::vector<VirtualProxyType> proxies;
 
@@ -51,12 +59,20 @@ struct TestVC : vt::vrt::VirtualContext {
     : my_index(in_my_index), work_amt(in_work_amt)
   {
     printf(
-      "constructing TestVC: my_index=%d, work amt=%d\n", my_index, work_amt
+      "node=%d, worker=%d: %p: constructing TestVC: my_index=%d, work amt=%d\n",
+      theContext()->getNode(), theContext()->getWorker(), this, my_index,
+      work_amt
     );
   }
 
   void getRightProxy(ProxyMsg* msg) {
     my_proxy = msg->proxies[my_index];
+
+    DEBUG_PRINT_START(
+      "my_proxy=%lld, index=%d, getProxy()=%lld, ptr=%p\n",
+      my_proxy, my_index, getProxy(), this
+    );
+
     assert(my_proxy == getProxy());
 
     auto const to_right = my_index+1;
@@ -66,7 +82,7 @@ struct TestVC : vt::vrt::VirtualContext {
       right_proxy = msg->proxies[to_right];
     }
 
-    printf(
+    DEBUG_PRINT_START(
       "my_proxy=%lld, proxies size=%ld, right=%d vc=%p has_right=%s, "
       "right proxy=%lld\n",
       getProxy(), msg->proxies.size(), to_right, this, print_bool(has_right),
@@ -78,14 +94,23 @@ struct TestVC : vt::vrt::VirtualContext {
       for (auto i = 0; i < my_index + 29; i++) {
         msg->work_vec.push_back(static_cast<double>(work_amt));
       }
-      theVirtualManager()->sendSerialMsg<TestVC, WorkMsg, doWorkRight>(
-        right_proxy, msg
-      );
+
+      // Manually dispatch to comm thread for now
+      auto send_fn = [=]{
+        theVirtualManager()->sendSerialMsg<TestVC, WorkMsg, doWorkRight>(
+          right_proxy, msg
+        );
+      };
+      if (theContext()->getWorker() == worker_id_comm_thread) {
+        send_fn();
+      } else {
+        theWorkerGrp()->enqueueCommThread(send_fn);
+      }
     }
   }
 
   void doWork(WorkMsg* msg) {
-    printf(
+    DEBUG_PRINT_START(
       "my_proxy=%lld, doing work size=%ld\n", my_proxy, msg->work_vec.size()
     );
 
@@ -95,29 +120,37 @@ struct TestVC : vt::vrt::VirtualContext {
     }
     stored_val = val;
 
-    printf(
+    DEBUG_PRINT_START(
       "my_proxy=%lld, finished work val=%f\n", my_proxy, stored_val
     );
   }
 };
 
 static void doWorkRight(WorkMsg* msg, TestVC* vc) {
-  printf(
+  DEBUG_PRINT_START(
     "doWorkRight: msg->work_vec.size()=%ld, vc=%p\n", msg->work_vec.size(), vc
   );
   vc->doWork(msg);
 }
 
 static void proxyHan(ProxyMsg* msg, TestVC* vc) {
-  printf("proxyHan: msg->proxies=%ld, vc=%p\n", msg->proxies.size(), vc);
+  DEBUG_PRINT_START("proxyHan: msg->proxies=%ld, vc=%p\n", msg->proxies.size(), vc);
   vc->getRightProxy(msg);
 }
+
+struct MakeMainMsg : vt::Message { };
+static void makeMain(MakeMainMsg* msg);
 
 struct MainVC : vt::vrt::MainVirtualContext {
   int my_data = -1;
 
-  MainVC() : my_data(4) {
-    printf("constructing MainVC: data=%d\n", my_data);
+  MainVC() : my_data(29) {
+    DEBUG_PRINT_START("constructing MainVC: data=%d\n", my_data);
+
+    if (theContext()->getNode() == 0) {
+      auto msg = makeSharedMessage<MakeMainMsg>();
+      theMsg()->broadcastMsg<MakeMainMsg, makeMain>(msg);
+    }
 
     std::vector<VirtualProxyType> proxies;
 
@@ -126,14 +159,26 @@ struct MainVC : vt::vrt::MainVirtualContext {
         i, i * 82773
       );
       proxies.push_back(proxy);
+
+      DEBUG_PRINT_START(
+        "%d: constructing proxy %lld, size=%ld, work=%d\n",
+        i, proxy, proxies.size(), i*82773
+      );
     }
 
+    int i = 0;
     for (auto&& elm : proxies) {
       ProxyMsg* msg = makeSharedMessage<ProxyMsg>(proxies);
-      printf("sending to proxy %lld\n", elm);
+      DEBUG_PRINT_START("%d: sending to proxy %lld\n", i, elm);
       theVirtualManager()->sendSerialMsg<TestVC, ProxyMsg, proxyHan>(elm, msg);
+      i++;
     }
   }
 };
+
+static void makeMain(MakeMainMsg* msg) {
+  theVirtualManager()->makeVirtual<MainVC>();
+}
+
 
 VT_REGISTER_MAIN_CONTEXT(MainVC);
