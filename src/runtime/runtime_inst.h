@@ -25,7 +25,7 @@ struct RuntimeInst {
 namespace vt {
 
 // This is the current runtime instance that is active
-ExternInitTLS(runtime::Runtime*, curRT, nullptr);
+extern runtime::Runtime* curRT;
 extern runtime::Runtime* rt;
 
 } /* end namespace vt */

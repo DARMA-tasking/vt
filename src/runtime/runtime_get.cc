@@ -25,9 +25,9 @@ namespace vt {
 
 static runtime::Runtime* no_rt = nullptr;
 
-#define CUR_RT AccessTLS(curRT)
+#define CUR_RT curRT
 #define IS_COMM_THREAD ::vt::theContext()->getWorker() == worker_id_comm_thread
-#define CUR_RT_UNSAFE (IS_COMM_THREAD ? AccessTLS(curRT) : no_rt)
+#define CUR_RT_SAFE (IS_COMM_THREAD ? curRT : no_rt)
 
 #define CHECK_THD                                                       \
   do {                                                                  \
@@ -58,5 +58,7 @@ trace::Trace*               theTrace()          { return CUR_RT->theTrace.get();
 #endif
 
 #undef CUR_RT
+#undef CUR_RT_SAFE
+#undef IS_COMM_THREAD
 
 } /* end namespace vt */

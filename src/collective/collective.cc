@@ -29,7 +29,7 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
   if (instance == RuntimeInstType::DefaultInstance) {
     // Set global variable for default instance for backward compatibility
     ::vt::rt = rt_ptr;
-    AccessTLS(curRT) = rt_ptr;
+    curRT = rt_ptr;
   }
   RuntimeInst<instance>::rt->initialize();
 
@@ -40,7 +40,7 @@ template <RuntimeInstType instance>
 void CollectiveAnyOps<instance>::setCurrentRuntimeTLS(RuntimeUnsafePtrType in) {
   bool const has_rt = in != nullptr;
   auto rt_use = has_rt ? in : ::vt::rt;
-  AccessTLS(curRT) = rt_use;
+  curRT = rt_use;
 }
 
 template <RuntimeInstType instance>
@@ -48,7 +48,7 @@ void CollectiveAnyOps<instance>::scheduleThenFinalize(
   RuntimePtrType in_rt, WorkerCountType const workers
 ) {
   bool const has_rt = in_rt != nullptr;
-  auto rt_use = has_rt ? in_rt.unsafe() : AccessTLS(curRT);
+  auto rt_use = has_rt ? in_rt.unsafe() : curRT;
 
   auto sched_fn = [=]{
     while (not rt_use->isTerminated()) {
@@ -76,7 +76,7 @@ void CollectiveAnyOps<instance>::finalize(RuntimePtrType in_rt) {
   if (instance == RuntimeInstType::DefaultInstance) {
     // Set global variable for default instance for backward compatibility
     ::vt::rt = nullptr;
-    AccessTLS(curRT) = nullptr;
+    curRT = nullptr;
   }
 
   if (in_rt) {
@@ -88,7 +88,7 @@ template <RuntimeInstType instance>
 void CollectiveAnyOps<instance>::abort(
   std::string const str, ErrorCodeType const code
 ) {
-  auto tls_rt = AccessTLS(curRT);
+  auto tls_rt = curRT;
   auto rt = tls_rt ? tls_rt : ::vt::rt;
   if (rt) {
     rt->abort(str, code);

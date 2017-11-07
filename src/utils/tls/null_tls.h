@@ -4,22 +4,29 @@
 
 #include "config.h"
 
-#if backend_no_threading
+#if backend_no_threading || backend_null_tls
 
 namespace vt { namespace util { namespace tls {
 
-template <typename T, char const* tag, T val = T{}>
+template <typename T, char const* tag>
 struct ThreadLocalNull {
-  using TypeT = T;
-
   static T& get() { return value_; }
-
 private:
   static T value_;
 };
 
 template <typename T, char const* tag, T val>
-typename ThreadLocalNull<T,tag,val>::TypeT ThreadLocalNull<T,tag,val>::value_ = {val};
+struct ThreadLocalInitNull {
+  static T& get() { return value_; }
+private:
+  static T value_;
+};
+
+template <typename T, char const* tag>
+T ThreadLocalNull<T,tag>::value_;
+
+template <typename T, char const* tag, T val>
+T ThreadLocalInitNull<T,tag,val>::value_ = {val};
 
 }}} /* end namespace vt::util::tls */
 

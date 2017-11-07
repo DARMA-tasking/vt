@@ -9,19 +9,27 @@
 
 namespace vt { namespace util { namespace tls {
 
-template <typename T, char const* tag, T val = T{}>
-struct ThreadLocalOMP {
-  using TypeT = T;
-
+template <typename T, char const* tag, T val>
+struct ThreadLocalInitOMP {
   static T& get() { return value_; }
+private:
+  static T value_;
+  #pragma omp threadprivate (value_)
+};
 
+template <typename T, char const* tag>
+struct ThreadLocalOMP {
+  static T& get() { return value_; }
 private:
   static T value_;
   #pragma omp threadprivate (value_)
 };
 
 template <typename T, char const* tag, T val>
-typename ThreadLocalOMP<T,tag,val>::TypeT ThreadLocalOMP<T,tag,val>::value_ = {val};
+T ThreadLocalInitOMP<T,tag,val>::value_ = val;
+
+template <typename T, char const* tag>
+T ThreadLocalOMP<T,tag>::value_;
 
 }}} /* end namespace vt::util::tls */
 

@@ -26,6 +26,8 @@ static constexpr int const num_vals = 128;
 
 // Test TLS: w/o initializer, single thread, global variable
 DeclareTLS(int, test_noinit_single_thd);
+#define IS_TLS 0
+DeclareInitVar(IS_TLS, int, test_var_noinit_single_thd, 0);
 
 TEST_F(TestTLS, basic_tls_noinit_single_thd) {
   using namespace vt::util::tls;
@@ -33,6 +35,15 @@ TEST_F(TestTLS, basic_tls_noinit_single_thd) {
   for (int i = 0; i < num_vals; i++) {
     AccessTLS(test_noinit_single_thd) = i;
     EXPECT_EQ(AccessTLS(test_noinit_single_thd), i);
+  }
+}
+
+TEST_F(TestTLS, basic_var_tls_noinit_single_thd) {
+  using namespace vt::util::tls;
+
+  for (int i = 0; i < num_vals; i++) {
+    AccessVar(test_var_noinit_single_thd) = i;
+    EXPECT_EQ(AccessVar(test_var_noinit_single_thd), i);
   }
 }
 
