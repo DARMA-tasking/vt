@@ -5,6 +5,7 @@
 #include "config.h"
 #include "vrt/vrt_common.h"
 #include "vrt/collection/collection_elm_proxy.h"
+#include "vrt/collection/insertable.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -47,6 +48,17 @@ struct StaticCollectionBase : CollectionBase<IndexT> {
 
 protected:
   VirtualElmCountType numElems_ = no_elms;
+};
+
+template <typename IndexT>
+struct StaticInsertableCollectionBase :
+    StaticCollectionBase<IndexT>, Insertable<IndexT>
+{
+  StaticInsertableCollectionBase(VirtualElmCountType const inNumElems)
+    : StaticCollectionBase<IndexT>(inNumElems)
+  {
+    CollectionBase<IndexT>::elmsFixedAtCreation_ = false;
+  }
 };
 
 template <typename IndexT>

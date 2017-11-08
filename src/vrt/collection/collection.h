@@ -16,6 +16,13 @@ struct Collection : StaticCollectionBase<IndexT> {
   { }
 };
 
+template <typename IndexT>
+struct InsertableCollection : StaticInsertableCollectionBase<IndexT> {
+  explicit InsertableCollection(VirtualElmCountType const elms)
+    : StaticInsertableCollectionBase<IndexT>(elms)
+  { }
+};
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_COLLECTION_H*/
