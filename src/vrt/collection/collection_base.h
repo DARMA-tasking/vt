@@ -62,14 +62,11 @@ struct StaticInsertableCollectionBase :
 };
 
 template <typename IndexT>
-struct DynamicCollectionBase : CollectionBase<IndexT> {
+struct DynamicCollectionBase : CollectionBase<IndexT>, InsertableEpoch<IndexT> {
   DynamicCollectionBase() : CollectionBase<IndexT>(false, false) { }
 
   // Unknown so return no_elms as the size
   VirtualElmCountType getSize() const { return no_elms; }
-
-protected:
-  EpochType curEpoch_ = no_epoch;
 };
 
 
