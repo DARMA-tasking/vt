@@ -40,6 +40,12 @@ struct IndexTraits {
   using isByteCopyable_t = decltype(std::declval<U const&>().isByteCopyable());
   using has_isByteCopyable = detection::is_detected<isByteCopyable_t, T>;
 
+  template <typename U>
+  using uniqueBits_t = decltype(std::declval<U const&>().uniqueBits());
+  using has_uniqueBits = detection::is_detected_convertible<
+    UniqueIndexBitType, uniqueBits_t, T
+  >;
+
   // This defines what it means to be an `Index'
   static constexpr auto const is_index =
     // default constructor and copy constructor
@@ -48,8 +54,8 @@ struct IndexTraits {
     has_equality::value and
     // typedefs/using IndexSizeType
     has_IndexSizeType::value and
-    // methods: packedSize() and isByteCopyable()
-    has_packedSize::value and has_isByteCopyable::value;
+    // methods: packedSize() and isByteCopyable() and uniqueBits()
+    has_packedSize::value and has_isByteCopyable::value and has_uniqueBits::value;
 };
 
 }}  // end namespace vt::index

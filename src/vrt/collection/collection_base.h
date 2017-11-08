@@ -1,0 +1,66 @@
+
+#if !defined INCLUDED_VRT_COLLECTION_COLLECTION_BASE_H
+#define INCLUDED_VRT_COLLECTION_COLLECTION_BASE_H
+
+#include "config.h"
+#include "vrt/vrt_common.h"
+#include "vrt/collection/collection_elm_proxy.h"
+
+namespace vt { namespace vrt { namespace collection {
+
+template <typename IndexT>
+struct CollectionBase : VrtBase {
+  using ProxyType = VirtualElmProxyType;
+
+  CollectionBase() = default;
+  CollectionBase(
+    bool const inHasStaticSize, bool const inElmsFixedAtCreation_ = true
+  ) : hasStaticSize_(inHasStaticSize),
+      elmsFixedAtCreation_(inElmsFixedAtCreation_)
+  { }
+
+  ProxyType getElementProxy(IndexT const& idx) const {
+    VirtualElmOnlyProxyType elmProxy;
+    VirtualElemProxyBuilder::createElmProxy(elmProxy, idx.uniqueBits());
+    ProxyType proxy(getProxy(), elmProxy);
+    return proxy;
+  }
+
+  bool isStatic() const { return hasStaticSize_ and elmsFixedAtCreation_; }
+
+  // Should be implemented in derived class (non-virtual)
+  VirtualElmCountType getSize() const;
+
+protected:
+  bool hasStaticSize_ = true;
+  bool elmsFixedAtCreation_ = true;
+};
+
+
+template <typename IndexT>
+struct StaticCollectionBase : CollectionBase<IndexT> {
+  StaticCollectionBase(VirtualElmCountType const inNumElems)
+    : CollectionBase<IndexT>(false, false), numElems_(inNumElems)
+  { }
+
+  VirtualElmCountType getSize() const { return numElems_; }
+
+protected:
+  VirtualElmCountType numElems_ = no_elms;
+};
+
+template <typename IndexT>
+struct DynamicCollectionBase : CollectionBase<IndexT> {
+  DynamicCollectionBase() : CollectionBase<IndexT>(false, false) { }
+
+  // Unknown so return no_elms as the size
+  VirtualElmCountType getSize() const { return no_elms; }
+
+protected:
+  EpochType curEpoch_ = no_epoch;
+};
+
+
+}}} /* end namespace vt::vrt::collection */
+
+#endif /*INCLUDED_VRT_COLLECTION_COLLECTION_BASE_H*/

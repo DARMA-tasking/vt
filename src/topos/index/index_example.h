@@ -31,6 +31,9 @@ struct ExampleIndex {
 
   // An index must inform the runtime if it is byte copyable
   bool isByteCopyable() const;
+
+  // Generate unique bit sequence for element index
+  UniqueIndexBitType uniqueBits() const;
 };
 
 }} // end namespace vt::index

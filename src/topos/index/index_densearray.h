@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "config.h"
+#include "utils/bits/bits_packer.h"
 
 #if backend_check_enabled(detector)
 #include "index_traits.h"
@@ -56,6 +57,15 @@ struct DenseIndexArray {
 
   bool isByteCopyable() const {
     return true;
+  }
+
+  UniqueIndexBitType uniqueBits() const {
+    UniqueIndexBitType bits{};
+    auto const& nbits = (sizeof(UniqueIndexBitType) * 8) / ndim;
+    for (auto i = 0; i < ndim; i++) {
+      vt::utils::BitPacker::setFieldDynamic(i*nbits, nbits, bits, dims[i]);
+    }
+    return bits;
   }
 
   DenseArraySizeType getSize() const {

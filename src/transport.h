@@ -26,6 +26,7 @@
 #include "topos/index/index.h"
 #include "topos/mapping/mapping_headers.h"
 #include "vrt/context/context_vrtheaders.h"
+#include "vrt/collection/collection_headers.h"
 #include "serialization/serialization.h"
 #include "standalone/vt_main.h"
 #include "utils/tls/tls.h"

@@ -41,6 +41,15 @@ struct BitPacker {
     );
     #endif
 
+    return BitPacker::setFieldDynamic<BitSegment, BitField>(
+      start, len, field, segment
+    );
+  }
+
+  template <typename BitSegment, typename BitField>
+  static inline void setFieldDynamic(
+    int8_t start, int8_t len, BitField& field, BitSegment const& segment
+  ) {
     field = field & ~(gen_bit_mask(len) << start);
     field = field | (static_cast<BitField>(segment) << start);
   }

@@ -4,21 +4,19 @@
 
 #include "config.h"
 #include "utils/bits/bits_common.h"
+#include "vrt/vrt_common.h"
 #include "context_vrt_fwd.h"
 #include "context_vrtproxy.h"
 
 namespace vt { namespace vrt {
 
-struct VirtualContext {
+struct VirtualContext : VrtBase {
   VirtualContext() = default;
   VirtualContext(bool const in_is_main) : is_main(in_is_main) { }
 
   friend struct VirtualContextAttorney;
 
-  VirtualProxyType getProxy() const { return proxy_; }
-
 private:
-  void setProxy(VirtualProxyType const& in_proxy) { proxy_ = in_proxy; }
 
 private:
   bool is_main = false;
