@@ -47,5 +47,5 @@ NodeType dense3DBlockMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes) {
   return denseBlockMap<Index3D, 3>(idx, max_idx, nnodes);
 }
 
-}}  // end namespace vt::location
+}}  // end namespace vt::mapping
 

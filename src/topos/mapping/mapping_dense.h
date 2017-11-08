@@ -42,7 +42,7 @@ NodeType dense1DBlockMap(Idx1DPtr idx, Idx1DPtr max_idx, NodeType nnodes);
 NodeType dense2DBlockMap(Idx2DPtr idx, Idx2DPtr max_idx, NodeType nnodes);
 NodeType dense3DBlockMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes);
 
-}}  // end namespace vt::location
+}}  // end namespace vt::mapping
 
 #include "mapping_dense.impl.h"
 

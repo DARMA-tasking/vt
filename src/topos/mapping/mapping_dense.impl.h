@@ -61,6 +61,6 @@ NodeType denseBlockMap(IdxPtr<Idx> idx, IdxPtr<Idx> max_idx, NodeType nnodes) {
   );
 }
 
-}}  // end namespace vt::location
+}}  // end namespace vt::mapping
 
 #endif /*INCLUDED_TOPOS_MAPPING_DENSE_IMPL*/
