@@ -74,6 +74,13 @@ struct TestSerialMessenger : TestParallelHarness {
     EXPECT_EQ(v2, val2);
     EXPECT_EQ(v3, val3);
   }
+
+  template <typename TupleT>
+  static void testBcastHandler(DataMsg<TupleT>* msg) {
+    auto const& node = theContext()->getNode();
+    //printf("%d:testBcastHandler\n",node);
+    return testHandler<TupleT>(msg);
+  }
 };
 
 TEST_F(TestSerialMessenger, test_serial_messenger_1) {
@@ -90,6 +97,22 @@ TEST_F(TestSerialMessenger, test_serial_messenger_1) {
     }
   }
 }
+
+TEST_F(TestSerialMessenger, test_serial_messenger_bcast_1) {
+  auto const& my_node = theContext()->getNode();
+
+  if (theContext()->getNumNodes() > 1) {
+    if (my_node == 0) {
+      using TupleType = std::tuple<int, int, int>;
+
+      auto msg = makeSharedMessage<DataMsg<TupleType>>(TupleType{val1,val2,val3});
+      SerializedMessenger::broadcastSerialMsg<
+        DataMsg<TupleType>, testBcastHandler<TupleType>
+      >(msg);
+    }
+  }
+}
+
 
 #if HAS_SERIALIZATION_LIBRARY
 TEST_F(TestSerialMessenger, test_serial_messenger_2) {

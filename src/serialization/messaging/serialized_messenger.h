@@ -80,6 +80,29 @@ struct SerializedMessenger {
   }
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
+  static void broadcastSerialMsg(MsgT* msg) {
+    using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
+
+    HandlerType const& han = auto_registry::makeAutoHandler<MsgT, f>(nullptr);
+
+    SerialEagerPayloadMsg<MsgT, BaseT>* payload_msg = nullptr;
+
+    auto serialized_msg = serialize(
+      *msg, [&](SizeType size) -> SerialByteType* {
+        payload_msg = makeSharedMessage<PayloadMsg>(size);
+        return payload_msg->payload.data();
+      }
+    );
+
+    // move serialized msg envelope to system envelope to preserve info
+    payload_msg->env = msg->env;
+    payload_msg->handler = han;
+    payload_msg->from_node = theContext()->getNode();
+
+    theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg);
+  }
+
+  template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void sendSerialMsg(
     MsgT* msg, ActionEagerSend<MsgT, BaseT> eager_sender,
     ActionDataSend data_sender
