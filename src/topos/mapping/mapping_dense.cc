@@ -5,6 +5,18 @@
 
 namespace vt { namespace mapping {
 
+NodeType defaultDenseIndex1DMap(Idx1DPtr idx, Idx1DPtr max_idx, NodeType nx) {
+  return dense1DBlockMap(idx, max_idx, nx);
+}
+
+NodeType defaultDenseIndex2DMap(Idx2DPtr idx, Idx2DPtr max_idx, NodeType nx) {
+  return dense2DBlockMap(idx, max_idx, nx);
+}
+
+NodeType defaultDenseIndex3DMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nx) {
+  return dense3DBlockMap(idx, max_idx, nx);
+}
+
 // Default round robin mappings
 NodeType dense1DRoundRobinMap(Idx1DPtr idx, Idx1DPtr max_idx, NodeType nnodes) {
   return idx->x() % nnodes;
