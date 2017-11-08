@@ -17,6 +17,7 @@
 #include "scheduler/scheduler.h"
 #include "topos/location/location.h"
 #include "vrt/context/context_vrtmanager.h"
+#include "vrt/collection/collection_headers.h"
 #include "worker/worker_headers.h"
 
 #include <memory>
@@ -244,6 +245,7 @@ void Runtime::initializeComponents() {
   theVirtualSeq = std::make_unique<seq::SequencerVirtual>();
   theLocMan = std::make_unique<location::LocationManager>();
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
+  theCollection = std::make_unique<vrt::collection::CollectionManager>();
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }

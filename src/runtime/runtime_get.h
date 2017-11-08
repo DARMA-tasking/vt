@@ -18,9 +18,12 @@
 #include "scheduler/scheduler.h"
 #include "topos/location/location.h"
 #include "vrt/context/context_vrtmanager.h"
+#include "vrt/collection/collection_headers.h"
 #include "worker/worker_headers.h"
 
 namespace vt {
+
+using CollectionManagerType = vrt::collection::CollectionManager;
 
 extern ActiveMessenger* theMsg();
 extern Registry* getRegistry();
@@ -36,6 +39,7 @@ extern location::LocationManager*  theLocMan();
 extern vrt::VirtualContextManager* theVirtualManager();
 extern pool::Pool*                 thePool();
 extern worker::WorkerGroupType*    theWorkerGrp();
+extern CollectionManagerType*      theCollection();
 
 #if backend_check_enabled(trace_enabled)
 extern trace::Trace*               theTrace();

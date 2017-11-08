@@ -50,6 +50,7 @@ seq::SequencerVirtual*      theVirtualSeq()     { return CUR_RT->theVirtualSeq.g
 term::TerminationDetector*  theTerm()           { return CUR_RT->theTerm.get();           }
 location::LocationManager*  theLocMan()         { return CUR_RT->theLocMan.get();         }
 vrt::VirtualContextManager* theVirtualManager() { return CUR_RT->theVirtualManager.get(); }
+CollectionManagerType*      theCollection()     { return CUR_RT->theCollection.get();     }
 worker::WorkerGroupType*    theWorkerGrp()      { return CUR_RT->theWorkerGrp.get();      }
 pool::Pool*                 thePool()           { return CUR_RT->thePool.get();           }
 

@@ -4,5 +4,6 @@
 
 #include "config.h"
 #include "vrt/collection/collection.h"
+#include "vrt/collection/collection_manager.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_COLLECTION_HEADERS_H*/

@@ -18,6 +18,7 @@
 #include "scheduler/scheduler.h"
 #include "topos/location/location.h"
 #include "vrt/context/context_vrtmanager.h"
+#include "vrt/collection/collection_headers.h"
 #include "worker/worker_headers.h"
 #include "runtime_get.h"
 
@@ -96,6 +97,7 @@ public:
   ComponentPtr<sched::Scheduler> theSched;
   ComponentPtr<location::LocationManager> theLocMan;
   ComponentPtr<vrt::VirtualContextManager> theVirtualManager;
+  ComponentPtr<vrt::collection::CollectionManager> theCollection;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtr<worker::WorkerGroupType> theWorkerGrp;
