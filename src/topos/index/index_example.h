@@ -30,7 +30,7 @@ struct ExampleIndex {
   IndexSizeType packedSize() const;
 
   // An index must inform the runtime if it is byte copyable
-  bool isByteCopyable() const;
+  bool indexIsByteCopyable() const;
 
   // Generate unique bit sequence for element index
   UniqueIndexBitType uniqueBits() const;

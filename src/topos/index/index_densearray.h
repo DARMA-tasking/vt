@@ -3,6 +3,7 @@
 #define INCLUDED_TOPOS_INDEX_DENSE_ARRAY
 
 #include <array>
+#include <type_traits>
 #include <string>
 #include <sstream>
 #include <cstdint>
@@ -19,7 +20,11 @@ namespace vt { namespace index {
 using NumDimensionsType = int8_t;
 
 template <typename IndexType, NumDimensionsType ndim = 1>
+struct DenseIndexArray;
+
+template <typename IndexType, NumDimensionsType ndim>
 struct DenseIndexArray {
+  using ThisIndexType = DenseIndexArray<IndexType, ndim>;
   using IndexSizeType = size_t;
 
   struct dense_single_value_tag {};
@@ -27,6 +32,7 @@ struct DenseIndexArray {
   using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
   using DenseArraySizeType = uint64_t;
   using DenseIndexType = IndexType;
+  using isByteCopyable = std::true_type;
 
   std::array<IndexType, ndim> dims = {};
 
@@ -55,7 +61,7 @@ struct DenseIndexArray {
     return ndim * sizeof(IndexType);
   }
 
-  bool isByteCopyable() const {
+  bool indexIsByteCopyable() const {
     return true;
   }
 

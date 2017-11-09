@@ -37,8 +37,8 @@ struct IndexTraits {
   using has_packedSize = detection::is_detected_convertible<size_t, packedSize_t, T>;
 
   template <typename U>
-  using isByteCopyable_t = decltype(std::declval<U const&>().isByteCopyable());
-  using has_isByteCopyable = detection::is_detected<isByteCopyable_t, T>;
+  using indexIsByteCopyable_t = decltype(std::declval<U const&>().indexIsByteCopyable());
+  using has_indexIsByteCopyable = detection::is_detected<indexIsByteCopyable_t, T>;
 
   template <typename U>
   using uniqueBits_t = decltype(std::declval<U const&>().uniqueBits());
@@ -54,8 +54,8 @@ struct IndexTraits {
     has_equality::value and
     // typedefs/using IndexSizeType
     has_IndexSizeType::value and
-    // methods: packedSize() and isByteCopyable() and uniqueBits()
-    has_packedSize::value and has_isByteCopyable::value and has_uniqueBits::value;
+    // methods: packedSize() and indexIsByteCopyable() and uniqueBits()
+    has_packedSize::value and has_indexIsByteCopyable::value and has_uniqueBits::value;
 };
 
 }}  // end namespace vt::index
