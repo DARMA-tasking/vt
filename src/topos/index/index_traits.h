@@ -29,10 +29,10 @@ struct IndexTraits {
   using has_copy_constructor = detection::is_detected<copy_constructor_t, T>;
 
   template <typename U>
-  using operator_eq_t = decltype(U(std::declval<U&>().operator=(
+  using operator_eq_t = decltype(U(std::declval<U>().operator=(
                                      std::declval<U const&>()
                                    )));
-  using has_operator_eq = detection::is_detected_convertible<T&, operator_eq_t, T>;
+  using has_operator_eq = detection::is_detected<operator_eq_t, T>;
 
   template <typename U>
   using equality_t = decltype(std::declval<U>().operator==(std::declval<U const&>()));
