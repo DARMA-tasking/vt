@@ -29,6 +29,12 @@ struct IndexTraits {
   using has_copy_constructor = detection::is_detected<copy_constructor_t, T>;
 
   template <typename U>
+  using operator_eq_t = decltype(U(std::declval<U&>().operator=(
+                                     std::declval<U const&>()
+                                   )));
+  using has_operator_eq = detection::is_detected_convertible<T&, operator_eq_t, T>;
+
+  template <typename U>
   using equality_t = decltype(std::declval<U>().operator==(std::declval<U const&>()));
   using has_equality = detection::is_detected<equality_t, T>;
 
@@ -51,7 +57,7 @@ struct IndexTraits {
     // default constructor and copy constructor
     has_copy_constructor::value and has_default_constructor::value and
     // operator ==
-    has_equality::value and
+    has_equality::value and has_operator_eq::value and
     // typedefs/using IndexSizeType
     has_IndexSizeType::value and
     // methods: packedSize() and indexIsByteCopyable() and uniqueBits()

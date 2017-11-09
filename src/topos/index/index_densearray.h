@@ -38,6 +38,7 @@ struct DenseIndexArray {
 
   DenseIndexArray() = default;
   DenseIndexArray(DenseIndexArray const&) = default;
+  DenseIndexArray& operator=(DenseIndexArray const&) = default;
   DenseIndexArray(DenseIndexArray&&) = default;
 
   template <typename... Idxs>

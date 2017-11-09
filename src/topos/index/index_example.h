@@ -23,6 +23,9 @@ struct ExampleIndex {
   // An index must have a copy constructor
   ExampleIndex(ExampleIndex const&) = default;
 
+  // An index must have an operator=
+  ExampleIndex& operator=(ExampleIndex const&) = default;
+
   // An index must have equality defined
   bool operator==(ExampleIndex const& other) const;
 
