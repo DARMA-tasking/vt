@@ -152,6 +152,9 @@ void CollectionManager::sendMsg(
 
     // route the message to the destination using the location manager
     theLocMan()->collectionLoc->routeMsg(toProxy, home_node, msg, act);
+  } else {
+    // @todo: buffer the msg
+    assert(0);
   }
 }
 
