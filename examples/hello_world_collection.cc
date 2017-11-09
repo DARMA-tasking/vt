@@ -3,17 +3,36 @@
 #include <cstdlib>
 
 using namespace vt;
+using namespace vt::vrt;
 using namespace vt::vrt::collection;
 using namespace vt::index;
 using namespace vt::mapping;
 
 struct MyCol : Collection<Index1D> {
-  MyCol(VirtualElmCountType elms, Index1D idx) : Collection<Index1D>(elms) {
+  Index1D idx;
+
+  MyCol(VirtualElmCountType elms, Index1D in_idx)
+    : Collection<Index1D>(elms)
+  {
+    idx = in_idx;
     auto const& node = theContext()->getNode();
     printf("constructing MyCol on node=%d: idx.x()=%d\n", node, idx.x());
   }
 };
 
+struct ColMsg : CollectionMessage<MyCol::IndexType> {
+  NodeType from_node;
+
+  ColMsg() = default;
+
+  explicit ColMsg(NodeType const& in_from_node)
+    : CollectionMessage(), from_node(in_from_node)
+  { }
+};
+
+static void colHan(ColMsg* msg, MyCol* col) {
+  printf("colHan received: idx=%d\n", col->idx.x());
+}
 
 struct HelloMsg : vt::Message {
   int from;
@@ -41,6 +60,11 @@ int main(int argc, char** argv) {
     auto proxy = theCollection()->makeCollection<
       MyCol, Index1D, defaultDenseIndex1DMap
     >(Index1D(64));
+    VirtualElmProxyType elm_proxy(proxy, 32);
+    auto const& this_node = theContext()->getNode();
+    auto msg = new ColMsg(this_node);
+
+    theCollection()->sendMsg<MyCol, ColMsg, colHan>(elm_proxy, msg, nullptr);
   }
 
   while (!rt->isTerminated()) {
