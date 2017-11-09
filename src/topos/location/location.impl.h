@@ -61,7 +61,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   if (pending_lookup_iter != pending_lookups_.end()) {
     for (auto&& pending_action : pending_lookup_iter->second) {
-      pending_action(id);
+      pending_action(theContext()->getNode());
     }
     pending_lookups_.erase(pending_lookup_iter);
   }
