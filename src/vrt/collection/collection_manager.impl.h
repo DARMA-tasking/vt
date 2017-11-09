@@ -70,7 +70,7 @@ template <typename SysMsgT>
           std::make_index_sequence<size>{}
         );
         theCollection()->insertCollectionElement<IndexT>(
-          std::move(new_vc), cur_idx, new_proxy
+          std::move(new_vc), cur_idx, msg->info.range, map_han, new_proxy
         );
       }
     });
@@ -91,21 +91,78 @@ template <typename IndexT>
   auto idx_holder = proxy_holder->second.find(entity_proxy.elmProxy);
   assert(idx_holder != proxy_holder->second.end() and "Idx proxy must exist");
 
-  auto& vc = idx_holder->second;
+  auto& inner_holder = idx_holder->second;
 
   auto const sub_handler = col_msg->getVrtHandler();
-  auto const vc_active_fn = auto_registry::getAutoHandlerCollection(sub_handler);
-  auto const vc_ptr = vc.get();
+  auto const collection_active_fn = auto_registry::getAutoHandlerCollection(sub_handler);
+  auto const col_ptr = inner_holder.getCollection();
 
-  assert(vc_ptr != nullptr && "Must be valid pointer");
+  printf("collectionMsgHandler: sub_handler=%d\n", sub_handler);
+
+  assert(col_ptr != nullptr && "Must be valid pointer");
 
   // for now, execute directly on comm thread
-  vc_active_fn(msg, vc_ptr);
+  collection_active_fn(msg, col_ptr);
+}
+
+template <
+  typename CollectionT,
+  typename MessageT,
+  ActiveCollectionTypedFnType<MessageT, CollectionT> *f
+>
+void CollectionManager::sendMsg(
+  VirtualElmProxyType const& toProxy, MessageT *const msg, ActionType act
+) {
+  using IndexT = typename CollectionT::IndexType;
+
+  // @todo: implement the action `act' after the routing is finished
+
+  auto& holder = CollectionHolder<IndexT>::vc_container_;
+  auto proxy_holder = holder.find(toProxy.colProxy);
+  assert(proxy_holder != holder.end() and "Proxy must exist");
+
+  auto idx_holder = proxy_holder->second.find(toProxy.elmProxy);
+  assert(idx_holder != proxy_holder->second.end() and "Idx proxy must exist");
+
+  auto& inner_holder = idx_holder->second;
+  auto const map_han = inner_holder.map_fn;
+  auto max_idx = inner_holder.max_idx;
+  auto cur_idx = IndexT::uniqueBitsToIndex(
+    VirtualElemProxyBuilder::elmProxyGetIndex(toProxy.elmProxy)
+  );
+  auto fn = auto_registry::getAutoHandlerMap(map_han);
+
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  auto home_node = fn(
+    reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
+    reinterpret_cast<vt::index::BaseIndex*>(&cur_idx),
+    num_nodes
+  );
+
+  // register the user's handler
+  HandlerType const& han = auto_registry::makeAutoHandlerCollection<
+    CollectionT, MessageT, f
+  >(msg);
+
+  // save the user's handler in the message
+  msg->setVrtHandler(han);
+  msg->setProxy(toProxy);
+
+  debug_print(
+    vrt, node,
+    "sending msg to collection: msg=%p, han=%d, home_node=%d\n",
+    msg, han, home_node
+  );
+
+  // route the message to the destination using the location manager
+  theLocMan()->collectionLoc->routeMsg(toProxy, home_node, msg, act);
 }
 
 template <typename IndexT>
 void CollectionManager::insertCollectionElement(
-  VirtualPtrType<IndexT> vc, IndexT const& idx, VirtualProxyType const &proxy
+  VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
+  HandlerType const& map_han, VirtualProxyType const &proxy
 ) {
   auto& holder = CollectionHolder<IndexT>::vc_container_;
   auto proxy_holder = holder.find(proxy);
@@ -133,11 +190,15 @@ void CollectionManager::insertCollectionElement(
     proxy_holder->second.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(bits),
-      std::forward_as_tuple(std::move(vc))
+      std::forward_as_tuple(
+        typename CollectionHolder<IndexT>::InnerHolder{
+          std::move(vc), map_han, max_idx
+        }
+      )
     );
 
     theLocMan()->collectionLoc->registerEntity(
-      VrtElmProxy{bits, proxy}, CollectionManager::collectionMsgHandler<IndexT>
+      VrtElmProxy{proxy,bits}, CollectionManager::collectionMsgHandler<IndexT>
     );
   } else {
     assert(0);

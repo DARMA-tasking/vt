@@ -27,6 +27,13 @@ struct BitPacker {
 
   template <int8_t start, int8_t len, typename BitSegment, typename BitField>
   static inline BitSegment getField(BitField const& field) {
+    return getFieldDynamic<BitSegment, BitField>(start, len, field);
+  }
+
+  template <typename BitSegment, typename BitField>
+  static inline BitSegment getFieldDynamic(
+    int8_t start, int8_t len, BitField const& field
+  ) {
     return static_cast<BitSegment>((field >> start) & gen_bit_mask(len));
   }
 

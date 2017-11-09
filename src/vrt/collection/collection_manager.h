@@ -37,6 +37,15 @@ struct CollectionManager {
   template <typename SysMsgT>
   static void createCollectionHan(SysMsgT* msg);
 
+  template <
+    typename CollectionT,
+    typename MessageT,
+    ActiveCollectionTypedFnType<MessageT, CollectionT> *f
+  >
+  void sendMsg(
+    VirtualElmProxyType const& toProxy, MessageT *const msg, ActionType act
+  );
+
   template <typename IndexT>
   static void collectionMsgHandler(BaseMessage* msg);
 
@@ -48,7 +57,8 @@ struct CollectionManager {
 
   template <typename IndexT>
   void insertCollectionElement(
-    VirtualPtrType<IndexT> vc, IndexT const& idx, VirtualProxyType const &proxy
+    VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
+    HandlerType const& map_han, VirtualProxyType const &proxy
   );
 
 protected:

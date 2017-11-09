@@ -4,12 +4,15 @@
 
 #include "config.h"
 #include "messaging/message.h"
+#include "vrt/vrt_common.h"
 #include "topos/location/location_msg.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename MessageT>
-using RoutedMessageType = LocationRoutedMsg<VirtualProxyType, MessageT>;
+using RoutedMessageType = LocationRoutedMsg<
+  ::vt::vrt::VirtualElmProxyType, MessageT
+>;
 
 template <typename IndexT>
 struct CollectionMessage : RoutedMessageType<::vt::Message> {

@@ -14,6 +14,7 @@ struct UntypedCollection : VrtBase { };
 template <typename IndexT>
 struct CollectionBase : UntypedCollection {
   using ProxyType = VirtualElmProxyType;
+  using IndexType = IndexT;
 
   CollectionBase() = default;
   CollectionBase(

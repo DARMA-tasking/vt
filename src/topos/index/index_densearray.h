@@ -42,7 +42,7 @@ struct DenseIndexArray {
   DenseIndexArray(DenseIndexArray&&) = default;
 
   template <typename... Idxs>
-  explicit DenseIndexArray(Idxs&& ... init) : dims({init...}) {}
+  explicit DenseIndexArray(Idxs&&... init) : dims({init...}) {}
 
   DenseIndexArray(dense_single_value_tag, IndexType const& init_value) {
     for (int i = 0; i < ndim; i++) {
@@ -50,7 +50,7 @@ struct DenseIndexArray {
     }
   }
 
-  IndexType operator[](IndexType const& index) const {
+  IndexType& operator[](IndexType const& index) {
     return dims[index];
   }
 
@@ -88,6 +88,17 @@ struct DenseIndexArray {
       vt::utils::BitPacker::setFieldDynamic(i*nbits, nbits, bits, dims[i]);
     }
     return bits;
+  }
+
+  static ThisIndexType uniqueBitsToIndex(UniqueIndexBitType const& bits) {
+    ThisIndexType idx{};
+    auto const& nbits = (sizeof(UniqueIndexBitType) * 8) / ndim;
+    for (auto i = 0; i < ndim; i++) {
+      auto const& val = vt::utils::BitPacker::getFieldDynamic<
+        UniqueIndexBitType>(i*nbits, nbits, bits);
+      idx[i] = val;
+    }
+    return idx;
   }
 
   DenseArraySizeType getSize() const {
