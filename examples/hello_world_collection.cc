@@ -3,6 +3,17 @@
 #include <cstdlib>
 
 using namespace vt;
+using namespace vt::vrt::collection;
+using namespace vt::index;
+using namespace vt::mapping;
+
+struct MyCol : Collection<Index1D> {
+  MyCol(VirtualElmCountType elms, Index1D idx) : Collection<Index1D>(elms) {
+    auto const& node = theContext()->getNode();
+    printf("constructing MyCol on node=%d\n", node);
+  }
+};
+
 
 struct HelloMsg : vt::Message {
   int from;
@@ -27,8 +38,9 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    HelloMsg* msg = new HelloMsg(my_node);
-    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
+    auto proxy = theCollection()->makeCollection<
+      MyCol, Index1D, defaultDenseIndex1DMap
+    >(Index1D(64));
   }
 
   while (!rt->isTerminated()) {
