@@ -3,8 +3,6 @@
 #define INCLUDED_VRT_VRT_COMMON_H
 
 #include "config.h"
-#include "vrt/context/context_vrt_fwd.h"
-#include "vrt/context/context_vrtproxy.h"
 
 namespace vt { namespace vrt {
 
@@ -26,10 +24,25 @@ struct VrtElmProxy {
     VirtualProxyType const& colProxy_, VirtualElmOnlyProxyType const& elmProxy_
   ) : colProxy(colProxy_), elmProxy(elmProxy_)
   { }
+
+  VrtElmProxy() = default;
+  VrtElmProxy(VrtElmProxy const&) = default;
+  VrtElmProxy(VrtElmProxy&&) = default;
 };
 
 using VirtualElmProxyType = VrtElmProxy;
 
 }} /* end namespace vt::vrt */
+
+namespace std {
+  template<>
+  struct hash<::vt::vrt::VrtElmProxy> {
+    size_t operator()(::vt::vrt::VrtElmProxy const& in) const {
+      return
+        std::hash<decltype(in.colProxy)>()(in.colProxy) +
+        std::hash<decltype(in.elmProxy)>()(in.elmProxy);
+    }
+  };
+}
 
 #endif /*INCLUDED_VRT_VRT_COMMON_H*/

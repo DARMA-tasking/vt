@@ -11,6 +11,7 @@
 #include "config.h"
 #include "context/context.h"
 #include "activefn/activefn.h"
+#include "vrt/vrt_common.h"
 #include "location_common.h"
 #include "location_msg.h"
 #include "location_record.h"
@@ -155,11 +156,14 @@ struct LocationManager {
   using LocInstContainerType = std::vector<LocCoordPtrType>;
   using VirtualLocMan = EntityLocationCoord<int32_t>;
   using VirtualContextLocMan = EntityLocationCoord<VirtualProxyType>;
+  using CollectionLocMan = EntityLocationCoord<::vt::vrt::VirtualElmProxyType>;
 
   std::unique_ptr<VirtualLocMan>
       virtual_loc = std::make_unique<VirtualLocMan>();
   std::unique_ptr<VirtualContextLocMan> vrtContextLoc =
       std::make_unique<VirtualContextLocMan>();
+  std::unique_ptr<CollectionLocMan> collectionLoc =
+    std::make_unique<CollectionLocMan>();
 
   static void insertInstance(int const i, LocCoordPtrType const& ptr);
   static LocCoordPtrType getInstance(int const inst);
