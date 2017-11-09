@@ -6,7 +6,8 @@
 
 #include "config.h"
 #include "topos/index/index.h"
-#include "mapping.h"
+#include "topos/mapping/mapping.h"
+#include "topos/mapping/mapping_dense.h"
 
 namespace vt { namespace mapping {
 
@@ -57,7 +58,7 @@ NodeType denseBlockMap(IdxPtr<Idx> idx, IdxPtr<Idx> max_idx, NodeType nnodes) {
   IndexElmType flat_idx = linearizeDenseIndex<IndexElmType, ndim>(idx, max_idx);
 
   return blockMapDenseFlatIndex<IndexElmType, NodeType>(
-    &flat_idx, &total_elems, nnodes
+    &total_elems, &flat_idx, nnodes
   );
 }
 
