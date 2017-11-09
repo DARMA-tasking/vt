@@ -9,7 +9,9 @@
 #include "vrt/collection/collection_manager.h"
 #include "vrt/collection/collection_create_msg.h"
 #include "vrt/collection/collection_info.h"
+#include "vrt/collection/collection_msg.h"
 #include "registry/auto_registry_map.h"
+#include "registry/auto_registry_collection.h"
 #include "topos/mapping/mapping_headers.h"
 
 #include <tuple>
@@ -78,6 +80,30 @@ template <typename SysMsgT>
 }
 
 template <typename IndexT>
+/*static*/ void CollectionManager::collectionMsgHandler(BaseMessage* msg) {
+  auto const col_msg = static_cast<CollectionMessage<IndexT>*>(msg);
+  auto const entity_proxy = col_msg->getProxy();
+
+  auto& holder = CollectionHolder<IndexT>::vc_container_;
+  auto proxy_holder = holder.find(entity_proxy.colProxy);
+  assert(proxy_holder != holder.end() and "Proxy must exist");
+
+  auto idx_holder = proxy_holder->second.find(entity_proxy.elmProxy);
+  assert(idx_holder != proxy_holder->second.end() and "Idx proxy must exist");
+
+  auto& vc = idx_holder->second;
+
+  auto const sub_handler = col_msg->getVrtHandler();
+  auto const vc_active_fn = auto_registry::getAutoHandlerCollection(sub_handler);
+  auto const vc_ptr = vc.get();
+
+  assert(vc_ptr != nullptr && "Must be valid pointer");
+
+  // for now, execute directly on comm thread
+  vc_active_fn(msg, vc_ptr);
+}
+
+template <typename IndexT>
 void CollectionManager::insertCollectionElement(
   VirtualPtrType<IndexT> vc, IndexT const& idx, VirtualProxyType const &proxy
 ) {
@@ -108,6 +134,10 @@ void CollectionManager::insertCollectionElement(
       std::piecewise_construct,
       std::forward_as_tuple(bits),
       std::forward_as_tuple(std::move(vc))
+    );
+
+    theLocMan()->collectionLoc->registerEntity(
+      VrtElmProxy{bits, proxy}, CollectionManager::collectionMsgHandler<IndexT>
     );
   } else {
     assert(0);

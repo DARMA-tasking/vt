@@ -28,6 +28,17 @@ struct VrtElmProxy {
   VrtElmProxy() = default;
   VrtElmProxy(VrtElmProxy const&) = default;
   VrtElmProxy(VrtElmProxy&&) = default;
+  VrtElmProxy& operator=(VrtElmProxy const&) = default;
+
+  bool operator==(VrtElmProxy const& other) const {
+    return other.colProxy == colProxy and other.elmProxy == elmProxy;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | colProxy | elmProxy;
+  }
+
 };
 
 using VirtualElmProxyType = VrtElmProxy;

@@ -37,6 +37,9 @@ struct CollectionManager {
   template <typename SysMsgT>
   static void createCollectionHan(SysMsgT* msg);
 
+  template <typename IndexT>
+  static void collectionMsgHandler(BaseMessage* msg);
+
   template <typename CollectionT, typename IndexT, typename Tuple, size_t... I>
   static VirtualPtrType<IndexT> runConstructor(
     VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,

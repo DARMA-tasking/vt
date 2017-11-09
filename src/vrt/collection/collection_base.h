@@ -9,14 +9,17 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+struct UntypedCollection : VrtBase { };
+
 template <typename IndexT>
-struct CollectionBase : VrtBase {
+struct CollectionBase : UntypedCollection {
   using ProxyType = VirtualElmProxyType;
 
   CollectionBase() = default;
   CollectionBase(
     bool const inHasStaticSize, bool const inElmsFixedAtCreation_ = true
-  ) : hasStaticSize_(inHasStaticSize),
+  ) : UntypedCollection(),
+      hasStaticSize_(inHasStaticSize),
       elmsFixedAtCreation_(inElmsFixedAtCreation_)
   { }
 

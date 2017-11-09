@@ -9,6 +9,7 @@
 #include "registry.h"
 #include "trace/trace.h"
 #include "vrt/context/context_vrt_funcs.h"
+#include "vrt/collection/collection_active_funcs.h"
 #include "topos/mapping/mapping_function.h"
 
 #include <vector>
@@ -18,6 +19,7 @@ namespace vt { namespace auto_registry {
 using AutoActiveType = ActiveFnPtrType;
 using AutoActiveFunctorType = ActiveFnPtrType;
 using AutoActiveVCType = vrt::ActiveVirtualFnPtrType;
+using AutoActiveCollectionType = ::vt::vrt::collection::ActiveCollectionFnPtrType;
 using AutoActiveMapType = mapping::ActiveMapFnPtrType;
 using AutoActiveSeedMapType = mapping::ActiveSeedMapFnPtrType;
 
@@ -61,6 +63,7 @@ using AutoRegistryContainerType = std::vector<AutoRegInfoType<RegInfoT>>;
 
 using AutoActiveContainerType = AutoRegistryContainerType<AutoActiveType>;
 using AutoActiveVCContainerType = AutoRegistryContainerType<AutoActiveVCType>;
+using AutoActiveCollectionContainerType = AutoRegistryContainerType<AutoActiveCollectionType>;
 using AutoActiveMapContainerType = AutoRegistryContainerType<AutoActiveMapType>;
 using AutoActiveSeedMapContainerType = AutoRegistryContainerType<AutoActiveSeedMapType>;
 using AutoActiveFunctorContainerType = AutoRegistryContainerType<AutoActiveFunctorType>;
