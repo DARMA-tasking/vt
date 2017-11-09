@@ -15,6 +15,7 @@ using ActiveMapFnPtrType = NodeType(*)(
 
 using ActiveSeedMapFnType = NodeType(SeedType, NodeType);
 using ActiveSeedMapFnPtrType = ActiveSeedMapFnType*;
+using CollectionMapFnType = ActiveMapFnPtrType;
 
 }} /* end namespace vt::mapping */
 

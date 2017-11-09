@@ -29,6 +29,8 @@ struct CollectionBase : VrtBase {
 
   bool isStatic() const { return hasStaticSize_ and elmsFixedAtCreation_; }
 
+  static bool isStaticSized() { return true; }
+
   // Should be implemented in derived class (non-virtual)
   VirtualElmCountType getSize() const;
 
@@ -46,6 +48,8 @@ struct StaticCollectionBase : CollectionBase<IndexT> {
 
   VirtualElmCountType getSize() const { return numElems_; }
 
+  static bool isStaticSized() { return true; }
+
 protected:
   VirtualElmCountType numElems_ = no_elms;
 };
@@ -59,6 +63,8 @@ struct StaticInsertableCollectionBase :
   {
     CollectionBase<IndexT>::elmsFixedAtCreation_ = false;
   }
+
+  static bool isStaticSized() { return false; }
 };
 
 template <typename IndexT>
@@ -67,6 +73,8 @@ struct DynamicCollectionBase : CollectionBase<IndexT>, InsertableEpoch<IndexT> {
 
   // Unknown so return no_elms as the size
   VirtualElmCountType getSize() const { return no_elms; }
+
+  static bool isStaticSized() { return false; }
 };
 
 

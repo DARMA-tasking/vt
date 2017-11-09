@@ -66,6 +66,21 @@ struct DenseIndexArray {
     return true;
   }
 
+  void foreach(ThisIndexType max, std::function<void(ThisIndexType)> fn) {
+    ThisIndexType idx;
+    std::array<IndexType, ndim> vec;
+    printf("size=%llu\n",max.getSize());
+    for (auto sz = 0; sz < max.getSize(); sz++) {
+      for (auto i = 0; i < ndim; i++) {
+        if (idx[i] + 1 <= max[idx[i]]) {
+          vec[i]++;
+          break;
+        }
+      }
+      fn(ThisIndexType(vec));
+    }
+  }
+
   UniqueIndexBitType uniqueBits() const {
     UniqueIndexBitType bits{};
     auto const& nbits = (sizeof(UniqueIndexBitType) * 8) / ndim;
