@@ -10,7 +10,7 @@ using namespace vt::mapping;
 struct MyCol : Collection<Index1D> {
   MyCol(VirtualElmCountType elms, Index1D idx) : Collection<Index1D>(elms) {
     auto const& node = theContext()->getNode();
-    printf("constructing MyCol on node=%d\n", node);
+    printf("constructing MyCol on node=%d: idx.x()=%d\n", node, idx.x());
   }
 };
 

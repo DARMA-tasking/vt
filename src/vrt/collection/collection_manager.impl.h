@@ -14,6 +14,7 @@
 
 #include <tuple>
 #include <utility>
+#include <cassert>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -66,12 +67,50 @@ template <typename SysMsgT>
           info.range.getSize(), cur_idx, &msg->tup,
           std::make_index_sequence<size>{}
         );
+        theCollection()->insertCollectionElement<IndexT>(
+          std::move(new_vc), cur_idx, new_proxy
+        );
       }
     });
-
-    //theCollection()->insertCollectionElement(std::move(new_vc), new_proxy);
   } else {
     // just wait and register the proxy
+  }
+}
+
+template <typename IndexT>
+void CollectionManager::insertCollectionElement(
+  VirtualPtrType<IndexT> vc, IndexT const& idx, VirtualProxyType const &proxy
+) {
+  auto& holder = CollectionHolder<IndexT>::vc_container_;
+  auto proxy_holder = holder.find(proxy);
+  if (proxy_holder == holder.end()) {
+    holder.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(proxy),
+      std::forward_as_tuple(
+        typename CollectionHolder<IndexT>::UntypedIndexContainer{}
+      )
+    );
+    proxy_holder = holder.find(proxy);
+  }
+
+  assert(proxy_holder != holder.end() and "Must exist at this point");
+
+  auto const& bits = idx.uniqueBits();
+  auto idx_iter = proxy_holder->second.find(bits);
+
+  bool const& idx_exists = idx_iter != proxy_holder->second.end();
+
+  assert(not idx_exists and "Index must not exist at this point");
+
+  if (!idx_exists) {
+    proxy_holder->second.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(bits),
+      std::forward_as_tuple(std::move(vc))
+    );
+  } else {
+    assert(0);
   }
 }
 

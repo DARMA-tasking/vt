@@ -6,21 +6,23 @@
 #include "vrt/vrt_common.h"
 #include "vrt/collection/collection_elm_proxy.h"
 #include "vrt/collection/collection.h"
+#include "vrt/collection/collection_holder.h"
 #include "topos/mapping/mapping_headers.h"
 
 #include <memory>
 #include <vector>
 #include <tuple>
 #include <utility>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection {
 
 struct CollectionManager {
   template <typename IndexT>
-  using CollectionType = Collection<IndexT>;
+  using CollectionType = typename CollectionHolder<IndexT>::Collection;
 
   template <typename IndexT>
-  using VirtualPtrType = std::unique_ptr<CollectionType<IndexT>>;
+  using VirtualPtrType = typename CollectionHolder<IndexT>::VirtualPtrType;
 
   CollectionManager() = default;
 
@@ -39,6 +41,11 @@ struct CollectionManager {
   static VirtualPtrType<IndexT> runConstructor(
     VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
     std::index_sequence<I...>
+  );
+
+  template <typename IndexT>
+  void insertCollectionElement(
+    VirtualPtrType<IndexT> vc, IndexT const& idx, VirtualProxyType const &proxy
   );
 
 protected:
