@@ -119,7 +119,7 @@ void CollectionManager::sendMsg(
 
   auto& holder_container = CollectionEntireHolder<IndexT>::proxy_container_;
   auto holder = holder_container.find(toProxy.colProxy);
-  if (holder == holder_container.end()) {
+  if (holder != holder_container.end()) {
     auto const map_han = holder->second.map_fn;
     auto max_idx = holder->second.max_idx;
     auto cur_idx = IndexT::uniqueBitsToIndex(
@@ -153,8 +153,20 @@ void CollectionManager::sendMsg(
     // route the message to the destination using the location manager
     theLocMan()->collectionLoc->routeMsg(toProxy, home_node, msg, act);
   } else {
-    // @todo: buffer the msg
-    assert(0);
+    auto iter = buffered_sends_.find(toProxy.colProxy);
+    if (iter == buffered_sends_.end()) {
+      buffered_sends_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(toProxy.colProxy),
+        std::forward_as_tuple(ActionContainerType{})
+      );
+      iter = buffered_sends_.find(toProxy.colProxy);
+    }
+    assert(iter != buffered_sends_.end() and "Must exist");
+    printf("%d: pushing into buffered sends: %lld\n", theContext()->getNode(), toProxy.colProxy);
+    iter->second.push_back([=](VirtualProxyType /*ignored*/){
+      theCollection()->sendMsg<CollectionT, MessageT, f>(toProxy, msg, act);
+    });
   }
 }
 
@@ -173,6 +185,17 @@ void CollectionManager::insertCollectionElement(
         typename CollectionEntireHolder<IndexT>::InnerHolder{map_han, max_idx}
       )
     );
+    printf("%d: looking for buffered sends: proxy=%lld, size=%ld\n", theContext()->getNode(), proxy, buffered_sends_.size());
+    auto iter = buffered_sends_.find(proxy);
+    if (iter != buffered_sends_.end()) {
+      printf("looking for buffered sends: FOUND\n");
+      for (auto&& elm : iter->second) {
+        printf("looking for buffered sends: running elm\n");
+        elm(proxy);
+      }
+      iter->second.clear();
+      buffered_sends_.erase(iter);
+    }
   }
 
   auto& holder = CollectionHolder<IndexT>::vc_container_;

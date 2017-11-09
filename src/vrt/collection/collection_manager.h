@@ -15,6 +15,8 @@
 #include <tuple>
 #include <utility>
 #include <unordered_map>
+#include <functional>
+#include <vector>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -24,6 +26,12 @@ struct CollectionManager {
 
   template <typename IndexT>
   using VirtualPtrType = typename CollectionHolder<IndexT>::VirtualPtrType;
+
+  using ActionProxyType = std::function<void(VirtualProxyType)>;
+  using ActionContainerType = std::vector<ActionProxyType>;
+  using BufferedActionType = std::unordered_map<
+    VirtualProxyType, ActionContainerType
+  >;
 
   CollectionManager() = default;
 
@@ -67,6 +75,7 @@ protected:
   void insertCollectionInfo(VirtualProxyType const& proxy);
 
 private:
+  BufferedActionType buffered_sends_;
   VirtualIDType curIdent_ = 0;
 };
 
