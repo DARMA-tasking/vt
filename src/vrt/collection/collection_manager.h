@@ -7,6 +7,7 @@
 #include "vrt/collection/collection_elm_proxy.h"
 #include "vrt/collection/collection.h"
 #include "vrt/collection/collection_holder.h"
+#include "vrt/collection/collection_entire_holder.h"
 #include "topos/mapping/mapping_headers.h"
 
 #include <memory>

@@ -117,46 +117,42 @@ void CollectionManager::sendMsg(
 
   // @todo: implement the action `act' after the routing is finished
 
-  auto& holder = CollectionHolder<IndexT>::vc_container_;
-  auto proxy_holder = holder.find(toProxy.colProxy);
-  assert(proxy_holder != holder.end() and "Proxy must exist");
+  auto& holder_container = CollectionEntireHolder<IndexT>::proxy_container_;
+  auto holder = holder_container.find(toProxy.colProxy);
+  if (holder == holder_container.end()) {
+    auto const map_han = holder->second.map_fn;
+    auto max_idx = holder->second.max_idx;
+    auto cur_idx = IndexT::uniqueBitsToIndex(
+      VirtualElemProxyBuilder::elmProxyGetIndex(toProxy.elmProxy)
+    );
+    auto fn = auto_registry::getAutoHandlerMap(map_han);
 
-  auto idx_holder = proxy_holder->second.find(toProxy.elmProxy);
-  assert(idx_holder != proxy_holder->second.end() and "Idx proxy must exist");
+    auto const& num_nodes = theContext()->getNumNodes();
 
-  auto& inner_holder = idx_holder->second;
-  auto const map_han = inner_holder.map_fn;
-  auto max_idx = inner_holder.max_idx;
-  auto cur_idx = IndexT::uniqueBitsToIndex(
-    VirtualElemProxyBuilder::elmProxyGetIndex(toProxy.elmProxy)
-  );
-  auto fn = auto_registry::getAutoHandlerMap(map_han);
+    auto home_node = fn(
+      reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
+      reinterpret_cast<vt::index::BaseIndex*>(&cur_idx),
+      num_nodes
+    );
 
-  auto const& num_nodes = theContext()->getNumNodes();
+    // register the user's handler
+    HandlerType const& han = auto_registry::makeAutoHandlerCollection<
+      CollectionT, MessageT, f
+    >(msg);
 
-  auto home_node = fn(
-    reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
-    reinterpret_cast<vt::index::BaseIndex*>(&cur_idx),
-    num_nodes
-  );
+    // save the user's handler in the message
+    msg->setVrtHandler(han);
+    msg->setProxy(toProxy);
 
-  // register the user's handler
-  HandlerType const& han = auto_registry::makeAutoHandlerCollection<
-    CollectionT, MessageT, f
-  >(msg);
+    debug_print(
+      vrt, node,
+      "sending msg to collection: msg=%p, han=%d, home_node=%d\n",
+      msg, han, home_node
+    );
 
-  // save the user's handler in the message
-  msg->setVrtHandler(han);
-  msg->setProxy(toProxy);
-
-  debug_print(
-    vrt, node,
-    "sending msg to collection: msg=%p, han=%d, home_node=%d\n",
-    msg, han, home_node
-  );
-
-  // route the message to the destination using the location manager
-  theLocMan()->collectionLoc->routeMsg(toProxy, home_node, msg, act);
+    // route the message to the destination using the location manager
+    theLocMan()->collectionLoc->routeMsg(toProxy, home_node, msg, act);
+  }
 }
 
 template <typename IndexT>
@@ -164,6 +160,18 @@ void CollectionManager::insertCollectionElement(
   VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
   HandlerType const& map_han, VirtualProxyType const &proxy
 ) {
+  auto& holder_container = CollectionEntireHolder<IndexT>::proxy_container_;
+  auto holder_iter = holder_container.find(proxy);
+  if (holder_iter == holder_container.end()) {
+    holder_container.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(proxy),
+      std::forward_as_tuple(
+        typename CollectionEntireHolder<IndexT>::InnerHolder{map_han, max_idx}
+      )
+    );
+  }
+
   auto& holder = CollectionHolder<IndexT>::vc_container_;
   auto proxy_holder = holder.find(proxy);
   if (proxy_holder == holder.end()) {
