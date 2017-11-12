@@ -123,6 +123,7 @@ void CollectionManager::sendMsg(
     auto const map_han = holder->second.map_fn;
     auto max_idx = holder->second.max_idx;
     auto cur_idx = IndexT::uniqueBitsToIndex(
+      //*reinterpret_cast<UniqueIndexBitType const*>(&toProxy.elmProxy)
       VirtualElemProxyBuilder::elmProxyGetIndex(toProxy.elmProxy)
     );
     auto fn = auto_registry::getAutoHandlerMap(map_han);

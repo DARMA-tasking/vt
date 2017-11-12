@@ -91,11 +91,12 @@ struct DenseIndexArray {
   }
 
   static ThisIndexType uniqueBitsToIndex(UniqueIndexBitType const& bits) {
+    using BitType = UniqueIndexBitType;
+
     ThisIndexType idx{};
     auto const& nbits = (sizeof(UniqueIndexBitType) * 8) / ndim;
     for (auto i = 0; i < ndim; i++) {
-      auto const& val = vt::utils::BitPacker::getFieldDynamic<
-        UniqueIndexBitType>(i*nbits, nbits, bits);
+      auto const& val = vt::utils::BitPacker::getFieldDynamic<BitType>(i*nbits, nbits, bits);
       idx[i] = val;
     }
     return idx;
