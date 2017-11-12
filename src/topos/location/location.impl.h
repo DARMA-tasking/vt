@@ -35,8 +35,8 @@ void EntityLocationCoord<EntityID>::registerEntity(
   );
 
   debug_print(
-      location, node,
-      "EntityLocationCoord: registerEntity: id=%llu\n", id
+    location, node,
+    "EntityLocationCoord: registerEntity\n"
   );
 
   local_registered_.insert(id);
@@ -77,8 +77,8 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
   );
 
   debug_print(
-      location, node,
-      "EntityLocationCoord: unregisterEntity: id=%d\n", id
+    location, node,
+    "EntityLocationCoord: unregisterEntity\n"
   );
 
   local_registered_.erase(reg_iter);
@@ -146,8 +146,8 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   bool const found = reg_iter != local_registered_.end();
 
   debug_print(
-      location, node,
-      "EntityLocationCoord: routeMsgEager: found=%s\n", print_bool(found)
+    location, node,
+    "EntityLocationCoord: routeMsgEager: found=%s\n", print_bool(found)
   );
 
   if (found) {
@@ -179,9 +179,9 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   );
 
   debug_print(
-      location, node,
-      "EntityLocationCoord: routeMsgEager: id=%d, home_node=%d, route_node=%d\n",
-      id, home_node, route_to_node
+    location, node,
+    "EntityLocationCoord: routeMsgEager: home_node=%d, route_node=%d\n",
+    home_node, route_to_node
   );
 
   return routeMsgNode<MessageT>(id, home_node, route_to_node, msg, action);
@@ -197,8 +197,8 @@ void EntityLocationCoord<EntityID>::getLocation(
 
   if (reg_iter != local_registered_.end()) {
     debug_print(
-        location, node,
-        "EntityLocationCoord: getLocation: id=%d, entity is local\n", id
+      location, node,
+      "EntityLocationCoord: getLocation: entity is local\n"
     );
 
     action(this_node);
@@ -208,9 +208,9 @@ void EntityLocationCoord<EntityID>::getLocation(
     bool const& rec_exists = recs_.exists(id);
 
     debug_print(
-        location, node,
-        "EntityLocationCoord: getLocation: id=%d, home_node=%d, rec_exists=%s\n",
-        id, home_node, print_bool(rec_exists)
+      location, node,
+      "EntityLocationCoord: getLocation: home_node=%d, rec_exists=%s\n",
+      home_node, print_bool(rec_exists)
     );
 
     if (not rec_exists) {
@@ -238,8 +238,8 @@ void EntityLocationCoord<EntityID>::getLocation(
         action(this_node);
       } else if (rec.isRemote()) {
         debug_print(
-            location, node,
-            "EntityLocationCoord: getLocation: id=%d, entity is remote\n", id
+          location, node,
+          "EntityLocationCoord: getLocation: entity is remote\n"
         );
 
         action(rec.getRemoteNode());
@@ -258,8 +258,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: routeMsgNode: id=%d, to_node=%d, node=%d: inst=%d\n",
-    id, to_node, this_node, this_inst
+    "EntityLocationCoord: routeMsgNode: to_node=%d, node=%d: inst=%d\n",
+    to_node, this_node, this_inst
   );
 
   if (to_node != this_node) {
@@ -286,14 +286,14 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
       debug_print(
         location, node,
-        "EntityLocationCoord: routeMsgNode: id=%d: size=%ld\n",
-        id, local_registered_.size()
+        "EntityLocationCoord: routeMsgNode: size=%ld\n",
+        local_registered_.size()
       );
 
       if (reg_iter != local_registered_.end()) {
         debug_print(
           location, node,
-          "EntityLocationCoord: routeMsgNode: id=%d: running actions\n", id
+          "EntityLocationCoord: routeMsgNode: running actions\n"
         );
 
         trigger_msg_handler_action(id);
@@ -303,7 +303,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       } else {
         debug_print(
           location, node,
-          "EntityLocationCoord: routeMsgNode: id=%d: buffering\n", id
+          "EntityLocationCoord: routeMsgNode: buffering\n"
         );
 
         // buffer the message here, the entity will be registered in the future
@@ -352,9 +352,9 @@ void EntityLocationCoord<EntityID>::routeMsg(
   bool const& use_eager = not is_large_msg;
 
   debug_print(
-      location, node,
-      "routeMsg: id=%d, home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
-      id, home_node, msg_size, print_bool(is_large_msg), print_bool(use_eager)
+    location, node,
+    "routeMsg: home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
+    home_node, msg_size, print_bool(is_large_msg), print_bool(use_eager)
   );
 
   msg->setLocInst(this_inst);
@@ -382,10 +382,9 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
   auto const& entity = pending_iter->second.entity;
 
   debug_print(
-      location, node,
-      "EntityLocationCoord: updatePendingRequest: event_id=%lld, entity=%d, "
-          "node=%d\n",
-      event_id, entity, node
+    location, node,
+    "EntityLocationCoord: updatePendingRequest: event_id=%lld, node=%d\n",
+    event_id, node
   );
 
   recs_.insert(entity, LocRecType{entity, eLocState::Remote, node});
@@ -408,9 +407,9 @@ template <typename MessageT>
   auto const& inst = msg->getLocInst();
 
   debug_print(
-      location, node,
-      "msgHandler: msg=%p, ref=%d, loc_inst=%d\n",
-      msg, envelopeGetRef(msg->env), inst
+    location, node,
+    "msgHandler: msg=%p, ref=%d, loc_inst=%d\n",
+    msg, envelopeGetRef(msg->env), inst
   );
 
   LocationCoord *loc = LocationManager::getInstance(inst);
