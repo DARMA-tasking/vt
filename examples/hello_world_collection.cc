@@ -60,11 +60,12 @@ int main(int argc, char** argv) {
     auto proxy = theCollection()->makeCollection<
       MyCol, Index1D, defaultDenseIndex1DMap
     >(Index1D(64));
-    VirtualElmProxyType elm_proxy(proxy, 32);
-    auto const& this_node = theContext()->getNode();
-    auto msg = new ColMsg(this_node);
-
-    theCollection()->sendMsg<MyCol, ColMsg, colHan>(elm_proxy, msg, nullptr);
+    for (int i = 10; i < 40; i++) {
+      VirtualElmProxyType elm_proxy(proxy, i);
+      auto const& this_node = theContext()->getNode();
+      auto msg = new ColMsg(this_node);
+      theCollection()->sendMsg<MyCol, ColMsg, colHan>(elm_proxy, msg, nullptr);
+    }
   }
 
   while (!rt->isTerminated()) {
