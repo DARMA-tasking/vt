@@ -24,13 +24,13 @@ NodeType dense1DRoundRobinMap(Idx1DPtr idx, Idx1DPtr max_idx, NodeType nnodes) {
 
 NodeType dense2DRoundRobinMap(Idx2DPtr idx, Idx2DPtr max_idx, NodeType nnodes) {
   using IndexElmType = typename Index2D::DenseIndexType;
-  auto const& lin_idx = linearizeDenseIndex<IndexElmType, 2>(idx, max_idx);
+  auto const& lin_idx = linearizeDenseIndexColMajor<IndexElmType, 2>(idx, max_idx);
   return lin_idx % nnodes;
 }
 
 NodeType dense3DRoundRobinMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes) {
   using IndexElmType = typename Index3D::DenseIndexType;
-  auto const& lin_idx = linearizeDenseIndex<IndexElmType, 3>(idx, max_idx);
+  auto const& lin_idx = linearizeDenseIndexColMajor<IndexElmType, 3>(idx, max_idx);
   return lin_idx % nnodes;
 }
 

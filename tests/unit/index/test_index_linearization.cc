@@ -30,7 +30,7 @@ TEST_F(TestIndex, test_index_1d_linearization) {
 
   for (int i = 0; i < dim1; i++) {
     auto cur_idx = index::Index1D(i);
-    auto lin_idx = mapping::linearizeDenseIndex(&cur_idx, &max_idx);
+    auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx);
 
     #if DEBUG_TEST_HARNESS_PRINT
       auto cur_idx_str = cur_idx.toString().c_str();
@@ -63,7 +63,7 @@ TEST_F(TestIndex, test_index_2d_linearization) {
   for (int i = 0; i < dim1; i++) {
     for (int j = 0; j < dim2; j++) {
       auto cur_idx = index::Index2D(i, j);
-      auto lin_idx = mapping::linearizeDenseIndex(&cur_idx, &max_idx);
+      auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx);
 
       #if DEBUG_TEST_HARNESS_PRINT
         auto cur_idx_str = cur_idx.toString().c_str();
@@ -98,7 +98,7 @@ TEST_F(TestIndex, test_index_3d_linearization) {
     for (int j = 0; j < dim2; j++) {
       for (int k = 0; k < dim3; k++) {
         auto cur_idx = index::Index3D(i, j, k);
-        auto lin_idx = mapping::linearizeDenseIndex(&cur_idx, &max_idx);
+        auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx);
 
         #if DEBUG_TEST_HARNESS_PRINT
           auto cur_idx_str = cur_idx.toString().c_str();

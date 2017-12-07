@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   for (int i = 0; i < dim1; i++) {
     for (int j = 0; j < dim2; j++) {
       auto cur_idx = index::Index2D(i,j);
-      auto lin_idx = mapping::linearizeDenseIndex(&cur_idx, &idx_a_max);
+      auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &idx_a_max);
       printf(
         "idx=%s, max=%s, lin=%d\n",
         cur_idx.toString().c_str(), idx_a_max.toString().c_str(), lin_idx

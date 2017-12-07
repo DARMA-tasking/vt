@@ -16,8 +16,13 @@ NodeType blockMapDenseFlatIndex(
 );
 
 template <typename Idx, index::NumDimensionsType ndim>
-Idx linearizeDenseIndex(
-  DenseIndex<Idx, ndim>* idx, DenseIndex<Idx, ndim>* max_idx
+Idx linearizeDenseIndexColMajor(
+    DenseIndex<Idx, ndim> *idx, DenseIndex<Idx, ndim> *max_idx
+);
+
+template <typename Idx, index::NumDimensionsType ndim>
+Idx linearizeDenseIndexRowMajor(
+    DenseIndex<Idx, ndim> *idx, DenseIndex<Idx, ndim> *max_idx
 );
 
 template <typename Index>
