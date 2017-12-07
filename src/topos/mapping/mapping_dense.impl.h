@@ -89,7 +89,7 @@ NodeType denseBlockMap(IdxPtr<Idx> idx, IdxPtr<Idx> max_idx, NodeType nnodes) {
   IndexElmType flat_idx = linearizeDenseIndexColMajor<IndexElmType, ndim>(idx, max_idx);
 
   return blockMapDenseFlatIndex<IndexElmType, NodeType>(
-    &total_elems, &flat_idx, nnodes
+    &flat_idx, &total_elems, nnodes
   );
 }
 
