@@ -27,10 +27,10 @@ TEST_F(TestIndex, test_index_1d_linearization) {
   index::Index1D max_idx(dim1);
 
   int cur_val = 0;
-
   for (int i = 0; i < dim1; i++) {
     auto cur_idx = index::Index1D(i);
     auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx);
+    auto lin_idx1 = mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx);
 
     #if DEBUG_TEST_HARNESS_PRINT
       auto cur_idx_str = cur_idx.toString().c_str();
@@ -39,6 +39,7 @@ TEST_F(TestIndex, test_index_1d_linearization) {
     #endif
 
     EXPECT_EQ(lin_idx, cur_val);
+    EXPECT_EQ(lin_idx1, cur_val);
 
     cur_val++;
   }
@@ -48,6 +49,12 @@ TEST_F(TestIndex, test_index_1d_linearization) {
     auto const& idx_max_str = max_idx.toString().c_str();
     printf("idx=%s, idx_max=%s\n", idx_str, idx_max_str);
   #endif
+
+  for (int i = 92; i < 100; i++) {
+    auto cur_idx = index::Index1D(i);
+    ASSERT_DEATH(mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx), "Out of range index!");
+    ASSERT_DEATH(mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx), "Out of range index!");
+  }
 }
 
 TEST_F(TestIndex, test_index_2d_linearization) {
@@ -59,7 +66,6 @@ TEST_F(TestIndex, test_index_2d_linearization) {
   index::Index2D max_idx(dim1, dim2);
 
   int cur_val = 0;
-
   for (int i = 0; i < dim1; i++) {
     for (int j = 0; j < dim2; j++) {
       auto cur_idx = index::Index2D(i, j);
@@ -77,11 +83,37 @@ TEST_F(TestIndex, test_index_2d_linearization) {
     }
   }
 
+  cur_val = 0;
+  for (int j = 0; j < dim2; j++) {
+    for (int i = 0; i < dim1; i++) {
+      auto cur_idx = index::Index2D(i, j);
+      auto lin_idx = mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx);
+
+      #if DEBUG_TEST_HARNESS_PRINT
+      auto cur_idx_str = cur_idx.toString().c_str();
+        auto max_idx_str = max_idx.toString().c_str();
+        printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
+      #endif
+
+      EXPECT_EQ(lin_idx, cur_val);
+
+      cur_val++;
+    }
+  }
+
   #if DEBUG_TEST_HARNESS_PRINT
     auto const& idx_str = idx.toString().c_str();
     auto const& idx_max_str = max_idx.toString().c_str();
     printf("idx=%s, idx_max=%s\n", idx_str, idx_max_str);
   #endif
+
+  for (int i = 10; i < 20; i++) {
+    for (int j = 12; j < 20; j++) {
+      auto cur_idx = index::Index2D(i,j);
+      ASSERT_DEATH(mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx), "Out of range index!");
+      ASSERT_DEATH(mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx), "Out of range index!");
+    }
+  }
 }
 
 TEST_F(TestIndex, test_index_3d_linearization) {
@@ -93,7 +125,6 @@ TEST_F(TestIndex, test_index_3d_linearization) {
   index::Index3D max_idx(dim1, dim2, dim3);
 
   int cur_val = 0;
-
   for (int i = 0; i < dim1; i++) {
     for (int j = 0; j < dim2; j++) {
       for (int k = 0; k < dim3; k++) {
@@ -113,11 +144,41 @@ TEST_F(TestIndex, test_index_3d_linearization) {
     }
   }
 
+  cur_val = 0;
+  for (int k = 0; k < dim3; k++) {
+    for (int j = 0; j < dim2; j++) {
+      for (int i = 0; i < dim1; i++) {
+        auto cur_idx = index::Index3D(i, j, k);
+        auto lin_idx = mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx);
+
+        #if DEBUG_TEST_HARNESS_PRINT
+        auto cur_idx_str = cur_idx.toString().c_str();
+          auto max_idx_str = max_idx.toString().c_str();
+          printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
+        #endif
+
+        EXPECT_EQ(lin_idx, cur_val);
+
+        cur_val++;
+      }
+    }
+  }
+
   #if DEBUG_TEST_HARNESS_PRINT
     auto const& idx_str = idx.toString().c_str();
     auto const& idx_max_str = max_idx.toString().c_str();
     printf("idx=%s, idx_max=%s\n", idx_str, idx_max_str);
   #endif
+
+  for (int i = 3; i < 10; i++) {
+    for (int j = 9; j < 15; j++) {
+      for (int k = 23; k < 30; k++) {
+        auto cur_idx = index::Index3D(i, j, k);
+        ASSERT_DEATH(mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx), "Out of range index!");
+        ASSERT_DEATH(mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx), "Out of range index!");
+      }
+    }
+  }
 }
 
 }}} // end namespace vt::tests::unit
