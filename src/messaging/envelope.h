@@ -39,6 +39,7 @@ struct Envelope {
   NodeType dest : node_num_bits;
   HandlerType han : handler_num_bits;
   RefType ref : ref_num_bits;
+  bool isDataParallel : 1;
 
   #if backend_check_enabled(trace_enabled)
   trace::TraceEventIDType trace_event : trace::trace_event_num_bits;
@@ -173,6 +174,16 @@ inline void envelopeRef(Env& env) {
 }
 
 template <typename Env>
+inline void envelopeSetIsDataParallel(Env& env, bool isDataParalel) {
+  reinterpret_cast<Envelope*>(&env)->isDataParallel = isDataParalel;
+}
+
+template <typename Env>
+inline bool envelopeGetDataParallel(Env const& env) {
+  return reinterpret_cast<Envelope const*>(&env)->isDataParallel;
+}
+
+template <typename Env>
 inline void envelopeDeref(Env& env) {
   reinterpret_cast<Envelope*>(&env)->ref--;
 }
@@ -191,6 +202,7 @@ inline void envelopeInit(Env& env) {
   envelopeSetDest(env, uninitialized_destination);
   envelopeSetHandler(env, uninitialized_handler);
   envelopeSetRef(env, not_shared_message);
+  envelopeSetIsDataParallel(env, false);
 }
 
 inline void envelopeInitEmpty(Envelope& env) {
@@ -293,3 +305,4 @@ static_assert(std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD");
 } //end namespace vt
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_H*/
+

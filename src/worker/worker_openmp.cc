@@ -5,6 +5,7 @@
 
 #include "context/context.h"
 #include "worker/worker_common.h"
+#include "worker/worker_headers.h"
 #include "worker/worker_openmp.h"
 
 #include <memory>
@@ -26,8 +27,21 @@ void OMPWorker::enqueue(WorkUnitType const& work_unit) {
   work_queue_.pushBack(work_unit);
 }
 
+void OMPWorker::enqueue_data_parallel(WorkUnitType const& work_unit) {
+  data_parallel_work_queue_.pushBack(work_unit);
+}
+
 void OMPWorker::progress() {
   // Noop
+}
+
+void OMPWorker::pause() {
+  sendTerminateSignal();
+}
+
+void OMPWorker::unpause() {
+  #pragma omp atomic write
+  should_terminate_ = false;
 }
 
 void OMPWorker::scheduler() {
@@ -44,6 +58,18 @@ void OMPWorker::scheduler() {
       auto elm = work_queue_.popGetBack();
       elm();
       finished_fn_(worker_id_, 1);
+    }
+
+    if (data_parallel_work_queue_.size() > 0) {
+      int const size = theWorkerGrp()->getPartitionSize();
+      int const min_thd = worker_id_ / size;
+      int const max_thd = worker_id_ / size + size;
+      for (int i = min_thd; i < max_thd; i++) {
+        if (worker_id_ != i) {
+          theWorkerGrp()->pauseWorker(i, true);
+        }
+      }
+      break;
     }
 
     #pragma omp atomic read

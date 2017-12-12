@@ -41,6 +41,7 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
     int const parent, int const pnthds, WorkerCommFnType comm_fn,
     bool const hasCommThread
   );
+  WorkerCountType getPartitionSize() const { return partition_size_; }
 
   // // thread-safe comm thread enqueue
   // void enqueueCommThreadSafe(WorkUnitType const& work_unit);
@@ -51,11 +52,23 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
   void enqueueForWorker(
     WorkerIDType const& worker_id, WorkUnitType const& work_unit
   );
+  void enqueueForMasterWorker(
+    WorkerIDType const& worker_id, WorkUnitType const& work_unit
+  );
   void enqueueAllWorkers(WorkUnitType const& work_unit);
+  void pauseWorker(WorkerCountType const& worker, bool const shouldPause) {
+    if (shouldPause) {
+      worker_state_[worker]->pause();
+    } else {
+      worker_state_[worker]->unpause();
+    }
+  }
 
 private:
+  AtomicType<bool> comm_finished = {false};
   WorkerFinishedFnType finished_fn_ = nullptr;
   AtomicType<WorkerCountType> ready_ = {0};
+  WorkerCountType partition_size_ = 0;
   bool initialized_ = false;
   WorkerCountType num_workers_ = 0;
   WorkerStateContainerType worker_state_;

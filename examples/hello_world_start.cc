@@ -2,6 +2,8 @@
 #include "transport.h"
 #include "utils/tls/tls.h"
 
+#include <Kokkos_Core.hpp>
+
 #include <cstdlib>
 #include <cstdio>
 #include <vector>
@@ -43,6 +45,7 @@ struct ProxyMsg : vt::vrt::VirtualMessage {
 
 struct WorkMsg : vt::vrt::VirtualMessage {
   std::vector<double> work_vec;
+  bool isDataParallel = false;
 
   WorkMsg() = default;
 
@@ -50,6 +53,7 @@ struct WorkMsg : vt::vrt::VirtualMessage {
   void serialize(SerializerT& s) {
     VirtualMessage::serialize(s);
     s | work_vec;
+    s | isDataParallel;
   }
 };
 
@@ -110,6 +114,10 @@ struct TestVC : vt::vrt::VirtualContext {
 
       // Manually dispatch to comm thread for now
       auto send_fn = [=]{
+        if (my_index == 0) {
+          envelopeSetIsDataParallel(msg->env, true);
+          msg->isDataParallel = true;
+        }
         theVirtualManager()->sendSerialMsg<TestVC, WorkMsg, doWorkRight>(
           right_proxy, msg
         );
@@ -142,11 +150,24 @@ struct TestVC : vt::vrt::VirtualContext {
   }
 };
 
+struct hello_world {
+  KOKKOS_INLINE_FUNCTION void operator() (const int i) const {
+    printf ("Hello from i = %i\n", i);
+  }
+};
+
+
 static void doWorkRight(WorkMsg* msg, TestVC* vc) {
   DEBUG_PRINT_START(
     "doWorkRight: msg->work_vec.size()=%ld, vc=%p\n", msg->work_vec.size(), vc
   );
-  vc->doWork(msg);
+
+  if (msg->isDataParallel) {
+    printf("is data parallel task\n");
+    Kokkos::parallel_for("HelloWorld", 15, hello_world());
+  } else {
+    vc->doWork(msg);
+  }
 }
 
 static void proxyHan(ProxyMsg* msg, TestVC* vc) {

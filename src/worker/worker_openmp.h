@@ -6,6 +6,7 @@
 
 #if backend_check_enabled(openmp)
 
+#include "utils/atomic/atomic.h"
 #include "worker/worker_common.h"
 #include "worker/worker_types.h"
 #include "utils/container/concurrent_deque.h"
@@ -14,6 +15,8 @@
 #include <memory>
 
 namespace vt { namespace worker {
+
+using ::vt::util::atomic::AtomicType;
 
 struct OMPWorker {
   using WorkerFunType = std::function<void()>;
@@ -29,11 +32,17 @@ struct OMPWorker {
   void join();
   void dispatch(WorkerFunType fun);
   void enqueue(WorkUnitType const& work_unit);
+  void enqueue_data_parallel(WorkUnitType const& work_unit);
   void sendTerminateSignal();
   void progress();
+  void pause();
+  void unpause();
 
 private:
   void scheduler();
+
+public:
+  WorkUnitContainerType data_parallel_work_queue_;
 
 private:
   bool should_terminate_= false;

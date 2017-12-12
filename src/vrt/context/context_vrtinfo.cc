@@ -64,7 +64,12 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* msg) {
   if (has_workers) {
     if (hasCoreMap() && !execute_comm) {
       auto const core = getCore();
-      theWorkerGrp()->enqueueForWorker(core, work_unit);
+      bool const is_data_parallel = envelopeGetDataParallel(msg->env);
+      if (is_data_parallel) {
+        theWorkerGrp()->enqueueForMasterWorker(core, work_unit);
+      } else {
+        theWorkerGrp()->enqueueForWorker(core, work_unit);
+      }
     } else {
       theWorkerGrp()->enqueueCommThread(work_unit);
     }

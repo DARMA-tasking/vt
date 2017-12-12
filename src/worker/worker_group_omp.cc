@@ -60,6 +60,9 @@ void WorkerGroupOMP::doWork(
 ) {
   using ::vt::ctx::ContextAttorney;
 
+  WorkerIDType const min_thd = parent * pnthds;
+  WorkerIDType const max_thd = (parent+1) * pnthds;
+
   WorkerIDType const thd = omp_get_thread_num() + (parent * pnthds);
   WorkerIDType const nthds = omp_get_num_threads();
 
@@ -77,11 +80,22 @@ void WorkerGroupOMP::doWork(
       thd, theContext()->getWorker(), num_workers_, print_bool(hasCommThread)
     );
 
-    worker_state_[thd] = std::make_unique<WorkerStateType>(
-      thd, nthds, finished_fn_
-    );
-    ready_++;
+    if (not worker_state_[thd]) {
+      worker_state_[thd] = std::make_unique<WorkerStateType>(
+        thd, nthds, finished_fn_
+      );
+      ready_++;
+    }
+
     worker_state_[thd]->spawn();
+
+    // if (not worker_state_[thd]->hasJoined()) {
+    //   for (auto i = min_thd; i < max_thd; i++) {
+    //     if (i != thd) {
+    //       worker_state_[thd]->pause_scheduler();
+    //     }
+    //   }
+    // }
   } else {
     // Set the thread-local worker in Context
     ContextAttorney::setWorker(worker_id_comm_thread);
@@ -109,6 +123,8 @@ void WorkerGroupOMP::doWork(
     comm_fn();
 
     debug_print(worker, node, "comm: should call join\n");
+
+    comm_finished = true;
 
     // once the comm function exits the program is terminated
     for (auto thd = 0; thd < num_workers_; thd++) {
@@ -138,17 +154,36 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
   int const partition_size = 2;
   int const num_partitions = (num_workers_ + 1)/partition_size;
 
+  partition_size_ = partition_size;
+
   printf("num_partitions=%d\n",num_partitions);
 
   Kokkos::initialize();
 
   Kokkos::OpenMP::partition_master([this,comm_fn,num_partitions](int id, int num){
     printf("id=%d,num=%d\n",id,num);
-    // Communication thread partition
-    #pragma omp parallel num_threads(num)
-    {
-      auto const comm_thread = id == num_partitions-1;
-      doWork(id, num, comm_fn, comm_thread);
+
+    while (!comm_finished.load()) {
+      // Communication thread partition
+      #pragma omp parallel num_threads(num)
+      {
+        auto const comm_thread = id == num_partitions-1;
+        doWork(id, num, comm_fn, comm_thread);
+      }
+
+      auto const master_worker_id = id*num;
+      auto& queue = worker_state_[master_worker_id]->data_parallel_work_queue_;
+      if (queue.size() > 0) {
+        auto elm = queue.popGetBack();
+        elm();
+        finished_fn_(master_worker_id, 1);
+      }
+
+      int const min_thd = master_worker_id / partition_size;
+      int const max_thd = master_worker_id / partition_size + partition_size;
+      for (int i = min_thd; i < max_thd; i++) {
+        theWorkerGrp()->pauseWorker(i, false);
+      }
     }
   }, num_partitions, partition_size);
 }
@@ -172,6 +207,14 @@ void WorkerGroupOMP::enqueueAnyWorker(WorkUnitType const& work_unit) {
 
   this->enqueued();
   worker_state_[0]->enqueue(work_unit);
+}
+
+void WorkerGroupOMP::enqueueForMasterWorker(
+  WorkerIDType const& worker_id, WorkUnitType const& work_unit
+) {
+  auto const master = worker_id / partition_size_;
+  this->enqueued();
+  worker_state_[master]->enqueue_data_parallel(work_unit);
 }
 
 void WorkerGroupOMP::enqueueForWorker(
