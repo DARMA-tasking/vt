@@ -10,9 +10,9 @@ using namespace vt;
 using namespace vt::vrt;
 using namespace vt::mapping;
 
-#define DEBUG_START_EXAMPLE 0
+#define DEBUG_START_EXAMPLE 1
 
-#define DEBUG_PRINTER_START(str, args...)                               \
+#define DEBUG_PRINT_START(str, args...)                               \
   do{                                                                   \
     printf(                                                             \
       "node=%d,worker=%d: " str,                                        \
@@ -20,11 +20,11 @@ using namespace vt::mapping;
     );                                                                  \
   } while (false);
 
-#if DEBUG_START_EXAMPLE
-  #define DEBUG_PRINT_START(str, args...) DEBUG_PRINTER_START
-#else
-  #define DEBUG_PRINT_START(str, args...)
-#endif
+// #if DEBUG_START_EXAMPLE
+//   #define DEBUG_PRINT_START(str, args...) DEBUG_PRINTER_START
+// #else
+//   #define DEBUG_PRINT_START(str, args...)
+// #endif
 
 struct ProxyMsg : vt::vrt::VirtualMessage {
   std::vector<VirtualProxyType> proxies;
@@ -170,11 +170,11 @@ struct MainVC : vt::vrt::MainVirtualContext {
 
     theTerm()->attachGlobalTermAction([]{
       auto const num_work_units = num_work_finished.load();
-      DEBUG_PRINTER_START("num_work_units=%d\n", num_work_units);
+      DEBUG_PRINT_START("num_work_units=%d\n", num_work_units);
 
       theWorkerGrp()->enqueueAllWorkers([]{
         auto const num_work_units = AccessTLS(tls_work);
-        DEBUG_PRINTER_START("tls work_units=%d\n", num_work_units);
+        DEBUG_PRINT_START("tls work_units=%d\n", num_work_units);
       });
     });
 

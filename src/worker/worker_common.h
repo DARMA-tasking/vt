@@ -9,7 +9,7 @@
 
 namespace vt { namespace worker {
 
-static constexpr WorkerCountType const num_default_workers = 4;
+static constexpr WorkerCountType const num_default_workers = 3;
 static constexpr WorkerCountType const num_default_comm = 1;
 
 using WorkerCommFnType = std::function<void()>;

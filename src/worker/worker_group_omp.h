@@ -37,6 +37,10 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
   void joinWorkers();
   void progress();
   bool commScheduler();
+  void doWork(
+    int const parent, int const pnthds, WorkerCommFnType comm_fn,
+    bool const hasCommThread
+  );
 
   // // thread-safe comm thread enqueue
   // void enqueueCommThreadSafe(WorkUnitType const& work_unit);

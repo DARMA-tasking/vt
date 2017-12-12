@@ -14,7 +14,7 @@
 namespace vt { namespace standalone {
 
 static constexpr NodeType const main_node = 0;
-static constexpr WorkerCountType const default_vt_num_workers = 4;
+static constexpr WorkerCountType const default_vt_num_workers = 3;
 
 template <typename VrtContextT>
 inline void vrLaunchMainContext() {

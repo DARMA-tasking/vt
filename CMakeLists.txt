@@ -27,6 +27,8 @@ else()
   message("OpenMP not found: must use std::thread for workers.")
 endif (OpenMP_FOUND)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/Users/jliffla/codes/kokkos-build/install/include")
+
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(PROJECT_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
@@ -283,7 +285,7 @@ else()
   include_directories(${GTEST_DIR}/include)
   include_directories(${PROJECT_TEST_UNIT_DIR})
 
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${GTEST_DIR}/lib")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${GTEST_DIR}/lib -L/Users/jliffla/codes/kokkos-build/install/lib -lkokkos")
 
   set(UNIT_TEST_PROC_TEST_LIST 2 4 8)
 

@@ -4,6 +4,9 @@
 #include "context/context_attorney.h"
 #include "collective/collective.h"
 
+#include "Kokkos_Core.hpp"
+#include "Kokkos_OpenMP.hpp"
+
 #if backend_check_enabled(openmp)
 
 #include "worker/worker_common.h"
@@ -13,7 +16,7 @@
 
 #include <omp.h>
 
-#define WORKER_OMP_VERBOSE 0
+#define WORKER_OMP_VERBOSE 1
 
 namespace vt { namespace worker {
 
@@ -51,6 +54,70 @@ void WorkerGroupOMP::enqueueCommThread(WorkUnitType const& work_unit) {
   WorkerGroupComm::enqueueComm(work_unit);
 }
 
+void WorkerGroupOMP::doWork(
+  int const parent, int const pnthds, WorkerCommFnType comm_fn,
+  bool const hasCommThread
+) {
+  using ::vt::ctx::ContextAttorney;
+
+  WorkerIDType const thd = omp_get_thread_num() + (parent * pnthds);
+  WorkerIDType const nthds = omp_get_num_threads();
+
+  // For now, all workers to have direct access to the runtime
+  // TODO: this needs to change
+  CollectiveOps::setCurrentRuntimeTLS();
+
+  if (thd < num_workers_ or not hasCommThread) {
+    // Set the thread-local worker in Context
+    ContextAttorney::setWorker(thd);
+
+    debug_print(
+      worker, node,
+      "Worker group OMP: (worker) thd=%d, worker=%d, num threads=%d, hasComm=%s\n",
+      thd, theContext()->getWorker(), num_workers_, print_bool(hasCommThread)
+    );
+
+    worker_state_[thd] = std::make_unique<WorkerStateType>(
+      thd, nthds, finished_fn_
+    );
+    ready_++;
+    worker_state_[thd]->spawn();
+  } else {
+    // Set the thread-local worker in Context
+    ContextAttorney::setWorker(worker_id_comm_thread);
+
+    debug_print(
+      worker, node,
+      "Worker group OMP: (comm) thd=%d, num threads=%d\n", thd, nthds
+    );
+
+    // Wait until all the workers are created and have filled the
+    // worker_state_ vector
+    while (ready_.load() < num_workers_) ;
+
+    debug_print(
+      worker, node,
+      "Worker group OMP: (comm) thd=%d, num threads=%d creating initial\n",
+      thd, nthds
+    );
+
+    // Enqueue an initial work unit for termination purposes
+    auto initial_work_unit = []{};
+    enqueueAllWorkers(initial_work_unit);
+
+    // launch comm function on the main communication thread
+    comm_fn();
+
+    debug_print(worker, node, "comm: should call join\n");
+
+    // once the comm function exits the program is terminated
+    for (auto thd = 0; thd < num_workers_; thd++) {
+      debug_print(worker, node, "comm: calling join thd=%d\n", thd );
+      worker_state_[thd]->join();
+    }
+  }
+}
+
 void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
   using ::vt::ctx::ContextAttorney;
 
@@ -67,56 +134,23 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
     "worker group OMP spawning=%d\n", num_workers_ + 1
   );
 
-  #pragma omp parallel num_threads(num_workers_ + 1)
-  {
-    WorkerIDType const thd = omp_get_thread_num();
-    WorkerIDType const nthds = omp_get_num_threads();
+  // set as constant for now
+  int const partition_size = 2;
+  int const num_partitions = (num_workers_ + 1)/partition_size;
 
-    // For now, all workers to have direct access to the runtime
-    // TODO: this needs to change
-    CollectiveOps::setCurrentRuntimeTLS();
+  printf("num_partitions=%d\n",num_partitions);
 
-    if (thd < num_workers_) {
-      // Set the thread-local worker in Context
-      ContextAttorney::setWorker(thd);
+  Kokkos::initialize();
 
-      debug_print(
-        worker, node,
-        "Worker group OMP: (worker) thd=%d, num threads=%d\n", thd, nthds
-      );
-
-      worker_state_[thd] = std::make_unique<WorkerStateType>(
-        thd, nthds, finished_fn_
-      );
-      ready_++;
-      worker_state_[thd]->spawn();
-    } else {
-      // Set the thread-local worker in Context
-      ContextAttorney::setWorker(worker_id_comm_thread);
-
-      debug_print(
-        worker, node,
-        "Worker group OMP: (comm) thd=%d, num threads=%d\n", thd, nthds
-      );
-
-      // Wait until all the workers are created and have filled the
-      // worker_state_ vector
-      while (ready_.load() < num_workers_) ;
-
-      // Enqueue an initial work unit for termination purposes
-      auto initial_work_unit = []{};
-      enqueueAllWorkers(initial_work_unit);
-
-      // launch comm function on the main communication thread
-      comm_fn();
-
-      // once the comm function exits the program is terminated
-      for (auto thd = 0; thd < num_workers_; thd++) {
-        debug_print( worker, node, "comm: calling join thd=%d\n", thd );
-        worker_state_[thd]->join();
-      }
+  Kokkos::OpenMP::partition_master([this,comm_fn,num_partitions](int id, int num){
+    printf("id=%d,num=%d\n",id,num);
+    // Communication thread partition
+    #pragma omp parallel num_threads(num)
+    {
+      auto const comm_thread = id == num_partitions-1;
+      doWork(id, num, comm_fn, comm_thread);
     }
-  }
+  }, num_partitions, partition_size);
 }
 
 void WorkerGroupOMP::spawnWorkers() {
@@ -162,7 +196,12 @@ void WorkerGroupOMP::enqueueAllWorkers(WorkUnitType const& work_unit) {
   #endif
 
   this->enqueued(num_workers_);
+
+  printf("enqueue for worker: num_workers_=%d\n",num_workers_);
+
   for (auto&& elm : worker_state_) {
+    printf("enqueue for worker\n");
+    fflush(stdout);
     elm->enqueue(work_unit);
   }
 }
