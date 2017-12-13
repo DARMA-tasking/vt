@@ -88,14 +88,6 @@ void WorkerGroupOMP::doWork(
     }
 
     worker_state_[thd]->spawn();
-
-    // if (not worker_state_[thd]->hasJoined()) {
-    //   for (auto i = min_thd; i < max_thd; i++) {
-    //     if (i != thd) {
-    //       worker_state_[thd]->pause_scheduler();
-    //     }
-    //   }
-    // }
   } else {
     // Set the thread-local worker in Context
     ContextAttorney::setWorker(worker_id_comm_thread);

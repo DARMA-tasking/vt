@@ -150,9 +150,17 @@ struct TestVC : vt::vrt::VirtualContext {
   }
 };
 
+struct squaresum {
+  typedef int value_type;
+  KOKKOS_INLINE_FUNCTION
+  void operator () (const int i, int& lsum) const {
+    lsum += i*i; // compute the sum of squares
+  }
+};
+
 struct hello_world {
   KOKKOS_INLINE_FUNCTION void operator() (const int i) const {
-    printf ("Hello from i = %i\n", i);
+    printf ("%d: Hello from i = %i\n", omp_get_thread_num(), i);
   }
 };
 
@@ -165,6 +173,12 @@ static void doWorkRight(WorkMsg* msg, TestVC* vc) {
   if (msg->isDataParallel) {
     printf("is data parallel task\n");
     Kokkos::parallel_for("HelloWorld", 15, hello_world());
+
+    const int n = 10;
+    int sum = 0;
+    Kokkos::parallel_reduce (n, squaresum (), sum);
+    printf ("Sum of squares of integers from 0 to %i, "
+            "computed in parallel, is %i\n", n - 1, sum);
   } else {
     vc->doWork(msg);
   }
