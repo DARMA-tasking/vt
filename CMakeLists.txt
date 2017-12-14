@@ -133,6 +133,11 @@ list(
   APPEND
   HEADER_FILES
   "${TOP_HEADER_FILES}"
+  )
+
+install(
+  FILES ${HEADER_FILES}
+  DESTINATION include
 )
 
 set(
