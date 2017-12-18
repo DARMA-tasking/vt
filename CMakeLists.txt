@@ -356,7 +356,7 @@ export(
 )
 
 configure_file(
-  cmake/VTConfig.cmake.in
+  cmake/vtConfig.cmake.in
   "${PROJECT_BINARY_DIR}/vtConfig.cmake" @ONLY
 )
 
