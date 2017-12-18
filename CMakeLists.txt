@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(virtual_transport_mpi)
+project(vt)
 
 find_package(MPI REQUIRED)
 
@@ -184,7 +184,7 @@ macro(add_test_for_example test_name test_exec)
   endforeach()
 endmacro()
 
-set(VIRTUAL_TRANSPORT_LIBRARY virtual-transport)
+set(VIRTUAL_TRANSPORT_LIBRARY vt)
 
 add_library(
   ${VIRTUAL_TRANSPORT_LIBRARY}
@@ -348,21 +348,21 @@ endif()
 
 
 export(
-  TARGETS virtual-transport
-  FILE "${PROJECT_BINARY_DIR}/VTDepends.cmake"
+  TARGETS vt
+  FILE "${PROJECT_BINARY_DIR}/vtDepends.cmake"
 )
 export(
-  PACKAGE virtual_transport_mpi
+  PACKAGE vt
 )
 
 configure_file(
   cmake/VTConfig.cmake.in
-  "${PROJECT_BINARY_DIR}/VTConfig.cmake" @ONLY
+  "${PROJECT_BINARY_DIR}/vtConfig.cmake" @ONLY
 )
 
 install(
   FILES
-  "${PROJECT_BINARY_DIR}/VTConfig.cmake"
+  "${PROJECT_BINARY_DIR}/vtConfig.cmake"
   DESTINATION cmake COMPONENT dev
 )
 
@@ -372,7 +372,8 @@ install(
 )
 
 install(
-  EXPORT virtual-transport
+  EXPORT vt
   DESTINATION cmake
   COMPONENT dev
 )
+
