@@ -192,6 +192,13 @@ add_library(
   ${HEADER_FILES} ${SOURCE_FILES}
 )
 
+install(
+  TARGETS ${VIRTUAL_TRANSPORT_LIBRARY}
+  EXPORT ${VIRTUAL_TRANSPORT_LIBRARY}
+  LIBRARY DESTINATION "lib"
+  ARCHIVE DESTINATION "lib"
+)
+
 foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
   # message("Example: building example >>>>> ${EXAMPLE}")
 
@@ -339,3 +346,33 @@ else()
   endforeach()
 endif()
 
+
+export(
+  TARGETS virtual-transport
+  FILE "${PROJECT_BINARY_DIR}/VTDepends.cmake"
+)
+export(
+  PACKAGE virtual_transport_mpi
+)
+
+configure_file(
+  cmake/VTConfig.cmake.in
+  "${PROJECT_BINARY_DIR}/VTConfig.cmake" @ONLY
+)
+
+install(
+  FILES
+  "${PROJECT_BINARY_DIR}/VTConfig.cmake"
+  DESTINATION cmake COMPONENT dev
+)
+
+install(
+  FILES
+  DESTINATION cmake COMPONENT dev
+)
+
+install(
+  EXPORT virtual-transport
+  DESTINATION cmake
+  COMPONENT dev
+)
