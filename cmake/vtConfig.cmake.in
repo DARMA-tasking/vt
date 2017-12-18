@@ -9,7 +9,7 @@
 GET_FILENAME_COMPONENT (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 IF (EXISTS "${VT_CMAKE_DIR}/CMakeCache.txt")
    # In build tree, which is undesirable
-   MESSAGE(FATAL_ERROR "FIND_PACKAGE found build tree instead of install tree.")
+   #MESSAGE(FATAL_ERROR "FIND_PACKAGE found build tree instead of install tree.")
 ELSE ()
    SET (VT_INCLUDE_DIRS ${VT_CMAKE_DIR}/../include)
    SET (VT_LIBRARY_DIRS ${VT_CMAKE_DIR}/../lib)
