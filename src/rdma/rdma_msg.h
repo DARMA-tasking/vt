@@ -116,6 +116,15 @@ using PutBackMessage = RDMAOpFinishedMessage<EpochTagEnvelope>;
 
 using DestroyChannel = ChannelMessage;
 
+template <typename StateT>
+struct StateMessage : vt::Message {
+  StateT* const state = nullptr;
+
+  explicit StateMessage(StateT* const in_state)
+    : state(in_state)
+  { }
+};
+
 }} //end namespace vt::rdma
 
 #endif /*INCLUDED_RDMA_RDMA_MSG_H*/

@@ -25,10 +25,15 @@ struct State {
   using RDMA_GroupType = Group;
   using RDMA_GetFunctionType = ActiveGetFunctionType;
   using RDMA_PutFunctionType = ActivePutFunctionType;
+  template <typename MsgType>
+  using RDMA_GetTypedFunctionType = ActiveTypedGetFunctionType<MsgType>;
+  template <typename MsgType>
+  using RDMA_PutTypedFunctionType = ActiveTypedPutFunctionType<MsgType>;
   using RDMA_TagGetHolderType =
     std::tuple<RDMA_GetFunctionType, RDMA_HandlerType>;
   using RDMA_TagPutHolderType =
     std::tuple<RDMA_PutFunctionType, RDMA_HandlerType>;
+  using RDMA_FunctionType = BaseMessage;
 
   template <typename T>
   using TagContainerType = std::unordered_map<TagType, T>;
@@ -46,9 +51,15 @@ struct State {
     bool const& use_default_handler = false
   );
 
-  template <RDMA_TypeType rdma_type, typename FunctionT>
-  RDMA_HandlerType setRDMAFn(
-    FunctionT const& fn, bool const& any_tag = false,
+  template <typename AssocFuncT, typename FuncT>
+  RDMA_HandlerType setRDMAGetFn(
+    AssocFuncT* msg, FuncT const& fn, bool const& any_tag = false,
+    TagType const& tag = no_tag
+  );
+
+  template <typename AssocFuncT, typename FuncT>
+  RDMA_HandlerType setRDMAPutFn(
+    AssocFuncT* msg, FuncT const& fn, bool const& any_tag = false,
     TagType const& tag = no_tag
   );
 
@@ -76,12 +87,13 @@ struct State {
   void processPendingGet(TagType const& tag = no_tag);
   void setDefaultHandler();
 
-  RDMA_GetType defaultGetHandlerFn(
-    BaseMessage* msg, ByteType num_bytes, ByteType req_offset, TagType tag
+  static RDMA_GetType defaultGetHandlerFn(
+    StateMessage<State>* msg, ByteType num_bytes, ByteType req_offset,
+    TagType tag
   );
 
-  void defaultPutHandlerFn(
-    BaseMessage* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes,
+  static void defaultPutHandlerFn(
+    StateMessage<State>* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes,
     ByteType req_offset, TagType tag
   );
 
@@ -103,21 +115,13 @@ private:
   TagContainerType<RDMA_TagGetHolderType> get_tag_holder;
   TagContainerType<RDMA_TagPutHolderType> put_tag_holder;
   TagContainerType<ContainerType<RDMA_InfoType>> pending_tag_gets, pending_tag_puts;
+
+  RDMA_FunctionType* user_state_get_msg_ = nullptr;
+  RDMA_FunctionType* user_state_put_msg_ = nullptr;
 };
 
-template<>
-RDMA_HandlerType
-State::setRDMAFn<
-  State::RDMA_TypeType::Put, State::RDMA_PutFunctionType
->(RDMA_PutFunctionType const& fn, bool const& any_tag, TagType const& tag);
-
-template<>
-RDMA_HandlerType
-State::setRDMAFn<
-  State::RDMA_TypeType::Get, State::RDMA_GetFunctionType
->(RDMA_GetFunctionType const& fn, bool const& any_tag, TagType const& tag);
-
-
 }} //end namespace vt::rdma
+
+#include "rdma/rdma_state.impl.h"
 
 #endif /*INCLUDED_RDMA_RDMA_STATE_H*/

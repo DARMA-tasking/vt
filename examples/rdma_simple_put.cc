@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
 
     //my_handle = theRDMA()->register_new_typed_rdma_handler(my_data, 10);
     my_handle = theRDMA()->registerNewRdmaHandler();
-    theRDMA()->associatePutFunction(my_handle, put_handler_fn, false);
+    theRDMA()->associatePutFunction<BaseMessage>(nullptr, my_handle, put_handler_fn, false);
     printf("%d: initializing my_handle=%lld\n", my_node, my_handle);
 
     TestMsg* msg = new TestMsg(my_node);

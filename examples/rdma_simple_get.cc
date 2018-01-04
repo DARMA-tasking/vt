@@ -31,9 +31,10 @@ static void tell_handle(TestMsg* msg) {
 }
 
 static double* my_data = nullptr;
+static TestMsg* test_msg = nullptr;
 
 static RDMA_GetType
-test_get_fn(BaseMessage* msg, ByteType num_bytes, ByteType offset, TagType tag) {
+test_get_fn(TestMsg* msg, ByteType num_bytes, ByteType offset, TagType tag) {
   printf(
     "%d: running test_get_fn: msg=%p, num_bytes=%lld, tag=%d\n",
     my_node, msg, num_bytes, tag
@@ -58,7 +59,7 @@ int main(int argc, char** argv) {
     }
 
     my_handle = theRDMA()->registerNewRdmaHandler();
-    theRDMA()->associateGetFunction(my_handle, test_get_fn, true);
+    theRDMA()->associateGetFunction<TestMsg>(test_msg, my_handle, test_get_fn, true);
     printf("initializing my_handle=%lld\n", my_handle);
 
     TestMsg* msg = new TestMsg(my_node);

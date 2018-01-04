@@ -4,6 +4,7 @@
 #include "rdma_state.h"
 
 #include <cstring>
+#include <memory>
 
 namespace vt { namespace rdma {
 
@@ -20,16 +21,18 @@ State::State(
 }
 
 void State::setDefaultHandler() {
-  using namespace std::placeholders;
+  using StateMsgT = StateMessage<State>;
 
   bool const handle_any_tag = true;
 
-  auto f_get = std::bind(&State::defaultGetHandlerFn, this, _1, _2, _3, _4);
-  theRDMA()->associateGetFunction(handle, f_get, handle_any_tag);
+  theRDMA()->associateGetFunction<StateMsgT>(
+    nullptr, handle, State::defaultGetHandlerFn, handle_any_tag
+  );
   using_default_get_handler = true;
 
-  auto f_put = std::bind(&State::defaultPutHandlerFn, this, _1, _2, _3, _4, _5);
-  theRDMA()->associatePutFunction(handle, f_put, handle_any_tag);
+  theRDMA()->associatePutFunction<StateMsgT>(
+    nullptr, handle, State::defaultPutHandlerFn, handle_any_tag
+  );
   using_default_put_handler = true;
 }
 
@@ -91,71 +94,6 @@ void State::unregisterRdmaHandler(
   }
 }
 
-template <>
-RDMA_HandlerType State::setRDMAFn<
-  State::RDMA_TypeType::Get, State::RDMA_GetFunctionType
->(RDMA_GetFunctionType const& fn, bool const& any_tag, TagType const& tag) {
-
-  auto const& this_node = theContext()->getNode();
-
-  debug_print(
-    rdma_state, node,
-    "setRdmaFn: GET tag=%d, handle=%lld, any_tag=%s\n",
-    tag, handle, print_bool(any_tag)
-  );
-
-  RDMA_HandlerType const handler = makeRdmaHandler(RDMA_TypeType::Get);
-
-  if (any_tag) {
-    assert(
-      tag == no_tag and "If any tag, you must not have a tag set"
-    );
-  }
-
-  this_rdma_get_handler = handler;
-
-  if (tag == no_tag) {
-    rdma_get_fn = fn;
-    get_any_tag = any_tag;
-  } else {
-    get_tag_holder[tag] = RDMA_TagGetHolderType{fn,handler};
-  }
-
-  return handler;
-}
-
-template <>
-RDMA_HandlerType State::setRDMAFn<
-  State::RDMA_TypeType::Put, State::RDMA_PutFunctionType
->(RDMA_PutFunctionType const& fn, bool const& any_tag, TagType const& tag) {
-  RDMA_HandlerType const handler = makeRdmaHandler(RDMA_TypeType::Put);
-
-  auto const& this_node = theContext()->getNode();
-
-  debug_print(
-    rdma_state, node,
-    "setRdmaFn: PUT tag=%d, handle=%lld, any_tag=%s\n",
-    tag, handle, print_bool(any_tag)
-  );
-
-  if (any_tag) {
-    assert(
-      tag == no_tag and "If any tag, you must not have a tag set"
-    );
-  }
-
-  this_rdma_put_handler = handler;
-
-  if (tag == no_tag) {
-    rdma_put_fn = fn;
-    put_any_tag = any_tag;
-  } else {
-    put_tag_holder[tag] = RDMA_TagPutHolderType{fn,handler};
-  }
-
-  return handler;
-}
-
 RDMA_HandlerType State::makeRdmaHandler(RDMA_TypeType const& rdma_type) {
   RDMA_HandlerType& handler =
     rdma_type == RDMA_TypeType::Put ? this_rdma_put_handler : this_rdma_get_handler;
@@ -189,46 +127,47 @@ bool State::testReadyPutData(TagType const& tag) {
   return not not_ready;
 }
 
-RDMA_GetType State::defaultGetHandlerFn(
-  BaseMessage* msg, ByteType req_num_bytes, ByteType req_offset, TagType tag
+/*static*/ RDMA_GetType State::defaultGetHandlerFn(
+  StateMessage<State>* msg, ByteType req_num_bytes, ByteType req_offset,
+  TagType tag
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& state = *msg->state;
 
   debug_print(
     rdma_state, node,
-    "%d: defaultGetHandlerFn: msg=%p, req_num_bytes=%lld, tag=%d\n",
-    this_node, msg, req_num_bytes, tag
+    "defaultGetHandlerFn: msg=%p, req_num_bytes=%lld, tag=%d\n",
+    msg, req_num_bytes, tag
   );
 
   assert(
-    ptr != nullptr and num_bytes != no_byte and
+    state.ptr != nullptr and state.num_bytes != no_byte and
     "To use default handler ptr and bytes must be set"
   );
 
   return RDMA_GetType{
-    static_cast<char*>(ptr) + req_offset,
-    req_num_bytes == no_byte ? num_bytes : req_num_bytes
+    static_cast<char*>(state.ptr) + req_offset,
+    req_num_bytes == no_byte ? state.num_bytes : req_num_bytes
   };
 }
 
-void State::defaultPutHandlerFn(
-  BaseMessage* msg, RDMA_PtrType in_ptr, ByteType req_num_bytes,
+/*static*/ void State::defaultPutHandlerFn(
+  StateMessage<State>* msg, RDMA_PtrType in_ptr, ByteType req_num_bytes,
   ByteType req_offset, TagType tag
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& state = *msg->state;
 
   debug_print(
     rdma_state, node,
-    "%d: defaultPutHandlerFn: msg=%p, ptr=%p, req_num_bytes=%lld, tag=%d\n",
-    this_node, msg, ptr, req_num_bytes, tag
+    "defaultPutHandlerFn: msg=%p, ptr=%p, req_num_bytes=%lld, tag=%d\n",
+    msg, ptr, req_num_bytes, tag
   );
 
   assert(
-    ptr != nullptr and num_bytes != no_byte and
+    state.ptr != nullptr and state.num_bytes != no_byte and
     "To use default handler ptr and bytes must be set"
   );
 
-  std::memcpy(static_cast<char*>(ptr) + req_offset, in_ptr, req_num_bytes);
+  std::memcpy(static_cast<char*>(state.ptr) + req_offset, in_ptr, req_num_bytes);
 }
 
 void State::getData(
@@ -242,24 +181,26 @@ void State::getData(
 
   bool const ready = testReadyGetData(info.tag);
 
-  auto const& this_node = theContext()->getNode();
-
   debug_print(
     rdma_state, node,
-    "%d: getData: msg=%p, tag=%d, ready=%s, handle=%lld, get_any_tag=%s\n",
-    this_node, msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag)
+    "getData: msg=%p, tag=%d, ready=%s, handle=%lld, get_any_tag=%s\n",
+    msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag)
   );
 
   auto const& offset = info.offset;
+
+  StateMessage<State> state_msg(this);
+  BaseMessage* const base_msg =
+    user_state_get_msg_ ? user_state_get_msg_ : &state_msg;
 
   if (ready) {
     RDMA_GetFunctionType get_fn =
       tag == no_tag or get_any_tag ? rdma_get_fn :
       std::get<0>(get_tag_holder.find(tag)->second);
     if (info.cont) {
-      info.cont(get_fn(nullptr, info.num_bytes, offset, info.tag));
+      info.cont(get_fn(base_msg, info.num_bytes, offset, info.tag));
     } else if (info.data_ptr) {
-      RDMA_GetType get = get_fn(nullptr, info.num_bytes, offset, info.tag);
+      RDMA_GetType get = get_fn(base_msg, info.num_bytes, offset, info.tag);
       memcpy(info.data_ptr, std::get<0>(get), std::get<1>(get));
       if (info.cont_action) {
         info.cont_action();
@@ -281,21 +222,23 @@ void State::putData(
 
   bool const ready = testReadyPutData(info.tag);
 
-  auto const& this_node = theContext()->getNode();
-
   debug_print(
     rdma_state, node,
-    "%d: putData: msg=%p, tag=%d, ptr=%p, num_bytes=%lld, "
+    "putData: msg=%p, tag=%d, ptr=%p, num_bytes=%lld, "
     "ready=%s, handle=%lld, get_any_tag=%s\n",
-    this_node, msg, info.tag, info.data_ptr, info.num_bytes, print_bool(ready),
+    msg, info.tag, info.data_ptr, info.num_bytes, print_bool(ready),
     handle, print_bool(get_any_tag)
   );
+
+  StateMessage<State> state_msg(this);
+  BaseMessage* const base_msg =
+    user_state_put_msg_ ? user_state_put_msg_ : &state_msg;
 
   if (ready) {
     RDMA_PutFunctionType put_fn =
       tag == no_tag or put_any_tag ? rdma_put_fn :
       std::get<0>(put_tag_holder.find(tag)->second);
-    put_fn(nullptr, info.data_ptr, info.num_bytes, info.offset, info.tag);
+    put_fn(base_msg, info.data_ptr, info.num_bytes, info.offset, info.tag);
 
     assert(
       not info.cont and "Cont should not be set for a put"
@@ -316,10 +259,12 @@ void State::processPendingGet(TagType const& tag) {
   RDMA_GetFunctionType get_fn =
     tag == no_tag ? rdma_get_fn : std::get<0>(get_tag_holder.find(tag)->second);
 
+  StateMessage<State> state_msg(this);
+
   auto pending_iter = pending_tag_gets.find(tag);
   if (pending_iter != pending_tag_gets.end()) {
     for (auto&& elm : pending_iter->second) {
-      elm.cont(get_fn(nullptr, elm.num_bytes, elm.offset, elm.tag));
+      elm.cont(get_fn(&state_msg, elm.num_bytes, elm.offset, elm.tag));
     }
   }
 }

@@ -41,6 +41,12 @@ struct RDMAManager {
   using RDMA_GetFunctionType = RDMA_StateType::RDMA_GetFunctionType;
   using RDMA_PutFunctionType = RDMA_StateType::RDMA_PutFunctionType;
   using RDMA_DirectType = std::tuple<RDMA_PtrType, ActionType>;
+  template <typename MsgType>
+  using RDMA_GetTypedFunctionType =
+    RDMA_StateType::RDMA_GetTypedFunctionType<MsgType>;
+  template <typename MsgType>
+  using RDMA_PutTypedFunctionType =
+    RDMA_StateType::RDMA_PutTypedFunctionType<MsgType>;
 
   template <typename T>
   void putTypedData(
@@ -213,18 +219,26 @@ struct RDMAManager {
     TagType const& tag = no_tag
   );
 
+  template <typename MsgType = BaseMessage>
   RDMA_HandlerType associateGetFunction(
-    RDMA_HandleType const& han, RDMA_GetFunctionType const& fn,
-    bool const& any_tag = false, TagType const& tag = no_tag
+    MsgType* msg, RDMA_HandleType const& han,
+    RDMA_GetTypedFunctionType<MsgType> const& fn, bool const& any_tag = false,
+    TagType const& tag = no_tag
   ) {
-    return associateRdmaFunction<RDMA_TypeType::Get>(han, fn, any_tag, tag);
+    return associateRdmaFunction<RDMA_TypeType::Get>(
+      msg,han,fn,any_tag,tag
+    );
   }
 
+  template <typename MsgType = BaseMessage>
   RDMA_HandlerType associatePutFunction(
-    RDMA_HandleType const& han, RDMA_PutFunctionType const& fn,
-    bool const& any_tag = false, TagType const& tag = no_tag
+    MsgType* msg, RDMA_HandleType const& han,
+    RDMA_PutTypedFunctionType<MsgType> const& fn, bool const& any_tag = false,
+    TagType const& tag = no_tag
   ) {
-    return associateRdmaFunction<RDMA_TypeType::Put>(han, fn, any_tag, tag);
+    return associateRdmaFunction<RDMA_TypeType::Put>(
+      msg,han,fn,any_tag,tag
+    );
   }
 
   void newChannel(
@@ -376,10 +390,14 @@ private:
     NodeType const& override_target = uninitialized_destination
   );
 
-  template <RDMAManager::RDMA_TypeType rdma_type, typename FunctionT>
+  template <
+    RDMAManager::RDMA_TypeType rdma_type,
+    typename AssocFuncT,
+    typename FunctionT
+  >
   RDMA_HandlerType associateRdmaFunction(
-    RDMA_HandleType const& han, FunctionT const& fn, bool const& any_tag,
-    TagType const& tag
+    AssocFuncT* msg, RDMA_HandleType const& han, FunctionT const& fn,
+    bool const& any_tag, TagType const& tag
   ) {
     auto const& this_node = theContext()->getNode();
     auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
@@ -397,7 +415,13 @@ private:
 
     auto& state = holder_iter->second;
 
-    return state.template setRDMAFn<rdma_type, FunctionT>(fn, any_tag, tag);
+    if (rdma_type == RDMAManager::RDMA_TypeType::Get) {
+      return state.setRDMAGetFn(msg, fn, any_tag, tag);
+    } else if (rdma_type == RDMAManager::RDMA_TypeType::Put) {
+      return state.setRDMAPutFn(msg, fn, any_tag, tag);
+    } else {
+      assert(0 and "Should be unreachable");
+    }
   }
 
   void requestGetData(
