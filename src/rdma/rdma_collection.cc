@@ -90,7 +90,13 @@ namespace vt { namespace rdma {
       std::forward_as_tuple(RDMAManager::RDMA_PendingType{action_ptr})
     );
   } else {
-    // Local check
+    // Local access to data
+    theRDMA()->requestGetData(
+      nullptr, false, rdma_handle, tag, no_byte, elm, nullptr,
+      [action_ptr](RDMA_GetType data){
+        action_ptr(std::get<0>(data), std::get<1>(data));
+      }
+    );
   }
 }
 
