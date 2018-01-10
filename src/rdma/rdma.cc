@@ -452,11 +452,14 @@ RDMAManager::tryPutPtr(
   RDMA_HandleType const& han, TagType const& tag
 ) {
   auto const& this_node = theContext()->getNode();
-  auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
+  auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
+  auto const& handler_node = RDMA_HandleManagerType::getRdmaNode(han);
 
   assert(
-    handler_node == this_node and "Handle must be local to this node"
+    (is_collective or handler_node == this_node)
+    and "Handle must be local to this node"
   );
+
   auto holder_iter = holder_.find(han);
   assert(
     holder_iter != holder_.end() and "Holder for handler must exist here"
