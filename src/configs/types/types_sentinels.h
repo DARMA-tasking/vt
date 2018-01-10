@@ -33,6 +33,7 @@ static constexpr RDMA_ElmType const no_rdma_elm = -1;
 static constexpr RDMA_BlockType const no_rdma_block = -1;
 static constexpr SeedType const no_seed = -1;
 static constexpr VirtualElmCountType const no_elms = -1;
+static constexpr TagType const local_rdma_op_tag = 0xFEEDFEED;
 
 
 }  // end namespace vt

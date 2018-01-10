@@ -39,7 +39,7 @@ namespace vt { namespace rdma {
   return han;
 }
 
-/*static*/void RDMACollectionManager::getElement(
+/*static*/ void RDMACollectionManager::getElement(
   RDMA_HandleType const& rdma_handle,
   RDMA_ElmType const& elm,
   RDMA_RecvType action_ptr,
@@ -92,7 +92,7 @@ namespace vt { namespace rdma {
   } else {
     // Local access to data
     theRDMA()->requestGetData(
-      nullptr, false, rdma_handle, tag, no_byte, elm, nullptr,
+      nullptr, false, rdma_handle, local_rdma_op_tag, no_byte, elm, nullptr,
       [action_ptr](RDMA_GetType data){
         action_ptr(std::get<0>(data), std::get<1>(data));
       }
