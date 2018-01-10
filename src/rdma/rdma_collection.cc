@@ -100,4 +100,83 @@ namespace vt { namespace rdma {
   }
 }
 
+/*static*/ void RDMACollectionManager::putElement(
+  RDMA_HandleType const& rdma_handle,
+  RDMA_ElmType const& elm,
+  RDMA_PtrType const& ptr,
+  RDMA_PutSerialize on_demand_put_serialize,
+  ActionType cont,
+  ActionType action_after_put,
+  TagType const& tag
+) {
+  auto const& rdma = theRDMA();
+
+  auto const& this_node = theContext()->getNode();
+  auto const& handle_getNode = RDMA_HandleManagerType::getRdmaNode(rdma_handle);
+  auto const& is_collective = RDMA_HandleManagerType::isCollective(rdma_handle);
+
+  debug_print(
+    rdma, node,
+    "putElement: han=%lld, is_collective=%s, getNode=%d, "
+    "elm_size=%lld, num_bytes=%lld, offset=%lld\n",
+    rdma_handle,print_bool(is_collective),handle_getNode,elm_size,num_bytes,offset
+  );
+
+  assert(is_collective and "Must be collective handle");
+
+  auto iter = rdma->holder_.find(rdma_handle);
+  assert(iter != rdma->holder_.end() and "Handler must exist");
+
+  auto& state = iter->second;
+  auto& group = state.group_info;
+
+  auto const& put_node = group->findDefaultNode(elm);
+
+  printf("putElement: elm=%lld, default_node=%d\n", elm, put_node);
+
+  if (put_node != this_node) {
+    // serialize the data since this put is non-local
+    RDMA_PutRetType put_ret = on_demand_put_serialize(RDMA_PutRetType{ptr, no_byte});
+    auto const& num_bytes = std::get<1>(put_ret);
+
+    RDMA_OpType const new_op = rdma->cur_op_++;
+
+    PutMessage* msg = new PutMessage(
+      new_op, num_bytes, elm, tag, rdma_handle,
+      action_after_put ? this_node : uninitialized_destination,
+      this_node
+    );
+
+    auto send_payload = [&](ActiveMessenger::SendFnType send){
+      auto ret = send(put_ret, put_node, no_tag, [=]{
+        if (cont != nullptr) {
+          cont();
+        }
+      });
+      msg->mpi_tag_to_recv = std::get<1>(ret);
+    };
+
+    setPutType(msg->env);
+
+    if (tag != no_tag) {
+      envelopeSetTag(msg->env, tag);
+    }
+
+    theMsg()->sendMsg<PutMessage, RDMAManager::putRecvMsg>(
+      put_node, msg, send_payload, [=]{ delete msg; }
+    );
+
+    if (action_after_put != nullptr) {
+      rdma->pending_ops_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(new_op),
+        std::forward_as_tuple(RDMAManager::RDMA_PendingType{action_after_put})
+      );
+    }
+  } else {
+    // Local put
+    assert(0);
+  }
+}
+
 }} /* end namespace vt::rdma */
