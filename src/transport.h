@@ -17,7 +17,7 @@
 #include "event/event_msgs.h"
 #include "termination/termination.h"
 #include "barrier/barrier.h"
-#include "rdma/rdma.h"
+#include "rdma/rdma_headers.h"
 #include "registry/auto_registry_interface.h"
 #include "sequence/sequencer_headers.h"
 #include "trace/trace.h"

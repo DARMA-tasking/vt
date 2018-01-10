@@ -16,6 +16,7 @@
 #include "rdma_channel.h"
 #include "rdma_group.h"
 #include "rdma_action.h"
+#include "rdma_collection_fwd.h"
 
 #include <unordered_map>
 #include <cassert>
@@ -460,6 +461,9 @@ private:
   );
 
 public:
+  friend struct RDMACollectionManager;
+
+public:
   RDMA_HandlerType allocateNewRdmaHandler();
 
   // handler functions for managing rdma operations
@@ -496,6 +500,7 @@ private:
   // Live channels that can be used to hardware-level get/put ops
   RDMA_LiveChannelsType channels_;
 
+  // Current RDMA channel tag
   TagType next_channel_tag_ = first_rdma_channel_tag;
 };
 

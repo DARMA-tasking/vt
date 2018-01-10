@@ -14,7 +14,7 @@ struct Map {
   RDMA_BlockMapType block_map = nullptr;
   RDMA_ElmMapType elm_map = nullptr;
 
-  Map()  = default;
+  Map() = default;
 
   Map(RDMA_BlockMapType in_block_map, RDMA_ElmMapType in_elm_map)
     : block_map(in_block_map), elm_map(in_elm_map)

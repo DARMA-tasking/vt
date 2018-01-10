@@ -11,7 +11,7 @@
 #include "termination/term_headers.h"
 #include "barrier/barrier.h"
 #include "pool/pool.h"
-#include "rdma/rdma.h"
+#include "rdma/rdma_headers.h"
 #include "parameterization/parameterization.h"
 #include "sequence/sequencer_headers.h"
 #include "trace/trace.h"

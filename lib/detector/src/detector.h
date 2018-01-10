@@ -8,6 +8,7 @@
 
 #include <type_traits>
 #include <utility>
+#include <tuple>
 
 namespace detection {
 
@@ -20,6 +21,7 @@ struct detector {
   constexpr static auto value = false;
   using value_t = std::false_type;
   using type = T;
+  using element_type = T;
 };
 
 template <typename T, template <typename...> class Op, typename... Args>
@@ -27,6 +29,7 @@ struct detector<T, void_t<Op<Args...>>, Op, Args...>  {
   constexpr static auto value = true;
   using value_t = std::true_type;
   using type = Op<Args...>;
+  using element_type = typename std::tuple_element<0, std::tuple<Args...>>::type;
 };
 
 template <template <typename...> class Op, typename... Args>

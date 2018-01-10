@@ -13,11 +13,11 @@ struct Pending {
   ActionType cont2 = nullptr;
   RDMA_PtrType data_ptr = nullptr;
 
-  Pending(RDMA_RecvType in_cont)
+  explicit Pending(RDMA_RecvType in_cont)
     : cont(in_cont)
   { }
 
-  Pending(ActionType in_cont2)
+  explicit Pending(ActionType in_cont2)
     : cont2(in_cont2)
   { }
 
