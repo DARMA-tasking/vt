@@ -92,7 +92,7 @@ namespace vt { namespace rdma {
   } else {
     // Local access to data
     theRDMA()->requestGetData(
-      nullptr, false, rdma_handle, local_rdma_op_tag, no_byte, elm, nullptr,
+      nullptr, false, rdma_handle, tag, local_rdma_op_tag, elm, nullptr,
       [action_ptr](RDMA_GetType data){
         action_ptr(std::get<0>(data), std::get<1>(data));
       }
@@ -175,7 +175,19 @@ namespace vt { namespace rdma {
     }
   } else {
     // Local put
-    assert(0);
+    theRDMA()->triggerPutRecvData(
+      rdma_handle, tag, ptr, local_rdma_op_tag, elm, [=](){
+        debug_print(
+          rdma, node, "putElement: local data is put\n"
+        );
+        if (cont) {
+          cont();
+        }
+        if (action_after_put) {
+          action_after_put();
+        }
+      }
+    );
   }
 }
 
