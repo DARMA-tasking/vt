@@ -8,7 +8,8 @@
 #include "activefn/activefn.h"
 #include "messaging/message.h"
 #include "tree/tree.h"
-#include "barrier_msg.h"
+#include "barrier/barrier_msg.h"
+#include "barrier/barrier_state.h"
 
 namespace vt { namespace barrier {
 
