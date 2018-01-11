@@ -4,9 +4,9 @@
 
 #include "config.h"
 #include "activefn/activefn.h"
-#include "rdma_common.h"
-#include "rdma_channel_lookup.h"
-#include "rdma_handle.h"
+#include "rdma/rdma_common.h"
+#include "rdma/channel/rdma_channel_lookup.h"
+#include "rdma/rdma_handle.h"
 
 #include <mpi.h>
 

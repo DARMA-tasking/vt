@@ -1,5 +1,5 @@
 
-#include "rdma_channel.h"
+#include "rdma/channel/rdma_channel.h"
 
 #define PRINT_RDMA_OP_TYPE(OP) ((OP) == RDMA_TypeType::Get ? "GET" : "PUT")
 
@@ -232,7 +232,7 @@ Channel::freeChannel() {
   }
 }
 
-Channel::~Channel() {
+/*virtual*/ Channel::~Channel() {
   freeChannel();
 }
 

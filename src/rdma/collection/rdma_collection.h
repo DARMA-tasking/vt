@@ -3,8 +3,8 @@
 #define INCLUDED_RDMA_RDMA_COLLECTION_H
 
 #include "configs/types/types_rdma.h"
-#include "rdma/rdma_collection_fwd.h"
-#include "rdma/rdma_collection_info.h"
+#include "rdma/collection/rdma_collection_fwd.h"
+#include "rdma/collection/rdma_collection_info.h"
 #include "rdma/rdma.h"
 
 #include <functional>

@@ -1,7 +1,7 @@
 
 #include "config.h"
-#include "rdma.h"
-#include "rdma_state.h"
+#include "rdma/rdma.h"
+#include "rdma/state/rdma_state.h"
 
 #include <cstring>
 #include <memory>

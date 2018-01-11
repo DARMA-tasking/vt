@@ -3,6 +3,6 @@
 #define INCLUDED_RDMA_RDMA_HEADERS_H
 
 #include "rdma/rdma.h"
-#include "rdma/rdma_collection.h"
+#include "rdma/collection/rdma_collection.h"
 
 #endif /*INCLUDED_RDMA_RDMA_HEADERS_H*/

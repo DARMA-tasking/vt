@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "messaging/message.h"
-#include "rdma_common.h"
+#include "rdma/rdma_common.h"
 
 namespace vt { namespace rdma {
 

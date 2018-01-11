@@ -3,8 +3,8 @@
 #define INCLUDED_RDMA_RDMA_CHANNEL_LOOKUP_H
 
 #include "config.h"
-#include "rdma_common.h"
-#include "rdma_handle.h"
+#include "rdma/rdma_common.h"
+#include "rdma/rdma_handle.h"
 
 #include <functional>
 

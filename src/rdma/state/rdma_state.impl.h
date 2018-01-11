@@ -2,7 +2,7 @@
 #if !defined INCLUDED_RDMA_RDMA_STATE_IMPL_H
 #define INCLUDED_RDMA_RDMA_STATE_IMPL_H
 
-#include "rdma/rdma_state.h"
+#include "rdma/state/rdma_state.h"
 
 namespace vt { namespace rdma {
 

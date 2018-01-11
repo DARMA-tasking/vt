@@ -3,8 +3,8 @@
 #define INCLUDED_RDMA_RDMA_GROUP_H
 
 #include "config.h"
-#include "rdma_map.h"
-#include "rdma_region.h"
+#include "rdma/group/rdma_map.h"
+#include "rdma/group/rdma_region.h"
 
 #include <unordered_map>
 

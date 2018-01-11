@@ -1,7 +1,7 @@
 
 #include "config.h"
-#include "rdma_common.h"
-#include "rdma_group.h"
+#include "rdma/rdma_common.h"
+#include "rdma/group/rdma_group.h"
 
 #include <unordered_map>
 

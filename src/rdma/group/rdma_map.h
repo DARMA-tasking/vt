@@ -3,7 +3,7 @@
 #define INCLUDED_RDMA_RDMA_MAP_H
 
 #include "config.h"
-#include "rdma_common.h"
+#include "rdma/rdma_common.h"
 
 #include <sstream>
 #include <iostream>
