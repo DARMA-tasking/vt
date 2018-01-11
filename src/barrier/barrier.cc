@@ -60,7 +60,10 @@ void Barrier::removeBarrier(
 BarrierType Barrier::newNamedBarrier() {
   setupTree();
   BarrierType const next_barrier = cur_named_barrier_++;
-  return next_barrier;
+  NodeType const cur_node = theContext()->getNode();
+  BarrierType const cur_node_shift = static_cast<BarrierType>(cur_node) << 32;
+  BarrierType const barrier_name = next_barrier | cur_node_shift;
+  return barrier_name;
 }
 
 void Barrier::waitBarrier(BarrierType const& barrier, bool const skip_term) {
