@@ -4,7 +4,7 @@
 
 #include "test_harness.h"
 
-#include "context/context_vrt.h"
+#include "vrt/context/context_vrt.h"
 
 namespace vt { namespace tests { namespace unit {
 

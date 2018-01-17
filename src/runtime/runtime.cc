@@ -237,6 +237,7 @@ void Runtime::initializeComponents() {
   theSched = std::make_unique<sched::Scheduler>();
   theTerm = std::make_unique<term::TerminationDetector>();
   theBarrier = std::make_unique<barrier::Barrier>();
+  theReduction = std::make_unique<reduction::Reduction>();
 
   // Advanced runtime components: not required for basic messaging
   theRDMA = std::make_unique<rdma::RDMAManager>();
@@ -311,6 +312,7 @@ void Runtime::finalizeComponents() {
 
   // Core components
   theBarrier = nullptr;
+  theReduction = nullptr;
   theTerm = nullptr;
   theSched = nullptr;
   theMsg = nullptr;

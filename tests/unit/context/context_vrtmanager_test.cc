@@ -4,7 +4,7 @@
 
 #include "test_parallel_harness.h"
 
-#include "context/context_vrtmanager.h"
+#include "vrt/context/context_vrtmanager.h"
 
 namespace vt { namespace tests { namespace unit {
 

@@ -52,7 +52,7 @@ set(
   topos/location topos/mapping topos/index utils/container utils/detector
   serialization serialization/messaging worker utils/mutex utils/static_checks
   standalone runtime utils/tls utils/atomic vrt/collection vrt rdma/channel
-  rdma/collection rdma/group rdma/state
+  rdma/collection rdma/group rdma/state reduction
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
@@ -149,7 +149,7 @@ set(
   test_seq trace_ring location_test location_test_msg broadcast_test index_test
   hello_world_vrtContext hello_world_vc jacobi1d_recur_vc jacobi1d_node
   term_epoch serialize_example hello_world_vc_remote hello_world_start
-  hello_world_collection rdma_unsized_collection
+  hello_world_collection rdma_unsized_collection reduce_test
 )
 
 set(
@@ -259,7 +259,7 @@ endforeach()
 
 set(
   UNIT_TEST_SUBDIRS_LIST
-  index active pool sequencer mapping serialization tls atomic
+  index active reduction pool sequencer mapping serialization tls atomic
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
