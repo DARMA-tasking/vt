@@ -39,7 +39,7 @@ namespace vt { namespace util { namespace tls {
   using ThreadLocalType = ThreadLocalNull<T,tag>;
 
   template <typename T, char const* tag, T val>
-  using ThreadLocalInitType = ThreadLocalNullInit<T,tag,val>;
+  using ThreadLocalInitType = ThreadLocalInitNull<T,tag,val>;
 #else
   backend_static_assert_unreachable
 #endif
