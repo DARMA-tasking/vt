@@ -89,7 +89,7 @@
 #define debug_check_context_transform(key, value) \
   debug_print_ ## value
 
-#define debug_print_context_foreach(opt, key_value_map...)              \
+#define debug_print_context_foreach(config, opt, key_value_map...)      \
   meld_eval_32(                                                         \
     meld_transform_key(                                                 \
       debug_check_context, opt,                                         \
@@ -97,9 +97,9 @@
     )                                                                   \
   )
 
-#define debug_print_context(feature, opt, arg...)     \
-  debug_print_context_foreach(                        \
-    opt, meld_eval_2(debug_list_contexts_printfn_kv)  \
+#define debug_print_context(config, feature, opt, arg...)     \
+  debug_print_context_foreach(                                \
+    config, opt, meld_eval_2(debug_list_contexts_printfn_kv)  \
   )(feature, arg)
 
 #endif  /*INCLUDED_DEBUG_CONFIG*/
