@@ -4,23 +4,25 @@
 
 #include "debug_config.h"
 
-#define debug_flush_to_out(stdout)              \
-  debug_cond_enabled(flush, fflush(stdout))
+#define debug_flush_to_out(config, stdout)       \
+  debug_cond_enabled(config, flush, fflush(stdout))
 
 #define debug_file_line_args ,__FILE__, __LINE__
 
-#define debug_file_arg debug_test(line_file, debug_file_line_args, )
-#define debug_file_fmt debug_test(line_file, "%s:%d ", )
+#define debug_file_arg                                \
+  debug_test(backend,line_file, debug_file_line_args, )
+#define debug_file_fmt                          \
+  debug_test(backend,line_file, "%s:%d ", )
 
 #define debug_decorated_prefix(debug_stamp, debug_type)       \
   "[%d] " debug_stamp " " debug_pretty_print(debug_type) ": "
 
-#define debug_decorated(\
-  PRINTER, \
-  debug_type, debug_stamp, \
-  proc, \
-  has_ctx_1, c1_fmt, c1_arg, \
-  has_ctx_2, c2_fmt, c2_arg, \
+#define debug_decorated(                                                \
+  PRINTER,                                                              \
+  debug_type, debug_stamp,                                              \
+  proc,                                                                 \
+  has_ctx_1, c1_fmt, c1_arg,                                            \
+  has_ctx_2, c2_fmt, c2_arg,                                            \
   main_fmt, main_arg...                                                 \
 )                                                                       \
   do {                                                                  \
@@ -54,7 +56,7 @@
         )()(,main_arg)                                                  \
       );                                                                \
     )                                                                   \
-    debug_flush_to_out(stdout);                                         \
+    debug_flush_to_out(config, stdout);                                 \
   } while (0);
 
 #define ctx_true 1
@@ -63,7 +65,8 @@
 #define print_ctx_node   ::vt::theContext()->getNode()
 #define print_ctx_worker ::vt::theContext()->getWorker()
 #define print_ctx_comm_worker                                       \
-  (print_ctx_worker == worker_id_comm_thread) ? comm_debug_print :  \
+  (print_ctx_worker == ::vt::worker_id_comm_thread) ?               \
+  ::vt::comm_debug_print :                                          \
   print_ctx_worker
 
 #define debug_virtual(\
@@ -182,53 +185,57 @@
 #define debug_print_locale(feature, fst_arg_as_pe, arg...) \
   debug_print_pe(feature, fst_arg_as_pe, arg)
 
-#define debug_print(feature, maybe_ctx, arg...) \
-  meld_eval_16(debug_print_recur_call(feature,maybe_ctx,arg))
+#define debug_print(feature, maybe_ctx, arg...)                         \
+  meld_eval_16(                                                         \
+    debug_print_recur_call(backend,feature,maybe_ctx,arg)               \
+  )
 
-#define debug_print_normal(feature, ctx, arg...)                        \
+#define debug_print_normal(config, feature, ctx, arg...)                \
   debug_cond_enabled(                                                   \
-    feature,                                                            \
-    debug_print_context(feature, ctx, arg)                              \
+    config, feature,                                                    \
+    debug_print_context(config, feature, ctx, arg)                      \
   )
 
 #define debug_print_handle_subclass(subclass, feature, ctx, arg...)     \
   debug_cond_enabled_else(                                              \
     feature,                                                            \
-    debug_print_context(feature, ctx, arg),                             \
+    debug_print_context(config, feature, ctx, arg),                     \
     debug_cond_enabled(                                                 \
       subclass,                                                         \
-      debug_print_context(feature, ctx, arg)                            \
+      debug_print_context(config, feature, ctx, arg)                    \
     )                                                                   \
   )                                                                     \
 
 // @todo  make this actually recursive
-#define debug_print_recur(feature, maybe_ctx, arg...)                   \
+#define debug_print_recur(config, feature, maybe_ctx, arg...)           \
   meld_if_stmt(                                                         \
     debug_lookup_is_printer(                                            \
       maybe_ctx, meld_eval_2(debug_list_contexts_printfn_kv)            \
     )                                                                   \
   )(                                                                    \
-    debug_print_normal(feature, maybe_ctx, arg)                         \
+    debug_print_normal(config, feature, maybe_ctx, arg)                 \
   )(                                                                    \
     debug_cond_enabled_else(                                            \
+      config,                                                           \
       feature,                                                          \
-      debug_print_recur_2(maybe_ctx, arg),                              \
+      debug_print_recur_2(config, maybe_ctx, arg),                      \
       debug_cond_enabled(                                               \
+        config,                                                         \
         maybe_ctx,                                                      \
-        debug_print_context(maybe_ctx, arg)                             \
+        debug_print_context(config, maybe_ctx, arg)                     \
       )                                                                 \
     )                                                                   \
   )
 
-#define debug_print_recur_2(feature, maybe_ctx, arg...)                 \
+#define debug_print_recur_2(config, feature, maybe_ctx, arg...)         \
   meld_if_stmt(                                                         \
     debug_lookup_is_printer(                                            \
       maybe_ctx, meld_eval_2(debug_list_contexts_printfn_kv)            \
     )                                                                   \
   )(                                                                    \
-    debug_print_context(feature, maybe_ctx, arg)                        \
+    debug_print_context(config, feature, maybe_ctx, arg)                \
   )(                                                                    \
-    debug_print_context(maybe_ctx, arg)                                 \
+    debug_print_context(config, maybe_ctx, arg)                         \
   )
 
 #define _debug__print_recur() debug_print_recur
