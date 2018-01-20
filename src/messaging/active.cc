@@ -478,6 +478,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
     auto const& this_node = theContext()->getNode();
 
     if (is_bcast) {
+      messageRef(msg);
       sendDataDirect(handler, msg, num_probe_bytes);
     }
 
