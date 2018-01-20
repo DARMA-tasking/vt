@@ -33,7 +33,7 @@ namespace vt { namespace util { namespace tls {
   using ThreadLocalType = ThreadLocalSTD<T,tag>;
 
   template <typename T, char const* tag, T val>
-  using ThreadLocalInitType = ThreadLocalSTDInit<T,tag,val>;
+  using ThreadLocalInitType = ThreadLocalInitSTD<T,tag,val>;
 #elif backend_no_threading
   template <typename T, char const* tag>
   using ThreadLocalType = ThreadLocalNull<T,tag>;
