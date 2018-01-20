@@ -264,7 +264,7 @@ RDMA_HandleType RDMAManager::registerNewRdmaHandler(
 
   RDMA_HandlerType new_handle = RDMA_HandleManagerType::createNewHandler();
   RDMA_IdentifierType const& new_identifier =
-    is_collective ? cur_collective_ident_ : cur_ident_++;
+    is_collective ? cur_collective_ident_++ : cur_ident_++;
 
   bool const is_sized = false;
 
