@@ -422,8 +422,8 @@ void RDMAManager::triggerPutRecvData(
 
   debug_print(
     rdma, node,
-    "triggerPutRecvData: han=%lld, tag=%d, holder.size=%ld\n",
-    han, tag, holder_.size()
+    "triggerPutRecvData: han=%lld, tag=%d, holder.size=%ld, offset=%llu, num_bytes=%llu\n",
+    han, tag, holder_.size(), offset, num_bytes
   );
 
   assert(

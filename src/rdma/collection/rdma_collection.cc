@@ -53,9 +53,8 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "getElement: han=%lld, is_collective=%s, getNode=%d, "
-    "elm_size=%lld, num_bytes=%lld, offset=%lld\n",
-    rdma_handle,print_bool(is_collective),handle_getNode,elm_size,num_bytes,offset
+    "getElement: han=%lld, is_collective=%s, getNode=%d\n",
+    rdma_handle,print_bool(is_collective),handle_getNode
   );
 
   assert(is_collective and "Must be collective handle");
@@ -117,9 +116,8 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "putElement: han=%lld, is_collective=%s, getNode=%d, "
-    "elm_size=%lld, num_bytes=%lld, offset=%lld\n",
-    rdma_handle,print_bool(is_collective),handle_getNode,elm_size,num_bytes,offset
+    "putElement: han=%lld, is_collective=%s, getNode=%d\n",
+    rdma_handle,print_bool(is_collective),handle_getNode
   );
 
   assert(is_collective and "Must be collective handle");
