@@ -67,7 +67,10 @@ namespace vt { namespace rdma {
 
   auto const& default_node = group->findDefaultNode(elm);
 
-  printf("elm=%lld, default_node=%d\n", elm, default_node);
+  debug_print(
+    rdma, node,
+    "elm=%lld, default_node=%d\n", elm, default_node
+  );
 
   if (default_node != this_node) {
     // Send msg to get data
@@ -130,7 +133,11 @@ namespace vt { namespace rdma {
 
   auto const& put_node = group->findDefaultNode(elm);
 
-  printf("putElement: elm=%lld, default_node=%d\n", elm, put_node);
+  debug_print(
+    rdma, node,
+    "putElement: elm=%lld, default_node=%d\n",
+    elm, put_node
+  );
 
   if (put_node != this_node) {
     // serialize the data since this put is non-local

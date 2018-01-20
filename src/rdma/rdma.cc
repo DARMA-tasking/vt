@@ -40,6 +40,11 @@ namespace vt { namespace rdma {
       auto send_payload = [&](ActiveMessenger::SendFnType send){
         auto ret = send(data, recv_node, no_tag, [=]{ });
         new_msg->mpi_tag_to_recv = std::get<1>(ret);
+        debug_print(
+          rdma, node,
+          "data is sending: tag=%d, node=%d\n",
+          new_msg->mpi_tag_to_recv, recv_node
+        );
       };
 
       setPutType(new_msg->env);
