@@ -50,7 +50,8 @@ static void put_data_fn(TestMsg* msg) {
 }
 
 static void put_handler_fn(
-  BaseMessage* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes, ByteType offset, TagType tag
+  BaseMessage* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes, ByteType offset,
+  TagType tag, bool
 ) {
   printf(
     "%d: put_handler_fn: my_data=%p, in_ptr=%p, in_num_bytes=%lld, tag=%d\n",

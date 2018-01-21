@@ -34,7 +34,7 @@ static double* my_data = nullptr;
 static TestMsg* test_msg = nullptr;
 
 static RDMA_GetType
-test_get_fn(TestMsg* msg, ByteType num_bytes, ByteType offset, TagType tag) {
+test_get_fn(TestMsg* msg, ByteType num_bytes, ByteType offset, TagType tag, bool) {
   printf(
     "%d: running test_get_fn: msg=%p, num_bytes=%lld, tag=%d\n",
     my_node, msg, num_bytes, tag

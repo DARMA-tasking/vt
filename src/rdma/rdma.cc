@@ -22,8 +22,9 @@ namespace vt { namespace rdma {
   );
 
   theRDMA()->requestGetData(
-    msg, msg->is_user_msg, msg->rdma_handle, msg_tag, msg->num_bytes, msg->offset,
-    nullptr, [msg_tag,op_id,recv_node,handle](RDMA_GetType data){
+    msg, msg->is_user_msg, msg->rdma_handle, msg_tag, msg->num_bytes,
+    msg->offset, false, nullptr,
+    [msg_tag,op_id,recv_node,handle](RDMA_GetType data){
       auto const& this_node = theContext()->getNode();
       debug_print(
         rdma, node, "data is ready\n"
@@ -167,7 +168,7 @@ namespace vt { namespace rdma {
               );
             }
             deleter();
-          }
+          }, false
         );
       });
   } else {
@@ -335,7 +336,8 @@ RDMAManager::allocateNewRdmaHandler() {
 void RDMAManager::requestGetData(
   GetMessage* msg, bool const& is_user_msg, RDMA_HandleType const& han,
   TagType const& tag, ByteType const& num_bytes, ByteType const& offset,
-  RDMA_PtrType const& ptr, RDMA_ContinuationType cont, ActionType next_action
+  bool const& is_local, RDMA_PtrType const& ptr, RDMA_ContinuationType cont,
+  ActionType next_action
 ) {
   auto const& this_node = theContext()->getNode();
   auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
@@ -354,7 +356,7 @@ void RDMAManager::requestGetData(
   auto& state = holder_iter->second;
 
   RDMA_InfoType info(
-    RDMA_TypeType::Get, num_bytes, offset, tag, cont, next_action, ptr
+    RDMA_TypeType::Get, num_bytes, offset, tag, cont, next_action, ptr, is_local
   );
 
   return state.getData(msg, is_user_msg, info);
@@ -419,7 +421,8 @@ void RDMAManager::triggerPutBackData(RDMA_OpType const& op) {
 
 void RDMAManager::triggerPutRecvData(
   RDMA_HandleType const& han, TagType const& tag, RDMA_PtrType ptr,
-  ByteType const& num_bytes, ByteType const& offset, ActionType const& action
+  ByteType const& num_bytes, ByteType const& offset, ActionType const& action,
+  bool const& is_local
 ) {
   auto const& this_node = theContext()->getNode();
   auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
@@ -427,7 +430,8 @@ void RDMAManager::triggerPutRecvData(
 
   debug_print(
     rdma, node,
-    "triggerPutRecvData: han=%lld, tag=%d, holder.size=%ld, offset=%llu, num_bytes=%llu\n",
+    "triggerPutRecvData: han=%lld, tag=%d, holder.size=%ld, offset=%llu, "
+    "num_bytes=%llu\n",
     han, tag, holder_.size(), offset, num_bytes
   );
 
@@ -446,7 +450,7 @@ void RDMAManager::triggerPutRecvData(
   bool const is_user_msg = false;
 
   RDMA_InfoType info(
-    RDMA_TypeType::Put, num_bytes, offset, tag, nullptr, action, ptr
+    RDMA_TypeType::Put, num_bytes, offset, tag, nullptr, action, ptr, is_local
   );
 
   return state.putData(nullptr, is_user_msg, info);
@@ -617,7 +621,7 @@ void RDMAManager::putData(
           if (action_after_put) {
             action_after_put();
           }
-        }
+        }, true
       );
     }
   }
@@ -860,7 +864,8 @@ void RDMAManager::getDataIntoBuf(
         "getData: local direct into buf, ptr=%p\n", ptr
       );
       theRDMA()->requestGetData(
-        nullptr, false, han, tag, num_bytes, offset, ptr, nullptr, next_action
+        nullptr, false, han, tag, num_bytes, offset, true, ptr, nullptr,
+        next_action
       );
     }
   }
@@ -889,7 +894,8 @@ void RDMAManager::getData(
     );
   } else {
     theRDMA()->requestGetData(
-      nullptr, false, han, tag, num_bytes, offset, nullptr, [cont](RDMA_GetType data){
+      nullptr, false, han, tag, num_bytes, offset, true, nullptr,
+      [cont](RDMA_GetType data){
         debug_print(
           rdma, node,
           "local: data is ready\n"

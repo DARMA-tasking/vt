@@ -24,7 +24,8 @@ struct RDMACollectionManager {
     RDMA_HandleType const& rdma_handle,
     RDMA_ElmType const& elm,
     RDMA_RecvType action_ptr = nullptr,
-    TagType const& tag = no_tag
+    TagType const& tag = no_tag,
+    ByteType const& bytes = no_byte
   );
 
   static void putElement(

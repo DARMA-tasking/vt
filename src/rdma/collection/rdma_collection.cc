@@ -43,7 +43,8 @@ namespace vt { namespace rdma {
   RDMA_HandleType const& rdma_handle,
   RDMA_ElmType const& elm,
   RDMA_RecvType action_ptr,
-  TagType const& tag
+  TagType const& tag,
+  ByteType const& bytes
 ) {
   auto const& rdma = theRDMA();
 
@@ -77,7 +78,7 @@ namespace vt { namespace rdma {
     RDMA_OpType const new_op = rdma->cur_op_++;
 
     GetMessage* msg = new GetMessage(
-      new_op, this_node, rdma_handle, no_byte, elm
+      new_op, this_node, rdma_handle, bytes, elm
     );
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
@@ -94,7 +95,7 @@ namespace vt { namespace rdma {
   } else {
     // Local access to data
     theRDMA()->requestGetData(
-      nullptr, false, rdma_handle, tag, local_rdma_op_tag, elm, nullptr,
+      nullptr, false, rdma_handle, tag, bytes, elm, true, nullptr,
       [action_ptr](RDMA_GetType data){
         action_ptr(std::get<0>(data), std::get<1>(data));
       }
@@ -191,7 +192,7 @@ namespace vt { namespace rdma {
         if (action_after_put) {
           action_after_put();
         }
-      }
+      }, true
     );
   }
 }

@@ -433,7 +433,7 @@ private:
   void requestGetData(
     GetMessage* msg, bool const& is_user_msg,
     RDMA_HandleType const& rdma_handle, TagType const& tag,
-    ByteType const& num_bytes, ByteType const& offset,
+    ByteType const& num_bytes, ByteType const& offset, bool const& is_local,
     RDMA_PtrType const& ptr = nullptr, RDMA_ContinuationType cont = no_action,
     ActionType next_action = no_action
   );
@@ -445,7 +445,8 @@ private:
 
   void triggerPutRecvData(
     RDMA_HandleType const& han, TagType const& tag, RDMA_PtrType ptr,
-    ByteType const& num_bytes, ByteType const& offset, ActionType const& action
+    ByteType const& num_bytes, ByteType const& offset, ActionType const& action,
+    bool const& is_local
   );
 
   RDMA_DirectType tryGetDataPtrDirect(RDMA_OpType const& op);
