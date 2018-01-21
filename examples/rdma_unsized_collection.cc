@@ -78,7 +78,7 @@ static RDMA_PtrType obtain_data_ptr(
 }
 
 static RDMA_GetType get_fn(
-  RDMAMsgType* msg, ByteType num_bytes, ByteType offset, TagType tag
+  RDMAMsgType* msg, ByteType num_bytes, ByteType offset, TagType tag, bool
 ) {
   printf(
     "%d: running get_fn: msg=%p, num_bytes=%lld, offset=%lld, tag=%d, state=%d\n",
@@ -92,7 +92,7 @@ static RDMA_GetType get_fn(
 
 static void put_fn(
   RDMAMsgType* msg, RDMA_PtrType ptr, ByteType num_bytes, ByteType offset,
-  TagType tag
+  TagType tag, bool
 ) {
   printf(
     "%d: put_fn: ptr=%p, num_bytes=%lld, tag=%d, offset=%lld\n",

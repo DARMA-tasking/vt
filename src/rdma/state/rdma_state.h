@@ -91,12 +91,12 @@ struct State {
 
   static RDMA_GetType defaultGetHandlerFn(
     StateMessage<State>* msg, ByteType num_bytes, ByteType req_offset,
-    TagType tag
+    TagType tag, bool is_local
   );
 
   static void defaultPutHandlerFn(
     StateMessage<State>* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes,
-    ByteType req_offset, TagType tag
+    ByteType req_offset, TagType tag, bool is_local
   );
 
   bool using_default_put_handler = false;
@@ -116,7 +116,8 @@ private:
 
   TagContainerType<RDMA_TagGetHolderType> get_tag_holder;
   TagContainerType<RDMA_TagPutHolderType> put_tag_holder;
-  TagContainerType<ContainerType<RDMA_InfoType>> pending_tag_gets, pending_tag_puts;
+  TagContainerType<ContainerType<RDMA_InfoType>> pending_tag_gets;
+  TagContainerType<ContainerType<RDMA_InfoType>> pending_tag_puts;
 
   RDMA_FunctionType* user_state_get_msg_ = nullptr;
   RDMA_FunctionType* user_state_put_msg_ = nullptr;

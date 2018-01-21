@@ -129,7 +129,7 @@ bool State::testReadyPutData(TagType const& tag) {
 
 /*static*/ RDMA_GetType State::defaultGetHandlerFn(
   StateMessage<State>* msg, ByteType req_num_bytes, ByteType req_offset,
-  TagType tag
+  TagType tag, bool is_local
 ) {
   auto const& state = *msg->state;
 
@@ -152,7 +152,7 @@ bool State::testReadyPutData(TagType const& tag) {
 
 /*static*/ void State::defaultPutHandlerFn(
   StateMessage<State>* msg, RDMA_PtrType in_ptr, ByteType req_num_bytes,
-  ByteType req_offset, TagType tag
+  ByteType req_offset, TagType tag, bool is_local
 ) {
   auto const& state = *msg->state;
 
@@ -183,14 +183,16 @@ void State::getData(
 
   debug_print(
     rdma_state, node,
-    "getData: msg=%p, tag=%d, ready=%s, handle=%lld, get_any_tag=%s\n",
-    msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag)
+    "getData: msg=%p, tag=%d, ready=%s, handle=%lld, get_any_tag=%s,"
+    " is_local=%s\n",
+    msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag),
+    print_bool(is_local)
   );
 
   auto const& offset = info.offset;
 
   StateMessage<State> state_msg(this);
-  BaseMessage* const base_msg =
+  BaseMessage* base_msg =
     user_state_get_msg_ ? user_state_get_msg_ : &state_msg;
 
   if (ready) {
@@ -198,9 +200,13 @@ void State::getData(
       tag == no_tag or get_any_tag ? rdma_get_fn :
       std::get<0>(get_tag_holder.find(tag)->second);
     if (info.cont) {
-      info.cont(get_fn(base_msg, info.num_bytes, offset, info.tag));
+      info.cont(
+        get_fn(base_msg, info.num_bytes, offset, info.tag, info.is_local)
+      );
     } else if (info.data_ptr) {
-      RDMA_GetType get = get_fn(base_msg, info.num_bytes, offset, info.tag);
+      RDMA_GetType get = get_fn(
+        base_msg, info.num_bytes, offset, info.tag, info.is_local
+      );
       memcpy(info.data_ptr, std::get<0>(get), std::get<1>(get));
       if (info.cont_action) {
         info.cont_action();
@@ -225,9 +231,9 @@ void State::putData(
   debug_print(
     rdma_state, node,
     "putData: msg=%p, tag=%d, ptr=%p, num_bytes=%lld, "
-    "ready=%s, handle=%lld, get_any_tag=%s\n",
+    "ready=%s, handle=%lld, get_any_tag=%s, is_local=%s\n",
     msg, info.tag, info.data_ptr, info.num_bytes, print_bool(ready),
-    handle, print_bool(get_any_tag)
+    handle, print_bool(get_any_tag), print_bool(is_local)
   );
 
   StateMessage<State> state_msg(this);
@@ -238,7 +244,10 @@ void State::putData(
     RDMA_PutFunctionType put_fn =
       tag == no_tag or put_any_tag ? rdma_put_fn :
       std::get<0>(put_tag_holder.find(tag)->second);
-    put_fn(base_msg, info.data_ptr, info.num_bytes, info.offset, info.tag);
+    put_fn(
+      base_msg, info.data_ptr, info.num_bytes, info.offset, info.tag,
+      info.is_local
+    );
 
     assert(
       not info.cont and "Cont should not be set for a put"
@@ -264,7 +273,9 @@ void State::processPendingGet(TagType const& tag) {
   auto pending_iter = pending_tag_gets.find(tag);
   if (pending_iter != pending_tag_gets.end()) {
     for (auto&& elm : pending_iter->second) {
-      elm.cont(get_fn(&state_msg, elm.num_bytes, elm.offset, elm.tag));
+      elm.cont(
+        get_fn(&state_msg, elm.num_bytes, elm.offset, elm.tag, elm.is_local)
+      );
     }
   }
 }

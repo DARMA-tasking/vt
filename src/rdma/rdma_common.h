@@ -54,12 +54,12 @@ using RDMA_OpType = int64_t;
 static constexpr RDMA_OpType const no_rdma_op = -1;
 
 template <typename MsgType>
-using ActiveTypedGetFunctionType = RDMA_GetType(*)(MsgType*, ByteType, ByteType, TagType);
+using ActiveTypedGetFunctionType = RDMA_GetType(*)(MsgType*, ByteType, ByteType, TagType, bool);
 template <typename MsgType>
-using ActiveTypedPutFunctionType = void(*)(MsgType*, RDMA_PtrType, ByteType, ByteType, TagType);
+using ActiveTypedPutFunctionType = void(*)(MsgType*, RDMA_PtrType, ByteType, ByteType, TagType, bool);
 
-using ActiveGetFunctionType = RDMA_GetType(*)(BaseMessage*, ByteType, ByteType, TagType);
-using ActivePutFunctionType = void(*)(BaseMessage*, RDMA_PtrType, ByteType, ByteType, TagType);
+using ActiveGetFunctionType = RDMA_GetType(*)(BaseMessage*, ByteType, ByteType, TagType, bool);
+using ActivePutFunctionType = void(*)(BaseMessage*, RDMA_PtrType, ByteType, ByteType, TagType, bool);
 
 using RDMA_PtrContinuationType = std::function<void(RDMA_PtrType)>;
 using RDMA_RecvType = std::function<void(void* ptr, size_t num_bytes)>;
