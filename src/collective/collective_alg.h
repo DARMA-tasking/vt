@@ -42,7 +42,42 @@ struct CollectiveAlg : Tree {
    *----------------------------------------------------------------------------
    */
 
+  inline void barrier(CollectiveAlgType const& barrier = no_barrier) {
+    return waitBarrier(barrier);
+  }
+
+  inline void barrierThen(ActionType fn) {
+    return contBarrier(fn);
+  }
+
+  inline void barrierThen(CollectiveAlgType const& barrier, ActionType fn) {
+    return contBarrier(fn, barrier);
+  }
+
+ private:
   using BarrierStateType = BarrierState;
+
+  void waitBarrier(
+      CollectiveAlgType const& barrier = no_barrier, bool const skip_term = false
+  );
+
+  void contBarrier(
+      ActionType fn, CollectiveAlgType const& barrier = no_barrier,
+      bool const skip_term = false
+  );
+
+  inline void systemMetaBarrier() {
+    bool const skip_term = true;
+    return waitBarrier(no_barrier, skip_term);
+  }
+
+  inline void systemMetaBarrierCont(ActionType fn) {
+    bool const skip_term = true;
+    return contBarrier(fn, no_barrier, skip_term);
+  }
+
+  static void barrierUp(BarrierMsg* msg);
+  static void barrierDown(BarrierMsg* msg);
 
   BarrierStateType& insertFindBarrier(
       bool const& is_named, bool const& is_wait, CollectiveAlgType const& barrier,
@@ -64,53 +99,18 @@ struct CollectiveAlg : Tree {
       bool const& is_named, bool const& is_wait, CollectiveAlgType const& barrier
   );
 
-  inline void barrier(CollectiveAlgType const& barrier = no_barrier) {
-    return waitBarrier(barrier);
-  }
+ private:
+  CollectiveAlgType cur_named_barrier_ = fst_collective_alg;
+  CollectiveAlgType cur_unnamed_barrier_ = fst_collective_alg;
 
-  inline void barrierThen(ActionType fn) {
-    return contBarrier(fn);
-  }
-
-  inline void barrierThen(CollectiveAlgType const& barrier, ActionType fn) {
-    return contBarrier(fn, barrier);
-  }
-
-  inline void systemMetaBarrier() {
-    bool const skip_term = true;
-    return waitBarrier(no_barrier, skip_term);
-  }
-
-  inline void systemMetaBarrierCont(ActionType fn) {
-    bool const skip_term = true;
-    return contBarrier(fn, no_barrier, skip_term);
-  }
-
-  static void barrierUp(BarrierMsg* msg);
-  static void barrierDown(BarrierMsg* msg);
-
-
+  ContainerType<BarrierStateType> named_barrier_state_, unnamed_barrier_state_;
   /*
    *----------------------------------------------------------------------------
    *           End Barrier
    *----------------------------------------------------------------------------
    */
 
- private:
-  void waitBarrier(
-      CollectiveAlgType const& barrier = no_barrier, bool const skip_term = false
-  );
 
-  void contBarrier(
-      ActionType fn, CollectiveAlgType const& barrier = no_barrier,
-      bool const skip_term = false
-  );
-
- private:
-  CollectiveAlgType cur_named_barrier_ = fst_collective_alg;
-  CollectiveAlgType cur_unnamed_barrier_ = fst_collective_alg;
-
-  ContainerType<BarrierStateType> named_barrier_state_, unnamed_barrier_state_;
 
 };
 
