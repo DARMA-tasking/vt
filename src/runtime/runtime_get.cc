@@ -53,6 +53,7 @@ vrt::VirtualContextManager* theVirtualManager() { return CUR_RT->theVirtualManag
 CollectionManagerType*      theCollection()     { return CUR_RT->theCollection.get();     }
 worker::WorkerGroupType*    theWorkerGrp()      { return CUR_RT->theWorkerGrp.get();      }
 pool::Pool*                 thePool()           { return CUR_RT->thePool.get();           }
+reduction::ReductionManager* theReduction()     { return CUR_RT->theReduction.get();      }
 
 #if backend_check_enabled(trace_enabled)
 trace::Trace*               theTrace()          { return CUR_RT->theTrace.get();          }

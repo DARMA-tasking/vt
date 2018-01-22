@@ -31,5 +31,6 @@
 #include "standalone/vt_main.h"
 #include "utils/tls/tls.h"
 #include "utils/atomic/atomic.h"
+#include "reduction/reduction_manager.h"
 
 #endif /*INCLUDED_TRANSPORT_H*/
