@@ -195,7 +195,7 @@ void Runtime::setup() {
   MPI_Barrier(theContext->getComm());
 
   // wait for all nodes to start up to initialize the runtime
-  theCollective()->barrierThen([this]{
+  theCollective->barrierThen([this]{
     MPI_Barrier(theContext->getComm());
   });
 
