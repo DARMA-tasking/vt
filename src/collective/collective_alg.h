@@ -42,6 +42,7 @@ struct CollectiveAlg : Tree {
    *----------------------------------------------------------------------------
    */
 
+ public:
   inline void barrier(CollectiveAlgType const& barrier = no_barrier) {
     return waitBarrier(barrier);
   }
@@ -50,12 +51,13 @@ struct CollectiveAlg : Tree {
     return contBarrier(fn);
   }
 
-  inline void barrierThen(CollectiveAlgType const& barrier, ActionType fn) {
-    return contBarrier(fn, barrier);
-  }
 
  private:
   using BarrierStateType = BarrierState;
+
+  inline void barrierThen(CollectiveAlgType const& barrier, ActionType fn) {
+    return contBarrier(fn, barrier);
+  }
 
   void waitBarrier(
       CollectiveAlgType const& barrier = no_barrier, bool const skip_term = false
@@ -104,6 +106,7 @@ struct CollectiveAlg : Tree {
   CollectiveAlgType cur_unnamed_barrier_ = fst_collective_alg;
 
   ContainerType<BarrierStateType> named_barrier_state_, unnamed_barrier_state_;
+
   /*
    *----------------------------------------------------------------------------
    *           End Barrier
