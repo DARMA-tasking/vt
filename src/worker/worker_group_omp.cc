@@ -2,7 +2,7 @@
 #include "config.h"
 #include "context/context.h"
 #include "context/context_attorney.h"
-#include "collective/collective.h"
+#include "collective/collective_ops.h"
 
 #if backend_check_enabled(openmp)
 

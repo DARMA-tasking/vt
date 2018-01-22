@@ -10,7 +10,7 @@
 #include "event/event.h"
 #include "termination/term_headers.h"
 #include "barrier/barrier.h"
-#include "reduction/reduction.h"
+#include "collective/collective_alg.h"
 #include "pool/pool.h"
 #include "rdma/rdma.h"
 #include "parameterization/parameterization.h"
@@ -31,7 +31,7 @@ extern Registry* getRegistry();
 
 extern ctx::Context*               theContext();
 extern barrier::Barrier*           theBarrier();
-extern reduction::Reduction*       theReduction();
+extern collective::CollectiveAlg*  theCollective();
 extern event::AsyncEvent*          theEvent();
 extern param::Param*               theParam();
 extern rdma::RDMAManager*          theRDMA();

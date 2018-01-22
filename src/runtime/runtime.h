@@ -10,7 +10,7 @@
 #include "event/event.h"
 #include "termination/term_headers.h"
 #include "barrier/barrier.h"
-#include "reduction/reduction.h"
+#include "collective/collective_alg.h"
 #include "pool/pool.h"
 #include "rdma/rdma_headers.h"
 #include "parameterization/parameterization.h"
@@ -90,7 +90,7 @@ public:
   ComponentPtr<event::AsyncEvent> theEvent;
   ComponentPtr<term::TerminationDetector> theTerm;
   ComponentPtr<barrier::Barrier> theBarrier;
-  ComponentPtr<reduction::Reduction> theReduction;
+  ComponentPtr<collective::CollectiveAlg> theCollective;
   ComponentPtr<pool::Pool> thePool;
   ComponentPtr<rdma::RDMAManager> theRDMA;
   ComponentPtr<param::Param> theParam;

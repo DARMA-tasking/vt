@@ -70,11 +70,11 @@ int main(int argc, char** argv) {
   printf("sizeof(EpochTagEnvelope)=%ld\n", sizeof(EpochTagEnvelope));
 
   printf("%d: calling wait_unnamed_barrier\n", this_node);
-  theBarrier()->barrier();
+  theCollective()->barrier();
   printf("%d: out of wait_unnamed_barrier\n", this_node);
 
   printf("%d: calling cont_unnamed_barrier\n", this_node);
-  theBarrier()->barrier_then([=]{
+  theCollective()->barrier_then([=]{
     printf("%d: out of cont_unnamed_barrier\n", this_node);
   });
 

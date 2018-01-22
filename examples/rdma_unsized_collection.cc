@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
   theRDMA()->associateGetFunction<RDMAMsgType>(rdma_state, my_handle, get_fn, true);
   theRDMA()->associatePutFunction<RDMAMsgType>(rdma_state, my_handle, put_fn, true);
 
-  theBarrier()->barrier();
+  theCollective()->barrier();
 
   if (my_node == 0) {
     double* test_data = new double[rdma_num_elements];

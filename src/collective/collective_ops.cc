@@ -1,5 +1,5 @@
 
-#include "collective.h"
+#include "collective_ops.h"
 #include "runtime/runtime.h"
 #include "runtime/runtime_inst.h"
 #include "utils/tls/tls.h"

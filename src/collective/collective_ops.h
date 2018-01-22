@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_H
+#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
+#define INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
 
 #include "config.h"
 #include "context/context.h"
@@ -39,4 +39,4 @@ using CollectiveOps = CollectiveAnyOps<collective_default_inst>;
 
 } //end namespace vt
 
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_H*/
+#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H*/

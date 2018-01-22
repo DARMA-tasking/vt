@@ -39,7 +39,7 @@ static runtime::Runtime* no_rt = nullptr;
 
 ctx::Context*               theContext()        { return CUR_RT->theContext.get();        }
 barrier::Barrier*           theBarrier()        { return CUR_RT->theBarrier.get();       }
-reduction::Reduction*       theReduction()      { return CUR_RT->theReduction.get();        }
+collective::CollectiveAlg*  theCollective()     { return CUR_RT->theCollective.get();        }
 event::AsyncEvent*          theEvent()          { return CUR_RT->theEvent.get();          }
 ActiveMessenger*            theMsg()            { return CUR_RT->theMsg.get();            }
 param::Param*               theParam()          { return CUR_RT->theParam.get();          }

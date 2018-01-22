@@ -24,6 +24,7 @@ using EventType = uint64_t;
 using EpochType = int32_t;
 using TagType = int32_t;
 using BarrierType = uint64_t;
+using CollectiveAlgType = uint64_t;
 using RefType = int16_t;
 using ByteType = uint64_t;
 using BitCountType = int32_t;

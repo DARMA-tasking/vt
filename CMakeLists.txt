@@ -52,7 +52,7 @@ set(
   topos/location topos/mapping topos/index utils/container utils/detector
   serialization serialization/messaging worker utils/mutex utils/static_checks
   standalone runtime utils/tls utils/atomic vrt/collection vrt rdma/channel
-  rdma/collection rdma/group rdma/state reduction
+  rdma/collection rdma/group rdma/state
 )
 
 include_directories(${PROJECT_SOURCE_DIR})

@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     my_data, my_data_len, my_data_len*num_nodes
   );
 
-  theBarrier()->barrier();
+  theCollective()->barrier();
 
   printf("%d: handle=%lld, create handle\n", my_node, my_handle);
 

@@ -195,7 +195,7 @@ void Runtime::setup() {
   MPI_Barrier(theContext->getComm());
 
   // wait for all nodes to start up to initialize the runtime
-  theBarrier->barrierThen([this]{
+  theCollective()->barrierThen([this]{
     MPI_Barrier(theContext->getComm());
   });
 
@@ -237,7 +237,7 @@ void Runtime::initializeComponents() {
   theSched = std::make_unique<sched::Scheduler>();
   theTerm = std::make_unique<term::TerminationDetector>();
   theBarrier = std::make_unique<barrier::Barrier>();
-  theReduction = std::make_unique<reduction::Reduction>();
+  theCollective = std::make_unique<collective::CollectiveAlg>();
 
   // Advanced runtime components: not required for basic messaging
   theRDMA = std::make_unique<rdma::RDMAManager>();
@@ -312,7 +312,7 @@ void Runtime::finalizeComponents() {
 
   // Core components
   theBarrier = nullptr;
-  theReduction = nullptr;
+  theCollective = nullptr;
   theTerm = nullptr;
   theSched = nullptr;
   theMsg = nullptr;

@@ -114,7 +114,7 @@ static void boundaryFinished(bool const is_left) {
     resid_val = kernel(cur_iter);
 
     theRDMA()->putTypedData(jac_resid, &resid_val, 1, my_node, no_tag, no_action, []{
-      theBarrier()->barrierThen([]{
+      theCollective()->barrierThen([]{
         if (cur_iter >= max_iterations) {
           finished();
         } else {
@@ -201,7 +201,7 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
     }
   }
 
-  theBarrier()->barrierThen([=]{
+  theCollective()->barrierThen([=]{
     #if DEBUG_JACOBI
     printf(
       "%d: jacobi1d: barrierThen next iter=%d: converged=%s\n",
@@ -282,7 +282,7 @@ int main(int argc, char** argv) {
   jac_t2_han = theRDMA()->registerCollectiveTyped(t2 + 1, blk_size, total_size);
   jac_resid = theRDMA()->registerCollectiveTyped(&resid_val, 1, num_nodes);
 
-  theBarrier()->barrierThen([]{
+  theCollective()->barrierThen([]{
     if (my_node == 0) {
       theMsg()->broadcastMsg<StartWorkMsg, startJacobi1dHandler>(
         makeSharedMessage<StartWorkMsg>(false)
