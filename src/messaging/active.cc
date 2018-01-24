@@ -1,6 +1,7 @@
 
 #include "config.h"
 #include "messaging/active.h"
+#include "messaging/payload.h"
 #include "termination/term_headers.h"
 
 namespace vt {
@@ -17,6 +18,7 @@ EventType ActiveMessenger::sendDataDirect(
   auto const& dest = envelopeGetDest(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
   auto const& is_term = envelopeIsTerm(msg->env);
+  auto const& is_put = envelopeIsPut(msg->env);
   auto const& epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
   auto const& is_shared = isSharedMessage(msg);
@@ -40,6 +42,10 @@ EventType ActiveMessenger::sendDataDirect(
     }
   );
 
+  assert(
+    (!is_bcast || !is_put) && "A put message cannot be a broadcast"
+  );
+
   debug_print(
     active, node,
     "sendMsgDirect: dest=%d, handler=%d, is_bcast=%s\n",
@@ -49,32 +55,83 @@ EventType ActiveMessenger::sendDataDirect(
   if (not is_bcast) {
     // non-broadcast message send
 
-    auto const event_id = theEvent()->createMPIEvent(this_node);
-    auto& holder = theEvent()->getEventHolder(event_id);
-    auto mpi_event = holder.get_event();
+    if (is_put) {
+      auto const put_parent_event_id = theEvent()->createParentEvent(this_node);
+      auto& put_parent_holder = theEvent()->getEventHolder(put_parent_event_id);
+      auto put_parent_event = put_parent_holder.get_event();
 
-    if (is_shared) {
-      mpi_event->setManagedMessage(msg);
+      if (next_action != nullptr) {
+        put_parent_holder.attachAction(next_action);
+      }
+
+      auto const& put_ptr = envelopeGetPutPtr(msg->env);
+      auto const& put_size = envelopeGetPutSize(msg->env);
+      assert(
+        (!(put_size != 0) || put_ptr) && "Must have valid ptr if size > 0"
+      );
+      auto const& ret = sendData(
+        RDMA_GetType{put_ptr, put_size}, dest, no_tag, nullptr
+      );
+      auto const& ret_tag = std::get<1>(ret);
+      auto const& put_event_send = std::get<0>(ret);
+      envelopeSetPutPtr(msg->env, nullptr, static_cast<size_t>(ret_tag));
+      printf("sendData: ptr=%p, tag=%d, put_size=%ld\n", put_ptr, ret_tag, put_size);
+
+      auto const event_id = theEvent()->createMPIEvent(this_node);
+      auto& holder = theEvent()->getEventHolder(event_id);
+      auto mpi_event = holder.get_event();
+
+      if (is_shared) {
+        mpi_event->setManagedMessage(msg);
+      }
+
+      if (not is_term) {
+        theTerm()->produce(epoch);
+      }
+
+      MPI_Isend(
+        msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
+        mpi_event->getRequest()
+      );
+
+      if (next_action != nullptr) {
+        put_parent_event->addEventToList(event_id);
+        put_parent_event->addEventToList(put_event_send);
+      }
+
+      if (is_shared) {
+        messageDeref(msg);
+      }
+
+      return put_parent_event_id;
+    } else {
+      auto const event_id = theEvent()->createMPIEvent(this_node);
+      auto& holder = theEvent()->getEventHolder(event_id);
+      auto mpi_event = holder.get_event();
+
+      if (is_shared) {
+        mpi_event->setManagedMessage(msg);
+      }
+
+      if (not is_term) {
+        theTerm()->produce(epoch);
+      }
+
+      MPI_Isend(
+        msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
+        mpi_event->getRequest()
+      );
+
+      if (next_action != nullptr) {
+        holder.attachAction(next_action);
+      }
+
+      if (is_shared) {
+        messageDeref(msg);
+      }
+
+      return event_id;
     }
-
-    if (not is_term) {
-      theTerm()->produce(epoch);
-    }
-
-    MPI_Isend(
-      msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-      mpi_event->getRequest()
-    );
-
-    if (next_action != nullptr) {
-      holder.attachAction(next_action);
-    }
-
-    if (is_shared) {
-      messageDeref(msg);
-    }
-
-    return event_id;
   } else {
     // broadcast message send
     auto const& num_nodes = theContext()->getNumNodes();
@@ -475,14 +532,26 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
     auto const& handler = envelopeGetHandler(msg->env);
     auto const& is_bcast = envelopeIsBcast(msg->env);
     auto const& dest = envelopeGetDest(msg->env);
+    auto const& is_put = envelopeIsPut(msg->env);
     auto const& this_node = theContext()->getNode();
+
+    if (is_put) {
+      auto size_as_put_tag = envelopeGetPutSize(msg->env);
+      TagType put_tag = static_cast<TagType>(size_as_put_tag);
+      messageRef(msg);
+      recvDataMsg(put_tag, msg_from_node, [=](RDMA_GetType ptr, ActionType deleter){
+        envelopeSetPutPtr(msg->env, std::get<0>(ptr), std::get<1>(ptr));
+        deliverActiveMsg(msg, msg_from_node, true);
+        messageDeref(msg);
+      });
+    }
 
     if (is_bcast) {
       messageRef(msg);
       sendDataDirect(handler, msg, num_probe_bytes);
     }
 
-    if (not is_bcast or (is_bcast and dest != this_node)) {
+    if ((not is_bcast or (is_bcast and dest != this_node)) and not is_put) {
       deliverActiveMsg(msg, msg_from_node, true);
     }
 
