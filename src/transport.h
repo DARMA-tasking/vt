@@ -7,6 +7,7 @@
 #include "pool/pool.h"
 #include "messaging/envelope.h"
 #include "messaging/message.h"
+#include "messaging/put_message.h"
 #include "activefn/activefn.h"
 #include "context/context.h"
 #include "collective/collective_ops.h"
