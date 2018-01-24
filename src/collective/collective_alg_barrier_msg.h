@@ -19,6 +19,6 @@ struct BarrierMsg : vt::ShortMessage {
   { }
 };
 
-}} //end namespace vt::barrier
+}} //end namespace vt::collective
 
 #endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_BARRIER_MSG_H*/
