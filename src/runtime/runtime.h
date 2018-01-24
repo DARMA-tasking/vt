@@ -9,7 +9,6 @@
 #include "messaging/active.h"
 #include "event/event.h"
 #include "termination/term_headers.h"
-#include "barrier/barrier.h"
 #include "collective/collective_alg.h"
 #include "pool/pool.h"
 #include "rdma/rdma_headers.h"
@@ -89,7 +88,6 @@ public:
   ComponentPtr<ctx::Context> theContext;
   ComponentPtr<event::AsyncEvent> theEvent;
   ComponentPtr<term::TerminationDetector> theTerm;
-  ComponentPtr<barrier::Barrier> theBarrier;
   ComponentPtr<collective::CollectiveAlg> theCollective;
   ComponentPtr<pool::Pool> thePool;
   ComponentPtr<rdma::RDMAManager> theRDMA;

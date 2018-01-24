@@ -9,7 +9,6 @@
 #include "messaging/active.h"
 #include "event/event.h"
 #include "termination/term_headers.h"
-#include "barrier/barrier.h"
 #include "collective/collective_alg.h"
 #include "pool/pool.h"
 #include "rdma/rdma.h"
@@ -30,7 +29,6 @@ extern ActiveMessenger* theMsg();
 extern Registry* getRegistry();
 
 extern ctx::Context*               theContext();
-extern barrier::Barrier*           theBarrier();
 extern collective::CollectiveAlg*  theCollective();
 extern event::AsyncEvent*          theEvent();
 extern param::Param*               theParam();

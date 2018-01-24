@@ -16,7 +16,6 @@
 #include "parameterization/parameterization.h"
 #include "event/event_msgs.h"
 #include "termination/termination.h"
-#include "barrier/barrier.h"
 #include "collective/collective_alg.h"
 #include "rdma/rdma_headers.h"
 #include "registry/auto_registry_interface.h"

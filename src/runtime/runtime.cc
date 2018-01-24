@@ -8,7 +8,6 @@
 #include "messaging/active.h"
 #include "event/event.h"
 #include "termination/termination.h"
-#include "barrier/barrier.h"
 #include "pool/pool.h"
 #include "rdma/rdma_headers.h"
 #include "parameterization/parameterization.h"
@@ -236,7 +235,6 @@ void Runtime::initializeComponents() {
   theMsg = std::make_unique<ActiveMessenger>();
   theSched = std::make_unique<sched::Scheduler>();
   theTerm = std::make_unique<term::TerminationDetector>();
-  theBarrier = std::make_unique<barrier::Barrier>();
   theCollective = std::make_unique<collective::CollectiveAlg>();
 
   // Advanced runtime components: not required for basic messaging
@@ -311,7 +309,6 @@ void Runtime::finalizeComponents() {
   theRDMA = nullptr;
 
   // Core components
-  theBarrier = nullptr;
   theCollective = nullptr;
   theTerm = nullptr;
   theSched = nullptr;
