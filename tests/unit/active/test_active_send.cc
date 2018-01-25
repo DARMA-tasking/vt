@@ -12,6 +12,10 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::tests::unit;
 
+struct PutTestMessage : ::vt::PutMessage {
+  PutTestMessage() = default;
+};
+
 struct TestActiveSend : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
@@ -29,6 +33,13 @@ struct TestActiveSend : TestParallelHarness {
 
     from_node = 0;
     to_node = 1;
+  }
+
+  static void test_handler_2(PutTestMessage* msg) {
+    auto ptr = static_cast<int*>(msg->getPut());
+    for (int i = 0; i < 10; i++) {
+      EXPECT_EQ(ptr[i], i);
+    }
   }
 
   static void test_handler(TestMsg* msg) {
@@ -56,10 +67,19 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
     printf("test_type_safe_active_fn_send: node=%d\n", my_node);
   #endif
 
+  std::vector<int> test_vec{0,1,2,3,4,5,6,7,8,9};
+
   if (my_node == from_node) {
     for (int i = 0; i < num_msg_sent; i++) {
       auto msg = new TestMsg();
       theMsg()->sendMsg<TestMsg, test_handler>(1, msg, [=]{ delete msg; });
+    }
+    for (int i = 0; i < num_msg_sent; i++) {
+      auto msg = new PutTestMessage();
+      msg->setPut(&test_vec[0], sizeof(int)*test_vec.size());
+      theMsg()->sendMsg<PutTestMessage, test_handler_2>(
+        1, msg, [=]{ delete msg; }
+      );
     }
   } else if (my_node == to_node) {
     theTerm()->attachGlobalTermAction([=]{
