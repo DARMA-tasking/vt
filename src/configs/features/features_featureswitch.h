@@ -31,6 +31,7 @@
     trace,                 "trace",                                     \
     vrt,                   "virtual-context",                           \
     worker,                "worker",                                    \
+    group,                 "group",                                     \
     location,              "location"                                   \
   )
 
