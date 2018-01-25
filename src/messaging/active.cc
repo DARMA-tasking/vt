@@ -77,60 +77,21 @@ EventType ActiveMessenger::sendDataDirect(
       envelopeSetPutPtr(msg->env, nullptr, static_cast<size_t>(ret_tag));
       printf("sendData: ptr=%p, tag=%d, put_size=%ld\n", put_ptr, ret_tag, put_size);
 
-      auto const event_id = theEvent()->createMPIEvent(this_node);
-      auto& holder = theEvent()->getEventHolder(event_id);
-      auto mpi_event = holder.get_event();
-
-      if (is_shared) {
-        mpi_event->setManagedMessage(msg);
-      }
-
-      if (not is_term) {
-        theTerm()->produce(epoch);
-      }
-
-      MPI_Isend(
-        msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-        mpi_event->getRequest()
+      basicSendData(
+        dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
+        put_parent_event, next_action
       );
 
       if (next_action != nullptr) {
-        put_parent_event->addEventToList(event_id);
         put_parent_event->addEventToList(put_event_send);
-      }
-
-      if (is_shared) {
-        messageDeref(msg);
       }
 
       return put_parent_event_id;
     } else {
-      auto const event_id = theEvent()->createMPIEvent(this_node);
-      auto& holder = theEvent()->getEventHolder(event_id);
-      auto mpi_event = holder.get_event();
-
-      if (is_shared) {
-        mpi_event->setManagedMessage(msg);
-      }
-
-      if (not is_term) {
-        theTerm()->produce(epoch);
-      }
-
-      MPI_Isend(
-        msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-        mpi_event->getRequest()
+      return basicSendData(
+        dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
+         nullptr, next_action
       );
-
-      if (next_action != nullptr) {
-        holder.attachAction(next_action);
-      }
-
-      if (is_shared) {
-        messageDeref(msg);
-      }
-
-      return event_id;
     }
   } else {
     // broadcast message send

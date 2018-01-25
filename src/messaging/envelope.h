@@ -291,36 +291,10 @@ inline void envelopeInitEmpty(EpochTagEnvelope& env) {
   envelopeSetTag(env, no_tag);
 }
 
-
 static_assert(std::is_pod<Envelope>(), "Envelope must be POD");
 static_assert(std::is_pod<EpochEnvelope>(), "EpochEnvelope must be POD");
 static_assert(std::is_pod<TagEnvelope>(), "TagEnvelope must be POD");
 static_assert(std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD");
-
-// template <typename EnvelopeT, typename SizeT>
-// struct PutEnvelope {
-//   using isByteCopyable = std::true_type;
-//   using PayloadPtrType = void*;
-//   using PayloadSizeType = SizeT;
-
-//   EnvelopeT env;
-//   PayloadPtrType data_ptr_;
-//   PayloadSizeType data_size_;
-// };
-
-// template <typename EnvelopeT>
-// using PutBasicEnvelope = PutEnvelope<EnvelopeT, size_t>;
-// using PutShortEnvelope = PutBasicEnvelope<Envelope>;
-
-// template <typename EnvelopeT>
-// inline void envelopeInitEmpty(PutBasicEnvelope<Envelope>& env) {
-//   envelopeInitEmpty(env.env);
-//   setPutType(env.env);
-//   env.data_ptr_ = nullptr;
-//   env.data_size_ = 0;
-// }
-
-// static_assert(std::is_pod<PutShortEnvelope>(), "PutShortEnvelope must be POD");
 
 } //end namespace vt
 

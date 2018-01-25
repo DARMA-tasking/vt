@@ -59,6 +59,7 @@ struct ActiveMessenger {
   using MessageType = ShortMessage*;
   using CountType = int32_t;
   using PendingRecvType = PendingRecv;
+  using EventRecordType = event::AsyncEvent::EventRecordType;
   using SendDataRetType = std::tuple<EventType, TagType>;
   using SendFnType = std::function<SendDataRetType(RDMA_GetType,NodeType,TagType,ActionType)>;
   using UserSendFnType = std::function<void(SendFnType)>;
@@ -462,6 +463,13 @@ struct ActiveMessenger {
   void deliverPendingMsgsHandler(HandlerType const& han, TagType const& tag = no_tag);
   void processMaybeReadyHanTag();
 
+  template <typename MessageT>
+  EventType basicSendData(
+    NodeType const& dest, MessageT* const msg, int const& msg_size,
+    bool const& is_shared, bool const& is_term, EpochType const& epoch,
+    TagType const& send_tag, EventRecordType* parent_event, ActionType next_action
+  );
+
 private:
   HandlerType current_handler_context_ = uninitialized_handler;
   HandlerType current_callback_context_ = uninitialized_handler;
@@ -476,5 +484,7 @@ private:
 extern ActiveMessenger* theMsg();
 
 } //end namespace vt
+
+#include "messaging/active.impl.h"
 
 #endif /*INCLUDED_MESSAGING_ACTIVE_H*/
