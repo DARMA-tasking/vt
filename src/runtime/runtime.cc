@@ -246,6 +246,7 @@ void Runtime::initializeComponents() {
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theCollection = std::make_unique<vrt::collection::CollectionManager>();
   theReduction = std::make_unique<reduction::ReductionManager>();
+  theGroup = std::make_unique<group::GroupManager>();
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }

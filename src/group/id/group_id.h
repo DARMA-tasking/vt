@@ -1,9 +1,9 @@
 
-#if !defined INCLUDED_GROUP_GROUP_ID_H
-#define INCLUDED_GROUP_GROUP_ID_H
+#if !defined INCLUDED_GROUP_ID_GROUP_ID_H
+#define INCLUDED_GROUP_ID_GROUP_ID_H
 
 #include "config.h"
-#include "group/group_types.h"
+#include "group/group_common.h"
 #include "utils/bits/bits_common.h"
 
 namespace vt { namespace group {
@@ -40,4 +40,4 @@ struct GroupIDBuilder {
 
 }} /* end namespace vt::group */
 
-#endif /*INCLUDED_GROUP_GROUP_ID_H*/
+#endif /*INCLUDED_GROUP_ID_GROUP_ID_H*/

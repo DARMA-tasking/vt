@@ -21,6 +21,7 @@
 #include "vrt/collection/collection_headers.h"
 #include "worker/worker_headers.h"
 #include "reduction/reduction_manager.h"
+#include "group/group_headers.h"
 #include "runtime_get.h"
 
 #include <memory>
@@ -100,6 +101,7 @@ public:
   ComponentPtr<vrt::VirtualContextManager> theVirtualManager;
   ComponentPtr<vrt::collection::CollectionManager> theCollection;
   ComponentPtr<reduction::ReductionManager> theReduction;
+  ComponentPtr<group::GroupManager> theGroup;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtr<worker::WorkerGroupType> theWorkerGrp;
