@@ -7,7 +7,7 @@
 namespace vt {
 
 EventType ActiveMessenger::basicSendData(
-  NodeType const& dest, BaseMessage* const msg, int const& msg_size,
+  NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
   bool const& is_shared, bool const& is_term, EpochType const& epoch,
   TagType const& send_tag, EventRecordType* parent_event, ActionType next_action
 ) {
@@ -16,6 +16,8 @@ EventType ActiveMessenger::basicSendData(
   auto const event_id = theEvent()->createMPIEvent(this_node);
   auto& holder = theEvent()->getEventHolder(event_id);
   auto mpi_event = holder.get_event();
+
+  auto msg = reinterpret_cast<MessageType const>(base_msg);
 
   if (is_shared) {
     mpi_event->setManagedMessage(msg);
@@ -114,7 +116,7 @@ EventType ActiveMessenger::sendDataDirect(
       envelopeSetPutPtr(msg->env, nullptr, static_cast<size_t>(ret_tag));
 
       basicSendData(
-        dest, base_msg, msg_size, is_shared, is_term, epoch, send_tag,
+        dest, msg_base, msg_size, is_shared, is_term, epoch, send_tag,
         put_parent_event, next_action
       );
 
@@ -125,7 +127,7 @@ EventType ActiveMessenger::sendDataDirect(
       return put_parent_event_id;
     } else {
       return basicSendData(
-        dest, base_msg, msg_size, is_shared, is_term, epoch, send_tag,
+        dest, msg_base, msg_size, is_shared, is_term, epoch, send_tag,
          nullptr, next_action
       );
     }
