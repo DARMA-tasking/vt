@@ -350,9 +350,8 @@ struct ActiveMessenger {
   void deliverPendingMsgsHandler(HandlerType const& han, TagType const& tag = no_tag);
   void processMaybeReadyHanTag();
 
-  template <typename MessageT>
   EventType basicSendData(
-    NodeType const& dest, MessageT* const msg, int const& msg_size,
+    NodeType const& dest, BaseMessage* const msg, int const& msg_size,
     bool const& is_shared, bool const& is_term, EpochType const& epoch,
     TagType const& send_tag, EventRecordType* parent_event, ActionType next_action
   );
