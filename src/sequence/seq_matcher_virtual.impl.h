@@ -26,13 +26,10 @@ template <typename T>
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename T>
 /*static*/ auto SeqMatcherVirtual<VcT, MsgT, f>::getFirstElem(T& lst) {
-  if (lst.size() > 0) {
-    auto elm = lst.front();
-    lst.pop_front();
-    return elm;
-  } else {
-    assert(0 and "Must have element");
-  }
+  assert(lst.size() > 0 and "Must have element");
+  auto elm = lst.front();
+  lst.pop_front();
+  return elm;
 }
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
