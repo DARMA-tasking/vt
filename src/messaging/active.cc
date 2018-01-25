@@ -214,10 +214,6 @@ EventType ActiveMessenger::sendDataDirect(
     }
   );
 
-  assert(
-    (!is_bcast || !is_put) && "A put message cannot be a broadcast"
-  );
-
   debug_print(
     active, node,
     "sendMsgDirect: dest=%d, handler=%d, is_bcast=%s, is_put=%s\n",
