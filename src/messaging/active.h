@@ -351,9 +351,24 @@ struct ActiveMessenger {
   void processMaybeReadyHanTag();
 
   EventType basicSendData(
-    NodeType const& dest, BaseMessage* const msg, int const& msg_size,
+    NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
     bool const& is_shared, bool const& is_term, EpochType const& epoch,
-    TagType const& send_tag, EventRecordType* parent_event, ActionType next_action
+    TagType const& send_tag, EventRecordType* parent_event,
+    ActionType next_action
+  );
+
+  EventType basicSendDataPut(
+    NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
+    bool const& is_shared, bool const& is_term, EpochType const& epoch,
+    TagType const& send_tag, EventRecordType* parent_event,
+    ActionType next_action, bool const& is_put, EventType const& in_event
+  );
+
+  EventType sendDataRecipients(
+    NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
+    bool const& is_shared, bool const& is_term, EpochType const& epoch,
+    TagType const& send_tag, ActionType next_action, bool const& is_put,
+    bool const& is_bcast
   );
 
 private:

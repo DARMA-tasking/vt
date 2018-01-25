@@ -162,8 +162,6 @@ namespace vt { namespace rdma {
       msg->mpi_tag_to_recv = std::get<1>(ret);
     };
 
-    setPutType(msg->env);
-
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
     }
