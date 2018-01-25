@@ -75,7 +75,6 @@ EventType ActiveMessenger::sendDataDirect(
       auto const& ret_tag = std::get<1>(ret);
       auto const& put_event_send = std::get<0>(ret);
       envelopeSetPutPtr(msg->env, nullptr, static_cast<size_t>(ret_tag));
-      printf("sendData: ptr=%p, tag=%d, put_size=%ld\n", put_ptr, ret_tag, put_size);
 
       basicSendData(
         dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
