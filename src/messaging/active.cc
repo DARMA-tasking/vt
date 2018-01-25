@@ -6,6 +6,43 @@
 
 namespace vt {
 
+EventType ActiveMessenger::basicSendData(
+  NodeType const& dest, BaseMessage* const msg, int const& msg_size,
+  bool const& is_shared, bool const& is_term, EpochType const& epoch,
+  TagType const& send_tag, EventRecordType* parent_event, ActionType next_action
+) {
+  auto const& this_node = theContext()->getNode();
+
+  auto const event_id = theEvent()->createMPIEvent(this_node);
+  auto& holder = theEvent()->getEventHolder(event_id);
+  auto mpi_event = holder.get_event();
+
+  if (is_shared) {
+    mpi_event->setManagedMessage(msg);
+  }
+
+  if (not is_term) {
+    theTerm()->produce(epoch);
+  }
+
+  MPI_Isend(
+    msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
+    mpi_event->getRequest()
+  );
+
+  if (parent_event) {
+    parent_event->addEventToList(event_id);
+  } else {
+    holder.attachAction(next_action);
+  }
+
+  if (is_shared) {
+    messageDeref(msg);
+  }
+
+  return event_id;
+}
+
 EventType ActiveMessenger::sendDataDirect(
   HandlerType const& han, BaseMessage* const msg_base, int const& msg_size,
   ActionType next_action
@@ -77,7 +114,7 @@ EventType ActiveMessenger::sendDataDirect(
       envelopeSetPutPtr(msg->env, nullptr, static_cast<size_t>(ret_tag));
 
       basicSendData(
-        dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
+        dest, base_msg, msg_size, is_shared, is_term, epoch, send_tag,
         put_parent_event, next_action
       );
 
@@ -88,7 +125,7 @@ EventType ActiveMessenger::sendDataDirect(
       return put_parent_event_id;
     } else {
       return basicSendData(
-        dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
+        dest, base_msg, msg_size, is_shared, is_term, epoch, send_tag,
          nullptr, next_action
       );
     }
