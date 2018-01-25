@@ -1,6 +1,7 @@
 
 #include "config.h"
-#include "group/group_id.h"
+#include "group/group_common.h"
+#include "group/id/group_id.h"
 #include "utils/bits/bits_common.h"
 
 namespace vt { namespace group {
