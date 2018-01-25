@@ -52,7 +52,7 @@ set(
   topos/location topos/mapping topos/index utils/container utils/detector
   serialization serialization/messaging worker utils/mutex utils/static_checks
   standalone runtime utils/tls utils/atomic utils/hash vrt/collection vrt
-  rdma/channel rdma/collection rdma/group rdma/state reduction
+  rdma/channel rdma/collection rdma/group rdma/state reduction group
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
@@ -259,11 +259,8 @@ endforeach()
 
 set(
   UNIT_TEST_SUBDIRS_LIST
-<<<<<<< HEAD
   index active collectives pool sequencer mapping serialization tls atomic
-=======
-  index active pool sequencer mapping serialization tls atomic reduce
->>>>>>> reduce: quick/basic implementation
+  reduce
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
