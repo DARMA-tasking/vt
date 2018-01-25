@@ -23,13 +23,11 @@ template <typename T>
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename T>
 /*static*/ auto SeqMatcher<MessageT, f>::getFirstElem(T& lst) {
-  if (lst.size() > 0) {
-    auto elm = lst.front();
-    lst.pop_front();
-    return elm;
-  } else {
-    assert(0 and "Must have element");
-  }
+  assert(lst.size > 0 and "Must have element");
+
+  auto elm = lst.front();
+  lst.pop_front();
+  return elm;
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
