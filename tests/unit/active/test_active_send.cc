@@ -12,7 +12,7 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct PutTestMessage : ::vt::PutMessage {
+struct PutTestMessage : ::vt::PayloadMessage {
   PutTestMessage() = default;
 };
 

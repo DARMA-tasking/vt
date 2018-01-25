@@ -48,8 +48,6 @@ namespace vt { namespace rdma {
         );
       };
 
-      setPutType(new_msg->env);
-
       auto deleter = [=]{ delete new_msg; };
 
       theMsg()->sendMsg<GetBackMessage, getRecvMsg>(
@@ -581,8 +579,6 @@ void RDMAManager::putData(
           });
           msg->mpi_tag_to_recv = std::get<1>(ret);
         };
-
-        setPutType(msg->env);
 
         if (tag != no_tag) {
           envelopeSetTag(msg->env, tag);

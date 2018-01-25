@@ -68,7 +68,6 @@ struct SerializedMessengerParam {
 
     meta_typed_data_msg->handler = typed_handler;
     meta_typed_data_msg->from_node = theContext()->getNode();
-    setPutType(meta_typed_data_msg->env);
 
     auto deleter = [=]{ delete meta_typed_data_msg; };
 

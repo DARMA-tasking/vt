@@ -148,8 +148,6 @@ struct SerializedMessenger {
         sys_msg->handler = typed_handler;
         sys_msg->from_node = theContext()->getNode();
 
-        setPutType(sys_msg->env);
-
         theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
           dest, sys_msg, send_serialized
         );

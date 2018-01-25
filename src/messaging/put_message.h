@@ -19,7 +19,7 @@ struct PutMessageComponent : MessageT {
   }
 };
 
-using PutMessage = PutMessageComponent<ActiveMessage<PutShortEnvelope>>;
+using PayloadMessage = PutMessageComponent<ActiveMessage<PutShortEnvelope>>;
 
 } /* end namespace vt */
 

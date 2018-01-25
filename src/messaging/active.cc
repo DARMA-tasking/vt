@@ -6,6 +6,137 @@
 
 namespace vt {
 
+EventType ActiveMessenger::sendDataRecipients(
+  NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
+  bool const& is_shared, bool const& is_term, EpochType const& epoch,
+  TagType const& send_tag, ActionType next_action, bool const& is_put,
+  bool const& is_bcast
+) {
+  auto const& this_node = theContext()->getNode();
+  auto msg = reinterpret_cast<MessageType const>(base_msg);
+  EventRecordType* parent = nullptr;
+  EventType parent_event_id = no_event;
+  if (is_put or is_bcast) {
+    parent_event_id = theEvent()->createParentEvent(this_node);
+    auto& holder = theEvent()->getEventHolder(parent_event_id);
+    parent = holder.get_event();
+  }
+  debug_print(
+    active, node,
+    "sendDataRecipients: msg=%p, refs=%d, is_put=%s, is_bcast=%s\n",
+    msg, envelopeGetRef(msg->env), print_bool(is_put), print_bool(is_bcast)
+  );
+  if (is_bcast) {
+    auto const& num_nodes = theContext()->getNumNodes();
+    auto const& rel_node = (this_node + num_nodes - dest) % num_nodes;
+    auto const& abs_child1 = rel_node*2 + 1;
+    auto const& abs_child2 = rel_node*2 + 2;
+    auto const& child1 = (abs_child1 + dest) % num_nodes;
+    auto const& child2 = (abs_child2 + dest) % num_nodes;
+
+    debug_print(
+      active, node,
+      "broadcastMsg: msg=%p, is_shared=%s, refs=%d\n",
+      msg, print_bool(is_shared), envelopeGetRef(msg->env)
+    );
+
+    debug_print(
+      active, node,
+      "broadcastMsg: rel_node=%d, child=[%d,%d], root=%d, nodes=%d, handler=%d\n",
+      rel_node, child1, child2, dest, num_nodes, envelopeGetHandler(msg->env)
+    );
+
+    if (abs_child1 >= num_nodes && abs_child2 >= num_nodes) {
+      if (next_action != nullptr) {
+        next_action();
+      }
+      return no_event;
+    }
+
+    if (abs_child1 < num_nodes) {
+      debug_print(
+        active, node,
+        "broadcastMsg: rel_node=%d, sending to child1=%d, root=%d, nodes=%d, "
+        "handler=%d\n",
+        rel_node, child1, dest, num_nodes, envelopeGetHandler(msg->env)
+      );
+      basicSendDataPut(
+        child1, msg, msg_size, is_shared, is_term, epoch, send_tag,
+        parent, next_action, is_put, parent_event_id
+      );
+    }
+
+    if (abs_child2 < num_nodes) {
+      debug_print(
+        active, node,
+        "broadcastMsg: rel_node=%d, sending to child2=%d, root=%d, nodes=%d, "
+        "handler=%d\n",
+        rel_node, child2, dest, num_nodes, envelopeGetHandler(msg->env)
+      );
+      basicSendDataPut(
+        child2, msg, msg_size, is_shared, is_term, epoch, send_tag,
+        parent, next_action, is_put, parent_event_id
+      );
+    }
+
+    if (is_shared) {
+      messageDeref(msg);
+    }
+
+    return parent_event_id;
+  } else {
+    return basicSendDataPut(
+      dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
+      parent, next_action, is_put, parent_event_id
+    );
+  }
+}
+
+EventType ActiveMessenger::basicSendDataPut(
+  NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
+  bool const& is_shared, bool const& is_term, EpochType const& epoch,
+  TagType const& send_tag, EventRecordType* parent_event,
+  ActionType next_action, bool const& is_put, EventType const& in_event
+) {
+  auto msg = reinterpret_cast<MessageType const>(base_msg);
+
+  debug_print(
+    active, node,
+    "basicSendDataPut: dest=%d, is_put=%s\n", dest, print_bool(is_put)
+  );
+
+  if (is_put) {
+    auto const& put_ptr = envelopeGetPutPtr(msg->env);
+    auto const& put_size = envelopeGetPutSize(msg->env);
+    assert(
+      (!(put_size != 0) || put_ptr) && "Must have valid ptr if size > 0"
+    );
+    auto const& ret = sendData(
+      RDMA_GetType{put_ptr, put_size}, dest, no_tag, nullptr
+    );
+    auto const& ret_tag = std::get<1>(ret);
+    auto const& put_event_send = std::get<0>(ret);
+    envelopeSetPutPtr(msg->env, nullptr, static_cast<size_t>(ret_tag));
+
+    if (next_action != nullptr) {
+      assert(parent_event != nullptr);
+      parent_event->addEventToList(put_event_send);
+    }
+
+    basicSendData(
+      dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
+      parent_event, next_action
+    );
+
+    return in_event;
+  } else {
+    return basicSendData(
+      dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
+      parent_event, next_action
+    );
+  }
+}
+
 EventType ActiveMessenger::basicSendData(
   NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
   bool const& is_shared, bool const& is_term, EpochType const& epoch,
@@ -35,7 +166,9 @@ EventType ActiveMessenger::basicSendData(
   if (parent_event) {
     parent_event->addEventToList(event_id);
   } else {
-    holder.attachAction(next_action);
+    if (next_action) {
+      holder.attachAction(next_action);
+    }
   }
 
   if (is_shared) {
@@ -87,148 +220,15 @@ EventType ActiveMessenger::sendDataDirect(
 
   debug_print(
     active, node,
-    "sendMsgDirect: dest=%d, handler=%d, is_bcast=%s\n",
-    dest, envelopeGetHandler(msg->env), print_bool(is_bcast)
+    "sendMsgDirect: dest=%d, handler=%d, is_bcast=%s, is_put=%s\n",
+    dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
+    print_bool(is_put)
   );
 
-  if (not is_bcast) {
-    // non-broadcast message send
-
-    if (is_put) {
-      auto const put_parent_event_id = theEvent()->createParentEvent(this_node);
-      auto& put_parent_holder = theEvent()->getEventHolder(put_parent_event_id);
-      auto put_parent_event = put_parent_holder.get_event();
-
-      if (next_action != nullptr) {
-        put_parent_holder.attachAction(next_action);
-      }
-
-      auto const& put_ptr = envelopeGetPutPtr(msg->env);
-      auto const& put_size = envelopeGetPutSize(msg->env);
-      assert(
-        (!(put_size != 0) || put_ptr) && "Must have valid ptr if size > 0"
-      );
-      auto const& ret = sendData(
-        RDMA_GetType{put_ptr, put_size}, dest, no_tag, nullptr
-      );
-      auto const& ret_tag = std::get<1>(ret);
-      auto const& put_event_send = std::get<0>(ret);
-      envelopeSetPutPtr(msg->env, nullptr, static_cast<size_t>(ret_tag));
-
-      basicSendData(
-        dest, msg_base, msg_size, is_shared, is_term, epoch, send_tag,
-        put_parent_event, next_action
-      );
-
-      if (next_action != nullptr) {
-        put_parent_event->addEventToList(put_event_send);
-      }
-
-      return put_parent_event_id;
-    } else {
-      return basicSendData(
-        dest, msg_base, msg_size, is_shared, is_term, epoch, send_tag,
-         nullptr, next_action
-      );
-    }
-  } else {
-    // broadcast message send
-    auto const& num_nodes = theContext()->getNumNodes();
-    auto const& rel_node = (this_node + num_nodes - dest) % num_nodes;
-    auto const& abs_child1 = rel_node*2 + 1;
-    auto const& abs_child2 = rel_node*2 + 2;
-    auto const& child1 = (abs_child1 + dest) % num_nodes;
-    auto const& child2 = (abs_child2 + dest) % num_nodes;
-
-    debug_print(
-      active, node,
-      "broadcastMsg: msg=%p, is_shared=%s, refs=%d\n",
-      msg, print_bool(is_shared), envelopeGetRef(msg->env)
-    );
-
-    debug_print(
-      active, node,
-      "broadcastMsg: rel_node=%d, child=[%d,%d], root=%d, nodes=%d, handler=%d\n",
-      rel_node, child1, child2, dest, num_nodes, envelopeGetHandler(msg->env)
-    );
-
-    if (abs_child1 >= num_nodes && abs_child2 >= num_nodes) {
-      if (next_action != nullptr) {
-        next_action();
-      }
-      return no_event;
-    }
-
-    auto const parent_event_id = theEvent()->createParentEvent(this_node);
-    auto& parent_holder = theEvent()->getEventHolder(parent_event_id);
-    auto parent_event = parent_holder.get_event();
-
-    if (next_action != nullptr) {
-      parent_holder.attachAction(next_action);
-    }
-
-    if (abs_child1 < num_nodes) {
-      auto const event_id1 = theEvent()->createMPIEvent(this_node);
-      auto& holder1 = theEvent()->getEventHolder(event_id1);
-      auto mpi_event1 = holder1.get_event();
-
-      if (is_shared) {
-        mpi_event1->setManagedMessage(msg);
-      }
-
-      debug_print(
-        active, node,
-        "broadcastMsg: sending to c1=%d, c2=%d, bcast_root=%d, handler=%d, "
-        "event_id=%lld\n",
-        child1, child2, dest, envelopeGetHandler(msg->env), event_id1
-      );
-
-      if (not is_term) {
-        theTerm()->produce(epoch);
-      }
-
-      MPI_Isend(
-        msg, msg_size, MPI_BYTE, child1, send_tag, theContext()->getComm(),
-        mpi_event1->getRequest()
-      );
-
-      parent_event->addEventToList(event_id1);
-    }
-
-    if (abs_child2 < num_nodes) {
-      auto const event_id2 = theEvent()->createMPIEvent(this_node);
-      auto& holder2 = theEvent()->getEventHolder(event_id2);
-      auto mpi_event2 = holder2.get_event();
-
-      if (is_shared) {
-        mpi_event2->setManagedMessage(msg);
-      }
-
-      debug_print(
-        active, node,
-        "broadcastMsg: sending to c2=%d, c1=%d, bcast_root=%d, handler=%d, "
-        "event_id=%lld\n",
-        child2, child1, dest, envelopeGetHandler(msg->env), event_id2
-      );
-
-      if (not is_term) {
-        theTerm()->produce(epoch);
-      }
-
-      MPI_Isend(
-        msg, msg_size, MPI_BYTE, child2, send_tag, theContext()->getComm(),
-        mpi_event2->getRequest()
-      );
-
-      parent_event->addEventToList(event_id2);
-    }
-
-    if (is_shared) {
-      messageDeref(msg);
-    }
-
-    return parent_event_id;
-  }
+  return sendDataRecipients(
+    dest, msg_base, msg_size, is_shared, is_term, epoch, send_tag,
+    next_action, is_put, is_bcast
+  );
 }
 
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
