@@ -4,8 +4,13 @@
 
 namespace vt {
 
-Tree::Tree(TreeConstructTag) {
+Tree::Tree(DefaultTreeConstructTag) {
   setupTree();
+}
+
+Tree::Tree(NodeListType const& in_children) {
+  is_root_ = true;
+  children_ = in_children;
 }
 
 NodeType Tree::getParent() const {
@@ -13,29 +18,44 @@ NodeType Tree::getParent() const {
 }
 
 NodeType Tree::getNumChildren() const {
-  return num_children_;
+  return children_.size();
 }
 
 bool Tree::isRoot() const {
   return is_root_;
 }
 
-void
-Tree::setupTree() {
+Tree::NodeListType const& Tree::getChildren() const {
+  return children_;
+}
+
+void Tree::foreachChild(OperationType op) const {
+  if (children_.size() > 0) {
+    for (auto&& elm : children_) {
+      op(elm);
+    }
+  }
+}
+
+void Tree::setupTree() {
   if (not set_up_tree_) {
-    my_node_ = theContext()->getNode();
-    num_nodes_ = theContext()->getNumNodes();
+    auto const& this_node_ = theContext()->getNode();
+    auto const& num_nodes_ = theContext()->getNumNodes();
 
-    c1_ = my_node_*2+1;
-    c2_ = my_node_*2+2;
-    has_c1_ = c1_ < num_nodes_;
-    has_c2_ = c2_ < num_nodes_;
-    num_children_ = has_c1_ + has_c2_;
+    auto const& c1_ = this_node_ * 2 + 1;
+    auto const& c2_ = this_node_ * 2 + 2;
 
-    is_root_ = my_node_ == 0;
+    if (c1_ < num_nodes_) {
+      children_.push_back(c1_);
+    }
+    if (c2_ < num_nodes_) {
+      children_.push_back(c2_);
+    }
+
+    is_root_ = this_node_ == 0;
 
     if (not is_root_) {
-      parent_ = (my_node_ - 1) / 2;
+      parent_ = (this_node_ - 1) / 2;
     }
 
     set_up_tree_ = true;

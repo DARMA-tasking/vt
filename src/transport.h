@@ -33,5 +33,6 @@
 #include "utils/tls/tls.h"
 #include "utils/atomic/atomic.h"
 #include "reduction/reduction_manager.h"
+#include "group/group_headers.h"
 
 #endif /*INCLUDED_TRANSPORT_H*/

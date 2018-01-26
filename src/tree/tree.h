@@ -4,23 +4,32 @@
 
 #include "config.h"
 
+#include <vector>
+#include <functional>
+
 namespace vt {
 
-static struct TreeConstructTag { } tree_cons_tag_t { };
+static struct DefaultTreeConstructTag { } tree_cons_tag_t { };
 
 struct Tree {
-  explicit Tree(TreeConstructTag);
+  using NodeListType = std::vector<NodeType>;
+  using OperationType = std::function<void(NodeType)>;
+
+  explicit Tree(DefaultTreeConstructTag);
+  explicit Tree(NodeListType const& in_children);
 
   void setupTree();
   NodeType getParent() const;
   NodeType getNumChildren() const;
   bool isRoot() const;
+  NodeListType const& getChildren() const;
+  void foreachChild(OperationType op) const;
 
 private:
   bool set_up_tree_ = false;
-  NodeType c1_ = -1, c2_ = -1, parent_ = -1;
-  NodeType num_children_ = 0, my_node_ = 0, num_nodes_ = 0;
-  bool has_c1_ = false, has_c2_ = false, is_root_ = false;
+  NodeType parent_ = uninitialized_destination;
+  bool is_root_ = false;
+  NodeListType children_;
 };
 
 } //end namespace vt

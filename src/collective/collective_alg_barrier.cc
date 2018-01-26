@@ -56,7 +56,6 @@ void CollectiveAlg::removeBarrier(
 }
 
 CollectiveAlgType CollectiveAlg::newNamedBarrier() {
-  setupTree();
   CollectiveAlgType const next_barrier = cur_named_barrier_++;
   NodeType const cur_node = theContext()->getNode();
   CollectiveAlgType const cur_node_shift = static_cast<CollectiveAlgType>(cur_node) << 32;
@@ -65,8 +64,6 @@ CollectiveAlgType CollectiveAlg::newNamedBarrier() {
 }
 
 void CollectiveAlg::waitBarrier(CollectiveAlgType const& barrier, bool const skip_term) {
-  setupTree();
-
   bool const is_wait = true;
   bool const is_named = barrier != no_barrier;
 
@@ -86,8 +83,6 @@ void CollectiveAlg::waitBarrier(CollectiveAlgType const& barrier, bool const ski
 void CollectiveAlg::contBarrier(
     ActionType fn, CollectiveAlgType const& barrier, bool const skip_term
 ) {
-  setupTree();
-
   bool const is_wait = false;
   bool const is_named = barrier != no_barrier;
 
@@ -117,9 +112,6 @@ void CollectiveAlg::barrierUp(
   auto const& num_children_ = getNumChildren();
   bool const& is_root_ = isRoot();
   auto const& parent_ = getParent();
-
-  // ToDo: Why setup again? Setup should be once per processor
-  setupTree();
 
   // ToDo: Why we call this function again? (if you come from contBarrier,
   // ToDo: this is already called)

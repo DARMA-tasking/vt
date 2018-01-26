@@ -7,6 +7,7 @@
 namespace vt {
 
 using PutPtrType = void*;
+using PutPtrConstType = void const*;
 using PutEnvSizeType = size_t;
 using PutUnderEnvelopeT = Envelope;
 
@@ -59,11 +60,11 @@ inline PutEnvSizeType envelopeGetPutSize(Env const& env) {
 
 template <typename Env>
 inline void envelopeSetPutPtr(
-  Env& env, PutPtrType ptr, PutEnvSizeType size
+  Env& env, PutPtrConstType ptr, PutEnvSizeType size
 ) {
   using PutType = PutEnvelope<PutUnderEnvelopeT, PutEnvSizeType>;
   if (envelopeIsPut(env)) {
-    reinterpret_cast<PutType*>(&env)->data_ptr_ = ptr;
+    reinterpret_cast<PutType*>(&env)->data_ptr_ = const_cast<PutPtrType>(ptr);
     reinterpret_cast<PutType*>(&env)->data_size_ = size;
   } else {
     assert(0 and "Envelope must be able to hold a put ptr");

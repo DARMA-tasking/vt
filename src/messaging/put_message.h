@@ -11,7 +11,7 @@ namespace vt {
 
 template <typename MessageT>
 struct PutMessageComponent : MessageT {
-  void setPut(void* const ptr, size_t const size) {
+  void setPut(void const* const ptr, size_t const size) {
     envelopeSetPutPtr(MessageT::env, ptr, size);
   }
   void* getPut() {
