@@ -13,12 +13,14 @@ namespace vt { namespace group {
 
 static constexpr NodeType const min_spanning_tree_size = 3;
 static constexpr NodeType const min_region_size = 1;
+static constexpr size_t const max_region_list_size = 4;
 
 struct Info {
   using RegionType = region::Region;
   using RegionPtrType = std::unique_ptr<RegionType>;
   using TreeType = Tree;
   using TreePtrType = std::unique_ptr<TreeType>;
+  using ListType = std::vector<RegionType::BoundType>;
 
   Info(
     bool const& in_is_collective, RegionPtrType in_region, ActionType in_action,
@@ -28,7 +30,8 @@ struct Info {
 
   friend struct GroupManager;
 
-  static void localGroupHandler(GroupListMsg* msg);
+  template <typename MsgT>
+  static void groupSetupHandler(MsgT* msg);
   static void groupTriggerHandler(GroupOnlyMsg* msg);
 
 private:
@@ -47,8 +50,11 @@ private:
   RegionType::SizeType total_size_ = 0;
   RegionType::SizeType wait_count_ = 0;
   bool is_remote_ = false;
+  ListType region_list_;
 };
 
 }} /* end namespace vt::group */
+
+#include "group/group_info.impl.h"
 
 #endif /*INCLUDED_GROUP_GROUP_INFO_H*/

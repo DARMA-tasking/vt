@@ -5,7 +5,7 @@
 #include "config.h"
 #include "group/group_common.h"
 #include "group/region/group_region.h"
-#include "group/group_info.h"
+#include "group/group_info.fwd.h"
 #include "group/group_manager.fwd.h"
 #include "registry/auto_registry_interface.h"
 #include "messaging/message.h"
@@ -28,15 +28,16 @@ struct GroupManager {
   using ActionContainerType = std::unordered_map<
     RemoteOperationIDType, ActionListType
   >;
+  using ActionGroupType = std::function<void(GroupType)>;
 
   GroupManager() = default;
 
   GroupType newGroup(
     RegionPtrType in_region, bool const& is_collective,
-    bool const& is_static, ActionType action
+    bool const& is_static, ActionGroupType action
   );
 
-  GroupType newGroup(RegionPtrType in_region, ActionType action);
+  GroupType newGroup(RegionPtrType in_region, ActionGroupType action);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   void sendMsg(GroupType const& group, MsgT* msg);
@@ -45,10 +46,10 @@ struct GroupManager {
 
 private:
   GroupType newCollectiveGroup(
-    RegionPtrType in_region, bool const& is_static, ActionType action
+    RegionPtrType in_region, bool const& is_static, ActionGroupType action
   );
   GroupType newLocalGroup(
-    RegionPtrType in_region, bool const& is_static, ActionType action
+    RegionPtrType in_region, bool const& is_static, ActionGroupType action
   );
   void initializeLocalGroup(
     GroupType const& group, RegionPtrType in_region, bool const& is_static,

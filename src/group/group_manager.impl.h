@@ -12,6 +12,7 @@
 #include "messaging/message.h"
 #include "messaging/active.h"
 #include "activefn/activefn.h"
+#include "group/group_info.h"
 
 #include <cassert>
 
@@ -19,6 +20,11 @@ namespace vt { namespace group {
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
 void GroupManager::sendMsg(GroupType const& group, MsgT* msg) {
+  debug_print(
+    group, node,
+    "GroupManager::sendMsg: group=%llu\n", group
+  );
+
   auto const& this_node = theContext()->getNode();
   auto const& group_node = GroupIDBuilder::getNode(group);
   auto const& group_static = GroupIDBuilder::isStatic(group);
@@ -80,14 +86,17 @@ void GroupManager::sendGroup(MsgT* msg, bool is_root) {
       );
 
       info.default_spanning_tree_->foreachChild([msg](NodeType child) {
-        debug_print(
-          group, node,
-          "GroupManager::tree foreach: sending to child=%d\n", child
-        );
-        messageRef(msg);
-        theMsg()->sendMsg<MsgT, groupSendHandler>(child, msg, [msg]{
-          messageDeref(msg);
-        });
+        auto const& this_node = theContext()->getNode();
+        if (child != this_node) {
+          debug_print(
+            group, node,
+            "GroupManager::tree foreach: sending to child=%d\n", child
+          );
+          messageRef(msg);
+          theMsg()->sendMsg<MsgT, groupSendHandler>(child, msg, [msg]{
+            messageDeref(msg);
+          });
+        }
       });
     }
 
