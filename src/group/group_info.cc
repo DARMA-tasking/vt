@@ -4,6 +4,9 @@
 #include "group/group_info.h"
 #include "group/id/group_id.h"
 #include "group/region/group_region.h"
+#include "group/region/group_range.h"
+#include "group/region/group_list.h"
+#include "group/region/group_shallow_list.h"
 #include "group/group_msg.h"
 #include "group/group_manager.h"
 #include "configs/types/types_type.h"
@@ -33,9 +36,9 @@ void Info::setup() {
     size, print_bool(is_remote_)
   );
   if (is_remote_) {
-    auto const& region_list = region_->makeList();
+    region_list_ = region_->makeList();
     this_node_included_ = true;
-    default_spanning_tree_ = std::make_unique<TreeType>(region_list);
+    default_spanning_tree_ = std::make_unique<TreeType>(region_list_);
     is_setup_ = true;
   } else {
     assert(
@@ -45,181 +48,69 @@ void Info::setup() {
     if (is_collective_) {
       assert(0 && "Not implemented");
     } else {
-      region_->sort();
-
       auto const& this_node = theContext()->getNode();
-      auto const& region_list = region_->makeList();
-      auto const& contains_this_node = region_->contains(this_node);
-      if (size < min_spanning_tree_size && contains_this_node) {
-        this_node_included_ = true;
-        default_spanning_tree_ = std::make_unique<TreeType>(region_list);
-        is_setup_ = true;
+
+      region_->sort();
+      if (region_->isList() || size < max_region_list_size) {
+        auto const& contains_this_node = region_->contains(this_node);
+        region_list_ = region_->makeList();
+        if (size < min_spanning_tree_size && contains_this_node) {
+          this_node_included_ = true;
+          default_spanning_tree_ = std::make_unique<TreeType>(region_list_);
+          is_setup_ = true;
+          is_forward_ = true;
+          forward_node_ = this_node;
+
+          auto new_region = region_->expand();
+          theGroup()->initializeRemoteGroup(
+            group_, std::move(new_region), true, total_size_
+          );
+
+          if (finished_setup_action_) {
+            finished_setup_action_();
+          }
+        } else {
+          debug_print(
+            group, node,
+            "Info::setup: sending as list\n"
+          );
+          auto const& low_node = region_list_[0];
+          RemoteOperationIDType op = no_op_id;
+          if (finished_setup_action_ != nullptr) {
+            op = theGroup()->registerContinuation(finished_setup_action_);
+          }
+          auto const& size = region_list_.size();
+          region::ShallowList lst(region_list_);
+          auto msg = makeSharedMessage<GroupListMsg>(
+            low_node, size, group_, op, size, this_node, &lst
+          );
+          is_forward_ = true;
+          forward_node_ = low_node;
+          theMsg()->sendMsg<GroupListMsg, Info::groupSetupHandler>(
+            low_node, msg
+          );
+        }
       } else {
-        auto const& low_node = region_list[0];
+        debug_print(
+          group, node,
+          "Info::setup: sending as range\n"
+        );
+        auto const& low_node = region_->head();
         RemoteOperationIDType op = no_op_id;
         if (finished_setup_action_ != nullptr) {
           op = theGroup()->registerContinuation(finished_setup_action_);
         }
-        auto msg = makeSharedMessage<GroupListMsg>(
-          low_node, region_list.size(), group_, op, region_list.size(),
-          this_node
-        );
-        msg->setPut(
-          reinterpret_cast<void const*>(&region_list[0]),
-          region_list.size()*sizeof(RegionType::BoundType)
+        auto const& size = region_->getSize();
+        auto msg = makeSharedMessage<GroupRangeMsg>(
+          low_node, size, group_, op, size, this_node,
+          static_cast<region::Range*>(region_.get())
         );
         is_forward_ = true;
         forward_node_ = low_node;
-        theMsg()->sendMsg<GroupListMsg, Info::localGroupHandler>(
+        theMsg()->sendMsg<GroupRangeMsg, Info::groupSetupHandler>(
           low_node, msg
         );
       }
-    }
-  }
-}
-
-/*static*/ void Info::localGroupHandler(GroupListMsg* msg) {
-  auto const& this_node = theContext()->getNode();
-  auto const& group_size = msg->getCount();
-  auto const& group_total_size = msg->getTotalCount();
-  auto const& group_root = msg->getRoot();
-  auto const& is_static = msg->isStatic();
-  auto group = msg->getGroup();
-  auto op_id = msg->getOpID();
-  auto parent = msg->getParent();
-  //auto const& group_create_node = GroupIDBuilder::getNode(group);
-  auto const& ptr = static_cast<RegionType::BoundType*>(
-    msg->getPut()
-  );
-
-  assert(
-    this_node == group_root &&
-    "This msg should only be sent to the root of the new local group"
-  );
-
-  debug_print(
-    group, node,
-    "Info::localGroupHandler: group size=%hd, group_total_size=%hd\n",
-    group_size, group_total_size
-  );
-
-  for (int i = 0; i < group_size; i++) {
-    debug_print(
-      group, node,
-      "Info::localGroupHandler: ptr[%d]=%d\n", i, ptr[i]
-    );
-  }
-
-  if (group_size < min_spanning_tree_size) {
-    auto new_ptr = ptr + 1;
-    auto new_size = group_size - 1;
-    auto region = std::make_unique<region::List>(new_ptr, new_size, true);
-
-    theGroup()->initializeRemoteGroup(
-      group, std::move(region), is_static, group_total_size
-    );
-
-    debug_print(
-      group, node,
-      "Info::localGroupHandler: op=%lu, parent=%d\n",
-      op_id, parent
-    );
-
-    if (op_id != no_op_id) {
-      // Send back message
-      auto msg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
-      theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(parent, msg);
-    }
-  } else {
-    // [0, 1,2,3,4,5,6,7,8]
-    auto new_ptr = ptr + 1;
-    auto new_size = group_size - 1;
-    if (new_size < min_spanning_tree_size) {
-      // Create parent region
-      auto region = std::make_unique<region::List>(new_ptr, new_size, true);
-
-      theGroup()->initializeRemoteGroup(
-        group, std::move(region), is_static, group_total_size
-      );
-      // end parent region
-
-      if (op_id != no_op_id) {
-        auto msg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
-        theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(parent, msg);
-      }
-
-    } else {
-      auto const& c1_size = new_size / 2;
-      auto const& c2_size = new_size - c1_size;
-      auto const& c1_ptr = new_ptr;
-      auto const& c2_ptr = new_ptr + c1_size;
-      auto const& c1 = *c1_ptr;
-      auto const& c2 = *c2_ptr;
-      auto region1 = std::make_unique<region::List>(c1_ptr, c1_size, true);
-      auto region2 = std::make_unique<region::List>(c2_ptr, c2_size, true);
-
-      debug_print(
-        group, node,
-        "Info::localGroupHandler: c1=%d, c2=%d, c1_size=%d, c2_size=%d\n",
-        c1, c2, c1_size, c2_size
-      );
-
-      // Create parent region
-      RegionType::BoundType list[2] = {c1,c2};
-      auto region = std::make_unique<region::List>(list, 2, true);
-
-      theGroup()->initializeRemoteGroup(
-        group, std::move(region), is_static, group_size
-      );
-      // end parent region
-
-      auto iter = theGroup()->remote_group_info_.find(group);
-      assert(iter != theGroup()->remote_group_info_.end());
-      auto info = iter->second.get();
-
-      info->wait_count_ += 2;
-
-      auto parent_cont = [msg,info,parent,group,op_id]{
-        debug_print(
-          group, node,
-          "Info::parent continuation: wait_count_=%lu, parent=%d\n",
-          info->wait_count_, parent
-        );
-
-        info->wait_count_--;
-        if (info->wait_count_ == 0 && parent != uninitialized_destination) {
-          debug_print(
-            group, node,
-            "Info::parent continuation: sending to parent=%d, op_id=%lu\n",
-            parent, op_id
-          );
-
-          auto msg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
-          theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
-            parent, msg
-          );
-        }
-        messageDeref(msg);
-      };
-
-      auto op1 = theGroup()->registerContinuation(parent_cont);
-      auto op2 = theGroup()->registerContinuation(parent_cont);
-
-      auto c1_msg = makeSharedMessage<GroupListMsg>(
-        c1, c1_size, group, op1, group_total_size, this_node
-      );
-      auto c2_msg = makeSharedMessage<GroupListMsg>(
-        c2, c2_size, group, op2, group_total_size, this_node
-      );
-
-      c1_msg->setPut(c1_ptr, c1_size * sizeof(RegionType::BoundType));
-      c2_msg->setPut(c2_ptr, c2_size * sizeof(RegionType::BoundType));
-
-      messageRef(msg);
-      messageRef(msg);
-
-      theMsg()->sendMsg<GroupListMsg, localGroupHandler>(c1, c1_msg);
-      theMsg()->sendMsg<GroupListMsg, localGroupHandler>(c2, c2_msg);
     }
   }
 }
