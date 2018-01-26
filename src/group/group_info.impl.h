@@ -58,7 +58,7 @@ template <typename MsgT>
     );
 
     auto region = range.tail();
-    auto owning_region = region->expand();
+    auto owning_region = region->copy();
 
     theGroup()->initializeRemoteGroup(
       group, std::move(owning_region), is_static, group_total_size

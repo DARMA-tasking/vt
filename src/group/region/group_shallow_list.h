@@ -27,7 +27,7 @@ struct ShallowList : Region {
   virtual RegionUPtrType tail() const override;
   virtual SplitRegionType split() const override;
   virtual BoundType const* getBound() const;
-  virtual RegionUPtrType expand() const override;
+  virtual RegionUPtrType copy() const override;
 
 private:
   SizeType size_ = 0;

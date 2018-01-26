@@ -71,7 +71,7 @@ ShallowList::ShallowList(ListType const& in_list)
   return bound_;
 }
 
-/*virtual*/ ShallowList::RegionUPtrType ShallowList::expand() const {
+/*virtual*/ ShallowList::RegionUPtrType ShallowList::copy() const {
   return std::make_unique<List>(bound_, size_, true);
 }
 

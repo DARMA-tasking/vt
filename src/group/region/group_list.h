@@ -24,7 +24,7 @@ struct List : Region {
   virtual BoundType head() const override;
   virtual RegionUPtrType tail() const override;
   virtual SplitRegionType split() const override;
-  virtual RegionUPtrType expand() const override;
+  virtual RegionUPtrType copy() const override;
 
 private:
   bool is_sorted_ = false;

@@ -25,7 +25,7 @@ struct Region {
   virtual bool contains(NodeType const& node) = 0;
   virtual bool isList() const = 0;
   virtual ListType const& makeList() = 0;
-  virtual RegionUPtrType expand() const = 0;
+  virtual RegionUPtrType copy() const = 0;
   virtual BoundType head() const = 0;
   virtual RegionUPtrType tail() const = 0;
   virtual SplitRegionType split() const = 0;

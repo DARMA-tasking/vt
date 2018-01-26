@@ -61,7 +61,7 @@ void Info::setup() {
           is_forward_ = true;
           forward_node_ = this_node;
 
-          auto new_region = region_->expand();
+          auto new_region = region_->copy();
           theGroup()->initializeRemoteGroup(
             group_, std::move(new_region), true, total_size_
           );
