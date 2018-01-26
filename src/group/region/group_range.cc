@@ -85,4 +85,20 @@ Range::Range(Range const& in_other, BoundType in_remove_extent)
   return std::make_unique<Range>(*this);
 }
 
+/*virtual*/ void Range::splitN(int nsplits, ApplyFnType apply) const {
+  auto const& size = static_cast<int>(getSize());
+  auto const& num_splits = std::min(nsplits, size);
+  BoundType cur_lo = lo_;
+  for (auto split = 0; split < num_splits; split++) {
+    auto const& child_size = size / num_splits;
+    auto const& max_left = ((cur_lo - hi_) / stride_);
+    auto r1 = std::make_unique<Range>(
+      cur_lo, std::min(static_cast<int>(hi_), cur_lo + child_size*stride_),
+      stride_
+    );
+    apply(std::move(r1));
+    cur_lo += child_size*stride_;
+  }
+}
+
 }}} /* end namespace vt::group::region */

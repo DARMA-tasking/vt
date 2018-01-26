@@ -108,4 +108,21 @@ List::List(
   return std::move(list);
 }
 
+/*virtual*/ void List::splitN(int nsplits, ApplyFnType apply) const {
+  auto const& size = static_cast<int>(getSize());
+  auto const& num_splits = std::min(nsplits, size);
+  int cur_idx = 0;
+  for (auto split = 0; split < num_splits; split++) {
+    auto const& child_size = size / num_splits;
+    auto const& cur_max = std::min(size, cur_idx + child_size);
+    ListType list;
+    for (int i = cur_idx; i < cur_max; i++) {
+      list.push_back(list_[i]);
+    }
+    auto r1 = std::make_unique<List>(std::move(list));
+    apply(std::move(r1));
+    cur_idx = cur_max;
+  }
+}
+
 }}} /* end namespace vt::group::region */

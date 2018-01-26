@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <memory>
 #include <tuple>
+#include <functional>
 
 namespace vt { namespace group { namespace region {
 
@@ -19,6 +20,7 @@ struct Region {
   using RegionUPtrType = std::unique_ptr<Region>;
   using SplitRegionType = std::tuple<RegionUPtrType, RegionUPtrType>;
   using ListType = std::vector<BoundType>;
+  using ApplyFnType = std::function<void(RegionUPtrType)>;
 
   virtual SizeType getSize() const = 0;
   virtual void sort() = 0;
@@ -29,6 +31,7 @@ struct Region {
   virtual BoundType head() const = 0;
   virtual RegionUPtrType tail() const = 0;
   virtual SplitRegionType split() const = 0;
+  virtual void splitN(int nsplits, ApplyFnType apply) const = 0;
 };
 
 struct List;
