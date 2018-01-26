@@ -75,4 +75,18 @@ ShallowList::ShallowList(ListType const& in_list)
   return std::make_unique<List>(bound_, size_, true);
 }
 
+/*virtual*/ void ShallowList::splitN(int nsplits, ApplyFnType apply) const {
+  auto const& size = static_cast<int>(getSize());
+  auto const& num_splits = std::min(nsplits, size);
+  BoundType const* cur_bound = bound_;
+  for (auto split = 0; split < num_splits; split++) {
+    auto const& child_size = size / num_splits;
+    auto const& max_left = (bound_ + size)-cur_bound;
+    auto const& min_val = std::min(child_size, static_cast<int>(max_left));
+    auto r1 = std::make_unique<ShallowList>(cur_bound, min_val);
+    apply(std::move(r1));
+    cur_bound += min_val;
+  }
+}
+
 }}} /* end namespace vt::group::region */

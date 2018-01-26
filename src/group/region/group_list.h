@@ -25,6 +25,7 @@ struct List : Region {
   virtual RegionUPtrType tail() const override;
   virtual SplitRegionType split() const override;
   virtual RegionUPtrType copy() const override;
+  virtual void splitN(int nsplits, ApplyFnType apply) const override;
 
 private:
   bool is_sorted_ = false;
