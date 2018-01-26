@@ -58,7 +58,6 @@ void Barrier::removeBarrier(
 }
 
 BarrierType Barrier::newNamedBarrier() {
-  setupTree();
   BarrierType const next_barrier = cur_named_barrier_++;
   NodeType const cur_node = theContext()->getNode();
   BarrierType const cur_node_shift = static_cast<BarrierType>(cur_node) << 32;
@@ -67,8 +66,6 @@ BarrierType Barrier::newNamedBarrier() {
 }
 
 void Barrier::waitBarrier(BarrierType const& barrier, bool const skip_term) {
-  setupTree();
-
   bool const is_wait = true;
   bool const is_named = barrier != no_barrier;
 
@@ -88,8 +85,6 @@ void Barrier::waitBarrier(BarrierType const& barrier, bool const skip_term) {
 void Barrier::contBarrier(
   ActionType fn, BarrierType const& barrier, bool const skip_term
 ) {
-  setupTree();
-
   bool const is_wait = false;
   bool const is_named = barrier != no_barrier;
 
@@ -119,9 +114,6 @@ void Barrier::barrierUp(
   auto const& num_children_ = getNumChildren();
   bool const& is_root_ = isRoot();
   auto const& parent_ = getParent();
-
-  // ToDo: Why setup again? Setup should be once per processor
-  setupTree();
 
   // ToDo: Why we call this function again? (if you come from contBarrier,
   // ToDo: this is already called)
