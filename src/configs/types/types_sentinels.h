@@ -35,6 +35,7 @@ static constexpr SeedType const no_seed = -1;
 static constexpr VirtualElmCountType const no_elms = -1;
 static constexpr TagType const local_rdma_op_tag = 0xFEEDFEED;
 static constexpr GroupType const no_group = 0xFEEDFEED;
+static constexpr GroupType const default_group = 0xFFFFFFFF;
 
 }  // end namespace vt
 
