@@ -13,6 +13,7 @@ namespace vt { namespace group {
 
 static constexpr NodeType const min_spanning_tree_size = 3;
 static constexpr NodeType const min_region_size = 1;
+static constexpr NodeType const default_num_children = 2;
 static constexpr size_t const max_region_list_size = 4;
 
 struct Info {

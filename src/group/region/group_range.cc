@@ -92,10 +92,9 @@ Range::Range(Range const& in_other, BoundType in_remove_extent)
   for (auto split = 0; split < num_splits; split++) {
     auto const& child_size = size / num_splits;
     auto const& max_left = ((cur_lo - hi_) / stride_);
-    auto r1 = std::make_unique<Range>(
-      cur_lo, std::min(static_cast<int>(hi_), cur_lo + child_size*stride_),
-      stride_
-    );
+    auto hi_bound = split == num_splits - 1 ?
+      hi_ : std::min(static_cast<int>(hi_), cur_lo + child_size*stride_);
+    auto r1 = std::make_unique<Range>(cur_lo, hi_bound, stride_);
     apply(std::move(r1));
     cur_lo += child_size*stride_;
   }

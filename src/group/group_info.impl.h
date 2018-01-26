@@ -83,34 +83,14 @@ template <typename MsgT>
     );
 
     auto const& range_tail = range.tail();
-    auto const& split = range_tail->split();
-    auto const& c1 = std::get<0>(split)->head();
-    auto const& c2 = std::get<1>(split)->head();
-    auto const& c1_size = std::get<0>(split)->getSize();
-    auto const& c2_size = std::get<1>(split)->getSize();
 
-    debug_print(
-      group, node,
-      "Info::groupSetupHandler: c1=%d, c2=%d, c1_size=%lu, c2_size=%lu\n",
-      c1, c2, c1_size, c2_size
-    );
+    std::vector<RegionType::BoundType> local_nodes;
 
-    // Create parent region
-    RegionType::BoundType list[2] = {c1,c2};
-    auto region = std::make_unique<region::List>(list, 2, true);
+    auto parent_cont = [msg,parent,group,op_id]{
+      auto iter = theGroup()->remote_group_info_.find(group);
+      assert(iter != theGroup()->remote_group_info_.end());
+      auto info = iter->second.get();
 
-    theGroup()->initializeRemoteGroup(
-      group, std::move(region), is_static, group_size
-    );
-    // end parent region
-
-    auto iter = theGroup()->remote_group_info_.find(group);
-    assert(iter != theGroup()->remote_group_info_.end());
-    auto info = iter->second.get();
-
-    info->wait_count_ += 2;
-
-    auto parent_cont = [msg,info,parent,group,op_id]{
       debug_print(
         group, node,
         "Info::parent continuation: wait_count_=%lu, parent=%d\n",
@@ -133,23 +113,44 @@ template <typename MsgT>
       messageDeref(msg);
     };
 
-    auto op1 = theGroup()->registerContinuation(parent_cont);
-    auto op2 = theGroup()->registerContinuation(parent_cont);
+    range_tail->splitN(default_num_children, [&](RegionPtrType region){
+      auto const& c = region->head();
+      auto const& c_size = region->getSize();
 
-    auto l1 = static_cast<RangeType*>(std::get<0>(split).get());
-    auto l2 = static_cast<RangeType*>(std::get<1>(split).get());
-    auto c1_msg = makeSharedMessage<MsgT>(
-      c1, c1_size, group, op1, group_total_size, this_node, l1
+      local_nodes.push_back(c);
+
+      debug_print(
+        group, node,
+        "Info::groupSetupHandler: child c=%d, c_size=%lu\n", c, c_size
+      );
+
+      auto op1 = theGroup()->registerContinuation(parent_cont);
+      auto l1 = static_cast<RangeType*>(region.get());
+      auto c_msg = makeSharedMessage<MsgT>(
+        c, c_size, group, op1, group_total_size, this_node, l1
+      );
+
+      messageRef(msg);
+
+      theMsg()->sendMsg<MsgT, groupSetupHandler>(c, c_msg);
+    });
+
+    auto const& num_children = local_nodes.size();
+
+    // Create parent region
+    auto region = std::make_unique<region::List>(
+      &local_nodes[0], num_children, true
     );
-    auto c2_msg = makeSharedMessage<MsgT>(
-      c2, c2_size, group, op2, group_total_size, this_node, l2
+
+    theGroup()->initializeRemoteGroup(
+      group, std::move(region), is_static, group_size
     );
+    // end parent region
 
-    messageRef(msg);
-    messageRef(msg);
-
-    theMsg()->sendMsg<MsgT, groupSetupHandler>(c1, c1_msg);
-    theMsg()->sendMsg<MsgT, groupSetupHandler>(c2, c2_msg);
+    auto iter = theGroup()->remote_group_info_.find(group);
+    assert(iter != theGroup()->remote_group_info_.end());
+    auto info = iter->second.get();
+    info->wait_count_ += num_children;
   }
 }
 

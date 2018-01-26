@@ -114,7 +114,8 @@ List::List(
   int cur_idx = 0;
   for (auto split = 0; split < num_splits; split++) {
     auto const& child_size = size / num_splits;
-    auto const& cur_max = std::min(size, cur_idx + child_size);
+    auto const& cur_max = split == num_splits - 1 ?
+      size : std::min(size, cur_idx + child_size);
     ListType list;
     for (int i = cur_idx; i < cur_max; i++) {
       list.push_back(list_[i]);
