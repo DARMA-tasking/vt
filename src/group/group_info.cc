@@ -111,7 +111,9 @@ void Info::setup() {
   }
 
   if (group_size < min_spanning_tree_size) {
-    auto region = std::make_unique<region::List>(ptr, group_total_size, true);
+    auto new_ptr = ptr + 1;
+    auto new_size = group_size - 1;
+    auto region = std::make_unique<region::List>(new_ptr, new_size, true);
 
     theGroup()->initializeRemoteGroup(
       group, std::move(region), is_static, group_total_size

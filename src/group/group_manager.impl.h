@@ -80,6 +80,10 @@ void GroupManager::sendGroup(MsgT* msg, bool is_root) {
       );
 
       info.default_spanning_tree_->foreachChild([msg](NodeType child) {
+        debug_print(
+          group, node,
+          "GroupManager::tree foreach: sending to child=%d\n", child
+        );
         messageRef(msg);
         theMsg()->sendMsg<MsgT, groupSendHandler>(child, msg, [msg]{
           messageDeref(msg);
