@@ -7,6 +7,7 @@
 #include "group/region/group_region.h"
 #include "group/group_info.fwd.h"
 #include "group/group_manager.fwd.h"
+#include "group/group_manager_active_attorney.fwd.h"
 #include "registry/auto_registry_interface.h"
 #include "messaging/message.h"
 #include "messaging/active.h"
@@ -43,6 +44,7 @@ struct GroupManager {
   void sendMsg(GroupType const& group, MsgT* msg);
 
   friend struct Info;
+  friend struct GroupActiveAttorney;
 
 private:
   GroupType newCollectiveGroup(
@@ -71,6 +73,8 @@ private:
 
   template <typename MsgT>
   static void groupSendHandler(MsgT* msg);
+
+  static void groupHandler(BaseMessage* msg, MsgSizeType const& msg_size);
 
 private:
   GroupIDType next_group_id_ = initial_group_id;

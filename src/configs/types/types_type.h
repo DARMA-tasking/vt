@@ -35,6 +35,7 @@ using VirtualElmOnlyProxyType = uint64_t;
 using VirtualElmCountType = int64_t;
 using UniqueIndexBitType = uint64_t;
 using GroupType = uint64_t;
+using MsgSizeType = int32_t;
 
 // Action types for attaching a closure to a runtime function
 using ActionType = std::function<void()>;

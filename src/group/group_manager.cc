@@ -105,4 +105,17 @@ void GroupManager::initializeLocalGroup(
   group_ptr->setup();
 }
 
+/*static*/ void GroupManager::groupHandler(
+  BaseMessage* base_msg, MsgSizeType const& msg_size
+) {
+  auto const& msg = reinterpret_cast<ShortMessage* const>(base_msg);
+  auto const& group = envelopeGetGroup(msg->env);
+  auto const& is_bcast = envelopeIsBcast(msg->env);
+  if (is_bcast) {
+    if (group == default_group) {
+    } else {
+    }
+  }
+}
+
 }} /* end namespace vt::group */
