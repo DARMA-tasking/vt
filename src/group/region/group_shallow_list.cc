@@ -82,7 +82,8 @@ ShallowList::ShallowList(ListType const& in_list)
   for (auto split = 0; split < num_splits; split++) {
     auto const& child_size = size / num_splits;
     auto const& max_left = (bound_ + size)-cur_bound;
-    auto const& min_val = std::min(child_size, static_cast<int>(max_left));
+    auto const& min_val = split == num_splits - 1 ?
+      max_left : std::min(child_size, static_cast<int>(max_left));
     auto r1 = std::make_unique<ShallowList>(cur_bound, min_val);
     apply(std::move(r1));
     cur_bound += min_val;
