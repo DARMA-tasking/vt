@@ -27,7 +27,8 @@ GroupType GroupManager::newGroup(RegionPtrType in_region, ActionGroupType action
 GroupType GroupManager::newCollectiveGroup(
   RegionPtrType in_region, bool const& is_static, ActionGroupType action
 ) {
-
+  assert(0 && "Not implemented");
+  return default_group;
 }
 
 GroupType GroupManager::newLocalGroup(

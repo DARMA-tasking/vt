@@ -39,6 +39,7 @@ struct Envelope {
   NodeType dest : node_num_bits;
   HandlerType han : handler_num_bits;
   RefType ref : ref_num_bits;
+  GroupType group : group_num_bits;
 
   #if backend_check_enabled(trace_enabled)
   trace::TraceEventIDType trace_event : trace::trace_event_num_bits;
@@ -169,6 +170,16 @@ inline void envelopeSetRef(Env& env, RefType const& ref = 0) {
 }
 
 template <typename Env>
+inline void envelopeSetGroup(Env& env, GroupType const& group = default_group) {
+  reinterpret_cast<Envelope*>(&env)->group = group;
+}
+
+template <typename Env>
+inline GroupType envelopeGetGroup(Env& env) {
+  return reinterpret_cast<Envelope*>(&env)->group;
+}
+
+template <typename Env>
 inline RefType envelopeGetRef(Env& env) {
   return reinterpret_cast<Envelope*>(&env)->ref;
 }
@@ -197,6 +208,7 @@ inline void envelopeInit(Env& env) {
   envelopeSetDest(env, uninitialized_destination);
   envelopeSetHandler(env, uninitialized_handler);
   envelopeSetRef(env, not_shared_message);
+  envelopeSetGroup(env);
 }
 
 inline void envelopeInitEmpty(Envelope& env) {
