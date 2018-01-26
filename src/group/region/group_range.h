@@ -27,7 +27,7 @@ struct Range : Region {
   virtual BoundType head() const override;
   virtual RegionUPtrType tail() const override;
   virtual SplitRegionType split() const override;
-  virtual RegionUPtrType expand() const override;
+  virtual RegionUPtrType copy() const override;
 
 private:
   BoundType const lo_ = uninitialized_destination;

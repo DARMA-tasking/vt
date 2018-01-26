@@ -103,7 +103,7 @@ List::List(
   return std::make_tuple(std::move(r1),std::move(r2));
 }
 
-/*virtual*/ List::RegionUPtrType List::expand() const {
+/*virtual*/ List::RegionUPtrType List::copy() const {
   auto list = std::make_unique<List>(*this);
   return std::move(list);
 }

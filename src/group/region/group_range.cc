@@ -81,7 +81,7 @@ Range::Range(Range const& in_other, BoundType in_remove_extent)
   return std::make_tuple(std::move(r1),std::move(r2));
 }
 
-/*virtual*/ Range::RegionUPtrType Range::expand() const {
+/*virtual*/ Range::RegionUPtrType Range::copy() const {
   return std::make_unique<Range>(*this);
 }
 
