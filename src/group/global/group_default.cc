@@ -111,14 +111,17 @@ namespace vt { namespace group { namespace global {
   auto const& dest = envelopeGetDest(msg->env);
   auto const& num_children = default_group_->spanning_tree_->getNumChildren();
   auto const& node = theContext()->getNode();
+  NodeType const& root_node = 0;
+  bool const& send_to_root = is_root && node != root_node;
   EventType event = no_event;
 
   debug_print(
     broadcast, node,
-    "DefaultGroup::broadcast size=%d, from=%d\n", size, from
+    "DefaultGroup::broadcast size=%d, from=%d, dest=%d, is_root=%s\n",
+    size, from, dest, print_bool(is_root)
   );
 
-  if (num_children > 0) {
+  if (num_children > 0 || send_to_root) {
     bool const& has_action = action != nullptr;
     EventRecordType* parent = nullptr;
     auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
@@ -129,31 +132,42 @@ namespace vt { namespace group { namespace global {
       parent = holder.get_event();
     }
 
-    default_group_->spanning_tree_->foreachChild([&](NodeType child) {
-      bool const& send = child != dest;
+    // Send to child nodes in the spanning tree
+    if (num_children > 0) {
+      default_group_->spanning_tree_->foreachChild([&](NodeType child) {
+        bool const& send = child != dest;
 
+        debug_print(
+          broadcast, node,
+          "DefaultGroup::broadcast *send* size=%d, from=%d, child=%d, send=%s\n",
+          size, from, child, print_bool(send)
+        );
+
+        if (send) {
+          messageRef(msg);
+          theMsg()->sendMsgBytesWithPut(
+            child, base, size, send_tag, parent, action, event
+          );
+        }
+      });
+    }
+
+    // If not the root of the spanning tree, send to the root to propagate to
+    // the rest of the tree
+    if (send_to_root) {
       debug_print(
         broadcast, node,
-        "DefaultGroup::broadcast *send* size=%d, from=%d, child=%d, send=%s\n",
-        size, from, child, print_bool(send)
+        "DefaultGroup::broadcast *send* is_root=%s, root_node=%d, dest=%d\n",
+        print_bool(is_root), root_node, dest
       );
 
-      if (send) {
-        messageRef(msg);
-        theMsg()->sendMsgBytesWithPut(
-          child, base, size, send_tag, parent, action, event
-        );
-      }
-    });
-
-    NodeType const& root_node = 0;
-    if (from == uninitialized_destination && dest != root_node) {
       messageRef(msg);
       theMsg()->sendMsgBytesWithPut(
         root_node, base, size, send_tag, parent, action, event
       );
     }
   }
+
   return event;
 }
 
