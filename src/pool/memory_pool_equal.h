@@ -11,7 +11,7 @@
 
 namespace vt { namespace pool {
 
-static constexpr size_t const small_msg_size_buf = sizeof(int64_t) * 4;
+static constexpr size_t const small_msg_size_buf = sizeof(int64_t) * 8;
 static constexpr size_t const memory_pool_env_size =
   sizeof(EpochTagEnvelope) + small_msg_size_buf;
 
