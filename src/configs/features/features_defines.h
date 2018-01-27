@@ -37,6 +37,7 @@
 #define debug_vrt(x) x
 #define debug_worker(x) x
 #define debug_group(x) x
+#define debug_broadcast(x) x
 
 // contextual modes for debug
 #define debug_node(x) x

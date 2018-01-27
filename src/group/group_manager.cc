@@ -6,6 +6,9 @@
 #include "group/id/group_id.h"
 #include "group/region/group_region.h"
 #include "group/group_info.h"
+#include "group/global/group_default.h"
+#include "group/global/group_default_msg.h"
+#include "scheduler/scheduler.h"
 
 namespace vt { namespace group {
 
@@ -105,17 +108,29 @@ void GroupManager::initializeLocalGroup(
   group_ptr->setup();
 }
 
-/*static*/ void GroupManager::groupHandler(
-  BaseMessage* base_msg, MsgSizeType const& msg_size
+/*static*/ EventType GroupManager::groupHandler(
+  BaseMessage* base, NodeType const& from, MsgSizeType const& size,
+  bool const is_root, ActionType action, bool* const deliver
 ) {
-  auto const& msg = reinterpret_cast<ShortMessage* const>(base_msg);
+  auto const& msg = reinterpret_cast<ShortMessage* const>(base);
   auto const& group = envelopeGetGroup(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
   if (is_bcast) {
+    // Deliver the message normally if it's not a the root of a broadcast
+    *deliver = !is_root;
     if (group == default_group) {
+      return global::DefaultGroup::broadcast(base, from, size, is_root, action);
     } else {
+      assert(0);
     }
+  } else {
+    *deliver = true;
   }
+  return no_event;
+}
+
+GroupManager::GroupManager() {
+  global::DefaultGroup::setupDefaultTree();
 }
 
 }} /* end namespace vt::group */

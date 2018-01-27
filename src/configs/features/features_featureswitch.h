@@ -32,6 +32,7 @@
     vrt,                   "virtual-context",                           \
     worker,                "worker",                                    \
     group,                 "group",                                     \
+    broadcast,             "bcast",                                     \
     location,              "location"                                   \
   )
 

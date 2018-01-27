@@ -31,7 +31,7 @@ EventType ActiveMessenger::sendMsg(
   ActionType next_action
 ) {
   envelopeSetup(msg->env, dest, han);
-  return sendDataDirect(han, msg, sizeof(MessageT), next_action);
+  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
 }
 
 template <typename MessageT>
@@ -48,7 +48,7 @@ EventType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendDataDirect(han, msg, sizeof(MessageT), next_action);
+  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -79,7 +79,7 @@ EventType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendDataDirect(han, msg, sizeof(MessageT), next_action);
+  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -117,7 +117,7 @@ EventType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendDataDirect(han, msg, sizeof(MessageT), next_action);
+  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
 }
 
 template <ActiveFnType* f, typename MessageT>
@@ -156,7 +156,7 @@ EventType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendDataDirect(han, msg, sizeof(MessageT), next_action);
+  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
 }
 
 template <typename FunctorT, typename MessageT>
@@ -179,7 +179,7 @@ EventType ActiveMessenger::sendMsg(
 
   // setup envelope
   envelopeSetup(msg->env, dest, han);
-  auto const& ret = sendDataDirect(han, msg, sizeof(MessageT), next_action);
+  auto const& ret = sendMsgSized(han, msg, sizeof(MessageT), next_action);
 
   return ret;
 }

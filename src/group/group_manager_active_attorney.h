@@ -5,11 +5,19 @@
 #include "config.h"
 #include "group/group_common.h"
 #include "messaging/message.h"
+#include "messaging/active.fwd.h"
 
 namespace vt { namespace group {
 
 struct GroupActiveAttorney {
-  static void groupHandler(BaseMessage* msg, MsgSizeType const& msg_size);
+
+  friend struct ::vt::ActiveMessenger;
+
+private:
+  static EventType groupHandler(
+    BaseMessage* msg, NodeType const& from, MsgSizeType const& msg_size,
+    bool const is_root, ActionType new_action, bool* const deliver
+  );
 };
 
 }} /* end namespace vt::group */

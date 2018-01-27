@@ -236,6 +236,7 @@ void Runtime::initializeComponents() {
   theSched = std::make_unique<sched::Scheduler>();
   theTerm = std::make_unique<term::TerminationDetector>();
   theCollective = std::make_unique<collective::CollectiveAlg>();
+  theGroup = std::make_unique<group::GroupManager>();
 
   // Advanced runtime components: not required for basic messaging
   theRDMA = std::make_unique<rdma::RDMAManager>();
@@ -246,7 +247,6 @@ void Runtime::initializeComponents() {
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theCollection = std::make_unique<vrt::collection::CollectionManager>();
   theReduction = std::make_unique<reduction::ReductionManager>();
-  theGroup = std::make_unique<group::GroupManager>();
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }
@@ -315,6 +315,7 @@ void Runtime::finalizeComponents() {
   theTerm = nullptr;
   theSched = nullptr;
   theMsg = nullptr;
+  theGroup = nullptr;
 
   // Helper components: thePool the last to be destructed because it handles
   // memory allocations
