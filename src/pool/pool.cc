@@ -1,5 +1,7 @@
 
+#include "config.h"
 #include "pool/pool.h"
+#include "pool/memory_pool_equal.h"
 
 namespace vt { namespace pool {
 
@@ -32,8 +34,6 @@ void* Pool::alloc(size_t const& num_bytes) {
 }
 
 void Pool::dealloc(void* const buf) {
-  auto const& small_bytes = small_msg.getNumBytes();
-
   void* const ptr_actual = static_cast<size_t*>(buf) - 1;
   auto const& actual_alloc_size = *static_cast<size_t*>(ptr_actual);
 
@@ -51,5 +51,18 @@ void Pool::dealloc(void* const buf) {
     free(ptr_actual);
   }
 };
+
+Pool::SizeType Pool::remainingSize(void* const buf) {
+  auto const& small_bytes = small_msg.getNumBytes();
+  void* const ptr_actual = static_cast<size_t*>(buf) - 1;
+  auto const& actual_alloc_size = *static_cast<size_t*>(ptr_actual);
+
+  bool const is_large = sizeIsLarge(actual_alloc_size);
+  if (is_large) {
+    return 0;
+  } else {
+    return small_bytes - actual_alloc_size;
+  }
+}
 
 }} //end namespace vt::pool

@@ -17,10 +17,13 @@
 #include <tuple>
 #include <vector>
 #include <unordered_map>
+#include <limits>
 
 namespace vt {
 
 using MPI_TagType = int;
+
+static constexpr size_t const PutPackedTag = std::numeric_limits<size_t>::max();
 
 enum class MPITag : MPI_TagType {
   ActiveMsgTag = 1,
@@ -308,6 +311,11 @@ struct ActiveMessenger {
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void trigger(std::function<void(vt::BaseMessage*)> fn);
+
+  void packMsg(
+    MessageType const msg, MsgSizeType const& size, void* ptr,
+    MsgSizeType const& ptr_bytes
+  );
 
   SendDataRetType sendData(
     RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,

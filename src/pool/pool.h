@@ -12,11 +12,14 @@
 namespace vt { namespace pool {
 
 struct Pool {
+  using SizeType = size_t;
+
   MemoryPoolEqual<memory_pool_env_size> small_msg;
 
   void* alloc(size_t const& num_bytes);
   void dealloc(void* const buf);
   bool sizeIsLarge(size_t const& num_bytes);
+  SizeType remainingSize(void* const buf);
 };
 
 }} //end namespace vt::pool
