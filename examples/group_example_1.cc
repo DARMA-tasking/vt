@@ -15,7 +15,7 @@ struct HelloMsg : vt::Message {
   { }
 };
 
-struct HelloGroupMsg : GroupUserMsg<Message> {
+struct HelloGroupMsg : ::vt::Message {
   HelloGroupMsg() = default;
 };
 
@@ -41,12 +41,16 @@ int main(int argc, char** argv) {
     HelloMsg* msg = new HelloMsg(my_node);
     theMsg()->broadcastMsg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
 
-    std::vector<region::Region::BoundType> vec{0,1,2,3,4,5,6,7};
-    auto list = std::make_unique<region::List>(vec);
-    this_group = theGroup()->newGroup(std::move(list), []{
+    //std::vector<region::Region::BoundType> vec{0,1,2,3,4,5,6,7};
+    //auto list = std::make_unique<region::List>(vec);
+    auto list = std::make_unique<region::Range>(0,theContext()->getNumNodes());
+    this_group = theGroup()->newGroup(std::move(list), [](GroupType group){
       printf("Group is created\n");
-      auto msg = makeSharedMessage<HelloGroupMsg>();
-      theGroup()->sendMsg<HelloGroupMsg, hello_group_handler>(this_group, msg);
+      auto msg = new HelloGroupMsg();
+      envelopeSetGroup(msg->env, group);
+      theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg, [=]{
+        delete msg;
+      });
     });
   }
 

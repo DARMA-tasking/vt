@@ -121,11 +121,118 @@ void GroupManager::initializeLocalGroup(
     if (group == default_group) {
       return global::DefaultGroup::broadcast(base, from, size, is_root, action);
     } else {
-      assert(0);
+      return theGroup()->sendGroup(base, from, size, is_root, action, deliver);
     }
   } else {
     *deliver = true;
   }
+  return no_event;
+}
+
+EventType GroupManager::sendGroup(
+  BaseMessage* base, NodeType const& from, MsgSizeType const& size,
+  bool const is_root, ActionType action, bool* const deliver
+) {
+  auto const& this_node = theContext()->getNode();
+  auto const& msg = reinterpret_cast<ShortMessage* const>(base);
+  auto const& group = envelopeGetGroup(msg->env);
+
+  debug_print(
+    group, node,
+    "GroupManager::sendGroup: group=%llu, is_root=%s\n",
+    group, print_bool(is_root)
+  );
+
+  auto const& group_node = GroupIDBuilder::getNode(group);
+  auto const& group_static = GroupIDBuilder::isStatic(group);
+  auto const& group_collective = GroupIDBuilder::isCollective(group);
+  auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
+
+  assert(
+    !group_collective && "Collective groups are not supported"
+  );
+
+  auto send_to_node = [&](NodeType node) -> EventType {
+    EventType event = no_event;
+    bool const& has_action = action != nullptr;
+    EventRecordType* parent = nullptr;
+    auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
+
+    if (has_action) {
+      event = theEvent()->createParentEvent(node);
+      auto& holder = theEvent()->getEventHolder(event);
+      parent = holder.get_event();
+    }
+
+    messageRef(msg);
+    return theMsg()->sendMsgBytesWithPut(
+      group_node, base, size, send_tag, nullptr, action, no_event
+    );
+  };
+
+  if (is_root && group_node != this_node) {
+    *deliver = false;
+    return send_to_node(group_node);
+  } else {
+    auto iter = local_group_info_.find(group);
+    bool is_at_root = iter != local_group_info_.end();
+    if (is_at_root && iter->second->forward_node_ != this_node) {
+      auto& info = *iter->second;
+      assert(info.is_forward_ && "Must be a forward");
+      auto const& node = info.forward_node_;
+      *deliver = false;
+      return send_to_node(node);
+    } else {
+      auto iter = remote_group_info_.find(group);
+      messageRef(msg);
+
+      debug_print(
+        broadcast, node,
+        "GroupManager::broadcast *send* remote size=%d, from=%d, child=%d, "
+        "found=%s\n",
+        size, from, child, print_bool(iter != remote_group_info_.end())
+      );
+
+      if (iter != remote_group_info_.end()) {
+        auto& info = *iter->second;
+        assert(!info.is_forward_ && "Must not be a forward");
+        assert(
+          info.default_spanning_tree_ != nullptr && "Must have spanning tree"
+        );
+
+        EventType event = no_event;
+        bool const& has_action = action != nullptr;
+        EventRecordType* parent = nullptr;
+        auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
+        auto const& num_children = info.default_spanning_tree_->getNumChildren();
+
+        if (has_action) {
+          event = theEvent()->createParentEvent(this_node);
+          auto& holder = theEvent()->getEventHolder(event);
+          parent = holder.get_event();
+        }
+
+        // Send to child nodes in the group's spanning tree
+        if (num_children > 0) {
+          info.default_spanning_tree_->foreachChild([&](NodeType child) {
+            debug_print(
+              broadcast, node,
+              "GroupManager::broadcast *send* size=%d, from=%d, child=%d\n",
+              size, from, child
+            );
+
+            if (child != this_node) {
+              messageRef(msg);
+              theMsg()->sendMsgBytesWithPut(
+                child, base, size, send_tag, parent, action, event
+              );
+            }
+          });
+        }
+      }
+    }
+  }
+
   return no_event;
 }
 

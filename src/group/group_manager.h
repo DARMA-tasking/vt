@@ -73,14 +73,10 @@ private:
   void registerContinuation(RemoteOperationIDType const& op, ActionType action);
   void triggerContinuation(RemoteOperationIDType const& op);
 
-  template <typename MsgT>
-  void sendGroup(MsgT* msg, bool is_root);
-
-  template <typename MsgT>
-  static void groupForwardHandler(MsgT* msg);
-
-  template <typename MsgT>
-  static void groupSendHandler(MsgT* msg);
+  EventType sendGroup(
+    BaseMessage* base, NodeType const& from, MsgSizeType const& size,
+    bool const is_root, ActionType action, bool* const deliver
+  );
 
   static EventType groupHandler(
     BaseMessage* msg, NodeType const& from, MsgSizeType const& msg_size,
