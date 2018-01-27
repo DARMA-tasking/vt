@@ -9,6 +9,7 @@
 #include "config.h"
 #include "activefn/activefn.h"
 #include "messaging/active.fwd.h"
+#include "messaging/interface.h"
 #include "event/event.h"
 #include "registry/registry.h"
 #include "registry/auto_registry_interface.h"
@@ -55,17 +56,19 @@ struct BufferedActiveMsg {
   { }
 };
 
-struct ActiveMessenger {
+struct ActiveMessenger :
+    messaging::interface::ActivePayloadFn,
+    messaging::interface::ActiveCallbackFn,
+    messaging::interface::ActivePreregisterFn,
+    messaging::interface::ActiveFunctorFn,
+    messaging::interface::ActiveBasicFn,
+    messaging::interface::ActiveAutoFn
+{
   using BufferedMsgType = BufferedActiveMsg;
   using MessageType = ShortMessage*;
   using CountType = int32_t;
   using PendingRecvType = PendingRecv;
   using EventRecordType = event::AsyncEvent::EventRecordType;
-  using SendDataRetType = std::tuple<EventType, TagType>;
-  using SendFnType = std::function<
-    SendDataRetType(RDMA_GetType,NodeType,TagType,ActionType)
-  >;
-  using UserSendFnType = std::function<void(SendFnType)>;
   using ContainerPendingType = std::unordered_map<TagType, PendingRecvType>;
   using MsgContType = std::list<BufferedMsgType>;
   using ContainerWaitingHandlerType = std::unordered_map<
@@ -86,185 +89,8 @@ struct ActiveMessenger {
   template <typename MessageT>
   void setTagMessage(MessageT* const msg, TagType const& tag);
 
-  /*----------------------------------------------------------------------------
-   *            Basic Active Message Send with Pre-Registered Handler
-   *----------------------------------------------------------------------------
-   *
-   * Send message  to pre-registered active message handler.
-   *
-   *   void myHandler(MyMsg* msg) {
-   *     // do work ...
-   *   }
-   *
-   *   HandlerType const han = registerNewHandler(my_handler);
-   *
-   *   MyMsg* msg = makeSharedMessage<MyMsg>(156);
-   *   theMsg()->sendMsg(29, han, msg);
-   *
-   *----------------------------------------------------------------------------
-   */
-
-  template <typename MessageT>
-  EventType sendMsg(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    ActionType next_action = nullptr
-  );
-
-  template <typename MessageT>
-  EventType sendMsg(
-    HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
-  );
-
-  /*
-   *----------------------------------------------------------------------------
-   *          End Basic Active Message Send with Pre-Registered Handler
-   *----------------------------------------------------------------------------
-   */
-
-  /*----------------------------------------------------------------------------
-   *              Send Message Active Function (type-safe handler)
-   *----------------------------------------------------------------------------
-   *
-   * Send message using a type-safe function handler. This is the predominant
-   * way that the messenger is expected to be used.
-   *
-   *   void myHandler(MyMsg* msg) {
-   *     // do work ...
-   *   }
-   *
-   *  theMsg()->sendMsg<MyMsg, myHandler>(1, msg);
-   *
-   *----------------------------------------------------------------------------
-   */
-
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
-  );
-
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType broadcastMsg(MessageT* const msg, ActionType act);
-
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
-  );
-
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act);
-
-  /*
-   *----------------------------------------------------------------------------
-   *             End Send Message Active Function (type-safe handler)
-   *----------------------------------------------------------------------------
-   */
-
-  /*----------------------------------------------------------------------------
-   *                 Send Message BASIC Active Function (deprecated?)
-   *----------------------------------------------------------------------------
-   *
-   * Send message using basic function handler. These handlers are NOT type-safe
-   * and require the user to cast their message to the correct type as so:
-   *
-   *   void basicHandler(vt::BaseMessage* msg_in) {
-   *     MyMsg* msg = static_cast<MyMsg*>(msg_in);
-   *     ...
-   *   }
-   *
-   *  theMsg()->sendMsg<basicHandler, MyMsg>(1, msg);
-   *
-   * Most likely this will be deprecated unless there is a use for this, since
-   * type safety does not cost anything in terms of overhead (either at runtime
-   * or compile-time).
-   *
-   *----------------------------------------------------------------------------
-   */
-
-  template <ActiveFnType* f, typename MessageT>
-  EventType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
-  );
-
-  template <ActiveFnType* f, typename MessageT>
-  EventType broadcastMsg(MessageT* const msg, ActionType act);
-
-  template <ActiveFnType* f, typename MessageT>
-  EventType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
-  );
-
-  template <ActiveFnType* f, typename MessageT>
-  EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act);
-
-  /*
-   *----------------------------------------------------------------------------
-   *              End Send Message BASIC Active Function (deprecated?)
-   *----------------------------------------------------------------------------
-   */
-
-  /*----------------------------------------------------------------------------
-   *                       Send Message Functor Variants
-   *----------------------------------------------------------------------------
-   *
-   * Send message Functor variants that cause an active message to trigger a
-   * user-defined functor such as:
-   *
-   *   struct X {
-   *     void operator()(MyMsg* msg) const { ... };
-   *   };
-   *
-   *----------------------------------------------------------------------------
-   */
-
-  template <typename FunctorT, typename MessageT>
-  EventType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
-  );
-
-  template <typename FunctorT, typename MessageT>
-  EventType broadcastMsg(MessageT* const msg, ActionType act);
-
-  template <typename FunctorT, typename MessageT>
-  EventType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
-  );
-
-  template <typename FunctorT, typename MessageT>
-  EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act);
-
-  /*
-   *----------------------------------------------------------------------------
-   *                      End Send Message Functor Variants
-   *----------------------------------------------------------------------------
-   */
-
-  /*----------------------------------------------------------------------------
-   *                     Send Data Message (includes payload)
-   *----------------------------------------------------------------------------
-   *
-   * Send message that includes a payload that can be arbitrary data that is
-   * coordinated by the system
-   *
-   *----------------------------------------------------------------------------
-   */
-  template <typename MessageT>
-  EventType sendMsg(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    UserSendFnType send_payload_fn, ActionType next_action = nullptr
-  );
-
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendMsg(
-    NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn,
-    ActionType next_action = nullptr
-  );
+  void trigger(std::function<void(vt::BaseMessage*)> fn);
 
   SendDataRetType sendData(
     RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
@@ -288,53 +114,10 @@ struct ActiveMessenger {
     RDMA_ContinuationDeleteType next = nullptr
   );
 
-  template <typename MessageT>
-  EventType broadcastMsg(
-    HandlerType const& han, MessageT* const msg, ActionType next_action = nullptr
-  );
-
   EventType sendMsgSized(
     HandlerType const& han, BaseMessage* const msg, MsgSizeType const& msg_size,
     ActionType next_action = nullptr
   );
-
-  /*
-   *----------------------------------------------------------------------------
-   *                           End Send Data Message
-   *----------------------------------------------------------------------------
-   */
-
-   /*----------------------------------------------------------------------------
-   *                            Send Message Callback
-   *----------------------------------------------------------------------------
-   *
-   * Send message *callback* variants (automatically allow user to callback upon
-   * message arrival)
-   *
-   *----------------------------------------------------------------------------
-   */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendDataCallback(
-    NodeType const& dest, MessageT* const msg, ActiveClosureFnType fn
-  );
-
-  template <typename MessageT>
-  void sendDataCallback(
-    HandlerType const& han, NodeType const& dest, MessageT* const msg,
-    ActiveClosureFnType fn
-  );
-
-  template <typename MessageT>
-  void sendCallback(MessageT* const msg);
-
-  /*
-   *----------------------------------------------------------------------------
-   *                        End Send Message Callback
-   *----------------------------------------------------------------------------
-   */
-
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  void trigger(std::function<void(vt::BaseMessage*)> fn);
 
   void performTriggeredActions();
   bool tryProcessIncomingMessage();
