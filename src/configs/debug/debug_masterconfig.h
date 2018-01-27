@@ -16,12 +16,12 @@
 #define backend_debug_modes backend_options_on(none)
 #else
 #define backend_debug_modes backend_options_on(                         \
-    flush                                                               \
+    group, flush                                                        \
 )
 #endif
 
 #define backend_features backend_options_on(         \
-    detector, openmp, no_feature.                    \
+    detector, openmp, no_feature                     \
 )
 
 #define backend_debug_contexts backend_options_on(              \
@@ -35,13 +35,5 @@
 #define backend_no_threading                                        \
   !backend_check_enabled(openmp) &&                                 \
   !backend_check_enabled(stdthread)
-
-//debug_print(rdma, node, "test");
-// backend
-// meld_eval_4(backend)
-// eval_join(backend,_configuration)
-
-//debug_check_enabled_shortcut(backend, rdma)
-//debug_flush_to_out(backend,stdout)
 
 #endif  /*INCLUDED_DEBUG_MASTER_CONFIG*/
