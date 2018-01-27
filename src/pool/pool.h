@@ -14,11 +14,19 @@ namespace vt { namespace pool {
 struct Pool {
   using SizeType = size_t;
 
-  MemoryPoolEqual<memory_pool_env_size> small_msg;
+  enum struct ePoolSize {
+    Small = 1,
+    Medium = 2,
+    Large = 3,
+    Malloc = 4
+  };
+
+  MemoryPoolEqual<small_memory_pool_env_size> small_msg;
+  MemoryPoolEqual<medium_memory_pool_env_size> medium_msg;
 
   void* alloc(size_t const& num_bytes);
   void dealloc(void* const buf);
-  bool sizeIsLarge(size_t const& num_bytes);
+  ePoolSize getPoolType(size_t const& num_bytes);
   SizeType remainingSize(void* const buf);
 };
 

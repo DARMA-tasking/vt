@@ -3,23 +3,32 @@
 #include "pool/pool.h"
 #include "pool/memory_pool_equal.h"
 
+#include <cstdlib>
+#include <cstdint>
+
 namespace vt { namespace pool {
 
-bool Pool::sizeIsLarge(size_t const& num_bytes) {
-  return num_bytes > small_msg.getNumBytes();
+Pool::ePoolSize Pool::getPoolType(size_t const& num_bytes) {
+  if (num_bytes <= small_msg.getNumBytes()) {
+    return ePoolSize::Small;
+  } else if (num_bytes <= medium_msg.getNumBytes()) {
+    return ePoolSize::Medium;
+  } else {
+    return ePoolSize::Malloc;
+  }
 }
 
 void* Pool::alloc(size_t const& num_bytes) {
-  auto const& small_bytes = small_msg.getNumBytes();
-
   void* ret = nullptr;
 
-  bool const is_large = sizeIsLarge(num_bytes);
+  ePoolSize const pool_type = getPoolType(num_bytes);
 
-  if (not is_large) {
+  if (pool_type == ePoolSize::Small) {
     ret = small_msg.alloc(num_bytes);
+  } else if (pool_type == ePoolSize::Medium) {
+    ret = medium_msg.alloc(num_bytes);
   } else {
-    ret = malloc(num_bytes + sizeof(size_t));
+    ret = std::malloc(num_bytes + sizeof(size_t));
     *static_cast<size_t*>(ret) = num_bytes;
     ret = static_cast<size_t*>(ret) + 1;
   }
@@ -37,7 +46,7 @@ void Pool::dealloc(void* const buf) {
   void* const ptr_actual = static_cast<size_t*>(buf) - 1;
   auto const& actual_alloc_size = *static_cast<size_t*>(ptr_actual);
 
-  bool const is_large = sizeIsLarge(actual_alloc_size);
+  ePoolSize const pool_type = getPoolType(actual_alloc_size);
 
   debug_print(
     pool, node,
@@ -45,23 +54,27 @@ void Pool::dealloc(void* const buf) {
     buf, is_large ? "true" : "false", actual_alloc_size
   );
 
-  if (not is_large) {
+  if (pool_type == ePoolSize::Small) {
     small_msg.dealloc(buf);
+  } else if (pool_type == ePoolSize::Medium) {
+    medium_msg.dealloc(buf);
   } else {
-    free(ptr_actual);
+    std::free(ptr_actual);
   }
 };
 
 Pool::SizeType Pool::remainingSize(void* const buf) {
-  auto const& small_bytes = small_msg.getNumBytes();
   void* const ptr_actual = static_cast<size_t*>(buf) - 1;
   auto const& actual_alloc_size = *static_cast<size_t*>(ptr_actual);
 
-  bool const is_large = sizeIsLarge(actual_alloc_size);
-  if (is_large) {
-    return 0;
+  ePoolSize const pool_type = getPoolType(actual_alloc_size);
+
+  if (pool_type == ePoolSize::Small) {
+    return small_msg.getNumBytes() - actual_alloc_size;
+  } else if (pool_type == ePoolSize::Medium) {
+    return medium_msg.getNumBytes() - actual_alloc_size;
   } else {
-    return small_bytes - actual_alloc_size;
+    return 0;
   }
 }
 
