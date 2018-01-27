@@ -159,14 +159,14 @@ EventType GroupManager::sendGroup(
     auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
     if (has_action) {
-      event = theEvent()->createParentEvent(node);
+      event = theEvent()->createParentEvent(this_node);
       auto& holder = theEvent()->getEventHolder(event);
       parent = holder.get_event();
     }
 
     messageRef(msg);
     return theMsg()->sendMsgBytesWithPut(
-      group_node, base, size, send_tag, nullptr, action, no_event
+      node, base, size, send_tag, nullptr, action, no_event
     );
   };
 
