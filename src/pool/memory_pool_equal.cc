@@ -9,7 +9,9 @@
 namespace vt { namespace pool {
 
 template <int64_t num_bytes_t>
-MemoryPoolEqual<num_bytes_t>::MemoryPoolEqual() {
+MemoryPoolEqual<num_bytes_t>::MemoryPoolEqual(SlotType const in_pool_size)
+  : pool_size_(in_pool_size)
+{
   resizePool();
 }
 

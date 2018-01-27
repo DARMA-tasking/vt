@@ -29,7 +29,7 @@ struct MemoryPoolEqual {
   static constexpr SlotType const fst_pool_slot = 0;
   static constexpr SlotType const default_pool_size = 1024;
 
-  MemoryPoolEqual();
+  MemoryPoolEqual(SlotType const in_pool_size = default_pool_size);
 
   virtual ~MemoryPoolEqual();
 

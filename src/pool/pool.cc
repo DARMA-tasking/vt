@@ -8,10 +8,19 @@
 
 namespace vt { namespace pool {
 
+Pool::Pool()
+  : small_msg(
+      std::make_unique<MemoryPoolType<small_memory_pool_env_size>>()
+    ),
+    medium_msg(
+      std::make_unique<MemoryPoolType<medium_memory_pool_env_size>>(64)
+    )
+{ }
+
 Pool::ePoolSize Pool::getPoolType(size_t const& num_bytes) {
-  if (num_bytes <= small_msg.getNumBytes()) {
+  if (num_bytes <= small_msg->getNumBytes()) {
     return ePoolSize::Small;
-  } else if (num_bytes <= medium_msg.getNumBytes()) {
+  } else if (num_bytes <= medium_msg->getNumBytes()) {
     return ePoolSize::Medium;
   } else {
     return ePoolSize::Malloc;
@@ -24,9 +33,9 @@ void* Pool::alloc(size_t const& num_bytes) {
   ePoolSize const pool_type = getPoolType(num_bytes);
 
   if (pool_type == ePoolSize::Small) {
-    ret = small_msg.alloc(num_bytes);
+    ret = small_msg->alloc(num_bytes);
   } else if (pool_type == ePoolSize::Medium) {
-    ret = medium_msg.alloc(num_bytes);
+    ret = medium_msg->alloc(num_bytes);
   } else {
     ret = std::malloc(num_bytes + sizeof(size_t));
     *static_cast<size_t*>(ret) = num_bytes;
@@ -55,9 +64,9 @@ void Pool::dealloc(void* const buf) {
   );
 
   if (pool_type == ePoolSize::Small) {
-    small_msg.dealloc(buf);
+    small_msg->dealloc(buf);
   } else if (pool_type == ePoolSize::Medium) {
-    medium_msg.dealloc(buf);
+    medium_msg->dealloc(buf);
   } else {
     std::free(ptr_actual);
   }
@@ -70,9 +79,9 @@ Pool::SizeType Pool::remainingSize(void* const buf) {
   ePoolSize const pool_type = getPoolType(actual_alloc_size);
 
   if (pool_type == ePoolSize::Small) {
-    return small_msg.getNumBytes() - actual_alloc_size;
+    return small_msg->getNumBytes() - actual_alloc_size;
   } else if (pool_type == ePoolSize::Medium) {
-    return medium_msg.getNumBytes() - actual_alloc_size;
+    return medium_msg->getNumBytes() - actual_alloc_size;
   } else {
     return 0;
   }
