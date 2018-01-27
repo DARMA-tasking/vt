@@ -13,7 +13,7 @@ void ActiveMessenger::packMsg(
   MessageType const msg, MsgSizeType const& size, void* ptr,
   MsgSizeType const& ptr_bytes
 ) {
-  debug_print_force(
+  debug_print(
     active, node,
     "packMsg: msg_size=%d, put_size=%d, ptr=%p\n",
     size, ptr_bytes, ptr
@@ -32,7 +32,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
 
   auto const& is_put = envelopeIsPut(msg->env);
 
-  debug_print_force(
+  debug_print(
     active, node,
     "sendMsgBytesWithPut: size=%d, dest=%d, is_put=%s\n",
     msg_size, dest, print_bool(is_put)
@@ -44,10 +44,18 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     auto const& rem_size = thePool()->remainingSize(base);
     auto const& put_ptr = envelopeGetPutPtr(msg->env);
     auto const& put_size = envelopeGetPutSize(msg->env);
+    bool const pack_in_buffer = put_size < rem_size;
     assert(
       (!(put_size != 0) || put_ptr) && "Must have valid ptr if size > 0"
     );
-    if (put_size < rem_size) {
+    debug_print(
+      active, node,
+      "sendMsgBytesWithPut: (put) put_ptr=%p, put_size=%lu, rem_size=%lu, "
+      "msg_size=%d, dest=%d, is_put=%s, pack_in_buffer=%s\n",
+      put_ptr, put_size, rem_size, msg_size, dest, print_bool(is_put),
+      print_bool(pack_in_buffer)
+    );
+    if (pack_in_buffer) {
       auto msg_size_ptr = static_cast<intptr_t>(msg_size);
       packMsg(msg, msg_size, put_ptr, put_size);
       new_msg_size += put_size;
