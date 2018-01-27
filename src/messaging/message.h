@@ -4,8 +4,8 @@
 
 #include "config.h"
 #include "messaging/envelope.h"
+#include "messaging/shared_message.h"
 #include "pool/pool.h"
-#include "shared_message.h"
 
 namespace vt {
 

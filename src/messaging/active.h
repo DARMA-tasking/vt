@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "activefn/activefn.h"
+#include "messaging/active.fwd.h"
 #include "event/event.h"
 #include "registry/registry.h"
 #include "registry/auto_registry_interface.h"
@@ -37,8 +38,8 @@ struct PendingRecv {
   PendingRecv(
     void* in_user_buf, RDMA_ContinuationDeleteType in_cont,
     ActionType in_dealloc_user_buf, NodeType node
-  ) : user_buf(in_user_buf), cont(in_cont), dealloc_user_buf(in_dealloc_user_buf),
-      recv_node(node)
+  ) : user_buf(in_user_buf), cont(in_cont),
+      dealloc_user_buf(in_dealloc_user_buf), recv_node(node)
   { }
 };
 
@@ -61,16 +62,20 @@ struct ActiveMessenger {
   using PendingRecvType = PendingRecv;
   using EventRecordType = event::AsyncEvent::EventRecordType;
   using SendDataRetType = std::tuple<EventType, TagType>;
-  using SendFnType = std::function<SendDataRetType(RDMA_GetType,NodeType,TagType,ActionType)>;
+  using SendFnType = std::function<
+    SendDataRetType(RDMA_GetType,NodeType,TagType,ActionType)
+  >;
   using UserSendFnType = std::function<void(SendFnType)>;
   using ContainerPendingType = std::unordered_map<TagType, PendingRecvType>;
   using MsgContType = std::list<BufferedMsgType>;
-  using ContainerWaitingHandlerType = std::unordered_map<HandlerType, MsgContType>;
+  using ContainerWaitingHandlerType = std::unordered_map<
+    HandlerType, MsgContType
+  >;
   using ReadyHanTagType = std::tuple<HandlerType, TagType>;
   using MaybeReadyType = std::vector<ReadyHanTagType>;
   using HandlerManagerType = HandlerManager;
 
-  ActiveMessenger() = default;
+  ActiveMessenger();
 
   template <typename MessageT>
   void setTermMessage(MessageT* const msg);
@@ -135,7 +140,8 @@ struct ActiveMessenger {
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag,
+    ActionType next_action = nullptr
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -179,7 +185,8 @@ struct ActiveMessenger {
 
   template <ActiveFnType* f, typename MessageT>
   EventType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag,
+    ActionType next_action = nullptr
   );
 
   template <ActiveFnType* f, typename MessageT>
@@ -216,7 +223,8 @@ struct ActiveMessenger {
 
   template <typename FunctorT, typename MessageT>
   EventType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag, ActionType next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag,
+    ActionType next_action = nullptr
   );
 
   template <typename FunctorT, typename MessageT>
@@ -264,7 +272,8 @@ struct ActiveMessenger {
   );
 
   bool recvDataMsg(
-    TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next = nullptr
+    TagType const& tag, NodeType const& node,
+    RDMA_ContinuationDeleteType next = nullptr
   );
 
   bool recvDataMsg(
@@ -275,7 +284,8 @@ struct ActiveMessenger {
   bool recvDataMsgBuffer(
     void* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
-    ActionType dealloc_user_buf = nullptr, RDMA_ContinuationDeleteType next = nullptr
+    ActionType dealloc_user_buf = nullptr,
+    RDMA_ContinuationDeleteType next = nullptr
   );
 
   template <typename MessageT>
@@ -283,8 +293,8 @@ struct ActiveMessenger {
     HandlerType const& han, MessageT* const msg, ActionType next_action = nullptr
   );
 
-  EventType sendDataDirect(
-    HandlerType const& han, BaseMessage* const msg, int const& msg_size,
+  EventType sendMsgSized(
+    HandlerType const& han, BaseMessage* const msg, MsgSizeType const& msg_size,
     ActionType next_action = nullptr
   );
 
@@ -332,7 +342,9 @@ struct ActiveMessenger {
   bool scheduler();
   bool isLocalTerm();
 
-  HandlerType registerNewHandler(ActiveClosureFnType fn, TagType const& tag = no_tag);
+  HandlerType registerNewHandler(
+    ActiveClosureFnType fn, TagType const& tag = no_tag
+  );
   void swapHandlerFn(
     HandlerType const& han, ActiveClosureFnType fn, TagType const& tag = no_tag
   );
@@ -340,38 +352,37 @@ struct ActiveMessenger {
   void registerHandlerFn(
     HandlerType const& han, ActiveClosureFnType fn, TagType const& tag = no_tag
   );
-  HandlerType collectiveRegisterHandler(ActiveClosureFnType fn, TagType const& tag = no_tag);
+  HandlerType collectiveRegisterHandler(
+    ActiveClosureFnType fn, TagType const& tag = no_tag
+  );
 
   HandlerType getCurrentHandler();
   HandlerType getCurrentCallback();
   NodeType getFromNodeCurrentHandler();
 
+  bool handleActiveMsg(
+    MessageType msg, NodeType const& sender, MsgSizeType const& size, bool insert
+  );
   bool deliverActiveMsg(MessageType msg, NodeType const& from_node, bool insert);
-  void deliverPendingMsgsHandler(HandlerType const& han, TagType const& tag = no_tag);
+  void deliverPendingMsgsHandler(
+    HandlerType const& han, TagType const& tag = no_tag
+  );
   void processMaybeReadyHanTag();
 
-  EventType basicSendData(
-    NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
-    bool const& is_shared, bool const& is_term, EpochType const& epoch,
-    TagType const& send_tag, EventRecordType* parent_event,
-    ActionType next_action
+  EventType sendMsgBytes(
+    NodeType const& dest, BaseMessage* const base_msg,
+    MsgSizeType const& msg_size, TagType const& send_tag,
+    EventRecordType* parent_event, ActionType next_action
   );
 
-  EventType basicSendDataPut(
-    NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
-    bool const& is_shared, bool const& is_term, EpochType const& epoch,
+  EventType sendMsgBytesWithPut(
+    NodeType const& dest, BaseMessage* const base, MsgSizeType const& msg_size,
     TagType const& send_tag, EventRecordType* parent_event,
-    ActionType next_action, bool const& is_put, EventType const& in_event
-  );
-
-  EventType sendDataRecipients(
-    NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
-    bool const& is_shared, bool const& is_term, EpochType const& epoch,
-    TagType const& send_tag, ActionType next_action, bool const& is_put,
-    bool const& is_bcast
+    ActionType next_action, EventType const& in_event
   );
 
 private:
+  NodeType this_node_ = uninitialized_destination;
   HandlerType current_handler_context_ = uninitialized_handler;
   HandlerType current_callback_context_ = uninitialized_handler;
   NodeType current_node_context_ = uninitialized_destination;

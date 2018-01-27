@@ -8,10 +8,14 @@
 #include "group/group_info.fwd.h"
 #include "group/group_manager.fwd.h"
 #include "group/group_manager_active_attorney.fwd.h"
+#include "group/group_msg.h"
+#include "group/global/group_default.h"
+#include "group/global/group_default_msg.h"
 #include "registry/auto_registry_interface.h"
 #include "messaging/message.h"
 #include "messaging/active.h"
 #include "activefn/activefn.h"
+#include "tree/tree.h"
 
 #include <memory>
 #include <unordered_map>
@@ -30,8 +34,12 @@ struct GroupManager {
     RemoteOperationIDType, ActionListType
   >;
   using ActionGroupType = std::function<void(GroupType)>;
+  using TreeType = Tree;
+  using TreePtrType = std::unique_ptr<TreeType>;
 
-  GroupManager() = default;
+  GroupManager();
+
+  void setupDefaultGroup();
 
   GroupType newGroup(
     RegionPtrType in_region, bool const& is_collective,
@@ -74,7 +82,10 @@ private:
   template <typename MsgT>
   static void groupSendHandler(MsgT* msg);
 
-  static void groupHandler(BaseMessage* msg, MsgSizeType const& msg_size);
+  static EventType groupHandler(
+    BaseMessage* msg, NodeType const& from, MsgSizeType const& msg_size,
+    bool const is_root, ActionType new_action, bool* const deliver
+  );
 
 private:
   GroupIDType next_group_id_ = initial_group_id;

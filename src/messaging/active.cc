@@ -3,106 +3,25 @@
 #include "messaging/active.h"
 #include "messaging/payload.h"
 #include "termination/term_headers.h"
+#include "group/group_manager_active_attorney.h"
 
 namespace vt {
 
-EventType ActiveMessenger::sendDataRecipients(
-  NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
-  bool const& is_shared, bool const& is_term, EpochType const& epoch,
-  TagType const& send_tag, ActionType next_action, bool const& is_put,
-  bool const& is_bcast
-) {
-  auto const& this_node = theContext()->getNode();
-  auto msg = reinterpret_cast<MessageType const>(base_msg);
-  EventRecordType* parent = nullptr;
-  EventType parent_event_id = no_event;
-  if (is_put or is_bcast) {
-    parent_event_id = theEvent()->createParentEvent(this_node);
-    auto& holder = theEvent()->getEventHolder(parent_event_id);
-    parent = holder.get_event();
-  }
-  debug_print(
-    active, node,
-    "sendDataRecipients: msg=%p, refs=%d, is_put=%s, is_bcast=%s\n",
-    msg, envelopeGetRef(msg->env), print_bool(is_put), print_bool(is_bcast)
-  );
-  if (is_bcast) {
-    auto const& num_nodes = theContext()->getNumNodes();
-    auto const& rel_node = (this_node + num_nodes - dest) % num_nodes;
-    auto const& abs_child1 = rel_node*2 + 1;
-    auto const& abs_child2 = rel_node*2 + 2;
-    auto const& child1 = (abs_child1 + dest) % num_nodes;
-    auto const& child2 = (abs_child2 + dest) % num_nodes;
+ActiveMessenger::ActiveMessenger() : this_node_(theContext()->getNode()) { }
 
-    debug_print(
-      active, node,
-      "broadcastMsg: msg=%p, is_shared=%s, refs=%d\n",
-      msg, print_bool(is_shared), envelopeGetRef(msg->env)
-    );
-
-    debug_print(
-      active, node,
-      "broadcastMsg: rel_node=%d, child=[%d,%d], root=%d, nodes=%d, handler=%d\n",
-      rel_node, child1, child2, dest, num_nodes, envelopeGetHandler(msg->env)
-    );
-
-    if (abs_child1 >= num_nodes && abs_child2 >= num_nodes) {
-      if (next_action != nullptr) {
-        next_action();
-      }
-      return no_event;
-    }
-
-    if (abs_child1 < num_nodes) {
-      debug_print(
-        active, node,
-        "broadcastMsg: rel_node=%d, sending to child1=%d, root=%d, nodes=%d, "
-        "handler=%d\n",
-        rel_node, child1, dest, num_nodes, envelopeGetHandler(msg->env)
-      );
-      basicSendDataPut(
-        child1, msg, msg_size, is_shared, is_term, epoch, send_tag,
-        parent, next_action, is_put, parent_event_id
-      );
-    }
-
-    if (abs_child2 < num_nodes) {
-      debug_print(
-        active, node,
-        "broadcastMsg: rel_node=%d, sending to child2=%d, root=%d, nodes=%d, "
-        "handler=%d\n",
-        rel_node, child2, dest, num_nodes, envelopeGetHandler(msg->env)
-      );
-      basicSendDataPut(
-        child2, msg, msg_size, is_shared, is_term, epoch, send_tag,
-        parent, next_action, is_put, parent_event_id
-      );
-    }
-
-    if (is_shared) {
-      messageDeref(msg);
-    }
-
-    return parent_event_id;
-  } else {
-    return basicSendDataPut(
-      dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
-      parent, next_action, is_put, parent_event_id
-    );
-  }
-}
-
-EventType ActiveMessenger::basicSendDataPut(
-  NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
-  bool const& is_shared, bool const& is_term, EpochType const& epoch,
+EventType ActiveMessenger::sendMsgBytesWithPut(
+  NodeType const& dest, BaseMessage* const base, MsgSizeType const& msg_size,
   TagType const& send_tag, EventRecordType* parent_event,
-  ActionType next_action, bool const& is_put, EventType const& in_event
+  ActionType next_action, EventType const& in_event
 ) {
-  auto msg = reinterpret_cast<MessageType const>(base_msg);
+  auto msg = reinterpret_cast<MessageType const>(base);
+
+  auto const& is_put = envelopeIsPut(msg->env);
 
   debug_print(
     active, node,
-    "basicSendDataPut: dest=%d, is_put=%s\n", dest, print_bool(is_put)
+    "sendMsgBytesWithPut: size=%d, dest=%d, is_put=%s\n",
+    msg_size, dest, print_bool(is_put)
   );
 
   if (is_put) {
@@ -122,33 +41,34 @@ EventType ActiveMessenger::basicSendDataPut(
       assert(parent_event != nullptr);
       parent_event->addEventToList(put_event_send);
     }
-
-    basicSendData(
-      dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
-      parent_event, next_action
-    );
-
-    return in_event;
-  } else {
-    return basicSendData(
-      dest, msg, msg_size, is_shared, is_term, epoch, send_tag,
-      parent_event, next_action
-    );
   }
+
+  auto send_event = sendMsgBytes(
+    dest, msg, msg_size, send_tag, parent_event, next_action
+  );
+
+  return is_put ? in_event : send_event;
 }
 
-EventType ActiveMessenger::basicSendData(
-  NodeType const& dest, BaseMessage* const base_msg, int const& msg_size,
-  bool const& is_shared, bool const& is_term, EpochType const& epoch,
+EventType ActiveMessenger::sendMsgBytes(
+  NodeType const& dest, BaseMessage* const base, MsgSizeType const& msg_size,
   TagType const& send_tag, EventRecordType* parent_event, ActionType next_action
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& msg = reinterpret_cast<MessageType const>(base);
 
-  auto const event_id = theEvent()->createMPIEvent(this_node);
+  auto const& epoch = envelopeIsEpochType(msg->env) ?
+    envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
+  auto const& is_shared = isSharedMessage(msg);
+  auto const& is_term = envelopeIsTerm(msg->env);
+
+  auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
   auto mpi_event = holder.get_event();
 
-  auto msg = reinterpret_cast<MessageType const>(base_msg);
+  debug_print(
+    active, node,
+    "sendMsgBytes: size=%d, dest=%d\n", msg_size, dest
+  );
 
   if (is_shared) {
     mpi_event->setManagedMessage(msg);
@@ -178,22 +98,16 @@ EventType ActiveMessenger::basicSendData(
   return event_id;
 }
 
-EventType ActiveMessenger::sendDataDirect(
-  HandlerType const& han, BaseMessage* const msg_base, int const& msg_size,
+EventType ActiveMessenger::sendMsgSized(
+  HandlerType const& han, BaseMessage* const base, MsgSizeType const& msg_size,
   ActionType next_action
 ) {
-  auto const& this_node = theContext()->getNode();
   auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
-  auto msg = reinterpret_cast<MessageType const>(msg_base);
+  auto msg = reinterpret_cast<MessageType const>(base);
 
   auto const& dest = envelopeGetDest(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_put = envelopeIsPut(msg->env);
-  auto const& epoch = envelopeIsEpochType(msg->env) ?
-    envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const& is_shared = isSharedMessage(msg);
 
   backend_enable_if(
     trace_enabled, {
@@ -204,7 +118,7 @@ EventType ActiveMessenger::sendDataDirect(
         if (not is_bcast) {
           trace::TraceEventIDType event = theTrace()->messageCreation(ep, msg_size);
           envelopeSetTraceEvent(msg->env, event);
-        } else if (is_bcast and dest == this_node) {
+        } else if (is_bcast and dest == this_node_) {
           trace::TraceEventIDType event = theTrace()->messageCreationBcast(
             ep, msg_size
           );
@@ -216,28 +130,51 @@ EventType ActiveMessenger::sendDataDirect(
 
   debug_print(
     active, node,
-    "sendMsgDirect: dest=%d, handler=%d, is_bcast=%s, is_put=%s\n",
+    "sendMsgSized: dest=%d, handler=%d, is_bcast=%s, is_put=%s\n",
     dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
-    print_bool(is_put)
+    print_bool(envelopeIsPut(msg->env))
   );
 
-  return sendDataRecipients(
-    dest, msg_base, msg_size, is_shared, is_term, epoch, send_tag,
-    next_action, is_put, is_bcast
+  bool deliver = false;
+  EventType const ret_event = group::GroupActiveAttorney::groupHandler(
+    msg, uninitialized_destination, msg_size, true, next_action, &deliver
   );
+
+  if (deliver) {
+    auto const& is_put = envelopeIsPut(msg->env);
+
+    EventRecordType* parent = nullptr;
+    EventType event = no_event;
+
+    if (is_put || ret_event != no_event) {
+      event = theEvent()->createParentEvent(this_node_);
+      auto& holder = theEvent()->getEventHolder(event);
+      parent = holder.get_event();
+    }
+
+    if (ret_event != no_event) {
+      parent->addEventToList(ret_event);
+    }
+
+    sendMsgBytesWithPut(
+      dest, base, msg_size, send_tag, parent, next_action, event
+    );
+
+    return event;
+  } else {
+    return ret_event;
+  }
 }
 
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
   ActionType next_action
 ) {
-  auto const& this_node = theContext()->getNode();
-
   auto const& data_ptr = std::get<0>(ptr);
   auto const& num_bytes = std::get<1>(ptr);
   auto const send_tag = tag == no_tag ? cur_direct_buffer_tag_++ : tag;
 
-  auto const event_id = theEvent()->createMPIEvent(this_node);
+  auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
   auto mpi_event = holder.get_event();
 
@@ -319,8 +256,6 @@ bool ActiveMessenger::recvDataMsgBuffer(
       );
 
       auto dealloc_buf = [=]{
-        auto const& this_node = theContext()->getNode();
-
         debug_print(
           active, node,
           "recvDataMsgBuffer: continuation user_buf=%p, buf=%p, tag=%d\n",
@@ -373,6 +308,22 @@ bool ActiveMessenger::recvDataMsg(
 
 NodeType ActiveMessenger::getFromNodeCurrentHandler() {
   return current_node_context_;
+}
+
+bool ActiveMessenger::handleActiveMsg(
+  MessageType msg, NodeType const& from, MsgSizeType const& size, bool insert
+) {
+  using ::vt::group::GroupActiveAttorney;
+
+  // Call group handler
+  bool deliver = false;
+  GroupActiveAttorney::groupHandler(msg, from, size, false, nullptr, &deliver);
+
+  if (deliver) {
+    return deliverActiveMsg(msg, from, insert);
+  } else {
+    return false;
+  }
 }
 
 bool ActiveMessenger::deliverActiveMsg(
@@ -482,16 +433,16 @@ bool ActiveMessenger::deliverActiveMsg(
     }
   }
 
-  if (not is_term and has_action_handler) {
-    theTerm()->consume(epoch);
-  }
-
   if (has_action_handler) {
     debug_print(
       active, node,
       "deliverActiveMsg: deref msg=%p, ref=%d, is_bcast=%s, dest=%d\n",
       msg, envelopeGetRef(msg->env), print_bool(is_bcast), dest
     );
+
+    if (!is_term) {
+      theTerm()->consume(epoch);
+    }
     messageDeref(msg);
   }
 
@@ -513,41 +464,31 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
     char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
 
-    NodeType const& msg_from_node = stat.MPI_SOURCE;
+    NodeType const& sender = stat.MPI_SOURCE;
 
     MPI_Recv(
-      buf, num_probe_bytes, MPI_BYTE, msg_from_node, stat.MPI_TAG,
+      buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
       theContext()->getComm(), MPI_STATUS_IGNORE
     );
 
     MessageType msg = reinterpret_cast<MessageType>(buf);
-
     messageConvertToShared(msg);
 
-    auto const& handler = envelopeGetHandler(msg->env);
-    auto const& is_bcast = envelopeIsBcast(msg->env);
-    auto const& dest = envelopeGetDest(msg->env);
     auto const& is_put = envelopeIsPut(msg->env);
-    auto const& this_node = theContext()->getNode();
 
     if (is_put) {
-      auto size_as_put_tag = envelopeGetPutSize(msg->env);
-      TagType put_tag = static_cast<TagType>(size_as_put_tag);
-      messageRef(msg);
-      recvDataMsg(put_tag, msg_from_node, [=](RDMA_GetType ptr, ActionType deleter){
-        envelopeSetPutPtr(msg->env, std::get<0>(ptr), std::get<1>(ptr));
-        deliverActiveMsg(msg, msg_from_node, true);
-        messageDeref(msg);
-      });
+      auto const size_as_put_tag = envelopeGetPutSize(msg->env);
+      TagType const put_tag = static_cast<TagType>(size_as_put_tag);
+      /*bool const put_delivered = */recvDataMsg(
+        put_tag, sender, [=](RDMA_GetType ptr, ActionType deleter){
+          envelopeSetPutPtr(msg->env, std::get<0>(ptr), std::get<1>(ptr));
+          handleActiveMsg(msg, sender, num_probe_bytes, true);
+        }
+      );
     }
 
-    if (is_bcast) {
-      messageRef(msg);
-      sendDataDirect(handler, msg, num_probe_bytes);
-    }
-
-    if ((not is_bcast or (is_bcast and dest != this_node)) and not is_put) {
-      deliverActiveMsg(msg, msg_from_node, true);
+    if (!is_put) {
+      handleActiveMsg(msg, sender, num_probe_bytes, true);
     }
 
     return true;
