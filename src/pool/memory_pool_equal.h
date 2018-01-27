@@ -11,9 +11,15 @@
 
 namespace vt { namespace pool {
 
-static constexpr size_t const small_msg_size_buf = sizeof(int64_t) * 8;
-static constexpr size_t const memory_pool_env_size =
+static constexpr size_t const small_msg_size_buf =
+  sizeof(int64_t)*8 - sizeof(EpochTagEnvelope);
+static constexpr size_t const small_memory_pool_env_size =
   sizeof(EpochTagEnvelope) + small_msg_size_buf;
+
+static constexpr size_t const medium_msg_size_buf =
+  sizeof(int64_t)*128 - sizeof(EpochTagEnvelope);
+static constexpr size_t const medium_memory_pool_env_size =
+  sizeof(EpochTagEnvelope) + medium_msg_size_buf;
 
 template <int64_t num_bytes_t>
 struct MemoryPoolEqual {

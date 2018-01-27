@@ -87,6 +87,7 @@ MemoryPoolEqual<num_bytes_t>::getNumBytes() {
   return num_bytes_;
 }
 
-template struct MemoryPoolEqual<memory_pool_env_size>;
+template struct MemoryPoolEqual<small_memory_pool_env_size>;
+template struct MemoryPoolEqual<medium_memory_pool_env_size>;
 
 }} //end namespace vt::pool
