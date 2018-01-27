@@ -251,11 +251,12 @@
   )
 
 #if debug_force_enabled
-//#warning "Debug force is enabled"
-#define debug_print_force debug_print_context
+  //#warning "Debug force is enabled"
+  #define debug_print_force(feature, opt, arg...)     \
+    debug_print_context(backend, feature, opt, arg)
 #else
-//#warning "Debug force is not enabled"
-#define debug_print_force debug_print
+  //#warning "Debug force is not enabled"
+  #define debug_print_force debug_print
 #endif
 
 #define backend_debug_print debug_print
