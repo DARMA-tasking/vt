@@ -43,7 +43,10 @@ int main(int argc, char** argv) {
 
     //std::vector<region::Region::BoundType> vec{0,1,2,3,4,5,6,7};
     //auto list = std::make_unique<region::List>(vec);
-    auto list = std::make_unique<region::Range>(0,theContext()->getNumNodes());
+    auto list = std::make_unique<region::Range>(
+      theContext()->getNumNodes() / 2,
+      theContext()->getNumNodes()
+    );
     this_group = theGroup()->newGroup(std::move(list), [](GroupType group){
       printf("Group is created\n");
       auto msg = new HelloGroupMsg();
