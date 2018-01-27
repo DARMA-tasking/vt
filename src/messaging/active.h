@@ -266,36 +266,9 @@ struct ActiveMessenger {
     ActionType next_action = nullptr
   );
 
-  SendDataRetType sendData(
-    RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
-    ActionType next_action = nullptr
-  );
-
-  bool recvDataMsg(
-    TagType const& tag, NodeType const& node,
-    RDMA_ContinuationDeleteType next = nullptr
-  );
-
-  bool recvDataMsg(
-    TagType const& tag, NodeType const& recv_node, bool const& enqueue,
-    RDMA_ContinuationDeleteType next = nullptr
-  );
-
-  bool recvDataMsgBuffer(
-    void* const user_buf, TagType const& tag,
-    NodeType const& node = uninitialized_destination, bool const& enqueue = true,
-    ActionType dealloc_user_buf = nullptr,
-    RDMA_ContinuationDeleteType next = nullptr
-  );
-
   template <typename MessageT>
   EventType broadcastMsg(
     HandlerType const& han, MessageT* const msg, ActionType next_action = nullptr
-  );
-
-  EventType sendMsgSized(
-    HandlerType const& han, BaseMessage* const msg, MsgSizeType const& msg_size,
-    ActionType next_action = nullptr
   );
 
   /*
@@ -335,6 +308,33 @@ struct ActiveMessenger {
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void trigger(std::function<void(vt::BaseMessage*)> fn);
+
+  SendDataRetType sendData(
+    RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
+    ActionType next_action = nullptr
+  );
+
+  bool recvDataMsg(
+    TagType const& tag, NodeType const& node,
+    RDMA_ContinuationDeleteType next = nullptr
+  );
+
+  bool recvDataMsg(
+    TagType const& tag, NodeType const& recv_node, bool const& enqueue,
+    RDMA_ContinuationDeleteType next = nullptr
+  );
+
+  bool recvDataMsgBuffer(
+    void* const user_buf, TagType const& tag,
+    NodeType const& node = uninitialized_destination, bool const& enqueue = true,
+    ActionType dealloc_user_buf = nullptr,
+    RDMA_ContinuationDeleteType next = nullptr
+  );
+
+  EventType sendMsgSized(
+    HandlerType const& han, BaseMessage* const msg, MsgSizeType const& msg_size,
+    ActionType next_action = nullptr
+  );
 
   void performTriggeredActions();
   bool tryProcessIncomingMessage();
