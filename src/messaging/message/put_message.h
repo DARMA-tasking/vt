@@ -1,11 +1,10 @@
 
-#if !defined INCLUDED_MESSAGING_PUT_MESSAGE_H
-#define INCLUDED_MESSAGING_PUT_MESSAGE_H
+#if !defined INCLUDED_MESSAGING_MESSAGE_PUT_MESSAGE_H
+#define INCLUDED_MESSAGING_MESSAGE_PUT_MESSAGE_H
 
 #include "config.h"
 #include "messaging/envelope.h"
-#include "messaging/payload.h"
-#include "messaging/message.h"
+#include "messaging/message/message.h"
 
 namespace vt {
 
@@ -23,4 +22,4 @@ using PayloadMessage = PutMessageComponent<ActiveMessage<PutShortEnvelope>>;
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_MESSAGING_PUT_MESSAGE_H*/
+#endif /*INCLUDED_MESSAGING_MESSAGE_PUT_MESSAGE_H*/

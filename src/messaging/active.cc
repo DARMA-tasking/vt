@@ -1,7 +1,7 @@
 
 #include "config.h"
 #include "messaging/active.h"
-#include "messaging/payload.h"
+#include "messaging/envelope.h"
 #include "termination/term_headers.h"
 #include "group/group_manager_active_attorney.h"
 

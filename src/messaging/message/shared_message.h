@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_MESSAGING_SHARED_MESSAGE_H
-#define INCLUDED_MESSAGING_SHARED_MESSAGE_H
+#if !defined INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_H
+#define INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_H
 
 #include "config.h"
 #include "messaging/envelope.h"
@@ -51,4 +51,4 @@ void messageDeref(MessageT* msg) {
 
 } //end namespace vt
 
-#endif /*INCLUDED_MESSAGING_SHARED_MESSAGE_H*/
+#endif /*INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_H*/
