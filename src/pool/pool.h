@@ -8,11 +8,16 @@
 #include <vector>
 #include <cstdint>
 #include <cassert>
+#include <memory>
 
 namespace vt { namespace pool {
 
 struct Pool {
   using SizeType = size_t;
+  template <int64_t num_bytes_t>
+  using MemoryPoolType = MemoryPoolEqual<num_bytes_t>;
+  template <int64_t num_bytes_t>
+  using MemoryPoolPtrType = std::unique_ptr<MemoryPoolType<num_bytes_t>>;
 
   enum struct ePoolSize {
     Small = 1,
@@ -21,13 +26,16 @@ struct Pool {
     Malloc = 4
   };
 
-  MemoryPoolEqual<small_memory_pool_env_size> small_msg;
-  MemoryPoolEqual<medium_memory_pool_env_size> medium_msg;
+  Pool();
 
   void* alloc(size_t const& num_bytes);
   void dealloc(void* const buf);
   ePoolSize getPoolType(size_t const& num_bytes);
   SizeType remainingSize(void* const buf);
+
+private:
+  MemoryPoolPtrType<small_memory_pool_env_size> small_msg = nullptr;
+  MemoryPoolPtrType<medium_memory_pool_env_size> medium_msg = nullptr;
 };
 
 }} //end namespace vt::pool
