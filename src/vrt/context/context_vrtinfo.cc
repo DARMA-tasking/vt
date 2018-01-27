@@ -7,7 +7,7 @@
 #include "registry/auto_registry_vc.h"
 #include "registry/auto_registry_map.h"
 #include "worker/worker_headers.h"
-#include "messaging/shared_message.h"
+#include "messaging/message.h"
 
 #include <memory>
 #include <cassert>

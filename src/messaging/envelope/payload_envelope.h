@@ -1,8 +1,8 @@
 
-#if !defined INCLUDED_MESSAGING_PAYLOAD_H
-#define INCLUDED_MESSAGING_PAYLOAD_H
+#if !defined INCLUDED_MESSAGING_ENVELOPE_PAYLOAD_ENVELOPE_H
+#define INCLUDED_MESSAGING_ENVELOPE_PAYLOAD_ENVELOPE_H
 
-#include "messaging/envelope.h"
+#include "messaging/envelope/envelope.h"
 
 namespace vt {
 
@@ -73,4 +73,4 @@ inline void envelopeSetPutPtr(
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_MESSAGING_PAYLOAD_H*/
+#endif /*INCLUDED_MESSAGING_ENVELOPE_PAYLOAD_ENVELOPE_H*/

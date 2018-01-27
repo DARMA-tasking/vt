@@ -53,7 +53,7 @@ set(
   serialization serialization/messaging worker utils/mutex utils/static_checks
   standalone runtime utils/tls utils/atomic vrt/collection vrt rdma/channel
   rdma/collection rdma/group rdma/state reduction group group/id group/region
-  group/global
+  group/global messaging/envelope messaging/message
 )
 
 include_directories(${PROJECT_SOURCE_DIR})

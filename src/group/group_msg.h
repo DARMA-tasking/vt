@@ -8,7 +8,7 @@
 #include "group/region/group_range.h"
 #include "group/region/group_list.h"
 #include "group/region/group_shallow_list.h"
-#include "messaging/put_message.h"
+#include "messaging/message.h"
 
 namespace vt { namespace group {
 
