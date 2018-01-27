@@ -16,6 +16,9 @@ struct PutMessageComponent : MessageT {
   void* getPut() {
     return envelopeGetPutPtr(MessageT::env);
   }
+  size_t getPutSize() {
+    return envelopeGetPutSize(MessageT::env);
+  }
 };
 
 using PayloadMessage = PutMessageComponent<ActiveMessage<PutShortEnvelope>>;
