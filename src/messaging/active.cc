@@ -31,49 +31,57 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   auto msg = reinterpret_cast<MessageType const>(base);
 
   auto const& is_put = envelopeIsPut(msg->env);
+  auto const& is_put_packed = envelopeIsPackedPutType(msg->env);
 
   debug_print(
     active, node,
-    "sendMsgBytesWithPut: size=%d, dest=%d, is_put=%s\n",
-    msg_size, dest, print_bool(is_put)
+    "sendMsgBytesWithPut: size=%d, dest=%d, is_put=%s, is_put_packed=%s\n",
+    msg_size, dest, print_bool(is_put), print_bool(is_put_packed)
   );
 
   MsgSizeType new_msg_size = msg_size;
 
-  if (is_put) {
-    auto const& rem_size = thePool()->remainingSize(base);
+  if (is_put && !is_put_packed) {
     auto const& put_ptr = envelopeGetPutPtr(msg->env);
     auto const& put_size = envelopeGetPutSize(msg->env);
-    bool const pack_in_buffer = put_size < rem_size;
+    auto const& rem_size = thePool()->remainingSize(base);
+    bool const direct_buf_pack = put_size <= rem_size &&
+      put_size <= max_pack_direct_size;
     assert(
       (!(put_size != 0) || put_ptr) && "Must have valid ptr if size > 0"
     );
     debug_print(
       active, node,
-      "sendMsgBytesWithPut: (put) put_ptr=%p, put_size=%lu, rem_size=%lu, "
-      "msg_size=%d, dest=%d, is_put=%s, pack_in_buffer=%s\n",
-      put_ptr, put_size, rem_size, msg_size, dest, print_bool(is_put),
-      print_bool(pack_in_buffer)
+      "sendMsgBytesWithPut: (put) put_ptr=%p, size:{msg=%d,put=%lu,rem=%lu},"
+      "dest=%d, max_pack_size=%d, direct_buf_pack=%s\n",
+      put_ptr, msg_size, put_size, rem_size, dest, max_pack_direct_size,
+      print_bool(direct_buf_pack)
     );
-    if (pack_in_buffer) {
+    if (direct_buf_pack) {
       auto msg_size_ptr = static_cast<intptr_t>(msg_size);
       packMsg(msg, msg_size, put_ptr, put_size);
       new_msg_size += put_size;
-      envelopeSetPutPtr(
-        msg->env, reinterpret_cast<void*>(msg_size_ptr), PutPackedTag
-      );
+      envelopeSetPutTag(msg->env, PutPackedTag);
+      setPackedPutType(msg->env);
     } else {
+      auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
-        RDMA_GetType{put_ptr,put_size}, dest, no_tag, nullptr
+        RDMA_GetType{put_ptr,put_size}, dest, env_tag, nullptr
       );
       auto const& ret_tag = std::get<1>(ret);
       auto const& put_event_send = std::get<0>(ret);
-      envelopeSetPutPtr(msg->env, nullptr, static_cast<size_t>(ret_tag));
+      if (ret_tag != env_tag) {
+        envelopeSetPutTag(msg->env, ret_tag);
+      }
       if (next_action != nullptr) {
         assert(parent_event != nullptr);
         parent_event->addEventToList(put_event_send);
       }
     }
+  } else if (is_put && is_put_packed) {
+    // Adjust size of the send for packed data
+    auto const& put_size = envelopeGetPutSize(msg->env);
+    new_msg_size += put_size;
   }
 
   auto send_event = sendMsgBytes(
@@ -518,13 +526,15 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
       print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
     );
 
+    CountType msg_bytes = num_probe_bytes;
+
     if (is_put) {
-      auto const size_as_put_tag = envelopeGetPutSize(msg->env);
-      if (size_as_put_tag == PutPackedTag) {
-        auto const msg_size_as_put_ptr = envelopeGetPutPtr(msg->env);
-        auto const msg_size = reinterpret_cast<size_t>(msg_size_as_put_ptr);
+      auto const put_tag = envelopeGetPutTag(msg->env);
+      if (put_tag == PutPackedTag) {
+        auto const put_size = envelopeGetPutSize(msg->env);
+        auto const msg_size = num_probe_bytes - put_size;
         char* put_ptr = buf + msg_size;
-        size_t put_size = num_probe_bytes - msg_size;
+        msg_bytes = msg_size;
 
         debug_print(
           active, node,
@@ -532,10 +542,9 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
           put_ptr, msg_size, put_size
         );
 
-        envelopeSetPutPtr(msg->env, put_ptr, put_size);
+        envelopeSetPutPtrOnly(msg->env, put_ptr);
         put_finished = true;
       } else {
-        TagType const put_tag = static_cast<TagType>(size_as_put_tag);
         /*bool const put_delivered = */recvDataMsg(
           put_tag, sender, [=](RDMA_GetType ptr, ActionType deleter){
             envelopeSetPutPtr(msg->env, std::get<0>(ptr), std::get<1>(ptr));
@@ -546,7 +555,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
     }
 
     if (!is_put || put_finished) {
-      handleActiveMsg(msg, sender, num_probe_bytes, true);
+      handleActiveMsg(msg, sender, msg_bytes, true);
     }
 
     return true;
