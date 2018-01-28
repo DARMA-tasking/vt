@@ -22,6 +22,7 @@ struct PutEnvelope {
 
   PtrType data_ptr_;
   EnvSizeType data_size_;
+  TagType put_data_tag_;
 };
 
 //using PutBasicEnvelope = PutEnvelope<EpochTagEnvelope, size_t>;
@@ -32,6 +33,7 @@ inline void envelopeInitEmpty(PutShortEnvelope& env) {
   setPutType(env.env);
   env.data_ptr_ = nullptr;
   env.data_size_ = 0;
+  env.put_data_tag_ = no_tag;
 }
 
 static_assert(std::is_pod<PutShortEnvelope>(), "PutShortEnvelope must be POD");
@@ -59,6 +61,17 @@ inline PutEnvSizeType envelopeGetPutSize(Env const& env) {
 }
 
 template <typename Env>
+inline TagType envelopeGetPutTag(Env const& env) {
+  using PutType = PutEnvelope<PutUnderEnvelopeT, PutEnvSizeType>;
+  if (envelopeIsPut(env)) {
+    return reinterpret_cast<PutType const*>(&env)->put_data_tag_;
+  } else {
+    assert(0 and "Envelope must be able to hold a put ptr");
+    return 0;
+  }
+}
+
+template <typename Env>
 inline void envelopeSetPutPtr(
   Env& env, PutPtrConstType ptr, PutEnvSizeType size
 ) {
@@ -69,6 +82,37 @@ inline void envelopeSetPutPtr(
   } else {
     assert(0 and "Envelope must be able to hold a put ptr");
   }
+}
+
+template <typename Env>
+inline void envelopeSetPutPtrOnly(Env& env, PutPtrConstType ptr) {
+  using PutType = PutEnvelope<PutUnderEnvelopeT, PutEnvSizeType>;
+  if (envelopeIsPut(env)) {
+    reinterpret_cast<PutType*>(&env)->data_ptr_ = const_cast<PutPtrType>(ptr);
+  } else {
+    assert(0 and "Envelope must be able to hold a put ptr");
+  }
+}
+
+template <typename Env>
+inline void envelopeSetPutTag(Env& env, TagType const& in_tag) {
+  using PutType = PutEnvelope<PutUnderEnvelopeT, PutEnvSizeType>;
+  if (envelopeIsPut(env)) {
+    reinterpret_cast<PutType*>(&env)->put_data_tag_ = in_tag;
+  } else {
+    assert(0 and "Envelope must be able to hold a put ptr");
+  }
+}
+
+template <typename Env>
+inline void setPackedPutType(Env& env) {
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvPackedPut;
+}
+
+template <typename Env>
+inline bool envelopeIsPackedPutType(Env const& env) {
+  auto const& bits = 1 << eEnvelopeType::EnvPackedPut;
+  return reinterpret_cast<Envelope const*>(&env)->type & bits;
 }
 
 } /* end namespace vt */

@@ -23,7 +23,8 @@ namespace vt {
 
 using MPI_TagType = int;
 
-static constexpr size_t const PutPackedTag = std::numeric_limits<size_t>::max();
+static constexpr TagType const PutPackedTag =
+  std::numeric_limits<TagType>::max();
 
 enum class MPITag : MPI_TagType {
   ActiveMsgTag = 1,
@@ -31,6 +32,7 @@ enum class MPITag : MPI_TagType {
 };
 
 static constexpr TagType const starting_direct_buffer_tag = 1000;
+static constexpr MsgSizeType const max_pack_direct_size = 512;
 
 struct PendingRecv {
   void* user_buf = nullptr;
