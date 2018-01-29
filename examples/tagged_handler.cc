@@ -60,7 +60,6 @@ static void myColFn(TestMsg* msg) {
   for (auto i = first_recv_tag; i < last_recv_tag; i++) {
     TestMsg* new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
     theMsg()->sendMsg(msg->callback_han, new_msg, i);
-    messageDeref(new_msg);
   }
 }
 
@@ -81,7 +80,6 @@ int main(int argc, char** argv) {
   if (my_node == 0) {
     TestMsg* msg = makeSharedMessage<TestMsg>(my_node, callback);
     theMsg()->broadcastMsg<TestMsg, myColFn>(msg);
-    messageDeref(msg);
   }
 
   while (!rt->isTerminated()) {
