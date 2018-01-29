@@ -27,8 +27,8 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    HelloMsg* msg = new HelloMsg(my_node);
-    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
+    HelloMsg* msg = makeSharedMessage<HelloMsg>(my_node);
+    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
   }
 
   while (!rt->isTerminated()) {
