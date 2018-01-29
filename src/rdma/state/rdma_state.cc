@@ -159,7 +159,7 @@ bool State::testReadyPutData(TagType const& tag) {
   debug_print(
     rdma_state, node,
     "defaultPutHandlerFn: msg=%p, ptr=%p, req_num_bytes=%lld, tag=%d\n",
-    msg, ptr, req_num_bytes, tag
+    msg, in_ptr, req_num_bytes, tag
   );
 
   assert(
@@ -186,7 +186,7 @@ void State::getData(
     "getData: msg=%p, tag=%d, ready=%s, handle=%lld, get_any_tag=%s,"
     " is_local=%s\n",
     msg, info.tag, print_bool(ready), handle, print_bool(get_any_tag),
-    print_bool(is_local)
+    print_bool(info.is_local)
   );
 
   auto const& offset = info.offset;
@@ -233,7 +233,7 @@ void State::putData(
     "putData: msg=%p, tag=%d, ptr=%p, num_bytes=%lld, "
     "ready=%s, handle=%lld, get_any_tag=%s, is_local=%s\n",
     msg, info.tag, info.data_ptr, info.num_bytes, print_bool(ready),
-    handle, print_bool(get_any_tag), print_bool(is_local)
+    handle, print_bool(get_any_tag), print_bool(info.is_local)
   );
 
   StateMessage<State> state_msg(this);
