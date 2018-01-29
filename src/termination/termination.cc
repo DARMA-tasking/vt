@@ -199,11 +199,11 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     );
 
     if (not is_root_) {
-      auto msg = new TermCounterMsg(state.getEpoch(), state.g_prod1, state.g_cons1);
-      theMsg()->setTermMessage(msg);
-      theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(
-        parent_, msg, [=] { delete msg; }
+      auto msg = makeSharedMessage<TermCounterMsg>(
+        state.getEpoch(), state.g_prod1, state.g_cons1
       );
+      theMsg()->setTermMessage(msg);
+      theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(parent_, msg);
 
       debug_print(
         term, node,
@@ -225,11 +225,9 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       );
 
       if (is_term) {
-        auto msg = new TermMsg(state.getEpoch());
+        auto msg = makeSharedMessage<TermMsg>(state.getEpoch());
         theMsg()->setTermMessage(msg);
-        theMsg()->broadcastMsg<TermMsg, epochFinishedHandler>(
-          msg, [=] { delete msg; }
-        );
+        theMsg()->broadcastMsg<TermMsg, epochFinishedHandler>(msg);
 
         state.setTerminated();
 
@@ -246,11 +244,9 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
           state.getEpoch(), state.getCurWave()
         );
 
-        auto msg = new TermMsg(state.getEpoch(), state.getCurWave());
+        auto msg = makeSharedMessage<TermMsg>(state.getEpoch(), state.getCurWave());
         theMsg()->setTermMessage(msg);
-        theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(
-          msg, [=] { delete msg; }
-        );
+        theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(msg);
       }
     }
 
@@ -433,22 +429,15 @@ void TerminationDetector::propagateNewEpoch(
   );
 
   if (is_ready) {
+    auto msg = makeSharedMessage<TermMsg>(new_epoch);
+    theMsg()->setTermMessage(msg);
+
     if (is_root_) {
       // broadcast ready to all
-      auto msg = new TermMsg(new_epoch);
-      theMsg()->setTermMessage(msg);
-
-      theMsg()->broadcastMsg<TermMsg, readyEpochHandler>(
-        msg, [=] { delete msg; }
-      );
+      theMsg()->broadcastMsg<TermMsg, readyEpochHandler>(msg);
     } else {
       // propagate up the tree
-      auto msg = new TermMsg(new_epoch);
-      theMsg()->setTermMessage(msg);
-
-      theMsg()->sendMsg<TermMsg, propagateNewEpochHandler>(
-        parent_, msg, [=] { delete msg; }
-      );
+      theMsg()->sendMsg<TermMsg, propagateNewEpochHandler>(parent_, msg);
     }
 
     state.submitToParent(is_root_, true);
