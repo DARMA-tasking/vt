@@ -33,6 +33,11 @@ void messageSetUnmanaged(MessageT* msg) {
 template <typename MessageT>
 void messageRef(MessageT* msg) {
   envelopeRef(msg->env);
+
+  debug_print(
+    pool, node,
+    "messageRef msg=%p, refs=%d\n", msg, envelopeGetRef(msg->env)
+  );
 }
 
 template <typename MessageT>

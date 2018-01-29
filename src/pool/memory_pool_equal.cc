@@ -22,6 +22,13 @@ template <int64_t num_bytes_t>
     "cur_slot_=%lld\n", cur_slot_
   );
 
+  // for (auto i = 0; i < cur_slot_; i++) {
+  //   debug_print_force(
+  //     pool, node,
+  //     "alloc never freed: ptr=%p, cur_slot_=%d\n", holder_.at(i), i
+  //   );
+  // }
+
   for (int i = cur_slot_; i < holder_.size(); i++) {
     free(holder_.at(i));
   }
@@ -57,13 +64,13 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(size_t const& sz) {
 
 template <int64_t num_bytes_t>
 void MemoryPoolEqual<num_bytes_t>::dealloc(void* const t) {
-  assert(
-    cur_slot_ - 1 >= 0 and "Must be greater than zero"
-  );
-
   debug_print(
     pool, node,
     "dealloc t=%p, cur_slot=%lld\n", t, cur_slot_
+  );
+
+  assert(
+    cur_slot_ - 1 >= 0 and "Must be greater than zero"
   );
 
   void* const ptr_actual = static_cast<size_t*>(t) - 1;

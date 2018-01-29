@@ -7,6 +7,8 @@
 #include "messaging/message/shared_message.h"
 #include "pool/pool.h"
 
+#include <typeinfo>
+
 namespace vt {
 
 struct BaseMessage { };
@@ -18,10 +20,23 @@ struct ActiveMessage : BaseMessage {
 
   ActiveMessage() {
     envelopeInitEmpty(env);
+
+    debug_print(
+      pool, node,
+      "Message::constructor of ptr=%p, type=%s\n",
+      this, typeid(this).name()
+    );
   }
 
   static void* operator new(std::size_t sz) {
-    return thePool()->alloc(sz);
+    auto const& ptr = thePool()->alloc(sz);
+
+    debug_print(
+      pool, node,
+      "Message::new of size=%lu, ptr=%p\n", sz, ptr
+    );
+
+    return ptr;
   }
 
   static void* operator new(std::size_t, void* mem) {
@@ -29,6 +44,11 @@ struct ActiveMessage : BaseMessage {
   }
 
   static void operator delete(void* ptr) {
+    debug_print(
+      pool, node,
+      "Message::delete of ptr=%p\n", ptr
+    );
+
     return thePool()->dealloc(ptr);
   }
 

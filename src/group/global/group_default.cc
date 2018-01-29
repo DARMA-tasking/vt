@@ -117,11 +117,12 @@ namespace vt { namespace group { namespace global {
 
   debug_print(
     broadcast, node,
-    "DefaultGroup::broadcast size=%d, from=%d, dest=%d, is_root=%s\n",
-    size, from, dest, print_bool(is_root)
+    "DefaultGroup::broadcast msg=%p, size=%d, from=%d, dest=%d, is_root=%s\n",
+    base, size, from, dest, print_bool(is_root)
   );
 
   if (num_children > 0 || send_to_root) {
+    auto const& is_shared = isSharedMessage(msg);
     bool const& has_action = action != nullptr;
     EventRecordType* parent = nullptr;
     auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
@@ -132,6 +133,10 @@ namespace vt { namespace group { namespace global {
       parent = holder.get_event();
     }
 
+    if (is_shared) {
+      messageRef(msg);
+    }
+
     // Send to child nodes in the spanning tree
     if (num_children > 0) {
       default_group_->spanning_tree_->foreachChild([&](NodeType child) {
@@ -139,15 +144,18 @@ namespace vt { namespace group { namespace global {
 
         debug_print(
           broadcast, node,
-          "DefaultGroup::broadcast *send* size=%d, from=%d, child=%d, send=%s\n",
-          size, from, child, print_bool(send)
+          "DefaultGroup::broadcast *send* size=%d, from=%d, child=%d, send=%s, "
+          "msg=%p\n",
+          size, from, child, print_bool(send), msg
         );
 
         if (send) {
-          messageRef(msg);
-          theMsg()->sendMsgBytesWithPut(
-            child, base, size, send_tag, parent, action, event
+          auto const put_event = theMsg()->sendMsgBytesWithPut(
+            child, base, size, send_tag, action
           );
+          if (has_action) {
+            parent->addEventToList(put_event);
+          }
         }
       });
     }
@@ -157,14 +165,21 @@ namespace vt { namespace group { namespace global {
     if (send_to_root) {
       debug_print(
         broadcast, node,
-        "DefaultGroup::broadcast *send* is_root=%s, root_node=%d, dest=%d\n",
-        print_bool(is_root), root_node, dest
+        "DefaultGroup::broadcast *send* is_root=%s, root_node=%d, dest=%d, "
+        "msg=%p\n",
+        print_bool(is_root), root_node, dest, msg
       );
 
-      messageRef(msg);
-      theMsg()->sendMsgBytesWithPut(
-        root_node, base, size, send_tag, parent, action, event
+      auto const put_event = theMsg()->sendMsgBytesWithPut(
+        root_node, base, size, send_tag, action
       );
+      if (has_action) {
+        parent->addEventToList(put_event);
+      }
+    }
+
+    if (is_shared) {
+      messageDeref(msg);
     }
   }
 

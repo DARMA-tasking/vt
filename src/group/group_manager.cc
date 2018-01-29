@@ -164,11 +164,10 @@ EventType GroupManager::sendGroup(
       parent = holder.get_event();
     }
 
-    messageRef(msg);
-    return theMsg()->sendMsgBytesWithPut(
-      node, base, size, send_tag, nullptr, action, no_event
-    );
+    return theMsg()->sendMsgBytesWithPut(node, base, size, send_tag, action);
   };
+
+  EventType ret_event = no_event;
 
   if (is_root && group_node != this_node) {
     *deliver = false;
@@ -184,13 +183,11 @@ EventType GroupManager::sendGroup(
       return send_to_node(node);
     } else {
       auto iter = remote_group_info_.find(group);
-      messageRef(msg);
 
       debug_print(
         broadcast, node,
-        "GroupManager::broadcast *send* remote size=%d, from=%d, child=%d, "
-        "found=%s\n",
-        size, from, child, print_bool(iter != remote_group_info_.end())
+        "GroupManager::broadcast *send* remote size=%d, from=%d, found=%s\n",
+        size, from, print_bool(iter != remote_group_info_.end())
       );
 
       if (iter != remote_group_info_.end()) {
@@ -200,15 +197,14 @@ EventType GroupManager::sendGroup(
           info.default_spanning_tree_ != nullptr && "Must have spanning tree"
         );
 
-        EventType event = no_event;
         bool const& has_action = action != nullptr;
         EventRecordType* parent = nullptr;
         auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
         auto const& num_children = info.default_spanning_tree_->getNumChildren();
 
         if (has_action) {
-          event = theEvent()->createParentEvent(this_node);
-          auto& holder = theEvent()->getEventHolder(event);
+          ret_event = theEvent()->createParentEvent(this_node);
+          auto& holder = theEvent()->getEventHolder(ret_event);
           parent = holder.get_event();
         }
 
@@ -222,10 +218,12 @@ EventType GroupManager::sendGroup(
             );
 
             if (child != this_node) {
-              messageRef(msg);
-              theMsg()->sendMsgBytesWithPut(
-                child, base, size, send_tag, parent, action, event
+              auto const put_event = theMsg()->sendMsgBytesWithPut(
+                child, base, size, send_tag, action
               );
+              if (has_action) {
+                parent->addEventToList(put_event);
+              }
             }
           });
         }
@@ -233,7 +231,7 @@ EventType GroupManager::sendGroup(
     }
   }
 
-  return no_event;
+  return ret_event;
 }
 
 GroupManager::GroupManager() {
