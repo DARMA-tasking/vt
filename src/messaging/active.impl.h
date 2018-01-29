@@ -48,6 +48,10 @@ EventType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
+  debug_print(
+    pool, node,
+    "sendMsg of indirect han=%d, dest=%d, tag=%d\n", han, dest, tag
+  );
   return sendMsgSized(han, msg, sizeof(MessageT), next_action);
 }
 
@@ -55,6 +59,10 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::broadcastMsg(
   MessageT* const msg, TagType const& tag, ActionType next_action
 ) {
+  debug_print(
+    pool, node,
+    "broadcastMsg of ptr=%p, type=%s\n", msg, typeid(MessageT).name()
+  );
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   auto const& this_node = theContext()->getNode();
   setBroadcastType(msg->env);
@@ -74,6 +82,10 @@ EventType ActiveMessenger::sendMsg(
   NodeType const& dest, MessageT* const msg, TagType const& tag,
   ActionType next_action
 ) {
+  debug_print(
+    active, node,
+    "sendMsg of ptr=%p, type=%s\n", msg, typeid(MessageT).name()
+  );
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   envelopeSetup(msg->env, dest, han);
   if (tag != no_tag) {

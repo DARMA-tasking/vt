@@ -382,13 +382,12 @@ struct ActiveMessenger {
   EventType sendMsgBytes(
     NodeType const& dest, BaseMessage* const base_msg,
     MsgSizeType const& msg_size, TagType const& send_tag,
-    EventRecordType* parent_event, ActionType next_action
+    ActionType next_action
   );
 
   EventType sendMsgBytesWithPut(
     NodeType const& dest, BaseMessage* const base, MsgSizeType const& msg_size,
-    TagType const& send_tag, EventRecordType* parent_event,
-    ActionType next_action, EventType const& in_event
+    TagType const& send_tag, ActionType next_action
   );
 
 private:

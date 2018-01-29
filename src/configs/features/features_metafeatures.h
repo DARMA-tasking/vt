@@ -8,7 +8,7 @@
 // Meta-features and debug and turn combinations on
 #define debug_meta_all                                                  \
   gen, runtime, active, term, barrier, event, pool, rdma, rdma_channel, \
-  rdma_state, handler, flush
+  rdma_state, handler, group, location, broadcast, flush
 
 // @todo: needed anymore?
 #define debug_sentinel_token       debug_sentinel_token

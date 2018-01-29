@@ -25,8 +25,7 @@ void ActiveMessenger::packMsg(
 
 EventType ActiveMessenger::sendMsgBytesWithPut(
   NodeType const& dest, BaseMessage* const base, MsgSizeType const& msg_size,
-  TagType const& send_tag, EventRecordType* parent_event,
-  ActionType next_action, EventType const& in_event
+  TagType const& send_tag, ActionType next_action
 ) {
   auto msg = reinterpret_cast<MessageType const>(base);
 
@@ -38,6 +37,10 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     "sendMsgBytesWithPut: size=%d, dest=%d, is_put=%s, is_put_packed=%s\n",
     msg_size, dest, print_bool(is_put), print_bool(is_put_packed)
   );
+
+  EventType new_event = theEvent()->createParentEvent(this_node_);
+  auto& holder = theEvent()->getEventHolder(new_event);
+  EventRecordType* parent = holder.get_event();
 
   MsgSizeType new_msg_size = msg_size;
 
@@ -73,9 +76,8 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
       if (ret_tag != env_tag) {
         envelopeSetPutTag(msg->env, ret_tag);
       }
-      if (next_action != nullptr) {
-        assert(parent_event != nullptr);
-        parent_event->addEventToList(put_event_send);
+      if (next_action) {
+        parent->addEventToList(put_event_send);
       }
     }
   } else if (is_put && is_put_packed) {
@@ -84,16 +86,20 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     new_msg_size += put_size;
   }
 
-  auto send_event = sendMsgBytes(
-    dest, msg, new_msg_size, send_tag, parent_event, next_action
+  auto const& send_event = sendMsgBytes(
+    dest, msg, new_msg_size, send_tag, next_action
   );
 
-  return is_put ? in_event : send_event;
+  if (next_action) {
+    parent->addEventToList(send_event);
+  }
+
+  return new_event;
 }
 
 EventType ActiveMessenger::sendMsgBytes(
   NodeType const& dest, BaseMessage* const base, MsgSizeType const& msg_size,
-  TagType const& send_tag, EventRecordType* parent_event, ActionType next_action
+  TagType const& send_tag, ActionType next_action
 ) {
   auto const& msg = reinterpret_cast<MessageType const>(base);
 
@@ -123,14 +129,6 @@ EventType ActiveMessenger::sendMsgBytes(
     msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
     mpi_event->getRequest()
   );
-
-  if (parent_event) {
-    parent_event->addEventToList(event_id);
-  } else {
-    if (next_action) {
-      holder.attachAction(next_action);
-    }
-  }
 
   if (is_shared) {
     messageDeref(msg);
@@ -187,22 +185,34 @@ EventType ActiveMessenger::sendMsgSized(
     EventRecordType* parent = nullptr;
     EventType event = no_event;
 
-    if (is_put || ret_event != no_event) {
+    if (next_action) {
       event = theEvent()->createParentEvent(this_node_);
       auto& holder = theEvent()->getEventHolder(event);
       parent = holder.get_event();
     }
 
-    if (ret_event != no_event) {
-      parent->addEventToList(ret_event);
-    }
-
-    sendMsgBytesWithPut(
-      dest, base, msg_size, send_tag, parent, next_action, event
+    auto const send_put_event = sendMsgBytesWithPut(
+      dest, base, msg_size, send_tag, next_action
     );
+
+    if (next_action) {
+      if (ret_event != no_event) {
+        parent->addEventToList(ret_event);
+      }
+      if (send_put_event != no_event) {
+        parent->addEventToList(send_put_event);
+      }
+      auto& holder = theEvent()->getEventHolder(event);
+      holder.attachAction(next_action);
+    }
 
     return event;
   } else {
+    if (ret_event != no_event && next_action) {
+      auto& holder = theEvent()->getEventHolder(ret_event);
+      holder.attachAction(next_action);
+    }
+
     return ret_event;
   }
 }
@@ -231,10 +241,6 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   );
 
   theTerm()->produce(term::any_epoch_sentinel);
-
-  if (next_action != nullptr) {
-    holder.attachAction(next_action);
-  }
 
   return SendDataRetType{event_id,send_tag};
 }
@@ -360,9 +366,17 @@ bool ActiveMessenger::handleActiveMsg(
   bool deliver = false;
   GroupActiveAttorney::groupHandler(msg, from, size, false, nullptr, &deliver);
 
+  debug_print(
+    active, node,
+    "handleActiveMsg: msg=%p, ref=%d, deliver=%s\n",
+    msg, envelopeGetRef(msg->env), print_bool(deliver)
+  );
+
   if (deliver) {
-    return deliverActiveMsg(msg, from, insert);
+    auto const& ret = deliverActiveMsg(msg, from, insert);
+    return ret;
   } else {
+    messageDeref(msg);
     return false;
   }
 }
@@ -400,12 +414,6 @@ bool ActiveMessenger::deliverActiveMsg(
     msg, envelopeGetRef(msg->env), print_bool(is_bcast)
   );
 
-  debug_print(
-    active, node,
-    "deliverActiveMsg: handler=%d, is_auto=%s, is_functor=%s\n",
-    handler, print_bool(is_auto), print_bool(is_functor)
-  );
-
   if (is_auto and is_functor) {
     active_fun = auto_registry::getAutoHandlerFunctor(handler);
   } else if (is_auto) {
@@ -414,14 +422,22 @@ bool ActiveMessenger::deliverActiveMsg(
     active_fun = theRegistry()->getHandler(handler, tag);
   }
 
+  bool const& has_action_handler = active_fun != no_action;
+
+  debug_print(
+    active, node,
+    "deliverActiveMsg: msg=%p, handler=%d, tag=%d, is_auto=%s, "
+    "is_functor=%s, has_action_handler=%s, insert=%s\n",
+    msg, handler, tag, print_bool(is_auto), print_bool(is_functor),
+    print_bool(has_action_handler), print_bool(insert)
+  );
+
   backend_enable_if(
     trace_enabled,
     if (is_auto) {
       trace_id = auto_registry::theTraceID(handler);
     }
   );
-
-  bool const& has_action_handler = active_fun != no_action;
 
   if (has_action_handler) {
     // set the current handler so the user can request it in the context of an
@@ -471,6 +487,13 @@ bool ActiveMessenger::deliverActiveMsg(
       } else {
         iter->second.push_back(BufferedMsgType{msg,from_node});
       }
+      debug_print(
+        active, node,
+        "deliverActiveMsg: inserting han=%d, msg=%p, ref=%d, list size=%lu\n",
+        handler, msg, envelopeGetRef(msg->env),
+        pending_handler_msgs_.find(handler)->second.size()
+      );
+      messageRef(msg);
     }
   }
 
@@ -582,6 +605,7 @@ void ActiveMessenger::processMaybeReadyHanTag() {
   for (auto&& x : maybe_ready_tag_han_) {
     deliverPendingMsgsHandler(std::get<0>(x), std::get<1>(x));
   }
+  maybe_ready_tag_han_.clear();
 }
 
 HandlerType ActiveMessenger::registerNewHandler(
@@ -609,11 +633,21 @@ void ActiveMessenger::swapHandlerFn(
 void ActiveMessenger::deliverPendingMsgsHandler(
   HandlerType const& han, TagType const& tag
 ) {
+  debug_print(
+    active, node,
+    "deliverPendingMsgsHandler: han=%d, tag=%d\n", han, tag
+  );
   auto iter = pending_handler_msgs_.find(han);
   if (iter != pending_handler_msgs_.end()) {
     if (iter->second.size() > 0) {
       for (auto cur = iter->second.begin(); cur != iter->second.end(); ++cur) {
+        debug_print(
+          active, node,
+          "deliverPendingMsgsHandler: msg=%p, from=%d\n",
+          cur->buffered_msg, cur->from_node
+        );
         if (deliverActiveMsg(cur->buffered_msg, cur->from_node, false)) {
+          messageDeref(cur->buffered_msg);
           cur = iter->second.erase(cur);
         }
       }
