@@ -63,7 +63,9 @@ CollectiveAlgType CollectiveAlg::newNamedBarrier() {
   return barrier_name;
 }
 
-void CollectiveAlg::waitBarrier(CollectiveAlgType const& barrier, bool const skip_term) {
+void CollectiveAlg::waitBarrier(
+  ActionType poll_action, CollectiveAlgType const& barrier, bool const skip_term
+) {
   bool const is_wait = true;
   bool const is_named = barrier != no_barrier;
 
@@ -71,10 +73,18 @@ void CollectiveAlg::waitBarrier(CollectiveAlgType const& barrier, bool const ski
 
   auto& barrier_state = insertFindBarrier(is_named, is_wait, next_barrier);
 
+  debug_print(
+    barrier, node,
+    "waitBarrier: next_barrier=%llu\n", next_barrier
+  );
+
   barrierUp(is_named, is_wait, next_barrier, skip_term);
 
   while (not barrier_state.released) {
     theMsg()->scheduler();
+    if (poll_action) {
+      poll_action();
+    }
   }
 
   removeBarrier(is_named, is_wait, next_barrier);
