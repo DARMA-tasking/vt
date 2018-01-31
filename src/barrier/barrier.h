@@ -46,8 +46,10 @@ struct Barrier : Tree {
     bool const& is_named, bool const& is_wait, BarrierType const& barrier
   );
 
-  inline void barrier(BarrierType const& barrier = no_barrier) {
-    return waitBarrier(barrier);
+  inline void barrier(
+    ActionType poll_action = nullptr, BarrierType const& barrier = no_barrier
+  ) {
+    return waitBarrier(poll_action, barrier);
   }
 
   inline void barrierThen(ActionType fn) {
@@ -60,7 +62,7 @@ struct Barrier : Tree {
 
   inline void systemMetaBarrier() {
     bool const skip_term = true;
-    return waitBarrier(no_barrier, skip_term);
+    return waitBarrier(nullptr, no_barrier, skip_term);
   }
 
   inline void systemMetaBarrierCont(ActionType fn) {
@@ -74,7 +76,8 @@ struct Barrier : Tree {
 private:
 
   void waitBarrier(
-    BarrierType const& barrier = no_barrier, bool const skip_term = false
+    ActionType poll_action = nullptr, BarrierType const& barrier = no_barrier,
+    bool const skip_term = false
   );
 
   void contBarrier(
