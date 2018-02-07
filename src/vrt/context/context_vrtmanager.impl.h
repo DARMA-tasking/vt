@@ -95,38 +95,44 @@ template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void VirtualContextManager::sendSerialMsg(
   VirtualProxyType const& toProxy, MsgT *const msg, ActionType act
 ) {
-  NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
-  // register the user's handler
-  HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
-  // save the user's handler in the message
-  msg->setVrtHandler(han);
-  msg->setProxy(toProxy);
+  if (theContext()->getWorker() == worker_id_comm_thread) {
+    NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
+    // register the user's handler
+    HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
+    // save the user's handler in the message
+    msg->setVrtHandler(han);
+    msg->setProxy(toProxy);
 
-  debug_print(
-    vrt, node,
-    "sending serialized msg to VC: msg=%p, han=%d, home_node=%d, toProxy=%lld\n",
-    msg, han, home_node, toProxy
-  );
+    debug_print(
+      vrt, node,
+      "sending serialized msg to VC: msg=%p, han=%d, home_node=%d, toProxy=%lld\n",
+      msg, han, home_node, toProxy
+    );
 
-  using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
+    using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
 
-  // route the message to the destination using the location manager
-  SerializedMessenger::sendSerialMsg<
-    MsgT, virtualTypedMsgHandler<MsgT>, VirtualMessage
-  >(
-    msg,
-    // custom send lambda to route the message
-    [=](SerialMsgT* msg){
-      msg->setProxy(toProxy);
-      theLocMan()->vrtContextLoc->routeMsgHandler<
-        SerialMsgT, SerializedMessenger::payloadMsgHandler
-      >(toProxy, home_node, msg, act);
-    },
-    // custom data transfer lambda if above the eager threshold
-    [=](ActionNodeType action){
-      theLocMan()->vrtContextLoc->routeNonEagerAction(toProxy, home_node, action);
-    }
-  );
+    // route the message to the destination using the location manager
+    SerializedMessenger::sendSerialMsg<
+      MsgT, virtualTypedMsgHandler<MsgT>, VirtualMessage
+    >(
+      msg,
+      // custom send lambda to route the message
+      [=](SerialMsgT* msg){
+        msg->setProxy(toProxy);
+        theLocMan()->vrtContextLoc->routeMsgHandler<
+          SerialMsgT, SerializedMessenger::payloadMsgHandler
+        >(toProxy, home_node, msg, act);
+      },
+      // custom data transfer lambda if above the eager threshold
+      [=](ActionNodeType action){
+        theLocMan()->vrtContextLoc->routeNonEagerAction(toProxy, home_node, action);
+      }
+    );
+  } else {
+    theWorkerGrp()->enqueueCommThread([=]{
+      theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, msg, act);
+    });
+  }
 }
 
 template <typename VrtContextT, typename... Args>
