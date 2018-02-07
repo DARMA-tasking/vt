@@ -136,11 +136,11 @@ bool Runtime::initialize(bool const force_now) {
 bool Runtime::finalize(bool const force_now) {
   if (force_now) {
     sync();
-    finalizeOptionalComponents();
     if (theContext->getNode() == 0) {
       printShutdownBanner();
     }
     finalizeComponents();
+    finalizeOptionalComponents();
     finalizeContext();
     finalized_ = true;
     return true;
@@ -325,6 +325,9 @@ void Runtime::finalizeComponents() {
   // memory allocations
   theRegistry = nullptr;
   theEvent->cleanup(); theEvent = nullptr;
+
+  // Initialize individual memory pool for each worker
+  thePool->destroyWorkerPools();
   thePool = nullptr;
 
   debug_print(runtime, node, "end: finalizeComponents\n");
@@ -334,9 +337,6 @@ void Runtime::finalizeOptionalComponents() {
   debug_print(runtime, node, "begin: finalizeOptionalComponents\n");
 
   theWorkerGrp = nullptr;
-
-  // Initialize individual memory pool for each worker
-  thePool->destroyWorkerPools();
 
   debug_print(runtime, node, "end: finalizeOptionalComponents\n");
 }

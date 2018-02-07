@@ -11,6 +11,7 @@
 #include "worker/worker_openmp.h"
 #include "worker/worker_group_counter.h"
 #include "worker/worker_group_comm.h"
+#include "utils/mutex/mutex.h"
 
 #include <vector>
 #include <memory>
@@ -25,6 +26,7 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
   using WorkerStateContainerType = std::vector<WorkerStatePtrType>;
   using WorkerFunType = std::function<void()>;
   using WorkUnitContainerType = util::container::ConcurrentDeque<WorkUnitType>;
+  using MutexType = util::mutex::MutexType;
 
   WorkerGroupOMP();
   WorkerGroupOMP(WorkerCountType const& in_num_workers);
@@ -37,9 +39,6 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
   void joinWorkers();
   void progress();
   bool commScheduler();
-
-  // // thread-safe comm thread enqueue
-  // void enqueueCommThreadSafe(WorkUnitType const& work_unit);
 
   // non-thread-safe comm and worker thread enqueue
   void enqueueCommThread(WorkUnitType const& work_unit);
@@ -55,6 +54,7 @@ private:
   bool initialized_ = false;
   WorkerCountType num_workers_ = 0;
   WorkerStateContainerType worker_state_;
+  MutexType enqueue_worker_mutex_{};
 };
 
 }} /* end namespace vt::worker */
