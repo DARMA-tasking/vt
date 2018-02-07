@@ -47,8 +47,14 @@ void WorkerGroupOMP::progress() {
 }
 
 void WorkerGroupOMP::enqueueCommThread(WorkUnitType const& work_unit) {
+  // if (theContext()->getWorker() != worker_id_comm_thread) {
+  //   enqueue_worker_mutex_.lock();
+  // }
   this->enqueued();
   WorkerGroupComm::enqueueComm(work_unit);
+  // if (theContext()->getWorker() != worker_id_comm_thread) {
+  //   enqueue_worker_mutex_.unlock();
+  // }
 }
 
 void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
