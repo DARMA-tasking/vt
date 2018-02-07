@@ -128,7 +128,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 
 void AsyncEvent::cleanup() {
   while (polling_event_container_.size() > 0) {
-    theEvent()->testEventsTrigger();
+    testEventsTrigger();
   }
   lookup_container_.clear();
   event_container_.clear();
