@@ -57,7 +57,6 @@ seq::SequencerVirtual*      theVirtualSeq()     { return CUR_RT->theVirtualSeq.g
 term::TerminationDetector*  theTerm()           { return CUR_RT->theTerm.get();           }
 location::LocationManager*  theLocMan()         { return CUR_RT->theLocMan.get();         }
 CollectionManagerType*      theCollection()     { return CUR_RT->theCollection.get();     }
-reduction::ReductionManager* theReduction()     { return CUR_RT->theReduction.get();      }
 group::GroupManager*        theGroup()          { return CUR_RT->theGroup.get();          }
 
 #if backend_check_enabled(trace_enabled)
