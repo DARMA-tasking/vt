@@ -35,6 +35,7 @@
 #define debug_trace(x) x
 #define debug_location(x) x
 #define debug_vrt(x) x
+#define debug_vrt_coll(x) x
 #define debug_worker(x) x
 #define debug_group(x) x
 #define debug_broadcast(x) x

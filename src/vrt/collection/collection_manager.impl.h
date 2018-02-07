@@ -52,7 +52,11 @@ template <typename SysMsgT>
     auto const& map_han = msg->map;
     auto fn = auto_registry::getAutoHandlerMap(map_han);
 
-    printf("running foreach: size=%llu, %d\n", info.range.getSize(), info.range.x());
+    debug_print(
+      vrt_coll, node,
+      "running foreach: size=%llu, %d\n",
+      info.range.getSize(), info.range.x()
+    );
 
     info.range.foreach(info.range, [=](IndexT cur_idx) {
       auto mapped_node = fn(
@@ -61,7 +65,11 @@ template <typename SysMsgT>
         theContext()->getNumNodes()
       );
 
-      //printf("running foreach: node=%d, cur_idx.x()=%d\n", mapped_node, cur_idx.x());
+      debug_print(
+        vrt_coll, node,
+        "running foreach: node=%d, cur_idx.x()=%d\n",
+        mapped_node, cur_idx.x()
+      );
 
       if (node == mapped_node) {
         // need to construct elements here
@@ -97,7 +105,10 @@ template <typename IndexT>
   auto const collection_active_fn = auto_registry::getAutoHandlerCollection(sub_handler);
   auto const col_ptr = inner_holder.getCollection();
 
-  printf("collectionMsgHandler: sub_handler=%d\n", sub_handler);
+  debug_print(
+    vrt_coll, node,
+    "collectionMsgHandler: sub_handler=%d\n", sub_handler
+  );
 
   assert(col_ptr != nullptr && "Must be valid pointer");
 
@@ -146,7 +157,7 @@ void CollectionManager::sendMsg(
     msg->setProxy(toProxy);
 
     debug_print(
-      vrt, node,
+      vrt_coll, node,
       "sending msg to collection: msg=%p, han=%d, home_node=%d\n",
       msg, han, home_node
     );
@@ -164,7 +175,12 @@ void CollectionManager::sendMsg(
       iter = buffered_sends_.find(toProxy.colProxy);
     }
     assert(iter != buffered_sends_.end() and "Must exist");
-    printf("%d: pushing into buffered sends: %lld\n", theContext()->getNode(), toProxy.colProxy);
+
+    debug_print(
+      vrt_coll, node,
+      "pushing into buffered sends: %lld\n", toProxy.colProxy
+    );
+
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       theCollection()->sendMsg<CollectionT, MessageT, f>(toProxy, msg, act);
     });
@@ -186,12 +202,26 @@ void CollectionManager::insertCollectionElement(
         typename CollectionEntireHolder<IndexT>::InnerHolder{map_han, max_idx}
       )
     );
-    printf("%d: looking for buffered sends: proxy=%lld, size=%ld\n", theContext()->getNode(), proxy, buffered_sends_.size());
+
+    debug_print(
+      vrt_coll, node,
+      "looking for buffered sends: proxy=%lld, size=%ld\n",
+      proxy, buffered_sends_.size()
+    );
+
     auto iter = buffered_sends_.find(proxy);
     if (iter != buffered_sends_.end()) {
-      printf("looking for buffered sends: FOUND\n");
+      debug_print(
+        vrt_coll, node,
+        "looking for buffered sends: FOUND\n"
+      );
+
       for (auto&& elm : iter->second) {
-        printf("looking for buffered sends: running elm\n");
+        debug_print(
+          vrt_coll, node,
+          "looking for buffered sends: running elm\n"
+        );
+
         elm(proxy);
       }
       iter->second.clear();
