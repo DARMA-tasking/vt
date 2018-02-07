@@ -12,7 +12,7 @@
 #include "utils/bits/bits_packer.h"
 
 #if backend_check_enabled(detector)
-#include "index_traits.h"
+#include "topos/index/index_traits.h"
 #endif
 
 namespace vt { namespace index {
