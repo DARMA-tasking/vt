@@ -46,6 +46,8 @@ static void hello_world(HelloMsg* msg) {
   printf("%d: Hello from node %d\n", theContext()->getNode(), msg->from);
 }
 
+static constexpr int32_t const default_num_elms = 4;
+
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
@@ -56,10 +58,16 @@ int main(int argc, char** argv) {
     CollectiveOps::abort("At least 2 ranks required");
   }
 
+  int32_t num_elms = default_num_elms;
+
+  if (argc > 1) {
+    num_elms = atoi(argv[1]);
+  }
+
   if (my_node == 0) {
     auto proxy = theCollection()->makeCollection<
       MyCol, Index1D, defaultDenseIndex1DMap
-    >(Index1D(64));
+    >(Index1D(num_elms));
     for (int i = 10; i < 40; i++) {
       VirtualElmProxyType elm_proxy(proxy, i);
       auto const& this_node = theContext()->getNode();
