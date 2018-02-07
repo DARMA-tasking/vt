@@ -276,6 +276,9 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   if (has_workers) {
     ContextAttorney::setNumWorkers(num_workers);
 
+    // Initialize individual memory pool for each worker
+    thePool->initWorkerPools(num_workers);
+
     theWorkerGrp = std::make_unique<worker::WorkerGroupType>();
 
     auto localTermFn = [](worker::eWorkerGroupEvent event){
@@ -330,6 +333,9 @@ void Runtime::finalizeOptionalComponents() {
   debug_print(runtime, node, "begin: finalizeOptionalComponents\n");
 
   theWorkerGrp = nullptr;
+
+  // Initialize individual memory pool for each worker
+  thePool->destroyWorkerPools();
 
   debug_print(runtime, node, "end: finalizeOptionalComponents\n");
 }

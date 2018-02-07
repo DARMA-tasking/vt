@@ -1,6 +1,7 @@
 
 #include "config.h"
-#include "memory_pool_equal.h"
+#include "pool/memory_pool_equal.h"
+#include "pool/pool_header.h"
 
 #include <vector>
 #include <cstdint>
@@ -47,10 +48,7 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(size_t const& sz) {
 
   auto const& slot = cur_slot_;
   void* const ptr = holder_[slot];
-
-  *static_cast<size_t*>(ptr) = sz;
-
-  void* const ptr_ret = static_cast<size_t*>(ptr) + 1;
+  void* const ptr_ret = HeaderManagerType::setHeader(sz, static_cast<char*>(ptr));
 
   debug_print(
     pool, node,
@@ -73,7 +71,8 @@ void MemoryPoolEqual<num_bytes_t>::dealloc(void* const t) {
     cur_slot_ - 1 >= 0 and "Must be greater than zero"
   );
 
-  void* const ptr_actual = static_cast<size_t*>(t) - 1;
+  auto t_char = static_cast<char*>(t);
+  void* const ptr_actual = HeaderManagerType::getHeaderPtr(t_char);
 
   holder_[--cur_slot_] = ptr_actual;
 }
@@ -96,7 +95,7 @@ MemoryPoolEqual<num_bytes_t>::getNumBytes() {
   return num_bytes_;
 }
 
-template struct MemoryPoolEqual<small_memory_pool_env_size>;
-template struct MemoryPoolEqual<medium_memory_pool_env_size>;
+template struct MemoryPoolEqual<memory_size_small>;
+template struct MemoryPoolEqual<memory_size_medium>;
 
 }} //end namespace vt::pool

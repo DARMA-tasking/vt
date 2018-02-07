@@ -3,7 +3,8 @@
 #define INCLUDED_POOL_POOL_H
 
 #include "config.h"
-#include "memory_pool_equal.h"
+#include "pool/memory_pool_equal.h"
+#include "pool/pool_header.h"
 
 #include <vector>
 #include <cstdint>
@@ -14,6 +15,8 @@ namespace vt { namespace pool {
 
 struct Pool {
   using SizeType = size_t;
+  using HeaderType = Header;
+  using HeaderManagerType = HeaderManager;
   template <int64_t num_bytes_t>
   using MemoryPoolType = MemoryPoolEqual<num_bytes_t>;
   template <int64_t num_bytes_t>
@@ -33,9 +36,22 @@ struct Pool {
   ePoolSize getPoolType(size_t const& num_bytes);
   SizeType remainingSize(void* const buf);
 
+  void initWorkerPools(WorkerCountType const& num_workers);
+  void destroyWorkerPools();
+
 private:
-  MemoryPoolPtrType<small_memory_pool_env_size> small_msg = nullptr;
-  MemoryPoolPtrType<medium_memory_pool_env_size> medium_msg = nullptr;
+  using MemPoolSType = MemoryPoolPtrType<memory_size_small>;
+  using MemPoolMType = MemoryPoolPtrType<memory_size_medium>;
+
+  static MemPoolSType initSPool();
+  static MemPoolMType initMPool();
+
+private:
+  MemPoolSType small_msg = nullptr;
+  MemPoolMType medium_msg = nullptr;
+
+  std::vector<MemPoolSType> s_msg_worker_;
+  std::vector<MemPoolMType> m_msg_worker_;
 };
 
 }} //end namespace vt::pool
