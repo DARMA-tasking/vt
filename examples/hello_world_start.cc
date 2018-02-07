@@ -21,7 +21,7 @@ using namespace vt::mapping;
   } while (false);
 
 #if DEBUG_START_EXAMPLE
-  #define DEBUG_PRINT_START(str, args...) DEBUG_PRINTER_START
+  #define DEBUG_PRINT_START(str, args...) DEBUG_PRINTER_START(str, args)
 #else
   #define DEBUG_PRINT_START(str, args...)
 #endif
@@ -108,17 +108,9 @@ struct TestVC : vt::vrt::VirtualContext {
         msg->work_vec.push_back(static_cast<double>(work_amt));
       }
 
-      // Manually dispatch to comm thread for now
-      auto send_fn = [=]{
-        theVirtualManager()->sendSerialMsg<TestVC, WorkMsg, doWorkRight>(
-          right_proxy, msg
-        );
-      };
-      if (theContext()->getWorker() == worker_id_comm_thread) {
-        send_fn();
-      } else {
-        theWorkerGrp()->enqueueCommThread(send_fn);
-      }
+      theVirtualManager()->sendSerialMsg<TestVC, WorkMsg, doWorkRight>(
+        right_proxy, msg
+      );
     }
   }
 
@@ -181,6 +173,7 @@ struct MainVC : vt::vrt::MainVirtualContext {
     std::vector<VirtualProxyType> proxies;
 
     for (auto i = 0; i < my_data; i++) {
+      //auto proxy = theVirtualManager()->makeVirtual<TestVC>(i, i * 82773);
       auto proxy = theVirtualManager()->makeVirtualMap<TestVC, randomSeedMapCore>(
         i, i * 82773
       );
