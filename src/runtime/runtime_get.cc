@@ -25,9 +25,10 @@ namespace vt {
 
 static runtime::Runtime* no_rt = nullptr;
 
-#define CUR_RT curRT
-#define IS_COMM_THREAD ::vt::theContext()->getWorker() == worker_id_comm_thread
+#define IS_COMM_THREAD curRT->theContext.get()->getWorker() == worker_id_comm_thread
 #define CUR_RT_SAFE (IS_COMM_THREAD ? curRT : no_rt)
+#define CUR_RT_TS curRT
+#define CUR_RT CUR_RT_SAFE
 
 #define CHECK_THD                                                       \
   do {                                                                  \
@@ -37,7 +38,13 @@ static runtime::Runtime* no_rt = nullptr;
     if (!check) { CUR_RT->abort(str, 29); }                             \
   } while (0);
 
-ctx::Context*               theContext()        { return CUR_RT->theContext.get();        }
+// Thread-safe runtime components
+ctx::Context*               theContext()        { return CUR_RT_TS->theContext.get();        }
+pool::Pool*                 thePool()           { return CUR_RT_TS->thePool.get();           }
+vrt::VirtualContextManager* theVirtualManager() { return CUR_RT_TS->theVirtualManager.get(); }
+worker::WorkerGroupType*    theWorkerGrp()      { return CUR_RT_TS->theWorkerGrp.get();      }
+
+// Non thread-safe runtime components
 barrier::Barrier*           theBarrier()        { return CUR_RT->theBarrier.get();        }
 event::AsyncEvent*          theEvent()          { return CUR_RT->theEvent.get();          }
 ActiveMessenger*            theMsg()            { return CUR_RT->theMsg.get();            }
@@ -49,10 +56,7 @@ seq::Sequencer*             theSeq()            { return CUR_RT->theSeq.get();  
 seq::SequencerVirtual*      theVirtualSeq()     { return CUR_RT->theVirtualSeq.get();     }
 term::TerminationDetector*  theTerm()           { return CUR_RT->theTerm.get();           }
 location::LocationManager*  theLocMan()         { return CUR_RT->theLocMan.get();         }
-vrt::VirtualContextManager* theVirtualManager() { return CUR_RT->theVirtualManager.get(); }
 CollectionManagerType*      theCollection()     { return CUR_RT->theCollection.get();     }
-worker::WorkerGroupType*    theWorkerGrp()      { return CUR_RT->theWorkerGrp.get();      }
-pool::Pool*                 thePool()           { return CUR_RT->thePool.get();           }
 reduction::ReductionManager* theReduction()     { return CUR_RT->theReduction.get();      }
 group::GroupManager*        theGroup()          { return CUR_RT->theGroup.get();          }
 
