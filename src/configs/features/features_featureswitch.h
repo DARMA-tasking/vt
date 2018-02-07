@@ -30,6 +30,7 @@
     sequence_vrt,          "sequencer-vrt",                             \
     trace,                 "trace",                                     \
     vrt,                   "virtual-context",                           \
+    vrt_coll,              "virtual-context-collection",                \
     worker,                "worker",                                    \
     group,                 "group",                                     \
     broadcast,             "bcast",                                     \
