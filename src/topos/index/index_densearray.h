@@ -68,16 +68,15 @@ struct DenseIndexArray {
 
   void foreach(ThisIndexType max, std::function<void(ThisIndexType)> fn) {
     ThisIndexType idx;
-    std::array<IndexType, ndim> vec;
-    printf("size=%llu\n",max.getSize());
+    std::array<IndexType, ndim> vec = {0};
     for (auto sz = 0; sz < max.getSize(); sz++) {
+      fn(ThisIndexType(vec));
       for (auto i = 0; i < ndim; i++) {
         if (idx[i] + 1 <= max[idx[i]]) {
           vec[i]++;
           break;
         }
       }
-      fn(ThisIndexType(vec));
     }
   }
 
