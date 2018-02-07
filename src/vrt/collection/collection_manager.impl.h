@@ -56,8 +56,8 @@ template <typename SysMsgT>
 
     info.range.foreach(info.range, [=](IndexT cur_idx) {
       auto mapped_node = fn(
-        reinterpret_cast<vt::index::BaseIndex*>(&msg->info.range),
         reinterpret_cast<vt::index::BaseIndex*>(&cur_idx),
+        reinterpret_cast<vt::index::BaseIndex*>(&msg->info.range),
         theContext()->getNumNodes()
       );
 
