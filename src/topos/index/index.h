@@ -5,11 +5,11 @@
 #include <cstdint>
 
 #include "config.h"
-#include "index_example.h"
-#include "index_densearray.h"
+#include "topos/index/index_example.h"
+#include "topos/index/index_densearray.h"
 
 #if backend_check_enabled(detector)
-#include "index_traits.h"
+#include "topos/index/index_traits.h"
 #endif
 
 namespace vt { namespace index {
