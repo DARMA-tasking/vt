@@ -17,9 +17,10 @@ namespace vt { namespace collective {
 constexpr CollectiveAlgType const fst_collective_alg = 1;
 
 struct CollectiveAlg :
-    public virtual reduce::Reduce,
-    public virtual barrier::Barrier
+    virtual reduce::Reduce,
+    virtual barrier::Barrier
 {
+
 /*----------------------------------------------------------------------------
  *
  *  CollectiveAlg class implements all collective operations:
@@ -34,12 +35,8 @@ struct CollectiveAlg :
 
   CollectiveAlg();
 
-  template <typename T>
-  using ContainerType = std::unordered_map<CollectiveAlgType, T>;
-
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-
 
 };
 
