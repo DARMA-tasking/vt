@@ -81,7 +81,7 @@ protected:
   void setup();
   void terminationHandler();
   void printStartupBanner();
-  void printShutdownBanner();
+  void printShutdownBanner(term::TermCounterType const& num_units);
 
 public:
   ComponentPtr<Registry> theRegistry;

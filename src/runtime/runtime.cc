@@ -106,8 +106,7 @@ void Runtime::printStartupBanner() {
   fprintf(stream, "VT: Running on %d nodes%s\n", nodes, worker_cnt.c_str());
 }
 
-void Runtime::printShutdownBanner() {
-  auto const num_units = theTerm->getNumUnits();
+void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   std::string fin = "Runtime finalizing";
   std::string units = std::to_string(num_units);
   auto const& stream = stdout;
@@ -134,12 +133,19 @@ bool Runtime::initialize(bool const force_now) {
 
 bool Runtime::finalize(bool const force_now) {
   if (force_now) {
+    auto const& is_zero = theContext->getNode() == 0;
+    auto const& num_units = theTerm->getNumUnits();
     sync();
-    if (theContext->getNode() == 0) {
-      printShutdownBanner();
-    }
+    fflush(stdout);
+    fflush(stderr);
+    sync();
     finalizeComponents();
     finalizeOptionalComponents();
+    sync();
+    sync();
+    if (is_zero) {
+      printShutdownBanner(num_units);
+    }
     finalizeContext();
     finalized_ = true;
     return true;
