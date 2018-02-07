@@ -1,6 +1,7 @@
 
 #include "config.h"
 #include "pool/pool.h"
+#include "worker/worker_headers.h"
 #include "pool/memory_pool_equal.h"
 
 #include <cstdlib>
@@ -9,13 +10,16 @@
 namespace vt { namespace pool {
 
 Pool::Pool()
-  : small_msg(
-      std::make_unique<MemoryPoolType<small_memory_pool_env_size>>()
-    ),
-    medium_msg(
-      std::make_unique<MemoryPoolType<medium_memory_pool_env_size>>(64)
-    )
+  : small_msg(initSPool()), medium_msg(initMPool())
 { }
+
+/*static*/Pool::MemPoolSType Pool::initSPool() {
+  return std::make_unique<MemoryPoolType<memory_size_small>>();
+}
+
+/*static*/ Pool::MemPoolMType Pool::initMPool() {
+  return std::make_unique<MemoryPoolType<memory_size_medium>>(64);
+}
 
 Pool::ePoolSize Pool::getPoolType(size_t const& num_bytes) {
   if (num_bytes <= small_msg->getNumBytes()) {
@@ -32,36 +36,56 @@ void* Pool::alloc(size_t const& num_bytes) {
 
   ePoolSize const pool_type = getPoolType(num_bytes);
 
+  auto const worker = theContext()->getWorker();
+  bool const comm_thread = worker == worker_id_comm_thread;
+
   if (pool_type == ePoolSize::Small) {
-    ret = small_msg->alloc(num_bytes);
+    auto pool = comm_thread ? small_msg.get() : s_msg_worker_[worker].get();
+    assert(
+      (comm_thread || s_msg_worker_.size() > worker) && "Must have worker pool"
+    );
+    ret = pool->alloc(num_bytes);
   } else if (pool_type == ePoolSize::Medium) {
-    ret = medium_msg->alloc(num_bytes);
+    auto pool = comm_thread ? medium_msg.get() : m_msg_worker_[worker].get();
+    assert(
+      (comm_thread || m_msg_worker_.size() > worker) && "Must have worker pool"
+    );
+    ret = pool->alloc(num_bytes);
   } else {
-    ret = std::malloc(num_bytes + sizeof(size_t));
-    *static_cast<size_t*>(ret) = num_bytes;
-    ret = static_cast<size_t*>(ret) + 1;
+    auto alloc_buf = std::malloc(num_bytes + sizeof(HeaderType));
+    ret = HeaderManagerType::setHeader(num_bytes, static_cast<char*>(alloc_buf));
   }
 
   debug_print(
     pool, node,
-    "Pool::alloc of size=%zu, type=%s, ret=%p\n",
-    num_bytes, print_pool_type(pool_type), ret
+    "Pool::alloc of size=%zu, type=%s, ret=%p, worker=%d\n",
+    num_bytes, print_pool_type(pool_type), ret, worker
   );
 
   return ret;
 }
 
 void Pool::dealloc(void* const buf) {
-  void* const ptr_actual = static_cast<size_t*>(buf) - 1;
-  auto const& actual_alloc_size = *static_cast<size_t*>(ptr_actual);
+  auto buf_char = static_cast<char*>(buf);
+  auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
+  auto const& alloc_worker = HeaderManagerType::getHeaderWorker(buf_char);
+  auto const& ptr_actual = HeaderManagerType::getHeaderPtr(buf_char);
+  auto const worker = theContext()->getWorker();
 
   ePoolSize const pool_type = getPoolType(actual_alloc_size);
 
   debug_print(
     pool, node,
-    "Pool::dealloc of buf=%p, type=%s, actual_alloc_size=%ld\n",
-    buf, print_pool_type(pool_type), actual_alloc_size
+    "Pool::dealloc of buf=%p, type=%s, alloc_size=%ld, worker=%d, ptr=%p\n",
+    buf, print_pool_type(pool_type), actual_alloc_size, alloc_worker, ptr_actual
   );
+
+  if (pool_type != ePoolSize::Malloc && alloc_worker != worker) {
+    theWorkerGrp()->enqueueForWorker(worker, [buf]{
+      thePool()->dealloc(buf);
+    });
+    return;
+  }
 
   if (pool_type == ePoolSize::Small) {
     small_msg->dealloc(buf);
@@ -73,8 +97,8 @@ void Pool::dealloc(void* const buf) {
 };
 
 Pool::SizeType Pool::remainingSize(void* const buf) {
-  void* const ptr_actual = static_cast<size_t*>(buf) - 1;
-  auto const& actual_alloc_size = *static_cast<size_t*>(ptr_actual);
+  auto buf_char = static_cast<char*>(buf);
+  auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
 
   ePoolSize const pool_type = getPoolType(actual_alloc_size);
 
@@ -85,6 +109,18 @@ Pool::SizeType Pool::remainingSize(void* const buf) {
   } else {
     return 0;
   }
+}
+
+void Pool::initWorkerPools(WorkerCountType const& num_workers) {
+  for (auto i = 0; i < num_workers; i++) {
+    s_msg_worker_.emplace_back(initSPool());
+    m_msg_worker_.emplace_back(initMPool());
+  }
+}
+
+void Pool::destroyWorkerPools() {
+  s_msg_worker_.clear();
+  m_msg_worker_.clear();
 }
 
 }} //end namespace vt::pool
