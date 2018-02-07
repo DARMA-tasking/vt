@@ -49,8 +49,11 @@ struct CollectiveAlg : Tree {
    */
 
  public:
-  inline void barrier(CollectiveAlgType const& barrier = no_barrier) {
-    return waitBarrier(barrier);
+  inline void barrier(
+    ActionType poll_action = nullptr,
+    CollectiveAlgType const& barrier = no_barrier
+  ) {
+    return waitBarrier(poll_action, barrier);
   }
 
   inline void barrierThen(ActionType fn) {
@@ -71,8 +74,9 @@ struct CollectiveAlg : Tree {
   }
 
   void waitBarrier(
-      CollectiveAlgType const& barrier = no_barrier,
-      bool const skip_term = false
+    ActionType poll_action = nullptr,
+    CollectiveAlgType const& barrier = no_barrier,
+    bool const skip_term = false
   );
 
   void contBarrier(
@@ -82,7 +86,7 @@ struct CollectiveAlg : Tree {
 
   inline void systemMetaBarrier() {
     bool const skip_term = true;
-    return waitBarrier(no_barrier, skip_term);
+    return waitBarrier(nullptr, no_barrier, skip_term);
   }
 
   inline void systemMetaBarrierCont(ActionType fn) {
