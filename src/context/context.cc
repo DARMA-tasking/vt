@@ -45,12 +45,16 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
   numNodes_ = static_cast<NodeType>(numNodesLocal);
   thisNode_ = static_cast<NodeType>(thisNodeLocal);
 
-  setWorker(worker_id_comm_thread);
+  setDefaultWorker();
 }
 
 Context::Context(bool const interop, MPI_Comm* comm)
   : Context(0, nullptr, interop, comm)
 { }
+
+void Context::setDefaultWorker() {
+  setWorker(worker_id_comm_thread);
+}
 
 DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id);
 

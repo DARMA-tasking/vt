@@ -38,6 +38,9 @@ protected:
   }
 
 private:
+  void setDefaultWorker();
+
+private:
   NodeType thisNode_ = uninitialized_destination;
   NodeType numNodes_ = uninitialized_destination;
   WorkerCountType numWorkers_ = no_workers;
