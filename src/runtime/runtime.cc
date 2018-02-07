@@ -246,7 +246,6 @@ void Runtime::initializeComponents() {
   theLocMan = std::make_unique<location::LocationManager>();
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theCollection = std::make_unique<vrt::collection::CollectionManager>();
-  theReduction = std::make_unique<reduction::ReductionManager>();
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }

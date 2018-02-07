@@ -43,6 +43,8 @@ struct CollectiveAlg :
 
 };
 
+using ReduceMsg = reduce::ReduceMsg;
+
 }}  // end namespace vt::collective
 
 namespace vt {

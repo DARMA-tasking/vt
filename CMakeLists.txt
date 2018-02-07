@@ -261,7 +261,6 @@ endforeach()
 set(
   UNIT_TEST_SUBDIRS_LIST
   index active collectives pool sequencer mapping serialization tls atomic
-  reduce
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})

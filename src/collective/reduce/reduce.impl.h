@@ -10,8 +10,6 @@
 
 namespace vt { namespace collective { namespace reduce {
 
-Reduce::Reduce() : Tree(tree_cons_tag_t) { }
-
 template <typename MessageT>
 /*static*/ void Reduce::reduceUp(MessageT* msg) {
   theCollective()->reduceNewMsg(msg);
