@@ -1,10 +1,10 @@
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_ALG_BARRIER_STATE_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_BARRIER_STATE_H
+#if !defined INCLUDED_COLLECTIVE_BARRIER_BARRIER_STATE_H
+#define INCLUDED_COLLECTIVE_BARRIER_BARRIER_STATE_H
 
 #include "config.h"
 
-namespace vt { namespace collective {
+namespace vt { namespace collective { namespace barrier {
 
 struct BarrierState {
   BarrierType barrier;
@@ -22,6 +22,6 @@ struct BarrierState {
   { }
 };
 
-}} /* end namespace vt::collective */
+}}} /* end namespace vt::collective::barrier */
 
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_BARRIER_STATE_H*/
+#endif /*INCLUDED_COLLECTIVE_BARRIER_BARRIER_STATE_H*/

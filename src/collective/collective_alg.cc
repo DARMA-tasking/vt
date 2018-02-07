@@ -1,5 +1,5 @@
 
-#include "collective_alg.h"
+#include "collective/collective_alg.h"
 
 namespace vt { namespace collective {
 

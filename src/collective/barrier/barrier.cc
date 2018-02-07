@@ -1,20 +1,23 @@
 
-#include "collective_alg.h"
+#include "collective/barrier/barrier.h"
+#include "collective/collective_alg.h"
 #include "messaging/active.h"
 
-namespace vt { namespace collective {
+namespace vt { namespace collective { namespace barrier {
 
-/*static*/ void CollectiveAlg::barrierUp(BarrierMsg* msg) {
+Barrier::Barrier() : Tree(tree_cons_tag_t) { }
+
+/*static*/ void Barrier::barrierUp(BarrierMsg* msg) {
   theCollective()->barrierUp(
       msg->is_named, msg->is_wait, msg->barrier, msg->skip_term
   );
 }
 
-/*static*/ void CollectiveAlg::barrierDown(BarrierMsg* msg) {
+/*static*/ void Barrier::barrierDown(BarrierMsg* msg) {
   theCollective()->barrierDown(msg->is_named, msg->is_wait, msg->barrier);
 }
 
-CollectiveAlg::BarrierStateType& CollectiveAlg::insertFindBarrier(
+Barrier::BarrierStateType& Barrier::insertFindBarrier(
     bool const& is_named, bool const& is_wait, CollectiveAlgType const& barrier,
     ActionType cont_action
 ) {
@@ -42,7 +45,7 @@ CollectiveAlg::BarrierStateType& CollectiveAlg::insertFindBarrier(
   return iter->second;
 }
 
-void CollectiveAlg::removeBarrier(
+void Barrier::removeBarrier(
     bool const& is_named, bool const& is_wait, CollectiveAlgType const& barrier
 ) {
   auto& state = is_named ? named_barrier_state_ : unnamed_barrier_state_;
@@ -55,7 +58,7 @@ void CollectiveAlg::removeBarrier(
   state.erase(iter);
 }
 
-CollectiveAlgType CollectiveAlg::newNamedBarrier() {
+CollectiveAlgType Barrier::newNamedBarrier() {
   CollectiveAlgType const next_barrier = cur_named_barrier_++;
   NodeType const cur_node = theContext()->getNode();
   CollectiveAlgType const cur_node_shift = static_cast<CollectiveAlgType>(cur_node) << 32;
@@ -63,7 +66,7 @@ CollectiveAlgType CollectiveAlg::newNamedBarrier() {
   return barrier_name;
 }
 
-void CollectiveAlg::waitBarrier(
+void Barrier::waitBarrier(
   ActionType poll_action, CollectiveAlgType const& barrier, bool const skip_term
 ) {
   bool const is_wait = true;
@@ -90,7 +93,7 @@ void CollectiveAlg::waitBarrier(
   removeBarrier(is_named, is_wait, next_barrier);
 }
 
-void CollectiveAlg::contBarrier(
+void Barrier::contBarrier(
     ActionType fn, CollectiveAlgType const& barrier, bool const skip_term
 ) {
   bool const is_wait = false;
@@ -103,7 +106,7 @@ void CollectiveAlg::contBarrier(
   barrierUp(is_named, is_wait, next_barrier, skip_term);
 }
 
-void CollectiveAlg::barrierDown(
+void Barrier::barrierDown(
     bool const& is_named, bool const& is_wait, CollectiveAlgType const& barrier
 ) {
   auto& barrier_state = insertFindBarrier(is_named, is_wait, barrier);
@@ -115,7 +118,7 @@ void CollectiveAlg::barrierDown(
   }
 }
 
-void CollectiveAlg::barrierUp(
+void Barrier::barrierUp(
     bool const& is_named, bool const& is_wait, CollectiveAlgType const& barrier,
     bool const& skip_term
 ) {
@@ -159,5 +162,4 @@ void CollectiveAlg::barrierUp(
   }
 }
 
-
-}}  // end namespace vt::collective
+}}}  // end namespace vt::collective::barrier

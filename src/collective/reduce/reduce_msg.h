@@ -1,13 +1,13 @@
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_ALG_REDUCE_MSG_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_REDUCE_MSG_H
+#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_MSG_H
+#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_MSG_H
 
 #include "config.h"
 #include "messaging/message.h"
 
 #include <cstdlib>
 
-namespace vt { namespace collective {
+namespace vt { namespace collective { namespace reduce {
 
 struct ReduceMsg;
 
@@ -26,6 +26,6 @@ struct ReduceMsg : ::vt::Message, ReduceLink {
   HandlerType combine_handler_ = uninitialized_handler;
 };
 
-}} //end namespace vt::collective
+}}} /* end namespace vt::collective::reduce */
 
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_REDUCE_MSG_H*/
+#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_MSG_H*/

@@ -1,13 +1,13 @@
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_ALG_REDUCE_STATE_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_REDUCE_STATE_H
+#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
+#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
 
 #include "config.h"
-#include "collective_alg_reduce_msg.h"
+#include "collective/reduce/reduce_msg.h"
 
 #include <vector>
 
-namespace vt { namespace collective {
+namespace vt { namespace collective { namespace reduce {
 
 struct ReduceState {
   ReduceState(
@@ -21,6 +21,6 @@ struct ReduceState {
   EpochType epoch_ = no_epoch;
 };
 
-}} /* end namespace vt::collective */
+}}} /* end namespace vt::collective::reduce */
 
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_REDUCE_STATE_H*/
+#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H*/

@@ -1,22 +1,24 @@
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_ALG_REDUCE_IMPL_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_REDUCE_IMPL_H
+#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_IMPL_H
+#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_IMPL_H
 
 #include "config.h"
-#include "collective_alg.h"
+#include "collective/collective_alg.h"
 #include "registry/registry.h"
 #include "registry/auto_registry_interface.h"
 #include "messaging/active.h"
 
-namespace vt { namespace collective {
+namespace vt { namespace collective { namespace reduce {
+
+Reduce::Reduce() : Tree(tree_cons_tag_t) { }
 
 template <typename MessageT>
-/*static*/ void CollectiveAlg::reduceUp(MessageT* msg) {
+/*static*/ void Reduce::reduceUp(MessageT* msg) {
   theCollective()->reduceNewMsg(msg);
 }
 
 template <typename MessageT>
-/*static*/ void CollectiveAlg::reduceRootRecv(MessageT* msg) {
+/*static*/ void Reduce::reduceRootRecv(MessageT* msg) {
   auto const& handler = msg->combine_handler_;
   auto active_fun = auto_registry::getAutoHandler(handler);
   msg->next = nullptr;
@@ -26,7 +28,7 @@ template <typename MessageT>
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-void CollectiveAlg::reduce(
+void Reduce::reduce(
     NodeType const& root, MessageT* const msg, TagType const& tag
 ) {
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
@@ -46,7 +48,7 @@ void CollectiveAlg::reduce(
 }
 
 template <typename MessageT>
-void CollectiveAlg::reduceNewMsg(MessageT* msg) {
+void Reduce::reduceNewMsg(MessageT* msg) {
   auto lookup = ReduceIdentifierType{msg->reduce_tag_,msg->reduce_epoch_};
   auto live_iter = live_reductions_.find(lookup);
   if (live_iter == live_reductions_.end()) {
@@ -102,6 +104,6 @@ void CollectiveAlg::reduceNewMsg(MessageT* msg) {
   }
 }
 
-}} //end namespace vt::collective
+}}} /* end namespace vt::collective::reduce */
 
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_REDUCE_IMPL_H*/
+#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_IMPL_H*/

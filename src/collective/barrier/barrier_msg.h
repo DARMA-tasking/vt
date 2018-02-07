@@ -1,11 +1,11 @@
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_ALG_BARRIER_MSG_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_BARRIER_MSG_H
+#if !defined INCLUDED_COLLECTIVE_BARRIER_BARRIER_MSG_H
+#define INCLUDED_COLLECTIVE_BARRIER_BARRIER_MSG_H
 
 #include "config.h"
 #include "messaging/message.h"
 
-namespace vt { namespace collective {
+namespace vt { namespace collective { namespace barrier {
 
 struct BarrierMsg : vt::ShortMessage {
   bool is_named, is_wait, skip_term = false;
@@ -19,6 +19,6 @@ struct BarrierMsg : vt::ShortMessage {
   { }
 };
 
-}} //end namespace vt::collective
+}}} /* end namespace vt::collective::barrier */
 
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_BARRIER_MSG_H*/
+#endif /*INCLUDED_COLLECTIVE_BARRIER_BARRIER_MSG_H*/
