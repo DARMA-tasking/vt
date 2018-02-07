@@ -11,7 +11,6 @@ namespace vt { namespace pool {
   view.layout->prealloc.alloc_size = num_bytes;
   view.layout->prealloc.alloc_worker = theContext()->getWorker();
   auto buf_start = buffer + sizeof(Header);
-  printf("setHeader: buffer=%p, ret=%p\n", buffer, buf_start);
   return buf_start;
 }
 
