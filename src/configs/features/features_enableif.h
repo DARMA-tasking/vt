@@ -101,8 +101,10 @@
 /* External Interface Functions */
 #define backend_check_enabled_options(config, test_option, options...)  \
   debug_check_enabled_shortcut_impl(config, test_option, options)
-#define backend_check_enabled(test_option)                          \
-  backend_check_enabled_options(backend, test_option)
+#define backend_check_enabled(test_option)                              \
+  backend_check_enabled_options(                                        \
+    test_option, backend_str_join(_configuration, backend)              \
+  )
 
 #define backend_enable_if_any(config, feature, eit) \
   debug_cond_enabled(config, feature, eit)
