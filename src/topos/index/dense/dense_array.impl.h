@@ -1,9 +1,9 @@
 
-#if !defined INCLUDED_TOPOS_INDEX_INDEX_DENSEARRAY_IMPL_H
-#define INCLUDED_TOPOS_INDEX_INDEX_DENSEARRAY_IMPL_H
+#if !defined INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H
+#define INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H
 
 #include "config.h"
-#include "topos/index/index_densearray.h"
+#include "topos/index/dense/dense_array.h"
 #include "utils/bits/bits_packer.h"
 
 #include <functional>
@@ -186,4 +186,4 @@ IndexType DenseIndexArray<IndexType, ndim>::z() const {
 
 }}  // end namespace vt::index
 
-#endif /*INCLUDED_TOPOS_INDEX_INDEX_DENSEARRAY_IMPL_H*/
+#endif /*INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H*/

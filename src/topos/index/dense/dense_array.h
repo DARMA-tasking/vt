@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_TOPOS_INDEX_DENSE_ARRAY
-#define INCLUDED_TOPOS_INDEX_DENSE_ARRAY
+#if !defined INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H
+#define INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H
 
 #include "config.h"
 #include "utils/bits/bits_packer.h"
@@ -13,7 +13,7 @@
 #include <functional>
 
 #if backend_check_enabled(detector)
-  #include "topos/index/index_traits.h"
+  #include "topos/index/traits/traits.h"
 #endif
 
 namespace vt { namespace index {
@@ -93,6 +93,6 @@ private:
 
 }}  // end namespace vt::index
 
-#include "topos/index/index_densearray.impl.h"
+#include "topos/index/dense/dense_array.impl.h"
 
-#endif  /*INCLUDED_TOPOS_INDEX_DENSE_ARRAY*/
+#endif /*INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H*/

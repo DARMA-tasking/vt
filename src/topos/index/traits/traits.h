@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_TOPOS_INDEX_TRAITS
-#define INCLUDED_TOPOS_INDEX_TRAITS
+#if !defined INCLUDED_TOPOS_INDEX_TRAITS_TRAITS_H
+#define INCLUDED_TOPOS_INDEX_TRAITS_TRAITS_H
 
 #include "config.h"
 
@@ -8,8 +8,8 @@
 #include <functional>
 
 #if backend_check_enabled(detector)
-#include "detector_headers.h"
-#endif  /*backend_check_enabled(detector)*/
+  #include "detector_headers.h"
+#endif /* backend_check_enabled(detector) */
 
 #if backend_check_enabled(detector)
 
@@ -80,4 +80,4 @@ struct IndexTraits {
 
 #endif  /*backend_check_enabled(detector)*/
 
-#endif  /*INCLUDED_TOPOS_INDEX_TRAITS*/
+#endif /*INCLUDED_TOPOS_INDEX_TRAITS_TRAITS_H*/
