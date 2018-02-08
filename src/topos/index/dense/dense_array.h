@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "utils/bits/bits_packer.h"
+#include "serialization/traits/byte_copy_trait.h"
 
 #include <array>
 #include <type_traits>
@@ -24,7 +25,7 @@ template <typename IndexType, NumDimensionsType ndim = 1>
 struct DenseIndexArray;
 
 template <typename IndexType, NumDimensionsType ndim>
-struct DenseIndexArray {
+struct DenseIndexArray : serialization::ByteCopyTrait {
   using ThisIndexType = DenseIndexArray<IndexType, ndim>;
   using IndexSizeType = size_t;
   using ApplyType = std::function<void(ThisIndexType)>;
@@ -34,7 +35,6 @@ struct DenseIndexArray {
   using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
   using DenseArraySizeType = uint64_t;
   using DenseIndexType = IndexType;
-  using isByteCopyable = std::true_type;
 
   DenseIndexArray() = default;
   DenseIndexArray(DenseIndexArray const&) = default;

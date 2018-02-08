@@ -6,6 +6,7 @@
 #include "serialization/serialize_interface.h"
 #include "serialization/messaging/serialized_messenger.h"
 #include "serialization/messaging/serialized_param_messenger.h"
+#include "serialization/traits/byte_copy_trait.h"
 
 namespace vt { namespace serialization {
 

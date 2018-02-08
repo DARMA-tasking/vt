@@ -73,7 +73,7 @@ set(
       vrt/collection/messages
       vrt/collection/proxy_builder
   serialization
-    serialization/messaging
+    serialization/messaging serialization/traits
   utils
     utils/demangle utils/container utils/bits utils/mutex utils/detector
     utils/hash utils/atomic utils/tls utils/static_checks
