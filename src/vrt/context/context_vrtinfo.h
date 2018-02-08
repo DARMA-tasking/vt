@@ -3,9 +3,9 @@
 #define INCLUDED_CONTEXT_VRT_INFO
 
 #include "config.h"
-#include "context_vrt.h"
-#include "context_vrtmessage.h"
-#include "context_vrt_fwd.h"
+#include "vrt/context/context_vrt.h"
+#include "vrt/context/context_vrtmessage.h"
+#include "vrt/context/context_vrt_fwd.h"
 #include "utils/mutex/mutex.h"
 #include "utils/atomic/atomic.h"
 #include "utils/container/process_ready_buffer.h"

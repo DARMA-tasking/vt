@@ -1,7 +1,7 @@
 
 #include "config.h"
-#include "context_vrtinfo.h"
-#include "context_vrtmessage.h"
+#include "vrt/context/context_vrtinfo.h"
+#include "vrt/context/context_vrtmessage.h"
 #include "utils/mutex/mutex.h"
 #include "utils/atomic/atomic.h"
 #include "registry/auto_registry_vc.h"

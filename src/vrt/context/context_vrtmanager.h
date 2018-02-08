@@ -7,12 +7,12 @@
 
 #include "config.h"
 #include "context/context.h"
-#include "context_vrt.h"
-#include "context_vrt_funcs.h"
-#include "context_vrtmessage.h"
-#include "context_vrtinfo.h"
-#include "context_vrtproxy.h"
-#include "context_vrt_internal_msgs.h"
+#include "vrt/context/context_vrt.h"
+#include "vrt/context/context_vrt_funcs.h"
+#include "vrt/context/context_vrtmessage.h"
+#include "vrt/context/context_vrtinfo.h"
+#include "vrt/context/context_vrtproxy.h"
+#include "vrt/context/context_vrt_internal_msgs.h"
 
 #include "utils/bits/bits_common.h"
 #include "activefn/activefn.h"

@@ -3,10 +3,10 @@
 #define INCLUDED_CONTEXT_VRT
 
 #include "config.h"
+#include "vrt/context/context_vrt_fwd.h"
+#include "vrt/context/context_vrtproxy.h"
 #include "utils/bits/bits_common.h"
 #include "vrt/vrt_common.h"
-#include "context_vrt_fwd.h"
-#include "context_vrtproxy.h"
 
 namespace vt { namespace vrt {
 

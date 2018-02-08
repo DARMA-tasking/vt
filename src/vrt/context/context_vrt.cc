@@ -1,5 +1,6 @@
 
-#include "context_vrt.h"
+#include "config.h"
+#include "vrt/context/context_vrt.h"
 
 namespace vt { namespace vrt {
 

@@ -3,10 +3,10 @@
 #define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_MAKE_CLOSURE_H
 
 #include "config.h"
-#include "context_vrt_fwd.h"
-#include "context_vrt_attorney.h"
-#include "context_vrtproxy.h"
-#include "context_vrtinfo.h"
+#include "vrt/context/context_vrt_fwd.h"
+#include "vrt/context/context_vrt_attorney.h"
+#include "vrt/context/context_vrtproxy.h"
+#include "vrt/context/context_vrtinfo.h"
 
 #include <tuple>
 #include <utility>

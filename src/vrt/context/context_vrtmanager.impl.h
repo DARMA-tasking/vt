@@ -3,10 +3,10 @@
 #define INCLUDED_CONTEXT_VRT_MANAGER_IMPL
 
 #include "config.h"
-#include "context_vrtmanager.h"
-#include "context_vrt_internal_msgs.h"
-#include "context_vrt_remoteinfo.h"
-#include "context_vrt_make_closure.h"
+#include "vrt/context/context_vrtmanager.h"
+#include "vrt/context/context_vrt_internal_msgs.h"
+#include "vrt/context/context_vrt_remoteinfo.h"
+#include "vrt/context/context_vrt_make_closure.h"
 #include "topos/location/location.h"
 #include "registry/auto_registry_vc.h"
 #include "registry/auto_registry_map.h"

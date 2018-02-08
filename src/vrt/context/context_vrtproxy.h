@@ -3,8 +3,8 @@
 #define INCLUDED_CONTEXT_VRT_PROXY
 
 #include "config.h"
-#include "context_vrt_fwd.h"
-#include "context_vrt.h"
+#include "vrt/context/context_vrt_fwd.h"
+#include "vrt/context/context_vrt.h"
 
 namespace vt { namespace vrt {
 

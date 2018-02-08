@@ -3,8 +3,8 @@
 #define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_REMOTEINFO_H
 
 #include "config.h"
-#include "context_vrt_fwd.h"
-#include "context_vrtproxy.h"
+#include "vrt/context/context_vrt_fwd.h"
+#include "vrt/context/context_vrtproxy.h"
 
 namespace vt { namespace vrt {
 

@@ -2,10 +2,10 @@
 #if !defined INCLUDED_TYPES_TYPE
 #define INCLUDED_TYPES_TYPE
 
+#include "configs/debug/debug_masterconfig.h"
+
 #include <cstdint>
 #include <functional>
-
-#include "configs/debug/debug_masterconfig.h"
 
 namespace vt {
 
