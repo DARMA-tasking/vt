@@ -26,7 +26,7 @@ void VirtualContextManager::insertVirtualContext(
   assert(holder_iter == holder_.end() && "Holder must not contain id");
 
   // registry the proxy with location manager
-  location::LocationManager::vrtContextLoc->registerEntity(
+  theLocMan()->vrtContextLoc->registerEntity(
     proxy, virtualMsgHandler
   );
 

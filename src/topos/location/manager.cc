@@ -28,14 +28,7 @@ namespace vt { namespace location {
 /*virtual*/ LocationManager::~LocationManager() {
   virtual_loc = nullptr;
   vrtContextLoc = nullptr;
+  collectionLoc.clear();
 }
-
-using LocType = LocationManager;
-
-/*static*/ LocType::PtrType<LocType::VrtLocType> LocType::virtual_loc =
-  std::make_unique<LocType::VrtLocType>();
-
-/*static*/ LocType::PtrType<LocType::VrtLocProxyType> LocType::vrtContextLoc =
-  std::make_unique<LocType::VrtLocProxyType>();
 
 }}  // end namespace vt::location

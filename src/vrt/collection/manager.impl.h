@@ -169,7 +169,7 @@ void CollectionManager::sendMsg(
     );
 
     // route the message to the destination using the location manager
-    location::LocationManager::collectionLoc<IndexT>->routeMsg(
+    theLocMan()->getCollectionLM<IndexT>(col_proxy)->routeMsg(
       toProxy, home_node, msg, act
     );
   } else {
@@ -244,7 +244,7 @@ void CollectionManager::insertCollectionElement(
     std::move(vc), map_han, max_idx
   });
 
-  location::LocationManager::collectionLoc<IndexT>->registerEntity(
+  theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
     VrtElmProxy<IndexT>{proxy,idx},
     CollectionManager::collectionMsgHandler<IndexT>
   );
