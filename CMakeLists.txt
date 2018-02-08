@@ -46,14 +46,23 @@ endif (ZLIB_FOUND)
 
 set(
   PROJECT_SUBDIRS_LIST
-  collective collective/reduce collective/barrier configs/debug configs/features
-  configs/types vrt/context event messaging pool rdma registry parameterization
-  handler sequence context termination trace tree scheduler utils/demangle
-  utils/bits demangle topos/location topos/mapping topos/index utils/container
-  utils/detector serialization serialization/messaging worker utils/mutex
-  utils/static_checks standalone runtime utils/tls utils/atomic utils/hash
-  vrt/collection vrt rdma/channel rdma/collection rdma/group rdma/state
-  group group/id group/region group/global messaging/envelope messaging/message
+
+  # Add component along with sub-directories
+  configs/debug configs/features configs/types
+  collective collective/reduce collective/barrier collective/tree
+  group group/id group/region group/global
+  messaging messaging/envelope messaging/message
+  pool pool/static_sized pool/header
+  rdma rdma/channel rdma/collection rdma/group rdma/state
+  topos/index topos/mapping topos/location
+  vrt vrt/context vrt/collection vrt/collection/types
+  serialization serialization/messaging
+  utils/demangle utils/container utils/bits utils/mutex utils/detector
+  utils/hash utils/atomic utils/tls utils/static_checks
+
+  # Add single-directory components
+  context event registry handler parameterization sequence termination
+  scheduler worker standalone runtime trace demangle
 )
 
 include_directories(${PROJECT_SOURCE_DIR})
