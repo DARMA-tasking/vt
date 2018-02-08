@@ -62,6 +62,7 @@ set(
     rdma/channel rdma/collection rdma/group rdma/state
   topos
     topos/location
+      topos/location/cache topos/location/message topos/location/record
     topos/index
       topos/index/dense topos/index/traits
     topos/mapping
