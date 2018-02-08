@@ -381,7 +381,7 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
     pending_iter != pending_actions_.end() && "Event must exist in pending"
   );
 
-  auto const& entity = pending_iter->second.entity;
+  auto const& entity = pending_iter->second.entity_;
 
   debug_print(
     location, node,

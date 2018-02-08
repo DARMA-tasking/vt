@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "topos/location/location_common.h"
+#include "topos/location/location.fwd.h"
 #include "topos/location/utility/pending.h"
 #include "topos/location/utility/entity.h"
 #include "topos/location/utility/coord.h"

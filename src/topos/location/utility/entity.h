@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "topos/location/location_common.h"
+#include "topos/location/location.fwd.h"
 #include "messaging/message.h"
 
 namespace vt { namespace location {
@@ -18,6 +19,8 @@ struct LocEntity {
   void applyRegisteredActionMsg(MessageT *msg) {
     msg_action_(static_cast<BaseMessage *>(msg));
   }
+
+  friend struct EntityLocationCoord<EntityID>;
 
 private:
   EntityID entity_;

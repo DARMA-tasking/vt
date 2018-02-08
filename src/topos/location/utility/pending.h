@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "topos/location/location_common.h"
+#include "topos/location/location.fwd.h"
 
 namespace vt { namespace location {
 
@@ -16,6 +17,8 @@ struct PendingLocationLookup {
   void applyNodeAction(NodeType const& node) {
     action_(node);
   }
+
+  friend struct EntityLocationCoord<EntityID>;
 
 private:
   EntityID entity_;
