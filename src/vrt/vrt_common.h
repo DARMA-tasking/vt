@@ -8,7 +8,8 @@
 
 namespace vt { namespace vrt {
 
-using VirtualElmProxyType = collection::VrtElmProxy;
+template <typename IndexT>
+using VirtualElmProxyType = collection::VrtElmProxy<IndexT>;
 
 }} /* end namespace vt::vrt */
 

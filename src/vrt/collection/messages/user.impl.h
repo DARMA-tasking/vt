@@ -23,19 +23,21 @@ HandlerType CollectionMessage<IndexT>::getVrtHandler() const {
 }
 
 template <typename IndexT>
-VirtualElmProxyType CollectionMessage<IndexT>::getProxy() const {
+VirtualElmProxyType<IndexT> CollectionMessage<IndexT>::getProxy() const {
   return to_proxy_;
 }
 
 template <typename IndexT>
-void CollectionMessage<IndexT>::setProxy(VirtualElmProxyType const& in_proxy) {
+void CollectionMessage<IndexT>::setProxy(
+  VirtualElmProxyType<IndexT> const& in_proxy
+) {
   to_proxy_ = in_proxy;
 }
 
 template <typename IndexT>
 template <typename SerializerT>
 void CollectionMessage<IndexT>::serialize(SerializerT& s) {
-  RoutedMessageType<vt::Message>::serialize(s);
+  RoutedMessageType<vt::Message, IndexT>::serialize(s);
   s | vt_sub_handler_;
   s | to_proxy_;
 }

@@ -4,7 +4,8 @@
 
 #include "config.h"
 #include "messaging/message.h"
-#include "topos/location/location_msg.h"
+#include "serialization/traits/byte_copy_trait.h"
+#include "topos/location/message/msg.h"
 
 #include <cassert>
 #include <type_traits>
@@ -14,10 +15,12 @@ namespace vt { namespace vrt {
 template <typename MessageT>
 using RoutedMessageType = LocationRoutedMsg<VirtualProxyType, MessageT>;
 
-struct VirtualMessage : RoutedMessageType<vt::Message> {
+struct VirtualMessage :
+    RoutedMessageType<vt::Message>, serialization::ByteCopyTrait
+{
   // By default, the `VirtualMessage' is byte copyable for serialization, but
-  // derived classes may not be
-  using isByteCopyable = std::true_type;
+  // derived classes may not be. The serialization::ByteCopyTrait specifies this
+  // property
 
   VirtualMessage() = default;
 

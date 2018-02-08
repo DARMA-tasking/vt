@@ -29,6 +29,7 @@ struct DenseIndexArray : serialization::ByteCopyTrait {
   using ThisIndexType = DenseIndexArray<IndexType, ndim>;
   using IndexSizeType = size_t;
   using ApplyType = std::function<void(ThisIndexType)>;
+  using IsByteCopyable = serialization::ByteCopyTrait;
 
   struct dense_single_value_tag {};
 

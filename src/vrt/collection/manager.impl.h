@@ -125,7 +125,8 @@ template <
   ActiveCollectionTypedFnType<MessageT, CollectionT> *f
 >
 void CollectionManager::sendMsg(
-  VirtualElmProxyType const& toProxy, MessageT *const msg, ActionType act
+  VirtualElmProxyType<typename CollectionT::IndexType> const& toProxy,
+  MessageT *const msg, ActionType act
 ) {
   using IndexT = typename CollectionT::IndexType;
 
@@ -166,7 +167,9 @@ void CollectionManager::sendMsg(
     );
 
     // route the message to the destination using the location manager
-    theLocMan()->collectionLoc->routeMsg(toProxy, home_node, msg, act);
+    location::LocationManager::collectionLoc<IndexT>->routeMsg(
+      toProxy, home_node, msg, act
+    );
   } else {
     auto iter = buffered_sends_.find(toProxy.colProxy);
     if (iter == buffered_sends_.end()) {
@@ -265,8 +268,9 @@ void CollectionManager::insertCollectionElement(
       )
     );
 
-    theLocMan()->collectionLoc->registerEntity(
-      VrtElmProxy{proxy,bits}, CollectionManager::collectionMsgHandler<IndexT>
+    location::LocationManager::collectionLoc<IndexT>->registerEntity(
+      VrtElmProxy<IndexT>{proxy,bits},
+      CollectionManager::collectionMsgHandler<IndexT>
     );
   } else {
     assert(0);
@@ -275,13 +279,13 @@ void CollectionManager::insertCollectionElement(
 
 template <
   typename CollectionT,
-  typename IndexT,
-  mapping::ActiveMapTypedFnType<IndexT> fn,
+  mapping::ActiveMapTypedFnType<typename CollectionT::IndexType> fn,
   typename... Args
 >
 VirtualProxyType CollectionManager::makeCollection(
-  IndexT const& range, Args&& ... args
+  typename CollectionT::IndexType const& range, Args&& ... args
 ) {
+  using IndexT = typename CollectionT::IndexType;
   using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
   using MsgType = CollectionCreateMsg<
     CollectionInfo<IndexT>, ArgsTupleType, CollectionT, IndexT
@@ -302,9 +306,9 @@ VirtualProxyType CollectionManager::makeCollection(
 
   messageRef(create_msg);
 
-  SerializedMessenger::broadcastSerialMsg<MsgType, createCollectionHan<MsgType>>(
-    create_msg
-  );
+  SerializedMessenger::broadcastSerialMsg<
+    MsgType, createCollectionHan<MsgType>
+  >(create_msg);
 
   CollectionManager::createCollectionHan<MsgType>(create_msg);
 

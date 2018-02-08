@@ -39,11 +39,12 @@ struct CollectionManager {
 
   template <
     typename CollectionT,
-    typename IndexT,
-    mapping::ActiveMapTypedFnType<IndexT> fn,
+    mapping::ActiveMapTypedFnType<typename CollectionT::IndexType> fn,
     typename... Args
   >
-  VirtualProxyType makeCollection(IndexT const& range, Args&& ... args);
+  VirtualProxyType makeCollection(
+    typename CollectionT::IndexType const& range, Args&& ... args
+  );
 
   template <typename SysMsgT>
   static void createCollectionHan(SysMsgT* msg);
@@ -54,7 +55,8 @@ struct CollectionManager {
     ActiveCollectionTypedFnType<MessageT, CollectionT> *f
   >
   void sendMsg(
-    VirtualElmProxyType const& toProxy, MessageT *const msg, ActionType act
+    VirtualElmProxyType<typename CollectionT::IndexType> const& toProxy,
+    MessageT *const msg, ActionType act
   );
 
   template <typename IndexT>

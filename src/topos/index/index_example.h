@@ -3,6 +3,7 @@
 #define INCLUDED_TOPOS_INDEX_EXAMPLE
 
 #include "config.h"
+#include "serialization/traits/byte_copy_trait.h"
 
 #include <cstdint>
 #include <functional>
@@ -18,6 +19,7 @@ namespace vt { namespace index {
 struct ExampleIndex {
   using IndexSizeType = size_t;
   using ApplyType = std::function<void(ExampleIndex)>;
+  using IsByteCopyable = serialization::ByteCopyTrait;
 
   // An index must have a default constructor
   ExampleIndex() = default;

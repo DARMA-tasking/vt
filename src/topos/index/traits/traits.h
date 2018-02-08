@@ -62,14 +62,18 @@ struct IndexTraits {
     ));
   using has_foreach = detection::is_detected<foreach_t, T>;
 
+  template <typename U>
+  using IsByteCopyable_t = typename U::IsByteCopyable;
+  using has_IsByteCopyable = detection::is_detected<IsByteCopyable_t, T>;
+
   // This defines what it means to be an `Index'
   static constexpr auto const is_index =
     // default constructor and copy constructor
     has_copy_constructor::value and has_default_constructor::value and
     // operator ==
     has_equality::value and has_operator_eq::value and
-    // typedefs/using IndexSizeType
-    has_IndexSizeType::value and
+    // typedefs/using IndexSizeType, IsByteCopyable
+    has_IndexSizeType::value and has_IsByteCopyable::value and
     // methods: packedSize() and indexIsByteCopyable() and uniqueBits() and
     //          foreach()
     has_packedSize::value and has_indexIsByteCopyable::value and

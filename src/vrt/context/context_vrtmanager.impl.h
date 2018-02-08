@@ -119,13 +119,15 @@ void VirtualContextManager::sendSerialMsg(
       // custom send lambda to route the message
       [=](SerialMsgT* msg){
         msg->setProxy(toProxy);
-        theLocMan()->vrtContextLoc->routeMsgHandler<
+        location::LocationManager::vrtContextLoc->routeMsgHandler<
           SerialMsgT, SerializedMessenger::payloadMsgHandler
         >(toProxy, home_node, msg, act);
       },
       // custom data transfer lambda if above the eager threshold
       [=](ActionNodeType action){
-        theLocMan()->vrtContextLoc->routeNonEagerAction(toProxy, home_node, action);
+        location::LocationManager::vrtContextLoc->routeNonEagerAction(
+          toProxy, home_node, action
+        );
       }
     );
   } else {
@@ -265,7 +267,9 @@ void VirtualContextManager::sendMsg(
   );
 
   // route the message to the destination using the location manager
-  theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
+  location::LocationManager::vrtContextLoc->routeMsg(
+    toProxy, home_node, msg, act
+  );
 }
 
 }}  // end namespace vt::vrt

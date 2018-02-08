@@ -11,10 +11,8 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-struct CollectionBase :
-  UntypedCollection
-{
-  using ProxyType = VirtualElmProxyType;
+struct CollectionBase : UntypedCollection {
+  using ProxyType = VirtualElmProxyType<IndexT>;
   using IndexType = IndexT;
 
   CollectionBase() = default;

@@ -3,8 +3,7 @@
 #include "vrt/context/context_vrtmanager.h"
 #include "vrt/context/context_vrt_attorney.h"
 
-namespace vt {
-namespace vrt {
+namespace vt { namespace vrt {
 
 VirtualContextManager::VirtualContextManager()
   : curIdent_(0), myNode_(theContext()->getNode())
@@ -26,7 +25,9 @@ void VirtualContextManager::insertVirtualContext(
   assert(holder_iter == holder_.end() && "Holder must not contain id");
 
   // registry the proxy with location manager
-  theLocMan()->vrtContextLoc->registerEntity(proxy, virtualMsgHandler);
+  location::LocationManager::vrtContextLoc->registerEntity(
+    proxy, virtualMsgHandler
+  );
 
   bool const is_constructed = new_vc != nullptr;
 
@@ -190,6 +191,4 @@ VirtualIDType VirtualContextManager::getCurrentID() const {
   return curIdent_;
 }
 
-}
-
-} // end namespace vt::vrt
+}} // end namespace vt::vrt
