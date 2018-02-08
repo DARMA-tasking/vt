@@ -4,7 +4,9 @@
 namespace vt { namespace collective {
 
 CollectiveAlg::CollectiveAlg()
-  : Tree(tree_cons_tag_t), Reduce(), Barrier()
+  : tree::Tree(tree::tree_cons_tag_t),
+    reduce::Reduce(),
+    barrier::Barrier()
 { }
 
 }}  // end namespace vt::collective

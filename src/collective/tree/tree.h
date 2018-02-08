@@ -1,13 +1,13 @@
 
-#if !defined INCLUDED_TREE_TREE_H
-#define INCLUDED_TREE_TREE_H
+#if !defined INCLUDED_COLLECTIVE_TREE_TREE_H
+#define INCLUDED_COLLECTIVE_TREE_TREE_H
 
 #include "config.h"
 
 #include <vector>
 #include <functional>
 
-namespace vt {
+namespace vt { namespace collective { namespace tree {
 
 static struct DefaultTreeConstructTag { } tree_cons_tag_t { };
 
@@ -32,6 +32,6 @@ private:
   NodeListType children_;
 };
 
-} //end namespace vt
+}}} //end namespace vt::collective::tree
 
-#endif /*INCLUDED_TREE_TREE_H*/
+#endif /*INCLUDED_COLLECTIVE_TREE_TREE_H*/

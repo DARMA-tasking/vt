@@ -12,20 +12,17 @@
 #include "term_common.h"
 #include "term_msgs.h"
 #include "term_state.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 
 namespace vt { namespace term {
 
 using namespace vt::epoch;
 
-struct TerminationDetector : Tree {
+struct TerminationDetector : collective::tree::Tree {
   using TermStateType = TermState;
   using ActionContainerType = std::vector<ActionType>;
 
-  TerminationDetector()
-    : Tree(tree_cons_tag_t),
-      any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren())
-  { }
+  TerminationDetector();
 
   template <typename T>
   using EpochContainerType = std::unordered_map<EpochType, T>;

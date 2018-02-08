@@ -4,7 +4,7 @@
 #include "group/global/group_default.h"
 #include "messaging/active.h"
 #include "messaging/message.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 
 #include <memory>
 #include <cassert>
@@ -55,7 +55,9 @@ namespace vt { namespace group { namespace global {
 /*static*/ void DefaultGroup::buildDefaultTree(PhaseType const& phase) {
   // Initialize spanning tree for default group `default_group'
   if (default_group_->spanning_tree_ == nullptr) {
-    default_group_->spanning_tree_ = std::make_unique<TreeType>(tree_cons_tag_t);
+    default_group_->spanning_tree_ = std::make_unique<TreeType>(
+      collective::tree::tree_cons_tag_t
+    );
     default_group_->this_node_ = theContext()->getNode();
     assert(phase == 0 && "Must be first phase when initializing spanning tree");
   }

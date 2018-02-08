@@ -8,7 +8,7 @@
 #include "group/group_manager.fwd.h"
 #include "activefn/activefn.h"
 #include "messaging/message.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 
 #include <memory>
 #include <cstdlib>
@@ -21,7 +21,7 @@ static constexpr PhaseType const num_phases = 2;
 
 struct DefaultGroup {
   using CountType = int32_t;
-  using TreeType = Tree;
+  using TreeType = collective::tree::Tree;
   using TreePtrType = std::unique_ptr<TreeType>;
 
   DefaultGroup() = default;

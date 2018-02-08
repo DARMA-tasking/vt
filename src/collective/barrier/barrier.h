@@ -7,7 +7,7 @@
 #include "config.h"
 #include "activefn/activefn.h"
 #include "messaging/message.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 #include "collective/barrier/barrier_msg.h"
 #include "collective/barrier/barrier_state.h"
 
@@ -15,7 +15,7 @@ namespace vt { namespace collective { namespace barrier {
 
 constexpr BarrierType const fst_barrier = 1;
 
-struct Barrier : virtual Tree {
+struct Barrier : virtual collective::tree::Tree {
   using BarrierStateType = BarrierState;
 
   Barrier();

@@ -1,8 +1,9 @@
 
-#include "tree/tree.h"
+#include "config.h"
+#include "collective/tree/tree.h"
 #include "context/context.h"
 
-namespace vt {
+namespace vt { namespace collective { namespace tree {
 
 Tree::Tree(DefaultTreeConstructTag) {
   setupTree();
@@ -62,5 +63,4 @@ void Tree::setupTree() {
   }
 }
 
-} //end namespace vt
-
+}}} //end namespace vt::collective::tree

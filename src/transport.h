@@ -3,7 +3,7 @@
 #define INCLUDED_TRANSPORT_H
 
 #include "config.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 #include "pool/pool.h"
 #include "messaging/envelope.h"
 #include "messaging/message.h"

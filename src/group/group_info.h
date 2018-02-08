@@ -7,7 +7,7 @@
 #include "group/group_manager.fwd.h"
 #include "group/region/group_region.h"
 #include "group/group_msg.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 
 namespace vt { namespace group {
 
@@ -19,7 +19,7 @@ static constexpr size_t const max_region_list_size = 4;
 struct Info {
   using RegionType = region::Region;
   using RegionPtrType = std::unique_ptr<RegionType>;
-  using TreeType = Tree;
+  using TreeType = collective::tree::Tree;
   using TreePtrType = std::unique_ptr<TreeType>;
   using ListType = std::vector<RegionType::BoundType>;
 

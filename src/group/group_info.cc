@@ -12,7 +12,7 @@
 #include "configs/types/types_type.h"
 #include "context/context.h"
 #include "messaging/active.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 
 #include <cassert>
 #include <memory>

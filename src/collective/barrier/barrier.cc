@@ -5,7 +5,9 @@
 
 namespace vt { namespace collective { namespace barrier {
 
-Barrier::Barrier() : Tree(tree_cons_tag_t) { }
+Barrier::Barrier() :
+   tree::Tree(tree::tree_cons_tag_t)
+{ }
 
 /*static*/ void Barrier::barrierUp(BarrierMsg* msg) {
   theCollective()->barrierUp(

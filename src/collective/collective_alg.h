@@ -3,7 +3,7 @@
 #define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H
 
 #include "config.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 #include "activefn/activefn.h"
 #include "messaging/message.h"
 #include "collective/barrier/barrier.h"

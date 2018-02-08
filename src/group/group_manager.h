@@ -15,7 +15,7 @@
 #include "messaging/message.h"
 #include "messaging/active.h"
 #include "activefn/activefn.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 
 #include <memory>
 #include <unordered_map>
@@ -34,7 +34,7 @@ struct GroupManager {
     RemoteOperationIDType, ActionListType
   >;
   using ActionGroupType = std::function<void(GroupType)>;
-  using TreeType = Tree;
+  using TreeType = collective::tree::Tree;
   using TreePtrType = std::unique_ptr<TreeType>;
 
   GroupManager();

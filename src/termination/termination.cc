@@ -7,6 +7,11 @@
 
 namespace vt { namespace term {
 
+TerminationDetector::TerminationDetector()
+  : collective::tree::Tree(collective::tree::tree_cons_tag_t),
+  any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren())
+{ }
+
 /*static*/ void TerminationDetector::propagateNewEpochHandler(TermMsg* msg) {
   bool const from_child = true;
   theTerm()->propagateNewEpoch(msg->new_epoch, from_child);

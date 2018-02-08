@@ -8,7 +8,7 @@
 #include "messaging/active.h"
 #include "activefn/activefn.h"
 #include "messaging/message.h"
-#include "tree/tree.h"
+#include "collective/tree/tree.h"
 #include "utils/hash/hash_tuple.h"
 
 #include <tuple>
@@ -17,7 +17,7 @@
 
 namespace vt { namespace collective { namespace reduce {
 
-struct Reduce : virtual Tree {
+struct Reduce : virtual collective::tree::Tree {
   using ReduceIdentifierType = std::tuple<TagType, EpochType>;
   using ReduceStateType = ReduceState;
 
