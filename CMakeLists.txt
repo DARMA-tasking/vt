@@ -54,7 +54,8 @@ set(
   messaging messaging/envelope messaging/message
   pool pool/static_sized pool/header
   rdma rdma/channel rdma/collection rdma/group rdma/state
-  topos/index topos/mapping topos/location
+  topos/index topos/location
+  topos/mapping topos/mapping/seed topos/mapping/dense
   vrt vrt/context vrt/collection vrt/collection/types vrt/collection/messages
   vrt/collection/proxy_builder
   serialization serialization/messaging

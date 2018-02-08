@@ -6,7 +6,7 @@
 
 #include "config.h"
 #include "topos/mapping/mapping.h"
-#include "topos/mapping/mapping_dense.h"
+#include "topos/mapping/dense/dense.h"
 #include "topos/index/index.h"
 
 namespace vt { namespace mapping {

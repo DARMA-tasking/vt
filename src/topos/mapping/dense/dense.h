@@ -49,6 +49,6 @@ NodeType dense3DBlockMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes);
 
 }}  // end namespace vt::mapping
 
-#include "topos/mapping/mapping_dense.impl.h"
+#include "topos/mapping/dense/dense.impl.h"
 
 #endif /*INCLUDED_TOPOS_MAPPING_DENSE*/

@@ -1,7 +1,7 @@
 
 #include "config.h"
-#include "mapping.h"
-#include "mapping_seed.h"
+#include "topos/mapping/mapping.h"
+#include "topos/mapping/seed/seed.h"
 
 #include <cstdlib>
 

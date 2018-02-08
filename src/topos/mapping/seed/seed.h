@@ -3,7 +3,7 @@
 #define INCLUDED_TOPOS_MAPPING_MAPPING_SEED_H
 
 #include "config.h"
-#include "mapping.h"
+#include "topos/mapping/mapping.h"
 
 #include <cstdlib>
 

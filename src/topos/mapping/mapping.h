@@ -2,13 +2,13 @@
 #if !defined INCLUDED_TOPOS_MAPPING
 #define INCLUDED_TOPOS_MAPPING
 
-#include <functional>
-
 #include "config.h"
+#include "topos/mapping/mapping_function.h"
+#include "topos/mapping/seed/seed.h"
 #include "topos/index/index.h"
-#include "mapping_function.h"
 #include "registry/auto_registry_map.h"
-#include "mapping_seed.h"
+
+#include <functional>
 
 namespace vt { namespace mapping {
 
