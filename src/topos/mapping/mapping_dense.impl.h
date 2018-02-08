@@ -5,9 +5,9 @@
 #include <cmath>
 
 #include "config.h"
-#include "topos/index/index.h"
 #include "topos/mapping/mapping.h"
 #include "topos/mapping/mapping_dense.h"
+#include "topos/index/index.h"
 
 namespace vt { namespace mapping {
 
@@ -39,44 +39,46 @@ inline NodeType blockMapDenseFlatIndex(
 
 template <typename Idx, index::NumDimensionsType ndim>
 Idx linearizeDenseIndexColMajor(
-    DenseIndex <Idx, ndim> *idx, DenseIndex <Idx, ndim> *max_idx
+  DenseIndex <Idx, ndim> *idx, DenseIndex <Idx, ndim> *max_idx
 ) {
-// @todo: Do we have a defined behaviour when index is out of max_idx?
-// @todo: This might be useful mechanism to express a boundary condition
+  // @todo: Do we have a defined behaviour when index is out of max_idx?
+  // @todo: This might be useful mechanism to express a boundary condition
+
+  auto const& idx_ = *idx;
+  auto const& max_idx_ = *max_idx;
 
   for (size_t dim = 0; dim < ndim; dim++) {
-    assert(
-        idx->dims[dim] <  max_idx->dims[dim] && "Out of range index!"
-    );
+    assert(idx_[dim] <  max_idx_[dim] && "Out of range index!");
   }
 
   Idx val = 0;
   Idx dim_size = 1;
   for (auto i = ndim - 1; i >= 0; i--) {
-    val += dim_size * idx->dims[i];
-    dim_size *= max_idx->dims[i];
+    val += dim_size * idx_[i];
+    dim_size *= max_idx_[i];
   }
   return val;
 }
 
 template <typename Idx, index::NumDimensionsType ndim>
 Idx linearizeDenseIndexRowMajor(
-    DenseIndex <Idx, ndim> *idx, DenseIndex <Idx, ndim> *max_idx
+  DenseIndex <Idx, ndim> *idx, DenseIndex <Idx, ndim> *max_idx
 ) {
-// @todo: Do we have a defined behaviour when index is out of max_idx?
-// @todo: This might be useful mechanism to express a boundary condition
+  // @todo: Do we have a defined behaviour when index is out of max_idx?
+  // @todo: This might be useful mechanism to express a boundary condition
+
+  auto const& idx_ = *idx;
+  auto const& max_idx_ = *max_idx;
 
   for (size_t dim = 0; dim < ndim; dim++) {
-    assert(
-        idx->dims[dim] <  max_idx->dims[dim] && "Out of range index!"
-    );
+    assert(idx_[dim] <  max_idx_[dim] && "Out of range index!");
   }
 
   Idx val = 0;
   Idx dim_size = 1;
   for (auto i = 0; i < ndim; i++) {
-    val += dim_size * idx->dims[i];
-    dim_size *= max_idx->dims[i];
+    val += dim_size * idx_[i];
+    dim_size *= max_idx_[i];
   }
   return val;
 }
@@ -86,7 +88,9 @@ NodeType denseBlockMap(IdxPtr<Idx> idx, IdxPtr<Idx> max_idx, NodeType nnodes) {
   using IndexElmType = typename Idx::DenseIndexType;
 
   IndexElmType total_elems = max_idx->getSize();
-  IndexElmType flat_idx = linearizeDenseIndexColMajor<IndexElmType, ndim>(idx, max_idx);
+  IndexElmType flat_idx = linearizeDenseIndexColMajor<IndexElmType, ndim>(
+    idx, max_idx
+  );
 
   return blockMapDenseFlatIndex<IndexElmType, NodeType>(
     &flat_idx, &total_elems, nnodes

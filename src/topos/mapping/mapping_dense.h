@@ -5,8 +5,8 @@
 #include <functional>
 
 #include "config.h"
+#include "topos/mapping/mapping.h"
 #include "topos/index/index.h"
-#include "mapping.h"
 
 namespace vt { namespace mapping {
 
@@ -17,12 +17,12 @@ NodeType blockMapDenseFlatIndex(
 
 template <typename Idx, index::NumDimensionsType ndim>
 Idx linearizeDenseIndexColMajor(
-    DenseIndex<Idx, ndim> *idx, DenseIndex<Idx, ndim> *max_idx
+  DenseIndex<Idx, ndim> *idx, DenseIndex<Idx, ndim> *max_idx
 );
 
 template <typename Idx, index::NumDimensionsType ndim>
 Idx linearizeDenseIndexRowMajor(
-    DenseIndex<Idx, ndim> *idx, DenseIndex<Idx, ndim> *max_idx
+  DenseIndex<Idx, ndim> *idx, DenseIndex<Idx, ndim> *max_idx
 );
 
 template <typename Index>
@@ -49,6 +49,6 @@ NodeType dense3DBlockMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes);
 
 }}  // end namespace vt::mapping
 
-#include "mapping_dense.impl.h"
+#include "topos/mapping/mapping_dense.impl.h"
 
 #endif /*INCLUDED_TOPOS_MAPPING_DENSE*/
