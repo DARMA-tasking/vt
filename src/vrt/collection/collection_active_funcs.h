@@ -6,11 +6,13 @@
 #include "messaging/message.h"
 #include "vrt/vrt_common.h"
 #include "vrt/collection/collection_elm_proxy.h"
-#include "vrt/collection/collection.h"
+#include "vrt/collection/types/headers.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-using ActiveCollectionFnPtrType = void(*)(vt::BaseMessage *, UntypedCollection*);
+using ActiveCollectionFnPtrType = void(*)(
+  ::vt::BaseMessage*, UntypedCollection*
+);
 
 template <typename MessageT, typename CollectionT>
 using ActiveCollectionTypedFnType = void(MessageT*, CollectionT*);

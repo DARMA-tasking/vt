@@ -3,7 +3,7 @@
 #define INCLUDED_VRT_COLLECTION_COLLECTION_HEADERS_H
 
 #include "config.h"
-#include "vrt/collection/collection.h"
+#include "vrt/collection/types/headers.h"
 #include "vrt/collection/collection_manager.h"
 #include "vrt/collection/collection_msg.h"
 #include "vrt/vrt_common.h"

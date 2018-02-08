@@ -5,7 +5,7 @@
 #include "config.h"
 #include "vrt/vrt_common.h"
 #include "vrt/collection/collection_elm_proxy.h"
-#include "vrt/collection/collection.h"
+#include "vrt/collection/types/headers.h"
 
 #include <unordered_map>
 
