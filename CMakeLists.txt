@@ -67,7 +67,7 @@ set(
     topos/mapping
       topos/mapping/seed topos/mapping/dense
   vrt
-    vrt/base vrt/context
+    vrt/base vrt/proxy vrt/context
     vrt/collection
       vrt/collection/types
       vrt/collection/messages
