@@ -15,6 +15,7 @@
 #define debug_detector(x) x
 #define debug_openmp(x) x
 #define debug_stdthread(x) x
+#define debug_print_term_msgs(x) x
 
 // distinct modes for debug
 #define debug_none(x) x

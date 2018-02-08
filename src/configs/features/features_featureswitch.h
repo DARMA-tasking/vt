@@ -49,6 +49,7 @@
   debug_list_holder(                                                    \
     no_feature,            "No feature",                                \
     bit_check_overflow,    "Check bitfield overflow",                   \
+    print_term_msgs,       "Debug-prints-TD-msgs",                      \
     trace_enabled,         "Trace",                                     \
     detector,              "Detector",                                  \
     openmp,                "OpenMP",                                    \

@@ -28,15 +28,17 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   TagType const& send_tag, ActionType next_action
 ) {
   auto msg = reinterpret_cast<MessageType const>(base);
-
+  auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_put = envelopeIsPut(msg->env);
   auto const& is_put_packed = envelopeIsPackedPutType(msg->env);
 
-  debug_print(
-    active, node,
-    "sendMsgBytesWithPut: size=%d, dest=%d, is_put=%s, is_put_packed=%s\n",
-    msg_size, dest, print_bool(is_put), print_bool(is_put_packed)
-  );
+  if (!is_term || backend_check_enabled(print_term_msgs)) {
+    debug_print(
+      active, node,
+      "sendMsgBytesWithPut: size=%d, dest=%d, is_put=%s, is_put_packed=%s\n",
+      msg_size, dest, print_bool(is_put), print_bool(is_put_packed)
+    );
+  }
 
   EventType new_event = theEvent()->createParentEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(new_event);
@@ -53,13 +55,15 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     assert(
       (!(put_size != 0) || put_ptr) && "Must have valid ptr if size > 0"
     );
-    debug_print(
-      active, node,
-      "sendMsgBytesWithPut: (put) put_ptr=%p, size:{msg=%d,put=%lu,rem=%lu},"
-      "dest=%d, max_pack_size=%d, direct_buf_pack=%s\n",
-      put_ptr, msg_size, put_size, rem_size, dest, max_pack_direct_size,
-      print_bool(direct_buf_pack)
-    );
+    if (!is_term || backend_check_enabled(print_term_msgs)) {
+      debug_print(
+        active, node,
+        "sendMsgBytesWithPut: (put) put_ptr=%p, size:{msg=%d,put=%lu,rem=%lu},"
+        "dest=%d, max_pack_size=%d, direct_buf_pack=%s\n",
+        put_ptr, msg_size, put_size, rem_size, dest, max_pack_direct_size,
+        print_bool(direct_buf_pack)
+      );
+    }
     if (direct_buf_pack) {
       auto msg_size_ptr = static_cast<intptr_t>(msg_size);
       packMsg(msg, msg_size, put_ptr, put_size);
@@ -112,10 +116,12 @@ EventType ActiveMessenger::sendMsgBytes(
   auto& holder = theEvent()->getEventHolder(event_id);
   auto mpi_event = holder.get_event();
 
-  debug_print(
-    active, node,
-    "sendMsgBytes: size=%d, dest=%d\n", msg_size, dest
-  );
+  if (!is_term || backend_check_enabled(print_term_msgs)) {
+    debug_print(
+      active, node,
+      "sendMsgBytes: size=%d, dest=%d\n", msg_size, dest
+    );
+  }
 
   if (is_shared) {
     mpi_event->setManagedMessage(msg);
@@ -147,6 +153,7 @@ EventType ActiveMessenger::sendMsgSized(
 
   auto const& dest = envelopeGetDest(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
+  auto const& is_term = envelopeIsTerm(msg->env);
 
   backend_enable_if(
     trace_enabled, {
@@ -167,12 +174,14 @@ EventType ActiveMessenger::sendMsgSized(
     }
   );
 
-  debug_print(
-    active, node,
-    "sendMsgSized: dest=%d, handler=%d, is_bcast=%s, is_put=%s\n",
-    dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
-    print_bool(envelopeIsPut(msg->env))
-  );
+  if (!is_term || backend_check_enabled(print_term_msgs)) {
+    debug_print(
+      active, node,
+      "sendMsgSized: dest=%d, handler=%d, is_bcast=%s, is_put=%s\n",
+      dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
+      print_bool(envelopeIsPut(msg->env))
+    );
+  }
 
   bool deliver = false;
   EventType const ret_event = group::GroupActiveAttorney::groupHandler(
@@ -366,11 +375,15 @@ bool ActiveMessenger::handleActiveMsg(
   bool deliver = false;
   GroupActiveAttorney::groupHandler(msg, from, size, false, nullptr, &deliver);
 
-  debug_print(
-    active, node,
-    "handleActiveMsg: msg=%p, ref=%d, deliver=%s\n",
-    msg, envelopeGetRef(msg->env), print_bool(deliver)
-  );
+  auto const& is_term = envelopeIsTerm(msg->env);
+
+  if (!is_term || backend_check_enabled(print_term_msgs)) {
+    debug_print(
+      active, node,
+      "handleActiveMsg: msg=%p, ref=%d, deliver=%s\n",
+      msg, envelopeGetRef(msg->env), print_bool(deliver)
+    );
+  }
 
   if (deliver) {
     auto const& ret = deliverActiveMsg(msg, from, insert);
@@ -408,11 +421,13 @@ bool ActiveMessenger::deliverActiveMsg(
     trace::TraceEventIDType trace_event = trace::no_trace_event;
   );
 
-  debug_print(
-    active, node,
-    "deliverActiveMsg: msg=%p, ref=%d, is_bcast=%s\n",
-    msg, envelopeGetRef(msg->env), print_bool(is_bcast)
-  );
+  if (!is_term || backend_check_enabled(print_term_msgs)) {
+    debug_print(
+      active, node,
+      "deliverActiveMsg: msg=%p, ref=%d, is_bcast=%s\n",
+      msg, envelopeGetRef(msg->env), print_bool(is_bcast)
+    );
+  }
 
   if (is_auto and is_functor) {
     active_fun = auto_registry::getAutoHandlerFunctor(handler);
@@ -424,13 +439,15 @@ bool ActiveMessenger::deliverActiveMsg(
 
   bool const& has_action_handler = active_fun != no_action;
 
-  debug_print(
-    active, node,
-    "deliverActiveMsg: msg=%p, handler=%d, tag=%d, is_auto=%s, "
-    "is_functor=%s, has_action_handler=%s, insert=%s\n",
-    msg, handler, tag, print_bool(is_auto), print_bool(is_functor),
-    print_bool(has_action_handler), print_bool(insert)
-  );
+  if (!is_term || backend_check_enabled(print_term_msgs)) {
+    debug_print(
+      active, node,
+      "deliverActiveMsg: msg=%p, handler=%d, tag=%d, is_auto=%s, "
+      "is_functor=%s, has_action_handler=%s, insert=%s\n",
+      msg, handler, tag, print_bool(is_auto), print_bool(is_functor),
+      print_bool(has_action_handler), print_bool(insert)
+    );
+  }
 
   backend_enable_if(
     trace_enabled,
@@ -487,22 +504,26 @@ bool ActiveMessenger::deliverActiveMsg(
       } else {
         iter->second.push_back(BufferedMsgType{msg,from_node});
       }
-      debug_print(
-        active, node,
-        "deliverActiveMsg: inserting han=%d, msg=%p, ref=%d, list size=%lu\n",
-        handler, msg, envelopeGetRef(msg->env),
-        pending_handler_msgs_.find(handler)->second.size()
-      );
+      if (!is_term || backend_check_enabled(print_term_msgs)) {
+        debug_print(
+          active, node,
+          "deliverActiveMsg: inserting han=%d, msg=%p, ref=%d, list size=%lu\n",
+          handler, msg, envelopeGetRef(msg->env),
+          pending_handler_msgs_.find(handler)->second.size()
+        );
+      }
       messageRef(msg);
     }
   }
 
   if (has_action_handler) {
-    debug_print(
-      active, node,
-      "deliverActiveMsg: deref msg=%p, ref=%d, is_bcast=%s, dest=%d\n",
-      msg, envelopeGetRef(msg->env), print_bool(is_bcast), dest
-    );
+    if (!is_term || backend_check_enabled(print_term_msgs)) {
+      debug_print(
+        active, node,
+        "deliverActiveMsg: deref msg=%p, ref=%d, is_bcast=%s, dest=%d\n",
+        msg, envelopeGetRef(msg->env), print_bool(is_bcast), dest
+      );
+    }
 
     if (!is_term) {
       theTerm()->consume(epoch);
@@ -538,16 +559,19 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
     MessageType msg = reinterpret_cast<MessageType>(buf);
     messageConvertToShared(msg);
 
+    auto const& is_term = envelopeIsTerm(msg->env);
     auto const& is_put = envelopeIsPut(msg->env);
     bool put_finished = false;
 
-    debug_print(
-      active, node,
-      "tryProcessIncoming: msg_size=%d, sender=%d, is_put=%s, is_bcast=%s, "
-      "handler=%d\n",
-      num_probe_bytes, sender, print_bool(is_put),
-      print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
-    );
+    if (!is_term || backend_check_enabled(print_term_msgs)) {
+      debug_print(
+        active, node,
+        "tryProcessIncoming: msg_size=%d, sender=%d, is_put=%s, is_bcast=%s, "
+        "handler=%d\n",
+        num_probe_bytes, sender, print_bool(is_put),
+        print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
+      );
+    }
 
     CountType msg_bytes = num_probe_bytes;
 
@@ -559,11 +583,13 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
         char* put_ptr = buf + msg_size;
         msg_bytes = msg_size;
 
-        debug_print(
-          active, node,
-          "tryProcessIncoming: packed put: ptr=%p, msg_size=%lu, put_size=%lu\n",
-          put_ptr, msg_size, put_size
-        );
+        if (!is_term || backend_check_enabled(print_term_msgs)) {
+          debug_print(
+            active, node,
+            "tryProcessIncoming: packed put: ptr=%p, msg_size=%lu, put_size=%lu\n",
+            put_ptr, msg_size, put_size
+          );
+        }
 
         envelopeSetPutPtrOnly(msg->env, put_ptr);
         put_finished = true;
@@ -623,6 +649,11 @@ HandlerType ActiveMessenger::collectiveRegisterHandler(
 void ActiveMessenger::swapHandlerFn(
   HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
 ) {
+  debug_print(
+    active, node,
+    "swapHandlerFn: han=%d, tag=%d\n", han, tag
+  );
+
   theRegistry()->swapHandler(han, fn, tag);
 
   if (fn != nullptr) {
@@ -660,6 +691,11 @@ void ActiveMessenger::deliverPendingMsgsHandler(
 void ActiveMessenger::registerHandlerFn(
   HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
 ) {
+  debug_print(
+    active, node,
+    "registerHandlerFn: han=%d, tag=%d\n", han, tag
+  );
+
   swapHandlerFn(han, fn, tag);
 
   if (fn != nullptr) {
@@ -670,6 +706,11 @@ void ActiveMessenger::registerHandlerFn(
 void ActiveMessenger::unregisterHandlerFn(
   HandlerType const& han, TagType const& tag
 ) {
+  debug_print(
+    active, node,
+    "unregisterHandlerFn: han=%d, tag=%d\n", han, tag
+  );
+
   return theRegistry()->unregisterHandlerFn(han, tag);
 }
 
