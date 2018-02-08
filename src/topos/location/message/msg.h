@@ -1,10 +1,10 @@
 
-#if !defined INCLUDED_TOPOS_LOCATION_MSG
-#define INCLUDED_TOPOS_LOCATION_MSG
+#if !defined INCLUDED_TOPOS_LOCATION_MESSAGE_MSG_H
+#define INCLUDED_TOPOS_LOCATION_MESSAGE_MSG_H
 
 #include "config.h"
+#include "topos/location/location_common.h"
 #include "messaging/message.h"
-#include "location_common.h"
 
 namespace vt { namespace location {
 
@@ -18,11 +18,12 @@ struct LocationMsg : vt::Message {
   NodeType resolved_node = uninitialized_destination;
 
   LocationMsg(
-      LocInstType const& in_loc_man_inst, EntityID const& in_entity,
-      LocEventID const& in_loc_event, NodeType const& in_ask_node,
-      NodeType in_home_node
+    LocInstType const& in_loc_man_inst, EntityID const& in_entity,
+    LocEventID const& in_loc_event, NodeType const& in_ask_node,
+    NodeType in_home_node
   ) : loc_man_inst(in_loc_man_inst), entity(in_entity), loc_event(in_loc_event),
-      ask_node(in_ask_node), home_node(in_home_node) {}
+      ask_node(in_ask_node), home_node(in_home_node)
+  { }
 
   void setResolvedNode(NodeType const& node) {
     resolved_node = node;
@@ -72,4 +73,4 @@ using LocationRoutedMsg = location::EntityMsg<EntityID, ActiveMessageT>;
 
 }  // end namespace::vt
 
-#endif  /*INCLUDED_TOPOS_LOCATION_MSG*/
+#endif /*INCLUDED_TOPOS_LOCATION_MESSAGE_MSG_H*/

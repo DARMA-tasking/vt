@@ -2,36 +2,39 @@
 #if !defined INCLUDED_TOPOS_LOCATION_IMP
 #define INCLUDED_TOPOS_LOCATION_IMP
 
+#include "config.h"
+#include "topos/location/location_common.h"
+#include "topos/location/location.h"
+#include "topos/location/manager.h"
+#include "topos/location/utility/entity.h"
+#include "context/context.h"
+#include "messaging/active.h"
+
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
 
-#include "config.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "location_common.h"
-#include "location_entity.h"
-#include "location.h"
-
 namespace vt { namespace location {
 
 template <typename EntityID>
-EntityLocationCoord<EntityID>::EntityLocationCoord() :
-    this_inst(cur_loc_inst++), recs_(default_max_cache_size) {
-  LocationManager::insertInstance(this_inst,
-                                  static_cast<LocationCoord *>(this));
+EntityLocationCoord<EntityID>::EntityLocationCoord()
+  : this_inst(cur_loc_inst++), recs_(default_max_cache_size)
+{
+  LocationManager::insertInstance(
+    this_inst, static_cast<LocationCoord*>(this)
+  );
 }
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
-    EntityID const& id, LocMsgActionType msg_action
+  EntityID const& id, LocMsgActionType msg_action
 ) {
   auto const& this_node = theContext()->getNode();
   auto reg_iter = local_registered_.find(id);
 
   assert(
-      reg_iter == local_registered_.end() and
-          "EntityLocationCoord entity should not already be registered"
+    reg_iter == local_registered_.end() &&
+    "EntityLocationCoord entity should not already be registered"
   );
 
   debug_print(
@@ -45,14 +48,13 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   if (msg_action != nullptr) {
     assert(
-        local_registered_msg_han_.find(id) == local_registered_msg_han_.end()
-            and
-                "Entitiy should not exist in local registered msg handler"
+      local_registered_msg_han_.find(id) == local_registered_msg_han_.end() &&
+      "Entitiy should not exist in local registered msg handler"
     );
     local_registered_msg_han_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(id),
-        std::forward_as_tuple(LocEntityMsg{id, msg_action})
+      std::piecewise_construct,
+      std::forward_as_tuple(id),
+      std::forward_as_tuple(LocEntityMsg{id, msg_action})
     );
   }
 
@@ -72,8 +74,8 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
   auto reg_iter = local_registered_.find(id);
 
   assert(
-      reg_iter != local_registered_.end() and
-          "EntityLocationCoord entity must be registered"
+    reg_iter != local_registered_.end() &&
+    "EntityLocationCoord entity must be registered"
   );
 
   debug_print(
@@ -96,7 +98,7 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityMigrated(
-    EntityID const& id, NodeType const& new_node
+  EntityID const& id, NodeType const& new_node
 ) {
   auto reg_iter = local_registered_.find(id);
 
@@ -109,7 +111,7 @@ void EntityLocationCoord<EntityID>::entityMigrated(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntityMigrated(
-    EntityID const& id, NodeType const& from, LocMsgActionType msg_action
+  EntityID const& id, NodeType const& from, LocMsgActionType msg_action
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future
@@ -118,7 +120,7 @@ void EntityLocationCoord<EntityID>::registerEntityMigrated(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::insertPendingEntityAction(
-    EntityID const& id, NodeActionType action
+  EntityID const& id, NodeActionType action
 ) {
   // this is the home node and there is no record on this entity
   auto pending_iter = pending_lookups_.find(id);
@@ -126,9 +128,9 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
     pending_iter->second.push_back(action);
   } else {
     pending_lookups_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(id),
-        std::forward_as_tuple(ActionListType{action})
+      std::piecewise_construct,
+      std::forward_as_tuple(id),
+      std::forward_as_tuple(ActionListType{action})
     );
   }
 }
@@ -136,8 +138,8 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
-    EntityID const& id, NodeType const& home_node, MessageT *msg,
-    ActionType action
+  EntityID const& id, NodeType const& home_node, MessageT *msg,
+  ActionType action
 ) {
   auto const& this_node = theContext()->getNode();
   NodeType route_to_node = uninitialized_destination;
@@ -174,8 +176,8 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   }
 
   assert(
-      route_to_node != uninitialized_destination and
-          "Node to route to must be set by this point"
+    route_to_node != uninitialized_destination &&
+    "Node to route to must be set by this point"
   );
 
   debug_print(
@@ -189,7 +191,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::getLocation(
-    EntityID const& id, NodeType const& home_node, NodeActionType const& action
+  EntityID const& id, NodeType const& home_node, NodeActionType const& action
 ) {
   auto const& this_node = theContext()->getNode();
 
@@ -218,13 +220,13 @@ void EntityLocationCoord<EntityID>::getLocation(
         auto const& event_id = fst_location_event_id++;
         auto msg = new LocMsgType(this_inst, id, event_id, this_node, home_node);
         theMsg()->sendMsg<LocMsgType, getLocationHandler>(
-            home_node, msg, [=] { delete msg; }
+          home_node, msg, [=] { delete msg; }
         );
         // save a pending action when information about location arrives
         pending_actions_.emplace(
-            std::piecewise_construct,
-            std::forward_as_tuple(event_id),
-            std::forward_as_tuple(PendingType{id, action})
+          std::piecewise_construct,
+          std::forward_as_tuple(event_id),
+          std::forward_as_tuple(PendingType{id, action})
         );
       } else {
         // this is the home node and there is no record on this entity
@@ -234,7 +236,7 @@ void EntityLocationCoord<EntityID>::getLocation(
       auto const& rec = recs_.get(id);
 
       if (rec.isLocal()) {
-        assert(0 and "Should be registered if this is the case!");
+        assert(0 && "Should be registered if this is the case!");
         action(this_node);
       } else if (rec.isRemote()) {
         debug_print(
@@ -251,8 +253,8 @@ void EntityLocationCoord<EntityID>::getLocation(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
-    EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-    MessageT *msg, ActionType action
+  EntityID const& id, NodeType const& home_node, NodeType const& to_node,
+  MessageT *msg, ActionType action
 ) {
   auto const& this_node = theContext()->getNode();
 
@@ -341,7 +343,7 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
-    EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act
+  EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act
 ) {
   // set field for location routed message
   msg->setEntity(id);
@@ -371,12 +373,12 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::updatePendingRequest(
-    LocEventID const& event_id, NodeType const& node
+  LocEventID const& event_id, NodeType const& node
 ) {
   auto pending_iter = pending_actions_.find(event_id);
 
   assert(
-      pending_iter != pending_actions_.end() and "Event must exist in pending"
+    pending_iter != pending_actions_.end() && "Event must exist in pending"
   );
 
   auto const& entity = pending_iter->second.entity;

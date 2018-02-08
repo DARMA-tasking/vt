@@ -2,11 +2,11 @@
 #if !defined INCLUDED_TOPOS_LOCATION_COMMON
 #define INCLUDED_TOPOS_LOCATION_COMMON
 
-#include <functional>
-#include <cstdint>
-
 #include "config.h"
 #include "messaging/message.h"
+
+#include <functional>
+#include <cstdint>
 
 namespace vt { namespace location {
 

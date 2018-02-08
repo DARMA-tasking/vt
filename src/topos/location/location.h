@@ -2,29 +2,26 @@
 #if !defined INCLUDED_TOPOS_LOCATION
 #define INCLUDED_TOPOS_LOCATION
 
+#include "config.h"
+#include "topos/location/location_common.h"
+#include "topos/location/utility/pending.h"
+#include "topos/location/utility/entity.h"
+#include "topos/location/utility/coord.h"
+#include "topos/location/message/msg.h"
+#include "topos/location/cache/cache.h"
+#include "topos/location/record/record.h"
+#include "topos/location/record/state.h"
+#include "context/context.h"
+#include "activefn/activefn.h"
+#include "vrt/vrt_common.h"
+
 #include <cstdint>
 #include <memory>
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
 
-#include "config.h"
-#include "context/context.h"
-#include "activefn/activefn.h"
-#include "vrt/vrt_common.h"
-#include "location_common.h"
-#include "location_msg.h"
-#include "location_record.h"
-#include "location_cache.h"
-#include "location_pending.h"
-#include "location_entity.h"
-
 namespace vt { namespace location {
-
-// General base class for the location coords to erase templated types
-struct LocationCoord {
-  int data;
-};
 
 template <typename EntityID>
 struct EntityLocationCoord : LocationCoord {
@@ -67,8 +64,8 @@ struct EntityLocationCoord : LocationCoord {
    *   3) Node 1: registerEntityMigrated(my_id, 0, ...);
    */
   void registerEntityMigrated(
-      EntityID const& id, NodeType const& __attribute__((unused)) from,
-      LocMsgActionType msg_action = nullptr
+    EntityID const& id, NodeType const& __attribute__((unused)) from,
+    LocMsgActionType msg_action = nullptr
   );
 
   /*
@@ -88,25 +85,25 @@ struct EntityLocationCoord : LocationCoord {
    * to `action' reflects the current known state, which may be remote.
    */
   void getLocation(
-      EntityID const& id,
-      NodeType const& home_node,
-      NodeActionType const& action
+    EntityID const& id,
+    NodeType const& home_node,
+    NodeActionType const& action
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgHandler(
-      EntityID const& id, NodeType const& home_node, MessageT *m,
-      ActionType action = nullptr
+    EntityID const& id, NodeType const& home_node, MessageT *m,
+    ActionType action = nullptr
   );
 
   template <typename MessageT>
   void routeMsg(
-      EntityID const& id, NodeType const& home_node, MessageT *m,
-      ActionType action = nullptr
+    EntityID const& id, NodeType const& home_node, MessageT *m,
+    ActionType action = nullptr
   );
 
   void routeNonEagerAction(
-      EntityID const& id, NodeType const& home_node, ActionNodeType action
+    EntityID const& id, NodeType const& home_node, ActionNodeType action
   );
 
   void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
@@ -120,14 +117,14 @@ struct EntityLocationCoord : LocationCoord {
 
   template <typename MessageT>
   void routeMsgEager(
-      EntityID const& id, NodeType const& home_node, MessageT *msg,
-      ActionType action = nullptr
+    EntityID const& id, NodeType const& home_node, MessageT *msg,
+    ActionType action = nullptr
   );
 
   template <typename MessageT>
   void routeMsgNode(
-      EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-      MessageT *msg, ActionType action = nullptr
+    EntityID const& id, NodeType const& home_node, NodeType const& to_node,
+    MessageT *msg, ActionType action = nullptr
   );
 
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
@@ -151,35 +148,8 @@ struct EntityLocationCoord : LocationCoord {
   PendingLocLookupsType pending_lookups_;
 };
 
-struct LocationManager {
-  using LocCoordPtrType = LocationCoord *;
-  using LocInstContainerType = std::vector<LocCoordPtrType>;
-  using VirtualLocMan = EntityLocationCoord<int32_t>;
-  using VirtualContextLocMan = EntityLocationCoord<VirtualProxyType>;
-  using CollectionLocMan = EntityLocationCoord<::vt::vrt::VirtualElmProxyType>;
-
-  std::unique_ptr<VirtualLocMan>
-      virtual_loc = std::make_unique<VirtualLocMan>();
-  std::unique_ptr<VirtualContextLocMan> vrtContextLoc =
-      std::make_unique<VirtualContextLocMan>();
-  std::unique_ptr<CollectionLocMan> collectionLoc =
-    std::make_unique<CollectionLocMan>();
-
-  static void insertInstance(int const i, LocCoordPtrType const& ptr);
-  static LocCoordPtrType getInstance(int const inst);
-
- private:
-  static LocInstContainerType loc_insts;
-};
-
 }}  // end namespace vt::location
 
-namespace vt {
-
-extern location::LocationManager* theLocMan();
-
-}  // end namespace vt
-
-#include "location.impl.h"
+#include "topos/location/location.impl.h"
 
 #endif  /*INCLUDED_TOPOS_LOCATION*/
