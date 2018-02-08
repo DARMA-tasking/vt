@@ -2,7 +2,7 @@
 #include "config.h"
 #include "pool/pool.h"
 #include "worker/worker_headers.h"
-#include "pool/memory_pool_equal.h"
+#include "pool/static_sized/memory_pool_equal.h"
 
 #include <cstdlib>
 #include <cstdint>

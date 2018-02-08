@@ -1,6 +1,6 @@
 
 #include "config.h"
-#include "pool/pool_header.h"
+#include "pool/header/pool_header.h"
 #include "context/context.h"
 
 namespace vt { namespace pool {

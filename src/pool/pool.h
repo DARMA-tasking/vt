@@ -3,8 +3,8 @@
 #define INCLUDED_POOL_POOL_H
 
 #include "config.h"
-#include "pool/memory_pool_equal.h"
-#include "pool/pool_header.h"
+#include "pool/static_sized/memory_pool_equal.h"
+#include "pool/header/pool_header.h"
 
 #include <vector>
 #include <cstdint>

@@ -1,11 +1,11 @@
 
-#if !defined INCLUDED_POOL_MEMORY_POOL_EQUAL_H
-#define INCLUDED_POOL_MEMORY_POOL_EQUAL_H
+#if !defined INCLUDED_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H
+#define INCLUDED_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H
 
 #include "config.h"
 #include "messaging/envelope.h"
 #include "context/context.h"
-#include "pool/pool_header.h"
+#include "pool/header/pool_header.h"
 
 #include <vector>
 #include <cstdint>
@@ -53,4 +53,4 @@ private:
 
 }} //end namespace vt::pool
 
-#endif /*INCLUDED_POOL_MEMORY_POOL_EQUAL_H*/
+#endif /*INCLUDED_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H*/
