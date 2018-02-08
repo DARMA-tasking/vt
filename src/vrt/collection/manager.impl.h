@@ -1,15 +1,15 @@
 
-#if !defined INCLUDED_VRT_COLLECTION_COLLECTION_MANAGER_IMPL_H
-#define INCLUDED_VRT_COLLECTION_COLLECTION_MANAGER_IMPL_H
+#if !defined INCLUDED_VRT_COLLECTION_MANAGER_IMPL_H
+#define INCLUDED_VRT_COLLECTION_MANAGER_IMPL_H
 
 #include "config.h"
 #include "context/context.h"
 #include "vrt/vrt_common.h"
-#include "vrt/collection/collection_elm_proxy.h"
-#include "vrt/collection/collection_manager.h"
-#include "vrt/collection/collection_create_msg.h"
+#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
+#include "vrt/collection/manager.h"
+#include "vrt/collection/messages/system_create.h"
 #include "vrt/collection/collection_info.h"
-#include "vrt/collection/collection_msg.h"
+#include "vrt/collection/messages/user.h"
 #include "registry/auto_registry_map.h"
 #include "registry/auto_registry_collection.h"
 #include "topos/mapping/mapping_headers.h"
@@ -17,6 +17,7 @@
 #include <tuple>
 #include <utility>
 #include <cassert>
+#include <memory>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -44,24 +45,26 @@ template <typename SysMsgT>
 
   auto const& node = theContext()->getNode();
   auto& info = msg->info;
-  VirtualProxyType new_proxy = info.proxy;
+  VirtualProxyType new_proxy = info.getProxy();
 
   theCollection()->insertCollectionInfo(new_proxy);
 
-  if (info.isImmediate) {
+  if (info.immediate_) {
     auto const& map_han = msg->map;
     auto fn = auto_registry::getAutoHandlerMap(map_han);
 
     debug_print(
       vrt_coll, node,
       "running foreach: size=%llu, %d\n",
-      info.range.getSize(), info.range.x()
+      info.range_.getSize(), info.range_.x()
     );
 
-    info.range.foreach(info.range, [=](IndexT cur_idx) {
+    auto const& user_index_range = info.getRange();
+
+    user_index_range.foreach(user_index_range, [=](IndexT cur_idx) {
       auto mapped_node = fn(
         reinterpret_cast<vt::index::BaseIndex*>(&cur_idx),
-        reinterpret_cast<vt::index::BaseIndex*>(&msg->info.range),
+        reinterpret_cast<vt::index::BaseIndex*>(&msg->info.range_),
         theContext()->getNumNodes()
       );
 
@@ -74,11 +77,11 @@ template <typename SysMsgT>
       if (node == mapped_node) {
         // need to construct elements here
         auto new_vc = CollectionManager::runConstructor<CollectionT, IndexT>(
-          info.range.getSize(), cur_idx, &msg->tup,
+          info.range_.getSize(), cur_idx, &msg->tup,
           std::make_index_sequence<size>{}
         );
         theCollection()->insertCollectionElement<IndexT>(
-          std::move(new_vc), cur_idx, msg->info.range, map_han, new_proxy
+          std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy
         );
       }
     });
@@ -92,7 +95,7 @@ template <typename IndexT>
   auto const col_msg = static_cast<CollectionMessage<IndexT>*>(msg);
   auto const entity_proxy = col_msg->getProxy();
 
-  auto& holder = CollectionHolder<IndexT>::vc_container_;
+  auto& holder = Holder<IndexT>::vc_container_;
   auto proxy_holder = holder.find(entity_proxy.colProxy);
   assert(proxy_holder != holder.end() and "Proxy must exist");
 
@@ -128,7 +131,7 @@ void CollectionManager::sendMsg(
 
   // @todo: implement the action `act' after the routing is finished
 
-  auto& holder_container = CollectionEntireHolder<IndexT>::proxy_container_;
+  auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder = holder_container.find(toProxy.colProxy);
   if (holder != holder_container.end()) {
     auto const map_han = holder->second.map_fn;
@@ -192,14 +195,14 @@ void CollectionManager::insertCollectionElement(
   VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
   HandlerType const& map_han, VirtualProxyType const &proxy
 ) {
-  auto& holder_container = CollectionEntireHolder<IndexT>::proxy_container_;
+  auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
   if (holder_iter == holder_container.end()) {
     holder_container.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(proxy),
       std::forward_as_tuple(
-        typename CollectionEntireHolder<IndexT>::InnerHolder{map_han, max_idx}
+        typename EntireHolder<IndexT>::InnerHolder{map_han, max_idx}
       )
     );
 
@@ -229,14 +232,14 @@ void CollectionManager::insertCollectionElement(
     }
   }
 
-  auto& holder = CollectionHolder<IndexT>::vc_container_;
+  auto& holder = Holder<IndexT>::vc_container_;
   auto proxy_holder = holder.find(proxy);
   if (proxy_holder == holder.end()) {
     holder.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(proxy),
       std::forward_as_tuple(
-        typename CollectionHolder<IndexT>::UntypedIndexContainer{}
+        typename Holder<IndexT>::UntypedIndexContainer{}
       )
     );
     proxy_holder = holder.find(proxy);
@@ -256,7 +259,7 @@ void CollectionManager::insertCollectionElement(
       std::piecewise_construct,
       std::forward_as_tuple(bits),
       std::forward_as_tuple(
-        typename CollectionHolder<IndexT>::InnerHolder{
+        typename Holder<IndexT>::InnerHolder{
           std::move(vc), map_han, max_idx
         }
       )
@@ -321,4 +324,4 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_COLLECTION_MANAGER_IMPL_H*/
+#endif /*INCLUDED_VRT_COLLECTION_MANAGER_IMPL_H*/

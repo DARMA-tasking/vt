@@ -3,34 +3,38 @@
 #define INCLUDED_VRT_COLLECTION_COLLECTION_INFO_H
 
 #include "config.h"
+#include "vrt/collection/manager.fwd.h"
 #include "vrt/context/context_vrt_fwd.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
 struct CollectionInfo {
-  bool isImmediate = false;
-  VirtualProxyType proxy = no_vrt_proxy;
-  VirtualRequestIDType req_id = no_request_id;
-  NodeType from_node = uninitialized_destination;
-  IndexT range;
-
   CollectionInfo() = default;
   CollectionInfo(CollectionInfo const&) = default;
   CollectionInfo(
-    IndexT const& in_range, bool const immediate, NodeType const& node,
-    VirtualProxyType p
-  ) : range(in_range), isImmediate(immediate), proxy(p), from_node(node)
+    IndexT const& in_range, bool const in_immediate,
+    NodeType const& in_from_node, VirtualProxyType in_proxy
+  ) : range_(in_range), immediate_(in_immediate), proxy_(in_proxy),
+      from_node_(in_from_node)
   { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | isImmediate;
-    s | proxy;
-    s | req_id;
-    s | from_node;
-    s | range;
+    s | immediate_ | proxy_ | req_id_ | from_node_ | range_;
   }
+
+  VirtualProxyType getProxy() const { return proxy_; }
+  IndexT const& getRange() const { return range_; }
+
+  friend struct CollectionManager;
+
+private:
+  bool immediate_ = false;
+  VirtualProxyType proxy_ = no_vrt_proxy;
+  VirtualRequestIDType req_id_ = no_request_id;
+  NodeType from_node_ = uninitialized_destination;
+  IndexT range_;
 };
 
 

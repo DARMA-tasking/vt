@@ -1,6 +1,6 @@
 
 #include "config.h"
-#include "vrt/collection/collection_elm_proxy.h"
+#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
 
 namespace vt { namespace vrt { namespace collection {
 

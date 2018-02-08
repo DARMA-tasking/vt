@@ -1,13 +1,13 @@
 
-#if !defined INCLUDED_VRT_COLLECTION_COLLECTION_ENTIRE_HOLDER_H
-#define INCLUDED_VRT_COLLECTION_COLLECTION_ENTIRE_HOLDER_H
+#if !defined INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_H
+#define INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_H
 
 #include "config.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-struct CollectionEntireHolder {
+struct EntireHolder {
   struct InnerHolder {
     HandlerType map_fn = uninitialized_handler;
     IndexT max_idx;
@@ -23,9 +23,9 @@ struct CollectionEntireHolder {
 };
 
 template <typename IndexT>
-/*static*/ typename CollectionEntireHolder<IndexT>::ProxyContainerType
-CollectionEntireHolder<IndexT>::proxy_container_;
+/*static*/ typename EntireHolder<IndexT>::ProxyContainerType
+EntireHolder<IndexT>::proxy_container_;
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_COLLECTION_ENTIRE_HOLDER_H*/
+#endif /*INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_H*/

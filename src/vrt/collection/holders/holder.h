@@ -1,21 +1,19 @@
 
-#if !defined INCLUDED_VRT_COLLECTION_COLLECTION_HOLDER_H
-#define INCLUDED_VRT_COLLECTION_COLLECTION_HOLDER_H
+#if !defined INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H
+#define INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H
 
 #include "config.h"
 #include "vrt/vrt_common.h"
-#include "vrt/collection/collection_elm_proxy.h"
+#include "vrt/collection/manager.fwd.h"
+#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vrt/collection/types/headers.h"
 
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection {
 
-// fwd deal for friendship
-struct CollectionManager;
-
 template <typename IndexT>
-struct CollectionHolder {
+struct Holder {
   using CollectionType = Collection<IndexT>;
   using VirtualPtrType = std::unique_ptr<CollectionType>;
 
@@ -47,10 +45,9 @@ private:
 };
 
 template <typename IndexT>
-typename CollectionHolder<IndexT>::UntypedProxyContainer
-  CollectionHolder<IndexT>::vc_container_;
-
+typename Holder<IndexT>::UntypedProxyContainer
+  Holder<IndexT>::vc_container_;
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_COLLECTION_HOLDER_H*/
+#endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H*/

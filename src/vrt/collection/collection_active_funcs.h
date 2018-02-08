@@ -5,7 +5,7 @@
 #include "config.h"
 #include "messaging/message.h"
 #include "vrt/vrt_common.h"
-#include "vrt/collection/collection_elm_proxy.h"
+#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vrt/collection/types/headers.h"
 
 namespace vt { namespace vrt { namespace collection {

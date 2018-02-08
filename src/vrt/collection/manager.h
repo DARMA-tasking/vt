@@ -1,14 +1,16 @@
 
-#if !defined INCLUDED_VRT_COLLECTION_COLLECTION_MANAGER_H
-#define INCLUDED_VRT_COLLECTION_COLLECTION_MANAGER_H
+#if !defined INCLUDED_VRT_COLLECTION_MANAGER_H
+#define INCLUDED_VRT_COLLECTION_MANAGER_H
 
 #include "config.h"
 #include "vrt/vrt_common.h"
-#include "vrt/collection/collection_elm_proxy.h"
+#include "vrt/collection/manager.fwd.h"
+#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vrt/collection/types/headers.h"
-#include "vrt/collection/collection_holder.h"
-#include "vrt/collection/collection_entire_holder.h"
+#include "vrt/collection/holders/holder.h"
+#include "vrt/collection/holders/entire_holder.h"
 #include "topos/mapping/mapping_headers.h"
+#include "messaging/message.h"
 
 #include <memory>
 #include <vector>
@@ -22,10 +24,10 @@ namespace vt { namespace vrt { namespace collection {
 
 struct CollectionManager {
   template <typename IndexT>
-  using CollectionType = typename CollectionHolder<IndexT>::Collection;
+  using CollectionType = typename Holder<IndexT>::Collection;
 
   template <typename IndexT>
-  using VirtualPtrType = typename CollectionHolder<IndexT>::VirtualPtrType;
+  using VirtualPtrType = typename Holder<IndexT>::VirtualPtrType;
 
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   using ActionContainerType = std::vector<ActionProxyType>;
@@ -87,6 +89,6 @@ extern vrt::collection::CollectionManager* theCollection();
 
 }  // end namespace vt
 
-#include "vrt/collection/collection_manager.impl.h"
+#include "vrt/collection/manager.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_COLLECTION_MANAGER_H*/
+#endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/

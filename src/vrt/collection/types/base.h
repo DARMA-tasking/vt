@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "vrt/vrt_common.h"
-#include "vrt/collection/collection_elm_proxy.h"
+#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vrt/collection/types/insertable.h"
 #include "vrt/collection/types/untyped.h"
 
