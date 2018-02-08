@@ -628,10 +628,13 @@ bool ActiveMessenger::isLocalTerm() {
 }
 
 void ActiveMessenger::processMaybeReadyHanTag() {
-  for (auto&& x : maybe_ready_tag_han_) {
+  decltype(maybe_ready_tag_han_) maybe_ready = maybe_ready_tag_han_;
+  // Clear first so clearing doesn't happen after new entries may be added by an
+  // active message arriving
+  maybe_ready_tag_han_.clear();
+  for (auto&& x : maybe_ready) {
     deliverPendingMsgsHandler(std::get<0>(x), std::get<1>(x));
   }
-  maybe_ready_tag_han_.clear();
 }
 
 HandlerType ActiveMessenger::registerNewHandler(
@@ -671,7 +674,7 @@ void ActiveMessenger::deliverPendingMsgsHandler(
   auto iter = pending_handler_msgs_.find(han);
   if (iter != pending_handler_msgs_.end()) {
     if (iter->second.size() > 0) {
-      for (auto cur = iter->second.begin(); cur != iter->second.end(); ++cur) {
+      for (auto cur = iter->second.begin(); cur != iter->second.end(); ) {
         debug_print(
           active, node,
           "deliverPendingMsgsHandler: msg=%p, from=%d\n",
@@ -680,6 +683,8 @@ void ActiveMessenger::deliverPendingMsgsHandler(
         if (deliverActiveMsg(cur->buffered_msg, cur->from_node, false)) {
           messageDeref(cur->buffered_msg);
           cur = iter->second.erase(cur);
+        } else {
+          ++cur;
         }
       }
     } else {
