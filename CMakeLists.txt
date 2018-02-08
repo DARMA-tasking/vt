@@ -48,20 +48,35 @@ set(
   PROJECT_SUBDIRS_LIST
 
   # Add component along with sub-directories
-  configs/debug configs/features configs/types
-  collective collective/reduce collective/barrier collective/tree
-  group group/id group/region group/global
-  messaging messaging/envelope messaging/message
-  pool pool/static_sized pool/header
-  rdma rdma/channel rdma/collection rdma/group rdma/state
-  topos/location
-  topos/index topos/index/dense topos/index/traits
-  topos/mapping topos/mapping/seed topos/mapping/dense
-  vrt vrt/context vrt/collection vrt/collection/types vrt/collection/messages
-  vrt/collection/proxy_builder
-  serialization serialization/messaging
-  utils/demangle utils/container utils/bits utils/mutex utils/detector
-  utils/hash utils/atomic utils/tls utils/static_checks
+  configs
+    configs/debug configs/features configs/types
+  collective
+    collective/reduce collective/barrier collective/tree
+  group
+    group/id group/region group/global
+  messaging
+    messaging/envelope messaging/message
+  pool
+    pool/static_sized pool/header
+  rdma
+    rdma/channel rdma/collection rdma/group rdma/state
+  topos
+    topos/location
+    topos/index
+      topos/index/dense topos/index/traits
+    topos/mapping
+      topos/mapping/seed topos/mapping/dense
+  vrt
+    vrt/base vrt/context
+    vrt/collection
+      vrt/collection/types
+      vrt/collection/messages
+      vrt/collection/proxy_builder
+  serialization
+    serialization/messaging
+  utils
+    utils/demangle utils/container utils/bits utils/mutex utils/detector
+    utils/hash utils/atomic utils/tls utils/static_checks
 
   # Add single-directory components
   context event registry handler parameterization sequence termination
