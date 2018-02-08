@@ -11,6 +11,7 @@
 #include "vrt/collection/holders/entire_holder.h"
 #include "topos/mapping/mapping_headers.h"
 #include "messaging/message.h"
+#include "topos/location/location_headers.h"
 
 #include <memory>
 #include <vector>

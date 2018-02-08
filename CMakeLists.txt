@@ -63,6 +63,7 @@ set(
   topos
     topos/location
       topos/location/cache topos/location/message topos/location/record
+      topos/location/utility
     topos/index
       topos/index/dense topos/index/traits
     topos/mapping
@@ -71,6 +72,7 @@ set(
     vrt/base vrt/proxy vrt/context
     vrt/collection
       vrt/collection/types vrt/collection/messages vrt/collection/proxy_builder
+      vrt/collection/holders
   serialization
     serialization/messaging serialization/traits
   utils

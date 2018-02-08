@@ -2,7 +2,7 @@
 #include "config.h"
 #include "vrt/context/context_vrtmanager.h"
 #include "vrt/context/context_vrt_attorney.h"
-#include "topos/location/manager.h"
+#include "topos/location/location_headers.h"
 
 namespace vt { namespace vrt {
 

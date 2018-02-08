@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_TOPOS_LOCATION
-#define INCLUDED_TOPOS_LOCATION
+#if !defined INCLUDED_TOPOS_LOCATION_LOCATION_H
+#define INCLUDED_TOPOS_LOCATION_LOCATION_H
 
 #include "config.h"
 #include "topos/location/location_common.h"
@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <list>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -41,6 +42,8 @@ struct EntityLocationCoord : LocationCoord {
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
 
   EntityLocationCoord();
+
+  virtual ~EntityLocationCoord();
 
   /*
    * The `registerEntity' method allows an external component to locally
@@ -153,4 +156,4 @@ struct EntityLocationCoord : LocationCoord {
 
 #include "topos/location/location.impl.h"
 
-#endif  /*INCLUDED_TOPOS_LOCATION*/
+#endif /*INCLUDED_TOPOS_LOCATION_LOCATION_H*/

@@ -4,17 +4,24 @@
 
 #include "config.h"
 #include "vrt/proxy/proxy_element.h"
+#include "vrt/collection/manager.fwd.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
 struct VrtElmProxy {
-  VirtualProxyType colProxy = no_vrt_proxy;
-  VirtualProxyElementType<IndexT> elmProxy{virtual_proxy_elm_empty_tag};
+  using CollectionProxyType = VirtualProxyType;
+  using ElementProxyType = VirtualProxyElementType<IndexT>;
 
-  explicit VrtElmProxy(
-    VirtualProxyType const& colProxy_, VirtualElmOnlyProxyType const& elmProxy_
-  ) : colProxy(colProxy_), elmProxy(elmProxy_)
+  VrtElmProxy(
+    VirtualProxyType const& in_col_proxy,
+    VirtualProxyElementType<IndexT> const& in_elm_proxy
+  ) : col_proxy_(in_col_proxy), elm_proxy_(in_elm_proxy)
+  { }
+
+  VrtElmProxy(
+    VirtualProxyType const& in_col_proxy, IndexT const& in_index
+  ) : col_proxy_(in_col_proxy), elm_proxy_(ElementProxyType{in_index})
   { }
 
   VrtElmProxy() = default;
@@ -23,13 +30,22 @@ struct VrtElmProxy {
   VrtElmProxy& operator=(VrtElmProxy const&) = default;
 
   bool operator==(VrtElmProxy const& other) const {
-    return other.colProxy == colProxy and other.elmProxy == elmProxy;
+    return other.col_proxy_ == col_proxy_ && other.elm_proxy_ == elm_proxy_;
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | colProxy | elmProxy;
+    s | col_proxy_ | elm_proxy_;
   }
+
+  friend struct CollectionManager;
+
+  CollectionProxyType getCollectionProxy() const { return col_proxy_; }
+  ElementProxyType getElementProxy() const { return elm_proxy_; }
+
+protected:
+  CollectionProxyType col_proxy_ = no_vrt_proxy;
+  ElementProxyType elm_proxy_{virtual_proxy_elm_empty_tag};
 };
 
 }}} /* end namespace vt::vrt::collection */
@@ -42,8 +58,12 @@ namespace std {
   struct hash<ElmProxyType<IndexT>> {
     size_t operator()(ElmProxyType<IndexT> const& in) const {
       return
-        std::hash<decltype(in.colProxy)>()(in.colProxy) +
-        std::hash<decltype(in.elmProxy)>()(in.elmProxy);
+        std::hash<typename ElmProxyType<IndexT>::CollectionProxyType>()(
+          in.getCollectionProxy()
+        ) +
+        std::hash<typename ElmProxyType<IndexT>::ElementProxyType>()(
+          in.getElementProxy()
+        );
     }
   };
 }

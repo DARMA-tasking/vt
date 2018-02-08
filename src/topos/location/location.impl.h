@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_TOPOS_LOCATION_IMP
-#define INCLUDED_TOPOS_LOCATION_IMP
+#if !defined INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H
+#define INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H
 
 #include "config.h"
 #include "topos/location/location_common.h"
@@ -23,6 +23,10 @@ EntityLocationCoord<EntityID>::EntityLocationCoord()
   LocationManager::insertInstance(
     this_inst, static_cast<LocationCoord*>(this)
   );
+}
+
+template <typename EntityID>
+/*virtual*/ EntityLocationCoord<EntityID>::~EntityLocationCoord() {
 }
 
 template <typename EntityID>
@@ -452,4 +456,4 @@ template <typename EntityID>
 
 }}  // end namespace vt::location
 
-#endif  /*INCLUDED_TOPOS_LOCATION_IMP*/
+#endif /*INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H*/

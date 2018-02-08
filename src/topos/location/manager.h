@@ -4,7 +4,9 @@
 
 #include "config.h"
 #include "topos/location/location_common.h"
-#include "topos/location/location.h"
+#include "topos/location/location.fwd.h"
+#include "topos/location/utility/coord.h"
+#include "vrt/vrt_common.h"
 
 namespace vt { namespace location {
 
@@ -30,6 +32,8 @@ struct LocationManager {
   // Manage different instances of individually managed entities
   static void insertInstance(int const i, LocCoordPtrType const& ptr);
   static LocCoordPtrType getInstance(int const inst);
+
+  virtual ~LocationManager();
 
  private:
   static LocInstContainerType loc_insts;

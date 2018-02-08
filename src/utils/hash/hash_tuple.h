@@ -8,7 +8,9 @@ namespace std {
   template <typename A, typename B>
   struct hash<std::tuple<A,B>> {
     size_t operator()(std::tuple<A,B> const& in) const {
-      return std::hash<size_t>()(std::get<0>(in)) + std::hash<size_t>()(std::get<1>(in));
+      auto const& v1 = std::hash<A>()(std::get<0>(in));
+      auto const& v2 = std::hash<B>()(std::get<1>(in));
+      return v1 ^ v2;
     }
   };
 }

@@ -9,13 +9,17 @@
 #include "vrt/collection/types/headers.h"
 
 #include <unordered_map>
+#include <tuple>
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
 struct Holder {
+  template <typename T, typename U>
+  using ContType = std::unordered_map<T, U>;
   using CollectionType = Collection<IndexT>;
   using VirtualPtrType = std::unique_ptr<CollectionType>;
+  using LookupElementType = std::tuple<VirtualProxyType, IndexT>;
 
   struct InnerHolder {
     VirtualPtrType vc_ptr_;
@@ -33,21 +37,25 @@ struct Holder {
     }
   };
 
-  using TypedIndexContainer = std::unordered_map<IndexT, VirtualPtrType>;
-  using TypedProxyContainer = std::unordered_map<VirtualProxyType, TypedIndexContainer>;
-  using UntypedIndexContainer = std::unordered_map<UniqueIndexBitType, InnerHolder>;
-  using UntypedProxyContainer = std::unordered_map<VirtualProxyType, UntypedIndexContainer>;
+  using TypedIndexContainer = ContType<LookupElementType, InnerHolder>;
+
+  static bool exists(VirtualProxyType const& proxy, IndexT const& idx);
+  static InnerHolder& lookup(VirtualProxyType const& proxy, IndexT const& idx);
+  static void insert(
+    VirtualProxyType const& proxy, IndexT const& idx, InnerHolder&& inner
+  );
 
   friend struct CollectionManager;
 
 private:
-  static UntypedProxyContainer vc_container_;
+  static TypedIndexContainer vc_container_;
 };
 
 template <typename IndexT>
-typename Holder<IndexT>::UntypedProxyContainer
-  Holder<IndexT>::vc_container_;
+typename Holder<IndexT>::TypedIndexContainer Holder<IndexT>::vc_container_;
 
 }}} /* end namespace vt::vrt::collection */
+
+#include "vrt/collection/holders/holder.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H*/

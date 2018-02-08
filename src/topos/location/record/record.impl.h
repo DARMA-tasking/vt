@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "topos/location/record/record.h"
+#include "topos/location/record/state_printer.h"
 
 namespace vt { namespace location {
 

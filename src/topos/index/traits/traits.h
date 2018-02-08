@@ -30,22 +30,38 @@ struct IndexTraits {
   using has_copy_constructor = detection::is_detected<copy_constructor_t, T>;
 
   template <typename U>
-  using operator_eq_t = decltype(U(std::declval<U>().operator=(
-                                     std::declval<U const&>()
-                                   )));
+  using copy_assignment_t = decltype(
+    std::declval<U>().operator=(std::declval<U const&>())
+  );
+  using has_copy_assignment = detection::is_detected_convertible<
+    T, copy_assignment_t, T
+  >;
+
+  template <typename U>
+  using operator_eq_t = decltype(
+    U(std::declval<U>().operator=(std::declval<U const&>()))
+  );
   using has_operator_eq = detection::is_detected<operator_eq_t, T>;
 
   template <typename U>
-  using equality_t = decltype(std::declval<U>().operator==(std::declval<U const&>()));
+  using equality_t = decltype(
+    std::declval<U>().operator==(std::declval<U const&>())
+  );
   using has_equality = detection::is_detected<equality_t, T>;
 
   template <typename U>
   using packedSize_t = decltype(std::declval<U const&>().packedSize());
-  using has_packedSize = detection::is_detected_convertible<size_t, packedSize_t, T>;
+  using has_packedSize = detection::is_detected_convertible<
+    size_t, packedSize_t, T
+  >;
 
   template <typename U>
-  using indexIsByteCopyable_t = decltype(std::declval<U const&>().indexIsByteCopyable());
-  using has_indexIsByteCopyable = detection::is_detected<indexIsByteCopyable_t, T>;
+  using indexIsByteCopyable_t = decltype(
+    std::declval<U const&>().indexIsByteCopyable()
+  );
+  using has_indexIsByteCopyable = detection::is_detected<
+    indexIsByteCopyable_t, T
+  >;
 
   template <typename U>
   using uniqueBits_t = decltype(std::declval<U const&>().uniqueBits());
@@ -68,8 +84,9 @@ struct IndexTraits {
 
   // This defines what it means to be an `Index'
   static constexpr auto const is_index =
-    // default constructor and copy constructor
+    // default constructor, copy constructor, and copy assignment operator
     has_copy_constructor::value and has_default_constructor::value and
+    has_copy_assignment::value and
     // operator ==
     has_equality::value and has_operator_eq::value and
     // typedefs/using IndexSizeType, IsByteCopyable

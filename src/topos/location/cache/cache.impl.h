@@ -93,18 +93,19 @@ void LocationCache<KeyT, ValueT>::printCache() const {
          << "\n";
 
   for (auto&& elm : lookup_) {
-    stream << "\t lookup val: entity=" << elm.first << "\n";
+    stream << "\t lookup val: entity=" << std::get<0>(elm) << "\n";
   }
 
   for (auto&& elm : cache_) {
     stream << "\t cache val: "
-           << "entity=" << elm.first << ", "
-           << "val=" << elm.second
+           << "entity=" << std::get<0>(elm) << ", "
+           << "val=" << std::get<1>(elm)
            << "\n";
   }
 
   debug_print(
-    location, node, "printing cache: %s", stream.str().c_str()
+    location, node,
+    "printing cache: %s", stream.str().c_str()
   );
 }
 

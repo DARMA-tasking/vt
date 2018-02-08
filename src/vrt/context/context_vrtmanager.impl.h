@@ -7,7 +7,7 @@
 #include "vrt/context/context_vrt_internal_msgs.h"
 #include "vrt/context/context_vrt_remoteinfo.h"
 #include "vrt/context/context_vrt_make_closure.h"
-#include "topos/location/location.h"
+#include "topos/location/location_headers.h"
 #include "topos/location/manager.h"
 #include "registry/auto_registry_vc.h"
 #include "registry/auto_registry_map.h"

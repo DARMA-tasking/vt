@@ -3,6 +3,7 @@
 #define INCLUDED_VRT_COLLECTION_MANAGER_IMPL_H
 
 #include "config.h"
+#include "topos/location/location_headers.h"
 #include "context/context.h"
 #include "vrt/vrt_common.h"
 #include "vrt/collection/proxy_builder/elm_proxy_builder.h"
@@ -95,17 +96,18 @@ template <typename IndexT>
   auto const col_msg = static_cast<CollectionMessage<IndexT>*>(msg);
   auto const entity_proxy = col_msg->getProxy();
 
-  auto& holder = Holder<IndexT>::vc_container_;
-  auto proxy_holder = holder.find(entity_proxy.colProxy);
-  assert(proxy_holder != holder.end() and "Proxy must exist");
+  auto const& col = entity_proxy.getCollectionProxy();
+  auto const& elm = entity_proxy.getElementProxy();
+  auto const& idx = elm.getIndex();
+  bool const& exists = Holder<IndexT>::exists(col, idx);
+  assert(exists && "Proxy must exist");
 
-  auto idx_holder = proxy_holder->second.find(entity_proxy.elmProxy);
-  assert(idx_holder != proxy_holder->second.end() and "Idx proxy must exist");
-
-  auto& inner_holder = idx_holder->second;
+  auto& inner_holder = Holder<IndexT>::lookup(col, idx);
 
   auto const sub_handler = col_msg->getVrtHandler();
-  auto const collection_active_fn = auto_registry::getAutoHandlerCollection(sub_handler);
+  auto const collection_active_fn = auto_registry::getAutoHandlerCollection(
+    sub_handler
+  );
   auto const col_ptr = inner_holder.getCollection();
 
   debug_print(
@@ -132,15 +134,15 @@ void CollectionManager::sendMsg(
 
   // @todo: implement the action `act' after the routing is finished
 
+  auto const& col_proxy = toProxy.getCollectionProxy();
+  auto const& elm_proxy = toProxy.getElementProxy();
+
   auto& holder_container = EntireHolder<IndexT>::proxy_container_;
-  auto holder = holder_container.find(toProxy.colProxy);
+  auto holder = holder_container.find(col_proxy);
   if (holder != holder_container.end()) {
     auto const map_han = holder->second.map_fn;
     auto max_idx = holder->second.max_idx;
-    auto cur_idx = IndexT::uniqueBitsToIndex(
-      //*reinterpret_cast<UniqueIndexBitType const*>(&toProxy.elmProxy)
-      VirtualElemProxyBuilder::elmProxyGetIndex(toProxy.elmProxy)
-    );
+    auto cur_idx = elm_proxy.getIndex();
     auto fn = auto_registry::getAutoHandlerMap(map_han);
 
     auto const& num_nodes = theContext()->getNumNodes();
@@ -171,20 +173,20 @@ void CollectionManager::sendMsg(
       toProxy, home_node, msg, act
     );
   } else {
-    auto iter = buffered_sends_.find(toProxy.colProxy);
+    auto iter = buffered_sends_.find(toProxy.getCollectionProxy());
     if (iter == buffered_sends_.end()) {
       buffered_sends_.emplace(
         std::piecewise_construct,
-        std::forward_as_tuple(toProxy.colProxy),
+        std::forward_as_tuple(toProxy.getCollectionProxy()),
         std::forward_as_tuple(ActionContainerType{})
       );
-      iter = buffered_sends_.find(toProxy.colProxy);
+      iter = buffered_sends_.find(toProxy.getCollectionProxy());
     }
     assert(iter != buffered_sends_.end() and "Must exist");
 
     debug_print(
       vrt_coll, node,
-      "pushing into buffered sends: %lld\n", toProxy.colProxy
+      "pushing into buffered sends: %lld\n", toProxy.getCollectionProxy()
     );
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
@@ -235,46 +237,17 @@ void CollectionManager::insertCollectionElement(
     }
   }
 
-  auto& holder = Holder<IndexT>::vc_container_;
-  auto proxy_holder = holder.find(proxy);
-  if (proxy_holder == holder.end()) {
-    holder.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(proxy),
-      std::forward_as_tuple(
-        typename Holder<IndexT>::UntypedIndexContainer{}
-      )
-    );
-    proxy_holder = holder.find(proxy);
-  }
+  auto const& elm_exists = Holder<IndexT>::exists(proxy, idx);
+  assert(!elm_exists && "Must not exist at this point");
 
-  assert(proxy_holder != holder.end() and "Must exist at this point");
+  Holder<IndexT>::insert(proxy, idx, typename Holder<IndexT>::InnerHolder{
+    std::move(vc), map_han, max_idx
+  });
 
-  auto const& bits = idx.uniqueBits();
-  auto idx_iter = proxy_holder->second.find(bits);
-
-  bool const& idx_exists = idx_iter != proxy_holder->second.end();
-
-  assert(not idx_exists and "Index must not exist at this point");
-
-  if (!idx_exists) {
-    proxy_holder->second.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(bits),
-      std::forward_as_tuple(
-        typename Holder<IndexT>::InnerHolder{
-          std::move(vc), map_han, max_idx
-        }
-      )
-    );
-
-    location::LocationManager::collectionLoc<IndexT>->registerEntity(
-      VrtElmProxy<IndexT>{proxy,bits},
-      CollectionManager::collectionMsgHandler<IndexT>
-    );
-  } else {
-    assert(0);
-  }
+  location::LocationManager::collectionLoc<IndexT>->registerEntity(
+    VrtElmProxy<IndexT>{proxy,idx},
+    CollectionManager::collectionMsgHandler<IndexT>
+  );
 }
 
 template <

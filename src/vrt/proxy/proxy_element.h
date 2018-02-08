@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <utility>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -13,6 +14,7 @@ static struct virtual_proxy_elm_empty { } virtual_proxy_elm_empty_tag { };
 
 template <typename IndexT>
 struct VirtualProxyElementType {
+  using IndexType = IndexT;
 
   explicit VirtualProxyElementType(IndexT const& in_idx)
     : idx_(in_idx)
@@ -33,8 +35,10 @@ struct VirtualProxyElementType {
     s | idx_;
   }
 
-private:
-  IndexT const idx_;
+  IndexT const& getIndex() const { return idx_; }
+
+protected:
+  IndexT idx_;
 };
 
 }}} /* end namespace vt::vrt::collection */
@@ -46,7 +50,7 @@ namespace std {
   template <typename IndexT>
   struct hash<ElmType<IndexT>> {
     size_t operator()(ElmType<IndexT> const& in) const {
-      return std::hash<decltype(in.colProxy)>()(in.idx_);
+      return std::hash<typename ElmType<IndexT>::IndexType>()(in.getIndex());
     }
   };
 }

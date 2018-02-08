@@ -14,7 +14,7 @@
 #include "sequence/sequencer_headers.h"
 #include "trace/trace.h"
 #include "scheduler/scheduler.h"
-#include "topos/location/location.h"
+#include "topos/location/location_headers.h"
 #include "vrt/context/context_vrtmanager.h"
 #include "vrt/collection/collection_headers.h"
 #include "worker/worker_headers.h"

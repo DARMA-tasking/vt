@@ -12,6 +12,7 @@
 #include <sstream>
 #include <cstdint>
 #include <functional>
+#include <utility>
 
 #if backend_check_enabled(detector)
   #include "topos/index/traits/traits.h"

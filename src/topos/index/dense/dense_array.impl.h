@@ -186,4 +186,19 @@ IndexType DenseIndexArray<IndexType, ndim>::z() const {
 
 }}  // end namespace vt::index
 
+namespace std {
+  template <typename IndexType, ::vt::index::NumDimensionsType ndim>
+  struct hash<::vt::index::DenseIndexArray<IndexType, ndim>> {
+    size_t operator()(
+      ::vt::index::DenseIndexArray<IndexType, ndim> const& in
+    ) const {
+      auto val = std::hash<IndexType>()(in[0]);
+      for (auto i = 1; i < ndim; i++) {
+        val += std::hash<IndexType>()(in[i]);
+      }
+      return val;
+    }
+  };
+}
+
 #endif /*INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H*/

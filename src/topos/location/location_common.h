@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_TOPOS_LOCATION_COMMON
-#define INCLUDED_TOPOS_LOCATION_COMMON
+#if !defined INCLUDED_TOPOS_LOCATION_LOCATION_COMMON_H
+#define INCLUDED_TOPOS_LOCATION_LOCATION_COMMON_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -29,4 +29,4 @@ static LocInstType cur_loc_inst = 0;
 
 }}  // end namespace vt::location
 
-#endif  /*INCLUDED_TOPOS_LOCATION_COMMON*/
+#endif /*INCLUDED_TOPOS_LOCATION_LOCATION_COMMON_H*/
