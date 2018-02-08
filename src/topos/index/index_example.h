@@ -2,9 +2,10 @@
 #if !defined INCLUDED_TOPOS_INDEX_EXAMPLE
 #define INCLUDED_TOPOS_INDEX_EXAMPLE
 
-#include <cstdint>
-
 #include "config.h"
+
+#include <cstdint>
+#include <functional>
 
 namespace vt { namespace index {
 
@@ -16,6 +17,7 @@ namespace vt { namespace index {
 
 struct ExampleIndex {
   using IndexSizeType = size_t;
+  using ApplyType = std::function<void(ExampleIndex)>;
 
   // An index must have a default constructor
   ExampleIndex() = default;
@@ -37,6 +39,9 @@ struct ExampleIndex {
 
   // Generate unique bit sequence for element index
   UniqueIndexBitType uniqueBits() const;
+
+  // Iterator for every element in a index used as a range
+  void foreach(ExampleIndex const& max, ApplyType fn) const;
 };
 
 }} // end namespace vt::index

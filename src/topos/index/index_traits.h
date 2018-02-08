@@ -2,9 +2,10 @@
 #if !defined INCLUDED_TOPOS_INDEX_TRAITS
 #define INCLUDED_TOPOS_INDEX_TRAITS
 
-#include <cstdint>
-
 #include "config.h"
+
+#include <cstdint>
+#include <functional>
 
 #if backend_check_enabled(detector)
 #include "detector_headers.h"
@@ -52,6 +53,15 @@ struct IndexTraits {
     UniqueIndexBitType, uniqueBits_t, T
   >;
 
+  template <typename U>
+  using ApplyType = std::function<void(U)>;
+  template <typename U>
+  using foreach_t = decltype(
+    std::declval<U const&>().foreach(
+      std::declval<U const&>(), std::declval<ApplyType<U>>()
+    ));
+  using has_foreach = detection::is_detected<foreach_t, T>;
+
   // This defines what it means to be an `Index'
   static constexpr auto const is_index =
     // default constructor and copy constructor
@@ -60,8 +70,10 @@ struct IndexTraits {
     has_equality::value and has_operator_eq::value and
     // typedefs/using IndexSizeType
     has_IndexSizeType::value and
-    // methods: packedSize() and indexIsByteCopyable() and uniqueBits()
-    has_packedSize::value and has_indexIsByteCopyable::value and has_uniqueBits::value;
+    // methods: packedSize() and indexIsByteCopyable() and uniqueBits() and
+    //          foreach()
+    has_packedSize::value and has_indexIsByteCopyable::value and
+    has_uniqueBits::value and has_foreach::value;
 };
 
 }}  // end namespace vt::index
