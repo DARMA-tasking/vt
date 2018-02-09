@@ -68,10 +68,9 @@ int main(int argc, char** argv) {
       Index1D(num_elms)
     );
     for (int i = 10; i < 40; i++) {
-      VirtualElmProxyType<Index1D> elm_proxy(proxy, Index1D(i));
       auto const& this_node = theContext()->getNode();
       auto msg = new ColMsg(this_node);
-      theCollection()->sendMsg<MyCol, ColMsg, colHan>(elm_proxy, msg, nullptr);
+      theCollection()->sendMsg<MyCol, ColMsg, colHan>(proxy[i], msg, nullptr);
     }
   }
 
