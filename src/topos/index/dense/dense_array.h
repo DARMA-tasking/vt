@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "utils/bits/bits_packer.h"
+#include "utils/static_checks/meta_type_eq_.h"
 #include "serialization/traits/byte_copy_trait.h"
 
 #include <array>
@@ -13,6 +14,7 @@
 #include <cstdint>
 #include <functional>
 #include <utility>
+#include <initializer_list>
 
 #if backend_check_enabled(detector)
   #include "topos/index/traits/traits.h"
@@ -25,14 +27,14 @@ using NumDimensionsType = int8_t;
 template <typename IndexType, NumDimensionsType ndim = 1>
 struct DenseIndexArray;
 
+static struct DenseIndexArraySingleInitTag { } dense_single_value_tag { };
+
 template <typename IndexType, NumDimensionsType ndim>
 struct DenseIndexArray : serialization::ByteCopyTrait {
   using ThisIndexType = DenseIndexArray<IndexType, ndim>;
   using IndexSizeType = size_t;
   using ApplyType = std::function<void(ThisIndexType)>;
   using IsByteCopyable = serialization::ByteCopyTrait;
-
-  struct dense_single_value_tag {};
 
   using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
   using DenseArraySizeType = uint64_t;
@@ -43,9 +45,17 @@ struct DenseIndexArray : serialization::ByteCopyTrait {
   DenseIndexArray& operator=(DenseIndexArray const&) = default;
   DenseIndexArray(DenseIndexArray&&) = default;
 
-  template <typename... Idxs>
+  template <
+    typename... Idxs,
+    typename = typename std::enable_if<
+      util::meta_type_eq<IndexType, typename std::decay<Idxs>::type...>::value
+    >::type
+  >
   explicit DenseIndexArray(Idxs&&... init);
-  DenseIndexArray(dense_single_value_tag, IndexType const& init_value);
+
+  DenseIndexArray(std::initializer_list<IndexType> vals);
+  DenseIndexArray(std::array<IndexType, ndim> in_array);
+  DenseIndexArray(DenseIndexArraySingleInitTag, IndexType const& init_value);
 
   IndexType& operator[](IndexType const& index);
   IndexType const& operator[](IndexType const& index) const;

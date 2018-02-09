@@ -71,19 +71,26 @@ template <typename SysMsgT>
       info.range_.getSize(), info.range_.x(), print_bool(is_functor)
     );
 
-    auto const& user_index_range = info.getRange();
+    auto user_index_range = info.getRange();
+    auto max_range = msg->info.range_;
 
-    user_index_range.foreach(user_index_range, [=](IndexT cur_idx) {
+    user_index_range.foreach(user_index_range, [=](IndexT cur_idx) mutable {
+      debug_print(
+        vrt_coll, node,
+        "running foreach: before map: cur_idx=%s, max_range=%s\n",
+        cur_idx.toString().c_str(), max_range.toString().c_str()
+      );
+
       auto mapped_node = fn(
         reinterpret_cast<vt::index::BaseIndex*>(&cur_idx),
-        reinterpret_cast<vt::index::BaseIndex*>(&msg->info.range_),
+        reinterpret_cast<vt::index::BaseIndex*>(&max_range),
         theContext()->getNumNodes()
       );
 
       debug_print(
         vrt_coll, node,
-        "running foreach: node=%d, cur_idx.x()=%d\n",
-        mapped_node, cur_idx.x()
+        "running foreach: node=%d, cur_idx=%s, max_range=%s\n",
+        mapped_node, cur_idx.toString().c_str(), max_range.toString().c_str()
       );
 
       if (node == mapped_node) {
@@ -160,8 +167,8 @@ void CollectionManager::sendMsg(
     auto const& num_nodes = theContext()->getNumNodes();
 
     auto home_node = fn(
-      reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
       reinterpret_cast<vt::index::BaseIndex*>(&cur_idx),
+      reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
       num_nodes
     );
 
@@ -265,7 +272,7 @@ void CollectionManager::insertCollectionElement(
 template <typename CollectionT, typename... Args>
 CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
 CollectionManager::construct(
-  typename CollectionT::IndexType const& range, Args&&... args
+  typename CollectionT::IndexType range, Args&&... args
 ) {
   using ParamT = typename DefaultMap<CollectionT>::MapParamPackType;
   auto const& map_han = auto_registry::makeAutoHandlerFunctorMap<
@@ -284,7 +291,7 @@ template <
 >
 CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
 CollectionManager::construct(
-  typename CollectionT::IndexType const& range, Args&&... args
+  typename CollectionT::IndexType range, Args&&... args
 ) {
   using IndexT = typename CollectionT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
@@ -294,7 +301,7 @@ CollectionManager::construct(
 template <typename CollectionT, typename... Args>
 CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
 CollectionManager::construct_map(
-  typename CollectionT::IndexType const& range, HandlerType const& map_handler,
+  typename CollectionT::IndexType range, HandlerType const& map_handler,
   Args&&... args
 ) {
   using IndexT = typename CollectionT::IndexType;
@@ -314,15 +321,21 @@ CollectionManager::construct_map(
   CollectionInfo<IndexT> info(range, is_static, node, new_proxy);
   create_msg->info = info;
 
-  messageRef(create_msg);
+  debug_print(
+    vrt_coll, node,
+    "construct_map: range=%s\n", range.toString().c_str()
+  );
 
   SerializedMessenger::broadcastSerialMsg<
     MsgType, createCollectionHan<MsgType>
   >(create_msg);
 
-  CollectionManager::createCollectionHan<MsgType>(create_msg);
-
-  messageDeref(create_msg);
+  auto create_msg_local = makeSharedMessage<MsgType>(
+    map_handler, ArgsTupleType{std::forward<Args>(args)...}
+  );
+  create_msg_local->info = info;
+  CollectionManager::createCollectionHan<MsgType>(create_msg_local);
+  messageDeref(create_msg_local);
 
   return CollectionProxyWrapType<typename CollectionT::IndexType>{new_proxy};
 }

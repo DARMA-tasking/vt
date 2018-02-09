@@ -50,21 +50,21 @@ template <typename IndexT>
 template <typename... IndexArgsT>
 typename CollectionIndexProxy<IndexT>::ElmProxyType
 CollectionIndexProxy<IndexT>::index_build(IndexArgsT&&... args) {
-  return index(IndexT{args...});
+  return index(IndexT(args...));
 }
 
 template <typename IndexT>
 template <typename... IndexArgsT>
 typename CollectionIndexProxy<IndexT>::ElmProxyType
 CollectionIndexProxy<IndexT>::operator[](IndexArgsT&&... args) {
-  return index_build(std::forward<IndexArgsT...>(args)...);
+  return index_build(std::forward<IndexArgsT>(args)...);
 }
 
 template <typename IndexT>
 template <typename... IndexArgsT>
 typename CollectionIndexProxy<IndexT>::ElmProxyType
 CollectionIndexProxy<IndexT>::operator()(IndexArgsT&&... args) {
-  return index_build(std::forward<IndexArgsT...>(args)...);
+  return index_build(std::forward<IndexArgsT>(args)...);
 }
 
 template <typename IndexT>

@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "topos/index/dense/dense_array.h"
+#include "context/context.h"
 #include "utils/bits/bits_packer.h"
 
 #include <functional>
@@ -15,14 +16,26 @@
 namespace vt { namespace index {
 
 template <typename IndexType, NumDimensionsType ndim>
-template <typename... Idxs>
+DenseIndexArray<IndexType, ndim>::DenseIndexArray(
+  std::array<IndexType, ndim> in_array
+) : dims(in_array)
+{ }
+
+template <typename IndexType, NumDimensionsType ndim>
+DenseIndexArray<IndexType, ndim>::DenseIndexArray(
+  std::initializer_list<IndexType> vals
+) : dims{vals}
+{ }
+
+template <typename IndexType, NumDimensionsType ndim>
+template <typename... Idxs, typename>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(Idxs&&... init)
   : dims({init...})
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(
-  dense_single_value_tag, IndexType const& init_value
+  DenseIndexArraySingleInitTag, IndexType const& init_value
 ) {
   for (int i = 0; i < ndim; i++) {
     dims[i] = init_value;
@@ -59,15 +72,19 @@ bool DenseIndexArray<IndexType, ndim>::indexIsByteCopyable() const {
 
 template <typename IndexType, NumDimensionsType ndim>
 void DenseIndexArray<IndexType, ndim>::foreach(
-  ThisIndexType max, ApplyType fn
+  ThisIndexType in_max, ApplyType fn
 ) const {
   ThisIndexType idx;
+  ThisIndexType max = in_max;
   std::array<IndexType, ndim> vec = {0};
   for (auto sz = 0; sz < max.getSize(); sz++) {
     fn(ThisIndexType(vec));
     for (auto i = 0; i < ndim; i++) {
-      if (idx[i] + 1 <= max[idx[i]]) {
+      if (vec[i] + 1 < max[i]) {
         vec[i]++;
+        for (auto j = 0; j < i; j++) {
+          vec[j] = 0;
+        }
         break;
       }
     }

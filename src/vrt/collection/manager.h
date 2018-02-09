@@ -48,7 +48,7 @@ struct CollectionManager {
   template <typename CollectionT, typename... Args>
   CollectionProxyWrapType<typename CollectionT::IndexType>
   construct_map(
-    typename CollectionT::IndexType const& range, HandlerType const& map,
+    typename CollectionT::IndexType range, HandlerType const& map,
     Args&&... args
   );
 
@@ -64,7 +64,7 @@ struct CollectionManager {
     typename... Args
   >
   CollectionProxyWrapType<typename CollectionT::IndexType>
-  construct(typename CollectionT::IndexType const& range, Args&&... args);
+  construct(typename CollectionT::IndexType range, Args&&... args);
 
   /*
    *      CollectionManager::construct<CollectionT, Args...>
@@ -75,7 +75,7 @@ struct CollectionManager {
    */
   template <typename CollectionT, typename... Args>
   CollectionProxyWrapType<typename CollectionT::IndexType>
-  construct(typename CollectionT::IndexType const& range, Args&&... args);
+  construct(typename CollectionT::IndexType range, Args&&... args);
 
   template <typename SysMsgT>
   static void createCollectionHan(SysMsgT* msg);

@@ -25,7 +25,7 @@ struct CollectionInfo {
   }
 
   VirtualProxyType getProxy() const { return proxy_; }
-  IndexT const& getRange() const { return range_; }
+  IndexT getRange() const { return range_; }
 
   friend struct CollectionManager;
 
