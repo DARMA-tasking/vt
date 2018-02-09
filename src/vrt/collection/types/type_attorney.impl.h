@@ -11,7 +11,7 @@ template <typename CollectionT>
 /*static*/ void CollectionTypeAttorney::setSize(
   CollectionT const& collection, VirtualElmCountType const& elms
 ) {
-  return collection.setSize(elms);
+  return collection->setSize(elms);
 }
 
 }}} /* end namespace vt::vrt::collection */
