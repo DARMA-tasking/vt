@@ -64,9 +64,8 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    auto proxy = theCollection()->makeCollection<MyCol, defaultDenseIndex1DMap>(
-      Index1D(num_elms)
-    );
+    auto const& range = Index1D(num_elms);
+    auto proxy = theCollection()->construct<MyCol>(range);
     for (int i = 10; i < 40; i++) {
       auto const& this_node = theContext()->getNode();
       auto msg = new ColMsg(this_node);
