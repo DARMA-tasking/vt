@@ -2,7 +2,7 @@
 #define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H
 
 #include "config.h"
-#include "auto_registry_common.h"
+#include "registry/auto_registry_common.h"
 
 namespace vt { namespace auto_registry {
 

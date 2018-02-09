@@ -39,15 +39,43 @@ struct CollectionManager {
 
   CollectionManager() = default;
 
+  /*
+   *         CollectionManager::construct_map<CollectionT, Args...>
+   *
+   *  Construct virtual context collection with an initial pre-registered map
+   *  function.
+   */
+  template <typename CollectionT, typename... Args>
+  CollectionProxyWrapType<typename CollectionT::IndexType>
+  construct_map(
+    typename CollectionT::IndexType const& range, HandlerType const& map,
+    Args&&... args
+  );
+
+  /*
+   *      CollectionManager::construct<CollectionT, MapFnT, Args...>
+   *
+   *  Construct virtual context collection with an explicit templated map
+   *  function, causing registration to occur.
+   */
   template <
     typename CollectionT,
     mapping::ActiveMapTypedFnType<typename CollectionT::IndexType> fn,
     typename... Args
   >
   CollectionProxyWrapType<typename CollectionT::IndexType>
-  makeCollection(
-    typename CollectionT::IndexType const& range, Args&& ... args
-  );
+  construct(typename CollectionT::IndexType const& range, Args&&... args);
+
+  /*
+   *      CollectionManager::construct<CollectionT, Args...>
+   *
+   *  Construct virtual context collection using the default map for the given
+   *  index. Found by looking up a vrt::collection::DefaultMap<...>
+   *  specialization for the Index type.
+   */
+  template <typename CollectionT, typename... Args>
+  CollectionProxyWrapType<typename CollectionT::IndexType>
+  construct(typename CollectionT::IndexType const& range, Args&&... args);
 
   template <typename SysMsgT>
   static void createCollectionHan(SysMsgT* msg);

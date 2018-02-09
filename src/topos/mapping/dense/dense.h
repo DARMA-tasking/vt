@@ -2,11 +2,12 @@
 #if !defined INCLUDED_TOPOS_MAPPING_DENSE
 #define INCLUDED_TOPOS_MAPPING_DENSE
 
-#include <functional>
-
 #include "config.h"
 #include "topos/mapping/mapping.h"
+#include "topos/mapping/adapt_mappers.h"
 #include "topos/index/index.h"
+
+#include <functional>
 
 namespace vt { namespace mapping {
 
@@ -46,6 +47,16 @@ NodeType dense3DRoundRobinMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes);
 NodeType dense1DBlockMap(Idx1DPtr idx, Idx1DPtr max_idx, NodeType nnodes);
 NodeType dense2DBlockMap(Idx2DPtr idx, Idx2DPtr max_idx, NodeType nnodes);
 NodeType dense3DBlockMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes);
+
+using dense1DMapFn    = FunctorAdapt<MapAdapter<Index1D>, defaultDenseIndex1DMap>;
+using dense2DMapFn    = FunctorAdapt<MapAdapter<Index2D>, defaultDenseIndex2DMap>;
+using dense3DMapFn    = FunctorAdapt<MapAdapter<Index3D>, defaultDenseIndex3DMap>;
+using dense1DRRMapFn  = FunctorAdapt<MapAdapter<Index1D>, dense1DRoundRobinMap>;
+using dense2DRRMapFn  = FunctorAdapt<MapAdapter<Index2D>, dense2DRoundRobinMap>;
+using dense3DRRMapFn  = FunctorAdapt<MapAdapter<Index3D>, dense3DRoundRobinMap>;
+using dense1DBlkMapFn = FunctorAdapt<MapAdapter<Index1D>, dense1DBlockMap>;
+using dense2DBlkMapFn = FunctorAdapt<MapAdapter<Index2D>, dense2DBlockMap>;
+using dense3DBlkMapFn = FunctorAdapt<MapAdapter<Index3D>, dense3DBlockMap>;
 
 }}  // end namespace vt::mapping
 

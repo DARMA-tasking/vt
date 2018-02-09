@@ -12,6 +12,7 @@
 #include "vrt/collection/collection_info.h"
 #include "vrt/collection/messages/user.h"
 #include "vrt/collection/types/type_attorney.h"
+#include "vrt/collection/defaults/default_map.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "registry/auto_registry_map.h"
 #include "registry/auto_registry_collection.h"
@@ -54,12 +55,20 @@ template <typename SysMsgT>
 
   if (info.immediate_) {
     auto const& map_han = msg->map;
-    auto fn = auto_registry::getAutoHandlerMap(map_han);
+    bool const& is_functor = HandlerManagerType::isHandlerFunctor(map_han);
+
+    auto_registry::AutoActiveMapType fn = nullptr;
+
+    if (is_functor) {
+      fn = auto_registry::getAutoHandlerFunctorMap(map_han);
+    } else {
+      fn = auto_registry::getAutoHandlerMap(map_han);
+    }
 
     debug_print(
       vrt_coll, node,
-      "running foreach: size=%llu, %d\n",
-      info.range_.getSize(), info.range_.x()
+      "running foreach: size=%llu, %d, is_functor=%s\n",
+      info.range_.getSize(), info.range_.x(), print_bool(is_functor)
     );
 
     auto const& user_index_range = info.getRange();
@@ -253,14 +262,40 @@ void CollectionManager::insertCollectionElement(
   );
 }
 
+template <typename CollectionT, typename... Args>
+CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
+CollectionManager::construct(
+  typename CollectionT::IndexType const& range, Args&&... args
+) {
+  using ParamT = typename DefaultMap<CollectionT>::MapParamPackType;
+  auto const& map_han = auto_registry::makeAutoHandlerFunctorMap<
+    typename DefaultMap<CollectionT>::MapType,
+    typename std::tuple_element<0,ParamT>::type,
+    typename std::tuple_element<1,ParamT>::type,
+    typename std::tuple_element<2,ParamT>::type
+  >();
+  return construct_map<CollectionT,Args...>(range,map_han,args...);
+}
+
 template <
   typename CollectionT,
   mapping::ActiveMapTypedFnType<typename CollectionT::IndexType> fn,
   typename... Args
 >
 CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
-CollectionManager::makeCollection(
-  typename CollectionT::IndexType const& range, Args&& ... args
+CollectionManager::construct(
+  typename CollectionT::IndexType const& range, Args&&... args
+) {
+  using IndexT = typename CollectionT::IndexType;
+  auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
+  return construct_map<CollectionT,Args...>(range, map_han, args...);
+}
+
+template <typename CollectionT, typename... Args>
+CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
+CollectionManager::construct_map(
+  typename CollectionT::IndexType const& range, HandlerType const& map_handler,
+  Args&&... args
 ) {
   using IndexT = typename CollectionT::IndexType;
   using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
@@ -269,8 +304,6 @@ CollectionManager::makeCollection(
   >;
 
   auto const& node = theContext()->getNode();
-  auto const& map_handler = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-
   auto create_msg = makeSharedMessage<MsgType>(
     map_handler, ArgsTupleType{std::forward<Args>(args)...}
   );
