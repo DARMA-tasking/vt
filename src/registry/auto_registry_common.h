@@ -16,12 +16,13 @@
 
 namespace vt { namespace auto_registry {
 
-using AutoActiveType = ActiveFnPtrType;
-using AutoActiveFunctorType = ActiveFnPtrType;
-using AutoActiveVCType = vrt::ActiveVirtualFnPtrType;
-using AutoActiveCollectionType = ::vt::vrt::collection::ActiveCollectionFnPtrType;
-using AutoActiveMapType = mapping::ActiveMapFnPtrType;
-using AutoActiveSeedMapType = mapping::ActiveSeedMapFnPtrType;
+using AutoActiveType           = ActiveFnPtrType;
+using AutoActiveFunctorType    = ActiveFnPtrType;
+using AutoActiveVCType         = vrt::ActiveVirtualFnPtrType;
+using AutoActiveCollectionType = vrt::collection::ActiveCollectionFnPtrType;
+using AutoActiveMapType        = mapping::ActiveMapFnPtrType;
+using AutoActiveMapFunctorType = mapping::ActiveMapFnPtrType;
+using AutoActiveSeedMapType    = mapping::ActiveSeedMapFnPtrType;
 
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;
@@ -31,23 +32,18 @@ struct AutoRegInfo {
   FnT activeFunT;
 
   #if backend_check_enabled(trace_enabled)
-
-  trace::TraceEntryIDType event_id;
-
-  AutoRegInfo(
-    FnT const& in_active_fun_t, trace::TraceEntryIDType const& in_event_id
-  ) : activeFunT(in_active_fun_t), event_id(in_event_id)
-  { }
-
-  trace::TraceEntryIDType theTraceID() const {
-    return event_id;
-  }
-
+    trace::TraceEntryIDType event_id;
+    AutoRegInfo(
+      FnT const& in_active_fun_t, trace::TraceEntryIDType const& in_event_id
+    ) : activeFunT(in_active_fun_t), event_id(in_event_id)
+    { }
+    trace::TraceEntryIDType theTraceID() const {
+      return event_id;
+    }
   #else
-
-  AutoRegInfo(FnT const& in_active_fun_t)
-    : activeFunT(in_active_fun_t) { }
-
+    explicit AutoRegInfo(FnT const& in_active_fun_t)
+      : activeFunT(in_active_fun_t)
+    { }
   #endif
 
   FnT getFun() const {
@@ -59,14 +55,15 @@ template <typename Fn>
 using AutoRegInfoType = AutoRegInfo<Fn>;
 
 template <typename RegInfoT>
-using AutoRegistryContainerType = std::vector<AutoRegInfoType<RegInfoT>>;
+using RegContType = std::vector<AutoRegInfoType<RegInfoT>>;
 
-using AutoActiveContainerType = AutoRegistryContainerType<AutoActiveType>;
-using AutoActiveVCContainerType = AutoRegistryContainerType<AutoActiveVCType>;
-using AutoActiveCollectionContainerType = AutoRegistryContainerType<AutoActiveCollectionType>;
-using AutoActiveMapContainerType = AutoRegistryContainerType<AutoActiveMapType>;
-using AutoActiveSeedMapContainerType = AutoRegistryContainerType<AutoActiveSeedMapType>;
-using AutoActiveFunctorContainerType = AutoRegistryContainerType<AutoActiveFunctorType>;
+using AutoActiveContainerType           = RegContType<AutoActiveType>;
+using AutoActiveVCContainerType         = RegContType<AutoActiveVCType>;
+using AutoActiveCollectionContainerType = RegContType<AutoActiveCollectionType>;
+using AutoActiveMapContainerType        = RegContType<AutoActiveMapType>;
+using AutoActiveMapFunctorContainerType = RegContType<AutoActiveMapFunctorType>;
+using AutoActiveSeedMapContainerType    = RegContType<AutoActiveSeedMapType>;
+using AutoActiveFunctorContainerType    = RegContType<AutoActiveFunctorType>;
 
 }} // end namespace vt::auto_registry
 

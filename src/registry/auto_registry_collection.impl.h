@@ -10,26 +10,19 @@ namespace vt { namespace auto_registry {
 inline AutoActiveCollectionType getAutoHandlerCollection(
   HandlerType const& handler
 ) {
-  return getAutoRegistryGen<
-    AutoActiveCollectionContainerType
-  >().at(handler).getFun();
+  using ContainerType = AutoActiveCollectionContainerType;
+  return getAutoRegistryGen<ContainerType>().at(handler).getFun();
 }
 
 template <
-  typename CollectionT,
-  typename MessageT,
-  ActiveCollectionTypedFnType<MessageT, CollectionT>* f
+  typename ColT, typename MsgT, ActiveCollectionTypedFnType<MsgT, ColT>* f
 >
-inline HandlerType makeAutoHandlerCollection(MessageT* const msg) {
-  HandlerType const id = RunnableGen<decltype(vt::auto_registry::FunctorAdapter<
-      ActiveCollectionTypedFnType<MessageT, CollectionT>, f
-    >()),
-    AutoActiveCollectionContainerType,
-    AutoRegInfoType<AutoActiveCollectionType>,
-    ActiveCollectionFnPtrType
-  >::idx;
-
-  return id;
+inline HandlerType makeAutoHandlerCollection(MsgT* const msg) {
+  using FunctorT = FunctorAdapter<ActiveCollectionTypedFnType<MsgT, ColT>, f>;
+  using ContainerType = AutoActiveCollectionContainerType;
+  using RegInfoType = AutoRegInfoType<AutoActiveCollectionType>;
+  using FuncType = ActiveCollectionFnPtrType;
+  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
 }
 
 }} /* end namespace vt::auto_registry */

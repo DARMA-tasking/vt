@@ -12,21 +12,26 @@ namespace vt { namespace auto_registry {
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) {
-  HandlerType const id = GET_HANDLER_ACTIVE_FUNCTION_EXPAND(
-    ActiveTypedFnType<MessageT>, f
-  );
-  return HandlerManagerType::makeHandler(true, false, id);
+  using FunctorT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
+  using ContainerType = AutoActiveContainerType;
+  using RegInfoType = AutoRegInfoType<AutoActiveType>;
+  using FuncType = ActiveFnPtrType;
+  using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
+  return HandlerManagerType::makeHandler(true, false, RunType::idx);
 }
 
 template <typename T, T value>
 inline HandlerType makeAutoHandler() {
-  HandlerType const id = GET_HANDLER_ACTIVE_FUNCTION_EXPAND(T, value);
-  return HandlerManagerType::makeHandler(true, false, id);
+  using FunctorT = FunctorAdapter<T, value>;
+  using ContainerType = AutoActiveContainerType;
+  using RegInfoType = AutoRegInfoType<AutoActiveType>;
+  using FuncType = ActiveFnPtrType;
+  using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
+  return HandlerManagerType::makeHandler(true, false, RunType::idx);
 }
 
 inline AutoActiveType getAutoHandler(HandlerType const& handler) {
   auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
-
   bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
 

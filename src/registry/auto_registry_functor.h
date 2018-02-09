@@ -11,7 +11,7 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename FunctorT>
+template <typename FunctorT, typename RegT, typename InfoT, typename FnT>
 struct RegistrarFunctor {
   AutoHandlerType index;
 
@@ -23,41 +23,48 @@ AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
 template <typename FunctorT, bool is_msg, typename... Args>
 HandlerType makeAutoHandlerFunctor();
 
-template <typename RunnableFunctorT>
+template <typename FunctorT, typename RegT, typename InfoT, typename FnT>
 struct RegistrarWrapperFunctor {
-  RegistrarFunctor<RunnableFunctorT> registrar;
+  RegistrarFunctor<FunctorT, RegT, InfoT, FnT> registrar;
 };
 
-template <typename RunnableFunctorT>
+template <typename FunctorT, typename RegT, typename InfoT, typename FnT>
 AutoHandlerType registerActiveFunctor();
 
 template <typename... Args>
 struct pack { };
 
-template <typename FunctorT, bool is_msg, typename... Args>
+template <
+  typename FunctorT, typename RegT, typename InfoT, typename FnT, bool msg,
+  typename... Args
+>
 struct RunnableFunctor {
   using FunctorType = FunctorT;
   using PackedArgsType = pack<Args...>;
 
-  static constexpr bool const IsMsgType = is_msg;
+  static constexpr bool const IsMsgType = msg;
 
   static AutoHandlerType const idx;
 
   RunnableFunctor() = default;
 };
 
-template <typename FunctorT, bool is_msg, typename... Args>
-AutoHandlerType const RunnableFunctor<FunctorT, is_msg, Args...>::idx =
-  registerActiveFunctor<RunnableFunctor<FunctorT, is_msg, Args...>>();
+template <
+  typename FunctorT, typename RegT, typename InfoT, typename FnT, bool msg,
+  typename... Args
+>
+AutoHandlerType const RunnableFunctor<FunctorT,RegT,InfoT,FnT,msg,Args...>::idx =
+  registerActiveFunctor<
+  RunnableFunctor<FunctorT, RegT, InfoT, FnT, msg, Args...>, RegT, InfoT, FnT
+  >();
 
-template <typename FunctorT, bool is_msg, typename... Args>
-bool const RunnableFunctor<FunctorT, is_msg, Args...>::IsMsgType;
+template <
+  typename FunctorT, typename RegT, typename InfoT, typename FnT, bool msg,
+  typename... Args
+>
+bool const RunnableFunctor<FunctorT, RegT, InfoT, FnT, msg, Args...>::IsMsgType;
 
 }} // end namespace vt::auto_registry
-
-// convenience macro for registration
-#define GET_HANDLER_ACTIVE_FUNCTOR(FunctorT, is_msg, Args)          \
-  vt::auto_registry::RunnableFunctor<FunctorT, is_msg, Args...>::idx;
 
 #include "auto_registry_functor_impl.h"
 

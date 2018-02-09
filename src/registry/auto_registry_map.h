@@ -13,6 +13,11 @@ namespace vt { namespace auto_registry {
 
 using namespace mapping;
 
+AutoActiveMapFunctorType getAutoHandlerFunctorMap(HandlerType const& han);
+
+template <typename FunctorT, typename... Args>
+HandlerType makeAutoHandlerFunctorMap();
+
 // Registration for collection index mapping functions
 AutoActiveMapType getAutoHandlerMap(HandlerType const& handler);
 

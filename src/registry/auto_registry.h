@@ -28,14 +28,6 @@ HandlerType makeAutoHandler();
 
 }} // end namespace vt::auto_registry
 
-// convenience macro for registration
-#define GET_HANDLER_ACTIVE_FUNCTION_EXPAND(TYPE_F, ADD_F)               \
-  vt::auto_registry::RunnableGen<                                       \
-   decltype(vt::auto_registry::FunctorAdapter<TYPE_F, ADD_F>()),        \
-   AutoActiveContainerType, AutoRegInfoType<AutoActiveType>,            \
-   ActiveFnPtrType                                                         \
-  >::idx;
-
 #include "auto_registry_impl.h"
 
 #endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_H*/

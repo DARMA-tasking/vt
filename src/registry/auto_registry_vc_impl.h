@@ -14,19 +14,16 @@ using namespace vrt;
 
 template <typename VrtT, typename MsgT, ActiveVrtTypedFnType<MsgT, VrtT>* f>
 inline HandlerType makeAutoHandlerVC(MsgT* const __attribute__((unused)) msg) {
-  HandlerType const id = RunnableGen<decltype(vt::auto_registry::FunctorAdapter<
-      ActiveVrtTypedFnType<MsgT, VrtT>, f
-    >()),
-    AutoActiveVCContainerType,
-    AutoRegInfoType<AutoActiveVCType>,
-    ActiveVirtualFnPtrType
-  >::idx;
-
-  return id;
+  using FunctorT = FunctorAdapter<ActiveVrtTypedFnType<MsgT, VrtT>, f>;
+  using ContainerType = AutoActiveVCContainerType;
+  using RegInfoType = AutoRegInfoType<AutoActiveVCType>;
+  using FuncType = ActiveVirtualFnPtrType;
+  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
 }
 
 inline AutoActiveVCType getAutoHandlerVC(HandlerType const& handler) {
-  return getAutoRegistryGen<AutoActiveVCContainerType>().at(handler).getFun();
+  using ContainerType = AutoActiveVCContainerType;
+  return getAutoRegistryGen<ContainerType>().at(handler).getFun();
 }
 
 }} // end namespace vt::auto_registry
