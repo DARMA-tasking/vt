@@ -12,6 +12,7 @@
 #include "vrt/collection/collection_info.h"
 #include "vrt/collection/messages/user.h"
 #include "vrt/collection/types/type_attorney.h"
+#include "vrt/proxy/collection_wrapper.h"
 #include "registry/auto_registry_map.h"
 #include "registry/auto_registry_collection.h"
 #include "topos/mapping/mapping_headers.h"
@@ -257,7 +258,8 @@ template <
   mapping::ActiveMapTypedFnType<typename CollectionT::IndexType> fn,
   typename... Args
 >
-VirtualProxyType CollectionManager::makeCollection(
+CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
+CollectionManager::makeCollection(
   typename CollectionT::IndexType const& range, Args&& ... args
 ) {
   using IndexT = typename CollectionT::IndexType;
@@ -289,7 +291,7 @@ VirtualProxyType CollectionManager::makeCollection(
 
   messageDeref(create_msg);
 
-  return new_proxy;
+  return CollectionProxyWrapType<typename CollectionT::IndexType>{new_proxy};
 }
 
 inline void CollectionManager::insertCollectionInfo(VirtualProxyType const& p) {

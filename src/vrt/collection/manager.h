@@ -9,6 +9,7 @@
 #include "vrt/collection/types/headers.h"
 #include "vrt/collection/holders/holder.h"
 #include "vrt/collection/holders/entire_holder.h"
+#include "vrt/proxy/collection_wrapper.h"
 #include "topos/mapping/mapping_headers.h"
 #include "messaging/message.h"
 #include "topos/location/location_headers.h"
@@ -26,15 +27,15 @@ namespace vt { namespace vrt { namespace collection {
 struct CollectionManager {
   template <typename IndexT>
   using CollectionType = typename Holder<IndexT>::Collection;
-
   template <typename IndexT>
   using VirtualPtrType = typename Holder<IndexT>::VirtualPtrType;
-
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   using ActionContainerType = std::vector<ActionProxyType>;
   using BufferedActionType = std::unordered_map<
     VirtualProxyType, ActionContainerType
   >;
+  template <typename IndexT>
+  using CollectionProxyWrapType = CollectionIndexProxy<IndexT>;
 
   CollectionManager() = default;
 
@@ -43,7 +44,8 @@ struct CollectionManager {
     mapping::ActiveMapTypedFnType<typename CollectionT::IndexType> fn,
     typename... Args
   >
-  VirtualProxyType makeCollection(
+  CollectionProxyWrapType<typename CollectionT::IndexType>
+  makeCollection(
     typename CollectionT::IndexType const& range, Args&& ... args
   );
 
