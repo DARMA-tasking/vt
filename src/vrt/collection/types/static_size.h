@@ -4,6 +4,8 @@
 
 #include "config.h"
 #include "vrt/collection/types/base.h"
+#include "vrt/collection/types/type_attorney.h"
+#include "vrt/collection/manager.fwd.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -11,18 +13,23 @@ template <typename IndexT>
 struct StaticCollectionBase :
   CollectionBase<IndexT>
 {
-  explicit StaticCollectionBase(VirtualElmCountType const inNumElems)
-    : CollectionBase<IndexT>(false, false), numElems_(inNumElems)
-  { }
+  explicit StaticCollectionBase(VirtualElmCountType const inNumElems);
+  StaticCollectionBase();
 
-  VirtualElmCountType getSize() const { return numElems_; }
+  VirtualElmCountType getSize() const;
+  static bool isStaticSized();
 
-  static bool isStaticSized() { return true; }
+  friend struct CollectionTypeAttorney;
+
+private:
+  void setSize(VirtualElmCountType const& elms);
 
 protected:
   VirtualElmCountType numElems_ = no_elms;
 };
 
 }}} /* end namespace vt::vrt::collection */
+
+#include "vrt/collection/types/static_size.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_STATIC_SIZE_H*/

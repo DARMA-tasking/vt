@@ -11,8 +11,7 @@ using namespace vt::mapping;
 struct MyCol : Collection<Index1D> {
   Index1D idx;
 
-  MyCol(VirtualElmCountType elms, Index1D in_idx)
-    : Collection<Index1D>(elms)
+  MyCol(Index1D in_idx) : Collection<Index1D>()
   {
     idx = in_idx;
     auto const& node = theContext()->getNode();

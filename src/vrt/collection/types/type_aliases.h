@@ -13,20 +13,18 @@ template <typename IndexT>
 struct Collection :
   StaticCollectionBase<IndexT>
 {
-  explicit Collection(VirtualElmCountType const elms)
-    : StaticCollectionBase<IndexT>(elms)
-  { }
+  explicit Collection(VirtualElmCountType const elms = no_elms);
 };
 
 template <typename IndexT>
 struct InsertableCollection :
   StaticInsertableCollectionBase<IndexT>
 {
-  explicit InsertableCollection(VirtualElmCountType const elms)
-    : StaticInsertableCollectionBase<IndexT>(elms)
-  { }
+  explicit InsertableCollection(VirtualElmCountType const elms = no_elms);
 };
 
 }}} /* end namespace vt::vrt::collection */
+
+#include "vrt/collection/types/type_aliases.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_TYPE_ALIASES_H*/

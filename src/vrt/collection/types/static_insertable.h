@@ -13,15 +13,14 @@ struct StaticInsertableCollectionBase :
   StaticCollectionBase<IndexT>,
   Insertable<IndexT>
 {
-  explicit StaticInsertableCollectionBase(VirtualElmCountType const inNumElems)
-    : StaticCollectionBase<IndexT>(inNumElems)
-  {
-    CollectionBase<IndexT>::elmsFixedAtCreation_ = false;
-  }
+  explicit StaticInsertableCollectionBase(VirtualElmCountType const inNumElems);
+  StaticInsertableCollectionBase();
 
-  static bool isStaticSized() { return false; }
+  static bool isStaticSized();
 };
 
 }}} /* end namespace vt::vrt::collection */
+
+#include "vrt/collection/types/static_insertable.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H*/

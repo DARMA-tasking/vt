@@ -11,6 +11,8 @@ template <typename IndexT>
 struct DeletableEpoch :
   Deletable<IndexT>
 {
+  DeletableEpoch() : Deletable<IndexT>() { }
+
 protected:
   EpochType curEpoch_ = no_epoch;
 };

@@ -11,6 +11,7 @@
 #include "vrt/collection/messages/system_create.h"
 #include "vrt/collection/collection_info.h"
 #include "vrt/collection/messages/user.h"
+#include "vrt/collection/types/type_attorney.h"
 #include "registry/auto_registry_map.h"
 #include "registry/auto_registry_collection.h"
 #include "topos/mapping/mapping_headers.h"
@@ -29,7 +30,7 @@ CollectionManager::runConstructor(
   std::index_sequence<I...>
 ) {
   return std::make_unique<CollectionT>(
-    elms, idx,
+    /*elms, */idx,
     std::forward<typename std::tuple_element<I,Tuple>::type>(
       std::get<I>(*tup)
     )...
@@ -77,10 +78,11 @@ template <typename SysMsgT>
 
       if (node == mapped_node) {
         // need to construct elements here
+        auto const& num_elms = info.range_.getSize();
         auto new_vc = CollectionManager::runConstructor<CollectionT, IndexT>(
-          info.range_.getSize(), cur_idx, &msg->tup,
-          std::make_index_sequence<size>{}
+          num_elms, cur_idx, &msg->tup, std::make_index_sequence<size>{}
         );
+        CollectionTypeAttorney::setSize(new_vc, num_elms);
         theCollection()->insertCollectionElement<IndexT>(
           std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy
         );

@@ -8,6 +8,8 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
 struct Deletable {
+  Deletable() = default;
+
   void deleteElement(IndexT const& idx);
 };
 

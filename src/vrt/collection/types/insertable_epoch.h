@@ -16,6 +16,8 @@ template <typename IndexT>
 struct InsertableEpoch :
   Insertable<IndexT>
 {
+  InsertableEpoch() : Insertable<IndexT>() { }
+
 protected:
   EpochType curEpoch_ = no_epoch;
 };

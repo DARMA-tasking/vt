@@ -11,6 +11,8 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
 struct Insertable {
+  Insertable() = default;
+
   void insert(IndexT const& idx);
 
   void beginInserting() {
