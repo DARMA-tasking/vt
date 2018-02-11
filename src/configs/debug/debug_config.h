@@ -24,14 +24,14 @@
 
 #define backend_print_all_options(print_all, key_value_map...)          \
   meld_if_stmt(print_all)(                                              \
-    _meld_eval_32768(                                                   \
+    _meld_eval_4096(                                                    \
       meld_print_kv(                                                    \
         backend_option_printer,                                         \
         key_value_map                                                   \
       )                                                                 \
     )                                                                   \
   )(                                                                    \
-    _meld_eval_32768(                                                   \
+    _meld_eval_4096(                                                    \
       meld_print_kv(                                                    \
         backend_option_printer_test_on,                                 \
         key_value_map                                                   \
@@ -46,7 +46,7 @@
 
 #define backend_print_all_debug_modes(print_all)      \
   backend_print_all_options(                          \
-    print_all, meld_eval_2(debug_list_debug_modes)    \
+    print_all, debug_list_debug_modes                 \
   )
 
 #define debug_check_if_equal(tok1, tok2)        \
