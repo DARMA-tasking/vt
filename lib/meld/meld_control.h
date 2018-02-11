@@ -78,6 +78,7 @@
 #define meld_bit_or _meld_bit_or
 #define meld_iif_stmt _meld_iif_stmt
 #define meld_to_bool _meld_to_bool
+#define meld_not _meld_logical_not
 #define meld_arg(arg...) meld_defer_1(meld_arg)()(arg)
 #define meld_comma ,
 #define meld_va_comma(arg...) , ##arg

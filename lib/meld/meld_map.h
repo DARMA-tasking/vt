@@ -23,6 +23,8 @@
   _meld_to_bool(_meld_extract_first(_meld__argument_token_ arg)())
 #define _meld__argument_token_() 0
 
+#define _meld_has_arguments_two(_, arg...) _meld_has_arguments(arg)
+
 #define _meld_stateless_map(fn, fst, arg...)               \
   fn(fst)                                                  \
   meld_if_stmt(_meld_has_arguments(arg))(                  \
@@ -88,6 +90,14 @@
 #define _meld__stateless_map_with_() _meld_stateless_map_with_
 #define _meld_map_with _meld_stateless_map_with_
 
+#define _meld_map_with_trans_(fn, fn2, with, fst, arg...)               \
+  fn(fst, with, _meld_has_arguments_two(arg))                           \
+  meld_if_stmt(_meld_has_arguments(arg))(                               \
+    meld_defer_2(_meld__map_with_trans_)()(fn, fn2, fn2(with), arg)     \
+  )()
+#define _meld__map_with_trans_() _meld_map_with_trans_
+#define _meld_map_with_trans _meld_map_with_trans_
+
 #define _meld_map_lst(map_fn, lambda, lst) _meld_eval(map_fn(lambda,lst))
 
 #define _meld_fold_or_(cur, fst, arg...)                               \
@@ -102,6 +112,7 @@
 #define meld_is_empty _meld_is_empty
 #define meld_map _meld_map
 #define meld_map_with _meld_map_with
+#define meld_map_with_trans _meld_map_with_trans
 #define meld_meta_map _meld_map_lst
 #define meld_fold_or _meld_fold_or_helper
 #define meld_lookup_key _meld_lookup_key_wrap
