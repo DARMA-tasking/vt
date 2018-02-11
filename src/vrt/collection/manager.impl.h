@@ -25,13 +25,13 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename CollectionT, typename IndexT, typename Tuple, size_t... I>
+template <typename ColT, typename IndexT, typename Tuple, size_t... I>
 /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
 CollectionManager::runConstructor(
   VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
   std::index_sequence<I...>
 ) {
-  return std::make_unique<CollectionT>(
+  return std::make_unique<ColT>(
     /*elms, */idx,
     std::forward<typename std::tuple_element<I,Tuple>::type>(
       std::get<I>(*tup)
@@ -40,8 +40,8 @@ CollectionManager::runConstructor(
 }
 
 template <typename SysMsgT>
-/*static*/ void CollectionManager::createCollectionHan(SysMsgT* msg) {
-  using CollectionT = typename SysMsgT::CollectionType;
+/*static*/ void CollectionManager::distConstruct(SysMsgT* msg) {
+  using ColT = typename SysMsgT::CollectionType;
   using IndexT = typename SysMsgT::IndexType;
   using Args = typename SysMsgT::ArgsTupleType;
 
@@ -96,7 +96,7 @@ template <typename SysMsgT>
       if (node == mapped_node) {
         // need to construct elements here
         auto const& num_elms = info.range_.getSize();
-        auto new_vc = CollectionManager::runConstructor<CollectionT, IndexT>(
+        auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
           num_elms, cur_idx, &msg->tup, std::make_index_sequence<size>{}
         );
         CollectionTypeAttorney::setSize(new_vc, num_elms);
@@ -140,16 +140,12 @@ template <typename IndexT>
   collection_active_fn(msg, col_ptr);
 }
 
-template <
-  typename CollectionT,
-  typename MessageT,
-  ActiveCollectionTypedFnType<MessageT, CollectionT> *f
->
+template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
 void CollectionManager::sendMsg(
-  VirtualElmProxyType<typename CollectionT::IndexType> const& toProxy,
-  MessageT *const msg, ActionType act
+  VirtualElmProxyType<typename ColT::IndexType> const& toProxy,
+  MsgT *const msg, ActionType act
 ) {
-  using IndexT = typename CollectionT::IndexType;
+  using IndexT = typename ColT::IndexType;
 
   // @todo: implement the action `act' after the routing is finished
 
@@ -174,7 +170,7 @@ void CollectionManager::sendMsg(
 
     // register the user's handler
     HandlerType const& han = auto_registry::makeAutoHandlerCollection<
-      CollectionT, MessageT, f
+      ColT, MsgT, f
     >(msg);
 
     // save the user's handler in the message
@@ -209,7 +205,7 @@ void CollectionManager::sendMsg(
     );
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
-      theCollection()->sendMsg<CollectionT, MessageT, f>(toProxy, msg, act);
+      theCollection()->sendMsg<ColT, MsgT, f>(toProxy, msg, act);
     });
   }
 }
@@ -269,45 +265,45 @@ void CollectionManager::insertCollectionElement(
   );
 }
 
-template <typename CollectionT, typename... Args>
-CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
+template <typename ColT, typename... Args>
+CollectionManager::CollectionProxyWrapType<typename ColT::IndexType>
 CollectionManager::construct(
-  typename CollectionT::IndexType range, Args&&... args
+  typename ColT::IndexType range, Args&&... args
 ) {
-  using ParamT = typename DefaultMap<CollectionT>::MapParamPackType;
+  using ParamT = typename DefaultMap<ColT>::MapParamPackType;
   auto const& map_han = auto_registry::makeAutoHandlerFunctorMap<
-    typename DefaultMap<CollectionT>::MapType,
+    typename DefaultMap<ColT>::MapType,
     typename std::tuple_element<0,ParamT>::type,
     typename std::tuple_element<1,ParamT>::type,
     typename std::tuple_element<2,ParamT>::type
   >();
-  return construct_map<CollectionT,Args...>(range,map_han,args...);
+  return constructMap<ColT,Args...>(range,map_han,args...);
 }
 
 template <
-  typename CollectionT,
-  mapping::ActiveMapTypedFnType<typename CollectionT::IndexType> fn,
+  typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn,
   typename... Args
 >
-CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
+CollectionManager::CollectionProxyWrapType<typename ColT::IndexType>
 CollectionManager::construct(
-  typename CollectionT::IndexType range, Args&&... args
+  typename ColT::IndexType range, Args&&... args
 ) {
-  using IndexT = typename CollectionT::IndexType;
+  using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return construct_map<CollectionT,Args...>(range, map_han, args...);
+  return constructMap<ColT,Args...>(range, map_han, args...);
 }
 
-template <typename CollectionT, typename... Args>
-CollectionManager::CollectionProxyWrapType<typename CollectionT::IndexType>
-CollectionManager::construct_map(
-  typename CollectionT::IndexType range, HandlerType const& map_handler,
+template <typename ColT, typename... Args>
+CollectionManager::CollectionProxyWrapType<typename ColT::IndexType>
+CollectionManager::constructMap(
+  typename ColT::IndexType range, HandlerType const& map_handler,
   Args&&... args
 ) {
-  using IndexT = typename CollectionT::IndexType;
+  using SerdesMsg = SerializedMessenger;
+  using IndexT = typename ColT::IndexType;
   using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
   using MsgType = CollectionCreateMsg<
-    CollectionInfo<IndexT>, ArgsTupleType, CollectionT, IndexT
+    CollectionInfo<IndexT>, ArgsTupleType, ColT, IndexT
   >;
 
   auto const& node = theContext()->getNode();
@@ -316,7 +312,7 @@ CollectionManager::construct_map(
   );
 
   auto const& new_proxy = makeNewCollectionProxy();
-  auto const& is_static = CollectionT::isStaticSized();
+  auto const& is_static = ColT::isStaticSized();
 
   CollectionInfo<IndexT> info(range, is_static, node, new_proxy);
   create_msg->info = info;
@@ -326,18 +322,16 @@ CollectionManager::construct_map(
     "construct_map: range=%s\n", range.toString().c_str()
   );
 
-  SerializedMessenger::broadcastSerialMsg<
-    MsgType, createCollectionHan<MsgType>
-  >(create_msg);
+  SerdesMsg::broadcastSerialMsg<MsgType, distConstruct<MsgType>>(create_msg);
 
   auto create_msg_local = makeSharedMessage<MsgType>(
     map_handler, ArgsTupleType{std::forward<Args>(args)...}
   );
   create_msg_local->info = info;
-  CollectionManager::createCollectionHan<MsgType>(create_msg_local);
+  CollectionManager::distConstruct<MsgType>(create_msg_local);
   messageDeref(create_msg_local);
 
-  return CollectionProxyWrapType<typename CollectionT::IndexType>{new_proxy};
+  return CollectionProxyWrapType<typename ColT::IndexType>{new_proxy};
 }
 
 inline void CollectionManager::insertCollectionInfo(VirtualProxyType const& p) {

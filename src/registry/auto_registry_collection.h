@@ -15,12 +15,8 @@ using namespace ::vt::vrt::collection;
 
 AutoActiveCollectionType getAutoHandlerCollection(HandlerType const& handler);
 
-template <
-  typename CollectionT,
-  typename MessageT,
-  ActiveCollectionTypedFnType<MessageT, CollectionT>* f
->
-HandlerType makeAutoHandlerCollection(MessageT* const msg);
+template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
+HandlerType makeAutoHandlerCollection(MsgT* const msg);
 
 }} /* end namespace vt::auto_registry */
 

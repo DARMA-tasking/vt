@@ -14,14 +14,12 @@ inline AutoActiveCollectionType getAutoHandlerCollection(
   return getAutoRegistryGen<ContainerType>().at(handler).getFun();
 }
 
-template <
-  typename ColT, typename MsgT, ActiveCollectionTypedFnType<MsgT, ColT>* f
->
+template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 inline HandlerType makeAutoHandlerCollection(MsgT* const msg) {
-  using FunctorT = FunctorAdapter<ActiveCollectionTypedFnType<MsgT, ColT>, f>;
+  using FunctorT = FunctorAdapter<ActiveColTypedFnType<MsgT, ColT>, f>;
   using ContainerType = AutoActiveCollectionContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionType>;
-  using FuncType = ActiveCollectionFnPtrType;
+  using FuncType = ActiveColFnPtrType;
   return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
 }
 

@@ -40,60 +40,56 @@ struct CollectionManager {
   CollectionManager() = default;
 
   /*
-   *         CollectionManager::construct_map<CollectionT, Args...>
+   *         CollectionManager::constructMap<ColT, Args...>
    *
    *  Construct virtual context collection with an initial pre-registered map
    *  function.
    */
-  template <typename CollectionT, typename... Args>
-  CollectionProxyWrapType<typename CollectionT::IndexType>
-  construct_map(
-    typename CollectionT::IndexType range, HandlerType const& map,
+  template <typename ColT, typename... Args>
+  CollectionProxyWrapType<typename ColT::IndexType>
+  constructMap(
+    typename ColT::IndexType range, HandlerType const& map,
     Args&&... args
   );
 
   /*
-   *      CollectionManager::construct<CollectionT, MapFnT, Args...>
+   *      CollectionManager::construct<ColT, MapFnT, Args...>
    *
    *  Construct virtual context collection with an explicit templated map
    *  function, causing registration to occur.
    */
   template <
-    typename CollectionT,
-    mapping::ActiveMapTypedFnType<typename CollectionT::IndexType> fn,
+    typename ColT,
+    mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn,
     typename... Args
   >
-  CollectionProxyWrapType<typename CollectionT::IndexType>
-  construct(typename CollectionT::IndexType range, Args&&... args);
+  CollectionProxyWrapType<typename ColT::IndexType>
+  construct(typename ColT::IndexType range, Args&&... args);
 
   /*
-   *      CollectionManager::construct<CollectionT, Args...>
+   *      CollectionManager::construct<ColT, Args...>
    *
    *  Construct virtual context collection using the default map for the given
    *  index. Found by looking up a vrt::collection::DefaultMap<...>
    *  specialization for the Index type.
    */
-  template <typename CollectionT, typename... Args>
-  CollectionProxyWrapType<typename CollectionT::IndexType>
-  construct(typename CollectionT::IndexType range, Args&&... args);
+  template <typename ColT, typename... Args>
+  CollectionProxyWrapType<typename ColT::IndexType>
+  construct(typename ColT::IndexType range, Args&&... args);
 
   template <typename SysMsgT>
-  static void createCollectionHan(SysMsgT* msg);
+  static void distConstruct(SysMsgT* msg);
 
-  template <
-    typename CollectionT,
-    typename MessageT,
-    ActiveCollectionTypedFnType<MessageT, CollectionT> *f
-  >
+  template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
   void sendMsg(
-    VirtualElmProxyType<typename CollectionT::IndexType> const& toProxy,
-    MessageT *const msg, ActionType act
+    VirtualElmProxyType<typename ColT::IndexType> const& toProxy,
+    MsgT *const msg, ActionType act
   );
 
   template <typename IndexT>
   static void collectionMsgHandler(BaseMessage* msg);
 
-  template <typename CollectionT, typename IndexT, typename Tuple, size_t... I>
+  template <typename ColT, typename IndexT, typename Tuple, size_t... I>
   static VirtualPtrType<IndexT> runConstructor(
     VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
     std::index_sequence<I...>

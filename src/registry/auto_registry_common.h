@@ -19,7 +19,7 @@ namespace vt { namespace auto_registry {
 using AutoActiveType           = ActiveFnPtrType;
 using AutoActiveFunctorType    = ActiveFnPtrType;
 using AutoActiveVCType         = vrt::ActiveVirtualFnPtrType;
-using AutoActiveCollectionType = vrt::collection::ActiveCollectionFnPtrType;
+using AutoActiveCollectionType = vrt::collection::ActiveColFnPtrType;
 using AutoActiveMapType        = mapping::ActiveMapFnPtrType;
 using AutoActiveMapFunctorType = mapping::ActiveMapFnPtrType;
 using AutoActiveSeedMapType    = mapping::ActiveSeedMapFnPtrType;

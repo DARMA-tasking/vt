@@ -10,12 +10,12 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-using ActiveCollectionFnPtrType = void(*)(
+using ActiveColFnPtrType = void(*)(
   ::vt::BaseMessage*, UntypedCollection*
 );
 
-template <typename MessageT, typename CollectionT>
-using ActiveCollectionTypedFnType = void(MessageT*, CollectionT*);
+template <typename MsgT, typename ColT>
+using ActiveColTypedFnType = void(MsgT*, ColT*);
 
 }}} /* end namespace vt::vrt::collection */
 
