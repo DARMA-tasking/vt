@@ -51,4 +51,8 @@
 #define debug_line_file(x) x
 #define debug_function(x) x
 
+// subclass modes
+#define debug_verbose(x) x
+#define debug_verbose_2(x) x
+
 #endif  /*INCLUDED_FEATURES_DEFINES*/

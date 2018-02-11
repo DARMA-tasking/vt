@@ -51,15 +51,21 @@
     bit_check_overflow,    "Check bitfield overflow",                   \
     print_term_msgs,       "Debug-prints-TD-msgs",                      \
     trace_enabled,         "Trace",                                     \
-    detector,              "Detector",                                  \
-    openmp,                "OpenMP",                                    \
-    stdthread,             "std::thread"                                \
+    detector,              "C++ Trait Detector",                        \
+    openmp,                "OpenMP Threading",                          \
+    stdthread,             "std::thread Threading"                      \
   )
 
 #define debug_list_contexts                                             \
   debug_list_holder(                                                    \
     node,                  "Print current node",                        \
     unknown,               "Print no processor"                         \
+  )
+
+#define debug_list_subclass                                             \
+  debug_list_holder(                                                    \
+    verbose,               "verbose",                                   \
+    verbose_2,             "verbose_2"                                  \
   )
 
 #define debug_list_all                          \

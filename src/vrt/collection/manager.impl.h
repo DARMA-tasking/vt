@@ -76,7 +76,7 @@ template <typename SysMsgT>
 
     user_index_range.foreach(user_index_range, [=](IndexT cur_idx) mutable {
       debug_print(
-        vrt_coll, node,
+        verbose, vrt_coll, node,
         "running foreach: before map: cur_idx=%s, max_range=%s\n",
         cur_idx.toString().c_str(), max_range.toString().c_str()
       );

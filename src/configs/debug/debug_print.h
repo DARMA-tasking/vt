@@ -196,18 +196,19 @@
     debug_print_context(config, feature, ctx, arg)                      \
   )
 
-#define debug_print_handle_subclass(subclass, feature, ctx, arg...)     \
+#define debug_print_handle_subclass(config, sub, feature, ctx, arg...)  \
   debug_cond_enabled_else(                                              \
+    config,                                                             \
     feature,                                                            \
     debug_print_context(config, feature, ctx, arg),                     \
     debug_cond_enabled(                                                 \
-      subclass,                                                         \
+      config,                                                           \
+      sub,                                                              \
       debug_print_context(config, feature, ctx, arg)                    \
     )                                                                   \
   )                                                                     \
 
-// @todo  make this actually recursive
-#define debug_print_recur(config, feature, maybe_ctx, arg...)           \
+#define debug_print_recur_inner(config, feature, maybe_ctx, arg...)     \
   meld_if_stmt(                                                         \
     debug_lookup_is_printer(                                            \
       maybe_ctx, meld_eval_2(debug_list_contexts_printfn_kv)            \
@@ -227,6 +228,20 @@
     )                                                                   \
   )
 
+#define debug_print_recur(config, feature, maybe_ctx, arg...)           \
+  meld_if_stmt(                                                         \
+    debug_lookup_is_printer(                                            \
+      feature, meld_eval_2(debug_list_subclass_printfn_kv)              \
+    )                                                                   \
+  )(                                                                    \
+    debug_cond_enabled(                                                 \
+      config, feature,                                                  \
+      debug_print_normal(config, maybe_ctx, arg)                        \
+    )                                                                   \
+  )(                                                                    \
+    debug_print_recur_inner(config, feature, maybe_ctx, arg)            \
+  )
+
 #define debug_print_recur_2(config, feature, maybe_ctx, arg...)         \
   meld_if_stmt(                                                         \
     debug_lookup_is_printer(                                            \
@@ -242,12 +257,13 @@
 #define debug_print_recur_call debug_print_recur
 
 // check all special subclass tokens in the future
-#define debug_print_check_subclass(feature, opt, arg...)    \
-  meld_if_stmt(meld_token_compare(feature, dealloc))        \
-  (                                                         \
-    debug_print_handle_subclass(feature, opt, arg)          \
-  )(                                                        \
-    debug_print_normal(feature, opt, arg)                   \
+#define debug_print_check_subclass(config, feature, opt, arg...)  \
+  meld_if_stmt(                                                   \
+    meld_token_compare(feature, verbose)                          \
+  )(                                                              \
+    debug_print_handle_subclass(feature, opt, arg)                \
+  )(                                                              \
+    debug_print_normal(config, feature, opt, arg)                 \
   )
 
 #if debug_force_enabled

@@ -77,11 +77,30 @@
  * Contexts to print function generation
  */
 
-#define debug_list_contexts_printfn_kv                                  \
-  debug_list_holder(                                                    \
-    node,                  node,                                        \
-    unknown,               unknown                                      \
+#define remove_even_strings(options...) remove_even_strings_(options)
+#define remove_even_strings_(option, listoptions...)                    \
+  meld_eval(                                                            \
+    meld_map_with_trans(                                                \
+      replace_even_previous, invert_current_map_state,                  \
+      meld_to_bool(bool), option, listoptions                           \
+    )                                                                   \
   )
+#define invert_current_map_state(state) meld_not(state)
+#define replace_even_previous(list_element, map_bool_state, not_last)   \
+  meld_if_stmt(map_bool_state)(                                         \
+    list_element,                                                       \
+    meld_if_stmt(not_last)(                                             \
+      list_element,                                                     \
+    )(                                                                  \
+      list_element                                                      \
+    )                                                                   \
+  )()
+
+#define debug_list_contexts_printfn_kv          \
+  remove_even_strings(debug_list_contexts)
+
+#define debug_list_subclass_printfn_kv          \
+  remove_even_strings(debug_list_subclass)
 
 #define debug_check_context(ctx1, ctx2)         \
   meld_token_compare(ctx1, ctx2)
