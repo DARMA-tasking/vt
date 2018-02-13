@@ -14,46 +14,46 @@
 
 #define debug_list_debug_modes                                          \
   debug_list_holder(                                                    \
-    gen,                   "general",                                   \
-    runtime,               "runtime",                                   \
     active,                "active",                                    \
-    term,                  "termination",                               \
     barrier,               "barrier",                                   \
+    broadcast,             "bcast",                                     \
     event,                 "event",                                     \
+    gen,                   "general",                                   \
+    group,                 "group",                                     \
+    handler,               "handler",                                   \
+    location,              "location",                                  \
+    param,                 "parameterization",                          \
     pool,                  "pool",                                      \
     rdma,                  "RDMA",                                      \
     rdma_channel,          "RDMA Channel",                              \
     rdma_state,            "RDMA State",                                \
-    param,                 "parameterization",                          \
-    handler,               "handler",                                   \
+    runtime,               "runtime",                                   \
     sequence,              "sequencer",                                 \
     sequence_vrt,          "sequencer-vrt",                             \
+    term,                  "termination",                               \
     trace,                 "trace",                                     \
     vrt,                   "virtual-context",                           \
     vrt_coll,              "virtual-context-collection",                \
-    worker,                "worker",                                    \
-    group,                 "group",                                     \
-    broadcast,             "bcast",                                     \
-    location,              "location"                                   \
+    worker,                "worker"                                     \
   )
 
 #define debug_list_debug_options                                        \
   debug_list_holder(                                                    \
-    startup,               "startup sequence",                          \
     flush,                 "flush all debug prints",                    \
+    function,              "print function context_debug",              \
     line_file,             "print line/file debug",                     \
-    function,              "print function context_debug"               \
+    startup,               "startup sequence"                           \
   )
 
 #define debug_list_features                                             \
   debug_list_holder(                                                    \
-    no_feature,            "No feature",                                \
     bit_check_overflow,    "Check bitfield overflow",                   \
-    print_term_msgs,       "Debug-prints-TD-msgs",                      \
-    trace_enabled,         "Trace",                                     \
     detector,              "C++ Trait Detector",                        \
+    no_feature,            "No feature",                                \
     openmp,                "OpenMP Threading",                          \
-    stdthread,             "std::thread Threading"                      \
+    print_term_msgs,       "Debug-prints-TD-msgs",                      \
+    stdthread,             "std::thread Threading",                     \
+    trace_enabled,         "Trace"                                      \
   )
 
 #define debug_list_contexts                                             \

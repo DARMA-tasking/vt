@@ -3,6 +3,9 @@
 #define INCLUDED_TPL_MELD_COMBINATORS
 
 #define _meld_eval(arg...) _meld_eval_1024(arg)
+#define _meld_eval_x03(arg...) _meld_eval_x02(_meld_eval_x02(arg))
+#define _meld_eval_x02(arg...) _meld_eval_x01(_meld_eval_x01(arg))
+#define _meld_eval_x01(arg...) _meld_eval_65536(_meld_eval_65536(arg))
 #define _meld_eval_65536(arg...) _meld_eval_32768(_meld_eval_32768(arg))
 #define _meld_eval_32768(arg...) _meld_eval_16384(_meld_eval_16384(arg))
 #define _meld_eval_16384(arg...) _meld_eval_8192(_meld_eval_8192(arg))

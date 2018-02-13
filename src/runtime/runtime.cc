@@ -104,7 +104,7 @@ void Runtime::printStartupBanner() {
   auto const& stream = stdout;
   fprintf(stream, "VT: %s: %s%s\n", init.c_str(), mode.c_str(), thd.c_str());
   fprintf(stream, "VT: Running on %d nodes%s\n", nodes, worker_cnt.c_str());
-  fprintf(stream, "VT: features enabled:" backend_print_all_features(0));
+  fprintf(stream, "VT: features enabled:\n" backend_print_all_features(0));
 }
 
 void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {

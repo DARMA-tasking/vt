@@ -57,6 +57,14 @@
 #define _meld__print_kv() _meld_print_kv
 #define _meld_print_kv_wrap _meld_print_kv
 
+#define _meld_print_kv_state(kv_printer, st, cur_key, cur_val, arg...)  \
+  kv_printer(st, cur_key, cur_val)                                      \
+  meld_if_stmt(_meld_has_arguments(arg))(                               \
+    meld_defer_2(_meld__print_kv_state)()(kv_printer, st,arg)           \
+  )()
+#define _meld__print_kv_state() _meld_print_kv_state
+#define _meld_print_kv_state_wrap _meld_print_kv_state
+
 #define _meld_check_enabled(check_fn, opt, cur_entry, arg_x...)         \
   meld_if_stmt(check_fn(opt, cur_entry))(1)                             \
   (                                                                     \
@@ -98,6 +106,36 @@
 #define _meld__map_with_trans_() _meld_map_with_trans_
 #define _meld_map_with_trans _meld_map_with_trans_
 
+#define _meld_map_with_trans_m_(prev, fn, fn2, with, fst, arg...)       \
+  fn(fst, with, prev)                                                   \
+  meld_if_stmt(_meld_has_arguments(arg))(                               \
+    meld_defer_2(_meld__map_with_trans_m_)()(fst,fn,fn2,fn2(with),arg)  \
+  )()
+#define _meld_map_with_trans_m_fst(fn, fn2, with, fst, arg...)          \
+  _meld_map_with_trans_m_(no_feature, fn, fn2, with, fst, arg)
+
+#define _meld__map_with_trans_m_() _meld_map_with_trans_m_
+#define _meld_map_with_trans_m _meld_map_with_trans_m_
+
+#define _meld_map_find_other_(fn, with, fst, arg...)                    \
+  fn(fst, with)                                                         \
+  meld_if_stmt(_meld_has_arguments(arg))(                               \
+    meld_defer_2(_meld__map_find_other_)()(fn,with,arg)                 \
+  )()
+#define _meld__map_find_other_() _meld_map_find_other_
+#define _meld_map_find_other _meld_map_find_other_
+
+
+#define _meld_map_find_sorted_(fn, fn2, with, key, value, arg...)       \
+  fn(key, value, with)                                                  \
+  meld_if_stmt(_meld_has_arguments(arg))(                               \
+    meld_defer_2(_meld__map_find_sorted_)()(fn,fn2,fn2(key,with),arg)   \
+  )()
+#define _meld__map_find_sorted_() _meld_map_find_sorted_
+#define _meld_map_find_sorted _meld_map_find_sorted_
+
+
+
 #define _meld_map_lst(map_fn, lambda, lst) _meld_eval(map_fn(lambda,lst))
 
 #define _meld_fold_or_(cur, fst, arg...)                               \
@@ -113,12 +151,16 @@
 #define meld_map _meld_map
 #define meld_map_with _meld_map_with
 #define meld_map_with_trans _meld_map_with_trans
+#define meld_map_with_trans_m _meld_map_with_trans_m_fst
+#define meld_map_find_other _meld_map_find_other
+#define meld_map_find_sorted _meld_map_find_sorted
 #define meld_meta_map _meld_map_lst
 #define meld_fold_or _meld_fold_or_helper
 #define meld_lookup_key _meld_lookup_key_wrap
 #define meld_lookup_else _meld_lookup_key_else
 #define meld_transform_key _meld_transform_key_wrap
 #define meld_print_kv _meld_print_kv_wrap
+#define meld_print_kv_state _meld_print_kv_state_wrap
 #define meld_check_enabled  _meld_check_enabled_wrap
 
 #endif  /*INCLUDED_TPL_MELD_MAP*/

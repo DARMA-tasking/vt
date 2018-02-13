@@ -187,7 +187,7 @@
 
 #define debug_print(feature, maybe_ctx, arg...)                         \
   meld_eval_16(                                                         \
-    debug_print_recur_call(backend,feature,maybe_ctx,arg)               \
+    debug_print_recur_call(backend_debug,feature,maybe_ctx,arg)         \
   )
 
 #define debug_print_normal(config, feature, ctx, arg...)                \
@@ -268,8 +268,8 @@
 
 #if debug_force_enabled
   //#warning "Debug force is enabled"
-  #define debug_print_force(feature, opt, arg...)     \
-    debug_print_context(backend, feature, opt, arg)
+  #define debug_print_force(feature, opt, arg...)         \
+    debug_print_context(backend_debug, feature, opt, arg)
 #else
   //#warning "Debug force is not enabled"
   #define debug_print_force debug_print

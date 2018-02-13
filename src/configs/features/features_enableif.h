@@ -28,6 +28,13 @@
     backend_debug_modes,                                        \
     backend_defaults                                            \
   )
+#define backend_feature_configuration debug_options_on(         \
+    backend_features,                                           \
+  )
+#define backend_debug_configuration debug_options_on(           \
+    backend_debug_modes,                                        \
+    backend_defaults                                            \
+  )
 #define backend(x) x
 
 /* Test functions toc check if options are enabled */
@@ -74,7 +81,7 @@
   )
 #define debug_cond_enabled_else(config, feature, if_true, if_false)     \
   debug_cond_clause(                                                    \
-    debug_check_enabled_shortcut(config,feature),if_true,if_false       \
+    debug_check_enabled_shortcut(unconfig,feature),if_true,if_false       \
   )
 #define debug_cond(condition, if_true)                          \
   debug_cond_clause(condition,if_true,)
