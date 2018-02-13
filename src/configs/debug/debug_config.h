@@ -175,7 +175,7 @@
     meld_if_stmt(                                                       \
       check(prev, backend_feature_configuration)                        \
     )(                                                                  \
-      #list_element                                                     \
+      "\t" #list_element "\n"                                           \
     )()                                                                 \
   )
 
