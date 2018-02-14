@@ -14,6 +14,7 @@
 #define debug_trace_enabled(x) x
 #define debug_detector(x) x
 #define debug_openmp(x) x
+#define debug_runtime_checks(x) x
 #define debug_stdthread(x) x
 #define debug_print_term_msgs(x) x
 

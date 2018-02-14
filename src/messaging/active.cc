@@ -131,6 +131,12 @@ EventType ActiveMessenger::sendMsgBytes(
     theTerm()->produce(epoch);
   }
 
+  #if backend_check_enabled(runtime_checks)
+  assert(
+    dest != theContext()->getNode() && "Destination should not be this node"
+  );
+  #endif
+
   MPI_Isend(
     msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
     mpi_event->getRequest()
@@ -243,6 +249,12 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     "sendData: ptr=%p, num_bytes=%lld dest=%d, tag=%d, send_tag=%d\n",
     data_ptr, num_bytes, dest, tag, send_tag
   );
+
+  #if backend_check_enabled(runtime_checks)
+  assert(
+    dest != theContext()->getNode() && "Destination should not be this node"
+  );
+  #endif
 
   MPI_Isend(
     data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),

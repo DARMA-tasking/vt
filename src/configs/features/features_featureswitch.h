@@ -53,6 +53,7 @@
     no_feature,            "No feature",                                \
     openmp,                "OpenMP Threading",                          \
     print_term_msgs,       "Debug-prints-TD-msgs",                      \
+    runtime_checks,        "Runtime Fidelity Checking",                 \
     stdthread,             "std::thread Threading",                     \
     trace_enabled,         "Trace"                                      \
   )
