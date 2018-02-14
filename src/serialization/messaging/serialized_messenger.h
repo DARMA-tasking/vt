@@ -34,6 +34,14 @@ struct SerializedMessenger {
   static void serialMsgHandler(SerialWrapperMsgType<UserMsgT>* sys_msg) {
     auto const handler = sys_msg->handler;
     auto const& recv_tag = sys_msg->data_recv_tag;
+
+    debug_print(
+      serial_msg, node,
+      "serialMsgHandler: non-eager, recvDataMsg: msg=%p, handler=%d, "
+      "recv_tag=%d\n",
+      sys_msg, handler, recv_tag
+    );
+
     theMsg()->recvDataMsg(
       recv_tag, sys_msg->from_node, [handler](RDMA_GetType ptr, ActionType){
         // be careful here not to use "msg", it is no longer valid
@@ -57,6 +65,12 @@ struct SerializedMessenger {
     UserMsgT* user_msg = new UserMsgT;
     auto tptr = deserialize<UserMsgT>(
       sys_msg->payload.data(), sys_msg->bytes, user_msg
+    );
+
+    debug_print(
+      serial_msg, node,
+      "payloadMsgHandler: msg=%p, handler=%d, bytes=%lu\n",
+      sys_msg, handler, sys_msg->bytes
     );
 
     auto active_fn = auto_registry::getAutoHandler(handler);
@@ -137,6 +151,12 @@ struct SerializedMessenger {
       // move serialized msg envelope to system envelope to preserve info
       //sys_msg->env = msg->env;
 
+      debug_print(
+        serial_msg, node,
+        "sendSerialMsg: non-eager: sys_msg=%p\n",
+        sys_msg
+      );
+
       assert(payload_msg == nullptr and data_sender != nullptr);
 
       auto send_data = [=](NodeType dest){
@@ -147,6 +167,12 @@ struct SerializedMessenger {
 
         sys_msg->handler = typed_handler;
         sys_msg->from_node = theContext()->getNode();
+
+        debug_print(
+          serial_msg, node,
+          "sendSerialMsg: non-eager: dest=%d, sys_msg=%p, handler=%d\n",
+          dest, sys_msg, typed_handler
+        );
 
         theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
           dest, sys_msg, send_serialized

@@ -30,6 +30,7 @@
     runtime,               "runtime",                                   \
     sequence,              "sequencer",                                 \
     sequence_vrt,          "sequencer-vrt",                             \
+    serial_msg,            "serialized-msg",                            \
     term,                  "termination",                               \
     trace,                 "trace",                                     \
     vrt,                   "virtual-context",                           \
