@@ -43,12 +43,18 @@ struct SerializedMessenger {
     );
 
     theMsg()->recvDataMsg(
-      recv_tag, sys_msg->from_node, [handler](RDMA_GetType ptr, ActionType){
+      recv_tag, sys_msg->from_node, [handler,recv_tag](RDMA_GetType ptr, ActionType){
         // be careful here not to use "msg", it is no longer valid
         auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
         auto ptr_size = std::get<1>(ptr);
         UserMsgT* msg = new UserMsgT;
         auto tptr = deserialize<UserMsgT>(raw_ptr, ptr_size, msg);
+
+        debug_print(
+          serial_msg, node,
+          "serialMsgHandler: recvDataMsg finished: handler=%d, recv_tag=%d\n",
+          handler, recv_tag
+        );
 
         auto active_fn = auto_registry::getAutoHandler(handler);
         active_fn(reinterpret_cast<BaseMessage*>(tptr));
@@ -69,7 +75,7 @@ struct SerializedMessenger {
 
     debug_print(
       serial_msg, node,
-      "payloadMsgHandler: msg=%p, handler=%d, bytes=%lu\n",
+      "payloadMsgHandler: msg=%p, handler=%d, bytes=%llu\n",
       sys_msg, handler, sys_msg->bytes
     );
 
@@ -147,36 +153,47 @@ struct SerializedMessenger {
     //printf("ptr_size=%ld\n", ptr_size);
 
     if (ptr_size > serialized_msg_eager_size) {
-      auto sys_msg = makeSharedMessage<SerialWrapperMsgType<MsgT>>();
-      // move serialized msg envelope to system envelope to preserve info
-      //sys_msg->env = msg->env;
-
       debug_print(
         serial_msg, node,
-        "sendSerialMsg: non-eager: sys_msg=%p\n",
-        sys_msg
+        "sendSerialMsg: non-eager: ptr_size=%zu\n", ptr_size
       );
 
-      assert(payload_msg == nullptr and data_sender != nullptr);
+      assert(payload_msg == nullptr && data_sender != nullptr);
 
       auto send_data = [=](NodeType dest){
-        auto send_serialized = [&](ActiveMessenger::SendFnType send){
-          auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag, no_action);
-          sys_msg->data_recv_tag = std::get<1>(ret);
-        };
+        auto const& node = theContext()->getNode();
+        if (node != dest) {
+          auto sys_msg = makeSharedMessage<SerialWrapperMsgType<MsgT>>();
+          auto send_serialized = [&](ActiveMessenger::SendFnType send){
+            auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag, no_action);
+            sys_msg->data_recv_tag = std::get<1>(ret);
+          };
 
-        sys_msg->handler = typed_handler;
-        sys_msg->from_node = theContext()->getNode();
+          sys_msg->handler = typed_handler;
+          sys_msg->from_node = theContext()->getNode();
 
-        debug_print(
-          serial_msg, node,
-          "sendSerialMsg: non-eager: dest=%d, sys_msg=%p, handler=%d\n",
-          dest, sys_msg, typed_handler
-        );
+          debug_print(
+            serial_msg, node,
+            "sendSerialMsg: non-eager: dest=%d, sys_msg=%p, handler=%d\n",
+            dest, sys_msg, typed_handler
+          );
 
-        theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
-          dest, sys_msg, send_serialized
-        );
+          theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
+            dest, sys_msg, send_serialized
+          );
+        } else {
+          MsgT* msg = new MsgT;
+          auto tptr = deserialize<MsgT>(ptr, ptr_size, msg);
+
+          debug_print(
+            serial_msg, node,
+            "serialMsgHandler: local msg: handler=%d\n", typed_handler
+          );
+
+          auto active_fn = auto_registry::getAutoHandler(typed_handler);
+          active_fn(reinterpret_cast<BaseMessage*>(tptr));
+
+        }
       };
 
       data_sender(send_data);

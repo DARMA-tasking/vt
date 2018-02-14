@@ -16,7 +16,7 @@ struct NoneVrt { };
 
 template <typename T, typename MessageT>
 struct SerializedDataMsgAny : MessageT {
-  SerializedDataMsgAny() : MessageT() { }
+  SerializedDataMsgAny() = default;
 
   HandlerType handler = uninitialized_handler;
   TagType data_recv_tag = no_tag;
