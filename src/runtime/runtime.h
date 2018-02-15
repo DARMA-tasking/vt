@@ -33,7 +33,7 @@ namespace vt { namespace runtime {
 
 struct Runtime {
   template <typename ComponentT>
-  using ComponentPtr = std::unique_ptr<ComponentT>;
+  using ComponentPtrType = std::unique_ptr<ComponentT>;
 
   Runtime(
     int argc = 0, char** argv = nullptr,
@@ -84,29 +84,29 @@ protected:
   void printShutdownBanner(term::TermCounterType const& num_units);
 
 public:
-  ComponentPtr<Registry> theRegistry;
-  ComponentPtr<ActiveMessenger> theMsg;
-  ComponentPtr<ctx::Context> theContext;
-  ComponentPtr<event::AsyncEvent> theEvent;
-  ComponentPtr<term::TerminationDetector> theTerm;
-  ComponentPtr<collective::CollectiveAlg> theCollective;
-  ComponentPtr<pool::Pool> thePool;
-  ComponentPtr<rdma::RDMAManager> theRDMA;
-  ComponentPtr<param::Param> theParam;
-  ComponentPtr<seq::Sequencer> theSeq;
-  ComponentPtr<seq::SequencerVirtual> theVirtualSeq;
-  ComponentPtr<sched::Scheduler> theSched;
-  ComponentPtr<location::LocationManager> theLocMan;
-  ComponentPtr<vrt::VirtualContextManager> theVirtualManager;
-  ComponentPtr<vrt::collection::CollectionManager> theCollection;
-  ComponentPtr<group::GroupManager> theGroup;
+  ComponentPtrType<Registry> theRegistry;
+  ComponentPtrType<ActiveMessenger> theMsg;
+  ComponentPtrType<ctx::Context> theContext;
+  ComponentPtrType<event::AsyncEvent> theEvent;
+  ComponentPtrType<term::TerminationDetector> theTerm;
+  ComponentPtrType<collective::CollectiveAlg> theCollective;
+  ComponentPtrType<pool::Pool> thePool;
+  ComponentPtrType<rdma::RDMAManager> theRDMA;
+  ComponentPtrType<param::Param> theParam;
+  ComponentPtrType<seq::Sequencer> theSeq;
+  ComponentPtrType<seq::SequencerVirtual> theVirtualSeq;
+  ComponentPtrType<sched::Scheduler> theSched;
+  ComponentPtrType<location::LocationManager> theLocMan;
+  ComponentPtrType<vrt::VirtualContextManager> theVirtualManager;
+  ComponentPtrType<vrt::collection::CollectionManager> theCollection;
+  ComponentPtrType<group::GroupManager> theGroup;
 
   // Node-level worker-based components for vt (these are optional)
-  ComponentPtr<worker::WorkerGroupType> theWorkerGrp;
+  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;
 
   // Optional components
   #if backend_check_enabled(trace_enabled)
-    ComponentPtr<trace::Trace> theTrace = nullptr;
+    ComponentPtrType<trace::Trace> theTrace = nullptr;
   #endif
 
 protected:
