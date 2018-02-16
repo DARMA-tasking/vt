@@ -94,6 +94,9 @@ struct CollectionManager {
     std::index_sequence<I...>
   );
 
+  template <typename ColT, typename IndexT, typename... Args>
+  static void testConstructorType();
+
   template <typename IndexT>
   void insertCollectionElement(
     VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,

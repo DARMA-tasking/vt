@@ -76,14 +76,14 @@ static inline std::unique_ptr<BufferT> serializeByte(
   return buf;
 }
 
-template<typename T>
+template <typename T>
 struct isTuple : std::false_type { };
-template<typename... Args>
+template <typename... Args>
 struct isTuple<std::tuple<Args...>> : std::true_type { };
 
-template<typename T>
+template <typename T>
 struct isVector : std::false_type { };
-template<typename U>
+template <typename U>
 struct isVector<std::vector<U>> : std::true_type { };
 
 template <typename T>

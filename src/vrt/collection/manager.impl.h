@@ -26,6 +26,20 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+template <typename ColT, typename IndexT, typename... Args>
+/*static*/ void CollectionManager::testConstructorType() {
+  using non_index_constructor_t = decltype(
+    ColT(std::declval<Args>()...)
+  );
+  using index_constructor_fst_t = decltype(
+    ColT(std::declval<IndexT>(),std::declval<Args>()...)
+  );
+  using index_constructor_snd_t = decltype(
+    ColT(std::declval<Args>()...,std::declval<IndexT>())
+  );
+
+}
+
 template <typename ColT, typename IndexT, typename Tuple, size_t... I>
 /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
 CollectionManager::runConstructor(
