@@ -28,16 +28,16 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT, typename... Args>
 /*static*/ void CollectionManager::testConstructorType() {
-  using non_index_constructor_t = decltype(
-    ColT(std::declval<Args>()...)
-  );
-  using index_constructor_fst_t = decltype(
-    ColT(std::declval<IndexT>(),std::declval<Args>()...)
-  );
-  using index_constructor_snd_t = decltype(
-    ColT(std::declval<Args>()...,std::declval<IndexT>())
-  );
+  template <typename U>
+  using non_idx_cons_t = decltype(U(std::declval<Args>()...));
+  template <typename U>
+  using idx_fst_t = decltype(U(std::declval<IndexT>(),std::declval<Args>()...));
+  template <typename U>
+  using idx_snd_t = decltype(U(std::declval<Args>()...,std::declval<IndexT>()));
 
+  using has_non_index_cons = detection::is_detected<non_idx_t, ColT>;
+  using has_index_fst = detection::is_detected<idx_fst_t, ColT>;
+  using has_index_snd = detection::is_detected<idx_snd_t, ColT>;
 }
 
 template <typename ColT, typename IndexT, typename Tuple, size_t... I>
