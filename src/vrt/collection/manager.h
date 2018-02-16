@@ -94,9 +94,6 @@ struct CollectionManager {
     std::index_sequence<I...>
   );
 
-  template <typename ColT, typename IndexT, typename... Args>
-  static void testConstructorType();
-
   template <typename IndexT>
   void insertCollectionElement(
     VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
@@ -111,6 +108,20 @@ protected:
 private:
   BufferedActionType buffered_sends_;
   VirtualIDType curIdent_ = 0;
+};
+
+template <typename ColT, typename IndexT, typename... Args>
+struct TestConstructorType {
+  template <typename U>
+  using non_idx_t = decltype(U(std::declval<Args>()...));
+  template <typename U>
+  using idx_fst_t = decltype(U(std::declval<IndexT>(),std::declval<Args>()...));
+  template <typename U>
+  using idx_snd_t = decltype(U(std::declval<Args>()...,std::declval<IndexT>()));
+
+  using has_non_index_cons = detection::is_detected<non_idx_t, ColT>;
+  using has_index_fst = detection::is_detected<idx_fst_t, ColT>;
+  using has_index_snd = detection::is_detected<idx_snd_t, ColT>;
 };
 
 }}} /* end namespace vt::vrt::collection */
