@@ -17,6 +17,7 @@
 #include "registry/auto_registry_map.h"
 #include "registry/auto_registry_collection.h"
 #include "topos/mapping/mapping_headers.h"
+#include "termination/term_headers.h"
 
 #include <tuple>
 #include <utility>
@@ -138,6 +139,8 @@ template <typename IndexT>
 
   // for now, execute directly on comm thread
   collection_active_fn(msg, col_ptr);
+
+  theTerm()->consume(term::any_epoch_sentinel);
 }
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
@@ -151,6 +154,8 @@ void CollectionManager::sendMsg(
 
   auto const& col_proxy = toProxy.getCollectionProxy();
   auto const& elm_proxy = toProxy.getElementProxy();
+
+  theTerm()->produce(term::any_epoch_sentinel);
 
   auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder = holder_container.find(col_proxy);
@@ -204,6 +209,8 @@ void CollectionManager::sendMsg(
       "pushing into buffered sends: %lld\n", toProxy.getCollectionProxy()
     );
 
+    theTerm()->produce(term::any_epoch_sentinel);
+
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       theCollection()->sendMsg<ColT, MsgT, f>(toProxy, msg, act);
     });
@@ -244,6 +251,8 @@ void CollectionManager::insertCollectionElement(
           vrt_coll, node,
           "looking for buffered sends: running elm\n"
         );
+
+        theTerm()->consume(term::any_epoch_sentinel);
 
         elm(proxy);
       }

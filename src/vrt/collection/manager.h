@@ -59,8 +59,7 @@ struct CollectionManager {
    *  function, causing registration to occur.
    */
   template <
-    typename ColT,
-    mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn,
+    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn,
     typename... Args
   >
   CollectionProxyWrapType<typename ColT::IndexType>

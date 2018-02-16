@@ -5,6 +5,7 @@
 #include "config.h"
 #include "topos/location/location_common.h"
 #include "topos/location/location.fwd.h"
+#include "topos/location/manager.fwd.h"
 #include "topos/location/utility/coord.h"
 #include "vrt/vrt_common.h"
 
@@ -35,21 +36,36 @@ struct LocationManager {
   using CollectionContainerType = std::unordered_map<
     VirtualProxyType, CollectionLocErasedType
   >;
+  template <typename LocType>
+  using ActionLocInstType = std::function<void(LocType*)>;
+  template <typename LocType>
+  using PendingContainerType = std::vector<ActionLocInstType<LocType>>;
 
   LocationManager() = default;
 
   virtual ~LocationManager();
+
+  static LocInstType cur_loc_inst;
 
   PtrType<VrtLocType> virtual_loc = std::make_unique<VrtLocType>();;
   PtrType<VrtLocProxyType> vrtContextLoc = std::make_unique<VrtLocProxyType>();
 
   template <typename IndexT>
   VrtColl<IndexT>* getCollectionLM(VirtualProxyType const& proxy);
+  template <typename IndexT>
+  void insertCollectionLM(VirtualProxyType const& proxy);
 
 public:
   // Manage different instances of individually managed entities
-  static void insertInstance(int const i, LocCoordPtrType const& ptr);
+  template <typename LocType>
+  static void insertInstance(int const i, LocType* ptr);
   static LocCoordPtrType getInstance(int const inst);
+
+  template <typename LocType>
+  static void applyInstance(int const inst, ActionLocInstType<LocType> action);
+
+  template <typename LocType>
+  static std::unordered_map<int, PendingContainerType<LocType>> pending_inst_;
 
 protected:
   CollectionContainerType collectionLoc;

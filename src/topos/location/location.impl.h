@@ -6,6 +6,7 @@
 #include "topos/location/location_common.h"
 #include "topos/location/location.h"
 #include "topos/location/manager.h"
+#include "topos/location/manager.fwd.h"
 #include "topos/location/utility/entity.h"
 #include "context/context.h"
 #include "messaging/active.h"
@@ -18,10 +19,16 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord()
-  : this_inst(cur_loc_inst++), recs_(default_max_cache_size)
+  : this_inst(theLocMan()->cur_loc_inst++), recs_(default_max_cache_size)
 {
-  LocationManager::insertInstance(
-    this_inst, static_cast<LocationCoord*>(this)
+  debug_print(
+    location, node,
+    "EntityLocationCoord constructor: inst=%d, this=%p\n",
+    this_inst, this
+  );
+
+  LocationManager::insertInstance<EntityLocationCoord<EntityID>>(
+    this_inst, this
   );
 }
 
@@ -43,7 +50,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: registerEntity\n"
+    "EntityLocationCoord: registerEntity: inst=%d\n", this_inst
   );
 
   local_registered_.insert(id);
@@ -65,9 +72,23 @@ void EntityLocationCoord<EntityID>::registerEntity(
   // trigger any pending actions upon registration
   auto pending_lookup_iter = pending_lookups_.find(id);
 
+  debug_print(
+    location, node,
+    "EntityLocationCoord: registerEntity: pending lookups size=%lu, this=%p\n",
+    pending_lookups_.size(), this
+  );
+
   if (pending_lookup_iter != pending_lookups_.end()) {
+    auto const& node = theContext()->getNode();
+    int action = 0;
     for (auto&& pending_action : pending_lookup_iter->second) {
-      pending_action(theContext()->getNode());
+      debug_print(
+        location, node,
+        "EntityLocationCoord: registerEntity: running pending action %d\n",
+        action
+      );
+      action++;
+      pending_action(node);
     }
     pending_lookups_.erase(pending_lookup_iter);
   }
@@ -126,6 +147,12 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::insertPendingEntityAction(
   EntityID const& id, NodeActionType action
 ) {
+  debug_print(
+    location, node,
+    "EntityLocationCoord: insertPendingEntityAction, this=%p\n",
+    this
+  );
+
   // this is the home node and there is no record on this entity
   auto pending_iter = pending_lookups_.find(id);
   if (pending_iter != pending_lookups_.end()) {
@@ -359,8 +386,9 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
   debug_print(
     location, node,
-    "routeMsg: home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
-    home_node, msg_size, print_bool(is_large_msg), print_bool(use_eager)
+    "routeMsg: inst=%d, home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
+    this_inst, home_node, msg_size, print_bool(is_large_msg),
+    print_bool(use_eager)
   );
 
   msg->setLocInst(this_inst);
@@ -418,9 +446,13 @@ template <typename MessageT>
     msg, envelopeGetRef(msg->env), inst
   );
 
-  LocationCoord *loc = LocationManager::getInstance(inst);
-  auto loc_entity = static_cast<EntityLocationCoord<EntityID> *>(loc);
-  loc_entity->routeMsg(entity_id, home_node, msg);
+  messageRef(msg);
+  LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
+    inst, [=](EntityLocationCoord<EntityID>* loc) {
+      loc->routeMsg(entity_id, home_node, msg);
+      messageDeref(msg);
+    }
+  );
 }
 
 template <typename EntityID>
@@ -431,16 +463,19 @@ template <typename EntityID>
   auto const& home_node = msg->home_node;
   auto const& ask_node = msg->ask_node;
 
-  LocationCoord *loc_coord = LocationManager::getInstance(inst);
-  auto loc = static_cast<EntityLocationCoord<EntityID> *>(loc_coord);
-
-  loc->getLocation(entity, home_node, [=](NodeType node) {
-    auto msg = new LocMsgType(inst, entity, event_id, ask_node, home_node);
-    msg->setResolvedNode(node);
-    theMsg()->sendMsg<LocMsgType, updateLocation>(
-        ask_node, msg, [=] { delete msg; }
-    );
-  });
+  messageRef(msg);
+  LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
+    inst, [=](EntityLocationCoord<EntityID>* loc) {
+      loc->getLocation(entity, home_node, [=](NodeType node) {
+        auto msg = new LocMsgType(inst, entity, event_id, ask_node, home_node);
+        msg->setResolvedNode(node);
+        theMsg()->sendMsg<LocMsgType, updateLocation>(
+          ask_node, msg, [=] { delete msg; }
+        );
+      });
+      messageDeref(msg);
+    }
+  );
 }
 
 template <typename EntityID>
@@ -449,9 +484,13 @@ template <typename EntityID>
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
 
-  LocationCoord *loc_coord = LocationManager::getInstance(inst);
-  auto loc = static_cast<EntityLocationCoord<EntityID> *>(loc_coord);
-  loc->updatePendingRequest(event_id, msg->resolved_node);
+  messageRef(msg);
+  LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
+    inst, [=](EntityLocationCoord<EntityID>* loc) {
+      loc->updatePendingRequest(event_id, msg->resolved_node);
+      messageDeref(msg);
+    }
+  );
 }
 
 }}  // end namespace vt::location

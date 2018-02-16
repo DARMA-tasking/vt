@@ -9,19 +9,14 @@ namespace vt { namespace location {
 
 /*static*/ LocationManager::LocInstContainerType LocationManager::loc_insts;
 
-/*static*/ void LocationManager::insertInstance(
-  int const inst, LocCoordPtrType const& ptr
-) {
-  if (loc_insts.size() < inst + 1) {
-    loc_insts.resize(inst + 1);
-  }
-  loc_insts.at(inst) = ptr;
-}
-
 /*static*/ LocationManager::LocCoordPtrType LocationManager::getInstance(
   int const inst
 ) {
-  assert(loc_insts.size() > inst and "inst must exist in container");
+  assert(
+    loc_insts.size() > inst &&
+    "LocationManager instance must exist in container"
+  );
+
   return loc_insts.at(inst);
 }
 
@@ -30,5 +25,7 @@ namespace vt { namespace location {
   vrtContextLoc = nullptr;
   collectionLoc.clear();
 }
+
+/*static*/ LocInstType LocationManager::cur_loc_inst = 0;
 
 }}  // end namespace vt::location
