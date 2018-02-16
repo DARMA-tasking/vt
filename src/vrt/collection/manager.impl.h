@@ -26,6 +26,34 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+// template <
+//   typename ColT, typename IndexT, typename Tuple, typename... Args,
+//   size_t... I, typename
+// >
+// /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
+// CollectionManager::detectConstructorIndexFst(
+//   VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
+//   std::index_sequence<I...> seq
+// ) {
+//   return runConstructor<ColT, IndexT, Tuple, I...>(elms,idx,tup,seq);
+// }
+
+// template <
+//   typename ColT, typename IndexT, typename Tuple, typename... Args,
+//   size_t... I, typename
+// >
+// /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
+// CollectionManager::detectConstructorNoIndex(
+//   VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
+//   std::index_sequence<I...>
+// ) {
+//   return std::make_unique<ColT>(
+//     std::forward<typename std::tuple_element<I,Tuple>::type>(
+//       std::get<I>(*tup)
+//     )...
+//   );
+// }
+
 template <typename ColT, typename IndexT, typename Tuple, size_t... I>
 /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
 CollectionManager::runConstructor(
@@ -33,7 +61,7 @@ CollectionManager::runConstructor(
   std::index_sequence<I...>
 ) {
   return std::make_unique<ColT>(
-    /*elms, */idx,
+    idx,
     std::forward<typename std::tuple_element<I,Tuple>::type>(
       std::get<I>(*tup)
     )...
@@ -97,8 +125,12 @@ template <typename SysMsgT>
       if (node == mapped_node) {
         // need to construct elements here
         auto const& num_elms = info.range_.getSize();
-        auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
-          num_elms, cur_idx, &msg->tup, std::make_index_sequence<size>{}
+        //DispatchCons<ColT, IndexT, RetT
+        // auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
+        //   num_elms, cur_idx, &msg->tup, std::make_index_sequence<size>{}
+        // );
+        auto new_vc = Deref::derefTuple<ColT, IndexT, decltype(msg->tup)>(
+          num_elms, cur_idx, &msg->tup
         );
         CollectionTypeAttorney::setSize(new_vc, num_elms);
         theCollection()->insertCollectionElement<IndexT>(

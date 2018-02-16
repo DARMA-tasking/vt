@@ -9,6 +9,9 @@
 #include "vrt/collection/types/headers.h"
 #include "vrt/collection/holders/holder.h"
 #include "vrt/collection/holders/entire_holder.h"
+#include "vrt/collection/traits/cons_detect.h"
+#include "vrt/collection/traits/cons_dispatch.h"
+#include "vrt/collection/coll_constructors.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "topos/mapping/mapping_headers.h"
 #include "messaging/message.h"
@@ -88,6 +91,40 @@ struct CollectionManager {
   template <typename IndexT>
   static void collectionMsgHandler(BaseMessage* msg);
 
+  /*
+   * Traits version of running the constructor based on the detected available
+   * constructor types
+   */
+
+  template <
+    typename ColT, typename IndexT, typename Tuple, typename... Args,
+    size_t... I,
+    typename = typename std::enable_if_t<
+      ConstructorType<ColT,IndexT,Args...>::use_no_index
+    >::type
+  >
+  static VirtualPtrType<IndexT> detectConstructorNoIndex(
+    VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
+    std::index_sequence<I...>
+  );
+
+  template <
+    typename ColT, typename IndexT, typename Tuple, typename... Args,
+    size_t... I,
+    typename = typename std::enable_if_t<
+      ConstructorType<ColT,IndexT,Args...>::use_index_fst
+    >::type
+  >
+  static VirtualPtrType<IndexT> detectConstructorIndexFst(
+    VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
+    std::index_sequence<I...>
+  );
+
+  /*
+   * Non-traits version of running the constructor: does not require the
+   * detection idiom to dispatch to constructor.
+   */
+
   template <typename ColT, typename IndexT, typename Tuple, size_t... I>
   static VirtualPtrType<IndexT> runConstructor(
     VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
@@ -110,18 +147,35 @@ private:
   VirtualIDType curIdent_ = 0;
 };
 
-template <typename ColT, typename IndexT, typename... Args>
-struct TestConstructorType {
-  template <typename U>
-  using non_idx_t = decltype(U(std::declval<Args>()...));
-  template <typename U>
-  using idx_fst_t = decltype(U(std::declval<IndexT>(),std::declval<Args>()...));
-  template <typename U>
-  using idx_snd_t = decltype(U(std::declval<Args>()...,std::declval<IndexT>()));
+struct Deref {
+  template <typename ColT, typename IndexT, typename Tuple, typename... Args>
+  static typename CollectionManager::VirtualPtrType<IndexT>
+  derefTuple(
+    VirtualElmCountType const& elms, IndexT const& idx, std::tuple<Args...>* tup
+  ) {
+    static constexpr auto size = std::tuple_size<Tuple>::value;
+    static constexpr auto seq = std::make_index_sequence<size>{};
+    using DispatcherType = DispatchCons<
+      ColT, IndexT, typename CollectionManager::VirtualPtrType<IndexT>, Tuple,
+      Args...
+    >;
+    return expandSeq<ColT, IndexT, Tuple, DispatcherType>(elms, idx, tup, seq);
+  }
 
-  using has_non_index_cons = detection::is_detected<non_idx_t, ColT>;
-  using has_index_fst = detection::is_detected<idx_fst_t, ColT>;
-  using has_index_snd = detection::is_detected<idx_snd_t, ColT>;
+  template <
+    typename ColT, typename IndexT, typename Tuple, typename DispatcherT,
+    size_t... I
+  >
+  static typename CollectionManager::VirtualPtrType<IndexT>
+  expandSeq(
+    VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
+    std::index_sequence<I...> seq
+  ) {
+    using ConsType = typename DispatcherT::template ConsType<I...>;
+    ConsType cons;
+    return cons(elms, idx, tup, seq);
+
+  }
 };
 
 }}} /* end namespace vt::vrt::collection */
