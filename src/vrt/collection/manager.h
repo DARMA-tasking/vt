@@ -97,7 +97,8 @@ struct CollectionManager {
   template <typename IndexT>
   void insertCollectionElement(
     VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
-    HandlerType const& map_han, VirtualProxyType const &proxy
+    HandlerType const& map_han, VirtualProxyType const& proxy,
+    int const& lm_inst_id
   );
 
 protected:

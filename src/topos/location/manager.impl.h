@@ -15,9 +15,18 @@
 namespace vt { namespace location {
 
 template <typename IndexT>
-void LocationManager::insertCollectionLM(VirtualProxyType const& proxy) {
+void LocationManager::insertCollectionLM(
+  VirtualProxyType const& proxy, int const lm_inst
+) {
   using LocType = VrtColl<IndexT>;
+  auto prev_inst = theLocMan()->cur_loc_inst;
+  if (lm_inst >= 0) {
+    theLocMan()->cur_loc_inst = lm_inst;
+  }
   auto loc_man_typed = new LocType();
+  if (lm_inst >= 0) {
+    theLocMan()->cur_loc_inst = std::max(theLocMan()->cur_loc_inst, prev_inst);
+  }
   auto loc_ptr = std::unique_ptr<LocErasureType, LocDeleterType>(
     static_cast<LocErasureType*>(loc_man_typed),
     [](LocErasureType* elm) {
@@ -34,7 +43,9 @@ void LocationManager::insertCollectionLM(VirtualProxyType const& proxy) {
 
 template <typename IndexT>
 LocationManager::VrtColl<IndexT>*
-LocationManager::getCollectionLM(VirtualProxyType const& proxy) {
+LocationManager::getCollectionLM(
+  VirtualProxyType const& proxy, int const lm_inst_name
+) {
   using LocType = VrtColl<IndexT>;
 
   auto loc_iter = collectionLoc.find(proxy);
@@ -42,13 +53,15 @@ LocationManager::getCollectionLM(VirtualProxyType const& proxy) {
 
   debug_print(
     location, node,
-    "getCollectionLM: proxy=%llu, found=%s\n",
-    proxy, print_bool(found)
+    "getCollectionLM: proxy=%llu, found=%s, lm_inst_name=%d\n",
+    proxy, print_bool(found), lm_inst_name
   );
 
-  if (!found) {
-    LocationManager::insertCollectionLM<IndexT>(proxy);
+  if (!found && lm_inst_name != -1) {
+    LocationManager::insertCollectionLM<IndexT>(proxy, lm_inst_name);
     loc_iter = collectionLoc.find(proxy);
+  } else if (!found) {
+    return nullptr;
   }
   assert(
     (loc_iter != collectionLoc.end() && loc_iter->second != nullptr) &&

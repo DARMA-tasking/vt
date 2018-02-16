@@ -113,7 +113,7 @@ struct EntityLocationCoord : LocationCoord {
   void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
   void printCurrentCache() const;
 
- private:
+private:
   template <typename MessageT>
   static void msgHandler(MessageT *msg);
   static void getLocationHandler(LocMsgType *msg);
@@ -133,7 +133,10 @@ struct EntityLocationCoord : LocationCoord {
 
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
 
- private:
+public:
+  LocInstType getInst() const;
+
+private:
   LocInstType this_inst = no_loc_inst;
 
   // message handlers for local registrations

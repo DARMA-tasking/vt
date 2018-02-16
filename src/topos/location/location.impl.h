@@ -434,6 +434,11 @@ void EntityLocationCoord<EntityID>::printCurrentCache() const {
 }
 
 template <typename EntityID>
+LocInstType EntityLocationCoord<EntityID>::getInst() const {
+  return this_inst;
+}
+
+template <typename EntityID>
 template <typename MessageT>
 /*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT *msg) {
   auto const& entity_id = msg->getEntity();

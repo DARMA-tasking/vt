@@ -51,9 +51,11 @@ struct LocationManager {
   PtrType<VrtLocProxyType> vrtContextLoc = std::make_unique<VrtLocProxyType>();
 
   template <typename IndexT>
-  VrtColl<IndexT>* getCollectionLM(VirtualProxyType const& proxy);
+  VrtColl<IndexT>* getCollectionLM(
+    VirtualProxyType const& proxy, int const lm_inst_name = -1
+  );
   template <typename IndexT>
-  void insertCollectionLM(VirtualProxyType const& proxy);
+  void insertCollectionLM(VirtualProxyType const& proxy, int const lm_inst);
 
 public:
   // Manage different instances of individually managed entities
