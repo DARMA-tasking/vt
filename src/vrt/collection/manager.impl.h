@@ -13,6 +13,7 @@
 #include "vrt/collection/messages/user.h"
 #include "vrt/collection/types/type_attorney.h"
 #include "vrt/collection/defaults/default_map.h"
+#include "vrt/collection/coll_constructors_deref.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "registry/auto_registry_map.h"
 #include "registry/auto_registry_collection.h"
@@ -25,34 +26,6 @@
 #include <memory>
 
 namespace vt { namespace vrt { namespace collection {
-
-// template <
-//   typename ColT, typename IndexT, typename Tuple, typename... Args,
-//   size_t... I, typename
-// >
-// /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
-// CollectionManager::detectConstructorIndexFst(
-//   VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
-//   std::index_sequence<I...> seq
-// ) {
-//   return runConstructor<ColT, IndexT, Tuple, I...>(elms,idx,tup,seq);
-// }
-
-// template <
-//   typename ColT, typename IndexT, typename Tuple, typename... Args,
-//   size_t... I, typename
-// >
-// /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
-// CollectionManager::detectConstructorNoIndex(
-//   VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
-//   std::index_sequence<I...>
-// ) {
-//   return std::make_unique<ColT>(
-//     std::forward<typename std::tuple_element<I,Tuple>::type>(
-//       std::get<I>(*tup)
-//     )...
-//   );
-// }
 
 template <typename ColT, typename IndexT, typename Tuple, size_t... I>
 /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
@@ -125,13 +98,17 @@ template <typename SysMsgT>
       if (node == mapped_node) {
         // need to construct elements here
         auto const& num_elms = info.range_.getSize();
-        //DispatchCons<ColT, IndexT, RetT
-        // auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
-        //   num_elms, cur_idx, &msg->tup, std::make_index_sequence<size>{}
-        // );
-        auto new_vc = Deref::derefTuple<ColT, IndexT, decltype(msg->tup)>(
-          num_elms, cur_idx, &msg->tup
-        );
+
+        #if backend_check_enabled(detector)
+          auto new_vc = DerefCons::derefTuple<ColT, IndexT, decltype(msg->tup)>(
+            num_elms, cur_idx, &msg->tup
+          );
+        #else
+          auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
+            num_elms, cur_idx, &msg->tup, std::make_index_sequence<size>{}
+          );
+        #endif
+
         CollectionTypeAttorney::setSize(new_vc, num_elms);
         theCollection()->insertCollectionElement<IndexT>(
           std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy,
