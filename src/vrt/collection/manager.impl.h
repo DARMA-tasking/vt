@@ -13,7 +13,7 @@
 #include "vrt/collection/messages/user.h"
 #include "vrt/collection/types/type_attorney.h"
 #include "vrt/collection/defaults/default_map.h"
-#include "vrt/collection/coll_constructors_deref.h"
+#include "vrt/collection/constructor/coll_constructors_deref.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "registry/auto_registry_map.h"
 #include "registry/auto_registry_collection.h"

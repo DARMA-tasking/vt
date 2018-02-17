@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "vrt/collection/traits/cons_detect.h"
-#include "vrt/collection/coll_constructors.h"
+#include "vrt/collection/constructor/coll_constructors.h"
 
 #if backend_check_enabled(detector)
   #include "detector_headers.h"

@@ -30,6 +30,6 @@ struct DerefCons {
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/collection/coll_constructors_deref.impl.h"
+#include "vrt/collection/constructor/coll_constructors_deref.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_COLL_CONSTRUCTORS_DEREF_H*/

@@ -11,7 +11,7 @@
 #include "vrt/collection/holders/entire_holder.h"
 #include "vrt/collection/traits/cons_detect.h"
 #include "vrt/collection/traits/cons_dispatch.h"
-#include "vrt/collection/coll_constructors.h"
+#include "vrt/collection/constructor/coll_constructors.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "topos/mapping/mapping_headers.h"
 #include "messaging/message.h"
