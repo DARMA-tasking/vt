@@ -9,8 +9,8 @@
 #include "utils/mutex/mutex.h"
 #include "utils/atomic/atomic.h"
 #include "utils/container/process_ready_buffer.h"
-#include "registry/auto_registry_vc.h"
-#include "registry/auto_registry_map.h"
+#include "registry/auto/auto_registry_vc.h"
+#include "registry/auto/auto_registry_map.h"
 #include "worker/worker_headers.h"
 
 #include <memory>

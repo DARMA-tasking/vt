@@ -11,7 +11,7 @@
 #include "messaging/active.fwd.h"
 #include "event/event.h"
 #include "registry/registry.h"
-#include "registry/auto_registry_interface.h"
+#include "registry/auto/auto_registry_interface.h"
 
 #include <type_traits>
 #include <tuple>

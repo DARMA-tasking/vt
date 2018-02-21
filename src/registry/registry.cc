@@ -2,7 +2,7 @@
 #include "config.h"
 #include "registry.h"
 
-namespace vt {
+namespace vt { namespace registry {
 
 HandlerType Registry::registerNewHandler(
   ActiveClosureFnType fn, TagType const& tag, bool const& is_collective
@@ -106,4 +106,4 @@ ActiveClosureFnType Registry::getHandler(
   }
 }
 
-} // end namespace vt
+}} //end namespace vt::registry

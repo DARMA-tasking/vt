@@ -234,7 +234,7 @@ void Runtime::initializeComponents() {
   debug_print(runtime, node, "begin: initializeComponents\n");
 
   // Helper components: not allowed to send messages during construction
-  theRegistry = std::make_unique<Registry>();
+  theRegistry = std::make_unique<registry::Registry>();
   theEvent = std::make_unique<event::AsyncEvent>();
   thePool = std::make_unique<pool::Pool>();
 

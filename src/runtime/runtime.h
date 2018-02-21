@@ -84,7 +84,7 @@ protected:
   void printShutdownBanner(term::TermCounterType const& num_units);
 
 public:
-  ComponentPtrType<Registry> theRegistry;
+  ComponentPtrType<registry::Registry> theRegistry;
   ComponentPtrType<messaging::ActiveMessenger> theMsg;
   ComponentPtrType<ctx::Context> theContext;
   ComponentPtrType<event::AsyncEvent> theEvent;

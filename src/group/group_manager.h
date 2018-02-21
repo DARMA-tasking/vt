@@ -11,7 +11,7 @@
 #include "group/group_msg.h"
 #include "group/global/group_default.h"
 #include "group/global/group_default_msg.h"
-#include "registry/auto_registry_interface.h"
+#include "registry/auto/auto_registry_interface.h"
 #include "messaging/message.h"
 #include "messaging/active.h"
 #include "activefn/activefn.h"

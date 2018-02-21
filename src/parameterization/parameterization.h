@@ -5,7 +5,7 @@
 #include "config.h"
 #include "messaging/message.h"
 #include "messaging/active.h"
-#include "registry/auto_registry_interface.h"
+#include "registry/auto/auto_registry_interface.h"
 #include "utils/static_checks/all_true.h"
 #include "param_meta.h"
 

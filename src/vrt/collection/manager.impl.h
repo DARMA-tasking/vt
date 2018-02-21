@@ -15,8 +15,8 @@
 #include "vrt/collection/defaults/default_map.h"
 #include "vrt/collection/constructor/coll_constructors_deref.h"
 #include "vrt/proxy/collection_wrapper.h"
-#include "registry/auto_registry_map.h"
-#include "registry/auto_registry_collection.h"
+#include "registry/auto/auto_registry_map.h"
+#include "registry/auto/auto_registry_collection.h"
 #include "topos/mapping/mapping_headers.h"
 #include "termination/term_headers.h"
 

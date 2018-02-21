@@ -8,7 +8,7 @@
 #include "group/group_manager.h"
 #include "group/id/group_id.h"
 #include "group/region/group_region.h"
-#include "registry/auto_registry_interface.h"
+#include "registry/auto/auto_registry_interface.h"
 #include "messaging/message.h"
 #include "messaging/active.h"
 #include "activefn/activefn.h"

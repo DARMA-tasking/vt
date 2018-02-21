@@ -10,7 +10,7 @@
 #include "activefn/activefn.h"
 #include "handler/handler.h"
 
-namespace vt {
+namespace vt { namespace registry {
 
 struct Registry {
   using HandlerManagerType = HandlerManager;
@@ -52,8 +52,12 @@ private:
   HandlerIdentifierType cur_ident_ = first_handle_identifier;
 };
 
-extern Registry* theRegistry();
+}} //end namespace vt::registry
 
-} //end namespace vt
+namespace vt {
+
+extern registry::Registry* theRegistry();
+
+} // end namespace vt
 
 #endif /*INCLUDED_REGISTRY_REGISTRY_H*/

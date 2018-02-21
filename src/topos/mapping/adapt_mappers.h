@@ -3,7 +3,7 @@
 #define INCLUDED_TOPOS_MAPPING_ADAPT_MAPPERS_H
 
 #include "config.h"
-#include "registry/auto_registry_general.h"
+#include "registry/auto/auto_registry_general.h"
 
 namespace vt { namespace mapping {
 

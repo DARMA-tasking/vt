@@ -5,7 +5,7 @@
 #include "config.h"
 #include "collective/collective_alg.h"
 #include "registry/registry.h"
-#include "registry/auto_registry_interface.h"
+#include "registry/auto/auto_registry_interface.h"
 #include "messaging/active.h"
 
 namespace vt { namespace collective { namespace reduce {

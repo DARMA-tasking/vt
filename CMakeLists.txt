@@ -78,9 +78,11 @@ set(
   utils
     utils/demangle utils/container utils/bits utils/mutex utils/detector
     utils/hash utils/atomic utils/tls utils/static_checks
+  registry
+    registry/auto
 
   # Add single-directory components
-  context event registry handler parameterization sequence termination
+  context event handler parameterization sequence termination
   scheduler worker standalone runtime trace demangle
 )
 

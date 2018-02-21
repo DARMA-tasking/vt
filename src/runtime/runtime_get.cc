@@ -50,7 +50,7 @@ event::AsyncEvent*          theEvent()          { return CUR_RT->theEvent.get();
 messaging::ActiveMessenger* theMsg()            { return CUR_RT->theMsg.get();            }
 param::Param*               theParam()          { return CUR_RT->theParam.get();          }
 rdma::RDMAManager*          theRDMA()           { return CUR_RT->theRDMA.get();           }
-Registry*                   theRegistry()       { return CUR_RT->theRegistry.get();       }
+registry::Registry*         theRegistry()       { return CUR_RT->theRegistry.get();       }
 sched::Scheduler*           theSched()          { return CUR_RT->theSched.get();          }
 seq::Sequencer*             theSeq()            { return CUR_RT->theSeq.get();            }
 seq::SequencerVirtual*      theVirtualSeq()     { return CUR_RT->theVirtualSeq.get();     }

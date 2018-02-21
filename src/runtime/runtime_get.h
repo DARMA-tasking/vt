@@ -35,7 +35,7 @@ extern event::AsyncEvent*          theEvent();
 extern messaging::ActiveMessenger* theMsg();
 extern param::Param*               theParam();
 extern rdma::RDMAManager*          theRDMA();
-extern Registry*                   theRegistry();
+extern registry::Registry*         theRegistry();
 extern sched::Scheduler*           theSched();
 extern seq::Sequencer*             theSeq();
 extern seq::SequencerVirtual*      theVirtualSeq();

@@ -18,7 +18,7 @@
 #include "event/event_msgs.h"
 #include "termination/termination.h"
 #include "rdma/rdma_headers.h"
-#include "registry/auto_registry_interface.h"
+#include "registry/auto/auto_registry_interface.h"
 #include "sequence/sequencer_headers.h"
 #include "trace/trace.h"
 #include "scheduler/scheduler.h"

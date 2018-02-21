@@ -4,8 +4,8 @@
 #include "vrt/context/context_vrtmessage.h"
 #include "utils/mutex/mutex.h"
 #include "utils/atomic/atomic.h"
-#include "registry/auto_registry_vc.h"
-#include "registry/auto_registry_map.h"
+#include "registry/auto/auto_registry_vc.h"
+#include "registry/auto/auto_registry_map.h"
 #include "worker/worker_headers.h"
 #include "messaging/message.h"
 
