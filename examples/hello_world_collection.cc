@@ -91,6 +91,7 @@ int main(int argc, char** argv) {
     num_elms = atoi(argv[1]);
   }
 
+  #if 1
   if (my_node == 0) {
     auto const& range = Index1D(num_elms);
     auto proxy = theCollection()->construct<MyCol>(range);
@@ -102,6 +103,8 @@ int main(int argc, char** argv) {
       );
     }
   }
+  #endif
+  #if 0
   if (my_node == 1) {
     auto const& dim1 = num_elms/2;
     auto const& dim2 = (num_elms+2)/2;
@@ -117,6 +120,7 @@ int main(int argc, char** argv) {
       }
     }
   }
+  #endif
 
   while (!rt->isTerminated()) {
     runScheduler();

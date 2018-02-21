@@ -111,8 +111,7 @@ template <typename SysMsgT>
 
         CollectionTypeAttorney::setSize(new_vc, num_elms);
         theCollection()->insertCollectionElement<IndexT>(
-          std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy,
-          msg->lm_inst
+          std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy
         );
       }
     });
@@ -232,8 +231,7 @@ void CollectionManager::sendMsg(
 template <typename IndexT>
 void CollectionManager::insertCollectionElement(
   VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
-  HandlerType const& map_han, VirtualProxyType const& proxy,
-  int const& lm_inst_id
+  HandlerType const& map_han, VirtualProxyType const& proxy
 ) {
   auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
@@ -281,7 +279,7 @@ void CollectionManager::insertCollectionElement(
     std::move(vc), map_han, max_idx
   });
 
-  theLocMan()->getCollectionLM<IndexT>(proxy, lm_inst_id)->registerEntity(
+  theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
     VrtElmProxy<IndexT>{proxy,idx},
     CollectionManager::collectionMsgHandler<IndexT>
   );
@@ -330,11 +328,10 @@ CollectionManager::constructMap(
 
   auto const& new_proxy = makeNewCollectionProxy();
   auto const& is_static = ColT::isStaticSized();
-  auto lm = theLocMan()->getCollectionLM<IndexT>(new_proxy, -2);
-  auto const& inst = lm->getInst();
+  auto lm = theLocMan()->getCollectionLM<IndexT>(new_proxy);
   auto const& node = theContext()->getNode();
   auto create_msg = makeSharedMessage<MsgType>(
-    map_handler, inst, ArgsTupleType{std::forward<Args>(args)...}
+    map_handler, ArgsTupleType{std::forward<Args>(args)...}
   );
 
   CollectionInfo<IndexT> info(range, is_static, node, new_proxy);
@@ -348,7 +345,7 @@ CollectionManager::constructMap(
   SerdesMsg::broadcastSerialMsg<MsgType, distConstruct<MsgType>>(create_msg);
 
   auto create_msg_local = makeSharedMessage<MsgType>(
-    map_handler, inst, ArgsTupleType{std::forward<Args>(args)...}
+    map_handler, ArgsTupleType{std::forward<Args>(args)...}
   );
   create_msg_local->info = info;
   CollectionManager::distConstruct<MsgType>(create_msg_local);

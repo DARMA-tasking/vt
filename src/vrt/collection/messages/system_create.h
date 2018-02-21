@@ -22,18 +22,16 @@ struct CollectionCreateMsg : ::vt::Message {
   RemoteInfo info;
   ArgsTuple tup;
   HandlerType map;
-  int lm_inst = -1;
 
   CollectionCreateMsg() = default;
   CollectionCreateMsg(
-    HandlerType const& in_han, int const& in_lm_inst, ArgsTuple&& in_tup
-  ) : ::vt::Message(), tup(std::forward<ArgsTuple>(in_tup)), map(in_han),
-      lm_inst(in_lm_inst)
+    HandlerType const& in_han, ArgsTuple&& in_tup
+  ) : ::vt::Message(), tup(std::forward<ArgsTuple>(in_tup)), map(in_han)
   { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | info | tup | map | lm_inst;
+    s | info | tup | map;
   }
 };
 
