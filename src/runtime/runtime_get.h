@@ -20,26 +20,29 @@
 #include "vrt/context/context_vrtmanager.h"
 #include "vrt/collection/collection_headers.h"
 #include "worker/worker_headers.h"
+#include "group/group_headers.h"
 
 namespace vt {
 
 using CollectionManagerType = vrt::collection::CollectionManager;
 
-extern ActiveMessenger* theMsg();
-extern Registry* getRegistry();
-
 extern ctx::Context*               theContext();
+extern pool::Pool*                 thePool();
+extern vrt::VirtualContextManager* theVirtualManager();
+extern worker::WorkerGroupType*    theWorkerGrp();
 extern collective::CollectiveAlg*  theCollective();
 extern event::AsyncEvent*          theEvent();
+extern ActiveMessenger*            theMsg();
 extern param::Param*               theParam();
 extern rdma::RDMAManager*          theRDMA();
+extern Registry*                   theRegistry();
 extern sched::Scheduler*           theSched();
+extern seq::Sequencer*             theSeq();
+extern seq::SequencerVirtual*      theVirtualSeq();
 extern term::TerminationDetector*  theTerm();
 extern location::LocationManager*  theLocMan();
-extern vrt::VirtualContextManager* theVirtualManager();
-extern pool::Pool*                 thePool();
-extern worker::WorkerGroupType*    theWorkerGrp();
 extern CollectionManagerType*      theCollection();
+extern group::GroupManager*        theGroup();
 
 #if backend_check_enabled(trace_enabled)
 extern trace::Trace*               theTrace();
