@@ -239,7 +239,7 @@ void Runtime::initializeComponents() {
   thePool = std::make_unique<pool::Pool>();
 
   // Core components: enables more complex subsequent initialization
-  theMsg = std::make_unique<ActiveMessenger>();
+  theMsg = std::make_unique<messaging::ActiveMessenger>();
   theSched = std::make_unique<sched::Scheduler>();
   theTerm = std::make_unique<term::TerminationDetector>();
   theCollective = std::make_unique<collective::CollectiveAlg>();

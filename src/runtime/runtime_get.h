@@ -32,7 +32,7 @@ extern vrt::VirtualContextManager* theVirtualManager();
 extern worker::WorkerGroupType*    theWorkerGrp();
 extern collective::CollectiveAlg*  theCollective();
 extern event::AsyncEvent*          theEvent();
-extern ActiveMessenger*            theMsg();
+extern messaging::ActiveMessenger* theMsg();
 extern param::Param*               theParam();
 extern rdma::RDMAManager*          theRDMA();
 extern Registry*                   theRegistry();

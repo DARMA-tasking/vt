@@ -6,7 +6,7 @@
 #include "messaging/envelope.h"
 #include "messaging/message/message.h"
 
-namespace vt {
+namespace vt { namespace messaging {
 
 template <typename MessageT>
 struct PutMessageComponent : MessageT {
@@ -21,8 +21,14 @@ struct PutMessageComponent : MessageT {
   }
 };
 
-using PayloadMessage = PutMessageComponent<ActiveMessage<PutShortEnvelope>>;
+}} //end namespace vt::messaging
 
-} /* end namespace vt */
+namespace vt {
+
+using PayloadMessage = messaging::PutMessageComponent<
+  ActiveMessage<PutShortEnvelope>
+>;
+
+} // end namespace vt
 
 #endif /*INCLUDED_MESSAGING_MESSAGE_PUT_MESSAGE_H*/

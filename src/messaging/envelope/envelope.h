@@ -10,7 +10,7 @@
 
 #include <cassert>
 
-namespace vt {
+namespace vt { namespace messaging {
 
 /*
  *  Envelope Type Bits:
@@ -33,7 +33,7 @@ enum eEnvelopeType {
 
 static constexpr BitCountType const envelope_num_bits = 8;
 
-struct Envelope {
+struct ActiveEnvelope {
   using isByteCopyable = std::true_type;
 
   EnvelopeDataType type : envelope_num_bits;
@@ -47,6 +47,10 @@ struct Envelope {
   #endif
 };
 
+}} //end namespace vt::messaging
+
+namespace vt {
+
 #if backend_check_enabled(trace_enabled)
 template <typename Env>
 inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt) {
@@ -59,8 +63,10 @@ inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env) {
 }
 #endif
 
-// Set the type of Envelope
+using Envelope = messaging::ActiveEnvelope;
+using eEnvType = messaging::eEnvelopeType;
 
+// Set the type of Envelope
 template <typename Env>
 inline void setNormalType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type = 0;
@@ -68,37 +74,37 @@ inline void setNormalType(Env& env) {
 
 template <typename Env>
 inline void setGetType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvGet;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvGet;
 }
 
 template <typename Env>
 inline void setPutType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvPut;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvPut;
 }
 
 template <typename Env>
 inline void setTermType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvTerm;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvTerm;
 }
 
 template <typename Env>
 inline void setBroadcastType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvBroadcast;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvBroadcast;
 }
 
 template <typename Env>
 inline void setEpochType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvEpochType;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvEpochType;
 }
 
 template <typename Env>
 inline void setTagType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvTagType;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvTagType;
 }
 
 template <typename Env>
 inline void setCallbackType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvCallback;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvCallback;
 }
 
 // Test the type of Envelope
@@ -106,37 +112,37 @@ inline void setCallbackType(Env& env) {
 template <typename Env>
 inline bool envelopeIsTerm(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
-    (1 << eEnvelopeType::EnvTerm);
+    (1 << eEnvType::EnvTerm);
 }
 
 template <typename Env>
 inline bool envelopeIsPut(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
-    (1 << eEnvelopeType::EnvPut);
+    (1 << eEnvType::EnvPut);
 }
 
 template <typename Env>
 inline bool envelopeIsBcast(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
-    (1 << eEnvelopeType::EnvBroadcast);
+    (1 << eEnvType::EnvBroadcast);
 }
 
 template <typename Env>
 inline bool envelopeIsEpochType(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
-    (1 << eEnvelopeType::EnvEpochType);
+    (1 << eEnvType::EnvEpochType);
 }
 
 template <typename Env>
 inline bool envelopeIsTagType(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
-    (1 << eEnvelopeType::EnvTagType);
+    (1 << eEnvType::EnvTagType);
 }
 
 template <typename Env>
 inline bool envelopeIsCallbackType(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
-    (1 << eEnvelopeType::EnvCallback);
+    (1 << eEnvType::EnvCallback);
 }
 
 // Get fields of Envelope
@@ -198,7 +204,9 @@ inline void envelopeDeref(Env& env) {
 // Envelope setup functions
 
 template <typename Env>
-inline void envelopeSetup(Env& env, NodeType const& dest, HandlerType const& handler) {
+inline void envelopeSetup(
+  Env& env, NodeType const& dest, HandlerType const& handler
+) {
   envelopeSetDest(env, dest);
   envelopeSetHandler(env, handler);
 }
@@ -216,27 +224,39 @@ inline void envelopeInitEmpty(Envelope& env) {
   envelopeInit(env);
 }
 
-struct EpochEnvelope {
+} // end namespace vt
+
+namespace vt { namespace messaging {
+
+struct EpochActiveEnvelope {
   using isByteCopyable = std::true_type;
 
-  Envelope env;
+  ActiveEnvelope env;;
   EpochType epoch : epoch_num_bits;
 };
 
-struct TagEnvelope {
+struct TagActiveEnvelope {
   using isByteCopyable = std::true_type;
 
-  Envelope env;
+  ActiveEnvelope env;;
   TagType tag : tag_num_bits;
 };
 
-struct EpochTagEnvelope {
+struct EpochTagActiveEnvelope {
   using isByteCopyable = std::true_type;
 
-  Envelope env;
+  ActiveEnvelope env;
   EpochType epoch : epoch_num_bits;
   TagType tag : tag_num_bits;
 };
+
+}} //end namespace vt::messaging
+
+namespace vt {
+
+using EpochEnvelope    = messaging::EpochActiveEnvelope;
+using TagEnvelope      = messaging::TagActiveEnvelope;
+using EpochTagEnvelope = messaging::EpochTagActiveEnvelope;
 
 template <typename Env>
 inline EpochType envelopeGetEpoch(Env const& env) {
@@ -304,11 +324,19 @@ inline void envelopeInitEmpty(EpochTagEnvelope& env) {
   envelopeSetTag(env, no_tag);
 }
 
-static_assert(std::is_pod<Envelope>(), "Envelope must be POD");
-static_assert(std::is_pod<EpochEnvelope>(), "EpochEnvelope must be POD");
-static_assert(std::is_pod<TagEnvelope>(), "TagEnvelope must be POD");
-static_assert(std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD");
+static_assert(
+  std::is_pod<Envelope>(),         "Envelope must be POD"
+);
+static_assert(
+  std::is_pod<EpochEnvelope>(),    "EpochEnvelope must be POD"
+);
+static_assert(
+  std::is_pod<TagEnvelope>(),      "TagEnvelope must be POD"
+);
+static_assert(
+  std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD"
+);
 
-} //end namespace vt
+} // end namespace vt
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_H*/

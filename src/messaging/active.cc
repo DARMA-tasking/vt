@@ -5,7 +5,7 @@
 #include "termination/term_headers.h"
 #include "group/group_manager_active_attorney.h"
 
-namespace vt {
+namespace vt { namespace messaging {
 
 ActiveMessenger::ActiveMessenger() : this_node_(theContext()->getNode()) { }
 
@@ -739,4 +739,4 @@ HandlerType ActiveMessenger::getCurrentCallback() {
   return current_callback_context_;
 }
 
-} //end namespace vt
+}} // end namespace vt::messaging

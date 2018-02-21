@@ -153,7 +153,7 @@ namespace vt { namespace rdma {
       this_node
     );
 
-    auto send_payload = [&](ActiveMessenger::SendFnType send){
+    auto send_payload = [&](Active::SendFnType send){
       auto ret = send(put_ret, put_node, no_tag, [=]{
         if (cont != nullptr) {
           cont();

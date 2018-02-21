@@ -27,6 +27,7 @@ struct PutEnvelope {
 
 //using PutBasicEnvelope = PutEnvelope<EpochTagEnvelope, size_t>;
 using PutShortEnvelope = PutEnvelope<Envelope, size_t>;
+using eEnvType = messaging::eEnvelopeType;
 
 inline void envelopeInitEmpty(PutShortEnvelope& env) {
   envelopeInitEmpty(env.env);
@@ -106,12 +107,12 @@ inline void envelopeSetPutTag(Env& env, TagType const& in_tag) {
 
 template <typename Env>
 inline void setPackedPutType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvelopeType::EnvPackedPut;
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvPackedPut;
 }
 
 template <typename Env>
 inline bool envelopeIsPackedPutType(Env const& env) {
-  auto const& bits = 1 << eEnvelopeType::EnvPackedPut;
+  auto const& bits = 1 << eEnvType::EnvPackedPut;
   return reinterpret_cast<Envelope const*>(&env)->type & bits;
 }
 

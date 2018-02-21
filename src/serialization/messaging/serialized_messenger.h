@@ -164,7 +164,7 @@ struct SerializedMessenger {
         auto const& node = theContext()->getNode();
         if (node != dest) {
           auto sys_msg = makeSharedMessage<SerialWrapperMsgType<MsgT>>();
-          auto send_serialized = [&](ActiveMessenger::SendFnType send){
+          auto send_serialized = [&](Active::SendFnType send){
             auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag, no_action);
             sys_msg->data_recv_tag = std::get<1>(ret);
           };

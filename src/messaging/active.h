@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include <limits>
 
-namespace vt {
+namespace vt { namespace messaging {
 
 using MPI_TagType = int;
 
@@ -402,9 +402,15 @@ private:
   TagType cur_direct_buffer_tag_ = starting_direct_buffer_tag;
 };
 
-extern ActiveMessenger* theMsg();
+}} // end namespace vt::messaging
 
-} //end namespace vt
+namespace vt {
+
+using Active = messaging::ActiveMessenger;
+
+extern messaging::ActiveMessenger* theMsg();
+
+} // end namespace vt
 
 #include "messaging/active.impl.h"
 

@@ -47,7 +47,7 @@ worker::WorkerGroupType*    theWorkerGrp()      { return CUR_RT_TS->theWorkerGrp
 // Non thread-safe runtime components
 collective::CollectiveAlg*  theCollective()     { return CUR_RT->theCollective.get();     }
 event::AsyncEvent*          theEvent()          { return CUR_RT->theEvent.get();          }
-ActiveMessenger*            theMsg()            { return CUR_RT->theMsg.get();            }
+messaging::ActiveMessenger* theMsg()            { return CUR_RT->theMsg.get();            }
 param::Param*               theParam()          { return CUR_RT->theParam.get();          }
 rdma::RDMAManager*          theRDMA()           { return CUR_RT->theRDMA.get();           }
 Registry*                   theRegistry()       { return CUR_RT->theRegistry.get();       }

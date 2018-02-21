@@ -61,7 +61,7 @@ struct SerializedMessengerParam {
       return ptr;
     });
 
-    auto send_serialized = [&](ActiveMessenger::SendFnType send){
+    auto send_serialized = [&](Active::SendFnType send){
       auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag, no_action);
       meta_typed_data_msg->data_recv_tag = std::get<1>(ret);
     };

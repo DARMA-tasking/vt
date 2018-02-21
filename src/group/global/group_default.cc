@@ -127,7 +127,9 @@ namespace vt { namespace group { namespace global {
     auto const& is_shared = isSharedMessage(msg);
     bool const& has_action = action != nullptr;
     EventRecordType* parent = nullptr;
-    auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
+    auto const& send_tag = static_cast<messaging::MPI_TagType>(
+      messaging::MPITag::ActiveMsgTag
+    );
 
     if (has_action) {
       event = theEvent()->createParentEvent(node);

@@ -11,7 +11,7 @@ namespace vt { namespace group {
 
 struct GroupActiveAttorney {
 
-  friend struct ::vt::ActiveMessenger;
+  friend struct ::vt::messaging::ActiveMessenger;
 
 private:
   static EventType groupHandler(

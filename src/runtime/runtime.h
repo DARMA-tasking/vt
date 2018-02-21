@@ -85,7 +85,7 @@ protected:
 
 public:
   ComponentPtrType<Registry> theRegistry;
-  ComponentPtrType<ActiveMessenger> theMsg;
+  ComponentPtrType<messaging::ActiveMessenger> theMsg;
   ComponentPtrType<ctx::Context> theContext;
   ComponentPtrType<event::AsyncEvent> theEvent;
   ComponentPtrType<term::TerminationDetector> theTerm;

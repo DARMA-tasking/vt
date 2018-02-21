@@ -146,7 +146,9 @@ EventType GroupManager::sendGroup(
   auto const& group_node = GroupIDBuilder::getNode(group);
   auto const& group_static = GroupIDBuilder::isStatic(group);
   auto const& group_collective = GroupIDBuilder::isCollective(group);
-  auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
+  auto const& send_tag = static_cast<messaging::MPI_TagType>(
+    messaging::MPITag::ActiveMsgTag
+  );
 
   assert(
     !group_collective && "Collective groups are not supported"
@@ -156,7 +158,9 @@ EventType GroupManager::sendGroup(
     EventType event = no_event;
     bool const& has_action = action != nullptr;
     EventRecordType* parent = nullptr;
-    auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
+    auto const& send_tag = static_cast<messaging::MPI_TagType>(
+      messaging::MPITag::ActiveMsgTag
+    );
 
     if (has_action) {
       event = theEvent()->createParentEvent(this_node);
@@ -199,7 +203,9 @@ EventType GroupManager::sendGroup(
 
         bool const& has_action = action != nullptr;
         EventRecordType* parent = nullptr;
-        auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
+        auto const& send_tag = static_cast<messaging::MPI_TagType>(
+          messaging::MPITag::ActiveMsgTag
+        );
         auto const& num_children = info.default_spanning_tree_->getNumChildren();
 
         if (has_action) {

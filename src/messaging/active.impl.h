@@ -6,7 +6,7 @@
 #include "messaging/active.h"
 #include "termination/term_headers.h"
 
-namespace vt {
+namespace vt { namespace messaging {
 
 template <typename MessageT>
 void ActiveMessenger::setTermMessage(MessageT* const msg) {
@@ -257,6 +257,6 @@ void ActiveMessenger::trigger(std::function<void(vt::BaseMessage*)> fn) {
   theRegistry()->saveTrigger(han, /*reinterpret_cast<active_function_t>(*/fn);
 }
 
-} /* end namespace vt */
+}} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ACTIVE_IMPL_H*/

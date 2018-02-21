@@ -9,16 +9,16 @@
 
 #include <typeinfo>
 
-namespace vt {
+namespace vt { namespace messaging {
 
-struct BaseMessage { };
+struct BaseMsg { };
 
 template <typename EnvelopeT>
-struct ActiveMessage : BaseMessage {
+struct ActiveMsg : BaseMsg {
   using EnvelopeType = EnvelopeT;
   EnvelopeType env;
 
-  ActiveMessage() {
+  ActiveMsg() {
     envelopeInitEmpty(env);
 
     debug_print(
@@ -60,37 +60,18 @@ struct ActiveMessage : BaseMessage {
   }
 };
 
-using ShortMessage = ActiveMessage<Envelope>;
-using EpochMessage = ActiveMessage<EpochEnvelope>;
-using EpochTagMessage = ActiveMessage<EpochTagEnvelope>;
+}} //end namespace vt::messaging
 
-// default vt::Message includes tag and epoch
-using Message = EpochTagMessage;
+namespace vt {
 
-struct CallbackMessage : vt::Message {
-  CallbackMessage() : Message() {
-    setCallbackType(env);
-  }
+using BaseMessage     = messaging::BaseMsg;
+template <typename EnvelopeT>
+using ActiveMessage   = messaging::ActiveMsg<EnvelopeT>;
+using ShortMessage    = messaging::ActiveMsg<Envelope>;
+using EpochMessage    = messaging::ActiveMsg<EpochEnvelope>;
+using EpochTagMessage = messaging::ActiveMsg<EpochTagEnvelope>;
+using Message         = EpochTagMessage;
 
-  void setCallback(HandlerType const& han) { callback_ = han; }
-  HandlerType getCallback() const { return callback_; }
-
-  // Explicitly write serialize so derived messages can contain non-byte
-  // serialization. Envelopes, by default, are required to be byte serializable.
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    Message::serialize(s);
-    s | callback_;
-  }
-
-  static inline HandlerType getCallbackMessage(ShortMessage* msg) {
-    return reinterpret_cast<CallbackMessage*>(msg)->getCallback();
-  }
-
-private:
-  HandlerType callback_ = uninitialized_handler;
-};
-
-} //end namespace vt
+} // end namespace vt
 
 #endif /*INCLUDED_MESSAGING_MESSAGE_MESSAGE_H*/
