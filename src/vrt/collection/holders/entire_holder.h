@@ -4,6 +4,8 @@
 
 #include "config.h"
 
+#include <unordered_map>
+
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
