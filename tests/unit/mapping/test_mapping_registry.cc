@@ -7,7 +7,7 @@
 #include "transport.h"
 #include "topos/index/index.h"
 #include "topos/mapping/mapping.h"
-#include "registry/auto_registry_map.h"
+#include "registry/auto/auto_registry_map.h"
 
 #include <vector>
 
