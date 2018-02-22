@@ -73,6 +73,8 @@ set(
     vrt/collection
       vrt/collection/types vrt/collection/messages vrt/collection/proxy_builder
       vrt/collection/holders
+  lb
+    lb/instrumentation
   serialization
     serialization/messaging serialization/traits
   utils
