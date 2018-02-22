@@ -3,7 +3,7 @@
 #define INCLUDED_LB_INSTRUMENTATION_ENTITY_H
 
 #include "config.h"
-#include "lb/instrumentation/info.h"
+#include "lb/instrumentation/database.h"
 #include "lb/lb_types.h"
 
 #include <unordered_map>
@@ -11,12 +11,14 @@
 namespace vt { namespace lb { namespace instrumentation {
 
 struct Entity {
-  using InfoType = Info;
+  using DatabaseType = Database;
+
+  Entity() = default;
 
   static LBEntityType registerEntity();
 
 protected:
-  std::unordered_map<LBEntityType, InfoType> entities_;
+  std::unordered_map<LBEntityType, DatabaseType> entities_;
 
 private:
   static LBEntityType cur_entity_id;

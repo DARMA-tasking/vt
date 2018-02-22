@@ -85,7 +85,7 @@ set(
 
   # Add single-directory components
   context event handler parameterization sequence termination
-  scheduler worker standalone runtime trace demangle
+  scheduler worker standalone runtime trace timing demangle
 )
 
 include_directories(${PROJECT_SOURCE_DIR})

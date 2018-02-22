@@ -1,6 +1,7 @@
 
 #include "config.h"
 #include "trace.h"
+#include "timing/timing.h"
 #include "scheduler/scheduler.h"
 
 #include <zlib.h>
@@ -395,7 +396,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
 }
 
 /*static*/ double Trace::getCurrentTime() {
-  return MPI_Wtime();
+  return timing::Timing::getCurrentTime();
 }
 
 /*static*/ void Trace::outputControlFile(std::ofstream& file) {
