@@ -7,6 +7,7 @@
 #include "lb/lb_types.h"
 
 #include <unordered_map>
+#include <stack>
 
 namespace vt { namespace lb { namespace instrumentation {
 
@@ -17,8 +18,12 @@ struct Entity {
 
   static LBEntityType registerEntity();
 
+  static void beginExecution(LBEntityType const& entity);
+  static void endExecution(LBEntityType const& entity);
+
 protected:
-  std::unordered_map<LBEntityType, DatabaseType> entities_;
+  static std::unordered_map<LBEntityType, TimeType> events_;
+  static std::unordered_map<LBEntityType, DatabaseType> entities_;
 
 private:
   static LBEntityType cur_entity_id;

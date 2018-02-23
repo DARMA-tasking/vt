@@ -11,9 +11,14 @@ namespace vt { namespace lb { namespace instrumentation {
 
 struct Entry {
   Entry() = default;
+  Entry(TimeType const& in_begin, TimeType const& in_end)
+    : begin_(in_begin), end_(in_end)
+  { }
+  Entry(Entry const&) = default;
+  Entry(Entry&&) = default;
 
-  TimeType begin = 0.0;
-  TimeType end = 0.0;
+  TimeType begin_ = 0.0;
+  TimeType end_ = 0.0;
 };
 
 }}} /* end namespace vt::lb::instrumentation */

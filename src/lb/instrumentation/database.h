@@ -20,7 +20,7 @@ struct Database {
   void addEntry(EntryType&& entry);
 
 private:
-  // Past timings
+  // Past timings ordered by time ascending
   std::unordered_map<LBPhaseType, EntryListType> phase_timings_;
 
   // Current/next phase for database entry
