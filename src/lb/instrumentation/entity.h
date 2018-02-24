@@ -7,7 +7,6 @@
 #include "lb/lb_types.h"
 
 #include <unordered_map>
-#include <stack>
 
 namespace vt { namespace lb { namespace instrumentation {
 

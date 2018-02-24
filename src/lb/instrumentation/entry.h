@@ -19,6 +19,11 @@ struct Entry {
 
   TimeType begin_ = 0.0;
   TimeType end_ = 0.0;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | begin_ | end_;
+  }
 };
 
 }}} /* end namespace vt::lb::instrumentation */

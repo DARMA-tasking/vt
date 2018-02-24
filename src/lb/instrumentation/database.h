@@ -19,6 +19,12 @@ struct Database {
 
   void addEntry(EntryType&& entry);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | phase_timings_;
+    s | cur_phase_;
+  }
+
 private:
   // Past timings ordered by time ascending
   std::unordered_map<LBPhaseType, EntryListType> phase_timings_;
