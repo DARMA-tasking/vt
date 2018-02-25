@@ -75,6 +75,7 @@ set(
       vrt/collection/holders
   lb
     lb/instrumentation
+    lb/instrumentation/centralized
   serialization
     serialization/messaging serialization/traits
   utils
