@@ -10,7 +10,18 @@
 namespace vt { namespace lb { namespace instrumentation {
 
 struct CentralCollect {
+  static void startReduce(LBPhaseType const& phase);
+  static void reduceCurrentPhase();
+  static CollectMsg* collectStats(LBPhaseType const& phase);
+  static LBPhaseType currentPhase();
+  static void nextPhase();
+
+  // Active message handlers
   static void centralizedCollect(CollectMsg* msg);
+
+private:
+  static NodeType collect_root_;
+  static LBPhaseType cur_lb_phase_;
 };
 
 }}} /* end namespace vt::lb::instrumentation */

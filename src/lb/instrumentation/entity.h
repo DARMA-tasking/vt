@@ -20,7 +20,7 @@ struct Entity {
   static void beginExecution(LBEntityType const& entity);
   static void endExecution(LBEntityType const& entity);
 
-protected:
+public:
   static std::unordered_map<LBEntityType, TimeType> events_;
   static std::unordered_map<LBEntityType, DatabaseType> entities_;
 

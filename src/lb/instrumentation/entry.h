@@ -16,6 +16,7 @@ struct Entry {
   { }
   Entry(Entry const&) = default;
   Entry(Entry&&) = default;
+  Entry& operator=(Entry const&) = default;
 
   TimeType begin_ = 0.0;
   TimeType end_ = 0.0;

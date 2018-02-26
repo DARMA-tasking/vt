@@ -5,6 +5,8 @@
 #include "config.h"
 #include "lb/lb_types.h"
 #include "lb/instrumentation/entry.h"
+#include "lb/instrumentation/centralized/collect_msg.fwd.h"
+#include "lb/instrumentation/centralized/collect.fwd.h"
 
 #include <unordered_map>
 #include <vector>
@@ -24,6 +26,9 @@ struct Database {
     s | phase_timings_;
     s | cur_phase_;
   }
+
+  friend struct CollectMsg;
+  friend struct CentralCollect;
 
 private:
   // Past timings ordered by time ascending

@@ -5,24 +5,38 @@
 #include "config.h"
 #include "lb/lb_types.h"
 #include "lb/instrumentation/entry.h"
+#include "collective/reduce/reduce.h"
 #include "messaging/message.h"
+
+#include <vector>
+#include <unordered_map>
 
 namespace vt { namespace lb { namespace instrumentation {
 
-struct CollectMsg : ::vt::Message {
+struct CollectMsg : ::vt::collective::reduce::ReduceMsg {
+  using EntryType = Entry;
+  using EntryListType = std::vector<EntryType>;
+  using ContainerType = std::unordered_map<LBEntityType, EntryListType>;
+
   CollectMsg() = default;
 
-  explicit CollectMsg(Database::EntryListType const& in_phase_entries)
-    : phase_entries_(in_phase_entries)
+  CollectMsg(
+    LBPhaseType const& in_phase, ContainerType const& in_entries
+  ) : phase_(in_phase), entries_(in_entries)
+  { }
+  explicit CollectMsg(LBPhaseType const& in_phase)
+    : CollectMsg(in_phase, ContainerType{})
   { }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | phase_entries_;
+    s | entries_;
+    s | phase_;
   }
 
 public:
-  Database::EntryListType phase_entries_;
+  LBPhaseType phase_ = no_phase;
+  ContainerType entries_;
 };
 
 }}} /* end namespace vt::lb::instrumentation */
