@@ -11,7 +11,7 @@ namespace vt { namespace vrt { namespace collection {
 template <typename IndexT>
 CollectionBase<IndexT>::CollectionBase(
   bool const static_size, bool const elms_fixed
-) : UntypedCollection(),
+) : Migratable(),
     hasStaticSize_(static_size),
     elmsFixedAtCreation_(elms_fixed)
 { }

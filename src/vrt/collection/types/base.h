@@ -7,12 +7,13 @@
 #include "vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vrt/collection/types/insertable.h"
 #include "vrt/collection/types/migrate_hooks.h"
+#include "vrt/collection/types/migratable.h"
 #include "vrt/collection/types/untyped.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-struct CollectionBase : UntypedCollection, MigrateHookBase {
+struct CollectionBase : Migratable {
   using ProxyType = VirtualElmProxyType<IndexT>;
   using IndexType = IndexT;
 
