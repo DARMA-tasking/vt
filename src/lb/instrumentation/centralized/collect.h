@@ -13,11 +13,15 @@ struct CentralCollect {
   static void startReduce(LBPhaseType const& phase);
   static void reduceCurrentPhase();
   static CollectMsg* collectStats(LBPhaseType const& phase);
+  static void collectFinished(
+    LBPhaseType const& phase, CollectMsg::ContainerType const& entries
+  );
   static LBPhaseType currentPhase();
   static void nextPhase();
 
   // Active message handlers
   static void centralizedCollect(CollectMsg* msg);
+  static void combine(CollectMsg* msg1, CollectMsg* msg2);
 
 private:
   static NodeType collect_root_;
