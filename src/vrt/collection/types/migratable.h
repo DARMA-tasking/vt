@@ -5,11 +5,12 @@
 #include "config.h"
 #include "vrt/vrt_common.h"
 #include "vrt/base/base.h"
+#include "vrt/collection/types/untyped.h"
 #include "vrt/collection/types/migrate_hooks.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-struct Migratable : MigrateHookBase, VrtBase {
+struct Migratable : MigrateHookBase, UntypedCollection {
   Migratable() = default;
 
   void migrate();
