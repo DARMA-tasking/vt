@@ -18,20 +18,24 @@ namespace vt { namespace lb { namespace instrumentation {
 
 /*static*/ void CentralCollect::combine(CollectMsg* msg1, CollectMsg* msg2) {
   assert(msg1->phase_ == msg2->phase_ && "Phases must be identical");
-  for (auto&& elm : msg2->entries_) {
-    auto const& entity = elm.first;
-    auto entry_iter = msg2->entries_.find(entity);
-    assert(entry_iter == msg2->entries_.end());
-    msg2->entries_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(entity),
-      std::forward_as_tuple(elm.second)
-    );
+
+  // Runtime validity check to ensure that nodes are unique
+  #if backend_check_enabled(runtime_checks) || 1
+  for (auto&& elm1 : msg1->entries_) {
+    for (auto&& elm2 : msg2->entries_) {
+      assert(
+        elm1.first != elm2.first &&
+        "CollectMsg combine must have unique entries"
+      );
+    }
   }
+  #endif
+
+  msg1->entries_.insert(msg2->entries_.begin(), msg2->entries_.end());
 }
 
 /*static*/ void CentralCollect::collectFinished(
-  LBPhaseType const& phase, CollectMsg::ContainerType const& entries
+  LBPhaseType const& phase, CollectMsg::ProcContainerType const& entries
 ) {
   debug_print(
     lb, node,
@@ -60,16 +64,32 @@ namespace vt { namespace lb { namespace instrumentation {
 }
 
 /*static*/ CollectMsg* CentralCollect::collectStats(LBPhaseType const& phase) {
+  auto const& node = theContext()->getNode();
   auto msg = makeSharedMessage<CollectMsg>(phase);
+  auto node_cont_iter = msg->entries_.find(node);
+  assert(
+    node_cont_iter == msg->entries_.end() &&
+    "Entries must not exist for this node"
+  );
+  msg->entries_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(node),
+    std::forward_as_tuple(CollectMsg::ContainerType{})
+  );
+  node_cont_iter = msg->entries_.find(node);
+  assert(
+    node_cont_iter != msg->entries_.end() &&
+    "Entries must exist here for this node"
+  );
   auto const& entity_list = Entity::entities_;
   for (auto&& elm : entity_list) {
     auto const& entity = elm.first;
     auto const& db = elm.second;
     auto phase_iter = db.phase_timings_.find(phase);
     if (phase_iter != db.phase_timings_.end()) {
-      auto msg_entry_iter = msg->entries_.find(entity);
-      if (msg_entry_iter == msg->entries_.end()) {
-        msg->entries_.emplace(
+      auto msg_entry_iter = node_cont_iter->second.find(entity);
+      if (msg_entry_iter == node_cont_iter->second.end()) {
+        node_cont_iter->second.emplace(
           std::piecewise_construct,
           std::forward_as_tuple(entity),
           std::forward_as_tuple(CollectMsg::EntryListType{})

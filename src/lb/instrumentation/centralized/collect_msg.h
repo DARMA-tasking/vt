@@ -17,15 +17,16 @@ struct CollectMsg : ::vt::collective::reduce::ReduceMsg {
   using EntryType = Entry;
   using EntryListType = std::vector<EntryType>;
   using ContainerType = std::unordered_map<LBEntityType, EntryListType>;
+  using ProcContainerType = std::unordered_map<NodeType, ContainerType>;
 
   CollectMsg() = default;
 
   CollectMsg(
-    LBPhaseType const& in_phase, ContainerType const& in_entries
+    LBPhaseType const& in_phase, ProcContainerType const& in_entries
   ) : phase_(in_phase), entries_(in_entries)
   { }
   explicit CollectMsg(LBPhaseType const& in_phase)
-    : CollectMsg(in_phase, ContainerType{})
+    : CollectMsg(in_phase, ProcContainerType{})
   { }
 
   template <typename Serializer>
@@ -36,7 +37,7 @@ struct CollectMsg : ::vt::collective::reduce::ReduceMsg {
 
 public:
   LBPhaseType phase_ = no_phase;
-  ContainerType entries_;
+  ProcContainerType entries_;
 };
 
 }}} /* end namespace vt::lb::instrumentation */

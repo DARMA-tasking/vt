@@ -14,7 +14,7 @@ struct CentralCollect {
   static void reduceCurrentPhase();
   static CollectMsg* collectStats(LBPhaseType const& phase);
   static void collectFinished(
-    LBPhaseType const& phase, CollectMsg::ContainerType const& entries
+    LBPhaseType const& phase, CollectMsg::ProcContainerType const& entries
   );
   static LBPhaseType currentPhase();
   static void nextPhase();
