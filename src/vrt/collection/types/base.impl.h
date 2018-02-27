@@ -5,7 +5,10 @@
 #include "config.h"
 #include "vrt/vrt_common.h"
 #include "vrt/collection/types/base.h"
-#include "vrt/collection/manager_elm_attorney.h"
+#include "vrt/collection/migrate/manager_migrate_attorney.h"
+#include "vrt/collection/migrate/migrate_status.h"
+
+#include <cassert>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -38,8 +41,13 @@ template <typename IndexT>
 
 template <typename IndexT>
 /*virtual*/ void CollectionBase<IndexT>::migrate(NodeType const& node) {
-  auto const& proxy = this->getProxy();
-  return CollectionElmAttorney<IndexT>::migrate(proxy, this->getIndex(), node);
+  auto const& migrate_status = CollectionElmAttorney<IndexT>::migrate(
+    this->getProxy(), this->getIndex(), node
+  );
+  assert(
+    migrate_status == MigrateStatus::MigratedToRemote &&
+    "Required be immediate, valid migration currently"
+  );
 }
 
 }}} /* end namespace vt::vrt::collection */

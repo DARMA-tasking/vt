@@ -20,6 +20,7 @@
 #include "registry/auto/auto_registry_common.h"
 #include "topos/mapping/mapping_headers.h"
 #include "termination/term_headers.h"
+#include "serialization/serialization.h"
 
 #include <tuple>
 #include <utility>
@@ -380,13 +381,55 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
  */
 
 template <typename IndexT>
-void CollectionManager::migrate(
-  VirtualProxyType const& proxy, IndexT const& index, NodeType const& node
+MigrateStatus CollectionManager::migrate(
+  VirtualProxyType const& col_proxy, IndexT const& idx, NodeType const& node
 ) {
  debug_print(
    vrt_coll, node,
-   "migrate: proxy=%llu, node=%d\n", proxy, node
+   "migrate: col_proxy=%llu, node=%d\n", col_proxy, node
  );
+ printf("migrate: col_proxy=%llu, node=%d\n", col_proxy, node);
+
+ auto const& this_node = theContext()->getNode();
+ if (this_node != node) {
+   auto const& proxy = CollectionIndexProxy<IndexT>(col_proxy).operator()(idx);
+
+   auto& proxy_cont_iter = EntireHolder<IndexT>::proxy_container_;
+   auto holder_iter = proxy_cont_iter.find(col_proxy);
+   assert(
+     holder_iter != proxy_cont_iter.end() && "Element must be registered here"
+   );
+
+   #if backend_check_enabled(runtime_checks)
+   {
+     bool const& exists = Holder<IndexT>::exists(col_proxy, idx);
+     assert(
+       exists && "Local element must exist here for migration to occur"
+     );
+   }
+   #endif
+
+   auto& inner_holder = Holder<IndexT>::lookup(col_proxy, idx);
+   auto const col_ptr = inner_holder.getCollection();
+
+   // ::serialization::interface::serialize(
+   //   col_ptr, [](SizeType size) -> SerialByteType* {
+   //   }
+   // );
+
+   theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityMigrated(proxy, node);
+
+   return MigrateStatus::MigratedToRemote;
+ } else {
+   #if backend_check_enabled(runtime_checks)
+     assert(
+       false && "Migration should only be called when node is != this_node"
+     );
+   #else
+     // Do nothing
+   #endif
+   return MigrateStatus::NoMigrationNecessary;
+ }
 }
 
 }}} /* end namespace vt::vrt::collection */
