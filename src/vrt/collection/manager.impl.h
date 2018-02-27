@@ -112,8 +112,9 @@ template <typename SysMsgT>
         #endif
 
         CollectionTypeAttorney::setSize(new_vc, num_elms);
-        IndexT idx = cur_idx;
-        CollectionTypeAttorney::setIndex<decltype(new_vc),IndexT>(new_vc, std::move(idx));
+        CollectionTypeAttorney::setIndex<decltype(new_vc),IndexT>(
+          new_vc, cur_idx
+        );
         theCollection()->insertCollectionElement<IndexT>(
           std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy
         );

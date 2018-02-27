@@ -16,9 +16,9 @@ template <typename CollectionT>
 
 template <typename CollectionT, typename IndexT>
 /*static*/ void CollectionTypeAttorney::setIndex(
-  CollectionT const& collection, IndexT&& index
+  CollectionT const& collection, IndexT const& index
 ) {
-  return collection->setIndex(std::move(index));
+  return collection->setIndex(index);
 }
 
 }}} /* end namespace vt::vrt::collection */

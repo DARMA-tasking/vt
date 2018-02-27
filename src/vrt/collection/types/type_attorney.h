@@ -17,7 +17,7 @@ private:
   );
   template <typename CollectionT, typename IndexT>
   static void setIndex(
-    CollectionT const& collection, IndexT&& index
+    CollectionT const& collection, IndexT const& index
   );
 };
 

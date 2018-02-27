@@ -16,12 +16,12 @@ struct Indexable {
 
   Indexable() = default;
 
-  IndexT getIndex() const { return index_; }
+  IndexT const& getIndex() const { return index_; }
 
 private:
   friend struct CollectionTypeAttorney;
 
-  void setIndex(IndexT&& in_index) { index_ = std::move(in_index); }
+  void setIndex(IndexT const& in_index) { index_ = in_index; }
 
 private:
   IndexT index_;
