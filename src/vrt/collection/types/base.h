@@ -12,7 +12,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-struct CollectionBase : UntypedCollection, MigrateHookInterface {
+struct CollectionBase : UntypedCollection, MigrateHookBase {
   using ProxyType = VirtualElmProxyType<IndexT>;
   using IndexType = IndexT;
 

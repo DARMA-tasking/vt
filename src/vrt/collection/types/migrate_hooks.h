@@ -7,12 +7,12 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-struct MigrateHookBase {
+struct MigrateHookInterface {
   virtual void onMigrateAway() = 0;
   virtual void onMigrateTo() = 0;
 };
 
-struct MigrateHookInterface : MigrateHookBase {
+struct MigrateHookBase : MigrateHookInterface {
   virtual void onMigrateAway() override {}
   virtual void onMigrateTo() override {}
 };
