@@ -21,6 +21,7 @@
     gen,                   "general",                                   \
     group,                 "group",                                     \
     handler,               "handler",                                   \
+    lb,                    "lb",                                        \
     location,              "location",                                  \
     param,                 "parameterization",                          \
     pool,                  "pool",                                      \
