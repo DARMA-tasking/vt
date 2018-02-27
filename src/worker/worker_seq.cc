@@ -5,7 +5,7 @@
 
 #include "context/context.h"
 #include "context/context_attorney.h"
-#include "collective/collective.h"
+#include "collective/collective_ops.h"
 #include "worker/worker_common.h"
 #include "worker/worker_seq.h"
 
