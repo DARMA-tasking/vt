@@ -4,10 +4,11 @@
 
 #include "config.h"
 #include "vrt/vrt_common.h"
+#include "vrt/collection/types/untyped.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-struct MigrateHookInterface {
+struct MigrateHookInterface : UntypedCollection {
   virtual void onMigrateAway() = 0;
   virtual void onMigrateTo() = 0;
 };

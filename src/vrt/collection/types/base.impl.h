@@ -12,8 +12,7 @@ namespace vt { namespace vrt { namespace collection {
 template <typename IndexT>
 CollectionBase<IndexT>::CollectionBase(
   bool const static_size, bool const elms_fixed
-) : Migratable(),
-    Indexable<IndexT>(),
+) : Indexable<IndexT>(),
     hasStaticSize_(static_size),
     elmsFixedAtCreation_(elms_fixed)
 { }
@@ -23,7 +22,7 @@ typename CollectionBase<IndexT>::ProxyType
 CollectionBase<IndexT>::getElementProxy(IndexT const& idx) const {
   VirtualElmOnlyProxyType elmProxy;
   VirtualElemProxyBuilder::createElmProxy(elmProxy, idx.uniqueBits());
-  ProxyType proxy(getProxy(), elmProxy);
+  ProxyType proxy(this->getProxy(), elmProxy);
   return proxy;
 }
 
@@ -39,7 +38,7 @@ template <typename IndexT>
 
 template <typename IndexT>
 /*virtual*/ void CollectionBase<IndexT>::migrate(NodeType const& node) {
-  auto const& proxy = getProxy();
+  auto const& proxy = this->getProxy();
   return CollectionElmAttorney<IndexT>::migrate(proxy, this->getIndex(), node);
 }
 

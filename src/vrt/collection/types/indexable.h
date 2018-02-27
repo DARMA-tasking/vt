@@ -5,13 +5,15 @@
 #include "config.h"
 #include "vrt/vrt_common.h"
 #include "vrt/collection/types/type_attorney.h"
+#include "vrt/collection/types/migrate_hooks.h"
+#include "vrt/collection/types/migratable.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-struct Indexable {
+struct Indexable : Migratable {
   explicit Indexable(IndexT&& in_index)
-    : index_(std::move(in_index))
+    : Migratable(), index_(std::move(in_index))
   { }
 
   Indexable() = default;
