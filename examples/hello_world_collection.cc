@@ -20,6 +20,12 @@ struct MyCol : Collection<Index1D> {
       node, node, idx.x()
     );
   }
+  MyCol() = default;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | idx;
+  }
 };
 
 struct OtherColl : Collection<Index2D> {
