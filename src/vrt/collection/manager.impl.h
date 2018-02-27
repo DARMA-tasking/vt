@@ -142,7 +142,12 @@ template <typename IndexT>
   auto const collection_active_fn = auto_registry::getAutoHandlerCollection(
     sub_handler
   );
+
+  // Be careful with type casting here..convert to typeless before
+  // reinterpreting the pointer so the compiler does not produce the wrong
+  // offset
   auto const col_ptr = inner_holder.getCollection();
+  void* typeless_collection = static_cast<void*>(col_ptr);
 
   debug_print(
     vrt_coll, node,
@@ -152,7 +157,9 @@ template <typename IndexT>
   assert(col_ptr != nullptr && "Must be valid pointer");
 
   // for now, execute directly on comm thread
-  collection_active_fn(msg, col_ptr);
+  collection_active_fn(
+    msg, reinterpret_cast<UntypedCollection*>(typeless_collection)
+  );
 
   theTerm()->consume(term::any_epoch_sentinel);
 }
