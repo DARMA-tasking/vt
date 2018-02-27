@@ -16,8 +16,8 @@ struct MyCol : Collection<Index1D> {
   {
     auto const& node = theContext()->getNode();
     printf(
-      "%d: constructing MyCol on node=%d: idx.x()=%d\n",
-      node, node, idx.x()
+      "%d: constructing MyCol on node=%d: idx.x()=%d, ptr=%p\n",
+      node, node, idx.x(), this
     );
   }
   MyCol() = default;
@@ -55,8 +55,21 @@ struct ColMsg : CollectionMessage<IndexT> {
 static void colHan(ColMsg<Index1D>* msg, MyCol* col) {
   auto const& node = theContext()->getNode();
   printf(
-    "%d: colHan received: idx=%d\n", node, col->idx.x()
+    "%d: colHan received: ptr=%p, idx=%d, getIndex=%d\n",
+    node, col, col->idx.x(), col->getIndex().x()
   );
+
+  #if TEST_MIGRATE
+  if (col->idx.x() == 2) {
+    auto const& this_node = theContext()->getNode();
+    auto const& num_nodes = theContext()->getNumNodes();
+    auto const& next_node = this_node + 1;
+    printf(
+      "%d: colHan calling migrate: idx=%d\n", node, col->idx.x()
+    );
+    col->migrate(next_node >= num_nodes ? 0 : next_node);
+  }
+  #endif
 }
 
 static void colHanOther(ColMsg<Index2D>* msg, OtherColl* col) {
