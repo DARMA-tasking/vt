@@ -17,6 +17,7 @@
 #include "vrt/proxy/collection_wrapper.h"
 #include "registry/auto/auto_registry_map.h"
 #include "registry/auto/auto_registry_collection.h"
+#include "registry/auto/auto_registry_common.h"
 #include "topos/mapping/mapping_headers.h"
 #include "termination/term_headers.h"
 
@@ -57,7 +58,8 @@ template <typename SysMsgT>
 
   if (info.immediate_) {
     auto const& map_han = msg->map;
-    bool const& is_functor = HandlerManagerType::isHandlerFunctor(map_han);
+    bool const& is_functor =
+      auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
 
     auto_registry::AutoActiveMapType fn = nullptr;
 
@@ -110,6 +112,8 @@ template <typename SysMsgT>
         #endif
 
         CollectionTypeAttorney::setSize(new_vc, num_elms);
+        IndexT idx = cur_idx;
+        CollectionTypeAttorney::setIndex<decltype(new_vc),IndexT>(new_vc, std::move(idx));
         theCollection()->insertCollectionElement<IndexT>(
           std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy
         );
@@ -361,6 +365,20 @@ inline void CollectionManager::insertCollectionInfo(VirtualProxyType const& p) {
 inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
   auto const& node = theContext()->getNode();
   return VirtualProxyBuilder::createProxy(curIdent_++, node, true, true);
+}
+
+/*
+ * Support of virtual context collection element migration
+ */
+
+template <typename IndexT>
+void CollectionManager::migrate(
+  VirtualProxyType const& proxy, IndexT const& index, NodeType const& node
+) {
+ debug_print(
+   vrt_coll, node,
+   "migrate: proxy=%llu, node=%d\n", proxy, node
+ );
 }
 
 }}} /* end namespace vt::vrt::collection */

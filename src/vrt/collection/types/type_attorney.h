@@ -15,6 +15,10 @@ private:
   static void setSize(
     CollectionT const& collection, VirtualElmCountType const& elms
   );
+  template <typename CollectionT, typename IndexT>
+  static void setIndex(
+    CollectionT const& collection, IndexT&& index
+  );
 };
 
 }}} /* end namespace vt::vrt::collection */

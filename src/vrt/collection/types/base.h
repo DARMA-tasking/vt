@@ -5,15 +5,17 @@
 #include "config.h"
 #include "vrt/vrt_common.h"
 #include "vrt/collection/proxy_builder/elm_proxy_builder.h"
+#include "vrt/collection/types/base.fwd.h"
 #include "vrt/collection/types/insertable.h"
 #include "vrt/collection/types/migrate_hooks.h"
 #include "vrt/collection/types/migratable.h"
+#include "vrt/collection/types/indexable.h"
 #include "vrt/collection/types/untyped.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-struct CollectionBase : Migratable {
+struct CollectionBase : Migratable, Indexable<IndexT> {
   using ProxyType = VirtualElmProxyType<IndexT>;
   using IndexType = IndexT;
 
@@ -28,6 +30,8 @@ struct CollectionBase : Migratable {
 
   // Should be implemented in derived class (non-virtual)
   VirtualElmCountType getSize() const;
+
+  void migrate(NodeType const& node) override;
 
 protected:
   bool hasStaticSize_ = true;

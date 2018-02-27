@@ -12,6 +12,7 @@
 #include "vrt/collection/traits/cons_detect.h"
 #include "vrt/collection/traits/cons_dispatch.h"
 #include "vrt/collection/constructor/coll_constructors.h"
+#include "vrt/collection/manager_elm_attorney.fwd.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "topos/mapping/mapping_headers.h"
 #include "messaging/message.h"
@@ -142,6 +143,15 @@ protected:
   void insertCollectionInfo(VirtualProxyType const& proxy);
 
 private:
+  template <typename IndexT>
+  friend struct CollectionElmAttorney;
+
+  template <typename IndexT>
+  void migrate(
+    VirtualProxyType const& proxy, IndexT const& index, NodeType const& node
+  );
+
+private:
   BufferedActionType buffered_sends_;
   VirtualIDType curIdent_ = 0;
 };
@@ -155,5 +165,6 @@ extern vrt::collection::CollectionManager* theCollection();
 }  // end namespace vt
 
 #include "vrt/collection/manager.impl.h"
+#include "vrt/collection/manager_elm_attorney.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/

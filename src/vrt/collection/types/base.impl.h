@@ -5,6 +5,7 @@
 #include "config.h"
 #include "vrt/vrt_common.h"
 #include "vrt/collection/types/base.h"
+#include "vrt/collection/manager_elm_attorney.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -12,6 +13,7 @@ template <typename IndexT>
 CollectionBase<IndexT>::CollectionBase(
   bool const static_size, bool const elms_fixed
 ) : Migratable(),
+    Indexable<IndexT>(),
     hasStaticSize_(static_size),
     elmsFixedAtCreation_(elms_fixed)
 { }
@@ -33,6 +35,12 @@ bool CollectionBase<IndexT>::isStatic() const {
 template <typename IndexT>
 /*static*/ bool CollectionBase<IndexT>::isStaticSized() {
   return true;
+}
+
+template <typename IndexT>
+/*virtual*/ void CollectionBase<IndexT>::migrate(NodeType const& node) {
+  auto const& proxy = getProxy();
+  return CollectionElmAttorney<IndexT>::migrate(proxy, this->getIndex(), node);
 }
 
 }}} /* end namespace vt::vrt::collection */

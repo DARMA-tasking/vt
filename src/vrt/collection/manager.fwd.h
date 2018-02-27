@@ -10,4 +10,10 @@ struct CollectionManager;
 
 }}} /* end namespace vt::vrt::collection */
 
+namespace vt {
+
+extern vrt::collection::CollectionManager* theCollection();
+
+}  // end namespace vt
+
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/

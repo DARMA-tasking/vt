@@ -11,8 +11,7 @@ namespace vt { namespace vrt { namespace collection {
 template <typename IndexT>
 StaticCollectionBase<IndexT>::StaticCollectionBase(
   VirtualElmCountType const inNumElems
-)
-  : CollectionBase<IndexT>(false, false), numElems_(inNumElems)
+) : CollectionBase<IndexT>(false, false), numElems_(inNumElems)
 { }
 
 template <typename IndexT>

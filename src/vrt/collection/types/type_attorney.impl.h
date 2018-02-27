@@ -14,6 +14,13 @@ template <typename CollectionT>
   return collection->setSize(elms);
 }
 
+template <typename CollectionT, typename IndexT>
+/*static*/ void CollectionTypeAttorney::setIndex(
+  CollectionT const& collection, IndexT&& index
+) {
+  return collection->setIndex(std::move(index));
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_IMPL_H*/
