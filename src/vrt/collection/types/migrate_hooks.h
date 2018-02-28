@@ -9,8 +9,14 @@
 namespace vt { namespace vrt { namespace collection {
 
 struct MigrateHookInterface : UntypedCollection {
-  virtual void onMigrateAway() = 0;
-  virtual void onMigrateTo() = 0;
+  MigrateHookInterface() = default;
+
+public:
+  virtual void preMigrateOut() = 0;
+  virtual void epiMigrateOut() = 0;
+  virtual void preMigrateIn()  = 0;
+  virtual void epiMigrateIn()  = 0;
+
 protected:
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -19,8 +25,14 @@ protected:
 };
 
 struct MigrateHookBase : MigrateHookInterface {
-  virtual void onMigrateAway() override {}
-  virtual void onMigrateTo() override {}
+  MigrateHookBase() = default;
+
+public:
+  virtual void preMigrateOut() override {}
+  virtual void epiMigrateOut() override {}
+  virtual void preMigrateIn()  override {}
+  virtual void epiMigrateIn()  override {}
+
 protected:
   template <typename Serializer>
   void serialize(Serializer& s) {
