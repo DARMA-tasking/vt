@@ -140,7 +140,7 @@ void EntityLocationCoord<EntityID>::registerEntityMigrated(
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future
-  return registerMigrated(id, msg_action);
+  return registerEntity(id, msg_action);
 }
 
 template <typename EntityID>
