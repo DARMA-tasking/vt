@@ -21,15 +21,9 @@ using Index2D = DenseIndexArray<int32_t, 2>;
 using Index3D = DenseIndexArray<int32_t, 3>;
 
 #if backend_check_enabled(detector)
-  static_assert(
-    vt::index::IndexTraits<Index1D>::is_index, "Index1D must follow index concept"
-  );
-  static_assert(
-    vt::index::IndexTraits<Index2D>::is_index, "Index2D must be an index"
-  );
-  static_assert(
-    vt::index::IndexTraits<Index3D>::is_index, "Index3D must be an index"
-  );
+  static_assert(IndexTraits<Index1D>::is_index, "Index1D does not conform");
+  static_assert(IndexTraits<Index2D>::is_index, "Index2D does not conform");
+  static_assert(IndexTraits<Index3D>::is_index, "Index3D does not conform");
 #endif
 
 }}  // end namespace vt::index

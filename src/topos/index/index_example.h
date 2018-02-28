@@ -58,8 +58,7 @@ struct ExampleIndex {
   namespace vt { namespace index {
 
   static_assert(
-    IndexTraits<ExampleIndex>::is_index,
-    "ExampleIndex must follow the Index concept"
+    IndexTraits<ExampleIndex>::is_index, "ExampleIndex does not conform"
   );
 
   }} // end namespace vt::index
