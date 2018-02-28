@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_VRT_COLLECTION_COLLECTION_ACTIVE_FUNCS_H
-#define INCLUDED_VRT_COLLECTION_COLLECTION_ACTIVE_FUNCS_H
+#if !defined INCLUDED_VRT_COLLECTION_ACTIVE_ACTIVE_FUNCS_H
+#define INCLUDED_VRT_COLLECTION_ACTIVE_ACTIVE_FUNCS_H
 
 #include "config.h"
 #include "messaging/message.h"
@@ -19,4 +19,4 @@ using ActiveColTypedFnType = void(MsgT*, ColT*);
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_COLLECTION_ACTIVE_FUNCS_H*/
+#endif /*INCLUDED_VRT_COLLECTION_ACTIVE_ACTIVE_FUNCS_H*/

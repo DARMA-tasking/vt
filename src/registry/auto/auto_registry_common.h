@@ -9,7 +9,7 @@
 #include "registry/registry.h"
 #include "trace/trace.h"
 #include "vrt/context/context_vrt_funcs.h"
-#include "vrt/collection/collection_active_funcs.h"
+#include "vrt/collection/active/active_funcs.h"
 #include "topos/mapping/mapping_function.h"
 
 #include <vector>
