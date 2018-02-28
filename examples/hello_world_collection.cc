@@ -22,6 +22,14 @@ struct MyCol : Collection<Index1D> {
   }
   MyCol() = default;
 
+  virtual ~MyCol() {
+    auto const& node = theContext()->getNode();
+    printf(
+      "%d: invoing destructor MyCol on node=%d: idx.x()=%d, ptr=%p\n",
+      node, node, idx.x(), this
+    );
+  }
+
   template <typename Serializer>
   void serialize(Serializer& s) {
     Collection<Index1D>::serialize(s);
@@ -38,6 +46,14 @@ struct OtherColl : Collection<Index2D> {
     auto const& node = theContext()->getNode();
     printf(
       "%d: constructing OtherColl on node=%d: idx={%d,%d}\n",
+      node, node, idx.x(), idx.y()
+    );
+  }
+
+  virtual ~OtherColl() {
+    auto const& node = theContext()->getNode();
+    printf(
+      "%d: invoing destructor OtherColl on node=%d: idx={%d,%d}\n",
       node, node, idx.x(), idx.y()
     );
   }
