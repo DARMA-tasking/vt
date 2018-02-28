@@ -7,18 +7,25 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename CollectionT>
+template <typename ColT>
 /*static*/ void CollectionTypeAttorney::setSize(
-  CollectionT const& collection, VirtualElmCountType const& elms
+  ColT const& col, VirtualElmCountType const& elms
 ) {
-  return collection->setSize(elms);
+  return col->setSize(elms);
 }
 
-template <typename CollectionT, typename IndexT>
+template <typename ColT, typename IndexT>
 /*static*/ void CollectionTypeAttorney::setIndex(
-  CollectionT const& collection, IndexT const& index
+  ColT const& col, IndexT const& index
 ) {
-  return collection->setIndex(index);
+  return col->setIndex(index);
+}
+
+template <typename ColT>
+/*static*/ void CollectionTypeAttorney::setProxy(
+  ColT const& col, VirtualProxyType const& proxy
+) {
+  return col->setProxy(proxy);
 }
 
 }}} /* end namespace vt::vrt::collection */

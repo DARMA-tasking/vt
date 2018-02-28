@@ -112,10 +112,16 @@ template <typename SysMsgT>
           );
         #endif
 
+        /*
+         * Set direct attributes of the newly constructed element directly on
+         * the user's class
+         */
         CollectionTypeAttorney::setSize(new_vc, num_elms);
+        CollectionTypeAttorney::setProxy(new_vc, new_proxy);
         CollectionTypeAttorney::setIndex<decltype(new_vc),IndexT>(
           new_vc, cur_idx
         );
+
         theCollection()->insertCollectionElement<IndexT>(
           std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy
         );

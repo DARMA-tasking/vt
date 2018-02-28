@@ -11,14 +11,12 @@ struct CollectionTypeAttorney {
   friend struct CollectionManager;
 
 private:
-  template <typename CollectionT>
-  static void setSize(
-    CollectionT const& collection, VirtualElmCountType const& elms
-  );
-  template <typename CollectionT, typename IndexT>
-  static void setIndex(
-    CollectionT const& collection, IndexT const& index
-  );
+  template <typename ColT>
+  static void setSize(ColT const& col, VirtualElmCountType const& elms);
+  template <typename ColT, typename IndexT>
+  static void setIndex(ColT const& col, IndexT const& idx);
+  template <typename ColT>
+  static void setProxy(ColT const& col, VirtualProxyType const& proxy);
 };
 
 }}} /* end namespace vt::vrt::collection */
