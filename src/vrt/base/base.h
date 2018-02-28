@@ -7,6 +7,13 @@
 namespace vt { namespace vrt {
 
 struct VrtBase {
+  VrtBase() = default;
+
+  explicit VrtBase(VirtualProxyType const& in_proxy)
+    : proxy_(in_proxy)
+  { }
+
+public:
   VirtualProxyType getProxy() const { return proxy_; }
 
 protected:
