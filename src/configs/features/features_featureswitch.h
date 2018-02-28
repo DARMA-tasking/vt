@@ -34,8 +34,8 @@
     serial_msg,            "serialized-msg",                            \
     term,                  "termination",                               \
     trace,                 "trace",                                     \
-    vrt,                   "virtual-context",                           \
-    vrt_coll,              "virtual-context-collection",                \
+    vrt,                   "vc",                                        \
+    vrt_coll,              "vcc",                                       \
     worker,                "worker"                                     \
   )
 
