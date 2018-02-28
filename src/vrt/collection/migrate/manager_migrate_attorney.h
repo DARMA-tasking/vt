@@ -24,9 +24,10 @@ private:
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& dest
   );
 
+  template <typename UniquePtrT>
   static MigrateStatus migrateIn(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-    std::unique_ptr<ColT> vc_elm
+    UniquePtrT vc_elm
   );
 };
 

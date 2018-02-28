@@ -428,14 +428,13 @@ MigrateStatus CollectionManager::migrateOut(
    }
    #endif
 
-   auto& inner_holder = Holder<IndexT>::lookup(col_proxy, idx);
-   auto const col_ptr = inner_holder.getCollection();
-   auto& typed_col_ref = *static_cast<ColT*>(col_ptr);
+   auto col_unique_ptr = Holder<IndexT>::remove(col_proxy, idx);
+   auto& typed_col_ref = *static_cast<ColT*>(col_unique_ptr.get());
 
    /*
     * Call the virtual prelude migrate out function
     */
-   col_ptr->preMigrateOut();
+   col_unique_ptr->preMigrateOut();
 
    using MigrateMsgType = MigrateMsg<ColT, IndexT>;
 
@@ -463,7 +462,7 @@ MigrateStatus CollectionManager::migrateOut(
    /*
     * Call the virtual epilog migrate out function
     */
-   col_ptr->epiMigrateOut();
+   col_unique_ptr->epiMigrateOut();
 
    return MigrateStatus::MigratedToRemote;
  } else {
@@ -478,10 +477,10 @@ MigrateStatus CollectionManager::migrateOut(
  }
 }
 
-template <typename ColT, typename IndexT>
+template <typename ColT, typename IndexT, typename UniquePtrT>
 MigrateStatus CollectionManager::migrateIn(
   VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-  std::unique_ptr<ColT> vc_elm
+  UniquePtrT vc_elm
 ) {
   debug_print(
     vrt_coll, node,
@@ -505,6 +504,8 @@ MigrateStatus CollectionManager::migrateIn(
    * Invoke the virtual epilog migrate-in function
    */
   vc_elm->epiMigrateIn();
+
+  return MigrateStatus::MigrateInLocal;
 }
 
 

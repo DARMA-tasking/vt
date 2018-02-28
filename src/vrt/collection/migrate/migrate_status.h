@@ -8,6 +8,7 @@ namespace vt { namespace vrt { namespace collection {
 
 enum struct MigrateStatus : int16_t {
   MigratedToRemote = 0,
+  MigrateInLocal,
   NoMigrationNecessary,
   MigrateError,
   PendingLocatAction

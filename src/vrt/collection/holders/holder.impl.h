@@ -49,6 +49,20 @@ Holder<IndexT>::lookup(VirtualProxyType const& proxy, IndexT const& idx) {
   return iter->second;
 }
 
+template <typename IndexT>
+/*static*/ typename Holder<IndexT>::VirtualPtrType
+Holder<IndexT>::remove(VirtualProxyType const& proxy, IndexT const& idx) {
+  auto const& lookup = std::make_tuple(proxy,idx);
+  auto& container = Holder<IndexT>::vc_container_;
+  auto iter = container.find(lookup);
+  assert(
+    iter != container.end() && "Entry must exist in holder when removing entry"
+  );
+  auto owned_ptr = std::move(iter->second.vc_ptr_);
+  container.erase(iter);
+  return std::move(owned_ptr);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H*/

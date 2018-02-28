@@ -13,7 +13,36 @@ namespace vt { namespace vrt { namespace collection {
 struct Migratable : MigrateHookBase {
   Migratable() = default;
 
+  /*
+   * The user or runtime system can invoke this method at any time (when a valid
+   * pointer to it exists) to migrate this VCC element to another memory domain
+   *
+   *  1.  Invoke migrate(node) where node != theContext()->getNode()
+   *  2.  Runtime system invokes Migratable::preMigrateOut()
+   *  3.  Migratable element is serialized
+   *  4.  Migratable element is sent to the destination node
+   *  5.  Location manager de-registers this element
+   *  6.  VCC manager removes local reference to this element
+   *  7.  Runtime system invokes Migratable::epiMigrateOut()
+   *  8.  Runtime system invokes Migratable::destroy()
+   *  9.  Runtime system invokes the destructor
+   *      ....... send MigrateMsg to MigrateHandlers::migrateInHandler .......
+   *  10. migrateInHandler() is invoked
+   *  11. Migratable element is de-serialized
+   *  12. Migratable element constructed with migration constructor
+   *  13. Runtime system invokes Migratable::preMigrateIn()
+   *  14. VCC manager add local reference to this element (InnerHolder)
+   *  15. Location manager registers this element on destination node
+   *  16. Runtime system invokes Migratable::epiMigrateIn()
+   *
+   */
   virtual void migrate(NodeType const& node) = 0;
+
+  /*
+   * The system invokes this when the destructor is about to be called on the
+   * VCC element due a migrate(NodeType const&) invocation
+   */
+  virtual void destroy();
 
 protected:
   template <typename Serializer>

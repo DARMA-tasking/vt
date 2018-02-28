@@ -28,10 +28,18 @@ struct MigrateHookBase : MigrateHookInterface {
   MigrateHookBase() = default;
 
 public:
-  virtual void preMigrateOut() override {}
-  virtual void epiMigrateOut() override {}
-  virtual void preMigrateIn()  override {}
-  virtual void epiMigrateIn()  override {}
+  virtual void preMigrateOut() override {
+    debug_print(vrt_coll, node, "preMigrateOut(): this=%p\n", this);
+  }
+  virtual void epiMigrateOut() override {
+    debug_print(vrt_coll, node, "epiMigrateOut(): this=%p\n", this);
+  }
+  virtual void preMigrateIn() override {
+    debug_print(vrt_coll, node, "preMigrateIn(): this=%p\n", this);
+  }
+  virtual void epiMigrateIn() override {
+    debug_print(vrt_coll, node, "epiMigrateIn(): this=%p\n", this);
+  }
 
 protected:
   template <typename Serializer>
