@@ -144,12 +144,18 @@ protected:
   void insertCollectionInfo(VirtualProxyType const& proxy);
 
 private:
-  template <typename IndexT>
+  template <typename ColT, typename IndexT>
   friend struct CollectionElmAttorney;
 
-  template <typename IndexT>
-  MigrateStatus migrate(
-    VirtualProxyType const& proxy, IndexT const& index, NodeType const& node
+  template <typename ColT, typename IndexT>
+  MigrateStatus migrateOut(
+    VirtualProxyType const& proxy, IndexT const& idx, NodeType const& dest
+  );
+
+  template <typename ColT, typename IndexT>
+  MigrateStatus migrateIn(
+    VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
+    std::unique_ptr<ColT> vc_elm
   );
 
 private:

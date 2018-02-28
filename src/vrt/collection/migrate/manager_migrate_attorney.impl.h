@@ -11,11 +11,11 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-/*static*/ MigrateStatus CollectionElmAttorney<IndexT>::migrate(
+template <typename ColT, typename IndexT>
+/*static*/ MigrateStatus CollectionElmAttorney<ColT, IndexT>::migrateOut(
   VirtualProxyType const& proxy, IndexT const& index, NodeType const& node
 ) {
-  return theCollection()->migrate<IndexT>(proxy, index, node);
+  return theCollection()->migrateOut<ColT,IndexT>(proxy,index,node);
 }
 
 }}} /* end namespace vt::vrt::collection */

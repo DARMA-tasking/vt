@@ -14,6 +14,8 @@
 #include "vrt/collection/types/type_attorney.h"
 #include "vrt/collection/defaults/default_map.h"
 #include "vrt/collection/constructor/coll_constructors_deref.h"
+#include "vrt/collection/migrate/migrate_msg.h"
+#include "vrt/collection/migrate/migrate_handlers.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "registry/auto/auto_registry_map.h"
 #include "registry/auto/auto_registry_collection.h"
@@ -254,7 +256,15 @@ void CollectionManager::insertCollectionElement(
 ) {
   auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
-  if (holder_iter == holder_container.end()) {
+  auto const& found_holder = holder_iter != holder_container.end();
+
+  debug_print(
+    vrt_coll, node,
+    "insertCollectionElement: proxy=%lld, map_han=%d, idx=%s, max_idx=%s\n",
+    proxy, map_han, print_index(idx), print_index(max_idx)
+  );
+
+  if (!found_holder) {
     holder_container.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(proxy),
@@ -386,18 +396,20 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
  * Support of virtual context collection element migration
  */
 
-template <typename IndexT>
-MigrateStatus CollectionManager::migrate(
-  VirtualProxyType const& col_proxy, IndexT const& idx, NodeType const& node
+template <typename ColT, typename IndexT>
+MigrateStatus CollectionManager::migrateOut(
+  VirtualProxyType const& col_proxy, IndexT const& idx, NodeType const& dest
 ) {
+ auto const& this_node = theContext()->getNode();
+
  debug_print(
    vrt_coll, node,
-   "migrate: col_proxy=%llu, node=%d\n", col_proxy, node
+   "CollectionManager::migrateOut: col_proxy=%llu, this_node=%d, dest=%d, "
+   "idx=%s\n",
+   col_proxy, this_node, dest, print_index(idx)
  );
- printf("migrate: col_proxy=%llu, node=%d\n", col_proxy, node);
 
- auto const& this_node = theContext()->getNode();
- if (this_node != node) {
+ if (this_node != dest) {
    auto const& proxy = CollectionIndexProxy<IndexT>(col_proxy).operator()(idx);
 
    auto& proxy_cont_iter = EntireHolder<IndexT>::proxy_container_;
@@ -417,19 +429,46 @@ MigrateStatus CollectionManager::migrate(
 
    auto& inner_holder = Holder<IndexT>::lookup(col_proxy, idx);
    auto const col_ptr = inner_holder.getCollection();
+   auto& typed_col_ref = *static_cast<ColT*>(col_ptr);
 
-   // ::serialization::interface::serialize(
-   //   col_ptr, [](SizeType size) -> SerialByteType* {
-   //   }
-   // );
+   /*
+    * Call the virtual prelude migrate out function
+    */
+   col_ptr->preMigrateOut();
 
-   theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityMigrated(proxy, node);
+   using MigrateMsgType = MigrateMsg<ColT, IndexT>;
+
+   auto msg = makeSharedMessage<MigrateMsgType>(proxy, this_node, dest);
+
+   SerialByteType* buf = nullptr;
+   SizeType buf_size = 0;
+   ::serialization::interface::serialize<ColT>(
+     typed_col_ref,
+     [&buf,&buf_size](SizeType size) -> SerialByteType* {
+       buf_size = size;
+       buf = static_cast<SerialByteType*>(std::malloc(buf_size));
+       return buf;
+     }
+   );
+   msg->setPut(buf, buf_size);
+
+   // @todo: action here to free put buffer
+   theMsg()->sendMsg<
+     MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
+   >(dest, msg, [msg]{ delete msg; });
+
+   theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityMigrated(proxy, dest);
+
+   /*
+    * Call the virtual epilog migrate out function
+    */
+   col_ptr->epiMigrateOut();
 
    return MigrateStatus::MigratedToRemote;
  } else {
    #if backend_check_enabled(runtime_checks)
      assert(
-       false && "Migration should only be called when node is != this_node"
+       false && "Migration should only be called when to_node is != this_node"
      );
    #else
      // Do nothing
@@ -437,6 +476,36 @@ MigrateStatus CollectionManager::migrate(
    return MigrateStatus::NoMigrationNecessary;
  }
 }
+
+template <typename ColT, typename IndexT>
+MigrateStatus CollectionManager::migrateIn(
+  VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
+  std::unique_ptr<ColT> vc_elm
+) {
+  debug_print(
+    vrt_coll, node,
+    "CollectionManager::migrateIn: proxy=%llu, idx=%s, from=%d, ptr=%p\n",
+    proxy, print_index(idx), from, vc_elm.get()
+  );
+
+  /*
+   * Invoke the virtual prelude migrate-in function
+   */
+  vc_elm->preMigrateIn();
+
+  auto const& elm_proxy = CollectionIndexProxy<IndexT>(proxy).operator()(idx);
+
+  theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntityMigrated(
+    VrtElmProxy<IndexT>{proxy,idx}, from,
+    CollectionManager::collectionMsgHandler<IndexT>
+  );
+
+  /*
+   * Invoke the virtual epilog migrate-in function
+   */
+  vc_elm->epiMigrateIn();
+}
+
 
 }}} /* end namespace vt::vrt::collection */
 

@@ -7,7 +7,7 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct CollectionElmAttorney;
 
 }}} /* end namespace vt::vrt::collection */

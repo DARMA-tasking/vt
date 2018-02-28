@@ -41,8 +41,11 @@ template <typename IndexT>
 
 template <typename IndexT>
 /*virtual*/ void CollectionBase<IndexT>::migrate(NodeType const& node) {
-  auto const& migrate_status = CollectionElmAttorney<IndexT>::migrate(
-    this->getProxy(), this->getIndex(), node
+  using ColT = CollectionBase<IndexT>;
+  auto const& collection_proxy = this->getProxy();
+  auto const& collection_index = this->getIndex();
+  auto const& migrate_status = CollectionElmAttorney<ColT, IndexT>::migrateOut(
+    collection_proxy, collection_index, node
   );
   assert(
     migrate_status == MigrateStatus::MigratedToRemote &&

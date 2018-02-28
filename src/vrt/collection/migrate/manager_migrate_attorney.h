@@ -7,17 +7,26 @@
 #include "vrt/collection/types/migratable.fwd.h"
 #include "vrt/collection/types/base.fwd.h"
 #include "vrt/collection/migrate/migrate_status.h"
+#include "vrt/collection/migrate/migrate_handlers.fwd.h"
+
+#include <memory>
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct CollectionElmAttorney {
   friend struct CollectionBase<IndexT>;
+  friend struct MigrateHandlers;
   friend struct Migratable;
 
 private:
-  static MigrateStatus migrate(
-    VirtualProxyType const& proxy, IndexT const& index, NodeType const& node
+  static MigrateStatus migrateOut(
+    VirtualProxyType const& proxy, IndexT const& idx, NodeType const& dest
+  );
+
+  static MigrateStatus migrateIn(
+    VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
+    std::unique_ptr<ColT> vc_elm
   );
 };
 
