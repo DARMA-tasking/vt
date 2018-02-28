@@ -124,9 +124,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < num_elms; i++) {
       auto const& this_node = theContext()->getNode();
       auto msg = new ColMsg<Index1D>(this_node);
-      theCollection()->sendMsg<MyCol, ColMsg<Index1D>, colHan>(
-        proxy[i], msg, nullptr
-      );
+      proxy[i].send<MyCol, ColMsg<Index1D>, colHan>(msg);
     }
   }
   #endif
