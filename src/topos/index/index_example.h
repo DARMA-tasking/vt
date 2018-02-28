@@ -7,13 +7,14 @@
 
 #include <cstdint>
 #include <functional>
+#include <string>
 
 namespace vt { namespace index {
 
 /*
- * This index (ExampleIndex) exists for pedagogical purposes only: to demonstrate
- * an example vt::index that conforms to the correct interface. If the detector
- * is enabled, this can be checked at compile time.
+ * This index (ExampleIndex) exists for pedagogical purposes only: to
+ * demonstrate an example vt::index that conforms to the correct interface. If
+ * the detector is enabled, this can be checked at compile time.
  */
 
 struct ExampleIndex {
@@ -44,6 +45,9 @@ struct ExampleIndex {
 
   // Iterator for every element in a index used as a range
   void foreach(ExampleIndex const& max, ApplyType fn) const;
+
+  // Pretty print an index as a std::string
+  std::string toString() const;
 };
 
 }} // end namespace vt::index

@@ -45,4 +45,6 @@ using Index3D = index::Index3D;
 
 }  // end namespace vt
 
+#include "topos/index/printer/print_index.h"
+
 #endif  /*INCLUDED_TOPOS_INDEX*/

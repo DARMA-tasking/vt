@@ -35,7 +35,6 @@ struct DenseIndexArray : serialization::ByteCopyTrait {
   using IndexSizeType = size_t;
   using ApplyType = std::function<void(ThisIndexType)>;
   using IsByteCopyable = serialization::ByteCopyTrait;
-
   using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
   using DenseArraySizeType = uint64_t;
   using DenseIndexType = IndexType;

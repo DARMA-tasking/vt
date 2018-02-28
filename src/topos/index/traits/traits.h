@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <string>
 
 #if backend_check_enabled(detector)
   #include "detector_headers.h"
