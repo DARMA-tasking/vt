@@ -24,6 +24,7 @@ struct MyCol : Collection<Index1D> {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
+    Collection<Index1D>::serialize(s);
     s | idx;
   }
 };
@@ -39,6 +40,12 @@ struct OtherColl : Collection<Index2D> {
       "%d: constructing OtherColl on node=%d: idx={%d,%d}\n",
       node, node, idx.x(), idx.y()
     );
+  }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    Collection<Index2D>::serialize(s);
+    s | idx;
   }
 };
 
