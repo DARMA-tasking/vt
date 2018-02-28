@@ -61,6 +61,9 @@ void CollectionBase<IndexT>::serialize(Serializer& s) {
   s | elmsFixedAtCreation_;
 }
 
+template <typename IndexT>
+/*virtual*/ CollectionBase<IndexT>::~CollectionBase() {}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_BASE_IMPL_H*/

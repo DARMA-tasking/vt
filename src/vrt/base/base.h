@@ -13,6 +13,8 @@ struct VrtBase {
     : proxy_(in_proxy)
   { }
 
+  virtual ~VrtBase() { }
+
 public:
   VirtualProxyType getProxy() const { return proxy_; }
 

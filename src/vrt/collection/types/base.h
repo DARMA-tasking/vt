@@ -20,6 +20,8 @@ struct CollectionBase : Indexable<IndexT> {
   CollectionBase() = default;
   CollectionBase(bool const static_size, bool const elms_fixed);
 
+  virtual ~CollectionBase();
+
   ProxyType getElementProxy(IndexT const& idx) const;
 
   bool isStatic() const;
