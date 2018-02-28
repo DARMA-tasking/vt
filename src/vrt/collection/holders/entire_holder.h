@@ -3,6 +3,7 @@
 #define INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_H
 
 #include "config.h"
+#include "vrt/collection/holders/col_holder.h"
 
 #include <unordered_map>
 
@@ -10,15 +11,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
 struct EntireHolder {
-  struct InnerHolder {
-    HandlerType map_fn = uninitialized_handler;
-    IndexT max_idx;
-
-    InnerHolder(HandlerType const& in_map_fn, IndexT const& idx)
-      : map_fn(in_map_fn), max_idx(idx)
-    { }
-  };
-
+  using InnerHolder = CollectionHolder<IndexT>;
   using ProxyContainerType = std::unordered_map<VirtualProxyType, InnerHolder>;
 
   static ProxyContainerType proxy_container_;
