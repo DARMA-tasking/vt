@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_MAP_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_MAP_H
+#if !defined INCLUDED_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_H
+#define INCLUDED_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_H
 
 #include "config.h"
 #include "registry/auto/auto_registry_common.h"
@@ -32,6 +32,6 @@ HandlerType makeAutoHandlerSeedMap();
 
 }} // end namespace vt::auto_registry
 
-#include "registry/auto/auto_registry_map_impl.h"
+#include "registry/auto/map/auto_registry_map_impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_MAP_H*/
+#endif /*INCLUDED_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_H*/

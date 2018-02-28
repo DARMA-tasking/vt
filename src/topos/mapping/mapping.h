@@ -6,7 +6,7 @@
 #include "topos/mapping/mapping_function.h"
 #include "topos/mapping/seed/seed.h"
 #include "topos/index/index.h"
-#include "registry/auto/auto_registry_map.h"
+#include "registry/auto/map/auto_registry_map.h"
 
 #include <functional>
 

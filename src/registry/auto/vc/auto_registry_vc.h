@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_VC_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_VC_H
+#if !defined INCLUDED_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_H
+#define INCLUDED_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_H
 
 #include "config.h"
 #include "registry/auto/auto_registry_common.h"
@@ -20,6 +20,6 @@ HandlerType makeAutoHandlerVC(MsgT* const msg);
 
 }} // end namespace vt::auto_registry
 
-#include "registry/auto/auto_registry_vc_impl.h"
+#include "registry/auto/vc/auto_registry_vc_impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_VC_H*/
+#endif /*INCLUDED_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_H*/

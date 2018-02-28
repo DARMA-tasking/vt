@@ -84,6 +84,8 @@ set(
     utils/hash utils/atomic utils/tls utils/static_checks
   registry
     registry/auto
+      registry/auto/functor registry/auto/map registry/auto/collection
+      registry/auto/vc
 
   # Add single-directory components
   context event handler parameterization sequence termination

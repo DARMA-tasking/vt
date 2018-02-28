@@ -9,8 +9,8 @@
 #include "vrt/context/context_vrt_make_closure.h"
 #include "topos/location/location_headers.h"
 #include "topos/location/manager.h"
-#include "registry/auto/auto_registry_vc.h"
-#include "registry/auto/auto_registry_map.h"
+#include "registry/auto/vc/auto_registry_vc.h"
+#include "registry/auto/map/auto_registry_map.h"
 #include "serialization/serialization.h"
 #include "worker/worker_headers.h"
 

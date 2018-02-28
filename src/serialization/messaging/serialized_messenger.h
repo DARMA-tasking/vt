@@ -6,7 +6,7 @@
 #include "messaging/message.h"
 #include "messaging/active.h"
 #include "registry/auto/auto_registry_interface.h"
-#include "registry/auto/auto_registry_vc.h"
+#include "registry/auto/vc/auto_registry_vc.h"
 #include "serialization/serialization.h"
 #include "serialization/messaging/serialized_data_msg.h"
 

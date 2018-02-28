@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_COLLECTION_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_COLLECTION_H
+#if !defined INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_H
+#define INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_H
 
 #include "config.h"
 #include "registry/auto/auto_registry_common.h"
@@ -20,6 +20,6 @@ HandlerType makeAutoHandlerCollection(MsgT* const msg);
 
 }} /* end namespace vt::auto_registry */
 
-#include "registry/auto/auto_registry_collection.impl.h"
+#include "registry/auto/collection/auto_registry_collection.impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_COLLECTION_H*/
+#endif /*INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_H*/

@@ -1,9 +1,9 @@
 
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_COLLECTION_IMPL_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_COLLECTION_IMPL_H
+#if !defined INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H
+#define INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H
 
 #include "config.h"
-#include "registry/auto/auto_registry_collection.h"
+#include "registry/auto/collection/auto_registry_collection.h"
 
 namespace vt { namespace auto_registry {
 
@@ -25,4 +25,4 @@ inline HandlerType makeAutoHandlerCollection(MsgT* const msg) {
 
 }} /* end namespace vt::auto_registry */
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_COLLECTION_IMPL_H*/
+#endif /*INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H*/
