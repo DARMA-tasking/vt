@@ -32,10 +32,6 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-/*virtual*/ CollectionManager::~CollectionManager() {
-
-}
-
 template <typename ColT, typename IndexT, typename Tuple, size_t... I>
 /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
 CollectionManager::runConstructor(

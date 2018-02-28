@@ -44,8 +44,6 @@ struct CollectionManager {
 
   CollectionManager() = default;
 
-  virtual ~CollectionManager();
-
   /*
    *         CollectionManager::constructMap<ColT, Args...>
    *
