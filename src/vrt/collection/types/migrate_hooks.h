@@ -11,11 +11,21 @@ namespace vt { namespace vrt { namespace collection {
 struct MigrateHookInterface : UntypedCollection {
   virtual void onMigrateAway() = 0;
   virtual void onMigrateTo() = 0;
+protected:
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    UntypedCollection::serialize(s);
+  }
 };
 
 struct MigrateHookBase : MigrateHookInterface {
   virtual void onMigrateAway() override {}
   virtual void onMigrateTo() override {}
+protected:
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    MigrateHookInterface::serialize(s);
+  }
 };
 
 }}} /* end namespace vt::vrt::collection */

@@ -10,9 +10,15 @@ namespace vt { namespace vrt { namespace collection {
  *      Base untyped collection for safe casting
  */
 
-struct UntypedCollection :
-  VrtBase
-{ };
+struct UntypedCollection : VrtBase {
+  UntypedCollection() = default;
+
+protected:
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    VrtBase::serialize(s);
+  }
+};
 
 }}} /* end namespace vt::vrt::collection */
 

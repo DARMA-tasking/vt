@@ -20,6 +20,13 @@ struct Indexable : Migratable {
 
   IndexT const& getIndex() const { return index_; }
 
+protected:
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    Migratable::serialize(s);
+    s | index_;
+  }
+
 private:
   friend struct CollectionTypeAttorney;
 

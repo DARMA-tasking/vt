@@ -31,6 +31,9 @@ struct CollectionBase : Indexable<IndexT> {
 
   void migrate(NodeType const& node) override;
 
+  template <typename Serializer>
+  void serialize(Serializer& s);
+
 protected:
   bool hasStaticSize_ = true;
   bool elmsFixedAtCreation_ = true;

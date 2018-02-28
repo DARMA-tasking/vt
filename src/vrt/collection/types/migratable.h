@@ -14,6 +14,12 @@ struct Migratable : MigrateHookBase {
   Migratable() = default;
 
   virtual void migrate(NodeType const& node) = 0;
+
+protected:
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    MigrateHookBase::serialize(s);
+  }
 };
 
 }}} /* end namespace vt::vrt::collection */

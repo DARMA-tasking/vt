@@ -12,6 +12,11 @@ struct VrtBase {
 protected:
   void setProxy(VirtualProxyType const& in_proxy) { proxy_ = in_proxy; }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | proxy_;
+  }
+
 private:
   VirtualProxyType proxy_ = no_vrt_proxy;
 };

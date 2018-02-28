@@ -50,6 +50,14 @@ template <typename IndexT>
   );
 }
 
+template <typename IndexT>
+template <typename Serializer>
+void CollectionBase<IndexT>::serialize(Serializer& s) {
+  Indexable<IndexT>::serialize(s);
+  s | hasStaticSize_;
+  s | elmsFixedAtCreation_;
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_BASE_IMPL_H*/
