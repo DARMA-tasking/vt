@@ -83,19 +83,43 @@ struct IndexTraits {
   using IsByteCopyable_t = typename U::IsByteCopyable;
   using has_IsByteCopyable = detection::is_detected<IsByteCopyable_t, T>;
 
-  // This defines what it means to be an `Index'
+  template <typename U>
+  using toString_t = decltype(std::declval<U const&>().toString());
+  using has_toString = detection::is_detected_convertible<
+    std::string, toString_t, T
+  >;
+
+  /*
+   * This defines what it means to be an `Index'; i.e., the index concept.
+   */
   static constexpr auto const is_index =
-    // default constructor, copy constructor, and copy assignment operator
-    has_copy_constructor::value and has_default_constructor::value and
-    has_copy_assignment::value and
-    // operator ==
-    has_equality::value and has_operator_eq::value and
-    // typedefs/using IndexSizeType, IsByteCopyable
-    has_IndexSizeType::value and has_IsByteCopyable::value and
-    // methods: packedSize() and indexIsByteCopyable() and uniqueBits() and
-    //          foreach()
-    has_packedSize::value and has_indexIsByteCopyable::value and
-    has_uniqueBits::value and has_foreach::value;
+    /*
+     *  default constructor, copy constructor, copy assignment operator
+     */
+    has_copy_constructor::value    and
+    has_default_constructor::value and
+    has_copy_assignment::value     and
+    /*
+     *  operator==
+     */
+    has_equality::value            and
+    has_operator_eq::value         and
+    /*
+     *  typedefs:
+     *    IndexSizeType, IsByteCopyable
+     */
+    has_IndexSizeType::value       and
+    has_IsByteCopyable::value      and
+    /*
+     * methods:
+     *   packedSize(), indexIsByteCopyable(), uniqueBits(), foreach(),
+     *   toString()
+     */
+    has_packedSize::value          and
+    has_indexIsByteCopyable::value and
+    has_uniqueBits::value          and
+    has_foreach::value             and
+    has_toString::value;
 };
 
 }}  // end namespace vt::index
