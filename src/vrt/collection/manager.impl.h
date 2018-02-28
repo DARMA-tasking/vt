@@ -16,6 +16,7 @@
 #include "vrt/collection/constructor/coll_constructors_deref.h"
 #include "vrt/collection/migrate/migrate_msg.h"
 #include "vrt/collection/migrate/migrate_handlers.h"
+#include "vrt/collection/active/active_funcs.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "registry/auto/map/auto_registry_map.h"
 #include "registry/auto/collection/auto_registry_collection.h"

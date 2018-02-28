@@ -74,6 +74,7 @@ set(
       vrt/collection/types vrt/collection/messages vrt/collection/proxy_builder
       vrt/collection/holders vrt/collection/migrate vrt/collection/traits
       vrt/collection/traits vrt/collection/defaults vrt/collection/constructor
+      vrt/collection/send
   lb
     lb/instrumentation
     lb/instrumentation/centralized

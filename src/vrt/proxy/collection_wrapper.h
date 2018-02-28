@@ -3,6 +3,7 @@
 #define INCLUDED_VRT_PROXY_COLLECTION_WRAPPER_H
 
 #include "config.h"
+#include "vrt/collection/send/sendable.h"
 #include "vrt/proxy/proxy_element.h"
 #include "vrt/proxy/proxy_collection.h"
 
