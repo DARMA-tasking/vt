@@ -145,10 +145,12 @@ template <typename IndexT>
   auto const& col = entity_proxy.getCollectionProxy();
   auto const& elm = entity_proxy.getElementProxy();
   auto const& idx = elm.getIndex();
-  bool const& exists = Holder<IndexT>::exists(col, idx);
+  auto elm_holder = theCollection()->findElmHolder<IndexT>(col);
+
+  bool const& exists = elm_holder->exists(idx);
   assert(exists && "Proxy must exist");
 
-  auto& inner_holder = Holder<IndexT>::lookup(col, idx);
+  auto& inner_holder = elm_holder->lookup(idx);
 
   auto const sub_handler = col_msg->getVrtHandler();
   auto const collection_active_fn = auto_registry::getAutoHandlerCollection(
@@ -303,12 +305,15 @@ void CollectionManager::insertCollectionElement(
       iter->second.clear();
       buffered_sends_.erase(iter);
     }
+
+    holder_iter = holder_container.find(proxy);
   }
 
-  auto const& elm_exists = Holder<IndexT>::exists(proxy, idx);
+  auto& elm_holder = holder_iter->second.holder_;
+  auto const& elm_exists = elm_holder.exists(idx);
   assert(!elm_exists && "Must not exist at this point");
 
-  Holder<IndexT>::insert(proxy, idx, typename Holder<IndexT>::InnerHolder{
+  elm_holder.insert(idx, typename Holder<IndexT>::InnerHolder{
     std::move(vc), map_han, max_idx
   });
 
@@ -433,31 +438,29 @@ MigrateStatus CollectionManager::migrateOut(
 
  if (this_node != dest) {
    auto const& proxy = CollectionIndexProxy<IndexT>(col_proxy).operator()(idx);
-
-   auto& proxy_cont_iter = EntireHolder<IndexT>::proxy_container_;
-   auto holder_iter = proxy_cont_iter.find(col_proxy);
+   auto elm_holder = findElmHolder<IndexT>(col_proxy);
    assert(
-     holder_iter != proxy_cont_iter.end() && "Element must be registered here"
+     elm_holder != nullptr && "Element must be registered here"
    );
 
    #if backend_check_enabled(runtime_checks)
    {
-     bool const& exists = Holder<IndexT>::exists(col_proxy, idx);
+     bool const& exists = elm_holder->exists(idx);
      assert(
        exists && "Local element must exist here for migration to occur"
      );
    }
    #endif
 
-   bool const& exists = Holder<IndexT>::exists(col_proxy, idx);
+   bool const& exists = elm_holder->exists(idx);
    if (!exists) {
      return MigrateStatus::ElementNotLocal;
    }
 
-   auto& coll_elm_info = Holder<IndexT>::lookup(col_proxy, idx);
+   auto& coll_elm_info = elm_holder->lookup(idx);
    auto map_fn = coll_elm_info.map_fn;
    auto range = coll_elm_info.max_idx;
-   auto col_unique_ptr = Holder<IndexT>::remove(col_proxy, idx);
+   auto col_unique_ptr = elm_holder->remove(idx);
    auto& typed_col_ref = *static_cast<ColT*>(col_unique_ptr.get());
 
    /*
@@ -580,6 +583,32 @@ template <typename IndexT>
 void CollectionManager::destroyMatching(VirtualProxyType const& proxy) {
   auto& proxy_cont_iter = EntireHolder<IndexT>::proxy_container_;
   auto holder_iter = proxy_cont_iter.find(proxy);
+}
+
+template <typename IndexT>
+CollectionHolder<IndexT>* CollectionManager::findColHolder(
+  VirtualProxyType const& proxy
+) {
+  auto& holder_container = EntireHolder<IndexT>::proxy_container_;
+  auto holder_iter = holder_container.find(proxy);
+  auto const& found_holder = holder_iter != holder_container.end();
+  if (found_holder) {
+    return &holder_iter->second;
+  } else {
+    return nullptr;
+  }
+}
+
+template <typename IndexT>
+Holder<IndexT>* CollectionManager::findElmHolder(
+  VirtualProxyType const& proxy
+) {
+  auto ret = findColHolder<IndexT>(proxy);
+  if (ret != nullptr) {
+    return &ret->holder_;
+  } else {
+    return nullptr;
+  }
 }
 
 

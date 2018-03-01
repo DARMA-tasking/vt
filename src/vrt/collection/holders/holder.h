@@ -21,25 +21,20 @@ struct Holder {
   using ContType = std::unordered_map<T, U>;
   using CollectionType = Collection<IndexT>;
   using VirtualPtrType = std::unique_ptr<CollectionType>;
-  using LookupElementType = std::tuple<VirtualProxyType, IndexT>;
+  using LookupElementType = IndexT;
   using InnerHolder = ElementHolder<IndexT>;
   using TypedIndexContainer = ContType<LookupElementType, InnerHolder>;
 
-  static bool exists(VirtualProxyType const& proxy, IndexT const& idx);
-  static InnerHolder& lookup(VirtualProxyType const& proxy, IndexT const& idx);
-  static void insert(
-    VirtualProxyType const& proxy, IndexT const& idx, InnerHolder&& inner
-  );
-  static VirtualPtrType remove(VirtualProxyType const& proxy, IndexT const& idx);
+  bool exists(IndexT const& idx);
+  InnerHolder& lookup(IndexT const& idx);
+  void insert(IndexT const& idx, InnerHolder&& inner);
+  VirtualPtrType remove(IndexT const& idx);
 
   friend struct CollectionManager;
 
 private:
-  static TypedIndexContainer vc_container_;
+  TypedIndexContainer vc_container_;
 };
-
-template <typename IndexT>
-typename Holder<IndexT>::TypedIndexContainer Holder<IndexT>::vc_container_;
 
 }}} /* end namespace vt::vrt::collection */
 

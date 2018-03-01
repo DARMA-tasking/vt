@@ -12,20 +12,16 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-/*static*/ bool Holder<IndexT>::exists(
-  VirtualProxyType const& proxy, IndexT const& idx
-) {
-  auto& container = Holder<IndexT>::vc_container_;
-  auto iter = container.find(std::make_tuple(proxy,idx));
+bool Holder<IndexT>::exists(IndexT const& idx ) {
+  auto& container = vc_container_;
+  auto iter = container.find(idx);
   return iter != container.end();
 }
 
 template <typename IndexT>
-/*static*/ void Holder<IndexT>::insert(
-  VirtualProxyType const& proxy, IndexT const& idx, InnerHolder&& inner
-) {
-  auto const& lookup = std::make_tuple(proxy,idx);
-  auto& container = Holder<IndexT>::vc_container_;
+void Holder<IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
+  auto const& lookup = idx;
+  auto& container = vc_container_;
   auto iter = container.find(lookup);
   assert(
     iter == container.end() && "Entry must not exist in holder when inserting"
@@ -38,10 +34,11 @@ template <typename IndexT>
 }
 
 template <typename IndexT>
-/*static*/ typename Holder<IndexT>::InnerHolder&
-Holder<IndexT>::lookup(VirtualProxyType const& proxy, IndexT const& idx) {
-  auto const& lookup = std::make_tuple(proxy,idx);
-  auto& container = Holder<IndexT>::vc_container_;
+typename Holder<IndexT>::InnerHolder& Holder<IndexT>::lookup(
+  IndexT const& idx
+) {
+  auto const& lookup = idx;
+  auto& container = vc_container_;
   auto iter = container.find(lookup);
   assert(
     iter != container.end() && "Entry must exist in holder when searching"
@@ -50,10 +47,11 @@ Holder<IndexT>::lookup(VirtualProxyType const& proxy, IndexT const& idx) {
 }
 
 template <typename IndexT>
-/*static*/ typename Holder<IndexT>::VirtualPtrType
-Holder<IndexT>::remove(VirtualProxyType const& proxy, IndexT const& idx) {
-  auto const& lookup = std::make_tuple(proxy,idx);
-  auto& container = Holder<IndexT>::vc_container_;
+typename Holder<IndexT>::VirtualPtrType Holder<IndexT>::remove(
+  IndexT const& idx
+) {
+  auto const& lookup = idx;
+  auto& container = vc_container_;
   auto iter = container.find(lookup);
   assert(
     iter != container.end() && "Entry must exist in holder when removing entry"

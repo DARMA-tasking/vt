@@ -143,6 +143,12 @@ struct CollectionManager {
     NodeType const& migrated_from = uninitialized_destination
   );
 
+private:
+  template <typename IndexT>
+  CollectionHolder<IndexT>* findColHolder(VirtualProxyType const& proxy);
+  template <typename IndexT>
+  Holder<IndexT>* findElmHolder(VirtualProxyType const& proxy);
+
 public:
   template <typename ColT, typename IndexT>
   void destroy(VirtualProxyType const& proxy);
