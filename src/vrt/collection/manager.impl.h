@@ -17,6 +17,8 @@
 #include "vrt/collection/migrate/migrate_msg.h"
 #include "vrt/collection/migrate/migrate_handlers.h"
 #include "vrt/collection/active/active_funcs.h"
+#include "vrt/collection/destroy/destroy_msg.h"
+#include "vrt/collection/destroy/destroy_handlers.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "registry/auto/map/auto_registry_map.h"
 #include "registry/auto/collection/auto_registry_collection.h"
@@ -556,6 +558,28 @@ MigrateStatus CollectionManager::migrateIn(
   vc_raw_ptr->epiMigrateIn();
 
   return MigrateStatus::MigrateInLocal;
+}
+
+template <typename ColT, typename IndexT>
+void CollectionManager::destroy(VirtualProxyType const& proxy) {
+  using DestroyMsgType = DestroyMsg<ColT, IndexT>;
+  auto const& this_node = theContext()->getNode();
+  auto msg = makeSharedMessage<DestroyMsgType>(proxy, this_node);
+  theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg);
+}
+
+template <typename ColT, typename IndexT>
+void CollectionManager::incomingDestroy(VirtualProxyType const& proxy) {
+  auto iter = await_destroy_.find(proxy);
+  if (iter == await_destroy_.end()) {
+    await_destroy_.emplace(proxy);
+  }
+}
+
+template <typename IndexT>
+void CollectionManager::destroyMatching(VirtualProxyType const& proxy) {
+  auto& proxy_cont_iter = EntireHolder<IndexT>::proxy_container_;
+  auto holder_iter = proxy_cont_iter.find(proxy);
 }
 
 

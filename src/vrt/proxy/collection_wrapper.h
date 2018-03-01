@@ -4,8 +4,10 @@
 
 #include "config.h"
 #include "vrt/collection/send/sendable.h"
+#include "vrt/collection/destroy/destroyable.h"
 #include "vrt/proxy/proxy_element.h"
 #include "vrt/proxy/proxy_collection.h"
+#include "vrt/proxy/base_wrapper.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -41,13 +43,11 @@ private:
  */
 
 template <typename IndexT>
-struct CollectionIndexProxy {
+struct CollectionIndexProxy : Destroyable<IndexT> {
   using ElmProxyType = VrtElmProxy<IndexT>;
 
   CollectionIndexProxy() = default;
   CollectionIndexProxy(VirtualProxyType const in_proxy);
-
-  VirtualProxyType getProxy() const;
 
   template <typename... IndexArgsT>
   ElmProxyType index_build(IndexArgsT&&... idx);
@@ -59,9 +59,6 @@ struct CollectionIndexProxy {
   ElmProxyType index(IndexT const& idx);
   ElmProxyType operator[](IndexT const& idx);
   ElmProxyType operator()(IndexT const& idx);
-
-private:
-  VirtualProxyType const proxy_ = no_vrt_proxy;
 };
 
 

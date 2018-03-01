@@ -24,6 +24,7 @@
 #include <tuple>
 #include <utility>
 #include <unordered_map>
+#include <unordered_set>
 #include <functional>
 #include <vector>
 
@@ -39,6 +40,7 @@ struct CollectionManager {
   using BufferedActionType = std::unordered_map<
     VirtualProxyType, ActionContainerType
   >;
+  using AwaitingDestructionType = std::unordered_set<VirtualProxyType>;
   template <typename IndexT>
   using CollectionProxyWrapType = CollectionIndexProxy<IndexT>;
 
@@ -141,6 +143,17 @@ struct CollectionManager {
     NodeType const& migrated_from = uninitialized_destination
   );
 
+public:
+  template <typename ColT, typename IndexT>
+  void destroy(VirtualProxyType const& proxy);
+
+private:
+  template <typename ColT, typename IndexT>
+  void incomingDestroy(VirtualProxyType const& proxy);
+
+  template <typename IndexT>
+  void destroyMatching(VirtualProxyType const& proxy);
+
 protected:
   VirtualProxyType makeNewCollectionProxy();
   void insertCollectionInfo(VirtualProxyType const& proxy);
@@ -170,6 +183,7 @@ private:
 private:
   BufferedActionType buffered_sends_;
   VirtualIDType curIdent_ = 0;
+  AwaitingDestructionType await_destroy_;
 };
 
 }}} /* end namespace vt::vrt::collection */
@@ -183,5 +197,7 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vrt/collection/manager.impl.h"
 #include "vrt/collection/migrate/manager_migrate_attorney.impl.h"
 #include "vrt/collection/send/sendable.impl.h"
+#include "vrt/collection/destroy/destroyable.impl.h"
+#include "vrt/collection/destroy/manager_destroy_attorney.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/

@@ -38,13 +38,8 @@ CollectionProxy::operator()(IndexT const& idx) {
 template <typename IndexT>
 CollectionIndexProxy<IndexT>::CollectionIndexProxy(
   VirtualProxyType const in_proxy
-) : proxy_(in_proxy)
+) : Destroyable<IndexT>(in_proxy)
 { }
-
-template <typename IndexT>
-VirtualProxyType CollectionIndexProxy<IndexT>::getProxy() const {
-  return proxy_;
-}
 
 template <typename IndexT>
 template <typename... IndexArgsT>
@@ -70,7 +65,7 @@ CollectionIndexProxy<IndexT>::operator()(IndexArgsT&&... args) {
 template <typename IndexT>
 typename CollectionIndexProxy<IndexT>::ElmProxyType
 CollectionIndexProxy<IndexT>::index(IndexT const& idx) {
-  return ElmProxyType{proxy_,VirtualProxyElementType<IndexT>{idx}};
+  return ElmProxyType{this->proxy_,VirtualProxyElementType<IndexT>{idx}};
 }
 
 template <typename IndexT>
