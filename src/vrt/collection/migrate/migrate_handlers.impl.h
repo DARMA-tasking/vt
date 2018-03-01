@@ -10,6 +10,7 @@
 #include "serialization/serialization.h"
 
 #include <memory>
+#include <functional>
 #include <cassert>
 
 namespace vt { namespace vrt { namespace collection {
@@ -18,30 +19,33 @@ template <typename ColT, typename IndexT>
 /*static*/ void MigrateHandlers::migrateInHandler(
   MigrateMsg<ColT, IndexT>* msg
 ) {
+  using ColBaseType = typename Holder<IndexT>::CollectionType;
+  using ColDeleterType = std::function<void(ColBaseType*)>;
+
   auto const& full_proxy = msg->getElementProxy();
   auto const& col_proxy = full_proxy.getCollectionProxy();
   auto const& elm_proxy = full_proxy.getElementProxy();
   auto const& from_node = msg->getFromNode();
   auto const& idx = elm_proxy.getIndex();
+  auto const& map_han = msg->getMapHandler();
+  auto const& range = msg->getRange();
 
   auto buf = reinterpret_cast<SerialByteType*>(msg->getPut());
   auto const& buf_size = msg->getPutSize();
-  auto vc_elm_ptr = ::serialization::interface::deserialize<ColT>(
-    ::serialization::interface::serdes_unique_tag{}, buf, buf_size
-  );
-  using UniquePtrType = decltype(vc_elm_ptr);
 
+  auto vc_elm_ptr = std::make_unique<ColT>();
+  auto vc_raw_ptr = ::serialization::interface::deserialize<ColT>(
+    buf, buf_size, vc_elm_ptr.get()
+  );
+  // ColT* col_t = new ColT();
   // auto vc_raw_ptr = ::serialization::interface::deserialize<ColT>(
-  //   buf, buf_size
+  //   buf, buf_size, col_t
   // );
-  // auto vc_elm_ptr = std::make_unique<ColT>(vc_raw_ptr, [](ColT* to_delete){
-  //   auto char_type_pointer = reinterpret_cast<SerialByteType*>(to_delete);
-  //   delete [] char_type_pointer;
-  // });
+  // auto vc_elm_ptr = std::unique_ptr<ColT>(vc_raw_ptr);
 
   auto const& migrate_status =
-    CollectionElmAttorney<ColT,IndexT>::template migrateIn<UniquePtrType>(
-      col_proxy, idx, from_node, std::move(vc_elm_ptr)
+    CollectionElmAttorney<ColT,IndexT>::migrateIn(
+      col_proxy, idx, from_node, std::move(vc_elm_ptr), range, map_han
     );
 
   assert(

@@ -13,5 +13,4 @@ namespace vt { namespace vrt { namespace collection {
   );
 }
 
-
 }}} /* end namespace vt::vrt::collection */

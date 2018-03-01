@@ -13,8 +13,14 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+template <typename IndexT>
+struct Collection;
+
 template <typename ColT, typename IndexT>
 struct CollectionElmAttorney {
+  using CollectionType = Collection<IndexT>;
+  using VirtualPtrType = std::unique_ptr<CollectionType>;
+
   friend struct CollectionBase<IndexT>;
   friend struct MigrateHandlers;
   friend struct Migratable;
@@ -24,10 +30,9 @@ private:
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& dest
   );
 
-  template <typename UniquePtrT>
   static MigrateStatus migrateIn(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-    UniquePtrT vc_elm
+    VirtualPtrType vc_elm, IndexT const& range, HandlerType const& map_han
   );
 };
 

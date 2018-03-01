@@ -40,11 +40,11 @@ template <typename IndexT>
 }
 
 template <typename IndexT>
-/*virtual*/ void CollectionBase<IndexT>::migrate(NodeType const& node) {
-  using ColT = CollectionBase<IndexT>;
+template <typename ColT>
+void CollectionBase<IndexT>::migrate(NodeType const& node) {
   auto const& collection_proxy = this->getProxy();
   auto const& collection_index = this->getIndex();
-  auto const& migrate_status = CollectionElmAttorney<ColT, IndexT>::migrateOut(
+  auto const& migrate_status = CollectionElmAttorney<ColT,IndexT>::migrateOut(
     collection_proxy, collection_index, node
   );
   assert(

@@ -36,7 +36,8 @@ struct Migratable : MigrateHookBase {
    *  16. Runtime system invokes Migratable::epiMigrateIn()
    *
    */
-  virtual void migrate(NodeType const& node) = 0;
+  template <typename ColT>
+  void migrate(NodeType const& node);
 
   /*
    * The system invokes this when the destructor is about to be called on the

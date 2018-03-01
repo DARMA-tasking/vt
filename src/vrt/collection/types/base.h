@@ -31,7 +31,8 @@ struct CollectionBase : Indexable<IndexT> {
   // Should be implemented in derived class (non-virtual)
   VirtualElmCountType getSize() const;
 
-  void migrate(NodeType const& node) override;
+  template <typename ColT>
+  void migrate(NodeType const& node);
 
   template <typename Serializer>
   void serialize(Serializer& s);

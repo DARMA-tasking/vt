@@ -136,12 +136,20 @@ struct CollectionManager {
   template <typename IndexT>
   void insertCollectionElement(
     VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
-    HandlerType const& map_han, VirtualProxyType const& proxy
+    HandlerType const& map_han, VirtualProxyType const& proxy,
+    bool const& is_migrated_in = false,
+    NodeType const& migrated_from = uninitialized_destination
   );
 
 protected:
   VirtualProxyType makeNewCollectionProxy();
   void insertCollectionInfo(VirtualProxyType const& proxy);
+
+public:
+  template <typename ColT>
+  MigrateStatus migrate(
+    VrtElmProxy<typename ColT::IndexType>, NodeType const& dest
+  );
 
 private:
   template <typename ColT, typename IndexT>
@@ -152,10 +160,11 @@ private:
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& dest
   );
 
-  template <typename ColT, typename IndexT, typename UniquePtrT>
+  template <typename ColT, typename IndexT>
   MigrateStatus migrateIn(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-    UniquePtrT vc_elm
+    VirtualPtrType<IndexT> vrt_elm_ptr, IndexT const& range,
+    HandlerType const& map_han
   );
 
 private:

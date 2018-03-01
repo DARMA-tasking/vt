@@ -15,10 +15,6 @@ template <typename IndexT>
 struct ElementHolder {
   using VirtualPtrType = std::unique_ptr<Collection<IndexT>>;
 
-  VirtualPtrType vc_ptr_;
-  HandlerType map_fn = uninitialized_handler;
-  IndexT max_idx;
-
   ElementHolder(
     VirtualPtrType in_vc_ptr_, HandlerType const& in_han, IndexT const& idx
   );
@@ -27,6 +23,10 @@ struct ElementHolder {
   virtual ~ElementHolder();
 
   typename VirtualPtrType::pointer getCollection();
+
+  VirtualPtrType vc_ptr_ = nullptr;
+  HandlerType map_fn = uninitialized_handler;
+  IndexT max_idx;
 };
 
 }}} /* end namespace vt::vrt::collection */
