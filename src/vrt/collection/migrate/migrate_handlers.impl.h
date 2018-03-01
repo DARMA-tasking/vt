@@ -19,9 +19,6 @@ template <typename ColT, typename IndexT>
 /*static*/ void MigrateHandlers::migrateInHandler(
   MigrateMsg<ColT, IndexT>* msg
 ) {
-  using ColBaseType = typename Holder<IndexT>::CollectionType;
-  using ColDeleterType = std::function<void(ColBaseType*)>;
-
   auto const& full_proxy = msg->getElementProxy();
   auto const& col_proxy = full_proxy.getCollectionProxy();
   auto const& elm_proxy = full_proxy.getElementProxy();
