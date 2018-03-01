@@ -4,12 +4,15 @@
 
 #include "config.h"
 #include "vrt/collection/holders/holder.h"
+#include "vrt/collection/holders/base_holder.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-struct CollectionHolder {
+struct CollectionHolder : BaseHolder {
   CollectionHolder(HandlerType const& in_map_fn, IndexT const& idx);
+
+  void destroy() override;
 
   HandlerType map_fn = uninitialized_handler;
   IndexT max_idx;

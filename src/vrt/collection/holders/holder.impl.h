@@ -8,6 +8,7 @@
 
 #include <unordered_map>
 #include <tuple>
+#include <cassert>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -20,6 +21,8 @@ bool Holder<IndexT>::exists(IndexT const& idx ) {
 
 template <typename IndexT>
 void Holder<IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
+  assert(!is_destroyed_ && "Must not be destroyed to insert a new element");
+
   auto const& lookup = idx;
   auto& container = vc_container_;
   auto iter = container.find(lookup);
@@ -59,6 +62,19 @@ typename Holder<IndexT>::VirtualPtrType Holder<IndexT>::remove(
   auto owned_ptr = std::move(iter->second.vc_ptr_);
   container.erase(iter);
   return std::move(owned_ptr);
+}
+
+template <typename IndexT>
+void Holder<IndexT>::destroyAll() {
+  if (!is_destroyed_) {
+    vc_container_.clear();
+    is_destroyed_ = true;
+  }
+}
+
+template <typename IndexT>
+bool Holder<IndexT>::isDestroyed() const {
+  return is_destroyed_;
 }
 
 }}} /* end namespace vt::vrt::collection */

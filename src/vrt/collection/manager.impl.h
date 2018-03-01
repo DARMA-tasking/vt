@@ -34,6 +34,11 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+template <typename>
+void CollectionManager::destroyCollections() {
+  UniversalIndexHolder<>::destroyAllLive();
+}
+
 template <typename ColT, typename IndexT, typename Tuple, size_t... I>
 /*static*/ typename CollectionManager::VirtualPtrType<IndexT>
 CollectionManager::runConstructor(
@@ -195,8 +200,8 @@ void CollectionManager::sendMsg(
   auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder = holder_container.find(col_proxy);
   if (holder != holder_container.end()) {
-    auto const map_han = holder->second.map_fn;
-    auto max_idx = holder->second.max_idx;
+    auto const map_han = holder->second->map_fn;
+    auto max_idx = holder->second->max_idx;
     auto cur_idx = elm_proxy.getIndex();
     auto fn = auto_registry::getAutoHandlerMap(map_han);
 
@@ -255,7 +260,7 @@ void CollectionManager::sendMsg(
 }
 
 template <typename IndexT>
-void CollectionManager::insertCollectionElement(
+bool CollectionManager::insertCollectionElement(
   VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
   HandlerType const& map_han, VirtualProxyType const& proxy,
   bool const& is_migrated_in, NodeType const& migrated_from
@@ -271,12 +276,10 @@ void CollectionManager::insertCollectionElement(
   );
 
   if (!found_holder) {
-    holder_container.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(proxy),
-      std::forward_as_tuple(
-        typename EntireHolder<IndexT>::InnerHolder{map_han, max_idx}
-      )
+    using HolderType = typename EntireHolder<IndexT>::InnerHolder;
+
+    EntireHolder<IndexT>::insert(
+      proxy, std::make_shared<HolderType>(map_han,max_idx)
     );
 
     debug_print(
@@ -309,24 +312,31 @@ void CollectionManager::insertCollectionElement(
     holder_iter = holder_container.find(proxy);
   }
 
-  auto& elm_holder = holder_iter->second.holder_;
+  auto& elm_holder = holder_iter->second->holder_;
   auto const& elm_exists = elm_holder.exists(idx);
   assert(!elm_exists && "Must not exist at this point");
 
-  elm_holder.insert(idx, typename Holder<IndexT>::InnerHolder{
-    std::move(vc), map_han, max_idx
-  });
+  auto const& destroyed = elm_holder.isDestroyed();
 
-  if (is_migrated_in) {
-    theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntityMigrated(
-      VrtElmProxy<IndexT>{proxy,idx}, migrated_from,
-      CollectionManager::collectionMsgHandler<IndexT>
-    );
+  if (!destroyed) {
+    elm_holder.insert(idx, typename Holder<IndexT>::InnerHolder{
+        std::move(vc), map_han, max_idx
+          });
+
+    if (is_migrated_in) {
+      theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntityMigrated(
+        VrtElmProxy<IndexT>{proxy,idx}, migrated_from,
+        CollectionManager::collectionMsgHandler<IndexT>
+      );
+    } else {
+      theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
+        VrtElmProxy<IndexT>{proxy,idx},
+        CollectionManager::collectionMsgHandler<IndexT>
+      );
+    }
+    return true;
   } else {
-    theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
-      VrtElmProxy<IndexT>{proxy,idx},
-      CollectionManager::collectionMsgHandler<IndexT>
-    );
+    return false;
   }
 }
 
@@ -551,7 +561,7 @@ MigrateStatus CollectionManager::migrateIn(
 
   auto const& elm_proxy = CollectionIndexProxy<IndexT>(proxy).operator()(idx);
 
-  insertCollectionElement<IndexT>(
+  auto const& inserted = insertCollectionElement<IndexT>(
     std::move(vrt_elm_ptr), idx, max, map_han, proxy, true, from
   );
 
@@ -560,7 +570,11 @@ MigrateStatus CollectionManager::migrateIn(
    */
   vc_raw_ptr->epiMigrateIn();
 
-  return MigrateStatus::MigrateInLocal;
+  if (inserted) {
+    return MigrateStatus::MigrateInLocal;
+  } else {
+    return MigrateStatus::DestroyedDuringMigrated;
+  }
 }
 
 template <typename ColT, typename IndexT>
@@ -581,8 +595,8 @@ void CollectionManager::incomingDestroy(VirtualProxyType const& proxy) {
 
 template <typename IndexT>
 void CollectionManager::destroyMatching(VirtualProxyType const& proxy) {
-  auto& proxy_cont_iter = EntireHolder<IndexT>::proxy_container_;
-  auto holder_iter = proxy_cont_iter.find(proxy);
+  auto elm_holder = findElmHolder<IndexT>(proxy);
+  elm_holder->destroyAll();
 }
 
 template <typename IndexT>
@@ -593,7 +607,7 @@ CollectionHolder<IndexT>* CollectionManager::findColHolder(
   auto holder_iter = holder_container.find(proxy);
   auto const& found_holder = holder_iter != holder_container.end();
   if (found_holder) {
-    return &holder_iter->second;
+    return holder_iter->second.get();
   } else {
     return nullptr;
   }

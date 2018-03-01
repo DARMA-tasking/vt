@@ -13,6 +13,11 @@ CollectionHolder<IndexT>::CollectionHolder(
 ) : map_fn(in_map_fn), max_idx(idx)
 { }
 
+template <typename IndexT>
+void CollectionHolder<IndexT>::destroy() {
+  holder_.destroyAll();
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_COL_HOLDER_IMPL_H*/

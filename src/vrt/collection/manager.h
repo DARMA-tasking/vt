@@ -46,6 +46,11 @@ struct CollectionManager {
 
   CollectionManager() = default;
 
+  virtual ~CollectionManager() { destroyCollections<>(); }
+
+  template <typename=void>
+  void destroyCollections();
+
   /*
    *         CollectionManager::constructMap<ColT, Args...>
    *
@@ -136,7 +141,7 @@ struct CollectionManager {
   );
 
   template <typename IndexT>
-  void insertCollectionElement(
+  bool insertCollectionElement(
     VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
     HandlerType const& map_han, VirtualProxyType const& proxy,
     bool const& is_migrated_in = false,

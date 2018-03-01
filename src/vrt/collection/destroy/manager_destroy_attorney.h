@@ -20,4 +20,6 @@ private:
 
 }}} /* end namespace vt::vrt::collection */
 
+#include "vrt/collection/destroy/manager_destroy_attorney.impl.h"
+
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_DESTROY_ATTORNEY_H*/

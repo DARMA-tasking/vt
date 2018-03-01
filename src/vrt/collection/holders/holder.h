@@ -29,11 +29,14 @@ struct Holder {
   InnerHolder& lookup(IndexT const& idx);
   void insert(IndexT const& idx, InnerHolder&& inner);
   VirtualPtrType remove(IndexT const& idx);
+  void destroyAll();
+  bool isDestroyed() const;
 
   friend struct CollectionManager;
 
 private:
   TypedIndexContainer vc_container_;
+  bool is_destroyed_ = false;
 };
 
 }}} /* end namespace vt::vrt::collection */

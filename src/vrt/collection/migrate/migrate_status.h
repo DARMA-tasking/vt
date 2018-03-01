@@ -12,7 +12,8 @@ enum struct MigrateStatus : int16_t {
   ElementNotLocal,
   NoMigrationNecessary,
   MigrateError,
-  PendingLocatAction
+  PendingLocatAction,
+  DestroyedDuringMigrated
 };
 
 }}} /* end namespace vt::vrt::collection */
