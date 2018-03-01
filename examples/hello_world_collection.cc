@@ -25,7 +25,7 @@ struct MyCol : Collection<Index1D> {
   virtual ~MyCol() {
     auto const& node = theContext()->getNode();
     printf(
-      "%d: invoing destructor MyCol on node=%d: idx.x()=%d, ptr=%p\n",
+      "%d: invoking destructor MyCol on node=%d: idx.x()=%d, ptr=%p\n",
       node, node, idx.x(), this
     );
   }
@@ -53,7 +53,7 @@ struct OtherColl : Collection<Index2D> {
   virtual ~OtherColl() {
     auto const& node = theContext()->getNode();
     printf(
-      "%d: invoing destructor OtherColl on node=%d: idx={%d,%d}\n",
+      "%d: invoking destructor OtherColl on node=%d: idx={%d,%d}\n",
       node, node, idx.x(), idx.y()
     );
   }
@@ -90,7 +90,7 @@ static void colHan(ColMsg<Index1D>* msg, MyCol* col) {
     printf(
       "%d: colHan calling migrate: idx=%d\n", node, col->idx.x()
     );
-    col->migrate(next_node >= num_nodes ? 0 : next_node);
+    col->migrate<MyCol>(next_node >= num_nodes ? 0 : next_node);
   }
   #endif
 }
