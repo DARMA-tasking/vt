@@ -312,6 +312,7 @@ void Runtime::finalizeComponents() {
   // Reverse order destruction of runtime components.
 
   // Advanced components: may communicate during destruction
+  theCollection = nullptr;
   theVirtualManager = nullptr;
   theLocMan = nullptr;
   theVirtualSeq = nullptr;
