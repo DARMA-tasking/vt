@@ -490,7 +490,7 @@ MigrateStatus CollectionManager::migrateOut(
    // @todo: action here to free put buffer
    theMsg()->sendMsg<
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
-   >(dest, msg, nullptr);
+   >(dest, msg, [msg]{});
 
    theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityMigrated(proxy, dest);
 
