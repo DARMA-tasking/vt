@@ -8,24 +8,92 @@ find_package(MPI REQUIRED)
 
 include_directories(${MPI_C_INCLUDE_PATH})
 
-set(CMAKE_CXX_STANDARD 14)
+set(VIRTUAL_TRANSPORT_LIBRARY vt)
+set(FCONTEXT_LIBRARY fcontext)
 
-# OpenMP support
+include(cmake-modules/SetCXXCompilerFlags.cmake)
+set_darma_compiler_flags()
+
+macro(require_pkg_directory pkg_name pkg_user_name)
+  #message(STATUS "require_directory: name=${pkg_name}")
+  option(${pkg_name}_DIR "Root folder for ${pkg_user_name} installation" OFF)
+  if (NOT ${pkg_name}_DIR)
+    message(FATAL_ERROR "Please specify ${pkg_user_name} library installation root with -D${pkg_name}_DIR=")
+  endif()
+endmacro(require_pkg_directory)
+
+macro(find_package_local pkg_name pkg_directory)
+  message(STATUS "find_package_local: pkg name=\"${pkg_name}\", directory=\"${pkg_directory}\"")
+  # search locally only for package
+  find_package(
+    ${pkg_name}
+    PATHS ${pkg_directory}
+    REQUIRED
+    NO_CMAKE_PACKAGE_REGISTRY
+    NO_CMAKE_BUILDS_PATH
+    NO_CMAKE_SYSTEM_PATH
+    NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
+  )
+endmacro(find_package_local)
+
+# require directories for these packages
+require_pkg_directory(darma_meld     "DARMA meld")
+require_pkg_directory(darma_detector "DARMA detector")
+# find these required packages
+find_package_local(darma_meld     "${darma_meld_DIR}/cmake")
+find_package_local(darma_detector "${darma_detector_DIR}/cmake")
+
+# find_package(darma_meld PATHS ${darma_meld_DIR}/cmake)
+# find_package(darma_detector PATHS ${darma_detector_DIR}/cmake)
+
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
+
 include(${CMAKE_MODULE_PATH}/FindOpenMP.cmake)
 
-if (OpenMP_FOUND)
+find_package(ZLIB REQUIRED)
+
+if (ZLIB_FOUND)
+  include_directories(${ZLIB_INCLUDE_DIRS})
+else()
+  message("zlib is required for tracing")
+endif (ZLIB_FOUND)
+
+function(config_for_std_thread)
+  set(DEFAULT_THREADING stdthread)
+endfunction(config_for_std_thread)
+
+function(config_for_openmp)
+  set(DEFAULT_THREADING openmp)
   message("OpenMP has been found: ")
   message("\t Linker flags: ${OpenMP_EXE_LINKER_FLAGS}")
   message("\t C_FLAGS=${OpenMP_C_FLAGS}")
   message("\t CXX_FLAGS=${OpenMP_CXX_FLAGS}")
-
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-else()
-  message("OpenMP not found: must use std::thread for workers.")
-endif (OpenMP_FOUND)
+endfunction(config_for_openmp)
+
+option(USE_STD_THREAD 
+       "whether to force use of std::thread for threading"
+       OFF)
+
+option(USE_OPENMP
+      "whether to force use of OpenMP for threading"
+      OFF)
+
+if (USE_STD_THREAD)
+  message("Using std::thread for worker threading")
+  config_for_std_thread()
+elseif(USE_OPENMP)
+  config_for_openmp()
+  if (NOT OpenMP_Found)
+    message(FATAL_ERROR "requested OpenMP with -DUSE_OPENMP=On, but cannot find valid OpenMP in compiler")
+  endif()
+elseif(OpenMP_FOUND) #no default specified
+  config_for_openmp()
+else() #no default specified
+  message("OpenMP not found: using std::thread for workers")
+  config_for_std_thread()
+endif()
 
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(PROJECT_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
@@ -453,4 +521,8 @@ install(
   DESTINATION cmake
   COMPONENT dev
 )
+
+configure_file(cmake_config.h.in cmake_config.h @ONLY)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 

@@ -203,6 +203,8 @@ void CollectionManager::sendMsg(
 
   theTerm()->produce(term::any_epoch_sentinel);
 
+
+  #pragma sst global proxy_container_
   auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
   auto holder = holder_container.find(col_proxy);
   if (holder != holder_container.end()) {
@@ -271,6 +273,7 @@ bool CollectionManager::insertCollectionElement(
   HandlerType const& map_han, VirtualProxyType const& proxy,
   bool const& is_migrated_in, NodeType const& migrated_from
 ) {
+  #pragma sst global proxy_container_
   auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
   auto const& found_holder = holder_iter != holder_container.end();
@@ -615,6 +618,7 @@ template <typename ColT, typename IndexT>
 CollectionHolder<ColT, IndexT>* CollectionManager::findColHolder(
   VirtualProxyType const& proxy
 ) {
+  #pragma sst global proxy_container_
   auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
   auto const& found_holder = holder_iter != holder_container.end();

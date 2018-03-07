@@ -73,9 +73,11 @@ template <typename T>
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ bool SeqMatcher<MessageT, f>::hasMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
+#pragma sst global seq_msg
     auto& lst = SeqStateType<MessageT,f>::seq_msg;
     return hasMatchingAnyNoTag(lst);
   } else {
+#pragma sst global seq_msg_tagged
     auto& tagged_lst = SeqStateType<MessageT, f>::seq_msg_tagged;
     return hasMatchingAnyTagged(tagged_lst, tag);
   }
@@ -84,9 +86,11 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ MessageT* SeqMatcher<MessageT, f>::getMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
+#pragma sst global seq_msg
     auto& lst = SeqStateType<MessageT, f>::seq_msg;
     return getMatchingAnyNoTag(lst);
   } else {
+#pragma sst global seq_msg_tagged
     auto& tagged_lst = SeqStateType<MessageT, f>::seq_msg_tagged;
     return getMatchingAnyTagged(tagged_lst, tag);
   }
@@ -95,9 +99,11 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ bool SeqMatcher<MessageT, f>::hasMatchingAction(TagType const& tag) {
   if (tag == no_tag) {
+ #pragma sst global seq_action
     auto& lst = SeqStateType<MessageT, f>::seq_action;
     return hasMatchingAnyNoTag(lst);
   } else {
+#pragma sst global seq_action_tagged
     auto& tagged_lst = SeqStateType<MessageT, f>::seq_action_tagged;
     return hasMatchingAnyTagged(tagged_lst, tag);
   }
@@ -109,9 +115,11 @@ SeqMatcher<MessageT, f>::getMatchingAction(TagType const& tag) {
   assert(hasMatchingAction(tag) and "Must have matching action");
 
   if (tag == no_tag) {
+#pragma sst global seq_action
     auto& lst = SeqStateType<MessageT, f>::seq_action;
     return getMatchingAnyNoTag(lst);
   } else {
+#pragma sst global seq_action_tagged
     auto& tagged_lst = SeqStateType<MessageT, f>::seq_action_tagged;
     return getMatchingAnyTagged(tagged_lst, tag);
   }
@@ -122,8 +130,10 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   MessageT* msg, TagType const& tag
 ) {
   if (tag == no_tag) {
+#pragma sst global seq_msg
     SeqStateType<MessageT, f>::seq_msg.push_back(msg);
   } else {
+#pragma sst global seq_msg_tagged
     SeqStateType<MessageT, f>::seq_msg_tagged[tag].push_back(msg);
   }
 }
@@ -139,9 +149,11 @@ template <typename FnT>
   );
 
   if (tag == no_tag) {
+#pragma sst global seq_action
     auto& lst = SeqStateType<MessageT,f>::seq_action;
     lst.emplace_back(SeqActionType{seq_id,action});
   } else {
+#pragma sst global seq_action_tagged
     auto& tagged_lst = SeqStateType<MessageT,f>::seq_action_tagged;
     tagged_lst[tag].emplace_back(SeqActionType{seq_id,action});
   }

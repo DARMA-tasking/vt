@@ -23,6 +23,7 @@ RegistryT& getAutoRegistryGen();
 
 template <typename RegistryT, typename>
 inline RegistryT& getAutoRegistryGen() {
+#pragma sst keep
   static RegistryT reg;
   return reg;
 }
