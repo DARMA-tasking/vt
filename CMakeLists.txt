@@ -14,18 +14,43 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
 include(${CMAKE_MODULE_PATH}/FindOpenMP.cmake)
 
-if (OpenMP_FOUND)
+function(config_for_std_thread)
+  set(DEFAULT_THREADING stdthread)
+endfunction(config_for_std_thread)
+
+function(config_for_openmp)
+  set(DEFAULT_THREADING openmp)
   message("OpenMP has been found: ")
   message("\t Linker flags: ${OpenMP_EXE_LINKER_FLAGS}")
   message("\t C_FLAGS=${OpenMP_C_FLAGS}")
   message("\t CXX_FLAGS=${OpenMP_CXX_FLAGS}")
-
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-else()
-  message("OpenMP not found: must use std::thread for workers.")
-endif (OpenMP_FOUND)
+endfunction(config_for_openmp)
+
+option(USE_STD_THREAD 
+       "whether to force use of std::thread for threading"
+       OFF)
+
+option(USE_OPENMP
+      "whether to force use of OpenMP for threading"
+      OFF)
+
+if (USE_STD_THREAD)
+  message("Using std::thread for worker threading")
+  config_for_std_thread()
+elseif(USE_OPENMP)
+  config_for_openmp()
+  if (NOT OpenMP_Found)
+    message(FATAL_ERROR "requested OpenMP with -DUSE_OPENMP=On, but cannot find valid OpenMP in compiler")
+  endif()
+elseif(OpenMP_FOUND) #no default specified
+  config_for_openmp()
+else() #no default specified
+  message("OpenMP not found: using std::thread for workers")
+  config_for_std_thread()
+endif()
 
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(PROJECT_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
@@ -430,4 +455,8 @@ install(
   DESTINATION cmake
   COMPONENT dev
 )
+
+configure_file(cmake_config.h.in cmake_config.h @ONLY)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 
