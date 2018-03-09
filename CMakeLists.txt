@@ -77,7 +77,11 @@ set(
       vrt/collection/send
   lb
     lb/instrumentation
-    lb/instrumentation/centralized
+      lb/instrumentation/centralized
+    lb/balancers
+      lb/balancers/centralized
+        lb/balancers/centralized/impls
+    lb/migration
   serialization
     serialization/messaging serialization/traits
   utils
