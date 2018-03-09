@@ -3,6 +3,7 @@
 #include "lb/instrumentation/centralized/collect.h"
 #include "lb/instrumentation/centralized/collect_msg.h"
 #include "lb/lb_types.h"
+#include "lb/lb_types_internal.h"
 #include "lb/instrumentation/entity.h"
 #include "lb/instrumentation/database.h"
 #include "collective/collective_alg.h"
@@ -35,7 +36,7 @@ namespace vt { namespace lb { namespace instrumentation {
 }
 
 /*static*/ void CentralCollect::collectFinished(
-  LBPhaseType const& phase, CollectMsg::ProcContainerType const& entries
+  LBPhaseType const& phase, ProcContainerType const& entries
 ) {
   debug_print(
     lb, node,
@@ -74,7 +75,7 @@ namespace vt { namespace lb { namespace instrumentation {
   msg->entries_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(node),
-    std::forward_as_tuple(CollectMsg::ContainerType{})
+    std::forward_as_tuple(ContainerType{})
   );
   node_cont_iter = msg->entries_.find(node);
   assert(
@@ -92,7 +93,7 @@ namespace vt { namespace lb { namespace instrumentation {
         node_cont_iter->second.emplace(
           std::piecewise_construct,
           std::forward_as_tuple(entity),
-          std::forward_as_tuple(CollectMsg::EntryListType{})
+          std::forward_as_tuple(EntryListType{})
         );
       }
       msg_entry_iter->second = phase_iter->second;

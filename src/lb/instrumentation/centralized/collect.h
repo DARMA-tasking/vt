@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "lb/lb_types.h"
+#include "lb/lb_types_internal.h"
 #include "lb/instrumentation/database.h"
 #include "lb/instrumentation/centralized/collect_msg.h"
 
@@ -14,7 +15,7 @@ struct CentralCollect {
   static void reduceCurrentPhase();
   static CollectMsg* collectStats(LBPhaseType const& phase);
   static void collectFinished(
-    LBPhaseType const& phase, CollectMsg::ProcContainerType const& entries
+    LBPhaseType const& phase, ProcContainerType const& entries
   );
   static LBPhaseType currentPhase();
   static void nextPhase();

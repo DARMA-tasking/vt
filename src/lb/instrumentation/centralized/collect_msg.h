@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "lb/lb_types.h"
+#include "lb/lb_types_internal.h"
 #include "lb/instrumentation/entry.h"
 #include "collective/reduce/reduce.h"
 #include "messaging/message.h"
@@ -14,11 +15,6 @@
 namespace vt { namespace lb { namespace instrumentation {
 
 struct CollectMsg : ::vt::collective::reduce::ReduceMsg {
-  using EntryType = Entry;
-  using EntryListType = std::vector<EntryType>;
-  using ContainerType = std::unordered_map<LBEntityType, EntryListType>;
-  using ProcContainerType = std::unordered_map<NodeType, ContainerType>;
-
   CollectMsg() = default;
 
   CollectMsg(
