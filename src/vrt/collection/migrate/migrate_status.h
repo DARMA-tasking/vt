@@ -12,7 +12,7 @@ enum struct MigrateStatus : int16_t {
   ElementNotLocal,
   NoMigrationNecessary,
   MigrateError,
-  PendingLocatAction,
+  PendingLocalAction,
   DestroyedDuringMigrated
 };
 
