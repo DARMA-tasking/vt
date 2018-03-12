@@ -16,6 +16,7 @@ static void hello_world(HelloMsg* msg) {
   printf("%d: Hello from node %d\n", theContext()->getNode(), msg->from);
 }
 
+#define sstmac_app_name hello_world_vt
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
