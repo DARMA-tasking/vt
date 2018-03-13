@@ -26,6 +26,6 @@ namespace vt { namespace location {
   collectionLoc.clear();
 }
 
-/*static*/ LocInstType LocationManager::cur_loc_inst = 0;
+/*static*/ LocInstType LocationManager::cur_loc_inst = 0xFF00000000000000;
 
 }}  // end namespace vt::location
