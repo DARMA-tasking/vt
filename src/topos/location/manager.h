@@ -18,7 +18,7 @@ struct LocationManager {
   template <typename LocType>
   using PtrType = std::unique_ptr<LocType>;
   using LocCoordPtrType = LocationCoord*;
-  using LocInstContainerType = std::vector<LocCoordPtrType>;
+  using LocInstContainerType = std::unordered_map<LocInstType, LocCoordPtrType>;
   using VrtLocType = EntityLocationCoord<int32_t>;
   using VrtLocProxyType = EntityLocationCoord<VirtualProxyType>;
 

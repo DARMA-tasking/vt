@@ -25,6 +25,8 @@
 
 namespace vt { namespace location {
 
+struct collection_lm_tag_t {};
+
 template <typename EntityID>
 struct EntityLocationCoord : LocationCoord {
   using LocRecType = LocRecord<EntityID>;
@@ -42,6 +44,8 @@ struct EntityLocationCoord : LocationCoord {
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
 
   EntityLocationCoord();
+  EntityLocationCoord(collection_lm_tag_t, LocInstType identifier);
+  explicit EntityLocationCoord(LocInstType const identifier);
 
   virtual ~EntityLocationCoord();
 

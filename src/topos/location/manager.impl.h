@@ -17,7 +17,9 @@ namespace vt { namespace location {
 template <typename IndexT>
 void LocationManager::insertCollectionLM(VirtualProxyType const& proxy) {
   using LocType = VrtColl<IndexT>;
-  auto loc_man_typed = new LocType();
+  auto loc_man_typed = new LocType(
+    collection_lm_tag_t{}, static_cast<LocInstType>(proxy)
+  );
   auto loc_ptr = std::unique_ptr<LocErasureType, LocDeleterType>(
     static_cast<LocErasureType*>(loc_man_typed),
     [](LocErasureType* elm) {
@@ -65,7 +67,8 @@ template <typename LocType>
 /*static*/ void LocationManager::applyInstance(
   LocInstType const inst, ActionLocInstType<LocType> action
 ) {
-  if (inst >= loc_insts.size()) {
+  auto inst_iter = loc_insts.find(inst);
+  if (inst_iter == loc_insts.end()) {
     auto pending_iter = pending_inst_<LocType>.find(inst);
     if (pending_iter == pending_inst_<LocType>.end()) {
       pending_inst_<LocType>.emplace(
@@ -83,11 +86,12 @@ template <typename LocType>
 }
 
 template <typename LocType>
-  if (loc_insts.size() < inst + 1) {
-    loc_insts.resize(inst + 1);
-  }
-  loc_insts.at(inst) = static_cast<LocCoordPtrType>(ptr);
 /*static*/ void LocationManager::insertInstance(LocInstType const inst, LocType* ptr) {
+  loc_insts.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(inst),
+    std::forward_as_tuple(static_cast<LocCoordPtrType>(ptr))
+  );
 
   auto iter = pending_inst_<LocType>.find(inst);
   if (iter != pending_inst_<LocType>.end()) {

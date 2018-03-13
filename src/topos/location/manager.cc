@@ -12,12 +12,14 @@ namespace vt { namespace location {
 /*static*/ LocationManager::LocCoordPtrType LocationManager::getInstance(
   LocInstType const inst
 ) {
+  auto inst_iter = loc_insts.find(inst);
+
   assert(
-    loc_insts.size() > inst &&
+    inst_iter != loc_insts.end() &&
     "LocationManager instance must exist in container"
   );
 
-  return loc_insts.at(inst);
+  return inst_iter->second;
 }
 
 /*virtual*/ LocationManager::~LocationManager() {

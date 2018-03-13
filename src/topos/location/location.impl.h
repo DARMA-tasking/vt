@@ -19,7 +19,18 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord()
-  : this_inst(theLocMan()->cur_loc_inst++), recs_(default_max_cache_size)
+  : EntityLocationCoord<EntityID>(theLocMan()->cur_loc_inst++)
+{ }
+
+template <typename EntityID>
+EntityLocationCoord<EntityID>::EntityLocationCoord(
+  collection_lm_tag_t, LocInstType identifier
+) : EntityLocationCoord<EntityID>(identifier)
+{ }
+
+template <typename EntityID>
+EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
+  : this_inst(identifier), recs_(default_max_cache_size)
 {
   debug_print(
     location, node,
