@@ -15,6 +15,28 @@ namespace vt { namespace lb { namespace instrumentation {
   return next_id | (static_cast<LBEntityType>(node) << 48);
 }
 
+/*static*/ LBEntityType Entity::registerMigratableEntity(Migratable* mig) {
+  auto const& entity = registerEntity();
+  migratables_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(entity),
+    std::forward_as_tuple(mig)
+  );
+  return entity;
+}
+
+/*static*/ void Entity::notifyMigrate(
+  NodeType const& to_node, LBEntityType const& entity
+) {
+  auto iter = migratables.find(entity);
+  assert(
+    iter != migratables.end() && "Entity must exist in migratables to migrate"
+  );
+  auto const& entity = iter->second;
+  entity->migrate(to_node);
+  migratables.erase(iter);
+}
+
 /*static*/ void Entity::beginExecution(LBEntityType const& entity) {
   auto const& current_time = timing::Timing::getCurrentTime();
   auto event_iter = events_.find(entity);

@@ -16,15 +16,18 @@ struct Entity {
   Entity() = default;
 
   static LBEntityType registerEntity();
+  static LBEntityType registerMigratableEntity(Migratable* mig);
 
   static void beginExecution(LBEntityType const& entity);
   static void endExecution(LBEntityType const& entity);
+  static void notifyMigrate(NodeType const& node, LBEntityType const& entity);
 
 public:
   static std::unordered_map<LBEntityType, TimeType> events_;
   static std::unordered_map<LBEntityType, DatabaseType> entities_;
 
 private:
+  static std::unordered_map<LBEntityType, Migratable*> migratables_;
   static LBEntityType cur_entity_id;
 };
 

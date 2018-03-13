@@ -39,6 +39,10 @@ struct Migratable : MigrateHookBase {
   template <typename ColT>
   void migrate(NodeType const& node);
 
+  void migrateVirtual(NodeType const& node) override {
+    return migrate(node);
+  }
+
   /*
    * The system invokes this when the destructor is about to be called on the
    * VCC element due a migrate(NodeType const&) invocation

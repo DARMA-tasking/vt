@@ -50,7 +50,7 @@ namespace vt { namespace lb { namespace centralized {
 void CentralMigrate::migrate(
   NodeType const& to_node, LBEntityType const& entity
 ) {
-
+  return Entity::notifyMigrate(to_node, entity);
 }
 
 }}} /* end namespace vt::lb::centralized */

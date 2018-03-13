@@ -10,7 +10,7 @@ namespace vt { namespace vrt { namespace collection {
  *      Base untyped collection for safe casting
  */
 
-struct UntypedCollection : VrtBase {
+struct UntypedCollection : VrtBase, LBMigratable {
   UntypedCollection() = default;
 
 protected:
