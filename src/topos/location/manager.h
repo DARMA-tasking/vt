@@ -58,14 +58,16 @@ struct LocationManager {
 public:
   // Manage different instances of individually managed entities
   template <typename LocType>
-  static void insertInstance(int const i, LocType* ptr);
-  static LocCoordPtrType getInstance(int const inst);
+  static void insertInstance(LocInstType const i, LocType* ptr);
+  static LocCoordPtrType getInstance(LocInstType const inst);
 
   template <typename LocType>
-  static void applyInstance(int const inst, ActionLocInstType<LocType> action);
+  static void applyInstance(LocInstType const inst, ActionLocInstType<LocType> action);
 
   template <typename LocType>
-  static std::unordered_map<int, PendingContainerType<LocType>> pending_inst_;
+  static std::unordered_map<
+    LocInstType, PendingContainerType<LocType>
+  > pending_inst_;
 
 protected:
   CollectionContainerType collectionLoc;

@@ -10,7 +10,7 @@ namespace vt { namespace location {
 /*static*/ LocationManager::LocInstContainerType LocationManager::loc_insts;
 
 /*static*/ LocationManager::LocCoordPtrType LocationManager::getInstance(
-  int const inst
+  LocInstType const inst
 ) {
   assert(
     loc_insts.size() > inst &&

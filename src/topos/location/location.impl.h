@@ -23,7 +23,7 @@ EntityLocationCoord<EntityID>::EntityLocationCoord()
 {
   debug_print(
     location, node,
-    "EntityLocationCoord constructor: inst=%d, this=%p\n",
+    "EntityLocationCoord constructor: inst=%llu, this=%p\n",
     this_inst, this
   );
 
@@ -50,7 +50,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: registerEntity: inst=%d\n", this_inst
+    "EntityLocationCoord: registerEntity: inst=%llu\n", this_inst
   );
 
   local_registered_.insert(id);
@@ -291,7 +291,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: routeMsgNode: to_node=%d, node=%d: inst=%d\n",
+    "EntityLocationCoord: routeMsgNode: to_node=%d, node=%d: inst=%llu\n",
     to_node, this_node, this_inst
   );
 
@@ -386,7 +386,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
   debug_print(
     location, node,
-    "routeMsg: inst=%d, home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
+    "routeMsg: inst=%llu, home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
     this_inst, home_node, msg_size, print_bool(is_large_msg),
     print_bool(use_eager)
   );
@@ -447,7 +447,7 @@ template <typename MessageT>
 
   debug_print(
     location, node,
-    "msgHandler: msg=%p, ref=%d, loc_inst=%d\n",
+    "msgHandler: msg=%p, ref=%d, loc_inst=%llu\n",
     msg, envelopeGetRef(msg->env), inst
   );
 

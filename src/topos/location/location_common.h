@@ -22,7 +22,7 @@ static constexpr LocationSizeType const default_max_cache_size = 128;
 
 static constexpr ByteType const small_msg_max_size = 256;
 
-using LocInstType = int16_t;
+using LocInstType = int64_t;
 
 static constexpr LocInstType const no_loc_inst = -1;
 

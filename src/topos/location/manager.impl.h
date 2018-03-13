@@ -63,7 +63,7 @@ LocationManager::getCollectionLM(VirtualProxyType const& proxy) {
 
 template <typename LocType>
 /*static*/ void LocationManager::applyInstance(
-  int const inst, ActionLocInstType<LocType> action
+  LocInstType const inst, ActionLocInstType<LocType> action
 ) {
   if (inst >= loc_insts.size()) {
     auto pending_iter = pending_inst_<LocType>.find(inst);
@@ -83,11 +83,11 @@ template <typename LocType>
 }
 
 template <typename LocType>
-/*static*/ void LocationManager::insertInstance(int const inst, LocType* ptr) {
   if (loc_insts.size() < inst + 1) {
     loc_insts.resize(inst + 1);
   }
   loc_insts.at(inst) = static_cast<LocCoordPtrType>(ptr);
+/*static*/ void LocationManager::insertInstance(LocInstType const inst, LocType* ptr) {
 
   auto iter = pending_inst_<LocType>.find(inst);
   if (iter != pending_inst_<LocType>.end()) {
@@ -100,7 +100,7 @@ template <typename LocType>
 
 template <typename LocType>
 /*static*/ std::unordered_map<
-  int, LocationManager::PendingContainerType<LocType>
+  LocInstType, LocationManager::PendingContainerType<LocType>
 > LocationManager::pending_inst_;
 
 }} /* end namespace vt::location */
