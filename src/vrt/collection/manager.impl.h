@@ -183,11 +183,17 @@ template <typename ColT, typename IndexT>
   theTerm()->consume(term::any_epoch_sentinel);
 }
 
-template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
+template <
+  typename MsgT,
+  ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+>
 void CollectionManager::sendMsg(
-  VirtualElmProxyType<ColT, typename ColT::IndexType> const& toProxy,
+  VirtualElmProxyType<
+  typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
+  > const& toProxy,
   MsgT *const msg, ActionType act
 ) {
+  using ColT = typename MsgT::CollectionType;
   using IndexT = typename ColT::IndexType;
 
   // @todo: implement the action `act' after the routing is finished
@@ -254,7 +260,7 @@ void CollectionManager::sendMsg(
     theTerm()->produce(term::any_epoch_sentinel);
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
-      theCollection()->sendMsg<ColT, MsgT, f>(toProxy, msg, act);
+      theCollection()->sendMsg<MsgT, f>(toProxy, msg, act);
     });
   }
 }

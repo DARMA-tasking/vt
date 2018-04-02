@@ -91,9 +91,14 @@ struct CollectionManager {
   template <typename SysMsgT>
   static void distConstruct(SysMsgT* msg);
 
-  template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
+  template <
+    typename MsgT,
+    ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+  >
   void sendMsg(
-    VirtualElmProxyType<ColT, typename ColT::IndexType> const& toProxy,
+    VirtualElmProxyType<
+      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
+    > const& toProxy,
     MsgT *const msg, ActionType act
   );
 

@@ -23,7 +23,10 @@ void Sendable<ColT, IndexT>::serialize(SerializerT& s) {
 }
 
 template <typename ColT, typename IndexT>
-template <typename ColU, typename MsgT, ActiveColTypedFnType<MsgT, ColU> *f>
+template <
+  typename MsgT,
+  ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+>
 void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
@@ -32,7 +35,7 @@ void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
    * @todo:
    *.  Directly reuse this proxy: static_cast<VrtElmProxy<IndexT>*>(this)
    */
-  return theCollection()->sendMsg<ColU, MsgT, f>(proxy, msg, continuation);
+  return theCollection()->sendMsg<MsgT, f>(proxy, msg, continuation);
 }
 
 }}} /* end namespace vt::vrt::collection */

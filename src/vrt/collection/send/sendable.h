@@ -19,7 +19,10 @@ struct Sendable : BaseCollectionProxy<ColT, IndexT> {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  template <typename ColU, typename MsgT, ActiveColTypedFnType<MsgT, ColU> *f>
+  template <
+    typename MsgT,
+    ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+  >
   void send(MsgT* msg, ActionType act = nullptr);
 };
 

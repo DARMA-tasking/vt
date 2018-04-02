@@ -18,7 +18,12 @@ template <typename ColT>
 struct CollectionMessage :
   RoutedMessageType<::vt::Message, ColT>, ColT::IndexType::IsByteCopyable
 {
+  /*
+   *. Type aliases for surrounding system => used to deduce during sends
+  */
+  using CollectionType = ColT;
   using IndexType = typename ColT::IndexType;
+
   CollectionMessage() = default;
 
   void setVrtHandler(HandlerType const& in_handler);
