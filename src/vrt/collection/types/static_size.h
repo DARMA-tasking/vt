@@ -9,9 +9,9 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct StaticCollectionBase :
-  CollectionBase<IndexT>
+  CollectionBase<ColT, IndexT>
 {
   explicit StaticCollectionBase(VirtualElmCountType const inNumElems);
   StaticCollectionBase();

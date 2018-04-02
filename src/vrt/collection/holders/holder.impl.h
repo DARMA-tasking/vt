@@ -12,15 +12,15 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-bool Holder<IndexT>::exists(IndexT const& idx ) {
+template <typename ColT, typename IndexT>
+bool Holder<ColT, IndexT>::exists(IndexT const& idx ) {
   auto& container = vc_container_;
   auto iter = container.find(idx);
   return iter != container.end();
 }
 
-template <typename IndexT>
-void Holder<IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
   assert(!is_destroyed_ && "Must not be destroyed to insert a new element");
 
   auto const& lookup = idx;
@@ -36,8 +36,8 @@ void Holder<IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
   );
 }
 
-template <typename IndexT>
-typename Holder<IndexT>::InnerHolder& Holder<IndexT>::lookup(
+template <typename ColT, typename IndexT>
+typename Holder<ColT, IndexT>::InnerHolder& Holder<ColT, IndexT>::lookup(
   IndexT const& idx
 ) {
   auto const& lookup = idx;
@@ -49,8 +49,8 @@ typename Holder<IndexT>::InnerHolder& Holder<IndexT>::lookup(
   return iter->second;
 }
 
-template <typename IndexT>
-typename Holder<IndexT>::VirtualPtrType Holder<IndexT>::remove(
+template <typename ColT, typename IndexT>
+typename Holder<ColT, IndexT>::VirtualPtrType Holder<ColT, IndexT>::remove(
   IndexT const& idx
 ) {
   auto const& lookup = idx;
@@ -64,16 +64,16 @@ typename Holder<IndexT>::VirtualPtrType Holder<IndexT>::remove(
   return std::move(owned_ptr);
 }
 
-template <typename IndexT>
-void Holder<IndexT>::destroyAll() {
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::destroyAll() {
   if (!is_destroyed_) {
     vc_container_.clear();
     is_destroyed_ = true;
   }
 }
 
-template <typename IndexT>
-bool Holder<IndexT>::isDestroyed() const {
+template <typename ColT, typename IndexT>
+bool Holder<ColT, IndexT>::isDestroyed() const {
   return is_destroyed_;
 }
 

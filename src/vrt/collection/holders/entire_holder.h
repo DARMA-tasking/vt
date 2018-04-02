@@ -27,9 +27,9 @@ template <typename always_void_>
 /*static*/ std::unordered_set<std::shared_ptr<BaseHolder>>
 UniversalIndexHolder<always_void_>::live_collections_;
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct EntireHolder {
-  using InnerHolder = CollectionHolder<IndexT>;
+  using InnerHolder = CollectionHolder<ColT, IndexT>;
   using InnerHolderPtr = std::shared_ptr<InnerHolder>;
   using ProxyContainerType = std::unordered_map<
     VirtualProxyType, InnerHolderPtr
@@ -47,9 +47,9 @@ struct EntireHolder {
   static ProxyContainerType proxy_container_;
 };
 
-template <typename IndexT>
-/*static*/ typename EntireHolder<IndexT>::ProxyContainerType
-EntireHolder<IndexT>::proxy_container_;
+template <typename ColT, typename IndexT>
+/*static*/ typename EntireHolder<ColT, IndexT>::ProxyContainerType
+EntireHolder<ColT, IndexT>::proxy_container_;
 
 }}} /* end namespace vt::vrt::collection */
 

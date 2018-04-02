@@ -9,7 +9,7 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct Insertable {
   Insertable() = default;
 

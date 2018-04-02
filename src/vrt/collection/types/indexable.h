@@ -10,10 +10,10 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-struct Indexable : Migratable {
+template <typename ColT, typename IndexT>
+struct Indexable : Migratable<ColT> {
   explicit Indexable(IndexT&& in_index)
-    : Migratable(), index_(std::move(in_index))
+    : Migratable<ColT>(), index_(std::move(in_index))
   { }
 
   Indexable() = default;
@@ -23,7 +23,7 @@ struct Indexable : Migratable {
 protected:
   template <typename Serializer>
   void serialize(Serializer& s) {
-    Migratable::serialize(s);
+    Migratable<ColT>::serialize(s);
     s | index_;
   }
 

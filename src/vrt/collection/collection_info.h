@@ -8,7 +8,7 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct CollectionInfo {
   CollectionInfo() = default;
   CollectionInfo(CollectionInfo const&) = default;

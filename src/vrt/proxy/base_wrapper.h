@@ -7,7 +7,7 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct BaseEntireCollectionProxy {
   BaseEntireCollectionProxy() = default;
   BaseEntireCollectionProxy(VirtualProxyType const in_proxy);

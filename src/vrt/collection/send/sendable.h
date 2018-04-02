@@ -8,18 +8,18 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-struct Sendable : BaseCollectionProxy<IndexT> {
+template <typename ColT, typename IndexT>
+struct Sendable : BaseCollectionProxy<ColT, IndexT> {
   Sendable() = default;
   Sendable(
-    typename BaseCollectionProxy<IndexT>::ProxyType const& in_proxy,
-    typename BaseCollectionProxy<IndexT>::ElementProxyType const& in_elm_proxy
+    typename BaseCollectionProxy<ColT, IndexT>::ProxyType const& in_proxy,
+    typename BaseCollectionProxy<ColT, IndexT>::ElementProxyType const& in_elm
   );
 
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
+  template <typename ColU, typename MsgT, ActiveColTypedFnType<MsgT, ColU> *f>
   void send(MsgT* msg, ActionType act = nullptr);
 };
 

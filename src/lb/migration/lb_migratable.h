@@ -6,8 +6,8 @@
 
 namespace vt {
 
-struct LBMigratable {
-  virtual void migrateVirtual(NodeType const& to_node) = 0;
+struct HasMigrate {
+  virtual void migrate(NodeType const& to_node) = 0;
 };
 
 } /* end namespace vt */

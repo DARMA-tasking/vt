@@ -7,12 +7,11 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-struct Destroyable : BaseEntireCollectionProxy<IndexT> {
+template <typename ColT, typename IndexT>
+struct Destroyable : BaseEntireCollectionProxy<ColT, IndexT> {
   Destroyable() = default;
   Destroyable(VirtualProxyType const in_proxy);
 
-  template <typename ColT>
   void destroy();
 };
 

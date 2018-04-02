@@ -15,7 +15,7 @@ namespace vt { namespace lb { namespace instrumentation {
   return next_id | (static_cast<LBEntityType>(node) << 48);
 }
 
-/*static*/ LBEntityType Entity::registerMigratableEntity(Migratable* mig) {
+/*static*/ LBEntityType Entity::registerMigratableEntity(MigratableType* mig) {
   auto const& entity = registerEntity();
   migratables_.emplace(
     std::piecewise_construct,
@@ -28,13 +28,13 @@ namespace vt { namespace lb { namespace instrumentation {
 /*static*/ void Entity::notifyMigrate(
   NodeType const& to_node, LBEntityType const& entity
 ) {
-  auto iter = migratables.find(entity);
+  auto iter = migratables_.find(entity);
   assert(
-    iter != migratables.end() && "Entity must exist in migratables to migrate"
+    iter != migratables_.end() && "Entity must exist in migratables to migrate"
   );
-  auto const& entity = iter->second;
-  entity->migrate(to_node);
-  migratables.erase(iter);
+  auto const& elm = iter->second;
+  elm->migrate(to_node);
+  migratables_.erase(iter);
 }
 
 /*static*/ void Entity::beginExecution(LBEntityType const& entity) {

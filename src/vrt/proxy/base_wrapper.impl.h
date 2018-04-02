@@ -7,14 +7,14 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-BaseEntireCollectionProxy<IndexT>::BaseEntireCollectionProxy(
+template <typename ColT, typename IndexT>
+BaseEntireCollectionProxy<ColT, IndexT>::BaseEntireCollectionProxy(
   VirtualProxyType const in_proxy
 ) : proxy_(in_proxy)
 { }
 
-template <typename IndexT>
-VirtualProxyType BaseEntireCollectionProxy<IndexT>::getProxy() const {
+template <typename ColT, typename IndexT>
+VirtualProxyType BaseEntireCollectionProxy<ColT, IndexT>::getProxy() const {
   return proxy_;
 }
 

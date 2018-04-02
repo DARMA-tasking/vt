@@ -9,15 +9,15 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-struct VrtElmProxy : Sendable<IndexT> {
-  using CollectionProxyType = typename Sendable<IndexT>::ProxyType;
-  using ElementProxyType = typename Sendable<IndexT>::ElementProxyType;
+template <typename ColT, typename IndexT>
+struct VrtElmProxy : Sendable<ColT, IndexT> {
+  using CollectionProxyType = typename Sendable<ColT, IndexT>::ProxyType;
+  using ElementProxyType = typename Sendable<ColT, IndexT>::ElementProxyType;
 
   VrtElmProxy(
     VirtualProxyType const& in_col_proxy,
-    VirtualProxyElementType<IndexT> const& in_elm_proxy
-  ) : Sendable<IndexT>(in_col_proxy, in_elm_proxy)
+    VirtualProxyElementType<ColT, IndexT> const& in_elm_proxy
+  ) : Sendable<ColT, IndexT>(in_col_proxy, in_elm_proxy)
   { }
 
   VrtElmProxy(
@@ -37,7 +37,7 @@ struct VrtElmProxy : Sendable<IndexT> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    Sendable<IndexT>::serialize(s);
+    Sendable<ColT, IndexT>::serialize(s);
   }
 
   friend struct CollectionManager;
@@ -45,22 +45,22 @@ struct VrtElmProxy : Sendable<IndexT> {
 
 }}} /* end namespace vt::vrt::collection */
 
-template <typename IndexT>
-using ElmProxyType = ::vt::vrt::collection::VrtElmProxy<IndexT>;
+template <typename ColT, typename IndexT>
+using ElmProxyType = ::vt::vrt::collection::VrtElmProxy<ColT, IndexT>;
 
 namespace std {
-  template <typename IndexT>
-  struct hash<ElmProxyType<IndexT>> {
-    size_t operator()(ElmProxyType<IndexT> const& in) const {
-      return
-        std::hash<typename ElmProxyType<IndexT>::CollectionProxyType>()(
-          in.getCollectionProxy()
-        ) +
-        std::hash<typename ElmProxyType<IndexT>::ElementProxyType>()(
-          in.getElementProxy()
-        );
-    }
-  };
+template <typename ColT, typename IndexT>
+struct hash<ElmProxyType<ColT, IndexT>> {
+  size_t operator()(ElmProxyType<ColT, IndexT> const& in) const {
+    return
+      std::hash<typename ElmProxyType<ColT, IndexT>::CollectionProxyType>()(
+        in.getCollectionProxy()
+      ) +
+      std::hash<typename ElmProxyType<ColT, IndexT>::ElementProxyType>()(
+        in.getElementProxy()
+      );
+  }
+};
 }
 
 #endif /*INCLUDED_VRT_PROXY_PROXY_H*/

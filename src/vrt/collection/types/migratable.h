@@ -10,6 +10,7 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+template <typename ColT>
 struct Migratable : MigrateHookBase {
   Migratable() = default;
 
@@ -36,12 +37,11 @@ struct Migratable : MigrateHookBase {
    *  16. Runtime system invokes Migratable::epiMigrateIn()
    *
    */
-  template <typename ColT>
-  void migrate(NodeType const& node);
-
-  void migrateVirtual(NodeType const& node) override {
-    return migrate(node);
-  }
+  /*
+    @todo: migrate interface is through base class HasMigrate to insert lower in
+           the hierarchy
+     virtual void migrate(NodeType const& node);
+  */
 
   /*
    * The system invokes this when the destructor is about to be called on the
@@ -51,11 +51,11 @@ struct Migratable : MigrateHookBase {
 
 protected:
   template <typename Serializer>
-  void serialize(Serializer& s) {
-    MigrateHookBase::serialize(s);
-  }
+  void serialize(Serializer& s);
 };
 
 }}} /* end namespace vt::vrt::collection */
+
+#include "vrt/collection/types/migratable.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_H*/

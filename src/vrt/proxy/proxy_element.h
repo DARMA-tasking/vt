@@ -12,9 +12,10 @@ namespace vt { namespace vrt { namespace collection {
 
 static struct virtual_proxy_elm_empty { } virtual_proxy_elm_empty_tag { };
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct VirtualProxyElementType {
   using IndexType = IndexT;
+  using CollectionType = ColT;
 
   explicit VirtualProxyElementType(IndexT const& in_idx)
     : idx_(in_idx)
@@ -43,14 +44,16 @@ protected:
 
 }}} /* end namespace vt::vrt::collection */
 
-template <typename IndexT>
-using ElmType = ::vt::vrt::collection::VirtualProxyElementType<IndexT>;
+template <typename ColT, typename IndexT>
+using ElmType = ::vt::vrt::collection::VirtualProxyElementType<ColT,IndexT>;
 
 namespace std {
-  template <typename IndexT>
-  struct hash<ElmType<IndexT>> {
-    size_t operator()(ElmType<IndexT> const& in) const {
-      return std::hash<typename ElmType<IndexT>::IndexType>()(in.getIndex());
+  template <typename ColT, typename IndexT>
+  struct hash<ElmType<ColT,IndexT>> {
+    size_t operator()(ElmType<ColT,IndexT> const& in) const {
+      return std::hash<typename ElmType<ColT,IndexT>::IndexType>()(
+        in.getIndex()
+      );
     }
   };
 }

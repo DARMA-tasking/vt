@@ -13,17 +13,17 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct Collection;
 
 template <typename ColT, typename IndexT>
 struct CollectionElmAttorney {
-  using CollectionType = Collection<IndexT>;
+  using CollectionType = Collection<ColT, IndexT>;
   using VirtualPtrType = std::unique_ptr<CollectionType>;
 
-  friend struct CollectionBase<IndexT>;
+  friend struct CollectionBase<ColT, IndexT>;
   friend struct MigrateHandlers;
-  friend struct Migratable;
+  friend struct Migratable<ColT>;
 
 private:
   static MigrateStatus migrateOut(

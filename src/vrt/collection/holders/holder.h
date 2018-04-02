@@ -15,14 +15,14 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct Holder {
   template <typename T, typename U>
   using ContType = std::unordered_map<T, U>;
-  using CollectionType = Collection<IndexT>;
+  using CollectionType = Collection<ColT, IndexT>;
   using VirtualPtrType = std::unique_ptr<CollectionType>;
   using LookupElementType = IndexT;
-  using InnerHolder = ElementHolder<IndexT>;
+  using InnerHolder = ElementHolder<ColT, IndexT>;
   using TypedIndexContainer = ContType<LookupElementType, InnerHolder>;
 
   bool exists(IndexT const& idx);

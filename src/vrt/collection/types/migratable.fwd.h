@@ -7,6 +7,7 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+template <typename ColT>
 struct Migratable;
 
 }}} /* end namespace vt::vrt::collection */

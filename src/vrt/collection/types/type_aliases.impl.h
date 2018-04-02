@@ -9,15 +9,15 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-Collection<IndexT>::Collection(VirtualElmCountType const elms)
-  : StaticCollectionBase<IndexT>(elms)
+template <typename ColT, typename IndexT>
+Collection<ColT, IndexT>::Collection(VirtualElmCountType const elms)
+  : StaticCollectionBase<ColT, IndexT>(elms)
 { }
 
-template <typename IndexT>
-InsertableCollection<IndexT>::InsertableCollection(
+template <typename ColT, typename IndexT>
+InsertableCollection<ColT, IndexT>::InsertableCollection(
   VirtualElmCountType const elms
-) : StaticInsertableCollectionBase<IndexT>(elms)
+) : StaticInsertableCollectionBase<ColT, IndexT>(elms)
 { }
 
 

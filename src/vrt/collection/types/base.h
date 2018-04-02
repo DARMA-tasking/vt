@@ -12,9 +12,9 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-struct CollectionBase : Indexable<IndexT> {
-  using ProxyType = VirtualElmProxyType<IndexT>;
+template <typename ColT, typename IndexT>
+struct CollectionBase : Indexable<ColT, IndexT> {
+  using ProxyType = VirtualElmProxyType<ColT, IndexT>;
   using IndexType = IndexT;
 
   CollectionBase() = default;
@@ -31,8 +31,7 @@ struct CollectionBase : Indexable<IndexT> {
   // Should be implemented in derived class (non-virtual)
   VirtualElmCountType getSize() const;
 
-  template <typename ColT>
-  void migrate(NodeType const& node);
+  virtual void migrate(NodeType const& node) override;
 
   template <typename Serializer>
   void serialize(Serializer& s);

@@ -9,30 +9,30 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-Sendable<IndexT>::Sendable(
-  typename BaseCollectionProxy<IndexT>::ProxyType const& in_proxy,
-  typename BaseCollectionProxy<IndexT>::ElementProxyType const& in_elm_proxy
-) : BaseCollectionProxy<IndexT>(in_proxy, in_elm_proxy)
+template <typename ColT, typename IndexT>
+Sendable<ColT, IndexT>::Sendable(
+  typename BaseCollectionProxy<ColT, IndexT>::ProxyType const& in_proxy,
+  typename BaseCollectionProxy<ColT, IndexT>::ElementProxyType const& in_elm
+) : BaseCollectionProxy<ColT, IndexT>(in_proxy, in_elm)
 { }
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 template <typename SerializerT>
-void Sendable<IndexT>::serialize(SerializerT& s) {
-  BaseCollectionProxy<IndexT>::serialize(s);
+void Sendable<ColT, IndexT>::serialize(SerializerT& s) {
+  BaseCollectionProxy<ColT, IndexT>::serialize(s);
 }
 
-template <typename IndexT>
-template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
-void Sendable<IndexT>::send(MsgT* msg, ActionType continuation) {
+template <typename ColT, typename IndexT>
+template <typename ColU, typename MsgT, ActiveColTypedFnType<MsgT, ColU> *f>
+void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
-  auto proxy = VrtElmProxy<IndexT>(col_proxy,elm_proxy);
+  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
   /*
    * @todo:
    *.  Directly reuse this proxy: static_cast<VrtElmProxy<IndexT>*>(this)
    */
-  return theCollection()->sendMsg<ColT, MsgT, f>(proxy, msg, continuation);
+  return theCollection()->sendMsg<ColU, MsgT, f>(proxy, msg, continuation);
 }
 
 }}} /* end namespace vt::vrt::collection */

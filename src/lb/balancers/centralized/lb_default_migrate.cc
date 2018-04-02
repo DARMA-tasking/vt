@@ -3,6 +3,7 @@
 #include "lb/lb_types.h"
 #include "lb/lb_types_internal.h"
 #include "lb/migration/migrate.h"
+#include "lb/instrumentation/entity.h"
 #include "lb/balancers/centralized/lb_interface.h"
 #include "lb/balancers/centralized/lb_default_migrate.h"
 #include "context/context.h"
@@ -50,7 +51,7 @@ namespace vt { namespace lb { namespace centralized {
 void CentralMigrate::migrate(
   NodeType const& to_node, LBEntityType const& entity
 ) {
-  return Entity::notifyMigrate(to_node, entity);
+  return instrumentation::Entity::notifyMigrate(to_node, entity);
 }
 
 }}} /* end namespace vt::lb::centralized */

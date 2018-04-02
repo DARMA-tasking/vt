@@ -8,10 +8,10 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct StaticInsertableCollectionBase :
-  StaticCollectionBase<IndexT>,
-  Insertable<IndexT>
+  StaticCollectionBase<ColT, IndexT>,
+  Insertable<ColT, IndexT>
 {
   explicit StaticInsertableCollectionBase(VirtualElmCountType const inNumElems);
   StaticInsertableCollectionBase();

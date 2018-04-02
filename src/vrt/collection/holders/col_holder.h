@@ -8,7 +8,7 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct CollectionHolder : BaseHolder {
   CollectionHolder(HandlerType const& in_map_fn, IndexT const& idx);
 
@@ -16,7 +16,7 @@ struct CollectionHolder : BaseHolder {
 
   HandlerType map_fn = uninitialized_handler;
   IndexT max_idx;
-  Holder<IndexT> holder_;
+  Holder<ColT,IndexT> holder_;
 };
 
 }}} /* end namespace vt::vrt::collection */

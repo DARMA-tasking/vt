@@ -9,16 +9,16 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct Collection :
-  StaticCollectionBase<IndexT>
+  StaticCollectionBase<ColT, IndexT>
 {
   explicit Collection(VirtualElmCountType const elms = no_elms);
 };
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct InsertableCollection :
-  StaticInsertableCollectionBase<IndexT>
+  StaticInsertableCollectionBase<ColT, IndexT>
 {
   explicit InsertableCollection(VirtualElmCountType const elms = no_elms);
 };

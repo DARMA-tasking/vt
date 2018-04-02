@@ -8,12 +8,14 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct DynamicCollectionBase :
-  CollectionBase<IndexT>,
-  InsertableEpoch<IndexT>
+  CollectionBase<ColT, IndexT>,
+  InsertableEpoch<ColT, IndexT>
 {
-  DynamicCollectionBase() : CollectionBase<IndexT>(false, false) { }
+  DynamicCollectionBase()
+    : CollectionBase<ColT, IndexT>(false, false)
+  { }
 
   // Unknown so return no_elms as the size
   VirtualElmCountType getSize() const { return no_elms; }

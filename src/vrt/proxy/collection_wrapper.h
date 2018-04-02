@@ -18,20 +18,20 @@ namespace vt { namespace vrt { namespace collection {
  */
 
 struct CollectionProxy {
-  template <typename IndexT>
-  using ElmProxyType = VrtElmProxy<IndexT>;
+  template <typename ColT, typename IndexT>
+  using ElmProxyType = VrtElmProxy<ColT, IndexT>;
 
   CollectionProxy() = default;
   CollectionProxy(VirtualProxyType const in_proxy);
 
   VirtualProxyType getProxy() const;
 
-  template <typename IndexT>
-  ElmProxyType<IndexT> index(IndexT const& idx);
-  template <typename IndexT>
-  ElmProxyType<IndexT> operator[](IndexT const& idx);
-  template <typename IndexT>
-  ElmProxyType<IndexT> operator()(IndexT const& idx);
+  template <typename ColT, typename IndexT>
+  ElmProxyType<ColT, IndexT> index(IndexT const& idx);
+  template <typename ColT, typename IndexT>
+  ElmProxyType<ColT, IndexT> operator[](IndexT const& idx);
+  template <typename ColT, typename IndexT>
+  ElmProxyType<ColT, IndexT> operator()(IndexT const& idx);
 
 private:
   VirtualProxyType const proxy_ = no_vrt_proxy;
@@ -42,9 +42,9 @@ private:
  * constructors to be forwarded for building indicies in line without the type.
  */
 
-template <typename IndexT>
-struct CollectionIndexProxy : Destroyable<IndexT> {
-  using ElmProxyType = VrtElmProxy<IndexT>;
+template <typename ColT, typename IndexT>
+struct CollectionIndexProxy : Destroyable<ColT, IndexT> {
+  using ElmProxyType = VrtElmProxy<ColT, IndexT>;
 
   CollectionIndexProxy() = default;
   CollectionIndexProxy(VirtualProxyType const in_proxy);

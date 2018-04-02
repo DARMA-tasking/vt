@@ -13,20 +13,20 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-ElementHolder<IndexT>::ElementHolder(
+template <typename ColT, typename IndexT>
+ElementHolder<ColT, IndexT>::ElementHolder(
   VirtualPtrType in_vc_ptr_, HandlerType const& in_han, IndexT const& idx
 ) : vc_ptr_(std::move(in_vc_ptr_)), map_fn(in_han), max_idx(idx)
 { }
 
-template <typename IndexT>
-/*virtual*/ ElementHolder<IndexT>::~ElementHolder() {
+template <typename ColT, typename IndexT>
+/*virtual*/ ElementHolder<ColT, IndexT>::~ElementHolder() {
   vc_ptr_ = nullptr;
 }
 
-template <typename IndexT>
-typename ElementHolder<IndexT>::VirtualPtrType::pointer
-ElementHolder<IndexT>::getCollection() {
+template <typename ColT, typename IndexT>
+typename ElementHolder<ColT, IndexT>::VirtualPtrType::pointer
+ElementHolder<ColT, IndexT>::getCollection() {
   assert(vc_ptr_ != nullptr and "Must be valid pointer");
   return vc_ptr_.get();
 }

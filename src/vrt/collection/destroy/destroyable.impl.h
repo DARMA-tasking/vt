@@ -9,14 +9,13 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-Destroyable<IndexT>::Destroyable(VirtualProxyType const in_proxy)
-  : BaseEntireCollectionProxy<IndexT>(in_proxy)
+template <typename ColT, typename IndexT>
+Destroyable<ColT, IndexT>::Destroyable(VirtualProxyType const in_proxy)
+  : BaseEntireCollectionProxy<ColT, IndexT>(in_proxy)
 { }
 
-template <typename IndexT>
-template <typename ColT>
-void Destroyable<IndexT>::destroy() {
+template <typename ColT, typename IndexT>
+void Destroyable<ColT, IndexT>::destroy() {
   return theCollection()->destroy<ColT,IndexT>(this->proxy_);
 }
 

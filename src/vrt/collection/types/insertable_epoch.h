@@ -12,11 +12,13 @@ namespace vt { namespace vrt { namespace collection {
  * collective) property over time
  */
 
-template <typename IndexT>
+template <typename ColT, typename IndexT>
 struct InsertableEpoch :
-  Insertable<IndexT>
+  Insertable<ColT, IndexT>
 {
-  InsertableEpoch() : Insertable<IndexT>() { }
+  InsertableEpoch()
+    : Insertable<ColT, IndexT>()
+  { }
 
 protected:
   EpochType curEpoch_ = no_epoch;

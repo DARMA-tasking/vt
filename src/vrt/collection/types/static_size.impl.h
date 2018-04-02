@@ -8,29 +8,31 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-StaticCollectionBase<IndexT>::StaticCollectionBase(
+template <typename ColT, typename IndexT>
+StaticCollectionBase<ColT, IndexT>::StaticCollectionBase(
   VirtualElmCountType const inNumElems
-) : CollectionBase<IndexT>(false, false), numElems_(inNumElems)
+) : CollectionBase<ColT, IndexT>(false, false), numElems_(inNumElems)
 { }
 
-template <typename IndexT>
-StaticCollectionBase<IndexT>::StaticCollectionBase()
+template <typename ColT, typename IndexT>
+StaticCollectionBase<ColT, IndexT>::StaticCollectionBase()
   : StaticCollectionBase(no_elms)
 { }
 
-template <typename IndexT>
-VirtualElmCountType StaticCollectionBase<IndexT>::getSize() const {
+template <typename ColT, typename IndexT>
+VirtualElmCountType StaticCollectionBase<ColT, IndexT>::getSize() const {
   return numElems_;
 }
 
-template <typename IndexT>
-/*static*/ bool StaticCollectionBase<IndexT>::isStaticSized() {
+template <typename ColT, typename IndexT>
+/*static*/ bool StaticCollectionBase<ColT, IndexT>::isStaticSized() {
   return true;
 }
 
-template <typename IndexT>
-void StaticCollectionBase<IndexT>::setSize(VirtualElmCountType const& elms) {
+template <typename ColT, typename IndexT>
+void StaticCollectionBase<ColT, IndexT>::setSize(
+  VirtualElmCountType const& elms
+) {
   numElems_ = elms;
 }
 

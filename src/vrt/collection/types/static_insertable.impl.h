@@ -8,22 +8,22 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-StaticInsertableCollectionBase<IndexT>::StaticInsertableCollectionBase(
+template <typename ColT, typename IndexT>
+StaticInsertableCollectionBase<ColT, IndexT>::StaticInsertableCollectionBase(
   VirtualElmCountType const inNumElems
-) : StaticCollectionBase<IndexT>(inNumElems),
-    Insertable<IndexT>()
+) : StaticCollectionBase<ColT, IndexT>(inNumElems),
+    Insertable<ColT, IndexT>()
 {
-  CollectionBase<IndexT>::elmsFixedAtCreation_ = false;
+  CollectionBase<ColT, IndexT>::elmsFixedAtCreation_ = false;
 }
 
-template <typename IndexT>
-StaticInsertableCollectionBase<IndexT>::StaticInsertableCollectionBase()
+template <typename ColT, typename IndexT>
+StaticInsertableCollectionBase<ColT, IndexT>::StaticInsertableCollectionBase()
   : StaticInsertableCollectionBase(no_elms)
 { }
 
-template <typename IndexT>
-/*static*/ bool StaticInsertableCollectionBase<IndexT>::isStaticSized() {
+template <typename ColT, typename IndexT>
+/*static*/ bool StaticInsertableCollectionBase<ColT, IndexT>::isStaticSized() {
   return false;
 }
 
