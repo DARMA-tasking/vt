@@ -8,11 +8,11 @@ using namespace vt::vrt::collection;
 using namespace vt::index;
 using namespace vt::mapping;
 
-struct MyCol : Collection<Index1D> {
+struct MyCol : Collection<MyCol, Index1D> {
   Index1D idx;
 
   MyCol(Index1D in_idx)
-    : Collection<Index1D>(), idx(in_idx)
+    : Collection<MyCol, Index1D>(), idx(in_idx)
   {
     auto const& node = theContext()->getNode();
     printf(
@@ -32,16 +32,17 @@ struct MyCol : Collection<Index1D> {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    Collection<Index1D>::serialize(s);
+    Collection<MyCol, Index1D>::serialize(s);
     s | idx;
   }
 };
 
-struct OtherColl : Collection<Index2D> {
+struct OtherColl : Collection<OtherColl, Index2D> {
   Index2D idx;
 
+  OtherColl() = default;
   OtherColl(Index2D in_idx)
-    : Collection<Index2D>(), idx(in_idx)
+    : Collection<OtherColl, Index2D>(), idx(in_idx)
   {
     auto const& node = theContext()->getNode();
     printf(
@@ -60,28 +61,37 @@ struct OtherColl : Collection<Index2D> {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    Collection<Index2D>::serialize(s);
+    Collection<OtherColl, Index2D>::serialize(s);
     s | idx;
   }
 };
 
-template <typename IndexT>
-struct ColMsg : CollectionMessage<IndexT> {
+template <typename ColT, typename IndexT>
+struct ColMsg : CollectionMessage<ColT, IndexT> {
   NodeType from_node;
 
   ColMsg() = default;
   ColMsg(NodeType const& in_from_node)
-    : CollectionMessage<IndexT>(), from_node(in_from_node)
+    : CollectionMessage<ColT, IndexT>(), from_node(in_from_node)
   { }
 };
 
-static void colHan(ColMsg<Index1D>* msg, MyCol* col) {
+static void colHan2(ColMsg<MyCol, Index1D>* msg, MyCol* col) {
+  auto const& node = theContext()->getNode();
+  printf(
+    "%d: colHan2 received: ptr=%p, idx=%d, getIndex=%d\n",
+    node, col, col->idx.x(), col->getIndex().x()
+  );
+}
+
+static void colHan(ColMsg<MyCol, Index1D>* msg, MyCol* col) {
   auto const& node = theContext()->getNode();
   printf(
     "%d: colHan received: ptr=%p, idx=%d, getIndex=%d\n",
     node, col, col->idx.x(), col->getIndex().x()
   );
 
+  #define TEST_MIGRATE 0
   #if TEST_MIGRATE
   if (col->idx.x() == 2) {
     auto const& this_node = theContext()->getNode();
@@ -90,12 +100,12 @@ static void colHan(ColMsg<Index1D>* msg, MyCol* col) {
     printf(
       "%d: colHan calling migrate: idx=%d\n", node, col->idx.x()
     );
-    col->migrate<MyCol>(next_node >= num_nodes ? 0 : next_node);
+    col->migrate(next_node >= num_nodes ? 0 : next_node);
   }
   #endif
 }
 
-static void colHanOther(ColMsg<Index2D>* msg, OtherColl* col) {
+static void colHanOther(ColMsg<OtherColl, Index2D>* msg, OtherColl* col) {
   auto const& node = theContext()->getNode();
   printf(
     "%d: colHanOther received: idx={%d,%d}\n",
@@ -139,8 +149,9 @@ int main(int argc, char** argv) {
     auto proxy = theCollection()->construct<MyCol>(range);
     for (int i = 0; i < num_elms; i++) {
       auto const& this_node = theContext()->getNode();
-      auto msg = new ColMsg<Index1D>(this_node);
-      proxy[i].send<MyCol, ColMsg<Index1D>, colHan>(msg);
+      auto msg = new ColMsg<MyCol, Index1D>(this_node);
+      proxy[i].send<MyCol, ColMsg<MyCol, Index1D>, colHan>(msg);
+      proxy[i].send<MyCol, ColMsg<MyCol, Index1D>, colHan2>(msg);
     }
   }
   #endif
@@ -153,9 +164,9 @@ int main(int argc, char** argv) {
     for (int i = 0; i < dim1; i++) {
       for (int j = 0; j < dim2; j++) {
         auto const& this_node = theContext()->getNode();
-        auto msg = new ColMsg<Index2D>(this_node);
+        auto msg = new ColMsg<OtherColl, Index2D>(this_node);
         theCollection()->sendMsg<
-          OtherColl, ColMsg<Index2D>, colHanOther
+          OtherColl, ColMsg<OtherColl, Index2D>, colHanOther
         >(proxy(i,j), msg, nullptr);
       }
     }
