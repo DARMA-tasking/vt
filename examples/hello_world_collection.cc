@@ -150,8 +150,8 @@ int main(int argc, char** argv) {
     for (int i = 0; i < num_elms; i++) {
       auto const& this_node = theContext()->getNode();
       auto msg = new ColMsg<MyCol>(this_node);
-      proxy[i].send<MyCol, ColMsg<MyCol>, colHan>(msg);
-      proxy[i].send<MyCol, ColMsg<MyCol>, colHan2>(msg);
+      proxy[i].send<ColMsg<MyCol>,colHan>(msg);
+      proxy[i].send<ColMsg<MyCol>,colHan2>(msg);
     }
   }
   #endif
@@ -165,9 +165,9 @@ int main(int argc, char** argv) {
       for (int j = 0; j < dim2; j++) {
         auto const& this_node = theContext()->getNode();
         auto msg = new ColMsg<OtherColl>(this_node);
-        theCollection()->sendMsg<
-          OtherColl, ColMsg<OtherColl>, colHanOther
-        >(proxy(i,j), msg, nullptr);
+        theCollection()->sendMsg<ColMsg<OtherColl>, colHanOther>(
+          proxy(i,j), msg, nullptr
+        );
       }
     }
   }
