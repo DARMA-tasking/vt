@@ -9,15 +9,16 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename MessageT, typename ColT, typename IndexT>
+template <typename MessageT, typename ColT>
 using RoutedMessageType = LocationRoutedMsg<
-  ::vt::vrt::VirtualElmProxyType<ColT, IndexT>, MessageT
+  ::vt::vrt::VirtualElmProxyType<ColT, typename ColT::IndexType>, MessageT
 >;
 
-template <typename ColT, typename IndexT>
+template <typename ColT>
 struct CollectionMessage :
-    RoutedMessageType<::vt::Message, ColT, IndexT>, IndexT::IsByteCopyable
+  RoutedMessageType<::vt::Message, ColT>, ColT::IndexType::IsByteCopyable
 {
+  using IndexType = typename ColT::IndexType;
   CollectionMessage() = default;
 
   void setVrtHandler(HandlerType const& in_handler);
@@ -25,8 +26,8 @@ struct CollectionMessage :
 
   // The variable `to_proxy_' manages the intended target of the
   // `CollectionMessage'
-  VirtualElmProxyType<ColT, IndexT> getProxy() const;
-  void setProxy(VirtualElmProxyType<ColT, IndexT> const& in_proxy);
+  VirtualElmProxyType<ColT, IndexType> getProxy() const;
+  void setProxy(VirtualElmProxyType<ColT, IndexType> const& in_proxy);
 
   // Explicitly write a serializer so derived user messages can contain non-byte
   // serialization
@@ -34,7 +35,7 @@ struct CollectionMessage :
   void serialize(SerializerT& s);
 
 private:
-  VirtualElmProxyType<ColT, IndexT> to_proxy_{};
+  VirtualElmProxyType<ColT, IndexType> to_proxy_{};
   HandlerType vt_sub_handler_ = uninitialized_handler;
 };
 

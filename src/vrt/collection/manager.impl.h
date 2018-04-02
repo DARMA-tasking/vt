@@ -144,7 +144,7 @@ template <typename SysMsgT>
 
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::collectionMsgHandler(BaseMessage* msg) {
-  auto const col_msg = static_cast<CollectionMessage<ColT, IndexT>*>(msg);
+  auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const entity_proxy = col_msg->getProxy();
 
   auto const& col = entity_proxy.getCollectionProxy();

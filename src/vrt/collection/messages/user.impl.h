@@ -9,38 +9,38 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-void CollectionMessage<ColT, IndexT>::setVrtHandler(
+template <typename ColT>
+void CollectionMessage<ColT>::setVrtHandler(
   HandlerType const& in_handler
 ) {
   vt_sub_handler_ = in_handler;
 }
 
-template <typename ColT, typename IndexT>
-HandlerType CollectionMessage<ColT, IndexT>::getVrtHandler() const {
+template <typename ColT>
+HandlerType CollectionMessage<ColT>::getVrtHandler() const {
   assert(
     vt_sub_handler_ != uninitialized_handler && "Must have a valid handler"
   );
   return vt_sub_handler_;
 }
 
-template <typename ColT, typename IndexT>
-VirtualElmProxyType<ColT, IndexT>
-CollectionMessage<ColT, IndexT>::getProxy() const {
+template <typename ColT>
+VirtualElmProxyType<ColT, typename ColT::IndexType>
+CollectionMessage<ColT>::getProxy() const {
   return to_proxy_;
 }
 
-template <typename ColT, typename IndexT>
-void CollectionMessage<ColT, IndexT>::setProxy(
-  VirtualElmProxyType<ColT, IndexT> const& in_proxy
+template <typename ColT>
+void CollectionMessage<ColT>::setProxy(
+  VirtualElmProxyType<ColT, typename ColT::IndexType> const& in_proxy
 ) {
   to_proxy_ = in_proxy;
 }
 
-template <typename ColT, typename IndexT>
+template <typename ColT>
 template <typename SerializerT>
-void CollectionMessage<ColT, IndexT>::serialize(SerializerT& s) {
-  RoutedMessageType<vt::Message, ColT, IndexT>::serialize(s);
+void CollectionMessage<ColT>::serialize(SerializerT& s) {
+  RoutedMessageType<vt::Message, ColT>::serialize(s);
   s | vt_sub_handler_;
   s | to_proxy_;
 }
