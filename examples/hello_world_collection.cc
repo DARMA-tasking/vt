@@ -66,17 +66,17 @@ struct OtherColl : Collection<OtherColl, Index2D> {
   }
 };
 
-template <typename ColT, typename IndexT>
-struct ColMsg : CollectionMessage<ColT, IndexT> {
+template <typename ColT>
+struct ColMsg : CollectionMessage<ColT> {
   NodeType from_node;
 
   ColMsg() = default;
   ColMsg(NodeType const& in_from_node)
-    : CollectionMessage<ColT, IndexT>(), from_node(in_from_node)
+    : CollectionMessage<ColT>(), from_node(in_from_node)
   { }
 };
 
-static void colHan2(ColMsg<MyCol, Index1D>* msg, MyCol* col) {
+static void colHan2(ColMsg<MyCol>* msg, MyCol* col) {
   auto const& node = theContext()->getNode();
   printf(
     "%d: colHan2 received: ptr=%p, idx=%d, getIndex=%d\n",
@@ -84,7 +84,7 @@ static void colHan2(ColMsg<MyCol, Index1D>* msg, MyCol* col) {
   );
 }
 
-static void colHan(ColMsg<MyCol, Index1D>* msg, MyCol* col) {
+static void colHan(ColMsg<MyCol>* msg, MyCol* col) {
   auto const& node = theContext()->getNode();
   printf(
     "%d: colHan received: ptr=%p, idx=%d, getIndex=%d\n",
@@ -105,7 +105,7 @@ static void colHan(ColMsg<MyCol, Index1D>* msg, MyCol* col) {
   #endif
 }
 
-static void colHanOther(ColMsg<OtherColl, Index2D>* msg, OtherColl* col) {
+static void colHanOther(ColMsg<OtherColl>* msg, OtherColl* col) {
   auto const& node = theContext()->getNode();
   printf(
     "%d: colHanOther received: idx={%d,%d}\n",
@@ -149,9 +149,9 @@ int main(int argc, char** argv) {
     auto proxy = theCollection()->construct<MyCol>(range);
     for (int i = 0; i < num_elms; i++) {
       auto const& this_node = theContext()->getNode();
-      auto msg = new ColMsg<MyCol, Index1D>(this_node);
-      proxy[i].send<MyCol, ColMsg<MyCol, Index1D>, colHan>(msg);
-      proxy[i].send<MyCol, ColMsg<MyCol, Index1D>, colHan2>(msg);
+      auto msg = new ColMsg<MyCol>(this_node);
+      proxy[i].send<MyCol, ColMsg<MyCol>, colHan>(msg);
+      proxy[i].send<MyCol, ColMsg<MyCol>, colHan2>(msg);
     }
   }
   #endif
@@ -164,9 +164,9 @@ int main(int argc, char** argv) {
     for (int i = 0; i < dim1; i++) {
       for (int j = 0; j < dim2; j++) {
         auto const& this_node = theContext()->getNode();
-        auto msg = new ColMsg<OtherColl, Index2D>(this_node);
+        auto msg = new ColMsg<OtherColl>(this_node);
         theCollection()->sendMsg<
-          OtherColl, ColMsg<OtherColl, Index2D>, colHanOther
+          OtherColl, ColMsg<OtherColl>, colHanOther
         >(proxy(i,j), msg, nullptr);
       }
     }
