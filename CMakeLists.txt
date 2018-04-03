@@ -85,7 +85,7 @@ set(
   serialization
     serialization/messaging serialization/traits
   utils
-    utils/demangle utils/container utils/bits utils/mutex utils/detector
+    utils/demangle utils/container utils/bits utils/mutex
     utils/hash utils/atomic utils/tls utils/static_checks
   registry
     registry/auto
