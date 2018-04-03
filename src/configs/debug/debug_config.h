@@ -2,7 +2,7 @@
 #if !defined INCLUDED_DEBUG_CONFIG
 #define INCLUDED_DEBUG_CONFIG
 
-#include "meld/meld_headers.h"
+#include "meld_headers.h"
 #include "configs/features/features_featureswitch.h"
 #include "configs/features/features_defines.h"
 #include "configs/features/features_metafeatures.h"

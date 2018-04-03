@@ -2,7 +2,7 @@
 #if !defined INCLUDED_FEATURES_FEATURE_SWITCH
 #define INCLUDED_FEATURES_FEATURE_SWITCH
 
-#include "meld/meld_headers.h"
+#include "meld_headers.h"
 #include "features_defines.h"
 
 /*
