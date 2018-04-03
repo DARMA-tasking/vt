@@ -107,6 +107,7 @@ if(NOT CMAKE_DETECTOR_PATH)
   message(FATAL_ERROR "Detector library not found")
 else()
   include_directories(${CMAKE_DETECTOR_PATH}/include/)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${CMAKE_DETECTOR_PATH}/lib")
   # include_directories(${CMAKE_DETECTOR_PATH}/src/)
   set(DETECTOR_LIBRARY detection)
   message("Detector library found: ${CMAKE_DETECTOR_PATH}")
@@ -126,6 +127,7 @@ else()
   add_compile_options(-DHAS_SERIALIZATION_LIBRARY=1)
   add_subdirectory(${CMAKE_SERIALIZATION_PATH} ${CMAKE_CURRENT_BINARY_DIR}/serialization)
   include_directories(${CMAKE_SERIALIZATION_PATH}/src/)
+  # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${CMAKE_SERIALIZATION_PATH}/lib")
   set(SERIALIZATION_LIBRARY serialization)
   message("Serialization library found: ${CMAKE_SERIALIZATION_PATH}")
 endif()
@@ -306,6 +308,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     ${MPI_C_LIBRARIES}
     ${FCONTEXT_LIBRARY}
     ${SERIALIZATION_LIBRARY}
+    ${DETECTOR_LIBRARY}
   )
 endforeach()
 
@@ -383,8 +386,9 @@ else()
         ${MPI_C_LIBRARIES}
         ${FCONTEXT_LIBRARY}
         ${SERIALIZATION_LIBRARY}
+        ${DETECTOR_LIBRARY}
         gtest gmock
-        )
+      )
 
       foreach(PROC ${UNIT_TEST_PROC_TEST_LIST})
         add_test(
