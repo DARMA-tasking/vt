@@ -103,8 +103,21 @@ include_directories(${PROJECT_LIB_DIR})
 add_subdirectory(${PROJECT_LIB_DIR}/context)
 set(FCONTEXT_LIBRARY fcontext)
 
-add_subdirectory(${PROJECT_LIB_DIR}/detector)
-include_directories(${PROJECT_LIB_DIR}/detector/src)
+if(NOT CMAKE_DETECTOR_PATH)
+  message(FATAL_ERROR "Detector library not found")
+else()
+  include_directories(${CMAKE_DETECTOR_PATH}/include/)
+  # include_directories(${CMAKE_DETECTOR_PATH}/src/)
+  set(DETECTOR_LIBRARY detection)
+  message("Detector library found: ${CMAKE_DETECTOR_PATH}")
+endif()
+
+if(NOT CMAKE_MELD_PATH)
+  message(FATAL_ERROR "Meld library not found")
+else()
+  include_directories(${CMAKE_MELD_PATH}/include/)
+  message("Meld library found: ${CMAKE_MELD_PATH}")
+endif()
 
 if(NOT CMAKE_SERIALIZATION_PATH)
   message("Serialization library not found")
@@ -268,6 +281,7 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
       ${MPI_C_LIBRARIES}
       ${FCONTEXT_LIBRARY}
       ${SERIALIZATION_LIBRARY}
+      ${DETECTOR_LIBRARY}
     )
   endif()
 endforeach()
@@ -404,13 +418,14 @@ export(
 
 set(
   CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}" "${MPI_C_INCLUDE_PATH}"
-                    "${CMAKE_SERIALIZATION_PATH}/src/" "${PROJECT_LIB_DIR}/detector/src"
-                    "${PROJECT_LIB_DIR}"
+                    "${CMAKE_SERIALIZATION_PATH}/src/" "${CMAKE_DETECTOR_PATH}/include"
+                    "${PROJECT_LIB_DIR}" "${CMAKE_MELD_PATH}/include"
 )
 
 set(
   CONF_LINK_DIRS ${VIRTUAL_TRANSPORT_LIBRARY} ${ZLIB_LIBRARIES}
                  ${MPI_C_LIBRARIES} ${FCONTEXT_LIBRARY} ${SERIALIZATION_LIBRARY}
+                 ${DETECTOR_LIBRARY}
 )
 
 configure_file(
