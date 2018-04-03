@@ -2,7 +2,7 @@
 
 if test $# -lt 1
 then
-    echo "usage $0 <build-mode> <compiler> <has-serialization> <all>"
+    echo "usage $0 <build-mode> <compiler> <has-serialization> <all> <detector-path> <meld-path>"
     exit 1;
 fi
 
@@ -37,6 +37,9 @@ then
 else
     serialization_path=
 fi
+
+meld_path=/Users/jliffla/codes/vt/meld-build
+detector_path=/Users/jliffla/codes/vt/detector-build
 
 echo "Building virtual transport layer mode=$build_mode"
 
@@ -83,6 +86,8 @@ cmake ${SOURCE_BASE_DIR} \
       ${build_all} \
       -DMPI_CXX_INCLUDE_PATH=${MPI_CXX_INC_PATH} \
       -DCMAKE_SERIALIZATION_PATH=${serialization_path} \
+      -DCMAKE_DETECTOR_PATH=${detector_path} \
+      -DCMAKE_MELD_PATH=${meld_path} \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true \
       -DGTEST_DIR=${gtest_directory} \
       -DCMAKE_C_COMPILER=${CC_COMPILER}
