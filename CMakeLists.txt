@@ -1,213 +1,96 @@
 cmake_minimum_required(VERSION 3.8)
 project(vt)
 
-find_package(MPI REQUIRED)
 
-# set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
-# set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+set(VIRTUAL_TRANSPORT_LIBRARY vt)
+set(FCONTEXT_LIBRARY fcontext)
 
-include_directories(${MPI_C_INCLUDE_PATH})
+include(cmake-modules/SetCXXCompilerFlags.cmake)
+set_darma_compiler_flags()
 
-set(CMAKE_CXX_STANDARD 14)
+option(darma_meld_DIR "Root folder for DARMA meld library installation" OFF)
+option(darma_detector_DIR "Root folder for DARMA meld library installation" OFF)
 
-# OpenMP support
+if (NOT darma_meld_DIR)
+message(FATAL_ERROR "Please specify meld library installation root with -Ddarma_meld_DIR=")
+endif()
+
+if (NOT darma_detector_DIR)
+message(FATAL_ERROR "Please specify detector library installation root with -Ddarma_detector_DIR=")
+endif()
+
+find_package(darma_meld PATHS ${darma_meld_DIR}/cmake)
+find_package(darma_detector PATHS ${darma_detector_DIR}/cmake)
+
+
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
-include(${CMAKE_MODULE_PATH}/FindOpenMP.cmake)
+include(${CMAKE_MODULE_PATH}/vtExternal.cmake)
 
-if (OpenMP_FOUND)
+function(config_for_std_thread)
+  set(DEFAULT_THREADING stdthread)
+endfunction(config_for_std_thread)
+
+function(config_for_openmp)
+  set(DEFAULT_THREADING openmp)
   message("OpenMP has been found: ")
   message("\t Linker flags: ${OpenMP_EXE_LINKER_FLAGS}")
   message("\t C_FLAGS=${OpenMP_C_FLAGS}")
   message("\t CXX_FLAGS=${OpenMP_CXX_FLAGS}")
+  vt_config_openmp_flags()
+endfunction(config_for_openmp)
 
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-else()
-  message("OpenMP not found: must use std::thread for workers.")
-endif (OpenMP_FOUND)
+option(USE_STD_THREAD 
+       "whether to force use of std::thread for threading"
+       OFF)
 
-set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+option(USE_OPENMP
+      "whether to force use of OpenMP for threading"
+      OFF)
+
+# OpenMP support
+if (USE_STD_THREAD)
+  message("Using std::thread for worker threading")
+  config_for_std_thread()
+elseif(USE_OPENMP)
+  config_for_openmp()
+  if (NOT OpenMP_Found)
+    message(FATAL_ERROR "requested OpenMP with -DUSE_OPENMP=On, but cannot find valid OpenMP in compiler")
+  endif()
+elseif(OpenMP_FOUND) #no default specified
+  config_for_openmp()
+else() #no default specified
+  message("OpenMP not found: using std::thread for workers")
+  config_for_std_thread()
+endif()
+
 set(PROJECT_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
-set(PROJECT_TEST_UNIT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
-set(PROJECT_TEST_PERF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests/perf)
 
 include (CTest)
 enable_testing()
 
-find_package(ZLIB REQUIRED)
 
-if (ZLIB_FOUND)
-  include_directories(${ZLIB_INCLUDE_DIRS})
-else()
-  message("zlib is required for tracing")
-endif (ZLIB_FOUND)
-
-set(
-  PROJECT_SUBDIRS_LIST
-
-  # Add component along with sub-directories
-  configs
-    configs/debug configs/features configs/types
-  collective
-    collective/reduce collective/barrier collective/tree
-  group
-    group/id group/region group/global
-  messaging
-    messaging/envelope messaging/message
-  pool
-    pool/static_sized pool/header
-  rdma
-    rdma/channel rdma/collection rdma/group rdma/state
-  topos
-    topos/location
-      topos/location/cache topos/location/message topos/location/record
-      topos/location/utility
-    topos/index
-      topos/index/dense topos/index/traits topos/index/printer
-    topos/mapping
-      topos/mapping/seed topos/mapping/dense
-  vrt
-    vrt/base vrt/proxy vrt/context
-    vrt/collection
-      vrt/collection/types vrt/collection/messages vrt/collection/proxy_builder
-      vrt/collection/holders vrt/collection/migrate vrt/collection/traits
-      vrt/collection/traits vrt/collection/defaults vrt/collection/constructor
-      vrt/collection/send
-  lb
-    lb/instrumentation
-      lb/instrumentation/centralized
-    lb/balancers
-      lb/balancers/centralized
-        lb/balancers/centralized/impls
-    lb/migration
-  serialization
-    serialization/messaging serialization/traits
-  utils
-    utils/demangle utils/container utils/bits utils/mutex
-    utils/hash utils/atomic utils/tls utils/static_checks
-  registry
-    registry/auto
-      registry/auto/functor registry/auto/map registry/auto/collection
-      registry/auto/vc
-
-  # Add single-directory components
-  context event handler parameterization sequence termination
-  scheduler worker standalone runtime trace timing demangle
-)
-
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_LIB_DIR})
-
-add_subdirectory(${PROJECT_LIB_DIR}/context)
-set(FCONTEXT_LIBRARY fcontext)
-
-if(NOT CMAKE_DETECTOR_PATH)
-  message(FATAL_ERROR "Detector library not found")
-else()
-  include_directories(${CMAKE_DETECTOR_PATH}/include/)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${CMAKE_DETECTOR_PATH}/lib")
-  # include_directories(${CMAKE_DETECTOR_PATH}/src/)
-  set(DETECTOR_LIBRARY detection)
-  message("Detector library found: ${CMAKE_DETECTOR_PATH}")
-endif()
-
-if(NOT CMAKE_MELD_PATH)
-  message(FATAL_ERROR "Meld library not found")
-else()
-  include_directories(${CMAKE_MELD_PATH}/include/)
-  message("Meld library found: ${CMAKE_MELD_PATH}")
-endif()
-
-if(NOT CMAKE_SERIALIZATION_PATH)
+if(NOT DARMA_SERIALIZATION_PATH)
   message("Serialization library not found")
   set(SERIALIZATION_LIBRARY)
 else()
-  add_compile_options(-DHAS_SERIALIZATION_LIBRARY=1)
-  add_subdirectory(${CMAKE_SERIALIZATION_PATH} ${CMAKE_CURRENT_BINARY_DIR}/serialization)
-  include_directories(${CMAKE_SERIALIZATION_PATH}/src/)
+  set(HAS_SERIALIZATION_LIBRARY 1)
+  add_subdirectory(${DARMA_SERIALIZATION_PATH} ${CMAKE_CURRENT_BINARY_DIR}/serialization)
+  include_directories(${DARMA_SERIALIZATION_PATH}/src)
   # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${CMAKE_SERIALIZATION_PATH}/lib")
   set(SERIALIZATION_LIBRARY serialization)
-  message("Serialization library found: ${CMAKE_SERIALIZATION_PATH}")
+  message("Serialization library found: ${DARMA_SERIALIZATION_PATH}")
 endif()
 
-file(
-  GLOB
-  HEADER_FILES
-  ${PROJECT_SOURCE_DIR}/*.h
-)
+add_subdirectory(${PROJECT_LIB_DIR}/context)
+add_subdirectory(src)
 
-file(
-  GLOB
-  SOURCE_FILES
-  ${PROJECT_SOURCE_DIR}/*.cc
-)
+add_custom_target(examples)
+add_subdirectory(examples)
 
-foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
-  # message(
-  #   "virtual-transport: adding header of subdirectory >>>>> ${SUB_DIR}\n"
-  #   "\tsource=${CMAKE_CURRENT_SOURCE_DIR}\n"
-  #   "\theader=${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.h\n"
-  #   "\tsource=${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.cc"
-  # )
-
-  file(
-    GLOB
-    "${SUB_DIR}_HEADER_FILES"
-    RELATIVE
-    "${CMAKE_CURRENT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.h"
-  )
-
-  file(
-    GLOB
-    "${SUB_DIR}_SOURCE_FILES"
-    RELATIVE
-    "${CMAKE_CURRENT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/${SUB_DIR}/*.cc"
-  )
-
-  list(
-    APPEND
-    HEADER_FILES
-    "${${SUB_DIR}_HEADER_FILES}"
-  )
-
-  list(
-    APPEND
-    SOURCE_FILES
-    "${${SUB_DIR}_SOURCE_FILES}"
-  )
-endforeach()
-
-file(
-  GLOB
-  TOP_HEADER_FILES
-  ${PROJECT_SOURCE_DIR}/*.h
-)
-
-list(
-  APPEND
-  HEADER_FILES
-  "${TOP_HEADER_FILES}"
-  )
-
-install(
-  FILES ${HEADER_FILES}
-  DESTINATION include
-)
-
-set(
-  PROJECT_EXAMPLES_LIST
-  hello_world ring rdma_simple_get rdma_simple_get_direct rdma_simple_put
-  rdma_simple_put_direct rdma_simple_channel rdma_channel_sync rdma_collective
-  callback callback_new reinstate tagged_handler param hello_world_functor
-  test_seq trace_ring location_test location_test_msg broadcast_test index_test
-  hello_world_vrtContext hello_world_vc jacobi1d_recur_vc jacobi1d_node
-  term_epoch serialize_example hello_world_vc_remote hello_world_start
-  hello_world_collection rdma_unsized_collection group_example_1 reduce
-)
+add_custom_target(unit_tests)
+add_custom_target(perf_tests)
+add_subdirectory(tests)
 
 set(
   PROJECT_PERF_TESTS
@@ -219,9 +102,6 @@ set(MPI_NUMPROC_FLAG "-n")
 
 set(PROC_TEST_LIST 2 4 8)
 
-add_custom_target(examples)
-add_custom_target(unit_tests)
-add_custom_target(perf_tests)
 
 macro(add_test_for_example test_name test_exec)
   foreach(PROC ${PROC_TEST_LIST})
@@ -242,194 +122,9 @@ macro(add_test_for_example test_name test_exec)
   endforeach()
 endmacro()
 
-set(VIRTUAL_TRANSPORT_LIBRARY vt)
-
-add_library(
-  ${VIRTUAL_TRANSPORT_LIBRARY}
-  STATIC
-  ${HEADER_FILES} ${SOURCE_FILES}
-)
-
-install(
-  TARGETS ${VIRTUAL_TRANSPORT_LIBRARY}
-  EXPORT ${VIRTUAL_TRANSPORT_LIBRARY}
-  LIBRARY DESTINATION "lib"
-  ARCHIVE DESTINATION "lib"
-)
-
-foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
-  # message("Example: building example >>>>> ${EXAMPLE}")
-
-  if(CMAKE_NO_BUILD_EXAMPLES)
-    message("Skipping example: ${EXAMPLE}")
-  else()
-    add_executable(
-      ${EXAMPLE}
-      ${PROJECT_EXAMPLE_DIR}/${EXAMPLE}.cc
-    )
-
-    add_dependencies(examples ${EXAMPLE})
-
-    add_test_for_example(
-      ${EXAMPLE}
-      ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
-      gtest
-    )
-
-    target_link_libraries(
-      ${EXAMPLE}
-      ${VIRTUAL_TRANSPORT_LIBRARY}
-      ${ZLIB_LIBRARIES}
-      ${MPI_C_LIBRARIES}
-      ${FCONTEXT_LIBRARY}
-      ${SERIALIZATION_LIBRARY}
-      ${DETECTOR_LIBRARY}
-    )
-  endif()
-endforeach()
-
-foreach(PERF_TEST ${PROJECT_PERF_TESTS})
-  add_executable(
-    ${PERF_TEST}
-    ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
-    )
-
-  add_dependencies(perf_tests ${PERF_TEST})
-
-  # add_test_for_example(
-  #   ${PERF_TEST}
-  #   ${CMAKE_CURRENT_BINARY_DIR}/${PERF_TEST}
-  # )
-
-  target_link_libraries(
-    ${PERF_TEST}
-    ${VIRTUAL_TRANSPORT_LIBRARY}
-    ${ZLIB_LIBRARIES}
-    ${MPI_C_LIBRARIES}
-    ${FCONTEXT_LIBRARY}
-    ${SERIALIZATION_LIBRARY}
-    ${DETECTOR_LIBRARY}
-  )
-endforeach()
-
-################################################################################
-#                              CMake for gtests                                #
-################################################################################
-
 set(
-  UNIT_TEST_SUBDIRS_LIST
-  index active collectives pool sequencer mapping serialization tls atomic
-)
-
-foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
-  file(
-    GLOB
-    "${SUB_DIR}_UNIT_TEST_SOURCE_FILES"
-    RELATIVE
-    "${PROJECT_TEST_UNIT_DIR}"
-    "${PROJECT_TEST_UNIT_DIR}/${SUB_DIR}/*.cc"
-  )
-
-  list(
-    APPEND
-    UNIT_TEST_SOURCE_FILES
-    "${${SUB_DIR}_UNIT_TEST_SOURCE_FILES}"
-  )
-endforeach()
-
-#message("unit test source files: ${UNIT_TEST_SOURCE_FILES}")
-
-if (NOT GTEST_DIR)
-  message("Unit test are disabled because GoogleTest is not setup via -DGTEST_DIR=")
-else()
-  set(
-    TEST_HEADER_FILES
-    ${PROJECT_TEST_UNIT_DIR}/test_harness.h
-  )
-
-  set(
-    TEST_SOURCE_FILES
-    ${PROJECT_TEST_UNIT_DIR}/main.cc
-  )
-
-  include_directories(${GTEST_DIR}/include)
-  include_directories(${PROJECT_TEST_UNIT_DIR})
-
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${GTEST_DIR}/lib")
-
-  set(UNIT_TEST_PROC_TEST_LIST 2 4 8)
-
-  foreach (UNIT_TEST_FILE ${UNIT_TEST_SOURCE_FILES})
-    GET_FILENAME_COMPONENT(
-      UNIT_TEST
-      ${UNIT_TEST_FILE}
-      NAME_WE
-    )
-
-    #message("Build unit test >>>> test=${UNIT_TEST}, path=${UNIT_TEST_FILE}")
-
-    if(CMAKE_NO_BUILD_TESTS)
-      message("Skipping test: ${UNIT_TEST}_${PROC}")
-    else()
-      add_executable(
-        ${UNIT_TEST}
-        ${TEST_SOURCE_FILES} ${TEST_HEADER_FILES}
-        ${PROJECT_TEST_UNIT_DIR}/${UNIT_TEST_FILE}
-        )
-
-      add_dependencies(unit_tests ${UNIT_TEST})
-
-      target_link_libraries(
-        ${UNIT_TEST}
-        ${VIRTUAL_TRANSPORT_LIBRARY}
-        ${ZLIB_LIBRARIES}
-        ${MPI_C_LIBRARIES}
-        ${FCONTEXT_LIBRARY}
-        ${SERIALIZATION_LIBRARY}
-        ${DETECTOR_LIBRARY}
-        gtest gmock
-      )
-
-      foreach(PROC ${UNIT_TEST_PROC_TEST_LIST})
-        add_test(
-          ${UNIT_TEST}_${PROC}
-          ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
-          ${CMAKE_CURRENT_BINARY_DIR}/${UNIT_TEST}
-          )
-        set_tests_properties(
-          ${UNIT_TEST}_${PROC}
-          PROPERTIES TIMEOUT 60
-          FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
-          PASS_REGULAR_EXPRESSION "PASSED"
-        )
-      endforeach()
-    endif()
-  endforeach()
-endif()
-
-
-export(
-  TARGETS vt ${FCONTEXT_LIBRARY} ${SERIALIZATION_LIBRARY}
-  FILE "${PROJECT_BINARY_DIR}/vtDepends.cmake"
-)
-
-export(
-  PACKAGE vt
-)
-
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAS_SERIALIZATION_LIBRARY=1")
-
-
-set(
-  CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}" "${MPI_C_INCLUDE_PATH}"
-                    "${CMAKE_SERIALIZATION_PATH}/src/" "${CMAKE_DETECTOR_PATH}/include"
-                    "${PROJECT_LIB_DIR}" "${CMAKE_MELD_PATH}/include"
-)
-
-set(
-  CONF_LINK_DIRS ${VIRTUAL_TRANSPORT_LIBRARY} ${ZLIB_LIBRARIES}
-                 ${MPI_C_LIBRARIES} ${FCONTEXT_LIBRARY} ${SERIALIZATION_LIBRARY}
-                 ${DETECTOR_LIBRARY}
+  CONF_INCLUDE_DIRS "${DARMA_DETECTOR_PATH}/include"
+                    "${DARMA_MELD_PATH}/include"
 )
 
 configure_file(
@@ -440,17 +135,12 @@ configure_file(
 install(
   FILES
   "${PROJECT_BINARY_DIR}/vtConfig.cmake"
-  DESTINATION cmake COMPONENT dev
+  DESTINATION cmake 
+  COMPONENT extCfg
 )
 
-install(
-  FILES
-  DESTINATION cmake COMPONENT dev
-)
+configure_file(cmake_config.h.in cmake_config.h @ONLY)
+install(FILES "${PROJECT_BINARY_DIR}/cmake_config.h" DESTINATION include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-install(
-  EXPORT vt
-  DESTINATION cmake
-  COMPONENT dev
-)
 

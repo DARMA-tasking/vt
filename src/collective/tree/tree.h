@@ -9,6 +9,7 @@
 
 namespace vt { namespace collective { namespace tree {
 
+#pragma sst keep
 static struct DefaultTreeConstructTag { } tree_cons_tag_t { };
 
 struct Tree {

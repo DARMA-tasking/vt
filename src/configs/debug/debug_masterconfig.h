@@ -2,6 +2,8 @@
 #if !defined INCLUDED_DEBUG_MASTER_CONFIG
 #define INCLUDED_DEBUG_MASTER_CONFIG
 
+#include <cmake_config.h>
+
 /*
  * Define the compile-time configuration options. Eventually this will be
  * partially defined with cmake options
@@ -21,7 +23,7 @@
 #endif
 
 #define backend_features backend_options_on(         \
-    detector, openmp                                 \
+    detector, default_threading                                 \
 )
 
 #define backend_debug_contexts backend_options_on(              \

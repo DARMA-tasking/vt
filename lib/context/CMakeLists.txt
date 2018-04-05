@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(fcontext)
 
+
 set(CMAKE_CXX_STANDARD 14)
 
 enable_language(CXX ASM)
@@ -54,7 +55,6 @@ add_library(
   ${HEADER_FILES} ${SOURCE_FILES} ${ASM_SOURCES}
 )
 
-install(TARGETS ${FCONTEXT_LIBRARY} EXPORT ${FCONTEXT_LIBRARY} DESTINATION lib)
 install(FILES ${HEADER_FILES} DESTINATION include)
 
 include_directories(${PROJECT_SOURCE_DIR})
@@ -173,3 +173,14 @@ foreach(EXAMPLE_FULL ${PROJECT_CXX_EXAMPLES})
     ${FCONTEXT_LIBRARY}
   )
 endforeach()
+
+install(TARGETS ${FCONTEXT_LIBRARY} 
+        EXPORT ${FCONTEXT_LIBRARY} 
+        DESTINATION lib)
+
+install(
+  EXPORT ${FCONTEXT_LIBRARY} 
+  DESTINATION cmake 
+  COMPONENT extCfg
+)
+

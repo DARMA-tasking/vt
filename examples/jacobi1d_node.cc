@@ -236,6 +236,8 @@ static int exitEarly(NodeType node, int exit_code, char* reason) {
   return exit_code;
 }
 
+#define sstmac_app_name jacobi1d_node_vt
+
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 

@@ -22,6 +22,7 @@ struct Region {
   using ListType = std::vector<BoundType>;
   using ApplyFnType = std::function<void(RegionUPtrType)>;
 
+  virtual ~Region(){}
   virtual SizeType getSize() const = 0;
   virtual void sort() = 0;
   virtual bool contains(NodeType const& node) = 0;

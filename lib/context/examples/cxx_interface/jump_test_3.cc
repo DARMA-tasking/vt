@@ -2,7 +2,7 @@
 #include "context_wrapper.h"
 #include "context_functor.h"
 #include "fcontext.h"
-#include "stack.h"
+#include "context_stack.h"
 #include "util.h"
 
 #include <time.h>

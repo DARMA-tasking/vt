@@ -79,6 +79,8 @@ static void create_jacobi1d(CreateJacobi1DMsg* msg, Jacobi1D* j1d) {
   }
 }
 
+#define sstmac_app_name jacobi1d_recur_vc_vt
+
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 

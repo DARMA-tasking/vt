@@ -1,23 +1,23 @@
 # Defines the following variables:
 #  VT_INCLUDE_DIRS - include directories
-#  VT_LIBRARY_DIRS - library directories
-#  VT_LIBRARIES    - libraries to link against
 #  VT_CXX_COMPILER - the compiler used
-#  VT_CXX_FLAGS - the compiler flags used
+#  VT_CXX_FLAGS - flags dependent projects must include for compiling
+#  VT_EXE_LINKER_FLAGS - flags dependent projects must include for linking
 
 # Compute paths
 GET_FILENAME_COMPONENT (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(${VT_CMAKE_DIR}/vt.cmake)
+include(${VT_CMAKE_DIR}/fcontext.cmake)
 
-set (VT_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
-set (VT_LIBRARY_DIRS ${VT_CMAKE_DIR}/../lib)
-set (VT_LINK_DIRS "@CONF_LINK_DIRS@")
+set (darma_meld_DIR @darma_meld_DIR@)
+find_package(darma_meld)
+set (darma_detector_DIR @darma_detector_DIR@)
+find_package(darma_detector)
 
-# Get compiler and flags
+set (VT_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@" "@CMAKE_INSTALL_PREFIX@/include")
 SET (VT_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
-SET (VT_CXX_FLAGS "@CMAKE_CXX_FLAGS@")
-
-# Our library dependencies (contains definitions for IMPORTED targets)
-INCLUDE ("${VT_CMAKE_DIR}/vtDepends.cmake")
-
-SET (VT_LIBRARIES vt @CMAKE_VT_LIBS_INIT@)
+SET (VT_REQUIRED_EXE_LINKER_FLAGS "@OpenMP_EXE_LINKER_FLAGS@")
+SET (VT_REQUIRED_CXX_FLAGS "@CMAKE_CXX_FLAGS@ @OpenMP_CXX_FLAGS@")
+set (VT_DETECTOR_PATH "@DARMA_DETECTOR_PATH@")
+set (VT_MELD_PATH "@DARMA_MELD_PATH@")
 
