@@ -24,7 +24,14 @@ find_package(darma_detector PATHS ${darma_detector_DIR}/cmake)
 
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
-include(${CMAKE_MODULE_PATH}/vtExternal.cmake)
+
+find_package(ZLIB REQUIRED)
+
+if (ZLIB_FOUND)
+  include_directories(${ZLIB_INCLUDE_DIRS})
+else()
+  message("zlib is required for tracing")
+endif (ZLIB_FOUND)
 
 function(config_for_std_thread)
   set(DEFAULT_THREADING stdthread)
