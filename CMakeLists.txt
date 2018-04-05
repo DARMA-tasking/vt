@@ -22,8 +22,9 @@ endif()
 find_package(darma_meld PATHS ${darma_meld_DIR}/cmake)
 find_package(darma_detector PATHS ${darma_detector_DIR}/cmake)
 
-
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
+
+include(${CMAKE_MODULE_PATH}/FindOpenMP.cmake)
 
 find_package(ZLIB REQUIRED)
 
@@ -43,7 +44,8 @@ function(config_for_openmp)
   message("\t Linker flags: ${OpenMP_EXE_LINKER_FLAGS}")
   message("\t C_FLAGS=${OpenMP_C_FLAGS}")
   message("\t CXX_FLAGS=${OpenMP_CXX_FLAGS}")
-  vt_config_openmp_flags()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endfunction(config_for_openmp)
 
 option(USE_STD_THREAD 
