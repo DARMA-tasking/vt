@@ -33,12 +33,28 @@ endmacro(find_package_local)
 # require directories for these packages
 require_pkg_directory(darma_meld     "DARMA meld")
 require_pkg_directory(darma_detector "DARMA detector")
-# find these required packages
+# find these required packages locally
 find_package_local(darma_meld     "${darma_meld_DIR}/cmake")
 find_package_local(darma_detector "${darma_detector_DIR}/cmake")
 
-# find_package(darma_meld PATHS ${darma_meld_DIR}/cmake)
-# find_package(darma_detector PATHS ${darma_detector_DIR}/cmake)
+#
+#        @todo: finish implementing this optional package
+#
+# macro(optional_pkg_directory pkg_name pkg_user_name)
+#   #message(STATUS "optional_pkg_directory: name=${pkg_name}")
+#   option(${pkg_name}_DIR "Root folder for ${pkg_user_name} installation" OFF)
+#   if (NOT ${pkg_name}_DIR)
+#     message(STATUS "Path for ${pkg_user_name} library (optional) not specified with -D${pkg_name}_DIR=")
+#     message(STATUS "Building without ${pkg_user_name} library")
+#   else()
+#     message(STATUS "Path for ${pkg_user_name} library (optional) specified with -D${pkg_name}_DIR=")
+#   endif()
+# endmacro(optional_pkg_directory)
+#
+# optional directory for this package
+## optional_pkg_directory(checkpoint    "Serialization/Checkpoint")
+#
+#
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
 
@@ -66,13 +82,8 @@ function(config_for_openmp)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endfunction(config_for_openmp)
 
-option(USE_STD_THREAD 
-       "whether to force use of std::thread for threading"
-       OFF)
-
-option(USE_OPENMP
-      "whether to force use of OpenMP for threading"
-      OFF)
+option(USE_STD_THREAD "whether to force use of std::thread for threading" OFF)
+option(USE_OPENMP "whether to force use of OpenMP for threading" OFF)
 
 # OpenMP support
 if (USE_STD_THREAD)
