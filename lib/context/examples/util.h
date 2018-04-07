@@ -4,6 +4,7 @@
 
 #include <time.h>
 #include <cstdlib>
+#include <cstdint>
 
 namespace fcontext { namespace examples {
 

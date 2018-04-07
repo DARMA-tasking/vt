@@ -1,6 +1,8 @@
 
 #include "util.h"
 
+#include <cstdint>
+
 namespace fcontext { namespace examples {
 
 void sleep(uint32_t const ms) {
