@@ -31,7 +31,7 @@ inline HandlerType makeAutoHandlerFunctorMap() {
   auto const& han = HandlerManagerType::makeHandler(true, true, RunnableT::idx);
   debug_print(
     handler, node,
-    "makeAutoHandlerFunctorMap: id=%d, handler=%d\n", id, han
+    "makeAutoHandlerFunctorMap: handler=%d\n", han
   );
   return han;
 }
