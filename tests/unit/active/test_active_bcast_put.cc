@@ -43,7 +43,7 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
     auto const size = msg->getPutSize();
 
     #if DEBUG_TEST_HARNESS_PRINT || 1
-      printf("%d: test_handler: size=%lu, ptr=%p\n", this_node, size, ptr);
+      printf("%d: test_handler: size=%u, ptr=%p\n", this_node, size, ptr);
     #endif
 
     EXPECT_EQ(put_size * sizeof(int), size);
