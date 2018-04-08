@@ -199,7 +199,7 @@ set(
   ping_pong
 )
 
-set(MPI_RUN_COMMAND "mpirun-mpich-clang")
+set(MPI_RUN_COMMAND "mpirun")
 set(MPI_NUMPROC_FLAG "-n")
 
 set(PROC_TEST_LIST 2 4 8)
