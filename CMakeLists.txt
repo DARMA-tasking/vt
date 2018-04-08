@@ -268,6 +268,7 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
       ${MPI_C_LIBRARIES}
       ${FCONTEXT_LIBRARY}
       ${SERIALIZATION_LIBRARY}
+      atomic
     )
   endif()
 endforeach()
@@ -292,6 +293,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     ${MPI_C_LIBRARIES}
     ${FCONTEXT_LIBRARY}
     ${SERIALIZATION_LIBRARY}
+    atomic
   )
 endforeach()
 
@@ -370,7 +372,8 @@ else()
         ${FCONTEXT_LIBRARY}
         ${SERIALIZATION_LIBRARY}
         gtest gmock
-        )
+	atomic
+      )
 
       foreach(PROC ${UNIT_TEST_PROC_TEST_LIST})
         add_test(
