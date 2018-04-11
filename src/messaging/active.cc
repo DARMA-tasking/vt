@@ -739,4 +739,12 @@ HandlerType ActiveMessenger::getCurrentCallback() {
   return current_callback_context_;
 }
 
+void ActiveMessenger::setGlobalEpoch(EpochType const& epoch) {
+  global_epoch_ = epoch;
+}
+
+EpochType ActiveMessenger::getGlobalEpoch() const {
+  return global_epoch_;
+}
+
 }} // end namespace vt::messaging
