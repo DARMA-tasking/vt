@@ -390,12 +390,15 @@ struct ActiveMessenger {
     TagType const& send_tag, ActionType next_action
   );
 
+  void setGlobalEpoch(EpochType const& epoch = no_epoch);
+  EpochType getGlobalEpoch() const;
+
 private:
   NodeType this_node_ = uninitialized_destination;
   HandlerType current_handler_context_ = uninitialized_handler;
   HandlerType current_callback_context_ = uninitialized_handler;
   NodeType current_node_context_ = uninitialized_destination;
-
+  EpochType global_epoch_ = no_epoch;
   MaybeReadyType maybe_ready_tag_han_;
   ContainerWaitingHandlerType pending_handler_msgs_;
   ContainerPendingType pending_recvs_;
