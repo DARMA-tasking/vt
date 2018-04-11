@@ -160,6 +160,7 @@ EventType ActiveMessenger::sendMsgSized(
   auto const& dest = envelopeGetDest(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
   auto const& is_term = envelopeIsTerm(msg->env);
+  auto const& is_epoch = envelopeIsEpochType(msg->env);
 
   backend_enable_if(
     trace_enabled, {
@@ -187,6 +188,10 @@ EventType ActiveMessenger::sendMsgSized(
       dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
       print_bool(envelopeIsPut(msg->env))
     );
+  }
+
+  if (is_epoch && global_epoch_ != no_epoch) {
+    setEpochMessage(msg, global_epoch_);
   }
 
   bool deliver = false;
