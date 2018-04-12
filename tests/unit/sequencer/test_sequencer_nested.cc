@@ -18,8 +18,8 @@ using namespace vt::tests::unit;
 #define DEBUG_PRINT_SEQ_NESTED(ORDER, CUR)                              \
   do {                                                                  \
     auto seq_id = theSeq()->getCurrentSeq();                              \
-    printf(                                                             \
-      "testSeqDeepNested: seq_id=%d, ordering=%d -- cur=%d --\n",       \
+    fmt::print(                                                             \
+      "testSeqDeepNested: seq_id={}, ordering={} -- cur={} --\n",       \
       seq_id, (ORDER).load(), (CUR)                                     \
     );                                                                  \
   } while (false);
@@ -162,7 +162,7 @@ struct TestSequencerNested : TestParallelHarness {
     }
 
     #if DEBUG_TEST_HARNESS_PRINT
-      printf("testSeqDeepNested: seq_id=%d, ordering=%d\n", seq_id, seq_ordering_.load());
+      fmt::print("testSeqDeepNested: seq_id={}, ordering={}\n", seq_id, seq_ordering_.load());
     #endif
 
     EXPECT_EQ(seq_ordering_++, 0);

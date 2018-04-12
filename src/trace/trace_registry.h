@@ -19,9 +19,9 @@ struct TraceRegistry {
   ) {
     // must use this old-style of print because context may not be initialized
     #if backend_check_enabled(trace_enabled) && backend_check_enabled(trace)
-    printf(
-      "register_event_hashed: event_type_name=%s, event_name=%s, "
-      "event_type_container.size=%ld\n",
+    fmt::print(
+      "register_event_hashed: event_type_name={}, event_name={}, "
+      "event_type_container.size={}\n",
       event_type_name.c_str(), event_name.c_str(),
       TraceContainersType::event_type_container.size()
     );

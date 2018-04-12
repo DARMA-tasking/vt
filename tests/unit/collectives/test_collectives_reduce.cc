@@ -31,21 +31,22 @@ struct TestReduce : TestParallelHarness {
   static void reducePlus(MyReduceMsg* msg) {
     auto const& this_node = theContext()->getNode();
 
-    printf(
-        "cur=%p: is_root=%s, count=%d, next=%p, num=%d\n",
-        msg, print_bool(msg->is_root), msg->count, msg->next, msg->num
+    fmt::print(
+      "cur={}: is_root={}, count={}, next={}, num={}\n",
+      print_ptr(msg), print_bool(msg->is_root), msg->count,
+      print_ptr(msg->next), msg->num
     );
 
     if (msg->is_root) {
-      printf("final num=%d\n", msg->num);
+      fmt::print("final num={}\n", msg->num);
     } else {
       MyReduceMsg* fst_msg = msg;
       MyReduceMsg* cur_msg = msg->next ? static_cast<MyReduceMsg*>(msg->next) : nullptr;;
       while (cur_msg != nullptr) {
-        printf(
-            "while fst_msg=%p: cur_msg=%p, is_root=%s, count=%d, next=%p, num=%d\n",
-            fst_msg, cur_msg, print_bool(cur_msg->is_root), cur_msg->count, cur_msg->next,
-            cur_msg->num
+        fmt::print(
+          "while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
+          print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->is_root),
+          cur_msg->count, print_ptr(cur_msg->next), cur_msg->num
         );
 
         fst_msg->num += cur_msg->num;
@@ -60,7 +61,7 @@ TEST_F(TestReduce, test_reduce_op) {
   auto const& root = 0;
 
   MyReduceMsg* msg = makeSharedMessage<MyReduceMsg>(my_node);
-  printf("msg->num=%d\n", msg->num);
+  fmt::print("msg->num={}\n", msg->num);
   theCollective()->reduce<MyReduceMsg, reducePlus>(root, msg);
 }
 

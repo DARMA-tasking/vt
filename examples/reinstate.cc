@@ -19,7 +19,7 @@ struct TestMsg : vt::Message {
 static void callbackFn2(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-  printf("%d: callbackFn2 handler node %d\n", theContext()->getNode(), msg.from);
+  fmt::print("{}: callbackFn2 handler node {}\n", theContext()->getNode(), msg.from);
 }
 
 static void reinstateFn(vt::BaseMessage* in_msg) {
@@ -37,7 +37,7 @@ static void callbackFn(vt::BaseMessage* in_msg) {
 
   theMsg()->sendMsg(my_reinstate_fn, makeSharedMessage<TestMsg>(0, han));
 
-  printf("%d: callbackFn handler node %d\n", theContext()->getNode(), msg.from);
+  fmt::print("{}: callbackFn handler node {}\n", theContext()->getNode(), msg.from);
 }
 
 static void myColFn(vt::BaseMessage* in_msg) {
@@ -45,8 +45,8 @@ static void myColFn(vt::BaseMessage* in_msg) {
 
   auto const& my_node = theContext()->getNode();
 
-  printf(
-    "%d: myColFn from=%d, callback=%d: sending\n",
+  fmt::print(
+    "{}: myColFn from={}, callback={}: sending\n",
     my_node, msg.from, msg.callback_han
   );
 

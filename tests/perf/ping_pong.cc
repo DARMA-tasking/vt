@@ -2,6 +2,8 @@
 #include <cassert>
 #include <cstdint>
 
+#include <fmt/format.h>
+
 #include "transport.h"
 
 #define DEBUG_PING_PONG 0
@@ -48,8 +50,8 @@ static void printTiming(int64_t const& num_bytes) {
 
   startTime = MPI_Wtime();
 
-  printf(
-    "%d: Finished num_pings=%lld, bytes=%lld, total time=%f, time/msg=%f\n",
+  fmt::print(
+    "{}: Finished num_pings={}, bytes={}, total time={}, time/msg={}\n",
     theContext()->getNode(), num_pings, num_bytes, total, total/num_pings
   );
 }
@@ -76,8 +78,8 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
   auto const& cnt = in_msg->count;
 
   #if DEBUG_PING_PONG
-    printf(
-      "%d: pingPong: cnt=%lld, bytes=%lld\n",
+    fmt::print(
+      "{}: pingPong: cnt={}, bytes={}\n",
       theContext()->getNode(), cnt, num_bytes
     );
   #endif

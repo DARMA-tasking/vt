@@ -37,7 +37,7 @@ inline AutoActiveType getAutoHandler(HandlerType const& handler) {
 
   debug_print(
     handler, node,
-    "get_auto_handler: handler=%d, id=%d, is_auto=%s, is_functor=%s\n",
+    "get_auto_handler: handler={}, id={}, is_auto={}, is_functor={}\n",
     handler, han_id, print_bool(is_auto), print_bool(is_functor)
   );
 

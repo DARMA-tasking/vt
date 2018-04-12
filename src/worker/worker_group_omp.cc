@@ -62,7 +62,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
 
   debug_print(
     worker, node,
-    "Worker group OMP: launching num worker threads=%d, num comm threads=%d\n",
+    "Worker group OMP: launching num worker threads={}, num comm threads={}\n",
     num_workers_, num_default_comm
   );
 
@@ -70,7 +70,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
 
   debug_print(
     worker, node,
-    "worker group OMP spawning=%d\n", num_workers_ + 1
+    "worker group OMP spawning={}\n", num_workers_ + 1
   );
 
   #pragma omp parallel num_threads(num_workers_ + 1)
@@ -88,7 +88,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
 
       debug_print(
         worker, node,
-        "Worker group OMP: (worker) thd=%d, num threads=%d\n", thd, nthds
+        "Worker group OMP: (worker) thd={}, num threads={}\n", thd, nthds
       );
 
       worker_state_[thd] = std::make_unique<WorkerStateType>(
@@ -102,7 +102,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
 
       debug_print(
         worker, node,
-        "Worker group OMP: (comm) thd=%d, num threads=%d\n", thd, nthds
+        "Worker group OMP: (comm) thd={}, num threads={}\n", thd, nthds
       );
 
       // Wait until all the workers are created and have filled the
@@ -118,7 +118,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
 
       // once the comm function exits the program is terminated
       for (auto thd = 0; thd < num_workers_; thd++) {
-        debug_print( worker, node, "comm: calling join thd=%d\n", thd );
+        debug_print( worker, node, "comm: calling join thd={}\n", thd );
         worker_state_[thd]->join();
       }
     }
@@ -153,7 +153,7 @@ void WorkerGroupOMP::enqueueForWorker(
   assert(worker_id < worker_state_.size() and "Worker ID must be valid");
 
   #if WORKER_OMP_VERBOSE
-  debug_print(worker, node, "WorkerGroupOMP: enqueue for id=%d\n", worker_id);
+  debug_print(worker, node, "WorkerGroupOMP: enqueue for id={}\n", worker_id);
   #endif
 
   this->enqueued();

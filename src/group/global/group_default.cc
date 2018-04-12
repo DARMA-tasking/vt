@@ -80,8 +80,8 @@ namespace vt { namespace group { namespace global {
 
   debug_print(
     group, node,
-    "sendUpTree: count=%d, default_group_->sync_count_[%hu]=%d, is_root=%s, "
-    "phase=%hu\n",
+    "sendUpTree: count={}, default_group_->sync_count_[{}]={}, is_root={}, "
+    "phase={}\n",
     count, phase, default_group_->sync_count_[phase],
     print_bool(default_group_->spanning_tree_->isRoot()), phase
   );
@@ -93,7 +93,7 @@ namespace vt { namespace group { namespace global {
     } else {
       debug_print(
         group, node,
-        "DefaultGroup::sendUpTree: root node: phase=%hu, num_phase=%hu\n",
+        "DefaultGroup::sendUpTree: root node: phase={}, num_phase={}\n",
         phase, num_phases
       );
       if (phase < num_phases) {
@@ -119,8 +119,8 @@ namespace vt { namespace group { namespace global {
 
   debug_print(
     broadcast, node,
-    "DefaultGroup::broadcast msg=%p, size=%d, from=%d, dest=%d, is_root=%s\n",
-    base, size, from, dest, print_bool(is_root)
+    "DefaultGroup::broadcast msg={}, size={}, from={}, dest={}, is_root={}\n",
+    print_ptr(base), size, from, dest, print_bool(is_root)
   );
 
   if (num_children > 0 || send_to_root) {
@@ -148,9 +148,9 @@ namespace vt { namespace group { namespace global {
 
         debug_print(
           broadcast, node,
-          "DefaultGroup::broadcast *send* size=%d, from=%d, child=%d, send=%s, "
-          "msg=%p\n",
-          size, from, child, print_bool(send), msg
+          "DefaultGroup::broadcast *send* size={}, from={}, child={}, send={}, "
+          "msg={}\n",
+          size, from, child, print_bool(send), print_ptr(msg)
         );
 
         if (send) {
@@ -169,9 +169,9 @@ namespace vt { namespace group { namespace global {
     if (send_to_root) {
       debug_print(
         broadcast, node,
-        "DefaultGroup::broadcast *send* is_root=%s, root_node=%d, dest=%d, "
-        "msg=%p\n",
-        print_bool(is_root), root_node, dest, msg
+        "DefaultGroup::broadcast *send* is_root={}, root_node={}, dest={}, "
+        "msg={}\n",
+        print_bool(is_root), root_node, dest, print_ptr(msg)
       );
 
       auto const put_event = theMsg()->sendMsgBytesWithPut(

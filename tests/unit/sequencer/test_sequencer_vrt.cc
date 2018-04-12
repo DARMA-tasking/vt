@@ -55,7 +55,7 @@ struct TestSequencerVirtual : TestParallelHarness {
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan1>([](
       TestMsg* msg, VirtualType* vrt
     ){
-      //printf("wait is triggered: msg=%p, vrt=%p\n", msg, vrt);
+      //fmt::print("wait is triggered: msg={}, vrt={}\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr);
       EXPECT_EQ(seq_ordering_++, 1);
     });
@@ -74,7 +74,7 @@ struct TestSequencerVirtual : TestParallelHarness {
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan2>([](
       TestMsg* msg, VirtualType* vrt
     ){
-      //printf("wait is triggered: msg=%p, vrt=%p\n", msg, vrt);
+      //fmt::print("wait is triggered: msg={}, vrt={}\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr);
       EXPECT_EQ(seq_ordering_++, 1);
     });
@@ -82,7 +82,7 @@ struct TestSequencerVirtual : TestParallelHarness {
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan2>([](
       TestMsg* msg, VirtualType* vrt
     ){
-      //printf("wait is triggered: msg=%p, vrt=%p\n", msg, vrt);
+      //fmt::print("wait is triggered: msg={}, vrt={}\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr);
       EXPECT_EQ(seq_ordering_++, 2);
     });
@@ -101,7 +101,10 @@ struct TestSequencerVirtual : TestParallelHarness {
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan3>([](
       TestMsg* msg, VirtualType* vrt
     ){
-      printf("wait is triggered for a: msg=%p, vrt=%p\n", msg, vrt);
+      fmt::print(
+        "wait is triggered for a: msg={}, vrt={}\n",
+        print_ptr(msg), print_ptr(vrt)
+      );
       EXPECT_EQ(vrt, test_vrt_ptr_a);
       EXPECT_EQ(seq_ordering_++, 1);
     });
@@ -120,7 +123,10 @@ struct TestSequencerVirtual : TestParallelHarness {
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan3>([](
       TestMsg* msg, VirtualType* vrt
     ){
-      printf("wait is triggered for b: msg=%p, vrt=%p\n", msg, vrt);
+      fmt::print(
+        "wait is triggered for b: msg={}, vrt={}\n",
+        print_ptr(msg), print_ptr(vrt)
+      );
       EXPECT_EQ(vrt, test_vrt_ptr_b);
       EXPECT_EQ(seq_ordering_++, 1);
     });
@@ -140,7 +146,7 @@ TEST_F(TestSequencerVirtual, test_seq_vc_1) {
     auto vrt_ptr = theVirtualManager()->getVirtualByProxy(proxy);
 
     test_vrt_ptr = static_cast<VirtualType*>(vrt_ptr);
-    //printf("vrt ptr=%p\n", test_vrt_ptr);
+    //fmt::print("vrt ptr={}\n", test_vrt_ptr);
 
     theVirtualSeq()->sequenced(seq_id, testSeqFn1);
 

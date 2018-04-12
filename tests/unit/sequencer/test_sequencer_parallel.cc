@@ -25,8 +25,8 @@ using namespace std::placeholders;
 #define DEBUG_PRINT_SEQ_NESTED(ORDER, CUR, LABEL)                       \
   do {                                                                  \
     auto seq_id = theSeq()->getCurrentSeq();                              \
-    printf(                                                             \
-      "seqParFnA (%s): seq_id=%d, ordering=%d -- cur=%d --\n",   \
+    fmt::print(                                                             \
+      "seqParFnA ({}): seq_id={}, ordering={} -- cur={} --\n",   \
       (LABEL), seq_id, (ORDER).load(), (CUR)                            \
     );                                                                  \
   } while (false);

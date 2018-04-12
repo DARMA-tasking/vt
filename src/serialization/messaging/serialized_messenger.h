@@ -37,8 +37,8 @@ struct SerializedMessenger {
 
     debug_print(
       serial_msg, node,
-      "serialMsgHandler: non-eager, recvDataMsg: msg=%p, handler=%d, "
-      "recv_tag=%d\n",
+      "serialMsgHandler: non-eager, recvDataMsg: msg={}, handler={}, "
+      "recv_tag={}\n",
       sys_msg, handler, recv_tag
     );
 
@@ -52,7 +52,7 @@ struct SerializedMessenger {
 
         debug_print(
           serial_msg, node,
-          "serialMsgHandler: recvDataMsg finished: handler=%d, recv_tag=%d\n",
+          "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={}\n",
           handler, recv_tag
         );
 
@@ -75,7 +75,7 @@ struct SerializedMessenger {
 
     debug_print(
       serial_msg, node,
-      "payloadMsgHandler: msg=%p, handler=%d, bytes=%llu\n",
+      "payloadMsgHandler: msg={}, handler={}, bytes={}\n",
       sys_msg, handler, sys_msg->bytes
     );
 
@@ -150,12 +150,12 @@ struct SerializedMessenger {
       }
     );
 
-    //printf("ptr_size=%ld\n", ptr_size);
+    //fmt::print("ptr_size={}\n", ptr_size);
 
     if (ptr_size > serialized_msg_eager_size) {
       debug_print(
         serial_msg, node,
-        "sendSerialMsg: non-eager: ptr_size=%zu\n", ptr_size
+        "sendSerialMsg: non-eager: ptr_size={}\n", ptr_size
       );
 
       assert(payload_msg == nullptr && data_sender != nullptr);
@@ -174,7 +174,7 @@ struct SerializedMessenger {
 
           debug_print(
             serial_msg, node,
-            "sendSerialMsg: non-eager: dest=%d, sys_msg=%p, handler=%d\n",
+            "sendSerialMsg: non-eager: dest={}, sys_msg={}, handler={}\n",
             dest, sys_msg, typed_handler
           );
 
@@ -187,7 +187,7 @@ struct SerializedMessenger {
 
           debug_print(
             serial_msg, node,
-            "serialMsgHandler: local msg: handler=%d\n", typed_handler
+            "serialMsgHandler: local msg: handler={}\n", typed_handler
           );
 
           auto active_fn = auto_registry::getAutoHandler(typed_handler);

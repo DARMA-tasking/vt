@@ -106,8 +106,8 @@ void VirtualContextManager::sendSerialMsg(
 
     debug_print(
       vrt, node,
-      "sending serialized msg to VC: msg=%p, han=%d, home_node=%d, toProxy=%lld\n",
-      msg, han, home_node, toProxy
+      "sending serialized msg to VC: msg={}, han={}, home_node={}, toProxy={}\n",
+      print_ptr(msg), han, home_node, toProxy
     );
 
     using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
@@ -209,7 +209,7 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
 
   debug_print(
     vrt, node,
-    "makeVirtualMap: has_workers=%s\n", print_bool(has_workers)
+    "makeVirtualMap: has_workers={}\n", print_bool(has_workers)
   );
 
   if (has_workers) {
@@ -221,7 +221,7 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
 
     debug_print(
       vrt, node,
-      "seed=%lld, mapped_core=%d, num_workers=%d\n",
+      "seed={}, mapped_core={}, num_workers={}\n",
       next_seed, mapped_core, num_workers
     );
 
@@ -264,7 +264,8 @@ void VirtualContextManager::sendMsg(
 
   debug_print(
     vrt, node,
-    "sending msg to VC: msg=%p, han=%d, home_node=%d\n", msg, han, home_node
+    "sending msg to VC: msg={}, han={}, home_node={}\n",
+    print_ptr(msg), han, home_node
   );
 
   // route the message to the destination using the location manager

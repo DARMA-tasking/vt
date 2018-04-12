@@ -36,7 +36,8 @@ void messageRef(MessageT* msg) {
 
   debug_print(
     pool, node,
-    "messageRef msg=%p, refs=%d\n", msg, envelopeGetRef(msg->env)
+    "messageRef msg={}, refs={}\n",
+    print_ptr(msg), envelopeGetRef(msg->env)
   );
 }
 
@@ -46,7 +47,8 @@ void messageDeref(MessageT* msg) {
 
   debug_print(
     pool, node,
-    "messageDeref msg=%p, refs=%d\n", msg, envelopeGetRef(msg->env)
+    "messageDeref msg={}, refs={}\n",
+    print_ptr(msg), envelopeGetRef(msg->env)
   );
 
   if (envelopeGetRef(msg->env) == 0) {

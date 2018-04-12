@@ -44,7 +44,7 @@ void WorkerGroupCounter::finished(WorkerIDType id, WorkUnitCountType num) {
   #if WORKER_COUNTER_VERBOSE
   debug_print(
     worker, node,
-    "WorkerGroupCounter: completed: id=%d, num=%lld\n", id, num
+    "WorkerGroupCounter: completed: id={}, num={}\n", id, num
   );
   #endif
 
@@ -87,8 +87,8 @@ void WorkerGroupCounter::progress() {
     #if WORKER_COUNTER_VERBOSE
     debug_print(
       worker, node,
-      "WorkerGroupCounter: progress: fin=%lld, enq=%lld, is_idle=%s, "
-      "last_event=%s, last_event_idle=%s\n",
+      "WorkerGroupCounter: progress: fin={}, enq={}, is_idle={}, "
+      "last_event={}, last_event_idle={}\n",
       cur_finished, cur_enqueued, print_bool(is_idle),
       WORKER_GROUP_EVENT_STR(last_event_), print_bool(last_event_idle)
     );
@@ -117,7 +117,7 @@ void WorkerGroupCounter::updateConsumedTerm() {
 
   debug_print(
     worker, node,
-    "WorkerGroupCounter: updating: num_fin=%lld, num_con=%lld, num_sub=%lld\n",
+    "WorkerGroupCounter: updating: num_fin={}, num_con={}, num_sub={}\n",
     cur_finished, cur_consumed, num_to_consume
   );
 
@@ -128,7 +128,7 @@ void WorkerGroupCounter::triggerListeners(eWorkerGroupEvent event) {
   #if WORKER_COUNTER_VERBOSE
   debug_print(
     worker, node,
-    "WorkerGroupCounter: triggering listeners: event=%s\n",
+    "WorkerGroupCounter: triggering listeners: event={}\n",
     WORKER_GROUP_EVENT_STR(event)
   );
   #endif

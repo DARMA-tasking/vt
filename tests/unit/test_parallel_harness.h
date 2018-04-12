@@ -36,7 +36,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& my_node = theContext()->getNode();
       auto const& num_nodes = theContext()->getNumNodes();
-      printf("my_node=%d, num_nodes=%d\n", my_node, num_nodes);
+      fmt::print("my_node={}, num_nodes={}\n", my_node, num_nodes);
     #endif
   }
 
@@ -49,7 +49,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& my_node = theContext()->getNode();
-      printf("my_node=%d, tearing down runtime\n", my_node);
+      fmt::print("my_node={}, tearing down runtime\n", my_node);
     #endif
 
     CollectiveOps::finalize();

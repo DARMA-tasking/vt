@@ -45,15 +45,15 @@ template <typename MsgT>
 
   debug_print(
     group, node,
-    "Info::groupSetupHandler: group size=%hd, group_total_size=%hd, "
-    "new_size=%d, min_spanning_tree_size=%d\n",
+    "Info::groupSetupHandler: group size={}, group_total_size={}, "
+    "new_size={}, min_spanning_tree_size={}\n",
     group_size, group_total_size, new_size, min_spanning_tree_size
   );
 
   if (new_size < min_spanning_tree_size) {
     debug_print(
       group, node,
-      "Info::groupSetupHandler: create leaf node: size=%d\n",
+      "Info::groupSetupHandler: create leaf node: size={}\n",
       new_size
     );
 
@@ -66,7 +66,7 @@ template <typename MsgT>
 
     debug_print(
       group, node,
-      "Info::groupSetupHandler: op=%lu, parent=%d\n",
+      "Info::groupSetupHandler: op={}, parent={}\n",
       op_id, parent
     );
 
@@ -78,7 +78,7 @@ template <typename MsgT>
   } else {
     debug_print(
       group, node,
-      "Info::groupSetupHandler: split and send to children: size=%d\n",
+      "Info::groupSetupHandler: split and send to children: size={}\n",
       new_size
     );
 
@@ -93,7 +93,7 @@ template <typename MsgT>
 
       debug_print(
         group, node,
-        "Info::parent continuation: wait_count_=%lu, parent=%d\n",
+        "Info::parent continuation: wait_count_={}, parent={}\n",
         info->wait_count_, parent
       );
 
@@ -101,7 +101,7 @@ template <typename MsgT>
       if (info->wait_count_ == 0 && parent != uninitialized_destination) {
         debug_print(
           group, node,
-          "Info::parent continuation: sending to parent=%d, op_id=%lu\n",
+          "Info::parent continuation: sending to parent={}, op_id={}\n",
           parent, op_id
         );
 
@@ -121,7 +121,7 @@ template <typename MsgT>
 
       debug_print(
         group, node,
-        "Info::groupSetupHandler: child c=%d, c_size=%lu\n", c, c_size
+        "Info::groupSetupHandler: child c={}, c_size={}\n", c, c_size
       );
 
       auto op1 = theGroup()->registerContinuation(parent_cont);

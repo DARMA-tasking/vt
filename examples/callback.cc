@@ -16,14 +16,14 @@ struct TestMsg : vt::Message {
 static void callback_fn(vt::BaseMessage* in_msg) {
   TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-  printf("%d: local handler node %d\n", theContext()->getNode(), msg.from);
+  fmt::print("{}: local handler node {}\n", theContext()->getNode(), msg.from);
 }
 
 static void my_col_fn(TestMsg* msg) {
   auto const& my_node = theContext()->getNode();
 
-  printf(
-    "%d: my_col_fn from=%d, callback=%d: sending\n",
+  fmt::print(
+    "{}: my_col_fn from={}, callback={}: sending\n",
     my_node, msg->from, msg->callback_han
   );
 

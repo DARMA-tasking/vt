@@ -62,7 +62,7 @@ void Trace::beginProcessing(
 
   debug_print(
     trace, node,
-    "event_start: ep=%lu, event=%d, time=%f\n", ep, event, time
+    "event_start: ep={}, event={}, time={}\n", ep, event, time
   );
 
   log->node = from_node;
@@ -81,7 +81,7 @@ void Trace::endProcessing(
 
   debug_print(
     trace, node,
-    "event_stop: ep=%lu, event=%d, time=%f\n", ep, event, time
+    "event_stop: ep={}, event={}, time={}\n", ep, event, time
   );
 
   log->node = from_node;
@@ -268,8 +268,8 @@ void Trace::writeTracesFile() {
 
   debug_print(
     trace, node,
-    "write_traces_file: traces.size=%ld, "
-    "event_type_container.size=%ld, event_container.size=%ld\n",
+    "write_traces_file: traces.size={}, "
+    "event_type_container.size={}, event_container.size={}\n",
     traces_.size(),
     TraceContainersType::event_type_container.size(),
     TraceContainersType::event_container.size()

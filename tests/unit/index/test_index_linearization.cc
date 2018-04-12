@@ -35,7 +35,7 @@ TEST_F(TestIndex, test_index_1d_linearization) {
     #if DEBUG_TEST_HARNESS_PRINT
       auto cur_idx_str = cur_idx.toString().c_str();
       auto max_idx_str = max_idx.toString().c_str();
-      printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
+      fmt::print("idx={}, max={}, lin={}\n", cur_idx_str, max_idx_str, lin_idx);
     #endif
 
     EXPECT_EQ(lin_idx, cur_val);
@@ -47,7 +47,7 @@ TEST_F(TestIndex, test_index_1d_linearization) {
   #if DEBUG_TEST_HARNESS_PRINT
     auto const& idx_str = idx.toString().c_str();
     auto const& idx_max_str = max_idx.toString().c_str();
-    printf("idx=%s, idx_max=%s\n", idx_str, idx_max_str);
+    fmt::print("idx={}, idx_max={}\n", idx_str, idx_max_str);
   #endif
 
   for (int i = 92; i < 100; i++) {
@@ -74,7 +74,7 @@ TEST_F(TestIndex, test_index_2d_linearization) {
       #if DEBUG_TEST_HARNESS_PRINT
         auto cur_idx_str = cur_idx.toString().c_str();
         auto max_idx_str = max_idx.toString().c_str();
-        printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
+        fmt::print("idx={}, max={}, lin={}\n", cur_idx_str, max_idx_str, lin_idx);
       #endif
 
       EXPECT_EQ(lin_idx, cur_val);
@@ -92,7 +92,7 @@ TEST_F(TestIndex, test_index_2d_linearization) {
       #if DEBUG_TEST_HARNESS_PRINT
       auto cur_idx_str = cur_idx.toString().c_str();
         auto max_idx_str = max_idx.toString().c_str();
-        printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
+        fmt::print("idx={}, max={}, lin={}\n", cur_idx_str, max_idx_str, lin_idx);
       #endif
 
       EXPECT_EQ(lin_idx, cur_val);
@@ -104,7 +104,7 @@ TEST_F(TestIndex, test_index_2d_linearization) {
   #if DEBUG_TEST_HARNESS_PRINT
     auto const& idx_str = idx.toString().c_str();
     auto const& idx_max_str = max_idx.toString().c_str();
-    printf("idx=%s, idx_max=%s\n", idx_str, idx_max_str);
+    fmt::print("idx={}, idx_max={}\n", idx_str, idx_max_str);
   #endif
 
   for (int i = 10; i < 20; i++) {
@@ -134,7 +134,7 @@ TEST_F(TestIndex, test_index_3d_linearization) {
         #if DEBUG_TEST_HARNESS_PRINT
           auto cur_idx_str = cur_idx.toString().c_str();
           auto max_idx_str = max_idx.toString().c_str();
-          printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
+          fmt::print("idx={}, max={}, lin={}\n", cur_idx_str, max_idx_str, lin_idx);
         #endif
 
         EXPECT_EQ(lin_idx, cur_val);
@@ -154,7 +154,7 @@ TEST_F(TestIndex, test_index_3d_linearization) {
         #if DEBUG_TEST_HARNESS_PRINT
         auto cur_idx_str = cur_idx.toString().c_str();
           auto max_idx_str = max_idx.toString().c_str();
-          printf("idx=%s, max=%s, lin=%d\n", cur_idx_str, max_idx_str, lin_idx);
+          fmt::print("idx={}, max={}, lin={}\n", cur_idx_str, max_idx_str, lin_idx);
         #endif
 
         EXPECT_EQ(lin_idx, cur_val);
@@ -167,7 +167,7 @@ TEST_F(TestIndex, test_index_3d_linearization) {
   #if DEBUG_TEST_HARNESS_PRINT
     auto const& idx_str = idx.toString().c_str();
     auto const& idx_max_str = max_idx.toString().c_str();
-    printf("idx=%s, idx_max=%s\n", idx_str, idx_max_str);
+    fmt::print("idx={}, idx_max={}\n", idx_str, idx_max_str);
   #endif
 
   for (int i = 3; i < 10; i++) {

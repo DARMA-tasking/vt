@@ -33,8 +33,8 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
 
   debug_print(
     vrt, node,
-    "setVirtualContextPtr: set ptr=%p, attaching process fn\n",
-    in_vrt_ptr.get()
+    "setVirtualContextPtr: set ptr={}, attaching process fn\n",
+    print_ptr(in_vrt_ptr.get())
   );
 
   msg_buffer_.attach([this,ptr](VirtualMessage* msg){
@@ -81,7 +81,7 @@ void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {
 
   debug_print(
     vrt, node,
-    "tryEnqueueWorkUnit is_cons=%s\n", print_bool(is_constructed)
+    "tryEnqueueWorkUnit is_cons={}\n", print_bool(is_constructed)
   );
 
   if (is_constructed) {
