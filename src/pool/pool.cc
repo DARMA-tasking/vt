@@ -58,7 +58,7 @@ void* Pool::alloc(size_t const& num_bytes) {
 
   debug_print(
     pool, node,
-    "Pool::alloc of size=%zu, type=%s, ret=%p, worker=%d\n",
+    "Pool::alloc of size={}, type={}, ret={}, worker={}\n",
     num_bytes, print_pool_type(pool_type), ret, worker
   );
 
@@ -76,8 +76,9 @@ void Pool::dealloc(void* const buf) {
 
   debug_print(
     pool, node,
-    "Pool::dealloc of buf=%p, type=%s, alloc_size=%ld, worker=%d, ptr=%p\n",
-    buf, print_pool_type(pool_type), actual_alloc_size, alloc_worker, ptr_actual
+    "Pool::dealloc of buf={}, type={}, alloc_size={}, worker={}, ptr={}\n",
+    buf, print_pool_type(pool_type), actual_alloc_size, alloc_worker,
+    print_ptr(ptr_actual)
   );
 
   if (pool_type != ePoolSize::Malloc && alloc_worker != worker) {

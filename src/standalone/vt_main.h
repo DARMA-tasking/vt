@@ -43,7 +43,7 @@ int vt_main(
   int argc, char** argv, WorkerCountType workers = default_vt_num_workers
 ) {
   auto rt = CollectiveOps::initialize(argc, argv, workers);
-  debug_print(gen, node, "vt_main: initialized workers=%d\n", workers);
+  debug_print(gen, node, "vt_main: initialized workers={}\n", workers);
 
   auto comm_fn = vrCommThreadWork<VrtContextT>;
 
@@ -54,7 +54,7 @@ int vt_main(
     theWorkerGrp()->spawnWorkersBlock(comm_fn);
   }
 
-  debug_print(gen, node, "vt_main: calling finalize workers=%d\n", workers);
+  debug_print(gen, node, "vt_main: calling finalize workers={}\n", workers);
   CollectiveOps::finalize(std::move(rt));
   return 0;
 }

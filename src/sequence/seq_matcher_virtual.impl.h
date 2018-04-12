@@ -147,7 +147,7 @@ template <typename FnT>
 ) {
   debug_print(
     sequence, node,
-    "SeqMatcher: buffering action: seq=%d, tag=%d\n", seq_id, tag
+    "SeqMatcher: buffering action: seq={}, tag={}\n", seq_id, tag
   );
 
   if (tag == no_tag) {

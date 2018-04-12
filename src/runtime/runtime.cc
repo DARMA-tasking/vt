@@ -50,7 +50,7 @@ bool Runtime::tryInitialize() {
 
   debug_print(
     runtime, unknown,
-    "Runtime: tryInitialize: initialized_=%s, finalized_=%s, init_now=%s\n",
+    "Runtime: tryInitialize: initialized_={}, finalized_={}, init_now={}\n",
     print_bool(initialized_), print_bool(finalized_), print_bool(init_now)
   );
 
@@ -67,8 +67,8 @@ bool Runtime::tryFinalize() {
 
   debug_print(
     runtime, unknown,
-    "Runtime: tryFinalize: initialized_=%s, finalized_=%s, rt_live=%s, sched=%s, "
-    "finalize_now=%s\n",
+    "Runtime: tryFinalize: initialized_={}, finalized_={}, rt_live={}, sched={}, "
+    "finalize_now={}\n",
     print_bool(initialized_), print_bool(finalized_), print_bool(rt_live),
     print_bool(has_run_sched), print_bool(finalize_now)
   );
@@ -102,16 +102,16 @@ void Runtime::printStartupBanner() {
     (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
 
   auto const& stream = stdout;
-  fprintf(stream, "VT: %s: %s%s\n", init.c_str(), mode.c_str(), thd.c_str());
-  fprintf(stream, "VT: Running on %d nodes%s\n", nodes, worker_cnt.c_str());
-  fprintf(stream, "VT: features enabled:\n" backend_print_all_features(0));
+  fmt::print(stream, "VT: {}: {}{}\n", init.c_str(), mode.c_str(), thd.c_str());
+  fmt::print(stream, "VT: Running on {} nodes{}\n", nodes, worker_cnt.c_str());
+  fmt::print(stream, "VT: features enabled:\n" backend_print_all_features(0));
 }
 
 void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   std::string fin = "Runtime finalizing";
   std::string units = std::to_string(num_units);
   auto const& stream = stdout;
-  fprintf(stream, "VT: %s: %s work units processed\n", fin.c_str(), units.c_str());
+  fmt::print(stream, "VT: {}: {} work units processed\n", fin.c_str(), units.c_str());
 }
 
 bool Runtime::initialize(bool const force_now) {
@@ -169,10 +169,10 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   NodeType const node = theContext ? theContext->getNode() : -1;
   std::string sep = "--------------";
   auto csep = sep.c_str();
-  fprintf(stderr, "VT: runtime error: system aborting\n");
-  fprintf(stderr, "%s Node %d Exiting: abort() invoked %s\n", csep, node, csep);
-  fprintf(stderr, "Error code: %d\n", code);
-  fprintf(stderr, "Reason: \"%s\"\n", abort_str.c_str());
+  fmt::print(stderr, "VT: runtime error: system aborting\n");
+  fmt::print(stderr, "{} Node {} Exiting: abort() invoked {}\n", csep, node, csep);
+  fmt::print(stderr, "Error code: {}\n", code);
+  fmt::print(stderr, "Reason: \"{}\"\n", abort_str.c_str());
 
   std::exit(code);
 }
@@ -274,7 +274,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   using ::vt::ctx::ContextAttorney;
 
   debug_print(
-    runtime, node, "begin: initializeWorkers: workers=%d\n", num_workers
+    runtime, node, "begin: initializeWorkers: workers={}\n", num_workers
   );
 
   bool const has_workers = num_workers != no_workers;

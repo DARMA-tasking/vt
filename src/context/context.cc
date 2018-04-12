@@ -11,8 +11,8 @@ namespace vt { namespace ctx {
 
 Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
   #if DEBUG_VT_CONTEXT
-    printf(
-      "Context::Context is_interop=%s, comm=%p\n", print_bool(is_interop), comm
+    fmt::print(
+      "Context::Context is_interop={}, comm={}\n", print_bool(is_interop), comm
     );
   #endif
 

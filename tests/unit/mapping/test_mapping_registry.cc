@@ -22,7 +22,7 @@ struct TestMsg : vt::ShortMessage {
 struct TestMappingRegistry : TestParallelHarness {
   static void test_handler(TestMsg* msg) {
     auto const& this_node = theContext()->getNode();
-    //printf("%d: test_handler: han=%d\n", this_node, msg->han);
+    //fmt::print("{}: test_handler: han={}\n", this_node, msg->han);
     auto fn = auto_registry::getAutoHandlerMap(msg->han);
 
     static constexpr index::Index1D::DenseIndexType const val = 64;
@@ -43,7 +43,7 @@ struct TestMappingRegistry : TestParallelHarness {
     } else {
       EXPECT_EQ(val % nnodes, node);
     }
-    //printf("node=%d\n", node);
+    //fmt::print("node={}\n", node);
   }
 
 };
@@ -64,7 +64,7 @@ TEST_F(TestMappingRegistry, test_mapping_block_1d_registry) {
   auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
-    printf("test_type_safe_active_fn_send: node=%d\n", my_node);
+    fmt::print("test_type_safe_active_fn_send: node={}\n", my_node);
   #endif
 
   if (my_node == 0) {

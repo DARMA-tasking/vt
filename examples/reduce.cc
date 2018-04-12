@@ -20,7 +20,7 @@ static void bcastTest(Msg* msg) {
   auto const& root = msg->broot;
 
   #if BCAST_DEBUG
-  printf("%d: bcastTestHandler root=%d\n", theContext()->getNode(), msg->broot);
+  fmt::print("{}: bcastTestHandler root={}\n", theContext()->getNode(), msg->broot);
   #endif
 
   assert(
@@ -51,12 +51,12 @@ int main(int argc, char** argv) {
       ));
 
   theTerm()->attachGlobalTermAction([=]{
-    printf("[%d] verify: count=%d, expected=%d\n", my_node, count, expected);
+    fmt::print("[{}] verify: count={}, expected={}\n", my_node, count, expected);
     assert(count == expected);
   });
 
   if (from_node == uninitialized_destination or from_node == my_node) {
-    printf("[%d] broadcast_test: broadcasting %d times\n", my_node, num_bcasts);
+    fmt::print("[{}] broadcast_test: broadcasting {} times\n", my_node, num_bcasts);
     for (int i = 0; i < num_bcasts; i++) {
       theMsg()->broadcastMsg<Msg, bcastTest>(makeSharedMessage<Msg>(my_node));
     }

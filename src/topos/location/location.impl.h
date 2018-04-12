@@ -34,8 +34,8 @@ EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
 {
   debug_print(
     location, node,
-    "EntityLocationCoord constructor: inst=%llu, this=%p\n",
-    this_inst, this
+    "EntityLocationCoord constructor: inst={}, this={}\n",
+    this_inst, print_ptr(this)
   );
 
   LocationManager::insertInstance<EntityLocationCoord<EntityID>>(
@@ -61,7 +61,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: registerEntity: inst=%llu\n", this_inst
+    "EntityLocationCoord: registerEntity: inst={}\n", this_inst
   );
 
   local_registered_.insert(id);
@@ -85,8 +85,8 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: registerEntity: pending lookups size=%lu, this=%p\n",
-    pending_lookups_.size(), this
+    "EntityLocationCoord: registerEntity: pending lookups size={}, this={}\n",
+    pending_lookups_.size(), print_ptr(this)
   );
 
   if (pending_lookup_iter != pending_lookups_.end()) {
@@ -95,7 +95,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
     for (auto&& pending_action : pending_lookup_iter->second) {
       debug_print(
         location, node,
-        "EntityLocationCoord: registerEntity: running pending action %d\n",
+        "EntityLocationCoord: registerEntity: running pending action {}\n",
         action
       );
       action++;
@@ -160,8 +160,8 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
 ) {
   debug_print(
     location, node,
-    "EntityLocationCoord: insertPendingEntityAction, this=%p\n",
-    this
+    "EntityLocationCoord: insertPendingEntityAction, this={}\n",
+    print_ptr(this)
   );
 
   // this is the home node and there is no record on this entity
@@ -191,7 +191,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: routeMsgEager: found=%s\n", print_bool(found)
+    "EntityLocationCoord: routeMsgEager: found={}\n", print_bool(found)
   );
 
   if (found) {
@@ -224,7 +224,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: routeMsgEager: home_node=%d, route_node=%d\n",
+    "EntityLocationCoord: routeMsgEager: home_node={}, route_node={}\n",
     home_node, route_to_node
   );
 
@@ -253,7 +253,7 @@ void EntityLocationCoord<EntityID>::getLocation(
 
     debug_print(
       location, node,
-      "EntityLocationCoord: getLocation: home_node=%d, rec_exists=%s\n",
+      "EntityLocationCoord: getLocation: home_node={}, rec_exists={}\n",
       home_node, print_bool(rec_exists)
     );
 
@@ -302,7 +302,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: routeMsgNode: to_node=%d, node=%d: inst=%llu\n",
+    "EntityLocationCoord: routeMsgNode: to_node={}, node={}: inst={}\n",
     to_node, this_node, this_inst
   );
 
@@ -330,7 +330,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
       debug_print(
         location, node,
-        "EntityLocationCoord: routeMsgNode: size=%ld\n",
+        "EntityLocationCoord: routeMsgNode: size={}\n",
         local_registered_.size()
       );
 
@@ -397,7 +397,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
   debug_print(
     location, node,
-    "routeMsg: inst=%llu, home=%d, msg_size=%ld, is_large_msg=%s, eager=%s\n",
+    "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}\n",
     this_inst, home_node, msg_size, print_bool(is_large_msg),
     print_bool(use_eager)
   );
@@ -428,7 +428,7 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: updatePendingRequest: event_id=%lld, node=%d\n",
+    "EntityLocationCoord: updatePendingRequest: event_id={}, node={}\n",
     event_id, node
   );
 
@@ -458,8 +458,8 @@ template <typename MessageT>
 
   debug_print(
     location, node,
-    "msgHandler: msg=%p, ref=%d, loc_inst=%llu\n",
-    msg, envelopeGetRef(msg->env), inst
+    "msgHandler: msg={}, ref={}, loc_inst={}\n",
+    print_ptr(msg), envelopeGetRef(msg->env), inst
   );
 
   messageRef(msg);

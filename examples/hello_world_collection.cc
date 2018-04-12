@@ -15,18 +15,18 @@ struct MyCol : Collection<MyCol, Index1D> {
     : Collection<MyCol, Index1D>(), idx(in_idx)
   {
     auto const& node = theContext()->getNode();
-    printf(
-      "%d: constructing MyCol on node=%d: idx.x()=%d, ptr=%p\n",
-      node, node, idx.x(), this
+    fmt::print(
+      "{}: constructing MyCol on node={}: idx.x()={}, ptr={}\n",
+      node, node, idx.x(), print_ptr(this)
     );
   }
   MyCol() = default;
 
   virtual ~MyCol() {
     auto const& node = theContext()->getNode();
-    printf(
-      "%d: invoking destructor MyCol on node=%d: idx.x()=%d, ptr=%p\n",
-      node, node, idx.x(), this
+    fmt::print(
+      "{}: invoking destructor MyCol on node={}: idx.x()={}, ptr={}\n",
+      node, node, idx.x(), print_ptr(this)
     );
   }
 
@@ -45,16 +45,16 @@ struct OtherColl : Collection<OtherColl, Index2D> {
     : Collection<OtherColl, Index2D>(), idx(in_idx)
   {
     auto const& node = theContext()->getNode();
-    printf(
-      "%d: constructing OtherColl on node=%d: idx={%d,%d}\n",
+    fmt::print(
+      "{}: constructing OtherColl on node={}: idx=[{},{}]\n",
       node, node, idx.x(), idx.y()
     );
   }
 
   virtual ~OtherColl() {
     auto const& node = theContext()->getNode();
-    printf(
-      "%d: invoking destructor OtherColl on node=%d: idx={%d,%d}\n",
+    fmt::print(
+      "{}: invoking destructor OtherColl on node={}: idx=[{},{}]\n",
       node, node, idx.x(), idx.y()
     );
   }
@@ -78,17 +78,17 @@ struct ColMsg : CollectionMessage<ColT> {
 
 static void colHan2(ColMsg<MyCol>* msg, MyCol* col) {
   auto const& node = theContext()->getNode();
-  printf(
-    "%d: colHan2 received: ptr=%p, idx=%d, getIndex=%d\n",
-    node, col, col->idx.x(), col->getIndex().x()
+  fmt::print(
+    "{}: colHan2 received: ptr={}, idx={}, getIndex={}\n",
+    node, print_ptr(col), col->idx.x(), col->getIndex().x()
   );
 }
 
 static void colHan(ColMsg<MyCol>* msg, MyCol* col) {
   auto const& node = theContext()->getNode();
-  printf(
-    "%d: colHan received: ptr=%p, idx=%d, getIndex=%d\n",
-    node, col, col->idx.x(), col->getIndex().x()
+  fmt::print(
+    "{}: colHan received: ptr={}, idx={}, getIndex={}\n",
+    node, print_ptr(col), col->idx.x(), col->getIndex().x()
   );
 
   #define TEST_MIGRATE 0
@@ -97,8 +97,8 @@ static void colHan(ColMsg<MyCol>* msg, MyCol* col) {
     auto const& this_node = theContext()->getNode();
     auto const& num_nodes = theContext()->getNumNodes();
     auto const& next_node = this_node + 1;
-    printf(
-      "%d: colHan calling migrate: idx=%d\n", node, col->idx.x()
+    fmt::print(
+      "{}: colHan calling migrate: idx={}\n", node, col->idx.x()
     );
     col->migrate(next_node >= num_nodes ? 0 : next_node);
   }
@@ -107,8 +107,8 @@ static void colHan(ColMsg<MyCol>* msg, MyCol* col) {
 
 static void colHanOther(ColMsg<OtherColl>* msg, OtherColl* col) {
   auto const& node = theContext()->getNode();
-  printf(
-    "%d: colHanOther received: idx={%d,%d}\n",
+  fmt::print(
+    "{}: colHanOther received: idx=[{},{}]\n",
     node, col->idx.x(), col->idx.y()
   );
 }
@@ -122,7 +122,7 @@ struct HelloMsg : vt::Message {
 };
 
 static void hello_world(HelloMsg* msg) {
-  printf("%d: Hello from node %d\n", theContext()->getNode(), msg->from);
+  fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
 }
 
 static constexpr int32_t const default_num_elms = 25;

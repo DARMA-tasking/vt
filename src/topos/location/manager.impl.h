@@ -44,7 +44,7 @@ LocationManager::getCollectionLM(VirtualProxyType const& proxy) {
 
   debug_print(
     location, node,
-    "getCollectionLM: proxy=%llu, found=%s\n",
+    "getCollectionLM: proxy={}, found={}\n",
     proxy, print_bool(found)
   );
 

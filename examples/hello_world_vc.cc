@@ -29,15 +29,15 @@ struct MyVC : vt::vrt::VirtualContext {
 
 static void my_han(TestMsg* msg, MyVC* vc) {
   auto this_node = theContext()->getNode();
-  printf(
-    "%d: vc=%p: msg->from=%d, vc->my_data=%d\n",
-    this_node, vc, msg->from, vc->my_data
+  fmt::print(
+    "{}: vc={}: msg->from={}, vc->my_data={}\n",
+    this_node, print_ptr(vc), msg->from, vc->my_data
   );
 }
 
 static void sendMsgToProxy(VirtualProxyType const& proxy) {
   auto this_node = theContext()->getNode();
-  printf("%d: sendMsgToProxy: proxy=%llu\n", this_node, proxy);
+  fmt::print("{}: sendMsgToProxy: proxy={}\n", this_node, proxy);
 
   auto m = new TestMsg(this_node + 32);
   theVirtualManager()->sendMsg<MyVC, TestMsg, my_han>(proxy, m, [=]{ delete m; });
@@ -45,7 +45,7 @@ static void sendMsgToProxy(VirtualProxyType const& proxy) {
 
 static void hello_world(HelloMsg* msg) {
   auto this_node = theContext()->getNode();
-  printf("%d: hello: proxy=%llu\n", this_node, msg->proxy);
+  fmt::print("{}: hello: proxy={}\n", this_node, msg->proxy);
   sendMsgToProxy(msg->proxy);
 }
 

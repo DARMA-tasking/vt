@@ -54,7 +54,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "getElement: han=%lld, is_collective=%s, getNode=%d\n",
+    "getElement: han={}, is_collective={}, getNode={}\n",
     rdma_handle,print_bool(is_collective),handle_getNode
   );
 
@@ -70,7 +70,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "elm=%lld, default_node=%d\n", elm, default_node
+    "elm={}, default_node={}\n", elm, default_node
   );
 
   if (default_node != this_node) {
@@ -120,7 +120,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "putElement: han=%lld, is_collective=%s, getNode=%d\n",
+    "putElement: han={}, is_collective={}, getNode={}\n",
     rdma_handle,print_bool(is_collective),handle_getNode
   );
 
@@ -136,7 +136,7 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "putElement: elm=%lld, default_node=%d\n",
+    "putElement: elm={}, default_node={}\n",
     elm, put_node
   );
 

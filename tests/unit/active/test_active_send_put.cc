@@ -34,7 +34,7 @@ struct TestActiveSendPut : TestParameterHarnessNode {
     auto ptr = static_cast<int*>(msg->getPut());
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
-      printf("%d: test_handler_2: size=%lu, ptr=%p\n", this_node, size, ptr);
+      fmt::print("{}: test_handler_2: size={}, ptr={}\n", this_node, size, ptr);
     #endif
     EXPECT_EQ(msg->num_ints * sizeof(int), size);
     for (int i = 0; i < msg->num_ints; i++) {
@@ -50,7 +50,7 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
   auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
-    printf("test_type_safe_active_fn_send_large_put: node=%d\n", my_node);
+    fmt::print("test_type_safe_active_fn_send_large_put: node={}\n", my_node);
   #endif
 
   auto const& vec_size = GetParam();
@@ -66,7 +66,7 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
     );
     msg->setPut(&test_vec_2[0], sizeof(int)*test_vec_2.size());
     #if DEBUG_TEST_HARNESS_PRINT
-      printf("%d: sendMsg: (put) i=%d\n", my_node, i);
+      fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
     #endif
     theMsg()->sendMsg<PutTestMessage, test_handler>(1, msg);
   }

@@ -23,7 +23,7 @@ WorkerGroupAny<WorkerT>::WorkerGroupAny(WorkerCountType const& in_num_workers)
 {
   debug_print(
     worker, node,
-    "WorkerGroup: constructing with default: num_workers_=%u\n",
+    "WorkerGroup: constructing with default: num_workers_={}\n",
     num_workers_
   );
 
@@ -100,7 +100,7 @@ template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::spawnWorkersBlock(WorkerCommFnType comm_fn) {
   debug_print(
     worker, node,
-    "WorkerGroup: spawnWorkersBlock: num_workers_=%u\n", num_workers_
+    "WorkerGroup: spawnWorkersBlock: num_workers_={}\n", num_workers_
   );
 
   // spawn the workers
@@ -116,7 +116,7 @@ void WorkerGroupAny<WorkerT>::spawnWorkers() {
 
   debug_print(
     worker, node,
-    "WorkerGroup: spawnWorkers: num_workers_=%u\n", num_workers_
+    "WorkerGroup: spawnWorkers: num_workers_={}\n", num_workers_
   );
 
   assert(workers_.size() >= num_workers_ and "Must be correct size");
@@ -143,7 +143,7 @@ template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::joinWorkers() {
   debug_print(
     worker, node,
-    "WorkerGroup: joinWorkers: num_workers_=%u\n", num_workers_
+    "WorkerGroup: joinWorkers: num_workers_={}\n", num_workers_
   );
 
   for (auto&& elm : workers_) {

@@ -9,7 +9,7 @@
  * partially defined with cmake options
  */
 
-#define debug_enabled 0
+#define debug_enabled 1
 #define debug_force_enabled 0
 
 #include "debug_print.h"
@@ -18,7 +18,7 @@
 #define backend_debug_modes backend_options_on(none)
 #else
 #define backend_debug_modes backend_options_on(                         \
-    group, flush                                                        \
+    debug_meta_all, group, flush                                        \
 )
 #endif
 

@@ -37,7 +37,7 @@ void OMPWorker::scheduler() {
       #if DEBUG_OMP_WORKER_SCHEDULER
       debug_print(
         worker, node,
-        "OMPWorker: scheduler: size=%ld\n", work_queue_.size()
+        "OMPWorker: scheduler: size={}\n", work_queue_.size()
       );
       #endif
 
@@ -61,7 +61,7 @@ void OMPWorker::sendTerminateSignal() {
 void OMPWorker::spawn() {
   debug_print(
     worker, node,
-    "OMPWorker: spawn: spawning worker: id=%d\n", worker_id_
+    "OMPWorker: spawn: spawning worker: id={}\n", worker_id_
   );
 
   scheduler();
@@ -70,7 +70,7 @@ void OMPWorker::spawn() {
 void OMPWorker::join() {
   debug_print(
     worker, node,
-    "OMPWorker: join: spawning worker: id=%d\n", worker_id_
+    "OMPWorker: join: spawning worker: id={}\n", worker_id_
   );
 
   // tell the worker to return from the scheduler loop

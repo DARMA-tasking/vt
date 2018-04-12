@@ -36,14 +36,16 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
   static void test_handler(PutTestMessage* msg) {
     #if DEBUG_TEST_HARNESS_PRINT || 1
       auto const& this_node = theContext()->getNode();
-      printf("%d: test_handler: cnt=%d\n", this_node, handler_count);
+      fmt::print("{}: test_handler: cnt={}\n", this_node, handler_count);
     #endif
 
     auto const ptr = static_cast<int*>(msg->getPut());
     auto const size = msg->getPutSize();
 
     #if DEBUG_TEST_HARNESS_PRINT || 1
-      printf("%d: test_handler: size=%lu, ptr=%p\n", this_node, size, ptr);
+      fmt::print(
+        "{}: test_handler: size={}, ptr={}\n", this_node, size, print_ptr(ptr)
+      );
     #endif
 
     EXPECT_EQ(put_size * sizeof(int), size);
@@ -67,7 +69,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
   NodeType const& root = GetParam();
 
   #if DEBUG_TEST_HARNESS_PRINT
-    printf("test_type_safe_active_fn_bcast: node=%d, root=%d\n", my_node, root);
+    fmt::print("test_type_safe_active_fn_bcast: node={}, root={}\n", my_node, root);
   #endif
 
   std::vector<int> put_payload;

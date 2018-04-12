@@ -19,17 +19,17 @@ struct TestMsg : vt::Message {
 };
 
 static void read_data_fn(TestMsg* msg) {
-  printf("%d: read_data_fn: handle=%lld\n", my_node, msg->han);
+  fmt::print("{}: read_data_fn: handle={}\n", my_node, msg->han);
 
   for (auto i = 0; i < put_len*2; i++) {
-    printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg->han, i, my_data[i]);
+    fmt::print("{}: han={} \t: my_data[{}] = {}\n", my_node, msg->han, i, my_data[i]);
   }
 }
 
 static void put_channel_setup(TestMsg* msg) {
   auto const& handle = msg->han;
 
-  printf("%d: put_channel_setup: handle=%lld\n", my_node, msg->han);
+  fmt::print("{}: put_channel_setup: handle={}\n", my_node, msg->han);
 
   if (my_node == 1) {
     int const num_elm = 2;
@@ -52,15 +52,15 @@ int main(int argc, char** argv) {
     // initialize my_data buffer, all but node 0 get -1.0
     for (auto i = 0; i < 4; i++) {
       my_data[i] = my_node != 0 ? (my_node+1)*i+1 : -1.0;
-      printf("%d: \t: my_data[%d] = %f\n", my_node, i, my_data[i]);
+      fmt::print("{}: \t: my_data[{}] = {}\n", my_node, i, my_data[i]);
     }
   }
 
   if (my_node == 0) {
     my_handle_1 = theRDMA()->registerNewTypedRdmaHandler(my_data, put_len);
 
-    printf(
-      "%d: initializing my_handle_1=%llx\n", my_node, my_handle_1
+    fmt::print(
+      "{}: initializing my_handle_1={}\n", my_node, my_handle_1
     );
 
     theRDMA()->newPutChannel(my_handle_1, 0, 1, [=]{

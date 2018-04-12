@@ -23,8 +23,8 @@ struct ActiveMsg : BaseMsg {
 
     debug_print(
       pool, node,
-      "Message::constructor of ptr=%p, type=%s\n",
-      this, typeid(this).name()
+      "Message::constructor of ptr={}, type={}\n",
+      print_ptr(this), typeid(this).name()
     );
   }
 
@@ -33,7 +33,7 @@ struct ActiveMsg : BaseMsg {
 
     debug_print(
       pool, node,
-      "Message::new of size=%lu, ptr=%p\n", sz, ptr
+      "Message::new of size={}, ptr={}\n", sz, print_ptr(ptr)
     );
 
     return ptr;
@@ -46,7 +46,7 @@ struct ActiveMsg : BaseMsg {
   static void operator delete(void* ptr) {
     debug_print(
       pool, node,
-      "Message::delete of ptr=%p\n", ptr
+      "Message::delete of ptr={}\n", print_ptr(ptr)
     );
 
     return thePool()->dealloc(ptr);

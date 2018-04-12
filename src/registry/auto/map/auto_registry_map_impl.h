@@ -31,7 +31,7 @@ inline HandlerType makeAutoHandlerFunctorMap() {
   auto const& han = HandlerManagerType::makeHandler(true, true, RunnableT::idx);
   debug_print(
     handler, node,
-    "makeAutoHandlerFunctorMap: handler=%d\n", han
+    "makeAutoHandlerFunctorMap: handler={}\n", han
   );
   return han;
 }
@@ -46,7 +46,7 @@ inline AutoActiveMapFunctorType getAutoHandlerFunctorMap(
 
   debug_print(
     handler, node,
-    "getAutoHandlerFunctorMap: handler=%d, id=%d, is_auto=%s, is_functor=%s\n",
+    "getAutoHandlerFunctorMap: handler={}, id={}, is_auto={}, is_functor={}\n",
     han, id, print_bool(is_auto), print_bool(is_functor)
   );
 
@@ -71,7 +71,7 @@ inline HandlerType makeAutoHandlerMap() {
   auto const& han = HandlerManagerType::makeHandler(true,false,id);
   debug_print(
     handler, node,
-    "makeAutoHandlerMap: id=%d, han=%d\n", id, han
+    "makeAutoHandlerMap: id={}, han={}\n", id, han
   );
   return han;
 }
@@ -81,7 +81,7 @@ inline AutoActiveMapType getAutoHandlerMap(HandlerType const& handler) {
   auto const& id = HandlerManagerType::getHandlerIdentifier(handler);
   debug_print(
     handler, node,
-    "getAutoHandlerMap: id=%d, handler=%d\n", id, handler
+    "getAutoHandlerMap: id={}, handler={}\n", id, handler
   );
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }
@@ -96,7 +96,7 @@ inline HandlerType makeAutoHandlerSeedMap() {
   auto const& han = HandlerManagerType::makeHandler(true,false,id);
   debug_print(
     handler, node,
-    "makeAutoHandlerMap: id=%d, han=%d\n", id, han
+    "makeAutoHandlerMap: id={}, han={}\n", id, han
   );
   return id;
 }
@@ -107,7 +107,7 @@ inline AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const& handler) {
   auto const& id = HandlerManagerType::getHandlerIdentifier(handler);
   debug_print(
     handler, node,
-    "getAutoHandlerSeedMap: id=%d, handler=%d\n", id, handler
+    "getAutoHandlerSeedMap: id={}, handler={}\n", id, handler
   );
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }

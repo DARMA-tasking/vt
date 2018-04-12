@@ -75,7 +75,7 @@ static std::vector<bool> count(num_workers);
 
 static void testAtomicMulti() {
   auto val = atomic_test_val.fetch_add(1);
-  //printf("val=%d\n", val);
+  //fmt::print("val={}\n", val);
   EXPECT_LE(val, num_workers);
   test_mutex.lock();
   bool const cur_count_value = count[val];
@@ -95,14 +95,14 @@ static void testAtomicMultiCAS() {
   int expected = atomic_test_slot.fetch_add(1);
   int desired = expected + 1;
 
-  //printf("begin: expected=%d, desired=%d\n", expected, desired);
+  //fmt::print("begin: expected={}, desired={}\n", expected, desired);
 
   bool result = false;
   do {
     result = atomic_test_cas.compare_exchange_strong(expected, desired);
   } while (!result);
 
-  //printf("finished: expected=%d, desired=%d\n", expected, desired);
+  //fmt::print("finished: expected={}, desired={}\n", expected, desired);
 }
 
 TEST_F(TestAtomic, basic_atomic_fetch_add_multi_thd) {

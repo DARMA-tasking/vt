@@ -14,7 +14,7 @@ struct TestMsg : CallbackMessage {
 };
 
 static void test_msg_recv(TestMsg* msg) {
-  printf("%d: sending callback %d\n", theContext()->getNode(), msg->from);
+  fmt::print("{}: sending callback {}\n", theContext()->getNode(), msg->from);
 
   TestMsg* sendMsg = makeSharedMessage<TestMsg>(my_node);
   theMsg()->sendCallback(sendMsg);
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
       theMsg()->sendDataCallback<TestMsg, test_msg_recv>(
         cur_node, msg, [=](BaseMessage* in_msg){
           TestMsg* msg = static_cast<TestMsg*>(in_msg);
-          printf("%d: callback received from %d\n", theContext()->getNode(), msg->from);
+          fmt::print("{}: callback received from {}\n", theContext()->getNode(), msg->from);
         }
       );
     }

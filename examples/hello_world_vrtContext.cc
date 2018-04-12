@@ -24,7 +24,7 @@ struct HelloVrtContext : VirtualContext {
 };
 
 static void hello_world(HelloMsg *msg) {
-  printf("%d: Hello from node %d\n", theContext()->getNode(), msg->from);
+  fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
 }
 
 int main(int argc, char **argv) {

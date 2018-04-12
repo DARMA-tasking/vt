@@ -8,20 +8,20 @@ static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
 
 static void fnTest(int a, int b, bool x) {
-  printf("fn: a=%d, b=%d, x=%s\n", a, b, x ? "true" : "false");
+  fmt::print("fn: a={}, b={}, x={}\n", a, b, x ? "true" : "false");
 }
 
 static void fnTest2(int x, int y) {
-  printf("fn2: x=%d,y=%d\n",x,y);
+  fmt::print("fn2: x={},y={}\n",x,y);
 }
 
 static void fnTest3(int x, double y) {
-  printf("fn3: x=%d,y=%f\n",x,y);
+  fmt::print("fn3: x={},y={}\n",x,y);
 }
 
 struct FunctorTest1 {
   void operator()(int x, double y) const {
-    printf("FunctorTest1: x=%d,y=%f\n",x,y);
+    fmt::print("FunctorTest1: x={},y={}\n",x,y);
   }
 };
 

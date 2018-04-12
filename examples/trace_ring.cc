@@ -35,8 +35,8 @@ static void ring(RingMsg* msg) {
 
   double const val = kernel(ring_from_node);
 
-  printf(
-    "%d: Hello from node %d: num_times=%d: kernel val=%f\n",
+  fmt::print(
+    "{}: Hello from node {}: num_times={}: kernel val={}\n",
     my_node, ring_from_node, num_times, val
   );
 
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
   num_nodes = theContext()->getNumNodes();
   next_node = my_node+1 >= num_nodes ? 0 : my_node+1;
 
-  printf("%d: my_node = %d here\n",theContext()->getNode(),my_node);
+  fmt::print("{}: my_node = {} here\n",theContext()->getNode(),my_node);
 
   if (num_nodes == 1) {
     CollectiveOps::abort("At least 2 ranks required");

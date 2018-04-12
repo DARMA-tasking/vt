@@ -26,8 +26,8 @@ static void processIterMsgs(vt::BaseMessage* in_msg) {
 
   count++;
 
-  printf(
-    "%d: process iteration node %d: count=%d, tag=%d, iteration=%d\n",
+  fmt::print(
+    "{}: process iteration node {}: count={}, tag={}, iteration={}\n",
     theContext()->getNode(), msg.from, count, first_tag, cur_iter
   );
 
@@ -42,8 +42,8 @@ static void processIterMsgs(vt::BaseMessage* in_msg) {
     theMsg()->unregisterHandlerFn(first_han, cur_iter-1);
     theMsg()->registerHandlerFn(first_han, processIterMsgs, cur_iter);
 
-    printf(
-      "%d: updating to NEXT iteration node %d: count=%d, cur_iter=%d\n",
+    fmt::print(
+      "{}: updating to NEXT iteration node {}: count={}, cur_iter={}\n",
       theContext()->getNode(), msg.from, count, cur_iter
     );
   }
@@ -52,8 +52,8 @@ static void processIterMsgs(vt::BaseMessage* in_msg) {
 static void myColFn(TestMsg* msg) {
   auto const& my_node = theContext()->getNode();
 
-  printf(
-    "%d: my_col_fn from=%d, callback=%d: tag=%d, sending, tag=[%d,%d]\n",
+  fmt::print(
+    "{}: my_col_fn from={}, callback={}: tag={}, sending, tag=[{},{}]\n",
     my_node, msg->from, msg->callback_han, first_recv_tag, first_recv_tag, last_recv_tag
   );
 

@@ -15,16 +15,19 @@ struct TestMsg : vt::Message {
 };
 
 static void tell_handle(TestMsg* msg) {
-  printf("%d: handle=%lld\n", my_node, msg->han);
+  fmt::print("{}: handle={}\n", my_node, msg->han);
 
   if (my_node == 1 || my_node == 2) {
-    printf("%d: requesting data\n", my_node);
+    fmt::print("{}: requesting data\n", my_node);
     theRDMA()->getData(msg->han, my_node, sizeof(double)*3, no_byte, [](void* data, size_t num_bytes){
       double* const ptr = static_cast<double*>(data);
       size_t const num_elems = num_bytes / sizeof(double);
-      printf("%d: data arrived: data=%p, num_bytes=%zu\n", my_node, data, num_bytes);
+      fmt::print(
+        "{}: data arrived: data={}, num_bytes={}\n",
+        my_node, print_ptr(data), num_bytes
+      );
       for (auto i = 0; i < num_elems; i++) {
-        printf("\t: my_data[%d] = %f\n", i, ptr[i]);
+        fmt::print("\t: my_data[{}] = {}\n", i, ptr[i]);
       }
     });
   }
@@ -35,9 +38,9 @@ static TestMsg* test_msg = nullptr;
 
 static RDMA_GetType
 test_get_fn(TestMsg* msg, ByteType num_bytes, ByteType offset, TagType tag, bool) {
-  printf(
-    "%d: running test_get_fn: msg=%p, num_bytes=%lld, tag=%d\n",
-    my_node, msg, num_bytes, tag
+  fmt::print(
+    "{}: running test_get_fn: msg={}, num_bytes={}, tag={}\n",
+    my_node, print_ptr(msg), num_bytes, tag
   );
   return RDMA_GetType{
     my_data+tag, num_bytes == no_byte ? sizeof(double)*10 : num_bytes
@@ -60,7 +63,7 @@ int main(int argc, char** argv) {
 
     my_handle = theRDMA()->registerNewRdmaHandler();
     theRDMA()->associateGetFunction<TestMsg>(test_msg, my_handle, test_get_fn, true);
-    printf("initializing my_handle=%lld\n", my_handle);
+    fmt::print("initializing my_handle={}\n", my_handle);
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;

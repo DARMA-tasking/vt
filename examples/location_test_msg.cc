@@ -34,8 +34,8 @@ struct MyTestMsg : LocationRoutedMsg<EntityType, ShortMessage> {
 static void entityTestHandler(EntityMsg* msg) {
   auto const& node = theContext()->getNode();
 
-  printf(
-    "%d: entityTestHandler entity=%d\n", node, msg->entity
+  fmt::print(
+    "{}: entityTestHandler entity={}\n", node, msg->entity
   );
 
   MyTestMsg* test_msg = new MyTestMsg(magic_number + node, node);
@@ -65,8 +65,8 @@ int main(int argc, char** argv) {
         "Message data is corrupted"
       );
 
-      printf(
-        "%d: handler triggered for test msg: data=%d\n",
+      fmt::print(
+        "{}: handler triggered for test msg: data={}\n",
         theContext()->getNode(), msg->data
       );
     });

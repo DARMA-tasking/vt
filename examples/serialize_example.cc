@@ -17,7 +17,7 @@ struct MyTest3ByteSerializable {
   int c = 41, d = 29;
 
   void print() {
-    printf("\t MyTest3ByteSerializable: c=%d, d=%d\n", c, d);
+    fmt::print("\t MyTest3ByteSerializable: c={}, d={}\n", c, d);
   }
 };
 
@@ -26,12 +26,12 @@ struct MyTest2 {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    printf("MyTest2 serialize\n");
+    fmt::print("MyTest2 serialize\n");
     s | c;
   }
 
   void print() {
-    printf("\t MyTest2: c=%d\n", c);
+    fmt::print("\t MyTest2: c={}\n", c);
   }
 };
 
@@ -42,13 +42,13 @@ struct MyTest {
   MyTest() = default;
 
   void print() {
-    printf("MyTest: a=%d, b=%d\n", a, b);
+    fmt::print("MyTest: a={}, b={}\n", a, b);
     my_test_2.print();
   }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    printf("MyTest serialize\n");
+    fmt::print("MyTest serialize\n");
     s | a;
     s | b;
     s | my_test_2;
@@ -59,20 +59,20 @@ void testSerializeVector() {
   std::vector<int> vec{10,20,40};
 
   for (auto&& elm : vec) {
-    printf("vec: before elm=%d\n", elm);
+    fmt::print("vec: before elm={}\n", elm);
   }
 
   auto serialized = serialize(vec);
   auto const& buf = serialized->getBuffer();
   auto const& buf_size = serialized->getSize();
 
-  printf("vec: ptr=%p, size=%ld\n", buf, buf_size);
+  fmt::print("vec: ptr={}, size={}\n", buf, buf_size);
 
   auto* tptr1 = deserialize<std::vector<int>>(buf, buf_size);
   auto& t = *tptr1;
 
   for (auto&& elm : t) {
-    printf("vec: deserialized elm=%d\n", elm);
+    fmt::print("vec: deserialized elm={}\n", elm);
   }
 }
 
@@ -86,7 +86,7 @@ void testSerializeUserClass() {
   auto const& buf = serialized->getBuffer();
   auto const& buf_size = serialized->getSize();
 
-  printf("ptr=%p, size=%ld\n", buf, buf_size);
+  fmt::print("ptr={}, size={}\n", buf, buf_size);
 
   auto* tptr1 = deserialize<MyTest>(buf, buf_size);
   auto& t = *tptr1;
@@ -106,7 +106,7 @@ void testSerializeByteUserClass() {
   auto const& buf = serialized->getBuffer();
   auto const& buf_size = serialized->getSize();
 
-  printf("ptr=%p, size=%ld\n", buf, buf_size);
+  fmt::print("ptr={}, size={}\n", buf, buf_size);
 
   auto* tptr1 = deserialize<Type>(buf, buf_size);
   auto& t = *tptr1;
@@ -120,14 +120,14 @@ void testSerializeTuple() {
 
   serial_type_t tup{10, 20};
 
-  printf("{{ %d, %d }}\n", std::get<0>(tup), std::get<1>(tup));
+  fmt::print("[[ {}, {} ]]\n", std::get<0>(tup), std::get<1>(tup));
 
   auto s1 = serialize(tup);
 
   auto const& buf2 = s1;
 
-  printf(
-    "ptr=%p, val=%d, size=%ld\n",
+  fmt::print(
+    "ptr={}, val={}, size={}\n",
     buf2->getBuffer(), *reinterpret_cast<int*>(buf2->getBuffer()),
     s1->getSize()
   );
@@ -137,7 +137,7 @@ void testSerializeTuple() {
   );
   auto& t1 = *tptr;
 
-  printf("{{ %d, %d }}\n", std::get<0>(t1), std::get<1>(t1));
+  fmt::print("[[ {}, {} ]]\n", std::get<0>(t1), std::get<1>(t1));
 }
 
 void testSerializeTupleVector() {
@@ -146,14 +146,14 @@ void testSerializeTupleVector() {
 
   serial_type_t tup{10,{20,30}};
 
-  printf("{{ %d, %d }}\n", std::get<0>(tup), std::get<1>(tup)[0]);
+  fmt::print("[[ {}, {} ]]\n", std::get<0>(tup), std::get<1>(tup)[0]);
 
   auto s1 = serialize(tup);
 
   auto const& buf2 = s1;
 
-  printf(
-    "ptr=%p, val=%d, size=%ld\n",
+  fmt::print(
+    "ptr={}, val={}, size={}\n",
     buf2->getBuffer(), *reinterpret_cast<int*>(buf2->getBuffer()),
     s1->getSize()
   );
@@ -163,7 +163,7 @@ void testSerializeTupleVector() {
   );
   auto& t1 = *tptr;
 
-  printf("{{ %d, %d }}\n", std::get<0>(t1), std::get<1>(t1)[0]);
+  fmt::print("[[ {}, {} ]]\n", std::get<0>(t1), std::get<1>(t1)[0]);
 }
 
 int main(int argc, char** argv) {

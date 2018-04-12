@@ -82,7 +82,7 @@ template <typename SysMsgT>
 
     debug_print(
       vrt_coll, node,
-      "running foreach: size=%llu, %d, is_functor=%s\n",
+      "running foreach: size={}, {}, is_functor={}\n",
       info.range_.getSize(), info.range_.x(), print_bool(is_functor)
     );
 
@@ -92,7 +92,7 @@ template <typename SysMsgT>
     user_index_range.foreach(user_index_range, [=](IndexT cur_idx) mutable {
       debug_print(
         verbose, vrt_coll, node,
-        "running foreach: before map: cur_idx=%s, max_range=%s\n",
+        "running foreach: before map: cur_idx={}, max_range={}\n",
         cur_idx.toString().c_str(), max_range.toString().c_str()
       );
 
@@ -104,7 +104,7 @@ template <typename SysMsgT>
 
       debug_print(
         vrt_coll, node,
-        "running foreach: node=%d, cur_idx=%s, max_range=%s\n",
+        "running foreach: node={}, cur_idx={}, max_range={}\n",
         mapped_node, cur_idx.toString().c_str(), max_range.toString().c_str()
       );
 
@@ -170,7 +170,7 @@ template <typename ColT, typename IndexT>
 
   debug_print(
     vrt_coll, node,
-    "collectionMsgHandler: sub_handler=%d\n", sub_handler
+    "collectionMsgHandler: sub_handler={}\n", sub_handler
   );
 
   assert(col_ptr != nullptr && "Must be valid pointer");
@@ -232,7 +232,7 @@ void CollectionManager::sendMsg(
 
     debug_print(
       vrt_coll, node,
-      "sending msg to collection: msg=%p, han=%d, home_node=%d\n",
+      "sending msg to collection: msg={}, han={}, home_node={}\n",
       msg, han, home_node
     );
 
@@ -256,7 +256,7 @@ void CollectionManager::sendMsg(
 
     debug_print(
       vrt_coll, node,
-      "pushing into buffered sends: %lld\n", toProxy.getCollectionProxy()
+      "pushing into buffered sends: {}\n", toProxy.getCollectionProxy()
     );
 
     theTerm()->produce(term::any_epoch_sentinel);
@@ -280,7 +280,7 @@ bool CollectionManager::insertCollectionElement(
 
   debug_print(
     vrt_coll, node,
-    "insertCollectionElement: proxy=%lld, map_han=%d, idx=%s, max_idx=%s\n",
+    "insertCollectionElement: proxy={}, map_han={}, idx={}, max_idx={}\n",
     proxy, map_han, print_index(idx), print_index(max_idx)
   );
 
@@ -293,7 +293,7 @@ bool CollectionManager::insertCollectionElement(
 
     debug_print(
       vrt_coll, node,
-      "looking for buffered sends: proxy=%lld, size=%ld\n",
+      "looking for buffered sends: proxy={}, size={}\n",
       proxy, buffered_sends_.size()
     );
 
@@ -403,7 +403,7 @@ CollectionManager::constructMap(
 
   debug_print(
     vrt_coll, node,
-    "construct_map: range=%s\n", range.toString().c_str()
+    "construct_map: range={}\n", range.toString().c_str()
   );
 
   SerdesMsg::broadcastSerialMsg<MsgType, distConstruct<MsgType>>(create_msg);
@@ -450,8 +450,8 @@ MigrateStatus CollectionManager::migrateOut(
 
  debug_print(
    vrt_coll, node,
-   "migrateOut: col_proxy=%llu, this_node=%d, dest=%d, "
-   "idx=%s\n",
+   "migrateOut: col_proxy={}, this_node={}, dest={}, "
+   "idx={}\n",
    col_proxy, this_node, dest, print_index(idx)
  );
 
@@ -491,7 +491,7 @@ MigrateStatus CollectionManager::migrateOut(
 
    debug_print(
      vrt_coll, node,
-     "migrateOut: col_proxy=%llu, idx=%s, dest=%d: serializing collection elm\n",
+     "migrateOut: col_proxy={}, idx={}, dest={}: serializing collection elm\n",
      col_proxy, print_index(idx), dest
    );
 
@@ -529,7 +529,7 @@ MigrateStatus CollectionManager::migrateOut(
 
    debug_print(
      vrt_coll, node,
-     "migrateOut: col_proxy=%llu, idx=%s, dest=%d: invoking destroy()\n",
+     "migrateOut: col_proxy={}, idx={}, dest={}: invoking destroy()\n",
      col_proxy, print_index(idx), dest
    );
 
@@ -561,7 +561,7 @@ MigrateStatus CollectionManager::migrateIn(
 ) {
   debug_print(
     vrt_coll, node,
-    "CollectionManager::migrateIn: proxy=%llu, idx=%s, from=%d, ptr=%p\n",
+    "CollectionManager::migrateIn: proxy={}, idx={}, from={}, ptr={}\n",
     proxy, print_index(idx), from, vrt_elm_ptr.get()
   );
 

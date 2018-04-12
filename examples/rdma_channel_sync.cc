@@ -23,12 +23,12 @@ struct TestMsg : vt::Message {
 static void put_channel_setup(TestMsg* msg);
 
 static void read_data_fn(TestMsg* msg) {
-  printf("%d: read_data_fn: handle=%lld\n", my_node, msg->han);
+  fmt::print("{}: read_data_fn: handle={}\n", my_node, msg->han);
 
   if (my_node == 0) {
     theRDMA()->syncLocalPutChannel(msg->han, 1, [=]{
       for (auto i = 0; i < put_len*2; i++) {
-        printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg->han, i, my_data[i]);
+        fmt::print("{}: han={} \t: my_data[{}] = {}\n", my_node, msg->han, i, my_data[i]);
       }
 
       theRDMA()->newGetChannel(my_handle_1, 0, 2, [=]{
@@ -39,7 +39,7 @@ static void read_data_fn(TestMsg* msg) {
   } else if (my_node == 2) {
     theRDMA()->syncLocalGetChannel(msg->han, [=]{
       for (auto i = 0; i < put_len*2; i++) {
-        printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg->han, i, my_data[i]);
+        fmt::print("{}: han={} \t: my_data[{}] = {}\n", my_node, msg->han, i, my_data[i]);
       }
     });
   }
@@ -48,7 +48,7 @@ static void read_data_fn(TestMsg* msg) {
 static void put_channel_setup(TestMsg* msg) {
   auto const& handle = msg->han;
 
-  printf("%d: put_channel_setup: handle=%lld\n", my_node, msg->han);
+  fmt::print("{}: put_channel_setup: handle={}\n", my_node, msg->han);
 
   if (my_node == 1) {
     theRDMA()->newPutChannel(handle, 0, 1, [=]{
@@ -70,8 +70,8 @@ static void put_channel_setup(TestMsg* msg) {
   }
   else if (my_node == 2) {
     theRDMA()->newGetChannel(handle, 0, 2, [=]{
-      printf(
-        "%d: creating get channel complete\n", my_node
+      fmt::print(
+        "{}: creating get channel complete\n", my_node
       );
       int const num_elm = 2;
 
@@ -109,15 +109,15 @@ int main(int argc, char** argv) {
     // initialize my_data buffer, all but node 0 get -1.0
     for (auto i = 0; i < 4; i++) {
       my_data[i] = my_node != 0 ? (my_node+1)*i+1 : -1.0;
-      printf("%d: \t: my_data[%d] = %f\n", my_node, i, my_data[i]);
+      fmt::print("{}: \t: my_data[{}] = {}\n", my_node, i, my_data[i]);
     }
   }
 
   if (my_node == 0) {
     my_handle_1 = theRDMA()->registerNewTypedRdmaHandler(my_data, put_len);
 
-    printf(
-      "%d: initializing my_handle_1=%llx\n", my_node, my_handle_1
+    fmt::print(
+      "{}: initializing my_handle_1={}\n", my_node, my_handle_1
     );
 
     theRDMA()->newPutChannel(my_handle_1, 0, 1, [=]{

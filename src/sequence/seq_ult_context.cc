@@ -42,7 +42,7 @@ bool SeqULTContext::isContextActive() const {
 void SeqULTContext::runStateFunc(fcontext::ContextFuncTransfer* state) {
   debug_print_force(
     sequence, node,
-    "SeqULTContext: runStateFunc: state=%p\n", state
+    "SeqULTContext: runStateFunc: state={}\n", print_ptr(state)
   );
 
   assert(state_fn_ != nullptr and "Must have valid state fn");
@@ -74,8 +74,8 @@ void SeqULTContext::suspend() {
 
   debug_print_force(
     sequence, node,
-    "SeqULTContext: suspend: cur_transfer_main_state=%p\n",
-    cur_transfer_main_state_
+    "SeqULTContext: suspend: cur_transfer_main_state={}\n",
+    print_ptr(cur_transfer_main_state_)
   );
 
   transfer_holder_main_ = fcontext::jumpContext(cur_transfer_main_state_->ctx);

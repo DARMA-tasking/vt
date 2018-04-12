@@ -26,7 +26,7 @@ SeqParallel::SeqFuncLen SeqParallel::getSize() const {
 SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
   debug_print(
     sequence, node,
-    "SeqParallel: expandParallelNode: funcs=%u, skip_queue=%s, node=%p\n",
+    "SeqParallel: expandParallelNode: funcs={}, skip_queue={}, node={}\n",
     num_funcs_, print_bool(seq_skip_queue), PRINT_SEQ_NODE_PTR(this_node)
   );
 
@@ -40,7 +40,7 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
   for (auto&& par_fn : par_funcs_) {
     debug_print(
       sequence, node,
-      "SeqParallel: expandParallelNode: num_funcs_=%u, expanding\n", num_funcs_
+      "SeqParallel: expandParallelNode: num_funcs_={}, expanding\n", num_funcs_
     );
 
     if (seq_skip_queue) {
@@ -52,7 +52,7 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
       auto defer_work = [=]{
         debug_print(
           sequence, node,
-          "SeqParallel: parallel node: expand deferred: id=%d\n", seq_id_
+          "SeqParallel: parallel node: expand deferred: id={}\n", seq_id_
         );
 
         executeSeqExpandContext(seq_id_, this_node, par_fn);
@@ -73,7 +73,7 @@ bool SeqParallel::join() {
 
   debug_print(
     sequence, node,
-    "SeqParallel: join: old_val=%d, num_funcs=%d\n", old_val, num_funcs_
+    "SeqParallel: join: old_val={}, num_funcs={}\n", old_val, num_funcs_
   );
 
   // Inform the termination detector that a child is consumed
