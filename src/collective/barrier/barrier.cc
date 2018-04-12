@@ -80,7 +80,7 @@ void Barrier::waitBarrier(
 
   debug_print(
     barrier, node,
-    "waitBarrier: next_barrier=%llu\n", next_barrier
+    "waitBarrier: next_barrier={}\n", next_barrier
   );
 
   barrierUp(is_named, is_wait, next_barrier, skip_term);
@@ -145,7 +145,7 @@ void Barrier::barrierUp(
       }
       debug_print(
           barrier, node,
-          "barrierUp: barrier=%llu\n", barrier
+          "barrierUp: barrier={}\n", barrier
       );
       theMsg()->sendMsg<BarrierMsg, barrierUp>(parent_, msg);
     } else {
@@ -156,7 +156,7 @@ void Barrier::barrierUp(
       }
       debug_print(
           barrier, node,
-          "barrierDown: barrier=%llu\n", barrier
+          "barrierDown: barrier={}\n", barrier
       );
       theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg);
       barrierDown(is_named, is_wait, barrier);

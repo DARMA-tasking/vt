@@ -32,7 +32,7 @@ void Info::setup() {
   auto const& size = region_->getSize();
   debug_print(
     group, node,
-    "Info::setup: group size=%lu, is_remote=%s\n",
+    "Info::setup: group size={}, is_remote={}\n",
     size, print_bool(is_remote_)
   );
   if (is_remote_) {

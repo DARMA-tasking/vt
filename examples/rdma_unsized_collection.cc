@@ -28,9 +28,12 @@ static void doGetHandler(Msg* m) {
   RDMACollectionManager::getElement(my_handle, 1, [](void* data, size_t num_bytes){
     double* const ptr = static_cast<double*>(data);
     size_t const num_elems = num_bytes / sizeof(double);
-    printf("%d: data arrived: data=%p, num_bytes=%zu\n", my_node, data, num_bytes);
+    fmt::print(
+      "{}: data arrived: data={}, num_bytes={}\n",
+      my_node, print_ptr(data), num_bytes
+    );
     for (auto i = 0; i < num_elems; i++) {
-      printf("\t: my_data[%d] = %f\n", i, ptr[i]);
+      fmt::print("\t: my_data[{}] = {}\n", i, ptr[i]);
     }
   });
 }
@@ -80,9 +83,9 @@ static RDMA_PtrType obtain_data_ptr(
 static RDMA_GetType get_fn(
   RDMAMsgType* msg, ByteType num_bytes, ByteType offset, TagType tag, bool
 ) {
-  printf(
-    "%d: running get_fn: msg=%p, num_bytes=%lld, offset=%lld, tag=%d, state=%d\n",
-    my_node, msg, num_bytes, offset, tag, msg->state
+  fmt::print(
+    "{}: running get_fn: msg={}, num_bytes={}, offset={}, tag={}, state={}\n",
+    my_node, print_ptr(msg), num_bytes, offset, tag, msg->state
   );
 
   auto const& ret_ptr = obtain_data_ptr(offset);
@@ -94,18 +97,18 @@ static void put_fn(
   RDMAMsgType* msg, RDMA_PtrType ptr, ByteType num_bytes, ByteType offset,
   TagType tag, bool
 ) {
-  printf(
-    "%d: put_fn: ptr=%p, num_bytes=%lld, tag=%d, offset=%lld\n",
-    my_node, ptr, num_bytes, tag, offset
+  fmt::print(
+    "{}: put_fn: ptr={}, num_bytes={}, tag={}, offset={}\n",
+    my_node, print_ptr(ptr), num_bytes, tag, offset
   );
 
   auto const& ret_ptr = obtain_data_ptr(offset, ptr, true);
 }
 
 static RDMA_PutRetType serialize_put_fn(RDMA_PutRetType put_in) {
-  printf(
-    "%d: serialize_put_fn: ptr=%p, num_bytes=%lld\n",
-    my_node, std::get<0>(put_in), std::get<1>(put_in)
+  fmt::print(
+    "{}: serialize_put_fn: ptr={}, num_bytes={}\n",
+    my_node, print_ptr(std::get<0>(put_in)), std::get<1>(put_in)
   );
 
   return RDMA_PutRetType{std::get<0>(put_in), rdma_num_elements*sizeof(double)};
@@ -139,13 +142,13 @@ int main(int argc, char** argv) {
     theMsg()->sendMsg<Msg, doGetHandler>(3, makeSharedMessage<Msg>());
     RDMACollectionManager::putElement(
       my_handle, 1, test_data, serialize_put_fn, no_action, []{
-        printf("%d: put finished\n", my_node);
+        fmt::print("{}: put finished\n", my_node);
         theMsg()->sendMsg<Msg, doGetHandler>(1, makeSharedMessage<Msg>());
       }
     );
   }
 
-  printf("%d: handle=%lld, create handle\n", my_node, my_handle);
+  fmt::print("{}: handle={}, create handle\n", my_node, my_handle);
 
   while (!rt->isTerminated()) {
     runScheduler();

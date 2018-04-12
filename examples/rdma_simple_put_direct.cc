@@ -19,24 +19,28 @@ struct TestMsg : vt::Message {
 };
 
 static void readDataFn(TestMsg* msg) {
-  printf("%d: readDataFn: handle=%lld\n", my_node, msg->han);
+  fmt::print("{}: readDataFn: handle={}\n", my_node, msg->han);
 
   for (auto i = 0; i < put_len*2; i++) {
-    printf("%d: han=%lld \t: my_data[%d] = %f\n", my_node, msg->han, i, my_data[i]);
+    fmt::print(
+      "{}: han={} \t: my_data[{}] = {}\n", my_node, msg->han, i, my_data[i]
+    );
   }
 }
 
 static void putDataFn(TestMsg* msg) {
   if (my_node == 1 or my_node == 2) {
-    printf(
-      "%d: putting data, handle=%lld, my_data=%p\n",
-      my_node, msg->han, my_data
+    fmt::print(
+      "{}: putting data, handle={}, my_data={}\n",
+      my_node, msg->han, print_ptr(my_data)
     );
 
     int const num_elm = 2;
     int const offset = num_elm*(my_node-1);
     theRDMA()->putTypedData(msg->han, my_data, num_elm, offset, no_action, [=]{
-      printf("%d: after put: sending msg back to 0: offset=%d\n", my_node, offset);
+      fmt::print(
+        "{}: after put: sending msg back to 0: offset={}\n", my_node, offset
+      );
 
       TestMsg* back = makeSharedMessage<TestMsg>(msg->han);
       theMsg()->sendMsg<TestMsg, readDataFn>(0, back);
@@ -65,8 +69,8 @@ int main(int argc, char** argv) {
   if (my_node == 0) {
     my_handle_1 = theRDMA()->registerNewTypedRdmaHandler(my_data, put_len);
 
-    printf(
-      "%d: initializing my_handle_1=%lld\n",
+    fmt::print(
+      "{}: initializing my_handle_1={}\n",
       my_node, my_handle_1
     );
 

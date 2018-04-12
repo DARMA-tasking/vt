@@ -14,7 +14,7 @@ void EventHolder::attachAction(ActionType action) {
 }
 
 void EventHolder::makeReadyTrigger() {
-  //printf("make_ready_trigger\n");
+  //fmt::print("make_ready_trigger\n");
   event_->setReady();
   executeActions();
   theEvent()->removeEventID(event_->getEventID());

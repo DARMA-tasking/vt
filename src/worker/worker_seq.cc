@@ -31,7 +31,7 @@ void WorkerSeq::enqueue(WorkUnitType const& work_unit) {
 
 void WorkerSeq::progress() {
   #if WORKER_SEQ_VERBOSE
-  debug_print(worker, node, "WorkerSeq: progress: id=%d\n", worker_id_);
+  debug_print(worker, node, "WorkerSeq: progress: id={}\n", worker_id_);
   #endif
 
   auto new_live = jump_fcontext(live.ctx);
@@ -46,7 +46,7 @@ void WorkerSeq::progress() {
   fcontext_transfer_t cur = t;
 
   #if WORKER_SEQ_VERBOSE
-  debug_print(worker, node, "workerSeqSched: id=%d\n", seq->worker_id_);
+  debug_print(worker, node, "workerSeqSched: id={}\n", seq->worker_id_);
   #endif
 
   while (!seq->should_terminate_) {
@@ -59,23 +59,23 @@ void WorkerSeq::progress() {
     }
 
     #if WORKER_SEQ_VERBOSE
-    debug_print(worker, node, "seq sched: id=%d jump out\n", seq->worker_id_);
+    debug_print(worker, node, "seq sched: id={} jump out\n", seq->worker_id_);
     #endif
 
     fcontext_transfer_t new_ctx = jump_fcontext(cur.ctx, nullptr);
     cur = new_ctx;
 
     #if WORKER_SEQ_VERBOSE
-    debug_print(worker, node, "seq sched: id=%d jump in\n", seq->worker_id_);
+    debug_print(worker, node, "seq sched: id={} jump in\n", seq->worker_id_);
     #endif
   }
 
-  debug_print(worker, node, "seq sched: id=%d term\n", seq->worker_id_);
+  debug_print(worker, node, "seq sched: id={} term\n", seq->worker_id_);
   jump_fcontext(cur.ctx, nullptr);
 }
 
 void WorkerSeq::startScheduler() {
-  debug_print(worker, node, "WorkerSeq: startScheduler: id=%d\n", worker_id_);
+  debug_print(worker, node, "WorkerSeq: startScheduler: id={}\n", worker_id_);
 
   using ::vt::ctx::ContextAttorney;
 
@@ -85,13 +85,13 @@ void WorkerSeq::startScheduler() {
   fctx = make_fcontext_stack(stack, workerSeqSched);
 
   #if WORKER_SEQ_VERBOSE
-  debug_print(worker, node, "WorkerSeq: jump context: id=%d\n", worker_id_);
+  debug_print(worker, node, "WorkerSeq: jump context: id={}\n", worker_id_);
   #endif
 
   live = jump_fcontext(fctx, this);
 
   #if WORKER_SEQ_VERBOSE
-  debug_print(worker, node, "WorkerSeq: jump context out: id=%d\n", worker_id_);
+  debug_print(worker, node, "WorkerSeq: jump context out: id={}\n", worker_id_);
   #endif
 }
 
@@ -100,12 +100,12 @@ void WorkerSeq::sendTerminateSignal() {
 }
 
 void WorkerSeq::spawn() {
-  debug_print(worker, node, "WorkerSeq: spawn: id=%d\n", worker_id_);
+  debug_print(worker, node, "WorkerSeq: spawn: id={}\n", worker_id_);
   startScheduler();
 }
 
 void WorkerSeq::join() {
-  debug_print(worker, node, "WorkerSeq: join: id=%d\n", worker_id_);
+  debug_print(worker, node, "WorkerSeq: join: id={}\n", worker_id_);
   // tell the worker to return from the scheduler loop
   sendTerminateSignal();
   progress();

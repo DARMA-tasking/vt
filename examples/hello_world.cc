@@ -10,10 +10,15 @@ struct HelloMsg : vt::Message {
   HelloMsg(int const& in_from)
     : Message(), from(in_from)
   { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | from;
+  }
 };
 
 static void hello_world(HelloMsg* msg) {
-  printf("%d: Hello from node %d\n", theContext()->getNode(), msg->from);
+  fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
 }
 
 #define sstmac_app_name hello_world_vt

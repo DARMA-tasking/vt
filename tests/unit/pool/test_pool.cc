@@ -31,7 +31,7 @@ struct TestPool : TestParallelHarness {
 template <int64_t num_bytes>
 void TestPool::testPoolFun(TestMsg<num_bytes>* prev_msg) {
   #if DEBUG_TEST_HARNESS_PRINT
-    printf("testPoolFun: num_bytes=%lld\n", num_bytes);
+    fmt::print("testPoolFun: num_bytes={}\n", num_bytes);
   #endif
 
   auto msg = new TestMsg<num_bytes * 2>();
@@ -68,7 +68,7 @@ TEST_F(TestPool, pool_alloc) {
   for (size_t cur_bytes = 1; cur_bytes < max_bytes; cur_bytes *= 2) {
     void* ptr = testPool->alloc(cur_bytes);
     std::memset(ptr, init_val, cur_bytes);
-    //printf("alloc %ld bytes, ptr=%p\n", cur_bytes, ptr);
+    //fmt::print("alloc {} bytes, ptr={}\n", cur_bytes, ptr);
     EXPECT_NE(ptr, nullptr);
     for (size_t i = 0; i < cur_bytes; i++) {
       EXPECT_EQ(static_cast<CharType*>(ptr)[i], init_val);

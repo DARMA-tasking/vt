@@ -33,8 +33,8 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 
   debug_print(
     event, node,
-    "theEvent: event=%lld, newevent=%lld, state=%d, "
-    "newevent_owning_node=%d, this_node=%d\n",
+    "theEvent: event={}, newevent={}, state={}, "
+    "newevent_owning_node={}, this_node={}\n",
     event, event_id, static_cast<int>(event_state), this_event_owning_node,
     this_node
   );
@@ -58,7 +58,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 
     debug_print(
       event, node,
-      "theEvent: event=%lld, newevent=%lld, state=%d sending msg, node=%d\n",
+      "theEvent: event={}, newevent={}, state={} sending msg, node={}\n",
       event, event_id, static_cast<int>(event_state), this_node
     );
 
@@ -107,8 +107,8 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 
   debug_print(
     event, node,
-    "checkEventFinishedHan:: event=%lld, node=%d, "
-    "this_node=%d, complete=%d, sent_from_node=%d\n",
+    "checkEventFinishedHan:: event={}, node={}, "
+    "this_node={}, complete={}, sent_from_node={}\n",
     event, node, theContext()->getNode(), static_cast<int>(is_complete),
     msg->sent_from_node_
   );
@@ -195,7 +195,7 @@ AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) 
 
   debug_print(
     event, node,
-    "theEvent: theEventHolder: node=%d, event=%lld, owning_node=%d\n",
+    "theEvent: theEventHolder: node={}, event={}, owning_node={}\n",
     theContext()->getNode(), event, owning_node
   );
 

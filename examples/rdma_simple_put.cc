@@ -17,21 +17,21 @@ struct TestMsg : vt::Message {
 static double* my_data = nullptr;
 
 static void read_data_fn(TestMsg* msg) {
-  printf("%d: read_data_fn: handle=%lld\n", my_node, msg->han);
+  fmt::print("{}: read_data_fn: handle={}\n", my_node, msg->han);
 
   if (my_node == 0) {
     int const len = 10;
     for (auto i = 0; i < len; i++) {
-      printf("\t: my_data[%d] = %f\n", i, my_data[i]);
+      fmt::print("\t: my_data[{}] = {}\n", i, my_data[i]);
     }
   }
 }
 
 static void put_data_fn(TestMsg* msg) {
-  printf("%d: put_data_fn: handle=%lld\n", my_node, msg->han);
+  fmt::print("{}: put_data_fn: handle={}\n", my_node, msg->han);
 
   if (my_node == 1) {
-    printf("%d: putting data\n", my_node);
+    fmt::print("{}: putting data\n", my_node);
 
     int const local_data_len = 3;
     double* local_data = new double[local_data_len];
@@ -41,7 +41,7 @@ static void put_data_fn(TestMsg* msg) {
     theRDMA()->putData(msg->han, local_data, sizeof(double)*local_data_len, [=]{
       delete [] local_data;
     }, [=]{
-      printf("%d: after put: sending msg back to 0\n", my_node);
+      fmt::print("{}: after put: sending msg back to 0\n", my_node);
       TestMsg* msg = new TestMsg(my_node);
       msg->han = my_handle;
       theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg, [=]{ delete msg; });
@@ -53,9 +53,9 @@ static void put_handler_fn(
   BaseMessage* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes, ByteType offset,
   TagType tag, bool
 ) {
-  printf(
-    "%d: put_handler_fn: my_data=%p, in_ptr=%p, in_num_bytes=%lld, tag=%d\n",
-    my_node, my_data, in_ptr, in_num_bytes, tag
+  fmt::print(
+    "{}: put_handler_fn: my_data={}, in_ptr={}, in_num_bytes={}, tag={}\n",
+    my_node, print_ptr(my_data), print_ptr(in_ptr), in_num_bytes, tag
   );
 
   std::memcpy(my_data, in_ptr, in_num_bytes);
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
     //my_handle = theRDMA()->register_new_typed_rdma_handler(my_data, 10);
     my_handle = theRDMA()->registerNewRdmaHandler();
     theRDMA()->associatePutFunction<BaseMessage>(nullptr, my_handle, put_handler_fn, false);
-    printf("%d: initializing my_handle=%lld\n", my_node, my_handle);
+    fmt::print("{}: initializing my_handle={}\n", my_node, my_handle);
 
     TestMsg* msg = new TestMsg(my_node);
     msg->han = my_handle;

@@ -30,7 +30,7 @@ struct TerminationDetector : collective::tree::Tree {
   inline void produce(
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   ) {
-    debug_print(term, node, "Termination: produce: epoch=%d\n",epoch);
+    debug_print(term, node, "Termination: produce: epoch={}\n",epoch);
     auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
     return produceConsume(in_epoch, num_units, true);
   }
@@ -38,7 +38,7 @@ struct TerminationDetector : collective::tree::Tree {
   inline void consume(
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   ) {
-    debug_print(term, node, "Termination: consume: epoch=%d\n",epoch);
+    debug_print(term, node, "Termination: consume: epoch={}\n",epoch);
     auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
     return produceConsume(in_epoch, num_units, false);
   }

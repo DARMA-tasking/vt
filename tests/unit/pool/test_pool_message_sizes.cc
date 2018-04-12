@@ -50,7 +50,7 @@ void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
   auto const& this_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
-    printf("%d: test: bytes=%lld, cnt=%d\n", this_node, num_bytes, count);
+    fmt::print("{}: test: bytes={}, cnt={}\n", this_node, num_bytes, count);
   #endif
 
   count++;

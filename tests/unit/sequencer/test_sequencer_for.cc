@@ -26,7 +26,7 @@ struct TestSequencerFor : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     #if DEBUG_TEST_HARNESS_PRINT
-      printf("testSeqForFn seq_id=%d\n", seq_id);
+      fmt::print("testSeqForFn seq_id={}\n", seq_id);
     #endif
 
     if (seq_id == -1) {
@@ -39,7 +39,7 @@ struct TestSequencerFor : TestParallelHarness {
     theSeq()->for_loop(0, end_range, 1, [](vt::seq::ForIndex i) {
       theSeq()->wait_closure<TestMsg, testSeqForHan>(no_tag, [=](TestMsg* msg){
         #if DEBUG_TEST_HARNESS_PRINT
-          printf("testSeqForFn running wait\n");
+          fmt::print("testSeqForFn running wait\n");
         #endif
 
         EXPECT_EQ(seq_ordering_++, i+1);
@@ -52,7 +52,7 @@ TEST_F(TestSequencerFor, test_for) {
   auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
-    printf("test_seq_handler: node=%d\n", my_node);
+    fmt::print("test_seq_handler: node={}\n", my_node);
   #endif
 
   if (my_node == 0) {

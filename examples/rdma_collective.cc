@@ -24,16 +24,16 @@ struct TestMsg : vt::Message {
 static void announce(TestMsg* msg) {
   auto const& rdma_handle = msg->han;
 
-  printf("%d: handle=%lld, requesting data\n", my_node, rdma_handle);
+  fmt::print("{}: handle={}, requesting data\n", my_node, rdma_handle);
 
   if (my_node == 1) {
     theRDMA()->newGetChannel(my_handle, 2, 1, [=]{
-      printf("set up channel with 2\n");
+      fmt::print("set up channel with 2\n");
 
       theRDMA()->getTypedDataInfoBuf(rdma_handle, local_data, local_data_len, 5, no_tag, [=]{
-        printf("%d: handle=%lld, finished getting data\n", my_node, rdma_handle);
+        fmt::print("{}: handle={}, finished getting data\n", my_node, rdma_handle);
         for (int i = 0; i < local_data_len; i++) {
-          printf("%d: \t local_data[%d] = %f\n", my_node, i, local_data[i]);
+          fmt::print("{}: \t local_data[{}] = {}\n", my_node, i, local_data[i]);
           assert(local_data[i] == 5.0+i);
         }
       });
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
 
   theCollective()->barrier();
 
-  printf("%d: handle=%lld, create handle\n", my_node, my_handle);
+  fmt::print("{}: handle={}, create handle\n", my_node, my_handle);
 
   if (my_node == 0) {
     theRDMA()->newGetChannel(my_handle, 0, 1, [=]{

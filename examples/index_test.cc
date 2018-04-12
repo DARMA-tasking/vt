@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
 
   auto node = mapping::dense1DBlockMap(&idx_1d, &idx_1d_2, num_nodes);
 
-  printf(
-    "idx=%s, idx2=%s, idx3=%s, size=%ld, node=%d\n",
+  fmt::print(
+    "idx={}, idx2={}, idx3={}, size={}, node={}\n",
     idx.toString().c_str(), idx2.toString().c_str(), idx3.toString().c_str(),
     sizeof(idx), node
   );
@@ -37,8 +37,8 @@ int main(int argc, char** argv) {
     for (int j = 0; j < dim2; j++) {
       auto cur_idx = index::Index2D(i,j);
       auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &idx_a_max);
-      printf(
-        "idx=%s, max=%s, lin=%d\n",
+      fmt::print(
+        "idx={}, max={}, lin={}\n",
         cur_idx.toString().c_str(), idx_a_max.toString().c_str(), lin_idx
       );
       assert(lin_idx == cur_val);
@@ -49,8 +49,8 @@ int main(int argc, char** argv) {
   auto const& idx_a_str = idx_a.toString().c_str();
   auto const& idx_a_max_str = idx_a_max.toString().c_str();
 
-  printf(
-    "idx_a=%s, indx_a_max=%s, node=%d\n", idx_a_str, idx_a_max_str, node_a
+  fmt::print(
+    "idx_a={}, indx_a_max={}, node={}\n", idx_a_str, idx_a_max_str, node_a
   );
 
   while (!rt->isTerminated()) {

@@ -9,7 +9,7 @@
 namespace vt { namespace util { namespace mutex {
 
 OMPMutex::OMPMutex() {
-  //printf("constructing lock: ptr=%p\n", &omp_lock);
+  //fmt::print("constructing lock: ptr={}\n", &omp_lock);
   omp_init_lock(&omp_lock);
 }
 

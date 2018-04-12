@@ -16,13 +16,13 @@ using namespace vt::tests::unit;
 #define DEBUG_PRINT_SEQ(ORDER, CUR, LABEL)                              \
   do {                                                                  \
     auto seq_id = theSeq()->getCurrentSeq();                              \
-    printf(                                                             \
-      "debug (%s): seq_id=%d, ordering=%d -- cur=%d --\n",              \
+    fmt::print(                                                             \
+      "debug ({}): seq_id={}, ordering={} -- cur={} --\n",              \
       (LABEL), seq_id, (ORDER).load(), (CUR)                            \
     );                                                                  \
   } while (false);
 #define DEBUG_PRINT(str, args...)               \
-  do { printf(str, args); } while (false);
+  do { fmt::print(str, args); } while (false);
 #else
 #define DEBUG_PRINT_SEQ(ORDER, CUR, LABEL)
 #define DEBUG_PRINT(str, args...)
@@ -94,7 +94,7 @@ static constexpr CountType const max_seq_depth = 8;
     if (seq_id == FinalizeAtomicValue || seq_id == ResetAtomicValue) {  \
       if (seq_id == FinalizeAtomicValue) {                              \
         DEBUG_PRINT(                                                    \
-          "num_waits+1=%d,seq_ordering_=%d\n",                          \
+          "num_waits+1={},seq_ordering_={}\n",                          \
           num_waits+1,seq_ordering_.load()                              \
         );                                                              \
         EXPECT_EQ(                                                      \
@@ -134,7 +134,7 @@ static constexpr CountType const max_seq_depth = 8;
                                                                         \
       for (int nseg = 0; nseg < num_segs; nseg++) {                     \
         theSeq()->sequenced([=]{                                        \
-          DEBUG_PRINT("nseg=%d:num_waits=%d\n",nseg,num_waits);         \
+          DEBUG_PRINT("nseg={}:num_waits={}\n",nseg,num_waits);         \
           DEBUG_PRINT_SEQ(seq_ordering_, 0, "start-sequenced");         \
           seqDepth(depth, [=]{                                          \
             for (int w = 0; w < num_waits; w++) {                       \

@@ -14,7 +14,7 @@ RDMA_HandlerType State::setRDMAGetFn(
 
   debug_print(
     rdma_state, node,
-    "setRDMAGetFn: GET tag=%d, handle=%lld, any_tag=%s\n",
+    "setRDMAGetFn: GET tag={}, handle={}, any_tag={}\n",
     tag, handle, print_bool(any_tag)
   );
 
@@ -51,7 +51,7 @@ RDMA_HandlerType State::setRDMAPutFn(
 
   debug_print(
     rdma_state, node,
-    "setRDMAPutFn: PUT tag=%d, handle=%lld, any_tag=%s\n",
+    "setRDMAPutFn: PUT tag={}, handle={}, any_tag={}\n",
     tag, handle, print_bool(any_tag)
   );
 

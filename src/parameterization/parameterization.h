@@ -40,14 +40,14 @@ template <typename Tuple>
 static void dataMessageHandler(DataMsg<Tuple>* msg) {
   debug_print(
     param, node,
-    "dataMessageHandler: id=%d\n", msg->sub_han
+    "dataMessageHandler: id={}\n", msg->sub_han
   );
 
 #if backend_check_enabled(trace_enabled)
   trace::TraceEntryIDType ep = auto_registry::theTraceID(msg->sub_han);
   trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
 
-  printf("dataMessageHandler: id=%d, ep=%lu\n", msg->sub_han, ep);
+  fmt::print("dataMessageHandler: id={}, ep={}\n", msg->sub_han, ep);
 
   NodeType const& from_node = theMsg()->getFromNodeCurrentHandler();
 

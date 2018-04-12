@@ -52,7 +52,7 @@ EventType ActiveMessenger::sendMsg(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       pool, node,
-      "sendMsg of indirect han=%d, dest=%d, tag=%d\n", han, dest, tag
+      "sendMsg of indirect han={}, dest={}, tag={}\n", han, dest, tag
     );
   }
   return sendMsgSized(han, msg, sizeof(MessageT), next_action);
@@ -66,7 +66,8 @@ EventType ActiveMessenger::broadcastMsg(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       pool, node,
-      "broadcastMsg of ptr=%p, type=%s\n", msg, typeid(MessageT).name()
+      "broadcastMsg of ptr={}, type={}\n",
+      print_ptr(msg), typeid(MessageT).name()
     );
   }
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
@@ -92,7 +93,8 @@ EventType ActiveMessenger::sendMsg(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "sendMsg of ptr=%p, type=%s\n", msg, typeid(MessageT).name()
+      "sendMsg of ptr={}, type={}\n",
+      print_ptr(msg), typeid(MessageT).name()
     );
   }
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);

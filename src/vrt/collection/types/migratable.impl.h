@@ -17,7 +17,7 @@ template <typename ColT>
 /*virtual*/ void Migratable<ColT>::destroy() {
   debug_print(
     vrt_coll, node,
-    "Migratable<ColT>::destroy(): this=%p\n", this
+    "Migratable<ColT>::destroy(): this={}\n", this
   );
 }
 

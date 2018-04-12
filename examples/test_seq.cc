@@ -14,15 +14,15 @@ struct EmptyMsg : vt::Message {
 #define PRINT_SEQUENCE_ON 1
 
 #if PRINT_SEQUENCE_ON
-#define PRINT_SEQUENCE(fmt, arg...)                                     \
+#define PRINT_SEQUENCE(str, args...)                                    \
   do {                                                                  \
-    printf(                                                             \
-      "%d: seq_id=%d: " fmt, theContext()->getNode(),                     \
-      theSeq()->getCurrentSeq(), ##arg                                    \
+    fmt::print(                                                         \
+      "{}: seq_id={}: " str, theContext()->getNode(),                   \
+      theSeq()->getCurrentSeq(), ##args                                 \
     );                                                                  \
   } while (0);
 #else
-#define PRINT_SEQUENCE
+#define PRINT_SEQUENCE(args...)
 #endif
 
 SEQUENCE_REGISTER_HANDLER(EmptyMsg, action1);
@@ -101,7 +101,7 @@ static void mySeqFor(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeqParallel: executing sequence\n");
 
   theSeq()->for_loop(0, 10, 1, [](vt::seq::ForIndex i) {
-    PRINT_SEQUENCE("for loop: i=%d\n", i);
+    PRINT_SEQUENCE("for loop: i={}\n", i);
     theSeq()->wait<EmptyMsg, action1>([](EmptyMsg* msg){
       PRINT_SEQUENCE("action1 triggered\n");
       theMsg()->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>());
@@ -146,11 +146,13 @@ static void mySeqSingleNode(SeqType const& seq_id) {
 }
 
 static void simpleSeq(SeqType const& seq_id) {
-  PRINT_SEQUENCE("simpleSeq: executing sequence: seq_id=%d\n", seq_id);
+  PRINT_SEQUENCE("simpleSeq: executing sequence: seq_id={}\n", seq_id);
 
   theSeq()->wait<EmptyMsg, action1>(10, [](EmptyMsg* msg){
     auto const& seq_id = theSeq()->getCurrentSeq();
-    PRINT_SEQUENCE("simpleSeq: seq=%d: w1 triggered: msg=%p\n", seq_id, msg);
+    PRINT_SEQUENCE(
+      "simpleSeq: seq={}: w1 triggered: msg={}\n", seq_id, print_ptr(msg)
+    );
   });
 
   theSeq()->sequenced([]{
@@ -166,13 +168,15 @@ static void simpleSeq(SeqType const& seq_id) {
 
   theSeq()->wait<EmptyMsg, action1>(20, [](EmptyMsg* msg){
     auto const& seq_id = theSeq()->getCurrentSeq();
-    PRINT_SEQUENCE("simpleSeq: seq=%d: w2 triggered: msg=%p\n", seq_id, msg);
+    PRINT_SEQUENCE(
+      "simpleSeq: seq={}: w2 triggered: msg={}\n", seq_id, print_ptr(msg)
+    );
     theMsg()->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>(), 30);
   });
 
   theSeq()->wait<EmptyMsg, action1>(30, [](EmptyMsg* msg){
     auto const& seq_id = theSeq()->getCurrentSeq();
-    PRINT_SEQUENCE("simpleSeq: seq=%d: w3 triggered\n", seq_id);
+    PRINT_SEQUENCE("simpleSeq: seq={}: w3 triggered\n", seq_id);
   });
 
   theSeq()->sequenced([]{
@@ -201,7 +205,7 @@ static void simpleSeq(SeqType const& seq_id) {
 
   theSeq()->wait<EmptyMsg, action1>(40, [](EmptyMsg* msg){
     auto const& seq_id = theSeq()->getCurrentSeq();
-    PRINT_SEQUENCE("simpleSeq: seq=%d: w4 triggered\n", seq_id);
+    PRINT_SEQUENCE("simpleSeq: seq={}: w4 triggered\n", seq_id);
   });
 }
 

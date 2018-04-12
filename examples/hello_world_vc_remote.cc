@@ -17,12 +17,12 @@ struct MyVC : vt::vrt::VirtualContext {
   int my_data = -1;
 
   MyVC(int const& my_data_in) : my_data(my_data_in) {
-    printf("constructing myVC: data=%d\n", my_data_in);
+    fmt::print("constructing myVC: data={}\n", my_data_in);
   }
 };
 
 static void testHan(TestMsg* msg, MyVC* vc) {
-  printf("testHan: msg->from=%d, my_data=%d\n", msg->from, vc->my_data);
+  fmt::print("testHan: msg->from={}, my_data={}\n", msg->from, vc->my_data);
 }
 
 int main(int argc, char** argv) {

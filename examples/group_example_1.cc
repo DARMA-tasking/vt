@@ -20,11 +20,11 @@ struct HelloGroupMsg : ::vt::Message {
 };
 
 static void hello_world(HelloMsg* msg) {
-  printf("%d: Hello from node %d\n", theContext()->getNode(), msg->from);
+  fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
 }
 
 static void hello_group_handler(HelloGroupMsg* msg) {
-  printf("%d: Hello from group handler\n", theContext()->getNode());
+  fmt::print("{}: Hello from group handler\n", theContext()->getNode());
 }
 
 int main(int argc, char** argv) {
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
       theContext()->getNumNodes()
     );
     this_group = theGroup()->newGroup(std::move(list), [](GroupType group){
-      printf("Group is created\n");
+      fmt::print("Group is created\n");
       auto msg = new HelloGroupMsg();
       envelopeSetGroup(msg->env, group);
       theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg, [=]{

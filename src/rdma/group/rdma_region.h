@@ -36,7 +36,7 @@ struct Region {
   }
 
   void setElmSize(RegionElmSizeType const& size) {
-    printf("setting region size to %d\n", size);
+    fmt::print("setting region size to {}\n", size);
 
     elm_size = size;
   }
@@ -48,10 +48,10 @@ struct Region {
   std::string regionToBuf() const {
     std::stringstream buf;
     buf << "[" << lo << ":" << hi << ":" << sd << "]" << std::endl;
-    // char const* const print_format = "[%lld:%lld:%lld]";
+    // char const* const print_format = "[{}:{}:{}]";
     // auto const& len = std::strlen(print_format);
     // std::string str(len);
-    // sprintf(str.c_str(), print_format, lo, hi, sd);
+    // sfmt::print(str.c_str(), print_format, lo, hi, sd);
     return buf.str();
   }
 };

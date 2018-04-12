@@ -12,7 +12,7 @@ namespace vt { namespace event {
 
   debug_print(
     event, node,
-    "EventIDManager::makeEvent: id=%d, node=%d\n", id, node
+    "EventIDManager::makeEvent: id={}, node={}\n", id, node
   );
 
   return new_event_id;

@@ -40,7 +40,7 @@ namespace vt { namespace lb { namespace instrumentation {
 ) {
   debug_print(
     lb, node,
-    "collectFinished: phase=%llu, size=%ld\n", phase, entries.size()
+    "collectFinished: phase={}, size={}\n", phase, entries.size()
   );
 }
 

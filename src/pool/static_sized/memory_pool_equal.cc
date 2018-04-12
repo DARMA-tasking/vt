@@ -20,13 +20,13 @@ template <int64_t num_bytes_t>
 /*virtual*/ MemoryPoolEqual<num_bytes_t>::~MemoryPoolEqual() {
   debug_print(
     pool, node,
-    "cur_slot_=%lld\n", cur_slot_
+    "cur_slot_={}\n", cur_slot_
   );
 
   // for (auto i = 0; i < cur_slot_; i++) {
   //   debug_print_force(
   //     pool, node,
-  //     "alloc never freed: ptr=%p, cur_slot_=%d\n", holder_.at(i), i
+  //     "alloc never freed: ptr={}, cur_slot_={}\n", holder_.at(i), i
   //   );
   // }
 
@@ -52,7 +52,7 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(size_t const& sz) {
 
   debug_print(
     pool, node,
-    "alloc ptr=%p, ptr_ret=%p cur_slot=%lld\n", ptr, ptr_ret, cur_slot_
+    "alloc ptr={}, ptr_ret={} cur_slot={}\n", ptr, ptr_ret, cur_slot_
   );
 
   cur_slot_++;
@@ -64,7 +64,7 @@ template <int64_t num_bytes_t>
 void MemoryPoolEqual<num_bytes_t>::dealloc(void* const t) {
   debug_print(
     pool, node,
-    "dealloc t=%p, cur_slot=%lld\n", t, cur_slot_
+    "dealloc t={}, cur_slot={}\n", t, cur_slot_
   );
 
   assert(

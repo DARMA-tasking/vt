@@ -34,7 +34,7 @@ TEST_F(TestMapping, test_mapping_block_1d) {
   for (int i = 0; i < max; i++) {
     index::Index1D idx_test(i);
     auto const& node = mapping::dense1DBlockMap(&idx_test, &max_idx, nnodes);
-    //printf("node=%d,idx val=%d, idx max=%d\n", node, idx_test[0], max_idx[0]);
+    //fmt::print("node={},idx val={}, idx max={}\n", node, idx_test[0], max_idx[0]);
     map_cnt[node]++;
   }
 
@@ -75,8 +75,8 @@ TEST_F(TestMapping, test_mapping_block_2d) {
       for (int j = 0; j < max_idx[1]; j++) {
         index::Index2D idx_test(i, j);
         auto const& node = mapping::dense2DBlockMap(&idx_test, &max_idx, nnodes);
-        // printf(
-        //   "node=%d,idx val=[%d,%d], idx max=[%d,%d]\n",
+        // fmt::print(
+        //   "node={},idx val=[{},{}], idx max=[{},{}]\n",
         //   node, idx_test[0], idx_test[1], max_idx[0], max_idx[1]
         // );
         map_cnt[node]++;
