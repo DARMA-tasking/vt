@@ -47,6 +47,7 @@ endif (ZLIB_FOUND)
 set(FMT_LIBRARY "fmt::fmt-header-only")
 add_subdirectory(${fmt_DIR} EXCLUDE_FROM_ALL)
 include_directories("${fmt_DIR}")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFMT_HEADER_ONLY=1")
 
 set(
   PROJECT_SUBDIRS_LIST
