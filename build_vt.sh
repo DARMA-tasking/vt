@@ -40,6 +40,7 @@ fi
 
 meld_path=/Users/jliffla/codes/vt/meld-build
 detector_path=/Users/jliffla/codes/vt/detector-build
+fmt_path=/Users/jliffla/codes/vt/virtual-transport/lib/fmt
 
 echo "Building virtual transport layer mode=$build_mode"
 
@@ -88,6 +89,7 @@ cmake ${SOURCE_BASE_DIR} \
       -DCMAKE_SERIALIZATION_PATH=${serialization_path} \
       -DCMAKE_DETECTOR_PATH=${detector_path} \
       -DCMAKE_MELD_PATH=${meld_path} \
+      -Dfmt_DIR=${fmt_path} \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true \
       -DGTEST_DIR=${gtest_directory} \
       -DCMAKE_C_COMPILER=${CC_COMPILER}

@@ -44,6 +44,10 @@ else()
   message("zlib is required for tracing")
 endif (ZLIB_FOUND)
 
+set(FMT_LIBRARY "fmt::fmt-header-only")
+add_subdirectory(${fmt_DIR} EXCLUDE_FROM_ALL)
+include_directories("${fmt_DIR}")
+
 set(
   PROJECT_SUBDIRS_LIST
 
@@ -284,6 +288,7 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
       ${FCONTEXT_LIBRARY}
       ${SERIALIZATION_LIBRARY}
       ${DETECTOR_LIBRARY}
+      ${FMT_LIBRARY}
     )
   endif()
 endforeach()
@@ -309,6 +314,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     ${FCONTEXT_LIBRARY}
     ${SERIALIZATION_LIBRARY}
     ${DETECTOR_LIBRARY}
+    ${FMT_LIBRARY}
   )
 endforeach()
 
@@ -388,6 +394,7 @@ else()
         ${SERIALIZATION_LIBRARY}
         ${DETECTOR_LIBRARY}
         gtest gmock
+        ${FMT_LIBRARY}
       )
 
       foreach(PROC ${UNIT_TEST_PROC_TEST_LIST})
