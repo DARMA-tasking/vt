@@ -10,6 +10,8 @@
 #include "seq_node.h"
 #include "seq_ult_context.h"
 
+#include <context_wrapper.h>
+
 namespace vt { namespace seq {
 
 struct SeqContext {

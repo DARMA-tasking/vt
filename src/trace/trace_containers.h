@@ -28,7 +28,17 @@ using TraceContainerEventClassType = EventLookupType<TraceEntryIDType, EventClas
 // Use static template initialization pattern to deal with ordering issues with
 // auto-registry
 template <typename = void>
-struct TraceContainers {
+class TraceContainers {
+ public:
+  static TraceContainerEventClassType& getEventTypeContainer(){
+    return event_type_container;
+  }
+
+  static TraceContainerEventType& getEventContainer(){
+    return event_container;
+  }
+
+ private:
   static TraceContainerEventClassType event_type_container;
   static TraceContainerEventType event_container;
 };

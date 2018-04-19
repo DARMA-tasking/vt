@@ -30,15 +30,15 @@ struct TraceRegistry {
     TraceEntryIDType event_type_seq = no_trace_entry_id;
     EventClassType new_event_type(event_type_name);
 
-    auto type_iter = TraceContainersType::event_type_container.find(
+    auto type_iter = TraceContainersType::getEventTypeContainer().find(
       new_event_type.theEventId()
     );
 
-    if (type_iter == TraceContainersType::event_type_container.end()) {
-      event_type_seq = TraceContainersType::event_type_container.size();
+    if (type_iter == TraceContainersType::getEventTypeContainer().end()) {
+      event_type_seq = TraceContainersType::getEventTypeContainer().size();
       new_event_type.setEventSeq(event_type_seq);
 
-      TraceContainersType::event_type_container.emplace(
+      TraceContainersType::getEventTypeContainer().emplace(
         std::piecewise_construct,
         std::forward_as_tuple(new_event_type.theEventId()),
         std::forward_as_tuple(new_event_type)
@@ -52,15 +52,15 @@ struct TraceRegistry {
 
     new_event.setEventTypeSeq(event_type_seq);
 
-    auto event_iter = TraceContainersType::event_container.find(
+    auto event_iter = TraceContainersType::getEventTypeContainer().find(
       new_event.theEventId()
     );
 
-    if (event_iter == TraceContainersType::event_container.end()) {
-      event_seq = TraceContainersType::event_container.size();
+    if (event_iter == TraceContainersType::getEventTypeContainer().end()) {
+      event_seq = TraceContainersType::getEventTypeContainer().size();
       new_event.setEventSeq(event_seq);
 
-      TraceContainersType::event_container.emplace(
+      TraceContainersType::getEventContainer().emplace(
         std::piecewise_construct,
         std::forward_as_tuple(new_event.theEventId()),
         std::forward_as_tuple(new_event)
