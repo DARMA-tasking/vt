@@ -120,7 +120,7 @@ add_library(
   STATIC
   ${HEADER_FILES} ${SOURCE_FILES}
 )
-target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${ZLIB_LIBRARIES} darma_meld darma_detector)
+target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${ZLIB_LIBRARIES} darma_meld darma_detector fmt::fmt)
 
 install(
   TARGETS ${VIRTUAL_TRANSPORT_LIBRARY}

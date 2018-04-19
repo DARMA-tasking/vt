@@ -61,12 +61,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
 include(${CMAKE_MODULE_PATH}/FindOpenMP.cmake)
 
 find_package(ZLIB REQUIRED)
-
 if (ZLIB_FOUND)
   include_directories(${ZLIB_INCLUDE_DIRS})
 else()
   message("zlib is required for tracing")
 endif (ZLIB_FOUND)
+
+find_package(fmt PATHS ${fmt_DIR} ${fmt_DIR}/lib/cmake)
+if(NOT fmt_FOUND)
+message(FATAL_ERROR "VT requires the fmt library. Please specify valid installation with -Dfmt_DIR= or install by downloading from https://github.com/fmtlib/fmt")
+endif()
 
 function(config_for_std_thread)
   set(DEFAULT_THREADING stdthread)

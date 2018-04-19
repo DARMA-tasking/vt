@@ -13,6 +13,8 @@ set (darma_meld_DIR @darma_meld_DIR@)
 find_package(darma_meld)
 set (darma_detector_DIR @darma_detector_DIR@)
 find_package(darma_detector)
+set (fmt_DIR @fmt_DIR@)
+find_package(fmt PATHS ${fmt_DIR} ${fmt_DIR}/lib/cmake)
 
 set (VT_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@" "@CMAKE_INSTALL_PREFIX@/include")
 SET (VT_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
