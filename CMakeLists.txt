@@ -177,7 +177,7 @@ configure_file(
 install(
   FILES
   "${PROJECT_BINARY_DIR}/vtConfig.cmake"
-  DESTINATION cmake 
+  DESTINATION cmake
   COMPONENT extCfg
 )
 
