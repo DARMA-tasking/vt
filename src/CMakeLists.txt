@@ -1,5 +1,4 @@
 
-set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(TOP_LEVEL_SUBDIRS
   configs
   collective
@@ -66,12 +65,6 @@ install(FILES ${TOP_HEADERS} DESTINATION include)
 
 
 
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/lib/context/src)
-include_directories(${PROJECT_LIB_DIR})
-include_directories(${DARMA_DETECTOR_PATH}/include)
-include_directories(${DARMA_MELD_PATH}/include)
-include_directories(${CMAKE_BINARY_DIR})
 
 file(
   GLOB
@@ -120,7 +113,24 @@ add_library(
   STATIC
   ${HEADER_FILES} ${SOURCE_FILES}
 )
-target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${ZLIB_LIBRARIES} darma_meld darma_detector fmt::fmt)
+
+target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS})
+target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${VT_TARGET_CXX_FLAGS})
+target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY}) #internal libs
+target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} darma_meld darma_detector fmt::fmt) #imported cmake libs
+target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${ZLIB_LIBRARIES}) #external, non-cmake libs
+target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${VT_TARGET_LINKER_FLAGS})
+
+target_include_directories(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+  $<INSTALL_INTERFACE:include>
+)
+
 
 install(
   TARGETS ${VIRTUAL_TRANSPORT_LIBRARY}

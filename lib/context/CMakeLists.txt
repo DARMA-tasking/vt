@@ -57,7 +57,12 @@ add_library(
 
 install(FILES ${HEADER_FILES} DESTINATION include)
 
-include_directories(${PROJECT_SOURCE_DIR})
+target_compile_options(${FCONTEXT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS})
+
+target_include_directories(${FCONTEXT_LIBRARY} PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:include>
+)
 
 set(PROJECT_EXAMPLE_C_DIR ${PROJECT_EXAMPLE_DIR}/c_interface)
 set(PROJECT_EXAMPLE_CXX_DIR ${PROJECT_EXAMPLE_DIR}/cxx_interface)
@@ -174,15 +179,6 @@ foreach(EXAMPLE_FULL ${PROJECT_CXX_EXAMPLES})
   )
 endforeach()
 
-install(
-  TARGETS ${FCONTEXT_LIBRARY}
-  EXPORT ${FCONTEXT_LIBRARY}
-  DESTINATION lib
-)
-
-install(
-  EXPORT ${FCONTEXT_LIBRARY}
-  DESTINATION cmake
-  COMPONENT extCfg
-)
-
+install(TARGETS ${FCONTEXT_LIBRARY} 
+        EXPORT ${VIRTUAL_TRANSPORT_LIBRARY} #this gets exported here
+        DESTINATION lib)
