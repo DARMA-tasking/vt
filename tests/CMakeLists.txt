@@ -39,7 +39,6 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
   #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${GTEST_DIR}/lib")
 
   foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
-    message("running on subdir=${SUB_DIR}")
     file(
       GLOB
       "${SUB_DIR}_UNIT_TEST_SOURCE_FILES"
