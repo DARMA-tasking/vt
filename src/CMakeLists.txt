@@ -56,15 +56,14 @@ set(
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 
 foreach(DIR ${TOP_LEVEL_SUBDIRS})
-install(DIRECTORY ${DIR} DESTINATION include
-        FILES_MATCHING PATTERN "*.h")
+  install(
+    DIRECTORY ${DIR} DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
+  )
 endforeach()
 
 file(GLOB TOP_HEADERS *.h)
 install(FILES ${TOP_HEADERS} DESTINATION include)
-
-
-
 
 file(
   GLOB
@@ -141,7 +140,6 @@ install(
 
 install(
   EXPORT vt
-  DESTINATION cmake 
+  DESTINATION cmake
   COMPONENT extCfg
 )
-

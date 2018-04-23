@@ -81,7 +81,7 @@ else()
           ${UNIT_TEST}_${PROC}
           ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
           ${CMAKE_CURRENT_BINARY_DIR}/${UNIT_TEST}
-          )
+        )
         set_tests_properties(
           ${UNIT_TEST}_${PROC}
           PROPERTIES TIMEOUT 60
@@ -97,7 +97,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
   add_executable(
     ${PERF_TEST}
     ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
-    )
+  )
   include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/src)
   include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/lib)
   include_directories(${PERF_TEST} ${CMAKE_BINARY_DIR})
