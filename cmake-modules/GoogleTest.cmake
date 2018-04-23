@@ -258,6 +258,7 @@ function(gtest_add_tests)
   set(multiValueArgs
       SOURCES
       EXTRA_ARGS
+      EXECUTE_COMMAND
   )
   set(allKeywords ${options} ${oneValueArgs} ${multiValueArgs})
 
@@ -336,7 +337,7 @@ function(gtest_add_tests)
           )
           add_test(NAME ${ctest_test_name}
                    ${workDir}
-                   COMMAND ${ARGS_TARGET}
+                   COMMAND ${ARGS_EXECUTE_COMMAND} "./${ARGS_TARGET}"
                      --gtest_also_run_disabled_tests
                      --gtest_filter=${gtest_test_name}
                      ${ARGS_EXTRA_ARGS}
@@ -348,7 +349,8 @@ function(gtest_add_tests)
         set(ctest_test_name ${ARGS_TEST_PREFIX}${gtest_test_name}${ARGS_TEST_SUFFIX})
         add_test(NAME ${ctest_test_name}
                  ${workDir}
-                 COMMAND ${ARGS_TARGET}
+                 COMMAND
+                 ${ARGS_EXECUTE_COMMAND} "./${ARGS_TARGET}"
                    --gtest_filter=${gtest_test_name}
                    ${ARGS_EXTRA_ARGS}
         )
