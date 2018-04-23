@@ -16,10 +16,8 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
   if(CMAKE_NO_BUILD_EXAMPLES)
     message("Skipping example: ${EXAMPLE}")
   else()
-    add_executable(
-      ${EXAMPLE}
-      ${EXAMPLE}.cc
-    )
+    add_executable(${EXAMPLE} ${EXAMPLE}.cc)
+
     include_directories(${EXAMPLE} ${CMAKE_SOURCE_DIR}/src)
     include_directories(${EXAMPLE} ${CMAKE_SOURCE_DIR}/lib/context/src)
     include_directories(${EXAMPLE} ${CMAKE_BINARY_DIR})
