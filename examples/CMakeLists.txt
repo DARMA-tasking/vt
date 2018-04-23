@@ -27,16 +27,21 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
     add_test_for_example_vt(
       ${EXAMPLE}
       ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
-      gtest
     )
+
+    target_link_libraries(${EXAMPLE} ${VIRTUAL_TRANSPORT_LIBRARY})
+    target_link_libraries(${EXAMPLE} ${FCONTEXT_LIBRARY})
+    target_link_libraries(${EXAMPLE} ${ZLIB_LIBRARIES})
+    target_link_libraries(${EXAMPLE} OpenMP::OpenMP_CXX)
+    target_link_libraries(${EXAMPLE} GTest::GTest)
+    target_link_libraries(${EXAMPLE} GTest::Main)
 
     target_link_libraries(
       ${EXAMPLE}
-      ${VIRTUAL_TRANSPORT_LIBRARY}
-      ${ZLIB_LIBRARIES}
-      ${MPI_C_LIBRARIES}
-      ${FCONTEXT_LIBRARY}
-      ${SERIALIZATION_LIBRARY}
+      darma_meld
+      darma_checkpoint
+      darma_detector
+      fmt::fmt
     )
   endif()
 endforeach()

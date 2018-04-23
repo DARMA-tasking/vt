@@ -98,7 +98,7 @@ if (${enable_gtest})
   find_package(gtest REQUIRED)
 
   if(GTEST_FOUND)
-    set(GTEST_DIR ${GTEST_ROOT})
+    set(GTEST_DIR "${GTEST_ROOT}")
   else()
     message(
       FATAL_ERROR
@@ -107,11 +107,13 @@ if (${enable_gtest})
     )
   endif()
 
+  set(VT_HAS_GTEST TRUE)
 else()
   message(
     STATUS
     "Gtest is disabled; not building tests. To enable set -Denable_gtest=true."
-  )
+    )
+  set(VT_HAS_GTEST FALSE)
 endif()
 
 include(${CMAKE_MODULE_PATH}/FindOpenMP.cmake)
@@ -145,10 +147,13 @@ function(config_for_openmp)
     "CC FLAGS=\"${OpenMP_C_FLAGS}\", "
     "CXX FLAGS=\"${OpenMP_CXX_FLAGS}\""
   )
-  string(APPEND VT_TARGET_CXX_FLAGS ${OpenMP_CXX_FLAGS})
-  set(VT_TARGET_CXX_FLAGS "${VT_TARGET_CXX_FLAGS}" PARENT_SCOPE)
-  string(APPEND VT_TARGET_LINKER_FLAGS ${OpenMP_EXE_LINKER_FLAGS})
-  set(VT_TARGET_LINKER_FLAGS "${VT_TARGET_LINKER_FLAGS}" PARENT_SCOPE)
+
+  # The flags are handled through the target instead of manually setting the
+  # flags for VT:
+  # string(APPEND VT_TARGET_CXX_FLAGS ${OpenMP_CXX_FLAGS})
+  # set(VT_TARGET_CXX_FLAGS "${VT_TARGET_CXX_FLAGS}" PARENT_SCOPE)
+  # string(APPEND VT_TARGET_LINKER_FLAGS ${OpenMP_EXE_LINKER_FLAGS})
+  # set(VT_TARGET_LINKER_FLAGS "${VT_TARGET_LINKER_FLAGS}" PARENT_SCOPE)
 endfunction(config_for_openmp)
 
 option(USE_STD_THREAD "whether to force use of std::thread for threading" OFF)
