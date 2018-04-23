@@ -204,9 +204,20 @@ macro(add_test_for_example_vt test_name test_exec)
   endforeach()
 endmacro()
 
+# Add subdirectories for tests and examples
+add_subdirectory(${PROJECT_LIB_DIR}/context)
+add_subdirectory(src)
+
+add_custom_target(examples)
+add_subdirectory(examples)
+
+add_custom_target(unit_tests)
+add_custom_target(perf_tests)
+add_subdirectory(tests)
+
 set(
-  CONF_INCLUDE_DIRS "${DARMA_DETECTOR_PATH}/include"
-                    "${DARMA_MELD_PATH}/include"
+  PROJECT_PERF_TESTS
+  ping_pong
 )
 
 configure_file(
