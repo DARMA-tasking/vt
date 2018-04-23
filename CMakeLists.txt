@@ -178,18 +178,6 @@ set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 include (CTest)
 enable_testing()
 
-# if(NOT DARMA_SERIALIZATION_PATH)
-#   message("Serialization library not found")
-#   set(SERIALIZATION_LIBRARY)
-# else()
-#   set(HAS_SERIALIZATION_LIBRARY 1)
-#   add_subdirectory(${DARMA_SERIALIZATION_PATH} ${CMAKE_CURRENT_BINARY_DIR}/serialization)
-#   include_directories(${DARMA_SERIALIZATION_PATH}/src)
-#   # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${CMAKE_SERIALIZATION_PATH}/lib")
-#   set(SERIALIZATION_LIBRARY serialization)
-#   message("Serialization library found: ${DARMA_SERIALIZATION_PATH}")
-# endif()
-
 # Set default command for invoking MPI (mpirun) and flag for MPI nprocs
 set(MPI_RUN_COMMAND "mpirun-mpich-clang")
 set(MPI_NUMPROC_FLAG "-n")
