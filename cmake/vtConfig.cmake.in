@@ -7,7 +7,7 @@
 # Compute paths
 GET_FILENAME_COMPONENT (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include(${VT_CMAKE_DIR}/vt.cmake)
-include(${VT_CMAKE_DIR}/fcontext.cmake)
+#include(${VT_CMAKE_DIR}/fcontext.cmake)
 
 set (darma_meld_DIR @darma_meld_DIR@)
 find_package(darma_meld)
