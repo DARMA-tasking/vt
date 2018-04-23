@@ -116,20 +116,29 @@ add_library(
 target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS})
 target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${VT_TARGET_CXX_FLAGS})
 target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY}) #internal libs
-target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} darma_meld darma_detector fmt::fmt) #imported cmake libs
 target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${ZLIB_LIBRARIES}) #external, non-cmake libs
 target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${VT_TARGET_LINKER_FLAGS})
 
-target_include_directories(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
+# imported cmake libs, triggers proper inclusion for public targets to
+target_link_libraries(
+  ${VIRTUAL_TRANSPORT_LIBRARY}
+  darma_meld
+  darma_checkpoint
+  darma_detector
+  fmt::fmt
+)
+
+target_include_directories(
+  ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
   $<INSTALL_INTERFACE:include>
 )
 
-target_include_directories(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
+target_include_directories(
+  ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:include>
 )
-
 
 install(
   TARGETS ${VIRTUAL_TRANSPORT_LIBRARY}

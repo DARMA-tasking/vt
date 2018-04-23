@@ -45,26 +45,74 @@ require_pkg_directory(darma_detector "DARMA detector")
 find_package_local(darma_meld     "${darma_meld_DIR}/cmake")
 find_package_local(darma_detector "${darma_detector_DIR}/cmake")
 
-#
-#        @todo: finish implementing this optional package
-#
-# macro(optional_pkg_directory pkg_name pkg_user_name)
-#   #message(STATUS "optional_pkg_directory: name=${pkg_name}")
-#   option(${pkg_name}_DIR "Root folder for ${pkg_user_name} installation" OFF)
-#   if (NOT ${pkg_name}_DIR)
-#     message(STATUS "Path for ${pkg_user_name} library (optional) not specified with -D${pkg_name}_DIR=")
-#     message(STATUS "Building without ${pkg_user_name} library")
-#   else()
-#     message(STATUS "Path for ${pkg_user_name} library (optional) specified with -D${pkg_name}_DIR=")
-#   endif()
-# endmacro(optional_pkg_directory)
-#
+macro(optional_pkg_directory pkg_name pkg_user_name)
+  #message(STATUS "optional_pkg_directory: name=${pkg_name}")
+  option(${pkg_name}_DIR "Root folder for ${pkg_user_name} installation" OFF)
+  if (NOT ${pkg_name}_DIR)
+    message(
+      STATUS
+      "Path for ${pkg_user_name} library (optional) not specified "
+      "with -D${pkg_name}_DIR="
+    )
+    message(
+      STATUS
+      "Building without ${pkg_user_name} library"
+    )
+    set(${pkg_name}_DIR_FOUND 0)
+  else()
+    message(
+      STATUS
+      "Path for ${pkg_user_name} library (optional) specified "
+      "with -D${pkg_name}_DIR=${${pkg_name}_DIR}"
+    )
+    set(${pkg_name}_DIR_FOUND 1)
+  endif()
+endmacro(optional_pkg_directory)
+
 # optional directory for this package
-## optional_pkg_directory(checkpoint    "Serialization/Checkpoint")
-#
-#
+optional_pkg_directory(darma_checkpoint "Serialization/Checkpoint")
+# if it is found then find the package
+if (${darma_checkpoint_DIR_FOUND})
+  find_package_local(darma_checkpoint "${darma_checkpoint_DIR}/cmake")
+  if (${darma_checkpoint_FOUND})
+    set(HAS_SERIALIZATION_LIBRARY 1)
+    set(SERIALIZATION_LIBRARY darma_checkpoint)
+  else()
+    message(FATAL_ERROR "Serialization/checkpoint library not found")
+  endif()
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
+
+# Google test cmake option and package setup
+option(
+  enable_gtest "Enable google test framework: -Dgtest_DIR= to specify path" ON
+)
+
+if (${enable_gtest})
+  if (${gtest_DIR})
+    set(GTEST_ROOT "${gtest_DIR}" CACHE PATH "Path to googletest")
+  endif()
+
+  include(${CMAKE_MODULE_PATH}/FindGTest.cmake)
+  find_package(gtest REQUIRED)
+
+  if(GTEST_FOUND)
+    set(GTEST_DIR ${GTEST_ROOT})
+  else()
+    message(
+      FATAL_ERROR
+      "Gtest not found, not building tests. "
+      "Please specify valid directory with -Dgtest_DIR="
+    )
+  endif()
+
+else()
+  message(
+    STATUS
+    "Gtest is disabled; not building tests. To enable set -Denable_gtest=true."
+  )
+endif()
 
 include(${CMAKE_MODULE_PATH}/FindOpenMP.cmake)
 

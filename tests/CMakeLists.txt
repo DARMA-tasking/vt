@@ -26,9 +26,7 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
   )
 endforeach()
 
-if (NOT GTEST_DIR)
-  message("Unit test are disabled because GoogleTest is not setup via -DGTEST_DIR=")
-else()
+if (GTEST_DIR)
   set(
     TEST_HEADER_FILES
     ${PROJECT_TEST_UNIT_DIR}/test_harness.h
