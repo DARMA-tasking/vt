@@ -2,8 +2,15 @@
 
 if test $# -lt 1
 then
-    echo "usage $0 <build-mode> <compiler> <has-serialization> <all> <detector-path> <meld-path>"
-    exit 1;
+    (>&2 echo
+       "usage: $0 "
+       "<build-mode=debug|release> "
+       "<compiler=clang|gnu> "
+       "[ <has-serialization=0|1> ] "
+       "[ <build-all-tests=0|1> ] "
+       "[ <detector-path> ] "
+       "[ <meld-path> ] "
+       "[ <checkpoint-path> ] ") && exit 29;
 fi
 
 build_mode=$1
@@ -29,30 +36,47 @@ else
     has_all=1
 fi
 
-echo "has_all=${has_all} has_serial=${has_serial} compiler=${compiler}"
+#echo "has_all=${has_all} has_serial=${has_serial} compiler=${compiler}"
 
 if test ${has_serial} -gt 0
 then
-    serialization_path=/Users/jliffla/codes/serialization
+    serialization_dir=/Users/jliffla/codes/vt/checkpoint-install/
 else
-    serialization_path=
+    if test $# -gt 6
+    then
+        serialization_dir=$6
+    fi
 fi
 
-meld_path=/Users/jliffla/codes/vt/meld-build
-detector_path=/Users/jliffla/codes/vt/detector-build
+meld_dir=/Users/jliffla/codes/vt/meld-install
+detector_dir=/Users/jliffla/codes/vt/detector-install
+fmt_dir=/Users/jliffla/codes/vt/fmt-install
 
-echo "Building virtual transport layer mode=$build_mode"
+if test $# -gt 4
+then
+    detector_dir=$4
+fi
+
+if test $# -gt 5
+then
+    meld_dir=$4
+fi
+
+gtest_dir=/Users/jliffla/codes/gtest/gtest-install/
 
 SOURCE_BASE_DIR=../virtual-transport/
 MAKE_VERBOSE=off
 
 if test $compiler = "clang"
 then
-    CXX_COMPILER=clang++-mp-3.9 # mpic++-mpich-clang39
-    CC_COMPILER=clang-mp-3.9 #mpicc-mpich-clang39
-else
+    CXX_COMPILER=mpic++-mpich-clang39
+    CC_COMPILER=mpicc-mpich-clang39
+elif test $compiler = "gnu"
+then
     CXX_COMPILER=mpic++-mpich-devel-gcc6
     CC_COMPILER=mpicc-mpich-devel-gcc6
+else
+    (>&2 echo "Please specify valid compiler option: $compiler") && exit 10;
 fi
 
 MPI_PATH=/opt/local/lib/mpich-clang39/libmpi.dylib
@@ -60,36 +84,34 @@ MPI_INC_PATH=/opt/local/include/mpich-clang39/
 MPI_CXX_PATH=/opt/local/lib/mpich-clang39/libmpicxx.dylib
 MPI_CXX_INC_PATH=/opt/local/include/mpich-clang39/mpicxx.h
 
-gtest_directory=/Users/jliffla/codes/gtest/gtest-build
-
-# Detector support:
-#   detector_path=/Users/jliffla/codes/vt/virtual-transport/lib/detector
-#   -DCMAKE_DETECTOR_PATH=${detector_path}
-
 if test ${has_all} -gt 0
 then
     build_all=""
 else
-    echo "Setting no build all for ${has_all}"
+    #echo "Setting no build all for ${has_all}"
     build_all="-DCMAKE_NO_BUILD_TESTS=1 -DCMAKE_NO_BUILD_EXAMPLES=1"
 fi
 
-cmake ${SOURCE_BASE_DIR} \
-      -DCMAKE_INSTALL_PREFIX=`pwd` \
-      -DCMAKE_CXX_FLAGS="-std=c++1y" \
-      -DCMAKE_BUILD_TYPE=${build_mode} \
-      -DCMAKE_VERBOSE_MAKEFILE:BOOL=$MAKE_VERBOSE \
-      -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
-      -DMPI_C_LIBRARIES=${MPI_PATH} \
-      -DMPI_C_INCLUDE_PATH=${MPI_INC_PATH} \
-      -DMPI_CXX_LIBRARIES=${MPI_CXX_PATH} \
-      ${build_all} \
-      -DMPI_CXX_INCLUDE_PATH=${MPI_CXX_INC_PATH} \
-      -DCMAKE_SERIALIZATION_PATH=${serialization_path} \
-      -DCMAKE_DETECTOR_PATH=${detector_path} \
-      -DCMAKE_MELD_PATH=${meld_path} \
-      -DCMAKE_EXPORT_COMPILE_COMMANDS=true \
-      -DGTEST_DIR=${gtest_directory} \
-      -DCMAKE_C_COMPILER=${CC_COMPILER}
+(>&2 echo "=== Building vt ===")
+(>&2 echo -e "\tBuild mode:$build_mode")
+(>&2 echo -e "\tCompiler suite=$compiler, cxx=$CXX_COMPILER, cc=$CC_COMPILER")
+(>&2 echo -e "\tAll tests/examples=${has_all}")
+(>&2 echo -e "\tCheckpoint=${has_serial}, path=$serialization_dir")
+(>&2 echo -e "\tMeld path=${meld_dir}")
+(>&2 echo -e "\tDetector path=${detector_dir}")
+(>&2 echo -e "\tGoogle gtest path=${gtest_dir}")
 
-
+cmake ${SOURCE_BASE_DIR}                                                    \
+      -DCMAKE_INSTALL_PREFIX=../vt-install                                  \
+      -DCMAKE_CXX_FLAGS="-std=c++1y"                                        \
+      -DCMAKE_BUILD_TYPE=${build_mode}                                      \
+      -DCMAKE_VERBOSE_MAKEFILE:BOOL=$MAKE_VERBOSE                           \
+      -DCMAKE_CXX_COMPILER=${CXX_COMPILER}                                  \
+      -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                  \
+      ${build_all}                                                          \
+      -DCMAKE_C_COMPILER=${CC_COMPILER}                                     \
+      -Ddarma_checkpoint_DIR=${serialization_dir}                           \
+      -Ddarma_meld_DIR=${meld_dir}                                          \
+      -Ddarma_detector_DIR=${detector_dir}                                  \
+      -Dfmt_DIR=${fmt_dir}                                                  \
+      -Dgtest_DIR=${gtest_dir}
