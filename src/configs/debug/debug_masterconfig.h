@@ -17,25 +17,24 @@
 #if !debug_enabled
 #define backend_debug_modes backend_options_on(none)
 #else
-#define backend_debug_modes backend_options_on(                         \
-    flush                                                               \
+#define backend_debug_modes backend_options_on(                          \
+  flush                                                                  \
 )
 #endif
 
-#define backend_features backend_options_on(         \
-    detector, default_threading                                 \
+#define backend_features backend_options_on(                             \
+    detector, default_threading                                          \
 )
 
-#define backend_debug_contexts backend_options_on(              \
-   node, locale, unknown                                        \
+#define backend_debug_contexts backend_options_on(                       \
+   node, locale, unknown                                                 \
 )
 
-#define backend_defaults backend_options_on(                    \
-   startup                                                      \
+#define backend_defaults backend_options_on(                             \
+   startup                                                               \
 )
 
-#define backend_no_threading                                        \
-  !backend_check_enabled(openmp) &&                                 \
-  !backend_check_enabled(stdthread)
+#define backend_no_threading                                             \
+  !backend_check_enabled(openmp) && !backend_check_enabled(stdthread)
 
 #endif  /*INCLUDED_DEBUG_MASTER_CONFIG*/
