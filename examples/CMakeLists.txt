@@ -23,12 +23,10 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
     include_directories(${EXAMPLE} ${CMAKE_SOURCE_DIR}/src)
     include_directories(${EXAMPLE} ${CMAKE_SOURCE_DIR}/lib/context/src)
     include_directories(${EXAMPLE} ${CMAKE_BINARY_DIR})
-    include_directories(${EXAMPLE} ${DARMA_DETECTOR_PATH}/include)
-    include_directories(${EXAMPLE} ${DARMA_MELD_PATH}/include)
 
     add_dependencies(examples ${EXAMPLE})
 
-    add_test_for_example(
+    add_test_for_example_vt(
       ${EXAMPLE}
       ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
       gtest

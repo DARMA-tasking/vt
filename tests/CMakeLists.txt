@@ -99,15 +99,13 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
   include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/src)
   include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/lib)
   include_directories(${PERF_TEST} ${CMAKE_BINARY_DIR})
-  include_directories(${PERF_TEST} ${DARMA_DETECTOR_PATH}/include)
-  include_directories(${PERF_TEST} ${DARMA_MELD_PATH}/include)
 
   add_dependencies(perf_tests ${PERF_TEST})
 
-  # add_test_for_example(
-  #   ${PERF_TEST}
-  #   ${CMAKE_CURRENT_BINARY_DIR}/${PERF_TEST}
-  # )
+  add_test_for_example_vt(
+    ${PERF_TEST}
+    ${CMAKE_CURRENT_BINARY_DIR}/${PERF_TEST}
+  )
 
   target_link_libraries(
     ${PERF_TEST}

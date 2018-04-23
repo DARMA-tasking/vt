@@ -184,7 +184,7 @@ set(MPI_NUMPROC_FLAG "-n")
 set(PROC_TEST_LIST 2 4 8)
 
 # Set up test scaffolding for running examples
-macro(add_test_for_example_2 test_name test_exec)
+macro(add_test_for_example_vt test_name test_exec)
   foreach(PROC ${PROC_TEST_LIST})
     if(CMAKE_NO_BUILD_TESTS)
       message("Skipping test: ${test_name}_${PROC}")
