@@ -145,8 +145,10 @@ function(config_for_openmp)
     "CC FLAGS=\"${OpenMP_C_FLAGS}\", "
     "CXX FLAGS=\"${OpenMP_CXX_FLAGS}\""
   )
-  set(VT_TARGET_CXX_FLAGS "${VT_TARGET_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  set(VT_TARGET_LINKER_FLAGS "${VT_TARGET_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  string(APPEND VT_TARGET_CXX_FLAGS ${OpenMP_CXX_FLAGS})
+  set(VT_TARGET_CXX_FLAGS "${VT_TARGET_CXX_FLAGS}" PARENT_SCOPE)
+  string(APPEND VT_TARGET_LINKER_FLAGS ${OpenMP_EXE_LINKER_FLAGS})
+  set(VT_TARGET_LINKER_FLAGS "${VT_TARGET_LINKER_FLAGS}" PARENT_SCOPE)
 endfunction(config_for_openmp)
 
 option(USE_STD_THREAD "whether to force use of std::thread for threading" OFF)
