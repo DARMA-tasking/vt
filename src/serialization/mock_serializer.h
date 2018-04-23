@@ -201,7 +201,7 @@ struct DeserTraits {
 
   template <typename U = T>
   void operator()(SerialByteType* buf, T& val, SizeType num, isNotVecType<U>* x = nullptr) {
-    std::memcpy(&val, buf, sizeof(T));
+    std::memcpy(static_cast<void*>(&val), buf, sizeof(T));
   }
 };
 
