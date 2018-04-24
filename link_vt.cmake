@@ -72,7 +72,7 @@ function(link_target_with_vt)
   endif()
 
   if (NOT DEFINED ARG_LINK_CHECKPOINT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_CHECKPOINT)
-    if (${CMAKE_HAS_SERIALIZATION_LIBRARY})
+    if (${VT_HAS_SERIALIZATION_LIBRARY})
       if (${ARG_DEBUG_LINK})
         message(STATUS "link_target_with_vt: checkpoint=${ARG_LINK_CHECKPOINT}")
       endif()

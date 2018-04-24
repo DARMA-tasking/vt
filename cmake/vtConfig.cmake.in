@@ -21,7 +21,7 @@ find_package(fmt PATHS ${fmt_DIR} ${fmt_DIR}/lib/cmake)
 
 set (darma_checkpoint_DIR @darma_checkpoint_DIR@)
 set (vt_has_darma_checkpoint @darma_checkpoint_DIR_FOUND@)
-if (${vt_has_darma_checkpoint})
+if (@VT_HAS_SERIALIZATION_LIBRARY@)
   find_package(darma_checkpoint)
   set(VT_HAS_CHECKPOINT "TRUE")
 else()
