@@ -10,12 +10,14 @@ set(
   hello_world_collection rdma_unsized_collection group_example_1 reduce
 )
 
-foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
-  # message("Example: building example >>>>> ${EXAMPLE}")
+if (CMAKE_NO_BUILD_EXAMPLES)
+  message(
+    STATUS "VT: not building examples because CMAKE_NO_BUILD_EXAMPLES is set"
+  )
+else()
+  foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
+    # message("Example: building example >>>>> ${EXAMPLE}")
 
-  if(CMAKE_NO_BUILD_EXAMPLES)
-    message("Skipping example: ${EXAMPLE}")
-  else()
     add_executable(${EXAMPLE} ${EXAMPLE}.cc)
 
     include_directories(${EXAMPLE} ${CMAKE_SOURCE_DIR}/src)
@@ -34,6 +36,6 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
       DEFAULT_LINK_SET
       LINK_GTEST ON
     )
-  endif()
-endforeach()
+  endforeach()
+endif()
 

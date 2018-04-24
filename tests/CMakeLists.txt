@@ -95,7 +95,13 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
   # foreach (UNIT_TEST_FILE ${UNIT_TEST_SOURCE_FILES})
   # endforeach()
 else()
-  message(STATUS "VT skipping building of tests")
+  if (${CMAKE_NO_BUILD_TESTS})
+    message(
+      STATUS "VT: not building tests because CMAKE_NO_BUILD_TESTS is set"
+    )
+  else()
+    message(STATUS "VT: not building tests because not VT_HAS_GTEST")
+  endif()
 endif()
 
 foreach(PERF_TEST ${PROJECT_PERF_TESTS})
