@@ -40,13 +40,6 @@ macro(find_package_local pkg_name pkg_directory)
   )
 endmacro(find_package_local)
 
-# require directories for these packages
-require_pkg_directory(darma_meld     "DARMA meld")
-require_pkg_directory(darma_detector "DARMA detector")
-# find these required packages locally
-find_package_local(darma_meld     "${darma_meld_DIR}/cmake")
-find_package_local(darma_detector "${darma_detector_DIR}/cmake")
-
 macro(optional_pkg_directory pkg_name pkg_user_name)
   #message(STATUS "optional_pkg_directory: name=${pkg_name}")
   option(${pkg_name}_DIR "Root folder for ${pkg_user_name} installation" OFF)
@@ -71,9 +64,15 @@ macro(optional_pkg_directory pkg_name pkg_user_name)
   endif()
 endmacro(optional_pkg_directory)
 
+# require directories for these packages
+require_pkg_directory(darma_meld     "DARMA meld")
+require_pkg_directory(darma_detector "DARMA detector")
+# find these required packages locally
+find_package_local(darma_meld     "${darma_meld_DIR}/cmake")
+find_package_local(darma_detector "${darma_detector_DIR}/cmake")
 # optional directory for this package
 optional_pkg_directory(darma_checkpoint "Serialization/Checkpoint")
-# if it is found then find the package
+# find the optional packages locally if identified
 if (${darma_checkpoint_DIR_FOUND})
   find_package_local(darma_checkpoint "${darma_checkpoint_DIR}/cmake")
   if (${darma_checkpoint_FOUND})
