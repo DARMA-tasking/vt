@@ -8,6 +8,7 @@ then
        "<compiler=clang|gnu> "
        "[ <has-serialization=0|1> ] "
        "[ <build-all-tests=0|1> ] "
+       "[ <vt-install-directory> ] "
        "[ <detector-path> ] "
        "[ <meld-path> ] "
        "[ <checkpoint-path> ] ") && exit 29;
@@ -42,9 +43,9 @@ if test ${has_serial} -gt 0
 then
     serialization_dir=/Users/jliffla/codes/vt/checkpoint-install/
 else
-    if test $# -gt 6
+    if test $# -gt 7
     then
-        serialization_dir=$6
+        serialization_dir=$8
     fi
 fi
 
@@ -54,12 +55,19 @@ fmt_dir=/Users/jliffla/codes/vt/fmt-install
 
 if test $# -gt 4
 then
-    detector_dir=$4
+    vt_install_dir=$5
+else
+    vt_install_dir=../vt-install
 fi
 
 if test $# -gt 5
 then
-    meld_dir=$4
+    detector_dir=$6
+fi
+
+if test $# -gt 6
+then
+    meld_dir=$7
 fi
 
 gtest_dir=/Users/jliffla/codes/gtest/gtest-install/
@@ -96,13 +104,14 @@ fi
 (>&2 echo -e "\tBuild mode:$build_mode")
 (>&2 echo -e "\tCompiler suite=$compiler, cxx=$CXX_COMPILER, cc=$CC_COMPILER")
 (>&2 echo -e "\tAll tests/examples=${has_all}")
+(>&2 echo -e "\tVT installation directory=${vt_install_dir}")
 (>&2 echo -e "\tCheckpoint=${has_serial}, path=$serialization_dir")
 (>&2 echo -e "\tMeld path=${meld_dir}")
 (>&2 echo -e "\tDetector path=${detector_dir}")
 (>&2 echo -e "\tGoogle gtest path=${gtest_dir}")
 
 cmake ${SOURCE_BASE_DIR}                                                    \
-      -DCMAKE_INSTALL_PREFIX=../vt-install                                  \
+      -DCMAKE_INSTALL_PREFIX=${vt_install_dir}                              \
       -DCMAKE_CXX_FLAGS="-std=c++1y"                                        \
       -DCMAKE_BUILD_TYPE=${build_mode}                                      \
       -DCMAKE_VERBOSE_MAKEFILE:BOOL=$MAKE_VERBOSE                           \
