@@ -98,10 +98,8 @@ endfunction()
 
 # Set up test scaffolding for running examples
 macro(add_test_for_example_vt test_name test_exec)
-  foreach(PROC ${PROC_TEST_LIST})
-    if(CMAKE_NO_BUILD_TESTS)
-      message("Skipping test: ${test_name}_${PROC}")
-    else()
+  if (NOT CMAKE_NO_BUILD_TESTS)
+    foreach(PROC ${PROC_TEST_LIST})
       #message("Adding test for example: ${test_name}")
       set(TEST_STRING "")
 
@@ -118,6 +116,6 @@ macro(add_test_for_example_vt test_name test_exec)
         ${test_name}_${PROC}
         PROPERTIES TIMEOUT 300 FAIL_REGULAR_EXPRESSION "FAILED;WARNING"
       )
-    endif()
-  endforeach()
+    endforeach()
+  endif()
 endmacro()
