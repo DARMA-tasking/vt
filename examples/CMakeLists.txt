@@ -29,19 +29,10 @@ foreach(EXAMPLE ${PROJECT_EXAMPLES_LIST})
       ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
     )
 
-    target_link_libraries(${EXAMPLE} ${VIRTUAL_TRANSPORT_LIBRARY})
-    target_link_libraries(${EXAMPLE} ${FCONTEXT_LIBRARY})
-    target_link_libraries(${EXAMPLE} ${ZLIB_LIBRARIES})
-    target_link_libraries(${EXAMPLE} OpenMP::OpenMP_CXX)
-    target_link_libraries(${EXAMPLE} GTest::GTest)
-    target_link_libraries(${EXAMPLE} GTest::Main)
-
-    target_link_libraries(
-      ${EXAMPLE}
-      darma_meld
-      darma_checkpoint
-      darma_detector
-      fmt::fmt
+    link_target_with_vt(
+      TARGET ${EXAMPLE}
+      DEFAULT_LINK_SET
+      LINK_GTEST ON
     )
   endif()
 endforeach()

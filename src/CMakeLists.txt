@@ -115,17 +115,11 @@ add_library(
 
 target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS})
 target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${VT_TARGET_CXX_FLAGS})
-target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY}) #internal libs
-target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} ${ZLIB_LIBRARIES}) #external, non-cmake libs
-target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} OpenMP::OpenMP_CXX)
 
-# imported cmake libs, triggers proper inclusion for public targets to
-target_link_libraries(
-  ${VIRTUAL_TRANSPORT_LIBRARY}
-  darma_meld
-  darma_checkpoint
-  darma_detector
-  fmt::fmt
+link_target_with_vt(
+  TARGET ${VIRTUAL_TRANSPORT_LIBRARY}
+  LINK_VT_LIB
+  DEFAULT_LINK_SET
 )
 
 target_include_directories(

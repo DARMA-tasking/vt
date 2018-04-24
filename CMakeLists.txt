@@ -10,59 +10,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules/")
 include(SetCXXCompilerFlags)
 set_darma_compiler_flags()
 
-macro(require_pkg_directory pkg_name pkg_user_name)
-  #message(STATUS "require_directory: name=${pkg_name}")
-  option(${pkg_name}_DIR "Root folder for ${pkg_user_name} installation" OFF)
-  if (NOT ${pkg_name}_DIR)
-    message(
-      FATAL_ERROR
-      "Please specify ${pkg_user_name} library installation root"
-      " with -D${pkg_name}_DIR="
-    )
-  endif()
-endmacro(require_pkg_directory)
-
-macro(find_package_local pkg_name pkg_directory)
-  message(
-    STATUS
-    "find_package_local: "
-    "pkg name=\"${pkg_name}\", directory=\"${pkg_directory}\""
-  )
-  # search locally only for package
-  find_package(
-    ${pkg_name}
-    PATHS ${pkg_directory}
-    REQUIRED
-    NO_CMAKE_PACKAGE_REGISTRY
-    NO_CMAKE_BUILDS_PATH
-    NO_CMAKE_SYSTEM_PATH
-    NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
-  )
-endmacro(find_package_local)
-
-macro(optional_pkg_directory pkg_name pkg_user_name)
-  #message(STATUS "optional_pkg_directory: name=${pkg_name}")
-  option(${pkg_name}_DIR "Root folder for ${pkg_user_name} installation" OFF)
-  if (NOT ${pkg_name}_DIR)
-    message(
-      STATUS
-      "Path for ${pkg_user_name} library (optional) not specified "
-      "with -D${pkg_name}_DIR="
-    )
-    message(
-      STATUS
-      "Building without ${pkg_user_name} library"
-    )
-    set(${pkg_name}_DIR_FOUND 0)
-  else()
-    message(
-      STATUS
-      "Path for ${pkg_user_name} library (optional) specified "
-      "with -D${pkg_name}_DIR=${${pkg_name}_DIR}"
-    )
-    set(${pkg_name}_DIR_FOUND 1)
-  endif()
-endmacro(optional_pkg_directory)
+include(local_package.cmake)
+include(link_vt.cmake)
+include(threading_config.cmake)
+include(test_vt.cmake)
 
 # require directories for these packages
 require_pkg_directory(darma_meld     "DARMA meld")
@@ -77,7 +28,7 @@ if (${darma_checkpoint_DIR_FOUND})
   find_package_local(darma_checkpoint "${darma_checkpoint_DIR}/cmake")
   if (${darma_checkpoint_FOUND})
     set(CMAKE_HAS_SERIALIZATION_LIBRARY 1)
-    set(SERIALIZATION_LIBRARY darma_checkpoint)
+    set(CHECKPOINT_LIBRARY darma_checkpoint)
   else()
     message(FATAL_ERROR "Serialization/checkpoint library not found")
   endif()
@@ -133,31 +84,7 @@ if(NOT fmt_FOUND)
   )
 endif()
 
-function(config_for_std_thread)
-  set(DEFAULT_THREADING stdthread)
-endfunction(config_for_std_thread)
-
 find_package(OpenMP)
-
-function(config_for_openmp)
-  set(DEFAULT_THREADING openmp)
-  message(
-    STATUS
-    "OpenMP has been found: "
-    "Linker=\"${OpenMP_EXE_LINKER_FLAGS}\", "
-    "CC FLAGS=\"${OpenMP_C_FLAGS}\", "
-    "CXX FLAGS=\"${OpenMP_CXX_FLAGS}\""
-  )
-
-  #
-  # The OpenMP compiler and linker flags are handled through the target instead
-  # of manually setting the flags for VT:
-  #
-  # string(APPEND VT_TARGET_CXX_FLAGS ${OpenMP_CXX_FLAGS})
-  # set(VT_TARGET_CXX_FLAGS "${VT_TARGET_CXX_FLAGS}" PARENT_SCOPE)
-  # string(APPEND VT_TARGET_LINKER_FLAGS ${OpenMP_EXE_LINKER_FLAGS})
-  # set(VT_TARGET_LINKER_FLAGS "${VT_TARGET_LINKER_FLAGS}" PARENT_SCOPE)
-endfunction(config_for_openmp)
 
 option(USE_STD_THREAD "whether to force use of std::thread for threading" OFF)
 option(USE_OPENMP "whether to force use of OpenMP for threading" OFF)
@@ -192,27 +119,6 @@ enable_testing()
 set(MPI_RUN_COMMAND "mpirun-mpich-clang")
 set(MPI_NUMPROC_FLAG "-n")
 set(PROC_TEST_LIST 2 4 8)
-
-# Set up test scaffolding for running examples
-macro(add_test_for_example_vt test_name test_exec)
-  foreach(PROC ${PROC_TEST_LIST})
-    if(CMAKE_NO_BUILD_TESTS)
-      message("Skipping test: ${test_name}_${PROC}")
-    else()
-      #message("Adding test for example: ${test_name}")
-      add_test(
-        ${test_name}_${PROC}
-        ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
-        ${test_exec} ${ARGN}
-      )
-
-      set_tests_properties(
-        ${test_name}_${PROC}
-        PROPERTIES TIMEOUT 300 FAIL_REGULAR_EXPRESSION "FAILED;WARNING"
-      )
-    endif()
-  endforeach()
-endmacro()
 
 # Add subdirectories for tests and examples
 add_subdirectory(${PROJECT_LIB_DIR}/context)

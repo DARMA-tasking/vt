@@ -67,19 +67,10 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
 
       add_dependencies(unit_tests ${UNIT_TEST})
 
-      target_link_libraries(${UNIT_TEST} ${VIRTUAL_TRANSPORT_LIBRARY})
-      target_link_libraries(${UNIT_TEST} ${FCONTEXT_LIBRARY})
-      target_link_libraries(${UNIT_TEST} ${ZLIB_LIBRARIES})
-      target_link_libraries(${UNIT_TEST} OpenMP::OpenMP_CXX)
-      target_link_libraries(${UNIT_TEST} GTest::GTest)
-      target_link_libraries(${UNIT_TEST} GTest::Main)
-
-      target_link_libraries(
-        ${UNIT_TEST}
-        darma_meld
-        darma_checkpoint
-        darma_detector
-        fmt::fmt
+      link_target_with_vt(
+        TARGET ${UNIT_TEST}
+        DEFAULT_LINK_SET
+        LINK_GTEST ON
       )
 
       foreach(PROC ${UNIT_TEST_PROC_TEST_LIST})
@@ -123,13 +114,6 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     ${CMAKE_CURRENT_BINARY_DIR}/${PERF_TEST}
   )
 
-  target_link_libraries(
-    ${PERF_TEST}
-    ${VIRTUAL_TRANSPORT_LIBRARY}
-    ${ZLIB_LIBRARIES}
-    ${MPI_C_LIBRARIES}
-    ${FCONTEXT_LIBRARY}
-    ${SERIALIZATION_LIBRARY}
-  )
+  link_target_with_vt(TARGET ${PERF_TEST} DEFAULT_LINK_SET)
 endforeach()
 
