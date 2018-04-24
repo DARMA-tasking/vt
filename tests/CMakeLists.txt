@@ -11,7 +11,7 @@ set(
   active
   collectives
   pool
-  #sequencer
+  sequencer
   mapping
   serialization
   tls
