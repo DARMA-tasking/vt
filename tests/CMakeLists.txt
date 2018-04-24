@@ -33,10 +33,7 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
     ${PROJECT_TEST_UNIT_DIR}/main.cc
   )
 
-  #include_directories(${GTEST_DIR}/include)
   include_directories(${PROJECT_TEST_UNIT_DIR})
-
-  #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${GTEST_DIR}/lib")
 
   foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
     file(
@@ -50,16 +47,16 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
     set(CUR_TEST_LIST "${SUB_DIR}_test_list")
 
     foreach (UNIT_TEST_FILE ${${SUB_DIR}_UNIT_TEST_SOURCE_FILES})
+      # message(
+      #   STATUS "Building unit test >>>> dir=${SUB_DIR} test=${UNIT_TEST}, "
+      #   "path=${UNIT_TEST_FILE}"
+      # )
+
       GET_FILENAME_COMPONENT(
         UNIT_TEST
         ${UNIT_TEST_FILE}
         NAME_WE
       )
-
-      # message(
-      #   STATUS
-      #   "Build unit test >>>> dir=${SUB_DIR} test=${UNIT_TEST}, path=${UNIT_TEST_FILE}"
-      # )
 
       add_executable(
         ${UNIT_TEST}

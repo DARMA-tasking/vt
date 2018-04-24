@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
 project(vt)
 
-
 set(VIRTUAL_TRANSPORT_LIBRARY vt)
 set(FCONTEXT_LIBRARY fcontext)
 
-include(cmake-modules/SetCXXCompilerFlags.cmake)
+# Set the local module path so custom cmake scripts can be located automatically
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules/")
+
+include(SetCXXCompilerFlags)
 set_darma_compiler_flags()
 
 macro(require_pkg_directory pkg_name pkg_user_name)
@@ -82,8 +84,6 @@ if (${darma_checkpoint_DIR_FOUND})
   endif()
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
-
 # Google test cmake option and package setup
 option(
   enable_gtest "Enable google test framework: -Dgtest_DIR= to specify path" ON
@@ -94,8 +94,10 @@ if (${enable_gtest})
     set(GTEST_ROOT "${gtest_DIR}" CACHE PATH "Path to googletest")
   endif()
 
-  include(${CMAKE_MODULE_PATH}/FindGTest.cmake)
-  find_package(gtest REQUIRED)
+  # Instead of explicitly including (include(FindGTest)), call find_package
+  # which automatically searches the module include path. This is the preferred
+  # mechanism for utilizing a package script.
+  find_package(GTest REQUIRED)
 
   if(GTEST_FOUND)
     set(GTEST_DIR "${GTEST_ROOT}")
@@ -115,8 +117,6 @@ else()
     )
   set(VT_HAS_GTEST FALSE)
 endif()
-
-include(${CMAKE_MODULE_PATH}/FindOpenMP.cmake)
 
 find_package(ZLIB REQUIRED)
 if (ZLIB_FOUND)
@@ -138,6 +138,8 @@ function(config_for_std_thread)
   set(DEFAULT_THREADING stdthread)
 endfunction(config_for_std_thread)
 
+find_package(OpenMP)
+
 function(config_for_openmp)
   set(DEFAULT_THREADING openmp)
   message(
@@ -148,8 +150,10 @@ function(config_for_openmp)
     "CXX FLAGS=\"${OpenMP_CXX_FLAGS}\""
   )
 
-  # The flags are handled through the target instead of manually setting the
-  # flags for VT:
+  #
+  # The OpenMP compiler and linker flags are handled through the target instead
+  # of manually setting the flags for VT:
+  #
   # string(APPEND VT_TARGET_CXX_FLAGS ${OpenMP_CXX_FLAGS})
   # set(VT_TARGET_CXX_FLAGS "${VT_TARGET_CXX_FLAGS}" PARENT_SCOPE)
   # string(APPEND VT_TARGET_LINKER_FLAGS ${OpenMP_EXE_LINKER_FLAGS})
