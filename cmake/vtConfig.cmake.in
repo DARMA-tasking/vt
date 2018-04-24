@@ -12,6 +12,8 @@ if (@DEFAULT_THREADING@ STREQUAL openmp)
   find_package(OpenMP REQUIRED)
 endif()
 
+find_package(MPI REQUIRED)
+
 set (darma_meld_DIR @darma_meld_DIR@)
 find_package(darma_meld)
 set (darma_detector_DIR @darma_detector_DIR@)
