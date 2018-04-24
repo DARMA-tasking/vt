@@ -98,29 +98,37 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
 else()
   if (${CMAKE_NO_BUILD_TESTS})
     message(
-      STATUS "VT: not building tests because CMAKE_NO_BUILD_TESTS is set"
+      STATUS
+      "VT: not building unit tests because CMAKE_NO_BUILD_TESTS is set"
     )
   else()
-    message(STATUS "VT: not building tests because not VT_HAS_GTEST")
+    message(STATUS "VT: not building unit tests because not VT_HAS_GTEST")
   endif()
 endif()
 
-foreach(PERF_TEST ${PROJECT_PERF_TESTS})
-  add_executable(
-    ${PERF_TEST}
-    ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
+if (${CMAKE_NO_BUILD_TESTS})
+  message(
+    STATUS
+    "VT: not building performance tests because CMAKE_NO_BUILD_TESTS is set"
   )
-  include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/src)
-  include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/lib)
-  include_directories(${PERF_TEST} ${CMAKE_BINARY_DIR})
+else()
+  foreach(PERF_TEST ${PROJECT_PERF_TESTS})
+    add_executable(
+      ${PERF_TEST}
+      ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
+    )
+    include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/src)
+    include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/lib)
+    include_directories(${PERF_TEST} ${CMAKE_BINARY_DIR})
 
-  add_dependencies(perf_tests ${PERF_TEST})
+    add_dependencies(perf_tests ${PERF_TEST})
 
-  add_test_for_example_vt(
-    ${PERF_TEST}
-    ${CMAKE_CURRENT_BINARY_DIR}/${PERF_TEST}
-  )
+    add_test_for_example_vt(
+      ${PERF_TEST}
+      ${CMAKE_CURRENT_BINARY_DIR}/${PERF_TEST}
+    )
 
-  link_target_with_vt(TARGET ${PERF_TEST} DEFAULT_LINK_SET)
-endforeach()
+    link_target_with_vt(TARGET ${PERF_TEST} DEFAULT_LINK_SET)
+  endforeach()
+endif()
 
