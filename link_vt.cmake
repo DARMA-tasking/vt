@@ -21,6 +21,7 @@ function(link_target_with_vt)
     LINK_STDTHREAD
     LINK_GTEST
     # the following linking options are enabled by default
+    LINK_MPI
     LINK_FMT
     LINK_ZLIB
     LINK_FCONTEXT
@@ -48,6 +49,13 @@ function(link_target_with_vt)
     # Unconditionally link the VT library for this target unless linking the VT
     # library itself itself
     target_link_libraries(${ARG_TARGET} ${VIRTUAL_TRANSPORT_LIBRARY})
+  endif()
+
+  if (NOT DEFINED ARG_LINK_MPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MPI)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: MPI=${ARG_LINK_MPI}")
+    endif()
+    target_link_libraries(${ARG_TARGET} MPI::MPI_CXX)
   endif()
 
   if (NOT DEFINED ARG_LINK_FCONTEXT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FCONTEXT)

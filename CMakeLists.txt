@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(vt)
 
 set(VIRTUAL_TRANSPORT_LIBRARY vt)
@@ -32,6 +32,29 @@ if (${darma_checkpoint_DIR_FOUND})
   else()
     message(FATAL_ERROR "Serialization/checkpoint library not found")
   endif()
+endif()
+
+find_package(MPI REQUIRED)
+if(MPI_FOUND)
+  #include_directories(${ZLIB_INCLUDE_DIRS})
+else()
+  message(FATAL_ERROR "Failure to locate MPI: MPI is required for VT to build")
+endif(MPI_FOUND)
+
+find_package(ZLIB REQUIRED)
+if(ZLIB_FOUND)
+  include_directories(${ZLIB_INCLUDE_DIRS})
+else()
+  message("zlib is required for tracing")
+endif(ZLIB_FOUND)
+
+find_package(fmt PATHS ${fmt_DIR} ${fmt_DIR}/lib/cmake)
+if(NOT fmt_FOUND)
+  message(
+    FATAL_ERROR
+    "VT requires the fmt library. Please specify valid installation with "
+    "-Dfmt_DIR= or install by downloading from https://github.com/fmtlib/fmt"
+  )
 endif()
 
 # Google test cmake option and package setup
@@ -68,26 +91,11 @@ else()
   set(VT_HAS_GTEST FALSE)
 endif()
 
-find_package(ZLIB REQUIRED)
-if (ZLIB_FOUND)
-  include_directories(${ZLIB_INCLUDE_DIRS})
-else()
-  message("zlib is required for tracing")
-endif (ZLIB_FOUND)
-
-find_package(fmt PATHS ${fmt_DIR} ${fmt_DIR}/lib/cmake)
-if(NOT fmt_FOUND)
-  message(
-    FATAL_ERROR
-    "VT requires the fmt library. Please specify valid installation with "
-    "-Dfmt_DIR= or install by downloading from https://github.com/fmtlib/fmt"
-  )
-endif()
-
-find_package(OpenMP)
-
+# Threading build configuration
 option(USE_STD_THREAD "whether to force use of std::thread for threading" OFF)
 option(USE_OPENMP "whether to force use of OpenMP for threading" OFF)
+
+find_package(OpenMP)
 
 # OpenMP support
 if (USE_STD_THREAD)
@@ -116,9 +124,21 @@ include (CTest)
 enable_testing()
 
 # Set default command for invoking MPI (mpirun) and flag for MPI nprocs
-set(MPI_RUN_COMMAND "mpirun-mpich-clang")
-set(MPI_NUMPROC_FLAG "-n")
-set(PROC_TEST_LIST 2 4 8)
+set(MPI_RUN_COMMAND  "${MPIEXEC_EXECUTABLE}")
+set(MPI_PRE_FLAGS    "${MPIEXEC_PREFLAGS}")
+set(MPI_EPI_FLAGS    "${MPIEXEC_POSTFLAGS}")
+set(MPI_NUMPROC_FLAG "${MPIEXEC_NUMPROC_FLAG}")
+set(MPI_MAX_NUMPROC  "${MPIEXEC_MAX_NUMPROCS}")
+
+message(STATUS "MPI detected max nproc: ${MPIEXEC_MAX_NUMPROCS}")
+
+set(PROC_TEST_LIST "")
+build_mpi_proc_test_list(
+  MAX_PROC       ${MPI_MAX_NUMPROC}
+  VARIABLE_OUT   PROC_TEST_LIST
+)
+
+message(STATUS "MPI proc test list: ${PROC_TEST_LIST}")
 
 # Add subdirectories for tests and examples
 add_subdirectory(${PROJECT_LIB_DIR}/context)
