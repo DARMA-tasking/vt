@@ -1,3 +1,4 @@
+
 macro(require_pkg_directory pkg_name pkg_user_name)
   #message(STATUS "require_directory: name=${pkg_name}")
   option(${pkg_name}_DIR "Root folder for ${pkg_user_name} installation" OFF)
