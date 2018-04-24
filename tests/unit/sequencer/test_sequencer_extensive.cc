@@ -15,13 +15,13 @@ using namespace vt::tests::unit;
 #if DEBUG_TEST_HARNESS_PRINT
 #define DEBUG_PRINT_SEQ(ORDER, CUR, LABEL)                              \
   do {                                                                  \
-    auto seq_id = theSeq()->getCurrentSeq();                              \
-    fmt::print(                                                             \
+    auto seq_id = theSeq()->getCurrentSeq();                            \
+    fmt::print(                                                         \
       "debug ({}): seq_id={}, ordering={} -- cur={} --\n",              \
       (LABEL), seq_id, (ORDER).load(), (CUR)                            \
     );                                                                  \
   } while (false);
-#define DEBUG_PRINT(str, args...)               \
+#define DEBUG_PRINT(str, args...)                                       \
   do { fmt::print(str, args); } while (false);
 #else
 #define DEBUG_PRINT_SEQ(ORDER, CUR, LABEL)
@@ -47,7 +47,7 @@ static constexpr CountType const max_num_waits_after = 2;
 static constexpr CountType const max_num_segs = 8;
 static constexpr CountType const max_seq_depth = 8;
 
-#define TEST_CALL(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, ___, IS_TAG)         \
+#define CALL_EXPAND(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, ___, IS_TAG)       \
   do {                                                                  \
     auto const& node = theContext()->getNode();                         \
     auto param = GetParam();                                            \
@@ -80,7 +80,7 @@ static constexpr CountType const max_seq_depth = 8;
     }                                                                   \
   } while (false);
 
-#define TEST_FN(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, ___, IS_TAG)           \
+#define FN_APPLY(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, ___, IS_TAG)          \
   static void SEQ_FN(SeqType const& seq_id) {                           \
     static std::atomic<OrderType> seq_ordering_{};                      \
                                                                         \
@@ -193,7 +193,7 @@ struct TestSequencerExtensive : TestParallelHarnessParam<ParamType> {
   SEQUENCE_REGISTER_HANDLER(TestSequencerExtensive::NumWaitsMsg, numWaitHan);
   SEQUENCE_REGISTER_HANDLER(TestSequencerExtensive::TestMsg, testSeqHan1);
 
-  TEST_FN(testSeqHan1, testSeqFn1, 0, TestMsg, 2, false);
+  FN_APPLY(testSeqHan1, testSeqFn1, 0, TestMsg, 2, false);
 
   static void seqDepth(int depth, std::function<void()> fn) {
     if (depth == 0) {
@@ -207,7 +207,7 @@ struct TestSequencerExtensive : TestParallelHarnessParam<ParamType> {
 };
 
 TEST_P(TestSequencerExtensive, test_wait_1) {
-  TEST_CALL(testSeqHan1, testSeqFn1, 0, TestMsg, 2, false);
+  CALL_EXPAND(testSeqHan1, testSeqFn1, 0, TestMsg, 2, false);
 }
 
 INSTANTIATE_TEST_CASE_P(
