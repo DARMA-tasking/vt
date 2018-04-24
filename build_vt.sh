@@ -81,8 +81,8 @@ then
     CC_COMPILER=clang-mp-3.9
 elif test $compiler = "gnu"
 then
-    CXX_COMPILER=g++-mp-6
-    CC_COMPILER=gcc-mp-6
+    CXX_COMPILER=mpicxx-mpich-devel-gcc6
+    CC_COMPILER=mpicc-mpich-devel-gcc6
 else
     (>&2 echo "Please specify valid compiler option: $compiler") && exit 10;
 fi
