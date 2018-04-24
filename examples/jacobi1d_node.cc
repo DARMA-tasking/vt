@@ -247,9 +247,12 @@ int main(int argc, char** argv) {
   my_node = theContext()->getNode();
   num_nodes = theContext()->getNumNodes();
 
-  if (argc == 2 && strncmp(argv[1], "gtest", 5) == 0) {
+  if (argc == 1) {
     total_size = 1024;
     max_iterations = 64;
+    ::fmt::print(
+      stderr, "{}: using default arguments since none provided\n", argv[0]
+    );
   } else {
     if (argc != 3) {
       std::string const buf = fmt::format(
