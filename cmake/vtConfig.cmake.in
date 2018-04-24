@@ -8,8 +8,9 @@
 GET_FILENAME_COMPONENT (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include(${VT_CMAKE_DIR}/vt.cmake)
 
-include(@CMAKE_MODULE_PATH@/FindOpenMP.cmake)
-find_package(OpenMP REQUIRED)
+if (@DEFAULT_THREADING@ STREQUAL openmp)
+  find_package(OpenMP REQUIRED)
+endif()
 
 set (darma_meld_DIR @darma_meld_DIR@)
 find_package(darma_meld)
