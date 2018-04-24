@@ -7,6 +7,7 @@
 #include <cstring>
 #include <functional>
 #include <memory>
+#include <string>
 
 #define DEBUG_JACOBI 0
 
@@ -227,9 +228,11 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
   });
 }
 
-static int exitEarly(NodeType node, int exit_code, char* reason) {
+static int exitEarly(
+  NodeType const node, int const exit_code, std::string const reason
+) {
   if (node == 0) {
-    CollectiveOps::abort(std::string(reason), exit_code);
+    CollectiveOps::abort(std::string{reason}, exit_code);
   }
 
   CollectiveOps::finalize();
@@ -249,8 +252,9 @@ int main(int argc, char** argv) {
     max_iterations = 64;
   } else {
     if (argc != 3) {
-      char buf[256];
-      fmt::print(buf, "usage: {} <total-num-elements> <max-iterations>", argv[0]);
+      std::string const buf = fmt::format(
+        "usage: {} <total-num-elements> <max-iterations>", argv[0]
+      );
       return exitEarly(my_node, 1, buf);
     }
 
@@ -259,8 +263,9 @@ int main(int argc, char** argv) {
   }
 
   if (num_nodes == 1) {
-    char buf[256];
-    fmt::print(buf, "Need >= 2 ranks:\n mpirun-mpich-clang -n 2 {}", argv[0]);
+    std::string const buf = fmt::format(
+      "Need >= 2 ranks:\n mpirun-mpich-clang -n 2 {}\0", argv[0]
+    );
     return exitEarly(my_node, 1, buf);
   }
 
