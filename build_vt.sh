@@ -113,8 +113,8 @@ cmake ${SOURCE_BASE_DIR}                                                    \
       -DCMAKE_C_COMPILER=${CC_COMPILER}                                     \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                  \
       ${build_all}                                                          \
-      -Ddarma_checkpoint_DIR=${serialization_dir}                           \
-      -Ddarma_meld_DIR=${meld_dir}                                          \
-      -Ddarma_detector_DIR=${detector_dir}                                  \
+      -Dcheckpoint_DIR=${serialization_dir}                                 \
+      -Dmeld_DIR=${meld_dir}                                                \
+      -Ddetector_DIR=${detector_dir}                                        \
       -Dfmt_DIR=${fmt_dir}                                                  \
       -Dgtest_DIR=${gtest_dir}

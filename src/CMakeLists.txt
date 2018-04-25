@@ -135,14 +135,24 @@ target_include_directories(
 )
 
 install(
-  TARGETS ${VIRTUAL_TRANSPORT_LIBRARY}
-  EXPORT ${VIRTUAL_TRANSPORT_LIBRARY}
-  LIBRARY DESTINATION "lib"
-  ARCHIVE DESTINATION "lib"
+  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
+  EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
+  LIBRARY DESTINATION       lib
+  ARCHIVE DESTINATION       lib
+  RUNTIME DESTINATION       bin
+  INCLUDES DESTINATION      include
 )
 
 install(
-  EXPORT vt
-  DESTINATION cmake
-  COMPONENT extCfg
+  EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
+  DESTINATION               cmake
+  FILE                      "vtTargets.cmake"
+  NAMESPACE                 vt::runtime::
+  COMPONENT                 runtime
+)
+
+export(
+  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY}
+  FILE                      "vtTargets.cmake"
+  NAMESPACE                 vt::runtime::
 )

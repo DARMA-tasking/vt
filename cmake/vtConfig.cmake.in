@@ -6,25 +6,30 @@
 
 # Compute paths
 GET_FILENAME_COMPONENT (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-include(${VT_CMAKE_DIR}/vt.cmake)
+
+include(${VT_CMAKE_DIR}/vtTargets.cmake)
+
+include(CMakeFindDependencyMacro)
 
 if (@DEFAULT_THREADING@ STREQUAL openmp)
-  find_package(OpenMP REQUIRED)
+  find_dependency(OpenMP REQUIRED)
 endif()
 
-find_package(MPI REQUIRED)
+find_dependency(MPI REQUIRED)
 
-set (darma_meld_DIR @darma_meld_DIR@)
-find_package(darma_meld)
-set (darma_detector_DIR @darma_detector_DIR@)
-find_package(darma_detector)
+set (meld_DIR @meld_DIR@)
+find_dependency(meld REQUIRED HINTS @meld_DIR@)
+
+set (detector_DIR @detector_DIR@)
+find_dependency(detector REQUIRED HINTS @detector_DIR@)
+
 set (fmt_DIR @fmt_DIR@)
-find_package(fmt PATHS ${fmt_DIR} ${fmt_DIR}/lib/cmake)
+find_dependency(fmt PATHS ${fmt_DIR} ${fmt_DIR}/lib/cmake)
 
-set (darma_checkpoint_DIR @darma_checkpoint_DIR@)
-set (vt_has_darma_checkpoint @darma_checkpoint_DIR_FOUND@)
+set (checkpoint_DIR @checkpoint_DIR@)
+set (vt_has_checkpoint @checkpoint_DIR_FOUND@)
 if (@VT_HAS_SERIALIZATION_LIBRARY@)
-  find_package(darma_checkpoint)
+  find_dependency(checkpoint REQUIRED HINTS @checkpoint_DIR@)
   set(VT_HAS_CHECKPOINT "TRUE")
 else()
   set(VT_HAS_CHECKPOINT "FALSE")
@@ -36,5 +41,3 @@ set (VT_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
 set(VT_HAS_DETECTOR "TRUE")
 set(VT_HAS_MELD "TRUE")
 set(VT_HAS_FMT "TRUE")
-
-

@@ -1,14 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(fcontext)
 
-
-set(CMAKE_CXX_STANDARD 14)
-
 enable_language(CXX ASM)
 
 include (CTest)
 enable_testing()
-
 
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
@@ -180,7 +176,10 @@ foreach(EXAMPLE_FULL ${PROJECT_CXX_EXAMPLES})
 endforeach()
 
 install(
-  TARGETS ${FCONTEXT_LIBRARY}
-  EXPORT ${VIRTUAL_TRANSPORT_LIBRARY} #this gets exported here
-  DESTINATION lib
+  TARGETS                   ${FCONTEXT_LIBRARY}
+  EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
+  LIBRARY DESTINATION       lib
+  ARCHIVE DESTINATION       lib
+  RUNTIME DESTINATION       bin
+  INCLUDES DESTINATION      include
 )

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 project(vt)
 
 set(VIRTUAL_TRANSPORT_LIBRARY vt)
@@ -36,10 +36,9 @@ configure_file(
 )
 
 install(
-  FILES
-  "${PROJECT_BINARY_DIR}/vtConfig.cmake"
-  DESTINATION cmake
-  COMPONENT extCfg
+  FILES        "${PROJECT_BINARY_DIR}/vtConfig.cmake"
+  DESTINATION  cmake
+  COMPONENT    runtime
 )
 
 configure_file(cmake_config.h.in cmake_config.h @ONLY)
