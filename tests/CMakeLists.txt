@@ -22,8 +22,6 @@ set(
 option(CMAKE_NO_BUILD_TESTS "Enable VT tests to be built" OFF)
 
 if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
-  set(UNIT_TEST_PROC_TEST_LIST 2 4 8)
-
   set(
     TEST_HEADER_FILES
     ${PROJECT_TEST_UNIT_DIR}/test_harness.h
@@ -33,8 +31,6 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
     TEST_SOURCE_FILES
     ${PROJECT_TEST_UNIT_DIR}/main.cc
   )
-
-  include_directories(${PROJECT_TEST_UNIT_DIR})
 
   foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
     file(
@@ -68,13 +64,15 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
 
       add_dependencies(unit_tests ${UNIT_TEST})
 
+      target_include_directories(${UNIT_TEST} PRIVATE ${PROJECT_TEST_UNIT_DIR})
+
       link_target_with_vt(
         TARGET ${UNIT_TEST}
         DEFAULT_LINK_SET
         LINK_GTEST ON
       )
 
-      foreach(PROC ${UNIT_TEST_PROC_TEST_LIST})
+      foreach(PROC ${PROC_TEST_LIST})
         gtest_add_tests(
           TARGET                 ${UNIT_TEST}
           WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
@@ -86,15 +84,12 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
 
       set_tests_properties(
         ${${CUR_TEST_LIST}}
-          PROPERTIES TIMEOUT 60
-          FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
-          PASS_REGULAR_EXPRESSION "PASSED"
-        )
+        PROPERTIES TIMEOUT 60
+        FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
+        PASS_REGULAR_EXPRESSION "PASSED"
+      )
     endforeach()
   endforeach()
-
-  # foreach (UNIT_TEST_FILE ${UNIT_TEST_SOURCE_FILES})
-  # endforeach()
 else()
   if (${CMAKE_NO_BUILD_TESTS})
     message(
@@ -113,22 +108,20 @@ if (${CMAKE_NO_BUILD_TESTS})
   )
 else()
   foreach(PERF_TEST ${PROJECT_PERF_TESTS})
-    add_executable(
-      ${PERF_TEST}
-      ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
-    )
-    include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/src)
-    include_directories(${PERF_TEST} ${CMAKE_SOURCE_DIR}/lib)
-    include_directories(${PERF_TEST} ${CMAKE_BINARY_DIR})
-
+    add_executable(${PERF_TEST} ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc)
     add_dependencies(perf_tests ${PERF_TEST})
+
+    link_target_with_vt(
+      TARGET ${PERF_TEST}
+      DEFAULT_LINK_SET
+      LINK_GTEST ON
+    )
 
     add_test_for_example_vt(
       ${PERF_TEST}
-      ${CMAKE_CURRENT_BINARY_DIR}/${PERF_TEST}
+      ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
+      perf_tests
     )
-
-    link_target_with_vt(TARGET ${PERF_TEST} DEFAULT_LINK_SET)
   endforeach()
 endif()
 

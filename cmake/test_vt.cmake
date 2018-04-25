@@ -12,8 +12,9 @@ function(run_executable_with_mpi)
     singleValArg
     TARGET_EXECUTABLE
     TARGET_NPROC
+    TARGET_NAME
+    TARGET_WORKING_DIRECTORY
     WRAPPER_EXECUTABLE
-    VARIABLE_OUT
   )
   set(
     multiValueArg
@@ -36,22 +37,20 @@ function(run_executable_with_mpi)
     )
   endif()
 
-  if (NOT DEFINED ${ARG_VARIABLE_OUT})
-    message(
-      FATAL_ERROR
-      "Out variable where string is generated must be defined (VARIABLE_OUT)"
-    )
-  endif()
+  add_test(
+    NAME                ${ARG_TARGET_NAME}
+    WORKING_DIRECTORY   ${ARG_TARGET_WORKING_DIRECTORY}
+    COMMAND
+      ${MPI_RUN_COMMAND}
+      ${MPI_NUMPROC_FLAG} ${ARG_TARGET_NPROC}
+      ${MPI_PRE_FLAGS}
+      ${ARG_WRAPPER_EXECUTABLE} ${ARG_WRAPPER_ARGS} ./${ARG_TARGET_EXECUTABLE}
+      ${MPI_EPI_FLAGS} ${ARG_TARGET_ARGS}
+  )
 
-  set(
-    ${ARG_VARIABLE_OUT}
-    "${MPI_RUN_COMMAND}                                                      \
-     ${MPI_NUMPROC_FLAG} ${ARG_TARGET_NPROC}                                 \
-     ${MPI_PRE_FLAGS}                                                        \
-     ${ARG_WRAPPER_EXECUTABLE} ${ARG_WRAPPER_ARGS} ${ARG_TARGET_EXECUTABLE}  \
-     ${MPI_EPI_FLAGS} ${ARG_TARGET_ARGS}                                     \
-    "
-    PARENT_SCOPE
+  set_tests_properties(
+    ${ARG_TARGET_NAME}
+    PROPERTIES TIMEOUT 60
   )
 endfunction()
 
@@ -97,20 +96,16 @@ function(build_mpi_proc_test_list)
 endfunction()
 
 # Set up test scaffolding for running examples
-macro(add_test_for_example_vt test_name test_exec)
+macro(add_test_for_example_vt test_target test_exec test_list)
   foreach(PROC ${PROC_TEST_LIST})
-    #message("Adding test for example: ${test_name}")
-    set(TEST_STRING "")
-   run_executable_with_mpi(
-      TARGET_EXECUTABLE ${test_exec}
-      TARGET_ARGS       ${ARGN}
-      TARGET_NPROC      ${PROC}
-      VARIABLE_OUT      TEST_STRING
-    )
-   add_test(${test_name}_${PROC} ${TEST_STRING})
-   set_tests_properties(
-      ${test_name}_${PROC}
-      PROPERTIES TIMEOUT 300 FAIL_REGULAR_EXPRESSION "FAILED;WARNING"
+    GET_FILENAME_COMPONENT(test_name ${test_exec} NAME_WE)
+
+    run_executable_with_mpi(
+      TARGET_EXECUTABLE            ${test_name}
+      TARGET_ARGS                  ${ARGN}
+      TARGET_NPROC                 ${PROC}
+      TARGET_NAME                  ${test_name}_${PROC}
+      TARGET_WORKING_DIRECTORY     ${CMAKE_CURRENT_BINARY_DIR}
     )
   endforeach()
 endmacro()
