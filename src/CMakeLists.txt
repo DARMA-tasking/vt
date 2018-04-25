@@ -113,6 +113,25 @@ add_library(
   ${HEADER_FILES} ${SOURCE_FILES}
 )
 
+target_compile_features(
+  ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
+  cxx_variadic_templates
+  cxx_auto_type
+  cxx_constexpr
+  cxx_decltype
+  cxx_defaulted_functions
+  cxx_deleted_functions
+  cxx_defaulted_move_initializers
+  cxx_delegating_constructors
+  cxx_lambdas
+  cxx_nonstatic_member_init
+  cxx_nullptr
+  cxx_override
+  cxx_range_for
+  cxx_right_angle_brackets
+  cxx_uniform_initialization
+)
+
 target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS})
 target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${VT_TARGET_CXX_FLAGS})
 
