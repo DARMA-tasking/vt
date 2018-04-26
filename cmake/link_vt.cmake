@@ -17,6 +17,7 @@ function(link_target_with_vt)
   set(
     singleValArg
     TARGET
+    BUILD_TYPE
     LINK_OPENMP
     LINK_STDTHREAD
     LINK_GTEST
@@ -48,7 +49,9 @@ function(link_target_with_vt)
   if (NOT ARG_LINK_VT_LIB)
     # Unconditionally link the VT library for this target unless linking the VT
     # library itself itself
-    target_link_libraries(${ARG_TARGET} PUBLIC ${VIRTUAL_TRANSPORT_LIBRARY})
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${VIRTUAL_TRANSPORT_LIBRARY}
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_MPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MPI)
@@ -56,28 +59,36 @@ function(link_target_with_vt)
       message(STATUS "link_target_with_vt: MPI=${ARG_LINK_MPI}")
     endif()
 
-    target_link_libraries(${ARG_TARGET} PUBLIC MPI::MPI_CXX)
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} MPI::MPI_CXX
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_FCONTEXT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FCONTEXT)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: fcontext=${ARG_LINK_FCONTEXT}")
     endif()
-    target_link_libraries(${ARG_TARGET} PUBLIC ${FCONTEXT_LIBRARY})
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FCONTEXT_LIBRARY}
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_ZLIB AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ZLIB)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: zlib=${ARG_LINK_ZLIB}")
     endif()
-    target_link_libraries(${ARG_TARGET} PUBLIC ${ZLIB_LIBRARIES})
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${ZLIB_LIBRARIES}
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_FMT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FMT)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: fmt=${ARG_LINK_FMT}")
     endif()
-    target_link_libraries(${ARG_TARGET} PUBLIC fmt::fmt)
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} fmt::fmt
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_CHECKPOINT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_CHECKPOINT)
@@ -85,7 +96,9 @@ function(link_target_with_vt)
       if (${ARG_DEBUG_LINK})
         message(STATUS "link_target_with_vt: checkpoint=${ARG_LINK_CHECKPOINT}")
       endif()
-      target_link_libraries(${ARG_TARGET} PUBLIC ${CHECKPOINT_LIBRARY})
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CHECKPOINT_LIBRARY}
+      )
     else()
       message(FATAL_ERROR "Trying to link with nonexistent checkpoint library")
     endif()
@@ -95,7 +108,9 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: meld=${ARG_LINK_MELD}")
     endif()
-    target_link_libraries(${ARG_TARGET} PUBLIC vt::lib::meld)
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} vt::lib::meld
+    )
     # set_target_properties(
     #   ${VIRTUAL_TRANSPORT_LIBRARY}
     #   PROPERTIES INTERFACE_LINK_LIBRARIES vt::lib::meld
@@ -106,7 +121,9 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: detector=${ARG_LINK_DETECTOR}")
     endif()
-    target_link_libraries(${ARG_TARGET} PUBLIC vt::lib::detector)
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} vt::lib::detector
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_OPENMP AND DEFAULT_THREADING STREQUAL openmp OR ARG_LINK_OPENMP)
@@ -114,9 +131,11 @@ function(link_target_with_vt)
       message(
         STATUS
         "link_target_with_vt: dt=${DEFAULT_THREADING}, omp=${ARG_LINK_OPENMP}"
-        )
+      )
     endif()
-    target_link_libraries(${ARG_TARGET} PUBLIC OpenMP::OpenMP_CXX)
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} OpenMP::OpenMP_CXX
+    )
   elseif (NOT DEFINED ARG_LINK_STDTHREAD AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_STDTHREAD)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt(..): stdthread=${ARG_LINK_STDTHREAD}")
@@ -129,14 +148,16 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: gtest=${ARG_LINK_GTEST}")
     endif()
-    target_link_libraries(${ARG_TARGET} PRIVATE GTest::GTest)
-    target_link_libraries(${ARG_TARGET} PRIVATE GTest::Main)
+    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} GTest::GTest)
+    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} GTest::Main)
   endif()
 
   if (${ARG_CUSTOM_LINK_ARGS})
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: custom=${ARG_CUSTOM_LINK_ARGS}")
     endif()
-    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_CUSTOM_LINK_ARGS})
+    target_link_libraries(
+      ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} ${ARG_CUSTOM_LINK_ARGS}
+     )
   endif()
 endfunction()

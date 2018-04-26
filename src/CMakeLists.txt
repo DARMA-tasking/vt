@@ -57,13 +57,19 @@ list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 
 foreach(DIR ${TOP_LEVEL_SUBDIRS})
   install(
-    DIRECTORY ${DIR} DESTINATION include
-    FILES_MATCHING PATTERN "*.h"
+    DIRECTORY                ${DIR}
+    DESTINATION              include
+    CONFIGURATIONS           ${build_type_list}
+    FILES_MATCHING PATTERN   "*.h"
   )
 endforeach()
 
 file(GLOB TOP_HEADERS *.h)
-install(FILES ${TOP_HEADERS} DESTINATION include)
+install(
+  FILES                      ${TOP_HEADERS}
+  DESTINATION                include
+  CONFIGURATIONS             ${build_type_list}
+)
 
 file(
   GLOB
@@ -141,6 +147,16 @@ link_target_with_vt(
   DEFAULT_LINK_SET
 )
 
+# link_target_with_vt(
+#   TARGET ${VIRTUAL_TRANSPORT_LIBRARY_DV1}
+#   BUILD_TYPE debug
+#   LINK_VT_LIB
+#   DEFAULT_LINK_SET
+# )
+
+# Define and set up the different build types of VT
+include(../cmake/define_build_types.cmake)
+
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
@@ -156,6 +172,8 @@ target_include_directories(
 install(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
   EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
+  CONFIGURATIONS            ${build_type_list}
+  COMPONENT                 runtime
   LIBRARY DESTINATION       lib
   ARCHIVE DESTINATION       lib
   RUNTIME DESTINATION       bin
@@ -165,8 +183,9 @@ install(
 install(
   EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
   DESTINATION               cmake
-  FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
+  FILE                      "vtTargets.cmake"
+  CONFIGURATIONS            ${build_type_list}
   COMPONENT                 runtime
 )
 

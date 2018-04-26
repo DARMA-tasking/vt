@@ -1,4 +1,6 @@
 
-#cmakedefine DARMA_DEFAULT_THREADING @DEFAULT_THREADING@
-#cmakedefine HAS_SERIALIZATION_LIBRARY @VT_HAS_SERIALIZATION_LIBRARY@
+#define DARMA_DEFAULT_THREADING @DEFAULT_THREADING@
+#define HAS_SERIALIZATION_LIBRARY @VT_HAS_SERIALIZATION_LIBRARY@
 
+#cmakedefine01 cmake_config_debug_enabled
+#define cmake_config_debug_modes @cmake_vt_features@

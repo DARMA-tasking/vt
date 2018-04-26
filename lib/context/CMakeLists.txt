@@ -178,6 +178,7 @@ endforeach()
 install(
   TARGETS                   ${FCONTEXT_LIBRARY}
   EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
+  COMPONENT                 context
   LIBRARY DESTINATION       lib
   ARCHIVE DESTINATION       lib
   RUNTIME DESTINATION       bin
