@@ -45,8 +45,8 @@ void send_to_neighbor() {
 
   auto const& own_node = vtheEvent->get_owning_node(evt);
 
-  printf(
-    "this_node=%d, event_id=%lld, own_node=%d\n",
+  fmt::print(
+    "this_node={}, event_id={}, own_node={}\n",
     this_node, evt, own_node
   );
 
@@ -65,25 +65,25 @@ int main(int argc, char** argv) {
 
   std::cout << "this_node=" << this_node << std::endl;
 
-  printf("sizeof(Envelope)=%ld\n", sizeof(Envelope));
-  printf("sizeof(EpochEnvelope)=%ld\n", sizeof(EpochEnvelope));
-  printf("sizeof(EpochTagEnvelope)=%ld\n", sizeof(EpochTagEnvelope));
+  fmt::print("sizeof(Envelope)=%ld\n", sizeof(Envelope));
+  fmt::print("sizeof(EpochEnvelope)=%ld\n", sizeof(EpochEnvelope));
+  fmt::print("sizeof(EpochTagEnvelope)=%ld\n", sizeof(EpochTagEnvelope));
 
-  printf("%d: calling wait_unnamed_barrier\n", this_node);
+  fmt::print("{}: calling wait_unnamed_barrier\n", this_node);
   theCollective()->barrier();
-  printf("%d: out of wait_unnamed_barrier\n", this_node);
+  fmt::print("{}: out of wait_unnamed_barrier\n", this_node);
 
-  printf("%d: calling cont_unnamed_barrier\n", this_node);
+  fmt::print("{}: calling cont_unnamed_barrier\n", this_node);
   theCollective()->barrier_then([=]{
-    printf("%d: out of cont_unnamed_barrier\n", this_node);
+    fmt::print("{}: out of cont_unnamed_barrier\n", this_node);
   });
 
   //test_msg_han = CollectiveOps::register_handler(handle_test_msg);
 
   // test_epoch = theTerm()->new_epoch();
   // theTerm()->attach_epoch_term_action(test_epoch, [=]{
-  //   printf(
-  //     "%d: EPOCH: finished: test_epoch=%d\n",
+  //   fmt::print(
+  //     "{}: EPOCH: finished: test_epoch={}\n",
   //     theContext()->getNode(), test_epoch
   //   );
   // });
@@ -91,8 +91,8 @@ int main(int argc, char** argv) {
   test_msg_han = CollectiveOps::register_handler([](vt::BaseMessage* in_msg){
     TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-    printf(
-      "this_node=%d, from_node=%d, num_nodes=%d\n",
+    fmt::print(
+      "this_node={}, from_node={}, num_nodes={}\n",
       this_node, msg.val, msg.val2
     );
 
@@ -104,13 +104,13 @@ int main(int argc, char** argv) {
   test_msg_han2 = CollectiveOps::register_handler([](vt::BaseMessage* in_msg){
     TestMsg& msg = *static_cast<TestMsg*>(in_msg);
 
-    printf(
-      "this_node=%d, evt=%lld, owner=%d\n",
+    fmt::print(
+      "this_node={}, evt={}, owner={}\n",
       this_node, msg.event, vttheEvent->get_owning_node(msg.event)
     );
 
     vt-theEvent->attach_action(msg.event, [=]{
-      printf("triggering remote event\n");
+      fmt::print("triggering remote event\n");
     });
   });
 

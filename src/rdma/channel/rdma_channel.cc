@@ -35,8 +35,8 @@ Channel::Channel(
 
   debug_print(
     rdma_channel, node,
-    "channel: construct: target=%d, non_target=%d, my_node=%d, han=%lld, "
-    "ptr=%p, bytes=%lld, is_target=%s\n",
+    "channel: construct: target={}, non_target={}, my_node={}, han={}, "
+    "ptr={}, bytes={}, is_target={}\n",
     target_, non_target_, my_node, rdma_handle_, ptr_, num_bytes_,
     print_bool(is_target_)
   );
@@ -46,7 +46,7 @@ void
 Channel::initChannelGroup() {
   debug_print(
     rdma_channel, node,
-    "channel: initChannelGroup: target=%d, non_target=%d, my_node=%d, han=%lld\n",
+    "channel: initChannelGroup: target={}, non_target={}, my_node={}, han={}\n",
     target_, non_target_, my_node_, rdma_handle_
   );
 
@@ -92,7 +92,7 @@ void
 Channel::syncChannelLocal() {
   debug_print(
     rdma_channel, node,
-    "channel: syncChannelLocal: target=%d, locked=%s starting\n",
+    "channel: syncChannelLocal: target={}, locked={} starting\n",
     target_, print_bool(locked_)
   );
 
@@ -109,7 +109,7 @@ Channel::syncChannelLocal() {
 
   debug_print(
     rdma_channel, node,
-    "channel: syncChannelLocal: target=%d, locked=%s finished\n",
+    "channel: syncChannelLocal: target={}, locked={} finished\n",
     target_, print_bool(locked_)
   );
 }
@@ -118,7 +118,7 @@ void
 Channel::syncChannelGlobal() {
   debug_print(
     rdma_channel, node,
-    "channel: syncChannelGlobal: target=%d starting\n", target_
+    "channel: syncChannelGlobal: target={} starting\n", target_
   );
 
   auto const& ret = MPI_Win_flush(target_pos_, window_);
@@ -130,7 +130,7 @@ Channel::syncChannelGlobal() {
 
   debug_print(
     rdma_channel, node,
-    "channel: syncChannelGlobal: target=%d finished\n", target_
+    "channel: syncChannelGlobal: target={} finished\n", target_
   );
 }
 
@@ -148,8 +148,8 @@ Channel::lockChannelForOp() {
 
     debug_print(
       rdma_channel, node,
-      "lockChannelForOp: is_target=%s, target=%d, op_type=%s, "
-      "lock_type=%d, exclusive=%d\n",
+      "lockChannelForOp: is_target={}, target={}, op_type={}, "
+      "lock_type={}, exclusive={}\n",
       print_bool(is_target_), target_, PRINT_RDMA_OP_TYPE(op_type_),
       lock_type, MPI_LOCK_EXCLUSIVE
     );
@@ -175,7 +175,7 @@ Channel::unlockChannelForOp() {
 
     debug_print(
       rdma_channel, node,
-      "unlockChannelForOp: target=%d, op_type=%s\n",
+      "unlockChannelForOp: target={}, op_type={}\n",
       target_, PRINT_RDMA_OP_TYPE(op_type_)
     );
 
@@ -194,8 +194,8 @@ Channel::writeDataToChannel(
 
   debug_print(
     rdma_channel, node,
-    "writeDataToChannel: target=%d, ptr=%p, ptr_num_bytes=%lld, "
-    "num_bytes=%lld, op_type=%s, offset=%lld\n",
+    "writeDataToChannel: target={}, ptr={}, ptr_num_bytes={}, "
+    "num_bytes={}, op_type={}, offset={}\n",
     target_, ptr, ptr_num_bytes, num_bytes_, PRINT_RDMA_OP_TYPE(op_type_), offset
   );
 
@@ -240,7 +240,7 @@ void
 Channel::initChannelWindow() {
   debug_print(
     rdma_channel, node,
-    "channel: create window: num_bytes=%lld\n", num_bytes_
+    "channel: create window: num_bytes={}\n", num_bytes_
   );
 
   int win_create_ret = 0;

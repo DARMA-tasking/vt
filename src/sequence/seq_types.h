@@ -58,7 +58,7 @@ enum class eSeqNodeState : int8_t {
    )                                                                    \
   )
 
-#define PRINT_SEQ_NODE_PTR(NODE) ((NODE) ? (NODE).get() : nullptr)
+#define PRINT_SEQ_NODE_PTR(NODE) ((NODE) ? print_ptr((NODE).get()) : nullptr)
 
 }} //end namespace vt::seq
 

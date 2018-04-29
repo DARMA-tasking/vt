@@ -45,7 +45,7 @@ struct BitPacker {
   static inline void setField(BitField& field, BitSegment const& segment) {
     #if backend_check_enabled(bit_check_overflow)
     auto const& seg_msb_bit = get_msb_bit(segment);
-    //printf("size=%d, high bit=%d\n", sizeof(BitSegment)*8, seg_msb_bit);
+    //fmt::print("size={}, high bit={}\n", sizeof(BitSegment)*8, seg_msb_bit);
     assert(
       seg_msb_bit <= len and
       "bit_check_overflow: value in segment overflows specified bit length"

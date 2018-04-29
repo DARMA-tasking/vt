@@ -1,23 +1,43 @@
 # Defines the following variables:
 #  VT_INCLUDE_DIRS - include directories
-#  VT_LIBRARY_DIRS - library directories
-#  VT_LIBRARIES    - libraries to link against
 #  VT_CXX_COMPILER - the compiler used
-#  VT_CXX_FLAGS - the compiler flags used
+#  VT_CXX_FLAGS - flags dependent projects must include for compiling
+#  VT_EXE_LINKER_FLAGS - flags dependent projects must include for linking
 
 # Compute paths
 GET_FILENAME_COMPONENT (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
-set (VT_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
-set (VT_LIBRARY_DIRS ${VT_CMAKE_DIR}/../lib)
-set (VT_LINK_DIRS "@CONF_LINK_DIRS@")
+include(${VT_CMAKE_DIR}/vtTargets.cmake)
 
-# Get compiler and flags
-SET (VT_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
-SET (VT_CXX_FLAGS "@CMAKE_CXX_FLAGS@")
+include(CMakeFindDependencyMacro)
 
-# Our library dependencies (contains definitions for IMPORTED targets)
-INCLUDE ("${VT_CMAKE_DIR}/vtDepends.cmake")
+if (@DEFAULT_THREADING@ STREQUAL openmp)
+  find_dependency(OpenMP REQUIRED)
+endif()
 
-SET (VT_LIBRARIES vt @CMAKE_VT_LIBS_INIT@)
+find_dependency(MPI REQUIRED)
 
+set (meld_DIR @meld_DIR@)
+find_dependency(meld REQUIRED HINTS @meld_DIR@)
+
+set (detector_DIR @detector_DIR@)
+find_dependency(detector REQUIRED HINTS @detector_DIR@)
+
+set (fmt_DIR @fmt_DIR@)
+find_dependency(fmt PATHS ${fmt_DIR} ${fmt_DIR}/lib/cmake)
+
+set (checkpoint_DIR @checkpoint_DIR@)
+set (vt_has_checkpoint @checkpoint_DIR_FOUND@)
+if (@VT_HAS_SERIALIZATION_LIBRARY@)
+  find_dependency(checkpoint REQUIRED HINTS @checkpoint_DIR@)
+  set(VT_HAS_CHECKPOINT "TRUE")
+else()
+  set(VT_HAS_CHECKPOINT "FALSE")
+endif()
+
+set (VT_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include")
+set (VT_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
+
+set(VT_HAS_DETECTOR "TRUE")
+set(VT_HAS_MELD "TRUE")
+set(VT_HAS_FMT "TRUE")

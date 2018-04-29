@@ -39,9 +39,9 @@ void VirtualContextManager::insertVirtualContext(
 
   debug_print(
     vrt, node,
-    "inserting new VC into holder_: id=%d, proxy=%lld, construct=%s, ptr=%p\n",
+    "inserting new VC into holder_: id={}, proxy={}, construct={}, ptr={}\n",
     id, proxy, print_bool(is_constructed),
-    is_constructed ? new_vc.get() : nullptr
+    is_constructed ? print_ptr(new_vc.get()) : nullptr
   );
 
   auto& holder = is_remote ? remote_holder_ : holder_;
@@ -86,8 +86,8 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
 
   debug_print(
     vrt, node,
-    "virtualMsgHandler: msg=%p, entity_proxy=%lld\n",
-    msg, entity_proxy
+    "virtualMsgHandler: msg={}, entity_proxy={}\n",
+    print_ptr(msg), entity_proxy
   );
 
   vc_info->tryEnqueueWorkUnit(static_cast<VirtualMessage*>(msg));
@@ -102,7 +102,7 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
 
   debug_print(
     vrt, node,
-    "sendBackVirtualProxy: send back cons_node=%d, req_node=%d, id=%lld\n",
+    "sendBackVirtualProxy: send back cons_node={}, req_node={}, id={}\n",
     cons_node, req_node, request_id
   );
 

@@ -71,7 +71,8 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(UserSeqFunType const& fn) {
 
   debug_print(
     sequence, node,
-    "Sequencer: sequenced: fn: context_=%p\n", context_
+    "Sequencer: sequenced: fn: context_={}\n",
+    print_ptr(context_)
   );
 
   return sequenced(context_->getSeq(), fn);
@@ -83,7 +84,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(
 ) {
   debug_print(
     sequence, node,
-    "Sequencer: sequenced (UserSeqFunWithIDType) seq_id=%d\n", seq_id
+    "Sequencer: sequenced (UserSeqFunWithIDType) seq_id={}\n", seq_id
   );
 
   auto sfn = [=]{ fn(seq_id); };
@@ -98,7 +99,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(
 
   debug_print(
     sequence, node,
-    "Sequencer: sequenced (UserSeqFunType) seq_id=%d: has_context=%s\n",
+    "Sequencer: sequenced (UserSeqFunType) seq_id={}: has_context={}\n",
     seq_id, print_bool(has_context)
   );
 
@@ -132,7 +133,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel_lst(
 
   debug_print(
     sequence, node,
-    "Sequencer: parallel: seq_id=%d, has_context=%s, num fns=%ld\n",
+    "Sequencer: parallel: seq_id={}, has_context={}, num fns={}\n",
     seq_id, print_bool(has_context), fn_list.size()
   );
 
@@ -154,7 +155,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel(FnT&&... fns) {
 
   debug_print(
     sequence, node,
-    "Sequencer: parallel: fn: context_=%p: num fns=%ld\n",
+    "Sequencer: parallel: fn: context_={}: num fns={}\n",
     context_, sizeof...(fns)
   );
 
@@ -170,7 +171,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel(
 
   debug_print(
     sequence, node,
-    "Sequencer: parallel: seq_id=%d, has_context=%s, num fns=%ld\n",
+    "Sequencer: parallel: seq_id={}, has_context={}, num fns={}\n",
     seq_id, print_bool(has_context), sizeof...(fns)
   );
 
@@ -224,7 +225,7 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::scheduler() {
   bool found = false;
   if (work_deque_.size() > 0) {
     debug_print(
-      sequence, node, "Sequencer: scheduler executing size=%ld\n",
+      sequence, node, "Sequencer: scheduler executing size={}\n",
       work_deque_.size()
     );
 
@@ -316,8 +317,8 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
 
   debug_print(
     sequence, node,
-    "Sequencer: wait: tag=%d: context seq id=%d, node=%p, blocked=%s, "
-    "ready=%s\n",
+    "Sequencer: wait: tag={}: context seq id={}, node={}, blocked={}, "
+    "ready={}\n",
     tag, seq_id, PRINT_SEQ_NODE_PTR(node),
     print_bool(node->isBlockedNode()), print_bool(seq_ready)
   );
@@ -333,8 +334,8 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
 
     debug_print(
       sequence, node,
-      "Sequencer: %s: tag=%d: node=%p, has_match=%s, "
-      "is_blocked=%s\n",
+      "Sequencer: {}: tag={}: node={}, has_match={}, "
+      "is_blocked={}\n",
       has_match ? "wait ran *immediately*" : "wait registered", tag,
       PRINT_SEQ_NODE_PTR(node), print_bool(has_match),
       print_bool(node->isBlockedNode())
@@ -347,7 +348,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
     if (has_match) {
       debug_print(
         sequence, node,
-        "Sequencer: activating next node: seq=%d, node=%p, blocked=%s\n",
+        "Sequencer: activating next node: seq={}, node={}, blocked={}\n",
         seq_id, PRINT_SEQ_NODE_PTR(node), print_bool(node->isBlockedNode())
       );
 
@@ -358,10 +359,10 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
       auto msg_recv_trigger = [node,seq_id,action,tag](MessageT* msg){
         debug_print(
           sequence, node,
-          "Sequencer: msg_recv_trigger: seq=%d, tag=%d, node=%p, blocked=%s, "
-          "msg=%p\n",
+          "Sequencer: msg_recv_trigger: seq={}, tag={}, node={}, blocked={}, "
+          "msg={}\n",
           seq_id, tag, PRINT_SEQ_NODE_PTR(node),
-          print_bool(node->isBlockedNode()), msg
+          print_bool(node->isBlockedNode()), print_ptr(msg)
         );
 
         action.runAction(msg, false);
@@ -390,7 +391,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
 
     debug_print(
       sequence, node,
-      "Sequencer: executed wait: has_match=%s: seq_id=%d\n",
+      "Sequencer: executed wait: has_match={}: seq_id={}\n",
       print_bool(has_match), seq_id
     );
     should_suspend = not has_match;
@@ -399,7 +400,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
 
     debug_print(
       sequence, node,
-      "Sequencer: deferring wait: seq_id=%d\n", seq_id
+      "Sequencer: deferring wait: seq_id={}\n", seq_id
     );
 
     node->addSequencedClosure(deferred_wait_action);
@@ -408,7 +409,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
   if (should_suspend and context_->isSuspendable()) {
     debug_print(
       sequence, node,
-      "Sequencer: should suspend: seq_id=%d, context suspendable=%s\n",
+      "Sequencer: should suspend: seq_id={}, context suspendable={}\n",
       seq_id, print_bool(context_->isSuspendable())
     );
 
@@ -428,17 +429,17 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::lookupContextExecute(
 
   debug_print(
     sequence, node,
-    "Sequencer: lookupContextExecute (start): id=%d: context=%p, node=%p\n",
-    id, context_, PRINT_SEQ_NODE_PTR(seq_node)
+    "Sequencer: lookupContextExecute (start): id={}: context={}, node={}\n",
+    id, print_ptr(context_), PRINT_SEQ_NODE_PTR(seq_node)
   );
 
   bool const blocked = executeInNodeContext(id, seq_node, c);
 
   debug_print(
     sequence, node,
-    "Sequencer: lookupContextExecute (end): id=%d: context=%p, node=%p, "
-    "blocked=%s\n",
-    id, context_, PRINT_SEQ_NODE_PTR(seq_node), print_bool(blocked)
+    "Sequencer: lookupContextExecute (end): id={}: context={}, node={}, "
+    "blocked={}\n",
+    id, print_ptr(context_), PRINT_SEQ_NODE_PTR(seq_node), print_bool(blocked)
   );
 
   return blocked;
@@ -472,7 +473,8 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
 
   debug_print(
     sequence, node,
-    "Sequencer: executeInNodeContext (start): id=%d: node=%p\n", id, node.get()
+    "Sequencer: executeInNodeContext (start): id={}: node={}\n",
+    id, print_ptr(node.get())
   );
 
   // save this node related to `id' for later execution in this context
@@ -490,7 +492,8 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
 
   debug_print(
     sequence, node,
-    "Sequencer: executeInNodeContext (end): id=%d: node=%p\n", id, node.get()
+    "Sequencer: executeInNodeContext (end): id={}: node={}\n",
+    id, print_ptr(node.get())
   );
 
   return node->isBlockedNode();
@@ -513,7 +516,8 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 
   debug_print(
     sequence, node,
-    "sequenceMsg: arrived: msg=%p, tag=%d\n", msg, msg_tag
+    "sequenceMsg: arrived: msg={}, tag={}\n",
+    print_ptr(msg), msg_tag
   );
 
   bool const has_match =
@@ -521,8 +525,8 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 
   debug_print(
     sequence, node,
-    "sequenceMsg: arriving: msg=%p, has_match=%s, tag=%d\n",
-    msg, print_bool(has_match), msg_tag
+    "sequenceMsg: arriving: msg={}, has_match={}, tag={}\n",
+    print_ptr(msg), print_bool(has_match), msg_tag
   );
 
   if (has_match) {

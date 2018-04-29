@@ -18,8 +18,8 @@ using namespace vt::tests::unit;
 #define DEBUG_PRINT_SEQ_NESTED(ORDER, CUR)                              \
   do {                                                                  \
     auto seq_id = theSeq()->getCurrentSeq();                              \
-    printf(                                                             \
-      "testSeqDeepNested: seq_id=%d, ordering=%d -- cur=%d --\n",       \
+    fmt::print(                                                             \
+      "testSeqDeepNested: seq_id={}, ordering={} -- cur={} --\n",       \
       seq_id, (ORDER).load(), (CUR)                                     \
     );                                                                  \
   } while (false);
@@ -162,7 +162,7 @@ struct TestSequencerNested : TestParallelHarness {
     }
 
     #if DEBUG_TEST_HARNESS_PRINT
-      printf("testSeqDeepNested: seq_id=%d, ordering=%d\n", seq_id, seq_ordering_.load());
+      fmt::print("testSeqDeepNested: seq_id={}, ordering={}\n", seq_id, seq_ordering_.load());
     #endif
 
     EXPECT_EQ(seq_ordering_++, 0);
@@ -219,26 +219,26 @@ struct TestSequencerNested : TestParallelHarness {
 /*static*/ TagType TestSequencerNested::single_tag;
 /*static*/ TagType TestSequencerNested::single_tag_2;
 
-#define SEQ_TEST(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, NUM_MSGS, IS_TAG)   \
-  do {                                                                \
-    SeqType const& seq_id = theSeq()->nextSeq();                        \
-    theSeq()->sequenced(seq_id, (SEQ_FN));                              \
-    for (int i = 0; i < (NUM_MSGS); i++) {                            \
-      TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
-      theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                             \
-        (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
-      );                                                              \
-    }                                                                 \
-    theTerm()->attachGlobalTermAction([=]{                              \
-      SEQ_FN(-1);                                                     \
-    });                                                               \
+#define SEQ_EXPAND(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, NUM_MSGS, IS_TAG)     \
+  do {                                                                    \
+    SeqType const& seq_id = theSeq()->nextSeq();                          \
+    theSeq()->sequenced(seq_id, (SEQ_FN));                                \
+    for (int i = 0; i < (NUM_MSGS); i++) {                                \
+      TagType const tag = (IS_TAG) ? i+1 : no_tag;                        \
+      theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                               \
+        (NODE), makeSharedMessage<MSG_TYPE>(), tag                        \
+      );                                                                  \
+    }                                                                     \
+    theTerm()->attachGlobalTermAction([=]{                                \
+      SEQ_FN(-1);                                                         \
+    });                                                                   \
   } while (false);
 
 TEST_F(TestSequencerNested, test_simple_nested_wait) {
   auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    SEQ_TEST(testSeqNested, testNestedWaitFn, my_node, TestMsg, 1, false);
+    SEQ_EXPAND(testSeqNested, testNestedWaitFn, my_node, TestMsg, 1, false);
   }
 }
 
@@ -246,7 +246,7 @@ TEST_F(TestSequencerNested, test_multi_nested_wait) {
   auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    SEQ_TEST(
+    SEQ_EXPAND(
       testSeqNestedMulti, testNestedWaitFnMulti, my_node, TestMsg, 2, false
     );
   }
@@ -256,7 +256,7 @@ TEST_F(TestSequencerNested, test_multi_nested_single_wait) {
   auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    SEQ_TEST(
+    SEQ_EXPAND(
       testSeqNestedSingleHan, testNestedSingle, my_node, TestMsg, 3, false
     );
   }
@@ -266,7 +266,7 @@ TEST_F(TestSequencerNested, test_multi_nested_single2_wait) {
   auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    SEQ_TEST(
+    SEQ_EXPAND(
       testSeqNestedSingle2Han, testNestedSingle2, my_node, TestMsg, 4, false
     );
   }
@@ -276,7 +276,7 @@ TEST_F(TestSequencerNested, test_multi_deep_nested_wait) {
   auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    SEQ_TEST(
+    SEQ_EXPAND(
       testSeqDeepNestedHan, testSeqDeepNested, my_node, TestMsg, 8, true
     );
   }

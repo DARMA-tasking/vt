@@ -92,7 +92,7 @@ inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& han) {
 
   debug_print(
     handler, node,
-    "getAutoHandlerFunctor: handler=%d, id=%d, is_auto=%s, is_functor=%s\n",
+    "getAutoHandlerFunctor: handler={}, id={}, is_auto={}, is_functor={}\n",
     han, id, print_bool(is_auto), print_bool(is_functor)
   );
 

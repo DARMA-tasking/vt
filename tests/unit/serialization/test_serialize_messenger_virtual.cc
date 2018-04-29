@@ -36,7 +36,7 @@ struct DataMsg : vt::vrt::VirtualMessage {
     EXPECT_EQ(vec[1], val2);
 
     // for (auto&& elm: vec) {
-    //   printf("elm=%d\n",elm);
+    //   fmt::print("elm={}\n",elm);
     // }
   }
 

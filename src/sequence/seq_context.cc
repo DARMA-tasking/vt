@@ -15,7 +15,7 @@ SeqContext::SeqContext(
 {
   debug_print(
     sequence, node,
-    "SeqContext: construct: node=%p, id=%d, suspendable=%s\n",
+    "SeqContext: construct: node={}, id={}, suspendable={}\n",
     PRINT_SEQ_NODE_PTR(node_), seq_id, print_bool(suspendable_)
   );
 
@@ -46,7 +46,7 @@ SeqNodePtrType SeqContext::getNode() const {
 void SeqContext::setNode(SeqNodePtrType node) {
   debug_print(
     sequence, node,
-    "SeqContext: setNode: node=%p, id=%d\n", PRINT_SEQ_NODE_PTR(node), seq_id
+    "SeqContext: setNode: node={}, id={}\n", PRINT_SEQ_NODE_PTR(node), seq_id
   );
 
   node_ = node;

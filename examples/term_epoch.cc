@@ -36,7 +36,9 @@ static void sendMsgEpoch(EpochType const& epoch, TTLType const& ttl = no_ttl);
 
 static void propagate_handler(PropagateMsg* msg) {
   EpochType const epoch = envelopeGetEpoch(msg->env);
-  printf("%d: propagate_handler: msg=%p, epoch=%d\n", my_node, msg, epoch);
+  fmt::print(
+    "{}: propagate_handler: msg={}, epoch={}\n", my_node, print_ptr(msg), epoch
+  );
   if (msg->life_time > 0) {
     sendMsgEpoch(epoch, msg->life_time);
   }
@@ -57,12 +59,12 @@ static void sendMsgEpoch(EpochType const& epoch, TTLType const& ttl) {
     theMsg()->setEpochMessage(msg, epoch);
   }
 
-  printf("%d: sending msg: epoch=%d, ttl=%d\n", my_node, epoch, msg->life_time);
+  fmt::print("{}: sending msg: epoch={}, ttl={}\n", my_node, epoch, msg->life_time);
 
   theMsg()->sendMsg<PropagateMsg, propagate_handler>(random_node, msg);
 
-  printf(
-    "%d: sendMsgEpoch: epoch=%d, node=%d, ttl-%d\n",
+  fmt::print(
+    "{}: sendMsgEpoch: epoch={}, node={}, ttl-{}\n",
     my_node, epoch, random_node, ttl
   );
 }
@@ -75,18 +77,18 @@ static void sendStartEpoch(EpochType const& epoch) {
 }
 
 static void next_epoch() {
-  printf("%d: cur_epoch=%d\n", my_node, cur_epoch);
+  fmt::print("{}: cur_epoch={}\n", my_node, cur_epoch);
 
   if (use_epoch) {
     cur_epoch = theTerm()->newEpoch();
 
     if (cur_epoch < max_epochs) {
-      printf("%d: new cur_epoch=%d\n", my_node, cur_epoch);
+      fmt::print("{}: new cur_epoch={}\n", my_node, cur_epoch);
 
       sendStartEpoch(cur_epoch);
 
       theTerm()->attachEpochTermAction(cur_epoch, []{
-        printf("%d: running attached action: cur_epoch=%d\n", my_node, cur_epoch);
+        fmt::print("{}: running attached action: cur_epoch={}\n", my_node, cur_epoch);
         next_epoch();
       });
     }
@@ -105,7 +107,7 @@ int main(int argc, char** argv) {
     use_epoch = atoi(argv[1]) == 1 ? true : false;
   }
 
-  printf("%d:use_epoch=%s\n", my_node, print_bool(use_epoch));
+  fmt::print("{}:use_epoch={}\n", my_node, print_bool(use_epoch));
 
   if (num_nodes == 1) {
     CollectiveOps::abort("At least 2 ranks required");

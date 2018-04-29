@@ -62,7 +62,7 @@ void Trace::beginProcessing(
 
   debug_print(
     trace, node,
-    "event_start: ep=%lu, event=%d, time=%f\n", ep, event, time
+    "event_start: ep={}, event={}, time={}\n", ep, event, time
   );
 
   log->node = from_node;
@@ -81,7 +81,7 @@ void Trace::endProcessing(
 
   debug_print(
     trace, node,
-    "event_stop: ep=%lu, event=%d, time=%f\n", ep, event, time
+    "event_stop: ep={}, event={}, time={}\n", ep, event, time
   );
 
   log->node = from_node;
@@ -268,8 +268,8 @@ void Trace::writeTracesFile() {
 
   debug_print(
     trace, node,
-    "write_traces_file: traces.size=%ld, "
-    "event_type_container.size=%ld, event_container.size=%ld\n",
+    "write_traces_file: traces.size={}, "
+    "event_type_container.size={}, event_container.size={}\n",
     traces_.size(),
     TraceContainersType::event_type_container.size(),
     TraceContainersType::event_container.size()
@@ -298,11 +298,11 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
       std::underlying_type<decltype(log->type)>::type
         >(log->type);
 
-    auto event_iter = TraceContainersType::event_container.find(log->ep);
+    auto event_iter = TraceContainersType::getEventContainer().find(log->ep);
 
     assert(
       log->ep == no_trace_entry_id or
-      event_iter != TraceContainersType::event_container.end() and
+      event_iter != TraceContainersType::getEventContainer().end() and
       "Event must exist that was logged"
     );
 
@@ -403,8 +403,8 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   auto const& node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  auto const& num_event_types = TraceContainersType::event_type_container.size();
-  auto const& num_events = TraceContainersType::event_container.size();
+  auto const& num_event_types = TraceContainersType::getEventContainer().size();
+  auto const& num_events = TraceContainersType::getEventContainer().size();
 
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
@@ -421,7 +421,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   ContainerEventSortedType sorted_event;
   ContainerEventTypeSortedType sorted_event_type;
 
-  for (auto&& elem : TraceContainersType::event_container) {
+  for (auto&& elem : TraceContainersType::getEventContainer()) {
     sorted_event.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),
@@ -429,7 +429,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     );
   }
 
-  for (auto&& elem : TraceContainersType::event_type_container) {
+  for (auto&& elem : TraceContainersType::getEventTypeContainer()) {
     sorted_event_type.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),

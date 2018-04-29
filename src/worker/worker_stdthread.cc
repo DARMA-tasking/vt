@@ -55,7 +55,7 @@ void StdThreadWorker::sendTerminateSignal() {
 void StdThreadWorker::spawn() {
   debug_print(
     worker, node,
-    "StdThreadWorker: spawn: spawning worker: id=%d\n", worker_id_
+    "StdThreadWorker: spawn: spawning worker: id={}\n", worker_id_
   );
 
   auto sched_fn = std::bind(&StdThreadWorker::scheduler, this);
@@ -65,7 +65,7 @@ void StdThreadWorker::spawn() {
 void StdThreadWorker::join() {
   debug_print(
     worker, node,
-    "StdThreadWorker: join: spawning worker: id=%d\n", worker_id_
+    "StdThreadWorker: join: spawning worker: id={}\n", worker_id_
   );
 
   // tell the worker to return from the scheduler loop

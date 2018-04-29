@@ -16,12 +16,12 @@ struct EntityMsg : vt::Message {
 };
 
 static void entityTestHandler(EntityMsg* msg) {
-  printf(
-    "%d: entityTestHandler entity=%d\n", theContext()->getNode(), msg->entity
+  fmt::print(
+    "{}: entityTestHandler entity={}\n", theContext()->getNode(), msg->entity
   );
 
   theLocMan()->virtual_loc->getLocation(msg->entity, msg->home, [](NodeType node){
-    printf("%d: entityTestHandler: location=%d\n", theContext()->getNode(), node);
+    fmt::print("{}: entityTestHandler: location={}\n", theContext()->getNode(), node);
     theLocMan()->virtual_loc->printCurrentCache();
   });
 }

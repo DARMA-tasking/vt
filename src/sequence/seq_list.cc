@@ -12,7 +12,7 @@ namespace vt { namespace seq {
 void SeqList::addAction(SeqFunType const& fn) {
   debug_print(
     sequence, node,
-    "SeqList: addAction id=%d, node_=%p\n", seq_id_, PRINT_SEQ_NODE_PTR(node_)
+    "SeqList: addAction id={}, node_={}\n", seq_id_, PRINT_SEQ_NODE_PTR(node_)
   );
 
   node_->addSequencedChild(SeqNodeType::makeNode(seq_id_, node_, fn));
@@ -21,7 +21,7 @@ void SeqList::addAction(SeqFunType const& fn) {
 void SeqList::addNode(SeqNodePtrType node) {
   debug_print(
     sequence, node,
-    "SeqList: addNode id=%d, node_=%p\n", seq_id_, PRINT_SEQ_NODE_PTR(node_)
+    "SeqList: addNode id={}, node_={}\n", seq_id_, PRINT_SEQ_NODE_PTR(node_)
   );
 
   node_->addSequencedChild(std::move(node));
@@ -34,7 +34,7 @@ void SeqList::expandNextNode() {
 
   debug_print(
     sequence, node,
-    "SeqList: expandNextNode id=%d, node_=%p, state=%s\n",
+    "SeqList: expandNextNode id={}, node_={}, state={}\n",
     seq_id_, PRINT_SEQ_NODE_PTR(node_), PRINT_SEQ_NODE_STATE(state)
   );
 

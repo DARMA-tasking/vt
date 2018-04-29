@@ -19,8 +19,8 @@ struct MyVC : vt::vrt::VrtContext {
 #if PRINT_SEQUENCE_ON
 #define PRINT_SEQUENCE(fmt, arg...)                                     \
   do {                                                                  \
-    printf(                                                             \
-      "%d: seq_id=%d: " fmt, theContext()->getNode(),                     \
+    fmt::print(                                                             \
+      "{}: seq_id={}: " fmt, theContext()->getNode(),                     \
       theSeq()->getCurrentSeq(), ##arg                                    \
     );                                                                  \
   } while (0);

@@ -60,7 +60,7 @@ void LocationCache<KeyT, ValueT>::insert(KeyT const& key, ValueT const& value) {
 
   debug_print(
     location, node,
-    "location cache: insert: found=%s, size=%ld\n",
+    "location cache: insert: found={}, size={}\n",
     print_bool(iter != lookup_.end()), lookup_.size()
   );
 
@@ -105,7 +105,7 @@ void LocationCache<KeyT, ValueT>::printCache() const {
 
   debug_print(
     location, node,
-    "printing cache: %s", stream.str().c_str()
+    "printing cache: {}", stream.str().c_str()
   );
 }
 

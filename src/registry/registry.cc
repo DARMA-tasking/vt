@@ -82,7 +82,7 @@ ActiveClosureFnType Registry::getTrigger(HandlerType const& han) {
 }
 
 void Registry::saveTrigger(HandlerType const& han, ActiveClosureFnType fn) {
-  printf("save_trigger: han=%d\n", han);
+  fmt::print("save_trigger: han={}\n", han);
   triggers_[han] = fn;
 }
 

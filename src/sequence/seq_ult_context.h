@@ -5,7 +5,7 @@
 #include "config.h"
 #include "seq_common.h"
 
-#include "context/src/context.h"
+#include <context.h>
 
 #include <functional>
 

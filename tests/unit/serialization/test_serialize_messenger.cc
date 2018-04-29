@@ -35,7 +35,7 @@ struct MyDataMsg : Message {
     EXPECT_EQ(vec[1], val2);
 
     for (auto&& elm: vec) {
-      printf("elm=%d\n",elm);
+      fmt::print("elm={}\n",elm);
     }
   }
 
@@ -47,7 +47,7 @@ struct MyDataMsg : Message {
 };
 
 static void myDataMsgHan(MyDataMsg* msg) {
-  printf("myDataMsgHandler: calling check\n");
+  fmt::print("myDataMsgHandler: calling check\n");
   msg->check();
 }
 
@@ -78,7 +78,7 @@ struct TestSerialMessenger : TestParallelHarness {
   template <typename TupleT>
   static void testBcastHandler(DataMsg<TupleT>* msg) {
     auto const& node = theContext()->getNode();
-    //printf("%d:testBcastHandler\n",node);
+    //fmt::print("{}:testBcastHandler\n",node);
     return testHandler<TupleT>(msg);
   }
 };

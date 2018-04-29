@@ -31,7 +31,7 @@ struct Jacobi1D : vt::vrt::VirtualContext {
     int64_t const& in_lo, int64_t const& in_hi, VirtualProxyType in_parent
   ) : parent(in_parent), lo(in_lo), hi(in_hi)
   {
-    printf("construct: lo=%lld, hi=%lld, parent=%lld\n", lo, hi, parent);
+    fmt::print("construct: lo={}, hi={}, parent={}\n", lo, hi, parent);
   }
 
   void create_children() {
@@ -39,8 +39,8 @@ struct Jacobi1D : vt::vrt::VirtualContext {
     auto const size = hi - lo;
     auto const mid = size / 2 + lo;
 
-    printf(
-      "create_children: lo=%lld, mid=%lld, hi=%lld, size=%lld\n",
+    fmt::print(
+      "create_children: lo={}, mid={}, hi={}, size={}\n",
       lo, mid, hi, size
     );
 
@@ -70,14 +70,16 @@ static void create_jacobi1d(CreateJacobi1DMsg* msg, Jacobi1D* j1d) {
   auto const size = hi - lo;
   auto const mid = size / 2 + lo;
 
-  printf(
-    "%d: lo=%lld, mid=%lld, hi=%lld, size=%lld\n", this_node, lo, mid, hi, size
+  fmt::print(
+    "{}: lo={}, mid={}, hi={}, size={}\n", this_node, lo, mid, hi, size
   );
 
   if (size > block_size) {
     j1d->create_children();
   }
 }
+
+#define sstmac_app_name jacobi1d_recur_vc_vt
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);

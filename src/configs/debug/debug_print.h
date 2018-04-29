@@ -4,6 +4,8 @@
 
 #include "debug_config.h"
 
+#include <fmt/format.h>
+
 #define debug_flush_to_out(config, stdout)       \
   debug_cond_enabled(config, flush, fflush(stdout))
 
@@ -12,10 +14,10 @@
 #define debug_file_arg                                \
   debug_test(backend,line_file, debug_file_line_args, )
 #define debug_file_fmt                          \
-  debug_test(backend,line_file, "%s:%d ", )
+  debug_test(backend,line_file, "{}:{} ", )
 
 #define debug_decorated_prefix(debug_stamp, debug_type)       \
-  "[%d] " debug_stamp " " debug_pretty_print(debug_type) ": "
+  "[{}] " debug_stamp " " debug_pretty_print(debug_type) ": "
 
 #define debug_decorated(                                                \
   PRINTER,                                                              \
@@ -89,7 +91,7 @@
   main_fmt, main_arg...                                                 \
 )                                                                       \
   debug_decorated(                                                      \
-    printf, debug_type, "VT", proc,                                     \
+    ::fmt::print, debug_type, "VT", proc,                               \
     has_c1, c1_fmt, c1_arg,                                             \
     has_c2, c2_fmt, c2_arg,                                             \
     main_fmt, ##main_arg                                                \
@@ -116,7 +118,7 @@
   debug_virtual(                                                        \
     debug_type,                                                         \
     ctx_true,  c1_fmt, c1_arg,                                          \
-    ctx_false, "%s",   "",                                              \
+    ctx_false, "{}",   "",                                              \
     main_fmt, ##main_arg                                                \
   )                                                                     \
 
@@ -126,8 +128,8 @@
 )                                                                       \
   debug_virtual_pe(                                                     \
     debug_type, proc,                                                   \
-    ctx_false, "%s", "",                                                \
-    ctx_false, "%s", "",                                                \
+    ctx_false, "{}", "",                                                \
+    ctx_false, "{}", "",                                                \
     main_fmt, ##main_arg                                                \
   )                                                                     \
 
@@ -144,16 +146,16 @@
   debug_virtual_ctx_none(debug_type, main_fmt, main_arg)
 
 // #define debug_print_array(debug_type, main_fmt, main_arg...)  \
-//   debug_virtual_ctx_1(debug_type, "idx=%d", thisIndex, main_fmt, ##main_arg)
+//   debug_virtual_ctx_1(debug_type, "idx={}", thisIndex, main_fmt, ##main_arg)
 
 // #define debug_print_aoth(debug_type, main_fmt, main_arg...)             \
-//   debug_virtual_ctx_1(debug_type, "idx=%d", this_index, main_fmt, main_arg)
+//   debug_virtual_ctx_1(debug_type, "idx={}", this_index, main_fmt, main_arg)
 
 #define debug_print_node(debug_type, main_fmt, main_arg...)             \
   debug_virtual_ctx_2(                                                  \
     debug_type,                                                         \
-    "node=%d",   print_ctx_node,                                        \
-    "worker=%d", print_ctx_comm_worker,                                 \
+    "node={}",   print_ctx_node,                                        \
+    "worker={}", print_ctx_comm_worker,                                 \
     main_fmt, main_arg                                                  \
   )
 
@@ -166,8 +168,8 @@
 #define debug_print_uid(debug_type, main_fmt, main_arg...)           \
   debug_virtual_ctx_2(                                               \
     debug_type,                                                      \
-    "idx=%d", thisIndex,                                             \
-    "uid=%ld", task_collection_id.unique_id,                         \
+    "idx={}", thisIndex,                                             \
+    "uid={}", task_collection_id.unique_id,                          \
     main_fmt, main_arg                                               \
   )
 
@@ -178,7 +180,7 @@
 
 #define virtual_fatal_error(str)                  \
   do {                                            \
-    fprintf(stderr, str);                         \
+    ::fmt::print(stderr, str);                    \
     exit(229);                                    \
   } while (0);
 

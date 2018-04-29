@@ -139,7 +139,7 @@ EventType GroupManager::sendGroup(
 
   debug_print(
     group, node,
-    "GroupManager::sendGroup: group=%llu, is_root=%s\n",
+    "GroupManager::sendGroup: group={}, is_root={}\n",
     group, print_bool(is_root)
   );
 
@@ -190,7 +190,7 @@ EventType GroupManager::sendGroup(
 
       debug_print(
         broadcast, node,
-        "GroupManager::broadcast *send* remote size=%d, from=%d, found=%s\n",
+        "GroupManager::broadcast *send* remote size={}, from={}, found={}\n",
         size, from, print_bool(iter != remote_group_info_.end())
       );
 
@@ -219,7 +219,7 @@ EventType GroupManager::sendGroup(
           info.default_spanning_tree_->foreachChild([&](NodeType child) {
             debug_print(
               broadcast, node,
-              "GroupManager::broadcast *send* size=%d, from=%d, child=%d\n",
+              "GroupManager::broadcast *send* size={}, from={}, child={}\n",
               size, from, child
             );
 

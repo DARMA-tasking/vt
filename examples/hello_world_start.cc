@@ -14,8 +14,8 @@ using namespace vt::mapping;
 
 #define DEBUG_PRINTER_START(str, args...)                               \
   do{                                                                   \
-    printf(                                                             \
-      "node=%d,worker=%d: " str,                                        \
+    fmt::print(                                                         \
+      "node={},worker={}: " str,                                        \
       theContext()->getNode(), theContext()->getWorker(), args          \
     );                                                                  \
   } while (false);
@@ -72,7 +72,7 @@ struct TestVC : vt::vrt::VirtualContext {
     : my_index(in_my_index), work_amt(in_work_amt)
   {
     DEBUG_PRINT_START(
-      "node=%d, worker=%d: %p: constructing TestVC: my_index=%d, work amt=%d\n",
+      "node={}, worker={}: {}: constructing TestVC: my_index={}, work amt={}\n",
       theContext()->getNode(), theContext()->getWorker(), this, my_index,
       work_amt
     );
@@ -82,7 +82,7 @@ struct TestVC : vt::vrt::VirtualContext {
     my_proxy = msg->proxies[my_index];
 
     DEBUG_PRINT_START(
-      "my_proxy=%lld, index=%d, getProxy()=%lld, ptr=%p\n",
+      "my_proxy={}, index={}, getProxy()={}, ptr={}\n",
       my_proxy, my_index, getProxy(), this
     );
 
@@ -96,8 +96,8 @@ struct TestVC : vt::vrt::VirtualContext {
     }
 
     DEBUG_PRINT_START(
-      "my_proxy=%lld, proxies size=%ld, right=%d vc=%p has_right=%s, "
-      "right proxy=%lld\n",
+      "my_proxy={}, proxies size={}, right={} vc={} has_right={}, "
+      "right proxy={}\n",
       getProxy(), msg->proxies.size(), to_right, this, print_bool(has_right),
       right_proxy
     );
@@ -116,7 +116,7 @@ struct TestVC : vt::vrt::VirtualContext {
 
   void doWork(WorkMsg* msg) {
     DEBUG_PRINT_START(
-      "my_proxy=%lld, doing work size=%ld\n", my_proxy, msg->work_vec.size()
+      "my_proxy={}, doing work size={}\n", my_proxy, msg->work_vec.size()
     );
 
     double val = 1.23;
@@ -129,20 +129,20 @@ struct TestVC : vt::vrt::VirtualContext {
     AccessTLS(tls_work)++;
 
     DEBUG_PRINT_START(
-      "my_proxy=%lld, finished work val=%f\n", my_proxy, stored_val
+      "my_proxy={}, finished work val={}\n", my_proxy, stored_val
     );
   }
 };
 
 static void doWorkRight(WorkMsg* msg, TestVC* vc) {
   DEBUG_PRINT_START(
-    "doWorkRight: msg->work_vec.size()=%ld, vc=%p\n", msg->work_vec.size(), vc
+    "doWorkRight: msg->work_vec.size()={}, vc={}\n", msg->work_vec.size(), vc
   );
   vc->doWork(msg);
 }
 
 static void proxyHan(ProxyMsg* msg, TestVC* vc) {
-  DEBUG_PRINT_START("proxyHan: msg->proxies=%ld, vc=%p\n", msg->proxies.size(), vc);
+  DEBUG_PRINT_START("proxyHan: msg->proxies={}, vc={}\n", msg->proxies.size(), vc);
   vc->getRightProxy(msg);
 }
 
@@ -153,7 +153,7 @@ struct MainVC : vt::vrt::MainVirtualContext {
   int my_data = -1;
 
   MainVC() : my_data(29) {
-    DEBUG_PRINT_START("constructing MainVC: data=%d\n", my_data);
+    DEBUG_PRINT_START("constructing MainVC: data={}\n", my_data);
 
     if (theContext()->getNode() == 0) {
       auto msg = makeSharedMessage<MakeMainMsg>();
@@ -162,11 +162,11 @@ struct MainVC : vt::vrt::MainVirtualContext {
 
     theTerm()->attachGlobalTermAction([]{
       auto const num_work_units = num_work_finished.load();
-      DEBUG_PRINTER_START("num_work_units=%d\n", num_work_units);
+      DEBUG_PRINTER_START("num_work_units={}\n", num_work_units);
 
       theWorkerGrp()->enqueueAllWorkers([]{
         auto const num_work_units = AccessTLS(tls_work);
-        DEBUG_PRINTER_START("tls work_units=%d\n", num_work_units);
+        DEBUG_PRINTER_START("tls work_units={}\n", num_work_units);
       });
     });
 
@@ -180,7 +180,7 @@ struct MainVC : vt::vrt::MainVirtualContext {
       proxies.push_back(proxy);
 
       DEBUG_PRINT_START(
-        "%d: constructing proxy %lld, size=%ld, work=%d\n",
+        "{}: constructing proxy {}, size={}, work={}\n",
         i, proxy, proxies.size(), i*82773
       );
     }
@@ -188,7 +188,7 @@ struct MainVC : vt::vrt::MainVirtualContext {
     int i = 0;
     for (auto&& elm : proxies) {
       ProxyMsg* msg = makeSharedMessage<ProxyMsg>(proxies);
-      DEBUG_PRINT_START("%d: sending to proxy %lld\n", i, elm);
+      DEBUG_PRINT_START("{}: sending to proxy {}\n", i, elm);
       theVirtualManager()->sendSerialMsg<TestVC, ProxyMsg, proxyHan>(elm, msg);
       i++;
     }

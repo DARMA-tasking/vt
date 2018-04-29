@@ -1,11 +1,12 @@
 
-#include "page.h"
+#include "context_page.h"
 
 #include <cassert>
 #include <unistd.h>
 #include <cmath>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <signal.h>
 
 namespace fcontext {
 

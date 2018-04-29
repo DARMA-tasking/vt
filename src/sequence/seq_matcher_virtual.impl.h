@@ -75,9 +75,11 @@ template <typename T>
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ bool SeqMatcherVirtual<VcT, MsgT, f>::hasMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
+#pragma sst global seq_msg
     auto& lst = SeqStateVirtualType<VcT, MsgT, f>::seq_msg;
     return hasMatchingAnyNoTag(lst);
   } else {
+#pragma sst global seq_msg_tagged
     auto& tagged_lst = SeqStateVirtualType<VcT, MsgT, f>::seq_msg_tagged;
     return hasMatchingAnyTagged(tagged_lst, tag);
   }
@@ -86,9 +88,11 @@ template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ MsgT* SeqMatcherVirtual<VcT, MsgT, f>::getMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
+#pragma sst global seq_msg
     auto& lst = SeqStateVirtualType<VcT, MsgT, f>::seq_msg;
     return getMatchingAnyNoTag(lst);
   } else {
+#pragma sst global seq_msg_tagged
     auto& tagged_lst = SeqStateVirtualType<VcT, MsgT, f>::seq_msg_tagged;
     return getMatchingAnyTagged(tagged_lst, tag);
   }
@@ -97,9 +101,11 @@ template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ bool SeqMatcherVirtual<VcT, MsgT, f>::hasMatchingAction(TagType const& tag) {
   if (tag == no_tag) {
+#pragma sst global seq_action
     auto& lst = SeqStateVirtualType<VcT, MsgT, f>::seq_action;
     return hasMatchingAnyNoTag(lst);
   } else {
+#pragma sst global seq_action_tagged
     auto& tagged_lst = SeqStateVirtualType<VcT, MsgT, f>::seq_action_tagged;
     return hasMatchingAnyTagged(tagged_lst, tag);
   }
@@ -111,9 +117,11 @@ SeqMatcherVirtual<VcT, MsgT, f>::getMatchingAction(TagType const& tag) {
   assert(hasMatchingAction(tag) and "Must have matching action");
 
   if (tag == no_tag) {
+#pragma sst global seq_action
     auto& lst = SeqStateVirtualType<VcT, MsgT, f>::seq_action;
     return getMatchingAnyNoTag(lst);
   } else {
+#pragma sst global seq_action_tagged
     auto& tagged_lst = SeqStateVirtualType<VcT, MsgT, f>::seq_action_tagged;
     return getMatchingAnyTagged(tagged_lst, tag);
   }
@@ -124,8 +132,10 @@ template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   MsgT* msg, TagType const& tag
 ) {
   if (tag == no_tag) {
+#pragma sst global seq_msg
     SeqStateVirtualType<VcT, MsgT, f>::seq_msg.push_back(msg);
   } else {
+#pragma sst global seq_msg_tagged
     SeqStateVirtualType<VcT, MsgT, f>::seq_msg_tagged[tag].push_back(msg);
   }
 }
@@ -137,13 +147,15 @@ template <typename FnT>
 ) {
   debug_print(
     sequence, node,
-    "SeqMatcher: buffering action: seq=%d, tag=%d\n", seq_id, tag
+    "SeqMatcher: buffering action: seq={}, tag={}\n", seq_id, tag
   );
 
   if (tag == no_tag) {
+#pragma sst global seq_action
     auto& lst = SeqStateVirtualType<VcT, MsgT, f>::seq_action;
     lst.emplace_back(SeqActionType{seq_id,action});
   } else {
+#pragma sst global seq_action_tagged
     auto& tagged_lst = SeqStateVirtualType<VcT, MsgT, f>::seq_action_tagged;
     tagged_lst[tag].emplace_back(SeqActionType{seq_id,action});
   }

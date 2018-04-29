@@ -17,6 +17,7 @@
 #define debug_runtime_checks(x) x
 #define debug_stdthread(x) x
 #define debug_print_term_msgs(x) x
+#define debug_default_threading(x) x
 
 // distinct modes for debug
 #define debug_none(x) x

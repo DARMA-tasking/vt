@@ -7,6 +7,7 @@
 #include <cstring>
 #include <functional>
 #include <memory>
+#include <string>
 
 #define DEBUG_JACOBI 0
 
@@ -81,7 +82,7 @@ static void calcResid(ActionBoolType action) {
         max_resid_val = 0.0;
         for (int i = 0; i < num_nodes; i++) {
           #if DEBUG_JACOBI
-          printf("%d: resid:i=%d:val=%f:iter=%d\n", my_node, i, local_resid_buf[i], cur_iter);
+          fmt::print("{}: resid:i={}:val={}:iter={}\n", my_node, i, local_resid_buf[i], cur_iter);
           #endif
           max_resid_val = std::max(max_resid_val, local_resid_buf[i]);
           if (local_resid_buf[i] > error_tolerance) {
@@ -97,15 +98,15 @@ static void calcResid(ActionBoolType action) {
 }
 
 static void finished() {
-  printf("%d: finished computation: error=%f, iter=%d\n", my_node, resid_val, cur_iter);
+  fmt::print("{}: finished computation: error={}, iter={}\n", my_node, resid_val, cur_iter);
 }
 
 static void boundaryFinished(bool const is_left) {
   wait_count--;
 
   #if DEBUG_JACOBI
-  printf(
-    "%d: finished get %s: wait_count=%d\n", my_node, (is_left ? "left" : "right"),
+  fmt::print(
+    "{}: finished get {}: wait_count={}\n", my_node, (is_left ? "left" : "right"),
     wait_count
   );
   #endif
@@ -151,8 +152,8 @@ static void doKernel(JacobiKernelMsg* msg) {
   wait_count = (is_far_left ? 0 : 1) + (is_far_right ? 0 : 1);
 
   #if DEBUG_JACOBI
-  printf(
-    "%d: doKernel: iter=%d, c1=%p, c2=%p, l_bound=%lld, r_bound=%lld, wait_count=%d\n",
+  fmt::print(
+    "{}: doKernel: iter={}, c1={}, c2={}, l_bound={}, r_bound={}, wait_count={}\n",
     my_node, iter, c1, c2, l_bound, r_bound, wait_count
   );
   #endif
@@ -162,7 +163,7 @@ static void doKernel(JacobiKernelMsg* msg) {
   } else {
     if (my_node != 0) {
       #if DEBUG_JACOBI
-      printf("%d: doKernel: iter=%d, get left wait_count=%d\n", my_node, iter, wait_count);
+      fmt::print("{}: doKernel: iter={}, get left wait_count={}\n", my_node, iter, wait_count);
       #endif
       auto fn = std::bind(boundaryFinished, true);
       theRDMA()->getTypedDataInfoBuf(jac_t1_han, c1, 1, l_bound, no_tag, fn);
@@ -170,7 +171,7 @@ static void doKernel(JacobiKernelMsg* msg) {
 
     if (my_node != num_nodes - 1) {
       #if DEBUG_JACOBI
-      printf("%d: doKernel: iter=%d, get right wait_count=%d\n", my_node, iter, wait_count);
+      fmt::print("{}: doKernel: iter={}, get right wait_count={}\n", my_node, iter, wait_count);
       #endif
       auto fn = std::bind(boundaryFinished, false);
       theRDMA()->getTypedDataInfoBuf(jac_t1_han, c1, 1, r_bound, no_tag, fn);
@@ -182,14 +183,14 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
   bool const& converged = msg->converged;
 
   #if DEBUG_JACOBI
-  printf(
-    "%d: startJacobi1dHandler: cur_iter=%d: converged=%s\n",
+  fmt::print(
+    "{}: startJacobi1dHandler: cur_iter={}: converged={}\n",
     my_node, cur_iter, print_bool(converged)
   );
   #endif
 
   if (my_node == 0) {
-    printf("iter=%d: starting: max_residual=%f\n", cur_iter, max_resid_val);
+    fmt::print("iter={}: starting: max_residual={}\n", cur_iter, max_resid_val);
   }
 
   if (cur_iter == 0) {
@@ -203,15 +204,15 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
 
   theCollective()->barrierThen([=]{
     #if DEBUG_JACOBI
-    printf(
-      "%d: jacobi1d: barrierThen next iter=%d: converged=%s\n",
+    fmt::print(
+      "{}: jacobi1d: barrierThen next iter={}: converged={}\n",
         my_node, cur_iter, print_bool(converged)
     );
     #endif
 
     if (not converged) {
       #if DEBUG_JACOBI
-      printf("%d: jacobi1d: next iter=%d\n", my_node, cur_iter);
+      fmt::print("{}: jacobi1d: next iter={}\n", my_node, cur_iter);
       #endif
 
       if (my_node == 0) {
@@ -227,14 +228,18 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
   });
 }
 
-static int exitEarly(NodeType node, int exit_code, char* reason) {
+static int exitEarly(
+  NodeType const node, int const exit_code, std::string const reason
+) {
   if (node == 0) {
-    CollectiveOps::abort(std::string(reason), exit_code);
+    CollectiveOps::abort(std::string{reason}, exit_code);
   }
 
   CollectiveOps::finalize();
   return exit_code;
 }
+
+#define sstmac_app_name jacobi1d_node_vt
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
@@ -242,13 +247,17 @@ int main(int argc, char** argv) {
   my_node = theContext()->getNode();
   num_nodes = theContext()->getNumNodes();
 
-  if (argc == 2 && strncmp(argv[1], "gtest", 5) == 0) {
+  if (argc == 1) {
     total_size = 1024;
     max_iterations = 64;
+    ::fmt::print(
+      stderr, "{}: using default arguments since none provided\n", argv[0]
+    );
   } else {
     if (argc != 3) {
-      char buf[256];
-      sprintf(buf, "usage: %s <total-num-elements> <max-iterations>", argv[0]);
+      std::string const buf = fmt::format(
+        "usage: {} <total-num-elements> <max-iterations>", argv[0]
+      );
       return exitEarly(my_node, 1, buf);
     }
 
@@ -257,8 +266,9 @@ int main(int argc, char** argv) {
   }
 
   if (num_nodes == 1) {
-    char buf[256];
-    sprintf(buf, "Need >= 2 ranks:\n mpirun-mpich-clang -n 2 %s", argv[0]);
+    std::string const buf = fmt::format(
+      "Need >= 2 ranks:\n mpirun-mpich-clang -n 2 {}\0", argv[0]
+    );
     return exitEarly(my_node, 1, buf);
   }
 
@@ -276,7 +286,7 @@ int main(int argc, char** argv) {
     t2[i] = 0.0;
   }
 
-  printf("%d: total_size=%lld, blk_size=%lld\n", my_node, total_size, blk_size);
+  fmt::print("{}: total_size={}, blk_size={}\n", my_node, total_size, blk_size);
 
   jac_t1_han = theRDMA()->registerCollectiveTyped(t1 + 1, blk_size, total_size);
   jac_t2_han = theRDMA()->registerCollectiveTyped(t2 + 1, blk_size, total_size);
