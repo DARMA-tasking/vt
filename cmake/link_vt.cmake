@@ -22,6 +22,7 @@ function(link_target_with_vt)
     LINK_STDTHREAD
     LINK_GTEST
     # the following linking options are enabled by default
+    LINK_ATOMIC
     LINK_MPI
     LINK_FMT
     LINK_ZLIB
@@ -52,9 +53,18 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${VIRTUAL_TRANSPORT_LIBRARY}
     )
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} atomic
-    )
+  endif()
+
+  if (NOT DEFINED ARG_LINK_ATOMIC AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ATOMIC)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: atomic=${ARG_LINK_ATOMIC}")
+    endif()
+
+    if (LINK_WITH_ATOMIC)
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${ATOMIC_LIB}
+        )
+    endif()
   endif()
 
   if (NOT DEFINED ARG_LINK_MPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MPI)
