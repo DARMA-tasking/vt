@@ -2,16 +2,17 @@
 
 if test $# -lt 1
 then
-    (>&2 echo
-       "usage: $0 "
-       "<build-mode=debug|release> "
-       "<compiler=clang|gnu> "
-       "[ <has-serialization=0|1> ] "
-       "[ <build-all-tests=0|1> ] "
-       "[ <vt-install-directory> ] "
-       "[ <detector-path> ] "
-       "[ <meld-path> ] "
-       "[ <checkpoint-path> ] ") && exit 29;
+    echo                                                \
+        "usage: $0 "                                    \
+       "<build-mode=debug|release> "                    \
+       "<compiler=clang|gnu> "                          \
+       "[ <has-serialization=0|1> ] "                   \
+       "[ <build-all-tests=0|1> ] "                     \
+       "[ <vt-install-directory> ] "                    \
+       "[ <detector-path> ] "                           \
+       "[ <meld-path> ] "                               \
+       "[ <checkpoint-path> ] "
+    exit 29
 fi
 
 build_mode=$1
@@ -84,7 +85,8 @@ then
     CXX_COMPILER=mpicxx-mpich-devel-gcc6
     CC_COMPILER=mpicc-mpich-devel-gcc6
 else
-    (>&2 echo "Please specify valid compiler option: $compiler") && exit 10;
+    (>&2 echo "Please specify valid compiler option: $compiler")
+    exit 10
 fi
 
 if test ${has_all} -gt 0
