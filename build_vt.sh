@@ -43,7 +43,6 @@ fi
 if test ${has_serial} -gt 0
 then
     serialization_dir=/Users/jliffla/codes/vt/checkpoint-install/
-else
     if test $# -gt 7
     then
         serialization_dir=$8
