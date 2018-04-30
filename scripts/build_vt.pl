@@ -38,8 +38,8 @@ $arg->add_optional_func("checkpoint", \$checkpoint, "checkpoint-install", \&mk);
 $arg->add_optional_func("fmt",        \$fmt,        "fmt-install",        \&mk);
 $arg->add_optional_func("gtest",      \$gtest,      "gtest-install",      \&mk);
 
-$arg->add_optional_arg("dry_run",     \$dry_run, 1);
-$arg->add_optional_arg("verbose",     \$verbose, 1);
+$arg->add_optional_arg("dry_run",     \$dry_run, 0);
+$arg->add_optional_arg("verbose",     \$verbose, 0);
 
 $arg->parse_arguments(@ARGV);
 
@@ -96,4 +96,8 @@ cmake $source_base_dir                                                       \\
 CMAKESTR
 ;
 #print "$str\n";
-system "$str 2>&1";
+if ($dry_run == 1) {
+    print "$str\n";
+} else {
+    system "$str 2>&1";
+}
