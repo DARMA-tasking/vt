@@ -1,1 +1,1 @@
-/Users/jliffla/codes/vt/virtual-transport/scripts/build_vt.sh
+./scripts/build_vt.sh
