@@ -11,6 +11,7 @@ require "args.pl";
 my ($build_mode,$compiler,$has_serial,$build_all_tests,$vt_install);
 my ($vt,$root,$detector,$meld,$checkpoint,$fmt,$gtest);
 my $libroot = "";
+my $atomic = "";
 my ($dry_run,$verbose);
 
 my $arg = Args->new();
@@ -31,6 +32,7 @@ $arg->add_optional_arg("vt",          \$vt,         "vt");
 
 $arg->add_optional_arg("root",        \$root,       "/Users/jliffla/codes");
 $arg->add_optional_arg("libroot",     \$libroot,    "/Users/jliffla/codes");
+$arg->add_optional_arg("atomic",      \$atomic,     "");
 
 $arg->add_optional_func("detector",   \$detector,   "detector-install",   \&mk);
 $arg->add_optional_func("meld",       \$meld,       "meld-install",       \&mk);
@@ -63,6 +65,11 @@ if ($build_all_tests > 0) {
     $build_all_str = "-DCMAKE_NO_BUILD_TESTS=1 -DCMAKE_NO_BUILD_EXAMPLES=1";
 }
 
+if ($atomic ne "") {
+    print "link with atomic\n";
+    $atomic = "-DLINK_WITH_ATOMIC:BOOL=1";
+}
+
 my $source_base_dir = "../$vt";
 
 print STDERR "=== Building vt ===\n";
@@ -87,16 +94,18 @@ cmake $source_base_dir                                                       \\
       -DCMAKE_CXX_COMPILER=$cxx                                              \\
       -DCMAKE_C_COMPILER=$cc                                                 \\
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                   \\
+      -DCMAKE_CXX_FLAGS=-fopenmp=libomp                                      \\
       -Dcheckpoint_DIR=$checkpoint                                           \\
       -Dmeld_DIR=$meld                                                       \\
       -Ddetector_DIR=$detector                                               \\
       -Dfmt_DIR=$fmt                                                         \\
       -Dgtest_DIR=$gtest                                                     \\
+      $atomic                                                                \\
       ${build_all_str}
 CMAKESTR
 ;
 #print "$str\n";
-if ($dry_run == 1) {
+if ($dry_run eq "true") {
     print "$str\n";
 } else {
     system "$str 2>&1";

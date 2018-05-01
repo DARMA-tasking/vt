@@ -60,10 +60,11 @@ function(link_target_with_vt)
       message(STATUS "link_target_with_vt: atomic=${ARG_LINK_ATOMIC}")
     endif()
 
+    set(ATOMIC_LIB atomic)
     if (LINK_WITH_ATOMIC)
       target_link_libraries(
         ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${ATOMIC_LIB}
-        )
+      )
     endif()
   endif()
 
