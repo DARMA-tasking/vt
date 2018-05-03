@@ -14,6 +14,7 @@
 namespace vt { namespace collective { namespace barrier {
 
 constexpr BarrierType const fst_barrier = 1;
+constexpr BarrierType const fst_coll_barrier = 0x8000000000000001;
 
 struct Barrier : virtual collective::tree::Tree {
   using BarrierStateType = BarrierState;
@@ -33,6 +34,7 @@ struct Barrier : virtual collective::tree::Tree {
   );
 
   BarrierType newNamedBarrier();
+  BarrierType newNamedCollectiveBarrier();
 
   void barrierUp(
     bool const& is_named, bool const& is_wait, BarrierType const& barrier,
@@ -84,6 +86,7 @@ private:
 
 private:
   BarrierType cur_named_barrier_ = fst_barrier;
+  BarrierType cur_named_coll_barrier_ = fst_coll_barrier;
   BarrierType cur_unnamed_barrier_ = fst_barrier;
 
   ContainerType<BarrierStateType> named_barrier_state_, unnamed_barrier_state_;
