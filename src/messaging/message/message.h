@@ -28,6 +28,8 @@ struct ActiveMsg : BaseMsg {
     );
   }
 
+  #if backend_check_enabled(memory_pool) && \
+     !backend_check_enabled(no_pool_alloc_env)
   static void* operator new(std::size_t sz) {
     auto const& ptr = thePool()->alloc(sz);
 
@@ -38,11 +40,10 @@ struct ActiveMsg : BaseMsg {
 
     return ptr;
   }
+  #endif
 
-  static void* operator new(std::size_t, void* mem) {
-    return mem;
-  }
-
+  #if backend_check_enabled(memory_pool) && \
+      !backend_check_enabled(no_pool_alloc_env)
   static void operator delete(void* ptr) {
     debug_print(
       pool, node,
@@ -51,6 +52,14 @@ struct ActiveMsg : BaseMsg {
 
     return thePool()->dealloc(ptr);
   }
+  #endif
+
+  #if backend_check_enabled(memory_pool) && \
+     !backend_check_enabled(no_pool_alloc_env)
+  static void* operator new(std::size_t, void* mem) {
+    return mem;
+  }
+  #endif
 
   // Explicitly write serialize so derived messages can contain non-byte
   // serialization. Envelopes, by default, are required to be byte serializable.

@@ -51,7 +51,9 @@
   debug_list_holder(                                                    \
     bit_check_overflow,    "Check bitfield overflow",                   \
     detector,              "C++ Trait Detector",                        \
+    memory_pool,           "Enable memory pooling",                     \
     no_feature,            "No feature",                                \
+    no_pool_alloc_env,     "Disable memory pool envelope",              \
     openmp,                "OpenMP Threading",                          \
     print_term_msgs,       "Debug-prints-TD-msgs",                      \
     runtime_checks,        "Runtime Fidelity Checking",                 \

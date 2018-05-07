@@ -51,9 +51,12 @@ void messageDeref(MessageT* msg) {
     print_ptr(msg), envelopeGetRef(msg->env)
   );
 
+  #if backend_check_enabled(memory_pool) && \
+     !backend_check_enabled(no_pool_alloc_env)
   if (envelopeGetRef(msg->env) == 0) {
     thePool()->dealloc(msg);
   }
+  #endif
 }
 
 } //end namespace vt

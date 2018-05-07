@@ -18,6 +18,8 @@
 #define debug_stdthread(x) x
 #define debug_print_term_msgs(x) x
 #define debug_default_threading(x) x
+#define debug_no_pool_alloc_env(x) x
+#define debug_memory_pool(x) x
 
 // distinct modes for debug
 #define debug_none(x) x

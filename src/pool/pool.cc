@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <cassert>
 
 namespace vt { namespace pool {
 
@@ -31,13 +32,39 @@ Pool::ePoolSize Pool::getPoolType(size_t const& num_bytes) {
   }
 }
 
-void* Pool::alloc(size_t const& num_bytes) {
-  void* ret = nullptr;
-
+void* Pool::try_pooled_alloc(size_t const& num_bytes) {
   ePoolSize const pool_type = getPoolType(num_bytes);
 
+  if (pool_type != ePoolSize::Malloc) {
+    return pooled_alloc(num_bytes, pool_type);
+  } else {
+    return nullptr;
+  }
+}
+
+bool Pool::try_pooled_dealloc(void* const buf) {
+  auto buf_char = static_cast<char*>(buf);
+  auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
+  ePoolSize const pool_type = getPoolType(actual_alloc_size);
+
+  if (pool_type != ePoolSize::Malloc) {
+    pooled_dealloc(buf, pool_type);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void* Pool::pooled_alloc(size_t const& num_bytes, ePoolSize const pool_type) {
   auto const worker = theContext()->getWorker();
   bool const comm_thread = worker == worker_id_comm_thread;
+  void* ret = nullptr;
+
+  debug_print(
+    pool, node,
+    "Pool::pooled_alloc of size={}, type={}, ret={}, worker={}\n",
+    num_bytes, print_pool_type(pool_type), ret, worker
+  );
 
   if (pool_type == ePoolSize::Small) {
     auto pool = comm_thread ? small_msg.get() : s_msg_worker_[worker].get();
@@ -52,14 +79,55 @@ void* Pool::alloc(size_t const& num_bytes) {
     );
     ret = pool->alloc(num_bytes);
   } else {
-    auto alloc_buf = std::malloc(num_bytes + sizeof(HeaderType));
-    ret = HeaderManagerType::setHeader(num_bytes, static_cast<char*>(alloc_buf));
+    assert(0 && "Pool must be valid");
+    ret = nullptr;
+  }
+
+  return ret;
+}
+
+void Pool::pooled_dealloc(void* const buf, ePoolSize const pool_type) {
+  debug_print(
+    pool, node,
+    "Pool::pooled_dealloc of ptr={}, type={}\n",
+    print_ptr(buf), print_pool_type(pool_type)
+  );
+
+  if (pool_type == ePoolSize::Small) {
+    small_msg->dealloc(buf);
+  } else if (pool_type == ePoolSize::Medium) {
+    medium_msg->dealloc(buf);
+  } else {
+    assert(0 && "Pool must be valid");
+  }
+}
+
+void* Pool::default_alloc(size_t const& num_bytes) {
+  auto alloc_buf = std::malloc(num_bytes + sizeof(HeaderType));
+  return HeaderManagerType::setHeader(num_bytes, static_cast<char*>(alloc_buf));
+}
+
+void Pool::default_dealloc(void* const ptr) {
+  std::free(ptr);
+}
+
+void* Pool::alloc(size_t const& num_bytes) {
+  void* ret = nullptr;
+
+  #if backend_check_enabled(memory_pool)
+    ret = try_pooled_alloc(num_bytes);
+  #endif
+
+  // Fall back to the default allocated if the pooled allocated fails to return
+  // a valid pointer
+  if (ret == nullptr) {
+    ret = default_alloc(num_bytes);
   }
 
   debug_print(
     pool, node,
-    "Pool::alloc of size={}, type={}, ret={}, worker={}\n",
-    num_bytes, print_pool_type(pool_type), ret, worker
+    "Pool::alloc of size={}, type={}, ret={}\n",
+    num_bytes, print_pool_type(pool_type), ret
   );
 
   return ret;
@@ -88,40 +156,59 @@ void Pool::dealloc(void* const buf) {
     return;
   }
 
-  if (pool_type == ePoolSize::Small) {
-    small_msg->dealloc(buf);
-  } else if (pool_type == ePoolSize::Medium) {
-    medium_msg->dealloc(buf);
-  } else {
-    std::free(ptr_actual);
+  bool success = false;
+
+  #if backend_check_enabled(memory_pool)
+    success = try_pooled_dealloc(buf);
+  #endif
+
+  if (!success) {
+    default_dealloc(ptr_actual);
   }
 };
 
 Pool::SizeType Pool::remainingSize(void* const buf) {
-  auto buf_char = static_cast<char*>(buf);
-  auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
+  #if backend_check_enabled(memory_pool)
+    auto buf_char = static_cast<char*>(buf);
+    auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
 
-  ePoolSize const pool_type = getPoolType(actual_alloc_size);
+    ePoolSize const pool_type = getPoolType(actual_alloc_size);
 
-  if (pool_type == ePoolSize::Small) {
-    return small_msg->getNumBytes() - actual_alloc_size;
-  } else if (pool_type == ePoolSize::Medium) {
-    return medium_msg->getNumBytes() - actual_alloc_size;
-  } else {
+    if (pool_type == ePoolSize::Small) {
+      return small_msg->getNumBytes() - actual_alloc_size;
+    } else if (pool_type == ePoolSize::Medium) {
+      return medium_msg->getNumBytes() - actual_alloc_size;
+    } else {
+      return 0;
+    }
+  #else
     return 0;
-  }
+  #endif
 }
 
 void Pool::initWorkerPools(WorkerCountType const& num_workers) {
-  for (auto i = 0; i < num_workers; i++) {
-    s_msg_worker_.emplace_back(initSPool());
-    m_msg_worker_.emplace_back(initMPool());
-  }
+  #if backend_check_enabled(memory_pool)
+    for (auto i = 0; i < num_workers; i++) {
+      s_msg_worker_.emplace_back(initSPool());
+      m_msg_worker_.emplace_back(initMPool());
+    }
+  #endif
 }
 
 void Pool::destroyWorkerPools() {
-  s_msg_worker_.clear();
-  m_msg_worker_.clear();
+  #if backend_check_enabled(memory_pool)
+    s_msg_worker_.clear();
+    m_msg_worker_.clear();
+  #endif
+}
+
+bool Pool::active() const {
+  return backend_check_enabled(memory_pool);
+}
+
+ bool Pool::active_env() const {
+  return backend_check_enabled(memory_pool) &&
+    !backend_check_enabled(no_pool_alloc_env);
 }
 
 }} //end namespace vt::pool

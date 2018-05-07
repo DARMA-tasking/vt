@@ -35,9 +35,31 @@ struct Pool {
   void dealloc(void* const buf);
   ePoolSize getPoolType(size_t const& num_bytes);
   SizeType remainingSize(void* const buf);
+  bool active() const;
+  bool active_env() const;
 
   void initWorkerPools(WorkerCountType const& num_workers);
   void destroyWorkerPools();
+
+private:
+  /*
+   * Attempt allocation via pooled and fall back to default allocation if it
+   * fails
+   */
+  void* try_pooled_alloc(size_t const& num_bytes);
+  bool try_pooled_dealloc(void* const buf);
+
+  /*
+   * Allocate memory from a specific local memory pool, indicated by `pool'
+   */
+  void* pooled_alloc(size_t const& num_bytes, ePoolSize const pool_type);
+  void pooled_dealloc(void* const buf, ePoolSize const pool_type);
+
+  /*
+   * Allocate from the default system allocator (std::malloc)
+   */
+  void* default_alloc(size_t const& num_bytes);
+  void default_dealloc(void* const ptr);
 
 private:
   using MemPoolSType = MemoryPoolPtrType<memory_size_small>;

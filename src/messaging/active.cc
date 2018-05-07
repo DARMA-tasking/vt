@@ -49,8 +49,17 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   if (is_put && !is_put_packed) {
     auto const& put_ptr = envelopeGetPutPtr(msg->env);
     auto const& put_size = envelopeGetPutSize(msg->env);
+    bool const& memory_pool_active = thePool()->active_env();
     auto const& rem_size = thePool()->remainingSize(base);
-    bool const direct_buf_pack = put_size <= rem_size &&
+    /*
+     * Directly pack if the pool is active (which means it may have
+     * overallocated and the remaining size of the (envelope) buffer is
+     * sufficient for the for the put payload.
+     *
+     */
+    bool const direct_buf_pack =
+      memory_pool_active                 &&
+      put_size <= rem_size               &&
       put_size <= max_pack_direct_size;
     assert(
       (!(put_size != 0) || put_ptr) && "Must have valid ptr if size > 0"
