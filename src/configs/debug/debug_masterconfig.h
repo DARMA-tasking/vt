@@ -18,7 +18,7 @@
 #define backend_debug_modes backend_options_on(none)
 #else
 #define backend_debug_modes backend_options_on(                          \
-    cmake_config_debug_modes                                             \
+  cmake_config_debug_modes                                               \
 )
 #endif
 
@@ -29,11 +29,11 @@
 )
 
 #define backend_debug_contexts backend_options_on(                       \
-   node, locale, unknown                                                 \
+  node, locale, unknown                                                  \
 )
 
 #define backend_defaults backend_options_on(                             \
-   startup                                                               \
+  startup                                                                \
 )
 
 #define backend_no_threading                                             \
