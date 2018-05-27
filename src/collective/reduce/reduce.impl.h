@@ -12,6 +12,7 @@ namespace vt { namespace collective { namespace reduce {
 
 template <typename MessageT>
 /*static*/ void Reduce::reduceUp(MessageT* msg) {
+  messageRef(msg);
   theCollective()->reduceNewMsg(msg);
 }
 
@@ -60,7 +61,6 @@ void Reduce::reduceNewMsg(MessageT* msg) {
   }
 
   auto& state = live_iter->second;
-  messageRef(msg);
   state.msgs.push_back(msg);
 
   if (state.msgs.size() == getNumChildren() + 1) {
@@ -71,33 +71,48 @@ void Reduce::reduceNewMsg(MessageT* msg) {
         state.msgs[i]->next = has_next ? state.msgs[i+1] : nullptr;
         state.msgs[i]->count = state.msgs.size() - i;
         state.msgs[i]->is_root = false;
+        ::fmt::print(
+          "{}: i={} next={} has_next={} count={} msgs.size()={}\n",
+          theContext()->getNode(), i, print_ptr(state.msgs[i]->next),
+          has_next, state.msgs[i]->count, state.msgs.size()
+        );
       }
 
-      // Run user handler
+      ::fmt::print(
+        "{}: msgs.size()={}\n", theContext()->getNode(), state.msgs.size()
+      );
+
+      /*
+       *  Invoke user handler to run the functor that combines messages,
+       *  applying the reduction operator
+       */
       auto const& handler = msg->combine_handler_;
       auto active_fun = auto_registry::getAutoHandler(handler);
       active_fun(state.msgs[0]);
+
+      /*
+       *  Dereference all but the first message, which will be forwarded on in
+       *  the reduction
+       */
+      // for (int i = 1; i < state.msgs.size(); i++) {
+      //   messageDeref(state.msgs[i]);
+      // }
     }
 
     // Send to parent
+    auto msg = static_cast<MessageT*>(state.msgs[0]);
+    auto cont = [msg]{ messageDeref(msg); };
     if (isRoot()) {
-      auto const& user_root = msg->reduce_root_;
-      if (user_root != theContext()->getNode()) {
-        theMsg()->sendMsg<MessageT, reduceRootRecv<MessageT>>(
-            user_root, static_cast<MessageT*>(state.msgs[0]), [=]{
-              /*delete state.msgs[0];*/
-            }
-        );
+      auto const& root = msg->reduce_root_;
+      if (root != theContext()->getNode()) {
+        theMsg()->sendMsg<MessageT, reduceRootRecv<MessageT>>(root, msg, cont);
       } else {
-        reduceRootRecv(state.msgs[0]);
-        //delete state.msgs[0];
+        reduceRootRecv(msg);
+        cont();
       }
     } else {
-      theMsg()->sendMsg<MessageT, reduceUp<MessageT>>(
-          getParent(), static_cast<MessageT*>(state.msgs[0]), [=]{
-            /*delete state.msgs[0];*/
-          }
-      );
+      auto const& parent = getParent();
+      theMsg()->sendMsg<MessageT, reduceUp<MessageT>>(parent, msg, cont);
     }
   }
 }
