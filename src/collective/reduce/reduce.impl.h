@@ -61,6 +61,7 @@ void Reduce::reduceNewMsg(MessageT* msg) {
   }
 
   auto& state = live_iter->second;
+  messageRef(msg);
   state.msgs.push_back(msg);
 
   if (state.msgs.size() == getNumChildren() + 1) {
@@ -71,47 +72,55 @@ void Reduce::reduceNewMsg(MessageT* msg) {
         state.msgs[i]->next = has_next ? state.msgs[i+1] : nullptr;
         state.msgs[i]->count = state.msgs.size() - i;
         state.msgs[i]->is_root = false;
-        ::fmt::print(
-          "{}: i={} next={} has_next={} count={} msgs.size()={}\n",
-          theContext()->getNode(), i, print_ptr(state.msgs[i]->next),
-          has_next, state.msgs[i]->count, state.msgs.size()
+
+        debug_print(
+          reduce, node,
+          "i={} next={} has_next={} count={} msgs.size()={}\n",
+          i, print_ptr(state.msgs[i]->next), has_next, state.msgs[i]->count,
+          state.msgs.size()
         );
       }
 
-      ::fmt::print(
-        "{}: msgs.size()={}\n", theContext()->getNode(), state.msgs.size()
+      debug_print(
+        reduce, node,
+        "msgs.size()={}\n", state.msgs.size()
       );
 
-      /*
-       *  Invoke user handler to run the functor that combines messages,
-       *  applying the reduction operator
-       */
+       /*
+        *  Invoke user handler to run the functor that combines messages,
+        *  applying the reduction operator
+        */
       auto const& handler = msg->combine_handler_;
       auto active_fun = auto_registry::getAutoHandler(handler);
       active_fun(state.msgs[0]);
-
-      /*
-       *  Dereference all but the first message, which will be forwarded on in
-       *  the reduction
-       */
-      // for (int i = 1; i < state.msgs.size(); i++) {
-      //   messageDeref(state.msgs[i]);
-      // }
     }
 
     // Send to parent
     auto msg = static_cast<MessageT*>(state.msgs[0]);
-    auto cont = [msg]{ messageDeref(msg); };
+    ActionType cont = nullptr;
     if (isRoot()) {
       auto const& root = msg->reduce_root_;
-      if (root != theContext()->getNode()) {
+      auto const& this_node = theContext()->getNode();
+      if (root != this_node) {
+        debug_print(
+          reduce, node,
+          "reduce notify root (send): root={}, node={}\n", root, this_node
+        );
         theMsg()->sendMsg<MessageT, reduceRootRecv<MessageT>>(root, msg, cont);
       } else {
+        debug_print(
+          reduce, node,
+          "reduce notify root (deliver directly): root={}, node={}\n",
+          root, this_node
+        );
         reduceRootRecv(msg);
-        cont();
       }
     } else {
       auto const& parent = getParent();
+      debug_print(
+        reduce, node,
+        "reduce send to parent: parent={}\n", parent
+      );
       theMsg()->sendMsg<MessageT, reduceUp<MessageT>>(parent, msg, cont);
     }
   }
