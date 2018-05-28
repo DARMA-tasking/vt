@@ -29,7 +29,7 @@ template <
   typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
 >
-void Broadcastable<ColT, IndexT>::broadcast(MsgT* msg, ActionType cont) {
+void Broadcastable<ColT, IndexT>::broadcast(MsgT* msg, ActionType cont) const {
   auto proxy = this->getProxy();
   return theCollection()->broadcastMsg<MsgT, f>(proxy,msg,cont);
 }

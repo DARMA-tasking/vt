@@ -24,7 +24,7 @@ struct Broadcastable : Destroyable<ColT, IndexT> {
     typename MsgT,
     ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
   >
-  void broadcast(MsgT* msg, ActionType act = nullptr);
+  void broadcast(MsgT* msg, ActionType act = nullptr) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
