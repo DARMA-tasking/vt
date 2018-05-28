@@ -149,7 +149,8 @@ int main(int argc, char** argv) {
     auto const& range = Index1D(num_elms);
     auto proxy = theCollection()->construct<MyCol>(range);
     auto msg = new ColMsg<MyCol>(this_node);
-    theCollection()->broadcastMsg<ColMsg<MyCol>,colHan>(proxy,msg,nullptr);
+    proxy.broadcast<ColMsg<MyCol>,colHan>(msg);
+    //theCollection()->broadcastMsg<ColMsg<MyCol>,colHan>(proxy,msg,nullptr);
     // for (int i = 0; i < num_elms; i++) {
     //   auto msg = new ColMsg<MyCol>(this_node);
     //   proxy[i].send<ColMsg<MyCol>,colHan>(msg);
