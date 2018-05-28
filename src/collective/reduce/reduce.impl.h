@@ -62,6 +62,7 @@ void Reduce::reduceNewMsg(MessageT* msg) {
   }
 
   auto& state = live_iter->second;
+  messageRef(msg);
   state.msgs.push_back(msg);
 
   if (state.msgs.size() == getNumChildren() + 1) {
