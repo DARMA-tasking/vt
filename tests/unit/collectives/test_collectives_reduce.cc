@@ -29,28 +29,27 @@ struct TestReduce : TestParallelHarness {
   }
 
   static void reducePlus(MyReduceMsg* msg) {
-    auto const& this_node = theContext()->getNode();
-
     fmt::print(
       "cur={}: is_root={}, count={}, next={}, num={}\n",
       print_ptr(msg), print_bool(msg->is_root), msg->count,
       print_ptr(msg->next), msg->num
     );
 
-    if (msg->is_root) {
+    if (msg->isRoot()) {
       fmt::print("final num={}\n", msg->num);
     } else {
       MyReduceMsg* fst_msg = msg;
-      MyReduceMsg* cur_msg = msg->next ? static_cast<MyReduceMsg*>(msg->next) : nullptr;;
+      MyReduceMsg* cur_msg = msg->getNext<MyReduceMsg>();
       while (cur_msg != nullptr) {
         fmt::print(
           "while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
-          print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->is_root),
-          cur_msg->count, print_ptr(cur_msg->next), cur_msg->num
+          print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->isRoot()),
+          cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()),
+          cur_msg->num
         );
 
         fst_msg->num += cur_msg->num;
-        cur_msg = cur_msg->next ? static_cast<MyReduceMsg*>(cur_msg->next) : nullptr;
+        cur_msg = cur_msg->getNext<MyReduceMsg>();
       }
     }
   }

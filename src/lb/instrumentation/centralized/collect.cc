@@ -45,15 +45,15 @@ namespace vt { namespace lb { namespace instrumentation {
 }
 
 /*static*/ void CentralCollect::centralizedCollect(CollectMsg* msg) {
-  if (msg->is_root) {
+  if (msg->isRoot()) {
     return collectFinished(msg->phase_, msg->entries_);
   } else {
     CollectMsg* fst_msg = msg;
-    CollectMsg* cur_msg = msg->next ? static_cast<CollectMsg*>(msg->next) : nullptr;
+    CollectMsg* cur_msg = msg->getNext<CollectMsg>();
     while (cur_msg != nullptr) {
       // Combine msgs
       CentralCollect::combine(fst_msg, cur_msg);
-      cur_msg = cur_msg->next ? static_cast<CollectMsg*>(cur_msg->next) : nullptr;
+      cur_msg = cur_msg->getNext<CollectMsg>();
     }
   }
 }
