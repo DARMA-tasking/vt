@@ -3,6 +3,7 @@
 #define INCLUDED_COLLECTIVE_REDUCE_REDUCE_H
 
 #include "config.h"
+#include "collective/reduce/reduce.fwd.h"
 #include "collective/reduce/reduce_state.h"
 #include "collective/reduce/reduce_msg.h"
 #include "messaging/active.h"
