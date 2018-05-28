@@ -52,9 +52,9 @@ void Reduce::reduceNewMsg(MessageT* msg) {
   auto live_iter = live_reductions_.find(lookup);
   if (live_iter == live_reductions_.end()) {
     live_reductions_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(lookup),
-        std::forward_as_tuple(ReduceState{msg->reduce_tag_,msg->reduce_epoch_})
+      std::piecewise_construct,
+      std::forward_as_tuple(lookup),
+      std::forward_as_tuple(ReduceState{msg->reduce_tag_,msg->reduce_epoch_})
     );
     live_iter = live_reductions_.find(lookup);
     assert(live_iter != live_reductions_.end());
