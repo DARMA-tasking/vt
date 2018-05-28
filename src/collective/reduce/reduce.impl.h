@@ -13,7 +13,7 @@ namespace vt { namespace collective { namespace reduce {
 template <typename MessageT>
 /*static*/ void Reduce::reduceUp(MessageT* msg) {
   messageRef(msg);
-  theCollective()->reduceNewMsg(msg);
+  reduceNewMsg<MessageT>(msg);
 }
 
 template <typename MessageT>
