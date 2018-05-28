@@ -43,7 +43,7 @@ private:
  */
 
 template <typename ColT, typename IndexT>
-struct CollectionIndexProxy : Destroyable<ColT, IndexT> {
+struct CollectionIndexProxy : Broadcastable<ColT, IndexT> {
   using ElmProxyType = VrtElmProxy<ColT, IndexT>;
 
   CollectionIndexProxy() = default;

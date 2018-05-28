@@ -19,6 +19,21 @@ void Destroyable<ColT, IndexT>::destroy() {
   return theCollection()->destroy<ColT,IndexT>(this->proxy_);
 }
 
+template <typename ColT, typename IndexT>
+Broadcastable<ColT, IndexT>::Broadcastable(VirtualProxyType const in_proxy)
+  : Destroyable<ColT, IndexT>(in_proxy)
+{ }
+
+template <typename ColT, typename IndexT>
+template <
+  typename MsgT,
+  ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+>
+void Broadcastable<ColT, IndexT>::broadcast(MsgT* msg, ActionType cont) {
+  auto proxy = this->getProxy();
+  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg,cont);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_DESTROY_DESTROYABLE_IMPL_H*/

@@ -40,7 +40,7 @@ CollectionProxy::operator()(IndexT const& idx) {
 template <typename ColT, typename IndexT>
 CollectionIndexProxy<ColT, IndexT>::CollectionIndexProxy(
   VirtualProxyType const in_proxy
-) : Destroyable<ColT, IndexT>(in_proxy)
+) : Broadcastable<ColT, IndexT>(in_proxy)
 { }
 
 template <typename ColT, typename IndexT>
