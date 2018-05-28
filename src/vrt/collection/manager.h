@@ -6,6 +6,7 @@
 #include "vrt/vrt_common.h"
 #include "vrt/collection/manager.fwd.h"
 #include "vrt/collection/proxy_builder/elm_proxy_builder.h"
+#include "vrt/collection/messages/system_create.h"
 #include "vrt/collection/types/headers.h"
 #include "vrt/collection/holders/holder.h"
 #include "vrt/collection/holders/entire_holder.h"
@@ -18,6 +19,7 @@
 #include "topos/mapping/mapping_headers.h"
 #include "messaging/message.h"
 #include "topos/location/location_headers.h"
+#include "collective/collective_alg.h"
 
 #include <memory>
 #include <vector>
@@ -91,6 +93,9 @@ struct CollectionManager {
   template <typename SysMsgT>
   static void distConstruct(SysMsgT* msg);
 
+  /*
+   *  Send message to an element of a collection
+   */
   template <
     typename MsgT,
     ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
@@ -105,6 +110,26 @@ struct CollectionManager {
   template <typename CoLT, typename IndexT>
   static void collectionMsgHandler(BaseMessage* msg);
 
+  /*
+   *  Broadcast message to all elements of a collection
+   */
+  template <
+    typename MsgT,
+    ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+  >
+  void broadcastMsg(
+    CollectionProxyWrapType<
+      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
+    > const& toProxy,
+    MsgT *const msg, ActionType act
+  );
+
+  template <typename ColT, typename IndexT, typename MsgT>
+  static void collectionBcastHandler(MsgT* msg);
+  template <typename=void>
+  static void collectionConstructHan(CollectionConsMsg* msg);
+  template <typename=void>
+  static void collectionFinishedHan(CollectionConsMsg* msg);
   /*
    * Traits version of running the constructor based on the detected available
    * constructor types
@@ -198,8 +223,10 @@ private:
 
 private:
   BufferedActionType buffered_sends_;
+  BufferedActionType buffered_bcasts_;
   VirtualIDType curIdent_ = 0;
   AwaitingDestructionType await_destroy_;
+  std::unordered_set<VirtualProxyType> constructed_;
 };
 
 }}} /* end namespace vt::vrt::collection */

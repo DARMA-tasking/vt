@@ -38,6 +38,16 @@ void CollectionMessage<ColT>::setProxy(
 }
 
 template <typename ColT>
+VirtualProxyType CollectionMessage<ColT>::getBcastProxy() const {
+  return bcast_proxy_;
+}
+
+template <typename ColT>
+void CollectionMessage<ColT>::setBcastProxy(VirtualProxyType const& in_proxy) {
+  bcast_proxy_ = in_proxy;
+}
+
+template <typename ColT>
 template <typename SerializerT>
 void CollectionMessage<ColT>::serialize(SerializerT& s) {
   RoutedMessageType<vt::Message, ColT>::serialize(s);

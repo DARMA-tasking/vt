@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <tuple>
 #include <memory>
+#include <functional>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -24,6 +25,7 @@ struct Holder {
   using LookupElementType = IndexT;
   using InnerHolder = ElementHolder<ColT, IndexT>;
   using TypedIndexContainer = ContType<LookupElementType, InnerHolder>;
+  using FuncApplyType = std::function<void(IndexT const&, void*)>;
 
   bool exists(IndexT const& idx);
   InnerHolder& lookup(IndexT const& idx);
@@ -31,6 +33,7 @@ struct Holder {
   VirtualPtrType remove(IndexT const& idx);
   void destroyAll();
   bool isDestroyed() const;
+  bool foreach(FuncApplyType fn);
 
   friend struct CollectionManager;
 

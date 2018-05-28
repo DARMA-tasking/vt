@@ -22,7 +22,7 @@ struct ElementHolder {
 
   virtual ~ElementHolder();
 
-  typename VirtualPtrType::pointer getCollection();
+  typename VirtualPtrType::pointer getCollection() const;
 
   VirtualPtrType vc_ptr_ = nullptr;
   HandlerType map_fn = uninitialized_handler;

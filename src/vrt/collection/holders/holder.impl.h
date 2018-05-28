@@ -77,6 +77,18 @@ bool Holder<ColT, IndexT>::isDestroyed() const {
   return is_destroyed_;
 }
 
+template <typename ColT, typename IndexT>
+bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
+  auto& container = vc_container_;
+  for (auto&& elm : container) {
+    auto const& idx = elm.first;
+    auto const& holder = elm.second;
+    auto const col_ptr = holder.getCollection();
+    fn(idx,col_ptr);
+  }
+  return true;
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H*/

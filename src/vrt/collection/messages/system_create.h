@@ -8,6 +8,7 @@
 #include "vrt/collection/types/headers.h"
 #include "messaging/message.h"
 #include "serialization/serialization.h"
+#include "collective/reduce/reduce.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -33,6 +34,15 @@ struct CollectionCreateMsg : ::vt::Message {
   void serialize(SerializerT& s) {
     s | info | tup | map;
   }
+};
+
+struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
+  CollectionConsMsg() = default;
+  explicit CollectionConsMsg(VirtualProxyType const& in_proxy)
+    : proxy(in_proxy)
+  { }
+
+  VirtualProxyType proxy = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

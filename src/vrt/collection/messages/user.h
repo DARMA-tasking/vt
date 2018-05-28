@@ -34,12 +34,16 @@ struct CollectionMessage :
   VirtualElmProxyType<ColT, IndexType> getProxy() const;
   void setProxy(VirtualElmProxyType<ColT, IndexType> const& in_proxy);
 
+  VirtualProxyType getBcastProxy() const;
+  void setBcastProxy(VirtualProxyType const& in_proxy);
+
   // Explicitly write a serializer so derived user messages can contain non-byte
   // serialization
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
 private:
+  VirtualProxyType bcast_proxy_{};
   VirtualElmProxyType<ColT, IndexType> to_proxy_{};
   HandlerType vt_sub_handler_ = uninitialized_handler;
 };

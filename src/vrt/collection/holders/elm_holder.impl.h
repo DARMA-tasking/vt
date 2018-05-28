@@ -26,7 +26,7 @@ template <typename ColT, typename IndexT>
 
 template <typename ColT, typename IndexT>
 typename ElementHolder<ColT, IndexT>::VirtualPtrType::pointer
-ElementHolder<ColT, IndexT>::getCollection() {
+ElementHolder<ColT, IndexT>::getCollection() const {
   assert(vc_ptr_ != nullptr and "Must be valid pointer");
   return vc_ptr_.get();
 }

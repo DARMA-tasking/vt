@@ -145,14 +145,16 @@ int main(int argc, char** argv) {
 
   #if 1
   if (my_node == 0) {
+    auto const& this_node = theContext()->getNode();
     auto const& range = Index1D(num_elms);
     auto proxy = theCollection()->construct<MyCol>(range);
-    for (int i = 0; i < num_elms; i++) {
-      auto const& this_node = theContext()->getNode();
-      auto msg = new ColMsg<MyCol>(this_node);
-      proxy[i].send<ColMsg<MyCol>,colHan>(msg);
-      proxy[i].send<ColMsg<MyCol>,colHan2>(msg);
-    }
+    auto msg = new ColMsg<MyCol>(this_node);
+    theCollection()->broadcastMsg<ColMsg<MyCol>,colHan>(proxy,msg,nullptr);
+    // for (int i = 0; i < num_elms; i++) {
+    //   auto msg = new ColMsg<MyCol>(this_node);
+    //   proxy[i].send<ColMsg<MyCol>,colHan>(msg);
+    //   proxy[i].send<ColMsg<MyCol>,colHan2>(msg);
+    // }
   }
   #endif
   #if 0
