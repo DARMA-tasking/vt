@@ -25,6 +25,7 @@
     location,              "location",                                  \
     param,                 "parameterization",                          \
     pool,                  "pool",                                      \
+    reduce,                "reduce",                                    \
     rdma,                  "RDMA",                                      \
     rdma_channel,          "RDMA Channel",                              \
     rdma_state,            "RDMA State",                                \

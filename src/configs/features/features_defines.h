@@ -30,6 +30,7 @@
 #define debug_barrier(x) x
 #define debug_event(x) x
 #define debug_pool(x) x
+#define debug_reduce(x) x
 #define debug_rdma(x) x
 #define debug_rdma_channel(x) x
 #define debug_rdma_state(x) x
