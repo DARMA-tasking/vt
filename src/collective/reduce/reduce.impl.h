@@ -28,7 +28,7 @@ template <typename MessageT>
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 void Reduce::reduce(
-    NodeType const& root, MessageT* const msg, TagType const& tag
+  NodeType const& root, MessageT* const msg, TagType const& tag
 ) {
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   msg->combine_handler_ = han;
