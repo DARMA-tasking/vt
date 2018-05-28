@@ -43,6 +43,7 @@ void Reduce::reduce(
   assert(iter != next_epoch_for_tag_.end() && "Must exist now");
   msg->reduce_epoch_ = iter->second++;
 
+  messageRef(msg);
   reduceNewMsg<MessageT>(msg);
 }
 
@@ -61,7 +62,6 @@ void Reduce::reduceNewMsg(MessageT* msg) {
   }
 
   auto& state = live_iter->second;
-  messageRef(msg);
   state.msgs.push_back(msg);
 
   if (state.msgs.size() == getNumChildren() + 1) {
