@@ -9,12 +9,14 @@
 #include "vrt/collection/types/insertable.h"
 #include "vrt/collection/types/indexable.h"
 #include "vrt/collection/types/untyped.h"
+#include "vrt/proxy/collection_wrapper.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct CollectionBase : Indexable<ColT, IndexT> {
   using ProxyType = VirtualElmProxyType<ColT, IndexT>;
+  using CollectionProxyType = CollectionIndexProxy<ColT, IndexT>;
   using IndexType = IndexT;
 
   CollectionBase() = default;
@@ -23,6 +25,7 @@ struct CollectionBase : Indexable<ColT, IndexT> {
   virtual ~CollectionBase();
 
   ProxyType getElementProxy(IndexT const& idx) const;
+  CollectionProxyType getCollectionProxy() const;
 
   bool isStatic() const;
 

@@ -9,48 +9,50 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT>
-void CollectionMessage<ColT>::setVrtHandler(
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setVrtHandler(
   HandlerType const& in_handler
 ) {
   vt_sub_handler_ = in_handler;
 }
 
-template <typename ColT>
-HandlerType CollectionMessage<ColT>::getVrtHandler() const {
+template <typename ColT, typename BaseMsgT>
+HandlerType CollectionMessage<ColT, BaseMsgT>::getVrtHandler() const {
   assert(
     vt_sub_handler_ != uninitialized_handler && "Must have a valid handler"
   );
   return vt_sub_handler_;
 }
 
-template <typename ColT>
+template <typename ColT, typename BaseMsgT>
 VirtualElmProxyType<ColT, typename ColT::IndexType>
-CollectionMessage<ColT>::getProxy() const {
+CollectionMessage<ColT, BaseMsgT>::getProxy() const {
   return to_proxy_;
 }
 
-template <typename ColT>
-void CollectionMessage<ColT>::setProxy(
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setProxy(
   VirtualElmProxyType<ColT, typename ColT::IndexType> const& in_proxy
 ) {
   to_proxy_ = in_proxy;
 }
 
-template <typename ColT>
-VirtualProxyType CollectionMessage<ColT>::getBcastProxy() const {
+template <typename ColT, typename BaseMsgT>
+VirtualProxyType CollectionMessage<ColT, BaseMsgT>::getBcastProxy() const {
   return bcast_proxy_;
 }
 
-template <typename ColT>
-void CollectionMessage<ColT>::setBcastProxy(VirtualProxyType const& in_proxy) {
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setBcastProxy(
+  VirtualProxyType const& in_proxy
+) {
   bcast_proxy_ = in_proxy;
 }
 
-template <typename ColT>
+template <typename ColT, typename BaseMsgT>
 template <typename SerializerT>
-void CollectionMessage<ColT>::serialize(SerializerT& s) {
-  RoutedMessageType<vt::Message, ColT>::serialize(s);
+void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
+  RoutedMessageType<BaseMsgT, ColT>::serialize(s);
   s | vt_sub_handler_;
   s | to_proxy_;
 }

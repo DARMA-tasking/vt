@@ -15,7 +15,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 CollectionProxy::ElmProxyType<ColT, IndexT>
-CollectionProxy::index(IndexT const& idx) {
+CollectionProxy::index(IndexT const& idx) const {
   return ElmProxyType<ColT, IndexT>{
     proxy_,VirtualProxyElementType<ColT, IndexT>{idx}
   };
@@ -23,13 +23,13 @@ CollectionProxy::index(IndexT const& idx) {
 
 template <typename ColT, typename IndexT>
 CollectionProxy::ElmProxyType<ColT, IndexT>
-CollectionProxy::operator[](IndexT const& idx) {
+CollectionProxy::operator[](IndexT const& idx) const {
   return index<ColT, IndexT>(idx);
 }
 
 template <typename ColT, typename IndexT>
 CollectionProxy::ElmProxyType<ColT, IndexT>
-CollectionProxy::operator()(IndexT const& idx) {
+CollectionProxy::operator()(IndexT const& idx) const {
   return index<ColT, IndexT>(idx);
 }
 
@@ -46,39 +46,39 @@ CollectionIndexProxy<ColT, IndexT>::CollectionIndexProxy(
 template <typename ColT, typename IndexT>
 template <typename... IndexArgsT>
 typename CollectionIndexProxy<ColT, IndexT>::ElmProxyType
-CollectionIndexProxy<ColT, IndexT>::index_build(IndexArgsT&&... args) {
+CollectionIndexProxy<ColT, IndexT>::index_build(IndexArgsT&&... args) const {
   return index(IndexT(args...));
 }
 
 template <typename ColT, typename IndexT>
 template <typename... IndexArgsT>
 typename CollectionIndexProxy<ColT, IndexT>::ElmProxyType
-CollectionIndexProxy<ColT, IndexT>::operator[](IndexArgsT&&... args) {
+CollectionIndexProxy<ColT, IndexT>::operator[](IndexArgsT&&... args) const {
   return index_build(std::forward<IndexArgsT>(args)...);
 }
 
 template <typename ColT, typename IndexT>
 template <typename... IndexArgsT>
 typename CollectionIndexProxy<ColT, IndexT>::ElmProxyType
-CollectionIndexProxy<ColT, IndexT>::operator()(IndexArgsT&&... args) {
+CollectionIndexProxy<ColT, IndexT>::operator()(IndexArgsT&&... args) const {
   return index_build(std::forward<IndexArgsT>(args)...);
 }
 
 template <typename ColT, typename IndexT>
 typename CollectionIndexProxy<ColT, IndexT>::ElmProxyType
-CollectionIndexProxy<ColT, IndexT>::index(IndexT const& idx) {
+CollectionIndexProxy<ColT, IndexT>::index(IndexT const& idx) const {
   return ElmProxyType{this->proxy_,VirtualProxyElementType<ColT, IndexT>{idx}};
 }
 
 template <typename ColT, typename IndexT>
 typename CollectionIndexProxy<ColT, IndexT>::ElmProxyType
-CollectionIndexProxy<ColT, IndexT>::operator[](IndexT const& idx) {
+CollectionIndexProxy<ColT, IndexT>::operator[](IndexT const& idx) const {
   return index(idx);
 }
 
 template <typename ColT, typename IndexT>
 typename CollectionIndexProxy<ColT, IndexT>::ElmProxyType
-CollectionIndexProxy<ColT, IndexT>::operator()(IndexT const& idx) {
+CollectionIndexProxy<ColT, IndexT>::operator()(IndexT const& idx) const {
   return index(idx);
 }
 

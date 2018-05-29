@@ -14,6 +14,11 @@ struct BaseEntireCollectionProxy {
 
   VirtualProxyType getProxy() const;
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | proxy_;
+  }
+
 protected:
   VirtualProxyType const proxy_ = no_vrt_proxy;
 };

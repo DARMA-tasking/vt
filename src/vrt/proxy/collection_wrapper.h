@@ -27,11 +27,11 @@ struct CollectionProxy {
   VirtualProxyType getProxy() const;
 
   template <typename ColT, typename IndexT>
-  ElmProxyType<ColT, IndexT> index(IndexT const& idx);
+  ElmProxyType<ColT, IndexT> index(IndexT const& idx) const;
   template <typename ColT, typename IndexT>
-  ElmProxyType<ColT, IndexT> operator[](IndexT const& idx);
+  ElmProxyType<ColT, IndexT> operator[](IndexT const& idx) const;
   template <typename ColT, typename IndexT>
-  ElmProxyType<ColT, IndexT> operator()(IndexT const& idx);
+  ElmProxyType<ColT, IndexT> operator()(IndexT const& idx) const;
 
 private:
   VirtualProxyType const proxy_ = no_vrt_proxy;
@@ -50,15 +50,15 @@ struct CollectionIndexProxy : Broadcastable<ColT, IndexT> {
   CollectionIndexProxy(VirtualProxyType const in_proxy);
 
   template <typename... IndexArgsT>
-  ElmProxyType index_build(IndexArgsT&&... idx);
+  ElmProxyType index_build(IndexArgsT&&... idx) const;
   template <typename... IndexArgsT>
-  ElmProxyType operator[](IndexArgsT&&... idx);
+  ElmProxyType operator[](IndexArgsT&&... idx) const;
   template <typename... IndexArgsT>
-  ElmProxyType operator()(IndexArgsT&&... idx);
+  ElmProxyType operator()(IndexArgsT&&... idx) const;
 
-  ElmProxyType index(IndexT const& idx);
-  ElmProxyType operator[](IndexT const& idx);
-  ElmProxyType operator()(IndexT const& idx);
+  ElmProxyType index(IndexT const& idx) const;
+  ElmProxyType operator[](IndexT const& idx) const;
+  ElmProxyType operator()(IndexT const& idx) const;
 };
 
 

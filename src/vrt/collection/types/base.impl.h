@@ -30,6 +30,14 @@ CollectionBase<ColT, IndexT>::getElementProxy(IndexT const& idx) const {
 }
 
 template <typename ColT, typename IndexT>
+typename CollectionBase<ColT, IndexT>::CollectionProxyType
+CollectionBase<ColT, IndexT>::getCollectionProxy() const {
+  auto const& proxy = this->getProxy();
+  typename CollectionBase<ColT, IndexT>::CollectionProxyType col_proxy(proxy);
+  return col_proxy;
+}
+
+template <typename ColT, typename IndexT>
 bool CollectionBase<ColT, IndexT>::isStatic() const {
   return hasStaticSize_ && elmsFixedAtCreation_;
 }

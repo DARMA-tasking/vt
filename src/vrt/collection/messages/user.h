@@ -14,9 +14,9 @@ using RoutedMessageType = LocationRoutedMsg<
   ::vt::vrt::VirtualElmProxyType<ColT, typename ColT::IndexType>, MessageT
 >;
 
-template <typename ColT>
+template <typename ColT, typename BaseMsgT = ::vt::Message>
 struct CollectionMessage :
-  RoutedMessageType<::vt::Message, ColT>, ColT::IndexType::IsByteCopyable
+  RoutedMessageType<BaseMsgT, ColT>, ColT::IndexType::IsByteCopyable
 {
   /*
    *. Type aliases for surrounding system => used to deduce during sends
