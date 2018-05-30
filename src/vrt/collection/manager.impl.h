@@ -345,6 +345,70 @@ void CollectionManager::broadcastMsg(
   }
 }
 
+template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+void CollectionManager::reduceMsg(
+  CollectionProxyWrapType<
+    typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
+  > const& toProxy,
+  MsgT *const msg, TagType const& tag
+) {
+  using ColT = typename MsgT::CollectionType;
+  using IndexT = typename ColT::IndexType;
+
+  debug_print(
+    vrt_coll, node,
+    "reduceMsg: msg={}\n", print_ptr(msg)
+  );
+
+  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& col_proxy = toProxy.getProxy();
+
+  // @todo: implement the action `act' after the routing is finished
+
+  auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
+  auto holder = holder_container.find(col_proxy);
+  auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
+
+  debug_print(
+    vrt_coll, node,
+    "reduceMsg: col_proxy={}, found={}, holder={}\n",
+    col_proxy, found_constructed, holder != holder_container.end()
+  );
+
+  if (holder != holder_container.end() && found_constructed) {
+    auto elm_holder = findElmHolder<ColT,IndexT>(col_proxy);
+    auto const& num_elms = elm_holder->numElements();
+
+    // register the user's handler
+    HandlerType const& han = auto_registry::makeAutoHandlerCollection<
+      ColT, MsgT, f
+    >(msg);
+
+    // save the user's handler in the message
+    msg->setVrtHandler(han);
+    msg->setBcastProxy(col_proxy);
+
+    debug_print(
+      vrt_coll, node,
+      "sending msg to collection: msg={}, han={}, home_node={}\n",
+      msg, han, home_node
+    );
+
+    debug_print(
+      vrt_coll, node,
+      "broadcastMsg: col_proxy={}, sending\n", col_proxy
+    );
+
+    theTerm()->produce(term::any_epoch_sentinel, num_nodes);
+
+    messageRef(msg);
+    theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT,MsgT>>(msg);
+    collectionBcastHandler<ColT,IndexT,MsgT>(msg);
+  } else {
+    // @todo: implement this
+  }
+}
+
 template <
   typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f

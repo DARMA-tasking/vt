@@ -111,6 +111,17 @@ struct CollectionManager {
   static void collectionMsgHandler(BaseMessage* msg);
 
   /*
+   *  Reduce all elements of a collection
+   */
+  template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+  void reduceMsg(
+    CollectionProxyWrapType<
+      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
+    > const& toProxy,
+    MsgT *const msg, TagType const& tag = no_tag
+  );
+
+  /*
    *  Broadcast message to all elements of a collection
    */
   template <
@@ -227,6 +238,7 @@ private:
   VirtualIDType curIdent_ = 0;
   AwaitingDestructionType await_destroy_;
   std::unordered_set<VirtualProxyType> constructed_;
+  std::unordered_map<TagType, EpochType> reudce_tag_epoch_;
 };
 
 }}} /* end namespace vt::vrt::collection */
