@@ -34,6 +34,7 @@ struct Holder {
   void destroyAll();
   bool isDestroyed() const;
   bool foreach(FuncApplyType fn);
+  typename TypedIndexContainer::size_type numElements() const;
 
   friend struct CollectionManager;
 

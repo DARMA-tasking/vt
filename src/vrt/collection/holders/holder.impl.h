@@ -89,6 +89,12 @@ bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   return true;
 }
 
+template <typename ColT, typename IndexT>
+typename Holder<ColT,IndexT>::TypedIndexContainer::size_type
+Holder<ColT,IndexT>::numElements() const {
+  return vc_container_.size();
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H*/
