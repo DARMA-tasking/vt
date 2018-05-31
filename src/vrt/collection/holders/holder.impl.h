@@ -60,7 +60,8 @@ typename Holder<ColT, IndexT>::VirtualPtrType Holder<ColT, IndexT>::remove(
     iter != container.end() && "Entry must exist in holder when removing entry"
   );
   auto owned_ptr = std::move(iter->second.vc_ptr_);
-  container.erase(iter);
+  erased = true;
+  foreach_iter = container.erase(iter);
   return std::move(owned_ptr);
 }
 
@@ -80,11 +81,18 @@ bool Holder<ColT, IndexT>::isDestroyed() const {
 template <typename ColT, typename IndexT>
 bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   auto& container = vc_container_;
-  for (auto&& elm : container) {
-    auto const& idx = elm.first;
-    auto const& holder = elm.second;
+  foreach_iter = container.begin();
+  erased = false;
+  while (foreach_iter != container.end()) {
+    auto const& idx = foreach_iter->first;
+    auto const& holder = foreach_iter->second;
     auto const col_ptr = holder.getCollection();
     fn(idx,col_ptr);
+    if (!erased) {
+      foreach_iter++;
+    } else {
+      erased = false;
+    }
   }
   return true;
 }
