@@ -10,6 +10,12 @@ namespace vt { namespace collective { namespace reduce {
 
 Reduce::Reduce()
   : tree::Tree(tree::tree_cons_tag_t)
-{ }
+{
+  debug_print(
+    reduce, node,
+    "Reduce constructor: children={}, parent={}\n",
+    getNumChildren(), getParent()
+  );
+}
 
 }}} /* end namespace vt::collective::reduce */
