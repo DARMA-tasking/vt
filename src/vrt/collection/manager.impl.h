@@ -781,7 +781,7 @@ MigrateStatus CollectionManager::migrateIn(
   debug_print(
     vrt_coll, node,
     "CollectionManager::migrateIn: proxy={}, idx={}, from={}, ptr={}\n",
-    proxy, print_index(idx), from, vrt_elm_ptr.get()
+    proxy, print_index(idx), from, print_ptr(vrt_elm_ptr.get())
   );
 
   auto vc_raw_ptr = vrt_elm_ptr.get();

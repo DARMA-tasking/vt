@@ -29,16 +29,16 @@ struct MigrateHookBase : MigrateHookInterface {
 
 public:
   virtual void preMigrateOut() override {
-    debug_print(vrt_coll, node, "preMigrateOut(): this={}\n", this);
+    debug_print(vrt_coll, node, "preMigrateOut(): this={}\n", print_ptr(this));
   }
   virtual void epiMigrateOut() override {
-    debug_print(vrt_coll, node, "epiMigrateOut(): this={}\n", this);
+    debug_print(vrt_coll, node, "epiMigrateOut(): this={}\n", print_ptr(this));
   }
   virtual void preMigrateIn() override {
-    debug_print(vrt_coll, node, "preMigrateIn(): this={}\n", this);
+    debug_print(vrt_coll, node, "preMigrateIn(): this={}\n", print_ptr(this));
   }
   virtual void epiMigrateIn() override {
-    debug_print(vrt_coll, node, "epiMigrateIn(): this={}\n", this);
+    debug_print(vrt_coll, node, "epiMigrateIn(): this={}\n", print_ptr(this));
   }
 
 protected:
