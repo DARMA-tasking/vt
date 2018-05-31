@@ -153,6 +153,10 @@ void Reduce::reduceNewMsg(MessageT* msg) {
     // Send to parent
     auto msg = static_cast<MessageT*>(state.msgs[0]);
     ActionType cont = nullptr;
+
+    state.msgs.clear();
+    state.num_contrib_ = 1;
+
     if (isRoot()) {
       auto const& root = msg->reduce_root_;
       auto const& this_node = theContext()->getNode();
