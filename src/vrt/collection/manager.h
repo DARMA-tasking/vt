@@ -139,11 +139,17 @@ struct CollectionManager {
   );
 
   template <typename ColT, typename IndexT, typename MsgT>
+  void broadcastFromRoot(MsgT* msg);
+
+  template <typename ColT, typename IndexT, typename MsgT>
   static void collectionBcastHandler(MsgT* msg);
+  template <typename ColT, typename IndexT, typename MsgT>
+  static void broadcastRootHandler(MsgT* msg);
   template <typename=void>
   static void collectionConstructHan(CollectionConsMsg* msg);
   template <typename=void>
   static void collectionFinishedHan(CollectionConsMsg* msg);
+
   /*
    * Traits version of running the constructor based on the detected available
    * constructor types

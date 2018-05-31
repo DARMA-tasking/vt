@@ -8,6 +8,7 @@
 #include "vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vrt/collection/holders/elm_holder.h"
 #include "vrt/collection/types/headers.h"
+#include "vrt/collection/messages/user.h"
 
 #include <unordered_map>
 #include <tuple>

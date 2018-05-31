@@ -5,6 +5,7 @@
 #include "config.h"
 #include "topos/location/message/msg.h"
 #include "messaging/message.h"
+#include "vrt/collection/manager.fwd.h"
 #include "vrt/vrt_common.h"
 
 namespace vt { namespace vrt { namespace collection {
@@ -37,15 +38,21 @@ struct CollectionMessage :
   VirtualProxyType getBcastProxy() const;
   void setBcastProxy(VirtualProxyType const& in_proxy);
 
+  EpochType getBcastEpoch() const;
+  void setBcastEpoch(EpochType const& epoch);
+
   // Explicitly write a serializer so derived user messages can contain non-byte
   // serialization
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
+  friend struct CollectionManager;
+
 private:
   VirtualProxyType bcast_proxy_{};
   VirtualElmProxyType<ColT, IndexType> to_proxy_{};
   HandlerType vt_sub_handler_ = uninitialized_handler;
+  EpochType bcast_epoch_ = no_epoch;
 };
 
 }}} /* end namespace vt::vrt::collection */

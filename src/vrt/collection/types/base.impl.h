@@ -66,6 +66,7 @@ void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   Indexable<ColT, IndexT>::serialize(s);
   s | hasStaticSize_;
   s | elmsFixedAtCreation_;
+  s | cur_bcast_epoch_;
 }
 
 template <typename ColT, typename IndexT>

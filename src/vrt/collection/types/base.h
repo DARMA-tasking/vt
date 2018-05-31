@@ -9,6 +9,7 @@
 #include "vrt/collection/types/insertable.h"
 #include "vrt/collection/types/indexable.h"
 #include "vrt/collection/types/untyped.h"
+#include "vrt/collection/manager.fwd.h"
 #include "vrt/proxy/collection_wrapper.h"
 
 namespace vt { namespace vrt { namespace collection {
@@ -39,7 +40,10 @@ struct CollectionBase : Indexable<ColT, IndexT> {
   template <typename Serializer>
   void serialize(Serializer& s);
 
+  friend struct CollectionManager;
+
 protected:
+  EpochType cur_bcast_epoch_ = 0;
   bool hasStaticSize_ = true;
   bool elmsFixedAtCreation_ = true;
 };

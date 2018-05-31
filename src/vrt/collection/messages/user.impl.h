@@ -50,6 +50,16 @@ void CollectionMessage<ColT, BaseMsgT>::setBcastProxy(
 }
 
 template <typename ColT, typename BaseMsgT>
+EpochType CollectionMessage<ColT, BaseMsgT>::getBcastEpoch() const {
+  return bcast_epoch_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setBcastEpoch(EpochType const& epoch) {
+  bcast_epoch_ = epoch;
+}
+
+template <typename ColT, typename BaseMsgT>
 template <typename SerializerT>
 void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
   RoutedMessageType<BaseMsgT, ColT>::serialize(s);

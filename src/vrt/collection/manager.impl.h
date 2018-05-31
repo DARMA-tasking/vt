@@ -164,12 +164,27 @@ template <typename ColT, typename IndexT, typename MsgT>
   assert(elm_holder != nullptr && "Should never happen");
   auto const sub_handler = col_msg->getVrtHandler();
   auto const act_fn = auto_registry::getAutoHandlerCollection(sub_handler);
-  elm_holder->foreach([msg,act_fn](IndexT const& idx, void* col_ptr) {
-    void* typeless_collection = static_cast<void*>(col_ptr);
-    assert(col_ptr != nullptr && "Must be valid pointer");
-    act_fn(
-      msg, reinterpret_cast<UntypedCollection*>(typeless_collection)
+  debug_print(
+    vrt_coll, node,
+    "broadcast apply: size={}\n", elm_holder->numElements()
+  );
+  elm_holder->foreach([msg,act_fn](
+    IndexT const& idx, Collection<ColT,IndexT>* base
+  ) {
+    debug_print(
+      vrt_coll, node,
+      "broadcast: apply to element: epoch={}, bcast_epoch={}\n",
+      msg->bcast_epoch_, base->cur_bcast_epoch_
     );
+    if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
+      void* typeless_collection = static_cast<void*>(base);
+      assert(base != nullptr && "Must be valid pointer");
+      // be very careful here, do not touch `base' after running the active
+      // message because it might have migrated out and be invalid
+      base->cur_bcast_epoch_++;
+      // @todo all migration during the call (fix iterator)
+      act_fn(msg, reinterpret_cast<UntypedCollection*>(typeless_collection));
+    }
   });
   theTerm()->consume(term::any_epoch_sentinel);
 }
@@ -255,6 +270,35 @@ template <typename ColT, typename IndexT>
   theTerm()->consume(term::any_epoch_sentinel);
 }
 
+template <typename ColT, typename IndexT, typename MsgT>
+/*static*/ void CollectionManager::broadcastRootHandler(MsgT* msg) {
+  theCollection()->broadcastFromRoot<ColT,IndexT,MsgT>(msg);
+}
+
+template <typename ColT, typename IndexT, typename MsgT>
+void CollectionManager::broadcastFromRoot(MsgT* msg) {
+  // broadcast to all nodes
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& proxy = msg->getBcastProxy();
+  auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
+  auto const bcast_node = VirtualProxyBuilder::getVirtualNode(proxy);
+
+  assert(elm_holder != nullptr && "Must have elm holder");
+  assert(this_node == bcast_node && "Must be the bcast node");
+
+  auto const epoch = elm_holder->cur_bcast_epoch_++;
+
+  msg->setBcastEpoch(epoch);
+
+  theTerm()->produce(term::any_epoch_sentinel, num_nodes);
+
+  messageRef(msg);
+  theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT,MsgT>>(msg);
+  collectionBcastHandler<ColT,IndexT,MsgT>(msg);
+  messageDeref(msg);
+}
+
 template <
   typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
@@ -273,7 +317,7 @@ void CollectionManager::broadcastMsg(
     "broadcastMsg: msg={}\n", print_ptr(msg)
   );
 
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& this_node = theContext()->getNode();
   auto const& col_proxy = toProxy.getProxy();
 
   // @todo: implement the action `act' after the routing is finished
@@ -290,30 +334,33 @@ void CollectionManager::broadcastMsg(
 
   if (holder != holder_container.end() && found_constructed) {
     // register the user's handler
-    HandlerType const& han = auto_registry::makeAutoHandlerCollection<
-      ColT, MsgT, f
-    >(msg);
+    HandlerType const& han =
+      auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
 
     // save the user's handler in the message
     msg->setVrtHandler(han);
     msg->setBcastProxy(col_proxy);
 
-    debug_print(
-      vrt_coll, node,
-      "sending msg to collection: msg={}, han={}, home_node={}\n",
-      msg, han, home_node
-    );
+    auto const bcast_node = VirtualProxyBuilder::getVirtualNode(col_proxy);
 
-    debug_print(
-      vrt_coll, node,
-      "broadcastMsg: col_proxy={}, sending\n", col_proxy
-    );
+    if (this_node != bcast_node) {
+      debug_print(
+        vrt_coll, node,
+        "broadcastMsg: col_proxy={}, sending to root node={}\n",
+        col_proxy, bcast_node
+      );
 
-    theTerm()->produce(term::any_epoch_sentinel, num_nodes);
-
-    messageRef(msg);
-    theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT,MsgT>>(msg);
-    collectionBcastHandler<ColT,IndexT,MsgT>(msg);
+      theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IndexT,MsgT>>(
+        bcast_node, msg
+      );
+    } else {
+      debug_print(
+        vrt_coll, node,
+        "broadcasting msg to collection: msg={}, han={}\n",
+        print_ptr(msg), han
+      );
+      broadcastFromRoot<ColT,IndexT,MsgT>(msg);
+    }
   } else {
     auto iter = buffered_bcasts_.find(col_proxy);
     if (iter == buffered_bcasts_.end()) {
@@ -697,11 +744,23 @@ MigrateStatus CollectionManager::migrateOut(
      return MigrateStatus::ElementNotLocal;
    }
 
+   debug_print(
+     vrt_coll, node,
+     "migrateOut: (before remove) holder numElements={}\n",
+     elm_holder->numElements()
+   );
+
    auto& coll_elm_info = elm_holder->lookup(idx);
    auto map_fn = coll_elm_info.map_fn;
    auto range = coll_elm_info.max_idx;
    auto col_unique_ptr = elm_holder->remove(idx);
    auto& typed_col_ref = *static_cast<ColT*>(col_unique_ptr.get());
+
+   debug_print(
+     vrt_coll, node,
+     "migrateOut: (after remove) holder numElements={}\n",
+     elm_holder->numElements()
+   );
 
    /*
     * Invoke the virtual prelude migrate out function
