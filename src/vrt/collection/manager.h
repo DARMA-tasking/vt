@@ -20,6 +20,8 @@
 #include "messaging/message.h"
 #include "topos/location/location_headers.h"
 #include "collective/collective_alg.h"
+#include "collective/reduce/reduce_msg.h"
+#include "collective/reduce/reduce_hash.h"
 
 #include <memory>
 #include <vector>
@@ -29,6 +31,7 @@
 #include <unordered_set>
 #include <functional>
 #include <vector>
+#include <list>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -45,6 +48,7 @@ struct CollectionManager {
   using AwaitingDestructionType = std::unordered_set<VirtualProxyType>;
   template <typename ColT, typename IndexT>
   using CollectionProxyWrapType = CollectionIndexProxy<ColT, IndexT>;
+  using ReduceIDType = ::vt::collective::reduce::ReduceEpochLookupType;
 
   CollectionManager() = default;
 
@@ -113,12 +117,11 @@ struct CollectionManager {
   /*
    *  Reduce all elements of a collection
    */
-  template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduceMsg(
-    CollectionProxyWrapType<
-      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-    > const& toProxy,
-    MsgT *const msg, TagType const& tag = no_tag
+  template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+  EpochType reduceMsg(
+    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+    MsgT *const msg, EpochType const& epoch = no_epoch,
+    TagType const& tag = no_tag
   );
 
   /*
@@ -238,7 +241,7 @@ private:
   VirtualIDType curIdent_ = 0;
   AwaitingDestructionType await_destroy_;
   std::unordered_set<VirtualProxyType> constructed_;
-  std::unordered_map<TagType, EpochType> reudce_tag_epoch_;
+  std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
 };
 
 }}} /* end namespace vt::vrt::collection */

@@ -33,6 +33,7 @@ struct ReduceMsg : ::vt::Message, ReduceLink {
   NodeType reduce_root_ = uninitialized_destination;
   TagType reduce_tag_ = no_tag;
   EpochType reduce_epoch_ = no_epoch;
+  VirtualProxyType reduce_proxy_ = no_vrt_proxy;
   HandlerType combine_handler_ = uninitialized_handler;
 };
 

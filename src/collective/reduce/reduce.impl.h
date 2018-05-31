@@ -12,7 +12,12 @@ namespace vt { namespace collective { namespace reduce {
 
 template <typename MessageT>
 /*static*/ void Reduce::reduceUp(MessageT* msg) {
-  messageRef(msg);
+  debug_print(
+    reduce, node,
+    "reduceUp: tag={}, epoch={}, vrt={}, msg={}\n",
+    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_, print_ptr(msg)
+  );
+  theCollective()->reduceAddMsg<MessageT>(msg);
   theCollective()->reduceNewMsg<MessageT>(msg);
 }
 
@@ -27,45 +32,90 @@ template <typename MessageT>
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-void Reduce::reduce(
-  NodeType const& root, MessageT* const msg, TagType const& tag
+EpochType Reduce::reduce(
+  NodeType const& root, MessageT* const msg, TagType const& tag,
+  EpochType const& epoch, ReduceNumType const& num_contrib,
+  VirtualProxyType const& proxy
 ) {
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   msg->combine_handler_ = han;
   msg->reduce_tag_ = tag;
   msg->reduce_root_ = root;
-
-  auto iter = next_epoch_for_tag_.find(tag);
-  if (iter == next_epoch_for_tag_.end()) {
-    next_epoch_for_tag_[tag] = static_cast<EpochType>(1);
-    iter = next_epoch_for_tag_.find(tag);
+  msg->reduce_proxy_ = proxy;
+  debug_print(
+    reduce, node,
+    "reduce: tag={}, epoch={}, vrt={}, num_contrib={}, msg={}, ref={}\n",
+    msg->reduce_tag_, msg->reduce_epoch_,
+    msg->reduce_proxy_, num_contrib, print_ptr(msg), envelopeGetRef(msg->env)
+  );
+  if (epoch == no_epoch) {
+    auto reduce_epoch_lookup = std::make_tuple(proxy,tag);
+    auto iter = next_epoch_for_tag_.find(reduce_epoch_lookup);
+    if (iter == next_epoch_for_tag_.end()) {
+      next_epoch_for_tag_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(reduce_epoch_lookup),
+        std::forward_as_tuple(EpochType{1})
+      );
+      iter = next_epoch_for_tag_.find(reduce_epoch_lookup);
+    }
+    assert(iter != next_epoch_for_tag_.end() && "Must exist now");
+    msg->reduce_epoch_ = iter->second++;
+  } else {
+    msg->reduce_epoch_ = epoch;
   }
-  assert(iter != next_epoch_for_tag_.end() && "Must exist now");
-  msg->reduce_epoch_ = iter->second++;
-
-  messageRef(msg);
+  reduceAddMsg<MessageT>(msg, num_contrib);
   reduceNewMsg<MessageT>(msg);
+  return msg->reduce_epoch_;
 }
 
 template <typename MessageT>
-void Reduce::reduceNewMsg(MessageT* msg) {
-  auto lookup = ReduceIdentifierType{msg->reduce_tag_,msg->reduce_epoch_};
+void Reduce::reduceAddMsg(MessageT* msg, ReduceNumType const& num_contrib) {
+  auto lookup = ReduceIdentifierType{
+    msg->reduce_tag_,msg->reduce_epoch_,msg->reduce_proxy_
+  };
   auto live_iter = live_reductions_.find(lookup);
   if (live_iter == live_reductions_.end()) {
     live_reductions_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(lookup),
-      std::forward_as_tuple(ReduceState{msg->reduce_tag_,msg->reduce_epoch_})
+      std::forward_as_tuple(ReduceState{
+        msg->reduce_tag_,msg->reduce_epoch_,msg->reduce_proxy_
+      })
     );
     live_iter = live_reductions_.find(lookup);
     assert(live_iter != live_reductions_.end());
   }
-
   auto& state = live_iter->second;
   messageRef(msg);
   state.msgs.push_back(msg);
+  if (num_contrib != -1) {
+    state.num_contrib_ = num_contrib;
+  }
+  debug_print(
+    reduce, node,
+    "reduceAddMsg: msg={}, contrib={}, msgs.size()={}, ref={}\n",
+    print_ptr(msg), state.num_contrib_,
+    state.msgs.size(), envelopeGetRef(msg->env)
+  );
+}
 
-  if (state.msgs.size() == getNumChildren() + 1) {
+template <typename MessageT>
+void Reduce::reduceNewMsg(MessageT* msg) {
+  auto lookup = ReduceIdentifierType{
+    msg->reduce_tag_,msg->reduce_epoch_,msg->reduce_proxy_
+  };
+  auto live_iter = live_reductions_.find(lookup);
+  auto& state = live_iter->second;
+
+  debug_print(
+    reduce, node,
+    "reduceNewMsg: tag={}, epoch={}, vrt={}, msg={}, children={}, contrib_={}\n",
+    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_,
+    state.msgs.size(), getNumChildren(), state.num_contrib_
+  );
+
+  if (state.msgs.size() == getNumChildren() + state.num_contrib_) {
     // Combine messages
     if (state.msgs.size() > 1) {
       for (int i = 0; i < state.msgs.size(); i++) {
@@ -76,9 +126,9 @@ void Reduce::reduceNewMsg(MessageT* msg) {
 
         debug_print(
           reduce, node,
-          "i={} next={} has_next={} count={} msgs.size()={}\n",
+          "i={} next={} has_next={} count={} msgs.size()={}, ref={}\n",
           i, print_ptr(state.msgs[i]->next_), has_next, state.msgs[i]->count_,
-          state.msgs.size()
+          state.msgs.size(), envelopeGetRef(state.msgs[i]->env)
         );
       }
 
@@ -94,6 +144,10 @@ void Reduce::reduceNewMsg(MessageT* msg) {
       auto const& handler = msg->combine_handler_;
       auto active_fun = auto_registry::getAutoHandler(handler);
       active_fun(state.msgs[0]);
+    }
+
+    for (int i = 1; i < state.msgs.size(); i++) {
+      messageDeref(state.msgs[i]);
     }
 
     // Send to parent

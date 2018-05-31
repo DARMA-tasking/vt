@@ -6,19 +6,24 @@
 #include "collective/reduce/reduce_msg.h"
 
 #include <vector>
+#include <cstdint>
 
 namespace vt { namespace collective { namespace reduce {
 
 struct ReduceState {
+  using ReduceNumType = int32_t;
+  using ReduceVecType = std::vector<ReduceMsg*>;
+
   ReduceState(
-      TagType const& in_tag_, EpochType const& in_epoch_
-  ) : tag_(in_tag_), epoch_(in_epoch_)
+    TagType const& in_tag_, EpochType const& in_epoch_,
+    ReduceNumType const& in_num_contrib
+  ) : tag_(in_tag_), epoch_(in_epoch_), num_contrib_(in_num_contrib)
   { }
 
-  std::vector<ReduceMsg*> msgs;
-  //int recv_event_count = 0;
+  ReduceVecType msgs = {};
   TagType tag_ = no_tag;
   EpochType epoch_ = no_epoch;
+  ReduceNumType num_contrib_ = 1;
 };
 
 }}} /* end namespace vt::collective::reduce */

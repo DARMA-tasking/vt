@@ -26,6 +26,7 @@
 #include "topos/mapping/mapping_headers.h"
 #include "termination/term_headers.h"
 #include "serialization/serialization.h"
+#include "collective/reduce/reduce_hash.h"
 
 #include <tuple>
 #include <utility>
@@ -138,8 +139,10 @@ template <typename SysMsgT>
       }
     });
 
+    uint64_t const tag_start_ = 0x0ff00000;
     auto msg = makeSharedMessage<CollectionConsMsg>(new_proxy);
-    auto const& tag_id = VirtualProxyBuilder::getVirtualID(new_proxy);
+    auto const& tag_id =
+      VirtualProxyBuilder::getVirtualID(new_proxy) | tag_start_;
     auto const& root = 0;
     debug_print(
       vrt_coll, node,
@@ -345,14 +348,11 @@ void CollectionManager::broadcastMsg(
   }
 }
 
-template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-void CollectionManager::reduceMsg(
-  CollectionProxyWrapType<
-    typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-  > const& toProxy,
-  MsgT *const msg, TagType const& tag
+template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+EpochType CollectionManager::reduceMsg(
+  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+  MsgT *const msg, EpochType const& epoch, TagType const& tag
 ) {
-  using ColT = typename MsgT::CollectionType;
   using IndexT = typename ColT::IndexType;
 
   debug_print(
@@ -360,14 +360,14 @@ void CollectionManager::reduceMsg(
     "reduceMsg: msg={}\n", print_ptr(msg)
   );
 
-  auto const& num_nodes = theContext()->getNumNodes();
   auto const& col_proxy = toProxy.getProxy();
 
   // @todo: implement the action `act' after the routing is finished
 
-  auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
+  auto& holder_container = EntireHolder<ColT,IndexT>::proxy_container_;
   auto holder = holder_container.find(col_proxy);
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
+  auto elm_holder = findElmHolder<ColT,IndexT>(col_proxy);
 
   debug_print(
     vrt_coll, node,
@@ -375,37 +375,31 @@ void CollectionManager::reduceMsg(
     col_proxy, found_constructed, holder != holder_container.end()
   );
 
-  if (holder != holder_container.end() && found_constructed) {
-    auto elm_holder = findElmHolder<ColT,IndexT>(col_proxy);
+  if (holder != holder_container.end() && found_constructed && elm_holder) {
     auto const& num_elms = elm_holder->numElements();
 
-    // register the user's handler
-    HandlerType const& han = auto_registry::makeAutoHandlerCollection<
-      ColT, MsgT, f
-    >(msg);
-
-    // save the user's handler in the message
-    msg->setVrtHandler(han);
-    msg->setBcastProxy(col_proxy);
-
-    debug_print(
-      vrt_coll, node,
-      "sending msg to collection: msg={}, han={}, home_node={}\n",
-      msg, han, home_node
+    auto reduce_id = std::make_tuple(col_proxy,tag);
+    auto epoch_iter = reduce_cur_epoch_.find(reduce_id);
+    EpochType cur_epoch = epoch;
+    if (epoch == no_epoch && epoch_iter != reduce_cur_epoch_.end()) {
+      cur_epoch = epoch_iter->second;
+    }
+    auto ret_epoch = theCollective()->reduce<MsgT,f>(
+      0,msg,tag,cur_epoch,num_elms,col_proxy
     );
+    if (epoch_iter == reduce_cur_epoch_.end()) {
+      reduce_cur_epoch_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(reduce_id),
+        std::forward_as_tuple(ret_epoch)
+      );
+    }
 
-    debug_print(
-      vrt_coll, node,
-      "broadcastMsg: col_proxy={}, sending\n", col_proxy
-    );
-
-    theTerm()->produce(term::any_epoch_sentinel, num_nodes);
-
-    messageRef(msg);
-    theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT,MsgT>>(msg);
-    collectionBcastHandler<ColT,IndexT,MsgT>(msg);
+    return ret_epoch;
   } else {
     // @todo: implement this
+    assert(0);
+    return no_epoch;
   }
 }
 

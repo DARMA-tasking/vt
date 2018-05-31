@@ -15,7 +15,7 @@ using namespace vt::tests::unit;
 
 struct MyReduceMsg : ReduceMsg {
   MyReduceMsg(int const& in_num)
-      : num(in_num)
+    : num(in_num)
   { }
 
   int num = 0;

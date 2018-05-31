@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "collective/reduce/reduce.fwd.h"
+#include "collective/reduce/reduce_hash.h"
 #include "collective/reduce/reduce_state.h"
 #include "collective/reduce/reduce_msg.h"
 #include "messaging/active.h"
@@ -15,19 +16,25 @@
 #include <tuple>
 #include <unordered_map>
 #include <cassert>
+#include <cstdint>
 
 namespace vt { namespace collective { namespace reduce {
 
 struct Reduce : virtual collective::tree::Tree {
-  using ReduceIdentifierType = std::tuple<TagType, EpochType>;
   using ReduceStateType = ReduceState;
+  using ReduceNumType = ReduceState::ReduceNumType;
 
   Reduce();
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  void reduce(
-    NodeType const& root, MessageT* const msg, TagType const& tag = no_tag
+  EpochType reduce(
+    NodeType const& root, MessageT* const msg, TagType const& tag = no_tag,
+    EpochType const& epoch = no_epoch, ReduceNumType const& num_contrib = 1,
+    VirtualProxyType const& proxy = no_vrt_proxy
   );
+
+  template <typename MessageT>
+  void reduceAddMsg(MessageT* msg, ReduceNumType const& num_contrib = -1);
 
   template <typename MessageT>
   void reduceNewMsg(MessageT* msg);
@@ -38,8 +45,8 @@ struct Reduce : virtual collective::tree::Tree {
   static void reduceUp(MessageT* msg);
 
 private:
-  std::unordered_map<TagType, EpochType> next_epoch_for_tag_;
-  std::unordered_map<ReduceIdentifierType, ReduceStateType> live_reductions_;
+  std::unordered_map<ReduceEpochLookupType,EpochType> next_epoch_for_tag_;
+  std::unordered_map<ReduceIdentifierType,ReduceStateType> live_reductions_;
 };
 
 }}} /* end namespace vt::collective::reduce */
