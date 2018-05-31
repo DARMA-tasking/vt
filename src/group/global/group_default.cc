@@ -154,6 +154,7 @@ namespace vt { namespace group { namespace global {
         );
 
         if (send) {
+          messageRef(msg);
           auto const put_event = theMsg()->sendMsgBytesWithPut(
             child, base, size, send_tag, action
           );
@@ -174,6 +175,7 @@ namespace vt { namespace group { namespace global {
         print_bool(is_root), root_node, dest, print_ptr(msg)
       );
 
+      messageRef(msg);
       auto const put_event = theMsg()->sendMsgBytesWithPut(
         root_node, base, size, send_tag, action
       );
