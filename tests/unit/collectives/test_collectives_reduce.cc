@@ -31,8 +31,8 @@ struct TestReduce : TestParallelHarness {
   static void reducePlus(MyReduceMsg* msg) {
     fmt::print(
       "cur={}: is_root={}, count={}, next={}, num={}\n",
-      print_ptr(msg), print_bool(msg->is_root), msg->count,
-      print_ptr(msg->next), msg->num
+      print_ptr(msg), print_bool(msg->isRoot()), msg->getCount(),
+      print_ptr(msg->getNext<MyReduceMsg>()), msg->num
     );
 
     if (msg->isRoot()) {
