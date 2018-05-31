@@ -1,0 +1,111 @@
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include "test_parallel_harness.h"
+#include "data_message.h"
+
+#include "transport.h"
+
+namespace vt { namespace tests { namespace unit {
+
+using namespace vt;
+using namespace vt::collective;
+using namespace vt::tests::unit;
+using namespace vt::vrt;
+using namespace vt::vrt::collection;
+using namespace vt::index;
+using namespace vt::mapping;
+
+struct MyReduceMsg : ReduceMsg {
+  MyReduceMsg(int const& in_num) : num(in_num) {}
+  int num = 0;
+};
+
+struct MyCol : Collection<MyCol, Index1D> {
+  MyCol()
+    : Collection<MyCol, Index1D>()
+  {
+    auto const& node = theContext()->getNode();
+    auto const& idx = getIndex();
+    fmt::print(
+      "{}: constructing MyCol on node={}: idx.x()={}, ptr={}\n",
+      node, node, idx.x(), print_ptr(this)
+    );
+  }
+
+  virtual ~MyCol() = default;
+};
+
+struct ColMsg : CollectionMessage<MyCol> {
+  NodeType from_node;
+
+  ColMsg() = default;
+  ColMsg(NodeType const& in_from_node)
+    : CollectionMessage<MyCol>(), from_node(in_from_node)
+  { }
+};
+
+struct TestReduceCollection : TestParallelHarness {
+  using TestMsg = TestStaticBytesShortMsg<4>;
+
+  virtual void SetUp() {
+    TestParallelHarness::SetUp();
+  }
+
+  static void colHan(ColMsg* msg, MyCol* col) {
+    auto const& node = theContext()->getNode();
+    auto const& idx = col->getIndex();
+    fmt::print(
+      "{}: colHan received: ptr={}, idx={}, getIndex={}\n",
+      node, print_ptr(col), idx.x(), col->getIndex().x()
+    );
+
+    auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
+    auto proxy = col->getProxy();
+    fmt::print("reduce_msg->num={}\n", reduce_msg->num);
+    theCollection()->reduceMsg<MyCol,MyReduceMsg,reducePlus>(proxy, reduce_msg);
+  }
+
+  static void reducePlus(MyReduceMsg* msg) {
+    fmt::print(
+      "{}: cur={}: is_root={}, count={}, next={}, num={}\n",
+      theContext()->getNode(), print_ptr(msg), print_bool(msg->isRoot()),
+      msg->getCount(), print_ptr(msg->getNext<MyReduceMsg>()), msg->num
+    );
+
+    if (msg->isRoot()) {
+      fmt::print("{}: final num={}\n", theContext()->getNode(), msg->num);
+    } else {
+      MyReduceMsg* fst_msg = msg;
+      MyReduceMsg* cur_msg = msg->getNext<MyReduceMsg>();
+      while (cur_msg != nullptr) {
+        fmt::print(
+          "{}: while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
+          theContext()->getNode(),
+          print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->isRoot()),
+          cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()),
+          cur_msg->num
+        );
+
+        fst_msg->num += cur_msg->num;
+        cur_msg = cur_msg->getNext<MyReduceMsg>();
+      }
+    }
+  }
+};
+
+TEST_F(TestReduceCollection, test_reduce_op) {
+  auto const& my_node = theContext()->getNode();
+  auto const& root = 0;
+
+  auto const& this_node = theContext()->getNode();
+  if (this_node == 0) {
+    auto const& range = Index1D(32);
+    auto proxy = theCollection()->construct<MyCol>(range);
+    auto msg = new ColMsg(this_node);
+    proxy.broadcast<ColMsg,colHan>(msg);
+  }
+}
+
+}}} // end namespace vt::tests::unit
