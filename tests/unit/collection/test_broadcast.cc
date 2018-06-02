@@ -25,7 +25,7 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex> {
   using ParamType = std::tuple<Args...>;
   TestCol() = default;
   void testMethod(Args... args) {
-    #if PRINT_CONSTRUCTOR_VALUES || 1
+    #if PRINT_CONSTRUCTOR_VALUES
       ConstructTuple<ParamType>::print(std::make_tuple(args...));
     #endif
     ConstructTuple<ParamType>::isCorrect(std::make_tuple(args...));
@@ -33,32 +33,30 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex> {
 };
 template <typename... Args>
 struct ColMsg : CollectionMessage<TestCol<Args...>> {
-  explicit ColMsg(std::tuple<Args...> in_tup) : tup(in_tup) {}
-  std::tuple<Args...> tup;
+  using TupleType = std::tuple<Args...>;
+  explicit ColMsg(TupleType in_tup) : tup(in_tup) {}
+  TupleType tup;
   template <typename SerializerT>
   void serialize(SerializerT& s) { s | tup; }
 };
 } /* end namespace bcast_col_ */
 
+template <
+  typename CollectionT,
+  typename MessageT = typename CollectionT::MsgType,
+  typename TupleT   = typename MessageT::TupleType
+>
 struct BroadcastHandlers {
-  template <
-    typename CollectionT,
-    typename MessageT = typename CollectionT::MsgType
-  >
   static void handler(MessageT* msg, CollectionT* col) {
-    return executeTup<CollectionT,decltype(msg->tup)>(col,msg->tup);
+    return execute(col,msg->tup);
   }
-  template <typename CollectionT, typename Tuple>
-  static void executeTup(CollectionT* col,Tuple args) {
-    return execute<CollectionT,Tuple>(col,args);
-  }
-  template <typename CollectionT, typename Tuple, typename... Args>
+  template <typename... Args>
   static void execute(CollectionT* col, std::tuple<Args...> args) {
     return unpack(col,args,std::index_sequence_for<Args...>{});
   }
-  template <typename CollectionT, typename Tuple, std::size_t ...I>
+  template <std::size_t ...I>
   static void unpack(
-    CollectionT* col, Tuple args, std::index_sequence<I...>
+    CollectionT* col, TupleT args, std::index_sequence<I...>
   ) {
     return col->testMethod(std::get<I>(args)...);
   }
@@ -83,15 +81,19 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
     auto msg = makeSharedMessage<MsgType>(args);
     proxy.template broadcast<
       MsgType,
-      BroadcastHandlers::handler<ColType,MsgType>
+      BroadcastHandlers<ColType>::handler
     >(msg);
+    auto msg2 = makeSharedMessage<MsgType>(args);
+    theCollection()->broadcastMsg<
+      MsgType,BroadcastHandlers<ColType>::handler
+    >(proxy, msg2, nullptr);
   }
 }
 
 REGISTER_TYPED_TEST_CASE_P(TestBroadcast, test_broadcast_1);
 
 using CollectionTestTypes = testing::Types<
-  bcast_col_            ::TestCol<std::string>,
+  bcast_col_            ::TestCol<int32_t>,
   bcast_col_            ::TestCol<int64_t>,
   bcast_col_            ::TestCol<std::string>,
   bcast_col_            ::TestCol<test_data::A>,
