@@ -17,11 +17,7 @@ struct DetectConsNoIndex {
     VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
     std::index_sequence<I...>
   ) {
-    return std::make_unique<ColT>(
-      std::forward<typename std::tuple_element<I,Tuple>::type>(
-        std::get<I>(*tup)
-      )...
-    );
+    return std::make_unique<ColT>(std::get<I>(*tup)...);
   }
 };
 
@@ -33,12 +29,7 @@ struct DetectConsIdxFst {
     VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
     std::index_sequence<I...>
   ) {
-    return std::make_unique<ColT>(
-      idx,
-      std::forward<typename std::tuple_element<I,Tuple>::type>(
-        std::get<I>(*tup)
-      )...
-    );
+    return std::make_unique<ColT>(idx,std::get<I>(*tup)...);
   }
 };
 
@@ -50,11 +41,7 @@ struct DetectConsIdxSnd {
     VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
     std::index_sequence<I...>
   ) {
-    return std::make_unique<ColT>(
-      std::forward<typename std::tuple_element<I,Tuple>::type>(
-        std::get<I>(*tup)
-      )..., idx
-    );
+    return std::make_unique<ColT>(std::get<I>(*tup)...,idx);
   }
 };
 
