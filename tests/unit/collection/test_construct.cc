@@ -7,9 +7,14 @@
 
 #include "transport.h"
 
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+
 #include <cstdint>
 #include <tuple>
 #include <string>
+
+#define PRINT_CONSTRUCTOR_VALUES 1
 
 namespace serdes {
 template <typename Serializer>
@@ -23,6 +28,46 @@ void serialize(Serializer& s, std::string& str) {
 }
 } /* end namespace serdes */
 
+namespace test_data {
+struct A {
+  int32_t a,b,c;
+  friend std::ostream& operator<<(std::ostream&os, A const& d) {
+    return os << d.a << "-" << d.b << "-" << d.c;
+  }
+  friend bool operator==(A const& c1,A const& c2) {
+    return c1.a == c2.a && c1.b == c2.b && c1.c == c2.c;
+  }
+};
+struct B {
+  std::string str;
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | str;
+  }
+  friend std::ostream& operator<<(std::ostream&os, B const& d) {
+    return os << d.str;
+  }
+  friend bool operator==(B const& c1,B const& c2) {
+    return c1.str == c2.str;
+  }
+};
+struct C {
+  std::string str;
+  int64_t a;
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | str;
+    s | a;
+  }
+  friend std::ostream& operator<<(std::ostream&os, C const& d) {
+    return os << d.str << '-' << d.a;
+  }
+  friend bool operator==(C const& c1,C const& c2) {
+    return c1.str == c2.str && c1.a == c2.a;
+  }
+};
+} /* end namespace test_data */
+
 namespace vt { namespace tests { namespace unit {
 
 using namespace vt;
@@ -33,21 +78,12 @@ using namespace vt::vrt::collection;
 using TestIndex = ::vt::index::Index1D;
 using ParamType = int32_t;
 
-// template <typename Tuple, std::size_t val=std::tuple_size<Tuple>::value>
-// struct PrintTuple {
-//   static void print(Tuple t) {}
-// };
-
-// template <typename Tuple>
-// struct PrintTuple<Tuple, 1> {
-//   static void print(Tuple t) {
-//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-//   }
-// };
-
-static constexpr char*   magic_string_  = "test_string123";
-static constexpr int32_t magic_int32_t_ = 29;
-static constexpr int64_t magic_int64_t_ = 0xFFFFFEEDFFFFFAAD;
+static char         magic_string_[]  = "test_string123";
+static int32_t      magic_int32_t_   = 29;
+static int64_t      magic_int64_t_   = 0xFFFFFEEDFFFFFAAD;
+static test_data::A magic_A_t_       = test_data::A{28,2773,12};
+static test_data::B magic_B_t_       = test_data::B{"the-ultimate-test"};
+static test_data::C magic_C_t_       = test_data::C{"test123",34};
 
 template <typename Tuple, typename=void>
 struct ConstructTuple {
@@ -56,51 +92,113 @@ struct ConstructTuple {
   static void isCorrect(Tuple t) { }
 };
 
-template <typename Tuple>
-struct ConstructTuple<
-  Tuple,
-  typename std::enable_if_t<std::is_same<Tuple,std::tuple<std::string>>::value>
->{
-  static Tuple construct() {
-    return std::make_tuple(std::string(magic_string_));
-  }
-  static void print(Tuple t) {
-    ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-  }
-  static void isCorrect(Tuple t) {
-    EXPECT_EQ(magic_string_, std::get<0>(t));
-  }
+#define CONSTRUCT_TUPLE_TYPE(PARAM_TYPE,PARAM_NAME)                     \
+  template <typename Tuple>                                             \
+  struct ConstructTuple<                                                \
+    Tuple,                                                              \
+    typename std::enable_if_t<                                          \
+      std::is_same<Tuple,std::tuple<PARAM_TYPE>>::value                 \
+    >                                                                   \
+  >{                                                                    \
+    static Tuple construct() {                                          \
+      return std::make_tuple(PARAM_NAME);                               \
+    }                                                                   \
+    static void print(Tuple t) {                                        \
+      ::fmt::print(                                                     \
+        "{}: val={}\n",theContext()->getNode(),std::get<0>(t)           \
+      );                                                                \
+    }                                                                   \
+    static void isCorrect(Tuple t) {                                    \
+      EXPECT_EQ(PARAM_NAME, std::get<0>(t));                            \
+    }                                                                   \
 };
 
-template <typename Tuple>
-struct ConstructTuple<
-  Tuple,
-  typename std::enable_if_t<std::is_same<Tuple,std::tuple<int32_t>>::value>
->{
-  static Tuple construct() { return std::make_tuple(magic_int32_t_); }
-  static void print(Tuple t) {
-    ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-  }
-  static void isCorrect(Tuple t) {
-    EXPECT_EQ(magic_int32_t_, std::get<0>(t));
-  }
-};
+CONSTRUCT_TUPLE_TYPE(std::string,magic_string_);
+CONSTRUCT_TUPLE_TYPE(int32_t,magic_int32_t_);
+CONSTRUCT_TUPLE_TYPE(int64_t,magic_int64_t_);
+CONSTRUCT_TUPLE_TYPE(test_data::A,magic_A_t_);
+CONSTRUCT_TUPLE_TYPE(test_data::B,magic_B_t_);
+CONSTRUCT_TUPLE_TYPE(test_data::C,magic_C_t_);
 
-template <typename Tuple>
-struct ConstructTuple<
-  Tuple,
-  typename std::enable_if_t<std::is_same<Tuple,std::tuple<int64_t>>::value>
->{
-  static Tuple construct() { return std::make_tuple(magic_int64_t_); }
-  static void print(Tuple t) {
-    ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-  }
-  static void isCorrect(Tuple t) {
-    EXPECT_EQ(magic_int64_t_, std::get<0>(t));
-  }
-};
+// template <typename Tuple>
+// struct ConstructTuple<
+//   Tuple,
+//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<std::string>>::value>
+// >{
+//   static Tuple construct() {
+//     return std::make_tuple(std::string(magic_string_));
+//   }
+//   static void print(Tuple t) {
+//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
+//   }
+//   static void isCorrect(Tuple t) {
+//     EXPECT_EQ(magic_string_, std::get<0>(t));
+//   }
+// };
 
+// template <typename Tuple>
+// struct ConstructTuple<
+//   Tuple,
+//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<int32_t>>::value>
+// >{
+//   static Tuple construct() { return std::make_tuple(magic_int32_t_); }
+//   static void print(Tuple t) {
+//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
+//   }
+//   static void isCorrect(Tuple t) {
+//     EXPECT_EQ(magic_int32_t_, std::get<0>(t));
+//   }
+// };
 
+// template <typename Tuple>
+// struct ConstructTuple<
+//   Tuple,
+//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<int64_t>>::value>
+// >{
+//   static Tuple construct() { return std::make_tuple(magic_int64_t_); }
+//   static void print(Tuple t) {
+//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
+//   }
+//   static void isCorrect(Tuple t) {
+//     EXPECT_EQ(magic_int64_t_, std::get<0>(t));
+//   }
+// };
+
+// template <typename Tuple>
+// struct ConstructTuple<
+//   Tuple,
+//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<test_data::A>>::value>
+// >{
+//   static Tuple construct() { return std::make_tuple(magic_A_t_); }
+//   static void print(Tuple t) {
+//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
+//   }
+//   static void isCorrect(Tuple t) { EXPECT_EQ(magic_A_t_, std::get<0>(t)); }
+// };
+
+// template <typename Tuple>
+// struct ConstructTuple<
+//   Tuple,
+//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<test_data::B>>::value>
+// >{
+//   static Tuple construct() { return std::make_tuple(magic_B_t_); }
+//   static void print(Tuple t) {
+//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
+//   }
+//   static void isCorrect(Tuple t) { EXPECT_EQ(magic_B_t_, std::get<0>(t)); }
+// };
+
+// template <typename Tuple>
+// struct ConstructTuple<
+//   Tuple,
+//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<test_data::C>>::value>
+// >{
+//   static Tuple construct() { return std::make_tuple(magic_C_t_); }
+//   static void print(Tuple t) {
+//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
+//   }
+//   static void isCorrect(Tuple t) { EXPECT_EQ(magic_C_t_, std::get<0>(t)); }
+// };
 
 struct ConstructHandlers;
 
@@ -158,7 +256,9 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex>, BaseCol {
     : Collection<TestCol, TestIndex>(),
       BaseCol(true)
   {
-    ConstructTuple<ParamType>::print(std::make_tuple(args...));
+    #if PRINT_CONSTRUCTOR_VALUES
+      ConstructTuple<ParamType>::print(std::make_tuple(args...));
+    #endif
     ConstructTuple<ParamType>::isCorrect(std::make_tuple(args...));
   }
 };
@@ -177,7 +277,9 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex>, BaseCol {
     : Collection<TestCol, TestIndex>(),
       BaseCol(true)
   {
-    ConstructTuple<ParamType>::print(std::make_tuple(args...));
+    #if PRINT_CONSTRUCTOR_VALUES
+      ConstructTuple<ParamType>::print(std::make_tuple(args...));
+    #endif
     ConstructTuple<ParamType>::isCorrect(std::make_tuple(args...));
   }
 };
@@ -196,7 +298,9 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex>, BaseCol {
     : Collection<TestCol, TestIndex>(),
       BaseCol(true)
   {
-    ConstructTuple<ParamType>::print(std::make_tuple(args...));
+    #if PRINT_CONSTRUCTOR_VALUES
+      ConstructTuple<ParamType>::print(std::make_tuple(args...));
+    #endif
     ConstructTuple<ParamType>::isCorrect(std::make_tuple(args...));
   }
 };
@@ -225,7 +329,8 @@ using CollectionTestTypes = testing::Types<
   // default_                ::TestCol,
   // index_                  ::TestCol,
   multi_param_idx_fst_    ::TestCol<int32_t>,
-  multi_param_idx_fst_    ::TestCol<std::string>
+  multi_param_idx_fst_    ::TestCol<std::string>,
+  multi_param_idx_fst_    ::TestCol<test_data::C>
   // multi_param_idx_fst_    ::TestCol<int64_t>,
   // multi_param_idx_fst_    ::TestCol<int32_t,int32_t>,
   // multi_param_idx_fst_    ::TestCol<int64_t,int64_t>,
@@ -259,19 +364,6 @@ struct ConstructParams {
     return theCollection()->construct<ColT>(idx,std::get<I>(args)...);
   }
 };
-
-// template <typename Tuple>
-// struct PrintParams {
-//   static void printTup(Tuple args) { return print(args); }
-//   template <typename... Args>
-//   static void print(std::tuple<Args...> args) {
-//     return unpack(args,std::index_sequence_for<Args...>{});
-//   }
-//   template <std::size_t ...I>
-//   static void unpack(Tuple args, std::index_sequence<I...>) {
-//     ::fmt::print("val={}\n",std::get<I>(args)...);
-//   }
-// };
 
 TYPED_TEST_P(TestConstruct, test_construct_1) {
   using ColType = TypeParam;
