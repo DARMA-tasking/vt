@@ -10,6 +10,7 @@ set(
   UNIT_TEST_SUBDIRS_LIST
   index
   active
+  collection
   collectives
   pool
   sequencer
