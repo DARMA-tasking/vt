@@ -31,6 +31,8 @@ void serialize(Serializer& s, std::string& str) {
 namespace test_data {
 struct A {
   int32_t a,b,c;
+  template <typename Serializer>
+  void serialize(Serializer& s) { s | a | b | c; }
   friend std::ostream& operator<<(std::ostream&os, A const& d) {
     return os << d.a << "-" << d.b << "-" << d.c;
   }
@@ -41,9 +43,7 @@ struct A {
 struct B {
   std::string str;
   template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | str;
-  }
+  void serialize(Serializer& s) { s | str; }
   friend std::ostream& operator<<(std::ostream&os, B const& d) {
     return os << d.str;
   }
@@ -55,10 +55,7 @@ struct C {
   std::string str;
   int64_t a;
   template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | str;
-    s | a;
-  }
+  void serialize(Serializer& s) { s | str | a; }
   friend std::ostream& operator<<(std::ostream&os, C const& d) {
     return os << d.str << '-' << d.a;
   }
@@ -119,86 +116,6 @@ CONSTRUCT_TUPLE_TYPE(int64_t,magic_int64_t_);
 CONSTRUCT_TUPLE_TYPE(test_data::A,magic_A_t_);
 CONSTRUCT_TUPLE_TYPE(test_data::B,magic_B_t_);
 CONSTRUCT_TUPLE_TYPE(test_data::C,magic_C_t_);
-
-// template <typename Tuple>
-// struct ConstructTuple<
-//   Tuple,
-//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<std::string>>::value>
-// >{
-//   static Tuple construct() {
-//     return std::make_tuple(std::string(magic_string_));
-//   }
-//   static void print(Tuple t) {
-//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-//   }
-//   static void isCorrect(Tuple t) {
-//     EXPECT_EQ(magic_string_, std::get<0>(t));
-//   }
-// };
-
-// template <typename Tuple>
-// struct ConstructTuple<
-//   Tuple,
-//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<int32_t>>::value>
-// >{
-//   static Tuple construct() { return std::make_tuple(magic_int32_t_); }
-//   static void print(Tuple t) {
-//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-//   }
-//   static void isCorrect(Tuple t) {
-//     EXPECT_EQ(magic_int32_t_, std::get<0>(t));
-//   }
-// };
-
-// template <typename Tuple>
-// struct ConstructTuple<
-//   Tuple,
-//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<int64_t>>::value>
-// >{
-//   static Tuple construct() { return std::make_tuple(magic_int64_t_); }
-//   static void print(Tuple t) {
-//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-//   }
-//   static void isCorrect(Tuple t) {
-//     EXPECT_EQ(magic_int64_t_, std::get<0>(t));
-//   }
-// };
-
-// template <typename Tuple>
-// struct ConstructTuple<
-//   Tuple,
-//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<test_data::A>>::value>
-// >{
-//   static Tuple construct() { return std::make_tuple(magic_A_t_); }
-//   static void print(Tuple t) {
-//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-//   }
-//   static void isCorrect(Tuple t) { EXPECT_EQ(magic_A_t_, std::get<0>(t)); }
-// };
-
-// template <typename Tuple>
-// struct ConstructTuple<
-//   Tuple,
-//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<test_data::B>>::value>
-// >{
-//   static Tuple construct() { return std::make_tuple(magic_B_t_); }
-//   static void print(Tuple t) {
-//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-//   }
-//   static void isCorrect(Tuple t) { EXPECT_EQ(magic_B_t_, std::get<0>(t)); }
-// };
-
-// template <typename Tuple>
-// struct ConstructTuple<
-//   Tuple,
-//   typename std::enable_if_t<std::is_same<Tuple,std::tuple<test_data::C>>::value>
-// >{
-//   static Tuple construct() { return std::make_tuple(magic_C_t_); }
-//   static void print(Tuple t) {
-//     ::fmt::print("{}: val={}\n",theContext()->getNode(),std::get<0>(t));
-//   }
-//   static void isCorrect(Tuple t) { EXPECT_EQ(magic_C_t_, std::get<0>(t)); }
-// };
 
 struct ConstructHandlers;
 
@@ -326,22 +243,32 @@ template <typename CollectionT>
 struct TestConstruct : TestParallelHarness {};
 
 using CollectionTestTypes = testing::Types<
-  // default_                ::TestCol,
-  // index_                  ::TestCol,
-  multi_param_idx_fst_    ::TestCol<int32_t>,
-  multi_param_idx_fst_    ::TestCol<std::string>,
-  multi_param_idx_fst_    ::TestCol<test_data::C>
-  // multi_param_idx_fst_    ::TestCol<int64_t>,
-  // multi_param_idx_fst_    ::TestCol<int32_t,int32_t>,
-  // multi_param_idx_fst_    ::TestCol<int64_t,int64_t>,
-  // multi_param_idx_snd_    ::TestCol<int32_t>,
-  // multi_param_idx_snd_    ::TestCol<int64_t>,
-  // multi_param_idx_snd_    ::TestCol<int32_t,int32_t>,
-  // multi_param_idx_snd_    ::TestCol<int64_t,int64_t>,
-  // multi_param_no_idx_     ::TestCol<int32_t>,
-  // multi_param_no_idx_     ::TestCol<int64_t>,
-  // multi_param_no_idx_     ::TestCol<int32_t,int32_t>,
-  // multi_param_no_idx_     ::TestCol<int64_t,int64_t>
+  default_                       ::TestCol,
+  index_                         ::TestCol,
+  multi_param_idx_fst_           ::TestCol<int32_t>,
+  multi_param_idx_fst_           ::TestCol<int64_t>,
+  multi_param_idx_fst_           ::TestCol<std::string>,
+  multi_param_idx_fst_           ::TestCol<test_data::A>,
+  multi_param_idx_fst_           ::TestCol<test_data::B>,
+  multi_param_idx_fst_           ::TestCol<test_data::C>,
+  multi_param_idx_fst_           ::TestCol<int32_t,int32_t>,
+  multi_param_idx_fst_           ::TestCol<int64_t,int64_t>,
+  multi_param_idx_snd_           ::TestCol<int32_t>,
+  multi_param_idx_snd_           ::TestCol<int64_t>,
+  multi_param_idx_snd_           ::TestCol<std::string>,
+  multi_param_idx_snd_           ::TestCol<test_data::A>,
+  multi_param_idx_snd_           ::TestCol<test_data::B>,
+  multi_param_idx_snd_           ::TestCol<test_data::C>,
+  multi_param_idx_snd_           ::TestCol<int32_t,int32_t>,
+  multi_param_idx_snd_           ::TestCol<int64_t,int64_t>,
+  multi_param_no_idx_            ::TestCol<int32_t>,
+  multi_param_no_idx_            ::TestCol<int64_t>,
+  multi_param_no_idx_            ::TestCol<std::string>,
+  multi_param_no_idx_            ::TestCol<test_data::A>,
+  multi_param_no_idx_            ::TestCol<test_data::B>,
+  multi_param_no_idx_            ::TestCol<test_data::C>,
+  multi_param_no_idx_            ::TestCol<int32_t,int32_t>,
+  multi_param_no_idx_            ::TestCol<int64_t,int64_t>
 >;
 
 TYPED_TEST_CASE_P(TestConstruct);
