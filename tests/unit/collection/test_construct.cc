@@ -14,7 +14,7 @@
 #include <tuple>
 #include <string>
 
-#define PRINT_CONSTRUCTOR_VALUES 1
+#define PRINT_CONSTRUCTOR_VALUES 0
 
 namespace serdes {
 template <typename Serializer>
