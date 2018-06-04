@@ -27,10 +27,15 @@ using SerializedInfoPtrType = std::unique_ptr<SerializedInfo>;
 using SerializedReturnType = SerializedInfoPtrType;
 
 template <typename T>
-SerializedReturnType serialize(T& target, BufferCallbackType fn = nullptr);
+SerializedReturnType serialize(
+  T& target, BufferCallbackType fn = nullptr, bool const partial = false
+);
 
 template <typename T>
-T* deserialize(SerialByteType* buf, SizeType size, T* user_buf = nullptr);
+T* deserialize(
+  SerialByteType* buf, SizeType size, T* user_buf = nullptr,
+  bool const partial = false
+);
 
 }} /* end namespace serialization::interface */
 

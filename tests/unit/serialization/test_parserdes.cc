@@ -13,6 +13,20 @@
 
 #include "transport.h"
 
+#define PRINT_DEBUG 0
+
+namespace serdes {
+template <typename Serializer>
+void parserdes(Serializer& s, std::string& str) {
+  typename std::string::size_type str_size = str.length();
+  s | str_size;
+  str.resize(str_size);
+  for (auto&& elm : str) {
+    s | elm;
+  }
+}
+} /* end namespace serdes */
+
 namespace vt { namespace tests { namespace unit {
 
 using namespace vt;
@@ -26,9 +40,25 @@ struct A : ::vt::Message {
   A(int32_t a,int32_t b,int32_t c,std::vector<int32_t> v)
     : ::vt::Message(),a(a),b(b),c(c),v(v)
   {}
-  template <typename Serializer> void serialize(Serializer& s) {}
   template <typename Serializer>
-  void parserdes(Serializer& s) { s & v; }
+  void serialize(Serializer& s) {
+    #if PRINT_DEBUG
+    ::fmt::print(
+      "test_data::A serialize v.size()={}, elm={}\n",
+      v.size(), (v.size() == 1 ? v[0] : -1)
+    );
+    #endif
+  }
+  template <typename Serializer>
+  void parserdes(Serializer& s) {
+    s & v;
+    #if PRINT_DEBUG
+    ::fmt::print(
+      "test_data::A parserdes v.size()={}, elm={}\n",
+      v.size(), (v.size() == 1 ? v[0] : -1)
+    );
+    #endif
+  }
   friend std::ostream& operator<<(std::ostream&os, A const& d) {
     return os << d.a << "-" << d.b << "-" << d.c
               << "," << (d.v.size() == 1 ? d.v[0] : -1);
@@ -40,12 +70,22 @@ struct A : ::vt::Message {
 struct B : ::vt::Message {
   std::string str;
   B() = default;
-  B(std::string str) : ::vt::Message(),str(str) {}
-  template <typename Serializer> void serialize(Serializer& s) {}
+  B(std::string str_) : ::vt::Message(),str(str_) {}
   template <typename Serializer>
-  void parserdes(Serializer& s) { s & str; }
+  void serialize(Serializer& s) {
+    #if PRINT_DEBUG
+      ::fmt::print("test_data::B serialize str={}\n", str);
+    #endif
+  }
+  template <typename Serializer>
+  void parserdes(Serializer& s) {
+    s & str;
+    #if PRINT_DEBUG
+      ::fmt::print("test_data::B parserdes str={}\n", str);
+    #endif
+  }
   friend std::ostream& operator<<(std::ostream&os, B const& d) {
-    return os << d.str;
+    return os << "\"" << d.str << "\"";
   }
   friend bool operator==(B const& c1,B const& c2) {
     return c1.str == c2.str;
@@ -58,7 +98,9 @@ struct C : ::vt::Message {
   C(std::string str,int64_t a) : ::vt::Message(),str(str),a(a) {}
   template <typename Serializer> void serialize(Serializer& s) {}
   template <typename Serializer>
-  void parserdes(Serializer& s) { s & str; }
+  void parserdes(Serializer& s) {
+    s & str;
+  }
   friend std::ostream& operator<<(std::ostream&os, C const& d) {
     return os << d.str << '-' << d.a;
   }
@@ -74,19 +116,66 @@ static test_data::C magic_C_t_       = test_data::C{"test123",34};
 
 struct TestParserdes : TestParallelHarness {
   template <typename MsgT>
+  static void testHandlerA(MsgT* msg) {
+    #if PRINT_DEBUG
+      ::fmt::print("testHandlerA: val={}\n", *msg);
+    #endif
+    EXPECT_EQ(*msg, magic_A_t_);
+  }
+  template <typename MsgT>
   static void testHandlerB(MsgT* msg) {
-    ::fmt::print("testHandlerB: val={}\n", *msg);
+    #if PRINT_DEBUG
+      ::fmt::print("testHandlerB: val={}\n", *msg);
+    #endif
     EXPECT_EQ(*msg, magic_B_t_);
+  }
+  template <typename MsgT>
+  static void testHandlerC(MsgT* msg) {
+    #if PRINT_DEBUG
+      ::fmt::print("testHandlerC: val={}\n", *msg);
+    #endif
+    EXPECT_EQ(*msg, magic_C_t_);
   }
 };
 
-TEST_F(TestParserdes, test_parserdes_b1) {
+TEST_F(TestParserdes, test_parserdes_a_1) {
   auto const& my_node = theContext()->getNode();
 
   if (theContext()->getNumNodes() > 1) {
     if (my_node == 0) {
-      auto msg = makeSharedMessageSz<test_data::B>(128);
+      auto msg = makeSharedMessageSz<test_data::A>(sizeof(int32_t), magic_A_t_);
+      #if PRINT_DEBUG
+        ::fmt::print("test_data::A sending msg val={}\n", *msg);
+      #endif
+      SerializedMessenger::sendParserdesMsg<test_data::A, testHandlerA>(1, msg);
+    }
+  }
+}
+
+TEST_F(TestParserdes, test_parserdes_b_1) {
+  auto const& my_node = theContext()->getNode();
+
+  if (theContext()->getNumNodes() > 1) {
+    if (my_node == 0) {
+      auto msg = makeSharedMessageSz<test_data::B>(128, magic_B_t_);
+      #if PRINT_DEBUG
+        ::fmt::print("test_data::B sending msg val={}\n", *msg);
+      #endif
       SerializedMessenger::sendParserdesMsg<test_data::B, testHandlerB>(1, msg);
+    }
+  }
+}
+
+TEST_F(TestParserdes, test_parserdes_c_1) {
+  auto const& my_node = theContext()->getNode();
+
+  if (theContext()->getNumNodes() > 1) {
+    if (my_node == 0) {
+      auto msg = makeSharedMessageSz<test_data::C>(8*sizeof(char), magic_C_t_);
+      #if PRINT_DEBUG
+        ::fmt::print("test_data::C sending msg val={}\n", *msg);
+      #endif
+      SerializedMessenger::sendParserdesMsg<test_data::C, testHandlerC>(1, msg);
     }
   }
 }
