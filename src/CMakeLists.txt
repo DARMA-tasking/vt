@@ -45,7 +45,7 @@ set(
       lb/balancers/centralized
         lb/balancers/centralized/impls
     lb/migration
-    serialization/messaging serialization/traits
+    serialization/messaging serialization/traits serialization/auto_dispatch
     utils/demangle utils/container utils/bits utils/mutex
     utils/hash utils/atomic utils/tls utils/static_checks
     registry/auto

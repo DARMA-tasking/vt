@@ -26,6 +26,9 @@ namespace vt { namespace location {
   virtual_loc = nullptr;
   vrtContextLoc = nullptr;
   collectionLoc.clear();
+  loc_insts.clear();
+  //pending_inst_.clear();
+  cur_loc_inst = 0xFF00000000000000;
 }
 
 /*static*/ LocInstType LocationManager::cur_loc_inst = 0xFF00000000000000;

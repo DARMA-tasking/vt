@@ -11,7 +11,12 @@
 
 namespace vt { namespace messaging {
 
-struct BaseMsg { };
+struct BaseMsg {
+  template <typename SerializerT>
+  void serializeParent(SerializerT& s) { }
+  template <typename SerializerT>
+  void serializeThis(SerializerT& s) { }
+};
 
 template <typename EnvelopeT>
 struct ActiveMsg : BaseMsg {
@@ -61,10 +66,16 @@ struct ActiveMsg : BaseMsg {
   }
   #endif
 
-  // Explicitly write serialize so derived messages can contain non-byte
+  // Explicitly write parent serialize so derived messages can contain non-byte
   // serialization. Envelopes, by default, are required to be byte serializable.
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
+  void serializeParent(SerializerT& s) {
+    BaseMsg::serializeParent(s);
+    BaseMsg::serializeThis(s);
+  }
+
+  template <typename SerializerT>
+  void serializeThis(SerializerT& s) {
     s | env;
   }
 };

@@ -8,7 +8,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-struct DestroyMsg : ::vt::Message {
+struct DestroyMsg final : ::vt::Message {
   DestroyMsg() = default;
   DestroyMsg(
     VirtualProxyType const& in_proxy, NodeType const& in_from

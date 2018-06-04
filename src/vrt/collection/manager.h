@@ -242,9 +242,11 @@ private:
   );
 
 private:
+  template <typename=void>
+  static VirtualIDType curIdent_;
+
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;
-  VirtualIDType curIdent_ = 0;
   AwaitingDestructionType await_destroy_;
   std::unordered_set<VirtualProxyType> constructed_;
   std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;

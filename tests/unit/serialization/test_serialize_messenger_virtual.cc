@@ -42,7 +42,6 @@ struct DataMsg : vt::vrt::VirtualMessage {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    VirtualMessage::serialize(s);
     s | vec;
     s | test;
   }

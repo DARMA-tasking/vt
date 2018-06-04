@@ -10,6 +10,7 @@
 #include "topos/location/utility/entity.h"
 #include "context/context.h"
 #include "messaging/active.h"
+#include "serialization/auto_dispatch/dispatch.h"
 
 #include <cstdint>
 #include <memory>
@@ -180,8 +181,8 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
-  EntityID const& id, NodeType const& home_node, MessageT *msg,
-  ActionType action
+  bool const serialize, EntityID const& id, NodeType const& home_node,
+  MessageT *msg, ActionType action
 ) {
   auto const& this_node = theContext()->getNode();
   NodeType route_to_node = uninitialized_destination;
@@ -191,7 +192,9 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: routeMsgEager: found={}\n", print_bool(found)
+    "EntityLocationCoord: routeMsgEager: found={}, home_node={}, "
+    "route_to_node={}, serialize={}\n",
+    found, home_node, route_to_node, serialize
   );
 
   if (found) {
@@ -224,11 +227,12 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: routeMsgEager: home_node={}, route_node={}\n",
-    home_node, route_to_node
+    "EntityLocationCoord: routeMsgEager: home_node={}, route_node={}, "
+    "serialize={}\n",
+    home_node, route_to_node, serialize
   );
 
-  return routeMsgNode<MessageT>(id, home_node, route_to_node, msg, action);
+  return routeMsgNode<MessageT>(serialize,id,home_node,route_to_node,msg,action);
 }
 
 template <typename EntityID>
@@ -295,22 +299,31 @@ void EntityLocationCoord<EntityID>::getLocation(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
-  EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-  MessageT *msg, ActionType action
+  bool const serialize, EntityID const& id, NodeType const& home_node,
+  NodeType const& to_node, MessageT *msg, ActionType action
 ) {
   auto const& this_node = theContext()->getNode();
 
   debug_print(
     location, node,
-    "EntityLocationCoord: routeMsgNode: to_node={}, node={}: inst={}\n",
-    to_node, this_node, this_inst
+    "EntityLocationCoord: routeMsgNode: to_node={}, node={}: inst={}, "
+    "serialize={}\n",
+    to_node, this_node, this_inst, serialize
   );
 
   if (to_node != this_node) {
     // set the instance on the message to deliver to the correct manager
     msg->setLocInst(this_inst);
-    // send to the node discovered by the location manager
-    theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg, action);
+
+    if (serialize) {
+      using ::vt::serialization::auto_dispatch::RequiredSerialization;
+      RequiredSerialization<MessageT,msgHandler>::sendMsg(
+        to_node,msg,no_tag,action
+      );
+    } else {
+      // send to the node discovered by the location manager
+      theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg, action);
+    }
   } else {
     if (msg->hasHandler()) {
       auto const& handler = msg->getHandler();
@@ -384,12 +397,24 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 
 template <typename EntityID>
 template <typename MessageT>
+void EntityLocationCoord<EntityID>::routeMsgSerialize(
+  EntityID const& id, NodeType const& home_node, MessageT *m,
+  ActionType action
+) {
+  return routeMsg<MessageT>(id,home_node,m,action,true);
+}
+
+
+template <typename EntityID>
+template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
-  EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act
+  EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act,
+  bool const serialize
 ) {
   // set field for location routed message
   msg->setEntity(id);
   msg->setHomeNode(home_node);
+  msg->setSerialize(serialize);
 
   auto const& msg_size = sizeof(*msg);
   bool const& is_large_msg = msg_size > small_msg_max_size;
@@ -397,19 +422,19 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
   debug_print(
     location, node,
-    "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}\n",
-    this_inst, home_node, msg_size, print_bool(is_large_msg),
-    print_bool(use_eager)
+    "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
+    "serialize={}\n",
+    this_inst, home_node, msg_size, is_large_msg, use_eager, serialize
   );
 
   msg->setLocInst(this_inst);
 
   if (use_eager) {
-    routeMsgEager<MessageT>(id, home_node, msg, act);
+    routeMsgEager<MessageT>(serialize, id, home_node, msg, act);
   } else {
     // non-eager protocol: get location first then send message after resolution
     getLocation(id, home_node, [=](NodeType node) {
-      routeMsgNode<MessageT>(id, home_node, node, msg, act);
+      routeMsgNode<MessageT>(serialize, id, home_node, node, msg, act);
     });
   }
 }
@@ -455,17 +480,18 @@ template <typename MessageT>
   auto const& entity_id = msg->getEntity();
   auto const& home_node = msg->getHomeNode();
   auto const& inst = msg->getLocInst();
+  auto const& serialize = msg->getSerialize();
 
   debug_print(
     location, node,
-    "msgHandler: msg={}, ref={}, loc_inst={}\n",
-    print_ptr(msg), envelopeGetRef(msg->env), inst
+    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}\n",
+    print_ptr(msg), envelopeGetRef(msg->env), inst, serialize
   );
 
   messageRef(msg);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
-      loc->routeMsg(entity_id, home_node, msg);
+      loc->routeMsg(entity_id, home_node, msg, nullptr, serialize);
       messageDeref(msg);
     }
   );

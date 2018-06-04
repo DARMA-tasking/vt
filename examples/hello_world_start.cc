@@ -36,7 +36,6 @@ struct ProxyMsg : vt::vrt::VirtualMessage {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    VirtualMessage::serialize(s);
     s | proxies;
   }
 };
@@ -48,7 +47,6 @@ struct WorkMsg : vt::vrt::VirtualMessage {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    VirtualMessage::serialize(s);
     s | work_vec;
   }
 };

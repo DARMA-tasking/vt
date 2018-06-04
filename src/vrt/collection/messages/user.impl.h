@@ -61,10 +61,18 @@ void CollectionMessage<ColT, BaseMsgT>::setBcastEpoch(EpochType const& epoch) {
 
 template <typename ColT, typename BaseMsgT>
 template <typename SerializerT>
-void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
-  RoutedMessageType<BaseMsgT, ColT>::serialize(s);
+void CollectionMessage<ColT, BaseMsgT>::serializeParent(SerializerT& s) {
+  RoutedMessageType<BaseMsgT, ColT>::serializeParent(s);
+  RoutedMessageType<BaseMsgT, ColT>::serializeThis(s);
+}
+
+template <typename ColT, typename BaseMsgT>
+template <typename SerializerT>
+void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
   s | vt_sub_handler_;
   s | to_proxy_;
+  s | bcast_proxy_;
+  s | bcast_epoch_;
 }
 
 }}} /* end namespace vt::vrt::collection */

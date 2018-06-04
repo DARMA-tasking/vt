@@ -107,6 +107,12 @@ struct EntityLocationCoord : LocationCoord {
   template <typename MessageT>
   void routeMsg(
     EntityID const& id, NodeType const& home_node, MessageT *m,
+    ActionType action = nullptr, bool const serialize = false
+  );
+
+  template <typename MessageT>
+  void routeMsgSerialize(
+    EntityID const& id, NodeType const& home_node, MessageT *m,
     ActionType action = nullptr
   );
 
@@ -125,14 +131,14 @@ private:
 
   template <typename MessageT>
   void routeMsgEager(
-    EntityID const& id, NodeType const& home_node, MessageT *msg,
-    ActionType action = nullptr
+    bool const serialize, EntityID const& id, NodeType const& home_node,
+    MessageT *msg, ActionType action = nullptr
   );
 
   template <typename MessageT>
   void routeMsgNode(
-    EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-    MessageT *msg, ActionType action = nullptr
+    bool const serialize, EntityID const& id, NodeType const& home_node,
+    NodeType const& to_node, MessageT *msg, ActionType action = nullptr
   );
 
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);

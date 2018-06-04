@@ -41,10 +41,13 @@ struct CollectionMessage :
   EpochType getBcastEpoch() const;
   void setBcastEpoch(EpochType const& epoch);
 
-  // Explicitly write a serializer so derived user messages can contain non-byte
-  // serialization
+  // Explicitly write a parent serializer so derived user messages can contain
+  // non-byte serialization
   template <typename SerializerT>
-  void serialize(SerializerT& s);
+  void serializeParent(SerializerT& s);
+
+  template <typename SerializerT>
+  void serializeThis(SerializerT& s);
 
   friend struct CollectionManager;
 

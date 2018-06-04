@@ -15,11 +15,16 @@ struct CallbackMsg : ::vt::Message {
   void setCallback(HandlerType const& han) { callback_ = han; }
   HandlerType getCallback() const { return callback_; }
 
-  // Explicitly write serialize so derived messages can contain non-byte
+  // Explicitly write parent serialize so derived messages can contain non-byte
   // serialization. Envelopes, by default, are required to be byte serializable.
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    Message::serialize(s);
+  void serializeParent(SerializerT& s) {
+    Message::serializeParent(s);
+    Message::serializeThis(s);
+  }
+
+  template <typename SerializerT>
+  void serializeThis(SerializerT& s) {
     s | callback_;
   }
 

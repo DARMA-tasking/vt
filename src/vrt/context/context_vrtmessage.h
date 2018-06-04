@@ -46,11 +46,16 @@ struct VirtualMessage :
   bool getExecuteCommThread() const { return execute_comm_thd_; }
   void setExecuteCommThread(bool const comm) { execute_comm_thd_ = comm; }
 
-  // Explicitly write a serializer so derived user messages can contain non-byte
-  // serialization
+  // Explicitly write a parent serializer so derived user messages can contain
+  // non-byte serialization
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    RoutedMessageType<vt::Message>::serialize(s);
+  void serializeParent(SerializerT& s) {
+    RoutedMessageType<vt::Message>::serializeParent(s);
+    RoutedMessageType<vt::Message>::serializeThis(s);
+  }
+
+  template <typename SerializerT>
+  void serializeThis(SerializerT& s) {
     s | vt_sub_handler_;
     s | to_proxy_;
     s | execute_comm_thd_;

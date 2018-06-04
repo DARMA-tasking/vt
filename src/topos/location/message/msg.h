@@ -49,12 +49,24 @@ struct EntityMsg : ActiveMessageT {
   bool hasHandler() const { return handler_ != uninitialized_handler; }
   void setHandler(HandlerType const& han) { handler_ = han; }
   HandlerType getHandler() const { return handler_; }
+  void setSerialize(bool const serialize) { serialize_ = serialize; }
+  bool getSerialize() const { return serialize_; }
 
-  // Explicitly write serialize so derived classes can have non-byte serializers
+  // Explicitly write parent serialize so derived classes can have non-byte
+  // serializers
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    ActiveMessageT::serialize(s);
-    s | entity_id_ | home_node_ | loc_man_inst_ | handler_;
+  void serializeParent(SerializerT& s) {
+    ActiveMessageT::serializeParent(s);
+    ActiveMessageT::serializeThis(s);
+  }
+
+  template <typename SerializerT>
+  void serializeThis(SerializerT& s) {
+    s | entity_id_;
+    s | home_node_;
+    s | loc_man_inst_;
+    s | handler_;
+    s | serialize_;
   }
 
 private:
@@ -62,6 +74,7 @@ private:
   NodeType home_node_ = uninitialized_destination;
   LocInstType loc_man_inst_ = no_loc_inst;
   HandlerType handler_ = uninitialized_handler;
+  bool serialize_ = false;
 };
 
 }}  // end namespace vt::location

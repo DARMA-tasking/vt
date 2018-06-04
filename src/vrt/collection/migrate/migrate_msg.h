@@ -10,7 +10,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-struct MigrateMsg : ::vt::PayloadMessage {
+struct MigrateMsg final : ::vt::PayloadMessage {
 
   MigrateMsg() = default;
   MigrateMsg(

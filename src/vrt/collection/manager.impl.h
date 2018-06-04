@@ -26,6 +26,7 @@
 #include "topos/mapping/mapping_headers.h"
 #include "termination/term_headers.h"
 #include "serialization/serialization.h"
+#include "serialization/auto_dispatch/dispatch.h"
 #include "collective/reduce/reduce_hash.h"
 
 #include <tuple>
@@ -34,6 +35,9 @@
 #include <memory>
 
 namespace vt { namespace vrt { namespace collection {
+
+template <typename>
+/*static*/ VirtualIDType CollectionManager::curIdent_ = 0;
 
 template <typename>
 void CollectionManager::destroyCollections() {
@@ -160,6 +164,11 @@ template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionBcastHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const col = col_msg->getBcastProxy();
+  debug_print(
+    vrt_coll, node,
+    "collectionBcastHandler: proxy={}, han={}, epoch={}\n",
+    col, col_msg->getVrtHandler(), col_msg->getBcastEpoch()
+  );
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(col);
   assert(elm_holder != nullptr && "Should never happen");
   auto const sub_handler = col_msg->getVrtHandler();
@@ -220,10 +229,11 @@ template <typename>
     "collectionConstructHan: proxy={}\n", msg->proxy
   );
   if (msg->isRoot()) {
-    CollectionConsMsg* new_msg(msg);
+    auto new_msg = makeSharedMessage<CollectionConsMsg>(*msg);
+    messageRef(new_msg);
     theMsg()->broadcastMsg<CollectionConsMsg,collectionFinishedHan>(new_msg);
-    CollectionConsMsg* new_msg_local(msg);
-    collectionFinishedHan(new_msg_local);
+    collectionFinishedHan(new_msg);
+    messageDeref(new_msg);
   } else {
     // do nothing
   }
@@ -291,10 +301,22 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
 
   msg->setBcastEpoch(epoch);
 
+  debug_print(
+    vrt_coll, node,
+    "broadcastFromRoot: proxy={}, epoch={}, han={}\n",
+    proxy, msg->getBcastEpoch(), msg->getVrtHandler()
+  );
+
   theTerm()->produce(term::any_epoch_sentinel, num_nodes);
 
+  using Serial = ::vt::serialization::auto_dispatch::RequiredSerialization<
+    MsgT, collectionBcastHandler<ColT,IndexT,MsgT>
+  >;
+
+  //auto new_msg = makeSharedMessage<MsgT>(*msg);
   messageRef(msg);
-  theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT,MsgT>>(msg);
+  Serial::broadcastMsg(msg);
+  //theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT,MsgT>>(msg);
   collectionBcastHandler<ColT,IndexT,MsgT>(msg);
   messageDeref(msg);
 }
@@ -346,13 +368,18 @@ void CollectionManager::broadcastMsg(
     if (this_node != bcast_node) {
       debug_print(
         vrt_coll, node,
-        "broadcastMsg: col_proxy={}, sending to root node={}\n",
-        col_proxy, bcast_node
+        "broadcastMsg: col_proxy={}, sending to root node={}, han={}\n",
+        col_proxy, bcast_node, han
       );
 
-      theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IndexT,MsgT>>(
-        bcast_node, msg
-      );
+      using Serial = ::vt::serialization::auto_dispatch::RequiredSerialization<
+        MsgT, broadcastRootHandler<ColT,IndexT,MsgT>
+      >;
+
+      Serial::sendMsg(bcast_node, msg);
+      // theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IndexT,MsgT>>(
+      //   bcast_node, msg
+      // );
     } else {
       debug_print(
         vrt_coll, node,
@@ -505,7 +532,7 @@ void CollectionManager::sendMsg(
     // route the message to the destination using the location manager
     auto lm = theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy);
     assert(lm != nullptr && "LM must exist");
-    lm->routeMsg(toProxy, home_node, msg, act);
+    lm->routeMsgSerialize(toProxy, home_node, msg, act);
     // TODO: race when proxy gets transferred off node before the LM is created
     // LocationManager::applyInstance<LocationManager::VrtColl<IndexT>>
   } else {
@@ -690,7 +717,7 @@ inline void CollectionManager::insertCollectionInfo(VirtualProxyType const& p) {
 
 inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
   auto const& node = theContext()->getNode();
-  return VirtualProxyBuilder::createProxy(curIdent_++, node, true, true);
+  return VirtualProxyBuilder::createProxy(curIdent_<>++, node, true, true);
 }
 
 /*
