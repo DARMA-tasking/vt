@@ -12,6 +12,7 @@
 
 #include <tuple>
 #include <type_traits>
+#include <cstdlib>
 
 using namespace ::serialization::interface;
 
@@ -31,6 +32,28 @@ struct SerializedMessenger {
   using SerialWrapperMsgType = SerializedDataMsg<UserMsgT>;
 
   template <typename UserMsgT>
+  static void serialMsgHandlerBcast(SerialWrapperMsgType<UserMsgT>* sys_msg) {
+    auto const& handler = sys_msg->handler;
+    auto const& ptr_size = sys_msg->ptr_size;
+
+    debug_print(
+      serial_msg, node,
+      "serialMsgHandlerBcast: handler={}, ptr_size={}\n",
+      handler, ptr_size
+    );
+
+    UserMsgT* user_msg = makeSharedMessage<UserMsgT>();
+    auto ptr_offset =
+      reinterpret_cast<char*>(sys_msg) + sizeof(SerialWrapperMsgType<UserMsgT>);
+    auto t_ptr = deserialize<UserMsgT>(ptr_offset, ptr_size, user_msg);
+
+    messageRef(user_msg);
+    auto active_fn = auto_registry::getAutoHandler(handler);
+    active_fn(reinterpret_cast<BaseMessage*>(t_ptr));
+    messageDeref(user_msg);
+  }
+
+  template <typename UserMsgT>
   static void serialMsgHandler(SerialWrapperMsgType<UserMsgT>* sys_msg) {
     auto const handler = sys_msg->handler;
     auto const& recv_tag = sys_msg->data_recv_tag;
@@ -39,7 +62,7 @@ struct SerializedMessenger {
       serial_msg, node,
       "serialMsgHandler: non-eager, recvDataMsg: msg={}, handler={}, "
       "recv_tag={}\n",
-      sys_msg, handler, recv_tag
+      print_ptr(sys_msg), handler, recv_tag
     );
 
     theMsg()->recvDataMsg(
@@ -47,7 +70,8 @@ struct SerializedMessenger {
         // be careful here not to use "msg", it is no longer valid
         auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
         auto ptr_size = std::get<1>(ptr);
-        UserMsgT* msg = new UserMsgT;
+        //UserMsgT* msg = static_cast<UserMsgT*>(std::malloc(sizeof(UserMsgT)));
+        UserMsgT* msg = makeSharedMessage<UserMsgT>();
         auto tptr = deserialize<UserMsgT>(raw_ptr, ptr_size, msg);
 
         debug_print(
@@ -56,8 +80,11 @@ struct SerializedMessenger {
           handler, recv_tag
         );
 
+        messageRef(msg);
         auto active_fn = auto_registry::getAutoHandler(handler);
         active_fn(reinterpret_cast<BaseMessage*>(tptr));
+        messageDeref(msg);
+        //std::free(msg);
       }
     );
   }
@@ -68,7 +95,8 @@ struct SerializedMessenger {
   ) {
     auto const handler = sys_msg->handler;
 
-    UserMsgT* user_msg = new UserMsgT;
+    //UserMsgT* user_msg = static_cast<UserMsgT*>(std::malloc(sizeof(UserMsgT)));
+    UserMsgT* user_msg = makeSharedMessage<UserMsgT>();
     auto tptr = deserialize<UserMsgT>(
       sys_msg->payload.data(), sys_msg->bytes, user_msg
     );
@@ -76,11 +104,14 @@ struct SerializedMessenger {
     debug_print(
       serial_msg, node,
       "payloadMsgHandler: msg={}, handler={}, bytes={}\n",
-      sys_msg, handler, sys_msg->bytes
+      print_ptr(sys_msg), handler, sys_msg->bytes
     );
 
+    messageRef(user_msg);
     auto active_fn = auto_registry::getAutoHandler(handler);
     active_fn(reinterpret_cast<BaseMessage*>(tptr));
+    messageDeref(user_msg);
+    //std::free(user_msg);
   }
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
@@ -104,22 +135,58 @@ struct SerializedMessenger {
     using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
 
     HandlerType const& han = auto_registry::makeAutoHandler<MsgT, f>(nullptr);
-
     SerialEagerPayloadMsg<MsgT, BaseT>* payload_msg = nullptr;
+    SizeType ptr_size = 0;
+    SerialWrapperMsgType<MsgT>* sys_msg = nullptr;
+    auto const& sys_size = sizeof(SerialWrapperMsgType<MsgT>);
 
     auto serialized_msg = serialize(
       *msg, [&](SizeType size) -> SerialByteType* {
-        payload_msg = makeSharedMessage<PayloadMsg>(size);
-        return payload_msg->payload.data();
+        ptr_size = size;
+        if (size > serialized_msg_eager_size) {
+          char* buf = static_cast<char*>(thePool()->alloc(ptr_size + sys_size));
+          sys_msg = new (buf) SerialWrapperMsgType<MsgT>{};
+          return buf + sys_size;
+        } else {
+          payload_msg = makeSharedMessage<PayloadMsg>(size);
+          return payload_msg->payload.data();
+        }
       }
     );
 
-    // move serialized msg envelope to system envelope to preserve info
-    payload_msg->env = msg->env;
-    payload_msg->handler = han;
-    payload_msg->from_node = theContext()->getNode();
+    if (ptr_size < serialized_msg_eager_size) {
+      assert(
+        ptr_size < serialized_msg_eager_size &&
+        "Must be smaller for eager protocol"
+      );
 
-    theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg);
+      // move serialized msg envelope to system envelope to preserve info
+      payload_msg->env = msg->env;
+      payload_msg->handler = han;
+      payload_msg->from_node = theContext()->getNode();
+
+      debug_print(
+        serial_msg, node,
+        "broadcastSerialMsg: han={}, size={}, serialized_msg_eager_size={}\n",
+        han, ptr_size, serialized_msg_eager_size
+      );
+
+      theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg);
+    } else {
+      sys_msg->handler = han;
+      sys_msg->from_node = theContext()->getNode();
+      sys_msg->ptr_size = ptr_size;
+
+      debug_print(
+        serial_msg, node,
+        "broadcastSerialMsg: container: han={}, sys_size={}, ptr_size={}\n",
+        han, sys_size, ptr_size
+      );
+
+      theMsg()->broadcastMsg<SerialWrapperMsgType<MsgT>,serialMsgHandlerBcast>(
+        sys_msg, ptr_size + sys_size, no_tag, no_action
+      );
+    }
   }
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
@@ -175,14 +242,15 @@ struct SerializedMessenger {
           debug_print(
             serial_msg, node,
             "sendSerialMsg: non-eager: dest={}, sys_msg={}, handler={}\n",
-            dest, sys_msg, typed_handler
+            dest, print_ptr(sys_msg), typed_handler
           );
 
           theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
             dest, sys_msg, send_serialized
           );
         } else {
-          MsgT* msg = new MsgT;
+          //MsgT* msg = static_cast<MsgT*>(std::malloc(sizeof(MsgT)));
+          MsgT* msg = makeSharedMessage<MsgT>();
           auto tptr = deserialize<MsgT>(ptr, ptr_size, msg);
 
           debug_print(
@@ -190,9 +258,11 @@ struct SerializedMessenger {
             "serialMsgHandler: local msg: handler={}\n", typed_handler
           );
 
+          messageRef(msg);
           auto active_fn = auto_registry::getAutoHandler(typed_handler);
           active_fn(reinterpret_cast<BaseMessage*>(tptr));
-
+          messageDeref(msg);
+          //std::free(msg);
         }
       };
 
