@@ -136,11 +136,31 @@ struct SerializedMessenger {
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void sendParserdesMsg(NodeType dest, MsgT* msg) {
+    debug_print(
+      serial_msg, node,
+      "sendParserdesMsg: dest={}, msg={}\n",
+      dest, print_ptr(msg)
+    );
+    return parserdesMsg<MsgT,f>(msg, false, dest);
+  }
+
+  template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
+  static void broadcastParserdesMsg(MsgT* msg) {
+    debug_print(
+      serial_msg, node,
+      "broadcastParserdesMsg: msg={}\n", print_ptr(msg)
+    );
+    return parserdesMsg<MsgT,f>(msg);
+  }
+
+  template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
+  static void parserdesMsg(
+    MsgT* msg, bool is_bcast = true, NodeType dest = uninitialized_destination
+  ) {
     HandlerType const& user_handler =
       auto_registry::makeAutoHandler<MsgT, f>(nullptr);
 
     SizeType ptr_size = 0;
-    bool const& partial = true;
     auto const& rem_size = thePool()->remainingSize(msg);
     auto const& msg_size = sizeof(MsgT);
     auto const& han_size = sizeof(HandlerType);
@@ -162,16 +182,22 @@ struct SerializedMessenger {
 
     debug_print(
       serial_msg, node,
-      "sendParserdesMsg: ptr_size={}, rem_size={}, msg_size\n",
-      ptr_size, rem_size, msg_size
+      "parserdesMsg: ptr_size={}, rem_size={}, msg_size={}, is_bcast={}, "
+      "dest={}\n",
+      ptr_size, rem_size, msg_size, is_bcast, dest
     );
 
     *reinterpret_cast<HandlerType*>(msg_ptr + msg_size) = user_handler;
     *reinterpret_cast<HandlerType*>(msg_ptr + msg_size + han_size) = ptr_size;
 
-    theMsg()->sendMsg<MsgT,parserdesHandler>(
-      dest, msg, ptr_size + msg_size + han_size + size_size, no_tag, no_action
-    );
+    auto const& total_size = ptr_size + msg_size + han_size + size_size;
+    auto const& tag = no_tag;
+    auto const& act = no_action;
+    if (is_bcast) {
+      theMsg()->broadcastMsg<MsgT,parserdesHandler>(msg, total_size, tag, act);
+    } else {
+      theMsg()->sendMsg<MsgT,parserdesHandler>(dest, msg, total_size, tag, act);
+    }
   }
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>

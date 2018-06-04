@@ -26,6 +26,9 @@ struct SenderSerialize {
   static EventType sendMsg(
     NodeType const& node, MessageT* msg, TagType const& tag, ActionType action
   );
+  static EventType sendMsgParserdes(
+    NodeType const& node, MessageT* msg, TagType const& tag, ActionType action
+  );
 };
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -38,6 +41,9 @@ struct Broadcaster {
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 struct BroadcasterSerialize {
   static EventType broadcastMsg(
+    MessageT* msg, TagType const& tag, ActionType action
+  );
+  static EventType broadcastMsgParserdes(
     MessageT* msg, TagType const& tag, ActionType action
   );
 };
@@ -66,7 +72,6 @@ struct RequiredSerialization<
     ::serdes::SerializableTraits<MessageT>::has_serialize_function
   >
 > {
-  //template <ActiveTypedFnType<MessageT>* f>
   static EventType sendMsg(
     NodeType const& node, MessageT* msg, TagType const& tag = no_tag,
     ActionType action = nullptr
@@ -74,11 +79,34 @@ struct RequiredSerialization<
     return SenderSerialize<MessageT,f>::sendMsg(node, msg, tag, action);
   }
 
-  //template <ActiveTypedFnType<MessageT>* f>
   static EventType broadcastMsg(
     MessageT* msg, TagType const& tag = no_tag, ActionType action = nullptr
   ) {
     return BroadcasterSerialize<MessageT,f>::broadcastMsg(msg, tag, action);
+  }
+};
+
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+struct RequiredSerialization<
+  MessageT,
+  f,
+  typename std::enable_if_t<
+    ::serdes::SerializableTraits<MessageT>::is_parserdes
+  >
+> {
+  static EventType sendMsg(
+    NodeType const& node, MessageT* msg, TagType const& tag = no_tag,
+    ActionType action = nullptr
+  ) {
+    return SenderSerialize<MessageT,f>::sendMsgParserdes(node, msg, tag, action);
+  }
+
+  static EventType broadcastMsg(
+    MessageT* msg, TagType const& tag = no_tag, ActionType action = nullptr
+  ) {
+    return BroadcasterSerialize<MessageT,f>::broadcastMsgParserdes(
+      msg, tag, action
+    );
   }
 };
 #endif
