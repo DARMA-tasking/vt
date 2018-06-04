@@ -43,7 +43,7 @@ struct MemoryPoolEqual {
 
 private:
   SlotType const num_bytes_ = num_bytes_t;
-  SlotType const num_full_bytes_ = num_bytes_t + sizeof(size_t);
+  SlotType const num_full_bytes_ = num_bytes_t + sizeof(Header);
 
   SlotType pool_size_ = default_pool_size;
   SlotType cur_slot_ = fst_pool_slot;

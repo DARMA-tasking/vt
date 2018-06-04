@@ -50,12 +50,14 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(
 
   auto const& slot = cur_slot_;
   void* const ptr = holder_[slot];
-  void* const ptr_ret =
-    HeaderManagerType::setHeader(sz, oversize, static_cast<char*>(ptr));
+  void* const ptr_ret = HeaderManagerType::setHeader(
+    sz, oversize, static_cast<char*>(ptr)
+  );
 
   debug_print(
     pool, node,
-    "alloc ptr={}, ptr_ret={} cur_slot={}\n", ptr, ptr_ret, cur_slot_
+    "alloc: ptr={}, ptr_ret={} cur_slot={}, sz={}, oversize={}\n",
+    ptr, ptr_ret, cur_slot_, sz, oversize
   );
 
   cur_slot_++;

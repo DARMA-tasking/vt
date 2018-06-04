@@ -33,7 +33,7 @@ struct Pool {
 
   void* alloc(size_t const& num_bytes, size_t oversize = 0);
   void dealloc(void* const buf);
-  ePoolSize getPoolType(size_t const& num_bytes);
+  ePoolSize getPoolType(size_t const& num_bytes, size_t const& oversize);
   SizeType remainingSize(void* const buf);
   bool active() const;
   bool active_env() const;
