@@ -148,7 +148,7 @@ struct TestParserdes : TestParallelHarness {
   }
 };
 
-TEST_F(TestParserdes, test_parserdes_a_1) {
+TEST_F(TestParserdes, test_send_parserdes_a_1) {
   auto const& my_node = theContext()->getNode();
 
   if (theContext()->getNumNodes() > 1) {
@@ -162,7 +162,7 @@ TEST_F(TestParserdes, test_parserdes_a_1) {
   }
 }
 
-TEST_F(TestParserdes, test_parserdes_b_1) {
+TEST_F(TestParserdes, test_send_parserdes_b_1) {
   auto const& my_node = theContext()->getNode();
 
   if (theContext()->getNumNodes() > 1) {
@@ -176,7 +176,7 @@ TEST_F(TestParserdes, test_parserdes_b_1) {
   }
 }
 
-TEST_F(TestParserdes, test_parserdes_c_1) {
+TEST_F(TestParserdes, test_send_parserdes_c_1) {
   auto const& my_node = theContext()->getNode();
 
   if (theContext()->getNumNodes() > 1) {
@@ -186,6 +186,48 @@ TEST_F(TestParserdes, test_parserdes_c_1) {
         ::fmt::print("test_data::C sending msg val={}\n", *msg);
       #endif
       SerializedMessenger::sendParserdesMsg<test_data::C, testHandlerC>(1, msg);
+    }
+  }
+}
+
+TEST_F(TestParserdes, test_broadcast_parserdes_a_1) {
+  auto const& my_node = theContext()->getNode();
+
+  if (theContext()->getNumNodes() > 1) {
+    if (my_node == 0) {
+      auto msg = makeSharedMessageSz<test_data::A>(sizeof(int32_t), magic_A_t_);
+      #if PRINT_DEBUG
+        ::fmt::print("test_data::A broadcasting msg val={}\n", *msg);
+      #endif
+      SerializedMessenger::broadcastParserdesMsg<test_data::A,testHandlerA>(msg);
+    }
+  }
+}
+
+TEST_F(TestParserdes, test_broadcast_parserdes_b_1) {
+  auto const& my_node = theContext()->getNode();
+
+  if (theContext()->getNumNodes() > 1) {
+    if (my_node == 0) {
+      auto msg = makeSharedMessageSz<test_data::B>(128, magic_B_t_);
+      #if PRINT_DEBUG
+        ::fmt::print("test_data::B broadcasting msg val={}\n", *msg);
+      #endif
+      SerializedMessenger::broadcastParserdesMsg<test_data::B,testHandlerB>(msg);
+    }
+  }
+}
+
+TEST_F(TestParserdes, test_broadcast_parserdes_c_1) {
+  auto const& my_node = theContext()->getNode();
+
+  if (theContext()->getNumNodes() > 1) {
+    if (my_node == 0) {
+      auto msg = makeSharedMessageSz<test_data::C>(8*sizeof(char), magic_C_t_);
+      #if PRINT_DEBUG
+        ::fmt::print("test_data::C broadcasting msg val={}\n", *msg);
+      #endif
+      SerializedMessenger::broadcastParserdesMsg<test_data::C,testHandlerC>(msg);
     }
   }
 }
