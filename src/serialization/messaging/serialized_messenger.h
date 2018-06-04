@@ -31,6 +31,26 @@ struct SerializedMessenger {
   template <typename UserMsgT>
   using SerialWrapperMsgType = SerializedDataMsg<UserMsgT>;
 
+  template <typename MsgT>
+  static void parserdesHandler(MsgT* msg) {
+    auto const& msg_size = sizeof(MsgT);
+    auto const& han_size = sizeof(HandlerType);
+    auto const& size_size = sizeof(size_t);
+    auto msg_ptr = reinterpret_cast<char*>(msg);
+    auto const& user_handler = *reinterpret_cast<HandlerType*>(
+      msg_ptr + msg_size
+    );
+    auto const& ptr_size = *reinterpret_cast<size_t*>(
+      msg_ptr + msg_size + han_size
+    );
+    auto ptr_offset = msg_ptr + msg_size + han_size + size_size;
+    auto t_ptr = deserialize<MsgT>(ptr_offset, ptr_size, msg, true);
+    messageRef(msg);
+    auto active_fn = auto_registry::getAutoHandler(user_handler);
+    active_fn(reinterpret_cast<BaseMessage*>(t_ptr));
+    messageDeref(msg);
+  }
+
   template <typename UserMsgT>
   static void serialMsgHandlerBcast(SerialWrapperMsgType<UserMsgT>* sys_msg) {
     auto const& handler = sys_msg->handler;
@@ -112,6 +132,47 @@ struct SerializedMessenger {
     active_fn(reinterpret_cast<BaseMessage*>(tptr));
     messageDeref(user_msg);
     //std::free(user_msg);
+  }
+
+  template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
+  static void sendParserdesMsg(NodeType dest, MsgT* msg) {
+    HandlerType const& user_handler =
+      auto_registry::makeAutoHandler<MsgT, f>(nullptr);
+
+    SizeType ptr_size = 0;
+    bool const& partial = true;
+    auto const& rem_size = thePool()->remainingSize(msg);
+    auto const& msg_size = sizeof(MsgT);
+    auto const& han_size = sizeof(HandlerType);
+    auto const& size_size = sizeof(size_t);
+    auto msg_ptr = reinterpret_cast<char*>(msg);
+
+    auto serialized_msg = serialize(
+      *msg, [&](SizeType size) -> SerialByteType* {
+        ptr_size = size;
+        if (size + han_size <= rem_size) {
+          auto ptr = msg_ptr + msg_size + han_size + size_size;
+          return ptr;
+        } else {
+          assert(0 && "Must fit in remaining size (current limitation)");
+          return nullptr;
+        }
+      },
+      partial
+    );
+
+    debug_print(
+      serial_msg, node,
+      "sendParserdesMsg: ptr_size={}, rem_size={}, msg_size\n",
+      ptr_size, rem_size, msg_size
+    );
+
+    *reinterpret_cast<HandlerType*>(msg_ptr + msg_size) = user_handler;
+    *reinterpret_cast<HandlerType*>(msg_ptr + msg_size + han_size) = ptr_size;
+
+    theMsg()->sendMsg<MsgT,parserdesHandler>(
+      dest, msg, ptr_size + msg_size + han_size + size_size, no_tag, no_action
+    );
   }
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>

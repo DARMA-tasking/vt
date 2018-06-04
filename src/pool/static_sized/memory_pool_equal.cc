@@ -36,7 +36,9 @@ template <int64_t num_bytes_t>
 }
 
 template <int64_t num_bytes_t>
-void* MemoryPoolEqual<num_bytes_t>::alloc(size_t const& sz) {
+void* MemoryPoolEqual<num_bytes_t>::alloc(
+  size_t const& sz, size_t const& oversize
+) {
   if (cur_slot_ + 1 >= holder_.size()) {
     resizePool();
   }
@@ -48,7 +50,8 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(size_t const& sz) {
 
   auto const& slot = cur_slot_;
   void* const ptr = holder_[slot];
-  void* const ptr_ret = HeaderManagerType::setHeader(sz, static_cast<char*>(ptr));
+  void* const ptr_ret =
+    HeaderManagerType::setHeader(sz, oversize, static_cast<char*>(ptr));
 
   debug_print(
     pool, node,

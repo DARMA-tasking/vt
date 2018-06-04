@@ -36,7 +36,7 @@ struct MemoryPoolEqual {
 
   virtual ~MemoryPoolEqual();
 
-  void* alloc(size_t const& sz);
+  void* alloc(size_t const& sz, size_t const& oversize);
   void dealloc(void* const t);
   void resizePool();
   SlotType getNumBytes();

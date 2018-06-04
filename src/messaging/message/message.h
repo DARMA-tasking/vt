@@ -45,6 +45,18 @@ struct ActiveMsg : BaseMsg {
 
     return ptr;
   }
+
+  static void* operator new(std::size_t sz, std::size_t oversize) {
+    auto const& ptr = thePool()->alloc(sz, oversize);
+
+    debug_print(
+      pool, node,
+      "Message::new (special sized) of size={}, oversize={}, ptr={}\n",
+      sz, oversize, print_ptr(ptr)
+    );
+
+    return ptr;
+  }
   #endif
 
   #if backend_check_enabled(memory_pool) && \

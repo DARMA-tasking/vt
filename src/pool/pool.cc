@@ -32,11 +32,11 @@ Pool::ePoolSize Pool::getPoolType(size_t const& num_bytes) {
   }
 }
 
-void* Pool::try_pooled_alloc(size_t const& num_bytes) {
-  ePoolSize const pool_type = getPoolType(num_bytes);
+void* Pool::try_pooled_alloc(size_t const& num_bytes, size_t const& oversize) {
+  ePoolSize const pool_type = getPoolType(num_bytes + oversize);
 
   if (pool_type != ePoolSize::Malloc) {
-    return pooled_alloc(num_bytes, pool_type);
+    return pooled_alloc(num_bytes, oversize, pool_type);
   } else {
     return nullptr;
   }
@@ -45,7 +45,8 @@ void* Pool::try_pooled_alloc(size_t const& num_bytes) {
 bool Pool::try_pooled_dealloc(void* const buf) {
   auto buf_char = static_cast<char*>(buf);
   auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
-  ePoolSize const pool_type = getPoolType(actual_alloc_size);
+  auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf_char);
+  ePoolSize const pool_type = getPoolType(actual_alloc_size + oversize);
 
   if (pool_type != ePoolSize::Malloc) {
     pooled_dealloc(buf, pool_type);
@@ -55,7 +56,9 @@ bool Pool::try_pooled_dealloc(void* const buf) {
   }
 }
 
-void* Pool::pooled_alloc(size_t const& num_bytes, ePoolSize const pool_type) {
+void* Pool::pooled_alloc(
+  size_t const& num_bytes, size_t const& oversize, ePoolSize const pool_type
+) {
   auto const worker = theContext()->getWorker();
   bool const comm_thread = worker == worker_id_comm_thread;
   void* ret = nullptr;
@@ -71,13 +74,13 @@ void* Pool::pooled_alloc(size_t const& num_bytes, ePoolSize const pool_type) {
     assert(
       (comm_thread || s_msg_worker_.size() > worker) && "Must have worker pool"
     );
-    ret = pool->alloc(num_bytes);
+    ret = pool->alloc(num_bytes, oversize);
   } else if (pool_type == ePoolSize::Medium) {
     auto pool = comm_thread ? medium_msg.get() : m_msg_worker_[worker].get();
     assert(
       (comm_thread || m_msg_worker_.size() > worker) && "Must have worker pool"
     );
-    ret = pool->alloc(num_bytes);
+    ret = pool->alloc(num_bytes, oversize);
   } else {
     assert(0 && "Pool must be valid");
     ret = nullptr;
@@ -102,26 +105,37 @@ void Pool::pooled_dealloc(void* const buf, ePoolSize const pool_type) {
   }
 }
 
-void* Pool::default_alloc(size_t const& num_bytes) {
-  auto alloc_buf = std::malloc(num_bytes + sizeof(HeaderType));
-  return HeaderManagerType::setHeader(num_bytes, static_cast<char*>(alloc_buf));
+void* Pool::default_alloc(size_t const& num_bytes, size_t const& oversize) {
+  auto alloc_buf = std::malloc(num_bytes + oversize + sizeof(HeaderType));
+  return HeaderManagerType::setHeader(
+    num_bytes, oversize, static_cast<char*>(alloc_buf)
+  );
 }
 
 void Pool::default_dealloc(void* const ptr) {
   std::free(ptr);
 }
 
-void* Pool::alloc(size_t const& num_bytes) {
+void* Pool::alloc(size_t const& base_num_bytes, size_t oversize) {
+  /*
+   * Padding for the extra handler typically required for oversize serialized
+   * sends
+   */
+  if (oversize != 0) {
+    oversize += 16;
+  }
+
+  auto const& num_bytes = base_num_bytes + oversize;
   void* ret = nullptr;
 
   #if backend_check_enabled(memory_pool)
-    ret = try_pooled_alloc(num_bytes);
+    ret = try_pooled_alloc(num_bytes, oversize);
   #endif
 
   // Fall back to the default allocated if the pooled allocated fails to return
   // a valid pointer
   if (ret == nullptr) {
-    ret = default_alloc(num_bytes);
+    ret = default_alloc(base_num_bytes, oversize);
   }
 
   debug_print(
@@ -171,6 +185,7 @@ Pool::SizeType Pool::remainingSize(void* const buf) {
   #if backend_check_enabled(memory_pool)
     auto buf_char = static_cast<char*>(buf);
     auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
+    auto const& over = HeaderManagerType::getHeaderOversizeBytes(buf_char);
 
     ePoolSize const pool_type = getPoolType(actual_alloc_size);
 
@@ -179,7 +194,7 @@ Pool::SizeType Pool::remainingSize(void* const buf) {
     } else if (pool_type == ePoolSize::Medium) {
       return medium_msg->getNumBytes() - actual_alloc_size;
     } else {
-      return 0;
+      return over;
     }
   #else
     return 0;

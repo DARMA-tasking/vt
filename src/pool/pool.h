@@ -31,7 +31,7 @@ struct Pool {
 
   Pool();
 
-  void* alloc(size_t const& num_bytes);
+  void* alloc(size_t const& num_bytes, size_t oversize = 0);
   void dealloc(void* const buf);
   ePoolSize getPoolType(size_t const& num_bytes);
   SizeType remainingSize(void* const buf);
@@ -46,19 +46,21 @@ private:
    * Attempt allocation via pooled and fall back to default allocation if it
    * fails
    */
-  void* try_pooled_alloc(size_t const& num_bytes);
+  void* try_pooled_alloc(size_t const& num_bytes, size_t const& oversize);
   bool try_pooled_dealloc(void* const buf);
 
   /*
    * Allocate memory from a specific local memory pool, indicated by `pool'
    */
-  void* pooled_alloc(size_t const& num_bytes, ePoolSize const pool_type);
+  void* pooled_alloc(
+    size_t const& num_bytes, size_t const& oversize, ePoolSize const pool_type
+  );
   void pooled_dealloc(void* const buf, ePoolSize const pool_type);
 
   /*
    * Allocate from the default system allocator (std::malloc)
    */
-  void* default_alloc(size_t const& num_bytes);
+  void* default_alloc(size_t const& num_bytes, size_t const& oversize);
   void default_dealloc(void* const ptr);
 
 private:

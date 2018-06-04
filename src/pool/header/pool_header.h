@@ -9,6 +9,7 @@ namespace vt { namespace pool {
 struct Header {
   WorkerIDType alloc_worker;
   size_t alloc_size;
+  size_t oversize;
 };
 
 struct AllocLayout {
@@ -21,8 +22,11 @@ union AllocView {
 };
 
 struct HeaderManager {
-  static char* setHeader(size_t const& num_bytes, char* buffer);
+  static char* setHeader(
+    size_t const& num_bytes, size_t const& oversize, char* buffer
+  );
   static size_t getHeaderBytes(char* buffer);
+  static size_t getHeaderOversizeBytes(char* buffer);
   static WorkerIDType getHeaderWorker(char* buffer);
   static char* getHeaderPtr(char* buffer);
 };
