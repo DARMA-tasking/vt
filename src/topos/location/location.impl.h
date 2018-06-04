@@ -257,17 +257,18 @@ void EntityLocationCoord<EntityID>::getLocation(
 
     debug_print(
       location, node,
-      "EntityLocationCoord: getLocation: home_node={}, rec_exists={}\n",
-      home_node, print_bool(rec_exists)
+      "EntityLocationCoord: getLocation: home_node={}, rec_exists={}, "
+      "msg size={}\n",
+      home_node, print_bool(rec_exists), sizeof(LocMsgType)
     );
 
     if (not rec_exists) {
       if (home_node != this_node) {
         auto const& event_id = fst_location_event_id++;
-        auto msg = new LocMsgType(this_inst, id, event_id, this_node, home_node);
-        theMsg()->sendMsg<LocMsgType, getLocationHandler>(
-          home_node, msg, [=] { delete msg; }
+        auto msg = makeSharedMessage<LocMsgType>(
+          this_inst, id, event_id, this_node, home_node
         );
+        theMsg()->sendMsg<LocMsgType, getLocationHandler>(home_node, msg);
         // save a pending action when information about location arrives
         pending_actions_.emplace(
           std::piecewise_construct,
@@ -509,11 +510,11 @@ template <typename EntityID>
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
       loc->getLocation(entity, home_node, [=](NodeType node) {
-        auto msg = new LocMsgType(inst, entity, event_id, ask_node, home_node);
-        msg->setResolvedNode(node);
-        theMsg()->sendMsg<LocMsgType, updateLocation>(
-          ask_node, msg, [=] { delete msg; }
+        auto msg = makeSharedMessage<LocMsgType>(
+          inst, entity, event_id, ask_node, home_node
         );
+        msg->setResolvedNode(node);
+        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg);
       });
       messageDeref(msg);
     }

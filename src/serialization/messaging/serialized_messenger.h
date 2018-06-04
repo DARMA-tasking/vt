@@ -194,9 +194,9 @@ struct SerializedMessenger {
     auto const& tag = no_tag;
     auto const& act = no_action;
     if (is_bcast) {
-      theMsg()->broadcastMsg<MsgT,parserdesHandler>(msg, total_size, tag, act);
+      theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag, act);
     } else {
-      theMsg()->sendMsg<MsgT,parserdesHandler>(dest, msg, total_size, tag, act);
+      theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag, act);
     }
   }
 
@@ -259,18 +259,21 @@ struct SerializedMessenger {
 
       theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg);
     } else {
+      auto const& total_size = ptr_size + sys_size;
+
       sys_msg->handler = han;
       sys_msg->from_node = theContext()->getNode();
       sys_msg->ptr_size = ptr_size;
 
       debug_print(
         serial_msg, node,
-        "broadcastSerialMsg: container: han={}, sys_size={}, ptr_size={}\n",
-        han, sys_size, ptr_size
+        "broadcastSerialMsg: container: han={}, sys_size={}, ptr_size={}, "
+        "total_size={}\n",
+        han, sys_size, ptr_size, total_size
       );
 
-      theMsg()->broadcastMsg<SerialWrapperMsgType<MsgT>,serialMsgHandlerBcast>(
-        sys_msg, ptr_size + sys_size, no_tag, no_action
+      theMsg()->broadcastMsgSz<SerialWrapperMsgType<MsgT>,serialMsgHandlerBcast>(
+        sys_msg, total_size, no_tag, no_action
       );
     }
   }

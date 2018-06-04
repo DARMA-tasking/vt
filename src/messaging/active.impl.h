@@ -30,11 +30,11 @@ EventType ActiveMessenger::sendMsg(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
   ActionType next_action
 ) {
-  return sendMsg<MessageT>(dest, han, msg, next_action, sizeof(MessageT));
+  return sendMsgSz<MessageT>(dest, han, msg, next_action, sizeof(MessageT));
 }
 
 template <typename MessageT>
-EventType ActiveMessenger::sendMsg(
+EventType ActiveMessenger::sendMsgSz(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
   ActionType next_action, ByteType const& msg_size
 ) {
@@ -67,7 +67,7 @@ EventType ActiveMessenger::sendMsg(
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-EventType ActiveMessenger::broadcastMsg(
+EventType ActiveMessenger::broadcastMsgSz(
   MessageT* const msg, ByteType const& msg_size, TagType const& tag,
   ActionType next_action
 ) {
@@ -85,14 +85,14 @@ EventType ActiveMessenger::broadcastMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsg(this_node, han, msg, next_action, msg_size);
+  return sendMsgSz(this_node, han, msg, next_action, msg_size);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::broadcastMsg(
   MessageT* const msg, TagType const& tag, ActionType next_action
 ) {
-  return broadcastMsg<MessageT,f>(msg,sizeof(MessageT),no_tag,next_action);
+  return broadcastMsgSz<MessageT,f>(msg,sizeof(MessageT),no_tag,next_action);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -105,11 +105,11 @@ EventType ActiveMessenger::sendMsg(
   NodeType const& dest, MessageT* const msg, TagType const& tag,
   ActionType next_action
 ) {
-  return sendMsg<MessageT,f>(dest, msg, sizeof(MessageT), tag, next_action);
+  return sendMsgSz<MessageT,f>(dest, msg, sizeof(MessageT), tag, next_action);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-EventType ActiveMessenger::sendMsg(
+EventType ActiveMessenger::sendMsgSz(
   NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
   TagType const& tag, ActionType next_action
 ) {
