@@ -35,10 +35,13 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex> {
 template <typename... Args>
 struct ColMsg : CollectionMessage<TestCol<Args...>> {
   using TupleType = std::tuple<Args...>;
+  ColMsg() = default;
   explicit ColMsg(TupleType in_tup) : tup(in_tup) {}
   TupleType tup;
   template <typename SerializerT>
-  void serialize(SerializerT& s) { s | tup; }
+  void serialize(SerializerT& s) {
+    s | tup;
+  }
 };
 } /* end namespace send_col_ */
 
@@ -96,14 +99,14 @@ TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
 REGISTER_TYPED_TEST_CASE_P(TestCollectionSend, test_collection_send_1);
 
 using CollectionTestTypes = testing::Types<
-  send_col_            ::TestCol<int32_t>
-  // send_col_            ::TestCol<int64_t>
-  // send_col_            ::TestCol<std::string>,
-  // send_col_            ::TestCol<test_data::A>,
-  // send_col_            ::TestCol<test_data::B>,
-  // send_col_            ::TestCol<test_data::C>,
-  // send_col_            ::TestCol<int32_t,int32_t>,
-  // send_col_            ::TestCol<int64_t,int64_t>
+  send_col_            ::TestCol<int32_t>,
+  send_col_            ::TestCol<int64_t>,
+  send_col_            ::TestCol<std::string>,
+  send_col_            ::TestCol<test_data::A>,
+  send_col_            ::TestCol<test_data::B>,
+  send_col_            ::TestCol<test_data::C>,
+  send_col_            ::TestCol<int32_t,int32_t>,
+  send_col_            ::TestCol<int64_t,int64_t>
 >;
 
 INSTANTIATE_TYPED_TEST_CASE_P(

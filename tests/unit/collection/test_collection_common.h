@@ -68,7 +68,13 @@ namespace vt { namespace tests { namespace unit {
 using TestIndex = ::vt::index::Index1D;
 using ParamType = int32_t;
 
-static char         magic_string_[]  = "test_string123";
+static char         magic_string_[]  =
+  "test_string123-long-string-for-testing_"
+  "test_string123-long-string-for-testing_"
+  "test_string123-long-string-for-testing_"
+  "test_string123-long-string-for-testing_"
+  "test_string123-long-string-for-testing_"
+  "test_string123-long-string-for-testing_";
 static int32_t      magic_int32_t_   = 29;
 static int64_t      magic_int64_t_   = 0xFFFFFEEDFFFFFAAD;
 static test_data::A magic_A_t_       = test_data::A{28,2773,12};

@@ -34,10 +34,13 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex> {
 template <typename... Args>
 struct ColMsg : CollectionMessage<TestCol<Args...>> {
   using TupleType = std::tuple<Args...>;
+  ColMsg() = default;
   explicit ColMsg(TupleType in_tup) : tup(in_tup) {}
   TupleType tup;
   template <typename SerializerT>
-  void serialize(SerializerT& s) { s | tup; }
+  void serialize(SerializerT& s) {
+    s | tup;
+  }
 };
 } /* end namespace bcast_col_ */
 
@@ -83,6 +86,7 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
       MsgType,
       BroadcastHandlers<ColType>::handler
     >(msg);
+
     auto msg2 = makeSharedMessage<MsgType>(args);
     theCollection()->broadcastMsg<
       MsgType,BroadcastHandlers<ColType>::handler
