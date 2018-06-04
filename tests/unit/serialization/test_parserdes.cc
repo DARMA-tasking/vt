@@ -36,19 +36,22 @@ namespace test_data {
 struct A : ::vt::Message {
   int32_t a,b,c;
   std::vector<int32_t> v;
-  A() = default;
+  // A() = default;
   A(int32_t a,int32_t b,int32_t c,std::vector<int32_t> v)
     : ::vt::Message(),a(a),b(b),c(c),v(v)
   {}
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    #if PRINT_DEBUG
-    ::fmt::print(
-      "test_data::A serialize v.size()={}, elm={}\n",
-      v.size(), (v.size() == 1 ? v[0] : -1)
-    );
-    #endif
-  }
+  /*
+   *  This should not be required for parserdes:
+   */
+  // template <typename Serializer>
+  // void serialize(Serializer& s) {
+  //   #if PRINT_DEBUG
+  //   ::fmt::print(
+  //     "test_data::A serialize v.size()={}, elm={}\n",
+  //     v.size(), (v.size() == 1 ? v[0] : -1)
+  //   );
+  //   #endif
+  // }
   template <typename Serializer>
   void parserdes(Serializer& s) {
     s & v;
@@ -69,14 +72,17 @@ struct A : ::vt::Message {
 };
 struct B : ::vt::Message {
   std::string str;
-  B() = default;
+  // B() = default;
   B(std::string str_) : ::vt::Message(),str(str_) {}
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    #if PRINT_DEBUG
-      ::fmt::print("test_data::B serialize str={}\n", str);
-    #endif
-  }
+  /*
+   *  This should not be required for parserdes:
+   */
+  // template <typename Serializer>
+  // void serialize(Serializer& s) {
+  //   #if PRINT_DEBUG
+  //     ::fmt::print("test_data::B serialize str={}\n", str);
+  //   #endif
+  // }
   template <typename Serializer>
   void parserdes(Serializer& s) {
     s & str;
@@ -94,9 +100,13 @@ struct B : ::vt::Message {
 struct C : ::vt::Message {
   std::string str;
   int64_t a;
-  C() = default;
+  // C() = default;
   C(std::string str,int64_t a) : ::vt::Message(),str(str),a(a) {}
-  template <typename Serializer> void serialize(Serializer& s) {}
+  /*
+   *  This should not be required for parserdes:
+   */
+  // template <typename Serializer>
+  // void serialize(Serializer& s) {}
   template <typename Serializer>
   void parserdes(Serializer& s) {
     s & str;

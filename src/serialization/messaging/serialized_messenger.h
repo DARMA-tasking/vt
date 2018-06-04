@@ -44,7 +44,7 @@ struct SerializedMessenger {
       msg_ptr + msg_size + han_size
     );
     auto ptr_offset = msg_ptr + msg_size + han_size + size_size;
-    auto t_ptr = deserialize<MsgT>(ptr_offset, ptr_size, msg, true);
+    auto t_ptr = deserializePartial<MsgT>(ptr_offset, ptr_size, msg);
     messageRef(msg);
     auto active_fn = auto_registry::getAutoHandler(user_handler);
     active_fn(reinterpret_cast<BaseMessage*>(t_ptr));
@@ -147,7 +147,7 @@ struct SerializedMessenger {
     auto const& size_size = sizeof(size_t);
     auto msg_ptr = reinterpret_cast<char*>(msg);
 
-    auto serialized_msg = serialize(
+    auto serialized_msg = serializePartial(
       *msg, [&](SizeType size) -> SerialByteType* {
         ptr_size = size;
         if (size + han_size <= rem_size) {
@@ -157,8 +157,7 @@ struct SerializedMessenger {
           assert(0 && "Must fit in remaining size (current limitation)");
           return nullptr;
         }
-      },
-      partial
+      }
     );
 
     debug_print(
