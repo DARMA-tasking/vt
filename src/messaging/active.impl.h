@@ -30,8 +30,16 @@ EventType ActiveMessenger::sendMsg(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
   ActionType next_action
 ) {
+  return sendMsg<MessageT>(dest, han, msg, next_action, sizeof(MessageT));
+}
+
+template <typename MessageT>
+EventType ActiveMessenger::sendMsg(
+  NodeType const& dest, HandlerType const& han, MessageT* const msg,
+  ActionType next_action, ByteType const& msg_size
+) {
   envelopeSetup(msg->env, dest, han);
-  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
+  return sendMsgSized(han, msg, msg_size, next_action);
 }
 
 template <typename MessageT>
@@ -60,7 +68,8 @@ EventType ActiveMessenger::sendMsg(
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::broadcastMsg(
-  MessageT* const msg, TagType const& tag, ActionType next_action
+  MessageT* const msg, ByteType const& msg_size, TagType const& tag,
+  ActionType next_action
 ) {
   auto const& is_term = envelopeIsTerm(msg->env);
   if (!is_term || backend_check_enabled(print_term_msgs)) {
@@ -76,7 +85,14 @@ EventType ActiveMessenger::broadcastMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsg(this_node, han, msg, next_action);
+  return sendMsg(this_node, han, msg, next_action, msg_size);
+}
+
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+EventType ActiveMessenger::broadcastMsg(
+  MessageT* const msg, TagType const& tag, ActionType next_action
+) {
+  return broadcastMsg<MessageT,f>(msg,sizeof(MessageT),no_tag,next_action);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -88,6 +104,14 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::sendMsg(
   NodeType const& dest, MessageT* const msg, TagType const& tag,
   ActionType next_action
+) {
+  return sendMsg<MessageT,f>(dest, msg, sizeof(MessageT), tag, next_action);
+}
+
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+EventType ActiveMessenger::sendMsg(
+  NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
+  TagType const& tag, ActionType next_action
 ) {
   auto const& is_term = envelopeIsTerm(msg->env);
   if (!is_term || backend_check_enabled(print_term_msgs)) {
@@ -102,7 +126,7 @@ EventType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
+  return sendMsgSized(han, msg, msg_size, next_action);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>

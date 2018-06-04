@@ -112,6 +112,12 @@ struct ActiveMessenger {
   template <typename MessageT>
   EventType sendMsg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
+    ActionType next_action, ByteType const& msg_size
+  );
+
+  template <typename MessageT>
+  EventType sendMsg(
+    NodeType const& dest, HandlerType const& han, MessageT* const msg,
     ActionType next_action = nullptr
   );
 
@@ -145,6 +151,12 @@ struct ActiveMessenger {
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType broadcastMsg(
+    MessageT* const msg, ByteType const& msg_size, TagType const& tag = no_tag,
+    ActionType next_action = nullptr
+  );
+
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  EventType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   );
@@ -156,6 +168,12 @@ struct ActiveMessenger {
   EventType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
+  );
+
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  EventType sendMsg(
+    NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
+    TagType const& tag = no_tag, ActionType next_action = nullptr
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
