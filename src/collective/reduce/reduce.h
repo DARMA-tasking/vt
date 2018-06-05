@@ -7,6 +7,8 @@
 #include "collective/reduce/reduce_hash.h"
 #include "collective/reduce/reduce_state.h"
 #include "collective/reduce/reduce_msg.h"
+#include "collective/reduce/operators/default_msg.h"
+#include "collective/reduce/operators/default_op.h"
 #include "messaging/active.h"
 #include "activefn/activefn.h"
 #include "messaging/message.h"
