@@ -76,7 +76,7 @@ TEST_F(TestReduce, test_reduce_op) {
   theCollective()->reduce<MyReduceMsg, reducePlus>(root, msg);
 }
 
-TEST_F(TestReduce, test_reduce_default_op) {
+TEST_F(TestReduce, test_reduce_plus_default_op) {
   auto const& my_node = theContext()->getNode();
   auto const& root = 0;
 
@@ -85,6 +85,30 @@ TEST_F(TestReduce, test_reduce_default_op) {
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg,PlusOp<int>,Print>
+  >(root, msg);
+}
+
+TEST_F(TestReduce, test_reduce_max_default_op) {
+  auto const& my_node = theContext()->getNode();
+  auto const& root = 0;
+
+  auto msg = makeSharedMessage<SysMsg>(my_node);
+  fmt::print("msg->num={}\n", msg->getConstVal());
+  theCollective()->reduce<
+    SysMsg,
+    SysMsg::msgHandler<SysMsg,MaxOp<int>,Print>
+  >(root, msg);
+}
+
+TEST_F(TestReduce, test_reduce_min_default_op) {
+  auto const& my_node = theContext()->getNode();
+  auto const& root = 0;
+
+  auto msg = makeSharedMessage<SysMsg>(my_node);
+  fmt::print("msg->num={}\n", msg->getConstVal());
+  theCollective()->reduce<
+    SysMsg,
+    SysMsg::msgHandler<SysMsg,MinOp<int>,Print>
   >(root, msg);
 }
 
