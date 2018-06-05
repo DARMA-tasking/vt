@@ -27,7 +27,7 @@ struct MaxOp {
 template <typename T>
 struct MinOp {
   void operator()(T& v1, T const& v2) {
-    v1 = std::max(v1,v2);
+    v1 = std::min(v1,v2);
   }
 };
 
@@ -64,6 +64,9 @@ using PlusOp = reduce::operators::PlusOp<T>;
 
 template <typename T>
 using MaxOp = reduce::operators::MaxOp<T>;
+
+template <typename T>
+using MinOp = reduce::operators::MinOp<T>;
 
 }} /* end namespace vt::collective */
 
