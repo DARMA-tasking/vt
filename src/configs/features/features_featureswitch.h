@@ -52,6 +52,7 @@
   debug_list_holder(                                                    \
     bit_check_overflow,    "Check bitfield overflow",                   \
     detector,              "C++ Trait Detector",                        \
+    lblite,                "LB-lite (collections) enabled",             \
     memory_pool,           "Enable memory pooling",                     \
     no_feature,            "No feature",                                \
     no_pool_alloc_env,     "Disable memory pool envelope",              \

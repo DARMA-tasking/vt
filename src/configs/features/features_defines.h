@@ -13,6 +13,7 @@
 #define debug_bit_check_overflow(x) x
 #define debug_trace_enabled(x) x
 #define debug_detector(x) x
+#define debug_lblite(x) x
 #define debug_openmp(x) x
 #define debug_runtime_checks(x) x
 #define debug_stdthread(x) x

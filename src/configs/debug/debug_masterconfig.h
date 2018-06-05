@@ -25,7 +25,7 @@
 #define default_threading openmp
 
 #define backend_features backend_options_on(                             \
-  memory_pool, detector, default_threading                               \
+    lblite, memory_pool, detector, default_threading                     \
 )
 
 #define backend_debug_contexts backend_options_on(                       \
