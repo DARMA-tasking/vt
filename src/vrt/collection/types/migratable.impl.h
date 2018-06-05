@@ -11,6 +11,7 @@ template <typename ColT>
 template <typename Serializer>
 void Migratable<ColT>::serialize(Serializer& s) {
   MigrateHookBase::serialize(s);
+  s | stats_;
 }
 
 template <typename ColT>

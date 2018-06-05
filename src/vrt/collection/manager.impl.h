@@ -19,6 +19,7 @@
 #include "vrt/collection/active/active_funcs.h"
 #include "vrt/collection/destroy/destroy_msg.h"
 #include "vrt/collection/destroy/destroy_handlers.h"
+#include "vrt/collection/balance/phase_msg.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "registry/auto/map/auto_registry_map.h"
 #include "registry/auto/collection/auto_registry_collection.h"
@@ -946,6 +947,18 @@ Holder<ColT, IndexT>* CollectionManager::findElmHolder(
   }
 }
 
+template <typename ColT>
+void CollectionManager::nextPhase(
+  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
+  PhaseType const& cur_phase
+) {
+  using namespace balance;
+  using MsgType = PhaseMsg<ColT>;
+  auto msg = makeSharedMessage<MsgType>(cur_phase);
+  theCollection()->broadcastMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
+    proxy, msg
+  );
+}
 
 }}} /* end namespace vt::vrt::collection */
 

@@ -7,6 +7,7 @@
 #include "vrt/base/base.h"
 #include "vrt/collection/types/migrate_hooks.h"
 #include "vrt/collection/types/migratable.fwd.h"
+#include "vrt/collection/balance/elm_stats.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -52,6 +53,10 @@ struct Migratable : MigrateHookBase {
 protected:
   template <typename Serializer>
   void serialize(Serializer& s);
+
+protected:
+  friend struct balance::ElementStats;
+  balance::ElementStats stats_;
 };
 
 }}} /* end namespace vt::vrt::collection */

@@ -135,7 +135,7 @@ struct CollectionManager {
     CollectionProxyWrapType<
       typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
     > const& toProxy,
-    MsgT *const msg, ActionType act
+    MsgT *const msg, ActionType act = nullptr
   );
 
   template <typename ColT, typename IndexT, typename MsgT>
@@ -198,6 +198,15 @@ struct CollectionManager {
     NodeType const& migrated_from = uninitialized_destination
   );
 
+  /*
+   *  LB-related operations on the collection
+   */
+  template <typename ColT>
+  void nextPhase(
+    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
+    PhaseType const& cur_phase
+  );
+
 private:
   template <typename ColT, typename IndexT>
   CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
@@ -228,6 +237,8 @@ public:
 private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmAttorney;
+
+  friend struct balance::ElementStats;
 
   template <typename ColT, typename IndexT>
   MigrateStatus migrateOut(
