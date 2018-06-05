@@ -135,7 +135,7 @@ struct CollectionManager {
     CollectionProxyWrapType<
       typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
     > const& toProxy,
-    MsgT *const msg, ActionType act = nullptr
+    MsgT *const msg, ActionType act = nullptr, bool instrument = true
   );
 
   template <typename ColT, typename IndexT, typename MsgT>

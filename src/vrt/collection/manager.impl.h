@@ -195,8 +195,16 @@ template <typename ColT, typename IndexT, typename MsgT>
 
       backend_enable_if(
         lblite, {
-          auto& stats = base->getStats();
-          stats.startTime();
+          debug_print_force(
+            vrt_coll, node,
+            "broadcast: apply to element: instrument={}\n",
+            msg->lbLiteInstrument()
+          );
+
+          if (msg->lbLiteInstrument()) {
+            auto& stats = base->getStats();
+            stats.startTime();
+          }
         }
       );
 
@@ -204,8 +212,10 @@ template <typename ColT, typename IndexT, typename MsgT>
 
       backend_enable_if(
         lblite, {
-          auto& stats = base->getStats();
-          stats.stopTime();
+          if (msg->lbLiteInstrument()) {
+            auto& stats = base->getStats();
+            stats.stopTime();
+          }
         }
       );
     }
@@ -289,8 +299,15 @@ template <typename ColT, typename IndexT>
 
   backend_enable_if(
     lblite, {
-      auto& stats = col_ptr->getStats();
-      stats.startTime();
+      debug_print_force(
+        vrt_coll, node,
+        "collectionMsgHandler: receive msg: instrument={}\n",
+        col_msg->lbLiteInstrument()
+      );
+      if (col_msg->lbLiteInstrument()) {
+        auto& stats = col_ptr->getStats();
+        stats.startTime();
+      }
     }
   );
 
@@ -301,8 +318,10 @@ template <typename ColT, typename IndexT>
 
   backend_enable_if(
     lblite, {
-      auto& stats = col_ptr->getStats();
-      stats.stopTime();
+      if (col_msg->lbLiteInstrument()) {
+        auto& stats = col_ptr->getStats();
+        stats.stopTime();
+      }
     }
   );
 
@@ -358,7 +377,7 @@ void CollectionManager::broadcastMsg(
   CollectionProxyWrapType<
     typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
   > const& toProxy,
-  MsgT *const msg, ActionType act
+  MsgT *const msg, ActionType act, bool instrument
 ) {
   using ColT = typename MsgT::CollectionType;
   using IndexT = typename ColT::IndexType;
@@ -370,6 +389,11 @@ void CollectionManager::broadcastMsg(
 
   auto const& this_node = theContext()->getNode();
   auto const& col_proxy = toProxy.getProxy();
+
+  backend_enable_if(
+    lblite,
+    msg->setLBLiteInstrument(!instrument);
+  );
 
   // @todo: implement the action `act' after the routing is finished
 
@@ -523,6 +547,11 @@ void CollectionManager::sendMsg(
 
   auto const& col_proxy = toProxy.getCollectionProxy();
   auto const& elm_proxy = toProxy.getElementProxy();
+
+  backend_enable_if(
+    lblite,
+    msg->setLBLiteInstrument(true);
+  );
 
   theTerm()->produce(term::any_epoch_sentinel);
 
@@ -983,8 +1012,26 @@ void CollectionManager::nextPhase(
   using namespace balance;
   using MsgType = PhaseMsg<ColT>;
   auto msg = makeSharedMessage<MsgType>(cur_phase);
+  auto const& instrument = false;
+
+  debug_print_force(
+    vrt_coll, node,
+    "nextPhase: broadcasting: cur_phase={}\n",
+    cur_phase
+  );
+
+  backend_enable_if(
+    lblite, {
+      msg->setLBLiteInstrument(instrument);
+      debug_print_force(
+        vrt_coll, node,
+        "nextPhase: broadcasting: instrument={}, cur_phase={}\n",
+        msg->lbLiteInstrument(), cur_phase
+      );
+    }
+  );
   theCollection()->broadcastMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
-    proxy, msg
+    proxy, msg, nullptr, instrument
   );
 }
 

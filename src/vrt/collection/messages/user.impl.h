@@ -73,7 +73,24 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
   s | to_proxy_;
   s | bcast_proxy_;
   s | bcast_epoch_;
+
+  backend_enable_if(
+    lblite,
+    s | lb_lite_instrument_;
+  );
 }
+
+#if backend_check_enabled(lblite)
+template <typename ColT, typename BaseMsgT>
+bool CollectionMessage<ColT, BaseMsgT>::lbLiteInstrument() const {
+  return lb_lite_instrument_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setLBLiteInstrument(bool const& val) {
+  lb_lite_instrument_ = val;
+}
+#endif
 
 }}} /* end namespace vt::vrt::collection */
 

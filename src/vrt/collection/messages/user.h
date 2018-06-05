@@ -41,6 +41,11 @@ struct CollectionMessage :
   EpochType getBcastEpoch() const;
   void setBcastEpoch(EpochType const& epoch);
 
+  #if backend_check_enabled(lblite)
+    bool lbLiteInstrument() const;
+    void setLBLiteInstrument(bool const& val);
+  #endif
+
   // Explicitly write a parent serializer so derived user messages can contain
   // non-byte serialization
   template <typename SerializerT>
@@ -56,6 +61,15 @@ private:
   VirtualElmProxyType<ColT, IndexType> to_proxy_{};
   HandlerType vt_sub_handler_ = uninitialized_handler;
   EpochType bcast_epoch_ = no_epoch;
+
+  #if backend_check_enabled(lblite)
+    /*
+     * By default this is off so system messages do not all get
+     * instrumented. When the user sends a message through theCollection
+     * (sendMsg,broadcastMsg) they are automatically instrumented
+     */
+    bool lb_lite_instrument_ = false;
+  #endif
 };
 
 }}} /* end namespace vt::vrt::collection */
