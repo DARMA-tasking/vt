@@ -537,14 +537,14 @@ void CollectionManager::sendMsg(
     // TODO: race when proxy gets transferred off node before the LM is created
     // LocationManager::applyInstance<LocationManager::VrtColl<IndexT>>
   } else {
-    auto iter = buffered_bcasts_.find(toProxy.getCollectionProxy());
-    if (iter == buffered_bcasts_.end()) {
-      buffered_bcasts_.emplace(
+    auto iter = buffered_sends_.find(toProxy.getCollectionProxy());
+    if (iter == buffered_sends_.end()) {
+      buffered_sends_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(toProxy.getCollectionProxy()),
         std::forward_as_tuple(ActionContainerType{})
       );
-      iter = buffered_bcasts_.find(toProxy.getCollectionProxy());
+      iter = buffered_sends_.find(toProxy.getCollectionProxy());
     }
     assert(iter != buffered_sends_.end() and "Must exist");
 
