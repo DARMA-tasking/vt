@@ -9,13 +9,24 @@ void ElementStats::startTime() {
   auto const& start_time = timing::Timing::getCurrentTime();
   cur_time_ = start_time;
   cur_time_started_ = true;
+
+  debug_print_force(
+    vrt_coll, node,
+    "ElementStats: startTime: time={}\n", start_time
+  );
 }
 
 void ElementStats::stopTime() {
   auto const& stop_time = timing::Timing::getCurrentTime();
   auto const& total_time = stop_time - cur_time_;
+  assert(cur_time_started_ && "Must have started time");
   cur_time_started_ = false;
   addTime(total_time);
+
+  debug_print_force(
+    vrt_coll, node,
+    "ElementStats: stopTime: time={}, total={}\n", stop_time, total_time
+  );
 }
 
 void ElementStats::addTime(TimeType const& time) {
