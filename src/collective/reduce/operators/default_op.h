@@ -24,6 +24,13 @@ struct MaxOp {
   }
 };
 
+template <typename T>
+struct MinOp {
+  void operator()(T& v1, T const& v2) {
+    v1 = std::max(v1,v2);
+  }
+};
+
 template <typename T = void>
 struct ReduceCombine {
   ReduceCombine() = default;
