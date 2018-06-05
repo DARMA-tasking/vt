@@ -57,6 +57,7 @@ protected:
 protected:
   friend struct balance::ElementStats;
   balance::ElementStats stats_;
+  balance::ElementStats& getStats() { return stats_; }
 };
 
 }}} /* end namespace vt::vrt::collection */

@@ -192,8 +192,22 @@ template <typename ColT, typename IndexT, typename MsgT>
       // be very careful here, do not touch `base' after running the active
       // message because it might have migrated out and be invalid
       base->cur_bcast_epoch_++;
-      // @todo all migration during the call (fix iterator)
+
+      backend_enable_if(
+        lblite, {
+          auto& stats = base->getStats();
+          stats.startTime();
+        }
+      );
+
       act_fn(msg, reinterpret_cast<UntypedCollection*>(typeless_collection));
+
+      backend_enable_if(
+        lblite, {
+          auto& stats = base->getStats();
+          stats.stopTime();
+        }
+      );
     }
   });
   theTerm()->consume(term::any_epoch_sentinel);
@@ -273,9 +287,23 @@ template <typename ColT, typename IndexT>
 
   assert(col_ptr != nullptr && "Must be valid pointer");
 
+  backend_enable_if(
+    lblite, {
+      auto& stats = col_ptr->getStats();
+      stats.startTime();
+    }
+  );
+
   // for now, execute directly on comm thread
   collection_active_fn(
     msg, reinterpret_cast<UntypedCollection*>(typeless_collection)
+  );
+
+  backend_enable_if(
+    lblite, {
+      auto& stats = col_ptr->getStats();
+      stats.stopTime();
+    }
   );
 
   theTerm()->consume(term::any_epoch_sentinel);
