@@ -21,7 +21,9 @@ set(
   PROJECT_SUBDIRS_LIST
   # Add component along with sub-directories
     configs/debug configs/features configs/types
-    collective/reduce collective/barrier collective/tree
+    collective/barrier collective/tree
+    collective/reduce/
+      collective/reduce/operators
     group/id group/region group/global
     messaging/envelope messaging/message
     pool/static_sized pool/header
