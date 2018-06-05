@@ -150,6 +150,7 @@ int main(int argc, char** argv) {
     auto proxy = theCollection()->construct<MyCol>(range);
     auto msg = new ColMsg<MyCol>(this_node);
     proxy.broadcast<ColMsg<MyCol>,colHan>(msg);
+    theCollection()->nextPhase<MyCol>(proxy,0);
     //theCollection()->broadcastMsg<ColMsg<MyCol>,colHan>(proxy,msg,nullptr);
     // for (int i = 0; i < num_elms; i++) {
     //   auto msg = new ColMsg<MyCol>(this_node);
