@@ -22,8 +22,8 @@ struct MyReduceMsg : ReduceMsg {
 };
 
 struct SysMsg : ReduceTMsg<int> {
-  SysMsg(int in_num)
-    : ReduceTMsg<SysMsg,int,Op,Print>(in_num)
+  explicit SysMsg(int in_num)
+    : ReduceTMsg<int>(in_num)
   { }
 };
 
