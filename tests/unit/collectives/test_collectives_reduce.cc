@@ -21,10 +21,9 @@ struct MyReduceMsg : ReduceMsg {
   int num = 0;
 };
 
-struct Print;
-struct SysMsg : ReduceTMsg<SysMsg,int,PlusOp<int>,Print> {
+struct SysMsg : ReduceTMsg<int> {
   SysMsg(int in_num)
-    : ReduceTMsg<SysMsg,int,PlusOp<int>,Print>(in_num)
+    : ReduceTMsg<SysMsg,int,Op,Print>(in_num)
   { }
 };
 
@@ -33,7 +32,6 @@ struct Print {
     fmt::print("final value={}\n", msg->getConstVal());
   }
 };
-
 
 struct TestReduce : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
@@ -84,7 +82,10 @@ TEST_F(TestReduce, test_reduce_default_op) {
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
   fmt::print("msg->num={}\n", msg->getConstVal());
-  theCollective()->reduce<SysMsg,SysMsg::msgHandler>(root, msg);
+  theCollective()->reduce<
+    SysMsg,
+    SysMsg::msgHandler<SysMsg,PlusOp<int>,Print>
+  >(root, msg);
 }
 
 }}} // end namespace vt::tests::unit
