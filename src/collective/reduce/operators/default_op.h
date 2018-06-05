@@ -24,14 +24,16 @@ struct MaxOp {
   }
 };
 
-template <typename MsgT, typename Op, typename ActOp>
+template <typename T = void>
 struct ReduceCombine {
   ReduceCombine() = default;
 private:
+  template <typename MsgT, typename Op, typename ActOp>
   static void combine(MsgT* m1, MsgT* m2) {
     Op()(m1->getVal(), m2->getConstVal());
   }
 public:
+  template <typename MsgT, typename Op, typename ActOp>
   static void msgHandler(MsgT* msg) {
     if (msg->isRoot()) {
       ActOp()(msg);
@@ -39,7 +41,7 @@ public:
       MsgT* fst_msg = msg;
       MsgT* cur_msg = msg->template getNext<MsgT>();
       while (cur_msg != nullptr) {
-        ReduceCombine<MsgT,Op,ActOp>::combine(fst_msg, cur_msg);
+        ReduceCombine<>::combine<MsgT,Op,ActOp>(fst_msg, cur_msg);
         cur_msg = cur_msg->template getNext<MsgT>();
       }
     }

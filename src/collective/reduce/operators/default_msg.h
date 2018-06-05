@@ -3,6 +3,7 @@
 #define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H
 
 #include "config.h"
+#include "collective/reduce/operators/default_op.h"
 #include "collective/reduce/reduce_msg.h"
 
 #include <array>
@@ -10,19 +11,18 @@
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
-template <typename MsgT, typename Op, typename ActOp>
+template <typename>
 struct ReduceCombine;
 
-template <typename MsgT, typename DataType, typename Op, typename ActOp>
-struct ReduceDataMsg : ReduceMsg, ReduceCombine<MsgT,Op,ActOp>
-{
+template <typename DataType>
+struct ReduceDataMsg : ReduceMsg, ReduceCombine<void> {
   ReduceDataMsg() = default;
   explicit ReduceDataMsg(DataType&& in_val)
     : val_(std::forward<DataType>(in_val)),
-      ReduceMsg(), ReduceCombine<MsgT,Op,ActOp>()
+      ReduceMsg(), ReduceCombine<void>()
   { }
   explicit ReduceDataMsg(DataType const& in_val)
-    : val_(in_val), ReduceMsg(), ReduceCombine<MsgT,Op,ActOp>()
+    : val_(in_val), ReduceMsg(), ReduceCombine<void>()
   { }
 
   DataType const& getConstVal() const { return val_; }
@@ -32,45 +32,45 @@ protected:
   DataType val_ = {};
 };
 
-template <typename MsgT, typename T, typename Op, typename ActOp>
-struct ReduceTMsg : ReduceDataMsg<MsgT,T,Op,ActOp> {
+template <typename T>
+struct ReduceTMsg : ReduceDataMsg<T> {
   using DataType = T;
   ReduceTMsg() = default;
   explicit ReduceTMsg(DataType&& in_val)
-    : ReduceDataMsg<MsgT,DataType,Op,ActOp>(std::forward<DataType>(in_val))
+    : ReduceDataMsg<DataType>(std::forward<DataType>(in_val))
   { }
   explicit ReduceTMsg(DataType const& in_val)
-    : ReduceDataMsg<MsgT,DataType,Op,ActOp>(in_val)
+    : ReduceDataMsg<DataType>(in_val)
   { }
 };
 
-template <typename MsgT, typename T, std::size_t N, typename Op, typename ActOp>
-struct ReduceArrMsg : ReduceDataMsg<MsgT,std::array<T,N>,ActOp,Op> {
+template <typename T, std::size_t N>
+struct ReduceArrMsg : ReduceDataMsg<std::array<T,N>> {
   using DataType = std::array<T,N>;
   ReduceArrMsg() = default;
   explicit ReduceArrMsg(DataType&& in_val)
-    : ReduceDataMsg<MsgT,DataType,Op,ActOp>(std::forward<DataType>(in_val))
+    : ReduceDataMsg<DataType>(std::forward<DataType>(in_val))
   { }
   explicit ReduceArrMsg(DataType const& in_val)
-    : ReduceDataMsg<MsgT,DataType,Op,ActOp>(in_val)
+    : ReduceDataMsg<DataType>(in_val)
   { }
 };
 
-template <typename MsgT, typename T, typename Op, typename ActOp>
-struct ReduceVecMsg : ReduceDataMsg<MsgT,std::vector<T>,ActOp,Op> {
+template <typename T>
+struct ReduceVecMsg : ReduceDataMsg<std::vector<T>> {
   using DataType = std::vector<T>;
 
   ReduceVecMsg() = default;
   explicit ReduceVecMsg(DataType&& in_val)
-    : ReduceDataMsg<MsgT,DataType,Op,ActOp>(std::forward<DataType>(in_val))
+    : ReduceDataMsg<DataType>(std::forward<DataType>(in_val))
   { }
   explicit ReduceVecMsg(DataType const& in_val)
-    : ReduceDataMsg<MsgT,DataType,Op,ActOp>(in_val)
+    : ReduceDataMsg<DataType>(in_val)
   { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | ReduceDataMsg<MsgT,DataType,Op,ActOp>::val_;
+    s | ReduceDataMsg<DataType>::val_;
   }
 };
 
@@ -79,14 +79,14 @@ struct ReduceVecMsg : ReduceDataMsg<MsgT,std::vector<T>,ActOp,Op> {
 
 namespace vt { namespace collective {
 
-template <typename MsgT, typename T, typename Op, typename ActOp>
-using ReduceVecMsg = reduce::operators::ReduceVecMsg<MsgT,T,Op,ActOp>;
+template <typename T>
+using ReduceVecMsg = reduce::operators::ReduceVecMsg<T>;
 
-template <typename MsgT, typename T, std::size_t N, typename Op, typename ActOp>
-using ReduceArrMsg = reduce::operators::ReduceArrMsg<MsgT,T,N,Op,ActOp>;
+template <typename T, std::size_t N>
+using ReduceArrMsg = reduce::operators::ReduceArrMsg<T,N>;
 
-template <typename MsgT, typename T, typename Op, typename ActOp>
-using ReduceTMsg = reduce::operators::ReduceTMsg<MsgT,T,Op,ActOp>;
+template <typename T>
+using ReduceTMsg = reduce::operators::ReduceTMsg<T>;
 
 }} /* end namespace vt::collective */
 
