@@ -1011,7 +1011,7 @@ void CollectionManager::nextPhase(
 ) {
   using namespace balance;
   using MsgType = PhaseMsg<ColT>;
-  auto msg = makeSharedMessage<MsgType>(cur_phase);
+  auto msg = makeSharedMessage<MsgType>(cur_phase, proxy);
   auto const& instrument = false;
 
   debug_print_force(
@@ -1031,6 +1031,27 @@ void CollectionManager::nextPhase(
     }
   );
   theCollection()->broadcastMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
+    proxy, msg, nullptr, instrument
+  );
+}
+
+template <typename ColT>
+void CollectionManager::computeStats(
+  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
+  PhaseType const& cur_phase
+) {
+  using namespace balance;
+  using MsgType = PhaseMsg<ColT>;
+  auto msg = makeSharedMessage<MsgType>(cur_phase,proxy);
+  auto const& instrument = false;
+
+  debug_print_force(
+    vrt_coll, node,
+    "computeStats: broadcasting: cur_phase={}\n",
+    cur_phase
+  );
+
+  theCollection()->broadcastMsg<MsgType,ElementStats::computeStats<ColT>>(
     proxy, msg, nullptr, instrument
   );
 }

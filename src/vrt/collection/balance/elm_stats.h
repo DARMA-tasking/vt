@@ -5,6 +5,7 @@
 #include "config.h"
 #include "vrt/collection/balance/elm_stats.fwd.h"
 #include "vrt/collection/balance/phase_msg.h"
+#include "vrt/collection/balance/stats_msg.h"
 #include "timing/timing.h"
 #include "vrt/collection/types/migratable.fwd.h"
 
@@ -25,6 +26,7 @@ struct ElementStats {
   void addTime(TimeType const& time);
   void updatePhase(PhaseType const& inc = 1);
   PhaseType getPhase() const;
+  TimeType getLoad(PhaseType const& phase) const;
 
   template <typename Serializer>
   void serialize(Serializer& s);
@@ -32,6 +34,12 @@ struct ElementStats {
 public:
   template <typename ColT>
   static void syncNextPhase(PhaseMsg<ColT>* msg, ColT* col);
+
+  template <typename ColT>
+  static void computeStats(PhaseMsg<ColT>* msg, ColT* col);
+
+  template <typename ColT>
+  static void statsIn(LoadStatsMsg<ColT>* msg, ColT* col);
 
   template <typename ColT>
   friend struct collection::Migratable;
@@ -43,8 +51,16 @@ protected:
   std::vector<TimeType> phase_timings_ = {};
 };
 
-}}}} /* end namespace vt::vrt::collection::balance */
+template <typename ColT>
+struct ComputeStats {
+  void operator()(PhaseReduceMsg<ColT>* msg);
+};
 
-#include "vrt/collection/balance/elm_stats.impl.h"
+template <typename ColT>
+struct CollectedStats {
+  void operator()(StatsMsg<ColT>* msg);
+};
+
+}}}} /* end namespace vt::vrt::collection::balance */
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_H*/

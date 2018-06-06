@@ -9,6 +9,9 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct BaseEntireCollectionProxy {
+  using CollectionType = ColT;
+  using IndexType = IndexT;
+
   BaseEntireCollectionProxy() = default;
   BaseEntireCollectionProxy(VirtualProxyType const in_proxy);
 

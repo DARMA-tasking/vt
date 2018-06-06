@@ -207,6 +207,12 @@ struct CollectionManager {
     PhaseType const& cur_phase
   );
 
+  template <typename ColT>
+  void computeStats(
+    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
+    PhaseType const& cur_phase
+  );
+
 private:
   template <typename ColT, typename IndexT>
   CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
@@ -276,5 +282,6 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vrt/collection/send/sendable.impl.h"
 #include "vrt/collection/destroy/destroyable.impl.h"
 #include "vrt/collection/destroy/manager_destroy_attorney.impl.h"
+#include "vrt/collection/balance/elm_stats.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/
