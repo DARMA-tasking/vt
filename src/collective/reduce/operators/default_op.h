@@ -20,7 +20,7 @@ struct None {
 template <typename T>
 struct PlusOp {
   void operator()(T& v1, T const& v2) {
-    v1 += v2;
+    v1 = v1 + v2;
   }
 };
 
