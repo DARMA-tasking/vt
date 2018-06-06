@@ -3,6 +3,8 @@
 #include "vrt/collection/balance/elm_stats.h"
 #include "timing/timing.h"
 
+#include <cassert>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void ElementStats::startTime() {
@@ -46,11 +48,23 @@ void ElementStats::updatePhase(PhaseType const& inc) {
     cur_phase_, inc
   );
 
+  phase_timings_.resize(cur_phase_ + 1);
   cur_phase_ += inc;
 }
 
 PhaseType ElementStats::getPhase() const {
   return cur_phase_;
+}
+
+TimeType ElementStats::getLoad(PhaseType const& phase) const {
+  debug_print_force(
+    vrt_coll, node,
+    "ElementStats: getLoad: phase={}, size={}\n",
+    phase, phase_timings_.size()
+  );
+
+  assert(phase_timings_.size() >= phase && "Must have phase");
+  return phase_timings_.at(phase);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
