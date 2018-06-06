@@ -10,6 +10,13 @@
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
+using NoneType = char;
+
+template <typename T>
+struct None {
+  void operator()(T& v1, T const& v2) {}
+};
+
 template <typename T>
 struct PlusOp {
   void operator()(T& v1, T const& v2) {
@@ -67,6 +74,11 @@ using MaxOp = reduce::operators::MaxOp<T>;
 
 template <typename T>
 using MinOp = reduce::operators::MinOp<T>;
+
+template <typename T>
+using NoneOp = reduce::operators::None<T>;
+
+using NoneType = reduce::operators::NoneType;
 
 }} /* end namespace vt::collective */
 
