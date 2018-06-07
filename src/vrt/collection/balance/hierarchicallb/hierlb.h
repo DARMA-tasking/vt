@@ -29,27 +29,34 @@ struct HierarchicalLB : HierLBTypes {
 
 private:
   static void downTreeHandler(LBTreeDownMsg* msg);
+  static void transferHan(TransferMsg* msg);
+  static void lbTreeUpHandler(LBTreeUpMsg* msg);
+
   void downTreeSend(
     NodeType const node, NodeType const from, ObjSampleType const& excess,
     bool const final_child
   );
-  void downTree(
-    NodeType const from, ObjSampleType&& excess, bool const final_child
-  );
-
-  static void lbTreeUpHandler(LBTreeUpMsg* msg);
   void lbTreeUpSend(
     NodeType const node, LoadType const child_load, NodeType const child,
     ObjSampleType const& load, NodeType const child_size
+  );
+  void transferSend(NodeType to, NodeType from, std::vector<ObjIDType> list);
+
+  void downTree(
+    NodeType const from, ObjSampleType&& excess, bool const final_child
   );
   void lbTreeUp(
     LoadType const child_load, NodeType const child, ObjSampleType&& load,
     NodeType const child_size
   );
+  void transfer(NodeType from, std::vector<ObjIDType> list);
+
   void sendDownTree();
   void distributeAmoungChildren();
   void clearObj(ObjSampleType& objs);
   HierLBChild* findMinChild();
+  void startMigrations();
+  NodeType objGetNode(ObjIDType const& id);
 
 private:
   ObjBinType histogramSample(LoadType const& load);
@@ -77,6 +84,7 @@ private:
   LoadType this_load = 0.0f;
   ObjSampleType obj_sample, load_over, given_objs, taken_objs;
   ElementLoadType const* stats = nullptr;
+  int64_t migrates_expected = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

@@ -219,6 +219,60 @@ void HierarchicalLB::calcLoadOver() {
   );
 }
 
+NodeType HierarchicalLB::objGetNode(ObjIDType const& id) {
+  return id >> 32;
+}
+
+void HierarchicalLB::startMigrations() {
+  auto const& this_node = theContext()->getNode();
+  std::map<NodeType, std::vector<ObjIDType>> transfer_list;
+
+  for (auto&& bin : taken_objs) {
+    for (auto&& obj_id : bin.second) {
+      auto const& node = objGetNode(obj_id);
+
+      if (node != this_node) {
+        migrates_expected++;
+
+        debug_print(
+          hierlb, node,
+          "startMigrations, obj_id={}, node={}\n",
+          obj_id, node
+        );
+
+        transfer_list[node].push_back(obj_id);
+      }
+    }
+  }
+
+  debug_print(
+    hierlb, node,
+    "startMigrations, transfer_list.size()={}\n",
+    transfer_list.size()
+  );
+
+  for (auto&& trans : transfer_list) {
+    transferSend(trans.first, this_node, trans.second);
+  }
+}
+
+void HierarchicalLB::transferSend(
+  NodeType node, NodeType from, std::vector<ObjIDType> transfer
+) {
+  auto msg = makeSharedMessage<TransferMsg>(from,transfer);
+  theMsg()->sendMsg<TransferMsg,transferHan>(node,msg);
+}
+
+void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
+
+}
+
+/*static*/ void HierarchicalLB::transferHan(TransferMsg* msg) {
+  HierarchicalLB::hier_lb_inst->transfer(
+    msg->getFrom(), std::move(msg->getTransferMove())
+  );
+}
+
 void HierarchicalLB::downTreeSend(
   NodeType const node, NodeType const from, ObjSampleType const& excess,
   bool const final_child
