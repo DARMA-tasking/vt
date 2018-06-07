@@ -21,6 +21,7 @@
     gen,                   "general",                                   \
     group,                 "group",                                     \
     handler,               "handler",                                   \
+    hierlb,                "HierarchicalLB",                            \
     lb,                    "lb",                                        \
     location,              "location",                                  \
     param,                 "parameterization",                          \

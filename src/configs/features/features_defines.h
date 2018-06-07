@@ -37,6 +37,7 @@
 #define debug_rdma_state(x) x
 #define debug_param(x) x
 #define debug_handler(x) x
+#define debug_hierlb(x) x
 #define debug_sequence(x) x
 #define debug_sequence_vrt(x) x
 #define debug_serial_msg(x) x
