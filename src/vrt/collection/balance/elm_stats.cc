@@ -12,9 +12,10 @@ void ElementStats::startTime() {
   cur_time_ = start_time;
   cur_time_started_ = true;
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
-    "ElementStats: startTime: time={}\n", start_time
+    "ElementStats: startTime: time={}\n",
+    start_time
   );
 }
 
@@ -25,20 +26,22 @@ void ElementStats::stopTime() {
   cur_time_started_ = false;
   addTime(total_time);
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
-    "ElementStats: stopTime: time={}, total={}\n", stop_time, total_time
+    "ElementStats: stopTime: time={}, total={}\n",
+    stop_time, total_time
   );
 }
 
 void ElementStats::addTime(TimeType const& time) {
-  debug_print_force(
-    vrt_coll, node,
-    "ElementStats: addTime: time={}\n", time
-  );
-
   phase_timings_.resize(cur_phase_ + 1);
   phase_timings_.at(cur_phase_) += time;
+
+  debug_print_force(
+    vrt_coll, node,
+    "ElementStats: addTime: time={}, cur_load={}\n",
+    time, phase_timings_.at(cur_phase_)
+  );
 }
 
 void ElementStats::updatePhase(PhaseType const& inc) {
@@ -57,14 +60,16 @@ PhaseType ElementStats::getPhase() const {
 }
 
 TimeType ElementStats::getLoad(PhaseType const& phase) const {
+  auto const& total_load = phase_timings_.at(phase);
+
   debug_print_force(
     vrt_coll, node,
-    "ElementStats: getLoad: phase={}, size={}\n",
-    phase, phase_timings_.size()
+    "ElementStats: getLoad: load={}, phase={}, size={}\n",
+    total_load, phase, phase_timings_.size()
   );
 
   assert(phase_timings_.size() >= phase && "Must have phase");
-  return phase_timings_.at(phase);
+  return total_load;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

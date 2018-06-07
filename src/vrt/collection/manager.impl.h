@@ -392,7 +392,7 @@ void CollectionManager::broadcastMsg(
 
   backend_enable_if(
     lblite,
-    msg->setLBLiteInstrument(!instrument);
+    msg->setLBLiteInstrument(instrument);
   );
 
   // @todo: implement the action `act' after the routing is finished

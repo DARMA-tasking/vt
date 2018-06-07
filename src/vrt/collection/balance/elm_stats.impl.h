@@ -6,6 +6,7 @@
 #include "vrt/collection/balance/elm_stats.h"
 #include "vrt/collection/balance/phase_msg.h"
 #include "vrt/collection/balance/stats_msg.h"
+#include "vrt/collection/balance/proc_stats.h"
 #include "vrt/collection/manager.h"
 #include "timing/timing.h"
 
@@ -74,16 +75,15 @@ template <typename ColT>
   using MsgType = StatsMsg<ColT>;
   auto& stats = col->stats_;
   auto const& cur_phase = msg->getPhase();
-
-  debug_print_force(
-    vrt_coll, node,
-    "ComputeStats ({}) (idx={}) (reduce): phase={}\n",
-    print_ptr(col), col->getIndex().x(), cur_phase
-  );
-
   auto const& total_load = stats.getLoad(cur_phase);
   auto const& proxy = col->getCollectionProxy();
   auto stats_msg = makeSharedMessage<MsgType>(cur_phase, total_load, proxy);
+
+  debug_print_force(
+    vrt_coll, node,
+    "ComputeStats ({}) (idx={}) (reduce): phase={}, load={}\n",
+    print_ptr(col), col->getIndex().x(), cur_phase, total_load
+  );
 
   theCollection()->reduceMsg<
     ColT,
@@ -98,13 +98,24 @@ template <typename ColT>
 /*static*/ void ElementStats::statsIn(LoadStatsMsg<ColT>* msg, ColT* col) {
   debug_print_force(
     vrt_coll, node,
-    "ElementsStats::statsIn\n"
+    "ElementsStats::statsIn: max={}, sum={}, avg={}\n",
+    msg->load_max_, msg->load_sum_, msg->load_sum_/8
   );
+
+  auto& stats = col->stats_;
+  auto const& cur_phase = msg->getPhase();
+  auto const& total_load = stats.getLoad(cur_phase);
+  auto const& proxy = col->getCollectionProxy();
+  auto const& idx = col->getIndex();
+  auto const& elm_proxy = proxy[idx];
+  ProcStats::addProcStats<ColT>(elm_proxy, col, msg->getPhase(), total_load);
 }
 
 template <typename ColT>
 void CollectedStats<ColT>::operator()(StatsMsg<ColT>* msg) {
-  auto load_msg = makeSharedMessage<LoadStatsMsg<ColT>>(msg->getConstVal());
+  auto load_msg = makeSharedMessage<LoadStatsMsg<ColT>>(
+    msg->getConstVal(), msg->getPhase()
+  );
 
   debug_print_force(
     vrt_coll, node,

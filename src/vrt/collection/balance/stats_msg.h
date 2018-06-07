@@ -32,9 +32,14 @@ struct LoadData {
 template <typename ColT>
 struct LoadStatsMsg : CollectionMessage<ColT>, LoadData {
   LoadStatsMsg() = default;
-  explicit LoadStatsMsg(LoadData const& in_load_data)
-    : LoadData(in_load_data)
+  LoadStatsMsg(LoadData const& in_load_data, PhaseType const& phase)
+    : LoadData(in_load_data), cur_phase_(phase)
   {}
+
+  PhaseType getPhase() const { return cur_phase_; }
+
+private:
+  PhaseType cur_phase_ = fst_lb_phase;
 };
 
 template <typename ColT>
