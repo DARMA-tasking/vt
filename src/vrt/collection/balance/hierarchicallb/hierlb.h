@@ -28,7 +28,16 @@ struct HierarchicalLB : HierLBTypes {
   void procDataIn(ElementLoadType const& data_in);
 
 private:
-  static void lbTreeUpHandler(LBTreeDownMsg* msg);
+  static void downTreeHandler(LBTreeDownMsg* msg);
+  void downTreeSend(
+    NodeType const node, NodeType const from, ObjSampleType const& excess,
+    bool const final_child
+  );
+  void downTree(
+    NodeType const from, ObjSampleType&& excess, bool const final_child
+  );
+
+  static void lbTreeUpHandler(LBTreeUpMsg* msg);
   void lbTreeUpSend(
     NodeType const node, LoadType const child_load, NodeType const child,
     ObjSampleType const& load, NodeType const child_size
@@ -39,6 +48,8 @@ private:
   );
   void sendDownTree();
   void distributeAmoungChildren();
+  void clearObj(ObjSampleType& objs);
+  HierLBChild* findMinChild();
 
 private:
   ObjBinType histogramSample(LoadType const& load);

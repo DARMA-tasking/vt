@@ -151,6 +151,7 @@ void HierarchicalLB::reduceLoad() {
 void HierarchicalLB::loadStats(
   LoadType const& total_load, LoadType const& in_max_load
 ) {
+  auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   avg_load = total_load / num_nodes;
   max_load = in_max_load;
@@ -162,6 +163,13 @@ void HierarchicalLB::loadStats(
   );
 
   calcLoadOver();
+
+  lbTreeUpSend(bottom_parent, this_load, this_node, load_over, 1);
+
+  if (children.size() == 0) {
+    ObjSampleType empty_obj{};
+    lbTreeUpSend(parent, 0.0f, this_node, empty_obj, agg_node_size);
+  }
 }
 
 void HierarchicalLB::calcLoadOver() {
@@ -205,7 +213,60 @@ void HierarchicalLB::calcLoadOver() {
   }
 }
 
-/*static*/ void HierarchicalLB::lbTreeUpHandler(LBTreeDownMsg* msg) {
+/*static*/ void HierarchicalLB::downTreeHandler(LBTreeDownMsg* msg) {
+  HierarchicalLB::hier_lb_inst->downTree(
+    msg->getFrom(), std::move(msg->getExcessMove()), msg->getFinalChild()
+  );
+}
+
+void HierarchicalLB::downTreeSend(
+  NodeType const node, NodeType const from, ObjSampleType const& excess,
+  bool const final_child
+) {
+  auto msg = makeSharedMessage<LBTreeDownMsg>(from,excess,final_child);
+  theMsg()->sendMsg<LBTreeDownMsg,downTreeHandler>(node,msg);
+}
+
+void HierarchicalLB::downTree(
+  NodeType const from, ObjSampleType&& excess_load, bool const final_child
+) {
+  debug_print(
+    hierlb, node,
+    "downTree: from={}, bottomParent={}: load={}\n",
+    from, bottom_parent, excess_load.size()
+  );
+
+  if (final_child) {
+    // take the load
+    taken_objs = std::move(excess_load);
+
+    int total_taken_load = 0;
+    for (auto&& item : taken_objs) {
+      total_taken_load = item.first * item.second.size();
+
+      debug_print(
+        hierlb, node,
+        "downTree: from={}, taken_bin={}, taken_bin_count={}, "
+        "total_taken_load={}\n",
+        from, item.first, item.second.size(), total_taken_load
+      );
+    }
+
+    this_load += total_taken_load;
+
+    debug_print(
+      hierlb, node,
+      "downTree: new load profile=%f, total_taken_load={}, "
+      "avg_load=%f\n",
+      this_load, total_taken_load, avg_load
+    );
+  } else {
+    given_objs = std::move(excess_load);
+    sendDownTree();
+  }
+}
+
+/*static*/ void HierarchicalLB::lbTreeUpHandler(LBTreeUpMsg* msg) {
   HierarchicalLB::hier_lb_inst->lbTreeUp(
     msg->getChildLoad(), msg->getChild(), std::move(msg->getLoadMove()),
     msg->getChildSize()
@@ -216,8 +277,8 @@ void HierarchicalLB::lbTreeUpSend(
   NodeType const node, LoadType const child_load, NodeType const child,
   ObjSampleType const& load, NodeType const child_size
 ) {
-  auto msg = makeSharedMessage<LBTreeDownMsg>(child_load,child,load,child_size);
-  theMsg()->sendMsg<LBTreeDownMsg,lbTreeUpHandler>(node,msg);
+  auto msg = makeSharedMessage<LBTreeUpMsg>(child_load,child,load,child_size);
+  theMsg()->sendMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
 }
 
 void HierarchicalLB::lbTreeUp(
@@ -321,5 +382,150 @@ void HierarchicalLB::lbTreeUp(
     }
   }
 }
+
+HierLBChild* HierarchicalLB::findMinChild() {
+  if (live_children.size() == 0) {
+    return nullptr;
+  }
+
+  auto cur = live_children.begin()->second.get();
+
+  debug_print(
+    hierlb, node,
+    "findMinChild, cur.pe={}, load={}\n",
+    cur->node, cur->cur_load
+  );
+
+  for (auto&& c : live_children) {
+    auto const& load = c.second->cur_load / c.second->node_size;
+    auto const& cur_load = cur->cur_load / cur->node_size;
+    if (load <  cur_load || cur->node_size == 0) {
+      cur = c.second.get();
+    }
+  }
+
+  return cur;
+}
+
+void
+HierarchicalLB::sendDownTree() {
+  auto const& this_node = theContext()->getNode();
+
+  debug_print(
+    hierlb, node,
+    "{}: sendDownTree\n"
+  );
+
+  auto cIter = given_objs.rbegin();
+
+  while (cIter != given_objs.rend()) {
+    auto c = findMinChild();
+    int const weight = c->node_size;
+    double const threshold = avg_load * weight * hierlb_threshold;
+
+    debug_print(
+      hierlb, node,
+      "\t distribute min child: c={}, child={}, cur_load={}, "
+      "weight={}, avg_load={}, threshold={}\n",
+      print_ptr(c), c ? c->node : -1, c ? c->cur_load : -1.0,
+      weight, avg_load, threshold
+    );
+
+    if (c == nullptr || weight == 0) {
+      break;
+    } else {
+      if (cIter->second.size() != 0) {
+        debug_print(
+          hierlb, node,
+          "\t distribute: child={}, cur_load={}, time={}\n",
+          c->node, c->cur_load, cIter->first
+       );
+
+        // @todo agglomerate units into this bin together to increase efficiency
+        auto task = cIter->second.back();
+        c->recs[cIter->first].push_back(task);
+        c->cur_load += cIter->first;
+        // remove from list
+        cIter->second.pop_back();
+      } else {
+        cIter++;
+      }
+    }
+  }
+
+  clearObj(given_objs);
+
+  for (auto& c : children) {
+    downTreeSend(c.second->node, this_node, c.second->recs, c.second->final_child);
+    c.second->recs.clear();
+  }
+}
+
+void HierarchicalLB::distributeAmoungChildren() {
+  auto const& this_node = theContext()->getNode();
+
+  debug_print(
+    hierlb, node,
+    "distribute_amoung_children: parent={}\n", parent
+  );
+
+  auto cIter = given_objs.rbegin();
+
+  while (cIter != given_objs.rend()) {
+    HierLBChild* c = findMinChild();
+    int const weight = c->node_size;
+    double const threshold = avg_load * weight * hierlb_threshold;
+
+    debug_print(
+      hierlb, node,
+      "\t distribute min child: c={}, child={}, cur_load={}, "
+      "weight={}, avg_load={}, threshold={}\n",
+      print_ptr(c), c ? c->node : -1, c ? c->cur_load : -1.0,
+      weight, avg_load, threshold
+    );
+
+    if (c == nullptr || c->cur_load > threshold || weight == 0) {
+      break;
+    } else {
+      if (cIter->second.size() != 0) {
+        debug_print(
+          hierlb, node,
+          "\t distribute: child={}, cur_load={}, time={}\n",
+          c->node, c->cur_load, cIter->first
+        );
+
+        // @todo agglomerate units into this bin together to increase efficiency
+        auto task = cIter->second.back();
+        c->recs[cIter->first].push_back(task);
+        c->cur_load += cIter->first;
+        // remove from list
+        cIter->second.pop_back();
+      } else {
+        cIter++;
+      }
+    }
+  }
+
+  clearObj(given_objs);
+
+  lbTreeUpSend(parent, total_child_load, this_node, given_objs, agg_node_size);
+
+  given_objs.clear();
+}
+
+void HierarchicalLB::clearObj(ObjSampleType& objs) {
+  std::vector<int> to_remove{};
+  for (auto&& bin : objs) {
+    if (bin.second.size() == 0) {
+      to_remove.push_back(bin.first);
+    }
+  }
+  for (auto&& r : to_remove) {
+    auto giter = objs.find(r);
+    assert(giter != objs.end() && "Must exist");
+    objs.erase(giter);
+  }
+}
+
 
 }}}} /* end namespace vt::vrt::collection::lb */
