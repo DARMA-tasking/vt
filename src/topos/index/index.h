@@ -14,8 +14,6 @@
 
 namespace vt { namespace index {
 
-struct BaseIndex { };
-
 using Index1D = DenseIndexArray<int32_t, 1>;
 using Index2D = DenseIndexArray<int32_t, 2>;
 using Index3D = DenseIndexArray<int32_t, 3>;

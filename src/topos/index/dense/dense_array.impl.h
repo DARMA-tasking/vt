@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "topos/index/dense/dense_array.h"
+#include "topos/index/base_index.h"
 #include "context/context.h"
 #include "utils/bits/bits_packer.h"
 
@@ -18,25 +19,26 @@ namespace vt { namespace index {
 template <typename IndexType, NumDimensionsType ndim>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(
   std::array<IndexType, ndim> in_array
-) : dims(in_array)
+) : dims(in_array), BaseIndex()
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(
   std::initializer_list<IndexType> vals
-) : dims{vals}
+) : dims{vals}, BaseIndex()
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
 template <typename... Idxs, typename>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(Idxs&&... init)
-  : dims({init...})
+  : dims({init...}), BaseIndex()
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(
   DenseIndexArraySingleInitTag, IndexType const& init_value
-) {
+) : BaseIndex()
+{
   for (int i = 0; i < ndim; i++) {
     dims[i] = init_value;
   }

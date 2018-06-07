@@ -3,6 +3,7 @@
 #define INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H
 
 #include "config.h"
+#include "topos/index/base_index.h"
 #include "utils/bits/bits_packer.h"
 #include "utils/static_checks/meta_type_eq_.h"
 #include "serialization/traits/byte_copy_trait.h"
@@ -30,7 +31,7 @@ struct DenseIndexArray;
 static struct DenseIndexArraySingleInitTag { } dense_single_value_tag { };
 
 template <typename IndexType, NumDimensionsType ndim>
-struct DenseIndexArray : serialization::ByteCopyTrait {
+struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   using ThisIndexType = DenseIndexArray<IndexType, ndim>;
   using IndexSizeType = size_t;
   using ApplyType = std::function<void(ThisIndexType)>;
