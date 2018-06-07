@@ -6,6 +6,7 @@
 #include "vrt/collection/balance/hierarchicallb/hierlb.fwd.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_types.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_child.h"
+#include "vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vrt/collection/balance/proc_stats.h"
 
 #include <unordered_map>
@@ -27,6 +28,11 @@ struct HierarchicalLB : HierLBTypes {
   void procDataIn(ElementLoadType const& data_in);
 
 private:
+  static void lbTreeUpHandler(LBTreeDownMsg* msg);
+  void lbTreeUpSend(
+    NodeType const node, LoadType const child_load, NodeType const child,
+    ObjSampleType const& load, NodeType const child_size
+  );
   void lbTreeUp(
     LoadType const child_load, NodeType const child, ObjSampleType&& load,
     NodeType const child_size

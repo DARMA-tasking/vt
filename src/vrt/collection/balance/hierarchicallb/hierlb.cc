@@ -5,6 +5,7 @@
 #include "vrt/collection/balance/hierarchicallb/hierlb_types.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_child.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_constants.h"
+#include "vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vrt/collection/balance/stats_msg.h"
 #include "collective/collective_alg.h"
 #include "collective/reduce/reduce.h"
@@ -202,6 +203,21 @@ void HierarchicalLB::calcLoadOver() {
       obj_sample.erase(obj_sample.find(i));
     }
   }
+}
+
+/*static*/ void HierarchicalLB::lbTreeUpHandler(LBTreeDownMsg* msg) {
+  HierarchicalLB::hier_lb_inst->lbTreeUp(
+    msg->getChildLoad(), msg->getChild(), std::move(msg->getLoadMove()),
+    msg->getChildSize()
+  );
+}
+
+void HierarchicalLB::lbTreeUpSend(
+  NodeType const node, LoadType const child_load, NodeType const child,
+  ObjSampleType const& load, NodeType const child_size
+) {
+  auto msg = makeSharedMessage<LBTreeDownMsg>(child_load,child,load,child_size);
+  theMsg()->sendMsg<LBTreeDownMsg,lbTreeUpHandler>(node,msg);
 }
 
 void HierarchicalLB::lbTreeUp(
