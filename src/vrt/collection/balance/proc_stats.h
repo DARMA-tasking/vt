@@ -33,8 +33,9 @@ private:
 
 private:
   static ElementIDType next_elm_;
-  static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
   static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
+public:
+  static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

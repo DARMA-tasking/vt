@@ -223,9 +223,23 @@ NodeType HierarchicalLB::objGetNode(ObjIDType const& id) {
   return id >> 32;
 }
 
+void HierarchicalLB::finishedTransferExchange() {
+  debug_print(
+    hierlb, node,
+    "finished all transfers: count={}",
+    transfer_count
+  );
+}
+
 void HierarchicalLB::startMigrations() {
   auto const& this_node = theContext()->getNode();
-  std::map<NodeType, std::vector<ObjIDType>> transfer_list;
+  TransferType transfer_list;
+
+  EpochType const epoch = theTerm()->newEpoch();
+  theMsg()->setGlobalEpoch(epoch);
+  theTerm()->attachEpochTermAction(epoch,[this]{
+    this->finishedTransferExchange();
+  });
 
   for (auto&& bin : taken_objs) {
     for (auto&& obj_id : bin.second) {
@@ -264,7 +278,18 @@ void HierarchicalLB::transferSend(
 }
 
 void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
+  auto trans_iter = transfers.find(from);
 
+  assert(trans_iter == transfers.end() && "There must not be an entry");
+
+  transfers[from] = list;
+  transfer_count += list.size();
+
+  for (auto&& elm : list) {
+    auto iter = balance::ProcStats::proc_migrate_.find(elm);
+    assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
+    iter->second(from);
+  }
 }
 
 /*static*/ void HierarchicalLB::transferHan(TransferMsg* msg) {
@@ -310,10 +335,12 @@ void HierarchicalLB::downTree(
 
     debug_print(
       hierlb, node,
-      "downTree: new load profile=%f, total_taken_load={}, "
-      "avg_load=%f\n",
+      "downTree: new load profile={}, total_taken_load={}, "
+      "avg_load={}\n",
       this_load, total_taken_load, avg_load
     );
+
+    startMigrations();
   } else {
     given_objs = std::move(excess_load);
     sendDownTree();

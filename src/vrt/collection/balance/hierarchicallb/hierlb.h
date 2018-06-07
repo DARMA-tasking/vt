@@ -10,6 +10,9 @@
 #include "vrt/collection/balance/proc_stats.h"
 
 #include <unordered_map>
+#include <vector>
+#include <list>
+#include <map>
 #include <memory>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
@@ -19,6 +22,7 @@ struct HierarchicalLB : HierLBTypes {
   using ChildMapType = std::unordered_map<NodeType,ChildPtrType>;
   using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
   using ProcStatsMsgType = balance::ProcStatsMsg;
+  using TransferType = std::map<NodeType, std::vector<ObjIDType>>;
   using LoadType = double;
 
   HierarchicalLB() = default;
@@ -57,6 +61,7 @@ private:
   HierLBChild* findMinChild();
   void startMigrations();
   NodeType objGetNode(ObjIDType const& id);
+  void finishedTransferExchange();
 
 private:
   ObjBinType histogramSample(LoadType const& load);
@@ -84,7 +89,8 @@ private:
   LoadType this_load = 0.0f;
   ObjSampleType obj_sample, load_over, given_objs, taken_objs;
   ElementLoadType const* stats = nullptr;
-  int64_t migrates_expected = 0;
+  int64_t migrates_expected = 0, transfer_count = 0;
+  TransferType transfers;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
