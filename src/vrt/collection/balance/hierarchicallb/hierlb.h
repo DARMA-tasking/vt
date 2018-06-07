@@ -27,6 +27,14 @@ struct HierarchicalLB : HierLBTypes {
   void procDataIn(ElementLoadType const& data_in);
 
 private:
+  void lbTreeUp(
+    LoadType const child_load, NodeType const child, ObjSampleType&& load,
+    NodeType const child_size
+  );
+  void sendDownTree();
+  void distributeAmoungChildren();
+
+private:
   ObjBinType histogramSample(LoadType const& load);
   LoadType loadMilli(LoadType const& load);
 
@@ -46,10 +54,12 @@ private:
   bool tree_setup = false;
   NodeType parent = uninitialized_destination;
   NodeType bottom_parent = uninitialized_destination;
+  NodeType agg_node_size = 0, child_msgs = 0;
   ChildMapType children, live_children;
-  LoadType avg_load = 0.0f, max_load = 0.0f;
+  LoadType avg_load = 0.0f, max_load = 0.0f, total_child_load = 0.0f;
   LoadType this_load = 0.0f;
-  ObjSampleType obj_sample;
+  ObjSampleType obj_sample, load_over, given_objs, taken_objs;
+  ElementLoadType const* stats = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

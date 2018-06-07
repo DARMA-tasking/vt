@@ -12,6 +12,8 @@
 
 #include <unordered_map>
 #include <memory>
+#include <list>
+#include <vector>
 #include <cassert>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
@@ -119,6 +121,7 @@ void HierarchicalLB::procDataIn(ElementLoadType const& data_in) {
     this_load += load_milli;
     obj_sample[bin].push_back(obj);
   }
+  stats = &data_in;
 }
 
 void HierarchicalLB::HierAvgLoad::operator()(balance::ProcStatsMsg* msg) {
@@ -156,9 +159,151 @@ void HierarchicalLB::loadStats(
     "loadStats: total_load={}, avg_load={}, max_load={}\n",
     total_load, avg_load, max_load
   );
+
+  calcLoadOver();
 }
 
 void HierarchicalLB::calcLoadOver() {
+  auto const threshold = hierlb_threshold * avg_load;
+
+  debug_print(
+    hierlb, node,
+    "calcLoadOver: this_load={}, avg_load={}, threshold={}\n",
+    this_load, avg_load, threshold
+  );
+
+  auto cur_item = obj_sample.begin();
+  while (this_load > threshold && cur_item != obj_sample.end()) {
+    if (cur_item->second.size() != 0) {
+      auto const obj = cur_item->second.back();
+
+      load_over[cur_item->first].push_back(obj);
+      cur_item->second.pop_back();
+
+      auto const& obj_id = obj;
+      auto obj_iter = stats->find(obj_id);
+      assert(obj_iter != stats->end() && "Obj must exist in stats");
+      auto const& obj_time_milli = loadMilli(obj_iter->second);
+
+      this_load -= obj_time_milli;
+
+      debug_print(
+        hierlb, node,
+        "calcLoadOver: this_load={}, threshold={}, adding unit: bin={}\n",
+        this_load, threshold, cur_item->first
+      );
+    } else {
+      cur_item++;
+    }
+  }
+
+  for (auto i = 0; i < obj_sample.size(); i++) {
+    if (obj_sample[i].size() == 0) {
+      obj_sample.erase(obj_sample.find(i));
+    }
+  }
+}
+
+void HierarchicalLB::lbTreeUp(
+  LoadType const child_load, NodeType const child, ObjSampleType&& load,
+  NodeType const child_size
+) {
+  auto const& this_node = theContext()->getNode();
+
+  debug_print(
+    hierlb, node,
+    "lbTreeUp: child={}, child_load={}, child_size={}, "
+    "child_msgs={}, children.size()={}, agg_node_size={}, "
+    "avg_load={}, child_avg={}, incoming load.size={}\n",
+    child, child_load, child_size, child_msgs+1, children.size(),
+    agg_node_size + child_size, avg_load, child_load/child_size,
+    load.size()
+  );
+
+  if (load.size() > 0) {
+    for (auto& bin : load) {
+      debug_print(
+        hierlb, node,
+        "\t lbTreeUp: combining bins for bin={}, size=%{}\n",
+        bin.first, bin.second.size()
+      );
+
+      if (bin.second.size() > 0) {
+        // splice in the new list to accumulated work units that fall in a
+        // common histrogram bin
+        typename decltype(given_objs)::iterator given_iter =
+          given_objs.find(bin.first);
+
+        if (given_iter == given_objs.end()) {
+          // do the insertion here
+          given_objs.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(bin.first),
+            std::forward_as_tuple(ObjBinListType{})
+          );
+
+          given_iter = given_objs.find(bin.first);
+
+          assert(
+            given_iter != given_objs.end() &&
+            "An insertion just took place so this must not fail"
+          );
+        }
+
+        // add in the load that was just received
+        total_child_load += bin.first * bin.second.size();
+
+        given_iter->second.splice(given_iter->second.begin(), bin.second);
+      }
+    }
+  }
+
+  agg_node_size += child_size;
+
+  auto child_iter = children.find(child);
+
+  assert(
+    child_iter != children.end() && "Entry must exist in children map"
+  );
+
+  child_iter->second->node_size = child_size;
+  child_iter->second->cur_load = child_load;
+  child_iter->second->node = child;
+
+  total_child_load += child_load;
+
+  child_msgs++;
+
+  if (child_size > 0 && child_load != 0.0) {
+    auto live_iter = live_children.find(child);
+    if (live_iter == live_children.end()) {
+      live_children.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(child),
+        std::forward_as_tuple(
+          std::make_unique<HierLBChild>(*child_iter->second)
+        )
+      );
+    }
+  }
+
+  assert(
+    child_msgs <= children.size() &&
+    "Number of children must be greater or less than"
+  );
+
+  if (child_msgs == children.size()) {
+    if (this_node == hierlb_root) {
+      debug_print(
+        hierlb, node,
+        "lbTreeUp: reached root!: total_load={}, avg={}\n",
+        total_child_load, total_child_load/agg_node_size
+      );
+      sendDownTree();
+    } else {
+      distributeAmoungChildren();
+    }
+  }
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
