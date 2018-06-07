@@ -81,13 +81,37 @@ void HierarchicalLB::setupTree() {
     factor += hierlb_nary;
   }
 
-  bottomParent = ((this_node + 1 + factor) - 1) / hierlb_nary;
+  bottom_parent = ((this_node + 1 + factor) - 1) / hierlb_nary;
 
   debug_print(
     hierlb, node,
-    "\t{}: parent={}, bottomParent={}, children.size()={}\n",
-    this_node, parent, bottomParent, children.size()
+    "\t{}: parent={}, bottom_parent={}, children.size()={}\n",
+    this_node, parent, bottom_parent, children.size()
   );
+}
+
+HierarchicalLB::ObjBinType
+HierarchicalLB::histogramSample(LoadType const& load) {
+  ObjBinType const bin =
+    ((static_cast<int32_t>(load)) / hierlb_bin_size * hierlb_bin_size)
+    + hierlb_bin_size;
+  return bin;
+}
+
+HierarchicalLB::LoadType
+HierarchicalLB::loadMilli(LoadType const& load) {
+  return load * 1000;
+}
+
+void HierarchicalLB::procDataIn(ElementLoadType const& data_in) {
+  for (auto&& stat : data_in) {
+    auto const& obj = stat.first;
+    auto const& load = stat.second;
+    auto const& load_milli = loadMilli(load);
+    auto const& bin = histogramSample(load_milli);
+    this_load += load_milli;
+    obj_sample[bin].push_back(obj);
+  }
 }
 
 void HierarchicalLB::calcLoadOver() {
