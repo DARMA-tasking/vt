@@ -5,6 +5,9 @@
 #include "vrt/collection/balance/hierarchicallb/hierlb_types.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_child.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_constants.h"
+#include "vrt/collection/balance/stats_msg.h"
+#include "collective/collective_alg.h"
+#include "collective/reduce/reduce.h"
 #include "context/context.h"
 
 #include <unordered_map>
@@ -12,6 +15,10 @@
 #include <cassert>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
+
+/*static*/
+std::unique_ptr<HierarchicalLB> HierarchicalLB::hier_lb_inst =
+  std::make_unique<HierarchicalLB>();
 
 void HierarchicalLB::setupTree() {
   assert(
@@ -112,6 +119,43 @@ void HierarchicalLB::procDataIn(ElementLoadType const& data_in) {
     this_load += load_milli;
     obj_sample[bin].push_back(obj);
   }
+}
+
+void HierarchicalLB::HierAvgLoad::operator()(balance::ProcStatsMsg* msg) {
+  auto nmsg = makeSharedMessage<balance::ProcStatsMsg>(*msg);
+  theMsg()->broadcastMsg<
+    balance::ProcStatsMsg, HierarchicalLB::loadStatsHandler
+  >(nmsg);
+}
+
+/*static*/ void HierarchicalLB::loadStatsHandler(ProcStatsMsgType* msg) {
+  auto const& lmax = msg->getConstVal().loadMax();
+  auto const& lsum = msg->getConstVal().loadSum();
+  HierarchicalLB::hier_lb_inst->loadStats(lsum,lmax);
+}
+
+void HierarchicalLB::reduceLoad() {
+  auto msg = makeSharedMessage<ProcStatsMsgType>(this_load);
+  theCollective()->reduce<
+    ProcStatsMsgType,
+    ProcStatsMsgType::template msgHandler<
+      ProcStatsMsgType, collective::PlusOp<balance::LoadData>, HierAvgLoad
+    >
+  >(hierlb_root,msg);
+}
+
+void HierarchicalLB::loadStats(
+  LoadType const& total_load, LoadType const& in_max_load
+) {
+  auto const& num_nodes = theContext()->getNumNodes();
+  avg_load = total_load / num_nodes;
+  max_load = in_max_load;
+
+  debug_print(
+    hierlb, node,
+    "loadStats: total_load={}, avg_load={}, max_load={}\n",
+    total_load, avg_load, max_load
+  );
 }
 
 void HierarchicalLB::calcLoadOver() {

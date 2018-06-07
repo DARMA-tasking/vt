@@ -17,6 +17,7 @@ struct HierarchicalLB : HierLBTypes {
   using ChildPtrType = std::unique_ptr<HierLBChild>;
   using ChildMapType = std::unordered_map<NodeType,ChildPtrType>;
   using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
+  using ProcStatsMsgType = balance::ProcStatsMsg;
   using LoadType = double;
 
   HierarchicalLB() = default;
@@ -30,11 +31,24 @@ private:
   LoadType loadMilli(LoadType const& load);
 
 private:
+  void reduceLoad();
+  void loadStats(LoadType const& avg_load, LoadType const& max_load);
+  static void loadStatsHandler(ProcStatsMsgType* msg);
+
+  struct HierAvgLoad {
+    void operator()(balance::ProcStatsMsg* msg);
+  };
+
+public:
+  static std::unique_ptr<HierarchicalLB> hier_lb_inst;
+
+private:
   bool tree_setup = false;
   NodeType parent = uninitialized_destination;
   NodeType bottom_parent = uninitialized_destination;
   ChildMapType children, live_children;
-  LoadType avg_load = 0.0f, this_load = 0.0f;
+  LoadType avg_load = 0.0f, max_load = 0.0f;
+  LoadType this_load = 0.0f;
   ObjSampleType obj_sample;
 };
 

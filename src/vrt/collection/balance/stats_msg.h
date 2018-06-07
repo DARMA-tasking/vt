@@ -25,6 +25,9 @@ struct LoadData {
     return ld1;
   }
 
+  TimeType loadMax() const { return load_max_; }
+  TimeType loadSum() const { return load_sum_; }
+
   TimeType load_max_ = 0.0;
   TimeType load_sum_ = 0.0;
 };
@@ -40,6 +43,13 @@ struct LoadStatsMsg : CollectionMessage<ColT>, LoadData {
 
 private:
   PhaseType cur_phase_ = fst_lb_phase;
+};
+
+struct ProcStatsMsg : collective::ReduceTMsg<LoadData> {
+  ProcStatsMsg() = default;
+  explicit ProcStatsMsg(TimeType const& in_total_load)
+    : ReduceTMsg<LoadData>({in_total_load,in_total_load})
+  { }
 };
 
 template <typename ColT>
