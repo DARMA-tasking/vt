@@ -28,7 +28,7 @@ struct HierarchicalLB : HierLBTypes {
 
   HierarchicalLB() = default;
 
-  void setupTree();
+  void setupTree(double const threshold);
   void calcLoadOver(HeapExtractEnum const extract);
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void procDataIn(ElementLoadType const& data_in);
@@ -83,6 +83,7 @@ public:
   static std::unique_ptr<HierarchicalLB> hier_lb_inst;
 
 private:
+  double this_threshold = 0.0f;
   bool tree_setup = false;
   NodeType parent = uninitialized_destination;
   NodeType bottom_parent = uninitialized_destination;

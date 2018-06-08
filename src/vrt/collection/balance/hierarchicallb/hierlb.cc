@@ -22,10 +22,9 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 /*static*/
-std::unique_ptr<HierarchicalLB> HierarchicalLB::hier_lb_inst =
-  std::make_unique<HierarchicalLB>();
+std::unique_ptr<HierarchicalLB> HierarchicalLB::hier_lb_inst = nullptr;
 
-void HierarchicalLB::setupTree() {
+void HierarchicalLB::setupTree(double const threshold) {
   assert(
     tree_setup == false &&
     "Tree must not already be set up when is this called"
@@ -34,9 +33,12 @@ void HierarchicalLB::setupTree() {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
+  this_threshold = threshold;
+
   debug_print(
     hierlb, node,
-    "HierarchicalLB: setupTree\n"
+    "HierarchicalLB: setupTree: threshold={}\n",
+    threshold
   );
 
   for (NodeType node = 0; node < hierlb_nary; node++) {
@@ -178,7 +180,7 @@ void HierarchicalLB::loadStats(
     this_load, total_load, avg_load, max_load
   );
 
-  calcLoadOver(HeapExtractEnum::LoadOverOneEach);
+  calcLoadOver(HeapExtractEnum::LoadOverLessThan);
 
   lbTreeUpSend(bottom_parent, this_load, this_node, load_over, 1);
 
@@ -191,7 +193,7 @@ void HierarchicalLB::loadStats(
 }
 
 void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
-  auto const threshold = hierlb_threshold * avg_load;
+  auto const threshold = this_threshold * avg_load;
   auto const obj_id = bin_list.back();
 
   load_over[bin].push_back(obj_id);
@@ -212,7 +214,7 @@ void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
 }
 
 void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
-  auto const threshold = hierlb_threshold * avg_load;
+  auto const threshold = this_threshold * avg_load;
 
   debug_print(
     hierlb, node,
@@ -558,7 +560,7 @@ void HierarchicalLB::sendDownTree() {
   while (cIter != given_objs.rend()) {
     auto c = findMinChild();
     int const weight = c->node_size;
-    double const threshold = avg_load * weight * hierlb_threshold;
+    double const threshold = avg_load * weight * this_threshold;
 
     debug_print(
       hierlb, node,
@@ -625,7 +627,7 @@ void HierarchicalLB::distributeAmoungChildren() {
   while (cIter != given_objs.rend()) {
     HierLBChild* c = findMinChild();
     int const weight = c->node_size;
-    double const threshold = avg_load * weight * hierlb_threshold;
+    double const threshold = avg_load * weight * this_threshold;
 
     debug_print(
       hierlb, node,
@@ -700,7 +702,8 @@ void HierarchicalLB::clearObj(ObjSampleType& objs) {
 }
 
 /*static*/ void HierarchicalLB::hierLBHandler(balance::HierLBMsg* msg) {
-  HierarchicalLB::hier_lb_inst->setupTree();
+  HierarchicalLB::hier_lb_inst = std::make_unique<HierarchicalLB>();
+  HierarchicalLB::hier_lb_inst->setupTree(hierlb_threshold);
   HierarchicalLB::hier_lb_inst->procDataIn(balance::ProcStats::proc_data_[0]);
   HierarchicalLB::hier_lb_inst->reduceLoad();
 }
