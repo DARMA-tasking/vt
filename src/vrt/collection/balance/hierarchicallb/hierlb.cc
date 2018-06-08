@@ -371,9 +371,8 @@ void HierarchicalLB::downTree(
     // take the load
     taken_objs = std::move(excess_load);
 
-    int total_taken_load = 0;
     for (auto&& item : taken_objs) {
-      total_taken_load = item.first * item.second.size();
+      LoadType const total_taken_load = item.first * item.second.size();
 
       debug_print(
         hierlb, node,
@@ -381,15 +380,14 @@ void HierarchicalLB::downTree(
         "total_taken_load={}\n",
         from, item.first, item.second.size(), total_taken_load
       );
-    }
 
-    this_load += total_taken_load;
+      this_load += total_taken_load;
+    }
 
     debug_print(
       hierlb, node,
-      "downTree: this_load_begin={}, new load profile={}, total_taken_load={}, "
-      "avg_load={}\n",
-      this_load_begin, this_load, total_taken_load, avg_load
+      "downTree: this_load_begin={}, new load profile={}, avg_load={}\n",
+      this_load_begin, this_load, avg_load
     );
 
     startMigrations();
