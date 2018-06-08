@@ -12,6 +12,7 @@ struct HierLBChild : HierLBTypes {
   HierLBChild(HierLBChild const&) = default;
   HierLBChild(HierLBChild&&) = default;
 
+  bool is_live = false;
   double cur_load = 0.0;
   int32_t node_size = 0;
   NodeType node = uninitialized_destination;

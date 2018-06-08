@@ -7,6 +7,7 @@
 #include "vrt/collection/balance/hierarchicallb/hierlb_types.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_child.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
+#include "vrt/collection/balance/hierarchicallb/hierlb_strat.h"
 #include "vrt/collection/balance/proc_stats.h"
 
 #include <unordered_map>
@@ -28,7 +29,8 @@ struct HierarchicalLB : HierLBTypes {
   HierarchicalLB() = default;
 
   void setupTree();
-  void calcLoadOver();
+  void calcLoadOver(HeapExtractEnum const extract);
+  void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void procDataIn(ElementLoadType const& data_in);
 
 private:
@@ -85,8 +87,8 @@ private:
   NodeType parent = uninitialized_destination;
   NodeType bottom_parent = uninitialized_destination;
   NodeType agg_node_size = 0, child_msgs = 0;
-  ChildMapType children, live_children;
-  LoadType avg_load = 0.0f, max_load = 0.0f, total_child_load = 0.0f;
+  ChildMapType children;
+  LoadType avg_load = 0.0f, max_load = 0.0f;
   LoadType this_load = 0.0f, this_load_begin = 0.0f;
   ObjSampleType obj_sample, load_over, given_objs, taken_objs;
   ElementLoadType const* stats = nullptr;

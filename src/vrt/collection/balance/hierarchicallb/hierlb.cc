@@ -6,6 +6,7 @@
 #include "vrt/collection/balance/hierarchicallb/hierlb_child.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_constants.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
+#include "vrt/collection/balance/hierarchicallb/hierlb_strat.h"
 #include "vrt/collection/balance/stats_msg.h"
 #include "serialization/messaging/serialized_messenger.h"
 #include "collective/collective_alg.h"
@@ -177,7 +178,7 @@ void HierarchicalLB::loadStats(
     this_load, total_load, avg_load, max_load
   );
 
-  calcLoadOver();
+  calcLoadOver(HeapExtractEnum::LoadOverOneEach);
 
   lbTreeUpSend(bottom_parent, this_load, this_node, load_over, 1);
 
@@ -189,7 +190,28 @@ void HierarchicalLB::loadStats(
   }
 }
 
-void HierarchicalLB::calcLoadOver() {
+void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
+  auto const threshold = hierlb_threshold * avg_load;
+  auto const obj_id = bin_list.back();
+
+  load_over[bin].push_back(obj_id);
+  bin_list.pop_back();
+
+  auto obj_iter = stats->find(obj_id);
+  assert(obj_iter != stats->end() && "Obj must exist in stats");
+  auto const& obj_time_milli = loadMilli(obj_iter->second);
+
+  this_load -= obj_time_milli;
+
+  debug_print(
+    hierlb, node,
+    "loadOverBin: this_load_begin={}, this_load={}, threshold={}: "
+    "adding unit: bin={}, milli={}\n",
+    this_load_begin, this_load, threshold, bin, obj_time_milli
+  );
+}
+
+void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
   auto const threshold = hierlb_threshold * avg_load;
 
   debug_print(
@@ -198,30 +220,37 @@ void HierarchicalLB::calcLoadOver() {
     this_load, avg_load, threshold
   );
 
-  auto cur_item = obj_sample.begin();
-  while (this_load > threshold && cur_item != obj_sample.end()) {
-    if (cur_item->second.size() != 0) {
-      auto const obj = cur_item->second.back();
-
-      load_over[cur_item->first].push_back(obj);
-      cur_item->second.pop_back();
-
-      auto const& obj_id = obj;
-      auto obj_iter = stats->find(obj_id);
-      assert(obj_iter != stats->end() && "Obj must exist in stats");
-      auto const& obj_time_milli = loadMilli(obj_iter->second);
-
-      this_load -= obj_time_milli;
-
-      debug_print(
-        hierlb, node,
-        "calcLoadOver: this_load_begin={}, this_load={}, threshold={}: "
-        "adding unit: bin={}\n",
-        this_load_begin, this_load, threshold, cur_item->first
-      );
-    } else {
-      cur_item++;
+  if (extract == HeapExtractEnum::LoadOverLessThan) {
+    auto cur_item = obj_sample.begin();
+    while (this_load > threshold && cur_item != obj_sample.end()) {
+      if (cur_item->second.size() != 0) {
+        loadOverBin(cur_item->first, cur_item->second);
+      } else {
+        cur_item++;
+      }
     }
+  } else if (extract == HeapExtractEnum::LoadOverGreaterThan) {
+    auto cur_item = obj_sample.rbegin();
+    while (this_load > threshold && cur_item != obj_sample.rend()) {
+      if (cur_item->second.size() != 0) {
+        loadOverBin(cur_item->first, cur_item->second);
+      } else {
+        cur_item++;
+      }
+    }
+  }  else if (extract == HeapExtractEnum::LoadOverOneEach) {
+    bool found = false;
+    do {
+      found = false;
+      auto cur_item = obj_sample.begin();
+      while (this_load > threshold && cur_item != obj_sample.end()) {
+        if (cur_item->second.size() != 0) {
+          loadOverBin(cur_item->first, cur_item->second);
+          found = true;
+        }
+        cur_item++;
+      }
+    } while (found);
   }
 
   for (auto i = 0; i < obj_sample.size(); i++) {
@@ -401,6 +430,7 @@ void HierarchicalLB::lbTreeUp(
     load.size()
   );
 
+  LoadType total_child_load = 0.0f;
   if (load.size() > 0) {
     for (auto& bin : load) {
       debug_print(
@@ -455,16 +485,9 @@ void HierarchicalLB::lbTreeUp(
   child_msgs++;
 
   if (child_size > 0 && child_load != hierlb_no_load_sentinel) {
-    auto live_iter = live_children.find(child);
-    if (live_iter == live_children.end()) {
-      live_children.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(child),
-        std::forward_as_tuple(
-          std::make_unique<HierLBChild>(*child_iter->second)
-        )
-      );
-    }
+    auto live_iter = children.find(child);
+    assert(live_iter != children.end() && "Must exist");
+    live_iter->second->is_live = true;
   }
 
   assert(
@@ -487,11 +510,15 @@ void HierarchicalLB::lbTreeUp(
 }
 
 HierLBChild* HierarchicalLB::findMinChild() {
-  if (live_children.size() == 0) {
+  auto cur_iter = children.begin();
+  while (!cur_iter->second->is_live && cur_iter != children.end()) {
+    cur_iter++;
+  }
+  if (cur_iter == children.end()) {
     return nullptr;
   }
 
-  auto cur = live_children.begin()->second.get();
+  auto cur = cur_iter->second.get();
 
   debug_print(
     hierlb, node,
@@ -499,7 +526,7 @@ HierLBChild* HierarchicalLB::findMinChild() {
     cur->node, cur->cur_load
   );
 
-  for (auto&& c : live_children) {
+  for (auto&& c : children) {
     auto const& load = c.second->cur_load / c.second->node_size;
     auto const& cur_load = cur->cur_load / cur->node_size;
     debug_print(
@@ -512,7 +539,7 @@ HierLBChild* HierarchicalLB::findMinChild() {
       "\t findMinChild: C node={}, node_size={}, load={}, rel-load={}\n",
       c.second->node, c.second->node_size, c.second->cur_load, load
     );
-    if (load < cur_load || cur->node_size == 0) {
+    if (load < cur_load && cur->is_live) {
       cur = c.second.get();
     }
   }
@@ -537,7 +564,7 @@ void HierarchicalLB::sendDownTree() {
 
     debug_print(
       hierlb, node,
-      "\t distribute min child: c={}, child={}, cur_load={}, "
+      "\t sendDownTree: distribute min child: c={}, child={}, cur_load={}, "
       "weight={}, avg_load={}, threshold={}\n",
       print_ptr(c), c ? c->node : -1, c ? c->cur_load : -1.0,
       weight, avg_load, threshold
@@ -549,7 +576,7 @@ void HierarchicalLB::sendDownTree() {
       if (cIter->second.size() != 0) {
         debug_print(
           hierlb, node,
-          "\t distribute: child={}, cur_load={}, time={}\n",
+          "\t sendDownTree: distribute: child={}, cur_load={}, time={}\n",
           c->node, c->cur_load, cIter->first
        );
 
@@ -567,12 +594,20 @@ void HierarchicalLB::sendDownTree() {
 
   clearObj(given_objs);
 
-  for (auto& c : live_children) {
+  for (auto& c : children) {
     debug_print(
       hierlb, node,
       "sendDownTree: downTreeSend: node={}, recs={}\n",
       c.second->node, c.second->recs.size()
     );
+
+    for (auto&& elm : c.second->recs) {
+      debug_print(
+        hierlb, node,
+        "\t downTreeSend: node={}, recs={}, bin={}, bin_size={}\n",
+        c.second->node, c.second->recs.size(), elm.first, elm.second.size()
+      );
+    }
 
     downTreeSend(c.second->node, this_node, c.second->recs, c.second->final_child);
     c.second->recs.clear();
@@ -596,7 +631,7 @@ void HierarchicalLB::distributeAmoungChildren() {
 
     debug_print(
       hierlb, node,
-      "\t distribute min child: c={}, child={}, cur_load={}, "
+      "\t Up: distribute min child: c={}, child={}, cur_load={}, "
       "weight={}, avg_load={}, threshold={}\n",
       print_ptr(c),
       c ? c->node : -1,
@@ -610,7 +645,7 @@ void HierarchicalLB::distributeAmoungChildren() {
       if (cIter->second.size() != 0) {
         debug_print(
           hierlb, node,
-          "\t distribute: child={}, cur_load={}, time={}\n",
+          "\t Up: distribute: child={}, cur_load={}, time={}\n",
           c->node, c->cur_load, cIter->first
         );
 
@@ -626,9 +661,28 @@ void HierarchicalLB::distributeAmoungChildren() {
     }
   }
 
+  LoadType total_child_load = 0.0;
+  NodeType total_size = 0;
+  for (auto&& child : children) {
+    auto const& node = child.second->node;
+    auto const& node_size = child.second->node_size;
+    auto const& load = child.second->cur_load;
+    auto const& is_live = child.second->is_live;
+    debug_print(
+      hierlb, node,
+      "distributeAmoungChildren: parent={}, child={}. is_live={}, size={}, "
+      "load={}\n",
+      parent, node, is_live, node_size, load
+    );
+    if (is_live) {
+      total_child_load += load;
+      total_size += node_size;
+    }
+  }
+
   clearObj(given_objs);
 
-  lbTreeUpSend(parent, total_child_load, this_node, given_objs, agg_node_size);
+  lbTreeUpSend(parent, total_child_load, this_node, given_objs, total_size);
 
   given_objs.clear();
 }
