@@ -61,6 +61,11 @@ struct CollectedStats {
   void operator()(StatsMsg<ColT>* msg);
 };
 
+template <typename ColT>
+struct StartHierLB {
+  void operator()(PhaseReduceMsg<ColT>* msg);
+};
+
 }}}} /* end namespace vt::vrt::collection::balance */
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_H*/

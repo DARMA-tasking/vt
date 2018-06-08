@@ -6,8 +6,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-static constexpr double const hierlb_threshold = 1.005f;
-static constexpr NodeType const hierlb_nary = 8;
+static constexpr double const hierlb_threshold = 0.95f;
+static constexpr NodeType const hierlb_nary = 3;
 static constexpr NodeType const hierlb_root = 0;
 static constexpr int32_t const hierlb_bin_size = 10;
 

@@ -8,6 +8,7 @@
 #include "vrt/collection/balance/stats_msg.h"
 #include "vrt/collection/balance/proc_stats.h"
 #include "vrt/collection/manager.h"
+#include "vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "timing/timing.h"
 
 #include <cassert>
@@ -109,6 +110,17 @@ template <typename ColT>
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
   ProcStats::addProcStats<ColT>(elm_proxy, col, msg->getPhase(), total_load);
+
+  auto phase_msg = makeSharedMessage<PhaseReduceMsg<ColT>>(cur_phase,proxy);
+  theCollection()->reduceMsg<
+    ColT,
+    PhaseReduceMsg<ColT>,
+    PhaseReduceMsg<ColT>::template msgHandler<
+      PhaseReduceMsg<ColT>,
+      collective::PlusOp<collective::NoneType>,
+      StartHierLB<ColT>
+    >
+  >(proxy, phase_msg, no_epoch, cur_phase);
 }
 
 template <typename ColT>
@@ -126,6 +138,14 @@ void CollectedStats<ColT>::operator()(StatsMsg<ColT>* msg) {
   theCollection()->broadcastMsg<
     LoadStatsMsg<ColT>, ElementStats::statsIn<ColT>
   >(msg->getProxy(), load_msg, nullptr, false);
+}
+
+template <typename ColT>
+void StartHierLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
+  auto nmsg = makeSharedMessage<HierLBMsg>();
+  theMsg()->broadcastMsg<HierLBMsg,lb::HierarchicalLB::hierLBHandler>(nmsg);
+  auto nmsg_root = makeSharedMessage<HierLBMsg>();
+  lb::HierarchicalLB::hierLBHandler(nmsg_root);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

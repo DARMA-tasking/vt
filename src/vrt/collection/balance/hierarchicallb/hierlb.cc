@@ -7,6 +7,7 @@
 #include "vrt/collection/balance/hierarchicallb/hierlb_constants.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vrt/collection/balance/stats_msg.h"
+#include "serialization/messaging/serialized_messenger.h"
 #include "collective/collective_alg.h"
 #include "collective/reduce/reduce.h"
 #include "context/context.h"
@@ -130,6 +131,8 @@ void HierarchicalLB::HierAvgLoad::operator()(balance::ProcStatsMsg* msg) {
   theMsg()->broadcastMsg<
     balance::ProcStatsMsg, HierarchicalLB::loadStatsHandler
   >(nmsg);
+  auto nmsg_root = makeSharedMessage<balance::ProcStatsMsg>(*msg);
+  HierarchicalLB::loadStatsHandler(nmsg_root);
 }
 
 /*static*/ void HierarchicalLB::loadStatsHandler(ProcStatsMsgType* msg) {
@@ -158,8 +161,8 @@ void HierarchicalLB::loadStats(
 
   debug_print(
     hierlb, node,
-    "loadStats: total_load={}, avg_load={}, max_load={}\n",
-    total_load, avg_load, max_load
+    "loadStats: this_load={}, total_load={}, avg_load={}, max_load={}\n",
+    this_load, total_load, avg_load, max_load
   );
 
   calcLoadOver();
@@ -168,7 +171,7 @@ void HierarchicalLB::loadStats(
 
   if (children.size() == 0) {
     ObjSampleType empty_obj{};
-    lbTreeUpSend(parent, 0.0f, this_node, empty_obj, agg_node_size);
+    lbTreeUpSend(parent, -1.0f, this_node, empty_obj, agg_node_size);
   }
 }
 
@@ -215,18 +218,18 @@ void HierarchicalLB::calcLoadOver() {
 
 /*static*/ void HierarchicalLB::downTreeHandler(LBTreeDownMsg* msg) {
   HierarchicalLB::hier_lb_inst->downTree(
-    msg->getFrom(), std::move(msg->getExcessMove()), msg->getFinalChild()
+    msg->getFrom(), msg->getExcess(), msg->getFinalChild()
   );
 }
 
 NodeType HierarchicalLB::objGetNode(ObjIDType const& id) {
-  return id >> 32;
+  return id & 0x0000000FFFFFFFF;
 }
 
 void HierarchicalLB::finishedTransferExchange() {
   debug_print(
     hierlb, node,
-    "finished all transfers: count={}",
+    "finished all transfers: count={}\n",
     transfer_count
   );
 }
@@ -274,7 +277,7 @@ void HierarchicalLB::transferSend(
   NodeType node, NodeType from, std::vector<ObjIDType> transfer
 ) {
   auto msg = makeSharedMessage<TransferMsg>(from,transfer);
-  theMsg()->sendMsg<TransferMsg,transferHan>(node,msg);
+  SerializedMessenger::sendSerialMsg<TransferMsg,transferHan>(node,msg);
 }
 
 void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
@@ -286,6 +289,12 @@ void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
   transfer_count += list.size();
 
   for (auto&& elm : list) {
+    debug_print(
+      hierlb, node,
+      "transfer: list.size()={}, elm={}\n",
+      list.size(), elm
+    );
+
     auto iter = balance::ProcStats::proc_migrate_.find(elm);
     assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
     iter->second(from);
@@ -293,9 +302,7 @@ void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
 }
 
 /*static*/ void HierarchicalLB::transferHan(TransferMsg* msg) {
-  HierarchicalLB::hier_lb_inst->transfer(
-    msg->getFrom(), std::move(msg->getTransferMove())
-  );
+  HierarchicalLB::hier_lb_inst->transfer(msg->getFrom(), msg->getTransfer());
 }
 
 void HierarchicalLB::downTreeSend(
@@ -303,16 +310,16 @@ void HierarchicalLB::downTreeSend(
   bool const final_child
 ) {
   auto msg = makeSharedMessage<LBTreeDownMsg>(from,excess,final_child);
-  theMsg()->sendMsg<LBTreeDownMsg,downTreeHandler>(node,msg);
+  SerializedMessenger::sendSerialMsg<LBTreeDownMsg,downTreeHandler>(node,msg);
 }
 
 void HierarchicalLB::downTree(
-  NodeType const from, ObjSampleType&& excess_load, bool const final_child
+  NodeType const from, ObjSampleType excess_load, bool const final_child
 ) {
   debug_print(
     hierlb, node,
-    "downTree: from={}, bottomParent={}: load={}\n",
-    from, bottom_parent, excess_load.size()
+    "downTree: from={}, bottom_parent={}: excess_load={}, final_child={}\n",
+    from, bottom_parent, excess_load.size(), final_child
   );
 
   if (final_child) {
@@ -349,7 +356,7 @@ void HierarchicalLB::downTree(
 
 /*static*/ void HierarchicalLB::lbTreeUpHandler(LBTreeUpMsg* msg) {
   HierarchicalLB::hier_lb_inst->lbTreeUp(
-    msg->getChildLoad(), msg->getChild(), std::move(msg->getLoadMove()),
+    msg->getChildLoad(), msg->getChild(), msg->getLoad(),
     msg->getChildSize()
   );
 }
@@ -359,11 +366,11 @@ void HierarchicalLB::lbTreeUpSend(
   ObjSampleType const& load, NodeType const child_size
 ) {
   auto msg = makeSharedMessage<LBTreeUpMsg>(child_load,child,load,child_size);
-  theMsg()->sendMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
+  SerializedMessenger::sendSerialMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
 }
 
 void HierarchicalLB::lbTreeUp(
-  LoadType const child_load, NodeType const child, ObjSampleType&& load,
+  LoadType const child_load, NodeType const child, ObjSampleType load,
   NodeType const child_size
 ) {
   auto const& this_node = theContext()->getNode();
@@ -382,15 +389,14 @@ void HierarchicalLB::lbTreeUp(
     for (auto& bin : load) {
       debug_print(
         hierlb, node,
-        "\t lbTreeUp: combining bins for bin={}, size=%{}\n",
+        "\t lbTreeUp: combining bins for bin={}, size={}\n",
         bin.first, bin.second.size()
       );
 
       if (bin.second.size() > 0) {
         // splice in the new list to accumulated work units that fall in a
         // common histrogram bin
-        typename decltype(given_objs)::iterator given_iter =
-          given_objs.find(bin.first);
+        auto given_iter = given_objs.find(bin.first);
 
         if (given_iter == given_objs.end()) {
           // do the insertion here
@@ -432,7 +438,7 @@ void HierarchicalLB::lbTreeUp(
 
   child_msgs++;
 
-  if (child_size > 0 && child_load != 0.0) {
+  if (child_size > 0 && child_load != -1.0f) {
     auto live_iter = live_children.find(child);
     if (live_iter == live_children.end()) {
       live_children.emplace(
@@ -473,7 +479,7 @@ HierLBChild* HierarchicalLB::findMinChild() {
 
   debug_print(
     hierlb, node,
-    "findMinChild, cur.pe={}, load={}\n",
+    "findMinChild, cur->node={}, load={}\n",
     cur->node, cur->cur_load
   );
 
@@ -494,7 +500,7 @@ HierarchicalLB::sendDownTree() {
 
   debug_print(
     hierlb, node,
-    "{}: sendDownTree\n"
+    "sendDownTree: given={}\n", given_objs.size()
   );
 
   auto cIter = given_objs.rbegin();
@@ -536,7 +542,13 @@ HierarchicalLB::sendDownTree() {
 
   clearObj(given_objs);
 
-  for (auto& c : children) {
+  for (auto& c : live_children) {
+    debug_print(
+      hierlb, node,
+      "sendDownTree: downTreeSend: node={}, recs={}\n",
+      c.second->node, c.second->recs.size()
+    );
+
     downTreeSend(c.second->node, this_node, c.second->recs, c.second->final_child);
     c.second->recs.clear();
   }
@@ -547,7 +559,7 @@ void HierarchicalLB::distributeAmoungChildren() {
 
   debug_print(
     hierlb, node,
-    "distribute_amoung_children: parent={}\n", parent
+    "distributeAmoungChildren: parent={}\n", parent
   );
 
   auto cIter = given_objs.rbegin();
@@ -561,7 +573,9 @@ void HierarchicalLB::distributeAmoungChildren() {
       hierlb, node,
       "\t distribute min child: c={}, child={}, cur_load={}, "
       "weight={}, avg_load={}, threshold={}\n",
-      print_ptr(c), c ? c->node : -1, c ? c->cur_load : -1.0,
+      print_ptr(c),
+      c ? c->node : -1,
+      c ? c->cur_load : -1.0,
       weight, avg_load, threshold
     );
 
@@ -608,5 +622,10 @@ void HierarchicalLB::clearObj(ObjSampleType& objs) {
   }
 }
 
+/*static*/ void HierarchicalLB::hierLBHandler(balance::HierLBMsg* msg) {
+  HierarchicalLB::hier_lb_inst->setupTree();
+  HierarchicalLB::hier_lb_inst->procDataIn(balance::ProcStats::proc_data_[0]);
+  HierarchicalLB::hier_lb_inst->reduceLoad();
+}
 
 }}}} /* end namespace vt::vrt::collection::lb */

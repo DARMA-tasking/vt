@@ -33,8 +33,8 @@ private:
 
 private:
   static ElementIDType next_elm_;
-  static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
 public:
+  static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
   static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
 };
 
