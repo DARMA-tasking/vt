@@ -101,20 +101,25 @@ void HierarchicalLB::setupTree() {
   );
 }
 
-HierarchicalLB::ObjBinType
-HierarchicalLB::histogramSample(LoadType const& load) {
+HierarchicalLB::ObjBinType HierarchicalLB::histogramSample(
+  LoadType const& load
+) {
   ObjBinType const bin =
     ((static_cast<int32_t>(load)) / hierlb_bin_size * hierlb_bin_size)
     + hierlb_bin_size;
   return bin;
 }
 
-HierarchicalLB::LoadType
-HierarchicalLB::loadMilli(LoadType const& load) {
+HierarchicalLB::LoadType HierarchicalLB::loadMilli(LoadType const& load) {
   return load * 1000;
 }
 
 void HierarchicalLB::procDataIn(ElementLoadType const& data_in) {
+  auto const& this_node = theContext()->getNode();
+  debug_print(
+    hierlb, node,
+    "{}: procDataIn: size={}\n", this_node, data_in.size()
+  );
   for (auto&& stat : data_in) {
     auto const& obj = stat.first;
     auto const& load = stat.second;
@@ -122,7 +127,14 @@ void HierarchicalLB::procDataIn(ElementLoadType const& data_in) {
     auto const& bin = histogramSample(load_milli);
     this_load += load_milli;
     obj_sample[bin].push_back(obj);
+
+    debug_print(
+      hierlb, node,
+      "\t {}: procDataIn: this_load={}, obj={}, load={}, load_milli={}, bin={}\n",
+      this_node, this_load, obj, load, load_milli, bin
+    );
   }
+  this_load_begin = this_load;
   stats = &data_in;
 }
 
@@ -171,7 +183,9 @@ void HierarchicalLB::loadStats(
 
   if (children.size() == 0) {
     ObjSampleType empty_obj{};
-    lbTreeUpSend(parent, -1.0f, this_node, empty_obj, agg_node_size);
+    lbTreeUpSend(
+      parent, hierlb_no_load_sentinel, this_node, empty_obj, agg_node_size
+    );
   }
 }
 
@@ -201,8 +215,9 @@ void HierarchicalLB::calcLoadOver() {
 
       debug_print(
         hierlb, node,
-        "calcLoadOver: this_load={}, threshold={}, adding unit: bin={}\n",
-        this_load, threshold, cur_item->first
+        "calcLoadOver: this_load_begin={}, this_load={}, threshold={}: "
+        "adding unit: bin={}\n",
+        this_load_begin, this_load, threshold, cur_item->first
       );
     } else {
       cur_item++;
@@ -210,8 +225,9 @@ void HierarchicalLB::calcLoadOver() {
   }
 
   for (auto i = 0; i < obj_sample.size(); i++) {
-    if (obj_sample[i].size() == 0) {
-      obj_sample.erase(obj_sample.find(i));
+    auto obj_iter = obj_sample.find(i);
+    if (obj_iter != obj_sample.end() && obj_iter->second.size() == 0) {
+      obj_sample.erase(obj_iter);
     }
   }
 }
@@ -342,9 +358,9 @@ void HierarchicalLB::downTree(
 
     debug_print(
       hierlb, node,
-      "downTree: new load profile={}, total_taken_load={}, "
+      "downTree: this_load_begin={}, new load profile={}, total_taken_load={}, "
       "avg_load={}\n",
-      this_load, total_taken_load, avg_load
+      this_load_begin, this_load, total_taken_load, avg_load
     );
 
     startMigrations();
@@ -438,7 +454,7 @@ void HierarchicalLB::lbTreeUp(
 
   child_msgs++;
 
-  if (child_size > 0 && child_load != -1.0f) {
+  if (child_size > 0 && child_load != hierlb_no_load_sentinel) {
     auto live_iter = live_children.find(child);
     if (live_iter == live_children.end()) {
       live_children.emplace(
@@ -486,7 +502,17 @@ HierLBChild* HierarchicalLB::findMinChild() {
   for (auto&& c : live_children) {
     auto const& load = c.second->cur_load / c.second->node_size;
     auto const& cur_load = cur->cur_load / cur->node_size;
-    if (load <  cur_load || cur->node_size == 0) {
+    debug_print(
+      hierlb, node,
+      "\t findMinChild: CUR node={}, node_size={}, load={}, rel-load={}\n",
+      cur->node, cur->node_size, cur->cur_load, cur_load
+    );
+    debug_print(
+      hierlb, node,
+      "\t findMinChild: C node={}, node_size={}, load={}, rel-load={}\n",
+      c.second->node, c.second->node_size, c.second->cur_load, load
+    );
+    if (load < cur_load || cur->node_size == 0) {
       cur = c.second.get();
     }
   }
@@ -494,8 +520,7 @@ HierLBChild* HierarchicalLB::findMinChild() {
   return cur;
 }
 
-void
-HierarchicalLB::sendDownTree() {
+void HierarchicalLB::sendDownTree() {
   auto const& this_node = theContext()->getNode();
 
   debug_print(

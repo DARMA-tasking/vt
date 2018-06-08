@@ -87,7 +87,7 @@ private:
   NodeType agg_node_size = 0, child_msgs = 0;
   ChildMapType children, live_children;
   LoadType avg_load = 0.0f, max_load = 0.0f, total_child_load = 0.0f;
-  LoadType this_load = 0.0f;
+  LoadType this_load = 0.0f, this_load_begin = 0.0f;
   ObjSampleType obj_sample, load_over, given_objs, taken_objs;
   ElementLoadType const* stats = nullptr;
   int64_t migrates_expected = 0, transfer_count = 0;

@@ -7,9 +7,10 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 static constexpr double const hierlb_threshold = 0.95f;
-static constexpr NodeType const hierlb_nary = 3;
+static constexpr NodeType const hierlb_nary = 2;
 static constexpr NodeType const hierlb_root = 0;
 static constexpr int32_t const hierlb_bin_size = 10;
+static constexpr double const hierlb_no_load_sentinel = -1.0f;
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
