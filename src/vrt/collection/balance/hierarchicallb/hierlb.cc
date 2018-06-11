@@ -158,6 +158,10 @@ void HierarchicalLB::HierAvgLoad::operator()(balance::ProcStatsMsg* msg) {
 }
 
 void HierarchicalLB::reduceLoad() {
+  debug_print(
+    hierlb, node,
+    "reduceLoad: this_load={}\n", this_load
+  );
   auto msg = makeSharedMessage<ProcStatsMsgType>(this_load);
   theCollective()->reduce<
     ProcStatsMsgType,
@@ -183,13 +187,15 @@ void HierarchicalLB::loadStats(
     this_threshold = std::min(1.0f - (diff_percent / 100.0f), hierlb_threshold);
   }
 
-  debug_print_force(
-    hierlb, node,
-    "loadStats: this_load={}, total_load={}, avg_load={}, max_load={}, "
-    "diff={}, diff_percent={}, should_lb={}, auto={}, threshold={}\n",
-    this_load, total_load, avg_load, max_load, diff, diff_percent, should_lb,
-    hierlb_auto_threshold, this_threshold
-  );
+  if (this_node == 0) {
+    fmt::print(
+      "VT: {}: "
+      "loadStats: this_load={}, total_load={}, avg_load={}, max_load={}, "
+      "diff={}, diff_percent={}, should_lb={}, auto={}, threshold={}\n",
+      this_node, this_load, total_load, avg_load, max_load, diff, diff_percent,
+      should_lb, hierlb_auto_threshold, this_threshold
+    );
+  }
 
   if (should_lb) {
     calcLoadOver(HeapExtractEnum::LoadOverLessThan);
@@ -290,7 +296,7 @@ NodeType HierarchicalLB::objGetNode(ObjIDType const& id) {
 }
 
 void HierarchicalLB::finishedTransferExchange() {
-  debug_print_force(
+  debug_print(
     hierlb, node,
     "finished all transfers: count={}\n",
     transfer_count
