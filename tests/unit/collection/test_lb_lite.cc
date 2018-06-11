@@ -96,7 +96,7 @@ struct FinishedIter {
   int64_t const mid_work = 100 * weight;
   int64_t const min_work = 1 * weight;
   int const x = idx < 8 ? max_work : (idx > 40 ? mid_work : min_work);
-  ::fmt::print("proc={}, idx={}, iter={}\n", theContext()->getNode(),idx,iter);
+  //::fmt::print("proc={}, idx={}, iter={}\n", theContext()->getNode(),idx,iter);
   for (int i = 0; i < 10000 * x; i++) {
     val *= val2 + i*29.4;
     val2 += 1.0;
