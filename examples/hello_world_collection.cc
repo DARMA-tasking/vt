@@ -10,6 +10,7 @@ using namespace vt::mapping;
 
 struct MyCol : Collection<MyCol, Index1D> {
   Index1D idx;
+  double test_val = 0.0;
 
   MyCol(Index1D in_idx)
     : Collection<MyCol, Index1D>(), idx(in_idx)
@@ -34,6 +35,7 @@ struct MyCol : Collection<MyCol, Index1D> {
   void serialize(Serializer& s) {
     Collection<MyCol, Index1D>::serialize(s);
     s | idx;
+    s | test_val;
   }
 };
 
@@ -69,10 +71,14 @@ struct OtherColl : Collection<OtherColl, Index2D> {
 template <typename ColT>
 struct ColMsg : CollectionMessage<ColT> {
   NodeType from_node;
+  int val_ = 0;
 
   ColMsg() = default;
-  ColMsg(NodeType const& in_from_node)
+  explicit ColMsg(NodeType const& in_from_node)
     : CollectionMessage<ColT>(), from_node(in_from_node)
+  { }
+  ColMsg(NodeType const& in_from_node, int32_t const val)
+    : CollectionMessage<ColT>(), from_node(in_from_node), val_(val)
   { }
 };
 
@@ -82,6 +88,22 @@ static void colHan2(ColMsg<MyCol>* msg, MyCol* col) {
     "{}: colHan2 received: ptr={}, idx={}, getIndex={}\n",
     node, print_ptr(col), col->idx.x(), col->getIndex().x()
   );
+}
+
+static void method1(ColMsg<MyCol>* msg, MyCol* col) {
+  auto const& node = theContext()->getNode();
+  fmt::print(
+    "{}: method1 received: ptr={}, idx={}, getIndex={}\n",
+    node, print_ptr(col), col->idx.x(), col->getIndex().x()
+  );
+  double val = 0.1f;
+  double val2 = 0.4f * msg->val_;
+  int x = col->getIndex().x() < 8 ? 10000 : (col->getIndex().x() > 40 ? 1000 : 10);
+  for (int i = 0; i < 10000 * x; i++) {
+    val *= val2 + i*29.4;
+    val2 += 1.0;
+  }
+  col->test_val += val + val2;
 }
 
 static void colHan(ColMsg<MyCol>* msg, MyCol* col) {
@@ -125,7 +147,7 @@ static void hello_world(HelloMsg* msg) {
   fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
 }
 
-static constexpr int32_t const default_num_elms = 25;
+static constexpr int32_t const default_num_elms = 128;
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
@@ -134,7 +156,7 @@ int main(int argc, char** argv) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    //CollectiveOps::abort("At least 2 ranks required");
+    CollectiveOps::abort("At least 2 ranks required");
   }
 
   int32_t num_elms = default_num_elms;
@@ -144,19 +166,36 @@ int main(int argc, char** argv) {
   }
 
   #if 1
+  #if LB_ENABLED
+    EpochType const epoch = theTerm()->newEpoch();
+    theMsg()->setGlobalEpoch(epoch);
+  #endif
+
   if (my_node == 0) {
     auto const& this_node = theContext()->getNode();
     auto const& range = Index1D(num_elms);
     auto proxy = theCollection()->construct<MyCol>(range);
     auto msg = new ColMsg<MyCol>(this_node);
+
+    #if !LB_ENABLED
+      for (int i = 0; i < num_elms; i++) {
+        auto msg = new ColMsg<MyCol>(this_node);
+        proxy[i].send<ColMsg<MyCol>,colHan>(msg);
+        proxy[i].send<ColMsg<MyCol>,colHan2>(msg);
+      }
+    #endif
+
     proxy.broadcast<ColMsg<MyCol>,colHan>(msg);
-    theCollection()->nextPhase<MyCol>(proxy,0);
-    //theCollection()->broadcastMsg<ColMsg<MyCol>,colHan>(proxy,msg,nullptr);
-    // for (int i = 0; i < num_elms; i++) {
-    //   auto msg = new ColMsg<MyCol>(this_node);
-    //   proxy[i].send<ColMsg<MyCol>,colHan>(msg);
-    //   proxy[i].send<ColMsg<MyCol>,colHan2>(msg);
-    // }
+
+    #if LB_ENABLED
+      for (int i = 0; i < num_elms; i++) {
+        auto msg = new ColMsg<MyCol>(this_node, i);
+        proxy[i].send<ColMsg<MyCol>,method1>(msg);
+      }
+      theTerm()->attachEpochTermAction(epoch,[=]{
+        theCollection()->nextPhase<MyCol>(proxy,0);
+      });
+    #endif
   }
   #endif
   #if 0
