@@ -1021,6 +1021,7 @@ void CollectionManager::nextPhase(
   );
 
   if (continuation != nullptr) {
+    theTerm()->produce(term::any_epoch_sentinel);
     lb_continuation_ = continuation;
   }
 
@@ -1065,6 +1066,7 @@ void CollectionManager::releaseLBContinuation() {
   if (lb_continuation_) {
     auto cont = lb_continuation_;
     lb_continuation_ = nullptr;
+    theTerm()->consume(term::any_epoch_sentinel);
     cont();
   }
 }
