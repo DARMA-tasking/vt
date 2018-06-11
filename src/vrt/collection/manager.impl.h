@@ -1014,7 +1014,7 @@ void CollectionManager::nextPhase(
   auto msg = makeSharedMessage<MsgType>(cur_phase, proxy);
   auto const& instrument = false;
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "nextPhase: broadcasting: cur_phase={}\n",
     cur_phase
@@ -1049,7 +1049,7 @@ void CollectionManager::computeStats(
   auto msg = makeSharedMessage<MsgType>(cur_phase,proxy);
   auto const& instrument = false;
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "computeStats: broadcasting: cur_phase={}\n",
     cur_phase

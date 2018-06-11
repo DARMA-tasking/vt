@@ -27,7 +27,7 @@ template <typename ColT>
 /*static*/ void ElementStats::syncNextPhase(PhaseMsg<ColT>* msg, ColT* col) {
   auto& stats = col->stats_;
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "ElementStats: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
     "msg->getPhase()={}\n",
@@ -60,7 +60,7 @@ void ComputeStats<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
   auto const& cur_phase = msg->getPhase();
   auto phase_msg = makeSharedMessage<PhaseMsg<ColT>>(cur_phase,proxy);
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "ComputeStats: starting broadcast: phase={}\n", cur_phase
   );
@@ -80,7 +80,7 @@ template <typename ColT>
   auto const& proxy = col->getCollectionProxy();
   auto stats_msg = makeSharedMessage<MsgType>(cur_phase, total_load, proxy);
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "ComputeStats ({}) (idx={}) (reduce): phase={}, load={}\n",
     print_ptr(col), col->getIndex().x(), cur_phase, total_load
@@ -97,7 +97,7 @@ template <typename ColT>
 
 template <typename ColT>
 /*static*/ void ElementStats::statsIn(LoadStatsMsg<ColT>* msg, ColT* col) {
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "ElementsStats::statsIn: max={}, sum={}, avg={}\n",
     msg->load_max_, msg->load_sum_, msg->load_sum_/8
@@ -129,7 +129,7 @@ void CollectedStats<ColT>::operator()(StatsMsg<ColT>* msg) {
     msg->getConstVal(), msg->getPhase()
   );
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "CollectedStats (broadcast): phase={}\n",
     msg->getPhase()

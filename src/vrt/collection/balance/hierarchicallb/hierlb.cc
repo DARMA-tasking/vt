@@ -303,7 +303,7 @@ void HierarchicalLB::startMigrations() {
       if (node != this_node) {
         migrates_expected++;
 
-        debug_print_force(
+        debug_print(
           hierlb, node,
           "startMigrations, obj_id={}, node={}\n",
           obj_id, node
@@ -314,7 +314,7 @@ void HierarchicalLB::startMigrations() {
     }
   }
 
-  debug_print_force(
+  debug_print(
     hierlb, node,
     "startMigrations, transfer_list.size()={}\n",
     transfer_list.size()

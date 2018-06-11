@@ -45,7 +45,7 @@ void ElementStats::addTime(TimeType const& time) {
 }
 
 void ElementStats::updatePhase(PhaseType const& inc) {
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "ElementStats: updatePhase: cur_phase_={}, inc={}\n",
     cur_phase_, inc
@@ -62,7 +62,7 @@ PhaseType ElementStats::getPhase() const {
 TimeType ElementStats::getLoad(PhaseType const& phase) const {
   auto const& total_load = phase_timings_.at(phase);
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "ElementStats: getLoad: load={}, phase={}, size={}\n",
     total_load, phase, phase_timings_.size()

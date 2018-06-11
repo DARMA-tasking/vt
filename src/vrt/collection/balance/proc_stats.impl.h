@@ -19,7 +19,7 @@ template <typename ColT>
 ) {
   auto const& next_elm = ProcStats::getNextElm();
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "ProcStats::addProcStats: element={}, phase={}, load={}\n",
     next_elm, phase, time
