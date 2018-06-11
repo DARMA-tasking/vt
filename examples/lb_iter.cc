@@ -3,11 +3,12 @@
 
 #include <cstdlib>
 
-using namespace vt;
-using namespace vt::vrt;
-using namespace vt::vrt::collection;
-using namespace vt::index;
-using namespace vt::mapping;
+using namespace ::vt;
+using namespace ::vt::vrt;
+using namespace ::vt::collective;
+using namespace ::vt::vrt::collection;
+using namespace ::vt::index;
+using namespace ::vt::mapping;
 
 static constexpr int32_t const default_num_elms = 16;
 static constexpr int32_t const num_iter = 8;
@@ -31,6 +32,29 @@ struct IterMsg : CollectionMessage<IterCol> {
   int64_t work_amt_ = 0;
 };
 
+struct IterReduceMsg : collective::ReduceTMsg<NoneType> {};
+
+static int32_t cur_iter = 0;
+static TimeType cur_time = 0;
+static CollectionIndexProxy<IterCol,Index1D> proxy = {};
+
+static void startIter(int32_t const iter);
+
+struct FinishedIter {
+  void operator()(IterReduceMsg* msg) {
+    auto const new_time = ::vt::timing::Timing::getCurrentTime();
+    ::fmt::print(
+      "finished iteration: iter={},time={}\n",
+      cur_iter,new_time-cur_time
+    );
+    cur_iter++;
+    cur_time = new_time;
+    if (cur_iter < num_iter) {
+      startIter(cur_iter);
+    }
+  }
+};
+
 static void iterWork(IterMsg* msg, IterCol* col) {
   double val = 0.1f;
   double val2 = 0.4f * msg->work_amt_;
@@ -43,6 +67,20 @@ static void iterWork(IterMsg* msg, IterCol* col) {
     val2 += 1.0;
   }
   col->data_2 += val + val2;
+
+  auto reduce_msg = makeSharedMessage<IterReduceMsg>();
+  theCollection()->reduceMsg<
+    IterCol,
+    IterReduceMsg,
+    IterReduceMsg::template msgHandler<
+      IterReduceMsg, collective::PlusOp<collective::NoneType>, FinishedIter
+    >
+  >(col->getCollectionProxy(), reduce_msg);
+}
+
+static void startIter(int32_t const iter) {
+  auto msg = makeSharedMessage<IterMsg>(10,iter);
+  proxy.broadcast<IterMsg,iterWork>(msg);
 }
 
 int main(int argc, char** argv) {
@@ -59,12 +97,9 @@ int main(int argc, char** argv) {
 
   if (this_node == 0) {
     auto const& range = Index1D(num_elms);
-    auto proxy = theCollection()->construct<IterCol>(range);
+    proxy = theCollection()->construct<IterCol>(range);
 
-    for (auto i = 0; i < num_iter; i++) {
-      auto msg = new IterMsg(10,i);
-      proxy.broadcast<IterMsg,iterWork>(msg);
-    }
+    startIter(0);
   }
 
   while (!rt->isTerminated()) {
