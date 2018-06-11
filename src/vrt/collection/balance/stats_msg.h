@@ -19,7 +19,7 @@ struct LoadData {
 
   friend LoadData operator+(LoadData ld1, LoadData const& ld2) {
     auto const& sum_load = ld1.load_sum_ + ld2.load_sum_;
-    auto const& max_load = std::max(ld1.load_sum_,ld2.load_sum_);
+    auto const& max_load = std::max(ld1.load_max_,ld2.load_max_);
     ld1.load_sum_ = sum_load;
     ld1.load_max_ = max_load;
     return ld1;
