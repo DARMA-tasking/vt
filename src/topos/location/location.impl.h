@@ -70,10 +70,10 @@ void EntityLocationCoord<EntityID>::registerEntity(
   recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
 
   if (msg_action != nullptr) {
-    assert(
-      local_registered_msg_han_.find(id) == local_registered_msg_han_.end() &&
-      "Entitiy should not exist in local registered msg handler"
-    );
+    // assert(
+    //   local_registered_msg_han_.find(id) == local_registered_msg_han_.end() &&
+    //   "Entitiy should not exist in local registered msg handler"
+    // );
     local_registered_msg_han_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(id),
