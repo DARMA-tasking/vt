@@ -203,12 +203,16 @@ void HierarchicalLB::loadStats(
   if (should_lb) {
     calcLoadOver(HeapExtractEnum::LoadOverLessThan);
 
-    lbTreeUpSend(bottom_parent, this_load, this_node, load_over, 1);
+    lbTreeUpSend(
+      bottom_parent, this_load, this_node, load_over, 1, load_over_size
+    );
 
     if (children.size() == 0) {
+      auto const& total_size = sizeof(std::size_t) * 4;
       ObjSampleType empty_obj{};
       lbTreeUpSend(
-        parent, hierlb_no_load_sentinel, this_node, empty_obj, agg_node_size
+        parent, hierlb_no_load_sentinel, this_node, empty_obj, agg_node_size,
+        total_size
       );
     }
   } else {
@@ -220,6 +224,12 @@ void HierarchicalLB::loadStats(
 void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   auto const threshold = this_threshold * avg_load;
   auto const obj_id = bin_list.back();
+
+  if (load_over.find(bin) == load_over.end()) {
+    load_over_size += sizeof(std::size_t) * 4;
+    load_over_size += sizeof(ObjIDType);
+    load_over_size += sizeof(ObjBinType);
+  }
 
   load_over[bin].push_back(obj_id);
   bin_list.pop_back();
@@ -352,8 +362,15 @@ void HierarchicalLB::startMigrations() {
 void HierarchicalLB::transferSend(
   NodeType node, NodeType from, std::vector<ObjIDType> transfer
 ) {
-  auto msg = makeSharedMessage<TransferMsg>(from,transfer);
-  SerializedMessenger::sendSerialMsg<TransferMsg,transferHan>(node,msg);
+  #if hierlb_use_parserdes
+    auto const& size =
+      transfer.size() * sizeof(ObjIDType) + 3 * sizeof(std::size_t);
+    auto msg = makeSharedMessageSz<TransferMsg>(size,from,transfer);
+    SerializedMessenger::sendParserdesMsg<TransferMsg,transferHan>(node,msg);
+  #else
+    auto msg = makeSharedMessage<TransferMsg>(from,transfer);
+    SerializedMessenger::sendSerialMsg<TransferMsg,transferHan>(node,msg);
+  #endif
 }
 
 void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
@@ -383,10 +400,19 @@ void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
 
 void HierarchicalLB::downTreeSend(
   NodeType const node, NodeType const from, ObjSampleType const& excess,
-  bool const final_child
+  bool const final_child, std::size_t const& approx_size
 ) {
-  auto msg = makeSharedMessage<LBTreeDownMsg>(from,excess,final_child);
-  SerializedMessenger::sendSerialMsg<LBTreeDownMsg,downTreeHandler>(node,msg);
+  #if hierlb_use_parserdes
+    auto msg = makeSharedMessageSz<LBTreeDownMsg>(
+      approx_size,from,excess,final_child
+    );
+    SerializedMessenger::sendParserdesMsg<LBTreeDownMsg,downTreeHandler>(
+      node,msg
+    );
+  #else
+    auto msg = makeSharedMessage<LBTreeDownMsg>(from,excess,final_child);
+    SerializedMessenger::sendSerialMsg<LBTreeDownMsg,downTreeHandler>(node,msg);
+  #endif
 }
 
 void HierarchicalLB::downTree(
@@ -435,12 +461,24 @@ void HierarchicalLB::downTree(
   );
 }
 
+std::size_t HierarchicalLB::getSize(ObjSampleType const& sample) {
+  return 0;
+}
+
 void HierarchicalLB::lbTreeUpSend(
   NodeType const node, LoadType const child_load, NodeType const child,
-  ObjSampleType const& load, NodeType const child_size
+  ObjSampleType const& load, NodeType const child_size,
+  std::size_t const& load_size_approx
 ) {
-  auto msg = makeSharedMessage<LBTreeUpMsg>(child_load,child,load,child_size);
-  SerializedMessenger::sendSerialMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
+  #if hierlb_use_parserdes
+    auto msg = makeSharedMessageSz<LBTreeUpMsg>(
+      load_size_approx,child_load,child,load,child_size
+    );
+    SerializedMessenger::sendParserdesMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
+  #else
+    auto msg = makeSharedMessage<LBTreeUpMsg>(child_load,child,load,child_size);
+    SerializedMessenger::sendSerialMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
+  #endif
 }
 
 void HierarchicalLB::lbTreeUp(
@@ -610,9 +648,16 @@ void HierarchicalLB::sendDownTree() {
        );
 
         // @todo agglomerate units into this bin together to increase efficiency
+        auto found = c->recs.find(cIter->first) != c->recs.end();
         auto task = cIter->second.back();
         c->recs[cIter->first].push_back(task);
         c->cur_load += cIter->first;
+        if (!found) {
+          c->recs_size += sizeof(std::size_t) * 4;
+          c->recs_size += sizeof(ObjBinType);
+        }
+        c->recs_size += sizeof(ObjIDType);
+
         // remove from list
         cIter->second.pop_back();
       } else {
@@ -638,7 +683,11 @@ void HierarchicalLB::sendDownTree() {
       );
     }
 
-    downTreeSend(c.second->node, this_node, c.second->recs, c.second->final_child);
+    downTreeSend(
+      c.second->node, this_node, c.second->recs, c.second->final_child,
+      c.second->recs_size
+    );
+    c.second->recs_size = 0;
     c.second->recs.clear();
   }
 }
@@ -679,9 +728,16 @@ void HierarchicalLB::distributeAmoungChildren() {
         );
 
         // @todo agglomerate units into this bin together to increase efficiency
+        auto found = c->recs.find(cIter->first) != c->recs.end();
         auto task = cIter->second.back();
         c->recs[cIter->first].push_back(task);
         c->cur_load += cIter->first;
+        if (!found) {
+          c->recs_size += sizeof(std::size_t) * 4;
+          c->recs_size += sizeof(ObjBinType);
+        }
+        c->recs_size += sizeof(ObjIDType);
+
         // remove from list
         cIter->second.pop_back();
       } else {
@@ -709,25 +765,31 @@ void HierarchicalLB::distributeAmoungChildren() {
     }
   }
 
-  clearObj(given_objs);
-
-  lbTreeUpSend(parent, total_child_load, this_node, given_objs, total_size);
+  auto const& data_size = clearObj(given_objs);
+  lbTreeUpSend(
+    parent, total_child_load, this_node, given_objs, total_size, data_size
+  );
 
   given_objs.clear();
 }
 
-void HierarchicalLB::clearObj(ObjSampleType& objs) {
+std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
+  std::size_t total_size = 0;
   std::vector<int> to_remove{};
   for (auto&& bin : objs) {
     if (bin.second.size() == 0) {
       to_remove.push_back(bin.first);
     }
+    total_size += bin.second.size() * sizeof(ObjIDType);
+    total_size += sizeof(ObjBinType);
+    total_size += sizeof(std::size_t) * 4;
   }
   for (auto&& r : to_remove) {
     auto giter = objs.find(r);
     assert(giter != objs.end() && "Must exist");
     objs.erase(giter);
   }
+  return total_size;
 }
 
 /*static*/ void HierarchicalLB::hierLBHandler(balance::HierLBMsg* msg) {

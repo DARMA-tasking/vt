@@ -40,11 +40,12 @@ private:
 
   void downTreeSend(
     NodeType const node, NodeType const from, ObjSampleType const& excess,
-    bool const final_child
+    bool const final_child, std::size_t const& approx_size
   );
   void lbTreeUpSend(
     NodeType const node, LoadType const child_load, NodeType const child,
-    ObjSampleType const& load, NodeType const child_size
+    ObjSampleType const& load, NodeType const child_size,
+    std::size_t const& load_size_approx
   );
   void transferSend(NodeType to, NodeType from, std::vector<ObjIDType> list);
 
@@ -59,7 +60,7 @@ private:
 
   void sendDownTree();
   void distributeAmoungChildren();
-  void clearObj(ObjSampleType& objs);
+  std::size_t clearObj(ObjSampleType& objs);
   HierLBChild* findMinChild();
   void startMigrations();
   NodeType objGetNode(ObjIDType const& id);
@@ -68,6 +69,7 @@ private:
 private:
   ObjBinType histogramSample(LoadType const& load);
   LoadType loadMilli(LoadType const& load);
+  std::size_t getSize(ObjSampleType const&);
 
 private:
   void reduceLoad();
@@ -92,6 +94,7 @@ private:
   LoadType avg_load = 0.0f, max_load = 0.0f;
   LoadType this_load = 0.0f, this_load_begin = 0.0f;
   ObjSampleType obj_sample, load_over, given_objs, taken_objs;
+  std::size_t load_over_size = 0;
   ElementLoadType const* stats = nullptr;
   int64_t migrates_expected = 0, transfer_count = 0;
   TransferType transfers;

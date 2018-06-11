@@ -6,14 +6,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-static constexpr double const hierlb_threshold = 0.5f;
+static constexpr double const hierlb_threshold = 0.3f;
 static constexpr double const hierlb_max_threshold = 1.004f;
 static constexpr NodeType const hierlb_nary = 2;
 static constexpr NodeType const hierlb_root = 0;
 static constexpr int32_t const hierlb_bin_size = 10;
 static constexpr double const hierlb_no_load_sentinel = -1.0f;
-static constexpr double const hierlb_tolerance = 3.0f;
+static constexpr double const hierlb_tolerance = 5.0f;
 static constexpr bool const hierlb_auto_threshold = true;
+
+#define hierlb_use_parserdes 1
 
 }}}} /* end namespace vt::vrt::collection::lb */
 

@@ -17,6 +17,7 @@ struct HierLBChild : HierLBTypes {
   int32_t node_size = 0;
   NodeType node = uninitialized_destination;
   bool final_child = false;
+  std::size_t recs_size = 0;
   ObjSampleType recs;
 };
 

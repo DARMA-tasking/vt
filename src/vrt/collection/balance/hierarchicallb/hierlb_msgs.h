@@ -3,6 +3,7 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_MSGS_H
 
 #include "config.h"
+#include "vrt/collection/balance/hierarchicallb/hierlb_constants.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_types.h"
 #include "vrt/collection/balance/proc_stats.h"
 #include "messaging/message.h"
@@ -20,10 +21,18 @@ struct LBTreeUpMsg : HierLBTypes, ::vt::Message {
       child_size_(in_child_size)
   { }
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | child_load_ | child_ | load_ | child_size_;
-  }
+
+  #if hierlb_use_parserdes
+    template <typename SerializerT>
+    void parserdes(SerializerT& s) {
+      s & load_;
+    }
+  #else
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      s | child_load_ | child_ | load_ | child_size_;
+    }
+  #endif
 
   LoadType getChildLoad() const { return child_load_; }
   NodeType getChild() const { return child_; }
@@ -47,10 +56,18 @@ struct LBTreeDownMsg : HierLBTypes, ::vt::Message {
   ) : from_(in_from), excess_(in_excess), final_child_(in_final_child)
   { }
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | from_ | excess_ | final_child_;
-  }
+
+  #if hierlb_use_parserdes
+    template <typename SerializerT>
+    void parserdes(SerializerT& s) {
+      s & excess_;
+    }
+  #else
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      s | from_ | excess_ | final_child_;
+    }
+  #endif
 
   NodeType getFrom() const { return from_; }
   ObjSampleType const& getExcess() const { return excess_; }
@@ -71,10 +88,17 @@ struct TransferMsg : HierLBTypes, ::vt::Message {
     : from_(in_from), transfer_(in_transfer)
   { }
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | from_ | transfer_;
-  }
+  #if hierlb_use_parserdes
+    template <typename SerializerT>
+    void parserdes(SerializerT& s) {
+      s & transfer_;
+    }
+  #else
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      s | from_ | transfer_;
+    }
+  #endif
 
   NodeType getFrom() const { return from_; }
   std::vector<ObjIDType> const& getTransfer() const { return transfer_; }
