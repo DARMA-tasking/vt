@@ -175,21 +175,36 @@ void HierarchicalLB::loadStats(
   avg_load = total_load / num_nodes;
   max_load = in_max_load;
 
-  debug_print(
+  auto const& diff = max_load - avg_load;
+  auto const& diff_percent = (diff / total_load) * 100.0f;
+  bool const& should_lb = diff_percent > hierlb_tolerance;
+
+  if (should_lb && hierlb_auto_threshold) {
+    this_threshold = std::min(1.0f - (diff_percent / 100.0f), hierlb_threshold);
+  }
+
+  debug_print_force(
     hierlb, node,
-    "loadStats: this_load={}, total_load={}, avg_load={}, max_load={}\n",
-    this_load, total_load, avg_load, max_load
+    "loadStats: this_load={}, total_load={}, avg_load={}, max_load={}, "
+    "diff={}, diff_percent={}, should_lb={}, auto={}, threshold={}\n",
+    this_load, total_load, avg_load, max_load, diff, diff_percent, should_lb,
+    hierlb_auto_threshold, this_threshold
   );
 
-  calcLoadOver(HeapExtractEnum::LoadOverLessThan);
+  if (should_lb) {
+    calcLoadOver(HeapExtractEnum::LoadOverLessThan);
 
-  lbTreeUpSend(bottom_parent, this_load, this_node, load_over, 1);
+    lbTreeUpSend(bottom_parent, this_load, this_node, load_over, 1);
 
-  if (children.size() == 0) {
-    ObjSampleType empty_obj{};
-    lbTreeUpSend(
-      parent, hierlb_no_load_sentinel, this_node, empty_obj, agg_node_size
-    );
+    if (children.size() == 0) {
+      ObjSampleType empty_obj{};
+      lbTreeUpSend(
+        parent, hierlb_no_load_sentinel, this_node, empty_obj, agg_node_size
+      );
+    }
+  } else {
+    // release continuation for next iteration
+    finishedTransferExchange();
   }
 }
 
