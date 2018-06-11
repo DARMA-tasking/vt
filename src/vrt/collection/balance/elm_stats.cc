@@ -37,7 +37,7 @@ void ElementStats::addTime(TimeType const& time) {
   phase_timings_.resize(cur_phase_ + 1);
   phase_timings_.at(cur_phase_) += time;
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "ElementStats: addTime: time={}, cur_load={}\n",
     time, phase_timings_.at(cur_phase_)

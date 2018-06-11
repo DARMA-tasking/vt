@@ -31,7 +31,8 @@ public:
 private:
   static ElementIDType getNextElm();
 
-private:
+  // @todo: make these private and friend appropriate classes
+public:
   static ElementIDType next_elm_;
 public:
   static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;

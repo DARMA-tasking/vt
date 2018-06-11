@@ -12,6 +12,7 @@
 #include "collective/collective_alg.h"
 #include "collective/reduce/reduce.h"
 #include "context/context.h"
+#include "vrt/collection/manager.h"
 
 #include <unordered_map>
 #include <memory>
@@ -274,11 +275,15 @@ NodeType HierarchicalLB::objGetNode(ObjIDType const& id) {
 }
 
 void HierarchicalLB::finishedTransferExchange() {
-  debug_print(
+  debug_print_force(
     hierlb, node,
     "finished all transfers: count={}\n",
     transfer_count
   );
+  balance::ProcStats::proc_migrate_.clear();
+  balance::ProcStats::proc_data_.clear();
+  balance::ProcStats::next_elm_ = 1;
+  theCollection()->releaseLBContinuation();
 }
 
 void HierarchicalLB::startMigrations() {
@@ -298,7 +303,7 @@ void HierarchicalLB::startMigrations() {
       if (node != this_node) {
         migrates_expected++;
 
-        debug_print(
+        debug_print_force(
           hierlb, node,
           "startMigrations, obj_id={}, node={}\n",
           obj_id, node
@@ -309,7 +314,7 @@ void HierarchicalLB::startMigrations() {
     }
   }
 
-  debug_print(
+  debug_print_force(
     hierlb, node,
     "startMigrations, transfer_list.size()={}\n",
     transfer_list.size()

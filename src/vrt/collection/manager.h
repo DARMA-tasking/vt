@@ -41,6 +41,7 @@ struct CollectionManager {
   template <typename ColT, typename IndexT>
   using VirtualPtrType = typename Holder<ColT, IndexT>::VirtualPtrType;
   using ActionProxyType = std::function<void(VirtualProxyType)>;
+  using ActionFinishedLBType = std::function<void()>;
   using ActionContainerType = std::vector<ActionProxyType>;
   using BufferedActionType = std::unordered_map<
     VirtualProxyType, ActionContainerType
@@ -204,7 +205,7 @@ struct CollectionManager {
   template <typename ColT>
   void nextPhase(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
-    PhaseType const& cur_phase
+    PhaseType const& cur_phase, ActionFinishedLBType continuation = nullptr
   );
 
   template <typename ColT>
@@ -212,6 +213,9 @@ struct CollectionManager {
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
     PhaseType const& cur_phase
   );
+
+  template <typename=void>
+  void releaseLBContinuation();
 
 private:
   template <typename ColT, typename IndexT>
@@ -267,6 +271,7 @@ private:
   AwaitingDestructionType await_destroy_;
   std::unordered_set<VirtualProxyType> constructed_;
   std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
+  ActionFinishedLBType lb_continuation_ = nullptr;
 };
 
 }}} /* end namespace vt::vrt::collection */

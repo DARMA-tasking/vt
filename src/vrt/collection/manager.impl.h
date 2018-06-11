@@ -195,7 +195,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 
       backend_enable_if(
         lblite, {
-          debug_print_force(
+          debug_print(
             vrt_coll, node,
             "broadcast: apply to element: instrument={}\n",
             msg->lbLiteInstrument()
@@ -299,7 +299,7 @@ template <typename ColT, typename IndexT>
 
   backend_enable_if(
     lblite, {
-      debug_print_force(
+      debug_print(
         vrt_coll, node,
         "collectionMsgHandler: receive msg: instrument={}\n",
         col_msg->lbLiteInstrument()
@@ -1007,7 +1007,7 @@ Holder<ColT, IndexT>* CollectionManager::findElmHolder(
 template <typename ColT>
 void CollectionManager::nextPhase(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
-  PhaseType const& cur_phase
+  PhaseType const& cur_phase, ActionFinishedLBType continuation
 ) {
   using namespace balance;
   using MsgType = PhaseMsg<ColT>;
@@ -1020,10 +1020,14 @@ void CollectionManager::nextPhase(
     cur_phase
   );
 
+  if (continuation != nullptr) {
+    lb_continuation_ = continuation;
+  }
+
   backend_enable_if(
     lblite, {
       msg->setLBLiteInstrument(instrument);
-      debug_print_force(
+      debug_print(
         vrt_coll, node,
         "nextPhase: broadcasting: instrument={}, cur_phase={}\n",
         msg->lbLiteInstrument(), cur_phase
@@ -1054,6 +1058,15 @@ void CollectionManager::computeStats(
   theCollection()->broadcastMsg<MsgType,ElementStats::computeStats<ColT>>(
     proxy, msg, nullptr, instrument
   );
+}
+
+template <typename>
+void CollectionManager::releaseLBContinuation() {
+  if (lb_continuation_) {
+    auto cont = lb_continuation_;
+    lb_continuation_ = nullptr;
+    cont();
+  }
 }
 
 }}} /* end namespace vt::vrt::collection */
