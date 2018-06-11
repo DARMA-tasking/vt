@@ -227,9 +227,9 @@ void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
 
   if (load_over.find(bin) == load_over.end()) {
     load_over_size += sizeof(std::size_t) * 4;
-    load_over_size += sizeof(ObjIDType);
     load_over_size += sizeof(ObjBinType);
   }
+  load_over_size += sizeof(ObjIDType);
 
   load_over[bin].push_back(obj_id);
   bin_list.pop_back();
@@ -364,7 +364,7 @@ void HierarchicalLB::transferSend(
 ) {
   #if hierlb_use_parserdes
     auto const& size =
-      transfer.size() * sizeof(ObjIDType) + 3 * sizeof(std::size_t);
+      transfer.size() * sizeof(ObjIDType) + (sizeof(std::size_t) * 2);
     auto msg = makeSharedMessageSz<TransferMsg>(size,from,transfer);
     SerializedMessenger::sendParserdesMsg<TransferMsg,transferHan>(node,msg);
   #else
