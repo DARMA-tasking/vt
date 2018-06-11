@@ -14,6 +14,7 @@ struct Broadcastable : Destroyable<ColT, IndexT> {
   Broadcastable(Broadcastable const&) = default;
   Broadcastable(Broadcastable&&) = default;
   Broadcastable(VirtualProxyType const in_proxy);
+  Broadcastable& operator=(Broadcastable const&) = default;
 
   template <
     typename MsgT,

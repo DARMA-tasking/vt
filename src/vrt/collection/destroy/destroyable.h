@@ -13,6 +13,7 @@ struct Destroyable : BaseEntireCollectionProxy<ColT, IndexT> {
   Destroyable(Destroyable const&) = default;
   Destroyable(Destroyable&&) = default;
   Destroyable(VirtualProxyType const in_proxy);
+  Destroyable& operator=(Destroyable const&) = default;
 
   void destroy();
 };

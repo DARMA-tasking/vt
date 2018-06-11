@@ -16,6 +16,9 @@ struct BaseEntireCollectionProxy {
   BaseEntireCollectionProxy(BaseEntireCollectionProxy const&) = default;
   BaseEntireCollectionProxy(BaseEntireCollectionProxy&&) = default;
   BaseEntireCollectionProxy(VirtualProxyType const in_proxy);
+  BaseEntireCollectionProxy& operator=(
+    BaseEntireCollectionProxy const&
+  ) = default;
 
   VirtualProxyType getProxy() const;
 
@@ -25,7 +28,7 @@ struct BaseEntireCollectionProxy {
   }
 
 protected:
-  VirtualProxyType const proxy_ = no_vrt_proxy;
+  VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
 }}} /* end namespace vt::vrt::collection */
