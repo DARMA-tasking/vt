@@ -142,9 +142,14 @@ void CollectedStats<ColT>::operator()(StatsMsg<ColT>* msg) {
 
 template <typename ColT>
 void StartHierLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
-  auto nmsg = makeSharedMessage<HierLBMsg>();
+  debug_print_force(
+    vrt_coll, node,
+    "StartHierLB: phase={}\n", msg->getPhase()
+  );
+
+  auto nmsg = makeSharedMessage<HierLBMsg>(msg->getPhase());
   theMsg()->broadcastMsg<HierLBMsg,lb::HierarchicalLB::hierLBHandler>(nmsg);
-  auto nmsg_root = makeSharedMessage<HierLBMsg>();
+  auto nmsg_root = makeSharedMessage<HierLBMsg>(msg->getPhase());
   lb::HierarchicalLB::hierLBHandler(nmsg_root);
 }
 

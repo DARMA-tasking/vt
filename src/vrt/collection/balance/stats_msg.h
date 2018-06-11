@@ -71,7 +71,17 @@ private:
   PhaseType cur_phase_ = fst_lb_phase;
 };
 
-struct HierLBMsg : Message {};
+struct HierLBMsg : Message {
+  HierLBMsg() = default;
+  explicit HierLBMsg(PhaseType const& phase)
+    : cur_phase_(phase)
+  {}
+
+  PhaseType getPhase() const { return cur_phase_; }
+
+private:
+  PhaseType cur_phase_ = fst_lb_phase;
+};
 
 }}}} /* end namespace vt::vrt::collection::balance */
 

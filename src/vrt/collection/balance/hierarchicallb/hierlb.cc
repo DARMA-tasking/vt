@@ -707,9 +707,11 @@ void HierarchicalLB::clearObj(ObjSampleType& objs) {
 }
 
 /*static*/ void HierarchicalLB::hierLBHandler(balance::HierLBMsg* msg) {
+  auto const& phase = msg->getPhase();
   HierarchicalLB::hier_lb_inst = std::make_unique<HierarchicalLB>();
   HierarchicalLB::hier_lb_inst->setupTree(hierlb_threshold);
-  HierarchicalLB::hier_lb_inst->procDataIn(balance::ProcStats::proc_data_[0]);
+  assert(balance::ProcStats::proc_data_.size() >= phase);
+  HierarchicalLB::hier_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
   HierarchicalLB::hier_lb_inst->reduceLoad();
 }
 
