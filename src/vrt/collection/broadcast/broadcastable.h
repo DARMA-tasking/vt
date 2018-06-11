@@ -11,6 +11,8 @@ namespace vt { namespace vrt { namespace collection {
 template <typename ColT, typename IndexT>
 struct Broadcastable : Destroyable<ColT, IndexT> {
   Broadcastable() = default;
+  Broadcastable(Broadcastable const&) = default;
+  Broadcastable(Broadcastable&&) = default;
   Broadcastable(VirtualProxyType const in_proxy);
 
   template <

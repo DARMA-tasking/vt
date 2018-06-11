@@ -13,6 +13,8 @@ struct BaseEntireCollectionProxy {
   using IndexType = IndexT;
 
   BaseEntireCollectionProxy() = default;
+  BaseEntireCollectionProxy(BaseEntireCollectionProxy const&) = default;
+  BaseEntireCollectionProxy(BaseEntireCollectionProxy&&) = default;
   BaseEntireCollectionProxy(VirtualProxyType const in_proxy);
 
   VirtualProxyType getProxy() const;

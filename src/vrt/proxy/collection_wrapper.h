@@ -48,7 +48,10 @@ struct CollectionIndexProxy : Broadcastable<ColT, IndexT> {
   using ElmProxyType = VrtElmProxy<ColT, IndexT>;
 
   CollectionIndexProxy() = default;
+  CollectionIndexProxy(CollectionIndexProxy const&) = default;
   CollectionIndexProxy(VirtualProxyType const in_proxy);
+
+  CollectionIndexProxy& operator=(CollectionIndexProxy const&) = default;
 
   template <typename... IndexArgsT>
   ElmProxyType index_build(IndexArgsT&&... idx) const;
