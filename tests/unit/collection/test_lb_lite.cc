@@ -37,8 +37,16 @@ struct LBTest : Collection<LBTest,Index1D> {
     EXPECT_EQ(val3, 384 * val1);
   }
 
+  void printValues() {
+    ::fmt::print(
+      "idx={}, val1={}, val2={}, val3={}\n",
+      getIndex().x(), val1, val2, val3
+    );
+  }
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    Collection<LBTest,Index1D>::serialize(s);
     s | val1 | val2 | val3 | data_2;
   }
 
@@ -88,11 +96,17 @@ struct FinishedIter {
   int64_t const mid_work = 100 * weight;
   int64_t const min_work = 1 * weight;
   int const x = idx < 8 ? max_work : (idx > 40 ? mid_work : min_work);
+  ::fmt::print("proc={}, idx={}, iter={}\n", theContext()->getNode(),idx,iter);
   for (int i = 0; i < 10000 * x; i++) {
     val *= val2 + i*29.4;
     val2 += 1.0;
   }
   col->data_2 += val + val2;
+  if (iter == 0) {
+    col->setValues();
+  } else {
+    col->assertValues();
+  }
   auto reduce_msg = makeSharedMessage<IterReduceMsg>();
   theCollection()->reduceMsg<
     LBTest,
@@ -124,7 +138,6 @@ TEST_F(TestLB, test_lb_1) {
     cur_time = ::vt::timing::Timing::getCurrentTime();
     startIter(0);
   }
-
 }
 
 }}} // end namespace vt::tests::unit
