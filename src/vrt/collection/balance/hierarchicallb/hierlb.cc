@@ -184,7 +184,10 @@ void HierarchicalLB::loadStats(
   bool const& should_lb = diff_percent > hierlb_tolerance;
 
   if (should_lb && hierlb_auto_threshold) {
-    this_threshold = std::min(1.0f - (diff_percent / 100.0f), hierlb_threshold);
+    this_threshold = std::min(
+      std::max(1.0f - (diff_percent / 100.0f), hierlb_threshold),
+      hierlb_max_threshold
+    );
   }
 
   if (this_node == 0) {
