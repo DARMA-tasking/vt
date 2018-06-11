@@ -20,6 +20,7 @@ set(
   trace_ring
   location_test
   location_test_msg
+  lb_iter
   broadcast_test
   index_test
   hello_world_vrtContext

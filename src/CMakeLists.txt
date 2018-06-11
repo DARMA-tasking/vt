@@ -40,7 +40,7 @@ set(
       vrt/collection/types vrt/collection/messages vrt/collection/proxy_builder
       vrt/collection/holders vrt/collection/migrate vrt/collection/traits
       vrt/collection/traits vrt/collection/defaults vrt/collection/constructor
-      vrt/collection/send
+      vrt/collection/send vrt/collection/destroy vrt/collection/broadcast
       vrt/collection/balance
         vrt/collection/balance/hierarchicallb
     lb/instrumentation
