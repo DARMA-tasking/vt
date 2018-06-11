@@ -10,7 +10,7 @@ using namespace ::vt::vrt::collection;
 using namespace ::vt::index;
 using namespace ::vt::mapping;
 
-static constexpr int32_t const default_num_elms = 16;
+static constexpr int32_t const default_num_elms = 64;
 static constexpr int32_t const num_iter = 8;
 
 struct IterCol : Collection<IterCol,Index1D> {
@@ -50,7 +50,9 @@ struct FinishedIter {
     cur_iter++;
     cur_time = new_time;
     if (cur_iter < num_iter) {
-      startIter(cur_iter);
+      theCollection()->nextPhase<IterCol>(proxy,cur_iter-1,[=]{
+        startIter(cur_iter);
+      });
     }
   }
 };
@@ -60,8 +62,11 @@ static void iterWork(IterMsg* msg, IterCol* col) {
   double val2 = 0.4f * msg->work_amt_;
   auto const idx = col->getIndex().x();
   auto const iter = msg->iter_;
-  ::fmt::print("idx={}, iter={}\n", idx, iter);
-  int const x = idx < 8 ? 10000 : (idx > 40 ? 1000 : 10);
+  //::fmt::print("proc={}, idx={}, iter={}\n", theContext()->getNode(),idx,iter);
+  int64_t const max_work = 10000;
+  int64_t const mid_work = 1000;
+  int64_t const min_work = 10;
+  int const x = idx < 8 ? max_work : (idx > 40 ? mid_work : min_work);
   for (int i = 0; i < 10000 * x; i++) {
     val *= val2 + i*29.4;
     val2 += 1.0;
@@ -98,7 +103,7 @@ int main(int argc, char** argv) {
   if (this_node == 0) {
     auto const& range = Index1D(num_elms);
     proxy = theCollection()->construct<IterCol>(range);
-
+    cur_time = ::vt::timing::Timing::getCurrentTime();
     startIter(0);
   }
 
