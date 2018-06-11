@@ -282,6 +282,7 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vrt/collection/send/sendable.impl.h"
 #include "vrt/collection/destroy/destroyable.impl.h"
 #include "vrt/collection/destroy/manager_destroy_attorney.impl.h"
+#include "vrt/collection/broadcast/broadcastable.impl.h"
 #include "vrt/collection/balance/elm_stats.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/

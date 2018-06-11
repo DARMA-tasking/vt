@@ -5,6 +5,7 @@
 #include "config.h"
 #include "vrt/collection/send/sendable.h"
 #include "vrt/collection/destroy/destroyable.h"
+#include "vrt/collection/broadcast/broadcastable.h"
 #include "vrt/proxy/proxy_element.h"
 #include "vrt/proxy/proxy_collection.h"
 #include "vrt/proxy/base_wrapper.h"
