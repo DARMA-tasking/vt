@@ -76,11 +76,12 @@ void Reduce::reduceAddMsg(MessageT* msg, ReduceNumType const& num_contrib) {
   };
   auto live_iter = live_reductions_.find(lookup);
   if (live_iter == live_reductions_.end()) {
+    auto num_contrib_state = num_contrib == -1 ? 1 : num_contrib;
     live_reductions_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(lookup),
       std::forward_as_tuple(ReduceState{
-        msg->reduce_tag_,msg->reduce_epoch_,msg->reduce_proxy_
+        msg->reduce_tag_,msg->reduce_epoch_,num_contrib_state
       })
     );
     live_iter = live_reductions_.find(lookup);
