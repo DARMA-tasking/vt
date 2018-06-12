@@ -36,7 +36,7 @@ $arg->add_optional_arg("libroot",     \$libroot,    "/Users/jliffla/codes");
 $arg->add_optional_arg("atomic",      \$atomic,     "");
 
 $arg->add_optional_arg("compiler_c",  \$compiler_c,   "");
-$arg->add_optional_arg("compiler_cxx" \$compiler_cxx, "");
+$arg->add_optional_arg("compiler_cxx",\$compiler_cxx, "");
 
 $arg->add_optional_func("detector",   \$detector,   "detector-install",   \&mk);
 $arg->add_optional_func("meld",       \$meld,       "meld-install",       \&mk);
