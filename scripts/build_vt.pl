@@ -25,9 +25,6 @@ sub mk {
 $arg->add_required_arg("build_mode",  \$build_mode);
 $arg->add_required_arg("compiler",    \$compiler);
 
-$arg->add_optional_arg("compiler_c",  \$compiler_c,   "");
-$arg->add_optional_arg("compiler_cxx" \$compiler_cxx, "");
-
 $arg->add_optional_arg("has_serial",  \$has_serial,      1);
 $arg->add_optional_arg("build_tests", \$build_all_tests, 1);
 $arg->add_optional_arg("vt_install",  \$vt_install,      "../vt-install/");
@@ -37,6 +34,9 @@ $arg->add_optional_arg("vt",          \$vt,         "vt");
 $arg->add_optional_arg("root",        \$root,       "/Users/jliffla/codes");
 $arg->add_optional_arg("libroot",     \$libroot,    "/Users/jliffla/codes");
 $arg->add_optional_arg("atomic",      \$atomic,     "");
+
+$arg->add_optional_arg("compiler_c",  \$compiler_c,   "");
+$arg->add_optional_arg("compiler_cxx" \$compiler_cxx, "");
 
 $arg->add_optional_func("detector",   \$detector,   "detector-install",   \&mk);
 $arg->add_optional_func("meld",       \$meld,       "meld-install",       \&mk);
