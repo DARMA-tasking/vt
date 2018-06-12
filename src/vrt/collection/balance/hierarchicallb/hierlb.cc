@@ -198,6 +198,7 @@ void HierarchicalLB::loadStats(
       this_node, this_load, total_load, avg_load, max_load, diff, diff_percent,
       should_lb, hierlb_auto_threshold, this_threshold
     );
+    fflush(stdout);
   }
 
   if (should_lb) {
