@@ -10,6 +10,7 @@ require "args.pl";
 
 my ($build_mode,$compiler,$has_serial,$build_all_tests,$vt_install);
 my ($vt,$root,$detector,$meld,$checkpoint,$fmt,$gtest);
+my ($compiler_cxx,$compiler_c);
 my $libroot = "";
 my $atomic = "";
 my ($dry_run,$verbose);
@@ -23,6 +24,9 @@ sub mk {
 
 $arg->add_required_arg("build_mode",  \$build_mode);
 $arg->add_required_arg("compiler",    \$compiler);
+
+$arg->add_optional_arg("compiler_c",  \$compiler_c,   "");
+$arg->add_optional_arg("compiler_cxx" \$compiler_cxx, "");
 
 $arg->add_optional_arg("has_serial",  \$has_serial,      1);
 $arg->add_optional_arg("build_tests", \$build_all_tests, 1);
@@ -55,6 +59,13 @@ if ($compiler eq "clang") {
     $cc="mpicc-mpich-devel-gcc6";
 } else {
     die "Please specify valid compiler option: $compiler";
+}
+
+if ($compiler_cxx ne "") {
+    $cxx = $compiler_cxx;
+}
+if ($compiler_c ne "") {
+    $cc = $compiler_c;
 }
 
 my $build_all_str = "";
