@@ -9,6 +9,7 @@
 #include "vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_strat.h"
 #include "vrt/collection/balance/proc_stats.h"
+#include "timing/timing.h"
 
 #include <unordered_map>
 #include <vector>
@@ -85,6 +86,7 @@ public:
   static std::unique_ptr<HierarchicalLB> hier_lb_inst;
 
 private:
+  TimeType start_time_ = 0.0f;
   double this_threshold = 0.0f;
   bool tree_setup = false;
   NodeType parent = uninitialized_destination;

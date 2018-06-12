@@ -13,6 +13,7 @@
 #include "collective/reduce/reduce.h"
 #include "context/context.h"
 #include "vrt/collection/manager.h"
+#include "timing/timing.h"
 
 #include <unordered_map>
 #include <memory>
@@ -310,11 +311,21 @@ NodeType HierarchicalLB::objGetNode(ObjIDType const& id) {
 }
 
 void HierarchicalLB::finishedTransferExchange() {
+  auto const& this_node = theContext()->getNode();
   debug_print(
     hierlb, node,
     "finished all transfers: count={}\n",
     transfer_count
   );
+  if (this_node == 0) {
+    auto const& total_time = timing::Timing::getCurrentTime() - start_time_;
+    fmt::print(
+      "VT: {}: "
+      "loadStats: total_time={}, transfer_count={}\n",
+      this_node, total_time, transfer_count
+    );
+    fflush(stdout);
+  }
   balance::ProcStats::proc_migrate_.clear();
   balance::ProcStats::proc_data_.clear();
   balance::ProcStats::next_elm_ = 1;
@@ -798,6 +809,7 @@ std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
 /*static*/ void HierarchicalLB::hierLBHandler(balance::HierLBMsg* msg) {
   auto const& phase = msg->getPhase();
   HierarchicalLB::hier_lb_inst = std::make_unique<HierarchicalLB>();
+  HierarchicalLB::hier_lb_inst->start_time_ = timing::Timing::getCurrentTime();
   HierarchicalLB::hier_lb_inst->setupTree(hierlb_threshold);
   assert(balance::ProcStats::proc_data_.size() >= phase);
   HierarchicalLB::hier_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
