@@ -105,7 +105,6 @@ cmake $source_base_dir                                                       \\
       -DCMAKE_CXX_COMPILER=$cxx                                              \\
       -DCMAKE_C_COMPILER=$cc                                                 \\
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                   \\
-      -DCMAKE_CXX_FLAGS=-fopenmp=libomp                                      \\
       -Dcheckpoint_DIR=$checkpoint                                           \\
       -Dmeld_DIR=$meld                                                       \\
       -Ddetector_DIR=$detector                                               \\
