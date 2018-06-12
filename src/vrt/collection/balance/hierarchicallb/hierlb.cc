@@ -180,7 +180,7 @@ void HierarchicalLB::loadStats(
   max_load = in_max_load;
 
   auto const& diff = max_load - avg_load;
-  auto const& diff_percent = (diff / total_load) * 100.0f;
+  auto const& diff_percent = (diff / avg_load) * 100.0f;
   bool const& should_lb = diff_percent > hierlb_tolerance;
 
   if (should_lb && hierlb_auto_threshold) {
