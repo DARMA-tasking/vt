@@ -183,14 +183,14 @@ static inline ParamContainerType make_values() {
 
 struct TestSequencerExtensive : TestParallelHarnessParam<ParamType> {
   using TestMsg = TestStaticBytesNormalMsg<4>;
-  using NumWaitsMsg = NumWaitsMsg;
+  using NumWaitsMsg2 = NumWaitsMsg;
   using OrderType = uint32_t;
 
   virtual void SetUp() {
     TestParallelHarnessParam<ParamType>::SetUp();
   }
 
-  SEQUENCE_REGISTER_HANDLER(TestSequencerExtensive::NumWaitsMsg, numWaitHan);
+  SEQUENCE_REGISTER_HANDLER(TestSequencerExtensive::NumWaitsMsg2, numWaitHan);
   SEQUENCE_REGISTER_HANDLER(TestSequencerExtensive::TestMsg, testSeqHan1);
 
   FN_APPLY(testSeqHan1, testSeqFn1, 0, TestMsg, 2, false);
@@ -216,3 +216,4 @@ INSTANTIATE_TEST_CASE_P(
 );
 
 }}} // end namespace vt::tests::unit
+      
