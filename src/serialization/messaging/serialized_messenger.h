@@ -234,7 +234,9 @@ struct SerializedMessenger {
           sys_msg = new (buf) SerialWrapperMsgType<MsgT>{};
           return buf + sys_size;
         } else {
-          payload_msg = makeSharedMessage<PayloadMsg>(size);
+          payload_msg = makeSharedMessage<PayloadMsg>(
+            static_cast<NumBytesType>(size)
+          );
           return payload_msg->payload.data();
         }
       }
