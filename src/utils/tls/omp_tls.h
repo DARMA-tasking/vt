@@ -13,23 +13,39 @@ template <typename T, char const* tag, T val>
 struct ThreadLocalInitOMP {
   static T& get() { return value_; }
 private:
-  static T value_;
-  #pragma omp threadprivate (value_)
+  #if defined(__GNUC__)
+    static thread_local T value_;
+  #else
+    static T value_;
+    #pragma omp threadprivate (value_)
+  #endif
 };
 
 template <typename T, char const* tag>
 struct ThreadLocalOMP {
   static T& get() { return value_; }
 private:
-  static T value_;
-  #pragma omp threadprivate (value_)
+  #if defined(__GNUC__)
+    static thread_local T value_;
+  #else
+    static T value_;
+    #pragma omp threadprivate (value_)
+  #endif
 };
 
-template <typename T, char const* tag, T val>
-T ThreadLocalInitOMP<T,tag,val>::value_ = val;
+#if defined(__GNUC__)
+  template <typename T, char const* tag, T val>
+  T thread_local ThreadLocalInitOMP<T,tag,val>::value_ = val;
 
-template <typename T, char const* tag>
-T ThreadLocalOMP<T,tag>::value_;
+  template <typename T, char const* tag>
+  T thread_local ThreadLocalOMP<T,tag>::value_;
+#else
+  template <typename T, char const* tag, T val>
+  T ThreadLocalInitOMP<T,tag,val>::value_ = val;
+
+  template <typename T, char const* tag>
+  T ThreadLocalOMP<T,tag>::value_;
+#endif
 
 }}} /* end namespace vt::util::tls */
 
