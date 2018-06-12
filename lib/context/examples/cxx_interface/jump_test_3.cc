@@ -36,8 +36,8 @@ struct Fn2 {
   }
 };
 
-Context<Fn1, double, int> ctx1;
-Context<Fn2, int> ctx2;
+ContextF<Fn1, double, int> ctx1;
+ContextF<Fn2, int> ctx2;
 
 int main(int argc, char** argv) {
   ULTContextType s1 = createStack();

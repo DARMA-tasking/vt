@@ -85,7 +85,7 @@ ContextFunctor<FunctorT, std::tuple<Args...>> makeContext(ULTContext ctx, Args&&
 }
 
 template <typename FunctorT, typename... Args>
-using Context = ContextFunctor<FunctorT, std::tuple<Args...>>;
+using ContextF = ContextFunctor<FunctorT, std::tuple<Args...>>;
 
 }} /* end namespace fcontext::functor */
 
