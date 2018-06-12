@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
+    #if 0
     theParam()->sendData(1, buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
     theParam()->sendData(1, PARAM_FUNCTION_RHS(fnTest), 50, 29, false);
     theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, buildData(10, 20, false));
@@ -47,6 +48,7 @@ int main(int argc, char** argv) {
     theParam()->sendData<FunctorTest1>(1, buildData(20, 50.0));
     theParam()->sendData<FunctorTest1>(1, 20, 100.0);
     theParam()->sendData<FunctorTest1>(1, buildData(10, 70.0));
+    #endif
   }
 
   while (!rt->isTerminated()) {
