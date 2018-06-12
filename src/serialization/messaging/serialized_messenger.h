@@ -301,7 +301,7 @@ struct SerializedMessenger {
           return ptr;
         } else {
           payload_msg = makeSharedMessage<SerialEagerPayloadMsg<MsgT, BaseT>>(
-            ptr_size
+            static_cast<NumBytesType>(ptr_size)
           );
           return payload_msg->payload.data();
         }
