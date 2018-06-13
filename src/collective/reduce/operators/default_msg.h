@@ -27,6 +27,13 @@ struct ReduceDataMsg : ReduceMsg, ReduceCombine<void> {
 
   DataType const& getConstVal() const { return val_; }
   DataType& getVal() { return val_; }
+  DataType&& getMoveVal() { return std::move(val_); }
+
+  template <typename SerializerT>
+  void invokeSerialize(SerializerT& s) {
+    ReduceMsg::invokeSerialize(s);
+    s | val_;
+  }
 
 protected:
   DataType val_ = {};
