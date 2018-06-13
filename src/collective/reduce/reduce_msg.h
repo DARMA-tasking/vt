@@ -35,6 +35,12 @@ struct ReduceMsg : ::vt::Message, ReduceLink {
   EpochType reduce_epoch_ = no_epoch;
   VirtualProxyType reduce_proxy_ = no_vrt_proxy;
   HandlerType combine_handler_ = uninitialized_handler;
+
+  template <typename SerializerT>
+  void invokeSerialize(SerializerT& s) {
+    s | reduce_root_ | reduce_tag_ | reduce_epoch_ | reduce_proxy_;
+    s | combine_handler_;
+  }
 };
 
 }}} /* end namespace vt::collective::reduce */

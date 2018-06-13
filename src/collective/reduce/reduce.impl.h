@@ -6,6 +6,7 @@
 #include "collective/collective_alg.h"
 #include "registry/registry.h"
 #include "registry/auto/auto_registry_interface.h"
+#include "serialization/auto_dispatch/dispatch.h"
 #include "messaging/active.h"
 
 namespace vt { namespace collective { namespace reduce {
@@ -166,7 +167,13 @@ void Reduce::reduceNewMsg(MessageT* msg) {
           reduce, node,
           "reduce notify root (send): root={}, node={}\n", root, this_node
         );
-        theMsg()->sendMsg<MessageT, reduceRootRecv<MessageT>>(root, msg, cont);
+
+        using SendDispatch =
+          serialization::auto_dispatch::RequiredSerialization<
+            MessageT, reduceRootRecv<MessageT>
+          >;
+        SendDispatch::sendMsg(root, msg);
+        //theMsg()->sendMsg<MessageT, reduceRootRecv<MessageT>>(root, msg, cont);
       } else {
         debug_print(
           reduce, node,
@@ -181,7 +188,12 @@ void Reduce::reduceNewMsg(MessageT* msg) {
         reduce, node,
         "reduce send to parent: parent={}\n", parent
       );
-      theMsg()->sendMsg<MessageT, reduceUp<MessageT>>(parent, msg, cont);
+      using SendDispatch =
+        serialization::auto_dispatch::RequiredSerialization<
+          MessageT, reduceUp<MessageT>
+        >;
+      SendDispatch::sendMsg(parent, msg);
+      //theMsg()->sendMsg<MessageT, reduceUp<MessageT>>(parent, msg, cont);
     }
   }
 }
