@@ -24,6 +24,7 @@ set(
     collective/barrier collective/tree
     collective/reduce/
       collective/reduce/operators
+    collective/scatter/
     group/id group/region group/global
     messaging/envelope messaging/message
     pool/static_sized pool/header
