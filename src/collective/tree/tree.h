@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <functional>
+#include <cstdlib>
 
 namespace vt { namespace collective { namespace tree {
 
@@ -15,6 +16,7 @@ static struct DefaultTreeConstructTag { } tree_cons_tag_t { };
 struct Tree {
   using NodeListType = std::vector<NodeType>;
   using OperationType = std::function<void(NodeType)>;
+  using NumLevelsType = int32_t;
 
   explicit Tree(DefaultTreeConstructTag);
   explicit Tree(NodeListType const& in_children);
@@ -24,7 +26,12 @@ struct Tree {
   NodeType getNumChildren() const;
   bool isRoot() const;
   NodeListType const& getChildren() const;
+  NodeListType&& getChildren(NodeType node) const;
   void foreachChild(OperationType op) const;
+  NumLevelsType numLevels() const;
+  void foreachChild(NumLevelsType level, OperationType op) const;
+  std::size_t getNumTotalChildren(NodeType child) const;
+  std::size_t getNumTotalChildren() const;
 
 private:
   bool set_up_tree_ = false;

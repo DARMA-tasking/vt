@@ -8,6 +8,7 @@
 #include "messaging/message.h"
 #include "collective/barrier/barrier.h"
 #include "collective/reduce/reduce.h"
+#include "collective/scatter/scatter.h"
 #include "utils/hash/hash_tuple.h"
 
 #include <unordered_map>
@@ -18,7 +19,8 @@ constexpr CollectiveAlgType const fst_collective_alg = 1;
 
 struct CollectiveAlg :
     virtual reduce::Reduce,
-    virtual barrier::Barrier
+    virtual barrier::Barrier,
+    virtual scatter::Scatter
 {
 
 /*----------------------------------------------------------------------------
@@ -51,5 +53,6 @@ extern collective::CollectiveAlg *theCollective();
 } //end namespace vt
 
 #include "collective/reduce/reduce.impl.h"
+#include "collective/scatter/scatter.impl.h"
 
 #endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H*/
