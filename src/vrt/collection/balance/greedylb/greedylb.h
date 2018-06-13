@@ -6,6 +6,7 @@
 #include "vrt/collection/balance/greedylb/greedylb.fwd.h"
 #include "vrt/collection/balance/greedylb/greedylb_types.h"
 #include "vrt/collection/balance/greedylb/greedylb_constants.h"
+#include "vrt/collection/balance/greedylb/greedylb_msgs.h"
 #include "vrt/collection/balance/proc_stats.h"
 #include "timing/timing.h"
 
@@ -29,9 +30,17 @@ private:
   void loadStats(LoadType const& avg_load, LoadType const& max_load);
   static void loadStatsHandler(ProcStatsMsgType* msg);
   ObjBinType histogramSample(LoadType const& load);
+  void finishedLB();
+  void reduceCollect();
+  void calcLoadOver();
+  void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
 
   struct GreedyAvgLoad {
     void operator()(balance::ProcStatsMsg* msg);
+  };
+
+  struct CentralCollect {
+    void operator()(GreedyCollectMsg* msg);
   };
 
 public:
@@ -39,11 +48,14 @@ public:
   static std::unique_ptr<GreedyLB> greedy_lb_inst;
   
 private:
+  double this_threshold = 0.0f;
   TimeType start_time_ = 0.0f;
   LoadType avg_load = 0.0f, max_load = 0.0f;
   LoadType this_load = 0.0f, this_load_begin = 0.0f;
   ElementLoadType const* stats = nullptr;
-  ObjSampleType obj_sample;
+  ObjSampleType obj_sample, load_over;
+  std::size_t load_over_size = 0;
+  int64_t migrates_expected = 0, transfer_count = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
