@@ -29,7 +29,7 @@ bool Tree::isRoot() const {
   return is_root_;
 }
 
-Tree::NodeListType Tree::getChildren(NodeType node) const {
+Tree::NodeListType&& Tree::getChildren(NodeType node) const {
   auto const& num_nodes = theContext()->getNumNodes();
   auto const& c1_ = node * 2 + 1;
   auto const& c2_ = node * 2 + 2;
@@ -40,7 +40,7 @@ Tree::NodeListType Tree::getChildren(NodeType node) const {
   if (c2_ < num_nodes) {
     children.push_back(c2_);
   }
-  return children;
+  return std::move(children);
 }
 
 std::size_t Tree::getNumTotalChildren(NodeType child) const {

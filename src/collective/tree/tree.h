@@ -26,7 +26,7 @@ struct Tree {
   NodeType getNumChildren() const;
   bool isRoot() const;
   NodeListType const& getChildren() const;
-  NodeListType getChildren(NodeType node) const;
+  NodeListType&& getChildren(NodeType node) const;
   void foreachChild(OperationType op) const;
   NumLevelsType numLevels() const;
   void foreachChild(NumLevelsType level, OperationType op) const;
