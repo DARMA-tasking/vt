@@ -25,12 +25,14 @@ void Scatter::scatter(
   );
   assert(total_size == combined_size && "Sizes must be consistent");
   auto ptr = reinterpret_cast<char*>(scatter_msg) + sizeof(ScatterMsg);
+  auto remaining_size = thePool()->remainingSize(ptr);
+  assert(remaining_size >= combined_size && "Remaining size must be sufficient");
   debug_print_force(
     scatter, node,
     "Scatter::scatter: total_size={}, elm_size={}, ScatterMsg={}, msg-ptr={}, "
-    "ptr={}\n",
+    "ptr={}, remaining_size={}\n",
     total_size, elm_size, sizeof(ScatterMsg), print_ptr(scatter_msg),
-    print_ptr(ptr)
+    print_ptr(ptr), remaining_size
   );
   auto const& root_node = 0;
   auto nptr = applyScatterRecur<>(root_node, ptr, elm_size, size_fn, data_fn);
