@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include <algorithm>
 #include <cassert>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
@@ -124,13 +125,17 @@ void GreedyLB::CentralCollect::operator()(GreedyCollectMsg* msg) {
       elm.first, elm.second.size()
     );
   }
+
+  auto objs = std::move(msg->getVal().getSampleMove());
+  auto profile = std::move(msg->getVal().getLoadProfileMove());
+  greedy_lb_inst->runBalancer(std::move(objs),std::move(profile));
 }
 
 void GreedyLB::reduceCollect() {
   #if greedylb_use_parserdes
     assert(0 && "greedylb parserdes not implemented");
   #else
-    auto msg = makeSharedMessage<GreedyCollectMsg>(load_over);
+    auto msg = makeSharedMessage<GreedyCollectMsg>(load_over,this_load);
     theCollective()->reduce<
       GreedyCollectMsg,
       GreedyCollectMsg::template msgHandler<
@@ -138,6 +143,62 @@ void GreedyLB::reduceCollect() {
       >
     >(greedy_root,msg);
   #endif
+}
+
+void GreedyLB::runBalancer(
+  ObjSampleType&& in_objs, LoadProfileType&& in_profile
+) {
+  using CompRecType = GreedyCompareLoad<GreedyRecord>;
+  using CompProcType = GreedyCompareLoad<GreedyProc>;
+  auto const& num_nodes = theContext()->getNumNodes();
+  ObjSampleType objs{std::move(in_objs)};
+  LoadProfileType profile{std::move(in_profile)};
+  std::vector<GreedyRecord> recs;
+  debug_print(
+    lblite, node,
+    "GreedyLB::runBalancer: objs={}, profile={}\n",
+    objs.size(), profile.size()
+  );
+  for (auto&& elm : objs) {
+    auto const& bin = elm.first;
+    auto const& obj_list = elm.second;
+    for (auto&& obj : obj_list) {
+      recs.emplace_back(GreedyRecord{obj,static_cast<LoadType>(bin)});
+    }
+  }
+  std::make_heap(recs.begin(), recs.end(), CompRecType());
+  auto nodes = std::vector<GreedyProc>{};
+  for (NodeType n = 0; n < num_nodes; n++) {
+    auto iter = profile.find(n);
+    assert(iter != profile.end() && "Must have load profile");
+    nodes.emplace_back(GreedyProc{n,iter->second});
+    debug_print(
+      lblite, node,
+      "\t GreedyLB::runBalancer: node={}, profile={}\n",
+      n, iter->second
+    );
+  }
+  std::make_heap(nodes.begin(), nodes.end(), CompProcType());
+  auto lb_size = recs.size();
+  for (auto i = 0; i < lb_size; i++) {
+    auto max_rec = recs.front();
+    std::pop_heap(recs.begin(), recs.end(), CompRecType());
+    recs.pop_back();
+    auto min_node = nodes.front();
+    std::pop_heap(nodes.begin(), nodes.end(), CompProcType());
+    nodes.pop_back();
+    debug_print(
+      lblite, node,
+      "\t GreedyLB::runBalancer: min_node={}, load_={}, "
+      "recs_={}, max_rec: obj={}, time={}\n",
+      min_node.node_, min_node.load_, min_node.recs_.size(),
+      max_rec.getObj(), max_rec.getLoad()
+    );
+    min_node.recs_.push_back(max_rec.getObj());
+    min_node.load_ += max_rec.getLoad();
+    nodes.push_back(min_node);
+    std::push_heap(nodes.begin(), nodes.end(), CompProcType());
+  }
 }
 
 void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {

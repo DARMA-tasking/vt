@@ -34,6 +34,7 @@ private:
   void reduceCollect();
   void calcLoadOver();
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
+  void runBalancer(ObjSampleType&& objs, LoadProfileType&& profile);
 
   struct GreedyAvgLoad {
     void operator()(balance::ProcStatsMsg* msg);

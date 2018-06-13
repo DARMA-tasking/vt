@@ -7,13 +7,26 @@
 #include "vrt/collection/balance/proc_stats.h"
 #include "messaging/message.h"
 
+#include <unordered_map>
+#include <cassert>
+
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct GreedyPayload : GreedyLBTypes {
   GreedyPayload() = default;
-  explicit GreedyPayload(ObjSampleType const& in_sample)
+  GreedyPayload(ObjSampleType const& in_sample, LoadType const& in_profile)
     : sample_(in_sample)
-  {}
+  {
+    auto const& this_node = theContext()->getNode();
+    auto iter = load_profile_.find(this_node);
+    auto end_iter = load_profile_.end();
+    assert(iter == end_iter && "Must not exist");
+    load_profile_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(this_node),
+      std::forward_as_tuple(in_profile)
+    );
+  }
 
   friend GreedyPayload operator+(GreedyPayload ld1, GreedyPayload const& ld2) {
     auto& sample1 = ld1.sample_;
@@ -25,27 +38,36 @@ struct GreedyPayload : GreedyLBTypes {
         sample1[bin].push_back(entry);
       }
     }
+    auto& load1 = ld1.load_profile_;
+    auto const& load2 = ld2.load_profile_;
+    for (auto&& elm : load2) {
+      auto const& proc = elm.first;
+      auto const& load = elm.second;
+      assert(load1.find(proc) == load1.end() && "Must not exist");
+      load1[proc] = load;
+    }
     return ld1;
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | sample_;
+    s | sample_ | load_profile_;
   }
 
   ObjSampleType const& getSample() const { return sample_; }
   ObjSampleType&& getSampleMove() { return std::move(sample_); }
+  LoadProfileType const& getLoadProfile() const { return load_profile_; }
+  LoadProfileType&& getLoadProfileMove() { return std::move(load_profile_); }
 
 protected:
+  LoadProfileType load_profile_;
   ObjSampleType sample_;
 };
 
 struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
-  using LoadType = double;
-
   GreedyCollectMsg() = default;
-  explicit GreedyCollectMsg(ObjSampleType const& in_load)
-    : collective::ReduceTMsg<GreedyPayload>(GreedyPayload{in_load})
+  GreedyCollectMsg(ObjSampleType const& in_load, LoadType const& in_profile)
+    : collective::ReduceTMsg<GreedyPayload>(GreedyPayload{in_load,in_profile})
   { }
 
   #if greedylb_use_parserdes
