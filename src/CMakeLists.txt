@@ -43,6 +43,7 @@ set(
       vrt/collection/send vrt/collection/destroy vrt/collection/broadcast
       vrt/collection/balance
         vrt/collection/balance/hierarchicallb
+        vrt/collection/balance/greedylb
     lb/instrumentation
       lb/instrumentation/centralized
     lb/balancers

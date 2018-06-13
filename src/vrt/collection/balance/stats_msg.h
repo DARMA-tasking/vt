@@ -83,6 +83,8 @@ private:
   PhaseType cur_phase_ = fst_lb_phase;
 };
 
+using GreedyLBMsg = HierLBMsg;
+
 }}}} /* end namespace vt::vrt::collection::balance */
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_STATS_MSG_H*/

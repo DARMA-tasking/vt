@@ -1,0 +1,51 @@
+
+#if !defined INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_H
+#define INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_H
+
+#include "config.h"
+#include "vrt/collection/balance/greedylb/greedylb.fwd.h"
+#include "vrt/collection/balance/greedylb/greedylb_types.h"
+#include "vrt/collection/balance/greedylb/greedylb_constants.h"
+#include "vrt/collection/balance/proc_stats.h"
+#include "timing/timing.h"
+
+#include <unordered_map>
+
+namespace vt { namespace vrt { namespace collection { namespace lb {
+
+struct GreedyLB : GreedyLBTypes {
+  using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
+  using ProcStatsMsgType = balance::ProcStatsMsg;
+  using LoadType = double;
+
+  GreedyLB() = default;
+
+public:
+  void procDataIn(ElementLoadType const& data_in);
+
+private:
+  LoadType loadMilli(LoadType const& load);
+  void reduceLoad();
+  void loadStats(LoadType const& avg_load, LoadType const& max_load);
+  static void loadStatsHandler(ProcStatsMsgType* msg);
+  ObjBinType histogramSample(LoadType const& load);
+
+  struct GreedyAvgLoad {
+    void operator()(balance::ProcStatsMsg* msg);
+  };
+
+public:
+  static void greedyLBHandler(balance::GreedyLBMsg* msg);
+  static std::unique_ptr<GreedyLB> greedy_lb_inst;
+  
+private:
+  TimeType start_time_ = 0.0f;
+  LoadType avg_load = 0.0f, max_load = 0.0f;
+  LoadType this_load = 0.0f, this_load_begin = 0.0f;
+  ElementLoadType const* stats = nullptr;
+  ObjSampleType obj_sample;
+};
+
+}}}} /* end namespace vt::vrt::collection::lb */
+
+#endif /*INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_H*/
