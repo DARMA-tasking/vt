@@ -9,6 +9,7 @@
 #include "vrt/collection/balance/proc_stats.h"
 #include "vrt/collection/manager.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb.h"
+#include "vrt/collection/balance/greedylb/greedylb.h"
 #include "timing/timing.h"
 
 #include <cassert>
@@ -151,6 +152,19 @@ void StartHierLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
   theMsg()->broadcastMsg<HierLBMsg,lb::HierarchicalLB::hierLBHandler>(nmsg);
   auto nmsg_root = makeSharedMessage<HierLBMsg>(msg->getPhase());
   lb::HierarchicalLB::hierLBHandler(nmsg_root);
+}
+
+template <typename ColT>
+void StartGreedyLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
+  debug_print_force(
+    vrt_coll, node,
+    "StartGreedyLB: phase={}\n", msg->getPhase()
+  );
+
+  auto nmsg = makeSharedMessage<GreedyLBMsg>(msg->getPhase());
+  theMsg()->broadcastMsg<GreedyLBMsg,lb::GreedyLB::greedyLBHandler>(nmsg);
+  auto nmsg_root = makeSharedMessage<GreedyLBMsg>(msg->getPhase());
+  lb::GreedyLB::greedyLBHandler(nmsg_root);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
