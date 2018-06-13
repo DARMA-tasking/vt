@@ -23,7 +23,15 @@ void Scatter::scatter(
   auto scatter_msg = makeSharedMessageSz<ScatterMsg>(
     combined_size, combined_size, elm_size
   );
+  assert(total_size == combined_size && "Sizes must be consistent");
   auto ptr = reinterpret_cast<char*>(scatter_msg) + sizeof(ScatterMsg);
+  debug_print_force(
+    scatter, node,
+    "Scatter::scatter: total_size={}, elm_size={}, ScatterMsg={}, msg-ptr={}, "
+    "ptr={}\n",
+    total_size, elm_size, sizeof(ScatterMsg), print_ptr(scatter_msg),
+    print_ptr(ptr)
+  );
   auto const& root_node = 0;
   auto nptr = applyScatterRecur<>(root_node, ptr, elm_size, size_fn, data_fn);
   assert(nptr == ptr + combined_size && "nptr must match size");

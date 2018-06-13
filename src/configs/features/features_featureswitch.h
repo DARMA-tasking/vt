@@ -31,6 +31,7 @@
     rdma_channel,          "RDMA Channel",                              \
     rdma_state,            "RDMA State",                                \
     runtime,               "runtime",                                   \
+    scatter,               "scatter",                                   \
     sequence,              "sequencer",                                 \
     sequence_vrt,          "sequencer-vrt",                             \
     serial_msg,            "serialized-msg",                            \
