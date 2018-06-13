@@ -31,7 +31,7 @@ void Scatter::scatter(
   auto const& this_node = theContext()->getNode();
   scatter_msg->user_han = handler;
   if (this_node != root_node) {
-    theMsg()->sendMsgSz<ScatterMsg,scatterHandler>(
+    theMsg()->sendMsgSz<ScatterMsg,scatterHandler<>>(
       root_node, scatter_msg, sizeof(ScatterMsg) + combined_size
     );
   } else {
@@ -56,6 +56,7 @@ char* Scatter::applyScatterRecur(
   return cur_ptr;
 }
 
+template <typename>
 void Scatter::scatterIn(ScatterMsg* msg) {
   auto const& total_children = getNumTotalChildren();
   auto const& elm_size = msg->elm_bytes_;
@@ -70,7 +71,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     auto const& bytes_size = num_children * elm_size;
     std::memcpy(ptr, in_ptr, bytes_size);
     in_ptr += bytes_size;
-    theMsg()->sendMsgSz<ScatterMsg,scatterHandler>(
+    theMsg()->sendMsgSz<ScatterMsg,scatterHandler<>>(
       child, child_msg, sizeof(ScatterMsg) + bytes_size
     );
   });
@@ -81,8 +82,9 @@ void Scatter::scatterIn(ScatterMsg* msg) {
   messageDeref(msg);
 }
 
+template <typename>
 /*static*/ void Scatter::scatterHandler(ScatterMsg* msg) {
-  return theCollective()->scatterIn(msg);
+  return theCollective()->scatterIn<>(msg);
 }
 
 }}} /* end namespace vt::collective::scatter */
