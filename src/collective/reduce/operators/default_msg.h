@@ -18,11 +18,11 @@ template <typename DataType>
 struct ReduceDataMsg : ReduceMsg, ReduceCombine<void> {
   ReduceDataMsg() = default;
   explicit ReduceDataMsg(DataType&& in_val)
-    : val_(std::forward<DataType>(in_val)),
-      ReduceMsg(), ReduceCombine<void>()
+    : ReduceMsg(), ReduceCombine<void>(),
+      val_(std::forward<DataType>(in_val))
   { }
   explicit ReduceDataMsg(DataType const& in_val)
-    : val_(in_val), ReduceMsg(), ReduceCombine<void>()
+    : ReduceMsg(), ReduceCombine<void>(), val_(in_val)
   { }
 
   DataType const& getConstVal() const { return val_; }
