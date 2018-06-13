@@ -135,6 +135,11 @@ void GreedyLB::reduceCollect() {
   #if greedylb_use_parserdes
     assert(0 && "greedylb parserdes not implemented");
   #else
+    debug_print(
+      lblite, node,
+      "GreedyLB::reduceCollect: load={}, load_begin={} load_over.size()={}\n",
+      this_load, this_load_begin, load_over.size()
+    );
     auto msg = makeSharedMessage<GreedyCollectMsg>(load_over,this_load);
     theCollective()->reduce<
       GreedyCollectMsg,
@@ -148,8 +153,8 @@ void GreedyLB::reduceCollect() {
 void GreedyLB::runBalancer(
   ObjSampleType&& in_objs, LoadProfileType&& in_profile
 ) {
-  using CompRecType = GreedyCompareLoad<GreedyRecord>;
-  using CompProcType = GreedyCompareLoad<GreedyProc>;
+  using CompRecType = GreedyCompareLoadMax<GreedyRecord>;
+  using CompProcType = GreedyCompareLoadMin<GreedyProc>;
   auto const& num_nodes = theContext()->getNumNodes();
   ObjSampleType objs{std::move(in_objs)};
   LoadProfileType profile{std::move(in_profile)};
@@ -181,11 +186,11 @@ void GreedyLB::runBalancer(
   std::make_heap(nodes.begin(), nodes.end(), CompProcType());
   auto lb_size = recs.size();
   for (auto i = 0; i < lb_size; i++) {
-    auto max_rec = recs.front();
     std::pop_heap(recs.begin(), recs.end(), CompRecType());
+    auto max_rec = recs.back();
     recs.pop_back();
-    auto min_node = nodes.front();
     std::pop_heap(nodes.begin(), nodes.end(), CompProcType());
+    auto min_node = nodes.back();
     nodes.pop_back();
     debug_print(
       lblite, node,

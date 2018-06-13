@@ -51,7 +51,14 @@ struct GreedyProc {
 };
 
 template <typename T>
-struct GreedyCompareLoad {
+struct GreedyCompareLoadMin {
+  bool operator()(T const& p1, T const& p2) const {
+    return p1.getLoad() > p2.getLoad();
+  }
+};
+
+template <typename T>
+struct GreedyCompareLoadMax {
   bool operator()(T const& p1, T const& p2) const {
     return p1.getLoad() < p2.getLoad();
   }
