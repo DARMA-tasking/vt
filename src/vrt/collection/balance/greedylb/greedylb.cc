@@ -204,6 +204,143 @@ void GreedyLB::runBalancer(
     nodes.push_back(min_node);
     std::push_heap(nodes.begin(), nodes.end(), CompProcType());
   }
+  return transferObjs(std::move(nodes));
+}
+
+NodeType GreedyLB::objGetNode(ObjIDType const& id) {
+  return id & 0x0000000FFFFFFFF;
+}
+
+void GreedyLB::finishedTransferExchange() {
+  auto const& this_node = theContext()->getNode();
+  debug_print(
+    lblite, node,
+    "finished all transfers: count={}\n",
+    transfer_count
+  );
+  if (this_node == 0) {
+    auto const& total_time = timing::Timing::getCurrentTime() - start_time_;
+    fmt::print(
+      "VT: {}: "
+      "loadStats: total_time={}, transfer_count={}\n",
+      this_node, total_time, transfer_count
+    );
+    fflush(stdout);
+  }
+  balance::ProcStats::proc_migrate_.clear();
+  balance::ProcStats::proc_data_.clear();
+  balance::ProcStats::next_elm_ = 1;
+  theCollection()->releaseLBContinuation();
+}
+
+void GreedyLB::recvObjs(GreedyLBTypes::ObjIDType* objs) {
+  auto const& this_node = theContext()->getNode();
+  auto const& num_recs = *objs;
+  auto recs = objs + 1;
+  debug_print(
+    lblite, node,
+    "recvObjs: num_recs={}\n", num_recs
+  );
+  TransferType transfer_list;
+  EpochType const epoch = theTerm()->newEpoch();
+  theMsg()->setGlobalEpoch(epoch);
+  theTerm()->attachEpochTermAction(epoch,[this]{
+    this->finishedTransferExchange();
+  });
+  for (auto i = 0; i < num_recs; i++) {
+    auto const& node = objGetNode(recs[i]);
+    transfer_list[node].push_back(recs[i]);
+    debug_print(
+      lblite, node,
+      "\t recvObjs: i={}, node={}, obj={}, num_recs={}\n",
+      i, node, recs[i], num_recs
+    );
+  }
+  for (auto&& trans : transfer_list) {
+    if (trans.first != this_node) {
+      transferSend(trans.first, this_node, trans.second);
+    }
+  }
+}
+
+/*static*/ void GreedyLB::recvObjsHan(GreedyLBTypes::ObjIDType* objs) {
+  GreedyLB::greedy_lb_inst->recvObjs(objs);
+}
+
+void GreedyLB::transferSend(
+  NodeType node, NodeType from, std::vector<ObjIDType> transfer
+) {
+  #if greedylb_use_parserdes
+    auto const& size =
+      transfer.size() * sizeof(ObjIDType) + (sizeof(std::size_t) * 2);
+    auto msg = makeSharedMessageSz<GreedyTransferMsg>(size,from,transfer);
+    SerializedMessenger::sendParserdesMsg<GreedyTransferMsg,transferHan>(
+      node,msg
+    );
+  #else
+    auto msg = makeSharedMessage<GreedyTransferMsg>(from,transfer);
+    SerializedMessenger::sendSerialMsg<GreedyTransferMsg,transferHan>(node,msg);
+  #endif
+}
+
+/*static*/ void GreedyLB::transferHan(GreedyTransferMsg* msg) {
+  GreedyLB::greedy_lb_inst->transfer(
+    msg->getFrom(), std::move(msg->getTransferMove())
+  );
+}
+
+void GreedyLB::transfer(NodeType from, std::vector<ObjIDType>&& list) {
+  auto trans_iter = transfers.find(from);
+
+  assert(trans_iter == transfers.end() && "There must not be an entry");
+
+  transfers[from] = list;
+  transfer_count += list.size();
+
+  for (auto&& elm : list) {
+    debug_print(
+      lblite, node,
+      "transfer: list.size()={}, elm={}, obj_node={}, from={}\n",
+      list.size(), elm, objGetNode(elm), from
+    );
+
+    auto iter = balance::ProcStats::proc_migrate_.find(elm);
+    assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
+    iter->second(from);
+  }
+}
+
+void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
+  std::size_t max_recs = 0, max_bytes = 0;
+  std::vector<GreedyProc> load(std::move(in_load));
+  std::unordered_map<NodeType,GreedyProc*> load_lookup;
+  for (auto&& elm : load) {
+    auto const& node = elm.node_;
+    auto const& recs = elm.recs_;
+    load_lookup.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(node),
+      std::forward_as_tuple(&elm)
+    );
+    max_recs = std::max(max_recs, recs.size() + 1);
+  }
+  max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
+  debug_print(
+    lblite, node,
+    "GreedyLB::transferObjs: max_recs={}, max_bytes={}\n",
+    max_recs, max_bytes
+  );
+  theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
+    max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
+      auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
+      auto proc = load_lookup[node];
+      auto const& rec_size = proc->recs_.size();
+      *ptr_out = rec_size;
+      for (auto i = 0; i < rec_size; i++) {
+        *(ptr_out + i + 1) = proc->recs_[i];
+      }
+    }
+  );
 }
 
 void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {

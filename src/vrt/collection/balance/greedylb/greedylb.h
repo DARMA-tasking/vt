@@ -17,6 +17,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 struct GreedyLB : GreedyLBTypes {
   using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
   using ProcStatsMsgType = balance::ProcStatsMsg;
+  using TransferType = std::map<NodeType, std::vector<ObjIDType>>;
   using LoadType = double;
 
   GreedyLB() = default;
@@ -35,6 +36,16 @@ private:
   void calcLoadOver();
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void runBalancer(ObjSampleType&& objs, LoadProfileType&& profile);
+  void transferObjs(std::vector<GreedyProc>&& load);
+  NodeType objGetNode(ObjIDType const& id);
+  void recvObjs(GreedyLBTypes::ObjIDType* objs);
+  void transfer(NodeType from, std::vector<ObjIDType>&& list);
+  void transferSend(
+    NodeType node, NodeType from, std::vector<ObjIDType> transfer
+  );
+  void finishedTransferExchange();
+  static void transferHan(GreedyTransferMsg* msg);
+  static void recvObjsHan(GreedyLBTypes::ObjIDType* objs);
 
   struct GreedyAvgLoad {
     void operator()(balance::ProcStatsMsg* msg);
@@ -47,7 +58,7 @@ private:
 public:
   static void greedyLBHandler(balance::GreedyLBMsg* msg);
   static std::unique_ptr<GreedyLB> greedy_lb_inst;
-  
+
 private:
   double this_threshold = 0.0f;
   TimeType start_time_ = 0.0f;
@@ -57,6 +68,7 @@ private:
   ObjSampleType obj_sample, load_over;
   std::size_t load_over_size = 0;
   int64_t migrates_expected = 0, transfer_count = 0;
+  TransferType transfers;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
