@@ -373,7 +373,7 @@ void GreedyLB::finishedLB() {
     auto const& total_time = timing::Timing::getCurrentTime() - start_time_;
     fmt::print(
       "VT: {}: "
-      "loadStats: total_time={}, transfer_count={}\n",
+      "GreedyLB: loadStats: total_time={}, transfer_count={}\n",
       this_node, total_time, transfer_count
     );
     fflush(stdout);
