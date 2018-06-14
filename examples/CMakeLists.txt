@@ -27,6 +27,7 @@ set(
   hello_world_vc
   jacobi1d_recur_vc
   jacobi1d_node
+  scf
   serialize_example
   hello_world_vc_remote
   hello_world_start
