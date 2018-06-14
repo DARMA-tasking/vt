@@ -62,12 +62,7 @@ struct CollectedStats {
 };
 
 template <typename ColT>
-struct StartHierLB {
-  void operator()(PhaseReduceMsg<ColT>* msg);
-};
-
-template <typename ColT>
-struct StartGreedyLB {
+struct StartLB {
   void operator()(PhaseReduceMsg<ColT>* msg);
 };
 

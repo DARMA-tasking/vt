@@ -7,6 +7,7 @@
 #include "vrt/collection/balance/phase_msg.h"
 #include "vrt/collection/balance/stats_msg.h"
 #include "vrt/collection/balance/proc_stats.h"
+#include "vrt/collection/balance/lb_type.h"
 #include "vrt/collection/manager.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vrt/collection/balance/greedylb/greedylb.h"
@@ -119,7 +120,7 @@ template <typename ColT>
     PhaseReduceMsg<ColT>::template msgHandler<
       PhaseReduceMsg<ColT>,
       collective::PlusOp<collective::NoneType>,
-      StartHierLB<ColT>
+      StartLB<ColT>
     >
   >(proxy, phase_msg, no_epoch, cur_phase);
 }
@@ -142,29 +143,33 @@ void CollectedStats<ColT>::operator()(StatsMsg<ColT>* msg) {
 }
 
 template <typename ColT>
-void StartHierLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
+void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
   debug_print_force(
     vrt_coll, node,
-    "StartHierLB: phase={}\n", msg->getPhase()
+    "StartLB: phase={}\n", msg->getPhase()
   );
 
-  auto nmsg = makeSharedMessage<HierLBMsg>(msg->getPhase());
-  theMsg()->broadcastMsg<HierLBMsg,lb::HierarchicalLB::hierLBHandler>(nmsg);
-  auto nmsg_root = makeSharedMessage<HierLBMsg>(msg->getPhase());
-  lb::HierarchicalLB::hierLBHandler(nmsg_root);
-}
-
-template <typename ColT>
-void StartGreedyLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
-  debug_print_force(
-    vrt_coll, node,
-    "StartGreedyLB: phase={}\n", msg->getPhase()
-  );
-
-  auto nmsg = makeSharedMessage<GreedyLBMsg>(msg->getPhase());
-  theMsg()->broadcastMsg<GreedyLBMsg,lb::GreedyLB::greedyLBHandler>(nmsg);
-  auto nmsg_root = makeSharedMessage<GreedyLBMsg>(msg->getPhase());
-  lb::GreedyLB::greedyLBHandler(nmsg_root);
+  switch (theContext()->getLB()) {
+  case LBType::HierarchicalLB:
+  {
+    auto nmsg = makeSharedMessage<HierLBMsg>(msg->getPhase());
+    theMsg()->broadcastMsg<HierLBMsg,lb::HierarchicalLB::hierLBHandler>(nmsg);
+    auto nmsg_root = makeSharedMessage<HierLBMsg>(msg->getPhase());
+    lb::HierarchicalLB::hierLBHandler(nmsg_root);
+  }
+  break;
+  case LBType::GreedyLB:
+  {
+    auto nmsg = makeSharedMessage<GreedyLBMsg>(msg->getPhase());
+    theMsg()->broadcastMsg<GreedyLBMsg,lb::GreedyLB::greedyLBHandler>(nmsg);
+    auto nmsg_root = makeSharedMessage<GreedyLBMsg>(msg->getPhase());
+    lb::GreedyLB::greedyLBHandler(nmsg_root);
+  }
+  break;
+  default:
+    theCollection()->releaseLBContinuation();
+    break;
+  }
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
