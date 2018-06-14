@@ -211,6 +211,13 @@ NodeType GreedyLB::objGetNode(ObjIDType const& id) {
   return id & 0x0000000FFFFFFFF;
 }
 
+GreedyLB::ObjIDType GreedyLB::objSetNode(
+  NodeType const& node, ObjIDType const& id
+) {
+  auto const new_id = id & 0xFFFFFFFF0000000;
+  return new_id | node;
+}
+
 void GreedyLB::finishedTransferExchange() {
   auto const& this_node = theContext()->getNode();
   debug_print(
@@ -233,13 +240,13 @@ void GreedyLB::finishedTransferExchange() {
   theCollection()->releaseLBContinuation();
 }
 
-void GreedyLB::recvObjs(GreedyLBTypes::ObjIDType* objs) {
+void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
   auto const& this_node = theContext()->getNode();
   auto const& num_recs = *objs;
   auto recs = objs + 1;
   debug_print(
     lblite, node,
-    "recvObjs: num_recs={}\n", num_recs
+    "recvObjsDirect: num_recs={}\n", num_recs
   );
   TransferType transfer_list;
   EpochType const epoch = theTerm()->newEpoch();
@@ -248,81 +255,39 @@ void GreedyLB::recvObjs(GreedyLBTypes::ObjIDType* objs) {
     this->finishedTransferExchange();
   });
   for (auto i = 0; i < num_recs; i++) {
-    auto const& node = objGetNode(recs[i]);
-    transfer_list[node].push_back(recs[i]);
+    auto const& to_node = objGetNode(recs[i]);
+    auto const& new_obj_id = objSetNode(this_node,recs[i]);
     debug_print(
       lblite, node,
-      "\t recvObjs: i={}, node={}, obj={}, num_recs={}\n",
-      i, node, recs[i], num_recs
+      "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}\n",
+      i, to_node, recs[i], new_obj_id, num_recs
     );
-  }
-  for (auto&& trans : transfer_list) {
-    if (trans.first != this_node) {
-      transferSend(trans.first, this_node, trans.second);
-    }
+    auto iter = balance::ProcStats::proc_migrate_.find(new_obj_id);
+    assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
+    iter->second(to_node);
   }
 }
 
 /*static*/ void GreedyLB::recvObjsHan(GreedyLBTypes::ObjIDType* objs) {
-  GreedyLB::greedy_lb_inst->recvObjs(objs);
-}
-
-void GreedyLB::transferSend(
-  NodeType node, NodeType from, std::vector<ObjIDType> transfer
-) {
-  #if greedylb_use_parserdes
-    auto const& size =
-      transfer.size() * sizeof(ObjIDType) + (sizeof(std::size_t) * 2);
-    auto msg = makeSharedMessageSz<GreedyTransferMsg>(size,from,transfer);
-    SerializedMessenger::sendParserdesMsg<GreedyTransferMsg,transferHan>(
-      node,msg
-    );
-  #else
-    auto msg = makeSharedMessage<GreedyTransferMsg>(from,transfer);
-    SerializedMessenger::sendSerialMsg<GreedyTransferMsg,transferHan>(node,msg);
-  #endif
-}
-
-/*static*/ void GreedyLB::transferHan(GreedyTransferMsg* msg) {
-  GreedyLB::greedy_lb_inst->transfer(
-    msg->getFrom(), std::move(msg->getTransferMove())
-  );
-}
-
-void GreedyLB::transfer(NodeType from, std::vector<ObjIDType>&& list) {
-  auto trans_iter = transfers.find(from);
-
-  assert(trans_iter == transfers.end() && "There must not be an entry");
-
-  transfers[from] = list;
-  transfer_count += list.size();
-
-  for (auto&& elm : list) {
-    debug_print(
-      lblite, node,
-      "transfer: list.size()={}, elm={}, obj_node={}, from={}\n",
-      list.size(), elm, objGetNode(elm), from
-    );
-
-    auto iter = balance::ProcStats::proc_migrate_.find(elm);
-    assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
-    iter->second(from);
-  }
+  GreedyLB::greedy_lb_inst->recvObjsDirect(objs);
 }
 
 void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
   std::size_t max_recs = 0, max_bytes = 0;
   std::vector<GreedyProc> load(std::move(in_load));
-  std::unordered_map<NodeType,GreedyProc*> load_lookup;
+  std::vector<std::vector<GreedyLBTypes::ObjIDType>> node_transfer(load.size());
   for (auto&& elm : load) {
     auto const& node = elm.node_;
     auto const& recs = elm.recs_;
-    load_lookup.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(node),
-      std::forward_as_tuple(&elm)
-    );
-    max_recs = std::max(max_recs, recs.size() + 1);
+    for (auto&& rec : recs) {
+      auto const& cur_node = objGetNode(rec);
+      // transfer required from `cur_node' to `node'
+      if (cur_node != node) {
+        auto const new_obj_id = objSetNode(node, rec);
+        node_transfer[cur_node].push_back(new_obj_id);
+        max_recs = std::max(max_recs, node_transfer[cur_node].size() + 1);
+      }
+    }
   }
   max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
   debug_print(
@@ -333,11 +298,11 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
   theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
     max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
       auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
-      auto proc = load_lookup[node];
-      auto const& rec_size = proc->recs_.size();
+      auto const& proc = node_transfer[node];
+      auto const& rec_size = proc.size();
       *ptr_out = rec_size;
       for (auto i = 0; i < rec_size; i++) {
-        *(ptr_out + i + 1) = proc->recs_[i];
+        *(ptr_out + i + 1) = proc[i];
       }
     }
   );

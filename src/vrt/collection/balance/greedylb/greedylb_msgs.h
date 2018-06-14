@@ -91,35 +91,6 @@ struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
   }
 };
 
-struct GreedyTransferMsg : GreedyLBTypes, ::vt::Message {
-  using LoadType = double;
-
-  GreedyTransferMsg() = default;
-  GreedyTransferMsg(NodeType const in_from, std::vector<ObjIDType> in_transfer)
-    : from_(in_from), transfer_(in_transfer)
-  { }
-
-  #if hierlb_use_parserdes
-    template <typename SerializerT>
-    void parserdes(SerializerT& s) {
-      s & transfer_;
-    }
-  #else
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      s | from_ | transfer_;
-    }
-  #endif
-
-  NodeType getFrom() const { return from_; }
-  std::vector<ObjIDType> const& getTransfer() const { return transfer_; }
-  std::vector<ObjIDType>&& getTransferMove() { return std::move(transfer_); }
-
-private:
-  NodeType from_ = uninitialized_destination;
-  std::vector<ObjIDType> transfer_;
-};
-
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H*/

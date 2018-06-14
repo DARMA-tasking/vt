@@ -38,13 +38,9 @@ private:
   void runBalancer(ObjSampleType&& objs, LoadProfileType&& profile);
   void transferObjs(std::vector<GreedyProc>&& load);
   NodeType objGetNode(ObjIDType const& id);
-  void recvObjs(GreedyLBTypes::ObjIDType* objs);
-  void transfer(NodeType from, std::vector<ObjIDType>&& list);
-  void transferSend(
-    NodeType node, NodeType from, std::vector<ObjIDType> transfer
-  );
+  ObjIDType objSetNode(NodeType const& node, ObjIDType const& id);
+  void recvObjsDirect(GreedyLBTypes::ObjIDType* objs);
   void finishedTransferExchange();
-  static void transferHan(GreedyTransferMsg* msg);
   static void recvObjsHan(GreedyLBTypes::ObjIDType* objs);
 
   struct GreedyAvgLoad {
