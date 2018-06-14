@@ -21,6 +21,18 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
 
   if (argc > 0 && argv[0] != nullptr) {
     auto const app_name = std::string(argv[0]);
+    if (app_name.size() >= 7) {
+      auto const app_sub = app_name.substr(app_name.size()-7, 7);
+      if (app_sub == std::string("lb_iter")) {
+        lb_ = LBType::HierarchicalLB;
+      }
+    }
+    if  (app_name.size() >= 12) {
+      auto const app_sub = app_name.substr(app_name.size()-12, 12);
+      if (app_sub == std::string("test_lb_lite")) {
+        lb_ = LBType::HierarchicalLB;
+      }
+    }
     if (app_name.size() > 2) {
       if (app_name.c_str()[app_name.size()-2] == '_') {
         if (app_name.c_str()[app_name.size()-1] == 'h') {
