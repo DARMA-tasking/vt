@@ -1,6 +1,9 @@
 
 #include "context/context.h"
 
+#include <string>
+#include <cstring>
+
 #include <mpi.h>
 
 // This cannot use the normal debug_print macros because they rely on context
@@ -15,6 +18,17 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
       "Context::Context is_interop={}, comm={}\n", print_bool(is_interop), comm
     );
   #endif
+
+  auto const app_name = std::string(argv[0]);
+  if (app_name.size() > 2) {
+    if (app_name.c_str()[app_name.size()-2] == '_') {
+      if (app_name.c_str()[app_name.size()-1] == 'h') {
+        lb_ = LBType::HierarchicalLB;
+      } else if (app_name.c_str()[app_name.size()-1] == 'g') {
+        lb_ = LBType::GreedyLB;
+      }
+    }
+  }
 
   if (not is_interop) {
     MPI_Init(&argc, &argv);
