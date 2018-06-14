@@ -265,6 +265,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     auto iter = balance::ProcStats::proc_migrate_.find(new_obj_id);
     assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
     iter->second(to_node);
+    transfer_count++;
   }
 }
 
