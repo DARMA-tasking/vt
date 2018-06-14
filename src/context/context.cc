@@ -19,13 +19,15 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
     );
   #endif
 
-  auto const app_name = std::string(argv[0]);
-  if (app_name.size() > 2) {
-    if (app_name.c_str()[app_name.size()-2] == '_') {
-      if (app_name.c_str()[app_name.size()-1] == 'h') {
-        lb_ = LBType::HierarchicalLB;
-      } else if (app_name.c_str()[app_name.size()-1] == 'g') {
-        lb_ = LBType::GreedyLB;
+  if (argc > 0 && argv[0] != nullptr) {
+    auto const app_name = std::string(argv[0]);
+    if (app_name.size() > 2) {
+      if (app_name.c_str()[app_name.size()-2] == '_') {
+        if (app_name.c_str()[app_name.size()-1] == 'h') {
+          lb_ = LBType::HierarchicalLB;
+        } else if (app_name.c_str()[app_name.size()-1] == 'g') {
+          lb_ = LBType::GreedyLB;
+        }
       }
     }
   }
