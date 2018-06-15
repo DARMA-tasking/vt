@@ -184,7 +184,7 @@ void HierarchicalLB::loadStats(
   auto const& diff_percent = (diff / avg_load) * 100.0f;
   bool const& should_lb = diff_percent > hierlb_tolerance;
 
-  if (should_lb && hierlb_auto_threshold) {
+  if (hierlb_auto_threshold) {
     this_threshold = std::min(
       std::max(1.0f - (diff_percent / 100.0f), hierlb_threshold),
       hierlb_max_threshold
