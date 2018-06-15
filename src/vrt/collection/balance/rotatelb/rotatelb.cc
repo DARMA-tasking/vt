@@ -1,50 +1,68 @@
 
 #include "config.h"
 #include "vrt/collection/balance/rotatelb/rotatelb.h"
+#include "vrt/collection/manager.h"
 
 #include <memory>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-/*static*/ void RotateLB::rotateObjHan(RotateObjMsg* msg) {
-  auto objs = reinterpret_cast<ObjIDType*>(
-    reinterpret_cast<char*>(msg) + sizeof(RotateObjMsg)
-  );
-  auto const num_objs = *objs;
-  auto objs_start = objs + 1;
-  for (auto i = 0; i < num_objs; i++) {
-  }
-}
-
 void RotateLB::procDataIn(ElementLoadType const& data_in) {
   auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+  auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
+  if (this_node == 0) {
+    fmt::print(
+      "VT: {}: "
+      "RotateLB: procDataIn: stats size={}, next_node={}\n",
+      this_node, data_in.size(), next_node
+    );
+    fflush(stdout);
+  }
   debug_print(
     lblite, node,
-    "{}: procDataIn: size={}\n", this_node, data_in.size()
+    "RotateLB::procDataIn: size={}, next_node={}\n",
+    data_in.size(), next_node
   );
-  std::vector<ObjIDType> objs;
+  EpochType const epoch = theTerm()->newEpoch();
+  theMsg()->setGlobalEpoch(epoch);
+  theTerm()->attachEpochTermAction(epoch,[this]{ this->finishedMigrate(); });
   for (auto&& stat : data_in) {
     auto const& obj = stat.first;
     auto const& load = stat.second;
-    objs.push_back(obj);
     debug_print(
       lblite, node,
-      "\t {}: procDataIn: obj={}, load={}\n", this_node, obj, load
+      "\t RotateLB::procDataIn: obj={}, load={}\n",
+      obj, load
     );
+    auto iter = balance::ProcStats::proc_migrate_.find(obj);
+    assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
+    transfer_count++;
+    iter->second(next_node);
   }
-  auto const& bytes = (objs.size()+1)*sizeof(ObjIDType);
-  auto msg = makeSharedMessageSz<RotateObjMsg>(bytes);
-  auto const& num_nodes = theContext()->getNumNodes();
-  auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
-  theMsg()->sendMsgSz<RotateObjMsg,rotateObjHan>(
-    next_node, msg, sizeof(RotateObjMsg) + bytes
+}
+
+void RotateLB::finishedMigrate() {
+  debug_print(
+    lblite, node,
+    "RotateLB::finishedMigrate: transfer_count={}\n",
+    transfer_count
   );
+  theMsg()->setGlobalEpoch();
+  balance::ProcStats::proc_migrate_.clear();
+  balance::ProcStats::proc_data_.clear();
+  balance::ProcStats::next_elm_ = 1;
+  theCollection()->releaseLBContinuation();
 }
 
 /*static*/ void RotateLB::rotateLBHandler(balance::RotateLBMsg* msg) {
   auto const& phase = msg->getPhase();
   RotateLB::rotate_lb_inst = std::make_unique<RotateLB>();
   assert(balance::ProcStats::proc_data_.size() >= phase);
+  debug_print(
+    lblite, node,
+    "\t RotateLB::rotateLBHandler: phase={}\n", phase
+  );
   RotateLB::rotate_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
 }
 

@@ -10,6 +10,7 @@
 #include <memory>
 #include <list>
 #include <map>
+#include <cstdlib>
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
@@ -34,11 +35,12 @@ struct RotateLB : RotateLBTypes {
   RotateLB() = default;
 
 private:
+  void finishedMigrate();
   void procDataIn(ElementLoadType const& data_in);
-  static void rotateObjHan(RotateObjMsg* msg);
   static std::unique_ptr<RotateLB> rotate_lb_inst;
 
 public:
+  int64_t transfer_count = 0;
   static void rotateLBHandler(balance::RotateLBMsg* msg);
 };
 
