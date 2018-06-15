@@ -234,6 +234,7 @@ void GreedyLB::finishedTransferExchange() {
     );
     fflush(stdout);
   }
+  theMsg()->setGlobalEpoch();
   balance::ProcStats::proc_migrate_.clear();
   balance::ProcStats::proc_data_.clear();
   balance::ProcStats::next_elm_ = 1;
