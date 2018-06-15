@@ -32,6 +32,7 @@
 #include <functional>
 #include <vector>
 #include <list>
+#include <cstdlib>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -215,7 +216,16 @@ struct CollectionManager {
   );
 
   template <typename=void>
+  std::size_t numCollections();
+
+  template <typename=void>
+  bool readyNextPhase();
+
+  template <typename=void>
   void releaseLBContinuation();
+
+  template <typename=void>
+  void makeCollectionReady();
 
 private:
   template <typename ColT, typename IndexT>

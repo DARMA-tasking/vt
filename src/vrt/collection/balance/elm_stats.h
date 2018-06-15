@@ -14,6 +14,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+static constexpr bool const lb_direct = true;
+
 struct ElementStats {
   using PhaseType = uint64_t;
 

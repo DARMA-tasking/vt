@@ -770,7 +770,7 @@ CollectionManager::constructMap(
 }
 
 inline void CollectionManager::insertCollectionInfo(VirtualProxyType const& p) {
-  // do nothing right now
+  // do nothing
 }
 
 inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
@@ -1002,6 +1002,25 @@ Holder<ColT, IndexT>* CollectionManager::findElmHolder(
   } else {
     return nullptr;
   }
+}
+
+template <typename>
+std::size_t CollectionManager::numCollections() {
+  return UniversalIndexHolder<>::getNumCollections();
+}
+
+template <typename>
+bool CollectionManager::readyNextPhase() {
+  auto const ready = UniversalIndexHolder<>::readyNextPhase();
+  if (ready) {
+    UniversalIndexHolder<>::resetPhase();
+  }
+  return ready;
+}
+
+template <typename>
+void CollectionManager::makeCollectionReady() {
+  UniversalIndexHolder<>::makeCollectionReady();
 }
 
 template <typename ColT>
