@@ -27,6 +27,7 @@ public:
   );
 
   static void clearStats();
+  static void releaseLB();
 
 private:
   static ElementIDType getNextElm();

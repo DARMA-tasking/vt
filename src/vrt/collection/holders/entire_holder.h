@@ -15,10 +15,12 @@ template <typename=void>
 struct UniversalIndexHolder {
   static void destroyAllLive();
   static bool readyNextPhase();
-  static void makeCollectionReady();
+  static void makeCollectionReady(VirtualProxyType const proxy);
   static void resetPhase();
   static std::size_t getNumCollections();
+  static std::size_t getNumReadyCollections();
 public:
+  static std::unordered_set<VirtualProxyType> ready_collections_;
   static std::unordered_set<std::shared_ptr<BaseHolder>> live_collections_;
 private:
   static std::size_t num_collections_phase_;

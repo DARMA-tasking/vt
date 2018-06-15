@@ -216,16 +216,25 @@ struct CollectionManager {
   );
 
   template <typename=void>
+  static void releaseLBPhase(CollectionPhaseMsg* msg);
+
+  template <typename=void>
   std::size_t numCollections();
+
+  template <typename=void>
+  std::size_t numReadyCollections();
 
   template <typename=void>
   bool readyNextPhase();
 
   template <typename=void>
+  void resetReadyPhase();
+
+  template <typename=void>
   void releaseLBContinuation();
 
   template <typename=void>
-  void makeCollectionReady();
+  void makeCollectionReady(VirtualProxyType const coll);
 
 private:
   template <typename ColT, typename IndexT>
@@ -281,7 +290,7 @@ private:
   AwaitingDestructionType await_destroy_;
   std::unordered_set<VirtualProxyType> constructed_;
   std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
-  ActionFinishedLBType lb_continuation_ = nullptr;
+  std::vector<ActionFinishedLBType> lb_continuations_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

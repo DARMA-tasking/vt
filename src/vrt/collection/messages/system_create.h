@@ -45,6 +45,8 @@ struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
   VirtualProxyType proxy = {};
 };
 
+struct CollectionPhaseMsg : ::vt::Message {};
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_MESSAGES_SYSTEM_CREATE_H*/

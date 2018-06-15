@@ -1010,17 +1010,24 @@ std::size_t CollectionManager::numCollections() {
 }
 
 template <typename>
+std::size_t CollectionManager::numReadyCollections() {
+  return UniversalIndexHolder<>::getNumReadyCollections();
+}
+
+template <typename>
+void CollectionManager::resetReadyPhase() {
+  UniversalIndexHolder<>::resetPhase();
+}
+
+template <typename>
 bool CollectionManager::readyNextPhase() {
   auto const ready = UniversalIndexHolder<>::readyNextPhase();
-  if (ready) {
-    UniversalIndexHolder<>::resetPhase();
-  }
   return ready;
 }
 
 template <typename>
-void CollectionManager::makeCollectionReady() {
-  UniversalIndexHolder<>::makeCollectionReady();
+void CollectionManager::makeCollectionReady(VirtualProxyType const proxy) {
+  UniversalIndexHolder<>::makeCollectionReady(proxy);
 }
 
 template <typename ColT>
@@ -1041,7 +1048,7 @@ void CollectionManager::nextPhase(
 
   if (continuation != nullptr) {
     theTerm()->produce(term::any_epoch_sentinel);
-    lb_continuation_ = continuation;
+    lb_continuations_.push_back(continuation);
   }
 
   backend_enable_if(
@@ -1080,13 +1087,21 @@ void CollectionManager::computeStats(
   );
 }
 
+template <typename always_void>
+/*static*/ void CollectionManager::releaseLBPhase(CollectionPhaseMsg* msg) {
+  theCollection()->releaseLBContinuation();
+}
+
 template <typename>
 void CollectionManager::releaseLBContinuation() {
-  if (lb_continuation_) {
-    auto cont = lb_continuation_;
-    lb_continuation_ = nullptr;
-    theTerm()->consume(term::any_epoch_sentinel);
-    cont();
+  UniversalIndexHolder<>::resetPhase();
+  if (lb_continuations_.size() > 0) {
+    auto continuations = lb_continuations_;
+    lb_continuations_.clear();
+    for (auto&& elm : continuations) {
+      theTerm()->consume(term::any_epoch_sentinel);
+      elm();
+    }
   }
 }
 

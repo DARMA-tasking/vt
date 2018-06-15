@@ -21,22 +21,33 @@ template <typename always_void_>
 
 template <typename always_void_>
 /*static*/ bool UniversalIndexHolder<always_void_>::readyNextPhase() {
-  return num_collections_phase_ == getNumCollections();
+  auto const ready_coll = getNumReadyCollections();
+  auto const total_coll = getNumCollections();
+  return ready_coll == total_coll;
 }
 
 template <typename always_void_>
-/*static*/ void UniversalIndexHolder<always_void_>::makeCollectionReady() {
-  num_collections_phase_++;
+/*static*/ void UniversalIndexHolder<always_void_>::makeCollectionReady(
+  VirtualProxyType const proxy
+) {
+  ready_collections_.insert(proxy);
 }
 
 template <typename always_void_>
 /*static*/ void UniversalIndexHolder<always_void_>::resetPhase() {
-  num_collections_phase_ = 0;
+  ready_collections_.clear();
 }
 
 template <typename always_void_>
-/*static*/ std::size_t UniversalIndexHolder<always_void_>::getNumCollections() {
+/*static*/ std::size_t
+UniversalIndexHolder<always_void_>::getNumCollections() {
   return live_collections_.size();
+}
+
+template <typename always_void_>
+/*static*/ std::size_t
+UniversalIndexHolder<always_void_>::getNumReadyCollections() {
+  return ready_collections_.size();
 }
 
 template <typename always_void_>
@@ -44,8 +55,8 @@ template <typename always_void_>
 UniversalIndexHolder<always_void_>::live_collections_;
 
 template <typename always_void_>
-/*static*/ std::size_t
-UniversalIndexHolder<always_void_>::num_collections_phase_ = 0;
+/*static*/ std::unordered_set<VirtualProxyType>
+UniversalIndexHolder<always_void_>::ready_collections_ = {};
 
 template <typename ColT, typename IndexT>
 /*static*/ void EntireHolder<ColT, IndexT>::insert(

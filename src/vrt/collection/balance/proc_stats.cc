@@ -1,6 +1,7 @@
 
 #include "config.h"
 #include "vrt/collection/balance/proc_stats.h"
+#include "vrt/collection/manager.h"
 #include "timing/timing.h"
 
 #include <vector>
@@ -30,6 +31,17 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
   auto const& this_node = theContext()->getNode();
   auto elm = next_elm_++;
   return (elm << 32) | this_node;
+}
+
+/*static*/ void ProcStats::releaseLB() {
+  auto msg = makeSharedMessage<CollectionPhaseMsg>();
+  theMsg()->broadcastMsg<
+    CollectionPhaseMsg,CollectionManager::releaseLBPhase
+  >(msg);
+  auto msg_this = makeSharedMessage<CollectionPhaseMsg>();
+  messageRef(msg_this);
+  CollectionManager::releaseLBPhase(msg_this);
+  messageDeref(msg_this);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

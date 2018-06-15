@@ -43,6 +43,7 @@ template <typename ColT>
 
   auto const& cur_phase = msg->getPhase();
   auto const& proxy = col->getCollectionProxy();
+  auto const& untyped_proxy = col->getProxy();
   auto const& total_load = stats.getLoad(cur_phase);
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
@@ -54,8 +55,15 @@ template <typename ColT>
   using FunctorStartLBType = StartLB<ColT>;
 
   if (lb_direct) {
-    theCollection()->makeCollectionReady();
+    auto const before_ready = theCollection()->numReadyCollections();
+    theCollection()->makeCollectionReady(untyped_proxy);
+    auto const after_ready = theCollection()->numReadyCollections();
     auto const ready = theCollection()->readyNextPhase();
+    debug_print_force(
+      vrt_coll, node,
+      "ElementStats: syncNextPhase: before_ready={}, after_ready={}, ready={}\n",
+      before_ready, after_ready, ready
+    );
     if (ready) {
       theCollection()->reduceMsg<
         ColT,
