@@ -11,6 +11,10 @@
 #include "timing/timing.h"
 
 #include <unordered_map>
+#include <map>
+#include <vector>
+#include <memory>
+#include <list>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
