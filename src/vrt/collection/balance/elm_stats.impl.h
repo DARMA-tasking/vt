@@ -15,6 +15,7 @@
 #include "timing/timing.h"
 
 #include <cassert>
+#include <type_traits>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -145,12 +146,20 @@ void CollectedStats<ColT>::operator()(StatsMsg<ColT>* msg) {
 
 template <typename ColT>
 void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
-  debug_print_force(
-    vrt_coll, node,
-    "StartLB: phase={}\n", msg->getPhase()
-  );
+  auto const& this_node = theContext()->getNode();
+  auto const the_lb = theContext()->getLB();
 
-  switch (theContext()->getLB()) {
+  if (this_node == 0) {
+    ::fmt::print(
+      "VT: {}: StartLB: phase={}, balancer={}, name={}\n",
+      this_node,
+      msg->getPhase(),
+      static_cast<typename std::underlying_type<LBType>::type>(the_lb),
+      lb_names_<>[the_lb]
+    );
+  }
+
+  switch (the_lb) {
   case LBType::HierarchicalLB:
   {
     auto nmsg = makeSharedMessage<HierLBMsg>(msg->getPhase());
