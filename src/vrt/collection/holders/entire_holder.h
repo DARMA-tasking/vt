@@ -13,42 +13,16 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename=void>
 struct UniversalIndexHolder {
-  static void destroyAllLive() {
-    for (auto&& elm : live_collections_) {
-      elm->destroy();
-    }
-    live_collections_.clear();
-  }
-
-  static bool readyNextPhase() {
-    return num_collections_phase_ == getNumCollections();
-  }
-
-  static void makeCollectionReady() {
-    num_collections_phase_++;
-  }
-
-  static void resetPhase() {
-    num_collections_phase_ = 0;
-  }
-
-  static std::size_t getNumCollections() {
-    return live_collections_.size();
-  }
-
+  static void destroyAllLive();
+  static bool readyNextPhase();
+  static void makeCollectionReady();
+  static void resetPhase();
+  static std::size_t getNumCollections();
 public:
   static std::unordered_set<std::shared_ptr<BaseHolder>> live_collections_;
 private:
   static std::size_t num_collections_phase_;
 };
-
-template <typename always_void_>
-/*static*/ std::unordered_set<std::shared_ptr<BaseHolder>>
-UniversalIndexHolder<always_void_>::live_collections_;
-
-template <typename always_void_>
-/*static*/ std::size_t
-UniversalIndexHolder<always_void_>::num_collections_phase_ = 0;
 
 template <typename ColT, typename IndexT>
 struct EntireHolder {
@@ -57,23 +31,12 @@ struct EntireHolder {
   using ProxyContainerType = std::unordered_map<
     VirtualProxyType, InnerHolderPtr
   >;
-
-  static void insert(VirtualProxyType const& proxy, InnerHolderPtr ptr) {
-    proxy_container_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(proxy),
-      std::forward_as_tuple(ptr)
-    );
-    UniversalIndexHolder<>::live_collections_.insert(ptr);
-  }
-
+  static void insert(VirtualProxyType const& proxy, InnerHolderPtr ptr);
   static ProxyContainerType proxy_container_;
 };
 
-template <typename ColT, typename IndexT>
-/*static*/ typename EntireHolder<ColT, IndexT>::ProxyContainerType
-EntireHolder<ColT, IndexT>::proxy_container_;
-
 }}} /* end namespace vt::vrt::collection */
+
+#include "vrt/collection/holders/entire_holder.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_H*/
