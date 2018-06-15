@@ -11,6 +11,7 @@
 #include "vrt/collection/manager.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vrt/collection/balance/greedylb/greedylb.h"
+#include "vrt/collection/balance/rotatelb/rotatelb.h"
 #include "timing/timing.h"
 
 #include <cassert>
@@ -164,6 +165,13 @@ void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
     theMsg()->broadcastMsg<GreedyLBMsg,lb::GreedyLB::greedyLBHandler>(nmsg);
     auto nmsg_root = makeSharedMessage<GreedyLBMsg>(msg->getPhase());
     lb::GreedyLB::greedyLBHandler(nmsg_root);
+  }
+  case LBType::RotateLB:
+  {
+    auto nmsg = makeSharedMessage<RotateLBMsg>(msg->getPhase());
+    theMsg()->broadcastMsg<RotateLBMsg,lb::RotateLB::rotateLBHandler>(nmsg);
+    auto nmsg_root = makeSharedMessage<RotateLBMsg>(msg->getPhase());
+    lb::RotateLB::rotateLBHandler(nmsg_root);
   }
   break;
   default:

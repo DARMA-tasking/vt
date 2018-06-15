@@ -84,6 +84,7 @@ private:
 };
 
 using GreedyLBMsg = HierLBMsg;
+using RotateLBMsg = HierLBMsg;
 
 }}}} /* end namespace vt::vrt::collection::balance */
 

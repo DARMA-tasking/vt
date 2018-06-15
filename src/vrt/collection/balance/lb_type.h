@@ -9,7 +9,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 enum struct LBType : int8_t {
   NoLB = 0,
   GreedyLB = 1,
-  HierarchicalLB = 2
+  HierarchicalLB = 2,
+  RotateLB = 3
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
