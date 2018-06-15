@@ -46,7 +46,7 @@ template <typename ColT>
   auto const& total_load = stats.getLoad(cur_phase);
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
-  ProcStats::addProcStats<ColT>(elm_proxy, col, msg->getPhase(), total_load);
+  ProcStats::addProcStats<ColT>(elm_proxy, col, cur_phase, total_load);
 
   auto phase_msg = makeSharedMessage<PhaseReduceMsg<ColT>>(cur_phase, proxy);
 
