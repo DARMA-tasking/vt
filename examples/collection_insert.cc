@@ -16,18 +16,16 @@ struct InsertCol : InsertableCollection<InsertCol,Index1D> {
   InsertCol()
     : InsertableCollection<InsertCol,Index1D>()
   {
-    ::fmt::print(
-      "constructing: idx={}\n", getIndex().x()
-    );
+    auto const& this_node = theContext()->getNode();
+    ::fmt::print("{}: constructing: idx={}\n", this_node, getIndex().x());
  }
 };
 
 struct TestMsg : CollectionMessage<InsertCol> { };
 
 static void work(TestMsg* msg, InsertCol* col) {
-  ::fmt::print(
-    "work: idx={}\n", col->getIndex().x()
-  );
+  auto const& this_node = theContext()->getNode();
+  ::fmt::print("work: node={}, idx={}\n", this_node, col->getIndex().x());
 }
 
 int main(int argc, char** argv) {
