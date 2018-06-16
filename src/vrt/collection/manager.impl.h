@@ -802,7 +802,7 @@ void CollectionManager::insert(
   auto const untyped_proxy = proxy.getProxy();
   auto found_constructed = constructed_.find(untyped_proxy) != constructed_.end();
 
-  debug_print_force(
+  debug_print(
     vrt_coll, node,
     "insert: proxy={}, constructed={}\n",
     untyped_proxy, found_constructed
@@ -872,7 +872,7 @@ void CollectionManager::insert(
     }
     assert(iter != buffered_bcasts_.end() and "Must exist");
 
-    debug_print_force(
+    debug_print(
       vrt_coll, node,
       "pushing dynamic insertion into buffered sends: {}\n",
       untyped_proxy
@@ -880,17 +880,17 @@ void CollectionManager::insert(
 
     theTerm()->produce(term::any_epoch_sentinel);
 
-    debug_print_force(
+    debug_print(
       vrt_coll, node,
       "insert: proxy={}, buffering\n", untyped_proxy
     );
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
-      debug_print_force(
+      debug_print(
         vrt_coll, node,
         "insert: proxy={}, running buffered\n", untyped_proxy
       );
       theTerm()->consume(term::any_epoch_sentinel);
-      theCollection()->insert<ColT>(proxy,max_idx,idx,node);
+      theCollection()->insert<ColT>(proxy,idx,max_idx,node);
     });
   }
 }
