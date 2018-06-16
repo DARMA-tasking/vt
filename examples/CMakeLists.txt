@@ -31,6 +31,7 @@ set(
   hello_world_vc_remote
   hello_world_start
   hello_world_collection
+  collection_insert
   rdma_unsized_collection
   group_example_1
   reduce
