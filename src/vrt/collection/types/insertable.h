@@ -5,25 +5,17 @@
 #include "config.h"
 #include "vrt/vrt_common.h"
 
-#include <cassert>
-
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct Insertable {
   Insertable() = default;
 
-  void insert(IndexT const& idx);
-
-  void beginInserting() {
-    assert(doneInserting == false and "Must not be done inserting");
-  }
-  void finishInserting() {
-    assert(doneInserting == false and "Must not be done inserting");
-    doneInserting = true;
-
-    // barrier, make sure that size is consistent
-  }
+  void insert(
+    IndexT const& idx, NodeType const& node = uninitialized_destination
+  );
+  void beginInserting();
+  void finishInserting();
 
 protected:
   bool doneInserting = false;
