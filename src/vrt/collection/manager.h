@@ -275,7 +275,7 @@ public:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   void insert(
     CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
-    IndexT max_idx, NodeType const& node = uninitialized_destination
+    NodeType const& node = uninitialized_destination
   );
 
 private:

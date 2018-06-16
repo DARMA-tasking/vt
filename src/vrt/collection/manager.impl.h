@@ -797,13 +797,13 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::insertHandler(InsertMsg<ColT,IndexT>* msg) {
   return theCollection()->insert<ColT,IndexT>(
-    msg->proxy_,msg->idx_,msg->max_,msg->construct_node_
+    msg->proxy_,msg->idx_,msg->construct_node_
   );
 }
 
 template <typename ColT, typename IndexT>
 void CollectionManager::insert(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx, IndexT max_idx,
+  CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
   NodeType const& node
 ) {
   auto const untyped_proxy = proxy.getProxy();
@@ -816,6 +816,8 @@ void CollectionManager::insert(
   );
 
   if (found_constructed) {
+    auto col_holder = findColHolder<ColT,IndexT>(untyped_proxy);
+    auto max_idx = col_holder->max_idx;
     auto const& this_node = theContext()->getNode();
     NodeType mapped_node = node;
     auto map_han = UniversalIndexHolder<>::getMap(proxy.getProxy());
@@ -897,7 +899,7 @@ void CollectionManager::insert(
         "insert: proxy={}, running buffered\n", untyped_proxy
       );
       theTerm()->consume(term::any_epoch_sentinel);
-      theCollection()->insert<ColT>(proxy,idx,max_idx,node);
+      theCollection()->insert<ColT>(proxy,idx,node);
     });
   }
 }

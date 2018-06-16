@@ -18,7 +18,7 @@ struct ElmInsertable : Sendable<ColT,IndexT> {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  void insert(IndexT max, NodeType node = uninitialized_destination);
+  void insert(NodeType node = uninitialized_destination);
 };
 
 }}} /* end namespace vt::vrt::collection */

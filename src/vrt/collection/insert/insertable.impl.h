@@ -22,11 +22,11 @@ void ElmInsertable<ColT, IndexT>::serialize(SerializerT& s) {
 }
 
 template <typename ColT, typename IndexT>
-void ElmInsertable<ColT, IndexT>::insert(IndexT max, NodeType node) {
+void ElmInsertable<ColT, IndexT>::insert(NodeType node) {
   auto const col_proxy = this->getCollectionProxy();
   auto const elm_proxy = this->getElementProxy();
   auto const idx = elm_proxy.getIndex();
-  theCollection()->insert<ColT,IndexT>(col_proxy,idx,max,node);
+  theCollection()->insert<ColT,IndexT>(col_proxy,idx,node);
 }
 
 }}} /* end namespace vt::vrt::collection */
