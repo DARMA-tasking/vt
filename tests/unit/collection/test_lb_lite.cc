@@ -148,18 +148,34 @@ TEST_F(TestLB, test_lb_1) {
   }
 }
 
-TEST_F(TestLB, test_lb_multi_1) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
-  auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy_1 = theCollection()->construct<LBTest>(range);
-    auto proxy_2 = theCollection()->construct<LBTest>(range);
-    cur_time = ::vt::timing::Timing::getCurrentTime();
-    startIter(0,proxy_1);
-    startIter(0,proxy_2);
-  }
-}
+// TEST_F(TestLB, test_lb_multi_1) {
+//   auto const& my_node = theContext()->getNode();
+//   auto const& root = 0;
+//   auto const& this_node = theContext()->getNode();
+//   if (this_node == 0) {
+//     auto const& range = Index1D(64);
+//     auto proxy_1 = theCollection()->construct<LBTest>(range);
+//     auto proxy_2 = theCollection()->construct<LBTest>(range);
+//     cur_time = ::vt::timing::Timing::getCurrentTime();
+//     startIter(0,proxy_1);
+//     startIter(0,proxy_2);
+//   }
+// }
+
+// TEST_F(TestLB, test_lb_multi_2) {
+//   auto const& my_node = theContext()->getNode();
+//   auto const& root = 0;
+//   auto const& this_node = theContext()->getNode();
+//   if (this_node == 0) {
+//     auto const& range = Index1D(32);
+//     auto proxy_1 = theCollection()->construct<LBTest>(range);
+//     auto proxy_2 = theCollection()->construct<LBTest>(range);
+//     auto proxy_3 = theCollection()->construct<LBTest>(range);
+//     cur_time = ::vt::timing::Timing::getCurrentTime();
+//     startIter(0,proxy_1);
+//     startIter(0,proxy_2);
+//     startIter(0,proxy_3);
+//   }
+// }
 
 }}} // end namespace vt::tests::unit
