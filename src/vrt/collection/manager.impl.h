@@ -146,7 +146,7 @@ template <typename SysMsgT>
   }
 
   uint64_t const tag_start_ = 0x0ff00000;
-  auto msg = makeSharedMessage<CollectionConsMsg>(new_proxy);
+  auto construct_msg = makeSharedMessage<CollectionConsMsg>(new_proxy);
   auto const& tag_id =
     VirtualProxyBuilder::getVirtualID(new_proxy) | tag_start_;
   auto const& root = 0;
@@ -155,7 +155,7 @@ template <typename SysMsgT>
     "calling reduce: new_proxy={}\n", new_proxy
   );
   theCollective()->reduce<CollectionConsMsg,collectionConstructHan>(
-    root, msg, tag_id
+    root, construct_msg, tag_id
   );
 }
 
