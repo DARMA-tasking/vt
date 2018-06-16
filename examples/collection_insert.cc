@@ -56,7 +56,11 @@ int main(int argc, char** argv) {
     });
 
     for (int i = 0; i < range.x(); i++) {
-      theCollection()->insert<InsertCol>(proxy, Index1D(i), range);
+      proxy[i].insert(range);
+      /*
+       * Alternative syntax:
+       *   theCollection()->insert<InsertCol>(proxy, Index1D(i), range);
+       */
     }
   }
 
