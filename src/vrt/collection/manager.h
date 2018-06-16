@@ -44,6 +44,7 @@ struct CollectionManager {
   using VirtualPtrType = typename Holder<ColT, IndexT>::VirtualPtrType;
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   using ActionFinishedLBType = std::function<void()>;
+  using NoElementActionType = std::function<void()>;
   using ActionContainerType = std::vector<ActionProxyType>;
   using BufferedActionType = std::unordered_map<
     VirtualProxyType, ActionContainerType
@@ -236,6 +237,9 @@ struct CollectionManager {
   template <typename=void>
   void makeCollectionReady(VirtualProxyType const coll);
 
+  template <typename=void>
+  void checkReduceNoElements();
+
 private:
   template <typename ColT, typename IndexT>
   CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
@@ -293,6 +297,7 @@ private:
   std::unordered_set<VirtualProxyType> constructed_;
   std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
   std::vector<ActionFinishedLBType> lb_continuations_ = {};
+  std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

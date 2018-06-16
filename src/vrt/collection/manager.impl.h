@@ -1057,6 +1057,27 @@ void CollectionManager::nextPhase(
   if (continuation != nullptr) {
     theTerm()->produce(term::any_epoch_sentinel);
     lb_continuations_.push_back(continuation);
+
+    auto const& untyped_proxy = proxy.getProxy();
+    auto iter = lb_no_elm_.find(untyped_proxy);
+    if (iter ==lb_no_elm_.end()) {
+      lb_no_elm_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(untyped_proxy),
+        std::forward_as_tuple([this,untyped_proxy]{
+          auto elm_holder =
+            findElmHolder<ColT,typename ColT::IndexType>(untyped_proxy);
+          auto const& num_elms = elm_holder->numElements();
+          // this collection manager does not participate in reduction
+          if (num_elms == 0) {
+            /*
+             * @todo: Implement child elision in reduction tree and up
+             * propagation
+             */
+          }
+        })
+      );
+    }
   }
 
   backend_enable_if(
@@ -1093,6 +1114,11 @@ void CollectionManager::computeStats(
   theCollection()->broadcastMsg<MsgType,ElementStats::computeStats<ColT>>(
     proxy, msg, nullptr, instrument
   );
+}
+
+template <typename always_void>
+void CollectionManager::checkReduceNoElements() {
+  // @todo
 }
 
 template <typename always_void>
