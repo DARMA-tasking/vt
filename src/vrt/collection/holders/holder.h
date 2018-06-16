@@ -21,7 +21,7 @@ template <typename ColT, typename IndexT>
 struct Holder {
   template <typename T, typename U>
   using ContType = std::unordered_map<T, U>;
-  using CollectionType = Collection<ColT, IndexT>;
+  using CollectionType = CollectionBase<ColT, IndexT>;
   using VirtualPtrType = std::unique_ptr<CollectionType>;
   using LookupElementType = IndexT;
   using InnerHolder = ElementHolder<ColT, IndexT>;

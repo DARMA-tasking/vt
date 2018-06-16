@@ -13,7 +13,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct ElementHolder {
-  using VirtualPtrType = std::unique_ptr<Collection<ColT,IndexT>>;
+  using VirtualPtrType = std::unique_ptr<CollectionBase<ColT,IndexT>>;
 
   ElementHolder(
     VirtualPtrType in_vc_ptr_, HandlerType const& in_han, IndexT const& idx

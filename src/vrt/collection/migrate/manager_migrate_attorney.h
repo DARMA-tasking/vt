@@ -18,7 +18,7 @@ struct Collection;
 
 template <typename ColT, typename IndexT>
 struct CollectionElmAttorney {
-  using CollectionType = Collection<ColT, IndexT>;
+  using CollectionType = CollectionBase<ColT, IndexT>;
   using VirtualPtrType = std::unique_ptr<CollectionType>;
 
   friend struct CollectionBase<ColT, IndexT>;

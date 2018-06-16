@@ -179,7 +179,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     "broadcast apply: size={}\n", elm_holder->numElements()
   );
   elm_holder->foreach([msg,act_fn](
-    IndexT const& idx, Collection<ColT,IndexT>* base
+    IndexT const& idx, CollectionBase<ColT,IndexT>* base
   ) {
     debug_print(
       vrt_coll, node,
