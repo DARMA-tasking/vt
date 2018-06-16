@@ -143,6 +143,13 @@ template <typename SysMsgT>
         );
       }
     });
+  } else {
+    auto const& map_han = msg->map;
+    auto const& max_idx = msg->info.range_;
+    using HolderType = typename EntireHolder<ColT, IndexT>::InnerHolder;
+    EntireHolder<ColT, IndexT>::insert(
+      new_proxy, std::make_shared<HolderType>(map_han,max_idx)
+    );
   }
 
   uint64_t const tag_start_ = 0x0ff00000;
