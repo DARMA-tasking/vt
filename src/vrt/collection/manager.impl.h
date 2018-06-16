@@ -514,6 +514,11 @@ EpochType CollectionManager::reduceMsg(
     auto ret_epoch = theCollective()->reduce<MsgT,f>(
       0,msg,tag,cur_epoch,num_elms,col_proxy
     );
+    debug_print(
+      vrt_coll, node,
+      "reduceMsg: col_proxy={}, epoch={}, num_elms={}, tag={}\n",
+      col_proxy, cur_epoch, num_elms, tag
+    );
     if (epoch_iter == reduce_cur_epoch_.end()) {
       reduce_cur_epoch_.emplace(
         std::piecewise_construct,
