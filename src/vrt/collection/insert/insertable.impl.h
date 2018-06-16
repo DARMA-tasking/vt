@@ -12,7 +12,7 @@ template <typename ColT, typename IndexT>
 ElmInsertable<ColT, IndexT>::ElmInsertable(
   typename BaseCollectionProxy<ColT, IndexT>::ProxyType const& in_proxy,
   typename BaseCollectionProxy<ColT, IndexT>::ElementProxyType const& in_elm
-) : BaseCollectionProxy<ColT, IndexT>(in_proxy, in_elm)
+) : Sendable<ColT, IndexT>(in_proxy, in_elm)
 { }
 
 template <typename ColT, typename IndexT>
