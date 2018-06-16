@@ -5,19 +5,21 @@
 #include "config.h"
 #include "vrt/collection/manager.fwd.h"
 #include "vrt/collection/send/sendable.h"
+#include "vrt/collection/insert/insertable.h"
 #include "vrt/proxy/proxy_element.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-struct VrtElmProxy : Sendable<ColT, IndexT> {
-  using CollectionProxyType = typename Sendable<ColT, IndexT>::ProxyType;
-  using ElementProxyType = typename Sendable<ColT, IndexT>::ElementProxyType;
+struct VrtElmProxy : ElmInsertable<ColT, IndexT> {
+  using CollectionProxyType = typename ElmInsertable<ColT, IndexT>::ProxyType;
+  using ElementProxyType    =
+    typename ElmInsertable<ColT, IndexT>::ElementProxyType;
 
   VrtElmProxy(
     VirtualProxyType const& in_col_proxy,
     VirtualProxyElementType<ColT, IndexT> const& in_elm_proxy
-  ) : Sendable<ColT, IndexT>(in_col_proxy, in_elm_proxy)
+  ) : ElmInsertable<ColT, IndexT>(in_col_proxy, in_elm_proxy)
   { }
 
   VrtElmProxy(
@@ -37,7 +39,7 @@ struct VrtElmProxy : Sendable<ColT, IndexT> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    Sendable<ColT, IndexT>::serialize(s);
+    ElmInsertable<ColT, IndexT>::serialize(s);
   }
 
   friend struct CollectionManager;
