@@ -9,6 +9,7 @@
 #include "messaging/message.h"
 #include "serialization/serialization.h"
 #include "collective/reduce/reduce.h"
+#include "vrt/proxy/collection_wrapper.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -46,6 +47,23 @@ struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
 };
 
 struct CollectionPhaseMsg : ::vt::Message {};
+
+template <typename ColT, typename IndexT>
+struct InsertMsg : ::vt::Message {
+  InsertMsg() = default;
+
+  InsertMsg(
+    CollectionIndexProxy<ColT,IndexT> in_proxy,
+    IndexT in_max, IndexT in_idx,
+    NodeType in_construct_node
+  ) : proxy_(in_proxy), max_(in_max), idx_(in_idx),
+      construct_node_(in_construct_node)
+  { }
+
+  CollectionIndexProxy<ColT,IndexT> proxy_ = {};
+  IndexT max_ = {}, idx_ = {};
+  NodeType construct_node_ = uninitialized_destination;
+};
 
 }}} /* end namespace vt::vrt::collection */
 

@@ -269,6 +269,15 @@ public:
     VrtElmProxy<ColT, typename ColT::IndexType>, NodeType const& dest
   );
 
+  template <typename ColT, typename IndexT>
+  static void insertHandler(InsertMsg<ColT,IndexT>* msg);
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  void insert(
+    CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT max_idx,
+    IndexT idx, NodeType const& node = uninitialized_destination
+  );
+
 private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmAttorney;
@@ -317,5 +326,6 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vrt/collection/broadcast/broadcastable.impl.h"
 #include "vrt/collection/balance/elm_stats.impl.h"
+#include "vrt/collection/types/insertable.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/

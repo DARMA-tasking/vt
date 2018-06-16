@@ -784,6 +784,118 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
 }
 
 /*
+ * Support of virtual context collection element dynamic insertion
+ */
+
+template <typename ColT, typename IndexT>
+/*static*/ void CollectionManager::insertHandler(InsertMsg<ColT,IndexT>* msg) {
+  return theCollection()->insert<ColT,IndexT>(
+    msg->proxy_,msg->idx_,msg->max_,msg->construct_node_
+  );
+}
+
+template <typename ColT, typename IndexT>
+void CollectionManager::insert(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx, IndexT max_idx,
+  NodeType const& node
+) {
+  auto const untyped_proxy = proxy.getProxy();
+  auto found_constructed = constructed_.find(untyped_proxy) != constructed_.end();
+
+  debug_print_force(
+    vrt_coll, node,
+    "insert: proxy={}, constructed={}\n",
+    untyped_proxy, found_constructed
+  );
+
+  if (found_constructed) {
+    auto const& this_node = theContext()->getNode();
+    NodeType mapped_node = node;
+    auto map_han = UniversalIndexHolder<>::getMap(proxy.getProxy());
+    if (node == uninitialized_destination) {
+      bool const& is_functor =
+        auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
+      auto_registry::AutoActiveMapType fn = nullptr;
+      if (is_functor) {
+        fn = auto_registry::getAutoHandlerFunctorMap(map_han);
+      } else {
+        fn = auto_registry::getAutoHandlerMap(map_han);
+      }
+      mapped_node = fn(
+        reinterpret_cast<vt::index::BaseIndex*>(&idx),
+        reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
+        theContext()->getNumNodes()
+      );
+    }
+    if (mapped_node == this_node) {
+      auto const& num_elms = max_idx.getSize();
+      std::tuple<> tup;
+
+      #if backend_check_enabled(detector)
+        auto new_vc = DerefCons::derefTuple<ColT,IndexT,std::tuple<>>(
+          num_elms, idx, &tup
+        );
+      #else
+        auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
+          num_elms, idx, &tup, std::make_index_sequence<0>{}
+        );
+      #endif
+
+      /*
+       * Set direct attributes of the newly constructed elempent directly on
+       * the user's class
+       */
+      CollectionTypeAttorney::setSize(new_vc, num_elms);
+      CollectionTypeAttorney::setProxy(new_vc, untyped_proxy);
+      CollectionTypeAttorney::setIndex<decltype(new_vc),IndexT>(new_vc, idx);
+
+      theCollection()->insertCollectionElement<ColT, IndexT>(
+        std::move(new_vc), idx, max_idx, map_han, untyped_proxy
+      );
+    } else {
+      auto msg = makeSharedMessage<InsertMsg<ColT,IndexT>>(
+        proxy,max_idx,idx,node
+      );
+      theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
+        mapped_node,msg
+      );
+    }
+  } else {
+    auto iter = buffered_bcasts_.find(untyped_proxy);
+    if (iter == buffered_bcasts_.end()) {
+      buffered_bcasts_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(untyped_proxy),
+        std::forward_as_tuple(ActionContainerType{})
+      );
+      iter = buffered_bcasts_.find(untyped_proxy);
+    }
+    assert(iter != buffered_bcasts_.end() and "Must exist");
+
+    debug_print_force(
+      vrt_coll, node,
+      "pushing dynamic insertion into buffered sends: {}\n",
+      untyped_proxy
+    );
+
+    theTerm()->produce(term::any_epoch_sentinel);
+
+    debug_print_force(
+      vrt_coll, node,
+      "insert: proxy={}, buffering\n", untyped_proxy
+    );
+    iter->second.push_back([=](VirtualProxyType /*ignored*/){
+      debug_print_force(
+        vrt_coll, node,
+        "insert: proxy={}, running buffered\n", untyped_proxy
+      );
+      theTerm()->consume(term::any_epoch_sentinel);
+      theCollection()->insert<ColT>(proxy,max_idx,idx,node);
+    });
+  }
+}
+
+/*
  * Support of virtual context collection element migration
  */
 
