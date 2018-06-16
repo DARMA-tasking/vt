@@ -16,7 +16,7 @@ Destroyable<ColT, IndexT>::Destroyable(VirtualProxyType const in_proxy)
 
 template <typename ColT, typename IndexT>
 void Destroyable<ColT, IndexT>::destroy() {
-  return theCollection()->destroy<ColT,IndexT>(this->proxy_);
+  return theCollection()->destroy<ColT,IndexT>(this->getProxy());
 }
 
 }}} /* end namespace vt::vrt::collection */

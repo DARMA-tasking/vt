@@ -15,6 +15,7 @@
 #include "vrt/collection/constructor/coll_constructors.h"
 #include "vrt/collection/migrate/manager_migrate_attorney.fwd.h"
 #include "vrt/collection/migrate/migrate_status.h"
+#include "vrt/collection/destroy/manager_destroy_attorney.fwd.h"
 #include "vrt/proxy/collection_wrapper.h"
 #include "topos/mapping/mapping_headers.h"
 #include "messaging/message.h"
@@ -47,7 +48,6 @@ struct CollectionManager {
   using BufferedActionType = std::unordered_map<
     VirtualProxyType, ActionContainerType
   >;
-  using AwaitingDestructionType = std::unordered_set<VirtualProxyType>;
   template <typename ColT, typename IndexT>
   using CollectionProxyWrapType = CollectionIndexProxy<ColT, IndexT>;
   using ReduceIDType = ::vt::collective::reduce::ReduceEpochLookupType;
@@ -244,14 +244,14 @@ private:
 
 public:
   template <typename ColT, typename IndexT>
-  void destroy(VirtualProxyType const& proxy);
+  void destroy(CollectionProxyWrapType<ColT,IndexT> const& proxy);
 
 private:
   template <typename ColT, typename IndexT>
-  void incomingDestroy(VirtualProxyType const& proxy);
+  void incomingDestroy(CollectionProxyWrapType<ColT,IndexT> const& proxy);
 
-  template <typename IndexT>
-  void destroyMatching(VirtualProxyType const& proxy);
+  template <typename ColT, typename IndexT>
+  void destroyMatching(CollectionProxyWrapType<ColT,IndexT> const& proxy);
 
 protected:
   VirtualProxyType makeNewCollectionProxy();
@@ -266,6 +266,9 @@ public:
 private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmAttorney;
+
+  template <typename ColT, typename IndexT>
+  friend struct CollectionElmDestroyAttorney;
 
   friend struct balance::ElementStats;
 
@@ -287,7 +290,6 @@ private:
 
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;
-  AwaitingDestructionType await_destroy_;
   std::unordered_set<VirtualProxyType> constructed_;
   std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
   std::vector<ActionFinishedLBType> lb_continuations_ = {};

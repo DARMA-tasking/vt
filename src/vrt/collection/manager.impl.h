@@ -956,24 +956,32 @@ MigrateStatus CollectionManager::migrateIn(
 }
 
 template <typename ColT, typename IndexT>
-void CollectionManager::destroy(VirtualProxyType const& proxy) {
+void CollectionManager::destroy(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy
+) {
   using DestroyMsgType = DestroyMsg<ColT, IndexT>;
   auto const& this_node = theContext()->getNode();
   auto msg = makeSharedMessage<DestroyMsgType>(proxy, this_node);
   theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg);
+  auto msg_this = makeSharedMessage<DestroyMsgType>(proxy, this_node);
+  messageRef(msg_this);
+  DestroyHandlers::destroyNow(msg_this);
+  messageDeref(msg_this);
 }
 
 template <typename ColT, typename IndexT>
-void CollectionManager::incomingDestroy(VirtualProxyType const& proxy) {
-  auto iter = await_destroy_.find(proxy);
-  if (iter == await_destroy_.end()) {
-    await_destroy_.emplace(proxy);
-  }
+void CollectionManager::incomingDestroy(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy
+) {
+  destroyMatching<ColT,IndexT>(proxy);
 }
 
-template <typename IndexT>
-void CollectionManager::destroyMatching(VirtualProxyType const& proxy) {
-  auto elm_holder = findElmHolder<IndexT>(proxy);
+template <typename ColT, typename IndexT>
+void CollectionManager::destroyMatching(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy
+) {
+  UniversalIndexHolder<>::destroyCollection(proxy.getProxy());
+  auto elm_holder = findElmHolder<ColT,IndexT>(proxy.getProxy());
   elm_holder->destroyAll();
 }
 

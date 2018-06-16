@@ -15,7 +15,7 @@ struct CollectionElmDestroyAttorney {
   friend struct DestroyHandlers;
 
 private:
-  static void incomingDestroy(VirtualProxyType const& proxy);
+  static void incomingDestroy(CollectionIndexProxy<ColT, IndexT> const& proxy);
 };
 
 }}} /* end namespace vt::vrt::collection */

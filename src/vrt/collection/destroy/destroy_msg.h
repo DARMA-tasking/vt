@@ -3,6 +3,7 @@
 #define INCLUDED_VRT_COLLECTION_DESTROY_DESTROY_MSG_H
 
 #include "config.h"
+#include "vrt/proxy/collection_wrapper.h"
 #include "messaging/message.h"
 
 namespace vt { namespace vrt { namespace collection {
@@ -11,11 +12,12 @@ template <typename ColT, typename IndexT>
 struct DestroyMsg final : ::vt::Message {
   DestroyMsg() = default;
   DestroyMsg(
-    VirtualProxyType const& in_proxy, NodeType const& in_from
+    CollectionIndexProxy<ColT,IndexT> const& in_proxy,
+    NodeType const& in_from
   ) : proxy_(in_proxy), from_(in_from)
   { }
 
-  VirtualProxyType getProxy() const { return proxy_; }
+  CollectionIndexProxy<ColT,IndexT> getProxy() const { return proxy_; }
   NodeType getFromNode() const { return from_; }
 
   template <typename Serializer>
@@ -24,7 +26,7 @@ struct DestroyMsg final : ::vt::Message {
   }
 
 private:
-  VirtualProxyType proxy_;
+  CollectionIndexProxy<ColT,IndexT> proxy_;
   NodeType from_ = uninitialized_destination;
 };
 

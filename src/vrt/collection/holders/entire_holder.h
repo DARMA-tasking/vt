@@ -14,6 +14,7 @@ namespace vt { namespace vrt { namespace collection {
 template <typename=void>
 struct UniversalIndexHolder {
   static void destroyAllLive();
+  static void destroyCollection(VirtualProxyType const proxy);
   static bool readyNextPhase();
   static void makeCollectionReady(VirtualProxyType const proxy);
   static void resetPhase();

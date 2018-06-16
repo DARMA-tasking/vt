@@ -13,7 +13,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionElmDestroyAttorney<ColT, IndexT>::incomingDestroy(
-  VirtualProxyType const& proxy
+  CollectionIndexProxy<ColT, IndexT> const& proxy
 ) {
   return theCollection()->incomingDestroy<ColT,IndexT>(proxy);
 }
