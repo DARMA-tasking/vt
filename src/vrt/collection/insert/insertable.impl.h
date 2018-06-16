@@ -26,7 +26,7 @@ void ElmInsertable<ColT, IndexT>::insert(IndexT max, NodeType node) {
   auto const col_proxy = this->getCollectionProxy();
   auto const elm_proxy = this->getElementProxy();
   auto const idx = elm_proxy.getIndex();
-  theCollection()->insert<ColT,IndexT>(col_proxy,max,idx,node);
+  theCollection()->insert<ColT,IndexT>(col_proxy,idx,max,node);
 }
 
 }}} /* end namespace vt::vrt::collection */
