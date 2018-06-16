@@ -8,15 +8,25 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <cassert>
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename always_void_>
 /*static*/ void UniversalIndexHolder<always_void_>::destroyAllLive() {
   for (auto&& elm : live_collections_) {
-    elm->destroy();
+    elm.second->destroy();
   }
   live_collections_.clear();
+}
+
+template <typename always_void_>
+/*static*/ void UniversalIndexHolder<always_void_>::destroyCollection(
+  VirtualProxyType const proxy
+) {
+  auto iter = live_collections_.find(proxy);
+  assert(iter != live_collections_.end() && "Collection must exist");
+  live_collections_.erase(iter);
 }
 
 template <typename always_void_>
@@ -51,7 +61,7 @@ UniversalIndexHolder<always_void_>::getNumReadyCollections() {
 }
 
 template <typename always_void_>
-/*static*/ std::unordered_set<std::shared_ptr<BaseHolder>>
+/*static*/ std::unordered_map<VirtualProxyType,std::shared_ptr<BaseHolder>>
 UniversalIndexHolder<always_void_>::live_collections_;
 
 template <typename always_void_>
@@ -67,7 +77,11 @@ template <typename ColT, typename IndexT>
     std::forward_as_tuple(proxy),
     std::forward_as_tuple(ptr)
   );
-  UniversalIndexHolder<>::live_collections_.insert(ptr);
+  UniversalIndexHolder<>::live_collections_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(proxy),
+    std::forward_as_tuple(ptr)
+  );
 }
 
 template <typename ColT, typename IndexT>
