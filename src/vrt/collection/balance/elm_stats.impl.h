@@ -59,7 +59,7 @@ template <typename ColT>
     theCollection()->makeCollectionReady(untyped_proxy);
     auto const after_ready = theCollection()->numReadyCollections();
     auto const ready = theCollection()->readyNextPhase();
-    debug_print_force(
+    debug_print(
       vrt_coll, node,
       "ElementStats: syncNextPhase: before_ready={}, after_ready={}, ready={}\n",
       before_ready, after_ready, ready
