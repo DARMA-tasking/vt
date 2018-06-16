@@ -71,7 +71,7 @@ template <typename SysMsgT>
   auto& info = msg->info;
   VirtualProxyType new_proxy = info.getProxy();
 
-  theCollection()->insertCollectionInfo(new_proxy);
+  theCollection()->insertCollectionInfo(new_proxy,msg->map);
 
   if (info.immediate_) {
     auto const& map_han = msg->map;
@@ -774,8 +774,10 @@ CollectionManager::constructMap(
   return CollectionProxyWrapType<ColT, typename ColT::IndexType>{new_proxy};
 }
 
-inline void CollectionManager::insertCollectionInfo(VirtualProxyType const& p) {
-  // do nothing
+inline void CollectionManager::insertCollectionInfo(
+  VirtualProxyType const& proxy, HandlerType const& map_han
+) {
+  UniversalIndexHolder<>::insertMap(proxy,map_han);
 }
 
 inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {

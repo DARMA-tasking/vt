@@ -61,8 +61,32 @@ UniversalIndexHolder<always_void_>::getNumReadyCollections() {
 }
 
 template <typename always_void_>
+/*static*/ void UniversalIndexHolder<always_void_>::insertMap(
+  VirtualProxyType const proxy, HandlerType const& han
+) {
+  live_collections_map_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(proxy),
+    std::forward_as_tuple(han)
+  );
+}
+
+template <typename always_void_>
+/*static*/ HandlerType UniversalIndexHolder<always_void_>::getMap(
+  VirtualProxyType const proxy
+) {
+  auto map_iter = live_collections_map_.find(proxy);
+  assert(map_iter != live_collections_map_.end() && "Map must exist");
+  return map_iter->second;
+}
+
+template <typename always_void_>
 /*static*/ std::unordered_map<VirtualProxyType,std::shared_ptr<BaseHolder>>
 UniversalIndexHolder<always_void_>::live_collections_;
+
+template <typename always_void_>
+/*static*/ std::unordered_map<VirtualProxyType,HandlerType>
+UniversalIndexHolder<always_void_>::live_collections_map_;
 
 template <typename always_void_>
 /*static*/ std::unordered_set<VirtualProxyType>

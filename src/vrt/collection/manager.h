@@ -259,7 +259,9 @@ private:
 
 protected:
   VirtualProxyType makeNewCollectionProxy();
-  void insertCollectionInfo(VirtualProxyType const& proxy);
+  void insertCollectionInfo(
+    VirtualProxyType const& proxy, HandlerType const& map
+  );
 
 public:
   template <typename ColT>

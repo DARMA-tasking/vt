@@ -20,11 +20,14 @@ struct UniversalIndexHolder {
   static void resetPhase();
   static std::size_t getNumCollections();
   static std::size_t getNumReadyCollections();
+  static void insertMap(VirtualProxyType const proxy, HandlerType const& han);
+  static HandlerType getMap(VirtualProxyType const proxy);
 public:
   static std::unordered_set<VirtualProxyType> ready_collections_;
   static std::unordered_map<
     VirtualProxyType,std::shared_ptr<BaseHolder>
   > live_collections_;
+  static std::unordered_map<VirtualProxyType,HandlerType> live_collections_map_;
 private:
   static std::size_t num_collections_phase_;
 };
