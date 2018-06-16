@@ -21,7 +21,10 @@ struct CollectionBase : Indexable<ColT, IndexT> {
   using IndexType = IndexT;
 
   CollectionBase() = default;
-  CollectionBase(bool const static_size, bool const elms_fixed);
+  CollectionBase(
+    bool const static_size, bool const elms_fixed,
+    VirtualElmCountType const num = -1
+  );
 
   virtual ~CollectionBase();
 
@@ -31,6 +34,8 @@ struct CollectionBase : Indexable<ColT, IndexT> {
   bool isStatic() const;
 
   static bool isStaticSized();
+
+  void setSize(VirtualElmCountType const& elms);
 
   // Should be implemented in derived class (non-virtual)
   VirtualElmCountType getSize() const;
@@ -43,6 +48,7 @@ struct CollectionBase : Indexable<ColT, IndexT> {
   friend struct CollectionManager;
 
 protected:
+  VirtualElmCountType numElems_ = no_elms;
   EpochType cur_bcast_epoch_ = 0;
   bool hasStaticSize_ = true;
   bool elmsFixedAtCreation_ = true;

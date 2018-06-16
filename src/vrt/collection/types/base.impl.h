@@ -14,8 +14,10 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 CollectionBase<ColT, IndexT>::CollectionBase(
-  bool const static_size, bool const elms_fixed
+  bool const static_size, bool const elms_fixed,
+  VirtualElmCountType const num
 ) : Indexable<ColT, IndexT>(),
+    numElems_(num),
     hasStaticSize_(static_size),
     elmsFixedAtCreation_(elms_fixed)
 { }
@@ -67,10 +69,16 @@ void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   s | hasStaticSize_;
   s | elmsFixedAtCreation_;
   s | cur_bcast_epoch_;
+  s | numElems_;
 }
 
 template <typename ColT, typename IndexT>
 /*virtual*/ CollectionBase<ColT, IndexT>::~CollectionBase() {}
+
+template <typename ColT, typename IndexT>
+void CollectionBase<ColT, IndexT>::setSize(VirtualElmCountType const& elms) {
+  numElems_ = elms;
+}
 
 }}} /* end namespace vt::vrt::collection */
 

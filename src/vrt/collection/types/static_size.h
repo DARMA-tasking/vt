@@ -20,12 +20,6 @@ struct StaticCollectionBase :
   static bool isStaticSized();
 
   friend struct CollectionTypeAttorney;
-
-private:
-  void setSize(VirtualElmCountType const& elms);
-
-protected:
-  VirtualElmCountType numElems_ = no_elms;
 };
 
 }}} /* end namespace vt::vrt::collection */
