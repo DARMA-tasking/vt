@@ -216,6 +216,7 @@ void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
     auto nmsg_root = makeSharedMessage<GreedyLBMsg>(msg->getPhase());
     lb::GreedyLB::greedyLBHandler(nmsg_root);
   }
+  break;
   case LBType::RotateLB:
   {
     auto nmsg = makeSharedMessage<RotateLBMsg>(msg->getPhase());
