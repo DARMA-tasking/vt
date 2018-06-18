@@ -401,9 +401,7 @@ void CollectionManager::broadcastMsg(
   );
 
   // @todo: implement the action `act' after the routing is finished
-
-  auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
-  auto holder = holder_container.find(col_proxy);
+  auto holder = findColHolder<ColT,IndexT>(col_proxy);
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
 
   debug_print(
@@ -412,7 +410,7 @@ void CollectionManager::broadcastMsg(
     col_proxy, found_constructed, holder != holder_container.end()
   );
 
-  if (holder != holder_container.end() && found_constructed) {
+  if (holder != nullptr && found_constructed) {
     // register the user's handler
     HandlerType const& han =
       auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
@@ -495,9 +493,6 @@ EpochType CollectionManager::reduceMsg(
   auto const& col_proxy = toProxy.getProxy();
 
   // @todo: implement the action `act' after the routing is finished
-
-  auto& holder_container = EntireHolder<ColT,IndexT>::proxy_container_;
-  auto holder = holder_container.find(col_proxy);
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
   auto elm_holder = findElmHolder<ColT,IndexT>(col_proxy);
 
@@ -507,7 +502,7 @@ EpochType CollectionManager::reduceMsg(
     col_proxy, found_constructed, holder != holder_container.end()
   );
 
-  if (holder != holder_container.end() && found_constructed && elm_holder) {
+  if (found_constructed && elm_holder) {
     auto const& num_elms = elm_holder->numElements();
 
     auto reduce_id = std::make_tuple(col_proxy,tag);
@@ -565,12 +560,10 @@ void CollectionManager::sendMsg(
 
   theTerm()->produce(term::any_epoch_sentinel);
 
-  #pragma sst global proxy_container_
-  auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
-  auto holder = holder_container.find(col_proxy);
-  if (holder != holder_container.end()) {
-    auto const map_han = holder->second->map_fn;
-    auto max_idx = holder->second->max_idx;
+  auto holder = findColHolder<ColT, IndexT>(col_proxy);
+  if (holder != nullptr) {
+    auto const map_han = holder->map_fn;
+    auto max_idx = holder->max_idx;
     auto cur_idx = elm_proxy.getIndex();
     auto fn = auto_registry::getAutoHandlerMap(map_han);
 
@@ -634,10 +627,7 @@ bool CollectionManager::insertCollectionElement(
   HandlerType const& map_han, VirtualProxyType const& proxy,
   bool const& is_migrated_in, NodeType const& migrated_from
 ) {
-  #pragma sst global proxy_container_
-  auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
-  auto holder_iter = holder_container.find(proxy);
-  auto const& found_holder = holder_iter != holder_container.end();
+  auto holder = findColHolder<ColT, IndexT>(proxy);
 
   debug_print(
     vrt_coll, node,
@@ -645,7 +635,7 @@ bool CollectionManager::insertCollectionElement(
     proxy, map_han, print_index(idx), print_index(max_idx)
   );
 
-  if (!found_holder) {
+  if (holder == nullptr) {
     using HolderType = typename EntireHolder<ColT, IndexT>::InnerHolder;
 
     EntireHolder<ColT, IndexT>::insert(
@@ -678,18 +668,16 @@ bool CollectionManager::insertCollectionElement(
       iter->second.clear();
       buffered_sends_.erase(iter);
     }
-
-    holder_iter = holder_container.find(proxy);
   }
 
-  auto& elm_holder = holder_iter->second->holder_;
-  auto const& elm_exists = elm_holder.exists(idx);
+  auto elm_holder = findElmHolder<ColT,IndexT>(proxy);
+  auto const& elm_exists = elm_holder->exists(idx);
   assert(!elm_exists && "Must not exist at this point");
 
-  auto const& destroyed = elm_holder.isDestroyed();
+  auto const& destroyed = elm_holder->isDestroyed();
 
   if (!destroyed) {
-    elm_holder.insert(idx, typename Holder<ColT, IndexT>::InnerHolder{
+    elm_holder->insert(idx, typename Holder<ColT, IndexT>::InnerHolder{
       std::move(vc), map_han, max_idx
     });
 
