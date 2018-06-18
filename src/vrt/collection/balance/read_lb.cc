@@ -71,13 +71,14 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
     int64_t lb_iter = -1;
     std::string lb_name;
 
-    if (std::isdigit(file.peek())) {
-      file >> lb_iter >> lb_name;
-      max_entry = std::max(max_entry, lb_iter);
-    } else {
+    if (std::isalpha(file.peek())) {
       file >> lb_name;
       lb_iter = max_entry;
       max_entry++;
+    } else {
+      file >> lb_iter;
+      file >> lb_name;
+      max_entry = std::max(max_entry, lb_iter);
     }
     if (file.peek() != '\n') {
       file >> lb_min;
