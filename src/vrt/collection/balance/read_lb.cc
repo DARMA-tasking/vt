@@ -2,6 +2,7 @@
 #include "config.h"
 #include "context/context.h"
 #include "vrt/collection/balance/read_lb.h"
+#include "vrt/collection/balance/lb_type.h"
 
 #include <string>
 #include <fstream>
@@ -85,7 +86,14 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
       file >> lb_max;
     }
 
-    if (lb_name != "") {
+    bool valid_lb_found = false;
+    for (auto&& elm : lb_names_<>) {
+      if (lb_name == elm.second) {
+        valid_lb_found = true;
+      }
+    }
+
+    if (valid_lb_found) {
       auto spec_index = static_cast<SpecIndex>(lb_iter);
       spec_.emplace(
         std::piecewise_construct,
