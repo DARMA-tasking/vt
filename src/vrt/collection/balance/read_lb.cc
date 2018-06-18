@@ -64,7 +64,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   std::ifstream file(filename);
   assert(file.good() && "must be valid");
 
+  constexpr int64_t const max_num_times = 100000;
   int64_t max_entry = 0;
+  int64_t num_times = 0;
   std::string cur_line;
   while (!file.eof()) {
     double lb_min = 0.0f, lb_max = 0.0f;
@@ -111,6 +113,12 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
         lb_min,
         lb_max
       );
+    }
+
+    num_times++;
+
+    if (num_times > max_num_times) {
+      break;
     }
   }
 
