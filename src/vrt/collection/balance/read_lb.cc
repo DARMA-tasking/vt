@@ -35,7 +35,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/ SpecEntry const* ReadLBSpec::entry(SpecIndex const& idx) {
   auto spec_iter = spec_.find(idx);
-  ::fmt::print(
+  debug_print(
+    lblite, node,
     "idx={},idx-mod={},found={},size={},num_entries={}\n",
     idx,
     idx % num_entries_,
@@ -91,7 +92,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
         std::forward_as_tuple(spec_index),
         std::forward_as_tuple(SpecEntry{spec_index,lb_name,lb_min,lb_max})
       );
-      ::fmt::print(
+      debug_print(
+        lblite, node,
         "{}: insert: idx={},size={},name={},min={},max={}\n",
         theContext()->getNode(),
         spec_index,
