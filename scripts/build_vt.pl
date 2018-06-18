@@ -110,6 +110,9 @@ cmake $source_base_dir                                                       \\
       -Ddetector_DIR=$detector                                               \\
       -Dfmt_DIR=$fmt                                                         \\
       -Dgtest_DIR=$gtest                                                     \\
+      -DGTEST_LIBRARY=$gtest/lib64/libgtest.a                                \\
+      -DGTEST_INCLUDE_DIR=$gtest/include                                     \\
+      -DGTEST_MAIN_LIBRARY=$gtest/lib64/libgtest_main.a                      \\
       $atomic                                                                \\
       ${build_all_str}
 CMAKESTR
