@@ -35,7 +35,8 @@ static void callbackFn(vt::BaseMessage* in_msg) {
   HandlerType const& han = theMsg()->getCurrentHandler();
   theMsg()->unregisterHandlerFn(han);
 
-  theMsg()->sendMsg(my_reinstate_fn, makeSharedMessage<TestMsg>(0, han));
+  NodeType const node = 0;
+  theMsg()->sendMsg(my_reinstate_fn, makeSharedMessage<TestMsg>(node, han));
 
   fmt::print("{}: callbackFn handler node {}\n", theContext()->getNode(), msg.from);
 }
