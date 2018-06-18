@@ -26,16 +26,13 @@ struct Scatter : virtual collective::tree::Tree {
   );
 
 protected:
-  template <typename=void>
   void scatterIn(ScatterMsg* msg);
 
 private:
-  template <typename=void>
   char* applyScatterRecur(
     NodeType node, char* ptr, std::size_t elm_size, FuncSizeType size_fn,
     FuncDataType data_fn
   );
-  template <typename=void>
   static void scatterHandler(ScatterMsg* msg);
 };
 
