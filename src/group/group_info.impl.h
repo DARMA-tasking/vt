@@ -115,7 +115,7 @@ template <typename MsgT>
 
     range_tail->splitN(default_num_children, [&](RegionPtrType region){
       auto const& c = region->head();
-      auto const& c_size = region->getSize();
+      auto const& c_size = static_cast<NodeType>(region->getSize());
 
       local_nodes.push_back(c);
 

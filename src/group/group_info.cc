@@ -79,7 +79,7 @@ void Info::setup() {
           if (finished_setup_action_ != nullptr) {
             op = theGroup()->registerContinuation(finished_setup_action_);
           }
-          auto const& size = region_list_.size();
+          auto const& size = static_cast<NodeType>(region_list_.size());
           region::ShallowList lst(region_list_);
           auto msg = makeSharedMessage<GroupListMsg>(
             low_node, size, group_, op, size, this_node, &lst
@@ -100,7 +100,7 @@ void Info::setup() {
         if (finished_setup_action_ != nullptr) {
           op = theGroup()->registerContinuation(finished_setup_action_);
         }
-        auto const& size = region_->getSize();
+        auto const& size = static_cast<NodeType>(region_->getSize());
         auto msg = makeSharedMessage<GroupRangeMsg>(
           low_node, size, group_, op, size, this_node,
           static_cast<region::Range*>(region_.get())
