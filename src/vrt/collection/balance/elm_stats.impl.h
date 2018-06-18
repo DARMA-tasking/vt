@@ -8,6 +8,7 @@
 #include "vrt/collection/balance/stats_msg.h"
 #include "vrt/collection/balance/proc_stats.h"
 #include "vrt/collection/balance/lb_type.h"
+#include "vrt/collection/balance/read_lb.h"
 #include "vrt/collection/manager.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vrt/collection/balance/greedylb/greedylb.h"
@@ -177,7 +178,17 @@ void CollectedStats<ColT>::operator()(StatsMsg<ColT>* msg) {
 template <typename ColT>
 void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
   auto const& this_node = theContext()->getNode();
-  auto const the_lb = theContext()->getLB();
+  auto const& phase = msg->getPhase();
+  auto the_lb = theContext()->getLB();
+
+  using namespace balance;
+  ReadLBSpec::openFile();
+  ReadLBSpec::readFile();
+
+  bool const has_spec = ReadLBSpec::hasSpec();
+  if (has_spec) {
+    the_lb = ReadLBSpec::getLB(phase);
+  }
 
   if (this_node == 0) {
     ::fmt::print(
