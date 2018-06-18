@@ -176,55 +176,56 @@ template <typename ColT, typename IndexT, typename MsgT>
     col, col_msg->getVrtHandler(), col_msg->getBcastEpoch()
   );
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(col);
-  assert(elm_holder != nullptr && "Should never happen");
-  auto const sub_handler = col_msg->getVrtHandler();
-  auto const act_fn = auto_registry::getAutoHandlerCollection(sub_handler);
-  debug_print(
-    vrt_coll, node,
-    "broadcast apply: size={}\n", elm_holder->numElements()
-  );
-  elm_holder->foreach([msg,act_fn](
-    IndexT const& idx, CollectionBase<ColT,IndexT>* base
-  ) {
+  if (elm_holder) {
+    auto const sub_handler = col_msg->getVrtHandler();
+    auto const act_fn = auto_registry::getAutoHandlerCollection(sub_handler);
     debug_print(
       vrt_coll, node,
-      "broadcast: apply to element: epoch={}, bcast_epoch={}\n",
-      msg->bcast_epoch_, base->cur_bcast_epoch_
+      "broadcast apply: size={}\n", elm_holder->numElements()
     );
-    if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
-      void* typeless_collection = static_cast<void*>(base);
-      assert(base != nullptr && "Must be valid pointer");
-      // be very careful here, do not touch `base' after running the active
-      // message because it might have migrated out and be invalid
-      base->cur_bcast_epoch_++;
-
-      backend_enable_if(
-        lblite, {
-          debug_print(
-            vrt_coll, node,
-            "broadcast: apply to element: instrument={}\n",
-            msg->lbLiteInstrument()
-          );
-
-          if (msg->lbLiteInstrument()) {
-            auto& stats = base->getStats();
-            stats.startTime();
-          }
-        }
+    elm_holder->foreach([msg,act_fn](
+      IndexT const& idx, CollectionBase<ColT,IndexT>* base
+    ) {
+      debug_print(
+        vrt_coll, node,
+        "broadcast: apply to element: epoch={}, bcast_epoch={}\n",
+        msg->bcast_epoch_, base->cur_bcast_epoch_
       );
+      if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
+        void* typeless_collection = static_cast<void*>(base);
+        assert(base != nullptr && "Must be valid pointer");
+        // be very careful here, do not touch `base' after running the active
+        // message because it might have migrated out and be invalid
+        base->cur_bcast_epoch_++;
 
-      act_fn(msg, reinterpret_cast<UntypedCollection*>(typeless_collection));
+        backend_enable_if(
+          lblite, {
+            debug_print(
+              vrt_coll, node,
+              "broadcast: apply to element: instrument={}\n",
+              msg->lbLiteInstrument()
+            );
 
-      backend_enable_if(
-        lblite, {
-          if (msg->lbLiteInstrument()) {
-            auto& stats = base->getStats();
-            stats.stopTime();
+            if (msg->lbLiteInstrument()) {
+              auto& stats = base->getStats();
+              stats.startTime();
+            }
           }
-        }
-      );
-    }
-  });
+        );
+
+        act_fn(msg, reinterpret_cast<UntypedCollection*>(typeless_collection));
+
+        backend_enable_if(
+          lblite, {
+            if (msg->lbLiteInstrument()) {
+              auto& stats = base->getStats();
+              stats.stopTime();
+            }
+          }
+        );
+      }
+    });
+  }
   theTerm()->consume(term::any_epoch_sentinel);
 }
 
