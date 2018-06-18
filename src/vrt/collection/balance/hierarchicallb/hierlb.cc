@@ -8,6 +8,7 @@
 #include "vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vrt/collection/balance/hierarchicallb/hierlb_strat.h"
 #include "vrt/collection/balance/stats_msg.h"
+#include "vrt/collection/balance/read_lb.h"
 #include "serialization/messaging/serialized_messenger.h"
 #include "collective/collective_alg.h"
 #include "collective/reduce/reduce.h"
@@ -810,8 +811,42 @@ std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
 /*static*/ void HierarchicalLB::hierLBHandler(balance::HierLBMsg* msg) {
   auto const& phase = msg->getPhase();
   HierarchicalLB::hier_lb_inst = std::make_unique<HierarchicalLB>();
+
+  using namespace balance;
+  ReadLBSpec::openFile();
+  ReadLBSpec::readFile();
+
+  bool fallback = true;
+  bool has_spec = ReadLBSpec::hasSpec();
+  if (has_spec) {
+    auto spec = ReadLBSpec::entry(phase);
+    if (spec) {
+      bool has_min_only = false;
+      if (spec->hasMin()) {
+        HierarchicalLB::hier_lb_inst->hierlb_threshold = spec->min();
+        has_min_only = true;
+      }
+      if (spec->hasMax()) {
+        HierarchicalLB::hier_lb_inst->hierlb_max_threshold = spec->max();
+        has_min_only = false;
+      }
+      if (has_min_only) {
+        HierarchicalLB::hier_lb_inst->hierlb_auto_threshold = false;
+      }
+      fallback = false;
+    }
+  }
+
+  if (fallback) {
+    HierarchicalLB::hier_lb_inst->hierlb_max_threshold = hierlb_max_threshold_p;
+    HierarchicalLB::hier_lb_inst->hierlb_threshold = hierlb_threshold_p;
+    HierarchicalLB::hier_lb_inst->hierlb_auto_threshold = hierlb_auto_threshold_p;
+  }
+
   HierarchicalLB::hier_lb_inst->start_time_ = timing::Timing::getCurrentTime();
-  HierarchicalLB::hier_lb_inst->setupTree(hierlb_threshold);
+  HierarchicalLB::hier_lb_inst->setupTree(
+    HierarchicalLB::hier_lb_inst->hierlb_threshold
+  );
   assert(balance::ProcStats::proc_data_.size() >= phase);
   HierarchicalLB::hier_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
   HierarchicalLB::hier_lb_inst->reduceLoad();

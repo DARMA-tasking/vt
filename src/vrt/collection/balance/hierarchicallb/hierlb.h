@@ -86,6 +86,8 @@ public:
   static std::unique_ptr<HierarchicalLB> hier_lb_inst;
 
 private:
+  double hierlb_max_threshold = 0.0f, hierlb_threshold = 0.0f;
+  bool hierlb_auto_threshold = true;
   TimeType start_time_ = 0.0f;
   double this_threshold = 0.0f;
   bool tree_setup = false;
