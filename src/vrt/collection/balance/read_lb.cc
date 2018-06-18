@@ -46,7 +46,11 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
     num_entries_
   );
   if (spec_iter == spec_.end()) {
-    spec_iter = spec_.find(idx % num_entries_);
+    auto idx2 = idx;
+    while (idx2 > num_entries_) {
+      idx2 -= num_entries_;
+    }
+    spec_iter = spec_.find(idx2/* % num_entries_*/);
     if (spec_iter != spec_.end()) {
       return &spec_iter->second;
     }
