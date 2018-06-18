@@ -8,6 +8,7 @@
 #include "vrt/collection/balance/greedylb/greedylb_types.h"
 #include "vrt/collection/balance/greedylb/greedylb_constants.h"
 #include "vrt/collection/balance/greedylb/greedylb_msgs.h"
+#include "vrt/collection/balance/read_lb.h"
 #include "vrt/collection/balance/stats_msg.h"
 #include "serialization/messaging/serialized_messenger.h"
 #include "context/context.h"
@@ -26,6 +27,41 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 /*static*/ void GreedyLB::greedyLBHandler(balance::GreedyLBMsg* msg) {
   auto const& phase = msg->getPhase();
   GreedyLB::greedy_lb_inst = std::make_unique<GreedyLB>();
+
+  using namespace balance;
+  ReadLBSpec::openFile();
+  ReadLBSpec::readFile();
+
+  bool fallback = true;
+  bool has_spec = ReadLBSpec::hasSpec();
+  if (has_spec) {
+    auto spec = ReadLBSpec::entry(phase);
+    if (spec) {
+      bool has_min_only = false;
+      if (spec->hasMin()) {
+        GreedyLB::greedy_lb_inst->this_threshold = spec->min();
+        GreedyLB::greedy_lb_inst->greedy_threshold = spec->min();
+        has_min_only = true;
+      }
+      if (spec->hasMax()) {
+        GreedyLB::greedy_lb_inst->this_threshold = spec->max();
+        GreedyLB::greedy_lb_inst->greedy_max_threshold = spec->min();
+        has_min_only = false;
+      }
+      if (has_min_only) {
+        GreedyLB::greedy_lb_inst->greedy_auto_threshold = false;
+      }
+      fallback = false;
+    }
+  }
+
+  if (fallback) {
+    GreedyLB::greedy_lb_inst->greedy_auto_threshold = greedy_auto_threshold_p;
+    GreedyLB::greedy_lb_inst->greedy_threshold = greedy_threshold_p;
+    GreedyLB::greedy_lb_inst->greedy_max_threshold = greedy_max_threshold_p;
+    GreedyLB::greedy_lb_inst->this_threshold = greedy_threshold_p;
+  }
+
   GreedyLB::greedy_lb_inst->start_time_ = timing::Timing::getCurrentTime();
   assert(balance::ProcStats::proc_data_.size() >= phase);
   GreedyLB::greedy_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
@@ -260,8 +296,10 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     auto const& new_obj_id = objSetNode(this_node,recs[i]);
     debug_print(
       lblite, node,
-      "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}\n",
-      i, to_node, recs[i], new_obj_id, num_recs
+      "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}, "
+      "byte_offset={}\n",
+      i, to_node, recs[i], new_obj_id, num_recs,
+      reinterpret_cast<char*>(recs) - reinterpret_cast<char*>(objs)
     );
     auto iter = balance::ProcStats::proc_migrate_.find(new_obj_id);
     assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");

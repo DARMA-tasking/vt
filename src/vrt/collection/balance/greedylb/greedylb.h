@@ -60,6 +60,9 @@ public:
   static std::unique_ptr<GreedyLB> greedy_lb_inst;
 
 private:
+  double greedy_max_threshold = 0.0f;
+  double greedy_threshold = 0.0f;
+  bool greedy_auto_threshold = true;
   double this_threshold = 0.0f;
   TimeType start_time_ = 0.0f;
   LoadType avg_load = 0.0f, max_load = 0.0f;
