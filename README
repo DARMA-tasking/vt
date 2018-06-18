@@ -1,0 +1,63 @@
+======================== ============================ ========================
+======================== ============================ ========================
+======================== VT = virtual-transport layer ========================
+======================== ============================ ========================
+======================== ============================ ========================
+
+VT is an active messaging layer with C++ object virtualization and automatic
+location management. It directly targets MPI to effectively interact with
+different machine architectures. Empowered with virtualization, VT can
+automatically dynamically load balance and schedule scientific applications with
+minimal user input.
+
+VT abstracts nodes/workers so a program can be written in terms of virtual units
+that can be migrated and executed on different hardware resources without
+explicit programmer mapping and management.
+
+======================== ============================ ========================
+========================           Building           ========================
+======================== ============================ ========================
+
+VT can be built with cmake.
+
+To build VT, you need the following dependencies:
+  -- fmt,
+  -- meld,
+  -- detector,
+  -- checkpoint,
+  -- MPI,
+  -- (gtest, if testing is enabled),
+  -- (OpenMP or std::threads, if threading is enabled.)
+
+meld, detector, and checkpoint are components that are within the VT ecosystem,
+but exported as separate cmake packages for re-usability.
+
+So to start out, obtain `fmt' and `googletest'.
+
+  googletest:    git@github.com:google/googletest.git
+  fmt:           git@github.com:fmtlib/fmt.git
+
+Build and install them.
+
+Now, you have a choice; you can either manually obtain and install `meld',
+`detector', and `checkpoint' or use the auto builder to co-install them.
+
+The auto builder is located here:
+
+  git@github.com:darma-mpi-backend/vt-auto-build.git
+
+If you choose the auto building, follow the directions in the repository. All
+you will need is `googletest' and `fmt' to complete the installation of VT.
+
+If you choose to build yourself, you must obtain and build meld, detector, and
+checkpoint. Once they are installed, point the VT cmake to them along with the
+external dependencies (fmt and googletest).
+
+Run cmake and enjoy!
+
+If you build with testing, you can use `make test' to execute the automated
+tests to test correctness of the VT build.
+
+======================== ============================ ========================
+======================== ============================ ========================
+======================== ============================ ========================
