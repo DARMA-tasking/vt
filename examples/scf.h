@@ -272,8 +272,13 @@ void four_center_update(
   std::vector<std::vector<IndexType>> const&, std::vector<Water> const&, double,
   libint2::Engine&);
 
+MatrixBlock four_center_update(MatrixBlock const&, Water const&, libint2::Engine&);
+
 std::vector<std::pair<double, std::array<double, 3>>>
 nuclei_charges(std::vector<Water> const&);
+
+// Returns the density for a specific water
+MatrixBlock matrixBasedScf(Water const& w);
 
 } /*end namespace scf*/
 

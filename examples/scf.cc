@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 
 #include <cstdlib>
+#include <libint2/diis.h>
 
 using namespace ::vt;
 
@@ -30,25 +31,19 @@ int main(int argc, char** argv) {
   }
 
   std::vector<scf::Water> waters;
-  waters.emplace_back(scf::Water(
-    {0.0, -0.07579, 0.0}, {0.86681, 0.60144, 0.0}, {-0.86681, 0.60144, 0.0}));
-
-  waters.emplace_back(scf::Water(
-    {0.0, -0.07579, 3.0}, {0.86681, 0.60144, 3.0}, {-0.86681, 0.60144, 3.0}));
-
-  for (auto const& w : waters) {
-    for (auto const& sh : w.shells()) {
-      std::cout << sh << std::endl;
-    }
+  auto num_waters = 5;
+  for (auto i = 0; i < num_waters; ++i) {
+    double scale = i * 2.0;
+    waters.emplace_back(scf::Water(
+      {0.0, -0.07579, scale}, {0.86681, 0.60144, scale},
+      {-0.86681, 0.60144, scale}));
   }
-
-  const auto num_waters = waters.size();
 
   // All the matrices we will need, trim down later.
   scf::SparseMatrix S(num_waters, num_waters);
   scf::SparseMatrix H(num_waters, num_waters);
   scf::SparseMatrix F(num_waters, num_waters);
-
+  scf::SparseMatrix D(num_waters, num_waters);
 
   // Get engine for V_integrals
   {
@@ -70,70 +65,18 @@ int main(int argc, char** argv) {
         auto out_V = one_body_integral(wi, wj, eng_v);
         scf::MatrixBlock out_H = out_T + out_V;
 
-        // if (i != j) {
-        //   S.block(j, i) = out_S.transpose();
-        //   H.block(j, i) = out_H.transpose();
-        // }
-
         S.block(i, j) = std::move(out_S);
         H.block(i, j) = std::move(out_H);
       }
     }
   }
 
-  auto truncate_thresh = 1e-12;
+  auto truncate_thresh = 1e-7;
   S.truncate(truncate_thresh);
   H.truncate(truncate_thresh);
 
-  // Initialize guess assuming that D = 0;
-  F = H;
-
-  // Bootstrap SCF
-  auto Srep = S.replicate();
-  auto Frep = F.replicate();
-  auto Hrep = H.replicate();
-  std::cout << "S sysm: " << (Srep - Srep.transpose()).norm() << "\n"
-            << std::endl;
-  std::cout << "S:\n" << Srep << "\n" << std::endl;
-  std::cout << "H sysm: " << (Hrep - Hrep.transpose()).norm() << "\n"
-            << std::endl;
-  std::cout << "H:\n" << Hrep << "\n" << std::endl;
-
-  auto nocc = 0;
-  for (auto const& w : waters) {
-    nocc += w.nelectrons();
-  }
-  nocc /= 2;
-
-
-  std::cout << "Occupation: " << nocc << std::endl;
-
-  auto make_new_density = [num_waters, nocc](auto F, auto S, double thresh) {
-    // TODO Compute on one node and bcast, luckily Eigen will work this way
-    // since there are no phase issues
-    Eigen::GeneralizedSelfAdjointEigenSolver<scf::MatrixBlock> gevd(F, S);
-    scf::MatrixBlock const& C = gevd.eigenvectors().leftCols(nocc);
-    scf::MatrixBlock Drep = C * C.transpose();
-
-    return scf::SparseMatrix(num_waters, num_waters, Drep, thresh);
-  };
-
-  auto D = make_new_density(Frep, Srep, truncate_thresh);
-  auto Drep = D.replicate();
-  std::cout << "Initial D sysm:" << (Drep - Drep.transpose()).norm()
-            << std::endl;
-  std::cout << "Initial D:\n" << Drep << "\n" << std::endl;
-
-
-  libint2::Engine eng_2e(libint2::Operator::coulomb, 6, 1, 0);
-
-  scf::MatrixBlock Q;
-  std::vector<std::vector<scf::IndexType>> sparse_pair_list;
-  std::tie(Q, sparse_pair_list) = scf::Schwarz(waters, eng_2e);
-
   auto enuc = 0.0;
   {
-
     std::vector<scf::Atom> atoms;
     atoms.reserve(num_waters * 3);
     for (auto const& w : waters) {
@@ -151,9 +94,50 @@ int main(int argc, char** argv) {
   }
   ::fmt::print("Nuclear repulsion energy: {}\n", enuc);
 
+  // Density guess is super position of water densities
+  for (auto i = 0; i < num_waters; ++i) {
+    D.block(i, i) = matrixBasedScf(waters[i]);
+  }
+  auto Drep = D.replicate();
+  if (num_waters < 3) {
+    std::cout << "Initial D:\n" << Drep << "\n" << std::endl;
+  }
+
+  auto Srep = S.replicate();
+  auto Frep = F.replicate();
+  auto Hrep = H.replicate();
+
+  auto nocc = 0;
+  for (auto const& w : waters) {
+    nocc += w.nelectrons();
+  }
+  nocc /= 2;
+
+
+  auto make_new_density = [num_waters, nocc](auto F, auto S, double thresh) {
+    // TODO Compute on one node and bcast, luckily Eigen will work this way
+    // since there are no phase issues
+    Eigen::GeneralizedSelfAdjointEigenSolver<scf::MatrixBlock> gevd(F, S);
+    scf::MatrixBlock const& C = gevd.eigenvectors().leftCols(nocc);
+    scf::MatrixBlock Drep = C * C.transpose();
+
+    return scf::SparseMatrix(num_waters, num_waters, Drep, thresh);
+  };
+
+  libint2::Engine eng_2e(libint2::Operator::coulomb, 6, 1, 0);
+
+  scf::MatrixBlock Q;
+  std::vector<std::vector<scf::IndexType>> sparse_pair_list;
+  std::tie(Q, sparse_pair_list) = scf::Schwarz(waters, eng_2e);
+
+  // Maybe we don't actually want to use diis, but keep if for now.
+  libint2::DIIS<scf::MatrixBlock> diis(2); // start DIIS on second iteration
   auto iter = 0;
-  while (40 != iter++) {
-    ::fmt::print("Starting iteration {}\n", iter);
+  auto energy = 0.0;
+  bool converged = false;
+  // Min 3 iters, then go until 40 iters or until converged
+  while (!converged) {
+    ::fmt::print("Starting iteration {}, ", iter + 1);
 
     // TODO Make a new fock matrix given the density
     scf::SparseMatrix Fnew(num_waters, num_waters);
@@ -164,20 +148,27 @@ int main(int argc, char** argv) {
     F.truncate(truncate_thresh);
     F = std::move(Fnew);
     Frep = F.replicate() + Hrep;
-    if (iter < 2) {
-      std::cout << "Iter(" << iter << ") F:\n" << Frep << "\n" << std::endl;
-    }
+
+    Drep = D.replicate();
+    auto old_energy = enuc + Drep.cwiseProduct(Hrep + Frep).sum();
+    auto diff = std::abs(old_energy - energy);
+    energy = old_energy;
+
+    scf::MatrixBlock grad = Frep * Drep * Srep - Srep * Drep * Frep;
+    // diis.extrapolate(Frep, grad);
 
     D = make_new_density(Frep, Srep, truncate_thresh);
-    Drep = D.replicate();
-
-    auto energy = enuc;
-    for (auto i = 0; i < Drep.rows(); ++i) {
-      for (auto j = 0; j < Drep.cols(); ++j) {
-        energy += Drep(i, j) * (Frep(i, j) + Hrep(i, j));
-      }
+    if (iter < 4) { // minimum 3 iters
+      converged = false;
+    } else if (iter == 99) {
+      converged = true;
+    } else if (diff < 1e-9) {
+      converged = true;
+    } else {
+      converged = false;
     }
-    ::fmt::print("\tenergy: {}\n", energy);
+    ::fmt::print("energy: {0:.10f}, diff: {1:.10f}\n", energy, diff);
+    ++iter;
   }
 
 
@@ -243,13 +234,12 @@ void scf::four_center_update(
     for (auto j = 0; j < nwaters; ++j) {
       const auto Qij = Q(i, j); // Coulomb Bra
       auto Fij = &F.block(i, j);
-      // auto* Fji = (i != j) ? &F.block(i, j) : nullptr;
-      decltype(Fij) Fji = nullptr;
 
       for (auto k = 0; k < nwaters; ++k) {
         const auto Qkj = Q(k, j); // Exchange ket
 
         auto& Dkj = D.block(k, j); // Exchange D
+        const auto dkj_size = Dkj.size();
         const auto Dkj_norm = Dkj.norm();
 
         // for (auto l : sparse_list[k]) {
@@ -258,32 +248,21 @@ void scf::four_center_update(
           const auto Qil = Q(i, l); // Exchange bra
 
           auto& Dkl = D.block(k, l); // Coulomb D
+          const auto dkl_size = Dkl.size();
 
           if (do_J(Qij, Qkl, Dkl.norm()) || do_K(Qil, Qkj, Dkj_norm)) {
             auto Fil = &F.block(i, l);
-            // auto* Fli = (i != l) ? &F.block(l, i) : nullptr;
-            decltype(Fil) Fli = nullptr;
 
-
-            if (Fij->size() == 0) {
+            if (dkl_size != 0 && Fij->size() == 0) {
               Fij->resize(scf::nbasis_per_water, scf::nbasis_per_water);
               Fij->setZero();
             }
 
-            if (Fji && Fji->size() == 0) {
-              Fji->resize(scf::nbasis_per_water, scf::nbasis_per_water);
-              Fji->setZero();
-            }
-
-            if (Fil->size() == 0) {
+            if (dkj_size != 0 && Fil->size() == 0) {
               Fil->resize(scf::nbasis_per_water, scf::nbasis_per_water);
               Fil->setZero();
             }
 
-            if (Fli && Fli->size() == 0) {
-              Fli->resize(scf::nbasis_per_water, scf::nbasis_per_water);
-              Fli->setZero();
-            }
 
             // We may want to dive down into this and do shell level screening
             auto ij_kl_ints = scf::two_e_integral(
@@ -301,78 +280,15 @@ void scf::four_center_update(
                     const auto ps = p * scf::nbasis_per_water + s;
 
                     const auto val = ij_kl_ints(pq, rs);
-                    Fij->operator()(p, q) += 2 * Dkl(r, s) * val;
-                    if (Fji) {
-                      Fji->operator()(q, p) += 2 * Dkl(r, s) * val;
+                    if (dkl_size) {
+                      Fij->operator()(p, q) += 2 * Dkl(r, s) * val;
                     }
-                    Fil->operator()(p, s) -= Dkj(r, q) * val;
-                    if (Fli) {
-                      Fli->operator()(s, p) -= Dkj(r, q) * val;
+                    if (dkj_size) {
+                      Fil->operator()(p, s) -= Dkj(r, q) * val;
                     }
                   }
                 }
               }
-            }
-
-            auto const& buf = eng.results();
-
-            auto s1_start = 0;
-            for (auto const& s1 : waters[i].shells()) {
-              const auto s1_size = s1.size();
-
-              auto s2_start = 0;
-              for (auto const& s2 : waters[j].shells()) {
-                const auto s2_size = s2.size();
-
-                auto s3_start = 0;
-                for (auto const& s3 : waters[k].shells()) {
-                  const auto s3_size = s3.size();
-
-                  auto s4_start = 0;
-                  for (auto const& s4 : waters[l].shells()) {
-                    const auto s4_size = s4.size();
-
-                    eng.compute(s1, s2, s3, s4);
-                    auto const& buf_1234 = buf[0];
-
-                    // write the matrix
-                    for (auto p = 0, pqrs = 0; p < s1_size; ++p) {
-                      const auto bf1 = p + s1_start;
-
-                      for (auto q = 0; q < s2_size; ++q) {
-                        const auto bf2 = q + s2_start;
-
-                        for (auto r = 0; r < s3_size; ++r) {
-                          const auto bf3 = r + s3_start;
-
-                          for (auto s = 0; s < s4_size; ++s, ++pqrs) {
-                            const auto bf4 = s + s4_start;
-
-                            const auto value = buf_1234[pqrs];
-                            const auto test_val = ij_kl_ints(
-                              bf1 * scf::nbasis_per_water + bf2,
-                              bf3 * scf::nbasis_per_water + bf4);
-
-                            if (test_val != value) {
-                              ::fmt::print(
-                                "value: {}, test val: {}, ({}, {}, {}, {})\n",
-                                value, test_val, bf1, bf2, bf3, bf4);
-                            }
-                            // Should take advantage of permsymm of F
-                            // Fij(bf1, bf2) += 2 * Dkl(bf3, bf4) * test_val;
-                            // Fil(bf1, bf4) -= Dkj(bf3, bf2) * test_val;
-                          }
-                        }
-                      }
-                    }
-
-                    s4_start += s4_size;
-                  }
-                  s3_start += s3_size;
-                }
-                s2_start += s2_size;
-              }
-              s1_start += s1_size;
             }
           }
         }
@@ -485,4 +401,87 @@ scf::one_body_integral(Water const& i, Water const& j, libint2::Engine& eng) {
   }
 
   return output;
+}
+
+scf::MatrixBlock scf::four_center_update(
+  scf::MatrixBlock const& D, scf::Water const& w, libint2::Engine& eng) {
+
+  scf::MatrixBlock F(scf::nbasis_per_water, scf::nbasis_per_water);
+  F.setZero();
+  auto ij_kl_ints = scf::two_e_integral(w, w, w, w, eng);
+
+  for (auto p = 0, pqrs = 0; p < scf::nbasis_per_water; ++p) {
+    for (auto q = 0; q < scf::nbasis_per_water; ++q) {
+      const auto pq = p * scf::nbasis_per_water + q;
+
+      for (auto r = 0; r < scf::nbasis_per_water; ++r) {
+        const auto rq = r * scf::nbasis_per_water + q;
+
+        for (auto s = 0; s < scf::nbasis_per_water; ++s, ++pqrs) {
+          const auto rs = r * scf::nbasis_per_water + s;
+          const auto ps = p * scf::nbasis_per_water + s;
+
+          const auto val = ij_kl_ints(pq, rs);
+          F(p, q) += 2 * D(r, s) * val;
+          F(p, s) -= D(r, q) * val;
+        }
+      }
+    }
+  }
+
+  return F;
+}
+
+
+scf::MatrixBlock scf::matrixBasedScf(scf::Water const& w) {
+  const auto max_nprim = 6;
+  const auto max_ang = 1;
+
+  libint2::Engine eng_o(libint2::Operator::overlap, max_nprim, max_ang, 0);
+  libint2::Engine eng_t(libint2::Operator::kinetic, max_nprim, max_ang, 0);
+  libint2::Engine eng_v(libint2::Operator::nuclear, max_nprim, max_ang, 0);
+
+  eng_v.set_params(scf::nuclei_charges({w}));
+
+  auto S = one_body_integral(w, w, eng_o);
+  auto T = one_body_integral(w, w, eng_t);
+  auto V = one_body_integral(w, w, eng_v);
+  scf::MatrixBlock H = T + V;
+  T.resize(0, 0);
+  V.resize(0, 0);
+
+  scf::MatrixBlock F = H;
+
+  auto new_density = [](auto F, auto S) {
+    Eigen::GeneralizedSelfAdjointEigenSolver<scf::MatrixBlock> gevd(F, S);
+    scf::MatrixBlock const& C = gevd.eigenvectors().leftCols(5);
+    return scf::MatrixBlock(C * C.transpose());
+  };
+
+  scf::MatrixBlock D = new_density(F, S);
+
+  libint2::Engine eng_2e(libint2::Operator::coulomb, max_nprim, max_ang, 0);
+  eng_2e.set_precision(0.0);
+
+  auto energy = 0.0;
+  auto diff = 1.0;
+  auto iter = 0;
+  libint2::DIIS<scf::MatrixBlock> diis(2); // start DIIS on second iteration
+  while (diff > 1e-8) {
+    F = H;
+    F += four_center_update(D, w, eng_2e);
+    auto new_energy = D.cwiseProduct(H + F).sum();
+
+    scf::MatrixBlock grad = F * D * S - S * D * F;
+    scf::MatrixBlock Fdiis = F;
+
+    diis.extrapolate(Fdiis, grad);
+
+    D = new_density(Fdiis, S);
+
+    diff = std::abs(new_energy - energy);
+    energy = new_energy;
+  }
+
+  return D;
 }
