@@ -4,18 +4,20 @@
 #include <eigen3/Eigen/Dense>
 #include <vector>
 
+#include <libint2.hpp>
+
 namespace scf {
 
 using IndexType = int32_t;
 
-static constexpr IndexType const nbasis_per_water = 24;
-static constexpr IndexType const nshell_per_water = 3;
+static constexpr IndexType const nbasis_per_water = 13;
+static constexpr IndexType const nshell_per_water = 9;
 
 static constexpr IndexType const i_block = nbasis_per_water;
 static constexpr IndexType const j_block = nbasis_per_water;
 
-// struct MatrixBlock : public Eigen::MatrixXd {};
-using MatrixBlock = Eigen::MatrixXd;
+using MatrixBlock =
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using Vector3d = Eigen::Vector3d;
 
 //
@@ -62,6 +64,12 @@ struct SparseMatrix {
     return blocks_[i][j];
   }
 
+  BlockType const& block(IndexType i, IndexType j) const {
+    assert(blocks_.size() >= i && "i must exist");
+    assert(blocks_[i].size() >= j && "j must exist");
+    return blocks_[i][j];
+  }
+
   // Return True for now until we decide on the distribution
   bool is_local(IndexType i, IndexType j) const { return true; }
 
@@ -99,12 +107,31 @@ struct SparseMatrix {
     return replicated;
   }
 
+  // Figure out what percentage of our blocks are dense
+  double fillPercent() const {
+    IndexType nlocal = 0;
+    IndexType npresent = 0;
+    for (auto i = 0; i < rows_; ++i) {
+      for (auto j = 0; j < cols_; ++j) {
+        if (is_local(i, j)) {
+          ++nlocal;
+          if (blocks_[i][j].size() > 0) {
+            ++npresent;
+          }
+        }
+      }
+    }
+
+    // TODO Allreduce nlocal and npresent
+    return static_cast<double>(npresent) / static_cast<double>(nlocal);
+  }
+
   // Remove blocks with fnorm smaller than threshold
   void truncate(double thresh) {
     const auto thresh2 = thresh * thresh;
     for (auto& row : blocks_) {
       for (auto& block : row) {
-        if (thresh < block.squaredNorm()) {
+        if (block.squaredNorm() < thresh2) {
           block.resize(0, 0);
         }
       }
@@ -118,55 +145,135 @@ struct SparseMatrix {
 };
 
 
-// Later change this to Libint Shell
-struct Shell {
-  Shell(Vector3d v) : pos_(std::move(v)) {}
-
-  Shell() = default;
-  Shell(Shell const&) = default;
-  Shell(Shell&&) = default;
-  ~Shell() = default;
-
-  Vector3d& center() { return pos_; }
-  Vector3d const& center() const { return pos_; }
-
-  private:
-  Vector3d pos_;
+struct Atom {
+  Atom(int n, Vector3d pos) : atomic_number(n), r(pos) {}
+  Atom() = default;
+  int atomic_number;
+  Vector3d r;
 };
 
-// Water will need to be expanded to have shells and we will select a
-// canonical ordering for the shells
+// Water holds all of the shells a water molecule needs
 struct Water {
-  Water(Vector3d O, Vector3d H1, Vector3d H2) : shells_(nshell_per_water) {
-    shells_.emplace_back(Shell(std::move(O)));
-    shells_.emplace_back(Shell(std::move(H1)));
-    shells_.emplace_back(Shell(std::move(H2)));
+
+  // Hard code atom ordering O->H1->H2 and then hard code 6-31g basis in NWCHEM
+  // order from the basis set exchange.  Also remove general contractions from
+  // the SP shells so that we have 9 shells and 13 functions for each water.
+  Water(Vector3d O, Vector3d H1, Vector3d H2)
+    : atoms_({Atom(8, ang_to_bohr * O), Atom(1, ang_to_bohr * H1),
+              Atom(1, ang_to_bohr * H2)}) {
+    // Initialize O shells
+    // Oxygen core S
+    std::vector<double> alpha = {5484.6717000, 825.2349500, 188.0469600,
+                                 52.9645000,   16.8975700,  5.7996353};
+
+    std::vector<double> coeffs = {0.0018311, 0.0139501, 0.0684451,
+                                  0.2327143, 0.4701930, 0.3585209};
+
+    // Shell 1
+    shells_.push_back(
+      libint2::Shell{alpha,
+                     {{0, false, coeffs}},
+                     {{atoms_[0].r[0], atoms_[0].r[1], atoms_[0].r[2]}}});
+
+    // Oxygen SP 1 stuffs
+    alpha = {15.5396160, 3.5999336, 1.0137618};
+    coeffs = {-0.1107775, -0.1480263, 1.1307670};
+    std::vector<double> coeffs2 = {0.0708743, 0.3397528, 0.7271586};
+
+    // Oxygen S1 shell 2
+    shells_.push_back(
+      libint2::Shell{alpha,
+                     {{0, false, coeffs}},
+                     {{atoms_[0].r[0], atoms_[0].r[1], atoms_[0].r[2]}}});
+
+    // Oxygen P1 shell 3
+    shells_.push_back(
+      libint2::Shell{alpha,
+                     {{1, false, coeffs2}},
+                     {{atoms_[0].r[0], atoms_[0].r[1], atoms_[0].r[2]}}});
+
+    //     // Oxygen S2 shell 4
+    shells_.push_back(
+      libint2::Shell{{0.2700058},
+                     {{0, false, {1.0}}},
+                     {{atoms_[0].r[0], atoms_[0].r[1], atoms_[0].r[2]}}});
+
+    // Oxygen P2 shell 5
+    shells_.push_back(
+      libint2::Shell{{0.2700058},
+                     {{1, false, {1.0}}},
+                     {{atoms_[0].r[0], atoms_[0].r[1], atoms_[0].r[2]}}});
+
+    // H1 S core shell 6
+    shells_.push_back(
+      libint2::Shell{{18.7311370, 2.8253937, 0.6401217},
+                     {
+                       {0, false, {0.03349460, 0.23472695, 0.81375733}},
+                     },
+                     {{atoms_[1].r[0], atoms_[1].r[1], atoms_[1].r[2]}}});
+
+    // H1 S2 shell 7
+    shells_.push_back(
+      libint2::Shell{{0.1612778},
+                     {
+                       {0, false, {1.0}},
+                     },
+                     {{atoms_[1].r[0], atoms_[1].r[1], atoms_[1].r[2]}}});
+
+    // H2 S core shell 8
+    shells_.push_back(
+      libint2::Shell{{18.7311370, 2.8253937, 0.6401217},
+                     {
+                       {0, false, {0.03349460, 0.23472695, 0.81375733}},
+                     },
+                     {{atoms_[2].r[0], atoms_[2].r[1], atoms_[2].r[2]}}});
+
+    // H1 S2 shell 9
+    shells_.push_back(
+      libint2::Shell{{0.1612778},
+                     {
+                       {0, false, {1.0}},
+                     },
+                     {{atoms_[2].r[0], atoms_[2].r[1], atoms_[2].r[2]}}});
   }
 
   Water() = default;
 
   IndexType nbasis() const { return nbasis_per_water; }
 
+  std::array<Atom, 3> const& atoms() const { return atoms_; }
+  std::vector<libint2::Shell> const& shells() const { return shells_; }
+  IndexType nelectrons() const {
+    return atoms_[0].atomic_number + atoms_[1].atomic_number +
+      atoms_[2].atomic_number;
+  }
+
   private:
-  std::vector<Shell> shells_;
-};
+  double ang_to_bohr = 1.889725989;
+  std::array<Atom, 3> atoms_;
+  std::vector<libint2::Shell> shells_;
+}; // namespace scf
 
 // 4 center integrals for 4 different waters
-MatrixBlock
-two_e_integral(Water const&, Water const&, Water const&, Water const&);
+MatrixBlock two_e_integral(
+  Water const&, Water const&, Water const&, Water const&, libint2::Engine&);
 
 // Overlap integrals
-MatrixBlock S_integral(Water const&, Water const&);
-
-// Nuclear attraction integrals
-MatrixBlock V_integral(Water const&, Water const&);
-
-// Kinetic energy integrals
-MatrixBlock T_integral(Water const&, Water const&);
+MatrixBlock one_body_integral(Water const&, Water const&, libint2::Engine&);
 
 // Compute the Schwarz bounds and the sparse pair list
 std::pair<MatrixBlock, std::vector<std::vector<IndexType>>>
-Schwarz(std::vector<Water> const&);
+Schwarz(std::vector<Water> const&, libint2::Engine&);
+
+// Ignore symmetry for now, we will eventually come back and make use of the
+// symmetry
+void four_center_update(
+  SparseMatrix&, SparseMatrix const&, MatrixBlock const&,
+  std::vector<std::vector<IndexType>> const&, std::vector<Water> const&, double,
+  libint2::Engine&);
+
+std::vector<std::pair<double, std::array<double, 3>>>
+nuclei_charges(std::vector<Water> const&);
 
 } /*end namespace scf*/
 
