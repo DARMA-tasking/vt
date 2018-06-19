@@ -31,9 +31,9 @@ int main(int argc, char** argv) {
   }
 
   std::vector<scf::Water> waters;
-  auto num_waters = 5;
+  auto num_waters = 10;
   for (auto i = 0; i < num_waters; ++i) {
-    double scale = i * 2.0;
+    double scale = i * 5.0;
     waters.emplace_back(scf::Water(
       {0.0, -0.07579, scale}, {0.86681, 0.60144, scale},
       {-0.86681, 0.60144, scale}));
@@ -42,8 +42,6 @@ int main(int argc, char** argv) {
   // All the matrices we will need, trim down later.
   scf::SparseMatrix S(num_waters, num_waters);
   scf::SparseMatrix H(num_waters, num_waters);
-  scf::SparseMatrix F(num_waters, num_waters);
-  scf::SparseMatrix D(num_waters, num_waters);
 
   // Get engine for V_integrals
   {
@@ -58,20 +56,25 @@ int main(int argc, char** argv) {
     // Populate the matrices with information
     for (auto i = 0; i < num_waters; ++i) {
       auto const& wi = waters[i];
-      for (auto j = 0; j < num_waters; ++j) {
+      for (auto j = i; j < num_waters; ++j) {
         auto const& wj = waters[j];
         auto out_S = one_body_integral(wi, wj, eng_o);
         auto out_T = one_body_integral(wi, wj, eng_t);
         auto out_V = one_body_integral(wi, wj, eng_v);
         scf::MatrixBlock out_H = out_T + out_V;
 
+        if (i != j) {
+          S.block(j, i) = out_S.transpose();
+          H.block(j, i) = out_H.transpose();
+        }
         S.block(i, j) = std::move(out_S);
         H.block(i, j) = std::move(out_H);
       }
     }
   }
 
-  auto truncate_thresh = 1e-7;
+  auto truncate_thresh = 1e-8;
+  auto Dtruncate_thresh = 1e-5;
   S.truncate(truncate_thresh);
   H.truncate(truncate_thresh);
 
@@ -95,16 +98,17 @@ int main(int argc, char** argv) {
   ::fmt::print("Nuclear repulsion energy: {}\n", enuc);
 
   // Density guess is super position of water densities
+  scf::SparseMatrix D(num_waters, num_waters);
   for (auto i = 0; i < num_waters; ++i) {
     D.block(i, i) = matrixBasedScf(waters[i]);
   }
+  fmt::print("SAWD D guess fill: {:.3f}\n", D.fillPercent());
   auto Drep = D.replicate();
   if (num_waters < 3) {
     std::cout << "Initial D:\n" << Drep << "\n" << std::endl;
   }
 
   auto Srep = S.replicate();
-  auto Frep = F.replicate();
   auto Hrep = H.replicate();
 
   auto nocc = 0;
@@ -112,7 +116,6 @@ int main(int argc, char** argv) {
     nocc += w.nelectrons();
   }
   nocc /= 2;
-
 
   auto make_new_density = [num_waters, nocc](auto F, auto S, double thresh) {
     // TODO Compute on one node and bcast, luckily Eigen will work this way
@@ -125,49 +128,112 @@ int main(int argc, char** argv) {
   };
 
   libint2::Engine eng_2e(libint2::Operator::coulomb, 6, 1, 0);
+  eng_2e.set_precision(0.0); // Needs to be super tight for Q matrix
 
   scf::MatrixBlock Q;
   std::vector<std::vector<scf::IndexType>> sparse_pair_list;
   std::tie(Q, sparse_pair_list) = scf::Schwarz(waters, eng_2e);
 
-  // Maybe we don't actually want to use diis, but keep if for now.
+  //
+  // Bootstrap first iteration so that we can control how close we start to
+  // converged
+  //
+
+  // Make a Fock matrix using our guess density
+  double c1 = 0.9999;
+  fmt::print("Bootstrapping SCF with {:.2f}\% SAWD guess\n", 100 * c1);
+  scf::SparseMatrix F = H;
+  const auto bootstrap_thresh = Dtruncate_thresh / 100.0;
+  eng_2e.set_precision(1e-7); // Not so tight for bootstrap
+  four_center_update(
+    F, D, Q, sparse_pair_list, waters, bootstrap_thresh, eng_2e);
+  F.truncate(truncate_thresh);
+
+  // Control how much we actually want F to come from the SAWD guess.
+  // F = c1 * Fguess + c2 * Hcore, c1 + c2 = 1
+  scf::MatrixBlock Frep = c1 * F.replicate() + (1.0 - c1) * Hrep;
+
+  // Make iteration 1 density based on our modified Fock guess
+  D = make_new_density(Frep, Srep, Dtruncate_thresh);
+  fmt::print("Bootstrapped D fill: {:.3f}\n", D.fillPercent());
+
+  //
+  // Start SCF iterations
+  //
+
+  // Maybe we don't actually want to use diis, diis will speed up our
+  // convergence, but depending on what aspect of VT we are trying to test, we
+  // may want the slower convergence of not using diis.
   libint2::DIIS<scf::MatrixBlock> diis(2); // start DIIS on second iteration
   auto iter = 0;
-  auto energy = 0.0;
+  auto energy = Drep.cwiseProduct(Hrep + Frep).sum();
   bool converged = false;
-  // Min 3 iters, then go until 40 iters or until converged
+  auto diff = 1.0;
+  auto grad_error = 1.0;
+  auto screen_thresh = 1e-6;
+  // Min 3 iters, then go until 100 iters or until converged
   while (!converged) {
-    ::fmt::print("Starting iteration {}, ", iter + 1);
+    auto const start_time = ::vt::timing::Timing::getCurrentTime();
+    fmt::print("Starting iteration {:2d}\n", iter + 1);
 
     // TODO Make a new fock matrix given the density
-    scf::SparseMatrix Fnew(num_waters, num_waters);
-    const auto schwarz_thresh = truncate_thresh;
+    F = H;
+    screen_thresh =
+      std::min(screen_thresh, std::min(1e-6, grad_error / std::abs(energy)));
+
+    screen_thresh = std::max(1e-10, screen_thresh); // Don't get too tight
+
+    // Steal and slightly modify libint's hf++ precision
+    const auto eng_precision =
+      std::min(
+        screen_thresh / Q.maxCoeff(), std::numeric_limits<double>::epsilon()) /
+      1296.0;
+
+    Dtruncate_thresh =
+      std::min(Dtruncate_thresh, std::min(1e-5, grad_error / 10.0));
+
+    Dtruncate_thresh = std::max(Dtruncate_thresh, 1e-8);
+
+    fmt::print(
+      "\tPrecisions, Fock: {:.2e}, Eng: {:.2e}, Dtrun: {:.2e}\n", screen_thresh,
+      eng_precision, Dtruncate_thresh);
+    eng_2e.set_precision(eng_precision);
+
     four_center_update(
-      Fnew, D, Q, sparse_pair_list, waters, schwarz_thresh, eng_2e);
+      F, D, Q, sparse_pair_list, waters, screen_thresh, eng_2e);
 
     F.truncate(truncate_thresh);
-    F = std::move(Fnew);
-    Frep = F.replicate() + Hrep;
 
+    Frep = F.replicate();
     Drep = D.replicate();
     auto old_energy = enuc + Drep.cwiseProduct(Hrep + Frep).sum();
-    auto diff = std::abs(old_energy - energy);
+    diff = std::abs(old_energy - energy);
     energy = old_energy;
 
     scf::MatrixBlock grad = Frep * Drep * Srep - Srep * Drep * Frep;
-    // diis.extrapolate(Frep, grad);
+    grad_error = grad.norm() / static_cast<double>(grad.rows());
+    // Once we fix our search space start using diis
+    if (Dtruncate_thresh == 1e-10 && screen_thresh == 1e-8) {
+      diis.extrapolate(Frep, grad);
+    }
 
-    D = make_new_density(Frep, Srep, truncate_thresh);
+    D = make_new_density(Frep, Srep, Dtruncate_thresh);
+    auto dfill = D.fillPercent();
     if (iter < 4) { // minimum 3 iters
       converged = false;
     } else if (iter == 99) {
       converged = true;
-    } else if (diff < 1e-9) {
+    } else if (diff < 1e-12 && grad_error < screen_thresh) {
       converged = true;
     } else {
       converged = false;
     }
-    ::fmt::print("energy: {0:.10f}, diff: {1:.10f}\n", energy, diff);
+    auto const end_time = ::vt::timing::Timing::getCurrentTime();
+    ::fmt::print(
+      "\tenergy: {0:.10f}, ediff: {1:0.3e}, grad_error: {6:0.3e}, dfill: "
+      "{4:.3f}, time: {5:.6f}\n",
+      energy, diff, screen_thresh, Dtruncate_thresh, dfill,
+      end_time - start_time, grad_error);
     ++iter;
   }
 
@@ -215,8 +281,6 @@ void scf::four_center_update(
   scf::SparseMatrix& F, scf::SparseMatrix const& D, MatrixBlock const& Q,
   std::vector<std::vector<scf::IndexType>> const& sparse_list,
   std::vector<scf::Water> const& waters, double screen, libint2::Engine& eng) {
-
-  eng.set_precision(0.0);
 
   auto do_J = [screen](double Qij, double Qkl, double Dkl_norm) {
     return Qij * Qkl * Dkl_norm >= screen;
