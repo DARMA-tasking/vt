@@ -47,6 +47,10 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   );
   if (spec_iter == spec_.end()) {
     auto idx2 = idx;
+    if (idx2 > num_entries_) {
+      auto const div = (idx2 - num_entries_) / num_entries_;
+      idx2 -= div;
+    }
     while (idx2 > num_entries_) {
       idx2 -= num_entries_;
     }
