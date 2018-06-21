@@ -8,6 +8,7 @@
 #include "registry/auto/map/auto_registry_map.h"
 #include "worker/worker_headers.h"
 #include "messaging/message.h"
+#include "runnable/vrt.h"
 
 #include <memory>
 #include <cassert>
@@ -54,7 +55,11 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* msg) {
   assert(vc_ptr != nullptr && "Must be valid pointer");
 
   auto work_unit = [=]{
-    vc_active_fn(msg, vc_ptr);
+    // @todo: fix the from node
+    auto const& from_node = 0;
+    runnable::RunnableVrt<VirtualMessage,VirtualContext>::run(
+      sub_handler, msg, vc_ptr, from_node
+    );
     messageDeref(msg);
   };
 
