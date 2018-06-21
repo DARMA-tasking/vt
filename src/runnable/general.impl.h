@@ -27,6 +27,9 @@ template <typename MsgT>
     theTrace()->beginProcessing(trace_id, sizeof(*msg), trace_event, from_node);
   #endif
 
+  if (func == nullptr) {
+    func = auto_registry::getAutoHandler(handler);
+  }
   func(msg);
 
   #if backend_check_enabled(trace_enabled)
