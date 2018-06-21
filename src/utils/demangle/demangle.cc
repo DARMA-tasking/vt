@@ -21,8 +21,21 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
   ::fmt::print("ADAPT before: adapt={}\n",str);
 
-  CountType   const  str_offset_right_ns = 34;
-  CountType   const  str_offset_right_tn = 28;
+  std::string const adapt_start = "FunctorAdapter";
+
+  CountType start = 0;
+  for (CountType i = 0; i < str.size() - adapt_start.size() - 1; i++) {
+    auto const substr = str.substr(i, adapt_start.size());
+    //::fmt::print("ADAPT XX substr: substr={}\n",substr);
+    if (substr == adapt_start) {
+      //::fmt::print("ADAPT substr: substr={}\n",substr);
+      start = i;
+      break;
+    }
+  }
+
+  CountType   const  str_offset_right_ns = adapt_start.size() + 1;
+  CountType   const  str_offset_right_tn = start;
   std::string const  func_adapt_params   = str.substr(
                      str_offset_right_ns + str_offset_right_tn,
     str.size() - 2 - str_offset_right_ns - str_offset_right_tn
