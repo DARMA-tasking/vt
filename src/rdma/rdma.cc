@@ -164,6 +164,7 @@ namespace vt { namespace rdma {
               theMsg()->sendMsg<PutBackMessage, putBackMsg>(
                 send_back, new_msg, [=]{ delete new_msg; }
               );
+              theTerm()->consume(term::any_epoch_sentinel);
             }
             deleter();
           }, false
@@ -187,6 +188,7 @@ namespace vt { namespace rdma {
           theMsg()->sendMsg<PutBackMessage, putBackMsg>(
             send_back, new_msg, [=]{ delete new_msg; }
           );
+          theTerm()->consume(term::any_epoch_sentinel);
         }
         deleter();
       }
@@ -570,6 +572,10 @@ void RDMAManager::putData(
           action_after_put ? this_node : uninitialized_destination,
           this_node
         );
+
+        if (action_after_put) {
+          theTerm()->produce(term::any_epoch_sentinel);
+        }
 
         auto send_payload = [&](Active::SendFnType send){
           auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag, [=]{
