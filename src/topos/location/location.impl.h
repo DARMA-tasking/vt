@@ -11,6 +11,7 @@
 #include "context/context.h"
 #include "messaging/active.h"
 #include "serialization/auto_dispatch/dispatch.h"
+#include "runnable/general.h"
 
 #include <cstdint>
 #include <memory>
@@ -328,8 +329,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   } else {
     if (msg->hasHandler()) {
       auto const& handler = msg->getHandler();
+      auto const& from = msg->getFromNode();
       auto active_fn = auto_registry::getAutoHandler(handler);
-      active_fn(reinterpret_cast<BaseMessage*>(msg));
+      runnable::Runnable<MessageT>::run(handler, active_fn, msg, from);
     } else {
       auto trigger_msg_handler_action = [=](EntityID const& id) {
         auto reg_han_iter = local_registered_msg_han_.find(id);
@@ -412,9 +414,11 @@ void EntityLocationCoord<EntityID>::routeMsg(
   EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act,
   bool const serialize
 ) {
+  auto const& from_node = theContext()->getNode();
   // set field for location routed message
   msg->setEntity(id);
   msg->setHomeNode(home_node);
+  msg->setFromNode(from_node);
   msg->setSerialize(serialize);
 
   auto const& msg_size = sizeof(*msg);
