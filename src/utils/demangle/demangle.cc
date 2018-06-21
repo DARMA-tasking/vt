@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <list>
 #include <cstring>
 
 namespace vt { namespace util { namespace demangle {
@@ -39,7 +40,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   CharType const caret        [2]  = {'<', '>'};
   CharType const delim      = ',';
 
-  std::vector<std::tuple<CharType const*, CountType*>> tuples = {
+  std::list<std::tuple<CharType const*, CountType*>> tuples = {
     {paren   , paren_count   },
     {bracket , bracket_count },
     {brace   , brace_count   },
