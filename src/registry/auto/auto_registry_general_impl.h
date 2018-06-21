@@ -3,6 +3,7 @@
 #define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H
 
 #include "config.h"
+#include "utils/demangle/demangle.h"
 #include "registry/auto/auto_registry_common.h"
 #include "registry/auto/auto_registry_general.h"
 

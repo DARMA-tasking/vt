@@ -27,6 +27,14 @@ using AutoActiveSeedMapType    = mapping::ActiveSeedMapFnPtrType;
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;
 
+enum struct RegistryTypeEnum {
+  RegGeneral = 1,
+  RegMap,
+  RegVrt,
+  RegSeed,
+  RegVrtCollection
+};
+
 template <typename FnT>
 struct AutoRegInfo {
   FnT activeFunT;

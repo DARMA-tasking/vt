@@ -22,7 +22,9 @@ AutoActiveType getAutoHandler(HandlerType const& handler);
 AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
 
 #if backend_check_enabled(trace_enabled)
-trace::TraceEntryIDType theTraceID(HandlerType const& handler);
+  trace::TraceEntryIDType theTraceID(
+    HandlerType const& handler, RegistryTypeEnum reg_type
+  );
 #endif
 
 }} // end namespace vt::auto_registry
