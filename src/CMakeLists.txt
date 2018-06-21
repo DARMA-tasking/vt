@@ -56,7 +56,7 @@ set(
     lb/migration
     serialization/messaging serialization/traits serialization/auto_dispatch
     utils/demangle utils/container utils/bits utils/mutex
-    utils/hash utils/atomic utils/tls utils/static_checks
+    utils/hash utils/atomic utils/tls utils/static_checks utils/string
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
       registry/auto/vc
