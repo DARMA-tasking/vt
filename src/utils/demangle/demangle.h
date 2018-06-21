@@ -31,7 +31,7 @@ struct DemanglerUtils {
 
   template <typename StringOut>
   static inline void splitString(
-      std::string const& s, char delim, StringOut result
+    std::string const& s, char delim, StringOut result
   ) {
     std::stringstream ss;
     ss.str(s);
@@ -42,7 +42,7 @@ struct DemanglerUtils {
   }
 
   static inline StrContainerType splitString(
-      std::string const& str, char delim
+    std::string const& str, char delim
   ) {
     StrContainerType elems;
     splitString(str, delim, std::back_inserter(elems));
