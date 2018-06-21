@@ -410,7 +410,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
        << "TOTAL_PHASES 1\n"
-       << "MACHINE unknown\n"
+       << "MACHINE vt\n"
        << "PROCESSORS " << num_nodes << "\n"
        << "TOTAL_CHARES " << num_event_types << "\n"
        << "TOTAL_EPS " << num_events << "\n"
