@@ -194,24 +194,28 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
 /*static*/ ActiveFunctorDemangler::StrParsedOutType
 ActiveFunctorDemangler::parseActiveFunctorName(
-    std::string const& name, std::string const& args
+  std::string const& name, std::string const& args
 ) {
-  // std::cout << "parse_active_functor_name:"
-  //           << "name=" << name << ", "
-  //           << "args=" << args
-  //           << std::endl;
+  debug_print(
+    verbose, gen, node,
+    "parseActiveFunctorName: \n"
+    "\t input name = \"{}\" \n"
+    "\t input args = \"{}\" \n",
+    name, args
+  );
 
-  auto args_clean = args.substr(29, args.size() - 30);
+  auto const ret = ActiveFunctionDemangler::parseActiveFunctionName(name);
 
-  std::stringstream args_ret;
-  args_ret << "operator()(";
-  args_ret << args_clean;
-  args_ret << ")";
+  debug_print(
+    verbose, gen, node,
+    "parseActiveFunctorName: \n"
+    "\t CLEAN namespace = \"{}\" \n"
+    "\t CLEAN funcname = \"{}\" \n",
+    ret.getNamespace(),
+    ret.getFunc()
+  );
 
-  std::stringstream args_no_space;
-  args_no_space << UtilType::removeSpaces(args_ret.str());
-
-  return std::make_tuple(name, args_no_space.str());
+  return ret;
 }
 
 }}} // end namespace vt::util::demangle

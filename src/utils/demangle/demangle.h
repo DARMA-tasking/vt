@@ -79,7 +79,7 @@ struct ActiveFunctionDemangler {
 };
 
 struct ActiveFunctorDemangler {
-  using StrParsedOutType = std::tuple<std::string, std::string>;
+  using StrParsedOutType = DemangledName;
   using UtilType = DemanglerUtils;
 
   static StrParsedOutType parseActiveFunctorName(

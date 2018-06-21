@@ -49,12 +49,10 @@ static inline void pullApart(
   auto const& args = util::demangle::DemanglerUtils::getTypeName<
     pack<Args...>
   >();
-  auto const& parsed_names =
+  auto const& parsed_type_name =
     util::demangle::ActiveFunctorDemangler::parseActiveFunctorName(name, args);
-  auto const& namespace_name = std::get<0>(parsed_names);
-  auto const& function_name = std::get<1>(parsed_names);
   auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
-    namespace_name, function_name
+    parsed_type_name.getNamespace(), parsed_type_name.getFuncParams()
   );
   #endif
 
