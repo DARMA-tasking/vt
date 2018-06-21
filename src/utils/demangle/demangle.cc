@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "utils/demangle/demangle.h"
+#include "context/context.h"
 
 #include <vector>
 #include <string>
