@@ -8,6 +8,7 @@
 #include "registry/auto/auto_registry_interface.h"
 #include "registry/auto/vc/auto_registry_vc.h"
 #include "serialization/serialization.h"
+#include "runnable/general.h"
 #include "serialization/messaging/serialized_data_msg.h"
 
 #include <tuple>
@@ -46,8 +47,9 @@ struct SerializedMessenger {
     auto ptr_offset = msg_ptr + msg_size + han_size + size_size;
     auto t_ptr = deserializePartial<MsgT>(ptr_offset, ptr_size, msg);
     messageRef(msg);
+    auto const& from_node = theMsg()->getFromNodeCurrentHandler();
     auto active_fn = auto_registry::getAutoHandler(user_handler);
-    active_fn(reinterpret_cast<BaseMessage*>(t_ptr));
+    runnable::Runnable<MsgT>::run(user_handler, active_fn, t_ptr, from_node);
     messageDeref(msg);
   }
 
@@ -69,7 +71,9 @@ struct SerializedMessenger {
 
     messageRef(user_msg);
     auto active_fn = auto_registry::getAutoHandler(handler);
-    active_fn(reinterpret_cast<BaseMessage*>(t_ptr));
+    runnable::Runnable<UserMsgT>::run(
+      handler, active_fn, t_ptr, sys_msg->from_node
+    );
     messageDeref(user_msg);
   }
 
@@ -85,8 +89,10 @@ struct SerializedMessenger {
       print_ptr(sys_msg), handler, recv_tag
     );
 
+    auto node = sys_msg->from_node;
     theMsg()->recvDataMsg(
-      recv_tag, sys_msg->from_node, [handler,recv_tag](RDMA_GetType ptr, ActionType){
+      recv_tag, sys_msg->from_node,
+      [handler,recv_tag,node](RDMA_GetType ptr, ActionType){
         // be careful here not to use "msg", it is no longer valid
         auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
         auto ptr_size = std::get<1>(ptr);
@@ -102,7 +108,7 @@ struct SerializedMessenger {
 
         messageRef(msg);
         auto active_fn = auto_registry::getAutoHandler(handler);
-        active_fn(reinterpret_cast<BaseMessage*>(tptr));
+        runnable::Runnable<UserMsgT>::run(handler, active_fn, tptr, node);
         messageDeref(msg);
         //std::free(msg);
       }
@@ -129,7 +135,9 @@ struct SerializedMessenger {
 
     messageRef(user_msg);
     auto active_fn = auto_registry::getAutoHandler(handler);
-    active_fn(reinterpret_cast<BaseMessage*>(tptr));
+    runnable::Runnable<UserMsgT>::run(
+      handler, active_fn, tptr, sys_msg->from_node
+    );
     messageDeref(user_msg);
     //std::free(user_msg);
   }
@@ -351,7 +359,7 @@ struct SerializedMessenger {
 
           messageRef(msg);
           auto active_fn = auto_registry::getAutoHandler(typed_handler);
-          active_fn(reinterpret_cast<BaseMessage*>(tptr));
+          runnable::Runnable<MsgT>::run(typed_handler,active_fn,tptr,node);
           messageDeref(msg);
           //std::free(msg);
         }
