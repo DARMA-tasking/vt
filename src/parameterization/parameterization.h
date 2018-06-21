@@ -44,7 +44,9 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   );
 
 #if backend_check_enabled(trace_enabled)
-  trace::TraceEntryIDType ep = auto_registry::theTraceID(msg->sub_han);
+  trace::TraceEntryIDType ep = auto_registry::theTraceID(
+    msg->sub_han, auto_registry::RegistryTypeEnum::RegGeneral
+  );
   trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
 
   fmt::print("dataMessageHandler: id={}, ep={}\n", msg->sub_han, ep);
