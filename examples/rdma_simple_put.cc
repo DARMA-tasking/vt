@@ -30,7 +30,7 @@ static void read_data_fn(TestMsg* msg) {
 static void put_data_fn(TestMsg* msg) {
   fmt::print("{}: put_data_fn: handle={}\n", my_node, msg->han);
 
-  if (my_node == 1) {
+  if (my_node < 4) {
     fmt::print("{}: putting data\n", my_node);
 
     int const local_data_len = 3;
@@ -38,14 +38,18 @@ static void put_data_fn(TestMsg* msg) {
     for (auto i = 0; i < local_data_len; i++) {
       local_data[i] = (i+1)*1000*(my_node+1);
     }
-    theRDMA()->putData(msg->han, local_data, sizeof(double)*local_data_len, [=]{
-      delete [] local_data;
-    }, [=]{
-      fmt::print("{}: after put: sending msg back to 0\n", my_node);
-      TestMsg* msg = new TestMsg(my_node);
-      msg->han = my_handle;
-      theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg, [=]{ delete msg; });
-    });
+    theRDMA()->putData(
+      msg->han, local_data, sizeof(double)*local_data_len,
+      (my_node-1)*local_data_len, no_tag, vt::rdma::rdma_default_byte_size,
+      [=]{
+        delete [] local_data;
+      }, [=]{
+        fmt::print("{}: after put: sending msg back to 0\n", my_node);
+        TestMsg* msg = new TestMsg(my_node);
+        msg->han = my_handle;
+        theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg, [=]{ delete msg; });
+      }
+    );
   }
 }
 
@@ -54,11 +58,19 @@ static void put_handler_fn(
   TagType tag, bool
 ) {
   fmt::print(
-    "{}: put_handler_fn: my_data={}, in_ptr={}, in_num_bytes={}, tag={}\n",
-    my_node, print_ptr(my_data), print_ptr(in_ptr), in_num_bytes, tag
+    "{}: put_handler_fn: my_data={}, in_ptr={}, in_num_bytes={}, tag={}, "
+    "offset={}\n",
+    my_node, print_ptr(my_data), print_ptr(in_ptr), in_num_bytes, tag, offset
   );
 
-  std::memcpy(my_data, in_ptr, in_num_bytes);
+  for (auto i = 0; i < in_num_bytes/sizeof(double); i++) {
+    ::fmt::print(
+      "{}: put_handler_fn: data[{}] = {}\n",
+      my_node, i, static_cast<double*>(in_ptr)[i]
+    );
+  }
+
+  std::memcpy(my_data + offset, in_ptr, in_num_bytes);
 }
 
 
