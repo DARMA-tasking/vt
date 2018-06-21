@@ -106,7 +106,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
       cur_func_piece++;
       func_name_pieces.resize(cur_func_piece + 1);
     } else {
-      func_name_pieces[cur_func_piece] += func_name[i];
+      func_name_pieces.at(cur_func_piece) += func_name[i];
     }
   }
 
