@@ -55,7 +55,8 @@ void Trace::setupNames(
 
 void Trace::beginProcessing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
-  TraceEventIDType const& event, NodeType const& from_node, double const& time
+  TraceEventIDType const& event, NodeType const& from_node, double const& time,
+  uint64_t const idx
 ) {
   auto const& type = TraceConstantsType::BeginProcessing;
   LogPtrType log = new LogType(time, ep, type);
@@ -68,13 +69,15 @@ void Trace::beginProcessing(
   log->node = from_node;
   log->msg_len = len;
   log->event = event;
+  log->idx = idx;
 
   logEvent(log);
 }
 
 void Trace::endProcessing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
-  TraceEventIDType const& event, NodeType const& from_node, double const& time
+  TraceEventIDType const& event, NodeType const& from_node, double const& time,
+  uint64_t const idx
 ) {
   auto const& type = TraceConstantsType::EndProcessing;
   LogPtrType log = new LogType(time, ep, type);
@@ -87,6 +90,7 @@ void Trace::endProcessing(
   log->node = from_node;
   log->msg_len = len;
   log->event = event;
+  log->idx = idx;
 
   logEvent(log);
 }
@@ -315,25 +319,29 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     case TraceConstantsType::BeginProcessing:
       gzprintf(
         file,
-        "%d %d %lu %lld %d %d 0 0 0 0 0 0 0\n",
+        "%d %d %lu %lld %d %d %d 0 %d 0 0 0 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
         converted_time,
         log->event,
-        log->node
+        log->node,
+        log->msg_len,
+        log->idx
       );
       break;
     case TraceConstantsType::EndProcessing:
       gzprintf(
         file,
-        "%d %d %lu %lld %d %d 0 0 0 0 0 0 0\n",
+        "%d %d %lu %lld %d %d %d 0 %d 0 0 0 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
         converted_time,
         log->event,
-        log->node
+        log->node,
+        log->msg_len,
+        log->idx
       );
       break;
     case TraceConstantsType::BeginIdle:

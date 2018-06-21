@@ -52,12 +52,14 @@ struct Trace {
   void beginProcessing(
     TraceEntryIDType const& ep, TraceMsgLenType const& len,
     TraceEventIDType const& event, NodeType const& from_node,
-    double const& time = getCurrentTime()
+    double const& time = getCurrentTime(),
+    uint64_t const idx = 0
   );
   void endProcessing(
     TraceEntryIDType const& ep, TraceMsgLenType const& len,
     TraceEventIDType const& event, NodeType const& from_node,
-    double const& time = getCurrentTime()
+    double const& time = getCurrentTime(),
+    uint64_t const idx = 0
   );
 
   void beginIdle(double const& time = getCurrentTime());
