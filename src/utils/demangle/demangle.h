@@ -2,6 +2,8 @@
 #if !defined INCLUDED_DEMANGLE
 #define INCLUDED_DEMANGLE
 
+#include "config.h"
+
 #include <string>
 #include <sstream>
 #include <vector>
@@ -11,8 +13,6 @@
 #include <cstdlib>
 #include <cxxabi.h>
 #include <assert.h>
-
-#include "config.h"
 
 namespace vt { namespace demangle {
 
