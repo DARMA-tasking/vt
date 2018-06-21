@@ -64,11 +64,19 @@
 #define ctx_true 1
 #define ctx_false 0
 
-#define print_ctx_node   ::vt::theContext()->getNode()
-#define print_ctx_worker ::vt::theContext()->getWorker()
-#define print_ctx_comm_worker                                       \
-  (print_ctx_worker == ::vt::worker_id_comm_thread) ?               \
-  ::vt::comm_debug_print :                                          \
+#define print_ctx_node   (                                              \
+    ::vt::theContext() ?                                                \
+      (::vt::theContext()->getNode()) :                                 \
+      static_cast<NodeType>(-1)                                         \
+  )
+#define print_ctx_worker   (                                            \
+    ::vt::theContext() ?                                                \
+      (::vt::theContext()->getWorker()) :                               \
+      static_cast<NodeType>(-1)                                         \
+  )
+#define print_ctx_comm_worker                                           \
+  (print_ctx_worker == ::vt::worker_id_comm_thread) ?                   \
+  ::vt::comm_debug_print :                                              \
   print_ctx_worker
 
 #define debug_virtual(\
