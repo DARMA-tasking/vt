@@ -5,7 +5,7 @@
 #include "config.h"
 
 #if backend_check_enabled(trace_enabled)
-# include "trace_common.h"
+# include "trace/trace_common.h"
 #endif
 
 #include <cassert>
