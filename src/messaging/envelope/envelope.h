@@ -51,6 +51,9 @@ struct ActiveEnvelope {
 
 namespace vt {
 
+using Envelope = messaging::ActiveEnvelope;
+using eEnvType = messaging::eEnvelopeType;
+
 #if backend_check_enabled(trace_enabled)
 template <typename Env>
 inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt) {
@@ -62,9 +65,6 @@ inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env) {
   return reinterpret_cast<Envelope*>(&env)->trace_event;
 }
 #endif
-
-using Envelope = messaging::ActiveEnvelope;
-using eEnvType = messaging::eEnvelopeType;
 
 // Set the type of Envelope
 template <typename Env>
