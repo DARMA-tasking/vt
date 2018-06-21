@@ -414,7 +414,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
        << "PROCESSORS " << num_nodes << "\n"
        << "TOTAL_CHARES " << num_event_types << "\n"
        << "TOTAL_EPS " << num_events << "\n"
-       << "TOTAL_MSGS 0\n"
+       << "TOTAL_MSGS 1\n"
        << "TOTAL_PSEUDOS 0\n"
        << "TOTAL_EVENTS 0"
        << std::endl;
@@ -463,7 +463,9 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
          << std::endl;
   }
 
-  file << "TOTAL_FUNCTIONS 0\n"
+  file << "MESSAGE 0 0\n"
+       << "TOTAL_STATS 0\n"
+       << "TOTAL_FUNCTIONS 0\n"
        << "END\n"
        << std::endl;
 }
