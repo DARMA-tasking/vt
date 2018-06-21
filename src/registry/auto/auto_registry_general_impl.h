@@ -17,13 +17,12 @@ RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
   auto fn = ActFnT::getFunction();
 
   #if backend_check_enabled(trace_enabled)
-  auto const& name = demangle::DemanglerUtils::getDemangledType<ActFnT>();
-  auto const& parsed_names =
-    demangle::ActiveFunctionDemangler::parseActiveFunctionName(name);
-  auto const& namespace_name = std::get<0>(parsed_names);
-  auto const& function_name = std::get<1>(parsed_names);
+  using Tn = typename ActFnT::ActFnType;
+  auto const& type_name = util::demangle::DemanglerUtils::getTypeName<Tn>();
+  auto const& parsed_type_name =
+    util::demangle::ActiveFunctionDemangler::parseActiveFunctionName(type_name);
   auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
-    namespace_name, function_name
+    parsed_type_name.getNamespace(), parsed_type_name.getFuncParams()
   );
 
   reg.emplace_back(InfoT{reinterpret_cast<FnT>(fn), trace_ep});

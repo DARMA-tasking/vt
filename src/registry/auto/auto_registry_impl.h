@@ -4,6 +4,7 @@
 #include "config.h"
 #include "registry/auto/auto_registry_common.h"
 #include "registry/auto/auto_registry.h"
+#include "utils/demangle/demangle.h"
 
 #include <vector>
 #include <memory>
@@ -17,6 +18,7 @@ inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) 
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;
   using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
+  //auto const& name = demangle::DemanglerUtils::getDemangledType<FunctorT>();
   return HandlerManagerType::makeHandler(true, false, RunType::idx);
 }
 

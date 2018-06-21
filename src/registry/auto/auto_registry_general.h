@@ -45,6 +45,7 @@ AutoHandlerType registerActiveGen();
 
 template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
 struct RunnableGen {
+  using ActFnType = ActFnT;
   using FunctionPtrType = typename ActFnT::FunctionPtrType;
 
   static AutoHandlerType const idx;
