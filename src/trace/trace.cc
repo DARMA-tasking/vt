@@ -459,7 +459,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
          << id << " "
          << name << " "
          << type << " "
-         << id << " "
+         << 0 << " "
          << std::endl;
   }
 
