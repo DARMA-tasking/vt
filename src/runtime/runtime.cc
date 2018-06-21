@@ -142,6 +142,7 @@ bool Runtime::finalize(bool const force_now) {
     sync();
     finalizeComponents();
     finalizeOptionalComponents();
+    finalizeTrace();
     sync();
     sync();
     if (is_zero) {
@@ -205,14 +206,6 @@ void Runtime::setup() {
     MPI_Barrier(theContext->getComm());
   });
 
-  backend_enable_if(
-    trace_enabled, {
-      std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-      auto const& node = theContext->getNode();
-      theTrace->setupNames(name, name + "." + std::to_string(node) + ".log.gz");
-    }
-  );
-
   debug_print(runtime, node, "end: setup\n");
 }
 
@@ -241,6 +234,7 @@ void Runtime::initializeComponents() {
   // Core components: enables more complex subsequent initialization
   theMsg = std::make_unique<messaging::ActiveMessenger>();
   theSched = std::make_unique<sched::Scheduler>();
+  initializeTrace();
   theTerm = std::make_unique<term::TerminationDetector>();
   theCollective = std::make_unique<collective::CollectiveAlg>();
   theGroup = std::make_unique<group::GroupManager>();
@@ -257,13 +251,28 @@ void Runtime::initializeComponents() {
   debug_print(runtime, node, "end: initializeComponents\n");
 }
 
-void Runtime::initializeOptionalComponents() {
-  debug_print(runtime, node, "begin: initializeOptionalComponents\n");
+void Runtime::initializeTrace() {
+  theTrace = std::make_unique<trace::Trace>();
 
   backend_enable_if(
-    trace_enabled,
-    theTrace = std::make_unique<trace::Trace>();
+    trace_enabled, {
+      std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
+      auto const& node = theContext->getNode();
+      theTrace->setupNames(name, name + "." + std::to_string(node) + ".log.gz");
+    }
   );
+}
+
+void Runtime::finalizeTrace() {
+  backend_enable_if(
+    trace_enabled, {
+      theTrace = nullptr;
+    }
+  );
+}
+
+void Runtime::initializeOptionalComponents() {
+  debug_print(runtime, node, "begin: initializeOptionalComponents\n");
 
   initializeWorkers(num_workers_);
 

@@ -69,11 +69,13 @@ protected:
   bool tryFinalize();
 
   void initializeContext(int argc, char** argv, MPI_Comm* comm);
+  void initializeTrace();
   void initializeComponents();
   void initializeOptionalComponents();
   void initializeWorkers(WorkerCountType const num_workers);
 
   void finalizeContext();
+  void finalizeTrace();
   void finalizeComponents();
   void finalizeOptionalComponents();
 
