@@ -135,12 +135,14 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     }
   }
 
-  for (auto&& elm : func_name_pieces) {
-    debug_print(
-      verbose, gen, node,
-      "ADAPT: func_name piece: adapt={}\n", elm
-    );
-  }
+  #if backend_check_enabled(verbose) && backend_check_enabled(gen)
+    for (auto&& elm : func_name_pieces) {
+      debug_print(
+        verbose, gen, node,
+        "ADAPT: func_name piece: adapt={}\n", elm
+      );
+    }
+  #endif
 
   std::string fused_namespace = {};
   if (func_name_pieces.size() < 2) {
