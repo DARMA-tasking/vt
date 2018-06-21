@@ -252,7 +252,11 @@ void Runtime::initializeComponents() {
 }
 
 void Runtime::initializeTrace() {
-  theTrace = std::make_unique<trace::Trace>();
+  backend_enable_if(
+    trace_enabled, {
+      theTrace = std::make_unique<trace::Trace>();
+    }
+  );
 
   backend_enable_if(
     trace_enabled, {
