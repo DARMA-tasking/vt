@@ -144,7 +144,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     "ADAPT: func_name: adapt={}\n", func_name
   );
 
-# if defined(__GNUC__)
+# if defined(__clang__)
+# elif defined(__GNUC__)
   std::string func_name_no_template = {};
   CountType temp_in = 0, temp_out = 0;
   for (int i = 0; i < func_name.size(); i++) {
