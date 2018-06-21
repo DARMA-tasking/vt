@@ -47,12 +47,31 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
   assert(start != start_sentinel && "String must be found");
 
+  std::string  func_adapt_params;
+
+# if defined(__clang__)
   CountType   const  str_offset_right_ns = adapt_start.size() + 1;
   CountType   const  str_offset_right_tn = start;
-  std::string const  func_adapt_params   = str.substr(
+
+  func_adapt_params  = str.substr(
                      str_offset_right_ns + str_offset_right_tn,
     str.size() - 2 - str_offset_right_ns - str_offset_right_tn
   );
+# elif defined(__GNUC__)
+  CountType   const  str_offset_right_ns = adapt_start.size() + 1;
+  CountType   const  str_offset_right_tn = start;
+
+  func_adapt_params  = str.substr(
+                     str_offset_right_ns + str_offset_right_tn,
+    str.size() - 1 - str_offset_right_ns - str_offset_right_tn
+  );
+  auto const split_semi = DemanglerUtils::splitString(func_adapt_params,';');
+  assert(split_semi.size() > 0 && "Must have at least one element");
+  func_adapt_params = split_semi[0].substr(0,split_semi[0].size()-1);
+#else
+  // @todo: what should we do here
+  func_adapt_params = str;
+# endif
 
   debug_print(
     verbose, gen, node,
@@ -107,7 +126,14 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   assert(pieces.size() == 2 && "Must be two pieces");
 
   auto const func_args = pieces[0];
+
+# if defined(__clang__)
   auto const func_name = pieces[1].substr(2,pieces[1].size()-2);
+# elif defined(__GNUC__)
+  auto       func_name = pieces[1].substr(1,pieces[1].size()-1);
+# else
+  auto const func_name = pieces[1];
+# endif
 
   debug_print(
     verbose, gen, node,
@@ -117,6 +143,23 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     verbose, gen, node,
     "ADAPT: func_name: adapt={}\n", func_name
   );
+
+# if defined(__GNUC__)
+  std::string func_name_no_template = {};
+  CountType temp_in = 0, temp_out = 0;
+  for (int i = 0; i < func_name.size(); i++) {
+    if (func_name[i] == '<') { temp_in++;  };
+    if (func_name[i] == '>') { temp_out++; };
+    if (temp_in == temp_out && func_name[i] != '>') {
+      func_name_no_template += func_name[i];
+    }
+  }
+  func_name = DemanglerUtils::removeSpaces(func_name_no_template);
+  debug_print(
+    verbose, gen, node,
+    "ADAPT: func_name_no_template: adapt={}\n", func_name_no_template
+  );
+# endif
 
   std::string const delim_str = {"::"};
   CountType cur_func_piece = 0;
@@ -161,9 +204,25 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   clean_funcname = *(func_name_pieces.end() - 1);
   clean_namespace = fused_namespace;
 
+# if defined(__clang__)
   CountType const init_offset = 6;
+# elif defined(__GNUC__)
+  CountType const init_offset = 5;
+# else
+  CountType const init_offset = 4;
+# endif
+
   auto const init_sub = func_args.substr(0,init_offset);
-  if (init_sub == "void (") {
+
+# if defined(__clang__)
+  std::string const leading_void_str = "void (";
+# elif defined(__GNUC__)
+  std::string const leading_void_str = "void(";
+# else
+  std::string const leading_void_str = "void";
+# endif
+
+  if (init_sub == leading_void_str) {
     auto const args = func_args.substr(
                           init_offset,
       func_args.size() - (init_offset) - 1
