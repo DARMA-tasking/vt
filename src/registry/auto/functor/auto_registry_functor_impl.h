@@ -43,12 +43,14 @@ static inline void pullApart(
   pack<Args...> __attribute__((unused)) packed_args
 ) {
   #if backend_check_enabled(trace_enabled)
-  auto const& name = demangle::DemanglerUtils::getDemangledType<
+  auto const& name = util::demangle::DemanglerUtils::getTypeName<
     typename FunctorT::FunctorType
   >();
-  auto const& args = demangle::DemanglerUtils::getDemangledType<pack<Args...>>();
+  auto const& args = util::demangle::DemanglerUtils::getTypeName<
+    pack<Args...>
+  >();
   auto const& parsed_names =
-    demangle::ActiveFunctorDemangler::parseActiveFunctorName(name, args);
+    util::demangle::ActiveFunctorDemangler::parseActiveFunctorName(name, args);
   auto const& namespace_name = std::get<0>(parsed_names);
   auto const& function_name = std::get<1>(parsed_names);
   auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
