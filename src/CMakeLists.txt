@@ -12,6 +12,7 @@ set(TOP_LEVEL_SUBDIRS
   serialization
   utils
   registry
+  runnable
   activefn
   # Add single-directory components
   context event handler parameterization sequence termination
