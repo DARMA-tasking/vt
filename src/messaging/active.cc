@@ -4,6 +4,7 @@
 #include "messaging/envelope.h"
 #include "termination/term_headers.h"
 #include "group/group_manager_active_attorney.h"
+#include "runnable/general.h"
 
 namespace vt { namespace messaging {
 
@@ -176,7 +177,9 @@ EventType ActiveMessenger::sendMsgSized(
       auto const& handler = envelopeGetHandler(msg->env);
       bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
       if (is_auto) {
-        trace::TraceEntryIDType ep = auto_registry::theTraceID(handler);
+        trace::TraceEntryIDType ep = auto_registry::theTraceID(
+          handler, auto_registry::RegistryTypeEnum::RegGeneral
+        );
         if (not is_bcast) {
           trace::TraceEventIDType event = theTrace()->messageCreation(ep, msg_size);
           envelopeSetTraceEvent(msg->env, event);
@@ -441,12 +444,6 @@ bool ActiveMessenger::deliverActiveMsg(
   bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
-  backend_enable_if(
-    trace_enabled,
-    trace::TraceEntryIDType trace_id = trace::no_trace_entry_id;
-    trace::TraceEventIDType trace_event = trace::no_trace_event;
-  );
-
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
@@ -476,13 +473,6 @@ bool ActiveMessenger::deliverActiveMsg(
     );
   }
 
-  backend_enable_if(
-    trace_enabled,
-    if (is_auto) {
-      trace_id = auto_registry::theTraceID(handler);
-    }
-  );
-
   if (has_action_handler) {
     // set the current handler so the user can request it in the context of an
     // active fun
@@ -490,25 +480,8 @@ bool ActiveMessenger::deliverActiveMsg(
     current_callback_context_ = callback;
     current_node_context_ = from_node;
 
-    backend_enable_if(
-      trace_enabled,
-      trace_event = envelopeGetTraceEvent(msg->env);
-    );
-
-    // begin trace of this active message
-    backend_enable_if(
-      trace_enabled,
-      theTrace()->beginProcessing(trace_id, sizeof(*msg), trace_event, from_node);
-    );
-
     // run the active function
-    active_fun(msg);
-
-    // end trace of this active message
-    backend_enable_if(
-      trace_enabled,
-      theTrace()->endProcessing(trace_id, sizeof(*msg), trace_event, from_node);
-    );
+    runnable::Runnable<ShortMessage>::run(handler, active_fun, msg, from_node);
 
     auto trigger = theRegistry()->getTrigger(handler);
     if (trigger) {
