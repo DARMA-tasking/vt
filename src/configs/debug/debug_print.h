@@ -64,13 +64,19 @@
 #define ctx_true 1
 #define ctx_false 0
 
+namespace vt { namespace runtime {
+struct Runtime;
+} /* end namespace runtime */
+extern runtime::Runtime* curRT;
+} /* end namespace vt */
+
 #define print_ctx_node   (                                              \
-    ::vt::rt != nullptr ?                                               \
+    ::vt::curRT != nullptr ?                                            \
       (::vt::theContext()->getNode()) :                                 \
       static_cast<NodeType>(-1)                                         \
   )
 #define print_ctx_worker   (                                            \
-    ::vt::rt != nullptr ?                                               \
+    ::vt::curRT != nullptr ?                                            \
       (::vt::theContext()->getWorker()) :                               \
       static_cast<NodeType>(-1)                                         \
   )
