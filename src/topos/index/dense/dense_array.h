@@ -60,6 +60,7 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   IndexType& operator[](IndexType const& index);
   IndexType const& operator[](IndexType const& index) const;
   IndexType get(IndexType const& index) const;
+  IndexType const* raw() const;
   IndexSizeType packedSize() const;
   bool indexIsByteCopyable() const;
   DenseArraySizeType getSize() const;

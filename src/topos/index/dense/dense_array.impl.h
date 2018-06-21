@@ -151,6 +151,11 @@ bool DenseIndexArray<IndexType, ndim>::operator==(
 }
 
 template <typename IndexType, NumDimensionsType ndim>
+IndexType const* DenseIndexArray<IndexType, ndim>::raw() const {
+  return &dims[0];
+}
+
+template <typename IndexType, NumDimensionsType ndim>
 bool DenseIndexArray<IndexType, ndim>::operator<(
   DenseIndexArrayType const& other
 ) const {
