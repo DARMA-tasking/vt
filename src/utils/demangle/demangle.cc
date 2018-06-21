@@ -19,7 +19,10 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   std::string clean_funcname  = {};
   std::string clean_params    = {};
 
-  ::fmt::print("ADAPT before: adapt={}\n",str);
+  debug_print(
+    verbose, gen, node,
+    "ADAPT before: adapt={}\n", str
+  );
 
   std::string const adapt_start = "FunctorAdapter";
 
@@ -27,9 +30,15 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   CountType start                = start_sentinel;
   for (CountType i = 0; i < str.size() - adapt_start.size() - 1; i++) {
     auto const substr = str.substr(i, adapt_start.size());
-    //::fmt::print("ADAPT XX substr: substr={}\n",substr);
+    // debug_print(
+    //   verbose, gen, node,
+    //   "ADAPT XX substr: substr={}\n", substr
+    // );
     if (substr == adapt_start) {
-      //::fmt::print("ADAPT substr: substr={}\n",substr);
+      // debug_print(
+      //   verbose, gen, node,
+      //   "ADAPT substr: substr={}\n", substr
+      // );
       start = i;
       break;
     }
@@ -44,7 +53,10 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     str.size() - 2 - str_offset_right_ns - str_offset_right_tn
   );
 
-  ::fmt::print("ADAPT: adapt={}\n",func_adapt_params);
+  debug_print(
+    verbose, gen, node,
+    "ADAPT: adapt={}\n", func_adapt_params
+  );
 
   CountType      paren_count  [2]  = {0,0};
   CountType      bracket_count[2]  = {0,0};
@@ -85,7 +97,10 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   }
 
   for (auto&& elm : pieces) {
-    ::fmt::print("ADAPT: split: adapt={}\n",elm);
+    debug_print(
+      verbose, gen, node,
+      "ADAPT: split: adapt={}\n", elm
+    );
   }
 
   assert(pieces.size() == 2 && "Must be two pieces");
@@ -93,8 +108,14 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   auto const func_args = pieces[0];
   auto const func_name = pieces[1].substr(2,pieces[1].size()-2);
 
-  ::fmt::print("ADAPT: func_args: adapt={}\n",func_args);
-  ::fmt::print("ADAPT: func_name: adapt={}\n",func_name);
+  debug_print(
+    verbose, gen, node,
+    "ADAPT: func_args: adapt={}\n", func_args
+  );
+  debug_print(
+    verbose, gen, node,
+    "ADAPT: func_name: adapt={}\n", func_name
+  );
 
   std::string const delim_str = {"::"};
   CountType cur_func_piece = 0;
@@ -114,7 +135,10 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   }
 
   for (auto&& elm : func_name_pieces) {
-    ::fmt::print("ADAPT: func_name piece: adapt={}\n",elm);
+    debug_print(
+      verbose, gen, node,
+      "ADAPT: func_name piece: adapt={}\n", elm
+    );
   }
 
   std::string fused_namespace = {};
@@ -123,7 +147,10 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     fused_namespace = "::";
   } else {
     for (auto iter = func_name_pieces.begin(); iter != func_name_pieces.end() - 1; ++iter) {
-      ::fmt::print("ADAPT: NS piece: adapt={}\n",*iter);
+      debug_print(
+        verbose, gen, node,
+        "ADAPT: NS piece: adapt={}\n", *iter
+      );
       fused_namespace += *iter + "::";
     }
   }
@@ -138,13 +165,17 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
                           init_offset,
       func_args.size() - (init_offset) - 1
     );
-    ::fmt::print("ADAPT: args={}\n", args);
+    debug_print(
+      verbose, gen, node,
+      "ADAPT: args={}\n", args
+    );
     clean_params = DemanglerUtils::removeSpaces(args);
   } else {
     clean_params = "";
   }
 
-  ::fmt::print(
+  debug_print(
+    verbose, gen, node,
     "ADAPT: \n"
     "\t CLEAN namespace = \"{}\" \n"
     "\t CLEAN  funcname = \"{}\" \n"
