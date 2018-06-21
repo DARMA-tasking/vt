@@ -403,7 +403,8 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   auto const& node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  auto const& num_event_types = TraceContainersType::getEventContainer().size();
+  auto const& num_event_types =
+    TraceContainersType::getEventTypeContainer().size();
   auto const& num_events = TraceContainersType::getEventContainer().size();
 
   file << "PROJECTIONS_ID\n"
