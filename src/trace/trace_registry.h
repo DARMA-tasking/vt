@@ -57,7 +57,7 @@ struct TraceRegistry {
     );
 
     if (event_iter == TraceContainersType::getEventTypeContainer().end()) {
-      event_seq = TraceContainersType::getEventTypeContainer().size();
+      event_seq = TraceContainersType::getEventContainer().size();
       new_event.setEventSeq(event_seq);
 
       TraceContainersType::getEventContainer().emplace(
