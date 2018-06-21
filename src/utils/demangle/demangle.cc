@@ -23,7 +23,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
   std::string const adapt_start = "FunctorAdapter";
 
-  CountType start = 0;
+  CountType const start_sentinel = -1;
+  CountType start                = start_sentinel;
   for (CountType i = 0; i < str.size() - adapt_start.size() - 1; i++) {
     auto const substr = str.substr(i, adapt_start.size());
     //::fmt::print("ADAPT XX substr: substr={}\n",substr);
@@ -33,6 +34,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
       break;
     }
   }
+
+  assert(start != start_sentinel && "String must be found");
 
   CountType   const  str_offset_right_ns = adapt_start.size() + 1;
   CountType   const  str_offset_right_tn = start;
