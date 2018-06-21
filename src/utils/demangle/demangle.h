@@ -75,7 +75,7 @@ struct ActiveFunctionDemangler {
   using StrParsedOutType = DemangledName;
   using UtilType = DemanglerUtils;
 
-  static StrParsedOutType&& parseActiveFunctionName(std::string const& str);
+  static StrParsedOutType parseActiveFunctionName(std::string const& str);
 };
 
 struct ActiveFunctorDemangler {

@@ -9,7 +9,7 @@
 
 namespace vt { namespace util { namespace demangle {
 
-/*static*/ ActiveFunctionDemangler::StrParsedOutType&&
+/*static*/ ActiveFunctionDemangler::StrParsedOutType
 ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   using CountType = int32_t;
   using CharType = char;
@@ -132,7 +132,10 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     clean_namespace, clean_funcname, clean_params
   );
 
-  return std::move(DemangledName{clean_namespace,clean_funcname,clean_params});
+  auto const demangled = DemangledName{
+    clean_namespace, clean_funcname, clean_params
+  };
+  return demangled;
 }
 
 /*static*/ ActiveFunctorDemangler::StrParsedOutType
