@@ -5,12 +5,12 @@
 #include "config.h"
 #include "context/context.h"
 
-#include "trace_common.h"
-#include "trace_registry.h"
-#include "trace_constants.h"
-#include "trace_event.h"
-#include "trace_containers.h"
-#include "trace_log.h"
+#include "trace/trace_common.h"
+#include "trace/trace_registry.h"
+#include "trace/trace_constants.h"
+#include "trace/trace_event.h"
+#include "trace/trace_containers.h"
+#include "trace/trace_log.h"
 
 #include <cstdint>
 #include <cassert>

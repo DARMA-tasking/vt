@@ -3,7 +3,7 @@
 #define INCLUDED_TRACE_TRACE_EVENT_H
 
 #include "config.h"
-#include "trace_common.h"
+#include "trace/trace_common.h"
 
 #include <cstdint>
 #include <unordered_map>

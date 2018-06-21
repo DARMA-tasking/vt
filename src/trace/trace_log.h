@@ -3,8 +3,8 @@
 #define INCLUDED_TRACE_TRACE_LOG_H
 
 #include "config.h"
-#include "trace_common.h"
-#include "trace_constants.h"
+#include "trace/trace_common.h"
+#include "trace/trace_constants.h"
 
 #include <cstdint>
 #include <vector>

@@ -1,6 +1,6 @@
 
 #include "config.h"
-#include "trace.h"
+#include "trace/trace.h"
 #include "timing/timing.h"
 #include "scheduler/scheduler.h"
 
