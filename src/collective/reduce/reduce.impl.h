@@ -8,6 +8,7 @@
 #include "registry/auto/auto_registry_interface.h"
 #include "serialization/auto_dispatch/dispatch.h"
 #include "messaging/active.h"
+#include "runnable/general.h"
 
 namespace vt { namespace collective { namespace reduce {
 
@@ -29,7 +30,8 @@ template <typename MessageT>
   msg->next_ = nullptr;
   msg->count_ = 1;
   msg->is_root_ = true;
-  active_fun(msg);
+  auto const& from_node = theMsg()->getFromNodeCurrentHandler();
+  runnable::Runnable<MessageT>::run(handler, nullptr, msg, from_node);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -145,7 +147,10 @@ void Reduce::reduceNewMsg(MessageT* msg) {
         */
       auto const& handler = msg->combine_handler_;
       auto active_fun = auto_registry::getAutoHandler(handler);
-      active_fun(state.msgs[0]);
+      auto const& from_node = theMsg()->getFromNodeCurrentHandler();
+      runnable::Runnable<MessageT>::run(
+        handler,nullptr,reinterpret_cast<MessageT*>(state.msgs[0]),from_node
+      );
     }
 
     for (int i = 1; i < state.msgs.size(); i++) {
