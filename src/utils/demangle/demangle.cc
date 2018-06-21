@@ -114,16 +114,19 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     ::fmt::print("ADAPT: func_name piece: adapt={}\n",elm);
   }
 
-  std::string fn_name = {};
-  std::string ns_fused = {"::"};
-  std::vector<std::string> func_name_ns(func_name_pieces.size() - 1);
-  for (auto iter = func_name_pieces.begin(); iter != func_name_pieces.end() - 1; ++iter) {
-    ::fmt::print("ADAPT: NS piece: adapt={}\n",*iter);
-    ns_fused += *iter + "::";
+  std::string fused_namespace = {};
+  if (func_name_pieces.size() < 2) {
+    // There is no namespace (in global); use "::" to represent it
+    fused_namespace = "::";
+  } else {
+    for (auto iter = func_name_pieces.begin(); iter != func_name_pieces.end() - 1; ++iter) {
+      ::fmt::print("ADAPT: NS piece: adapt={}\n",*iter);
+      fused_namespace += *iter + "::";
+    }
   }
 
   clean_funcname = *(func_name_pieces.end() - 1);
-  clean_namespace = ns_fused;
+  clean_namespace = fused_namespace;
 
   CountType const init_offset = 6;
   auto const init_sub = func_args.substr(0,init_offset);
