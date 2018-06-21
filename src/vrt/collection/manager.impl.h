@@ -29,6 +29,7 @@
 #include "serialization/serialization.h"
 #include "serialization/auto_dispatch/dispatch.h"
 #include "collective/reduce/reduce_hash.h"
+#include "runnable/collection.h"
 
 #include <tuple>
 #include <utility>
@@ -177,13 +178,12 @@ template <typename ColT, typename IndexT, typename MsgT>
   );
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(col);
   if (elm_holder) {
-    auto const sub_handler = col_msg->getVrtHandler();
-    auto const act_fn = auto_registry::getAutoHandlerCollection(sub_handler);
+    auto const handler = col_msg->getVrtHandler();
     debug_print(
       vrt_coll, node,
       "broadcast apply: size={}\n", elm_holder->numElements()
     );
-    elm_holder->foreach([msg,act_fn](
+    elm_holder->foreach([col_msg,msg,handler](
       IndexT const& idx, CollectionBase<ColT,IndexT>* base
     ) {
       debug_print(
@@ -213,7 +213,12 @@ template <typename ColT, typename IndexT, typename MsgT>
           }
         );
 
-        act_fn(msg, reinterpret_cast<UntypedCollection*>(typeless_collection));
+        auto const from_node = col_msg->getFromNode();
+        auto untyped = reinterpret_cast<UntypedCollection*>(typeless_collection);
+        runnable::RunnableCollection<MsgT,UntypedCollection>::run(
+          handler, msg, untyped, from_node,
+          *reinterpret_cast<uint64_t const*>(base->getIndex().raw())
+        );
 
         backend_enable_if(
           lblite, {
@@ -286,9 +291,6 @@ template <typename ColT, typename IndexT>
   auto& inner_holder = elm_holder->lookup(idx);
 
   auto const sub_handler = col_msg->getVrtHandler();
-  auto const collection_active_fn = auto_registry::getAutoHandlerCollection(
-    sub_handler
-  );
 
   // Be careful with type casting here..convert to typeless before
   // reinterpreting the pointer so the compiler does not produce the wrong
@@ -317,9 +319,11 @@ template <typename ColT, typename IndexT>
     }
   );
 
-  // for now, execute directly on comm thread
-  collection_active_fn(
-    msg, reinterpret_cast<UntypedCollection*>(typeless_collection)
+  auto const from_node = col_msg->getFromNode();
+  auto untyped = reinterpret_cast<UntypedCollection*>(typeless_collection);
+  runnable::RunnableCollection<CollectionMessage<ColT>,UntypedCollection>::run(
+    sub_handler, col_msg, untyped, from_node,
+    *reinterpret_cast<uint64_t const*>(col_ptr->getIndex().raw())
   );
 
   backend_enable_if(
@@ -419,6 +423,7 @@ void CollectionManager::broadcastMsg(
     // save the user's handler in the message
     msg->setVrtHandler(han);
     msg->setBcastProxy(col_proxy);
+    msg->setFromNode(this_node);
 
     auto const bcast_node = VirtualProxyBuilder::getVirtualNode(col_proxy);
 

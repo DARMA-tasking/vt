@@ -41,6 +41,9 @@ struct CollectionMessage :
   EpochType getBcastEpoch() const;
   void setBcastEpoch(EpochType const& epoch);
 
+  NodeType getFromNode() const;
+  void setFromNode(NodeType const& node);
+
   #if backend_check_enabled(lblite)
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
@@ -61,6 +64,7 @@ private:
   VirtualElmProxyType<ColT, IndexType> to_proxy_{};
   HandlerType vt_sub_handler_ = uninitialized_handler;
   EpochType bcast_epoch_ = no_epoch;
+  NodeType from_node_ = uninitialized_destination;
 
   #if backend_check_enabled(lblite)
     /*

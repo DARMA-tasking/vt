@@ -60,6 +60,16 @@ void CollectionMessage<ColT, BaseMsgT>::setBcastEpoch(EpochType const& epoch) {
 }
 
 template <typename ColT, typename BaseMsgT>
+NodeType CollectionMessage<ColT, BaseMsgT>::getFromNode() const {
+  return from_node_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setFromNode(NodeType const& node) {
+  from_node_ = node;
+}
+
+template <typename ColT, typename BaseMsgT>
 template <typename SerializerT>
 void CollectionMessage<ColT, BaseMsgT>::serializeParent(SerializerT& s) {
   RoutedMessageType<BaseMsgT, ColT>::serializeParent(s);
