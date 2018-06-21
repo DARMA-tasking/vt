@@ -65,12 +65,12 @@
 #define ctx_false 0
 
 #define print_ctx_node   (                                              \
-    ::vt::theContext() ?                                                \
+    ::vt::rt != nullptr ?                                               \
       (::vt::theContext()->getNode()) :                                 \
       static_cast<NodeType>(-1)                                         \
   )
 #define print_ctx_worker   (                                            \
-    ::vt::theContext() ?                                                \
+    ::vt::rt != nullptr ?                                               \
       (::vt::theContext()->getWorker()) :                               \
       static_cast<NodeType>(-1)                                         \
   )
