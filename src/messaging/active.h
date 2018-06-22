@@ -12,6 +12,7 @@
 #include "event/event.h"
 #include "registry/registry.h"
 #include "registry/auto/auto_registry_interface.h"
+#include "trace/trace_common.h"
 
 #include <type_traits>
 #include <tuple>
@@ -388,6 +389,10 @@ struct ActiveMessenger {
   HandlerType getCurrentCallback();
   NodeType getFromNodeCurrentHandler();
 
+  #if backend_check_enabled(trace_enabled)
+    trace::TraceEventIDType getCurrentTraceEvent() const;
+  #endif
+
   bool handleActiveMsg(
     MessageType msg, NodeType const& sender, MsgSizeType const& size, bool insert
   );
@@ -413,6 +418,10 @@ struct ActiveMessenger {
 
 private:
   NodeType this_node_ = uninitialized_destination;
+  #if backend_check_enabled(trace_enabled)
+    trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
+  #endif
+
   HandlerType current_handler_context_ = uninitialized_handler;
   HandlerType current_callback_context_ = uninitialized_handler;
   NodeType current_node_context_ = uninitialized_destination;

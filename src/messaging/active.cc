@@ -159,6 +159,12 @@ EventType ActiveMessenger::sendMsgBytes(
   return event_id;
 }
 
+#if backend_check_enabled(trace_enabled)
+trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
+  return current_trace_context_;
+}
+#endif
+
 EventType ActiveMessenger::sendMsgSized(
   HandlerType const& han, BaseMessage* const base, MsgSizeType const& msg_size,
   ActionType next_action
@@ -480,6 +486,10 @@ bool ActiveMessenger::deliverActiveMsg(
     current_callback_context_ = callback;
     current_node_context_ = from_node;
 
+    #if backend_check_enabled(trace_enabled)
+      current_trace_context_ = from_node;
+    #endif
+
     // run the active function
     runnable::Runnable<ShortMessage>::run(handler, active_fun, msg, from_node);
 
@@ -492,6 +502,10 @@ bool ActiveMessenger::deliverActiveMsg(
     current_handler_context_ = uninitialized_handler;
     current_callback_context_ = uninitialized_handler;
     current_node_context_ = uninitialized_destination;
+
+    #if backend_check_enabled(trace_enabled)
+      current_trace_context_ = trace::no_trace_event;
+    #endif
   } else {
     if (insert) {
       auto iter = pending_handler_msgs_.find(handler);
