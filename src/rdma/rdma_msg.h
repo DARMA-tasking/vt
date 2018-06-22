@@ -30,6 +30,7 @@ struct RequestDataMessage : ActiveMessage<EnvelopeT> {
 
 template <typename EnvelopeT>
 struct SendDataMessage : ActiveMessage<EnvelopeT> {
+  SendDataMessage() = default;
   SendDataMessage(
     RDMA_OpType const& in_op, ByteType const& in_num_bytes,
     ByteType const& in_offset, TagType const& in_mpi_tag,
