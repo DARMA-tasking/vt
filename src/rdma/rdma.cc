@@ -618,7 +618,7 @@ void RDMAManager::putData(
           }
 
           theMsg()->sendMsgSz<PutMessage,putRecvMsg>(
-            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag
+            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag, cont
           );
 
           debug_print(
