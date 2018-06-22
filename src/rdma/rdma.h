@@ -435,8 +435,9 @@ private:
     GetMessage* msg, bool const& is_user_msg,
     RDMA_HandleType const& rdma_handle, TagType const& tag,
     ByteType const& num_bytes, ByteType const& offset, bool const& is_local,
-    RDMA_PtrType const& ptr = nullptr, RDMA_ContinuationType cont = no_action,
-    ActionType next_action = no_action
+    RDMA_PtrType const& ptr = nullptr,
+    NodeType const& from_node = uninitialized_destination,
+    RDMA_ContinuationType cont = no_action, ActionType next_action = no_action
   );
 
   void triggerGetRecvData(
@@ -447,7 +448,7 @@ private:
   void triggerPutRecvData(
     RDMA_HandleType const& han, TagType const& tag, RDMA_PtrType ptr,
     ByteType const& num_bytes, ByteType const& offset, ActionType const& action,
-    bool const& is_local
+    bool const& is_local, NodeType const& from_node
   );
 
   RDMA_DirectType tryGetDataPtrDirect(RDMA_OpType const& op);

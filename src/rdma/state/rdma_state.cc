@@ -171,7 +171,8 @@ bool State::testReadyPutData(TagType const& tag) {
 }
 
 void State::getData(
-  GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
+  GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
+  NodeType const& from_node
 ) {
   auto const& tag = info.tag;
 
@@ -212,13 +213,18 @@ void State::getData(
         info.cont_action();
       }
     }
+
+    #if backend_check_enabled(trace_enabled)
+      theTrace()->endProcessing(trace_id, info.num_bytes, event, from_node);
+    #endif
   } else {
     pending_tag_gets[tag].push_back(info);
   }
 }
 
 void State::putData(
-  PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
+  PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
+  NodeType const& from_node
 ) {
   auto const& tag = info.tag;
 

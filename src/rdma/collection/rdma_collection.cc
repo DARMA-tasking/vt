@@ -95,7 +95,7 @@ namespace vt { namespace rdma {
   } else {
     // Local access to data
     theRDMA()->requestGetData(
-      nullptr, false, rdma_handle, tag, bytes, elm, true, nullptr,
+      nullptr, false, rdma_handle, tag, bytes, elm, true, nullptr, this_node,
       [action_ptr](RDMA_GetType data){
         action_ptr(std::get<0>(data), std::get<1>(data));
       }
@@ -190,7 +190,7 @@ namespace vt { namespace rdma {
         if (action_after_put) {
           action_after_put();
         }
-      }, true
+      }, true, this_node
     );
   }
 }

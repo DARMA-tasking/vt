@@ -79,11 +79,13 @@ struct State {
   bool testReadyPutData(TagType const& tag);
 
   void getData(
-    GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
+    GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
+    NodeType const& from_node
   );
 
   void putData(
-    PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info
+    PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
+    NodeType const& from_node
   );
 
   void processPendingGet(TagType const& tag = no_tag);
