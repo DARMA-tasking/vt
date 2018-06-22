@@ -120,6 +120,7 @@ namespace vt { namespace rdma {
   auto const send_back = msg->send_back;
   auto const recv_node = msg->recv_node;
   auto const recv_tag = msg->mpi_tag_to_recv;
+  auto const direct = msg->packed_direct;
 
   auto const& this_node = theContext()->getNode();
 
@@ -129,70 +130,86 @@ namespace vt { namespace rdma {
     msg->op_id, msg_tag, msg->num_bytes, msg->mpi_tag_to_recv, msg->rdma_handle
   );
 
-  assert(
-    recv_tag != no_tag and "PutMessage must have recv tag"
-  );
-
-  // try to get early access to the ptr for a direct put into user buffer
-  auto const& put_ptr = theRDMA()->tryPutPtr(msg->rdma_handle, msg_tag);
-  auto const rdma_handle = msg->rdma_handle;
-  auto const offset = msg->offset;
-
-  debug_print(
-    rdma, node,
-    "putRecvMsg: bytes={}, recv_tag={}, put_ptr={}\n",
-    msg->num_bytes, msg->mpi_tag_to_recv, put_ptr
-  );
-
-  if (put_ptr == nullptr) {
-    theMsg()->recvDataMsg(
-      recv_tag, recv_node, [=](RDMA_GetType ptr, ActionType deleter){
+  if (direct) {
+    auto data_ptr = reinterpret_cast<char*>(msg) + sizeof(PutMessage);
+    theRDMA()->triggerPutRecvData(
+      msg->rdma_handle, msg_tag, data_ptr, msg->num_bytes, msg->offset, [=]{
         debug_print(
           rdma, node,
-          "putData: after recv data trigger: recv_tag={}, recv_node={}\n",
-          recv_tag, recv_node
+          "put_data: after put trigger: send_back={}\n", send_back
         );
-        theRDMA()->triggerPutRecvData(
-          rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
-          offset, [=]{
-            debug_print(
-              rdma, node,
-              "put_data: after put trigger: send_back={}\n", send_back
-            );
-            if (send_back != uninitialized_destination) {
-              PutBackMessage* new_msg = new PutBackMessage(op_id);
-              theMsg()->sendMsg<PutBackMessage, putBackMsg>(
-                send_back, new_msg, [=]{ delete new_msg; }
-              );
-              theTerm()->consume(term::any_epoch_sentinel);
-            }
-            deleter();
-          }, false, recv_node
-        );
-      });
-  } else {
-    auto const& put_ptr_offset =
-      msg->offset != no_byte ? static_cast<char*>(put_ptr) + msg->offset : put_ptr;
-
-    // do a direct recv into the user buffer
-    theMsg()->recvDataMsgBuffer(
-      put_ptr_offset, recv_tag, recv_node, true, []{},
-      [=](RDMA_GetType ptr, ActionType deleter){
-        debug_print(
-          rdma, node,
-          "putData: recv_data_msg_buffer DIRECT: offset={}\n",
-          msg->offset
-        );
-        if (send_back) {
-          PutBackMessage* new_msg = new PutBackMessage(op_id);
-          theMsg()->sendMsg<PutBackMessage, putBackMsg>(
-            send_back, new_msg, [=]{ delete new_msg; }
-          );
+        if (send_back != uninitialized_destination) {
+          auto new_msg = makeSharedMessage<PutBackMessage>(op_id);
+          theMsg()->sendMsg<PutBackMessage, putBackMsg>(send_back, new_msg);
           theTerm()->consume(term::any_epoch_sentinel);
         }
-        deleter();
-      }
+      }, false, recv_node
     );
+  } else {
+    assert(
+      recv_tag != no_tag and "PutMessage must have recv tag"
+    );
+
+    // try to get early access to the ptr for a direct put into user buffer
+    auto const& put_ptr = theRDMA()->tryPutPtr(msg->rdma_handle, msg_tag);
+    auto const rdma_handle = msg->rdma_handle;
+    auto const offset = msg->offset;
+
+    debug_print(
+      rdma, node,
+      "putRecvMsg: bytes={}, recv_tag={}, put_ptr={}\n",
+      msg->num_bytes, msg->mpi_tag_to_recv, put_ptr
+    );
+
+    if (put_ptr == nullptr) {
+      theMsg()->recvDataMsg(
+        recv_tag, recv_node, [=](RDMA_GetType ptr, ActionType deleter){
+          debug_print(
+            rdma, node,
+            "putData: after recv data trigger: recv_tag={}, recv_node={}\n",
+            recv_tag, recv_node
+          );
+          theRDMA()->triggerPutRecvData(
+            rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
+            offset, [=]{
+              debug_print(
+                rdma, node,
+                "put_data: after put trigger: send_back={}\n", send_back
+              );
+              if (send_back != uninitialized_destination) {
+                PutBackMessage* new_msg = new PutBackMessage(op_id);
+                theMsg()->sendMsg<PutBackMessage, putBackMsg>(
+                  send_back, new_msg, [=]{ delete new_msg; }
+                );
+                theTerm()->consume(term::any_epoch_sentinel);
+              }
+              deleter();
+            }, false, recv_node
+          );
+        });
+    } else {
+      auto const& put_ptr_offset =
+        msg->offset != no_byte ? static_cast<char*>(put_ptr) + msg->offset : put_ptr;
+      // do a direct recv into the user buffer
+      theMsg()->recvDataMsgBuffer(
+        put_ptr_offset, recv_tag, recv_node, true, []{},
+        [=](RDMA_GetType ptr, ActionType deleter){
+          debug_print(
+            rdma, node,
+            "putData: recv_data_msg_buffer DIRECT: offset={}\n",
+            msg->offset
+          );
+          if (send_back) {
+            PutBackMessage* new_msg = new PutBackMessage(op_id);
+            theMsg()->sendMsg<PutBackMessage, putBackMsg>(
+              send_back, new_msg, [=]{ delete new_msg; }
+            );
+            theTerm()->consume(term::any_epoch_sentinel);
+          }
+          deleter();
+        }
+      );
+    }
   }
 }
 
@@ -536,7 +553,8 @@ void RDMAManager::sendDataChannel(
 void RDMAManager::putData(
   RDMA_HandleType const& han, RDMA_PtrType const& ptr, ByteType const& num_bytes,
   ByteType const& offset, TagType const& tag, ByteType const& elm_size,
-  ActionType cont, ActionType action_after_put, NodeType const& collective_node
+  ActionType cont, ActionType action_after_put, NodeType const& collective_node,
+  bool const direct_message_send
 ) {
   auto const& this_node = theContext()->getNode();
   auto const handle_put_node = RDMA_HandleManagerType::getRdmaNode(han);
@@ -567,40 +585,78 @@ void RDMAManager::putData(
       } else {
         RDMA_OpType const new_op = cur_op_++;
 
-        PutMessage* msg = new PutMessage(
-          new_op, num_bytes, offset, no_tag, han,
-          action_after_put ? this_node : uninitialized_destination,
-          this_node
-        );
-
         if (action_after_put) {
           theTerm()->produce(term::any_epoch_sentinel);
         }
 
-        auto send_payload = [&](Active::SendFnType send){
-          auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag, [=]{
-            if (cont != nullptr) {
-              cont();
-            }
-          });
-          msg->mpi_tag_to_recv = std::get<1>(ret);
-        };
+        bool direct_put_pack = direct_message_send || num_bytes < 64;
 
-        if (tag != no_tag) {
-          envelopeSetTag(msg->env, tag);
+        if (direct_put_pack) {
+          PutMessage* msg = nullptr;
+          if (direct_message_send) {
+            msg = reinterpret_cast<PutMessage*>(ptr);
+            msg->send_back =
+              action_after_put ? this_node : uninitialized_destination;
+            msg->rdma_handle = han;
+            msg->recv_node = this_node;
+            msg->op_id = new_op;
+            msg->num_bytes = num_bytes;
+            msg->offset = offset;
+            msg->packed_direct = true;
+          } else {
+            msg = makeSharedMessageSz<PutMessage>(
+              num_bytes, new_op, num_bytes, offset, no_tag, han,
+              action_after_put ? this_node : uninitialized_destination,
+              this_node, direct_put_pack
+            );
+            auto msg_ptr = reinterpret_cast<char*>(msg) + sizeof(PutMessage);
+            std::memcpy(msg_ptr, ptr, num_bytes);
+          }
+
+          if (tag != no_tag) {
+            envelopeSetTag(msg->env, tag);
+          }
+
+          theMsg()->sendMsgSz<PutMessage,putRecvMsg>(
+            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag
+          );
+
+          debug_print(
+            rdma, node,
+            "putData: sending direct: ptr={}, num_bytes={}, offset={}\n",
+            ptr, num_bytes, offset
+          );
+
+        } else {
+          auto msg = makeSharedMessage<PutMessage>(
+            new_op, num_bytes, offset, no_tag, han,
+            action_after_put ? this_node : uninitialized_destination,
+            this_node
+          );
+
+          auto send_payload = [&](Active::SendFnType send){
+            auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag, [=]{
+              if (cont != nullptr) {
+                cont();
+              }
+            });
+            msg->mpi_tag_to_recv = std::get<1>(ret);
+          };
+
+          if (tag != no_tag) {
+            envelopeSetTag(msg->env, tag);
+          }
+
+          theMsg()->sendMsg<PutMessage, putRecvMsg>(
+            put_node, msg, send_payload
+          );
+
+          debug_print(
+            rdma, node,
+            "putData: sending: ptr={}, num_bytes={}, recv_tag={}, offset={}\n",
+            ptr, num_bytes, msg->mpi_tag_to_recv, offset
+          );
         }
-
-        auto deleter = [=]{ delete msg; };
-
-        theMsg()->sendMsg<PutMessage, putRecvMsg>(
-          put_node, msg, send_payload, deleter
-        );
-
-        debug_print(
-          rdma, node,
-          "putData: sending: ptr={}, num_bytes={}, recv_tag={}, offset={}\n",
-          ptr, num_bytes, msg->mpi_tag_to_recv, offset
-        );
 
         if (action_after_put != nullptr) {
           pending_ops_.emplace(

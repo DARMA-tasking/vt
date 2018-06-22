@@ -35,11 +35,12 @@ struct SendDataMessage : ActiveMessage<EnvelopeT> {
     ByteType const& in_offset, TagType const& in_mpi_tag,
     RDMA_HandleType const& in_han = no_rdma_handle,
     NodeType const& back = uninitialized_destination,
-    NodeType const& in_recv_node = uninitialized_destination
+    NodeType const& in_recv_node = uninitialized_destination,
+    bool const in_packed_direct = false
   ) : ActiveMessage<EnvelopeT>(),
-    op_id(in_op), num_bytes(in_num_bytes), rdma_handle(in_han),
-    mpi_tag_to_recv(in_mpi_tag), send_back(back), offset(in_offset),
-    recv_node(in_recv_node)
+    rdma_handle(in_han), send_back(back), recv_node(in_recv_node),
+    mpi_tag_to_recv(in_mpi_tag), op_id(in_op), num_bytes(in_num_bytes),
+    offset(in_offset), packed_direct(in_packed_direct)
   { }
 
   RDMA_HandleType rdma_handle = no_rdma_handle;
@@ -49,6 +50,7 @@ struct SendDataMessage : ActiveMessage<EnvelopeT> {
   RDMA_OpType op_id = no_rdma_op;
   ByteType num_bytes = no_byte;
   ByteType offset = no_byte;
+  bool packed_direct = false;
 };
 
 template <typename EnvelopeT>

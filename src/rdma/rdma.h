@@ -95,7 +95,8 @@ struct RDMAManager {
     ByteType const& num_bytes, ByteType const& offset, TagType const& tag,
     ByteType const& elm_size = rdma_default_byte_size,
     ActionType cont = no_action, ActionType action_after_put = no_action,
-    NodeType const& collective_node = uninitialized_destination
+    NodeType const& collective_node = uninitialized_destination,
+    bool const direct_message_send = false
   );
 
   void getDataIntoBuf(
