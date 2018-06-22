@@ -62,7 +62,10 @@ int main(int argc, char** argv) {
     }
 
     my_handle = theRDMA()->registerNewRdmaHandler();
-    theRDMA()->associateGetFunction<TestMsg>(test_msg, my_handle, test_get_fn, true);
+    theRDMA()->associateGetFunction<TestMsg,test_get_fn>(
+      test_msg, my_handle, test_get_fn, true
+    );
+
     fmt::print("initializing my_handle={}\n", my_handle);
 
     TestMsg* msg = new TestMsg(my_node);

@@ -130,8 +130,12 @@ int main(int argc, char** argv) {
   rdma_state = new RDMAMsgType();
 
   my_handle = RDMACollectionManager::registerUnsizedCollection(num_elms);
-  theRDMA()->associateGetFunction<RDMAMsgType>(rdma_state, my_handle, get_fn, true);
-  theRDMA()->associatePutFunction<RDMAMsgType>(rdma_state, my_handle, put_fn, true);
+  theRDMA()->associateGetFunction<RDMAMsgType,get_fn>(
+    rdma_state, my_handle, get_fn, true
+  );
+  theRDMA()->associatePutFunction<RDMAMsgType,put_fn>(
+    rdma_state, my_handle, put_fn, true
+  );
 
   theCollective()->barrier();
 
