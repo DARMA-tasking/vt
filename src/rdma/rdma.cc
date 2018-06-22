@@ -593,6 +593,7 @@ void RDMAManager::putData(
 
         if (direct_put_pack) {
           PutMessage* msg = nullptr;
+          auto cur_cont = cont;
           if (direct_message_send) {
             msg = reinterpret_cast<PutMessage*>(ptr);
             msg->send_back =
@@ -611,6 +612,8 @@ void RDMAManager::putData(
             );
             auto msg_ptr = reinterpret_cast<char*>(msg) + sizeof(PutMessage);
             std::memcpy(msg_ptr, ptr, num_bytes);
+            cont();
+            cur_cont = nullptr;
           }
 
           if (tag != no_tag) {
@@ -618,7 +621,7 @@ void RDMAManager::putData(
           }
 
           theMsg()->sendMsgSz<PutMessage,putRecvMsg>(
-            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag, cont
+            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag, cur_cont
           );
 
           debug_print(
