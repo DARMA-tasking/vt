@@ -265,6 +265,11 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
+
+  if (next_action != nullptr) {
+    holder.attachAction(next_action);
+  }
+
   auto mpi_event = holder.get_event();
 
   debug_print(
