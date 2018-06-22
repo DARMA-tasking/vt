@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "messaging/message.h"
+#include "configs/types/types_rdma.h"
 
 namespace vt {
 
@@ -49,6 +50,30 @@ using ActiveFnPtrType = void(*)(vt::BaseMessage *);
 
 template <typename MessageT>
 using ActiveTypedFnType = void(MessageT *);
+
+using ActiveClosureRDMAGetFnType = std::function<
+  RDMA_GetType(vt::BaseMessage*, ByteType, ByteType, TagType, bool)
+>;
+using ActiveRDMAGetFnPtrType = RDMA_GetType(*)(
+  vt::BaseMessage *, ByteType, ByteType, TagType, bool
+);
+template <typename MessageT>
+using ActiveTypedRDMAGetFnType = RDMA_GetType(
+  MessageT*, ByteType, ByteType, TagType, bool
+);
+
+using ActiveClosureRDMAPutFnType = std::function<
+  void(vt::BaseMessage*, RDMA_PtrType, ByteType, ByteType, TagType, bool)
+>;
+using ActiveRDMAPutFnPtrType = void(*)(
+  vt::BaseMessage *, RDMA_PtrType, ByteType, ByteType, TagType, bool
+);
+template <typename MessageT>
+using ActiveTypedRDMAPutFnType = void(
+  MessageT*, RDMA_PtrType, ByteType, ByteType, TagType, bool
+);
+
+
 
 }  // end namespace vt
 
