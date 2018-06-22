@@ -32,9 +32,9 @@ struct State {
   template <typename MsgType>
   using RDMA_PutTypedFunctionType = ActiveTypedPutFunctionType<MsgType>;
   using RDMA_TagGetHolderType =
-    std::tuple<RDMA_GetFunctionType, RDMA_HandlerType>;
+    std::tuple<RDMA_GetFunctionType, RDMA_HandlerType, vt::HandlerType>;
   using RDMA_TagPutHolderType =
-    std::tuple<RDMA_PutFunctionType, RDMA_HandlerType>;
+    std::tuple<RDMA_PutFunctionType, RDMA_HandlerType, vt::HandlerType>;
   using RDMA_FunctionType = BaseMessage;
 
   template <typename T>
@@ -53,15 +53,15 @@ struct State {
     bool const& use_default_handler = false
   );
 
-  template <typename AssocFuncT, typename FuncT>
+  template <typename MsgT, typename FuncT, ActiveTypedRDMAGetFnType<MsgT>* f>
   RDMA_HandlerType setRDMAGetFn(
-    AssocFuncT* msg, FuncT const& fn, bool const& any_tag = false,
+    MsgT* msg, FuncT const& fn, bool const& any_tag = false,
     TagType const& tag = no_tag
   );
 
-  template <typename AssocFuncT, typename FuncT>
+  template <typename MsgT, typename FuncT, ActiveTypedRDMAPutFnType<MsgT>* f>
   RDMA_HandlerType setRDMAPutFn(
-    AssocFuncT* msg, FuncT const& fn, bool const& any_tag = false,
+    MsgT* msg, FuncT const& fn, bool const& any_tag = false,
     TagType const& tag = no_tag
   );
 
@@ -109,6 +109,8 @@ struct State {
 private:
   RDMA_HandlerType this_rdma_get_handler = uninitialized_rdma_handler;
   RDMA_HandlerType this_rdma_put_handler = uninitialized_rdma_handler;
+  ::vt::HandlerType this_get_handler = uninitialized_handler;
+  ::vt::HandlerType this_put_handler = uninitialized_handler;
 
   bool get_any_tag = false;
   bool put_any_tag = false;

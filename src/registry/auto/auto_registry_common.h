@@ -23,6 +23,8 @@ using AutoActiveCollectionType = vrt::collection::ActiveColFnPtrType;
 using AutoActiveMapType        = mapping::ActiveMapFnPtrType;
 using AutoActiveMapFunctorType = mapping::ActiveMapFnPtrType;
 using AutoActiveSeedMapType    = mapping::ActiveSeedMapFnPtrType;
+using AutoActiveRDMAGetType    = ActiveRDMAGetFnPtrType;
+using AutoActiveRDMAPutType    = ActiveRDMAPutFnPtrType;
 
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;
@@ -32,7 +34,9 @@ enum struct RegistryTypeEnum {
   RegMap,
   RegVrt,
   RegSeed,
-  RegVrtCollection
+  RegVrtCollection,
+  RegRDMAGet,
+  RegRDMAPut
 };
 
 template <typename FnT>
@@ -72,6 +76,8 @@ using AutoActiveMapContainerType        = RegContType<AutoActiveMapType>;
 using AutoActiveMapFunctorContainerType = RegContType<AutoActiveMapFunctorType>;
 using AutoActiveSeedMapContainerType    = RegContType<AutoActiveSeedMapType>;
 using AutoActiveFunctorContainerType    = RegContType<AutoActiveFunctorType>;
+using AutoActiveRDMAGetContainerType    = RegContType<AutoActiveRDMAGetType>;
+using AutoActiveRDMAPutContainerType    = RegContType<AutoActiveRDMAPutType>;
 
 }} // end namespace vt::auto_registry
 

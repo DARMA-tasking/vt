@@ -48,6 +48,16 @@ trace::TraceEntryIDType theTraceID(
     return getAutoRegistryGen<ContType>().at(handler).theTraceID();
     break;
   }
+  case RegistryTypeEnum::RegRDMAGet: {
+    using ContType = AutoActiveRDMAGetContainerType;
+    return getAutoRegistryGen<ContType>().at(handler).theTraceID();
+    break;
+  }
+  case RegistryTypeEnum::RegRDMAPut: {
+    using ContType = AutoActiveRDMAPutContainerType;
+    return getAutoRegistryGen<ContType>().at(handler).theTraceID();
+    break;
+  }
   case RegistryTypeEnum::RegSeed: {
     using ContType = AutoActiveSeedMapContainerType;
     auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);

@@ -2,8 +2,10 @@
 #define INCLUDED_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_IMPL_H
 
 #include "config.h"
-#include "registry/auto/auto_registry_common.h"
 #include "registry/auto/functor/auto_registry_functor.h"
+#include "registry/auto/auto_registry_common.h"
+#include "registry/auto/auto_registry_general.h"
+#include "utils/demangle/demangle.h"
 
 #include <vector>
 #include <memory>

@@ -226,26 +226,26 @@ struct RDMAManager {
     TagType const& tag = no_tag
   );
 
-  template <typename MsgType = BaseMessage>
+  template <typename MsgType = BaseMessage, ActiveTypedRDMAGetFnType<MsgType>* f>
   RDMA_HandlerType associateGetFunction(
     MsgType* msg, RDMA_HandleType const& han,
     RDMA_GetTypedFunctionType<MsgType> const& fn, bool const& any_tag = false,
     TagType const& tag = no_tag
   ) {
-    return associateRdmaFunction<RDMA_TypeType::Get>(
-      msg,han,fn,any_tag,tag
-    );
+    return associateRdmaGetFunction<
+      RDMA_TypeType::Get,MsgType,RDMA_GetTypedFunctionType<MsgType>,f
+    >(msg,han,fn,any_tag,tag);
   }
 
-  template <typename MsgType = BaseMessage>
+  template <typename MsgType = BaseMessage, ActiveTypedRDMAPutFnType<MsgType>* f>
   RDMA_HandlerType associatePutFunction(
     MsgType* msg, RDMA_HandleType const& han,
     RDMA_PutTypedFunctionType<MsgType> const& fn, bool const& any_tag = false,
     TagType const& tag = no_tag
   ) {
-    return associateRdmaFunction<RDMA_TypeType::Put>(
-      msg,han,fn,any_tag,tag
-    );
+    return associateRdmaPutFunction<
+      RDMA_TypeType::Put,MsgType,RDMA_PutTypedFunctionType<MsgType>,f
+    >(msg,han,fn,any_tag,tag);
   }
 
   void newChannel(
@@ -399,11 +399,10 @@ private:
 
   template <
     RDMAManager::RDMA_TypeType rdma_type,
-    typename AssocFuncT,
-    typename FunctionT
+    typename MsgT, typename FunctionT, ActiveTypedRDMAGetFnType<MsgT>* f
   >
-  RDMA_HandlerType associateRdmaFunction(
-    AssocFuncT* msg, RDMA_HandleType const& han, FunctionT const& fn,
+  RDMA_HandlerType associateRdmaGetFunction(
+    MsgT* msg, RDMA_HandleType const& han, FunctionT const& fn,
     bool const& any_tag, TagType const& tag
   ) {
     auto const& this_node = theContext()->getNode();
@@ -423,9 +422,38 @@ private:
     auto& state = holder_iter->second;
 
     if (rdma_type == RDMAManager::RDMA_TypeType::Get) {
-      return state.setRDMAGetFn(msg, fn, any_tag, tag);
-    } else if (rdma_type == RDMAManager::RDMA_TypeType::Put) {
-      return state.setRDMAPutFn(msg, fn, any_tag, tag);
+      return state.setRDMAGetFn<MsgT,FunctionT,f>(msg, fn, any_tag, tag);
+    } else {
+      assert(0 and "Should be unreachable");
+    }
+  }
+
+  template <
+    RDMAManager::RDMA_TypeType rdma_type,
+    typename MsgT, typename FunctionT, ActiveTypedRDMAPutFnType<MsgT>* f
+  >
+  RDMA_HandlerType associateRdmaPutFunction(
+    MsgT* msg, RDMA_HandleType const& han, FunctionT const& fn,
+    bool const& any_tag, TagType const& tag
+  ) {
+    auto const& this_node = theContext()->getNode();
+    auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
+    auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
+
+    assert(
+      (is_collective or handler_node == this_node)
+      and "Handle must be local to this node"
+    );
+
+    auto holder_iter = holder_.find(han);
+    assert(
+      holder_iter != holder_.end() and "Holder for handler must exist here"
+    );
+
+    auto& state = holder_iter->second;
+
+    if (rdma_type == RDMAManager::RDMA_TypeType::Put) {
+      return state.setRDMAPutFn<MsgT,FunctionT,f>(msg, fn, any_tag, tag);
     } else {
       assert(0 and "Should be unreachable");
     }

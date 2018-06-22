@@ -2,6 +2,11 @@
 #include "config.h"
 #include "rdma/rdma.h"
 #include "rdma/state/rdma_state.h"
+#include "registry/auto/auto_registry_common.h"
+#include "registry/auto/auto_registry_interface.h"
+#include "registry/auto/auto_registry_general.h"
+#include "trace/trace_common.h"
+#include "messaging/active.h"
 
 #include <cstring>
 #include <memory>
@@ -25,12 +30,12 @@ void State::setDefaultHandler() {
 
   bool const handle_any_tag = true;
 
-  theRDMA()->associateGetFunction<StateMsgT>(
+  theRDMA()->associateGetFunction<StateMsgT,State::defaultGetHandlerFn>(
     nullptr, handle, State::defaultGetHandlerFn, handle_any_tag
   );
   using_default_get_handler = true;
 
-  theRDMA()->associatePutFunction<StateMsgT>(
+  theRDMA()->associatePutFunction<StateMsgT,State::defaultPutHandlerFn>(
     nullptr, handle, State::defaultPutHandlerFn, handle_any_tag
   );
   using_default_put_handler = true;
@@ -71,11 +76,13 @@ void State::unregisterRdmaHandler(
   if (tag == no_tag) {
     if (this_rdma_get_handler == handler) {
       this_rdma_get_handler = uninitialized_rdma_handler;
+      this_get_handler = uninitialized_handler;
       rdma_get_fn = nullptr;
       using_default_get_handler = false;
     }
     if (this_rdma_put_handler == handler) {
       this_rdma_put_handler = uninitialized_rdma_handler;
+      this_put_handler = uninitialized_handler;
       rdma_put_fn = nullptr;
       using_default_put_handler = false;
     }
@@ -200,6 +207,21 @@ void State::getData(
     RDMA_GetFunctionType get_fn =
       tag == no_tag or get_any_tag ? rdma_get_fn :
       std::get<0>(get_tag_holder.find(tag)->second);
+    ::vt::HandlerType const reg_han =
+      tag == no_tag or get_any_tag ? this_get_handler :
+      std::get<2>(get_tag_holder.find(tag)->second);
+
+    #if backend_check_enabled(trace_enabled)
+      trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
+        reg_han, auto_registry::RegistryTypeEnum::RegRDMAGet
+      );
+      trace::TraceEventIDType event = theMsg()->getCurrentTraceEvent();
+    #endif
+
+    #if backend_check_enabled(trace_enabled)
+      theTrace()->beginProcessing(trace_id, info.num_bytes, event, from_node);
+    #endif
+
     if (info.cont) {
       info.cont(
         get_fn(base_msg, info.num_bytes, offset, info.tag, info.is_local)
@@ -250,6 +272,21 @@ void State::putData(
     RDMA_PutFunctionType put_fn =
       tag == no_tag or put_any_tag ? rdma_put_fn :
       std::get<0>(put_tag_holder.find(tag)->second);
+    ::vt::HandlerType const reg_han =
+      tag == no_tag or put_any_tag ? this_put_handler :
+      std::get<2>(put_tag_holder.find(tag)->second);
+
+    #if backend_check_enabled(trace_enabled)
+      trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
+        reg_han, auto_registry::RegistryTypeEnum::RegRDMAPut
+      );
+      trace::TraceEventIDType event = theMsg()->getCurrentTraceEvent();
+    #endif
+
+    #if backend_check_enabled(trace_enabled)
+      theTrace()->beginProcessing(trace_id, info.num_bytes, event, from_node);
+    #endif
+
     put_fn(
       base_msg, info.data_ptr, info.num_bytes, info.offset, info.tag,
       info.is_local
@@ -262,6 +299,10 @@ void State::putData(
     if (info.cont_action) {
       info.cont_action();
     }
+
+    #if backend_check_enabled(trace_enabled)
+      theTrace()->endProcessing(trace_id, info.num_bytes, event, from_node);
+    #endif
   } else {
     pending_tag_puts[tag].push_back(info);
   }

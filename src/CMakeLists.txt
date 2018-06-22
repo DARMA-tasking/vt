@@ -59,7 +59,7 @@ set(
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
-      registry/auto/vc
+      registry/auto/vc registry/auto/rdma
 
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
