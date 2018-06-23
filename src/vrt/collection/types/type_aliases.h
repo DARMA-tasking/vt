@@ -25,6 +25,16 @@ struct InsertableCollection :
 
 }}} /* end namespace vt::vrt::collection */
 
+namespace vt {
+
+template <typename ColT, typename IndexT>
+using Collection = vrt::collection::Collection<ColT,IndexT>;
+
+template <typename ColT, typename IndexT>
+using InsertableCollection = vrt::collection::InsertableCollection<ColT,IndexT>;
+
+} /* end namespace vt */
+
 #include "vrt/collection/types/type_aliases.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_TYPE_ALIASES_H*/
