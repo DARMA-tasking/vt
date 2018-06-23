@@ -68,6 +68,14 @@ struct CollectionIndexProxy : Broadcastable<ColT, IndexT> {
 
 }}} /* end namespace vt::vrt::collection */
 
+namespace vt {
+
+template <typename ColT, typename IndexT>
+using CollectionIndexProxy = vrt::collection::CollectionIndexProxy<ColT,IndexT>;
+using CollectionProxy = vrt::collection::CollectionProxy;
+
+} /* end namespace vt */
+
 #include "vrt/proxy/collection_wrapper.impl.h"
 
 #endif /*INCLUDED_VRT_PROXY_COLLECTION_WRAPPER_H*/
