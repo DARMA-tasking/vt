@@ -3,8 +3,11 @@
 #include "trace/trace.h"
 #include "timing/timing.h"
 #include "scheduler/scheduler.h"
+#include "utils/demangle/demangle.h"
 
 #include <zlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace vt { namespace trace {
 
@@ -49,6 +52,26 @@ void Trace::setupNames(
   trace_name_ = in_trace_name;
   dir_name_ = in_dir_name;
   start_time_ = getCurrentTime();
+
+  if (theContext()->getNode() == 0) {
+    if (dir_name_ != "") {
+      bool made_dir = true, have_cur_directory = true;
+      char cur_dir[1024];
+      if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
+        have_cur_directory = false;
+      }
+      if (have_cur_directory) {
+        auto full_dir_name = std::string(cur_dir) + "/" + dir_name_;
+        auto const dir_ret = mkdir(full_dir_name.c_str(), S_IRWXU);
+        if (dir_ret == -1) {
+          made_dir = false;
+        }
+        if (made_dir) {
+          use_directory_ = true;
+        }
+      }
+    }
+  }
 }
 
 /*virtual*/ Trace::~Trace() {
@@ -281,11 +304,34 @@ void Trace::writeTracesFile() {
     TraceContainersType::event_container.size()
   );
 
-  std::string full_trace_name = {};
-  std::string full_sts_name = {};
+  auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
+  auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
+  auto const trace_name = tc[tc.size()-1];
+  auto const prog_name = tc[tc.size()-1];
+
+  std::string full_trace_name = trace_name;
+  std::string full_sts_name = prog_name + ".sts";
+
   if (dir_name_ != "") {
-    full_trace_name = dir_name_ + "/" + trace_name_;
-    full_sts_name = dir_name_ + "/" + prog_name_ + ".sts";
+    bool have_cur_directory = true;
+    char cur_dir[1024];
+    if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
+      have_cur_directory = false;
+    }
+
+    if (have_cur_directory) {
+      auto full_dir_name = std::string(cur_dir) + "/" + dir_name_;
+      struct stat info;
+      if (stat(full_dir_name.c_str(), &info) != 0) {
+        use_directory_ = false;
+      } else {
+        use_directory_ = true;
+      }
+      if (use_directory_) {
+        full_trace_name = full_dir_name + "/" + trace_name;
+        full_sts_name = full_dir_name + "/" + prog_name + ".sts";
+      }
+    }
   }
 
   gzFile file = gzopen(full_trace_name.c_str(), "wb");

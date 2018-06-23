@@ -106,7 +106,7 @@ private:
   std::string prog_name_, trace_name_;
 
   bool enabled_ = true, idle_begun_ = false;
-
+  bool use_directory_ = false;
   double start_time_ = 0.0;
 };
 
