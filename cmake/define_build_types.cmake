@@ -16,15 +16,27 @@ endfunction()
 
 add_configuration_type(debug_v1)
 add_configuration_type(debug_v2)
+add_configuration_type(debug_trace)
+add_configuration_type(release_trace)
 
 # set(VIRTUAL_TRANSPORT_LIBRARY_DV1 vt-debug_v1)
 # set(VIRTUAL_TRANSPORT_LIBRARY_DV2 vt-debug_v2)
 # set(VIRTUAL_TRANSPORT_LIBRARY_REL vt-release)
 
-set(cmake_vt_features_debug_v2                 "gen, barrier, active, runtime, flush")
-set(cmake_vt_features_debug_v1                 "runtime, flush")
-set(cmake_vt_features_debug                    "flush")
-set(cmake_vt_features_release                  "flush")
+set(cmake_vt_debug_modes_debug_trace           "flush")
+set(cmake_vt_debug_modes_release_trace         "flush")
+set(cmake_vt_debug_modes_debug_v2              "gen, barrier, active, runtime, flush")
+set(cmake_vt_debug_modes_debug_v1              "runtime, flush")
+set(cmake_vt_debug_modes_debug                 "flush")
+set(cmake_vt_debug_modes_release               "flush")
+set(cmake_vt_features_debug_trace              "trace_enabled")
+set(cmake_vt_features_release_trace            "trace_enabled")
+set(cmake_vt_features_debug_v2                 "")
+set(cmake_vt_features_debug_v1                 "")
+set(cmake_vt_features_debug                    "")
+set(cmake_vt_features_release                  "")
+set(cmake_config_debug_enabled_debug_trace     1)
+set(cmake_config_debug_enabled_release_trace   0)
 set(cmake_config_debug_enabled_debug_v2        1)
 set(cmake_config_debug_enabled_debug_v1        1)
 set(cmake_config_debug_enabled_debug           0)
@@ -36,6 +48,11 @@ set(build_type_list)
 
 foreach(cur_build_type ${CMAKE_CONFIGURATION_TYPES})
   #message(STATUS "generating for build type=${cur_build_type}")
+
+  set(
+    cmake_vt_debug_modes
+    ${cmake_vt_debug_modes_${cur_build_type}}
+  )
 
   set(
     cmake_vt_features
@@ -79,6 +96,8 @@ target_include_directories(
   $<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>
   $<$<CONFIG:debug_v1>:${PROJECT_BIN_DIR}/debug_v1>
   $<$<CONFIG:debug_v2>:${PROJECT_BIN_DIR}/debug_v2>
+  $<$<CONFIG:debug_trace>:${PROJECT_BIN_DIR}/debug_trace>
+  $<$<CONFIG:release_trace>:${PROJECT_BIN_DIR}/release_trace>
 )
 
 set(

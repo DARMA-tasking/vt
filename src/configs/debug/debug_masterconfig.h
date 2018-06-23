@@ -25,7 +25,8 @@
 #define default_threading openmp
 
 #define backend_features backend_options_on(                             \
-    lblite, memory_pool, detector, default_threading                     \
+  detector, default_threading, lblite, memory_pool,                      \
+  cmake_config_features                                                  \
 )
 
 #define backend_debug_contexts backend_options_on(                       \
