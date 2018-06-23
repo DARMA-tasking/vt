@@ -46,7 +46,8 @@ struct Trace {
 
   void initialize();
   void setupNames(
-    std::string const& in_prog_name, std::string const& in_trace_name
+    std::string const& in_prog_name, std::string const& in_trace_name,
+    std::string const& in_dir_name = ""
   );
 
   void beginProcessing(

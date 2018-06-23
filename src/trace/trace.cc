@@ -42,10 +42,12 @@ bool Trace::inIdleEvent() const {
 }
 
 void Trace::setupNames(
-  std::string const& in_prog_name, std::string const& in_trace_name
+  std::string const& in_prog_name, std::string const& in_trace_name,
+  std::string const& in_dir_name
 ) {
   prog_name_ = in_prog_name;
   trace_name_ = in_trace_name;
+  dir_name_ = in_dir_name;
   start_time_ = getCurrentTime();
 }
 
