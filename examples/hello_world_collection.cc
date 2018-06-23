@@ -3,8 +3,6 @@
 #include <cstdlib>
 
 using namespace vt;
-using namespace vt::vrt;
-using namespace vt::vrt::collection;
 using namespace vt::index;
 using namespace vt::mapping;
 
