@@ -312,7 +312,7 @@ void Trace::writeTracesFile() {
   auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
   auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
   auto const trace_name = tc[tc.size()-1];
-  auto const prog_name = tc[tc.size()-1];
+  auto const prog_name = pc[pc.size()-1];
   #endif
 
   std::string full_trace_name = trace_name_;
