@@ -78,6 +78,13 @@ private:
 
 }}} /* end namespace vt::vrt::collection */
 
+namespace vt {
+
+template <typename ColT, typename MsgT = ::vt::Message>
+using CollectionMessage = vrt::collection::CollectionMessage<ColT, MsgT>;
+
+} /* end namespace vt */
+
 #include "vrt/collection/messages/user.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MESSAGES_USER_H*/
