@@ -73,8 +73,10 @@ namespace vt { namespace rdma {
   auto const& this_node = theContext()->getNode();
   debug_print(
     rdma, node,
-    "getRecvMsg: op={}, tag={}, bytes={}, get_ptr={}, mpi_tag={}, send_back={}\n",
-    msg->op_id, msg_tag, msg->num_bytes, get_ptr, msg->mpi_tag_to_recv, msg->send_back
+    "getRecvMsg: op={}, tag={}, bytes={}, get_ptr={}, "
+    "mpi_tag={}, send_back={}\n",
+    msg->op_id, msg_tag, msg->num_bytes, get_ptr,
+    msg->mpi_tag_to_recv, msg->send_back
   );
 
   if (get_ptr == nullptr) {
@@ -126,8 +128,10 @@ namespace vt { namespace rdma {
 
   debug_print(
     rdma, node,
-    "putRecvMsg: op={}, tag={}, bytes={}, recv_tag={}, han={}\n",
-    msg->op_id, msg_tag, msg->num_bytes, msg->mpi_tag_to_recv, msg->rdma_handle
+    "putRecvMsg: op={}, tag={}, bytes={}, recv_node={}, send_back={}, "
+    "recv_tag={}, han={}, direct={}\n",
+    msg->op_id, msg_tag, msg->num_bytes, recv_node, send_back,
+    msg->mpi_tag_to_recv, msg->rdma_handle, direct
   );
 
   if (direct) {
@@ -157,8 +161,9 @@ namespace vt { namespace rdma {
 
     debug_print(
       rdma, node,
-      "putRecvMsg: bytes={}, recv_tag={}, put_ptr={}\n",
-      msg->num_bytes, msg->mpi_tag_to_recv, put_ptr
+      "putRecvMsg: recv_node={}, send_back={}, bytes={}, recv_tag={}, "
+      "put_ptr={}\n",
+      recv_node, send_back, msg->num_bytes, msg->mpi_tag_to_recv, put_ptr
     );
 
     if (put_ptr == nullptr) {
@@ -166,8 +171,9 @@ namespace vt { namespace rdma {
         recv_tag, recv_node, [=](RDMA_GetType ptr, ActionType deleter){
           debug_print(
             rdma, node,
-            "putData: after recv data trigger: recv_tag={}, recv_node={}\n",
-            recv_tag, recv_node
+            "putData: after recv data trigger: recv_tag={}, recv_node={}, "
+	    "send_back={}, bytes={}\n",
+            recv_tag, recv_node, send_back, msg->num_bytes
           );
           theRDMA()->triggerPutRecvData(
             rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
@@ -562,6 +568,13 @@ void RDMAManager::putData(
 
   auto const& put_node = is_collective ? collective_node : handle_put_node;
 
+  debug_print(
+    rdma, node,
+    "putData: sending: put_node={}, ptr={}, num_bytes={}, offset={}, "
+    "tag={}, han={}\n",
+    put_node, print_ptr(ptr), num_bytes, offset, tag, han
+  );
+
   if (is_collective and collective_node == uninitialized_destination) {
     return putDataIntoBufCollective(
       han, ptr, num_bytes, elm_size, offset, cont, action_after_put
@@ -626,8 +639,9 @@ void RDMAManager::putData(
 
           debug_print(
             rdma, node,
-            "putData: sending direct: ptr={}, num_bytes={}, offset={}\n",
-            ptr, num_bytes, offset
+            "putData: sending direct: put_node={}, ptr={}, num_bytes={}, "
+	    "offset={}\n",
+            put_node, ptr, num_bytes, offset
           );
 
         } else {
@@ -639,6 +653,12 @@ void RDMAManager::putData(
 
           auto send_payload = [&](Active::SendFnType send){
             auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag, [=]{
+		debug_print(
+                  rdma, node,
+		  "putData: execute payload fn: put_node={}, ptr={}, num_bytes={}, "
+		  "send_tag={}, offset={}\n",
+		  put_node, ptr, num_bytes, msg->mpi_tag_to_recv, offset
+		);
               if (cont != nullptr) {
                 cont();
               }
@@ -650,14 +670,22 @@ void RDMAManager::putData(
             envelopeSetTag(msg->env, tag);
           }
 
+	  debug_print(
+	    rdma, node,
+	    "putData: recvData before: put_node={}, ptr={}, num_bytes={}, "
+	    "send_tag={}, offset={}\n",
+	    put_node, ptr, num_bytes, msg->mpi_tag_to_recv, offset
+          );
+
           theMsg()->sendMsg<PutMessage, putRecvMsg>(
             put_node, msg, send_payload
           );
 
           debug_print(
             rdma, node,
-            "putData: sending: ptr={}, num_bytes={}, recv_tag={}, offset={}\n",
-            ptr, num_bytes, msg->mpi_tag_to_recv, offset
+            "putData: recvData after: put_node={}, ptr={}, num_bytes={}, "
+	    "send_tag={}, offset={}\n",
+            put_node, ptr, num_bytes, msg->mpi_tag_to_recv, offset
           );
         }
 
@@ -670,6 +698,11 @@ void RDMAManager::putData(
         }
       }
     } else {
+      debug_print(
+        rdma, node,
+        "putData: local: put_node={}, ptr={}, num_bytes={}, offset={}\n",
+        put_node, ptr, num_bytes, offset
+      );
       theRDMA()->triggerPutRecvData(
         han, tag, ptr, num_bytes, offset, [=](){
           debug_print(
