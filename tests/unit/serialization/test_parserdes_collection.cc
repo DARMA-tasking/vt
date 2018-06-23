@@ -31,8 +31,6 @@ namespace vt { namespace tests { namespace unit {
 
 using namespace vt;
 using namespace vt::tests::unit;
-using namespace vt::vrt;
-using namespace vt::vrt::collection;
 
 using TestIndex = ::vt::index::Index1D;
 
