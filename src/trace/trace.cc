@@ -279,7 +279,14 @@ void Trace::writeTracesFile() {
     TraceContainersType::event_container.size()
   );
 
-  gzFile file = gzopen(trace_name_.c_str(), "wb");
+  std::string full_trace_name = {};
+  std::string full_sts_name = {};
+  if (dir_name_ != "") {
+    full_trace_name = dir_name_ + "/" + trace_name_;
+    full_sts_name = dir_name_ + "/" + prog_name_ + ".sts";
+  }
+
+  gzFile file = gzopen(full_trace_name.c_str(), "wb");
   outputHeader(node, start_time_, file);
   writeLogFile(file, traces_);
   outputFooter(node, start_time_, file);
@@ -287,7 +294,7 @@ void Trace::writeTracesFile() {
 
   if (node == designated_root_node) {
     std::ofstream file;
-    file.open(prog_name_ + ".sts");
+    file.open(full_sts_name);
     outputControlFile(file);
     file.flush();
     file.close();

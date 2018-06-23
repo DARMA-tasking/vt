@@ -101,7 +101,7 @@ private:
   TraceContainerType traces_;
   TraceStackType open_events_;
   TraceEventIDType cur_event_ = 1;
-
+  std::string dir_name_;
   std::string prog_name_, trace_name_;
 
   bool enabled_ = true, idle_begun_ = false;
