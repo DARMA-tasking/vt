@@ -7,31 +7,21 @@
 #include "vrt/collection/types/static_size.h"
 #include "vrt/collection/types/static_insertable.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt {
 
 template <typename ColT, typename IndexT>
 struct Collection :
-  StaticCollectionBase<ColT, IndexT>
+  vrt::collection::StaticCollectionBase<ColT, IndexT>
 {
   explicit Collection(VirtualElmCountType const elms = no_elms);
 };
 
 template <typename ColT, typename IndexT>
 struct InsertableCollection :
-  StaticInsertableCollectionBase<ColT, IndexT>
+  vrt::collection::StaticInsertableCollectionBase<ColT, IndexT>
 {
   explicit InsertableCollection(VirtualElmCountType const elms = no_elms);
 };
-
-}}} /* end namespace vt::vrt::collection */
-
-namespace vt {
-
-template <typename ColT, typename IndexT>
-using Collection = vrt::collection::Collection<ColT,IndexT>;
-
-template <typename ColT, typename IndexT>
-using InsertableCollection = vrt::collection::InsertableCollection<ColT,IndexT>;
 
 } /* end namespace vt */
 
