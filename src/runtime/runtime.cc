@@ -262,7 +262,9 @@ void Runtime::initializeTrace() {
     trace_enabled, {
       std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
       auto const& node = theContext->getNode();
-      theTrace->setupNames(name, name + "." + std::to_string(node) + ".log.gz");
+      theTrace->setupNames(
+        name, name + "." + std::to_string(node) + ".log.gz", name
+      );
     }
   );
 }
