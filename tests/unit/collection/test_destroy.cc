@@ -16,8 +16,6 @@ using namespace vt;
 using namespace vt::collective;
 using namespace vt::index;
 using namespace vt::mapping;
-using namespace vt::vrt;
-using namespace vt::vrt::collection;
 using namespace vt::tests::unit;
 
 struct WorkMsg;
