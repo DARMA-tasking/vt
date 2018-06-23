@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#define trace_use_dir 1
+
 namespace vt { namespace trace {
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
@@ -53,6 +55,7 @@ void Trace::setupNames(
   dir_name_ = in_dir_name;
   start_time_ = getCurrentTime();
 
+  #if trace_use_dir
   if (theContext()->getNode() == 0) {
     if (dir_name_ != "") {
       bool made_dir = true, have_cur_directory = true;
@@ -72,6 +75,7 @@ void Trace::setupNames(
       }
     }
   }
+  #endif
 }
 
 /*virtual*/ Trace::~Trace() {
@@ -304,16 +308,19 @@ void Trace::writeTracesFile() {
     TraceContainersType::event_container.size()
   );
 
+  #if trace_use_dir
   auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
   auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
   auto const trace_name = tc[tc.size()-1];
   auto const prog_name = tc[tc.size()-1];
+  #endif
 
-  std::string full_trace_name = trace_name;
-  std::string full_sts_name = prog_name + ".sts";
+  std::string full_trace_name = trace_name_;
+  std::string full_sts_name = prog_name_ + ".sts";
 
+  #if trace_use_dir
   if (dir_name_ != "") {
-    bool have_cur_directory = true;
+    bool made_dir = true, have_cur_directory = true;
     char cur_dir[1024];
     if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
       have_cur_directory = false;
@@ -327,12 +334,14 @@ void Trace::writeTracesFile() {
       } else {
         use_directory_ = true;
       }
+
       if (use_directory_) {
         full_trace_name = full_dir_name + "/" + trace_name;
         full_sts_name = full_dir_name + "/" + prog_name + ".sts";
       }
     }
   }
+  #endif
 
   gzFile file = gzopen(full_trace_name.c_str(), "wb");
   outputHeader(node, start_time_, file);
