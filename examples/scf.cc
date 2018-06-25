@@ -31,15 +31,15 @@ int main(int argc, char** argv) {
   }
 
   std::vector<scf::Water> waters;
-  auto num_waters = 10;
+  auto num_waters = 40;
   for (auto i = 0; i < num_waters; ++i) {
-    double scale = i * 5.0;
+    double scale = i * 7.0;
     waters.emplace_back(scf::Water(
       {0.0, -0.07579, scale}, {0.86681, 0.60144, scale},
       {-0.86681, 0.60144, scale}));
   }
 
-  // All the matrices we will need, trim down later.
+  // All the matrices we will need.
   scf::SparseMatrix S(num_waters, num_waters);
   scf::SparseMatrix H(num_waters, num_waters);
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
   }
 
   auto truncate_thresh = 1e-8;
-  auto Dtruncate_thresh = 1e-5;
+  auto Dtruncate_thresh = 1e-6;
   S.truncate(truncate_thresh);
   H.truncate(truncate_thresh);
 
@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
   //
 
   // Make a Fock matrix using our guess density
-  double c1 = 0.9999;
+  double c1 = 0.5;
   fmt::print("Bootstrapping SCF with {:.2f}\% SAWD guess\n", 100 * c1);
   scf::SparseMatrix F = H;
   const auto bootstrap_thresh = Dtruncate_thresh / 100.0;
@@ -189,11 +189,6 @@ int main(int argc, char** argv) {
         screen_thresh / Q.maxCoeff(), std::numeric_limits<double>::epsilon()) /
       1296.0;
 
-    Dtruncate_thresh =
-      std::min(Dtruncate_thresh, std::min(1e-5, grad_error / 10.0));
-
-    Dtruncate_thresh = std::max(Dtruncate_thresh, 1e-8);
-
     fmt::print(
       "\tPrecisions, Fock: {:.2e}, Eng: {:.2e}, Dtrun: {:.2e}\n", screen_thresh,
       eng_precision, Dtruncate_thresh);
@@ -212,10 +207,7 @@ int main(int argc, char** argv) {
 
     scf::MatrixBlock grad = Frep * Drep * Srep - Srep * Drep * Frep;
     grad_error = grad.norm() / static_cast<double>(grad.rows());
-    // Once we fix our search space start using diis
-    if (Dtruncate_thresh == 1e-10 && screen_thresh == 1e-8) {
-      diis.extrapolate(Frep, grad);
-    }
+    diis.extrapolate(Frep, grad);
 
     D = make_new_density(Frep, Srep, Dtruncate_thresh);
     auto dfill = D.fillPercent();
@@ -230,10 +222,9 @@ int main(int argc, char** argv) {
     }
     auto const end_time = ::vt::timing::Timing::getCurrentTime();
     ::fmt::print(
-      "\tenergy: {0:.10f}, ediff: {1:0.3e}, grad_error: {6:0.3e}, dfill: "
-      "{4:.3f}, time: {5:.6f}\n",
-      energy, diff, screen_thresh, Dtruncate_thresh, dfill,
-      end_time - start_time, grad_error);
+      "\tenergy: {0:.10f}, ediff: {1:0.3e}, grad_error: {3:0.3e}, dfill: "
+      "{2:.3f}, time: {4:.6f}\n",
+      energy, diff, dfill, grad_error, end_time - start_time);
     ++iter;
   }
 
@@ -294,8 +285,8 @@ void scf::four_center_update(
   const auto nwaters = waters.size();
   const auto nblock = scf::nbasis_per_water;
   for (auto i = 0; i < nwaters; ++i) {
-    // for (auto j : sparse_list[i]) {
-    for (auto j = 0; j < nwaters; ++j) {
+    for (auto j : sparse_list[i]) {
+    // for (auto j = 0; j < nwaters; ++j) {
       const auto Qij = Q(i, j); // Coulomb Bra
       auto Fij = &F.block(i, j);
 
@@ -306,8 +297,8 @@ void scf::four_center_update(
         const auto dkj_size = Dkj.size();
         const auto Dkj_norm = Dkj.norm();
 
-        // for (auto l : sparse_list[k]) {
-        for (auto l = 0; l < nwaters; ++l) {
+        for (auto l : sparse_list[k]) {
+        // for (auto l = 0; l < nwaters; ++l) {
           const auto Qkl = Q(k, l); // Coulomb ket
           const auto Qil = Q(i, l); // Exchange bra
 
@@ -335,19 +326,17 @@ void scf::four_center_update(
             for (auto p = 0, pqrs = 0; p < scf::nbasis_per_water; ++p) {
               for (auto q = 0; q < scf::nbasis_per_water; ++q) {
                 const auto pq = p * scf::nbasis_per_water + q;
+                auto& Fpq = Fij->operator()(p, q);
 
                 for (auto r = 0; r < scf::nbasis_per_water; ++r) {
-                  const auto rq = r * scf::nbasis_per_water + q;
-
                   for (auto s = 0; s < scf::nbasis_per_water; ++s, ++pqrs) {
                     const auto rs = r * scf::nbasis_per_water + s;
-                    const auto ps = p * scf::nbasis_per_water + s;
 
                     const auto val = ij_kl_ints(pq, rs);
-                    if (dkl_size) {
-                      Fij->operator()(p, q) += 2 * Dkl(r, s) * val;
+                    if (dkl_size) { // This cleanly maps to matrix vector
+                      Fpq += 2 * Dkl(r, s) * val;
                     }
-                    if (dkj_size) {
+                    if (dkj_size) { // This less cleanly maps to matrix vector
                       Fil->operator()(p, s) -= Dkj(r, q) * val;
                     }
                   }
@@ -479,11 +468,8 @@ scf::MatrixBlock scf::four_center_update(
       const auto pq = p * scf::nbasis_per_water + q;
 
       for (auto r = 0; r < scf::nbasis_per_water; ++r) {
-        const auto rq = r * scf::nbasis_per_water + q;
-
         for (auto s = 0; s < scf::nbasis_per_water; ++s, ++pqrs) {
           const auto rs = r * scf::nbasis_per_water + s;
-          const auto ps = p * scf::nbasis_per_water + s;
 
           const auto val = ij_kl_ints(pq, rs);
           F(p, q) += 2 * D(r, s) * val;
