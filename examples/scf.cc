@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
       energy, diff, dfill, grad_error, end_time - start_time);
     ++iter;
   }
-  MPI_Barrier(MPI_COMM_WORLD); // Don't end before we print 
+  MPI_Barrier(MPI_COMM_WORLD); // Don't end before we print
 
 
   while (!rt->isTerminated()) {
@@ -302,13 +302,11 @@ void scf::four_center_update(
     return Qil * Qkj * Dkj_norm >= screen;
   };
 
-  // TODO come back and add exchange
   const auto nwaters = waters.size();
   const auto nblock = scf::nbasis_per_water;
   auto iter = 0ul;
   for (auto i = 0; i < nwaters; ++i) {
     for (auto j : sparse_list[i]) {
-      // for (auto j = 0; j < nwaters; ++j) {
       const auto Qij = Q(i, j); // Coulomb Bra
       auto Fij = &F.block(i, j);
 
@@ -323,24 +321,25 @@ void scf::four_center_update(
           continue; // MPI distribute round robin
         }
 
-        // for (auto l : sparse_list[k]) {
-        // #pragma omp parallel for
-        for (auto l = 0; l < nwaters; ++l) {
+        for (auto l : sparse_list[k]) {
           const auto Qkl = Q(k, l); // Coulomb ket
           const auto Qil = Q(i, l); // Exchange bra
 
           auto& Dkl = D.block(k, l); // Coulomb D
           const auto dkl_size = Dkl.size();
 
-          scf::MatrixBlock Fij_local(
-            scf::nbasis_per_water, scf::nbasis_per_water);
-          Fij_local.setZero();
-
-          scf::MatrixBlock Fil_local(
-            scf::nbasis_per_water, scf::nbasis_per_water);
-          Fil_local.setZero();
-
           if (do_J(Qij, Qkl, Dkl.norm()) || do_K(Qil, Qkj, Dkj_norm)) {
+            auto Fil = &F.block(i, l);
+
+            if (Fij->size() == 0) {
+              Fij->resize(scf::nbasis_per_water, scf::nbasis_per_water);
+              Fij->setZero();
+            }
+
+            if (Fil->size() == 0) {
+              Fil->resize(scf::nbasis_per_water, scf::nbasis_per_water);
+              Fil->setZero();
+            }
 
             const auto tid = omp_get_thread_num();
             auto& eng = engines[tid];
@@ -358,10 +357,10 @@ void scf::four_center_update(
 
                     const auto val = ij_kl_ints(pq, rs);
                     if (dkl_size) { // This cleanly maps to matrix vector
-                      Fij_local(p, q) += 2 * Dkl(r, s) * val;
+                      Fij->operator()(p, q) += 2 * Dkl(r, s) * val;
                     }
                     if (dkj_size) { // This less cleanly maps to matrix vector
-                      Fil_local(p, s) -= Dkj(r, q) * val;
+                      Fil->operator()(p, s) -= Dkj(r, q) * val;
                     }
                   }
                 }
@@ -369,21 +368,6 @@ void scf::four_center_update(
             }
           }
 
-          auto Fil = &F.block(i, l);
-
-          // #pragma omp critical
-          if (Fij->size() == 0) {
-            Fij->resize(scf::nbasis_per_water, scf::nbasis_per_water);
-            Fij->setZero();
-          }
-
-          if (Fil->size() == 0) {
-            Fil->resize(scf::nbasis_per_water, scf::nbasis_per_water);
-            Fil->setZero();
-          }
-
-          (*Fij) += Fij_local;
-          (*Fil) += Fil_local;
         }
       }
     }
