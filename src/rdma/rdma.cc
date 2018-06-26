@@ -635,7 +635,7 @@ void RDMAManager::putData(
           debug_print(
             rdma, node,
             "putData: sending direct: put_node={}, ptr={}, num_bytes={}, "
-	    "offset={}\n",
+            "offset={}\n",
             put_node, ptr, num_bytes, offset
           );
 
