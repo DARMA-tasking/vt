@@ -24,6 +24,7 @@ struct ElementHolder {
 
   typename VirtualPtrType::pointer getCollection() const;
 
+  bool erased_ = false;
   VirtualPtrType vc_ptr_ = nullptr;
   HandlerType map_fn = uninitialized_handler;
   IndexT max_idx;
