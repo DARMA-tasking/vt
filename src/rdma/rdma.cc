@@ -618,7 +618,9 @@ void RDMAManager::putData(
             );
             auto msg_ptr = reinterpret_cast<char*>(msg) + sizeof(PutMessage);
             std::memcpy(msg_ptr, ptr, num_bytes);
-            cont();
+            if (cont) {
+              cont();
+            }
             cur_cont = nullptr;
           }
 
