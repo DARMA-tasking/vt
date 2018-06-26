@@ -145,7 +145,6 @@ namespace vt { namespace rdma {
         if (send_back != uninitialized_destination) {
           auto new_msg = makeSharedMessage<PutBackMessage>(op_id);
           theMsg()->sendMsg<PutBackMessage, putBackMsg>(send_back, new_msg);
-          theTerm()->consume(term::any_epoch_sentinel);
         }
       }, false, recv_node
     );
@@ -187,7 +186,6 @@ namespace vt { namespace rdma {
                 theMsg()->sendMsg<PutBackMessage, putBackMsg>(
                   send_back, new_msg, [=]{ delete new_msg; }
                 );
-                theTerm()->consume(term::any_epoch_sentinel);
               }
               deleter();
             }, false, recv_node
@@ -210,7 +208,6 @@ namespace vt { namespace rdma {
             theMsg()->sendMsg<PutBackMessage, putBackMsg>(
               send_back, new_msg, [=]{ delete new_msg; }
             );
-            theTerm()->consume(term::any_epoch_sentinel);
           }
           deleter();
         }
@@ -597,10 +594,6 @@ void RDMAManager::putData(
         );
       } else {
         RDMA_OpType const new_op = cur_op_++;
-
-        if (action_after_put) {
-          theTerm()->produce(term::any_epoch_sentinel);
-        }
 
         bool direct_put_pack = direct_message_send || num_bytes < 64;
 
