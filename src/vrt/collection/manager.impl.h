@@ -543,18 +543,46 @@ EpochType CollectionManager::reduceMsg(
 
 template <
   typename MsgT,
+  ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+>
+void CollectionManager::sendMsg(
+  VirtualElmProxyType<
+    typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
+  > const& toProxy,
+  MsgT *msg, ActionType action
+) {
+  // register the user's handler
+  HandlerType const& handler = auto_registry::makeAutoHandlerCollectionMem<
+    typename MsgT::CollectionType, MsgT, f
+  >(msg);
+  // save the user's handler in the message
+  return sendMsgUntypedHandler<MsgT>(toProxy,msg,handler,true,action);
+}
+
+template <
+  typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
 >
 void CollectionManager::sendMsg(
   VirtualElmProxyType<
     typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
   > const& toProxy,
-  MsgT *const msg, ActionType act
+  MsgT *msg, ActionType action
 ) {
-  using ColT = typename MsgT::CollectionType;
-  using IndexT = typename ColT::IndexType;
+  // register the user's handler
+  HandlerType const& handler = auto_registry::makeAutoHandlerCollection<
+    typename MsgT::CollectionType, MsgT, f
+  >(msg);
+  // save the user's handler in the message
+  return sendMsgUntypedHandler<MsgT>(toProxy,msg,handler,false,action);
+}
 
-  // @todo: implement the action `act' after the routing is finished
+template <typename MsgT, typename ColT, typename IdxT>
+void CollectionManager::sendMsgUntypedHandler(
+  VirtualElmProxyType<ColT, typename ColT::IndexType> const& toProxy,
+  MsgT *msg, HandlerType const& handler, bool const member, ActionType action
+) {
+  // @todo: implement the action `action' after the routing is finished
 
   auto const& col_proxy = toProxy.getCollectionProxy();
   auto const& elm_proxy = toProxy.getElementProxy();
@@ -566,7 +594,7 @@ void CollectionManager::sendMsg(
 
   theTerm()->produce(term::any_epoch_sentinel);
 
-  auto holder = findColHolder<ColT, IndexT>(col_proxy);
+  auto holder = findColHolder<ColT, IdxT>(col_proxy);
   if (holder != nullptr) {
     auto const map_han = holder->map_fn;
     auto max_idx = holder->max_idx;
@@ -581,14 +609,9 @@ void CollectionManager::sendMsg(
       num_nodes
     );
 
-    // register the user's handler
-    HandlerType const& han = auto_registry::makeAutoHandlerCollection<
-      ColT, MsgT, f
-    >(msg);
-
-    // save the user's handler in the message
-    msg->setVrtHandler(han);
+    msg->setVrtHandler(handler);
     msg->setProxy(toProxy);
+    msg->setMember(member);
 
     debug_print(
       vrt_coll, node,
@@ -597,9 +620,9 @@ void CollectionManager::sendMsg(
     );
 
     // route the message to the destination using the location manager
-    auto lm = theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy);
+    auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
     assert(lm != nullptr && "LM must exist");
-    lm->routeMsgSerialize(toProxy, home_node, msg, act);
+    lm->routeMsgSerialize(toProxy, home_node, msg, action);
     // TODO: race when proxy gets transferred off node before the LM is created
     // LocationManager::applyInstance<LocationManager::VrtColl<IndexT>>
   } else {
@@ -622,7 +645,9 @@ void CollectionManager::sendMsg(
     theTerm()->produce(term::any_epoch_sentinel);
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
-      theCollection()->sendMsg<MsgT, f>(toProxy, msg, act);
+      theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
+        toProxy, msg, handler, member, action
+      );
     });
   }
 }

@@ -105,13 +105,34 @@ struct CollectionManager {
    */
   template <
     typename MsgT,
+    typename ColT = typename MsgT::CollectionType,
+    typename IdxT = typename ColT::IndexType
+  >
+  void sendMsgUntypedHandler(
+    VirtualElmProxyType<ColT, typename ColT::IndexType> const& toProxy,
+    MsgT *msg, HandlerType const& handler, bool const member, ActionType action
+  );
+
+  template <
+    typename MsgT,
     ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
   >
   void sendMsg(
     VirtualElmProxyType<
       typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
     > const& toProxy,
-    MsgT *const msg, ActionType act
+    MsgT *msg, ActionType action = nullptr
+  );
+
+  template <
+    typename MsgT,
+    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+  >
+  void sendMsg(
+    VirtualElmProxyType<
+      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
+    > const& toProxy,
+    MsgT *msg, ActionType act = nullptr
   );
 
   template <typename CoLT, typename IndexT>
