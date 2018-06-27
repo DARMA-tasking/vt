@@ -23,6 +23,25 @@ inline HandlerType makeAutoHandlerCollection(MsgT* const msg) {
   return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
 }
 
+inline AutoActiveCollectionMemType getAutoHandlerCollectionMem(
+  HandlerType const& handler
+) {
+  using ContainerType = AutoActiveCollectionMemContainerType;
+  return getAutoRegistryGen<ContainerType>().at(handler).getFun();
+}
+
+template <
+  typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
+>
+inline HandlerType makeAutoHandlerCollectionMem(MsgT* const msg) {
+  using FunctorT = FunctorAdapterMember<ActiveColMemberTypedFnType<MsgT, ColT>, f>;
+  using ContainerType = AutoActiveCollectionMemContainerType;
+  using RegInfoType = AutoRegInfoType<AutoActiveCollectionMemType>;
+  using FuncType = ActiveColMemberFnPtrType;
+  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+}
+
+
 }} /* end namespace vt::auto_registry */
 
 #endif /*INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H*/

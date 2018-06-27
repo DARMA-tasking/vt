@@ -18,6 +18,15 @@ AutoActiveCollectionType getAutoHandlerCollection(HandlerType const& handler);
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 HandlerType makeAutoHandlerCollection(MsgT* const msg);
 
+AutoActiveCollectionMemType getAutoHandlerCollectionMem(
+  HandlerType const& handler
+);
+
+template <
+  typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
+>
+HandlerType makeAutoHandlerCollectionMem(MsgT* const msg);
+
 }} /* end namespace vt::auto_registry */
 
 #include "registry/auto/collection/auto_registry_collection.impl.h"
