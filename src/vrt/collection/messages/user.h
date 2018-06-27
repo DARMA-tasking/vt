@@ -44,6 +44,9 @@ struct CollectionMessage :
   NodeType getFromNode() const;
   void setFromNode(NodeType const& node);
 
+  bool getMember() const;
+  void setMember(bool const& member);
+
   #if backend_check_enabled(lblite)
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
@@ -65,6 +68,7 @@ private:
   HandlerType vt_sub_handler_ = uninitialized_handler;
   EpochType bcast_epoch_ = no_epoch;
   NodeType from_node_ = uninitialized_destination;
+  bool member_ = false;
 
   #if backend_check_enabled(lblite)
     /*

@@ -90,6 +90,16 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
   );
 }
 
+template <typename ColT, typename BaseMsgT>
+bool CollectionMessage<ColT,BaseMsgT>::getMember() const {
+  return member_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT,BaseMsgT>::setMember(bool const& member) {
+  member_ = member;
+}
+
 #if backend_check_enabled(lblite)
 template <typename ColT, typename BaseMsgT>
 bool CollectionMessage<ColT, BaseMsgT>::lbLiteInstrument() const {
