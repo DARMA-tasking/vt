@@ -27,7 +27,7 @@ void Broadcastable<ColT, IndexT>::broadcast(MsgT* msg, ActionType cont) const {
 template <typename ColT, typename IndexT>
 template <
   typename MsgT,
-  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> *f
+  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
 >
 void Broadcastable<ColT, IndexT>::broadcast(MsgT* msg, ActionType cont) const {
   auto proxy = this->getProxy();

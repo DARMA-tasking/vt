@@ -24,7 +24,7 @@ struct Broadcastable : Destroyable<ColT, IndexT> {
 
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> *f
+    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
   >
   void broadcast(MsgT* msg, ActionType act = nullptr) const;
 };
