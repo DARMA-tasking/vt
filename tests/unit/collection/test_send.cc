@@ -29,6 +29,10 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex> {
     #endif
     ConstructTuple<ParamType>::isCorrect(std::make_tuple(args...));
   }
+  void handler(ColMsg<Args...>* msg);
+  void execute(std::tuple<Args...> args);
+  template <typename TupleT, std::size_t ...I>
+  void unpack(TupleT args, std::index_sequence<I...>);
 };
 template <typename... Args>
 struct ColMsg : CollectionMessage<TestCol<Args...>> {
@@ -41,6 +45,19 @@ struct ColMsg : CollectionMessage<TestCol<Args...>> {
     s | tup;
   }
 };
+
+template <typename... Args>
+void TestCol<Args...>::handler(ColMsg<Args...>* msg) { return execute(msg->tup); }
+template <typename... Args>
+void TestCol<Args...>::execute(std::tuple<Args...> args) {
+  return unpack(args,std::index_sequence_for<Args...>{});
+}
+template <typename... Args>
+template <typename TupleT, std::size_t ...I>
+void TestCol<Args...>::unpack(TupleT args, std::index_sequence<I...>) {
+  return testMethod(std::get<I>(args)...);
+}
+
 } /* end namespace send_col_ */
 
 template <
@@ -66,8 +83,11 @@ struct SendHandlers {
 
 template <typename CollectionT>
 struct TestCollectionSend : TestParallelHarness {};
+template <typename CollectionT>
+struct TestCollectionSendMem : TestParallelHarness {};
 
 TYPED_TEST_CASE_P(TestCollectionSend);
+TYPED_TEST_CASE_P(TestCollectionSendMem);
 
 TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
   using ColType = TypeParam;
@@ -94,7 +114,33 @@ TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
   }
 }
 
+TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
+  using ColType = TypeParam;
+  using MsgType = typename ColType::MsgType;
+  using ParamType = typename ColType::ParamType;
+
+  auto const& this_node = theContext()->getNode();
+  if (this_node == 0) {
+    auto const& col_size = 32;
+    auto range = TestIndex(col_size);
+    ParamType args = ConstructTuple<ParamType>::construct();
+    auto proxy = theCollection()->construct<ColType>(range);
+    for (int i = 0; i < col_size; i++) {
+      auto msg = makeSharedMessage<MsgType>(args);
+      //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
+      if (i % 2 == 0) {
+        proxy[i].template send<MsgType,&ColType::handler>(msg);
+      } else {
+        theCollection()->sendMsg<MsgType,&ColType::handler>(
+          proxy[i], msg, nullptr
+        );
+      }
+    }
+  }
+}
+
 REGISTER_TYPED_TEST_CASE_P(TestCollectionSend, test_collection_send_1);
+REGISTER_TYPED_TEST_CASE_P(TestCollectionSendMem, test_collection_send_ptm_1);
 
 using CollectionTestTypes = testing::Types<
   send_col_            ::TestCol<int32_t>,
@@ -109,6 +155,9 @@ using CollectionTestTypes = testing::Types<
 
 INSTANTIATE_TYPED_TEST_CASE_P(
   test_collection_send, TestCollectionSend, CollectionTestTypes
+);
+INSTANTIATE_TYPED_TEST_CASE_P(
+  test_collection_send_mem, TestCollectionSendMem, CollectionTestTypes
 );
 
 }}} // end namespace vt::tests::unit
