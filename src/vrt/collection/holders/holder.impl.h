@@ -25,10 +25,17 @@ void Holder<ColT, IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
 
   auto const& lookup = idx;
   auto& container = vc_container_;
-  auto iter = container.find(lookup);
-  assert(
-    iter == container.end() && "Entry must not exist in holder when inserting"
-  );
+  /*
+   * This assertion no longer valid due to delayed erasure. In fact, the inner
+   * holder VC pointer may be nullptr but set to erased. The move should deal
+   * with this problem.
+   *
+   *   auto iter = container.find(lookup);
+   *   assert(
+   *     iter == container.end() &&
+   *     "Entry must not exist in holder when inserting"
+   *   );
+   */
   container.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(lookup),
