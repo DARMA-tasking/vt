@@ -15,7 +15,7 @@ namespace vt { namespace runnable {
 template <typename MsgT, typename ElementT>
 /*static*/ void RunnableCollection<MsgT,ElementT>::run(
   HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node,
-  uint64_t idx
+  bool member, uint64_t idx
 ) {
   #if backend_check_enabled(trace_enabled)
     trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
@@ -31,8 +31,13 @@ template <typename MsgT, typename ElementT>
     );
   #endif
 
-  auto const func = auto_registry::getAutoHandlerCollection(handler);
-  func(msg, elm);
+  if (member) {
+    auto const func = auto_registry::getAutoHandlerCollectionMem(handler);
+    (elm->*func)(msg);
+  } else {
+    auto const func = auto_registry::getAutoHandlerCollection(handler);
+    func(msg, elm);
+  };
 
   #if backend_check_enabled(trace_enabled)
     theTrace()->endProcessing(

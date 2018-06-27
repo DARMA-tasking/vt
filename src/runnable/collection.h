@@ -10,7 +10,7 @@ template <typename MsgT, typename ElementT>
 struct RunnableCollection {
   static void run(
     HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node,
-    uint64_t idx
+    bool member, uint64_t idx
   );
 };
 

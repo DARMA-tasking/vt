@@ -179,11 +179,12 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(col);
   if (elm_holder) {
     auto const handler = col_msg->getVrtHandler();
+    auto const member = col_msg->getMember();
     debug_print(
       vrt_coll, node,
       "broadcast apply: size={}\n", elm_holder->numElements()
     );
-    elm_holder->foreach([col_msg,msg,handler](
+    elm_holder->foreach([col_msg,msg,handler,member](
       IndexT const& idx, CollectionBase<ColT,IndexT>* base
     ) {
       debug_print(
@@ -216,7 +217,7 @@ template <typename ColT, typename IndexT, typename MsgT>
         auto const from_node = col_msg->getFromNode();
         auto untyped = reinterpret_cast<UntypedCollection*>(typeless_collection);
         runnable::RunnableCollection<MsgT,UntypedCollection>::run(
-          handler, msg, untyped, from_node,
+          handler, msg, untyped, from_node, member,
           *reinterpret_cast<uint64_t const*>(base->getIndex().raw())
         );
 
@@ -291,6 +292,7 @@ template <typename ColT, typename IndexT>
   auto& inner_holder = elm_holder->lookup(idx);
 
   auto const sub_handler = col_msg->getVrtHandler();
+  auto const member = col_msg->getMember();
 
   // Be careful with type casting here..convert to typeless before
   // reinterpreting the pointer so the compiler does not produce the wrong
@@ -322,7 +324,7 @@ template <typename ColT, typename IndexT>
   auto const from_node = col_msg->getFromNode();
   auto untyped = reinterpret_cast<UntypedCollection*>(typeless_collection);
   runnable::RunnableCollection<CollectionMessage<ColT>,UntypedCollection>::run(
-    sub_handler, col_msg, untyped, from_node,
+    sub_handler, col_msg, untyped, from_node, member,
     *reinterpret_cast<uint64_t const*>(col_ptr->getIndex().raw())
   );
 
