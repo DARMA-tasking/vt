@@ -38,7 +38,7 @@ AutoHandlerType registerActiveGen() {
 
 template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
 /*static*/ constexpr typename
-RunnableGen<ActFnT, RegT, InfoT, FnT>::FunctionPtrType*
+RunnableGen<ActFnT, RegT, InfoT, FnT>::FunctionPtrType
 RunnableGen<ActFnT, RegT, InfoT, FnT>::getFunction() {
   return ActFnT::getFunction();
 }

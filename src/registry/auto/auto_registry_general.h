@@ -8,9 +8,21 @@ namespace vt { namespace auto_registry {
 
 template <typename F, F* f>
 struct FunctorAdapter {
+  using FunctionPtrType = F*;
+
+  static constexpr FunctionPtrType getFunction() { return f; }
+
+  template <typename... A>
+  auto operator()(A&&... a) -> decltype(f(std::forward<A>(a)...)) {
+    return f(std::forward<A>(a)...);
+   }
+};
+
+template <typename F, F f>
+struct FunctorAdapterMember {
   using FunctionPtrType = F;
 
-  static constexpr F* getFunction() { return f; }
+  static constexpr FunctionPtrType getFunction() { return f; }
 
   template <typename... A>
   auto operator()(A&&... a) -> decltype(f(std::forward<A>(a)...)) {
@@ -49,7 +61,7 @@ struct RunnableGen {
   using FunctionPtrType = typename ActFnT::FunctionPtrType;
 
   static AutoHandlerType const idx;
-  static constexpr FunctionPtrType* getFunction();
+  static constexpr FunctionPtrType getFunction();
 
   RunnableGen() = default;
 };
