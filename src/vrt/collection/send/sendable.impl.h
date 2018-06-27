@@ -38,6 +38,22 @@ void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
   return theCollection()->sendMsg<MsgT, f>(proxy, msg, continuation);
 }
 
+template <typename ColT, typename IndexT>
+template <
+  typename MsgT,
+  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> *f
+>
+void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
+  auto col_proxy = this->getCollectionProxy();
+  auto elm_proxy = this->getElementProxy();
+  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
+  /*
+   * @todo:
+   *.  Directly reuse this proxy: static_cast<VrtElmProxy<IndexT>*>(this)
+   */
+  return theCollection()->sendMsg<MsgT, f>(proxy, msg, continuation);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_SEND_SENDABLE_IMPL_H*/

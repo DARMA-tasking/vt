@@ -24,6 +24,12 @@ struct Sendable : BaseCollectionProxy<ColT, IndexT> {
     ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
   >
   void send(MsgT* msg, ActionType act = nullptr);
+
+  template <
+    typename MsgT,
+    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+  >
+  void send(MsgT* msg, ActionType act = nullptr);
 };
 
 }}} /* end namespace vt::vrt::collection */
