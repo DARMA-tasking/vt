@@ -16,15 +16,16 @@
 
 namespace vt { namespace auto_registry {
 
-using AutoActiveType           = ActiveFnPtrType;
-using AutoActiveFunctorType    = ActiveFnPtrType;
-using AutoActiveVCType         = vrt::ActiveVirtualFnPtrType;
-using AutoActiveCollectionType = vrt::collection::ActiveColFnPtrType;
-using AutoActiveMapType        = mapping::ActiveMapFnPtrType;
-using AutoActiveMapFunctorType = mapping::ActiveMapFnPtrType;
-using AutoActiveSeedMapType    = mapping::ActiveSeedMapFnPtrType;
-using AutoActiveRDMAGetType    = ActiveRDMAGetFnPtrType;
-using AutoActiveRDMAPutType    = ActiveRDMAPutFnPtrType;
+using AutoActiveType              = ActiveFnPtrType;
+using AutoActiveFunctorType       = ActiveFnPtrType;
+using AutoActiveVCType            = vrt::ActiveVirtualFnPtrType;
+using AutoActiveCollectionType    = vrt::collection::ActiveColFnPtrType;
+using AutoActiveCollectionMemType = vrt::collection::ActiveColMemberFnPtrType;
+using AutoActiveMapType           = mapping::ActiveMapFnPtrType;
+using AutoActiveMapFunctorType    = mapping::ActiveMapFnPtrType;
+using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;
+using AutoActiveRDMAGetType       = ActiveRDMAGetFnPtrType;
+using AutoActiveRDMAPutType       = ActiveRDMAPutFnPtrType;
 
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;
@@ -69,15 +70,16 @@ using AutoRegInfoType = AutoRegInfo<Fn>;
 template <typename RegInfoT>
 using RegContType = std::vector<AutoRegInfoType<RegInfoT>>;
 
-using AutoActiveContainerType           = RegContType<AutoActiveType>;
-using AutoActiveVCContainerType         = RegContType<AutoActiveVCType>;
-using AutoActiveCollectionContainerType = RegContType<AutoActiveCollectionType>;
-using AutoActiveMapContainerType        = RegContType<AutoActiveMapType>;
-using AutoActiveMapFunctorContainerType = RegContType<AutoActiveMapFunctorType>;
-using AutoActiveSeedMapContainerType    = RegContType<AutoActiveSeedMapType>;
-using AutoActiveFunctorContainerType    = RegContType<AutoActiveFunctorType>;
-using AutoActiveRDMAGetContainerType    = RegContType<AutoActiveRDMAGetType>;
-using AutoActiveRDMAPutContainerType    = RegContType<AutoActiveRDMAPutType>;
+using AutoActiveContainerType              = RegContType<AutoActiveType>;
+using AutoActiveVCContainerType            = RegContType<AutoActiveVCType>;
+using AutoActiveCollectionContainerType    = RegContType<AutoActiveCollectionType>;
+using AutoActiveCollectionMemContainerType = RegContType<AutoActiveCollectionMemType>;
+using AutoActiveMapContainerType           = RegContType<AutoActiveMapType>;
+using AutoActiveMapFunctorContainerType    = RegContType<AutoActiveMapFunctorType>;
+using AutoActiveSeedMapContainerType       = RegContType<AutoActiveSeedMapType>;
+using AutoActiveFunctorContainerType       = RegContType<AutoActiveFunctorType>;
+using AutoActiveRDMAGetContainerType       = RegContType<AutoActiveRDMAGetType>;
+using AutoActiveRDMAPutContainerType       = RegContType<AutoActiveRDMAPutType>;
 
 }} // end namespace vt::auto_registry
 
