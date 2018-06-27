@@ -41,7 +41,7 @@ void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
 template <typename ColT, typename IndexT>
 template <
   typename MsgT,
-  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> *f
+  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
 >
 void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
   auto col_proxy = this->getCollectionProxy();
