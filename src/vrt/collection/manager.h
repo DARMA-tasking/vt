@@ -153,13 +153,35 @@ struct CollectionManager {
    */
   template <
     typename MsgT,
+    typename ColT = typename MsgT::CollectionType,
+    typename IdxT = typename ColT::IndexType
+  >
+  void broadcastMsgUntypedHandler(
+    CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *msg,
+    HandlerType const& handler, bool const member,
+    ActionType act, bool instrument
+  );
+
+  template <
+    typename MsgT,
     ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
   >
   void broadcastMsg(
     CollectionProxyWrapType<
       typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
     > const& toProxy,
-    MsgT *const msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, ActionType act = nullptr, bool instrument = true
+  );
+
+  template <
+    typename MsgT,
+    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+  >
+  void broadcastMsg(
+    CollectionProxyWrapType<
+      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
+    > const& toProxy,
+    MsgT *msg, ActionType act = nullptr, bool instrument = true
   );
 
   template <typename ColT, typename IndexT, typename MsgT>

@@ -383,17 +383,44 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
 
 template <
   typename MsgT,
+  ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+>
+void CollectionManager::broadcastMsg(
+  CollectionProxyWrapType<
+    typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
+  > const& toProxy,
+  MsgT *const msg, ActionType act, bool inst
+) {
+  // register the user's handler
+  HandlerType const& han = auto_registry::makeAutoHandlerCollectionMem<
+    typename MsgT::CollectionType, MsgT, f
+  >(msg);
+  return broadcastMsgUntypedHandler<MsgT>(toProxy,msg,han,true,act,inst);
+}
+
+template <
+  typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
 >
 void CollectionManager::broadcastMsg(
   CollectionProxyWrapType<
     typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
   > const& toProxy,
-  MsgT *const msg, ActionType act, bool instrument
+  MsgT *const msg, ActionType act, bool inst
 ) {
-  using ColT = typename MsgT::CollectionType;
-  using IndexT = typename ColT::IndexType;
+  // register the user's handler
+  HandlerType const& han = auto_registry::makeAutoHandlerCollection<
+    typename MsgT::CollectionType, MsgT, f
+  >(msg);
+  return broadcastMsgUntypedHandler<MsgT>(toProxy,msg,han,false,act,inst);
+}
 
+template <typename MsgT, typename ColT, typename IdxT>
+void CollectionManager::broadcastMsgUntypedHandler(
+  CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *msg,
+  HandlerType const& handler, bool const member,
+  ActionType act, bool instrument
+) {
   debug_print(
     vrt_coll, node,
     "broadcastMsg: msg={}\n", print_ptr(msg)
@@ -408,7 +435,7 @@ void CollectionManager::broadcastMsg(
   );
 
   // @todo: implement the action `act' after the routing is finished
-  auto holder = findColHolder<ColT,IndexT>(col_proxy);
+  auto holder = findColHolder<ColT,IdxT>(col_proxy);
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
 
   debug_print(
@@ -418,14 +445,11 @@ void CollectionManager::broadcastMsg(
   );
 
   if (holder != nullptr && found_constructed) {
-    // register the user's handler
-    HandlerType const& han =
-      auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
-
     // save the user's handler in the message
-    msg->setVrtHandler(han);
+    msg->setVrtHandler(handler);
     msg->setBcastProxy(col_proxy);
     msg->setFromNode(this_node);
+    msg->setMember(member);
 
     auto const bcast_node = VirtualProxyBuilder::getVirtualNode(col_proxy);
 
@@ -437,11 +461,11 @@ void CollectionManager::broadcastMsg(
       );
 
       using Serial = ::vt::serialization::auto_dispatch::RequiredSerialization<
-        MsgT, broadcastRootHandler<ColT,IndexT,MsgT>
+        MsgT, broadcastRootHandler<ColT,IdxT,MsgT>
       >;
 
       Serial::sendMsg(bcast_node, msg);
-      // theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IndexT,MsgT>>(
+      // theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT,MsgT>>(
       //   bcast_node, msg
       // );
     } else {
@@ -450,7 +474,7 @@ void CollectionManager::broadcastMsg(
         "broadcasting msg to collection: msg={}, han={}\n",
         print_ptr(msg), han
       );
-      broadcastFromRoot<ColT,IndexT,MsgT>(msg);
+      broadcastFromRoot<ColT,IdxT,MsgT>(msg);
     }
   } else {
     auto iter = buffered_bcasts_.find(col_proxy);
@@ -481,7 +505,9 @@ void CollectionManager::broadcastMsg(
         "broadcastMsg: col_proxy={}, running buffered\n", col_proxy
       );
       theTerm()->consume(term::any_epoch_sentinel);
-      theCollection()->broadcastMsg<MsgT, f>(toProxy, msg, act);
+      theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
+        toProxy, msg, handler, member, act, instrument
+      );
     });
   }
 }
