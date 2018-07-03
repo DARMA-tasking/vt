@@ -2,10 +2,6 @@
 #if !defined INCLUDED_TERMINATION_TERMINATION_H
 #define INCLUDED_TERMINATION_TERMINATION_H
 
-#include <cstdint>
-#include <unordered_map>
-#include <vector>
-
 #include "config.h"
 #include "messaging/epoch.h"
 #include "activefn/activefn.h"
@@ -13,6 +9,10 @@
 #include "term_msgs.h"
 #include "term_state.h"
 #include "collective/tree/tree.h"
+
+#include <cstdint>
+#include <unordered_map>
+#include <vector>
 
 namespace vt { namespace term {
 
