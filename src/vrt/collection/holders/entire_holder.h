@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "vrt/collection/holders/col_holder.h"
+#include "epoch/epoch.h"
 
 #include <unordered_map>
 #include <unordered_set>

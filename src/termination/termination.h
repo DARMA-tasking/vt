@@ -3,7 +3,7 @@
 #define INCLUDED_TERMINATION_TERMINATION_H
 
 #include "config.h"
-#include "messaging/epoch.h"
+#include "epoch/epoch.h"
 #include "activefn/activefn.h"
 #include "term_common.h"
 #include "term_msgs.h"
