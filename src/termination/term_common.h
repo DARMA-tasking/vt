@@ -3,7 +3,7 @@
 #define INCLUDED_TERMINATION_TERM_COMMON_H
 
 #include "config.h"
-#include "messaging/epoch.h"
+#include "epoch/epoch.h"
 
 namespace vt { namespace term {
 
