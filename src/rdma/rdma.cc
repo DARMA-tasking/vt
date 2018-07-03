@@ -171,7 +171,7 @@ namespace vt { namespace rdma {
           debug_print(
             rdma, node,
             "putData: after recv data trigger: recv_tag={}, recv_node={}, "
-	    "send_back={}, bytes={}\n",
+            "send_back={}, bytes={}\n",
             recv_tag, recv_node, send_back, msg->num_bytes
           );
           theRDMA()->triggerPutRecvData(
