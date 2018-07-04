@@ -48,6 +48,9 @@ std::vector<std::string> TestHarnessAny<TestBase>::orig_args_;
 
 using TestHarness = TestHarnessAny<testing::Test>;
 
+template <typename ParamT>
+using TestHarnessParam = TestHarnessAny<testing::TestWithParam<ParamT>>;
+
 }}} // end namespace vt::tests::unit
 
 #endif /* __VIRTUAL_TRANSPORT_TEST_HARNESS__ */

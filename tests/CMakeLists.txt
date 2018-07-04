@@ -12,6 +12,7 @@ set(
   active
   collection
   collectives
+  epoch
   pool
   sequencer
   mapping
