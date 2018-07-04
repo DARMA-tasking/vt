@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_BITS_BITS_PACKER_IMPL_H
 #define INCLUDED_UTILS_BITS_BITS_PACKER_IMPL_H
 
-#inlcude "config.h"
+#include "config.h"
 
 #include <cstdlib>
 
@@ -10,8 +10,10 @@ namespace vt { namespace utils {
 
 #define gen_bit_mask(len) ((static_cast<uint64_t>(1) << (len)) - 1)
 
+using FieldType = BitPacker::FieldType;
+
 template <typename BitField>
-/*static*/ inline FieldUnsignedType
+/*static*/ inline BitPacker::FieldUnsignedType
 BitPacker::getMsbBit(BitField const& field) {
   uint64_t field_copy = static_cast<uint64_t>(field);
   FieldUnsignedType r = 0;
@@ -93,7 +95,6 @@ BitPacker::boolGetField(BitField const& field) {
   bool const is_set = field_copy & (1UL << start);
   return is_set;
 }
-
 
 }} /* end namespace vt::utils */
 
