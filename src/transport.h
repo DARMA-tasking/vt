@@ -32,5 +32,6 @@
 #include "utils/tls/tls.h"
 #include "utils/atomic/atomic.h"
 #include "group/group_headers.h"
+#include "epoch/epoch_headers.h"
 
 #endif /*INCLUDED_TRANSPORT_H*/
