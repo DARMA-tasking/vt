@@ -5,6 +5,7 @@
 #include "config.h"
 #include "epoch/epoch.h"
 #include "epoch/epoch_manip.h"
+#include "context/context.h"
 #include "utils/bits/bits_common.h"
 #include "utils/bits/bits_packer.h"
 
@@ -30,6 +31,14 @@ namespace vt { namespace epoch {
   return new_epoch;
 }
 
+/*static*/ inline EpochType makeRootedEpoch(
+  EpochType const& seq, bool const& is_user, eEpochCategory const& category
+) {
+  auto const& root_node = theContext()->getNode();
+  return EpochManip::makeEpoch(seq,true,root_node,is_user,category);
+}
+
+
 /*static*/ inline EpochType EpochManip::next(EpochType const& epoch) {
   return EpochManip::nextFast(epoch);
 }
@@ -44,26 +53,6 @@ namespace vt { namespace epoch {
 /*static*/ inline EpochType EpochManip::nextFast(EpochType const& epoch) {
   return epoch + 1;
 }
-
-// /*static*/ inline EpochType EpochManip::makeCollEpoch(
-//   EpochType seq, eEpochHeader hdr, eEpochCategory category
-// ) {
-//   return EpochType{};
-// }
-
-// /*static*/ inline EpochType EpochManip::getSeq(EpochType const& epoch) {
-//   // auto const& is_rooted = isRooted(epoch);
-
-//   // if (!is_rooted) {
-//   //   return BitPackerType::getField<
-//   //     eEpochLayout::Sequential, epoch_seq_num_bits, EpochType
-//   //   >(epoch);
-//   // } else {
-//   //   return BitPackerType::getField<
-//   //     eEpochRootedLayout::RootedSeq, epoch_rooted_seq_num_bits, EpochType
-//   //   >(epoch);
-//   // }
-// }
 
 }} /* end namespace vt::epoch */
 
