@@ -18,6 +18,7 @@ set(
   hello_world_functor
   test_seq
   term_epoch
+  epoch_example
   trace_ring
   location_test
   location_test_msg
