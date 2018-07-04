@@ -43,8 +43,20 @@ struct TerminationDetector : collective::tree::Tree {
     return produceConsume(in_epoch, num_units, false);
   }
 
-  TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
+public:
   EpochType newEpoch();
+
+  void attachGlobalTermAction(ActionType action);
+  void forceGlobalTermAction(ActionType action);
+  void attachEpochTermAction(EpochType const& epoch, ActionType action);
+
+  static void registerDefaultTerminationAction(ActionType default_action);
+
+private:
+  EpochType newEpochCollective();
+  EpochType newEpochRooted();
+
+  TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
   void cleanupEpoch(EpochType const& epoch);
   void produceConsumeState(
     TermStateType& state, TermCounterType const& num_units, bool produce
@@ -53,9 +65,6 @@ struct TerminationDetector : collective::tree::Tree {
     EpochType const& epoch = any_epoch_sentinel,
     TermCounterType const& num_units = 1, bool produce = true
   );
-  void maybePropagate();
-  void setLocalTerminated(bool const terminated, bool const no_local = true);
-
   void propagateEpochExternalState(
     TermStateType& state, TermCounterType const& prod, TermCounterType const& cons
   );
@@ -64,20 +73,21 @@ struct TerminationDetector : collective::tree::Tree {
     TermCounterType const& cons
   );
 
-  bool propagateEpoch(TermStateType& state);
+public:
+  void setLocalTerminated(bool const terminated, bool const no_local = true);
+  void maybePropagate();
   TermCounterType getNumUnits() const;
+
+private:
+  bool propagateEpoch(TermStateType& state);
   void epochFinished(EpochType const& epoch, bool const cleanup);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void triggerAllEpochActions(EpochType const& epoch);
   void triggerAllActions(EpochType const& epoch);
-  void attachGlobalTermAction(ActionType action);
-  void forceGlobalTermAction(ActionType action);
-  void attachEpochTermAction(EpochType const& epoch, ActionType action);
   void setupNewEpoch(EpochType const& new_epoch, bool const from_child);
   void propagateNewEpoch(EpochType const& new_epoch, bool const from_child);
   void readyNewEpoch(EpochType const& new_epoch);
 
-  static void registerDefaultTerminationAction(ActionType default_action);
   static void propagateNewEpochHandler(TermMsg* msg);
   static void readyEpochHandler(TermMsg* msg);
   static void propagateEpochHandler(TermCounterMsg* msg);
