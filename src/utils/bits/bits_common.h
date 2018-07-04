@@ -3,8 +3,8 @@
 #define INCLUDED_BITS_COMMON
 
 #include "config.h"
-#include "bits_counter.h"
-#include "bits_packer.h"
+#include "utils/bits/bits_counter.h"
+#include "utils/bits/bits_packer.h"
 
 namespace vt {
 
