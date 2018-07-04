@@ -34,6 +34,11 @@ struct EpochManip {
   static void setNode       (EpochType& epoch, NodeType       const node     );
   static void setSeq        (EpochType& epoch, EpochType      const seq      );
 
+  static EpochType makeRootedEpoch(
+    EpochType      const& seq,
+    bool           const& is_user    = false,
+    eEpochCategory const& category   = default_epoch_category
+  );
   static EpochType makeEpoch(
     EpochType      const& seq,
     bool           const& is_rooted  = false,
