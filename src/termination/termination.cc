@@ -350,18 +350,41 @@ void TerminationDetector::triggerAllActions(EpochType const& epoch) {
   }
 }
 
-EpochType TerminationDetector::newEpoch() {
+EpochType TerminationDetector::newEpochCollective() {
   if (cur_epoch_ == no_epoch) {
-    cur_epoch_ = first_epoch;
+    auto const& is_rooted = false;
+    cur_rooted_epoch_ = epoch::EpochManip::makeEpoch(first_epoch, is_rooted);
   }
 
   EpochType const cur = cur_epoch_;
   cur_epoch_++;
 
-  bool const from_child = false;
+  auto const from_child = false;
   propagateNewEpoch(cur, from_child);
 
   return cur;
+}
+
+EpochType TerminationDetector::newEpochRooted() {
+  if (cur_rooted_epoch_ == no_epoch) {
+    auto const& is_rooted = true;
+    auto const& root_node = theContext()->getNode();
+    cur_rooted_epoch_ = epoch::EpochManip::makeEpoch(
+      first_epoch, is_rooted, root_node
+    );
+  } else {
+    cur_rooted_epoch_++;
+  }
+
+  EpochType const cur = cur_rooted_epoch_;
+  auto const from_child = false;
+  propagateNewEpoch(cur, from_child);
+
+  return cur;
+}
+
+EpochType TerminationDetector::newEpoch() {
+  return newEpochCollective();
 }
 
 void TerminationDetector::attachGlobalTermAction(ActionType action) {
