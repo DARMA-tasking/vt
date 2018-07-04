@@ -440,8 +440,8 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
   debug_print(
     vrt_coll, node,
-    "broadcastMsg: col_proxy={}, found={}, holder={}\n",
-    col_proxy, found_constructed, holder != holder_container.end()
+    "broadcastMsg: col_proxy={}, found={}\n",
+    col_proxy, found_constructed
   );
 
   if (holder != nullptr && found_constructed) {
@@ -456,8 +456,8 @@ void CollectionManager::broadcastMsgUntypedHandler(
     if (this_node != bcast_node) {
       debug_print(
         vrt_coll, node,
-        "broadcastMsg: col_proxy={}, sending to root node={}, han={}\n",
-        col_proxy, bcast_node, han
+        "broadcastMsg: col_proxy={}, sending to root node={}, handler={}\n",
+        col_proxy, bcast_node, handler
       );
 
       using Serial = ::vt::serialization::auto_dispatch::RequiredSerialization<
@@ -471,8 +471,8 @@ void CollectionManager::broadcastMsgUntypedHandler(
     } else {
       debug_print(
         vrt_coll, node,
-        "broadcasting msg to collection: msg={}, han={}\n",
-        print_ptr(msg), han
+        "broadcasting msg to collection: msg={}, handler={}\n",
+        print_ptr(msg), handler
       );
       broadcastFromRoot<ColT,IdxT,MsgT>(msg);
     }
@@ -532,8 +532,8 @@ EpochType CollectionManager::reduceMsg(
 
   debug_print(
     vrt_coll, node,
-    "reduceMsg: col_proxy={}, found={}, holder={}\n",
-    col_proxy, found_constructed, holder != holder_container.end()
+    "reduceMsg: col_proxy={}, found={}\n",
+    col_proxy, found_constructed
   );
 
   if (found_constructed && elm_holder) {
@@ -643,8 +643,8 @@ void CollectionManager::sendMsgUntypedHandler(
 
     debug_print(
       vrt_coll, node,
-      "sending msg to collection: msg={}, han={}, home_node={}\n",
-      msg, han, home_node
+      "sending msg to collection: msg={}, handler={}, home_node={}\n",
+      msg, handler, home_node
     );
 
     // route the message to the destination using the location manager
