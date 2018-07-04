@@ -2,6 +2,7 @@
 set(TOP_LEVEL_SUBDIRS
   configs
   collective
+  epoch
   group
   messaging
   pool
