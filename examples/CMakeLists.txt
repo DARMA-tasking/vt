@@ -17,6 +17,7 @@ set(
   param
   hello_world_functor
   test_seq
+  term_epoch
   trace_ring
   location_test
   location_test_msg
