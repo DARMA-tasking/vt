@@ -27,6 +27,7 @@ struct TermState {
   TermWaveType getCurWave() const;
   void setCurWave(TermWaveType const& wave);
   NodeType getNumChildren() const;
+  bool noLocalUnits() const;
 
   TermState(
     EpochType const& in_epoch, bool const in_local_terminated, bool const active,

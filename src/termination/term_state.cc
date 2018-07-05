@@ -37,6 +37,10 @@ void TermState::notifyChildReceive() {
   assert(recv_child_count_ <= num_children_ and "Must be <= than num children");
 }
 
+bool TermState::noLocalUnits() const {
+  return l_prod == 0 && l_cons == 0;
+}
+
 void TermState::setTerminated() {
   term_detected_ = true;
 }
