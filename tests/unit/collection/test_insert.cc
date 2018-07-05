@@ -46,7 +46,7 @@ TEST_F(TestInsert, test_insert_dense_1) {
       proxy[i].insert();
     }
   }
-  theTerm()->attachGlobalTermAction([]{
+  theTerm()->addAction([]{
     /// ::fmt::print("num inserted={}\n", num_inserted);
     // Relies on default mapping equally distributing
     EXPECT_EQ(num_inserted, num_elms_per_node);
@@ -65,7 +65,7 @@ TEST_F(TestInsert, test_insert_sparse_1) {
       proxy[i].insert();
     }
   }
-  theTerm()->attachGlobalTermAction([]{
+  theTerm()->addAction([]{
     /// ::fmt::print("num inserted={}\n", num_inserted);
     // Relies on default mapping equally distributing
     EXPECT_EQ(num_inserted, num_elms_per_node);
@@ -84,7 +84,7 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
       proxy[i].insert(this_node);
     }
   }
-  theTerm()->attachGlobalTermAction([=]{
+  theTerm()->addAction([=]{
     /// ::fmt::print("num inserted={}\n", num_inserted);
     // Relies on default mapping equally distributing
     if (this_node == 0) {
@@ -105,7 +105,7 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
       proxy[i].insert(this_node);
     }
   }
-  theTerm()->attachGlobalTermAction([=]{
+  theTerm()->addAction([=]{
     /// ::fmt::print("num inserted={}\n", num_inserted);
     // Relies on default mapping equally distributing
     if (this_node == 0) {

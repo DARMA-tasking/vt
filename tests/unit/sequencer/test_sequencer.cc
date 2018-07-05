@@ -126,7 +126,7 @@ TEST_F(TestSequencer, test_single_wait) {
 
     theMsg()->sendMsg<TestMsg, testSeqHan>(my_node, makeSharedMessage<TestMsg>());
 
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       testSingleWaitFn(-1);
     });
   }
@@ -143,7 +143,7 @@ TEST_F(TestSequencer, test_single_wait_tagged) {
       my_node, makeSharedMessage<TestMsg>(), single_tag
     );
 
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       testSingleTaggedWaitFn(-1);
     });
   }
@@ -163,7 +163,7 @@ TEST_F(TestSequencer, test_multi_wait) {
       my_node, makeSharedMessage<TestMsg>()
     );
 
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       testMultiWaitFn(-1);
     });
   }
@@ -183,7 +183,7 @@ TEST_F(TestSequencer, test_multi_wait_tagged) {
       my_node, makeSharedMessage<TestMsg>(), single_tag_2
     );
 
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       testMultiTaggedWaitFn(-1);
     });
   }

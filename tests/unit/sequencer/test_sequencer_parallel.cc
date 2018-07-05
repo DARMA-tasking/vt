@@ -109,7 +109,7 @@ TEST_P(TestSequencerParallelParam, test_seq_parallel_param) {
     for (CountType i = 0; i < par_count; i++) {
       theMsg()->sendMsg<TestMsg, seqParHanN>(node, makeSharedMessage<TestMsg>());
     }
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       seq_par_cnt_fn(SeqParFinalizeAtomicValue);
     });
   }
@@ -265,7 +265,7 @@ struct TestSequencerParallel : TestParallelHarness {
         (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
       );                                                              \
     }                                                                 \
-    theTerm()->attachGlobalTermAction([=]{                            \
+    theTerm()->addAction([=]{                                         \
       SEQ_FN(-1);                                                     \
     });                                                               \
   } while (false);

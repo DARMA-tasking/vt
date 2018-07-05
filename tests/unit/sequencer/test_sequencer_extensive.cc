@@ -74,7 +74,7 @@ static constexpr CountType const max_seq_depth = 8;
           (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
         );                                                              \
       }                                                                 \
-      theTerm()->attachGlobalTermAction([=]{                            \
+      theTerm()->addAction([=]{                                         \
         SEQ_FN(FinalizeAtomicValue);                                    \
       });                                                               \
     }                                                                   \

@@ -75,7 +75,7 @@ TEST_F(TestDestroy, test_destroy_1) {
     auto msg = makeSharedMessage<WorkMsg>();
     proxy.broadcast<WorkMsg,DestroyTest::work>(msg);
   }
-  theTerm()->attachGlobalTermAction([]{
+  theTerm()->addAction([]{
     /// ::fmt::print("num destroyed={}\n", num_destroyed);
     // Relies on default mapping equally distributing
     EXPECT_EQ(num_destroyed, num_elms_per_node);

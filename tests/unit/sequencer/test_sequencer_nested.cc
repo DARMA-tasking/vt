@@ -229,7 +229,7 @@ struct TestSequencerNested : TestParallelHarness {
         (NODE), makeSharedMessage<MSG_TYPE>(), tag                        \
       );                                                                  \
     }                                                                     \
-    theTerm()->attachGlobalTermAction([=]{                                \
+    theTerm()->addAction([=]{                                             \
       SEQ_FN(-1);                                                         \
     });                                                                   \
   } while (false);

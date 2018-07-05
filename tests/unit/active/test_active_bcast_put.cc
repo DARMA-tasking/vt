@@ -89,7 +89,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
       }
     }
 
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       if (my_node != root) {
         ASSERT_TRUE(handler_count == num_msg_sent);
       }

@@ -65,7 +65,7 @@ TEST_F(TestSequencerFor, test_for) {
       );
     }
 
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       testSeqForFn(-1);
     });
   }
