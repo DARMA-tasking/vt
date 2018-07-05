@@ -6,6 +6,16 @@
 
 namespace vt { namespace term {
 
+/* deprecated termination action methods */
+void TermAction::attachEpochTermAction(EpochType const& epoch, ActionType action) {
+  return addActionEpoch(epoch,action);
+}
+
+void TermAction::attachGlobalTermAction(ActionType action) {
+  return addAction(action);
+}
+/* end deprecated termination action methods */
+
 void TermAction::addDefaultAction(ActionType action) {
   return addAction(action);
 }
