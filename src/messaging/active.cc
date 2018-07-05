@@ -208,8 +208,14 @@ EventType ActiveMessenger::sendMsgSized(
     );
   }
 
-  if (is_epoch && global_epoch_ != no_epoch) {
-    setEpochMessage(msg, global_epoch_);
+  if (is_epoch) {
+    // Propagate current epoch on message first, otherwise propagate the global
+    // epoch set on the active messenger
+    if (current_epoch_context_ != no_epoch) {
+      setEpochMessage(msg, current_epoch_context_);
+    } else if (global_epoch_ != no_epoch) {
+      setEpochMessage(msg, global_epoch_);
+    }
   }
 
   bool deliver = false;
@@ -487,12 +493,13 @@ bool ActiveMessenger::deliverActiveMsg(
   if (has_action_handler) {
     // set the current handler so the user can request it in the context of an
     // active fun
-    current_handler_context_ = handler;
+    current_handler_context_  = handler;
     current_callback_context_ = callback;
-    current_node_context_ = from_node;
+    current_node_context_     = from_node;
+    current_epoch_context_    = epoch;
 
     #if backend_check_enabled(trace_enabled)
-      current_trace_context_ = from_node;
+      current_trace_context_  = from_node;
     #endif
 
     // run the active function
@@ -504,12 +511,13 @@ bool ActiveMessenger::deliverActiveMsg(
     }
 
     // unset current handler
-    current_handler_context_ = uninitialized_handler;
+    current_handler_context_  = uninitialized_handler;
     current_callback_context_ = uninitialized_handler;
-    current_node_context_ = uninitialized_destination;
+    current_node_context_     = uninitialized_destination;
+    current_epoch_context_    = no_epoch;
 
     #if backend_check_enabled(trace_enabled)
-      current_trace_context_ = trace::no_trace_event;
+      current_trace_context_  = trace::no_trace_event;
     #endif
   } else {
     if (insert) {
@@ -744,6 +752,10 @@ HandlerType ActiveMessenger::getCurrentHandler() {
 
 HandlerType ActiveMessenger::getCurrentCallback() {
   return current_callback_context_;
+}
+
+EpochType ActiveMessenger::getCurrentEpoch() const {
+  return current_epoch_context_;
 }
 
 void ActiveMessenger::setGlobalEpoch(EpochType const& epoch) {
