@@ -26,7 +26,7 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
   );
   EpochType const epoch = theTerm()->newEpoch();
   theMsg()->setGlobalEpoch(epoch);
-  theTerm()->attachEpochTermAction(epoch,[this]{ this->finishedMigrate(); });
+  theTerm()->addActionEpoch(epoch,[this]{ this->finishedMigrate(); });
   for (auto&& stat : data_in) {
     auto const& obj = stat.first;
     auto const& load = stat.second;
