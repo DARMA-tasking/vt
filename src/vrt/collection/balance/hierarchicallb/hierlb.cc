@@ -340,7 +340,7 @@ void HierarchicalLB::startMigrations() {
 
   EpochType const epoch = theTerm()->newEpoch();
   theMsg()->setGlobalEpoch(epoch);
-  theTerm()->attachEpochTermAction(epoch,[this]{
+  theTerm()->addActionEpoch(epoch,[this]{
     this->finishedTransferExchange();
   });
 
