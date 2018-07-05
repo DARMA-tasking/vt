@@ -196,8 +196,8 @@ void Runtime::setup() {
 
   runtime_active_ = true;
 
-  auto handler = std::bind(&Runtime::terminationHandler, this);
-  term::TerminationDetector::registerDefaultTerminationAction(handler);
+  auto action = std::bind(&Runtime::terminationHandler, this);
+  theTerm->addDefaultAction(action);
 
   MPI_Barrier(theContext->getComm());
 
