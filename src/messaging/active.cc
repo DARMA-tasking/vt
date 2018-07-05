@@ -408,7 +408,7 @@ bool ActiveMessenger::recvDataMsg(
   return recvDataMsgBuffer(nullptr, tag, recv_node, enqueue, nullptr, next);
 }
 
-NodeType ActiveMessenger::getFromNodeCurrentHandler() {
+NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
   return current_node_context_;
 }
 
@@ -746,11 +746,11 @@ void ActiveMessenger::unregisterHandlerFn(
   return theRegistry()->unregisterHandlerFn(han, tag);
 }
 
-HandlerType ActiveMessenger::getCurrentHandler() {
+HandlerType ActiveMessenger::getCurrentHandler() const {
   return current_handler_context_;
 }
 
-HandlerType ActiveMessenger::getCurrentCallback() {
+HandlerType ActiveMessenger::getCurrentCallback() const {
   return current_callback_context_;
 }
 

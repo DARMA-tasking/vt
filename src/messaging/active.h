@@ -385,9 +385,9 @@ struct ActiveMessenger {
     ActiveClosureFnType fn, TagType const& tag = no_tag
   );
 
-  HandlerType getCurrentHandler();
-  HandlerType getCurrentCallback();
-  NodeType getFromNodeCurrentHandler();
+  HandlerType getCurrentHandler() const;
+  HandlerType getCurrentCallback() const;
+  NodeType getFromNodeCurrentHandler() const;
   EpochType getCurrentEpoch() const;
 
   #if backend_check_enabled(trace_enabled)
