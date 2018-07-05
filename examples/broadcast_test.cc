@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
       from_node == my_node ? 0 : 1
     ));
 
-  theTerm()->attachGlobalTermAction([=]{
+  theTerm()->addAction([=]{
     fmt::print("[{}] verify: count={}, expected={}\n", my_node, count, expected);
     assert(count == expected);
   });

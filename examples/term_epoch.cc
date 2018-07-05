@@ -87,7 +87,7 @@ static void next_epoch() {
 
       sendStartEpoch(cur_epoch);
 
-      theTerm()->attachEpochTermAction(cur_epoch, []{
+      theTerm()->addActionEpoch(cur_epoch, []{
         fmt::print("{}: running attached action: cur_epoch={}\n", my_node, cur_epoch);
         next_epoch();
       });
