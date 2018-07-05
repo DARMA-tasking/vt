@@ -288,7 +288,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
   TransferType transfer_list;
   EpochType const epoch = theTerm()->newEpoch();
   theMsg()->setGlobalEpoch(epoch);
-  theTerm()->attachEpochTermAction(epoch,[this]{
+  theTerm()->addActionEpoch(epoch,[this]{
     this->finishedTransferExchange();
   });
   for (auto i = 0; i < num_recs; i++) {
