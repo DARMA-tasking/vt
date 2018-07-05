@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
         auto msg = new ColMsg<MyCol>(this_node, i);
         proxy[i].send<ColMsg<MyCol>,method1>(msg);
       }
-      theTerm()->attachEpochTermAction(epoch,[=]{
+      theTerm()->addEpochAction(epoch,[=]{
         theCollection()->nextPhase<MyCol>(proxy,0);
       });
     #endif

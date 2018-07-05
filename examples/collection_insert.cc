@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     auto const& range = Index1D(num_elms);
     auto proxy = theCollection()->construct<InsertCol>(range);
 
-    theTerm()->attachEpochTermAction(epoch,[=]{
+    theTerm()->addActionEpoch(epoch,[=]{
       ::fmt::print("broadcasting\n");
       auto msg = makeSharedMessage<TestMsg>();
       proxy.broadcast<TestMsg,work>(msg);

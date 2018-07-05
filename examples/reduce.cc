@@ -46,11 +46,11 @@ int main(int argc, char** argv) {
   }
 
   int32_t const expected = num_bcasts *
-      (from_node == uninitialized_destination ? theContext()->getNumNodes() - 1 : (
-          from_node == my_node ? 0 : 1
-      ));
+    (from_node == uninitialized_destination ? theContext()->getNumNodes() - 1 : (
+      from_node == my_node ? 0 : 1
+    ));
 
-  theTerm()->attachGlobalTermAction([=]{
+  theTerm()->addAction([=]{
     fmt::print("[{}] verify: count={}, expected={}\n", my_node, count, expected);
     assert(count == expected);
   });

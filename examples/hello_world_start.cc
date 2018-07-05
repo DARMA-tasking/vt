@@ -158,7 +158,7 @@ struct MainVC : vt::vrt::MainVirtualContext {
       theMsg()->broadcastMsg<MakeMainMsg, makeMain>(msg);
     }
 
-    theTerm()->attachGlobalTermAction([]{
+    theTerm()->addAction([]{
       auto const num_work_units = num_work_finished.load();
       DEBUG_PRINTER_START("num_work_units={}\n", num_work_units);
 
