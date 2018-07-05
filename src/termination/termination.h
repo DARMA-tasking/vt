@@ -44,7 +44,19 @@ struct TerminationDetector : collective::tree::Tree {
   }
 
 public:
+  /*
+   * Deprecated interface for creating a new collective epoch for detecting
+   * termination
+   */
   EpochType newEpoch();
+
+public:
+  /*
+   * New interface for making epochs for termination detection
+   */
+  EpochType makeEpochRooted();
+  EpochType makeEpochCollective();
+  EpochType makeEpoch(bool const is_collective);
 
   void attachGlobalTermAction(ActionType action);
   void forceGlobalTermAction(ActionType action);
@@ -87,6 +99,10 @@ private:
   void setupNewEpoch(EpochType const& new_epoch, bool const from_child);
   void propagateNewEpoch(EpochType const& new_epoch, bool const from_child);
   void readyNewEpoch(EpochType const& new_epoch);
+
+  void rootMakeEpoch(EpochType const& epoch);
+  void makeRootedEpoch(EpochType const& epoch, bool const is_root);
+  static void makeRootedEpoch(TermMsg* msg);
 
   static void propagateNewEpochHandler(TermMsg* msg);
   static void readyEpochHandler(TermMsg* msg);

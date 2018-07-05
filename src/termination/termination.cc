@@ -4,6 +4,7 @@
 #include "messaging/active.h"
 #include "collective/collective_ops.h"
 #include "scheduler/scheduler.h"
+#include "epoch/epoch_headers.h"
 
 namespace vt { namespace term {
 
@@ -19,6 +20,11 @@ TerminationDetector::TerminationDetector()
 
 /*static*/ void TerminationDetector::readyEpochHandler(TermMsg* msg) {
   theTerm()->readyNewEpoch(msg->new_epoch);
+}
+
+/*static*/ void TerminationDetector::makeRootedEpoch(TermMsg* msg) {
+  bool const is_root = false;
+  theTerm()->makeRootedEpoch(msg->new_epoch, is_root);
 }
 
 /*static*/ void
@@ -284,9 +290,12 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
 void TerminationDetector::epochFinished(
   EpochType const& epoch, bool const cleanup
 ) {
+  auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
+
   debug_print(
     term, node,
-    "epochFinished: epoch={}\n", epoch
+    "epochFinished: epoch={}, is_rooted_epoch={}\n",
+    epoch, is_rooted_epoch
   );
 
   triggerAllActions(epoch);
@@ -295,9 +304,15 @@ void TerminationDetector::epochFinished(
     cleanupEpoch(epoch);
   }
 
-  // close the epoch window
-  if (first_resolved_epoch_ == epoch) {
-    first_resolved_epoch_++;
+  /*
+   *  Rooted epochs are not tracked in the window because they are not purely
+   *  sequential
+   */
+  if (!is_rooted_epoch) {
+    // close the epoch window
+    if (first_resolved_epoch_ == epoch) {
+      first_resolved_epoch_++;
+    }
   }
 }
 
@@ -375,12 +390,29 @@ EpochType TerminationDetector::newEpochRooted() {
   } else {
     cur_rooted_epoch_++;
   }
+  /*
+   *  This method should only be called by the root node for the rooted epoch
+   *  identifier, which is distinct and has the node embedded in it to
+   *  distinguish it from all other epochs
+   */
+  rootMakeEpoch(cur_rooted_epoch_);
+  return cur_rooted_epoch_;
+}
 
-  EpochType const cur = cur_rooted_epoch_;
-  auto const from_child = false;
-  propagateNewEpoch(cur, from_child);
+EpochType TerminationDetector::makeEpochRooted() {
+  return makeEpoch(false);
+}
 
-  return cur;
+EpochType TerminationDetector::makeEpochCollective() {
+  return makeEpoch(true);
+}
+
+EpochType TerminationDetector::makeEpoch(bool const is_collective) {
+  if (is_collective) {
+    return newEpochCollective();
+  } else {
+    return newEpochRooted();
+  }
 }
 
 EpochType TerminationDetector::newEpoch() {
@@ -412,6 +444,53 @@ void TerminationDetector::attachEpochTermAction(
   // inhibit global termination from being reached when an epoch has a
   // registered action
   produce();
+}
+
+void TerminationDetector::rootMakeEpoch(EpochType const& epoch) {
+  debug_print(
+    term, node,
+    "rootMakeEpoch: root={}, epoch={}\n",
+    theContext()->getNode(), epoch
+  );
+
+  /*
+   *  Broadcast new rooted epoch to all other nodes to start processing this
+   *  epoch
+   */
+  auto msg = makeSharedMessage<TermMsg>(epoch);
+  theMsg()->setTermMessage(msg);
+  theMsg()->broadcastMsg<TermMsg,makeRootedEpoch>(msg);
+  /*
+   *  Setup the new rooted epoch locally on the root node (this node)
+   */
+  bool const is_root = true;
+  makeRootedEpoch(epoch,is_root);
+}
+
+void TerminationDetector::makeRootedEpoch(
+  EpochType const& epoch, bool const is_root
+) {
+  bool const is_ready = true;
+  auto& state = findOrCreateState(epoch, is_ready);
+  state.activateEpoch();
+
+  debug_print(
+    term, node,
+    "makeRootedEpoch: epoch={}, is_root={}\n", epoch, is_root
+  );
+
+  if (is_root && state.noLocalUnits()) {
+    /*
+     *  Do not submit parent at the root if no units have been produced at the
+     *  root: a false positive is possible if termination starts immediately
+     *  because it may finish before any unit is produced or consumed with the
+     *  new rooted epoch
+     */
+  } else {
+    if (state.readySubmitParent()) {
+      propagateEpoch(state);
+    }
+  }
 }
 
 void TerminationDetector::setupNewEpoch(
