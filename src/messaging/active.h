@@ -388,6 +388,7 @@ struct ActiveMessenger {
   HandlerType getCurrentHandler();
   HandlerType getCurrentCallback();
   NodeType getFromNodeCurrentHandler();
+  EpochType getCurrentEpoch() const;
 
   #if backend_check_enabled(trace_enabled)
     trace::TraceEventIDType getCurrentTraceEvent() const;
@@ -425,6 +426,7 @@ private:
   HandlerType current_handler_context_ = uninitialized_handler;
   HandlerType current_callback_context_ = uninitialized_handler;
   NodeType current_node_context_ = uninitialized_destination;
+  EpochType current_epoch_context_ = no_epoch;
   EpochType global_epoch_ = no_epoch;
   MaybeReadyType maybe_ready_tag_han_;
   ContainerWaitingHandlerType pending_handler_msgs_;
