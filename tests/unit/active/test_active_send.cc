@@ -95,7 +95,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
       theMsg()->sendMsg<TestMsg, test_handler>(1, msg, [=]{ delete msg; });
     }
   } else if (my_node == to_node) {
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       EXPECT_EQ(handler_count, num_msg_sent);
     });
   }

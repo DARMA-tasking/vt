@@ -154,7 +154,7 @@ TEST_F(TestSequencerVirtual, test_seq_vc_1) {
       proxy, makeSharedMessage<TestMsg>()
     );
 
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       testSeqFn1(FinalizeAtomicValue);
     });
   }
@@ -178,7 +178,7 @@ TEST_F(TestSequencerVirtual, test_seq_vc_2) {
       );
     }
 
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       testSeqFn2(FinalizeAtomicValue);
     });
   }
@@ -210,7 +210,7 @@ TEST_F(TestSequencerVirtual, test_seq_vc_distinct_inst_3) {
 
     // @todo: fix this it is getting triggered early (a termination detector
     // bug?)
-    theTerm()->attachGlobalTermAction([=]{
+    theTerm()->addAction([=]{
       // testSeqFn3a(FinalizeAtomicValue);
       // testSeqFn3b(FinalizeAtomicValue);
     });
