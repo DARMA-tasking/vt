@@ -3,11 +3,12 @@
 #define INCLUDED_TERMINATION_TERMINATION_H
 
 #include "config.h"
+#include "termination/term_common.h"
+#include "termination/term_msgs.h"
+#include "termination/term_state.h"
+#include "termination/term_action.h"
 #include "epoch/epoch.h"
 #include "activefn/activefn.h"
-#include "term_common.h"
-#include "term_msgs.h"
-#include "term_state.h"
 #include "collective/tree/tree.h"
 
 #include <cstdint>
@@ -16,32 +17,20 @@
 
 namespace vt { namespace term {
 
-using namespace vt::epoch;
-
-struct TerminationDetector : collective::tree::Tree {
+struct TerminationDetector : TermAction, collective::tree::Tree {
+  template <typename T>
+  using EpochContainerType = std::unordered_map<EpochType, T>;
   using TermStateType = TermState;
-  using ActionContainerType = std::vector<ActionType>;
 
   TerminationDetector();
 
-  template <typename T>
-  using EpochContainerType = std::unordered_map<EpochType, T>;
-
-  inline void produce(
+  void produce(
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
-  ) {
-    debug_print(term, node, "Termination: produce: epoch={}\n",epoch);
-    auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-    return produceConsume(in_epoch, num_units, true);
-  }
+  );
 
-  inline void consume(
+  void consume(
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
-  ) {
-    debug_print(term, node, "Termination: consume: epoch={}\n",epoch);
-    auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-    return produceConsume(in_epoch, num_units, false);
-  }
+  );
 
 public:
   /*
@@ -57,12 +46,6 @@ public:
   EpochType makeEpochRooted();
   EpochType makeEpochCollective();
   EpochType makeEpoch(bool const is_collective);
-
-  void attachGlobalTermAction(ActionType action);
-  void forceGlobalTermAction(ActionType action);
-  void attachEpochTermAction(EpochType const& epoch, ActionType action);
-
-  static void registerDefaultTerminationAction(ActionType default_action);
 
 private:
   EpochType newEpochCollective();
@@ -94,8 +77,6 @@ private:
   bool propagateEpoch(TermStateType& state);
   void epochFinished(EpochType const& epoch, bool const cleanup);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
-  void triggerAllEpochActions(EpochType const& epoch);
-  void triggerAllActions(EpochType const& epoch);
   void setupNewEpoch(EpochType const& new_epoch, bool const from_child);
   void propagateNewEpoch(EpochType const& new_epoch, bool const from_child);
   void readyNewEpoch(EpochType const& new_epoch);
@@ -113,32 +94,18 @@ private:
 private:
   // the current collective epoch across all nodes
   EpochType cur_epoch_ = no_epoch;
-
   // the current rooted epoch just on this node
   EpochType cur_rooted_epoch_ = no_epoch;
-
   // the epoch window [fst, lst]
   EpochType first_resolved_epoch_ = no_epoch, last_resolved_epoch_ = no_epoch;
-
   // global termination state
   TermStateType any_epoch_state_;
-
   // epoch termination state
   EpochContainerType<TermStateType> epoch_state_;
-
-  // action container for global termination
-  ActionContainerType global_term_actions_;
-
-  // action container for each epoch
-  EpochContainerType<ActionContainerType> epoch_actions_;
 };
 
 }} // end namespace vt::term
 
-namespace vt {
-
-extern term::TerminationDetector* theTerm();
-
-} // end namespace vt
+#include "termination/termination.impl.h"
 
 #endif /*INCLUDED_TERMINATION_TERMINATION_H*/

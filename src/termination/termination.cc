@@ -1,6 +1,7 @@
 
-#include "term_common.h"
-#include "termination.h"
+#include "config.h"
+#include "termination/termination.h"
+#include "termination/term_common.h"
 #include "messaging/active.h"
 #include "collective/collective_ops.h"
 #include "scheduler/scheduler.h"
@@ -38,17 +39,6 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
 
 /*static*/ void TerminationDetector::epochContinueHandler(TermMsg* msg) {
   theTerm()->epochContinue(msg->new_epoch, msg->wave);
-}
-
-/*static*/ void TerminationDetector::registerDefaultTerminationAction(
-  ActionType default_action
-) {
-  debug_print(
-    term, node,
-    "registering default termination action\n",
-  );
-
-  theTerm()->attachGlobalTermAction(default_action);
 }
 
 TermCounterType TerminationDetector::getNumUnits() const {
@@ -298,7 +288,7 @@ void TerminationDetector::epochFinished(
     epoch, is_rooted_epoch
   );
 
-  triggerAllActions(epoch);
+  triggerAllActions(epoch,epoch_state_);
 
   if (cleanup) {
     cleanupEpoch(epoch);
@@ -337,38 +327,11 @@ void TerminationDetector::epochContinue(
   theTerm()->maybePropagate();
 }
 
-void TerminationDetector::triggerAllEpochActions(EpochType const& epoch) {
-  auto action_iter = epoch_actions_.find(epoch);
-  if (action_iter != epoch_actions_.end()) {
-    auto const& size = action_iter->second.size();
-    for (auto&& action : action_iter->second) {
-      action();
-    }
-    epoch_actions_.erase(action_iter);
-    consume(any_epoch_sentinel, size);
-  }
-}
-
-void TerminationDetector::triggerAllActions(EpochType const& epoch) {
-  if (epoch == any_epoch_sentinel) {
-    for (auto&& state : epoch_state_) {
-      triggerAllEpochActions(state.first);
-    }
-
-    for (auto&& action : global_term_actions_) {
-      action();
-    }
-
-    global_term_actions_.clear();
-  } else {
-    triggerAllEpochActions(epoch);
-  }
-}
-
 EpochType TerminationDetector::newEpochCollective() {
   if (cur_epoch_ == no_epoch) {
     auto const& is_rooted = false;
-    cur_rooted_epoch_ = epoch::EpochManip::makeEpoch(first_epoch, is_rooted);
+    cur_rooted_epoch_ =
+      epoch::EpochManip::makeEpoch(epoch::first_epoch, is_rooted);
   }
 
   EpochType const cur = cur_epoch_;
@@ -385,7 +348,7 @@ EpochType TerminationDetector::newEpochRooted() {
     auto const& is_rooted = true;
     auto const& root_node = theContext()->getNode();
     cur_rooted_epoch_ = epoch::EpochManip::makeEpoch(
-      first_epoch, is_rooted, root_node
+      epoch::first_epoch, is_rooted, root_node
     );
   } else {
     cur_rooted_epoch_++;
@@ -417,33 +380,6 @@ EpochType TerminationDetector::makeEpoch(bool const is_collective) {
 
 EpochType TerminationDetector::newEpoch() {
   return newEpochCollective();
-}
-
-void TerminationDetector::attachGlobalTermAction(ActionType action) {
-  global_term_actions_.emplace_back(action);
-}
-
-void TerminationDetector::forceGlobalTermAction(ActionType action) {
-  global_term_actions_.clear();
-  global_term_actions_.emplace_back(action);
-}
-
-void TerminationDetector::attachEpochTermAction(
-  EpochType const& epoch, ActionType action
-) {
-  auto epoch_iter = epoch_actions_.find(epoch);
-  if (epoch_iter == epoch_actions_.end()) {
-    epoch_actions_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(epoch),
-      std::forward_as_tuple(ActionContainerType{action})
-    );
-  } else {
-    epoch_iter->second.emplace_back(action);
-  }
-  // inhibit global termination from being reached when an epoch has a
-  // registered action
-  produce();
 }
 
 void TerminationDetector::rootMakeEpoch(EpochType const& epoch) {
