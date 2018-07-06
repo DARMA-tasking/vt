@@ -29,12 +29,6 @@ void ElmInsertable<ColT, IndexT>::insert(NodeType node) {
   theCollection()->insert<ColT,IndexT>(col_proxy,idx,node);
 }
 
-template <typename ColT, typename IndexT>
-void ElmInsertable<ColT, IndexT>::finishedInserting(ActionType action) {
-  auto const col_proxy = this->getCollectionProxy();
-  theCollection()->finishedInserting<ColT,IndexT>(col_proxy,action);
-}
-
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_INSERT_INSERTABLE_IMPL_H*/

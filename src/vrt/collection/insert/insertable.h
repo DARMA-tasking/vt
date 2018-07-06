@@ -19,7 +19,6 @@ struct ElmInsertable : Sendable<ColT,IndexT> {
   void serialize(SerializerT& s);
 
   void insert(NodeType node = uninitialized_destination);
-  void finishedInserting(ActionType action = nullptr);
 };
 
 }}} /* end namespace vt::vrt::collection */

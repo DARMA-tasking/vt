@@ -34,6 +34,12 @@ void Broadcastable<ColT, IndexT>::broadcast(MsgT* msg, ActionType cont) const {
   return theCollection()->broadcastMsg<MsgT, f>(proxy,msg,cont);
 }
 
+template <typename ColT, typename IndexT>
+void Broadcastable<ColT, IndexT>::finishedInserting(ActionType action) {
+  auto const col_proxy = this->getProxy();
+  theCollection()->finishedInserting<ColT,IndexT>(col_proxy,action);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H*/
