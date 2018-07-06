@@ -27,6 +27,8 @@ struct Broadcastable : Destroyable<ColT, IndexT> {
     ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
   >
   void broadcast(MsgT* msg, ActionType act = nullptr) const;
+
+  void finishedInserting(ActionType action = nullptr);
 };
 
 }}} /* end namespace vt::vrt::collection */
