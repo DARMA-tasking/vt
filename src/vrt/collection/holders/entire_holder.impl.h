@@ -3,6 +3,7 @@
 #define INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_IMPL_H
 
 #include "config.h"
+#include "epoch/epoch_headers.h"
 #include "vrt/collection/holders/entire_holder.h"
 
 #include <unordered_map>
@@ -62,13 +63,37 @@ UniversalIndexHolder<always_void_>::getNumReadyCollections() {
 
 template <typename always_void_>
 /*static*/ void UniversalIndexHolder<always_void_>::insertMap(
-  VirtualProxyType const proxy, HandlerType const& han
+  VirtualProxyType const proxy, HandlerType const& han,
+  EpochType const& insert_epoch
 ) {
   live_collections_map_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(proxy),
     std::forward_as_tuple(han)
   );
+  insert_epoch_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(proxy),
+    std::forward_as_tuple(insert_epoch)
+  );
+}
+
+template <typename always_void_>
+/*static*/ void UniversalIndexHolder<always_void_>::insertSetEpoch(
+  VirtualProxyType const proxy, EpochType const& insert_epoch
+) {
+  auto iter = insert_epoch_.find(proxy);
+  assert(iter != insert_epoch_.end() && "Proxy must exist in insert epoch");
+  iter->second = insert_epoch;
+}
+
+template <typename always_void_>
+/*static*/ EpochType UniversalIndexHolder<always_void_>::insertGetEpoch(
+  VirtualProxyType const proxy
+) {
+  auto iter = insert_epoch_.find(proxy);
+  assert(iter != insert_epoch_.end() && "Proxy must exist in insert epoch");
+  return iter->second;
 }
 
 template <typename always_void_>
@@ -91,6 +116,10 @@ UniversalIndexHolder<always_void_>::live_collections_map_;
 template <typename always_void_>
 /*static*/ std::unordered_set<VirtualProxyType>
 UniversalIndexHolder<always_void_>::ready_collections_ = {};
+
+template <typename always_void_>
+/*static*/ std::unordered_map<VirtualProxyType,EpochType>
+UniversalIndexHolder<always_void_>::insert_epoch_ = {};
 
 template <typename ColT, typename IndexT>
 /*static*/ void EntireHolder<ColT, IndexT>::insert(

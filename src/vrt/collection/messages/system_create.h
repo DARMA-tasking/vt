@@ -46,6 +46,15 @@ struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
   VirtualProxyType proxy = {};
 };
 
+struct FinishedUpdateMsg : ::vt::collective::reduce::ReduceMsg {
+  FinishedUpdateMsg() = default;
+  explicit FinishedUpdateMsg(VirtualProxyType const& in_proxy)
+    : proxy_(in_proxy)
+  { }
+
+  VirtualProxyType proxy_ = {};
+};
+
 struct CollectionPhaseMsg : ::vt::Message {};
 
 template <typename ColT, typename IndexT>
@@ -54,15 +63,54 @@ struct InsertMsg : ::vt::Message {
 
   InsertMsg(
     CollectionIndexProxy<ColT,IndexT> in_proxy,
-    IndexT in_max, IndexT in_idx,
-    NodeType in_construct_node
+    IndexT in_max, IndexT in_idx, NodeType in_construct_node,
+    EpochType in_epoch
   ) : proxy_(in_proxy), max_(in_max), idx_(in_idx),
-      construct_node_(in_construct_node)
+      construct_node_(in_construct_node), epoch_(in_epoch)
   { }
 
   CollectionIndexProxy<ColT,IndexT> proxy_ = {};
   IndexT max_ = {}, idx_ = {};
   NodeType construct_node_ = uninitialized_destination;
+  EpochType epoch_ = no_epoch;
+};
+
+template <typename ColT, typename IndexT>
+struct DoneInsertMsg : ::vt::Message {
+  DoneInsertMsg() = default;
+
+  DoneInsertMsg(
+    CollectionIndexProxy<ColT,IndexT> in_proxy,
+    NodeType const& in_action_node = uninitialized_destination
+  ) : action_node_(in_action_node), proxy_(in_proxy)
+  { }
+
+  NodeType action_node_ = uninitialized_destination;
+  CollectionIndexProxy<ColT,IndexT> proxy_ = {};
+};
+
+template <typename ColT, typename IndexT>
+struct ActInsertMsg : ::vt::Message {
+  ActInsertMsg() = default;
+
+  explicit ActInsertMsg(CollectionIndexProxy<ColT,IndexT> in_proxy)
+    : proxy_(in_proxy)
+  { }
+
+  CollectionIndexProxy<ColT,IndexT> proxy_ = {};
+};
+
+template <typename ColT, typename IndexT>
+struct UpdateInsertMsg : ::vt::Message {
+  UpdateInsertMsg() = default;
+
+  UpdateInsertMsg(
+    CollectionIndexProxy<ColT,IndexT> in_proxy, EpochType const& in_epoch
+  ) : proxy_(in_proxy), epoch_(in_epoch)
+  { }
+
+  CollectionIndexProxy<ColT,IndexT> proxy_ = {};
+  EpochType epoch_ = no_epoch;
 };
 
 }}} /* end namespace vt::vrt::collection */
