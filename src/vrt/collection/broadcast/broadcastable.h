@@ -28,7 +28,7 @@ struct Broadcastable : Destroyable<ColT, IndexT> {
   >
   void broadcast(MsgT* msg, ActionType act = nullptr) const;
 
-  void finishedInserting(ActionType action = nullptr);
+  void finishedInserting(ActionType action = nullptr) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
