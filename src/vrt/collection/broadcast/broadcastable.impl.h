@@ -35,7 +35,7 @@ void Broadcastable<ColT, IndexT>::broadcast(MsgT* msg, ActionType cont) const {
 }
 
 template <typename ColT, typename IndexT>
-void Broadcastable<ColT, IndexT>::finishedInserting(ActionType action) {
+void Broadcastable<ColT, IndexT>::finishedInserting(ActionType action) const {
   auto const col_proxy = this->getProxy();
   theCollection()->finishedInserting<ColT,IndexT>(col_proxy,action);
 }
