@@ -34,6 +34,10 @@ struct EpochManip {
   static void setNode       (EpochType& epoch, NodeType       const node     );
   static void setSeq        (EpochType& epoch, EpochType      const seq      );
 
+  /*
+   * General (stateless) methods for creating a epoch with certain properties
+   * based on a current sequence number
+   */
   static EpochType makeRootedEpoch(
     EpochType      const& seq,
     bool           const& is_user    = false,
@@ -46,11 +50,30 @@ struct EpochManip {
     bool           const& is_user    = false,
     eEpochCategory const& category   = default_epoch_category
   );
+
+  /*
+   * Stateful methods for creating a epoch based on epochs that have already
+   * been created in the past
+   */
+  static EpochType makeNewRootedEpoch(
+    bool           const& is_user    = false,
+    eEpochCategory const& category   = default_epoch_category
+  );
+  static EpochType makeNewEpoch(
+    bool           const& is_rooted  = false,
+    NodeType       const& root_node  = default_epoch_node,
+    bool           const& is_user    = false,
+    eEpochCategory const& category   = default_epoch_category
+  );
   static EpochType next(EpochType const& epoch);
 
 private:
   static EpochType nextSlow(EpochType const& epoch);
   static EpochType nextFast(EpochType const& epoch);
+
+private:
+  static EpochType cur_rooted_;
+  static EpochType cur_non_rooted_;
 };
 
 }} /* end namespace vt::epoch */

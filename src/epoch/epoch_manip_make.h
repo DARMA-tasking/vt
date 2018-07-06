@@ -31,13 +31,44 @@ namespace vt { namespace epoch {
   return new_epoch;
 }
 
-/*static*/ inline EpochType makeRootedEpoch(
+/*static*/ inline EpochType EpochManip::makeNewEpoch(
+  bool const& is_rooted, NodeType const& root_node,
+  bool const& is_user, eEpochCategory const& category
+) {
+  if (is_rooted) {
+    return makeNewRootedEpoch(is_user,category);
+  } else {
+    if (cur_non_rooted_ == no_epoch) {
+      cur_non_rooted_ = first_epoch;
+    }
+    auto const new_epoch = makeEpoch(
+      cur_non_rooted_,false,uninitialized_destination,is_user,category
+    );
+    cur_non_rooted_++;
+    return new_epoch;
+  }
+}
+
+/*static*/ inline EpochType EpochManip::makeRootedEpoch(
   EpochType const& seq, bool const& is_user, eEpochCategory const& category
 ) {
   auto const& root_node = theContext()->getNode();
   return EpochManip::makeEpoch(seq,true,root_node,is_user,category);
 }
 
+/*static*/ inline EpochType EpochManip::makeNewRootedEpoch(
+  bool const& is_user, eEpochCategory const& category
+) {
+  auto const& root_node = theContext()->getNode();
+  if (cur_rooted_ == no_epoch) {
+    cur_rooted_ = first_epoch;
+  }
+  auto const& next_rooted_epoch = EpochManip::makeEpoch(
+    cur_rooted_,true,root_node,is_user,category
+  );
+  cur_rooted_++;
+  return next_rooted_epoch;
+}
 
 /*static*/ inline EpochType EpochManip::next(EpochType const& epoch) {
   return EpochManip::nextFast(epoch);
