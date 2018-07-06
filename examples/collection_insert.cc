@@ -50,14 +50,23 @@ int main(int argc, char** argv) {
       auto msg = makeSharedMessage<TestMsg>();
       proxy.broadcast<TestMsg,work>(msg);
     });
-
-    for (int i = 0; i < range.x(); i++) {
-      proxy[i].insert();
+    for (int i = 0; i < range.x() / 2; i++) {
+      proxy[i].insert(i % 2);
       /*
        * Alternative syntax:
        *   theCollection()->insert<InsertCol>(proxy, Index1D(i));
        */
     }
+    ::fmt::print("calling finished insert\n");
+    proxy.finishedInserting([=]{
+      ::fmt::print("insertions are finished\n");
+      for (int i = range.x()/2; i < range.x(); i++) {
+        proxy[i].insert(i % 2);
+      }
+      proxy.finishedInserting([proxy]{
+        ::fmt::print("insertions are finished2\n");
+      });
+    });
   }
 
   while (!rt->isTerminated()) {
