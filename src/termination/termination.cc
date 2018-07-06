@@ -328,38 +328,21 @@ void TerminationDetector::epochContinue(
 }
 
 EpochType TerminationDetector::newEpochCollective() {
-  if (cur_epoch_ == no_epoch) {
-    auto const& is_rooted = false;
-    cur_rooted_epoch_ =
-      epoch::EpochManip::makeEpoch(epoch::first_epoch, is_rooted);
-  }
-
-  EpochType const cur = cur_epoch_;
-  cur_epoch_++;
-
+  auto const& epoch = epoch::EpochManip::makeNewEpoch();
   auto const from_child = false;
-  propagateNewEpoch(cur, from_child);
-
-  return cur;
+  propagateNewEpoch(epoch, from_child);
+  return epoch;
 }
 
 EpochType TerminationDetector::newEpochRooted() {
-  if (cur_rooted_epoch_ == no_epoch) {
-    auto const& is_rooted = true;
-    auto const& root_node = theContext()->getNode();
-    cur_rooted_epoch_ = epoch::EpochManip::makeEpoch(
-      epoch::first_epoch, is_rooted, root_node
-    );
-  } else {
-    cur_rooted_epoch_++;
-  }
+  auto const& rooted_epoch = epoch::EpochManip::makeNewRootedEpoch();
   /*
    *  This method should only be called by the root node for the rooted epoch
    *  identifier, which is distinct and has the node embedded in it to
    *  distinguish it from all other epochs
    */
-  rootMakeEpoch(cur_rooted_epoch_);
-  return cur_rooted_epoch_;
+  rootMakeEpoch(rooted_epoch);
+  return rooted_epoch;
 }
 
 EpochType TerminationDetector::makeEpochRooted() {
@@ -403,17 +386,29 @@ void TerminationDetector::rootMakeEpoch(EpochType const& epoch) {
   makeRootedEpoch(epoch,is_root);
 }
 
+void TerminationDetector::activateEpoch(EpochType const& epoch) {
+  auto& state = findOrCreateState(epoch, true);
+  state.activateEpoch();
+  state.notifyLocalTerminated();
+  if (state.readySubmitParent()) {
+    propagateEpoch(state);
+  }
+}
+
 void TerminationDetector::makeRootedEpoch(
   EpochType const& epoch, bool const is_root
 ) {
-  bool const is_ready = true;
+  bool const is_ready = !is_root;
   auto& state = findOrCreateState(epoch, is_ready);
-  state.activateEpoch();
 
   debug_print(
     term, node,
     "makeRootedEpoch: epoch={}, is_root={}\n", epoch, is_root
   );
+
+  if (!is_root) {
+    state.activateEpoch();
+  }
 
   if (is_root && state.noLocalUnits()) {
     /*

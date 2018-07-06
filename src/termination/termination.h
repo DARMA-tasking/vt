@@ -46,6 +46,7 @@ public:
   EpochType makeEpochRooted();
   EpochType makeEpochCollective();
   EpochType makeEpoch(bool const is_collective);
+  void activateEpoch(EpochType const& epoch);
 
 private:
   EpochType newEpochCollective();
@@ -92,10 +93,6 @@ private:
   static void epochContinueHandler(TermMsg* msg);
 
 private:
-  // the current collective epoch across all nodes
-  EpochType cur_epoch_ = no_epoch;
-  // the current rooted epoch just on this node
-  EpochType cur_rooted_epoch_ = no_epoch;
   // the epoch window [fst, lst]
   EpochType first_resolved_epoch_ = no_epoch, last_resolved_epoch_ = no_epoch;
   // global termination state
