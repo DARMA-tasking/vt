@@ -21,11 +21,14 @@ struct CollectionInfo {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | immediate_ | proxy_ | req_id_ | from_node_ | range_;
+    s | immediate_ | proxy_ | req_id_ | from_node_ | range_ | insert_epoch_;
   }
 
   VirtualProxyType getProxy() const { return proxy_; }
   IndexT getRange() const { return range_; }
+
+  void setInsertEpoch(EpochType const& in_epoch) { insert_epoch_ = in_epoch; }
+  EpochType getInsertEpoch() const { return insert_epoch_; }
 
   friend struct CollectionManager;
 
@@ -35,6 +38,7 @@ private:
   VirtualRequestIDType req_id_ = no_request_id;
   NodeType from_node_ = uninitialized_destination;
   IndexT range_;
+  EpochType insert_epoch_ = no_epoch;
 };
 
 

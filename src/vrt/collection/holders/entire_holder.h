@@ -21,9 +21,17 @@ struct UniversalIndexHolder {
   static void resetPhase();
   static std::size_t getNumCollections();
   static std::size_t getNumReadyCollections();
-  static void insertMap(VirtualProxyType const proxy, HandlerType const& han);
+  static void insertMap(
+    VirtualProxyType const proxy, HandlerType const& han,
+    EpochType const& insert_epoch = no_epoch
+  );
   static HandlerType getMap(VirtualProxyType const proxy);
 public:
+  static void insertSetEpoch(
+    VirtualProxyType const proxy, EpochType const& insert_epoch
+  );
+  static EpochType insertGetEpoch(VirtualProxyType const proxy);
+  static std::unordered_map<VirtualProxyType,EpochType> insert_epoch_;
   static std::unordered_set<VirtualProxyType> ready_collections_;
   static std::unordered_map<
     VirtualProxyType,std::shared_ptr<BaseHolder>

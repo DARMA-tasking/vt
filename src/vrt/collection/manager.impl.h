@@ -33,6 +33,7 @@
 
 #include <tuple>
 #include <utility>
+#include <functional>
 #include <cassert>
 #include <memory>
 
@@ -71,8 +72,9 @@ template <typename SysMsgT>
   auto const& node = theContext()->getNode();
   auto& info = msg->info;
   VirtualProxyType new_proxy = info.getProxy();
+  auto const& insert_epoch = info.getInsertEpoch();
 
-  theCollection()->insertCollectionInfo(new_proxy,msg->map);
+  theCollection()->insertCollectionInfo(new_proxy,msg->map,insert_epoch);
 
   if (info.immediate_) {
     auto const& map_han = msg->map;
@@ -807,6 +809,13 @@ CollectionManager::constructMap(
   );
 
   CollectionInfo<ColT, IndexT> info(range, is_static, node, new_proxy);
+
+  if (!is_static) {
+    auto const& insert_epoch = theTerm()->makeEpochRooted();
+    info.setInsertEpoch(insert_epoch);
+    setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
+  }
+
   create_msg->info = info;
 
   debug_print(
@@ -827,9 +836,10 @@ CollectionManager::constructMap(
 }
 
 inline void CollectionManager::insertCollectionInfo(
-  VirtualProxyType const& proxy, HandlerType const& map_han
+  VirtualProxyType const& proxy, HandlerType const& map_han,
+  EpochType const& insert_epoch
 ) {
-  UniversalIndexHolder<>::insertMap(proxy,map_han);
+  UniversalIndexHolder<>::insertMap(proxy,map_han,insert_epoch);
 }
 
 inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
@@ -843,9 +853,165 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
 
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::insertHandler(InsertMsg<ColT,IndexT>* msg) {
-  return theCollection()->insert<ColT,IndexT>(
+  auto const& epoch = msg->epoch_;
+  theCollection()->insert<ColT,IndexT>(
     msg->proxy_,msg->idx_,msg->construct_node_
   );
+  theTerm()->consume(epoch);
+}
+
+template <typename ColT, typename IndexT>
+/*static*/ void CollectionManager::updateInsertEpochHandler(
+  UpdateInsertMsg<ColT,IndexT>* msg
+) {
+  auto const& untyped_proxy = msg->proxy_.getProxy();
+  UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,msg->epoch_);
+
+  auto const& root = 0;
+  auto nmsg = makeSharedMessage<FinishedUpdateMsg>(untyped_proxy);
+  theCollective()->reduce<FinishedUpdateMsg,finishedUpdateHan>(
+    root, nmsg, msg->epoch_
+  );
+}
+
+template <typename>
+/*static*/ void CollectionManager::finishedUpdateHan(
+  FinishedUpdateMsg* msg
+) {
+  if (msg->isRoot()) {
+    /*
+     *  Trigger any actions that the user may have registered for when insertion
+     *  has fully terminated
+     */
+    return theCollection()->actInsert<>(msg->proxy_);
+  }
+}
+
+template <typename ColT, typename IndexT>
+void CollectionManager::setupNextInsertTrigger(
+  VirtualProxyType const& proxy, EpochType const& insert_epoch
+) {
+  auto finished_insert_trigger = [proxy,insert_epoch]{
+    theCollection()->finishedInsertEpoch<ColT,IndexT>(proxy,insert_epoch);
+  };
+  auto start_detect = [insert_epoch,finished_insert_trigger]{
+    theTerm()->activateEpoch(insert_epoch);
+    theTerm()->addAction(insert_epoch, finished_insert_trigger);
+  };
+  insert_finished_action_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(proxy),
+    std::forward_as_tuple(start_detect)
+  );
+}
+
+template <typename ColT, typename IndexT>
+void CollectionManager::finishedInsertEpoch(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy, EpochType const& epoch
+) {
+  auto const& this_node = theContext()->getNode();
+  auto const& untyped_proxy = proxy.getProxy();
+
+  /*
+   *  Add trigger for the next insertion phase/epoch finishing
+   */
+  auto const& next_insert_epoch = theTerm()->makeEpochRooted();
+  UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,next_insert_epoch);
+
+  auto msg = makeSharedMessage<UpdateInsertMsg<ColT,IndexT>>(
+    proxy,next_insert_epoch
+  );
+  theMsg()->broadcastMsg<
+    UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
+  >(msg);
+
+  /*
+   *  Setup next epoch
+   */
+  setupNextInsertTrigger<ColT,IndexT>(untyped_proxy,next_insert_epoch);
+
+  /*
+   *  Contribute to reduction for update epoch: this forces the update of the
+   *  current insertion epoch to be consistent across the managers *before*
+   *  triggering the user's finished epoch handler so that all actions on the
+   *  corresponding collection after are related to the new insert epoch
+   */
+  auto const& root = 0;
+  auto nmsg = makeSharedMessage<FinishedUpdateMsg>(untyped_proxy);
+  theCollective()->reduce<FinishedUpdateMsg,finishedUpdateHan>(
+    root, nmsg, next_insert_epoch
+  );
+}
+
+template <typename ColT, typename IndexT>
+/*static*/ void CollectionManager::actInsertHandler(
+  ActInsertMsg<ColT,IndexT>* msg
+) {
+  auto const& untyped_proxy = msg->proxy_.getProxy();
+  return theCollection()->actInsert<>(untyped_proxy);
+}
+
+template <typename>
+void CollectionManager::actInsert(VirtualProxyType const& proxy) {
+  auto iter = user_insert_action_.find(proxy);
+  if (iter != user_insert_action_.end()) {
+    auto action = iter->second;
+    user_insert_action_.erase(iter);
+    action();
+  }
+}
+
+template <typename ColT, typename IndexT>
+/*static*/ void CollectionManager::doneInsertHandler(
+  DoneInsertMsg<ColT,IndexT>* msg
+) {
+  auto const& node = msg->action_node_;
+  auto const& untyped_proxy = msg->proxy_.getProxy();
+  if (node != uninitialized_destination) {
+    auto send = [untyped_proxy,node]{
+      auto msg = makeSharedMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
+      theMsg()->sendMsg<
+        ActInsertMsg<ColT,IndexT>,actInsertHandler<ColT,IndexT>
+      >(node,msg);
+    };
+    return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_, send);
+  } else {
+    return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_);
+  }
+}
+
+template <typename ColT, typename IndexT>
+void CollectionManager::finishedInserting(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy,
+  ActionType insert_action
+) {
+  auto const& this_node = theContext()->getNode();
+  auto const& untyped_proxy = proxy.getProxy();
+  /*
+   *  Register the user's action for when insertion is completed across the
+   *  whole system, which termination in the insertion epoch can enforce
+   */
+  if (insert_action) {
+    user_insert_action_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(untyped_proxy),
+      std::forward_as_tuple(insert_action)
+    );
+  }
+  auto const& cons_node = VirtualProxyBuilder::getVirtualNode(untyped_proxy);
+  if (cons_node == this_node) {
+    auto iter = insert_finished_action_.find(untyped_proxy);
+    assert(iter != insert_finished_action_.end() && "Insertable should exist");
+    auto action = iter->second;
+    insert_finished_action_.erase(untyped_proxy);
+    action();
+  } else {
+    auto node = insert_action ? this_node : uninitialized_destination;
+    auto msg = makeSharedMessage<DoneInsertMsg<ColT,IndexT>>(proxy,node);
+    theMsg()->sendMsg<DoneInsertMsg<ColT,IndexT>,doneInsertHandler<ColT,IndexT>>(
+      cons_node,msg
+    );
+  }
 }
 
 template <typename ColT, typename IndexT>
@@ -867,7 +1033,9 @@ void CollectionManager::insert(
     auto max_idx = col_holder->max_idx;
     auto const& this_node = theContext()->getNode();
     NodeType mapped_node = node;
-    auto map_han = UniversalIndexHolder<>::getMap(proxy.getProxy());
+    auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
+    auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
+    assert(insert_epoch != no_epoch && "Epoch should be valid");
     if (node == uninitialized_destination) {
       bool const& is_functor =
         auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
@@ -910,13 +1078,15 @@ void CollectionManager::insert(
       );
     } else {
       auto msg = makeSharedMessage<InsertMsg<ColT,IndexT>>(
-        proxy,max_idx,idx,node
+        proxy,max_idx,idx,node,insert_epoch
       );
+      theTerm()->produce(insert_epoch);
       theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
         mapped_node,msg
       );
     }
   } else {
+    auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
     auto iter = buffered_bcasts_.find(untyped_proxy);
     if (iter == buffered_bcasts_.end()) {
       buffered_bcasts_.emplace(
@@ -934,7 +1104,7 @@ void CollectionManager::insert(
       untyped_proxy
     );
 
-    theTerm()->produce(term::any_epoch_sentinel);
+    theTerm()->produce(insert_epoch);
 
     debug_print(
       vrt_coll, node,
@@ -945,8 +1115,8 @@ void CollectionManager::insert(
         vrt_coll, node,
         "insert: proxy={}, running buffered\n", untyped_proxy
       );
-      theTerm()->consume(term::any_epoch_sentinel);
       theCollection()->insert<ColT>(proxy,idx,node);
+      theTerm()->consume(insert_epoch);
     });
   }
 }

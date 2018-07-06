@@ -303,7 +303,8 @@ private:
 protected:
   VirtualProxyType makeNewCollectionProxy();
   void insertCollectionInfo(
-    VirtualProxyType const& proxy, HandlerType const& map
+    VirtualProxyType const& proxy, HandlerType const& map,
+    EpochType const& insert_epoch = no_epoch
   );
 
 public:
@@ -319,6 +320,39 @@ public:
   void insert(
     CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
     NodeType const& node = uninitialized_destination
+  );
+
+  template <typename ColT, typename IndexT>
+  static void doneInsertHandler(DoneInsertMsg<ColT,IndexT>* msg);
+
+  template <typename ColT, typename IndexT>
+  static void actInsertHandler(ActInsertMsg<ColT,IndexT>* msg);
+
+  template <typename ColT, typename IndexT>
+  static void updateInsertEpochHandler(UpdateInsertMsg<ColT,IndexT>* msg);
+
+  template <typename=void>
+  static void finishedUpdateHan(FinishedUpdateMsg* msg);
+
+  template <typename=void>
+  void actInsert(VirtualProxyType const& proxy);
+
+  template <typename ColT, typename IndexT>
+  void setupNextInsertTrigger(
+    VirtualProxyType const& proxy, EpochType const& insert_epoch
+  );
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  void finishedInserting(
+    CollectionProxyWrapType<ColT,IndexT> const& proxy,
+    ActionType insert_action = nullptr
+  );
+
+private:
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  void finishedInsertEpoch(
+    CollectionProxyWrapType<ColT,IndexT> const& proxy,
+    EpochType const& insert_epoch
   );
 
 private:
@@ -352,6 +386,8 @@ private:
   std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
   std::vector<ActionFinishedLBType> lb_continuations_ = {};
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
+  std::unordered_map<VirtualProxyType,ActionType> insert_finished_action_ = {};
+  std::unordered_map<VirtualProxyType,ActionType> user_insert_action_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */
