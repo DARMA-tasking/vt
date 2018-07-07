@@ -88,6 +88,7 @@ int main(int argc, char** argv) {
     auto const& rooted_new_epoch = theTerm()->makeEpochRooted();
     ::fmt::print("{}: new epoch={}\n", my_node, rooted_new_epoch);
     sendMsgEpoch(rooted_new_epoch, true, 5);
+    theTerm()->activateEpoch(rooted_new_epoch);
     theTerm()->addAction(rooted_new_epoch, [=]{
       ::fmt::print("{}: epoch={}, action\n", my_node, rooted_new_epoch);
     });
