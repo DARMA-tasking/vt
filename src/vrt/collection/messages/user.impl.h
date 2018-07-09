@@ -83,6 +83,7 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
   s | to_proxy_;
   s | bcast_proxy_;
   s | bcast_epoch_;
+  s | member_;
 
   backend_enable_if(
     lblite,
