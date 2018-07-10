@@ -104,6 +104,24 @@ struct TestReduceCollection : TestParallelHarness {
     theCollection()->reduceMsg<MyCol,MyReduceMsg,reducePlus>(proxy, reduce_msg);
   }
 
+  static void colHanPartial(ColMsg* msg, MyCol* col) {
+    auto const& node = theContext()->getNode();
+    auto const& idx = col->getIndex();
+    fmt::print(
+      "{}: colHan received: ptr={}, idx={}, getIndex={}\n",
+      node, print_ptr(col), idx.x(), col->getIndex().x()
+    );
+
+    auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
+    auto proxy = col->getProxy();
+    fmt::print("reduce_msg->num={}\n", reduce_msg->num);
+    theCollection()->reduceMsgExpr<MyCol,MyReduceMsg,reducePlus>(
+      proxy,reduce_msg, [](Index1D const& idx) -> bool {
+        return idx.x() < 8;
+      }
+    );
+  }
+
   static void colHanVec(ColMsg* msg, MyCol* col) {
     auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
@@ -162,6 +180,19 @@ TEST_F(TestReduceCollection, test_reduce_op) {
     auto proxy = theCollection()->construct<MyCol>(range);
     auto msg = new ColMsg(this_node);
     proxy.broadcast<ColMsg,colHan>(msg);
+  }
+}
+
+TEST_F(TestReduceCollection, test_reduce_partial_op) {
+  auto const& my_node = theContext()->getNode();
+  auto const& root = 0;
+
+  auto const& this_node = theContext()->getNode();
+  if (this_node == 0) {
+    auto const& range = Index1D(32);
+    auto proxy = theCollection()->construct<MyCol>(range);
+    auto msg = new ColMsg(this_node);
+    proxy.broadcast<ColMsg,colHanPartial>(msg);
   }
 }
 
