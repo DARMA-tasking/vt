@@ -878,6 +878,12 @@ template <typename>
 /*static*/ void CollectionManager::finishedUpdateHan(
   FinishedUpdateMsg* msg
 ) {
+  debug_print(
+    vrt_coll, node,
+    "finishedUpdateHan: proxy={}, root={}\n",
+    msg->proxy_, msg->isRoot()
+  );
+
   if (msg->isRoot()) {
     /*
      *  Trigger any actions that the user may have registered for when insertion
@@ -891,12 +897,27 @@ template <typename ColT, typename IndexT>
 void CollectionManager::setupNextInsertTrigger(
   VirtualProxyType const& proxy, EpochType const& insert_epoch
 ) {
+  debug_print(
+    vrt_coll, node,
+    "setupNextInsertTrigger: proxy={}, insert_epoch={}\n",
+    proxy, insert_epoch
+  );
+
   auto finished_insert_trigger = [proxy,insert_epoch]{
+    debug_print(
+      vrt_coll, node,
+      "insert finished insert trigger: epoch={}\n",
+      insert_epoch
+    );
     theCollection()->finishedInsertEpoch<ColT,IndexT>(proxy,insert_epoch);
   };
   auto start_detect = [insert_epoch,finished_insert_trigger]{
-    theTerm()->activateEpoch(insert_epoch);
+    debug_print(
+      vrt_coll, node,
+      "insert start_detect: epoch={}\n",insert_epoch
+    );
     theTerm()->addAction(insert_epoch, finished_insert_trigger);
+    theTerm()->activateEpoch(insert_epoch);
   };
   insert_finished_action_.emplace(
     std::piecewise_construct,
@@ -912,6 +933,12 @@ void CollectionManager::finishedInsertEpoch(
   auto const& this_node = theContext()->getNode();
   auto const& untyped_proxy = proxy.getProxy();
 
+  debug_print(
+    vrt_coll, node,
+    "finishedInsertEpoch: (before) proxy={}, epoch={}\n",
+    untyped_proxy, epoch
+  );
+
   /*
    *  Add trigger for the next insertion phase/epoch finishing
    */
@@ -925,10 +952,22 @@ void CollectionManager::finishedInsertEpoch(
     UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
   >(msg);
 
+  debug_print(
+    vrt_coll, node,
+    "finishedInsertEpoch: (after broadcast) proxy={}, epoch={}\n",
+    untyped_proxy, epoch
+  );
+
   /*
    *  Setup next epoch
    */
   setupNextInsertTrigger<ColT,IndexT>(untyped_proxy,next_insert_epoch);
+
+  debug_print(
+    vrt_coll, node,
+    "finishedInsertEpoch: (after setup) proxy={}, epoch={}\n",
+    untyped_proxy, epoch
+  );
 
   /*
    *  Contribute to reduction for update epoch: this forces the update of the
@@ -940,6 +979,12 @@ void CollectionManager::finishedInsertEpoch(
   auto nmsg = makeSharedMessage<FinishedUpdateMsg>(untyped_proxy);
   theCollective()->reduce<FinishedUpdateMsg,finishedUpdateHan>(
     root, nmsg, next_insert_epoch
+  );
+
+  debug_print(
+    vrt_coll, node,
+    "finishedInsertEpoch: (after reduce) proxy={}, epoch={}\n",
+    untyped_proxy, epoch
   );
 }
 
@@ -953,6 +998,12 @@ template <typename ColT, typename IndexT>
 
 template <typename>
 void CollectionManager::actInsert(VirtualProxyType const& proxy) {
+  debug_print(
+    vrt_coll, node,
+    "actInsert: proxy={}\n",
+    proxy
+  );
+
   auto iter = user_insert_action_.find(proxy);
   if (iter != user_insert_action_.end()) {
     auto action = iter->second;
@@ -998,7 +1049,15 @@ void CollectionManager::finishedInserting(
       std::forward_as_tuple(insert_action)
     );
   }
+
   auto const& cons_node = VirtualProxyBuilder::getVirtualNode(untyped_proxy);
+
+  debug_print(
+    vrt_coll, node,
+    "finishedInserting: proxy={}, cons_node={}, this_node={}\n",
+    proxy.getProxy(), cons_node, this_node
+  );
+
   if (cons_node == this_node) {
     auto iter = insert_finished_action_.find(untyped_proxy);
     assert(iter != insert_finished_action_.end() && "Insertable should exist");
