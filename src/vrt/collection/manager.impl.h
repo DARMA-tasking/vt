@@ -515,9 +515,10 @@ void CollectionManager::broadcastMsgUntypedHandler(
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType CollectionManager::reduceMsg(
+EpochType CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-  MsgT *const msg, EpochType const& epoch, TagType const& tag
+  MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
+  EpochType const& epoch, TagType const& tag
 ) {
   using IndexT = typename ColT::IndexType;
 
@@ -539,7 +540,13 @@ EpochType CollectionManager::reduceMsg(
   );
 
   if (found_constructed && elm_holder) {
-    auto const& num_elms = elm_holder->numElements();
+    std::size_t num_elms = 0;
+
+    if (expr_fn == nullptr) {
+      num_elms = elm_holder->numElements();
+    } else {
+      num_elms = elm_holder->numElementsExpr(expr_fn);
+    }
 
     auto reduce_id = std::make_tuple(col_proxy,tag);
     auto epoch_iter = reduce_cur_epoch_.find(reduce_id);
@@ -569,6 +576,14 @@ EpochType CollectionManager::reduceMsg(
     assert(0);
     return no_epoch;
   }
+}
+
+template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+EpochType CollectionManager::reduceMsg(
+  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+  MsgT *const msg, EpochType const& epoch, TagType const& tag
+) {
+  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag);
 }
 
 template <
