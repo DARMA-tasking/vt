@@ -45,6 +45,8 @@ struct CollectionManager {
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   using ActionFinishedLBType = std::function<void()>;
   using NoElementActionType = std::function<void()>;
+  template <typename IndexT>
+  using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
   using ActionContainerType = std::vector<ActionProxyType>;
   using BufferedActionType = std::unordered_map<
     VirtualProxyType, ActionContainerType
@@ -146,6 +148,13 @@ struct CollectionManager {
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
     MsgT *const msg, EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag
+  );
+
+  template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+  EpochType reduceMsgExpr(
+    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+    MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
+    EpochType const& epoch = no_epoch, TagType const& tag = no_tag
   );
 
   /*
