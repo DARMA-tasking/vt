@@ -646,7 +646,7 @@ void CollectionManager::sendMsgUntypedHandler(
     debug_print(
       vrt_coll, node,
       "sending msg to collection: msg={}, handler={}, home_node={}\n",
-      msg, handler, home_node
+      print_ptr(msg), handler, home_node
     );
 
     // route the message to the destination using the location manager
