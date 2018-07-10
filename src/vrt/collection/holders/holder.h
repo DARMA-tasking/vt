@@ -27,6 +27,7 @@ struct Holder {
   using InnerHolder = ElementHolder<ColT, IndexT>;
   using TypedIndexContainer = ContType<LookupElementType, InnerHolder>;
   using FuncApplyType = std::function<void(IndexT const&, CollectionType*)>;
+  using FuncExprType = std::function<bool(IndexT const&)>;
 
   bool exists(IndexT const& idx);
   InnerHolder& lookup(IndexT const& idx);
@@ -36,6 +37,7 @@ struct Holder {
   bool isDestroyed() const;
   bool foreach(FuncApplyType fn);
   typename TypedIndexContainer::size_type numElements() const;
+  typename TypedIndexContainer::size_type numElementsExpr(FuncExprType f) const;
 
   friend struct CollectionManager;
 

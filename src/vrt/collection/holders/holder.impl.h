@@ -119,6 +119,16 @@ Holder<ColT,IndexT>::numElements() const {
   return vc_container_.size();
 }
 
+template <typename ColT, typename IndexT>
+typename Holder<ColT,IndexT>::TypedIndexContainer::size_type
+Holder<ColT,IndexT>::numElementsExpr(FuncExprType fn) const {
+  typename Holder<ColT,IndexT>::TypedIndexContainer::size_type num_in = 0;
+  for (auto&& elm : vc_container_) {
+    num_in += fn(elm.first);
+  }
+  return num_in;
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H*/
