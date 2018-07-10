@@ -40,6 +40,25 @@ void Broadcastable<ColT, IndexT>::finishedInserting(ActionType action) const {
   theCollection()->finishedInserting<ColT,IndexT>(col_proxy,action);
 }
 
+template <typename ColT, typename IndexT>
+template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+EpochType Broadcastable<ColT, IndexT>::reduce(
+  MsgT *const msg, EpochType const& epoch, TagType const& tag
+) {
+  auto const col_proxy = this->getProxy();
+  return theCollection()->reduceMsg<ColT,MsgT,f>(col_proxy,msg,epoch,tag);
+}
+
+template <typename ColT, typename IndexT>
+template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+EpochType Broadcastable<ColT, IndexT>::reduceExpr(
+  MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch,
+  TagType const& tag
+) {
+  auto const col_proxy = this->getProxy();
+  return theCollection()->reduceMsgExpr<ColT,MsgT,f>(col_proxy,msg,fn,epoch,tag);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H*/
