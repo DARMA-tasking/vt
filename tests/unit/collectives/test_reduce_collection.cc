@@ -122,6 +122,24 @@ struct TestReduceCollection : TestParallelHarness {
     );
   }
 
+  static void colHanPartialProxy(ColMsg* msg, MyCol* col) {
+    auto const& node = theContext()->getNode();
+    auto const& idx = col->getIndex();
+    fmt::print(
+      "{}: colHan received: ptr={}, idx={}, getIndex={}\n",
+      node, print_ptr(col), idx.x(), col->getIndex().x()
+    );
+
+    auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
+    auto proxy = col->getCollectionProxy();
+    fmt::print("reduce_msg->num={}\n", reduce_msg->num);
+    proxy.reduceExpr<MyReduceMsg,reducePlus>(
+      reduce_msg, [](Index1D const& idx) -> bool {
+        return idx.x() < 8;
+      }
+    );
+  }
+
   static void colHanVec(ColMsg* msg, MyCol* col) {
     auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
@@ -140,6 +158,25 @@ struct TestReduceCollection : TestParallelHarness {
       SysMsgVec,
       SysMsgVec::msgHandler<SysMsgVec,PlusOp<VectorPayload>,PrintVec>
     >(proxy, reduce_msg);
+  }
+
+  static void colHanVecProxy(ColMsg* msg, MyCol* col) {
+    auto const& node = theContext()->getNode();
+    auto const& idx = col->getIndex();
+    fmt::print(
+      "{}: colHanVec received: ptr={}, idx={}, getIndex={}\n",
+      node, print_ptr(col), idx.x(), col->getIndex().x()
+    );
+
+    auto reduce_msg = makeSharedMessage<SysMsgVec>(static_cast<double>(idx.x()));
+    auto proxy = col->getCollectionProxy();
+    fmt::print(
+      "reduce_msg->vec.size()={}\n", reduce_msg->getConstVal().vec.size()
+    );
+    proxy.reduce<
+      SysMsgVec,
+      SysMsgVec::msgHandler<SysMsgVec,PlusOp<VectorPayload>,PrintVec>
+    >(reduce_msg);
   }
 
   static void reducePlus(MyReduceMsg* msg) {
@@ -206,6 +243,32 @@ TEST_F(TestReduceCollection, test_reduce_vec_op) {
     auto proxy = theCollection()->construct<MyCol>(range);
     auto msg = new ColMsg(this_node);
     proxy.broadcast<ColMsg,colHanVec>(msg);
+  }
+}
+
+TEST_F(TestReduceCollection, test_reduce_partial_proxy_op) {
+  auto const& my_node = theContext()->getNode();
+  auto const& root = 0;
+
+  auto const& this_node = theContext()->getNode();
+  if (this_node == 0) {
+    auto const& range = Index1D(32);
+    auto proxy = theCollection()->construct<MyCol>(range);
+    auto msg = new ColMsg(this_node);
+    proxy.broadcast<ColMsg,colHanPartialProxy>(msg);
+  }
+}
+
+TEST_F(TestReduceCollection, test_reduce_vec_proxy_op) {
+  auto const& my_node = theContext()->getNode();
+  auto const& root = 0;
+
+  auto const& this_node = theContext()->getNode();
+  if (this_node == 0) {
+    auto const& range = Index1D(32);
+    auto proxy = theCollection()->construct<MyCol>(range);
+    auto msg = new ColMsg(this_node);
+    proxy.broadcast<ColMsg,colHanVecProxy>(msg);
   }
 }
 
