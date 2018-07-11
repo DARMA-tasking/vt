@@ -19,7 +19,7 @@ template <typename MessageT>
     "reduceUp: tag={}, epoch={}, vrt={}, msg={}\n",
     msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_, print_ptr(msg)
   );
-  theCollective()->reduceAddMsg<MessageT>(msg);
+  theCollective()->reduceAddMsg<MessageT>(msg,false);
   theCollective()->reduceNewMsg<MessageT>(msg);
 }
 
@@ -67,13 +67,15 @@ EpochType Reduce::reduce(
   } else {
     msg->reduce_epoch_ = epoch;
   }
-  reduceAddMsg<MessageT>(msg, num_contrib);
+  reduceAddMsg<MessageT>(msg,true,num_contrib);
   reduceNewMsg<MessageT>(msg);
   return msg->reduce_epoch_;
 }
 
 template <typename MessageT>
-void Reduce::reduceAddMsg(MessageT* msg, ReduceNumType const& num_contrib) {
+void Reduce::reduceAddMsg(
+  MessageT* msg, bool const local, ReduceNumType const& num_contrib
+) {
   auto lookup = ReduceIdentifierType{
     msg->reduce_tag_,msg->reduce_epoch_,msg->reduce_proxy_
   };
@@ -96,6 +98,11 @@ void Reduce::reduceAddMsg(MessageT* msg, ReduceNumType const& num_contrib) {
   if (num_contrib != -1) {
     state.num_contrib_ = num_contrib;
   }
+  if (local) {
+    state.num_local_contrib_++;
+  }
+  state.combine_handler_ = msg->combine_handler_;
+  state.reduce_root_ = msg->reduce_root_;
   debug_print(
     reduce, node,
     "reduceAddMsg: msg={}, contrib={}, msgs.size()={}, ref={}\n",
@@ -105,21 +112,24 @@ void Reduce::reduceAddMsg(MessageT* msg, ReduceNumType const& num_contrib) {
 }
 
 template <typename MessageT>
-void Reduce::reduceNewMsg(MessageT* msg) {
-  auto lookup = ReduceIdentifierType{
-    msg->reduce_tag_,msg->reduce_epoch_,msg->reduce_proxy_
-  };
+void Reduce::startReduce(
+  TagType const& tag, EpochType const& epoch, VirtualProxyType const& proxy,
+  bool use_num_contrib
+) {
+  auto lookup = ReduceIdentifierType{tag,epoch,proxy};
   auto live_iter = live_reductions_.find(lookup);
   auto& state = live_iter->second;
 
-  debug_print(
-    reduce, node,
-    "reduceNewMsg: tag={}, epoch={}, vrt={}, msg={}, children={}, contrib_={}\n",
-    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_,
-    state.msgs.size(), getNumChildren(), state.num_contrib_
-  );
+  auto const& nmsgs = state.msgs.size();
+  bool ready = false;
 
-  if (state.msgs.size() == getNumChildren() + state.num_contrib_) {
+  if (use_num_contrib) {
+    ready = nmsgs == getNumChildren() + state.num_contrib_;
+  } else {
+    ready = nmsgs == getNumChildren() + state.num_local_contrib_;
+  }
+
+  if (ready) {
     // Combine messages
     if (state.msgs.size() > 1) {
       for (int i = 0; i < state.msgs.size(); i++) {
@@ -145,7 +155,7 @@ void Reduce::reduceNewMsg(MessageT* msg) {
         *  Invoke user handler to run the functor that combines messages,
         *  applying the reduction operator
         */
-      auto const& handler = msg->combine_handler_;
+      auto const& handler = state.combine_handler_;
       auto active_fun = auto_registry::getAutoHandler(handler);
       auto const& from_node = theMsg()->getFromNodeCurrentHandler();
       runnable::Runnable<MessageT>::run(
@@ -165,7 +175,7 @@ void Reduce::reduceNewMsg(MessageT* msg) {
     state.num_contrib_ = 1;
 
     if (isRoot()) {
-      auto const& root = msg->reduce_root_;
+      auto const& root = state.reduce_root_;
       auto const& this_node = theContext()->getNode();
       if (root != this_node) {
         debug_print(
@@ -201,6 +211,20 @@ void Reduce::reduceNewMsg(MessageT* msg) {
       //theMsg()->sendMsg<MessageT, reduceUp<MessageT>>(parent, msg, cont);
     }
   }
+}
+
+template <typename MessageT>
+void Reduce::reduceNewMsg(MessageT* msg) {
+  debug_print(
+    reduce, node,
+    "reduceNewMsg: tag={}, epoch={}, vrt={}, msg={}, children={}, contrib_={}\n",
+    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_,
+    state.msgs.size(), getNumChildren(), state.num_contrib_
+  );
+
+  return startReduce<MessageT>(
+    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_
+  );
 }
 
 }}} /* end namespace vt::collective::reduce */

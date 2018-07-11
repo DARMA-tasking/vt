@@ -24,6 +24,9 @@ struct ReduceState {
   TagType tag_ = no_tag;
   EpochType epoch_ = no_epoch;
   ReduceNumType num_contrib_ = 1;
+  ReduceNumType num_local_contrib_ = 0;
+  HandlerType combine_handler_ = uninitialized_handler;
+  NodeType reduce_root_ = uninitialized_destination;
 };
 
 }}} /* end namespace vt::collective::reduce */

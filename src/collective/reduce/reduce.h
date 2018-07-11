@@ -36,10 +36,22 @@ struct Reduce : virtual collective::tree::Tree {
   );
 
   template <typename MessageT>
-  void reduceAddMsg(MessageT* msg, ReduceNumType const& num_contrib = -1);
+  void reduceAddMsg(
+    MessageT* msg, bool const local, ReduceNumType const& num_contrib = -1
+  );
 
   template <typename MessageT>
   void reduceNewMsg(MessageT* msg);
+
+  /*
+   *  Explicitly start the reduction when the number of contributions is not
+   *  known up front
+   */
+  template <typename MessageT>
+  void startReduce(
+    TagType const& tag, EpochType const& epoch, VirtualProxyType const& proxy,
+    bool use_num_contrib = true
+  );
 
   template <typename MessageT>
   static void reduceRootRecv(MessageT* msg);
