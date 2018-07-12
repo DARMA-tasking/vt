@@ -8,6 +8,8 @@
 #include "vrt/collection/insert/insertable.h"
 #include "vrt/proxy/proxy_element.h"
 
+#include <ostream>
+
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
@@ -42,8 +44,24 @@ struct VrtElmProxy : ElmInsertable<ColT, IndexT> {
     ElmInsertable<ColT, IndexT>::serialize(s);
   }
 
+  template <typename ColU, typename IndexU>
+  friend std::ostream& operator<<(
+    std::ostream& os, VrtElmProxy<ColU,IndexU> const& vrt
+  );
+
   friend struct CollectionManager;
 };
+
+template <typename ColT, typename IndexT>
+std::ostream& operator<<(
+  std::ostream& os, VrtElmProxy<ColT,IndexT> const& vrt
+) {
+  os << "("
+     << "vrt=" << vrt.col_proxy_ << ","
+     << "idx=" << vrt.elm_proxy_.getIndex()
+     << ")";
+  return os;
+}
 
 }}} /* end namespace vt::vrt::collection */
 
