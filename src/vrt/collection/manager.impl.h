@@ -882,10 +882,12 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::insertHandler(InsertMsg<ColT,IndexT>* msg) {
   auto const& epoch = msg->epoch_;
+  auto const& g_epoch = msg->g_epoch_;
   theCollection()->insert<ColT,IndexT>(
     msg->proxy_,msg->idx_,msg->construct_node_
   );
   theTerm()->consume(epoch);
+  theTerm()->consume(g_epoch);
 }
 
 template <typename ColT, typename IndexT>
@@ -1166,10 +1168,12 @@ void CollectionManager::insert(
         std::move(new_vc), idx, max_idx, map_han, untyped_proxy, mapped_node
       );
     } else {
+      auto const& global_epoch = theMsg()->getGlobalEpoch();
       auto msg = makeSharedMessage<InsertMsg<ColT,IndexT>>(
-        proxy,max_idx,idx,insert_node,mapped_node,insert_epoch
+        proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,global_epoch
       );
       theTerm()->produce(insert_epoch);
+      theTerm()->produce(global_epoch);
       theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
         insert_node,msg
       );
@@ -1193,6 +1197,8 @@ void CollectionManager::insert(
       untyped_proxy
     );
 
+    auto const& global_epoch = theMsg()->getGlobalEpoch();
+    theTerm()->produce(global_epoch);
     theTerm()->produce(insert_epoch);
 
     debug_print(
@@ -1206,6 +1212,7 @@ void CollectionManager::insert(
       );
       theCollection()->insert<ColT>(proxy,idx,node);
       theTerm()->consume(insert_epoch);
+      theTerm()->consume(global_epoch);
     });
   }
 }
