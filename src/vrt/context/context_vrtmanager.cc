@@ -27,7 +27,7 @@ void VirtualContextManager::insertVirtualContext(
 
   // registry the proxy with location manager
   theLocMan()->vrtContextLoc->registerEntity(
-    proxy, virtualMsgHandler
+    proxy, myNode_, virtualMsgHandler
   );
 
   bool const is_constructed = new_vc != nullptr;
