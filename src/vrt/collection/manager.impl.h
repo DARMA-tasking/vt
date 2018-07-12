@@ -142,7 +142,8 @@ template <typename SysMsgT>
         );
 
         theCollection()->insertCollectionElement<ColT, IndexT>(
-          std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy
+          std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy,
+          mapped_node
         );
       }
     });
@@ -153,6 +154,11 @@ template <typename SysMsgT>
     EntireHolder<ColT, IndexT>::insert(
       new_proxy, std::make_shared<HolderType>(map_han,max_idx)
     );
+    /*
+     *  This is to ensure that the collection LM instance gets created so that
+     *  messages can be forwarded properly
+     */
+    theLocMan()->getCollectionLM<ColT, IndexT>(new_proxy);
   }
 
   uint64_t const tag_start_ = 0x0ff00000;
@@ -289,6 +295,12 @@ template <typename ColT, typename IndexT>
   auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(col);
 
   bool const& exists = elm_holder->exists(idx);
+
+  debug_print(
+    vrt_coll, node,
+    "collectionMsgHandler: exists={}, idx={}\n",
+    exists, idx
+  );
   assert(exists && "Proxy must exist");
 
   auto& inner_holder = elm_holder->lookup(idx);
@@ -701,7 +713,8 @@ template <typename ColT, typename IndexT>
 bool CollectionManager::insertCollectionElement(
   VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
   HandlerType const& map_han, VirtualProxyType const& proxy,
-  bool const& is_migrated_in, NodeType const& migrated_from
+  NodeType const& home_node, bool const& is_migrated_in,
+  NodeType const& migrated_from
 ) {
   auto holder = findColHolder<ColT, IndexT>(proxy);
 
@@ -764,7 +777,7 @@ bool CollectionManager::insertCollectionElement(
       );
     } else {
       theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntity(
-        VrtElmProxy<ColT, IndexT>{proxy,idx},
+        VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
     }
@@ -1106,26 +1119,28 @@ void CollectionManager::insert(
     auto col_holder = findColHolder<ColT,IndexT>(untyped_proxy);
     auto max_idx = col_holder->max_idx;
     auto const& this_node = theContext()->getNode();
-    NodeType mapped_node = node;
     auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
     auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
     assert(insert_epoch != no_epoch && "Epoch should be valid");
-    if (node == uninitialized_destination) {
-      bool const& is_functor =
-        auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
-      auto_registry::AutoActiveMapType fn = nullptr;
-      if (is_functor) {
-        fn = auto_registry::getAutoHandlerFunctorMap(map_han);
-      } else {
-        fn = auto_registry::getAutoHandlerMap(map_han);
-      }
-      mapped_node = fn(
-        reinterpret_cast<vt::index::BaseIndex*>(&idx),
-        reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
-        theContext()->getNumNodes()
-      );
+
+    bool const& is_functor =
+      auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
+    auto_registry::AutoActiveMapType fn = nullptr;
+    if (is_functor) {
+      fn = auto_registry::getAutoHandlerFunctorMap(map_han);
+    } else {
+      fn = auto_registry::getAutoHandlerMap(map_han);
     }
-    if (mapped_node == this_node) {
+    auto const& mapped_node = fn(
+      reinterpret_cast<vt::index::BaseIndex*>(&idx),
+      reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
+      theContext()->getNumNodes()
+    );
+
+    auto const& has_explicit_node = node != uninitialized_destination;
+    auto const& insert_node = has_explicit_node ? node : mapped_node;
+
+    if (insert_node == this_node) {
       auto const& num_elms = max_idx.getSize();
       std::tuple<> tup;
 
@@ -1140,7 +1155,7 @@ void CollectionManager::insert(
       #endif
 
       /*
-       * Set direct attributes of the newly constructed elempent directly on
+       * Set direct attributes of the newly constructed element directly on
        * the user's class
        */
       CollectionTypeAttorney::setSize(new_vc, num_elms);
@@ -1148,15 +1163,15 @@ void CollectionManager::insert(
       CollectionTypeAttorney::setIndex<decltype(new_vc),IndexT>(new_vc, idx);
 
       theCollection()->insertCollectionElement<ColT, IndexT>(
-        std::move(new_vc), idx, max_idx, map_han, untyped_proxy
+        std::move(new_vc), idx, max_idx, map_han, untyped_proxy, mapped_node
       );
     } else {
       auto msg = makeSharedMessage<InsertMsg<ColT,IndexT>>(
-        proxy,max_idx,idx,node,insert_epoch
+        proxy,max_idx,idx,insert_node,mapped_node,insert_epoch
       );
       theTerm()->produce(insert_epoch);
       theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
-        mapped_node,msg
+        insert_node,msg
       );
     }
   } else {
@@ -1356,8 +1371,9 @@ MigrateStatus CollectionManager::migrateIn(
     idx
   );
 
+  auto const& home_node = uninitialized_destination;
   auto const& inserted = insertCollectionElement<ColT, IndexT>(
-    std::move(vrt_elm_ptr), idx, max, map_han, proxy, true, from
+    std::move(vrt_elm_ptr), idx, max, map_han, proxy, home_node, true, from
   );
 
   /*

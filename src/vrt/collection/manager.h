@@ -249,7 +249,7 @@ struct CollectionManager {
   bool insertCollectionElement(
     VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
     HandlerType const& map_han, VirtualProxyType const& proxy,
-    bool const& is_migrated_in = false,
+    NodeType const& home_node, bool const& is_migrated_in = false,
     NodeType const& migrated_from = uninitialized_destination
   );
 

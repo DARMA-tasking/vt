@@ -64,14 +64,16 @@ struct InsertMsg : ::vt::Message {
   InsertMsg(
     CollectionIndexProxy<ColT,IndexT> in_proxy,
     IndexT in_max, IndexT in_idx, NodeType in_construct_node,
-    EpochType in_epoch
+    NodeType in_home_node, EpochType in_epoch
   ) : proxy_(in_proxy), max_(in_max), idx_(in_idx),
-      construct_node_(in_construct_node), epoch_(in_epoch)
+      construct_node_(in_construct_node), home_node_(in_home_node),
+      epoch_(in_epoch)
   { }
 
   CollectionIndexProxy<ColT,IndexT> proxy_ = {};
   IndexT max_ = {}, idx_ = {};
   NodeType construct_node_ = uninitialized_destination;
+  NodeType home_node_ = uninitialized_destination;
   EpochType epoch_ = no_epoch;
 };
 
