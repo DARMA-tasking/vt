@@ -208,6 +208,21 @@ IndexType DenseIndexArray<IndexType, ndim>::z() const {
   return dims[2];
 }
 
+template <typename IndexT, NumDimensionsType nd>
+std::ostream& operator<<(
+  std::ostream& os, ::vt::index::DenseIndexArray<IndexT,nd> const& idx
+) {
+  os << "idx(";
+    for (int i = 0; i < nd; i++) {
+      os << idx.dims[i];
+      if (i != nd-1) {
+        os << ",";
+      }
+    }
+  os << ")";
+  return os;
+}
+
 }}  // end namespace vt::index
 
 namespace std {

@@ -16,6 +16,7 @@
 #include <functional>
 #include <utility>
 #include <initializer_list>
+#include <ostream>
 
 #if backend_check_enabled(detector)
   #include "topos/index/traits/traits.h"
@@ -92,6 +93,11 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
     typename T = void, typename = typename std::enable_if<ndim >= 3, T>::type
   >
   IndexType z() const;
+
+  template <typename IndexT, NumDimensionsType nd>
+  friend std::ostream& operator<<(
+    std::ostream& os, DenseIndexArray<IndexT,nd> const& idx
+  );
 
 private:
   std::array<IndexType, ndim> dims = {};
