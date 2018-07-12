@@ -64,7 +64,9 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: registerEntity: inst={}\n", this_inst
+    "EntityLocationCoord: registerEntity: inst={}, home={}, migrated={}, "
+    "id={}\n",
+    this_inst, home, migrated, id
   );
 
   local_registered_.insert(id);
@@ -88,8 +90,9 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: registerEntity: pending lookups size={}, this={}\n",
-    pending_lookups_.size(), print_ptr(this)
+    "EntityLocationCoord: registerEntity: pending lookups size={}, this={}, "
+    "id={}\n",
+    pending_lookups_.size(), print_ptr(this), id
   );
 
   if (pending_lookup_iter != pending_lookups_.end()) {
@@ -163,8 +166,8 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
 ) {
   debug_print(
     location, node,
-    "EntityLocationCoord: insertPendingEntityAction, this={}\n",
-    print_ptr(this)
+    "EntityLocationCoord: insertPendingEntityAction, this={}, id={}\n",
+    print_ptr(this), id
   );
 
   // this is the home node and there is no record on this entity
@@ -195,8 +198,8 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   debug_print(
     location, node,
     "EntityLocationCoord: routeMsgEager: found={}, home_node={}, "
-    "route_to_node={}, serialize={}\n",
-    found, home_node, route_to_node, serialize
+    "route_to_node={}, serialize={}, id={}\n",
+    found, home_node, route_to_node, serialize, id
   );
 
   if (found) {
@@ -230,8 +233,8 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   debug_print(
     location, node,
     "EntityLocationCoord: routeMsgEager: home_node={}, route_node={}, "
-    "serialize={}\n",
-    home_node, route_to_node, serialize
+    "serialize={}, id={}\n",
+    home_node, route_to_node, serialize, id
   );
 
   return routeMsgNode<MessageT>(serialize,id,home_node,route_to_node,msg,action);
@@ -309,9 +312,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
   debug_print(
     location, node,
-    "EntityLocationCoord: routeMsgNode: to_node={}, node={}: inst={}, "
-    "serialize={}\n",
-    to_node, this_node, this_inst, serialize
+    "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: inst={}, "
+    "serialize={}, home_node={}, id={}\n",
+    to_node, this_node, this_inst, serialize, home_node, id
   );
 
   if (to_node != this_node) {
@@ -328,6 +331,13 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg, action);
     }
   } else {
+    debug_print(
+      location, node,
+      "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: "
+      "home_node={}, apply here\n",
+      to_node, this_node, home_node
+    );
+
     if (msg->hasHandler()) {
       auto const& handler = msg->getHandler();
       auto const& from = msg->getFromNode();
@@ -339,6 +349,10 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         assert(
           reg_han_iter != local_registered_msg_han_.end() and
           "Message handler must exist for location manager routed msg"
+        );
+        debug_print(
+          location, node,
+          "EntityLocationCoord: local registered handler: id={}\n", id
         );
         reg_han_iter->second.applyRegisteredActionMsg(msg);
       };
@@ -490,8 +504,8 @@ template <typename MessageT>
 
   debug_print(
     location, node,
-    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}\n",
-    print_ptr(msg), envelopeGetRef(msg->env), inst, serialize
+    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}\n",
+    print_ptr(msg), envelopeGetRef(msg->env), inst, serialize, entity_id
   );
 
   messageRef(msg);

@@ -123,7 +123,9 @@ struct EntityLocationCoord : LocationCoord {
     EntityID const& id, NodeType const& home_node, ActionNodeType action
   );
 
-  void updatePendingRequest(LocEventID const& event_id, NodeType const& node);
+  void updatePendingRequest(
+    LocEventID const& event_id, EntityID const& id, NodeType const& node
+  );
   void printCurrentCache() const;
 
 private:
