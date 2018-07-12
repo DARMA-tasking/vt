@@ -127,5 +127,55 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
   });
 }
 
+TEST_F(TestInsert, test_insert_send_dense_node_1) {
+  auto const& root = 0;
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+  if (this_node == 0) {
+    auto const& range = Index1D(num_nodes * num_elms_per_node);
+    auto proxy = theCollection()->construct<InsertTest>(range);
+    for (auto i = 0; i < range.x(); i++) {
+      proxy[i].insert((this_node + 1) % num_nodes);
+      auto msg = makeSharedMessage<WorkMsg>();
+      proxy[i].send<WorkMsg,&InsertTest::work>(msg);
+      // ::fmt::print("sending to {}\n", i);
+    }
+  }
+  theTerm()->addAction([=]{
+    /// ::fmt::print("num inserted={}\n", num_inserted);
+    // Relies on default mapping equally distributing
+    if (this_node == 1 || (this_node == 0 && num_nodes == 1)) {
+      EXPECT_EQ(num_inserted, num_elms_per_node * num_nodes);
+      EXPECT_EQ(num_work, num_elms_per_node * num_nodes);
+    }
+    num_inserted = 0;
+    num_work = 0;
+  });
+}
+
+TEST_F(TestInsert, test_insert_send_sparse_node_1) {
+  auto const& root = 0;
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+  if (this_node == 0) {
+    auto const& range = Index1D(num_nodes * num_elms_per_node * 16);
+    auto proxy = theCollection()->construct<InsertTest>(range);
+    for (auto i = 0; i < range.x(); i+=16) {
+      proxy[i].insert((this_node + 1) % num_nodes);
+      auto msg = makeSharedMessage<WorkMsg>();
+      proxy[i].send<WorkMsg,&InsertTest::work>(msg);
+    }
+  }
+  theTerm()->addAction([=]{
+    /// ::fmt::print("num inserted={}\n", num_inserted);
+    // Relies on default mapping equally distributing
+    if (this_node == 1 || (this_node == 0 && num_nodes == 1)) {
+      EXPECT_EQ(num_inserted, num_elms_per_node * num_nodes);
+      EXPECT_EQ(num_work, num_elms_per_node * num_nodes);
+    }
+    num_inserted = 0;
+    num_work = 0;
+  });
+}
 
 }}} // end namespace vt::tests::unit
