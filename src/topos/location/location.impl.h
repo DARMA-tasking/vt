@@ -51,7 +51,8 @@ template <typename EntityID>
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
-  EntityID const& id, LocMsgActionType msg_action
+  EntityID const& id, NodeType const& home, LocMsgActionType msg_action,
+  bool const& migrated
 ) {
   auto const& this_node = theContext()->getNode();
   auto reg_iter = local_registered_.find(id);

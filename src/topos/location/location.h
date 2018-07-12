@@ -59,7 +59,10 @@ struct EntityLocationCoord : LocationCoord {
    * message may arrive for the entity by a location coordinator calling
    * `routeMsg' to the associated entity.
    */
-  void registerEntity(EntityID const& id, LocMsgActionType msg_action = nullptr);
+  void registerEntity(
+    EntityID const& id, NodeType const& home,
+    LocMsgActionType msg_action = nullptr, bool const& migrated = false
+  );
   void unregisterEntity(EntityID const& id);
   void entityMigrated(EntityID const& id, NodeType const& new_node);
 
