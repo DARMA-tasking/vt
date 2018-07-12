@@ -39,10 +39,10 @@ int main(int argc, char** argv) {
   int32_t entity = 10, entity2 = 11, entity3 = 12;
 
   if (my_node == 0) {
-    theLocMan()->virtual_loc->registerEntity(entity);
-    theLocMan()->virtual_loc->registerEntity(entity2);
+    theLocMan()->virtual_loc->registerEntity(entity,my_node);
+    theLocMan()->virtual_loc->registerEntity(entity2,my_node);
   } else if (my_node == 1) {
-    theLocMan()->virtual_loc->registerEntity(entity3);
+    theLocMan()->virtual_loc->registerEntity(entity3,my_node);
   }
 
   if (my_node == 0) {
