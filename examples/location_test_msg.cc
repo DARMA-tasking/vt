@@ -57,19 +57,21 @@ int main(int argc, char** argv) {
   EntityType entity = arbitrary_entity_id;
 
   if (my_node == 0) {
-    theLocMan()->virtual_loc->registerEntity(entity, [](BaseMessage* in_msg){
-      auto msg = static_cast<MyTestMsg*>(in_msg);
+    theLocMan()->virtual_loc->registerEntity(
+      entity, my_node, [](BaseMessage* in_msg){
+        auto msg = static_cast<MyTestMsg*>(in_msg);
 
-      assert(
-        msg->data == magic_number + msg->from_node and
-        "Message data is corrupted"
-      );
+        assert(
+          msg->data == magic_number + msg->from_node and
+          "Message data is corrupted"
+        );
 
-      fmt::print(
-        "{}: handler triggered for test msg: data={}\n",
-        theContext()->getNode(), msg->data
-      );
-    });
+        fmt::print(
+          "{}: handler triggered for test msg: data={}\n",
+          theContext()->getNode(), msg->data
+        );
+      }
+    );
 
     theMsg()->broadcastMsg<EntityMsg, entityTestHandler>(
       makeSharedMessage<EntityMsg>(entity, my_node)
