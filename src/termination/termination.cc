@@ -306,6 +306,15 @@ void TerminationDetector::epochFinished(
   }
 }
 
+bool TerminationDetector::testEpochFinished(EpochType const& epoch) {
+  auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
+  if (is_rooted_epoch) {
+    return false;
+  } else {
+    return epoch < first_resolved_epoch_;
+  }
+}
+
 void TerminationDetector::epochContinue(
   EpochType const& epoch, TermWaveType const& wave
 ) {
@@ -489,7 +498,7 @@ void TerminationDetector::propagateNewEpoch(
 void TerminationDetector::readyNewEpoch(EpochType const& new_epoch) {
   if (first_resolved_epoch_ == no_epoch) {
     assert(last_resolved_epoch_ == no_epoch);
-    first_resolved_epoch_ = 0;
+    first_resolved_epoch_ = new_epoch;
     last_resolved_epoch_ = new_epoch;
   } else {
     last_resolved_epoch_ = std::max(new_epoch, last_resolved_epoch_);

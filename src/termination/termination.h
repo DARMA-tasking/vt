@@ -74,6 +74,10 @@ public:
   void maybePropagate();
   TermCounterType getNumUnits() const;
 
+public:
+  // TermFinished interface
+  bool testEpochFinished(EpochType const& epoch) override;
+
 private:
   bool propagateEpoch(TermStateType& state);
   void epochFinished(EpochType const& epoch, bool const cleanup);

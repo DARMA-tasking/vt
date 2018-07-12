@@ -5,13 +5,14 @@
 #include "config.h"
 #include "termination/term_common.h"
 #include "termination/term_state.h"
+#include "termination/term_finished.h"
 
 #include <vector>
 #include <unordered_map>
 
 namespace vt { namespace term {
 
-struct TermAction {
+struct TermAction : TermFinished {
   using TermStateType = TermState;
   using ActionContType = std::vector<ActionType>;
   using EpochActionContType = std::unordered_map<EpochType,ActionContType>;

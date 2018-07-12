@@ -47,6 +47,11 @@ void TermAction::addActionEpoch(EpochType const& epoch, ActionType action) {
      *  local termination of a specific epoch is waiting for detection
      */
     theTerm()->produce(term::any_epoch_sentinel);
+
+    auto const& finished = testEpochFinished(epoch);
+    if (finished) {
+      triggerAllEpochActions(epoch);
+    }
   }
 }
 
