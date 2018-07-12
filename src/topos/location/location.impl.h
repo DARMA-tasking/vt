@@ -109,6 +109,30 @@ void EntityLocationCoord<EntityID>::registerEntity(
     }
     pending_lookups_.erase(pending_lookup_iter);
   }
+
+  if (!migrated) {
+    /*
+     *  This is the case where the entity is *not* migrated here but gets
+     *  constructed in an alternative non-default location. Thus we need to
+     *  inform the home so that messages can be forwarded.
+     */
+    assert(home != uninitialized_destination && "Must have home node info");
+    if (home != this_node) {
+      debug_print(
+        location, node,
+        "EntityLocationCoord: registerEntity: updating id={}, home={}: "
+        "not migrated\n",
+        id, home
+      );
+
+      auto const& ask_node = uninitialized_destination;
+      auto msg = makeSharedMessage<LocMsgType>(
+        this_inst, id, no_location_event_id, ask_node, home
+      );
+      msg->setResolvedNode(this_node);
+      theMsg()->sendMsg<LocMsgType, updateLocation>(home, msg);
+    }
+  }
 }
 
 template <typename EntityID>
@@ -157,7 +181,7 @@ void EntityLocationCoord<EntityID>::registerEntityMigrated(
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future
-  return registerEntity(id, msg_action);
+  return registerEntity(id, uninitialized_destination, msg_action, true);
 }
 
 template <typename EntityID>
@@ -381,12 +405,33 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           "EntityLocationCoord: routeMsgNode: buffering\n"
         );
 
+        messageRef(msg);
+
+        EntityID id_ = id;
         // buffer the message here, the entity will be registered in the future
-        insertPendingEntityAction(id, [=](NodeType) {
-          trigger_msg_handler_action(id);
-          if (action) {
-            action();
+        insertPendingEntityAction(id_, [=](NodeType resolved) {
+          auto const& this_node = theContext()->getNode();
+
+          debug_print(
+            location, node,
+            "EntityLocationCoord: routeMsgNode: trigger action: resolved={}, "
+            "this_node={}, id={}\n", resolved, this_node, id_
+          );
+
+          if (resolved == this_node) {
+            trigger_msg_handler_action(id_);
+            if (action) {
+              action();
+            }
+          } else {
+            /*
+             *  Recurse with the new updated node information. This occurs
+             *  typically when an non-migrated registration occurs off the home
+             *  node and messages are buffered, awaiting forwarding information.
+             */
+            routeMsgNode<MessageT>(serialize,id_,home_node,resolved,msg,action);
           }
+          messageDeref(msg);
         });
       }
     }
@@ -461,15 +506,8 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::updatePendingRequest(
-  LocEventID const& event_id, NodeType const& node
+  LocEventID const& event_id, EntityID const& id, NodeType const& node
 ) {
-  auto pending_iter = pending_actions_.find(event_id);
-
-  assert(
-    pending_iter != pending_actions_.end() && "Event must exist in pending"
-  );
-
-  auto const& entity = pending_iter->second.entity_;
 
   debug_print(
     location, node,
@@ -477,11 +515,38 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
     event_id, node
   );
 
-  recs_.insert(entity, LocRecType{entity, eLocState::Remote, node});
+  if (event_id != no_location_event_id) {
+    auto pending_iter = pending_actions_.find(event_id);
 
-  pending_iter->second.applyNodeAction(node);
+    assert(
+      pending_iter != pending_actions_.end() && "Event must exist in pending"
+    );
 
-  pending_actions_.erase(pending_iter);
+    auto const& entity = pending_iter->second.entity_;
+
+    recs_.insert(entity, LocRecType{entity, eLocState::Remote, node});
+
+    pending_iter->second.applyNodeAction(node);
+
+    pending_actions_.erase(pending_iter);
+  } else {
+    recs_.insert(id, LocRecType{id, eLocState::Remote, node});
+
+    // trigger any pending actions upon registration
+    auto pending_lookup_iter = pending_lookups_.find(id);
+
+    debug_print(
+      location, node,
+      "EntityLocationCoord: updatePendingRequest: node={}\n", node
+    );
+
+    if (pending_lookup_iter != pending_lookups_.end()) {
+      for (auto&& pending_action : pending_lookup_iter->second) {
+        pending_action(node);
+      }
+      pending_lookups_.erase(pending_lookup_iter);
+    }
+  }
 }
 
 template <typename EntityID>
@@ -546,10 +611,21 @@ template <typename EntityID>
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
 
+  debug_print(
+    location, node,
+    "updateLocation: event_id={}, resolved={}, id={}\n",
+    event_id, msg->resolved_node, entity
+  );
+
   messageRef(msg);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
-      loc->updatePendingRequest(event_id, msg->resolved_node);
+      debug_print(
+        location, node,
+        "updateLocation: event_id={}, running pending: resolved={}, id={}\n",
+        event_id, msg->resolved_node, entity
+      );
+      loc->updatePendingRequest(event_id, entity, msg->resolved_node);
       messageDeref(msg);
     }
   );
