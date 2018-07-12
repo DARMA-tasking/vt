@@ -21,12 +21,24 @@ using namespace vt::tests::unit;
 struct WorkMsg;
 
 static int32_t num_inserted = 0;
+static int32_t num_work = 0;
 
 struct InsertTest : InsertableCollection<InsertTest,Index1D> {
-  InsertTest() : InsertableCollection<InsertTest,Index1D>() {
+  InsertTest() = default;
+  InsertTest(Index1D const& idx) : InsertableCollection<InsertTest,Index1D>() {
     num_inserted++;
+    // ::fmt::print(
+    //   "{}: inserting on node {}\n", idx.x(), theContext()->getNode()
+    // );
   }
+
+  void work(WorkMsg* msg);
 };
+
+void InsertTest::work(WorkMsg* msg) {
+  // ::fmt::print("node={}: num_work={}\n", theContext()->getNode(), num_work);
+  num_work++;
+}
 
 struct WorkMsg : CollectionMessage<InsertTest> {};
 using ColProxyType = CollectionIndexProxy<InsertTest,Index1D>;
