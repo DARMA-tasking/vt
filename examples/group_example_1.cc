@@ -38,8 +38,8 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    HelloMsg* msg = new HelloMsg(my_node);
-    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
+    HelloMsg* msg = makeSharedMessage<HelloMsg>(my_node);
+    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
 
     //std::vector<region::Region::BoundType> vec{0,1,2,3,4,5,6,7};
     //auto list = std::make_unique<region::List>(vec);
