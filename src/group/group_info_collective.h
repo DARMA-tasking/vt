@@ -49,6 +49,7 @@ protected:
 
   static void upHan(GroupCollectiveMsg* msg);
   static void downHan(GroupCollectiveMsg* msg);
+  static void newRootHan(GroupCollectiveMsg* msg);
   static void downFinishedHan(GroupOnlyMsg* msg);
   static void finalizeHan(GroupOnlyMsg* msg);
   static void newTreeHan(GroupOnlyMsg* msg);
@@ -59,6 +60,7 @@ private:
   void atRoot();
   void downTree(GroupCollectiveMsg* msg);
   void collectiveFn(GroupCollectiveMsg* msg);
+  void newRoot(GroupCollectiveMsg* msg);
   void downTreeFinished(GroupOnlyMsg* msg);
   void finalizeTree(GroupOnlyMsg* msg);
   void finalize();
@@ -78,6 +80,8 @@ protected:
   uint32_t extra_arrived_count_          = 0;
   uint32_t send_down_                    = 0;
   uint32_t send_down_finished_           = 0;
+  NodeType known_root_node_              = 0;
+  bool is_new_root_                      = false;
 
 private:
   RemoteOperationIDType down_tree_cont_     = no_op_id;
@@ -85,6 +89,7 @@ private:
   RemoteOperationIDType up_tree_cont_       = no_op_id;
   RemoteOperationIDType finalize_cont_      = no_op_id;
   RemoteOperationIDType new_tree_cont_      = no_op_id;
+  RemoteOperationIDType new_root_cont_      = no_op_id;
 };
 
 struct GroupCollSort {

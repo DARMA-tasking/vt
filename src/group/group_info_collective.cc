@@ -48,6 +48,7 @@ void InfoColl::setupCollective() {
   down_tree_fin_cont_ = theGroup()->nextCollectiveID();
   finalize_cont_      = theGroup()->nextCollectiveID();
   new_tree_cont_      = theGroup()->nextCollectiveID();
+  new_root_cont_      = theGroup()->nextCollectiveID();
 
   theGroup()->registerContinuationT<GroupCollectiveMsg*>(
     down_tree_cont_,
@@ -80,6 +81,15 @@ void InfoColl::setupCollective() {
       assert(iter != theGroup()->local_collective_group_info_.end());
       auto const& from = theMsg()->getFromNodeCurrentHandler();
       iter->second->newTree(from);
+    }
+  );
+  theGroup()->registerContinuationT<GroupCollectiveMsg*>(
+    new_root_cont_,
+    [group_](GroupCollectiveMsg* msg){
+      auto iter = theGroup()->local_collective_group_info_.find(group_);
+      assert(iter != theGroup()->local_collective_group_info_.end());
+      auto const& from = theMsg()->getFromNodeCurrentHandler();
+      iter->second->newRoot(msg);
     }
   );
 
@@ -136,13 +146,57 @@ void InfoColl::upTree() {
   );
 
   if (is_root) {
-    assert(is_in_group && "Limitation that must be fixed");
-    for (auto&& msg : msg_in_group) {
-      span_children_.push_back(msg->getChild());
+    if (is_in_group) {
+      auto const& this_node = theContext()->getNode();
+      for (auto&& msg : msg_in_group) {
+        span_children_.push_back(msg->getChild());
+      }
+      known_root_node_ = this_node;
+      is_new_root_ = true;
+      in_phase_two_ = true;
+      finalize();
+      return;
+    } else {
+      /*
+       *  Sort nodes to find the largest node to make it the root of the whole
+       *  reduction
+       */
+      std::vector<GroupCollectiveMsg*> msg_list;
+      for (auto&& msg : msg_in_group) {
+        msg_list.emplace_back(msg);
+      }
+      std::sort(msg_list.begin(), msg_list.end(), GroupCollSort());
+
+      auto root_node = msg_list[0]->getChild();
+      known_root_node_ = root_node;
+      is_new_root_ = false;
+
+      debug_print(
+        group, node,
+        "InfoColl::upTree: ROOT group={:x}, is_root={}, new_root={}, msgs={}\n",
+        group, is_root, root_node, msg_list.size()
+      );
+
+      auto msg = makeSharedMessage<GroupCollectiveMsg>(
+        group,new_root_cont_,true,0,root_node,0,msg_list.size()-1
+      );
+      theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
+
+      for (int i = 1; i < msg_list.size(); i++) {
+        debug_print(
+          group, node,
+          "InfoColl::upTree: ROOT group={:x}, new_root={}, sending to={}\n",
+          group, root_node, msg_list[i]->getChild()
+        );
+
+        msg_list[i]->setOpID(down_tree_cont_);
+        theMsg()->sendMsg<GroupCollectiveMsg,downHan>(root_node,msg_list[i]);
+        ++send_down_;
+      }
+      in_phase_two_ = true;
+      finalize();
+      return;
     }
-    in_phase_two_ = true;
-    finalize();
-    return;
   }
 
   if (is_in_group && (msg_in_group.size() == 2 || msg_in_group.size() == 0)) {
@@ -256,6 +310,15 @@ RemoteOperationIDType InfoColl::makeCollectiveContinuation(
   return id;
 }
 
+void InfoColl::newRoot(GroupCollectiveMsg* msg) {
+  debug_print(
+    group, node,
+    "InfoColl::newRoot: group={:x}\n", msg->getGroup()
+  );
+
+  is_new_root_ = true;
+}
+
 void InfoColl::collectiveFn(GroupCollectiveMsg* msg) {
   messageRef(msg);
   msgs_.push_back(msg);
@@ -334,10 +397,10 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
 
 void InfoColl::newTree(NodeType const& parent) {
   auto const& group_ = getGroupID();
-  collective_->parent_ = parent;
+  collective_->parent_ = is_new_root_ ? -1 : parent;
   sendDownNewTree();
   assert(is_in_group && "Must be in group");
-  auto const& is_root = parent == -1;
+  auto const& is_root = is_new_root_;
   collective_->span_   = std::make_unique<TreeType>(
     is_root, collective_->parent_, collective_->span_children_
   );
@@ -435,6 +498,10 @@ void InfoColl::downTreeFinished(GroupOnlyMsg* msg) {
   return upHan(msg);
 }
 
+/*static*/ void InfoColl::newRootHan(GroupCollectiveMsg* msg) {
+  return upHan(msg);
+}
+
 /*static*/ void InfoColl::downFinishedHan(GroupOnlyMsg* msg) {
   return tree(msg);
 }
@@ -460,7 +527,18 @@ void FinishedWork::operator()(FinishedReduceMsg* msg) {
   assert(
     iter != theGroup()->local_collective_group_info_.end() && "Must exist"
   );
-  iter->second->newTree(-1);
+  auto const& this_node = theContext()->getNode();
+  auto info = iter->second.get();
+  if (info->known_root_node_ != this_node) {
+    auto nmsg = makeSharedMessage<GroupOnlyMsg>(
+      msg->getGroup(),info->new_tree_cont_
+    );
+    theMsg()->sendMsg<GroupOnlyMsg,InfoColl::newTreeHan>(
+      info->known_root_node_,nmsg
+    );
+  } else {
+    info->newTree(-1);
+  }
 }
 
 }} /* end namespace vt::group */
