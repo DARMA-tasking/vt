@@ -18,4 +18,14 @@ Reduce::Reduce()
   );
 }
 
+Reduce::Reduce(collective::tree::Tree* in_tree)
+  : tree::Tree(*in_tree)
+{
+  debug_print(
+    reduce, node,
+    "Reduce constructor: children={}, parent={}\n",
+    getNumChildren(), getParent()
+  );
+}
+
 }}} /* end namespace vt::collective::reduce */

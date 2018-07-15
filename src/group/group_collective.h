@@ -8,6 +8,7 @@
 #include "group/group_info.fwd.h"
 #include "group/group_info.fwd.h"
 #include "collective/tree/tree.h"
+#include "collective/reduce/reduce.h"
 
 #include <memory>
 
@@ -17,6 +18,8 @@ struct GroupCollective {
   using TreeType = collective::tree::Tree;
   using TreePtrType = std::unique_ptr<TreeType>;
   using NodeListType = TreeType::NodeListType;
+  using ReduceType = collective::reduce::Reduce;
+  using ReducePtrType = std::unique_ptr<ReduceType>;
 
   explicit GroupCollective()
     : init_span_(
@@ -36,6 +39,8 @@ private:
   TreePtrType span_           = nullptr;
   TreePtrType init_span_      = nullptr;
   NodeListType span_children_ = {};
+  NodeType parent_            = uninitialized_destination;
+  ReducePtrType reduce_       = nullptr;
 };
 
 }} /* end namespace vt::group */

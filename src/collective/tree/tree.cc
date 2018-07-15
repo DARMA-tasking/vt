@@ -12,6 +12,15 @@ Tree::Tree(DefaultTreeConstructTag) {
   setupTree();
 }
 
+Tree::Tree(
+  bool const in_is_root, NodeType const& parent, NodeListType const& in_children
+) {
+  is_root_ = in_is_root;
+  children_ = in_children;
+  parent_ = parent;
+  set_up_tree_ = true;
+}
+
 Tree::Tree(NodeListType const& in_children) {
   is_root_ = true;
   children_ = in_children;

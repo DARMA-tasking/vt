@@ -28,6 +28,8 @@ struct Reduce : virtual collective::tree::Tree {
 
   Reduce();
 
+  explicit Reduce(collective::tree::Tree* in_tree);
+
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EpochType reduce(
     NodeType const& root, MessageT* const msg, TagType const& tag = no_tag,

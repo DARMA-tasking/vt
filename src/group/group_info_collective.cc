@@ -8,6 +8,7 @@
 #include "context/context.h"
 #include "messaging/active.h"
 #include "collective/tree/tree.h"
+#include "collective/collective_alg.h"
 #include "group/group_manager.h"
 
 #include <memory>
@@ -46,6 +47,7 @@ void InfoColl::setupCollective() {
   down_tree_cont_     = theGroup()->nextCollectiveID();
   down_tree_fin_cont_ = theGroup()->nextCollectiveID();
   finalize_cont_      = theGroup()->nextCollectiveID();
+  new_tree_cont_      = theGroup()->nextCollectiveID();
 
   theGroup()->registerContinuationT<GroupCollectiveMsg*>(
     down_tree_cont_,
@@ -69,6 +71,15 @@ void InfoColl::setupCollective() {
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       assert(iter != theGroup()->local_collective_group_info_.end());
       iter->second->finalizeTree(msg);
+    }
+  );
+  theGroup()->registerContinuationT<GroupOnlyMsg*>(
+    new_tree_cont_,
+    [group_](GroupOnlyMsg* msg){
+      auto iter = theGroup()->local_collective_group_info_.find(group_);
+      assert(iter != theGroup()->local_collective_group_info_.end());
+      auto const& from = theMsg()->getFromNodeCurrentHandler();
+      iter->second->newTree(from);
     }
   );
 
@@ -133,7 +144,7 @@ void InfoColl::upTree() {
     return;
   }
 
-  if (is_in_group && (msg_in_group.size() > 2 || msg_in_group.size() == 0)) {
+  if (is_in_group && (msg_in_group.size() == 2 || msg_in_group.size() == 0)) {
     /*
      *  Case where we have an approx. a balanced tree: send up the tree like
      *  usual
@@ -143,7 +154,7 @@ void InfoColl::upTree() {
     auto const& level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,true,size,child,level
+      group,op,is_in_group,size,child,level
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
 
@@ -158,7 +169,7 @@ void InfoColl::upTree() {
      */
     auto const& child = theContext()->getNode();
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,false,0,child,0,msg_in_group.size()
+      group,op,is_in_group,0,child,0,msg_in_group.size()
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     /*
@@ -175,12 +186,13 @@ void InfoColl::upTree() {
      * loosing efficiency!
      */
     auto const& child = theContext()->getNode();
-    auto msg = makeSharedMessage<GroupCollectiveMsg>(group,op,true,1,child,0,1);
+    auto msg = makeSharedMessage<GroupCollectiveMsg>(
+      group,op,is_in_group,1,child,0,1
+    );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[0]);
   } else {
-    assert(!is_in_group && msg_in_group.size() > 2);
-    assert(msg_in_group.size() == 3);
+    assert(msg_in_group.size() > 2);
 
     std::vector<GroupCollectiveMsg*> msg_list;
     for (auto&& msg : msg_in_group) {
@@ -192,10 +204,10 @@ void InfoColl::upTree() {
       msg_list.emplace_back(msg);
     }
 
-    auto const& extra = 2;
+    auto const& extra = msg_in_group.size() / 2;
     auto const& child = theContext()->getNode();
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,false,0,child,0,extra
+      group,op,is_in_group,0,child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
 
@@ -205,27 +217,27 @@ void InfoColl::upTree() {
       msg_in_group.size(), msg_list.size()
     );
 
-    assert(msg_list.size() == 3);
-
     std::sort(msg_list.begin(), msg_list.end(), GroupCollSort());
 
     auto iter = msg_list.rbegin();
     auto iter_end = msg_list.rend();
-    NodeType c[2];
-    c[0] = (*iter)->getChild();
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, *iter);
-    iter++;
-    c[1] = (*iter)->getChild();
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, *iter);
-    iter++;
+    NodeType* c = static_cast<NodeType*>(std::malloc(sizeof(NodeType) * extra));
+
+    for (int i = 0; i < extra; i++) {
+      c[i] = (*iter)->getChild();
+      theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, *iter);
+      iter++;
+    }
 
     int32_t i = 0;
     while (iter != iter_end) {
       (*iter)->setOpID(down_tree_cont_);
-      theMsg()->sendMsg<GroupCollectiveMsg,downHan>(c[i % 2],*iter);
+      theMsg()->sendMsg<GroupCollectiveMsg,downHan>(c[i % extra],*iter);
       ++send_down_;
       ++iter;
     }
+
+    std::free(c);
   }
 }
 
@@ -319,6 +331,37 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
   theMsg()->sendMsg<GroupOnlyMsg,downFinishedHan>(from,nmsg);
 }
 
+void InfoColl::newTree(NodeType const& parent) {
+  collective_->parent_ = parent;
+  sendDownNewTree();
+  assert(is_in_group && "Must be in group");
+  auto const& is_root = parent == -1;
+  collective_->span_   = std::make_unique<TreeType>(
+    is_root, collective_->parent_, collective_->span_children_
+  );
+  collective_->reduce_ = std::make_unique<ReduceType>(
+    collective_->span_.get()
+  );
+  auto const& action = getAction();
+  if (action) {
+    action();
+  }
+}
+
+void InfoColl::sendDownNewTree() {
+  auto const& group_ = getGroupID();
+  auto const& children = collective_->span_children_;
+  for (auto&& c : children) {
+    debug_print(
+      group, node,
+      "InfoColl::sendDownNewTree: group={:x}, sending to child={}\n",
+      group_, c
+    );
+    auto msg = makeSharedMessage<GroupOnlyMsg>(group_,new_tree_cont_);
+    theMsg()->sendMsg<GroupOnlyMsg,newTreeHan>(c,msg);
+  }
+}
+
 void InfoColl::finalize() {
   auto const& group_ = getGroupID();
 
@@ -350,6 +393,24 @@ void InfoColl::finalize() {
       auto msg = makeSharedMessage<GroupOnlyMsg>(group_,finalize_cont_);
       theMsg()->sendMsg<GroupOnlyMsg,finalizeHan>(c,msg);
     }
+
+    if (!is_in_group) {
+      auto const& action = getAction();
+      if (action) {
+        action();
+      }
+    }
+
+    auto const& root = 0;
+    auto msg = makeSharedMessage<FinishedReduceMsg>(group_);
+    theCollective()->reduce<
+      FinishedReduceMsg,
+      FinishedReduceMsg::msgHandler<
+        FinishedReduceMsg,
+        collective::PlusOp<collective::NoneType>,
+        FinishedWork
+      >
+    >(root,msg);
   }
 }
 
@@ -378,6 +439,26 @@ void InfoColl::downTreeFinished(GroupOnlyMsg* msg) {
 
 /*static*/ void InfoColl::finalizeHan(GroupOnlyMsg* msg) {
   return tree(msg);
+}
+
+/*static*/ void InfoColl::newTreeHan(GroupOnlyMsg* msg) {
+  return tree(msg);
+}
+
+InfoColl::ReducePtrType InfoColl::getReduce() const {
+  return collective_->reduce_.get();
+}
+
+void FinishedWork::operator()(FinishedReduceMsg* msg) {
+  debug_print(
+    verbose, group, node,
+    "FinishedWork: group={:x}\n", msg->getGroup()
+  );
+  auto iter = theGroup()->local_collective_group_info_.find(msg->getGroup());
+  assert(
+    iter != theGroup()->local_collective_group_info_.end() && "Must exist"
+  );
+  iter->second->newTree(-1);
 }
 
 }} /* end namespace vt::group */

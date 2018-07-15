@@ -66,6 +66,18 @@ GroupType GroupManager::newLocalGroup(
   return group;
 }
 
+bool GroupManager::inGroup(GroupType const& group) {
+  auto iter = local_collective_group_info_.find(group);
+  assert(iter != local_collective_group_info_.end() && "Must exist");
+  return iter->second->is_in_group;
+}
+
+collective::reduce::Reduce* GroupManager::groupReduce(GroupType const& group) {
+  auto iter = local_collective_group_info_.find(group);
+  assert(iter != local_collective_group_info_.end() && "Must exist");
+  return iter->second->getReduce();
+}
+
 RemoteOperationIDType GroupManager::registerContinuation(ActionType action) {
   RemoteOperationIDType next_id = cur_id_++;
   continuation_actions_.emplace(

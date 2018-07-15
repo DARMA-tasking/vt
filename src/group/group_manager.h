@@ -16,6 +16,7 @@
 #include "messaging/active.h"
 #include "activefn/activefn.h"
 #include "collective/tree/tree.h"
+#include "collective/reduce/reduce.h"
 
 #include <memory>
 #include <unordered_map>
@@ -57,12 +58,14 @@ struct GroupManager {
 
   GroupType newGroup(RegionPtrType in_region, ActionGroupType action);
   GroupType newGroupCollective(bool const in_group, ActionGroupType action);
+  bool inGroup(GroupType const& group);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   void sendMsg(GroupType const& group, MsgT* msg);
 
   friend struct Info;
   friend struct InfoColl;
+  friend struct FinishedWork;
   friend struct InfoRooted;
   friend struct GroupActiveAttorney;
 
@@ -107,6 +110,10 @@ private:
     bool const is_root, ActionType action, bool* const deliver
   );
 
+public:
+  collective::reduce::Reduce* groupReduce(GroupType const& group);
+
+private:
   static EventType groupHandler(
     BaseMessage* msg, NodeType const& from, MsgSizeType const& msg_size,
     bool const is_root, ActionType new_action, bool* const deliver

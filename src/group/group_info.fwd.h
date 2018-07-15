@@ -10,6 +10,7 @@ struct InfoBase;
 struct InfoColl;
 struct InfoRooted;
 struct Info;
+struct FinishedWork;
 
 }} /* end namespace vt::group */
 

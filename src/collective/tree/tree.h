@@ -21,6 +21,11 @@ struct Tree {
   explicit Tree(DefaultTreeConstructTag);
   explicit Tree(NodeListType const& in_children);
 
+  Tree(
+    bool const in_is_root, NodeType const& parent,
+    NodeListType const& in_children
+  );
+
   void setupTree();
   NodeType getParent() const;
   NodeType getNumChildren() const;

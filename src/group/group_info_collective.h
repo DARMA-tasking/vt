@@ -7,18 +7,42 @@
 #include "group/group_info_base.h"
 #include "group/group_collective.h"
 #include "group/group_collective_msg.h"
+#include "collective/reduce/reduce.h"
 
 #include <memory>
 
 namespace vt { namespace group {
 
+struct FinishedReduceMsg : collective::ReduceTMsg<collective::NoneType> {
+  FinishedReduceMsg() = default;
+  explicit FinishedReduceMsg(GroupType const& in_group)
+    : group_(in_group)
+  { }
+
+  GroupType getGroup() const { return group_; }
+
+private:
+  GroupType group_ = no_group;
+};
+
+struct FinishedWork {
+  void operator()(FinishedReduceMsg* msg);
+};
+
 struct InfoColl : virtual InfoBase {
   using GroupCollectiveType = GroupCollective;
   using GroupCollectivePtrType = std::unique_ptr<GroupCollective>;
+  using ReduceType = collective::reduce::Reduce;
+  using ReducePtrType = ReduceType*;
 
   explicit InfoColl(bool const in_is_in_group)
     : is_in_group(in_is_in_group)
   { }
+
+  friend FinishedWork;
+
+public:
+  ReducePtrType getReduce() const;
 
 protected:
   void setupCollective();
@@ -27,6 +51,7 @@ protected:
   static void downHan(GroupCollectiveMsg* msg);
   static void downFinishedHan(GroupOnlyMsg* msg);
   static void finalizeHan(GroupOnlyMsg* msg);
+  static void newTreeHan(GroupOnlyMsg* msg);
   static void tree(GroupOnlyMsg* msg);
 
 private:
@@ -37,6 +62,8 @@ private:
   void downTreeFinished(GroupOnlyMsg* msg);
   void finalizeTree(GroupOnlyMsg* msg);
   void finalize();
+  void sendDownNewTree();
+  void newTree(NodeType const& parent);
   RemoteOperationIDType makeCollectiveContinuation(GroupType const group_);
 
 protected:
@@ -57,6 +84,7 @@ private:
   RemoteOperationIDType down_tree_fin_cont_ = no_op_id;
   RemoteOperationIDType up_tree_cont_       = no_op_id;
   RemoteOperationIDType finalize_cont_      = no_op_id;
+  RemoteOperationIDType new_tree_cont_      = no_op_id;
 };
 
 struct GroupCollSort {
