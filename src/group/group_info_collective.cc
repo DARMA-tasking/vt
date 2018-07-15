@@ -9,6 +9,7 @@
 #include "messaging/active.h"
 #include "collective/tree/tree.h"
 #include "collective/collective_alg.h"
+#include "collective/collective_ops.h"
 #include "group/group_manager.h"
 
 #include <memory>
@@ -157,6 +158,10 @@ void InfoColl::upTree() {
       finalize();
       return;
     } else {
+      if (msg_in_group.size() == 0) {
+        auto const& group_ = getGroupID();
+        CollectiveOps::abort("A group must have at least a single node",group_);
+      }
       /*
        *  Sort nodes to find the largest node to make it the root of the whole
        *  reduction
