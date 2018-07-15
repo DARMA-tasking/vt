@@ -18,8 +18,8 @@ Reduce::Reduce()
   );
 }
 
-Reduce::Reduce(collective::tree::Tree* in_tree)
-  : tree::Tree(*in_tree)
+Reduce::Reduce(GroupType const& group, collective::tree::Tree* in_tree)
+  : tree::Tree(*in_tree), group_(group)
 {
   debug_print(
     reduce, node,

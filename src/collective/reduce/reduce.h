@@ -27,8 +27,7 @@ struct Reduce : virtual collective::tree::Tree {
   using ReduceNumType = ReduceState::ReduceNumType;
 
   Reduce();
-
-  explicit Reduce(collective::tree::Tree* in_tree);
+  Reduce(GroupType const& group, collective::tree::Tree* in_tree);
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EpochType reduce(
@@ -63,6 +62,7 @@ struct Reduce : virtual collective::tree::Tree {
 private:
   std::unordered_map<ReduceEpochLookupType,EpochType> next_epoch_for_tag_;
   std::unordered_map<ReduceIdentifierType,ReduceStateType> live_reductions_;
+  GroupType group_ = default_group;
 };
 
 }}} /* end namespace vt::collective::reduce */

@@ -332,6 +332,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
 }
 
 void InfoColl::newTree(NodeType const& parent) {
+  auto const& group_ = getGroupID();
   collective_->parent_ = parent;
   sendDownNewTree();
   assert(is_in_group && "Must be in group");
@@ -340,7 +341,7 @@ void InfoColl::newTree(NodeType const& parent) {
     is_root, collective_->parent_, collective_->span_children_
   );
   collective_->reduce_ = std::make_unique<ReduceType>(
-    collective_->span_.get()
+    group_, collective_->span_.get()
   );
   auto const& action = getAction();
   if (action) {

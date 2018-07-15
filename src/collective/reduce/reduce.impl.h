@@ -9,6 +9,7 @@
 #include "serialization/auto_dispatch/dispatch.h"
 #include "messaging/active.h"
 #include "runnable/general.h"
+#include "group/group_headers.h"
 
 namespace vt { namespace collective { namespace reduce {
 
@@ -19,8 +20,14 @@ template <typename MessageT>
     "reduceUp: tag={}, epoch={}, vrt={}, msg={}\n",
     msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_, print_ptr(msg)
   );
-  theCollective()->reduceAddMsg<MessageT>(msg,false);
-  theCollective()->reduceNewMsg<MessageT>(msg);
+  auto const& grp = envelopeGetGroup(msg->env);
+  if (grp == default_group) {
+    theCollective()->reduceAddMsg<MessageT>(msg,false);
+    theCollective()->reduceNewMsg<MessageT>(msg);
+  } else {
+    theGroup()->groupReduce(grp)->template reduceAddMsg<MessageT>(msg,false);
+    theGroup()->groupReduce(grp)->template reduceNewMsg<MessageT>(msg);
+  }
 }
 
 template <typename MessageT>
@@ -40,6 +47,9 @@ EpochType Reduce::reduce(
   EpochType const& epoch, ReduceNumType const& num_contrib,
   VirtualProxyType const& proxy
 ) {
+  if (group_ != default_group) {
+    envelopeSetGroup(msg->env, group_);
+  }
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   msg->combine_handler_ = han;
   msg->reduce_tag_ = tag;
