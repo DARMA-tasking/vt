@@ -37,6 +37,7 @@ set(
   collection_insert
   rdma_unsized_collection
   group_example_1
+  group_collective
   reduce
 )
 
