@@ -136,6 +136,7 @@ void InfoColl::upTree() {
   );
 
   if (is_root) {
+    assert(is_in_group && "Limitation that must be fixed");
     for (auto&& msg : msg_in_group) {
       span_children_.push_back(msg->getChild());
     }
