@@ -22,13 +22,15 @@ struct GroupMsg : MsgT {
 
   GroupMsg(
     GroupType const& in_group, RemoteOperationIDType const& in_op,
-    NodeType const& in_root
-  ) : MsgT(), group_(in_group), op_id_(in_op), root_(in_root)
+    NodeType const& in_root, bool const& in_default_group
+  ) : MsgT(), group_(in_group), op_id_(in_op), root_(in_root),
+      default_group_(in_default_group)
   { }
 
   GroupType getGroup() const { return group_; }
   RemoteOperationIDType getOpID() const { return op_id_; }
   NodeType getRoot() const { return root_; }
+  bool isDefault() const { return default_group_; }
 
   void setGroup(GroupType const& group) { group_ = group; }
   void setOpID(RemoteOperationIDType const& op) { op_id_ = op; }
@@ -38,6 +40,7 @@ protected:
   GroupType group_             = no_group;
   RemoteOperationIDType op_id_ = no_op_id;
   NodeType root_               = uninitialized_destination;
+  bool default_group_          = false;
 };
 
 using GroupOnlyMsg = GroupMsg<::vt::Message>;

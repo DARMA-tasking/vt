@@ -152,6 +152,23 @@ void InfoColl::upTree() {
       for (auto&& msg : msg_in_group) {
         span_children_.push_back(msg->getChild());
       }
+      /*
+       *  In this case we have exactly the default group, so we can fall back to
+       *  that without using this group explicitly
+       */
+      debug_print(
+        group, node,
+        "InfoColl::upTree: is_in_group={}, subtree={}, num_nodes={}\n",
+        is_in_group, subtree, theContext()->getNumNodes()
+      );
+      if (subtree + 1 == theContext()->getNumNodes() && is_in_group) {
+        /*
+         *  This will allow bypassing using this spanning tree because it is
+         *  equivalent in terms of functionality, although the spanning tree may
+         *  differ
+         */
+        is_default_group_ = true;
+      }
       known_root_node_ = this_node;
       is_new_root_     = true;
       in_phase_two_    = true;
@@ -344,6 +361,10 @@ NodeType InfoColl::getRoot() const {
   }
 }
 
+bool InfoColl::isGroupDefault() const {
+  return is_default_group_;
+}
+
 void InfoColl::collectiveFn(GroupCollectiveMsg* msg) {
   messageRef(msg);
   msgs_.push_back(msg);
@@ -494,7 +515,7 @@ void InfoColl::finalize() {
       );
 
       auto msg = makeSharedMessage<GroupOnlyMsg>(
-        group_,finalize_cont_,known_root_node_
+        group_,finalize_cont_,known_root_node_,is_default_group_
       );
       theMsg()->sendMsg<GroupOnlyMsg,finalizeHan>(c,msg);
     }
@@ -530,6 +551,7 @@ void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
   in_phase_two_ = true;
   known_root_node_ = new_root;
   has_root_ = true;
+  is_default_group_ = msg->isDefault();
   finalize();
 }
 
