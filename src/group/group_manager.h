@@ -20,6 +20,7 @@
 #include <memory>
 #include <unordered_map>
 #include <cstdlib>
+#include <functional>
 
 namespace vt { namespace group {
 
@@ -29,13 +30,21 @@ struct GroupManager {
   using GroupInfoType = Info;
   using GroupInfoPtrType = std::unique_ptr<GroupInfoType>;
   using GroupContainerType = std::unordered_map<GroupType, GroupInfoPtrType>;
+  using ActionGroupType = std::function<void(GroupType)>;
+  using TreeType = collective::tree::Tree;
+  using TreePtrType = std::unique_ptr<TreeType>;
   using ActionListType = std::vector<ActionType>;
   using ActionContainerType = std::unordered_map<
     RemoteOperationIDType, ActionListType
   >;
-  using ActionGroupType = std::function<void(GroupType)>;
-  using TreeType = collective::tree::Tree;
-  using TreePtrType = std::unique_ptr<TreeType>;
+  template <typename T>
+  using ActionTType = std::function<void(T)>;
+  template <typename T>
+  using ActionListTType = std::vector<ActionTType<T>>;
+  template <typename T>
+  using ActionContainerTType = std::unordered_map<
+    RemoteOperationIDType, ActionListTType<T>
+  >;
 
   GroupManager();
 
@@ -47,19 +56,26 @@ struct GroupManager {
   );
 
   GroupType newGroup(RegionPtrType in_region, ActionGroupType action);
+  GroupType newGroupCollective(bool const in_group, ActionGroupType action);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   void sendMsg(GroupType const& group, MsgT* msg);
 
   friend struct Info;
+  friend struct InfoColl;
+  friend struct InfoRooted;
   friend struct GroupActiveAttorney;
 
 private:
   GroupType newCollectiveGroup(
-    RegionPtrType in_region, bool const& is_static, ActionGroupType action
+    bool const& in_group, bool const& is_static, ActionGroupType action
   );
   GroupType newLocalGroup(
     RegionPtrType in_region, bool const& is_static, ActionGroupType action
+  );
+  void initializeLocalGroupCollective(
+    GroupType const& group, bool const& is_static, ActionType action,
+    bool const in_group
   );
   void initializeLocalGroup(
     GroupType const& group, RegionPtrType in_region, bool const& is_static,
@@ -69,8 +85,21 @@ private:
     GroupType const& group, RegionPtrType in_region, bool const& is_static,
     RegionType::SizeType const& group_size
   );
+
+  template <typename T>
+  RemoteOperationIDType registerContinuationT(ActionTType<T> action);
+  template <typename T>
+  void registerContinuationT(
+    RemoteOperationIDType const& op, ActionTType<T> a
+  );
+  template <typename T>
+  void triggerContinuationT(RemoteOperationIDType const& op, T t);
+  RemoteOperationIDType nextCollectiveID() { return cur_collective_id_++; }
+
   RemoteOperationIDType registerContinuation(ActionType action);
-  void registerContinuation(RemoteOperationIDType const& op, ActionType action);
+  void registerContinuation(
+    RemoteOperationIDType const& op, ActionType action
+  );
   void triggerContinuation(RemoteOperationIDType const& op);
 
   EventType sendGroup(
@@ -84,18 +113,26 @@ private:
   );
 
 private:
-  GroupIDType next_group_id_ = initial_group_id;
-  GroupContainerType local_group_info_;
-  GroupContainerType remote_group_info_;
-  RemoteOperationIDType cur_id_ = 0;
-  ActionContainerType continuation_actions_;
+  GroupIDType           next_group_id_                = initial_group_id;
+  GroupIDType           next_collective_group_id_     = initial_group_id;
+  GroupContainerType    local_collective_group_info_  = {};
+  GroupContainerType    local_group_info_             = {};
+  GroupContainerType    remote_group_info_            = {};
+  RemoteOperationIDType cur_id_                       = 0;
+  RemoteOperationIDType cur_collective_id_            = 0xFFFFFFFF00000000;
+  ActionContainerType   continuation_actions_         = {};
+
+  template <typename T>
+  static ActionContainerTType<T> continuation_actions_t_;
+  template <typename T>
+  static std::unordered_map<RemoteOperationIDType,std::vector<T>> waiting_cont_;
 };
 
-}
+} /* end namespace group */
 
 extern group::GroupManager* theGroup();
 
-} /* end namespace vt::group */
+} /* end namespace vt */
 
 #include "group/group_manager.impl.h"
 

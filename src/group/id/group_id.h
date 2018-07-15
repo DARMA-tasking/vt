@@ -14,6 +14,7 @@ static constexpr BitCountType const group_node_num_bits =
     BitCounterType<NodeType>::value;
 static constexpr BitCountType const group_id_num_bits =
     BitCounterType<GroupIDType>::value;
+static constexpr NodeType const group_collective_node = -1;
 
 enum eGroupIDBits {
   Collective = 0,

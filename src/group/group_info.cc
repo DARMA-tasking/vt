@@ -1,15 +1,12 @@
 
 #include "config.h"
+#include "configs/types/types_type.h"
 #include "group/group_common.h"
 #include "group/group_info.h"
+#include "group/group_info_collective.h"
+#include "group/group_info_rooted.h"
 #include "group/id/group_id.h"
-#include "group/region/group_region.h"
-#include "group/region/group_range.h"
-#include "group/region/group_list.h"
-#include "group/region/group_shallow_list.h"
-#include "group/group_msg.h"
 #include "group/group_manager.h"
-#include "configs/types/types_type.h"
 #include "context/context.h"
 #include "messaging/active.h"
 #include "collective/tree/tree.h"
@@ -20,98 +17,63 @@
 namespace vt { namespace group {
 
 Info::Info(
-  bool const& in_is_collective, RegionPtrType in_region, ActionType in_action,
+  bool const& in_is_collective, ActionType in_action, GroupType const in_group,
+  bool const& in_is_remote, bool const& in_is_in_group, RegionPtrType in_region,
+  RegionType::SizeType const& in_total_size
+) : InfoRooted(
+      in_is_remote, in_region ? std::move(in_region) : nullptr, in_total_size
+    ),
+    InfoColl(
+      in_is_in_group
+    ),
+    group_(in_group), is_collective_(in_is_collective),
+    finished_setup_action_(in_action)
+{ }
+
+Info::Info(
+  InfoRootedConsType, RegionPtrType in_region, ActionType in_action,
   GroupType const in_group, RegionType::SizeType const& in_total_size,
   bool const& in_is_remote
-) : is_collective_(in_is_collective), region_(std::move(in_region)),
-    finished_setup_action_(in_action), group_(in_group),
-    total_size_(in_total_size), is_remote_(in_is_remote)
+) : Info(
+      false, in_action, in_group, in_is_remote, false, std::move(in_region),
+      in_total_size
+    )
+{ }
+
+Info::Info(
+  InfoRootedLocalConsType, RegionPtrType in_region, ActionType in_action,
+  GroupType const in_group, RegionType::SizeType const& in_total_size
+) : Info(
+      info_rooted_cons, std::move(in_region), in_action, in_group,
+      in_total_size, false
+    )
+{ }
+
+Info::Info(
+  InfoRootedRemoteConsType, RegionPtrType in_region, GroupType const in_group,
+  RegionType::SizeType const& in_total_size
+) : Info(
+      info_rooted_cons, std::move(in_region), nullptr, in_group,
+      in_total_size, true
+    )
+{ }
+
+Info::Info(
+  InfoCollectiveConsType, ActionType in_action, GroupType const in_group,
+  bool const in_is_in_group
+) : Info(true, in_action, in_group, false, in_is_in_group, nullptr, 0)
 { }
 
 void Info::setup() {
-  auto const& size = region_->getSize();
-  debug_print(
-    group, node,
-    "Info::setup: group size={}, is_remote={}\n",
-    size, print_bool(is_remote_)
-  );
-  if (is_remote_) {
-    region_list_ = region_->makeList();
-    this_node_included_ = true;
-    default_spanning_tree_ = std::make_unique<TreeType>(region_list_);
-    is_setup_ = true;
+  if (is_collective_) {
+    assert(is_collective_  && "Must be collective for this setup");
+    assert(!collective_    && "Collective should not be initialized");
+    assert(!is_remote_     && "Must not be remote for this setup");
+    assert(!region_        && "Region must be nullptr");
+    return setupCollective();
   } else {
-    assert(
-      size >= min_region_size &&
-      "Size of the region must be at least min_region_size"
-    );
-    if (is_collective_) {
-      assert(0 && "Not implemented");
-    } else {
-      auto const& this_node = theContext()->getNode();
-
-      region_->sort();
-      if (region_->isList() || size < max_region_list_size) {
-        auto const& contains_this_node = region_->contains(this_node);
-        region_list_ = region_->makeList();
-        if (size < min_spanning_tree_size && contains_this_node) {
-          this_node_included_ = true;
-          default_spanning_tree_ = std::make_unique<TreeType>(region_list_);
-          is_setup_ = true;
-          is_forward_ = true;
-          forward_node_ = this_node;
-
-          auto new_region = region_->copy();
-          theGroup()->initializeRemoteGroup(
-            group_, std::move(new_region), true, total_size_
-          );
-
-          if (finished_setup_action_) {
-            finished_setup_action_();
-          }
-        } else {
-          debug_print(
-            group, node,
-            "Info::setup: sending as list\n"
-          );
-          auto const& low_node = region_list_[0];
-          RemoteOperationIDType op = no_op_id;
-          if (finished_setup_action_ != nullptr) {
-            op = theGroup()->registerContinuation(finished_setup_action_);
-          }
-          auto const& size = static_cast<NodeType>(region_list_.size());
-          region::ShallowList lst(region_list_);
-          auto msg = makeSharedMessage<GroupListMsg>(
-            low_node, size, group_, op, size, this_node, &lst
-          );
-          is_forward_ = true;
-          forward_node_ = low_node;
-          theMsg()->sendMsg<GroupListMsg, Info::groupSetupHandler>(
-            low_node, msg
-          );
-        }
-      } else {
-        debug_print(
-          group, node,
-          "Info::setup: sending as range\n"
-        );
-        auto const& low_node = region_->head();
-        RemoteOperationIDType op = no_op_id;
-        if (finished_setup_action_ != nullptr) {
-          op = theGroup()->registerContinuation(finished_setup_action_);
-        }
-        auto const& size = static_cast<NodeType>(region_->getSize());
-        auto msg = makeSharedMessage<GroupRangeMsg>(
-          low_node, size, group_, op, size, this_node,
-          static_cast<region::Range*>(region_.get())
-        );
-        is_forward_ = true;
-        forward_node_ = low_node;
-        theMsg()->sendMsg<GroupRangeMsg, Info::groupSetupHandler>(
-          low_node, msg
-        );
-      }
-    }
+    assert(!is_collective_ && "Must not be collective for this setup");
+    return setupRooted();
   }
 }
 

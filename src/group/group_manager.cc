@@ -16,22 +16,37 @@ GroupType GroupManager::newGroup(
   RegionPtrType in_region, bool const& is_collective, bool const& is_static,
   ActionGroupType action
 ) {
-  if (is_collective) {
-    return newCollectiveGroup(std::move(in_region), is_static, action);
-  } else {
-    return newLocalGroup(std::move(in_region), is_static, action);
-  }
+  assert(!is_collective && "Must not be collective");
+  return newLocalGroup(std::move(in_region), is_static, action);
 }
 
-GroupType GroupManager::newGroup(RegionPtrType in_region, ActionGroupType action) {
-  return newGroup(std::move(in_region), false, true, action);
+GroupType GroupManager::newGroup(
+  RegionPtrType in_region, ActionGroupType action
+) {
+  bool const is_static = true;
+  bool const is_collective = false;
+  return newGroup(std::move(in_region), is_collective, is_static, action);
+}
+
+GroupType GroupManager::newGroupCollective(
+  bool const in_group, ActionGroupType action
+) {
+  bool const is_static = true;
+  return newCollectiveGroup(in_group, is_static, action);
 }
 
 GroupType GroupManager::newCollectiveGroup(
-  RegionPtrType in_region, bool const& is_static, ActionGroupType action
+  bool const& is_in_group, bool const& is_static, ActionGroupType action
 ) {
-  assert(0 && "Not implemented");
-  return default_group;
+  auto const& this_node = theContext()->getNode();
+  auto new_id = next_collective_group_id_++;
+  bool const is_collective = true;
+  auto const& group = GroupIDBuilder::createGroupID(
+    new_id, this_node, is_collective, is_static
+  );
+  auto group_action = std::bind(action, group);
+  initializeLocalGroupCollective(group, is_static, group_action, is_in_group);
+  return group;
 }
 
 GroupType GroupManager::newLocalGroup(
@@ -39,8 +54,9 @@ GroupType GroupManager::newLocalGroup(
 ) {
   auto const& this_node = theContext()->getNode();
   auto new_id = next_group_id_++;
+  bool const is_collective = false;
   auto const& group = GroupIDBuilder::createGroupID(
-    new_id, this_node, false, is_static
+    new_id, this_node, is_collective, is_static
   );
   auto const& size = in_region->getSize();
   auto group_action = std::bind(action, group);
@@ -80,11 +96,28 @@ void GroupManager::initializeRemoteGroup(
   GroupType const& group, RegionPtrType in_region, bool const& is_static,
   RegionType::SizeType const& group_size
 ) {
+  bool const remote = true;
   auto group_info = std::make_unique<GroupInfoType>(
-    false, std::move(in_region), nullptr, group, group_size, true
+    info_rooted_remote_cons, std::move(in_region), group, group_size
   );
   auto group_ptr = group_info.get();
   remote_group_info_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(group),
+    std::forward_as_tuple(std::move(group_info))
+  );
+  group_ptr->setup();
+}
+
+void GroupManager::initializeLocalGroupCollective(
+  GroupType const& group, bool const& is_static, ActionType action,
+  bool const in_group
+) {
+  auto group_info = std::make_unique<GroupInfoType>(
+    info_collective_cons, action, group, in_group
+  );
+  auto group_ptr = group_info.get();
+  local_collective_group_info_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(group),
     std::forward_as_tuple(std::move(group_info))
@@ -96,8 +129,9 @@ void GroupManager::initializeLocalGroup(
   GroupType const& group, RegionPtrType in_region, bool const& is_static,
   ActionType action, RegionType::SizeType const& group_size
 ) {
+  bool const remote = false;
   auto group_info = std::make_unique<GroupInfoType>(
-    false, std::move(in_region), action, group, group_size, false
+    info_rooted_local_cons, std::move(in_region), action, group, group_size
   );
   auto group_ptr = group_info.get();
   local_group_info_.emplace(

@@ -6,6 +6,9 @@
 
 namespace vt { namespace group {
 
+struct InfoBase;
+struct InfoColl;
+struct InfoRooted;
 struct Info;
 
 }} /* end namespace vt::group */

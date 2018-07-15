@@ -10,11 +10,12 @@ namespace vt { namespace group {
   GroupIDType const& id, NodeType const& node, bool const& is_collective,
   bool const& is_static
 ) {
+  auto const& set_node = !is_collective ? node : group_collective_node;
   GroupType new_group = 0;
 
   setIsCollective(new_group, is_collective);
   setIsStatic(new_group, is_static);
-  setNode(new_group, node);
+  setNode(new_group, set_node);
   setID(new_group, id);
 
   return new_group;
