@@ -25,26 +25,38 @@ protected:
 
   static void upHan(GroupCollectiveMsg* msg);
   static void downHan(GroupCollectiveMsg* msg);
+  static void downFinishedHan(GroupOnlyMsg* msg);
+  static void finalizeHan(GroupOnlyMsg* msg);
+  static void tree(GroupOnlyMsg* msg);
 
 private:
   void upTree();
   void atRoot();
   void downTree(GroupCollectiveMsg* msg);
   void collectiveFn(GroupCollectiveMsg* msg);
+  void downTreeFinished(GroupOnlyMsg* msg);
+  void finalizeTree(GroupOnlyMsg* msg);
+  void finalize();
   RemoteOperationIDType makeCollectiveContinuation(GroupType const group_);
 
 protected:
   bool is_in_group                       = false;
   bool finished_init_                    = false;
+  bool in_phase_two_                     = false;
   GroupCollectivePtrType collective_     = nullptr;
   WaitCountType coll_wait_count_         = 0;
   std::vector<GroupCollectiveMsg*> msgs_ = {};
   uint32_t arrived_count_                = 0;
   uint32_t extra_count_                  = 0;
+  uint32_t extra_arrived_count_          = 0;
+  uint32_t send_down_                    = 0;
+  uint32_t send_down_finished_           = 0;
 
 private:
-  RemoteOperationIDType down_tree_cont_  = no_op_id;
-  RemoteOperationIDType up_tree_cont_    = no_op_id;
+  RemoteOperationIDType down_tree_cont_     = no_op_id;
+  RemoteOperationIDType down_tree_fin_cont_ = no_op_id;
+  RemoteOperationIDType up_tree_cont_       = no_op_id;
+  RemoteOperationIDType finalize_cont_      = no_op_id;
 };
 
 struct GroupCollSort {

@@ -70,8 +70,8 @@ void GroupManager::triggerContinuationT(
 
   debug_print(
     verbose, group, node,
-    "GroupManager::triggerContinuationT: op={:x}, found={}\n",
-    op, found
+    "GroupManager::triggerContinuationT: op={:x}, found={}, size={}\n",
+    op, found, continuation_actions_t_<T>.size()
   );
 
   if (found) {
