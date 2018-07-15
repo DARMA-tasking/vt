@@ -78,6 +78,14 @@ collective::reduce::Reduce* GroupManager::groupReduce(GroupType const& group) {
   return iter->second->getReduce();
 }
 
+NodeType GroupManager::groupRoot(GroupType const& group) const {
+  auto iter = local_collective_group_info_.find(group);
+  assert(iter != local_collective_group_info_.end() && "Must exist");
+  auto const& root = iter->second->getRoot();
+  assert(root != uninitialized_destination && "Must have valid root");
+  return root;
+}
+
 RemoteOperationIDType GroupManager::registerContinuation(ActionType action) {
   RemoteOperationIDType next_id = cur_id_++;
   continuation_actions_.emplace(

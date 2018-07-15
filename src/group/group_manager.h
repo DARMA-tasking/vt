@@ -112,6 +112,7 @@ private:
 
 public:
   collective::reduce::Reduce* groupReduce(GroupType const& group);
+  NodeType groupRoot(GroupType const& group) const;
 
 private:
   static EventType groupHandler(

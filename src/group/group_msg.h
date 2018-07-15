@@ -20,15 +20,24 @@ struct GroupMsg : MsgT {
     : MsgT(), group_(in_group), op_id_(in_op)
   { }
 
+  GroupMsg(
+    GroupType const& in_group, RemoteOperationIDType const& in_op,
+    NodeType const& in_root
+  ) : MsgT(), group_(in_group), op_id_(in_op), root_(in_root)
+  { }
+
   GroupType getGroup() const { return group_; }
   RemoteOperationIDType getOpID() const { return op_id_; }
+  NodeType getRoot() const { return root_; }
 
   void setGroup(GroupType const& group) { group_ = group; }
   void setOpID(RemoteOperationIDType const& op) { op_id_ = op; }
+  void setRoot(NodeType const& root) { root_ = root; }
 
 protected:
-  GroupType group_ = no_group;
+  GroupType group_             = no_group;
   RemoteOperationIDType op_id_ = no_op_id;
+  NodeType root_               = uninitialized_destination;
 };
 
 using GroupOnlyMsg = GroupMsg<::vt::Message>;
@@ -53,11 +62,11 @@ struct GroupInfoMsg : MsgT {
   bool isStatic() const { return is_static_; }
 
 private:
-  NodeType root_node_ = uninitialized_destination;
-  NodeType num_nodes_ = uninitialized_destination;
+  NodeType root_node_       = uninitialized_destination;
+  NodeType num_nodes_       = uninitialized_destination;
   NodeType total_num_nodes_ = uninitialized_destination;
-  bool is_static_ = true;
-  NodeType parent_node_ = uninitialized_destination;
+  bool is_static_           = true;
+  NodeType parent_node_     = uninitialized_destination;
 };
 
 struct GroupListMsg : GroupInfoMsg<GroupMsg<::vt::PayloadMessage>> {

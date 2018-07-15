@@ -43,6 +43,7 @@ struct InfoColl : virtual InfoBase {
 
 public:
   ReducePtrType getReduce() const;
+  NodeType getRoot() const;
 
 protected:
   void setupCollective();
@@ -82,6 +83,7 @@ protected:
   uint32_t send_down_finished_           = 0;
   NodeType known_root_node_              = 0;
   bool is_new_root_                      = false;
+  bool has_root_                         = false;
 
 private:
   RemoteOperationIDType down_tree_cont_     = no_op_id;

@@ -153,8 +153,9 @@ void InfoColl::upTree() {
         span_children_.push_back(msg->getChild());
       }
       known_root_node_ = this_node;
-      is_new_root_ = true;
-      in_phase_two_ = true;
+      is_new_root_     = true;
+      in_phase_two_    = true;
+      has_root_        = true;
       finalize();
       return;
     } else {
@@ -175,6 +176,7 @@ void InfoColl::upTree() {
       auto root_node = msg_list[0]->getChild();
       known_root_node_ = root_node;
       is_new_root_ = false;
+      has_root_ = true;
 
       debug_print(
         group, node,
@@ -316,12 +318,30 @@ RemoteOperationIDType InfoColl::makeCollectiveContinuation(
 }
 
 void InfoColl::newRoot(GroupCollectiveMsg* msg) {
+  auto const& this_node = theContext()->getNode();
+
   debug_print(
     group, node,
     "InfoColl::newRoot: group={:x}\n", msg->getGroup()
   );
 
+  known_root_node_ = this_node;
+  has_root_ = true;
   is_new_root_ = true;
+}
+
+NodeType InfoColl::getRoot() const {
+  debug_print(
+    verbose, group, node,
+    "InfoColl::getRoot: group={:x}, has_root_={}, known_root_node_={}\n",
+    getGroupID(), has_root_, known_root_node_
+  );
+
+  if (!has_root_) {
+    return uninitialized_destination;
+  } else {
+    return known_root_node_;
+  }
 }
 
 void InfoColl::collectiveFn(GroupCollectiveMsg* msg) {
@@ -457,9 +477,11 @@ void InfoColl::finalize() {
     debug_print(
       group, node,
       "InfoColl::finalize: group={:x}, send_down_={}, send_down_finished_={}, "
-      "children={}, in_phase_two_={}, in_group={}, children={}\n",
-      group_, send_down_, send_down_finished_, collective_->span_children_.size(),
-      in_phase_two_, is_in_group, buf
+      "children={}, in_phase_two_={}, in_group={}, children={}, has_root_={}, "
+      "known_root_node_={}, is_new_root_={}\n",
+      group_, send_down_, send_down_finished_,
+      collective_->span_children_.size(), in_phase_two_, is_in_group, buf
+      , has_root_, known_root_node_, is_new_root_
     );
 
     auto const& children = collective_->getChildren();
@@ -471,7 +493,9 @@ void InfoColl::finalize() {
         group_, c
       );
 
-      auto msg = makeSharedMessage<GroupOnlyMsg>(group_,finalize_cont_);
+      auto msg = makeSharedMessage<GroupOnlyMsg>(
+        group_,finalize_cont_,known_root_node_
+      );
       theMsg()->sendMsg<GroupOnlyMsg,finalizeHan>(c,msg);
     }
 
@@ -496,12 +520,16 @@ void InfoColl::finalize() {
 }
 
 void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
+  auto const& new_root = msg->getRoot();
+  assert(new_root != uninitialized_destination && "Must have root node");
   debug_print(
     verbose, group, node,
-    "InfoColl::finalizeTree: group={:x}\n",
-    msg->getGroup()
+    "InfoColl::finalizeTree: group={:x}, new_root={}\n",
+    msg->getGroup(), new_root
   );
   in_phase_two_ = true;
+  known_root_node_ = new_root;
+  has_root_ = true;
   finalize();
 }
 
