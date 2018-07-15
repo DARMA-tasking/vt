@@ -394,7 +394,16 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
 
   auto const& from = theMsg()->getFromNodeCurrentHandler();
   assert(collective_ && "Must be valid");
-  collective_->span_children_.push_back(msg->getChild());
+
+  if (collective_->span_children_.size() < 4) {
+    collective_->span_children_.push_back(msg->getChild());
+  } else {
+    auto const& num = collective_->span_children_.size();
+    auto const& child = collective_->span_children_[msg->getChild() % num];
+    messageRef(msg);
+    theMsg()->sendMsg<GroupCollectiveMsg,downHan>(child,msg);
+  }
+
   auto const& group_ = getGroupID();
   auto nmsg = makeSharedMessage<GroupOnlyMsg>(group_,down_tree_fin_cont_);
   theMsg()->sendMsg<GroupOnlyMsg,downFinishedHan>(from,nmsg);
@@ -442,15 +451,15 @@ void InfoColl::finalize() {
     cur += sprintf(buf + cur, "%d,", elm);
   }
 
-  debug_print(
-    group, node,
-    "InfoColl::finalize: group={:x}, send_down_={}, send_down_finished_={}, "
-    "children={}, in_phase_two_={}, in_group={}, children={}\n",
-    group_, send_down_, send_down_finished_, collective_->span_children_.size(),
-    in_phase_two_, is_in_group, buf
-  );
-
   if (in_phase_two_ && send_down_finished_ == send_down_) {
+    debug_print_force(
+      group, node,
+      "InfoColl::finalize: group={:x}, send_down_={}, send_down_finished_={}, "
+      "children={}, in_phase_two_={}, in_group={}, children={}\n",
+      group_, send_down_, send_down_finished_, collective_->span_children_.size(),
+      in_phase_two_, is_in_group, buf
+    );
+
     auto const& children = collective_->getChildren();
     for (auto&& c : children) {
 
