@@ -444,15 +444,17 @@ void InfoColl::sendDownNewTree() {
 void InfoColl::finalize() {
   auto const& group_ = getGroupID();
 
-  char buf[256];
-  buf[0] = '\0';
-  int cur = 0;
-  for (auto&& elm : collective_->span_children_) {
-    cur += sprintf(buf + cur, "%d,", elm);
-  }
-
   if (in_phase_two_ && send_down_finished_ == send_down_) {
-    debug_print_force(
+    #if backend_check_enabled(group)
+      char buf[256];
+      buf[0] = '\0';
+      int cur = 0;
+      for (auto&& elm : collective_->span_children_) {
+        cur += sprintf(buf + cur, "%d,", elm);
+      }
+    #endif
+
+    debug_print(
       group, node,
       "InfoColl::finalize: group={:x}, send_down_={}, send_down_finished_={}, "
       "children={}, in_phase_two_={}, in_group={}, children={}\n",
