@@ -9,6 +9,7 @@
 #include "group/global/group_default.h"
 #include "group/global/group_default_msg.h"
 #include "scheduler/scheduler.h"
+#include "collective/collective_alg.h"
 
 namespace vt { namespace group {
 
@@ -79,7 +80,7 @@ GroupManager::ReducePtrType GroupManager::groupReduce(GroupType const& group) {
   if (!is_default_group) {
     return iter->second->getReduce();
   } else {
-    return theReduce();
+    return theCollective();
   }
 }
 
