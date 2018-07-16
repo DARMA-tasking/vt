@@ -547,8 +547,8 @@ EpochType CollectionManager::reduceMsgExpr(
 
   debug_print(
     vrt_coll, node,
-    "reduceMsg: col_proxy={}, found={}\n",
-    col_proxy, found_constructed
+    "reduceMsg: col_proxy={}, found={}, group={:x}\n",
+    col_proxy, found_constructed, elm_holder->group()
   );
 
   if (found_constructed && elm_holder) {
