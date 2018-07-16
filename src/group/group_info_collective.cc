@@ -237,7 +237,7 @@ void InfoColl::upTree() {
 
       auto msg = makeSharedMessage<GroupCollectiveMsg>(
         group,new_root_cont_,true,static_cast<NodeType>(0),root_node,0,
-        msg_list.size()-1
+        static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size()-1)
       );
       theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
 
@@ -283,7 +283,8 @@ void InfoColl::upTree() {
      */
     auto const& child = theContext()->getNode();
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,static_cast<NodeType>(0),child,0,msg_in_group.size()
+      group,op,is_in_group,static_cast<NodeType>(0),child,0,
+      static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size())
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     /*
@@ -318,7 +319,8 @@ void InfoColl::upTree() {
       msg_list.emplace_back(msg);
     }
 
-    auto const& extra = msg_in_group.size() / 2;
+    auto const& extra =
+      static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size() / 2);
     auto const& child = theContext()->getNode();
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
       group,op,is_in_group,static_cast<NodeType>(0),child,0,extra
