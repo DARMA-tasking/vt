@@ -349,7 +349,10 @@ template <typename ColT, typename IndexT, typename MsgT>
       }
     });
   }
-  theTerm()->consume(term::any_epoch_sentinel);
+  auto const& group = envelopeGetGroup(msg->env);
+  if (group == default_group) {
+    theTerm()->consume(term::any_epoch_sentinel);
+  }
 }
 
 template <typename>
@@ -526,8 +529,6 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
     proxy, msg->getBcastEpoch(), msg->getVrtHandler()
   );
 
-  theTerm()->produce(term::any_epoch_sentinel, num_nodes);
-
   using Serial = ::vt::serialization::auto_dispatch::RequiredSerialization<
     MsgT, collectionBcastHandler<ColT,IndexT,MsgT>
   >;
@@ -547,6 +548,8 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
   if (use_group) {
     auto const& group = elm_holder->group();
     envelopeSetGroup(msg->env, group);
+  } else {
+    theTerm()->produce(term::any_epoch_sentinel, num_nodes);
   }
 
   messageRef(msg);
