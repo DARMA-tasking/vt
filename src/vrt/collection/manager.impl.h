@@ -180,28 +180,62 @@ template <typename SysMsgT>
     root, construct_msg, tag_id
   );
 
-  /*
-   *  Create a new group for the collection that only contains the nodes for
-   *  which elements exist. If the collection is static, this group will never
-   *  change
-   */
+  if (info.immediate_) {
+    /*
+     *  Create a new group for the collection that only contains the nodes for
+     *  which elements exist. If the collection is static, this group will never
+     *  change
+     */
 
-  auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(new_proxy);
+    auto const elms = theCollection()->groupElementCount<ColT,IndexT>(new_proxy);
+    bool const in_group = elms > 0;
+
+    debug_print(
+      vrt_coll, node,
+      "creating new group: elms={}, in_group={}\n",
+      elms, in_group
+    );
+
+    theCollection()->createGroupCollection<ColT, IndexT>(new_proxy, in_group);
+  } else {
+    /*
+     *  If the collection is not immediate (non-static) we need to wait for a
+     *  finishedInserting call to build the group.
+     */
+  }
+}
+
+template <typename ColT, typename IndexT>
+std::size_t CollectionManager::groupElementCount(VirtualProxyType const& p) {
+  auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(p);
   std::size_t const num_elms = elm_holder->numElements();
-  bool const in_group = num_elms > 0;
 
   debug_print(
     vrt_coll, node,
-    "constructing group: num_elms={}, in_group={}\n",
-    num_elms, in_group
+    "groupElementcount: num_elms={}, proxy={}, proxy-hex={:x}\n",
+    num_elms, p, p
   );
 
+  return num_elms;
+}
+
+template <typename ColT, typename IndexT>
+GroupType CollectionManager::createGroupCollection(
+  VirtualProxyType const& proxy, bool const in_group
+) {
+  debug_print(
+    vrt_coll, node,
+    "createGroupCollection: proxy={:x}, in_group={}\n",
+    proxy, in_group
+  );
+
+  auto const& vid = VirtualProxyBuilder::getVirtualID(proxy);
   auto const group_id = theGroup()->newGroupCollective(
-    in_group, [new_proxy,vid](GroupType new_group){
+    in_group, [proxy,vid](GroupType new_group){
       auto const& group_root = theGroup()->groupRoot(new_group);
       auto const& is_group_default = theGroup()->groupDefault(new_group);
       auto const& in_group = theGroup()->inGroup(new_group);
-      auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(new_proxy);
+      auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
       elm_holder->setGroup(new_group);
       elm_holder->setUseGroup(!is_group_default);
       elm_holder->setGroupReady(true);
@@ -211,22 +245,23 @@ template <typename SysMsgT>
 
       debug_print(
         vrt_coll, node,
-        "group finished construction: new_group={:x}, use_group={}, ready={}, "
-        "root={}, is_group_default={}\n",
-        new_group, elm_holder->useGroup(), elm_holder->groupReady(),
+        "group finished construction: proxy={}, new_group={:x}, use_group={}, "
+        "ready={}, root={}, is_group_default={}\n",
+        proxy, new_group, elm_holder->useGroup(), elm_holder->groupReady(),
         group_root, is_group_default
       );
 
       if (!is_group_default && in_group) {
         uint64_t const group_tag_mask = 0x0fff0000;
-        auto group_msg = makeSharedMessage<CollectionConsMsg>(new_proxy);
+        auto group_msg = makeSharedMessage<CollectionGroupMsg>(proxy,new_group);
         auto const& group_tag_id = vid | group_tag_mask;
         debug_print(
           vrt_coll, node,
-          "calling group (construct) reduce: new_proxy={}\n", new_proxy
+          "calling group (construct) reduce: proxy={}\n", proxy
         );
         theGroup()->groupReduce(new_group)->reduce<
-          CollectionConsMsg,collectionGroupConstructHan
+          CollectionGroupMsg,
+          collectionGroupReduceHan
         >(group_root, group_msg, group_tag_id);
       }
     }
@@ -234,9 +269,11 @@ template <typename SysMsgT>
 
   debug_print(
     vrt_coll, node,
-    "called newGroupCollective: num_elms={}, in_group={}, group_id={:x}\n",
-    num_elms, in_group, group_id
+    "createGroupCollection (after): proxy={:x}, in_group={}, group_id={:x}\n",
+    proxy, in_group, group_id
   );
+
+  return group_id;
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
@@ -309,9 +346,23 @@ template <typename ColT, typename IndexT, typename MsgT>
 
 template <typename>
 /*static*/ void CollectionManager::collectionGroupFinishedHan(
-  CollectionConsMsg* msg
+  CollectionGroupMsg* msg
 ) {
-
+  auto const& proxy = msg->getProxy();
+  auto& buffered = theCollection()->buffered_group_;
+  auto iter = buffered.find(proxy);
+  debug_print(
+    vrt_coll, node,
+    "collectionGroupFinishedHan: proxy={}, buffered size={}\n",
+    proxy, (iter != buffered.end() ? iter->second.size() : -1)
+  );
+  if (iter != buffered.end()) {
+    for (auto&& elm : iter->second) {
+      elm(proxy);
+    }
+    iter->second.clear();
+    buffered.erase(iter);
+  }
 }
 
 template <typename>
@@ -356,19 +407,17 @@ template <typename>
 }
 
 template <typename>
-/*static*/ void CollectionManager::collectionGroupConstructHan(
-  CollectionConsMsg* msg
+/*static*/ void CollectionManager::collectionGroupReduceHan(
+  CollectionGroupMsg* msg
 ) {
   debug_print(
     vrt_coll, node,
-    "collectionGroupConstructHan: proxy={}, root={}\n",
-    msg->proxy, msg->isRoot()
+    "collectionGroupReduceHan: proxy={}, root={}, group={}\n",
+    msg->proxy, msg->isRoot(), msg->getGroup()
   );
   if (msg->isRoot()) {
-    auto new_msg = makeSharedMessage<CollectionConsMsg>(*msg);
-    //theMsg()->broadcastMsg<CollectionConsMsg,collectionGroupFinishedHan>(new_msg);
-  } else {
-    // do nothing
+    auto nmsg = makeSharedMessage<CollectionGroupMsg>(*msg);
+    theMsg()->broadcastMsg<CollectionGroupMsg,collectionGroupFinishedHan>(nmsg);
   }
 }
 
@@ -985,6 +1034,27 @@ template <typename ColT, typename IndexT>
   auto const& untyped_proxy = msg->proxy_.getProxy();
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,msg->epoch_);
 
+  /*
+   *  Start building the a new group for broadcasts and reductions over the
+   *  current set of elements based the distributed snapshot
+   */
+
+  auto const elms = theCollection()->groupElementCount<ColT,IndexT>(
+    untyped_proxy
+  );
+  bool const in_group = elms > 0;
+
+  debug_print(
+    vrt_coll, node,
+    "finishedInsertEpoch: creating new group: elms={}, in_group={}\n",
+    elms, in_group
+  );
+
+  theCollection()->createGroupCollection<ColT, IndexT>(untyped_proxy, in_group);
+
+  /*
+   *  Contribute to reduction for update epoch
+   */
   auto const& root = 0;
   auto nmsg = makeSharedMessage<FinishedUpdateMsg>(untyped_proxy);
   theCollective()->reduce<FinishedUpdateMsg,finishedUpdateHan>(
@@ -1069,6 +1139,23 @@ void CollectionManager::finishedInsertEpoch(
   theMsg()->broadcastMsg<
     UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
   >(msg);
+
+  /*
+   *  Start building the a new group for broadcasts and reductions over the
+   *  current set of elements based the distributed snapshot
+   */
+  auto const elms = theCollection()->groupElementCount<ColT,IndexT>(
+    untyped_proxy
+  );
+  bool const in_group = elms > 0;
+
+  debug_print(
+    vrt_coll, node,
+    "finishedInsertEpoch: creating new group: elms={}, in_group={}\n",
+    elms, in_group
+  );
+
+  theCollection()->createGroupCollection<ColT, IndexT>(untyped_proxy, in_group);
 
   debug_print(
     vrt_coll, node,

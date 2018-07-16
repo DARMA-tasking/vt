@@ -205,9 +205,23 @@ struct CollectionManager {
   template <typename=void>
   static void collectionFinishedHan(CollectionConsMsg* msg);
   template <typename=void>
-  static void collectionGroupConstructHan(CollectionConsMsg* msg);
+  static void collectionGroupReduceHan(CollectionGroupMsg* msg);
   template <typename=void>
-  static void collectionGroupFinishedHan(CollectionConsMsg* msg);
+  static void collectionGroupFinishedHan(CollectionGroupMsg* msg);
+
+  /*
+   *  Automatic group creation for each collection instance for broadcasts
+   *  (optimization) and reduce (correctness)
+   */
+
+  template <typename ColT, typename IndexT>
+  std::size_t groupElementCount(VirtualProxyType const& proxy);
+
+  template <typename ColT, typename IndexT>
+  GroupType createGroupCollection(
+    VirtualProxyType const& proxy, bool const in_group
+  );
+
 
   /*
    * Traits version of running the constructor based on the detected available
@@ -395,6 +409,7 @@ private:
 
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;
+  BufferedActionType buffered_group_;
   std::unordered_set<VirtualProxyType> constructed_;
   std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
   std::vector<ActionFinishedLBType> lb_continuations_ = {};

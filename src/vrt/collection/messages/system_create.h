@@ -43,7 +43,22 @@ struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
     : proxy(in_proxy)
   { }
 
+  VirtualProxyType getProxy() const { return proxy; }
+
   VirtualProxyType proxy = {};
+};
+
+struct CollectionGroupMsg : CollectionConsMsg {
+  CollectionGroupMsg() = default;
+  CollectionGroupMsg(
+    VirtualProxyType const& in_proxy, GroupType const& in_group
+  ) : CollectionConsMsg(in_proxy), group_(in_group)
+  { }
+
+  GroupType getGroup() const { return group_; }
+
+private:
+  GroupType group_ = no_group;
 };
 
 struct FinishedUpdateMsg : ::vt::collective::reduce::ReduceMsg {
