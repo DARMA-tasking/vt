@@ -135,7 +135,7 @@ void InfoColl::setupCollective() {
   );
 
   if (collective_->getInitialChildren() == 0) {
-    auto const& size = is_in_group ? 1 : 0;
+    auto const& size = static_cast<NodeType>(is_in_group ? 1 : 0);
     auto const& child = theContext()->getNode();
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
       group_, up_tree_cont_, in_group, size, child
@@ -236,7 +236,8 @@ void InfoColl::upTree() {
       );
 
       auto msg = makeSharedMessage<GroupCollectiveMsg>(
-        group,new_root_cont_,true,0,root_node,0,msg_list.size()-1
+        group,new_root_cont_,true,static_cast<NodeType>(0),root_node,0,
+        msg_list.size()-1
       );
       theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
 
@@ -263,7 +264,7 @@ void InfoColl::upTree() {
      *  usual
      */
     auto const& child = theContext()->getNode();
-    auto const& size = subtree + 1;
+    auto const& size = static_cast<NodeType>(subtree + 1);
     auto const& level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
@@ -282,7 +283,7 @@ void InfoColl::upTree() {
      */
     auto const& child = theContext()->getNode();
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,0,child,0,msg_in_group.size()
+      group,op,is_in_group,static_cast<NodeType>(0),child,0,msg_in_group.size()
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     /*
@@ -300,7 +301,7 @@ void InfoColl::upTree() {
      */
     auto const& child = theContext()->getNode();
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,1,child,0,1
+      group,op,is_in_group,static_cast<NodeType>(1),child,0,1
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[0]);
@@ -320,7 +321,7 @@ void InfoColl::upTree() {
     auto const& extra = msg_in_group.size() / 2;
     auto const& child = theContext()->getNode();
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,0,child,0,extra
+      group,op,is_in_group,static_cast<NodeType>(0),child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
 
