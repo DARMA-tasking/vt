@@ -73,6 +73,7 @@ template <typename SysMsgT>
   auto& info = msg->info;
   VirtualProxyType new_proxy = info.getProxy();
   auto const& insert_epoch = info.getInsertEpoch();
+  bool element_created_here = false;
 
   theCollection()->insertCollectionInfo(new_proxy,msg->map,insert_epoch);
 
@@ -98,7 +99,7 @@ template <typename SysMsgT>
     auto user_index_range = info.getRange();
     auto max_range = msg->info.range_;
 
-    user_index_range.foreach(user_index_range, [=](IndexT cur_idx) mutable {
+    user_index_range.foreach(user_index_range, [&](IndexT cur_idx) mutable {
       debug_print(
         verbose, vrt_coll, node,
         "running foreach: before map: cur_idx={}, max_range={}\n",
@@ -145,9 +146,14 @@ template <typename SysMsgT>
           std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy,
           mapped_node
         );
+        element_created_here = true;
       }
     });
   } else {
+    assert(element_created_here == false && "Element should not be created");
+  }
+
+  if (!element_created_here) {
     auto const& map_han = msg->map;
     auto const& max_idx = msg->info.range_;
     using HolderType = typename EntireHolder<ColT, IndexT>::InnerHolder;
@@ -161,10 +167,10 @@ template <typename SysMsgT>
     theLocMan()->getCollectionLM<ColT, IndexT>(new_proxy);
   }
 
-  uint64_t const tag_start_ = 0x0ff00000;
+  uint64_t const tag_mask_ = 0x0ff00000;
+  auto const& vid = VirtualProxyBuilder::getVirtualID(new_proxy);
   auto construct_msg = makeSharedMessage<CollectionConsMsg>(new_proxy);
-  auto const& tag_id =
-    VirtualProxyBuilder::getVirtualID(new_proxy) | tag_start_;
+  auto const& tag_id = vid | tag_mask_;
   auto const& root = 0;
   debug_print(
     vrt_coll, node,
