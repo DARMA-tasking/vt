@@ -5,6 +5,8 @@
 #include "group/group_info_collective.h"
 #include "group/group_collective.h"
 #include "group/group_collective_msg.h"
+#include "group/group_collective_reduce_msg.h"
+#include "group/group_collective_util.h"
 #include "context/context.h"
 #include "messaging/active.h"
 #include "collective/tree/tree.h"
@@ -192,8 +194,8 @@ void InfoColl::upTree() {
 
       auto root_node = msg_list[0]->getChild();
       known_root_node_ = root_node;
-      is_new_root_ = false;
-      has_root_ = true;
+      is_new_root_     = false;
+      has_root_        = true;
 
       debug_print(
         group, node,
@@ -343,8 +345,8 @@ void InfoColl::newRoot(GroupCollectiveMsg* msg) {
   );
 
   known_root_node_ = this_node;
-  has_root_ = true;
-  is_new_root_ = true;
+  has_root_        = true;
+  is_new_root_     = true;
 }
 
 NodeType InfoColl::getRoot() const {
@@ -468,6 +470,11 @@ void InfoColl::newTree(NodeType const& parent) {
   if (action) {
     action();
   }
+  auto cur_actions = pending_ready_actions_;
+  pending_ready_actions_.clear();
+  for (auto&& act : cur_actions) {
+    act();
+  }
 }
 
 void InfoColl::sendDownNewTree() {
@@ -536,7 +543,7 @@ void InfoColl::finalize() {
       FinishedReduceMsg::msgHandler<
         FinishedReduceMsg,
         collective::PlusOp<collective::NoneType>,
-        FinishedWork
+        CollSetupFinished
       >
     >(root,msg);
   }
@@ -550,9 +557,9 @@ void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
     "InfoColl::finalizeTree: group={:x}, new_root={}\n",
     msg->getGroup(), new_root
   );
-  in_phase_two_ = true;
-  known_root_node_ = new_root;
-  has_root_ = true;
+  in_phase_two_     = true;
+  known_root_node_  = new_root;
+  has_root_         = true;
   is_default_group_ = msg->isDefault();
   finalize();
 }
@@ -586,27 +593,33 @@ InfoColl::ReducePtrType InfoColl::getReduce() const {
   return collective_->reduce_.get();
 }
 
-void FinishedWork::operator()(FinishedReduceMsg* msg) {
-  debug_print(
-    verbose, group, node,
-    "FinishedWork: group={:x}\n", msg->getGroup()
-  );
-  auto iter = theGroup()->local_collective_group_info_.find(msg->getGroup());
-  assert(
-    iter != theGroup()->local_collective_group_info_.end() && "Must exist"
-  );
-  auto const& this_node = theContext()->getNode();
-  auto info = iter->second.get();
-  if (info->known_root_node_ != this_node) {
-    auto nmsg = makeSharedMessage<GroupOnlyMsg>(
-      msg->getGroup(),info->new_tree_cont_
-    );
-    theMsg()->sendMsg<GroupOnlyMsg,InfoColl::newTreeHan>(
-      info->known_root_node_,nmsg
-    );
+bool InfoColl::isReady() const {
+  return
+    in_phase_two_ && has_root_ &&
+    (!is_in_group || collective_->span_ != nullptr);
+}
+
+void InfoColl::readyAction(ActionType const action) {
+  if (isReady()) {
+    action();
   } else {
-    info->newTree(-1);
+    pending_ready_actions_.emplace_back(action);
   }
+}
+
+InfoColl::TreeType* InfoColl::getTree() const {
+  assert(collective_        && "Collective must exist");
+  assert(collective_->span_ && "Spanning tree must exist");
+  assert(in_phase_two_      && "Must be in phase two");
+  assert(has_root_          && "Root node must be known by this node");
+  assert(
+    known_root_node_ != uninitialized_destination && "Known root must be set"
+  );
+  return collective_->span_.get();
+}
+
+bool InfoColl::inGroup() const {
+  return is_in_group;
 }
 
 }} /* end namespace vt::group */
