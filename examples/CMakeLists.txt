@@ -35,6 +35,7 @@ set(
   hello_world_start
   hello_world_collection
   collection_insert
+  collection_group
   rdma_unsized_collection
   group_example_1
   group_collective

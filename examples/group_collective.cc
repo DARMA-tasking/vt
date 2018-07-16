@@ -45,17 +45,26 @@ int main(int argc, char** argv) {
   auto const& my_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes < 2) {
     CollectiveOps::abort("At least 2 ranks required");
   }
 
+  srand48(my_node * 29);
+
+  auto const& random_node_filter = drand48() < 0.5;
+  auto const& even_node_filter   = my_node % 2 == 0;
+  auto const& odd_node_filter    = my_node % 2 == 1;
+
   this_group = theGroup()->newGroupCollective(
-    my_node < num_nodes / 2, [=](GroupType group){
+    odd_node_filter, [=](GroupType group){
       auto const& root = 0;
       auto const& in_group = theGroup()->inGroup(group);
+      auto const& root_node = theGroup()->groupRoot(group);
+      auto const& is_default_group = theGroup()->groupDefault(group);
       fmt::print(
-        "{}: Group is created: group={}, in_group={}\n",
-        my_node, group, in_group
+        "{}: Group is created: group={}, in_group={}, root={}, "
+        "is_default_group={}\n",
+        my_node, group, in_group, root_node, is_default_group
       );
       if (in_group) {
         auto msg = makeSharedMessage<SysMsg>(1);
@@ -64,19 +73,16 @@ int main(int argc, char** argv) {
           SysMsg, SysMsg::msgHandler<SysMsg,collective::PlusOp<int>,Print>
         >(root, msg);
       }
+      fmt::print("node={}\n", my_node);
+      if (my_node == 1) {
+        //assert(in_group);
+        auto msg = makeSharedMessage<HelloGroupMsg>();
+        envelopeSetGroup(msg->env, group);
+        fmt::print("calling broadcasting={}\n", my_node);
+        theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg);
+      }
     }
   );
-  // if (my_node == 0) {
-  //   HelloMsg* msg = makeSharedMessage<HelloMsg>(my_node);
-  //   theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
-
-  //   //std::vector<region::Region::BoundType> vec{0,1,2,3,4,5,6,7};
-  //   //auto list = std::make_unique<region::List>(vec);
-  //   auto list = std::make_unique<region::Range>(
-  //     theContext()->getNumNodes() / 2,
-  //     theContext()->getNumNodes()
-  //   );
-  // }
 
   while (!rt->isTerminated()) {
     runScheduler();
