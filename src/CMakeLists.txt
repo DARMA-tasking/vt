@@ -25,7 +25,7 @@ set(
     configs/debug configs/features configs/types
     collective/barrier collective/tree
     collective/reduce/
-      collective/reduce/operators
+      collective/reduce/operators collective/reduce/functors
     collective/scatter/
     group/id group/region group/global
     messaging/envelope messaging/message
