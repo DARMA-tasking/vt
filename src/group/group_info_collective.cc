@@ -442,8 +442,9 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
   } else {
     auto const& num = collective_->span_children_.size();
     auto const& child = collective_->span_children_[msg->getChild() % num];
-    messageRef(msg);
-    theMsg()->sendMsg<GroupCollectiveMsg,downHan>(child,msg);
+    auto nmsg = makeSharedMessage<GroupCollectiveMsg>(*msg);
+    theMsg()->sendMsg<GroupCollectiveMsg,downHan>(child,nmsg);
+    ++send_down_;
   }
 
   auto const& group_ = getGroupID();
