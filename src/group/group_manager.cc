@@ -75,7 +75,12 @@ bool GroupManager::inGroup(GroupType const& group) {
 GroupManager::ReducePtrType GroupManager::groupReduce(GroupType const& group) {
   auto iter = local_collective_group_info_.find(group);
   assert(iter != local_collective_group_info_.end() && "Must exist");
-  return iter->second->getReduce();
+  auto const& is_default_group = iter->second->isGroupDefault();
+  if (!is_default_group) {
+    return iter->second->getReduce();
+  } else {
+    return theReduce();
+  }
 }
 
 NodeType GroupManager::groupRoot(GroupType const& group) const {
