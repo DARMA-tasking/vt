@@ -361,6 +361,10 @@ EventType GroupManager::sendGroup(
   auto const& this_node = theContext()->getNode();
   auto const& msg = reinterpret_cast<ShortMessage* const>(base);
   auto const& group = envelopeGetGroup(msg->env);
+  auto const& dest = envelopeGetDest(msg->env);
+  auto const& is_shared = isSharedMessage(msg);
+  auto const& this_node_dest = dest == this_node;
+  auto const& first_send = from == uninitialized_destination;
 
   debug_print(
     group, node,
@@ -405,21 +409,28 @@ EventType GroupManager::sendGroup(
     auto iter = local_group_info_.find(group);
     bool is_at_root = iter != local_group_info_.end();
     if (is_at_root && iter->second->forward_node_ != this_node) {
-      auto& info = *iter->second;
-      assert(info.is_forward_ && "Must be a forward");
-      auto const& node = info.forward_node_;
-      *deliver = false;
-      return send_to_node(node);
+      if (iter->second->forward_node_ != this_node) {
+        auto& info = *iter->second;
+        assert(info.is_forward_ && "Must be a forward");
+        auto const& node = info.forward_node_;
+        *deliver = false;
+        return send_to_node(node);
+      } else {
+        *deliver = true;
+        return no_event;
+      }
     } else {
       auto iter = remote_group_info_.find(group);
 
       debug_print(
         broadcast, node,
-        "GroupManager::broadcast *send* remote size={}, from={}, found={}\n",
-        size, from, iter != remote_group_info_.end()
+        "GroupManager::sendGroup: *send* remote size={}, from={}, found={}, "
+        "dest={}, group={:x}, is_root={} \n",
+        size, from, iter != remote_group_info_.end(), dest, group,
+        is_root
       );
 
-      if (iter != remote_group_info_.end()) {
+      if (iter != remote_group_info_.end() && (!this_node_dest || first_send)) {
         auto& info = *iter->second;
         assert(!info.is_forward_ && "Must not be a forward");
         assert(
@@ -439,16 +450,21 @@ EventType GroupManager::sendGroup(
           parent = holder.get_event();
         }
 
+        if (is_shared) {
+          messageRef(msg);
+        }
+
         // Send to child nodes in the group's spanning tree
         if (num_children > 0) {
           info.default_spanning_tree_->foreachChild([&](NodeType child) {
             debug_print(
               broadcast, node,
-              "GroupManager::broadcast *send* size={}, from={}, child={}\n",
+              "GroupManager::sendGroup: *send* size={}, from={}, child={}\n",
               size, from, child
             );
 
             if (child != this_node) {
+              messageRef(msg);
               auto const put_event = theMsg()->sendMsgBytesWithPut(
                 child, base, size, send_tag, action
               );
@@ -457,6 +473,18 @@ EventType GroupManager::sendGroup(
               }
             }
           });
+        }
+
+        if (is_shared) {
+          messageDeref(msg);
+        }
+
+        if (is_root && from == uninitialized_destination) {
+          *deliver = true;
+        } else if (!is_root && dest == this_node) {
+          *deliver = false;
+        } else {
+          *deliver = true;
         }
       }
     }
