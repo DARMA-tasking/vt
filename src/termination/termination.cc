@@ -339,8 +339,13 @@ void TerminationDetector::epochContinue(
 EpochType TerminationDetector::newEpochCollective() {
   auto const& epoch = epoch::EpochManip::makeNewEpoch();
   auto const from_child = false;
+  produce(epoch,1);
   propagateNewEpoch(epoch, from_child);
   return epoch;
+}
+
+void TerminationDetector::finishedEpoch(EpochType const& epoch) {
+  consume(epoch,1);
 }
 
 EpochType TerminationDetector::newEpochRooted() {

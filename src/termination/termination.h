@@ -47,6 +47,7 @@ public:
   EpochType makeEpochCollective();
   EpochType makeEpoch(bool const is_collective);
   void activateEpoch(EpochType const& epoch);
+  void finishedEpoch(EpochType const& epoch);
 
 private:
   EpochType newEpochCollective();
