@@ -45,6 +45,10 @@ void InfoColl::setupCollectiveSingular() {
   collective_->span_ = std::make_unique<TreeType>(
     true,uninitialized_destination,TreeType::NodeListType{}
   );
+  auto const& action = getAction();
+  if (action) {
+    action();
+  }
 }
 
 void InfoColl::setupCollective() {
