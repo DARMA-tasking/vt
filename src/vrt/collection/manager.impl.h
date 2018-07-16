@@ -263,6 +263,14 @@ GroupType CollectionManager::createGroupCollection(
           CollectionGroupMsg,
           collectionGroupReduceHan
         >(group_root, group_msg, group_tag_id);
+      } else if (is_group_default) {
+        /*
+         *  Trigger the group finished handler directly because the default
+         *  group will now be utilized
+         */
+        auto nmsg = makeSharedMessage<CollectionGroupMsg>(proxy,new_group);
+        theCollection()->collectionGroupFinishedHan<>(nmsg);
+        messageDeref(nmsg);
       }
     }
   );
