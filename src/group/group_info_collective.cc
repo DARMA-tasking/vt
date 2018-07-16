@@ -24,13 +24,44 @@
 
 namespace vt { namespace group {
 
+void InfoColl::setupCollectiveSingular() {
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& in_group = is_in_group;
+  assert(num_nodes == 1 && "This method handles single node case");
+  if (in_group) {
+    known_root_node_   = this_node;
+    is_new_root_       = true;
+    in_phase_two_      = true;
+    has_root_          = true;
+    is_default_group_  = true;
+    collective_->span_ = std::make_unique<TreeType>(
+      true,uninitialized_destination,{}
+    );
+  } else {
+    known_root_node_   = uninitialized_destination;
+    is_new_root_       = false;
+    in_phase_two_      = true;
+    has_root_          = true;
+    is_default_group_  = false;
+    collective_->span_ = std::make_unique<TreeType>(
+      true,uninitialized_destination,{}
+    );
+  }
+}
+
 void InfoColl::setupCollective() {
+  auto const& num_nodes = theContext()->getNumNodes();
   auto const& group_ = getGroupID();
 
   assert(!collective_   && "Collective should not be initialized");
 
   if (!collective_) {
     collective_ = std::make_unique<InfoColl::GroupCollectiveType>();
+  }
+
+  if (num_nodes == 1) {
+    return setupCollectiveSingular();
   }
 
   auto const& in_group = is_in_group;

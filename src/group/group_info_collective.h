@@ -45,6 +45,7 @@ public:
 
 protected:
   void setupCollective();
+  void setupCollectiveSingular();
 
   static void upHan(GroupCollectiveMsg* msg);
   static void downHan(GroupCollectiveMsg* msg);
