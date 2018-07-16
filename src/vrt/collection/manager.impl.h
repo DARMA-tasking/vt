@@ -524,11 +524,28 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
     MsgT, collectionBcastHandler<ColT,IndexT,MsgT>
   >;
 
-  //auto new_msg = makeSharedMessage<MsgT>(*msg);
+  auto const& group_ready = elm_holder->groupReady();
+  auto const& send_group = elm_holder->useGroup();
+  bool const use_group = group_ready && send_group;
+
+  debug_print(
+    vrt_coll, node,
+    "broadcastFromRoot: proxy={}, epoch={}, han={}, group_ready={}, "
+    "group_active={}, use_group={}\n",
+    proxy, msg->getBcastEpoch(), msg->getVrtHandler(),
+    group_ready, send_group, use_group
+  );
+
+  if (use_group) {
+    auto const& group = elm_holder->group();
+    envelopeSetGroup(msg->env, group);
+  }
+
   messageRef(msg);
   Serial::broadcastMsg(msg);
-  //theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT,MsgT>>(msg);
-  collectionBcastHandler<ColT,IndexT,MsgT>(msg);
+  if (!use_group) {
+    collectionBcastHandler<ColT,IndexT,MsgT>(msg);
+  }
   messageDeref(msg);
 }
 
