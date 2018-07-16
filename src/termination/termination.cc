@@ -311,7 +311,7 @@ bool TerminationDetector::testEpochFinished(EpochType const& epoch) {
   if (is_rooted_epoch) {
     return false;
   } else {
-    return epoch < first_resolved_epoch_;
+    return epoch > first_resolved_epoch_;
   }
 }
 
