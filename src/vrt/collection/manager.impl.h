@@ -179,6 +179,64 @@ template <typename SysMsgT>
   theCollective()->reduce<CollectionConsMsg,collectionConstructHan>(
     root, construct_msg, tag_id
   );
+
+  /*
+   *  Create a new group for the collection that only contains the nodes for
+   *  which elements exist. If the collection is static, this group will never
+   *  change
+   */
+
+  auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(new_proxy);
+  std::size_t const num_elms = elm_holder->numElements();
+  bool const in_group = num_elms > 0;
+
+  debug_print(
+    vrt_coll, node,
+    "constructing group: num_elms={}, in_group={}\n",
+    num_elms, in_group
+  );
+
+  auto const group_id = theGroup()->newGroupCollective(
+    in_group, [new_proxy,vid](GroupType new_group){
+      auto const& group_root = theGroup()->groupRoot(new_group);
+      auto const& is_group_default = theGroup()->groupDefault(new_group);
+      auto const& in_group = theGroup()->inGroup(new_group);
+      auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(new_proxy);
+      elm_holder->setGroup(new_group);
+      elm_holder->setUseGroup(!is_group_default);
+      elm_holder->setGroupReady(true);
+      if (!is_group_default) {
+        elm_holder->setGroupRoot(group_root);
+      }
+
+      debug_print(
+        vrt_coll, node,
+        "group finished construction: new_group={:x}, use_group={}, ready={}, "
+        "root={}, is_group_default={}\n",
+        new_group, elm_holder->useGroup(), elm_holder->groupReady(),
+        group_root, is_group_default
+      );
+
+      if (!is_group_default && in_group) {
+        uint64_t const group_tag_mask = 0x0fff0000;
+        auto group_msg = makeSharedMessage<CollectionConsMsg>(new_proxy);
+        auto const& group_tag_id = vid | group_tag_mask;
+        debug_print(
+          vrt_coll, node,
+          "calling group (construct) reduce: new_proxy={}\n", new_proxy
+        );
+        theGroup()->groupReduce(new_group)->reduce<
+          CollectionConsMsg,collectionGroupConstructHan
+        >(group_root, group_msg, group_tag_id);
+      }
+    }
+  );
+
+  debug_print(
+    vrt_coll, node,
+    "called newGroupCollective: num_elms={}, in_group={}, group_id={:x}\n",
+    num_elms, in_group, group_id
+  );
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
@@ -250,6 +308,13 @@ template <typename ColT, typename IndexT, typename MsgT>
 }
 
 template <typename>
+/*static*/ void CollectionManager::collectionGroupFinishedHan(
+  CollectionConsMsg* msg
+) {
+
+}
+
+template <typename>
 /*static*/ void CollectionManager::collectionFinishedHan(
   CollectionConsMsg* msg
 ) {
@@ -285,6 +350,23 @@ template <typename>
     theMsg()->broadcastMsg<CollectionConsMsg,collectionFinishedHan>(new_msg);
     collectionFinishedHan(new_msg);
     messageDeref(new_msg);
+  } else {
+    // do nothing
+  }
+}
+
+template <typename>
+/*static*/ void CollectionManager::collectionGroupConstructHan(
+  CollectionConsMsg* msg
+) {
+  debug_print(
+    vrt_coll, node,
+    "collectionGroupConstructHan: proxy={}, root={}\n",
+    msg->proxy, msg->isRoot()
+  );
+  if (msg->isRoot()) {
+    auto new_msg = makeSharedMessage<CollectionConsMsg>(*msg);
+    //theMsg()->broadcastMsg<CollectionConsMsg,collectionGroupFinishedHan>(new_msg);
   } else {
     // do nothing
   }

@@ -204,6 +204,10 @@ struct CollectionManager {
   static void collectionConstructHan(CollectionConsMsg* msg);
   template <typename=void>
   static void collectionFinishedHan(CollectionConsMsg* msg);
+  template <typename=void>
+  static void collectionGroupConstructHan(CollectionConsMsg* msg);
+  template <typename=void>
+  static void collectionGroupFinishedHan(CollectionConsMsg* msg);
 
   /*
    * Traits version of running the constructor based on the detected available
