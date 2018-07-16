@@ -38,16 +38,28 @@ struct Holder {
   bool foreach(FuncApplyType fn);
   typename TypedIndexContainer::size_type numElements() const;
   typename TypedIndexContainer::size_type numElementsExpr(FuncExprType f) const;
+  GroupType group() const { return cur_group_; }
+  void setGroup(GroupType const& group) { cur_group_ = group; }
+  bool useGroup() const { return use_group_; }
+  void setUseGroup(bool const use_group) { use_group_ = use_group; }
+  bool groupReady() const { return group_ready_; }
+  void setGroupReady(bool const ready) { group_ready_ = ready; }
+  NodeType groupRoot() const { return group_root_; }
+  void setGroupRoot(NodeType const root) { group_root_ = root; }
 
   friend struct CollectionManager;
 
 private:
-  bool erased = false;
-  typename TypedIndexContainer::iterator foreach_iter;
+  bool erased                                                     = false;
+  typename TypedIndexContainer::iterator foreach_iter             = {};
   std::unordered_map<EpochType, CollectionMessage<ColT>*> bcasts_ = {};
-  EpochType cur_bcast_epoch_ = 1;
-  TypedIndexContainer vc_container_;
-  bool is_destroyed_ = false;
+  EpochType cur_bcast_epoch_                                      = 1;
+  TypedIndexContainer vc_container_                               = {};
+  bool is_destroyed_                                              = false;
+  GroupType cur_group_                                            = no_group;
+  bool use_group_                                                 = false;
+  bool group_ready_                                               = false;
+  NodeType group_root_                                            = 0;
 };
 
 }}} /* end namespace vt::vrt::collection */
