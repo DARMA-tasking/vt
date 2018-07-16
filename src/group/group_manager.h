@@ -46,6 +46,8 @@ struct GroupManager {
   using ActionContainerTType = std::unordered_map<
     RemoteOperationIDType, ActionListTType<T>
   >;
+  using ReduceType = collective::reduce::Reduce;
+  using ReducePtrType = ReduceType*;
 
   GroupManager();
 
@@ -111,7 +113,7 @@ private:
   );
 
 public:
-  collective::reduce::Reduce* groupReduce(GroupType const& group);
+  ReducePtrType groupReduce(GroupType const& group);
   NodeType groupRoot(GroupType const& group) const;
   bool groupDefault(GroupType const& group) const;
 
