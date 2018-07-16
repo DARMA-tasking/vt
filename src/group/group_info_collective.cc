@@ -35,19 +35,16 @@ void InfoColl::setupCollectiveSingular() {
     in_phase_two_      = true;
     has_root_          = true;
     is_default_group_  = true;
-    collective_->span_ = std::make_unique<TreeType>(
-      true,uninitialized_destination,{}
-    );
   } else {
     known_root_node_   = uninitialized_destination;
     is_new_root_       = false;
     in_phase_two_      = true;
     has_root_          = true;
     is_default_group_  = false;
-    collective_->span_ = std::make_unique<TreeType>(
-      true,uninitialized_destination,{}
-    );
   }
+  collective_->span_ = std::make_unique<TreeType>(
+    true,uninitialized_destination,TreeType::NodeListType{}
+  );
 }
 
 void InfoColl::setupCollective() {
