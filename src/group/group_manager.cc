@@ -171,23 +171,181 @@ void GroupManager::initializeLocalGroup(
 
 /*static*/ EventType GroupManager::groupHandler(
   BaseMessage* base, NodeType const& from, MsgSizeType const& size,
-  bool const is_root, ActionType action, bool* const deliver
+  bool const root, ActionType act, bool* const deliver
 ) {
   auto const& msg = reinterpret_cast<ShortMessage* const>(base);
   auto const& group = envelopeGetGroup(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
+  auto const& dest = envelopeGetDest(msg->env);
+
+  debug_print(
+    group, node,
+    "GroupManager::groupHandler: size={}, root={}, from={}, group={:x}, "
+    "bcast={}, dest={}\n",
+    size, root, from, group, is_bcast, dest
+  );
+
   if (is_bcast) {
     // Deliver the message normally if it's not a the root of a broadcast
-    *deliver = !is_root;
+    *deliver = !root;
     if (group == default_group) {
-      return global::DefaultGroup::broadcast(base, from, size, is_root, action);
+      return global::DefaultGroup::broadcast(base,from,size,root,act);
     } else {
-      return theGroup()->sendGroup(base, from, size, is_root, action, deliver);
+      auto const& is_collective_group = GroupIDBuilder::isCollective(group);
+      if (is_collective_group) {
+        return theGroup()->sendGroupCollective(base,from,size,root,act,deliver);
+      } else {
+        return theGroup()->sendGroup(base,from,size,root,act,deliver);
+      }
     }
   } else {
     *deliver = true;
   }
   return no_event;
+}
+
+EventType GroupManager::sendGroupCollective(
+  BaseMessage* base, NodeType const& from, MsgSizeType const& size,
+  bool const is_root, ActionType action, bool* const deliver
+) {
+  auto const& send_tag = static_cast<messaging::MPI_TagType>(
+    messaging::MPITag::ActiveMsgTag
+  );
+  auto const& msg = reinterpret_cast<ShortMessage* const>(base);
+  auto const& group = envelopeGetGroup(msg->env);
+  auto iter = local_collective_group_info_.find(group);
+  assert(iter != local_collective_group_info_.end() && "Must exist");
+  auto const& info = *iter->second;
+  auto const& in_group = info.inGroup();
+  auto const& group_ready = info.isReady();
+  auto const& has_action = action != nullptr;
+  auto const& is_shared = isSharedMessage(msg);
+  EventRecordType* parent = nullptr;
+
+  if (in_group && group_ready) {
+    auto const& this_node = theContext()->getNode();
+    auto const& dest = envelopeGetDest(msg->env);
+    auto const& is_bcast = envelopeIsBcast(msg->env);
+    auto const& is_group_collective = GroupIDBuilder::isCollective(group);
+    auto const& root_node = info.getRoot();
+    auto const& send_to_root = is_root && this_node != root_node;
+    auto const& this_node_dest = dest == this_node;
+    auto const& first_send = from == uninitialized_destination;
+
+    assert(is_group_collective && "This must be a collective group");
+
+    debug_print(
+      group, node,
+      "GroupManager::sendGroupCollective: group={:x}, collective={}, "
+      "in_group={}, group root={}, is_root={}, dest={}, from={}, is_bcast={}\n",
+      group, is_group_collective, in_group, root_node, is_root, dest, from,
+      is_bcast
+    );
+
+    EventType event = no_event;
+    auto const& tree = info.getTree();
+    auto const& num_children = tree->getNumChildren();
+    auto const& node = theContext()->getNode();
+
+    debug_print(
+      group, node,
+      "GroupManager::sendGroupCollective: group={:x}, collective={}, "
+      "num_children={}\n",
+      group, is_group_collective, num_children
+    );
+
+    if ((num_children > 0 || send_to_root) && (!this_node_dest || first_send)) {
+      if (has_action) {
+        event = theEvent()->createParentEvent(node);
+        auto& holder = theEvent()->getEventHolder(event);
+        parent = holder.get_event();
+      }
+
+      if (is_shared) {
+        messageRef(msg);
+      }
+
+      info.getTree()->foreachChild([&](NodeType child){
+        bool const& send = child != dest;
+
+        debug_print(
+          broadcast, node,
+          "GroupManager::sendGroupCollective *send* size={}, from={}, child={}, "
+          "send={}, msg={}\n",
+          size, from, child, send, print_ptr(msg)
+        );
+
+        if (send) {
+          messageRef(msg);
+          auto const put_event = theMsg()->sendMsgBytesWithPut(
+            child, base, size, send_tag, action
+          );
+          if (has_action) {
+            parent->addEventToList(put_event);
+          }
+        }
+      });
+
+      /*
+       *  Send message to the root node of the group
+       */
+      if (send_to_root) {
+        messageRef(msg);
+        auto const put_event = theMsg()->sendMsgBytesWithPut(
+          root_node, base, size, send_tag, action
+        );
+        if (has_action) {
+          parent->addEventToList(put_event);
+        }
+      }
+
+      if (is_shared) {
+        messageDeref(msg);
+      }
+
+      if (!first_send && this_node_dest) {
+        *deliver = false;
+      } else {
+        *deliver = true;
+      }
+
+      return event;
+    } else {
+      *deliver = true;
+      return no_event;
+    }
+  } else if (in_group && !group_ready) {
+    messageRef(msg);
+    local_collective_group_info_.find(group)->second->readyAction([=]{
+      theGroup()->sendGroupCollective(base,from,size,is_root,action,deliver);
+    });
+    *deliver = true;
+    return no_event;
+  } else {
+    auto const& root_node = info.getRoot();
+    assert(!in_group && "Must not be in this group");
+    /*
+     *  Forward message to the root node of the group; currently, only nodes
+     *  that are part of the group can be in the spanning tree. Thus, this node
+     *  must forward.
+     */
+    messageRef(msg);
+    auto const put_event = theMsg()->sendMsgBytesWithPut(
+      root_node, base, size, send_tag, action
+    );
+    if (has_action) {
+      parent->addEventToList(put_event);
+    }
+    if (is_shared) {
+      messageDeref(msg);
+    }
+    /*
+     *  Do not deliver on this node since it is not part of the group and will
+     *  just forward to the root node.
+     */
+    *deliver = false;
+    return put_event;
+  }
 }
 
 EventType GroupManager::sendGroup(

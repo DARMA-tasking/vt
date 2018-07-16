@@ -112,6 +112,11 @@ private:
     bool const is_root, ActionType action, bool* const deliver
   );
 
+  EventType sendGroupCollective(
+    BaseMessage* base, NodeType const& from, MsgSizeType const& size,
+    bool const is_root, ActionType action, bool* const deliver
+  );
+
 public:
   ReducePtrType groupReduce(GroupType const& group);
   NodeType groupRoot(GroupType const& group) const;
