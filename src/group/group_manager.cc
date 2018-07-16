@@ -359,7 +359,7 @@ EventType GroupManager::sendGroup(
   debug_print(
     group, node,
     "GroupManager::sendGroup: group={}, is_root={}\n",
-    group, print_bool(is_root)
+    group, is_root
   );
 
   auto const& group_node = GroupIDBuilder::getNode(group);
@@ -410,7 +410,7 @@ EventType GroupManager::sendGroup(
       debug_print(
         broadcast, node,
         "GroupManager::broadcast *send* remote size={}, from={}, found={}\n",
-        size, from, print_bool(iter != remote_group_info_.end())
+        size, from, iter != remote_group_info_.end()
       );
 
       if (iter != remote_group_info_.end()) {
