@@ -427,13 +427,14 @@ void InfoColl::collectiveFn(GroupCollectiveMsg* msg) {
 }
 
 void InfoColl::downTree(GroupCollectiveMsg* msg) {
+  auto const& from = theMsg()->getFromNodeCurrentHandler();
+
   debug_print(
     group, node,
-    "InfoColl::downTree: group={:x}, child={}\n",
-    getGroupID(), msg->getChild()
+    "InfoColl::downTree: group={:x}, child={}, from={}\n",
+    getGroupID(), msg->getChild(), from
   );
 
-  auto const& from = theMsg()->getFromNodeCurrentHandler();
   assert(collective_ && "Must be valid");
 
   if (collective_->span_children_.size() < 4) {
