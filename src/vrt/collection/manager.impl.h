@@ -699,13 +699,50 @@ EpochType CollectionManager::reduceMsgExpr(
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
   auto elm_holder = findElmHolder<ColT,IndexT>(col_proxy);
 
+  auto const& group_ready = elm_holder->groupReady();
+  auto const& send_group = elm_holder->useGroup();
+  auto const& group = elm_holder->group();
+  bool const use_group = group_ready && send_group;
+
   debug_print(
     vrt_coll, node,
-    "reduceMsg: col_proxy={}, found={}, group={:x}\n",
-    col_proxy, found_constructed, elm_holder->group()
+    "reduceMsg: col_proxy={}, found={}, group={:x}, group_ready={}, "
+    "use_group={}\n",
+    col_proxy, found_constructed, group, group_ready, send_group
   );
 
-  if (found_constructed && elm_holder) {
+  if (!group_ready) {
+    auto iter = buffered_group_.find(col_proxy);
+    if (iter == buffered_group_.end()) {
+      buffered_group_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(col_proxy),
+        std::forward_as_tuple(ActionContainerType{})
+      );
+      iter = buffered_group_.find(col_proxy);
+    }
+    assert(iter != buffered_group_.end() and "Must exist");
+
+    theTerm()->produce(term::any_epoch_sentinel);
+
+    debug_print(
+      vrt_coll, node,
+      "reduceMsgExpr: col_proxy={}, buffering reduce operation\n",
+      col_proxy
+    );
+
+    iter->second.push_back([=](VirtualProxyType /*ignored*/){
+      debug_print(
+        vrt_coll, node,
+        "reduceMsgExpr: col_proxy={}, running buffered reduce operation\n",
+        col_proxy
+      );
+      theTerm()->consume(term::any_epoch_sentinel);
+      theCollection()->reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,expr_fn,epoch,tag);
+    });
+
+    return no_epoch;
+  } else if (found_constructed && elm_holder) {
     std::size_t num_elms = 0;
 
     if (expr_fn == nullptr) {
@@ -720,9 +757,17 @@ EpochType CollectionManager::reduceMsgExpr(
     if (epoch == no_epoch && epoch_iter != reduce_cur_epoch_.end()) {
       cur_epoch = epoch_iter->second;
     }
-    auto ret_epoch = theCollective()->reduce<MsgT,f>(
-      0,msg,tag,cur_epoch,num_elms,col_proxy
-    );
+    EpochType ret_epoch = no_epoch;
+
+    if (use_group) {
+      ret_epoch = theGroup()->groupReduce(group)->template reduce<MsgT,f>(
+        0,msg,tag,cur_epoch,num_elms,col_proxy
+      );
+    } else {
+      ret_epoch = theCollective()->reduce<MsgT,f>(
+        0,msg,tag,cur_epoch,num_elms,col_proxy
+      );
+    }
     debug_print(
       vrt_coll, node,
       "reduceMsg: col_proxy={}, epoch={}, num_elms={}, tag={}\n",
