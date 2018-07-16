@@ -13,7 +13,7 @@ namespace vt { namespace group {
 
 template <typename MsgT>
 struct GroupCollectiveInfoMsg : MsgT {
-  using CountType = uint32_t;
+  using CountType = int32_t;
 
   GroupCollectiveInfoMsg() = default;
   GroupCollectiveInfoMsg(
