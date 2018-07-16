@@ -16,6 +16,7 @@ set(
   pool
   sequencer
   mapping
+  group
   serialization
   tls
   atomic
