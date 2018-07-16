@@ -69,7 +69,7 @@ GroupType GroupManager::newLocalGroup(
 bool GroupManager::inGroup(GroupType const& group) {
   auto iter = local_collective_group_info_.find(group);
   assert(iter != local_collective_group_info_.end() && "Must exist");
-  return iter->second->is_in_group;
+  return iter->second->inGroup();
 }
 
 GroupManager::ReducePtrType GroupManager::groupReduce(GroupType const& group) {
