@@ -5,38 +5,19 @@
 #include "config.h"
 #include "collective/reduce/reduce_msg.h"
 #include "collective/reduce/operators/default_msg.h"
+#include "collective/reduce/operators/functors/none_op.h"
+#include "collective/reduce/operators/functors/and_op.h"
+#include "collective/reduce/operators/functors/or_op.h"
+#include "collective/reduce/operators/functors/plus_op.h"
+#include "collective/reduce/operators/functors/max_op.h"
+#include "collective/reduce/operators/functors/min_op.h"
+#include "collective/reduce/operators/functors/bit_and_op.h"
+#include "collective/reduce/operators/functors/bit_or_op.h"
+#include "collective/reduce/operators/functors/bit_xor_op.h"
 
 #include <algorithm>
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
-
-using NoneType = char;
-
-template <typename T>
-struct None {
-  void operator()(T& v1, T const& v2) {}
-};
-
-template <typename T>
-struct PlusOp {
-  void operator()(T& v1, T const& v2) {
-    v1 = v1 + v2;
-  }
-};
-
-template <typename T>
-struct MaxOp {
-  void operator()(T& v1, T const& v2) {
-    v1 = std::max(v1,v2);
-  }
-};
-
-template <typename T>
-struct MinOp {
-  void operator()(T& v1, T const& v2) {
-    v1 = std::min(v1,v2);
-  }
-};
 
 template <typename T = void>
 struct ReduceCombine {
@@ -63,23 +44,5 @@ public:
 };
 
 }}}} /* end namespace vt::collective::reduce::operators */
-
-namespace vt { namespace collective {
-
-template <typename T>
-using PlusOp = reduce::operators::PlusOp<T>;
-
-template <typename T>
-using MaxOp = reduce::operators::MaxOp<T>;
-
-template <typename T>
-using MinOp = reduce::operators::MinOp<T>;
-
-template <typename T>
-using NoneOp = reduce::operators::None<T>;
-
-using NoneType = reduce::operators::NoneType;
-
-}} /* end namespace vt::collective */
 
 #endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_H*/
