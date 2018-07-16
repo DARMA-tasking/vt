@@ -26,7 +26,7 @@ struct DestroyTest : Collection<DestroyTest,Index1D> {
   DestroyTest() = default;
 
   virtual ~DestroyTest() {
-    /// ::fmt::print("destroying collection: idx={}\n", getIndex().x());
+    // ::fmt::print("destroying collection: idx={}\n", getIndex().x());
     num_destroyed++;
   }
 
@@ -51,6 +51,7 @@ struct FinishedWork {
 
 /*static*/ void DestroyTest::work(WorkMsg* msg, DestroyTest* col) {
   auto proxy = col->getCollectionProxy();
+  // ::fmt::print("work idx={}, proxy={:x}\n", col->getIndex(), proxy.getProxy());
   auto reduce_msg = makeSharedMessage<CollReduceMsg>(proxy);
   theCollection()->reduceMsg<
     DestroyTest,
@@ -73,10 +74,11 @@ TEST_F(TestDestroy, test_destroy_1) {
     auto const& range = Index1D(num_nodes * num_elms_per_node);
     auto proxy = theCollection()->construct<DestroyTest>(range);
     auto msg = makeSharedMessage<WorkMsg>();
+    // ::fmt::print("broadcasting proxy={:x}\n", proxy.getProxy());
     proxy.broadcast<WorkMsg,DestroyTest::work>(msg);
   }
   theTerm()->addAction([]{
-    /// ::fmt::print("num destroyed={}\n", num_destroyed);
+    // ::fmt::print("num destroyed={}\n", num_destroyed);
     // Relies on default mapping equally distributing
     EXPECT_EQ(num_destroyed, num_elms_per_node);
   });
