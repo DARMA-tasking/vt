@@ -57,11 +57,12 @@ struct SerializedMessenger {
   static void serialMsgHandlerBcast(SerialWrapperMsgType<UserMsgT>* sys_msg) {
     auto const& handler = sys_msg->handler;
     auto const& ptr_size = sys_msg->ptr_size;
+    auto const& group_ = envelopeGetGroup(sys_msg->env);
 
     debug_print(
       serial_msg, node,
-      "serialMsgHandlerBcast: handler={}, ptr_size={}\n",
-      handler, ptr_size
+      "serialMsgHandlerBcast: group_={:x}, handler={}, ptr_size={}\n",
+      group_, handler, ptr_size
     );
 
     UserMsgT* user_msg = makeSharedMessage<UserMsgT>();
@@ -126,11 +127,12 @@ struct SerializedMessenger {
     auto tptr = deserialize<UserMsgT>(
       sys_msg->payload.data(), sys_msg->bytes, user_msg
     );
+    auto const& group_ = envelopeGetGroup(sys_msg->env);
 
     debug_print(
       serial_msg, node,
-      "payloadMsgHandler: msg={}, handler={}, bytes={}\n",
-      print_ptr(sys_msg), handler, sys_msg->bytes
+      "payloadMsgHandler: group={:x}, msg={}, handler={}, bytes={}\n",
+      group_, print_ptr(sys_msg), handler, sys_msg->bytes
     );
 
     messageRef(user_msg);
@@ -266,8 +268,9 @@ struct SerializedMessenger {
 
       debug_print(
         serial_msg, node,
-        "broadcastSerialMsg: han={}, size={}, serialized_msg_eager_size={}\n",
-        han, ptr_size, serialized_msg_eager_size
+        "broadcastSerialMsg: han={}, size={}, serialized_msg_eager_size={}, "
+        "group={:x}\n",
+        han, ptr_size, serialized_msg_eager_size, group_
       );
 
       theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg);
@@ -282,8 +285,8 @@ struct SerializedMessenger {
       debug_print(
         serial_msg, node,
         "broadcastSerialMsg: container: han={}, sys_size={}, ptr_size={}, "
-        "total_size={}\n",
-        han, sys_size, ptr_size, total_size
+        "total_size={}, group={:x}\n",
+        han, sys_size, ptr_size, total_size, group_
       );
 
       theMsg()->broadcastMsgSz<SerialWrapperMsgType<MsgT>,serialMsgHandlerBcast>(
