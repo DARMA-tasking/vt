@@ -27,7 +27,8 @@ set(
     collective/reduce/
       collective/reduce/operators collective/reduce/functors
     collective/scatter/
-    group/id group/region group/global
+    group/id group/region group/global group/msg group/collective group/rooted
+    group/base
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
