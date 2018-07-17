@@ -530,23 +530,26 @@ void InfoColl::finalize() {
   auto const& group_ = getGroupID();
 
   if (in_phase_two_ && send_down_finished_ == send_down_) {
-    #if backend_check_enabled(group)
-      char buf[256];
-      buf[0] = '\0';
-      int cur = 0;
-      for (auto&& elm : collective_->span_children_) {
-        cur += sprintf(buf + cur, "%d,", elm);
-      }
-    #endif
 
-    debug_print(
-      group, node,
-      "InfoColl::finalize: group={:x}, send_down_={}, send_down_finished_={}, "
-      "children={}, in_phase_two_={}, in_group={}, children={}, has_root_={}, "
-      "known_root_node_={}, is_new_root_={}\n",
-      group_, send_down_, send_down_finished_,
-      collective_->span_children_.size(), in_phase_two_, is_in_group, buf
-      , has_root_, known_root_node_, is_new_root_
+    backend_enable_if(
+      group, {
+        char buf[256];
+        buf[0] = '\0';
+        int cur = 0;
+        for (auto&& elm : collective_->span_children_) {
+          cur += sprintf(buf + cur, "%d,", elm);
+        }
+
+        debug_print(
+          group, node,
+          "InfoColl::finalize: group={:x}, send_down_={}, send_down_finished_={}, "
+          "children={}, in_phase_two_={}, in_group={}, children={}, has_root_={}, "
+          "known_root_node_={}, is_new_root_={}\n",
+          group_, send_down_, send_down_finished_,
+          collective_->span_children_.size(), in_phase_two_, is_in_group, buf,
+          has_root_, known_root_node_, is_new_root_
+        );
+      }
     );
 
     auto const& children = collective_->getChildren();
