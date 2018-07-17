@@ -112,6 +112,10 @@
   backend_check_enabled_options(                                        \
     test_option, backend_str_join(_configuration, backend)              \
   )
+#define backend_debug_enabled(test_option)                              \
+  backend_check_enabled_options(                                        \
+    test_option, backend_str_join(_configuration, backend_debug)        \
+  )
 
 #define backend_enable_if_any(config, feature, eit) \
   debug_cond_enabled(config, feature, eit)
