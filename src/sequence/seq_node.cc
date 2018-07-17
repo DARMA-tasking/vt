@@ -102,6 +102,10 @@ SeqNode::SizeType SeqNode::getSize() const {
     break;
   case TypeEnum::InvalidNode:
     return 0;
+    break;
+  default:
+    assert(0 && "Should not be reachable");
+    return 0;
   }
 }
 
