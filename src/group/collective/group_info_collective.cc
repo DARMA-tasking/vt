@@ -166,6 +166,7 @@ void InfoColl::upTree() {
       subtree += msg->getSubtreeSize();
     }
   }
+  subtree_ = subtree;
 
   auto& span_children_ = collective_->span_children_;
   auto const& is_root = collective_->isInitialRoot();
@@ -175,9 +176,10 @@ void InfoColl::upTree() {
 
   debug_print(
     group, node,
-    "InfoColl::upTree: is_in_group={}, msg_in_group.size()={}, group={:x}, "
-    "op={:x}, is_root={}\n",
-    is_in_group, msg_in_group.size(), group, op, is_root
+    "InfoColl::upTree: is_in_group={}, msgs.size()={}, msg_in_group.size()={}, "
+    "extra={}, wait={}, group={:x}, op={:x}, is_root={}, subtree={}\n",
+    is_in_group, msgs_.size(), msg_in_group.size(), extra_count_,
+    coll_wait_count_, group, op, is_root, subtree
   );
 
   if (is_root) {
@@ -224,7 +226,7 @@ void InfoColl::upTree() {
       }
       std::sort(msg_list.begin(), msg_list.end(), GroupCollSort());
 
-      auto root_node = msg_list[0]->getChild();
+      auto const root_node = msg_list[0]->getChild();
       known_root_node_ = root_node;
       is_new_root_     = false;
       has_root_        = true;
@@ -235,9 +237,12 @@ void InfoColl::upTree() {
         group, is_root, root_node, msg_list.size()
       );
 
+      auto const& subtree = static_cast<NodeType>(0);
+      auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
+        msg_in_group.size()-1
+      );
       auto msg = makeSharedMessage<GroupCollectiveMsg>(
-        group,new_root_cont_,true,static_cast<NodeType>(0),root_node,0,
-        static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size()-1)
+        group,new_root_cont_,true,subtree,root_node,0,extra
       );
       theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
 
@@ -258,17 +263,20 @@ void InfoColl::upTree() {
     }
   }
 
+  auto const& subtree_this = is_in_group ? 1 : 0;
+  auto const& sub = static_cast<NodeType>(subtree_this);
+
   if (is_in_group && (msg_in_group.size() == 2 || msg_in_group.size() == 0)) {
     /*
      *  Case where we have an approx. a balanced tree: send up the tree like
      *  usual
      */
     auto const& child = theContext()->getNode();
-    auto const& size = static_cast<NodeType>(subtree + 1);
+    auto const& total_subtree = static_cast<NodeType>(subtree + sub);
     auto const& level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,size,child,level
+      group,op,is_in_group,total_subtree,child,level
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
 
@@ -282,9 +290,11 @@ void InfoColl::upTree() {
      * message up the initial spanning tree
      */
     auto const& child = theContext()->getNode();
+    auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
+      msg_in_group.size()
+    );
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,static_cast<NodeType>(0),child,0,
-      static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size())
+      group,op,is_in_group,sub,child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     /*
@@ -301,8 +311,9 @@ void InfoColl::upTree() {
      * loosing efficiency!
      */
     auto const& child = theContext()->getNode();
+    auto const& extra = 1;
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,static_cast<NodeType>(1),child,0,1
+      group,op,is_in_group,sub,child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[0]);
@@ -322,8 +333,9 @@ void InfoColl::upTree() {
     auto const& extra =
       static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size() / 2);
     auto const& child = theContext()->getNode();
+    auto const& total_subtree = sub + subtree;
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,static_cast<NodeType>(0),child,0,extra
+      group,op,is_in_group,total_subtree,child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
 
@@ -539,14 +551,15 @@ void InfoColl::finalize() {
           cur += sprintf(buf + cur, "%d,", elm);
         }
 
+        auto const& num_children = collective_->span_children_.size();
         debug_print(
           group, node,
-          "InfoColl::finalize: group={:x}, send_down_={}, send_down_finished_={}, "
-          "children={}, in_phase_two_={}, in_group={}, children={}, has_root_={}, "
-          "known_root_node_={}, is_new_root_={}\n",
-          group_, send_down_, send_down_finished_,
-          collective_->span_children_.size(), in_phase_two_, is_in_group, buf,
-          has_root_, known_root_node_, is_new_root_
+          "InfoColl::finalize: group={:x}, send_down_={}, "
+          "send_down_finished_={}, in_phase_two_={}, in_group={}, "
+          "has_root_={}, known_root_node_={}, is_new_root_={}, num={}, sub={},"
+          "children={}\n",
+          group_, send_down_, send_down_finished_, in_phase_two_, is_in_group,
+          has_root_, known_root_node_, is_new_root_, num_children, subtree_, buf
         );
      #endif
 

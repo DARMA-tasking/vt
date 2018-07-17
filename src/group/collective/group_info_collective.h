@@ -84,6 +84,7 @@ protected:
   bool is_new_root_                      = false;
   bool has_root_                         = false;
   bool is_default_group_                 = false;
+  std::size_t subtree_                   = 0;
 
 private:
   RemoteOperationIDType down_tree_cont_     = no_op_id;
