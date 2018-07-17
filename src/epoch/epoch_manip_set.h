@@ -17,12 +17,16 @@ void EpochManip::setIsRooted(EpochType& epoch, bool const is_rooted) {
 
 /*static*/ inline
 void EpochManip::setHasCategory(EpochType& epoch, bool const has_cat) {
-  BitPackerType::boolSetField<eEpochLayout::EpochHasCategory>(epoch,has_cat);
+  BitPackerType::boolSetField<eEpochLayout::EpochHasCategory,1,EpochType>(
+    epoch,has_cat
+  );
 }
 
 /*static*/ inline
 void EpochManip::setIsUser(EpochType& epoch, bool const is_user) {
-  BitPackerType::boolSetField<eEpochLayout::EpochUser>(epoch,is_user);
+  BitPackerType::boolSetField<eEpochLayout::EpochUser,1,EpochType>(
+    epoch,is_user
+  );
 }
 
 /*static*/ inline
