@@ -695,7 +695,7 @@ template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 EpochType CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
   MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-  EpochType const& epoch, TagType const& tag
+  EpochType const& epoch, TagType const& tag, NodeType const& root
 ) {
   using IndexT = typename ColT::IndexType;
 
@@ -749,7 +749,9 @@ EpochType CollectionManager::reduceMsgExpr(
         col_proxy
       );
       theTerm()->consume(term::any_epoch_sentinel);
-      theCollection()->reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,expr_fn,epoch,tag);
+      theCollection()->reduceMsgExpr<ColT,MsgT,f>(
+        toProxy,msg,expr_fn,epoch,tag,root
+      );
     });
 
     return no_epoch;
@@ -770,13 +772,17 @@ EpochType CollectionManager::reduceMsgExpr(
     }
     EpochType ret_epoch = no_epoch;
 
+    auto const& root_node =
+      root == uninitialized_destination ? default_collection_reduce_root_node :
+      root;
+
     if (use_group) {
       ret_epoch = theGroup()->groupReduce(group)->template reduce<MsgT,f>(
-        0,msg,tag,cur_epoch,num_elms,col_proxy
+        root_node,msg,tag,cur_epoch,num_elms,col_proxy
       );
     } else {
       ret_epoch = theCollective()->reduce<MsgT,f>(
-        0,msg,tag,cur_epoch,num_elms,col_proxy
+        root_node,msg,tag,cur_epoch,num_elms,col_proxy
       );
     }
     debug_print(
@@ -803,9 +809,10 @@ EpochType CollectionManager::reduceMsgExpr(
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 EpochType CollectionManager::reduceMsg(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-  MsgT *const msg, EpochType const& epoch, TagType const& tag
+  MsgT *const msg, EpochType const& epoch, TagType const& tag,
+  NodeType const& root
 ) {
-  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag);
+  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag,root);
 }
 
 template <

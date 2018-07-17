@@ -147,14 +147,16 @@ struct CollectionManager {
   EpochType reduceMsg(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
     MsgT *const msg, EpochType const& epoch = no_epoch,
-    TagType const& tag = no_tag
+    TagType const& tag = no_tag,
+    NodeType const& root_node = uninitialized_destination
   );
 
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
   EpochType reduceMsgExpr(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-    EpochType const& epoch = no_epoch, TagType const& tag = no_tag
+    EpochType const& epoch = no_epoch, TagType const& tag = no_tag,
+    NodeType const& root_node = uninitialized_destination
   );
 
   /*
