@@ -37,6 +37,9 @@
 #include <cassert>
 #include <memory>
 
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+
 namespace vt { namespace vrt { namespace collection {
 
 template <typename>
