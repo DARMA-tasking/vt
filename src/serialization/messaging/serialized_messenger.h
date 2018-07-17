@@ -250,6 +250,8 @@ struct SerializedMessenger {
       }
     );
 
+    auto const& group_ = envelopeGetGroup(msg->env);
+
     if (ptr_size < serialized_msg_eager_size) {
       assert(
         ptr_size < serialized_msg_eager_size &&
@@ -260,6 +262,7 @@ struct SerializedMessenger {
       payload_msg->env = msg->env;
       payload_msg->handler = han;
       payload_msg->from_node = theContext()->getNode();
+      envelopeSetGroup(payload_msg->env, group_);
 
       debug_print(
         serial_msg, node,
@@ -274,6 +277,7 @@ struct SerializedMessenger {
       sys_msg->handler = han;
       sys_msg->from_node = theContext()->getNode();
       sys_msg->ptr_size = ptr_size;
+      envelopeSetGroup(sys_msg->env, group_);
 
       debug_print(
         serial_msg, node,
