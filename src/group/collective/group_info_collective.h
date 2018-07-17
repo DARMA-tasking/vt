@@ -4,10 +4,10 @@
 
 #include "config.h"
 #include "group/group_common.h"
-#include "group/group_info_base.h"
-#include "group/group_collective.h"
-#include "group/group_collective_msg.h"
-#include "group/group_collective_reduce_msg.h"
+#include "group/base/group_info_base.h"
+#include "group/collective/group_collective.h"
+#include "group/collective/group_collective_msg.h"
+#include "group/collective/group_collective_reduce_msg.h"
 #include "collective/reduce/reduce.h"
 
 #include <memory>

@@ -4,12 +4,12 @@
 
 #include "config.h"
 #include "group/group_common.h"
-#include "group/group_info_base.h"
+#include "group/base/group_info_base.h"
 #include "group/region/group_region.h"
 #include "group/region/group_range.h"
 #include "group/region/group_list.h"
 #include "group/region/group_shallow_list.h"
-#include "group/group_msg.h"
+#include "group/msg/group_msg.h"
 
 #include <memory>
 #include <vector>

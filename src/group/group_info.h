@@ -4,13 +4,13 @@
 
 #include "config.h"
 #include "group/group_common.h"
-#include "group/group_info_collective.h"
-#include "group/group_info_rooted.h"
+#include "group/collective/group_info_collective.h"
+#include "group/rooted/group_info_rooted.h"
 #include "group/group_manager.fwd.h"
 #include "group/region/group_region.h"
-#include "group/group_msg.h"
-#include "group/group_collective_msg.h"
-#include "group/group_collective.h"
+#include "group/msg/group_msg.h"
+#include "group/collective/group_collective_msg.h"
+#include "group/collective/group_collective.h"
 #include "collective/tree/tree.h"
 
 #include <memory>

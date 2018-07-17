@@ -1,7 +1,7 @@
 
 #include "config.h"
 #include "group/group_common.h"
-#include "group/group_info_collective.h"
+#include "group/collective/group_info_collective.h"
 #include "context/context.h"
 #include "messaging/active.h"
 #include "group/group_manager.h"

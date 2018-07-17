@@ -6,7 +6,6 @@
 #include "group/group_common.h"
 #include "group/group_manager.fwd.h"
 #include "group/group_info.fwd.h"
-#include "group/group_info.fwd.h"
 #include "collective/tree/tree.h"
 #include "collective/reduce/reduce.h"
 

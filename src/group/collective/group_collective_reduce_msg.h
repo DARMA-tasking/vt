@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "group/group_common.h"
-#include "group/group_collective_msg.h"
+#include "group/collective/group_collective_msg.h"
 #include "collective/reduce/reduce.h"
 
 namespace vt { namespace group {

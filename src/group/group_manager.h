@@ -8,7 +8,7 @@
 #include "group/group_info.fwd.h"
 #include "group/group_manager.fwd.h"
 #include "group/group_manager_active_attorney.fwd.h"
-#include "group/group_msg.h"
+#include "group/msg/group_msg.h"
 #include "group/global/group_default.h"
 #include "group/global/group_default_msg.h"
 #include "registry/auto/auto_registry_interface.h"

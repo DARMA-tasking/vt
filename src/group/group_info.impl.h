@@ -10,7 +10,7 @@
 #include "group/region/group_range.h"
 #include "group/region/group_list.h"
 #include "group/region/group_shallow_list.h"
-#include "group/group_msg.h"
+#include "group/msg/group_msg.h"
 #include "group/group_manager.h"
 #include "configs/types/types_type.h"
 #include "context/context.h"

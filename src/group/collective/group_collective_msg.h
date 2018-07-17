@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "group/group_common.h"
-#include "group/group_msg.h"
+#include "group/msg/group_msg.h"
 #include "messaging/message.h"
 
 #include <cstdlib>
