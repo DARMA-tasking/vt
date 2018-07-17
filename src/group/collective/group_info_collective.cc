@@ -531,8 +531,7 @@ void InfoColl::finalize() {
 
   if (in_phase_two_ && send_down_finished_ == send_down_) {
 
-    backend_enable_if(
-      group, {
+      #if backend_debug_enabled(group)
         char buf[256];
         buf[0] = '\0';
         int cur = 0;
@@ -549,8 +548,7 @@ void InfoColl::finalize() {
           collective_->span_children_.size(), in_phase_two_, is_in_group, buf,
           has_root_, known_root_node_, is_new_root_
         );
-      }
-    );
+     #endif
 
     auto const& children = collective_->getChildren();
     for (auto&& c : children) {
