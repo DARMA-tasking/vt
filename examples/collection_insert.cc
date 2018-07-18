@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
        *   theCollection()->insert<InsertCol>(proxy, Index1D(i));
        */
     }
+    theTerm()->finishedEpoch(epoch);
     ::fmt::print("calling finished insert\n");
     proxy.finishedInserting([=]{
       ::fmt::print("insertions are finished\n");
@@ -67,6 +68,8 @@ int main(int argc, char** argv) {
         ::fmt::print("insertions are finished2\n");
       });
     });
+  } else {
+    theTerm()->finishedEpoch(epoch);
   }
 
   while (!rt->isTerminated()) {
