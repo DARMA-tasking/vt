@@ -80,17 +80,19 @@ static void next_epoch() {
   fmt::print("{}: cur_epoch={}\n", my_node, cur_epoch);
 
   if (use_epoch) {
-    cur_epoch = theTerm()->newEpoch();
 
-    if (cur_epoch < max_epochs) {
+    if (cur_epoch + 1 < max_epochs) {
+      cur_epoch = theTerm()->newEpoch();
+
       fmt::print("{}: new cur_epoch={}\n", my_node, cur_epoch);
 
       sendStartEpoch(cur_epoch);
 
-      theTerm()->addActionEpoch(cur_epoch, []{
+      theTerm()->addAction(cur_epoch, []{
         fmt::print("{}: running attached action: cur_epoch={}\n", my_node, cur_epoch);
         next_epoch();
       });
+      theTerm()->finishedEpoch(cur_epoch);
     }
   } else {
     sendStartEpoch(no_epoch);
