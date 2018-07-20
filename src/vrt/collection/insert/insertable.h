@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "vrt/proxy/base_collection.h"
+#include "vrt/collection/send/sendable.h"
 
 namespace vt { namespace vrt { namespace collection {
 

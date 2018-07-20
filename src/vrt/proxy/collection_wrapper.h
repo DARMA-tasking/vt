@@ -6,6 +6,7 @@
 #include "vrt/collection/send/sendable.h"
 #include "vrt/collection/destroy/destroyable.h"
 #include "vrt/collection/broadcast/broadcastable.h"
+#include "vrt/collection/insert/insert_finished.h"
 #include "vrt/proxy/proxy_element.h"
 #include "vrt/proxy/proxy_collection.h"
 #include "vrt/proxy/base_wrapper.h"
@@ -44,7 +45,7 @@ private:
  */
 
 template <typename ColT, typename IndexT>
-struct CollectionIndexProxy : Broadcastable<ColT, IndexT> {
+struct CollectionIndexProxy : InsertFinished<ColT, IndexT> {
   using ElmProxyType = VrtElmProxy<ColT, IndexT>;
 
   CollectionIndexProxy() = default;

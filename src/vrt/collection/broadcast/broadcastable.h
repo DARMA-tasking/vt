@@ -11,8 +11,6 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct Broadcastable : Destroyable<ColT, IndexT> {
-  using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
-
   Broadcastable() = default;
   Broadcastable(Broadcastable const&) = default;
   Broadcastable(Broadcastable&&) = default;
@@ -30,20 +28,6 @@ struct Broadcastable : Destroyable<ColT, IndexT> {
     ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
   >
   void broadcast(MsgT* msg, ActionType act = nullptr) const;
-
-  template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduce(
-    MsgT *const msg, EpochType const& epoch = no_epoch,
-    TagType const& tag = no_tag
-  );
-
-  template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceExpr(
-    MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch = no_epoch,
-    TagType const& tag = no_tag
-  );
-
-  void finishedInserting(ActionType action = nullptr) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
