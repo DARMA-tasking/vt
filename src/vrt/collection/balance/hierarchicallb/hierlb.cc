@@ -371,6 +371,8 @@ void HierarchicalLB::startMigrations() {
   for (auto&& trans : transfer_list) {
     transferSend(trans.first, this_node, trans.second);
   }
+
+  theTerm()->finishedEpoch(epoch);
 }
 
 void HierarchicalLB::transferSend(
