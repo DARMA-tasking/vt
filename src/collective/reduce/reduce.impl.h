@@ -133,6 +133,12 @@ void Reduce::startReduce(
   auto const& nmsgs = state.msgs.size();
   bool ready = false;
 
+  debug_print(
+    reduce, node,
+    "startReduce: tag={}, epoch={}, vrt={}, msg={}, children={}, contrib_={}\n",
+    tag, epoch, proxy, state.msgs.size(), getNumChildren(), state.num_contrib_
+  );
+
   if (use_num_contrib) {
     ready = nmsgs == getNumChildren() + state.num_contrib_;
   } else {
@@ -225,13 +231,6 @@ void Reduce::startReduce(
 
 template <typename MessageT>
 void Reduce::reduceNewMsg(MessageT* msg) {
-  debug_print(
-    reduce, node,
-    "reduceNewMsg: tag={}, epoch={}, vrt={}, msg={}, children={}, contrib_={}\n",
-    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_,
-    state.msgs.size(), getNumChildren(), state.num_contrib_
-  );
-
   return startReduce<MessageT>(
     msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_
   );
