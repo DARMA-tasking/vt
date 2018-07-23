@@ -4,18 +4,19 @@
 
 #include "config.h"
 #include "vrt/collection/destroy/destroyable.h"
-#include "vrt/proxy/base_wrapper.h"
+#include "vrt/proxy/base_collection_proxy.h"
 #include "vrt/collection/manager.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-Destroyable<ColT, IndexT>::Destroyable(VirtualProxyType const in_proxy)
-  : BaseEntireCollectionProxy<ColT, IndexT>(in_proxy)
+template <typename ColT, typename IndexT, typename BaseProxyT>
+Destroyable<ColT,IndexT,BaseProxyT>::Destroyable(
+  VirtualProxyType const in_proxy
+) : BaseProxyT(in_proxy)
 { }
 
-template <typename ColT, typename IndexT>
-void Destroyable<ColT, IndexT>::destroy() {
+template <typename ColT, typename IndexT, typename BaseProxyT>
+void Destroyable<ColT,IndexT,BaseProxyT>::destroy() {
   return theCollection()->destroy<ColT,IndexT>(this->getProxy());
 }
 

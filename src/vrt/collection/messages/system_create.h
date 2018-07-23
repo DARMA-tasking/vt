@@ -9,7 +9,7 @@
 #include "messaging/message.h"
 #include "serialization/serialization.h"
 #include "collective/reduce/reduce.h"
-#include "vrt/proxy/collection_wrapper.h"
+#include "vrt/proxy/collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -77,7 +77,7 @@ struct InsertMsg : ::vt::Message {
   InsertMsg() = default;
 
   InsertMsg(
-    CollectionIndexProxy<ColT,IndexT> in_proxy,
+    CollectionProxy<ColT,IndexT> in_proxy,
     IndexT in_max, IndexT in_idx, NodeType in_construct_node,
     NodeType in_home_node, EpochType in_epoch, EpochType in_g_epoch
   ) : proxy_(in_proxy), max_(in_max), idx_(in_idx),
@@ -85,7 +85,7 @@ struct InsertMsg : ::vt::Message {
       epoch_(in_epoch), g_epoch_(in_g_epoch)
   { }
 
-  CollectionIndexProxy<ColT,IndexT> proxy_ = {};
+  CollectionProxy<ColT,IndexT> proxy_ = {};
   IndexT max_ = {}, idx_ = {};
   NodeType construct_node_ = uninitialized_destination;
   NodeType home_node_ = uninitialized_destination;
@@ -98,24 +98,24 @@ struct DoneInsertMsg : ::vt::Message {
   DoneInsertMsg() = default;
 
   DoneInsertMsg(
-    CollectionIndexProxy<ColT,IndexT> in_proxy,
+    CollectionProxy<ColT,IndexT> in_proxy,
     NodeType const& in_action_node = uninitialized_destination
   ) : action_node_(in_action_node), proxy_(in_proxy)
   { }
 
   NodeType action_node_ = uninitialized_destination;
-  CollectionIndexProxy<ColT,IndexT> proxy_ = {};
+  CollectionProxy<ColT,IndexT> proxy_ = {};
 };
 
 template <typename ColT, typename IndexT>
 struct ActInsertMsg : ::vt::Message {
   ActInsertMsg() = default;
 
-  explicit ActInsertMsg(CollectionIndexProxy<ColT,IndexT> in_proxy)
+  explicit ActInsertMsg(CollectionProxy<ColT,IndexT> in_proxy)
     : proxy_(in_proxy)
   { }
 
-  CollectionIndexProxy<ColT,IndexT> proxy_ = {};
+  CollectionProxy<ColT,IndexT> proxy_ = {};
 };
 
 template <typename ColT, typename IndexT>
@@ -123,11 +123,11 @@ struct UpdateInsertMsg : ::vt::Message {
   UpdateInsertMsg() = default;
 
   UpdateInsertMsg(
-    CollectionIndexProxy<ColT,IndexT> in_proxy, EpochType const& in_epoch
+    CollectionProxy<ColT,IndexT> in_proxy, EpochType const& in_epoch
   ) : proxy_(in_proxy), epoch_(in_epoch)
   { }
 
-  CollectionIndexProxy<ColT,IndexT> proxy_ = {};
+  CollectionProxy<ColT,IndexT> proxy_ = {};
   EpochType epoch_ = no_epoch;
 };
 

@@ -1,27 +1,29 @@
 
-#if !defined INCLUDED_VRT_PROXY_PROXY_H
-#define INCLUDED_VRT_PROXY_PROXY_H
+#if !defined INCLUDED_VRT_PROXY_COLLECTION_ELM_PROXY_H
+#define INCLUDED_VRT_PROXY_COLLECTION_ELM_PROXY_H
 
 #include "config.h"
+#include "vrt/collection/proxy_traits/proxy_elm_traits.h"
 #include "vrt/collection/manager.fwd.h"
 #include "vrt/collection/send/sendable.h"
 #include "vrt/collection/insert/insertable.h"
-#include "vrt/proxy/proxy_element.h"
+#include "vrt/proxy/base_elm_proxy.h"
 
 #include <ostream>
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-struct VrtElmProxy : ElmInsertable<ColT, IndexT> {
-  using CollectionProxyType = typename ElmInsertable<ColT, IndexT>::ProxyType;
-  using ElementProxyType    =
-    typename ElmInsertable<ColT, IndexT>::ElementProxyType;
+struct VrtElmProxy : ProxyCollectionElmTraits<ColT, IndexT> {
+  using CollectionProxyType =
+    typename ProxyCollectionElmTraits<ColT, IndexT>::ProxyType;
+  using ElementProxyType =
+    typename ProxyCollectionElmTraits<ColT, IndexT>::ElementProxyType;
 
   VrtElmProxy(
     VirtualProxyType const& in_col_proxy,
-    VirtualProxyElementType<ColT, IndexT> const& in_elm_proxy
-  ) : ElmInsertable<ColT, IndexT>(in_col_proxy, in_elm_proxy)
+    BaseElmProxy<ColT, IndexT> const& in_elm_proxy
+  ) : ProxyCollectionElmTraits<ColT, IndexT>(in_col_proxy, in_elm_proxy)
   { }
 
   VrtElmProxy(
@@ -41,7 +43,7 @@ struct VrtElmProxy : ElmInsertable<ColT, IndexT> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    ElmInsertable<ColT, IndexT>::serialize(s);
+    ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);
   }
 
   template <typename ColU, typename IndexU>
@@ -83,4 +85,4 @@ struct hash<ElmProxyType<ColT, IndexT>> {
 };
 }
 
-#endif /*INCLUDED_VRT_PROXY_PROXY_H*/
+#endif /*INCLUDED_VRT_PROXY_COLLECTION_ELM_PROXY_H*/

@@ -3,16 +3,15 @@
 #define INCLUDED_VRT_COLLECTION_REDUCABLE_REDUCABLE_H
 
 #include "config.h"
-#include "vrt/proxy/base_wrapper.h"
-#include "vrt/collection/broadcast/broadcastable.h"
+#include "vrt/proxy/base_collection_proxy.h"
 #include "activefn/activefn.h"
 
 #include <functional>
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-struct Reducable : Broadcastable<ColT, IndexT> {
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct Reducable : BaseProxyT {
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
 
   Reducable() = default;

@@ -20,7 +20,7 @@
 #include "vrt/collection/destroy/destroy_msg.h"
 #include "vrt/collection/destroy/destroy_handlers.h"
 #include "vrt/collection/balance/phase_msg.h"
-#include "vrt/proxy/collection_wrapper.h"
+#include "vrt/proxy/collection_proxy.h"
 #include "registry/auto/map/auto_registry_map.h"
 #include "registry/auto/collection/auto_registry_collection.h"
 #include "registry/auto/auto_registry_common.h"
@@ -1505,7 +1505,7 @@ MigrateStatus CollectionManager::migrateOut(
  );
 
  if (this_node != dest) {
-   auto const& proxy = CollectionIndexProxy<ColT, IndexT>(col_proxy).operator()(
+   auto const& proxy = CollectionProxy<ColT, IndexT>(col_proxy).operator()(
      idx
    );
    auto elm_holder = findElmHolder<ColT, IndexT>(col_proxy);
@@ -1633,7 +1633,7 @@ MigrateStatus CollectionManager::migrateIn(
    */
   vc_raw_ptr->preMigrateIn();
 
-  auto const& elm_proxy = CollectionIndexProxy<ColT, IndexT>(proxy).operator()(
+  auto const& elm_proxy = CollectionProxy<ColT, IndexT>(proxy).operator()(
     idx
   );
 

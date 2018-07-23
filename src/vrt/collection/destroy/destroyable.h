@@ -3,16 +3,16 @@
 #define INCLUDED_VRT_COLLECTION_DESTROY_DESTROYABLE_H
 
 #include "config.h"
-#include "vrt/proxy/base_wrapper.h"
+#include "vrt/proxy/base_collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-struct Destroyable : BaseEntireCollectionProxy<ColT, IndexT> {
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct Destroyable : BaseProxyT {
   Destroyable() = default;
   Destroyable(Destroyable const&) = default;
   Destroyable(Destroyable&&) = default;
-  Destroyable(VirtualProxyType const in_proxy);
+  explicit Destroyable(VirtualProxyType const in_proxy);
   Destroyable& operator=(Destroyable const&) = default;
 
   void destroy();

@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "messaging/message.h"
-#include "vrt/proxy/proxy_collection.h"
+#include "vrt/proxy/collection_elm_proxy.h"
 #include "vrt/collection/collection_info.h"
 
 namespace vt { namespace vrt { namespace collection {

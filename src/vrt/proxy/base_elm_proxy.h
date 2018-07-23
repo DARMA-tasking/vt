@@ -1,6 +1,6 @@
 
-#if !defined INCLUDED_VRT_PROXY_PROXY_ELEMENT_H
-#define INCLUDED_VRT_PROXY_PROXY_ELEMENT_H
+#if !defined INCLUDED_VRT_PROXY_BASE_ELM_PROXY_H
+#define INCLUDED_VRT_PROXY_BASE_ELM_PROXY_H
 
 #include "config.h"
 
@@ -13,21 +13,21 @@ namespace vt { namespace vrt { namespace collection {
 static struct virtual_proxy_elm_empty { } virtual_proxy_elm_empty_tag { };
 
 template <typename ColT, typename IndexT>
-struct VirtualProxyElementType {
+struct BaseElmProxy {
   using IndexType = IndexT;
   using CollectionType = ColT;
 
-  explicit VirtualProxyElementType(IndexT const& in_idx)
+  explicit BaseElmProxy(IndexT const& in_idx)
     : idx_(in_idx)
   { }
-  explicit VirtualProxyElementType(virtual_proxy_elm_empty) { }
+  explicit BaseElmProxy(virtual_proxy_elm_empty) { }
 
-  VirtualProxyElementType() = default;
-  VirtualProxyElementType(VirtualProxyElementType const&) = default;
-  VirtualProxyElementType(VirtualProxyElementType&&) = default;
-  VirtualProxyElementType& operator=(VirtualProxyElementType const&) = default;
+  BaseElmProxy() = default;
+  BaseElmProxy(BaseElmProxy const&) = default;
+  BaseElmProxy(BaseElmProxy&&) = default;
+  BaseElmProxy& operator=(BaseElmProxy const&) = default;
 
-  bool operator==(VirtualProxyElementType const& other) const {
+  bool operator==(BaseElmProxy const& other) const {
     return other.idx_ == idx_;
   }
 
@@ -45,7 +45,7 @@ protected:
 }}} /* end namespace vt::vrt::collection */
 
 template <typename ColT, typename IndexT>
-using ElmType = ::vt::vrt::collection::VirtualProxyElementType<ColT,IndexT>;
+using ElmType = ::vt::vrt::collection::BaseElmProxy<ColT,IndexT>;
 
 namespace std {
   template <typename ColT, typename IndexT>
@@ -58,4 +58,4 @@ namespace std {
   };
 }
 
-#endif /*INCLUDED_VRT_PROXY_PROXY_ELEMENT_H*/
+#endif /*INCLUDED_VRT_PROXY_BASE_ELM_PROXY_H*/

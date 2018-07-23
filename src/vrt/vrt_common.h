@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "vrt/base/base.h"
-#include "vrt/proxy/proxy_collection.h"
+#include "vrt/proxy/collection_elm_proxy.h"
 
 namespace vt { namespace vrt {
 

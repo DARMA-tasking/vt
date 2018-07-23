@@ -4,17 +4,21 @@
 
 #include "config.h"
 #include "vrt/collection/insert/insert_finished.h"
-#include "vrt/proxy/base_wrapper.h"
+#include "vrt/collection/manager.h"
+#include "vrt/proxy/base_collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-InsertFinished<ColT,IndexT>::InsertFinished(VirtualProxyType const in_proxy)
-  :  Reducable<ColT,IndexT>(in_proxy)
+template <typename ColT, typename IndexT, typename BaseProxyT>
+InsertFinished<ColT,IndexT,BaseProxyT>::InsertFinished(
+  VirtualProxyType const in_proxy
+) : BaseProxyT(in_proxy)
 { }
 
-template <typename ColT, typename IndexT>
-void InsertFinished<ColT, IndexT>::finishedInserting(ActionType action) const {
+template <typename ColT, typename IndexT, typename BaseProxyT>
+void InsertFinished<ColT,IndexT,BaseProxyT>::finishedInserting(
+  ActionType action
+) const {
   auto const col_proxy = this->getProxy();
   theCollection()->finishedInserting<ColT,IndexT>(col_proxy,action);
 }

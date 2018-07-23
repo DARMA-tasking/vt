@@ -4,32 +4,37 @@
 
 #include "config.h"
 #include "vrt/collection/broadcast/broadcastable.h"
-#include "vrt/collection/destroy/destroyable.h"
-#include "vrt/proxy/base_wrapper.h"
+#include "vrt/proxy/base_collection_proxy.h"
+#include "vrt/collection/manager.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-Broadcastable<ColT, IndexT>::Broadcastable(VirtualProxyType const in_proxy)
-  : Destroyable<ColT, IndexT>(in_proxy)
+template <typename ColT, typename IndexT, typename BaseProxyT>
+Broadcastable<ColT,IndexT,BaseProxyT>::Broadcastable(
+  VirtualProxyType const in_proxy
+) : BaseProxyT(in_proxy)
 { }
 
-template <typename ColT, typename IndexT>
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <
   typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
 >
-void Broadcastable<ColT, IndexT>::broadcast(MsgT* msg, ActionType cont) const {
+void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(
+  MsgT* msg, ActionType cont
+) const {
   auto proxy = this->getProxy();
   return theCollection()->broadcastMsg<MsgT, f>(proxy,msg,cont);
 }
 
-template <typename ColT, typename IndexT>
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
 >
-void Broadcastable<ColT, IndexT>::broadcast(MsgT* msg, ActionType cont) const {
+void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(
+  MsgT* msg, ActionType cont
+) const {
   auto proxy = this->getProxy();
   return theCollection()->broadcastMsg<MsgT, f>(proxy,msg,cont);
 }

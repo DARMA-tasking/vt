@@ -10,14 +10,14 @@
 #include "vrt/collection/types/indexable.h"
 #include "vrt/collection/types/untyped.h"
 #include "vrt/collection/manager.fwd.h"
-#include "vrt/proxy/collection_wrapper.h"
+#include "vrt/proxy/collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct CollectionBase : Indexable<ColT, IndexT> {
   using ProxyType = VirtualElmProxyType<ColT, IndexT>;
-  using CollectionProxyType = CollectionIndexProxy<ColT, IndexT>;
+  using CollectionProxyType = CollectionProxy<ColT, IndexT>;
   using IndexType = IndexT;
 
   CollectionBase() = default;

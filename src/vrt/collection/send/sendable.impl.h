@@ -4,30 +4,31 @@
 
 #include "config.h"
 #include "vrt/collection/send/sendable.h"
-#include "vrt/proxy/base_collection.h"
 #include "vrt/collection/manager.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-Sendable<ColT, IndexT>::Sendable(
-  typename BaseCollectionProxy<ColT, IndexT>::ProxyType const& in_proxy,
-  typename BaseCollectionProxy<ColT, IndexT>::ElementProxyType const& in_elm
-) : BaseCollectionProxy<ColT, IndexT>(in_proxy, in_elm)
+template <typename ColT, typename IndexT, typename BaseProxyT>
+Sendable<ColT,IndexT,BaseProxyT>::Sendable(
+  typename BaseProxyT::ProxyType const& in_proxy,
+  typename BaseProxyT::ElementProxyType const& in_elm
+) : BaseProxyT(in_proxy, in_elm)
 { }
 
-template <typename ColT, typename IndexT>
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename SerializerT>
-void Sendable<ColT, IndexT>::serialize(SerializerT& s) {
-  BaseCollectionProxy<ColT, IndexT>::serialize(s);
+void Sendable<ColT,IndexT,BaseProxyT>::serialize(SerializerT& s) {
+  BaseProxyT::serialize(s);
 }
 
-template <typename ColT, typename IndexT>
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <
   typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
 >
-void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
+void Sendable<ColT,IndexT,BaseProxyT>::send(
+  MsgT* msg, ActionType continuation
+) {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
@@ -38,12 +39,14 @@ void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
   return theCollection()->sendMsg<MsgT, f>(proxy, msg, continuation);
 }
 
-template <typename ColT, typename IndexT>
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
 >
-void Sendable<ColT, IndexT>::send(MsgT* msg, ActionType continuation) {
+void Sendable<ColT,IndexT,BaseProxyT>::send(
+  MsgT* msg, ActionType continuation
+) {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);

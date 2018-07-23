@@ -3,14 +3,13 @@
 #define INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_H
 
 #include "config.h"
-#include "vrt/collection/destroy/destroyable.h"
-#include "vrt/proxy/base_wrapper.h"
+#include "vrt/proxy/base_collection_proxy.h"
 #include "activefn/activefn.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-struct Broadcastable : Destroyable<ColT, IndexT> {
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct Broadcastable : BaseProxyT {
   Broadcastable() = default;
   Broadcastable(Broadcastable const&) = default;
   Broadcastable(Broadcastable&&) = default;

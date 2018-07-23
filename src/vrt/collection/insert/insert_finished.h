@@ -4,13 +4,13 @@
 
 #include "config.h"
 #include "vrt/collection/reducable/reducable.h"
-#include "vrt/proxy/base_wrapper.h"
+#include "vrt/proxy/base_collection_proxy.h"
 #include "activefn/activefn.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-struct InsertFinished : Reducable<ColT, IndexT> {
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct InsertFinished : BaseProxyT {
   InsertFinished() = default;
   InsertFinished(InsertFinished const&) = default;
   InsertFinished(InsertFinished&&) = default;
