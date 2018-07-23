@@ -45,7 +45,7 @@ set(
       vrt/collection/holders vrt/collection/migrate vrt/collection/traits
       vrt/collection/traits vrt/collection/defaults vrt/collection/constructor
       vrt/collection/send vrt/collection/destroy vrt/collection/broadcast
-      vrt/collection/insert vrt/collection/reducable
+      vrt/collection/insert vrt/collection/reducable vrt/collection/mapped_node
       vrt/collection/balance
         vrt/collection/balance/hierarchicallb
         vrt/collection/balance/greedylb
