@@ -10,10 +10,13 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct CollectionHolder : BaseHolder {
-  CollectionHolder(HandlerType const& in_map_fn, IndexT const& idx);
+  CollectionHolder(
+    HandlerType const& in_map_fn, IndexT const& idx, bool const in_is_static
+  );
 
   void destroy() override;
 
+  bool is_static_ = false;
   HandlerType map_fn = uninitialized_handler;
   IndexT max_idx;
   Holder<ColT,IndexT> holder_;

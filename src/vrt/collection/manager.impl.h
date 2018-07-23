@@ -167,7 +167,7 @@ template <typename SysMsgT>
 
         theCollection()->insertCollectionElement<ColT, IndexT>(
           std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy,
-          mapped_node
+          info.immediate_, mapped_node
         );
         element_created_here = true;
       }
@@ -181,7 +181,7 @@ template <typename SysMsgT>
     auto const& max_idx = msg->info.range_;
     using HolderType = typename EntireHolder<ColT, IndexT>::InnerHolder;
     EntireHolder<ColT, IndexT>::insert(
-      new_proxy, std::make_shared<HolderType>(map_han,max_idx)
+      new_proxy, std::make_shared<HolderType>(map_han,max_idx,info.immediate_)
     );
     /*
      *  This is to ensure that the collection LM instance gets created so that
@@ -377,14 +377,17 @@ template <typename ColT, typename IndexT, typename MsgT>
    *  Buffer the broadcast message for later delivery (elements that migrate
    *  in), inserted elements, etc.
    */
-  auto const& epoch = msg->bcast_epoch_;
-  theCollection()->bufferBroadcastMsg<ColT>(untyped_proxy, epoch, msg);
-  auto const& group = envelopeGetGroup(msg->env);
+  auto col_holder = theCollection()->findColHolder<ColT,IndexT>(untyped_proxy);
+  if (!col_holder->is_static_) {
+    auto const& epoch = msg->bcast_epoch_;
+    theCollection()->bufferBroadcastMsg<ColT>(untyped_proxy, epoch, msg);
+  }
   /*
    *  Termination: consume for default epoch for correct termination: on the
    *  other end the sender produces p units for each broadcast to the default
    *  group
    */
+  auto const& group = envelopeGetGroup(msg->env);
   if (group == default_group) {
     theTerm()->consume(term::any_epoch_sentinel);
   }
@@ -1067,7 +1070,7 @@ template <typename ColT, typename IndexT>
 bool CollectionManager::insertCollectionElement(
   VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
   HandlerType const& map_han, VirtualProxyType const& proxy,
-  NodeType const& home_node, bool const& is_migrated_in,
+  bool const is_static, NodeType const& home_node, bool const& is_migrated_in,
   NodeType const& migrated_from
 ) {
   auto holder = findColHolder<ColT, IndexT>(proxy);
@@ -1082,7 +1085,7 @@ bool CollectionManager::insertCollectionElement(
     using HolderType = typename EntireHolder<ColT, IndexT>::InnerHolder;
 
     EntireHolder<ColT, IndexT>::insert(
-      proxy, std::make_shared<HolderType>(map_han,max_idx)
+      proxy, std::make_shared<HolderType>(map_han,max_idx,is_static)
     );
 
     debug_print(
@@ -1589,7 +1592,8 @@ void CollectionManager::insert(
       CollectionTypeAttorney::setIndex<decltype(new_vc),IndexT>(new_vc, idx);
 
       theCollection()->insertCollectionElement<ColT, IndexT>(
-        std::move(new_vc), idx, max_idx, map_han, untyped_proxy, mapped_node
+        std::move(new_vc), idx, max_idx, map_han, untyped_proxy, false,
+        mapped_node
       );
     } else {
       auto const& global_epoch = theMsg()->getGlobalEpoch();
@@ -1802,9 +1806,11 @@ MigrateStatus CollectionManager::migrateIn(
     idx
   );
 
+  bool const is_static = ColT::isStaticSized();
   auto const& home_node = uninitialized_destination;
   auto const& inserted = insertCollectionElement<ColT, IndexT>(
-    std::move(vrt_elm_ptr), idx, max, map_han, proxy, home_node, true, from
+    std::move(vrt_elm_ptr), idx, max, map_han, proxy, is_static,
+    home_node, true, from
   );
 
   /*

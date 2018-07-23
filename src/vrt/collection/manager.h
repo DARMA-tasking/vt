@@ -312,7 +312,8 @@ public:
   bool insertCollectionElement(
     VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
     HandlerType const& map_han, VirtualProxyType const& proxy,
-    NodeType const& home_node, bool const& is_migrated_in = false,
+    bool const is_static, NodeType const& home_node,
+    bool const& is_migrated_in = false,
     NodeType const& migrated_from = uninitialized_destination
   );
 
