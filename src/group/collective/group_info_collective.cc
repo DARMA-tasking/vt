@@ -333,7 +333,7 @@ void InfoColl::upTree() {
     auto const& extra =
       static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size() / 2);
     auto const& child = theContext()->getNode();
-    auto const& total_subtree = sub + subtree;
+    auto const& total_subtree = static_cast<NodeType>(sub + subtree);
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,0,extra
     );
