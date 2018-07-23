@@ -306,6 +306,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     iter->second(to_node);
     transfer_count++;
   }
+  theTerm()->finishedEpoch(epoch);
 }
 
 /*static*/ void GreedyLB::recvObjsHan(GreedyLBTypes::ObjIDType* objs) {
