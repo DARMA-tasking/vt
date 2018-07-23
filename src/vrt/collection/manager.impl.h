@@ -945,7 +945,7 @@ EpochType CollectionManager::reduceMsgExpr(
   auto idx_non_const = idx;
   auto idx_non_const_ptr = &idx_non_const;
   auto const& mapped_node = fn(
-    reinterpret_cast<vt::index::BaseIndex*>(&idx_non_const_ptr),
+    reinterpret_cast<vt::index::BaseIndex*>(idx_non_const_ptr),
     reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
     theContext()->getNumNodes()
   );
