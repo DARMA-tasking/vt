@@ -40,6 +40,7 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
     transfer_count++;
     iter->second(next_node);
   }
+  theTerm()->finishedEpoch(epoch);
 }
 
 void RotateLB::finishedMigrate() {
