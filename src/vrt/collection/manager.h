@@ -54,10 +54,21 @@ struct CollectionManager {
   template <typename ColT, typename IndexT>
   using CollectionProxyWrapType = CollectionProxy<ColT, IndexT>;
   using ReduceIDType = ::vt::collective::reduce::ReduceEpochLookupType;
+  template <typename ColT>
+  using EpochBcastType = std::unordered_map<EpochType,CollectionMessage<ColT>*>;
+  template <typename ColT>
+  using BcastBufferType = std::unordered_map<
+    VirtualProxyType, EpochBcastType<ColT>
+  >;
+  using CleanupFnType = std::function<void()>;
+  using CleanupListFnType = std::list<CleanupFnType>;
 
   CollectionManager() = default;
 
-  virtual ~CollectionManager() { destroyCollections<>(); }
+  virtual ~CollectionManager() { cleanupAll<>(); }
+
+  template <typename=void>
+  void cleanupAll();
 
   template <typename=void>
   void destroyCollections();
@@ -152,11 +163,26 @@ struct CollectionManager {
   );
 
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+  EpochType reduceMsg(
+    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+    MsgT *const msg, EpochType const& epoch, TagType const& tag,
+    typename ColT::IndexType const& idx
+  );
+
+  template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
   EpochType reduceMsgExpr(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
     EpochType const& epoch = no_epoch, TagType const& tag = no_tag,
     NodeType const& root_node = uninitialized_destination
+  );
+
+  template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+  EpochType reduceMsgExpr(
+    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+    MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
+    EpochType const& epoch, TagType const& tag,
+    typename ColT::IndexType const& idx
   );
 
   /*
@@ -198,6 +224,23 @@ struct CollectionManager {
   template <typename ColT, typename IndexT, typename MsgT>
   void broadcastFromRoot(MsgT* msg);
 
+private:
+  template <typename ColT, typename MsgT>
+  void bufferBroadcastMsg(
+    VirtualProxyType const& proxy, EpochType const& epoch, MsgT* msg
+  );
+
+  template <typename ColT>
+  void clearBufferedBroadcastMsg(
+    VirtualProxyType const& proxy, EpochType const& epoch
+  );
+
+  template <typename ColT, typename MsgT>
+  CollectionMessage<ColT>* getBufferedBroadcastMsg(
+    VirtualProxyType const& proxy, EpochType const& epoch
+  );
+
+public:
   template <typename ColT, typename IndexT, typename MsgT>
   static void collectionBcastHandler(MsgT* msg);
   template <typename ColT, typename IndexT, typename MsgT>
@@ -409,6 +452,10 @@ private:
   template <typename=void>
   static VirtualIDType curIdent_;
 
+  template <typename ColT>
+  static BcastBufferType<ColT> broadcasts_;
+
+  CleanupListFnType cleanup_fns_;
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;
   BufferedActionType buffered_group_;

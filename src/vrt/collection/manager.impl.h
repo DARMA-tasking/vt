@@ -45,6 +45,26 @@ namespace vt { namespace vrt { namespace collection {
 template <typename>
 /*static*/ VirtualIDType CollectionManager::curIdent_ = 0;
 
+template <typename ColT>
+/*static*/ CollectionManager::BcastBufferType<ColT>
+CollectionManager::broadcasts_ = {};
+
+template <typename>
+void CollectionManager::cleanupAll() {
+  /*
+   *  Destroy all the current live collections
+   */
+  destroyCollections<>();
+  /*
+   *  Run the cleanup functions for type-specific cleanup that can not be
+   *  performed without capturing the type of each collection
+   */
+  for (auto fn : cleanup_fns_) {
+    fn();
+  }
+  cleanup_fns_.clear();
+}
+
 template <typename>
 void CollectionManager::destroyCollections() {
   UniversalIndexHolder<>::destroyAllLive();
@@ -290,13 +310,14 @@ GroupType CollectionManager::createGroupCollection(
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionBcastHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
-  auto const col = col_msg->getBcastProxy();
+  auto const bcast_proxy = col_msg->getBcastProxy();
+  auto const& untyped_proxy = bcast_proxy;
   debug_print(
     vrt_coll, node,
     "collectionBcastHandler: proxy={}, han={}, epoch={}\n",
     col, col_msg->getVrtHandler(), col_msg->getBcastEpoch()
   );
-  auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(col);
+  auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(bcast_proxy);
   if (elm_holder) {
     auto const handler = col_msg->getVrtHandler();
     auto const member = col_msg->getMember();
@@ -352,10 +373,78 @@ template <typename ColT, typename IndexT, typename MsgT>
       }
     });
   }
+  /*
+   *  Buffer the broadcast message for later delivery (elements that migrate
+   *  in), inserted elements, etc.
+   */
+  auto const& epoch = msg->bcast_epoch_;
+  theCollection()->bufferBroadcastMsg<ColT>(untyped_proxy, epoch, msg);
   auto const& group = envelopeGetGroup(msg->env);
+  /*
+   *  Termination: consume for default epoch for correct termination: on the
+   *  other end the sender produces p units for each broadcast to the default
+   *  group
+   */
   if (group == default_group) {
     theTerm()->consume(term::any_epoch_sentinel);
   }
+}
+
+template <typename ColT, typename MsgT>
+void CollectionManager::bufferBroadcastMsg(
+  VirtualProxyType const& proxy, EpochType const& epoch, MsgT* msg
+) {
+  auto proxy_iter = broadcasts_<ColT>.find(proxy);
+  if (proxy_iter == broadcasts_<ColT>.end()) {
+    if (broadcasts_<ColT>.size() == 0) {
+      cleanup_fns_.push_back([]{ broadcasts_<ColT>.clear(); });
+    }
+    broadcasts_<ColT>.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(proxy),
+      std::forward_as_tuple(
+        std::unordered_map<EpochType,CollectionMessage<ColT>*>{{epoch,msg}}
+      )
+    );
+  } else {
+    auto epoch_iter = proxy_iter->second.find(epoch);
+    if (epoch_iter == proxy_iter->second.end()) {
+      proxy_iter->second.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(epoch),
+        std::forward_as_tuple(msg)
+      );
+    } else {
+      epoch_iter->second = msg;
+    }
+  }
+}
+
+template <typename ColT>
+void CollectionManager::clearBufferedBroadcastMsg(
+  VirtualProxyType const& proxy, EpochType const& epoch
+) {
+  auto proxy_iter = broadcasts_<ColT>.find(proxy);
+  if (proxy_iter != broadcasts_<ColT>.end()) {
+    auto epoch_iter = proxy_iter->second.find(epoch);
+    if (epoch_iter != proxy_iter->second.end()) {
+      proxy_iter->second.erase(epoch_iter);
+    }
+  }
+}
+
+template <typename ColT, typename MsgT>
+CollectionMessage<ColT>* CollectionManager::getBufferedBroadcastMsg(
+  VirtualProxyType const& proxy, EpochType const& epoch
+) {
+  auto proxy_iter = broadcasts_<ColT>.find(proxy);
+  if (proxy_iter != broadcasts_<ColT>.end()) {
+    auto epoch_iter = proxy_iter->second.find(epoch);
+    if (epoch_iter != proxy_iter->second.end()) {
+      return proxy_iter->second->second;
+    }
+  }
+  return nullptr;
 }
 
 template <typename>
@@ -817,6 +906,48 @@ EpochType CollectionManager::reduceMsg(
   NodeType const& root
 ) {
   return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag,root);
+}
+
+template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+EpochType CollectionManager::reduceMsg(
+  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+  MsgT *const msg, EpochType const& epoch, TagType const& tag,
+  typename ColT::IndexType const& idx
+) {
+  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag,idx);
+}
+
+template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+EpochType CollectionManager::reduceMsgExpr(
+  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+  MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
+  EpochType const& epoch, TagType const& tag,
+  typename ColT::IndexType const& idx
+) {
+  using IndexT = typename ColT::IndexType;
+  auto const untyped_proxy = toProxy.getProxy();
+  auto constructed = constructed_.find(untyped_proxy) != constructed_.end();
+  assert(constructed && "Must be constructed");
+  auto col_holder = findColHolder<ColT,IndexT>(untyped_proxy);
+  auto max_idx = col_holder->max_idx;
+  auto const& this_node = theContext()->getNode();
+  auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
+  auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
+  assert(insert_epoch != no_epoch && "Epoch should be valid");
+  bool const& is_functor =
+    auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
+  auto_registry::AutoActiveMapType fn = nullptr;
+  if (is_functor) {
+    fn = auto_registry::getAutoHandlerFunctorMap(map_han);
+  } else {
+    fn = auto_registry::getAutoHandlerMap(map_han);
+  }
+  auto const& mapped_node = fn(
+    reinterpret_cast<vt::index::BaseIndex*>(&idx),
+    reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
+    theContext()->getNumNodes()
+  );
+  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag,mapped_node);
 }
 
 template <
