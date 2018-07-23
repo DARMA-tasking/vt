@@ -380,6 +380,13 @@ protected:
   );
 
 public:
+  template <typename ColT, typename IndexT>
+  NodeType getMappedNode(
+    CollectionProxyWrapType<ColT,IndexT> const& proxy,
+    typename ColT::IndexType const& idx
+  );
+
+public:
   template <typename ColT>
   MigrateStatus migrate(
     VrtElmProxy<ColT, typename ColT::IndexType>, NodeType const& dest

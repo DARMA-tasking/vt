@@ -1496,6 +1496,38 @@ void CollectionManager::finishedInserting(
 }
 
 template <typename ColT, typename IndexT>
+NodeType CollectionManager::getMappedNode(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy,
+  typename ColT::IndexType const& idx
+) {
+  auto const untyped_proxy = proxy.getProxy();
+  auto found_constructed = constructed_.find(untyped_proxy) != constructed_.end();
+  if (found_constructed) {
+    auto col_holder = findColHolder<ColT,IndexT>(untyped_proxy);
+    auto max_idx = col_holder->max_idx;
+    auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
+    bool const& is_functor =
+      auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
+    auto_registry::AutoActiveMapType fn = nullptr;
+    if (is_functor) {
+      fn = auto_registry::getAutoHandlerFunctorMap(map_han);
+    } else {
+      fn = auto_registry::getAutoHandlerMap(map_han);
+    }
+    auto idx_non_const = idx;
+    auto idx_non_const_ptr = &idx_non_const;
+    auto const& mapped_node = fn(
+      reinterpret_cast<vt::index::BaseIndex*>(idx_non_const_ptr),
+      reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
+      theContext()->getNumNodes()
+    );
+    return mapped_node;
+  } else {
+    return uninitialized_destination;
+  }
+}
+
+template <typename ColT, typename IndexT>
 void CollectionManager::insert(
   CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
   NodeType const& node
