@@ -211,10 +211,10 @@ EventType ActiveMessenger::sendMsgSized(
   if (is_epoch) {
     // Propagate current epoch on message first, otherwise propagate the global
     // epoch set on the active messenger
-    if (current_epoch_context_ != no_epoch) {
-      setEpochMessage(msg, current_epoch_context_);
-    } else if (global_epoch_ != no_epoch) {
+    if (global_epoch_ != no_epoch) {
       setEpochMessage(msg, global_epoch_);
+    } else if (current_epoch_context_ != no_epoch) {
+      setEpochMessage(msg, current_epoch_context_);
     }
   }
 

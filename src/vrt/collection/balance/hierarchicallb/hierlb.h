@@ -51,13 +51,13 @@ private:
   void transferSend(NodeType to, NodeType from, std::vector<ObjIDType> list);
 
   void downTree(
-    NodeType const from, ObjSampleType&& excess, bool const final_child
+    NodeType const from, ObjSampleType const& excess, bool const final_child
   );
   void lbTreeUp(
-    LoadType const child_load, NodeType const child, ObjSampleType&& load,
+    LoadType const child_load, NodeType const child, ObjSampleType load,
     NodeType const child_size
   );
-  void transfer(NodeType from, std::vector<ObjIDType>&& list);
+  void transfer(NodeType from, std::vector<ObjIDType> const& list);
 
   void sendDownTree();
   void distributeAmoungChildren();

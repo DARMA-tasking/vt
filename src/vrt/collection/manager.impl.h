@@ -1944,6 +1944,7 @@ void CollectionManager::nextPhase(
              * @todo: Implement child elision in reduction tree and up
              * propagation
              */
+            assert(0);
           }
         })
       );

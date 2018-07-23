@@ -304,6 +304,8 @@ void TerminationDetector::epochFinished(
       first_resolved_epoch_++;
     }
   }
+
+  epoch_finished_.emplace(epoch);
 }
 
 bool TerminationDetector::testEpochFinished(EpochType const& epoch) {
@@ -311,7 +313,11 @@ bool TerminationDetector::testEpochFinished(EpochType const& epoch) {
   if (is_rooted_epoch) {
     return false;
   } else {
-    return epoch > first_resolved_epoch_;
+    if (epoch_finished_.find(epoch) != epoch_finished_.end()) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 

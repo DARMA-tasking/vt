@@ -342,6 +342,7 @@ struct SerializedMessenger {
             sys_msg->data_recv_tag = std::get<1>(ret);
           };
 
+          sys_msg->env = msg->env;
           sys_msg->handler = typed_handler;
           sys_msg->from_node = theContext()->getNode();
 
