@@ -314,8 +314,8 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const& untyped_proxy = bcast_proxy;
   debug_print(
     vrt_coll, node,
-    "collectionBcastHandler: proxy={}, han={}, epoch={}\n",
-    col, col_msg->getVrtHandler(), col_msg->getBcastEpoch()
+    "collectionBcastHandler: bcast_proxy={}, han={}, epoch={}\n",
+    bcast_proxy, col_msg->getVrtHandler(), col_msg->getBcastEpoch()
   );
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(bcast_proxy);
   if (elm_holder) {
