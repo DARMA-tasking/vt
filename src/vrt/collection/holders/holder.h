@@ -14,6 +14,7 @@
 #include <tuple>
 #include <memory>
 #include <functional>
+#include <cstdlib>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -28,6 +29,7 @@ struct Holder {
   using TypedIndexContainer = ContType<LookupElementType, InnerHolder>;
   using FuncApplyType = std::function<void(IndexT const&, CollectionType*)>;
   using FuncExprType = std::function<bool(IndexT const&)>;
+  using CountType = uint64_t;
 
   bool exists(IndexT const& idx);
   InnerHolder& lookup(IndexT const& idx);
@@ -60,6 +62,7 @@ private:
   bool use_group_                                                 = false;
   bool group_ready_                                               = false;
   NodeType group_root_                                            = 0;
+  CountType num_erased_not_removed_                               = 0;
 };
 
 }}} /* end namespace vt::vrt::collection */

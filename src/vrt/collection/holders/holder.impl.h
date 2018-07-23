@@ -69,6 +69,7 @@ typename Holder<ColT, IndexT>::VirtualPtrType Holder<ColT, IndexT>::remove(
   auto owned_ptr = std::move(iter->second.vc_ptr_);
   assert(iter->second.erased_ == false && "Must not be erased already");
   iter->second.erased_ = true;
+  num_erased_not_removed_++;
   return std::move(owned_ptr);
 }
 
@@ -104,6 +105,7 @@ bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   if (num_reentrant == 0) {
     for (auto iter = container.begin(); iter != container.end(); ) {
       if (iter->second.erased_) {
+        num_erased_not_removed_--;
         iter = container.erase(iter);
       } else {
         ++iter;
@@ -116,7 +118,7 @@ bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
 template <typename ColT, typename IndexT>
 typename Holder<ColT,IndexT>::TypedIndexContainer::size_type
 Holder<ColT,IndexT>::numElements() const {
-  return vc_container_.size();
+  return vc_container_.size() - num_erased_not_removed_;
 }
 
 template <typename ColT, typename IndexT>
