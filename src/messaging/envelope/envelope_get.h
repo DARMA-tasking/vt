@@ -24,7 +24,7 @@ inline RefType envelopeGetRef(Env& env);
 
 #if backend_check_enabled(trace_enabled)
 template <typename Env>
-inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt);
+inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env);
 #endif
 
 } /* end namespace vt */
