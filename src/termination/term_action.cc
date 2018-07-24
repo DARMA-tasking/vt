@@ -49,7 +49,6 @@ void TermAction::addActionEpoch(EpochType const& epoch, ActionType action) {
     theTerm()->produce(term::any_epoch_sentinel);
 
     auto const& finished = testEpochFinished(epoch);
-    ::fmt::print("node={}, epoch={}, finished={}\n", theContext()->getNode(), epoch, finished);
     if (finished) {
       triggerAllEpochActions(epoch);
     }
