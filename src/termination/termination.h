@@ -107,6 +107,8 @@ private:
   EpochContainerType<TermStateType> epoch_state_;
   // finished epoch list (@todo: memory bound)
   std::unordered_set<EpochType> epoch_finished_;
+  // ready epoch list (misnomer: finishedEpoch was invoked)
+  std::unordered_set<EpochType> epoch_ready_;
 };
 
 }} // end namespace vt::term

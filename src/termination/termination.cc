@@ -351,7 +351,15 @@ EpochType TerminationDetector::newEpochCollective() {
 }
 
 void TerminationDetector::finishedEpoch(EpochType const& epoch) {
-  consume(epoch,1);
+  auto ready_iter = epoch_ready_.find(epoch);
+  if (ready_iter == epoch_ready_.end()) {
+    consume(epoch,1);
+    epoch_ready_.emplace(epoch);
+  } else {
+    /*
+     * Do nothing: the epoch as already been in "finished" state on this node
+     */
+  }
 }
 
 EpochType TerminationDetector::newEpochRooted() {
