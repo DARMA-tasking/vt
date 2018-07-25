@@ -6,6 +6,7 @@ set(TOP_LEVEL_SUBDIRS
   group
   messaging
   pool
+  pipe
   rdma
   topos
   vrt
@@ -29,6 +30,7 @@ set(
     collective/scatter/
     group/id group/region group/global group/msg group/collective group/rooted
     group/base
+    pipe/id pipe/msg pipe/state pipe/signal pipe/callback pipe/interface
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
