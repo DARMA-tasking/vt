@@ -13,6 +13,7 @@
 
 #include <cstdint>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace vt { namespace term {
@@ -104,6 +105,8 @@ private:
   TermStateType any_epoch_state_;
   // epoch termination state
   EpochContainerType<TermStateType> epoch_state_;
+  // finished epoch list (@todo: memory bound)
+  std::unordered_set<EpochType> epoch_finished_;
 };
 
 }} // end namespace vt::term
