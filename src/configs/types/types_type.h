@@ -37,6 +37,7 @@ using UniqueIndexBitType = uint64_t;
 using GroupType = uint64_t;
 using MsgSizeType = int32_t;
 using PhaseType = uint64_t;
+using PipeType = uint64_t;
 
 // Action types for attaching a closure to a runtime function
 using ActionType = std::function<void()>;
