@@ -174,6 +174,12 @@ void TerminationDetector::propagateEpochExternal(
   }
 }
 
+void TerminationDetector::resetGlobalTerm() {
+  any_epoch_state_ = TermState(
+    any_epoch_sentinel, false, true, getNumChildren()
+  );
+}
+
 bool TerminationDetector::propagateEpoch(TermStateType& state) {
   bool const& is_ready = state.readySubmitParent();
   bool const& is_root_ = isRoot();

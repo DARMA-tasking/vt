@@ -164,6 +164,15 @@ void Runtime::runScheduler() {
   theSched->scheduler();
 }
 
+void Runtime::reset() {
+  MPI_Barrier(theContext->getComm());
+
+  runtime_active_ = true;
+  theTerm->resetGlobalTerm();
+
+  MPI_Barrier(theContext->getComm());
+}
+
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   aborted_ = true;
 

@@ -35,6 +35,10 @@ struct TermState {
   );
   TermState(EpochType const& in_epoch, NodeType const& children);
 
+  TermState(TermState const&) = default;
+  TermState(TermState&&) = default;
+  TermState& operator=(TermState const&) = default;
+
   // four-counter method
   TermCounterType l_prod = 0, l_cons = 0;
   TermCounterType g_prod1 = 0, g_cons1 = 0;
@@ -50,7 +54,7 @@ private:
 
   EventCountType recv_child_count_ = 0;
   NodeType num_children_ = uninitialized_destination;
-  EpochType const epoch_ = no_epoch;
+  EpochType epoch_ = no_epoch;
   TermWaveType cur_wave_ = 0, submitted_wave_ = -1;
 };
 

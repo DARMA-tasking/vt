@@ -33,6 +33,8 @@ struct TerminationDetector : TermAction, collective::tree::Tree {
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   );
 
+  void resetGlobalTerm();
+
 public:
   /*
    * Deprecated interface for creating a new collective epoch for detecting

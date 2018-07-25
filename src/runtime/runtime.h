@@ -54,6 +54,7 @@ struct Runtime {
   bool isFinalized() const { return finalized_; }
   bool hasSchedRun() const { return theSched ? theSched->hasSchedRun() : false; }
 
+  void reset();
   bool initialize(bool const force_now = false);
   bool finalize(bool const force_now = false);
   void runScheduler();
