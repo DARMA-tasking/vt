@@ -25,7 +25,7 @@ struct SerializedDataMsgAny : MessageT {
 };
 
 template <typename T>
-using SerializedDataMsg = SerializedDataMsgAny<T, ShortMessage>;
+using SerializedDataMsg = SerializedDataMsgAny<T, Message>;
 
 using NumBytesType = int64_t;
 
