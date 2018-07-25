@@ -21,6 +21,7 @@
 #include "vrt/collection/collection_headers.h"
 #include "worker/worker_headers.h"
 #include "group/group_headers.h"
+#include "pipe/pipe_headers.h"
 #include "runtime_get.h"
 
 #include <memory>
@@ -103,6 +104,7 @@ public:
   ComponentPtrType<vrt::VirtualContextManager> theVirtualManager;
   ComponentPtrType<vrt::collection::CollectionManager> theCollection;
   ComponentPtrType<group::GroupManager> theGroup;
+  ComponentPtrType<pipe::PipeManager> theCB;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;

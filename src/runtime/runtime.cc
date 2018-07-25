@@ -247,6 +247,7 @@ void Runtime::initializeComponents() {
   theTerm = std::make_unique<term::TerminationDetector>();
   theCollective = std::make_unique<collective::CollectiveAlg>();
   theGroup = std::make_unique<group::GroupManager>();
+  theCB = std::make_unique<pipe::PipeManager>();
 
   // Advanced runtime components: not required for basic messaging
   theRDMA = std::make_unique<rdma::RDMAManager>();
@@ -350,6 +351,7 @@ void Runtime::finalizeComponents() {
   theSched = nullptr;
   theMsg = nullptr;
   theGroup = nullptr;
+  theCB = nullptr;
 
   // Helper components: thePool the last to be destructed because it handles
   // memory allocations

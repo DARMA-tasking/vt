@@ -58,6 +58,7 @@ term::TerminationDetector*  theTerm()           { return CUR_RT->theTerm.get(); 
 location::LocationManager*  theLocMan()         { return CUR_RT->theLocMan.get();         }
 CollectionManagerType*      theCollection()     { return CUR_RT->theCollection.get();     }
 group::GroupManager*        theGroup()          { return CUR_RT->theGroup.get();          }
+pipe::PipeManager*          theCB()             { return CUR_RT->theCB.get();             }
 
 #if backend_check_enabled(trace_enabled)
 trace::Trace*               theTrace()          { return CUR_RT->theTrace.get();          }

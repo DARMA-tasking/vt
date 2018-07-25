@@ -21,6 +21,7 @@
 #include "vrt/collection/collection_headers.h"
 #include "worker/worker_headers.h"
 #include "group/group_headers.h"
+#include "pipe/pipe_headers.h"
 
 namespace vt {
 
@@ -43,6 +44,7 @@ extern term::TerminationDetector*  theTerm();
 extern location::LocationManager*  theLocMan();
 extern CollectionManagerType*      theCollection();
 extern group::GroupManager*        theGroup();
+extern pipe::PipeManager*          theCB();
 
 #if backend_check_enabled(trace_enabled)
 extern trace::Trace*               theTrace();
