@@ -7,7 +7,7 @@
 #include "pipe/id/pipe_id.h"
 #include "pipe/interface/base_container.h"
 #include "pipe/interface/send_container.h"
-#include "pipe/callback/callback_handler_send.h"
+#include "pipe/callback/handler_send/callback_handler_send.h"
 
 namespace vt { namespace pipe { namespace interface {
 
