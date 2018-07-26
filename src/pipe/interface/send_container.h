@@ -24,7 +24,7 @@ private:
 
   void triggerDirect(DataT data);
 
-  template <typename... Ts, typename Func>
+  template <typename... Ts>
   void foreach(std::tuple<Ts...> const& t, DataT data);
 
   template <typename... Ts, std::size_t... Idx>

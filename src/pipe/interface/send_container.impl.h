@@ -46,7 +46,7 @@ bool SendContainer<DataT,Args...>::isSendBack() const {
 }
 
 template <typename DataT, typename... Args>
-template <typename... Ts, typename Func>
+template <typename... Ts>
 void SendContainer<DataT,Args...>::foreach(
   std::tuple<Ts...> const& t, DataT data
 ) {

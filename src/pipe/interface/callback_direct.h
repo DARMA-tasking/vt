@@ -12,17 +12,21 @@
 namespace vt { namespace pipe { namespace interface {
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-struct CallbackDirectSend : SendContainer<MsgT,callback::CallbackSend<MsgT,f>> {
+struct CallbackDirectSend : SendContainer<MsgT*,callback::CallbackSend<MsgT,f>> {
 
   CallbackDirectSend(PipeType const& in_pipe, NodeType const& in_node)
-    : SendContainer<MsgT,callback::CallbackSend<MsgT,f>>(
+    : SendContainer<MsgT*,callback::CallbackSend<MsgT,f>>(
         in_pipe, callback::CallbackSend<MsgT,f>(in_node)
       )
   { }
 
+  void send(MsgT* m) {
+    SendContainer<MsgT*,callback::CallbackSend<MsgT,f>>::trigger(m);
+  }
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    SendContainer<MsgT,callback::CallbackSend<MsgT,f>>::serialize(s);
+    SendContainer<MsgT*,callback::CallbackSend<MsgT,f>>::serialize(s);
   }
 
 };
