@@ -45,7 +45,10 @@ PipeManager::makeCallbackSingleSendTyped(
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>*... f>
-auto
+interface::CallbackDirectSendMulti<
+  MsgT,
+  typename RepeatNImpl<sizeof...(f),callback::CallbackSend<MsgT>>::ResultType
+>
 PipeManager::makeCallbackMultiSendTyped(
   bool const is_persist, NodeType const& send_to_node
 ) {

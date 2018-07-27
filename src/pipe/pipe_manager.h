@@ -9,6 +9,7 @@
 #include "pipe/interface/send_container.h"
 #include "pipe/interface/callback_direct.h"
 #include "pipe/callback/handler_send/callback_handler_send_remote.h"
+#include "pipe/pipe_manager_construct.h"
 #include "activefn/activefn.h"
 
 #include <unordered_map>
@@ -28,7 +29,11 @@ struct PipeManager {
    *  directly from the sender; thus this node is not involved in the process
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>*... f>
-  auto makeCallbackMultiSendTyped(
+  interface::CallbackDirectSendMulti<
+    MsgT,
+    typename RepeatNImpl<sizeof...(f),callback::CallbackSend<MsgT>>::ResultType
+  >
+  makeCallbackMultiSendTyped(
     bool const is_persist, NodeType const& send_to_node
   );
 
