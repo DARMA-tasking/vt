@@ -36,7 +36,6 @@ PipeManager::CallbackSendType<MsgT>
 PipeManager::makeCallbackSingleSendTyped(
   bool const is_persist, NodeType const& send_to_node
 ) {
-  // using SendContainerType = typename interface::SendContainer<MsgT>;
   auto const& new_pipe_id = makePipeID(is_persist,false);
   auto const& handler = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
   auto container = CallbackSendType<MsgT>(
@@ -50,18 +49,16 @@ auto
 PipeManager::makeCallbackMultiSendTyped(
   bool const is_persist, NodeType const& send_to_node
 ) {
-  auto const& new_pipe_id = makePipeID(is_persist,false);
   using CBSendT = callback::CallbackSend<MsgT>;
   using ConsT = std::tuple<NodeType>;
   using TupleConsT = typename RepeatNImpl<sizeof...(f),ConsT>::ResultType;
-  std::array<NodeType,sizeof...(f)> send_node_array;
-  send_node_array.fill(send_to_node);
-
-  ::fmt::print("arr val0={} val1={}\n", send_node_array[0], send_node_array[1]);
-  auto const cons = TupleConsT{send_node_array};
-  ::fmt::print("tup val0={} val1={}\n", std::get<0>(std::get<0>(cons)), std::get<0>(std::get<1>(cons)));
   using ConstructMeta = ConstructCallbacks<CBSendT,TupleConsT,MsgT,f...>;
   using TupleCBType = typename ConstructMeta::ResultType;
+
+  auto const& new_pipe_id = makePipeID(is_persist,false);
+  std::array<NodeType,sizeof...(f)> send_node_array;
+  send_node_array.fill(send_to_node);
+  auto const cons = TupleConsT{send_node_array};
   auto const tuple = ConstructMeta::make(cons);
   auto rcm = interface::CallbackDirectSendMulti<MsgT,TupleCBType>(
     interface::CallbackDirectSendMultiTag,new_pipe_id,tuple

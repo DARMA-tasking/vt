@@ -45,7 +45,9 @@ public:
       refs_--;
       triggered_++;
     }
+    ::fmt::print("CallbackBase: calling trigger_ on cb\n");
     trigger_(data);
+    ::fmt::print("CallbackBase: (after) calling trigger_ on cb\n");
   }
 
   bool finished() const {
