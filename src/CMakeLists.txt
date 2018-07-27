@@ -30,7 +30,12 @@ set(
     collective/scatter/
     group/id group/region group/global group/msg group/collective group/rooted
     group/base
-    pipe/id pipe/msg pipe/state pipe/signal pipe/callback pipe/interface
+    pipe/id pipe/msg pipe/state pipe/signal pipe/interface pipe/callback
+      pipe/callback/handler_send
+      pipe/callback/handler_bcast
+      pipe/callback/proxy_send
+      pipe/callback/proxy_bcast
+      pipe/callback/anon
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
