@@ -25,6 +25,7 @@ struct CallbackProxySend : CallbackBase<signal::Signal<MsgT>> {
   using IndexedProxyType = typename ColT::ProxyType;
   using ProxyType        = typename ColT::CollectionProxyType;
   using IndexType        = typename ColT::IndexType;
+  using MessageType      = MsgT;
 
   explicit CallbackProxySend(IndexedProxyType const& in_proxy)
     : proxy_(in_proxy.getCollectionProxy()),

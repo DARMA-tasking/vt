@@ -13,6 +13,8 @@
 #include "activefn/activefn.h"
 
 #include <unordered_map>
+#include <tuple>
+#include <type_traits>
 
 namespace vt { namespace pipe {
 
@@ -36,6 +38,15 @@ struct PipeManager {
   makeCallbackMultiSendTyped(
     bool const is_persist, NodeType const& send_to_node
   );
+
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  auto pushTarget(NodeType const& send_to_node);
+
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
+  auto pushTarget(CallbackT in, NodeType const& send_to_node);
+
+  template <typename CallbackT>
+  auto buildMultiCB(CallbackT in);
 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   CallbackSendType<MsgT> makeCallbackSingleSendTyped(

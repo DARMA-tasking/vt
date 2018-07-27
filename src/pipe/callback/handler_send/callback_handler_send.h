@@ -17,6 +17,7 @@ struct CallbackSendHandler : CallbackBase<signal::Signal<MsgT>> {
   using SignalBaseType = typename signal::Signal<MsgT>;
   using SignalType     = typename CallbackBase<SignalBaseType>::SignalType;
   using SignalDataType = typename SignalType::DataType;
+  using MessageType    = MsgT;
 
   CallbackSendHandler(NodeType const& in_send_node)
     : send_node_(in_send_node)

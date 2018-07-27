@@ -24,6 +24,7 @@ struct CallbackProxyBcast : CallbackBase<signal::Signal<MsgT>> {
   using SignalDataType  = typename SignalType::DataType;
   using ProxyType       = typename ColT::CollectionProxyType;
   using CallbackFnType  = std::function<void(SignalDataType)>;
+  using MessageType     = MsgT;
 
   explicit CallbackProxyBcast(ProxyType const& in_proxy)
     : proxy_(in_proxy)

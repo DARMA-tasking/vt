@@ -74,4 +74,27 @@ void PipeManager::makeCallbackSingleBcast(bool const is_persist) {
   auto const& new_pipe_id = makePipeID(is_persist,false);
 }
 
+template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
+auto PipeManager::pushTarget(CallbackT in, NodeType const& send_to_node) {
+  auto const& han = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  return std::tuple_cat(
+    std::make_tuple(callback::CallbackSend<MsgT>(han,send_to_node)), in
+  );
+}
+
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+auto PipeManager::pushTarget(NodeType const& send_to_node) {
+  auto const& han = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  return std::make_tuple(callback::CallbackSend<MsgT>(han,send_to_node));
+}
+
+template <typename CallbackT>
+auto PipeManager::buildMultiCB(CallbackT in) {
+  using MsgT = typename std::tuple_element<0,CallbackT>::type::SignalDataType;
+  auto const& new_pipe_id = makePipeID(true,false);
+  return interface::CallbackDirectSendMulti<MsgT,CallbackT>(
+    interface::CallbackDirectSendMultiTag,new_pipe_id,in
+  );
+}
+
 }} /* end namespace vt::pipe */

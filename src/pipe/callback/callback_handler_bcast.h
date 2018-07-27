@@ -16,6 +16,7 @@ struct CallbackBcast : CallbackBase<signal::Signal<MsgT>> {
   using SignalBaseType = typename signal::Signal<MsgT>;
   using SignalType     = typename CallbackBase<SignalBaseType>::SignalType;
   using SignalDataType = typename SignalType::DataType;
+  using MessageType    = MsgT;
 
   explicit CallbackBcast(bool const in_include_root = false)
     : include_root_(in_include_root)

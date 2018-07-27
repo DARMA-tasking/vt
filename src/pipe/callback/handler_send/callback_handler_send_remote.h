@@ -19,6 +19,7 @@ struct CallbackSend : CallbackBase<signal::Signal<MsgT>> {
   using SignalBaseType = typename signal::Signal<MsgT>;
   using SignalType     = typename CallbackBase<SignalBaseType>::SignalType;
   using SignalDataType = typename SignalType::DataType;
+  using MessageType    = MsgT;
 
   CallbackSend() = default;
   CallbackSend(CallbackSend const&) = default;
