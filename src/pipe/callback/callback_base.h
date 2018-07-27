@@ -37,10 +37,10 @@ struct CallbackBase {
   virtual ~CallbackBase() = default;
 
 protected:
-  virtual void trigger_(SignalDataType data) = 0;
+  virtual void trigger_(SignalDataType* data) = 0;
 
 public:
-  void trigger(SignalDataType data) {
+  void trigger(SignalDataType* data) {
     if (reference_counted_) {
       refs_--;
       triggered_++;

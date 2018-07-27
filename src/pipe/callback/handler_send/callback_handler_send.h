@@ -13,12 +13,12 @@
 namespace vt { namespace pipe { namespace callback {
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-struct CallbackSend : CallbackBase<signal::Signal<MsgT*>> {
-  using SignalBaseType = typename signal::Signal<MsgT*>;
+struct CallbackSendHandler : CallbackBase<signal::Signal<MsgT>> {
+  using SignalBaseType = typename signal::Signal<MsgT>;
   using SignalType     = typename CallbackBase<SignalBaseType>::SignalType;
   using SignalDataType = typename SignalType::DataType;
 
-  CallbackSend(NodeType const& in_send_node)
+  CallbackSendHandler(NodeType const& in_send_node)
     : send_node_(in_send_node)
   { }
 
@@ -29,7 +29,7 @@ struct CallbackSend : CallbackBase<signal::Signal<MsgT*>> {
   }
 
 private:
-  void trigger_(SignalDataType data) override {
+  void trigger_(SignalDataType* data) override {
     auto const& this_node = theContext()->getNode();
     if (this_node == send_node_) {
       f(data);

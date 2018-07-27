@@ -23,7 +23,7 @@ struct CallbackAnonFun : CallbackBase<SignalT> {
   { }
 
 private:
-  void trigger_(SignalDataType data) override {
+  void trigger_(SignalDataType* data) override {
     fn_(data);
   }
 

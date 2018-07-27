@@ -8,7 +8,7 @@
 
 namespace vt { namespace pipe { namespace interface {
 
-template <typename DataT>
+template <typename MsgT>
 struct BaseContainer {
 
   explicit BaseContainer(PipeType const& in_pipe)

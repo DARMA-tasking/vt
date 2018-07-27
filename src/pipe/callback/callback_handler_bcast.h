@@ -12,8 +12,8 @@
 namespace vt { namespace pipe { namespace callback {
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-struct CallbackBcast : CallbackBase<signal::Signal<MsgT*>> {
-  using SignalBaseType = typename signal::Signal<MsgT*>;
+struct CallbackBcast : CallbackBase<signal::Signal<MsgT>> {
+  using SignalBaseType = typename signal::Signal<MsgT>;
   using SignalType     = typename CallbackBase<SignalBaseType>::SignalType;
   using SignalDataType = typename SignalType::DataType;
 
@@ -28,10 +28,10 @@ struct CallbackBcast : CallbackBase<signal::Signal<MsgT*>> {
   }
 
 private:
-  void trigger_(SignalDataType data) override {
+  void trigger_(SignalDataType* data) override {
     theMsg()->broadcastMsg<MsgT,f>(data);
     if (include_root_) {
-      auto nmsg = makeSharedMessage<SignalDataType>(*data);
+      auto nmsg = makeSharedMessage<SignalDataType*>(*data);
       f(nmsg);
     }
   }

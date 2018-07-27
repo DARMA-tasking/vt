@@ -8,6 +8,7 @@
 #include "pipe/pipe_manager.fwd.h"
 #include "pipe/interface/send_container.h"
 #include "pipe/interface/callback_direct.h"
+#include "pipe/callback/handler_send/callback_handler_send_remote.h"
 #include "activefn/activefn.h"
 
 #include <unordered_map>
@@ -15,10 +16,10 @@
 namespace vt { namespace pipe {
 
 struct PipeManager {
-  using PipeStateType          = PipeState;
+  using PipeStateType = PipeState;
 
-  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  using CallbackSendType = interface::CallbackDirectSend<MsgT,f>;
+  template <typename MsgT>
+  using CallbackSendType = interface::CallbackDirectSend<MsgT>;
 
   PipeManager() = default;
 
@@ -26,8 +27,13 @@ struct PipeManager {
    *  Builders for non-send-back type of pipe callback: they are invoked
    *  directly from the sender; thus this node is not involved in the process
    */
+  template <typename MsgT, ActiveTypedFnType<MsgT>*... f>
+  auto makeCallbackMultiSendTyped(
+    bool const is_persist, NodeType const& send_to_node
+  );
+
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  CallbackSendType<MsgT,f> makeCallbackSingleSend(
+  CallbackSendType<MsgT> makeCallbackSingleSendTyped(
     bool const is_persist, NodeType const& send_to_node
   );
 
@@ -38,8 +44,8 @@ struct PipeManager {
    *  Trigger and send back on a pipe that is not locally triggerable and thus
    *  requires communication if it is "sent" off-node.
    */
-  template <typename DataT>
-  void triggerSendBack(PipeType const& pipe, DataT data);
+  template <typename MsgT>
+  void triggerSendBack(PipeType const& pipe, MsgT* data);
 
 private:
   PipeType makePipeID(bool const persist, bool const send_back);
@@ -55,5 +61,6 @@ private:
 
 #include "pipe/pipe_manager.impl.h"
 #include "pipe/interface/send_container.impl.h"
+#include "pipe/interface/remote_container_msg.impl.h"
 
 #endif /*INCLUDED_PIPE_PIPE_MANAGER_H*/

@@ -6,27 +6,71 @@
 #include "pipe/pipe_common.h"
 #include "pipe/id/pipe_id.h"
 #include "pipe/interface/base_container.h"
-#include "pipe/interface/send_container.h"
-#include "pipe/callback/handler_send/callback_handler_send.h"
+#include "pipe/interface/remote_container_msg.h"
+#include "pipe/callback/handler_send/callback_handler_send_remote.h"
+
+#include <tuple>
+#include <utility>
+#include <type_traits>
 
 namespace vt { namespace pipe { namespace interface {
 
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-struct CallbackDirectSend : SendContainer<MsgT*,callback::CallbackSend<MsgT,f>> {
+template <typename MsgT>
+struct CallbackDirectSend :
+    RemoteContainerMsg<MsgT,std::tuple<callback::CallbackSend<MsgT>>>
+{
+  using BaseType = RemoteContainerMsg<
+    MsgT,std::tuple<callback::CallbackSend<MsgT>>
+  >;
 
-  CallbackDirectSend(PipeType const& in_pipe, NodeType const& in_node)
-    : SendContainer<MsgT*,callback::CallbackSend<MsgT,f>>(
-        in_pipe, callback::CallbackSend<MsgT,f>(in_node)
-      )
+  CallbackDirectSend(
+    PipeType const& in_pipe, NodeType const& in_node,
+    HandlerType const& in_handler
+  ) : BaseType(in_pipe, callback::CallbackSend<MsgT>(in_handler,in_node))
   { }
 
   void send(MsgT* m) {
-    SendContainer<MsgT*,callback::CallbackSend<MsgT,f>>::trigger(m);
+    ::fmt::print("callback send\n");
+    BaseType::trigger(m);
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    SendContainer<MsgT*,callback::CallbackSend<MsgT,f>>::serialize(s);
+    BaseType::serialize(s);
+  }
+
+};
+
+static struct CallbackDirectSendMultiTagType {} CallbackDirectSendMultiTag { };
+
+template <typename MsgT, typename TupleT>
+struct CallbackDirectSendMulti : RemoteContainerMsg<MsgT,TupleT> {
+
+  template <typename... Args>
+  explicit CallbackDirectSendMulti(PipeType const& in_pipe, Args... args)
+    : RemoteContainerMsg<MsgT,TupleT>(in_pipe,std::make_tuple(args...))
+  { }
+
+  template <typename... Args>
+  CallbackDirectSendMulti(
+    CallbackDirectSendMultiTagType, PipeType const& in_pipe,
+    std::tuple<Args...> tup
+  ) : RemoteContainerMsg<MsgT,TupleT>(in_pipe,tup)
+  { }
+
+  // template <std::size_t elm, typename... Vals>
+  // void setValue(Vals... vals) {
+  //   RemoteContainerMsg<MsgT,Args...>::template setValues<elm,Vals...>(vals...);
+  // }
+
+  void send(MsgT* m) {
+    ::fmt::print("callback send\n");
+    RemoteContainerMsg<MsgT,TupleT>::trigger(m);
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    RemoteContainerMsg<MsgT,TupleT>::serialize(s);
   }
 
 };

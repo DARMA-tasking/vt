@@ -18,8 +18,8 @@ template <
   typename MsgT,
   vrt::collection::ActiveColTypedFnType<MsgT,ColT>* f
 >
-struct CallbackProxyBcast : CallbackBase<signal::Signal<MsgT*>> {
-  using SignalBaseType  = typename signal::Signal<MsgT*>;
+struct CallbackProxyBcast : CallbackBase<signal::Signal<MsgT>> {
+  using SignalBaseType  = typename signal::Signal<MsgT>;
   using SignalType      = typename CallbackBase<SignalBaseType>::SignalType;
   using SignalDataType  = typename SignalType::DataType;
   using ProxyType       = typename ColT::CollectionProxyType;
@@ -36,7 +36,7 @@ struct CallbackProxyBcast : CallbackBase<signal::Signal<MsgT*>> {
   }
 
 private:
-  void trigger_(SignalDataType data) override {
+  void trigger_(SignalDataType* data) override {
     proxy_.template broadcast<ColT,MsgT,f>(data);
   }
 

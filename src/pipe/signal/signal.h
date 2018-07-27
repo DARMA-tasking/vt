@@ -9,11 +9,16 @@ namespace vt { namespace pipe { namespace signal {
 
 struct SignalBase {};
 
-template <typename DataT>
+template <typename MsgT>
 struct Signal : SignalBase {
-  using DataType = DataT;
+  using DataType = MsgT;
 
   TagType getTag() const { return signal_tag_; }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | signal_tag_;
+  }
 
 private:
   TagType signal_tag_ = no_tag;
