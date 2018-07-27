@@ -27,9 +27,7 @@ struct CallbackSend : CallbackBase<signal::Signal<MsgT>> {
   CallbackSend(
     HandlerType const& in_handler, NodeType const& in_send_node
   ) : send_node_(in_send_node), handler_(in_handler)
-  {
-    ::fmt::print("send_node_={}\n",send_node_);
-  }
+  { }
 
   HandlerType getHandler() const { return handler_; }
 
