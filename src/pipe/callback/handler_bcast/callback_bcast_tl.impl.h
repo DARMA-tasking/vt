@@ -20,12 +20,12 @@ void CallbackBcastTypeless::serialize(SerializerT& s) {
 }
 
 template <typename MsgT>
-void CallbackBcastTypeless::trigger(MsgT* msg) {
+void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
   debug_print(
     pipe, node,
-    "CallbackBcast: trigger_: this_node={}, include_sender_={}\n",
-    this_node, include_sender_
+    "CallbackBcast: trigger_: pipe={:x}, this_node={}, include_sender_={}\n",
+    pipe, this_node, include_sender_
   );
   theMsg()->broadcastMsg<MsgT>(handler_, msg);
   if (include_sender_) {

@@ -22,7 +22,8 @@ struct CallbackSendTypeless : CallbackBaseTL<CallbackSendTypeless> {
 
 public:
   template <typename MsgT>
-  void trigger(MsgT* msg);
+  void trigger(MsgT* msg, PipeType const& pipe);
+  void triggerVoid(PipeType const& pipe);
 
 private:
   NodeType send_node_ = uninitialized_destination;

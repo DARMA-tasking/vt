@@ -8,6 +8,7 @@
 #include "pipe/pipe_manager_base.h"
 #include "pipe/callback/cb_union/cb_raw_base.h"
 #include "activefn/activefn.h"
+#include "context/context.h"
 
 namespace vt { namespace pipe {
 
@@ -32,6 +33,37 @@ PipeManagerTL::makeCallbackSingleBcast(bool const& inc) {
   );
   return cb;
 }
+
+template <typename unused_>
+PipeManagerTL::CallbackType
+PipeManagerTL:: makeCallbackSingleAnonVoid(FuncVoidType fn) {
+  auto const& new_pipe_id = makeCallbackFuncVoid(true,fn,true);
+  auto cb = CallbackType(callback::cbunion::RawAnonTag,new_pipe_id);
+
+  debug_print(
+    pipe, node,
+    "makeCallbackSingleAnonVoid: persist={}, pipe={:x}\n",
+    true, new_pipe_id
+  );
+
+  return cb;
+}
+
+template <typename MsgT>
+PipeManagerTL::CallbackType
+PipeManagerTL:: makeCallbackSingleAnon(FuncMsgType<MsgT> fn) {
+  auto const& new_pipe_id = makeCallbackFunc<MsgT>(true,fn,true);
+  auto cb = CallbackType(callback::cbunion::RawAnonTag,new_pipe_id);
+
+  debug_print(
+    pipe, node,
+    "makeCallbackSingleAnon: persist={}, pipe={:x}\n",
+    true, new_pipe_id
+  );
+
+  return cb;
+}
+
 
 }} /* end namespace vt::pipe */
 

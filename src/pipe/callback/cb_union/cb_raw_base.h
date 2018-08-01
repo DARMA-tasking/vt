@@ -26,9 +26,12 @@ struct CallbackRawBaseSingle {
     RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
     bool const& in_inc
   );
+  CallbackRawBaseSingle(RawAnonTagType, PipeType const& in_pipe);
 
   template <typename MsgT>
   void send(MsgT* msg);
+
+  void send();
 
   template <typename SerializerT>
   void serialize(SerializerT& s);

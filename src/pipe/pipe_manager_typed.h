@@ -30,10 +30,6 @@ struct PipeManagerTyped : virtual PipeManagerBase {
   using CallbackBcastType    = typename CallbackTypes<T>::CallbackDirectBcast;
   using CallbackAnonVoidType = typename CallbackTypes<void>::CallbackAnonVoid;
 
-  template <typename MsgT>
-  using FuncMsgType          = std::function<void(MsgT*)>;
-  using FuncVoidType         = std::function<void(void)>;
-
   /*
    *  Builders for non-send-back type of pipe callback: they are invoked
    *  directly from the sender; thus this node is not involved in the process

@@ -9,6 +9,7 @@
 #include "pipe/msg/callback.h"
 #include "pipe/signal/signal_holder.h"
 #include "pipe/callback/anon/callback_anon.fwd.h"
+#include "pipe/callback/anon/callback_anon_tl.fwd.h"
 
 #include <functional>
 
@@ -20,12 +21,14 @@ struct PipeManagerBase {
   template <typename MsgT>
   using FuncMsgType = std::function<void(MsgT*)>;
   using FuncType = std::function<void(void)>;
+  using FuncVoidType         = std::function<void(void)>;
   using DispatchFuncType = PipeState::DispatchFuncType;
 
   PipeManagerBase() = default;
 
   template <typename SignalT>
   friend struct pipe::callback::CallbackAnon;
+  friend struct pipe::callback::CallbackAnonTypeless;
 
   PipeType makeCallbackFuncVoid(
     bool const& persist, FuncType fn, bool const& dispatch = false,

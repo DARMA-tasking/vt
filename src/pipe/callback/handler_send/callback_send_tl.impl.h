@@ -20,12 +20,12 @@ void CallbackSendTypeless::serialize(SerializerT& s) {
 }
 
 template <typename MsgT>
-void CallbackSendTypeless::trigger(MsgT* msg) {
+void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
   debug_print(
     pipe, node,
-    "CallbackSendTypeless: trigger_: this_node={}, send_node_={}\n",
-    this_node, send_node_
+    "CallbackSendTypeless: trigger_: pipe={:x}, this_node={}, send_node_={}\n",
+    pipe, this_node, send_node_
   );
   if (this_node == send_node_) {
     auto nmsg = reinterpret_cast<ShortMessage*>(msg);

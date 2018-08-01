@@ -21,6 +21,12 @@ struct PipeManagerTL : virtual PipeManagerBase {
 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   CallbackType makeCallbackSingleBcast(bool const& inc);
+
+  template <typename=void>
+  CallbackType makeCallbackSingleAnonVoid(FuncVoidType fn);
+
+  template <typename MsgT>
+  CallbackType makeCallbackSingleAnon(FuncMsgType<MsgT> fn);
 };
 
 }} /* end namespace vt::pipe */

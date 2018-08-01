@@ -27,7 +27,8 @@ struct CallbackBcastTypeless : CallbackBaseTL<CallbackBcastTypeless> {
 
 public:
   template <typename MsgT>
-  void trigger(MsgT* msg);
+  void trigger(MsgT* msg, PipeType const& pipe);
+  void triggerVoid(PipeType const& pipe);
 
 private:
   HandlerType handler_ = uninitialized_handler;

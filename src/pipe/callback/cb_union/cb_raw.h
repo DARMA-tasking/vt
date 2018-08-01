@@ -5,15 +5,14 @@
 #include "config.h"
 #include "pipe/callback/handler_send/callback_send_tl.h"
 #include "pipe/callback/handler_bcast/callback_bcast_tl.h"
+#include "pipe/callback/anon/callback_anon_tl.h"
 
 #include <cstdlib>
 #include <cstdint>
 
 namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
-struct AnonCB {
-  NodeType send_node_ = uninitialized_destination;
-};
+struct AnonCB : CallbackAnonTypeless { };
 
 struct SendMsgCB : CallbackSendTypeless {
   SendMsgCB(

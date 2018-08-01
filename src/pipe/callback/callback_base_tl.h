@@ -15,9 +15,14 @@ struct CallbackBaseTL {
   void serialize(SerializerT& s) { }
 
   template <typename MsgT>
-  void trigger(MsgT* msg) {
+  void trigger(MsgT* msg, PipeType const& pipe) {
     auto cb = static_cast<CallbackT&>(*this);
-    return cb.template trigger<MsgT>(msg);
+    return cb.template trigger<MsgT>(msg,pipe);
+  }
+
+  void triggerVoid(PipeType const& pipe) {
+    auto cb = static_cast<CallbackT&>(*this);
+    return cb.template triggerVoid(pipe);
   }
 };
 

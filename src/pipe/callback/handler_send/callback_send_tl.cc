@@ -11,4 +11,8 @@ CallbackSendTypeless::CallbackSendTypeless(
 ) : send_node_(in_send_node), handler_(in_handler)
 { }
 
+void CallbackSendTypeless::triggerVoid(PipeType const& pipe) {
+  assert(0 && "Send: void trigger not allowed");
+}
+
 }}} /* end namespace vt::pipe::callback */
