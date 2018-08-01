@@ -4,7 +4,6 @@
 
 #include "config.h"
 #include "pipe/pipe_common.h"
-#include "pipe/pipe_manager.h"
 #include "pipe/state/pipe_state.h"
 #include "pipe/interface/remote_container_msg.h"
 #include "pipe/interface/send_container.h"

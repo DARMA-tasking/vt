@@ -7,6 +7,9 @@
 #include "pipe/interface/remote_container_msg.h"
 #include "pipe/id/pipe_id.h"
 #include "pipe/pipe_manager.h"
+#include "context/context.h"
+#include "messaging/message.h"
+#include "pipe/signal/signal.h"
 
 #include <tuple>
 #include <utility>
@@ -30,16 +33,58 @@ RemoteContainerMsg<MsgT,TupleT>::RemoteContainerMsg(
 {}
 
 template <typename MsgT, typename TupleT>
-template <typename CallbackT>
-void RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgT* data) {
-  ::fmt::print("RemoteContainerMsg: calling trigger on cb\n");
-  cb.trigger(data);
+template <typename MsgU, typename CallbackT>
+RemoteContainerMsg<MsgT,TupleT>::IsVoidType<MsgU>
+RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU*) {
+  auto const& pid = BaseContainer<MsgT>::getPipe();
+  constexpr auto multi_callback = std::tuple_size<decltype(trigger_list_)>();
+  debug_print(
+    pipe, node,
+    "RemoteContainerMsg: (void) invoke trigger: pipe{:x}, multi={}\n",
+    pid, multi_callback
+  );
+  cb.trigger(nullptr,pid);
 }
 
 template <typename MsgT, typename TupleT>
-void RemoteContainerMsg<MsgT,TupleT>::trigger(MsgT* data) {
+template <typename MsgU, typename CallbackT>
+RemoteContainerMsg<MsgT,TupleT>::IsNotVoidType<MsgU>
+RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
+  auto const& pid = BaseContainer<MsgT>::getPipe();
+  auto const& multi_callback = std::tuple_size<decltype(trigger_list_)>() > 0;
+  debug_print(
+    pipe, node,
+    "RemoteContainerMsg: (typed) invoke trigger: pipe{:x}, multi={}, ptr={}\n",
+    pid, multi_callback, print_ptr(data)
+  );
+  MsgT* cur_msg = data;
+
+  /*
+   *  Make a copy of the message for each callback trigger because the callback
+   *  trigger may send/bcast messages, thus a copy must be made
+   */
+  if (multi_callback) {
+    cur_msg = makeSharedMessage<MsgT>(*data);
+    messageRef(cur_msg);
+  }
+
+  cb.trigger(cur_msg,pid);
+
+  if (multi_callback) {
+    messageDeref(cur_msg);
+  }
+}
+
+template <typename MsgT, typename TupleT>
+template <typename MsgU>
+void RemoteContainerMsg<MsgT,TupleT>::trigger(MsgU* data) {
+  auto const& pipe = BaseContainer<MsgT>::getPipe();
   bool const& is_send_back = isSendBack();
-  ::fmt::print("RemoteContainerMsg: send_back={}\n", is_send_back);
+  debug_print(
+    pipe, node,
+    "RemoteContainerMsg: pipe{:x}, send_back={}, size={}\n",
+    pipe, is_send_back, std::tuple_size<decltype(trigger_list_)>()
+  );
   if (is_send_back) {
     auto const& pipe = this->getPipe();
     theCB()->triggerSendBack<MsgT>(pipe,data);

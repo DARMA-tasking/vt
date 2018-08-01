@@ -6,56 +6,23 @@
 #include "pipe/pipe_common.h"
 #include "pipe/state/pipe_state.h"
 #include "pipe/pipe_manager.fwd.h"
-#include "pipe/interface/send_container.h"
-#include "pipe/interface/callback_direct.h"
-#include "pipe/callback/handler_send/callback_handler_send_remote.h"
-#include "pipe/pipe_manager_construct.h"
+#include "pipe/pipe_manager_tl.h"
+#include "pipe/pipe_manager_typed.h"
+#include "pipe/msg/callback.h"
+#include "pipe/signal/signal_holder.h"
+#include "pipe/callback/anon/callback_anon.fwd.h"
 #include "activefn/activefn.h"
 
 #include <unordered_map>
-#include <tuple>
-#include <type_traits>
+#include <functional>
 
 namespace vt { namespace pipe {
 
-struct PipeManager {
-  using PipeStateType = PipeState;
+struct PipeManager : PipeManagerTL, PipeManagerTyped {
 
-  template <typename MsgT>
-  using CallbackSendType = interface::CallbackDirectSend<MsgT>;
+  PipeManager();
 
-  PipeManager() = default;
-
-  /*
-   *  Builders for non-send-back type of pipe callback: they are invoked
-   *  directly from the sender; thus this node is not involved in the process
-   */
-  template <typename MsgT, ActiveTypedFnType<MsgT>*... f>
-  interface::CallbackDirectSendMulti<
-    MsgT,
-    typename RepeatNImpl<sizeof...(f),callback::CallbackSend<MsgT>>::ResultType
-  >
-  makeCallbackMultiSendTyped(
-    bool const is_persist, NodeType const& send_to_node
-  );
-
-  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  auto pushTarget(NodeType const& send_to_node);
-
-  template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
-  auto pushTarget(CallbackT in, NodeType const& send_to_node);
-
-  template <typename CallbackT>
-  auto buildMultiCB(CallbackT in);
-
-  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  CallbackSendType<MsgT> makeCallbackSingleSendTyped(
-    bool const is_persist, NodeType const& send_to_node
-  );
-
-  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  void makeCallbackSingleBcast(bool const is_persist);
-
+public:
   /*
    *  Trigger and send back on a pipe that is not locally triggerable and thus
    *  requires communication if it is "sent" off-node.
@@ -64,19 +31,20 @@ struct PipeManager {
   void triggerSendBack(PipeType const& pipe, MsgT* data);
 
 private:
-  PipeType makePipeID(bool const persist, bool const send_back);
-
-private:
-  // the current pipe id local to this node
-  PipeIDType cur_pipe_id_ = initial_pipe_id;
-  // the pipe state for pipes that have a send back
-  std::unordered_map<PipeType,PipeStateType> pipe_state_;
+  // The group ID used to indicate that the message is being used as a pipe
+  GroupType group_id_ = no_group;
 };
 
 }} /* end namespace vt::pipe */
 
-#include "pipe/pipe_manager.impl.h"
 #include "pipe/interface/send_container.impl.h"
 #include "pipe/interface/remote_container_msg.impl.h"
+#include "pipe/callback/anon/callback_anon.impl.h"
+#include "pipe/callback/anon/callback_anon_listener.impl.h"
+#include "pipe/signal/signal_holder.impl.h"
+#include "pipe/pipe_manager_base.impl.h"
+#include "pipe/pipe_manager_tl.impl.h"
+#include "pipe/pipe_manager_typed.impl.h"
+#include "pipe/pipe_manager.impl.h"
 
 #endif /*INCLUDED_PIPE_PIPE_MANAGER_H*/

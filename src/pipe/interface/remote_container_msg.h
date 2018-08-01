@@ -5,6 +5,7 @@
 #include "config.h"
 #include "pipe/pipe_common.h"
 #include "pipe/id/pipe_id.h"
+#include "pipe/signal/signal.h"
 #include "pipe/interface/base_container.h"
 
 #include <tuple>
@@ -15,6 +16,11 @@ namespace vt { namespace pipe { namespace interface {
 
 template <typename MsgT, typename TupleT>
 struct RemoteContainerMsg : BaseContainer<MsgT> {
+  using VoidSigType   = signal::SigVoidType;
+  template <typename T, typename U=void>
+  using IsVoidType    = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;
+  template <typename T, typename U=void>
+  using IsNotVoidType = std::enable_if_t<!std::is_same<T,VoidSigType>::value,U>;
 
   template <typename... Args>
   explicit RemoteContainerMsg(PipeType const& in_pipe, Args... args);
@@ -23,8 +29,11 @@ struct RemoteContainerMsg : BaseContainer<MsgT> {
   RemoteContainerMsg(PipeType const& in_pipe, std::tuple<Args...> tup);
 
 private:
-  template <typename CallbackT>
-  void triggerDirect(CallbackT cb, MsgT* data);
+  template <typename MsgU, typename CallbackT>
+  IsNotVoidType<MsgU> triggerDirect(CallbackT cb, MsgU* data);
+
+  template <typename MsgU, typename CallbackT>
+  IsVoidType<MsgU> triggerDirect(CallbackT cb, MsgU* data);
 
   void triggerDirect(MsgT* data);
 
@@ -39,7 +48,8 @@ private:
   bool isSendBack() const;
 
 public:
-  void trigger(MsgT* data);
+  template <typename MsgU>
+  void trigger(MsgU* data);
 
   template <typename SerializerT>
   void serialize(SerializerT& s);
