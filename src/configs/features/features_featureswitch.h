@@ -25,6 +25,7 @@
     lb,                    "lb",                                        \
     location,              "location",                                  \
     param,                 "parameterization",                          \
+    pipe,                  "pipe",                                      \
     pool,                  "pool",                                      \
     reduce,                "reduce",                                    \
     rdma,                  "RDMA",                                      \
