@@ -9,6 +9,9 @@
 #include "registry/auto/auto_registry_general.h"
 #include "trace/trace_common.h"
 #include "messaging/envelope.h"
+#include "handler/handler.h"
+
+#include <cassert>
 
 namespace vt { namespace runnable {
 
@@ -16,6 +19,8 @@ template <typename MsgT>
 /*static*/ void Runnable<MsgT>::run(
   HandlerType handler, ActiveClosureFnType func, MsgT* msg, NodeType from_node
 ) {
+  using HandlerManagerType = HandlerManager;
+
   #if backend_check_enabled(trace_enabled)
     trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
       handler, auto_registry::RegistryTypeEnum::RegGeneral
@@ -28,8 +33,18 @@ template <typename MsgT>
   #endif
 
   if (func == nullptr) {
-    func = auto_registry::getAutoHandler(handler);
+    bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
+    bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
+
+    if (is_auto && is_functor) {
+      func = auto_registry::getAutoHandlerFunctor(handler);
+    } else if (is_auto) {
+      func = auto_registry::getAutoHandler(handler);
+    } else {
+      assert(0 && "Must be auto handler");
+    }
   }
+
   func(msg);
 
   #if backend_check_enabled(trace_enabled)

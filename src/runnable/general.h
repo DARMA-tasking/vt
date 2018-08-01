@@ -3,6 +3,8 @@
 #define INCLUDED_RUNNABLE_GENERAL_H
 
 #include "config.h"
+#include "registry/registry.h"
+#include "registry/auto/auto_registry_interface.h"
 
 namespace vt { namespace runnable {
 
