@@ -8,14 +8,14 @@ namespace vt { namespace messaging {
 
 /*
  *  Envelope Type Bits:
- *    001 -> Get Message
+ *    001 -> Pipe Message
  *    010 -> Put Message
  *    100 -> Term Message
  *    ...
  */
 
 enum eEnvelopeType {
-  EnvGet       = 0,
+  EnvPipe      = 0,
   EnvPut       = 1,
   EnvTerm      = 2,
   EnvBroadcast = 3,

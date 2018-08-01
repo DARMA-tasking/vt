@@ -22,6 +22,12 @@ inline bool envelopeIsPut(Env const& env) {
 }
 
 template <typename Env>
+inline bool envelopeIsPipe(Env const& env) {
+  return reinterpret_cast<Envelope const*>(&env)->type &
+    (1 << eEnvType::EnvPipe);
+}
+
+template <typename Env>
 inline bool envelopeIsBcast(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->type &
     (1 << eEnvType::EnvBroadcast);

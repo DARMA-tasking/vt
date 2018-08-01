@@ -14,8 +14,8 @@ inline void setNormalType(Env& env) {
 }
 
 template <typename Env>
-inline void setGetType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvGet;
+inline void setPipeType(Env& env) {
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvPipe;
 }
 
 template <typename Env>

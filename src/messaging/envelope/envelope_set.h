@@ -14,7 +14,7 @@ template <typename Env>
 inline void setNormalType(Env& env);
 
 template <typename Env>
-inline void setGetType(Env& env);
+inline void setPipeType(Env& env);
 
 template <typename Env>
 inline void setPutType(Env& env);

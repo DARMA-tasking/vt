@@ -13,6 +13,9 @@ template <typename Env>
 inline bool envelopeIsTerm(Env const& env);
 
 template <typename Env>
+inline bool envelopeIsPipe(Env const& env);
+
+template <typename Env>
 inline bool envelopeIsPut(Env const& env);
 
 template <typename Env>
