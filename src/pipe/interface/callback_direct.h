@@ -5,9 +5,10 @@
 #include "config.h"
 #include "pipe/pipe_common.h"
 #include "pipe/id/pipe_id.h"
+#include "pipe/signal/signal.h"
 #include "pipe/interface/base_container.h"
 #include "pipe/interface/remote_container_msg.h"
-#include "pipe/callback/handler_send/callback_handler_send_remote.h"
+#include "context/context.h"
 
 #include <tuple>
 #include <utility>
@@ -15,62 +16,34 @@
 
 namespace vt { namespace pipe { namespace interface {
 
-template <typename MsgT>
-struct CallbackDirectSend :
-    RemoteContainerMsg<MsgT,std::tuple<callback::CallbackSend<MsgT>>>
-{
-  using BaseType = RemoteContainerMsg<
-    MsgT,std::tuple<callback::CallbackSend<MsgT>>
-  >;
+template <typename MsgT, typename CallbackT>
+struct CallbackDirect : RemoteContainerMsg<MsgT,std::tuple<CallbackT>> {
+  using BaseType      = RemoteContainerMsg<MsgT,std::tuple<CallbackT>>;
+  using VoidSigType   = signal::SigVoidType;
+  template <typename T, typename U=void>
+  using IsVoidType    = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;
+  template <typename T, typename U=void>
+  using IsNotVoidType = std::enable_if_t<!std::is_same<T,VoidSigType>::value,U>;
 
-  CallbackDirectSend(
-    PipeType const& in_pipe, NodeType const& in_node,
-    HandlerType const& in_handler
-  ) : BaseType(in_pipe, callback::CallbackSend<MsgT>(in_handler,in_node))
+  template <typename... Args>
+  CallbackDirect(PipeType const& in_pipe, Args... args)
+    : BaseType(in_pipe, CallbackT(args...))
   { }
 
-  void send(MsgT* m) {
-    ::fmt::print("callback send\n");
-    BaseType::trigger(m);
+  template <typename MsgU>
+  IsNotVoidType<MsgU> send(MsgU* m) {
+    static_assert(!std::is_same<MsgT,MsgU>::value, "Required exact type match");
+    BaseType::template trigger<MsgU>(m);
+  }
+
+  template <typename T=void, typename=IsVoidType<MsgT,T>>
+  void send() {
+    BaseType::template trigger<MsgT>(nullptr);
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     BaseType::serialize(s);
-  }
-
-};
-
-static struct CallbackDirectSendMultiTagType {} CallbackDirectSendMultiTag { };
-
-template <typename MsgT, typename TupleT>
-struct CallbackDirectSendMulti : RemoteContainerMsg<MsgT,TupleT> {
-
-  template <typename... Args>
-  explicit CallbackDirectSendMulti(PipeType const& in_pipe, Args... args)
-    : RemoteContainerMsg<MsgT,TupleT>(in_pipe,std::make_tuple(args...))
-  { }
-
-  template <typename... Args>
-  CallbackDirectSendMulti(
-    CallbackDirectSendMultiTagType, PipeType const& in_pipe,
-    std::tuple<Args...> tup
-  ) : RemoteContainerMsg<MsgT,TupleT>(in_pipe,tup)
-  { }
-
-  // template <std::size_t elm, typename... Vals>
-  // void setValue(Vals... vals) {
-  //   RemoteContainerMsg<MsgT,Args...>::template setValues<elm,Vals...>(vals...);
-  // }
-
-  void send(MsgT* m) {
-    ::fmt::print("callback send\n");
-    RemoteContainerMsg<MsgT,TupleT>::trigger(m);
-  }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    RemoteContainerMsg<MsgT,TupleT>::serialize(s);
   }
 
 };
