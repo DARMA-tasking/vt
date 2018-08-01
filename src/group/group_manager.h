@@ -60,6 +60,7 @@ struct GroupManager {
 
   GroupType newGroup(RegionPtrType in_region, ActionGroupType action);
   GroupType newGroupCollective(bool const in_group, ActionGroupType action);
+  GroupType newGroupCollectiveLabel(GroupCollectiveLabelTagType);
   bool inGroup(GroupType const& group);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>

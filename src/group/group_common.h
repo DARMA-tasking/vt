@@ -15,6 +15,8 @@ using RemoteOperationIDType = size_t;
 
 static constexpr RemoteOperationIDType const no_op_id = -1;
 
+static struct GroupCollectiveLabelTagType { } GroupCollectiveLabelTag { };
+
 }} /* end namespace vt::group */
 
 #endif /*INCLUDED_GROUP_GROUP_COMMON_H*/

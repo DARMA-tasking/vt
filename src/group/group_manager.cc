@@ -36,6 +36,13 @@ GroupType GroupManager::newGroupCollective(
   return newCollectiveGroup(in_group, is_static, action);
 }
 
+GroupType GroupManager::newGroupCollectiveLabel(GroupCollectiveLabelTagType) {
+  auto const& this_node = theContext()->getNode();
+  auto next_id = next_collective_group_id_++;
+  auto const& id = GroupIDBuilder::createGroupID(next_id,this_node,true,true);
+  return id;
+}
+
 GroupType GroupManager::newCollectiveGroup(
   bool const& is_in_group, bool const& is_static, ActionGroupType action
 ) {
@@ -180,34 +187,46 @@ void GroupManager::initializeLocalGroup(
   bool const root, ActionType act, bool* const deliver
 ) {
   auto const& msg = reinterpret_cast<ShortMessage* const>(base);
-  auto const& group = envelopeGetGroup(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
-  auto const& dest = envelopeGetDest(msg->env);
+  auto const& is_pipe = envelopeIsPipe(msg->env);
 
-  debug_print(
-    group, node,
-    "GroupManager::groupHandler: size={}, root={}, from={}, group={:x}, "
-    "bcast={}, dest={}\n",
-    size, root, from, group, is_bcast, dest
-  );
+  if (!is_pipe) {
+    auto const& group = envelopeGetGroup(msg->env);
+    auto const& is_bcast = envelopeIsBcast(msg->env);
+    auto const& dest = envelopeGetDest(msg->env);
 
-  if (is_bcast) {
-    // Deliver the message normally if it's not a the root of a broadcast
-    *deliver = !root;
-    if (group == default_group) {
-      return global::DefaultGroup::broadcast(base,from,size,root,act);
-    } else {
-      auto const& is_collective_group = GroupIDBuilder::isCollective(group);
-      if (is_collective_group) {
-        return theGroup()->sendGroupCollective(base,from,size,root,act,deliver);
+    debug_print(
+      group, node,
+      "GroupManager::groupHandler: size={}, root={}, from={}, group={:x}, "
+      "bcast={}, dest={}\n",
+      size, root, from, group, is_bcast, dest
+    );
+
+    if (is_bcast) {
+      // Deliver the message normally if it's not a the root of a broadcast
+      *deliver = !root;
+      if (group == default_group) {
+        return global::DefaultGroup::broadcast(base,from,size,root,act);
       } else {
-        return theGroup()->sendGroup(base,from,size,root,act,deliver);
+        auto const& is_collective_group = GroupIDBuilder::isCollective(group);
+        if (is_collective_group) {
+          return theGroup()->sendGroupCollective(base,from,size,root,act,deliver);
+        } else {
+          return theGroup()->sendGroup(base,from,size,root,act,deliver);
+        }
       }
+    } else {
+      *deliver = true;
     }
+    return no_event;
   } else {
+    /*
+     *  Pipe message bypass the group because they already specifically trigger
+     *  actions that are not group-related but reuse the group ID as a the pipe
+     *  ID to trigger corresponding callback actions
+     */
     *deliver = true;
+    return no_event;
   }
-  return no_event;
 }
 
 EventType GroupManager::sendGroupCollective(
