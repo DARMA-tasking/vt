@@ -15,7 +15,9 @@
 namespace vt { namespace pipe { namespace signal {
 
 template <typename SignalT>
-void SignalHolder<SignalT>::addSignal(PipeType const& pid, DataType in_data) {
+void SignalHolder<SignalT>::addSignal(
+  PipeType const& pid, DataPtrType in_data
+) {
   auto iter = pending_holder_.find(pid);
   if (iter == pending_holder_.end()) {
     pending_holder_.emplace(
@@ -29,7 +31,9 @@ void SignalHolder<SignalT>::addSignal(PipeType const& pid, DataType in_data) {
 }
 
 template <typename SignalT>
-void SignalHolder<SignalT>::removeListener(PipeType const& pid, ListenerPtrType listener) {
+void SignalHolder<SignalT>::removeListener(
+  PipeType const& pid, ListenerPtrType listener
+) {
   auto iter = listeners_.find(pid);
   if (iter != listeners_.end()) {
     auto liter = iter->second.begin();
@@ -65,12 +69,12 @@ void SignalHolder<SignalT>::clearPipe(PipeType const& pid) {
 }
 
 template <typename SignalT>
-SignalHolder<SignalT>::ListenerListIterType
+typename SignalHolder<SignalT>::ListenerListIterType
 SignalHolder<SignalT>::removeListener(
-  ListenerListIterType iter
+  ListenerMapIterType map_iter, ListenerListIterType iter
 ) {
   ListenerType elm = std::move(*iter);
-  auto niter = iter->second.erase(iter);
+  auto niter = map_iter->second.erase(iter);
   // explicitly set to nullptr to invoke destructor (instead of waiting for
   // out of scope)
   elm = nullptr;
@@ -78,19 +82,24 @@ SignalHolder<SignalT>::removeListener(
 }
 
 template <typename SignalT>
-void SignalHolder<SignalT>::deliverAll(PipeType const& pid, DataType data) {
-  auto iter = pending_holder_.find(pid);
-  if (iter != pending_holder_.end()) {
+void SignalHolder<SignalT>::deliverAll(PipeType const& pid, DataPtrType data) {
+  auto iter = listeners_.find(pid);
+  if (iter != listeners_.end()) {
     auto liter = iter->second.begin();
     while (liter != iter->second.end()) {
-      applySignal(liter->get(), data);
+      applySignal(liter->get(),data,pid);
       auto const& is_fin = finished(liter->get());
       if (is_fin) {
-        liter = removeListener(liter);
+        liter = removeListener(iter,liter);
       } else {
         liter++;
       }
     }
+    if (iter->second.size() == 0) {
+      listeners_.erase(iter);
+    }
+  } else {
+    assert(0 && "At least one listener should exist");
   }
 }
 
@@ -101,18 +110,19 @@ void SignalHolder<SignalT>::addListener(PipeType const& pid, ListenerType&& cb) 
     listeners_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(pid),
-      std::forward_as_tuple(ListenerListType{std::move(cb)})
+      std::forward_as_tuple(ListenerListType{})
     );
-  } else {
-    iter->second.emplace_back(std::move(cb));
+    iter = listeners_.find(pid);
+    assert(iter != listeners_.end() && "Must exist now");
   }
+  iter->second.emplace_back(std::move(cb));
 }
 
 template <typename SignalT>
 void SignalHolder<SignalT>::applySignal(
-  ListenerPtrType listener, DataType data
+  ListenerPtrType listener, DataPtrType data, PipeType const& pid
 ) {
-  listener->trigger(data);
+  listener->trigger(data,pid);
 }
 
 template <typename SignalT>
