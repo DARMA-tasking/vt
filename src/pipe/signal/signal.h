@@ -5,26 +5,45 @@
 #include "config.h"
 #include "pipe/pipe_common.h"
 
+#include <cstdlib>
+
 namespace vt { namespace pipe { namespace signal {
 
 struct SignalBase {};
 
-template <typename MsgT>
+template <typename DataT>
 struct Signal : SignalBase {
-  using DataType = MsgT;
+  using DataType    = DataT;
+  using DataPtrType = DataType*;
 
-  TagType getTag() const { return signal_tag_; }
+  Signal() = default;
+  Signal(Signal const&) = default;
+  Signal(Signal&&) = default;
+  Signal& operator=(Signal const&) = default;
+
+  explicit Signal(DataPtrType in_ptr)
+    : Signal(in_ptr,no_tag)
+  { }
+  Signal(DataPtrType in_ptr, TagType in_tag)
+    : data_ptr_(in_ptr), signal_tag_(in_tag)
+  { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | signal_tag_;
   }
 
+public:
+  DataPtrType get() const { return data_ptr_; }
+  TagType getTag() const { return signal_tag_; }
+
 private:
+  DataPtrType data_ptr_ = nullptr;
   TagType signal_tag_ = no_tag;
 };
 
-using SignalVoid = Signal<void>;
+using SigVoidType = int8_t;
+using SignalVoid = Signal<SigVoidType>;
 
 }}} /* end namespace vt::pipe::signal */
 
