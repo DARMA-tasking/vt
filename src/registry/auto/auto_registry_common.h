@@ -26,6 +26,7 @@ using AutoActiveMapFunctorType    = mapping::ActiveMapFnPtrType;
 using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;
 using AutoActiveRDMAGetType       = ActiveRDMAGetFnPtrType;
 using AutoActiveRDMAPutType       = ActiveRDMAPutFnPtrType;
+using AutoActiveIndexType         = std::size_t;
 
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;
@@ -37,7 +38,8 @@ enum struct RegistryTypeEnum {
   RegSeed,
   RegVrtCollection,
   RegRDMAGet,
-  RegRDMAPut
+  RegRDMAPut,
+  RegIndex
 };
 
 template <typename FnT>
@@ -80,6 +82,7 @@ using AutoActiveSeedMapContainerType       = RegContType<AutoActiveSeedMapType>;
 using AutoActiveFunctorContainerType       = RegContType<AutoActiveFunctorType>;
 using AutoActiveRDMAGetContainerType       = RegContType<AutoActiveRDMAGetType>;
 using AutoActiveRDMAPutContainerType       = RegContType<AutoActiveRDMAPutType>;
+using AutoActiveIndexContainerType         = RegContType<AutoActiveIndexType>;
 
 }} // end namespace vt::auto_registry
 

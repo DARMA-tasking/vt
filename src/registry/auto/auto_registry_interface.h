@@ -31,5 +31,6 @@ AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
 
 #include "registry/auto/auto_registry.h"
 #include "registry/auto/functor/auto_registry_functor.h"
+#include "registry/auto/index/auto_registry_index.h"
 
 #endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H*/
