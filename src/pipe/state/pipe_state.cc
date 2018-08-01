@@ -27,8 +27,16 @@ bool PipeState::isAutomatic() const {
   return automatic_;
 }
 
+bool PipeState::isPersist() const {
+  return !automatic_;
+}
+
 PipeType PipeState::getPipe() const {
   return pipe_;
+}
+
+RefType PipeState::refsPerListener() const {
+  return num_signals_expected_;
 }
 
 bool PipeState::finished() const {

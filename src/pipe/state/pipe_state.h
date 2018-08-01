@@ -17,8 +17,10 @@ struct PipeState {
   void signalRecv();
   void listenerReg();
   bool isAutomatic() const;
+  bool isPersist() const;
   PipeType getPipe() const;
   bool finished() const;
+  RefType refsPerListener() const;
 
 private:
   bool automatic_                 = false;
@@ -26,7 +28,7 @@ private:
   RefType num_signals_received_   = 0;
   RefType num_listeners_expected_ = -1;
   RefType num_listeners_received_ = 0;
-  PipeType pipe_                = no_pipe;
+  PipeType pipe_                  = no_pipe;
 };
 
 }} /* end namespace vt::pipe */
