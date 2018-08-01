@@ -6,13 +6,14 @@
 namespace vt { namespace pipe {
 
 PipeState::PipeState(
-  PipeType const& in_pipe, RefType const& in_signals, RefType const& in_lis
-) : automatic_(true), num_signals_expected_(in_signals),
+  PipeType const& in_pipe, RefType const& in_signals, RefType const& in_lis,
+  bool const& in_typeless
+) : automatic_(true), typeless_(in_typeless), num_signals_expected_(in_signals),
     num_listeners_expected_(in_lis), pipe_(in_pipe)
 {}
 
-PipeState::PipeState(PipeType const& in_pipe)
-  : automatic_(false), pipe_(in_pipe)
+PipeState::PipeState(PipeType const& in_pipe, bool const& in_typeless)
+  : automatic_(false), typeless_(in_typeless), pipe_(in_pipe)
 {}
 
 void PipeState::signalRecv() {
@@ -27,6 +28,10 @@ bool PipeState::isAutomatic() const {
   return automatic_;
 }
 
+bool PipeState::isTypeless() const {
+  return typeless_;
+}
+
 bool PipeState::isPersist() const {
   return !automatic_;
 }
@@ -37,6 +42,15 @@ PipeType PipeState::getPipe() const {
 
 RefType PipeState::refsPerListener() const {
   return num_signals_expected_;
+}
+
+void PipeState::setDispatch(DispatchFuncType in_dispatch) {
+  dispatch_ = in_dispatch;
+}
+
+void PipeState::dispatch(void* ptr) {
+  assert(dispatch_ != nullptr && "Dispatch function must be available");
+  dispatch_(ptr);
 }
 
 bool PipeState::finished() const {

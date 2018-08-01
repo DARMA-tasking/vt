@@ -21,8 +21,8 @@
 namespace vt { namespace pipe {
 
 void PipeManagerBase::newPipeState(
-  PipeType const& pipe, bool persist, RefType num_signals,
-  RefType num_listeners, RefType num_reg_listeners
+  PipeType const& pipe, bool persist, bool typeless, RefType num_signals,
+  RefType num_listeners, RefType num_reg_listeners, DispatchFuncType fn
 ) {
   /*
    *  Create pipe state of `pipe' to track the state locally on this node
@@ -31,7 +31,9 @@ void PipeManagerBase::newPipeState(
   assert(iter == pipe_state_.end() && "State must not exist for new pipe");
   assert((persist || num_signals > 0) && "Valid signal count non-persist");
   auto state_in =
-    !persist ? PipeState{pipe,num_signals,num_listeners} : PipeState(pipe);
+    !persist ?
+    PipeState{pipe,num_signals,num_listeners,typeless} :
+    PipeState(pipe,typeless);
   pipe_state_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(pipe),
@@ -46,19 +48,30 @@ void PipeManagerBase::newPipeState(
   for (int i = 0; i < num_reg_listeners; i++) {
     state.listenerReg();
   }
+  if (fn) {
+    state.setDispatch(fn);
+  }
 }
 
 PipeType PipeManagerBase::makeCallbackFuncVoid(
-  bool const& persist, FuncType fn, RefType num_signals, RefType num_listeners
+  bool const& persist, FuncType fn, bool const& dispatch, RefType num_signals,
+  RefType num_listeners
 ) {
   using SignalType = signal::SignalVoid;
 
   bool const& send_back = false;
   auto const& pipe_id = makePipeID(persist,send_back);
+  auto dispatch_fn = [pipe_id](void*) {
+    signal_holder_<SignalType>.deliverAll(pipe_id,nullptr);
+  };
+  DispatchFuncType dfn = nullptr;
+  if (dispatch) {
+    dfn = dispatch_fn;
+  }
   /*
    *  Add a new entry for pipe state to track it on this node
    */
-  newPipeState(pipe_id,persist,num_signals,num_listeners,1);
+  newPipeState(pipe_id,persist,dispatch,num_signals,num_listeners,1,dfn);
   /*
    *  Register a listener for this signal to trigger the anon function when the
    *  callback is invoked

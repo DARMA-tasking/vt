@@ -64,21 +64,34 @@ void PipeManagerBase::registerCallback(
 
 template <typename MsgT>
 PipeType PipeManagerBase::makeCallbackFunc(
-  bool const& persist, FuncMsgType<MsgT> fn, RefType num_signals,
-  RefType num_listeners
+  bool const& persist, FuncMsgType<MsgT> fn, bool const& dispatch,
+  RefType num_signals, RefType num_listeners
 ) {
-  bool const& send_back = true;
+  using SignalType = signal::Signal<MsgT>;
+
+  bool const& send_back = false;
   auto const& pipe_id = makePipeID(persist,send_back);
+  /*
+   *  Create a dispatch function so any inputs can be dispatched without any
+   *  type information on the sending side
+   */
+  auto dispatch_fn = [pipe_id](void* input) {
+    auto data = reinterpret_cast<typename SignalType::DataPtrType>(input);
+    signal_holder_<SignalType>.deliverAll(pipe_id,data);
+  };
+  DispatchFuncType dfn = nullptr;
+  if (dispatch) {
+    dfn = dispatch_fn;
+  }
   /*
    *  Add a new entry for pipe state to track it on this node
    */
-  newPipeState(pipe_id,persist,num_signals,num_listeners,1);
+  newPipeState(pipe_id,persist,dispatch,num_signals,num_listeners,1,dfn);
 
   /*
    *  Register a listener for this signal to trigger the anon function when the
    *  callback is invoked
    */
-  using SignalType = signal::Signal<MsgT>;
   assert(num_listeners > 0 && "Number of listeners must be positive");
   auto const& num_refs = !persist ? num_signals / num_listeners : -1;
   auto anon = std::make_unique<callback::AnonListener<SignalType>>(
