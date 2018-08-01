@@ -9,10 +9,13 @@
 
 namespace vt { namespace pipe {
 
-using PipeIDType = uint32_t;
+using PipeIDType       = uint32_t;
+using PipeRemoteOpType = uint64_t;
 
-static constexpr PipeIDType const initial_pipe_id = 0;
-static constexpr PipeIDType const no_pipe_id = 0xFFFFFFFF;
+static constexpr PipeIDType       const initial_pipe_id = 0;
+static constexpr PipeIDType       const no_pipe_id      = 0xFFFFFFFF;
+static constexpr PipeRemoteOpType const initial_pipe_op = 0;
+static constexpr PipeRemoteOpType const no_pipe_op      = 0xFFFFFFFFFFFFFFFF;
 
 }} /* end namespace vt::pipe */
 
