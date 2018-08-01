@@ -1,0 +1,26 @@
+
+#if !defined INCLUDED_PIPE_CALLBACK_CALLBACK_BASE_TL_H
+#define INCLUDED_PIPE_CALLBACK_CALLBACK_BASE_TL_H
+
+#include "config.h"
+#include "pipe/pipe_common.h"
+
+namespace vt { namespace pipe { namespace callback {
+
+template <typename CallbackT>
+struct CallbackBaseTL {
+  CallbackBaseTL() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) { }
+
+  template <typename MsgT>
+  void trigger(MsgT* msg) {
+    auto cb = static_cast<CallbackT&>(*this);
+    return cb.template trigger<MsgT>(msg);
+  }
+};
+
+}}} /* end namespace vt::pipe::callback */
+
+#endif /*INCLUDED_PIPE_CALLBACK_CALLBACK_BASE_TL_H*/
