@@ -10,9 +10,20 @@ namespace vt { namespace runnable {
 
 template <typename MsgT>
 struct Runnable {
+  template <typename... Args>
+  using FnParamType = void(*)(Args...);
+
   static void run(
-    HandlerType handler, ActiveClosureFnType func, MsgT* msg, NodeType from_node
+    HandlerType handler, ActiveFnPtrType func, MsgT* msg, NodeType from_node,
+    TagType in_tag = no_tag
   );
+};
+
+struct RunnableVoid {
+  template <typename... Args>
+  using FnParamType = void(*)(Args...);
+
+  static inline void run(HandlerType handler, NodeType from_node);
 };
 
 }} /* end namespace vt::runnable */
