@@ -456,7 +456,7 @@ bool ActiveMessenger::deliverActiveMsg(
     CallbackMessage::getCallbackMessage(msg) : uninitialized_handler;
   auto const& from_node = is_bcast ? dest : in_from_node;
 
-  ActiveClosureFnType active_fun = nullptr;
+  ActiveFnPtrType active_fun = nullptr;
 
   bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
@@ -474,7 +474,7 @@ bool ActiveMessenger::deliverActiveMsg(
   } else if (is_auto) {
     active_fun = auto_registry::getAutoHandler(handler);
   } else {
-    active_fun = theRegistry()->getHandler(handler, tag);
+    active_fun = nullptr;
   }
 
   bool const& has_action_handler = active_fun != no_action;
@@ -503,7 +503,7 @@ bool ActiveMessenger::deliverActiveMsg(
     #endif
 
     // run the active function
-    runnable::Runnable<ShortMessage>::run(handler, active_fun, msg, from_node);
+    runnable::Runnable<ShortMessage>::run(handler,active_fun,msg,from_node,tag);
 
     auto trigger = theRegistry()->getTrigger(handler);
     if (trigger) {
