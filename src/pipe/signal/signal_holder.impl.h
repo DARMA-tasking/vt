@@ -82,7 +82,35 @@ SignalHolder<SignalT>::removeListener(
 }
 
 template <typename SignalT>
+typename SignalHolder<SignalT>::SigCountType
+SignalHolder<SignalT>::getCount(PipeType const& pid) {
+  auto iter = listener_count_.find(pid);
+  if (iter != listener_count_.end()) {
+    return iter->second;
+  } else {
+    return -1;
+  }
+}
+
+template <typename SignalT>
+void SignalHolder<SignalT>::setCount(
+  PipeType const& pid, SigCountType const& count
+) {
+  auto iter = listener_count_.find(pid);
+  if (iter != listener_count_.end()) {
+    iter->second = count;
+  } else {
+    listener_count_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(pid),
+      std::forward_as_tuple(count)
+    );
+  }
+}
+
+template <typename SignalT>
 void SignalHolder<SignalT>::deliverAll(PipeType const& pid, DataPtrType data) {
+  auto const& count = getCount(pid);
   auto iter = listeners_.find(pid);
   if (iter != listeners_.end()) {
     auto liter = iter->second.begin();
@@ -101,6 +129,9 @@ void SignalHolder<SignalT>::deliverAll(PipeType const& pid, DataPtrType data) {
   } else {
     assert(0 && "At least one listener should exist");
   }
+  // if (buffer) {
+  //   addSignal(pid,data);
+  // }
 }
 
 template <typename SignalT>
@@ -115,6 +146,16 @@ void SignalHolder<SignalT>::addListener(PipeType const& pid, ListenerType&& cb) 
     iter = listeners_.find(pid);
     assert(iter != listeners_.end() && "Must exist now");
   }
+
+  // // Deliver any pending signals
+  // auto pending_iter = pending_holder_.find(pid);
+  // if (pending_iter !=  pending_holder_.end()) {
+  //   for (auto&& elm : pending_iter->second) {
+  //     cb->trigger(elm,pid);
+  //   }
+  // }
+
+  // Finally insert into listeners
   iter->second.emplace_back(std::move(cb));
 }
 
@@ -128,6 +169,11 @@ void SignalHolder<SignalT>::applySignal(
 template <typename SignalT>
 bool SignalHolder<SignalT>::finished(ListenerPtrType listener) const {
   return listener->finished();
+}
+
+template <typename SignalT>
+bool SignalHolder<SignalT>::exists(PipeType const& pipe) const {
+  return listeners_.find(pipe) != listeners_.end();
 }
 
 }}} /* end namespace vt::pipe::signal */
