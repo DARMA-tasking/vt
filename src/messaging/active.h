@@ -13,6 +13,7 @@
 #include "registry/registry.h"
 #include "registry/auto/auto_registry_interface.h"
 #include "trace/trace_common.h"
+#include "utils/static_checks/functor.h"
 
 #include <type_traits>
 #include <tuple>
@@ -245,22 +246,34 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
 
-  template <typename FunctorT, typename MessageT>
+  template <
+    typename FunctorT,
+    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
   EventType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   );
 
-  template <typename FunctorT, typename MessageT>
+  template <
+    typename FunctorT,
+    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
   EventType broadcastMsg(MessageT* const msg, ActionType act);
 
-  template <typename FunctorT, typename MessageT>
+  template <
+    typename FunctorT,
+    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
   EventType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
     ActionType next_action = nullptr
   );
 
-  template <typename FunctorT, typename MessageT>
+  template <
+    typename FunctorT,
+    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
   EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act);
 
   /*
