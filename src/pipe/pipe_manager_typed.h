@@ -12,6 +12,8 @@
 #include "pipe/interface/callback_types.h"
 #include "pipe/callback/handler_send/callback_send_han.h"
 #include "pipe/pipe_manager_construct.h"
+#include "utils/static_checks/functor.h"
+#include "vrt/collection/active/active_funcs.h"
 
 #include <type_traits>
 #include <tuple>
@@ -21,14 +23,23 @@ namespace vt { namespace pipe {
 
 struct PipeManagerTyped : virtual PipeManagerBase {
   template <typename T>
-  using CallbackTypes        = interface::CallbackTypes<T>;
+  using CBTypes                = interface::CallbackTypes<T>;
   template <typename T>
-  using CallbackSendType     = typename CallbackTypes<T>::CallbackDirectSend;
+  using CallbackSendType       = typename CBTypes<T>::CallbackDirectSend;
   template <typename T>
-  using CallbackAnonType     = typename CallbackTypes<T>::CallbackAnon;
+  using CallbackAnonType       = typename CBTypes<T>::CallbackAnon;
   template <typename T>
-  using CallbackBcastType    = typename CallbackTypes<T>::CallbackDirectBcast;
-  using CallbackAnonVoidType = typename CallbackTypes<void>::CallbackAnonVoid;
+  using CallbackBcastType      = typename CBTypes<T>::CallbackDirectBcast;
+  using CallbackSendVoidType   = typename CBTypes<void>::CallbackDirectVoidSend;
+  using CallbackBcastVoidType  = typename CBTypes<void>::CallbackDirectVoidBcast;
+  using CallbackAnonVoidType   = typename CBTypes<void>::CallbackAnonVoid;
+
+  template <typename C, typename T>
+  using CBVrtTypes             = interface::CallbackVrtTypes<C,T>;
+  template <typename C, typename T>
+  using CallbackProxyBcastType = typename CBVrtTypes<C,T>::CallbackProxyBcast;
+  template <typename C, typename T>
+  using CallbackProxySendType  = typename CBVrtTypes<C,T>::CallbackProxySend;
 
   /*
    *  Builders for non-send-back type of pipe callback: they are invoked
@@ -67,6 +78,19 @@ struct PipeManagerTyped : virtual PipeManagerBase {
     bool const is_persist, NodeType const& send_to_node
   );
 
+  template <
+    typename FunctorT,
+    typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
+  CallbackSendType<MsgT> makeCallbackSingleSendFunctorTyped(
+    bool const is_persist, NodeType const& send_to_node
+  );
+
+  template <typename FunctorT>
+  CallbackSendVoidType makeCallbackSingleSendFunctorVoidTyped(
+    bool const is_persist, NodeType const& send_to_node
+  );
+
   /*
    *  Make a fully typed single-endpoint anon function callback
    */
@@ -85,6 +109,39 @@ struct PipeManagerTyped : virtual PipeManagerBase {
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   CallbackBcastType<MsgT> makeCallbackSingleBcastTyped(bool const inc);
+
+  template <
+    typename FunctorT,
+    typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
+  CallbackBcastType<MsgT> makeCallbackSingleBcastFunctorTyped(bool const inc);
+
+  template <typename FunctorT>
+  CallbackBcastVoidType makeCallbackSingleBcastFunctorVoidTyped(bool const inc);
+
+  /*
+   *  Make a fully typed vrt proxy broadcast directly routed callback
+   */
+  template <
+    typename ColT,
+    typename MsgT,
+    vrt::collection::ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  CallbackProxyBcastType<ColT,MsgT> makeCallbackSingleProxyBcastTyped(
+    CollectionProxy<ColT,typename ColT::IndexType> proxy
+  );
+
+  /*
+   *  Make a fully typed vrt proxy indexed send directly routed callback
+   */
+  template <
+    typename ColT,
+    typename MsgT,
+    vrt::collection::ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  CallbackProxySendType<ColT,MsgT> makeCallbackSingleProxySendTyped(
+    typename ColT::ProxyType proxy
+  );
 };
 
 }} /* end namespace vt::pipe */

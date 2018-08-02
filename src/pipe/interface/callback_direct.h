@@ -32,7 +32,7 @@ struct CallbackDirect : RemoteContainerMsg<MsgT,std::tuple<CallbackT>> {
 
   template <typename MsgU>
   IsNotVoidType<MsgU> send(MsgU* m) {
-    static_assert(!std::is_same<MsgT,MsgU>::value, "Required exact type match");
+    static_assert(std::is_same<MsgT,MsgU>::value, "Required exact type match");
     BaseType::template trigger<MsgU>(m);
   }
 

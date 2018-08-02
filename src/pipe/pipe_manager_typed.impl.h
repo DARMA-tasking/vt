@@ -63,8 +63,31 @@ PipeManagerTyped::makeCallbackSingleSendTyped(
   auto const& new_pipe_id = makePipeID(is_persist,false);
   auto const& handler = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
   auto container = CallbackSendType<MsgT>(
-    new_pipe_id,send_to_node,handler
+    new_pipe_id,handler,send_to_node
   );
+  return container;
+}
+
+template <typename FunctorT, typename MsgT>
+PipeManagerTyped::CallbackSendType<MsgT>
+PipeManagerTyped::makeCallbackSingleSendFunctorTyped(
+  bool const is_persist, NodeType const& send_to_node
+) {
+  auto const& new_pipe_id = makePipeID(is_persist,false);
+  auto const& handler =
+    auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  auto container = CallbackSendType<MsgT>(new_pipe_id,handler,send_to_node);
+  return container;
+}
+
+template <typename FunctorT>
+PipeManagerTyped::CallbackSendVoidType
+PipeManagerTyped::makeCallbackSingleSendFunctorVoidTyped(
+  bool const is_persist, NodeType const& send_to_node
+) {
+  auto const& new_pipe_id = makePipeID(is_persist,false);
+  auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT,true>();
+  auto container = CallbackSendVoidType(new_pipe_id,handler,send_to_node);
   return container;
 }
 
@@ -76,6 +99,61 @@ PipeManagerTyped::makeCallbackSingleBcastTyped(bool const inc) {
   auto container = CallbackBcastType<MsgT>(
     new_pipe_id,handler,inc
   );
+  return container;
+}
+
+template <typename FunctorT, typename MsgT>
+PipeManagerTyped::CallbackBcastType<MsgT>
+PipeManagerTyped::makeCallbackSingleBcastFunctorTyped(bool const inc) {
+  auto const& new_pipe_id = makePipeID(true,false);
+  auto const& handler =
+    auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  auto container = CallbackBcastType<MsgT>(
+    new_pipe_id,handler,inc
+  );
+  return container;
+}
+
+template <typename FunctorT>
+PipeManagerTyped::CallbackBcastVoidType
+PipeManagerTyped::makeCallbackSingleBcastFunctorVoidTyped(bool const inc) {
+  auto const& new_pipe_id = makePipeID(true,false);
+  auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT,true>();
+  auto container = CallbackBcastVoidType(new_pipe_id,handler,inc);
+  return container;
+}
+
+template <
+  typename ColT,
+  typename MsgT,
+  vrt::collection::ActiveColTypedFnType<MsgT,ColT> *f
+>
+PipeManagerTyped::CallbackProxyBcastType<ColT,MsgT>
+PipeManagerTyped::makeCallbackSingleProxyBcastTyped(
+  CollectionProxy<ColT,typename ColT::IndexType> proxy
+) {
+  auto const& new_pipe_id = makePipeID(true,false);
+  auto const& han = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(
+    nullptr
+  );
+  auto container = CallbackProxyBcastType<ColT,MsgT>(new_pipe_id,han,proxy);
+  return container;
+}
+
+template <
+  typename ColT,
+  typename MsgT,
+  vrt::collection::ActiveColTypedFnType<MsgT,ColT> *f
+>
+PipeManagerTyped::CallbackProxySendType<ColT,MsgT>
+PipeManagerTyped::makeCallbackSingleProxySendTyped(
+  typename ColT::ProxyType proxy
+) {
+  auto const& new_pipe_id = makePipeID(true,false);
+  auto const& han = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(
+    nullptr
+  );
+  auto container = CallbackProxySendType<ColT,MsgT>(new_pipe_id,han,proxy);
   return container;
 }
 

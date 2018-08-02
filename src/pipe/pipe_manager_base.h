@@ -10,6 +10,8 @@
 #include "pipe/signal/signal_holder.h"
 #include "pipe/callback/anon/callback_anon.fwd.h"
 #include "pipe/callback/anon/callback_anon_tl.fwd.h"
+#include "pipe/callback/handler_send/callback_send.fwd.h"
+#include "pipe/callback/handler_bcast/callback_bcast.fwd.h"
 
 #include <functional>
 
@@ -29,6 +31,10 @@ struct PipeManagerBase {
   template <typename SignalT>
   friend struct pipe::callback::CallbackAnon;
   friend struct pipe::callback::CallbackAnonTypeless;
+  template <typename SignalT>
+  friend struct pipe::callback::CallbackSend;
+  template <typename SignalT>
+  friend struct pipe::callback::CallbackBcast;
 
   PipeType makeCallbackFuncVoid(
     bool const& persist, FuncType fn, bool const& dispatch = false,
@@ -45,15 +51,27 @@ struct PipeManagerBase {
   void addListener(PipeType const& pipe, FuncMsgType<MsgT> fn);
   void addListenerVoid(PipeType const& pipe, FuncType fn);
 
+private:
+  template <typename MsgT, typename ListenerT>
+  PipeType makeCallbackAny(
+    bool const& persist, ListenerT&& fn, bool const& dispatch = false,
+    RefType num_signals = -1, RefType num_listeners = 1
+  );
+
+  template <typename MsgT, typename ListenerT>
+  void addListenerAny(PipeType const& pipe, ListenerT&& fn);
+
 public:
   static void triggerCallbackHan(CallbackMsg* msg);
 
   template <typename MsgT>
   static void triggerCallbackMsgHan(MsgT* msg);
 
-private:
+protected:
   template <typename MsgT>
   void triggerPipeTyped(PipeType const& pipe, MsgT* msg);
+  template <typename MsgT>
+  void triggerPipeUnknown(PipeType const& pipe, MsgT* msg);
   template <typename SignalT, typename ListenerT>
   void registerCallback(
     PipeType const& pipe, ListenerT&& listener, bool update_state = true

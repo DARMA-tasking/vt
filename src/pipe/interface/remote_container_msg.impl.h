@@ -40,7 +40,7 @@ RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU*) {
   constexpr auto multi_callback = std::tuple_size<decltype(trigger_list_)>();
   debug_print(
     pipe, node,
-    "RemoteContainerMsg: (void) invoke trigger: pipe{:x}, multi={}\n",
+    "RemoteContainerMsg: (void) invoke trigger: pipe={:x}, multi={}\n",
     pid, multi_callback
   );
   cb.trigger(nullptr,pid);
@@ -54,7 +54,7 @@ RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
   auto const& multi_callback = std::tuple_size<decltype(trigger_list_)>() > 0;
   debug_print(
     pipe, node,
-    "RemoteContainerMsg: (typed) invoke trigger: pipe{:x}, multi={}, ptr={}\n",
+    "RemoteContainerMsg: (typed) invoke trigger: pipe={:x}, multi={}, ptr={}\n",
     pid, multi_callback, print_ptr(data)
   );
   MsgT* cur_msg = data;
@@ -82,7 +82,7 @@ void RemoteContainerMsg<MsgT,TupleT>::trigger(MsgU* data) {
   bool const& is_send_back = isSendBack();
   debug_print(
     pipe, node,
-    "RemoteContainerMsg: pipe{:x}, send_back={}, size={}\n",
+    "RemoteContainerMsg: pipe={:x}, send_back={}, size={}\n",
     pipe, is_send_back, std::tuple_size<decltype(trigger_list_)>()
   );
   if (is_send_back) {

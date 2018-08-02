@@ -39,8 +39,32 @@ template <typename MsgT>
 template <typename MsgT>
 void PipeManagerBase::triggerPipeTyped(PipeType const& pipe, MsgT* msg) {
   using SignalType = signal::Signal<MsgT>;
-  signal_holder_<SignalType>.deliverAll(pipe,msg);
+  auto const& exists = signal_holder_<SignalType>.exists(pipe);
+  if (exists) {
+    signal_holder_<SignalType>.deliverAll(pipe,msg);
+  } else {
+    auto nmsg = makeSharedMessage<MsgT>(*msg);
+    messageRef(nmsg);
+    triggerPipeUnknown<MsgT>(pipe,nmsg);
+    messageDeref(nmsg);
+  }
   generalSignalTrigger(pipe);
+}
+
+template <typename MsgT>
+void PipeManagerBase::triggerPipeUnknown(PipeType const& pipe, MsgT* msg) {
+  using SignalType = signal::Signal<MsgT>;
+  auto iter = pipe_state_.find(pipe);
+  assert(iter != pipe_state_.end() && "Pipe state must exist");
+
+  debug_print(
+    pipe, node,
+    "PipeManagerBase: triggerPipeUnknown: pipe={:x}, msg_ptr={}: "
+    "dynamic dispatch\n",
+    pipe, print_ptr(msg)
+  );
+
+  iter->second.dispatch(msg);
 }
 
 template <typename SignalT, typename ListenerT>
@@ -62,9 +86,9 @@ void PipeManagerBase::registerCallback(
   }
 }
 
-template <typename MsgT>
-PipeType PipeManagerBase::makeCallbackFunc(
-  bool const& persist, FuncMsgType<MsgT> fn, bool const& dispatch,
+template <typename MsgT, typename ListenerT>
+PipeType PipeManagerBase::makeCallbackAny(
+  bool const& persist, ListenerT&& listener, bool const& dispatch,
   RefType num_signals, RefType num_listeners
 ) {
   using SignalType = signal::Signal<MsgT>;
@@ -87,22 +111,45 @@ PipeType PipeManagerBase::makeCallbackFunc(
    *  Add a new entry for pipe state to track it on this node
    */
   newPipeState(pipe_id,persist,dispatch,num_signals,num_listeners,1,dfn);
-
   /*
-   *  Register a listener for this signal to trigger the anon function when the
-   *  callback is invoked
+   *  Do not update the pipe state since this newly registered listener is
+   *  already counted by the `1' in the newPipeState(...,1)
    */
+  registerCallback<SignalType>(pipe_id,std::move(listener),false);
+  return pipe_id;
+}
+
+template <typename MsgT>
+PipeType PipeManagerBase::makeCallbackFunc(
+  bool const& persist, FuncMsgType<MsgT> fn, bool const& dispatch,
+  RefType num_signals, RefType num_listeners
+) {
+  using SignalType = signal::Signal<MsgT>;
   assert(num_listeners > 0 && "Number of listeners must be positive");
   auto const& num_refs = !persist ? num_signals / num_listeners : -1;
   auto anon = std::make_unique<callback::AnonListener<SignalType>>(
     fn, persist, num_refs
   );
-  /*
-   *  Do not update the pipe state since this newly registered listener is
-   *  already counted by the `1' in the newPipeState(...,1)
-   */
-  registerCallback<SignalType>(pipe_id, std::move(anon), false);
-  return pipe_id;
+  return makeCallbackAny<MsgT>(
+    persist, std::move(anon), dispatch, num_signals, num_listeners
+  );
+}
+
+
+template <typename MsgT, typename ListenerT>
+void PipeManagerBase::addListenerAny(PipeType const& pipe, ListenerT&& fn) {
+  using SignalType = signal::Signal<MsgT>;
+  auto iter = pipe_state_.find(pipe);
+  assert(iter != pipe_state_.end() && "Pipe state must exist");
+  auto& state = iter->second;
+  if (!state.hasDispatch()) {
+    auto fn = [pipe](void* input) {
+      auto data = reinterpret_cast<typename SignalType::DataPtrType>(input);
+      signal_holder_<SignalType>.deliverAll(pipe,data);
+    };
+    state.setDispatch(fn);
+  }
+  return registerCallback<SignalType>(pipe, std::move(fn));
 }
 
 template <typename MsgT>

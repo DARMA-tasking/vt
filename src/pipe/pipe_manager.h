@@ -39,8 +39,12 @@ private:
 
 #include "pipe/interface/send_container.impl.h"
 #include "pipe/interface/remote_container_msg.impl.h"
+#include "pipe/callback/handler_send/callback_send.impl.h"
+#include "pipe/callback/handler_bcast/callback_bcast.impl.h"
 #include "pipe/callback/anon/callback_anon.impl.h"
 #include "pipe/callback/anon/callback_anon_listener.impl.h"
+#include "pipe/callback/anon/callback_anon_tl.impl.h"
+#include "pipe/callback/handler_bcast/callback_bcast_tl.impl.h"
 #include "pipe/signal/signal_holder.impl.h"
 #include "pipe/pipe_manager_base.impl.h"
 #include "pipe/pipe_manager_tl.impl.h"

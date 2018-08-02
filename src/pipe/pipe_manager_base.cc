@@ -114,13 +114,20 @@ void PipeManagerBase::generalSignalTrigger(PipeType const& pipe) {
 void PipeManagerBase::triggerPipe(PipeType const& pipe) {
   using SignalType = signal::SignalVoid;
 
+  auto const& exists = signal_holder_<SignalType>.exists(pipe);
+
   debug_print(
     pipe, node,
-    "PipeManagerBase: triggerPipe: pipe={:x}, invoking deliverAll\n",
-    pipe
+    "PipeManagerBase: triggerPipe: pipe={:x}, exists={}: delivering\n",
+    pipe, exists
   );
 
-  signal_holder_<SignalType>.deliverAll(pipe, nullptr);
+  if (exists) {
+    signal_holder_<SignalType>.deliverAll(pipe, nullptr);
+  } else {
+    triggerPipeUnknown<void>(pipe,nullptr);
+  }
+
   generalSignalTrigger(pipe);
 }
 
