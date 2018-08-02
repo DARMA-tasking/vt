@@ -36,12 +36,22 @@ struct CallbackRawBaseSingle {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
+  PipeType getPipe() const { return pipe_; }
+
 private:
   PipeType pipe_ = no_pipe;
   GeneralCallback cb_;
 };
 
-struct CallbackRawBase {
+template <typename MsgT>
+struct CallbackRawBaseTyped : CallbackRawBaseSingle {
+
+  CallbackRawBaseTyped() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    CallbackRawBaseSingle::serialize(s);
+  }
 
 };
 

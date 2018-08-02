@@ -2,6 +2,10 @@
 #include "config.h"
 #include "pipe/pipe_common.h"
 #include "pipe/callback/handler_bcast/callback_bcast_tl.h"
+#include "pipe/msg/callback.h"
+#include "context/context.h"
+#include "messaging/active.h"
+#include "runnable/general.h"
 
 #include <cassert>
 
@@ -13,7 +17,18 @@ CallbackBcastTypeless::CallbackBcastTypeless(
 { }
 
 void CallbackBcastTypeless::triggerVoid(PipeType const& pipe) {
-  assert(0 && "Bcast: void trigger not allowed");
+  auto const& this_node = theContext()->getNode();
+  debug_print(
+    pipe, node,
+    "CallbackBcast: (void) trigger_: pipe={:x}, this_node={}, "
+    "include_sender_={}\n",
+    pipe, this_node, include_sender_
+  );
+  auto msg = makeSharedMessage<CallbackMsg>(pipe);
+  theMsg()->broadcastMsg<CallbackMsg>(handler_,msg);
+  if (include_sender_) {
+    runnable::RunnableVoid::run(handler_,this_node);
+  }
 }
 
 }}} /* end namespace vt::pipe::callback */

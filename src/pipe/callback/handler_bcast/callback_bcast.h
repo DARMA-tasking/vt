@@ -20,6 +20,11 @@ struct CallbackBcast : CallbackBase<signal::Signal<MsgT>> {
   using SignalType     = typename CallbackBase<SignalBaseType>::SignalType;
   using SignalDataType = typename SignalType::DataType;
   using MessageType    = MsgT;
+  using VoidSigType    = signal::SigVoidType;
+  template <typename T, typename U=void>
+  using IsVoidType     = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;
+  template <typename T, typename U=void>
+  using IsNotVoidType  = std::enable_if_t<!std::is_same<T,VoidSigType>::value,U>;
 
   CallbackBcast() = default;
   CallbackBcast(CallbackBcast const&) = default;
@@ -27,36 +32,23 @@ struct CallbackBcast : CallbackBase<signal::Signal<MsgT>> {
 
   CallbackBcast(
     HandlerType const& in_handler, bool const& in_include
-  ) : handler_(in_handler), include_sender_(in_include)
-  { }
+  );
 
   HandlerType getHandler() const { return handler_; }
   bool getIncSender() const { return include_sender_; }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    CallbackBase<SignalBaseType>::serializer(s);
-    s | include_sender_;
-    s | handler_;
-  }
+  void serialize(SerializerT& s);
 
 private:
-  void trigger_(SignalDataType* data) override {
-    auto const& this_node = theContext()->getNode();
-    debug_print(
-      pipe, node,
-      "CallbackBcast: trigger_: this_node={}, include_sender_={}\n",
-      this_node, include_sender_
-    );
-    theMsg()->broadcastMsg<SignalDataType>(handler_, data);
-    if (include_sender_) {
-      auto nmsg = makeSharedMessage<SignalDataType>(*data);
-      auto nmsgc = reinterpret_cast<ShortMessage*>(nmsg);
-      messageRef(nmsg);
-      runnable::Runnable<ShortMessage>::run(handler_,nullptr,nmsgc,this_node);
-      messageDeref(nmsg);
-    }
-  }
+  template <typename T>
+  IsVoidType<T> triggerDispatch(SignalDataType* data, PipeType const& pid);
+
+  template <typename T>
+  IsNotVoidType<T> triggerDispatch(SignalDataType* data, PipeType const& pid);
+
+  void trigger_(SignalDataType* data, PipeType const& pid) override;
+  void trigger_(SignalDataType* data) override;
 
 private:
   HandlerType handler_ = uninitialized_handler;

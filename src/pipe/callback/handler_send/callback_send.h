@@ -12,6 +12,8 @@
 #include "messaging/envelope.h"
 #include "runnable/general.h"
 
+#include <type_traits>
+
 namespace vt { namespace pipe { namespace callback {
 
 template <typename MsgT>
@@ -20,6 +22,11 @@ struct CallbackSend : CallbackBase<signal::Signal<MsgT>> {
   using SignalType     = typename CallbackBase<SignalBaseType>::SignalType;
   using SignalDataType = typename SignalType::DataType;
   using MessageType    = MsgT;
+  using VoidSigType    = signal::SigVoidType;
+  template <typename T, typename U=void>
+  using IsVoidType     = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;
+  template <typename T, typename U=void>
+  using IsNotVoidType  = std::enable_if_t<!std::is_same<T,VoidSigType>::value,U>;
 
   CallbackSend() = default;
   CallbackSend(CallbackSend const&) = default;
@@ -35,6 +42,13 @@ struct CallbackSend : CallbackBase<signal::Signal<MsgT>> {
   void serialize(SerializerT& s);
 
 private:
+  template <typename T>
+  IsVoidType<T> triggerDispatch(SignalDataType* data, PipeType const& pid);
+
+  template <typename T>
+  IsNotVoidType<T> triggerDispatch(SignalDataType* data, PipeType const& pid);
+
+  void trigger_(SignalDataType* data, PipeType const& pid) override;
   void trigger_(SignalDataType* data) override;
 
 private:
@@ -43,7 +57,5 @@ private:
 };
 
 }}} /* end namespace vt::pipe::callback */
-
-#include "pipe/callback/handler_send/callback_send.impl.h"
 
 #endif /*INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_H*/

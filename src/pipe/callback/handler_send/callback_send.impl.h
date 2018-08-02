@@ -5,8 +5,10 @@
 #include "config.h"
 #include "pipe/pipe_common.h"
 #include "pipe/callback/handler_send/callback_send.h"
+#include "pipe/pipe_manager.h"
 #include "context/context.h"
 #include "messaging/active.h"
+#include "runnable/general.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -25,7 +27,37 @@ void CallbackSend<MsgT>::serialize(SerializerT& s) {
 }
 
 template <typename MsgT>
+void CallbackSend<MsgT>::trigger_(SignalDataType* data, PipeType const& pid) {
+  triggerDispatch<MsgT>(data,pid);
+}
+
+template <typename MsgT>
 void CallbackSend<MsgT>::trigger_(SignalDataType* data) {
+  assert(0 && "Should not be reachable in this derived class");
+}
+
+template <typename MsgT>
+template <typename T>
+CallbackSend<MsgT>::IsVoidType<T>
+CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
+  auto const& this_node = theContext()->getNode();
+  debug_print(
+    pipe, node,
+    "CallbackSend: (void) trigger_: this_node={}, send_node_={}\n",
+    this_node, send_node_
+  );
+  if (this_node == send_node_) {
+    runnable::RunnableVoid::run(handler_,this_node);
+  } else {
+    auto msg = makeSharedMessage<CallbackMsg>(pid);
+    theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg);
+  }
+}
+
+template <typename MsgT>
+template <typename T>
+CallbackSend<MsgT>::IsNotVoidType<T>
+CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
   debug_print(
     pipe, node,
@@ -39,6 +71,7 @@ void CallbackSend<MsgT>::trigger_(SignalDataType* data) {
     theMsg()->sendMsg<SignalDataType>(send_node_, handler_, data);
   }
 }
+
 
 }}} /* end namespace vt::pipe::callback */
 

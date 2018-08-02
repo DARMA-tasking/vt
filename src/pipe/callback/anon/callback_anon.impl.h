@@ -9,6 +9,7 @@
 #include "pipe/msg/callback.h"
 #include "pipe/pipe_manager.h"
 #include "messaging/active.h"
+#include "messaging/envelope.h"
 #include "context/context.h"
 
 #include <cassert>
@@ -48,7 +49,24 @@ template <typename T>
 CallbackAnon<MsgT>::IsNotVoidType<T>
 CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   // Overload when the signal is non-void
-  assert(0);
+  auto const& this_node = theContext()->getNode();
+  auto const& pipe_node = PipeIDBuilder::getNode(pid);
+  debug_print(
+    pipe, node,
+    "CallbackAnon: (T signal) trigger_: pipe_={:x}, pipe_node={}\n",
+    pid, pipe_node
+  );
+  if (this_node == pipe_node) {
+    theCB()->triggerPipeTyped<T>(pid,data);
+  } else {
+    /*
+     * Set pipe type on the message envelope; use the group in the envelope in
+     * indicate the pipe
+     */
+    setPipeType(data->env);
+    envelopeSetGroup(data->env,pid);
+    theMsg()->sendMsg<T,PipeManager::triggerCallbackMsgHan>(pipe_node, data);
+  }
 }
 
 template <typename MsgT>
