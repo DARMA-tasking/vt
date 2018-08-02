@@ -44,6 +44,10 @@ RefType PipeState::refsPerListener() const {
   return num_signals_expected_;
 }
 
+bool PipeState::hasDispatch() const {
+  return dispatch_ != nullptr;
+}
+
 void PipeState::setDispatch(DispatchFuncType in_dispatch) {
   dispatch_ = in_dispatch;
 }

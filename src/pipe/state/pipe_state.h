@@ -28,6 +28,7 @@ struct PipeState {
   bool finished() const;
   RefType refsPerListener() const;
 
+  bool hasDispatch() const;
   void setDispatch(DispatchFuncType in_dispatch);
   void dispatch(void* ptr);
 
