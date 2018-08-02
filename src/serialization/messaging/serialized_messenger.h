@@ -14,6 +14,7 @@
 #include <tuple>
 #include <type_traits>
 #include <cstdlib>
+#include <cassert>
 
 using namespace ::serialization::interface;
 
@@ -154,22 +155,50 @@ struct SerializedMessenger {
     return parserdesMsg<MsgT,f>(msg, false, dest);
   }
 
+  template <typename MsgT, typename BaseT = Message>
+  static void sendParserdesMsgHandler(
+    NodeType dest, HandlerType const& handler, MsgT* msg
+  ) {
+    debug_print(
+      serial_msg, node,
+      "sendParserdesMsg: dest={}, msg={}\n",
+      dest, print_ptr(msg)
+    );
+    return parserdesMsgHandler<MsgT>(msg, handler, false, dest);
+  }
+
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void broadcastParserdesMsg(MsgT* msg) {
     debug_print(
       serial_msg, node,
       "broadcastParserdesMsg: msg={}\n", print_ptr(msg)
     );
-    return parserdesMsg<MsgT,f>(msg);
+    return parserdesMsg<MsgT,f>(msg,true);
+  }
+
+  template <typename MsgT, typename BaseT = Message>
+  static void broadcastParserdesMsgHandler(MsgT* msg, HandlerType const& han) {
+    debug_print(
+      serial_msg, node,
+      "broadcastParserdesMsgHandler: msg={}, han={}\n", print_ptr(msg), han
+    );
+    return parserdesMsgHandler<MsgT>(msg,han,true);
   }
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void parserdesMsg(
     MsgT* msg, bool is_bcast = true, NodeType dest = uninitialized_destination
   ) {
-    HandlerType const& user_handler =
-      auto_registry::makeAutoHandler<MsgT, f>(nullptr);
+    auto const& user_handler = auto_registry::makeAutoHandler<MsgT, f>(nullptr);
+    return parserdesMsgHandler(msg, user_handler, is_bcast, dest);
+  }
 
+  template <typename MsgT, typename BaseT = Message>
+  static void parserdesMsgHandler(
+    MsgT* msg, HandlerType const& handler, bool is_bcast = true,
+    NodeType dest = uninitialized_destination
+  ) {
+    auto const& user_handler = handler;
     SizeType ptr_size = 0;
     auto const& rem_size = thePool()->remainingSize(msg);
     auto const& msg_size = sizeof(MsgT);
@@ -212,25 +241,39 @@ struct SerializedMessenger {
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void sendSerialMsg(
-    NodeType dest, MsgT* msg,
+    NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager = nullptr
+  ) {
+    auto const& handler = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+    return sendSerialMsgHandler<MsgT,BaseT>(dest,msg,handler,eager);
+  }
+
+  template <typename MsgT, typename BaseT = Message>
+  static void sendSerialMsgHandler(
+    NodeType dest, MsgT* msg, HandlerType const& handler,
     ActionEagerSend<MsgT, BaseT> eager_sender = nullptr
   ) {
-    auto eager_default_send = [=](SerializedEagerMsg<MsgT, BaseT>* m){
-      theMsg()->sendMsg<SerialEagerPayloadMsg<MsgT, BaseT>,payloadMsgHandler>(
-        dest, m
-      );
+    auto eager_default_send = [=](SerializedEagerMsg<MsgT,BaseT>* m){
+      using MsgType = SerialEagerPayloadMsg<MsgT,BaseT>;
+      theMsg()->sendMsg<MsgType,payloadMsgHandler>(dest,m);
     };
     auto eager = eager_sender ? eager_sender : eager_default_send;
-    return sendSerialMsg<MsgT,f,BaseT>(msg, eager, [=](ActionNodeType action) {
-      action(dest);
-    });
+    return sendSerialMsgHandler<MsgT,BaseT>(
+      msg,eager,handler,[=](ActionNodeType action) {
+        action(dest);
+      }
+    );
   }
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void broadcastSerialMsg(MsgT* msg) {
+    HandlerType const& han = auto_registry::makeAutoHandler<MsgT, f>(nullptr);
+    return broadcastSerialMsgHandler<MsgT,BaseT>(msg,han);
+  }
+
+  template <typename MsgT, typename BaseT = Message>
+  static void broadcastSerialMsgHandler(MsgT* msg, HandlerType const& han) {
     using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
 
-    HandlerType const& han = auto_registry::makeAutoHandler<MsgT, f>(nullptr);
     SerialEagerPayloadMsg<MsgT, BaseT>* payload_msg = nullptr;
     SizeType ptr_size = 0;
     SerialWrapperMsgType<MsgT>* sys_msg = nullptr;
@@ -297,12 +340,17 @@ struct SerializedMessenger {
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void sendSerialMsg(
-    MsgT* msg, ActionEagerSend<MsgT, BaseT> eager_sender,
-    ActionDataSend data_sender
+    MsgT* msg, ActionEagerSend<MsgT, BaseT> eager, ActionDataSend sender
   ) {
-    HandlerType const& typed_handler =
-      auto_registry::makeAutoHandler<MsgT, f>(nullptr);
+    auto const& handler = auto_registry::makeAutoHandler<MsgT, f>(nullptr);
+    return sendSerialMsgHandler<MsgT,BaseT>(msg,eager,handler,sender);
+  }
 
+  template <typename MsgT, typename BaseT = Message>
+  static void sendSerialMsgHandler(
+    MsgT* msg, ActionEagerSend<MsgT, BaseT> eager_sender,
+    HandlerType const& typed_handler, ActionDataSend data_sender
+  ) {
     SerialEagerPayloadMsg<MsgT, BaseT>* payload_msg = nullptr;
     SerialByteType* ptr = nullptr;
     SizeType ptr_size = 0;
