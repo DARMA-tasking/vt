@@ -215,6 +215,17 @@ struct RequiredSerializationHandler<
 
 }}} /* end namespace vt::serialization::auto_dispatch */
 
+namespace vt {
+
+template <typename MsgT>
+using ActiveSendHandler =
+  serialization::auto_dispatch::RequiredSerializationHandler<MsgT>;
+
+template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+using ActiveSend = serialization::auto_dispatch::RequiredSerialization<MsgT,f>;
+
+} /* end namespace vt */
+
 #include "serialization/auto_dispatch/dispatch.impl.h"
 
 #endif /*INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_H*/
