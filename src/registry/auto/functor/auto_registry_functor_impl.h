@@ -45,12 +45,9 @@ static inline void pullApart(
   pack<Args...> __attribute__((unused)) packed_args
 ) {
   #if backend_check_enabled(trace_enabled)
-  auto const& name = util::demangle::DemanglerUtils::getTypeName<
-    typename FunctorT::FunctorType
-  >();
-  auto const& args = util::demangle::DemanglerUtils::getTypeName<
-    pack<Args...>
-  >();
+  using DemangleType = util::demangle::DemanglerUtils;
+  auto const& name = DemangleType::getTypeName<typename FunctorT::FunctorType>();
+  auto const& args = DemangleType::getTypeName<pack<Args...>>();
   auto const& parsed_type_name =
     util::demangle::ActiveFunctorDemangler::parseActiveFunctorName(name, args);
   auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
@@ -58,21 +55,28 @@ static inline void pullApart(
   );
   #endif
 
+  using TupleType = std::tuple<Args...>;
+  static constexpr auto num_args = std::tuple_size<TupleType>::value;
+
   if (msg) {
     auto fn_ptr = functorHandlerWrapperReg<FunctorT, Args...>;
     reg.emplace_back(InfoT{
+      NumArgsTag,
       reinterpret_cast<FnT>(fn_ptr)
-        #if backend_check_enabled(trace_enabled)
-        , trace_ep
-        #endif
+      #if backend_check_enabled(trace_enabled)
+      , trace_ep
+      #endif
+      , num_args
     });
   } else {
     auto fn_ptr = functorHandlerWrapperRval<FunctorT, Args...>;
     reg.emplace_back(InfoT{
+      NumArgsTag,
       reinterpret_cast<FnT>(fn_ptr)
-        #if backend_check_enabled(trace_enabled)
-        , trace_ep
-        #endif
+      #if backend_check_enabled(trace_enabled)
+      , trace_ep
+      #endif
+     , num_args
     });
   }
 }
@@ -85,6 +89,15 @@ RegistrarFunctor<FunctorT, RegT, InfoT, FnT>::RegistrarFunctor() {
   pullApart<FunctorT, RegT, InfoT, FnT>(
     reg, FunctorT::IsMsgType, typename FunctorT::PackedArgsType()
   );
+}
+
+inline NumArgsType getAutoHandlerFunctorArgs(HandlerType const& han) {
+  auto const& id = HandlerManagerType::getHandlerIdentifier(han);
+  bool const& is_auto = HandlerManagerType::isHandlerAuto(han);
+  bool const& is_functor = HandlerManagerType::isHandlerFunctor(han);
+
+  using ContainerType = AutoActiveFunctorContainerType;
+  return getAutoRegistryGen<ContainerType>().at(id).getNumArgs();
 }
 
 inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& han) {

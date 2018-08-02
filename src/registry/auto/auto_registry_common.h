@@ -13,6 +13,7 @@
 #include "topos/mapping/mapping_function.h"
 
 #include <vector>
+#include <cstdlib>
 
 namespace vt { namespace auto_registry {
 
@@ -30,6 +31,7 @@ using AutoActiveIndexType         = std::size_t;
 
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;
+using NumArgsType = int16_t;
 
 enum struct RegistryTypeEnum {
   RegGeneral = 1,
@@ -42,15 +44,24 @@ enum struct RegistryTypeEnum {
   RegIndex
 };
 
+static struct NumArgsTagType { } NumArgsTag { };
+
 template <typename FnT>
 struct AutoRegInfo {
   FnT activeFunT;
+  NumArgsType args_ = 1;
 
   #if backend_check_enabled(trace_enabled)
     trace::TraceEntryIDType event_id;
     AutoRegInfo(
       FnT const& in_active_fun_t, trace::TraceEntryIDType const& in_event_id
     ) : activeFunT(in_active_fun_t), event_id(in_event_id)
+    { }
+    AutoRegInfo(
+      NumArgsTagType,
+      FnT const& in_active_fun_t, trace::TraceEntryIDType const& in_event_id,
+      NumArgsType const& in_args
+    ) : activeFunT(in_active_fun_t), event_id(in_event_id), args_(in_args)
     { }
     trace::TraceEntryIDType theTraceID() const {
       return event_id;
@@ -59,7 +70,16 @@ struct AutoRegInfo {
     explicit AutoRegInfo(FnT const& in_active_fun_t)
       : activeFunT(in_active_fun_t)
     { }
+    AutoRegInfo(
+      NumArgsTagType,
+      FnT const& in_active_fun_t, NumArgsType const& in_args
+    ) : activeFunT(in_active_fun_t), args_(in_args)
+    { }
   #endif
+
+  NumArgsType getNumArgs() const {
+    return args_;
+  }
 
   FnT getFun() const {
     return activeFunT;
