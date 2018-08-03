@@ -130,6 +130,22 @@ struct ActiveMessenger {
   );
 
   /*
+   *  Auto method for dispatching to the serialization framework if required
+   *  based on examining compile-time traits of the message
+   */
+  template <typename MessageT>
+  EventType sendMsgAuto(
+    NodeType const& dest, HandlerType const& han, MessageT* const msg,
+    ActionType next_action = nullptr
+  );
+
+  template <typename MessageT>
+  EventType sendMsgAuto(
+    NodeType const& dest, HandlerType const& han, MessageT* const msg,
+    TagType const& tag, ActionType next_action = nullptr
+  );
+
+  /*
    *----------------------------------------------------------------------------
    *          End Basic Active Message Send with Pre-Registered Handler
    *----------------------------------------------------------------------------
@@ -181,6 +197,27 @@ struct ActiveMessenger {
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act);
 
+  /*
+   *  Auto method for dispatching to the serialization framework if required
+   *  based on examining compile-time traits of the message
+   */
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  EventType sendMsgAuto(
+    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
+    ActionType next_action = nullptr
+  );
+
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  EventType sendMsgAuto(
+    NodeType const& dest, MessageT* const msg,
+    ActionType next_action = nullptr
+  );
+
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  EventType broadcastMsgAuto(
+    MessageT* const msg, TagType const& tag = no_tag,
+    ActionType next_action = nullptr
+  );
   /*
    *----------------------------------------------------------------------------
    *             End Send Message Active Function (type-safe handler)
@@ -259,7 +296,22 @@ struct ActiveMessenger {
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
+  EventType broadcastMsgAuto(
+    MessageT* const msg, TagType const& tag = no_tag,
+    ActionType next_action = nullptr
+  );
+
+  template <
+    typename FunctorT,
+    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
   EventType broadcastMsg(MessageT* const msg, ActionType act);
+
+  template <
+    typename FunctorT,
+    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
+  EventType broadcastMsgAuto(MessageT* const msg, ActionType act);
 
   template <
     typename FunctorT,
@@ -274,7 +326,24 @@ struct ActiveMessenger {
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
+  EventType sendMsgAuto(
+    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
+    ActionType next_action = nullptr
+  );
+
+  template <
+    typename FunctorT,
+    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
   EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act);
+
+  template <
+    typename FunctorT,
+    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+  >
+  EventType sendMsgAuto(
+    NodeType const& dest, MessageT* const msg, ActionType act
+  );
 
   /*
    *----------------------------------------------------------------------------
@@ -305,7 +374,22 @@ struct ActiveMessenger {
 
   template <typename MessageT>
   EventType broadcastMsg(
-    HandlerType const& han, MessageT* const msg, ActionType next_action = nullptr
+    HandlerType const& han, MessageT* const msg, ActionType act = nullptr
+  );
+
+  /*
+   *  Auto method for dispatching to the serialization framework if required
+   *  based on examining compile-time traits of the message
+   */
+  template <typename MessageT>
+  EventType broadcastMsgAuto(
+    HandlerType const& han, MessageT* const msg, ActionType act = nullptr
+  );
+
+  template <typename MessageT>
+  EventType broadcastMsgAuto(
+    HandlerType const& han, MessageT* const msg, TagType const& tag,
+    ActionType act = nullptr
   );
 
   /*
