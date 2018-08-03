@@ -37,6 +37,17 @@ EventType ActiveMessenger::sendMsg(
 }
 
 template <typename MessageT>
+EventType ActiveMessenger::sendMsg(
+  NodeType const& dest, HandlerType const& han, MessageT* const msg,
+  TagType const& tag, ActionType next_action
+) {
+  if (tag != no_tag) {
+    envelopeSetTag(msg->env, tag);
+  }
+  return sendMsgSz<MessageT>(dest, han, msg, next_action, sizeof(MessageT));
+}
+
+template <typename MessageT>
 EventType ActiveMessenger::sendMsgSz(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
   ActionType next_action, ByteType const& msg_size
@@ -74,7 +85,7 @@ EventType ActiveMessenger::sendMsgAuto(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
   ActionType act
 ) {
-  return ActiveSendHandler<MessageT>::sendMsg(dest,han,msg,no_tag,act);
+  return ActiveSendHandler<MessageT>::sendMsg(dest,msg,han,no_tag,act);
 }
 
 template <typename MessageT>
@@ -82,7 +93,7 @@ EventType ActiveMessenger::sendMsgAuto(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
   TagType const& tag, ActionType act
 ) {
-  return ActiveSendHandler<MessageT>::sendMsg(dest,han,msg,tag,act);
+  return ActiveSendHandler<MessageT>::sendMsg(dest,msg,han,tag,act);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -316,6 +327,19 @@ EventType ActiveMessenger::broadcastMsg(
 ) {
   auto const& this_node = theContext()->getNode();
   setBroadcastType(msg->env);
+  return sendMsg(this_node, han, msg, next_action);
+}
+
+template <typename MessageT>
+EventType ActiveMessenger::broadcastMsg(
+  HandlerType const& han, MessageT* const msg, TagType const& tag,
+  ActionType next_action
+) {
+  auto const& this_node = theContext()->getNode();
+  setBroadcastType(msg->env);
+  if (tag != no_tag) {
+    envelopeSetTag(msg->env, tag);
+  }
   return sendMsg(this_node, han, msg, next_action);
 }
 
