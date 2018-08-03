@@ -25,7 +25,7 @@ template <typename MsgT>
   MsgT* msg, HandlerType const& handler, TagType const& tag,
   ActionType action
 ) {
-  return theMsg()->broadcastMsg<MsgT>(msg,handler,tag,action);
+  return theMsg()->broadcastMsg<MsgT>(handler,msg,tag,action);
 }
 
 template <typename MsgT>
