@@ -147,6 +147,18 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
   return parserdesMsg<MsgT,f>(msg, false, dest);
 }
 
+template <typename FunctorT, typename MsgT, typename BaseT>
+/*static*/ void SerializedMessenger::sendParserdesMsg(
+  NodeType dest, MsgT* msg
+) {
+  debug_print(
+    serial_msg, node,
+    "sendParserdesMsg: (functor) dest={}, msg={}\n",
+    dest, print_ptr(msg)
+  );
+  return parserdesMsg<FunctorT,MsgT>(msg, false, dest);
+}
+
 template <typename MsgT, typename BaseT>
 /*static*/ void SerializedMessenger::sendParserdesMsgHandler(
   NodeType dest, HandlerType const& handler, MsgT* msg
@@ -157,6 +169,15 @@ template <typename MsgT, typename BaseT>
     dest, print_ptr(msg)
   );
   return parserdesMsgHandler<MsgT>(msg, handler, false, dest);
+}
+
+template <typename FunctorT, typename MsgT, typename BaseT>
+/*static*/ void SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
+  debug_print(
+    serial_msg, node,
+    "broadcastParserdesMsg: (functor) msg={}\n", print_ptr(msg)
+  );
+  return parserdesMsg<FunctorT,MsgT>(msg,true);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
@@ -179,12 +200,21 @@ template <typename MsgT, typename BaseT>
   return parserdesMsgHandler<MsgT>(msg,han,true);
 }
 
+
+template <typename FunctorT, typename MsgT, typename BaseT>
+/*static*/ void SerializedMessenger::parserdesMsg(
+  MsgT* msg, bool is_bcast, NodeType dest
+) {
+  auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  return parserdesMsgHandler(msg,h,is_bcast,dest);
+}
+
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 /*static*/ void SerializedMessenger::parserdesMsg(
   MsgT* msg, bool is_bcast, NodeType dest
 ) {
-  auto const& user_handler = auto_registry::makeAutoHandler<MsgT, f>(nullptr);
-  return parserdesMsgHandler(msg, user_handler, is_bcast, dest);
+  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  return parserdesMsgHandler(msg,h,is_bcast,dest);
 }
 
 template <typename MsgT, typename BaseT>
@@ -236,8 +266,16 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 /*static*/ void SerializedMessenger::sendSerialMsg(
   NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager
 ) {
-  auto const& handler = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
-  return sendSerialMsgHandler<MsgT,BaseT>(dest,msg,handler,eager);
+  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  return sendSerialMsgHandler<MsgT,BaseT>(dest,msg,h,eager);
+}
+
+template <typename FunctorT, typename MsgT, typename BaseT>
+/*static*/ void SerializedMessenger::sendSerialMsg(
+  NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager
+) {
+  auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  return sendSerialMsgHandler<MsgT,BaseT>(dest,msg,h,eager);
 }
 
 template <typename MsgT, typename BaseT>
@@ -257,10 +295,16 @@ template <typename MsgT, typename BaseT>
   );
 }
 
+template <typename FunctorT, typename MsgT, typename BaseT>
+/*static*/ void SerializedMessenger::broadcastSerialMsg(MsgT* msg) {
+  auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  return broadcastSerialMsgHandler<MsgT,BaseT>(msg,h);
+}
+
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 /*static*/ void SerializedMessenger::broadcastSerialMsg(MsgT* msg) {
-  HandlerType const& han = auto_registry::makeAutoHandler<MsgT, f>(nullptr);
-  return broadcastSerialMsgHandler<MsgT,BaseT>(msg,han);
+  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  return broadcastSerialMsgHandler<MsgT,BaseT>(msg,h);
 }
 
 template <typename MsgT, typename BaseT>
@@ -337,8 +381,8 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 /*static*/ void SerializedMessenger::sendSerialMsg(
   MsgT* msg, ActionEagerSend<MsgT, BaseT> eager, ActionDataSend sender
 ) {
-  auto const& handler = auto_registry::makeAutoHandler<MsgT, f>(nullptr);
-  return sendSerialMsgHandler<MsgT,BaseT>(msg,eager,handler,sender);
+  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  return sendSerialMsgHandler<MsgT,BaseT>(msg,eager,h,sender);
 }
 
 template <typename MsgT, typename BaseT>

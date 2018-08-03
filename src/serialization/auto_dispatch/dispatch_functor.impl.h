@@ -1,9 +1,9 @@
 
-#if !defined INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_IMPL_H
-#define INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_IMPL_H
+#if !defined INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_FUNCTOR_IMPL_H
+#define INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_FUNCTOR_IMPL_H
 
 #include "config.h"
-#include "serialization/auto_dispatch/dispatch.h"
+#include "serialization/auto_dispatch/dispatch_functor.h"
 #include "serialization/serialize_interface.h"
 #include "serialization/messaging/serialized_messenger.h"
 #include "messaging/active.h"
@@ -15,66 +15,67 @@ namespace vt { namespace serialization { namespace auto_dispatch {
 /*
  * Regular message sned/braoadcast pass-though (acts as delegate)
  */
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType Sender<MsgT,f>::sendMsg(
+template <typename FunctorT, typename MsgT>
+/*static*/ EventType SenderFunctor<FunctorT,MsgT>::sendMsg(
   NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
 ) {
-  return theMsg()->sendMsg<MsgT,f>(node,msg,tag,action);
+  return theMsg()->sendMsg<FunctorT,MsgT>(node,msg,tag,action);
 }
 
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType Broadcaster<MsgT,f>::broadcastMsg(
+template <typename FunctorT, typename MsgT>
+/*static*/ EventType BroadcasterFunctor<FunctorT,MsgT>::broadcastMsg(
   MsgT* msg, TagType const& tag, ActionType action
 ) {
-  return theMsg()->broadcastMsg<MsgT,f>(msg,tag,action);
+  return theMsg()->broadcastMsg<FunctorT,MsgT>(msg,tag,action);
 }
 
 /*
  * Serialization message sned/braoadcast detected based on the is_serializable
  * type traits
  */
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType SenderSerialize<MsgT,f>::sendMsgParserdes(
+template <typename FunctorT, typename MsgT>
+/*static*/ EventType SenderSerializeFunctor<FunctorT,MsgT>::sendMsgParserdes(
   NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
 ) {
   assert(tag == no_tag && "Tagged messages serialized not implemented");
-  SerializedMessenger::sendParserdesMsg<MsgT,f>(node,msg);
+  SerializedMessenger::sendParserdesMsg<FunctorT,MsgT>(node,msg);
   // @todo: forward event through chain
   return no_event;
 }
 
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType SenderSerialize<MsgT,f>::sendMsg(
+template <typename FunctorT, typename MsgT>
+/*static*/ EventType SenderSerializeFunctor<FunctorT,MsgT>::sendMsg(
   NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
 ) {
   assert(tag == no_tag && "Tagged messages serialized not implemented");
-  SerializedMessenger::sendSerialMsg<MsgT,f>(node,msg);
+  SerializedMessenger::sendSerialMsg<FunctorT,MsgT>(node,msg);
   // @todo: forward event through chain
   return no_event;
 }
 
 
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType BroadcasterSerialize<MsgT,f>::broadcastMsgParserdes(
+template <typename FunctorT, typename MsgT>
+/*static*/ EventType
+ BroadcasterSerializeFunctor<FunctorT,MsgT>::broadcastMsgParserdes(
   MsgT* msg, TagType const& tag, ActionType action
 ) {
   assert(tag == no_tag && "Tagged messages serialized not implemented");
-  SerializedMessenger::broadcastParserdesMsg<MsgT,f>(msg);
+  SerializedMessenger::broadcastParserdesMsg<FunctorT,MsgT>(msg);
   // @todo: forward event through chain
   return no_event;
 }
 
 
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType BroadcasterSerialize<MsgT,f>::broadcastMsg(
+template <typename FunctorT, typename MsgT>
+/*static*/ EventType BroadcasterSerializeFunctor<FunctorT,MsgT>::broadcastMsg(
   MsgT* msg, TagType const& tag, ActionType action
 ) {
   assert(tag == no_tag && "Tagged messages serialized not implemented");
-  SerializedMessenger::broadcastSerialMsg<MsgT,f>(msg);
+  SerializedMessenger::broadcastSerialMsg<FunctorT,MsgT>(msg);
   // @todo: forward event through chain
   return no_event;
 }
 
 }}} /* end namespace vt::serialization::auto_dispatch */
 
-#endif /*INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_IMPL_H*/
+#endif /*INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_FUNCTOR_IMPL_H*/

@@ -46,10 +46,16 @@ struct SerializedMessenger {
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void sendParserdesMsg(NodeType dest, MsgT* msg);
 
+  template <typename FunctorT, typename MsgT, typename BaseT = Message>
+  static void sendParserdesMsg(NodeType dest, MsgT* msg);
+
   template <typename MsgT, typename BaseT = Message>
   static void sendParserdesMsgHandler(
     NodeType dest, HandlerType const& handler, MsgT* msg
   );
+
+  template <typename FunctorT, typename MsgT, typename BaseT = Message>
+  static void broadcastParserdesMsg(MsgT* msg);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void broadcastParserdesMsg(MsgT* msg);
@@ -62,10 +68,20 @@ struct SerializedMessenger {
     MsgT* msg, bool is_bcast = true, NodeType dest = uninitialized_destination
   );
 
+  template <typename FunctorT, typename MsgT, typename BaseT = Message>
+  static void parserdesMsg(
+    MsgT* msg, bool is_bcast = true, NodeType dest = uninitialized_destination
+  );
+
   template <typename MsgT, typename BaseT = Message>
   static void parserdesMsgHandler(
     MsgT* msg, HandlerType const& handler, bool is_bcast = true,
     NodeType dest = uninitialized_destination
+  );
+
+  template <typename FunctorT, typename MsgT, typename BaseT = Message>
+  static void sendSerialMsg(
+    NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager = nullptr
   );
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
@@ -78,6 +94,9 @@ struct SerializedMessenger {
     NodeType dest, MsgT* msg, HandlerType const& handler,
     ActionEagerSend<MsgT, BaseT> eager_sender = nullptr
   );
+
+  template <typename FunctorT, typename MsgT, typename BaseT = Message>
+  static void broadcastSerialMsg(MsgT* msg);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static void broadcastSerialMsg(MsgT* msg);
