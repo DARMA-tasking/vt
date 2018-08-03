@@ -65,7 +65,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
      */
     setPipeType(data->env);
     envelopeSetGroup(data->env,pid);
-    theMsg()->sendMsg<T,PipeManager::triggerCallbackMsgHan>(pipe_node, data);
+    theMsg()->sendMsgAuto<T,PipeManager::triggerCallbackMsgHan>(pipe_node, data);
   }
 }
 

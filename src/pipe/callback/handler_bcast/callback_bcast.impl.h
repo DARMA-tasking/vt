@@ -65,7 +65,7 @@ CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) 
     "CallbackBcast: trigger_: this_node={}, include_sender_={}\n",
     this_node, include_sender_
   );
-  theMsg()->broadcastMsg<SignalDataType>(handler_, data);
+  theMsg()->broadcastMsgAuto<SignalDataType>(handler_, data);
   if (include_sender_) {
     auto nmsg = makeSharedMessage<SignalDataType>(*data);
     auto nmsgc = reinterpret_cast<ShortMessage*>(nmsg);

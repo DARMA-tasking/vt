@@ -27,7 +27,7 @@ void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     "CallbackBcast: trigger_: pipe={:x}, this_node={}, include_sender_={}\n",
     pipe, this_node, include_sender_
   );
-  theMsg()->broadcastMsg<MsgT>(handler_, msg);
+  theMsg()->broadcastMsgAuto<MsgT>(handler_, msg);
   if (include_sender_) {
     auto nmsg = makeSharedMessage<MsgT>(*msg);
     auto nmsgc = reinterpret_cast<ShortMessage*>(nmsg);

@@ -31,7 +31,7 @@ void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     auto nmsg = reinterpret_cast<ShortMessage*>(msg);
     runnable::Runnable<ShortMessage>::run(handler_, nullptr, nmsg, this_node);
   } else {
-    theMsg()->sendMsg<MsgT>(send_node_, handler_, msg);
+    theMsg()->sendMsgAuto<MsgT>(send_node_, handler_, msg);
   }
 }
 
