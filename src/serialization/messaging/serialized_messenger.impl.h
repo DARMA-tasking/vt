@@ -35,8 +35,7 @@ template <typename MsgT>
   auto t_ptr = deserializePartial<MsgT>(ptr_offset, ptr_size, msg);
   messageRef(msg);
   auto const& from_node = theMsg()->getFromNodeCurrentHandler();
-  auto active_fn = auto_registry::getAutoHandler(user_handler);
-  runnable::Runnable<MsgT>::run(user_handler, active_fn, t_ptr, from_node);
+  runnable::Runnable<MsgT>::run(user_handler, nullptr, t_ptr, from_node);
   messageDeref(msg);
 }
 
@@ -60,9 +59,8 @@ template <typename UserMsgT>
   auto t_ptr = deserialize<UserMsgT>(ptr_offset, ptr_size, user_msg);
 
   messageRef(user_msg);
-  auto active_fn = auto_registry::getAutoHandler(handler);
   runnable::Runnable<UserMsgT>::run(
-    handler, active_fn, t_ptr, sys_msg->from_node
+    handler, nullptr, t_ptr, sys_msg->from_node
   );
   messageDeref(user_msg);
 }
@@ -99,8 +97,7 @@ template <typename UserMsgT>
       );
 
       messageRef(msg);
-      auto active_fn = auto_registry::getAutoHandler(handler);
-      runnable::Runnable<UserMsgT>::run(handler, active_fn, tptr, node);
+      runnable::Runnable<UserMsgT>::run(handler, nullptr, tptr, node);
       messageDeref(msg);
       //std::free(msg);
     }
@@ -127,9 +124,8 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   );
 
   messageRef(user_msg);
-  auto active_fn = auto_registry::getAutoHandler(handler);
   runnable::Runnable<UserMsgT>::run(
-    handler, active_fn, tptr, sys_msg->from_node
+    handler, nullptr, tptr, sys_msg->from_node
   );
   messageDeref(user_msg);
   //std::free(user_msg);
@@ -453,8 +449,7 @@ template <typename MsgT, typename BaseT>
         );
 
         messageRef(msg);
-        auto active_fn = auto_registry::getAutoHandler(typed_handler);
-        runnable::Runnable<MsgT>::run(typed_handler,active_fn,tptr,node);
+        runnable::Runnable<MsgT>::run(typed_handler,nullptr,tptr,node);
         messageDeref(msg);
         //std::free(msg);
       }
