@@ -36,6 +36,7 @@ set(
       pipe/callback/proxy_send
       pipe/callback/proxy_bcast
       pipe/callback/anon
+      pipe/callback/cb_union
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
@@ -68,7 +69,7 @@ set(
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
-      registry/auto/vc registry/auto/rdma
+      registry/auto/vc registry/auto/rdma registry/auto/index
 
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
