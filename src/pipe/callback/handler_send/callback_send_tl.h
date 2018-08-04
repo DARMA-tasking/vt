@@ -32,6 +32,4 @@ private:
 
 }}} /* end namespace vt::pipe::callback */
 
-#include "pipe/callback/handler_send/callback_send_tl.impl.h"
-
 #endif /*INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_H*/

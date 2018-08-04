@@ -27,6 +27,8 @@ struct CallbackRawBaseSingle {
     bool const& in_inc
   );
   CallbackRawBaseSingle(RawAnonTagType, PipeType const& in_pipe);
+  CallbackRawBaseSingle(RawSendColMsgTagType, PipeType const& in_pipe);
+  CallbackRawBaseSingle(RawBcastColMsgTagType, PipeType const& in_pipe);
 
   template <typename MsgT>
   void send(MsgT* msg);

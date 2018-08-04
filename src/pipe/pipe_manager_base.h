@@ -9,32 +9,36 @@
 #include "pipe/msg/callback.h"
 #include "pipe/signal/signal_holder.h"
 #include "pipe/callback/anon/callback_anon.fwd.h"
-#include "pipe/callback/anon/callback_anon_tl.fwd.h"
 #include "pipe/callback/handler_send/callback_send.fwd.h"
 #include "pipe/callback/handler_bcast/callback_bcast.fwd.h"
+#include "pipe/callback/proxy_send/callback_proxy_send_tl.fwd.h"
+#include "pipe/callback/proxy_bcast/callback_proxy_bcast_tl.fwd.h"
+#include "pipe/callback/anon/callback_anon_tl.fwd.h"
 
 #include <functional>
 
 namespace vt { namespace pipe {
 
 struct PipeManagerBase {
-  using PipeStateType = PipeState;
+  using PipeStateType    = PipeState;
 
   template <typename MsgT>
-  using FuncMsgType = std::function<void(MsgT*)>;
-  using FuncType = std::function<void(void)>;
-  using FuncVoidType         = std::function<void(void)>;
+  using FuncMsgType      = std::function<void(MsgT*)>;
+  using FuncType         = std::function<void(void)>;
+  using FuncVoidType     = std::function<void(void)>;
   using DispatchFuncType = PipeState::DispatchFuncType;
 
   PipeManagerBase() = default;
 
   template <typename SignalT>
   friend struct pipe::callback::CallbackAnon;
-  friend struct pipe::callback::CallbackAnonTypeless;
   template <typename SignalT>
   friend struct pipe::callback::CallbackSend;
   template <typename SignalT>
   friend struct pipe::callback::CallbackBcast;
+  friend struct pipe::callback::CallbackAnonTypeless;
+  friend struct pipe::callback::CallbackProxySendTypeless;
+  friend struct pipe::callback::CallbackProxyBcastTypeless;
 
   PipeType makeCallbackFuncVoid(
     bool const& persist, FuncType fn, bool const& dispatch = false,

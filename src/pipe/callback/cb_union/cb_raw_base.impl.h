@@ -22,6 +22,12 @@ void CallbackRawBaseSingle::send(MsgT* msg) {
   case CallbackEnum::AnonCB:
     cb_.u_.anon_cb_.trigger<MsgT>(msg,pipe_);
     break;
+  case CallbackEnum::SendColMsgCB:
+    cb_.u_.send_col_msg_cb_.trigger<MsgT>(msg,pipe_);
+    break;
+  case CallbackEnum::BcastColMsgCB:
+    cb_.u_.bcast_col_msg_cb_.trigger<MsgT>(msg,pipe_);
+    break;
   default:
     assert(0 && "Should not be reachable");
   }

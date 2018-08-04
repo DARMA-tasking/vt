@@ -10,6 +10,10 @@
 #include "pipe/callback/callback_base.h"
 #include "pipe/callback/handler_send/callback_send.h"
 #include "pipe/callback/handler_bcast/callback_bcast.h"
+#include "pipe/callback/proxy_send/callback_proxy_send.h"
+#include "pipe/callback/proxy_bcast/callback_proxy_bcast.h"
+#include "pipe/callback/proxy_send/callback_proxy_send_tl.h"
+#include "pipe/callback/proxy_bcast/callback_proxy_bcast_tl.h"
 #include "activefn/activefn.h"
 #include "context/context.h"
 #include "utils/static_checks/functor.h"
@@ -81,6 +85,46 @@ void PipeManagerTL::addListenerFunctorBcast(
     cb.getPipe(), std::make_unique<callback::CallbackBcast<MsgT>>(han,inc)
   );
 }
+
+template <typename ColT, typename MsgT, PipeManagerTL::ColHanType<ColT,MsgT>* f>
+PipeManagerTL::CallbackType
+PipeManagerTL::makeCallbackSingleProxySend(typename ColT::ProxyType proxy) {
+  bool const persist = true;
+  bool const send_back = false;
+  bool const dispatch = true;
+  auto const& pipe_id = makePipeID(persist,send_back);
+  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
+  auto cb = CallbackType(callback::cbunion::RawSendColMsgTag,pipe_id);
+  auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(
+    nullptr
+  );
+  addListenerAny<MsgT>(
+    cb.getPipe(),
+    std::make_unique<callback::CallbackProxySend<ColT,MsgT>>(handler,proxy)
+  );
+  return cb;
+}
+
+  // Single active message collection proxy bcast
+template <typename ColT, typename MsgT, PipeManagerTL::ColHanType<ColT,MsgT>* f>
+PipeManagerTL::CallbackType
+PipeManagerTL::makeCallbackSingleProxyBcast(ColProxyType<ColT> proxy) {
+  bool const persist = true;
+  bool const send_back = false;
+  bool const dispatch = true;
+  auto const& pipe_id = makePipeID(persist,send_back);
+  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
+  auto cb = CallbackType(callback::cbunion::RawBcastColMsgTag,pipe_id);
+  auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(
+    nullptr
+  );
+  addListenerAny<MsgT>(
+    cb.getPipe(),
+    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(handler,proxy)
+  );
+  return cb;
+}
+
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 PipeManagerTL::CallbackType

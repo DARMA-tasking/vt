@@ -22,6 +22,16 @@ CallbackRawBaseSingle::CallbackRawBaseSingle(
 ) : pipe_(in_pipe), cb_(AnonCB{})
 { }
 
+CallbackRawBaseSingle::CallbackRawBaseSingle(
+  RawSendColMsgTagType, PipeType const& in_pipe
+) : pipe_(in_pipe), cb_(SendColMsgCB{})
+{ }
+
+CallbackRawBaseSingle::CallbackRawBaseSingle(
+  RawBcastColMsgTagType, PipeType const& in_pipe
+) : pipe_(in_pipe), cb_(BcastColMsgCB{})
+{ }
+
 void CallbackRawBaseSingle::send() {
   switch (cb_.active_) {
   case CallbackEnum::SendMsgCB:
@@ -32,6 +42,12 @@ void CallbackRawBaseSingle::send() {
     break;
   case CallbackEnum::AnonCB:
     cb_.u_.anon_cb_.triggerVoid(pipe_);
+    break;
+  case CallbackEnum::SendColMsgCB:
+    assert(0 && "void dispatch not allowed for send collection msg callback");
+    break;
+  case CallbackEnum::BcastColMsgCB:
+    assert(0 && "void dispatch not allowed for bcast collection msg callback");
     break;
   default:
     assert(0 && "Should not be reachable");

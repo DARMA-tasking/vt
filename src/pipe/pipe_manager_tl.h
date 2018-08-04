@@ -7,10 +7,18 @@
 #include "pipe/pipe_manager_base.h"
 #include "pipe/callback/cb_union/cb_raw_base.h"
 #include "activefn/activefn.h"
+#include "vrt/collection/active/active_funcs.h"
+#include "vrt/proxy/collection_proxy.h"
 
 namespace vt { namespace pipe {
 
 struct PipeManagerTL : virtual PipeManagerBase {
+  template <typename ColT, typename MsgT>
+  using ColHanType = vrt::collection::ActiveColTypedFnType<MsgT,ColT>;
+
+  template <typename ColT>
+  using ColProxyType = CollectionProxy<ColT,typename ColT::IndexType>;
+
   using CallbackType = callback::cbunion::CallbackRawBaseSingle;
 
   /*
@@ -44,6 +52,14 @@ struct PipeManagerTL : virtual PipeManagerBase {
 
   template <typename MsgT>
   CallbackType makeCallbackSingleAnon(FuncMsgType<MsgT> fn);
+
+  // Single active message collection proxy send
+  template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
+  CallbackType makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
+
+  // Single active message collection proxy bcast
+  template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
+  CallbackType makeCallbackSingleProxyBcast(ColProxyType<ColT> proxy);
 
   // Multi-staged callback
   template <typename=void>

@@ -5,6 +5,8 @@
 #include "config.h"
 #include "pipe/callback/handler_send/callback_send_tl.h"
 #include "pipe/callback/handler_bcast/callback_bcast_tl.h"
+#include "pipe/callback/proxy_bcast/callback_proxy_bcast_tl.h"
+#include "pipe/callback/proxy_send/callback_proxy_send_tl.h"
 #include "pipe/callback/anon/callback_anon_tl.h"
 
 #include <cstdlib>
@@ -28,14 +30,12 @@ struct BcastMsgCB : CallbackBcastTypeless {
   { }
 };
 
-struct SendColMsgCB {
-  HandlerType handler_ = uninitialized_handler;
-  VirtualProxyType proxy_ = no_vrt_proxy;
+struct SendColMsgCB : CallbackProxySendTypeless {
+  SendColMsgCB() = default;
 };
 
-struct BcastColMsgCB {
-  HandlerType handler_ = uninitialized_handler;
-  VirtualProxyType proxy_ = no_vrt_proxy;
+struct BcastColMsgCB : CallbackProxyBcastTypeless {
+  BcastColMsgCB() = default;
 };
 
 union CallbackUnion {
