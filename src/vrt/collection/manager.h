@@ -66,6 +66,20 @@ struct CollectionManager {
   using CleanupFnType = std::function<void()>;
   using CleanupListFnType = std::list<CleanupFnType>;
 
+  template <typename T, typename U=void>
+  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
+  template <typename T, typename U=void>
+  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
+
+  template <typename ColT, typename UserMsgT, typename T, typename U=void>
+  using IsWrapType = std::enable_if_t<
+    std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
+  >;
+  template <typename ColT, typename UserMsgT, typename T, typename U=void>
+  using IsNotWrapType = std::enable_if_t<
+    !std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
+  >;
+
   CollectionManager() = default;
 
   virtual ~CollectionManager() { cleanupAll<>(); }
@@ -191,11 +205,6 @@ struct CollectionManager {
   /*
    *  Broadcast message to all elements of a collection
    */
-  template <typename T, typename U=void>
-  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
-  template <typename T, typename U=void>
-  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
-
   template <typename MsgT, typename ColT>
   void broadcastNormalMsg(
     CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
@@ -288,15 +297,6 @@ private:
   );
 
 public:
-  template <typename ColT, typename UserMsgT, typename T, typename U=void>
-  using IsWrapType = std::enable_if_t<
-    std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
-  >;
-  template <typename ColT, typename UserMsgT, typename T, typename U=void>
-  using IsNotWrapType = std::enable_if_t<
-    !std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
-  >;
-
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
   static IsWrapType<ColT,UserMsgT,MsgT> collectionBcastDeliver(
     MsgT* msg, CollectionBase<ColT,IndexT>* col, HandlerType han, bool member,
