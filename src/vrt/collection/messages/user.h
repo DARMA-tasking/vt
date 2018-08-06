@@ -8,12 +8,16 @@
 #include "vrt/collection/manager.fwd.h"
 #include "vrt/vrt_common.h"
 
+#include <type_traits>
+
 namespace vt { namespace vrt { namespace collection {
 
 template <typename MessageT, typename ColT>
 using RoutedMessageType = LocationRoutedMsg<
   ::vt::vrt::VirtualElmProxyType<ColT, typename ColT::IndexType>, MessageT
 >;
+
+static struct ColMsgWrapTagType { } ColMsgWrapTag { };
 
 template <typename ColT, typename BaseMsgT = ::vt::Message>
 struct CollectionMessage :
@@ -24,8 +28,14 @@ struct CollectionMessage :
   */
   using CollectionType = ColT;
   using IndexType = typename ColT::IndexType;
+  using IsCollectionMessage = std::true_type;
+  using UserMsgType = void;
 
   CollectionMessage() = default;
+
+  explicit CollectionMessage(ColMsgWrapTagType)
+    : is_wrap_(true)
+  { }
 
   void setVrtHandler(HandlerType const& in_handler);
   HandlerType getVrtHandler() const;
@@ -46,6 +56,9 @@ struct CollectionMessage :
 
   bool getMember() const;
   void setMember(bool const& member);
+
+  bool getWrap() const;
+  void setWrap(bool const& wrap);
 
   #if backend_check_enabled(lblite)
     bool lbLiteInstrument() const;
@@ -69,6 +82,7 @@ private:
   EpochType bcast_epoch_ = no_epoch;
   NodeType from_node_ = uninitialized_destination;
   bool member_ = false;
+  bool is_wrap_ = false;
 
   #if backend_check_enabled(lblite)
     /*

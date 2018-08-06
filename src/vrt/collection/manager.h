@@ -16,6 +16,8 @@
 #include "vrt/collection/migrate/manager_migrate_attorney.fwd.h"
 #include "vrt/collection/migrate/migrate_status.h"
 #include "vrt/collection/destroy/manager_destroy_attorney.fwd.h"
+#include "vrt/collection/messages/user_wrap.h"
+#include "vrt/collection/traits/coll_msg.h"
 #include "vrt/proxy/collection_proxy.h"
 #include "topos/mapping/mapping_headers.h"
 #include "messaging/message.h"
@@ -47,12 +49,13 @@ struct CollectionManager {
   using NoElementActionType = std::function<void()>;
   template <typename IndexT>
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
+  using TypelessBcastFuncType = std::function<void(void*,std::size_t)>;
   using ActionContainerType = std::vector<ActionProxyType>;
   using BufferedActionType = std::unordered_map<
     VirtualProxyType, ActionContainerType
   >;
-  template <typename ColT, typename IndexT>
-  using CollectionProxyWrapType = CollectionProxy<ColT, IndexT>;
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  using CollectionProxyWrapType = CollectionProxy<ColT,IndexT>;
   using ReduceIDType = ::vt::collective::reduce::ReduceEpochLookupType;
   template <typename ColT>
   using EpochBcastType = std::unordered_map<EpochType,CollectionMessage<ColT>*>;
@@ -188,36 +191,80 @@ struct CollectionManager {
   /*
    *  Broadcast message to all elements of a collection
    */
-  template <
-    typename MsgT,
-    typename ColT = typename MsgT::CollectionType,
-    typename IdxT = typename ColT::IndexType
-  >
+  template <typename T, typename U=void>
+  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
+  template <typename T, typename U=void>
+  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
+
+  template <typename MsgT, typename ColT>
+  void broadcastNormalMsg(
+    CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
+    HandlerType const& handler, bool const member,
+    ActionType act = nullptr, bool instrument = true
+  );
+
+  template <typename MsgT, typename ColT, typename IdxT>
   void broadcastMsgUntypedHandler(
-    CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *msg,
+    CollectionProxyWrapType<ColT,IdxT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
     ActionType act, bool instrument
   );
 
+  // CollectionMessage non-detecting broadcast
   template <
     typename MsgT,
-    ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
   >
   void broadcastMsg(
-    CollectionProxyWrapType<
-      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-    > const& toProxy,
+    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    MsgT *msg, ActionType act = nullptr, bool instrument = true
+  );
+
+  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  IsColMsgType<MsgT> broadcastMsg(
+    CollectionProxyWrapType<ColT> const& proxy,
+    MsgT *msg, ActionType act = nullptr, bool instrument = true
+  );
+
+  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  IsNotColMsgType<MsgT> broadcastMsg(
+    CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, ActionType act = nullptr, bool instrument = true
   );
 
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  void broadcastMsg(
-    CollectionProxyWrapType<
-      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-    > const& toProxy,
+  IsColMsgType<MsgT> broadcastMsg(
+    CollectionProxyWrapType<ColT> const& proxy,
+    MsgT *msg, ActionType act = nullptr, bool instrument = true
+  );
+
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT,ColT> f
+  >
+  IsNotColMsgType<MsgT> broadcastMsg(
+    CollectionProxyWrapType<ColT> const& proxy,
+    MsgT *msg, ActionType act = nullptr, bool instrument = true
+  );
+
+  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  void broadcastMsgImpl(
+    CollectionProxyWrapType<ColT> const& proxy,
+    MsgT *msg, ActionType act = nullptr, bool instrument = true
+  );
+
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT,ColT> f
+  >
+  void broadcastMsgImpl(
+    CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, ActionType act = nullptr, bool instrument = true
   );
 
@@ -241,6 +288,26 @@ private:
   );
 
 public:
+  template <typename ColT, typename UserMsgT, typename T, typename U=void>
+  using IsWrapType = std::enable_if_t<
+    std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
+  >;
+  template <typename ColT, typename UserMsgT, typename T, typename U=void>
+  using IsNotWrapType = std::enable_if_t<
+    !std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
+  >;
+
+  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
+  static IsWrapType<ColT,UserMsgT,MsgT> collectionBcastDeliver(
+    MsgT* msg, CollectionBase<ColT,IndexT>* col, HandlerType han, bool member,
+    NodeType from
+  );
+  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
+  static IsNotWrapType<ColT,UserMsgT,MsgT> collectionBcastDeliver(
+    MsgT* msg, CollectionBase<ColT,IndexT>* col, HandlerType han, bool member,
+    NodeType from
+  );
+
   template <typename ColT, typename IndexT, typename MsgT>
   static void collectionBcastHandler(MsgT* msg);
   template <typename ColT, typename IndexT, typename MsgT>
@@ -473,6 +540,7 @@ private:
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
   std::unordered_map<VirtualProxyType,ActionType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionType> user_insert_action_ = {};
+  std::unordered_map<VirtualProxyType,TypelessBcastFuncType> typeless_send_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

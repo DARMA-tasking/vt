@@ -11,6 +11,7 @@
 #include "vrt/collection/messages/system_create.h"
 #include "vrt/collection/collection_info.h"
 #include "vrt/collection/messages/user.h"
+#include "vrt/collection/messages/user_wrap.h"
 #include "vrt/collection/types/type_attorney.h"
 #include "vrt/collection/defaults/default_map.h"
 #include "vrt/collection/constructor/coll_constructors_deref.h"
@@ -307,10 +308,41 @@ GroupType CollectionManager::createGroupCollection(
   return group_id;
 }
 
+template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
+/*static*/ CollectionManager::IsWrapType<ColT,UserMsgT,MsgT>
+CollectionManager::collectionBcastDeliver(
+  MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
+  NodeType from
+) {
+  auto& user_msg = msg->getMsg();
+  auto user_msg_ptr = &user_msg;
+  void* raw_ptr = static_cast<void*>(base);
+  auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
+  runnable::RunnableCollection<UserMsgT,UntypedCollection>::run(
+    han, user_msg_ptr, ptr, from, member,
+    *reinterpret_cast<uint64_t const*>(base->getIndex().raw())
+  );
+}
+
+template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
+/*static*/ CollectionManager::IsNotWrapType<ColT,UserMsgT,MsgT>
+CollectionManager::collectionBcastDeliver(
+  MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
+  NodeType from
+) {
+  void* raw_ptr = static_cast<void*>(base);
+  auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
+  runnable::RunnableCollection<MsgT,UntypedCollection>::run(
+    han, msg, ptr, from, member,
+    *reinterpret_cast<uint64_t const*>(base->getIndex().raw())
+  );
+}
+
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionBcastHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const bcast_proxy = col_msg->getBcastProxy();
+  auto const is_wrap = col_msg->getWrap();
   auto const& untyped_proxy = bcast_proxy;
   debug_print(
     vrt_coll, node,
@@ -334,7 +366,6 @@ template <typename ColT, typename IndexT, typename MsgT>
         msg->bcast_epoch_, base->cur_bcast_epoch_
       );
       if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
-        void* typeless_collection = static_cast<void*>(base);
         assert(base != nullptr && "Must be valid pointer");
         // be very careful here, do not touch `base' after running the active
         // message because it might have migrated out and be invalid
@@ -355,11 +386,9 @@ template <typename ColT, typename IndexT, typename MsgT>
           }
         );
 
-        auto const from_node = col_msg->getFromNode();
-        auto untyped = reinterpret_cast<UntypedCollection*>(typeless_collection);
-        runnable::RunnableCollection<MsgT,UntypedCollection>::run(
-          handler, msg, untyped, from_node, member,
-          *reinterpret_cast<uint64_t const*>(base->getIndex().raw())
+        auto const from = col_msg->getFromNode();
+        collectionBcastDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
+          msg,base,handler,member,from
         );
 
         backend_enable_if(
@@ -624,10 +653,6 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
     proxy, msg->getBcastEpoch(), msg->getVrtHandler()
   );
 
-  using Serial = ::vt::serialization::auto_dispatch::RequiredSerialization<
-    MsgT, collectionBcastHandler<ColT,IndexT,MsgT>
-  >;
-
   auto const& group_ready = elm_holder->groupReady();
   auto const& use_group = elm_holder->useGroup();
   bool const send_group = group_ready && use_group;
@@ -649,7 +674,7 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
   }
 
   messageRef(msg);
-  Serial::broadcastMsg(msg);
+  theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(msg);
   if (!send_group) {
     collectionBcastHandler<ColT,IndexT,MsgT>(msg);
   }
@@ -658,36 +683,96 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
 
 template <
   typename MsgT,
-  ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+  ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
 >
 void CollectionManager::broadcastMsg(
-  CollectionProxyWrapType<
-    typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-  > const& toProxy,
-  MsgT *const msg, ActionType act, bool inst
+  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+  MsgT *msg, ActionType act, bool instrument
 ) {
-  // register the user's handler
-  HandlerType const& han = auto_registry::makeAutoHandlerCollectionMem<
-    typename MsgT::CollectionType, MsgT, f
-  >(msg);
-  return broadcastMsgUntypedHandler<MsgT>(toProxy,msg,han,true,act,inst);
+  using ColT = typename MsgT::CollectionType;
+  return broadcastMsg<MsgT,ColT,f>(proxy,msg,act,instrument);
+}
+
+template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+CollectionManager::IsColMsgType<MsgT>
+CollectionManager::broadcastMsg(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, ActionType act,
+  bool instrument
+) {
+  return broadcastMsgImpl<MsgT,ColT,f>(proxy,msg,act,instrument);
+}
+
+template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+CollectionManager::IsNotColMsgType<MsgT>
+CollectionManager::broadcastMsg(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, ActionType act,
+  bool instrument
+) {
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,false,act,instrument);
 }
 
 template <
   typename MsgT,
-  ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+  typename ColT,
+  ActiveColMemberTypedFnType<MsgT,ColT> f
 >
-void CollectionManager::broadcastMsg(
-  CollectionProxyWrapType<
-    typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-  > const& toProxy,
-  MsgT *const msg, ActionType act, bool inst
+CollectionManager::IsColMsgType<MsgT>
+CollectionManager::broadcastMsg(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, ActionType act,
+  bool instrument
+ ) {
+  return broadcastMsgImpl<MsgT,ColT,f>(proxy,msg,act,instrument);
+}
+
+template <
+  typename MsgT,
+  typename ColT,
+  ActiveColMemberTypedFnType<MsgT,ColT> f
+>
+CollectionManager::IsNotColMsgType<MsgT>
+CollectionManager::broadcastMsg(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, ActionType act,
+  bool instrument
+) {
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,true,act,instrument);
+}
+
+template <
+  typename MsgT,
+  typename ColT,
+  ActiveColMemberTypedFnType<MsgT,ColT> f
+>
+void CollectionManager::broadcastMsgImpl(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, ActionType act,
+  bool inst
 ) {
   // register the user's handler
-  HandlerType const& han = auto_registry::makeAutoHandlerCollection<
-    typename MsgT::CollectionType, MsgT, f
-  >(msg);
-  return broadcastMsgUntypedHandler<MsgT>(toProxy,msg,han,false,act,inst);
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,true,act,inst);
+}
+
+template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+void CollectionManager::broadcastMsgImpl(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, ActionType act,
+  bool inst
+) {
+  // register the user's handler
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,false,act,inst);
+}
+
+template <typename MsgT, typename ColT>
+void CollectionManager::broadcastNormalMsg(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
+  HandlerType const& handler, bool const member,
+  ActionType act, bool instrument
+) {
+  auto wrap_msg = makeSharedMessage<ColMsgWrap<ColT,MsgT>>(*msg);
+  return broadcastMsgUntypedHandler<ColMsgWrap<ColT,MsgT>,ColT>(
+    proxy, wrap_msg, handler, member, act, instrument
+  );
 }
 
 template <typename MsgT, typename ColT, typename IdxT>
@@ -726,23 +811,16 @@ void CollectionManager::broadcastMsgUntypedHandler(
     msg->setFromNode(this_node);
     msg->setMember(member);
 
-    auto const bcast_node = VirtualProxyBuilder::getVirtualNode(col_proxy);
+    auto const bnode = VirtualProxyBuilder::getVirtualNode(col_proxy);
 
-    if (this_node != bcast_node) {
+    if (this_node != bnode) {
       debug_print(
         vrt_coll, node,
         "broadcastMsg: col_proxy={}, sending to root node={}, handler={}\n",
-        col_proxy, bcast_node, handler
+        col_proxy, bnode, handler
       );
 
-      using Serial = ::vt::serialization::auto_dispatch::RequiredSerialization<
-        MsgT, broadcastRootHandler<ColT,IdxT,MsgT>
-      >;
-
-      Serial::sendMsg(bcast_node, msg);
-      // theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT,MsgT>>(
-      //   bcast_node, msg
-      // );
+      theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(bnode,msg);
     } else {
       debug_print(
         vrt_coll, node,

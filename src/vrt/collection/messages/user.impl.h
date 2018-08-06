@@ -84,6 +84,7 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
   s | bcast_proxy_;
   s | bcast_epoch_;
   s | member_;
+  s | is_wrap_;
 
   backend_enable_if(
     lblite,
@@ -99,6 +100,16 @@ bool CollectionMessage<ColT,BaseMsgT>::getMember() const {
 template <typename ColT, typename BaseMsgT>
 void CollectionMessage<ColT,BaseMsgT>::setMember(bool const& member) {
   member_ = member;
+}
+
+template <typename ColT, typename BaseMsgT>
+bool CollectionMessage<ColT,BaseMsgT>::getWrap() const {
+  return is_wrap_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT,BaseMsgT>::setWrap(bool const& wrap) {
+  is_wrap_ = wrap;
 }
 
 #if backend_check_enabled(lblite)
