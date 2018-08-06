@@ -310,7 +310,7 @@ GroupType CollectionManager::createGroupCollection(
 
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsWrapType<ColT,UserMsgT,MsgT>
-CollectionManager::collectionBcastDeliver(
+CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
   NodeType from
 ) {
@@ -326,7 +326,7 @@ CollectionManager::collectionBcastDeliver(
 
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsNotWrapType<ColT,UserMsgT,MsgT>
-CollectionManager::collectionBcastDeliver(
+CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
   NodeType from
 ) {
@@ -387,7 +387,7 @@ template <typename ColT, typename IndexT, typename MsgT>
         );
 
         auto const from = col_msg->getFromNode();
-        collectionBcastDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
+        collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
           msg,base,handler,member,from
         );
 
