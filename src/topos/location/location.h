@@ -107,6 +107,12 @@ struct EntityLocationCoord : LocationCoord {
     ActionType action = nullptr
   );
 
+  template <typename MessageT, ActiveTypedFnType<MessageT> *f>
+  void routeMsgSerializeHandler(
+    EntityID const& id, NodeType const& home_node, MessageT *m,
+    ActionType action = nullptr
+  );
+
   template <typename MessageT>
   void routeMsg(
     EntityID const& id, NodeType const& home_node, MessageT *m,

@@ -452,10 +452,19 @@ template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandler(
   EntityID const& id, NodeType const& home_node, MessageT *m, ActionType action
 ) {
-  HandlerType const& han = auto_registry::makeAutoHandler<MessageT, f>(nullptr);
-  m->setHandler(han);
+  auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
+  m->setHandler(handler);
+  return routeMsg<MessageT>(id,home_node,m,action);
+}
 
-  return routeMsg<MessageT>(id, home_node, m, action);
+template <typename EntityID>
+template <typename MessageT, ActiveTypedFnType<MessageT> *f>
+void EntityLocationCoord<EntityID>::routeMsgSerializeHandler(
+  EntityID const& id, NodeType const& home_node, MessageT *m, ActionType action
+) {
+  auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
+  m->setHandler(handler);
+  return routeMsg<MessageT>(id,home_node,m,action,true);
 }
 
 template <typename EntityID>
@@ -466,7 +475,6 @@ void EntityLocationCoord<EntityID>::routeMsgSerialize(
 ) {
   return routeMsg<MessageT>(id,home_node,m,action,true);
 }
-
 
 template <typename EntityID>
 template <typename MessageT>
