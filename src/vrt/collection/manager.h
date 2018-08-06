@@ -229,6 +229,15 @@ struct CollectionManager {
     MsgT *msg, ActionType act = nullptr, bool instrument = true
   );
 
+  template <
+    typename MsgT,
+    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+  >
+  void broadcastMsg(
+    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    MsgT *msg, ActionType act = nullptr, bool instrument = true
+  );
+
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   IsColMsgType<MsgT> broadcastMsg(
     CollectionProxyWrapType<ColT> const& proxy,

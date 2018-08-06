@@ -683,6 +683,18 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
 
 template <
   typename MsgT,
+  ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+>
+void CollectionManager::broadcastMsg(
+  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+  MsgT *msg, ActionType act, bool instrument
+) {
+  using ColT = typename MsgT::CollectionType;
+  return broadcastMsg<MsgT,ColT,f>(proxy,msg,act,instrument);
+}
+
+template <
+  typename MsgT,
   ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
 >
 void CollectionManager::broadcastMsg(
