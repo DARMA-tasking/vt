@@ -139,19 +139,22 @@ struct CollectionManager {
     typename IdxT = typename ColT::IndexType
   >
   void sendMsgUntypedHandler(
-    VirtualElmProxyType<ColT, typename ColT::IndexType> const& toProxy,
-    MsgT *msg, HandlerType const& handler, bool const member, ActionType action
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
+    HandlerType const& handler, bool const member, ActionType action
+  );
+
+  template <typename MsgT, typename ColT>
+  void sendNormalMsg(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
+    HandlerType const& handler, bool const member, ActionType action
   );
 
   template <
-    typename MsgT,
-    ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+    typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
   >
   void sendMsg(
-    VirtualElmProxyType<
-      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-    > const& toProxy,
-    MsgT *msg, ActionType action = nullptr
+    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
+    ActionType act = nullptr
   );
 
   template <
@@ -159,14 +162,68 @@ struct CollectionManager {
     ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
   >
   void sendMsg(
-    VirtualElmProxyType<
-      typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-    > const& toProxy,
-    MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
+    ActionType act = nullptr
+  );
+
+  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  IsColMsgType<MsgT> sendMsg(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+  );
+
+  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  IsNotColMsgType<MsgT> sendMsg(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+  );
+
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT,ColT> f
+  >
+  IsColMsgType<MsgT> sendMsg(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+  );
+
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT,ColT> f
+  >
+  IsNotColMsgType<MsgT> sendMsg(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+  );
+
+  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  void sendMsgImpl(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+  );
+
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+  >
+  void sendMsgImpl(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+  );
+
+  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
+  static IsWrapType<ColT,UserMsgT,MsgT> collectionMsgDeliver(
+    MsgT* msg, CollectionBase<ColT,IndexT>* col, HandlerType han, bool member,
+    NodeType from
+  );
+  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
+  static IsNotWrapType<ColT,UserMsgT,MsgT> collectionMsgDeliver(
+    MsgT* msg, CollectionBase<ColT,IndexT>* col, HandlerType han, bool member,
+    NodeType from
   );
 
   template <typename CoLT, typename IndexT>
   static void collectionMsgHandler(BaseMessage* msg);
+
+  template <typename ColT, typename IndexT, typename MsgT>
+  static void collectionMsgTypedHandler(MsgT* msg);
 
   /*
    *  Reduce all elements of a collection

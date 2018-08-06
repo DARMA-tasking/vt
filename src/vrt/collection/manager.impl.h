@@ -556,8 +556,8 @@ template <typename>
   }
 }
 
-template <typename ColT, typename IndexT>
-/*static*/ void CollectionManager::collectionMsgHandler(BaseMessage* msg) {
+template <typename ColT, typename IndexT, typename MsgT>
+/*static*/ void CollectionManager::collectionMsgTypedHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const entity_proxy = col_msg->getProxy();
 
@@ -607,11 +607,9 @@ template <typename ColT, typename IndexT>
     }
   );
 
-  auto const from_node = col_msg->getFromNode();
-  auto untyped = reinterpret_cast<UntypedCollection*>(typeless_collection);
-  runnable::RunnableCollection<CollectionMessage<ColT>,UntypedCollection>::run(
-    sub_handler, col_msg, untyped, from_node, member,
-    *reinterpret_cast<uint64_t const*>(col_ptr->getIndex().raw())
+  auto const from = col_msg->getFromNode();
+  collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
+    msg,col_ptr,sub_handler,member,from
   );
 
   backend_enable_if(
@@ -624,6 +622,13 @@ template <typename ColT, typename IndexT>
   );
 
   theTerm()->consume(term::any_epoch_sentinel);
+}
+
+template <typename ColT, typename IndexT>
+/*static*/ void CollectionManager::collectionMsgHandler(BaseMessage* msg) {
+  return collectionMsgTypedHandler<ColT,IndexT,CollectionMessage<ColT>>(
+    static_cast<CollectionMessage<ColT>*>(msg)
+  );
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
@@ -1045,46 +1050,107 @@ EpochType CollectionManager::reduceMsgExpr(
   return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag,mapped_node);
 }
 
+
+template <typename MsgT, typename ColT>
+void CollectionManager::sendNormalMsg(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
+  HandlerType const& handler, bool const member, ActionType action
+) {
+  auto wrap_msg = makeSharedMessage<ColMsgWrap<ColT,MsgT>>(*msg);
+  return sendMsgUntypedHandler<ColMsgWrap<ColT,MsgT>,ColT>(
+    proxy, wrap_msg, handler, member, action
+  );
+}
+
+template <
+  typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+>
+void CollectionManager::sendMsg(
+  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
+  ActionType act
+) {
+  using ColT = typename MsgT::CollectionType;
+  return sendMsg<MsgT,ColT,f>(proxy,msg,act);
+}
+
 template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
 >
 void CollectionManager::sendMsg(
-  VirtualElmProxyType<
-    typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-  > const& toProxy,
-  MsgT *msg, ActionType action
+  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
+  ActionType act
 ) {
-  // register the user's handler
-  HandlerType const& handler = auto_registry::makeAutoHandlerCollectionMem<
-    typename MsgT::CollectionType, MsgT, f
-  >(msg);
-  // save the user's handler in the message
-  return sendMsgUntypedHandler<MsgT>(toProxy,msg,handler,true,action);
+  using ColT = typename MsgT::CollectionType;
+  return sendMsg<MsgT,ColT,f>(proxy,msg,act);
+}
+
+template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+CollectionManager::IsColMsgType<MsgT>
+CollectionManager::sendMsg(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+) {
+  return sendMsgImpl<MsgT,ColT,f>(proxy,msg,act);
+}
+
+template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+CollectionManager::IsNotColMsgType<MsgT>
+CollectionManager::sendMsg(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+) {
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  return sendNormalMsg<MsgT,ColT>(proxy,msg,h,false,act);
 }
 
 template <
   typename MsgT,
-  ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
+  typename ColT,
+  ActiveColMemberTypedFnType<MsgT,ColT> f
 >
-void CollectionManager::sendMsg(
-  VirtualElmProxyType<
-    typename MsgT::CollectionType, typename MsgT::CollectionType::IndexType
-  > const& toProxy,
-  MsgT *msg, ActionType action
+CollectionManager::IsColMsgType<MsgT>
+CollectionManager::sendMsg(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
 ) {
-  // register the user's handler
-  HandlerType const& handler = auto_registry::makeAutoHandlerCollection<
-    typename MsgT::CollectionType, MsgT, f
-  >(msg);
-  // save the user's handler in the message
-  return sendMsgUntypedHandler<MsgT>(toProxy,msg,handler,false,action);
+  return sendMsgImpl<MsgT,ColT,f>(proxy,msg,act);
+}
+
+template <
+  typename MsgT,
+  typename ColT,
+  ActiveColMemberTypedFnType<MsgT,ColT> f
+>
+CollectionManager::IsNotColMsgType<MsgT>
+CollectionManager::sendMsg(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+) {
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  return sendNormalMsg<MsgT,ColT>(proxy,msg,h,true,act);
+}
+
+template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+void CollectionManager::sendMsgImpl(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+) {
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  return sendMsgUntypedHandler<MsgT>(proxy,msg,h,false,act);
+}
+
+template <
+  typename MsgT,
+  typename ColT,
+  ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+>
+void CollectionManager::sendMsgImpl(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+) {
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  return sendMsgUntypedHandler<MsgT>(proxy,msg,h,true,act);
 }
 
 template <typename MsgT, typename ColT, typename IdxT>
 void CollectionManager::sendMsgUntypedHandler(
-  VirtualElmProxyType<ColT, typename ColT::IndexType> const& toProxy,
-  MsgT *msg, HandlerType const& handler, bool const member, ActionType action
+  VirtualElmProxyType<ColT> const& toProxy, MsgT *msg,
+  HandlerType const& handler, bool const member, ActionType action
 ) {
   // @todo: implement the action `action' after the routing is finished
 
@@ -1126,7 +1192,9 @@ void CollectionManager::sendMsgUntypedHandler(
     // route the message to the destination using the location manager
     auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
     assert(lm != nullptr && "LM must exist");
-    lm->routeMsgSerialize(toProxy, home_node, msg, action);
+    lm->template routeMsgSerializeHandler<
+      MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
+     >(toProxy, home_node, msg, action);
     // TODO: race when proxy gets transferred off node before the LM is created
     // LocationManager::applyInstance<LocationManager::VrtColl<IndexT>>
   } else {
