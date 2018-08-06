@@ -796,12 +796,11 @@ void CollectionManager::broadcastNormalMsg(
 template <typename MsgT, typename ColT, typename IdxT>
 void CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *msg,
-  HandlerType const& handler, bool const member,
-  ActionType act, bool instrument
+  HandlerType const& handler, bool const member, ActionType act, bool instrument
 ) {
   debug_print(
     vrt_coll, node,
-    "broadcastMsg: msg={}\n", print_ptr(msg)
+    "broadcastMsgUntypedHandler: msg={}\n", print_ptr(msg)
   );
 
   auto const& this_node = theContext()->getNode();
@@ -818,7 +817,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
   debug_print(
     vrt_coll, node,
-    "broadcastMsg: col_proxy={}, found={}\n",
+    "broadcastMsgUntypedHandler: col_proxy={}, found={}\n",
     col_proxy, found_constructed
   );
 
@@ -834,7 +833,8 @@ void CollectionManager::broadcastMsgUntypedHandler(
     if (this_node != bnode) {
       debug_print(
         vrt_coll, node,
-        "broadcastMsg: col_proxy={}, sending to root node={}, handler={}\n",
+        "broadcastMsgUntypedHandler: col_proxy={}, sending to root node={}, "
+        "handler={}\n",
         col_proxy, bnode, handler
       );
 
@@ -868,12 +868,13 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
     debug_print(
       vrt_coll, node,
-      "broadcastMsg: col_proxy={}, buffering\n", col_proxy
+      "broadcastMsgUntypedHandler: col_proxy={}, buffering\n", col_proxy
     );
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       debug_print(
         vrt_coll, node,
-        "broadcastMsg: col_proxy={}, running buffered\n", col_proxy
+        "broadcastMsgUntypedHandler: col_proxy={}, running buffered\n",
+        col_proxy
       );
       theTerm()->consume(term::any_epoch_sentinel);
       theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
