@@ -316,6 +316,9 @@ CollectionManager::collectionAutoMsgDeliver(
 ) {
   auto& user_msg = msg->getMsg();
   auto user_msg_ptr = &user_msg;
+  // Be careful with type casting here..convert to typeless before
+  // reinterpreting the pointer so the compiler does not produce the wrong
+  // offset
   void* raw_ptr = static_cast<void*>(base);
   auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
   runnable::RunnableCollection<UserMsgT,UntypedCollection>::run(
@@ -330,6 +333,9 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
   NodeType from
 ) {
+  // Be careful with type casting here..convert to typeless before
+  // reinterpreting the pointer so the compiler does not produce the wrong
+  // offset
   void* raw_ptr = static_cast<void*>(base);
   auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
   runnable::RunnableCollection<MsgT,UntypedCollection>::run(
@@ -367,8 +373,6 @@ template <typename ColT, typename IndexT, typename MsgT>
       );
       if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
         assert(base != nullptr && "Must be valid pointer");
-        // be very careful here, do not touch `base' after running the active
-        // message because it might have migrated out and be invalid
         base->cur_bcast_epoch_++;
 
         backend_enable_if(
@@ -386,6 +390,8 @@ template <typename ColT, typename IndexT, typename MsgT>
           }
         );
 
+        // be very careful here, do not touch `base' after running the active
+        // message because it might have migrated out and be invalid
         auto const from = col_msg->getFromNode();
         collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
           msg,base,handler,member,from
@@ -579,12 +585,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 
   auto const sub_handler = col_msg->getVrtHandler();
   auto const member = col_msg->getMember();
-
-  // Be careful with type casting here..convert to typeless before
-  // reinterpreting the pointer so the compiler does not produce the wrong
-  // offset
   auto const col_ptr = inner_holder.getCollection();
-  void* typeless_collection = static_cast<void*>(col_ptr);
 
   debug_print(
     vrt_coll, node,
