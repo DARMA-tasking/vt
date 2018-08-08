@@ -578,7 +578,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 
   debug_print(
     vrt_coll, node,
-    "collectionMsgHandler: exists={}, idx={}\n",
+    "collectionMsgTypedHandler: exists={}, idx={}\n",
     exists, idx
   );
   assert(exists && "Proxy must exist");
@@ -591,7 +591,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 
   debug_print(
     vrt_coll, node,
-    "collectionMsgHandler: sub_handler={}\n", sub_handler
+    "collectionMsgTypedHandler: sub_handler={}\n", sub_handler
   );
 
   assert(col_ptr != nullptr && "Must be valid pointer");
@@ -600,7 +600,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     lblite, {
       debug_print(
         vrt_coll, node,
-        "collectionMsgHandler: receive msg: instrument={}\n",
+        "collectionMsgTypedHandler: receive msg: instrument={}\n",
         col_msg->lbLiteInstrument()
       );
       if (col_msg->lbLiteInstrument()) {
