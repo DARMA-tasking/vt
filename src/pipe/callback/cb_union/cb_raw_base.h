@@ -4,8 +4,11 @@
 
 #include "config.h"
 #include "pipe/callback/cb_union/cb_raw.h"
+#include "pipe/signal/signal.h"
+#include "registry/auto/auto_registry_common.h"
 
 #include <cassert>
+#include <type_traits>
 
 namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
@@ -14,8 +17,14 @@ static struct RawSendMsgTagType     { } RawSendMsgTag     { };
 static struct RawBcastMsgTagType    { } RawBcastMsgTag    { };
 static struct RawSendColMsgTagType  { } RawSendColMsgTag  { };
 static struct RawBcastColMsgTagType { } RawBcastColMsgTag { };
+static struct RawSendColDirTagType  { } RawSendColDirTag  { };
+static struct RawBcastColDirTagType { } RawBcastColDirTag { };
+
+template <typename MsgT>
+struct CallbackTyped;
 
 struct CallbackRawBaseSingle {
+  using AutoHandlerType = auto_registry::AutoHandlerType;
 
   CallbackRawBaseSingle() = default;
   CallbackRawBaseSingle(CallbackRawBaseSingle const&) = default;
@@ -38,6 +47,16 @@ struct CallbackRawBaseSingle {
   CallbackRawBaseSingle(RawAnonTagType, PipeType const& in_pipe);
   CallbackRawBaseSingle(RawSendColMsgTagType, PipeType const& in_pipe);
   CallbackRawBaseSingle(RawBcastColMsgTagType, PipeType const& in_pipe);
+  CallbackRawBaseSingle(
+    RawBcastColDirTagType, PipeType const& in_pipe,
+    HandlerType const& in_handler, AutoHandlerType const& in_vrt,
+    bool const& in_member, VirtualProxyType const& in_proxy
+  );
+  CallbackRawBaseSingle(
+    RawSendColDirTagType, PipeType const& in_pipe,
+    HandlerType const& in_handler, AutoHandlerType const& in_vrt_handler,
+    void* index_bits
+  );
 
   template <typename MsgT>
   void send(MsgT* msg);
@@ -49,7 +68,10 @@ struct CallbackRawBaseSingle {
 
   PipeType getPipe() const { return pipe_; }
 
-private:
+  template <typename MsgT>
+  friend struct CallbackTyped;
+
+protected:
   PipeType pipe_ = no_pipe;
   GeneralCallback cb_;
 };

@@ -41,6 +41,20 @@ struct BcastColMsgCB : CallbackProxyBcastTypeless {
   BcastColMsgCB() = default;
 };
 
+struct BcastColDirCB : CallbackProxyBcastDirect {
+  BcastColDirCB() = default;
+  BcastColDirCB(
+    HandlerType const& in_handler,
+    CallbackProxyBcastDirect::AutoHandlerType const& in_vrt_handler,
+    bool const& in_member, VirtualProxyType const& in_proxy
+  ) : CallbackProxyBcastDirect(in_handler, in_vrt_handler, in_member, in_proxy)
+  { }
+};
+
+struct SendColDirCB : CallbackProxyBcastDirect {
+  SendColDirCB() = default;
+};
+
 union CallbackUnion {
 
   CallbackUnion() : anon_cb_(AnonCB{}) { }
@@ -52,6 +66,8 @@ union CallbackUnion {
   explicit CallbackUnion(BcastMsgCB const& in)    : bcast_msg_cb_(in)     { }
   explicit CallbackUnion(SendColMsgCB const& in)  : send_col_msg_cb_(in)  { }
   explicit CallbackUnion(BcastColMsgCB const& in) : bcast_col_msg_cb_(in) { }
+  explicit CallbackUnion(BcastColDirCB const& in) : bcast_col_dir_cb_(in) { }
+  explicit CallbackUnion(SendColDirCB const& in)  : send_col_dir_cb_(in)  { }
   explicit CallbackUnion(AnonCB const& in)        : anon_cb_(in)          { }
 
   AnonCB        anon_cb_;
@@ -59,6 +75,8 @@ union CallbackUnion {
   BcastMsgCB    bcast_msg_cb_;
   SendColMsgCB  send_col_msg_cb_;
   BcastColMsgCB bcast_col_msg_cb_;
+  BcastColDirCB bcast_col_dir_cb_;
+  SendColDirCB  send_col_dir_cb_;
 };
 
 enum struct CallbackEnum : int8_t {
@@ -67,7 +85,9 @@ enum struct CallbackEnum : int8_t {
   BcastMsgCB    = 2,
   SendColMsgCB  = 3,
   BcastColMsgCB = 4,
-  AnonCB        = 5
+  BcastColDirCB = 5,
+  SendColDirCB  = 6,
+  AnonCB        = 7
 };
 
 struct GeneralCallback {
@@ -90,6 +110,12 @@ struct GeneralCallback {
   { }
   explicit GeneralCallback(AnonCB const& in)
     : u_(in), active_(CallbackEnum::AnonCB)
+  { }
+  explicit GeneralCallback(BcastColDirCB const& in)
+    : u_(in), active_(CallbackEnum::BcastColDirCB)
+  { }
+  explicit GeneralCallback(SendColDirCB const& in)
+    : u_(in), active_(CallbackEnum::SendColDirCB)
   { }
 
   template <typename SerializerT>

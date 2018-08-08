@@ -32,6 +32,20 @@ CallbackRawBaseSingle::CallbackRawBaseSingle(
 ) : pipe_(in_pipe), cb_(BcastColMsgCB{})
 { }
 
+CallbackRawBaseSingle::CallbackRawBaseSingle(
+  RawBcastColDirTagType, PipeType const& in_pipe,
+  HandlerType const& in_handler, AutoHandlerType const& in_vrt,
+  bool const& in_member, VirtualProxyType const& in_proxy
+) : pipe_(in_pipe), cb_(BcastColDirCB{in_handler,in_vrt,in_member,in_proxy})
+ { }
+
+// CallbackRawBaseSingle::CallbackRawBaseSingle(
+//   RawSendColDirTagType, PipeType const& in_pipe,
+//   HandlerType const& in_handler, AutoHandlerType const& in_vrt_handler,
+//   void* in_index
+// ) : pipe_(in_pipe), cb_(SendColDirCB{in_handler,in_vrt_handler,in_index})
+//  { }
+
 void CallbackRawBaseSingle::send() {
   switch (cb_.active_) {
   case CallbackEnum::SendMsgCB:
@@ -48,6 +62,12 @@ void CallbackRawBaseSingle::send() {
     break;
   case CallbackEnum::BcastColMsgCB:
     assert(0 && "void dispatch not allowed for bcast collection msg callback");
+    break;
+  case CallbackEnum::BcastColDirCB:
+    assert(0 && "void dispatch not allowed for bcast collection msg callback");
+    break;
+  case CallbackEnum::SendColDirCB:
+    assert(0 && "void dispatch not allowed for send collection msg callback");
     break;
   default:
     assert(0 && "Should not be reachable");

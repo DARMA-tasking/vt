@@ -28,6 +28,12 @@ void CallbackRawBaseSingle::send(MsgT* msg) {
   case CallbackEnum::BcastColMsgCB:
     cb_.u_.bcast_col_msg_cb_.trigger<MsgT>(msg,pipe_);
     break;
+  case CallbackEnum::SendColDirCB:
+    cb_.u_.send_col_dir_cb_.trigger<MsgT>(msg,pipe_);
+    break;
+  case CallbackEnum::BcastColDirCB:
+    cb_.u_.bcast_col_dir_cb_.trigger<MsgT>(msg,pipe_);
+    break;
   default:
     assert(0 && "Should not be reachable");
   }
