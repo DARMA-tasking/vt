@@ -175,17 +175,24 @@ void Runtime::reset() {
 
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   aborted_ = true;
-  output(abort_str,code);
+  output(abort_str,code,true);
   std::exit(code);
 }
 
-void Runtime::output(std::string const abort_str, ErrorCodeType const code) {
+void Runtime::output(
+  std::string const abort_str, ErrorCodeType const code, bool error
+) {
   NodeType const node = theContext ? theContext->getNode() : -1;
   std::string sep = "--------------";
   auto csep = sep.c_str();
-  fmt::print(stderr, "VT: runtime error: system aborting\n");
-  fmt::print(stderr, "{} Node {} Exiting: abort() invoked {}\n", csep, node, csep);
-  fmt::print(stderr, "Error code: {}\n", code);
+  if (error) {
+    fmt::print(stderr, "VT: runtime error: system aborting\n");
+    fmt::print(stderr, "{} Node {} Exiting: abort() invoked {}\n", csep, node, csep);
+  } else {
+    fmt::print(stderr, "VT: runtime warning\n");
+    fmt::print(stderr, "{} Node {} info: {}\n", csep, node, csep);
+  }
+  fmt::print(stderr, "Code: {}\n", code);
   fmt::print(stderr, "Reason: \"{}\"\n", abort_str.c_str());
 }
 
