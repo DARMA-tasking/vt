@@ -282,11 +282,8 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     data_ptr, num_bytes, dest, tag, send_tag
   );
 
-  #if backend_check_enabled(runtime_checks)
-  assert(
-    dest != theContext()->getNode() && "Destination should not be this node"
-  );
-  #endif
+  vtWarnIf(dest == theContext()->getNode(), "Destination should != this node");
+  vtAbortIf(dest >= theContext()->getNumNodes(), "Invalid destination");
 
   MPI_Isend(
     data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
