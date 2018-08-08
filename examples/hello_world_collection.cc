@@ -173,16 +173,17 @@ int main(int argc, char** argv) {
     auto const& this_node = theContext()->getNode();
     auto const& range = Index1D(num_elms);
     auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg<MyCol>(this_node);
 
     #if !LB_ENABLED
       for (int i = 0; i < num_elms; i++) {
-        auto msg = new ColMsg<MyCol>(this_node);
+        auto msg = makeSharedMessage<ColMsg<MyCol>>(this_node);
         proxy[i].send<ColMsg<MyCol>,colHan>(msg);
-        proxy[i].send<ColMsg<MyCol>,colHan2>(msg);
+        auto msg2 = makeSharedMessage<ColMsg<MyCol>>(this_node);
+        proxy[i].send<ColMsg<MyCol>,colHan2>(msg2);
       }
     #endif
 
+    auto msg = makeSharedMessage<ColMsg<MyCol>>(this_node);
     proxy.broadcast<ColMsg<MyCol>,colHan>(msg);
 
     #if LB_ENABLED
