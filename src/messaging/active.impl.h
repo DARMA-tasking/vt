@@ -85,6 +85,11 @@ EventType ActiveMessenger::sendMsg(
       "sendMsg of indirect han={}, dest={}, tag={}\n", han, dest, tag
     );
   }
+  debug_print(
+    active, node,
+    "sendMsg: (handler) han={}, msg={}, tag={}\n",
+    han, print_ptr(msg), tag
+  );
   return sendMsgSized(han, msg, sizeof(MessageT), next_action);
 }
 
@@ -373,6 +378,11 @@ EventType ActiveMessenger::sendDataCallback(
   HandlerType const& this_han = registerNewHandler(fn, no_tag);
   auto cb = static_cast<CallbackMessage*>(msg);
   cb->setCallback(this_han);
+  debug_print(
+    active, node,
+    "sendDataCallback: msg={}, this_han={}, dest={}\n",
+    print_ptr(msg), this_han, dest
+  );
   return sendMsg<MessageT,f>(dest, msg, no_tag, nullptr);
 }
 
@@ -384,13 +394,23 @@ void ActiveMessenger::sendDataCallback(
   HandlerType const& this_han = registerNewHandler(fn, no_tag);
   auto cb = static_cast<CallbackMessage*>(msg);
   cb->setCallback(this_han);
+  debug_print(
+    active, node,
+    "sendDataCallback: msg={}, han={}, dest={}\n",
+    print_ptr(msg), han, dest
+  );
   sendMsg(dest, han, msg);
 }
 
 template <typename MessageT>
 void ActiveMessenger::sendCallback(MessageT* const msg) {
   auto const& han_callback = getCurrentCallback();
-  sendMsg(han_callback, msg);
+  debug_print(
+    active, node,
+    "sendCallback: msg={}, han_callback={}\n",
+    print_ptr(msg), han_callback
+  );
+  sendMsgHan<MessageT>(han_callback, msg);
 }
 
 
