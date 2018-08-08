@@ -43,10 +43,10 @@ struct BcastColMsgCB : CallbackProxyBcastTypeless {
 
 union CallbackUnion {
 
-  /*
-   * Default constructor defined for serialization purposes
-   */
-  CallbackUnion() = default;
+  CallbackUnion() : anon_cb_(AnonCB{}) { }
+  CallbackUnion(CallbackUnion const&) = default;
+  CallbackUnion(CallbackUnion&&) = default;
+  CallbackUnion& operator=(CallbackUnion const&) = default;
 
   explicit CallbackUnion(SendMsgCB const& in)     : send_msg_cb_(in)      { }
   explicit CallbackUnion(BcastMsgCB const& in)    : bcast_msg_cb_(in)     { }
