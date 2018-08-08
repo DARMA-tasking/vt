@@ -120,7 +120,33 @@ struct GeneralCallback {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | u_ | active_;
+    s | active_;
+    switch (active_) {
+    case CallbackEnum::AnonCB:
+      s | u_.anon_cb_;
+      break;
+    case CallbackEnum::SendMsgCB:
+      s | u_.send_msg_cb_;
+      break;
+    case CallbackEnum::SendColMsgCB:
+      s | u_.send_col_msg_cb_;
+      break;
+    case CallbackEnum::BcastMsgCB:
+      s | u_.bcast_msg_cb_;
+      break;
+    case CallbackEnum::BcastColMsgCB:
+      s | u_.bcast_col_msg_cb_;
+      break;
+    case CallbackEnum::BcastColDirCB:
+      s | u_.bcast_col_dir_cb_;
+      break;
+    case CallbackEnum::NoCB:
+      assert(0 && "Trying to serialize union in invalid state");
+      break;
+    default:
+      assert(0 && "Should be unreachable");
+      break;
+    }
   }
 
   CallbackUnion u_;
