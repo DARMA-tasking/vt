@@ -9,6 +9,8 @@
 
 #include "configs/debug/debug_config.h"
 
+#include <cassert>
+
 #if backend_check_enabled(production)
   #define vtAssert(cond,str)
 #else
