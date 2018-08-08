@@ -274,6 +274,20 @@ struct CollectionManager {
    *  Broadcast message to all elements of a collection
    */
   template <typename MsgT, typename ColT>
+  IsNotColMsgType<MsgT> broadcastMsgWithHan(
+    CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
+    HandlerType const& handler, bool const member,
+    ActionType act = nullptr, bool instrument = true
+  );
+
+  template <typename MsgT, typename ColT>
+  IsColMsgType<MsgT> broadcastMsgWithHan(
+    CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
+    HandlerType const& handler, bool const member,
+    ActionType act = nullptr, bool instrument = true
+  );
+
+  template <typename MsgT, typename ColT>
   void broadcastNormalMsg(
     CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,

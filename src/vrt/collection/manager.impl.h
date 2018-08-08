@@ -782,6 +782,27 @@ void CollectionManager::broadcastMsgImpl(
 }
 
 template <typename MsgT, typename ColT>
+CollectionManager::IsColMsgType<MsgT>
+CollectionManager::broadcastMsgWithHan(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
+  HandlerType const& h, bool const mem, ActionType act, bool inst
+) {
+  using IdxT = typename ColT::IndexType;
+  ::fmt::print("broadcastMsgWithHan is col\n");
+  return broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(proxy,msg,h,mem,act,inst);
+}
+
+template <typename MsgT, typename ColT>
+CollectionManager::IsNotColMsgType<MsgT>
+CollectionManager::broadcastMsgWithHan(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
+  HandlerType const& h, bool const mem, ActionType act, bool inst
+) {
+::fmt::print("broadcastMsgWithHan is NOT col\n");
+  return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,mem,act,inst);
+}
+
+template <typename MsgT, typename ColT>
 void CollectionManager::broadcastNormalMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
   HandlerType const& handler, bool const member,
