@@ -61,7 +61,7 @@
     no_pool_alloc_env,     "Disable memory pool envelope",              \
     openmp,                "OpenMP Threading",                          \
     print_term_msgs,       "Debug-prints-TD-msgs",                      \
-    runtime_checks,        "Runtime Fidelity Checking",                 \
+    production,            "Production",                                \
     stdthread,             "std::thread Threading",                     \
     trace_enabled,         "Trace"                                      \
   )
