@@ -57,6 +57,14 @@ EventType ActiveMessenger::sendMsgSz(
 }
 
 template <typename MessageT>
+EventType ActiveMessenger::sendMsgHan(
+  HandlerType const& han, MessageT* const msg, TagType const& tag,
+  ActionType next_action
+) {
+  return sendMsg(han,msg,tag,next_action);
+}
+
+template <typename MessageT>
 EventType ActiveMessenger::sendMsg(
   HandlerType const& han, MessageT* const msg, TagType const& tag,
   ActionType next_action

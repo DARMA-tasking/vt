@@ -135,6 +135,12 @@ struct ActiveMessenger {
     ActionType next_action = nullptr
   );
 
+  template <typename MessageT>
+  EventType sendMsgHan(
+    HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag,
+    ActionType next_action = nullptr
+  );
+
   /*
    *  Auto method for dispatching to the serialization framework if required
    *  based on examining compile-time traits of the message
