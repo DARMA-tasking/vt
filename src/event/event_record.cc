@@ -46,7 +46,7 @@ bool EventRecord::testMPIEventReady() {
 
   if (ready and msg_ != nullptr and isSharedMessage(msg_)) {
     debug_print(
-      active, node,
+      verbose, active, node,
       "testMPIEventRead: deref: msg={}\n",
       print_ptr(msg_)
     );
