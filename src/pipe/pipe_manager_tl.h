@@ -21,6 +21,9 @@ struct PipeManagerTL : virtual PipeManagerBase {
 
   using CallbackType = callback::cbunion::CallbackRawBaseSingle;
 
+  template <typename MsgT>
+  using CallbackMsgType = callback::cbunion::CallbackTyped<MsgT>;
+
   /*
    *  Untyped variants of callbacks: uses union to dispatch
    */
@@ -64,6 +67,9 @@ struct PipeManagerTL : virtual PipeManagerBase {
   // Multi-staged callback
   template <typename=void>
   CallbackType makeCallback();
+
+  template <typename T>
+  CallbackMsgType<T> makeCallbackTyped();
 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   void addListener(CallbackType const& cb, NodeType const& node);

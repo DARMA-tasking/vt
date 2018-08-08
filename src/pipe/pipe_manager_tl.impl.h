@@ -33,6 +33,11 @@ PipeManagerTL::CallbackType PipeManagerTL::makeCallback() {
   return cb;
 }
 
+template <typename T>
+PipeManagerTL::CallbackMsgType<T> PipeManagerTL::makeCallbackTyped() {
+  return makeCallback();
+}
+
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 void PipeManagerTL::addListener(CallbackType const& cb, NodeType const& node) {
   auto const& han = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
