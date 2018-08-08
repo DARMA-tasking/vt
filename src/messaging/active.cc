@@ -458,6 +458,7 @@ bool ActiveMessenger::deliverActiveMsg(
 
   ActiveFnPtrType active_fun = nullptr;
 
+  bool has_ex_handler = false;
   bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
@@ -474,10 +475,13 @@ bool ActiveMessenger::deliverActiveMsg(
   } else if (is_auto) {
     active_fun = auto_registry::getAutoHandler(handler);
   } else {
-    active_fun = nullptr;
+    auto ret = theRegistry()->getHandler(handler, tag);
+    if (ret != nullptr) {
+      has_ex_handler = true;
+    }
   }
 
-  bool const& has_action_handler = active_fun != no_action;
+  bool const& has_action_handler = active_fun != no_action or has_ex_handler;
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
