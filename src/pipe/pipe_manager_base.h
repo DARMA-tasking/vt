@@ -39,6 +39,8 @@ struct PipeManagerBase {
   friend struct pipe::callback::CallbackAnonTypeless;
   friend struct pipe::callback::CallbackProxySendTypeless;
   friend struct pipe::callback::CallbackProxyBcastTypeless;
+  friend struct pipe::callback::CallbackProxySendDirect;
+  friend struct pipe::callback::CallbackProxyBcastDirect;
 
   PipeType makeCallbackFuncVoid(
     bool const& persist, FuncType fn, bool const& dispatch = false,
