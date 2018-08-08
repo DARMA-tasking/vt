@@ -2,7 +2,7 @@
 #if !defined INCLUDED_DEBUG_PRINT
 #define INCLUDED_DEBUG_PRINT
 
-#include "debug_config.h"
+#include "configs/debug/debug_config.h"
 
 #include <fmt/format.h>
 

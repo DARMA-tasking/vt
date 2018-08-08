@@ -7,7 +7,7 @@
 #include "configs/features/features_defines.h"
 #include "configs/features/features_metafeatures.h"
 #include "configs/features/features_enableif.h"
-#include "debug_printconst.h"
+#include "configs/debug/debug_printconst.h"
 
 /* Printers for configurations */
 

@@ -3,7 +3,7 @@
 #define INCLUDED_TYPES_SIZE
 
 #include "configs/debug/debug_masterconfig.h"
-#include "types_type.h"
+#include "configs/types/types_type.h"
 #include "utils/bits/bits_common.h"
 
 namespace vt {
