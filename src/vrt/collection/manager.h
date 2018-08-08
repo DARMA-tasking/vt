@@ -18,6 +18,8 @@
 #include "vrt/collection/destroy/manager_destroy_attorney.fwd.h"
 #include "vrt/collection/messages/user_wrap.h"
 #include "vrt/collection/traits/coll_msg.h"
+#include "vrt/collection/dispatch/dispatch.h"
+#include "vrt/collection/dispatch/registry.h"
 #include "vrt/proxy/collection_proxy.h"
 #include "topos/mapping/mapping_headers.h"
 #include "messaging/message.h"
@@ -64,6 +66,7 @@ struct CollectionManager {
   >;
   using CleanupFnType = std::function<void()>;
   using CleanupListFnType = std::list<CleanupFnType>;
+  using DispatchHandlerType = auto_registry::AutoHandlerType;
 
   template <typename T, typename U=void>
   using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
@@ -371,6 +374,15 @@ struct CollectionManager {
   template <typename ColT, typename IndexT, typename MsgT>
   void broadcastFromRoot(MsgT* msg);
 
+public:
+  /*
+   * Vrt collection type/handle registration for typeless dispatch
+   */
+  template <typename MsgT, typename ColT>
+  DispatchHandlerType getDispatchHandler();
+  template <typename=void>
+  DispatchBasePtrType getDispatcher(DispatchHandlerType const& han);
+
 private:
   template <typename ColT, typename MsgT>
   void bufferBroadcastMsg(
@@ -652,5 +664,7 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vrt/collection/broadcast/broadcastable.impl.h"
 #include "vrt/collection/balance/elm_stats.impl.h"
 #include "vrt/collection/types/insertable.impl.h"
+#include "vrt/collection/dispatch/dispatch.impl.h"
+#include "vrt/collection/dispatch/registry.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/

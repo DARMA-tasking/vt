@@ -21,6 +21,8 @@
 #include "vrt/collection/destroy/destroy_msg.h"
 #include "vrt/collection/destroy/destroy_handlers.h"
 #include "vrt/collection/balance/phase_msg.h"
+#include "vrt/collection/dispatch/dispatch.h"
+#include "vrt/collection/dispatch/registry.h"
 #include "vrt/proxy/collection_proxy.h"
 #include "registry/auto/map/auto_registry_map.h"
 #include "registry/auto/collection/auto_registry_collection.h"
@@ -2207,6 +2209,20 @@ void CollectionManager::releaseLBContinuation() {
     }
   }
 }
+
+template <typename MsgT, typename ColT>
+CollectionManager::DispatchHandlerType
+CollectionManager::getDispatchHandler() {
+  auto const idx = makeVrtDispatch<MsgT,ColT>();
+  return idx;
+}
+
+template <typename always_void>
+DispatchBasePtrType
+CollectionManager::getDispatcher(DispatchHandlerType const& han) {
+  return getDispatch(han);
+}
+
 
 }}} /* end namespace vt::vrt::collection */
 
