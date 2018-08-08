@@ -121,6 +121,7 @@ EventType ActiveMessenger::sendMsgBytes(
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
   auto const& is_shared = isSharedMessage(msg);
   auto const& is_term = envelopeIsTerm(msg->env);
+  auto const& is_bcast = envelopeIsBcast(msg->env);
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
@@ -141,8 +142,10 @@ EventType ActiveMessenger::sendMsgBytes(
     theTerm()->produce(epoch);
   }
 
-
-  vtWarnIf(dest == theContext()->getNode(), "Destination should != this node");
+  vtWarnIf(
+    !(dest != theContext()->getNode() || is_bcast),
+    "Destination should != this node"
+  );
   vtAbortIf(dest >= theContext()->getNumNodes(), "Invalid destination");
 
   MPI_Isend(
