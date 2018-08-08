@@ -26,6 +26,12 @@ struct CallbackBcastTypeless : CallbackBaseTL<CallbackBcastTypeless> {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
+  bool operator==(CallbackBcastTypeless const& other) const {
+    return
+      other.include_sender_ == include_sender_ &&
+      other.handler_ == handler_;
+  }
+
 public:
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe);

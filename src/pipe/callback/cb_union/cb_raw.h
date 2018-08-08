@@ -118,6 +118,30 @@ struct GeneralCallback {
     : u_(in), active_(CallbackEnum::SendColDirCB)
   { }
 
+  bool operator==(GeneralCallback const& other) const {
+    bool const same_active = other.active_ == active_;
+    if (same_active) {
+      switch (active_) {
+      case CallbackEnum::AnonCB:
+         return u_.anon_cb_ == other.u_.anon_cb_;
+      case CallbackEnum::SendMsgCB:
+        return u_.send_msg_cb_ == other.u_.send_msg_cb_;
+      case CallbackEnum::SendColMsgCB:
+        return u_.send_col_msg_cb_ == other.u_.send_col_msg_cb_;
+      case CallbackEnum::BcastMsgCB:
+        return u_.bcast_msg_cb_ == other.u_.bcast_msg_cb_;
+      case CallbackEnum::BcastColMsgCB:
+        return u_.bcast_col_msg_cb_ == other.u_.bcast_col_msg_cb_;
+      case CallbackEnum::BcastColDirCB:
+        return u_.bcast_col_dir_cb_ == other.u_.bcast_col_dir_cb_;
+      case CallbackEnum::NoCB: return true;
+      default: return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | active_;

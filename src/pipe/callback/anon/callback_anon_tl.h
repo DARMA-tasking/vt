@@ -19,6 +19,10 @@ struct CallbackAnonTypeless : CallbackBaseTL<CallbackAnonTypeless> {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
+  bool operator==(CallbackAnonTypeless const& other) const {
+    return true;
+  }
+
 public:
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe);

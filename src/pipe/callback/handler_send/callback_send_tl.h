@@ -25,6 +25,10 @@ struct CallbackSendTypeless : CallbackBaseTL<CallbackSendTypeless> {
   HandlerType getHandler() const { return handler_; }
   NodeType getSendNode() const { return send_node_; }
 
+  bool operator==(CallbackSendTypeless const& other) const {
+    return other.send_node_ == send_node_ && other.handler_ == handler_;
+  }
+
 public:
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe);

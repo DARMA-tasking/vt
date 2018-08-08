@@ -15,6 +15,10 @@ struct CallbackProxySendTypeless : CallbackBaseTL<CallbackProxySendTypeless> {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
+  bool operator==(CallbackProxySendTypeless const& other) const {
+    return true;
+  }
+
 public:
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe);
@@ -34,6 +38,12 @@ struct CallbackProxySendDirect : CallbackBaseTL<CallbackProxySendDirect> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s);
+
+  bool operator==(CallbackProxySendDirect const& other) const {
+    return
+      other.handler_ == handler_ &&
+      other.vrt_dispatch_han_ == vrt_dispatch_han_;
+  }
 
 public:
   template <typename MsgT>

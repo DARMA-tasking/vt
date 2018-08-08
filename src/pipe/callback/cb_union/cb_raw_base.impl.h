@@ -16,6 +16,11 @@ CallbackRawBaseSingle::CallbackRawBaseSingle(CallbackTyped<MsgT> in)
 { }
 
 template <typename MsgT>
+bool CallbackRawBaseSingle::operator==(CallbackTyped<MsgT> const& other) const {
+  return equal(other);
+}
+
+template <typename MsgT>
 void CallbackRawBaseSingle::send(MsgT* msg) {
   switch (cb_.active_) {
   case CallbackEnum::SendMsgCB:
