@@ -11,6 +11,11 @@
 namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
 template <typename MsgT>
+CallbackRawBaseSingle::CallbackRawBaseSingle(CallbackTyped<MsgT> in)
+  : pipe_(in.pipe_), cb_(in.cb_)
+{ }
+
+template <typename MsgT>
 void CallbackRawBaseSingle::send(MsgT* msg) {
   switch (cb_.active_) {
   case CallbackEnum::SendMsgCB:
