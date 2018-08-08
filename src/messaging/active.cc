@@ -142,7 +142,7 @@ EventType ActiveMessenger::sendMsgBytes(
   }
 
 
-  vtAbortIf(dest != theContext()->getNode(), "Destination should != this node");
+  vtAbortIf(dest == theContext()->getNode(), "Destination should != this node");
   vtAbortIf(dest >= theContext()->getNumNodes(), "Invalid destination");
 
   MPI_Isend(

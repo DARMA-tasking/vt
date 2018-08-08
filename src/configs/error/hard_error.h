@@ -32,7 +32,7 @@ inline void error(std::string const& str, ErrorCodeType error) {
   #define vtAbortCode(str,error) ::vt::error(str,error);
   #define vtAbortIf(cond,str)                     \
     do {                                          \
-      if (!(cond)) {                              \
+      if ((cond)) {                               \
         vtAbort(str);                             \
       }                                           \
     } while (false)
