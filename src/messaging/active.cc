@@ -141,11 +141,9 @@ EventType ActiveMessenger::sendMsgBytes(
     theTerm()->produce(epoch);
   }
 
-  #if backend_check_enabled(runtime_checks)
-  assert(
-    dest != theContext()->getNode() && "Destination should not be this node"
-  );
-  #endif
+
+  vtAbortIf(dest != theContext()->getNode(), "Destination should != this node");
+  vtAbortIf(dest >= theContext()->getNumNodes(), "Invalid destination");
 
   MPI_Isend(
     msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
