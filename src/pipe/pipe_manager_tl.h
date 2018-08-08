@@ -24,49 +24,75 @@ struct PipeManagerTL : virtual PipeManagerBase {
   template <typename MsgT>
   using CallbackMsgType = callback::cbunion::CallbackTyped<MsgT>;
 
+  template <typename MsgT>
+  using FnType = ActiveTypedFnType<MsgT>;
+
+  template <typename MsgT>
+  using DefType = CallbackMsgType<MsgT>;
+
+  using V = signal::SigVoidType;
+
   /*
    *  Untyped variants of callbacks: uses union to dispatch
    */
 
-  // Single active message function-handler
-  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  CallbackType makeCallbackSingleSend(NodeType const& node);
 
-  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  CallbackType makeCallbackSingleBcast(bool const& inc);
+  template <typename T, FnType<T>* f, typename CbkT = DefType<T>>
+  CbkT makeCallbackSingleSendT(NodeType const& node);
+
+  // Single active message function-handler
+  template <typename T, FnType<T>* f, typename CbkT = DefType<T>>
+  CbkT makeCallbackSingleSend(NodeType const& node);
+
+  template <typename T, FnType<T>* f, typename CbkT = DefType<T>>
+  CbkT makeCallbackSingleBcast(bool const& inc);
 
   // Single active message functor-handler
-  template <typename FunctorT>
-  CallbackType makeCallbackFunctorSend(NodeType const& node);
+  template <
+    typename FunctorT,
+    typename T = typename util::FunctorExtractor<FunctorT>::MessageType,
+    typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackFunctorSend(NodeType const& node);
 
-  template <typename FunctorT>
-  CallbackType makeCallbackFunctorBcast(bool const& inc);
+  template <
+    typename FunctorT,
+    typename T = typename util::FunctorExtractor<FunctorT>::MessageType,
+    typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackFunctorBcast(bool const& inc);
 
   // Single active message functor-handler void param
-  template <typename FunctorT>
-  CallbackType makeCallbackFunctorSendVoid(NodeType const& node);
+  template <typename FunctorT, typename CbkT = DefType<V>>
+  CbkT makeCallbackFunctorSendVoid(NodeType const& node);
 
-  template <typename FunctorT>
-  CallbackType makeCallbackFunctorBcastVoid(bool const& inc);
+  template <typename FunctorT, typename CbkT = DefType<V>>
+  CbkT makeCallbackFunctorBcastVoid(bool const& inc);
 
   // Single active message anon func-handler
-  template <typename=void>
-  CallbackType makeCallbackSingleAnonVoid(FuncVoidType fn);
+  template <typename CbkT = DefType<V>>
+  CbkT makeCallbackSingleAnonVoid(FuncVoidType fn);
 
-  template <typename MsgT>
-  CallbackType makeCallbackSingleAnon(FuncMsgType<MsgT> fn);
+  template <typename T, typename CbkT = DefType<T>>
+  CbkT makeCallbackSingleAnon(FuncMsgType<T> fn);
 
   // Single active message collection proxy send
-  template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
-  CallbackType makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
+  template <
+    typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
 
   // Single active message collection proxy bcast
-  template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
-  CallbackType makeCallbackSingleProxyBcast(ColProxyType<ColT> proxy);
+  template <
+    typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackSingleProxyBcast(ColProxyType<ColT> proxy);
 
   // Single active message collection proxy bcast direct
-  template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
-  CallbackType makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy);
+  template <
+    typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy);
 
   // Multi-staged callback
   template <typename=void>
@@ -75,20 +101,28 @@ struct PipeManagerTL : virtual PipeManagerBase {
   template <typename T>
   CallbackMsgType<T> makeCallbackTyped();
 
-  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  void addListener(CallbackType const& cb, NodeType const& node);
+  template <typename T, ActiveTypedFnType<T>* f, typename CbkT = DefType<T>>
+  void addListener(CbkT const& cb, NodeType const& node);
 
-  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  void addListenerBcast(CallbackType const& cb, bool const& inc);
+  template <typename T, ActiveTypedFnType<T>* f, typename CbkT = DefType<T>>
+  void addListenerBcast(CbkT const& cb, bool const& inc);
 
-  template <typename FunctorT>
-  void addListenerFunctor(CallbackType const& cb, NodeType const& node);
+  template <
+    typename FunctorT,
+    typename T = typename util::FunctorExtractor<FunctorT>::MessageType,
+    typename CbkT = DefType<T>
+  >
+  void addListenerFunctor(CbkT const& cb, NodeType const& node);
 
-  template <typename FunctorT>
-  void addListenerFunctorVoid(CallbackType const& cb, NodeType const& node);
+  template <typename FunctorT, typename CbkT = DefType<V>>
+  void addListenerFunctorVoid(CbkT const& cb, NodeType const& node);
 
-  template <typename FunctorT>
-  void addListenerFunctorBcast(CallbackType const& cb, bool const& inc);
+  template <
+    typename FunctorT,
+    typename T = typename util::FunctorExtractor<FunctorT>::MessageType,
+    typename CbkT = DefType<T>
+  >
+  void addListenerFunctorBcast(CbkT const& cb, bool const& inc);
 };
 
 }} /* end namespace vt::pipe */
