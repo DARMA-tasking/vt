@@ -362,13 +362,20 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       to_node, this_node, home_node
     );
 
-    if (msg->hasHandler()) {
-      auto const& handler = msg->getHandler();
-      auto const& from = msg->getFromNode();
-      auto active_fn = auto_registry::getAutoHandler(handler);
-      runnable::Runnable<MessageT>::run(handler, active_fn, msg, from);
-    } else {
-      auto trigger_msg_handler_action = [=](EntityID const& id) {
+    auto trigger_msg_handler_action = [=](EntityID const& id) {
+      bool const& has_handler = msg->hasHandler();
+      if (has_handler) {
+        auto const& handler = msg->getHandler();
+        auto const& from = msg->getFromNode();
+        auto active_fn = auto_registry::getAutoHandler(handler);
+        debug_print(
+          location, node,
+          "EntityLocationCoord: apply direct handler action: "
+          "id={}, from={}, handler={}\n",
+          id, handler
+        );
+        runnable::Runnable<MessageT>::run(handler, active_fn, msg, from);
+      } else {
         auto reg_han_iter = local_registered_msg_han_.find(id);
         assert(
           reg_han_iter != local_registered_msg_han_.end() and
@@ -376,64 +383,64 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         );
         debug_print(
           location, node,
-          "EntityLocationCoord: local registered handler: id={}\n", id
+          "EntityLocationCoord: no direct handler: id={}\n", id
         );
         reg_han_iter->second.applyRegisteredActionMsg(msg);
-      };
+      }
+    };
 
-      auto reg_iter = local_registered_.find(id);
+    auto reg_iter = local_registered_.find(id);
 
+    debug_print(
+      location, node,
+      "EntityLocationCoord: routeMsgNode: size={}\n",
+      local_registered_.size()
+    );
+
+    if (reg_iter != local_registered_.end()) {
       debug_print(
         location, node,
-        "EntityLocationCoord: routeMsgNode: size={}\n",
-        local_registered_.size()
+        "EntityLocationCoord: routeMsgNode: running actions\n"
       );
 
-      if (reg_iter != local_registered_.end()) {
-        debug_print(
-          location, node,
-          "EntityLocationCoord: routeMsgNode: running actions\n"
-        );
-
-        trigger_msg_handler_action(id);
-        if (action) {
-          action();
-        }
-      } else {
-        debug_print(
-          location, node,
-          "EntityLocationCoord: routeMsgNode: buffering\n"
-        );
-
-        messageRef(msg);
-
-        EntityID id_ = id;
-        // buffer the message here, the entity will be registered in the future
-        insertPendingEntityAction(id_, [=](NodeType resolved) {
-          auto const& this_node = theContext()->getNode();
-
-          debug_print(
-            location, node,
-            "EntityLocationCoord: routeMsgNode: trigger action: resolved={}, "
-            "this_node={}, id={}\n", resolved, this_node, id_
-          );
-
-          if (resolved == this_node) {
-            trigger_msg_handler_action(id_);
-            if (action) {
-              action();
-            }
-          } else {
-            /*
-             *  Recurse with the new updated node information. This occurs
-             *  typically when an non-migrated registration occurs off the home
-             *  node and messages are buffered, awaiting forwarding information.
-             */
-            routeMsgNode<MessageT>(serialize,id_,home_node,resolved,msg,action);
-          }
-          messageDeref(msg);
-        });
+      trigger_msg_handler_action(id);
+      if (action) {
+        action();
       }
+    } else {
+      debug_print(
+        location, node,
+        "EntityLocationCoord: routeMsgNode: buffering\n"
+      );
+
+      messageRef(msg);
+
+      EntityID id_ = id;
+      // buffer the message here, the entity will be registered in the future
+      insertPendingEntityAction(id_, [=](NodeType resolved) {
+        auto const& this_node = theContext()->getNode();
+
+        debug_print(
+          location, node,
+          "EntityLocationCoord: routeMsgNode: trigger action: resolved={}, "
+          "this_node={}, id={}\n", resolved, this_node, id_
+        );
+
+        if (resolved == this_node) {
+          trigger_msg_handler_action(id_);
+          if (action) {
+            action();
+          }
+        } else {
+          /*
+           *  Recurse with the new updated node information. This occurs
+           *  typically when an non-migrated registration occurs off the home
+           *  node and messages are buffered, awaiting forwarding information.
+           */
+          routeMsgNode<MessageT>(serialize,id_,home_node,resolved,msg,action);
+        }
+        messageDeref(msg);
+      });
     }
   }
 }
