@@ -11,12 +11,14 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <cassert>
 
 namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
 struct AnonCB : CallbackAnonTypeless { };
 
 struct SendMsgCB : CallbackSendTypeless {
+  SendMsgCB() = default;
   SendMsgCB(
     HandlerType const& in_handler, NodeType const& in_send_node
   ) : CallbackSendTypeless(in_handler, in_send_node)
@@ -24,6 +26,7 @@ struct SendMsgCB : CallbackSendTypeless {
 };
 
 struct BcastMsgCB : CallbackBcastTypeless {
+  BcastMsgCB() = default;
   BcastMsgCB(
     HandlerType const& in_handler, bool const& in_include
   ) : CallbackBcastTypeless(in_handler, in_include)

@@ -11,10 +11,11 @@
 namespace vt { namespace pipe { namespace callback {
 
 struct CallbackBcastTypeless : CallbackBaseTL<CallbackBcastTypeless> {
-
   CallbackBcastTypeless() = default;
   CallbackBcastTypeless(CallbackBcastTypeless const&) = default;
   CallbackBcastTypeless(CallbackBcastTypeless&&) = default;
+  CallbackBcastTypeless& operator=(CallbackBcastTypeless const&) = default;
+
   CallbackBcastTypeless(
     HandlerType const& in_handler, bool const& in_include
   );
