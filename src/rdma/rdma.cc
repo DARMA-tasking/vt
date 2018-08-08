@@ -1054,7 +1054,7 @@ void RDMAManager::setupChannelWithRemote(
   debug_print(
     rdma_channel, node,
     "setupChannelWithRemote: han={}, dest={}, target={}, channel={}\n",
-    han, dest, target, channel
+    han, dest, target, print_ptr(channel)
   );
 
   if (channel == nullptr) {
