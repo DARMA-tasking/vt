@@ -44,13 +44,13 @@ inline void warning(std::string const& str, ErrorCodeType error, bool quit) {
   #define vtWarnFailCode(str,error) ::vt::warning(str,error,true);
   #define vtWarnIf(cond,str)                            \
     do {                                                \
-      if (!cond) {                                      \
+      if (cond) {                                       \
         vtWarn(str);                                    \
       }                                                 \
     } while (false)
   #define vtWarnIfCode(cond,str,error)                  \
     do {                                                \
-      if (!cond) {                                      \
+      if (cond) {                                       \
         vtWarnCode(str,error);                          \
       }                                                 \
     } while (false)
