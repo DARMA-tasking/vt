@@ -175,7 +175,11 @@ void Runtime::reset() {
 
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   aborted_ = true;
+  output(abort_str,code);
+  std::exit(code);
+}
 
+void Runtime::output(std::string const abort_str, ErrorCodeType const code) {
   NodeType const node = theContext ? theContext->getNode() : -1;
   std::string sep = "--------------";
   auto csep = sep.c_str();
@@ -183,8 +187,6 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   fmt::print(stderr, "{} Node {} Exiting: abort() invoked {}\n", csep, node, csep);
   fmt::print(stderr, "Error code: {}\n", code);
   fmt::print(stderr, "Reason: \"{}\"\n", abort_str.c_str());
-
-  std::exit(code);
 }
 
 void Runtime::terminationHandler() {

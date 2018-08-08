@@ -102,10 +102,31 @@ void CollectiveAnyOps<instance>::abort(
 }
 
 template <RuntimeInstType instance>
+void CollectiveAnyOps<instance>::output(
+  std::string const str, ErrorCodeType const code
+) {
+  auto tls_rt = curRT;
+  auto rt = tls_rt ? tls_rt : ::vt::rt;
+  if (rt) {
+    rt->output(str, code);
+  } else {
+    ::fmt::print(str.c_str());
+  }
+}
+
+template <RuntimeInstType instance>
 HandlerType CollectiveAnyOps<instance>::registerHandler(ActiveClosureFnType fn) {
   return theRegistry()->registerActiveHandler(fn);
 }
 
 template struct CollectiveAnyOps<collective_default_inst>;
+
+void abort(std::string const str, ErrorCodeType const code) {
+  return CollectiveOps::abort(str,code);
+}
+
+void output(std::string const str, ErrorCodeType const code) {
+  return CollectiveOps::output(str,code);
+}
 
 } //end namespace vt

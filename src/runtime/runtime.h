@@ -60,6 +60,7 @@ struct Runtime {
   bool finalize(bool const force_now = false);
   void runScheduler();
   void abort(std::string const abort_str, ErrorCodeType const code);
+  void output(std::string const abort_str, ErrorCodeType const code);
 
   RuntimeInstType getInstanceID() const { return instance_; }
 
