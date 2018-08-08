@@ -18,6 +18,15 @@ static struct RawBcastColMsgTagType { } RawBcastColMsgTag { };
 struct CallbackRawBaseSingle {
 
   CallbackRawBaseSingle() = default;
+  CallbackRawBaseSingle(CallbackRawBaseSingle const&) = default;
+  CallbackRawBaseSingle(CallbackRawBaseSingle&&) = default;
+  CallbackRawBaseSingle& operator=(CallbackRawBaseSingle const&) = default;
+
+  // Conversion operator for moving from typed to untyped
+  template <typename MsgT>
+  CallbackRawBaseSingle(CallbackTyped<MsgT> in);
+
+  // Constructors for different types of callbacks
   CallbackRawBaseSingle(
     RawSendMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
     NodeType const& in_node

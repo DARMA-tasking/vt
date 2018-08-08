@@ -72,6 +72,9 @@ enum struct CallbackEnum : int8_t {
 
 struct GeneralCallback {
   GeneralCallback() = default;
+  GeneralCallback(GeneralCallback const&) = default;
+  GeneralCallback(GeneralCallback&&) = default;
+  GeneralCallback& operator=(GeneralCallback const&) = default;
 
   explicit GeneralCallback(SendMsgCB const& in)
     : u_(in), active_(CallbackEnum::SendMsgCB)
