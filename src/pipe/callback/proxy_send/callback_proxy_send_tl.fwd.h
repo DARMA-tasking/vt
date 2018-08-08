@@ -7,6 +7,7 @@
 namespace vt { namespace pipe { namespace callback {
 
 struct CallbackProxySendTypeless;
+struct CallbackProxySendDirect;
 
 }}} /* end namespace vt::pipe::callback */
 
