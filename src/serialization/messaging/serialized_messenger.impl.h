@@ -317,7 +317,7 @@ template <typename MsgT, typename BaseT>
   auto serialized_msg = serialize(
     *msg, [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
-      if (size > serialized_msg_eager_size) {
+      if (size >= serialized_msg_eager_size) {
         char* buf = static_cast<char*>(thePool()->alloc(ptr_size + sys_size));
         sys_msg = new (buf) SerialWrapperMsgType<MsgT>{};
         return buf + sys_size;
