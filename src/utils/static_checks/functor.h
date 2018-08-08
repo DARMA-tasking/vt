@@ -20,11 +20,12 @@ template <
   typename FunctorT,
   typename FunctorFnT = decltype(&FunctorT::operator()),
   typename Traits = FunctorTraits<FunctorFnT>,
-  typename MsgT = typename Traits::MessageType
+  typename MessageT = typename Traits::MessageType
 >
 struct FunctorExtractor {
   using FunctorType = FunctorT;
-  using MessageType = MsgT;
+  using MsgT = MessageT;
+  using MessageType = MessageT;
 };
 
 }} /* end namespace vt::util */
