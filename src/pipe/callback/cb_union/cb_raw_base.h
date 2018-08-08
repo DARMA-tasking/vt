@@ -46,9 +46,38 @@ private:
 };
 
 template <typename MsgT>
-struct CallbackRawBaseTyped : CallbackRawBaseSingle {
+struct CallbackTyped : CallbackRawBaseSingle {
+  using VoidSigType   = signal::SigVoidType;
+  template <typename T, typename U=void>
+  using IsVoidType    = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;
+  template <typename T, typename U=void>
+  using IsNotVoidType = std::enable_if_t<!std::is_same<T,VoidSigType>::value,U>;
 
-  CallbackRawBaseTyped() = default;
+  CallbackTyped() = default;
+  CallbackTyped(CallbackTyped const&) = default;
+  CallbackTyped(CallbackTyped&&) = default;
+  CallbackTyped& operator=(CallbackTyped const&) = default;
+
+  // Conversion operators to typed from untyped
+  CallbackTyped(CallbackRawBaseSingle const& other) {
+    pipe_ = other.pipe_;
+    cb_   = other.cb_;
+  }
+  CallbackTyped(CallbackRawBaseSingle&& other) {
+    pipe_ = std::move(other.pipe_);
+    cb_   = std::move(other.cb_);
+  }
+
+  template <typename MsgU>
+  IsNotVoidType<MsgU> send(MsgU* m) {
+    static_assert(std::is_same<MsgT,MsgU>::value, "Required exact type match");
+    CallbackRawBaseSingle::send<MsgU>(m);
+  }
+
+  template <typename T=void, typename=IsVoidType<MsgT,T>>
+  void send() {
+    CallbackRawBaseSingle::send();
+  }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
