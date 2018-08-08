@@ -64,6 +64,10 @@ struct PipeManagerTL : virtual PipeManagerBase {
   template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
   CallbackType makeCallbackSingleProxyBcast(ColProxyType<ColT> proxy);
 
+  // Single active message collection proxy bcast direct
+  template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
+  CallbackType makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy);
+
   // Multi-staged callback
   template <typename=void>
   CallbackType makeCallback();

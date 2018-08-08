@@ -110,7 +110,7 @@ PipeManagerTL::makeCallbackSingleProxySend(typename ColT::ProxyType proxy) {
   return cb;
 }
 
-  // Single active message collection proxy bcast
+// Single active message collection proxy bcast
 template <typename ColT, typename MsgT, PipeManagerTL::ColHanType<ColT,MsgT>* f>
 PipeManagerTL::CallbackType
 PipeManagerTL::makeCallbackSingleProxyBcast(ColProxyType<ColT> proxy) {
@@ -130,6 +130,29 @@ PipeManagerTL::makeCallbackSingleProxyBcast(ColProxyType<ColT> proxy) {
   return cb;
 }
 
+template <typename ColT, typename MsgT, PipeManagerTL::ColHanType<ColT,MsgT>* f>
+PipeManagerTL::CallbackType
+PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
+  bool const persist = true;
+  bool const send_back = false;
+  bool const dispatch = true;
+  auto const& pipe_id = makePipeID(persist,send_back);
+  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
+  auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(
+    nullptr
+  );
+  auto const& vrt_handler = theCollection()->getDispatchHandler<MsgT,ColT>();
+  bool const member = false;
+  auto cb = CallbackType(
+    callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,
+    proxy.getProxy()
+  );
+  addListenerAny<MsgT>(
+    cb.getPipe(),
+    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(handler,proxy)
+  );
+  return cb;
+}
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 PipeManagerTL::CallbackType
