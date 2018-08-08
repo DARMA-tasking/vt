@@ -49,7 +49,6 @@ struct CollectionManager {
   using NoElementActionType = std::function<void()>;
   template <typename IndexT>
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
-  using TypelessBcastFuncType = std::function<void(void*,std::size_t)>;
   using ActionContainerType = std::vector<ActionProxyType>;
   using BufferedActionType = std::unordered_map<
     VirtualProxyType, ActionContainerType
@@ -606,7 +605,6 @@ private:
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
   std::unordered_map<VirtualProxyType,ActionType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionType> user_insert_action_ = {};
-  std::unordered_map<VirtualProxyType,TypelessBcastFuncType> typeless_send_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */
