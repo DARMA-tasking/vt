@@ -11,6 +11,7 @@
 #include "pipe/msg/callback.h"
 #include "pipe/signal/signal_holder.h"
 #include "pipe/callback/anon/callback_anon.fwd.h"
+#include "pipe/callback/cb_union/cb_raw_base.h"
 #include "activefn/activefn.h"
 
 #include <unordered_map>
@@ -20,7 +21,34 @@ namespace vt { namespace pipe {
 
 struct PipeManager : PipeManagerTL, PipeManagerTyped {
 
+  template <typename FunctorT>
+  using GetMsgType = typename util::FunctorExtractor<FunctorT>::MessageType;
+  using Void = V;
+
   PipeManager();
+
+  template <typename MsgT>
+  Callback<MsgT> makeFunc(FuncMsgType<MsgT> fn);
+  Callback<Void> makeFunc(FuncVoidType fn);
+
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  Callback<MsgT> makeSend(NodeType const& node);
+  template <typename FunctorT, typename MsgT = GetMsgType<FunctorT>>
+  Callback<MsgT> makeSend(NodeType const& node);
+  template <typename FunctorT>
+  Callback<Void> makeSend(NodeType const& node);
+  template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
+  Callback<MsgT> makeSend(typename ColT::ProxyType proxy);
+
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  Callback<MsgT> makeBcast();
+  template <typename FunctorT, typename MsgT = GetMsgType<FunctorT>>
+  Callback<MsgT> makeBcast();
+  template <typename FunctorT>
+  Callback<Void> makeBast(NodeType const& node);
+  template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
+  Callback<MsgT> makeBcast(ColProxyType<ColT> proxy);
+
 
 public:
   /*
