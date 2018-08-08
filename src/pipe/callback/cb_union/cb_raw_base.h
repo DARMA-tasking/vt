@@ -88,6 +88,15 @@ struct CallbackTyped : CallbackRawBaseSingle {
 
 }}}} /* end namespace vt::pipe::callback::cbunion */
 
+namespace vt {
+
+template <typename MsgT>
+using Callback = pipe::callback::cbunion::CallbackTyped<MsgT>;
+
+using CallbackU = pipe::callback::cbunion::CallbackRawBaseSingle;
+
+} /* end namespace vt */
+
 #include "pipe/callback/cb_union/cb_raw_base.impl.h"
 
 #endif /*INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H*/
