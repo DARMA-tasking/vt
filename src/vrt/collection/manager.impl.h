@@ -1052,6 +1052,24 @@ EpochType CollectionManager::reduceMsgExpr(
   return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag,mapped_node);
 }
 
+template <typename MsgT, typename ColT>
+CollectionManager::IsNotColMsgType<MsgT>
+CollectionManager::sendMsgWithHan(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
+  HandlerType const& handler, bool const member, ActionType action
+) {
+  return sendNormalMsg<MsgT,ColT>(proxy,msg,handler,member,action);
+}
+
+template <typename MsgT, typename ColT>
+CollectionManager::IsColMsgType<MsgT>
+CollectionManager::sendMsgWithHan(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
+  HandlerType const& handler, bool const member, ActionType action
+) {
+  using IdxT = typename ColT::IndexType;
+  return sendMsgUntypedHandler<MsgT,ColT,IdxT>(proxy,msg,handler,member,action);
+}
 
 template <typename MsgT, typename ColT>
 void CollectionManager::sendNormalMsg(

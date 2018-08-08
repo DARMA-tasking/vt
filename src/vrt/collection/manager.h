@@ -143,6 +143,18 @@ struct CollectionManager {
   );
 
   template <typename MsgT, typename ColT>
+  IsNotColMsgType<MsgT> sendMsgWithHan(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
+    HandlerType const& handler, bool const member, ActionType action
+  );
+
+  template <typename MsgT, typename ColT>
+  IsColMsgType<MsgT> sendMsgWithHan(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
+    HandlerType const& handler, bool const member, ActionType action
+  );
+
+  template <typename MsgT, typename ColT>
   void sendNormalMsg(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member, ActionType action
