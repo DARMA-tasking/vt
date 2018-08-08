@@ -821,9 +821,12 @@ void CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *msg,
   HandlerType const& handler, bool const member, ActionType act, bool instrument
 ) {
+  auto const idx = makeVrtDispatch<MsgT,ColT>();
+
   debug_print(
     vrt_coll, node,
-    "broadcastMsgUntypedHandler: msg={}\n", print_ptr(msg)
+    "broadcastMsgUntypedHandler: msg={}, idx={}\n",
+    print_ptr(msg), idx
   );
 
   auto const& this_node = theContext()->getNode();
