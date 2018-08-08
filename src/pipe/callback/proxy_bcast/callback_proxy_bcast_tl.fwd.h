@@ -7,6 +7,7 @@
 namespace vt { namespace pipe { namespace callback {
 
 struct CallbackProxyBcastTypeless;
+struct CallbackProxyBcastDirect;
 
 }}} /* end namespace vt::pipe::callback */
 
