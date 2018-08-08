@@ -33,6 +33,8 @@ inline void warning(std::string const& str, ErrorCodeType error, bool quit) {
 #if backend_check_enabled(production)
   #define vtWarn(str)
   #define vtWarnCode(str,error)
+  #define vtWarnIf(cond,str)
+  #define vtWarnIfCode(cond,str,error)
   #define vtWarnFail(str)
   #define vtWarnFailCode(str,error)
 #else
@@ -40,6 +42,18 @@ inline void warning(std::string const& str, ErrorCodeType error, bool quit) {
   #define vtWarnCode(str,error)     ::vt::warning(str,error,false);
   #define vtWarnFail(str)           ::vt::warning(str,1,true);
   #define vtWarnFailCode(str,error) ::vt::warning(str,error,true);
+  #define vtWarnIf(cond,str)                            \
+    do {                                                \
+      if (!cond) {                                      \
+        vtWarn(str);                                    \
+      }                                                 \
+    } while (false)
+  #define vtWarnIfCode(cond,str,error)                  \
+    do {                                                \
+      if (!cond) {                                      \
+        vtWarnCode(str,error);                          \
+      }                                                 \
+    } while (false)
 #endif
 
 #endif /*INCLUDED_CONFIGS_ERROR_SOFT_ERROR_H*/
