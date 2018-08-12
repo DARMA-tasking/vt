@@ -180,20 +180,26 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
 }
 
 void Runtime::output(
-  std::string const abort_str, ErrorCodeType const code, bool error
+  std::string const abort_str, ErrorCodeType const code, bool error,
+  bool decorate
 ) {
   NodeType const node = theContext ? theContext->getNode() : -1;
-  std::string sep = "--------------";
-  auto csep = sep.c_str();
-  if (error) {
-    fmt::print(stderr, "VT: runtime error: system aborting\n");
-    fmt::print(stderr, "{} Node {} Exiting: abort() invoked {}\n", csep, node, csep);
+  if (decorate) {
+    std::string sep = "--------------";
+    if (error) {
+      fmt::print(stderr, "VT: runtime error: system aborting\n");
+      auto const info = ::fmt::format("Node {} Fatal Error", node);
+      fmt::print(stderr, "{:-^80}\n", info);
+    } else {
+      fmt::print(stderr, "VT: runtime warning\n");
+      auto const info = ::fmt::format("Node {} info", node);
+      fmt::print(stderr, "{:-^80}\n", info);
+    }
+    fmt::print(stderr, "Code: {}\n", code);
+    fmt::print(stderr, "{}\n", abort_str);
   } else {
-    fmt::print(stderr, "VT: runtime warning\n");
-    fmt::print(stderr, "{} Node {} info: {}\n", csep, node, csep);
+    fmt::print(stderr, "{}\n", abort_str);
   }
-  fmt::print(stderr, "Code: {}\n", code);
-  fmt::print(stderr, "Reason: \"{}\"\n", abort_str.c_str());
 }
 
 void Runtime::terminationHandler() {

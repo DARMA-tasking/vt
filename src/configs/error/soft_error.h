@@ -11,49 +11,65 @@
 
 #include "configs/debug/debug_config.h"
 #include "configs/types/types_type.h"
+#include "configs/error/common.h"
 
 #include <string>
 
+#include <fmt/format.h>
+
 namespace vt {
 
-// Forward declare abort and output signatures, defined in collective ops
-void abort(std::string const str, ErrorCodeType const code);
-void output(std::string const str, ErrorCodeType const code);
-
-inline void warning(std::string const& str, ErrorCodeType error, bool quit) {
+template <typename... Args>
+inline void warning(
+  std::string const& str, ErrorCodeType error, bool quit,
+  std::string const& file, int const line, std::string const& func,
+  Args&&... args
+) {
+  std::string const buf = ::fmt::format(str, std::forward<Args>(args)...);
+  std::string const inf = ::fmt::format(
+    "{}\n \nFile: {}\nLine: {}\nFunction: {}\n",buf,file,line,func
+  );
   if (quit) {
-    return ::vt::abort(str,error);
+    return ::vt::abort(inf,error);
   } else {
-    return ::vt::output(str,error);
+    return ::vt::output(inf,error,false,true);
   }
 }
 
 } /* end namespace vt */
 
 #if backend_check_enabled(production)
-  #define vtWarn(str)
-  #define vtWarnCode(str,error)
-  #define vtWarnIf(cond,str)
-  #define vtWarnIfCode(cond,str,error)
-  #define vtWarnFail(str)
-  #define vtWarnFailCode(str,error)
+  #define vtWarn(str,args...)
+  #define vtWarnCode(error,str,args...)
+  #define vtWarnIf(cond,str,args...)
+  #define vtWarnIfCode(error,cond,str,args...)
+  #define vtWarnFail(str,args...)
+  #define vtWarnFailCode(error,str,args...)
 #else
-  #define vtWarn(str)               ::vt::warning(str,1,false);
-  #define vtWarnCode(str,error)     ::vt::warning(str,error,false);
-  #define vtWarnFail(str)           ::vt::warning(str,1,true);
-  #define vtWarnFailCode(str,error) ::vt::warning(str,error,true);
-  #define vtWarnIf(cond,str)                            \
-    do {                                                \
-      if (cond) {                                       \
-        vtWarn(str);                                    \
-      }                                                 \
+  #define vtWarn(str,args...)                                             \
+    ::vt::warning(str,1,    false, DEBUG_LOCATION  outputArgsImpl(args));
+  #define vtWarnCode(code,str,args...)                                    \
+    ::vt::warning(str,code, false, DEBUG_LOCATION  outputArgsImpl(args));
+  #define vtWarnFail(str,args...)                                         \
+    ::vt::warning(str,1,    true,  DEBUG_LOCATION  outputArgsImpl(args));
+  #define vtWarnFailCode(code,str,args...)                                \
+    ::vt::warning(str,code, true,  DEBUG_LOCATION  outputArgsImpl(args));
+  #define vtWarnIf(cond,str,args...)                                      \
+    do {                                                                  \
+      if (cond) {                                                         \
+        vtWarn(str,args);                                                 \
+      }                                                                   \
     } while (false)
-  #define vtWarnIfCode(cond,str,error)                  \
-    do {                                                \
-      if (cond) {                                       \
-        vtWarnCode(str,error);                          \
-      }                                                 \
+  #define vtWarnIfCode(code,cond,str,args...)                             \
+    do {                                                                  \
+      if (cond) {                                                         \
+        vtWarnCode(code,str,args);                                        \
+      }                                                                   \
     } while (false)
+  #define vtWarnIfNot(cond,str,args...)                                   \
+    vtWarnIf(INVERT_COND(cond),str,args)
+  #define vtWarnIfNotCode(code,cond,str,args...)                          \
+    vtWarnIfCode(code,INVERT_COND(cond),str,args)
 #endif
 
 #endif /*INCLUDED_CONFIGS_ERROR_SOFT_ERROR_H*/

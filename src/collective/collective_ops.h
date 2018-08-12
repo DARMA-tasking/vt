@@ -31,7 +31,10 @@ struct CollectiveAnyOps {
   );
   static void setCurrentRuntimeTLS(RuntimeUnsafePtrType in_rt = nullptr);
   static void abort(std::string const str = "", ErrorCodeType const code = 1);
-  static void output(std::string const str = "", ErrorCodeType const code = 1);
+  static void output(
+    std::string const str = "", ErrorCodeType const code = 1,
+    bool error = false, bool decorate = true
+  );
 
   static HandlerType registerHandler(ActiveClosureFnType fn);
 };
@@ -40,7 +43,10 @@ using CollectiveOps = CollectiveAnyOps<collective_default_inst>;
 
 // Export the default CollectiveOps::{abort,output} to the vt namespace
 void abort(std::string const str = "", ErrorCodeType const code = 1);
-void output(std::string const str = "", ErrorCodeType const code = 1);
+void output(
+  std::string const str = "", ErrorCodeType const code = 1, bool error = false,
+  bool decorate = true
+);
 
 } //end namespace vt
 

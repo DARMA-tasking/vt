@@ -61,7 +61,8 @@ struct Runtime {
   void runScheduler();
   void abort(std::string const abort_str, ErrorCodeType const code);
   void output(
-    std::string const abort_str, ErrorCodeType const code, bool error = false
+    std::string const abort_str, ErrorCodeType const code, bool error = false,
+    bool decorate = true
   );
 
   RuntimeInstType getInstanceID() const { return instance_; }
