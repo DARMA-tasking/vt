@@ -9,33 +9,41 @@
 
 #include "configs/debug/debug_config.h"
 #include "configs/types/types_type.h"
+#include "configs/error/common.h"
+#include "configs/error/error.h"
 
 #include <string>
-
-namespace vt {
-
-// Forward declare abort and output signatures, defined in collective ops
-void abort(std::string const str, ErrorCodeType const code);
-
-inline void error(std::string const& str, ErrorCodeType error) {
-  return ::vt::abort(str,error);
-}
-
-} /* end namespace vt */
+#include <tuple>
+#include <type_traits>
 
 #if backend_check_enabled(production)
-  #define vtAbort(str)           ::vt::error(str,1);
-  #define vtAbortCode(str,error) ::vt::error(str,error);
-  #define vtAbortIf(cond,str)
+  #define vtAbort(str,args...)                                            \
+    ::vt::error::display(str,1  outputArgsImpl(args));
+  #define vtAbortCode(xy,str,args...)                                     \
+    ::vt::error::display(str,xy outputArgsImpl(args));
 #else
-  #define vtAbort(str)           ::vt::error(str,1);
-  #define vtAbortCode(str,error) ::vt::error(str,error);
-  #define vtAbortIf(cond,str)                     \
-    do {                                          \
-      if ((cond)) {                               \
-        vtAbort(str);                             \
-      }                                           \
-    } while (false)
+  #define vtAbort(str,args...)                                            \
+    ::vt::error::displayLoc(str,1, DEBUG_LOCATION outputArgsImpl(args));
+  #define vtAbortCode(xy,str,args...)                                     \
+    ::vt::error::displayLoc(str,xy,DEBUG_LOCATION outputArgsImpl(args));
 #endif
+
+#define vtAbortIf(cond,str,args...)                                       \
+  do {                                                                    \
+    if ((cond)) {                                                         \
+      vtAbort(str,args);                                                  \
+    }                                                                     \
+  } while (false)
+#define vtAbortIfCode(code,cond,str,args...)                              \
+  do {                                                                    \
+    if ((cond)) {                                                         \
+      vtAbortCode(code,str,args);                                         \
+    }                                                                     \
+  } while (false)
+
+#define vtAbortIfNot(cond,str,args...)                                    \
+  vtAbortIf(INVERT_COND(cond),str,args)
+#define vtAbortIfNotCode(code,cond,str,args...)                           \
+  vtAbortIfCode(code,INVERT_COND(cond),str,args)
 
 #endif /*INCLUDED_CONFIGS_ERROR_HARD_ERROR_H*/

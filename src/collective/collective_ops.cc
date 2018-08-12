@@ -103,12 +103,12 @@ void CollectiveAnyOps<instance>::abort(
 
 template <RuntimeInstType instance>
 void CollectiveAnyOps<instance>::output(
-  std::string const str, ErrorCodeType const code
+  std::string const str, ErrorCodeType const code, bool error, bool decorate
 ) {
   auto tls_rt = curRT;
   auto rt = tls_rt ? tls_rt : ::vt::rt;
   if (rt) {
-    rt->output(str, code);
+    rt->output(str,code,error,decorate);
   } else {
     ::fmt::print(str.c_str());
   }
@@ -125,8 +125,10 @@ void abort(std::string const str, ErrorCodeType const code) {
   return CollectiveOps::abort(str,code);
 }
 
-void output(std::string const str, ErrorCodeType const code) {
-  return CollectiveOps::output(str,code);
+void output(
+  std::string const str, ErrorCodeType const code, bool error, bool decorate
+) {
+  return CollectiveOps::output(str,code,error,decorate);
 }
 
 } //end namespace vt
