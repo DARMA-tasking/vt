@@ -58,19 +58,19 @@ void CallbackRawBaseSingle::send() {
     cb_.u_.anon_cb_.triggerVoid(pipe_);
     break;
   case CallbackEnum::SendColMsgCB:
-    assert(0 && "void dispatch not allowed for send collection msg callback");
+    vtAssert(0, "void dispatch not allowed for send collection msg callback");
     break;
   case CallbackEnum::BcastColMsgCB:
-    assert(0 && "void dispatch not allowed for bcast collection msg callback");
+    vtAssert(0, "void dispatch not allowed for bcast collection msg callback");
     break;
   case CallbackEnum::BcastColDirCB:
-    assert(0 && "void dispatch not allowed for bcast collection msg callback");
+    vtAssert(0, "void dispatch not allowed for bcast collection msg callback");
     break;
   case CallbackEnum::SendColDirCB:
-    assert(0 && "void dispatch not allowed for send collection msg callback");
+    vtAssert(0, "void dispatch not allowed for send collection msg callback");
     break;
   default:
-    assert(0 && "Should not be reachable");
+    vtAssert(0, "Should not be reachable");
   }
 }
 

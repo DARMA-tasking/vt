@@ -36,8 +36,8 @@ Barrier::BarrierStateType& Barrier::insertFindBarrier(
   }
 
   if (cont_action != nullptr) {
-    assert(
-      (not is_wait) and
+    vtAssert(
+      (not is_wait),
       "Barrier must not be waiting kind if action is associated"
     );
 
@@ -53,8 +53,8 @@ void Barrier::removeBarrier(
   auto& state = is_named ? named_barrier_state_ : unnamed_barrier_state_;
 
   auto iter = state.find(barrier);
-  assert(
-    iter != state.end() and "Barrier must exist at this point"
+  vtAssert(
+    iter != state.end(), "Barrier must exist at this point"
   );
 
   state.erase(iter);

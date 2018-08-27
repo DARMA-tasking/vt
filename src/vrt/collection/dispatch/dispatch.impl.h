@@ -42,7 +42,7 @@ void DispatchCollection<ColT,MsgT>::send(
 
 template <typename always_void_>
 VirtualProxyType DispatchCollectionBase::getDefaultProxy() const {
-  assert(default_proxy_ != no_vrt_proxy && "Must be valid proxy");
+  vtAssert(default_proxy_ != no_vrt_proxy, "Must be valid proxy");
   return default_proxy_;
 }
 

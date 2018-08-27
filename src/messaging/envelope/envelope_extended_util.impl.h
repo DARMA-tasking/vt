@@ -14,7 +14,7 @@ inline EpochType envelopeGetEpoch(Env const& env) {
   } else if (envelopeIsEpochType(env)) {
     return reinterpret_cast<EpochEnvelope const*>(&env)->epoch;
   } else {
-    assert(0 and "Envelope must be able to hold an epoch");
+    vtAssert(0, "Envelope must be able to hold an epoch");
     return no_epoch;
   }
 }
@@ -26,7 +26,7 @@ inline void envelopeSetEpoch(Env& env, EpochType const& epoch) {
   } else if (envelopeIsEpochType(env)) {
     reinterpret_cast<EpochEnvelope*>(&env)->epoch = epoch;
   } else {
-    assert(0 and "Envelope must be able to hold an epoch");
+    vtAssert(0, "Envelope must be able to hold an epoch");
   }
 }
 
@@ -37,7 +37,7 @@ inline TagType envelopeGetTag(Env const& env) {
   } else if (envelopeIsTagType(env)) {
     return reinterpret_cast<TagEnvelope const*>(&env)->tag;
   } else {
-    assert(0 and "Envelope must be able to hold an tag");
+    vtAssert(0, "Envelope must be able to hold an tag");
     return no_tag;
   }
 }
@@ -49,7 +49,7 @@ inline void envelopeSetTag(Env& env, TagType const& tag) {
   } else if (envelopeIsTagType(env)) {
     reinterpret_cast<TagEnvelope*>(&env)->tag = tag;
   } else {
-    assert(0 and "Envelope must be able to hold an tag");
+    vtAssert(0, "Envelope must be able to hold an tag");
   }
 }
 

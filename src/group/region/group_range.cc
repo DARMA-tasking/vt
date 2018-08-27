@@ -15,8 +15,8 @@ Range::Range(
   BoundType const& in_lo, BoundType const& in_hi, BoundType const& in_stride
 ) : lo_(in_lo), hi_(in_hi), stride_(in_stride)
 {
-  assert(
-    in_stride >= 1 && "Stride must be 1 more more: negative strides not allowed"
+  vtAssert(
+    in_stride >= 1, "Stride must be 1 more more: negative strides not allowed"
   );
 }
 
@@ -73,8 +73,8 @@ Range::Range(Range const& in_other, BoundType in_remove_extent)
 /*virtual*/ Range::SplitRegionType Range::split() const {
   auto const& size = getSize();
   auto const& span = (hi_ - lo_) / 2;
-  assert(
-    size >= 2 && "Size must be at least 2 to split"
+  vtAssert(
+    size >= 2, "Size must be at least 2 to split"
   );
   auto r1 = std::make_unique<Range>(lo_, lo_+span, stride_);
   auto r2 = std::make_unique<Range>(lo_+span, hi_, stride_);

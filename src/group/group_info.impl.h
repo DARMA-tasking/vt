@@ -36,8 +36,8 @@ template <typename MsgT>
   auto parent = msg->getParent();
   auto const& range = msg->getRange();
 
-  assert(
-    this_node == group_root &&
+  vtAssert(
+    this_node == group_root,
     "This msg should only be sent to the root of the new local group"
   );
 
@@ -88,7 +88,7 @@ template <typename MsgT>
 
     auto parent_cont = [msg,parent,group,op_id]{
       auto iter = theGroup()->remote_group_info_.find(group);
-      assert(iter != theGroup()->remote_group_info_.end());
+      vtAssertExpr(iter != theGroup()->remote_group_info_.end());
       auto info = iter->second.get();
 
       debug_print(
@@ -148,7 +148,7 @@ template <typename MsgT>
     // end parent region
 
     auto iter = theGroup()->remote_group_info_.find(group);
-    assert(iter != theGroup()->remote_group_info_.end());
+    vtAssertExpr(iter != theGroup()->remote_group_info_.end());
     auto info = iter->second.get();
     info->wait_count_ += num_children;
   }

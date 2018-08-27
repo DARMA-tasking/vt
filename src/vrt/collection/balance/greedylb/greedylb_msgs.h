@@ -20,7 +20,7 @@ struct GreedyPayload : GreedyLBTypes {
     auto const& this_node = theContext()->getNode();
     auto iter = load_profile_.find(this_node);
     auto end_iter = load_profile_.end();
-    assert(iter == end_iter && "Must not exist");
+    vtAssert(iter == end_iter, "Must not exist");
     load_profile_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(this_node),
@@ -43,7 +43,7 @@ struct GreedyPayload : GreedyLBTypes {
     for (auto&& elm : load2) {
       auto const& proc = elm.first;
       auto const& load = elm.second;
-      assert(load1.find(proc) == load1.end() && "Must not exist");
+      vtAssert(load1.find(proc) == load1.end(), "Must not exist");
       load1[proc] = load;
     }
     return ld1;

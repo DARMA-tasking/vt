@@ -23,7 +23,7 @@ ShallowList::ShallowList(ListType const& in_list)
 }
 
 /*virtual*/ void ShallowList::sort() {
-  assert(0 && "Can not be sorted");
+  vtAssert(0, "Can not be sorted");
 }
 
 /*virtual*/ bool ShallowList::contains(NodeType const& node) {
@@ -36,7 +36,7 @@ ShallowList::ShallowList(ListType const& in_list)
 }
 
 /*virtual*/ ShallowList::ListType const& ShallowList::makeList() {
-  assert(0 && "Can not be implemented for ShallowList");
+  vtAssert(0, "Can not be implemented for ShallowList");
   // typename ShallowList::ListType list;
   // for (auto i = 0; i < size_; i++) {
   //   list.push_back(bound_[i]);
@@ -57,8 +57,8 @@ ShallowList::ShallowList(ListType const& in_list)
 }
 
 /*virtual*/ ShallowList::SplitRegionType ShallowList::split() const {
-  assert(
-    size_ >= 2 && "Size must be at least 2 to split"
+  vtAssert(
+    size_ >= 2, "Size must be at least 2 to split"
   );
   auto const& c1_size = size_ / 2;
   auto const& c2_size = size_ - c1_size;

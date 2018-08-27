@@ -68,7 +68,7 @@ TerminationDetector::findOrCreateState(EpochType const& epoch, bool is_ready) {
   bool const local_term = is_ready;
   bool const epoch_active = is_ready;
 
-  assert(epoch != any_epoch_sentinel and "Should not be any epoch");
+  vtAssert(epoch != any_epoch_sentinel, "Should not be any epoch");
 
   auto epoch_iter = epoch_state_.find(epoch);
 
@@ -278,7 +278,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
   if (epoch != any_epoch_sentinel) {
     auto epoch_iter = epoch_state_.find(epoch);
-    assert(epoch_iter != epoch_state_.end() and "Must exist");
+    vtAssert(epoch_iter != epoch_state_.end(), "Must exist");
     epoch_state_.erase(epoch_iter);
   }
 }
@@ -522,7 +522,7 @@ void TerminationDetector::propagateNewEpoch(
 
 void TerminationDetector::readyNewEpoch(EpochType const& new_epoch) {
   if (first_resolved_epoch_ == no_epoch) {
-    assert(last_resolved_epoch_ == no_epoch);
+    vtAssertExpr(last_resolved_epoch_ == no_epoch);
     first_resolved_epoch_ = new_epoch;
     last_resolved_epoch_ = new_epoch;
   } else {

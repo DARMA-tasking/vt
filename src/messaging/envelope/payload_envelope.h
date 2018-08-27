@@ -45,7 +45,7 @@ inline PutPtrType envelopeGetPutPtr(Env const& env) {
   if (envelopeIsPut(env)) {
     return reinterpret_cast<PutType const*>(&env)->data_ptr_;
   } else {
-    assert(0 and "Envelope must be able to hold a put ptr");
+    vtAssert(0, "Envelope must be able to hold a put ptr");
     return nullptr;
   }
 }
@@ -56,7 +56,7 @@ inline PutEnvSizeType envelopeGetPutSize(Env const& env) {
   if (envelopeIsPut(env)) {
     return reinterpret_cast<PutType const*>(&env)->data_size_;
   } else {
-    assert(0 and "Envelope must be able to hold a put ptr");
+    vtAssert(0, "Envelope must be able to hold a put ptr");
     return 0;
   }
 }
@@ -67,7 +67,7 @@ inline TagType envelopeGetPutTag(Env const& env) {
   if (envelopeIsPut(env)) {
     return reinterpret_cast<PutType const*>(&env)->put_data_tag_;
   } else {
-    assert(0 and "Envelope must be able to hold a put ptr");
+    vtAssert(0, "Envelope must be able to hold a put ptr");
     return 0;
   }
 }
@@ -81,7 +81,7 @@ inline void envelopeSetPutPtr(
     reinterpret_cast<PutType*>(&env)->data_ptr_ = const_cast<PutPtrType>(ptr);
     reinterpret_cast<PutType*>(&env)->data_size_ = size;
   } else {
-    assert(0 and "Envelope must be able to hold a put ptr");
+    vtAssert(0, "Envelope must be able to hold a put ptr");
   }
 }
 
@@ -91,7 +91,7 @@ inline void envelopeSetPutPtrOnly(Env& env, PutPtrConstType ptr) {
   if (envelopeIsPut(env)) {
     reinterpret_cast<PutType*>(&env)->data_ptr_ = const_cast<PutPtrType>(ptr);
   } else {
-    assert(0 and "Envelope must be able to hold a put ptr");
+    vtAssert(0, "Envelope must be able to hold a put ptr");
   }
 }
 
@@ -101,7 +101,7 @@ inline void envelopeSetPutTag(Env& env, TagType const& in_tag) {
   if (envelopeIsPut(env)) {
     reinterpret_cast<PutType*>(&env)->put_data_tag_ = in_tag;
   } else {
-    assert(0 and "Envelope must be able to hold a put ptr");
+    vtAssert(0, "Envelope must be able to hold a put ptr");
   }
 }
 

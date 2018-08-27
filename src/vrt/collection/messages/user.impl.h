@@ -18,8 +18,8 @@ void CollectionMessage<ColT, BaseMsgT>::setVrtHandler(
 
 template <typename ColT, typename BaseMsgT>
 HandlerType CollectionMessage<ColT, BaseMsgT>::getVrtHandler() const {
-  assert(
-    vt_sub_handler_ != uninitialized_handler && "Must have a valid handler"
+  vtAssert(
+    vt_sub_handler_ != uninitialized_handler, "Must have a valid handler"
   );
   return vt_sub_handler_;
 }

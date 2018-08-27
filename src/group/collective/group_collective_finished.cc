@@ -14,8 +14,8 @@ void InfoColl::CollSetupFinished::operator()(FinishedReduceMsg* msg) {
     "CollSetupFinished: group={:x}\n", msg->getGroup()
   );
   auto iter = theGroup()->local_collective_group_info_.find(msg->getGroup());
-  assert(
-    iter != theGroup()->local_collective_group_info_.end() && "Must exist"
+  vtAssert(
+    iter != theGroup()->local_collective_group_info_.end(), "Must exist"
   );
   auto const& this_node = theContext()->getNode();
   auto info = iter->second.get();

@@ -43,8 +43,8 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(
     resizePool();
   }
 
-  assert(
-    cur_slot_+1 < holder_.size() and
+  vtAssert(
+    cur_slot_+1 < holder_.size(),
     "Must be within pool size, add capability to grow"
   );
 
@@ -72,8 +72,8 @@ void MemoryPoolEqual<num_bytes_t>::dealloc(void* const t) {
     "dealloc t={}, cur_slot={}\n", t, cur_slot_
   );
 
-  assert(
-    cur_slot_ - 1 >= 0 and "Must be greater than zero"
+  vtAssert(
+    cur_slot_ - 1 >= 0, "Must be greater than zero"
   );
 
   auto t_char = static_cast<char*>(t);

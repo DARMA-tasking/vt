@@ -37,8 +37,8 @@ TaggedSequencerVrt<SeqTag, SeqTrigger>::createVirtualSeq(
     vrt_context
   );
 
-  assert(
-    vrt_context != nullptr and "Virtual context must exist locally"
+  vtAssert(
+    vrt_context != nullptr, "Virtual context must exist locally"
   );
 
   SeqType const& next_seq = this->createSeq();
@@ -50,8 +50,8 @@ TaggedSequencerVrt<SeqTag, SeqTrigger>::createVirtualSeq(
 
   auto seq_iter = seq_vrt_lookup_.find(next_seq);
 
-  assert(
-    seq_iter == seq_vrt_lookup_.end() and "Must not exist"
+  vtAssert(
+    seq_iter == seq_vrt_lookup_.end(), "Must not exist"
   );
 
   seq_vrt_lookup_.emplace(
@@ -76,8 +76,8 @@ VirtualProxyType TaggedSequencerVrt<SeqTag, SeqTrigger>::getCurrentVirtualProxy(
 
   auto seq_iter = seq_vrt_lookup_.find(cur_seq_id);
 
-  assert(
-    seq_iter != seq_vrt_lookup_.end() and "Must exist"
+  vtAssert(
+    seq_iter != seq_vrt_lookup_.end(), "Must exist"
   );
 
   return seq_iter->second.proxy;
@@ -163,7 +163,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
   SeqType const seq_id = this->getSeqID();
   SeqNodePtrType node = this->getNode(seq_id);
 
-  assert(node != nullptr and "Must have node from context");
+  vtAssert(node != nullptr, "Must have node from context");
 
   bool const seq_ready = node->isReady();
 
@@ -222,7 +222,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
 
         action.runAction(vc, msg);
 
-        assert(node != nullptr and "node must not be nullptr");
+        vtAssert(node != nullptr, "node must not be nullptr");
 
         node->setBlockedOnNode(eSeqConstructType::WaitConstruct, false);
         node->activate();

@@ -23,12 +23,12 @@ void Scatter::scatter(
   auto scatter_msg = makeSharedMessageSz<ScatterMsg>(
     combined_size, combined_size, elm_size
   );
-  assert(total_size == combined_size && "Sizes must be consistent");
+  vtAssert(total_size == combined_size, "Sizes must be consistent");
   auto ptr = reinterpret_cast<char*>(scatter_msg) + sizeof(ScatterMsg);
   auto remaining_size = thePool()->remainingSize(
     reinterpret_cast<void*>(scatter_msg)
   );
-  assert(remaining_size >= combined_size && "Remaining size must be sufficient");
+  vtAssert(remaining_size >= combined_size, "Remaining size must be sufficient");
   debug_print(
     scatter, node,
     "Scatter::scatter: total_size={}, elm_size={}, ScatterMsg={}, msg-ptr={}, "
@@ -43,7 +43,7 @@ void Scatter::scatter(
     "Scatter::scatter: incremented size={}\n",
     nptr-ptr
   );
-  assert(nptr == ptr + combined_size && "nptr must match size");
+  vtAssert(nptr == ptr + combined_size, "nptr must match size");
   auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
   auto const& this_node = theContext()->getNode();
   scatter_msg->user_han = handler;

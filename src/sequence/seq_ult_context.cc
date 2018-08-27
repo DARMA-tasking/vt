@@ -45,7 +45,7 @@ void SeqULTContext::runStateFunc(fcontext::ContextFuncTransfer* state) {
     "SeqULTContext: runStateFunc: state={}\n", print_ptr(state)
   );
 
-  assert(state_fn_ != nullptr and "Must have valid state fn");
+  vtAssert(state_fn_ != nullptr, "Must have valid state fn");
   setCurTransferState(state);
   state_fn_();
 }
@@ -69,7 +69,7 @@ void SeqULTContext::start() {
 }
 
 void SeqULTContext::suspend() {
-  assert(cur_transfer_main_state_ != nullptr and "Must have valid state");
+  vtAssert(cur_transfer_main_state_ != nullptr, "Must have valid state");
   has_valid_context_state_ = true;
 
   debug_print_force(
@@ -83,12 +83,12 @@ void SeqULTContext::suspend() {
 }
 
 void SeqULTContext::resume() {
-  assert(has_valid_context_state_ and "Must have valid context state");
+  vtAssert(has_valid_context_state_, "Must have valid context state");
   transfer_holder_ctx_ = fcontext::jumpContext(transfer_holder_ctx_.transfer);
 }
 
 void SeqULTContext::finish() {
-  assert(has_valid_context_state_ and "Must have valid context state");
+  vtAssert(has_valid_context_state_, "Must have valid context state");
   has_valid_context_state_ = false;
   cur_transfer_main_state_ = nullptr;
 }

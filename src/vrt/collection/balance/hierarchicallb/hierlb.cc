@@ -28,8 +28,8 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 std::unique_ptr<HierarchicalLB> HierarchicalLB::hier_lb_inst = nullptr;
 
 void HierarchicalLB::setupTree(double const threshold) {
-  assert(
-    tree_setup == false &&
+  vtAssert(
+    tree_setup == false,
     "Tree must not already be set up when is this called"
   );
 
@@ -48,7 +48,7 @@ void HierarchicalLB::setupTree(double const threshold) {
     NodeType const child = this_node * hierlb_nary + node + 1;
     if (child < num_nodes) {
       auto child_iter = children.find(child);
-      assert(child_iter == children.end() && "Child must not exist");
+      vtAssert(child_iter == children.end(), "Child must not exist");
       children.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(child),
@@ -81,7 +81,7 @@ void HierarchicalLB::setupTree(double const threshold) {
           std::forward_as_tuple(std::make_unique<HierLBChild>())
         );
         auto child_iter = children.find(child);
-        assert(child_iter != children.end() && "Must exist");
+        vtAssert(child_iter != children.end(), "Must exist");
         child_iter->second->final_child = true;
         debug_print(
           hierlb, node,
@@ -238,7 +238,7 @@ void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   bin_list.pop_back();
 
   auto obj_iter = stats->find(obj_id);
-  assert(obj_iter != stats->end() && "Obj must exist in stats");
+  vtAssert(obj_iter != stats->end(), "Obj must exist in stats");
   auto const& obj_time_milli = loadMilli(obj_iter->second);
 
   this_load -= obj_time_milli;
@@ -392,7 +392,7 @@ void HierarchicalLB::transferSend(
 void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType>&& list) {
   auto trans_iter = transfers.find(from);
 
-  assert(trans_iter == transfers.end() && "There must not be an entry");
+  vtAssert(trans_iter == transfers.end(), "There must not be an entry");
 
   transfers[from] = list;
   transfer_count += list.size();
@@ -405,7 +405,7 @@ void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType>&& list) {
     );
 
     auto iter = balance::ProcStats::proc_migrate_.find(elm);
-    assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
+    vtAssert(iter != balance::ProcStats::proc_migrate_.end(), "Must exist");
     iter->second(from);
   }
 }
@@ -539,8 +539,8 @@ void HierarchicalLB::lbTreeUp(
 
           given_iter = given_objs.find(bin.first);
 
-          assert(
-            given_iter != given_objs.end() &&
+          vtAssert(
+            given_iter != given_objs.end(),
             "An insertion just took place so this must not fail"
           );
         }
@@ -557,8 +557,8 @@ void HierarchicalLB::lbTreeUp(
 
   auto child_iter = children.find(child);
 
-  assert(
-    child_iter != children.end() && "Entry must exist in children map"
+  vtAssert(
+    child_iter != children.end(), "Entry must exist in children map"
   );
 
   child_iter->second->node_size = child_size;
@@ -571,12 +571,12 @@ void HierarchicalLB::lbTreeUp(
 
   if (child_size > 0 && child_load != hierlb_no_load_sentinel) {
     auto live_iter = children.find(child);
-    assert(live_iter != children.end() && "Must exist");
+    vtAssert(live_iter != children.end(), "Must exist");
     live_iter->second->is_live = true;
   }
 
-  assert(
-    child_msgs <= children.size() &&
+  vtAssert(
+    child_msgs <= children.size(),
     "Number of children must be greater or less than"
   );
 
@@ -804,7 +804,7 @@ std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
   }
   for (auto&& r : to_remove) {
     auto giter = objs.find(r);
-    assert(giter != objs.end() && "Must exist");
+    vtAssert(giter != objs.end(), "Must exist");
     objs.erase(giter);
   }
   return total_size;
@@ -849,7 +849,7 @@ std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
   HierarchicalLB::hier_lb_inst->setupTree(
     HierarchicalLB::hier_lb_inst->hierlb_threshold
   );
-  assert(balance::ProcStats::proc_data_.size() >= phase);
+  vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase);
   HierarchicalLB::hier_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
   HierarchicalLB::hier_lb_inst->reduceLoad();
 }

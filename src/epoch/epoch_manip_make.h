@@ -21,7 +21,7 @@ namespace vt { namespace epoch {
   EpochManip::setIsUser(new_epoch, is_user);
   EpochManip::setHasCategory(new_epoch, has_category);
   if (is_rooted) {
-    assert(root_node != uninitialized_destination);
+    vtAssertExpr(root_node != uninitialized_destination);
     EpochManip::setNode(new_epoch, root_node);
   }
   if (has_category) {

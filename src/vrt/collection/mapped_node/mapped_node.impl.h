@@ -23,7 +23,7 @@ void MappedNode<ColT,IndexT,BaseProxyT>::getMappedNode() const {
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 void MappedNode<ColT,IndexT,BaseProxyT>::lookupLocation(FuncLocType fn) {
-  assert(0 && "Not implemented yet");
+  vtAssert(0, "Not implemented yet");
 }
 
 }}} /* end namespace vt::vrt::collection */

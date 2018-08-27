@@ -59,8 +59,8 @@ void Scheduler::scheduler() {
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
-  assert(
-    event_triggers.size() >= event and "Must be large enough to hold this event"
+  vtAssert(
+    event_triggers.size() >= event, "Must be large enough to hold this event"
   );
 
   for (auto& t : event_triggers[event]) {
@@ -76,8 +76,8 @@ void Scheduler::triggerEvent(SchedulerEventType const& event) {
 void Scheduler::registerTrigger(
   SchedulerEventType const& event, TriggerType trigger
 ) {
-  assert(
-    event_triggers.size() >= event and "Must be large enough to hold this event"
+  vtAssert(
+    event_triggers.size() >= event, "Must be large enough to hold this event"
   );
   event_triggers[event].push_back(trigger);
 }
@@ -85,8 +85,8 @@ void Scheduler::registerTrigger(
 void Scheduler::registerTriggerOnce(
   SchedulerEventType const& event, TriggerType trigger
 ) {
-  assert(
-    event_triggers.size() >= event and "Must be large enough to hold this event"
+  vtAssert(
+    event_triggers.size() >= event, "Must be large enough to hold this event"
   );
   event_triggers_once[event].push_back(trigger);
 }

@@ -74,18 +74,18 @@ void* Pool::pooled_alloc(
 
   if (pool_type == ePoolSize::Small) {
     auto pool = comm_thread ? small_msg.get() : s_msg_worker_[worker].get();
-    assert(
-      (comm_thread || s_msg_worker_.size() > worker) && "Must have worker pool"
+    vtAssert(
+      (comm_thread || s_msg_worker_.size() > worker), "Must have worker pool"
     );
     ret = pool->alloc(num_bytes, oversize);
   } else if (pool_type == ePoolSize::Medium) {
     auto pool = comm_thread ? medium_msg.get() : m_msg_worker_[worker].get();
-    assert(
-      (comm_thread || m_msg_worker_.size() > worker) && "Must have worker pool"
+    vtAssert(
+      (comm_thread || m_msg_worker_.size() > worker), "Must have worker pool"
     );
     ret = pool->alloc(num_bytes, oversize);
   } else {
-    assert(0 && "Pool must be valid");
+    vtAssert(0, "Pool must be valid");
     ret = nullptr;
   }
 
@@ -104,7 +104,7 @@ void Pool::pooled_dealloc(void* const buf, ePoolSize const pool_type) {
   } else if (pool_type == ePoolSize::Medium) {
     medium_msg->dealloc(buf);
   } else {
-    assert(0 && "Pool must be valid");
+    vtAssert(0, "Pool must be valid");
   }
 }
 

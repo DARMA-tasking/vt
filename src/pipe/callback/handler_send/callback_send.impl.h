@@ -33,7 +33,7 @@ void CallbackSend<MsgT>::trigger_(SignalDataType* data, PipeType const& pid) {
 
 template <typename MsgT>
 void CallbackSend<MsgT>::trigger_(SignalDataType* data) {
-  assert(0 && "Should not be reachable in this derived class");
+  vtAssert(0, "Should not be reachable in this derived class");
 }
 
 template <typename MsgT>

@@ -22,7 +22,7 @@ void ElementStats::startTime() {
 void ElementStats::stopTime() {
   auto const& stop_time = timing::Timing::getCurrentTime();
   auto const& total_time = stop_time - cur_time_;
-  //assert(cur_time_started_ && "Must have started time");
+  //vtAssert(cur_time_started_, "Must have started time");
   cur_time_started_ = false;
   addTime(total_time);
 
@@ -68,7 +68,7 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
     total_load, phase, phase_timings_.size()
   );
 
-  assert(phase_timings_.size() >= phase && "Must have phase");
+  vtAssert(phase_timings_.size() >= phase, "Must have phase");
   return total_load;
 }
 

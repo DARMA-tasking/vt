@@ -66,20 +66,20 @@ Info::Info(
 
 void Info::setup() {
   if (is_collective_) {
-    assert(is_collective_  && "Must be collective for this setup");
-    assert(!collective_    && "Collective should not be initialized");
-    assert(!is_remote_     && "Must not be remote for this setup");
-    assert(!region_        && "Region must be nullptr");
+    vtAssert(is_collective_ , "Must be collective for this setup");
+    vtAssert(!collective_   , "Collective should not be initialized");
+    vtAssert(!is_remote_    , "Must not be remote for this setup");
+    vtAssert(!region_       , "Region must be nullptr");
     return setupCollective();
   } else {
-    assert(!is_collective_ && "Must not be collective for this setup");
+    vtAssert(!is_collective_, "Must not be collective for this setup");
     return setupRooted();
   }
 }
 
 /*static*/ void Info::groupTriggerHandler(GroupOnlyMsg* msg) {
   auto const& op_id = msg->getOpID();
-  assert(op_id != no_op_id && "Must have valid op");
+  vtAssert(op_id != no_op_id, "Must have valid op");
   theGroup()->triggerContinuation(op_id);
 }
 

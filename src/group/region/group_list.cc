@@ -69,8 +69,8 @@ List::List(
 }
 
 /*virtual*/ List::BoundType List::head() const {
-  assert(
-    list_.size() > 0 && "Must be non-zero length to invoke head()"
+  vtAssert(
+    list_.size() > 0, "Must be non-zero length to invoke head()"
   );
   return list_[0];
 }
@@ -85,8 +85,8 @@ List::List(
 
 /*virtual*/ List::SplitRegionType List::split() const {
   auto const& size = getSize();
-  assert(
-    size >= 2 && "Size must be at least 2 to split"
+  vtAssert(
+    size >= 2, "Size must be at least 2 to split"
   );
 
   ListType l1, l2;

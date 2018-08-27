@@ -57,8 +57,8 @@ void EntityLocationCoord<EntityID>::registerEntity(
   auto const& this_node = theContext()->getNode();
   auto reg_iter = local_registered_.find(id);
 
-  assert(
-    reg_iter == local_registered_.end() &&
+  vtAssert(
+    reg_iter == local_registered_.end(),
     "EntityLocationCoord entity should not already be registered"
   );
 
@@ -74,8 +74,8 @@ void EntityLocationCoord<EntityID>::registerEntity(
   recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
 
   if (msg_action != nullptr) {
-    // assert(
-    //   local_registered_msg_han_.find(id) == local_registered_msg_han_.end() &&
+    // vtAssert(
+    //   local_registered_msg_han_.find(id) == local_registered_msg_han_.end(),
     //   "Entitiy should not exist in local registered msg handler"
     // );
     local_registered_msg_han_.emplace(
@@ -116,7 +116,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
      *  constructed in an alternative non-default location. Thus we need to
      *  inform the home so that messages can be forwarded.
      */
-    assert(home != uninitialized_destination && "Must have home node info");
+    vtAssert(home != uninitialized_destination, "Must have home node info");
     if (home != this_node) {
       debug_print(
         location, node,
@@ -139,8 +139,8 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
   auto reg_iter = local_registered_.find(id);
 
-  assert(
-    reg_iter != local_registered_.end() &&
+  vtAssert(
+    reg_iter != local_registered_.end(),
     "EntityLocationCoord entity must be registered"
   );
 
@@ -249,8 +249,8 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
     }
   }
 
-  assert(
-    route_to_node != uninitialized_destination &&
+  vtAssert(
+    route_to_node != uninitialized_destination,
     "Node to route to must be set by this point"
   );
 
@@ -312,7 +312,7 @@ void EntityLocationCoord<EntityID>::getLocation(
       auto const& rec = recs_.get(id);
 
       if (rec.isLocal()) {
-        assert(0 && "Should be registered if this is the case!");
+        vtAssert(0, "Should be registered if this is the case!");
         action(this_node);
       } else if (rec.isRemote()) {
         debug_print(
@@ -377,8 +377,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         runnable::Runnable<MessageT>::run(handler, active_fn, msg, from);
       } else {
         auto reg_han_iter = local_registered_msg_han_.find(id);
-        assert(
-          reg_han_iter != local_registered_msg_han_.end() and
+        vtAssert(
+          reg_han_iter != local_registered_msg_han_.end(),
           "Message handler must exist for location manager routed msg"
         );
         debug_print(
@@ -533,8 +533,8 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
   if (event_id != no_location_event_id) {
     auto pending_iter = pending_actions_.find(event_id);
 
-    assert(
-      pending_iter != pending_actions_.end() && "Event must exist in pending"
+    vtAssert(
+      pending_iter != pending_actions_.end(), "Event must exist in pending"
     );
 
     auto const& entity = pending_iter->second.entity_;

@@ -27,8 +27,8 @@ TaggedSequencer<SeqTag, SeqTrigger>::nextSeq() {
 
   auto seq_iter = seq_lookup_.find(cur_id);
 
-  assert(
-    seq_iter == seq_lookup_.end() and "New seq_id should not exist now"
+  vtAssert(
+    seq_iter == seq_lookup_.end(), "New seq_id should not exist now"
   );
 
   seq_lookup_.emplace(
@@ -42,7 +42,7 @@ TaggedSequencer<SeqTag, SeqTrigger>::nextSeq() {
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 void TaggedSequencer<SeqTag, SeqTrigger>::assertValidContext() const {
-  assert(hasContext() and "Must be in a valid sequence");
+  vtAssert(hasContext(), "Must be in a valid sequence");
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
@@ -311,7 +311,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
   SeqType const seq_id = getSeqID();
   SeqNodePtrType node = getNode(seq_id);
 
-  assert(node != nullptr and "Must have node from context");
+  vtAssert(node != nullptr, "Must have node from context");
 
   bool const seq_ready = node->isReady();
 
@@ -367,7 +367,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
 
         action.runAction(msg, false);
 
-        assert(node != nullptr and "node must not be nullptr");
+        vtAssert(node != nullptr, "node must not be nullptr");
 
         node->setBlockedOnNode(eSeqConstructType::WaitConstruct, false);
         node->activate();
@@ -423,7 +423,7 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::lookupContextExecute(
   SeqType const& id, SeqCtxFunctionType c
 ) {
   auto node_iter = node_lookup_.find(id);
-  assert(node_iter != node_lookup_.end() and "Must have valid node context");
+  vtAssert(node_iter != node_lookup_.end(), "Must have valid node context");
 
   auto seq_node = node_iter->second;
 
@@ -558,8 +558,8 @@ template <typename SeqTag, template <typename> class SeqTrigger>
 typename TaggedSequencer<SeqTag, SeqTrigger>::SeqListType&
 TaggedSequencer<SeqTag, SeqTrigger>::getSeqList(SeqType const& seq_id) {
   auto seq_iter = seq_lookup_.find(seq_id);
-  assert(
-    seq_iter != seq_lookup_.end() and "This seq_id must exit"
+  vtAssert(
+    seq_iter != seq_lookup_.end(), "This seq_id must exit"
   );
   return seq_iter->second;
 }

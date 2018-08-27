@@ -29,8 +29,8 @@ namespace vt { namespace lb { namespace instrumentation {
   NodeType const& to_node, LBEntityType const& entity
 ) {
   auto iter = migratables_.find(entity);
-  assert(
-    iter != migratables_.end() && "Entity must exist in migratables to migrate"
+  vtAssert(
+    iter != migratables_.end(), "Entity must exist in migratables to migrate"
   );
   auto const& elm = iter->second;
   elm->migrate(to_node);
@@ -62,8 +62,8 @@ namespace vt { namespace lb { namespace instrumentation {
     entity_iter = entities_.find(entity);
   }
   auto const& event_iter = events_.find(entity);
-  assert(
-    event_iter != events_.end() && "Must have begin"
+  vtAssert(
+    event_iter != events_.end(), "Must have begin"
   );
   auto const& begin_time = event_iter->second;
   auto const& end_time = timing::Timing::getCurrentTime();

@@ -26,7 +26,7 @@ template <typename T>
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename T>
 /*static*/ auto SeqMatcherVirtual<VcT, MsgT, f>::getFirstElem(T& lst) {
-  assert(lst.size() > 0 and "Must have element");
+  vtAssert(lst.size() > 0, "Must have element");
   auto elm = lst.front();
   lst.pop_front();
   return elm;
@@ -62,7 +62,7 @@ template <typename T>
 /*static*/ auto SeqMatcherVirtual<VcT, MsgT, f>::getMatchingAnyTagged(
   SeqStateTaggedContType<T>& tagged_lst, TagType const& tag
 ) {
-  assert(hasMatchingAnyTagged(tagged_lst, tag) and "Must have matching elem");
+  vtAssert(hasMatchingAnyTagged(tagged_lst, tag), "Must have matching elem");
 
   auto iter = tagged_lst.find(tag);
   auto elm = getFirstElem(iter->second);
@@ -114,7 +114,7 @@ template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ typename SeqMatcherVirtual<VcT, MsgT, f>::SeqActionType
 SeqMatcherVirtual<VcT, MsgT, f>::getMatchingAction(TagType const& tag) {
-  assert(hasMatchingAction(tag) and "Must have matching action");
+  vtAssert(hasMatchingAction(tag), "Must have matching action");
 
   if (tag == no_tag) {
 #pragma sst global seq_action

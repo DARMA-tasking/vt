@@ -9,7 +9,7 @@ namespace vt { namespace rdma {
 
 static_assert(
   sizeof(RDMA_HandleType) == sizeof(RDMA_HandlerType),
-  "RDMA Handle and RDMA Handler IDs must be the same size"
+  "RDMA Handle, RDMA Handler IDs must be the same size"
 );
 
 struct HandleManager {

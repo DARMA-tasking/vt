@@ -127,7 +127,7 @@ void SignalHolder<SignalT>::deliverAll(PipeType const& pid, DataPtrType data) {
       listeners_.erase(iter);
     }
   } else {
-    assert(0 && "At least one listener should exist");
+    vtAssert(0, "At least one listener should exist");
   }
   // if (buffer) {
   //   addSignal(pid,data);
@@ -144,7 +144,7 @@ void SignalHolder<SignalT>::addListener(PipeType const& pid, ListenerType&& cb) 
       std::forward_as_tuple(ListenerListType{})
     );
     iter = listeners_.find(pid);
-    assert(iter != listeners_.end() && "Must exist now");
+    vtAssert(iter != listeners_.end(), "Must exist now");
   }
 
   // // Deliver any pending signals

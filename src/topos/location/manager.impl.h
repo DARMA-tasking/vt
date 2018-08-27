@@ -54,8 +54,8 @@ LocationManager::getCollectionLM(VirtualProxyType const& proxy) {
   } else if (!found) {
     return nullptr;
   }
-  assert(
-    (loc_iter != collectionLoc.end() && loc_iter->second != nullptr) &&
+  vtAssert(
+    loc_iter != collectionLoc.end() && loc_iter->second != nullptr,
     "Location manager must exist now for this collection"
   );
   auto manager = loc_iter->second.get();

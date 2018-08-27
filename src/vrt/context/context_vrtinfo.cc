@@ -25,7 +25,7 @@ VirtualInfo::VirtualInfo(
 { }
 
 void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
-  assert(in_vrt_ptr != nullptr && "Must have a valid vrt ptr");
+  vtAssert(in_vrt_ptr != nullptr, "Must have a valid vrt ptr");
 
   vrt_ptr_ = std::move(in_vrt_ptr);
   is_constructed_ = true;
@@ -52,7 +52,7 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* msg) {
   auto const vc_active_fn = auto_registry::getAutoHandlerVC(sub_handler);
   auto const vc_ptr = vrt_ptr_.get();
 
-  assert(vc_ptr != nullptr && "Must be valid pointer");
+  vtAssert(vc_ptr != nullptr, "Must be valid pointer");
 
   auto work_unit = [=]{
     // @todo: fix the from node
@@ -101,7 +101,7 @@ void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {
 }
 
 VirtualContext* VirtualInfo::get() const {
-  assert(vrt_ptr_ != nullptr and "Must have a valid context");
+  vtAssert(vrt_ptr_ != nullptr, "Must have a valid context");
   return vrt_ptr_.get();
 }
 

@@ -30,9 +30,9 @@ template <typename SignalT>
 template <typename MsgT>
 /*static*/ void PipeManagerBase::triggerCallbackMsgHan(MsgT* msg) {
   auto const& is_pipe = messaging::envelopeIsPipe(msg->env);
-  assert(is_pipe && "Must be pipe type");
+  vtAssert(is_pipe, "Must be pipe type");
   auto const& pipe_id = envelopeGetGroup(msg->env);
-  assert(pipe_id != no_group && pipe_id != no_pipe && "Pipe must be valid");
+  vtAssert(pipe_id != no_group && pipe_id != no_pipe, "Pipe must be valid");
   theCB()->triggerPipeTyped<MsgT>(pipe_id,msg);
 }
 
@@ -55,7 +55,7 @@ template <typename MsgT>
 void PipeManagerBase::triggerPipeUnknown(PipeType const& pipe, MsgT* msg) {
   using SignalType = signal::Signal<MsgT>;
   auto iter = pipe_state_.find(pipe);
-  assert(iter != pipe_state_.end() && "Pipe state must exist");
+  vtAssert(iter != pipe_state_.end(), "Pipe state must exist");
 
   debug_print(
     pipe, node,
@@ -81,7 +81,7 @@ void PipeManagerBase::registerCallback(
    */
   if (update_state) {
     auto iter = pipe_state_.find(pipe);
-    assert(iter != pipe_state_.end() && "Pipe state must exist");
+    vtAssert(iter != pipe_state_.end(), "Pipe state must exist");
     iter->second.listenerReg();
   }
 }
@@ -125,7 +125,7 @@ PipeType PipeManagerBase::makeCallbackFunc(
   RefType num_signals, RefType num_listeners
 ) {
   using SignalType = signal::Signal<MsgT>;
-  assert(num_listeners > 0 && "Number of listeners must be positive");
+  vtAssert(num_listeners > 0, "Number of listeners must be positive");
   auto const& num_refs = !persist ? num_signals / num_listeners : -1;
   auto anon = std::make_unique<callback::AnonListener<SignalType>>(
     fn, persist, num_refs
@@ -140,7 +140,7 @@ template <typename MsgT, typename ListenerT>
 void PipeManagerBase::addListenerAny(PipeType const& pipe, ListenerT&& fn) {
   using SignalType = signal::Signal<MsgT>;
   auto iter = pipe_state_.find(pipe);
-  assert(iter != pipe_state_.end() && "Pipe state must exist");
+  vtAssert(iter != pipe_state_.end(), "Pipe state must exist");
   auto& state = iter->second;
   if (!state.hasDispatch()) {
     auto fn = [pipe](void* input) {
@@ -156,7 +156,7 @@ template <typename MsgT>
 void PipeManagerBase::addListener(PipeType const& pipe, FuncMsgType<MsgT> fn) {
   using SignalType = signal::Signal<MsgT>;
   auto iter = pipe_state_.find(pipe);
-  assert(iter != pipe_state_.end() && "Pipe state must exist");
+  vtAssert(iter != pipe_state_.end(), "Pipe state must exist");
   auto const& state = iter->second;
   auto const& persist = state.isPersist();
   auto const& refs = state.refsPerListener();

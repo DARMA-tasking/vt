@@ -36,7 +36,7 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
       obj, load
     );
     auto iter = balance::ProcStats::proc_migrate_.find(obj);
-    assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
+    vtAssert(iter != balance::ProcStats::proc_migrate_.end(), "Must exist");
     transfer_count++;
     iter->second(next_node);
   }
@@ -59,7 +59,7 @@ void RotateLB::finishedMigrate() {
 /*static*/ void RotateLB::rotateLBHandler(balance::RotateLBMsg* msg) {
   auto const& phase = msg->getPhase();
   RotateLB::rotate_lb_inst = std::make_unique<RotateLB>();
-  assert(balance::ProcStats::proc_data_.size() >= phase);
+  vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase);
   debug_print(
     lblite, node,
     "\t RotateLB::rotateLBHandler: phase={}\n", phase

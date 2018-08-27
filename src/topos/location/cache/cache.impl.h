@@ -33,7 +33,7 @@ template <typename KeyT, typename ValueT>
 ValueT const& LocationCache<KeyT, ValueT>::get(KeyT const& key) {
   auto iter = lookup_.find(key);
 
-  assert(iter != lookup_.end() and "Key must exist in cache");
+  vtAssert(iter != lookup_.end(), "Key must exist in cache");
 
   cache_.splice(cache_.begin(), cache_, iter->second);
 

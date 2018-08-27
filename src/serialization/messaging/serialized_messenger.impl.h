@@ -232,7 +232,7 @@ template <typename MsgT, typename BaseT>
         auto ptr = msg_ptr + msg_size + han_size + size_size;
         return ptr;
       } else {
-        assert(0 && "Must fit in remaining size (current limitation)");
+        vtAssert(0, "Must fit in remaining size (current limitation)");
         return nullptr;
       }
     }
@@ -333,8 +333,8 @@ template <typename MsgT, typename BaseT>
   auto const& group_ = envelopeGetGroup(msg->env);
 
   if (ptr_size < serialized_msg_eager_size) {
-    assert(
-      ptr_size < serialized_msg_eager_size &&
+    vtAssert(
+      ptr_size < serialized_msg_eager_size,
       "Must be smaller for eager protocol"
     );
 
@@ -414,7 +414,7 @@ template <typename MsgT, typename BaseT>
       "sendSerialMsg: non-eager: ptr_size={}\n", ptr_size
     );
 
-    assert(payload_msg == nullptr && data_sender != nullptr);
+    vtAssertExpr(payload_msg == nullptr && data_sender != nullptr);
 
     auto send_data = [=](NodeType dest){
       auto const& node = theContext()->getNode();
@@ -457,7 +457,7 @@ template <typename MsgT, typename BaseT>
 
     data_sender(send_data);
   } else {
-    assert(payload_msg != nullptr and eager_sender != nullptr);
+    vtAssertExpr(payload_msg != nullptr && eager_sender != nullptr);
 
     // move serialized msg envelope to system envelope to preserve info
     payload_msg->env = msg->env;

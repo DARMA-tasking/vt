@@ -17,7 +17,7 @@ GroupType GroupManager::newGroup(
   RegionPtrType in_region, bool const& is_collective, bool const& is_static,
   ActionGroupType action
 ) {
-  assert(!is_collective && "Must not be collective");
+  vtAssert(!is_collective, "Must not be collective");
   return newLocalGroup(std::move(in_region), is_static, action);
 }
 
@@ -76,13 +76,13 @@ GroupType GroupManager::newLocalGroup(
 
 bool GroupManager::inGroup(GroupType const& group) {
   auto iter = local_collective_group_info_.find(group);
-  assert(iter != local_collective_group_info_.end() && "Must exist");
+  vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   return iter->second->inGroup();
 }
 
 GroupManager::ReducePtrType GroupManager::groupReduce(GroupType const& group) {
   auto iter = local_collective_group_info_.find(group);
-  assert(iter != local_collective_group_info_.end() && "Must exist");
+  vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& is_default_group = iter->second->isGroupDefault();
   if (!is_default_group) {
     return iter->second->getReduce();
@@ -93,15 +93,15 @@ GroupManager::ReducePtrType GroupManager::groupReduce(GroupType const& group) {
 
 NodeType GroupManager::groupRoot(GroupType const& group) const {
   auto iter = local_collective_group_info_.find(group);
-  assert(iter != local_collective_group_info_.end() && "Must exist");
+  vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& root = iter->second->getRoot();
-  assert(root != uninitialized_destination && "Must have valid root");
+  vtAssert(root != uninitialized_destination, "Must have valid root");
   return root;
 }
 
 bool GroupManager::groupDefault(GroupType const& group) const {
   auto iter = local_collective_group_info_.find(group);
-  assert(iter != local_collective_group_info_.end() && "Must exist");
+  vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& def = iter->second->isGroupDefault();
   return def;
 }
@@ -239,7 +239,7 @@ EventType GroupManager::sendGroupCollective(
   auto const& msg = reinterpret_cast<ShortMessage* const>(base);
   auto const& group = envelopeGetGroup(msg->env);
   auto iter = local_collective_group_info_.find(group);
-  assert(iter != local_collective_group_info_.end() && "Must exist");
+  vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& info = *iter->second;
   auto const& in_group = info.inGroup();
   auto const& group_ready = info.isReady();
@@ -257,7 +257,7 @@ EventType GroupManager::sendGroupCollective(
     auto const& this_node_dest = dest == this_node;
     auto const& first_send = from == uninitialized_destination;
 
-    assert(is_group_collective && "This must be a collective group");
+    vtAssert(is_group_collective, "This must be a collective group");
 
     debug_print(
       group, node,
@@ -348,7 +348,7 @@ EventType GroupManager::sendGroupCollective(
     return no_event;
   } else {
     auto const& root_node = info.getRoot();
-    assert(!in_group && "Must not be in this group");
+    vtAssert(!in_group, "Must not be in this group");
     /*
      *  Forward message to the root node of the group; currently, only nodes
      *  that are part of the group can be in the spanning tree. Thus, this node
@@ -398,8 +398,8 @@ EventType GroupManager::sendGroup(
     messaging::MPITag::ActiveMsgTag
   );
 
-  assert(
-    !group_collective && "Collective groups are not supported"
+  vtAssert(
+    !group_collective, "Collective groups are not supported"
   );
 
   auto send_to_node = [&](NodeType node) -> EventType {
@@ -430,7 +430,7 @@ EventType GroupManager::sendGroup(
     if (is_at_root && iter->second->forward_node_ != this_node) {
       if (iter->second->forward_node_ != this_node) {
         auto& info = *iter->second;
-        assert(info.is_forward_ && "Must be a forward");
+        vtAssert(info.is_forward_, "Must be a forward");
         auto const& node = info.forward_node_;
         *deliver = false;
         return send_to_node(node);
@@ -451,9 +451,9 @@ EventType GroupManager::sendGroup(
 
       if (iter != remote_group_info_.end() && (!this_node_dest || first_send)) {
         auto& info = *iter->second;
-        assert(!info.is_forward_ && "Must not be a forward");
-        assert(
-          info.default_spanning_tree_ != nullptr && "Must have spanning tree"
+        vtAssert(!info.is_forward_, "Must not be a forward");
+        vtAssert(
+          info.default_spanning_tree_ != nullptr, "Must have spanning tree"
         );
 
         bool const& has_action = action != nullptr;

@@ -126,7 +126,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
 }
 
 void WorkerGroupOMP::spawnWorkers() {
-  assert(0 and "Not supported on OMP workers");
+  vtAssert(0, "Not supported on OMP workers");
 }
 
 void WorkerGroupOMP::joinWorkers() {
@@ -136,7 +136,7 @@ void WorkerGroupOMP::joinWorkers() {
 }
 
 void WorkerGroupOMP::enqueueAnyWorker(WorkUnitType const& work_unit) {
-  assert(initialized_ and "Must be initialized to enqueue");
+  vtAssert(initialized_, "Must be initialized to enqueue");
 
   #if WORKER_OMP_VERBOSE
   debug_print(worker, node, "WorkerGroupOMP: enqueue any worker\n");
@@ -149,8 +149,8 @@ void WorkerGroupOMP::enqueueAnyWorker(WorkUnitType const& work_unit) {
 void WorkerGroupOMP::enqueueForWorker(
   WorkerIDType const& worker_id, WorkUnitType const& work_unit
 ) {
-  assert(initialized_ and "Must be initialized to enqueue");
-  assert(worker_id < worker_state_.size() and "Worker ID must be valid");
+  vtAssert(initialized_, "Must be initialized to enqueue");
+  vtAssert(worker_id < worker_state_.size(), "Worker ID must be valid");
 
   #if WORKER_OMP_VERBOSE
   debug_print(worker, node, "WorkerGroupOMP: enqueue for id={}\n", worker_id);
@@ -161,7 +161,7 @@ void WorkerGroupOMP::enqueueForWorker(
 }
 
 void WorkerGroupOMP::enqueueAllWorkers(WorkUnitType const& work_unit) {
-  assert(initialized_ and "Must be initialized to enqueue");
+  vtAssert(initialized_, "Must be initialized to enqueue");
 
   #if WORKER_OMP_VERBOSE
   debug_print(worker, node, "WorkerGroupOMP: enqueue all workers\n");

@@ -14,8 +14,8 @@ namespace vt { namespace location {
 ) {
   auto inst_iter = loc_insts.find(inst);
 
-  assert(
-    inst_iter != loc_insts.end() &&
+  vtAssert(
+    inst_iter != loc_insts.end(),
     "LocationManager instance must exist in container"
   );
 

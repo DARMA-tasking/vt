@@ -176,7 +176,7 @@ template <typename SysMsgT>
       }
     });
   } else {
-    assert(element_created_here == false && "Element should not be created");
+    vtAssert(element_created_here == false, "Element should not be created");
   }
 
   if (!element_created_here) {
@@ -374,7 +374,7 @@ template <typename ColT, typename IndexT, typename MsgT>
         msg->bcast_epoch_, base->cur_bcast_epoch_
       );
       if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
-        assert(base != nullptr && "Must be valid pointer");
+        vtAssert(base != nullptr, "Must be valid pointer");
         base->cur_bcast_epoch_++;
 
         backend_enable_if(
@@ -581,7 +581,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     "collectionMsgTypedHandler: exists={}, idx={}\n",
     exists, idx
   );
-  assert(exists && "Proxy must exist");
+  vtAssert(exists, "Proxy must exist");
 
   auto& inner_holder = elm_holder->lookup(idx);
 
@@ -594,7 +594,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     "collectionMsgTypedHandler: sub_handler={}\n", sub_handler
   );
 
-  assert(col_ptr != nullptr && "Must be valid pointer");
+  vtAssert(col_ptr != nullptr, "Must be valid pointer");
 
   backend_enable_if(
     lblite, {
@@ -648,8 +648,8 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
   auto const bcast_node = VirtualProxyBuilder::getVirtualNode(proxy);
 
-  assert(elm_holder != nullptr && "Must have elm holder");
-  assert(this_node == bcast_node && "Must be the bcast node");
+  vtAssert(elm_holder != nullptr, "Must have elm holder");
+  vtAssert(this_node == bcast_node, "Must be the bcast node");
 
   auto const epoch = elm_holder->cur_bcast_epoch_++;
 
@@ -883,7 +883,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
       );
       iter = buffered_bcasts_.find(col_proxy);
     }
-    assert(iter != buffered_bcasts_.end() and "Must exist");
+    vtAssert(iter != buffered_bcasts_.end(), "Must exist");
 
     debug_print(
       vrt_coll, node,
@@ -951,7 +951,7 @@ EpochType CollectionManager::reduceMsgExpr(
       );
       iter = buffered_group_.find(col_proxy);
     }
-    assert(iter != buffered_group_.end() and "Must exist");
+    vtAssert(iter != buffered_group_.end(), "Must exist");
 
     theTerm()->produce(term::any_epoch_sentinel);
 
@@ -1020,7 +1020,7 @@ EpochType CollectionManager::reduceMsgExpr(
     return ret_epoch;
   } else {
     // @todo: implement this
-    assert(0);
+    vtAssertExpr(0);
     return no_epoch;
   }
 }
@@ -1053,13 +1053,13 @@ EpochType CollectionManager::reduceMsgExpr(
   using IndexT = typename ColT::IndexType;
   auto const untyped_proxy = toProxy.getProxy();
   auto constructed = constructed_.find(untyped_proxy) != constructed_.end();
-  assert(constructed && "Must be constructed");
+  vtAssert(constructed, "Must be constructed");
   auto col_holder = findColHolder<ColT,IndexT>(untyped_proxy);
   auto max_idx = col_holder->max_idx;
   auto const& this_node = theContext()->getNode();
   auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
   auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
-  assert(insert_epoch != no_epoch && "Epoch should be valid");
+  vtAssert(insert_epoch != no_epoch, "Epoch should be valid");
   bool const& is_functor =
     auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
   auto_registry::AutoActiveMapType fn = nullptr;
@@ -1237,7 +1237,7 @@ void CollectionManager::sendMsgUntypedHandler(
 
     // route the message to the destination using the location manager
     auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
-    assert(lm != nullptr && "LM must exist");
+    vtAssert(lm != nullptr, "LM must exist");
     lm->template routeMsgSerializeHandler<
       MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
      >(toProxy, home_node, msg, action);
@@ -1253,7 +1253,7 @@ void CollectionManager::sendMsgUntypedHandler(
       );
       iter = buffered_sends_.find(toProxy.getCollectionProxy());
     }
-    assert(iter != buffered_sends_.end() and "Must exist");
+    vtAssert(iter != buffered_sends_.end(), "Must exist");
 
     debug_print(
       vrt_coll, node,
@@ -1322,7 +1322,7 @@ bool CollectionManager::insertCollectionElement(
 
   auto elm_holder = findElmHolder<ColT,IndexT>(proxy);
   auto const& elm_exists = elm_holder->exists(idx);
-  assert(!elm_exists && "Must not exist at this point");
+  vtAssert(!elm_exists, "Must not exist at this point");
 
   auto const& destroyed = elm_holder->isDestroyed();
 
@@ -1689,7 +1689,7 @@ void CollectionManager::finishedInserting(
 
   if (cons_node == this_node) {
     auto iter = insert_finished_action_.find(untyped_proxy);
-    assert(iter != insert_finished_action_.end() && "Insertable should exist");
+    vtAssert(iter != insert_finished_action_.end(), "Insertable should exist");
     auto action = iter->second;
     insert_finished_action_.erase(untyped_proxy);
     action();
@@ -1754,7 +1754,7 @@ void CollectionManager::insert(
     auto const& this_node = theContext()->getNode();
     auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
     auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
-    assert(insert_epoch != no_epoch && "Epoch should be valid");
+    vtAssert(insert_epoch != no_epoch, "Epoch should be valid");
 
     bool const& is_functor =
       auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
@@ -1821,7 +1821,7 @@ void CollectionManager::insert(
       );
       iter = buffered_bcasts_.find(untyped_proxy);
     }
-    assert(iter != buffered_bcasts_.end() and "Must exist");
+    vtAssert(iter != buffered_bcasts_.end(), "Must exist");
 
     debug_print(
       vrt_coll, node,
@@ -1882,15 +1882,15 @@ MigrateStatus CollectionManager::migrateOut(
      idx
    );
    auto elm_holder = findElmHolder<ColT, IndexT>(col_proxy);
-   assert(
-     elm_holder != nullptr && "Element must be registered here"
+   vtAssert(
+     elm_holder != nullptr, "Element must be registered here"
    );
 
    #if backend_check_enabled(runtime_checks)
    {
      bool const& exists = elm_holder->exists(idx);
-     assert(
-       exists && "Local element must exist here for migration to occur"
+     vtAssert(
+       exists, "Local element must exist here for migration to occur"
      );
    }
    #endif
@@ -1977,8 +1977,8 @@ MigrateStatus CollectionManager::migrateOut(
    return MigrateStatus::MigratedToRemote;
  } else {
    #if backend_check_enabled(runtime_checks)
-     assert(
-       false && "Migration should only be called when to_node is != this_node"
+     vtAssert(
+       false, "Migration should only be called when to_node is != this_node"
      );
    #else
      // Do nothing

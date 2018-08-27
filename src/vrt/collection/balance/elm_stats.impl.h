@@ -39,7 +39,7 @@ template <typename ColT>
     print_ptr(col), col->getIndex().x(), stats.getPhase(), msg->getPhase()
   );
 
-  assert(stats.getPhase() == msg->getPhase() && "Phases must match");
+  vtAssert(stats.getPhase() == msg->getPhase(), "Phases must match");
   stats.updatePhase(1);
 
   auto const& cur_phase = msg->getPhase();

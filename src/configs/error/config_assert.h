@@ -37,12 +37,21 @@
   #define vtAssertInfo(cond,str,args...)
   #define vtAssertNot(cond,str,args...)
   #define vtAssertNotInfo(cond,str,args...)
+  #define vtAssertExpr(cond)
 #else
   #define vtAssertImpl(fail,cond,str,args...)                           \
     do {                                                                \
       if (!(cond)) {                                                    \
         ::vt::debug::assert::assertOut(                                 \
           fail,#cond,str,DEBUG_LOCATION,1 outputArgsImpl(args)          \
+        );                                                              \
+      }                                                                 \
+    } while (false)
+  #define vtAssertExprImpl(fail,cond)                                   \
+    do {                                                                \
+      if (!(cond)) {                                                    \
+        ::vt::debug::assert::assertOutExpr(                             \
+          fail,#cond,DEBUG_LOCATION,1                                   \
         );                                                              \
       }                                                                 \
     } while (false)
@@ -59,9 +68,11 @@
   #if backend_check_enabled(assert_no_fail)
     #define vtAssert(cond,str,args...)     vtAssertImpl(false,cond,str,args)
     #define vtAssertInfo(cond,str,args...) vtAssertArgImpl(false,cond,str,args)
+    #define vtAssertExpr(cond)             vtAssertExprImpl(false,cond)
   #else
     #define vtAssert(cond,str,args...)     vtAssertImpl(true,cond,str,args)
     #define vtAssertInfo(cond,str,args...) vtAssertArgImpl(true,cond,str,args)
+    #define vtAssertExpr(cond)             vtAssertExprImpl(true,cond)
   #endif
 
   #define vtAssertNot(cond,str,args...)                                 \

@@ -28,8 +28,8 @@ RDMA_HandlerType State::setRDMAGetFn(
   auto const reg_han = auto_registry::makeAutoHandlerRDMAGet<MsgT,f>(nullptr);
 
   if (any_tag) {
-    assert(
-      tag == no_tag and "If any tag, you must not have a tag set"
+    vtAssert(
+      tag == no_tag, "If any tag, you must not have a tag set"
     );
   }
 
@@ -66,8 +66,8 @@ RDMA_HandlerType State::setRDMAPutFn(
   auto const reg_han = auto_registry::makeAutoHandlerRDMAPut<MsgT,f>(nullptr);
 
   if (any_tag) {
-    assert(
-      tag == no_tag and "If any tag, you must not have a tag set"
+    vtAssert(
+      tag == no_tag, "If any tag, you must not have a tag set"
     );
   }
 

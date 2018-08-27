@@ -85,7 +85,7 @@ template <typename MsgT>
   } else if (is_auto) {
     func = auto_registry::getAutoHandler(handler);
   } else {
-    assert(0 && "Must be auto handler");
+    vtAssert(0, "Must be auto handler");
   }
 
   auto void_fn = reinterpret_cast<FnParamType<>>(func);

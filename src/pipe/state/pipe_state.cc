@@ -53,7 +53,7 @@ void PipeState::setDispatch(DispatchFuncType in_dispatch) {
 }
 
 void PipeState::dispatch(void* ptr) {
-  assert(dispatch_ != nullptr && "Dispatch function must be available");
+  vtAssert(dispatch_ != nullptr, "Dispatch function must be available");
   dispatch_(ptr);
 }
 

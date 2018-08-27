@@ -45,7 +45,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     }
   }
 
-  assert(start != start_sentinel && "String must be found");
+  vtAssert(start != start_sentinel, "String must be found");
 
   std::string  func_adapt_params;
 
@@ -66,7 +66,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     str.size() - 1 - str_offset_right_ns - str_offset_right_tn
   );
   auto const split_semi = DemanglerUtils::splitString(func_adapt_params,';');
-  assert(split_semi.size() > 0 && "Must have at least one element");
+  vtAssert(split_semi.size() > 0, "Must have at least one element");
   func_adapt_params = split_semi[0].substr(0,split_semi[0].size()-1);
 #else
   // @todo: what should we do here
@@ -123,7 +123,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     );
   }
 
-  assert(pieces.size() == 2 && "Must be two pieces");
+  vtAssert(pieces.size() == 2, "Must be two pieces");
 
   auto const func_args = pieces[0];
 

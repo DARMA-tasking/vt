@@ -21,7 +21,7 @@ bool Holder<ColT, IndexT>::exists(IndexT const& idx ) {
 
 template <typename ColT, typename IndexT>
 void Holder<ColT, IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
-  assert(!is_destroyed_ && "Must not be destroyed to insert a new element");
+  vtAssert(!is_destroyed_, "Must not be destroyed to insert a new element");
 
   auto const& lookup = idx;
   auto& container = vc_container_;
@@ -31,8 +31,8 @@ void Holder<ColT, IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
    * with this problem.
    *
    *   auto iter = container.find(lookup);
-   *   assert(
-   *     iter == container.end() &&
+   *   vtAssert(
+   *     iter == container.end(),
    *     "Entry must not exist in holder when inserting"
    *   );
    */
@@ -50,8 +50,8 @@ typename Holder<ColT, IndexT>::InnerHolder& Holder<ColT, IndexT>::lookup(
   auto const& lookup = idx;
   auto& container = vc_container_;
   auto iter = container.find(lookup);
-  assert(
-    iter != container.end() && "Entry must exist in holder when searching"
+  vtAssert(
+    iter != container.end(), "Entry must exist in holder when searching"
   );
   return iter->second;
 }
@@ -63,11 +63,11 @@ typename Holder<ColT, IndexT>::VirtualPtrType Holder<ColT, IndexT>::remove(
   auto const& lookup = idx;
   auto& container = vc_container_;
   auto iter = container.find(lookup);
-  assert(
-    iter != container.end() && "Entry must exist in holder when removing entry"
+  vtAssert(
+    iter != container.end(), "Entry must exist in holder when removing entry"
   );
   auto owned_ptr = std::move(iter->second.vc_ptr_);
-  assert(iter->second.erased_ == false && "Must not be erased already");
+  vtAssert(iter->second.erased_ == false, "Must not be erased already");
   iter->second.erased_ = true;
   num_erased_not_removed_++;
   return std::move(owned_ptr);
