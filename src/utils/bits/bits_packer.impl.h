@@ -57,8 +57,8 @@ BitPacker::setField(BitField& field, BitType const& segment) {
   #if backend_check_enabled(bit_check_overflow)
     auto const& seg_msb_bit = get_msb_bit(segment);
     //fmt::print("size={}, high bit={}\n", sizeof(BitType)*8, seg_msb_bit);
-    assert(
-      seg_msb_bit <= len and
+    vtAssert(
+      seg_msb_bit <= len,
       "bit_check_overflow: value in segment overflows specified bit length"
     );
   #endif

@@ -18,14 +18,14 @@ namespace vt { namespace lb { namespace instrumentation {
 /*static*/ NodeType CentralCollect::collect_root_ = 0;
 
 /*static*/ void CentralCollect::combine(CollectMsg* msg1, CollectMsg* msg2) {
-  assert(msg1->phase_ == msg2->phase_ && "Phases must be identical");
+  vtAssert(msg1->phase_ == msg2->phase_, "Phases must be identical");
 
   // Runtime validity check to ensure that nodes are unique
   #if backend_check_enabled(runtime_checks) || 1
   for (auto&& elm1 : msg1->entries_) {
     for (auto&& elm2 : msg2->entries_) {
-      assert(
-        elm1.first != elm2.first &&
+      vtAssert(
+        elm1.first != elm2.first,
         "CollectMsg combine must have unique entries"
       );
     }
@@ -68,8 +68,8 @@ namespace vt { namespace lb { namespace instrumentation {
   auto const& node = theContext()->getNode();
   auto msg = makeSharedMessage<CollectMsg>(phase);
   auto node_cont_iter = msg->entries_.find(node);
-  assert(
-    node_cont_iter == msg->entries_.end() &&
+  vtAssert(
+    node_cont_iter == msg->entries_.end(),
     "Entries must not exist for this node"
   );
   msg->entries_.emplace(
@@ -78,8 +78,8 @@ namespace vt { namespace lb { namespace instrumentation {
     std::forward_as_tuple(ContainerType{})
   );
   node_cont_iter = msg->entries_.find(node);
-  assert(
-    node_cont_iter != msg->entries_.end() &&
+  vtAssert(
+    node_cont_iter != msg->entries_.end(),
     "Entries must exist here for this node"
   );
   auto const& entity_list = Entity::entities_;

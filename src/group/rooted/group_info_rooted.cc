@@ -37,8 +37,8 @@ void InfoRooted::setupRooted() {
     default_spanning_tree_ = std::make_unique<TreeType>(region_list_);
     is_setup_ = true;
   } else {
-    assert(
-      size >= min_region_size &&
+    vtAssert(
+      size >= min_region_size,
       "Size of the region must be at least min_region_size"
     );
     auto const& this_node = theContext()->getNode();

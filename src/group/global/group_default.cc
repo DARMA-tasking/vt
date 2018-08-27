@@ -30,8 +30,8 @@ namespace vt { namespace group { namespace global {
 
 /*static*/ void DefaultGroup::newPhaseSendChildren(PhaseType const& phase) {
    // Initialize spanning tree for default group `default_group'
-  assert(
-    default_group_->spanning_tree_ != nullptr &&
+  vtAssert(
+    default_group_->spanning_tree_,
     "Must have valid tree when entering new phase"
   );
   if (default_group_->spanning_tree_->getNumChildren() > 0) {
@@ -59,12 +59,12 @@ namespace vt { namespace group { namespace global {
       collective::tree::tree_cons_tag_t
     );
     default_group_->this_node_ = theContext()->getNode();
-    assert(phase == 0 && "Must be first phase when initializing spanning tree");
+    vtAssert(phase == 0, "Must be first phase when initializing spanning tree");
   }
 }
 
 /*static*/ void DefaultGroup::newPhase(PhaseType const& phase) {
-  assert(default_group_->cur_phase_ == phase && "Must be on current phase");
+  vtAssert(default_group_->cur_phase_ == phase, "Must be on current phase");
 
   PhaseType const& new_phase = phase + 1;
   default_group_->cur_phase_ = new_phase;
@@ -72,8 +72,8 @@ namespace vt { namespace group { namespace global {
 }
 
 /*static*/ void DefaultGroup::sendUpTree(PhaseType const& phase) {
-  assert(
-    default_group_->spanning_tree_ != nullptr && "Must have valid tree"
+  vtAssert(
+    default_group_->spanning_tree_ != nullptr, "Must have valid tree"
   );
 
   auto const& count = default_group_->spanning_tree_->getNumChildren() + 1;

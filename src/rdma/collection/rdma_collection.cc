@@ -23,10 +23,10 @@ namespace vt { namespace rdma {
   auto const& han = rdma->registerNewRdmaHandler(false, ptr, num_bytes, true);
 
   auto iter = rdma->holder_.find(han);
-  assert(iter != rdma->holder_.end() and "Handler must exist");
+  vtAssert(iter != rdma->holder_.end(), "Handler must exist");
 
-  assert(
-    (not demand_allocate or ptr == nullptr) and
+  vtAssert(
+    (not demand_allocate or ptr == nullptr),
     "ptr should be null if on demand allocation is enabled"
   );
 
@@ -58,10 +58,10 @@ namespace vt { namespace rdma {
     rdma_handle,print_bool(is_collective),handle_getNode
   );
 
-  assert(is_collective and "Must be collective handle");
+  vtAssert(is_collective, "Must be collective handle");
 
   auto iter = rdma->holder_.find(rdma_handle);
-  assert(iter != rdma->holder_.end() and "Handler must exist");
+  vtAssert(iter != rdma->holder_.end(), "Handler must exist");
 
   auto& state = iter->second;
   auto& group = state.group_info;
@@ -124,10 +124,10 @@ namespace vt { namespace rdma {
     rdma_handle,print_bool(is_collective),handle_getNode
   );
 
-  assert(is_collective and "Must be collective handle");
+  vtAssert(is_collective, "Must be collective handle");
 
   auto iter = rdma->holder_.find(rdma_handle);
-  assert(iter != rdma->holder_.end() and "Handler must exist");
+  vtAssert(iter != rdma->holder_.end(), "Handler must exist");
 
   auto& state = iter->second;
   auto& group = state.group_info;

@@ -32,8 +32,8 @@ void Registry::swapHandler(
 ) {
   if (tag == no_tag) {
     auto iter = registered_.find(han);
-    assert(
-      iter != registered_.end() and "Handler must be registered"
+    vtAssert(
+      iter != registered_.end(), "Handler must be registered"
     );
     iter->second = fn;
   } else {

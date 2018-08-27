@@ -294,8 +294,8 @@ struct RDMAManager {
     auto const& this_node = theContext()->getNode();
     auto const& target = getTarget(han, in_target);
     bool const is_local = true;
-    assert(
-      this_node != target and "Sync get works with non-target"
+    vtAssert(
+      this_node != target, "Sync get works with non-target"
     );
     return syncChannel(is_local, han, RDMA_TypeType::Get, target, this_node, action);
   }
@@ -322,8 +322,8 @@ struct RDMAManager {
     auto const& this_node = theContext()->getNode();
     auto const& target = getTarget(han, in_target);
     bool const is_local = false;
-    assert(
-      this_node != target and "Sync get works with non-target"
+    vtAssert(
+      this_node != target, "Sync get works with non-target"
     );
     return syncChannel(is_local, han, RDMA_TypeType::Get, target, this_node, action);
   }
@@ -341,8 +341,8 @@ struct RDMAManager {
     auto const& this_node = theContext()->getNode();
     auto const& target = getTarget(han, in_target);
     bool const is_local = false;
-    assert(
-      this_node != target and "Sync remote put channel should be other target"
+    vtAssert(
+      this_node != target, "Sync remote put channel should be other target"
     );
     return syncChannel(is_local, han, RDMA_TypeType::Put, target, this_node, action);
   }
@@ -410,14 +410,14 @@ private:
     auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
     auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 
-    assert(
+    vtAssert(
       (is_collective or handler_node == this_node)
-      and "Handle must be local to this node"
+     , "Handle must be local to this node"
     );
 
     auto holder_iter = holder_.find(han);
-    assert(
-      holder_iter != holder_.end() and "Holder for handler must exist here"
+    vtAssert(
+      holder_iter != holder_.end(), "Holder for handler must exist here"
     );
 
     auto& state = holder_iter->second;
@@ -425,7 +425,7 @@ private:
     if (rdma_type == RDMAManager::RDMA_TypeType::Get) {
       return state.setRDMAGetFn<MsgT,FunctionT,f>(msg, fn, any_tag, tag);
     } else {
-      assert(0 and "Should be unreachable");
+      vtAssert(0, "Should be unreachable");
     }
   }
 
@@ -441,14 +441,14 @@ private:
     auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
     auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 
-    assert(
+    vtAssert(
       (is_collective or handler_node == this_node)
-      and "Handle must be local to this node"
+     , "Handle must be local to this node"
     );
 
     auto holder_iter = holder_.find(han);
-    assert(
-      holder_iter != holder_.end() and "Holder for handler must exist here"
+    vtAssert(
+      holder_iter != holder_.end(), "Holder for handler must exist here"
     );
 
     auto& state = holder_iter->second;
@@ -456,7 +456,7 @@ private:
     if (rdma_type == RDMAManager::RDMA_TypeType::Put) {
       return state.setRDMAPutFn<MsgT,FunctionT,f>(msg, fn, any_tag, tag);
     } else {
-      assert(0 and "Should be unreachable");
+      vtAssert(0, "Should be unreachable");
     }
   }
 

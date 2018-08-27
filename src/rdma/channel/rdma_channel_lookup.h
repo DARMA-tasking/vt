@@ -20,8 +20,8 @@ struct ChannelLookup {
     NodeType const& in_non_target
   ) : handle(han), target(in_target), non_target(in_non_target)
   {
-    assert(target != uninitialized_destination);
-    assert(non_target != uninitialized_destination);
+    vtAssertExpr(target != uninitialized_destination);
+    vtAssertExpr(non_target != uninitialized_destination);
   }
 
   ChannelLookup(ChannelLookup const&) = default;

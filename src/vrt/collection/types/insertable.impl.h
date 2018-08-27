@@ -17,12 +17,12 @@ void Insertable<ColT,IndexT>::insert(IndexT const& idx, NodeType const& node) {
 
 template <typename ColT, typename IndexT>
 void Insertable<ColT,IndexT>::beginInserting() {
-    assert(doneInserting == false and "Must not be done inserting");
+    vtAssert(doneInserting == false, "Must not be done inserting");
 }
 
 template <typename ColT, typename IndexT>
 void Insertable<ColT,IndexT>::finishInserting() {
-  assert(doneInserting == false and "Must not be done inserting");
+  vtAssert(doneInserting == false, "Must not be done inserting");
   doneInserting = true;
   // barrier, make sure that size is consistent
 }

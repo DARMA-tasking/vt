@@ -219,13 +219,13 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
   };
 
   auto grouped_end = [&]() -> TraceEventIDType {
-    assert(
-      not open_events_.empty() and "Stack should be empty"
+    vtAssert(
+      not open_events_.empty(), "Stack should be empty"
     );
 
-    assert(
+    vtAssert(
       open_events_.top()->ep == log->ep and
-      open_events_.top()->type == TraceConstantsType::BeginProcessing and
+      open_events_.top()->type == TraceConstantsType::BeginProcessing,
       "Top event should be correct type and event"
     );
 
@@ -281,7 +281,7 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     return basic_no_event_create();
     break;
   default:
-    assert(0 and "Not implemented");
+    vtAssert(0, "Not implemented");
     return 0;
     break;
   }
@@ -368,9 +368,9 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
 
     auto event_iter = TraceContainersType::getEventContainer().find(log->ep);
 
-    assert(
+    vtAssert(
       log->ep == no_trace_entry_id or
-      event_iter != TraceContainersType::getEventContainer().end() and
+      event_iter != TraceContainersType::getEventContainer().end(),
       "Event must exist that was logged"
     );
 
@@ -455,10 +455,10 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
       );
       break;
     case TraceConstantsType::MessageRecv:
-      assert(0);
+      vtAssertExpr(0);
       break;
     default:
-      assert(0);
+      vtAssertExpr(0);
     }
 
     delete log;

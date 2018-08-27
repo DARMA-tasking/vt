@@ -28,7 +28,7 @@ struct Region {
     RegionElmSizeType const& in_elm_size = no_elm_size
   ) : lo(in_lo), hi(in_hi), sd(in_sd), elm_size(in_elm_size)
   {
-    assert(sd == 1);
+    vtAssertExpr(sd == 1);
   }
 
   bool hasElmSize() const {

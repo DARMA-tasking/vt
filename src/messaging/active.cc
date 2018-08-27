@@ -62,8 +62,8 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
       memory_pool_active                 &&
       put_size <= rem_size               &&
       put_size <= max_pack_direct_size;
-    assert(
-      (!(put_size != 0) || put_ptr) && "Must have valid ptr if size > 0"
+    vtAssert(
+      (!(put_size != 0) || put_ptr), "Must have valid ptr if size > 0"
     );
     if (!is_term || backend_check_enabled(print_term_msgs)) {
       debug_print(
@@ -144,9 +144,11 @@ EventType ActiveMessenger::sendMsgBytes(
 
   vtWarnIf(
     !(dest != theContext()->getNode() || is_bcast),
-    "Destination should != this node"
+    "Destination {} should != this node", dest
   );
-  vtAbortIf(dest >= theContext()->getNumNodes(), "Invalid destination");
+  vtAbortIf(
+    dest >= theContext()->getNumNodes(), "Invalid destination: {}", dest
+  );
 
   MPI_Isend(
     msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
@@ -290,8 +292,14 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     data_ptr, num_bytes, dest, tag, send_tag
   );
 
-  vtWarnIf(dest == theContext()->getNode(), "Destination should != this node");
-  vtAbortIf(dest >= theContext()->getNumNodes(), "Invalid destination");
+  vtWarnIf(
+    dest == theContext()->getNode(),
+    "Destination {} should != this node", dest
+  );
+  vtAbortIf(
+    dest >= theContext()->getNumNodes(),
+    "Invalid destination: {}", dest
+  );
 
   MPI_Isend(
     data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),

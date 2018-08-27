@@ -179,7 +179,7 @@ struct ByteCopyableTraits {
 
   template <typename U = T>
   static BufferPtrType apply(T* val, SizeType num, isNotByteCopyType<U>* x = nullptr) {
-    assert(false and "Non-byte copyable serialization not implemented");
+    vtAssert(false, "Non-byte copyable serialization not implemented");
   }
 };
 

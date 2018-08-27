@@ -24,7 +24,7 @@ public:
   void trigger(MsgT* msg, PipeType const& pipe);
 
   void triggerVoid(PipeType const& pipe) {
-    assert(0 && "Must not be void");
+    vtAssert(0, "Must not be void");
   }
 };
 
@@ -55,7 +55,7 @@ public:
   void trigger(MsgT* msg, PipeType const& pipe);
 
   void triggerVoid(PipeType const& pipe) {
-    assert(0 && "Must not be void");
+    vtAssert(0, "Must not be void");
   }
 
 private:

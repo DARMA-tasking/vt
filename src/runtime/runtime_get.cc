@@ -34,7 +34,7 @@ static runtime::Runtime* no_rt = nullptr;
   do {                                                                  \
     bool const check = IS_COMM_THREAD;                                  \
     std::string str("Only comm thread can access this component");      \
-    assert(check && str.c_str());                                       \
+    vtAssertExpr(check && str.c_str());                                       \
     if (!check) { CUR_RT->abort(str, 29); }                             \
   } while (0);
 

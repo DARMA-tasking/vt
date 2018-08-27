@@ -68,7 +68,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   }
     break;
   default:
-    assert(0 && "This should be unreachable");
+    vtAssert(0, "This should be unreachable");
     break;
   }
   return event_id;
@@ -77,8 +77,8 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 /*static*/ void AsyncEvent::eventFinished(EventFinishedMsg* msg) {
   auto const& complete = theEvent()->testEventComplete(msg->event_back_);
 
-  assert(
-    complete == AsyncEvent::EventStateType::EventWaiting and
+  vtAssert(
+    complete == AsyncEvent::EventStateType::EventWaiting,
     "Event must be waiting since it depends on this finished event"
   );
 
@@ -90,14 +90,14 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   auto const& event = msg->event_;
   auto const& node = theEvent()->getOwningNode(event);
 
-  assert(
-    node == theContext()->getNode() and "Node must be identical"
+  vtAssert(
+    node == theContext()->getNode(), "Node must be identical"
   );
 
   auto send_back_fun = [=]{
     auto msg_send = new EventFinishedMsg(event, msg->event_back_);
     auto send_back = theEvent()->getOwningNode(msg->event_back_);
-    assert(send_back == msg->sent_from_node_);
+    vtAssertExpr(send_back == msg->sent_from_node_);
     theMsg()->sendMsg<EventFinishedMsg, eventFinished>(
       send_back, msg_send, [=]{ delete msg_send; }
     );
@@ -116,8 +116,8 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   if (is_complete == AsyncEvent::EventStateType::EventReady) {
     send_back_fun();
   } else {
-    assert(
-      is_complete == AsyncEvent::EventStateType::EventWaiting and
+    vtAssert(
+      is_complete == AsyncEvent::EventStateType::EventWaiting,
       "Must be waiting if not ready"
     );
     /*ignore return event*/ theEvent()->attachAction(event, send_back_fun);
@@ -200,13 +200,13 @@ AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) 
   );
 
   if (owning_node != theContext()->getNode()) {
-    assert(0 && "Event does not belong to this node");
+    vtAssert(0, "Event does not belong to this node");
   }
 
   auto container_iter = lookup_container_.find(event);
 
-  assert(
-    container_iter != lookup_container_.end() and "Event must exist in container"
+  vtAssert(
+    container_iter != lookup_container_.end(), "Event must exist in container"
   );
 
   return *container_iter->second;

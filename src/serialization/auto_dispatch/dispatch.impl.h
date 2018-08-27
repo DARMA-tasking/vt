@@ -37,7 +37,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType SenderSerialize<MsgT,f>::sendMsgParserdes(
   NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
 ) {
-  assert(tag == no_tag && "Tagged messages serialized not implemented");
+  vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   SerializedMessenger::sendParserdesMsg<MsgT,f>(node,msg);
   // @todo: forward event through chain
   return no_event;
@@ -47,7 +47,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType SenderSerialize<MsgT,f>::sendMsg(
   NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
 ) {
-  assert(tag == no_tag && "Tagged messages serialized not implemented");
+  vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   SerializedMessenger::sendSerialMsg<MsgT,f>(node,msg);
   // @todo: forward event through chain
   return no_event;
@@ -58,7 +58,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType BroadcasterSerialize<MsgT,f>::broadcastMsgParserdes(
   MsgT* msg, TagType const& tag, ActionType action
 ) {
-  assert(tag == no_tag && "Tagged messages serialized not implemented");
+  vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   SerializedMessenger::broadcastParserdesMsg<MsgT,f>(msg);
   // @todo: forward event through chain
   return no_event;
@@ -69,7 +69,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType BroadcasterSerialize<MsgT,f>::broadcastMsg(
   MsgT* msg, TagType const& tag, ActionType action
 ) {
-  assert(tag == no_tag && "Tagged messages serialized not implemented");
+  vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   SerializedMessenger::broadcastSerialMsg<MsgT,f>(msg);
   // @todo: forward event through chain
   return no_event;

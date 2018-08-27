@@ -82,7 +82,7 @@ SeqNode::SeqNode(
     // do nothing
     break;
   default:
-    assert(0 and "Should never be able to reach this case");
+    vtAssert(0, "Should never be able to reach this case");
   }
 
   // set to invalid just for sanity's sake
@@ -104,7 +104,7 @@ SeqNode::SizeType SeqNode::getSize() const {
     return 0;
     break;
   default:
-    assert(0 && "Should not be reachable");
+    vtAssert(0, "Should not be reachable");
     return 0;
   }
 }
@@ -291,8 +291,8 @@ void SeqNode::activate() {
       sequenced_closures_.size(), unexpanded_size
     );
 
-    assert(
-      blocked_on_node_ == false and ready_ == true and "Must be ready+unblocked"
+    vtAssert(
+      blocked_on_node_ == false and ready_ == true, "Must be ready+unblocked"
     );
 
     bool blocked = false;
@@ -358,7 +358,7 @@ SeqNodeStateEnumType SeqNode::expandNext() {
     return SeqNodeStateEnumType::InvalidState;
     break;
   default:
-    assert(0 and "This should never happen");
+    vtAssert(0, "This should never happen");
   }
 
   return SeqNodeStateEnumType::InvalidState;
@@ -373,8 +373,8 @@ void SeqNode::addSequencedChild(SeqNodePtrType ptr) {
     payload_.children->size()
   );
 
-  assert(type_ == TypeEnum::ParentNode and "Must be parent node");
-  assert(order_type_ == OrderEnum::SequencedOrder and "Must be sequenced");
+  vtAssert(type_ == TypeEnum::ParentNode, "Must be parent node");
+  vtAssert(order_type_ == OrderEnum::SequencedOrder, "Must be sequenced");
 
   if (payload_.children->size() > 0) {
     auto const& cur = payload_.children->begin();
@@ -391,8 +391,8 @@ void SeqNode::addSequencedFunction(SeqExpandFunType fun) {
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), payload_.funcs->size()
   );
 
-  assert(type_ == TypeEnum::LeafNode and "Must be leaf node");
-  assert(order_type_ == OrderEnum::SequencedOrder and "Must be sequenced");
+  vtAssert(type_ == TypeEnum::LeafNode, "Must be leaf node");
+  vtAssert(order_type_ == OrderEnum::SequencedOrder, "Must be sequenced");
 
   payload_.funcs->push_back(fun);
 }
@@ -404,8 +404,8 @@ void SeqNode::addParallelFunction(SeqExpandFunType fun) {
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), payload_.funcs->size()
   );
 
-  assert(type_ == TypeEnum::LeafNode and "Must be leaf node");
-  assert(order_type_ == OrderEnum::ParallelOrder and "Must be parallel");
+  vtAssert(type_ == TypeEnum::LeafNode, "Must be leaf node");
+  vtAssert(order_type_ == OrderEnum::ParallelOrder, "Must be parallel");
 
   payload_.funcs->push_back(fun);
 }

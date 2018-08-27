@@ -30,7 +30,7 @@ void InfoColl::setupCollectiveSingular() {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const& in_group = is_in_group;
-  assert(num_nodes == 1 && "This method handles single node case");
+  vtAssert(num_nodes == 1, "This method handles single node case");
   if (in_group) {
     known_root_node_   = this_node;
     is_new_root_       = true;
@@ -62,7 +62,7 @@ void InfoColl::setupCollective() {
   auto const& num_nodes = theContext()->getNumNodes();
   auto const& group_ = getGroupID();
 
-  assert(!collective_   && "Collective should not be initialized");
+  vtAssert(!collective_  , "Collective should not be initialized");
 
   if (!collective_) {
     collective_ = std::make_unique<InfoColl::GroupCollectiveType>();
@@ -100,7 +100,7 @@ void InfoColl::setupCollective() {
     down_tree_cont_,
     [group_](GroupCollectiveMsg* msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
-      assert(iter != theGroup()->local_collective_group_info_.end());
+      vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       iter->second->downTree(msg);
     }
   );
@@ -108,7 +108,7 @@ void InfoColl::setupCollective() {
     down_tree_fin_cont_,
     [group_](GroupOnlyMsg* msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
-      assert(iter != theGroup()->local_collective_group_info_.end());
+      vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       iter->second->downTreeFinished(msg);
     }
   );
@@ -116,7 +116,7 @@ void InfoColl::setupCollective() {
     finalize_cont_,
     [group_](GroupOnlyMsg* msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
-      assert(iter != theGroup()->local_collective_group_info_.end());
+      vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       iter->second->finalizeTree(msg);
     }
   );
@@ -124,7 +124,7 @@ void InfoColl::setupCollective() {
     new_tree_cont_,
     [group_](GroupOnlyMsg* msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
-      assert(iter != theGroup()->local_collective_group_info_.end());
+      vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       auto const& from = theMsg()->getFromNodeCurrentHandler();
       iter->second->newTree(from);
     }
@@ -133,7 +133,7 @@ void InfoColl::setupCollective() {
     new_root_cont_,
     [group_](GroupCollectiveMsg* msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
-      assert(iter != theGroup()->local_collective_group_info_.end());
+      vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       auto const& from = theMsg()->getFromNodeCurrentHandler();
       iter->second->newRoot(msg);
     }
@@ -166,8 +166,8 @@ void InfoColl::atRoot() {
 }
 
 void InfoColl::upTree() {
-  assert(
-    msgs_.size() - extra_count_  == coll_wait_count_ - 1 && "Must be equal"
+  vtAssert(
+    msgs_.size() - extra_count_  == coll_wait_count_ - 1, "Must be equal"
   );
   decltype(msgs_) msg_in_group = {};
   std::size_t subtree = 0;
@@ -329,7 +329,7 @@ void InfoColl::upTree() {
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[0]);
   } else {
-    assert(msg_in_group.size() > 2);
+    vtAssertExpr(msg_in_group.size() > 2);
 
     std::vector<GroupCollectiveMsg*> msg_list;
     for (auto&& msg : msg_in_group) {
@@ -387,7 +387,7 @@ RemoteOperationIDType InfoColl::makeCollectiveContinuation(
   theGroup()->registerContinuationT<GroupCollectiveMsg*>(
     id, [group_](GroupCollectiveMsg* msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
-      assert(iter != theGroup()->local_collective_group_info_.end());
+      vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       iter->second->collectiveFn(msg);
     }
   );
@@ -468,7 +468,7 @@ void InfoColl::collectiveFn(GroupCollectiveMsg* msg) {
 /*static*/ void InfoColl::tree(GroupOnlyMsg* msg) {
   messageRef(msg);
   auto const& op_id = msg->getOpID();
-  assert(op_id != no_op_id && "Must have valid op");
+  vtAssert(op_id != no_op_id, "Must have valid op");
   theGroup()->triggerContinuationT<GroupOnlyMsg*>(op_id,msg);
 }
 
@@ -481,7 +481,7 @@ void InfoColl::collectiveFn(GroupCollectiveMsg* msg) {
 
   messageRef(msg);
   auto const& op_id = msg->getOpID();
-  assert(op_id != no_op_id && "Must have valid op");
+  vtAssert(op_id != no_op_id, "Must have valid op");
   theGroup()->triggerContinuationT<GroupCollectiveMsg*>(op_id,msg);
   //messageDeref(msg);
 }
@@ -495,7 +495,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
     getGroupID(), msg->getChild(), from
   );
 
-  assert(collective_ && "Must be valid");
+  vtAssert(collective_, "Must be valid");
 
   if (collective_->span_children_.size() < 4) {
     collective_->span_children_.push_back(msg->getChild());
@@ -516,7 +516,7 @@ void InfoColl::newTree(NodeType const& parent) {
   auto const& group_ = getGroupID();
   collective_->parent_ = is_new_root_ ? -1 : parent;
   sendDownNewTree();
-  assert(is_in_group && "Must be in group");
+  vtAssert(is_in_group, "Must be in group");
   auto const& is_root = is_new_root_;
   collective_->span_   = std::make_unique<TreeType>(
     is_root, collective_->parent_, collective_->span_children_
@@ -611,7 +611,7 @@ void InfoColl::finalize() {
 
 void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
   auto const& new_root = msg->getRoot();
-  assert(new_root != uninitialized_destination && "Must have root node");
+  vtAssert(new_root != uninitialized_destination, "Must have root node");
   debug_print(
     verbose, group, node,
     "InfoColl::finalizeTree: group={:x}, new_root={}\n",
@@ -668,12 +668,12 @@ void InfoColl::readyAction(ActionType const action) {
 }
 
 InfoColl::TreeType* InfoColl::getTree() const {
-  assert(collective_        && "Collective must exist");
-  assert(collective_->span_ && "Spanning tree must exist");
-  assert(in_phase_two_      && "Must be in phase two");
-  assert(has_root_          && "Root node must be known by this node");
-  assert(
-    known_root_node_ != uninitialized_destination && "Known root must be set"
+  vtAssert(collective_       , "Collective must exist");
+  vtAssert(collective_->span_, "Spanning tree must exist");
+  vtAssert(in_phase_two_     , "Must be in phase two");
+  vtAssert(has_root_         , "Root node must be known by this node");
+  vtAssert(
+    known_root_node_ != uninitialized_destination, "Known root must be set"
   );
   return collective_->span_.get();
 }

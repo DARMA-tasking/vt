@@ -47,7 +47,7 @@ void SeqList::expandNextNode() {
     expandNextNode();
     break;
   default:
-    assert(0 and "This should never happen");
+    vtAssert(0, "This should never happen");
   }
 }
 

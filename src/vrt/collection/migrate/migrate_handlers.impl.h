@@ -45,8 +45,8 @@ template <typename ColT, typename IndexT>
       col_proxy, idx, from_node, std::move(vc_elm_ptr), range, map_han
     );
 
-  assert(
-    migrate_status == MigrateStatus::MigrateInLocal &&
+  vtAssert(
+    migrate_status == MigrateStatus::MigrateInLocal,
     "Should be valid local migration into this memory domain"
   );
 }

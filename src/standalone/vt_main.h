@@ -50,7 +50,7 @@ int vt_main(
   if (workers == no_workers) {
     comm_fn();
   } else {
-    assert(theWorkerGrp() != nullptr and "Must have valid worker group");
+    vtAssert(theWorkerGrp() != nullptr, "Must have valid worker group");
     theWorkerGrp()->spawnWorkersBlock(comm_fn);
   }
 

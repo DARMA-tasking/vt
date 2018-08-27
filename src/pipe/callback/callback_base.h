@@ -75,7 +75,7 @@ public:
 
   bool finished() const {
     if (reference_counted_) {
-      assert(refs_ != -1 && "refs_ must be a valid positive integer");
+      vtAssert(refs_ != -1, "refs_ must be a valid positive integer");
       return refs_ == 0;
     } else {
       return false;

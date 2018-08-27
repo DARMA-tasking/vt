@@ -34,7 +34,7 @@ void TermState::notifyChildReceive() {
     submitted_wave_, recv_child_count_, num_children_
   );
 
-  assert(recv_child_count_ <= num_children_ and "Must be <= than num children");
+  vtAssert(recv_child_count_ <= num_children_, "Must be <= than num children");
 }
 
 bool TermState::noLocalUnits() const {
@@ -65,13 +65,13 @@ void TermState::submitToParent(bool const, bool const setup) {
 }
 
 void TermState::receiveContinueSignal(TermWaveType const& wave) {
-  assert(cur_wave_ == wave - 1 and "Wave must monotonically increase");
+  vtAssert(cur_wave_ == wave - 1, "Wave must monotonically increase");
   cur_wave_ = wave;
 }
 
 bool TermState::readySubmitParent(bool const needs_active) const {
-  assert(
-    num_children_ != uninitialized_destination and "Children must be valid"
+  vtAssert(
+    num_children_ != uninitialized_destination, "Children must be valid"
   );
 
   auto const ret = (epoch_active_ or not needs_active) and

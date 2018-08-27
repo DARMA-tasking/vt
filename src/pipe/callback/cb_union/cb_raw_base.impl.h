@@ -45,7 +45,7 @@ void CallbackRawBaseSingle::send(MsgT* msg) {
     cb_.u_.bcast_col_dir_cb_.trigger<MsgT>(msg,pipe_);
     break;
   default:
-    assert(0 && "Should not be reachable");
+    vtAssert(0, "Should not be reachable");
   }
 }
 

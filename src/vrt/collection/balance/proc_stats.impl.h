@@ -27,14 +27,14 @@ template <typename ColT>
 
   proc_data_.resize(phase + 1);
   auto elm_iter = proc_data_.at(phase).find(next_elm);
-  assert(elm_iter == proc_data_.at(phase).end() && "Must not exist");
+  vtAssert(elm_iter == proc_data_.at(phase).end(), "Must not exist");
   proc_data_.at(phase).emplace(
     std::piecewise_construct,
     std::forward_as_tuple(next_elm),
     std::forward_as_tuple(time)
   );
   auto migrate_iter = proc_migrate_.find(next_elm);
-  assert(migrate_iter == proc_migrate_.end() && "Migrate func must not exist");
+  vtAssert(migrate_iter == proc_migrate_.end(), "Migrate func must not exist");
   proc_migrate_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(next_elm),

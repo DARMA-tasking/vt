@@ -33,8 +33,8 @@ struct Group {
     RDMA_BlockType blk_lo;
     NodeType cur_node;
 
-    assert(map.elm_map != nullptr);
-    assert(map.block_map != nullptr);
+    vtAssertExpr(map.elm_map != nullptr);
+    vtAssertExpr(map.block_map != nullptr);
 
     while (elm_hi < hi) {
       auto const& ret = map.elm_map(lo, num_total_elems, num_blocks);

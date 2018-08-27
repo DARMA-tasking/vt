@@ -28,7 +28,7 @@ AnonListener<SignalT>::AnonListener(CallbackFnType const& in_fn)
 
 template <typename SignalT>
 void AnonListener<SignalT>::trigger_(SignalDataType* data) {
-  assert(fn_ != nullptr && "Must have valid function pointer");
+  vtAssert(fn_ != nullptr, "Must have valid function pointer");
   fn_(data);
 }
 

@@ -70,8 +70,8 @@ EventType ActiveMessenger::sendMsg(
   ActionType next_action
 ) {
   auto const& dest = HandlerManagerType::getHandlerNode(han);
-  assert(
-    dest != uninitialized_destination and
+  vtAssert(
+    dest != uninitialized_destination,
     "Destination must be known in handler"
   );
   envelopeSetup(msg->env, dest, han);

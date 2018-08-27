@@ -23,7 +23,7 @@ void VirtualContextManager::insertVirtualContext(
   auto const& id = VirtualProxyBuilder::getVirtualID(proxy);
 
   auto holder_iter = holder_.find(id);
-  assert(holder_iter == holder_.end() && "Holder must not contain id");
+  vtAssert(holder_iter == holder_.end(), "Holder must not contain id");
 
   // registry the proxy with location manager
   theLocMan()->vrtContextLoc->registerEntity(
@@ -80,8 +80,8 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
 
   auto vc_info = theVirtualManager()->getVirtualInfoByProxy(entity_proxy);
 
-  assert(
-    vc_info != nullptr && "A virtual context must exist to invoke user handler"
+  vtAssert(
+    vc_info != nullptr, "A virtual context must exist to invoke user handler"
   );
 
   debug_print(
@@ -114,8 +114,8 @@ void VirtualContextManager::recvVirtualProxy(
 ) {
   auto pending_iter = pending_request_.find(id);
 
-  assert(
-    pending_iter == pending_request_.end() && "Must be valid pending request"
+  vtAssert(
+    pending_iter == pending_request_.end(), "Must be valid pending request"
   );
 
   auto& pending_req = pending_iter->second;
@@ -131,7 +131,7 @@ VirtualContextManager::getVirtualInfoByID(
   auto& holder = is_remote ? remote_holder_ : holder_;
   auto iter = holder.find(lookupID);
   if (iter == holder.end()) {
-    assert(0 && "Virtual entity could not be found locally: invalid ID!");
+    vtAssert(0, "Virtual entity could not be found locally: invalid ID!");
     return nullptr;
   } else {
     return iter->second.get();
@@ -153,7 +153,7 @@ VirtualContextManager::getVirtualInfoByProxy(VirtualProxyType const& proxy) {
     return info;
   } else {
     // this proxy is not on this node
-    assert(0 && "Proxy must be on this node");
+    vtAssert(0, "Proxy must be on this node");
     return nullptr;
   }
 }
@@ -169,7 +169,7 @@ void VirtualContextManager::destroyVirtualByID(
 ) {
   auto& holder = is_remote ? remote_holder_ : holder_;
   auto iter = holder.find(lookupID);
-  assert(iter != holder.end() and "Virtual ID must exist");
+  vtAssert(iter != holder.end(), "Virtual ID must exist");
   holder.erase(iter);
 }
 

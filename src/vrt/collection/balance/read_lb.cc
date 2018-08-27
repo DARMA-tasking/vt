@@ -70,7 +70,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   }
 
   std::ifstream file(filename);
-  assert(file.good() && "must be valid");
+  vtAssert(file.good(), "must be valid");
 
   constexpr int64_t const max_num_times = 100000;
   int64_t max_entry = 0;

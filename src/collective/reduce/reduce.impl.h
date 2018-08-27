@@ -72,7 +72,7 @@ EpochType Reduce::reduce(
       );
       iter = next_epoch_for_tag_.find(reduce_epoch_lookup);
     }
-    assert(iter != next_epoch_for_tag_.end() && "Must exist now");
+    vtAssert(iter != next_epoch_for_tag_.end(), "Must exist now");
     msg->reduce_epoch_ = iter->second++;
   } else {
     msg->reduce_epoch_ = epoch;
@@ -100,7 +100,7 @@ void Reduce::reduceAddMsg(
       })
     );
     live_iter = live_reductions_.find(lookup);
-    assert(live_iter != live_reductions_.end());
+    vtAssertExpr(live_iter != live_reductions_.end());
   }
   auto& state = live_iter->second;
   messageRef(msg);

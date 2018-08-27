@@ -26,7 +26,7 @@ template <typename always_void_>
   VirtualProxyType const proxy
 ) {
   auto iter = live_collections_.find(proxy);
-  assert(iter != live_collections_.end() && "Collection must exist");
+  vtAssert(iter != live_collections_.end(), "Collection must exist");
   live_collections_.erase(iter);
 }
 
@@ -83,7 +83,7 @@ template <typename always_void_>
   VirtualProxyType const proxy, EpochType const& insert_epoch
 ) {
   auto iter = insert_epoch_.find(proxy);
-  assert(iter != insert_epoch_.end() && "Proxy must exist in insert epoch");
+  vtAssert(iter != insert_epoch_.end(), "Proxy must exist in insert epoch");
   iter->second = insert_epoch;
 }
 
@@ -92,7 +92,7 @@ template <typename always_void_>
   VirtualProxyType const proxy
 ) {
   auto iter = insert_epoch_.find(proxy);
-  assert(iter != insert_epoch_.end() && "Proxy must exist in insert epoch");
+  vtAssert(iter != insert_epoch_.end(), "Proxy must exist in insert epoch");
   return iter->second;
 }
 
@@ -101,7 +101,7 @@ template <typename always_void_>
   VirtualProxyType const proxy
 ) {
   auto map_iter = live_collections_map_.find(proxy);
-  assert(map_iter != live_collections_map_.end() && "Map must exist");
+  vtAssert(map_iter != live_collections_map_.end(), "Map must exist");
   return map_iter->second;
 }
 

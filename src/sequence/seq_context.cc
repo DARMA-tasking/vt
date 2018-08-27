@@ -26,12 +26,12 @@ SeqContext::SeqContext(
 SeqContext::SeqContext(SeqType const& in_seq_id) : seq_id(in_seq_id) { }
 
 void SeqContext::suspend() {
-  assert(seq_ult != nullptr and "Seq ULT must be live");
+  vtAssert(seq_ult != nullptr, "Seq ULT must be live");
   seq_ult->suspend();
 }
 
 void SeqContext::resume() {
-  assert(seq_ult != nullptr and "Seq ULT must be live");
+  vtAssert(seq_ult != nullptr, "Seq ULT must be live");
   seq_ult->resume();
 }
 

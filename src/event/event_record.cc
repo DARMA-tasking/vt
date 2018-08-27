@@ -21,10 +21,10 @@ EventRecord::EventRecord(EventRecordType const& type, EventType const& id)
     event_union_.event_list = new EventListType{};
     break;
   case EventRecordType::Invalid:
-    assert(0 and "Testing readiness of invalid event record");
+    vtAssert(0, "Testing readiness of invalid event record");
     break;
   default:
-    assert(0 and "Should be impossible to reach this case");
+    vtAssert(0, "Should be impossible to reach this case");
   }
 
 }
@@ -84,16 +84,16 @@ void EventRecord::setManagedMessage(ShortMessage* in_msg) {
 }
 
 void EventRecord::setReady() {
-  assert(
-    type_ == EventRecordType::NormalEventRecord and "Type must be normal event"
+  vtAssert(
+    type_ == EventRecordType::NormalEventRecord, "Type must be normal event"
   );
 
   ready = true;
 }
 
 void EventRecord::addEventToList(EventType const& event) {
-  assert(
-    type_ == EventRecordType::ParentEventRecord and "Type must be parent event"
+  vtAssert(
+    type_ == EventRecordType::ParentEventRecord, "Type must be parent event"
   );
 
   getEventList()->push_back(event);
@@ -111,25 +111,25 @@ bool EventRecord::testReady() {
     return testParentEventReady();
     break;
   case EventRecordType::Invalid:
-    assert(0 and "Testing readiness of invalid event record");
+    vtAssert(0, "Testing readiness of invalid event record");
     break;
   default:
-    assert(0 and "Should be impossible to reach this case");
+    vtAssert(0, "Should be impossible to reach this case");
   }
   return false;
 }
 
 MPI_Request* EventRecord::getRequest() {
-  assert(
-    type_ == EventRecordType::MPI_EventRecord and "Type must be MPI event"
+  vtAssert(
+    type_ == EventRecordType::MPI_EventRecord, "Type must be MPI event"
   );
 
   return &event_union_.mpi_req;
 }
 
 EventListPtrType EventRecord::getEventList() const {
-  assert(
-    type_ == EventRecordType::ParentEventRecord and "Type must be parent event"
+  vtAssert(
+    type_ == EventRecordType::ParentEventRecord, "Type must be parent event"
   );
 
   return event_union_.event_list;

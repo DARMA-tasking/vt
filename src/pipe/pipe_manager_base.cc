@@ -28,8 +28,8 @@ void PipeManagerBase::newPipeState(
    *  Create pipe state of `pipe' to track the state locally on this node
    */
   auto iter = pipe_state_.find(pipe);
-  assert(iter == pipe_state_.end() && "State must not exist for new pipe");
-  assert((persist || num_signals > 0) && "Valid signal count non-persist");
+  vtAssert(iter == pipe_state_.end(), "State must not exist for new pipe");
+  vtAssert((persist || num_signals > 0), "Valid signal count non-persist");
   auto state_in =
     !persist ?
     PipeState{pipe,num_signals,num_listeners,typeless} :
@@ -40,7 +40,7 @@ void PipeManagerBase::newPipeState(
     std::forward_as_tuple(std::move(state_in))
   );
   iter = pipe_state_.find(pipe);
-  assert(iter != pipe_state_.end() && "State must exist for new pipe");
+  vtAssert(iter != pipe_state_.end(), "State must exist for new pipe");
   auto& state = iter->second;
   /*
    *  Increment (manually) the number of registered listeners
@@ -76,7 +76,7 @@ PipeType PipeManagerBase::makeCallbackFuncVoid(
    *  Register a listener for this signal to trigger the anon function when the
    *  callback is invoked
    */
-  assert(num_listeners > 0 && "Number of listeners must be positive");
+  vtAssert(num_listeners > 0, "Number of listeners must be positive");
   auto const& num_refs = !persist ? num_signals / num_listeners : -1;
   auto closure = [fn](typename SignalType::DataType*){ fn(); };
   auto anon = std::make_unique<callback::AnonListener<SignalType>>(
@@ -99,7 +99,7 @@ void PipeManagerBase::addListenerVoid(PipeType const& pipe, FuncType fn) {
 
 void PipeManagerBase::generalSignalTrigger(PipeType const& pipe) {
   auto iter = pipe_state_.find(pipe);
-  assert(iter != pipe_state_.end() && "Must exist");
+  vtAssert(iter != pipe_state_.end(), "Must exist");
   auto& state = iter->second;
   state.signalRecv();
   auto const& automatic = state.isAutomatic();

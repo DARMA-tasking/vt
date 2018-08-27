@@ -11,6 +11,12 @@
 
 namespace vt { namespace debug { namespace assert {
 
+template <typename=void>
+inline void assertOutExpr(
+  bool fail, std::string const cond, std::string const& file, int const line,
+  std::string const& func, ErrorCodeType error
+);
+
 template <typename... Args>
 inline
 std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>

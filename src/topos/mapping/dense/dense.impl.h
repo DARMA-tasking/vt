@@ -48,7 +48,7 @@ Idx linearizeDenseIndexColMajor(
   auto const& max_idx_ = *max_idx;
 
   for (size_t dim = 0; dim < ndim; dim++) {
-    assert(idx_[dim] <  max_idx_[dim] && "Out of range index!");
+    vtAssert(idx_[dim] <  max_idx_[dim], "Out of range index!");
   }
 
   Idx val = 0;
@@ -71,7 +71,7 @@ Idx linearizeDenseIndexRowMajor(
   auto const& max_idx_ = *max_idx;
 
   for (size_t dim = 0; dim < ndim; dim++) {
-    assert(idx_[dim] <  max_idx_[dim] && "Out of range index!");
+    vtAssert(idx_[dim] <  max_idx_[dim], "Out of range index!");
   }
 
   Idx val = 0;

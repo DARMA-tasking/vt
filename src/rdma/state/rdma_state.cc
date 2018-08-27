@@ -18,9 +18,9 @@ State::State(
   ByteType const& in_num_bytes, bool const& use_default_handler
 ) : handle(in_handle), ptr(in_ptr), num_bytes(in_num_bytes) {
   if (use_default_handler) {
-    assert(
-      in_num_bytes != no_byte and ptr != nullptr and
-      "Bytes and ptr must be set to use default"
+    vtAssert(
+      in_num_bytes != no_byte && ptr != nullptr,
+      "Bytes, ptr must be set to use default"
     );
   }
 }
@@ -146,9 +146,9 @@ bool State::testReadyPutData(TagType const& tag) {
     print_ptr(msg), req_num_bytes, tag
   );
 
-  assert(
-    state.ptr != nullptr and state.num_bytes != no_byte and
-    "To use default handler ptr and bytes must be set"
+  vtAssert(
+    state.ptr != nullptr && state.num_bytes != no_byte,
+    "To use default handler ptr, bytes must be set"
   );
 
   return RDMA_GetType{
@@ -169,9 +169,9 @@ bool State::testReadyPutData(TagType const& tag) {
     print_ptr(msg), print_ptr(in_ptr), req_num_bytes, tag
   );
 
-  assert(
-    state.ptr != nullptr and state.num_bytes != no_byte and
-    "To use default handler ptr and bytes must be set"
+  vtAssert(
+    state.ptr != nullptr && state.num_bytes != no_byte,
+    "To use default handler ptr, bytes must be set"
   );
 
   std::memcpy(static_cast<char*>(state.ptr) + req_offset, in_ptr, req_num_bytes);
@@ -183,8 +183,8 @@ void State::getData(
 ) {
   auto const& tag = info.tag;
 
-  assert(
-    not is_user_msg and "User-level get messages currently unsupported"
+  vtAssert(
+    not is_user_msg, "User-level get messages currently unsupported"
   );
 
   bool const ready = testReadyGetData(info.tag);
@@ -250,8 +250,8 @@ void State::putData(
 ) {
   auto const& tag = info.tag;
 
-  assert(
-    not is_user_msg and "User-level get messages currently unsupported"
+  vtAssert(
+    not is_user_msg, "User-level get messages currently unsupported"
   );
 
   bool const ready = testReadyPutData(info.tag);
@@ -293,8 +293,8 @@ void State::putData(
       info.is_local
     );
 
-    assert(
-      not info.cont and "Cont should not be set for a put"
+    vtAssert(
+      not info.cont, "Cont should not be set for a put"
     );
 
     if (info.cont_action) {
@@ -311,7 +311,7 @@ void State::putData(
 
 void State::processPendingGet(TagType const& tag) {
   bool const ready = testReadyGetData(tag);
-  assert(ready and "Must be ready to process pending");
+  vtAssert(ready, "Must be ready to process pending");
 
   RDMA_GetFunctionType get_fn =
     tag == no_tag ? rdma_get_fn : std::get<0>(get_tag_holder.find(tag)->second);
@@ -330,8 +330,8 @@ void State::processPendingGet(TagType const& tag) {
 
 // void
 // State::set_collective_map(rdma_map_t const& map) {
-//   assert(
-//     RDMA_HandleManagerType::is_collective(handle) and "Must be collective handle"
+//   vtAssert(
+//     RDMA_HandleManagerType::is_collective(handle), "Must be collective handle"
 //   );
 
 //   collective_map = map;
@@ -345,9 +345,9 @@ void State::processPendingGet(TagType const& tag) {
 
 // NodeType
 // State::getNode(RDMA_ElmType const& elm) {
-//   assert(
-//     collective_map != nullptr and RDMA_HandleManagerType::is_collective(handle)
-//     and "Must be collective and have map assigned"
+//   vtAssert(
+//     collective_map != vtAullptr, RDMA_HandleManagerType::is_collective(handle)
+//    , "Must be collective, have map assigned"
 //   );
 
 //   return collective_map(elm);

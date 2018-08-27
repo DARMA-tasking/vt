@@ -63,7 +63,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
   }
 
   GreedyLB::greedy_lb_inst->start_time_ = timing::Timing::getCurrentTime();
-  assert(balance::ProcStats::proc_data_.size() >= phase);
+  vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase);
   GreedyLB::greedy_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
   greedy_lb_inst->reduceLoad();
 }
@@ -169,7 +169,7 @@ void GreedyLB::CentralCollect::operator()(GreedyCollectMsg* msg) {
 
 void GreedyLB::reduceCollect() {
   #if greedylb_use_parserdes
-    assert(0 && "greedylb parserdes not implemented");
+    vtAssert(0, "greedylb parserdes not implemented");
   #else
     debug_print(
       lblite, node,
@@ -211,7 +211,7 @@ void GreedyLB::runBalancer(
   auto nodes = std::vector<GreedyProc>{};
   for (NodeType n = 0; n < num_nodes; n++) {
     auto iter = profile.find(n);
-    assert(iter != profile.end() && "Must have load profile");
+    vtAssert(iter != profile.end(), "Must have load profile");
     nodes.emplace_back(GreedyProc{n,iter->second});
     debug_print(
       lblite, node,
@@ -302,7 +302,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
       reinterpret_cast<char*>(recs) - reinterpret_cast<char*>(objs)
     );
     auto iter = balance::ProcStats::proc_migrate_.find(new_obj_id);
-    assert(iter != balance::ProcStats::proc_migrate_.end() && "Must exist");
+    vtAssert(iter != balance::ProcStats::proc_migrate_.end(), "Must exist");
     iter->second(to_node);
     transfer_count++;
   }
@@ -363,7 +363,7 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   bin_list.pop_back();
 
   auto obj_iter = stats->find(obj_id);
-  assert(obj_iter != stats->end() && "Obj must exist in stats");
+  vtAssert(obj_iter != stats->end(), "Obj must exist in stats");
   auto const& obj_time_milli = loadMilli(obj_iter->second);
 
   this_load -= obj_time_milli;

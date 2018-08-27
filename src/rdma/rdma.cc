@@ -149,8 +149,8 @@ namespace vt { namespace rdma {
       }, false, recv_node
     );
   } else {
-    assert(
-      recv_tag != no_tag and "PutMessage must have recv tag"
+    vtAssert(
+      recv_tag != no_tag, "PutMessage must have recv tag"
     );
 
     // try to get early access to the ptr for a direct put into user buffer
@@ -269,8 +269,8 @@ RDMA_HandleType RDMAManager::registerNewCollective(
   auto const& han = registerNewRdmaHandler(use_default, ptr, num_bytes, true);
 
   auto iter = holder_.find(han);
-  assert(
-    iter != holder_.end() and "Handler must exist"
+  vtAssert(
+    iter != holder_.end(), "Handler must exist"
   );
 
   auto& state = iter->second;
@@ -327,8 +327,8 @@ void RDMAManager::unregisterRdmaHandler(
   bool const& use_default
 ) {
   auto holder_iter = holder_.find(han);
-  assert(
-    holder_iter != holder_.end() and "Holder for handler must exist here"
+  vtAssert(
+    holder_iter != holder_.end(), "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -339,8 +339,8 @@ void RDMAManager::unregisterRdmaHandler(
   RDMA_HandleType const& han, RDMA_HandlerType const& handler, TagType const& tag
 ) {
   auto holder_iter = holder_.find(han);
-  assert(
-    holder_iter != holder_.end() and "Holder for handler must exist here"
+  vtAssert(
+    holder_iter != holder_.end(), "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -363,14 +363,14 @@ void RDMAManager::requestGetData(
   auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 
-  assert(
+  vtAssert(
     (is_collective or handler_node == this_node)
-    and "Handle must be local to this node"
+   , "Handle must be local to this node"
   );
 
   auto holder_iter = holder_.find(han);
-  assert(
-    holder_iter != holder_.end() and "Holder for handler must exist here"
+  vtAssert(
+    holder_iter != holder_.end(), "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -388,8 +388,8 @@ void RDMAManager::triggerGetRecvData(
 ) {
   auto iter = pending_ops_.find(op);
 
-  assert(
-    iter != pending_ops_.end() and "Pending op must exist"
+  vtAssert(
+    iter != pending_ops_.end(), "Pending op must exist"
   );
 
   if (iter->second.cont) {
@@ -410,8 +410,8 @@ RDMAManager::RDMA_DirectType RDMAManager::tryGetDataPtrDirect(
 ) {
   auto iter = pending_ops_.find(op);
 
-  assert(
-    iter != pending_ops_.end() and "Pending op must exist"
+  vtAssert(
+    iter != pending_ops_.end(), "Pending op must exist"
   );
 
   if (iter->second.cont) {
@@ -420,8 +420,8 @@ RDMAManager::RDMA_DirectType RDMAManager::tryGetDataPtrDirect(
     auto ptr = iter->second.data_ptr;
     auto action = iter->second.cont2;
     pending_ops_.erase(iter);
-    assert(
-      ptr != nullptr and "ptr must be set"
+    vtAssert(
+      ptr != nullptr, "ptr must be set"
     );
     return RDMA_DirectType{ptr,action};
   }
@@ -430,8 +430,8 @@ RDMAManager::RDMA_DirectType RDMAManager::tryGetDataPtrDirect(
 void RDMAManager::triggerPutBackData(RDMA_OpType const& op) {
   auto iter = pending_ops_.find(op);
 
-  assert(
-    iter != pending_ops_.end() and "Pending op must exist"
+  vtAssert(
+    iter != pending_ops_.end(), "Pending op must exist"
   );
 
   iter->second.cont2();
@@ -455,14 +455,14 @@ void RDMAManager::triggerPutRecvData(
     han, tag, holder_.size(), offset, num_bytes
   );
 
-  assert(
+  vtAssert(
     (is_collective or handler_node == this_node)
-    and "Handle must be local to this node"
+   , "Handle must be local to this node"
   );
 
   auto holder_iter = holder_.find(han);
-  assert(
-    holder_iter != holder_.end() and "Holder for handler must exist here"
+  vtAssert(
+    holder_iter != holder_.end(), "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -484,14 +484,14 @@ RDMAManager::tryPutPtr(
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
   auto const& handler_node = RDMA_HandleManagerType::getRdmaNode(han);
 
-  assert(
+  vtAssert(
     (is_collective or handler_node == this_node)
-    and "Handle must be local to this node"
+   , "Handle must be local to this node"
   );
 
   auto holder_iter = holder_.find(han);
-  assert(
-    holder_iter != holder_.end() and "Holder for handler must exist here"
+  vtAssert(
+    holder_iter != holder_.end(), "Holder for handler must exist here"
   );
 
   auto& state = holder_iter->second;
@@ -731,12 +731,12 @@ void RDMAManager::putRegionTypeless(
     );
 
     auto holder_iter = holder_.find(han);
-    assert(
-      holder_iter != holder_.end() and "Holder for handler must exist here"
+    vtAssert(
+      holder_iter != holder_.end(), "Holder for handler must exist here"
     );
 
     auto& state = holder_iter->second;
-    assert(state.group_info != nullptr);
+    vtAssertExpr(state.group_info != nullptr);
 
     auto group = state.group_info.get();
 
@@ -776,8 +776,8 @@ void RDMAManager::putRegionTypeless(
     local_action->release();
     remote_action->release();
   } else {
-    assert(
-      is_collective and "Putting regions only works with collective handles"
+    vtAssert(
+      is_collective, "Putting regions only works with collective handles"
     );
   }
 }
@@ -797,13 +797,13 @@ void RDMAManager::getRegionTypeless(
     );
 
     auto holder_iter = holder_.find(han);
-    assert(
-      holder_iter != holder_.end() and "Holder for handler must exist here"
+    vtAssert(
+      holder_iter != holder_.end(), "Holder for handler must exist here"
     );
 
     auto& state = holder_iter->second;
 
-    assert(state.group_info != nullptr);
+    vtAssertExpr(state.group_info != nullptr);
 
     auto group = state.group_info.get();
 
@@ -846,8 +846,8 @@ void RDMAManager::getRegionTypeless(
 
     action->release();
   } else {
-    assert(
-      is_collective and "Getting regions only works with collective handles"
+    vtAssert(
+      is_collective, "Getting regions only works with collective handles"
     );
   }
 }
@@ -1014,13 +1014,13 @@ void RDMAManager::newChannel(
     "target={},non_target={}\n", target, non_target
   );
 
-  assert(
+  vtAssert(
     (target == spec_target or spec_target == uninitialized_destination)
-    and "Target must match handle"
+   , "Target must match handle"
   );
 
-  assert(
-    target != non_target and "Target and non-target must be different"
+  vtAssert(
+    target != non_target, "Target and non-target must be different"
   );
 
   /*
@@ -1116,8 +1116,8 @@ void RDMAManager::createDirectChannelFinish(
 
   if (is_target) {
     auto holder_iter = holder_.find(han);
-    assert(
-      holder_iter != holder_.end() and "Holder for handler must exist here"
+    vtAssert(
+      holder_iter != holder_.end(), "Holder for handler must exist here"
     );
 
     auto& state = holder_iter->second;
@@ -1184,8 +1184,8 @@ RDMAManager::RDMA_ChannelType* RDMAManager::findChannel(
   );
   if (chan_iter == channels_.end()) {
     if (must_exist) {
-      assert(
-        chan_iter != channels_.end() and "Channel must exist"
+      vtAssert(
+        chan_iter != channels_.end(), "Channel must exist"
       );
       debug_print(
         rdma_channel, node,
@@ -1213,7 +1213,7 @@ void RDMAManager::createDirectChannelInternal(
   bool const& is_get = type == RDMA_TypeType::Get;
   bool const& is_put = type == RDMA_TypeType::Put;
 
-  assert(
+  vtAssertExpr(
     rdma_op_type == type or rdma_op_type == RDMA_TypeType::GetOrPut
   );
 
@@ -1248,8 +1248,8 @@ void RDMAManager::createDirectChannelInternal(
   );
 
   if (not is_target and channel_tag == no_tag and num_bytes == no_byte) {
-    assert(
-      channel_tag == no_tag and "Should not have tag assigned"
+    vtAssert(
+      channel_tag == no_tag, "Should not have tag assigned"
     );
 
     auto const& unique_channel_tag = nextRdmaChannelTag();
@@ -1260,8 +1260,8 @@ void RDMAManager::createDirectChannelInternal(
       unique_channel_tag
     );
 
-    assert(
-      channel_tag == no_tag and
+    vtAssert(
+      channel_tag == no_tag,
       "Should not have a tag assigned at this point"
     );
 
@@ -1289,8 +1289,8 @@ void RDMAManager::createDirectChannelInternal(
 
 ByteType RDMAManager::lookupBytesHandler(RDMA_HandleType const& han) {
   auto holder_iter = holder_.find(han);
-  assert(
-    holder_iter != holder_.end() and "Holder for handler must exist here"
+  vtAssert(
+    holder_iter != holder_.end(), "Holder for handler must exist here"
   );
   auto& state = holder_iter->second;
   auto const& num_bytes = state.num_bytes;

@@ -56,8 +56,8 @@ template <typename ColT, typename IndexT>
   auto const& migrate_status = CollectionElmAttorney<ColT,IndexT>::migrateOut(
     collection_proxy, collection_index, node
   );
-  assert(
-    migrate_status == MigrateStatus::MigratedToRemote &&
+  vtAssert(
+    migrate_status == MigrateStatus::MigratedToRemote,
     "Required be immediate, valid migration currently"
   );
 }

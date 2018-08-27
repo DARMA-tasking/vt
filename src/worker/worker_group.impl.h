@@ -52,14 +52,14 @@ template <typename WorkerT>
 
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::enqueueCommThread(WorkUnitType const& work_unit) {
-  assert(initialized_ and "Must be initialized to enqueue");
+  vtAssert(initialized_, "Must be initialized to enqueue");
   this->enqueued();
   WorkerGroupComm::enqueueComm(work_unit);
 }
 
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::enqueueAnyWorker(WorkUnitType const& work_unit) {
-  assert(initialized_ and "Must be initialized to enqueue");
+  vtAssert(initialized_, "Must be initialized to enqueue");
 
   this->enqueued();
   workers_[0].enqueue(work_unit);
@@ -69,8 +69,8 @@ template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::enqueueForWorker(
   WorkerIDType const& worker_id, WorkUnitType const& work_unit
 ) {
-  assert(initialized_ and "Must be initialized to enqueue");
-  assert(worker_id < workers_.size() and "Worker ID must be valid");
+  vtAssert(initialized_, "Must be initialized to enqueue");
+  vtAssert(worker_id < workers_.size(), "Worker ID must be valid");
 
   this->enqueued();
   workers_[worker_id]->enqueue(work_unit);
@@ -78,7 +78,7 @@ void WorkerGroupAny<WorkerT>::enqueueForWorker(
 
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::enqueueAllWorkers(WorkUnitType const& work_unit) {
-  assert(initialized_ and "Must be initialized to enqueue");
+  vtAssert(initialized_, "Must be initialized to enqueue");
 
   this->enqueued(num_workers_);
 
@@ -119,7 +119,7 @@ void WorkerGroupAny<WorkerT>::spawnWorkers() {
     "WorkerGroup: spawnWorkers: num_workers_={}\n", num_workers_
   );
 
-  assert(workers_.size() >= num_workers_ and "Must be correct size");
+  vtAssert(workers_.size() >= num_workers_, "Must be correct size");
 
   for (int i = 0; i < num_workers_; i++) {
     WorkerIDType const worker_id = i;

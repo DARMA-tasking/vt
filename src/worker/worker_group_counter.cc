@@ -60,8 +60,8 @@ void WorkerGroupCounter::finished(WorkerIDType id, WorkUnitCountType num) {
 void WorkerGroupCounter::assertCommThread() {
   // Sanity check to ensure single-threaded methods are only called by the
   // communication thread
-  assert(
-    theContext()->getWorker() == worker_id_comm_thread &&
+  vtAssert(
+    theContext()->getWorker() == worker_id_comm_thread,
     "This must only run on the communication thread"
   );
 }

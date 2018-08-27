@@ -44,7 +44,7 @@ private:
   inline PointerType get() const { return rt_; }
   inline ReferenceType operator*() { return getRef(); }
   inline ReferenceType getRef() const {
-    assert(rt_ && "RuntimeHolder: holder is null: can not be dereferenced!");
+    vtAssert(rt_, "RuntimeHolder: holder is null: can not be dereferenced!");
     return *rt_;
   }
 

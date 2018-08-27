@@ -30,13 +30,13 @@ struct VirtualMessage :
     vt_sub_handler_ = in_handler;
   }
   HandlerType getVrtHandler() const {
-    assert(vt_sub_handler_ != uninitialized_handler && "Must have a valid handler");
+    vtAssert(vt_sub_handler_ != uninitialized_handler, "Must have a valid handler");
     return vt_sub_handler_;
   }
 
   // The variable `to_proxy_' manages the intended target of the VirtualMessage
   VirtualProxyType getProxy() const {
-    assert(to_proxy_ != no_vrt_proxy && "Must have a valid proxy target");
+    vtAssert(to_proxy_ != no_vrt_proxy, "Must have a valid proxy target");
     return to_proxy_;
   }
   void setProxy(VirtualProxyType const& in_proxy) { to_proxy_ = in_proxy; }

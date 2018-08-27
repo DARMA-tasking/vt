@@ -26,10 +26,10 @@ void PipeManager::triggerSendBack(PipeType const& pipe, MsgT* data) {
   auto const& node_back = PipeIDBuilder::getNode(pipe);
   if (node_back != this_node) {
     // Send the message back to the owner node
-    assert(0);
+    vtAssertExpr(0);
   } else {
     // Directly trigger the action because the pipe meta-data is located here
-    assert(0);
+    vtAssertExpr(0);
   }
 }
 
