@@ -84,7 +84,7 @@ struct TestVC : vt::vrt::VirtualContext {
       my_proxy, my_index, getProxy(), this
     );
 
-    assert(my_proxy == getProxy());
+    vtAssertExpr(my_proxy == getProxy());
 
     auto const to_right = my_index+1;
     bool const has_right = to_right < msg->proxies.size();

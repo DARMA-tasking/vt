@@ -61,8 +61,8 @@ int main(int argc, char** argv) {
       entity, my_node, [](BaseMessage* in_msg){
         auto msg = static_cast<MyTestMsg*>(in_msg);
 
-        assert(
-          msg->data == magic_number + msg->from_node and
+        vtAssert(
+          msg->data == magic_number + msg->from_node,
           "Message data is corrupted"
         );
 

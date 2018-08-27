@@ -276,8 +276,8 @@ int main(int argc, char** argv) {
 
   blk_size = total_size / num_nodes;
 
-  assert(blk_size * num_nodes == total_size);
-  assert(blk_size * num_nodes == total_size);
+  vtAssertExpr(blk_size * num_nodes == total_size);
+  vtAssertExpr(blk_size * num_nodes == total_size);
 
   t1 = new double[blk_size + 2];
   t2 = new double[blk_size + 2];

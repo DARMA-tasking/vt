@@ -31,7 +31,7 @@ static void processIterMsgs(vt::BaseMessage* in_msg) {
     theContext()->getNode(), msg.from, count, first_tag, cur_iter
   );
 
-  assert(first_tag == cur_iter);
+  vtAssertExpr(first_tag == cur_iter);
 
   // received all for this iteration
   if (count == theContext()->getNumNodes() - 1) {

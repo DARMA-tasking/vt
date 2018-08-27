@@ -7,21 +7,13 @@ using namespace vt;
 struct HelloMsg : vt::Message {
   int from;
 
-  HelloMsg(int const& in_from)
-    : Message(), from(in_from)
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | from;
-  }
+  HelloMsg(int const& in_from) : from(in_from) { }
 };
 
 static void hello_world(HelloMsg* msg) {
   fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
 }
 
-#define sstmac_app_name hello_world_vt
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 

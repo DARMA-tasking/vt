@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
       }
       fmt::print("node={}\n", my_node);
       if (my_node == 1) {
-        //assert(in_group);
+        //vtAssertExpr(in_group);
         auto msg = makeSharedMessage<HelloGroupMsg>();
         envelopeSetGroup(msg->env, group);
         fmt::print("calling broadcasting={}\n", my_node);
