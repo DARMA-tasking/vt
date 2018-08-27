@@ -19,6 +19,15 @@
 
 namespace vt { namespace pipe {
 
+
+template <typename T>
+struct FunctorTraits {
+  template <typename U>
+  using FunctorNoMsgArchType = decltype(std::declval<U>().operator()());
+  using FunctorNoMsgType = detection::is_detected<FunctorNoMsgArchType,T>;
+  static constexpr auto const has_no_msg_type = FunctorNoMsgType::value;
+};
+
 struct PipeManager : PipeManagerTL, PipeManagerTyped {
 
   template <typename FunctorT>
