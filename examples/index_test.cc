@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
         "idx={}, max={}, lin={}\n",
         cur_idx.toString().c_str(), idx_a_max.toString().c_str(), lin_idx
       );
-      assert(lin_idx == cur_val);
+      vtAssertExpr(lin_idx == cur_val);
       cur_val++;
     }
   }

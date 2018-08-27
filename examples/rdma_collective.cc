@@ -34,7 +34,7 @@ static void announce(TestMsg* msg) {
         fmt::print("{}: handle={}, finished getting data\n", my_node, rdma_handle);
         for (int i = 0; i < local_data_len; i++) {
           fmt::print("{}: \t local_data[{}] = {}\n", my_node, i, local_data[i]);
-          assert(local_data[i] == 5.0+i);
+          vtAssertExpr(local_data[i] == 5.0+i);
         }
       });
     });

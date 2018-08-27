@@ -143,6 +143,36 @@ struct CallbackMethodFunctorVoidB {
   }
 };
 
+struct CallbackMethodFunctor {
+  void operator()(TestMsg* msg) {
+    fmt::print("{}: triggering functor 1\n", theContext()->getNode());
+  }
+};
+
+struct CallbackMethodFunctorNew {
+  void operator()(TestMsg* msg) {
+    fmt::print("{}: triggering functor NEW\n", theContext()->getNode());
+  }
+};
+
+struct CallbackMethodFunctorVoid {
+  void operator()() {
+    fmt::print("{}: triggering functor VOID\n", theContext()->getNode());
+  }
+};
+
+struct CallbackMethodFunctorB {
+  void operator()(TestMsg* msg) {
+    fmt::print("{}: triggering functor 1 bcast\n", theContext()->getNode());
+  }
+};
+
+struct CallbackMethodFunctorVoidB {
+  void operator()() {
+    fmt::print("{}: triggering functor VOID bcast\n", theContext()->getNode());
+  }
+};
+
 #define sstmac_app_name hello_world_vt
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);

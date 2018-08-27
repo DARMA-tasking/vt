@@ -19,17 +19,20 @@ static void tell_handle(TestMsg* msg) {
 
   if (my_node == 1 || my_node == 2) {
     fmt::print("{}: requesting data\n", my_node);
-    theRDMA()->getData(msg->han, my_node, sizeof(double)*3, no_byte, [](void* data, size_t num_bytes){
-      double* const ptr = static_cast<double*>(data);
-      size_t const num_elems = num_bytes / sizeof(double);
-      fmt::print(
-        "{}: data arrived: data={}, num_bytes={}\n",
-        my_node, print_ptr(data), num_bytes
-      );
-      for (auto i = 0; i < num_elems; i++) {
-        fmt::print("\t: my_data[{}] = {}\n", i, ptr[i]);
+    theRDMA()->getData(
+      msg->han, my_node, sizeof(double)*3, no_byte,
+      [](void* data, size_t num_bytes){
+        double* const ptr = static_cast<double*>(data);
+        size_t const num_elems = num_bytes / sizeof(double);
+        fmt::print(
+          "{}: data arrived: data={}, num_bytes={}\n",
+          my_node, print_ptr(data), num_bytes
+        );
+        for (auto i = 0; i < num_elems; i++) {
+          fmt::print("\t: my_data[{}] = {}\n", i, ptr[i]);
+        }
       }
-    });
+    );
   }
 }
 

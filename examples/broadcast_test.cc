@@ -23,8 +23,8 @@ static void bcastTest(Msg* msg) {
   fmt::print("{}: bcastTestHandler root={}\n", theContext()->getNode(), msg->broot);
   #endif
 
-  assert(
-    root != my_node and "Broadcast should deliver to all but this node"
+  vtAssert(
+    root != my_node, "Broadcast should deliver to all but this node"
   );
 
   count++;
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 
   theTerm()->addAction([=]{
     fmt::print("[{}] verify: count={}, expected={}\n", my_node, count, expected);
-    assert(count == expected);
+    vtAssertExpr(count == expected);
   });
 
   if (from_node == uninitialized_destination or from_node == my_node) {
