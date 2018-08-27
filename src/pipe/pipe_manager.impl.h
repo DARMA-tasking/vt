@@ -33,4 +33,44 @@ void PipeManager::triggerSendBack(PipeType const& pipe, MsgT* data) {
   }
 }
 
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+Callback<MsgT> PipeManager::makeSend(NodeType const& node) {
+  return makeCallbackSingleSend<MsgT,f>(node);
+}
+
+template <typename FunctorT, typename MsgT>
+Callback<MsgT> PipeManager::makeSend(NodeType const& node) {
+  return makeCallbackFunctorSend<FunctorT,MsgT>(node);
+}
+
+template <typename FunctorT, typename not_used_>
+Callback<PipeManager::Void> PipeManager::makeSend(NodeType const& node) {
+  return makeCallbackFunctorSendVoid<FunctorT>(node);
+}
+
+template <typename ColT, typename MsgT, PipeManager::ColHanType<ColT,MsgT>* f>
+Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
+  return makeCallbackSingleProxySend<ColT,MsgT,f>(proxy);
+}
+
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+Callback<MsgT> PipeManager::makeBcast() {
+  return makeCallbackSingleBcast<MsgT,f>(true);
+}
+
+template <typename FunctorT, typename MsgT>
+Callback<MsgT> PipeManager::makeBcast() {
+  return makeCallbackFunctorBcast<FunctorT,MsgT>(true);
+}
+
+template <typename FunctorT, typename not_used_>
+Callback<PipeManager::Void> PipeManager::makeBcast() {
+  return makeCallbackFunctorBcastVoid<FunctorT>(true);
+}
+
+template <typename ColT, typename MsgT, PipeManager::ColHanType<ColT,MsgT>* f>
+Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
+  return makeCallbackSingleProxyBcast<ColT,MsgT,f>(proxy);
+}
+
 }} /* end namespace vt::pipe */
