@@ -44,7 +44,10 @@ struct PipeManager : PipeManagerTL, PipeManagerTyped {
   Callback<MsgT> makeSend(NodeType const& node);
   template <typename FunctorT, typename MsgT = GetMsgType<FunctorT>>
   Callback<MsgT> makeSend(NodeType const& node);
-  template <typename FunctorT>
+  template <
+    typename FunctorT,
+    typename = std::enable_if_t<FunctorTraits<FunctorT>::has_no_msg_type>
+  >
   Callback<Void> makeSend(NodeType const& node);
   template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
   Callback<MsgT> makeSend(typename ColT::ProxyType proxy);
@@ -53,8 +56,11 @@ struct PipeManager : PipeManagerTL, PipeManagerTyped {
   Callback<MsgT> makeBcast();
   template <typename FunctorT, typename MsgT = GetMsgType<FunctorT>>
   Callback<MsgT> makeBcast();
-  template <typename FunctorT>
-  Callback<Void> makeBast(NodeType const& node);
+  template <
+    typename FunctorT,
+    typename = std::enable_if_t<FunctorTraits<FunctorT>::has_no_msg_type>
+  >
+  Callback<Void> makeBcast();
   template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
   Callback<MsgT> makeBcast(ColProxyType<ColT> proxy);
 
