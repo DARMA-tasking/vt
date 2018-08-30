@@ -71,6 +71,9 @@ public:
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
 
+  bool isEpochReady(EpochType const& epoch) const noexcept;
+  bool isEpochFinished(EpochType const& epoch) const noexcept;
+
 public:
   // void scopedEpoch(ActionType closure, ActionType action);
 
