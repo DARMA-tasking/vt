@@ -129,10 +129,19 @@ void TerminationDetector::maybePropagate() {
     propagateEpoch(any_epoch_state_);
   }
 
-  for (auto&& e : epoch_state_) {
-    if (e.second.readySubmitParent()) {
-      propagateEpoch(e.second);
+  for (auto&& iter = epoch_state_.begin(); iter != epoch_state_.end(); ) {
+    auto &state = iter->second;
+    bool clean_epoch = false;
+    if (state.readySubmitParent()) {
+      propagateEpoch(state);
+      if (state.isTerminated() && iter->first != any_epoch_sentinel)
+        clean_epoch = true;
     }
+    
+    if ( clean_epoch )
+      iter = epoch_state_.erase( iter );
+    else
+      ++iter;
   }
 }
 
@@ -266,10 +275,6 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     // reset counters
     state.g_prod1 = state.g_cons1 = 0;
     state.submitToParent(is_root_);
-
-    if (state.isTerminated()) {
-      cleanupEpoch(state.getEpoch());
-    }
   }
 
   return is_ready;
