@@ -51,6 +51,9 @@ public:
   EpochType makeEpoch(bool const is_collective);
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
+  
+  bool isEpochReady(EpochType const& epoch) const noexcept;
+  bool isEpochFinished(EpochType const& epoch) const noexcept;
 
 private:
   EpochType newEpochCollective();
