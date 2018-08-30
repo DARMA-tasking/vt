@@ -1329,6 +1329,11 @@ bool CollectionManager::insertCollectionElement(
 
   auto elm_holder = findElmHolder<ColT,IndexT>(proxy);
   auto const& elm_exists = elm_holder->exists(idx);
+
+  if (elm_exists) {
+    return false;
+  }
+
   vtAssert(!elm_exists, "Must not exist at this point");
 
   auto const& destroyed = elm_holder->isDestroyed();
