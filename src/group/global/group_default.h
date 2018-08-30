@@ -53,7 +53,7 @@ private:
   TreePtrType spanning_tree_ = nullptr;
   bool finished_startup_ = false;
   PhaseType cur_phase_ = 0;
-  CountType sync_count_[num_phases] = { 0 };
+  CountType sync_count_[num_phases + 1] = { 0, 0, 0 };
   NodeType this_node_ = uninitialized_destination;
 };
 
