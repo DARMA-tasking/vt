@@ -470,6 +470,26 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   }
 }
 
+bool
+TerminationDetector::isEpochReady(EpochType const& epoch) const noexcept {
+  auto const finished = isEpochFinished(epoch);
+  return finsihed || (epoch_ready_.find(epoch) != epoch_ready_.end());
+}
+
+bool
+TerminationDetector::isEpochFinished(EpochType const& epoch) const noexcept {
+  auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
+  if (is_rooted_epoch) {
+    return false;
+  } else {
+    if (epoch_finished_.find(epoch) != epoch_finished_.end()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
 EpochType TerminationDetector::newEpochRooted(bool const useDS) {
   /*
    *  This method should only be called by the root node for the rooted epoch
