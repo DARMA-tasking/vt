@@ -67,6 +67,7 @@ struct CollectionManager {
   using CleanupFnType = std::function<void()>;
   using CleanupListFnType = std::list<CleanupFnType>;
   using DispatchHandlerType = auto_registry::AutoHandlerType;
+  using ActionVecType = std::vector<ActionType>;
 
   template <typename T, typename U=void>
   using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
