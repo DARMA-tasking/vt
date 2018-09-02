@@ -642,8 +642,8 @@ private:
   std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
   std::vector<ActionFinishedLBType> lb_continuations_ = {};
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
-  std::unordered_map<VirtualProxyType,ActionType> insert_finished_action_ = {};
-  std::unordered_map<VirtualProxyType,ActionType> user_insert_action_ = {};
+  std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
+  std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */
