@@ -1531,11 +1531,16 @@ void CollectionManager::setupNextInsertTrigger(
     theTerm()->addAction(insert_epoch, finished_insert_trigger);
     theTerm()->activateEpoch(insert_epoch);
   };
-  insert_finished_action_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(proxy),
-    std::forward_as_tuple(start_detect)
-  );
+  auto iter = insert_finished_action_.find(proxy);
+  if (iter == insert_finished_action_.end()) {
+    insert_finished_action_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(proxy),
+      std::forward_as_tuple(ActionVecType{start_detect})
+    );
+  } else {
+    iter->second.push_back(start_detect);
+  }
 }
 
 template <typename ColT, typename IndexT>
@@ -1635,9 +1640,11 @@ void CollectionManager::actInsert(VirtualProxyType const& proxy) {
 
   auto iter = user_insert_action_.find(proxy);
   if (iter != user_insert_action_.end()) {
-    auto action = iter->second;
+    auto action_lst = iter->second;
     user_insert_action_.erase(iter);
-    action();
+    for (auto&& action : action_lst) {
+      action();
+    }
   }
 }
 
@@ -1647,6 +1654,13 @@ template <typename ColT, typename IndexT>
 ) {
   auto const& node = msg->action_node_;
   auto const& untyped_proxy = msg->proxy_.getProxy();
+
+  debug_print(
+    vrt_coll, node,
+    "doneInsertHandler: proxy={}, node={}\n",
+    untyped_proxy, node
+  );
+
   if (node != uninitialized_destination) {
     auto send = [untyped_proxy,node]{
       auto msg = makeSharedMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
@@ -1672,11 +1686,16 @@ void CollectionManager::finishedInserting(
    *  whole system, which termination in the insertion epoch can enforce
    */
   if (insert_action) {
-    user_insert_action_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(untyped_proxy),
-      std::forward_as_tuple(insert_action)
-    );
+    auto iter = user_insert_action_.find(untyped_proxy);
+    if (iter ==  user_insert_action_.end()) {
+      user_insert_action_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(untyped_proxy),
+        std::forward_as_tuple(ActionVecType{insert_action})
+      );
+    } else {
+      iter->second.push_back(insert_action);
+    }
   }
 
   auto const& cons_node = VirtualProxyBuilder::getVirtualNode(untyped_proxy);
@@ -1689,10 +1708,13 @@ void CollectionManager::finishedInserting(
 
   if (cons_node == this_node) {
     auto iter = insert_finished_action_.find(untyped_proxy);
-    assert(iter != insert_finished_action_.end() && "Insertable should exist");
-    auto action = iter->second;
-    insert_finished_action_.erase(untyped_proxy);
-    action();
+    if (iter != insert_finished_action_.end()) {
+      auto action_lst = iter->second;
+      insert_finished_action_.erase(untyped_proxy);
+      for (auto&& action : action_lst) {
+        action();
+      }
+    }
   } else {
     auto node = insert_action ? this_node : uninitialized_destination;
     auto msg = makeSharedMessage<DoneInsertMsg<ColT,IndexT>>(proxy,node);
