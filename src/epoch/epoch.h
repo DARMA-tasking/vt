@@ -47,8 +47,9 @@ static constexpr BitCountType const epoch_user_num_bits = 1;
  */
 
 enum struct eEpochCategory : int8_t {
-  NoCategoryEpoch = 0x0,
-  InsertEpoch     = 0x1
+  NoCategoryEpoch       = 0x0,
+  InsertEpoch           = 0x1,
+  DijkstraScholtenEpoch = 0x2
 };
 
 inline std::ostream& operator<<(std::ostream& os, eEpochCategory const& cat) {
@@ -60,7 +61,7 @@ inline std::ostream& operator<<(std::ostream& os, eEpochCategory const& cat) {
  *  ensure the epoch_category_num_bits is sufficiently large.
  *
  */
-static constexpr BitCountType const epoch_category_num_bits = 1;
+static constexpr BitCountType const epoch_category_num_bits = 2;
 
 /*
  *  Epoch layout enum to help with manipuating the bits
