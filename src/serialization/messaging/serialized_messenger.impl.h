@@ -408,6 +408,12 @@ template <typename MsgT, typename BaseT>
 
   //fmt::print("ptr_size={}\n", ptr_size);
 
+  debug_print(
+    serial_msg, node,
+    "sendSerialMsgHandler: ptr_size={}, han={}, eager={}\n",
+    ptr_size, typed_handler, ptr_size <= serialized_msg_eager_size
+  );
+
   if (ptr_size > serialized_msg_eager_size) {
     debug_print(
       serial_msg, node,
@@ -457,6 +463,11 @@ template <typename MsgT, typename BaseT>
 
     data_sender(send_data);
   } else {
+    debug_print(
+      serial_msg, node,
+      "sendSerialMsg: eager: ptr_size={}\n", ptr_size
+    );
+
     vtAssertExpr(payload_msg != nullptr && eager_sender != nullptr);
 
     // move serialized msg envelope to system envelope to preserve info
