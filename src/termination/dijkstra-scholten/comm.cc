@@ -40,6 +40,11 @@ namespace vt { namespace term { namespace ds {
 }
 
 /*static*/ void StateDS::rootTerminated(EpochType epoch) {
+  debug_print(
+    termds, node,
+    "StateDS::rootTerminated: epoch={}\n", epoch
+  );
+  theTerm()->triggerAllEpochActions(epoch);
 }
 
 /*static*/ StateDS::TerminatorType*
