@@ -20,7 +20,7 @@ TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeType self_)
 
 template <typename CommType>
 void TermDS<CommType>::terminated() {
-
+  CommType::rootTerminated(epoch_);
 }
 
 template <typename CommType>
