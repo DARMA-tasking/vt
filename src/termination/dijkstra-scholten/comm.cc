@@ -21,6 +21,7 @@ namespace vt { namespace term { namespace ds {
   );
   auto const& node = theContext()->getNode();
   auto msg = makeSharedMessage<AckMsg>(epoch,node,successor,cnt);
+  theMsg()->setTermMessage(msg);
   theMsg()->sendMsg<AckMsg,requestAckHan>(successor,msg);
 }
 
@@ -34,6 +35,7 @@ namespace vt { namespace term { namespace ds {
   );
   auto const& node = theContext()->getNode();
   auto msg = makeSharedMessage<AckMsg>(epoch,node,predecessor,cnt);
+  theMsg()->setTermMessage(msg);
   theMsg()->sendMsg<AckMsg,acknowledgeHan>(predecessor,msg);
 }
 
