@@ -104,8 +104,9 @@ void TermDS<CommType>::msgProcessed(NodeType const predecessor) {
     }
   }
 
-  if (predecessor == parent)
+  if (predecessor == parent) {
     reqedParent += 1;
+  }
 
   tryAck();
   tryLast();
