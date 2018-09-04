@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "utils/bits/bits_common.h"
+#include "configs/debug/debug_fmt.h"
 
 namespace vt { namespace epoch {
 
@@ -49,6 +50,10 @@ enum struct eEpochCategory : int8_t {
   NoCategoryEpoch = 0x0,
   InsertEpoch     = 0x1
 };
+
+inline std::ostream& operator<<(std::ostream& os, eEpochCategory const& cat) {
+  return debug::printEnum<eEpochCategory>(os,cat);
+}
 
 /*
  *  Important: if you add categories to the enum of epoch categories, you must
