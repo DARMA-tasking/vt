@@ -7,6 +7,8 @@
 #include "termination/term_msgs.h"
 #include "termination/term_state.h"
 #include "termination/term_action.h"
+#include "termination/term_interface.h"
+#include "termination/dijkstra-scholten/ds_headers.h"
 #include "epoch/epoch.h"
 #include "activefn/activefn.h"
 #include "collective/tree/tree.h"
@@ -18,20 +20,35 @@
 
 namespace vt { namespace term {
 
-struct TerminationDetector : TermAction, collective::tree::Tree {
+using DijkstraScholtenTerm = term::ds::StateDS;
+
+struct TerminationDetector :
+  TermAction, collective::tree::Tree, DijkstraScholtenTerm, TermInterface
+{
   template <typename T>
   using EpochContainerType = std::unordered_map<EpochType, T>;
   using TermStateType = TermState;
+  using TermStateDSType = term::ds::StateDS::TerminatorType;
 
   TerminationDetector();
 
+  /****************************************************************************
+   *
+   * Termination interface: produce(..)/consume(..) for 4-counter wave-based
+   * termination, send(..) for Dijkstra-Scholten parental responsibility TD
+   *
+   ***************************************************************************/
   void produce(
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   );
-
   void consume(
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   );
+  void send(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
+  void recv(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
+  /***************************************************************************/
+
+  TermStateDSType* getDSTerm(EpochType const& epoch);
 
   void resetGlobalTerm();
 
@@ -46,16 +63,20 @@ public:
   /*
    * New interface for making epochs for termination detection
    */
-  EpochType makeEpochRooted();
+  EpochType makeEpochRooted(bool const useDS = false);
   EpochType makeEpochCollective();
-  EpochType makeEpoch(bool const is_collective);
+  EpochType makeEpoch(bool const is_collective, bool const useDS = false);
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
 
-private:
-  EpochType newEpochCollective();
-  EpochType newEpochRooted();
+public:
+  // void scopedEpoch(ActionType closure, ActionType action);
 
+public:
+  EpochType newEpochCollective();
+  EpochType newEpochRooted(bool const useDS = false);
+
+private:
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
   void cleanupEpoch(EpochType const& epoch);
   void produceConsumeState(
