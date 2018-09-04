@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "termination/dijkstra-scholten/ds.h"
+#include "termination/dijkstra-scholten/comm.h"
 #include "termination/dijkstra-scholten/ack_request.h"
 
 namespace vt { namespace term { namespace ds {
@@ -151,7 +152,7 @@ void TermDS<CommType>::tryLast() {
   debug_print(
     term, node,
     "{}: tryLast: has parent={}, D={}, C={}, emc={}, reqedParent={}, "
-    "ackedParent={}\n"
+    "ackedParent={}\n",
     self, parent, D, C, engagementMessageCount, reqedParent, ackedParent
   );
 
@@ -194,6 +195,7 @@ void TermDS<CommType>::tryLast() {
   }
 }
 
+template struct TermDS<StateDS>;
 
 }}} /* end namespace vt::term::ds */
 

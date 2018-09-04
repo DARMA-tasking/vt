@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "termination/dijkstra-scholten/ack_request.h"
+#include "termination/dijkstra-scholten/comm.fwd.h"
 
 #include <cstdlib>
 #include <map>
@@ -67,7 +68,6 @@ protected:
   EpochType epoch_                  = no_epoch;
   AckReqListType outstanding        = {};
 };
-
 
 }}} /* end namespace vt::term::ds */
 
