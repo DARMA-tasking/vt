@@ -26,8 +26,7 @@ void TermDS<CommType>::terminated() {
 template <typename CommType>
 void TermDS<CommType>::setRoot(bool isRoot) {
   if (isRoot) {
-    //C = processedSum = -1;
-    //outstanding.push(AckRequest(NodeType(), 0));
+    outstanding.push_back(AckRequest(NodeType(), 0));
   }
 }
 
