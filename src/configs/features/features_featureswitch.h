@@ -37,6 +37,7 @@
     sequence_vrt,          "sequencer-vrt",                             \
     serial_msg,            "serialized-msg",                            \
     term,                  "termination",                               \
+    termds,                "dijkstra-scholten-TD",                      \
     trace,                 "trace",                                     \
     vrt,                   "vc",                                        \
     vrt_coll,              "vcc",                                       \
