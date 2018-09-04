@@ -14,6 +14,11 @@ namespace vt { namespace term { namespace ds {
 /*static*/ void StateDS::requestAck(
   EpochType epoch, Endpoint successor, int64_t cnt
 ) {
+  debug_print(
+    termds, node,
+    "StateDS::requestAck: epoch={}, pred={}, cnt={}\n",
+    epoch, successor, cnt
+  );
   auto const& node = theContext()->getNode();
   auto msg = makeSharedMessage<AckMsg>(epoch,node,successor,cnt);
   theMsg()->sendMsg<AckMsg,requestAckHan>(successor,msg);
@@ -22,6 +27,11 @@ namespace vt { namespace term { namespace ds {
 /*static*/ void StateDS::acknowledge(
   EpochType epoch, Endpoint predecessor, int64_t cnt
 ) {
+  debug_print(
+    termds, node,
+    "StateDS::acknowledge: epoch={}, pred={}, cnt={}\n",
+    epoch, predecessor, cnt
+  );
   auto const& node = theContext()->getNode();
   auto msg = makeSharedMessage<AckMsg>(epoch,node,predecessor,cnt);
   theMsg()->sendMsg<AckMsg,acknowledgeHan>(predecessor,msg);
