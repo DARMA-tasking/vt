@@ -337,8 +337,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   debug_print(
     location, node,
     "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: inst={}, "
-    "serialize={}, home_node={}, id={}\n",
-    to_node, this_node, this_inst, serialize, home_node, id
+    "serialize={}, home_node={}, id={}, ref={}\n",
+    to_node, this_node, this_inst, serialize, home_node, id,
+    envelopeGetRef(msg->env)
   );
 
   if (to_node != this_node) {
@@ -358,8 +359,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     debug_print(
       location, node,
       "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: "
-      "home_node={}, apply here\n",
-      to_node, this_node, home_node
+      "home_node={}, ref={}: apply here\n",
+      to_node, this_node, home_node, envelopeGetRef(msg->env)
     );
 
     auto trigger_msg_handler_action = [=](EntityID const& id) {
@@ -371,8 +372,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         debug_print(
           location, node,
           "EntityLocationCoord: apply direct handler action: "
-          "id={}, from={}, handler={}\n",
-          id, handler
+          "id={}, from={}, handler={}, ref={}\n",
+          id, from, handler, envelopeGetRef(msg->env)
         );
         runnable::Runnable<MessageT>::run(handler, active_fn, msg, from);
       } else {
@@ -410,7 +411,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     } else {
       debug_print(
         location, node,
-        "EntityLocationCoord: routeMsgNode: buffering\n"
+        "EntityLocationCoord: routeMsgNode: ref={}, buffering\n",
+        envelopeGetRef(msg->env)
       );
 
       messageRef(msg);
@@ -423,7 +425,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         debug_print(
           location, node,
           "EntityLocationCoord: routeMsgNode: trigger action: resolved={}, "
-          "this_node={}, id={}\n", resolved, this_node, id_
+          "this_node={}, id={}, ref={}\n",
+          resolved, this_node, id_, envelopeGetRef(msg->env)
         );
 
         if (resolved == this_node) {
