@@ -5,6 +5,9 @@
 #include "config.h"
 #include "termination/termination.h"
 #include "termination/dijkstra-scholten/comm.h"
+#include "termination/dijkstra-scholten/ds.h"
+#include "messaging/active.h"
+#include "context/context.h"
 
 namespace vt { namespace term { namespace ds {
 
