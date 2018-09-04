@@ -17,6 +17,7 @@ struct TermInterface {
   );
   /// Interface for Dijkstra-Scholten termination
   void send(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
+  void recv(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
 };
 
 }} /* end namespace vt::term */

@@ -6,6 +6,9 @@
 #include "collective/collective_ops.h"
 #include "scheduler/scheduler.h"
 #include "epoch/epoch_headers.h"
+#include "termination/dijkstra-scholten/ds_headers.h"
+#include "termination/dijkstra-scholten/comm.h"
+#include "termination/dijkstra-scholten/ds.h"
 
 namespace vt { namespace term {
 
@@ -103,6 +106,71 @@ void TerminationDetector::produceConsumeState(
   if (state.readySubmitParent()) {
     propagateEpoch(state);
   }
+}
+
+void TerminationDetector::send(NodeType const& node, EpochType const& epoch) {
+  auto ptr = getDSTerm(epoch);
+  if (ptr) {
+    debug_print(
+      termds, node,
+      "send: (DS) epoch={:x}, successor={}\n",
+      epoch, node
+    );
+    ptr->msgSent(node);
+  }
+}
+
+void TerminationDetector::recv(NodeType const& node, EpochType const& epoch) {
+  auto ptr = getDSTerm(epoch);
+  if (ptr) {
+    debug_print(
+      termds, node,
+      "recv: (DS) epoch={:x}, predecessor={}\n",
+      epoch, node
+    );
+    ptr->msgProcessed(node);
+  }
+}
+
+TerminationDetector::TermStateDSType*
+TerminationDetector::getDSTerm(EpochType const& epoch) {
+  if (epoch != no_epoch) {
+    auto const is_rooted = epoch::EpochManip::isRooted(epoch);
+    debug_print(
+      termds, node,
+      "getDSTerm: epoch={:x}, no_epoch={:x}, any_epoch_sentinel={:x}, "
+      "is_rooted={}\n",
+      epoch, no_epoch, any_epoch_sentinel, is_rooted
+    );
+    if (epoch != any_epoch_sentinel && is_rooted) {
+      auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
+      auto const epoch_category = epoch::EpochManip::category(epoch);
+      auto const is_ds = epoch_category == ds_epoch;
+      debug_print(
+        termds, node,
+        "getDSTerm: epoch={:x}, category={}, ds_epoch={}, "
+        "is_rooted={}, is_ds={}\n",
+        epoch, epoch_category, ds_epoch, is_rooted, is_ds
+      );
+      if (is_ds) {
+        auto iter = term_.find(epoch);
+        if (iter == term_.end()) {
+          auto const this_node = theContext()->getNode();
+          term_.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(epoch),
+            std::forward_as_tuple(
+              TerminatorType{epoch,false,this_node}
+            )
+          );
+          iter = term_.find(epoch);
+          vtAssert(iter != term_.end(), "Must exist");
+        }
+        return &iter->second;
+      }
+    }
+  }
+  return nullptr;
 }
 
 void TerminationDetector::produceConsume(
@@ -368,30 +436,51 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   }
 }
 
-EpochType TerminationDetector::newEpochRooted() {
-  auto const& rooted_epoch = epoch::EpochManip::makeNewRootedEpoch();
+EpochType TerminationDetector::newEpochRooted(bool const useDS) {
   /*
    *  This method should only be called by the root node for the rooted epoch
    *  identifier, which is distinct and has the node embedded in it to
    *  distinguish it from all other epochs
    */
-  rootMakeEpoch(rooted_epoch);
-  return rooted_epoch;
+  if (useDS) {
+    auto const& rooted_epoch = epoch::EpochManip::makeNewRootedEpoch(
+      false, epoch::eEpochCategory::DijkstraScholtenEpoch
+    );
+    auto const this_node = theContext()->getNode();
+    auto iter = term_.find(rooted_epoch);
+    vtAssertInfo(
+      iter == term_.end(), "New epoch must not exist", rooted_epoch, useDS
+    );
+    term_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(rooted_epoch),
+      std::forward_as_tuple(
+        TerminatorType{rooted_epoch,true,this_node}
+      )
+    );
+    return rooted_epoch;
+  } else {
+    auto const& rooted_epoch = epoch::EpochManip::makeNewRootedEpoch();
+    rootMakeEpoch(rooted_epoch);
+    return rooted_epoch;
+  }
 }
 
-EpochType TerminationDetector::makeEpochRooted() {
-  return makeEpoch(false);
+EpochType TerminationDetector::makeEpochRooted(bool const useDS) {
+  return makeEpoch(false,useDS);
 }
 
 EpochType TerminationDetector::makeEpochCollective() {
   return makeEpoch(true);
 }
 
-EpochType TerminationDetector::makeEpoch(bool const is_collective) {
+EpochType TerminationDetector::makeEpoch(
+  bool const is_collective, bool const useDS
+) {
   if (is_collective) {
     return newEpochCollective();
   } else {
-    return newEpochRooted();
+    return newEpochRooted(useDS);
   }
 }
 
