@@ -34,7 +34,7 @@ void TermDS<CommType>::setRoot(bool isRoot) {
 template <typename CommType>
 void TermDS<CommType>::msgSent(NodeType successor) {
   debug_print(
-    term, node,
+    termds, node,
     "{} sent message to {}\n", self, successor
   );
   vtAssertInfo(
@@ -82,7 +82,7 @@ void TermDS<CommType>::msgProcessed(NodeType const predecessor) {
 
   if (outstanding.size() == 0) {
     debug_print(
-      term, node,
+      termds, node,
       "{}: got engagement message from new parent={}, count={}, D={}\n",
       self, predecessor, 1, D
     );
@@ -150,7 +150,7 @@ bool TermDS<CommType>::hasParent() {
 template <typename CommType>
 void TermDS<CommType>::tryLast() {
   debug_print(
-    term, node,
+    termds, node,
     "{}: tryLast: has parent={}, D={}, C={}, emc={}, reqedParent={}, "
     "ackedParent={}\n",
     self, parent, D, C, engagementMessageCount, reqedParent, ackedParent
@@ -163,7 +163,7 @@ void TermDS<CommType>::tryLast() {
   auto const engageEq = reqedParent - ackedParent == engagementMessageCount;
   if (engageEq && D == 0 && C == engagementMessageCount) {
     debug_print(
-      term, node,
+      termds, node,
       "{}: successful tryLast: parent={}, emc={}\n",
       self, parent, engagementMessageCount
     );
