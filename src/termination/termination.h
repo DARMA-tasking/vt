@@ -48,6 +48,7 @@ struct TerminationDetector :
   void recv(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
   /***************************************************************************/
 
+  friend struct ds::StateDS;
   TermStateDSType* getDSTerm(EpochType const& epoch);
 
   void resetGlobalTerm();
