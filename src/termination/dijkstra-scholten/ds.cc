@@ -54,6 +54,10 @@ void TermDS<CommType>::gotAck(CountType count) {
     parent
   );
   D -= count;
+  debug_print(
+    termds, node,
+    "gotAck count={}, D={}\n", count, D
+  );
   tryLast();
 }
 
@@ -82,8 +86,8 @@ void TermDS<CommType>::msgProcessed(NodeType const predecessor) {
   if (outstanding.size() == 0) {
     debug_print(
       termds, node,
-      "{}: got engagement message from new parent={}, count={}, D={}\n",
-      self, predecessor, 1, D
+      "got engagement message from new parent={}, count={}, D={}\n",
+      predecessor, 1, D
     );
 
     parent = predecessor;
@@ -151,9 +155,10 @@ template <typename CommType>
 void TermDS<CommType>::tryLast() {
   debug_print(
     termds, node,
-    "{}: tryLast: has parent={}, D={}, C={}, emc={}, reqedParent={}, "
-    "ackedParent={}\n",
-    self, parent, D, C, engagementMessageCount, reqedParent, ackedParent
+    "tryLast: parent={}, D={}, C={}, emc={}, reqedParent={}, "
+    "ackedParent={}, outstanding.size()={}\n",
+    parent, D, C, engagementMessageCount, reqedParent, ackedParent,
+    outstanding.size()
   );
 
   if (outstanding.size() != 1) {
@@ -161,15 +166,19 @@ void TermDS<CommType>::tryLast() {
   }
 
   auto const engageEq = reqedParent - ackedParent == engagementMessageCount;
-  if (engageEq && D == 0 && C == engagementMessageCount) {
-    debug_print(
-      termds, node,
-      "{}: successful tryLast: parent={}, emc={}\n",
-      self, parent, engagementMessageCount
-    );
 
+  debug_print(
+    termds, node,
+    "tryLast: parent={}, D={}, C={}, emc={}, reqedParent={}, "
+    "ackedParent={}, engageEq={}\n",
+    parent, D, C, engagementMessageCount, reqedParent, ackedParent,
+    engageEq
+  );
+
+  if (engageEq && D == 0 && C == engagementMessageCount) {
     AckRequest a = outstanding.back();
     outstanding.pop_back();
+
     vtAssertInfo(
       engagementMessageCount == a.count,
       "DS-invariant", C, D, processedSum, ackedArbitrary,
@@ -177,8 +186,14 @@ void TermDS<CommType>::tryLast() {
       parent
     );
 
+    debug_print(
+      termds, node,
+      "successful tryLast: parent={}, emc={}, a.pred={}\n",
+      parent, engagementMessageCount, a.pred
+    );
+
     if (a.pred == self) {
-      CommType::rootTerminated(epoch_);
+      terminated();
     } else {
       vtAssertInfo(
         parent == a.pred,
