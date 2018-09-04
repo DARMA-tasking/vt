@@ -429,6 +429,7 @@ template <typename MsgT, typename BaseT>
         auto send_serialized = [&](Active::SendFnType send){
           auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag, no_action);
           sys_msg->data_recv_tag = std::get<1>(ret);
+          messageDeref(msg);
         };
 
         sys_msg->env = msg->env;
@@ -476,6 +477,8 @@ template <typename MsgT, typename BaseT>
     payload_msg->from_node = theContext()->getNode();
 
     eager_sender(payload_msg);
+
+    messageDeref(msg);
   }
 }
 
