@@ -53,10 +53,11 @@ template <typename UserMsgT>
     group_, handler, ptr_size
   );
 
-  UserMsgT* user_msg = makeSharedMessage<UserMsgT>();
+  auto user_msg = makeSharedMessage<UserMsgT>();
   auto ptr_offset =
     reinterpret_cast<char*>(sys_msg) + sizeof(SerialWrapperMsgType<UserMsgT>);
   auto t_ptr = deserialize<UserMsgT>(ptr_offset, ptr_size, user_msg);
+  envelopeSetRef(user_msg->env, 1);
 
   messageRef(user_msg);
   runnable::Runnable<UserMsgT>::run(
@@ -87,8 +88,9 @@ template <typename UserMsgT>
       auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
       auto ptr_size = std::get<1>(ptr);
       //UserMsgT* msg = static_cast<UserMsgT*>(std::malloc(sizeof(UserMsgT)));
-      UserMsgT* msg = makeSharedMessage<UserMsgT>();
+      auto msg = makeSharedMessage<UserMsgT>();
       auto tptr = deserialize<UserMsgT>(raw_ptr, ptr_size, msg);
+      envelopeSetRef(msg->env, 1);
 
       debug_print(
         serial_msg, node,
@@ -110,17 +112,27 @@ template <typename UserMsgT, typename BaseEagerMsgT>
 ) {
   auto const handler = sys_msg->handler;
 
-  //UserMsgT* user_msg = static_cast<UserMsgT*>(std::malloc(sizeof(UserMsgT)));
-  UserMsgT* user_msg = makeSharedMessage<UserMsgT>();
+  auto user_msg = makeSharedMessage<UserMsgT>();
+
+  debug_print(
+    serial_msg, node,
+    "payloadMsgHandler: user ref={}\n",
+    envelopeGetRef(user_msg->env)
+  );
+
   auto tptr = deserialize<UserMsgT>(
     sys_msg->payload.data(), sys_msg->bytes, user_msg
   );
+  envelopeSetRef(user_msg->env, 1);
   auto const& group_ = envelopeGetGroup(sys_msg->env);
 
   debug_print(
     serial_msg, node,
-    "payloadMsgHandler: group={:x}, msg={}, handler={}, bytes={}\n",
-    group_, print_ptr(sys_msg), handler, sys_msg->bytes
+    "payloadMsgHandler: group={:x}, msg={}, handler={}, bytes={}, "
+    "user ref={}, sys ref={}\n",
+    group_, print_ptr(sys_msg), handler, sys_msg->bytes,
+    envelopeGetRef(user_msg->env),
+    envelopeGetRef(sys_msg->env)
   );
 
   messageRef(user_msg);
@@ -447,8 +459,9 @@ template <typename MsgT, typename BaseT>
         );
       } else {
         //MsgT* msg = static_cast<MsgT*>(std::malloc(sizeof(MsgT)));
-        MsgT* msg = makeSharedMessage<MsgT>();
+        auto msg = makeSharedMessage<MsgT>();
         auto tptr = deserialize<MsgT>(ptr, ptr_size, msg);
+        envelopeSetRef(msg, 1);
 
         debug_print(
           serial_msg, node,
