@@ -140,6 +140,7 @@ EventType ActiveMessenger::sendMsgBytes(
 
   if (not is_term) {
     theTerm()->produce(epoch);
+    theTerm()->send(dest,epoch);
   }
 
   vtWarnIf(
@@ -551,6 +552,10 @@ bool ActiveMessenger::deliverActiveMsg(
       }
       messageRef(msg);
     }
+  }
+
+  if (!is_term) {
+    theTerm()->recv(from_node,epoch);
   }
 
   if (has_action_handler) {
