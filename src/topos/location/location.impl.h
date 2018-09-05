@@ -337,9 +337,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   debug_print(
     location, node,
     "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: inst={}, "
-    "serialize={}, home_node={}, id={}, ref={}\n",
+    "serialize={}, home_node={}, id={}, ref={}, from={}, msg={}\n",
     to_node, this_node, this_inst, serialize, home_node, id,
-    envelopeGetRef(msg->env)
+    envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg)
   );
 
   if (to_node != this_node) {
@@ -359,15 +359,16 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     debug_print(
       location, node,
       "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: "
-      "home_node={}, ref={}: apply here\n",
-      to_node, this_node, home_node, envelopeGetRef(msg->env)
+      "home_node={}, ref={}, from={}: apply here\n",
+      to_node, this_node, home_node, envelopeGetRef(msg->env),
+      msg->getLocFromNode()
     );
 
     auto trigger_msg_handler_action = [=](EntityID const& id) {
       bool const& has_handler = msg->hasHandler();
+      auto const& from = msg->getLocFromNode();
       if (has_handler) {
         auto const& handler = msg->getHandler();
-        auto const& from = msg->getFromNode();
         auto active_fn = auto_registry::getAutoHandler(handler);
         debug_print(
           location, node,
@@ -387,6 +388,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           "EntityLocationCoord: no direct handler: id={}\n", id
         );
         reg_han_iter->second.applyRegisteredActionMsg(msg);
+      }
+      if (from == this_node) {
+        messageDeref(msg);
       }
     };
 
@@ -490,13 +494,15 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
   EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act,
-  bool const serialize
+  bool const serialize, NodeType from_node
 ) {
-  auto const& from_node = theContext()->getNode();
+  auto const& from =
+    from_node == uninitialized_destination ? theContext()->getNode() :
+    from_node;
   // set field for location routed message
   msg->setEntity(id);
   msg->setHomeNode(home_node);
-  msg->setFromNode(from_node);
+  msg->setLocFromNode(from);
   msg->setSerialize(serialize);
 
   auto const& msg_size = sizeof(*msg);
@@ -506,8 +512,9 @@ void EntityLocationCoord<EntityID>::routeMsg(
   debug_print(
     location, node,
     "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
-    "serialize={}\n",
-    this_inst, home_node, msg_size, is_large_msg, use_eager, serialize
+    "serialize={}, in_from={}, from={}, msg{}, msg from={}\n",
+    this_inst, home_node, msg_size, is_large_msg, use_eager, serialize,
+    from_node, from, print_ptr(msg), msg->getLocFromNode()
   );
 
   msg->setLocInst(this_inst);
@@ -584,17 +591,19 @@ template <typename MessageT>
   auto const& home_node = msg->getHomeNode();
   auto const& inst = msg->getLocInst();
   auto const& serialize = msg->getSerialize();
+  auto const& from_node = msg->getLocFromNode();
 
   debug_print(
     location, node,
-    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}\n",
-    print_ptr(msg), envelopeGetRef(msg->env), inst, serialize, entity_id
+    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}\n",
+    print_ptr(msg), envelopeGetRef(msg->env), inst, serialize, entity_id,
+    from_node
   );
 
   messageRef(msg);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
-      loc->routeMsg(entity_id, home_node, msg, nullptr, serialize);
+      loc->routeMsg(entity_id, home_node, msg, nullptr, serialize, from_node);
       messageDeref(msg);
     }
   );
