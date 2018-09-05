@@ -37,6 +37,7 @@ set(
       pipe/callback/proxy_bcast
       pipe/callback/anon
       pipe/callback/cb_union
+    termination/dijkstra-scholten
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
