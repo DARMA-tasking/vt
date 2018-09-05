@@ -59,7 +59,6 @@ template <typename UserMsgT>
   auto t_ptr = deserialize<UserMsgT>(ptr_offset, ptr_size, user_msg);
   envelopeSetRef(user_msg->env, 1);
 
-  messageRef(user_msg);
   runnable::Runnable<UserMsgT>::run(
     handler, nullptr, t_ptr, sys_msg->from_node
   );
@@ -98,10 +97,8 @@ template <typename UserMsgT>
         handler, recv_tag
       );
 
-      messageRef(msg);
       runnable::Runnable<UserMsgT>::run(handler, nullptr, tptr, node);
       messageDeref(msg);
-      //std::free(msg);
     }
   );
 }
@@ -113,13 +110,6 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   auto const handler = sys_msg->handler;
 
   auto user_msg = makeSharedMessage<UserMsgT>();
-
-  debug_print(
-    serial_msg, node,
-    "payloadMsgHandler: user ref={}\n",
-    envelopeGetRef(user_msg->env)
-  );
-
   auto tptr = deserialize<UserMsgT>(
     sys_msg->payload.data(), sys_msg->bytes, user_msg
   );
@@ -129,18 +119,16 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   debug_print(
     serial_msg, node,
     "payloadMsgHandler: group={:x}, msg={}, handler={}, bytes={}, "
-    "user ref={}, sys ref={}\n",
+    "user ref={}, sys ref={}, user_msg={}\n",
     group_, print_ptr(sys_msg), handler, sys_msg->bytes,
-    envelopeGetRef(user_msg->env),
-    envelopeGetRef(sys_msg->env)
+    envelopeGetRef(user_msg->env), envelopeGetRef(sys_msg->env),
+    print_ptr(user_msg)
   );
 
-  messageRef(user_msg);
   runnable::Runnable<UserMsgT>::run(
     handler, nullptr, tptr, sys_msg->from_node
   );
   messageDeref(user_msg);
-  //std::free(user_msg);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
@@ -468,10 +456,8 @@ template <typename MsgT, typename BaseT>
           "serialMsgHandler: local msg: handler={}\n", typed_handler
         );
 
-        messageRef(msg);
         runnable::Runnable<MsgT>::run(typed_handler,nullptr,tptr,node);
         messageDeref(msg);
-        //std::free(msg);
       }
     };
 
