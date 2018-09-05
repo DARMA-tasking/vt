@@ -529,6 +529,8 @@ void TerminationDetector::makeRootedEpoch(
     "makeRootedEpoch: epoch={}, is_root={}\n", epoch, is_root
   );
 
+  epoch_ready_.emplace(epoch);
+
   if (!is_root) {
     state.activateEpoch();
   }
