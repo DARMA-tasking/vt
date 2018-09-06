@@ -30,11 +30,26 @@ struct TestStaticBytesMsg : MessageT {
   { }
 };
 
+template <typename MessageT, NumBytesType num_bytes>
+struct TestStaticSerialBytesMsg : TestStaticBytesMsg<MessageT,num_bytes> {
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageT::serializeThis(s);
+    s | TestStaticBytesMsg<MessageT,num_bytes>::bytes;
+    for (auto&& elm : TestStaticBytesMsg<MessageT,num_bytes>::payload) {
+      s | elm;
+    }
+  }
+};
+
 template <NumBytesType num_bytes>
 using TestStaticBytesNormalMsg = TestStaticBytesMsg<vt::Message, num_bytes>;
 
 template <NumBytesType num_bytes>
 using TestStaticBytesShortMsg = TestStaticBytesMsg<vt::ShortMessage, num_bytes>;
+
+template <NumBytesType num_bytes>
+using TestStaticBytesSerialMsg = TestStaticSerialBytesMsg<vt::Message, num_bytes>;
 
 template <typename MessageT, typename T, int len>
 struct WaitInfoMsg : MessageT {
