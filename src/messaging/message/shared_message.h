@@ -61,7 +61,12 @@ void messageDeref(MessageT* msg) {
   #if backend_check_enabled(memory_pool) && \
      !backend_check_enabled(no_pool_alloc_env)
   if (envelopeGetRef(msg->env) == 0) {
-    thePool()->dealloc(msg);
+    // @todo: what is the correct strategy here? invoking dealloc does not
+    // invoke the destructor
+    //
+    // thePool()->dealloc(msg);
+    //
+    delete msg;
   }
   #endif
 }
