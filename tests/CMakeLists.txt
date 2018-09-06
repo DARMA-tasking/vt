@@ -20,6 +20,7 @@ set(
   serialization
   tls
   atomic
+  memory
 )
 
 option(CMAKE_NO_BUILD_TESTS "Enable VT tests to be built" OFF)
