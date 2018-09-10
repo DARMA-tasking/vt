@@ -181,6 +181,7 @@ EventType ActiveMessenger::sendMsgSized(
   auto const& is_bcast = envelopeIsBcast(msg->env);
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_epoch = envelopeIsEpochType(msg->env);
+  auto const& is_shared = isSharedMessage(msg);
 
   backend_enable_if(
     trace_enabled, {
@@ -262,6 +263,10 @@ EventType ActiveMessenger::sendMsgSized(
     }
 
     return ret_event;
+  }
+
+  if (is_shared) {
+    messageDeref(msg);
   }
 }
 
