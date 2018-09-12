@@ -14,6 +14,7 @@
 #include "registry/auto/auto_registry_interface.h"
 #include "messaging/message.h"
 #include "messaging/active.h"
+#include "messaging/message/smart_ptr.h"
 #include "activefn/activefn.h"
 #include "collective/tree/tree.h"
 #include "collective/reduce/reduce.h"
@@ -113,13 +114,15 @@ private:
   void triggerContinuation(RemoteOperationIDType const& op);
 
   EventType sendGroup(
-    BaseMessage* base, NodeType const& from, MsgSizeType const& size,
-    bool const is_root, ActionType action, bool* const deliver
+    MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+    MsgSizeType const& size, bool const is_root, ActionType action,
+    bool* const deliver
   );
 
   EventType sendGroupCollective(
-    BaseMessage* base, NodeType const& from, MsgSizeType const& size,
-    bool const is_root, ActionType action, bool* const deliver
+    MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+    MsgSizeType const& size, bool const is_root, ActionType action,
+    bool* const deliver
   );
 
 public:
@@ -129,8 +132,9 @@ public:
 
 private:
   static EventType groupHandler(
-    BaseMessage* msg, NodeType const& from, MsgSizeType const& msg_size,
-    bool const is_root, ActionType new_action, bool* const deliver
+    MsgSharedPtr<BaseMsgType> const& msg, NodeType const& from,
+    MsgSizeType const& msg_size, bool const is_root, ActionType new_action,
+    bool* const deliver
   );
 
 private:

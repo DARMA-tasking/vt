@@ -9,6 +9,7 @@
 #include "config.h"
 #include "activefn/activefn.h"
 #include "messaging/active.fwd.h"
+#include "messaging/message/smart_ptr.h"
 #include "event/event.h"
 #include "registry/registry.h"
 #include "registry/auto/auto_registry_interface.h"
@@ -51,7 +52,7 @@ struct PendingRecv {
 };
 
 struct BufferedActiveMsg {
-  using MessageType = ShortMessage*;
+  using MessageType = MsgSharedPtr<BaseMsgType>;
 
   MessageType buffered_msg;
   NodeType from_node;
@@ -476,8 +477,8 @@ struct ActiveMessenger {
   );
 
   EventType sendMsgSized(
-    HandlerType const& han, BaseMessage* const msg, MsgSizeType const& msg_size,
-    ActionType next_action = nullptr
+    HandlerType const& han, MsgSharedPtr<BaseMsgType> const& msg,
+    MsgSizeType const& msg_size, ActionType next_action = nullptr
   );
 
   void performTriggeredActions();
@@ -510,23 +511,27 @@ struct ActiveMessenger {
   #endif
 
   bool handleActiveMsg(
-    MessageType msg, NodeType const& sender, MsgSizeType const& size, bool insert
+    MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
+    MsgSizeType const& size, bool insert
   );
-  bool deliverActiveMsg(MessageType msg, NodeType const& from_node, bool insert);
+  bool deliverActiveMsg(
+    MsgSharedPtr<BaseMsgType> const& base, NodeType const& from_node,
+    bool insert
+  );
   void deliverPendingMsgsHandler(
     HandlerType const& han, TagType const& tag = no_tag
   );
   void processMaybeReadyHanTag();
 
   EventType sendMsgBytes(
-    NodeType const& dest, BaseMessage* const base_msg,
+    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
     MsgSizeType const& msg_size, TagType const& send_tag,
     ActionType next_action
   );
 
   EventType sendMsgBytesWithPut(
-    NodeType const& dest, BaseMessage* const base, MsgSizeType const& msg_size,
-    TagType const& send_tag, ActionType next_action
+    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+    MsgSizeType const& msg_size, TagType const& send_tag, ActionType next_action
   );
 
   void setGlobalEpoch(EpochType const& epoch = no_epoch);

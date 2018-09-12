@@ -4,6 +4,7 @@
 #include "group/global/group_default.h"
 #include "messaging/active.h"
 #include "messaging/message.h"
+#include "messaging/message/smart_ptr.h"
 #include "collective/tree/tree.h"
 
 #include <memory>
@@ -104,11 +105,11 @@ namespace vt { namespace group { namespace global {
 }
 
 /*static*/ EventType DefaultGroup::broadcast(
-  BaseMessage* base, NodeType const& from, MsgSizeType const& size,
-  bool const is_root, ActionType action
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSizeType const& size, bool const is_root, ActionType action
 ) {
   // By default use the default_group_->spanning_tree_
-  auto const& msg = reinterpret_cast<ShortMessage* const>(base);
+  auto const& msg = base.get();
   // Destination is where the broadcast originated from
   auto const& dest = envelopeGetDest(msg->env);
   auto const& num_children = default_group_->spanning_tree_->getNumChildren();
@@ -124,7 +125,6 @@ namespace vt { namespace group { namespace global {
   );
 
   if (num_children > 0 || send_to_root) {
-    auto const& is_shared = isSharedMessage(msg);
     bool const& has_action = action != nullptr;
     EventRecordType* parent = nullptr;
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
@@ -135,10 +135,6 @@ namespace vt { namespace group { namespace global {
       event = theEvent()->createParentEvent(node);
       auto& holder = theEvent()->getEventHolder(event);
       parent = holder.get_event();
-    }
-
-    if (is_shared) {
-      messageRef(msg);
     }
 
     // Send to child nodes in the spanning tree
@@ -154,7 +150,6 @@ namespace vt { namespace group { namespace global {
         );
 
         if (send) {
-          messageRef(msg);
           auto const put_event = theMsg()->sendMsgBytesWithPut(
             child, base, size, send_tag, action
           );
@@ -175,17 +170,12 @@ namespace vt { namespace group { namespace global {
         print_bool(is_root), root_node, dest, print_ptr(msg)
       );
 
-      messageRef(msg);
       auto const put_event = theMsg()->sendMsgBytesWithPut(
         root_node, base, size, send_tag, action
       );
       if (has_action) {
         parent->addEventToList(put_event);
       }
-    }
-
-    if (is_shared) {
-      messageDeref(msg);
     }
   }
 

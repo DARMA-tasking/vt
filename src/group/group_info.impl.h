@@ -86,7 +86,7 @@ template <typename MsgT>
 
     std::vector<RegionType::BoundType> local_nodes;
 
-    auto parent_cont = [msg,parent,group,op_id]{
+    auto parent_cont = [parent,group,op_id]{
       auto iter = theGroup()->remote_group_info_.find(group);
       vtAssertExpr(iter != theGroup()->remote_group_info_.end());
       auto info = iter->second.get();
@@ -110,7 +110,6 @@ template <typename MsgT>
           parent, msg
         );
       }
-      messageDeref(msg);
     };
 
     range_tail->splitN(default_num_children, [&](RegionPtrType region){
@@ -129,9 +128,6 @@ template <typename MsgT>
       auto c_msg = makeSharedMessage<MsgT>(
         c, c_size, group, op1, group_total_size, this_node, l1
       );
-
-      messageRef(msg);
-
       theMsg()->sendMsg<MsgT, groupSetupHandler>(c, c_msg);
     });
 

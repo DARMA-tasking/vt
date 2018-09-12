@@ -8,6 +8,7 @@
 #include "group/group_manager.fwd.h"
 #include "activefn/activefn.h"
 #include "messaging/message.h"
+#include "messaging/message/smart_ptr.h"
 #include "collective/tree/tree.h"
 
 #include <memory>
@@ -31,8 +32,8 @@ struct DefaultGroup {
   // Interface for collection communication within the default group
 public:
   static EventType broadcast(
-    BaseMessage* base, NodeType const& from, MsgSizeType const& size,
-    bool const is_root, ActionType action
+    MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+    MsgSizeType const& size, bool const is_root, ActionType action
   );
 
 private:
