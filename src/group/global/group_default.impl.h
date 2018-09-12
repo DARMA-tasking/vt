@@ -19,7 +19,6 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* handler>
   if (this_node == node) {
     auto msg = makeSharedMessage<MsgT>();
     envelopeSetTag(msg->env, phase);
-    messageRef(msg);
     handler(msg);
     messageDeref(msg);
   } else {

@@ -58,17 +58,21 @@ void messageDeref(MessageT* msg) {
     print_ptr(msg), envelopeGetRef(msg->env)
   );
 
-  #if backend_check_enabled(memory_pool) && \
-     !backend_check_enabled(no_pool_alloc_env)
   if (envelopeGetRef(msg->env) == 0) {
-    // @todo: what is the correct strategy here? invoking dealloc does not
-    // invoke the destructor
-    //
-    // thePool()->dealloc(msg);
-    //
+    /* @todo: what is the correct strategy here? invoking dealloc does not
+     * invoke the destructor
+     *
+     * Instead of explicit/direct dealloc to pool:
+     *   thePool()->dealloc(msg);
+     *
+     * Call `delete' to trigger the destructor and execute overloaded
+     * functionality! This should trigger the pool dealloc invocation if it is
+     * being used.
+     *
+     */
+    // msg->operator delete(msg);
     delete msg;
   }
-  #endif
 }
 
 } //end namespace vt

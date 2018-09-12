@@ -4,8 +4,10 @@
 
 #include "config.h"
 #include "group/group_common.h"
+#include "messaging/message/message.h"
 #include "messaging/message.h"
 #include "messaging/active.fwd.h"
+#include "messaging/message/smart_ptr.h"
 
 namespace vt { namespace group {
 
@@ -15,8 +17,9 @@ struct GroupActiveAttorney {
 
 private:
   static EventType groupHandler(
-    BaseMessage* msg, NodeType const& from, MsgSizeType const& msg_size,
-    bool const is_root, ActionType new_action, bool* const deliver
+    MsgSharedPtr<BaseMsgType> const& msg, NodeType const& from,
+    MsgSizeType const& msg_size, bool const is_root, ActionType new_action,
+    bool* const deliver
   );
 };
 

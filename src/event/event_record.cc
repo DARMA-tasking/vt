@@ -1,8 +1,8 @@
 
-#include <memory>
-
 #include "event.h"
 #include "event_record.h"
+
+#include <memory>
 
 #include <mpi.h>
 
@@ -44,13 +44,12 @@ bool EventRecord::testMPIEventReady() {
 
   bool const ready = flag == 1;
 
-  if (ready and msg_ != nullptr and isSharedMessage(msg_)) {
+  if (ready and msg_ != nullptr and isSharedMessage(msg_.get())) {
     debug_print(
       verbose, active, node,
       "testMPIEventRead: deref: msg={}\n",
-      print_ptr(msg_)
+      print_ptr(msg_.get())
     );
-    messageDeref(msg_);
     msg_ = nullptr;
   }
 
@@ -78,9 +77,8 @@ EventType EventRecord::getEventID() const {
   return event_id_;
 }
 
-void EventRecord::setManagedMessage(ShortMessage* in_msg) {
+void EventRecord::setManagedMessage(MsgSharedPtr<ShortMessage> in_msg) {
   msg_ = in_msg;
-  messageRef(msg_);
 }
 
 void EventRecord::setReady() {

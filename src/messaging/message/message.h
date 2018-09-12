@@ -52,10 +52,7 @@ struct ActiveMsg : BaseMsg {
 
     return ptr;
   }
-  #endif
 
-  #if backend_check_enabled(memory_pool) && \
-      !backend_check_enabled(no_pool_alloc_env)
   static void operator delete(void* ptr) {
     debug_print(
       pool, node,
@@ -64,10 +61,23 @@ struct ActiveMsg : BaseMsg {
 
     return thePool()->dealloc(ptr);
   }
-  #endif
 
-  #if backend_check_enabled(memory_pool) && \
-     !backend_check_enabled(no_pool_alloc_env)
+  static void* operator new(std::size_t, void* mem) {
+    return mem;
+  }
+  #else
+  static void* operator new(std::size_t sz) {
+    return std::malloc(sz);
+  }
+
+  static void* operator new(std::size_t sz, std::size_t oversize) {
+    return std::malloc(sz + oversize);
+  }
+
+  static void operator delete(void* ptr) {
+    std::free(ptr);
+  }
+
   static void* operator new(std::size_t, void* mem) {
     return mem;
   }
@@ -95,6 +105,8 @@ using ShortMessage    = messaging::ActiveMsg<Envelope>;
 using EpochMessage    = messaging::ActiveMsg<EpochEnvelope>;
 using EpochTagMessage = messaging::ActiveMsg<EpochTagEnvelope>;
 using Message         = EpochTagMessage;
+
+using BaseMsgType     = ShortMessage;
 
 } // end namespace vt
 

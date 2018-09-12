@@ -183,10 +183,10 @@ void GroupManager::initializeLocalGroup(
 }
 
 /*static*/ EventType GroupManager::groupHandler(
-  BaseMessage* base, NodeType const& from, MsgSizeType const& size,
-  bool const root, ActionType act, bool* const deliver
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSizeType const& size, bool const root, ActionType act, bool* const deliver
 ) {
-  auto const& msg = reinterpret_cast<ShortMessage* const>(base);
+  auto const& msg = reinterpret_cast<ShortMessage* const>(base.get());
   auto const& is_pipe = envelopeIsPipe(msg->env);
 
   if (!is_pipe) {
@@ -230,13 +230,14 @@ void GroupManager::initializeLocalGroup(
 }
 
 EventType GroupManager::sendGroupCollective(
-  BaseMessage* base, NodeType const& from, MsgSizeType const& size,
-  bool const is_root, ActionType action, bool* const deliver
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSizeType const& size, bool const is_root, ActionType action,
+  bool* const deliver
 ) {
   auto const& send_tag = static_cast<messaging::MPI_TagType>(
     messaging::MPITag::ActiveMsgTag
   );
-  auto const& msg = reinterpret_cast<ShortMessage* const>(base);
+  auto const& msg = base.get();
   auto const& group = envelopeGetGroup(msg->env);
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
@@ -244,7 +245,6 @@ EventType GroupManager::sendGroupCollective(
   auto const& in_group = info.inGroup();
   auto const& group_ready = info.isReady();
   auto const& has_action = action != nullptr;
-  auto const& is_shared = isSharedMessage(msg);
   EventRecordType* parent = nullptr;
 
   if (in_group && group_ready) {
@@ -286,10 +286,6 @@ EventType GroupManager::sendGroupCollective(
         parent = holder.get_event();
       }
 
-      if (is_shared) {
-        messageRef(msg);
-      }
-
       info.getTree()->foreachChild([&](NodeType child){
         bool const& send = child != dest;
 
@@ -301,7 +297,6 @@ EventType GroupManager::sendGroupCollective(
         );
 
         if (send) {
-          messageRef(msg);
           auto const put_event = theMsg()->sendMsgBytesWithPut(
             child, base, size, send_tag, action
           );
@@ -315,17 +310,12 @@ EventType GroupManager::sendGroupCollective(
        *  Send message to the root node of the group
        */
       if (send_to_root) {
-        messageRef(msg);
         auto const put_event = theMsg()->sendMsgBytesWithPut(
           root_node, base, size, send_tag, action
         );
         if (has_action) {
           parent->addEventToList(put_event);
         }
-      }
-
-      if (is_shared) {
-        messageDeref(msg);
       }
 
       if (!first_send && this_node_dest) {
@@ -340,7 +330,6 @@ EventType GroupManager::sendGroupCollective(
       return no_event;
     }
   } else if (in_group && !group_ready) {
-    messageRef(msg);
     local_collective_group_info_.find(group)->second->readyAction([=]{
       theGroup()->sendGroupCollective(base,from,size,is_root,action,deliver);
     });
@@ -354,15 +343,11 @@ EventType GroupManager::sendGroupCollective(
      *  that are part of the group can be in the spanning tree. Thus, this node
      *  must forward.
      */
-    messageRef(msg);
     auto const put_event = theMsg()->sendMsgBytesWithPut(
       root_node, base, size, send_tag, action
     );
     if (has_action) {
       parent->addEventToList(put_event);
-    }
-    if (is_shared) {
-      messageDeref(msg);
     }
     /*
      *  Do not deliver on this node since it is not part of the group and will
@@ -374,14 +359,14 @@ EventType GroupManager::sendGroupCollective(
 }
 
 EventType GroupManager::sendGroup(
-  BaseMessage* base, NodeType const& from, MsgSizeType const& size,
-  bool const is_root, ActionType action, bool* const deliver
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSizeType const& size, bool const is_root, ActionType action,
+  bool* const deliver
 ) {
   auto const& this_node = theContext()->getNode();
-  auto const& msg = reinterpret_cast<ShortMessage* const>(base);
+  auto const& msg = base.get();
   auto const& group = envelopeGetGroup(msg->env);
   auto const& dest = envelopeGetDest(msg->env);
-  auto const& is_shared = isSharedMessage(msg);
   auto const& this_node_dest = dest == this_node;
   auto const& first_send = from == uninitialized_destination;
 
@@ -469,10 +454,6 @@ EventType GroupManager::sendGroup(
           parent = holder.get_event();
         }
 
-        if (is_shared) {
-          messageRef(msg);
-        }
-
         // Send to child nodes in the group's spanning tree
         if (num_children > 0) {
           info.default_spanning_tree_->foreachChild([&](NodeType child) {
@@ -483,7 +464,6 @@ EventType GroupManager::sendGroup(
             );
 
             if (child != this_node) {
-              messageRef(msg);
               auto const put_event = theMsg()->sendMsgBytesWithPut(
                 child, base, size, send_tag, action
               );
@@ -492,10 +472,6 @@ EventType GroupManager::sendGroup(
               }
             }
           });
-        }
-
-        if (is_shared) {
-          messageDeref(msg);
         }
 
         if (is_root && from == uninitialized_destination) {

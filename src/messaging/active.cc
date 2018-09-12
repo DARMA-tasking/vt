@@ -2,6 +2,7 @@
 #include "config.h"
 #include "messaging/active.h"
 #include "messaging/envelope.h"
+#include "messaging/message/smart_ptr.h"
 #include "termination/term_headers.h"
 #include "group/group_manager_active_attorney.h"
 #include "runnable/general.h"
@@ -25,10 +26,10 @@ void ActiveMessenger::packMsg(
 }
 
 EventType ActiveMessenger::sendMsgBytesWithPut(
-  NodeType const& dest, BaseMessage* const base, MsgSizeType const& msg_size,
-  TagType const& send_tag, ActionType next_action
+  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+  MsgSizeType const& msg_size, TagType const& send_tag, ActionType next_action
 ) {
-  auto msg = reinterpret_cast<MessageType const>(base);
+  auto msg = base.get();
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_put = envelopeIsPut(msg->env);
   auto const& is_put_packed = envelopeIsPackedPutType(msg->env);
@@ -51,7 +52,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     auto const& put_ptr = envelopeGetPutPtr(msg->env);
     auto const& put_size = envelopeGetPutSize(msg->env);
     bool const& memory_pool_active = thePool()->active_env();
-    auto const& rem_size = thePool()->remainingSize(base);
+    auto const& rem_size = thePool()->remainingSize(msg);
     /*
      * Directly pack if the pool is active (which means it may have
      * overallocated and the remaining size of the (envelope) buffer is
@@ -101,7 +102,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   }
 
   auto const& send_event = sendMsgBytes(
-    dest, msg, new_msg_size, send_tag, next_action
+    dest, base, new_msg_size, send_tag, next_action
   );
 
   if (next_action) {
@@ -112,10 +113,10 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
 }
 
 EventType ActiveMessenger::sendMsgBytes(
-  NodeType const& dest, BaseMessage* const base, MsgSizeType const& msg_size,
-  TagType const& send_tag, ActionType next_action
+  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+  MsgSizeType const& msg_size, TagType const& send_tag, ActionType next_action
 ) {
-  auto const& msg = reinterpret_cast<MessageType const>(base);
+  auto const& msg = base.get();
 
   auto const& epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
@@ -135,7 +136,7 @@ EventType ActiveMessenger::sendMsgBytes(
   }
 
   if (is_shared) {
-    mpi_event->setManagedMessage(msg);
+    mpi_event->setManagedMessage(base.to<ShortMessage>());
   }
 
   if (not is_term) {
@@ -156,10 +157,6 @@ EventType ActiveMessenger::sendMsgBytes(
     mpi_event->getRequest()
   );
 
-  if (is_shared) {
-    messageDeref(msg);
-  }
-
   return event_id;
 }
 
@@ -170,12 +167,12 @@ trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
 #endif
 
 EventType ActiveMessenger::sendMsgSized(
-  HandlerType const& han, BaseMessage* const base, MsgSizeType const& msg_size,
-  ActionType next_action
+  HandlerType const& han, MsgSharedPtr<BaseMsgType> const& base,
+  MsgSizeType const& msg_size, ActionType next_action
 ) {
   auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
-  auto msg = reinterpret_cast<MessageType const>(base);
+  auto msg = base.get();
 
   auto const& dest = envelopeGetDest(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
@@ -225,8 +222,10 @@ EventType ActiveMessenger::sendMsgSized(
 
   bool deliver = false;
   EventType const ret_event = group::GroupActiveAttorney::groupHandler(
-    msg, uninitialized_destination, msg_size, true, next_action, &deliver
+    base, uninitialized_destination, msg_size, true, next_action, &deliver
   );
+
+  EventType ret = no_event;
 
   if (deliver) {
     auto const& is_put = envelopeIsPut(msg->env);
@@ -255,19 +254,17 @@ EventType ActiveMessenger::sendMsgSized(
       holder.attachAction(next_action);
     }
 
-    return event;
+    ret = event;
   } else {
     if (ret_event != no_event && next_action) {
       auto& holder = theEvent()->getEventHolder(ret_event);
       holder.attachAction(next_action);
     }
 
-    return ret_event;
+    ret = ret_event;
   }
 
-  if (is_shared) {
-    messageDeref(msg);
-  }
+  return ret;
 }
 
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
@@ -425,13 +422,16 @@ NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
 }
 
 bool ActiveMessenger::handleActiveMsg(
-  MessageType msg, NodeType const& from, MsgSizeType const& size, bool insert
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSizeType const& size, bool insert
 ) {
   using ::vt::group::GroupActiveAttorney;
 
+  auto msg = base.to<ShortMessage>().get();
+
   // Call group handler
   bool deliver = false;
-  GroupActiveAttorney::groupHandler(msg, from, size, false, nullptr, &deliver);
+  GroupActiveAttorney::groupHandler(base, from, size, false, nullptr, &deliver);
 
   auto const& is_term = envelopeIsTerm(msg->env);
 
@@ -443,18 +443,15 @@ bool ActiveMessenger::handleActiveMsg(
     );
   }
 
-  if (deliver) {
-    auto const& ret = deliverActiveMsg(msg, from, insert);
-    return ret;
-  } else {
-    messageDeref(msg);
-    return false;
-  }
+  return deliver ? deliverActiveMsg(base,from,insert) : false;
 }
 
 bool ActiveMessenger::deliverActiveMsg(
-  MessageType msg, NodeType const& in_from_node, bool insert
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const& in_from_node,
+  bool insert
 ) {
+  auto msg = base.to<ShortMessage>().get();
+
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
   auto const& dest = envelopeGetDest(msg->env);
@@ -542,10 +539,10 @@ bool ActiveMessenger::deliverActiveMsg(
         pending_handler_msgs_.emplace(
           std::piecewise_construct,
           std::forward_as_tuple(handler),
-          std::forward_as_tuple(MsgContType{BufferedMsgType{msg,from_node}})
+          std::forward_as_tuple(MsgContType{BufferedMsgType{base,from_node}})
         );
       } else {
-        iter->second.push_back(BufferedMsgType{msg,from_node});
+        iter->second.push_back(BufferedMsgType{base,from_node});
       }
       if (!is_term || backend_check_enabled(print_term_msgs)) {
         debug_print(
@@ -555,7 +552,6 @@ bool ActiveMessenger::deliverActiveMsg(
           pending_handler_msgs_.find(handler)->second.size()
         );
       }
-      messageRef(msg);
     }
   }
 
@@ -575,7 +571,6 @@ bool ActiveMessenger::deliverActiveMsg(
     if (!is_term) {
       theTerm()->consume(epoch);
     }
-    messageDeref(msg);
   }
 
   return has_action_handler;
@@ -603,8 +598,9 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
       theContext()->getComm(), MPI_STATUS_IGNORE
     );
 
-    MessageType msg = reinterpret_cast<MessageType>(buf);
+    auto msg = reinterpret_cast<MessageType>(buf);
     messageConvertToShared(msg);
+    auto base = promoteMsg(msg);
 
     auto const& is_term = envelopeIsTerm(msg->env);
     auto const& is_put = envelopeIsPut(msg->env);
@@ -642,16 +638,17 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
         put_finished = true;
       } else {
         /*bool const put_delivered = */recvDataMsg(
-          put_tag, sender, [=](RDMA_GetType ptr, ActionType deleter){
-            envelopeSetPutPtr(msg->env, std::get<0>(ptr), std::get<1>(ptr));
-            handleActiveMsg(msg, sender, num_probe_bytes, true);
+          put_tag, sender,
+          [=](RDMA_GetType ptr, ActionType deleter){
+            envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
+            handleActiveMsg(base, sender, num_probe_bytes, true);
           }
         );
       }
     }
 
     if (!is_put || put_finished) {
-      handleActiveMsg(msg, sender, msg_bytes, true);
+      handleActiveMsg(base, sender, msg_bytes, true);
     }
 
     return true;
@@ -725,10 +722,9 @@ void ActiveMessenger::deliverPendingMsgsHandler(
         debug_print(
           active, node,
           "deliverPendingMsgsHandler: msg={}, from={}\n",
-          print_ptr(cur->buffered_msg), cur->from_node
+          print_ptr(cur->buffered_msg.get()), cur->from_node
         );
         if (deliverActiveMsg(cur->buffered_msg, cur->from_node, false)) {
-          messageDeref(cur->buffered_msg);
           cur = iter->second.erase(cur);
         } else {
           ++cur;

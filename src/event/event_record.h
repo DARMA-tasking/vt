@@ -2,13 +2,14 @@
 #if !defined INCLUDED_EVENT_EVENT_RECORD_H
 #define INCLUDED_EVENT_EVENT_RECORD_H
 
+#include "config.h"
+#include "messaging/message.h"
+#include "messaging/message/smart_ptr.h"
+
 #include <memory>
 #include <vector>
 
 #include <mpi.h>
-
-#include "config.h"
-#include "messaging/message.h"
 
 namespace vt { namespace event {
 
@@ -46,12 +47,12 @@ struct EventRecord {
   void setReady();
   MPI_Request* getRequest();
   EventListPtrType getEventList() const;
-  void setManagedMessage(ShortMessage* in_msg);
+  void setManagedMessage(MsgSharedPtr<ShortMessage> in_msg);
 
 private:
   bool ready = false;
 
-  ShortMessage* msg_ = nullptr;
+  MsgSharedPtr<ShortMessage> msg_ = nullptr;
 
   // the union for storing payload of event depending on type
   EventPayloadType event_union_;

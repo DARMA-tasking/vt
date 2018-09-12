@@ -53,7 +53,8 @@ EventType ActiveMessenger::sendMsgSz(
   ActionType next_action, ByteType const& msg_size
 ) {
   envelopeSetup(msg->env, dest, han);
-  return sendMsgSized(han, msg, msg_size, next_action);
+  auto base = promoteMsg(msg).template to<BaseMsgType>();
+  return sendMsgSized(han, base, msg_size, next_action);
 }
 
 template <typename MessageT>
@@ -90,7 +91,8 @@ EventType ActiveMessenger::sendMsg(
     "sendMsg: (handler) han={}, msg={}, tag={}\n",
     han, print_ptr(msg), tag
   );
-  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
+  auto base = promoteMsg(msg).template to<BaseMsgType>();
+  return sendMsgSized(han, base, sizeof(MessageT), next_action);
 }
 
 template <typename MessageT>
@@ -169,7 +171,8 @@ EventType ActiveMessenger::sendMsgSz(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsgSized(han, msg, msg_size, next_action);
+  auto base = promoteMsg(msg).template to<BaseMsgType>();;
+  return sendMsgSized(han, base, msg_size, next_action);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -229,7 +232,8 @@ EventType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
+  auto base = promoteMsg(msg).template to<BaseMsgType>();
+  return sendMsgSized(han, base, sizeof(MessageT), next_action);
 }
 
 template <ActiveFnType* f, typename MessageT>
@@ -268,7 +272,8 @@ EventType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsgSized(han, msg, sizeof(MessageT), next_action);
+  auto base = promoteMsg(msg).template to<BaseMsgType>();
+  return sendMsgSized(han, base, sizeof(MessageT), next_action);
 }
 
 template <typename FunctorT, typename MessageT>
@@ -320,8 +325,8 @@ EventType ActiveMessenger::sendMsg(
 
   // setup envelope
   envelopeSetup(msg->env, dest, han);
-  auto const& ret = sendMsgSized(han, msg, sizeof(MessageT), next_action);
-
+  auto base = promoteMsg(msg).template to<BaseMsgType>();
+  auto const& ret = sendMsgSized(han, base, sizeof(MessageT), next_action);
   return ret;
 }
 

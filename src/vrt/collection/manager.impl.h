@@ -2060,7 +2060,6 @@ void CollectionManager::destroy(
   auto msg = makeSharedMessage<DestroyMsgType>(proxy, this_node);
   theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg);
   auto msg_this = makeSharedMessage<DestroyMsgType>(proxy, this_node);
-  messageRef(msg_this);
   DestroyHandlers::destroyNow(msg_this);
   messageDeref(msg_this);
 }
