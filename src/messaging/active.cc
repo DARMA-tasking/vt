@@ -358,7 +358,13 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
       char* buf =
         user_buf == nullptr ?
+
+    #if backend_check_enabled(memory_pool)
         static_cast<char*>(thePool()->alloc(num_probe_bytes)) :
+    #else
+        static_cast<char*>(std::malloc(num_probe_bytes))      :
+    #endif
+
         static_cast<char*>(user_buf);
 
       MPI_Recv(
@@ -589,7 +595,11 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
+    #if backend_check_enabled(memory_pool)
+      char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
+    #else
+      char* buf = static_cast<char*>(std::malloc(num_probe_bytes));
+    #endif
 
     NodeType const& sender = stat.MPI_SOURCE;
 
