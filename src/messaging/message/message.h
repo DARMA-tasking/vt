@@ -4,7 +4,6 @@
 
 #include "config.h"
 #include "messaging/envelope.h"
-#include "messaging/message/shared_message.h"
 #include "pool/pool.h"
 
 #include <typeinfo>
@@ -17,6 +16,7 @@ template <typename EnvelopeT>
 struct ActiveMsg : BaseMsg {
   using EnvelopeType = EnvelopeT;
   EnvelopeType env;
+  bool has_owner_ = false;
 
   ActiveMsg() {
     envelopeInitEmpty(env);
@@ -90,7 +90,10 @@ struct ActiveMsg : BaseMsg {
 
   template <typename SerializerT>
   void serializeThis(SerializerT& s) {
+    // @todo: do not serialize the entire envelope---it contains specific data
+    // for this message
     s | env;
+    s | has_owner_;
   }
 };
 
