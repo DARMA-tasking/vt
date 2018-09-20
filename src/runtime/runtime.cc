@@ -176,7 +176,9 @@ void Runtime::reset() {
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   aborted_ = true;
   output(abort_str,code,true);
-  std::exit(code);
+  _Exit(code);
+  // @todo: why will this not compile with clang!!?
+  //quick_exit(code);
 }
 
 void Runtime::output(
