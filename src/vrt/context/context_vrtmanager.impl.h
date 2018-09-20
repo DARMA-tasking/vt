@@ -118,11 +118,11 @@ void VirtualContextManager::sendSerialMsg(
     >(
       msg,
       // custom send lambda to route the message
-      [=](SerialMsgT* msg){
+      [=](MsgSharedPtr<SerialMsgT> msg){
         msg->setProxy(toProxy);
         theLocMan()->vrtContextLoc->routeMsgHandler<
           SerialMsgT, SerializedMessenger::payloadMsgHandler
-        >(toProxy, home_node, msg, act);
+        >(toProxy, home_node, msg.get(), act);
       },
       // custom data transfer lambda if above the eager threshold
       [=](ActionNodeType action){
@@ -251,13 +251,15 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void VirtualContextManager::sendMsg(
-  VirtualProxyType const& toProxy, MsgT *const msg, ActionType act
+  VirtualProxyType const& toProxy, MsgT *const raw_msg, ActionType act
 ) {
   // @todo: implement the action `act' after the routing is finished
 
-  NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
+  auto msg = promoteMsg(raw_msg);
+
+  auto const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
   // register the user's handler
-  HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
+  auto const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg.get());
   // save the user's handler in the message
   msg->setVrtHandler(han);
   msg->setProxy(toProxy);
@@ -269,9 +271,7 @@ void VirtualContextManager::sendMsg(
   );
 
   // route the message to the destination using the location manager
-  theLocMan()->vrtContextLoc->routeMsg(
-    toProxy, home_node, msg, act
-  );
+  theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
 }
 
 }}  // end namespace vt::vrt

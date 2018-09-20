@@ -537,11 +537,11 @@ template <typename>
     "collectionConstructHan: proxy={}\n", msg->proxy
   );
   if (msg->isRoot()) {
-    auto new_msg = makeSharedMessage<CollectionConsMsg>(*msg);
-    messageRef(new_msg);
-    theMsg()->broadcastMsg<CollectionConsMsg,collectionFinishedHan>(new_msg);
-    collectionFinishedHan(new_msg);
-    messageDeref(new_msg);
+    auto new_msg = makeMessage<CollectionConsMsg>(*msg);
+    theMsg()->broadcastMsg<CollectionConsMsg,collectionFinishedHan>(
+      new_msg.get()
+    );
+    collectionFinishedHan(new_msg.get());
   } else {
     // do nothing
   }
@@ -638,7 +638,9 @@ template <typename ColT, typename IndexT, typename MsgT>
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
-void CollectionManager::broadcastFromRoot(MsgT* msg) {
+void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
+  auto msg = promoteMsg(raw_msg);
+
   // broadcast to all nodes
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
@@ -679,12 +681,12 @@ void CollectionManager::broadcastFromRoot(MsgT* msg) {
     theTerm()->produce(term::any_epoch_sentinel, num_nodes);
   }
 
-  messageRef(msg);
-  theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(msg);
+  theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
+    msg.get()
+  );
   if (!send_group) {
-    collectionBcastHandler<ColT,IndexT,MsgT>(msg);
+    collectionBcastHandler<ColT,IndexT,MsgT>(msg.get());
   }
-  messageDeref(msg);
 }
 
 template <
@@ -816,7 +818,7 @@ void CollectionManager::broadcastNormalMsg(
 
 template <typename MsgT, typename ColT, typename IdxT>
 void CollectionManager::broadcastMsgUntypedHandler(
-  CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *msg,
+  CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *raw_msg,
   HandlerType const& handler, bool const member, ActionType act, bool instrument
 ) {
   auto const idx = makeVrtDispatch<MsgT,ColT>();
@@ -834,6 +836,8 @@ void CollectionManager::broadcastMsgUntypedHandler(
     lblite,
     msg->setLBLiteInstrument(instrument);
   );
+
+  auto msg = promoteMsg(raw_msg);
 
   // @todo: implement the action `act' after the routing is finished
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
@@ -862,14 +866,16 @@ void CollectionManager::broadcastMsgUntypedHandler(
         col_proxy, bnode, handler
       );
 
-      theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(bnode,msg);
+      theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(
+        bnode,msg.get()
+      );
     } else {
       debug_print(
         vrt_coll, node,
         "broadcasting msg to collection: msg={}, handler={}\n",
         print_ptr(msg), handler
       );
-      broadcastFromRoot<ColT,IdxT,MsgT>(msg);
+      broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
     }
   } else {
     auto iter = buffered_bcasts_.find(col_proxy);
@@ -902,7 +908,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
       );
       theTerm()->consume(term::any_epoch_sentinel);
       theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
-        toProxy, msg, handler, member, act, instrument
+        toProxy, msg.get(), handler, member, act, instrument
       );
     });
   }
@@ -1193,7 +1199,7 @@ void CollectionManager::sendMsgImpl(
 
 template <typename MsgT, typename ColT, typename IdxT>
 void CollectionManager::sendMsgUntypedHandler(
-  VirtualElmProxyType<ColT> const& toProxy, MsgT *msg,
+  VirtualElmProxyType<ColT> const& toProxy, MsgT *raw_msg,
   HandlerType const& handler, bool const member, ActionType action
 ) {
   // @todo: implement the action `action' after the routing is finished
@@ -1207,6 +1213,8 @@ void CollectionManager::sendMsgUntypedHandler(
   );
 
   theTerm()->produce(term::any_epoch_sentinel);
+
+  auto msg = promoteMsg(raw_msg);
 
   auto holder = findColHolder<ColT, IdxT>(col_proxy);
   if (holder != nullptr) {
@@ -1238,7 +1246,7 @@ void CollectionManager::sendMsgUntypedHandler(
     vtAssert(lm != nullptr, "LM must exist");
     lm->template routeMsgSerializeHandler<
       MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
-     >(toProxy, home_node, msg, action);
+    >(toProxy, home_node, msg, action);
     // TODO: race when proxy gets transferred off node before the LM is created
     // LocationManager::applyInstance<LocationManager::VrtColl<IndexT>>
   } else {
@@ -1262,7 +1270,7 @@ void CollectionManager::sendMsgUntypedHandler(
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
-        toProxy, msg, handler, member, action
+        toProxy, msg.get(), handler, member, action
       );
     });
   }
@@ -1391,7 +1399,7 @@ CollectionManager::constructMap(
   auto const& is_static = ColT::isStaticSized();
   auto lm = theLocMan()->getCollectionLM<ColT, IndexT>(new_proxy);
   auto const& node = theContext()->getNode();
-  auto create_msg = makeSharedMessage<MsgType>(
+  auto create_msg = makeMessage<MsgType>(
     map_handler, ArgsTupleType{std::forward<Args>(args)...}
   );
 
@@ -1410,14 +1418,15 @@ CollectionManager::constructMap(
     "construct_map: range={}\n", range.toString().c_str()
   );
 
-  SerdesMsg::broadcastSerialMsg<MsgType, distConstruct<MsgType>>(create_msg);
+  SerdesMsg::broadcastSerialMsg<MsgType,distConstruct<MsgType>>(
+    create_msg.get()
+  );
 
-  auto create_msg_local = makeSharedMessage<MsgType>(
+  auto create_msg_local = makeMessage<MsgType>(
     map_handler, ArgsTupleType{std::forward<Args>(args)...}
   );
   create_msg_local->info = info;
-  CollectionManager::distConstruct<MsgType>(create_msg_local);
-  messageDeref(create_msg_local);
+  CollectionManager::distConstruct<MsgType>(create_msg_local.get());
 
   return CollectionProxyWrapType<ColT, typename ColT::IndexType>{new_proxy};
 }
@@ -2082,11 +2091,9 @@ void CollectionManager::destroy(
 ) {
   using DestroyMsgType = DestroyMsg<ColT, IndexT>;
   auto const& this_node = theContext()->getNode();
-  auto msg = makeSharedMessage<DestroyMsgType>(proxy, this_node);
-  theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg);
-  auto msg_this = makeSharedMessage<DestroyMsgType>(proxy, this_node);
-  DestroyHandlers::destroyNow(msg_this);
-  messageDeref(msg_this);
+  auto msg = makeMessage<DestroyMsgType>(proxy, this_node);
+  theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg.get());
+  DestroyHandlers::destroyNow(msg.get());
 }
 
 template <typename ColT, typename IndexT>
