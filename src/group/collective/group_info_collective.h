@@ -9,6 +9,7 @@
 #include "group/collective/group_collective_msg.h"
 #include "group/collective/group_collective_reduce_msg.h"
 #include "collective/reduce/reduce.h"
+#include "messaging/message.h"
 
 #include <memory>
 #include <list>
@@ -16,10 +17,11 @@
 namespace vt { namespace group {
 
 struct InfoColl : virtual InfoBase {
-  using GroupCollectiveType = GroupCollective;
+  using GroupCollectiveType    = GroupCollective;
   using GroupCollectivePtrType = std::unique_ptr<GroupCollective>;
-  using ReduceType = collective::reduce::Reduce;
-  using ReducePtrType = ReduceType*;
+  using ReduceType             = collective::reduce::Reduce;
+  using ReducePtrType          = ReduceType*;
+  using GroupCollMsgPtrType    = MsgSharedPtr<GroupCollectiveMsg>;
 
   explicit InfoColl(bool const in_is_in_group)
     : is_in_group(in_is_in_group)
@@ -59,7 +61,7 @@ private:
   void upTree();
   void atRoot();
   void downTree(GroupCollectiveMsg* msg);
-  void collectiveFn(GroupCollectiveMsg* msg);
+  void collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg);
   void newRoot(GroupCollectiveMsg* msg);
   void downTreeFinished(GroupOnlyMsg* msg);
   void finalizeTree(GroupOnlyMsg* msg);
@@ -74,7 +76,7 @@ protected:
   bool in_phase_two_                     = false;
   GroupCollectivePtrType collective_     = nullptr;
   WaitCountType coll_wait_count_         = 0;
-  std::vector<GroupCollectiveMsg*> msgs_ = {};
+  std::vector<GroupCollMsgPtrType> msgs_ = {};
   uint32_t arrived_count_                = 0;
   uint32_t extra_count_                  = 0;
   uint32_t extra_arrived_count_          = 0;
