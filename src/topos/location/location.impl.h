@@ -211,7 +211,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
   bool const serialize, EntityID const& id, NodeType const& home_node,
-  MessageT *msg, ActionType action
+  MsgSharedPtr<MessageT> msg, ActionType action
 ) {
   auto const& this_node = theContext()->getNode();
   NodeType route_to_node = uninitialized_destination;
@@ -330,7 +330,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
   bool const serialize, EntityID const& id, NodeType const& home_node,
-  NodeType const& to_node, MessageT *msg, ActionType action
+  NodeType const& to_node, MsgSharedPtr<MessageT> msg, ActionType action
 ) {
   auto const& this_node = theContext()->getNode();
 
@@ -349,11 +349,11 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     if (serialize) {
       using ::vt::serialization::auto_dispatch::RequiredSerialization;
       RequiredSerialization<MessageT,msgHandler>::sendMsg(
-        to_node,msg,no_tag,action
+        to_node,msg.get(),no_tag,action
       );
     } else {
       // send to the node discovered by the location manager
-      theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg, action);
+      theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg.get(), action);
     }
   } else {
     debug_print(
@@ -376,7 +376,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           "id={}, from={}, handler={}, ref={}\n",
           id, from, handler, envelopeGetRef(msg->env)
         );
-        runnable::Runnable<MessageT>::run(handler, active_fn, msg, from);
+        runnable::Runnable<MessageT>::run(handler, active_fn, msg.get(), from);
       } else {
         auto reg_han_iter = local_registered_msg_han_.find(id);
         vtAssert(
@@ -387,10 +387,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           location, node,
           "EntityLocationCoord: no direct handler: id={}\n", id
         );
-        reg_han_iter->second.applyRegisteredActionMsg(msg);
-      }
-      if (from == this_node) {
-        messageDeref(msg);
+        reg_han_iter->second.applyRegisteredActionMsg(msg.get());
       }
     };
 
@@ -419,8 +416,6 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         envelopeGetRef(msg->env)
       );
 
-      messageRef(msg);
-
       EntityID id_ = id;
       // buffer the message here, the entity will be registered in the future
       insertPendingEntityAction(id_, [=](NodeType resolved) {
@@ -446,7 +441,6 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
            */
           routeMsgNode<MessageT>(serialize,id_,home_node,resolved,msg,action);
         }
-        messageDeref(msg);
       });
     }
   }
@@ -468,13 +462,15 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 ) {
   auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
   m->setHandler(handler);
-  return routeMsg<MessageT>(id,home_node,m,action);
+  auto msg = promoteMsg(m);
+  return routeMsg<MessageT>(id,home_node,msg,action);
 }
 
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgSerializeHandler(
-  EntityID const& id, NodeType const& home_node, MessageT *m, ActionType action
+  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m,
+  ActionType action
 ) {
   auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
   m->setHandler(handler);
@@ -484,7 +480,7 @@ void EntityLocationCoord<EntityID>::routeMsgSerializeHandler(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgSerialize(
-  EntityID const& id, NodeType const& home_node, MessageT *m,
+  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m,
   ActionType action
 ) {
   return routeMsg<MessageT>(id,home_node,m,action,true);
@@ -493,12 +489,13 @@ void EntityLocationCoord<EntityID>::routeMsgSerialize(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
-  EntityID const& id, NodeType const& home_node, MessageT *msg, ActionType act,
-  bool const serialize, NodeType from_node
+  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
+  ActionType act, bool const serialize, NodeType from_node
 ) {
   auto const& from =
     from_node == uninitialized_destination ? theContext()->getNode() :
     from_node;
+
   // set field for location routed message
   msg->setEntity(id);
   msg->setHomeNode(home_node);
@@ -586,7 +583,8 @@ LocInstType EntityLocationCoord<EntityID>::getInst() const {
 
 template <typename EntityID>
 template <typename MessageT>
-/*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT *msg) {
+/*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT *raw_msg) {
+  auto msg = promoteMsg(raw_msg);
   auto const& entity_id = msg->getEntity();
   auto const& home_node = msg->getHomeNode();
   auto const& inst = msg->getLocInst();
@@ -600,24 +598,23 @@ template <typename MessageT>
     from_node
   );
 
-  messageRef(msg);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
       loc->routeMsg(entity_id, home_node, msg, nullptr, serialize, from_node);
-      messageDeref(msg);
     }
   );
 }
 
 template <typename EntityID>
-/*static*/ void EntityLocationCoord<EntityID>::getLocationHandler(LocMsgType *msg) {
+/*static*/ void EntityLocationCoord<EntityID>::getLocationHandler(
+  LocMsgType* raw_msg
+) {
+  auto msg = promoteMsg(raw_msg);
   auto const& event_id = msg->loc_event;
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
   auto const& home_node = msg->home_node;
   auto const& ask_node = msg->ask_node;
-
-  messageRef(msg);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
       loc->getLocation(entity, home_node, [=](NodeType node) {
@@ -627,13 +624,15 @@ template <typename EntityID>
         msg->setResolvedNode(node);
         theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg);
       });
-      messageDeref(msg);
     }
   );
 }
 
 template <typename EntityID>
-/*static*/ void EntityLocationCoord<EntityID>::updateLocation(LocMsgType *msg) {
+/*static*/ void EntityLocationCoord<EntityID>::updateLocation(
+  LocMsgType *raw_msg
+) {
+  auto msg = promoteMsg(raw_msg);
   auto const& event_id = msg->loc_event;
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
@@ -644,7 +643,6 @@ template <typename EntityID>
     event_id, msg->resolved_node, entity
   );
 
-  messageRef(msg);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
       debug_print(
@@ -653,7 +651,6 @@ template <typename EntityID>
         event_id, msg->resolved_node, entity
       );
       loc->updatePendingRequest(event_id, entity, msg->resolved_node);
-      messageDeref(msg);
     }
   );
 }
