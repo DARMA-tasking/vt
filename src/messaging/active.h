@@ -136,6 +136,24 @@ struct ActiveMessenger {
     ActionType next_action = nullptr
   );
 
+  template <typename MsgT>
+  EventType sendMsg(
+    NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
+    ActionType next_action = nullptr
+  );
+
+  template <typename MsgT>
+  EventType sendMsg(
+    NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
+    TagType const& tag, ActionType next_action = nullptr
+  );
+
+  template <typename MsgT>
+  EventType sendMsg(
+    HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
+    TagType const& tag = no_tag, ActionType next_action = nullptr
+  );
+
   template <typename MessageT>
   EventType sendMsgHan(
     HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag,
@@ -393,6 +411,18 @@ struct ActiveMessenger {
   template <typename MessageT>
   EventType broadcastMsg(
     HandlerType const& han, MessageT* const msg, TagType const& tag,
+    ActionType act = nullptr
+  );
+
+  template <typename MsgT>
+  EventType broadcastMsg(
+    HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
+    ActionType act = nullptr
+  );
+
+  template <typename MsgT>
+  EventType broadcastMsg(
+    HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag,
     ActionType act = nullptr
   );
 
