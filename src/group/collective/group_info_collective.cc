@@ -96,46 +96,46 @@ void InfoColl::setupCollective() {
   new_tree_cont_      = theGroup()->nextCollectiveID();
   new_root_cont_      = theGroup()->nextCollectiveID();
 
-  theGroup()->registerContinuationT<GroupCollectiveMsg*>(
+  theGroup()->registerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
     down_tree_cont_,
-    [group_](GroupCollectiveMsg* msg){
+    [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
-      iter->second->downTree(msg);
+      iter->second->downTree(msg.get());
     }
   );
-  theGroup()->registerContinuationT<GroupOnlyMsg*>(
+  theGroup()->registerContinuationT<MsgSharedPtr<GroupOnlyMsg>>(
     down_tree_fin_cont_,
-    [group_](GroupOnlyMsg* msg){
+    [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
-      iter->second->downTreeFinished(msg);
+      iter->second->downTreeFinished(msg.get());
     }
   );
-  theGroup()->registerContinuationT<GroupOnlyMsg*>(
+  theGroup()->registerContinuationT<MsgSharedPtr<GroupOnlyMsg>>(
     finalize_cont_,
-    [group_](GroupOnlyMsg* msg){
+    [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
-      iter->second->finalizeTree(msg);
+      iter->second->finalizeTree(msg.get());
     }
   );
-  theGroup()->registerContinuationT<GroupOnlyMsg*>(
+  theGroup()->registerContinuationT<MsgSharedPtr<GroupOnlyMsg>>(
     new_tree_cont_,
-    [group_](GroupOnlyMsg* msg){
+    [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       auto const& from = theMsg()->getFromNodeCurrentHandler();
       iter->second->newTree(from);
     }
   );
-  theGroup()->registerContinuationT<GroupCollectiveMsg*>(
+  theGroup()->registerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
     new_root_cont_,
-    [group_](GroupCollectiveMsg* msg){
+    [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       auto const& from = theMsg()->getFromNodeCurrentHandler();
-      iter->second->newRoot(msg);
+      iter->second->newRoot(msg.get());
     }
   );
 
@@ -312,7 +312,7 @@ void InfoColl::upTree() {
      *  Forward all the children messages up the tree (up to 2 of them)
      */
     for (std::size_t i = 0; i < msg_in_group.size(); i++) {
-      theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[i]);
+      theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[i].get());
     }
   } else if (is_in_group && msg_in_group.size() == 1) {
     /*
@@ -327,7 +327,7 @@ void InfoColl::upTree() {
       group,op,is_in_group,sub,child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[0]);
+    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[0].get());
   } else {
     vtAssertExpr(msg_in_group.size() > 2);
 
@@ -384,8 +384,8 @@ RemoteOperationIDType InfoColl::makeCollectiveContinuation(
   GroupType const group_
 ) {
   auto const& id = theGroup()->nextCollectiveID();
-  theGroup()->registerContinuationT<GroupCollectiveMsg*>(
-    id, [group_](GroupCollectiveMsg* msg){
+  theGroup()->registerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
+    id, [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       iter->second->collectiveFn(msg);
@@ -425,8 +425,7 @@ bool InfoColl::isGroupDefault() const {
   return is_default_group_;
 }
 
-void InfoColl::collectiveFn(GroupCollectiveMsg* msg) {
-  messageRef(msg);
+void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
   msgs_.push_back(msg);
 
   auto const& child = msg->getChild();
@@ -466,10 +465,10 @@ void InfoColl::collectiveFn(GroupCollectiveMsg* msg) {
 }
 
 /*static*/ void InfoColl::tree(GroupOnlyMsg* msg) {
-  messageRef(msg);
   auto const& op_id = msg->getOpID();
   vtAssert(op_id != no_op_id, "Must have valid op");
-  theGroup()->triggerContinuationT<GroupOnlyMsg*>(op_id,msg);
+  auto msg_ptr = promoteMsg(msg);
+  theGroup()->triggerContinuationT<MsgSharedPtr<GroupOnlyMsg>>(op_id,msg_ptr);
 }
 
 /*static*/ void InfoColl::upHan(GroupCollectiveMsg* msg) {
@@ -478,12 +477,12 @@ void InfoColl::collectiveFn(GroupCollectiveMsg* msg) {
     "InfoColl::upHan: group={:x}, op={:x}, child={}, extra={}\n",
     msg->getGroup(), msg->getOpID(), msg->getChild(), msg->getExtraNodes()
   );
-
-  messageRef(msg);
   auto const& op_id = msg->getOpID();
   vtAssert(op_id != no_op_id, "Must have valid op");
-  theGroup()->triggerContinuationT<GroupCollectiveMsg*>(op_id,msg);
-  //messageDeref(msg);
+  auto msg_ptr = promoteMsg(msg);
+  theGroup()->triggerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
+    op_id,msg_ptr
+  );
 }
 
 void InfoColl::downTree(GroupCollectiveMsg* msg) {

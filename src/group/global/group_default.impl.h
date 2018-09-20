@@ -17,10 +17,9 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* handler>
 ) {
   auto const& this_node = theContext()->getNode();
   if (this_node == node) {
-    auto msg = makeSharedMessage<MsgT>();
-    envelopeSetTag(msg->env, phase);
-    handler(msg);
-    messageDeref(msg);
+    auto msg = makeMessage<MsgT>();
+    envelopeSetTag(msg.get()->env, phase);
+    handler(msg.get());
   } else {
     auto msg = makeSharedMessage<MsgT>();
     envelopeSetTag(msg->env, phase);
