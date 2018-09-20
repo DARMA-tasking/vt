@@ -26,6 +26,30 @@ void ActiveMessenger::setTagMessage(MsgPtrT msg, TagType const& tag) {
   envelopeSetTag(msg->env, tag);
 }
 
+template <typename MsgT>
+EventType ActiveMessenger::sendMsg(
+  NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
+  ActionType next_action
+) {
+  return sendMsg<MsgT>(dest,han,msg.get(),next_action);
+}
+
+template <typename MsgT>
+EventType ActiveMessenger::sendMsg(
+  NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
+  TagType const& tag, ActionType next_action
+) {
+  return sendMsg<MsgT>(dest,han,msg.get(),tag,next_action);
+}
+
+template <typename MsgT>
+EventType ActiveMessenger::sendMsg(
+  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag,
+  ActionType next_action
+) {
+  return sendMsg<MsgT>(han,msg.get(),tag,next_action);
+}
+
 template <typename MessageT>
 EventType ActiveMessenger::sendMsg(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
@@ -335,6 +359,21 @@ EventType ActiveMessenger::sendMsg(
 ) {
   HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   return sendMsg<MessageT>(dest, han, msg, send_payload_fn, next_action);
+}
+
+template <typename MsgT>
+EventType ActiveMessenger::broadcastMsg(
+  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, ActionType act
+) {
+  return broadcastMsg<MsgT>(han,msg.get(),act);
+}
+
+template <typename MsgT>
+EventType ActiveMessenger::broadcastMsg(
+  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag,
+  ActionType act
+) {
+  return broadcastMsg<MsgT>(han,msg.get(),tag,act);
 }
 
 template <typename MessageT>
