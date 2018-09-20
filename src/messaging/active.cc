@@ -614,7 +614,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
     auto msg = reinterpret_cast<MessageType>(buf);
     messageConvertToShared(msg);
-    auto base = promoteMsg(msg);
+    auto base = promoteMsgOwner(msg);
 
     auto const& is_term = envelopeIsTerm(msg->env);
     auto const& is_put = envelopeIsPut(msg->env);
