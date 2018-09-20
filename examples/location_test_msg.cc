@@ -38,9 +38,9 @@ static void entityTestHandler(EntityMsg* msg) {
     "{}: entityTestHandler entity={}\n", node, msg->entity
   );
 
-  MyTestMsg* test_msg = new MyTestMsg(magic_number + node, node);
-  theLocMan()->virtual_loc->routeMsg(
-    msg->entity, msg->home, test_msg, [=]{ delete test_msg; }
+  auto test_msg = makeMessage<MyTestMsg>(magic_number + node, node);
+  theLocMan()->virtual_loc->routeMsg<MyTestMsg>(
+    msg->entity, msg->home, test_msg
   );
 }
 

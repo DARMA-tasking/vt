@@ -26,7 +26,7 @@ void handle_test_msg(vt::Message* in_msg) {
 }
 
 void send_to_neighbor() {
-  TestMsg* msg = new TestMsg(this_node, num_nodes, -1);
+  auto msg = makeSharedMessage<TestMsg>(this_node, num_nodes, -1);
 
   int const next = this_node+1 < num_nodes ? this_node+1 : 0;
 
@@ -37,7 +37,7 @@ void send_to_neighbor() {
     delete msg;
   });
 
-  TestMsg* msg2 = new TestMsg(this_node, num_nodes, evt);
+  auto msg2 = makeSharedMessage<TestMsg>(this_node, num_nodes, evt);
 
   EventType evt2 = theMsg()->sendMsg(next, test_msg_han2, msg2, [=]{
     //std::cout << "deleting msg" << std::endl;
@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
   if (this_node == 0) {
     send_to_neighbor();
 
-    TestMsg* msg = new TestMsg(this_node, num_nodes, -1);
+    auto msg = makeSharedMessage<TestMsg>(this_node, num_nodes, -1);
 
     // theMsg()->broadcast_msg(test_msg_han, msg, [=]{
     //   //std::cout << "deleting msg" << std::endl;

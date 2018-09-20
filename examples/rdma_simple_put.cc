@@ -45,9 +45,9 @@ static void put_data_fn(TestMsg* msg) {
         delete [] local_data;
       }, [=]{
         fmt::print("{}: after put: sending msg back to 0\n", my_node);
-        TestMsg* msg = new TestMsg(my_node);
+        auto msg = makeSharedMessage<TestMsg>(my_node);
         msg->han = my_handle;
-        theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg, [=]{ delete msg; });
+        theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg);
       }
     );
   }
@@ -100,9 +100,9 @@ int main(int argc, char** argv) {
     );
     fmt::print("{}: initializing my_handle={}\n", my_node, my_handle);
 
-    TestMsg* msg = new TestMsg(my_node);
+    auto msg = makeSharedMessage<TestMsg>(my_node);
     msg->han = my_handle;
-    theMsg()->broadcastMsg<TestMsg,put_data_fn>(msg, [=]{ delete msg; });
+    theMsg()->broadcastMsg<TestMsg,put_data_fn>(msg);
   }
 
   while (!rt->isTerminated()) {

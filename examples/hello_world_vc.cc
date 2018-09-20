@@ -39,8 +39,8 @@ static void sendMsgToProxy(VirtualProxyType const& proxy) {
   auto this_node = theContext()->getNode();
   fmt::print("{}: sendMsgToProxy: proxy={}\n", this_node, proxy);
 
-  auto m = new TestMsg(this_node + 32);
-  theVirtualManager()->sendMsg<MyVC, TestMsg, my_han>(proxy, m, [=]{ delete m; });
+  auto m = makeSharedMessage<TestMsg>(this_node + 32);
+  theVirtualManager()->sendMsg<MyVC, TestMsg, my_han>(proxy, m);
 }
 
 static void hello_world(HelloMsg* msg) {
@@ -64,8 +64,8 @@ int main(int argc, char** argv) {
     sendMsgToProxy(proxy);
 
     // send out the proxy to all the nodes
-    HelloMsg* msg = new HelloMsg(proxy);
-    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg, [=]{ delete msg; });
+    HelloMsg* msg = makeSharedMessage<HelloMsg>(proxy);
+    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
   }
 
   while (!rt->isTerminated()) {

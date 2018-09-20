@@ -71,9 +71,9 @@ int main(int argc, char** argv) {
 
     fmt::print("initializing my_handle={}\n", my_handle);
 
-    TestMsg* msg = new TestMsg(my_node);
+    auto msg = makeSharedMessage<TestMsg>(my_node);
     msg->han = my_handle;
-    theMsg()->broadcastMsg<TestMsg, tell_handle>(msg, [=]{ delete msg; });
+    theMsg()->broadcastMsg<TestMsg, tell_handle>(msg);
   }
 
   while (!rt->isTerminated()) {
