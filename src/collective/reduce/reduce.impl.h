@@ -10,6 +10,7 @@
 #include "messaging/active.h"
 #include "runnable/general.h"
 #include "group/group_headers.h"
+#include "messaging/message.h"
 
 namespace vt { namespace collective { namespace reduce {
 
@@ -103,8 +104,8 @@ void Reduce::reduceAddMsg(
     vtAssertExpr(live_iter != live_reductions_.end());
   }
   auto& state = live_iter->second;
-  messageRef(msg);
-  state.msgs.push_back(msg);
+  auto msg_ptr = promoteMsg(msg).template to<ReduceMsg>();;
+  state.msgs.push_back(msg_ptr);
   if (num_contrib != -1) {
     state.num_contrib_ = num_contrib;
   }
@@ -150,7 +151,7 @@ void Reduce::startReduce(
     if (state.msgs.size() > 1) {
       for (int i = 0; i < state.msgs.size(); i++) {
         bool const has_next = i+1 < state.msgs.size();
-        state.msgs[i]->next_ = has_next ? state.msgs[i+1] : nullptr;
+        state.msgs[i]->next_ = has_next ? state.msgs[i+1].get() : nullptr;
         state.msgs[i]->count_ = state.msgs.size() - i;
         state.msgs[i]->is_root_ = false;
 
@@ -175,16 +176,13 @@ void Reduce::startReduce(
       auto active_fun = auto_registry::getAutoHandler(handler);
       auto const& from_node = theMsg()->getFromNodeCurrentHandler();
       runnable::Runnable<MessageT>::run(
-        handler,nullptr,reinterpret_cast<MessageT*>(state.msgs[0]),from_node
+        handler,nullptr,static_cast<MessageT*>(state.msgs[0].get()),from_node
       );
     }
 
-    for (int i = 1; i < state.msgs.size(); i++) {
-      messageDeref(state.msgs[i]);
-    }
-
     // Send to parent
-    auto msg = static_cast<MessageT*>(state.msgs[0]);
+    auto msg = state.msgs[0];
+    auto typed_msg = static_cast<MessageT*>(msg.get());
     ActionType cont = nullptr;
 
     state.msgs.clear();
@@ -203,15 +201,14 @@ void Reduce::startReduce(
           serialization::auto_dispatch::RequiredSerialization<
             MessageT, reduceRootRecv<MessageT>
           >;
-        SendDispatch::sendMsg(root, msg);
-        //theMsg()->sendMsg<MessageT, reduceRootRecv<MessageT>>(root, msg, cont);
+        SendDispatch::sendMsg(root,typed_msg);
       } else {
         debug_print(
           reduce, node,
           "reduce notify root (deliver directly): root={}, node={}\n",
           root, this_node
         );
-        reduceRootRecv(msg);
+        reduceRootRecv(typed_msg);
       }
     } else {
       auto const& parent = getParent();
@@ -223,8 +220,7 @@ void Reduce::startReduce(
         serialization::auto_dispatch::RequiredSerialization<
           MessageT, reduceUp<MessageT>
         >;
-      SendDispatch::sendMsg(parent, msg);
-      //theMsg()->sendMsg<MessageT, reduceUp<MessageT>>(parent, msg, cont);
+      SendDispatch::sendMsg(parent,typed_msg);
     }
   }
 }
