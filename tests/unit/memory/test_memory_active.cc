@@ -39,15 +39,14 @@ TYPED_TEST_P(TestMemoryActive, test_memory_remote_send) {
   bool const run_test = num_nodes > 1;
   NodeType const to_node = 1;
 
-  std::vector<MsgType*> msgs;
+  std::vector<MsgSharedPtr<MsgType>> msgs;
 
   if (run_test && my_node == 0) {
     for (int i = 0; i < num_msg_sent; i++) {
-      auto msg = makeSharedMessage<MsgType>();
-      messageRef(msg);
+      auto msg = makeMessage<MsgType>();
       msgs.push_back(msg);
       theMsg()->sendMsg<MsgType,TestMemoryActive<MsgType>::test_handler>(
-        to_node, msg
+        to_node, msg.get()
       );
     }
   }

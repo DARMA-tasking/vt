@@ -81,11 +81,9 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
   if (root < num_nodes) {
     if (my_node == root) {
       for (int i = 0; i < num_msg_sent; i++) {
-        auto msg = new PutTestMessage();
+        auto msg = makeSharedMessage<PutTestMessage>();
         msg->setPut(&put_payload[0], put_size * sizeof(int));
-        theMsg()->broadcastMsg<PutTestMessage, test_handler>(
-          msg, [=]{ delete msg; }
-        );
+        theMsg()->broadcastMsg<PutTestMessage, test_handler>(msg);
       }
     }
 

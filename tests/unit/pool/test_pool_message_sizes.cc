@@ -59,14 +59,14 @@ void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
     this_node == from_node ? to_node : from_node;
 
   if (count < max_test_count) {
-    auto msg = new TestMsg<num_bytes>();
+    auto msg = makeSharedMessage<TestMsg<num_bytes>>();
     theMsg()->sendMsg<TestMsg<num_bytes>, testPoolFun>(
-      next, msg, [=]{ delete msg; }
+      next, msg
     );
   } else {
-    auto msg = new TestMsg<num_bytes * 2>();
+    auto msg = makeSharedMessage<TestMsg<num_bytes * 2>>();
     theMsg()->sendMsg<TestMsg<num_bytes * 2>, testPoolFun>(
-      next, msg, [=]{ delete msg; }
+      next, msg
     );
     count = 0;
   }
@@ -81,9 +81,9 @@ TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
   auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    auto msg = new TestMsg<min_bytes>();
+    auto msg = makeSharedMessage<TestMsg<min_bytes>>();
     theMsg()->sendMsg<TestMsg<min_bytes>, testPoolFun>(
-      to_node, msg, [=]{ delete msg; }
+      to_node, msg
     );
   }
 }

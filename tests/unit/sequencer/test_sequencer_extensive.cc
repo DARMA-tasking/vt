@@ -63,9 +63,9 @@ static constexpr CountType const max_seq_depth = 8;
       CountType in[param_size] = {                                      \
         wait_cnt, wait_pre, wait_post, seg_cnt, depth                   \
       };                                                                \
-      auto msg = new NumWaitsMsg(in);                                   \
+      auto msg = makeSharedMessage<NumWaitsMsg>(in);                    \
       theMsg()->sendMsg<NumWaitsMsg, numWaitHan>(                       \
-        (NODE), msg, [=]{ delete msg; }                                 \
+        (NODE), msg                                                     \
       );                                                                \
       auto const total = (wait_cnt * seg_cnt) + wait_pre + wait_post;   \
       for (int i = 0; i < total; i++) {                                 \

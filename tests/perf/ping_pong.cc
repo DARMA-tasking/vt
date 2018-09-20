@@ -61,9 +61,9 @@ static void finishedPing(FinishedPingMsg<num_bytes>* msg) {
   printTiming(num_bytes);
 
   if (num_bytes != max_bytes) {
-    auto msg = new PingMsg<num_bytes * 2>();
+    auto msg = makeSharedMessage<PingMsg<num_bytes * 2>>();
     theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong>(
-      pong_node, msg, [=]{ delete msg; }
+      pong_node, msg
     );
   }
 }
@@ -86,13 +86,12 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
 
   #if REUSE_MESSAGE_PING_PONG
     in_msg->count++;
-    messageRef(in_msg);
   #endif
 
   if (cnt >= num_pings) {
-    auto msg = new FinishedPingMsg<num_bytes>(num_bytes);
+    auto msg = makeSharedMessage<FinishedPingMsg<num_bytes>>(num_bytes);
     theMsg()->sendMsg<FinishedPingMsg<num_bytes>, finishedPing>(
-      0, msg, [=]{ delete msg; }
+      0, msg
     );
   } else {
     NodeType const next =
@@ -103,8 +102,8 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
         next, in_msg, [=]{ /*delete in_msg;*/ }
       );
     #else
-      auto m = new PingMsg<num_bytes>(cnt + 1);
-      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong>(next, m, [=]{ delete m; });
+      auto m = makeSharedMessage<PingMsg<num_bytes>>(cnt + 1);
+      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong>(next, m);
     #endif
   }
 }
@@ -126,8 +125,8 @@ int main(int argc, char** argv) {
   startTime = MPI_Wtime();
 
   if (my_node == 0) {
-    auto m = new PingMsg<min_bytes>();
-    theMsg()->sendMsg<PingMsg<min_bytes>, pingPong>(pong_node, m, [=]{ delete m; });
+    auto m = makeSharedMessage<PingMsg<min_bytes>>();
+    theMsg()->sendMsg<PingMsg<min_bytes>, pingPong>(pong_node, m);
   }
 
   while (!rt->isTerminated()) {
