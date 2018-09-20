@@ -55,7 +55,6 @@ int vt_main(
   }
 
   debug_print(gen, node, "vt_main: calling finalize workers={}\n", workers);
-  CollectiveOps::finalize(std::move(rt));
   return 0;
 }
 
