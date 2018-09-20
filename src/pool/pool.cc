@@ -35,31 +35,31 @@ Pool::ePoolSize Pool::getPoolType(
   }
 }
 
-void* Pool::try_pooled_alloc(size_t const& num_bytes, size_t const& oversize) {
+void* Pool::tryPooledAlloc(size_t const& num_bytes, size_t const& oversize) {
   ePoolSize const pool_type = getPoolType(num_bytes, oversize);
 
   if (pool_type != ePoolSize::Malloc) {
-    return pooled_alloc(num_bytes, oversize, pool_type);
+    return pooledAlloc(num_bytes, oversize, pool_type);
   } else {
     return nullptr;
   }
 }
 
-bool Pool::try_pooled_dealloc(void* const buf) {
+bool Pool::tryPooledDealloc(void* const buf) {
   auto buf_char = static_cast<char*>(buf);
   auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
   auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf_char);
   ePoolSize const pool_type = getPoolType(actual_alloc_size, oversize);
 
   if (pool_type != ePoolSize::Malloc) {
-    pooled_dealloc(buf, pool_type);
+    poolDealloc(buf, pool_type);
     return true;
   } else {
     return false;
   }
 }
 
-void* Pool::pooled_alloc(
+void* Pool::pooledAlloc(
   size_t const& num_bytes, size_t const& oversize, ePoolSize const pool_type
 ) {
   auto const worker = theContext()->getWorker();
@@ -92,7 +92,7 @@ void* Pool::pooled_alloc(
   return ret;
 }
 
-void Pool::pooled_dealloc(void* const buf, ePoolSize const pool_type) {
+void Pool::poolDealloc(void* const buf, ePoolSize const pool_type) {
   debug_print(
     pool, node,
     "Pool::pooled_dealloc of ptr={}, type={}\n",
@@ -108,14 +108,14 @@ void Pool::pooled_dealloc(void* const buf, ePoolSize const pool_type) {
   }
 }
 
-void* Pool::default_alloc(size_t const& num_bytes, size_t const& oversize) {
+void* Pool::defaultAlloc(size_t const& num_bytes, size_t const& oversize) {
   auto alloc_buf = std::malloc(num_bytes + oversize + sizeof(HeaderType));
   return HeaderManagerType::setHeader(
     num_bytes, oversize, static_cast<char*>(alloc_buf)
   );
 }
 
-void Pool::default_dealloc(void* const ptr) {
+void Pool::defaultDealloc(void* const ptr) {
   std::free(ptr);
 }
 
@@ -131,13 +131,13 @@ void* Pool::alloc(size_t const& num_bytes, size_t oversize) {
   void* ret = nullptr;
 
   #if backend_check_enabled(memory_pool)
-    ret = try_pooled_alloc(num_bytes, oversize);
+    ret = tryPooledAlloc(num_bytes, oversize);
   #endif
 
   // Fall back to the default allocated if the pooled allocated fails to return
   // a valid pointer
   if (ret == nullptr) {
-    ret = default_alloc(num_bytes, oversize);
+    ret = defaultAlloc(num_bytes, oversize);
   }
 
   debug_print(
@@ -176,11 +176,11 @@ void Pool::dealloc(void* const buf) {
   bool success = false;
 
   #if backend_check_enabled(memory_pool)
-    success = try_pooled_dealloc(buf);
+    success = tryPooledDealloc(buf);
   #endif
 
   if (!success) {
-    default_dealloc(ptr_actual);
+    defaultDealloc(ptr_actual);
   }
 };
 
