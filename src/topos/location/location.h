@@ -96,9 +96,7 @@ struct EntityLocationCoord : LocationCoord {
    * to `action' reflects the current known state, which may be remote.
    */
   void getLocation(
-    EntityID const& id,
-    NodeType const& home_node,
-    NodeActionType const& action
+    EntityID const& id, NodeType const& home_node, NodeActionType const& action
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
@@ -109,20 +107,20 @@ struct EntityLocationCoord : LocationCoord {
 
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgSerializeHandler(
-    EntityID const& id, NodeType const& home_node, MessageT *m,
+    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
     ActionType action = nullptr
   );
 
   template <typename MessageT>
   void routeMsg(
-    EntityID const& id, NodeType const& home_node, MessageT *m,
+    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
     ActionType action = nullptr, bool const serialize = false,
     NodeType from_node = uninitialized_destination
   );
 
   template <typename MessageT>
   void routeMsgSerialize(
-    EntityID const& id, NodeType const& home_node, MessageT *m,
+    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
     ActionType action = nullptr
   );
 
@@ -144,13 +142,14 @@ private:
   template <typename MessageT>
   void routeMsgEager(
     bool const serialize, EntityID const& id, NodeType const& home_node,
-    MessageT *msg, ActionType action = nullptr
+    MsgSharedPtr<MessageT> msg, ActionType action = nullptr
   );
 
   template <typename MessageT>
   void routeMsgNode(
     bool const serialize, EntityID const& id, NodeType const& home_node,
-    NodeType const& to_node, MessageT *msg, ActionType action = nullptr
+    NodeType const& to_node, MsgSharedPtr<MessageT> msg,
+    ActionType action = nullptr
   );
 
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
