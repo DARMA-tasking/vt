@@ -111,8 +111,8 @@ int main(int argc, char **argv) {
 //    std::cout << my_vrtc.getVrtContextUId() << std::endl;
 //    std::cout << my_vrtc.isCollection() << std::endl;
 
-    HelloMsg *msg = new HelloMsg(my_node);
-    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg, [=] { delete msg; });
+    auto msg = makeSharedMessage<HelloMsg>(my_node);
+    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
   }
 
   while (!rt->isTerminated()) {

@@ -32,8 +32,8 @@ static void ring(RingMsg* msg) {
 }
 
 static void sendToNext() {
-  RingMsg* msg = new RingMsg(my_node);
-  theMsg()->sendMsg<RingMsg, ring>(next_node, msg, [=]{ delete msg; });
+  RingMsg* msg = makeSharedMessage<RingMsg>(my_node);
+  theMsg()->sendMsg<RingMsg, ring>(next_node, msg);
 }
 
 int main(int argc, char** argv) {
@@ -47,8 +47,6 @@ int main(int argc, char** argv) {
 
   if (num_nodes == 1) {
     CollectiveOps::abort("At least 2 ranks required");
-    
-
   }
 
   if (my_node == 0) {

@@ -45,9 +45,9 @@ int main(int argc, char** argv) {
   if (my_node == 0) {
     my_handle = theRDMA()->registerNewTypedRdmaHandler(my_data, my_data_len);
 
-    TestMsg* msg = new TestMsg(my_node);
+    auto msg = makeSharedMessage<TestMsg>(my_node);
     msg->han = my_handle;
-    theMsg()->broadcastMsg<TestMsg, tellHandle>(msg, [=]{ delete msg; });
+    theMsg()->broadcastMsg<TestMsg, tellHandle>(msg);
   }
 
   while (!rt->isTerminated()) {

@@ -51,7 +51,7 @@ static void myColFn(vt::BaseMessage* in_msg) {
     my_node, msg.from, msg.callback_han
   );
 
-  TestMsg* new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
+  auto new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
   theMsg()->sendMsg(msg.callback_han, new_msg);
 }
 
@@ -68,13 +68,11 @@ int main(int argc, char** argv) {
 
   if (num_nodes == 1) {
     CollectiveOps::abort("At least 2 ranks required");
-    
-
   }
 
   if (my_node == 0) {
-    TestMsg* msg = new TestMsg(my_node, callback);
-    theMsg()->broadcastMsg(my_col_han, msg, [=]{ delete msg; });
+    auto msg = makeSharedMessage<TestMsg>(my_node, callback);
+    theMsg()->broadcastMsg(my_col_han, msg);
   }
 
   while (!rt->isTerminated()) {

@@ -58,8 +58,8 @@ static void myColFn(TestMsg* msg) {
   );
 
   for (auto i = first_recv_tag; i < last_recv_tag; i++) {
-    TestMsg* new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
-    theMsg()->sendMsg(msg->callback_han, new_msg, i);
+    auto new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
+    theMsg()->sendMsg<TestMsg>(msg->callback_han, new_msg, i);
   }
 }
 

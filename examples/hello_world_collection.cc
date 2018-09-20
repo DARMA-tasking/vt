@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
 
     #if LB_ENABLED
       for (int i = 0; i < num_elms; i++) {
-        auto msg = new ColMsg<MyCol>(this_node, i);
+        auto msg = makeSharedMessage<ColMsg<MyCol>>(this_node, i);
         proxy[i].send<ColMsg<MyCol>,method1>(msg);
       }
       theTerm()->addEpochAction(epoch,[=]{
@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < dim1; i++) {
       for (int j = 0; j < dim2; j++) {
         auto const& this_node = theContext()->getNode();
-        auto msg = new ColMsg<OtherColl>(this_node);
+        auto msg = makeSharedMessage<ColMsg<OtherColl>>(this_node);
         theCollection()->sendMsg<ColMsg<OtherColl>, colHanOther>(
           proxy(i,j), msg, nullptr
         );

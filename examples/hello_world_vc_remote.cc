@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     auto proxy = theVirtualManager()->makeVirtualNode<MyVC>(1, 45);
-    auto msg = new TestMsg(my_node);
+    auto msg = makeSharedMessage<TestMsg>(my_node);
     theVirtualManager()->sendMsg<MyVC, TestMsg, testHan>(proxy, msg);
   }
 

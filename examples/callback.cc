@@ -27,7 +27,7 @@ static void my_col_fn(TestMsg* msg) {
     my_node, msg->from, msg->callback_han
   );
 
-  TestMsg* new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
+  auto new_msg = makeSharedMessage<TestMsg>(my_node, uninitialized_handler);
   theMsg()->sendMsg(msg->callback_han, new_msg);
 }
 
@@ -44,8 +44,8 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    TestMsg* msg = new TestMsg(my_node, callback);
-    theMsg()->broadcastMsg<TestMsg, my_col_fn>(msg, [=]{ delete msg; });
+    auto msg = makeSharedMessage<TestMsg>(my_node, callback);
+    theMsg()->broadcastMsg<TestMsg, my_col_fn>(msg);
   }
 
   while (!rt->isTerminated()) {

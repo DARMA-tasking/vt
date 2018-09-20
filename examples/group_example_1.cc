@@ -49,11 +49,9 @@ int main(int argc, char** argv) {
     );
     this_group = theGroup()->newGroup(std::move(list), [](GroupType group){
       fmt::print("Group is created\n");
-      auto msg = new HelloGroupMsg();
+      auto msg = makeSharedMessage<HelloGroupMsg>();
       envelopeSetGroup(msg->env, group);
-      theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg, [=]{
-        delete msg;
-      });
+      theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg);
     });
   }
 

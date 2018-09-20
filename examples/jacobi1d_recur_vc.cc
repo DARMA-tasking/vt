@@ -48,16 +48,16 @@ struct Jacobi1D : vt::vrt::VirtualContext {
     c2 = theVirtualManager()->makeVirtual<Jacobi1D>(mid, hi, proxy);
 
     {
-      CreateJacobi1DMsg* msg = new CreateJacobi1DMsg(lo, mid, proxy);
+      auto msg = makeSharedMessage<CreateJacobi1DMsg>(lo, mid, proxy);
       theVirtualManager()->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
-        c1, msg, [=]{ delete msg; }
+        c1, msg
       );
     }
 
     {
-      CreateJacobi1DMsg* msg = new CreateJacobi1DMsg(mid, hi, proxy);
+      auto msg = makeSharedMessage<CreateJacobi1DMsg>(mid, hi, proxy);
       theVirtualManager()->sendMsg<Jacobi1D, CreateJacobi1DMsg, create_jacobi1d>(
-        c2, msg, [=]{ delete msg; }
+        c2, msg
       );
     }
   }
