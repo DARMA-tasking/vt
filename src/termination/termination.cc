@@ -248,6 +248,40 @@ void TerminationDetector::resetGlobalTerm() {
   );
 }
 
+void TerminationDetector::cleanEpoch(EpochType const& epoch) {
+  // Clean up epoch ready unordered_set
+  {
+    auto iter = epoch_ready_.find(epoch);
+    if (iter != epoch_ready_.end()) {
+      epoch_ready_.erase(iter);
+    }
+  }
+
+  // Clean up epoch finished unordered_set
+  {
+    auto iter = epoch_finished_.find(epoch);
+    if (iter != epoch_finished_.end()) {
+      epoch_finished_.erase(iter);
+    }
+  }
+
+  // Clean up actions associated with epoch
+  {
+    auto iter = epoch_actions_.find(epoch);
+    if (iter != epoch_actions_.end()) {
+      epoch_actions_.erase(iter);
+    }
+  }
+
+  // Clean up state associated with epoch
+  {
+    auto iter = epoch_state_.find(epoch);
+    if (iter != epoch_state_.end()) {
+      epoch_state_.erase(iter);
+    }
+  }
+}
+
 bool TerminationDetector::propagateEpoch(TermStateType& state) {
   bool const& is_ready = state.readySubmitParent();
   bool const& is_root_ = isRoot();

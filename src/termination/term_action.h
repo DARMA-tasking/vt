@@ -41,7 +41,7 @@ protected:
   void triggerAllActions(EpochType const& epoch, EpochStateType const& state);
   void triggerAllEpochActions(EpochType const& epoch);
 
-private:
+protected:
   // Container for hold global termination actions
   ActionContType global_term_actions_ = {};
   // Container to hold actions to perform when an epoch has terminated
