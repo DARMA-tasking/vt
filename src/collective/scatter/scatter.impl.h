@@ -28,7 +28,11 @@ void Scatter::scatter(
   auto remaining_size = thePool()->remainingSize(
     reinterpret_cast<void*>(scatter_msg)
   );
-  vtAssert(remaining_size >= combined_size, "Remaining size must be sufficient");
+  vtAssertInfo(
+    remaining_size >= combined_size,
+    "Remaining size must be sufficient",
+    total_size, combined_size, remaining_size, elm_size
+  );
   debug_print(
     scatter, node,
     "Scatter::scatter: total_size={}, elm_size={}, ScatterMsg={}, msg-ptr={}, "
