@@ -43,10 +43,8 @@ void PipeManagerBase::triggerPipeTyped(PipeType const& pipe, MsgT* msg) {
   if (exists) {
     signal_holder_<SignalType>.deliverAll(pipe,msg);
   } else {
-    auto nmsg = makeSharedMessage<MsgT>(*msg);
-    messageRef(nmsg);
-    triggerPipeUnknown<MsgT>(pipe,nmsg);
-    messageDeref(nmsg);
+    auto nmsg = makeMessage<MsgT>(*msg);
+    triggerPipeUnknown<MsgT>(pipe,nmsg.get());
   }
   generalSignalTrigger(pipe);
 }

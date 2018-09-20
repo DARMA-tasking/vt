@@ -48,8 +48,8 @@ CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) 
     "CallbackBcast: (void) trigger_: this_node={}, include_sender_={}\n",
     this_node, include_sender_
   );
-  auto msg = makeSharedMessage<CallbackMsg>(pid);
-  theMsg()->broadcastMsg<CallbackMsg>(handler_,msg);
+  auto msg = makeMessage<CallbackMsg>(pid);
+  theMsg()->broadcastMsg<CallbackMsg>(handler_,msg.get());
   if (include_sender_) {
     runnable::RunnableVoid::run(handler_,this_node);
   }
@@ -67,11 +67,9 @@ CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) 
   );
   theMsg()->broadcastMsgAuto<SignalDataType>(handler_, data);
   if (include_sender_) {
-    auto nmsg = makeSharedMessage<SignalDataType>(*data);
-    auto nmsgc = reinterpret_cast<ShortMessage*>(nmsg);
-    messageRef(nmsg);
-    runnable::Runnable<ShortMessage>::run(handler_,nullptr,nmsgc,this_node);
-    messageDeref(nmsg);
+    auto nmsg = makeMessage<SignalDataType>(*data);
+    auto short_msg = nmsg.template to<ShortMessage>.get();
+    runnable::Runnable<ShortMessage>::run(handler_,nullptr,short_msg,this_node);
   }
 }
 
