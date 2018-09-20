@@ -30,6 +30,12 @@ MessageT* makeSharedMessageSz(std::size_t size, Args&&... args) {
   return msg;
 }
 
+template <typename MsgT, typename... Args>
+MsgSharedPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args) {
+  auto msg = makeSharedMessageSz<MsgT>(size,std::forward<Args>(args)...);
+  return promoteMsgOwner<MsgT>(msg);
+}
+
 template <typename MessageT>
 void messageConvertToShared(MessageT* msg) {
   envelopeSetRef(msg->env, 1);
