@@ -33,7 +33,6 @@ template <typename MsgT>
   );
   auto ptr_offset = msg_ptr + msg_size + han_size + size_size;
   auto t_ptr = deserializePartial<MsgT>(ptr_offset, ptr_size, msg);
-  auto shared_msg = MsgSharedPtr<MsgT>(messaging::MsgInitNonOwnerTag, msg);
   auto const& from_node = theMsg()->getFromNodeCurrentHandler();
   runnable::Runnable<MsgT>::run(user_handler, nullptr, t_ptr, from_node);
 }
