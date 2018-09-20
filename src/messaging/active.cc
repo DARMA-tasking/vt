@@ -380,7 +380,11 @@ bool ActiveMessenger::recvDataMsgBuffer(
         );
 
         if (user_buf == nullptr) {
-          thePool()->dealloc(buf);
+          #if backend_check_enabled(memory_pool)
+            thePool()->dealloc(buf);
+          #else
+            std::free(buf);
+          #endif
         } else if (dealloc_user_buf != nullptr and user_buf != nullptr) {
           dealloc_user_buf();
         }
