@@ -18,6 +18,9 @@ MsgSharedPtr<MsgT> makeMessage(Args&&... args);
 template <typename MessageT, typename... Args>
 MessageT* makeSharedMessageSz(std::size_t size, Args&&... args);
 
+template <typename MsgT, typename... Args>
+MsgSharedPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args);
+
 template <typename MessageT>
 void messageConvertToShared(MessageT* msg);
 
