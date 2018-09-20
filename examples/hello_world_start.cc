@@ -162,10 +162,10 @@ struct MainVC : vt::vrt::MainVirtualContext {
       auto const num_work_units = num_work_finished.load();
       DEBUG_PRINTER_START("num_work_units={}\n", num_work_units);
 
-      theWorkerGrp()->enqueueAllWorkers([]{
-        auto const num_work_units = AccessTLS(tls_work);
-        DEBUG_PRINTER_START("tls work_units={}\n", num_work_units);
-      });
+      // theWorkerGrp()->enqueueAllWorkers([]{
+      //   auto const num_work_units = AccessTLS(tls_work);
+      //   DEBUG_PRINTER_START("tls work_units={}\n", num_work_units);
+      // });
     });
 
     std::vector<VirtualProxyType> proxies;
