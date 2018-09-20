@@ -21,7 +21,7 @@ using SerializedEagerMsg = SerialEagerPayloadMsg<MsgT, BaseEagerMsgT>;
 
 template <typename MsgT, typename BaseEagerMsgT>
 using ActionEagerSend = std::function<void(
-  SerializedEagerMsg<MsgT, BaseEagerMsgT>* msg
+  MsgSharedPtr<SerializedEagerMsg<MsgT,BaseEagerMsgT>> msg
 )>;
 using ActionDataSend = std::function<void(ActionNodeType)>;
 
