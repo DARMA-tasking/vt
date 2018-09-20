@@ -34,7 +34,7 @@ namespace vt { namespace rdma {
       // auto const& data_ptr = std::get<0>(data);
       // auto const& num_bytes = std::get<1>(data);
 
-      GetBackMessage* new_msg = new GetBackMessage(
+      auto new_msg = makeSharedMessage<GetBackMessage>(
         op_id, std::get<1>(data), 0, no_tag, handle, this_node
       );
 
@@ -48,10 +48,8 @@ namespace vt { namespace rdma {
         );
       };
 
-      auto deleter = [=]{ delete new_msg; };
-
       theMsg()->sendMsg<GetBackMessage, getRecvMsg>(
-        recv_node, new_msg, send_payload, deleter
+        recv_node, new_msg, send_payload
       );
 
       debug_print(
@@ -82,11 +80,13 @@ namespace vt { namespace rdma {
   if (get_ptr == nullptr) {
     auto const op_id = msg->op_id;
     theMsg()->recvDataMsg(
-      msg->mpi_tag_to_recv, msg->send_back, [=](RDMA_GetType ptr, ActionType deleter){
+      msg->mpi_tag_to_recv, msg->send_back,
+      [=](RDMA_GetType ptr, ActionType deleter){
         theRDMA()->triggerGetRecvData(
-          op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
+          op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr)
         );
-      });
+      }
+    );
   } else {
     theMsg()->recvDataMsgBuffer(
       get_ptr, msg->mpi_tag_to_recv, msg->send_back, true, [this_node,get_ptr_action]{
@@ -157,6 +157,7 @@ namespace vt { namespace rdma {
     auto const& put_ptr = theRDMA()->tryPutPtr(msg->rdma_handle, msg_tag);
     auto const rdma_handle = msg->rdma_handle;
     auto const offset = msg->offset;
+    auto const bytes = msg->num_bytes;
 
     debug_print(
       rdma, node,
@@ -172,7 +173,7 @@ namespace vt { namespace rdma {
             rdma, node,
             "putData: after recv data trigger: recv_tag={}, recv_node={}, "
             "send_back={}, bytes={}\n",
-            recv_tag, recv_node, send_back, msg->num_bytes
+            recv_tag, recv_node, send_back, bytes
           );
           theRDMA()->triggerPutRecvData(
             rdma_handle, msg_tag, std::get<0>(ptr), std::get<1>(ptr),
@@ -182,12 +183,11 @@ namespace vt { namespace rdma {
                 "put_data: after put trigger: send_back={}\n", send_back
               );
               if (send_back != uninitialized_destination) {
-                PutBackMessage* new_msg = new PutBackMessage(op_id);
+                auto new_msg = makeSharedMessage<PutBackMessage>(op_id);
                 theMsg()->sendMsg<PutBackMessage, putBackMsg>(
-                  send_back, new_msg, [=]{ delete new_msg; }
+                  send_back, new_msg
                 );
               }
-              deleter();
             }, false, recv_node
           );
         });
@@ -201,15 +201,14 @@ namespace vt { namespace rdma {
           debug_print(
             rdma, node,
             "putData: recv_data_msg_buffer DIRECT: offset={}\n",
-            msg->offset
+            offset
           );
           if (send_back) {
-            PutBackMessage* new_msg = new PutBackMessage(op_id);
+            auto new_msg = makeSharedMessage<PutBackMessage>(op_id);
             theMsg()->sendMsg<PutBackMessage, putBackMsg>(
-              send_back, new_msg, [=]{ delete new_msg; }
+              send_back, new_msg
             );
           }
-          deleter();
         }
       );
     }
@@ -229,7 +228,8 @@ namespace vt { namespace rdma {
   auto const& num_bytes = theRDMA()->lookupBytesHandler(msg->rdma_handle);
 
   if (not msg->has_bytes) {
-    theMsg()->sendCallback(makeSharedMessage<GetInfoChannel>(num_bytes));
+    auto cbmsg = makeMessage<GetInfoChannel>(num_bytes);
+    theMsg()->sendCallback(cbmsg.get());
   }
 
   theRDMA()->createDirectChannelInternal(
@@ -240,7 +240,8 @@ namespace vt { namespace rdma {
 
 /*static*/ void RDMAManager::removeChannel(DestroyChannel* msg) {
   theRDMA()->removeDirectChannel(msg->han);
-  theMsg()->sendCallback(makeSharedMessage<CallbackMessage>());
+  auto cbmsg = makeMessage<CallbackMessage>();
+  theMsg()->sendCallback(cbmsg.get());
 }
 
 /*static*/ void RDMAManager::remoteChannel(ChannelMessage* msg) {
@@ -256,7 +257,8 @@ namespace vt { namespace rdma {
 
   theRDMA()->createDirectChannelInternal(
     msg->type, msg->han, msg->non_target, [=]{
-      theMsg()->sendCallback(makeSharedMessage<CallbackMessage>());
+      auto cbmsg = makeMessage<CallbackMessage>();
+      theMsg()->sendCallback(cbmsg.get());
     },
     target, msg->channel_tag, msg->num_bytes
   );
@@ -383,8 +385,8 @@ void RDMAManager::requestGetData(
 }
 
 void RDMAManager::triggerGetRecvData(
-  RDMA_OpType const& op, TagType const& tag, RDMA_PtrType ptr, ByteType const& num_bytes,
-  ActionType const& action
+  RDMA_OpType const& op, TagType const& tag, RDMA_PtrType ptr,
+  ByteType const& num_bytes, ActionType const& action
 ) {
   auto iter = pending_ops_.find(op);
 
@@ -940,11 +942,13 @@ void RDMAManager::getDataIntoBuf(
       } else {
         RDMA_OpType const new_op = cur_op_++;
 
-        GetMessage* msg = new GetMessage(new_op, this_node, han, num_bytes, offset);
+        auto msg = makeSharedMessage<GetMessage>(
+          new_op, this_node, han, num_bytes, offset
+        );
         if (tag != no_tag) {
           envelopeSetTag(msg->env, tag);
         }
-        theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg, [=]{ delete msg; });
+        theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg);
 
         pending_ops_.emplace(
           std::piecewise_construct,
@@ -975,11 +979,13 @@ void RDMAManager::getData(
   if (getNode != this_node) {
     RDMA_OpType const new_op = cur_op_++;
 
-    GetMessage* msg = new GetMessage(new_op, this_node, han, num_bytes, offset);
+    auto msg = makeSharedMessage<GetMessage>(
+      new_op, this_node, han, num_bytes, offset
+    );
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
     }
-    theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg, [=]{ delete msg; });
+    theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg);
 
     pending_ops_.emplace(
       std::piecewise_construct,
