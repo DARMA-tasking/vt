@@ -293,9 +293,8 @@ GroupType CollectionManager::createGroupCollection(
          *  Trigger the group finished handler directly because the default
          *  group will now be utilized
          */
-        auto nmsg = makeSharedMessage<CollectionGroupMsg>(proxy,new_group);
-        theCollection()->collectionGroupFinishedHan<>(nmsg);
-        messageDeref(nmsg);
+        auto nmsg = makeMessage<CollectionGroupMsg>(proxy,new_group);
+        theCollection()->collectionGroupFinishedHan<>(nmsg.get());
       }
     }
   );
