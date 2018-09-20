@@ -11,20 +11,18 @@
 
 namespace vt { namespace messaging {
 
-template <typename MessageT>
-void ActiveMessenger::setTermMessage(MessageT* const msg) {
+template <typename MsgPtrT>
+void ActiveMessenger::setTermMessage(MsgPtrT const msg) {
   setTermType(msg->env);
 }
 
-template <typename MessageT>
-void ActiveMessenger::setEpochMessage(
-  MessageT* const msg, EpochType const& epoch
-) {
+template <typename MsgPtrT>
+void ActiveMessenger::setEpochMessage(MsgPtrT msg, EpochType const& epoch) {
   envelopeSetEpoch(msg->env, epoch);
 }
 
-template <typename MessageT>
-void ActiveMessenger::setTagMessage(MessageT* const msg, TagType const& tag) {
+template <typename MsgPtrT>
+void ActiveMessenger::setTagMessage(MsgPtrT msg, TagType const& tag) {
   envelopeSetTag(msg->env, tag);
 }
 

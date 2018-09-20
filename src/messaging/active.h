@@ -85,14 +85,14 @@ struct ActiveMessenger {
 
   ActiveMessenger();
 
-  template <typename MessageT>
-  void setTermMessage(MessageT* const msg);
+  template <typename MsgPtrT>
+  void setTermMessage(MsgPtrT const msg);
 
-  template <typename MessageT>
-  void setEpochMessage(MessageT* const msg, EpochType const& epoch);
+  template <typename MsgPtrT>
+  void setEpochMessage(MsgPtrT const msg, EpochType const& epoch);
 
-  template <typename MessageT>
-  void setTagMessage(MessageT* const msg, TagType const& tag);
+  template <typename MsgPtrT>
+  void setTagMessage(MsgPtrT const msg, TagType const& tag);
 
   /*----------------------------------------------------------------------------
    *            Basic Active Message Send with Pre-Registered Handler
