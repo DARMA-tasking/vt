@@ -35,10 +35,9 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
 
 /*static*/ void ProcStats::releaseLB() {
   using MsgType = CollectionPhaseMsg;
-  auto msg = makeSharedMessage<MsgType>();
-  auto msg_copy = MsgSharedPtr<MsgType>(messaging::MsgInitNonOwnerTag,msg);
-  theMsg()->broadcastMsg<MsgType,CollectionManager::releaseLBPhase>(msg);
-  CollectionManager::releaseLBPhase(msg_copy.get());
+  auto msg = makeMessage<MsgType>();
+  theMsg()->broadcastMsg<MsgType,CollectionManager::releaseLBPhase>(msg.get());
+  CollectionManager::releaseLBPhase(msg.get());
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

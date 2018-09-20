@@ -45,8 +45,10 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
   });
 }
 
-bool VirtualInfo::enqueueWorkUnit(VirtualMessage* msg) {
+bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
   using auto_registry::AutoActiveVCType;
+
+  auto msg = promoteMsg(raw_msg);
 
   auto const sub_handler = msg->getVrtHandler();
   auto const vc_active_fn = auto_registry::getAutoHandlerVC(sub_handler);
@@ -58,9 +60,8 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* msg) {
     // @todo: fix the from node
     auto const& from_node = 0;
     runnable::RunnableVrt<VirtualMessage,VirtualContext>::run(
-      sub_handler, msg, vc_ptr, from_node
+      sub_handler, msg.get(), vc_ptr, from_node
     );
-    messageDeref(msg);
   };
 
   bool const has_workers = theContext()->hasWorkers();
@@ -93,10 +94,6 @@ void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {
     enqueued = enqueueWorkUnit(msg);
   } else {
     msg_buffer_.push(msg);
-  }
-
-  if (enqueued) {
-    messageRef(msg);
   }
 }
 
