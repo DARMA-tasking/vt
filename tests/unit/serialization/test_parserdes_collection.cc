@@ -135,12 +135,12 @@ TEST_F(TestParserdes, test_collection_send_parserdes_a_1) {
       auto const& col_size = 32;
       auto range = TestIndex(col_size);
       auto proxy = theCollection()->construct<Col>(range);
-      auto msg = makeSharedMessageSz<test_data::A>(8*sizeof(char), magic_A_t_);
+      auto msg = makeMessageSz<test_data::A>(8*sizeof(char), magic_A_t_);
       #if PRINT_DEBUG
         ::fmt::print("test_data::A sending msg to collection val={}\n", *msg);
       #endif
       for (int i = 0; i < col_size; i++) {
-        proxy[i].send<test_data::A,testHandlerA>(msg);
+        proxy[i].send<test_data::A,testHandlerA>(msg.get());
       }
     }
   }
@@ -154,12 +154,12 @@ TEST_F(TestParserdes, test_collection_send_parserdes_b_1) {
       auto const& col_size = 32;
       auto range = TestIndex(col_size);
       auto proxy = theCollection()->construct<Col>(range);
-      auto msg = makeSharedMessageSz<test_data::B>(8*sizeof(char), magic_B_t_);
+      auto msg = makeMessageSz<test_data::B>(8*sizeof(char), magic_B_t_);
       #if PRINT_DEBUG
         ::fmt::print("test_data::B sending msg to collection val={}\n", *msg);
       #endif
       for (int i = 0; i < col_size; i++) {
-        proxy[i].send<test_data::B,testHandlerB>(msg);
+        proxy[i].send<test_data::B,testHandlerB>(msg.get());
       }
     }
   }
@@ -173,12 +173,12 @@ TEST_F(TestParserdes, test_collection_send_parserdes_c_1) {
       auto const& col_size = 32;
       auto range = TestIndex(col_size);
       auto proxy = theCollection()->construct<Col>(range);
-      auto msg = makeSharedMessageSz<test_data::C>(8*sizeof(char), magic_C_t_);
+      auto msg = makeMessageSz<test_data::C>(8*sizeof(char), magic_C_t_);
       #if PRINT_DEBUG
         ::fmt::print("test_data::C sending msg to collection val={}\n", *msg);
       #endif
       for (int i = 0; i < col_size; i++) {
-        proxy[i].send<test_data::C,testHandlerC>(msg);
+        proxy[i].send<test_data::C,testHandlerC>(msg.get());
       }
     }
   }
@@ -192,11 +192,11 @@ TEST_F(TestParserdes, test_collection_broadcast_parserdes_a_1) {
       auto const& col_size = 32;
       auto range = TestIndex(col_size);
       auto proxy = theCollection()->construct<Col>(range);
-      auto msg = makeSharedMessageSz<test_data::A>(8*sizeof(char), magic_A_t_);
+      auto msg = makeMessageSz<test_data::A>(8*sizeof(char), magic_A_t_);
       #if PRINT_DEBUG
         ::fmt::print("test_data::A sending msg to collection val={}\n", *msg);
       #endif
-      proxy.broadcast<test_data::A,testHandlerA>(msg);
+      proxy.broadcast<test_data::A,testHandlerA>(msg.get());
     }
   }
 }
@@ -209,11 +209,11 @@ TEST_F(TestParserdes, test_collection_broadcast_parserdes_b_1) {
       auto const& col_size = 32;
       auto range = TestIndex(col_size);
       auto proxy = theCollection()->construct<Col>(range);
-      auto msg = makeSharedMessageSz<test_data::B>(8*sizeof(char), magic_B_t_);
+      auto msg = makeMessageSz<test_data::B>(8*sizeof(char), magic_B_t_);
       #if PRINT_DEBUG
         ::fmt::print("test_data::B sending msg to collection val={}\n", *msg);
       #endif
-      proxy.broadcast<test_data::B,testHandlerB>(msg);
+      proxy.broadcast<test_data::B,testHandlerB>(msg.get());
     }
   }
 }
@@ -226,11 +226,11 @@ TEST_F(TestParserdes, test_collection_broadcast_parserdes_c_1) {
       auto const& col_size = 32;
       auto range = TestIndex(col_size);
       auto proxy = theCollection()->construct<Col>(range);
-      auto msg = makeSharedMessageSz<test_data::C>(8*sizeof(char), magic_C_t_);
+      auto msg = makeMessageSz<test_data::C>(8*sizeof(char), magic_C_t_);
       #if PRINT_DEBUG
         ::fmt::print("test_data::C sending msg to collection val={}\n", *msg);
       #endif
-      proxy.broadcast<test_data::C,testHandlerC>(msg);
+      proxy.broadcast<test_data::C,testHandlerC>(msg.get());
     }
   }
 }
