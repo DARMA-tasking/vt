@@ -40,7 +40,8 @@ inline void vrCommThreadWork() {
 
 template <typename VrtContextT>
 int vt_main(
-  int argc, char** argv, WorkerCountType workers = default_vt_num_workers
+  int argc, char** argv, WorkerCountType workers = no_workers
+  //default_vt_num_workers
 ) {
   auto rt = CollectiveOps::initialize(argc, argv, workers);
   debug_print(gen, node, "vt_main: initialized workers={}\n", workers);
@@ -54,7 +55,7 @@ int vt_main(
     theWorkerGrp()->spawnWorkersBlock(comm_fn);
   }
 
-  debug_print(gen, node, "vt_main: calling finalize workers={}\n", workers);
+  debug_print(gen, node, "vt_main: auto finalize workers={}\n", workers);
   return 0;
 }
 
