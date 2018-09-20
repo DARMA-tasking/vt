@@ -27,6 +27,7 @@ template <typename MessageT, typename... Args>
 MessageT* makeSharedMessageSz(std::size_t size, Args&&... args) {
   MessageT* msg = new (size) MessageT{std::forward<Args>(args)...};
   envelopeSetRef(msg->env, 1);
+  msg->has_owner_ = false;
   return msg;
 }
 
