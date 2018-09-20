@@ -206,10 +206,11 @@ void TerminationDetector::maybePropagate() {
         clean_epoch = true;
       }
     }
-    if ( clean_epoch )
-      iter = epoch_state_.erase( iter );
-    else
+    if (clean_epoch) {
+      iter = epoch_state_.erase(iter);
+    } else {
       ++iter;
+    }
   }
 }
 
@@ -478,7 +479,7 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 bool
 TerminationDetector::isEpochReady(EpochType const& epoch) const noexcept {
   auto const finished = isEpochFinished(epoch);
-  return finsihed || (epoch_ready_.find(epoch) != epoch_ready_.end());
+  return finished || (epoch_ready_.find(epoch) != epoch_ready_.end());
 }
 
 bool
