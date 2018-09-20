@@ -76,10 +76,8 @@ void Scatter::scatterIn(ScatterMsg* msg) {
       child, child_msg, sizeof(ScatterMsg) + child_bytes_size
     );
   });
-  messageRef(msg);
   auto active_fn = auto_registry::getAutoHandler(user_handler);
   active_fn(reinterpret_cast<BaseMessage*>(in_base_ptr));
-  messageDeref(msg);
 }
 
 /*static*/ void Scatter::scatterHandler(ScatterMsg* msg) {
