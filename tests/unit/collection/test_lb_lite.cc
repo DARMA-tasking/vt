@@ -75,7 +75,8 @@ static double weight = 1.0f;
 static int32_t num_iter = 8;
 
 struct FinishedIter {
-  void operator()(IterReduceMsg* msg) {
+  void operator()(IterReduceMsg* raw_msg) {
+    auto msg = promoteMsg(raw_msg);
     auto const new_time = ::vt::timing::Timing::getCurrentTime();
     ::fmt::print(
       "finished iteration: iter={}, num_iter={}, time={}\n",
