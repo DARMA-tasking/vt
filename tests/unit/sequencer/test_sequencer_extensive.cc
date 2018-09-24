@@ -60,6 +60,10 @@ static constexpr CountType const max_seq_depth = 8;
       SeqType const& seq_id = theSeq()->nextSeq();                      \
       SEQ_FN(ResetAtomicValue);                                         \
       theSeq()->sequenced(seq_id, (SEQ_FN));                            \
+      theTerm()->addAction([=]{                                         \
+        SEQ_FN(FinalizeAtomicValue);                                    \
+      });                                                               \
+    } else if (node == 1) {                                             \
       CountType in[param_size] = {                                      \
         wait_cnt, wait_pre, wait_post, seg_cnt, depth                   \
       };                                                                \
@@ -74,9 +78,6 @@ static constexpr CountType const max_seq_depth = 8;
           (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
         );                                                              \
       }                                                                 \
-      theTerm()->addAction([=]{                                         \
-        SEQ_FN(FinalizeAtomicValue);                                    \
-      });                                                               \
     }                                                                   \
   } while (false);
 
@@ -207,7 +208,10 @@ struct TestSequencerExtensive : TestParallelHarnessParam<ParamType> {
 };
 
 TEST_P(TestSequencerExtensive, test_wait_1) {
-  CALL_EXPAND(testSeqHan1, testSeqFn1, 0, TestMsg, 2, false);
+  auto const& num_nodes = theContext()->getNumNodes();
+  if (num_nodes > 1) {
+    CALL_EXPAND(testSeqHan1, testSeqFn1, 0, TestMsg, 2, false);
+  }
 }
 
 INSTANTIATE_TEST_CASE_P(
