@@ -427,7 +427,8 @@ template <typename ColT, typename IndexT, typename MsgT>
    */
   auto const& group = envelopeGetGroup(msg->env);
   if (group == default_group) {
-    theTerm()->consume(term::any_epoch_sentinel);
+    auto const& cur_epoch = theMsg()->getEpoch();
+    theTerm()->consume(cur_epoch);
   }
 }
 
@@ -569,7 +570,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionMsgTypedHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const entity_proxy = col_msg->getProxy();
-
+  auto const cur_epoch = theMsg()->getEpoch();
   auto const& col = entity_proxy.getCollectionProxy();
   auto const& elm = entity_proxy.getElementProxy();
   auto const& idx = elm.getIndex();
@@ -579,10 +580,11 @@ template <typename ColT, typename IndexT, typename MsgT>
 
   debug_print(
     vrt_coll, node,
-    "collectionMsgTypedHandler: exists={}, idx={}\n",
-    exists, idx
+    "collectionMsgTypedHandler: exists={}, idx={}, cur_epoch={}\n",
+    exists, idx, cur_epoch
   );
-  vtAssert(exists, "Proxy must exist");
+
+  vtAssertInfo(exists, "Proxy must exist", cur_epoch, idx);
 
   auto& inner_holder = elm_holder->lookup(idx);
 
@@ -595,7 +597,10 @@ template <typename ColT, typename IndexT, typename MsgT>
     "collectionMsgTypedHandler: sub_handler={}\n", sub_handler
   );
 
-  vtAssert(col_ptr != nullptr, "Must be valid pointer");
+  vtAssertInfo(
+    col_ptr != nullptr, "Must be valid pointer",
+    sub_handler, member, cur_epoch, idx, exists
+  );
 
   backend_enable_if(
     lblite, {
@@ -625,7 +630,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     }
   );
 
-  theTerm()->consume(term::any_epoch_sentinel);
+  theTerm()->consume(cur_epoch);
 }
 
 template <typename ColT, typename IndexT>
@@ -654,9 +659,10 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   vtAssert(elm_holder != nullptr, "Must have elm holder");
   vtAssert(this_node == bcast_node, "Must be the bcast node");
 
-  auto const epoch = elm_holder->cur_bcast_epoch_++;
+  auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
+  auto const cur_epoch = theMsg()->getEpoch();
 
-  msg->setBcastEpoch(epoch);
+  msg->setBcastEpoch(bcast_epoch);
 
   debug_print(
     vrt_coll, node,
@@ -681,7 +687,7 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
     auto const& group = elm_holder->group();
     envelopeSetGroup(msg->env, group);
   } else {
-    theTerm()->produce(term::any_epoch_sentinel, num_nodes);
+    theTerm()->produce(cur_epoch, num_nodes);
   }
 
   theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
@@ -846,10 +852,12 @@ void CollectionManager::broadcastMsgUntypedHandler(
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
 
+  auto const& cur_epoch = theMsg()->getEpoch();
+
   debug_print(
     vrt_coll, node,
-    "broadcastMsgUntypedHandler: col_proxy={}, found={}\n",
-    col_proxy, found_constructed
+    "broadcastMsgUntypedHandler: col_proxy={}, found={}, cur_epoch={}\n",
+    col_proxy, found_constructed, cur_epoch
   );
 
   if (holder != nullptr && found_constructed) {
@@ -865,8 +873,8 @@ void CollectionManager::broadcastMsgUntypedHandler(
       debug_print(
         vrt_coll, node,
         "broadcastMsgUntypedHandler: col_proxy={}, sending to root node={}, "
-        "handler={}\n",
-        col_proxy, bnode, handler
+        "handler={}, cur_epoch={}\n",
+        col_proxy, bnode, handler, cur_epoch
       );
 
       theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(
@@ -897,22 +905,26 @@ void CollectionManager::broadcastMsgUntypedHandler(
       "pushing into buffered sends: {}\n", col_proxy
     );
 
-    theTerm()->produce(term::any_epoch_sentinel);
+    theTerm()->produce(cur_epoch);
 
     debug_print(
       vrt_coll, node,
-      "broadcastMsgUntypedHandler: col_proxy={}, buffering\n", col_proxy
+      "broadcastMsgUntypedHandler: col_proxy={}, cur_epoch={}, buffering\n",
+      col_proxy, cur_epoch
     );
+
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       debug_print(
         vrt_coll, node,
         "broadcastMsgUntypedHandler: col_proxy={}, running buffered\n",
         col_proxy
       );
-      theTerm()->consume(term::any_epoch_sentinel);
+      theMsg()->pushEpoch(cur_epoch);
       theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, act, instrument
       );
+      theMsg()->popEpoch();
+      theTerm()->consume(cur_epoch);
     });
   }
 }
@@ -1215,7 +1227,8 @@ void CollectionManager::sendMsgUntypedHandler(
     msg->setLBLiteInstrument(true);
   );
 
-  theTerm()->produce(term::any_epoch_sentinel);
+  auto const& cur_epoch = theMsg()->getEpoch();
+  theTerm()->produce(cur_epoch);
 
   auto msg = promoteMsg(raw_msg);
 
@@ -1250,8 +1263,6 @@ void CollectionManager::sendMsgUntypedHandler(
     lm->template routeMsgSerializeHandler<
       MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
     >(toProxy, home_node, msg, action);
-    // TODO: race when proxy gets transferred off node before the LM is created
-    // LocationManager::applyInstance<LocationManager::VrtColl<IndexT>>
   } else {
     auto iter = buffered_sends_.find(toProxy.getCollectionProxy());
     if (iter == buffered_sends_.end()) {
@@ -1269,12 +1280,15 @@ void CollectionManager::sendMsgUntypedHandler(
       "pushing into buffered sends: {}\n", toProxy.getCollectionProxy()
     );
 
-    theTerm()->produce(term::any_epoch_sentinel);
+    theTerm()->produce(cur_epoch);
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
+      theMsg()->pushEpoch(cur_epoch);
       theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, action
       );
+      theMsg()->popEpoch();
+      theTerm()->consume(cur_epoch);
     });
   }
 }
@@ -1319,8 +1333,6 @@ bool CollectionManager::insertCollectionElement(
           vrt_coll, node,
           "looking for buffered sends: running elm\n"
         );
-
-        theTerm()->consume(term::any_epoch_sentinel);
 
         elm(proxy);
       }
