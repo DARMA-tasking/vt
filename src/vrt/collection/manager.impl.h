@@ -826,7 +826,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
   debug_print(
     vrt_coll, node,
     "broadcastMsgUntypedHandler: msg={}, idx={}\n",
-    print_ptr(msg), idx
+    print_ptr(raw_msg), idx
   );
 
   auto const& this_node = theContext()->getNode();
@@ -873,7 +873,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
       debug_print(
         vrt_coll, node,
         "broadcasting msg to collection: msg={}, handler={}\n",
-        print_ptr(msg), handler
+        print_ptr(raw_msg), handler
       );
       broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
     }
@@ -1238,7 +1238,7 @@ void CollectionManager::sendMsgUntypedHandler(
     debug_print(
       vrt_coll, node,
       "sending msg to collection: msg={}, handler={}, home_node={}\n",
-      print_ptr(msg), handler, home_node
+      print_ptr(raw_msg), handler, home_node
     );
 
     // route the message to the destination using the location manager
@@ -1332,7 +1332,6 @@ bool CollectionManager::insertCollectionElement(
   if (elm_exists) {
     return false;
   }
-
   vtAssert(!elm_exists, "Must not exist at this point");
 
   auto const& destroyed = elm_holder->isDestroyed();
