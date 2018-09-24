@@ -39,7 +39,8 @@ static CollectionIndexProxy<IterCol,Index1D> proxy = {};
 static void startIter(int32_t const iter);
 
 struct FinishedIter {
-  void operator()(IterReduceMsg* msg) {
+  void operator()(IterReduceMsg* raw_msg) {
+    auto msg = promoteMsg(raw_msg);
     auto const new_time = ::vt::timing::Timing::getCurrentTime();
     ::fmt::print(
       "finished iteration: iter={},time={}\n",
