@@ -146,7 +146,7 @@ EventType ActiveMessenger::broadcastMsgSz(
       print_ptr(msg), typeid(MessageT).name()
     );
   }
-  HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+  auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   auto const& this_node = theContext()->getNode();
   setBroadcastType(msg->env);
   if (tag != no_tag) {
@@ -188,7 +188,7 @@ EventType ActiveMessenger::sendMsgSz(
       print_ptr(msg), typeid(MessageT).name()
     );
   }
-  HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+  auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   envelopeSetup(msg->env, dest, han);
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
@@ -230,7 +230,7 @@ template <ActiveFnType* f, typename MessageT>
 EventType ActiveMessenger::broadcastMsg(
   MessageT* const msg, TagType const& tag, ActionType next_action
 ) {
-  HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+  auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   auto const& this_node = theContext()->getNode();
   setBroadcastType(msg->env);
   if (tag != no_tag) {
@@ -249,7 +249,7 @@ EventType ActiveMessenger::sendMsg(
   NodeType const& dest, MessageT* const msg, TagType const& tag,
   ActionType next_action
 ) {
-  HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+  auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   envelopeSetup(msg->env, dest, han);
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
@@ -269,7 +269,7 @@ template <typename FunctorT, typename MessageT>
 EventType ActiveMessenger::broadcastMsg(
   MessageT* const msg, TagType const& tag, ActionType next_action
 ) {
-  HandlerType const& han =
+  auto const& han =
     auto_registry::makeAutoHandlerFunctor<FunctorT, true, MessageT*>();
   setBroadcastType(msg->env);
   if (tag != no_tag) {
@@ -288,7 +288,7 @@ EventType ActiveMessenger::sendMsg(
   NodeType const& dest, MessageT* const msg, TagType const& tag,
   ActionType next_action
 ) {
-  HandlerType const& han =
+  auto const& han =
     auto_registry::makeAutoHandlerFunctor<FunctorT, true, MessageT*>();
   envelopeSetup(msg->env, dest, han);
   if (tag != no_tag) {
@@ -357,7 +357,7 @@ EventType ActiveMessenger::sendMsg(
   NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn,
   ActionType next_action
 ) {
-  HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+  auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   return sendMsg<MessageT>(dest, han, msg, send_payload_fn, next_action);
 }
 
@@ -417,7 +417,7 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::sendDataCallback(
   NodeType const& dest, MessageT* const msg, ActiveClosureFnType fn
 ) {
-  HandlerType const& this_han = registerNewHandler(fn, no_tag);
+  auto const& this_han = registerNewHandler(fn, no_tag);
   auto cb = static_cast<CallbackMessage*>(msg);
   cb->setCallback(this_han);
   debug_print(
@@ -433,7 +433,7 @@ void ActiveMessenger::sendDataCallback(
   HandlerType const& han, NodeType const& dest, MessageT* const msg,
   ActiveClosureFnType fn
 ) {
-  HandlerType const& this_han = registerNewHandler(fn, no_tag);
+  auto const& this_han = registerNewHandler(fn, no_tag);
   auto cb = static_cast<CallbackMessage*>(msg);
   cb->setCallback(this_han);
   debug_print(
@@ -458,7 +458,7 @@ void ActiveMessenger::sendCallback(MessageT* const msg) {
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 void ActiveMessenger::trigger(std::function<void(vt::BaseMessage*)> fn) {
-  HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
+  auto const& han = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
   theRegistry()->saveTrigger(han, /*reinterpret_cast<active_function_t>(*/fn);
 }
 
