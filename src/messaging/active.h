@@ -21,6 +21,7 @@
 #include <vector>
 #include <unordered_map>
 #include <limits>
+#include <stack>
 
 namespace vt { namespace messaging {
 
@@ -64,24 +65,23 @@ struct BufferedActiveMsg {
 };
 
 struct ActiveMessenger {
-  using BufferedMsgType = BufferedActiveMsg;
-  using MessageType = ShortMessage*;
-  using CountType = int32_t;
-  using PendingRecvType = PendingRecv;
-  using EventRecordType = event::AsyncEvent::EventRecordType;
-  using SendDataRetType = std::tuple<EventType, TagType>;
-  using SendFnType = std::function<
+  using BufferedMsgType      = BufferedActiveMsg;
+  using MessageType          = ShortMessage*;
+  using CountType            = int32_t;
+  using PendingRecvType      = PendingRecv;
+  using EventRecordType      = event::AsyncEvent::EventRecordType;
+  using SendDataRetType      = std::tuple<EventType, TagType>;
+  using SendFnType           = std::function<
     SendDataRetType(RDMA_GetType,NodeType,TagType,ActionType)
   >;
-  using UserSendFnType = std::function<void(SendFnType)>;
-  using ContainerPendingType = std::unordered_map<TagType, PendingRecvType>;
-  using MsgContType = std::list<BufferedMsgType>;
-  using ContainerWaitingHandlerType = std::unordered_map<
-    HandlerType, MsgContType
-  >;
-  using ReadyHanTagType = std::tuple<HandlerType, TagType>;
-  using MaybeReadyType = std::vector<ReadyHanTagType>;
-  using HandlerManagerType = HandlerManager;
+  using UserSendFnType       = std::function<void(SendFnType)>;
+  using ContainerPendingType = std::unordered_map<TagType,PendingRecvType>;
+  using MsgContType          = std::list<BufferedMsgType>;
+  using ContWaitType         = std::unordered_map<HandlerType, MsgContType>;
+  using ReadyHanTagType      = std::tuple<HandlerType, TagType>;
+  using MaybeReadyType       = std::vector<ReadyHanTagType>;
+  using HandlerManagerType   = HandlerManager;
+  using EpochStackType       = std::stack<EpochType>;
 
   ActiveMessenger();
 
@@ -568,20 +568,22 @@ struct ActiveMessenger {
   EpochType getGlobalEpoch() const;
 
 private:
-  NodeType this_node_ = uninitialized_destination;
+  NodeType this_node_                   = uninitialized_destination;
+
   #if backend_check_enabled(trace_enabled)
     trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
   #endif
 
-  HandlerType current_handler_context_ = uninitialized_handler;
+  HandlerType current_handler_context_  = uninitialized_handler;
   HandlerType current_callback_context_ = uninitialized_handler;
-  NodeType current_node_context_ = uninitialized_destination;
-  EpochType current_epoch_context_ = no_epoch;
-  EpochType global_epoch_ = no_epoch;
-  MaybeReadyType maybe_ready_tag_han_;
-  ContainerWaitingHandlerType pending_handler_msgs_;
-  ContainerPendingType pending_recvs_;
-  TagType cur_direct_buffer_tag_ = starting_direct_buffer_tag;
+  NodeType current_node_context_        = uninitialized_destination;
+  EpochType current_epoch_context_      = no_epoch;
+  EpochType global_epoch_               = no_epoch;
+  MaybeReadyType maybe_ready_tag_han_   = {};
+  ContWaitType pending_handler_msgs_    = {};
+  ContainerPendingType pending_recvs_   = {};
+  TagType cur_direct_buffer_tag_        = starting_direct_buffer_tag;
+  EpochStackType epoch_stack_           = {};
 };
 
 }} // end namespace vt::messaging
