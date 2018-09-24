@@ -564,8 +564,40 @@ struct ActiveMessenger {
     MsgSizeType const& msg_size, TagType const& send_tag, ActionType next_action
   );
 
+  /*
+   * setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
+   * stack depending on the value of the `epoch' passed as an argument.
+   */
   void setGlobalEpoch(EpochType const& epoch = no_epoch);
+  /*
+   * getGlobalEpoch() returns the top epoch on the stack iff epoch_stack.size()
+   * > 0, else it returns no_epoch
+   */
   EpochType getGlobalEpoch() const;
+
+  /*
+   * pushEpoch(epoch) pushes any epoch onto the local stack iff epoch !=
+   * no_epoch; the epoch stack includes all locally pushed epochs and the
+   * current contexts pushed, transitively causally related active message
+   * handlers.
+   */
+  void pushEpoch(EpochType const& epoch);
+
+  /*
+   * popEpoch(epoch) shall remove the top entry from epoch_size_, iif the size
+   * is non-zero and the `epoch' passed, if `epoch != no_epoch', is equal to the
+   * top of the `epoch_stack_.top()'; else, it shall remove any entry from the
+   * top of the stack.
+   */
+  EpochType popEpoch(EpochType const& epoch = no_epoch);
+
+private:
+  using EpochStackSizeType = typename EpochStackType::size_type;
+
+  inline void epochPreludeHandler(EpochType const& epoch);
+  inline void epochEpilogHandler(
+    EpochType const& epoch, EpochStackSizeType const& prev_stack_size
+  );
 
 private:
   NodeType this_node_                   = uninitialized_destination;
