@@ -519,9 +519,11 @@ bool ActiveMessenger::deliverActiveMsg(
     current_node_context_     = from_node;
     current_epoch_context_    = epoch;
 
-    #if backend_check_enabled(trace_enabled)
+    backend_enable_if(
+      trace_enabled,
       current_trace_context_  = from_node;
-    #endif
+    );
+
 
     // run the active function
     runnable::Runnable<ShortMessage>::run(handler,active_fun,msg,from_node,tag);
@@ -537,9 +539,11 @@ bool ActiveMessenger::deliverActiveMsg(
     current_node_context_     = uninitialized_destination;
     current_epoch_context_    = no_epoch;
 
-    #if backend_check_enabled(trace_enabled)
+    backend_enable_if(
+      trace_enabled,
       current_trace_context_  = trace::no_trace_event;
-    #endif
+    );
+
   } else {
     if (insert) {
       auto iter = pending_handler_msgs_.find(handler);
