@@ -512,18 +512,30 @@ bool ActiveMessenger::deliverActiveMsg(
   }
 
   if (has_action_handler) {
+    using EpochStackSizeType = typename decltype(epoch_stack_)::size_type;
+
+    auto const& env_epoch    = not (epoch == term::any_epoch_sentinel);
+    auto const& has_epoch    = env_epoch and epoch == no_epoch;
+    auto const& cur_epoch    = env_epoch ? epoch : no_epoch;
+
     // set the current handler so the user can request it in the context of an
     // active fun
     current_handler_context_  = handler;
     current_callback_context_ = callback;
     current_node_context_     = from_node;
-    current_epoch_context_    = epoch;
+    current_epoch_context_    = cur_epoch;
 
     backend_enable_if(
       trace_enabled,
       current_trace_context_  = from_node;
     );
 
+    EpochStackSizeType ep_stack_size = 0;
+
+    if (has_epoch) {
+      epoch_stack_.push(cur_epoch);
+      ep_stack_size = epoch_stack_.size();
+    }
 
     // run the active function
     runnable::Runnable<ShortMessage>::run(handler,active_fun,msg,from_node,tag);
@@ -543,6 +555,28 @@ bool ActiveMessenger::deliverActiveMsg(
       trace_enabled,
       current_trace_context_  = trace::no_trace_event;
     );
+
+    if (has_epoch) {
+      EpochStackSizeType cur_stack_size = epoch_stack_.size();
+      vtAssertNot(
+        ep_stack_size < cur_stack_size,
+        "Epoch stack popped below preceding push size in handler"
+      );
+      vtWarnInfo(
+        ep_stack_size == cur_stack_size, "Stack must be same size",
+        ep_stack_size, cur_stack_size,
+        cur_stack_size > 0 ? epoch_stack_.top() : no_epoch,
+        current_handler_context_, current_epoch_context_, current_node_context_,
+        current_callback_context_, env_epoch, has_epoch, cur_epoch
+      );
+      vtAssertNotExpr(cur_stack_size == 0);
+      while (cur_stack_size > ep_stack_size) {
+        cur_stack_size = (epoch_stack_.pop(), epoch_stack_.size());
+      }
+      vtAssertExpr(epoch_stack_.top() == cur_epoch);
+      vtAssertExpr(cur_stack_size == ep_stack_size);
+      epoch_stack_.pop();
+    }
 
   } else {
     if (insert) {
