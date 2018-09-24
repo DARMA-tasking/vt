@@ -415,7 +415,10 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto col_holder = theCollection()->findColHolder<ColT,IndexT>(untyped_proxy);
   if (!col_holder->is_static_) {
     auto const& epoch = msg->bcast_epoch_;
-    theCollection()->bufferBroadcastMsg<ColT>(untyped_proxy, epoch, msg);
+    /*
+     * @todo: buffer the broadcasts only when needed and clean up appropriately
+     */
+    // theCollection()->bufferBroadcastMsg<ColT>(untyped_proxy, epoch, msg);
   }
   /*
    *  Termination: consume for default epoch for correct termination: on the
