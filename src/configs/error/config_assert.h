@@ -64,15 +64,19 @@
         );                                                              \
       }                                                                 \
     } while (false)
+  #define vtAssertExprArgImpl(fail,cond,args...)                        \
+    vtAssertArgImpl(fail,cond,#cond,args)
 
   #if backend_check_enabled(assert_no_fail)
     #define vtAssert(cond,str,args...)     vtAssertImpl(false,cond,str,args)
     #define vtAssertInfo(cond,str,args...) vtAssertArgImpl(false,cond,str,args)
     #define vtAssertExpr(cond)             vtAssertExprImpl(false,cond)
+    #define vtAssertExprInfo(cond,args...) vtAssertExprArgImpl(false,cond,args)
   #else
     #define vtAssert(cond,str,args...)     vtAssertImpl(true,cond,str,args)
     #define vtAssertInfo(cond,str,args...) vtAssertArgImpl(true,cond,str,args)
     #define vtAssertExpr(cond)             vtAssertExprImpl(true,cond)
+    #define vtAssertExprInfo(cond,args...) vtAssertExprArgImpl(true,cond,args)
   #endif
 
   #define vtAssertNot(cond,str,args...)                                 \
