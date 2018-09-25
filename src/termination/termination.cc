@@ -258,8 +258,8 @@ void TerminationDetector::resetGlobalTerm() {
   );
 }
 
-void TerminationDetector::cleanEpoch(EpochType const& epoch) {
-  // Clean up epoch ready unordered_set
+void TerminationDetector::freeEpoch(EpochType const& epoch) {
+  // Clean up epoch ready std::unordered_set
   {
     auto iter = epoch_ready_.find(epoch);
     if (iter != epoch_ready_.end()) {

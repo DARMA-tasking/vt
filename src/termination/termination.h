@@ -52,7 +52,7 @@ struct TerminationDetector :
   TermStateDSType* getDSTerm(EpochType const& epoch);
 
   void resetGlobalTerm();
-  void cleanEpoch(EpochType const& epoch);
+  void freeEpoch(EpochType const& epoch);
 
 public:
   /*
