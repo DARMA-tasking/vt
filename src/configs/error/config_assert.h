@@ -81,9 +81,9 @@
     #define vtWarnInfo(cond,str,args...)   vtAssertArgImpl(false,cond,str,args)
   #endif
 
-  #define vtAssertNot(cond,str,args...)                                 \
-    vtAssert(INVERT_COND(cond),str,args)
-  #define vtAssertNotInfo(cond,str,args...)                             \
+  #define vtAssertNot(cond,str,args...) vtAssert(INVERT_COND(cond),str,args)
+  #define vtAssertNotExpr(cond)         vtAssertExpr(INVERT_COND(cond))
+  #define vtAssertNotInfo(cond,str,args...)                              \
     vtAssertInfo(INVERT_COND(cond),str,args)
 #endif
 
