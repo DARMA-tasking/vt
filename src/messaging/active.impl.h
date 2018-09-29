@@ -462,6 +462,114 @@ void ActiveMessenger::trigger(std::function<void(vt::BaseMessage*)> fn) {
   theRegistry()->saveTrigger(han, /*reinterpret_cast<active_function_t>(*/fn);
 }
 
+inline ActiveMessenger::EpochStackSizeType
+ActiveMessenger::epochPreludeHandler(EpochType const& cur_epoch) {
+  debug_print_force(
+    active, node,
+    "epochPreludeHandler: top={:x}, cur_epoch={:x}, size={}\n",
+    epoch_stack_.size() > 0 ? epoch_stack_.top(): no_epoch, cur_epoch,
+    epoch_stack_.size()
+  );
+
+  return epoch_stack_.push(cur_epoch),epoch_stack_.size();
+}
+
+inline void ActiveMessenger::epochEpilogHandler(
+  EpochType const& cur_epoch, EpochStackSizeType const& ep_stack_size
+) {
+  EpochStackSizeType cur_stack_size = epoch_stack_.size();
+
+  debug_print_force(
+    active, node,
+    "epochEpilogHandler: top={:x}, size={}\n",
+    epoch_stack_.size() > 0 ? epoch_stack_.top(): no_epoch,
+    cur_stack_size
+  );
+
+  vtAssertNot(
+    ep_stack_size < cur_stack_size,
+    "Epoch stack popped below preceding push size in handler"
+  );
+  vtWarnInfo(
+    ep_stack_size == cur_stack_size, "Stack must be same size",
+    ep_stack_size, cur_stack_size,
+    cur_stack_size > 0 ? epoch_stack_.top() : no_epoch,
+    current_handler_context_, current_epoch_context_, current_node_context_,
+    current_callback_context_, cur_epoch
+  );
+  vtAssertNotExpr(cur_stack_size == 0);
+  while (cur_stack_size > ep_stack_size) {
+    cur_stack_size = (epoch_stack_.pop(), epoch_stack_.size());
+  }
+  vtAssertExpr(epoch_stack_.top() == cur_epoch);
+  vtAssertExpr(cur_stack_size == ep_stack_size);
+  epoch_stack_.pop();
+}
+
+inline void ActiveMessenger::setGlobalEpoch(EpochType const& epoch) {
+  /*
+   * setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
+   * stack depending on the value of the `epoch' passed as an argument.
+   */
+  if (epoch == no_epoch) {
+    vtAssertInfo(
+      epoch_stack_.size() > 0, "Setting no global epoch requires non-zero size",
+      epoch_stack_.size()
+    );
+    if (epoch_stack_.size() > 0) {
+      epoch_stack_.pop();
+    }
+  } else {
+    epoch_stack_.push(epoch);
+  }
+}
+
+inline EpochType ActiveMessenger::getGlobalEpoch() const {
+  vtAssertInfo(
+    epoch_stack_.size() > 0, "Epoch stack size must be greater than zero",
+    epoch_stack_.size()
+  );
+  return epoch_stack_.size() ? epoch_stack_.top() : term::any_epoch_sentinel;
+}
+
+inline void ActiveMessenger::pushEpoch(EpochType const& epoch) {
+  /*
+   * pushEpoch(epoch) pushes any epoch onto the local stack iff epoch !=
+   * no_epoch; the epoch stack includes all locally pushed epochs and the
+   * current contexts pushed, transitively causally related active message
+   * handlers.
+   */
+  vtAssertInfo(
+    epoch != no_epoch, "Do not push no_epoch onto the epoch stack",
+    epoch, no_epoch, epoch_stack_.size(),
+    epoch_stack_.size() > 0 ? epoch_stack_.top() : no_epoch
+  );
+  if (epoch != no_epoch) {
+    epoch_stack_.push(epoch);
+  }
+}
+
+inline EpochType ActiveMessenger::popEpoch(EpochType const& epoch) {
+  /*
+   * popEpoch(epoch) shall remove the top entry from epoch_size_, iif the size
+   * is non-zero and the `epoch' passed, if `epoch != no_epoch', is equal to the
+   * top of the `epoch_stack_.top()'; else, it shall remove any entry from the
+   * top of the stack.
+   */
+  auto const& non_zero = epoch_stack_.size() > 0;
+  if (epoch == no_epoch) {
+    return non_zero ? epoch_stack_.pop(),epoch_stack_.top() : no_epoch;
+  } else {
+    return non_zero && epoch == epoch_stack_.top() ?
+      epoch_stack_.pop(),epoch :
+      no_epoch;
+  }
+}
+
+inline EpochType ActiveMessenger::getEpoch() const {
+  return getGlobalEpoch();
+}
+
 }} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ACTIVE_IMPL_H*/

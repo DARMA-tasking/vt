@@ -85,6 +85,8 @@ struct ActiveMessenger {
 
   ActiveMessenger();
 
+  virtual ~ActiveMessenger();
+
   template <typename MsgPtrT>
   void setTermMessage(MsgPtrT const msg);
 
@@ -568,12 +570,12 @@ struct ActiveMessenger {
    * setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
    * stack depending on the value of the `epoch' passed as an argument.
    */
-  void setGlobalEpoch(EpochType const& epoch = no_epoch);
+  inline void setGlobalEpoch(EpochType const& epoch = no_epoch);
   /*
    * getGlobalEpoch() returns the top epoch on the stack iff epoch_stack.size()
    * > 0, else it returns no_epoch
    */
-  EpochType getGlobalEpoch() const;
+  inline EpochType getGlobalEpoch() const;
 
   /*
    * pushEpoch(epoch) pushes any epoch onto the local stack iff epoch !=
@@ -581,7 +583,7 @@ struct ActiveMessenger {
    * current contexts pushed, transitively causally related active message
    * handlers.
    */
-  void pushEpoch(EpochType const& epoch);
+  inline void pushEpoch(EpochType const& epoch);
 
   /*
    * popEpoch(epoch) shall remove the top entry from epoch_size_, iif the size
@@ -589,12 +591,17 @@ struct ActiveMessenger {
    * top of the `epoch_stack_.top()'; else, it shall remove any entry from the
    * top of the stack.
    */
-  EpochType popEpoch(EpochType const& epoch = no_epoch);
+  inline EpochType popEpoch(EpochType const& epoch = no_epoch);
+
+  /*
+   * getEpoch() returns the top of the epoch_stack_
+   */
+  inline EpochType getEpoch() const;
 
 private:
   using EpochStackSizeType = typename EpochStackType::size_type;
 
-  inline void epochPreludeHandler(EpochType const& epoch);
+  inline EpochStackSizeType epochPreludeHandler(EpochType const& epoch);
   inline void epochEpilogHandler(
     EpochType const& epoch, EpochStackSizeType const& prev_stack_size
   );

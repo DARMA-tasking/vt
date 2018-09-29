@@ -535,10 +535,12 @@ bool ActiveMessenger::deliverActiveMsg(
   }
 
   if (has_action_handler) {
-    using EpochStackSizeType = typename decltype(epoch_stack_)::size_type;
+    // the epoch_stack_ size after the epoch on the active message, if included
+    // in the envelope, is pushed.
+    EpochStackSizeType ep_stack_size = 0;
 
     auto const& env_epoch    = not (epoch == term::any_epoch_sentinel);
-    auto const& has_epoch    = env_epoch and epoch == no_epoch;
+    auto const& has_epoch    = env_epoch and epoch != no_epoch;
     auto const& cur_epoch    = env_epoch ? epoch : no_epoch;
 
     // set the current handler so the user can request it in the context of an
@@ -553,11 +555,8 @@ bool ActiveMessenger::deliverActiveMsg(
       current_trace_context_  = from_node;
     );
 
-    EpochStackSizeType ep_stack_size = 0;
-
     if (has_epoch) {
-      epoch_stack_.push(cur_epoch);
-      ep_stack_size = epoch_stack_.size();
+      ep_stack_size = epochPreludeHandler(cur_epoch);
     }
 
     // run the active function
@@ -580,25 +579,7 @@ bool ActiveMessenger::deliverActiveMsg(
     );
 
     if (has_epoch) {
-      EpochStackSizeType cur_stack_size = epoch_stack_.size();
-      vtAssertNot(
-        ep_stack_size < cur_stack_size,
-        "Epoch stack popped below preceding push size in handler"
-      );
-      vtWarnInfo(
-        ep_stack_size == cur_stack_size, "Stack must be same size",
-        ep_stack_size, cur_stack_size,
-        cur_stack_size > 0 ? epoch_stack_.top() : no_epoch,
-        current_handler_context_, current_epoch_context_, current_node_context_,
-        current_callback_context_, env_epoch, has_epoch, cur_epoch
-      );
-      vtAssertNotExpr(cur_stack_size == 0);
-      while (cur_stack_size > ep_stack_size) {
-        cur_stack_size = (epoch_stack_.pop(), epoch_stack_.size());
-      }
-      vtAssertExpr(epoch_stack_.top() == cur_epoch);
-      vtAssertExpr(cur_stack_size == ep_stack_size);
-      epoch_stack_.pop();
+      epochEpilogHandler(cur_epoch,ep_stack_size);
     }
 
   } else {
@@ -846,67 +827,5 @@ HandlerType ActiveMessenger::getCurrentCallback() const {
 EpochType ActiveMessenger::getCurrentEpoch() const {
   return current_epoch_context_;
 }
-
-void ActiveMessenger::setGlobalEpoch(EpochType const& epoch) {
-  /*
-   * setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
-   * stack depending on the value of the `epoch' passed as an argument.
-   */
-  if (epoch == no_epoch) {
-    vtAssertInfo(
-      epoch_stack_.size() > 0, "Setting no global epoch requires non-zero size",
-      epoch_stack_.size()
-    );
-    if (epoch_stack_.size() > 0) {
-      epoch_stack_.pop();
-    }
-  } else {
-    epoch_stack_.push(epoch);
-  }
-}
-
-EpochType ActiveMessenger::getGlobalEpoch() const {
-  vtAssertInfo(
-    epoch_stack_.size() > 0, "Epoch stack size must be greater than zero",
-    epoch_stack_.size()
-  );
-  return epoch_stack_.size() ? epoch_stack_.top() : no_epoch;
-}
-
-void ActiveMessenger::pushEpoch(EpochType const& epoch) {
-  /*
-   * pushEpoch(epoch) pushes any epoch onto the local stack iff epoch !=
-   * no_epoch; the epoch stack includes all locally pushed epochs and the
-   * current contexts pushed, transitively causally related active message
-   * handlers.
-   */
-  vtAssertInfo(
-    epoch != no_epoch, "Do not push no_epoch onto the epoch stack",
-    epoch, no_epoch, epoch_stack_.size(),
-    epoch_stack_.size() > 0 ? epoch_stack_.top() : no_epoch
-  );
-  if (epoch != no_epoch) {
-    epoch_stack_.push(epoch);
-  }
-}
-
-EpochType ActiveMessenger::popEpoch(EpochType const& epoch) {
-  /*
-   * popEpoch(epoch) shall remove the top entry from epoch_size_, iif the size
-   * is non-zero and the `epoch' passed, if `epoch != no_epoch', is equal to the
-   * top of the `epoch_stack_.top()'; else, it shall remove any entry from the
-   * top of the stack.
-   */
-  auto const& non_zero = epoch_stack_.size() > 0;
-  if (epoch == no_epoch) {
-    return non_zero ? epoch_stack_.pop(),epoch_stack_.top() : no_epoch;
-  } else {
-    return non_zero && epoch == epoch_stack_.top() ?
-      epoch_stack_.pop(),epoch :
-      no_epoch;
-  }
-}
-
-
 
 }} // end namespace vt::messaging
