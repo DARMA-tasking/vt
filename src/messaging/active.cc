@@ -156,11 +156,6 @@ EventType ActiveMessenger::sendMsgBytes(
     mpi_event->setManagedMessage(base.to<ShortMessage>());
   }
 
-  if (not is_term) {
-    theTerm()->produce(epoch);
-    theTerm()->send(dest,epoch);
-  }
-
   vtWarnIf(
     !(dest != theContext()->getNode() || is_bcast),
     "Destination {} should != this node", dest
@@ -173,6 +168,11 @@ EventType ActiveMessenger::sendMsgBytes(
     msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
     mpi_event->getRequest()
   );
+
+  if (not is_term) {
+    theTerm()->produce(epoch);
+    theTerm()->send(dest,epoch);
+  }
 
   return event_id;
 }
