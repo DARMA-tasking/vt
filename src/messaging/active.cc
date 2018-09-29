@@ -9,7 +9,24 @@
 
 namespace vt { namespace messaging {
 
-ActiveMessenger::ActiveMessenger() : this_node_(theContext()->getNode()) { }
+ActiveMessenger::ActiveMessenger()
+  : this_node_(theContext()->getNode())
+{
+  /*
+   * Push the default epoch into the stack so it is always at the bottom of the
+   * stack during execution until the AM's destructor is invoked
+   */
+  pushEpoch(term::any_epoch_sentinel);
+}
+
+/*virtual*/ ActiveMessenger::~ActiveMessenger() {
+  auto const ret_epoch = popEpoch(term::any_epoch_sentinel);
+  vtAssertInfo(
+    ret_epoch == term::any_epoch_sentinel, "Last pop must be any epoch",
+    ret_epoch, term::any_epoch_sentinel, epoch_stack_.size()
+  );
+  vtAssertExpr(epoch_stack_.size() == 0);
+}
 
 void ActiveMessenger::packMsg(
   MessageType const msg, MsgSizeType const& size, void* ptr,
