@@ -504,8 +504,9 @@ bool ActiveMessenger::deliverActiveMsg(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "deliverActiveMsg: msg={}, ref={}, is_bcast={}\n",
-      print_ptr(msg), envelopeGetRef(msg->env), print_bool(is_bcast)
+      "deliverActiveMsg: msg={}, ref={}, is_bcast={}, epoch={:x}\n",
+      print_ptr(msg), envelopeGetRef(msg->env), print_bool(is_bcast),
+      epoch
     );
   }
 
