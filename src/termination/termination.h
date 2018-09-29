@@ -8,6 +8,7 @@
 #include "termination/term_state.h"
 #include "termination/term_action.h"
 #include "termination/term_interface.h"
+#include "termination/term_window.h"
 #include "termination/dijkstra-scholten/ds_headers.h"
 #include "epoch/epoch.h"
 #include "activefn/activefn.h"
@@ -16,7 +17,9 @@
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 #include <vector>
+#include <memory>
 
 namespace vt { namespace term {
 
@@ -27,8 +30,9 @@ struct TerminationDetector :
 {
   template <typename T>
   using EpochContainerType = std::unordered_map<EpochType, T>;
-  using TermStateType = TermState;
-  using TermStateDSType = term::ds::StateDS::TerminatorType;
+  using TermStateType      = TermState;
+  using TermStateDSType    = term::ds::StateDS::TerminatorType;
+  using WindowType         = std::unique_ptr<EpochWindow>;
 
   TerminationDetector();
 
@@ -71,11 +75,12 @@ public:
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
 
-  bool isEpochReady(EpochType const& epoch) const noexcept;
-  bool isEpochFinished(EpochType const& epoch) const noexcept;
-
 public:
-  // void scopedEpoch(ActionType closure, ActionType action);
+  struct Scoped {
+    EpochType rooted(bool small, ActionType closure);
+    void rooted(bool small, ActionType closure, ActionType action);
+    void rootedWait(bool small, ActionType closure);
+  } scope;
 
 public:
   EpochType newEpochCollective();
@@ -99,6 +104,14 @@ private:
     TermCounterType const& cons
   );
 
+  EpochType getArchetype(EpochType const& epoch) const;
+  EpochWindow* getWindow(EpochType const& epoch);
+
+private:
+  void updateResolvedEpochs(EpochType const& epoch, bool const rooted);
+  void inquireFinished(EpochType const& epoch, NodeType const& from_node);
+  void replyFinished(EpochType const& epoch, bool const& is_finished);
+
 public:
   void setLocalTerminated(bool const terminated, bool const no_local = true);
   void maybePropagate();
@@ -106,7 +119,9 @@ public:
 
 public:
   // TermFinished interface
-  bool testEpochFinished(EpochType const& epoch) override;
+  TermStatusEnum testEpochFinished(
+    EpochType const& epoch, ActionType action
+  ) override;
 
 private:
   bool propagateEpoch(TermStateType& state);
@@ -118,8 +133,10 @@ private:
 
   void rootMakeEpoch(EpochType const& epoch);
   void makeRootedEpoch(EpochType const& epoch, bool const is_root);
-  static void makeRootedEpoch(TermMsg* msg);
 
+  static void makeRootedEpoch(TermMsg* msg);
+  static void inquireEpochFinished(TermFinishedMsg* msg);
+  static void replyEpochFinished(TermFinishedReplyMsg* msg);
   static void propagateNewEpochHandler(TermMsg* msg);
   static void readyEpochHandler(TermMsg* msg);
   static void propagateEpochHandler(TermCounterMsg* msg);
@@ -127,16 +144,16 @@ private:
   static void epochContinueHandler(TermMsg* msg);
 
 private:
-  // the epoch window [fst, lst]
-  EpochType first_resolved_epoch_ = no_epoch, last_resolved_epoch_ = no_epoch;
   // global termination state
   TermStateType any_epoch_state_;
   // epoch termination state
-  EpochContainerType<TermStateType> epoch_state_;
-  // finished epoch list (@todo: memory bound)
-  std::unordered_set<EpochType> epoch_finished_;
+  EpochContainerType<TermStateType> epoch_state_        = {};
+  // epoch window container for specific archetyped epochs
+  std::unordered_map<EpochType,WindowType> epoch_arch_  = {};
+  // epoch window for basic collective epochs
+  std::unique_ptr<EpochWindow> epoch_coll_              = nullptr;
   // ready epoch list (misnomer: finishedEpoch was invoked)
-  std::unordered_set<EpochType> epoch_ready_;
+  std::unordered_set<EpochType> epoch_ready_            = {};
 };
 
 }} // end namespace vt::term

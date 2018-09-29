@@ -33,6 +33,7 @@ private:
 };
 
 struct TermFinishedReplyMsg : vt::Message {
+
   TermFinishedReplyMsg() = default;
   TermFinishedReplyMsg(EpochType const& in_epoch, bool const& in_finished)
     : epoch_(in_epoch), finished_(in_finished)

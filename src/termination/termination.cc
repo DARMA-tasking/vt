@@ -2,6 +2,7 @@
 #include "config.h"
 #include "termination/termination.h"
 #include "termination/term_common.h"
+#include "termination/term_window.h"
 #include "messaging/active.h"
 #include "collective/collective_ops.h"
 #include "scheduler/scheduler.h"
@@ -10,11 +11,14 @@
 #include "termination/dijkstra-scholten/comm.h"
 #include "termination/dijkstra-scholten/ds.h"
 
+#include <memory>
+
 namespace vt { namespace term {
 
 TerminationDetector::TerminationDetector()
   : collective::tree::Tree(collective::tree::tree_cons_tag_t),
-  any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren())
+  any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
+  epoch_coll_(std::make_unique<EpochWindow>())
 { }
 
 /*static*/ void TerminationDetector::propagateNewEpochHandler(TermMsg* msg) {
@@ -42,6 +46,45 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
 
 /*static*/ void TerminationDetector::epochContinueHandler(TermMsg* msg) {
   theTerm()->epochContinue(msg->new_epoch, msg->wave);
+}
+
+/*static*/ void TerminationDetector::inquireEpochFinished(
+  TermFinishedMsg* msg
+) {
+  theTerm()->inquireFinished(msg->getEpoch(),msg->getFromNode());
+}
+
+/*static*/ void TerminationDetector::replyEpochFinished(
+  TermFinishedReplyMsg* msg
+) {
+  theTerm()->replyFinished(msg->getEpoch(),msg->isFinished());
+}
+
+EpochType TerminationDetector::getArchetype(EpochType const& epoch) const {
+  auto epoch_arch = epoch;
+  epoch::EpochManip::setSeq(epoch_arch,0);
+  return epoch_arch;
+}
+
+EpochWindow* TerminationDetector::getWindow(EpochType const& epoch) {
+  auto const is_rooted = epoch::EpochManip::isRooted(epoch);
+  if (is_rooted) {
+    auto const& arch_epoch = getArchetype(epoch);
+    auto iter = epoch_arch_.find(arch_epoch);
+    if (iter == epoch_arch_.end()) {
+      epoch_arch_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(arch_epoch),
+        std::forward_as_tuple(std::make_unique<EpochWindow>(true))
+      );
+      iter = epoch_arch_.find(arch_epoch);
+      iter->second->initialize(epoch);
+    }
+    return iter->second.get();
+  } else {
+    vtAssertExpr(epoch_coll_ != nullptr);
+    return epoch_coll_.get();
+  }
 }
 
 TermCounterType TerminationDetector::getNumUnits() const {
@@ -267,15 +310,10 @@ void TerminationDetector::freeEpoch(EpochType const& epoch) {
     }
   }
 
-  // Clean up epoch finished unordered_set
-  {
-    auto iter = epoch_finished_.find(epoch);
-    if (iter != epoch_finished_.end()) {
-      epoch_finished_.erase(iter);
-    }
-  }
+  auto window = getWindow(epoch);
+  window->clean(epoch);
 
-  // Clean up actions associated with epoch
+  // Clean up any actions lambdas associated with epoch
   {
     auto iter = epoch_actions_.find(epoch);
     if (iter != epoch_actions_.end()) {
@@ -283,7 +321,7 @@ void TerminationDetector::freeEpoch(EpochType const& epoch) {
     }
   }
 
-  // Clean up state associated with epoch
+  // Clean up local epoch state associated with epoch
   {
     auto iter = epoch_state_.find(epoch);
     if (iter != epoch_state_.end()) {
@@ -386,8 +424,9 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
   if (epoch != any_epoch_sentinel) {
     auto epoch_iter = epoch_state_.find(epoch);
-    vtAssert(epoch_iter != epoch_state_.end(), "Must exist");
-    epoch_state_.erase(epoch_iter);
+    if (epoch_iter != epoch_state_.end()) {
+      epoch_state_.erase(epoch_iter);
+    }
   }
 }
 
@@ -408,31 +447,135 @@ void TerminationDetector::epochFinished(
     cleanupEpoch(epoch);
   }
 
-  /*
-   *  Rooted epochs are not tracked in the window because they are not purely
-   *  sequential
-   */
-  if (!is_rooted_epoch) {
-    // close the epoch window
-    if (first_resolved_epoch_ == epoch) {
-      first_resolved_epoch_++;
-    }
-  }
-
-  epoch_finished_.emplace(epoch);
+  updateResolvedEpochs(epoch, is_rooted_epoch);
 }
 
-bool TerminationDetector::testEpochFinished(EpochType const& epoch) {
-  auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
-  if (is_rooted_epoch) {
-    return false;
+void TerminationDetector::inquireFinished(
+  EpochType const& epoch, NodeType const& from
+) {
+  auto const& is_rooted = epoch::EpochManip::isRooted(epoch);
+  auto const& epoch_root_node = epoch::EpochManip::node(epoch);
+  auto const& this_node = theContext()->getNode();
+
+  vtAssertInfo(
+    !is_rooted || epoch_root_node == this_node,
+    "Must be not rooted or this is root node",
+    is_rooted, epoch_root_node, epoch, from
+  );
+
+  auto const& finished = testEpochFinished(epoch,nullptr);
+  auto const& is_ready = finished == TermStatusEnum::Finished;
+
+  vtAssertExprInfo(finished != TermStatusEnum::Remote, epoch, from);
+
+  debug_print(
+    term, node,
+    "inquireFinished: epoch={}, is_rooted={}, root={}, is_ready={}, from={}\n",
+    epoch, is_rooted, epoch_root_node, is_ready, from
+  );
+
+  auto msg = makeMessage<TermFinishedReplyMsg>(epoch,is_ready);
+  theMsg()->sendMsg<TermFinishedReplyMsg,replyEpochFinished>(from,msg.get());
+}
+
+void TerminationDetector::replyFinished(
+  EpochType const& epoch, bool const& is_finished
+) {
+  debug_print(
+    term, node,
+    "replyFinished: epoch={}, is_finished={}\n",
+    epoch, is_finished
+  );
+}
+
+void TerminationDetector::updateResolvedEpochs(
+  EpochType const& epoch, bool const rooted
+) {
+  debug_print(
+    term, node,
+    "updateResolvedEpoch: epoch={:x}, rooted={}, "
+    "collective: first={:x}, last={:x}\n",
+    epoch, rooted, epoch_coll_->getFirst(), epoch_coll_->getLast()
+  );
+
+  if (rooted) {
+    auto window = getWindow(epoch);
+    window->closeEpoch(epoch);
   } else {
-    if (epoch_finished_.find(epoch) != epoch_finished_.end()) {
-      return true;
+    epoch_coll_->closeEpoch(epoch);
+  }
+}
+
+TermStatusEnum TerminationDetector::testEpochFinished(
+  EpochType const& epoch, ActionType action
+) {
+  TermStatusEnum status = TermStatusEnum::Pending;
+  auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
+
+  if (is_rooted_epoch) {
+    auto const& this_node = theContext()->getNode();
+    auto const& root = epoch::EpochManip::node(epoch);
+    if (root == this_node) {
+      /*
+       * The idea here is that if this is executed on the root, it must have
+       * valid info on whether the rooted live or finished
+       */
+      auto window = getWindow(epoch);
+      auto is_finished = window->isFinished(epoch);
+      if (is_finished) {
+        status = TermStatusEnum::Finished;
+      }
     } else {
-      return false;
+      /*
+       * Send a message to the root node to find out whether this epoch is
+       * finished or not
+       */
+      status = TermStatusEnum::Remote;
+      auto msg = makeMessage<TermFinishedMsg>(epoch,this_node);
+      theMsg()->sendMsg<TermFinishedMsg,inquireEpochFinished>(root,msg.get());
+    }
+  } else {
+    auto const& is_finished = epoch_coll_->isFinished(epoch);
+    if (is_finished) {
+      status = TermStatusEnum::Finished;
     }
   }
+
+  debug_print(
+    term, node,
+    "testEpochFinished: epoch={}, pending={}, finished={}, remote={}\n",
+    epoch, status == TermStatusEnum::Pending, status == TermStatusEnum::Finished,
+    status == TermStatusEnum::Remote
+  );
+
+  if (action != nullptr) {
+    switch (status) {
+    case TermStatusEnum::Finished:
+      action();
+      break;
+    case TermStatusEnum::Remote: {
+      auto iter = finished_actions_.find(epoch);
+      if (iter == finished_actions_.end()) {
+        finished_actions_.emplace(
+          std::piecewise_construct,
+          std::forward_as_tuple(epoch),
+          std::forward_as_tuple(std::vector<ActionType>{action})
+        );
+      } else {
+        iter->second.push_back(action);
+      }
+      break;
+    }
+    case TermStatusEnum::Pending:
+      // do nothing, action does not get triggered
+      break;
+    default:
+      vtAssertInfo(0, "Should not be reachable", epoch);
+      break;
+    }
+  }
+
+  return status;
 }
 
 void TerminationDetector::epochContinue(
@@ -457,43 +600,38 @@ void TerminationDetector::epochContinue(
 }
 
 EpochType TerminationDetector::newEpochCollective() {
-  auto const& epoch = epoch::EpochManip::makeNewEpoch();
+  auto const& new_epoch = epoch::EpochManip::makeNewEpoch();
+  vtAssertExpr(epoch_coll_ != nullptr);
+  epoch_coll_->addEpoch(new_epoch);
   auto const from_child = false;
-  produce(epoch,1);
-  propagateNewEpoch(epoch, from_child);
-  return epoch;
+  produce(new_epoch,1);
+  propagateNewEpoch(new_epoch, from_child);
+  return new_epoch;
 }
 
 void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   auto ready_iter = epoch_ready_.find(epoch);
+
+  debug_print(
+    term, node,
+    "finishedEpoch: epoch={}, exists={}\n",
+    epoch, ready_iter != epoch_ready_.end()
+  );
+
   if (ready_iter == epoch_ready_.end()) {
-    consume(epoch,1);
     epoch_ready_.emplace(epoch);
+    consume(epoch,1);
   } else {
     /*
      * Do nothing: the epoch as already been in "finished" state on this node
      */
   }
-}
 
-bool
-TerminationDetector::isEpochReady(EpochType const& epoch) const noexcept {
-  auto const finished = isEpochFinished(epoch);
-  return finished || (epoch_ready_.find(epoch) != epoch_ready_.end());
-}
-
-bool
-TerminationDetector::isEpochFinished(EpochType const& epoch) const noexcept {
-  auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
-  if (is_rooted_epoch) {
-    return false;
-  } else {
-    if (epoch_finished_.find(epoch) != epoch_finished_.end()) {
-      return true;
-    } else {
-      return false;
-    }
-  }
+  debug_print(
+    term, node,
+    "finishedEpoch: (after consume) epoch={}\n",
+    epoch
+  );
 }
 
 EpochType TerminationDetector::newEpochRooted(bool const useDS) {
@@ -538,9 +676,13 @@ EpochType TerminationDetector::makeEpoch(
   bool const is_collective, bool const useDS
 ) {
   if (is_collective) {
-    return newEpochCollective();
+    auto const& epoch = newEpochCollective();
+    getWindow(epoch)->addEpoch(epoch);
+    return epoch;
   } else {
-    return newEpochRooted(useDS);
+    auto const& epoch = newEpochRooted(useDS);
+    getWindow(epoch)->addEpoch(epoch);
+    return epoch;
   }
 }
 
@@ -570,6 +712,11 @@ void TerminationDetector::rootMakeEpoch(EpochType const& epoch) {
 }
 
 void TerminationDetector::activateEpoch(EpochType const& epoch) {
+  debug_print(
+    term, node,
+    "activateEpoch: epoch={}\n", epoch
+  );
+
   auto& state = findOrCreateState(epoch, true);
   state.activateEpoch();
   state.notifyLocalTerminated();
@@ -583,6 +730,8 @@ void TerminationDetector::makeRootedEpoch(
 ) {
   bool const is_ready = !is_root;
   auto& state = findOrCreateState(epoch, is_ready);
+
+  getWindow(epoch)->addEpoch(epoch);
 
   debug_print(
     term, node,
@@ -672,21 +821,13 @@ void TerminationDetector::propagateNewEpoch(
 }
 
 void TerminationDetector::readyNewEpoch(EpochType const& new_epoch) {
-  if (first_resolved_epoch_ == no_epoch) {
-    vtAssertExpr(last_resolved_epoch_ == no_epoch);
-    first_resolved_epoch_ = new_epoch;
-    last_resolved_epoch_ = new_epoch;
-  } else {
-    last_resolved_epoch_ = std::max(new_epoch, last_resolved_epoch_);
-  }
-
   auto& state = findOrCreateState(new_epoch, true);
   state.activateEpoch();
 
   debug_print(
     term, node,
-    "readyNewEpoch: epoch={}: first_resolved_epoch={}, last_resolved_epoch={}\n",
-    new_epoch, first_resolved_epoch_, last_resolved_epoch_
+    "readyNewEpoch: epoch={:x}: collective: first={:x}, last={:x}\n",
+    new_epoch, epoch_coll_->getFirst(), epoch_coll_->getLast()
   );
 
   if (state.readySubmitParent()) {

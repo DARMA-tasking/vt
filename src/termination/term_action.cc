@@ -48,10 +48,9 @@ void TermAction::addActionEpoch(EpochType const& epoch, ActionType action) {
      */
     theTerm()->produce(term::any_epoch_sentinel);
 
-    auto const& finished = testEpochFinished(epoch);
-    if (finished) {
+    auto const& finished = testEpochFinished(epoch, [=]{
       triggerAllEpochActions(epoch);
-    }
+    });
   }
 }
 
