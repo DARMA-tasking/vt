@@ -20,6 +20,12 @@ ActiveMessenger::ActiveMessenger()
 }
 
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {
+  // Pop all extraneous epochs off the stack greater than 1
+  auto stack_size = epoch_stack_.size();
+  while (stack_size > 1) {
+    stack_size = (epoch_stack_.pop(), epoch_stack_.size());
+  }
+  // Pop off the last epoch: term::any_epoch_sentinel
   auto const ret_epoch = popEpoch(term::any_epoch_sentinel);
   vtAssertInfo(
     ret_epoch == term::any_epoch_sentinel, "Last pop must be any epoch",
