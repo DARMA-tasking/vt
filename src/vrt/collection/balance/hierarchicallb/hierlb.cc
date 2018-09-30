@@ -378,6 +378,10 @@ void HierarchicalLB::startMigrations() {
 void HierarchicalLB::transferSend(
   NodeType node, NodeType from, std::vector<ObjIDType> transfer
 ) {
+  vtAssertExprInfo(
+    node != theContext()->getNode(), node, parent, bottom_parent,
+    transfer.size(), from
+  );
   #if hierlb_use_parserdes
     auto const& size =
       transfer.size() * sizeof(ObjIDType) + (sizeof(std::size_t) * 2);
@@ -420,17 +424,27 @@ void HierarchicalLB::downTreeSend(
   NodeType const node, NodeType const from, ObjSampleType const& excess,
   bool const final_child, std::size_t const& approx_size
 ) {
-  #if hierlb_use_parserdes
-    auto msg = makeSharedMessageSz<LBTreeDownMsg>(
-      approx_size,from,excess,final_child
-    );
-    SerializedMessenger::sendParserdesMsg<LBTreeDownMsg,downTreeHandler>(
-      node,msg
-    );
-  #else
-    auto msg = makeSharedMessage<LBTreeDownMsg>(from,excess,final_child);
-    SerializedMessenger::sendSerialMsg<LBTreeDownMsg,downTreeHandler>(node,msg);
-  #endif
+  // vtAssertExprInfo(
+  //   node != theContext()->getNode(), node, from, excess.size(),
+  //   final_child, approx_size, parent, bottom_parent
+  // );
+  auto this_node = theContext()->getNode();
+  if (node != this_node) {
+    #if hierlb_use_parserdes
+      auto msg = makeSharedMessageSz<LBTreeDownMsg>(
+        approx_size,from,excess,final_child
+      );
+      SerializedMessenger::sendParserdesMsg<LBTreeDownMsg,downTreeHandler>(
+        node,msg
+      );
+    #else
+      auto msg = makeSharedMessage<LBTreeDownMsg>(from,excess,final_child);
+      SerializedMessenger::sendSerialMsg<LBTreeDownMsg,downTreeHandler>(node,msg);
+    #endif
+  } else {
+    auto msg = makeMessage<LBTreeDownMsg>(from,excess,final_child);
+    downTreeHandler(msg.get());
+  }
 }
 
 void HierarchicalLB::downTree(
@@ -488,15 +502,25 @@ void HierarchicalLB::lbTreeUpSend(
   ObjSampleType const& load, NodeType const child_size,
   std::size_t const& load_size_approx
 ) {
-  #if hierlb_use_parserdes
-    auto msg = makeSharedMessageSz<LBTreeUpMsg>(
-      load_size_approx,child_load,child,load,child_size
-    );
-    SerializedMessenger::sendParserdesMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
-  #else
-    auto msg = makeSharedMessage<LBTreeUpMsg>(child_load,child,load,child_size);
-    SerializedMessenger::sendSerialMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
-  #endif
+  // vtAssertExprInfo(
+  //   node != theContext()->getNode(), node, child, child_load, child_size,
+  //   parent, bottom_parent, load_size_approx
+  // );
+  auto this_node = theContext()->getNode();
+  if (node != this_node) {
+    #if hierlb_use_parserdes
+      auto msg = makeSharedMessageSz<LBTreeUpMsg>(
+        load_size_approx,child_load,child,load,child_size
+      );
+      SerializedMessenger::sendParserdesMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
+    #else
+      auto msg = makeSharedMessage<LBTreeUpMsg>(child_load,child,load,child_size);
+      SerializedMessenger::sendSerialMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
+    #endif
+  } else {
+    auto msg = makeMessage<LBTreeUpMsg>(child_load,child,load,child_size);
+    lbTreeUpHandler(msg.get());
+  }
 }
 
 void HierarchicalLB::lbTreeUp(
