@@ -841,12 +841,12 @@ void CollectionManager::broadcastMsgUntypedHandler(
   auto const& this_node = theContext()->getNode();
   auto const& col_proxy = toProxy.getProxy();
 
+  auto msg = promoteMsg(raw_msg);
+
   backend_enable_if(
     lblite,
     msg->setLBLiteInstrument(instrument);
   );
-
-  auto msg = promoteMsg(raw_msg);
 
   // @todo: implement the action `act' after the routing is finished
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
@@ -1222,6 +1222,8 @@ void CollectionManager::sendMsgUntypedHandler(
   auto const& col_proxy = toProxy.getCollectionProxy();
   auto const& elm_proxy = toProxy.getElementProxy();
 
+  auto msg = promoteMsg(raw_msg);
+
   backend_enable_if(
     lblite,
     msg->setLBLiteInstrument(true);
@@ -1229,8 +1231,6 @@ void CollectionManager::sendMsgUntypedHandler(
 
   auto const& cur_epoch = theMsg()->getEpoch();
   theTerm()->produce(cur_epoch);
-
-  auto msg = promoteMsg(raw_msg);
 
   auto holder = findColHolder<ColT, IdxT>(col_proxy);
   if (holder != nullptr) {
