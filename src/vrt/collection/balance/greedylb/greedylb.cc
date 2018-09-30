@@ -270,7 +270,6 @@ void GreedyLB::finishedTransferExchange() {
     );
     fflush(stdout);
   }
-  theMsg()->setGlobalEpoch();
   balance::ProcStats::proc_migrate_.clear();
   balance::ProcStats::proc_data_.clear();
   balance::ProcStats::next_elm_ = 1;
@@ -286,8 +285,8 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     "recvObjsDirect: num_recs={}\n", num_recs
   );
   TransferType transfer_list;
-  EpochType const epoch = theTerm()->newEpoch();
-  theMsg()->setGlobalEpoch(epoch);
+  auto const epoch = theTerm()->newEpoch();
+  theMsg()->pushEpoch(epoch);
   theTerm()->addActionEpoch(epoch,[this]{
     this->finishedTransferExchange();
   });
@@ -307,6 +306,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     transfer_count++;
   }
   theTerm()->finishedEpoch(epoch);
+  theMsg()->popEpoch();
 }
 
 /*static*/ void GreedyLB::recvObjsHan(GreedyLBTypes::ObjIDType* objs) {

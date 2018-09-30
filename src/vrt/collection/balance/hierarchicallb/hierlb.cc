@@ -327,7 +327,6 @@ void HierarchicalLB::finishedTransferExchange() {
     );
     fflush(stdout);
   }
-  theMsg()->setGlobalEpoch();
   balance::ProcStats::proc_migrate_.clear();
   balance::ProcStats::proc_data_.clear();
   balance::ProcStats::next_elm_ = 1;
@@ -338,8 +337,8 @@ void HierarchicalLB::startMigrations() {
   auto const& this_node = theContext()->getNode();
   TransferType transfer_list;
 
-  EpochType const epoch = theTerm()->newEpoch();
-  theMsg()->setGlobalEpoch(epoch);
+  auto const epoch = theTerm()->newEpoch();
+  theMsg()->pushEpoch(epoch);
   theTerm()->addActionEpoch(epoch,[this]{
     this->finishedTransferExchange();
   });
@@ -373,6 +372,7 @@ void HierarchicalLB::startMigrations() {
   }
 
   theTerm()->finishedEpoch(epoch);
+  theMsg()->popEpoch();
 }
 
 void HierarchicalLB::transferSend(

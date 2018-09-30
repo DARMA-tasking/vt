@@ -24,8 +24,8 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
     "RotateLB::procDataIn: size={}, next_node={}\n",
     data_in.size(), next_node
   );
-  EpochType const epoch = theTerm()->newEpoch();
-  theMsg()->setGlobalEpoch(epoch);
+  auto const epoch = theTerm()->newEpoch();
+  theMsg()->pushEpoch(epoch);
   theTerm()->addActionEpoch(epoch,[this]{ this->finishedMigrate(); });
   for (auto&& stat : data_in) {
     auto const& obj = stat.first;
@@ -41,6 +41,7 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
     iter->second(next_node);
   }
   theTerm()->finishedEpoch(epoch);
+  theMsg()->popEpoch();
 }
 
 void RotateLB::finishedMigrate() {
@@ -49,7 +50,6 @@ void RotateLB::finishedMigrate() {
     "RotateLB::finishedMigrate: transfer_count={}\n",
     transfer_count
   );
-  theMsg()->setGlobalEpoch();
   balance::ProcStats::proc_migrate_.clear();
   balance::ProcStats::proc_data_.clear();
   balance::ProcStats::next_elm_ = 1;
