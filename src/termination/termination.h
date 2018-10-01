@@ -74,11 +74,13 @@ public:
    */
 
   struct Scoped {
-    EpochType rooted(bool small, ActionType closure);
-    EpochType rooted(bool small, ActionType closure, ActionType action);
+    static EpochType rooted(bool small, ActionType closure);
+    static EpochType rooted(bool small, ActionType closure, ActionType action);
+    static EpochType collective(ActionType closure);
+    static EpochType collective(ActionType closure, ActionType action);
 
     template <typename... Actions>
-    void rootedSeq(bool small, Actions... closures);
+    static void rootedSeq(bool small, Actions... closures);
   } scope;
 
 public:

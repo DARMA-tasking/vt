@@ -12,7 +12,9 @@
 namespace vt { namespace term {
 
 template <typename... Actions>
-void TerminationDetector::Scoped::rootedSeq(bool small, Actions... closures) {
+/*static*/ void TerminationDetector::Scoped::rootedSeq(
+  bool small, Actions... closures
+) {
   //static constexpr auto num_closures = sizeof...(Actions);
   // std::vector<ActionType> vec { { closures.. } };
   // for (auto&& elm : vec) {
