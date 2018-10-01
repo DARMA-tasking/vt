@@ -33,7 +33,7 @@ private:
   static void rootTerminatedHan(AckMsg* msg);
 
 protected:
-  std::unordered_map<EpochType, TerminatorType> term_;
+  std::unordered_map<EpochType, TerminatorType> term_  = {};
 };
 
 }}} /* end namespace vt::term::ds */
