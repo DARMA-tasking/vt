@@ -33,6 +33,7 @@ namespace vt { namespace term {
   vtAssertExpr(closure != nullptr);
   closure();
   theTerm()->finishedEpoch(epoch);
+  return epoch;
 }
 
 /*static*/ EpochType TerminationDetector::Scoped::collective(
@@ -59,6 +60,7 @@ namespace vt { namespace term {
   vtAssertExpr(closure != nullptr);
   closure();
   theTerm()->finishedEpoch(epoch);
+  return epoch;
 }
 
 }} /* end namespace vt::term */
