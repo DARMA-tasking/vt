@@ -658,14 +658,31 @@ void TerminationDetector::epochContinue(
   theTerm()->maybePropagate();
 }
 
-EpochType TerminationDetector::newEpochCollective() {
+EpochType TerminationDetector::newEpochCollective(bool const child) {
   auto const& new_epoch = epoch::EpochManip::makeNewEpoch();
   vtAssertExpr(epoch_coll_ != nullptr);
   epoch_coll_->addEpoch(new_epoch);
   auto const from_child = false;
   produce(new_epoch,1);
   propagateNewEpoch(new_epoch, from_child);
+
+  if (child) {
+    linkChildEpoch(new_epoch);
+  }
+
   return new_epoch;
+}
+
+void TerminationDetector::linkChildEpoch(EpochType const& epoch) {
+  // Add the current active epoch in the messenger as a child epoch so the
+  // current epoch does not detect termination until the new epoch terminations
+  auto const cur_epoch = theMsg()->getEpoch();
+  if (cur_epoch != no_epoch && cur_epoch != term::any_epoch_sentinel) {
+    auto epoch_iter = epoch_state_.find(cur_epoch);
+    vtAssertExpr(epoch_iter != epoch_state_.end());
+    auto& state = epoch_iter->second;
+    state.addChildEpoch(cur_epoch);
+  }
 }
 
 void TerminationDetector::finishedEpoch(EpochType const& epoch) {
@@ -693,7 +710,9 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   );
 }
 
-EpochType TerminationDetector::newEpochRooted(bool const useDS) {
+EpochType TerminationDetector::newEpochRooted(
+  bool const useDS, bool const child
+) {
   /*
    *  This method should only be called by the root node for the rooted epoch
    *  identifier, which is distinct and has the node embedded in it to
@@ -715,10 +734,17 @@ EpochType TerminationDetector::newEpochRooted(bool const useDS) {
         TerminatorType{rooted_epoch,true,this_node}
       )
     );
+    if (child) {
+      iter = term_.find(rooted_epoch);
+      vtAssertInfo(
+        iter != term_.end(), "New epoch must exist now", rooted_epoch, useDS
+      );
+      iter->second.addChildEpoch(rooted_epoch);
+    }
     return rooted_epoch;
   } else {
     auto const& rooted_epoch = epoch::EpochManip::makeNewRootedEpoch();
-    rootMakeEpoch(rooted_epoch);
+    rootMakeEpoch(rooted_epoch,child);
     return rooted_epoch;
   }
 }
@@ -745,11 +771,13 @@ EpochType TerminationDetector::makeEpoch(
   }
 }
 
-EpochType TerminationDetector::newEpoch() {
-  return newEpochCollective();
+EpochType TerminationDetector::newEpoch(bool const child) {
+  return newEpochCollective(child);
 }
 
-void TerminationDetector::rootMakeEpoch(EpochType const& epoch) {
+void TerminationDetector::rootMakeEpoch(
+  EpochType const& epoch, bool const child
+) {
   debug_print(
     term, node,
     "rootMakeEpoch: root={}, epoch={}\n",
@@ -768,6 +796,11 @@ void TerminationDetector::rootMakeEpoch(EpochType const& epoch) {
    */
   bool const is_root = true;
   makeRootedEpoch(epoch,is_root);
+
+
+  if (child) {
+    linkChildEpoch(epoch);
+  }
 }
 
 void TerminationDetector::activateEpoch(EpochType const& epoch) {

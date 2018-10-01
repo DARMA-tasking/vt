@@ -65,7 +65,21 @@ public:
    * Deprecated interface for creating a new collective epoch for detecting
    * termination
    */
-  EpochType newEpoch();
+  EpochType newEpoch(bool const child = false);
+
+public:
+  /*
+   * Interface for scoped epochs using C++ lexical scopes to encapsulate epoch
+   * regimes
+   */
+
+  struct Scoped {
+    EpochType rooted(bool small, ActionType closure);
+    EpochType rooted(bool small, ActionType closure, ActionType action);
+
+    template <typename... Actions>
+    void rootedSeq(bool small, Actions... closures);
+  } scope;
 
 public:
   /*
@@ -78,15 +92,8 @@ public:
   void finishedEpoch(EpochType const& epoch);
 
 public:
-  struct Scoped {
-    EpochType rooted(bool small, ActionType closure);
-    void rooted(bool small, ActionType closure, ActionType action);
-    void rootedWait(bool small, ActionType closure);
-  } scope;
-
-public:
-  EpochType newEpochCollective();
-  EpochType newEpochRooted(bool const useDS = false);
+  EpochType newEpochCollective(bool const child = false);
+  EpochType newEpochRooted(bool const useDS = false, bool const child = false);
 
 private:
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
@@ -132,8 +139,8 @@ private:
   void setupNewEpoch(EpochType const& new_epoch, bool const from_child);
   void propagateNewEpoch(EpochType const& new_epoch, bool const from_child);
   void readyNewEpoch(EpochType const& new_epoch);
-
-  void rootMakeEpoch(EpochType const& epoch);
+  void linkChildEpoch(EpochType const& epoch);
+  void rootMakeEpoch(EpochType const& epoch, bool const child = false);
   void makeRootedEpoch(EpochType const& epoch, bool const is_root);
 
   static void makeRootedEpoch(TermMsg* msg);
@@ -161,5 +168,6 @@ private:
 }} // end namespace vt::term
 
 #include "termination/termination.impl.h"
+#include "termination/term_scope.impl.h"
 
 #endif /*INCLUDED_TERMINATION_TERMINATION_H*/
