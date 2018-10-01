@@ -471,6 +471,35 @@ void TerminationDetector::epochFinished(
     epoch, is_rooted_epoch
   );
 
+  // Clear all the children epochs that are nested by this epoch (waiting on it
+  // to complete)
+  auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
+  auto const epoch_category = epoch::EpochManip::category(epoch);
+  auto const is_ds = epoch_category == ds_epoch;
+  if (!is_rooted_epoch || (is_rooted_epoch && !is_ds)) {
+    if (epoch != term::any_epoch_sentinel) {
+      auto iter = epoch_state_.find(epoch);
+      vtAssertExprInfo(
+        iter != epoch_state_.end(), epoch, cleanup, is_rooted_epoch
+      );
+      if (iter != epoch_state_.end()) {
+        iter->second.clearChildren();
+      }
+    } else {
+      // Although in theory the term::any_epoch_sentinel could track all other
+      // epochs as children, it does not need for correctness (and this would be
+      // expensive)
+    }
+  } else {
+    vtAssertExpr(is_ds);
+    vtAssertExpr(ds_epoch == epoch_category);
+    auto ptr = getDSTerm(epoch);
+    vtAssertExpr(ptr != nullptr);
+    if (ptr) {
+      ptr->clearChildren();
+    }
+  }
+
   triggerAllActions(epoch,epoch_state_);
 
   if (cleanup) {
