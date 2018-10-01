@@ -6,8 +6,25 @@
 #include "termination/dijkstra-scholten/ds.h"
 #include "termination/dijkstra-scholten/comm.h"
 #include "termination/dijkstra-scholten/ack_request.h"
+#include "termination/termination.h"
 
 namespace vt { namespace term { namespace ds {
+
+template <typename CommType>
+void TermDS<CommType>::addChildEpoch(EpochType const& epoch) {
+  // Produce a single work unit for the child epoch so it can not finish while
+  // this epoch is live
+  theTerm()->genProd(epoch);
+  children_.push_back(epoch);
+}
+
+template <typename CommType>
+void TermDS<CommType>::clearChildren() {
+  for (auto&& cur_epoch : children_) {
+    theTerm()->genCons(cur_epoch);
+  }
+  children_.clear();
+}
 
 template <typename CommType>
 TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeType self_)

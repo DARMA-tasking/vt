@@ -55,6 +55,10 @@ struct TermDS {
 private:
   void tryLast();
 
+public:
+  void addChildEpoch(EpochType const& epoch);
+  void clearChildren();
+
 protected:
   NodeType parent                   = uninitialized_destination;
   NodeType self                     = uninitialized_destination;
@@ -67,6 +71,7 @@ protected:
   CountType processedSum            = 0;
   EpochType epoch_                  = no_epoch;
   AckReqListType outstanding        = {};
+  std::vector<EpochType> children_  = {};
 };
 
 }}} /* end namespace vt::term::ds */
