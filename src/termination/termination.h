@@ -50,6 +50,8 @@ struct TerminationDetector :
   );
   void send(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
   void recv(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
+  void genProd(EpochType const& epoch);
+  void genCons(EpochType const& epoch);
   /***************************************************************************/
 
   friend struct ds::StateDS;

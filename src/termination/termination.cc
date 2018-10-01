@@ -151,6 +151,34 @@ void TerminationDetector::produceConsumeState(
   }
 }
 
+void TerminationDetector::genProd(EpochType const& epoch) {
+  vtAssertExpr(epoch != no_epoch);
+  if (epoch == term::any_epoch_sentinel) {
+    produce(epoch,1);
+  } else {
+    auto ptr = getDSTerm(epoch);
+    if (ptr) {
+      vtAbort("Failure: cannot perform a general produce for DS");
+    } else {
+      produce(epoch,1);
+    }
+  }
+}
+
+void TerminationDetector::genCons(EpochType const& epoch) {
+  vtAssertExpr(epoch != no_epoch);
+  if (epoch == term::any_epoch_sentinel) {
+    consume(epoch,1);
+  } else {
+    auto ptr = getDSTerm(epoch);
+    if (ptr) {
+      vtAbort("Failure: cannot perform a general consume for DS");
+    } else {
+      consume(epoch,1);
+    }
+  }
+}
+
 void TerminationDetector::send(NodeType const& node, EpochType const& epoch) {
   auto ptr = getDSTerm(epoch);
   if (ptr) {
@@ -369,8 +397,10 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       );
 
     } else /*if (is_root) */ {
-      bool const& is_term = state.g_prod1 == state.g_cons1 and
-        state.g_prod2 == state.g_cons2 and state.g_prod1 == state.g_prod2;
+      bool const& is_term =
+        state.g_prod1 == state.g_cons1 and
+        state.g_prod2 == state.g_cons2 and
+        state.g_prod1 == state.g_prod2;
 
       // four-counter method implementation
       debug_print(
