@@ -1,7 +1,23 @@
 
-#include "term_state.h"
+#include "config.h"
+#include "termination/term_state.h"
+#include "termination/termination.h"
 
 namespace vt { namespace term {
+
+void TermState::addChildEpoch(EpochType const& epoch) {
+  // Produce a single work unit for the child epoch so it can not finish while
+  // this epoch is live
+  theTerm()->produce(epoch,1);
+  epoch_child_.push_back(epoch);
+}
+
+void TermState::clearChildren() {
+  for (auto&& cur_epoch : epoch_child_) {
+    theTerm()->consume(cur_epoch,1);
+  }
+  epoch_child_.clear();
+}
 
 TermWaveType TermState::getCurWave() const {
   return cur_wave_;
