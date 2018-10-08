@@ -8,8 +8,9 @@
 namespace vt { namespace pipe {
 
 PipeManager::PipeManager() {
-  auto constexpr tag = group::GroupCollectiveLabelTag;
-  group_id_ = theGroup()->newGroupCollectiveLabel(tag);
+  group_id_ = theGroup()->newGroupCollectiveLabel(
+    group::GroupCollectiveLabelTag
+  );
 }
 
 }} /* end namespace vt::pipe */
