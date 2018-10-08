@@ -2,7 +2,6 @@
 set(
   PROJECT_EXAMPLES_LIST
   hello_world
-  pipe_simple
   ring
   rdma_simple_get
   rdma_simple_get_direct
