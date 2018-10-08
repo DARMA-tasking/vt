@@ -10,9 +10,9 @@ namespace vt { namespace tutorial {
  * the handler, and other information for processing the message
  */
 
-//              VT Base Message
-//            \----------------/
-//             \              /
+//            VT Base Message
+//           \----------------/
+//            \              /
 struct MyMsg : ::vt::Message {
   // In general, a default constructor is required for the a message because it
   // may be reconstructed by VT
@@ -28,32 +28,86 @@ private:
   int a_ = 0, b_ = 0;
 };
 
+/*
+ * Following are two active message handler declarations. These are the
+ * functions that can be remotely invoked by sending a message in VT. VT allows
+ * for multiple styles for handlers. The first (msgHandlerA) is the C-style
+ * active message handler. It is exactly equivalent (in terms of practical use
+ * ramifications) to the functor style, which follows (MsgHandlerB). Either
+ * style can be used to define a message handler. The only slight benefit the
+ * functor has is uniqueness in type, when enables introspection of the message
+ * type. This is realized in the sending side code: the function style requires
+ * the message type before the value function template parameter. However, both
+ * are *fully type checked* and will not allow the wrong message type to be
+ * sent.
+ */
+
+// Forward declaration for the active message handler (function ptr style)
+static void msgHandlerA(MyMsg* msg);
+
+// Forward declaration for the active message handler (functor style)
+struct MsgHandlerB {
+  void operator()(MyMsg* msg);
+};
 
 static inline void activeMessageNode() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
 
   /*
-   * All nodes will invoke this (see calling code) in a SPMD-style execution
-   * reflective of the MPI style. After initialize, every rank executes this
-   * function: activeMessageNode(). However, this is not required: each node can
-   * execute any code the user wishes. Typically, a "root" node may kick off
-   * some messages, while the other nodes just execute the scheduler code.
+   * A basic active message send essentially does an
+   * ``MPI_Send(..,destination,...)'' to the destination node passed to
+   * ::vt::theMsg()->sendMsg(destination). The handler, which is passed as the
+   * second template argument, is the function that is triggered when the
+   * message arrives on the destination node.
    *
-   * A basic send essentially does an ``MPI_Send(..,destination,...)'' to the
-   * destination node passed to ::vt::theMsg()->sendMsg(destination). The
-   * handler, which is passed as the second template argument, is the function
-   * that is triggered when the message arrives on the destination node.
+   * The theMsg()->sendMsg(..) does not serialize the message sent to the
+   * destination node. Even if the message has a serialize method (the above
+   * example does not), it is sent as bytes. This is because sendMsg always just
+   * sends the data directly that is passed to it.
+   *
+   * This example uses the function pointer style compared to the send inside of
+   * msgHandlerA, which uses the functor style send.
    */
 
   if (this_node == 0) {
-    auto msg = ::vt::makeMessage<MyMsg>(10*(this_node+1),20*(this_node+1));
-    ::vt::theMsg()->sendMsg<MyMsg,msgHandlerA>(this_node+1, msg.get());
+    NodeType const to_node = 1;
+    auto msg = ::vt::makeSharedMessage<MyMsg>(29,32);
+    ::vt::theMsg()->sendMsg<MyMsg,msgHandlerA>(to_node, msg);
   }
 }
 
 static void msgHandlerA(MyMsg* msg) {
+  /*
+   * VT provides vtAssert (and a half-dozen variants) that replace the simple
+   * the assert call found in cassert.
+   */
+  vtAssert(msg->getA() == 29, "Value a incorrect");
+  vtAssert(msg->getB() == 32, "Value b incorrect");
 
+  auto const cur_node = ::vt::theContext()->getNode();
+
+  ::fmt::print("msgHandlerA: triggered on node={}\n", cur_node);
+
+  /* Node 0 sends MyMsg to node 1 in the above code so this should execute on
+   * node 1 */
+  vtAssert(cur_node == 1, "This handler should execute on node 1");
+
+  /*
+   * In response to this message, node 1 sends a message back to node 0. This
+   * invocation uses the functor style send.
+   */
+  NodeType const to_node = 0;
+  auto msg2 = ::vt::makeSharedMessage<MyMsg>(10,20);
+  ::vt::theMsg()->sendMsg<MsgHandlerB>(to_node, msg2);
+}
+
+void MsgHandlerB::operator()(MyMsg* msg) {
+  auto const cur_node = ::vt::theContext()->getNode();
+  vtAssert(msg->getA() == 10, "Value a incorrect");
+  vtAssert(msg->getB() == 20, "Value b incorrect");
+  vtAssert(cur_node == 0, "This handler should execute on node 0");
+  ::fmt::print("msgHandlerB: triggered on node={}\n", cur_node);
 }
 
 }} /* end namespace vt::tutorial */
