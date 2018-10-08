@@ -14,6 +14,9 @@
 
 namespace vt { namespace collective { namespace reduce {
 
+template <typename U>
+/*static*/ Reduce::ReduceMapType<U> Reduce::live_reductions_ = {};
+
 template <typename MessageT>
 /*static*/ void Reduce::reduceUp(MessageT* msg) {
   debug_print(
@@ -90,21 +93,21 @@ void Reduce::reduceAddMsg(
   auto lookup = ReduceIdentifierType{
     msg->reduce_tag_,msg->reduce_epoch_,msg->reduce_proxy_
   };
-  auto live_iter = live_reductions_.find(lookup);
-  if (live_iter == live_reductions_.end()) {
+  auto live_iter = live_reductions_<MessageT>.find(lookup);
+  if (live_iter == live_reductions_<MessageT>.end()) {
     auto num_contrib_state = num_contrib == -1 ? 1 : num_contrib;
-    live_reductions_.emplace(
+    live_reductions_<MessageT>.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(lookup),
-      std::forward_as_tuple(ReduceState{
+      std::forward_as_tuple(ReduceState<MessageT>{
         msg->reduce_tag_,msg->reduce_epoch_,num_contrib_state
       })
     );
-    live_iter = live_reductions_.find(lookup);
-    vtAssertExpr(live_iter != live_reductions_.end());
+    live_iter = live_reductions_<MessageT>.find(lookup);
+    vtAssertExpr(live_iter != live_reductions_<MessageT>.end());
   }
   auto& state = live_iter->second;
-  auto msg_ptr = promoteMsg(msg).template to<ReduceMsg>();;
+  auto msg_ptr = promoteMsg(msg);
   state.msgs.push_back(msg_ptr);
   if (num_contrib != -1) {
     state.num_contrib_ = num_contrib;
@@ -128,7 +131,7 @@ void Reduce::startReduce(
   bool use_num_contrib
 ) {
   auto lookup = ReduceIdentifierType{tag,epoch,proxy};
-  auto live_iter = live_reductions_.find(lookup);
+  auto live_iter = live_reductions_<MessageT>.find(lookup);
   auto& state = live_iter->second;
 
   auto const& nmsgs = state.msgs.size();

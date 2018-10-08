@@ -11,9 +11,10 @@
 
 namespace vt { namespace collective { namespace reduce {
 
+template <typename U>
 struct ReduceState {
   using ReduceNumType = int32_t;
-  using ReduceVecType = std::vector<MsgSharedPtr<ReduceMsg>>;
+  using ReduceVecType = std::vector<MsgSharedPtr<U>>;
 
   ReduceState(
     TagType const& in_tag_, EpochType const& in_epoch_,

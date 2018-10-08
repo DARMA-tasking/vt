@@ -23,8 +23,12 @@
 namespace vt { namespace collective { namespace reduce {
 
 struct Reduce : virtual collective::tree::Tree {
-  using ReduceStateType = ReduceState;
-  using ReduceNumType = ReduceState::ReduceNumType;
+  template <typename U>
+  using ReduceStateType = ReduceState<U>;
+  template <typename U>
+  using ReduceMapType =
+    std::unordered_map<ReduceIdentifierType,ReduceStateType<U>>;
+  using ReduceNumType = typename ReduceState<void>::ReduceNumType;
 
   Reduce();
   Reduce(GroupType const& group, collective::tree::Tree* in_tree);
@@ -60,8 +64,9 @@ struct Reduce : virtual collective::tree::Tree {
   static void reduceUp(MessageT* msg);
 
 private:
+  template <typename U>
+  static ReduceMapType<U> live_reductions_;
   std::unordered_map<ReduceEpochLookupType,EpochType> next_epoch_for_tag_;
-  std::unordered_map<ReduceIdentifierType,ReduceStateType> live_reductions_;
   GroupType group_ = default_group;
 };
 
