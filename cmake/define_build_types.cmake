@@ -71,7 +71,7 @@ foreach(cur_build_type ${CMAKE_CONFIGURATION_TYPES})
 
   install(
     FILES            "${PROJECT_BINARY_DIR}/${cur_build_type}/cmake_config.h"
-    DESTINATION      include/${cur_build_type}
+    DESTINATION      include
     CONFIGURATIONS   ${cur_build_type}
   )
 
