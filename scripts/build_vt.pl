@@ -110,6 +110,7 @@ cmake $source_base_dir                                                       \\
       -Ddetector_DIR=$detector                                               \\
       -Dfmt_DIR=$fmt                                                         \\
       -Dgtest_DIR=$gtest                                                     \\
+      -DGTEST_ROOT=$gtest                                                    \\
       $atomic                                                                \\
       ${build_all_str}
 CMAKESTR
