@@ -572,7 +572,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const& col = entity_proxy.getCollectionProxy();
   auto const& elm = entity_proxy.getElementProxy();
   auto const& idx = elm.getIndex();
-  auto holder = findColHolder<ColT,IdxT>(col);
+  auto holder = findColHolder<ColT,IndexT>(col);
   auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(col);
 
   bool const& exists = elm_holder->exists(idx);
