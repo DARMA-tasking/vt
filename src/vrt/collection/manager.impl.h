@@ -424,8 +424,9 @@ template <typename ColT, typename IndexT, typename MsgT>
    *  group
    */
   auto const& group = envelopeGetGroup(msg->env);
+  auto const& msg_epoch = envelopeGetEpoch(msg->env);
   if (group == default_group) {
-    theTerm()->consume(term::any_epoch_sentinel);
+    theTerm()->consume(msg_epoch);
   }
 }
 
@@ -623,7 +624,8 @@ template <typename ColT, typename IndexT, typename MsgT>
     }
   );
 
-  theTerm()->consume(term::any_epoch_sentinel);
+  auto const msg_epoch = envelopeGetEpoch(msg->env);
+  theTerm()->consume(msg_epoch);
 }
 
 template <typename ColT, typename IndexT>
@@ -653,6 +655,7 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   vtAssert(this_node == bcast_node, "Must be the bcast node");
 
   auto const epoch = elm_holder->cur_bcast_epoch_++;
+  auto const msg_epoch = envelopeGetEpoch(raw_msg->env);
 
   msg->setBcastEpoch(epoch);
 
@@ -679,7 +682,7 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
     auto const& group = elm_holder->group();
     envelopeSetGroup(msg->env, group);
   } else {
-    theTerm()->produce(term::any_epoch_sentinel, num_nodes);
+    theTerm()->produce(msg_epoch, num_nodes);
   }
 
   theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
@@ -844,6 +847,9 @@ void CollectionManager::broadcastMsgUntypedHandler(
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
 
+  auto const cur_epoch = theMsg()->getCurrentEpoch();
+  auto const env_epoch = envelopeGetEpoch(raw_msg->env);
+
   debug_print(
     vrt_coll, node,
     "broadcastMsgUntypedHandler: col_proxy={}, found={}\n",
@@ -895,7 +901,8 @@ void CollectionManager::broadcastMsgUntypedHandler(
       "pushing into buffered sends: {}\n", col_proxy
     );
 
-    theTerm()->produce(term::any_epoch_sentinel);
+    theTerm()->produce(env_epoch);
+    theTerm()->produce(cur_epoch);
 
     debug_print(
       vrt_coll, node,
@@ -907,10 +914,11 @@ void CollectionManager::broadcastMsgUntypedHandler(
         "broadcastMsgUntypedHandler: col_proxy={}, running buffered\n",
         col_proxy
       );
-      theTerm()->consume(term::any_epoch_sentinel);
       theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, act, instrument
       );
+      theTerm()->consume(env_epoch);
+      theTerm()->consume(cur_epoch);
     });
   }
 }
@@ -1213,7 +1221,10 @@ void CollectionManager::sendMsgUntypedHandler(
     msg->setLBLiteInstrument(true);
   );
 
-  theTerm()->produce(term::any_epoch_sentinel);
+  auto const cur_epoch = theMsg()->getCurrentEpoch();
+  auto const env_epoch = envelopeGetEpoch(raw_msg->env);
+
+  theTerm()->produce(env_epoch);
 
   auto msg = promoteMsg(raw_msg);
 
@@ -1267,12 +1278,16 @@ void CollectionManager::sendMsgUntypedHandler(
       "pushing into buffered sends: {}\n", toProxy.getCollectionProxy()
     );
 
-    theTerm()->produce(term::any_epoch_sentinel);
+    theTerm()->produce(cur_epoch);
+    theTerm()->produce(env_epoch);
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, action
       );
+
+      theTerm()->consume(cur_epoch);
+      theTerm()->consume(env_epoch);
     });
   }
 }
