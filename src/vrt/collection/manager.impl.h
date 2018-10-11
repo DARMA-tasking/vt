@@ -914,9 +914,12 @@ void CollectionManager::broadcastMsgUntypedHandler(
         "broadcastMsgUntypedHandler: col_proxy={}, running buffered\n",
         col_proxy
       );
+      auto const cur_global = theMsg()->getGlobalEpoch();
+      theMsg()->setGlobalEpoch(env_epoch);
       theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, act, instrument
       );
+      theMsg()->setGlobalEpoch(cur_global);
       theTerm()->consume(env_epoch);
       theTerm()->consume(cur_epoch);
     });
