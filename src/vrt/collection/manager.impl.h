@@ -882,7 +882,11 @@ void CollectionManager::broadcastMsgUntypedHandler(
         "broadcasting msg to collection: msg={}, handler={}\n",
         print_ptr(msg), handler
       );
+
+      auto const cur_global = theMsg()->getGlobalEpoch();
+      theMsg()->setGlobalEpoch(env_epoch);
       broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
+      theMsg()->setGlobalEpoch(cur_global);
     }
   } else {
     auto iter = buffered_bcasts_.find(col_proxy);
