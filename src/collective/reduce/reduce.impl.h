@@ -194,6 +194,10 @@ void Reduce::startReduce(
     if (isRoot()) {
       auto const& root = state.reduce_root_;
       auto const& this_node = theContext()->getNode();
+
+      auto const cur_global_epoch = theMsg()->getGlobalEpoch();
+      theMsg()->setGlobalEpoch(envelopeGetEpoch(typed_msg->env));
+
       if (root != this_node) {
         debug_print(
           reduce, node,
@@ -213,17 +217,22 @@ void Reduce::startReduce(
         );
         reduceRootRecv(typed_msg);
       }
+
+      theMsg()->setGlobalEpoch(cur_global_epoch);
     } else {
       auto const& parent = getParent();
       debug_print(
         reduce, node,
         "reduce send to parent: parent={}\n", parent
       );
+      auto const cur_global_epoch = theMsg()->getGlobalEpoch();
+      theMsg()->setGlobalEpoch(envelopeGetEpoch(typed_msg->env));
       using SendDispatch =
         serialization::auto_dispatch::RequiredSerialization<
           MessageT, reduceUp<MessageT>
         >;
       SendDispatch::sendMsg(parent,typed_msg);
+      theMsg()->setGlobalEpoch(cur_global_epoch);
     }
   }
 }
