@@ -572,6 +572,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const& col = entity_proxy.getCollectionProxy();
   auto const& elm = entity_proxy.getElementProxy();
   auto const& idx = elm.getIndex();
+  auto holder = findColHolder<ColT,IdxT>(col);
   auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(col);
 
   bool const& exists = elm_holder->exists(idx);
@@ -581,7 +582,11 @@ template <typename ColT, typename IndexT, typename MsgT>
     "collectionMsgTypedHandler: exists={}, idx={}\n",
     exists, idx
   );
-  vtAssert(exists, "Proxy must exist");
+
+  vtAssertInfo(
+    exists, "Proxy must exist", entity_proxy, idx, exists, holder == nullptr,
+    no_vrt_proxy
+  );
 
   auto& inner_holder = elm_holder->lookup(idx);
 
