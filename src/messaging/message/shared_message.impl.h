@@ -9,11 +9,29 @@
 
 namespace vt {
 
+// namespace messaging {
+// struct ActiveMessenger;
+// }
+
+// extern messaging::ActiveMessenger* theMsg();
+
+inline EpochType getCurrentEpoch();
+inline EpochType getGlobalEpoch();
+
 template <typename MsgT, typename... Args>
 MsgT* makeSharedMessage(Args&&... args) {
   auto msg = new MsgT{std::forward<Args>(args)...};
   envelopeSetRef(msg->env, 1);
   msg->has_owner_ = false;
+  if (envelopeIsEpochType(msg->env)) {
+    auto const cur_epoch_context = getCurrentEpoch();
+    auto const global_epoch = getGlobalEpoch();
+    if (cur_epoch_context != no_epoch) {
+      envelopeSetEpoch(msg->env,cur_epoch_context);
+    } else if (global_epoch != no_epoch) {
+      envelopeSetEpoch(msg->env,global_epoch);
+    }
+  }
   return msg;
 }
 

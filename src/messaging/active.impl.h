@@ -462,6 +462,12 @@ void ActiveMessenger::trigger(std::function<void(vt::BaseMessage*)> fn) {
   theRegistry()->saveTrigger(han, /*reinterpret_cast<active_function_t>(*/fn);
 }
 
-}} //end namespace vt::messaging
+}
+
+inline EpochType getCurrentEpoch() { return theMsg()->getCurrentEpoch(); }
+inline EpochType getGlobalEpoch() { return theMsg()->getGlobalEpoch(); }
+
+
+} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ACTIVE_IMPL_H*/
