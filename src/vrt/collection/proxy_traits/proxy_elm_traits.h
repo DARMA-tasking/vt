@@ -6,6 +6,7 @@
 #include "vrt/proxy/base_collection_elm_proxy.h"
 #include "vrt/proxy/base_elm_proxy.h"
 #include "vrt/collection/send/sendable.h"
+#include "vrt/collection/gettable/gettable.h"
 #include "vrt/collection/insert/insertable.h"
 
 namespace vt { namespace vrt { namespace collection {
@@ -13,7 +14,10 @@ namespace vt { namespace vrt { namespace collection {
 namespace elm_proxy {
 
 template <typename ColT, typename IndexT>
-using Chain2 = ElmInsertable<ColT,IndexT,BaseCollectionElmProxy<ColT,IndexT>>;
+using Chain3 = Gettable<ColT,IndexT,BaseCollectionElmProxy<ColT,IndexT>>;
+
+template <typename ColT, typename IndexT>
+using Chain2 = ElmInsertable<ColT,IndexT,Chain3<ColT,IndexT>>;
 
 template <typename ColT, typename IndexT>
 using Chain1 = Sendable<ColT,IndexT,Chain2<ColT,IndexT>>;

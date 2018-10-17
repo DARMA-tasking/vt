@@ -1757,6 +1757,35 @@ NodeType CollectionManager::getMappedNode(
 }
 
 template <typename ColT, typename IndexT>
+ColT* CollectionManager::tryGetLocalPtr(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx
+) {
+  auto const untyped = proxy.getProxy();
+  auto elm_holder = findElmHolder<ColT,IndexT>(untyped);
+
+   vtAssertInfo(
+     elm_holder != nullptr, "Collection must be registered here",
+     untyped
+   );
+
+   auto const& elm_exists = elm_holder->exists(idx);
+
+   if (elm_exists) {
+     auto& elm_info = elm_holder->lookup(idx);
+     auto elm_ptr = elm_info.getCollection();
+
+     vtAssertInfo(
+       elm_ptr != nullptr, "Pointer to the element must not be nullptr",
+       untyped
+     );
+
+     return static_cast<ColT*>(elm_ptr);
+   } else {
+     return nullptr;
+   }
+}
+
+template <typename ColT, typename IndexT>
 void CollectionManager::insert(
   CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
   NodeType const& node

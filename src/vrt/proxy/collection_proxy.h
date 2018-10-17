@@ -15,7 +15,7 @@ namespace vt { namespace vrt { namespace collection {
  * constructors to be forwarded for building indicies in line without the type.
  */
 
-template <typename ColT, typename IndexT>
+template <typename ColT, typename IndexT = typename ColT::IndexType>
 struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   using ElmProxyType = VrtElmProxy<ColT, IndexT>;
 

@@ -573,6 +573,11 @@ public:
     NodeType const& node = uninitialized_destination
   );
 
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  ColT* tryGetLocalPtr(
+    CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx
+  );
+
   template <typename ColT, typename IndexT>
   static void doneInsertHandler(DoneInsertMsg<ColT,IndexT>* msg);
 
@@ -657,6 +662,7 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vrt/collection/manager.impl.h"
 #include "vrt/collection/migrate/manager_migrate_attorney.impl.h"
 #include "vrt/collection/send/sendable.impl.h"
+#include "vrt/collection/gettable/gettable.impl.h"
 #include "vrt/collection/reducable/reducable.impl.h"
 #include "vrt/collection/insert/insertable.impl.h"
 #include "vrt/collection/insert/insert_finished.impl.h"
