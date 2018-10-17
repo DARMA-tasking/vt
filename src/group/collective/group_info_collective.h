@@ -13,6 +13,8 @@
 #include <memory>
 #include <list>
 
+#include <mpi.h>
+
 namespace vt { namespace group {
 
 struct InfoColl : virtual InfoBase {
@@ -42,6 +44,7 @@ public:
   bool inGroup() const;
   bool isReady() const;
   void readyAction(ActionType const action);
+  MPI_Comm getComm() const;
 
 protected:
   void setupCollective();
@@ -96,6 +99,9 @@ private:
 
 private:
   std::list<ActionType> pending_ready_actions_ = {};
+
+private:
+  MPI_Comm mpi_group_comm = MPI_COMM_WORLD;
 };
 
 }} /* end namespace vt::group */

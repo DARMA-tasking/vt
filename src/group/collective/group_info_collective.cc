@@ -22,6 +22,8 @@
 #include <algorithm>
 #include <cassert>
 
+#include <mpi.h>
+
 namespace vt { namespace group {
 
 void InfoColl::setupCollectiveSingular() {
@@ -51,7 +53,12 @@ void InfoColl::setupCollectiveSingular() {
   }
 }
 
+MPI_Comm InfoColl::getComm() const {
+  return mpi_group_comm;
+}
+
 void InfoColl::setupCollective() {
+  auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const& group_ = getGroupID();
 
@@ -77,6 +84,10 @@ void InfoColl::setupCollective() {
     "children={}, wait={}\n",
     is_in_group, group_, parent, children, coll_wait_count_
   );
+
+  auto const cur_comm = theContext()->getComm();
+  int32_t const group_color = in_group;
+  MPI_Comm_split(cur_comm, group_color, this_node, &mpi_group_comm);
 
   up_tree_cont_       = makeCollectiveContinuation(group_);
   down_tree_cont_     = theGroup()->nextCollectiveID();

@@ -11,6 +11,8 @@
 #include "scheduler/scheduler.h"
 #include "collective/collective_alg.h"
 
+#include <mpi.h>
+
 namespace vt { namespace group {
 
 GroupType GroupManager::newGroup(
@@ -147,6 +149,20 @@ void GroupManager::initializeRemoteGroup(
     std::forward_as_tuple(std::move(group_info))
   );
   group_ptr->setup();
+}
+
+MPI_Comm GroupManager::getGroupComm(GroupType const& group_id) {
+  auto iter = local_collective_group_info_.find(group_id);
+  vtAssertInfo(
+    iter != local_collective_group_info_.end(),
+    "Must be a valid, active collection group to extract communicator",
+    group_id
+  );
+  if (iter != local_collective_group_info_.end()) {
+    return iter->second->getComm();
+  } else {
+    return MPI_COMM_WORLD;
+  }
 }
 
 void GroupManager::initializeLocalGroupCollective(

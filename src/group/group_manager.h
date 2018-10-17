@@ -23,6 +23,8 @@
 #include <cstdlib>
 #include <functional>
 
+#include <mpi.h>
+
 namespace vt { namespace group {
 
 struct GroupManager {
@@ -62,6 +64,8 @@ struct GroupManager {
   GroupType newGroupCollective(bool const in_group, ActionGroupType action);
   GroupType newGroupCollectiveLabel(GroupCollectiveLabelTagType);
   bool inGroup(GroupType const& group);
+
+  MPI_Comm getGroupComm(GroupType const& group_id);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   void sendMsg(GroupType const& group, MsgT* msg);
