@@ -287,9 +287,11 @@ int main(int argc, char** argv) {
     auto msg = ::vt::makeSharedMessage<SolveMsg<Block>>();
     proxy.broadcast<SolveMsg<Block>, &Block::solve>(msg);
 
-    auto proxy_msg = ::vt::makeMessage<ProxyMsg>(proxy.getProxy());
-    theMsg()->broadcastMsg<SetupGroup>(proxy_msg.get());
-    SetupGroup()(proxy_msg.get());
+    auto proxy_msg = ::vt::makeSharedMessage<ProxyMsg>(proxy.getProxy());
+    theMsg()->broadcastMsg<SetupGroup>(proxy_msg);
+    // Invoke it locally: broadcast sends to all other nodes
+    auto proxy_msg_local = ::vt::makeSharedMessage<ProxyMsg>(proxy.getProxy());
+    SetupGroup()(proxy_msg_local);
   }
 
   ::vt::CollectiveOps::finalize();
