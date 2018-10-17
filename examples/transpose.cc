@@ -56,9 +56,8 @@ struct SubSolveInfo {
     auto const& block_offset = sub_rank_ * needed_blocks_;
     // This will just check that the transpose took place properly
     for (auto i = 0; i < have_blocks_ * block_size; i++) {
-      vtAssertInfo(
-        solver_data_[i] == block_offset * block_size + i, "Correct value",
-        i, have_blocks_, block_size, block_offset, solver_data_[i]
+      vtAssert(
+        solver_data_[i] == block_offset * block_size + i, "Correct value"
       );
     }
   }

@@ -153,11 +153,15 @@ void GroupManager::initializeRemoteGroup(
 
 MPI_Comm GroupManager::getGroupComm(GroupType const& group_id) {
   auto iter = local_collective_group_info_.find(group_id);
-  vtAssertInfo(
+  vtAssert(
     iter != local_collective_group_info_.end(),
-    "Must be a valid, active collection group to extract communicator",
-    group_id
+    "Must be a valid, active collection group to extract communicator"
   );
+  // vtAssertInfo(
+  //   iter != local_collective_group_info_.end(),
+  //   "Must be a valid, active collection group to extract communicator",
+  //   group_id
+  // );
   if (iter != local_collective_group_info_.end()) {
     return iter->second->getComm();
   } else {

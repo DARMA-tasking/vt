@@ -1763,9 +1763,8 @@ ColT* CollectionManager::tryGetLocalPtr(
   auto const untyped = proxy.getProxy();
   auto elm_holder = findElmHolder<ColT,IndexT>(untyped);
 
-   vtAssertInfo(
-     elm_holder != nullptr, "Collection must be registered here",
-     untyped
+   vtAssert(
+     elm_holder != nullptr, "Collection must be registered here"
    );
 
    auto const& elm_exists = elm_holder->exists(idx);
@@ -1774,9 +1773,8 @@ ColT* CollectionManager::tryGetLocalPtr(
      auto& elm_info = elm_holder->lookup(idx);
      auto elm_ptr = elm_info.getCollection();
 
-     vtAssertInfo(
-       elm_ptr != nullptr, "Pointer to the element must not be nullptr",
-       untyped
+     vtAssert(
+       elm_ptr != nullptr, "Pointer to the element must not be nullptr"
      );
 
      return static_cast<ColT*>(elm_ptr);
