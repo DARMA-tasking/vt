@@ -40,6 +40,7 @@ set(
   group_example_1
   group_collective
   reduce
+  transpose
 )
 
 if (CMAKE_NO_BUILD_EXAMPLES)
