@@ -247,16 +247,18 @@ int main(int argc, char** argv) {
   my_node = theContext()->getNode();
   num_nodes = theContext()->getNumNodes();
 
+  std::string name(argv[0]);
+
   if (argc == 1) {
     total_size = 1024;
     max_iterations = 64;
     ::fmt::print(
-      stderr, "{}: using default arguments since none provided\n", argv[0]
+      stderr, "{}: using default arguments since none provided\n", name
     );
   } else {
     if (argc != 3) {
       std::string const buf = fmt::format(
-        "usage: {} <total-num-elements> <max-iterations>", argv[0]
+        "usage: {} <total-num-elements> <max-iterations>", name
       );
       return exitEarly(my_node, 1, buf);
     }
@@ -267,7 +269,7 @@ int main(int argc, char** argv) {
 
   if (num_nodes == 1) {
     std::string const buf = fmt::format(
-      "Need >= 2 ranks:\n mpirun-mpich-clang -n 2 {}\0", argv[0]
+      "Need >= 2 ranks:\n mpirun-mpich-clang -n 2 {}\0", name
     );
     return exitEarly(my_node, 1, buf);
   }
