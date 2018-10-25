@@ -144,8 +144,8 @@ template <typename IndexT>
   MPI_Comm_rank(sub_comm, &sub_rank);
 
   ::fmt::print(
-    "subSolveHandler: node={}, num={}, sub_rank={}, sub_size={}, comm={}\n",
-    this_node, num_nodes, sub_rank, sub_size, sub_comm
+    "subSolveHandler: node={}, num={}, sub_rank={}, sub_size={}\n",
+    this_node, num_nodes, sub_rank, sub_size
   );
 
   vtAssert(this_node % 2 == 0, "Must be even");
