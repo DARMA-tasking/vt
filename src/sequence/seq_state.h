@@ -40,16 +40,16 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 using SeqStateType = SeqMsgState<MessageT, f>;
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-typename SeqStateType<MessageT, f>::ActionContainerType SeqMsgState<MessageT, f>::seq_action;
+typename SeqMsgState<MessageT, f>::ActionContainerType SeqMsgState<MessageT, f>::seq_action;
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-typename SeqStateType<MessageT, f>::TaggedActionContainerType SeqMsgState<MessageT, f>::seq_action_tagged;
+typename SeqMsgState<MessageT, f>::TaggedActionContainerType SeqMsgState<MessageT, f>::seq_action_tagged;
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-typename SeqStateType<MessageT, f>::MsgContainerType SeqMsgState<MessageT, f>::seq_msg;
+typename SeqMsgState<MessageT, f>::MsgContainerType SeqMsgState<MessageT, f>::seq_msg;
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-typename SeqStateType<MessageT, f>::TaggedMsgContainerType SeqMsgState<MessageT, f>::seq_msg_tagged;
+typename SeqMsgState<MessageT, f>::TaggedMsgContainerType SeqMsgState<MessageT, f>::seq_msg_tagged;
 
 }} //end namespace vt::seq
 
