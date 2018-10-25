@@ -33,7 +33,10 @@ WorkerGroupAny<WorkerT>::WorkerGroupAny(WorkerCountType const& in_num_workers)
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::initialize() {
   using namespace std::placeholders;
-  finished_fn_ = std::bind(&WorkerGroupAny::finished, this, _1, _2);
+  finished_fn_ = std::bind(
+    &WorkerGroupAny::finished, this,
+    std::placeholders::_1, std::placeholders::_2
+  );
 
   workers_.resize(num_workers_);
 }
