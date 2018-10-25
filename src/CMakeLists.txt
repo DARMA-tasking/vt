@@ -156,6 +156,7 @@ target_compile_features(
   cxx_range_for
   cxx_right_angle_brackets
   cxx_uniform_initialization
+  cxx_alias_templates
 )
 
 target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS})
