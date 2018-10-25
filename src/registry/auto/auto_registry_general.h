@@ -13,7 +13,7 @@ struct FunctorAdapter {
   static constexpr FunctionPtrType getFunction() { return f; }
 
   template <typename... A>
-  auto operator()(A&&... a) -> decltype(f(std::forward<A>(a)...)) {
+  auto operator()(A&&... a) -> decltype(auto) {
     return f(std::forward<A>(a)...);
    }
 };
@@ -25,7 +25,7 @@ struct FunctorAdapterMember {
   static constexpr FunctionPtrType getFunction() { return f; }
 
   template <typename... A>
-  auto operator()(A&&... a) -> decltype(f(std::forward<A>(a)...)) {
+  auto operator()(A&&... a) -> decltype(auto) {
     return f(std::forward<A>(a)...);
    }
 };
