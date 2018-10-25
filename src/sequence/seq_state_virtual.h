@@ -42,19 +42,19 @@ template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 using SeqStateVirtualType = SeqMsgStateVirtual<VcT, MsgT, f>;
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-typename SeqStateVirtualType<VcT, MsgT, f>::ActionContainerType
+typename SeqMsgStateVirtual<VcT, MsgT, f>::ActionContainerType
   SeqMsgStateVirtual<VcT, MsgT, f>::seq_action;
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-typename SeqStateVirtualType<VcT, MsgT, f>::TaggedActionContainerType
+typename SeqMsgStateVirtual<VcT, MsgT, f>::TaggedActionContainerType
   SeqMsgStateVirtual<VcT, MsgT, f>::seq_action_tagged;
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-typename SeqStateVirtualType<VcT, MsgT, f>::MsgContainerType
+typename SeqMsgStateVirtual<VcT, MsgT, f>::MsgContainerType
   SeqMsgStateVirtual<VcT, MsgT, f>::seq_msg;
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-typename SeqStateVirtualType<VcT, MsgT, f>::TaggedMsgContainerType
+typename SeqMsgStateVirtual<VcT, MsgT, f>::TaggedMsgContainerType
   SeqMsgStateVirtual<VcT, MsgT, f>::seq_msg_tagged;
 
 }} //end namespace vt::seq
