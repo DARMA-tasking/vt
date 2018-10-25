@@ -89,10 +89,10 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   CharType const delim      = ',';
 
   std::list<std::tuple<CharType const*, CountType*>> tuples = {
-    {paren   , paren_count   },
-    {bracket , bracket_count },
-    {brace   , brace_count   },
-    {caret   , caret_count   }
+    std::make_tuple(paren   , paren_count   ),
+    std::make_tuple(bracket , bracket_count ),
+    std::make_tuple(brace   , brace_count   ),
+    std::make_tuple(caret   , caret_count   )
   };
   CountType cur_param    = 0;
   std::vector<std::string> pieces(cur_param + 1);
