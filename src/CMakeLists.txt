@@ -140,6 +140,10 @@ add_library(
 )
 
 target_compile_features(
+  ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC cxx_std_14
+)
+
+target_compile_features(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   cxx_variadic_templates
   cxx_auto_type
