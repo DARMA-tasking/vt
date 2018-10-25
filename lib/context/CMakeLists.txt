@@ -54,6 +54,7 @@ add_library(
 install(FILES ${HEADER_FILES} DESTINATION include)
 
 target_compile_options(${FCONTEXT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS})
+target_compile_features(${FCONTEXT_LIBRARY} PUBLIC cxx_std_14)
 
 target_include_directories(${FCONTEXT_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
