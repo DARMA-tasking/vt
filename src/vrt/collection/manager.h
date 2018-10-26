@@ -441,32 +441,11 @@ public:
 
   /*
    * Traits version of running the constructor based on the detected available
-   * constructor types
+   * constructor types:
+   *
+   * This variant is accessed through the traits class directly and the
+   * constructor is invoked
    */
-
-  template <
-    typename ColT, typename IndexT, typename Tuple, typename... Args,
-    size_t... I,
-    typename = typename std::enable_if_t<
-      ConstructorType<ColT,IndexT,Args...>::use_no_index
-    >::type
-  >
-  static VirtualPtrType<ColT, IndexT> detectConstructorNoIndex(
-    VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
-    std::index_sequence<I...>
-  );
-
-  template <
-    typename ColT, typename IndexT, typename Tuple, typename... Args,
-    size_t... I,
-    typename = typename std::enable_if_t<
-      ConstructorType<ColT,IndexT,Args...>::use_index_fst
-    >::type
-  >
-  static VirtualPtrType<ColT, IndexT> detectConstructorIndexFst(
-    VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
-    std::index_sequence<I...>
-  );
 
   /*
    * Non-traits version of running the constructor: does not require the
