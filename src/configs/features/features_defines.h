@@ -17,6 +17,7 @@
 #define debug_openmp(x) x
 #define debug_production(x) x
 #define debug_stdthread(x) x
+#define debug_parserdes(x) x
 #define debug_print_term_msgs(x) x
 #define debug_default_threading(x) x
 #define debug_no_pool_alloc_env(x) x

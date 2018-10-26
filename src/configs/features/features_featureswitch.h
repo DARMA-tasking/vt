@@ -60,6 +60,7 @@
     no_feature,            "No feature",                                \
     no_pool_alloc_env,     "Disable memory pool envelope",              \
     openmp,                "OpenMP Threading",                          \
+    parserdes,             "Enable partial inline serialization",       \
     print_term_msgs,       "Debug-prints-TD-msgs",                      \
     production,            "Production",                                \
     stdthread,             "std::thread Threading",                     \
