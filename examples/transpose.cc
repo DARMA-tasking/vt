@@ -81,15 +81,15 @@ struct SubSolveInfo {
 struct Block : Collection<Block,Index1D> {
 
   Block() = default;
-  Block(Index1D idx, int num_elm, int num_pieces) {
+  Block(int num_elm, int num_pieces) {
     ::fmt::print(
-      "construct: node={}, idx={}, elm={}, pieces={}\n",
-      theContext()->getNode(), idx, num_elm, num_pieces
+      "construct: node={}, elm={}, pieces={}\n",
+      theContext()->getNode(), num_elm, num_pieces
     );
-    initialize(idx);
   }
 
-  void initialize(Index1D idx) {
+  void initialize() {
+    auto idx = this->getIndex();
     data_.resize(block_size);
     for (auto i = 0; i < block_size; i++) {
       data_[i] = idx.x() * block_size + i;
@@ -118,7 +118,8 @@ struct Block : Collection<Block,Index1D> {
   }
 
   void solve(SolveMsg<Block>* msg) {
-
+    // Invoke initialize here so that the index is ready
+    initialize();
   }
 
 private:
