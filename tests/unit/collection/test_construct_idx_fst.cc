@@ -43,8 +43,14 @@ using CollectionTestTypes = testing::Types<
   multi_param_idx_fst_           ::TestCol<int64_t,int64_t>
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(
-  test_construct_idx_fst, TestConstruct, CollectionTestTypes
-);
+// Only enable this test if the detector is enabled since they depend on
+// detecting constructor index
+#if backend_check_enabled(detector)
+
+  INSTANTIATE_TYPED_TEST_CASE_P(
+    test_construct_idx_fst, TestConstruct, CollectionTestTypes
+  );
+
+#endif /*backend_check_enabled(detector)*/
 
 }}} // end namespace vt::tests::unit
