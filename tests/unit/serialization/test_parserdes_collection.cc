@@ -15,6 +15,8 @@
 
 #define PRINT_DEBUG 0
 
+#if backend_check_enabled(parserdes)
+
 namespace serdes {
 template <typename Serializer>
 void parserdes(Serializer& s, std::string& str) {
@@ -234,3 +236,5 @@ TEST_F(TestParserdes, test_collection_broadcast_parserdes_c_1) {
 }
 
 }}} // end namespace vt::tests::unit
+
+#endif /*backend_check_enabled(parserdes)*/
