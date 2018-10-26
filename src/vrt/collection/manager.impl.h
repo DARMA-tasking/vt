@@ -80,7 +80,6 @@ CollectionManager::runConstructor(
   std::index_sequence<I...>
 ) {
   return std::make_unique<ColT>(
-    idx,
     std::forward<typename std::tuple_element<I,Tuple>::type>(
       std::get<I>(*tup)
     )...
