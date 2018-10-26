@@ -5,8 +5,14 @@
 #include "config.h"
 #include "vrt/collection/manager.h"
 
+#if backend_check_enabled(detector)
+  #include "detector_headers.h"
+#endif /*backend_check_enabled(detector)*/
+
 #include <tuple>
 #include <functional>
+
+#if backend_check_enabled(detector)
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -31,5 +37,7 @@ struct DerefCons {
 }}} /* end namespace vt::vrt::collection */
 
 #include "vrt/collection/constructor/coll_constructors_deref.impl.h"
+
+#endif /*backend_check_enabled(detector)*/
 
 #endif /*INCLUDED_VRT_COLLECTION_COLL_CONSTRUCTORS_DEREF_H*/
