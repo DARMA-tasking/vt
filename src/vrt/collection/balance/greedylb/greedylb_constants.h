@@ -13,7 +13,12 @@ static constexpr double const greedy_tolerance = 5.0f;
 static constexpr double const greedy_threshold_p = 0.3f;
 static constexpr double const greedy_max_threshold_p = 1.004f;
 
-#define greedylb_use_parserdes 0
+#if backend_check_enabled(parserdes)
+  // This is not a mistake, currently default off, even if parserdes is on
+  #define greedylb_use_parserdes 0
+#else
+  #define greedylb_use_parserdes 0
+#endif
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
