@@ -46,8 +46,11 @@ The auto builder is located here:
 
   git@github.com:darma-mpi-backend/vt-auto-build.git
 
-If you choose the auto building, follow the directions in the repository. All
-you will need is `googletest' and `fmt' to complete the installation of VT.
+If you choose the auto building, follow the directions in the repository. But
+this command may get you most of the way there:
+
+perl ./auto.pl build_mode=debug compiler_c=clang-3.9 compiler_cxx=clang++-3.9  \
+prefix=my-prefix-dir
 
 If you choose to build yourself, you must obtain and build meld, detector, and
 checkpoint. Once they are installed, point the VT cmake to them along with the
