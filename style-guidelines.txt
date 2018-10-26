@@ -1,51 +1,119 @@
 
-=== Example Code Following Style ===
+/*
+ * Code style guidelines by example (or see .clang-format for an approximation
+ * of how to automate part of this)
+ */
 
+/*
+ * Do not use "typedef", always use "using". The "using" construct actually gets
+ * the order sane. Make type aliases whenever it seems useful. Do not hold back,
+ * especially if the type is long or *could ever change*.
+ */
 using NodeType = uint16_t;
 
+struct OtherClass {
+  virtual void myTestMethod(int a) = 0;
+};
+
+// Prefer "struct" over "class"
+template <typename T, typename U = void>
 struct MyClassName : OtherClass {
-  // if it is above 80 cols, wrap to next line with regular identing
-  static inline typename Abc<T,X>::type my_simple_method(
+
+  using MyIntType = int32_t;
+  using IteratorType = typename std::vector<MyIntType>::const_reverse_iterator;
+
+  // Use defaults when possible and needed
+  MyClassName() = default;
+  MyClassName(MyClassName&&) = default;
+  MyClassName(MyClassName const&) = default;
+
+  // Often your destructor should be virtual
+  virtual ~MyClassName() = default;
+
+  // if it is above 80 cols, wrap to next line with regular indenting
+  static inline typename Abc<T,X>::type mySimpleMethod(
     int a, int b, int c, int d
   );
 
-  static void my_test(int a) {
-    int a;
-    int tmp;
+  // Use the override keyword, it can only help you
+  void myTestMethod(int a) override {
+    // Initialize stack variables as much as possible (and static when possible)
+    int a = 0, tmp = 0;
     int my_local_count = 0;
+    std::vector<int> my_vec = {};
+
+    /*
+     * Don't be afraid to use "and" or "or" or "not_eq". Often it's more
+     * readable. It's fully C++ standard compliant.
+     */
+    if (my_local_count != 0 and a == 0) {
+      a = 10;
+    }
+
+    // Braces instead of semicolon when empty
+    while (true) { }
+
+    // Prefer spacing here
+    for (int i = 0; i < 10; i++) {
+
+    }
+
+    for (auto&& elm : my_vec) { }
   }
 
-  // if function returns bool, it should start with "is" or "has"
-  bool isValid();
-  bool hasValue();
+  // if function returns bool, don't make the name too complicated
+  bool valid() const;
 
 private:
+  // Private members have trailing underscore
   int my_data_;
-  bool is_coll; // if data is boolean, it should start with "is" or "has"
+  bool is_coll_; // if data is boolean, it should start with "is" or "has"
 };
 
-enum eMyEnum {
+/*
+ * Wrap typename args when they get long, start ">" on next line, indented as
+ * so. Use "typename" unless you have to use "class": exception being template
+ * templates. Space goes here: "template <". Ellipses on on LHS for parameter
+ * packs
+ */
+template <
+  typename CollectionT, typename IndexT, typename TupleT, typename RetT,
+  typename... Args
+>
+struct ManyTemplateParams {
+  // Wrap function args when they get long, indented as so
+  RetT operator()(
+    CollectionT const& col, IndexT const& idx, TupleT&& tup,
+    std::tuple<Args...> tup, std::unique_ptr<intt64_t> ptr
+  ) {
+    return {};
+  }
+};
+
+/*
+ * Use an enum struct when possible. Degrading automatically (happens with
+ * non-strongly typed enums) may introduce bugs
+ */
+
+enum struct CallbackEnum : int32_t {
   ConstantOne = 0,
-  ConstantTwo = 1,
+  ConstantTwo = 1
 };
 
-
+// A new line should be after the template, even in cases like this:
 template <typename T>
-struct A {
- 
-};
+struct A;
 
+// Use tag types when necessary. Name the type *Type explicitly, tag without
 
-Suggestion:
- 
--    Use a space in between template and the bracket.
--    Use “typename” instead of “class” for all possible cases (the only time you have to use “class” is when you have a “template template”).
- 
-Namespaces:
- 
--    Do not indent code under a namespace.
--    Always combine multiple nested namespaces in one line (makes it easier to identify the full namespace path)
- 
+struct MyTagType { } MyTag { };
+
+/*
+ * Do not indent code under a namespace. Always combine multiple nested
+ * namespaces in one line (makes it easier to identify the full namespace path)
+ * unless you need to wrap, then try to semantically group them
+ */
+
 namespace X { namespace Y {
- 
+
 }} // end namespace X::Y
