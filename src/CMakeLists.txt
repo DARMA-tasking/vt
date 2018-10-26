@@ -75,10 +75,12 @@ set(
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 
+set(VT_INSTALL_DESTINATION "include/vt")
+
 foreach(DIR ${TOP_LEVEL_SUBDIRS})
   install(
     DIRECTORY                ${DIR}
-    DESTINATION              include
+    DESTINATION              ${VT_INSTALL_DESTINATION}
     CONFIGURATIONS           ${build_type_list}
     FILES_MATCHING PATTERN   "*.h"
   )
@@ -87,7 +89,7 @@ endforeach()
 file(GLOB TOP_HEADERS *.h)
 install(
   FILES                      ${TOP_HEADERS}
-  DESTINATION                include
+  DESTINATION                ${VT_INSTALL_DESTINATION}
   CONFIGURATIONS             ${build_type_list}
 )
 
@@ -202,7 +204,7 @@ install(
   LIBRARY DESTINATION       lib
   ARCHIVE DESTINATION       lib
   RUNTIME DESTINATION       bin
-  INCLUDES DESTINATION      include
+  INCLUDES DESTINATION      ${VT_INSTALL_DESTINATION}
 )
 
 install(
