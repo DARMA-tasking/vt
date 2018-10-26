@@ -24,8 +24,7 @@ static int32_t num_inserted = 0;
 static int32_t num_work = 0;
 
 struct InsertTest : InsertableCollection<InsertTest,Index1D> {
-  InsertTest() = default;
-  InsertTest(Index1D const& idx) : InsertableCollection<InsertTest,Index1D>() {
+  InsertTest() : InsertableCollection<InsertTest,Index1D>() {
     num_inserted++;
     // ::fmt::print(
     //   "{}: inserting on node {}\n", idx.x(), theContext()->getNode()
