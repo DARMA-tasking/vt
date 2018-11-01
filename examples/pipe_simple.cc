@@ -6,21 +6,6 @@ using namespace vt;
 using namespace vt::index;
 using namespace vt::mapping;
 
-namespace serdes {
-
-template <typename Serializer>
-void serialize(Serializer& s, std::string& str) {
-  typename std::string::size_type str_size = str.length();
-  s | str_size;
-  str.resize(str_size);
-  for (auto&& elm : str) {
-    s | elm;
-  }
-}
-
-} /* end namespace serdes */
-
-
 struct MyCol : Collection<MyCol, Index1D> {
   MyCol() = default;
 };
