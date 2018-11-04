@@ -4,7 +4,7 @@
 
 #include "test_parallel_harness.h"
 
-#include "transport.h"
+#include "vt/transport.h"
 #include "topos/index/index.h"
 #include "topos/mapping/mapping.h"
 #include "registry/auto/map/auto_registry_map.h"

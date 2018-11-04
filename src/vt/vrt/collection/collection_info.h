@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_COLLECTION_INFO_H
 #define INCLUDED_VRT_COLLECTION_COLLECTION_INFO_H
 
-#include "config.h"
-#include "vrt/collection/manager.fwd.h"
-#include "vrt/context/context_vrt_fwd.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/context/context_vrt_fwd.h"
 
 namespace vt { namespace vrt { namespace collection {
 

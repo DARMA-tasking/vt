@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H
 #define INCLUDED_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/insert/insert_finished.h"
-#include "vrt/collection/manager.h"
-#include "vrt/proxy/base_collection_proxy.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/insert/insert_finished.h"
+#include "vt/vrt/collection/manager.h"
+#include "vt/vrt/proxy/base_collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 

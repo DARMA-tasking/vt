@@ -1,8 +1,8 @@
 
-#include <memory>
+#include "vt/event/event.h"
+#include "vt/event/event_record.h"
 
-#include "event.h"
-#include "event_record.h"
+#include <memory>
 
 #include <mpi.h>
 

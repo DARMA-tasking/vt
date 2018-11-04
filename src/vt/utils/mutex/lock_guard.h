@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_MUTEX_LOCK_GUARD_H
 #define INCLUDED_UTILS_MUTEX_LOCK_GUARD_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <mutex>
 

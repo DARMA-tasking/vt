@@ -2,8 +2,8 @@
 #if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_GET_IMPL_H
 #define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_GET_IMPL_H
 
-#include "config.h"
-#include "messaging/envelope/envelope_get.h"
+#include "vt/config.h"
+#include "vt/messaging/envelope/envelope_get.h"
 
 namespace vt {
 

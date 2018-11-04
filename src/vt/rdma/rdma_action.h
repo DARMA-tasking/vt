@@ -2,8 +2,8 @@
 #if !defined INCLUDED_RDMA_RDMA_ACTION_H
 #define INCLUDED_RDMA_RDMA_ACTION_H
 
-#include "config.h"
-#include "rdma/rdma_common.h"
+#include "vt/config.h"
+#include "vt/rdma/rdma_common.h"
 
 #include <sstream>
 #include <iostream>

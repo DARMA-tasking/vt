@@ -2,7 +2,7 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_STRAT_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_STRAT_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <cstdlib>
 

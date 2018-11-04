@@ -2,10 +2,10 @@
 #if !defined INCLUDED_PIPE_CALLBACK_CALLBACK_BASE_H
 #define INCLUDED_PIPE_CALLBACK_CALLBACK_BASE_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/signal/signal.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/signal/signal.h"
+#include "vt/context/context.h"
 
 namespace vt { namespace pipe { namespace callback {
 

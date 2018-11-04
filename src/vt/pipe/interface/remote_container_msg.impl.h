@@ -2,14 +2,14 @@
 #if !defined INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_MSG_IMPL_H
 #define INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_MSG_IMPL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/interface/remote_container_msg.h"
-#include "pipe/id/pipe_id.h"
-#include "pipe/pipe_manager.h"
-#include "context/context.h"
-#include "messaging/message.h"
-#include "pipe/signal/signal.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/interface/remote_container_msg.h"
+#include "vt/pipe/id/pipe_id.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/context/context.h"
+#include "vt/messaging/message.h"
+#include "vt/pipe/signal/signal.h"
 
 #include <tuple>
 #include <utility>

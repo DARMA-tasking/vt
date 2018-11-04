@@ -2,11 +2,11 @@
 #if !defined INCLUDED_EVENT_EVENT_HOLDER_H
 #define INCLUDED_EVENT_EVENT_HOLDER_H
 
+#include "vt/config.h"
+#include "vt/event/event_record.h"
+
 #include <memory>
 #include <vector>
-
-#include "config.h"
-#include "event_record.h"
 
 namespace vt { namespace event {
 

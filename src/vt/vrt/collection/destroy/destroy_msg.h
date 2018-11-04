@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_DESTROY_DESTROY_MSG_H
 #define INCLUDED_VRT_COLLECTION_DESTROY_DESTROY_MSG_H
 
-#include "config.h"
-#include "vrt/proxy/collection_proxy.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/vrt/proxy/collection_proxy.h"
+#include "vt/messaging/message.h"
 
 namespace vt { namespace vrt { namespace collection {
 

@@ -2,17 +2,17 @@
 #if !defined INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_TL_IMPL_H
 #define INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_TL_IMPL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/callback/callback_base_tl.h"
-#include "pipe/callback/anon/callback_anon_tl.h"
-#include "pipe/id/pipe_id.h"
-#include "pipe/msg/callback.h"
-#include "pipe/pipe_manager.h"
-#include "activefn/activefn.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "runnable/general.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/callback_base_tl.h"
+#include "vt/pipe/callback/anon/callback_anon_tl.h"
+#include "vt/pipe/id/pipe_id.h"
+#include "vt/pipe/msg/callback.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/activefn/activefn.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
+#include "vt/runnable/general.h"
 
 namespace vt { namespace pipe { namespace callback {
 

@@ -2,8 +2,8 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
 #define INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
 
-#include "config.h"
-#include "collective/reduce/reduce_msg.h"
+#include "vt/config.h"
+#include "vt/collective/reduce/reduce_msg.h"
 
 #include <vector>
 #include <cstdint>

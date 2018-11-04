@@ -2,11 +2,11 @@
 #if !defined INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_FUNCTOR_IMPL_H
 #define INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_FUNCTOR_IMPL_H
 
-#include "config.h"
-#include "serialization/auto_dispatch/dispatch_functor.h"
-#include "serialization/serialize_interface.h"
-#include "serialization/messaging/serialized_messenger.h"
-#include "messaging/active.h"
+#include "vt/config.h"
+#include "vt/serialization/auto_dispatch/dispatch_functor.h"
+#include "vt/serialization/serialize_interface.h"
+#include "vt/serialization/messaging/serialized_messenger.h"
+#include "vt/messaging/active.h"
 
 #include <cassert>
 

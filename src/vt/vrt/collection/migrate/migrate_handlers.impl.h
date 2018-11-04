@@ -2,12 +2,12 @@
 #if !defined INCLUDED_VRT_COLLECTION_MIGRATE_MIGRATE_HANDLERS_IMPL_H
 #define INCLUDED_VRT_COLLECTION_MIGRATE_MIGRATE_HANDLERS_IMPL_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/migrate/migrate_msg.h"
-#include "vrt/collection/migrate/migrate_handlers.h"
-#include "vrt/collection/migrate/manager_migrate_attorney.h"
-#include "serialization/serialization.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/migrate/migrate_msg.h"
+#include "vt/vrt/collection/migrate/migrate_handlers.h"
+#include "vt/vrt/collection/migrate/manager_migrate_attorney.h"
+#include "vt/serialization/serialization.h"
 
 #include <memory>
 #include <functional>

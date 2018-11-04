@@ -2,9 +2,9 @@
 #if !defined INCLUDED_SEQUENCE_SEQUENCER_MANAGER_H
 #define INCLUDED_SEQUENCE_SEQUENCER_MANAGER_H
 
-#include "config.h"
-#include "seq_common.h"
-#include "sequencer_fwd.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/sequencer_fwd.h"
 
 #include <limits>
 
@@ -27,6 +27,6 @@ private:
 
 }} // end namespace vt::seq
 
-#include "sequencer_manager.impl.h"
+#include "vt/sequence/sequencer_manager.impl.h"
 
 #endif /*INCLUDED_SEQUENCE_SEQUENCER_MANAGER_H*/

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <unordered_map>
 #include <string>

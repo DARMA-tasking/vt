@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_COLL_CONSTRUCTORS_DEREF_H
 #define INCLUDED_VRT_COLLECTION_COLL_CONSTRUCTORS_DEREF_H
 
-#include "config.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/manager.h"
 
 #if backend_check_enabled(detector)
   #include "detector_headers.h"
@@ -36,7 +36,7 @@ struct DerefCons {
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/collection/constructor/coll_constructors_deref.impl.h"
+#include "vt/vrt/collection/constructor/coll_constructors_deref.impl.h"
 
 #endif /*backend_check_enabled(detector)*/
 

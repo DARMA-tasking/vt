@@ -2,10 +2,10 @@
 #if !defined INCLUDED_EPOCH_EPOCH_MANIP_H
 #define INCLUDED_EPOCH_EPOCH_MANIP_H
 
-#include "config.h"
-#include "epoch/epoch.h"
-#include "utils/bits/bits_common.h"
-#include "utils/bits/bits_packer.h"
+#include "vt/config.h"
+#include "vt/epoch/epoch.h"
+#include "vt/utils/bits/bits_common.h"
+#include "vt/utils/bits/bits_packer.h"
 
 namespace vt { namespace epoch {
 
@@ -78,8 +78,8 @@ private:
 
 }} /* end namespace vt::epoch */
 
-#include "epoch/epoch_manip_get.h"
-#include "epoch/epoch_manip_set.h"
-#include "epoch/epoch_manip_make.h"
+#include "vt/epoch/epoch_manip_get.h"
+#include "vt/epoch/epoch_manip_set.h"
+#include "vt/epoch/epoch_manip_make.h"
 
 #endif /*INCLUDED_EPOCH_EPOCH_MANIP_H*/

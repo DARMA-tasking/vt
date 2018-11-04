@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H
 #define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H
 
-#include "config.h"
-#include "vrt/context/context_vrt.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrt.h"
+#include "vt/messaging/message.h"
 
 namespace vt { namespace vrt {
 

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_ATOMIC_NULL_ATOMIC_H
 #define INCLUDED_UTILS_ATOMIC_NULL_ATOMIC_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_no_threading
 

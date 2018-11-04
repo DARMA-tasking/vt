@@ -2,7 +2,7 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_BIT_XOR_OP_H
 #define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_BIT_XOR_OP_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 

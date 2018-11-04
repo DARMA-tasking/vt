@@ -2,26 +2,26 @@
 #if !defined INCLUDED_RDMA_RDMA_H
 #define INCLUDED_RDMA_RDMA_H
 
-#include "config.h"
-#include "activefn/activefn.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
 
-#include "rdma/rdma_common.h"
-#include "rdma/rdma_types.h"
-#include "rdma/rdma_handle.h"
-#include "rdma/rdma_msg.h"
-#include "rdma/rdma_pending.h"
-#include "rdma/rdma_action.h"
+#include "vt/rdma/rdma_common.h"
+#include "vt/rdma/rdma_types.h"
+#include "vt/rdma/rdma_handle.h"
+#include "vt/rdma/rdma_msg.h"
+#include "vt/rdma/rdma_pending.h"
+#include "vt/rdma/rdma_action.h"
 
-#include "rdma/state/rdma_state.h"
+#include "vt/rdma/state/rdma_state.h"
 
-#include "rdma/group/rdma_map.h"
-#include "rdma/group/rdma_region.h"
-#include "rdma/group/rdma_group.h"
+#include "vt/rdma/group/rdma_map.h"
+#include "vt/rdma/group/rdma_region.h"
+#include "vt/rdma/group/rdma_group.h"
 
-#include "rdma/channel/rdma_channel_lookup.h"
-#include "rdma/channel/rdma_channel.h"
+#include "vt/rdma/channel/rdma_channel_lookup.h"
+#include "vt/rdma/channel/rdma_channel.h"
 
-#include "rdma/collection/rdma_collection_fwd.h"
+#include "vt/rdma/collection/rdma_collection_fwd.h"
 
 #include <unordered_map>
 #include <cassert>

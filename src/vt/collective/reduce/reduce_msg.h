@@ -2,9 +2,9 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_MSG_H
 #define INCLUDED_COLLECTIVE_REDUCE_REDUCE_MSG_H
 
-#include "config.h"
-#include "collective/reduce/reduce.fwd.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/collective/reduce/reduce.fwd.h"
+#include "vt/messaging/message.h"
 
 #include <cstdlib>
 

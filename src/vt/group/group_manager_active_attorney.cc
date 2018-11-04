@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/group_manager.h"
-#include "group/group_manager_active_attorney.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/group_manager.h"
+#include "vt/group/group_manager_active_attorney.h"
 
 namespace vt { namespace group {
 

@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_DISPATCH_DISPATCH_H
 #define INCLUDED_VRT_COLLECTION_DISPATCH_DISPATCH_H
 
-#include "config.h"
-#include "vrt/collection/traits/coll_msg.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/traits/coll_msg.h"
 
 #include <type_traits>
 

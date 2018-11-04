@@ -2,11 +2,11 @@
 #if !defined INCLUDED_VRT_PROXY_COLLECTION_PROXY_H
 #define INCLUDED_VRT_PROXY_COLLECTION_PROXY_H
 
-#include "config.h"
-#include "vrt/collection/proxy_traits/proxy_col_traits.h"
-#include "vrt/proxy/base_elm_proxy.h"
-#include "vrt/proxy/collection_elm_proxy.h"
-#include "vrt/proxy/base_collection_proxy.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/proxy_traits/proxy_col_traits.h"
+#include "vt/vrt/proxy/base_elm_proxy.h"
+#include "vt/vrt/proxy/collection_elm_proxy.h"
+#include "vt/vrt/proxy/base_collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -49,6 +49,6 @@ using CollectionProxy = vrt::collection::CollectionProxy<ColT,IndexT>;
 
 } /* end namespace vt */
 
-#include "vrt/proxy/collection_proxy.impl.h"
+#include "vt/vrt/proxy/collection_proxy.impl.h"
 
 #endif /*INCLUDED_VRT_PROXY_COLLECTION_PROXY_H*/

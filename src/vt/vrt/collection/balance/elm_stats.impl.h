@@ -2,18 +2,18 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/balance/elm_stats.h"
-#include "vrt/collection/balance/phase_msg.h"
-#include "vrt/collection/balance/stats_msg.h"
-#include "vrt/collection/balance/proc_stats.h"
-#include "vrt/collection/balance/lb_type.h"
-#include "vrt/collection/balance/read_lb.h"
-#include "vrt/collection/manager.h"
-#include "vrt/collection/balance/hierarchicallb/hierlb.h"
-#include "vrt/collection/balance/greedylb/greedylb.h"
-#include "vrt/collection/balance/rotatelb/rotatelb.h"
-#include "timing/timing.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/elm_stats.h"
+#include "vt/vrt/collection/balance/phase_msg.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/read_lb.h"
+#include "vt/vrt/collection/manager.h"
+#include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
+#include "vt/vrt/collection/balance/greedylb/greedylb.h"
+#include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
+#include "vt/timing/timing.h"
 
 #include <cassert>
 #include <type_traits>

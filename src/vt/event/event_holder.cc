@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "event.h"
-#include "event_holder.h"
+#include "vt/config.h"
+#include "vt/event/event.h"
+#include "vt/event/event_holder.h"
 
 namespace vt { namespace event {
 

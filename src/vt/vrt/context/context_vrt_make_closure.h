@@ -2,11 +2,11 @@
 #if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_MAKE_CLOSURE_H
 #define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_MAKE_CLOSURE_H
 
-#include "config.h"
-#include "vrt/context/context_vrt_fwd.h"
-#include "vrt/context/context_vrt_attorney.h"
-#include "vrt/context/context_vrtproxy.h"
-#include "vrt/context/context_vrtinfo.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrt_fwd.h"
+#include "vt/vrt/context/context_vrt_attorney.h"
+#include "vt/vrt/context/context_vrtproxy.h"
+#include "vt/vrt/context/context_vrtinfo.h"
 
 #include <tuple>
 #include <utility>
@@ -55,6 +55,6 @@ struct VirtualMakeClosure {
 
 }} /* end namespace vt::vrt */
 
-#include "vrt/context/context_vrt_make_closure.impl.h"
+#include "vt/vrt/context/context_vrt_make_closure.impl.h"
 
 #endif /*INCLUDED_VRT_CONTEXT/CONTEXT_VRT_MAKE_CLOSURE_H*/

@@ -12,7 +12,7 @@
 #define debug_enabled cmake_config_debug_enabled
 #define debug_force_enabled 0
 
-#include "configs/debug/debug_print.h"
+#include "vt/configs/debug/debug_print.h"
 
 #if !debug_enabled
 #define backend_debug_modes backend_options_on(none)

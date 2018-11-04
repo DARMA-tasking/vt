@@ -2,8 +2,8 @@
 #if !defined INCLUDED_EVENT_EVENT_ID_H
 #define INCLUDED_EVENT_EVENT_ID_H
 
-#include "config.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
 
 namespace vt { namespace event {
 

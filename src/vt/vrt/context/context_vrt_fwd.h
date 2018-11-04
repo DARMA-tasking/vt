@@ -2,9 +2,9 @@
 #if !defined INCLUDED_CONTEXT_VRT_FWD
 #define INCLUDED_CONTEXT_VRT_FWD
 
-#include "config.h"
-#include "vrt/context/context_vrt.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrt.h"
+#include "vt/messaging/message.h"
 
 #include <cstdlib>
 #include <cstdint>

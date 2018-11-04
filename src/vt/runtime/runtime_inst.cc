@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "runtime_inst.h"
-#include "runtime.h"
+#include "vt/config.h"
+#include "vt/runtime/runtime_inst.h"
+#include "vt/runtime/runtime.h"
 
 #include <memory>
 

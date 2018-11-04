@@ -7,7 +7,7 @@
  *  build/runtime mode when the assertion breaks
  */
 
-#include "configs/debug/debug_config.h"
+#include "vt/configs/debug/debug_config.h"
 
 #include <cassert>
 

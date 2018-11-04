@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_DEFAULTS_DEFAULT_MAP_H
 #define INCLUDED_VRT_COLLECTION_DEFAULTS_DEFAULT_MAP_H
 
-#include "config.h"
-#include "topos/mapping/mapping_headers.h"
-#include "topos/mapping/dense/dense.h"
+#include "vt/config.h"
+#include "vt/topos/mapping/mapping_headers.h"
+#include "vt/topos/mapping/dense/dense.h"
 
 #include <tuple>
 #include <type_traits>

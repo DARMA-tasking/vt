@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_DISPATCH_REGISTRY_H
 #define INCLUDED_VRT_COLLECTION_DISPATCH_REGISTRY_H
 
-#include "config.h"
-#include "registry/auto/auto_registry_common.h"
-#include "vrt/collection/dispatch/dispatch.h"
+#include "vt/config.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/vrt/collection/dispatch/dispatch.h"
 
 #include <vector>
 #include <memory>

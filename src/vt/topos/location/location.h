@@ -2,19 +2,19 @@
 #if !defined INCLUDED_TOPOS_LOCATION_LOCATION_H
 #define INCLUDED_TOPOS_LOCATION_LOCATION_H
 
-#include "config.h"
-#include "topos/location/location_common.h"
-#include "topos/location/location.fwd.h"
-#include "topos/location/utility/pending.h"
-#include "topos/location/utility/entity.h"
-#include "topos/location/utility/coord.h"
-#include "topos/location/message/msg.h"
-#include "topos/location/cache/cache.h"
-#include "topos/location/record/record.h"
-#include "topos/location/record/state.h"
-#include "context/context.h"
-#include "activefn/activefn.h"
-#include "vrt/vrt_common.h"
+#include "vt/config.h"
+#include "vt/topos/location/location_common.h"
+#include "vt/topos/location/location.fwd.h"
+#include "vt/topos/location/utility/pending.h"
+#include "vt/topos/location/utility/entity.h"
+#include "vt/topos/location/utility/coord.h"
+#include "vt/topos/location/message/msg.h"
+#include "vt/topos/location/cache/cache.h"
+#include "vt/topos/location/record/record.h"
+#include "vt/topos/location/record/state.h"
+#include "vt/context/context.h"
+#include "vt/activefn/activefn.h"
+#include "vt/vrt/vrt_common.h"
 
 #include <cstdint>
 #include <memory>
@@ -179,6 +179,6 @@ private:
 
 }}  // end namespace vt::location
 
-#include "topos/location/location.impl.h"
+#include "vt/topos/location/location.impl.h"
 
 #endif /*INCLUDED_TOPOS_LOCATION_LOCATION_H*/

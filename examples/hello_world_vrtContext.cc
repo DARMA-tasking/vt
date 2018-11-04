@@ -2,9 +2,9 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "transport.h"
-#include "vrt/context/context_vrt.h"
-#include "vrt/context/context_vrtmanager.h"
+#include "vt/transport.h"
+#include "vt/vrt/context/context_vrt.h"
+#include "vt/vrt/context/context_vrtmanager.h"
 
 using namespace vt;
 using namespace vt::vrt;

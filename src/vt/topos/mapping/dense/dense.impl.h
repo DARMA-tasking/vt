@@ -4,10 +4,10 @@
 
 #include <cmath>
 
-#include "config.h"
-#include "topos/mapping/mapping.h"
-#include "topos/mapping/dense/dense.h"
-#include "topos/index/index.h"
+#include "vt/config.h"
+#include "vt/topos/mapping/mapping.h"
+#include "vt/topos/mapping/dense/dense.h"
+#include "vt/topos/index/index.h"
 
 namespace vt { namespace mapping {
 

@@ -2,9 +2,9 @@
 #if !defined INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_H
 #define INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_H
 
-#include "config.h"
-#include "messaging/envelope.h"
-#include "pool/pool.h"
+#include "vt/config.h"
+#include "vt/messaging/envelope.h"
+#include "vt/pool/pool.h"
 
 namespace vt {
 

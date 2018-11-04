@@ -2,21 +2,21 @@
 #if !defined INCLUDED_GROUP_GROUP_MANAGER_H
 #define INCLUDED_GROUP_GROUP_MANAGER_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/region/group_region.h"
-#include "group/group_info.fwd.h"
-#include "group/group_manager.fwd.h"
-#include "group/group_manager_active_attorney.fwd.h"
-#include "group/msg/group_msg.h"
-#include "group/global/group_default.h"
-#include "group/global/group_default_msg.h"
-#include "registry/auto/auto_registry_interface.h"
-#include "messaging/message.h"
-#include "messaging/active.h"
-#include "activefn/activefn.h"
-#include "collective/tree/tree.h"
-#include "collective/reduce/reduce.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/region/group_region.h"
+#include "vt/group/group_info.fwd.h"
+#include "vt/group/group_manager.fwd.h"
+#include "vt/group/group_manager_active_attorney.fwd.h"
+#include "vt/group/msg/group_msg.h"
+#include "vt/group/global/group_default.h"
+#include "vt/group/global/group_default_msg.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/messaging/message.h"
+#include "vt/messaging/active.h"
+#include "vt/activefn/activefn.h"
+#include "vt/collective/tree/tree.h"
+#include "vt/collective/reduce/reduce.h"
 
 #include <memory>
 #include <unordered_map>
@@ -155,6 +155,6 @@ extern group::GroupManager* theGroup();
 
 } /* end namespace vt */
 
-#include "group/group_manager.impl.h"
+#include "vt/group/group_manager.impl.h"
 
 #endif /*INCLUDED_GROUP_GROUP_MANAGER_H*/

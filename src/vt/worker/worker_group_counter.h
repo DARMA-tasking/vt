@@ -2,10 +2,10 @@
 #if !defined INCLUDED_WORKER_WORKER_GROUP_COUNTER_H
 #define INCLUDED_WORKER_WORKER_GROUP_COUNTER_H
 
-#include "config.h"
-#include "worker/worker_common.h"
-#include "utils/atomic/atomic.h"
-#include "utils/container/process_ready_buffer.h"
+#include "vt/config.h"
+#include "vt/worker/worker_common.h"
+#include "vt/utils/atomic/atomic.h"
+#include "vt/utils/container/process_ready_buffer.h"
 
 #include <list>
 

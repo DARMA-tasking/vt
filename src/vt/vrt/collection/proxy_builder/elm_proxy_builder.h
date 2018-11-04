@@ -2,7 +2,7 @@
 #if !defined INCLUDED_VRT_COLLECTION_PROXY_BUILDER_ELM_PROXY_BUILDER_H
 #define INCLUDED_VRT_COLLECTION_PROXY_BUILDER_ELM_PROXY_BUILDER_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace vrt { namespace collection {
 

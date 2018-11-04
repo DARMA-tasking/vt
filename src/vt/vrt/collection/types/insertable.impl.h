@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H
 #define INCLUDED_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/types/insertable.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/types/insertable.h"
+#include "vt/vrt/collection/manager.h"
 
 #include <cassert>
 

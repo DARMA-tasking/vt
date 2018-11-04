@@ -2,7 +2,7 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_MIN_OP_H
 #define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_MIN_OP_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <algorithm>
 

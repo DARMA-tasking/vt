@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_TLS_TLS_IMPL_H
 #define INCLUDED_UTILS_TLS_TLS_IMPL_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace util { namespace tls {
 

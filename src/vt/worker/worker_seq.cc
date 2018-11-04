@@ -1,13 +1,13 @@
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_no_threading
 
-#include "context/context.h"
-#include "context/context_attorney.h"
-#include "collective/collective_ops.h"
-#include "worker/worker_common.h"
-#include "worker/worker_seq.h"
+#include "vt/context/context.h"
+#include "vt/context/context_attorney.h"
+#include "vt/collective/collective_ops.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_seq.h"
 
 #include <memory>
 #include <functional>

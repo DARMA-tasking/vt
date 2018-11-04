@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_REMOTEINFO_H
 #define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_REMOTEINFO_H
 
-#include "config.h"
-#include "vrt/context/context_vrt_fwd.h"
-#include "vrt/context/context_vrtproxy.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrt_fwd.h"
+#include "vt/vrt/context/context_vrtproxy.h"
 
 namespace vt { namespace vrt {
 

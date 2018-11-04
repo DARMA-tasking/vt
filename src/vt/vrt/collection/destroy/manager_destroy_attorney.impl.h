@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_MANAGER_DESTROY_ATTORNEY_IMPL_H
 #define INCLUDED_VRT_COLLECTION_MANAGER_DESTROY_ATTORNEY_IMPL_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/destroy/manager_destroy_attorney.h"
-#include "vrt/collection/manager.fwd.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/destroy/manager_destroy_attorney.h"
+#include "vt/vrt/collection/manager.fwd.h"
 
 #include <memory>
 

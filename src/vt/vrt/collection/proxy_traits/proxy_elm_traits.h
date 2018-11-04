@@ -2,12 +2,12 @@
 #if !defined INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
 #define INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
 
-#include "config.h"
-#include "vrt/proxy/base_collection_elm_proxy.h"
-#include "vrt/proxy/base_elm_proxy.h"
-#include "vrt/collection/send/sendable.h"
-#include "vrt/collection/gettable/gettable.h"
-#include "vrt/collection/insert/insertable.h"
+#include "vt/config.h"
+#include "vt/vrt/proxy/base_collection_elm_proxy.h"
+#include "vt/vrt/proxy/base_elm_proxy.h"
+#include "vt/vrt/collection/send/sendable.h"
+#include "vt/vrt/collection/gettable/gettable.h"
+#include "vt/vrt/collection/insert/insertable.h"
 
 namespace vt { namespace vrt { namespace collection {
 

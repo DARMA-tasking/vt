@@ -1,6 +1,6 @@
 
-#include "config.h"
-#include "omp_mutex.h"
+#include "vt/config.h"
+#include "vt/utils/mutex/omp_mutex.h"
 
 #if backend_check_enabled(openmp)
 

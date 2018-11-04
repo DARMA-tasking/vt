@@ -6,11 +6,11 @@
 #include <cstdint>
 #include <atomic>
 
-#include "config.h"
-#include "utils/atomic/atomic.h"
-#include "seq_common.h"
-#include "seq_types.h"
-#include "seq_node_fwd.h"
+#include "vt/config.h"
+#include "vt/utils/atomic/atomic.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_types.h"
+#include "vt/sequence/seq_node_fwd.h"
 
 namespace vt { namespace seq {
 

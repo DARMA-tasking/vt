@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_STATIC_CHECKS_ALL_TRUE_H
 #define INCLUDED_UTILS_STATIC_CHECKS_ALL_TRUE_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace util {
 

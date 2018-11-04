@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_UNTYPED_H
 #define INCLUDED_VRT_COLLECTION_TYPES_UNTYPED_H
 
-#include "config.h"
-#include "lb/migration/lb_migratable.h"
+#include "vt/config.h"
+#include "vt/lb/migration/lb_migratable.h"
 
 namespace vt { namespace vrt { namespace collection {
 

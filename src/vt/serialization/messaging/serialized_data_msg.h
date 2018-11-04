@@ -2,9 +2,9 @@
 #if !defined INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H
 #define INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "serialization/serialization.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/serialization/serialization.h"
 
 using namespace ::serialization::interface;
 

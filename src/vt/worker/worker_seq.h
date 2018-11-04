@@ -2,13 +2,13 @@
 #if !defined INCLUDED_WORKER_WORKER_SEQ_H
 #define INCLUDED_WORKER_WORKER_SEQ_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_no_threading
 
-#include "worker/worker_common.h"
-#include "worker/worker_types.h"
-#include "utils/container/concurrent_deque.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_types.h"
+#include "vt/utils/container/concurrent_deque.h"
 
 #include <fcontext.h>
 
@@ -53,7 +53,7 @@ private:
 }} /* end namespace vt::worker */
 
 #if backend_check_enabled(detector)
-  #include "worker/worker_traits.h"
+  #include "vt/worker/worker_traits.h"
 
   namespace vt { namespace worker {
 

@@ -2,9 +2,9 @@
 #if !defined INCLUDED_RDMA_RDMA_MSG_H
 #define INCLUDED_RDMA_RDMA_MSG_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "rdma/rdma_common.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/rdma/rdma_common.h"
 
 namespace vt { namespace rdma {
 

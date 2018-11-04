@@ -2,11 +2,11 @@
 #if !defined INCLUDED_LB_INSTRUMENTATION_DATABASE_H
 #define INCLUDED_LB_INSTRUMENTATION_DATABASE_H
 
-#include "config.h"
-#include "lb/lb_types.h"
-#include "lb/instrumentation/entry.h"
-#include "lb/instrumentation/centralized/collect_msg.fwd.h"
-#include "lb/instrumentation/centralized/collect.fwd.h"
+#include "vt/config.h"
+#include "vt/lb/lb_types.h"
+#include "vt/lb/instrumentation/entry.h"
+#include "vt/lb/instrumentation/centralized/collect_msg.fwd.h"
+#include "vt/lb/instrumentation/centralized/collect.fwd.h"
 
 #include <unordered_map>
 #include <vector>

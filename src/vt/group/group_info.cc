@@ -1,15 +1,15 @@
 
-#include "config.h"
-#include "configs/types/types_type.h"
-#include "group/group_common.h"
-#include "group/group_info.h"
-#include "group/collective/group_info_collective.h"
-#include "group/rooted/group_info_rooted.h"
-#include "group/id/group_id.h"
-#include "group/group_manager.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "collective/tree/tree.h"
+#include "vt/config.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/group/group_common.h"
+#include "vt/group/group_info.h"
+#include "vt/group/collective/group_info_collective.h"
+#include "vt/group/rooted/group_info_rooted.h"
+#include "vt/group/id/group_id.h"
+#include "vt/group/group_manager.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
+#include "vt/collective/tree/tree.h"
 
 #include <cassert>
 #include <memory>

@@ -2,9 +2,9 @@
 #if !defined INCLUDED_RDMA_RDMA_PENDING_H
 #define INCLUDED_RDMA_RDMA_PENDING_H
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "rdma/rdma_common.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/rdma/rdma_common.h"
 
 namespace vt { namespace rdma {
 

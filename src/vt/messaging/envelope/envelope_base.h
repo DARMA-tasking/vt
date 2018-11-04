@@ -2,8 +2,8 @@
 #if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_BASE_H
 #define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_BASE_H
 
-#include "config.h"
-#include "messaging/envelope/envelope_type.h"
+#include "vt/config.h"
+#include "vt/messaging/envelope/envelope_type.h"
 
 #include <type_traits>
 

@@ -2,15 +2,15 @@
 #if !defined INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_MESSENGER_IMPL_H
 #define INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_MESSENGER_IMPL_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "messaging/active.h"
-#include "registry/auto/auto_registry_interface.h"
-#include "registry/auto/vc/auto_registry_vc.h"
-#include "serialization/serialization.h"
-#include "runnable/general.h"
-#include "serialization/messaging/serialized_data_msg.h"
-#include "serialization/messaging/serialized_messenger.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/messaging/active.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/registry/auto/vc/auto_registry_vc.h"
+#include "vt/serialization/serialization.h"
+#include "vt/runnable/general.h"
+#include "vt/serialization/messaging/serialized_data_msg.h"
+#include "vt/serialization/messaging/serialized_messenger.h"
 
 #include <tuple>
 #include <type_traits>

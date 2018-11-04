@@ -2,14 +2,14 @@
 #if !defined INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_HAN_IMPL_H
 #define INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_HAN_IMPL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/signal/signal.h"
-#include "pipe/callback/handler_send/callback_send_han.h"
-#include "pipe/callback/callback_base.h"
-#include "activefn/activefn.h"
-#include "context/context.h"
-#include "messaging/active.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/signal/signal.h"
+#include "vt/pipe/callback/handler_send/callback_send_han.h"
+#include "vt/pipe/callback/callback_base.h"
+#include "vt/activefn/activefn.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace pipe { namespace callback {
 

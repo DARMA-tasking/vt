@@ -2,11 +2,11 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_BASE_IMPL_H
 #define INCLUDED_VRT_COLLECTION_TYPES_BASE_IMPL_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/types/base.h"
-#include "vrt/collection/migrate/manager_migrate_attorney.h"
-#include "vrt/collection/migrate/migrate_status.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/types/base.h"
+#include "vt/vrt/collection/migrate/manager_migrate_attorney.h"
+#include "vt/vrt/collection/migrate/migrate_status.h"
 
 #include <cassert>
 

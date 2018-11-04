@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_COLL_CONSTRUCTORS_DEREF_IMPL_H
 #define INCLUDED_VRT_COLLECTION_COLL_CONSTRUCTORS_DEREF_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/manager.h"
 
 #if backend_check_enabled(detector)
 

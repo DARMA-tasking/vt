@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H
 #define INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/types/migratable.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/types/migratable.h"
 
 namespace vt { namespace vrt { namespace collection {
 

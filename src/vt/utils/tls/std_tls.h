@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_TLS_STD_TLS_H
 #define INCLUDED_UTILS_TLS_STD_TLS_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_check_enabled(stdthread)
 

@@ -2,22 +2,22 @@
 #if !defined INCLUDED_UTILS_TLS_TLS_H
 #define INCLUDED_UTILS_TLS_TLS_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #define backend_null_tls 1
 
 #if backend_check_enabled(openmp)
-  #include "utils/tls/omp_tls.h"
+  #include "vt/utils/tls/omp_tls.h"
 #elif backend_check_enabled(stdthread)
-  #include "utils/tls/std_tls.h"
+  #include "vt/utils/tls/std_tls.h"
 #elif backend_no_threading
-  #include "utils/tls/null_tls.h"
+  #include "vt/utils/tls/null_tls.h"
 #else
   backend_static_assert_unreachable
 #endif
 
 #if backend_null_tls
-  #include "utils/tls/null_tls.h"
+  #include "vt/utils/tls/null_tls.h"
 #endif
 
 namespace vt { namespace util { namespace tls {
@@ -103,6 +103,6 @@ namespace vt { namespace util { namespace tls {
 
 }}} /* end namespace vt::util::tls */
 
-#include "tls.impl.h"
+#include "vt/utils/tls/tls.impl.h"
 
 #endif /*INCLUDED_UTILS_TLS_TLS_H*/

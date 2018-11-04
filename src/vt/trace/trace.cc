@@ -1,9 +1,9 @@
 
-#include "config.h"
-#include "trace/trace.h"
-#include "timing/timing.h"
-#include "scheduler/scheduler.h"
-#include "utils/demangle/demangle.h"
+#include "vt/config.h"
+#include "vt/trace/trace.h"
+#include "vt/timing/timing.h"
+#include "vt/scheduler/scheduler.h"
+#include "vt/utils/demangle/demangle.h"
 
 #include <zlib.h>
 #include <sys/stat.h>

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_TOPOS_INDEX_TRAITS_TRAITS_H
 #define INCLUDED_TOPOS_INDEX_TRAITS_TRAITS_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <cstdint>
 #include <functional>

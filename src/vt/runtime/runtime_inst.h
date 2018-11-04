@@ -2,9 +2,9 @@
 #if !defined INCLUDED_RUNTIME_INST_H
 #define INCLUDED_RUNTIME_INST_H
 
-#include "config.h"
-#include "runtime/runtime_common.h"
-#include "utils/tls/tls.h"
+#include "vt/config.h"
+#include "vt/runtime/runtime_common.h"
+#include "vt/utils/tls/tls.h"
 
 #include <memory>
 
@@ -30,6 +30,6 @@ extern runtime::Runtime* rt;
 
 } /* end namespace vt */
 
-#include "runtime_inst.impl.h"
+#include "vt/runtime/runtime_inst.impl.h"
 
 #endif /*INCLUDED_RUNTIME_INST_H*/

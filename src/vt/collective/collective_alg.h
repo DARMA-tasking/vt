@@ -2,14 +2,14 @@
 #if !defined INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H
 #define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H
 
-#include "config.h"
-#include "collective/tree/tree.h"
-#include "activefn/activefn.h"
-#include "messaging/message.h"
-#include "collective/barrier/barrier.h"
-#include "collective/reduce/reduce.h"
-#include "collective/scatter/scatter.h"
-#include "utils/hash/hash_tuple.h"
+#include "vt/config.h"
+#include "vt/collective/tree/tree.h"
+#include "vt/activefn/activefn.h"
+#include "vt/messaging/message.h"
+#include "vt/collective/barrier/barrier.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/collective/scatter/scatter.h"
+#include "vt/utils/hash/hash_tuple.h"
 
 #include <unordered_map>
 
@@ -52,7 +52,7 @@ extern collective::CollectiveAlg *theCollective();
 
 } //end namespace vt
 
-#include "collective/reduce/reduce.impl.h"
-#include "collective/scatter/scatter.impl.h"
+#include "vt/collective/reduce/reduce.impl.h"
+#include "vt/collective/scatter/scatter.impl.h"
 
 #endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H*/

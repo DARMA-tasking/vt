@@ -2,9 +2,9 @@
 #if !defined INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_H
 #define INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_H
 
-#include "config.h"
-#include "context/context.h"
-#include "utils/mutex/mutex.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/utils/mutex/mutex.h"
 
 #include <deque>
 #include <mutex>
@@ -71,7 +71,7 @@ private:
 
 }}} //end namespace vt::util::container
 
-#include "concurrent_deque_locked.impl.h"
+#include "vt/utils/container/concurrent_deque_locked.impl.h"
 
 #endif /*INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_H*/
 

@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H
 #define INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/holders/holder.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/holders/holder.h"
 
 #include <unordered_map>
 #include <tuple>

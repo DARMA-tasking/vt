@@ -2,11 +2,11 @@
 #if !defined INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H
 #define INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H
 
-#include "config.h"
-#include "topos/index/dense/dense_array.h"
-#include "topos/index/base_index.h"
-#include "context/context.h"
-#include "utils/bits/bits_packer.h"
+#include "vt/config.h"
+#include "vt/topos/index/dense/dense_array.h"
+#include "vt/topos/index/base_index.h"
+#include "vt/context/context.h"
+#include "vt/utils/bits/bits_packer.h"
 
 #include <functional>
 #include <string>

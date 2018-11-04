@@ -2,9 +2,9 @@
 #if !defined INCLUDED_RDMA_RDMA_COLLECTION_INFO_H
 #define INCLUDED_RDMA_RDMA_COLLECTION_INFO_H
 
-#include "config.h"
-#include "topos/location/cache/cache.h"
-#include "topos/location/record/record.h"
+#include "vt/config.h"
+#include "vt/topos/location/cache/cache.h"
+#include "vt/topos/location/record/record.h"
 
 namespace vt { namespace rdma {
 

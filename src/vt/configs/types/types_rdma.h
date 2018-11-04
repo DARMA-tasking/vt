@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TYPES_RDMA
 #define INCLUDED_TYPES_RDMA
 
-#include "configs/debug/debug_masterconfig.h"
-#include "configs/types/types_type.h"
+#include "vt/configs/debug/debug_masterconfig.h"
+#include "vt/configs/types/types_type.h"
 
 #include <cstdint>
 #include <functional>

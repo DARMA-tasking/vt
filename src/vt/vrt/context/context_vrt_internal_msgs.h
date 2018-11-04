@@ -2,11 +2,11 @@
 #if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H
 #define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H
 
-#include "config.h"
-#include "vrt/context/context_vrtproxy.h"
-#include "vrt/context/context_vrt_fwd.h"
-#include "messaging/message.h"
-#include "serialization/serialization.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrtproxy.h"
+#include "vt/vrt/context/context_vrt_fwd.h"
+#include "vt/messaging/message.h"
+#include "vt/serialization/serialization.h"
 
 #include <array>
 

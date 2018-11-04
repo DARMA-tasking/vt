@@ -2,13 +2,13 @@
 #if !defined INCLUDED_EVENT_EVENT_RECORD_H
 #define INCLUDED_EVENT_EVENT_RECORD_H
 
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+
 #include <memory>
 #include <vector>
 
 #include <mpi.h>
-
-#include "config.h"
-#include "messaging/message.h"
 
 namespace vt { namespace event {
 

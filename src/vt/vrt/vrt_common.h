@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_VRT_COMMON_H
 #define INCLUDED_VRT_VRT_COMMON_H
 
-#include "config.h"
-#include "vrt/base/base.h"
-#include "vrt/proxy/collection_elm_proxy.h"
+#include "vt/config.h"
+#include "vt/vrt/base/base.h"
+#include "vt/vrt/proxy/collection_elm_proxy.h"
 
 namespace vt { namespace vrt {
 

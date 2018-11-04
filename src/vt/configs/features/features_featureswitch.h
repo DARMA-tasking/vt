@@ -3,7 +3,7 @@
 #define INCLUDED_FEATURES_FEATURE_SWITCH
 
 #include "meld_headers.h"
-#include "configs/features/features_defines.h"
+#include "vt/configs/features/features_defines.h"
 
 /*
  * Key-value maps for various options and features that can be statically turned

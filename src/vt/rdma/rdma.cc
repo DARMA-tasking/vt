@@ -1,6 +1,6 @@
 
-#include "rdma.h"
-#include "messaging/active.h"
+#include "vt/rdma/rdma.h"
+#include "vt/messaging/active.h"
 
 #include <cstring>
 

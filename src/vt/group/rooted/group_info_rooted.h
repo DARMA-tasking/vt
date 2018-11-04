@@ -2,14 +2,14 @@
 #if !defined INCLUDED_GROUP_GROUP_INFO_ROOTED_H
 #define INCLUDED_GROUP_GROUP_INFO_ROOTED_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/base/group_info_base.h"
-#include "group/region/group_region.h"
-#include "group/region/group_range.h"
-#include "group/region/group_list.h"
-#include "group/region/group_shallow_list.h"
-#include "group/msg/group_msg.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/base/group_info_base.h"
+#include "vt/group/region/group_region.h"
+#include "vt/group/region/group_range.h"
+#include "vt/group/region/group_list.h"
+#include "vt/group/region/group_shallow_list.h"
+#include "vt/group/msg/group_msg.h"
 
 #include <memory>
 #include <vector>

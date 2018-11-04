@@ -2,9 +2,9 @@
 #if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
 #define INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
 
-#include "registry/auto/auto_registry_common.h"
-#include "config.h"
-#include "registry/registry.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/config.h"
+#include "vt/registry/registry.h"
 
 namespace vt { namespace auto_registry {
 
@@ -29,8 +29,8 @@ AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
 
 }} // end namespace vt::auto_registry
 
-#include "registry/auto/auto_registry.h"
-#include "registry/auto/functor/auto_registry_functor.h"
-#include "registry/auto/index/auto_registry_index.h"
+#include "vt/registry/auto/auto_registry.h"
+#include "vt/registry/auto/functor/auto_registry_functor.h"
+#include "vt/registry/auto/index/auto_registry_index.h"
 
 #endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H*/

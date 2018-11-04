@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_H
 #define INCLUDED_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_H
 
-#include "config.h"
-#include "vrt/collection/manager.fwd.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/manager.fwd.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -21,6 +21,6 @@ private:
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/collection/types/type_attorney.impl.h"
+#include "vt/vrt/collection/types/type_attorney.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_H*/

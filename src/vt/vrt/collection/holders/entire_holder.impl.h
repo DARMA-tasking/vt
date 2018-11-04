@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_IMPL_H
 #define INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_IMPL_H
 
-#include "config.h"
-#include "epoch/epoch_headers.h"
-#include "vrt/collection/holders/entire_holder.h"
+#include "vt/config.h"
+#include "vt/epoch/epoch_headers.h"
+#include "vt/vrt/collection/holders/entire_holder.h"
 
 #include <unordered_map>
 #include <unordered_set>

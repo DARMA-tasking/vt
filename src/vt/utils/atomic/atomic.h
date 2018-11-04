@@ -2,14 +2,14 @@
 #if !defined INCLUDED_UTILS_ATOMIC_ATOMIC_H
 #define INCLUDED_UTILS_ATOMIC_ATOMIC_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_check_enabled(openmp)
-  #include "utils/atomic/omp_atomic.h"
+  #include "vt/utils/atomic/omp_atomic.h"
 #elif backend_check_enabled(stdthread)
-  #include "utils/atomic/std_atomic.h"
+  #include "vt/utils/atomic/std_atomic.h"
 #elif backend_no_threading
-  #include "utils/atomic/null_atomic.h"
+  #include "vt/utils/atomic/null_atomic.h"
 #else
   backend_static_assert_unreachable
 #endif

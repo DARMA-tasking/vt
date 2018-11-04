@@ -2,13 +2,13 @@
 #if !defined INCLUDED_PIPE_PIPE_MANAGER_TL_H
 #define INCLUDED_PIPE_PIPE_MANAGER_TL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/pipe_manager_base.h"
-#include "pipe/callback/cb_union/cb_raw_base.h"
-#include "activefn/activefn.h"
-#include "vrt/collection/active/active_funcs.h"
-#include "vrt/proxy/collection_proxy.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/pipe_manager_base.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/activefn/activefn.h"
+#include "vt/vrt/collection/active/active_funcs.h"
+#include "vt/vrt/proxy/collection_proxy.h"
 
 namespace vt { namespace pipe {
 

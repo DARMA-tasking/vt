@@ -2,8 +2,8 @@
 #if !defined INCLUDED_MESSAGING_MESSAGE_CALLBACK_H
 #define INCLUDED_MESSAGING_MESSAGE_CALLBACK_H
 
-#include "config.h"
-#include "messaging/message/message.h"
+#include "vt/config.h"
+#include "vt/messaging/message/message.h"
 
 namespace vt { namespace messaging {
 

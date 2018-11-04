@@ -2,7 +2,7 @@
 #if !defined INCLUDED_VRT_COLLECTION_CONS_DETECT_H
 #define INCLUDED_VRT_COLLECTION_CONS_DETECT_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_check_enabled(detector)
   #include "detector_headers.h"

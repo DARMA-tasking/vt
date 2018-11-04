@@ -2,10 +2,10 @@
 #if !defined INCLUDED_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H
 #define INCLUDED_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H
 
-#include "config.h"
-#include "messaging/envelope.h"
-#include "context/context.h"
-#include "pool/header/pool_header.h"
+#include "vt/config.h"
+#include "vt/messaging/envelope.h"
+#include "vt/context/context.h"
+#include "vt/pool/header/pool_header.h"
 
 #include <vector>
 #include <cstdint>

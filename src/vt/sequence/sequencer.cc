@@ -1,9 +1,9 @@
 
-#include "config.h"
-#include "activefn/activefn.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
 
-#include "seq_common.h"
-#include "sequencer_headers.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/sequencer_headers.h"
 
 namespace vt { namespace seq {
 

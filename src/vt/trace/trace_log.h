@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TRACE_TRACE_LOG_H
 #define INCLUDED_TRACE_TRACE_LOG_H
 
-#include "config.h"
-#include "trace/trace_common.h"
-#include "trace/trace_constants.h"
+#include "vt/config.h"
+#include "vt/trace/trace_common.h"
+#include "vt/trace/trace_constants.h"
 
 #include <cstdint>
 #include <vector>

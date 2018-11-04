@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TRACE_TRACE_EVENT_H
 #define INCLUDED_TRACE_TRACE_EVENT_H
 
-#include "config.h"
-#include "trace/trace_common.h"
+#include "vt/config.h"
+#include "vt/trace/trace_common.h"
 
 #include <cstdint>
 #include <unordered_map>

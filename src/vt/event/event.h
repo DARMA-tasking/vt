@@ -2,6 +2,13 @@
 #if !defined INCLUDED_EVENT_EVENT_H
 #define INCLUDED_EVENT_EVENT_H
 
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/event/event_record.h"
+#include "vt/event/event_id.h"
+#include "vt/event/event_holder.h"
+#include "vt/event/event_msgs.h"
+
 #include <memory>
 #include <vector>
 #include <list>
@@ -9,13 +16,6 @@
 #include <unordered_map>
 
 #include <mpi.h>
-
-#include "config.h"
-#include "context/context.h"
-#include "event_record.h"
-#include "event_id.h"
-#include "event_holder.h"
-#include "event_msgs.h"
 
 namespace vt { namespace event {
 

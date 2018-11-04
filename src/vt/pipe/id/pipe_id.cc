@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/id/pipe_id.h"
-#include "utils/bits/bits_common.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/id/pipe_id.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace pipe {
 

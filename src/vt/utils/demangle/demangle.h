@@ -2,10 +2,10 @@
 #if !defined INCLUDED_UTILS_DEMANGLE_DEMANGLE_H
 #define INCLUDED_UTILS_DEMANGLE_DEMANGLE_H
 
-#include "config.h"
-#include "utils/string/static.h"
-#include "utils/demangle/get_type_name.h"
-#include "utils/demangle/demangled_name.h"
+#include "vt/config.h"
+#include "vt/utils/string/static.h"
+#include "vt/utils/demangle/get_type_name.h"
+#include "vt/utils/demangle/demangled_name.h"
 
 #include <string>
 #include <sstream>

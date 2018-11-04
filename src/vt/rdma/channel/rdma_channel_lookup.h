@@ -2,9 +2,9 @@
 #if !defined INCLUDED_RDMA_RDMA_CHANNEL_LOOKUP_H
 #define INCLUDED_RDMA_RDMA_CHANNEL_LOOKUP_H
 
-#include "config.h"
-#include "rdma/rdma_common.h"
-#include "rdma/rdma_handle.h"
+#include "vt/config.h"
+#include "vt/rdma/rdma_common.h"
+#include "vt/rdma/rdma_handle.h"
 
 #include <functional>
 

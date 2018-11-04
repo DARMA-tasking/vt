@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H
 #define INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_check_enabled(detector)
   #include "detector_headers.h"

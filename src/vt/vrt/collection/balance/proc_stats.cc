@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "vrt/collection/balance/proc_stats.h"
-#include "vrt/collection/manager.h"
-#include "timing/timing.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/manager.h"
+#include "vt/timing/timing.h"
 
 #include <vector>
 #include <unordered_map>

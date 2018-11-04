@@ -1,12 +1,12 @@
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/callback/callback_base_tl.h"
-#include "pipe/callback/handler_send/callback_send_tl.h"
-#include "pipe/msg/callback.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "runnable/general.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/callback_base_tl.h"
+#include "vt/pipe/callback/handler_send/callback_send_tl.h"
+#include "vt/pipe/msg/callback.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
+#include "vt/runnable/general.h"
 
 namespace vt { namespace pipe { namespace callback {
 

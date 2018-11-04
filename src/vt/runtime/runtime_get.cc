@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "runtime.h"
-#include "runtime_inst.h"
-#include "utils/tls/tls.h"
+#include "vt/config.h"
+#include "vt/runtime/runtime.h"
+#include "vt/runtime/runtime_inst.h"
+#include "vt/utils/tls/tls.h"
 
 #include <cassert>
 

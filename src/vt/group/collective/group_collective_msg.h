@@ -2,10 +2,10 @@
 #if !defined INCLUDED_GROUP_GROUP_COLLECTIVE_MSG_H
 #define INCLUDED_GROUP_GROUP_COLLECTIVE_MSG_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/msg/group_msg.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/msg/group_msg.h"
+#include "vt/messaging/message.h"
 
 #include <cstdlib>
 

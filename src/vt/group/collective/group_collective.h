@@ -2,12 +2,12 @@
 #if !defined INCLUDED_GROUP_GROUP_COLLECTIVE_H
 #define INCLUDED_GROUP_GROUP_COLLECTIVE_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/group_manager.fwd.h"
-#include "group/group_info.fwd.h"
-#include "collective/tree/tree.h"
-#include "collective/reduce/reduce.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/group_manager.fwd.h"
+#include "vt/group/group_info.fwd.h"
+#include "vt/collective/tree/tree.h"
+#include "vt/collective/reduce/reduce.h"
 
 #include <memory>
 

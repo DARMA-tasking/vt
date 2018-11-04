@@ -2,7 +2,7 @@
 #if !defined INCLUDED_COLLECTIVE_TREE_TREE_H
 #define INCLUDED_COLLECTIVE_TREE_TREE_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <vector>
 #include <functional>

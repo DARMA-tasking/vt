@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H
 #define INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H
 
-#include "config.h"
-#include "topos/location/location_common.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/topos/location/location_common.h"
+#include "vt/context/context.h"
 
 #include <list>
 #include <tuple>
@@ -45,6 +45,6 @@ struct LocationCache {
 
 }}  // end namespace vt::location
 
-#include "topos/location/cache/cache.impl.h"
+#include "vt/topos/location/cache/cache.impl.h"
 
 #endif /*INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H*/

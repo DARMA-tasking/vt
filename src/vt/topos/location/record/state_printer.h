@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TOPOS_LOCATION_RECORD_STATE_PRINTER_H
 #define INCLUDED_TOPOS_LOCATION_RECORD_STATE_PRINTER_H
 
-#include "config.h"
-#include "topos/location/record/state.h"
-#include "topos/location/record/state_stringize.h"
+#include "vt/config.h"
+#include "vt/topos/location/record/state.h"
+#include "vt/topos/location/record/state_stringize.h"
 
 #include <cstdlib>
 #include <cstdint>

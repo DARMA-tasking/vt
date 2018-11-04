@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "collective/scatter/scatter.h"
-#include "collective/collective_alg.h"
-#include "messaging/active.h"
+#include "vt/config.h"
+#include "vt/collective/scatter/scatter.h"
+#include "vt/collective/collective_alg.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace collective { namespace scatter {
 

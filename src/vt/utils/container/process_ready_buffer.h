@@ -2,9 +2,9 @@
 #if !defined INCLUDED_UTILS_CONTAINER_PROCESS_READY_BUFFER_H
 #define INCLUDED_UTILS_CONTAINER_PROCESS_READY_BUFFER_H
 
-#include "config.h"
-#include "context/context.h"
-#include "utils/mutex/mutex.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/utils/mutex/mutex.h"
 
 #include <list>
 #include <functional>

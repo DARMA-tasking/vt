@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TOPOS_MAPPING_MAPPING_SEED_H
 #define INCLUDED_TOPOS_MAPPING_MAPPING_SEED_H
 
-#include "config.h"
-#include "topos/mapping/mapping.h"
+#include "vt/config.h"
+#include "vt/topos/mapping/mapping.h"
 
 #include <cstdlib>
 

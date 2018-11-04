@@ -1,10 +1,10 @@
 #if !defined INCLUDED_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_IMPL_H
 #define INCLUDED_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_IMPL_H
 
-#include "config.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry.h"
-#include "vrt/context/context_vrt_funcs.h"
+#include "vt/config.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry.h"
+#include "vt/vrt/context/context_vrt_funcs.h"
 
 #include <vector>
 

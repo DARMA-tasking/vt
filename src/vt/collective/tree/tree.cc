@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "collective/tree/tree.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/collective/tree/tree.h"
+#include "vt/context/context.h"
 
 #include <cmath>
 #include <cstdlib>

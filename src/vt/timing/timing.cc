@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "timing/timing.h"
-#include "timing/timing_type.h"
+#include "vt/config.h"
+#include "vt/timing/timing.h"
+#include "vt/timing/timing_type.h"
 
 #include <mpi.h>
 

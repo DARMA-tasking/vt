@@ -2,8 +2,8 @@
 #if !defined INCLUDED_GROUP_REGION_GROUP_REGION_H
 #define INCLUDED_GROUP_REGION_GROUP_REGION_H
 
-#include "config.h"
-#include "group/group_common.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
 
 #include <vector>
 #include <cstdlib>

@@ -2,14 +2,14 @@
 #if !defined INCLUDED_TERMINATION_TERMINATION_H
 #define INCLUDED_TERMINATION_TERMINATION_H
 
-#include "config.h"
-#include "termination/term_common.h"
-#include "termination/term_msgs.h"
-#include "termination/term_state.h"
-#include "termination/term_action.h"
-#include "epoch/epoch.h"
-#include "activefn/activefn.h"
-#include "collective/tree/tree.h"
+#include "vt/config.h"
+#include "vt/termination/term_common.h"
+#include "vt/termination/term_msgs.h"
+#include "vt/termination/term_state.h"
+#include "vt/termination/term_action.h"
+#include "vt/epoch/epoch.h"
+#include "vt/activefn/activefn.h"
+#include "vt/collective/tree/tree.h"
 
 #include <cstdint>
 #include <unordered_map>
@@ -115,6 +115,6 @@ private:
 
 }} // end namespace vt::term
 
-#include "termination/termination.impl.h"
+#include "vt/termination/termination.impl.h"
 
 #endif /*INCLUDED_TERMINATION_TERMINATION_H*/

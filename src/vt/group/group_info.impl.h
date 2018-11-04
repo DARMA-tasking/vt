@@ -2,20 +2,20 @@
 #if !defined INCLUDED_GROUP_GROUP_INFO_IMPL_H
 #define INCLUDED_GROUP_GROUP_INFO_IMPL_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/group_info.h"
-#include "group/id/group_id.h"
-#include "group/region/group_region.h"
-#include "group/region/group_range.h"
-#include "group/region/group_list.h"
-#include "group/region/group_shallow_list.h"
-#include "group/msg/group_msg.h"
-#include "group/group_manager.h"
-#include "configs/types/types_type.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "collective/tree/tree.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/group_info.h"
+#include "vt/group/id/group_id.h"
+#include "vt/group/region/group_region.h"
+#include "vt/group/region/group_range.h"
+#include "vt/group/region/group_list.h"
+#include "vt/group/region/group_shallow_list.h"
+#include "vt/group/msg/group_msg.h"
+#include "vt/group/group_manager.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
+#include "vt/collective/tree/tree.h"
 
 #include <cassert>
 #include <memory>

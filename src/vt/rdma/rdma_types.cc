@@ -1,5 +1,5 @@
 
-#include "rdma/rdma_types.h"
+#include "vt/rdma/rdma_types.h"
 
 namespace vt {
 

@@ -2,9 +2,9 @@
 #if !defined INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H
 #define INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H
 
-#include "config.h"
-#include "utils/mutex/mutex.h"
-#include "concurrent_deque_locked.h"
+#include "vt/config.h"
+#include "vt/utils/mutex/mutex.h"
+#include "vt/utils/container/concurrent_deque_locked.h"
 
 #include <deque>
 #include <cassert>

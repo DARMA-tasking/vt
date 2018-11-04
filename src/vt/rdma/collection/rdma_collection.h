@@ -2,10 +2,10 @@
 #if !defined INCLUDED_RDMA_RDMA_COLLECTION_H
 #define INCLUDED_RDMA_RDMA_COLLECTION_H
 
-#include "configs/types/types_rdma.h"
-#include "rdma/collection/rdma_collection_fwd.h"
-#include "rdma/collection/rdma_collection_info.h"
-#include "rdma/rdma.h"
+#include "vt/configs/types/types_rdma.h"
+#include "vt/rdma/collection/rdma_collection_fwd.h"
+#include "vt/rdma/collection/rdma_collection_info.h"
+#include "vt/rdma/rdma.h"
 
 #include <functional>
 

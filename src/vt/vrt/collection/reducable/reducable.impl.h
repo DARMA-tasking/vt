@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_REDUCABLE_REDUCABLE_IMPL_H
 #define INCLUDED_VRT_COLLECTION_REDUCABLE_REDUCABLE_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/reducable/reducable.h"
-#include "vrt/proxy/base_collection_proxy.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/reducable/reducable.h"
+#include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/vrt/collection/manager.h"
 
 namespace vt { namespace vrt { namespace collection {
 

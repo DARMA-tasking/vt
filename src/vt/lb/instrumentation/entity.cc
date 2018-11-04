@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "context/context.h"
-#include "lb/instrumentation/entity.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/lb/instrumentation/entity.h"
 
 #include <cassert>
 

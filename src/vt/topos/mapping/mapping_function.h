@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TOPOS_MAPPING_MAPPING_FUNCTION_H
 #define INCLUDED_TOPOS_MAPPING_MAPPING_FUNCTION_H
 
-#include "config.h"
-#include "topos/index/index.h"
+#include "vt/config.h"
+#include "vt/topos/index/index.h"
 
 namespace vt { namespace mapping {
 

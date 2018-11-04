@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_DELETABLE_EPOCH_H
 #define INCLUDED_VRT_COLLECTION_TYPES_DELETABLE_EPOCH_H
 
-#include "config.h"
-#include "vrt/collection/types/deletable.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/types/deletable.h"
 
 namespace vt { namespace vrt { namespace collection {
 

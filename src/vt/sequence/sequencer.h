@@ -2,21 +2,21 @@
 #if !defined INCLUDED_SEQUENCE_SEQUENCER_H
 #define INCLUDED_SEQUENCE_SEQUENCER_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "messaging/active.h"
-#include "termination/termination.h"
-#include "utils/container/concurrent_deque.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/messaging/active.h"
+#include "vt/termination/termination.h"
+#include "vt/utils/container/concurrent_deque.h"
 
-#include "sequencer_manager.h"
-#include "seq_common.h"
-#include "seq_context.h"
-#include "seq_node.h"
-#include "seq_list.h"
-#include "seq_state.h"
-#include "seq_matcher.h"
-#include "seq_action.h"
-#include "seq_parallel.h"
+#include "vt/sequence/sequencer_manager.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_context.h"
+#include "vt/sequence/seq_node.h"
+#include "vt/sequence/seq_list.h"
+#include "vt/sequence/seq_state.h"
+#include "vt/sequence/seq_matcher.h"
+#include "vt/sequence/seq_action.h"
+#include "vt/sequence/seq_parallel.h"
 
 #include <unordered_map>
 #include <list>
@@ -171,7 +171,7 @@ extern seq::Sequencer* theSeq();
 
 } //end namespace vt
 
-#include "sequencer.impl.h"
+#include "vt/sequence/sequencer.impl.h"
 
 #endif /*INCLUDED_SEQUENCE_SEQUENCER_H*/
 

@@ -2,10 +2,10 @@
 #if !defined INCLUDED_WORKER_WORKER_GROUP_COMM_H
 #define INCLUDED_WORKER_WORKER_GROUP_COMM_H
 
-#include "config.h"
-#include "worker/worker_common.h"
-#include "worker/worker_types.h"
-#include "utils/container/concurrent_deque.h"
+#include "vt/config.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_types.h"
+#include "vt/utils/container/concurrent_deque.h"
 
 namespace vt { namespace worker {
 

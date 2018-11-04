@@ -2,12 +2,12 @@
 #if !defined INCLUDED_RDMA_RDMA_STATE_IMPL_H
 #define INCLUDED_RDMA_RDMA_STATE_IMPL_H
 
-#include "config.h"
-#include "rdma/state/rdma_state.h"
-#include "messaging/message.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/functor/auto_registry_functor.h"
-#include "registry/auto/rdma/auto_registry_rdma.h"
+#include "vt/config.h"
+#include "vt/rdma/state/rdma_state.h"
+#include "vt/messaging/message.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/functor/auto_registry_functor.h"
+#include "vt/registry/auto/rdma/auto_registry_rdma.h"
 
 namespace vt { namespace rdma {
 

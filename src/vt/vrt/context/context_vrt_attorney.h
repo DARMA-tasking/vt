@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_ATTORNEY_H
 #define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_ATTORNEY_H
 
-#include "config.h"
-#include "vrt/context/context_vrt.h"
-#include "vrt/context/context_vrt_fwd.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrt.h"
+#include "vt/vrt/context/context_vrt_fwd.h"
 
 namespace vt { namespace vrt {
 

@@ -5,19 +5,19 @@
 #include <unordered_map>
 #include <memory>
 
-#include "config.h"
-#include "context/context.h"
-#include "vrt/context/context_vrt.h"
-#include "vrt/context/context_vrt_funcs.h"
-#include "vrt/context/context_vrtmessage.h"
-#include "vrt/context/context_vrtinfo.h"
-#include "vrt/context/context_vrtproxy.h"
-#include "vrt/context/context_vrt_internal_msgs.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/vrt/context/context_vrt.h"
+#include "vt/vrt/context/context_vrt_funcs.h"
+#include "vt/vrt/context/context_vrtmessage.h"
+#include "vt/vrt/context/context_vrtinfo.h"
+#include "vt/vrt/context/context_vrtproxy.h"
+#include "vt/vrt/context/context_vrt_internal_msgs.h"
 
-#include "utils/bits/bits_common.h"
-#include "activefn/activefn.h"
-#include "topos/mapping/mapping_function.h"
-#include "serialization/serialization.h"
+#include "vt/utils/bits/bits_common.h"
+#include "vt/activefn/activefn.h"
+#include "vt/topos/mapping/mapping_function.h"
+#include "vt/serialization/serialization.h"
 
 namespace vt { namespace vrt {
 
@@ -153,6 +153,6 @@ extern vrt::VirtualContextManager* theVirtualManager();
 
 }  // end namespace vt
 
-#include "context_vrtmanager.impl.h"
+#include "vt/vrt/context/context_vrtmanager.impl.h"
 
 #endif  /*INCLUDED_CONTEXT_VRT_MANAGER*/

@@ -2,10 +2,10 @@
 #if !defined INCLUDED_CONTEXT_VRT_MESSAGE
 #define INCLUDED_CONTEXT_VRT_MESSAGE
 
-#include "config.h"
-#include "messaging/message.h"
-#include "serialization/traits/byte_copy_trait.h"
-#include "topos/location/message/msg.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/serialization/traits/byte_copy_trait.h"
+#include "vt/topos/location/message/msg.h"
 
 #include <cassert>
 #include <type_traits>

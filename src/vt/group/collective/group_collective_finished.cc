@@ -1,10 +1,10 @@
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/collective/group_info_collective.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "group/group_manager.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/collective/group_info_collective.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
+#include "vt/group/group_manager.h"
 
 namespace vt { namespace group {
 

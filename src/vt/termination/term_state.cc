@@ -1,5 +1,5 @@
 
-#include "term_state.h"
+#include "vt/termination/term_state.h"
 
 namespace vt { namespace term {
 

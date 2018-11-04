@@ -2,15 +2,15 @@
 #if !defined INCLUDED_TRACE_TRACE_H
 #define INCLUDED_TRACE_TRACE_H
 
-#include "config.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
 
-#include "trace/trace_common.h"
-#include "trace/trace_registry.h"
-#include "trace/trace_constants.h"
-#include "trace/trace_event.h"
-#include "trace/trace_containers.h"
-#include "trace/trace_log.h"
+#include "vt/trace/trace_common.h"
+#include "vt/trace/trace_registry.h"
+#include "vt/trace/trace_constants.h"
+#include "vt/trace/trace_event.h"
+#include "vt/trace/trace_containers.h"
+#include "vt/trace/trace_log.h"
 
 #include <cstdint>
 #include <cassert>

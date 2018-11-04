@@ -2,12 +2,12 @@
 #if !defined INCLUDED_GROUP_GLOBAL_GROUP_DEFAULT_IMPL_H
 #define INCLUDED_GROUP_GLOBAL_GROUP_DEFAULT_IMPL_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/global/group_default.h"
-#include "messaging/active.h"
-#include "activefn/activefn.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/global/group_default.h"
+#include "vt/messaging/active.h"
+#include "vt/activefn/activefn.h"
+#include "vt/context/context.h"
 
 namespace vt { namespace group { namespace global {
 

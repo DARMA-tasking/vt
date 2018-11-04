@@ -1,10 +1,10 @@
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/global/group_default.h"
-#include "messaging/active.h"
-#include "messaging/message.h"
-#include "collective/tree/tree.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/global/group_default.h"
+#include "vt/messaging/active.h"
+#include "vt/messaging/message.h"
+#include "vt/collective/tree/tree.h"
 
 #include <memory>
 #include <cassert>

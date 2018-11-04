@@ -1,16 +1,16 @@
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/pipe_manager_base.h"
-#include "pipe/pipe_manager.h"
-#include "pipe/state/pipe_state.h"
-#include "pipe/id/pipe_id.h"
-#include "context/context.h"
-#include "pipe/signal/signal_holder.h"
-#include "pipe/callback/anon/callback_anon_listener.h"
-#include "pipe/id/pipe_id.h"
-#include "pipe/msg/callback.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/pipe_manager_base.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/pipe/state/pipe_state.h"
+#include "vt/pipe/id/pipe_id.h"
+#include "vt/context/context.h"
+#include "vt/pipe/signal/signal_holder.h"
+#include "vt/pipe/callback/anon/callback_anon_listener.h"
+#include "vt/pipe/id/pipe_id.h"
+#include "vt/pipe/msg/callback.h"
+#include "vt/context/context.h"
 
 #include <cassert>
 #include <cstdlib>

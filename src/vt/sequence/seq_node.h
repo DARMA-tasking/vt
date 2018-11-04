@@ -7,12 +7,12 @@
 #include <cassert>
 #include <cstdint>
 
-#include "config.h"
-#include "seq_common.h"
-#include "seq_helpers.h"
-#include "seq_parallel.h"
-#include "seq_closure.h"
-#include "seq_types.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_helpers.h"
+#include "vt/sequence/seq_parallel.h"
+#include "vt/sequence/seq_closure.h"
+#include "vt/sequence/seq_types.h"
 
 namespace vt { namespace seq {
 
@@ -101,6 +101,6 @@ private:
 
 }} //end namespace vt::seq
 
-#include "seq_node.impl.h"
+#include "vt/sequence/seq_node.impl.h"
 
 #endif /* INCLUDED_SEQUENCE_SEQ_NODE_H*/

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TYPE_H
 #define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TYPE_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace messaging {
 

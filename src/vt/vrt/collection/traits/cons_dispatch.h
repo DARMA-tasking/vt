@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_TRAITS_CONS_DISPATCH_H
 #define INCLUDED_VRT_COLLECTION_TRAITS_CONS_DISPATCH_H
 
-#include "config.h"
-#include "vrt/collection/traits/cons_detect.h"
-#include "vrt/collection/constructor/coll_constructors.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/traits/cons_detect.h"
+#include "vt/vrt/collection/constructor/coll_constructors.h"
 
 #if backend_check_enabled(detector)
   #include "detector_headers.h"

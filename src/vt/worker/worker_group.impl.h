@@ -2,10 +2,10 @@
 #if !defined INCLUDED_WORKER_WORKER_GROUP_IMPL_H
 #define INCLUDED_WORKER_WORKER_GROUP_IMPL_H
 
-#include "config.h"
-#include "context/context.h"
-#include "worker_common.h"
-#include "worker_group.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_group.h"
 
 #include <functional>
 #include <cstdint>

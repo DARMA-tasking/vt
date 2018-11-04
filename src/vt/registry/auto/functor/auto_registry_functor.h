@@ -2,9 +2,9 @@
 #if !defined INCLUDED_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_H
 #define INCLUDED_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_H
 
-#include "config.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/registry.h"
+#include "vt/config.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/registry.h"
 
 #include <vector>
 #include <memory>
@@ -67,6 +67,6 @@ bool const RunnableFunctor<FunctorT, RegT, InfoT, FnT, msg, Args...>::IsMsgType;
 
 }} // end namespace vt::auto_registry
 
-#include "registry/auto/functor/auto_registry_functor_impl.h"
+#include "vt/registry/auto/functor/auto_registry_functor_impl.h"
 
 #endif /*INCLUDED_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_H*/

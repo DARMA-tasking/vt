@@ -2,9 +2,9 @@
 #if !defined INCLUDED_RDMA_RDMA_GROUP_H
 #define INCLUDED_RDMA_RDMA_GROUP_H
 
-#include "config.h"
-#include "rdma/group/rdma_map.h"
-#include "rdma/group/rdma_region.h"
+#include "vt/config.h"
+#include "vt/rdma/group/rdma_map.h"
+#include "vt/rdma/group/rdma_region.h"
 
 #include <unordered_map>
 

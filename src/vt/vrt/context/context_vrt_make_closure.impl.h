@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_MAKE_CLOSURE_IMPL_H
 #define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_MAKE_CLOSURE_IMPL_H
 
-#include "config.h"
-#include "vrt/context/context_vrt_make_closure.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrt_make_closure.h"
 
 #include <tuple>
 #include <utility>

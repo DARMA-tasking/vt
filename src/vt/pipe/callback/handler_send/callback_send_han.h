@@ -2,11 +2,11 @@
 #if !defined INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_HAN_H
 #define INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_HAN_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/signal/signal.h"
-#include "pipe/callback/callback_base.h"
-#include "activefn/activefn.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/signal/signal.h"
+#include "vt/pipe/callback/callback_base.h"
+#include "vt/activefn/activefn.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -31,6 +31,6 @@ private:
 
 }}} /* end namespace vt::pipe::callback */
 
-#include "pipe/callback/handler_send/callback_send_han.impl.h"
+#include "vt/pipe/callback/handler_send/callback_send_han.impl.h"
 
 #endif /*INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_HAN_H*/

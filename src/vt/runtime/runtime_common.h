@@ -2,7 +2,7 @@
 #if !defined INCLUDED_RUNTIME_RUNTIME_COMMON_H
 #define INCLUDED_RUNTIME_RUNTIME_COMMON_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace runtime {
 

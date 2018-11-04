@@ -1,5 +1,5 @@
 
-#include "rdma/channel/rdma_channel.h"
+#include "vt/rdma/channel/rdma_channel.h"
 
 #define PRINT_RDMA_OP_TYPE(OP) ((OP) == RDMA_TypeType::Get ? "GET" : "PUT")
 

@@ -2,16 +2,16 @@
 #if !defined INCLUDED_GROUP_GROUP_INFO_H
 #define INCLUDED_GROUP_GROUP_INFO_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/collective/group_info_collective.h"
-#include "group/rooted/group_info_rooted.h"
-#include "group/group_manager.fwd.h"
-#include "group/region/group_region.h"
-#include "group/msg/group_msg.h"
-#include "group/collective/group_collective_msg.h"
-#include "group/collective/group_collective.h"
-#include "collective/tree/tree.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/collective/group_info_collective.h"
+#include "vt/group/rooted/group_info_rooted.h"
+#include "vt/group/group_manager.fwd.h"
+#include "vt/group/region/group_region.h"
+#include "vt/group/msg/group_msg.h"
+#include "vt/group/collective/group_collective_msg.h"
+#include "vt/group/collective/group_collective.h"
+#include "vt/collective/tree/tree.h"
 
 #include <memory>
 #include <cstdlib>
@@ -83,6 +83,6 @@ private:
 
 }} /* end namespace vt::group */
 
-#include "group/group_info.impl.h"
+#include "vt/group/group_info.impl.h"
 
 #endif /*INCLUDED_GROUP_GROUP_INFO_H*/

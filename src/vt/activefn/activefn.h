@@ -2,9 +2,9 @@
 #if !defined INCLUDED_REGISTRY_FUNCTION
 #define INCLUDED_REGISTRY_FUNCTION
 
-#include "config.h"
-#include "messaging/message.h"
-#include "configs/types/types_rdma.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/configs/types/types_rdma.h"
 
 namespace vt {
 

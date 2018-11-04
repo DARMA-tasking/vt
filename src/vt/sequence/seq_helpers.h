@@ -8,11 +8,11 @@
 #include <cassert>
 #include <cstdint>
 
-#include "config.h"
-#include "seq_common.h"
-#include "seq_types.h"
-#include "seq_node_fwd.h"
-#include "seq_parallel.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_types.h"
+#include "vt/sequence/seq_node_fwd.h"
+#include "vt/sequence/seq_parallel.h"
 
 namespace vt { namespace seq {
 

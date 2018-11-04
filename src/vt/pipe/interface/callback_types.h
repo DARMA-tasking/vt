@@ -2,16 +2,16 @@
 #if !defined INCLUDED_PIPE_INTERFACE_CALLBACK_TYPES_H
 #define INCLUDED_PIPE_INTERFACE_CALLBACK_TYPES_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/interface/callback_direct.h"
-#include "pipe/interface/callback_direct_multi.h"
-#include "pipe/callback/handler_send/callback_send.h"
-#include "pipe/callback/anon/callback_anon.h"
-#include "pipe/callback/handler_bcast/callback_bcast.h"
-#include "pipe/callback/proxy_bcast/callback_proxy_bcast.h"
-#include "pipe/callback/proxy_send/callback_proxy_send.h"
-#include "pipe/signal/signal.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/interface/callback_direct.h"
+#include "vt/pipe/interface/callback_direct_multi.h"
+#include "vt/pipe/callback/handler_send/callback_send.h"
+#include "vt/pipe/callback/anon/callback_anon.h"
+#include "vt/pipe/callback/handler_bcast/callback_bcast.h"
+#include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.h"
+#include "vt/pipe/callback/proxy_send/callback_proxy_send.h"
+#include "vt/pipe/signal/signal.h"
 
 namespace vt { namespace pipe { namespace interface {
 

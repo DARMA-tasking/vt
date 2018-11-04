@@ -2,10 +2,10 @@
 #if !defined INCLUDED_GROUP_GROUP_COLLECTIVE_REDUCE_MSG_H
 #define INCLUDED_GROUP_GROUP_COLLECTIVE_REDUCE_MSG_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/collective/group_collective_msg.h"
-#include "collective/reduce/reduce.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/collective/group_collective_msg.h"
+#include "vt/collective/reduce/reduce.h"
 
 namespace vt { namespace group {
 

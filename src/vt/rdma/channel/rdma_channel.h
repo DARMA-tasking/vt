@@ -2,11 +2,11 @@
 #if !defined INCLUDED_RDMA_RDMA_CHANNEL_H
 #define INCLUDED_RDMA_RDMA_CHANNEL_H
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "rdma/rdma_common.h"
-#include "rdma/channel/rdma_channel_lookup.h"
-#include "rdma/rdma_handle.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/rdma/rdma_common.h"
+#include "vt/rdma/channel/rdma_channel_lookup.h"
+#include "vt/rdma/rdma_handle.h"
 
 #include <mpi.h>
 

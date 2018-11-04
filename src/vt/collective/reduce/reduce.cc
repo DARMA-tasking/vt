@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "collective/reduce/reduce.h"
-#include "collective/reduce/reduce_state.h"
+#include "vt/config.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/collective/reduce/reduce_state.h"
 
 #include <tuple>
 #include <unordered_map>

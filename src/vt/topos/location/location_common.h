@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TOPOS_LOCATION_LOCATION_COMMON_H
 #define INCLUDED_TOPOS_LOCATION_LOCATION_COMMON_H
 
-#include "config.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
 
 #include <functional>
 #include <cstdint>

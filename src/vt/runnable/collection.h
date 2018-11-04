@@ -2,7 +2,7 @@
 #if !defined INCLUDED_RUNNABLE_COLLECTION_H
 #define INCLUDED_RUNNABLE_COLLECTION_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace runnable {
 
@@ -16,6 +16,6 @@ struct RunnableCollection {
 
 }} /* end namespace vt::runnable */
 
-#include "runnable/collection.impl.h"
+#include "vt/runnable/collection.impl.h"
 
 #endif /*INCLUDED_RUNNABLE_COLLECTION_H*/

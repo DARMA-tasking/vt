@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_TLS_NULL_TLS_H
 #define INCLUDED_UTILS_TLS_NULL_TLS_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_no_threading || backend_null_tls
 

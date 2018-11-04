@@ -2,10 +2,10 @@
 #if !defined INCLUDED_GROUP_REGION_GROUP_SHALLOW_LIST_H
 #define INCLUDED_GROUP_REGION_GROUP_SHALLOW_LIST_H
 
-#include "config.h"
-#include "context/context.h"
-#include "group/group_common.h"
-#include "group/region/group_region.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/group/group_common.h"
+#include "vt/group/region/group_region.h"
 
 namespace vt { namespace group { namespace region {
 

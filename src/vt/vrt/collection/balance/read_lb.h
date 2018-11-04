@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_READ_LB_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_READ_LB_H
 
-#include "config.h"
-#include "vrt/collection/balance/lb_type.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_type.h"
 
 #include <string>
 #include <fstream>

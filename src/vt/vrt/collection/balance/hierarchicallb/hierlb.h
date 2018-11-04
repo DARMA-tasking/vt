@@ -2,14 +2,14 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_H
 
-#include "config.h"
-#include "vrt/collection/balance/hierarchicallb/hierlb.fwd.h"
-#include "vrt/collection/balance/hierarchicallb/hierlb_types.h"
-#include "vrt/collection/balance/hierarchicallb/hierlb_child.h"
-#include "vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
-#include "vrt/collection/balance/hierarchicallb/hierlb_strat.h"
-#include "vrt/collection/balance/proc_stats.h"
-#include "timing/timing.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/hierarchicallb/hierlb.fwd.h"
+#include "vt/vrt/collection/balance/hierarchicallb/hierlb_types.h"
+#include "vt/vrt/collection/balance/hierarchicallb/hierlb_child.h"
+#include "vt/vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
+#include "vt/vrt/collection/balance/hierarchicallb/hierlb_strat.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/timing/timing.h"
 
 #include <unordered_map>
 #include <vector>

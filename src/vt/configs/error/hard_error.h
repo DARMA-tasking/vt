@@ -7,8 +7,8 @@
  *  triggered
  */
 
-#include "configs/debug/debug_config.h"
-#include "configs/types/types_type.h"
+#include "vt/configs/debug/debug_config.h"
+#include "vt/configs/types/types_type.h"
 
 #include <string>
 

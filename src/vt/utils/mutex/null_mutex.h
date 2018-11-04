@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_MUTEX_NULL_MUTEX_H
 #define INCLUDED_UTILS_MUTEX_NULL_MUTEX_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace util { namespace mutex {
 

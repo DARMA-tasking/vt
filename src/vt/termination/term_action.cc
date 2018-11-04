@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "termination/term_action.h"
-#include "termination/term_common.h"
-#include "termination/termination.h"
+#include "vt/config.h"
+#include "vt/termination/term_action.h"
+#include "vt/termination/term_common.h"
+#include "vt/termination/termination.h"
 
 namespace vt { namespace term {
 

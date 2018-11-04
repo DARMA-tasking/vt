@@ -2,12 +2,12 @@
 #if !defined INCLUDED_TOPOS_LOCATION_MANAGER_H
 #define INCLUDED_TOPOS_LOCATION_MANAGER_H
 
-#include "config.h"
-#include "topos/location/location_common.h"
-#include "topos/location/location.fwd.h"
-#include "topos/location/manager.fwd.h"
-#include "topos/location/utility/coord.h"
-#include "vrt/vrt_common.h"
+#include "vt/config.h"
+#include "vt/topos/location/location_common.h"
+#include "vt/topos/location/location.fwd.h"
+#include "vt/topos/location/manager.fwd.h"
+#include "vt/topos/location/utility/coord.h"
+#include "vt/vrt/vrt_common.h"
 
 #include <unordered_map>
 #include <functional>
@@ -78,7 +78,7 @@ protected:
 
 }} /* end namespace vt::location */
 
-#include "topos/location/manager.impl.h"
+#include "vt/topos/location/manager.impl.h"
 
 namespace vt {
 

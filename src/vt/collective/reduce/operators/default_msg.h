@@ -2,9 +2,9 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H
 #define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H
 
-#include "config.h"
-#include "collective/reduce/operators/default_op.h"
-#include "collective/reduce/reduce_msg.h"
+#include "vt/config.h"
+#include "vt/collective/reduce/operators/default_op.h"
+#include "vt/collective/reduce/reduce_msg.h"
 
 #include <array>
 #include <vector>

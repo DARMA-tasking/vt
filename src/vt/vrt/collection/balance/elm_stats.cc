@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "vrt/collection/balance/elm_stats.h"
-#include "timing/timing.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/elm_stats.h"
+#include "vt/timing/timing.h"
 
 #include <cassert>
 

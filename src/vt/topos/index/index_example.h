@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TOPOS_INDEX_EXAMPLE
 #define INCLUDED_TOPOS_INDEX_EXAMPLE
 
-#include "config.h"
-#include "serialization/traits/byte_copy_trait.h"
+#include "vt/config.h"
+#include "vt/serialization/traits/byte_copy_trait.h"
 
 #include <cstdint>
 #include <functional>
@@ -53,7 +53,7 @@ struct ExampleIndex {
 }} // end namespace vt::index
 
 #if backend_check_enabled(detector)
-  #include "topos/index/traits/traits.h"
+  #include "vt/topos/index/traits/traits.h"
 
   namespace vt { namespace index {
 

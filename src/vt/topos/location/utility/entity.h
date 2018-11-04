@@ -2,10 +2,10 @@
 #if !defined INCLUDED_TOPOS_LOCATION_UTILITY_ENTITY_H
 #define INCLUDED_TOPOS_LOCATION_UTILITY_ENTITY_H
 
-#include "config.h"
-#include "topos/location/location_common.h"
-#include "topos/location/location.fwd.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/topos/location/location_common.h"
+#include "vt/topos/location/location.fwd.h"
+#include "vt/messaging/message.h"
 
 namespace vt { namespace location {
 

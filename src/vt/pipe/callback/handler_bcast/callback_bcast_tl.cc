@@ -1,11 +1,11 @@
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/callback/handler_bcast/callback_bcast_tl.h"
-#include "pipe/msg/callback.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "runnable/general.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/handler_bcast/callback_bcast_tl.h"
+#include "vt/pipe/msg/callback.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
+#include "vt/runnable/general.h"
 
 #include <cassert>
 

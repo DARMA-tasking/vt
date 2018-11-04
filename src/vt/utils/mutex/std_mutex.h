@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_MUTEX_STD_MUTEX_H
 #define INCLUDED_UTILS_MUTEX_STD_MUTEX_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_check_enabled(stdthread)
 #include <mutex>
@@ -14,7 +14,7 @@ using STDMutex = std::mutex;
 }}} // end namespace vt::util::mutex
 
 #if backend_check_enabled(detector)
-  #include "mutex_traits.h"
+  #include "vt/utils/mutex/mutex_traits.h"
 
   namespace vt { namespace util { namespace mutex {
 

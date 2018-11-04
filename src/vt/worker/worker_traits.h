@@ -2,9 +2,9 @@
 #if !defined INCLUDED_WORKER_WORKER_TRAITS_H
 #define INCLUDED_WORKER_WORKER_TRAITS_H
 
-#include "config.h"
-#include "worker/worker_common.h"
-#include "worker/worker_types.h"
+#include "vt/config.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_types.h"
 
 #if backend_check_enabled(detector)
   #include "detector_headers.h"

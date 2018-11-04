@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TOPOS_LOCATION_UTILITY_PENDING_H
 #define INCLUDED_TOPOS_LOCATION_UTILITY_PENDING_H
 
-#include "config.h"
-#include "topos/location/location_common.h"
-#include "topos/location/location.fwd.h"
+#include "vt/config.h"
+#include "vt/topos/location/location_common.h"
+#include "vt/topos/location/location.fwd.h"
 
 namespace vt { namespace location {
 

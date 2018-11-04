@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TOPOS_LOCATION_RECORD_RECORD_IMPL_H
 #define INCLUDED_TOPOS_LOCATION_RECORD_RECORD_IMPL_H
 
-#include "config.h"
-#include "topos/location/record/record.h"
-#include "topos/location/record/state_printer.h"
+#include "vt/config.h"
+#include "vt/topos/location/record/record.h"
+#include "vt/topos/location/record/state_printer.h"
 
 namespace vt { namespace location {
 

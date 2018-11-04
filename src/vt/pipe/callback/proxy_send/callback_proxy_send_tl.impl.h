@@ -2,14 +2,14 @@
 #if !defined INCLUDED_PIPE_CALLBACK_PROXY_SEND_CALLBACK_PROXY_SEND_TL_IMPL_H
 #define INCLUDED_PIPE_CALLBACK_PROXY_SEND_CALLBACK_PROXY_SEND_TL_IMPL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/callback/callback_base_tl.h"
-#include "pipe/callback/proxy_send/callback_proxy_send_tl.h"
-#include "pipe/id/pipe_id.h"
-#include "pipe/pipe_manager.h"
-#include "context/context.h"
-#include "messaging/active.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/callback_base_tl.h"
+#include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.h"
+#include "vt/pipe/id/pipe_id.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
 
 #include <cassert>
 

@@ -2,10 +2,10 @@
 #if !defined INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_FUNCTOR_H
 #define INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_FUNCTOR_H
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "serialization/serialize_interface.h"
-#include "utils/static_checks/functor.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/serialization/serialize_interface.h"
+#include "vt/utils/static_checks/functor.h"
 
 #if HAS_SERIALIZATION_LIBRARY
   #define HAS_DETECTION_COMPONENT 1
@@ -128,6 +128,6 @@ using ActiveSendFunctor =
 
 } /* end namespace vt */
 
-#include "serialization/auto_dispatch/dispatch_handler.impl.h"
+#include "vt/serialization/auto_dispatch/dispatch_handler.impl.h"
 
 #endif /*INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_FUNCTOR_H*/

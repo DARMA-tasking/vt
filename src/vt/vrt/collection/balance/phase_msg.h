@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_PHASE_MSG_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_PHASE_MSG_H
 
-#include "config.h"
-#include "collective/reduce/reduce.h"
-#include "vrt/collection/messages/user.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/vrt/collection/messages/user.h"
+#include "vt/messaging/message.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

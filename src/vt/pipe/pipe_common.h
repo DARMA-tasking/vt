@@ -2,8 +2,8 @@
 #if !defined INCLUDED_PIPE_PIPE_COMMON_H
 #define INCLUDED_PIPE_PIPE_COMMON_H
 
-#include "config.h"
-#include "pipe/pipe_manager.fwd.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 
 #include <cstdlib>
 

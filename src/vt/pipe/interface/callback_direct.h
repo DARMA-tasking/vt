@@ -2,13 +2,13 @@
 #if !defined INCLUDED_PIPE_INTERFACE_CALLBACK_DIRECT_H
 #define INCLUDED_PIPE_INTERFACE_CALLBACK_DIRECT_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/id/pipe_id.h"
-#include "pipe/signal/signal.h"
-#include "pipe/interface/base_container.h"
-#include "pipe/interface/remote_container_msg.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/id/pipe_id.h"
+#include "vt/pipe/signal/signal.h"
+#include "vt/pipe/interface/base_container.h"
+#include "vt/pipe/interface/remote_container_msg.h"
+#include "vt/context/context.h"
 
 #include <tuple>
 #include <utility>

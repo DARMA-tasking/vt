@@ -8,7 +8,7 @@
 #include "test_harness.h"
 #include "test_parallel_harness.h"
 
-#include "transport.h"
+#include "vt/transport.h"
 
 #if backend_check_enabled(openmp)
   #include <omp.h>

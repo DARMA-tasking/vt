@@ -2,10 +2,10 @@
 #if !defined INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H
 #define INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H
 
-#include "config.h"
-#include "sequencer.h"
-#include "vrt/context/context_vrt.h"
-#include "vrt/context/context_vrtmanager.h"
+#include "vt/config.h"
+#include "vt/sequence/sequencer.h"
+#include "vt/vrt/context/context_vrt.h"
+#include "vt/vrt/context/context_vrtmanager.h"
 
 #include <cassert>
 #include <cstdint>

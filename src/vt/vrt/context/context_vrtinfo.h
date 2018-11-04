@@ -2,16 +2,16 @@
 #if !defined INCLUDED_CONTEXT_VRT_INFO
 #define INCLUDED_CONTEXT_VRT_INFO
 
-#include "config.h"
-#include "vrt/context/context_vrt.h"
-#include "vrt/context/context_vrtmessage.h"
-#include "vrt/context/context_vrt_fwd.h"
-#include "utils/mutex/mutex.h"
-#include "utils/atomic/atomic.h"
-#include "utils/container/process_ready_buffer.h"
-#include "registry/auto/vc/auto_registry_vc.h"
-#include "registry/auto/map/auto_registry_map.h"
-#include "worker/worker_headers.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrt.h"
+#include "vt/vrt/context/context_vrtmessage.h"
+#include "vt/vrt/context/context_vrt_fwd.h"
+#include "vt/utils/mutex/mutex.h"
+#include "vt/utils/atomic/atomic.h"
+#include "vt/utils/container/process_ready_buffer.h"
+#include "vt/registry/auto/vc/auto_registry_vc.h"
+#include "vt/registry/auto/map/auto_registry_map.h"
+#include "vt/worker/worker_headers.h"
 
 #include <memory>
 #include <cassert>

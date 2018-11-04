@@ -2,18 +2,18 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_H
 #define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_H
 
-#include "config.h"
-#include "collective/reduce/reduce_msg.h"
-#include "collective/reduce/operators/default_msg.h"
-#include "collective/reduce/operators/functors/none_op.h"
-#include "collective/reduce/operators/functors/and_op.h"
-#include "collective/reduce/operators/functors/or_op.h"
-#include "collective/reduce/operators/functors/plus_op.h"
-#include "collective/reduce/operators/functors/max_op.h"
-#include "collective/reduce/operators/functors/min_op.h"
-#include "collective/reduce/operators/functors/bit_and_op.h"
-#include "collective/reduce/operators/functors/bit_or_op.h"
-#include "collective/reduce/operators/functors/bit_xor_op.h"
+#include "vt/config.h"
+#include "vt/collective/reduce/reduce_msg.h"
+#include "vt/collective/reduce/operators/default_msg.h"
+#include "vt/collective/reduce/operators/functors/none_op.h"
+#include "vt/collective/reduce/operators/functors/and_op.h"
+#include "vt/collective/reduce/operators/functors/or_op.h"
+#include "vt/collective/reduce/operators/functors/plus_op.h"
+#include "vt/collective/reduce/operators/functors/max_op.h"
+#include "vt/collective/reduce/operators/functors/min_op.h"
+#include "vt/collective/reduce/operators/functors/bit_and_op.h"
+#include "vt/collective/reduce/operators/functors/bit_or_op.h"
+#include "vt/collective/reduce/operators/functors/bit_xor_op.h"
 
 #include <algorithm>
 

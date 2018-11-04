@@ -2,8 +2,8 @@
 #if !defined INCLUDED_PIPE_SIGNAL_SIGNAL_H
 #define INCLUDED_PIPE_SIGNAL_SIGNAL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
 
 #include <cstdlib>
 

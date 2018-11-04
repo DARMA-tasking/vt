@@ -2,17 +2,17 @@
 #if !defined INCLUDED_WORKER_WORKER_GROUP_H
 #define INCLUDED_WORKER_WORKER_GROUP_H
 
-#include "config.h"
-#include "worker/worker_common.h"
-#include "worker/worker.h"
-#include "worker/worker_group_counter.h"
-#include "worker/worker_group_comm.h"
-#include "utils/atomic/atomic.h"
+#include "vt/config.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker.h"
+#include "vt/worker/worker_group_counter.h"
+#include "vt/worker/worker_group_comm.h"
+#include "vt/utils/atomic/atomic.h"
 
 #if backend_check_enabled(stdthread)
-  #include "worker/worker_stdthread.h"
+  #include "vt/worker/worker_stdthread.h"
 #elif backend_no_threading
-  #include "worker/worker_seq.h"
+  #include "vt/worker/worker_seq.h"
 #endif
 
 #include <vector>
@@ -63,7 +63,7 @@ private:
 }} /* end namespace vt::worker */
 
 #if backend_check_enabled(detector) && backend_check_enabled(stdthread)
-  #include "worker/worker_group_traits.h"
+  #include "vt/worker/worker_group_traits.h"
 
   namespace vt { namespace worker {
 
@@ -75,6 +75,6 @@ private:
   }} /* end namespace vt::worker */
 #endif /*backend_check_enabled(detector) && backend_check_enabled(stdthread)*/
 
-#include "worker/worker_group.impl.h"
+#include "vt/worker/worker_group.impl.h"
 
 #endif /*INCLUDED_WORKER_WORKER_GROUP_H*/

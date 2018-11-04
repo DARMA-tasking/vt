@@ -2,10 +2,10 @@
 #if !defined INCLUDED_PIPE_SIGNAL_SIGNAL_HOLDER_IMPL_H
 #define INCLUDED_PIPE_SIGNAL_SIGNAL_HOLDER_IMPL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/signal/signal_holder.h"
-#include "pipe/callback/callback_base.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/signal/signal_holder.h"
+#include "vt/pipe/callback/callback_base.h"
 
 #include <cassert>
 #include <unordered_map>

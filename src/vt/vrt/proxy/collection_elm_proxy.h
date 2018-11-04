@@ -2,12 +2,12 @@
 #if !defined INCLUDED_VRT_PROXY_COLLECTION_ELM_PROXY_H
 #define INCLUDED_VRT_PROXY_COLLECTION_ELM_PROXY_H
 
-#include "config.h"
-#include "vrt/collection/proxy_traits/proxy_elm_traits.h"
-#include "vrt/collection/manager.fwd.h"
-#include "vrt/collection/send/sendable.h"
-#include "vrt/collection/insert/insertable.h"
-#include "vrt/proxy/base_elm_proxy.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/proxy_traits/proxy_elm_traits.h"
+#include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/collection/send/sendable.h"
+#include "vt/vrt/collection/insert/insertable.h"
+#include "vt/vrt/proxy/base_elm_proxy.h"
 
 #include <ostream>
 

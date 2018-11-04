@@ -2,10 +2,10 @@
 #if !defined INCLUDED_LB_INSTRUMENTATION_ENTITY_H
 #define INCLUDED_LB_INSTRUMENTATION_ENTITY_H
 
-#include "config.h"
-#include "lb/instrumentation/database.h"
-#include "lb/lb_types.h"
-#include "lb/migration/lb_migratable.h"
+#include "vt/config.h"
+#include "vt/lb/instrumentation/database.h"
+#include "vt/lb/lb_types.h"
+#include "vt/lb/migration/lb_migratable.h"
 
 #include <unordered_map>
 

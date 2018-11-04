@@ -2,10 +2,10 @@
 #if !defined INCLUDED_GROUP_GROUP_MANAGER_ACTIVE_ATTORNEY_H
 #define INCLUDED_GROUP_GROUP_MANAGER_ACTIVE_ATTORNEY_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "messaging/message.h"
-#include "messaging/active.fwd.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/messaging/message.h"
+#include "vt/messaging/active.fwd.h"
 
 namespace vt { namespace group {
 

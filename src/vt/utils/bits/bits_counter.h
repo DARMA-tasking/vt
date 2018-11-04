@@ -2,7 +2,7 @@
 #if !defined INCLUDED_BITS_COUNTER
 #define INCLUDED_BITS_COUNTER
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace utils {
 
