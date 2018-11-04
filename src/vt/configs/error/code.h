@@ -2,7 +2,7 @@
 #if !defined INCLUDED_CONFIGS_ERROR_CODE_H
 #define INCLUDED_CONFIGS_ERROR_CODE_H
 
-#include "configs/error/code_class.h"
+#include "vt/configs/error/code_class.h"
 
 #include <cstdlib>
 

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_IMPL_H
 #define INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_IMPL_H
 
-#include "configs/error/keyval_printer.h"
+#include "vt/configs/error/keyval_printer.h"
 
 #include <cstdlib>
 #include <tuple>

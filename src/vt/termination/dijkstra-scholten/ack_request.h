@@ -2,7 +2,7 @@
 #if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_ACK_REQUEST_H
 #define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_ACK_REQUEST_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <cstdlib>
 

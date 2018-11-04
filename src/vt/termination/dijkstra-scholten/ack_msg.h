@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_ACK_MSG_H
 #define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_ACK_MSG_H
 
-#include "config.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
 
 #include <cstdlib>
 

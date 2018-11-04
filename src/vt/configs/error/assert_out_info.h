@@ -2,8 +2,8 @@
 #if !defined INCLUDED_CONFIGS_ERROR_ASSERT_OUT_INFO_H
 #define INCLUDED_CONFIGS_ERROR_ASSERT_OUT_INFO_H
 
-#include "configs/error/common.h"
-#include "configs/types/types_type.h"
+#include "vt/configs/error/common.h"
+#include "vt/configs/types/types_type.h"
 
 #include <tuple>
 #include <string>
@@ -30,6 +30,6 @@ assertOutInfo(
 
 }}} /* end namespace vt::debug::assert */
 
-#include "configs/error/assert_out_info.impl.h"
+#include "vt/configs/error/assert_out_info.impl.h"
 
 #endif /*INCLUDED_CONFIGS_ERROR_ASSERT_OUT_INFO_H*/

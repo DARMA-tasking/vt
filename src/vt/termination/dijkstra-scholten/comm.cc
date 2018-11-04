@@ -2,12 +2,12 @@
 #if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_CC
 #define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_CC
 
-#include "config.h"
-#include "termination/termination.h"
-#include "termination/dijkstra-scholten/comm.h"
-#include "termination/dijkstra-scholten/ds.h"
-#include "messaging/active.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/termination/termination.h"
+#include "vt/termination/dijkstra-scholten/comm.h"
+#include "vt/termination/dijkstra-scholten/ds.h"
+#include "vt/messaging/active.h"
+#include "vt/context/context.h"
 
 namespace vt { namespace term { namespace ds {
 

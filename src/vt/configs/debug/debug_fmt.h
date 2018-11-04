@@ -2,7 +2,7 @@
 #if !defined INCLUDED_CONFIGS_DEBUG_DEBUG_FMT_H
 #define INCLUDED_CONFIGS_DEBUG_DEBUG_FMT_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>

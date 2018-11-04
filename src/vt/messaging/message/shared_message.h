@@ -32,6 +32,6 @@ void messageResetDeserdes(MsgPtrT const& msg);
 
 } //end namespace vt
 
-#include "messaging/message/shared_message.impl.h"
+#include "vt/messaging/message/shared_message.impl.h"
 
 #endif /*INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_H*/

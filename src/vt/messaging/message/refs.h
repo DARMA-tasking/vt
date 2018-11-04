@@ -2,9 +2,9 @@
 #if !defined INCLUDED_MESSAGING_MESSAGE_REFS_H
 #define INCLUDED_MESSAGING_MESSAGE_REFS_H
 
-#include "config.h"
-#include "messaging/envelope.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/messaging/envelope.h"
+#include "vt/context/context.h"
 
 namespace vt {
 
@@ -25,6 +25,6 @@ bool isSharedMessage(MessageT* msg);
 
 } /* end namespace vt */
 
-#include "messaging/message/refs.impl.h"
+#include "vt/messaging/message/refs.impl.h"
 
 #endif /*INCLUDED_MESSAGING_MESSAGE_REFS_H*/

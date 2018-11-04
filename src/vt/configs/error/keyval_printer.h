@@ -2,8 +2,8 @@
 #if !defined INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_H
 #define INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_H
 
-#include "configs/error/common.h"
-#include "configs/debug/debug_config.h"
+#include "vt/configs/error/common.h"
+#include "vt/configs/debug/debug_config.h"
 
 #include <cstdlib>
 #include <tuple>
@@ -31,6 +31,6 @@ struct PrinterNameValue {
 
 }}} /* end namespace vt::util::error */
 
-#include "configs/error/keyval_printer.impl.h"
+#include "vt/configs/error/keyval_printer.impl.h"
 
 #endif /*INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_H*/

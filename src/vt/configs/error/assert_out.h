@@ -2,8 +2,8 @@
 #if !defined INCLUDED_CONFIGS_ERROR_ASSERT_OUT_H
 #define INCLUDED_CONFIGS_ERROR_ASSERT_OUT_H
 
-#include "configs/types/types_type.h"
-#include "configs/error/common.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/error/common.h"
 
 #include <tuple>
 #include <type_traits>
@@ -37,6 +37,6 @@ assertOut(
 
 }}} /* end namespace vt::debug::assert */
 
-#include "configs/error/assert_out.impl.h"
+#include "vt/configs/error/assert_out.impl.h"
 
 #endif /*INCLUDED_CONFIGS_ERROR_ASSERT_OUT_H*/

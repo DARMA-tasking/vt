@@ -2,10 +2,10 @@
 #if !defined INCLUDED_TERMINATION_TERM_SCOPE_IMPL_H
 #define INCLUDED_TERMINATION_TERM_SCOPE_IMPL_H
 
-#include "config.h"
-#include "termination/termination.h"
-#include "termination/term_common.h"
-#include "scheduler/scheduler.h"
+#include "vt/config.h"
+#include "vt/termination/termination.h"
+#include "vt/termination/term_common.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <vector>
 

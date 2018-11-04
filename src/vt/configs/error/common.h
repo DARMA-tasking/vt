@@ -3,7 +3,7 @@
 #define INCLUDED_CONFIGS_ERROR_COMMON_H
 
 #include "meld_headers.h"
-#include "configs/types/types_type.h"
+#include "vt/configs/types/types_type.h"
 
 #define outputArgsImpl(args...)                                         \
   meld_if_stmt(                                                         \

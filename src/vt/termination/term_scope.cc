@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "termination/termination.h"
-#include "termination/term_common.h"
-#include "scheduler/scheduler.h"
+#include "vt/config.h"
+#include "vt/termination/termination.h"
+#include "vt/termination/term_common.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace term {
 

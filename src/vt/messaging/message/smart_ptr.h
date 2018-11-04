@@ -2,9 +2,9 @@
 #if !defined INCLUDED_MESSAGING_MESSAGE_SMART_PTR_H
 #define INCLUDED_MESSAGING_MESSAGE_SMART_PTR_H
 
-#include "config.h"
-#include "messaging/message/message.h"
-#include "messaging/message/refs.h"
+#include "vt/config.h"
+#include "vt/messaging/message/message.h"
+#include "vt/messaging/message/refs.h"
 
 namespace vt { namespace messaging {
 

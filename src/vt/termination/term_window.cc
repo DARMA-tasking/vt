@@ -1,6 +1,6 @@
 
-#include "config.h"
-#include "termination/term_window.h"
+#include "vt/config.h"
+#include "vt/termination/term_window.h"
 
 namespace vt { namespace term {
 

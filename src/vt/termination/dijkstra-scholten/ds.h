@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_H
 #define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_H
 
-#include "config.h"
-#include "termination/dijkstra-scholten/ack_request.h"
-#include "termination/dijkstra-scholten/comm.fwd.h"
+#include "vt/config.h"
+#include "vt/termination/dijkstra-scholten/ack_request.h"
+#include "vt/termination/dijkstra-scholten/comm.fwd.h"
 
 #include <cstdlib>
 #include <map>

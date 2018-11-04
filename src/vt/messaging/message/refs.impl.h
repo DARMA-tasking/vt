@@ -2,9 +2,9 @@
 #if !defined INCLUDED_MESSAGING_MESSAGE_REFS_IMPL_H
 #define INCLUDED_MESSAGING_MESSAGE_REFS_IMPL_H
 
-#include "config.h"
-#include "messaging/envelope.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/messaging/envelope.h"
+#include "vt/context/context.h"
 
 namespace vt {
 

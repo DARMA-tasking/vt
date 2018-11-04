@@ -2,10 +2,10 @@
 #if !defined INCLUDED_CONFIGS_ERROR_ERROR_IMPL_H
 #define INCLUDED_CONFIGS_ERROR_ERROR_IMPL_H
 
-#include "configs/debug/debug_config.h"
-#include "configs/types/types_type.h"
-#include "configs/error/common.h"
-#include "configs/error/error.h"
+#include "vt/configs/debug/debug_config.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/error/common.h"
+#include "vt/configs/error/error.h"
 
 #include <string>
 #include <tuple>

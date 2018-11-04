@@ -4,7 +4,6 @@
 
 #include "vt/config.h"
 #include "vt/messaging/envelope.h"
-#include "vt/messaging/message/shared_message.h"
 #include "vt/pool/pool.h"
 
 #include <typeinfo>

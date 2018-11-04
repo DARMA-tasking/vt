@@ -2,7 +2,7 @@
 #if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_FWD_H
 #define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_FWD_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace term { namespace ds {
 

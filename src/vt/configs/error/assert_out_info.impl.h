@@ -2,11 +2,11 @@
 #if !defined INCLUDED_CONFIGS_ERROR_ASSERT_OUT_INFO_IMPL_H
 #define INCLUDED_CONFIGS_ERROR_ASSERT_OUT_INFO_IMPL_H
 
-#include "configs/error/common.h"
-#include "configs/types/types_type.h"
-#include "configs/error/assert_out.h"
-#include "configs/error/assert_out_info.h"
-#include "configs/error/keyval_printer.h"
+#include "vt/configs/error/common.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/error/assert_out.h"
+#include "vt/configs/error/assert_out_info.h"
+#include "vt/configs/error/keyval_printer.h"
 
 #include <cassert>
 #include <tuple>

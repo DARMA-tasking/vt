@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TERMINATION_TERM_WINDOW_H
 #define INCLUDED_TERMINATION_TERM_WINDOW_H
 
-#include "config.h"
-#include "epoch/epoch_manip.h"
+#include "vt/config.h"
+#include "vt/epoch/epoch_manip.h"
 
 #include <unordered_set>
 

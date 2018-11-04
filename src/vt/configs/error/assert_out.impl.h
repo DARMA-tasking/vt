@@ -2,9 +2,9 @@
 #if !defined INCLUDED_CONFIGS_ERROR_ASSERT_OUT_IMPL_H
 #define INCLUDED_CONFIGS_ERROR_ASSERT_OUT_IMPL_H
 
-#include "configs/error/common.h"
-#include "configs/types/types_type.h"
-#include "configs/error/assert_out.h"
+#include "vt/configs/error/common.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/error/assert_out.h"
 
 #include <tuple>
 #include <type_traits>
