@@ -5,9 +5,9 @@
 #include "test_parallel_harness.h"
 
 #include "vt/transport.h"
-#include "topos/index/index.h"
-#include "topos/mapping/mapping.h"
-#include "registry/auto/map/auto_registry_map.h"
+#include "vt/topos/index/index.h"
+#include "vt/topos/mapping/mapping.h"
+#include "vt/registry/auto/map/auto_registry_map.h"
 
 #include <vector>
 
