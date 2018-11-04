@@ -4,7 +4,7 @@
 
 #include "test_harness.h"
 
-#include "transport.h"
+#include "vt/transport.h"
 
 namespace vt { namespace tests { namespace unit {
 

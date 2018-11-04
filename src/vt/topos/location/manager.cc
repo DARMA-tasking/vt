@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "topos/location/location_common.h"
-#include "topos/location/manager.h"
+#include "vt/config.h"
+#include "vt/topos/location/location_common.h"
+#include "vt/topos/location/manager.h"
 
 #include <cassert>
 

@@ -2,14 +2,14 @@
 #if !defined INCLUDED_GROUP_GROUP_INFO_COLLECTIVE_H
 #define INCLUDED_GROUP_GROUP_INFO_COLLECTIVE_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/base/group_info_base.h"
-#include "group/collective/group_collective.h"
-#include "group/collective/group_collective_msg.h"
-#include "group/collective/group_collective_reduce_msg.h"
-#include "collective/reduce/reduce.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/base/group_info_base.h"
+#include "vt/group/collective/group_collective.h"
+#include "vt/group/collective/group_collective_msg.h"
+#include "vt/group/collective/group_collective_reduce_msg.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/messaging/message.h"
 
 #include <memory>
 #include <list>

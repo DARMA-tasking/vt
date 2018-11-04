@@ -2,9 +2,9 @@
 #if !defined INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_H
 #define INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_H
 
-#include "config.h"
-#include "utils/mutex/mutex.h"
-#include "concurrent_deque_locked.h"
+#include "vt/config.h"
+#include "vt/utils/mutex/mutex.h"
+#include "vt/utils/container/concurrent_deque_locked.h"
 
 namespace vt { namespace util { namespace container {
 

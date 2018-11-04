@@ -2,12 +2,12 @@
 #if !defined INCLUDED_VRT_COLLECTION_MANAGER_MIGRATE_ATTORNEY_H
 #define INCLUDED_VRT_COLLECTION_MANAGER_MIGRATE_ATTORNEY_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/types/migratable.fwd.h"
-#include "vrt/collection/types/base.fwd.h"
-#include "vrt/collection/migrate/migrate_status.h"
-#include "vrt/collection/migrate/migrate_handlers.fwd.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/types/migratable.fwd.h"
+#include "vt/vrt/collection/types/base.fwd.h"
+#include "vt/vrt/collection/migrate/migrate_status.h"
+#include "vt/vrt/collection/migrate/migrate_handlers.fwd.h"
 
 #include <memory>
 

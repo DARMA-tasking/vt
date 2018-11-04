@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "seq_common.h"
-#include "seq_ult_context.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_ult_context.h"
 
 #include <cassert>
 #include <functional>

@@ -2,12 +2,12 @@
 #if !defined INCLUDED_PARAMETERIZATION_PARAMETERIZATION_H
 #define INCLUDED_PARAMETERIZATION_PARAMETERIZATION_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "messaging/active.h"
-#include "registry/auto/auto_registry_interface.h"
-#include "utils/static_checks/all_true.h"
-#include "param_meta.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/messaging/active.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/utils/static_checks/all_true.h"
+#include "vt/parameterization/param_meta.h"
 
 #include <tuple>
 #include <utility>

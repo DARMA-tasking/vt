@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/collective/group_collective_msg.h"
-#include "group/collective/group_collective_util.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/collective/group_collective_msg.h"
+#include "vt/group/collective/group_collective_util.h"
 
 namespace vt { namespace group {
 

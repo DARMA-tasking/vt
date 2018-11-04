@@ -2,8 +2,8 @@
 #if !defined INCLUDED_SEQUENCE_SEQUENCER_MANAGER_IMPL_H
 #define INCLUDED_SEQUENCE_SEQUENCER_MANAGER_IMPL_H
 
-#include "config.h"
-#include "seq_common.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
 
 namespace vt { namespace seq {
 

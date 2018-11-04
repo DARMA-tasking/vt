@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TOPOS_LOCATION_UTILITY_COORD_H
 #define INCLUDED_TOPOS_LOCATION_UTILITY_COORD_H
 
-#include "config.h"
-#include "topos/location/location_common.h"
+#include "vt/config.h"
+#include "vt/topos/location/location_common.h"
 
 namespace vt { namespace location {
 

@@ -2,18 +2,18 @@
 #if !defined INCLUDED_PIPE_PIPE_MANAGER_BASE_H
 #define INCLUDED_PIPE_PIPE_MANAGER_BASE_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/pipe_manager.fwd.h"
-#include "pipe/state/pipe_state.h"
-#include "pipe/msg/callback.h"
-#include "pipe/signal/signal_holder.h"
-#include "pipe/callback/anon/callback_anon.fwd.h"
-#include "pipe/callback/handler_send/callback_send.fwd.h"
-#include "pipe/callback/handler_bcast/callback_bcast.fwd.h"
-#include "pipe/callback/proxy_send/callback_proxy_send_tl.fwd.h"
-#include "pipe/callback/proxy_bcast/callback_proxy_bcast_tl.fwd.h"
-#include "pipe/callback/anon/callback_anon_tl.fwd.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/pipe_manager.fwd.h"
+#include "vt/pipe/state/pipe_state.h"
+#include "vt/pipe/msg/callback.h"
+#include "vt/pipe/signal/signal_holder.h"
+#include "vt/pipe/callback/anon/callback_anon.fwd.h"
+#include "vt/pipe/callback/handler_send/callback_send.fwd.h"
+#include "vt/pipe/callback/handler_bcast/callback_bcast.fwd.h"
+#include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.fwd.h"
+#include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast_tl.fwd.h"
+#include "vt/pipe/callback/anon/callback_anon_tl.fwd.h"
 
 #include <functional>
 

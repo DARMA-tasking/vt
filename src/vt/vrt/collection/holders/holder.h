@@ -2,13 +2,13 @@
 #if !defined INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H
 #define INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/manager.fwd.h"
-#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
-#include "vrt/collection/holders/elm_holder.h"
-#include "vrt/collection/types/headers.h"
-#include "vrt/collection/messages/user.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
+#include "vt/vrt/collection/holders/elm_holder.h"
+#include "vt/vrt/collection/types/headers.h"
+#include "vt/vrt/collection/messages/user.h"
 
 #include <unordered_map>
 #include <tuple>
@@ -67,6 +67,6 @@ private:
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/collection/holders/holder.impl.h"
+#include "vt/vrt/collection/holders/holder.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H*/

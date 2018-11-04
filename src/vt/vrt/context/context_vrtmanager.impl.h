@@ -2,17 +2,17 @@
 #if !defined INCLUDED_CONTEXT_VRT_MANAGER_IMPL
 #define INCLUDED_CONTEXT_VRT_MANAGER_IMPL
 
-#include "config.h"
-#include "vrt/context/context_vrtmanager.h"
-#include "vrt/context/context_vrt_internal_msgs.h"
-#include "vrt/context/context_vrt_remoteinfo.h"
-#include "vrt/context/context_vrt_make_closure.h"
-#include "topos/location/location_headers.h"
-#include "topos/location/manager.h"
-#include "registry/auto/vc/auto_registry_vc.h"
-#include "registry/auto/map/auto_registry_map.h"
-#include "serialization/serialization.h"
-#include "worker/worker_headers.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrtmanager.h"
+#include "vt/vrt/context/context_vrt_internal_msgs.h"
+#include "vt/vrt/context/context_vrt_remoteinfo.h"
+#include "vt/vrt/context/context_vrt_make_closure.h"
+#include "vt/topos/location/location_headers.h"
+#include "vt/topos/location/manager.h"
+#include "vt/registry/auto/vc/auto_registry_vc.h"
+#include "vt/registry/auto/map/auto_registry_map.h"
+#include "vt/serialization/serialization.h"
+#include "vt/worker/worker_headers.h"
 
 #include <cassert>
 #include <memory>

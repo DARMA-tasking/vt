@@ -4,12 +4,12 @@
 
 #include <unordered_map>
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "messaging/message.h"
-#include "collective/tree/tree.h"
-#include "collective/barrier/barrier_msg.h"
-#include "collective/barrier/barrier_state.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/messaging/message.h"
+#include "vt/collective/tree/tree.h"
+#include "vt/collective/barrier/barrier_msg.h"
+#include "vt/collective/barrier/barrier_state.h"
 
 namespace vt { namespace collective { namespace barrier {
 

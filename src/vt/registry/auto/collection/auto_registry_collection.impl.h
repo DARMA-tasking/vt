@@ -2,8 +2,8 @@
 #if !defined INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H
 #define INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H
 
-#include "config.h"
-#include "registry/auto/collection/auto_registry_collection.h"
+#include "vt/config.h"
+#include "vt/registry/auto/collection/auto_registry_collection.h"
 
 namespace vt { namespace auto_registry {
 

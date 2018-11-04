@@ -2,9 +2,9 @@
 #if !defined INCLUDED_LB_LB_TYPES_INTERNAL_H
 #define INCLUDED_LB_LB_TYPES_INTERNAL_H
 
-#include "config.h"
-#include "lb/lb_types.h"
-#include "lb/instrumentation/entry.h"
+#include "vt/config.h"
+#include "vt/lb/lb_types.h"
+#include "vt/lb/instrumentation/entry.h"
 
 #include <vector>
 #include <unordered_map>

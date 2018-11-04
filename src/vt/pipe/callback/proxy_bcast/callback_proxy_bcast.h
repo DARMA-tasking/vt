@@ -2,12 +2,12 @@
 #if !defined INCLUDED_PIPE_CALLBACK_CALLBACK_PROXY_BCAST_H
 #define INCLUDED_PIPE_CALLBACK_CALLBACK_PROXY_BCAST_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/signal/signal.h"
-#include "pipe/callback/callback_base.h"
-#include "vrt/collection/active/active_funcs.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/signal/signal.h"
+#include "vt/pipe/callback/callback_base.h"
+#include "vt/vrt/collection/active/active_funcs.h"
+#include "vt/vrt/collection/manager.h"
 
 #include <functional>
 #include <cassert>

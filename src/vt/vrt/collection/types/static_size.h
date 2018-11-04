@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_STATIC_SIZE_H
 #define INCLUDED_VRT_COLLECTION_TYPES_STATIC_SIZE_H
 
-#include "config.h"
-#include "vrt/collection/types/base.h"
-#include "vrt/collection/types/type_attorney.h"
-#include "vrt/collection/manager.fwd.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/types/base.h"
+#include "vt/vrt/collection/types/type_attorney.h"
+#include "vt/vrt/collection/manager.fwd.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -24,6 +24,6 @@ struct StaticCollectionBase :
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/collection/types/static_size.impl.h"
+#include "vt/vrt/collection/types/static_size.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_STATIC_SIZE_H*/

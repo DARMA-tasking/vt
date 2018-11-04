@@ -1,9 +1,9 @@
 
-#include "config.h"
-#include "context/context.h"
-#include "group/group_common.h"
-#include "group/region/group_region.h"
-#include "group/region/group_range.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/group/group_common.h"
+#include "vt/group/region/group_region.h"
+#include "vt/group/region/group_range.h"
 
 #include <vector>
 #include <algorithm>

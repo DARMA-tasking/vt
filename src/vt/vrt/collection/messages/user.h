@@ -2,11 +2,11 @@
 #if !defined INCLUDED_VRT_COLLECTION_MESSAGES_USER_H
 #define INCLUDED_VRT_COLLECTION_MESSAGES_USER_H
 
-#include "config.h"
-#include "topos/location/message/msg.h"
-#include "messaging/message.h"
-#include "vrt/collection/manager.fwd.h"
-#include "vrt/vrt_common.h"
+#include "vt/config.h"
+#include "vt/topos/location/message/msg.h"
+#include "vt/messaging/message.h"
+#include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/vrt_common.h"
 
 #include <type_traits>
 
@@ -103,6 +103,6 @@ using CollectionMessage = vrt::collection::CollectionMessage<ColT, MsgT>;
 
 } /* end namespace vt */
 
-#include "vrt/collection/messages/user.impl.h"
+#include "vt/vrt/collection/messages/user.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MESSAGES_USER_H*/

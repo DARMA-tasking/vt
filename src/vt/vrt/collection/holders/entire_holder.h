@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_H
 #define INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_H
 
-#include "config.h"
-#include "vrt/collection/holders/col_holder.h"
-#include "epoch/epoch.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/holders/col_holder.h"
+#include "vt/epoch/epoch.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -54,6 +54,6 @@ struct EntireHolder {
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/collection/holders/entire_holder.impl.h"
+#include "vt/vrt/collection/holders/entire_holder.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_ENTIRE_HOLDER_H*/

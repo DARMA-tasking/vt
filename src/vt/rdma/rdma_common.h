@@ -2,11 +2,11 @@
 #if !defined INCLUDED_RDMA_RDMA_COMMON_H
 #define INCLUDED_RDMA_RDMA_COMMON_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "utils/bits/bits_common.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/utils/bits/bits_common.h"
 
-#include "rdma_types.h"
+#include "vt/rdma/rdma_types.h"
 
 #include <tuple>
 

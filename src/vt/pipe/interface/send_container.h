@@ -2,10 +2,10 @@
 #if !defined INCLUDED_PIPE_INTERFACE_SEND_CONTAINER_H
 #define INCLUDED_PIPE_INTERFACE_SEND_CONTAINER_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/id/pipe_id.h"
-#include "pipe/interface/base_container.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/id/pipe_id.h"
+#include "vt/pipe/interface/base_container.h"
 
 #include <tuple>
 #include <utility>

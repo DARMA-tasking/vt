@@ -7,9 +7,9 @@
 #include <cassert>
 #include <cstdint>
 
-#include "config.h"
-#include "utils/bits/bits_common.h"
-#include "activefn/activefn.h"
+#include "vt/config.h"
+#include "vt/utils/bits/bits_common.h"
+#include "vt/activefn/activefn.h"
 
 namespace vt {
 

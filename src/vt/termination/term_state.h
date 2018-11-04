@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TERMINATION_TERM_STATE_H
 #define INCLUDED_TERMINATION_TERM_STATE_H
 
-#include "config.h"
-#include "context/context.h"
-#include "term_common.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/termination/term_common.h"
 
 #include <vector>
 #include <cstdlib>

@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TOPOS_LOCATION_RECORD_RECORD_H
 #define INCLUDED_TOPOS_LOCATION_RECORD_RECORD_H
 
-#include "config.h"
-#include "topos/location/record/state.h"
+#include "vt/config.h"
+#include "vt/topos/location/record/state.h"
 
 #include <iostream>
 
@@ -35,6 +35,6 @@ private:
 
 }}  // end namespace vt::location
 
-#include "topos/location/record/record.impl.h"
+#include "vt/topos/location/record/record.impl.h"
 
 #endif /*INCLUDED_TOPOS_LOCATION_RECORD_RECORD_H*/

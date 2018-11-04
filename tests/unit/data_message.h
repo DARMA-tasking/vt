@@ -2,7 +2,7 @@
 #if ! defined __VIRTUAL_TRANSPORT_DATA_MESSAGE__
 #define __VIRTUAL_TRANSPORT_DATA_MESSAGE__
 
-#include "transport.h"
+#include "vt/transport.h"
 
 #include <array>
 #include <cstdint>

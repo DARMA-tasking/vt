@@ -3,7 +3,7 @@
 #define INCLUDED_FEATURES_META_FEATURES
 
 #include "meld_headers.h"
-#include "configs/features/features_defines.h"
+#include "vt/configs/features/features_defines.h"
 
 // Meta-features and debug and turn combinations on
 #define debug_meta_all                                                     \

@@ -2,13 +2,13 @@
 #if !defined INCLUDED_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_IMPL_H
 #define INCLUDED_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_IMPL_H
 
-#include "config.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry.h"
-#include "registry/auto/map/auto_registry_map.h"
-#include "registry/auto/functor/auto_registry_functor.h"
-#include "topos/mapping/mapping_function.h"
-#include "registry/auto/map/auto_registry_map.h"
+#include "vt/config.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry.h"
+#include "vt/registry/auto/map/auto_registry_map.h"
+#include "vt/registry/auto/functor/auto_registry_functor.h"
+#include "vt/topos/mapping/mapping_function.h"
+#include "vt/registry/auto/map/auto_registry_map.h"
 
 #include <cassert>
 

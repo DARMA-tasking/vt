@@ -2,9 +2,9 @@
 #if !defined INCLUDED_GROUP_GLOBAL_GROUP_DEFAULT_MSG_H
 #define INCLUDED_GROUP_GLOBAL_GROUP_DEFAULT_MSG_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/messaging/message.h"
 
 namespace vt { namespace group { namespace global {
 

@@ -5,10 +5,10 @@
 #include <memory>
 #include <mpi.h>
 
-#include "config.h"
-#include "context/context_attorney_fwd.h"
-#include "utils/tls/tls.h"
-#include "vrt/collection/balance/lb_type.h"
+#include "vt/config.h"
+#include "vt/context/context_attorney_fwd.h"
+#include "vt/utils/tls/tls.h"
+#include "vt/vrt/collection/balance/lb_type.h"
 
 namespace vt {  namespace ctx {
 

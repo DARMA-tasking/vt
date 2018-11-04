@@ -2,12 +2,12 @@
 #if !defined INCLUDED_VRT_COLLECTION_MESSAGES_USER_WRAP_H
 #define INCLUDED_VRT_COLLECTION_MESSAGES_USER_WRAP_H
 
-#include "config.h"
-#include "topos/location/message/msg.h"
-#include "messaging/message.h"
-#include "vrt/collection/messages/user.h"
-#include "vrt/collection/manager.fwd.h"
-#include "vrt/vrt_common.h"
+#include "vt/config.h"
+#include "vt/topos/location/message/msg.h"
+#include "vt/messaging/message.h"
+#include "vt/vrt/collection/messages/user.h"
+#include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/vrt_common.h"
 
 #if HAS_SERIALIZATION_LIBRARY
   #define HAS_DETECTION_COMPONENT 1

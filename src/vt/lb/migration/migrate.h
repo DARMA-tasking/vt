@@ -2,8 +2,8 @@
 #if !defined INCLUDED_LB_MIGRATION_MIGRATE_H
 #define INCLUDED_LB_MIGRATION_MIGRATE_H
 
-#include "config.h"
-#include "lb/lb_types.h"
+#include "vt/config.h"
+#include "vt/lb/lb_types.h"
 
 #include <unordered_map>
 #include <vector>

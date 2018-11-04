@@ -2,9 +2,9 @@
 #if !defined INCLUDED_MESSAGING_MESSAGE_PUT_MESSAGE_H
 #define INCLUDED_MESSAGING_MESSAGE_PUT_MESSAGE_H
 
-#include "config.h"
-#include "messaging/envelope.h"
-#include "messaging/message/message.h"
+#include "vt/config.h"
+#include "vt/messaging/envelope.h"
+#include "vt/messaging/message/message.h"
 
 namespace vt { namespace messaging {
 

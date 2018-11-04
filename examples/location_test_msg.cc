@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cstdio>
 
-#include "transport.h"
+#include "vt/transport.h"
 
 using namespace vt;
 

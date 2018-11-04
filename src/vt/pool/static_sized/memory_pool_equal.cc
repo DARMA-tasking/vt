@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "pool/static_sized/memory_pool_equal.h"
-#include "pool/header/pool_header.h"
+#include "vt/config.h"
+#include "vt/pool/static_sized/memory_pool_equal.h"
+#include "vt/pool/header/pool_header.h"
 
 #include <vector>
 #include <cstdint>

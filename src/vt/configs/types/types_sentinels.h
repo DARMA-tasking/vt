@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TYPES_SENTINELS
 #define INCLUDED_TYPES_SENTINELS
 
-#include "configs/debug/debug_masterconfig.h"
-#include "configs/types/types_type.h"
-#include "configs/types/types_rdma.h"
+#include "vt/configs/debug/debug_masterconfig.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_rdma.h"
 
 namespace vt {
 

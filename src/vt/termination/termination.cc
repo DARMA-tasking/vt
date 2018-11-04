@@ -1,15 +1,16 @@
 
-#include "config.h"
-#include "termination/termination.h"
-#include "termination/term_common.h"
-#include "termination/term_window.h"
-#include "messaging/active.h"
-#include "collective/collective_ops.h"
-#include "scheduler/scheduler.h"
-#include "epoch/epoch_headers.h"
-#include "termination/dijkstra-scholten/ds_headers.h"
-#include "termination/dijkstra-scholten/comm.h"
-#include "termination/dijkstra-scholten/ds.h"
+
+#include "vt/config.h"
+#include "vt/termination/termination.h"
+#include "vt/termination/term_common.h"
+#include "vt/termination/term_window.h"
+#include "vt/messaging/active.h"
+#include "vt/collective/collective_ops.h"
+#include "vt/scheduler/scheduler.h"
+#include "vt/epoch/epoch_headers.h"
+#include "vt/termination/dijkstra-scholten/ds_headers.h"
+#include "vt/termination/dijkstra-scholten/comm.h"
+#include "vt/termination/dijkstra-scholten/ds.h"
 
 #include <memory>
 

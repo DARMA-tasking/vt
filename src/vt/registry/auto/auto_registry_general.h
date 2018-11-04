@@ -1,8 +1,8 @@
 #if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H
 #define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H
 
-#include "config.h"
-#include "registry/auto/auto_registry_common.h"
+#include "vt/config.h"
+#include "vt/registry/auto/auto_registry_common.h"
 
 namespace vt { namespace auto_registry {
 
@@ -68,6 +68,6 @@ struct RunnableGen {
 
 }} // end namespace vt::auto_registry
 
-#include "registry/auto/auto_registry_general_impl.h"
+#include "vt/registry/auto/auto_registry_general_impl.h"
 
 #endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H*/

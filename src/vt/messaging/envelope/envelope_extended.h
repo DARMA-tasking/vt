@@ -2,9 +2,9 @@
 #if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_H
 #define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_H
 
-#include "config.h"
-#include "messaging/envelope/envelope_type.h"
-#include "messaging/envelope/envelope_base.h"
+#include "vt/config.h"
+#include "vt/messaging/envelope/envelope_type.h"
+#include "vt/messaging/envelope/envelope_base.h"
 
 #include <type_traits>
 
@@ -46,6 +46,6 @@ static_assert(std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD");
 
 } /* end namespace vt */
 
-#include "messaging/envelope/envelope_extended.impl.h"
+#include "vt/messaging/envelope/envelope_extended.impl.h"
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_H*/

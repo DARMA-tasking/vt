@@ -2,10 +2,10 @@
 #if !defined INCLUDED_REGISTRY_AUTO_RDMA_AUTO_REGISTRY_RDMA_IMPL_H
 #define INCLUDED_REGISTRY_AUTO_RDMA_AUTO_REGISTRY_RDMA_IMPL_H
 
-#include "config.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry_general.h"
-#include "registry/auto/rdma/auto_registry_rdma.h"
+#include "vt/config.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry_general.h"
+#include "vt/registry/auto/rdma/auto_registry_rdma.h"
 
 namespace vt { namespace auto_registry {
 

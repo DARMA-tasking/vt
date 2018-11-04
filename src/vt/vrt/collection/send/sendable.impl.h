@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_SEND_SENDABLE_IMPL_H
 #define INCLUDED_VRT_COLLECTION_SEND_SENDABLE_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/send/sendable.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/send/sendable.h"
+#include "vt/vrt/collection/manager.h"
 
 namespace vt { namespace vrt { namespace collection {
 

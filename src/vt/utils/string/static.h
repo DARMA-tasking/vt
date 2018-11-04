@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_STRING_STATIC_H
 #define INCLUDED_UTILS_STRING_STATIC_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <cstring>
 

@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_PROXY_COLLECTION_PROXY_IMPL_H
 #define INCLUDED_VRT_PROXY_COLLECTION_PROXY_IMPL_H
 
-#include "config.h"
-#include "vrt/proxy/collection_proxy.h"
-#include "vrt/proxy/base_elm_proxy.h"
-#include "vrt/collection/proxy_traits/proxy_col_traits.h"
+#include "vt/config.h"
+#include "vt/vrt/proxy/collection_proxy.h"
+#include "vt/vrt/proxy/base_elm_proxy.h"
+#include "vt/vrt/collection/proxy_traits/proxy_col_traits.h"
 
 namespace vt { namespace vrt { namespace collection {
 

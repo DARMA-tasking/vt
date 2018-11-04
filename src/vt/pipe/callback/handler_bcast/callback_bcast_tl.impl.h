@@ -2,14 +2,14 @@
 #if !defined INCLUDED_PIPE_CALLBACK_HANDLER_BCAST_CALLBACK_BCAST_TL_IMPL_H
 #define INCLUDED_PIPE_CALLBACK_HANDLER_BCAST_CALLBACK_BCAST_TL_IMPL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/callback/callback_base_tl.h"
-#include "pipe/callback/handler_bcast/callback_bcast_tl.h"
-#include "activefn/activefn.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "runnable/general.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/callback_base_tl.h"
+#include "vt/pipe/callback/handler_bcast/callback_bcast_tl.h"
+#include "vt/activefn/activefn.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
+#include "vt/runnable/general.h"
 
 namespace vt { namespace pipe { namespace callback {
 

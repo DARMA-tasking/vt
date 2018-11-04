@@ -1,11 +1,12 @@
 
-#include "config.h"
-#include "messaging/active.h"
-#include "messaging/envelope.h"
-#include "messaging/message/smart_ptr.h"
-#include "termination/term_headers.h"
-#include "group/group_manager_active_attorney.h"
-#include "runnable/general.h"
+
+#include "vt/config.h"
+#include "vt/messaging/active.h"
+#include "vt/messaging/envelope.h"
+#include "vt/messaging/message/smart_ptr.h"
+#include "vt/termination/term_headers.h"
+#include "vt/group/group_manager_active_attorney.h"
+#include "vt/runnable/general.h"
 
 namespace vt { namespace messaging {
 

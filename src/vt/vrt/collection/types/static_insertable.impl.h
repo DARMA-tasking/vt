@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_IMPL_H
 #define INCLUDED_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/types/base.h"
-#include "vrt/collection/types/static_size.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/types/base.h"
+#include "vt/vrt/collection/types/static_size.h"
 
 namespace vt { namespace vrt { namespace collection {
 

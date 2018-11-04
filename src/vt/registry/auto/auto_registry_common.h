@@ -2,15 +2,15 @@
 #if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_COMMON_H
 #define INCLUDED_REGISTRY_AUTO_REGISTRY_COMMON_H
 
-#include "trace/trace_event.h"
+#include "vt/trace/trace_event.h"
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "registry/registry.h"
-#include "trace/trace.h"
-#include "vrt/context/context_vrt_funcs.h"
-#include "vrt/collection/active/active_funcs.h"
-#include "topos/mapping/mapping_function.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/registry/registry.h"
+#include "vt/trace/trace.h"
+#include "vt/vrt/context/context_vrt_funcs.h"
+#include "vt/vrt/collection/active/active_funcs.h"
+#include "vt/topos/mapping/mapping_function.h"
 
 #include <vector>
 #include <cstdlib>

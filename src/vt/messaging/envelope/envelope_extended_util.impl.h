@@ -2,8 +2,8 @@
 #if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_UTIL_IMPL_H
 #define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_UTIL_IMPL_H
 
-#include "config.h"
-#include "messaging/envelope/envelope_extended_util.h"
+#include "vt/config.h"
+#include "vt/messaging/envelope/envelope_extended_util.h"
 
 namespace vt {
 

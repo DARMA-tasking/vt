@@ -2,10 +2,10 @@
 #if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H
 #define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H
 
-#include "config.h"
-#include "utils/demangle/demangle.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry_general.h"
+#include "vt/config.h"
+#include "vt/utils/demangle/demangle.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry_general.h"
 
 namespace vt { namespace auto_registry {
 

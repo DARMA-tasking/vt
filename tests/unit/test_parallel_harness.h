@@ -11,7 +11,7 @@
 #include "test_config.h"
 #include "test_harness.h"
 
-#include "transport.h"
+#include "vt/transport.h"
 
 #include <mpi.h>
 

@@ -2,15 +2,15 @@
 #if !defined INCLUDED_PIPE_PIPE_MANAGER_CONSTRUCT_H
 #define INCLUDED_PIPE_PIPE_MANAGER_CONSTRUCT_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/state/pipe_state.h"
-#include "pipe/interface/remote_container_msg.h"
-#include "pipe/interface/send_container.h"
-#include "pipe/interface/callback_direct.h"
-#include "pipe/id/pipe_id.h"
-#include "context/context.h"
-#include "registry/auto/auto_registry.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/state/pipe_state.h"
+#include "vt/pipe/interface/remote_container_msg.h"
+#include "vt/pipe/interface/send_container.h"
+#include "vt/pipe/interface/callback_direct.h"
+#include "vt/pipe/id/pipe_id.h"
+#include "vt/context/context.h"
+#include "vt/registry/auto/auto_registry.h"
 
 #include <cassert>
 #include <tuple>

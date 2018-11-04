@@ -2,8 +2,8 @@
 #if !defined INCLUDED_UTILS_DEMANGLE_GET_TYPE_NAME_H
 #define INCLUDED_UTILS_DEMANGLE_GET_TYPE_NAME_H
 
-#include "config.h"
-#include "utils/string/static.h"
+#include "vt/config.h"
+#include "vt/utils/string/static.h"
 
 namespace vt { namespace util { namespace demangle {
 

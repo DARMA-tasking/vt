@@ -2,21 +2,21 @@
 #if !defined INCLUDED_PIPE_PIPE_MANAGER_TL_IMPL_H
 #define INCLUDED_PIPE_PIPE_MANAGER_TL_IMPL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/pipe_manager_tl.h"
-#include "pipe/pipe_manager_base.h"
-#include "pipe/callback/cb_union/cb_raw_base.h"
-#include "pipe/callback/callback_base.h"
-#include "pipe/callback/handler_send/callback_send.h"
-#include "pipe/callback/handler_bcast/callback_bcast.h"
-#include "pipe/callback/proxy_send/callback_proxy_send.h"
-#include "pipe/callback/proxy_bcast/callback_proxy_bcast.h"
-#include "pipe/callback/proxy_send/callback_proxy_send_tl.h"
-#include "pipe/callback/proxy_bcast/callback_proxy_bcast_tl.h"
-#include "activefn/activefn.h"
-#include "context/context.h"
-#include "utils/static_checks/functor.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/pipe_manager_tl.h"
+#include "vt/pipe/pipe_manager_base.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/pipe/callback/callback_base.h"
+#include "vt/pipe/callback/handler_send/callback_send.h"
+#include "vt/pipe/callback/handler_bcast/callback_bcast.h"
+#include "vt/pipe/callback/proxy_send/callback_proxy_send.h"
+#include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.h"
+#include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.h"
+#include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast_tl.h"
+#include "vt/activefn/activefn.h"
+#include "vt/context/context.h"
+#include "vt/utils/static_checks/functor.h"
 
 #include <memory>
 

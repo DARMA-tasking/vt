@@ -8,8 +8,8 @@
 #include <cassert>
 #include <cstdint>
 
-#include "config.h"
-#include "seq_common.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
 
 namespace vt { namespace seq {
 

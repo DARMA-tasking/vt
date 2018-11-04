@@ -2,7 +2,7 @@
 #if !defined INCLUDED_POOL_HEADER_POOL_HEADER_H
 #define INCLUDED_POOL_HEADER_POOL_HEADER_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace pool {
 

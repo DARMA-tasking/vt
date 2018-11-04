@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_SEND_SENDABLE_H
 #define INCLUDED_VRT_COLLECTION_SEND_SENDABLE_H
 
-#include "config.h"
-#include "vrt/collection/active/active_funcs.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/active/active_funcs.h"
 
 namespace vt { namespace vrt { namespace collection {
 

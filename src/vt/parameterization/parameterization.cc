@@ -1,5 +1,5 @@
 
-#include "parameterization/parameterization.h"
+#include "vt/parameterization/parameterization.h"
 
 namespace vt { namespace param {
 

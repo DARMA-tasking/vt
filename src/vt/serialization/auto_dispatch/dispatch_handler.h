@@ -2,9 +2,9 @@
 #if !defined INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_HANDLER_H
 #define INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_HANDLER_H
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "serialization/serialize_interface.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/serialization/serialize_interface.h"
 
 #if HAS_SERIALIZATION_LIBRARY
   #define HAS_DETECTION_COMPONENT 1
@@ -129,6 +129,6 @@ using ActiveSendHandler =
 
 } /* end namespace vt */
 
-#include "serialization/auto_dispatch/dispatch_handler.impl.h"
+#include "vt/serialization/auto_dispatch/dispatch_handler.impl.h"
 
 #endif /*INCLUDED_SERIALIZATION_AUTO_DISPATCH_DISPATCH_HANDLER_H*/

@@ -2,11 +2,11 @@
 #if !defined INCLUDED_TOPOS_MAPPING
 #define INCLUDED_TOPOS_MAPPING
 
-#include "config.h"
-#include "topos/mapping/mapping_function.h"
-#include "topos/mapping/seed/seed.h"
-#include "topos/index/index.h"
-#include "registry/auto/map/auto_registry_map.h"
+#include "vt/config.h"
+#include "vt/topos/mapping/mapping_function.h"
+#include "vt/topos/mapping/seed/seed.h"
+#include "vt/topos/index/index.h"
+#include "vt/registry/auto/map/auto_registry_map.h"
 
 #include <functional>
 

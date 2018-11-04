@@ -2,14 +2,14 @@
 #if !defined INCLUDED_RUNNABLE_GENERAL_IMPL_H
 #define INCLUDED_RUNNABLE_GENERAL_IMPL_H
 
-#include "config.h"
-#include "runnable/general.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry_interface.h"
-#include "registry/auto/auto_registry_general.h"
-#include "trace/trace_common.h"
-#include "messaging/envelope.h"
-#include "handler/handler.h"
+#include "vt/config.h"
+#include "vt/runnable/general.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/registry/auto/auto_registry_general.h"
+#include "vt/trace/trace_common.h"
+#include "vt/messaging/envelope.h"
+#include "vt/handler/handler.h"
 
 #include <cassert>
 

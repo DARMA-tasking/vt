@@ -1,10 +1,10 @@
 #if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_IMPL_H
 #define INCLUDED_REGISTRY_AUTO_REGISTRY_IMPL_H
 
-#include "config.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry.h"
-#include "utils/demangle/demangle.h"
+#include "vt/config.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry.h"
+#include "vt/utils/demangle/demangle.h"
 
 #include <vector>
 #include <memory>

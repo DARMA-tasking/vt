@@ -2,10 +2,10 @@
 #if !defined INCLUDED_COLLECTIVE_SCATTER_SCATTER_IMPL_H
 #define INCLUDED_COLLECTIVE_SCATTER_SCATTER_IMPL_H
 
-#include "config.h"
-#include "collective/scatter/scatter.h"
-#include "collective/scatter/scatter_msg.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/collective/scatter/scatter.h"
+#include "vt/collective/scatter/scatter_msg.h"
+#include "vt/context/context.h"
 
 #include <cassert>
 #include <cstring>

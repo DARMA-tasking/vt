@@ -2,10 +2,10 @@
 #if !defined INCLUDED_LB_BALANCERS_CENTRALIZED_LB_INTERFACE_H
 #define INCLUDED_LB_BALANCERS_CENTRALIZED_LB_INTERFACE_H
 
-#include "config.h"
-#include "lb/lb_types.h"
-#include "lb/lb_types_internal.h"
-#include "lb/migration/migrate.h"
+#include "vt/config.h"
+#include "vt/lb/lb_types.h"
+#include "vt/lb/lb_types_internal.h"
+#include "vt/lb/migration/migrate.h"
 
 #include <vector>
 #include <unordered_map>

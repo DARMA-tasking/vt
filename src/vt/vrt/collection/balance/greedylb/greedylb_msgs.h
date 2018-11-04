@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H
 
-#include "config.h"
-#include "vrt/collection/balance/greedylb/greedylb_types.h"
-#include "vrt/collection/balance/proc_stats.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/greedylb/greedylb_types.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/messaging/message.h"
 
 #include <unordered_map>
 #include <cassert>

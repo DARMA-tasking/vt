@@ -1,14 +1,14 @@
 
-#include "config.h"
-#include "vrt/context/context_vrtinfo.h"
-#include "vrt/context/context_vrtmessage.h"
-#include "utils/mutex/mutex.h"
-#include "utils/atomic/atomic.h"
-#include "registry/auto/vc/auto_registry_vc.h"
-#include "registry/auto/map/auto_registry_map.h"
-#include "worker/worker_headers.h"
-#include "messaging/message.h"
-#include "runnable/vrt.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrtinfo.h"
+#include "vt/vrt/context/context_vrtmessage.h"
+#include "vt/utils/mutex/mutex.h"
+#include "vt/utils/atomic/atomic.h"
+#include "vt/registry/auto/vc/auto_registry_vc.h"
+#include "vt/registry/auto/map/auto_registry_map.h"
+#include "vt/worker/worker_headers.h"
+#include "vt/messaging/message.h"
+#include "vt/runnable/vrt.h"
 
 #include <memory>
 #include <cassert>

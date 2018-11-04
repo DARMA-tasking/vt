@@ -2,8 +2,8 @@
 #if !defined INCLUDED_PIPE_STATE_PIPE_STATE_H
 #define INCLUDED_PIPE_STATE_PIPE_STATE_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
 
 #include <functional>
 

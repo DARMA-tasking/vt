@@ -2,9 +2,9 @@
 #if !defined INCLUDED_RUNNABLE_GENERAL_H
 #define INCLUDED_RUNNABLE_GENERAL_H
 
-#include "config.h"
-#include "registry/registry.h"
-#include "registry/auto/auto_registry_interface.h"
+#include "vt/config.h"
+#include "vt/registry/registry.h"
+#include "vt/registry/auto/auto_registry_interface.h"
 
 namespace vt { namespace runnable {
 
@@ -28,6 +28,6 @@ struct RunnableVoid {
 
 }} /* end namespace vt::runnable */
 
-#include "runnable/general.impl.h"
+#include "vt/runnable/general.impl.h"
 
 #endif /*INCLUDED_RUNNABLE_GENERAL_H*/

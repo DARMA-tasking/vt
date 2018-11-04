@@ -2,14 +2,14 @@
 #if !defined INCLUDED_SEQUENCE_SEQ_MATCHER_VIRTUAL_H
 #define INCLUDED_SEQUENCE_SEQ_MATCHER_VIRTUAL_H
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "messaging/message.h"
-#include "seq_common.h"
-#include "seq_action.h"
-#include "seq_state_virtual.h"
-#include "seq_action_virtual.h"
-#include "vrt/context/context_vrtheaders.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/messaging/message.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_action.h"
+#include "vt/sequence/seq_state_virtual.h"
+#include "vt/sequence/seq_action_virtual.h"
+#include "vt/vrt/context/context_vrtheaders.h"
 
 #include <list>
 #include <unordered_map>
@@ -65,6 +65,6 @@ struct SeqMatcherVirtual {
 
 }} //end namespace vt::seq
 
-#include "seq_matcher_virtual.impl.h"
+#include "vt/sequence/seq_matcher_virtual.impl.h"
 
 #endif /* INCLUDED_SEQUENCE_SEQ_MATCHER_VIRTUAL_H*/

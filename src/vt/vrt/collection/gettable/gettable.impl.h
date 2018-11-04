@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_GETTABLE_GETTABLE_IMPL_H
 #define INCLUDED_VRT_COLLECTION_GETTABLE_GETTABLE_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/insert/insertable.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/insert/insertable.h"
+#include "vt/vrt/collection/manager.h"
 
 namespace vt { namespace vrt { namespace collection {
 

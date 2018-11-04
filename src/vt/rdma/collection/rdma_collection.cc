@@ -1,7 +1,7 @@
 
-#include "messaging/active.h"
-#include "rdma/rdma.h"
-#include "rdma/collection/rdma_collection.h"
+#include "vt/messaging/active.h"
+#include "vt/rdma/rdma.h"
+#include "vt/rdma/collection/rdma_collection.h"
 
 #include <cassert>
 #include <cstdio>

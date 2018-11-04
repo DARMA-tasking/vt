@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_ROTATELB_ROTATELB_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_ROTATELB_ROTATELB_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "vrt/collection/balance/proc_stats.h"
-#include "timing/timing.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/timing/timing.h"
 
 #include <memory>
 #include <list>

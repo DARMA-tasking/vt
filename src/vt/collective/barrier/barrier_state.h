@@ -2,7 +2,7 @@
 #if !defined INCLUDED_COLLECTIVE_BARRIER_BARRIER_STATE_H
 #define INCLUDED_COLLECTIVE_BARRIER_BARRIER_STATE_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace collective { namespace barrier {
 

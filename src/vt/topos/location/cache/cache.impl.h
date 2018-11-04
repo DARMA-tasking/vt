@@ -2,10 +2,10 @@
 #if !defined INCLUDED_TOPOS_LOCATION_CACHE_CACHE_IMPL_H
 #define INCLUDED_TOPOS_LOCATION_CACHE_CACHE_IMPL_H
 
-#include "config.h"
-#include "topos/location/location_common.h"
-#include "topos/location/cache/cache.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/topos/location/location_common.h"
+#include "vt/topos/location/cache/cache.h"
+#include "vt/context/context.h"
 
 #include <cstdint>
 #include <memory>

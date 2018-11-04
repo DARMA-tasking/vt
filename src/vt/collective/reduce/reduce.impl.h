@@ -2,15 +2,15 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_IMPL_H
 #define INCLUDED_COLLECTIVE_REDUCE_REDUCE_IMPL_H
 
-#include "config.h"
-#include "collective/collective_alg.h"
-#include "registry/registry.h"
-#include "registry/auto/auto_registry_interface.h"
-#include "serialization/auto_dispatch/dispatch.h"
-#include "messaging/active.h"
-#include "runnable/general.h"
-#include "group/group_headers.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/collective/collective_alg.h"
+#include "vt/registry/registry.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/serialization/auto_dispatch/dispatch.h"
+#include "vt/messaging/active.h"
+#include "vt/runnable/general.h"
+#include "vt/group/group_headers.h"
+#include "vt/messaging/message.h"
 
 namespace vt { namespace collective { namespace reduce {
 

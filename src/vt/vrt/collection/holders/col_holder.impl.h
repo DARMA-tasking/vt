@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_HOLDERS_COL_HOLDER_IMPL_H
 #define INCLUDED_VRT_COLLECTION_HOLDERS_COL_HOLDER_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/holders/col_holder.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/holders/col_holder.h"
 
 namespace vt { namespace vrt { namespace collection {
 

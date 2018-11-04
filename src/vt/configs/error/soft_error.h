@@ -9,9 +9,9 @@
  *  the cost of these checks can be fully optimized out.
  */
 
-#include "configs/debug/debug_config.h"
-#include "configs/types/types_type.h"
-#include "configs/error/common.h"
+#include "vt/configs/debug/debug_config.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/error/common.h"
 
 #include <string>
 

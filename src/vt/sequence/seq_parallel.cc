@@ -1,9 +1,9 @@
 
-#include "config.h"
-#include "seq_common.h"
-#include "seq_parallel.h"
-#include "sequencer.h"
-#include "termination/term_headers.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_parallel.h"
+#include "vt/sequence/sequencer.h"
+#include "vt/termination/term_headers.h"
 
 namespace vt { namespace seq {
 

@@ -1,12 +1,12 @@
 
-#include "config.h"
-#include "rdma/rdma.h"
-#include "rdma/state/rdma_state.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry_interface.h"
-#include "registry/auto/auto_registry_general.h"
-#include "trace/trace_common.h"
-#include "messaging/active.h"
+#include "vt/config.h"
+#include "vt/rdma/rdma.h"
+#include "vt/rdma/state/rdma_state.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/registry/auto/auto_registry_general.h"
+#include "vt/trace/trace_common.h"
+#include "vt/messaging/active.h"
 
 #include <cstring>
 #include <memory>

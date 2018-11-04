@@ -2,9 +2,9 @@
 #if !defined INCLUDED_RUNTIME_RUNTIME_HOLDER_H
 #define INCLUDED_RUNTIME_RUNTIME_HOLDER_H
 
-#include "config.h"
-#include "runtime/runtime_common.h"
-#include "runtime/runtime.h"
+#include "vt/config.h"
+#include "vt/runtime/runtime_common.h"
+#include "vt/runtime/runtime.h"
 
 #include <cassert>
 

@@ -2,11 +2,11 @@
 #if !defined INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_H
 #define INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/signal/signal.h"
-#include "pipe/msg/callback.h"
-#include "pipe/callback/callback_base.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/signal/signal.h"
+#include "vt/pipe/msg/callback.h"
+#include "vt/pipe/callback/callback_base.h"
 
 #include <functional>
 #include <cassert>

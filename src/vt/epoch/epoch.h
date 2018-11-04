@@ -2,9 +2,9 @@
 #if !defined INCLUDED_EPOCH_EPOCH_H
 #define INCLUDED_EPOCH_EPOCH_H
 
-#include "config.h"
-#include "utils/bits/bits_common.h"
-#include "configs/debug/debug_fmt.h"
+#include "vt/config.h"
+#include "vt/utils/bits/bits_common.h"
+#include "vt/configs/debug/debug_fmt.h"
 
 namespace vt { namespace epoch {
 

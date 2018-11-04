@@ -2,17 +2,17 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CC
 #define INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CC
 
-#include "config.h"
-#include "vrt/collection/balance/greedylb/greedylb.h"
-#include "vrt/collection/balance/greedylb/greedylb.fwd.h"
-#include "vrt/collection/balance/greedylb/greedylb_types.h"
-#include "vrt/collection/balance/greedylb/greedylb_constants.h"
-#include "vrt/collection/balance/greedylb/greedylb_msgs.h"
-#include "vrt/collection/balance/read_lb.h"
-#include "vrt/collection/balance/stats_msg.h"
-#include "serialization/messaging/serialized_messenger.h"
-#include "context/context.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/greedylb/greedylb.h"
+#include "vt/vrt/collection/balance/greedylb/greedylb.fwd.h"
+#include "vt/vrt/collection/balance/greedylb/greedylb_types.h"
+#include "vt/vrt/collection/balance/greedylb/greedylb_constants.h"
+#include "vt/vrt/collection/balance/greedylb/greedylb_msgs.h"
+#include "vt/vrt/collection/balance/read_lb.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
+#include "vt/serialization/messaging/serialized_messenger.h"
+#include "vt/context/context.h"
+#include "vt/vrt/collection/manager.h"
 
 #include <unordered_map>
 #include <memory>

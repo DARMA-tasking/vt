@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_MUTEX_OMP_MUTEX_H
 #define INCLUDED_UTILS_MUTEX_OMP_MUTEX_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_check_enabled(openmp)
 
@@ -26,7 +26,7 @@ struct OMPMutex {
 }}} /* end namespace vt::util::mutex */
 
 #if backend_check_enabled(detector)
-  #include "mutex_traits.h"
+  #include "vt/utils/mutex/mutex_traits.h"
 
   namespace vt { namespace util { namespace mutex {
 

@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_HOLDERS_COL_HOLDER_H
 #define INCLUDED_VRT_COLLECTION_HOLDERS_COL_HOLDER_H
 
-#include "config.h"
-#include "vrt/collection/holders/holder.h"
-#include "vrt/collection/holders/base_holder.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/holders/holder.h"
+#include "vt/vrt/collection/holders/base_holder.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -24,6 +24,6 @@ struct CollectionHolder : BaseHolder {
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/collection/holders/col_holder.impl.h"
+#include "vt/vrt/collection/holders/col_holder.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_COL_HOLDER_H*/

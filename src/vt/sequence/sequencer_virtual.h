@@ -2,13 +2,13 @@
 #if !defined INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_H
 #define INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_H
 
-#include "config.h"
-#include "sequencer.h"
-#include "seq_virtual_info.h"
-#include "seq_matcher_virtual.h"
-#include "seq_action_virtual.h"
-#include "seq_state_virtual.h"
-#include "vrt/context/context_vrt.h"
+#include "vt/config.h"
+#include "vt/sequence/sequencer.h"
+#include "vt/sequence/seq_virtual_info.h"
+#include "vt/sequence/seq_matcher_virtual.h"
+#include "vt/sequence/seq_action_virtual.h"
+#include "vt/sequence/seq_state_virtual.h"
+#include "vt/vrt/context/context_vrt.h"
 
 namespace vt { namespace seq {
 
@@ -63,6 +63,6 @@ extern seq::SequencerVirtual* theVirtualSeq();
 
 } //end namespace vt
 
-#include "sequencer_virtual.impl.h"
+#include "vt/sequence/sequencer_virtual.impl.h"
 
 #endif /*INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_H*/

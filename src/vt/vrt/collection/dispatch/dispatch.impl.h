@@ -2,11 +2,11 @@
 #if !defined INCLUDED_VRT_COLLECTION_DISPATCH_DISPATCH_IMPL_H
 #define INCLUDED_VRT_COLLECTION_DISPATCH_DISPATCH_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/dispatch/dispatch.h"
-#include "vrt/proxy/collection_proxy.h"
-#include "vrt/collection/traits/coll_msg.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/dispatch/dispatch.h"
+#include "vt/vrt/proxy/collection_proxy.h"
+#include "vt/vrt/collection/traits/coll_msg.h"
+#include "vt/vrt/collection/manager.h"
 
 #include <cassert>
 

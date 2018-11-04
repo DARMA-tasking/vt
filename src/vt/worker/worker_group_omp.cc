@@ -1,13 +1,13 @@
 
-#include "config.h"
-#include "context/context.h"
-#include "context/context_attorney.h"
-#include "collective/collective_ops.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/context/context_attorney.h"
+#include "vt/collective/collective_ops.h"
 
 #if backend_check_enabled(openmp)
 
-#include "worker/worker_common.h"
-#include "worker/worker_group_omp.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_group_omp.h"
 
 #include <functional>
 

@@ -2,9 +2,9 @@
 #if !defined INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_IMPL_H
 #define INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_IMPL_H
 
-#include "config.h"
-#include "pipe/callback/cb_union/cb_raw.h"
-#include "pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/config.h"
+#include "vt/pipe/callback/cb_union/cb_raw.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
 
 #include <cassert>
 

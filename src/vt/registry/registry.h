@@ -6,9 +6,9 @@
 #include <unordered_map>
 #include <cassert>
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "handler/handler.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/handler/handler.h"
 
 namespace vt { namespace registry {
 

@@ -2,18 +2,18 @@
 #if !defined INCLUDED_UTILS_MUTEX_MUTEX_H
 #define INCLUDED_UTILS_MUTEX_MUTEX_H
 
-#include "config.h"
-#include "utils/mutex/lock_guard.h"
-#include "utils/mutex/null_mutex.h"
+#include "vt/config.h"
+#include "vt/utils/mutex/lock_guard.h"
+#include "vt/utils/mutex/null_mutex.h"
 
 #include <mutex>
 
 #if backend_check_enabled(openmp)
-  #include "utils/mutex/omp_mutex.h"
+  #include "vt/utils/mutex/omp_mutex.h"
 #elif backend_check_enabled(stdthread)
-  #include "utils/mutex/std_mutex.h"
+  #include "vt/utils/mutex/std_mutex.h"
 #elif backend_no_threading
-  #include "utils/mutex/null_mutex.h"
+  #include "vt/utils/mutex/null_mutex.h"
 #else
   backend_static_assert_unreachable
 #endif

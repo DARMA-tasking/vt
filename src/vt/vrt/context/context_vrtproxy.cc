@@ -1,6 +1,6 @@
 
-#include "config.h"
-#include "vrt/context/context_vrtproxy.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrtproxy.h"
 
 namespace vt {namespace vrt {
 

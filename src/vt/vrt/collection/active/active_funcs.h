@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_ACTIVE_ACTIVE_FUNCS_H
 #define INCLUDED_VRT_COLLECTION_ACTIVE_ACTIVE_FUNCS_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
-#include "vrt/collection/types/headers.fwd.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
+#include "vt/vrt/collection/types/headers.fwd.h"
 
 namespace vt { namespace vrt { namespace collection {
 

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_VRT_BASE_BASE_H
 #define INCLUDED_VRT_BASE_BASE_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace vrt {
 

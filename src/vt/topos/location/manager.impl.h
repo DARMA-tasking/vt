@@ -2,10 +2,10 @@
 #if !defined INCLUDED_TOPOS_LOCATION_MANAGER_IMPL_H
 #define INCLUDED_TOPOS_LOCATION_MANAGER_IMPL_H
 
-#include "config.h"
-#include "topos/location/manager.h"
-#include "topos/location/location_common.h"
-#include "topos/location/location.h"
+#include "vt/config.h"
+#include "vt/topos/location/manager.h"
+#include "vt/topos/location/location_common.h"
+#include "vt/topos/location/location.h"
 
 #include <memory>
 #include <cassert>

@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_TYPE_ALIASES_H
 #define INCLUDED_VRT_COLLECTION_TYPES_TYPE_ALIASES_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/types/static_size.h"
-#include "vrt/collection/types/static_insertable.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/types/static_size.h"
+#include "vt/vrt/collection/types/static_insertable.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -35,6 +35,6 @@ using InsertableCollection = vrt::collection::InsertableCollection<ColT,IndexT>;
 
 } /* end namespace vt */
 
-#include "vrt/collection/types/type_aliases.impl.h"
+#include "vt/vrt/collection/types/type_aliases.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_TYPE_ALIASES_H*/

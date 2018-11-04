@@ -1,6 +1,6 @@
 
-#include "rdma/rdma_handle.h"
-#include "utils/bits/bits_common.h"
+#include "vt/rdma/rdma_handle.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace rdma {
 

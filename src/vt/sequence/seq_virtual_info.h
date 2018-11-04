@@ -2,9 +2,9 @@
 #if !defined INCLUDED_SEQUENCE_SEQ_VIRTUAL_INFO_H
 #define INCLUDED_SEQUENCE_SEQ_VIRTUAL_INFO_H
 
-#include "config.h"
-#include "vrt/context/context_vrt.h"
-#include "vrt/context/context_vrtproxy.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrt.h"
+#include "vt/vrt/context/context_vrtproxy.h"
 
 namespace vt { namespace seq {
 

@@ -4,9 +4,9 @@
 
 #include <list>
 
-#include "config.h"
-#include "seq_common.h"
-#include "seq_node.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_node.h"
 
 namespace vt { namespace seq {
 

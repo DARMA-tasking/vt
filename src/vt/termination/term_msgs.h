@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TERMINATION_TERM_MSGS_H
 #define INCLUDED_TERMINATION_TERM_MSGS_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "term_state.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/termination/term_state.h"
 
 namespace vt { namespace term {
 

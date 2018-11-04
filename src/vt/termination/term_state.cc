@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "termination/term_state.h"
-#include "termination/termination.h"
+#include "vt/config.h"
+#include "vt/termination/term_state.h"
+#include "vt/termination/termination.h"
 
 namespace vt { namespace term {
 

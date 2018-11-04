@@ -2,13 +2,13 @@
 #if !defined INCLUDED_PIPE_CALLBACK_HANDLER_BCAST_CALLBACK_BCAST_IMPL_H
 #define INCLUDED_PIPE_CALLBACK_HANDLER_BCAST_CALLBACK_BCAST_IMPL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/callback/handler_bcast/callback_bcast.h"
-#include "pipe/pipe_manager.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "runnable/general.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/handler_bcast/callback_bcast.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
+#include "vt/runnable/general.h"
 
 #include <cassert>
 

@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "group/region/group_region.h"
-#include "group/region/group_shallow_list.h"
-#include "group/region/group_list.h"
+#include "vt/config.h"
+#include "vt/group/region/group_region.h"
+#include "vt/group/region/group_shallow_list.h"
+#include "vt/group/region/group_list.h"
 
 namespace vt { namespace group { namespace region {
 

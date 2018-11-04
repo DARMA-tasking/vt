@@ -2,8 +2,8 @@
 #if !defined INCLUDED_TOPOS_LOCATION_RECORD_STATE_H
 #define INCLUDED_TOPOS_LOCATION_RECORD_STATE_H
 
-#include "config.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
 
 #include <cstdlib>
 #include <cstdint>

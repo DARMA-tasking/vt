@@ -5,9 +5,9 @@
 #include <list>
 #include <unordered_map>
 
-#include "config.h"
-#include "seq_common.h"
-#include "seq_action.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_action.h"
 
 namespace vt { namespace seq {
 

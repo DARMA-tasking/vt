@@ -2,8 +2,8 @@
 #if !defined INCLUDED_SERIALIZATION_MOCK_SERIALIZER_H
 #define INCLUDED_SERIALIZATION_MOCK_SERIALIZER_H
 
-#include "config.h"
-#include "utils/static_checks/all_true.h"
+#include "vt/config.h"
+#include "vt/utils/static_checks/all_true.h"
 
 #include <cstdlib>
 #include <functional>

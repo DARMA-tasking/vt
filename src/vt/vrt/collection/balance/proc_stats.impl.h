@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/balance/proc_stats.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 
 #include <vector>
 #include <unordered_map>

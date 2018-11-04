@@ -2,12 +2,12 @@
 #if !defined INCLUDED_LB_INSTRUMENTATION_CENTRALIZED_COLLECT_MSG_H
 #define INCLUDED_LB_INSTRUMENTATION_CENTRALIZED_COLLECT_MSG_H
 
-#include "config.h"
-#include "lb/lb_types.h"
-#include "lb/lb_types_internal.h"
-#include "lb/instrumentation/entry.h"
-#include "collective/reduce/reduce.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/lb/lb_types.h"
+#include "vt/lb/lb_types_internal.h"
+#include "vt/lb/instrumentation/entry.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/messaging/message.h"
 
 #include <vector>
 #include <unordered_map>

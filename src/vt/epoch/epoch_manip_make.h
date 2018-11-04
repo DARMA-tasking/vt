@@ -2,12 +2,12 @@
 #if !defined INCLUDED_EPOCH_EPOCH_MANIP_MAKE_H
 #define INCLUDED_EPOCH_EPOCH_MANIP_MAKE_H
 
-#include "config.h"
-#include "epoch/epoch.h"
-#include "epoch/epoch_manip.h"
-#include "context/context.h"
-#include "utils/bits/bits_common.h"
-#include "utils/bits/bits_packer.h"
+#include "vt/config.h"
+#include "vt/epoch/epoch.h"
+#include "vt/epoch/epoch_manip.h"
+#include "vt/context/context.h"
+#include "vt/utils/bits/bits_common.h"
+#include "vt/utils/bits/bits_packer.h"
 
 namespace vt { namespace epoch {
 

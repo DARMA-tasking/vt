@@ -2,10 +2,10 @@
 #if !defined INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_H
 #define INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/callback/callback_base_tl.h"
-#include "activefn/activefn.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/callback_base_tl.h"
+#include "vt/activefn/activefn.h"
 
 namespace vt { namespace pipe { namespace callback {
 

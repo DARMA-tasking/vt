@@ -11,7 +11,7 @@
 #include "test_parallel_harness.h"
 #include "data_message.h"
 
-#include "transport.h"
+#include "vt/transport.h"
 
 #define PRINT_DEBUG 0
 

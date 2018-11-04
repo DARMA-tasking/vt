@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_MAPPED_NODE_MAPPED_NODE_H
 #define INCLUDED_VRT_COLLECTION_MAPPED_NODE_MAPPED_NODE_H
 
-#include "config.h"
-#include "vrt/proxy/base_collection_proxy.h"
-#include "vrt/proxy/base_collection_elm_proxy.h"
+#include "vt/config.h"
+#include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/vrt/proxy/base_collection_elm_proxy.h"
 
 #include <functional>
 
@@ -26,6 +26,6 @@ struct MappedNode : BaseProxyT {
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/collection/mapped_node/mapped_node.impl.h"
+#include "vt/vrt/collection/mapped_node/mapped_node.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MAPPED_NODE_MAPPED_NODE_H*/

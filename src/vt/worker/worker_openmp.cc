@@ -1,11 +1,11 @@
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_check_enabled(openmp)
 
-#include "context/context.h"
-#include "worker/worker_common.h"
-#include "worker/worker_openmp.h"
+#include "vt/context/context.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_openmp.h"
 
 #include <memory>
 #include <functional>

@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_PROXY_BASE_COLLECTION_PROXY_H
 #define INCLUDED_VRT_PROXY_BASE_COLLECTION_PROXY_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -33,6 +33,6 @@ protected:
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/proxy/base_collection_proxy.impl.h"
+#include "vt/vrt/proxy/base_collection_proxy.impl.h"
 
 #endif /*INCLUDED_VRT_PROXY_BASE_COLLECTION_PROXY_H*/

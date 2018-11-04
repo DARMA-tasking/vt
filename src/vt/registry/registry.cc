@@ -1,6 +1,6 @@
 
-#include "config.h"
-#include "registry.h"
+#include "vt/config.h"
+#include "vt/registry/registry.h"
 
 namespace vt { namespace registry {
 

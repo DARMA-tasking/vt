@@ -2,7 +2,7 @@
 #if !defined INCLUDED_RDMA_RDMA_TYPES_H
 #define INCLUDED_RDMA_RDMA_TYPES_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <sstream>
 #include <iostream>

@@ -2,9 +2,9 @@
 #if !defined INCLUDED_TYPES_SIZE
 #define INCLUDED_TYPES_SIZE
 
-#include "configs/debug/debug_masterconfig.h"
-#include "configs/types/types_type.h"
-#include "utils/bits/bits_common.h"
+#include "vt/configs/debug/debug_masterconfig.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt {
 

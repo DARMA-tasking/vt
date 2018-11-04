@@ -2,13 +2,13 @@
 #if !defined INCLUDED_RUNNABLE_COLLECTION_IMPL_H
 #define INCLUDED_RUNNABLE_COLLECTION_IMPL_H
 
-#include "config.h"
-#include "runnable/collection.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry_interface.h"
-#include "registry/auto/collection/auto_registry_collection.h"
-#include "trace/trace_common.h"
-#include "messaging/envelope.h"
+#include "vt/config.h"
+#include "vt/runnable/collection.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/registry/auto/collection/auto_registry_collection.h"
+#include "vt/trace/trace_common.h"
+#include "vt/messaging/envelope.h"
 
 namespace vt { namespace runnable {
 

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_SCHEDULER_SCHEDULER_H
 #define INCLUDED_SCHEDULER_SCHEDULER_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <cassert>
 #include <vector>

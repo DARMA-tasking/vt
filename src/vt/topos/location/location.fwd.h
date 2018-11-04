@@ -2,7 +2,7 @@
 #if !defined INCLUDED_TOPOS_LOCATION_LOCATION_FWD_H
 #define INCLUDED_TOPOS_LOCATION_LOCATION_FWD_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace location {
 

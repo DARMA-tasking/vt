@@ -6,9 +6,9 @@
 #include <functional>
 #include <vector>
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "vrt/context/context_vrtheaders.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/vrt/context/context_vrtheaders.h"
 
 namespace vt { namespace seq {
 

@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_MIGRATE_MIGRATE_MSG_H
 #define INCLUDED_VRT_COLLECTION_MIGRATE_MIGRATE_MSG_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "vrt/proxy/collection_elm_proxy.h"
-#include "vrt/collection/collection_info.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/vrt/proxy/collection_elm_proxy.h"
+#include "vt/vrt/collection/collection_info.h"
 
 namespace vt { namespace vrt { namespace collection {
 

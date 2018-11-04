@@ -2,7 +2,7 @@
 #if !defined INCLUDED_MESSAGING_ENVELOPE_PAYLOAD_ENVELOPE_H
 #define INCLUDED_MESSAGING_ENVELOPE_PAYLOAD_ENVELOPE_H
 
-#include "messaging/envelope/envelope.h"
+#include "vt/messaging/envelope/envelope.h"
 
 namespace vt {
 

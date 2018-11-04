@@ -3,8 +3,8 @@
 #define INCLUDED_FEATURES_ENABLE_IF
 
 #include "meld_headers.h"
-#include "configs/features/features_featureswitch.h"
-#include "configs/features/features_defines.h"
+#include "vt/configs/features/features_featureswitch.h"
+#include "vt/configs/features/features_defines.h"
 
 #define backend_static_assert_unreachable       \
   static_assert(false, "Configuration error: This should be unreachable");

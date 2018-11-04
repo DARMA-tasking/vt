@@ -2,11 +2,11 @@
 #if !defined INCLUDED_VRT_COLLECTION_HOLDERS_ELM_HOLDER_IMPL_H
 #define INCLUDED_VRT_COLLECTION_HOLDERS_ELM_HOLDER_IMPL_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/holders/elm_holder.h"
-#include "vrt/collection/manager.fwd.h"
-#include "vrt/collection/types/headers.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/holders/elm_holder.h"
+#include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/collection/types/headers.h"
 
 #include <memory>
 #include <cassert>

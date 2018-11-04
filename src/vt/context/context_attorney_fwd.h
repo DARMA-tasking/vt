@@ -2,7 +2,7 @@
 #if !defined INCLUDED_CONTEXT_CONTEXT_ATTORNEY_FWD_H
 #define INCLUDED_CONTEXT_CONTEXT_ATTORNEY_FWD_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace ctx {
 

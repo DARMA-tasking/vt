@@ -2,7 +2,7 @@
 #if !defined INCLUDED_TRACE_TRACE_COMMON_H
 #define INCLUDED_TRACE_TRACE_COMMON_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <cstdint>
 #include <functional>

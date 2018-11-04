@@ -41,7 +41,7 @@ T* deserializePartial(SerialByteType* buf, SizeType size, T* user_buf = nullptr)
 
 }} /* end namespace serialization::interface */
 
-#include "serialize_interface.impl.h"
+#include "vt/serialize_interface.impl.h"
 
 #endif
 

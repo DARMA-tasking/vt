@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_DEMANGLE_DEMANGLED_NAME_H
 #define INCLUDED_UTILS_DEMANGLE_DEMANGLED_NAME_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <string>
 

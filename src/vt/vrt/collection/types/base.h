@@ -2,15 +2,15 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_BASE_H
 #define INCLUDED_VRT_COLLECTION_TYPES_BASE_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
-#include "vrt/collection/types/base.fwd.h"
-#include "vrt/collection/types/insertable.h"
-#include "vrt/collection/types/indexable.h"
-#include "vrt/collection/types/untyped.h"
-#include "vrt/collection/manager.fwd.h"
-#include "vrt/proxy/collection_proxy.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
+#include "vt/vrt/collection/types/base.fwd.h"
+#include "vt/vrt/collection/types/insertable.h"
+#include "vt/vrt/collection/types/indexable.h"
+#include "vt/vrt/collection/types/untyped.h"
+#include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/proxy/collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -56,6 +56,6 @@ protected:
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vrt/collection/types/base.impl.h"
+#include "vt/vrt/collection/types/base.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_BASE_H*/

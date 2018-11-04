@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_MESSAGES_USER_IMPL_H
 #define INCLUDED_VRT_COLLECTION_MESSAGES_USER_IMPL_H
 
-#include "config.h"
-#include "vrt/collection/messages/user.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/messages/user.h"
 
 #include <cassert>
 

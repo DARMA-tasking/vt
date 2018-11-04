@@ -2,12 +2,12 @@
 #if !defined INCLUDED_TRACE_TRACE_REGISTRY_H
 #define INCLUDED_TRACE_TRACE_REGISTRY_H
 
-#include "config.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
 
-#include "trace/trace_common.h"
-#include "trace/trace_event.h"
-#include "trace/trace_containers.h"
+#include "vt/trace/trace_common.h"
+#include "vt/trace/trace_event.h"
+#include "vt/trace/trace_containers.h"
 
 namespace vt { namespace trace {
 

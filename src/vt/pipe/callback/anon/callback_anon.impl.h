@@ -2,15 +2,15 @@
 #if !defined INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_IMPL_H
 #define INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_IMPL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/callback/anon/callback_anon.h"
-#include "pipe/signal/signal.h"
-#include "pipe/msg/callback.h"
-#include "pipe/pipe_manager.h"
-#include "messaging/active.h"
-#include "messaging/envelope.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/anon/callback_anon.h"
+#include "vt/pipe/signal/signal.h"
+#include "vt/pipe/msg/callback.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/messaging/active.h"
+#include "vt/messaging/envelope.h"
+#include "vt/context/context.h"
 
 #include <cassert>
 

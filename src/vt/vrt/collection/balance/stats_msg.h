@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_STATS_MSG_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_STATS_MSG_H
 
-#include "config.h"
-#include "collective/reduce/reduce.h"
-#include "messaging/message.h"
-#include "timing/timing.h"
+#include "vt/config.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/messaging/message.h"
+#include "vt/timing/timing.h"
 
 #include <algorithm>
 

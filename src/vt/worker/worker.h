@@ -2,9 +2,9 @@
 #if !defined INCLUDED_WORKER_WORKER_H
 #define INCLUDED_WORKER_WORKER_H
 
-#include "config.h"
-#include "worker/worker_common.h"
-#include "worker/worker_types.h"
+#include "vt/config.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_types.h"
 
 #include <functional>
 
@@ -29,7 +29,7 @@ struct Worker {
 }} /* end namespace vt::worker */
 
 #if backend_check_enabled(detector)
-  #include "worker/worker_traits.h"
+  #include "vt/worker/worker_traits.h"
 
   namespace vt { namespace worker {
 

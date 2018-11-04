@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_H
 #define INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_H
 
-#include "config.h"
-#include "vrt/proxy/base_collection_proxy.h"
-#include "activefn/activefn.h"
+#include "vt/config.h"
+#include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/activefn/activefn.h"
 
 namespace vt { namespace vrt { namespace collection {
 

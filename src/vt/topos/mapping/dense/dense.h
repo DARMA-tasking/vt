@@ -2,10 +2,10 @@
 #if !defined INCLUDED_TOPOS_MAPPING_DENSE
 #define INCLUDED_TOPOS_MAPPING_DENSE
 
-#include "config.h"
-#include "topos/mapping/mapping.h"
-#include "topos/mapping/adapt_mappers.h"
-#include "topos/index/index.h"
+#include "vt/config.h"
+#include "vt/topos/mapping/mapping.h"
+#include "vt/topos/mapping/adapt_mappers.h"
+#include "vt/topos/index/index.h"
 
 #include <functional>
 
@@ -60,6 +60,6 @@ using dense3DBlkMapFn = FunctorAdapt<MapAdapter<Index3D>, dense3DBlockMap>;
 
 }}  // end namespace vt::mapping
 
-#include "topos/mapping/dense/dense.impl.h"
+#include "vt/topos/mapping/dense/dense.impl.h"
 
 #endif /*INCLUDED_TOPOS_MAPPING_DENSE*/

@@ -2,10 +2,10 @@
 #if !defined INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
 #define INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
 
-#include "config.h"
-#include "pipe/callback/cb_union/cb_raw.h"
-#include "pipe/signal/signal.h"
-#include "registry/auto/auto_registry_common.h"
+#include "vt/config.h"
+#include "vt/pipe/callback/cb_union/cb_raw.h"
+#include "vt/pipe/signal/signal.h"
+#include "vt/registry/auto/auto_registry_common.h"
 
 #include <cassert>
 #include <type_traits>
@@ -188,6 +188,6 @@ using CallbackU = pipe::callback::cbunion::CallbackRawBaseSingle;
 
 } /* end namespace vt */
 
-#include "pipe/callback/cb_union/cb_raw_base.impl.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.impl.h"
 
 #endif /*INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H*/

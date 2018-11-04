@@ -2,10 +2,10 @@
 #if !defined INCLUDED_REGISTRY_AUTO_INDEX_AUTO_REGISTRY_INDEX_H
 #define INCLUDED_REGISTRY_AUTO_INDEX_AUTO_REGISTRY_INDEX_H
 
-#include "config.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry_general.h"
-#include "registry/registry.h"
+#include "vt/config.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry_general.h"
+#include "vt/registry/registry.h"
 
 namespace vt { namespace auto_registry {
 
@@ -16,6 +16,6 @@ AutoHandlerType makeAutoIndex();
 
 }} // end namespace vt::auto_registry
 
-#include "registry/auto/index/auto_registry_index.impl.h"
+#include "vt/registry/auto/index/auto_registry_index.impl.h"
 
 #endif /*INCLUDED_REGISTRY_AUTO_INDEX_AUTO_REGISTRY_INDEX_H*/

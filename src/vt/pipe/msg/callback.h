@@ -2,9 +2,9 @@
 #if !defined INCLUDED_PIPE_MSG_CALLBACK_H
 #define INCLUDED_PIPE_MSG_CALLBACK_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/messaging/message.h"
 
 namespace vt { namespace pipe {
 

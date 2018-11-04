@@ -2,18 +2,18 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_H
 #define INCLUDED_COLLECTIVE_REDUCE_REDUCE_H
 
-#include "config.h"
-#include "collective/reduce/reduce.fwd.h"
-#include "collective/reduce/reduce_hash.h"
-#include "collective/reduce/reduce_state.h"
-#include "collective/reduce/reduce_msg.h"
-#include "collective/reduce/operators/default_msg.h"
-#include "collective/reduce/operators/default_op.h"
-#include "messaging/active.h"
-#include "activefn/activefn.h"
-#include "messaging/message.h"
-#include "collective/tree/tree.h"
-#include "utils/hash/hash_tuple.h"
+#include "vt/config.h"
+#include "vt/collective/reduce/reduce.fwd.h"
+#include "vt/collective/reduce/reduce_hash.h"
+#include "vt/collective/reduce/reduce_state.h"
+#include "vt/collective/reduce/reduce_msg.h"
+#include "vt/collective/reduce/operators/default_msg.h"
+#include "vt/collective/reduce/operators/default_op.h"
+#include "vt/messaging/active.h"
+#include "vt/activefn/activefn.h"
+#include "vt/messaging/message.h"
+#include "vt/collective/tree/tree.h"
+#include "vt/utils/hash/hash_tuple.h"
 
 #include <tuple>
 #include <unordered_map>

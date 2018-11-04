@@ -2,9 +2,9 @@
 #if !defined INCLUDED_GROUP_GROUP_COLLECTIVE_UTIL_H
 #define INCLUDED_GROUP_GROUP_COLLECTIVE_UTIL_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "group/collective/group_collective_msg.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/group/collective/group_collective_msg.h"
 
 namespace vt { namespace group {
 

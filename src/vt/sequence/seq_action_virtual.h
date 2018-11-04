@@ -2,9 +2,9 @@
 #if !defined INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_H
 #define INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_H
 
-#include "config.h"
-#include "seq_common.h"
-#include "termination/termination.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/termination/termination.h"
 
 namespace vt { namespace seq {
 
@@ -24,6 +24,6 @@ struct ActionVirtual {
 
 }} //end namespace vt::seq
 
-#include "seq_action_virtual.impl.h"
+#include "vt/sequence/seq_action_virtual.impl.h"
 
 #endif /* INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_H*/

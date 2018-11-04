@@ -2,14 +2,14 @@
 #if !defined INCLUDED_VRT_COLLECTION_MESSAGES_SYSTEM_CREATE_H
 #define INCLUDED_VRT_COLLECTION_MESSAGES_SYSTEM_CREATE_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/proxy_builder/elm_proxy_builder.h"
-#include "vrt/collection/types/headers.h"
-#include "messaging/message.h"
-#include "serialization/serialization.h"
-#include "collective/reduce/reduce.h"
-#include "vrt/proxy/collection_proxy.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
+#include "vt/vrt/collection/types/headers.h"
+#include "vt/messaging/message.h"
+#include "vt/serialization/serialization.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/vrt/proxy/collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 

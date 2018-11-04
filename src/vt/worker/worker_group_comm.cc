@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "context/context.h"
-#include "worker/worker_common.h"
-#include "worker/worker_group_comm.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_group_comm.h"
 
 namespace vt { namespace worker {
 

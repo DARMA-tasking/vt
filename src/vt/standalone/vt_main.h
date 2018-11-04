@@ -2,11 +2,11 @@
 #if !defined INCLUDED_STANDALONE_VT_MAIN_H
 #define INCLUDED_STANDALONE_VT_MAIN_H
 
-#include "config.h"
-#include "context/context.h"
-#include "collective/collective_ops.h"
-#include "runtime/runtime_headers.h"
-#include "worker/worker_headers.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/collective/collective_ops.h"
+#include "vt/runtime/runtime_headers.h"
+#include "vt/worker/worker_headers.h"
 
 #include <cassert>
 #include <functional>

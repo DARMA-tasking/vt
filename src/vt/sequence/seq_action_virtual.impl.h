@@ -2,9 +2,9 @@
 #if !defined INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_IMPL_H
 #define INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_IMPL_H
 
-#include "config.h"
-#include "seq_common.h"
-#include "seq_action.h"
+#include "vt/config.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_action.h"
 
 namespace vt { namespace seq {
 

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_HASH_H
 #define INCLUDED_COLLECTIVE_REDUCE_REDUCE_HASH_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <tuple>
 

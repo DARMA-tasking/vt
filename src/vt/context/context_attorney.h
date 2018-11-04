@@ -2,10 +2,10 @@
 #if !defined INCLUDED_CONTEXT_CONTEXT_ATTORNEY_H
 #define INCLUDED_CONTEXT_CONTEXT_ATTORNEY_H
 
-#include "config.h"
-#include "context/context_attorney_fwd.h"
-#include "worker/worker_headers.h"
-#include "runtime/runtime_headers.h"
+#include "vt/config.h"
+#include "vt/context/context_attorney_fwd.h"
+#include "vt/worker/worker_headers.h"
+#include "vt/runtime/runtime_headers.h"
 
 namespace vt {  namespace ctx {
 

@@ -2,7 +2,7 @@
 #if !defined INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_FWD_H
 #define INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_FWD_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace pipe { namespace callback {
 

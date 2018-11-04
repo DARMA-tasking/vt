@@ -2,13 +2,13 @@
 #if !defined INCLUDED_RUNNABLE_VRT_IMPL_H
 #define INCLUDED_RUNNABLE_VRT_IMPL_H
 
-#include "config.h"
-#include "runnable/vrt.h"
-#include "registry/auto/auto_registry_common.h"
-#include "registry/auto/auto_registry_interface.h"
-#include "registry/auto/vc/auto_registry_vc.h"
-#include "trace/trace_common.h"
-#include "messaging/envelope.h"
+#include "vt/config.h"
+#include "vt/runnable/vrt.h"
+#include "vt/registry/auto/auto_registry_common.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/registry/auto/vc/auto_registry_vc.h"
+#include "vt/trace/trace_common.h"
+#include "vt/messaging/envelope.h"
 
 namespace vt { namespace runnable {
 

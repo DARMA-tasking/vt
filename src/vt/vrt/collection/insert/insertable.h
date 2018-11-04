@@ -2,8 +2,8 @@
 #if !defined INCLUDED_VRT_COLLECTION_INSERT_INSERTABLE_H
 #define INCLUDED_VRT_COLLECTION_INSERT_INSERTABLE_H
 
-#include "config.h"
-#include "vrt/collection/send/sendable.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/send/sendable.h"
 
 namespace vt { namespace vrt { namespace collection {
 

@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "pool/pool.h"
-#include "worker/worker_headers.h"
-#include "pool/static_sized/memory_pool_equal.h"
+#include "vt/config.h"
+#include "vt/pool/pool.h"
+#include "vt/worker/worker_headers.h"
+#include "vt/pool/static_sized/memory_pool_equal.h"
 
 #include <cstdlib>
 #include <cstdint>

@@ -2,11 +2,11 @@
 #if !defined INCLUDED_COLLECTIVE_SCATTER_SCATTER_H
 #define INCLUDED_COLLECTIVE_SCATTER_SCATTER_H
 
-#include "config.h"
-#include "collective/scatter/scatter_msg.h"
-#include "activefn/activefn.h"
-#include "messaging/message.h"
-#include "collective/tree/tree.h"
+#include "vt/config.h"
+#include "vt/collective/scatter/scatter_msg.h"
+#include "vt/activefn/activefn.h"
+#include "vt/messaging/message.h"
+#include "vt/collective/tree/tree.h"
 
 #include <functional>
 #include <cstdlib>

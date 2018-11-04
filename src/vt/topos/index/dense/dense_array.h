@@ -2,11 +2,11 @@
 #if !defined INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H
 #define INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H
 
-#include "config.h"
-#include "topos/index/base_index.h"
-#include "utils/bits/bits_packer.h"
-#include "utils/static_checks/meta_type_eq_.h"
-#include "serialization/traits/byte_copy_trait.h"
+#include "vt/config.h"
+#include "vt/topos/index/base_index.h"
+#include "vt/utils/bits/bits_packer.h"
+#include "vt/utils/static_checks/meta_type_eq_.h"
+#include "vt/serialization/traits/byte_copy_trait.h"
 
 #include <array>
 #include <type_traits>
@@ -19,7 +19,7 @@
 #include <ostream>
 
 #if backend_check_enabled(detector)
-  #include "topos/index/traits/traits.h"
+  #include "vt/topos/index/traits/traits.h"
 #endif
 
 namespace vt { namespace index {
@@ -112,6 +112,6 @@ private:
 
 }}  // end namespace vt::index
 
-#include "topos/index/dense/dense_array.impl.h"
+#include "vt/topos/index/dense/dense_array.impl.h"
 
 #endif /*INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H*/

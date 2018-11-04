@@ -2,16 +2,16 @@
 #if !defined INCLUDED_RDMA_RDMA_STATE_H
 #define INCLUDED_RDMA_RDMA_STATE_H
 
-#include "config.h"
-#include "rdma/rdma_common.h"
-#include "rdma/rdma_handle.h"
-#include "rdma/rdma_msg.h"
-#include "rdma/rdma_info.h"
+#include "vt/config.h"
+#include "vt/rdma/rdma_common.h"
+#include "vt/rdma/rdma_handle.h"
+#include "vt/rdma/rdma_msg.h"
+#include "vt/rdma/rdma_info.h"
 
-#include "rdma/group/rdma_map.h"
-#include "rdma/group/rdma_group.h"
+#include "vt/rdma/group/rdma_map.h"
+#include "vt/rdma/group/rdma_group.h"
 
-#include "rdma/channel/rdma_channel.h"
+#include "vt/rdma/channel/rdma_channel.h"
 
 #include <unordered_map>
 #include <vector>
@@ -129,6 +129,6 @@ private:
 
 }} //end namespace vt::rdma
 
-#include "rdma/state/rdma_state.impl.h"
+#include "vt/rdma/state/rdma_state.impl.h"
 
 #endif /*INCLUDED_RDMA_RDMA_STATE_H*/

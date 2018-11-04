@@ -1,6 +1,6 @@
 
 
-#include "trace/trace_event.h"
+#include "vt/trace/trace_event.h"
 
 #include <string>
 

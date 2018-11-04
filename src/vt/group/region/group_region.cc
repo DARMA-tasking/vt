@@ -1,6 +1,6 @@
 
-#include "config.h"
-#include "group/region/group_region.h"
+#include "vt/config.h"
+#include "vt/group/region/group_region.h"
 
 namespace vt { namespace group { namespace region {
 

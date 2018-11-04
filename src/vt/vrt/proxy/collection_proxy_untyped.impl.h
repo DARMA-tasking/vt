@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_PROXY_COLLECTION_PROXY_UNTYPED_IMPL_H
 #define INCLUDED_VRT_PROXY_COLLECTION_PROXY_UNTYPED_IMPL_H
 
-#include "config.h"
-#include "vrt/proxy/base_elm_proxy.h"
-#include "vrt/proxy/collection_proxy_untyped.h"
+#include "vt/config.h"
+#include "vt/vrt/proxy/base_elm_proxy.h"
+#include "vt/vrt/proxy/collection_proxy_untyped.h"
 
 namespace vt { namespace vrt { namespace collection {
 

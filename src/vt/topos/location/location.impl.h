@@ -2,16 +2,16 @@
 #if !defined INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H
 #define INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H
 
-#include "config.h"
-#include "topos/location/location_common.h"
-#include "topos/location/location.h"
-#include "topos/location/manager.h"
-#include "topos/location/manager.fwd.h"
-#include "topos/location/utility/entity.h"
-#include "context/context.h"
-#include "messaging/active.h"
-#include "serialization/auto_dispatch/dispatch.h"
-#include "runnable/general.h"
+#include "vt/config.h"
+#include "vt/topos/location/location_common.h"
+#include "vt/topos/location/location.h"
+#include "vt/topos/location/manager.h"
+#include "vt/topos/location/manager.fwd.h"
+#include "vt/topos/location/utility/entity.h"
+#include "vt/context/context.h"
+#include "vt/messaging/active.h"
+#include "vt/serialization/auto_dispatch/dispatch.h"
+#include "vt/runnable/general.h"
 
 #include <cstdint>
 #include <memory>

@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "vrt/collection/balance/rotatelb/rotatelb.h"
-#include "vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
+#include "vt/vrt/collection/manager.h"
 
 #include <memory>
 

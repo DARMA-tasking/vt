@@ -2,7 +2,7 @@
 #if !defined INCLUDED_VRT_PROXY_BASE_ELM_PROXY_H
 #define INCLUDED_VRT_PROXY_BASE_ELM_PROXY_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <cstdlib>
 #include <cstdint>

@@ -2,18 +2,18 @@
 #if !defined INCLUDED_PIPE_PIPE_MANAGER_TYPED_H
 #define INCLUDED_PIPE_PIPE_MANAGER_TYPED_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/pipe_manager_base.h"
-#include "pipe/pipe_manager_typed.fwd.h"
-#include "pipe/interface/send_container.h"
-#include "pipe/interface/callback_direct.h"
-#include "pipe/interface/callback_direct_multi.h"
-#include "pipe/interface/callback_types.h"
-#include "pipe/callback/handler_send/callback_send_han.h"
-#include "pipe/pipe_manager_construct.h"
-#include "utils/static_checks/functor.h"
-#include "vrt/collection/active/active_funcs.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/pipe_manager_base.h"
+#include "vt/pipe/pipe_manager_typed.fwd.h"
+#include "vt/pipe/interface/send_container.h"
+#include "vt/pipe/interface/callback_direct.h"
+#include "vt/pipe/interface/callback_direct_multi.h"
+#include "vt/pipe/interface/callback_types.h"
+#include "vt/pipe/callback/handler_send/callback_send_han.h"
+#include "vt/pipe/pipe_manager_construct.h"
+#include "vt/utils/static_checks/functor.h"
+#include "vt/vrt/collection/active/active_funcs.h"
 
 #include <type_traits>
 #include <tuple>

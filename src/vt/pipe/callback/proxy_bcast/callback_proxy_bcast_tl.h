@@ -2,10 +2,10 @@
 #if !defined INCLUDED_PIPE_CALLBACK_PROXY_BCAST_CALLBACK_PROXY_BCAST_TL_H
 #define INCLUDED_PIPE_CALLBACK_PROXY_BCAST_CALLBACK_PROXY_BCAST_TL_H
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/callback/callback_base_tl.h"
-#include "registry/auto/auto_registry_common.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/callback_base_tl.h"
+#include "vt/registry/auto/auto_registry_common.h"
 
 namespace vt { namespace pipe { namespace callback {
 

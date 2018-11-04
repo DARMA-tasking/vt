@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "pool/header/pool_header.h"
-#include "context/context.h"
+#include "vt/config.h"
+#include "vt/pool/header/pool_header.h"
+#include "vt/context/context.h"
 
 namespace vt { namespace pool {
 

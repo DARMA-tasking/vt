@@ -2,12 +2,12 @@
 #if !defined INCLUDED_MESSAGING_ACTIVE_IMPL_H
 #define INCLUDED_MESSAGING_ACTIVE_IMPL_H
 
-#include "config.h"
-#include "messaging/active.h"
-#include "termination/term_headers.h"
-#include "serialization/auto_dispatch/dispatch.h"
-#include "serialization/auto_dispatch/dispatch_handler.h"
-#include "serialization/auto_dispatch/dispatch_functor.h"
+#include "vt/config.h"
+#include "vt/messaging/active.h"
+#include "vt/termination/term_headers.h"
+#include "vt/serialization/auto_dispatch/dispatch.h"
+#include "vt/serialization/auto_dispatch/dispatch_handler.h"
+#include "vt/serialization/auto_dispatch/dispatch_functor.h"
 
 namespace vt { namespace messaging {
 

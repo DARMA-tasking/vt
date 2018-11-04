@@ -6,15 +6,15 @@
 #include <memory>
 #include <mpi.h>
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "messaging/active.fwd.h"
-#include "messaging/message/smart_ptr.h"
-#include "event/event.h"
-#include "registry/registry.h"
-#include "registry/auto/auto_registry_interface.h"
-#include "trace/trace_common.h"
-#include "utils/static_checks/functor.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/messaging/active.fwd.h"
+#include "vt/messaging/message/smart_ptr.h"
+#include "vt/event/event.h"
+#include "vt/registry/registry.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/trace/trace_common.h"
+#include "vt/utils/static_checks/functor.h"
 
 #include <type_traits>
 #include <tuple>
@@ -635,6 +635,6 @@ extern messaging::ActiveMessenger* theMsg();
 
 } // end namespace vt
 
-#include "messaging/active.impl.h"
+#include "vt/messaging/active.impl.h"
 
 #endif /*INCLUDED_MESSAGING_ACTIVE_H*/

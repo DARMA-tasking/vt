@@ -2,7 +2,7 @@
 #if !defined INCLUDED_UTILS_BITS_BITS_PACKER_IMPL_H
 #define INCLUDED_UTILS_BITS_BITS_PACKER_IMPL_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <cstdlib>
 

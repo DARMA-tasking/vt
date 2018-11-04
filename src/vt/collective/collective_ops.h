@@ -2,10 +2,10 @@
 #if !defined INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
 #define INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
 
-#include "config.h"
-#include "context/context.h"
-#include "runtime/runtime_headers.h"
-#include "registry/registry.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/runtime/runtime_headers.h"
+#include "vt/registry/registry.h"
 
 #include <string>
 

@@ -4,9 +4,9 @@
 
 #include "test_harness.h"
 
-#include "transport.h"
-#include "topos/index/index.h"
-#include "topos/mapping/mapping.h"
+#include "vt/transport.h"
+#include "vt/topos/index/index.h"
+#include "vt/topos/mapping/mapping.h"
 
 #include <vector>
 

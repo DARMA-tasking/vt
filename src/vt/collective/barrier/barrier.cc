@@ -1,7 +1,7 @@
 
-#include "collective/barrier/barrier.h"
-#include "collective/collective_alg.h"
-#include "messaging/active.h"
+#include "vt/collective/barrier/barrier.h"
+#include "vt/collective/collective_alg.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace collective { namespace barrier {
 

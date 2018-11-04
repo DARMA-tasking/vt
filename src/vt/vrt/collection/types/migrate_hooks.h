@@ -2,9 +2,9 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_MIGRATE_HOOKS_H
 #define INCLUDED_VRT_COLLECTION_TYPES_MIGRATE_HOOKS_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/types/untyped.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/types/untyped.h"
 
 namespace vt { namespace vrt { namespace collection {
 

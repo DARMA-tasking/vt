@@ -1,15 +1,15 @@
 
-#include "config.h"
-#include "context/context.h"
-#include "group/group_common.h"
-#include "group/group_manager.h"
-#include "group/id/group_id.h"
-#include "group/region/group_region.h"
-#include "group/group_info.h"
-#include "group/global/group_default.h"
-#include "group/global/group_default_msg.h"
-#include "scheduler/scheduler.h"
-#include "collective/collective_alg.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/group/group_common.h"
+#include "vt/group/group_manager.h"
+#include "vt/group/id/group_id.h"
+#include "vt/group/region/group_region.h"
+#include "vt/group/group_info.h"
+#include "vt/group/global/group_default.h"
+#include "vt/group/global/group_default_msg.h"
+#include "vt/scheduler/scheduler.h"
+#include "vt/collective/collective_alg.h"
 
 #include <mpi.h>
 

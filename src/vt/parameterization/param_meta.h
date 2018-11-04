@@ -2,7 +2,7 @@
 #if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
 #define INCLUDED_PARAMETERIZATION_PARAM_META_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <tuple>
 #include <utility>

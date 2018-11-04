@@ -1,9 +1,9 @@
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/pipe_manager.h"
-#include "group/group_common.h"
-#include "group/group_manager.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/group/group_common.h"
+#include "vt/group/group_manager.h"
 
 namespace vt { namespace pipe {
 

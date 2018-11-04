@@ -6,7 +6,7 @@
 #include "test_collection_common.h"
 #include "data_message.h"
 
-#include "transport.h"
+#include "vt/transport.h"
 
 #include <cstdint>
 

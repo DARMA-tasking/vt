@@ -2,7 +2,7 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_HEADERS_H
 #define INCLUDED_VRT_COLLECTION_TYPES_HEADERS_H
 
-#include "config.h"
+#include "vt/config.h"
 
 /*
  * Include all the collection variants with differing constraints:
@@ -16,24 +16,24 @@
  *   - Deletable during epochs
  *   - Dynamic
  */
-#include "vrt/collection/types/untyped.h"
-#include "vrt/collection/types/base.h"
+#include "vt/vrt/collection/types/untyped.h"
+#include "vt/vrt/collection/types/base.h"
 
-#include "vrt/collection/types/static_size.h"
-#include "vrt/collection/types/static_insertable.h"
+#include "vt/vrt/collection/types/static_size.h"
+#include "vt/vrt/collection/types/static_insertable.h"
 
-#include "vrt/collection/types/insertable.h"
-#include "vrt/collection/types/insertable_epoch.h"
+#include "vt/vrt/collection/types/insertable.h"
+#include "vt/vrt/collection/types/insertable_epoch.h"
 
-#include "vrt/collection/types/deletable.h"
-#include "vrt/collection/types/deletable_epoch.h"
+#include "vt/vrt/collection/types/deletable.h"
+#include "vt/vrt/collection/types/deletable_epoch.h"
 
-#include "vrt/collection/types/dynamic.h"
+#include "vt/vrt/collection/types/dynamic.h"
 
 /*
  *  Type aliases/wrappers for the above collection base classes for user
  *  convenience.
  */
-#include "vrt/collection/types/type_aliases.h"
+#include "vt/vrt/collection/types/type_aliases.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_HEADERS_H*/

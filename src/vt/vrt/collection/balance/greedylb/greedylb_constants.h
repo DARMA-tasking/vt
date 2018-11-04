@@ -2,7 +2,7 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CONSTANTS_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CONSTANTS_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 

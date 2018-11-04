@@ -2,9 +2,9 @@
 #if !defined INCLUDED_EVENT_EVENT_RECORD_H
 #define INCLUDED_EVENT_EVENT_RECORD_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "messaging/message/smart_ptr.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 #include <memory>
 #include <vector>

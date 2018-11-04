@@ -1,12 +1,12 @@
 
-#include "config.h"
-#include "lb/instrumentation/centralized/collect.h"
-#include "lb/instrumentation/centralized/collect_msg.h"
-#include "lb/lb_types.h"
-#include "lb/lb_types_internal.h"
-#include "lb/instrumentation/entity.h"
-#include "lb/instrumentation/database.h"
-#include "collective/collective_alg.h"
+#include "vt/config.h"
+#include "vt/lb/instrumentation/centralized/collect.h"
+#include "vt/lb/instrumentation/centralized/collect_msg.h"
+#include "vt/lb/lb_types.h"
+#include "vt/lb/lb_types_internal.h"
+#include "vt/lb/instrumentation/entity.h"
+#include "vt/lb/instrumentation/database.h"
+#include "vt/collective/collective_alg.h"
 
 #include <unordered_map>
 #include <vector>

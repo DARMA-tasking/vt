@@ -1,13 +1,13 @@
 
-#include "config.h"
+#include "vt/config.h"
 
 #if backend_check_enabled(stdthread)
 
-#include "context/context.h"
-#include "context/context_attorney.h"
-#include "collective/collective.h"
-#include "worker/worker_common.h"
-#include "worker/worker_stdthread.h"
+#include "vt/context/context.h"
+#include "vt/context/context_attorney.h"
+#include "vt/collective/collective.h"
+#include "vt/worker/worker_common.h"
+#include "vt/worker/worker_stdthread.h"
 
 #include <thread>
 #include <memory>

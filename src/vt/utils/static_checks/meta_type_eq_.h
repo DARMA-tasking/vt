@@ -2,8 +2,8 @@
 #if !defined INCLUDED_UTILS_STATIC_CHECKS_META_TYPE_EQ__H
 #define INCLUDED_UTILS_STATIC_CHECKS_META_TYPE_EQ__H
 
-#include "config.h"
-#include "utils/static_checks/cond_.h"
+#include "vt/config.h"
+#include "vt/utils/static_checks/cond_.h"
 
 #include <type_traits>
 

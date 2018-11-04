@@ -2,7 +2,7 @@
 #if !defined INCLUDED_LB_MIGRATION_LB_MIGRATABLE_H
 #define INCLUDED_LB_MIGRATION_LB_MIGRATABLE_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt {
 

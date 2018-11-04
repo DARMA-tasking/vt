@@ -2,13 +2,13 @@
 #if !defined INCLUDED_SEQUENCE_SEQ_MATCHER_H
 #define INCLUDED_SEQUENCE_SEQ_MATCHER_H
 
-#include "config.h"
-#include "activefn/activefn.h"
-#include "messaging/message.h"
-#include "seq_common.h"
-#include "seq_action.h"
-#include "seq_state.h"
-#include "seq_action.h"
+#include "vt/config.h"
+#include "vt/activefn/activefn.h"
+#include "vt/messaging/message.h"
+#include "vt/sequence/seq_common.h"
+#include "vt/sequence/seq_action.h"
+#include "vt/sequence/seq_state.h"
+#include "vt/sequence/seq_action.h"
 
 #include <list>
 #include <unordered_map>
@@ -62,6 +62,6 @@ struct SeqMatcher {
 
 }} //end namespace vt::seq
 
-#include "seq_matcher.impl.h"
+#include "vt/sequence/seq_matcher.impl.h"
 
 #endif /* INCLUDED_SEQUENCE_SEQ_MATCHER_H*/

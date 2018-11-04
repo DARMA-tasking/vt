@@ -2,7 +2,7 @@
 #if !defined INCLUDED_SERIALIZATION_TRAITS_BYTE_COPY_TRAIT_H
 #define INCLUDED_SERIALIZATION_TRAITS_BYTE_COPY_TRAIT_H
 
-#include "config.h"
+#include "vt/config.h"
 
 #include <type_traits>
 

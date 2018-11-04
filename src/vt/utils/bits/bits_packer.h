@@ -45,6 +45,6 @@ private:
 
 }}  // end namespace vt::utils
 
-#include "utils/bits/bits_packer.impl.h"
+#include "vt/utils/bits/bits_packer.impl.h"
 
 #endif  /*INCLUDED_BITS_PACKER*/

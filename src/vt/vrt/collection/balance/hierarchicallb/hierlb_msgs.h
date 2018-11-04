@@ -2,11 +2,11 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_MSGS_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_MSGS_H
 
-#include "config.h"
-#include "vrt/collection/balance/hierarchicallb/hierlb_constants.h"
-#include "vrt/collection/balance/hierarchicallb/hierlb_types.h"
-#include "vrt/collection/balance/proc_stats.h"
-#include "messaging/message.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/hierarchicallb/hierlb_constants.h"
+#include "vt/vrt/collection/balance/hierarchicallb/hierlb_types.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/messaging/message.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 

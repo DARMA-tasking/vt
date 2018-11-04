@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "lb/lb_types.h"
-#include "lb/instrumentation/database.h"
-#include "lb/instrumentation/entry.h"
+#include "vt/config.h"
+#include "vt/lb/lb_types.h"
+#include "vt/lb/instrumentation/database.h"
+#include "vt/lb/instrumentation/entry.h"
 
 namespace vt { namespace lb { namespace instrumentation {
 

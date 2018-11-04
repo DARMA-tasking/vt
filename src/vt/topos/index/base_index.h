@@ -2,7 +2,7 @@
 #if !defined INCLUDED_TOPOS_INDEX_BASE_INDEX_H
 #define INCLUDED_TOPOS_INDEX_BASE_INDEX_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace index {
 

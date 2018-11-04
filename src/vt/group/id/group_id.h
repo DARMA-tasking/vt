@@ -2,9 +2,9 @@
 #if !defined INCLUDED_GROUP_ID_GROUP_ID_H
 #define INCLUDED_GROUP_ID_GROUP_ID_H
 
-#include "config.h"
-#include "group/group_common.h"
-#include "utils/bits/bits_common.h"
+#include "vt/config.h"
+#include "vt/group/group_common.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace group {
 

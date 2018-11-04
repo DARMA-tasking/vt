@@ -2,11 +2,11 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_INDEXABLE_H
 #define INCLUDED_VRT_COLLECTION_TYPES_INDEXABLE_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/types/type_attorney.h"
-#include "vrt/collection/types/migrate_hooks.h"
-#include "vrt/collection/types/migratable.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/types/type_attorney.h"
+#include "vt/vrt/collection/types/migrate_hooks.h"
+#include "vt/vrt/collection/types/migratable.h"
 
 namespace vt { namespace vrt { namespace collection {
 

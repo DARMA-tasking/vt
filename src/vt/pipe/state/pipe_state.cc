@@ -1,7 +1,7 @@
 
-#include "config.h"
-#include "pipe/pipe_common.h"
-#include "pipe/state/pipe_state.h"
+#include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/state/pipe_state.h"
 
 namespace vt { namespace pipe {
 

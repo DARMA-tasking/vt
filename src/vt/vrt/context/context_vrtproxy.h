@@ -2,9 +2,9 @@
 #if !defined INCLUDED_CONTEXT_VRT_PROXY
 #define INCLUDED_CONTEXT_VRT_PROXY
 
-#include "config.h"
-#include "vrt/context/context_vrt_fwd.h"
-#include "vrt/context/context_vrt.h"
+#include "vt/config.h"
+#include "vt/vrt/context/context_vrt_fwd.h"
+#include "vt/vrt/context/context_vrt.h"
 
 namespace vt { namespace vrt {
 

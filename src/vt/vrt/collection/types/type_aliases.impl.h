@@ -2,10 +2,10 @@
 #if !defined INCLUDED_VRT_COLLECTION_TYPES_TYPE_ALIASES_IMPL_H
 #define INCLUDED_VRT_COLLECTION_TYPES_TYPE_ALIASES_IMPL_H
 
-#include "config.h"
-#include "vrt/vrt_common.h"
-#include "vrt/collection/types/static_size.h"
-#include "vrt/collection/types/static_insertable.h"
+#include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/types/static_size.h"
+#include "vt/vrt/collection/types/static_insertable.h"
 
 namespace vt { namespace vrt { namespace collection {
 

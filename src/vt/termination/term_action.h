@@ -2,10 +2,10 @@
 #if !defined INCLUDED_TERMINATION_TERM_ACTION_H
 #define INCLUDED_TERMINATION_TERM_ACTION_H
 
-#include "config.h"
-#include "termination/term_common.h"
-#include "termination/term_state.h"
-#include "termination/term_finished.h"
+#include "vt/config.h"
+#include "vt/termination/term_common.h"
+#include "vt/termination/term_state.h"
+#include "vt/termination/term_finished.h"
 
 #include <vector>
 #include <unordered_map>

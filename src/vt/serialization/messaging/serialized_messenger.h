@@ -2,10 +2,10 @@
 #if !defined INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_MESSENGER_H
 #define INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_MESSENGER_H
 
-#include "config.h"
-#include "messaging/message.h"
-#include "serialization/serialization.h"
-#include "serialization/messaging/serialized_data_msg.h"
+#include "vt/config.h"
+#include "vt/messaging/message.h"
+#include "vt/serialization/serialization.h"
+#include "vt/serialization/messaging/serialized_data_msg.h"
 
 #include <tuple>
 #include <type_traits>
@@ -124,6 +124,6 @@ using SerializedMessenger = ::vt::serialization::SerializedMessenger;
 
 } /* end namespace vt */
 
-#include "serialization/messaging/serialized_messenger.impl.h"
+#include "vt/serialization/messaging/serialized_messenger.impl.h"
 
 #endif /*INCLUDED_SERIALIZATION_MESSAGING/SERIALIZED_MESSENGER_H*/

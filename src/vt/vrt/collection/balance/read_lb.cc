@@ -1,8 +1,8 @@
 
-#include "config.h"
-#include "context/context.h"
-#include "vrt/collection/balance/read_lb.h"
-#include "vrt/collection/balance/lb_type.h"
+#include "vt/config.h"
+#include "vt/context/context.h"
+#include "vt/vrt/collection/balance/read_lb.h"
+#include "vt/vrt/collection/balance/lb_type.h"
 
 #include <string>
 #include <fstream>

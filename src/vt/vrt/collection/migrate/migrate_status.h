@@ -2,7 +2,7 @@
 #if !defined INCLUDED_VRT_COLLECTION_MIGRATE_MIGRATE_STATUS_H
 #define INCLUDED_VRT_COLLECTION_MIGRATE_MIGRATE_STATUS_H
 
-#include "config.h"
+#include "vt/config.h"
 
 namespace vt { namespace vrt { namespace collection {
 
