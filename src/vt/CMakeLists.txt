@@ -77,17 +77,19 @@ set(
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 
 set(VT_INSTALL_DESTINATION "include/vt")
+set(VT_EXTERNAL_DESTINATION "include")
 
 foreach(DIR ${TOP_LEVEL_SUBDIRS})
   install(
-    DIRECTORY                ${DIR}
+    DIRECTORY                "vt/${DIR}"
     DESTINATION              ${VT_INSTALL_DESTINATION}
     CONFIGURATIONS           ${build_type_list}
     FILES_MATCHING PATTERN   "*.h"
   )
 endforeach()
 
-file(GLOB TOP_HEADERS *.h)
+file(GLOB TOP_HEADERS "vt/*.h")
+
 install(
   FILES                      ${TOP_HEADERS}
   DESTINATION                ${VT_INSTALL_DESTINATION}
@@ -97,13 +99,13 @@ install(
 file(
   GLOB
   HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/vt/*.h
 )
 
 file(
   GLOB
   SOURCE_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/vt/*.cc
 )
 
 foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
@@ -112,7 +114,7 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
     "${SUB_DIR}_HEADER_FILES"
     RELATIVE
     "${CMAKE_CURRENT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/${SUB_DIR}/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/vt/${SUB_DIR}/*.h"
   )
 
   file(
@@ -120,7 +122,7 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
     "${SUB_DIR}_SOURCE_FILES"
     RELATIVE
     "${CMAKE_CURRENT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/${SUB_DIR}/*.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/vt/${SUB_DIR}/*.cc"
   )
 
   list(
@@ -187,14 +189,8 @@ include(../cmake/define_build_types.cmake)
 
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-  $<INSTALL_INTERFACE:include>
-)
-
-target_include_directories(
-  ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
-  $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/vt>
+  $<INSTALL_INTERFACE:${VT_EXTERNAL_DESTINATION}>
 )
 
 install(
@@ -205,7 +201,7 @@ install(
   LIBRARY DESTINATION       lib
   ARCHIVE DESTINATION       lib
   RUNTIME DESTINATION       bin
-  INCLUDES DESTINATION      ${VT_INSTALL_DESTINATION}
+  INCLUDES DESTINATION      ${VT_EXTERNAL_DESTINATION}
 )
 
 install(
