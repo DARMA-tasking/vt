@@ -33,7 +33,6 @@ set(
   jacobi1d_node
   serialize_example
   hello_world_vc_remote
-  hello_world_start
   hello_world_collection
   collection_insert
   collection_group
