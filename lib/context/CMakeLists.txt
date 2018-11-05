@@ -133,55 +133,59 @@ foreach(FILE ${PROJECT_EXAMPLE_TOP_HEADERS})
   list(APPEND PROJECT_EXAMPLE_TOP_HEADER_FILES "${PROJECT_EXAMPLE_DIR}/${FILE}")
 endforeach()
 
-foreach(EXAMPLE_FULL ${PROJECT_C_EXAMPLES})
-  GET_FILENAME_COMPONENT(
-    EXAMPLE
-    ${EXAMPLE_FULL}
-    NAME_WE
-  )
+if(CONTEXT_BUILD_TESTS_EXAMPLES)
 
-  add_executable(
-    ${EXAMPLE}
-    ${PROJECT_EXAMPLE_C_DIR}/${EXAMPLE}.cc
-    ${PROJECT_EXAMPLE_TOP_HEADER_FILES}
-    ${PROJECT_EXAMPLE_TOP_IMPL_FILES}
-  )
+  foreach(EXAMPLE_FULL ${PROJECT_C_EXAMPLES})
+    GET_FILENAME_COMPONENT(
+      EXAMPLE
+      ${EXAMPLE_FULL}
+      NAME_WE
+    )
 
-  add_test_for_example(
-    ${EXAMPLE}
-    ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
-  )
+    add_executable(
+      ${EXAMPLE}
+      ${PROJECT_EXAMPLE_C_DIR}/${EXAMPLE}.cc
+      ${PROJECT_EXAMPLE_TOP_HEADER_FILES}
+      ${PROJECT_EXAMPLE_TOP_IMPL_FILES}
+    )
 
-  target_link_libraries(
-    ${EXAMPLE}
-    ${FCONTEXT_LIBRARY}
-  )
-endforeach()
+    add_test_for_example(
+      ${EXAMPLE}
+      ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
+    )
 
-foreach(EXAMPLE_FULL ${PROJECT_CXX_EXAMPLES})
-  GET_FILENAME_COMPONENT(
-    EXAMPLE
-    ${EXAMPLE_FULL}
-    NAME_WE
-  )
+    target_link_libraries(
+      ${EXAMPLE}
+      ${FCONTEXT_LIBRARY}
+    )
+  endforeach()
 
-  add_executable(
-    ${EXAMPLE}
-    ${PROJECT_EXAMPLE_CXX_DIR}/${EXAMPLE}.cc
-    ${PROJECT_EXAMPLE_TOP_HEADER_FILES}
-    ${PROJECT_EXAMPLE_TOP_IMPL_FILES}
-  )
+  foreach(EXAMPLE_FULL ${PROJECT_CXX_EXAMPLES})
+    GET_FILENAME_COMPONENT(
+      EXAMPLE
+      ${EXAMPLE_FULL}
+      NAME_WE
+    )
 
-  add_test_for_example(
-    ${EXAMPLE}
-    ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
-  )
+    add_executable(
+      ${EXAMPLE}
+      ${PROJECT_EXAMPLE_CXX_DIR}/${EXAMPLE}.cc
+      ${PROJECT_EXAMPLE_TOP_HEADER_FILES}
+      ${PROJECT_EXAMPLE_TOP_IMPL_FILES}
+    )
 
-  target_link_libraries(
-    ${EXAMPLE}
-    ${FCONTEXT_LIBRARY}
-  )
-endforeach()
+    add_test_for_example(
+      ${EXAMPLE}
+      ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE}
+    )
+
+    target_link_libraries(
+      ${EXAMPLE}
+      ${FCONTEXT_LIBRARY}
+    )
+  endforeach()
+
+endif()
 
 install(
   TARGETS                   ${FCONTEXT_LIBRARY}
