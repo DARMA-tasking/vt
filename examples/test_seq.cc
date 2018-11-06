@@ -221,7 +221,9 @@ int main(int argc, char** argv) {
 
   #if SIMPLE_SEQ_MULTI_NODE
   if (num_nodes == 1) {
-    CollectiveOps::abort("At least 2 ranks required");
+    CollectiveOps::output("requires at least 2 nodes");
+    CollectiveOps::finalize();
+    return 0;
   }
   #endif
 

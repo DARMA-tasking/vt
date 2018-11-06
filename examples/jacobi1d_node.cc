@@ -232,7 +232,9 @@ static int exitEarly(
   NodeType const node, int const exit_code, std::string const reason
 ) {
   if (node == 0) {
-    CollectiveOps::abort(std::string{reason}, exit_code);
+    CollectiveOps::output(std::string{reason});
+    CollectiveOps::finalize();
+    return 0;
   }
 
   CollectiveOps::finalize();

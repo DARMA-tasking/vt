@@ -112,7 +112,9 @@ int main(int argc, char** argv) {
   fmt::print("{}:use_epoch={}\n", my_node, print_bool(use_epoch));
 
   if (num_nodes == 1) {
-    CollectiveOps::abort("At least 2 ranks required");
+    CollectiveOps::output("requires at least 2 nodes");
+    CollectiveOps::finalize();
+    return 0;
   }
 
   next_epoch();

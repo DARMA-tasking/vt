@@ -46,7 +46,9 @@ int main(int argc, char** argv) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes < 2) {
-    CollectiveOps::abort("At least 2 ranks required");
+    CollectiveOps::output("requires at least 2 nodes");
+    CollectiveOps::finalize();
+    return 0;
   }
 
   srand48(my_node * 29);

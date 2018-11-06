@@ -46,7 +46,9 @@ int main(int argc, char** argv) {
   fmt::print("{}: my_node = {} here\n",theContext()->getNode(),my_node);
 
   if (num_nodes == 1) {
-    CollectiveOps::abort("At least 2 ranks required");
+    CollectiveOps::output("requires at least 2 nodes");
+    CollectiveOps::finalize();
+    return 0;
   }
 
   if (my_node == 0) {

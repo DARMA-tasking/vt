@@ -36,9 +36,9 @@ int main(int argc, char** argv) {
   my_node = theContext()->getNode();
 
   if (theContext()->getNumNodes() == 1) {
-    CollectiveOps::abort("At least 2 ranks required");
-
-
+    CollectiveOps::output("requires at least 2 nodes");
+    CollectiveOps::finalize();
+    return 0;
   }
 
   NodeType from_node = uninitialized_destination;
