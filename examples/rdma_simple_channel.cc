@@ -33,10 +33,16 @@ static void put_channel_setup(TestMsg* msg) {
 
   if (my_node == 1) {
     int const num_elm = 2;
-    theRDMA()->putTypedData(handle, my_data, num_elm, no_byte, no_tag, [=]{
-      TestMsg* back = makeSharedMessage<TestMsg>(handle);
-      theMsg()->sendMsg<TestMsg, read_data_fn>(0, back);
-    });
+    theRDMA()->putTypedData(
+      handle, my_data, num_elm, no_byte, no_tag,
+      [=]{
+        fmt::print("{}: local put finished\n", my_node);
+      },
+      [=]{
+        TestMsg* back = makeSharedMessage<TestMsg>(handle);
+        theMsg()->sendMsg<TestMsg, read_data_fn>(0, back);
+      }
+    );
   }
 }
 
