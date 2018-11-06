@@ -30,7 +30,7 @@ struct CollectiveAnyOps {
     RuntimePtrType in_rt = nullptr, WorkerCountType const workers = no_workers
   );
   static void setCurrentRuntimeTLS(RuntimeUnsafePtrType in_rt = nullptr);
-  static void abort(std::string const str = "", ErrorCodeType const code = 1);
+  static void abort(std::string const str = "", ErrorCodeType const code = 0);
   static void output(
     std::string const str = "", ErrorCodeType const code = 1,
     bool error = false, bool decorate = true
