@@ -80,9 +80,9 @@ if ($mpi_c ne "") {
 }
 if ($mpi_exec ne "") {
     my $mpi_bin_exec = `which $mpi_exec`;
+    chomp $mpi_bin_exec;
     $mpi_str .= "-DMPIEXEC_EXECUTABLE=$mpi_bin_exec ";
 }
-
 
 my $build_all_str = "";
 
