@@ -540,17 +540,29 @@ void RDMAManager::sendDataChannel(
 
   channel->writeDataToChannel(ptr, num_bytes, offset);
 
+  debug_print(
+    rdma, node,
+    "sendDataChannel: han={}, type={}, has:cont={}, "
+    "has:action_after_remote_op={}\n",
+    han, PRINT_CHANNEL_TYPE(type), cont != nullptr,
+    action_after_remote_op != nullptr
+  );
+
   if (cont) {
     cont();
   }
 
   if (type == RDMA_TypeType::Put and action_after_remote_op) {
     syncRemotePutChannel(han, target, [=]{
-      action_after_remote_op();
+      if (action_after_remote_op) {
+        action_after_remote_op();
+      }
     });
   } else if (type == RDMA_TypeType::Get and action_after_remote_op) {
     syncRemoteGetChannel(han, target, [=]{
-      action_after_remote_op();
+      if (action_after_remote_op) {
+        action_after_remote_op();
+      }
     });
   }
 }

@@ -158,6 +158,12 @@ Channel::lockChannelForOp() {
       lock_type, target_pos_, mpi_win_lock_assert_arg, window_
     );
 
+    debug_print(
+      rdma_channel, node,
+      "lockChannelForOp: target={}, op_type={}, MPI_Win_lock finished\n",
+      target_, PRINT_RDMA_OP_TYPE(op_type_)
+    );
+
     vtAssert(ret == MPI_SUCCESS, "MPI_Win_lock: Should be successful");
 
     locked_ = true;
@@ -195,13 +201,20 @@ Channel::writeDataToChannel(
   debug_print(
     rdma_channel, node,
     "writeDataToChannel: target={}, ptr={}, ptr_num_bytes={}, "
-    "num_bytes={}, op_type={}, offset={}\n",
-    target_, ptr, ptr_num_bytes, num_bytes_, PRINT_RDMA_OP_TYPE(op_type_), offset
+    "num_bytes={}, op_type={}, offset={}, locked_={}\n",
+    target_, ptr, ptr_num_bytes, num_bytes_, PRINT_RDMA_OP_TYPE(op_type_),
+    offset, locked_
   );
 
   if (not locked_) {
     lockChannelForOp();
   }
+
+  debug_print(
+    rdma_channel, node,
+    "writeDataToChannel: lock finished: target={}, op_type={}, locked_={}\n",
+    target_, PRINT_RDMA_OP_TYPE(op_type_), locked_
+  );
 
   if (op_type_ == RDMA_TypeType::Get) {
     auto const& get_ret = MPI_Get(
