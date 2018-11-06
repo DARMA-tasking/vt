@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "test_config.h"
 #include "test_harness.h"
@@ -17,7 +18,28 @@
 
 namespace vt { namespace tests { namespace unit {
 
-static bool mpi_is_initialized = false;
+/*
+ *  gtest runs many tests in the same binary, but there is no way to know when
+ *  to call MPI_Finalize, which can only be called once (when it's called
+ *  MPI_Init can't be called again)! This singleton uses static initialization
+ *  to init/finalize exactly once
+ */
+struct MPISingletonMultiTest {
+  MPISingletonMultiTest(int& argc, char**& argv) {
+    MPI_Init(&argc, &argv);
+    comm_ = MPI_COMM_WORLD;
+    MPI_Barrier(comm_);
+  }
+  virtual ~MPISingletonMultiTest() {
+    MPI_Barrier(comm_);
+    MPI_Finalize();
+  }
+
+private:
+  MPI_Comm comm_;
+};
+
+extern std::unique_ptr<MPISingletonMultiTest> mpi_singleton;
 
 template <typename TestBase>
 struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
@@ -26,9 +48,10 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 
     TestHarnessAny<TestBase>::SetUp();
 
-    if (not mpi_is_initialized) {
-      MPI_Init(&this->argc_, &this->argv_);
-      mpi_is_initialized = true;
+    if (mpi_singleton == nullptr) {
+      mpi_singleton = std::make_unique<MPISingletonMultiTest>(
+        this->argc_, this->argv_
+      );
     }
 
     CollectiveOps::initialize(this->argc_, this->argv_, no_workers, true);
