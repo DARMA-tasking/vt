@@ -79,7 +79,8 @@ if ($mpi_c ne "") {
     $mpi_str .= "-DMPI_C_COMPILER=$mpi_c ";
 }
 if ($mpi_exec ne "") {
-    $mpi_str .= "-DMPIEXEC_EXECUTABLE=$mpi_exec ";
+    my $mpi_bin_exec = `which $mpi_exec`;
+    $mpi_str .= "-DMPIEXEC_EXECUTABLE=$mpi_bin_exec ";
 }
 
 
