@@ -10,9 +10,10 @@ require "args.pl";
 
 my ($build_mode,$compiler,$has_serial,$build_all_tests,$vt_install);
 my ($vt,$root,$detector,$meld,$checkpoint,$fmt,$gtest);
-my ($compiler_cxx,$compiler_c);
+my ($compiler_cxx,$compiler_c,$mpi_c,$mpi_cxx,$mpi_exec);
 my $libroot = "";
 my $atomic = "";
+my $mpi_str = "";
 my ($dry_run,$verbose);
 
 my $arg = Args->new();
@@ -37,6 +38,9 @@ $arg->add_optional_arg("atomic",      \$atomic,     "");
 
 $arg->add_optional_arg("compiler_c",  \$compiler_c,   "");
 $arg->add_optional_arg("compiler_cxx",\$compiler_cxx, "");
+$arg->add_optional_arg("mpi_c",       \$mpi_c,        "");
+$arg->add_optional_arg("mpi_cxx",     \$mpi_cxx,      "");
+$arg->add_optional_arg("mpi_exec",    \$mpi_exec,     "");
 
 $arg->add_optional_func("detector",   \$detector,   "detector-install",   \&mk);
 $arg->add_optional_func("meld",       \$meld,       "meld-install",       \&mk);
@@ -67,6 +71,17 @@ if ($compiler_cxx ne "") {
 if ($compiler_c ne "") {
     $cc = $compiler_c;
 }
+
+if ($mpi_cxx ne "") {
+    $mpi_str .= "-DMPI_CXX_COMPILER=$mpi_cxx ";
+}
+if ($mpi_c ne "") {
+    $mpi_str .= "-DMPI_C_COMPILER=$mpi_c ";
+}
+if ($mpi_exec ne "") {
+    $mpi_str .= "-DMPIEXEC_EXECUTABLE=$mpi_exec ";
+}
+
 
 my $build_all_str = "";
 
@@ -104,6 +119,7 @@ cmake $source_base_dir                                                       \\
       -DCMAKE_VERBOSE_MAKEFILE:BOOL=$verbose                                 \\
       -DCMAKE_CXX_COMPILER=$cxx                                              \\
       -DCMAKE_C_COMPILER=$cc                                                 \\
+      ${mpi_str}                                                             \\
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                   \\
       -Dcheckpoint_DIR=$checkpoint                                           \\
       -Dmeld_DIR=$meld                                                       \\
