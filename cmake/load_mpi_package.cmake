@@ -29,4 +29,5 @@ build_mpi_proc_test_list(
 )
 
 message(STATUS "MPI proc test list: ${PROC_TEST_LIST}")
+message(STATUS "MPI exec: ${MPIEXEC_EXECUTABLE}")
 
