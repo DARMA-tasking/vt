@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+#if backend_check_enabled(mpi_rdma)
   my_data = new double[my_data_len];
 
   if (my_node < 3) {
@@ -126,6 +127,7 @@ int main(int argc, char** argv) {
       theMsg()->sendMsg<TestMsg, put_channel_setup>(1, msg1);
     });
   }
+#endif
 
   while (!rt->isTerminated()) {
     runScheduler();
