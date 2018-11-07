@@ -53,6 +53,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+#if backend_check_enabled(mpi_rdma)
   my_data = new double[my_data_len];
   local_data = new double[local_data_len];
 
@@ -80,6 +81,7 @@ int main(int argc, char** argv) {
       theMsg()->broadcastMsg<TestMsg, announce>(msg);
     });
   }
+#endif
 
   while (!rt->isTerminated()) {
     runScheduler();
