@@ -58,6 +58,7 @@
     detector,              "C++ Trait Detector",                        \
     lblite,                "LB-lite (collections) enabled",             \
     memory_pool,           "Enable memory pooling",                     \
+    mpi_rdma,              "Enable RDMA MPI Operations",                \
     no_feature,            "No feature",                                \
     no_pool_alloc_env,     "Disable memory pool envelope",              \
     openmp,                "OpenMP Threading",                          \
