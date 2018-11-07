@@ -7,13 +7,8 @@ set(
   rdma_simple_get_direct
   rdma_simple_put
   rdma_simple_put_direct
-  ###
-  ### Disable the following two examples/tests. They utilize RDMA channels that
-  ### reply on MPI_{Get,Put} which may not work properly with openmpi:
-  ###
-  ###   rdma_simple_channel
-  ###   rdma_channel_sync
-  ###
+  rdma_simple_channel
+  rdma_channel_sync
   rdma_collective
   callback
   callback_new
