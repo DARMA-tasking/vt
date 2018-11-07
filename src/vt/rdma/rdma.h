@@ -267,18 +267,27 @@ struct RDMAManager {
     RDMA_HandleType const& han, NodeType const& target,
     NodeType const& non_target, ActionType const& action = nullptr
   ) {
-    return newChannel(
-      RDMA_TypeType::Get, han, target, non_target, action
-    );
+    #if backend_check_enabled(mpi_rdma)
+      return newChannel(
+        RDMA_TypeType::Get, han, target, non_target, action
+      );
+    #else
+      vtAbort("Feature \"mpi_rdma\" is not enabled\n");
+    #endif
   }
 
   void newPutChannel(
     RDMA_HandleType const& han, NodeType const& target,
     NodeType const& non_target, ActionType const& action = nullptr
   ) {
-    return newChannel(
-      RDMA_TypeType::Put, han, target, non_target, action
-    );
+
+    #if backend_check_enabled(mpi_rdma)
+      return newChannel(
+        RDMA_TypeType::Put, han, target, non_target, action
+      );
+    #else
+      vtAbort("Feature \"mpi_rdma\" is not enabled\n");
+    #endif
   }
 
   void syncLocalGetChannel(
