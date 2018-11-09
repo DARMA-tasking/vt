@@ -2,9 +2,9 @@
 #if !defined INCLUDED_CONTEXT_SRC_CONTEXT_FUNCTOR_H
 #define INCLUDED_CONTEXT_SRC_CONTEXT_FUNCTOR_H
 
-#include "fcontext.h"
-#include "context_wrapper.h"
-#include "context_stack.h"
+#include "context/fcontext.h"
+#include "context/context_wrapper.h"
+#include "context/context_stack.h"
 
 #include <functional>
 #include <tuple>

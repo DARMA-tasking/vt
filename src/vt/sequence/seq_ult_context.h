@@ -5,7 +5,7 @@
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
 
-#include <context.h>
+#include <context/context.h>
 
 #include <functional>
 

@@ -2,15 +2,15 @@
 #if !defined INCLUDED_SEQUENCE_SEQ_CONTEXT_H
 #define INCLUDED_SEQUENCE_SEQ_CONTEXT_H
 
-#include <list>
-#include <memory>
-
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
 #include "vt/sequence/seq_node.h"
 #include "vt/sequence/seq_ult_context.h"
 
-#include <context_wrapper.h>
+#include <list>
+#include <memory>
+
+#include <context/context_wrapper.h>
 
 namespace vt { namespace seq {
 

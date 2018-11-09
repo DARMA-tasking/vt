@@ -13,13 +13,13 @@ set(PROJECT_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 file(
   GLOB
   HEADER_FILES
-  ${PROJECT_SOURCE_DIR}/*.h
+  ${PROJECT_SOURCE_DIR}/context/*.h
 )
 
 file(
   GLOB
   SOURCE_FILES
-  ${PROJECT_SOURCE_DIR}/*.cc
+  ${PROJECT_SOURCE_DIR}/context/*.cc
 )
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -36,9 +36,9 @@ endif()
 
 set(
   ASM_SOURCES
-  "${PROJECT_SOURCE_DIR}/asm/make_${CPU_ARCH}_${ASM_EXT}"
-  "${PROJECT_SOURCE_DIR}/asm/jump_${CPU_ARCH}_${ASM_EXT}"
-  "${PROJECT_SOURCE_DIR}/asm/ontop_${CPU_ARCH}_${ASM_EXT}"
+  "${PROJECT_SOURCE_DIR}/context/asm/make_${CPU_ARCH}_${ASM_EXT}"
+  "${PROJECT_SOURCE_DIR}/context/asm/jump_${CPU_ARCH}_${ASM_EXT}"
+  "${PROJECT_SOURCE_DIR}/context/asm/ontop_${CPU_ARCH}_${ASM_EXT}"
 )
 
 #message("ASM_SOURCES=${ASM_SOURCES}")
@@ -51,7 +51,7 @@ add_library(
   ${HEADER_FILES} ${SOURCE_FILES} ${ASM_SOURCES}
 )
 
-set(VT_CONTEXT_INSTALL_DESTINATION "include/vt")
+set(VT_CONTEXT_INSTALL_DESTINATION "include/context")
 set(VT_CONTEXT_EXTERNAL_DESTINATION "include")
 
 install(

@@ -1,7 +1,7 @@
 
-#include "context_stack.h"
-#include "fcontext.h"
-#include "context_page.h"
+#include "context/context_stack.h"
+#include "context/fcontext.h"
+#include "context/context_page.h"
 
 #include <cassert>
 #include <cstdlib>

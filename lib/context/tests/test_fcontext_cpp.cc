@@ -2,8 +2,8 @@
 #include <time.h>
 #include <cstdio>
 
-#include "context_wrapper.h"
-#include "stack.h"
+#include "context/context_wrapper.h"
+#include "context/stack.h"
 
 using namespace fcontext;
 

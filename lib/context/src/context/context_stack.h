@@ -2,7 +2,7 @@
 #if !defined INCLUDED_CONTEXT_SRC_STACK_H
 #define INCLUDED_CONTEXT_SRC_STACK_H
 
-#include "context_wrapper.h"
+#include "context/context_wrapper.h"
 
 #include <memory>
 #include <cstdlib>
