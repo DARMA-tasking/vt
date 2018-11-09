@@ -339,10 +339,12 @@ EventType ActiveMessenger::sendMsg(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
   UserSendFnType send_payload_fn, ActionType next_action
 ) {
-  using namespace std::placeholders;
+  namespace ph = std::placeholders;
 
   // must send first so action payload function runs before the send
-  auto f = std::bind(&ActiveMessenger::sendData, this, _1, _2, _3, _4);
+  auto f = std::bind(
+    &ActiveMessenger::sendData, this, ph::_1, ph::_2, ph::_3, ph::_4
+  );
   send_payload_fn(f);
 
   // setup envelope

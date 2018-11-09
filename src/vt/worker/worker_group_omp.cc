@@ -28,8 +28,8 @@ WorkerGroupOMP::WorkerGroupOMP(WorkerCountType const& in_num_workers)
 }
 
 void WorkerGroupOMP::initialize() {
-  using namespace std::placeholders;
-  finished_fn_ = std::bind(&WorkerGroupOMP::finished, this, _1, _2);
+  namespace ph = std::placeholders;
+  finished_fn_ = std::bind(&WorkerGroupOMP::finished, this, ph::_1, ph::_2);
 
   worker_state_.resize(num_workers_);
 }

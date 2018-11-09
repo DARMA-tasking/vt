@@ -13,8 +13,8 @@
 namespace vt { namespace worker {
 
 void WorkerGroupCounter::attachEnqueueProgressFn() {
-  using std::placeholders::_1;
-  auto fn = std::bind(&WorkerGroupCounter::enqueued, this, _1);
+  namespace ph = std::placeholders;
+  auto fn = std::bind(&WorkerGroupCounter::enqueued, this, ph::_1);
   enqueued_count_.attach(fn, worker_id_comm_thread);
 }
 
