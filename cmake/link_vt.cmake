@@ -47,6 +47,14 @@ function(link_target_with_vt)
     message(STATUS "link_target_with_vt: default link=${ARG_DEFAULT_LINK_SET}")
   endif()
 
+  if (${ARG_LINK_GTEST})
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: gtest=${ARG_LINK_GTEST}")
+    endif()
+    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} GTest::GTest)
+    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} GTest::Main)
+  endif()
+
   if (NOT ARG_LINK_VT_LIB)
     # Unconditionally link the VT library for this target unless linking the VT
     # library itself itself
@@ -156,14 +164,6 @@ function(link_target_with_vt)
     endif()
     # @todo: is there something that needs to be done for std::threads to work
     # in all cases, perhaps "-pthread"?
-  endif()
-
-  if (${ARG_LINK_GTEST})
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: gtest=${ARG_LINK_GTEST}")
-    endif()
-    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} GTest::GTest)
-    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} GTest::Main)
   endif()
 
   if (${ARG_CUSTOM_LINK_ARGS})
