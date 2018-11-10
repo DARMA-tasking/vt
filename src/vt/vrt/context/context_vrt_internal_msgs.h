@@ -3,7 +3,7 @@
 #define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H
 
 #include "vt/config.h"
-#include "vt/vrt/context/context_vrtproxy.h"
+#include "vt/vrt/proxy/proxy_bits.h"
 #include "vt/vrt/context/context_vrt_fwd.h"
 #include "vt/messaging/message.h"
 #include "vt/serialization/serialization.h"
