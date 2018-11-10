@@ -6,15 +6,17 @@ namespace vt {namespace vrt {
 
 /*static*/ VirtualProxyType VirtualProxyBuilder::createProxy(
   VirtualIDType const& id, NodeType const& node, bool const& is_coll,
-  bool const& is_migratable
+  bool const& is_migratable, bool const& is_distributed
 ) {
+  constexpr NodeType const default_remote_node = 0;
   VirtualProxyType new_proxy = 0;
+  NodeType remote_node = is_distributed ? default_remote_node : node;
 
   setIsCollection(new_proxy, is_coll);
   setIsMigratable(new_proxy, is_migratable);
-  setIsRemote(new_proxy, false);
-  setVirtualNode(new_proxy, node);
-  setVirtualID(new_proxy, id);
+  setIsRemote    (new_proxy, is_distributed);
+  setVirtualNode (new_proxy, remote_node);
+  setVirtualID   (new_proxy, id);
 
   return new_proxy;
 }
