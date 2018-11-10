@@ -21,15 +21,15 @@ enum eVirtualProxyBits {
   Collection = 0,
   Migratable = eVirtualProxyBits::Collection + virtual_is_collection_num_bits,
   Remote     = eVirtualProxyBits::Migratable + virtual_is_migratable_num_bits,
-  Node       = eVirtualProxyBits::Remote + virtual_is_remote_num_bits,
-  ID         = eVirtualProxyBits::Node + virtual_node_num_bits
+  Node       = eVirtualProxyBits::Remote     + virtual_is_remote_num_bits,
+  ID         = eVirtualProxyBits::Node       + virtual_node_num_bits
 };
 
 enum eVirtualProxyRemoteBits {
   // The prelude is the same as eVirtualProxyBits. Starting with the ID field it
   // is different
-  RemoteNode = eVirtualProxyBits::Node + virtual_node_num_bits,
-  RemoteID = eVirtualProxyRemoteBits::RemoteNode + virtual_node_num_bits
+  RemoteNode = eVirtualProxyBits::Node             + virtual_node_num_bits,
+  RemoteID   = eVirtualProxyRemoteBits::RemoteNode + virtual_node_num_bits
 };
 
 struct VirtualProxyBuilder {
@@ -38,8 +38,11 @@ struct VirtualProxyBuilder {
     bool const& is_coll = false, bool const& is_migratable = false
   );
   static VirtualProxyType createRemoteProxy(
-    VirtualRemoteIDType const& id, NodeType const& this_node,
-    NodeType const& target_node, bool const& is_coll, bool const& is_migratable
+    VirtualRemoteIDType const& id,
+    NodeType            const& this_node,
+    NodeType            const& target_node,
+    bool                const& is_coll,
+    bool                const& is_migratable
   );
 
   static void setIsCollection(VirtualProxyType& proxy, bool const& is_coll);
