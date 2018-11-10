@@ -36,6 +36,19 @@ struct RuntimeHolder {
   bool operator!=(std::nullptr_t) const { return rt_ != nullptr; }
   operator bool() const { return rt_ != nullptr; }
 
+  RuntimeHolder& operator=(RuntimeHolder&& holder) {
+    release();
+    if (holder.rt_) {
+      owner_ = holder.owner_;
+      rt_ = holder.rt_;
+      holder.owner_ = false;
+      holder.release();
+    } else {
+      rt_ = nullptr;
+    }
+    return *this;
+  }
+
   inline PointerType unsafe() { return rt_; }
   inline PointerType operator->() const { return rt_; }
   void makeNonOwning() { owner_ = false; }
