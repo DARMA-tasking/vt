@@ -87,7 +87,11 @@ void Runtime::printStartupBanner() {
   WorkerCountType const workers = theContext->getNumWorkers();
   bool const has_workers = theContext->hasWorkers();
 
-  std::string init = "Runtime initializing";
+  std::string is_interop_str =
+    is_interop_ ?
+      std::string("interop=") + std::string(is_interop_ ? "true" : "false") :
+      std::string("");
+  std::string init = "Runtime initializing: " + is_interop_str;
   std::string mode = std::string("mode: ") +
     std::string(num_workers_ == no_workers ? "single" : "multi") +
     std::string("-threaded");
