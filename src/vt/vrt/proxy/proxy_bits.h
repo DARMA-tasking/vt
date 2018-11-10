@@ -34,8 +34,11 @@ enum eVirtualProxyRemoteBits {
 
 struct VirtualProxyBuilder {
   static VirtualProxyType createProxy(
-    VirtualIDType const& id, NodeType const& node,
-    bool const& is_coll = false, bool const& is_migratable = false
+    VirtualIDType       const& id,
+    NodeType            const& node,
+    bool                const& is_coll        = false,
+    bool                const& is_migratable  = false,
+    bool                const& is_distributed = false
   );
   static VirtualProxyType createRemoteProxy(
     VirtualRemoteIDType const& id,
