@@ -11,6 +11,7 @@
 #include "vt/context/context.h"
 #include "vt/collective/collective_ops.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/collective/collective.h"
 #include "vt/event/event.h"
 #include "vt/registry/registry.h"
 #include "vt/messaging/active.h"
