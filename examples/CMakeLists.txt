@@ -35,6 +35,7 @@ set(
   serialize_example
   hello_world_vc_remote
   hello_world_collection
+  simple_collection
   collection_insert
   collection_group
   rdma_unsized_collection
