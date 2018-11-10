@@ -25,11 +25,11 @@ namespace vt {namespace vrt {
 ) {
   VirtualProxyType new_proxy = 0;
 
-  setIsCollection(new_proxy, is_coll);
-  setIsMigratable(new_proxy, is_migratable);
-  setIsRemote(new_proxy, true);
-  setVirtualNode(new_proxy, target_node);
-  setVirtualRemoteID(new_proxy, id);
+  setIsCollection     (new_proxy, is_coll);
+  setIsMigratable     (new_proxy, is_migratable);
+  setIsRemote         (new_proxy, true);
+  setVirtualNode      (new_proxy, target_node);
+  setVirtualRemoteID  (new_proxy, id);
   setVirtualRemoteNode(new_proxy, this_node);
 
   auto const& id1 = VirtualProxyBuilder::getVirtualID(new_proxy);
