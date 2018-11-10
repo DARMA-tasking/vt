@@ -4,7 +4,6 @@
 
 #include "vt/config.h"
 #include "vt/vrt/context/context_vrt_fwd.h"
-#include "vt/vrt/context/context_vrt.h"
 
 namespace vt { namespace vrt {
 

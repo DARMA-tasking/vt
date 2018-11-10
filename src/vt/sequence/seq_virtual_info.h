@@ -4,7 +4,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/context/context_vrt.h"
-#include "vt/vrt/context/context_vrtproxy.h"
+#include "vt/vrt/proxy/proxy_bits.h"
 
 namespace vt { namespace seq {
 

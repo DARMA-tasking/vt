@@ -11,7 +11,7 @@
 #include "vt/vrt/context/context_vrt_funcs.h"
 #include "vt/vrt/context/context_vrtmessage.h"
 #include "vt/vrt/context/context_vrtinfo.h"
-#include "vt/vrt/context/context_vrtproxy.h"
+#include "vt/vrt/proxy/proxy_bits.h"
 #include "vt/vrt/context/context_vrt_internal_msgs.h"
 
 #include "vt/utils/bits/bits_common.h"
