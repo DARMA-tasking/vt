@@ -14,6 +14,7 @@ namespace vt { namespace vrt { namespace collection {
 template <typename CollectionT>
 struct DefaultMapBase {
   using IndexType        = typename CollectionT::IndexType;
+  using BaseType         = typename IndexType::DenseIndexType;
   using IndexPtrType     = IndexType*;
   using MapParamPackType = std::tuple<IndexPtrType,IndexPtrType,NodeType>;
 };
@@ -29,13 +30,19 @@ template <typename CollectionT>
 struct DefaultMap<
   CollectionT,
   typename std::enable_if_t<
-    std::is_same<typename CollectionT::IndexType, ::vt::index::Index1D>::value
+    std::is_same<
+      typename CollectionT::IndexType,
+      typename ::vt::index::Index1D<
+        typename CollectionT::IndexType::DenseIndexType
+      >
+    >::value
   >
 > : DefaultMapBase<CollectionT>
 {
-  using BlockMapType     = ::vt::mapping::dense1DBlkMapFn;
-  using RRMapType        = ::vt::mapping::dense1DRRMapFn;
-  using DefaultMapType   = ::vt::mapping::dense1DMapFn;
+  using BaseType         = typename CollectionT::IndexType::DenseIndexType;
+  using BlockMapType     = ::vt::mapping::dense1DBlkMapFn<BaseType>;
+  using RRMapType        = ::vt::mapping::dense1DRRMapFn<BaseType>;
+  using DefaultMapType   = ::vt::mapping::dense1DMapFn<BaseType>;
   using MapType          = DefaultMapType;
 };
 
@@ -47,13 +54,19 @@ template <typename CollectionT>
 struct DefaultMap<
   CollectionT,
   typename std::enable_if_t<
-    std::is_same<typename CollectionT::IndexType, ::vt::index::Index2D>::value
+    std::is_same<
+      typename CollectionT::IndexType,
+      typename ::vt::index::Index2D<
+        typename CollectionT::IndexType::DenseIndexType
+      >
+    >::value
   >
 > : DefaultMapBase<CollectionT>
 {
-  using BlockMapType     = ::vt::mapping::dense2DBlkMapFn;
-  using RRMapType        = ::vt::mapping::dense2DRRMapFn;
-  using DefaultMapType   = ::vt::mapping::dense2DMapFn;
+  using BaseType         = typename CollectionT::IndexType::DenseIndexType;
+  using BlockMapType     = ::vt::mapping::dense2DBlkMapFn<BaseType>;
+  using RRMapType        = ::vt::mapping::dense2DRRMapFn<BaseType>;
+  using DefaultMapType   = ::vt::mapping::dense2DMapFn<BaseType>;
   using MapType          = DefaultMapType;
 };
 
@@ -65,13 +78,19 @@ template <typename CollectionT>
 struct DefaultMap<
   CollectionT,
   typename std::enable_if_t<
-    std::is_same<typename CollectionT::IndexType, ::vt::index::Index3D>::value
+    std::is_same<
+      typename CollectionT::IndexType,
+      typename ::vt::index::Index3D<
+        typename CollectionT::IndexType::DenseIndexType
+      >
+    >::value
   >
 > : DefaultMapBase<CollectionT>
 {
-  using BlockMapType     = ::vt::mapping::dense3DBlkMapFn;
-  using RRMapType        = ::vt::mapping::dense3DRRMapFn;
-  using DefaultMapType   = ::vt::mapping::dense3DMapFn;
+  using BaseType         = typename CollectionT::IndexType::DenseIndexType;
+  using BlockMapType     = ::vt::mapping::dense3DBlkMapFn<BaseType>;
+  using RRMapType        = ::vt::mapping::dense3DRRMapFn<BaseType>;
+  using DefaultMapType   = ::vt::mapping::dense3DMapFn<BaseType>;
   using MapType          = DefaultMapType;
 };
 
