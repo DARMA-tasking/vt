@@ -11,6 +11,57 @@
 
 namespace vt { namespace mapping {
 
+template <typename T>
+NodeType defaultDenseIndex1DMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType nx) {
+  return dense1DBlockMap<T>(idx, max, nx);
+}
+
+template <typename T>
+NodeType defaultDenseIndex2DMap(Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType nx) {
+  return dense2DBlockMap<T>(idx, max, nx);
+}
+
+template <typename T>
+NodeType defaultDenseIndex3DMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType nx) {
+  return dense3DBlockMap<T>(idx, max, nx);
+}
+
+// Default round robin mappings
+template <typename T>
+NodeType dense1DRoundRobinMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType nx) {
+  return idx->x() % nx;
+}
+
+template <typename T>
+NodeType dense2DRoundRobinMap(Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType nx) {
+  using IndexElmType = typename IdxType2D<T>::DenseIndexType;
+  auto const& lin_idx = linearizeDenseIndexColMajor<IndexElmType, 2>(idx, max);
+  return lin_idx % nx;
+}
+
+template <typename T>
+NodeType dense3DRoundRobinMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType nx) {
+  using IndexElmType = typename IdxType3D<T>::DenseIndexType;
+  auto const& lin_idx = linearizeDenseIndexColMajor<IndexElmType, 3>(idx, max);
+  return lin_idx % nx;
+}
+
+// Default block mappings
+template <typename T>
+NodeType dense1DBlockMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType nx) {
+  return denseBlockMap<IdxType1D<T>, 1>(idx, max, nx);
+}
+
+template <typename T>
+NodeType dense2DBlockMap(Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType nx) {
+  return denseBlockMap<IdxType2D<T>, 2>(idx, max, nx);
+}
+
+template <typename T>
+NodeType dense3DBlockMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType nx) {
+  return denseBlockMap<IdxType3D<T>, 3>(idx, max, nx);
+}
+
 template <typename IndexElmType, typename PhysicalType>
 inline NodeType blockMapDenseFlatIndex(
   IndexElmType* flat_idx_ptr, IndexElmType* num_elems_ptr,

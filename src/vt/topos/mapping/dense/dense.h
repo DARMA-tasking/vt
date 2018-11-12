@@ -29,34 +29,57 @@ Idx linearizeDenseIndexRowMajor(
 template <typename Index>
 using IdxPtr = Index*;
 
-using Idx1DPtr = Index1D*;
-using Idx2DPtr = Index2D*;
-using Idx3DPtr = Index3D*;
+template <typename T = IdxBase> using Idx1DPtr = IdxType1D<T>*;
+template <typename T = IdxBase> using Idx2DPtr = IdxType2D<T>*;
+template <typename T = IdxBase> using Idx3DPtr = IdxType3D<T>*;
 
 template <typename Idx, index::NumDimensionsType ndim>
 NodeType denseBlockMap(IdxPtr<Idx> idx, IdxPtr<Idx> max_idx, NodeType nnodes);
 
-NodeType defaultDenseIndex1DMap(Idx1DPtr idx, Idx1DPtr max_idx, NodeType nnodes);
-NodeType defaultDenseIndex2DMap(Idx2DPtr idx, Idx2DPtr max_idx, NodeType nnodes);
-NodeType defaultDenseIndex3DMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes);
+template <typename T = IdxBase>
+NodeType defaultDenseIndex1DMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType n);
+template <typename T = IdxBase>
+NodeType defaultDenseIndex2DMap(Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType n);
+template <typename T = IdxBase>
+NodeType defaultDenseIndex3DMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType n);
 
-NodeType dense1DRoundRobinMap(Idx1DPtr idx, Idx1DPtr max_idx, NodeType nnodes);
-NodeType dense2DRoundRobinMap(Idx2DPtr idx, Idx2DPtr max_idx, NodeType nnodes);
-NodeType dense3DRoundRobinMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes);
+template <typename T = IdxBase>
+NodeType dense1DRoundRobinMap(  Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType n);
+template <typename T = IdxBase>
+NodeType dense2DRoundRobinMap(  Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType n);
+template <typename T = IdxBase>
+NodeType dense3DRoundRobinMap(  Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType n);
 
-NodeType dense1DBlockMap(Idx1DPtr idx, Idx1DPtr max_idx, NodeType nnodes);
-NodeType dense2DBlockMap(Idx2DPtr idx, Idx2DPtr max_idx, NodeType nnodes);
-NodeType dense3DBlockMap(Idx3DPtr idx, Idx3DPtr max_idx, NodeType nnodes);
+template <typename T = IdxBase>
+NodeType dense1DBlockMap(       Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType n);
+template <typename T = IdxBase>
+NodeType dense2DBlockMap(       Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType n);
+template <typename T = IdxBase>
+NodeType dense3DBlockMap(       Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType n);
 
-using dense1DMapFn    = FunctorAdapt<MapAdapter<Index1D>, defaultDenseIndex1DMap>;
-using dense2DMapFn    = FunctorAdapt<MapAdapter<Index2D>, defaultDenseIndex2DMap>;
-using dense3DMapFn    = FunctorAdapt<MapAdapter<Index3D>, defaultDenseIndex3DMap>;
-using dense1DRRMapFn  = FunctorAdapt<MapAdapter<Index1D>, dense1DRoundRobinMap>;
-using dense2DRRMapFn  = FunctorAdapt<MapAdapter<Index2D>, dense2DRoundRobinMap>;
-using dense3DRRMapFn  = FunctorAdapt<MapAdapter<Index3D>, dense3DRoundRobinMap>;
-using dense1DBlkMapFn = FunctorAdapt<MapAdapter<Index1D>, dense1DBlockMap>;
-using dense2DBlkMapFn = FunctorAdapt<MapAdapter<Index2D>, dense2DBlockMap>;
-using dense3DBlkMapFn = FunctorAdapt<MapAdapter<Index3D>, dense3DBlockMap>;
+template <typename T = IdxBase>   using i1D   = IdxType1D<T>;
+template <typename T = IdxBase>   using i2D   = IdxType2D<T>;
+template <typename T = IdxBase>   using i3D   = IdxType3D<T>;
+template <typename F, F* f>       using Adapt = FunctorAdapt<F,f>;
+
+template <typename T = IdxBase>
+using dense1DMapFn    = Adapt<MapAdapter<i1D<T>>, defaultDenseIndex1DMap<T>>;
+template <typename T = IdxBase>
+using dense2DMapFn    = Adapt<MapAdapter<i2D<T>>, defaultDenseIndex2DMap<T>>;
+template <typename T = IdxBase>
+using dense3DMapFn    = Adapt<MapAdapter<i3D<T>>, defaultDenseIndex3DMap<T>>;
+template <typename T = IdxBase>
+using dense1DRRMapFn  = Adapt<MapAdapter<i1D<T>>, dense1DRoundRobinMap<T>>;
+template <typename T = IdxBase>
+using dense2DRRMapFn  = Adapt<MapAdapter<i2D<T>>, dense2DRoundRobinMap<T>>;
+template <typename T = IdxBase>
+using dense3DRRMapFn  = Adapt<MapAdapter<i3D<T>>, dense3DRoundRobinMap<T>>;
+template <typename T = IdxBase>
+using dense1DBlkMapFn = Adapt<MapAdapter<i1D<T>>, dense1DBlockMap<T>>;
+template <typename T = IdxBase>
+using dense2DBlkMapFn = Adapt<MapAdapter<i2D<T>>, dense2DBlockMap<T>>;
+template <typename T = IdxBase>
+using dense3DBlkMapFn = Adapt<MapAdapter<i3D<T>>, dense3DBlockMap<T>>;
 
 }}  // end namespace vt::mapping
 
