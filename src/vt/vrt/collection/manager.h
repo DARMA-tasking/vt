@@ -69,6 +69,9 @@ struct CollectionManager {
   using DispatchHandlerType = auto_registry::AutoHandlerType;
   using ActionVecType = std::vector<ActionType>;
 
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  using DistribConstructFn = std::function<std::unique_ptr<ColT>(IndexT idx)>;
+
   template <typename T, typename U=void>
   using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
   template <typename T, typename U=void>
@@ -129,6 +132,26 @@ struct CollectionManager {
   template <typename ColT, typename... Args>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
   construct(typename ColT::IndexType range, Args&&... args);
+
+  /*
+   *      CollectionManager::construct<ColT, MapFnT>
+   *
+   *  Construct virtual context collection with an explicit map. This construct
+   *  method enables distributed SPMD construction of the virtual context
+   *  collection using the `DistribConstructFn`. The system will invoke that
+   *  function for every index in the system based on the where each index is
+   *  mapped with the MapFnT.
+   */
+  template <
+    typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+  >
+  CollectionProxyWrapType<ColT, typename ColT::IndexType>
+  construct(typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn);
+
+  /*
+   * Private interface for distConstruct that CollectionManager uses to
+   * broadcast and construct on every node.
+   */
 
   template <typename SysMsgT>
   static void distConstruct(SysMsgT* msg);
