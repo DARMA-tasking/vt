@@ -23,12 +23,12 @@ TEST_F(TestIndex, test_index_1d_linearization) {
 
   static constexpr int const dim1 = 92;
 
-  index::Index1D idx(8);
-  index::Index1D max_idx(dim1);
+  Index1D idx(8);
+  Index1D max_idx(dim1);
 
   int cur_val = 0;
   for (int i = 0; i < dim1; i++) {
-    auto cur_idx = index::Index1D(i);
+    auto cur_idx = Index1D(i);
     auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx);
     auto lin_idx1 = mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx);
 
@@ -54,7 +54,7 @@ TEST_F(TestIndex, test_index_1d_linearization) {
   // exactly...
   #if 0
   for (int i = 92; i < 100; i++) {
-    auto cur_idx = index::Index1D(i);
+    auto cur_idx = Index1D(i);
     ASSERT_DEATH(mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx), "Out of range index!");
     ASSERT_DEATH(mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx), "Out of range index!");
   }
@@ -66,13 +66,13 @@ TEST_F(TestIndex, test_index_2d_linearization) {
 
   static constexpr int const dim1 = 10, dim2 = 12;
 
-  index::Index2D idx(8, 4);
-  index::Index2D max_idx(dim1, dim2);
+  Index2D idx(8, 4);
+  Index2D max_idx(dim1, dim2);
 
   int cur_val = 0;
   for (int i = 0; i < dim1; i++) {
     for (int j = 0; j < dim2; j++) {
-      auto cur_idx = index::Index2D(i, j);
+      auto cur_idx = Index2D(i, j);
       auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx);
 
       #if DEBUG_TEST_HARNESS_PRINT
@@ -90,7 +90,7 @@ TEST_F(TestIndex, test_index_2d_linearization) {
   cur_val = 0;
   for (int j = 0; j < dim2; j++) {
     for (int i = 0; i < dim1; i++) {
-      auto cur_idx = index::Index2D(i, j);
+      auto cur_idx = Index2D(i, j);
       auto lin_idx = mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx);
 
       #if DEBUG_TEST_HARNESS_PRINT
@@ -114,7 +114,7 @@ TEST_F(TestIndex, test_index_2d_linearization) {
   #if 0
   for (int i = 10; i < 20; i++) {
     for (int j = 12; j < 20; j++) {
-      auto cur_idx = index::Index2D(i,j);
+      auto cur_idx = Index2D(i,j);
       ASSERT_DEATH(mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx), "Out of range index!");
       ASSERT_DEATH(mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx), "Out of range index!");
     }
@@ -127,14 +127,14 @@ TEST_F(TestIndex, test_index_3d_linearization) {
 
   static constexpr int const dim1 = 3, dim2 = 9, dim3 = 23;
 
-  index::Index3D idx(1, 5, 16);
-  index::Index3D max_idx(dim1, dim2, dim3);
+  Index3D idx(1, 5, 16);
+  Index3D max_idx(dim1, dim2, dim3);
 
   int cur_val = 0;
   for (int i = 0; i < dim1; i++) {
     for (int j = 0; j < dim2; j++) {
       for (int k = 0; k < dim3; k++) {
-        auto cur_idx = index::Index3D(i, j, k);
+        auto cur_idx = Index3D(i, j, k);
         auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx);
 
         #if DEBUG_TEST_HARNESS_PRINT
@@ -154,7 +154,7 @@ TEST_F(TestIndex, test_index_3d_linearization) {
   for (int k = 0; k < dim3; k++) {
     for (int j = 0; j < dim2; j++) {
       for (int i = 0; i < dim1; i++) {
-        auto cur_idx = index::Index3D(i, j, k);
+        auto cur_idx = Index3D(i, j, k);
         auto lin_idx = mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx);
 
         #if DEBUG_TEST_HARNESS_PRINT
@@ -180,7 +180,7 @@ TEST_F(TestIndex, test_index_3d_linearization) {
   for (int i = 3; i < 10; i++) {
     for (int j = 9; j < 15; j++) {
       for (int k = 23; k < 30; k++) {
-        auto cur_idx = index::Index3D(i, j, k);
+        auto cur_idx = Index3D(i, j, k);
         ASSERT_DEATH(mapping::linearizeDenseIndexColMajor(&cur_idx, &max_idx), "Out of range index!");
         ASSERT_DEATH(mapping::linearizeDenseIndexRowMajor(&cur_idx, &max_idx), "Out of range index!");
       }

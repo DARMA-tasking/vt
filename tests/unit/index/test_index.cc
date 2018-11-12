@@ -21,9 +21,9 @@ class TestIndex : public TestHarness {
 TEST_F(TestIndex, test_index_1d) {
   using namespace vt;
 
-  static constexpr index::Index1D::DenseIndexType const val = 29;
+  static constexpr Index1D::DenseIndexType const val = 29;
 
-  index::Index1D idx(val);
+  Index1D idx(val);
 
   EXPECT_EQ(idx[0], val);
   EXPECT_EQ(idx.x(), val);
@@ -34,10 +34,10 @@ TEST_F(TestIndex, test_index_1d) {
 TEST_F(TestIndex, test_index_2d) {
   using namespace vt;
 
-  static constexpr index::Index2D::DenseIndexType const val1 = 29;
-  static constexpr index::Index2D::DenseIndexType const val2 = 34;
+  static constexpr Index2D::DenseIndexType const val1 = 29;
+  static constexpr Index2D::DenseIndexType const val2 = 34;
 
-  index::Index2D idx(val1, val2);
+  Index2D idx(val1, val2);
 
   EXPECT_EQ(idx[0], val1);
   EXPECT_EQ(idx.x(), val1);
@@ -53,11 +53,11 @@ TEST_F(TestIndex, test_index_2d) {
 TEST_F(TestIndex, test_index_3d) {
   using namespace vt;
 
-  static constexpr index::Index3D::DenseIndexType const val1 = 29;
-  static constexpr index::Index3D::DenseIndexType const val2 = 34;
-  static constexpr index::Index3D::DenseIndexType const val3 = 92;
+  static constexpr Index3D::DenseIndexType const val1 = 29;
+  static constexpr Index3D::DenseIndexType const val2 = 34;
+  static constexpr Index3D::DenseIndexType const val3 = 92;
 
-  index::Index3D idx(val1, val2, val3);
+  Index3D idx(val1, val2, val3);
 
   EXPECT_EQ(idx[0], val1);
   EXPECT_EQ(idx.x(), val1);

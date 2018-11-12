@@ -14,8 +14,6 @@ namespace vt { namespace tests { namespace unit {
 
 using namespace vt;
 using namespace vt::collective;
-using namespace vt::index;
-using namespace vt::mapping;
 using namespace vt::tests::unit;
 
 struct IterMsg;
