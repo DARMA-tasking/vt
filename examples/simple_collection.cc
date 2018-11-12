@@ -6,12 +6,13 @@
 
 using namespace ::vt;
 using namespace ::vt::collective;
-using namespace ::vt::index;
 using namespace ::vt::mapping;
 
-static constexpr int32_t const default_num_elms = 64;
+static constexpr std::size_t const default_num_elms = 64;
 
-struct TestColl : Collection<TestColl,Index1D> {
+using IndexType = IdxType1D<std::size_t>;
+
+struct TestColl : Collection<TestColl,IndexType> {
   TestColl() = default;
 
   virtual ~TestColl() {
@@ -62,7 +63,8 @@ int main(int argc, char** argv) {
   }
 
   if (this_node == 0) {
-    auto const& range = Index1D(num_elms);
+    using BaseIndexType = typename IndexType::DenseIndexType;
+    auto const& range = IndexType(static_cast<BaseIndexType>(num_elms));
     auto proxy = theCollection()->construct<TestColl>(range);
 
     auto msg = makeSharedMessage<TestColl::TestMsg>();

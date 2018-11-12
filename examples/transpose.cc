@@ -4,8 +4,6 @@
 #include <vector>
 
 using namespace vt;
-using namespace vt::index;
-using namespace vt::mapping;
 
 static constexpr int const num_pieces = 4;
 static constexpr int const num_elem = 1024;

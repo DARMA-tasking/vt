@@ -3,8 +3,6 @@
 #include <cstdlib>
 
 using namespace vt;
-using namespace vt::index;
-using namespace vt::mapping;
 
 struct MyCol : Collection<MyCol, Index1D> {
   Index1D idx;
