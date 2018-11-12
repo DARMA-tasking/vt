@@ -5,8 +5,6 @@
 
 using namespace ::vt;
 using namespace ::vt::collective;
-using namespace ::vt::index;
-using namespace ::vt::mapping;
 
 static constexpr int32_t const default_num_elms = 64;
 static int32_t num_iter = 8;
