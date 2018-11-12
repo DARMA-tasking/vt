@@ -12,8 +12,6 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::collective;
 using namespace vt::tests::unit;
-using namespace vt::index;
-using namespace vt::mapping;
 
 struct MyReduceMsg : ReduceMsg {
   MyReduceMsg(int const& in_num) : num(in_num) {}

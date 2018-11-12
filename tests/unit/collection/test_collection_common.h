@@ -53,7 +53,7 @@ struct C {
 
 namespace vt { namespace tests { namespace unit {
 
-using TestIndex = ::vt::index::Index1D;
+using TestIndex = ::vt::Index1D;
 using ParamType = int32_t;
 
 static char         magic_string_[]  =

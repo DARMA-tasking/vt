@@ -25,12 +25,12 @@ struct TestMappingRegistry : TestParallelHarness {
     //fmt::print("{}: test_handler: han={}\n", this_node, msg->han);
     auto fn = auto_registry::getAutoHandlerMap(msg->han);
 
-    static constexpr index::Index1D::DenseIndexType const val = 64;
-    static constexpr index::Index1D::DenseIndexType const max = 256;
+    static constexpr Index1D::DenseIndexType const val = 64;
+    static constexpr Index1D::DenseIndexType const max = 256;
     static constexpr NodeType const nnodes = 8;
 
-    index::Index1D idx(val);
-    index::Index1D max_idx(max);
+    Index1D idx(val);
+    Index1D max_idx(max);
 
     auto const& node = fn(
       reinterpret_cast<index::BaseIndex*>(&idx),
@@ -49,13 +49,13 @@ struct TestMappingRegistry : TestParallelHarness {
 };
 
 static NodeType map_fn(
-  index::Index1D* idx, index::Index1D* max_idx, NodeType nnodes
+  Index1D* idx, Index1D* max_idx, NodeType nnodes
 ) {
   return mapping::dense1DBlockMap(idx, max_idx, nnodes);
 }
 
 static NodeType map_fn2(
-  index::Index1D* idx, index::Index1D* max_idx, NodeType nnodes
+  Index1D* idx, Index1D* max_idx, NodeType nnodes
 ) {
   return mapping::dense1DRoundRobinMap(idx, max_idx, nnodes);
 }
@@ -68,12 +68,12 @@ TEST_F(TestMappingRegistry, test_mapping_block_1d_registry) {
   #endif
 
   if (my_node == 0) {
-    auto map_han = auto_registry::makeAutoHandlerMap<index::Index1D, map_fn>();
+    auto map_han = auto_registry::makeAutoHandlerMap<Index1D, map_fn>();
     auto msg = makeSharedMessage<TestMsg>(map_han);
     msg->is_block = true;
     theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
 
-    auto map_han2 = auto_registry::makeAutoHandlerMap<index::Index1D, map_fn2>();
+    auto map_han2 = auto_registry::makeAutoHandlerMap<Index1D, map_fn2>();
     auto msg2 = makeSharedMessage<TestMsg>(map_han2);
     theMsg()->broadcastMsg<TestMsg, test_handler>(msg2);
   }
