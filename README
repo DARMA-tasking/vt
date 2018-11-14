@@ -1,8 +1,5 @@
-======================== ============================ ========================
-======================== ============================ ========================
+
 ======================== VT = virtual-transport layer ========================
-======================== ============================ ========================
-======================== ============================ ========================
 
 VT is an active messaging layer with C++ object virtualization and automatic
 location management. It directly targets MPI to effectively interact with
@@ -14,9 +11,8 @@ VT abstracts nodes/workers so a program can be written in terms of virtual units
 that can be migrated and executed on different hardware resources without
 explicit programmer mapping and management.
 
-======================== ============================ ========================
+
 ========================           Building           ========================
-======================== ============================ ========================
 
 VT can be built with cmake.
 
@@ -61,6 +57,4 @@ Run cmake and enjoy!
 If you build with testing, you can use `make test' to execute the automated
 tests to test correctness of the VT build.
 
-======================== ============================ ========================
-======================== ============================ ========================
 ======================== ============================ ========================
