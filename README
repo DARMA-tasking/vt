@@ -1,5 +1,5 @@
 
-======================== VT = virtual-transport layer ========================
+========================   VT => Virtual Transport    ========================
 
 VT is an active messaging layer with C++ object virtualization and automatic
 location management. It directly targets MPI to effectively interact with
