@@ -13,4 +13,8 @@ PipeManager::PipeManager() {
   );
 }
 
+Callback<PipeManager::Void> PipeManager::makeFunc(FuncVoidType fn) {
+  return makeCallbackSingleAnonVoid<Callback<Void>>(fn);
+}
+
 }} /* end namespace vt::pipe */
