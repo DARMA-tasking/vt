@@ -39,7 +39,9 @@ void CallbackProxyBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
      */
     setPipeType(msg->env);
     envelopeSetGroup(msg->env,pipe);
-    theMsg()->sendMsg<MsgT,PipeManager::triggerCallbackMsgHan>(pipe_node,msg);
+    theMsg()->sendMsgAuto<MsgT,PipeManager::triggerCallbackMsgHan>(
+      pipe_node,msg
+    );
   }
 }
 
