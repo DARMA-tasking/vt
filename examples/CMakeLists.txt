@@ -12,6 +12,7 @@ set(
   rdma_collective
   callback
   callback_new
+  ctx_callback
   reinstate
   tagged_handler
   param
