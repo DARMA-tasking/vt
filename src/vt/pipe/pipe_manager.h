@@ -36,6 +36,8 @@ struct PipeManager : PipeManagerTL, PipeManagerTyped {
 
   PipeManager();
 
+  template <typename MsgT, typename ContextT>
+  Callback<MsgT> makeFunc(ContextT* ctx, FuncMsgCtxType<MsgT, ContextT> fn);
   template <typename MsgT>
   Callback<MsgT> makeFunc(FuncMsgType<MsgT> fn);
   Callback<Void> makeFunc(FuncVoidType fn);

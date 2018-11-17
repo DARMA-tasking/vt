@@ -76,6 +76,9 @@ struct PipeManagerTL : virtual PipeManagerBase {
   template <typename T, typename CbkT = DefType<T>>
   CbkT makeCallbackSingleAnon(FuncMsgType<T> fn);
 
+  template <typename T, typename U, typename CbkT = DefType<T>>
+  CbkT makeCallbackSingleAnon(U* u, FuncMsgCtxType<T, U> fn);
+
   // Single active message collection proxy send
   template <
     typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
