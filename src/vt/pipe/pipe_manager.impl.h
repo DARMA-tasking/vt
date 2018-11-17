@@ -33,6 +33,11 @@ void PipeManager::triggerSendBack(PipeType const& pipe, MsgT* data) {
   }
 }
 
+template <typename MsgT>
+Callback<MsgT> PipeManager::makeFunc(FuncMsgType<MsgT> fn) {
+  return makeCallbackSingleAnon<MsgT,Callback<MsgT>>(fn);
+}
+
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 Callback<MsgT> PipeManager::makeSend(NodeType const& node) {
   return makeCallbackSingleSend<MsgT,f>(node);
