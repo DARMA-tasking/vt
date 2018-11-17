@@ -198,7 +198,7 @@ PipeManagerTL::makeCallbackSingleBcast(bool const& inc) {
 
 template <typename CallbackT>
 CallbackT
-PipeManagerTL:: makeCallbackSingleAnonVoid(FuncVoidType fn) {
+PipeManagerTL::makeCallbackSingleAnonVoid(FuncVoidType fn) {
   auto const& new_pipe_id = makeCallbackFuncVoid(true,fn,true);
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
@@ -213,7 +213,7 @@ PipeManagerTL:: makeCallbackSingleAnonVoid(FuncVoidType fn) {
 
 template <typename MsgT, typename CallbackT>
 CallbackT
-PipeManagerTL:: makeCallbackSingleAnon(FuncMsgType<MsgT> fn) {
+PipeManagerTL::makeCallbackSingleAnon(FuncMsgType<MsgT> fn) {
   auto const& new_pipe_id = makeCallbackFunc<MsgT>(true,fn,true);
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
