@@ -73,6 +73,12 @@ bool DenseIndexArray<IndexType, ndim>::indexIsByteCopyable() const {
 }
 
 template <typename IndexType, NumDimensionsType ndim>
+void DenseIndexArray<IndexType, ndim>::foreach(ApplyType fn) const {
+  auto const idx = *this;
+  return foreach(idx, fn);
+}
+
+template <typename IndexType, NumDimensionsType ndim>
 void DenseIndexArray<IndexType, ndim>::foreach(
   ThisIndexType in_max, ApplyType fn
 ) const {
