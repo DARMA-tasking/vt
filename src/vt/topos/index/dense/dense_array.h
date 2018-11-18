@@ -67,6 +67,7 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   DenseArraySizeType getSize() const;
   std::string toString() const;
   void foreach(ThisIndexType max, ApplyType fn) const;
+  void foreach(ApplyType fn) const;
   UniqueIndexBitType uniqueBits() const;
 
   static ThisIndexType uniqueBitsToIndex(UniqueIndexBitType const& bits);
