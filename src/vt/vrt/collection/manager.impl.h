@@ -23,6 +23,7 @@
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
+#include "vt/vrt/collection/holders/insert_context_holder.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
@@ -88,9 +89,9 @@ CollectionManager::runConstructor(
 
 template <typename SysMsgT>
 /*static*/ void CollectionManager::distConstruct(SysMsgT* msg) {
-  using ColT = typename SysMsgT::CollectionType;
+  using ColT   = typename SysMsgT::CollectionType;
   using IndexT = typename SysMsgT::IndexType;
-  using Args = typename SysMsgT::ArgsTupleType;
+  using Args   = typename SysMsgT::ArgsTupleType;
 
   static constexpr auto size = std::tuple_size<Args>::value;
 
@@ -161,11 +162,7 @@ template <typename SysMsgT>
          * Set direct attributes of the newly constructed element directly on
          * the user's class
          */
-        CollectionTypeAttorney::setSize(new_vc, num_elms);
-        CollectionTypeAttorney::setProxy(new_vc, new_proxy);
-        CollectionTypeAttorney::setIndex<decltype(new_vc),IndexT>(
-          new_vc, cur_idx
-        );
+        CollectionTypeAttorney::setup(new_vc, num_elms, cur_idx, new_proxy);
 
         theCollection()->insertCollectionElement<ColT, IndexT>(
           std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy,
@@ -181,53 +178,15 @@ template <typename SysMsgT>
   if (!element_created_here) {
     auto const& map_han = msg->map;
     auto const& max_idx = msg->info.range_;
-    using HolderType = typename EntireHolder<ColT, IndexT>::InnerHolder;
-    EntireHolder<ColT, IndexT>::insert(
-      new_proxy, std::make_shared<HolderType>(map_han,max_idx,info.immediate_)
-    );
-    /*
-     *  This is to ensure that the collection LM instance gets created so that
-     *  messages can be forwarded properly
-     */
-    theLocMan()->getCollectionLM<ColT, IndexT>(new_proxy);
+    insertMetaCollection<ColT>(new_proxy,map_han,max_idx,info.immediate_);
   }
 
-  uint64_t const tag_mask_ = 0x0ff00000;
-  auto const& vid = VirtualProxyBuilder::getVirtualID(new_proxy);
-  auto construct_msg = makeSharedMessage<CollectionConsMsg>(new_proxy);
-  auto const& tag_id = vid | tag_mask_;
-  auto const& root = 0;
-  debug_print(
-    vrt_coll, node,
-    "calling reduce: new_proxy={}\n", new_proxy
-  );
-  theCollective()->reduce<CollectionConsMsg,collectionConstructHan>(
-    root, construct_msg, tag_id
-  );
+  // Reduce construction of the collection to release dependencies when
+  // construction has finsihed
+  reduceConstruction<ColT>(new_proxy);
 
-  if (info.immediate_) {
-    /*
-     *  Create a new group for the collection that only contains the nodes for
-     *  which elements exist. If the collection is static, this group will never
-     *  change
-     */
-
-    auto const elms = theCollection()->groupElementCount<ColT,IndexT>(new_proxy);
-    bool const in_group = elms > 0;
-
-    debug_print(
-      vrt_coll, node,
-      "creating new group: elms={}, in_group={}\n",
-      elms, in_group
-    );
-
-    theCollection()->createGroupCollection<ColT, IndexT>(new_proxy, in_group);
-  } else {
-    /*
-     *  If the collection is not immediate (non-static) we need to wait for a
-     *  finishedInserting call to build the group.
-     */
-  }
+  // Construct a underlying group for the collection
+  groupConstruction<ColT>(new_proxy,info.immediate_);
 }
 
 template <typename ColT, typename IndexT>
@@ -1373,18 +1332,304 @@ bool CollectionManager::insertCollectionElement(
   }
 }
 
+/*
+ * Support constructing a VT collection in a fully distributed manner, with the
+ * user supplying the pointers to the elements.
+ */
+
+template <typename ColT>
+CollectionManager::CollectionProxyWrapType<ColT>
+ CollectionManager::constructCollective(
+  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+  TagType const& tag
+) {
+  auto const map_han = getDefaultMap<ColT>();
+  return constructCollectiveMap<ColT>(range,cons_fn,map_han,tag);
+}
+
+
+template <
+  typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+>
+CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
+CollectionManager::constructCollective(
+  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+  TagType const& tag
+) {
+  using IndexT = typename ColT::IndexType;
+  auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
+  return constructCollectiveMap<ColT>(range,cons_fn,map_han,tag);
+}
+
+
+template <typename ColT>
+CollectionManager::CollectionProxyWrapType<ColT>
+CollectionManager::constructCollectiveMap(
+  typename ColT::IndexType range, DistribConstructFn<ColT> user_construct_fn,
+  HandlerType const& map_han, TagType const& tag
+) {
+  using IndexT         = typename ColT::IndexType;
+  using TypedProxyType = CollectionProxyWrapType<ColT>;
+
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+
+  // Register the collection mapping function
+  // auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
+
+  // Create a new distributed proxy, ordered wrt the input tag
+  auto const& proxy = makeDistProxy<>(tag);
+
+  // Initialize the typed proxy for the user interface, returned from this fn
+  auto const typed_proxy = TypedProxyType{proxy};
+
+  // For now, the distributed SPMD constructed collection must be statically
+  // sized, not dynamically insertable to use this constructed methodology.
+  auto const& is_static = ColT::isStaticSized();
+  vtAssertInfo(
+    is_static, "Distributed collection construct must be statically sized",
+    is_static, tag, map_han
+  );
+
+  // Invoke getCollectionLM() to create a new location manager instance for this
+  // collection
+  auto loc = theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
+
+  debug_print(
+    vrt_coll, node,
+    "construct (dist): proxy={:x}, is_static={}\n",
+    proxy, is_static
+  );
+
+  // Start the local collection initiation process, lcoal meta-info about the
+  // collection. Insert epoch is `no_epoch` because dynamic insertions are not
+  // allowed when using SPMD distributed construction currently
+  insertCollectionInfo(proxy, map_han, no_epoch);
+
+  // Total count across the statically sized collection
+  auto const num_elms = range.getSize();
+
+  // Get the handler function
+  auto fn = auto_registry::getHandlerMap(map_han);
+
+  // Walk through the index range with the mapping function and invoke the
+  // construct function (parameter to this fn) for local elements, populating
+  // the holder
+  range.foreach([&](IndexT cur_idx) mutable {
+    using BaseIdxType      = vt::index::BaseIndex;
+    using VirtualElmPtr    = VirtualPtrType<ColT,IndexT>;
+    using IdxContextHolder = InsertContextHolder<IndexT>;
+
+    debug_print(
+      /*verbose, */vrt_coll, node,
+      "construct (dist): foreach: map: cur_idx={}, index range={}\n",
+      cur_idx.toString(), range.toString()
+    );
+
+    auto const cur = static_cast<BaseIdxType*>(&cur_idx);
+    auto const max = static_cast<BaseIdxType*>(&range);
+
+    auto mapped_node = fn(cur, max, num_nodes);
+
+    debug_print(
+      /*verbose, */vrt_coll, node,
+      "construct (dist): foreach: cur_idx={}, mapped_node={}\n",
+      cur_idx.toString(), mapped_node
+    );
+
+    if (this_node == mapped_node) {
+      // // Check the current context index, asserting that it's nullptr (there can
+      // // only be one live creation context at time)
+      // auto const ctx_idx = IdxContextHolder::index();
+
+      // vtAssert(ctx_idx == nullptr, "Context index must not be set");
+
+      // Set the current context index to `cur_idx`. This enables the user to
+      // query the index of their collection element in the constructor, which
+      // is often very handy
+      IdxContextHolder::set(&cur_idx);
+
+      // Invoke the user's construct function with a single argument---the index
+      // of element being constructed
+      VirtualElmPtr elm_ptr = user_construct_fn(cur_idx);
+
+      // Through the attorney, setup all the properties on the newly constructed
+      // collection element: index, proxy, number of elements. Note: because of
+      // how the constructor works, the index is not currently available through
+      // "getIndex"
+      CollectionTypeAttorney::setup(elm_ptr, num_elms, cur_idx, proxy);
+
+      // Insert the element into the managed holder for elements
+      insertCollectionElement<ColT>(
+        std::move(elm_ptr), cur_idx, range, map_han, proxy, true, mapped_node
+      );
+
+      // Clear the current index context
+      IdxContextHolder::clear();
+
+      debug_print(
+        /*verbose, */vrt_coll, node,
+        "construct (dist): new local elm: num_elm={}, proxy={:x}, cur_idx={}\n",
+        num_elms, proxy, cur_idx.toString()
+      );
+    }
+  });
+
+  // Insert the meta-data for this new collection
+  insertMetaCollection<ColT>(proxy, map_han, range, is_static);
+
+  // Reduce construction of the distributed collection
+  reduceConstruction<ColT>(proxy);
+
+  // Construct a underlying group for the collection
+  groupConstruction<ColT>(proxy, is_static);
+
+  return typed_proxy;
+}
+
+template <typename>
+VirtualProxyType CollectionManager::makeDistProxy(TagType const& tag) {
+  static constexpr VirtualIDType first_dist_id = 0;
+
+  // Get the next distributed ID for a given tag
+  auto id_iter = dist_tag_id_.find(tag);
+  if (id_iter == dist_tag_id_.end()) {
+    dist_tag_id_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(tag),
+      std::forward_as_tuple(first_dist_id)
+    );
+    id_iter = dist_tag_id_.find(tag);
+  }
+
+  vtAssertInfo(
+    id_iter != dist_tag_id_.end(), "Dist tag iter must not be end",
+    tag, first_dist_id
+  );
+
+  VirtualIDType const new_dist_id = id_iter->second++;
+
+  auto const& this_node = theContext()->getNode();
+  bool const& is_collection = true;
+  bool const& is_migratable = true;
+  bool const& is_distributed = true;
+
+  // Create the new proxy with the `new_dist_id`
+  auto const proxy = VirtualProxyBuilder::createProxy(
+    new_dist_id, this_node, is_collection, is_migratable, is_distributed
+  );
+
+  debug_print(
+    vrt_coll, node,
+    "makeDistProxy: node={}, new_dist_id={}, proxy={:x}\n",
+    this_node, new_dist_id, proxy
+  );
+
+  return proxy;
+}
+
+/* end SPMD distributed collection support */
+
+template <typename ColT>
+/*static*/ HandlerType CollectionManager::getDefaultMap() {
+  using ParamT = typename DefaultMap<ColT>::MapParamPackType;
+  return getDefaultMapImpl<ColT,ParamT>(ParamT{});
+}
+
+template <typename ColT, typename ParamT, typename... Args>
+/*static*/ HandlerType CollectionManager::getDefaultMapImpl(
+  std::tuple<Args...>
+) {
+  using MapT = typename DefaultMap<ColT>::MapType;
+  return auto_registry::makeAutoHandlerFunctorMap<MapT,Args...>();
+}
+
+template <typename IndexT>
+/*static*/ IndexT* CollectionManager::queryIndexContext() {
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+  auto const idx = IdxContextHolder::index();
+  vtAssertExpr(idx != nullptr);
+  return idx;
+}
+
+template <typename ColT, typename... Args>
+/*static*/ void CollectionManager::insertMetaCollection(
+  VirtualProxyType const& proxy, Args&&... args
+) {
+  using IndexType      = typename ColT::IndexType;
+  using MetaHolderType = EntireHolder<ColT, IndexType>;
+  using HolderType     = typename MetaHolderType::InnerHolder;
+
+  // Create and insert the meta-data into the meta-collection holder
+  auto holder = std::make_shared<HolderType>(std::forward<Args>(args)...);
+  MetaHolderType::insert(proxy,holder);
+  /*
+   *  This is to ensure that the collection LM instance gets created so that
+   *  messages can be forwarded properly
+   */
+  theLocMan()->getCollectionLM<ColT,IndexType>(proxy);
+}
+
+template <typename ColT>
+/*static*/ void CollectionManager::reduceConstruction(
+  VirtualProxyType const& proxy
+) {
+  /*
+   * Start a asynchronous reduction to coordinate operations that might depend
+   * on construction completing (meta-data must be available, LM initialized,
+   * etc.)
+   */
+  uint64_t const tag_mask_ = 0x0ff00000;
+  auto const& vid = VirtualProxyBuilder::getVirtualID(proxy);
+  auto construct_msg = makeSharedMessage<CollectionConsMsg>(proxy);
+  auto const& tag_id = vid | tag_mask_;
+  auto const& root = 0;
+  debug_print(
+    vrt_coll, node,
+    "reduceConstruction: invoke reduce: proxy={:x}\n", proxy
+  );
+  theCollective()->reduce<CollectionConsMsg,collectionConstructHan>(
+    root, construct_msg, tag_id
+  );
+}
+
+template <typename ColT>
+/*static*/ void CollectionManager::groupConstruction(
+  VirtualProxyType const& proxy, bool immediate
+) {
+  if (immediate) {
+    /*
+     *  Create a new group for the collection that only contains the nodes for
+     *  which elements exist. If the collection is static, this group will never
+     *  change
+     */
+
+    using IndexT = typename ColT::IndexType;
+    auto const elms = theCollection()->groupElementCount<ColT,IndexT>(proxy);
+    bool const in_group = elms > 0;
+
+    debug_print(
+      vrt_coll, node,
+      "groupConstruction: creating new group: proxy={:x}, elms={}, in_group={}\n",
+      proxy, elms, in_group
+    );
+
+    theCollection()->createGroupCollection<ColT,IndexT>(proxy, in_group);
+  } else {
+    /*
+     *  If the collection is not immediate (non-static) we need to wait for a
+     *  finishedInserting call to build the group.
+     */
+  }
+}
+
+
 template <typename ColT, typename... Args>
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::construct(
   typename ColT::IndexType range, Args&&... args
 ) {
-  using ParamT = typename DefaultMap<ColT>::MapParamPackType;
-  auto const& map_han = auto_registry::makeAutoHandlerFunctorMap<
-    typename DefaultMap<ColT>::MapType,
-    typename std::tuple_element<0,ParamT>::type,
-    typename std::tuple_element<1,ParamT>::type,
-    typename std::tuple_element<2,ParamT>::type
-  >();
+  auto const map_han = getDefaultMap<ColT>();
   return constructMap<ColT,Args...>(range,map_han,args...);
 }
 
