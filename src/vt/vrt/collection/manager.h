@@ -44,7 +44,7 @@ namespace vt { namespace vrt { namespace collection {
 struct CollectionManager {
   template <typename ColT, typename IndexT>
   using CollectionType = typename Holder<ColT, IndexT>::Collection;
-  template <typename ColT, typename IndexT>
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
   using VirtualPtrType = typename Holder<ColT, IndexT>::VirtualPtrType;
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   using ActionFinishedLBType = std::function<void()>;
