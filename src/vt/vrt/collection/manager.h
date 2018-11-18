@@ -145,16 +145,60 @@ struct CollectionManager {
   template <
     typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
-  CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  construct(typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn);
+  CollectionProxyWrapType<ColT> constructCollective(
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+    TagType const& tag = no_tag
+  );
+
+  template <typename ColT>
+  CollectionProxyWrapType<ColT> constructCollective(
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+    TagType const& tag = no_tag
+  );
+
+  template <typename ColT>
+  CollectionProxyWrapType<ColT> constructCollectiveMap(
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+    HandlerType const& map_han, TagType const& tag
+  );
 
   /*
    * Private interface for distConstruct that CollectionManager uses to
    * broadcast and construct on every node.
    */
+  template <typename ColT>
+  static HandlerType getDefaultMap();
 
+
+  template <typename ColT, typename ParamT, typename... Args>
+  static HandlerType getDefaultMapImpl(std::tuple<Args...>);
+
+  // Setup meta-data for the collection on this node
+  template <typename ColT, typename... Args>
+  static void insertMetaCollection(
+    VirtualProxyType const& proxy, Args&&... inner_holder_args
+  );
+
+  // Build a distributed proxy for SPMD collection construction
+  template <typename=void>
+  VirtualProxyType makeDistProxy(TagType const& tag = no_tag);
+
+  // Handler invoked during normal collection construction across the machine
   template <typename SysMsgT>
   static void distConstruct(SysMsgT* msg);
+
+  // Query the current index: this function can only be called legally during
+  // the constructor of a virtual collection element
+  template <typename IndexT>
+  static IndexT* queryIndexContext();
+
+  // Async reduce for new collection construction coordination wrt meta-datt
+  template <typename ColT>
+  static void reduceConstruction(VirtualProxyType const& proxy);
+
+  // Create a group for the new collection for collectives (broadcast/reduce/..)
+  template <typename ColT>
+  static void groupConstruction(VirtualProxyType const& proxy, bool immediate);
 
   /*
    *  Send message to an element of a collection
@@ -548,6 +592,7 @@ private:
 
 protected:
   VirtualProxyType makeNewCollectionProxy();
+
   void insertCollectionInfo(
     VirtualProxyType const& proxy, HandlerType const& map,
     EpochType const& insert_epoch = no_epoch
@@ -651,6 +696,7 @@ private:
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
+  std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */
@@ -673,6 +719,7 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"
 #include "vt/vrt/collection/balance/elm_stats.impl.h"
 #include "vt/vrt/collection/types/insertable.impl.h"
+#include "vt/vrt/collection/types/indexable.impl.h"
 #include "vt/vrt/collection/dispatch/dispatch.impl.h"
 #include "vt/vrt/collection/dispatch/registry.impl.h"
 
