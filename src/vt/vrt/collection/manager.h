@@ -481,7 +481,7 @@ public:
     std::index_sequence<I...>
   );
 
-  template <typename ColT, typename IndexT>
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
   bool insertCollectionElement(
     VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
     HandlerType const& map_han, VirtualProxyType const& proxy,
