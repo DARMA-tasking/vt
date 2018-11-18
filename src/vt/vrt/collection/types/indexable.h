@@ -12,28 +12,28 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct Indexable : Migratable<ColT> {
-  explicit Indexable(IndexT&& in_index)
-    : Migratable<ColT>(), index_(std::move(in_index))
-  { }
 
+  explicit Indexable(IndexT&& in_index);
   Indexable() = default;
 
-  IndexT const& getIndex() const { return index_; }
+  IndexT const& getIndex() const;
 
 protected:
   template <typename Serializer>
-  void serialize(Serializer& s) {
-    Migratable<ColT>::serialize(s);
-    s | index_;
-  }
+  void serialize(Serializer& s);
 
 private:
   friend struct CollectionTypeAttorney;
 
-  void setIndex(IndexT const& in_index) { index_ = in_index; }
+  void setIndex(IndexT const& in_index);
 
 private:
+  // The index stored with the collection element
   IndexT index_;
+  // This field stores whether the `index_` has been properly set: if the
+  // constructor overload has no index, it will not be set until the its set
+  // through the `CollectionTypeAttorney`
+  bool set_index_ = false;
 };
 
 }}} /* end namespace vt::vrt::collection */
