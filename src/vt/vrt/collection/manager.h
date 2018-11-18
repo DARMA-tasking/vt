@@ -70,7 +70,7 @@ struct CollectionManager {
   using ActionVecType = std::vector<ActionType>;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  using DistribConstructFn = std::function<std::unique_ptr<ColT>(IndexT idx)>;
+  using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;
 
   template <typename T, typename U=void>
   using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
