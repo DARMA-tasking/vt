@@ -11,9 +11,14 @@ struct CollectionTypeAttorney {
   friend struct CollectionManager;
 
 private:
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  static void setup(
+    ColT const& col, VirtualElmCountType const& elms, IndexT const& idx,
+    VirtualProxyType const& proxy
+  );
   template <typename ColT>
   static void setSize(ColT const& col, VirtualElmCountType const& elms);
-  template <typename ColT, typename IndexT>
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
   static void setIndex(ColT const& col, IndexT const& idx);
   template <typename ColT>
   static void setProxy(ColT const& col, VirtualProxyType const& proxy);
