@@ -7,6 +7,16 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+template <typename ColT, typename IndexT>
+/*static*/ void CollectionTypeAttorney::setup(
+  ColT const& col, VirtualElmCountType const& elms, IndexT const& idx,
+  VirtualProxyType const& proxy
+) {
+  setSize (col,elms);
+  setIndex(col,idx);
+  setProxy(col,proxy);
+}
+
 template <typename ColT>
 /*static*/ void CollectionTypeAttorney::setSize(
   ColT const& col, VirtualElmCountType const& elms
