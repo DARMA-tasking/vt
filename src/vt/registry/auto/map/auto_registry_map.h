@@ -30,6 +30,8 @@ AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const& handler);
 template <ActiveSeedMapFnType* f>
 HandlerType makeAutoHandlerSeedMap();
 
+AutoActiveMapType getHandlerMap(HandlerType const& han);
+
 }} // end namespace vt::auto_registry
 
 #include "vt/registry/auto/map/auto_registry_map_impl.h"

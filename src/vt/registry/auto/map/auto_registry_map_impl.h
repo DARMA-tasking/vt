@@ -112,6 +112,15 @@ inline AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const& handler) {
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }
 
+inline AutoActiveMapType getHandlerMap(HandlerType const& han) {
+  bool const& is_functor = HandlerManagerType::isHandlerFunctor(han);
+  if (is_functor) {
+    return getAutoHandlerFunctorMap(han);
+  } else {
+    return getAutoHandlerMap(han);
+  }
+}
+
 }} /* end namespace vt::auto_registry */
 
 #endif /*INCLUDED_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_IMPL_H*/
