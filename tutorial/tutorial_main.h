@@ -7,6 +7,7 @@
 #include "tutorial_1d.h"
 #include "tutorial_1e.h"
 #include "tutorial_1f.h"
+#include "tutorial_1g.h"
 #include "tutorial_2a.h"
 
 int main(int argc, char** argv) {
@@ -47,6 +48,9 @@ int main(int argc, char** argv) {
 
     // Invoke tutorial 1e: active message group rooted
     activeMessageGroupRoot();
+
+    // Invoke tutorial 1g: callback
+    activeMessageCallback();
   }
 
   /*
