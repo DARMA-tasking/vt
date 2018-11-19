@@ -2077,6 +2077,9 @@ void CollectionManager::insert(
   CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
   NodeType const& node
 ) {
+  using BaseIdxType      = vt::index::BaseIndex;
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+
   auto const untyped_proxy = proxy.getProxy();
   auto found_constructed = constructed_.find(untyped_proxy) != constructed_.end();
 
@@ -2094,19 +2097,12 @@ void CollectionManager::insert(
     auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
     vtAssert(insert_epoch != no_epoch, "Epoch should be valid");
 
-    bool const& is_functor =
-      auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
-    auto_registry::AutoActiveMapType fn = nullptr;
-    if (is_functor) {
-      fn = auto_registry::getAutoHandlerFunctorMap(map_han);
-    } else {
-      fn = auto_registry::getAutoHandlerMap(map_han);
-    }
-    auto const& mapped_node = fn(
-      reinterpret_cast<vt::index::BaseIndex*>(&idx),
-      reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
-      theContext()->getNumNodes()
-    );
+    // Get the handler function
+    auto fn = auto_registry::getHandlerMap(map_han);
+
+    auto const cur = static_cast<BaseIdxType*>(&idx);
+    auto const max = static_cast<BaseIdxType*>(&max_idx);
+    auto const& mapped_node = fn(cur, max, theContext()->getNumNodes());
 
     auto const& has_explicit_node = node != uninitialized_destination;
     auto const& insert_node = has_explicit_node ? node : mapped_node;
@@ -2114,6 +2110,10 @@ void CollectionManager::insert(
     if (insert_node == this_node) {
       auto const& num_elms = max_idx.getSize();
       std::tuple<> tup;
+
+      // Set the current context index to `idx`, enabled the user to query the
+      // index during the constructor
+      IdxContextHolder::set(&idx);
 
       #if backend_check_enabled(detector)
         auto new_vc = DerefCons::derefTuple<ColT,IndexT,std::tuple<>>(
@@ -2129,14 +2129,15 @@ void CollectionManager::insert(
        * Set direct attributes of the newly constructed element directly on
        * the user's class
        */
-      CollectionTypeAttorney::setSize(new_vc, num_elms);
-      CollectionTypeAttorney::setProxy(new_vc, untyped_proxy);
-      CollectionTypeAttorney::setIndex<decltype(new_vc),IndexT>(new_vc, idx);
+      CollectionTypeAttorney::setup(new_vc, num_elms, idx, untyped_proxy);
 
       theCollection()->insertCollectionElement<ColT, IndexT>(
         std::move(new_vc), idx, max_idx, map_han, untyped_proxy, false,
         mapped_node
       );
+
+      // Clear the current index context
+      IdxContextHolder::clear();
     } else {
       auto const& global_epoch = theMsg()->getGlobalEpoch();
       auto msg = makeSharedMessage<InsertMsg<ColT,IndexT>>(
