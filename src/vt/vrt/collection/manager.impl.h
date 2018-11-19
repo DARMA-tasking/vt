@@ -89,64 +89,66 @@ CollectionManager::runConstructor(
 
 template <typename SysMsgT>
 /*static*/ void CollectionManager::distConstruct(SysMsgT* msg) {
-  using ColT   = typename SysMsgT::CollectionType;
-  using IndexT = typename SysMsgT::IndexType;
-  using Args   = typename SysMsgT::ArgsTupleType;
+  using ColT        = typename SysMsgT::CollectionType;
+  using IndexT      = typename SysMsgT::IndexType;
+  using Args        = typename SysMsgT::ArgsTupleType;
+  using BaseIdxType = vt::index::BaseIndex;
 
-  static constexpr auto size = std::tuple_size<Args>::value;
+  static constexpr auto num_args = std::tuple_size<Args>::value;
 
-  auto const& node = theContext()->getNode();
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+
   auto& info = msg->info;
-  VirtualProxyType new_proxy = info.getProxy();
-  auto const& insert_epoch = info.getInsertEpoch();
-  bool element_created_here = false;
 
-  theCollection()->insertCollectionInfo(new_proxy,msg->map,insert_epoch);
+  // The VirtualProxyType for this construction
+  auto proxy = info.getProxy();
+  // The insert epoch for this collection
+  auto const& insert_epoch = info.getInsertEpoch();
+  // Count the number of elements locally created here
+  int64_t num_elements_created = 0;
+  // Get the mapping function handle
+  auto const& map_han = msg->map;
+  // Get the range for the construction
+  auto range = msg->info.range_;
+
+  theCollection()->insertCollectionInfo(proxy,msg->map,insert_epoch);
 
   if (info.immediate_) {
-    auto const& map_han = msg->map;
-    bool const& is_functor =
-      auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
-
-    auto_registry::AutoActiveMapType fn = nullptr;
-
-    if (is_functor) {
-      fn = auto_registry::getAutoHandlerFunctorMap(map_han);
-    } else {
-      fn = auto_registry::getAutoHandlerMap(map_han);
-    }
+    // Get the handler function
+    auto fn = auto_registry::getHandlerMap(map_han);
+    // Total count across the statically sized collection
+    auto const& num_elms = info.range_.getSize();
 
     debug_print(
       vrt_coll, node,
-      "running foreach: size={}, {}, is_functor={}\n",
-      info.range_.getSize(), info.range_.x(), print_bool(is_functor)
+      "running foreach: size={}, range={}, map_han={}\n",
+      num_elms, range, map_han
     );
 
-    auto user_index_range = info.getRange();
-    auto max_range = msg->info.range_;
-
-    user_index_range.foreach(user_index_range, [&](IndexT cur_idx) mutable {
+    range.foreach([&](IndexT cur_idx) mutable {
       debug_print(
         verbose, vrt_coll, node,
-        "running foreach: before map: cur_idx={}, max_range={}\n",
-        cur_idx.toString().c_str(), max_range.toString().c_str()
+        "running foreach: before map: cur_idx={}, range={}\n",
+        cur_idx.toString(), range.toString()
       );
 
-      auto mapped_node = fn(
-        reinterpret_cast<vt::index::BaseIndex*>(&cur_idx),
-        reinterpret_cast<vt::index::BaseIndex*>(&max_range),
-        theContext()->getNumNodes()
-      );
+      auto const cur = static_cast<BaseIdxType*>(&cur_idx);
+      auto const max = static_cast<BaseIdxType*>(&range);
+
+      auto mapped_node = fn(cur, max, num_nodes);
 
       debug_print(
         vrt_coll, node,
-        "running foreach: node={}, cur_idx={}, max_range={}\n",
-        mapped_node, cur_idx.toString().c_str(), max_range.toString().c_str()
+        "construct: foreach: node={}, cur_idx={}, max_range={}\n",
+        mapped_node, cur_idx.toString(), range.toString()
       );
 
-      if (node == mapped_node) {
-        // need to construct elements here
-        auto const& num_elms = info.range_.getSize();
+      if (this_node == mapped_node) {
+        // Actually construct the element. If the detector is enabled, call the
+        // detection-based overloads to invoke the constructor with the
+        // optionally-positional index. Otherwise, invoke constructor without
+        // the index as a parameter
 
         #if backend_check_enabled(detector)
           auto new_vc = DerefCons::derefTuple<ColT, IndexT, decltype(msg->tup)>(
@@ -154,7 +156,7 @@ template <typename SysMsgT>
           );
         #else
           auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
-            num_elms, cur_idx, &msg->tup, std::make_index_sequence<size>{}
+            num_elms, cur_idx, &msg->tup, std::make_index_sequence<num_args>{}
           );
         #endif
 
@@ -162,31 +164,32 @@ template <typename SysMsgT>
          * Set direct attributes of the newly constructed element directly on
          * the user's class
          */
-        CollectionTypeAttorney::setup(new_vc, num_elms, cur_idx, new_proxy);
+        CollectionTypeAttorney::setup(new_vc, num_elms, cur_idx, proxy);
 
+        // Insert the element into the managed holder for elements
         theCollection()->insertCollectionElement<ColT, IndexT>(
-          std::move(new_vc), cur_idx, msg->info.range_, map_han, new_proxy,
+          std::move(new_vc), cur_idx, msg->info.range_, map_han, proxy,
           info.immediate_, mapped_node
         );
-        element_created_here = true;
+
+        // Increment the number of elements created locally
+        num_elements_created++;
       }
     });
   } else {
-    vtAssert(element_created_here == false, "Element should not be created");
+    vtAssert(num_elements_created == 0, "Elements should not be created");
   }
 
-  if (!element_created_here) {
-    auto const& map_han = msg->map;
-    auto const& max_idx = msg->info.range_;
-    insertMetaCollection<ColT>(new_proxy,map_han,max_idx,info.immediate_);
+  if (num_elements_created == 0) {
+    insertMetaCollection<ColT>(proxy,map_han,range,info.immediate_);
   }
 
   // Reduce construction of the collection to release dependencies when
   // construction has finsihed
-  reduceConstruction<ColT>(new_proxy);
+  reduceConstruction<ColT>(proxy);
 
   // Construct a underlying group for the collection
-  groupConstruction<ColT>(new_proxy,info.immediate_);
+  groupConstruction<ColT>(proxy,info.immediate_);
 }
 
 template <typename ColT, typename IndexT>
