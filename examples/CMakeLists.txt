@@ -43,6 +43,7 @@ set(
   group_collective
   reduce
   transpose
+  tutorial
 )
 
 if (CMAKE_NO_BUILD_EXAMPLES)
