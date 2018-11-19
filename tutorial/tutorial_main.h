@@ -9,6 +9,7 @@
 #include "tutorial_1f.h"
 #include "tutorial_1g.h"
 #include "tutorial_2a.h"
+#include "tutorial_2b.h"
 
 int main(int argc, char** argv) {
   using namespace vt::tutorial;
@@ -67,8 +68,11 @@ int main(int argc, char** argv) {
 
   ::vt::theCollective()->barrier();
 
-  // Invoke tutorial 2a: virtual collection
+  // Invoke tutorial 2a: virtual collection creation
   collection();
+
+  // Invoke tutorial 2b: virtual collection reduce
+  collectionReduce();
 
 
   /*
