@@ -6,9 +6,12 @@ namespace vt { namespace tutorial {
 // Forward declaration for message
 struct MyCollMsg;
 
-//               VT Base Class for a collection     Index (built-in)
-//            \----------------------------------/   \---------/
-//             \                                /     \       /
+//               VT Base Class for a collection
+//         \-------------------------------------/
+//          \                                   /
+//           \                         Index   /
+//            \                     \---------/
+//             \                     \       /
 struct MyCol : ::vt::Collection<MyCol,Index1D> {
 
   void msgHandler(MyCollMsg* msg);
