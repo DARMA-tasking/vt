@@ -36,6 +36,7 @@ set(
   hello_world_vc_remote
   hello_world_collection
   simple_collection
+  simple_collection_collective
   collection_insert
   collection_group
   rdma_unsized_collection
