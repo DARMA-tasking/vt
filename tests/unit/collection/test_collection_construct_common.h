@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <tuple>
 #include <string>
+#include <memory>
 
 #define PRINT_CONSTRUCTOR_VALUES 0
 
@@ -42,6 +43,9 @@ struct ConstructHandlers {
 template <typename CollectionT>
 struct TestConstruct : TestParallelHarness {};
 
+template <typename CollectionT>
+struct TestConstructDist : TestParallelHarness {};
+
 template <typename ColT, typename Tuple>
 struct ConstructParams {
   using IndexType = typename ColT::IndexType;
@@ -63,7 +67,9 @@ struct ConstructParams {
   ) {
     if (collective) {
       return theCollection()->constructCollective<ColT>(
-        idx,std::get<I>(args)...
+        idx,[=](IndexType idx) {
+          return std::make_unique<ColT>(std::get<I>(args)...);
+        }
       );
     } else {
       return theCollection()->construct<ColT>(idx,std::get<I>(args)...);
@@ -82,6 +88,7 @@ protected:
 };
 
 TYPED_TEST_CASE_P(TestConstruct);
+TYPED_TEST_CASE_P(TestConstructDist);
 
 TYPED_TEST_P(TestConstruct, test_construct_1) {
   using ColType = TypeParam;
@@ -102,7 +109,7 @@ TYPED_TEST_P(TestConstruct, test_construct_1) {
   }
 }
 
-TYPED_TEST_P(TestConstruct, test_construct_distributed_1) {
+TYPED_TEST_P(TestConstructDist, test_construct_distributed_1) {
   using ColType = TypeParam;
   using MsgType = typename ColType::MsgType;
   using ParamType = typename ColType::ParamType;
@@ -119,7 +126,7 @@ TYPED_TEST_P(TestConstruct, test_construct_distributed_1) {
 }
 
 REGISTER_TYPED_TEST_CASE_P(TestConstruct, test_construct_1);
-REGISTER_TYPED_TEST_CASE_P(TestConstruct, test_construct_distributed_1);
+REGISTER_TYPED_TEST_CASE_P(TestConstructDist, test_construct_distributed_1);
 
 }}} // end namespace vt::tests::unit
 
