@@ -10,7 +10,7 @@ require "args.pl";
 
 my ($build_mode,$compiler,$has_serial,$build_all_tests,$vt_install);
 my ($vt,$root,$detector,$meld,$checkpoint,$fmt,$gtest);
-my ($compiler_cxx,$compiler_c,$mpi_c,$mpi_cxx,$mpi_exec);
+my ($compiler_cxx,$compiler_c,$mpi_cc,$mpi_cxx,$mpi_exec);
 my $libroot = "";
 my $atomic = "";
 my $mpi_str = "";
@@ -38,7 +38,7 @@ $arg->add_optional_arg("atomic",      \$atomic,     "");
 
 $arg->add_optional_arg("compiler_c",  \$compiler_c,   "");
 $arg->add_optional_arg("compiler_cxx",\$compiler_cxx, "");
-$arg->add_optional_arg("mpi_c",       \$mpi_c,        "");
+$arg->add_optional_arg("mpi_cc",      \$mpi_cc,       "");
 $arg->add_optional_arg("mpi_cxx",     \$mpi_cxx,      "");
 $arg->add_optional_arg("mpi_exec",    \$mpi_exec,     "");
 
@@ -75,8 +75,8 @@ if ($compiler_c ne "") {
 if ($mpi_cxx ne "") {
     $mpi_str .= "-DMPI_CXX_COMPILER=$mpi_cxx ";
 }
-if ($mpi_c ne "") {
-    $mpi_str .= "-DMPI_C_COMPILER=$mpi_c ";
+if ($mpi_cc ne "") {
+    $mpi_str .= "-DMPI_C_COMPILER=$mpi_cc ";
 }
 if ($mpi_exec ne "") {
     my $mpi_bin_exec = `which $mpi_exec`;
@@ -105,6 +105,7 @@ print STDERR "\tRoot=$root\n";
 print STDERR "\tLibroot=$libroot\n";
 print STDERR "\tVT dir name=$vt\n";
 print STDERR "\tCompiler suite=$compiler, cxx=$cxx, cc=$cc\n";
+print STDERR "\tMPI Compiler suite=$compiler, mpicc=$mpi_cc, mpicxx=$mpi_cxx\n";
 print STDERR "\tAll tests/examples=$build_all_tests\n";
 print STDERR "\tVT installation directory=$vt_install\n";
 print STDERR "\tCheckpoint=$has_serial, path=$checkpoint\n";
