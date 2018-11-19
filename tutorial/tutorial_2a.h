@@ -9,7 +9,7 @@ struct MyCollMsg;
 //               VT Base Class for a collection     Index (built-in)
 //            \----------------------------------/   \---------/
 //             \                                /     \       /
-struct MyCol : ::vt::vrt::collection::Collection<MyCol,Index1D> {
+struct MyCol : ::vt::Collection<MyCol,Index1D> {
 
   void msgHandler(MyCollMsg* msg);
 
@@ -18,7 +18,7 @@ struct MyCol : ::vt::vrt::collection::Collection<MyCol,Index1D> {
 //                            VT Base Message for Collections
 //               \-------------------------------------------/
 //                \                                         /
-struct MyCollMsg : ::vt::vrt::collection::CollectionMessage<MyCol> { };
+struct MyCollMsg : ::vt::CollectionMessage<MyCol> { };
 
 void MyCol::msgHandler(MyCollMsg* msg) {
   auto cur_node = theContext()->getNode();
@@ -41,7 +41,7 @@ static inline void collection() {
 
   if (this_node == 0) {
     // Range of 32 elements for the collection
-    auto range = ::vt::index::Index1D(32);
+    auto range = ::vt::Index1D(32);
     // Construct the collection: invoked by one node. By default, the elements
     // will be block mapped to the nodes
     auto proxy = theCollection()->construct<MyCol>(range);
