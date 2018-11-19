@@ -18,9 +18,9 @@ struct MyCol : ::vt::Collection<MyCol,Index1D> {
 
 };
 
-//                            VT Base Message for Collections
-//               \-------------------------------------------/
-//                \                                         /
+//                 VT Base Message for Collections
+//               \--------------------------------/
+//                \                              /
 struct MyCollMsg : ::vt::CollectionMessage<MyCol> { };
 
 void MyCol::msgHandler(MyCollMsg* msg) {
@@ -29,17 +29,14 @@ void MyCol::msgHandler(MyCollMsg* msg) {
   ::fmt::print("MyCol::msgHandler index={}, node={}\n", idx.x(), cur_node);
 }
 
-// Tutorial code to demonstrate broadcasting a message to the entire system
+// Tutorial code to demonstrate creating a collection
 static inline void collection() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
 
   /*
-   * This is an example of the rooted group creation and broadcast to that
-   * group. A group allows the user to create a subset of nodes. A broadcast by
-   * default sends the message to every node in the default group (which
-   * includes all nodes). If a explicit group is set in the envelope, the
-   * broadcast will only arrive on the nodes in that group.
+   * This is an example of creating a virtual context collection with an index
+   * range
    */
 
   if (this_node == 0) {
