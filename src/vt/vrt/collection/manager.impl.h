@@ -145,10 +145,17 @@ template <typename SysMsgT>
       );
 
       if (this_node == mapped_node) {
+        using IdxContextHolder = InsertContextHolder<IndexT>;
+
         // Actually construct the element. If the detector is enabled, call the
         // detection-based overloads to invoke the constructor with the
         // optionally-positional index. Otherwise, invoke constructor without
         // the index as a parameter
+
+        // Set the current context index to `cur_idx`. This enables the user to
+        // query the index of their collection element in the constructor, which
+        // is often very handy
+        IdxContextHolder::set(&cur_idx);
 
         #if backend_check_enabled(detector)
           auto new_vc = DerefCons::derefTuple<ColT, IndexT, decltype(msg->tup)>(
@@ -171,6 +178,9 @@ template <typename SysMsgT>
           std::move(new_vc), cur_idx, msg->info.range_, map_han, proxy,
           info.immediate_, mapped_node
         );
+
+        // Clear the current index context
+        IdxContextHolder::clear();
 
         // Increment the number of elements created locally
         num_elements_created++;
