@@ -82,8 +82,16 @@ using CollectionTestTypes = testing::Types<
   index_                         ::TestCol
 >;
 
+using CollectionTestDistTypes = testing::Types<
+  default_                       ::TestCol
+>;
+
 INSTANTIATE_TYPED_TEST_CASE_P(
   test_construct_simple, TestConstruct, CollectionTestTypes
+);
+
+INSTANTIATE_TYPED_TEST_CASE_P(
+  test_construct_distributed_simple, TestConstructDist, CollectionTestDistTypes
 );
 
 }}} // end namespace vt::tests::unit
