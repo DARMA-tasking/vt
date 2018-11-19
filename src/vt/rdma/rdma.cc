@@ -35,7 +35,7 @@ namespace vt { namespace rdma {
       // auto const& num_bytes = std::get<1>(data);
 
       auto new_msg = makeSharedMessage<GetBackMessage>(
-        op_id, std::get<1>(data), 0, no_tag, handle, this_node
+        op_id, std::get<1>(data), 0u, no_tag, handle, this_node
       );
 
       auto send_payload = [&](Active::SendFnType send){
