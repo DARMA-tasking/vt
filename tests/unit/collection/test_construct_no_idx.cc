@@ -47,4 +47,8 @@ INSTANTIATE_TYPED_TEST_CASE_P(
   test_construct_no_idx, TestConstruct, CollectionTestTypes
 );
 
+INSTANTIATE_TYPED_TEST_CASE_P(
+  test_construct_no_idx_dist, TestConstructDist, CollectionTestTypes
+);
+
 }}} // end namespace vt::tests::unit
