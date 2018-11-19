@@ -20,7 +20,11 @@ inline void assertOutExpr(
   bool fail, std::string const cond, std::string const& file, int const line,
   std::string const& func, ErrorCodeType error
 ) {
-  ::vt::output(cond,error,false,true);
+  auto const assert_fail_str = ::fmt::format(
+    "Assertion failed: ({}) : File: {}\nLine: {}\nFunction: {}\n",
+    cond,file,line,func
+  );
+  ::vt::output(assert_fail_str,error,false,true);
   if (fail) {
     assert(false);
   }
