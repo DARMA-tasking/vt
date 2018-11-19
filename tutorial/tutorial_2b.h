@@ -34,7 +34,8 @@ struct ReduceMsg : ::vt::collective::ReduceTMsg<int32_t> {};
 // Functor that is the target of the collection reduction
 struct PrintReduceResult {
   void operator()(ReduceMsg* msg) {
-    fmt::print("val={}\n", msg->getConstVal());
+    fmt::print("collection reduce value={}\n", msg->getConstVal());
+    assert(32 * 100 == msg->getConstVal());
   }
 };
 
