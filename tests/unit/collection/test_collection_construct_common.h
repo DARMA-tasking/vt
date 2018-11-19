@@ -50,30 +50,38 @@ template <typename ColT, typename Tuple>
 struct ConstructParams {
   using IndexType = typename ColT::IndexType;
   using ProxyType = CollectionIndexProxy<ColT,IndexType>;
-  static ProxyType constructTup(
-    IndexType idx,Tuple args,bool collective = false
-  ) {
-    return construct(collective,idx,args);
+  static ProxyType constructTup(IndexType idx,Tuple args) {
+    return construct(idx,args);
   }
   template <typename... Args>
-  static ProxyType construct(
-    bool collective, IndexType idx, std::tuple<Args...> args
-  ) {
-    return unpack(collective,idx,args,std::index_sequence_for<Args...>{});
+  static ProxyType construct(IndexType idx, std::tuple<Args...> args) {
+    return unpack(idx,args,std::index_sequence_for<Args...>{});
   }
   template <std::size_t ...I>
   static ProxyType unpack(
-    bool collective, IndexType idx, Tuple args, std::index_sequence<I...>
+    IndexType idx, Tuple args, std::index_sequence<I...>
   ) {
-    if (collective) {
-      return theCollection()->constructCollective<ColT>(
-        idx,[=](IndexType idx) {
-          return std::make_unique<ColT>(std::get<I>(args)...);
-        }
-      );
-    } else {
-      return theCollection()->construct<ColT>(idx,std::get<I>(args)...);
-    }
+    return theCollection()->construct<ColT>(idx,std::get<I>(args)...);
+  }
+
+  static ProxyType constructTupCollective(IndexType idx,Tuple args) {
+    return constructCollective(idx,args);
+  }
+  template <typename... Args>
+  static ProxyType constructCollective(
+    IndexType idx, std::tuple<Args...> args
+  ) {
+    return unpackCollective(idx,args,std::index_sequence_for<Args...>{});
+  }
+  template <std::size_t ...I>
+  static ProxyType unpackCollective(
+    IndexType idx, Tuple args, std::index_sequence<I...>
+  ) {
+    return theCollection()->constructCollective<ColT>(
+      idx,[=](IndexType idx) {
+        return std::make_unique<ColT>(std::get<I>(args)...);
+      }
+    );
   }
 };
 
@@ -91,8 +99,8 @@ TYPED_TEST_CASE_P(TestConstruct);
 TYPED_TEST_CASE_P(TestConstructDist);
 
 TYPED_TEST_P(TestConstruct, test_construct_1) {
-  using ColType = TypeParam;
-  using MsgType = typename ColType::MsgType;
+  using ColType   = TypeParam;
+  using MsgType   = typename ColType::MsgType;
   using ParamType = typename ColType::ParamType;
 
   auto const& this_node = theContext()->getNode();
@@ -110,14 +118,16 @@ TYPED_TEST_P(TestConstruct, test_construct_1) {
 }
 
 TYPED_TEST_P(TestConstructDist, test_construct_distributed_1) {
-  using ColType = TypeParam;
-  using MsgType = typename ColType::MsgType;
+  using ColType   = TypeParam;
+  using MsgType   = typename ColType::MsgType;
   using ParamType = typename ColType::ParamType;
 
   auto const& col_size = 32;
   auto rng = TestIndex(col_size);
   ParamType args = ConstructTuple<ParamType>::construct();
-  auto proxy = ConstructParams<ColType,ParamType>::constructTup(rng,args,true);
+  auto proxy = ConstructParams<ColType,ParamType>::constructTupCollective(
+    rng,args
+  );
   auto msg = makeSharedMessage<MsgType>();
   proxy.template broadcast<
     MsgType,
@@ -125,7 +135,7 @@ TYPED_TEST_P(TestConstructDist, test_construct_distributed_1) {
   >(msg);
 }
 
-REGISTER_TYPED_TEST_CASE_P(TestConstruct, test_construct_1);
+REGISTER_TYPED_TEST_CASE_P(TestConstruct,     test_construct_1);
 REGISTER_TYPED_TEST_CASE_P(TestConstructDist, test_construct_distributed_1);
 
 }}} // end namespace vt::tests::unit
