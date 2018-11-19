@@ -1424,7 +1424,7 @@ CollectionManager::constructCollectiveMap(
     using IdxContextHolder = InsertContextHolder<IndexT>;
 
     debug_print(
-      /*verbose, */vrt_coll, node,
+      verbose, vrt_coll, node,
       "construct (dist): foreach: map: cur_idx={}, index range={}\n",
       cur_idx.toString(), range.toString()
     );
@@ -1435,7 +1435,7 @@ CollectionManager::constructCollectiveMap(
     auto mapped_node = fn(cur, max, num_nodes);
 
     debug_print(
-      /*verbose, */vrt_coll, node,
+      verbose, vrt_coll, node,
       "construct (dist): foreach: cur_idx={}, mapped_node={}\n",
       cur_idx.toString(), mapped_node
     );
@@ -1456,11 +1456,16 @@ CollectionManager::constructCollectiveMap(
       // of element being constructed
       VirtualElmPtr elm_ptr = user_construct_fn(cur_idx);
 
+      debug_print(
+        verbose, vrt_coll, node,
+        "construct (dist): ptr={}\n", print_ptr(elm_ptr.get())
+      );
+
       // Through the attorney, setup all the properties on the newly constructed
       // collection element: index, proxy, number of elements. Note: because of
       // how the constructor works, the index is not currently available through
       // "getIndex"
-      CollectionTypeAttorney::setup(elm_ptr, num_elms, cur_idx, proxy);
+      CollectionTypeAttorney::setup(elm_ptr.get(), num_elms, cur_idx, proxy);
 
       // Insert the element into the managed holder for elements
       insertCollectionElement<ColT>(
