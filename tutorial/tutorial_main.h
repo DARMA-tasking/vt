@@ -8,6 +8,7 @@
 #include "tutorial_1e.h"
 #include "tutorial_1f.h"
 #include "tutorial_1g.h"
+#include "tutorial_1h.h"
 #include "tutorial_2a.h"
 #include "tutorial_2b.h"
 
@@ -67,6 +68,9 @@ int main(int argc, char** argv) {
   activeMessageGroupCollective();
 
   ::vt::theCollective()->barrier();
+
+  // Invoke tutorial 1h: reduction
+  activeMessageReduce();
 
   // Invoke tutorial 2a: virtual collection creation
   collection();
