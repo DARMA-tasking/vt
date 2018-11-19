@@ -4,3 +4,5 @@ transport
 lib/*-build
 .emacs.desktop
 project/*
+balance.in
+CMakeSettings.json
