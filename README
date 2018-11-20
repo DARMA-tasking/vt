@@ -56,26 +56,26 @@ $ perl ./auto.pl --help
 usage auto.pl <arguments>...
 Format each argument to script as: <argname>=<argval>
 Example: "auto.pl mode=fast"
-	 <argument-name>  |  <required> | <default>           |  <value>
-	 build_mode       |  true       | <no-default-value>  |  <no-default-value>
-	 compiler_c       |  true       | <no-default-value>  |  <no-default-value>
-	 compiler_cxx     |  true       | <no-default-value>  |  <no-default-value>
-	 vt_build_mode    |  false      |                     |
-	 root_dir         |  false      | <path>              |  <path>
-	 build_tests      |  false      | 1                   |  1
-	 fmt              |  false      |                     |
-	 kokkos           |  false      |                     |
-	 build_kokkos     |  false      | 0                   |  0
-	 prefix           |  false      |                     |
-	 par              |  false      | 14                  |  14
-	 dry_run          |  false      | 0                   |  0
-	 verbose          |  false      | 0                   |  0
-	 gtest            |  false      |                     |
-	 clean            |  false      | 0                   |  0
-	 backend          |  false      | 0                   |  0
-	 atomic           |  false      |                     |
-	 mpi_cc           |  false      |                     |
-	 mpi_cxx          |  false      |                     |
+  <argument-name>  |  <required> | <default>           |  <value>
+  build_mode       |  true       | <no-default-value>  |  <no-default-value>
+  compiler_c       |  true       | <no-default-value>  |  <no-default-value>
+  compiler_cxx     |  true       | <no-default-value>  |  <no-default-value>
+  vt_build_mode    |  false      |                     |
+  root_dir         |  false      | <path>              |  <path>
+  build_tests      |  false      | 1                   |  1
+  fmt              |  false      |                     |
+  kokkos           |  false      |                     |
+  build_kokkos     |  false      | 0                   |  0
+  prefix           |  false      |                     |
+  par              |  false      | 14                  |  14
+  dry_run          |  false      | 0                   |  0
+  verbose          |  false      | 0                   |  0
+  gtest            |  false      |                     |
+  clean            |  false      | 0                   |  0
+  backend          |  false      | 0                   |  0
+  atomic           |  false      |                     |
+  mpi_cc           |  false      |                     |
+  mpi_cxx          |  false      |                     |
 
 This command may get you most of the way there:
 
