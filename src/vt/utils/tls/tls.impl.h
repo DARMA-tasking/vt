@@ -15,7 +15,7 @@ namespace vt { namespace util { namespace tls {
 #define InitTempTLS(init) ,init
 
 #define InnerTLS(TLCLS, TYPE, VAR, INIT, INIT_STR, EXTERN, STATIC)           \
-  EXTERN STATIC MakeStrTLS(tls, VAR, INIT_STR)                               \
+  EXTERN STATIC constexpr MakeStrTLS(tls, VAR, INIT_STR)                     \
   EXTERN STATIC util::tls::TLCLS<TYPE, StrTLS(tls,VAR) INIT> TagTLS(VAR);
 #define DeclareInitImplTLS(tlcls, type, var, init)                           \
   InnerTLS(tlcls, type, var, InitTempTLS(init), InitStrTLS(var), , )
