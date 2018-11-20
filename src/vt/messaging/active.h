@@ -622,7 +622,7 @@ private:
   ContWaitType pending_handler_msgs_    = {};
   ContainerPendingType pending_recvs_   = {};
   TagType cur_direct_buffer_tag_        = starting_direct_buffer_tag;
-  EpochStackType epoch_stack_           = {};
+  EpochStackType epoch_stack_;
 };
 
 }} // end namespace vt::messaging
