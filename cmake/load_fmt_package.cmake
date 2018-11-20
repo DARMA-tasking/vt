@@ -5,7 +5,7 @@
 #    @todo: currently required, but eventually should be optional
 #
 
-find_package(fmt PATHS ${fmt_DIR} ${fmt_DIR}/lib/cmake)
+find_package_local(fmt "${fmt_DIR}/lib/cmake/fmt")
 if(NOT fmt_FOUND)
   message(
     FATAL_ERROR
