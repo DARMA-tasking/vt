@@ -17,6 +17,8 @@ macro(find_package_local pkg_name pkg_directory)
     "find_package_local: "
     "pkg name=\"${pkg_name}\", directory=\"${pkg_directory}\""
   )
+  set("${pkg_name}_PREV" ${pkg_name})
+  set("${pkg_name}_DIR" ${pkg_directory})
   # search locally only for package
   find_package(
     ${pkg_name}
@@ -27,6 +29,7 @@ macro(find_package_local pkg_name pkg_directory)
     NO_CMAKE_SYSTEM_PATH
     NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
   )
+  set("${pkg_name}_DIR" ${${pkg_name}_PREV})
 endmacro(find_package_local)
 
 macro(optional_pkg_directory pkg_name pkg_user_name)
