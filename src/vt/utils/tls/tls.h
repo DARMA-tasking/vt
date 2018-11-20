@@ -53,52 +53,52 @@ namespace vt { namespace util { namespace tls {
 #endif
 
 // Declare and extern TLS variable with initializer
-#define DeclareInitTLS(type, var, init)                     \
+#define DeclareInitTLS(type, var, init)                                       \
   DeclareInitImplTLS(ThreadLocalInitType, type, var, init)
-#define ExternInitTLS(type, var, init)                    \
+#define ExternInitTLS(type, var, init)                                        \
   ExternInitImplTLS(ThreadLocalInitType, type, var, init)
 // Declare and extern TLS variable w/o initializer
-#define DeclareTLS(type, var)                   \
+#define DeclareTLS(type, var)                                                 \
   DeclareImplTLS(ThreadLocalType, type, var)
-#define ExternTLS(type, var)                    \
+#define ExternTLS(type, var)                                                  \
   ExternImplTLS(ThreadLocalType, type, var)
 // Access a TLS variable
-#define AccessTLS(var)                          \
+#define AccessTLS(var)                                                        \
   AccessImplTLS(var)
 
 // Declare and extern a variable with initializer that may or may not be TLS
-#define DeclareInitVar(TLS, type, var, init)                            \
-  DeclareInitImplTLS(                                                   \
-    ThreadLocalInitType, type, var, init                                \
+#define DeclareInitVar(TLS, type, var, init)                                  \
+  DeclareInitImplTLS(                                                         \
+    ThreadLocalInitType, type, var, init                                      \
   )
-#define ExternInitVar(TLS, type, var, init)                             \
-  ExternInitImplTLS(                                                    \
-    ThreadLocalInitType, type, var, init                                \
+#define ExternInitVar(TLS, type, var, init)                                   \
+  ExternInitImplTLS(                                                          \
+    ThreadLocalInitType, type, var, init                                      \
   )
-#define AccessVar(var)                          \
+#define AccessVar(var)                                                        \
   AccessImplTLS(var)
 
 // Variant for file-level static TLS variables
-#define DeclareStaticTLS(type, var)             \
+#define DeclareStaticTLS(type, var)                                           \
   DeclareStImplTLS(ThreadLocalType, type, var)
-#define DeclareStaticInitTLS(type, var, init)                 \
+#define DeclareStaticInitTLS(type, var, init)                                 \
   DeclareStInitImplTLS(ThreadLocalInitType, type, var, init)
 
 // Variant for class level static TLS variables
 // Declare class level static TLS variable w/o initializer
-#define DeclareClassInsideTLS(cls, type, var)           \
+#define DeclareClassInsideTLS(cls, type, var)                                 \
   DeclareClsInImplTLS(ThreadLocalType, cls, type, var)
-#define DeclareClassOutsideTLS(cls, type, var)              \
+#define DeclareClassOutsideTLS(cls, type, var)                                \
   DeclareClsOutImplTLS(ThreadLocalType, cls, type, var)
 
 // Declare class level static TLS variable w initializer
-#define DeclareClassInsideInitTLS(cls, type, var, init)               \
+#define DeclareClassInsideInitTLS(cls, type, var, init)                       \
   DeclareClsInInitImplTLS(ThreadLocalInitType, cls, type, var, init)
-#define   DeclareClassOutsideInitTLS(cls, type, var, init)            \
+#define DeclareClassOutsideInitTLS(cls, type, var, init)                      \
   DeclareClsOutInitImplTLS(ThreadLocalInitType, cls, type, var, init)
 
 // Access a static TLS variable in a class
-#define AccessClassTLS(cls, var)                \
+#define AccessClassTLS(cls, var)                                              \
   AccessClsImplTLS(cls, var)
 
 }}} /* end namespace vt::util::tls */
