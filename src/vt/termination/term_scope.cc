@@ -3,6 +3,7 @@
 #include "vt/termination/termination.h"
 #include "vt/termination/term_common.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace term {
 
@@ -16,7 +17,9 @@ namespace vt { namespace term {
   auto action = [&]{ term_finished = true; };
   theTerm()->addActionEpoch(epoch,action);
   vtAssertExpr(closure != nullptr);
+  theMsg()->pushEpoch(epoch);
   closure();
+  theMsg()->popEpoch();
   theTerm()->finishedEpoch(epoch);
   while (!term_finished) {
     runScheduler();
@@ -31,7 +34,9 @@ namespace vt { namespace term {
   auto const epoch = theTerm()->newEpochRooted(use_dijkstra_scholten);
   theTerm()->addActionEpoch(epoch,action);
   vtAssertExpr(closure != nullptr);
+  theMsg()->pushEpoch(epoch);
   closure();
+  theMsg()->popEpoch();
   theTerm()->finishedEpoch(epoch);
   return epoch;
 }
@@ -44,7 +49,9 @@ namespace vt { namespace term {
   auto action = [&]{ term_finished = true; };
   theTerm()->addActionEpoch(epoch,action);
   vtAssertExpr(closure != nullptr);
+  theMsg()->pushEpoch(epoch);
   closure();
+  theMsg()->popEpoch();
   theTerm()->finishedEpoch(epoch);
   while (!term_finished) {
     runScheduler();
@@ -58,7 +65,9 @@ namespace vt { namespace term {
   auto const epoch = theTerm()->newEpochCollective(true);
   theTerm()->addActionEpoch(epoch,action);
   vtAssertExpr(closure != nullptr);
+  theMsg()->pushEpoch(epoch);
   closure();
+  theMsg()->popEpoch();
   theTerm()->finishedEpoch(epoch);
   return epoch;
 }
