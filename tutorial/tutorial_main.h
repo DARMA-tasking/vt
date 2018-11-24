@@ -9,8 +9,11 @@
 #include "tutorial_1f.h"
 #include "tutorial_1g.h"
 #include "tutorial_1h.h"
+
 #include "tutorial_2a.h"
 #include "tutorial_2b.h"
+
+#include "tutorial_3a.h"
 
 int main(int argc, char** argv) {
   using namespace vt::tutorial;
@@ -77,6 +80,9 @@ int main(int argc, char** argv) {
 
   // Invoke tutorial 2b: virtual collection reduce
   collectionReduce();
+
+  // Termination with active messages
+  activeMessageTerm();
 
 
   /*
