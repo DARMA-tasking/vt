@@ -19,7 +19,8 @@ template <typename ColT, typename IndexT>
 template <typename... IndexArgsT>
 typename CollectionProxy<ColT, IndexT>::ElmProxyType
 CollectionProxy<ColT, IndexT>::index_build(IndexArgsT&&... args) const {
-  return index(IndexT(args...));
+  using BaseIndexType = typename IndexT::DenseIndexType;
+  return index(IndexT(static_cast<BaseIndexType>(args)...));
 }
 
 template <typename ColT, typename IndexT>

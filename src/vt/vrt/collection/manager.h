@@ -20,6 +20,7 @@
 #include "vt/vrt/collection/traits/coll_msg.h"
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
+#include "vt/vrt/collection/staged_token/token.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/messaging/message.h"
@@ -134,7 +135,7 @@ struct CollectionManager {
   construct(typename ColT::IndexType range, Args&&... args);
 
   /*
-   *      CollectionManager::construct<ColT, MapFnT>
+   *      CollectionManager::constructCollective<ColT, MapFnT>
    *
    *  Construct virtual context collection with an explicit map. This construct
    *  method enables distributed SPMD construction of the virtual context
@@ -161,6 +162,29 @@ struct CollectionManager {
     typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
     HandlerType const& map_han, TagType const& tag
   );
+
+  /*
+   *      CollectionManager::constructInsert<ColT, MapFnT>
+   *
+   *  Construct virtual context collection with insertions by the user before
+   *  the collection is used. The collection is still statically sized and must
+   *  be finalized before use.
+   */
+private:
+  template <typename ColT, typename... Args>
+  void staticInsert(
+    VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
+  );
+
+
+public:
+  template <typename ColT>
+  InsertToken<ColT> constructInsert(
+    typename ColT::IndexType range, TagType const& tag = no_tag
+  );
+
+  template <typename ColT>
+  CollectionProxyWrapType<ColT> finishedInsert(InsertToken<ColT>&& token);
 
   /*
    * Private interface for distConstruct that CollectionManager uses to
@@ -665,6 +689,9 @@ private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmDestroyAttorney;
 
+  template <typename ColT, typename IndexT>
+  friend struct InsertTokenRval;
+
   friend struct balance::ElementStats;
 
   template <typename ColT, typename IndexT>
@@ -722,5 +749,6 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vt/vrt/collection/types/indexable.impl.h"
 #include "vt/vrt/collection/dispatch/dispatch.impl.h"
 #include "vt/vrt/collection/dispatch/registry.impl.h"
+#include "vt/vrt/collection/staged_token/token.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/

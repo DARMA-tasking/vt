@@ -1204,8 +1204,10 @@ void CollectionManager::sendMsgUntypedHandler(
   auto const& cur_epoch = theMsg()->getEpoch();
   theTerm()->produce(cur_epoch);
 
+  // auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
+
   auto holder = findColHolder<ColT, IdxT>(col_proxy);
-  if (holder != nullptr) {
+  if (holder != nullptr /* && found_constructed*/) {
     auto const map_han = holder->map_fn;
     auto max_idx = holder->max_idx;
     auto cur_idx = elm_proxy.getIndex();
@@ -1547,6 +1549,125 @@ VirtualProxyType CollectionManager::makeDistProxy(TagType const& tag) {
 }
 
 /* end SPMD distributed collection support */
+
+
+template <typename ColT, typename... Args>
+void CollectionManager::staticInsert(
+  VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
+) {
+  using IndexT           = typename ColT::IndexType;
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+  using BaseIdxType      = vt::index::BaseIndex;
+
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  auto map_han = UniversalIndexHolder<>::getMap(proxy);
+
+  // Set the current context index to `idx`
+  IdxContextHolder::set(&idx);
+
+  auto tuple = std::make_tuple(std::forward<Args>(args)...);
+
+  static constexpr auto num_args = std::tuple_size<decltype(tuple)>::value;
+
+  auto holder = findColHolder<ColT, IndexT>(proxy);
+
+  auto range = holder->max_idx;
+  auto const num_elms = range.getSize();
+
+  // Get the handler function
+  auto fn = auto_registry::getHandlerMap(map_han);
+
+  auto const cur = static_cast<BaseIdxType*>(&idx);
+  auto const max = static_cast<BaseIdxType*>(&range);
+  auto const& home_node = fn(cur, max, num_nodes);
+
+  #if backend_check_enabled(detector)
+    auto elm_ptr = DerefCons::derefTuple<ColT, IndexT, decltype(tuple)>(
+      num_elms, idx, &tuple
+    );
+  #else
+    auto elm_ptr = CollectionManager::runConstructor<ColT, IndexT>(
+      num_elms, idx, &tuple, std::make_index_sequence<num_args>{}
+    );
+  #endif
+
+  debug_print(
+    verbose, vrt_coll, node,
+    "construct (staticInsert): ptr={}\n", print_ptr(elm_ptr.get())
+  );
+
+  // Through the attorney, setup all the properties on the newly constructed
+  // collection element: index, proxy, number of elements. Note: because of
+  // how the constructor works, the index is not currently available through
+  // "getIndex"
+  CollectionTypeAttorney::setup(elm_ptr.get(), num_elms, idx, proxy);
+
+  // Insert the element into the managed holder for elements
+  insertCollectionElement<ColT>(
+    std::move(elm_ptr), idx, range, map_han, proxy, true, home_node
+  );
+
+  // Clear the current index context
+  IdxContextHolder::clear();
+
+}
+
+template <typename ColT>
+InsertToken<ColT> CollectionManager::constructInsert(
+  typename ColT::IndexType range, TagType const& tag
+) {
+  using IndexT         = typename ColT::IndexType;
+
+  auto const map_han = getDefaultMap<ColT>();
+
+  // Create a new distributed proxy, ordered wrt the input tag
+  auto const& proxy = makeDistProxy<>(tag);
+
+  // For now, the staged insert collection must be statically sized. It is *not*
+  // dynamically insertable!
+  auto const& is_static = ColT::isStaticSized();
+  vtAssertInfo(
+    is_static, "Staged insert construction must be statically sized",
+    is_static, tag, map_han
+  );
+
+  // Invoke getCollectionLM() to create a new location manager instance for this
+  // collection
+  auto loc = theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
+
+  // Start the local collection initiation process, lcoal meta-info about the
+  // collection. Insert epoch is `no_epoch` because dynamic insertions are not
+  // allowed when using SPMD distributed construction currently
+  insertCollectionInfo(proxy, map_han, no_epoch);
+
+  // Insert the meta-data for this new collection
+  insertMetaCollection<ColT>(proxy, map_han, range, is_static);
+
+  return InsertToken<ColT>{proxy};
+}
+
+template <typename ColT>
+CollectionManager::CollectionProxyWrapType<ColT>
+CollectionManager::finishedInsert(InsertToken<ColT>&& token) {
+  using TypedProxyType = CollectionProxyWrapType<ColT>;
+
+  InsertToken<ColT>&& tok = std::move(token);
+
+  auto const& proxy = tok.getProxy();
+
+  // Initialize the typed proxy for the user interface, returned from this fn
+  auto const typed_proxy = TypedProxyType{proxy};
+
+  // Reduce construction of the distributed collection
+  reduceConstruction<ColT>(proxy);
+
+  // Construct a underlying group for the collection
+  groupConstruction<ColT>(proxy, true);
+
+  return typed_proxy;
+}
 
 template <typename ColT>
 /*static*/ HandlerType CollectionManager::getDefaultMap() {
