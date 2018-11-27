@@ -18,7 +18,7 @@ struct Gettable : BaseProxyT {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  ColT* tryGetLocalPtr();
+  ColT* tryGetLocalPtr() const;
 };
 
 }}} /* end namespace vt::vrt::collection */

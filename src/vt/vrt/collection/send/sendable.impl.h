@@ -28,7 +28,7 @@ template <
 >
 void Sendable<ColT,IndexT,BaseProxyT>::send(
   MsgT* msg, ActionType continuation
-) {
+) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
@@ -46,7 +46,7 @@ template <
 >
 void Sendable<ColT,IndexT,BaseProxyT>::send(
   MsgT* msg, ActionType continuation
-) {
+) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);

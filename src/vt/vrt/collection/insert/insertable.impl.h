@@ -22,7 +22,7 @@ void ElmInsertable<ColT,IndexT,BaseProxyT>::serialize(SerializerT& s) {
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-void ElmInsertable<ColT,IndexT,BaseProxyT>::insert(NodeType node) {
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insert(NodeType node) const {
   auto const col_proxy = this->getCollectionProxy();
   auto const elm_proxy = this->getElementProxy();
   auto const idx = elm_proxy.getIndex();

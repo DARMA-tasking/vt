@@ -19,7 +19,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f>
 EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
   MsgT *const msg, EpochType const& epoch, TagType const& tag,
   NodeType const& node
-) {
+) const {
   auto const proxy = this->getProxy();
   return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,epoch,tag,node);
 }
@@ -29,7 +29,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f>
 EpochType Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
   MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch,
   TagType const& tag, NodeType const& node
-) {
+) const {
   auto const proxy = this->getProxy();
   return theCollection()->reduceMsgExpr<ColT,MsgT,f>(
     proxy,msg,fn,epoch,tag,node
@@ -40,7 +40,7 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
 EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
   MsgT *const msg, EpochType const& epoch, TagType const& tag, IndexT const& idx
-) {
+) const {
   auto const proxy = this->getProxy();
   return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,epoch,tag,idx);
 }
@@ -50,7 +50,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f>
 EpochType Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
   MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch,
   TagType const& tag, IndexT const& idx
-) {
+) const {
   auto const proxy = this->getProxy();
   return theCollection()->reduceMsgExpr<ColT,MsgT,f>(
     proxy,msg,fn,epoch,tag,idx

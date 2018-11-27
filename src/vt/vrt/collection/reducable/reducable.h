@@ -25,27 +25,27 @@ struct Reducable : BaseProxyT {
     MsgT *const msg, EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag,
     NodeType const& node = uninitialized_destination
-  );
+  ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   EpochType reduceExpr(
     MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag,
     NodeType const& node = uninitialized_destination
-  );
+  ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   EpochType reduce(
     MsgT *const msg, EpochType const& epoch, TagType const& tag,
     IndexT const& idx
-  );
+  ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   EpochType reduceExpr(
     MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch,
     TagType const& tag,
     IndexT const& idx
-  );
+  ) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

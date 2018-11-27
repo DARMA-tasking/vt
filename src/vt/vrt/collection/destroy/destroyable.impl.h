@@ -16,7 +16,7 @@ Destroyable<ColT,IndexT,BaseProxyT>::Destroyable(
 { }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-void Destroyable<ColT,IndexT,BaseProxyT>::destroy() {
+void Destroyable<ColT,IndexT,BaseProxyT>::destroy() const {
   return theCollection()->destroy<ColT,IndexT>(this->getProxy());
 }
 

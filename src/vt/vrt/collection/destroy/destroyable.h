@@ -15,7 +15,7 @@ struct Destroyable : BaseProxyT {
   explicit Destroyable(VirtualProxyType const in_proxy);
   Destroyable& operator=(Destroyable const&) = default;
 
-  void destroy();
+  void destroy() const;
 };
 
 }}} /* end namespace vt::vrt::collection */

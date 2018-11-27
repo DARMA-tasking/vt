@@ -18,7 +18,7 @@ struct ElmInsertable : BaseProxyT {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  void insert(NodeType node = uninitialized_destination);
+  void insert(NodeType node = uninitialized_destination) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

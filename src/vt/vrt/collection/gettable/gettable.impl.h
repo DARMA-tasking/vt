@@ -22,7 +22,7 @@ void Gettable<ColT,IndexT,BaseProxyT>::serialize(SerializerT& s) {
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-ColT* Gettable<ColT,IndexT,BaseProxyT>::tryGetLocalPtr() {
+ColT* Gettable<ColT,IndexT,BaseProxyT>::tryGetLocalPtr() const {
   auto const col_proxy = this->getCollectionProxy();
   auto const elm_proxy = this->getElementProxy();
   auto const idx = elm_proxy.getIndex();
