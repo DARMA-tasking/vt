@@ -24,6 +24,7 @@ set(
   PROJECT_SUBDIRS_LIST
   # Add component along with sub-directories
     configs/debug configs/features configs/types configs/error
+    configs/generated
     collective/barrier collective/tree
     collective/reduce/
       collective/reduce/operators collective/reduce/functors
@@ -109,6 +110,12 @@ file(
   ${CMAKE_CURRENT_SOURCE_DIR}/vt/*.cc
 )
 
+file(
+  GLOB
+  SOURCE_FILES
+  ${PROJECT_BIN_DIR}/src/vt/configs/generated/vt_git_revision.cc
+)
+
 foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
   file(
     GLOB
@@ -187,6 +194,7 @@ link_target_with_vt(
 
 # Define and set up the different build types of VT
 include(../cmake/define_build_types.cmake)
+include(../cmake/build_git_info.cmake)
 
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
