@@ -23,7 +23,7 @@ namespace vt { namespace arguments {
 /*static*/ bool     ArgConfig::parsed             = false;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
-  if (parsed) {
+  if (parsed || argc == 0 || argv == nullptr) {
     return 0;
   }
 
