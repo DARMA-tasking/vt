@@ -14,7 +14,7 @@ using namespace ::vt::runtime;
 
 template <RuntimeInstType instance>
 RuntimePtrType CollectiveAnyOps<instance>::initialize(
-  int argc, char** argv, WorkerCountType const num_workers,
+  int& argc, char**& argv, WorkerCountType const num_workers,
   bool is_interop, MPI_Comm* comm
 ) {
   using vt::runtime::RuntimeInst;
