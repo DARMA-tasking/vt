@@ -336,7 +336,7 @@ void InfoColl::upTree() {
       debug_print(
         group, node,
         "InfoColl::upTree: inserting into set msg={}\n",
-        print_ptr(msg)
+        print_ptr(msg.get())
       );
       msg_list.emplace_back(msg);
     }
