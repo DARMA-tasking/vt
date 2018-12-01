@@ -1,7 +1,6 @@
 
 #include "vt/config.h"
 #include "vt/runtime/runtime.h"
-
 #include "vt/context/context.h"
 #include "vt/context/context_attorney.h"
 #include "vt/registry/registry.h"
@@ -18,13 +17,23 @@
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/worker/worker_headers.h"
+#include "vt/configs/generated/vt_git_revision.h"
+#include "vt/configs/debug/debug_colorize.h"
+#include "vt/configs/arguments/args.h"
+#include "vt/configs/error/stack_out.h"
+#include "vt/configs/error/pretty_print_stack.h"
 
 #include <memory>
 #include <functional>
 #include <string>
+#include <vector>
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
+#include <limits.h>
+#include <unistd.h>
+
+#include <fmt/color.h>
 
 namespace vt { namespace runtime {
 
@@ -89,12 +98,13 @@ void Runtime::printStartupBanner() {
 
   std::string is_interop_str =
     is_interop_ ?
-      std::string("interop=") + std::string(is_interop_ ? "true" : "false") :
+      std::string(" interop=") + std::string(is_interop_ ? "true:" : "false:") :
       std::string("");
-  std::string init = "Runtime initializing: " + is_interop_str;
-  std::string mode = std::string("mode: ") +
+  std::string init = "Runtime Initializing:" + is_interop_str;
+  std::string mode = std::string("mode: ");
+  std::string mode_type =
     std::string(num_workers_ == no_workers ? "single" : "multi") +
-    std::string("-threaded");
+    std::string("-thread per rank");
   std::string thd = !has_workers ? std::string("") :
     std::string(", worker threading: ") +
     std::string(
@@ -102,20 +112,64 @@ void Runtime::printStartupBanner() {
         openmp, "OpenMP", backend_enable_if_else(stdthread, "std::thread", "")
       )
    );
-  std::string worker_cnt = !has_workers ? std::string("") :
+  std::string cnt = !has_workers ? std::string("") :
     (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
+  std::string node_str = nodes == 1 ? "node" : "nodes";
+  std::string all_node = std::to_string(nodes) + " " + node_str + cnt;
 
-  auto const& stream = stdout;
-  fmt::print(stream, "VT: {}: {}{}\n", init.c_str(), mode.c_str(), thd.c_str());
-  fmt::print(stream, "VT: Running on {} nodes{}\n", nodes, worker_cnt.c_str());
-  fmt::print(stream, "VT: features enabled:\n" backend_print_all_features(0));
+  char hostname[1024];
+  gethostname(hostname, 1024);
+
+  auto green    = debug::green();
+  auto red      = debug::red();
+  auto reset    = debug::reset();
+  auto bd_green = debug::bd_green();
+  auto magenta  = debug::magenta();
+  auto vt_pre   = debug::vtPre();
+  auto emph     = [=](std::string s) -> std::string { return debug::emph(s); };
+  auto reg      = [=](std::string s) -> std::string { return debug::reg(s);  };
+
+  std::vector<std::string> features = {"" backend_print_all_features(0) };
+
+  std::string dirty = "";
+  if (strncmp(vt_git_clean_status.c_str(), "DIRTY", 5) == 0) {
+    dirty = red + std::string("*dirty*") + reset;
+  }
+
+  auto f1 = fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd));
+  auto f2 = fmt::format("{}Running on: {}\n", green, emph(all_node));
+  auto f3 = fmt::format("{}Machine Hostname: {}\n", green, emph(hostname));
+  auto f4 = fmt::format("{}Build SHA: {}\n", green, emph(vt_git_sha1));
+  auto f5 = fmt::format("{}Build Ref: {}\n", green, emph(vt_git_refspec));
+  auto f6 = fmt::format("{}Description: {} {}\n", green, emph(vt_git_description), dirty);
+  auto f7 = fmt::format("{}Compile-time Features Enabled:{}\n", green, reset);
+
+  fmt::print("{}{}{}", vt_pre, f1, reset);
+  fmt::print("{}{}{}", vt_pre, f2, reset);
+  fmt::print("{}{}{}", vt_pre, f3, reset);
+  fmt::print("{}{}{}", vt_pre, f4, reset);
+  fmt::print("{}{}{}", vt_pre, f5, reset);
+  fmt::print("{}{}{}", vt_pre, f6, reset);
+  fmt::print("{}{}{}", vt_pre, f7, reset);
+  for (auto i = 1; i < features.size(); i++) {
+    fmt::print("{}\t{}\n", vt_pre, emph(features.at(i)));
+  }
+  //fmt::print("{}\n", reset);
+  fmt::print(reset);
 }
 
 void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
-  std::string fin = "Runtime finalizing";
+  auto green    = debug::green();
+  auto reset    = debug::reset();
+  auto bd_green = debug::bd_green();
+  auto magenta  = debug::magenta();
+  auto f1 = fmt::format("{}Runtime Finalizing{}", green, reset);
+  auto f2 = fmt::format("{}Total work units processed:{} ", green, reset);
+  auto vt_pre = bd_green + std::string("vt") + reset + ": ";
+  std::string fin = "";
   std::string units = std::to_string(num_units);
-  auto const& stream = stdout;
-  fmt::print(stream, "VT: {}: {} work units processed\n", fin.c_str(), units.c_str());
+  fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);
+  fmt::print("{}{}{}\n", vt_pre, f1, reset);
 }
 
 bool Runtime::initialize(bool const force_now) {
@@ -179,7 +233,7 @@ void Runtime::reset() {
 
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   aborted_ = true;
-  output(abort_str,code,true);
+  output(abort_str,code,true,true,false);
   _Exit(code);
   // @todo: why will this not compile with clang!!?
   //quick_exit(code);
@@ -187,25 +241,57 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
 
 void Runtime::output(
   std::string const abort_str, ErrorCodeType const code, bool error,
-  bool decorate
+  bool decorate, bool formatted
 ) {
-  NodeType const node = theContext ? theContext->getNode() : -1;
+  auto node      = theContext ? theContext->getNode() : -1;
+  auto green     = debug::green();
+  auto byellow   = debug::byellow();
+  auto red       = debug::red();
+  auto reset     = debug::reset();
+  auto vt_pre    = debug::vtPre();
+  auto bred      = debug::bred();
+  auto node_str  = ::vt::debug::proc(node);
+  auto prefix    = vt_pre + node_str + " ";
+  auto seperator = fmt::format("{}{}{:-^120}{}\n", prefix, bred, "", reset);
+  auto warn_sep  = fmt::format("{}{}{:-^120}{}\n", prefix, byellow, "", reset);
+  // auto space     = fmt::format("{}\n", prefix);
+
   if (decorate) {
-    std::string sep = "--------------";
     if (error) {
-      fmt::print(stderr, "VT: runtime error: system aborting\n");
-      auto const info = ::fmt::format("Node {} Fatal Error", node);
-      fmt::print(stderr, "{:-^80}\n", info);
+      auto f1 = fmt::format(" Runtime Error: System Aborting! ");
+      auto const info = ::fmt::format(" Fatal Error on Node {} ", node);
+      // fmt::print(stderr, "{}", space);
+      fmt::print(stderr, "{}", seperator);
+      fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, bred, f1, reset);
+      fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, bred, info, reset);
+      fmt::print(stderr, "{}", seperator);
     } else {
-      fmt::print(stderr, "VT: runtime warning\n");
-      auto const info = ::fmt::format("Node {} info", node);
-      fmt::print(stderr, "{:-^80}\n", info);
+      auto f1 = fmt::format(" Runtime Warning ");
+      auto const info = ::fmt::format(" Warning on Node {} ", node);
+      // fmt::print(stderr, "{}", space);
+      fmt::print(stderr, "{}", warn_sep);
+      fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, byellow, f1,   reset);
+      fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, byellow, info, reset);
+      fmt::print(stderr, "{}", warn_sep);
     }
-    fmt::print(stderr, "Code: {}\n", code);
-    fmt::print(stderr, "{}\n", abort_str);
-  } else {
-    fmt::print(stderr, "{}\n", abort_str);
   }
+
+  if (formatted) {
+    fmt::print(stderr, "{}", abort_str);
+  } else {
+    fmt::print(stderr, "{}\n", prefix);
+    fmt::print(stderr, "{}Message: {}{}{}\n", prefix, byellow, abort_str, reset);
+    fmt::print(stderr, "{}\n", prefix);
+  }
+
+  if (error) {
+    auto stack = debug::stack::dumpStack();
+    auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+    fmt::print("{}", stack_pretty);
+  }
+
+  fflush(stdout);
+  fflush(stderr);
 }
 
 void Runtime::terminationHandler() {

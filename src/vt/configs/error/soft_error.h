@@ -12,6 +12,7 @@
 #include "vt/configs/debug/debug_config.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/error/common.h"
+#include "vt/configs/error/pretty_print_message.h"
 
 #include <string>
 
@@ -25,14 +26,13 @@ inline void warning(
   std::string const& file, int const line, std::string const& func,
   Args&&... args
 ) {
+  auto msg = "vtWarn() Invoked";
   std::string const buf = ::fmt::format(str, std::forward<Args>(args)...);
-  std::string const inf = ::fmt::format(
-    "{}\n \nFile: {}\nLine: {}\nFunction: {}\n",buf,file,line,func
-  );
+  auto inf = debug::stringizeMessage(msg,buf,"",file,line,func,error);
   if (quit) {
-    return ::vt::abort(inf,error);
+    return ::vt::output(inf,error,true,true,true);
   } else {
-    return ::vt::output(inf,error,false,true);
+    return ::vt::output(inf,error,false,true,true);
   }
 }
 

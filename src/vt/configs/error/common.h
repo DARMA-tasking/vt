@@ -19,8 +19,13 @@ namespace vt {
 
 // Forward declare abort and output signatures, defined in collective ops
 void abort(std::string const str, ErrorCodeType const code);
-void output(std::string const str, ErrorCodeType const code, bool, bool);
+void output(std::string const str, ErrorCodeType const code, bool, bool, bool);
 
-} /* end namespace vt */
+namespace debug {
+
+extern NodeType preNode();
+extern NodeType preNodes();
+
+}} /* end namespace vt::debug */
 
 #endif /*INCLUDED_CONFIGS_ERROR_COMMON_H*/

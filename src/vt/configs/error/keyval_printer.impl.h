@@ -3,6 +3,7 @@
 #define INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_IMPL_H
 
 #include "vt/configs/error/keyval_printer.h"
+#include "vt/configs/debug/debug_colorize.h"
 
 #include <cstdlib>
 #include <tuple>
@@ -16,7 +17,12 @@ namespace vt { namespace util { namespace error {
 
 template <typename T, typename U>
 static std::string makeVal(T const& t, U const& u) {
-  return ::fmt::format("{:>40} = {}",t,u);
+  auto green           = ::vt::debug::green();
+  auto blue            = ::vt::debug::blue();
+  auto reset           = ::vt::debug::reset();
+  auto bred            = ::vt::debug::bred();
+  auto magenta         = ::vt::debug::magenta();
+  return ::fmt::format("{}{:>40}{} = {}{}{}",magenta,t,reset,green,u,reset);
 }
 
 template <typename ConsT, typename ConsU>

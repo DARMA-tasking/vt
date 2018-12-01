@@ -91,4 +91,16 @@ DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id);
 
 }}  // end namespace vt::ctx
 
+namespace vt { namespace debug {
+
+NodeType preNode() {
+  return theContext() ? theContext()->getNode() : -1;
+}
+NodeType preNodes() {
+  return theContext() ? theContext()->getNumNodes() : -1;
+}
+
+}} /* end namespace vt::debug */
+
+
 #undef DEBUG_VT_CONTEXT
