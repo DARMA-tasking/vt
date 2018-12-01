@@ -12,8 +12,8 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
   auto const& num_nodes = theContext()->getNumNodes();
   auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
   if (this_node == 0) {
-    fmt::print(
-      "VT: {}: "
+    vt_print(
+      lblite,
       "RotateLB: procDataIn: stats size={}, next_node={}\n",
       this_node, data_in.size(), next_node
     );

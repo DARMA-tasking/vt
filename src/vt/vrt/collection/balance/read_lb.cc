@@ -124,9 +124,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
     } else {
       auto const& this_node = theContext()->getNode();
       if (this_node == 0 && lb_name != "") {
-        ::fmt::print(
-          stderr,
-          "{}: VT: valid LB not found: \"name={},iter={},min={},max={}\"\n",
+        vt_print(
+          lblite,
+          "valid LB not found: \"name={},iter={},min={},max={}\"\n",
           this_node, lb_name, lb_iter, lb_min, lb_max
         );
       }

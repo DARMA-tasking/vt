@@ -193,10 +193,11 @@ void HierarchicalLB::loadStats(
   }
 
   if (this_node == 0) {
-    fmt::print(
-      "VT: {}: "
-      "HierLB: loadStats: this_load={}, total_load={}, avg_load={}, max_load={}, "
-      "diff={}, diff_percent={}, should_lb={}, auto={}, threshold={}\n",
+    vt_print(
+      hierlb,
+      "HierLB: loadStats: this_load={}, total_load={}, avg_load={}, "
+      "max_load={}, diff={}, diff_percent={}, should_lb={}, auto={}, "
+      "threshold={}\n",
       this_node, this_load, total_load, avg_load, max_load, diff, diff_percent,
       should_lb, hierlb_auto_threshold, this_threshold
     );
@@ -320,8 +321,8 @@ void HierarchicalLB::finishedTransferExchange() {
   );
   if (this_node == 0) {
     auto const& total_time = timing::Timing::getCurrentTime() - start_time_;
-    fmt::print(
-      "VT: {}: "
+    vt_print(
+      hierlb,
       "loadStats: total_time={}, transfer_count={}\n",
       this_node, total_time, transfer_count
     );

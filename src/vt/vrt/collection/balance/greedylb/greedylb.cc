@@ -128,8 +128,8 @@ void GreedyLB::loadStats(
   }
 
   if (this_node == 0) {
-    fmt::print(
-      "VT: {}: "
+    vt_print(
+      lblite,
       "loadStats: this_load={}, total_load={}, avg_load={}, max_load={}, "
       "diff={}, diff_percent={}, should_lb={}, auto={}, threshold={}\n",
       this_node, this_load, total_load, avg_load, max_load, diff, diff_percent,
@@ -263,8 +263,8 @@ void GreedyLB::finishedTransferExchange() {
   );
   if (this_node == 0) {
     auto const& total_time = timing::Timing::getCurrentTime() - start_time_;
-    fmt::print(
-      "VT: {}: "
+    vt_print(
+      lblite,
       "loadStats: total_time={}, transfer_count={}\n",
       this_node, total_time, transfer_count
     );
@@ -411,8 +411,8 @@ void GreedyLB::finishedLB() {
   );
   if (this_node == 0) {
     auto const& total_time = timing::Timing::getCurrentTime() - start_time_;
-    fmt::print(
-      "VT: {}: "
+    vt_print(
+      lblite,
       "GreedyLB: loadStats: total_time={}, transfer_count={}\n",
       this_node, total_time, transfer_count
     );
