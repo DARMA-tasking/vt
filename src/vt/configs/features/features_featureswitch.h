@@ -56,17 +56,17 @@
   debug_list_holder(                                                    \
     bit_check_overflow,    "Check bitfield overflow",                   \
     detector,              "C++ Trait Detector",                        \
-    lblite,                "LB-lite (collections) enabled",             \
-    memory_pool,           "Enable memory pooling",                     \
-    mpi_rdma,              "Enable RDMA MPI Operations",                \
+    lblite,                "Load Balancing for Collections",            \
+    memory_pool,           "Memory Pooling",                            \
+    mpi_rdma,              "Native RDMA with MPI",                      \
     no_feature,            "No feature",                                \
-    no_pool_alloc_env,     "Disable memory pool envelope",              \
+    no_pool_alloc_env,     "No memory pool envelope",                   \
     openmp,                "OpenMP Threading",                          \
-    parserdes,             "Enable partial inline serialization",       \
-    print_term_msgs,       "Debug-prints-TD-msgs",                      \
-    production,            "Production",                                \
+    parserdes,             "Partial Inline Serialization",              \
+    print_term_msgs,       "Print Termination Control Messages",        \
+    production,            "Production Build",                          \
     stdthread,             "std::thread Threading",                     \
-    trace_enabled,         "Trace"                                      \
+    trace_enabled,         "Tracing Projections"                        \
   )
 
 #define debug_list_contexts                                             \
