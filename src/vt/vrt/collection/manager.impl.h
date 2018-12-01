@@ -771,7 +771,6 @@ CollectionManager::broadcastMsgWithHan(
   HandlerType const& h, bool const mem, ActionType act, bool inst
 ) {
   using IdxT = typename ColT::IndexType;
-  ::fmt::print("broadcastMsgWithHan is col\n");
   return broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(proxy,msg,h,mem,act,inst);
 }
 
@@ -781,7 +780,6 @@ CollectionManager::broadcastMsgWithHan(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
   HandlerType const& h, bool const mem, ActionType act, bool inst
 ) {
-::fmt::print("broadcastMsgWithHan is NOT col\n");
   return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,mem,act,inst);
 }
 
