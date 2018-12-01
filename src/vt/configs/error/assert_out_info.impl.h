@@ -7,11 +7,13 @@
 #include "vt/configs/error/assert_out.h"
 #include "vt/configs/error/assert_out_info.h"
 #include "vt/configs/error/keyval_printer.h"
+#include "vt/configs/debug/debug_colorize.h"
 
 #include <cassert>
 #include <tuple>
 #include <type_traits>
 #include <string>
+#include <sstream>
 
 #include <fmt/format.h>
 
@@ -49,14 +51,34 @@ assertOutInfo(
   auto const t2 = std::make_tuple(args...);
   auto varlist = PrinterType::make(t1,t2);
 
-  std::string state = ::fmt::format("{:*^80}\n\n", " DEBUG STATE ");
+  auto node      = debug::preNode();
+  auto vt_pre    = debug::vtPre();
+  auto bred      = debug::bred();
+  auto node_str  = debug::proc(node);
+  auto prefix    = vt_pre + node_str + " ";
+  auto byellow   = debug::byellow();
+  auto yellow    = debug::yellow();
+  auto reset     = debug::reset();
+  auto green     = debug::green();
+  auto seperator = fmt::format("{}{}{:-^120}{}\n", prefix, yellow, "", reset);
+  auto space     = fmt::format("{}\n", prefix);
+  auto title     = fmt::format(
+    "{}{}{:-^120}{}\n", prefix, yellow, " Debug State Assert Info ", reset
+  );
+  auto pre       = fmt::format("{}{}{}{}", seperator, title, seperator, space);
+
+  std::ostringstream str_buf;
+
+  auto buf = fmt::format("{}", pre);
+  str_buf << buf;
+
+  //str_buf << seperator << seperator;
   for (auto&& var : varlist) {
-    state += var + "\n";
+    auto cur = fmt::format("{}{}{:>25}{}\n", prefix, green, var, reset);
+    str_buf << cur;
   }
-  state += "\n";
-  state += ::fmt::format("{:*^80}\n", "");
-  state += "\n";
-  ::vt::output(state,error,false,false);
+  str_buf << space << seperator << seperator;
+  ::vt::output(str_buf.str(),error,false,false,true);
 
   if (fail) {
     assert(false);

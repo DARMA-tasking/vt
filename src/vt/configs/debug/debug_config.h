@@ -197,9 +197,8 @@
     )                                                                   \
   )
 #define find_if_enabled(list_element, kv_list)                          \
-  "\t"                                                                  \
-  debug_find_value_kv(list_element, backend_str_join(kv_list, debug_))  \
-  "\n"
+  ,                                                                     \
+  debug_find_value_kv(list_element, backend_str_join(kv_list, debug_))
 
 //find_value_enabled(list_debug_modes, backend_debug_modes)
 

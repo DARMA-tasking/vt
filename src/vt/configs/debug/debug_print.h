@@ -3,6 +3,7 @@
 #define INCLUDED_DEBUG_PRINT
 
 #include "vt/configs/debug/debug_config.h"
+#include "vt/configs/debug/debug_colorize.h"
 
 #include <fmt/format.h>
 
@@ -16,8 +17,21 @@
 #define debug_file_fmt                          \
   debug_test(backend,line_file, "{}:{} ", )
 
-#define debug_decorated_prefix(debug_stamp, debug_type)       \
-  "[{}] " debug_stamp " " debug_pretty_print(debug_type) ": "
+#define print_colorize(color, str, str2)                                \
+  ((::vt::debug::ttyc()) ?                                              \
+   (std::string(color) + std::string(str) + std::string("\33[00m") +    \
+    std::string(str2)) :                                                \
+   std::string(str) + std::string(str2))
+
+#define vt_print_colorize print_colorize("\33[32;1m", "vt", ":")
+
+#define type_print_colorize(debug_type)                                 \
+  print_colorize("\33[32m", debug_pretty_print(debug_type), ":")
+
+#define proc_print_colorize(proc)                                       \
+  print_colorize("\e[34m", "[" +std::to_string(proc) + "]", "")
+
+#define debug_decorated_prefix(debug_stamp, debug_type) "{} {} {} "
 
 #define debug_decorated(                                                \
   PRINTER,                                                              \
@@ -33,7 +47,10 @@
         PRINTER(                                                        \
           debug_decorated_prefix(debug_stamp, debug_type)               \
           c1_fmt " " c2_fmt ": " debug_file_fmt main_fmt,               \
-          proc, c1_arg, c2_arg debug_file_arg                           \
+          vt_print_colorize,                                            \
+          proc_print_colorize(proc),                                    \
+          type_print_colorize(debug_type),                              \
+          c1_arg, c2_arg debug_file_arg                                 \
           meld_if_stmt(                                                 \
             meld_to_bool(_meld_is_empty(main_arg))                      \
           )()(,main_arg)                                                \
@@ -42,7 +59,10 @@
         PRINTER(                                                        \
           debug_decorated_prefix(debug_stamp, debug_type)               \
           c1_fmt ": " debug_file_fmt main_fmt,                          \
-          proc, c1_arg debug_file_arg                                   \
+          vt_print_colorize,                                            \
+          proc_print_colorize(proc),                                    \
+          type_print_colorize(debug_type),                              \
+          c1_arg debug_file_arg                                         \
           meld_if_stmt(                                                 \
             meld_to_bool(_meld_is_empty(main_arg))                      \
           )()(,main_arg)                                                \
@@ -52,7 +72,10 @@
       PRINTER(                                                          \
         debug_decorated_prefix(debug_stamp, debug_type)                 \
         debug_file_fmt main_fmt,                                        \
-        proc debug_file_arg                                             \
+        vt_print_colorize,                                              \
+        proc_print_colorize(proc),                                      \
+        type_print_colorize(debug_type)                                 \
+        debug_file_arg                                                  \
         meld_if_stmt(                                                   \
           meld_to_bool(_meld_is_empty(main_arg))                        \
         )()(,main_arg)                                                  \
@@ -85,10 +108,10 @@ extern runtime::Runtime* curRT;
   ::vt::comm_debug_print :                                              \
   print_ctx_worker
 
-#define debug_virtual(\
-  debug_type, \
-  has_c1, c1_fmt, c1_arg, \
-  has_c2, c2_fmt, c2_arg, \
+#define debug_virtual(                                                  \
+  debug_type,                                                           \
+  has_c1, c1_fmt, c1_arg,                                               \
+  has_c2, c2_fmt, c2_arg,                                               \
   main_fmt, main_arg...                                                 \
 )                                                                       \
   debug_virtual_pe(                                                     \
@@ -98,23 +121,23 @@ extern runtime::Runtime* curRT;
     main_fmt, ##main_arg                                                \
   )                                                                     \
 
-#define debug_virtual_pe(\
-  debug_type, proc, \
-  has_c1, c1_fmt, c1_arg, \
-  has_c2, c2_fmt, c2_arg, \
+#define debug_virtual_pe(                                               \
+  debug_type, proc,                                                     \
+  has_c1, c1_fmt, c1_arg,                                               \
+  has_c2, c2_fmt, c2_arg,                                               \
   main_fmt, main_arg...                                                 \
 )                                                                       \
   debug_decorated(                                                      \
-    ::fmt::print, debug_type, "VT", proc,                               \
+    ::fmt::print, debug_type, "vt", proc,                               \
     has_c1, c1_fmt, c1_arg,                                             \
     has_c2, c2_fmt, c2_arg,                                             \
     main_fmt, ##main_arg                                                \
   )
 
-#define debug_virtual_ctx_2(\
-  debug_type, \
-  c1_fmt, c1_arg, \
-  c2_fmt, c2_arg, \
+#define debug_virtual_ctx_2(                                            \
+  debug_type,                                                           \
+  c1_fmt, c1_arg,                                                       \
+  c2_fmt, c2_arg,                                                       \
   main_fmt, main_arg...                                                 \
 )                                                                       \
   debug_virtual(                                                        \
@@ -124,9 +147,9 @@ extern runtime::Runtime* curRT;
     main_fmt, ##main_arg                                                \
   )                                                                     \
 
-#define debug_virtual_ctx_1(\
-  debug_type, \
-  c1_fmt, c1_arg, \
+#define debug_virtual_ctx_1(                                            \
+  debug_type,                                                           \
+  c1_fmt, c1_arg,                                                       \
   main_fmt, main_arg...                                                 \
 )                                                                       \
   debug_virtual(                                                        \
@@ -136,8 +159,8 @@ extern runtime::Runtime* curRT;
     main_fmt, ##main_arg                                                \
   )                                                                     \
 
-#define debug_virtual_proc_ctx_none(\
-  debug_type, proc, \
+#define debug_virtual_proc_ctx_none(                                    \
+  debug_type, proc,                                                     \
   main_fmt, main_arg...                                                 \
 )                                                                       \
   debug_virtual_pe(                                                     \
@@ -147,8 +170,8 @@ extern runtime::Runtime* curRT;
     main_fmt, ##main_arg                                                \
   )                                                                     \
 
-#define debug_virtual_ctx_none(\
-  debug_type, \
+#define debug_virtual_ctx_none(                                         \
+  debug_type,                                                           \
   main_fmt, main_arg...                                                 \
 )                                                                       \
   debug_virtual_proc_ctx_none(                                          \
@@ -166,12 +189,16 @@ extern runtime::Runtime* curRT;
 //   debug_virtual_ctx_1(debug_type, "idx={}", this_index, main_fmt, main_arg)
 
 #define debug_print_node(debug_type, main_fmt, main_arg...)             \
-  debug_virtual_ctx_2(                                                  \
+  debug_virtual_ctx_none(                                               \
     debug_type,                                                         \
-    "node={}",   print_ctx_node,                                        \
-    "worker={}", print_ctx_comm_worker,                                 \
     main_fmt, main_arg                                                  \
   )
+
+  // debug_virtual_ctx_1(                                                  \
+  //   debug_type,                                                         \
+  //   "worker={}", print_ctx_comm_worker,                                 \
+  //   main_fmt, main_arg                                                  \
+  // )
 
 #define debug_print_unknown(debug_type, main_fmt, main_arg...)  \
   debug_virtual_proc_ctx_none(debug_type, -1, main_fmt, main_arg)
@@ -191,6 +218,9 @@ extern runtime::Runtime* curRT;
   debug_virtual_ctx_none(debug_type, main_fmt, main_arg)
 #define verbose_info_pe(debug_type, proc, main_fmt, main_arg...)  \
   debug_virtual_proc_ctx_none(debug_type, proc, main_fmt, main_arg)
+
+#define vt_print(debug_type, main_fmt, main_arg...) \
+  verbose_info(debug_type,main_fmt,main_arg)
 
 #define virtual_fatal_error(str)                  \
   do {                                            \

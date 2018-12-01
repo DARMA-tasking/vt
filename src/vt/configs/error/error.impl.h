@@ -6,6 +6,7 @@
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/error/common.h"
 #include "vt/configs/error/error.h"
+#include "vt/configs/error/pretty_print_message.h"
 
 #include <string>
 #include <tuple>
@@ -39,10 +40,9 @@ displayLoc(
   std::string const& file, int const line, std::string const& func,
   Args&&... args
 ) {
-  std::string const inf = ::fmt::format(
-    "FATAL ERROR: {}\nFile: {}\nLine: {}\nFunction: {}\n",str,file,line,func
-  );
-  return ::vt::abort(inf,error);
+  auto msg = "vtAbort() Invoked";
+  auto const inf = debug::stringizeMessage(msg,str,"",file,line,func,error);
+  return ::vt::output(inf,error,true,true,true);
 }
 
 template <typename... Args>
@@ -53,8 +53,10 @@ displayLoc(
   std::string const& file, int const line, std::string const& func,
   Args&&... args
 ) {
+  auto msg = "vtAbort() Invoked";
   std::string const buf = ::fmt::format(str,std::forward<Args>(args)...);
-  return ::vt::error::displayLoc(buf,error,file,line,func);
+  auto const inf = debug::stringizeMessage(msg,buf,"",file,line,func,error);
+  return ::vt::output(inf,error,true,true,true);
 }
 
 }} /* end namespace vt::error */

@@ -33,7 +33,7 @@ struct CollectiveAnyOps {
   static void abort(std::string const str = "", ErrorCodeType const code = 0);
   static void output(
     std::string const str = "", ErrorCodeType const code = 1,
-    bool error = false, bool decorate = true
+    bool error = false, bool decorate = true, bool formatted = false
   );
 
   static HandlerType registerHandler(ActiveClosureFnType fn);

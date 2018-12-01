@@ -62,7 +62,7 @@ struct Runtime {
   void abort(std::string const abort_str, ErrorCodeType const code);
   void output(
     std::string const abort_str, ErrorCodeType const code, bool error = false,
-    bool decorate = true
+    bool decorate = true, bool formatted = true
   );
 
   RuntimeInstType getInstanceID() const { return instance_; }
