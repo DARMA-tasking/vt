@@ -35,6 +35,7 @@ namespace vt { namespace runtime {
 struct Runtime {
   template <typename ComponentT>
   using ComponentPtrType = std::unique_ptr<ComponentT>;
+  using ArgType = vt::arguments::ArgConfig;
 
   Runtime(
     int argc = 0, char** argv = nullptr,
