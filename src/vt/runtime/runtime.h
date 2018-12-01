@@ -91,6 +91,13 @@ protected:
   void printStartupBanner();
   void printShutdownBanner(term::TermCounterType const& num_units);
 
+  void setupSignalHandler();
+  void setupSignalHandlerINT();
+  void setupTerminateHandler();
+  static void sigHandler(int sig);
+  static void sigHandlerINT(int sig);
+  static void termHandler();
+
 public:
   ComponentPtrType<registry::Registry> theRegistry;
   ComponentPtrType<messaging::ActiveMessenger> theMsg;

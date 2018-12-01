@@ -32,6 +32,7 @@
 #include <cstdlib>
 #include <limits.h>
 #include <unistd.h>
+#include <csignal>
 
 #include <fmt/color.h>
 
@@ -43,7 +44,56 @@ Runtime::Runtime(
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
      user_argv_(argv)
-{ }
+{
+  setupSignalHandler();
+  setupSignalHandlerINT();
+  setupTerminateHandler();
+}
+
+/*static*/ void Runtime::sigHandlerINT(int sig) {
+  auto node      = vt::theContext() ? vt::theContext()->getNode() : -1;
+  auto vt_pre    = debug::vtPre();
+  auto node_str  = ::vt::debug::proc(node);
+  auto prefix    = vt_pre + node_str + " ";
+  ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
+  auto stack = debug::stack::dumpStack();
+  auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+  fmt::print("{}", stack_pretty);
+  ::fmt::print("\n");
+  std::exit(1);
+}
+
+/*static*/ void Runtime::sigHandler(int sig) {
+  auto vt_pre    = debug::vtPre();
+  auto bred      = debug::bred();
+  ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
+  auto stack = debug::stack::dumpStack();
+  ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
+  ::fmt::print("\n");
+  std::exit(1);
+}
+
+/*static*/ void Runtime::termHandler() {
+  auto vt_pre    = debug::vtPre();
+  auto bred      = debug::bred();
+  ::fmt::print("{}Caught std::terminate \n", vt_pre);
+  auto stack = debug::stack::dumpStack();
+  ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
+  ::fmt::print("\n");
+  std::exit(1);
+}
+
+void Runtime::setupSignalHandler() {
+  signal(SIGSEGV, Runtime::sigHandler);
+}
+
+void Runtime::setupSignalHandlerINT() {
+  signal(SIGINT, Runtime::sigHandlerINT);
+}
+
+void Runtime::setupTerminateHandler() {
+  std::set_terminate(termHandler);
+}
 
 /*virtual*/ Runtime::~Runtime() {
   while (runtime_active_ && !aborted_) {
