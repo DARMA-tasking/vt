@@ -7,22 +7,24 @@
 namespace vt { namespace arguments {
 
 /*static*/ CLI::App ArgConfig::app{"vt"};
-/*static*/ bool     ArgConfig::vt_color        = true;
-/*static*/ bool     ArgConfig::vt_no_color     = false;
-/*static*/ bool     ArgConfig::vt_auto_color   = false;
-/*static*/ bool     ArgConfig::vt_no_sigint    = false;
-/*static*/ bool     ArgConfig::vt_no_sigsegv   = false;
-/*static*/ bool     ArgConfig::vt_no_terminate = false;
-/*static*/ bool     ArgConfig::vt_warn_stack   = true;
-/*static*/ bool     ArgConfig::vt_assert_stack = true;
-/*static*/ bool     ArgConfig::vt_abort_stack  = true;
-/*static*/ bool     ArgConfig::vt_stack        = true;
-/*static*/ bool     ArgConfig::parsed          = false;
+/*static*/ bool     ArgConfig::vt_color           = true;
+/*static*/ bool     ArgConfig::vt_no_color        = false;
+/*static*/ bool     ArgConfig::vt_auto_color      = false;
+/*static*/ bool     ArgConfig::vt_no_sigint       = false;
+/*static*/ bool     ArgConfig::vt_no_sigsegv      = false;
+/*static*/ bool     ArgConfig::vt_no_terminate    = false;
+/*static*/ bool     ArgConfig::vt_no_warn_stack   = false;
+/*static*/ bool     ArgConfig::vt_no_assert_stack = false;
+/*static*/ bool     ArgConfig::vt_no_abort_stack  = false;
+/*static*/ bool     ArgConfig::vt_no_stack        = false;
+/*static*/ bool     ArgConfig::parsed             = false;
 
 /*static*/ int ArgConfig::parse(int argc, char** argv) {
   if (parsed) {
     return 0;
   }
+
+  fmt::print("argc={}, argv={}\n", argc, print_ptr(argv));
 
   /*
    * Flags for controlling the colorization of output from vt
@@ -30,34 +32,48 @@ namespace vt { namespace arguments {
   auto always = "Always colorize output";
   auto never  = "Never colorize output";
   auto maybe  = "Use isatty to determine colorization of output";
-  auto a = app.add_flag("-c,--vt_color",      vt_color,      always, true);
-  auto b = app.add_flag("-n,--vt_no_color",   vt_no_color,   never, false);
-  auto c = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe, false);
+  auto a = app.add_flag("-c,--vt_color",      vt_color,      always);
+  auto b = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
+  auto c = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe);
+  auto colorGroup = "Print Coloring";
+  a->group(colorGroup);
+  b->group(colorGroup);
+  c->group(colorGroup);
   b->excludes(a);
   b->excludes(c);
 
   /*
    * Flags for controlling the signals that VT tries to catch
    */
-  auto no_sigint      = "Do not register handler for SIGINT";
-  auto no_sigsegv     = "Do not register handler for SIGSEGV";
+  auto no_sigint      = "Do not register signal handler for SIGINT";
+  auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
   auto no_terminate   = "Do not register handler for std::terminate";
   auto d = app.add_flag("--vt_no_SIGINT",    vt_no_sigint,    no_sigint);
   auto e = app.add_flag("--vt_no_SIGSEGV",   vt_no_sigsegv,   no_sigsegv);
   auto f = app.add_flag("--vt_no_terminate", vt_no_terminate, no_terminate);
+  auto signalGroup = "Signal Handling";
+  d->group(signalGroup);
+  e->group(signalGroup);
+  f->group(signalGroup);
 
 
   /*
    * Flags to control stack dumping
    */
-  auto stack  = "Dump stack traces";
-  auto warn   = "Dump stack traces when vtWarn(..) is invoked";
-  auto assert = "Dump stack traces when vtAssert(..) is invoked";
-  auto abort  = "Dump stack traces when vtAabort(..) is invoked";
-  auto g = app.add_flag("--vt_warn_stack",   vt_warn_stack,   warn,   true);
-  auto h = app.add_flag("--vt_assert_stack", vt_assert_stack, assert, true);
-  auto i = app.add_flag("--vt_abort_stack",  vt_abort_stack,  abort,  true);
-  auto j = app.add_flag("--vt_stack",        vt_stack,        stack,  true);
+  auto stack  = "Do not dump stack traces";
+  auto warn   = "Do not dump stack traces when vtWarn(..) is invoked";
+  auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
+  auto abort  = "Do not dump stack traces when vtAabort(..) is invoked";
+  auto g = app.add_flag("--vt_no_warn_stack",   vt_no_warn_stack,   warn);
+  auto h = app.add_flag("--vt_no_assert_stack", vt_no_assert_stack, assert);
+  auto i = app.add_flag("--vt_no_abort_stack",  vt_no_abort_stack,  abort);
+  auto j = app.add_flag("--vt_no_stack",        vt_no_stack,        stack);
+  auto stackGroup = "Stack Dumps";
+  g->group(stackGroup);
+  h->group(stackGroup);
+  i->group(stackGroup);
+  j->group(stackGroup);
+
 
   /*
    * Flags for enabling load balancing and configuring it
