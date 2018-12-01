@@ -50,11 +50,11 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 
     if (mpi_singleton == nullptr) {
       mpi_singleton = std::make_unique<MPISingletonMultiTest>(
-        this->argc_, this->argv_
+        test_argc, test_argv
       );
     }
 
-    CollectiveOps::initialize(this->argc_, this->argv_, no_workers, true);
+    CollectiveOps::initialize(test_argc, test_argv, no_workers, true);
 
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& my_node = theContext()->getNode();
