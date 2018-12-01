@@ -21,10 +21,10 @@ public:
   static bool vt_no_sigsegv;
   static bool vt_no_terminate;
 
-  static bool vt_warn_stack;
-  static bool vt_assert_stack;
-  static bool vt_abort_stack;
-  static bool vt_stack;
+  static bool vt_no_warn_stack;
+  static bool vt_no_assert_stack;
+  static bool vt_no_abort_stack;
+  static bool vt_no_stack;
 
 private:
   static CLI::App app;

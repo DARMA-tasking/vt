@@ -85,15 +85,21 @@ Runtime::Runtime(
 }
 
 void Runtime::setupSignalHandler() {
-  signal(SIGSEGV, Runtime::sigHandler);
+  if (!ArgType::vt_no_sigsegv) {
+    signal(SIGSEGV, Runtime::sigHandler);
+  }
 }
 
 void Runtime::setupSignalHandlerINT() {
-  signal(SIGINT, Runtime::sigHandlerINT);
+  if (!ArgType::vt_no_sigint) {
+    signal(SIGINT, Runtime::sigHandlerINT);
+  }
 }
 
 void Runtime::setupTerminateHandler() {
-  std::set_terminate(termHandler);
+  if (!ArgType::vt_no_terminate) {
+    std::set_terminate(termHandler);
+  }
 }
 
 /*virtual*/ Runtime::~Runtime() {
@@ -335,9 +341,9 @@ void Runtime::output(
     fmt::print(stderr, "{}\n", prefix);
   }
 
-  if (ArgType::vt_stack) {
-    bool const on_abort = ArgType::vt_abort_stack;
-    bool const on_warn = ArgType::warn_stack;
+  if (!ArgType::vt_no_stack) {
+    bool const on_abort = !ArgType::vt_no_abort_stack;
+    bool const on_warn = !ArgType::vt_no_warn_stack;
     bool const dump = (error && on_abort) || (!error && on_warn);
     if (dump) {
       auto stack = debug::stack::dumpStack();
