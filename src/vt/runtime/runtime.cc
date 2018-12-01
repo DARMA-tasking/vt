@@ -48,6 +48,7 @@ Runtime::Runtime(
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
+  ArgType::parse(user_argc_, user_argv_);
 }
 
 /*static*/ void Runtime::sigHandlerINT(int sig) {
@@ -334,10 +335,15 @@ void Runtime::output(
     fmt::print(stderr, "{}\n", prefix);
   }
 
-  if (error) {
-    auto stack = debug::stack::dumpStack();
-    auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-    fmt::print("{}", stack_pretty);
+  if (ArgType::vt_stack) {
+    bool const on_abort = ArgType::vt_abort_stack;
+    bool const on_warn = ArgType::warn_stack;
+    bool const dump = (error && on_abort) || (!error && on_warn);
+    if (dump) {
+      auto stack = debug::stack::dumpStack();
+      auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+      fmt::print("{}", stack_pretty);
+    }
   }
 
   fflush(stdout);

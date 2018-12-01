@@ -23,7 +23,7 @@ set(TOP_LEVEL_SUBDIRS
 set(
   PROJECT_SUBDIRS_LIST
   # Add component along with sub-directories
-    configs/debug configs/features configs/types configs/error
+    configs/debug configs/features configs/types configs/error configs/arguments
     configs/generated
     collective/barrier collective/tree
     collective/reduce/
