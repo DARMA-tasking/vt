@@ -45,10 +45,10 @@ Runtime::Runtime(
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
      user_argv_(argv)
 {
+  ArgType::parse(argc, argv);
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
-  ArgType::parse(argc, argv);
 }
 
 /*static*/ void Runtime::sigHandlerINT(int sig) {
