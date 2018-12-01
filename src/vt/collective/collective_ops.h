@@ -22,7 +22,7 @@ template <RuntimeInstType instance = collective_default_inst>
 struct CollectiveAnyOps {
   // The general methods that interact with the managed runtime holder
   static RuntimePtrType initialize(
-    int argc, char** argv, WorkerCountType const num_workers = no_workers,
+    int& argc, char**& argv, WorkerCountType const num_workers = no_workers,
     bool is_interop = false, MPI_Comm* comm = nullptr
   );
   static void finalize(RuntimePtrType in_rt = nullptr);

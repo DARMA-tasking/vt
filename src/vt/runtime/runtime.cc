@@ -39,7 +39,7 @@
 namespace vt { namespace runtime {
 
 Runtime::Runtime(
-  int argc, char** argv, WorkerCountType in_num_workers,
+  int& argc, char**& argv, WorkerCountType in_num_workers,
   bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
@@ -48,7 +48,7 @@ Runtime::Runtime(
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
-  ArgType::parse(user_argc_, user_argv_);
+  ArgType::parse(argc, argv);
 }
 
 /*static*/ void Runtime::sigHandlerINT(int sig) {

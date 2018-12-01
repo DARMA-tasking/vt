@@ -38,7 +38,7 @@ struct Runtime {
   using ArgType = vt::arguments::ArgConfig;
 
   Runtime(
-    int argc = 0, char** argv = nullptr,
+    int& argc, char**& argv,
     WorkerCountType in_num_workers = no_workers, bool const interop_mode = false,
     MPI_Comm* in_comm = nullptr,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
