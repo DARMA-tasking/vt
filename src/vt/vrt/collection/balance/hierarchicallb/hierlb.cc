@@ -195,7 +195,7 @@ void HierarchicalLB::loadStats(
   if (this_node == 0) {
     vt_print(
       hierlb,
-      "HierLB: loadStats: this_load={}, total_load={}, avg_load={}, "
+      "loadStats: this_load={}, total_load={}, avg_load={}, "
       "max_load={}, diff={}, diff_percent={}, should_lb={}, auto={}, "
       "threshold={}\n",
       this_node, this_load, total_load, avg_load, max_load, diff, diff_percent,
