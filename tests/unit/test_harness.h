@@ -12,6 +12,9 @@
 
 namespace vt { namespace tests { namespace unit {
 
+extern int test_argc;
+extern char** test_argv;
+
 template <typename TestBase>
 struct TestHarnessAny : TestBase {
   virtual void SetUp() {
