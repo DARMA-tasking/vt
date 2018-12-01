@@ -2,6 +2,9 @@
 #include "vt/config.h"
 #include "vt/configs/arguments/args.h"
 
+#include <string>
+#include <vector>
+
 #include <CLI/CLI.hpp>
 
 namespace vt { namespace arguments {
@@ -19,9 +22,14 @@ namespace vt { namespace arguments {
 /*static*/ bool     ArgConfig::vt_no_stack        = false;
 /*static*/ bool     ArgConfig::parsed             = false;
 
-/*static*/ int ArgConfig::parse(int argc, char** argv) {
+/*static*/ int ArgConfig::parse(int& argc, char**& argv) {
   if (parsed) {
     return 0;
+  }
+
+  std::vector<std::string> args;
+  for (auto i = 0; i < argc; i++) {
+    args.push_back(std::string(argv[i]));
   }
 
   fmt::print("argc={}, argv={}\n", argc, print_ptr(argv));
@@ -83,11 +91,40 @@ namespace vt { namespace arguments {
   /*
    * Run the parser!
    */
+  app.allow_extras(true);
   try {
-    app.parse(argc, argv);
+    app.parse(args);
   } catch (CLI::Error &e) {
     return app.exit(e);
   }
+
+  /*
+   * Put the arguments back into argc, argv, but properly order them based on
+   * the input order by comparing between the current args
+   */
+  std::vector<std::string> ret_args;
+  std::vector<std::size_t> ret_idx;
+
+  // Reverse iterate (CLI11 reverses the order when they modify the args)
+  for (auto iter = args.rbegin(); iter != args.rend(); ++iter) {
+    for (auto i = 0; i < argc; i++) {
+      if (std::string(argv[i]) == *iter) {
+        ret_idx.push_back(i);
+      }
+    }
+    ret_args.push_back(*iter);
+  }
+
+  // Use the saved index to setup the new_argv and new_argc
+  int new_argc = ret_args.size();
+  char** new_argv = new char*[new_argc];
+  for (auto i = 0; i < new_argc; i++) {
+    new_argv[i] = argv[ret_idx[i]];
+  }
+
+  // Set them back with all vt arguments elided
+  argc = new_argc;
+  argv = new_argv;
 
   parsed = true;
   return 1;

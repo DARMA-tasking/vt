@@ -10,7 +10,7 @@ namespace vt { namespace arguments {
 
 struct ArgConfig {
 
-  static int parse(int argc, char** argv);
+  static int parse(int& argc, char**& argv);
 
 public:
   static bool vt_color;
