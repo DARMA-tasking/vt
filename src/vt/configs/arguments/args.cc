@@ -32,7 +32,7 @@ namespace vt { namespace arguments {
     args.push_back(std::string(argv[i]));
   }
 
-  fmt::print("argc={}, argv={}\n", argc, print_ptr(argv));
+  // fmt::print("argc={}, argv={}\n", argc, print_ptr(argv));
 
   /*
    * Flags for controlling the colorization of output from vt
