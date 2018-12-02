@@ -194,7 +194,6 @@ link_target_with_vt(
 
 # Define and set up the different build types of VT
 include(../cmake/define_build_types.cmake)
-include(../cmake/build_git_info.cmake)
 
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
