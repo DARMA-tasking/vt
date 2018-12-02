@@ -22,11 +22,11 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_no_stack        = false;
 /*static*/ std::string ArgConfig::vt_stack_file      = "";
 /*static*/ std::string ArgConfig::vt_stack_dir       = "";
-/*static*/ int32_t     ArgConfig::vt_stack_mod       = 0;
+/*static*/ int32_t     ArgConfig::vt_stack_mod       = 1;
 /*static*/ bool        ArgConfig::vt_trace           = false;
 /*static*/ std::string ArgConfig::vt_trace_file      = "";
 /*static*/ std::string ArgConfig::vt_trace_dir       = "";
-/*static*/ int32_t     ArgConfig::vt_trace_mod       = 0;
+/*static*/ int32_t     ArgConfig::vt_trace_mod       = 1;
 /*static*/ bool        ArgConfig::parsed             = false;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
