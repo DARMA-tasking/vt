@@ -23,6 +23,10 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_stack_file      = "";
 /*static*/ std::string ArgConfig::vt_stack_dir       = "";
 /*static*/ int32_t     ArgConfig::vt_stack_mod       = 0;
+/*static*/ bool        ArgConfig::vt_trace           = false;
+/*static*/ std::string ArgConfig::vt_trace_file      = "";
+/*static*/ std::string ArgConfig::vt_trace_dir       = "";
+/*static*/ int32_t     ArgConfig::vt_trace_mod       = 0;
 /*static*/ bool        ArgConfig::parsed             = false;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
@@ -78,7 +82,7 @@ namespace vt { namespace arguments {
   auto file   = "Dump stack traces to file instead of stdout";
   auto name   = "Name of file to dump stack backtrace";
   auto dir    = "Name of directory to write stack files";
-  auto mod    = "Write stack dump if (node % vt_stack_mod) == 1 (default all)";
+  auto mod    = "Write stack dump if (node % vt_stack_mod) == 0 (default 1)";
   auto g = app.add_flag("--vt_no_warn_stack",   vt_no_warn_stack,   warn);
   auto h = app.add_flag("--vt_no_assert_stack", vt_no_assert_stack, assert);
   auto i = app.add_flag("--vt_no_abort_stack",  vt_no_abort_stack,  abort);
@@ -94,6 +98,24 @@ namespace vt { namespace arguments {
   k->group(stackGroup);
   l->group(stackGroup);
   m->group(stackGroup);
+
+
+  /*
+   * Flags to control tracing output
+   */
+  auto trace  = "Enable tracing (must be compiled with trace_enabled)";
+  auto tfile  = "Name of trace files";
+  auto tdir   = "Name of directory for trace files";
+  auto tmod   = "Output trace file if (node % vt_stack_mod) == 0 (default 1)";
+  auto n = app.add_flag("--vt_trace",           vt_trace,           trace);
+  auto o = app.add_option("--vt_trace_file",    vt_trace_file,      tfile, "");
+  auto p = app.add_option("--vt_trace_dir",     vt_trace_dir,       tdir,  "");
+  auto q = app.add_option("--vt_trace_mod",     vt_trace_mod,       tmod,  1);
+  auto traceGroup = "Tracing Configuration";
+  n->group(traceGroup);
+  o->group(traceGroup);
+  p->group(traceGroup);
+  q->group(traceGroup);
 
   /*
    * Flags for enabling load balancing and configuring it

@@ -4,7 +4,7 @@
 
 #include "vt/config.h"
 #include "vt/context/context.h"
-
+#include "vt/configs/arguments/args.h"
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_constants.h"
@@ -29,13 +29,14 @@
 namespace vt { namespace trace {
 
 struct Trace {
-  using LogType = Log;
-  using TraceConstantsType = eTraceConstants;
+  using LogType             = Log;
+  using TraceConstantsType  = eTraceConstants;
   using TraceContainersType = TraceContainers<void>;
-  using TimeIntegerType = int64_t;
-  using LogPtrType = LogType*;
-  using TraceContainerType = std::vector<LogPtrType>;
-  using TraceStackType = std::stack<LogPtrType>;
+  using TimeIntegerType     = int64_t;
+  using LogPtrType          = LogType*;
+  using TraceContainerType  = std::vector<LogPtrType>;
+  using TraceStackType      = std::stack<LogPtrType>;
+  using ArgType             = vt::arguments::ArgConfig;
 
   Trace();
   Trace(std::string const& in_prog_name, std::string const& in_trace_name);
@@ -82,6 +83,7 @@ struct Trace {
 
   void enableTracing();
   void disableTracing();
+  bool checkEnabled();
 
   void writeTracesFile();
   void writeLogFile(gzFile file, TraceContainerType const& traces);
