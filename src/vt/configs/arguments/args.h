@@ -34,6 +34,37 @@ public:
   static std::string vt_trace_dir;
   static int32_t vt_trace_mod;
 
+  static bool vt_debug_all;
+  static bool vt_debug_none;
+  static bool vt_debug_gen;
+  static bool vt_debug_runtime;
+  static bool vt_debug_active;
+  static bool vt_debug_term;
+  static bool vt_debug_termds;
+  static bool vt_debug_barrier;
+  static bool vt_debug_event;
+  static bool vt_debug_pipe;
+  static bool vt_debug_pool;
+  static bool vt_debug_reduce;
+  static bool vt_debug_rdma;
+  static bool vt_debug_rdma_channel;
+  static bool vt_debug_rdma_state;
+  static bool vt_debug_param;
+  static bool vt_debug_handler;
+  static bool vt_debug_hierlb;
+  static bool vt_debug_scatter;
+  static bool vt_debug_sequence;
+  static bool vt_debug_sequence_vrt;
+  static bool vt_debug_serial_msg;
+  static bool vt_debug_trace;
+  static bool vt_debug_location;
+  static bool vt_debug_lb;
+  static bool vt_debug_vrt;
+  static bool vt_debug_vrt_coll;
+  static bool vt_debug_worker;
+  static bool vt_debug_group;
+  static bool vt_debug_broadcast;
+
 private:
   static CLI::App app;
   static bool parsed;
