@@ -23,7 +23,7 @@ add_configuration_type(release_trace)
 
 set(
   cmake_vt_debug_modes_all
-  "gen, runtime, active, term, ermds, barrier, event, pipe,       \
+  "gen, runtime, active, term, termds, barrier, event, pipe,      \
    pool, reduce, rdma, rdma_channel, rdma_state, param, handler,  \
    hierlb, scatter, sequence, sequence_vrt, serial_msg, trace,    \
    location, lb, vrt, vrt_coll, worker, group, broadcast, flush"
