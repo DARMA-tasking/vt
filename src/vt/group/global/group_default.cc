@@ -121,7 +121,7 @@ namespace vt { namespace group { namespace global {
   debug_print(
     broadcast, node,
     "DefaultGroup::broadcast msg={}, size={}, from={}, dest={}, is_root={}\n",
-    print_ptr(base), size, from, dest, print_bool(is_root)
+    print_ptr(base.get()), size, from, dest, print_bool(is_root)
   );
 
   if (num_children > 0 || send_to_root) {
