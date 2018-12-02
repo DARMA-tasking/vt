@@ -27,6 +27,7 @@ public:
   static bool vt_no_stack;
   static std::string vt_stack_file;
   static std::string vt_stack_dir;
+  static int32_t vt_stack_mod;
 
 private:
   static CLI::App app;
