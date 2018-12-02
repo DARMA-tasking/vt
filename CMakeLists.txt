@@ -21,6 +21,8 @@ set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
+include(cmake/build_git_info.cmake)
+
 # Add subdirectories for tests and examples
 add_subdirectory(${PROJECT_LIB_DIR}/context)
 add_subdirectory(src)
