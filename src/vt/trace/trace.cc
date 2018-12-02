@@ -191,7 +191,7 @@ TraceEventIDType Trace::messageRecv(
 }
 
 TraceEventIDType Trace::logEvent(LogPtrType log) {
-  if (not enabled_) {
+  if (not enabled_ || not checkEnabled()) {
     return 0;
   }
 
@@ -287,6 +287,22 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
   }
 }
 
+bool Trace::checkEnabled() {
+  if (ArgType::vt_trace) {
+    auto const& node = theContext()->getNode();
+    if (ArgType::vt_trace_mod == 0) {
+      return true;
+    } else if (node % ArgType::vt_trace_mod == 1) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+
 void Trace::enableTracing() {
   enabled_ = true;
 };
@@ -317,6 +333,7 @@ void Trace::writeTracesFile() {
 
   std::string full_trace_name = trace_name_;
   std::string full_sts_name = prog_name_ + ".sts";
+  std::string full_dir_name = "";
 
   #if trace_use_dir
   if (dir_name_ != "") {
@@ -327,7 +344,7 @@ void Trace::writeTracesFile() {
     }
 
     if (have_cur_directory) {
-      auto full_dir_name = std::string(cur_dir) + "/" + dir_name_;
+      full_dir_name = std::string(cur_dir) + "/" + dir_name_;
       struct stat info;
       if (stat(full_dir_name.c_str(), &info) != 0) {
         use_directory_ = false;
@@ -343,11 +360,23 @@ void Trace::writeTracesFile() {
   }
   #endif
 
-  gzFile file = gzopen(full_trace_name.c_str(), "wb");
-  outputHeader(node, start_time_, file);
-  writeLogFile(file, traces_);
-  outputFooter(node, start_time_, file);
-  gzclose(file);
+  if (ArgType::vt_trace_dir != "") {
+    full_dir_name = ArgType::vt_trace_dir + "/";
+  }
+
+  if (ArgType::vt_trace_file != "") {
+    auto const node_str = std::to_string(node) + ".log.gz";
+    full_trace_name = full_dir_name + "/" + ArgType::vt_trace_file + node_str;
+    full_sts_name   = full_dir_name + "/" + ArgType::vt_trace_file + ".sts";
+  }
+
+  if (checkEnabled()) {
+    gzFile file = gzopen(full_trace_name.c_str(), "wb");
+    outputHeader(node, start_time_, file);
+    writeLogFile(file, traces_);
+    outputFooter(node, start_time_, file);
+    gzclose(file);
+  }
 
   if (node == designated_root_node) {
     std::ofstream file;
