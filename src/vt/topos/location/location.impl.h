@@ -339,7 +339,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: inst={}, "
     "serialize={}, home_node={}, id={}, ref={}, from={}, msg={}\n",
     to_node, this_node, this_inst, serialize, home_node, id,
-    envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg)
+    envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg.get())
   );
 
   if (to_node != this_node) {
@@ -511,7 +511,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
     "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
     "serialize={}, in_from={}, from={}, msg{}, msg from={}\n",
     this_inst, home_node, msg_size, is_large_msg, use_eager, serialize,
-    from_node, from, print_ptr(msg), msg->getLocFromNode()
+    from_node, from, print_ptr(msg.get()), msg->getLocFromNode()
   );
 
   msg->setLocInst(this_inst);
@@ -594,7 +594,7 @@ template <typename MessageT>
   debug_print(
     location, node,
     "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}\n",
-    print_ptr(msg), envelopeGetRef(msg->env), inst, serialize, entity_id,
+    print_ptr(msg.get()), envelopeGetRef(msg->env), inst, serialize, entity_id,
     from_node
   );
 
