@@ -34,8 +34,6 @@
 #include <unistd.h>
 #include <csignal>
 
-#include <fmt/color.h>
-
 namespace vt { namespace runtime {
 
 /*static*/ std::string Runtime::prog_name_ = "";
@@ -325,6 +323,7 @@ void Runtime::printStartupBanner() {
     }
   #endif
 
+  #if backend_check_enabled(trace_enabled)
   if (ArgType::vt_trace) {
     auto f9 = opt_on("--vt_trace", "Tracing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
@@ -358,6 +357,7 @@ void Runtime::printStartupBanner() {
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
   }
+  #endif
 
   if (ArgType::vt_no_sigint) {
     auto f11 = fmt::format("Disabling SIGINT signal handling");
