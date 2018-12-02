@@ -71,6 +71,7 @@ struct Runtime {
 private:
   RuntimeInstType const instance_;
 
+  static bool nodeStackWrite();
   static void writeToFile(std::string const& str);
   static std::string prog_name_;
 

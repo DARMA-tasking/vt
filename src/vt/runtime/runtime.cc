@@ -61,14 +61,18 @@ Runtime::Runtime(
   auto vt_pre    = debug::vtPre();
   auto node_str  = ::vt::debug::proc(node);
   auto prefix    = vt_pre + node_str + " ";
-  ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
-  auto stack = debug::stack::dumpStack();
-  auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-  if (ArgType::vt_stack_file != "") {
-    Runtime::writeToFile(stack_pretty);
-  } else {
-    ::fmt::print("{}", stack_pretty);
-    ::fmt::print("\n");
+  if (node == 0 || node == -1) {
+    ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
+  }
+  if (Runtime::nodeStackWrite()) {
+    auto stack = debug::stack::dumpStack();
+    auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+    if (ArgType::vt_stack_file != "") {
+      Runtime::writeToFile(stack_pretty);
+    } else {
+      ::fmt::print("{}", stack_pretty);
+      ::fmt::print("\n");
+    }
   }
   std::exit(1);
 }
@@ -77,12 +81,14 @@ Runtime::Runtime(
   auto vt_pre    = debug::vtPre();
   auto bred      = debug::bred();
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
-  auto stack = debug::stack::dumpStack();
-  if (ArgType::vt_stack_file != "") {
-    Runtime::writeToFile(std::get<0>(stack));
-  } else {
-    ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
-    ::fmt::print("\n");
+  if (Runtime::nodeStackWrite()) {
+    auto stack = debug::stack::dumpStack();
+    if (ArgType::vt_stack_file != "") {
+      Runtime::writeToFile(std::get<0>(stack));
+    } else {
+      ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
+      ::fmt::print("\n");
+    }
   }
   std::exit(1);
 }
@@ -91,14 +97,29 @@ Runtime::Runtime(
   auto vt_pre    = debug::vtPre();
   auto bred      = debug::bred();
   ::fmt::print("{}Caught std::terminate \n", vt_pre);
-  auto stack = debug::stack::dumpStack();
-  if (ArgType::vt_stack_file != "") {
-    Runtime::writeToFile(std::get<0>(stack));
-  } else {
-    ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
-    ::fmt::print("\n");
+  if (Runtime::nodeStackWrite()) {
+    auto stack = debug::stack::dumpStack();
+    if (ArgType::vt_stack_file != "") {
+      Runtime::writeToFile(std::get<0>(stack));
+    } else {
+      ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
+      ::fmt::print("\n");
+    }
   }
   std::exit(1);
+}
+
+/*static*/ bool Runtime::nodeStackWrite() {
+  auto const& node = debug::preNode();
+  if (node == uninitialized_destination) {
+    return true;
+  } else if (ArgType::vt_stack_mod == 0) {
+    return true;
+  } else if (node % ArgType::vt_stack_mod == 0) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 /*static*/ void Runtime::writeToFile(std::string const& str) {
@@ -375,12 +396,14 @@ void Runtime::output(
     bool const on_warn = !ArgType::vt_no_warn_stack;
     bool const dump = (error && on_abort) || (!error && on_warn);
     if (dump) {
-      auto stack = debug::stack::dumpStack();
-      auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-      if (ArgType::vt_stack_file != "") {
-        Runtime::writeToFile(stack_pretty);
-      } else {
-        fmt::print("{}", stack_pretty);
+      if (Runtime::nodeStackWrite()) {
+        auto stack = debug::stack::dumpStack();
+        auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+        if (ArgType::vt_stack_file != "") {
+          Runtime::writeToFile(stack_pretty);
+        } else {
+          fmt::print("{}", stack_pretty);
+        }
       }
     }
   }

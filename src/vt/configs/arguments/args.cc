@@ -22,6 +22,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_no_stack        = false;
 /*static*/ std::string ArgConfig::vt_stack_file      = "";
 /*static*/ std::string ArgConfig::vt_stack_dir       = "";
+/*static*/ int32_t     ArgConfig::vt_stack_mod       = 0;
 /*static*/ bool        ArgConfig::parsed             = false;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
@@ -61,7 +62,7 @@ namespace vt { namespace arguments {
   auto d = app.add_flag("--vt_no_SIGINT",    vt_no_sigint,    no_sigint);
   auto e = app.add_flag("--vt_no_SIGSEGV",   vt_no_sigsegv,   no_sigsegv);
   auto f = app.add_flag("--vt_no_terminate", vt_no_terminate, no_terminate);
-  auto signalGroup = "Signal Handling";
+  auto signalGroup = "Signa Handling";
   d->group(signalGroup);
   e->group(signalGroup);
   f->group(signalGroup);
@@ -77,19 +78,22 @@ namespace vt { namespace arguments {
   auto file   = "Dump stack traces to file instead of stdout";
   auto name   = "Name of file to dump stack backtrace";
   auto dir    = "Name of directory to write stack files";
+  auto mod    = "Write stack dump if (node % vt_stack_mod) == 1 (default all)";
   auto g = app.add_flag("--vt_no_warn_stack",   vt_no_warn_stack,   warn);
   auto h = app.add_flag("--vt_no_assert_stack", vt_no_assert_stack, assert);
   auto i = app.add_flag("--vt_no_abort_stack",  vt_no_abort_stack,  abort);
   auto j = app.add_flag("--vt_no_stack",        vt_no_stack,        stack);
   auto k = app.add_option("--vt_stack_file",    vt_stack_file,      file, "");
   auto l = app.add_option("--vt_stack_dir",     vt_stack_dir,       dir,  "");
-  auto stackGroup = "Stack Dumps";
+  auto m = app.add_option("--vt_stack_mod",     vt_stack_mod,       mod,  1);
+  auto stackGroup = "Dump Stack Backtrace";
   g->group(stackGroup);
   h->group(stackGroup);
   i->group(stackGroup);
   j->group(stackGroup);
   k->group(stackGroup);
   l->group(stackGroup);
+  m->group(stackGroup);
 
   /*
    * Flags for enabling load balancing and configuring it
