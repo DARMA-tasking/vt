@@ -71,6 +71,9 @@ struct Runtime {
 private:
   RuntimeInstType const instance_;
 
+  static void writeToFile(std::string const& str);
+  static std::string prog_name_;
+
 protected:
   bool tryInitialize();
   bool tryFinalize();
