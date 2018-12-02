@@ -25,6 +25,8 @@ using EventClassType = EventClass;
 using TraceContainerEventType = EventLookupType<TraceEntryIDType, TraceEventType>;
 using TraceContainerEventClassType = EventLookupType<TraceEntryIDType, EventClassType>;
 
+struct Trace;
+
 // Use static template initialization pattern to deal with ordering issues with
 // auto-registry
 template <typename = void>
@@ -37,6 +39,8 @@ class TraceContainers {
   static TraceContainerEventType& getEventContainer(){
     return event_container;
   }
+
+  friend struct Trace;
 
  private:
   static TraceContainerEventClassType event_type_container;
