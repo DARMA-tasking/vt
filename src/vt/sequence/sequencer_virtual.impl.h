@@ -34,7 +34,7 @@ TaggedSequencerVrt<SeqTag, SeqTrigger>::createVirtualSeq(
   debug_print(
     sequence_vrt, node,
     "SequencerVirtual: lookup virtual context: vrt_context={}\n",
-    vrt_context
+    print_ptr(vrt_context)
   );
 
   vtAssert(
@@ -217,7 +217,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
           "SequencerVrt: msg_recv_trigger: seq={}, tag={}, node={}, blocked={}, "
           "msg={}\n",
           seq_id, tag, PRINT_SEQ_NODE_PTR(node),
-          print_bool(node->isBlockedNode()), msg
+          print_bool(node->isBlockedNode()), print_ptr(msg)
         );
 
         action.runAction(vc, msg);
