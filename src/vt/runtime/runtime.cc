@@ -459,91 +459,95 @@ void Runtime::printStartupBanner() {
     }                                                         \
   } while (0);
 
-  #if !backend_check_enabled(none)
+  // #define debug_print_force(feature, opt, arg...)         \
+  //   debug_print_context(backend_debug, feature, opt, arg)
+
+
+  #if !backend_debug_enabled(none)
     debug_warn_compile(none)
   #endif
-  #if !backend_check_enabled(gen)
+  #if !backend_debug_enabled(gen)
     debug_warn_compile(gen)
   #endif
-  #if !backend_check_enabled(runtime)
+  #if !backend_debug_enabled(runtime)
     debug_warn_compile(runtime)
   #endif
-  #if !backend_check_enabled(active)
+  #if !backend_debug_enabled(active)
     debug_warn_compile(active)
   #endif
-  #if !backend_check_enabled(term)
+  #if !backend_debug_enabled(term)
     debug_warn_compile(term)
   #endif
-  #if !backend_check_enabled(termds)
+  #if !backend_debug_enabled(termds)
     debug_warn_compile(termds)
   #endif
-  #if !backend_check_enabled(barrier)
+  #if !backend_debug_enabled(barrier)
     debug_warn_compile(barrier)
   #endif
-  #if !backend_check_enabled(event)
+  #if !backend_debug_enabled(event)
     debug_warn_compile(event)
   #endif
-  #if !backend_check_enabled(pipe)
+  #if !backend_debug_enabled(pipe)
     debug_warn_compile(pipe)
   #endif
-  #if !backend_check_enabled(pool)
+  #if !backend_debug_enabled(pool)
     debug_warn_compile(pool)
   #endif
-  #if !backend_check_enabled(reduce)
+  #if !backend_debug_enabled(reduce)
     debug_warn_compile(reduce)
   #endif
-  #if !backend_check_enabled(rdma)
+  #if !backend_debug_enabled(rdma)
     debug_warn_compile(rdma)
   #endif
-  #if !backend_check_enabled(rdma_channel)
+  #if !backend_debug_enabled(rdma_channel)
     debug_warn_compile(rdma_channel)
   #endif
-  #if !backend_check_enabled(rdma_state)
+  #if !backend_debug_enabled(rdma_state)
     debug_warn_compile(rdma_state)
   #endif
-  #if !backend_check_enabled(param)
+  #if !backend_debug_enabled(param)
     debug_warn_compile(param)
   #endif
-  #if !backend_check_enabled(handler)
+  #if !backend_debug_enabled(handler)
     debug_warn_compile(handler)
   #endif
-  #if !backend_check_enabled(hierlb)
+  #if !backend_debug_enabled(hierlb)
     debug_warn_compile(hierlb)
   #endif
-  #if !backend_check_enabled(scatter)
+  #if !backend_debug_enabled(scatter)
       debug_warn_compile(scatter)
   #endif
-  #if !backend_check_enabled(sequence)
+  #if !backend_debug_enabled(sequence)
     debug_warn_compile(sequence)
   #endif
-  #if !backend_check_enabled(sequence_vrt)
+  #if !backend_debug_enabled(sequence_vrt)
     debug_warn_compile(sequence_vrt)
   #endif
-  #if !backend_check_enabled(serial_msg)
+  #if !backend_debug_enabled(serial_msg)
     debug_warn_compile(serial_msg)
   #endif
-  #if !backend_check_enabled(trace)
+  #if !backend_debug_enabled(trace)
     debug_warn_compile(trace)
   #endif
-  #if !backend_check_enabled(location)
+  #if !backend_debug_enabled(location)
     debug_warn_compile(location)
   #endif
-  #if !backend_check_enabled(lb)
+  #if !backend_debug_enabled(lb)
     debug_warn_compile(lb)
   #endif
-  #if !backend_check_enabled(vrt)
+  #if !backend_debug_enabled(vrt)
     debug_warn_compile(vrt)
   #endif
-  #if !backend_check_enabled(vrt_coll)
+  #if !backend_debug_enabled(vrt_coll)
     debug_warn_compile(vrt_coll)
   #endif
-  #if !backend_check_enabled(worker)
+  #if !backend_debug_enabled(worker)
     debug_warn_compile(worker)
   #endif
-  #if !backend_check_enabled(group)
+  #if !backend_debug_enabled(group)
     debug_warn_compile(group)
   #endif
-  #if !backend_check_enabled(broadcast)
+  #if !backend_debug_enabled(broadcast)
     debug_warn_compile(broadcast)
   #endif
 
