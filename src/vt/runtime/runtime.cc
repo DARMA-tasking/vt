@@ -264,8 +264,9 @@ void Runtime::printStartupBanner() {
 
   auto warn_cr = [=](std::string opt, std::string compile) -> std::string {
     return fmt::format(
-      "{}Warning:{} {} has no effect: compile-time"
-      " feature \"{}\" is disabled{}\n", red, reset, opt, compile, reset
+      "{}Warning:{} {}{}{} has no effect: compile-time"
+      " feature {}{}{} is disabled{}\n", red, reset, magenta, opt, reset,
+      magenta, compile, reset, reset
     );
   };
   auto opt_on = [=](std::string opt, std::string compile) -> std::string {
@@ -443,6 +444,108 @@ void Runtime::printStartupBanner() {
     auto f12 = opt_on("--vt_stack_mod", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
+
+  if (ArgType::vt_debug_all) {
+    auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
+    auto f12 = opt_on("--vt_debug_all", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+#define debug_warn_compile(opt)                               \
+  do {                                                        \
+    if (ArgType::vt_debug_ ## opt) {                          \
+      auto f9 = warn_cr("--vt_debug_" #opt, "debug_" #opt);   \
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);              \
+    }                                                         \
+  } while (0);
+
+  #if !backend_check_enabled(none)
+    debug_warn_compile(none)
+  #endif
+  #if !backend_check_enabled(gen)
+    debug_warn_compile(gen)
+  #endif
+  #if !backend_check_enabled(runtime)
+    debug_warn_compile(runtime)
+  #endif
+  #if !backend_check_enabled(active)
+    debug_warn_compile(active)
+  #endif
+  #if !backend_check_enabled(term)
+    debug_warn_compile(term)
+  #endif
+  #if !backend_check_enabled(termds)
+    debug_warn_compile(termds)
+  #endif
+  #if !backend_check_enabled(barrier)
+    debug_warn_compile(barrier)
+  #endif
+  #if !backend_check_enabled(event)
+    debug_warn_compile(event)
+  #endif
+  #if !backend_check_enabled(pipe)
+    debug_warn_compile(pipe)
+  #endif
+  #if !backend_check_enabled(pool)
+    debug_warn_compile(pool)
+  #endif
+  #if !backend_check_enabled(reduce)
+    debug_warn_compile(reduce)
+  #endif
+  #if !backend_check_enabled(rdma)
+    debug_warn_compile(rdma)
+  #endif
+  #if !backend_check_enabled(rdma_channel)
+    debug_warn_compile(rdma_channel)
+  #endif
+  #if !backend_check_enabled(rdma_state)
+    debug_warn_compile(rdma_state)
+  #endif
+  #if !backend_check_enabled(param)
+    debug_warn_compile(param)
+  #endif
+  #if !backend_check_enabled(handler)
+    debug_warn_compile(handler)
+  #endif
+  #if !backend_check_enabled(hierlb)
+    debug_warn_compile(hierlb)
+  #endif
+  #if !backend_check_enabled(scatter)
+      debug_warn_compile(scatter)
+  #endif
+  #if !backend_check_enabled(sequence)
+    debug_warn_compile(sequence)
+  #endif
+  #if !backend_check_enabled(sequence_vrt)
+    debug_warn_compile(sequence_vrt)
+  #endif
+  #if !backend_check_enabled(serial_msg)
+    debug_warn_compile(serial_msg)
+  #endif
+  #if !backend_check_enabled(trace)
+    debug_warn_compile(trace)
+  #endif
+  #if !backend_check_enabled(location)
+    debug_warn_compile(location)
+  #endif
+  #if !backend_check_enabled(lb)
+    debug_warn_compile(lb)
+  #endif
+  #if !backend_check_enabled(vrt)
+    debug_warn_compile(vrt)
+  #endif
+  #if !backend_check_enabled(vrt_coll)
+    debug_warn_compile(vrt_coll)
+  #endif
+  #if !backend_check_enabled(worker)
+    debug_warn_compile(worker)
+  #endif
+  #if !backend_check_enabled(group)
+    debug_warn_compile(group)
+  #endif
+  #if !backend_check_enabled(broadcast)
+    debug_warn_compile(broadcast)
+  #endif
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);
