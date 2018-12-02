@@ -13,9 +13,11 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
 /*static*/ bool        ArgConfig::vt_auto_color         = false;
+
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
+
 /*static*/ bool        ArgConfig::vt_no_warn_stack      = false;
 /*static*/ bool        ArgConfig::vt_no_assert_stack    = false;
 /*static*/ bool        ArgConfig::vt_no_abort_stack     = false;
@@ -23,10 +25,18 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_stack_file         = "";
 /*static*/ std::string ArgConfig::vt_stack_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_stack_mod          = 0;
+
 /*static*/ bool        ArgConfig::vt_trace              = false;
 /*static*/ std::string ArgConfig::vt_trace_file         = "";
 /*static*/ std::string ArgConfig::vt_trace_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_trace_mod          = 0;
+
+/*static*/ bool        ArgConfig::vt_lb                 = false;
+/*static*/ bool        ArgConfig::vt_lb_file            = false;
+/*static*/ std::string ArgConfig::vt_lb_file_name       = "balance.in";
+/*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
+/*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
+
 /*static*/ bool        ArgConfig::vt_debug_all          = false;
 /*static*/ bool        ArgConfig::vt_debug_none         = false;
 /*static*/ bool        ArgConfig::vt_debug_gen          = false;
@@ -250,6 +260,26 @@ namespace vt { namespace arguments {
   /*
    * Flags for enabling load balancing and configuring it
    */
+
+  auto lb           = "Enable load balancing";
+  auto lb_file      = "Enable reading LB configuration from file";
+  auto lb_file_name = "LB configuration file to read";
+  auto lb_name      = "Name of the load balancer to use";
+  auto lb_interval  = "Load balancing interval";
+  auto lbn = "NoLB";
+  auto lbi = 1;
+  auto lbf = "balance.in";
+  auto s = app.add_flag("--vt_lb",             vt_lb,            lb);
+  auto t = app.add_flag("--vt_lb_file",        vt_lb_file,       lb_file);
+  auto u = app.add_option("--vt_lb_file_name", vt_lb_file_name,  lb_file_name, lbf);
+  auto v = app.add_option("--vt_lb_name",      vt_lb_name,       lb_name,      lbn);
+  auto w = app.add_option("--vt_lb_interval",  vt_lb_interval,   lb_interval,  lbi);
+  auto debugLB = "Load Balancing";
+  s->group(debugLB);
+  t->group(debugLB);
+  u->group(debugLB);
+  v->group(debugLB);
+  w->group(debugLB);
 
 
   /*
