@@ -45,6 +45,10 @@ struct Trace {
 
   friend struct Log;
 
+  std::string getTraceName() const { return full_trace_name; }
+  std::string getSTSName()   const { return full_sts_name;   }
+  std::string getDirectory() const { return full_dir_name;   }
+
   void initialize();
   void setupNames(
     std::string const& in_prog_name, std::string const& in_trace_name,
@@ -104,12 +108,16 @@ private:
   TraceContainerType traces_;
   TraceStackType open_events_;
   TraceEventIDType cur_event_ = 1;
-  std::string dir_name_;
-  std::string prog_name_, trace_name_;
-
-  bool enabled_ = true, idle_begun_ = false;
-  bool use_directory_ = false;
-  double start_time_ = 0.0;
+  std::string dir_name_       = "";
+  std::string prog_name_      = "";
+  std::string trace_name_     = "";
+  bool enabled_               = true;
+  bool idle_begun_            = false;
+  bool use_directory_         = false;
+  double start_time_          = 0.0;
+  std::string full_trace_name = "";
+  std::string full_sts_name   = "";
+  std::string full_dir_name   = "";
 };
 
 }} //end namespace vt::trace

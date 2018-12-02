@@ -179,15 +179,27 @@ template <typename ColT>
 void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
   auto const& this_node = theContext()->getNode();
   auto const& phase = msg->getPhase();
-  auto the_lb = theContext()->getLB();
 
-  using namespace balance;
-  ReadLBSpec::openFile();
-  ReadLBSpec::readFile();
+  LBType the_lb = LBType::NoLB;
 
-  bool const has_spec = ReadLBSpec::hasSpec();
-  if (has_spec) {
-    the_lb = ReadLBSpec::getLB(phase);
+  if (ArgType::vt_lb_file) {
+    auto const file_name = ArgType::vt_lb_file_name;
+    ReadLBSpec::openFile(file_name);
+    ReadLBSpec::readFile();
+    bool const has_spec = ReadLBSpec::hasSpec();
+    if (has_spec) {
+      the_lb = ReadLBSpec::getLB(phase);
+    }
+  } else {
+    vtAssert(ArgType::vt_lb_interval != 0, "LB Interval must not be 0");
+    if (phase % ArgType::vt_lb_interval == 0) {
+      for (auto&& elm : lb_names_<>) {
+        if (elm.second == ArgType::vt_lb_name) {
+          the_lb = elm.first;
+          break;
+        }
+      }
+    }
   }
 
   if (this_node == 0) {

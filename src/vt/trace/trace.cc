@@ -50,6 +50,8 @@ void Trace::setupNames(
   std::string const& in_prog_name, std::string const& in_trace_name,
   std::string const& in_dir_name
 ) {
+  auto const& node = theContext()->getNode();
+
   prog_name_ = in_prog_name;
   trace_name_ = in_trace_name;
   dir_name_ = in_dir_name;
@@ -76,6 +78,55 @@ void Trace::setupNames(
     }
   }
   #endif
+
+  #if trace_use_dir
+  auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
+  auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
+  auto const trace_name = tc[tc.size()-1];
+  auto const prog_name = pc[pc.size()-1];
+  #endif
+
+  full_trace_name = trace_name_;
+  full_sts_name = prog_name_ + ".sts";
+  full_dir_name = "";
+
+  #if trace_use_dir
+  if (dir_name_ != "") {
+    bool made_dir = true, have_cur_directory = true;
+    char cur_dir[1024];
+    if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
+      have_cur_directory = false;
+    }
+
+    if (have_cur_directory) {
+      full_dir_name = std::string(cur_dir) + "/" + dir_name_;
+      struct stat info;
+      if (stat(full_dir_name.c_str(), &info) != 0) {
+        use_directory_ = false;
+      } else {
+        use_directory_ = true;
+      }
+
+      if (use_directory_) {
+        full_trace_name = trace_name;
+        full_sts_name = full_dir_name + "/" + prog_name + ".sts";
+      }
+    }
+  }
+  #endif
+
+  if (ArgType::vt_trace_dir != "") {
+    full_dir_name = ArgType::vt_trace_dir + "/";
+  }
+
+  if (ArgType::vt_trace_file != "") {
+    auto const node_str = "." + std::to_string(node) + ".log.gz";
+    full_trace_name = ArgType::vt_trace_file + node_str;
+    full_sts_name   = full_dir_name + "/" + ArgType::vt_trace_file + ".sts";
+  } else {
+    full_trace_name = trace_name;
+    full_sts_name   = full_dir_name + "/" + trace_name + ".sts";
+  }
 }
 
 /*virtual*/ Trace::~Trace() {
@@ -324,58 +375,9 @@ void Trace::writeTracesFile() {
     TraceContainersType::event_container.size()
   );
 
-  #if trace_use_dir
-  auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
-  auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
-  auto const trace_name = tc[tc.size()-1];
-  auto const prog_name = pc[pc.size()-1];
-  #endif
-
-  std::string full_trace_name = trace_name_;
-  std::string full_sts_name = prog_name_ + ".sts";
-  std::string full_dir_name = "";
-
-  #if trace_use_dir
-  if (dir_name_ != "") {
-    bool made_dir = true, have_cur_directory = true;
-    char cur_dir[1024];
-    if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
-      have_cur_directory = false;
-    }
-
-    if (have_cur_directory) {
-      full_dir_name = std::string(cur_dir) + "/" + dir_name_;
-      struct stat info;
-      if (stat(full_dir_name.c_str(), &info) != 0) {
-        use_directory_ = false;
-      } else {
-        use_directory_ = true;
-      }
-
-      if (use_directory_) {
-        full_trace_name = full_dir_name + "/" + trace_name;
-        full_sts_name = full_dir_name + "/" + prog_name + ".sts";
-      }
-    }
-  }
-  #endif
-
-  if (ArgType::vt_trace_dir != "") {
-    full_dir_name = ArgType::vt_trace_dir + "/";
-  }
-
-  if (ArgType::vt_trace_file != "") {
-    auto const node_str = std::to_string(node) + ".log.gz";
-    full_trace_name = full_dir_name + "/" + ArgType::vt_trace_file + node_str;
-    full_sts_name   = full_dir_name + "/" + ArgType::vt_trace_file + ".sts";
-  } else {
-    auto const node_str = std::to_string(node) + ".log.gz";
-    full_trace_name = full_dir_name + "/" + trace_name + node_str;
-    full_sts_name   = full_dir_name + "/" + trace_name + ".sts";
-  }
-
   if (checkEnabled()) {
-    gzFile file = gzopen(full_trace_name.c_str(), "wb");
+    auto path = full_dir_name + "/" + full_trace_name;
+    gzFile file = gzopen(path.c_str(), "wb");
     outputHeader(node, start_time_, file);
     writeLogFile(file, traces_);
     outputFooter(node, start_time_, file);

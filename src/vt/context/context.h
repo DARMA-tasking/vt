@@ -8,7 +8,6 @@
 #include "vt/config.h"
 #include "vt/context/context_attorney_fwd.h"
 #include "vt/utils/tls/tls.h"
-#include "vt/vrt/collection/balance/lb_type.h"
 
 namespace vt {  namespace ctx {
 
@@ -28,9 +27,6 @@ struct Context {
     return AccessClassTLS(Context, thisWorker_);
   }
 
-  using LBType = vrt::collection::balance::LBType;
-  inline LBType getLB() const { return lb_; }
-
   friend struct ContextAttorney;
 
 protected:
@@ -45,7 +41,6 @@ private:
   void setDefaultWorker();
 
 private:
-  LBType lb_ = LBType::NoLB;
   NodeType thisNode_ = uninitialized_destination;
   NodeType numNodes_ = uninitialized_destination;
   WorkerCountType numWorkers_ = no_workers;

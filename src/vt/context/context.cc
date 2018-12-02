@@ -19,34 +19,6 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
     );
   #endif
 
-  if (argc > 0 && argv[0] != nullptr) {
-    auto const app_name = std::string(argv[0]);
-    auto const default_lb = LBType::HierarchicalLB;
-    if (app_name.size() >= 7) {
-      auto const app_sub = app_name.substr(app_name.size()-7, 7);
-      if (app_sub == std::string("lb_iter")) {
-        lb_ = default_lb;
-      }
-    }
-    if  (app_name.size() >= 12) {
-      auto const app_sub = app_name.substr(app_name.size()-12, 12);
-      if (app_sub == std::string("test_lb_lite")) {
-        lb_ = default_lb;
-      }
-    }
-    if (app_name.size() > 2) {
-      auto const last = app_name.size() - 1;
-      if (app_name[last-1] == '_') {
-        switch (app_name[last]) {
-        case 'h': lb_ = LBType::HierarchicalLB; break;
-        case 'g': lb_ = LBType::GreedyLB;       break;
-        case 'r': lb_ = LBType::RotateLB;       break;
-        default:                                break;
-        }
-      }
-    }
-  }
-
   if (not is_interop) {
     MPI_Init(&argc, &argv);
   }

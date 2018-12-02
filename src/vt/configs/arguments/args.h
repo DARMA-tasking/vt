@@ -34,6 +34,12 @@ public:
   static std::string vt_trace_dir;
   static int32_t vt_trace_mod;
 
+  static bool vt_lb;
+  static bool vt_lb_file;
+  static std::string vt_lb_file_name;
+  static std::string vt_lb_name;
+  static int32_t vt_lb_interval;
+
   static bool vt_debug_all;
   static bool vt_debug_none;
   static bool vt_debug_gen;

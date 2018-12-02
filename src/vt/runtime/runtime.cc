@@ -261,6 +261,189 @@ void Runtime::printStartupBanner() {
   for (auto i = 1; i < features.size(); i++) {
     fmt::print("{}\t{}\n", vt_pre, emph(features.at(i)));
   }
+
+  auto warn_cr = [=](std::string opt, std::string compile) -> std::string {
+    return fmt::format(
+      "{}Warning:{} {} has no effect: compile-time"
+      " feature \"{}\" is disabled{}\n", red, reset, opt, compile, reset
+    );
+  };
+  auto opt_on = [=](std::string opt, std::string compile) -> std::string {
+    return fmt::format(
+      "{}Option:{} flag {}{}{} on: {}{}\n",
+      green, reset, magenta, opt, reset, compile, reset
+    );
+  };
+  auto opt_off = [=](std::string opt, std::string compile) -> std::string {
+    return fmt::format(
+      "{}Option:{} flag {}{}{} not set: {}{}\n",
+      green, reset, magenta, opt, reset, compile, reset
+    );
+  };
+  auto opt_inverse = [=](std::string opt, std::string compile) -> std::string {
+    return fmt::format(
+      "{}Default:{} {}, use {}{}{} to disable{}\n",
+      green, reset, compile, magenta, opt, reset, reset
+    );
+  };
+
+  auto f8 = fmt::format("{}Runtime Configuration:{}\n", green, reset);
+  fmt::print("{}{}{}", vt_pre, f8, reset);
+
+  #if !backend_check_enabled(lblite)
+    if (ArgType::vt_lb) {
+      auto f9 = warn_cr("--vt_lb", "lblite");
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);
+    }
+  #endif
+
+  if (ArgType::vt_lb) {
+    auto f9 = opt_on("--vt_lb", "Load balancing enabled");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
+    if (ArgType::vt_lb_file) {
+      auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
+      fmt::print("{}\t{}{}", vt_pre, f10, reset);
+      auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
+      auto f11 = opt_on("--vt_lb_file_name", f12);
+      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+    } else {
+      auto a3 = fmt::format("Load balancer name: \"{}\"", ArgType::vt_lb_name);
+      auto a4 = opt_on("--vt_lb_name", a3);
+      fmt::print("{}\t{}{}", vt_pre, a4, reset);
+      auto a1 =
+        fmt::format("Load balancing interval = {}", ArgType::vt_lb_interval);
+      auto a2 = opt_on("--vt_lb_interval", a1);
+      fmt::print("{}\t{}{}", vt_pre, a2, reset);
+    }
+  }
+
+  #if !backend_check_enabled(trace_enabled)
+    if (ArgType::vt_trace) {
+      auto f9 = warn_cr("--vt_trace", "trace_enabled");
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);
+    }
+  #endif
+
+  if (ArgType::vt_trace) {
+    auto f9 = opt_on("--vt_trace", "Tracing enabled");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
+    if (ArgType::vt_trace_file != "") {
+      auto f11 = fmt::format("Trace file name \"{}\"", theTrace->getTraceName());
+      auto f12 = opt_on("--vt_trace_file", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    } else {
+      if (theTrace) {
+        auto f11 = fmt::format("Trace file \"{}\"", theTrace->getTraceName());
+        auto f12 = opt_inverse("--vt_trace_file", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
+    }
+    if (ArgType::vt_trace_dir != "") {
+      auto f11 = fmt::format("Directory \"{}\"", ArgType::vt_trace_dir);
+      auto f12 = opt_on("--vt_trace_dir", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    } else {
+      if (theTrace) {
+        auto f11 = fmt::format(
+          "Trace directory \"{}\"", theTrace->getDirectory()
+        );
+        auto f12 = opt_inverse("--vt_trace_dir", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
+    }
+    if (ArgType::vt_trace_mod != 0) {
+      auto f11 = fmt::format("Output every {} files ", ArgType::vt_trace_mod);
+      auto f12 = opt_on("--vt_trace_mod", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+  }
+
+  if (ArgType::vt_no_sigint) {
+    auto f11 = fmt::format("Disabling SIGINT signal handling");
+    auto f12 = opt_on("--vt_no_SIGINT", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("SIGINT signal handling enabled by default");
+    auto f12 = opt_inverse("--vt_no_SIGINT", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_no_sigsegv) {
+    auto f11 = fmt::format("Disabling SIGSEGV signal handling");
+    auto f12 = opt_on("--vt_no_SIGSEGV", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("SIGSEGV signal handling enabled by default");
+    auto f12 = opt_inverse("--vt_no_SIGSEGV", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_no_color) {
+    auto f11 = fmt::format("Disabling color output");
+    auto f12 = opt_on("--vt_no_color", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    if (ArgType::vt_auto_color) {
+      auto f11 = fmt::format("Automatic TTY detection for color output");
+      auto f12 = opt_on("--vt_auto_color", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    } else {
+      auto f11 = fmt::format("Color output enabled by default");
+      auto f12 = opt_inverse("--vt_no_color", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+  }
+
+  if (ArgType::vt_no_stack) {
+    auto f11 = fmt::format("Disabling all stack dumps");
+    auto f12 = opt_on("--vt_no_stack", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("Stack dumps enabled by default");
+    auto f12 = opt_inverse("--vt_no_stack", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_no_warn_stack) {
+    auto f11 = fmt::format("Disabling all stack dumps on vtWarn(..)");
+    auto f12 = opt_on("--vt_no_warn_stack", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_no_assert_stack) {
+    auto f11 = fmt::format("Disabling all stack dumps on vtAssert(..)");
+    auto f12 = opt_on("--vt_no_assert_stack", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_no_abort_stack) {
+    auto f11 = fmt::format("Disabling all stack dumps on vtAbort(..)");
+    auto f12 = opt_on("--vt_no_abort_stack", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_stack_file != "") {
+    auto f11 = fmt::format(
+      "Output stack dumps with file name {}", ArgType::vt_stack_file
+    );
+    auto f12 = opt_on("--vt_stack_file", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_stack_dir != "") {
+    auto f11 = fmt::format("Output stack dumps to {}", ArgType::vt_stack_dir);
+    auto f12 = opt_on("--vt_stack_dir", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_stack_mod != 0) {
+    auto f11 = fmt::format(
+      "Output stack dumps every {} files ", ArgType::vt_stack_mod
+    );
+    auto f12 = opt_on("--vt_stack_mod", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   //fmt::print("{}\n", reset);
   fmt::print(reset);
 }
