@@ -25,6 +25,8 @@ public:
   static bool vt_no_assert_stack;
   static bool vt_no_abort_stack;
   static bool vt_no_stack;
+  static std::string vt_stack_file;
+  static std::string vt_stack_dir;
 
 private:
   static CLI::App app;

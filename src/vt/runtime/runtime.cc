@@ -38,6 +38,8 @@
 
 namespace vt { namespace runtime {
 
+/*static*/ std::string Runtime::prog_name_ = "";
+
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
   bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
@@ -46,6 +48,9 @@ Runtime::Runtime(
      user_argv_(argv)
 {
   ArgType::parse(argc, argv);
+  if (argc > 0) {
+    prog_name_ = std::string(argv[0]);
+  }
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
@@ -59,8 +64,12 @@ Runtime::Runtime(
   ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
   auto stack = debug::stack::dumpStack();
   auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-  fmt::print("{}", stack_pretty);
-  ::fmt::print("\n");
+  if (ArgType::vt_stack_file != "") {
+    Runtime::writeToFile(stack_pretty);
+  } else {
+    ::fmt::print("{}", stack_pretty);
+    ::fmt::print("\n");
+  }
   std::exit(1);
 }
 
@@ -69,8 +78,12 @@ Runtime::Runtime(
   auto bred      = debug::bred();
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
   auto stack = debug::stack::dumpStack();
-  ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
-  ::fmt::print("\n");
+  if (ArgType::vt_stack_file != "") {
+    Runtime::writeToFile(std::get<0>(stack));
+  } else {
+    ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
+    ::fmt::print("\n");
+  }
   std::exit(1);
 }
 
@@ -79,9 +92,25 @@ Runtime::Runtime(
   auto bred      = debug::bred();
   ::fmt::print("{}Caught std::terminate \n", vt_pre);
   auto stack = debug::stack::dumpStack();
-  ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
-  ::fmt::print("\n");
+  if (ArgType::vt_stack_file != "") {
+    Runtime::writeToFile(std::get<0>(stack));
+  } else {
+    ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
+    ::fmt::print("\n");
+  }
   std::exit(1);
+}
+
+/*static*/ void Runtime::writeToFile(std::string const& str) {
+  std::string app_name = prog_name_ == "" ? "prog" : prog_name_;
+  std::string name = ArgType::vt_stack_file == "" ? app_name : ArgType::vt_stack_file;
+  auto const& node = debug::preNode();
+  std::string file = name + "." + std::to_string(node) + ".stack.out";
+  std::string dir  = ArgType::vt_stack_dir == "" ? "" : ArgType::vt_stack_dir + "/";
+  std::string path = dir + file;
+  FILE* f = fopen(path.c_str(), "w+");
+  fprintf(f, "%s", str.c_str());
+  fclose(f);
 }
 
 void Runtime::setupSignalHandler() {
@@ -348,7 +377,11 @@ void Runtime::output(
     if (dump) {
       auto stack = debug::stack::dumpStack();
       auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-      fmt::print("{}", stack_pretty);
+      if (ArgType::vt_stack_file != "") {
+        Runtime::writeToFile(stack_pretty);
+      } else {
+        fmt::print("{}", stack_pretty);
+      }
     }
   }
 

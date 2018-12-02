@@ -9,18 +9,20 @@
 
 namespace vt { namespace arguments {
 
-/*static*/ CLI::App ArgConfig::app{"vt"};
-/*static*/ bool     ArgConfig::vt_color           = true;
-/*static*/ bool     ArgConfig::vt_no_color        = false;
-/*static*/ bool     ArgConfig::vt_auto_color      = false;
-/*static*/ bool     ArgConfig::vt_no_sigint       = false;
-/*static*/ bool     ArgConfig::vt_no_sigsegv      = false;
-/*static*/ bool     ArgConfig::vt_no_terminate    = false;
-/*static*/ bool     ArgConfig::vt_no_warn_stack   = false;
-/*static*/ bool     ArgConfig::vt_no_assert_stack = false;
-/*static*/ bool     ArgConfig::vt_no_abort_stack  = false;
-/*static*/ bool     ArgConfig::vt_no_stack        = false;
-/*static*/ bool     ArgConfig::parsed             = false;
+/*static*/ CLI::App    ArgConfig::app{"vt"};
+/*static*/ bool        ArgConfig::vt_color           = true;
+/*static*/ bool        ArgConfig::vt_no_color        = false;
+/*static*/ bool        ArgConfig::vt_auto_color      = false;
+/*static*/ bool        ArgConfig::vt_no_sigint       = false;
+/*static*/ bool        ArgConfig::vt_no_sigsegv      = false;
+/*static*/ bool        ArgConfig::vt_no_terminate    = false;
+/*static*/ bool        ArgConfig::vt_no_warn_stack   = false;
+/*static*/ bool        ArgConfig::vt_no_assert_stack = false;
+/*static*/ bool        ArgConfig::vt_no_abort_stack  = false;
+/*static*/ bool        ArgConfig::vt_no_stack        = false;
+/*static*/ std::string ArgConfig::vt_stack_file      = "";
+/*static*/ std::string ArgConfig::vt_stack_dir       = "";
+/*static*/ bool        ArgConfig::parsed             = false;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
   if (parsed || argc == 0 || argv == nullptr) {
@@ -72,16 +74,22 @@ namespace vt { namespace arguments {
   auto warn   = "Do not dump stack traces when vtWarn(..) is invoked";
   auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
   auto abort  = "Do not dump stack traces when vtAabort(..) is invoked";
+  auto file   = "Dump stack traces to file instead of stdout";
+  auto name   = "Name of file to dump stack backtrace";
+  auto dir    = "Name of directory to write stack files";
   auto g = app.add_flag("--vt_no_warn_stack",   vt_no_warn_stack,   warn);
   auto h = app.add_flag("--vt_no_assert_stack", vt_no_assert_stack, assert);
   auto i = app.add_flag("--vt_no_abort_stack",  vt_no_abort_stack,  abort);
   auto j = app.add_flag("--vt_no_stack",        vt_no_stack,        stack);
+  auto k = app.add_option("--vt_stack_file",    vt_stack_file,      file, "");
+  auto l = app.add_option("--vt_stack_dir",     vt_stack_dir,       dir,  "");
   auto stackGroup = "Stack Dumps";
   g->group(stackGroup);
   h->group(stackGroup);
   i->group(stackGroup);
   j->group(stackGroup);
-
+  k->group(stackGroup);
+  l->group(stackGroup);
 
   /*
    * Flags for enabling load balancing and configuring it
