@@ -14,8 +14,6 @@ function(add_configuration_type config_type)
   endif()
 endfunction()
 
-add_configuration_type(debug_v1)
-add_configuration_type(debug_v2)
 add_configuration_type(debug_trace)
 add_configuration_type(release_trace)
 
@@ -23,11 +21,16 @@ add_configuration_type(release_trace)
 # set(VIRTUAL_TRANSPORT_LIBRARY_DV2 vt-debug_v2)
 # set(VIRTUAL_TRANSPORT_LIBRARY_REL vt-release)
 
-set(cmake_vt_debug_modes_debug_trace           "flush")
+set(
+  cmake_vt_debug_modes_all
+  "gen, runtime, active, term, ermds, barrier, event, pipe,       \
+   pool, reduce, rdma, rdma_channel, rdma_state, param, handler,  \
+   hierlb, scatter, sequence, sequence_vrt, serial_msg, trace,    \
+   location, lb, vrt, vrt_coll, worker, group, broadcast, flush"
+)
+set(cmake_vt_debug_modes_debug_trace           "${cmake_vt_debug_modes_all}")
 set(cmake_vt_debug_modes_release_trace         "flush")
-set(cmake_vt_debug_modes_debug_v2              "gen, barrier, active, runtime, flush")
-set(cmake_vt_debug_modes_debug_v1              "runtime, flush")
-set(cmake_vt_debug_modes_debug                 "flush")
+set(cmake_vt_debug_modes_debug                 "${cmake_vt_debug_modes_all}")
 set(cmake_vt_debug_modes_release               "flush")
 set(cmake_vt_features_debug_trace              "trace_enabled")
 set(cmake_vt_features_release_trace            "trace_enabled")
@@ -35,11 +38,11 @@ set(cmake_vt_features_debug_v2                 "")
 set(cmake_vt_features_debug_v1                 "")
 set(cmake_vt_features_debug                    "")
 set(cmake_vt_features_release                  "")
-set(cmake_config_debug_enabled_debug_trace     0)
+set(cmake_config_debug_enabled_debug_trace     1)
 set(cmake_config_debug_enabled_release_trace   0)
 set(cmake_config_debug_enabled_debug_v2        1)
 set(cmake_config_debug_enabled_debug_v1        1)
-set(cmake_config_debug_enabled_debug           0)
+set(cmake_config_debug_enabled_debug           1)
 set(cmake_config_debug_enabled_release         0)
 
 #message(STATUS "build types=${CMAKE_CONFIGURATION_TYPES}")
@@ -94,8 +97,6 @@ target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   $<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug>
   $<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>
-  $<$<CONFIG:debug_v1>:${PROJECT_BIN_DIR}/debug_v1>
-  $<$<CONFIG:debug_v2>:${PROJECT_BIN_DIR}/debug_v2>
   $<$<CONFIG:debug_trace>:${PROJECT_BIN_DIR}/debug_trace>
   $<$<CONFIG:release_trace>:${PROJECT_BIN_DIR}/release_trace>
 )
