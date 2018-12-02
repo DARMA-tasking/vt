@@ -368,6 +368,10 @@ void Trace::writeTracesFile() {
     auto const node_str = std::to_string(node) + ".log.gz";
     full_trace_name = full_dir_name + "/" + ArgType::vt_trace_file + node_str;
     full_sts_name   = full_dir_name + "/" + ArgType::vt_trace_file + ".sts";
+  } else {
+    auto const node_str = std::to_string(node) + ".log.gz";
+    full_trace_name = full_dir_name + "/" + trace_name + node_str;
+    full_sts_name   = full_dir_name + "/" + trace_name + ".sts";
   }
 
   if (checkEnabled()) {
