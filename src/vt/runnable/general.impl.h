@@ -26,7 +26,7 @@ template <typename MsgT>
     trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
       handler, auto_registry::RegistryTypeEnum::RegGeneral
     );
-    trace::TraceEventIDType trace_event = no_trace_event;
+    trace::TraceEventIDType trace_event = trace::no_trace_event;
     if (msg) {
       trace_event = envelopeGetTraceEvent(msg->env);
     }
