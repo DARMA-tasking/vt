@@ -33,6 +33,11 @@
 
 #define debug_decorated_prefix(debug_stamp, debug_type) "{} {} {} "
 
+#define debug_argument_option(opt)                                      \
+  ::vt::arguments::ArgConfig::vt_debug_ ## opt
+
+#define debug_all_option ::vt::arguments::ArgConfig::vt_debug_all
+
 #define debug_decorated(                                                \
   PRINTER,                                                              \
   debug_type, debug_stamp,                                              \
@@ -189,10 +194,12 @@ extern runtime::Runtime* curRT;
 //   debug_virtual_ctx_1(debug_type, "idx={}", this_index, main_fmt, main_arg)
 
 #define debug_print_node(debug_type, main_fmt, main_arg...)             \
-  debug_virtual_ctx_none(                                               \
-    debug_type,                                                         \
-    main_fmt, main_arg                                                  \
-  )
+  if (debug_argument_option(debug_type) or debug_all_option) {          \
+    debug_virtual_ctx_none(                                             \
+      debug_type,                                                       \
+      main_fmt, main_arg                                                \
+    )                                                                   \
+  }
 
   // debug_virtual_ctx_1(                                                  \
   //   debug_type,                                                         \
