@@ -267,7 +267,7 @@ void VirtualContextManager::sendMsg(
   debug_print(
     vrt, node,
     "sending msg to VC: msg={}, han={}, home_node={}\n",
-    print_ptr(msg), han, home_node
+    print_ptr(msg.get()), han, home_node
   );
 
   // route the message to the destination using the location manager
