@@ -440,7 +440,7 @@ template <typename MsgT, typename BaseT>
         debug_print(
           serial_msg, node,
           "sendSerialMsg: non-eager: dest={}, sys_msg={}, handler={}\n",
-          dest, print_ptr(sys_msg), typed_handler
+          dest, print_ptr(sys_msg.get()), typed_handler
         );
 
         theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
