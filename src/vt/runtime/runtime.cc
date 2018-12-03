@@ -24,6 +24,7 @@
 #include "vt/configs/error/pretty_print_stack.h"
 
 #include <memory>
+#include <iostream>
 #include <functional>
 #include <string>
 #include <vector>
@@ -52,6 +53,24 @@ Runtime::Runtime(
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
+}
+
+void Runtime::pauseForDebugger() {
+  if (ArgType::vt_pause) {
+    char node_str[256];
+    auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
+    sprintf(node_str, "prog-%d.pid", node);
+    auto const pid = getpid();
+    FILE* f = fopen(node_str, "w+");
+    fprintf(f, "%d", pid);
+    fclose(f);
+
+    #if __APPLE__
+      system("read");
+    #else
+      system("pause");
+    #endif
+  }
 }
 
 /*static*/ void Runtime::sigHandlerINT(int sig) {
@@ -465,6 +484,12 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_pause) {
+    auto f11 = fmt::format("Enabled debug pause at startup");
+    auto f12 = opt_on("--vt_pause", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
     auto f12 = opt_on("--vt_debug_all", f11);
@@ -749,6 +774,10 @@ void Runtime::setup() {
   theCollective->barrierThen([this]{
     MPI_Barrier(theContext->getComm());
   });
+
+  if (ArgType::vt_pause) {
+    pauseForDebugger();
+  }
 
   debug_print(runtime, node, "end: setup\n");
 }

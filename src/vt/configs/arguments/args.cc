@@ -40,6 +40,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = true;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
 
+/*static*/ bool        ArgConfig::vt_pause              = false;
+
 /*static*/ bool        ArgConfig::vt_debug_all          = false;
 /*static*/ bool        ArgConfig::vt_debug_none         = false;
 /*static*/ bool        ArgConfig::vt_debug_gen          = false;
@@ -296,6 +298,15 @@ namespace vt { namespace arguments {
   auto debugTerm = "Termination";
   x->group(debugTerm);
   y->group(debugTerm);
+
+  /*
+   * Flags for controlling termination
+   */
+
+  auto pause        = "Pause at startup so GDB/LLDB can be attached";
+  auto z = app.add_flag("--vt_pause", vt_pause, pause);
+  auto launchTerm = "Debugging/Launch";
+  z->group(launchTerm);
 
 
   /*

@@ -97,6 +97,7 @@ protected:
   void printStartupBanner();
   void printShutdownBanner(term::TermCounterType const& num_units);
 
+  void pauseForDebugger();
   void setupSignalHandler();
   void setupSignalHandlerINT();
   void setupTerminateHandler();

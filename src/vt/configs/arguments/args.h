@@ -43,6 +43,8 @@ public:
   static bool vt_no_detect_hang;
   static int64_t vt_hang_freq;
 
+  static bool vt_pause;
+
   static bool vt_debug_all;
   static bool vt_debug_none;
   static bool vt_debug_gen;
