@@ -207,8 +207,10 @@ extern runtime::Runtime* curRT;
   //   main_fmt, main_arg                                                  \
   // )
 
-#define debug_print_unknown(debug_type, main_fmt, main_arg...)  \
-  debug_virtual_proc_ctx_none(debug_type, -1, main_fmt, main_arg)
+#define debug_print_unknown(debug_type, main_fmt, main_arg...)          \
+  if (debug_argument_option(debug_type) or debug_all_option) {          \
+    debug_virtual_proc_ctx_none(debug_type, -1, main_fmt, main_arg)     \
+  }
 
 // #define debug_print_pe(debug_type, proc, main_fmt, main_arg...)   \
 //   debug_virtual_proc_ctx_none(debug_type, proc, main_fmt, main_arg)
