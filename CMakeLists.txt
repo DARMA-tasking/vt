@@ -7,6 +7,12 @@ set(FCONTEXT_LIBRARY fcontext)
 # Set the local module path so custom cmake scripts can be located automatically
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules/")
 
+# Try to find ccache to speed up compilation
+find_program(ccache_binary ccache)
+if (ccache_binary)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${ccache_binary}")
+endif()
+
 include(SetCXXCompilerFlags)
 set_darma_compiler_flags()
 

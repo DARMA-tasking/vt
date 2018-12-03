@@ -148,3 +148,4 @@ if ($dry_run eq "true") {
 # -DGTEST_INCLUDE_DIR=$gtest/include                                     \\
 # -DGTEST_MAIN_LIBRARY=$gtest/lib64/libgtest_main.a                      \\
 #
+#      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                   \\
