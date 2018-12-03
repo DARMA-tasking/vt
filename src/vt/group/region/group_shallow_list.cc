@@ -4,6 +4,8 @@
 #include "vt/group/region/group_shallow_list.h"
 #include "vt/group/region/group_list.h"
 
+#include <cassert>
+
 namespace vt { namespace group { namespace region {
 
 ShallowList::ShallowList(BoundType const* in_bound, SizeType const& in_size)
@@ -37,11 +39,7 @@ ShallowList::ShallowList(ListType const& in_list)
 
 /*virtual*/ ShallowList::ListType const& ShallowList::makeList() {
   vtAssert(0, "Can not be implemented for ShallowList");
-  // typename ShallowList::ListType list;
-  // for (auto i = 0; i < size_; i++) {
-  //   list.push_back(bound_[i]);
-  // }
-  // return list;
+  assert(false);
 }
 
 /*virtual*/ bool ShallowList::isList() const {

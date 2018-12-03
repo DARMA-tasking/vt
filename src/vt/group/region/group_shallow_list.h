@@ -21,7 +21,7 @@ struct ShallowList : Region {
   virtual SizeType getSize() const override;
   virtual void sort() override;
   virtual bool contains(NodeType const& node) override;
-  virtual ListType const& makeList() override;
+  virtual ListType const& makeList [[noreturn]] () override;
   virtual bool isList() const override;
   virtual BoundType head() const override;
   virtual RegionUPtrType tail() const override;
