@@ -154,7 +154,7 @@ function(link_target_with_vt)
       message(STATUS "link_target_with_vt: cli11=${ARG_LINK_CLI11}")
     endif()
     target_link_libraries(
-      ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} CLI11::CLI11
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} CLI11::CLI11
     )
   endif()
 
