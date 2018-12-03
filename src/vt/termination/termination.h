@@ -13,6 +13,7 @@
 #include "vt/epoch/epoch.h"
 #include "vt/activefn/activefn.h"
 #include "vt/collective/tree/tree.h"
+#include "vt/configs/arguments/args.h"
 
 #include <cstdint>
 #include <unordered_map>
@@ -33,6 +34,7 @@ struct TerminationDetector :
   using TermStateType      = TermState;
   using TermStateDSType    = term::ds::StateDS::TerminatorType;
   using WindowType         = std::unique_ptr<EpochWindow>;
+  using ArgType            = vt::arguments::ArgConfig;
 
   TerminationDetector();
 

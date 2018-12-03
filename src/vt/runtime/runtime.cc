@@ -359,6 +359,24 @@ void Runtime::printStartupBanner() {
   }
   #endif
 
+  if (ArgType::vt_no_detect_hang) {
+    auto f11 = fmt::format("Disabling termination hang detection");
+    auto f12 = opt_on("--vt_no_detect_hang", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("Termination hang detection enabled by default");
+    auto f12 = opt_inverse("--vt_no_detect_hang", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_hang_freq != 0) {
+    auto f11 = fmt::format(
+      "Detecting hang every {} tree traversals ", ArgType::vt_hang_freq
+    );
+    auto f12 = opt_on("--vt_hang_detect", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_no_sigint) {
     auto f11 = fmt::format("Disabling SIGINT signal handling");
     auto f12 = opt_on("--vt_no_SIGINT", f11);

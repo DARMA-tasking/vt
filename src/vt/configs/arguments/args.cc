@@ -37,6 +37,9 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
 /*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
 
+/*static*/ bool        ArgConfig::vt_no_detect_hang     = true;
+/*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
+
 /*static*/ bool        ArgConfig::vt_debug_all          = false;
 /*static*/ bool        ArgConfig::vt_debug_none         = false;
 /*static*/ bool        ArgConfig::vt_debug_gen          = false;
@@ -280,6 +283,19 @@ namespace vt { namespace arguments {
   u->group(debugLB);
   v->group(debugLB);
   w->group(debugLB);
+
+  /*
+   * Flags for controlling termination
+   */
+
+  auto hang         = "Disable termination hang detection";
+  auto hang_freq    = "The number of tree traversals before a hang is detected";
+  auto hfd          = 1024;
+  auto x = app.add_flag("--vt_no_detect_hang", vt_no_detect_hang, hang);
+  auto y = app.add_option("--vt_hang_freq",    vt_hang_freq,      hang_freq, hfd);
+  auto debugTerm = "Termination";
+  x->group(debugTerm);
+  y->group(debugTerm);
 
 
   /*

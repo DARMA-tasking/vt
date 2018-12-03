@@ -11,6 +11,8 @@
 #include "vt/termination/dijkstra-scholten/ds_headers.h"
 #include "vt/termination/dijkstra-scholten/comm.h"
 #include "vt/termination/dijkstra-scholten/ds.h"
+#include "vt/configs/arguments/args.h"
+#include "vt/configs/debug/debug_colorize.h"
 
 #include <memory>
 
@@ -421,6 +423,36 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         epochFinished(state.getEpoch(), false);
       } else {
+        if (!ArgType::vt_no_detect_hang) {
+          // Counts are the same as previous iteration
+          if (state.g_prod2 == state.g_prod1 && state.g_cons2 == state.g_cons1) {
+            state.constant_count++;
+          } else {
+            state.constant_count = 0;
+          }
+
+          if (
+            state.constant_count >= ArgType::vt_hang_freq and
+            state.constant_count %  ArgType::vt_hang_freq == 0
+          ) {
+            auto node            = ::vt::debug::preNode();
+            auto vt_pre          = ::vt::debug::vtPre();
+            auto node_str        = ::vt::debug::proc(node);
+            auto prefix          = vt_pre + node_str + " ";
+            auto reset           = ::vt::debug::reset();
+            auto bred            = ::vt::debug::bred();
+            auto magenta         = ::vt::debug::magenta();
+
+            auto f1 = fmt::format(
+              "{}Termination hang detected:{} {}produced={}{} {}consumed={}{}\n",
+              bred, reset,
+              magenta, state.g_prod1, reset,
+              magenta, state.g_cons1, reset
+            );
+            vt_print(term, "{}", f1);
+          }
+        }
+
         state.g_prod2 = state.g_prod1;
         state.g_cons2 = state.g_cons1;
         state.g_prod1 = state.g_cons1 = 0;
