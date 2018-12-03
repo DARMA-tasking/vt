@@ -369,12 +369,14 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_hang_freq != 0) {
-    auto f11 = fmt::format(
-      "Detecting hang every {} tree traversals ", ArgType::vt_hang_freq
-    );
-    auto f12 = opt_on("--vt_hang_detect", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  if (!ArgType::vt_no_detect_hang) {
+    if (ArgType::vt_hang_freq != 0) {
+      auto f11 = fmt::format(
+        "Detecting hang every {} tree traversals ", ArgType::vt_hang_freq
+      );
+      auto f12 = opt_on("--vt_hang_detect", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
 
   if (ArgType::vt_no_sigint) {
