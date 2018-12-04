@@ -148,7 +148,7 @@
   debug_print_ ## value
 
 #define debug_print_context_foreach(config, opt, key_value_map...)      \
-  meld_eval_32(                                                         \
+  meld_eval_2(                                                         \
     meld_transform_key(                                                 \
       debug_check_context, opt,                                         \
       debug_check_context_transform, key_value_map                      \

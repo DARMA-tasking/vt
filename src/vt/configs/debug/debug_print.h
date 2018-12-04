@@ -245,7 +245,7 @@ extern runtime::Runtime* curRT;
   debug_print_pe(feature, fst_arg_as_pe, arg)
 
 #define debug_print(feature, maybe_ctx, arg...)                         \
-  meld_eval_16(                                                         \
+  meld_eval_2(                                                         \
     debug_print_recur_call(backend_debug,feature,maybe_ctx,arg)         \
   )
 
