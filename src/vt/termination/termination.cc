@@ -444,9 +444,10 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
             auto magenta         = ::vt::debug::magenta();
 
             auto f1 = fmt::format(
-              "{}Termination hang detected:{} {}produced={}{} {}consumed={}{}\n",
+              "{}Termination hang detected:{} {}epoch={:x} "
+              "produced={}{} {}consumed={}{}\n",
               bred, reset,
-              magenta, state.g_prod1, reset,
+              magenta, state.getEpoch(), state.g_prod1, reset,
               magenta, state.g_cons1, reset
             );
             vt_print(term, "{}", f1);
