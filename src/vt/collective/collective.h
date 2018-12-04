@@ -9,13 +9,25 @@
 
 namespace vt {
 
-inline RuntimePtrType initialize(int ac, char** av, MPI_Comm* comm = nullptr) {
+// vt::{initialize,finalize} exported into the main ::vt namespace
+inline RuntimePtrType initialize(
+  int& argc, char**& argv, WorkerCountType const num_workers = no_workers,
+  bool is_interop = false, MPI_Comm* comm = nullptr
+) {
+  return ::vt::CollectiveOps::initialize(argc,argv,num_workers,is_interop,comm);
+}
+
+inline RuntimePtrType initialize(
+  int& argc, char**& argv, MPI_Comm* comm = nullptr
+) {
   bool const is_interop = comm != nullptr;
-  return ::vt::CollectiveOps::initialize(ac,av,no_workers,is_interop,comm);
+  return ::vt::CollectiveOps::initialize(argc,argv,no_workers,is_interop,comm);
 }
 
 inline RuntimePtrType initialize(MPI_Comm* comm = nullptr) {
-  return ::vt::initialize(0,nullptr,comm);
+  int argc = 0;
+  char** argv = nullptr;
+  return ::vt::CollectiveOps::initialize(argc,argv,no_workers,true,comm);
 }
 
 inline void finalize(RuntimePtrType in_rt = nullptr) {
