@@ -26,10 +26,10 @@ add_configuration_type(debug_v2)
 
 set(
   cmake_vt_debug_modes_all
-  "gen, runtime, active, term, termds, barrier, event, pipe,      \
-   pool, reduce, rdma, rdma_channel, rdma_state, param, handler,  \
-   hierlb, scatter, sequence, sequence_vrt, serial_msg, trace,    \
-   location, lb, vrt, vrt_coll, worker, group, broadcast, flush"
+  "gen, runtime, active, term, termds, barrier, pipe,   \
+   pool, reduce, rdma, rdma_channel, param, handler,    \
+   hierlb, scatter, serial_msg, trace,                  \
+   location, lb, vrt_coll, group, broadcast, flush"
 )
 set(cmake_vt_debug_modes_debug_trace           "${cmake_vt_debug_modes_all}")
 set(cmake_vt_debug_modes_release_trace         "flush")
