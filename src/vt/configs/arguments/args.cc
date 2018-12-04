@@ -37,7 +37,7 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
 /*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
 
-/*static*/ bool        ArgConfig::vt_no_detect_hang     = true;
+/*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
 
 /*static*/ bool        ArgConfig::vt_pause              = false;
