@@ -228,8 +228,12 @@ extern runtime::Runtime* curRT;
 #define verbose_info_pe(debug_type, proc, main_fmt, main_arg...)  \
   debug_virtual_proc_ctx_none(debug_type, proc, main_fmt, main_arg)
 
-#define vt_print(debug_type, main_fmt, main_arg...) \
-  verbose_info(debug_type,main_fmt,main_arg)
+#define vt_print(debug_type, main_fmt, main_arg...)                  \
+  do {                                                               \
+    if (!::vt::arguments::ArgConfig::vt_quiet) {                     \
+      verbose_info(debug_type,main_fmt,main_arg);                    \
+    }                                                                \
+  } while(0);
 
 #define virtual_fatal_error(str)                  \
   do {                                            \

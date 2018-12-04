@@ -13,6 +13,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
 /*static*/ bool        ArgConfig::vt_auto_color         = false;
+/*static*/ bool        ArgConfig::vt_quiet              = false;
 
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
@@ -89,16 +90,19 @@ namespace vt { namespace arguments {
   /*
    * Flags for controlling the colorization of output from vt
    */
+  auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Always colorize output";
   auto never  = "Never colorize output";
   auto maybe  = "Use isatty to determine colorization of output";
-  auto a = app.add_flag("-c,--vt_color",      vt_color,      always);
-  auto b = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
-  auto c = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe);
-  auto colorGroup = "Print Coloring";
-  a->group(colorGroup);
-  b->group(colorGroup);
-  c->group(colorGroup);
+  auto a  = app.add_flag("-c,--vt_color",      vt_color,      always);
+  auto b  = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
+  auto c  = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe);
+  auto a1 = app.add_flag("-q,--vt_quiet",      vt_quiet,      quiet);
+  auto outputGroup = "Output Control";
+  a->group(outputGroup);
+  b->group(outputGroup);
+  c->group(outputGroup);
+  a1->group(outputGroup);
   b->excludes(a);
   b->excludes(c);
 

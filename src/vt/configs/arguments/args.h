@@ -16,6 +16,7 @@ public:
   static bool vt_color;
   static bool vt_no_color;
   static bool vt_auto_color;
+  static bool vt_quiet;
 
   static bool vt_no_sigint;
   static bool vt_no_sigsegv;

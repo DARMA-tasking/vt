@@ -216,6 +216,11 @@ bool Runtime::tryFinalize() {
 }
 
 void Runtime::printStartupBanner() {
+  // If --vt_quiet is set, immediately exit printing nothing during startup
+  if (ArgType::vt_quiet) {
+    return;
+  }
+
   NodeType const nodes = theContext->getNumNodes();
   WorkerCountType const workers = theContext->getNumWorkers();
   bool const has_workers = theContext->hasWorkers();
@@ -601,6 +606,10 @@ void Runtime::printStartupBanner() {
 }
 
 void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
+  // If --vt_quiet is set, immediately exit printing nothing during startup
+  if (ArgType::vt_quiet) {
+    return;
+  }
   auto green    = debug::green();
   auto reset    = debug::reset();
   auto bd_green = debug::bd_green();
