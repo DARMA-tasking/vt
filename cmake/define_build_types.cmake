@@ -17,6 +17,9 @@ endfunction()
 add_configuration_type(debug_trace)
 add_configuration_type(release_trace)
 
+add_configuration_type(debug_v1)
+add_configuration_type(debug_v2)
+
 # set(VIRTUAL_TRANSPORT_LIBRARY_DV1 vt-debug_v1)
 # set(VIRTUAL_TRANSPORT_LIBRARY_DV2 vt-debug_v2)
 # set(VIRTUAL_TRANSPORT_LIBRARY_REL vt-release)
@@ -96,6 +99,8 @@ endforeach()
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   $<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug>
+  $<$<CONFIG:debug_v1>:${PROJECT_BIN_DIR}/debug_v1>
+  $<$<CONFIG:debug_v2>:${PROJECT_BIN_DIR}/debug_v2>
   $<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>
   $<$<CONFIG:debug_trace>:${PROJECT_BIN_DIR}/debug_trace>
   $<$<CONFIG:release_trace>:${PROJECT_BIN_DIR}/release_trace>

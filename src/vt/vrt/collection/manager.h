@@ -707,6 +707,10 @@ private:
   );
 
 private:
+  template <typename MsgT>
+  static EpochType getCurrentEpoch(MsgT* msg);
+
+private:
   template <typename=void>
   static VirtualIDType curIdent_;
 

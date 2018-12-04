@@ -632,7 +632,7 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   vtAssert(this_node == bcast_node, "Must be the bcast node");
 
   auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
-  auto const cur_epoch = theMsg()->getEpoch();
+  auto const cur_epoch = getCurrentEpoch(msg.get());
 
   msg->setBcastEpoch(bcast_epoch);
 
@@ -795,6 +795,27 @@ void CollectionManager::broadcastNormalMsg(
   );
 }
 
+template <typename MsgT>
+/*static*/ EpochType CollectionManager::getCurrentEpoch(MsgT* msg) {
+  auto const& any_epoch = term::any_epoch_sentinel;
+  auto const& msg_epoch = envelopeGetEpoch(msg->env);
+
+  // Prefer the epoch on the msg before the current handler epoch
+  if (msg_epoch != no_epoch and msg_epoch != any_epoch) {
+    // It has a valid non-global epoch, which should be used for tracking it's
+    // causality
+    return msg_epoch;
+  } else {
+    // Otherwise, use the active messenger's current epoch on the stack
+    auto const& epoch_state = theMsg()->getEpoch();
+    vtAssert(
+      epoch_state != no_epoch, "Must have a valid epoch here",
+      print_ptr(msg), epoch_state, msg_epoch, no_epoch, any_epoch
+    );
+    return epoch_state;
+  }
+}
+
 template <typename MsgT, typename ColT, typename IdxT>
 void CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *raw_msg,
@@ -822,7 +843,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
 
-  auto const& cur_epoch = theMsg()->getEpoch();
+  auto const& cur_epoch = getCurrentEpoch(msg.get());
 
   debug_print(
     vrt_coll, node,
@@ -1199,7 +1220,7 @@ void CollectionManager::sendMsgUntypedHandler(
     msg->setLBLiteInstrument(true);
   );
 
-  auto const& cur_epoch = theMsg()->getEpoch();
+  auto const& cur_epoch = getCurrentEpoch(msg.get());
   theTerm()->produce(cur_epoch);
 
   // auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
@@ -2258,12 +2279,12 @@ void CollectionManager::insert(
       // Clear the current index context
       IdxContextHolder::clear();
     } else {
-      auto const& global_epoch = theMsg()->getGlobalEpoch();
+      auto const& cur_epoch = theMsg()->getEpoch();
       auto msg = makeSharedMessage<InsertMsg<ColT,IndexT>>(
-        proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,global_epoch
+        proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,cur_epoch
       );
       theTerm()->produce(insert_epoch);
-      theTerm()->produce(global_epoch);
+      theTerm()->produce(cur_epoch);
       theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
         insert_node,msg
       );
@@ -2287,8 +2308,8 @@ void CollectionManager::insert(
       untyped_proxy
     );
 
-    auto const& global_epoch = theMsg()->getGlobalEpoch();
-    theTerm()->produce(global_epoch);
+    auto const& cur_epoch = theMsg()->getEpoch();
+    theTerm()->produce(cur_epoch);
     theTerm()->produce(insert_epoch);
 
     debug_print(
@@ -2302,7 +2323,7 @@ void CollectionManager::insert(
       );
       theCollection()->insert<ColT>(proxy,idx,node);
       theTerm()->consume(insert_epoch);
-      theTerm()->consume(global_epoch);
+      theTerm()->consume(cur_epoch);
     });
   }
 }
