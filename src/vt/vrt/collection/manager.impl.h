@@ -155,7 +155,7 @@ template <typename SysMsgT>
         // Set the current context index to `cur_idx`. This enables the user to
         // query the index of their collection element in the constructor, which
         // is often very handy
-        IdxContextHolder::set(&cur_idx);
+        IdxContextHolder::set(&cur_idx,proxy);
 
         #if backend_check_enabled(detector)
           auto new_vc = DerefCons::derefTuple<ColT, IndexT, decltype(msg->tup)>(
@@ -1483,7 +1483,7 @@ CollectionManager::constructCollectiveMap(
       // Set the current context index to `cur_idx`. This enables the user to
       // query the index of their collection element in the constructor, which
       // is often very handy
-      IdxContextHolder::set(&cur_idx);
+      IdxContextHolder::set(&cur_idx,proxy);
 
       // Invoke the user's construct function with a single argument---the index
       // of element being constructed
@@ -1586,7 +1586,7 @@ void CollectionManager::staticInsert(
   auto map_han = UniversalIndexHolder<>::getMap(proxy);
 
   // Set the current context index to `idx`
-  IdxContextHolder::set(&idx);
+  IdxContextHolder::set(&idx,proxy);
 
   auto tuple = std::make_tuple(std::forward<Args>(args)...);
 
@@ -1710,6 +1710,14 @@ template <typename IndexT>
   auto const idx = IdxContextHolder::index();
   vtAssertExpr(idx != nullptr);
   return idx;
+}
+
+template <typename IndexT>
+/*static*/ VirtualProxyType CollectionManager::queryProxyContext() {
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+  auto const proxy = IdxContextHolder::proxy();
+  vtAssertExpr(proxy != no_vrt_proxy);
+  return proxy;
 }
 
 template <typename ColT, typename... Args>
@@ -2255,7 +2263,7 @@ void CollectionManager::insert(
 
       // Set the current context index to `idx`, enabled the user to query the
       // index during the constructor
-      IdxContextHolder::set(&idx);
+      IdxContextHolder::set(&idx,untyped_proxy);
 
       #if backend_check_enabled(detector)
         auto new_vc = DerefCons::derefTuple<ColT,IndexT,std::tuple<>>(

@@ -34,7 +34,11 @@ CollectionBase<ColT, IndexT>::getElementProxy(IndexT const& idx) const {
 template <typename ColT, typename IndexT>
 typename CollectionBase<ColT, IndexT>::CollectionProxyType
 CollectionBase<ColT, IndexT>::getCollectionProxy() const {
-  auto const& proxy = this->getProxy();
+  auto proxy = this->getProxy();
+  if (proxy == no_vrt_proxy) {
+    proxy = theCollection()->queryProxyContext<IndexT>();
+    vtAssertExpr(proxy != no_vrt_proxy);
+  }
   typename CollectionBase<ColT, IndexT>::CollectionProxyType col_proxy(proxy);
   return col_proxy;
 }

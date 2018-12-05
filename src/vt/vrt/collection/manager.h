@@ -215,6 +215,8 @@ public:
   // the constructor of a virtual collection element
   template <typename IndexT>
   static IndexT* queryIndexContext();
+  template <typename IndexT>
+  static VirtualProxyType queryProxyContext();
 
   // Async reduce for new collection construction coordination wrt meta-datt
   template <typename ColT>
@@ -754,5 +756,6 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vt/vrt/collection/dispatch/dispatch.impl.h"
 #include "vt/vrt/collection/dispatch/registry.impl.h"
 #include "vt/vrt/collection/staged_token/token.impl.h"
+#include "vt/vrt/collection/types/base.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/

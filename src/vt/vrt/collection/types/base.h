@@ -56,6 +56,4 @@ protected:
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vt/vrt/collection/types/base.impl.h"
-
 #endif /*INCLUDED_VRT_COLLECTION_TYPES_BASE_H*/
