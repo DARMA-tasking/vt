@@ -645,6 +645,7 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
 
   auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
   auto const cur_epoch = getCurrentEpoch(msg.get());
+  theMsg()->pushEpoch(cur_epoch);
 
   msg->setBcastEpoch(bcast_epoch);
 
@@ -680,6 +681,8 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   if (!send_group) {
     collectionBcastHandler<ColT,IndexT,MsgT>(msg.get());
   }
+
+  theMsg()->popEpoch();
 }
 
 template <
