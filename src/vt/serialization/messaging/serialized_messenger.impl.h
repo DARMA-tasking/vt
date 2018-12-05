@@ -71,8 +71,8 @@ template <typename UserMsgT>
   debug_print(
     serial_msg, node,
     "serialMsgHandler: non-eager, recvDataMsg: msg={}, handler={}, "
-    "recv_tag={}\n",
-    print_ptr(sys_msg), handler, recv_tag
+    "recv_tag={}, epoch={}\n",
+    print_ptr(sys_msg), handler, recv_tag, envelopeGetEpoch(sys_msg->env)
   );
 
   auto node = sys_msg->from_node;
@@ -88,8 +88,9 @@ template <typename UserMsgT>
 
       debug_print(
         serial_msg, node,
-        "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={}\n",
-        handler, recv_tag
+        "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={},"
+        "epoch={}\n",
+        handler, recv_tag, envelopeGetEpoch(msg->env)
       );
 
       runnable::Runnable<UserMsgT>::run(handler, nullptr, tptr, node);
@@ -116,10 +117,10 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   debug_print(
     serial_msg, node,
     "payloadMsgHandler: group={:x}, msg={}, handler={}, bytes={}, "
-    "user ref={}, sys ref={}, user_msg={}\n",
+    "user ref={}, sys ref={}, user_msg={}, epoch={}\n",
     group_, print_ptr(sys_msg), handler, sys_msg->bytes,
     envelopeGetRef(user_msg->env), envelopeGetRef(sys_msg->env),
-    print_ptr(user_msg.get())
+    print_ptr(user_msg.get()), envelopeGetEpoch(sys_msg->env)
   );
 
   runnable::Runnable<UserMsgT>::run(
@@ -409,8 +410,9 @@ template <typename MsgT, typename BaseT>
 
   debug_print(
     serial_msg, node,
-    "sendSerialMsgHandler: ptr_size={}, han={}, eager={}\n",
-    ptr_size, typed_handler, ptr_size <= serialized_msg_eager_size
+    "sendSerialMsgHandler: ptr_size={}, han={}, eager={}, epoch={}\n",
+    ptr_size, typed_handler, ptr_size <= serialized_msg_eager_size,
+    envelopeGetEpoch(msg_ptr->env)
   );
 
   if (ptr_size > serialized_msg_eager_size) {
