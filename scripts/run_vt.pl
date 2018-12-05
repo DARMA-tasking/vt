@@ -1,0 +1,127 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use File::Basename;
+use lib dirname (__FILE__);
+
+require "args.pl";
+require "background.pl";
+
+my $arg = Args->new();
+my $bkg = Background->new();
+
+my ($launch,$binary,$nodes,$user_args);
+my @launch_modes = ('mpi', 'gdb', 'xterm', 'xterm-gdb');
+
+$arg->add_required_arg("bin",       \$binary,      "");
+$arg->add_required_val("launch",    \$launch,      \@launch_modes);
+$arg->add_optional_arg("nodes",     \$nodes,       1);
+$arg->add_optional_arg("args",      \$user_args,   "");
+
+$arg->parse_arguments(@ARGV);
+
+print "bin=\"$binary\", launch=\"$launch\", nodes=\"$nodes\", args=\"$user_args\"\n";
+
+sub run_cmd {
+    my $cmd = shift;
+    system ($cmd);
+}
+
+sub launchMPI {
+    my $mpibin = `which mpirun`;
+    chomp $mpibin;
+    my $mpi_launch = "$mpibin -n $nodes $binary --vt_pause";
+    print "$mpibin: $mpi_launch\n";
+    $bkg->run(\&run_cmd, [$mpi_launch]);
+    #system($mpi_launch);
+}
+
+sub launchXterm {
+    my $i = shift;
+    my $file = "prog-$i.pid";
+    print "waiting for file: $file\n";
+    while (!(-e $file)) { }
+    print "has file: $file\n";
+    my $pid = 0;
+    if (-e $file) {
+        open FILE, "<", $file;
+        foreach (<FILE>) {
+            print "i=$i:$_\n";
+            $pid = $_;
+        }
+        close FILE;
+    } else {
+        print STDERR "File does not exist: $file\n";
+    }
+    chomp $pid;
+
+    my $tmp_file = `mktemp`;
+    chomp $tmp_file;
+    print "TEMP:$tmp_file\n";
+
+    my $gdb_file = `mktemp`;
+    chomp $gdb_file;
+
+    my $gdb = `which gdb`;
+    my $xterm = `which xterm`;
+    chomp $gdb;
+    chomp $xterm;
+
+    my $fout = <<GDBSCRIPT
+#!/bin/sh
+cat > $gdb_file << END_OF_SCRIPT
+handle SIGWINCH nostop noprint
+handle SIGWAITING nostop noprint
+file $binary
+attach $pid
+END_OF_SCRIPT\n
+$xterm -e $gdb -x $gdb_file
+GDBSCRIPT
+;
+
+    open  TMP_FILE, ">$tmp_file";
+    print TMP_FILE "$fout\n";
+    close TMP_FILE;
+
+    $bkg->run(\&run_cmd, ["sh $tmp_file"]);
+}
+
+## Main part of the script that launches based on user selection
+
+if ($launch eq 'mpi') {
+    &launchMPI();
+} elsif ($launch eq 'xterm-gdb') {
+    my $mpibin = `which mpirun`;
+    chomp $mpibin;
+    my $mpi_launch = "$mpibin -n $nodes $binary --vt_pause";
+    print "$mpibin: $mpi_launch\n";
+
+    $bkg->run(\&run_cmd, [$mpi_launch]);
+    for (my $i = 0; $i < $nodes; $i++) {
+        &launchXterm($i);
+    }
+}
+
+$bkg->wait_all();
+
+#
+# Some example C-code taken from another project as an example
+#
+# sprintf(gdbScript, "/tmp/cpdstartgdb.%d.%d", getpid(), CmiMyPe());
+#      f = fopen(gdbScript, "w");
+#      fprintf(f,"#!/bin/sh\n");
+#      fprintf(f,"cat > /tmp/start_gdb.$$ << END_OF_SCRIPT\n");
+#      fprintf(f,"shell /bin/rm -f /tmp/start_gdb.$$\n");
+#      //fprintf(f,"handle SIGPIPE nostop noprint\n");
+#      fprintf(f,"handle SIGWINCH nostop noprint\n");
+#      fprintf(f,"handle SIGWAITING nostop noprint\n");
+#      fprintf(f, "attach %d\n", getpid());
+#      fprintf(f,"END_OF_SCRIPT\n");
+#      fprintf(f, "DISPLAY='%s';export DISPLAY\n",CpvAccess(displayArgument));
+#      fprintf(f,"/usr/X11R6/bin/xterm ");
+#      fprintf(f," -title 'Node %d ' ",CmiMyPe());
+#      fprintf(f," -e /usr/bin/gdb -x /tmp/start_gdb.$$ \n");
+#      fprintf(f, "exit 0\n");
+#      fclose(f);
