@@ -322,10 +322,16 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const bcast_proxy = col_msg->getBcastProxy();
   auto const is_wrap = col_msg->getWrap();
   auto const& untyped_proxy = bcast_proxy;
+  auto const& group = envelopeGetGroup(msg->env);
+  auto const& cur_epoch = theMsg()->getEpoch();
+  auto const& msg_epoch = envelopeGetEpoch(msg->env);
+  theMsg()->pushEpoch(cur_epoch);
   debug_print(
     vrt_coll, node,
-    "collectionBcastHandler: bcast_proxy={}, han={}, epoch={}\n",
-    bcast_proxy, col_msg->getVrtHandler(), col_msg->getBcastEpoch()
+    "collectionBcastHandler: bcast_proxy={:x}, han={}, bcast epoch={}, "
+    "epoch={}, msg epoch={}, group={}, default group={}\n",
+    bcast_proxy, col_msg->getVrtHandler(), col_msg->getBcastEpoch(),
+    cur_epoch, msg_epoch, group, default_group
   );
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(bcast_proxy);
   if (elm_holder) {
@@ -397,11 +403,17 @@ template <typename ColT, typename IndexT, typename MsgT>
    *  other end the sender produces p units for each broadcast to the default
    *  group
    */
-  auto const& group = envelopeGetGroup(msg->env);
+  debug_print(
+    vrt_coll, node,
+    "collectionBcastHandler: (consume) bcast_proxy={:x}, han={}, bcast epoch={}, "
+    "epoch={}, msg epoch={}, group={}, default group={}\n",
+    bcast_proxy, col_msg->getVrtHandler(), col_msg->getBcastEpoch(),
+    cur_epoch, msg_epoch, group, default_group
+  );
   if (group == default_group) {
-    auto const& cur_epoch = theMsg()->getEpoch();
     theTerm()->consume(cur_epoch);
   }
+  theMsg()->popEpoch();
 }
 
 template <typename ColT, typename MsgT>
@@ -542,7 +554,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionMsgTypedHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const entity_proxy = col_msg->getProxy();
-  auto const cur_epoch = theMsg()->getEpoch();
+  auto const cur_epoch = getCurrentEpoch(msg);
   auto const& col = entity_proxy.getCollectionProxy();
   auto const& elm = entity_proxy.getElementProxy();
   auto const& idx = elm.getIndex();
@@ -632,7 +644,7 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   vtAssert(this_node == bcast_node, "Must be the bcast node");
 
   auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
-  auto const cur_epoch = theMsg()->getEpoch();//getCurrentEpoch(msg.get());
+  auto const cur_epoch = getCurrentEpoch(msg.get());
 
   msg->setBcastEpoch(bcast_epoch);
 
@@ -648,11 +660,11 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
 
   debug_print(
     vrt_coll, node,
-    "broadcastFromRoot: proxy={:x}, epoch={}, han={}, group_ready={}, "
-    "group_active={}, use_group={}, send_group={}, group={:x}\n",
+    "broadcastFromRoot: proxy={:x}, bcast epoch={}, han={}, group_ready={}, "
+    "group_active={}, use_group={}, send_group={}, group={:x}, cur_epoch={}\n",
     proxy, msg->getBcastEpoch(), msg->getVrtHandler(),
     group_ready, send_group, use_group, send_group,
-    use_group ? elm_holder->group() : default_group
+    use_group ? elm_holder->group() : default_group, cur_epoch
   );
 
   if (send_group) {
@@ -845,9 +857,14 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
   auto const& cur_epoch = getCurrentEpoch(msg.get());
 
+  auto msg_epoch = envelopeGetEpoch(msg->env);
+  if (msg_epoch == no_epoch) {
+    envelopeSetEpoch(msg->env, cur_epoch);
+  }
+
   debug_print(
     vrt_coll, node,
-    "broadcastMsgUntypedHandler: col_proxy={}, found={}, cur_epoch={}\n",
+    "broadcastMsgUntypedHandler: col_proxy={:x}, found={}, cur_epoch={}\n",
     col_proxy, found_constructed, cur_epoch
   );
 
@@ -1224,7 +1241,18 @@ void CollectionManager::sendMsgUntypedHandler(
   auto const& cur_epoch = getCurrentEpoch(msg.get());
   theTerm()->produce(cur_epoch);
 
+  auto msg_epoch = envelopeGetEpoch(msg->env);
+  if (msg_epoch == no_epoch) {
+    envelopeSetEpoch(msg->env, cur_epoch);
+  }
+
   // auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
+
+  debug_print(
+    vrt_coll, node,
+    "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={}\n",
+    col_proxy, cur_epoch
+  );
 
   auto holder = findColHolder<ColT, IdxT>(col_proxy);
   if (holder != nullptr /* && found_constructed*/) {
