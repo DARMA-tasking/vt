@@ -209,7 +209,7 @@ std::size_t CollectionManager::groupElementCount(VirtualProxyType const& p) {
 
   debug_print(
     vrt_coll, node,
-    "groupElementcount: num_elms={}, proxy={}, proxy-hex={:x}\n",
+    "groupElementcount: num_elms={}, proxy={:x}, proxy={:x}\n",
     num_elms, p, p
   );
 
@@ -242,7 +242,7 @@ GroupType CollectionManager::createGroupCollection(
 
       debug_print(
         vrt_coll, node,
-        "group finished construction: proxy={}, new_group={:x}, use_group={}, "
+        "group finished construction: proxy={:x}, new_group={:x}, use_group={}, "
         "ready={}, root={}, is_group_default={}\n",
         proxy, new_group, elm_holder->useGroup(), elm_holder->groupReady(),
         group_root, is_group_default
@@ -254,7 +254,7 @@ GroupType CollectionManager::createGroupCollection(
         auto const& group_tag_id = vid | group_tag_mask;
         debug_print(
           vrt_coll, node,
-          "calling group (construct) reduce: proxy={}\n", proxy
+          "calling group (construct) reduce: proxy={:x}\n", proxy
         );
         theGroup()->groupReduce(new_group)->reduce<
           CollectionGroupMsg,
@@ -470,8 +470,8 @@ template <typename>
   auto iter = buffered.find(proxy);
   debug_print(
     vrt_coll, node,
-    "collectionGroupFinishedHan: proxy={}, buffered size={}\n",
-    proxy, (iter != buffered.end() ? iter->second.size() : -1)
+    "collectionGroupFinishedHan: proxy={:x}, buffered size={}\n",
+    proxy, (iter != buffered.end() ? iter->second.size() : 0)
   );
   if (iter != buffered.end()) {
     for (auto&& elm : iter->second) {
@@ -492,8 +492,8 @@ template <typename>
   auto iter = buffered.find(proxy);
   debug_print(
     vrt_coll, node,
-    "collectionFinishedHan: proxy={}, buffered size={}\n",
-    proxy, (iter != buffered.end() ? iter->second.size() : -1)
+    "collectionFinishedHan: proxy={:x}, buffered size={}\n",
+    proxy, (iter != buffered.end() ? iter->second.size() : 0)
   );
   if (iter != buffered.end()) {
     for (auto&& elm : iter->second) {
@@ -510,7 +510,7 @@ template <typename>
 ) {
   debug_print(
     vrt_coll, node,
-    "collectionConstructHan: proxy={}\n", msg->proxy
+    "collectionConstructHan: proxy={:x}\n", msg->proxy
   );
   if (msg->isRoot()) {
     auto new_msg = makeMessage<CollectionConsMsg>(*msg);
@@ -529,7 +529,7 @@ template <typename>
 ) {
   debug_print(
     vrt_coll, node,
-    "collectionGroupReduceHan: proxy={}, root={}, group={}\n",
+    "collectionGroupReduceHan: proxy={:x}, root={}, group={}\n",
     msg->proxy, msg->isRoot(), msg->getGroup()
   );
   if (msg->isRoot()) {
@@ -632,13 +632,13 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   vtAssert(this_node == bcast_node, "Must be the bcast node");
 
   auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
-  auto const cur_epoch = getCurrentEpoch(msg.get());
+  auto const cur_epoch = theMsg()->getEpoch();//getCurrentEpoch(msg.get());
 
   msg->setBcastEpoch(bcast_epoch);
 
   debug_print(
     vrt_coll, node,
-    "broadcastFromRoot: proxy={}, epoch={}, han={}\n",
+    "broadcastFromRoot: proxy={:x}, epoch={}, han={}\n",
     proxy, msg->getBcastEpoch(), msg->getVrtHandler()
   );
 
@@ -648,7 +648,7 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
 
   debug_print(
     vrt_coll, node,
-    "broadcastFromRoot: proxy={}, epoch={}, han={}, group_ready={}, "
+    "broadcastFromRoot: proxy={:x}, epoch={}, han={}, group_ready={}, "
     "group_active={}, use_group={}, send_group={}, group={:x}\n",
     proxy, msg->getBcastEpoch(), msg->getVrtHandler(),
     group_ready, send_group, use_group, send_group,
@@ -863,7 +863,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
     if (this_node != bnode) {
       debug_print(
         vrt_coll, node,
-        "broadcastMsgUntypedHandler: col_proxy={}, sending to root node={}, "
+        "broadcastMsgUntypedHandler: col_proxy={:x}, sending to root node={}, "
         "handler={}, cur_epoch={}\n",
         col_proxy, bnode, handler, cur_epoch
       );
@@ -893,21 +893,22 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
     debug_print(
       vrt_coll, node,
-      "pushing into buffered sends: {}\n", col_proxy
+      "broadcastMsgUntypedHandler: pushing into buffered sends: col_proxy={:x}\n",
+      col_proxy
     );
 
     theTerm()->produce(cur_epoch);
 
     debug_print(
       vrt_coll, node,
-      "broadcastMsgUntypedHandler: col_proxy={}, cur_epoch={}, buffering\n",
+      "broadcastMsgUntypedHandler: col_proxy={:x}, cur_epoch={}, buffering\n",
       col_proxy, cur_epoch
     );
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       debug_print(
         vrt_coll, node,
-        "broadcastMsgUntypedHandler: col_proxy={}, running buffered\n",
+        "broadcastMsgUntypedHandler: col_proxy={:x}, running buffered\n",
         col_proxy
       );
       theMsg()->pushEpoch(cur_epoch);
@@ -946,7 +947,7 @@ EpochType CollectionManager::reduceMsgExpr(
 
   debug_print(
     vrt_coll, node,
-    "reduceMsg: col_proxy={}, found={}, group={:x}, group_ready={}, "
+    "reduceMsg: col_proxy={:x}, found={}, group={:x}, group_ready={}, "
     "use_group={}\n",
     col_proxy, found_constructed, group, group_ready, send_group
   );
@@ -967,14 +968,14 @@ EpochType CollectionManager::reduceMsgExpr(
 
     debug_print(
       vrt_coll, node,
-      "reduceMsgExpr: col_proxy={}, buffering reduce operation\n",
+      "reduceMsgExpr: col_proxy={:x}, buffering reduce operation\n",
       col_proxy
     );
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       debug_print(
         vrt_coll, node,
-        "reduceMsgExpr: col_proxy={}, running buffered reduce operation\n",
+        "reduceMsgExpr: col_proxy={:x}, running buffered reduce operation\n",
         col_proxy
       );
       theTerm()->consume(term::any_epoch_sentinel);
@@ -1016,7 +1017,7 @@ EpochType CollectionManager::reduceMsgExpr(
     }
     debug_print(
       vrt_coll, node,
-      "reduceMsg: col_proxy={}, epoch={}, num_elms={}, tag={}\n",
+      "reduceMsg: col_proxy={:x}, epoch={}, num_elms={}, tag={}\n",
       col_proxy, cur_epoch, num_elms, tag
     );
     if (epoch_iter == reduce_cur_epoch_.end()) {
@@ -1270,7 +1271,8 @@ void CollectionManager::sendMsgUntypedHandler(
 
     debug_print(
       vrt_coll, node,
-      "pushing into buffered sends: {}\n", toProxy.getCollectionProxy()
+      "sendMsgUntypedHandler: pushing into buffered sends: col_proxy={:x}\n",
+      toProxy.getCollectionProxy()
     );
 
     theTerm()->produce(cur_epoch);
@@ -1297,7 +1299,7 @@ bool CollectionManager::insertCollectionElement(
 
   debug_print(
     vrt_coll, node,
-    "insertCollectionElement: proxy={}, map_han={}, idx={}, max_idx={}\n",
+    "insertCollectionElement: proxy={:x}, map_han={}, idx={}, max_idx={}\n",
     proxy, map_han, print_index(idx), print_index(max_idx)
   );
 
@@ -1310,7 +1312,7 @@ bool CollectionManager::insertCollectionElement(
 
     debug_print(
       vrt_coll, node,
-      "looking for buffered sends: proxy={}, size={}\n",
+      "looking for buffered sends: proxy={:x}, size={}\n",
       proxy, buffered_sends_.size()
     );
 
@@ -1921,7 +1923,7 @@ template <typename>
 ) {
   debug_print(
     vrt_coll, node,
-    "finishedUpdateHan: proxy={}, root={}\n",
+    "finishedUpdateHan: proxy={:x}, root={}\n",
     msg->proxy_, msg->isRoot()
   );
 
@@ -1940,7 +1942,7 @@ void CollectionManager::setupNextInsertTrigger(
 ) {
   debug_print(
     vrt_coll, node,
-    "setupNextInsertTrigger: proxy={}, insert_epoch={}\n",
+    "setupNextInsertTrigger: proxy={:x}, insert_epoch={}\n",
     proxy, insert_epoch
   );
 
@@ -1981,7 +1983,7 @@ void CollectionManager::finishedInsertEpoch(
 
   debug_print(
     vrt_coll, node,
-    "finishedInsertEpoch: (before) proxy={}, epoch={}\n",
+    "finishedInsertEpoch: (before) proxy={:x}, epoch={}\n",
     untyped_proxy, epoch
   );
 
@@ -2017,7 +2019,7 @@ void CollectionManager::finishedInsertEpoch(
 
   debug_print(
     vrt_coll, node,
-    "finishedInsertEpoch: (after broadcast) proxy={}, epoch={}\n",
+    "finishedInsertEpoch: (after broadcast) proxy={:x}, epoch={}\n",
     untyped_proxy, epoch
   );
 
@@ -2028,7 +2030,7 @@ void CollectionManager::finishedInsertEpoch(
 
   debug_print(
     vrt_coll, node,
-    "finishedInsertEpoch: (after setup) proxy={}, epoch={}\n",
+    "finishedInsertEpoch: (after setup) proxy={:x}, epoch={}\n",
     untyped_proxy, epoch
   );
 
@@ -2046,7 +2048,7 @@ void CollectionManager::finishedInsertEpoch(
 
   debug_print(
     vrt_coll, node,
-    "finishedInsertEpoch: (after reduce) proxy={}, epoch={}\n",
+    "finishedInsertEpoch: (after reduce) proxy={:x}, epoch={}\n",
     untyped_proxy, epoch
   );
 }
@@ -2063,7 +2065,7 @@ template <typename>
 void CollectionManager::actInsert(VirtualProxyType const& proxy) {
   debug_print(
     vrt_coll, node,
-    "actInsert: proxy={}\n",
+    "actInsert: proxy={:x}\n",
     proxy
   );
 
@@ -2086,7 +2088,7 @@ template <typename ColT, typename IndexT>
 
   debug_print(
     vrt_coll, node,
-    "doneInsertHandler: proxy={}, node={}\n",
+    "doneInsertHandler: proxy={:x}, node={}\n",
     untyped_proxy, node
   );
 
@@ -2131,7 +2133,7 @@ void CollectionManager::finishedInserting(
 
   debug_print(
     vrt_coll, node,
-    "finishedInserting: proxy={}, cons_node={}, this_node={}\n",
+    "finishedInserting: proxy={:x}, cons_node={}, this_node={}\n",
     proxy.getProxy(), cons_node, this_node
   );
 
@@ -2225,7 +2227,7 @@ void CollectionManager::insert(
 
   debug_print(
     vrt_coll, node,
-    "insert: proxy={}, constructed={}\n",
+    "insert: proxy={:x}, constructed={}\n",
     untyped_proxy, found_constructed
   );
 
@@ -2314,12 +2316,12 @@ void CollectionManager::insert(
 
     debug_print(
       vrt_coll, node,
-      "insert: proxy={}, buffering\n", untyped_proxy
+      "insert: proxy={:x}, buffering\n", untyped_proxy
     );
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       debug_print(
         vrt_coll, node,
-        "insert: proxy={}, running buffered\n", untyped_proxy
+        "insert: proxy={:x}, running buffered\n", untyped_proxy
       );
       theCollection()->insert<ColT>(proxy,idx,node);
       theTerm()->consume(insert_epoch);
@@ -2351,7 +2353,7 @@ MigrateStatus CollectionManager::migrateOut(
 
  debug_print(
    vrt_coll, node,
-   "migrateOut: col_proxy={}, this_node={}, dest={}, "
+   "migrateOut: col_proxy={:x}, this_node={}, dest={}, "
    "idx={}\n",
    col_proxy, this_node, dest, print_index(idx)
  );
@@ -2404,7 +2406,7 @@ MigrateStatus CollectionManager::migrateOut(
 
    debug_print(
      vrt_coll, node,
-     "migrateOut: col_proxy={}, idx={}, dest={}: serializing collection elm\n",
+     "migrateOut: col_proxy={:x}, idx={}, dest={}: serializing collection elm\n",
      col_proxy, print_index(idx), dest
    );
 
@@ -2442,7 +2444,7 @@ MigrateStatus CollectionManager::migrateOut(
 
    debug_print(
      vrt_coll, node,
-     "migrateOut: col_proxy={}, idx={}, dest={}: invoking destroy()\n",
+     "migrateOut: col_proxy={:x}, idx={}, dest={}: invoking destroy()\n",
      col_proxy, print_index(idx), dest
    );
 
@@ -2474,7 +2476,7 @@ MigrateStatus CollectionManager::migrateIn(
 ) {
   debug_print(
     vrt_coll, node,
-    "CollectionManager::migrateIn: proxy={}, idx={}, from={}, ptr={}\n",
+    "CollectionManager::migrateIn: proxy={:x}, idx={}, from={}, ptr={}\n",
     proxy, print_index(idx), from, print_ptr(vrt_elm_ptr.get())
   );
 
