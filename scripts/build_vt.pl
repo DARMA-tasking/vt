@@ -14,7 +14,7 @@ my ($compiler_cxx,$compiler_c,$mpi_cc,$mpi_cxx,$mpi_exec);
 my $libroot = "";
 my $atomic = "";
 my $mpi_str = "";
-my ($dry_run,$verbose);
+my ($dry_run,$verbose,$fast);
 
 my $arg = Args->new();
 
@@ -51,6 +51,7 @@ $arg->add_optional_func("gtest",      \$gtest,      "gtest-install",      \&mk);
 
 $arg->add_optional_arg("dry_run",     \$dry_run, 0);
 $arg->add_optional_arg("verbose",     \$verbose, 0);
+$arg->add_optional_arg("fast",        \$fast,    0);
 
 $arg->parse_arguments(@ARGV);
 
@@ -100,6 +101,11 @@ if ($atomic ne "") {
 
 my $source_base_dir = "../$vt";
 
+my $fast_str = "";
+if ($fast == 1) {
+    $fast_str = "-DVT_DEBUG_FAST=1";
+}
+
 print STDERR "=== Building vt ===\n";
 print STDERR "\tBuild mode:$build_mode\n";
 print STDERR "\tRoot=$root\n";
@@ -131,6 +137,7 @@ cmake $source_base_dir                                                       \\
       -DCLI11_DIR=$cli11                                                     \\
       -Dgtest_DIR=$gtest                                                     \\
       -DGTEST_ROOT=$gtest                                                    \\
+      $fast_str                                                              \\
       $atomic                                                                \\
       ${build_all_str}
 CMAKESTR

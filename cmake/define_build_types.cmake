@@ -24,10 +24,16 @@ add_configuration_type(debug_v2)
 # set(VIRTUAL_TRANSPORT_LIBRARY_DV2 vt-debug_v2)
 # set(VIRTUAL_TRANSPORT_LIBRARY_REL vt-release)
 
+if (${VT_DEBUG_FAST})
+  set(VT_DEBUG_MODE_ON 0)
+else()
+  set(VT_DEBUG_MODE_ON 1)
+endif()
+
 set(
   cmake_vt_debug_modes_all
   "gen, runtime, active, term, termds, barrier, pipe,   \
-   pool, reduce, rdma, rdma_channel, param, handler,    \
+   pool, reduce, rdma, rdma_channel, handler,           \
    hierlb, scatter, serial_msg, trace,                  \
    location, lb, vrt_coll, group, broadcast, flush"
 )
@@ -45,7 +51,7 @@ set(cmake_config_debug_enabled_debug_trace     1)
 set(cmake_config_debug_enabled_release_trace   0)
 set(cmake_config_debug_enabled_debug_v2        1)
 set(cmake_config_debug_enabled_debug_v1        1)
-set(cmake_config_debug_enabled_debug           1)
+set(cmake_config_debug_enabled_debug           ${VT_DEBUG_MODE_ON})
 set(cmake_config_debug_enabled_release         0)
 
 #message(STATUS "build types=${CMAKE_CONFIGURATION_TYPES}")
