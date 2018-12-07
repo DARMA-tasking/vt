@@ -27,6 +27,7 @@ bool Scheduler::schedulerImpl() {
   bool const event_sch = theEvent()->scheduler();
   bool const seq_sch = theSeq()->scheduler();
   bool const vrt_seq_sch = theVirtualSeq()->scheduler();
+  bool const collection_sch = theCollection()->scheduler<>();
   bool const worker_sch =
     theContext()->hasWorkers() ? theWorkerGrp()->progress(),false : false;
   bool const worker_comm_sch =
@@ -36,7 +37,7 @@ bool Scheduler::schedulerImpl() {
 
   scheduled_work =
     msg_sch or event_sch or seq_sch or vrt_seq_sch or
-    worker_sch or worker_comm_sch;
+    worker_sch or worker_comm_sch or collection_sch;
 
   if (scheduled_work) {
     is_idle = false;

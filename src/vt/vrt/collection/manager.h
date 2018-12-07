@@ -39,6 +39,7 @@
 #include <vector>
 #include <list>
 #include <cstdlib>
+#include <deque>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -623,6 +624,13 @@ protected:
     VirtualProxyType const& proxy, HandlerType const& map,
     EpochType const& insert_epoch = no_epoch
   );
+
+private:
+  template <typename=void>
+  void schedule(ActionType action);
+public:
+  template <typename=void>
+  bool scheduler();
 
 public:
   template <typename ColT, typename IndexT>

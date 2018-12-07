@@ -2743,6 +2743,23 @@ CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
 }
 
+template <typename always_void>
+void CollectionManager::schedule(ActionType action) {
+  work_units_.push_back(action);
+}
+
+template <typename always_void>
+bool CollectionManager::scheduler() {
+  if (work_units_.size() == 0) {
+    return false;
+  } else {
+    auto unit = work_units_.back();
+    work_units_.pop_back();
+    unit();
+    return true;
+  }
+}
+
 
 }}} /* end namespace vt::vrt::collection */
 
