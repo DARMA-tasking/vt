@@ -237,7 +237,8 @@ public:
   >
   void sendMsgUntypedHandler(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member, ActionType action
+    HandlerType const& handler, bool const member, ActionType action,
+    bool imm_context = true
   );
 
   template <typename MsgT, typename ColT>
@@ -738,6 +739,7 @@ private:
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
+  std::deque<ActionType> work_units_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

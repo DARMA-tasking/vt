@@ -600,10 +600,12 @@ template <typename ColT, typename IndexT, typename MsgT>
     }
   );
 
+  theMsg()->pushEpoch(cur_epoch);
   auto const from = col_msg->getFromNode();
   collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
     msg,col_ptr,sub_handler,member,from
   );
+  theMsg()->popEpoch();
 
   backend_enable_if(
     lblite, {
@@ -1227,7 +1229,8 @@ void CollectionManager::sendMsgImpl(
 template <typename MsgT, typename ColT, typename IdxT>
 void CollectionManager::sendMsgUntypedHandler(
   VirtualElmProxyType<ColT> const& toProxy, MsgT *raw_msg,
-  HandlerType const& handler, bool const member, ActionType action
+  HandlerType const& handler, bool const member, ActionType action,
+  bool imm_context
 ) {
   // @todo: implement the action `action' after the routing is finished
 
@@ -1242,23 +1245,39 @@ void CollectionManager::sendMsgUntypedHandler(
   );
 
   auto const& cur_epoch = getCurrentEpoch(msg.get());
-  theTerm()->produce(cur_epoch);
 
   auto msg_epoch = envelopeGetEpoch(msg->env);
   if (msg_epoch == no_epoch) {
     envelopeSetEpoch(msg->env, cur_epoch);
   }
 
-  // auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
-
   debug_print(
     vrt_coll, node,
-    "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={}\n",
-    col_proxy, cur_epoch
+    "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={}, imm_context={}\n",
+    col_proxy, cur_epoch, imm_context
   );
+
+  if (imm_context) {
+    theTerm()->produce(cur_epoch);
+    schedule<>([=]{
+      theMsg()->pushEpoch(cur_epoch);
+      theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
+        toProxy, msg.get(), handler, member, action, false
+      );
+      theMsg()->popEpoch();
+      theTerm()->consume(cur_epoch);
+    });
+    return;
+  } else {
+    theTerm()->produce(cur_epoch);
+  }
+
+  // auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
 
   auto holder = findColHolder<ColT, IdxT>(col_proxy);
   if (holder != nullptr /* && found_constructed*/) {
+    theMsg()->pushEpoch(cur_epoch);
+
     auto const map_han = holder->map_fn;
     auto max_idx = holder->max_idx;
     auto cur_idx = elm_proxy.getIndex();
@@ -1288,6 +1307,8 @@ void CollectionManager::sendMsgUntypedHandler(
     lm->template routeMsgSerializeHandler<
       MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
     >(toProxy, home_node, msg, action);
+
+    theMsg()->popEpoch();
   } else {
     auto iter = buffered_sends_.find(toProxy.getCollectionProxy());
     if (iter == buffered_sends_.end()) {
@@ -1311,7 +1332,7 @@ void CollectionManager::sendMsgUntypedHandler(
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       theMsg()->pushEpoch(cur_epoch);
       theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
-        toProxy, msg.get(), handler, member, action
+        toProxy, msg.get(), handler, member, action, false
       );
       theMsg()->popEpoch();
       theTerm()->consume(cur_epoch);
