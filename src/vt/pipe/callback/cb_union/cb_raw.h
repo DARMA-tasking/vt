@@ -144,7 +144,10 @@ struct GeneralCallback {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | active_;
+    using EnumDataType = typename std::underlying_type<CallbackEnum>::type;
+    EnumDataType val = static_cast<EnumDataType>(active_);
+    s | val;
+    active_ = static_cast<CallbackEnum>(val);
     switch (active_) {
     case CallbackEnum::AnonCB:
       s | u_.anon_cb_;
