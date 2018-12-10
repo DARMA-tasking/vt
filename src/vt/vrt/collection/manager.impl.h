@@ -385,18 +385,20 @@ template <typename ColT, typename IndexT, typename MsgT>
         );
       }
     });
+    // Update the current bcast epoch
+    elm_holder->setGlobalBcastEpoch(msg->bcast_epoch_);
   }
   /*
    *  Buffer the broadcast message for later delivery (elements that migrate
    *  in), inserted elements, etc.
    */
   auto col_holder = theCollection()->findColHolder<ColT,IndexT>(untyped_proxy);
-  if (!col_holder->is_static_) {
+  if (!col_holder->is_static_ or col_holder->is_async_migrate_) {
     auto const& epoch = msg->bcast_epoch_;
     /*
      * @todo: buffer the broadcasts only when needed and clean up appropriately
      */
-    // theCollection()->bufferBroadcastMsg<ColT>(untyped_proxy, epoch, msg);
+    theCollection()->bufferBroadcastMsg<ColT>(untyped_proxy, epoch, msg);
   }
   /*
    *  Termination: consume for default epoch for correct termination: on the
@@ -428,9 +430,7 @@ void CollectionManager::bufferBroadcastMsg(
     broadcasts_<ColT>.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(proxy),
-      std::forward_as_tuple(
-        std::unordered_map<EpochType,CollectionMessage<ColT>*>{{epoch,msg}}
-      )
+      std::forward_as_tuple(EpochBcastType<ColT>{{epoch,msg}})
     );
   } else {
     auto epoch_iter = proxy_iter->second.find(epoch);
@@ -459,7 +459,7 @@ void CollectionManager::clearBufferedBroadcastMsg(
   }
 }
 
-template <typename ColT, typename MsgT>
+template <typename ColT>
 CollectionMessage<ColT>* CollectionManager::getBufferedBroadcastMsg(
   VirtualProxyType const& proxy, EpochType const& epoch
 ) {
@@ -1408,6 +1408,18 @@ bool CollectionManager::insertCollectionElement(
         VrtElmProxy<ColT, IndexT>{proxy,idx}, migrated_from,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
+
+      if (!holder->is_static_ or holder->is_async_migrate_) {
+        auto const bcast_epoch = elm_holder->getGlobalBcastEpoch();
+        auto const local_epoch = elm_holder->getBcastEpoch(idx);
+        // Need to deliver some broadcasts this element missed
+        if (bcast_epoch > local_epoch) {
+          for (auto epoch = local_epoch; epoch < bcast_epoch; epoch++) {
+            auto msg = getBufferedBroadcastMsg<ColT>(proxy,epoch);
+            vtAssert(false, "This needs to be implemented");
+          }
+        }
+      }
     } else {
       theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntity(
         VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node,

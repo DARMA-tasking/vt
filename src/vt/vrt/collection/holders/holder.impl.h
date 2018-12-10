@@ -74,6 +74,36 @@ typename Holder<ColT, IndexT>::VirtualPtrType Holder<ColT, IndexT>::remove(
 }
 
 template <typename ColT, typename IndexT>
+EpochType Holder<ColT, IndexT>::getGlobalBcastEpoch() const {
+  return cur_bcast_epoch_;
+}
+
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::setGlobalBcastEpoch(EpochType const& cur) {
+  cur_bcast_epoch_ = cur;
+}
+
+template <typename ColT, typename IndexT>
+EpochType Holder<ColT, IndexT>::getBcastEpoch(IndexT const& idx) const {
+  auto const& lookup = idx;
+  auto& container = vc_container_;
+  auto iter = container.find(lookup);
+  vtAssert(iter != container.end(), "Entry must exist in holder");
+  return iter->second.getBcastEpoch();
+}
+
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::setBcastEpoch(
+  IndexT const& idx, EpochType const& cur
+) {
+  auto const& lookup = idx;
+  auto& container = vc_container_;
+  auto iter = container.find(lookup);
+  vtAssert(iter != container.end(), "Entry must exist in holder");
+  iter->second.setBcastEpoch(cur);
+}
+
+template <typename ColT, typename IndexT>
 void Holder<ColT, IndexT>::destroyAll() {
   if (!is_destroyed_) {
     vc_container_.clear();

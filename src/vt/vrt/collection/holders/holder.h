@@ -48,6 +48,10 @@ struct Holder {
   void setGroupReady(bool const ready) { group_ready_ = ready; }
   NodeType groupRoot() const { return group_root_; }
   void setGroupRoot(NodeType const root) { group_root_ = root; }
+  EpochType getBcastEpoch(IndexT const& idx) const;
+  void setBcastEpoch(IndexT const& idx, EpochType const& cur);
+  void setGlobalBcastEpoch(EpochType const& cur);
+  EpochType getGlobalBcastEpoch() const;
 
   friend struct CollectionManager;
 

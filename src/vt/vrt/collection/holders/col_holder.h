@@ -17,6 +17,7 @@ struct CollectionHolder : BaseHolder {
   void destroy() override;
 
   bool is_static_ = false;
+  bool is_async_migrate_ = false;
   HandlerType map_fn = uninitialized_handler;
   IndexT max_idx;
   Holder<ColT,IndexT> holder_;

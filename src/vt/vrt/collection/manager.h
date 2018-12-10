@@ -490,7 +490,7 @@ private:
     VirtualProxyType const& proxy, EpochType const& epoch
   );
 
-  template <typename ColT, typename MsgT>
+  template <typename ColT>
   CollectionMessage<ColT>* getBufferedBroadcastMsg(
     VirtualProxyType const& proxy, EpochType const& epoch
   );

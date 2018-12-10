@@ -22,6 +22,8 @@ struct ElementHolder {
 
   virtual ~ElementHolder();
 
+  EpochType getBcastEpoch() const { return vc_ptr_->cur_bcast_epoch_; }
+  void setBcastEpoch(EpochType const& cur) { vc_ptr_->cur_bcast_epoch_ = cur; }
   typename VirtualPtrType::pointer getCollection() const;
 
   bool erased_ = false;
