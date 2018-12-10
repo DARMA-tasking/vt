@@ -80,6 +80,12 @@ public:
   static bool vt_user_1;
   static bool vt_user_2;
   static bool vt_user_3;
+  static int32_t vt_user_int_1;
+  static int32_t vt_user_int_2;
+  static int32_t vt_user_int_3;
+  static std::string vt_user_str_1;
+  static std::string vt_user_str_2;
+  static std::string vt_user_str_3;
 
 private:
   static CLI::App app;

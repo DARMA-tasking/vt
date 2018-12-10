@@ -77,6 +77,12 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_user_1             = false;
 /*static*/ bool        ArgConfig::vt_user_2             = false;
 /*static*/ bool        ArgConfig::vt_user_3             = false;
+/*static*/ int32_t     ArgConfig::vt_user_int_1         = 0;
+/*static*/ int32_t     ArgConfig::vt_user_int_2         = 0;
+/*static*/ int32_t     ArgConfig::vt_user_int_3         = 0;
+/*static*/ std::string ArgConfig::vt_user_str_1         = "";
+/*static*/ std::string ArgConfig::vt_user_str_2         = "";
+/*static*/ std::string ArgConfig::vt_user_str_3         = "";
 
 /*static*/ bool        ArgConfig::parsed                = false;
 
@@ -325,19 +331,31 @@ namespace vt { namespace arguments {
   auto user1    = "User Option 1a (boolean)";
   auto user2    = "User Option 2a (boolean)";
   auto user3    = "User Option 3a (boolean)";
-  // auto userint1 = "User Option 1b (int32_t)";
-  // auto userint2 = "User Option 2b (int32_t)";
-  // auto userint3 = "User Option 3b (int32_t)";
-  // auto userstr1 = "User Option 1c (std::string)";
-  // auto userstr2 = "User Option 2c (std::string)";
-  // auto userstr3 = "User Option 3c (std::string)";
-  auto u1 = app.add_flag("--vt_user_1", vt_user_1, user1);
-  auto u2 = app.add_flag("--vt_user_2", vt_user_2, user2);
-  auto u3 = app.add_flag("--vt_user_3", vt_user_3, user3);
+  auto userint1 = "User Option 1b (int32_t)";
+  auto userint2 = "User Option 2b (int32_t)";
+  auto userint3 = "User Option 3b (int32_t)";
+  auto userstr1 = "User Option 1c (std::string)";
+  auto userstr2 = "User Option 2c (std::string)";
+  auto userstr3 = "User Option 3c (std::string)";
+  auto u1  = app.add_flag("--vt_user_1", vt_user_1, user1);
+  auto u2  = app.add_flag("--vt_user_2", vt_user_2, user2);
+  auto u3  = app.add_flag("--vt_user_3", vt_user_3, user3);
+  auto ui1 = app.add_option("--vt_user_int_1", vt_user_int_1, userint1, 0);
+  auto ui2 = app.add_option("--vt_user_int_2", vt_user_int_2, userint2, 0);
+  auto ui3 = app.add_option("--vt_user_int_3", vt_user_int_3, userint3, 0);
+  auto us1 = app.add_option("--vt_user_str_1", vt_user_str_1, userstr1, "");
+  auto us2 = app.add_option("--vt_user_str_2", vt_user_str_2, userstr2, "");
+  auto us3 = app.add_option("--vt_user_str_3", vt_user_str_3, userstr3, "");
   auto userOpts = "User Options";
   u1->group(userOpts);
   u2->group(userOpts);
   u3->group(userOpts);
+  ui1->group(userOpts);
+  ui2->group(userOpts);
+  ui3->group(userOpts);
+  us1->group(userOpts);
+  us2->group(userOpts);
+  us3->group(userOpts);
 
 
   /*
