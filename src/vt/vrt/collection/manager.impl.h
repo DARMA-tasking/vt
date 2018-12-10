@@ -1577,6 +1577,23 @@ CollectionManager::constructCollectiveMap(
   // Construct a underlying group for the collection
   groupConstruction<ColT>(proxy, is_static);
 
+  debug_print(
+    vrt_coll, node,
+    "constructCollectiveMap: entering wait for constructed_\n"
+  );
+
+  // Wait for construction to finish before we release control to the user; this
+  // ensures that other parts of the system do not migrate elements until the
+  // group construction is complete
+  while (constructed_.find(proxy) == constructed_.end()) {
+    vt::runScheduler();
+  }
+
+  debug_print(
+    vrt_coll, node,
+    "constructCollectiveMap: proxy in constructed finished\n"
+  );
+
   return typed_proxy;
 }
 
