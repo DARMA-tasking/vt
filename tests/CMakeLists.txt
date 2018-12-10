@@ -18,6 +18,7 @@ set(
   mapping
   group
   serialization
+  termination
   tls
   atomic
   memory

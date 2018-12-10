@@ -677,9 +677,17 @@ void Runtime::reset() {
   MPI_Barrier(theContext->getComm());
 
   runtime_active_ = true;
+
+  auto action = std::bind(&Runtime::terminationHandler, this);
+  theTerm->addDefaultAction(action);
   theTerm->resetGlobalTerm();
 
   MPI_Barrier(theContext->getComm());
+
+  // Without workers running on the node, the termination detector should
+  // assume its locally ready to propagate instead of waiting for them to
+  // become idle.
+  theTerm->setLocalTerminated(true);
 }
 
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
