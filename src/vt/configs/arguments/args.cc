@@ -73,6 +73,11 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_worker       = false;
 /*static*/ bool        ArgConfig::vt_debug_group        = false;
 /*static*/ bool        ArgConfig::vt_debug_broadcast    = false;
+
+/*static*/ bool        ArgConfig::vt_user_1             = false;
+/*static*/ bool        ArgConfig::vt_user_2             = false;
+/*static*/ bool        ArgConfig::vt_user_3             = false;
+
 /*static*/ bool        ArgConfig::parsed                = false;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
@@ -311,6 +316,28 @@ namespace vt { namespace arguments {
   auto z = app.add_flag("--vt_pause", vt_pause, pause);
   auto launchTerm = "Debugging/Launch";
   z->group(launchTerm);
+
+  /*
+   * User option flags for convenience; VT will parse these and the app can use
+   * them however the apps requires
+   */
+
+  auto user1    = "User Option 1a (boolean)";
+  auto user2    = "User Option 2a (boolean)";
+  auto user3    = "User Option 3a (boolean)";
+  // auto userint1 = "User Option 1b (int32_t)";
+  // auto userint2 = "User Option 2b (int32_t)";
+  // auto userint3 = "User Option 3b (int32_t)";
+  // auto userstr1 = "User Option 1c (std::string)";
+  // auto userstr2 = "User Option 2c (std::string)";
+  // auto userstr3 = "User Option 3c (std::string)";
+  auto u1 = app.add_flag("--vt_user_1", vt_user_1, user1);
+  auto u2 = app.add_flag("--vt_user_2", vt_user_2, user2);
+  auto u3 = app.add_flag("--vt_user_3", vt_user_3, user3);
+  auto userOpts = "User Options";
+  u1->group(userOpts);
+  u2->group(userOpts);
+  u3->group(userOpts);
 
 
   /*

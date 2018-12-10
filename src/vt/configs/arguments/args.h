@@ -77,10 +77,18 @@ public:
   static bool vt_debug_group;
   static bool vt_debug_broadcast;
 
+  static bool vt_user_1;
+  static bool vt_user_2;
+  static bool vt_user_3;
+
 private:
   static CLI::App app;
   static bool parsed;
 };
+
+inline bool user1() { return ArgConfig::vt_user_1; }
+inline bool user2() { return ArgConfig::vt_user_2; }
+inline bool user3() { return ArgConfig::vt_user_3; }
 
 }} /* end namespace vt::arguments */
 
