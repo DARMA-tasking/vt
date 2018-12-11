@@ -50,6 +50,7 @@ struct TermState {
   TermCounterType g_prod2                     = 0;
   TermCounterType g_cons2                     = 0;
   EventCountType  constant_count              = 0;
+  EventCountType  num_print_constant          = 0;
 
 private:
   // Boolean local_terminated is for future optimization to disable propagation

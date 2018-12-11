@@ -81,8 +81,7 @@ assertOutInfo(
   ::vt::output(str_buf.str(),error,false,false,true);
 
   if (fail) {
-    assert(false);
-    std::exit(1);
+    vtAbort("Assertion failed");
   }
 }
 

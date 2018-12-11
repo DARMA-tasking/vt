@@ -113,6 +113,9 @@ void CollectiveAnyOps<instance>::output(
   } else {
     ::fmt::print(str.c_str());
   }
+  if (error) {
+    vt::abort("Assertion Failed", 129);
+  }
 }
 
 template <RuntimeInstType instance>

@@ -32,8 +32,7 @@ inline void assertOutExpr(
   auto const& list_str = std::get<1>(stack);
 
   if (fail) {
-    assert(false);
-    std::exit(1);
+    vtAbort("Assertion failed");
   }
 }
 
@@ -49,8 +48,7 @@ assertOut(
   auto assert_fail_str = stringizeMessage(msg,str,cond,file,line,func,error);
   ::vt::output(assert_fail_str,error,true,true,true);
   if (fail) {
-    assert(false);
-    std::exit(1);
+    vtAbort("Assertion failed");
   }
 }
 
@@ -65,8 +63,7 @@ assertOut(
   auto const arg_str = ::fmt::format(str,args...);
   assertOut(false,cond,arg_str,file,line,func,error);
   if (fail) {
-    assert(false);
-    std::exit(1);
+    vtAbort("Assertion failed");
   }
 }
 

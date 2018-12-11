@@ -435,22 +435,38 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
             state.constant_count >= ArgType::vt_hang_freq and
             state.constant_count %  ArgType::vt_hang_freq == 0
           ) {
-            auto node            = ::vt::debug::preNode();
-            auto vt_pre          = ::vt::debug::vtPre();
-            auto node_str        = ::vt::debug::proc(node);
-            auto prefix          = vt_pre + node_str + " ";
-            auto reset           = ::vt::debug::reset();
-            auto bred            = ::vt::debug::bred();
-            auto magenta         = ::vt::debug::magenta();
+            if (
+              state.num_print_constant == 0 or
+              std::log(static_cast<double>(state.constant_count)) >
+              state.num_print_constant
+            ) {
+              auto node            = ::vt::debug::preNode();
+              auto vt_pre          = ::vt::debug::vtPre();
+              auto node_str        = ::vt::debug::proc(node);
+              auto prefix          = vt_pre + node_str + " ";
+              auto reset           = ::vt::debug::reset();
+              auto bred            = ::vt::debug::bred();
+              auto magenta         = ::vt::debug::magenta();
 
-            auto f1 = fmt::format(
-              "{}Termination hang detected:{} {}traversals={} epoch={:x} "
-              "produced={}{} {}consumed={}{}\n",
-              bred, reset,
-              magenta, state.constant_count, state.getEpoch(), state.g_prod1,
-              reset, magenta, state.g_cons1, reset
-            );
-            vt_print(term, "{}", f1);
+              auto f1 = fmt::format(
+                "{}Termination hang detected:{} {}traversals={} epoch={:x} "
+                "produced={}{} {}consumed={}{}\n",
+                bred, reset,
+                magenta, state.constant_count, state.getEpoch(), state.g_prod1,
+                reset, magenta, state.g_cons1, reset
+              );
+              vt_print(term, "{}", f1);
+              state.num_print_constant++;
+
+              #if !backend_check_enabled(production)
+                if (state.num_print_constant > 10) {
+                  vtAbort(
+                    "Hang detected (consumed != produced) for k tree "
+                    "traversals, where k=", state.constant_count
+                  );
+                }
+              #endif
+            }
           }
         }
 

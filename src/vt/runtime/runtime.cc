@@ -693,7 +693,12 @@ void Runtime::reset() {
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   aborted_ = true;
   output(abort_str,code,true,true,false);
-  _Exit(code);
+  if (theContext) {
+    auto const comm = theContext->getComm();
+    MPI_Abort(comm, 129);
+  } else {
+    _Exit(code);
+  }
   // @todo: why will this not compile with clang!!?
   //quick_exit(code);
 }
