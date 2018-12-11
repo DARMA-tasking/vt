@@ -181,7 +181,9 @@ struct CallbackTyped : CallbackRawBaseSingle {
 
 namespace vt {
 
-template <typename MsgT>
+using VoidMsg = pipe::signal::SigVoidType;
+
+template <typename MsgT = VoidMsg>
 using Callback = pipe::callback::cbunion::CallbackTyped<MsgT>;
 
 using CallbackU = pipe::callback::cbunion::CallbackRawBaseSingle;
