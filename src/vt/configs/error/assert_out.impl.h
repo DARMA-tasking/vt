@@ -33,6 +33,7 @@ inline void assertOutExpr(
 
   if (fail) {
     assert(false);
+    std::exit(1);
   }
 }
 
@@ -49,6 +50,7 @@ assertOut(
   ::vt::output(assert_fail_str,error,true,true,true);
   if (fail) {
     assert(false);
+    std::exit(1);
   }
 }
 
@@ -64,6 +66,7 @@ assertOut(
   assertOut(false,cond,arg_str,file,line,func,error);
   if (fail) {
     assert(false);
+    std::exit(1);
   }
 }
 

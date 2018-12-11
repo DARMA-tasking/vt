@@ -82,6 +82,7 @@ assertOutInfo(
 
   if (fail) {
     assert(false);
+    std::exit(1);
   }
 }
 
