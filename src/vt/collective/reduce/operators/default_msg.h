@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/collective/reduce/operators/default_op.h"
 #include "vt/collective/reduce/reduce_msg.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
 
 #include <array>
 #include <vector>
@@ -59,6 +60,8 @@ struct ReduceCombine;
 
 template <typename DataType>
 struct ReduceDataMsg : ReduceMsg, ReduceCombine<void> {
+  using CallbackType = CallbackU;
+
   ReduceDataMsg() = default;
   explicit ReduceDataMsg(DataType&& in_val)
     : ReduceMsg(), ReduceCombine<void>(),
@@ -71,15 +74,21 @@ struct ReduceDataMsg : ReduceMsg, ReduceCombine<void> {
   DataType const& getConstVal() const { return val_; }
   DataType& getVal() { return val_; }
   DataType&& getMoveVal() { return std::move(val_); }
+  CallbackType getCallback() { return cb_; }
+
+  template <typename MsgT>
+  void setCallback(Callback<MsgT> cb) { cb_ = CallbackType{cb}; }
 
   template <typename SerializerT>
   void invokeSerialize(SerializerT& s) {
     ReduceMsg::invokeSerialize(s);
     s | val_;
+    s | cb_;
   }
 
 protected:
-  DataType val_ = {};
+  DataType val_    = {};
+  CallbackType cb_ = {};
 };
 
 template <typename T>
