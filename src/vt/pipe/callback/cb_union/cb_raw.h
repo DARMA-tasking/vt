@@ -168,7 +168,7 @@ struct GeneralCallback {
       s | u_.bcast_col_dir_cb_;
       break;
     case CallbackEnum::NoCB:
-      vtAssert(0, "Trying to serialize union in invalid state");
+      // Serializing empty callback!
       break;
     default:
       vtAssert(0, "Should be unreachable");
