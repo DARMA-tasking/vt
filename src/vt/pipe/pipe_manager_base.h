@@ -69,6 +69,8 @@ struct PipeManagerBase {
   using FuncMsgType      = std::function<void(MsgT*)>;
   template <typename MsgT, typename ContextT>
   using FuncMsgCtxType   = std::function<void(MsgT*, ContextT*)>;
+  template <typename ContextT>
+  using FuncCtxType      = std::function<void(ContextT*)>;
   using FuncType         = std::function<void(void)>;
   using FuncVoidType     = std::function<void(void)>;
   using DispatchFuncType = PipeState::DispatchFuncType;
