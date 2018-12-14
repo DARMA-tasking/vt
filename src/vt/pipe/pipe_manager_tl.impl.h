@@ -149,9 +149,36 @@ PipeManagerTL::makeCallbackSingleProxySend(typename ColT::ProxyType proxy) {
   auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(
     nullptr
   );
+  bool member = false;
   addListenerAny<MsgT>(
     cb.getPipe(),
-    std::make_unique<callback::CallbackProxySend<ColT,MsgT>>(handler,proxy)
+    std::make_unique<callback::CallbackProxySend<ColT,MsgT>>(
+      handler,proxy,member
+    )
+  );
+  return cb;
+}
+
+template <
+  typename ColT, typename MsgT, PipeManagerTL::ColMemType<ColT,MsgT> f,
+  typename CallbackT
+>
+CallbackT
+PipeManagerTL::makeCallbackSingleProxySend(typename ColT::ProxyType proxy) {
+  bool const persist = true;
+  bool const send_back = false;
+  bool const dispatch = true;
+  auto const& pipe_id = makePipeID(persist,send_back);
+  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
+  auto cb = CallbackT(callback::cbunion::RawSendColMsgTag,pipe_id);
+  auto const& handler =
+    auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(nullptr);
+  bool member = true;
+  addListenerAny<MsgT>(
+    cb.getPipe(),
+    std::make_unique<callback::CallbackProxySend<ColT,MsgT>>(
+      handler,proxy,member
+    )
   );
   return cb;
 }
@@ -201,7 +228,37 @@ PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   );
   addListenerAny<MsgT>(
     cb.getPipe(),
-    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(handler,proxy)
+    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(
+      handler,proxy,member
+    )
+  );
+  return cb;
+}
+
+template <
+  typename ColT, typename MsgT, PipeManagerTL::ColMemType<ColT,MsgT> f,
+  typename CallbackT
+>
+CallbackT
+PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
+  bool const persist = true;
+  bool const send_back = false;
+  bool const dispatch = true;
+  auto const& pipe_id = makePipeID(persist,send_back);
+  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
+  auto const& handler =
+    auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(nullptr);
+  auto const& vrt_handler = theCollection()->getDispatchHandler<MsgT,ColT>();
+  bool const member = true;
+  auto cb = CallbackT(
+    callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,
+    proxy.getProxy()
+  );
+  addListenerAny<MsgT>(
+    cb.getPipe(),
+    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(
+      handler,proxy,member
+    )
   );
   return cb;
 }
