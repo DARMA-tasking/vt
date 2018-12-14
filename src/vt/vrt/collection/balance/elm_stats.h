@@ -71,6 +71,7 @@ struct ElementStats {
   void startTime();
   void stopTime();
   void addTime(TimeType const& time);
+  void setModelWeight(TimeType const& time);
   void updatePhase(PhaseType const& inc = 1);
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;
