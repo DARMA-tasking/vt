@@ -268,6 +268,19 @@ PipeManagerTL::makeCallbackSingleAnonVoid(FuncVoidType fn) {
   return cb;
 }
 
+template <typename C, typename CallbackT>
+CallbackT
+PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncCtxType<C> fn) {
+  auto fn_closure = [ctx,fn] { fn(ctx); };
+
+  debug_print(
+    pipe, node,
+    "makeCallbackSingleAnon: created closure\n"
+  );
+
+  return makeCallbackSingleAnonVoid(fn_closure);
+}
+
 template <typename MsgT, typename C, typename CallbackT>
 CallbackT
 PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncMsgCtxType<MsgT, C> fn) {
