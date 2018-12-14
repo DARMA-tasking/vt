@@ -65,7 +65,7 @@ struct Reducable : BaseProxyT {
   Reducable& operator=(Reducable const&) = default;
 
 
-  template <typename MsgT, typename OpT>
+  template <typename OpT, typename MsgT>
   EpochType reduce(
     MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag

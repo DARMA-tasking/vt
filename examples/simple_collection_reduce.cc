@@ -34,7 +34,7 @@ struct TestColl : Collection<TestColl,Index1D> {
     vtAssertExpr(cb.valid());
     auto rmsg = makeMessage<TestReduceMsg>();
     rmsg->getVal() = 10;
-    proxy.reduce<TestReduceMsg,collective::PlusOp<int>>(rmsg.get(),cb);
+    proxy.reduce<collective::PlusOp<int>>(rmsg.get(),cb);
   }
 
 private:
