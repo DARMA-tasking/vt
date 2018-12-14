@@ -20,6 +20,11 @@
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
 template <typename T = void>
+struct ReduceCallback {
+  void operator()(T* t) const { /* do nothing */ }
+};
+
+template <typename T = void>
 struct ReduceCombine {
   ReduceCombine() = default;
 private:
