@@ -985,14 +985,16 @@ void CollectionManager::broadcastMsgUntypedHandler(
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 EpochType CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-  MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
+  MsgT *const raw_msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
   EpochType const& epoch, TagType const& tag, NodeType const& root
 ) {
   using IndexT = typename ColT::IndexType;
 
+  auto msg = promoteMsg(raw_msg);
+
   debug_print(
     vrt_coll, node,
-    "reduceMsg: msg={}\n", print_ptr(msg)
+    "reduceMsg: msg={}\n", print_ptr(raw_msg)
   );
 
   auto const& col_proxy = toProxy.getProxy();
@@ -1041,7 +1043,7 @@ EpochType CollectionManager::reduceMsgExpr(
       );
       theTerm()->consume(term::any_epoch_sentinel);
       theCollection()->reduceMsgExpr<ColT,MsgT,f>(
-        toProxy,msg,expr_fn,epoch,tag,root
+        toProxy,msg.get(),expr_fn,epoch,tag,root
       );
     });
 
@@ -1069,11 +1071,11 @@ EpochType CollectionManager::reduceMsgExpr(
 
     if (use_group) {
       ret_epoch = theGroup()->groupReduce(group)->template reduce<MsgT,f>(
-        root_node,msg,tag,cur_epoch,num_elms,col_proxy
+        root_node,msg.get(),tag,cur_epoch,num_elms,col_proxy
       );
     } else {
       ret_epoch = theCollective()->reduce<MsgT,f>(
-        root_node,msg,tag,cur_epoch,num_elms,col_proxy
+        root_node,msg.get(),tag,cur_epoch,num_elms,col_proxy
       );
     }
     debug_print(
