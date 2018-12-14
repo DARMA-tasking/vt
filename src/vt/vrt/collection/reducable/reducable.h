@@ -5,6 +5,7 @@
 #include "vt/config.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
 #include "vt/activefn/activefn.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
 
 #include <functional>
 
@@ -19,6 +20,13 @@ struct Reducable : BaseProxyT {
   Reducable(Reducable&&) = default;
   explicit Reducable(VirtualProxyType const in_proxy);
   Reducable& operator=(Reducable const&) = default;
+
+
+  template <typename MsgT, typename OpT>
+  EpochType reduce(
+    MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch = no_epoch,
+    TagType const& tag = no_tag
+  ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   EpochType reduce(
