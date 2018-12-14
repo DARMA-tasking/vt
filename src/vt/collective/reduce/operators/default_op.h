@@ -80,6 +80,10 @@ public:
   static void msgHandler(MsgT* msg) {
     if (msg->isRoot()) {
       auto cb = msg->getCallback();
+      debug_print(
+        reduce, node,
+        "ROOT: reduce root: valid={}, ptr={}\n", cb.valid(), print_ptr(msg)
+      );
       if (cb.valid()) {
         cb.template send<MsgT>(msg);
       } else {
@@ -88,6 +92,11 @@ public:
     } else {
       MsgT* fst_msg = msg;
       MsgT* cur_msg = msg->template getNext<MsgT>();
+      debug_print(
+        reduce, node,
+        "leaf: fst valid={}, ptr={}\n", fst_msg->getCallback().valid(),
+        print_ptr(fst_msg)
+      );
       while (cur_msg != nullptr) {
         ReduceCombine<>::combine<MsgT,Op,ActOp>(fst_msg, cur_msg);
         cur_msg = cur_msg->template getNext<MsgT>();
