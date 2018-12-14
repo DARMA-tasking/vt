@@ -38,6 +38,7 @@ set(
   simple_collection
   simple_collection_collective
   simple_collection_insert
+  simple_collection_reduce
   collection_insert
   collection_group
   rdma_unsized_collection
