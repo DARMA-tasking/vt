@@ -36,7 +36,12 @@ public:
   template <typename MsgT, typename Op, typename ActOp>
   static void msgHandler(MsgT* msg) {
     if (msg->isRoot()) {
-      ActOp()(msg);
+      auto cb = msg->getCallback();
+      if (cb.valid()) {
+        cb.template send<MsgT>(msg);
+      } else {
+        ActOp()(msg);
+      }
     } else {
       MsgT* fst_msg = msg;
       MsgT* cur_msg = msg->template getNext<MsgT>();
