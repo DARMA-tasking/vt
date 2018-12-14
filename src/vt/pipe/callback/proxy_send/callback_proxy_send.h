@@ -25,16 +25,17 @@ struct CallbackProxySend : CallbackBase<signal::Signal<MsgT>> {
   using MessageType      = MsgT;
 
   CallbackProxySend(
-    HandlerType const& in_handler, IndexedProxyType const& in_proxy
+    HandlerType const& in_handler, IndexedProxyType const& in_proxy,
+    bool const& in_member
   ) : proxy_(in_proxy.getCollectionProxy()),
       idx_(in_proxy.getElementProxy().getIndex()),
-      handler_(in_handler)
+      handler_(in_handler), member_(in_member)
   { }
 
   CallbackProxySend(
     HandlerType const& in_handler, ProxyType const& in_proxy,
-    IndexType const& in_idx
-  ) : proxy_(in_proxy), idx_(in_idx), handler_(in_handler)
+    IndexType const& in_idx, bool const& in_member
+  ) : proxy_(in_proxy), idx_(in_idx), handler_(in_handler), member_(in_member)
   { }
 
   template <typename SerializerT>
@@ -42,12 +43,13 @@ struct CallbackProxySend : CallbackBase<signal::Signal<MsgT>> {
     CallbackBase<SignalBaseType>::serializer(s);
     s | proxy_ | idx_;
     s | handler_;
+    s | member_;
   }
 
 private:
   void trigger_(SignalDataType* data) override {
-    theCollection()->sendMsgUntypedHandler(
-      proxy_[idx_],data,handler_,false,nullptr
+    theCollection()->sendMsgWithHan(
+      proxy_.index(idx_),data,handler_,member_,nullptr
     );
   }
 
@@ -55,6 +57,7 @@ private:
   ProxyType proxy_     = {};
   IndexType idx_       = {};
   HandlerType handler_ = uninitialized_handler;
+  bool member_         = false;
 };
 
 }}} /* end namespace vt::pipe::callback */

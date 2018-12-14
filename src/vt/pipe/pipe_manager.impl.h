@@ -63,6 +63,11 @@ Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
   return makeCallbackSingleProxySend<ColT,MsgT,f>(proxy);
 }
 
+template <typename ColT, typename MsgT, PipeManager::ColMemType<ColT,MsgT> f>
+Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
+  return makeCallbackSingleProxySend<ColT,MsgT,f>(proxy);
+}
+
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 Callback<MsgT> PipeManager::makeBcast() {
   return makeCallbackSingleBcast<MsgT,f>(true);
@@ -80,7 +85,12 @@ Callback<PipeManager::Void> PipeManager::makeBcast() {
 
 template <typename ColT, typename MsgT, PipeManager::ColHanType<ColT,MsgT>* f>
 Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
-  return makeCallbackSingleProxyBcast<ColT,MsgT,f>(proxy);
+  return makeCallbackSingleProxyBcastDirect<ColT,MsgT,f>(proxy);
+}
+
+template <typename ColT, typename MsgT, PipeManager::ColMemType<ColT,MsgT> f>
+Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
+  return makeCallbackSingleProxyBcastDirect<ColT,MsgT,f>(proxy);
 }
 
 }} /* end namespace vt::pipe */

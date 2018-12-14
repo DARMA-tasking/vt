@@ -26,8 +26,10 @@ struct CallbackProxyBcast : CallbackBase<signal::Signal<MsgT>> {
   CallbackProxyBcast(CallbackProxyBcast const&) = default;
   CallbackProxyBcast(CallbackProxyBcast&&) = default;
 
-  CallbackProxyBcast(HandlerType const& in_handler, ProxyType const& in_proxy)
-    : proxy_(in_proxy), handler_(in_handler)
+  CallbackProxyBcast(
+    HandlerType const& in_handler, ProxyType const& in_proxy,
+    bool const& in_member
+  ) : proxy_(in_proxy), handler_(in_handler), member_(in_member)
   { }
 
   template <typename SerializerT>
@@ -35,18 +37,20 @@ struct CallbackProxyBcast : CallbackBase<signal::Signal<MsgT>> {
     CallbackBase<SignalBaseType>::serializer(s);
     s | proxy_;
     s | handler_;
+    s | member_;
   }
 
 private:
   void trigger_(SignalDataType* data) override {
-    theCollection()->broadcastMsgUntypedHandler(
-      proxy_,data,handler_,false,nullptr,true
+    theCollection()->broadcastMsgWithHan(
+      proxy_,data,handler_,member_,nullptr,true
     );
   }
 
 private:
   ProxyType proxy_     = {};
   HandlerType handler_ = uninitialized_handler;
+  bool member_         = false;
 };
 
 }}} /* end namespace vt::pipe::callback */

@@ -53,6 +53,8 @@ struct PipeManager : PipeManagerTL, PipeManagerTyped {
   Callback<Void> makeSend(NodeType const& node);
   template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
   Callback<MsgT> makeSend(typename ColT::ProxyType proxy);
+  template <typename ColT, typename MsgT, ColMemType<ColT,MsgT> f>
+  Callback<MsgT> makeSend(typename ColT::ProxyType proxy);
 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   Callback<MsgT> makeBcast();
@@ -64,6 +66,8 @@ struct PipeManager : PipeManagerTL, PipeManagerTyped {
   >
   Callback<Void> makeBcast();
   template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
+  Callback<MsgT> makeBcast(ColProxyType<ColT> proxy);
+  template <typename ColT, typename MsgT, ColMemType<ColT,MsgT> f>
   Callback<MsgT> makeBcast(ColProxyType<ColT> proxy);
 
 
