@@ -69,6 +69,9 @@ struct CallbackRawBaseSingle {
     return other.pipe_ == pipe_ && other.cb_ == cb_;
   }
 
+  bool null()  const { return cb_.null();  }
+  bool valid() const { return cb_.valid(); }
+
   template <typename MsgT>
   void send(MsgT* msg);
 

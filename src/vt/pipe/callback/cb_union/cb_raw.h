@@ -176,6 +176,9 @@ struct GeneralCallback {
     }
   }
 
+  bool null()  const { return active_ == CallbackEnum::NoCB; }
+  bool valid() const { return !null(); }
+
   CallbackUnion u_;
   CallbackEnum active_ = CallbackEnum::NoCB;
 };
