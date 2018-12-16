@@ -198,7 +198,7 @@ void HierarchicalLB::loadStats(
       "loadStats: this_load={}, total_load={}, avg_load={}, "
       "max_load={}, diff={}, diff_percent={}, should_lb={}, auto={}, "
       "threshold={}\n",
-      this_node, this_load, total_load, avg_load, max_load, diff, diff_percent,
+      this_load, total_load, avg_load, max_load, diff, diff_percent,
       should_lb, hierlb_auto_threshold, this_threshold
     );
     fflush(stdout);
@@ -324,7 +324,7 @@ void HierarchicalLB::finishedTransferExchange() {
     vt_print(
       hierlb,
       "loadStats: total_time={}, transfer_count={}\n",
-      this_node, total_time, transfer_count
+      total_time, transfer_count
     );
     fflush(stdout);
   }

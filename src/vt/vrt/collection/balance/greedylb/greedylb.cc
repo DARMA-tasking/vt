@@ -132,7 +132,7 @@ void GreedyLB::loadStats(
       lblite,
       "loadStats: this_load={}, total_load={}, avg_load={}, max_load={}, "
       "diff={}, diff_percent={}, should_lb={}, auto={}, threshold={}\n",
-      this_node, this_load, total_load, avg_load, max_load, diff, diff_percent,
+      this_load, total_load, avg_load, max_load, diff, diff_percent,
       should_lb, greedy_auto_threshold, this_threshold
     );
     fflush(stdout);
@@ -266,7 +266,7 @@ void GreedyLB::finishedTransferExchange() {
     vt_print(
       lblite,
       "loadStats: total_time={}, transfer_count={}\n",
-      this_node, total_time, transfer_count
+      total_time, transfer_count
     );
     fflush(stdout);
   }
@@ -414,7 +414,7 @@ void GreedyLB::finishedLB() {
     vt_print(
       lblite,
       "GreedyLB: loadStats: total_time={}, transfer_count={}\n",
-      this_node, total_time, transfer_count
+      total_time, transfer_count
     );
     fflush(stdout);
   }

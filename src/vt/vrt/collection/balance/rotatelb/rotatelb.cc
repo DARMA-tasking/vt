@@ -15,7 +15,7 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
     vt_print(
       lblite,
       "RotateLB: procDataIn: stats size={}, next_node={}\n",
-      this_node, data_in.size(), next_node
+      data_in.size(), next_node
     );
     fflush(stdout);
   }
