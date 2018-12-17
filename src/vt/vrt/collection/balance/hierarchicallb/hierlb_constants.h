@@ -16,7 +16,7 @@ static constexpr double   const hierlb_tolerance        = 5.0f;
 static constexpr bool     const hierlb_auto_threshold_p = true;
 
 #if backend_check_enabled(parserdes)
-  #define hierlb_use_parserdes 1
+  #define hierlb_use_parserdes 0
 #else
   #define hierlb_use_parserdes 0
 #endif

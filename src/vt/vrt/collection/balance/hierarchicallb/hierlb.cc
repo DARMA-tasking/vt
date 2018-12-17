@@ -304,7 +304,7 @@ void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
 
 /*static*/ void HierarchicalLB::downTreeHandler(LBTreeDownMsg* msg) {
   HierarchicalLB::hier_lb_inst->downTree(
-    msg->getFrom(), std::move(msg->getExcessMove()), msg->getFinalChild()
+    msg->getFrom(), msg->getExcessMove(), msg->getFinalChild()
   );
 }
 
@@ -394,7 +394,7 @@ void HierarchicalLB::transferSend(
   #endif
 }
 
-void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType>&& list) {
+void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
   auto trans_iter = transfers.find(from);
 
   vtAssert(trans_iter == transfers.end(), "There must not be an entry");
@@ -417,7 +417,7 @@ void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType>&& list) {
 
 /*static*/ void HierarchicalLB::transferHan(TransferMsg* msg) {
   HierarchicalLB::hier_lb_inst->transfer(
-    msg->getFrom(), std::move(msg->getTransferMove())
+    msg->getFrom(), msg->getTransferMove()
   );
 }
 
@@ -449,7 +449,7 @@ void HierarchicalLB::downTreeSend(
 }
 
 void HierarchicalLB::downTree(
-  NodeType const from, ObjSampleType&& excess_load, bool const final_child
+  NodeType const from, ObjSampleType excess_load, bool const final_child
 ) {
   debug_print(
     hierlb, node,
@@ -459,7 +459,7 @@ void HierarchicalLB::downTree(
 
   if (final_child) {
     // take the load
-    taken_objs = std::move(excess_load);
+    taken_objs = excess_load;
 
     for (auto&& item : taken_objs) {
       LoadType const total_taken_load = item.first * item.second.size();
@@ -482,14 +482,14 @@ void HierarchicalLB::downTree(
 
     startMigrations();
   } else {
-    given_objs = std::move(excess_load);
+    given_objs = excess_load;
     sendDownTree();
   }
 }
 
 /*static*/ void HierarchicalLB::lbTreeUpHandler(LBTreeUpMsg* msg) {
   HierarchicalLB::hier_lb_inst->lbTreeUp(
-    msg->getChildLoad(), msg->getChild(), std::move(msg->getLoadMove()),
+    msg->getChildLoad(), msg->getChild(), msg->getLoadMove(),
     msg->getChildSize()
   );
 }
@@ -525,7 +525,7 @@ void HierarchicalLB::lbTreeUpSend(
 }
 
 void HierarchicalLB::lbTreeUp(
-  LoadType const child_load, NodeType const child, ObjSampleType&& load,
+  LoadType const child_load, NodeType const child, ObjSampleType load,
   NodeType const child_size
 ) {
   auto const& this_node = theContext()->getNode();
