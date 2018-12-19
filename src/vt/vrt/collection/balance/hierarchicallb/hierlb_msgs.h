@@ -84,8 +84,9 @@ struct TransferMsg : HierLBTypes, ::vt::Message {
   using LoadType = double;
 
   TransferMsg() = default;
-  TransferMsg(NodeType const in_from, std::vector<ObjIDType> in_transfer)
-    : from_(in_from), transfer_(in_transfer)
+  TransferMsg(
+    NodeType const in_from, std::vector<ObjIDType> const& in_transfer
+  ) : from_(in_from), transfer_(in_transfer)
   { }
 
   #if hierlb_use_parserdes

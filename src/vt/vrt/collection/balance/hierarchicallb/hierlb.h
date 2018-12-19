@@ -48,7 +48,10 @@ private:
     ObjSampleType const& load, NodeType const child_size,
     std::size_t const& load_size_approx
   );
-  void transferSend(NodeType to, NodeType from, std::vector<ObjIDType> list);
+  void transferSend(
+    NodeType to, NodeType from, std::vector<ObjIDType> const& list,
+    EpochType const& epoch
+  );
 
   void downTree(
     NodeType const from, ObjSampleType excess, bool const final_child
@@ -57,7 +60,7 @@ private:
     LoadType const child_load, NodeType const child, ObjSampleType load,
     NodeType const child_size
   );
-  void transfer(NodeType from, std::vector<ObjIDType> list);
+  void transfer(NodeType from, std::vector<ObjIDType> const& list);
 
   void sendDownTree();
   void distributeAmoungChildren();

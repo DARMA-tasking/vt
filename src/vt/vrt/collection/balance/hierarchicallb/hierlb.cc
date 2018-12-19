@@ -304,7 +304,7 @@ void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
 
 /*static*/ void HierarchicalLB::downTreeHandler(LBTreeDownMsg* msg) {
   HierarchicalLB::hier_lb_inst->downTree(
-    msg->getFrom(), msg->getExcessMove(), msg->getFinalChild()
+    msg->getFrom(), msg->getExcess(), msg->getFinalChild()
   );
 }
 
@@ -339,7 +339,6 @@ void HierarchicalLB::startMigrations() {
   TransferType transfer_list;
 
   auto const epoch = theTerm()->newEpoch();
-  theMsg()->pushEpoch(epoch);
   theTerm()->addActionEpoch(epoch,[this]{
     this->finishedTransferExchange();
   });
@@ -369,15 +368,15 @@ void HierarchicalLB::startMigrations() {
   );
 
   for (auto&& trans : transfer_list) {
-    transferSend(trans.first, this_node, trans.second);
+    transferSend(trans.first, this_node, trans.second, epoch);
   }
 
   theTerm()->finishedEpoch(epoch);
-  theMsg()->popEpoch();
 }
 
 void HierarchicalLB::transferSend(
-  NodeType node, NodeType from, std::vector<ObjIDType> transfer
+  NodeType node, NodeType from, std::vector<ObjIDType> const& transfer,
+  EpochType const& epoch
 ) {
   vtAssertExprInfo(
     node != theContext()->getNode(), node, parent, bottom_parent,
@@ -387,14 +386,18 @@ void HierarchicalLB::transferSend(
     auto const& size =
       transfer.size() * sizeof(ObjIDType) + (sizeof(std::size_t) * 2);
     auto msg = makeSharedMessageSz<TransferMsg>(size,from,transfer);
+    envelopeSetEpoch(msg->env, epoch);
     SerializedMessenger::sendParserdesMsg<TransferMsg,transferHan>(node,msg);
   #else
     auto msg = makeSharedMessage<TransferMsg>(from,transfer);
+    envelopeSetEpoch(msg->env, epoch);
     SerializedMessenger::sendSerialMsg<TransferMsg,transferHan>(node,msg);
   #endif
 }
 
-void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
+void HierarchicalLB::transfer(
+  NodeType from, std::vector<ObjIDType> const& list
+) {
   auto trans_iter = transfers.find(from);
 
   vtAssert(trans_iter == transfers.end(), "There must not be an entry");
@@ -416,9 +419,7 @@ void HierarchicalLB::transfer(NodeType from, std::vector<ObjIDType> list) {
 }
 
 /*static*/ void HierarchicalLB::transferHan(TransferMsg* msg) {
-  HierarchicalLB::hier_lb_inst->transfer(
-    msg->getFrom(), msg->getTransferMove()
-  );
+  HierarchicalLB::hier_lb_inst->transfer(msg->getFrom(), msg->getTransfer());
 }
 
 void HierarchicalLB::downTreeSend(
@@ -489,7 +490,7 @@ void HierarchicalLB::downTree(
 
 /*static*/ void HierarchicalLB::lbTreeUpHandler(LBTreeUpMsg* msg) {
   HierarchicalLB::hier_lb_inst->lbTreeUp(
-    msg->getChildLoad(), msg->getChild(), msg->getLoadMove(),
+    msg->getChildLoad(), msg->getChild(), msg->getLoad(),
     msg->getChildSize()
   );
 }
@@ -721,8 +722,9 @@ void HierarchicalLB::sendDownTree() {
     for (auto&& elm : c.second->recs) {
       debug_print(
         hierlb, node,
-        "\t downTreeSend: node={}, recs={}, bin={}, bin_size={}\n",
-        c.second->node, c.second->recs.size(), elm.first, elm.second.size()
+        "\t downTreeSend: node={}, recs={}, bin={}, bin_size={}, final={}\n",
+        c.second->node, c.second->recs.size(), elm.first, elm.second.size(),
+        c.second->final_child
       );
     }
 
