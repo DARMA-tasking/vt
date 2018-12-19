@@ -15,6 +15,7 @@ my $libroot = "";
 my $atomic = "";
 my $mpi_str = "";
 my ($dry_run,$verbose,$fast);
+my ($lb_on,$detector_on);
 
 my $arg = Args->new();
 
@@ -49,9 +50,11 @@ $arg->add_optional_func("fmt",        \$fmt,        "fmt-install",        \&mk);
 $arg->add_optional_func("cli11",      \$cli11,      "cli11-install",      \&mk);
 $arg->add_optional_func("gtest",      \$gtest,      "gtest-install",      \&mk);
 
-$arg->add_optional_arg("dry_run",     \$dry_run, 0);
-$arg->add_optional_arg("verbose",     \$verbose, 0);
-$arg->add_optional_arg("fast",        \$fast,    0);
+$arg->add_optional_arg("dry_run",     \$dry_run,     0);
+$arg->add_optional_arg("verbose",     \$verbose,     0);
+$arg->add_optional_arg("fast",        \$fast,        0);
+$arg->add_optional_arg("lb_on",       \$lb_on,       0);
+$arg->add_optional_arg("detector_on", \$detector_on, 1);
 
 $arg->parse_arguments(@ARGV);
 
@@ -106,6 +109,16 @@ if ($fast == 1) {
     $fast_str = "-DVT_DEBUG_FAST=1";
 }
 
+my $lb_str = "";
+if ($lb_on == 1) {
+    $lb_str = "-Dvt_lb_enabled:BOOL=true ";
+}
+
+my $detector_on_str = "";
+if ($detector_on == 0) {
+    $detector_on_str = "-Dvt_detector_disabled:BOOL=true ";
+}
+
 print STDERR "=== Building vt ===\n";
 print STDERR "\tBuild mode:$build_mode\n";
 print STDERR "\tRoot=$root\n";
@@ -130,6 +143,8 @@ cmake $source_base_dir                                                       \\
       -DCMAKE_C_COMPILER=$cc                                                 \\
       ${mpi_str}                                                             \\
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                   \\
+      ${lb_str}                                                              \\
+      ${detector_on_str}                                                     \\
       -Dcheckpoint_DIR=$checkpoint                                           \\
       -Dmeld_DIR=$meld                                                       \\
       -Ddetector_DIR=$detector                                               \\
