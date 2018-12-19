@@ -15,7 +15,7 @@ my $libroot = "";
 my $atomic = "";
 my $mpi_str = "";
 my ($dry_run,$verbose,$fast);
-my ($lb_on,$detector_on);
+my ($lb_on,$detector_on,$trace_on);
 
 my $arg = Args->new();
 
@@ -55,6 +55,7 @@ $arg->add_optional_arg("verbose",     \$verbose,     0);
 $arg->add_optional_arg("fast",        \$fast,        0);
 $arg->add_optional_arg("lb_on",       \$lb_on,       0);
 $arg->add_optional_arg("detector_on", \$detector_on, 1);
+$arg->add_optional_arg("trace_on",    \$trace_on,    0);
 
 $arg->parse_arguments(@ARGV);
 
@@ -114,6 +115,11 @@ if ($lb_on == 1) {
     $lb_str = "-Dvt_lb_enabled:BOOL=true ";
 }
 
+my $trace_str = "";
+if ($trace_on == 1) {
+    $trace_str = "-Dvt_trace_enabled:BOOL=true ";
+}
+
 my $detector_on_str = "";
 if ($detector_on == 0) {
     $detector_on_str = "-Dvt_detector_disabled:BOOL=true ";
@@ -143,6 +149,7 @@ cmake $source_base_dir                                                       \\
       -DCMAKE_C_COMPILER=$cc                                                 \\
       ${mpi_str}                                                             \\
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                   \\
+      ${trace_str}                                                           \\
       ${lb_str}                                                              \\
       ${detector_on_str}                                                     \\
       -Dcheckpoint_DIR=$checkpoint                                           \\
