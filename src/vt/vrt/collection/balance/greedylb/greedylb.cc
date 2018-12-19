@@ -70,7 +70,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void GreedyLB::reduceLoad() {
   debug_print(
-    lblite, node,
+    lb, node,
     "reduceLoad: this_load={}\n", this_load
   );
   auto msg = makeSharedMessage<ProcStatsMsgType>(this_load);
@@ -149,14 +149,14 @@ void GreedyLB::loadStats(
 
 void GreedyLB::CentralCollect::operator()(GreedyCollectMsg* msg) {
   debug_print(
-    lblite, node,
+    lb, node,
     "CentralCollect: entries size={}\n",
     msg->getConstVal().getSample().size()
   );
 
   for (auto&& elm : msg->getConstVal().getSample()) {
     debug_print(
-      lblite, node,
+      lb, node,
       "\t CentralCollect: bin={}, num={}\n",
       elm.first, elm.second.size()
     );
@@ -172,7 +172,7 @@ void GreedyLB::reduceCollect() {
     vtAssert(0, "greedylb parserdes not implemented");
   #else
     debug_print(
-      lblite, node,
+      lb, node,
       "GreedyLB::reduceCollect: load={}, load_begin={} load_over.size()={}\n",
       this_load, this_load_begin, load_over.size()
     );
@@ -196,7 +196,7 @@ void GreedyLB::runBalancer(
   LoadProfileType profile{std::move(in_profile)};
   std::vector<GreedyRecord> recs;
   debug_print(
-    lblite, node,
+    lb, node,
     "GreedyLB::runBalancer: objs={}, profile={}\n",
     objs.size(), profile.size()
   );
@@ -214,7 +214,7 @@ void GreedyLB::runBalancer(
     vtAssert(iter != profile.end(), "Must have load profile");
     nodes.emplace_back(GreedyProc{n,iter->second});
     debug_print(
-      lblite, node,
+      lb, node,
       "\t GreedyLB::runBalancer: node={}, profile={}\n",
       n, iter->second
     );
@@ -229,7 +229,7 @@ void GreedyLB::runBalancer(
     auto min_node = nodes.back();
     nodes.pop_back();
     debug_print(
-      lblite, node,
+      lb, node,
       "\t GreedyLB::runBalancer: min_node={}, load_={}, "
       "recs_={}, max_rec: obj={}, time={}\n",
       min_node.node_, min_node.load_, min_node.recs_.size(),
@@ -257,7 +257,7 @@ GreedyLB::ObjIDType GreedyLB::objSetNode(
 void GreedyLB::finishedTransferExchange() {
   auto const& this_node = theContext()->getNode();
   debug_print(
-    lblite, node,
+    lb, node,
     "finished all transfers: count={}\n",
     transfer_count
   );
@@ -281,7 +281,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
   auto const& num_recs = *objs;
   auto recs = objs + 1;
   debug_print(
-    lblite, node,
+    lb, node,
     "recvObjsDirect: num_recs={}\n", num_recs
   );
   TransferType transfer_list;
@@ -294,7 +294,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     auto const& to_node = objGetNode(recs[i]);
     auto const& new_obj_id = objSetNode(this_node,recs[i]);
     debug_print(
-      lblite, node,
+      lb, node,
       "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}, "
       "byte_offset={}\n",
       i, to_node, recs[i], new_obj_id, num_recs,
@@ -332,7 +332,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
   }
   max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
   debug_print(
-    lblite, node,
+    lb, node,
     "GreedyLB::transferObjs: max_recs={}, max_bytes={}\n",
     max_recs, max_bytes
   );
@@ -369,7 +369,7 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   this_load -= obj_time_milli;
 
   debug_print(
-    lblite, node,
+    lb, node,
     "loadOverBin: this_load_begin={}, this_load={}, threshold={}: "
     "adding unit: bin={}, milli={}\n",
     this_load_begin, this_load, threshold, bin, obj_time_milli
@@ -380,7 +380,7 @@ void GreedyLB::calcLoadOver() {
   auto const threshold = this_threshold * avg_load;
 
   debug_print(
-    lblite, node,
+    lb, node,
     "calcLoadOver: this_load={}, avg_load={}, threshold={}\n",
     this_load, avg_load, threshold
   );
@@ -405,7 +405,7 @@ void GreedyLB::calcLoadOver() {
 void GreedyLB::finishedLB() {
   auto const& this_node = theContext()->getNode();
   debug_print(
-    lblite, node,
+    lb, node,
     "finished all transfers: count={}\n",
     transfer_count
   );
@@ -427,7 +427,7 @@ void GreedyLB::finishedLB() {
 void GreedyLB::procDataIn(ElementLoadType const& data_in) {
   auto const& this_node = theContext()->getNode();
   debug_print(
-    lblite, node,
+    lb, node,
     "{}: procDataIn: size={}\n", this_node, data_in.size()
   );
   for (auto&& stat : data_in) {
@@ -439,7 +439,7 @@ void GreedyLB::procDataIn(ElementLoadType const& data_in) {
     obj_sample[bin].push_back(obj);
 
     debug_print(
-      lblite, node,
+      lb, node,
       "\t {}: procDataIn: this_load={}, obj={}, load={}, load_milli={}, bin={}\n",
       this_node, this_load, obj, load, load_milli, bin
     );
