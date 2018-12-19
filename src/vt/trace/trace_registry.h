@@ -17,13 +17,13 @@ struct TraceRegistry {
   static TraceEntryIDType registerEventHashed(
     std::string const& event_type_name, std::string const& event_name
   ) {
-    // must use this old-style of print because context may not be initialized
     #if backend_check_enabled(trace_enabled) && backend_check_enabled(trace)
-    fmt::print(
+    debug_print(
+      trace, node,
       "register_event_hashed: event_type_name={}, event_name={}, "
       "event_type_container.size={}\n",
       event_type_name.c_str(), event_name.c_str(),
-      TraceContainersType::event_type_container.size()
+      TraceContainersType::getEventTypeContainer().size()
     );
     #endif
 
