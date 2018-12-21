@@ -9,8 +9,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define trace_use_dir 1
-
 namespace vt { namespace trace {
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
@@ -57,75 +55,33 @@ void Trace::setupNames(
   dir_name_ = in_dir_name;
   start_time_ = getCurrentTime();
 
-  #if trace_use_dir
-  if (theContext()->getNode() == 0) {
-    if (dir_name_ != "") {
-      bool made_dir = true, have_cur_directory = true;
-      char cur_dir[1024];
-      if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
-        have_cur_directory = false;
-      }
-      if (have_cur_directory) {
-        auto full_dir_name = std::string(cur_dir) + "/" + dir_name_;
-        auto const dir_ret = mkdir(full_dir_name.c_str(), S_IRWXU);
-        if (dir_ret == -1) {
-          made_dir = false;
-        }
-        if (made_dir) {
-          use_directory_ = true;
-        }
-      }
-    }
+  bool have_cur_directory = true;
+  char cur_dir[1024];
+  if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
+    vtAssert(false, "Must have current directory");
   }
-  #endif
 
-  #if trace_use_dir
+  if (ArgType::vt_trace_dir != "") {
+    full_dir_name = std::string(cur_dir) + "/" + ArgType::vt_trace_dir + "/";
+  }
+
+  if (theContext()->getNode() == 0) {
+    auto const dir_ret = mkdir(full_dir_name.c_str(), S_IRWXU);
+    //vtAssert(dir_ret != -1, "Must be able to make directory");
+  }
+
   auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
   auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
   auto const trace_name = tc[tc.size()-1];
   auto const prog_name = pc[pc.size()-1];
-  #endif
 
-  full_trace_name = trace_name_;
-  full_sts_name = prog_name_ + ".sts";
-  full_dir_name = "";
-
-  #if trace_use_dir
-  if (dir_name_ != "") {
-    bool made_dir = true, have_cur_directory = true;
-    char cur_dir[1024];
-    if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
-      have_cur_directory = false;
-    }
-
-    if (have_cur_directory) {
-      full_dir_name = std::string(cur_dir) + "/" + dir_name_;
-      struct stat info;
-      if (stat(full_dir_name.c_str(), &info) != 0) {
-        use_directory_ = false;
-      } else {
-        use_directory_ = true;
-      }
-
-      if (use_directory_) {
-        full_trace_name = trace_name;
-        full_sts_name = full_dir_name + "/" + prog_name + ".sts";
-      }
-    }
-  }
-  #endif
-
-  if (ArgType::vt_trace_dir != "") {
-    full_dir_name = ArgType::vt_trace_dir + "/";
-  }
-
+  auto const node_str = "." + std::to_string(node) + ".log.gz";
   if (ArgType::vt_trace_file != "") {
-    auto const node_str = "." + std::to_string(node) + ".log.gz";
-    full_trace_name = ArgType::vt_trace_file + node_str;
+    full_trace_name = full_dir_name + "/" + ArgType::vt_trace_file + node_str;
     full_sts_name   = full_dir_name + "/" + ArgType::vt_trace_file + ".sts";
   } else {
-    full_trace_name = trace_name;
-    full_sts_name   = full_dir_name + "/" + trace_name + ".sts";
+    full_trace_name = full_dir_name + "/" + trace_name;
+    full_sts_name   = full_dir_name + "/" + prog_name + ".sts";
   }
 }
 
@@ -376,7 +332,7 @@ void Trace::writeTracesFile() {
   );
 
   if (checkEnabled()) {
-    auto path = full_dir_name + "/" + full_trace_name;
+    auto path = full_trace_name;
     gzFile file = gzopen(path.c_str(), "wb");
     outputHeader(node, start_time_, file);
     writeLogFile(file, traces_);
@@ -386,7 +342,8 @@ void Trace::writeTracesFile() {
 
   if (node == designated_root_node) {
     std::ofstream file;
-    file.open(full_sts_name);
+    auto name = full_sts_name;
+    file.open(name);
     outputControlFile(file);
     file.flush();
     file.close();
