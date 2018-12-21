@@ -25,32 +25,56 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     "ADAPT before: adapt={}\n", str
   );
 
-  std::string const adapt_start = "FunctorAdapter";
+  std::string const adapt_start     = "FunctorAdapter";
+  std::string const adapt_start_mem = "FunctorAdapterMember";
 
   CountType const start_sentinel = -1;
   CountType start                = start_sentinel;
-  for (CountType i = 0; i < str.size() - adapt_start.size() - 1; i++) {
-    auto const substr = str.substr(i, adapt_start.size());
-    // debug_print(
-    //   verbose, gen, node,
-    //   "ADAPT XX substr: substr={}\n", substr
-    // );
-    if (substr == adapt_start) {
-      // debug_print(
-      //   verbose, gen, node,
-      //   "ADAPT substr: substr={}\n", substr
-      // );
+
+  bool found_member = false;
+  for (CountType i = 0; i < str.size() - adapt_start_mem.size() - 1; i++) {
+    auto const substr = str.substr(i, adapt_start_mem.size());
+    debug_print(
+      verbose, gen, node,
+      "ADAPT XX substr: substr={}\n", substr
+    );
+    if (substr == adapt_start_mem) {
+      debug_print(
+        verbose, gen, node,
+        "ADAPT substr: substr={}\n", substr
+      );
       start = i;
+      found_member = true;
       break;
+    }
+  }
+
+  if (not found_member) {
+    for (CountType i = 0; i < str.size() - adapt_start.size() - 1; i++) {
+      auto const substr = str.substr(i, adapt_start.size());
+      debug_print(
+        verbose, gen, node,
+        "ADAPT XX substr: substr={}\n", substr
+      );
+      if (substr == adapt_start) {
+        debug_print(
+          verbose, gen, node,
+          "ADAPT substr: substr={}\n", substr
+        );
+        start = i;
+        break;
+      }
     }
   }
 
   vtAssert(start != start_sentinel, "String must be found");
 
-  std::string  func_adapt_params;
+  std::string adapt = found_member ? adapt_start_mem : adapt_start;
+
+  std::string func_adapt_params;
 
 # if defined(__clang__)
-  CountType   const  str_offset_right_ns = adapt_start.size() + 1;
+  CountType   const  str_offset_right_ns = adapt.size() + 1;
   CountType   const  str_offset_right_tn = start;
 
   func_adapt_params  = str.substr(
@@ -58,7 +82,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     str.size() - 2 - str_offset_right_ns - str_offset_right_tn
   );
 # elif defined(__GNUC__)
-  CountType   const  str_offset_right_ns = adapt_start.size() + 1;
+  CountType   const  str_offset_right_ns = adapt.size() + 1;
   CountType   const  str_offset_right_tn = start;
 
   func_adapt_params  = str.substr(
@@ -123,17 +147,19 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     );
   }
 
-  vtAssert(pieces.size() == 2, "Must be two pieces");
+  vtAssertInfo(
+    pieces.size() == 2, "Must be two pieces", pieces[0]
+  );
 
   auto const func_args = pieces[0];
 
-# if defined(__clang__)
-  auto const func_name = pieces[1].substr(2,pieces[1].size()-2);
-# elif defined(__GNUC__)
-  auto       func_name = pieces[1].substr(1,pieces[1].size()-1);
-# else
-  auto const func_name = pieces[1];
-# endif
+#   if defined(__clang__)
+    auto const func_name = pieces[1].substr(2,pieces[1].size()-2);
+#   elif defined(__GNUC__)
+    auto       func_name = pieces[1].substr(1,pieces[1].size()-1);
+#   else
+    auto const func_name = pieces[1];
+#   endif
 
   debug_print(
     verbose, gen, node,
@@ -235,6 +261,17 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     clean_params = DemanglerUtils::removeSpaces(args);
   } else {
     clean_params = "";
+  }
+
+  if (found_member) {
+    CountType pstart = 0;
+    for (auto i = 0; i < clean_params.size(); i++) {
+      if (clean_params[i] == '*') {
+        pstart = i+3;
+        break;
+      }
+    }
+    clean_params = clean_params.substr(pstart,clean_params.size());
   }
 
   debug_print(
