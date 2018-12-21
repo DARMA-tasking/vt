@@ -48,6 +48,11 @@ trace::TraceEntryIDType theTraceID(
     return getAutoRegistryGen<ContType>().at(handler).theTraceID();
     break;
   }
+  case RegistryTypeEnum::RegVrtCollectionMember: {
+    using ContType = AutoActiveCollectionMemContainerType;
+    return getAutoRegistryGen<ContType>().at(handler).theTraceID();
+    break;
+  }
   case RegistryTypeEnum::RegRDMAGet: {
     using ContType = AutoActiveRDMAGetContainerType;
     return getAutoRegistryGen<ContType>().at(handler).theTraceID();

@@ -18,8 +18,11 @@ template <typename MsgT, typename ElementT>
   bool member, uint64_t idx
 ) {
   #if backend_check_enabled(trace_enabled)
+    auto reg_enum = member ?
+      auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+      auto_registry::RegistryTypeEnum::RegVrtCollection;
     trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
-      handler, auto_registry::RegistryTypeEnum::RegVrtCollection
+      handler, reg_enum
     );
     trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);
   #endif

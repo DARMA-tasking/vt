@@ -39,6 +39,7 @@ enum struct RegistryTypeEnum {
   RegVrt,
   RegSeed,
   RegVrtCollection,
+  RegVrtCollectionMember,
   RegRDMAGet,
   RegRDMAPut,
   RegIndex
