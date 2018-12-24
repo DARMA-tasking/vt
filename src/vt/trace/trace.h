@@ -45,26 +45,21 @@
 #if !defined INCLUDED_TRACE_TRACE_H
 #define INCLUDED_TRACE_TRACE_H
 
-#include "vt/config.h"
-#include "vt/context/context.h"
-#include "vt/configs/arguments/args.h"
 #include "vt/trace/trace_common.h"
-#include "vt/trace/trace_registry.h"
-#include "vt/trace/trace_constants.h"
-#include "vt/trace/trace_event.h"
 #include "vt/trace/trace_containers.h"
 #include "vt/trace/trace_log.h"
+#include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_user_event.h"
 
-#include <cstdint>
 #include <cassert>
-#include <unordered_map>
-#include <stack>
-#include <string>
-#include <vector>
-#include <memory>
+#include <cstdint>
 #include <functional>
 #include <iosfwd>
+#include <memory>
+#include <stack>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include <mpi.h>
 #include <zlib.h>
@@ -88,9 +83,9 @@ struct Trace {
 
   friend struct Log;
 
-  std::string getTraceName() const { return full_trace_name; }
-  std::string getSTSName()   const { return full_sts_name;   }
-  std::string getDirectory() const { return full_dir_name;   }
+  std::string getTraceName() const { return full_trace_name_; }
+  std::string getSTSName()   const { return full_sts_name_;   }
+  std::string getDirectory() const { return full_dir_name_;   }
 
   void initialize();
   void setupNames(
@@ -156,7 +151,9 @@ struct Trace {
   void disableTracing();
   bool checkEnabled();
 
-  void writeTracesFile();
+  void flushTracesFile(bool useGlobalSync = false);
+  void writeTracesFile(int flush = Z_FINISH);
+  void cleanupTracesFile();
   void writeLogFile(gzFile file, TraceContainerType const& traces);
   bool inIdleEvent() const;
 
@@ -185,10 +182,15 @@ private:
   bool enabled_                 = true;
   bool idle_begun_              = false;
   double start_time_            = 0.0;
-  std::string full_trace_name   = "";
-  std::string full_sts_name     = "";
-  std::string full_dir_name     = "";
-  UserEventRegistry user_event  = {};
+  std::string full_trace_name_  = "";
+  std::string full_sts_name_    = "";
+  std::string full_dir_name_    = "";
+  UserEventRegistry user_event_ = {};
+  gzFile log_file_;
+  bool file_is_open_            = false;
+  bool wrote_sts_file_          = false;
+  int64_t cur_                  = 0;
+  int64_t cur_stop_             = 0;
 };
 
 }} //end namespace vt::trace
