@@ -189,26 +189,26 @@ void Trace::addUserBracketedNote(
 }
 
 UserEventIDType Trace::registerUserEventColl(std::string const& name) {
-  return user_event.collective(name);
+  return user_event_.collective(name);
 }
 
 UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
-  return user_event.rooted(name);
+  return user_event_.rooted(name);
 }
 
 UserEventIDType Trace::registerUserEventHash(std::string const& name) {
-  return user_event.hash(name);
+  return user_event_.hash(name);
 }
 
 void Trace::registerUserEventManual(
   std::string const& name, UserSpecEventIDType id
 ) {
-  user_event.user(name, id);
+  user_event_.user(name, id);
 }
 
 void insertNewUserEvent(UserEventIDType event, std::string const& name) {
   #if backend_check_enabled(trace_enabled)
-    theTrace()->user_event.insertEvent(event, name);
+    theTrace()->user_event_.insertEvent(event, name);
   #endif
 }
 
@@ -234,7 +234,7 @@ void Trace::addUserEventManual(UserSpecEventIDType event) {
     event
   );
 
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEvent(id);
 }
 
@@ -287,12 +287,12 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
 }
 
 void Trace::addUserEventBracketedManualBegin(UserSpecEventIDType event) {
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEventBracketedBegin(id);
 }
 
 void Trace::addUserEventBracketedManualEnd(UserSpecEventIDType event) {
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEventBracketedEnd(id);
 }
 
@@ -305,7 +305,7 @@ void Trace::addUserEventBracketedManual(
     event, begin, end
   );
 
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEventBracketed(id, begin, end);
 }
 
@@ -629,7 +629,7 @@ void Trace::writeTracesFile() {
       file_is_open = true;
     }
     writeLogFile(log_file, traces_);
-    gzflush(log_file, Z_SYNC_FLUSH);
+    gzflush(log_file, Z_FINISH);
   }
 
   if (node == designated_root_node and not wrote_sts_file) {
@@ -644,8 +644,9 @@ void Trace::writeTracesFile() {
 }
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
-  for (auto&& log : traces) {
-    auto const converted_time = timeToInt(log->time - start_time_);
+  for (auto i = cur_; i < traces.size(); i++) {
+    auto& log = traces[i];
+    auto const& converted_time = timeToInt(log->time - start_time_);
 
     auto const type = static_cast<
       std::underlying_type<decltype(log->type)>::type
@@ -659,8 +660,13 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
       "Event must exist that was logged"
     );
 
-    auto const event_seq_id = log->ep == no_trace_entry_id ?
-      no_trace_entry_id : event_iter->second.theEventSeq();
+    TraceEntryIDType event_seq_id;
+    if (event_iter == TraceContainersType::getEventContainer().end()) {
+      event_seq_id = 0;
+    } else {
+      event_seq_id = log->ep == no_trace_entry_id ?
+        no_trace_entry_id : event_iter->second.theEventSeq();
+    }
 
     auto const num_nodes = theContext()->getNumNodes();
 
@@ -803,7 +809,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     delete log;
   }
 
-  traces.empty();
+  cur_ += traces.size();
 }
 
 /*static*/ double Trace::getCurrentTime() {
@@ -816,7 +822,7 @@ void Trace::outputControlFile(std::ofstream& file) {
   auto const num_event_types =
     TraceContainersType::getEventTypeContainer().size();
   auto const num_events = TraceContainersType::getEventContainer().size();
-  auto const num_user_events = user_event.getEvents().size();
+  auto const num_user_events = user_event_.getEvents().size();
 
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
@@ -877,7 +883,7 @@ void Trace::outputControlFile(std::ofstream& file) {
   file << "MESSAGE 0 0\n"
        << "TOTAL_STATS 0\n";
 
-  for (auto&& elm : user_event.getEvents()) {
+  for (auto&& elm : user_event_.getEvents()) {
     auto const id = elm.first;
     auto const name = elm.second;
 
