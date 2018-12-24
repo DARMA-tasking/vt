@@ -90,6 +90,7 @@ struct Trace {
   bool checkEnabled();
 
   void writeTracesFile();
+  void cleanupTracesFile();
   void writeLogFile(gzFile file, TraceContainerType const& traces);
   bool inIdleEvent() const;
 
@@ -118,6 +119,9 @@ private:
   std::string full_trace_name = "";
   std::string full_sts_name   = "";
   std::string full_dir_name   = "";
+  gzFile log_file;
+  bool file_is_open = false;
+  bool wrote_sts_file = false;
 };
 
 }} //end namespace vt::trace
