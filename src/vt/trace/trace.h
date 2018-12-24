@@ -157,6 +157,7 @@ struct Trace {
   bool checkEnabled();
 
   void writeTracesFile();
+  void cleanupTracesFile();
   void writeLogFile(gzFile file, TraceContainerType const& traces);
   bool inIdleEvent() const;
 
@@ -179,16 +180,20 @@ private:
 private:
   TraceContainerType traces_;
   TraceStackType open_events_;
-  TraceEventIDType cur_event_   = 1;
-  std::string prog_name_        = "";
-  std::string trace_name_       = "";
-  bool enabled_                 = true;
-  bool idle_begun_              = false;
-  double start_time_            = 0.0;
-  std::string full_trace_name   = "";
-  std::string full_sts_name     = "";
-  std::string full_dir_name     = "";
-  UserEventRegistry user_event  = {};
+  TraceEventIDType cur_event_ = 1;
+  std::string dir_name_       = "";
+  std::string prog_name_      = "";
+  std::string trace_name_     = "";
+  bool enabled_               = true;
+  bool idle_begun_            = false;
+  bool use_directory_         = false;
+  double start_time_          = 0.0;
+  std::string full_trace_name = "";
+  std::string full_sts_name   = "";
+  std::string full_dir_name   = "";
+  gzFile log_file;
+  bool file_is_open = false;
+  bool wrote_sts_file = false;
 };
 
 }} //end namespace vt::trace
