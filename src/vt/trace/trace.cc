@@ -352,7 +352,7 @@ void Trace::writeTracesFile() {
       file_is_open = true;
     }
     writeLogFile(log_file, traces_);
-    gzflush(log_file, Z_SYNC_FLUSH);
+    gzflush(log_file, Z_FINISH);
   }
 
   if (node == designated_root_node and not wrote_sts_file) {
@@ -367,12 +367,13 @@ void Trace::writeTracesFile() {
 }
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
-  for (auto&& log : traces) {
+  for (auto i = cur; i < traces.size(); i++) {
+    auto& log = traces[i];
     auto const& converted_time = timeToInt(log->time - start_time_);
 
     auto const& type = static_cast<
       std::underlying_type<decltype(log->type)>::type
-        >(log->type);
+    >(log->type);
 
     auto event_iter = TraceContainersType::getEventContainer().find(log->ep);
 
@@ -382,8 +383,13 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
       "Event must exist that was logged"
     );
 
-    auto const& event_seq_id = log->ep == no_trace_entry_id ?
-      no_trace_entry_id : event_iter->second.theEventSeq();
+    TraceEntryIDType event_seq_id;
+    if (event_iter == TraceContainersType::getEventContainer().end()) {
+      event_seq_id = 0;
+    } else {
+      event_seq_id = log->ep == no_trace_entry_id ?
+        no_trace_entry_id : event_iter->second.theEventSeq();
+    }
 
     auto const& num_nodes = theContext()->getNumNodes();
 
@@ -472,7 +478,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     delete log;
   }
 
-  traces.empty();
+  cur += traces.size();
 }
 
 /*static*/ double Trace::getCurrentTime() {

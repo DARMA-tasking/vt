@@ -122,6 +122,7 @@ private:
   gzFile log_file;
   bool file_is_open = false;
   bool wrote_sts_file = false;
+  int64_t cur = 0;
 };
 
 }} //end namespace vt::trace
