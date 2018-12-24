@@ -134,7 +134,7 @@ void Trace::setupNames(
 }
 
 /*virtual*/ Trace::~Trace() {
-  writeTracesFile();
+  cleanupTracesFile();
 }
 
 void Trace::addUserNote(std::string const& note) {
@@ -359,6 +359,10 @@ void Trace::endProcessing(
   log->idx4 = idx4;
 
   logEvent(log);
+
+  if (traces_.size() > 100) {
+    writeTracesFile();
+  }
 }
 
 void Trace::beginIdle(double const time) {
@@ -596,6 +600,15 @@ void Trace::disableTracing() {
   enabled_ = false;
 }
 
+void Trace::cleanupTracesFile() {
+  if (checkEnabled()) {
+    auto const& node = theContext()->getNode();
+    writeTracesFile();
+    outputFooter(node, start_time_, log_file);
+    gzclose(log_file);
+  }
+}
+
 void Trace::writeTracesFile() {
   auto const node = theContext()->getNode();
 
@@ -610,20 +623,23 @@ void Trace::writeTracesFile() {
 
   if (checkEnabled()) {
     auto path = full_trace_name;
-    gzFile file = gzopen(path.c_str(), "wb");
-    outputHeader(node, start_time_, file);
-    writeLogFile(file, traces_);
-    outputFooter(node, start_time_, file);
-    gzclose(file);
+    if (not file_is_open) {
+      log_file = gzopen(path.c_str(), "wb");
+      outputHeader(node, start_time_, log_file);
+      file_is_open = true;
+    }
+    writeLogFile(log_file, traces_);
+    gzflush(log_file, Z_SYNC_FLUSH);
   }
 
-  if (node == designated_root_node) {
+  if (node == designated_root_node and not wrote_sts_file) {
     std::ofstream file;
     auto name = full_sts_name;
     file.open(name);
     outputControlFile(file);
     file.flush();
     file.close();
+    wrote_sts_file = true;
   }
 }
 
