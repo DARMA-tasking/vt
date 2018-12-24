@@ -63,13 +63,19 @@ sub launchXterm {
 
     my $gdb_file = `mktemp`;
     chomp $gdb_file;
+    print "GDBTEMP:$gdb_file\n";
 
-    my $gdb = `which gdb`;
+    my $gdb = `which lldb`;
     my $xterm = `which xterm`;
     chomp $gdb;
     chomp $xterm;
+    print "GDB:$gdb\n";
+    print "XTERM:$xterm\n";
 
+    my $mpibin = `which mpirun`;
+    chomp $mpibin;
     my $fout = <<GDBSCRIPT
+
 #!/bin/sh
 cat > $gdb_file << END_OF_SCRIPT
 handle SIGWINCH nostop noprint
@@ -77,8 +83,11 @@ handle SIGWAITING nostop noprint
 file $binary
 attach $pid
 END_OF_SCRIPT\n
-$xterm -e $gdb -x $gdb_file
+$mpibin -n 2 --hostfile my_hostfile $xterm -hold -e $gdb $binary;
+
 GDBSCRIPT
+#$mpibin -n 2 $xterm -hold -e $gdb -ex $gdb_file run --args $binary --vt_pause;
+## $xterm -e $gdb -x $gdb_file
 ;
 
     open  TMP_FILE, ">$tmp_file";
@@ -95,11 +104,12 @@ if ($launch eq 'mpi') {
 } elsif ($launch eq 'xterm-gdb') {
     my $mpibin = `which mpirun`;
     chomp $mpibin;
-    my $mpi_launch = "$mpibin -n $nodes $binary --vt_pause";
+    my $mpi_launch = "$mpibin -n $nodes --hostfile my_hostfile $binary --vt_pause";
     print "$mpibin: $mpi_launch\n";
 
-    $bkg->run(\&run_cmd, [$mpi_launch]);
-    for (my $i = 0; $i < $nodes; $i++) {
+    #$bkg->run(\&run_cmd, [$mpi_launch]);
+    for (my $i = 0; $i < 1; $i++) {
+        print "$i: $nodes\n";
         &launchXterm($i);
     }
 }
