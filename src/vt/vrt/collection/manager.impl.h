@@ -2490,25 +2490,12 @@ MigrateStatus CollectionManager::migrateOut(
    using MigrateMsgType = MigrateMsg<ColT, IndexT>;
 
    auto msg = makeSharedMessage<MigrateMsgType>(
-     proxy, this_node, dest, map_fn, range
+     proxy, this_node, dest, map_fn, range, &typed_col_ref
    );
 
-   SerialByteType* buf = nullptr;
-   SizeType buf_size = 0;
-   ::serialization::interface::serialize<ColT>(
-     typed_col_ref,
-     [&buf,&buf_size](SizeType size) -> SerialByteType* {
-       buf_size = size;
-       buf = static_cast<SerialByteType*>(std::malloc(buf_size));
-       return buf;
-     }
-   );
-   msg->setPut(buf, buf_size);
-
-   // @todo: action here to free put buffer
-   theMsg()->sendMsg<
+   theMsg()->sendMsgAuto<
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
-   >(dest, msg, [msg]{});
+   >(dest, msg);
 
    theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityMigrated(
      proxy, dest

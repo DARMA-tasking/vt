@@ -10,7 +10,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-struct MigrateMsg final : ::vt::PayloadMessage {
+struct MigrateMsg final : ::vt::Message {
 
   MigrateMsg() = default;
   MigrateMsg(
@@ -28,7 +28,7 @@ struct MigrateMsg final : ::vt::PayloadMessage {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | elm_proxy_ | from_ | to_ | map_fn_ | range_;
+    s | elm_proxy_ | from_ | to_ | map_fn_ | range_ | elm_;
   }
 
 private:
@@ -37,6 +37,7 @@ private:
   NodeType to_ = uninitialized_destination;
   HandlerType map_fn_ = uninitialized_handler;
   IndexT range_;
+  ColT* elm_ = nullptr;
 };
 
 }}} /* end namespace vt::vrt::collection */

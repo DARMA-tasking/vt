@@ -19,26 +19,33 @@ template <typename ColT, typename IndexT>
 /*static*/ void MigrateHandlers::migrateInHandler(
   MigrateMsg<ColT, IndexT>* msg
 ) {
+  auto const& from_node = msg->getFromNode();
   auto const& full_proxy = msg->getElementProxy();
   auto const& col_proxy = full_proxy.getCollectionProxy();
   auto const& elm_proxy = full_proxy.getElementProxy();
-  auto const& from_node = msg->getFromNode();
   auto const& idx = elm_proxy.getIndex();
+
+  debug_print(
+    vrt_coll, node,
+    "migrateInHandler: from_node={}, idx={}\n",
+    from_node, idx
+  );
+
   auto const& map_han = msg->getMapHandler();
   auto const& range = msg->getRange();
 
-  auto buf = reinterpret_cast<SerialByteType*>(msg->getPut());
-  auto const& buf_size = msg->getPutSize();
+  // auto buf = reinterpret_cast<SerialByteType*>(msg->getPut());
+  // auto const& buf_size = msg->getPutSize();
 
-  auto vc_elm_ptr = std::make_unique<ColT>();
-  auto vc_raw_ptr = ::serialization::interface::deserialize<ColT>(
-    buf, buf_size, vc_elm_ptr.get()
-  );
+  // auto vc_elm_ptr = std::make_unique<ColT>();
+  // auto vc_raw_ptr = ::serialization::interface::deserialize<ColT>(
+  //   buf, buf_size, vc_elm_ptr.get()
+  // );
   // ColT* col_t = new ColT();
   // auto vc_raw_ptr = ::serialization::interface::deserialize<ColT>(
   //   buf, buf_size, col_t
   // );
-  // auto vc_elm_ptr = std::unique_ptr<ColT>(vc_raw_ptr);
+  auto vc_elm_ptr = std::make_unique<ColT>(*msg->elm_);
 
   auto const& migrate_status =
     CollectionElmAttorney<ColT,IndexT>::migrateIn(
