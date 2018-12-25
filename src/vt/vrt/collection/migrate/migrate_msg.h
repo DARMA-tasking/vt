@@ -38,6 +38,7 @@ private:
   NodeType to_ = uninitialized_destination;
   HandlerType map_fn_ = uninitialized_handler;
   IndexT range_;
+public:
   ColT* elm_ = nullptr;
 };
 
