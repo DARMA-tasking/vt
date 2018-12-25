@@ -45,7 +45,7 @@ template <typename ColT, typename IndexT>
   // auto vc_raw_ptr = ::serialization::interface::deserialize<ColT>(
   //   buf, buf_size, col_t
   // );
-  auto vc_elm_ptr = std::make_unique<ColT>(*msg->elm_);
+  auto vc_elm_ptr = std::make_unique<ColT>(std::move(*msg->elm_));
 
   auto const& migrate_status =
     CollectionElmAttorney<ColT,IndexT>::migrateIn(
