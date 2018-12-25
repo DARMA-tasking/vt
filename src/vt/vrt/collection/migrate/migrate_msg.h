@@ -29,7 +29,11 @@ struct MigrateMsg final : ::vt::Message {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | elm_proxy_ | from_ | to_ | map_fn_ | range_ | elm_;
+    s | elm_proxy_ | from_ | to_ | map_fn_ | range_;
+    if (s.isUnpacking()) {
+      elm_ = new ColT{};
+    }
+    s | *elm_;
   }
 
 private:
