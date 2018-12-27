@@ -211,7 +211,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
   bool const serialize, EntityID const& id, NodeType const& home_node,
-  MsgSharedPtr<MessageT> msg, NodeType const& from_node, ActionType action
+  MsgSharedPtr<MessageT> msg, ActionType action
 ) {
   auto const& this_node = theContext()->getNode();
   NodeType route_to_node = uninitialized_destination;
@@ -229,17 +229,6 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   if (found) {
     recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
     route_to_node = this_node;
-
-    if (
-      from_node != this_node && this_node != home_node &&
-      from_node != uninitialized_destination
-    ) {
-      auto msg = makeSharedMessage<LocMsgType>(
-        this_inst, id, no_location_event_id, from_node, home_node
-      );
-      msg->setResolvedNode(this_node);
-      theMsg()->sendMsg<LocMsgType, updateLocation>(from_node, msg);
-    }
   } else {
     bool const& rec_exists = recs_.exists(id);
 
@@ -258,14 +247,6 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
         route_to_node = rec.getRemoteNode();
       }
     }
-
-    debug_print(
-      location, node,
-      "EntityLocationCoord: routeMsgEager: found={}, home_node={}, "
-      "route_to_node={}, route_to_node={}, id={}, rec_exists={}\n",
-      found, home_node, route_to_node, route_to_node, id, rec_exists
-    );
-
   }
 
   vtAssert(
@@ -536,7 +517,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
   msg->setLocInst(this_inst);
 
   if (use_eager) {
-    routeMsgEager<MessageT>(serialize, id, home_node, msg, from_node, act);
+    routeMsgEager<MessageT>(serialize, id, home_node, msg, act);
   } else {
     // non-eager protocol: get location first then send message after resolution
     getLocation(id, home_node, [=](NodeType node) {

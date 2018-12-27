@@ -142,8 +142,7 @@ private:
   template <typename MessageT>
   void routeMsgEager(
     bool const serialize, EntityID const& id, NodeType const& home_node,
-    MsgSharedPtr<MessageT> msg, NodeType const& from_node,
-    ActionType action = nullptr
+    MsgSharedPtr<MessageT> msg, ActionType action = nullptr
   );
 
   template <typename MessageT>
