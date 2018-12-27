@@ -90,7 +90,7 @@ void Barrier::waitBarrier(
   barrierUp(is_named, is_wait, barrier, skip_term);
 
   while (not barrier_state.released) {
-    vt::runScheduler();
+    theMsg()->scheduler();
     if (poll_action) {
       poll_action();
     }
