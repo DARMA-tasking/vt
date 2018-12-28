@@ -18,7 +18,7 @@ static constexpr LocEventID const no_location_event_id = -1;
 static LocEventID fst_location_event_id = 0;
 
 using LocationSizeType = size_t;
-static constexpr LocationSizeType const default_max_cache_size = 128;
+static constexpr LocationSizeType const default_max_cache_size = 4096;
 
 static constexpr ByteType const small_msg_max_size = 256;
 
