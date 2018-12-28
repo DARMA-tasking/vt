@@ -516,7 +516,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
   msg->setLocInst(this_inst);
 
-  if (use_eager) {
+  if (use_eager && !serialize) {
     routeMsgEager<MessageT>(serialize, id, home_node, msg, act);
   } else {
     // non-eager protocol: get location first then send message after resolution
