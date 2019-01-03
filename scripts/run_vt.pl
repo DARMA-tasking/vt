@@ -57,13 +57,6 @@ sub launchXterm {
     }
     chomp $pid;
 
-    my $tmp_file = `mktemp`;
-    chomp $tmp_file;
-    print "TEMP:$tmp_file\n";
-
-    my $gdb_file = `mktemp`;
-    chomp $gdb_file;
-    print "GDBTEMP:$gdb_file\n";
 
     my $gdb = `which lldb`;
     my $xterm = `which xterm`;
@@ -74,27 +67,11 @@ sub launchXterm {
 
     my $mpibin = `which mpirun`;
     chomp $mpibin;
-    my $fout = <<GDBSCRIPT
 
-#!/bin/sh
-cat > $gdb_file << END_OF_SCRIPT
-handle SIGWINCH nostop noprint
-handle SIGWAITING nostop noprint
-file $binary
-attach $pid
-END_OF_SCRIPT\n
-$mpibin -n 2 --hostfile my_hostfile $xterm -hold -e $gdb $binary;
+    my $lldb_xterm = "$xterm -hold -e $gdb -p $pid";
+    print "$lldb_xterm: $lldb_xterm\n";
+    $bkg->run(\&run_cmd, [$lldb_xterm]);
 
-GDBSCRIPT
-#$mpibin -n 2 $xterm -hold -e $gdb -ex $gdb_file run --args $binary --vt_pause;
-## $xterm -e $gdb -x $gdb_file
-;
-
-    open  TMP_FILE, ">$tmp_file";
-    print TMP_FILE "$fout\n";
-    close TMP_FILE;
-
-    $bkg->run(\&run_cmd, ["sh $tmp_file"]);
 }
 
 ## Main part of the script that launches based on user selection
@@ -102,13 +79,20 @@ GDBSCRIPT
 if ($launch eq 'mpi') {
     &launchMPI();
 } elsif ($launch eq 'xterm-gdb') {
+    my $gdb = `which lldb`;
+    my $xterm = `which xterm`;
+    chomp $gdb;
+    chomp $xterm;
+    print "GDB:$gdb\n";
+    print "XTERM:$xterm\n";
+
     my $mpibin = `which mpirun`;
     chomp $mpibin;
-    my $mpi_launch = "$mpibin -n $nodes --hostfile my_hostfile $binary --vt_pause";
+    my $mpi_launch = "$mpibin -n $nodes $binary --vt_pause";
     print "$mpibin: $mpi_launch\n";
 
-    #$bkg->run(\&run_cmd, [$mpi_launch]);
-    for (my $i = 0; $i < 1; $i++) {
+    $bkg->run(\&run_cmd, [$mpi_launch]);
+    for (my $i = 0; $i < $nodes; $i++) {
         print "$i: $nodes\n";
         &launchXterm($i);
     }
