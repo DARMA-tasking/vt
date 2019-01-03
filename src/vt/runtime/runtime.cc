@@ -109,6 +109,7 @@ void Runtime::pauseForDebugger() {
     auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
     sprintf(node_str, "prog-%d.pid", node);
     auto const pid = getpid();
+    std::cout << "PID from runtime.cc: "<< pid<< std::endl;
     FILE* f = fopen(node_str, "w+");
     fprintf(f, "%d", pid);
     fclose(f);
@@ -672,12 +673,15 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
 }
 
 bool Runtime::initialize(bool const force_now) {
-  if (force_now) {
+
+    std::cout << "Runtime::initialize: " << force_now<< std::endl;
+if (force_now) {
     initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();
     initializeOptionalComponents();
     sync();
     if (theContext->getNode() == 0) {
+        std::cout << "Runtime::printStartupBanner: " << std::endl;
       printStartupBanner();
     }
     setup();
@@ -685,6 +689,7 @@ bool Runtime::initialize(bool const force_now) {
     initialized_ = true;
     return true;
   } else {
+    std::cout << "Runtime::tryInitialize: " << std::endl;
     return tryInitialize();
   }
 }
@@ -845,6 +850,7 @@ void Runtime::setup() {
     MPI_Barrier(theContext->getComm());
   });
 
+  std::cout << "Runtime::setup()"<< std::endl;
   if (ArgType::vt_pause) {
     pauseForDebugger();
   }
