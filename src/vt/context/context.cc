@@ -65,27 +65,22 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
     int name_len = 20;
     char name[20];
     gethostname(name, name_len);
-    std::cout << "MPI_Init =" <<name<< std::endl;
 
-  std::cout << " context cc MPI" << std::endl;
   if (not is_interop) {
     MPI_Init(&argc, &argv);
   }
-  std::cout << " context cc MPI 2" << std::endl;
 
   if (comm != nullptr) {
     communicator_ = *comm;
   } else {
     communicator_ = MPI_COMM_WORLD;
   }
-  std::cout << " context cc MPI Communicator" << std::endl;
 
   MPI_Barrier(communicator_);
 
   if (is_interop) {
     MPI_Comm_split(communicator_, 0, 0, &communicator_);
   }
-  std::cout << " context cc MPI split" << std::endl;
 
   MPI_Barrier(communicator_);
 
@@ -95,30 +90,7 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
   int thisNodeLocal = uninitialized_destination;
 
   MPI_Comm_size(communicator_, &numNodesLocal);
-  std::cout << " context cc  MPI_Comm_size " << std::endl;
   MPI_Comm_rank(communicator_, &thisNodeLocal);
-  std::cout << " context cc  MPI_Comm_rank" << std::endl;
-
-  std::cout << "myd id is  before sleep" << getpid()<< std::endl;
-   int i = 0;
-   while(0==i)
-   {
-    sleep(10);
-   }
-
-   int myId;
-   MPI_Comm_rank(MPI_COMM_WORLD,&myId);
-   if(myId == 0)
-   {
-     std::cout << "myd id is 0"<< std::endl;
-     int *a=nullptr;
-         a[10] = 20;
-   }
-   else
-   {
-     std::cout << "myd id is N"<< std::endl;
-   }
-
 
   numNodes_ = static_cast<NodeType>(numNodesLocal);
   thisNode_ = static_cast<NodeType>(thisNodeLocal);

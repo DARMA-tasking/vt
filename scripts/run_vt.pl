@@ -38,6 +38,16 @@ sub launchMPI {
     #system($mpi_launch);
 }
 
+sub removeOldPidFile {
+    my $i = shift;
+    my $file = "prog-$i.pid";
+    my $pid = 0;
+    if (-e $file) {
+        print "removing old file: $file\n";
+        unlink $file;
+    }
+}
+
 sub launchXterm {
     my $i = shift;
     my $file = "prog-$i.pid";
@@ -52,6 +62,7 @@ sub launchXterm {
             $pid = $_;
         }
         close FILE;
+        unlink $file;
     } else {
         print STDERR "File does not exist: $file\n";
     }
@@ -68,7 +79,7 @@ sub launchXterm {
     my $mpibin = `which mpirun`;
     chomp $mpibin;
 
-    my $lldb_xterm = "$xterm -hold -e $gdb -p $pid";
+    my $lldb_xterm = "$xterm -hold -e $gdb -p $pid -o c";
     print "$lldb_xterm: $lldb_xterm\n";
     $bkg->run(\&run_cmd, [$lldb_xterm]);
 
@@ -85,6 +96,11 @@ if ($launch eq 'mpi') {
     chomp $xterm;
     print "GDB:$gdb\n";
     print "XTERM:$xterm\n";
+
+    for (my $i = 0; $i < $nodes; $i++) {
+        print "$i: $nodes\n";
+        &removeOldPidFile($i);
+    }
 
     my $mpibin = `which mpirun`;
     chomp $mpibin;
