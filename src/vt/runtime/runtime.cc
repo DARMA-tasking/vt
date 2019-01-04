@@ -66,11 +66,7 @@ void Runtime::pauseForDebugger() {
     fprintf(f, "%d", pid);
     fclose(f);
 
-    #if __APPLE__
-      system("read");
-    #else
-      system("pause");
-    #endif
+    sleep(10);
   }
 }
 
