@@ -104,7 +104,7 @@ if ($launch eq 'mpi') {
 
     my $mpibin = `which mpirun`;
     chomp $mpibin;
-    my $mpi_launch = "$mpibin -n $nodes $binary --vt_pause";
+    my $mpi_launch = "$mpibin -n $nodes $binary $user_args";
     print "$mpibin: $mpi_launch\n";
 
     $bkg->run(\&run_cmd, [$mpi_launch]);
