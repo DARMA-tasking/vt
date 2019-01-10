@@ -2,14 +2,23 @@
 
 if test $# -lt 2
 then
-    echo "usage: $0 <root-dir> <license-template>"
+    echo "usage: $0 <root-dir> <license-template> [pattern]"
     exit 1
 fi
 
 dir=$1
 license=$2
 
-allfiles=$(find $dir -iname "*.h")
+if test $# -gt 2
+then
+    pattern=$3
+else
+    pattern="*.h"
+fi
+
+echo "Running on root=$dir, license=$license, pattern=$pattern"
+
+allfiles=$(find $dir -iname "$pattern")
 
 for file in $allfiles
 do
