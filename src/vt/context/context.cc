@@ -48,7 +48,6 @@
 #include <cstring>
 
 #include <mpi.h>
-#include <stdio.h>
 
 // This cannot use the normal debug_print macros because they rely on context
 // being live to print contextual information
@@ -62,9 +61,6 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
       "Context::Context is_interop={}, comm={}\n", print_bool(is_interop), comm
     );
   #endif
-    int name_len = 20;
-    char name[20];
-    gethostname(name, name_len);
 
   if (not is_interop) {
     MPI_Init(&argc, &argv);
