@@ -1,7 +1,6 @@
- ************************************************************************
 
-                                VT
-              Copyright (C) 2017 NTESS, LLC
+                       vt (Virtual Transport)
+                   Copyright (C) 2018 NTESS, LLC
 
  Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
  the U.S. Government retains certain rights in this software.
@@ -34,5 +33,3 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  Questions? Contact darma@sandia.gov
-
- ************************************************************************
