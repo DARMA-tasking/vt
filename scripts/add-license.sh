@@ -26,7 +26,7 @@ do
    filedir=$(dirname $file)
    licensetmp=$(mktemp)
    filetmp=$(mktemp)
-   echo "Running on file=$file, dir=$filedir, license=$license, tmp=$tmp"
+   echo "Running on file=$file, dir=$filedir, license=$license, tmp=$filetmp"
    sed 's/\<file-name.h\>/'$filename'/g' $license > $licensetmp
    cat $licensetmp $file > $filetmp
    mv $filetmp $file
