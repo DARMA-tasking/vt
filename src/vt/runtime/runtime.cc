@@ -65,7 +65,10 @@ void Runtime::pauseForDebugger() {
     fprintf(f, "%d", pid);
     fclose(f);
 
-    sleep(10);
+    int i = 0;
+    while(i == 0) {
+      sleep(5);
+    }
   }
 }
 

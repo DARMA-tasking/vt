@@ -79,7 +79,7 @@ sub launchXterm {
     my $mpibin = `which mpirun`;
     chomp $mpibin;
 
-    my $lldb_xterm = "$xterm -hold -e $gdb -p $pid -o c";
+    my $lldb_xterm = "$xterm -hold -e $gdb -p $pid";
     print "$lldb_xterm: $lldb_xterm\n";
     $bkg->run(\&run_cmd, [$lldb_xterm]);
 
