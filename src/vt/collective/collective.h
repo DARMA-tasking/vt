@@ -54,7 +54,7 @@ namespace vt {
 
 // vt::{initialize,finalize} exported into the main ::vt namespace
 inline RuntimePtrType initialize(
-  int& argc, char**& argv, WorkerCountType const num_workers = no_workers,
+  int& argc, char**& argv, WorkerCountType const num_workers,
   bool is_interop = false, MPI_Comm* comm = nullptr
 ) {
   return ::vt::CollectiveOps::initialize(argc,argv,num_workers,is_interop,comm);
