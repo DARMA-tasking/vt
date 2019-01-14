@@ -2,9 +2,11 @@
 #                              CMake for gtests                                #
 ################################################################################
 
-set(PROJECT_TEST_UNIT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/unit)
-set(PROJECT_TEST_PERF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/perf)
-set(PROJECT_PERF_TESTS ping_pong)
+set(PROJECT_TEST_UNIT_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/unit)
+set(PROJECT_TEST_PERF_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/perf)
+set(PROJECT_TEST_BENCHMARK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/benchmark)
+set(PROJECT_BENCHMARK_TESTS    ring_msg_benchmark)
+set(PROJECT_PERF_TESTS         ping_pong)
 
 set(
   UNIT_TEST_SUBDIRS_LIST
@@ -124,6 +126,24 @@ else()
     add_test_for_example_vt(
       ${PERF_TEST}
       ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
+      perf_tests
+    )
+  endforeach()
+
+
+  foreach(BENCHMARK ${PROJECT_BENCHMARK_TESTS})
+    add_executable(${BENCHMARK} ${PROJECT_TEST_BENCHMARK_DIR}/${BENCHMARK}.cc)
+    add_dependencies(benchmark_tests ${BENCHMARK})
+
+    link_target_with_vt(
+      TARGET ${BENCHMARK}
+      DEFAULT_LINK_SET
+      LINK_GTEST ON
+    )
+
+    add_test_for_example_vt(
+      ${BENCHMARK}
+      ${PROJECT_TEST_BENCHMARK_DIR}/${BENCHMARK}.cc
       perf_tests
     )
   endforeach()

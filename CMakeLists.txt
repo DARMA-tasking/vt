@@ -38,6 +38,7 @@ add_subdirectory(examples)
 
 add_custom_target(unit_tests)
 add_custom_target(perf_tests)
+add_custom_target(benchmark_tests)
 add_subdirectory(tests)
 
 # Configure file for the VT package
