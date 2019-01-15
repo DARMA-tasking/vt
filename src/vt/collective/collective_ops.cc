@@ -44,6 +44,7 @@
 
 #include "vt/collective/collective_ops.h"
 #include "vt/runtime/runtime.h"
+#include "vt/scheduler/scheduler.h"
 #include "vt/runtime/runtime_inst.h"
 #include "vt/utils/tls/tls.h"
 

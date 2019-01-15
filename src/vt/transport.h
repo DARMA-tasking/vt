@@ -77,5 +77,6 @@
 #include "vt/utils/atomic/atomic.h"
 #include "vt/group/group_headers.h"
 #include "vt/epoch/epoch_headers.h"
+#include "vt/pipe/pipe_headers.h"
 
 #endif /*INCLUDED_TRANSPORT_H*/

@@ -43,6 +43,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/context/context.h"
 #include "vt/runtime/runtime.h"
 #include "vt/runtime/runtime_inst.h"
 #include "vt/utils/tls/tls.h"

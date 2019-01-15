@@ -55,6 +55,7 @@
 #include "vt/parameterization/parameterization.h"
 #include "vt/sequence/sequencer_headers.h"
 #include "vt/trace/trace.h"
+#include "vt/pipe/pipe_manager.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
@@ -96,6 +97,10 @@ Runtime::Runtime(
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
+}
+
+bool Runtime::hasSchedRun() const {
+  return theSched ? theSched->hasSchedRun() : false;
 }
 
 void Runtime::pauseForDebugger() {
