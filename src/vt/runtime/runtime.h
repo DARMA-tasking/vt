@@ -65,7 +65,6 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
-#include "vt/runtime/runtime_get.h"
 #include "vt/configs/arguments/args.h"
 
 #include <memory>

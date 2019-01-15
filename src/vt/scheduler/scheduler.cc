@@ -47,7 +47,10 @@
 #include "vt/messaging/active.h"
 #include "vt/event/event.h"
 #include "vt/termination/termination.h"
-#include "vt/runtime/runtime_get.h"
+#include "vt/sequence/sequencer.h"
+#include "vt/sequence/sequencer_virtual.h"
+#include "vt/worker/worker_headers.h"
+#include "vt/vrt/collection/manager.h"
 
 namespace vt { namespace sched {
 

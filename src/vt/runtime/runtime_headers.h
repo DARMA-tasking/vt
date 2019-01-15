@@ -48,7 +48,6 @@
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_inst.h"
 #include "vt/runtime/runtime.h"
-#include "vt/runtime/runtime_get.h"
 #include "vt/runtime/runtime_holder.h"
 
 namespace vt { namespace runtime {

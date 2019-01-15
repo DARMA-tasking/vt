@@ -46,6 +46,24 @@
 #include "vt/runtime/runtime.h"
 #include "vt/runtime/runtime_inst.h"
 #include "vt/utils/tls/tls.h"
+#include "vt/vrt/context/context_vrtmanager.h"
+#include "vt/context/context.h"
+#include "vt/registry/registry.h"
+#include "vt/messaging/active.h"
+#include "vt/event/event.h"
+#include "vt/termination/term_headers.h"
+#include "vt/collective/collective_alg.h"
+#include "vt/pool/pool.h"
+#include "vt/rdma/rdma.h"
+#include "vt/parameterization/parameterization.h"
+#include "vt/sequence/sequencer_headers.h"
+#include "vt/trace/trace.h"
+#include "vt/scheduler/scheduler.h"
+#include "vt/topos/location/location_headers.h"
+#include "vt/vrt/collection/collection_headers.h"
+#include "vt/worker/worker_headers.h"
+#include "vt/group/group_headers.h"
+#include "vt/pipe/pipe_headers.h"
 
 #include <cassert>
 
@@ -80,6 +98,8 @@ static runtime::Runtime* no_rt = nullptr;
     vtAssertExpr(check && str.c_str());                                       \
     if (!check) { CUR_RT->abort(str, 29); }                             \
   } while (0);
+
+using CollectionManagerType = vrt::collection::CollectionManager;
 
 // Thread-safe runtime components
 ctx::Context*               theContext()        { return CUR_RT_TS->theContext.get();        }
