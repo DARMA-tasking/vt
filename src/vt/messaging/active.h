@@ -552,8 +552,8 @@ struct ActiveMessenger {
   );
 
   EventType sendMsgSized(
-    HandlerType const& han, MsgSharedPtr<BaseMsgType> const& msg,
-    MsgSizeType const& msg_size, ActionType next_action = nullptr
+    MsgSharedPtr<BaseMsgType> const& msg, MsgSizeType const& msg_size,
+    ActionType next_action = nullptr
   );
 
   void performTriggeredActions();

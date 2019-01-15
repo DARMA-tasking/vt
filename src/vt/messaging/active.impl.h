@@ -119,7 +119,7 @@ EventType ActiveMessenger::sendMsgSz(
 ) {
   envelopeSetup(msg->env, dest, han);
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  return sendMsgSized(han, base, msg_size, next_action);
+  return sendMsgSized(base, msg_size, next_action);
 }
 
 template <typename MessageT>
@@ -157,7 +157,7 @@ EventType ActiveMessenger::sendMsg(
     han, print_ptr(msg), tag
   );
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  return sendMsgSized(han, base, sizeof(MessageT), next_action);
+  return sendMsgSized(base, sizeof(MessageT), next_action);
 }
 
 template <typename MessageT>
@@ -237,7 +237,7 @@ EventType ActiveMessenger::sendMsgSz(
     envelopeSetTag(msg->env, tag);
   }
   auto base = promoteMsg(msg).template to<BaseMsgType>();;
-  return sendMsgSized(han, base, msg_size, next_action);
+  return sendMsgSized(base, msg_size, next_action);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -298,7 +298,7 @@ EventType ActiveMessenger::sendMsg(
     envelopeSetTag(msg->env, tag);
   }
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  return sendMsgSized(han, base, sizeof(MessageT), next_action);
+  return sendMsgSized(base, sizeof(MessageT), next_action);
 }
 
 template <ActiveFnType* f, typename MessageT>
@@ -338,7 +338,7 @@ EventType ActiveMessenger::sendMsg(
     envelopeSetTag(msg->env, tag);
   }
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  return sendMsgSized(han, base, sizeof(MessageT), next_action);
+  return sendMsgSized(base, sizeof(MessageT), next_action);
 }
 
 template <typename FunctorT, typename MessageT>
@@ -393,7 +393,7 @@ EventType ActiveMessenger::sendMsg(
   // setup envelope
   envelopeSetup(msg->env, dest, han);
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  auto const& ret = sendMsgSized(han, base, sizeof(MessageT), next_action);
+  auto const& ret = sendMsgSized(base, sizeof(MessageT), next_action);
   return ret;
 }
 

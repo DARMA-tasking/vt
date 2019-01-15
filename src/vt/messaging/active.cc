@@ -234,8 +234,8 @@ trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
 #endif
 
 EventType ActiveMessenger::sendMsgSized(
-  HandlerType const& han, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size, ActionType next_action
+  MsgSharedPtr<BaseMsgType> const& base, MsgSizeType const& msg_size,
+  ActionType next_action
 ) {
   auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
