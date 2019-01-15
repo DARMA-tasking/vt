@@ -172,7 +172,7 @@ template <typename UserMsgT, typename BaseEagerMsgT>
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ void SerializedMessenger::sendParserdesMsg(
+/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsg(
   NodeType dest, MsgT* msg
 ) {
   debug_print(
@@ -184,7 +184,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 }
 
 template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::sendParserdesMsg(
+/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsg(
   NodeType dest, MsgT* msg
 ) {
   debug_print(
@@ -196,7 +196,7 @@ template <typename FunctorT, typename MsgT, typename BaseT>
 }
 
 template <typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::sendParserdesMsgHandler(
+/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsgHandler(
   NodeType dest, HandlerType const& handler, MsgT* msg
 ) {
   debug_print(
@@ -208,7 +208,8 @@ template <typename MsgT, typename BaseT>
 }
 
 template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
+/*static*/ messaging::PendingSend
+ SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
   debug_print(
     serial_msg, node,
     "broadcastParserdesMsg: (functor) msg={}\n", print_ptr(msg)
@@ -217,7 +218,8 @@ template <typename FunctorT, typename MsgT, typename BaseT>
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ void SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
+/*static*/ messaging::PendingSend
+ SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
   debug_print(
     serial_msg, node,
     "broadcastParserdesMsg: msg={}\n", print_ptr(msg)
@@ -226,7 +228,8 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 }
 
 template <typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::broadcastParserdesMsgHandler(
+/*static*/ messaging::PendingSend
+ SerializedMessenger::broadcastParserdesMsgHandler(
   MsgT* msg, HandlerType const& han
 ) {
   debug_print(
@@ -238,7 +241,7 @@ template <typename MsgT, typename BaseT>
 
 
 template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::parserdesMsg(
+/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsg(
   MsgT* msg, bool is_bcast, NodeType dest
 ) {
   auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
@@ -246,7 +249,7 @@ template <typename FunctorT, typename MsgT, typename BaseT>
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ void SerializedMessenger::parserdesMsg(
+/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsg(
   MsgT* msg, bool is_bcast, NodeType dest
 ) {
   auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
@@ -254,7 +257,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 }
 
 template <typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::parserdesMsgHandler(
+/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsgHandler(
   MsgT* msg, HandlerType const& handler, bool is_bcast, NodeType dest
 ) {
   auto const& user_handler = handler;
@@ -298,7 +301,7 @@ template <typename MsgT, typename BaseT>
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ void SerializedMessenger::sendSerialMsg(
+/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsg(
   NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager
 ) {
   auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
@@ -306,7 +309,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 }
 
 template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::sendSerialMsg(
+/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsg(
   NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager
 ) {
   auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
@@ -314,36 +317,40 @@ template <typename FunctorT, typename MsgT, typename BaseT>
 }
 
 template <typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::sendSerialMsgHandler(
+/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsgHandler(
   NodeType dest, MsgT* msg, HandlerType const& handler,
   ActionEagerSend<MsgT, BaseT> eager_sender
 ) {
-  auto eager_default_send = [=](MsgSharedPtr<SerializedEagerMsg<MsgT,BaseT>> m){
+  auto eager_default_send =
+    [=](MsgSharedPtr<SerializedEagerMsg<MsgT,BaseT>> m) -> messaging::PendingSend {
     using MsgType = SerialEagerPayloadMsg<MsgT,BaseT>;
-    theMsg()->sendMsg<MsgType,payloadMsgHandler>(dest,m.get());
+    return theMsg()->sendMsg<MsgType,payloadMsgHandler>(dest,m.get());
   };
   auto eager = eager_sender ? eager_sender : eager_default_send;
   return sendSerialMsgHandler<MsgT,BaseT>(
-    msg,eager,handler,[=](ActionNodeType action) {
-      action(dest);
+    msg,eager,handler,[=](ActionNodeSendType action) -> messaging::PendingSend {
+      return action(dest);
     }
   );
 }
 
 template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::broadcastSerialMsg(MsgT* msg) {
+/*static*/ messaging::PendingSend
+ SerializedMessenger::broadcastSerialMsg(MsgT* msg) {
   auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
   return broadcastSerialMsgHandler<MsgT,BaseT>(msg,h);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ void SerializedMessenger::broadcastSerialMsg(MsgT* msg) {
+/*static*/ messaging::PendingSend
+ SerializedMessenger::broadcastSerialMsg(MsgT* msg) {
   auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
   return broadcastSerialMsgHandler<MsgT,BaseT>(msg,h);
 }
 
 template <typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::broadcastSerialMsgHandler(
+/*static*/ messaging::PendingSend
+ SerializedMessenger::broadcastSerialMsgHandler(
   MsgT* msg, HandlerType const& han
 ) {
   using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
@@ -391,7 +398,9 @@ template <typename MsgT, typename BaseT>
       han, ptr_size, serialized_msg_eager_size, group_
     );
 
-    theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg.get());
+    return theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(
+      payload_msg.get()
+    );
   } else {
     auto const& total_size = ptr_size + sys_size;
 
@@ -407,14 +416,15 @@ template <typename MsgT, typename BaseT>
       han, sys_size, ptr_size, total_size, group_
     );
 
-    theMsg()->broadcastMsgSz<SerialWrapperMsgType<MsgT>,serialMsgHandlerBcast>(
+    using MsgType = SerialWrapperMsgType<MsgT>;
+    return theMsg()->broadcastMsgSz<MsgType,serialMsgHandlerBcast>(
       sys_msg.get(), total_size, no_tag
     );
   }
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ void SerializedMessenger::sendSerialMsg(
+/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsg(
   MsgT* msg, ActionEagerSend<MsgT, BaseT> eager, ActionDataSend sender
 ) {
   auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
@@ -422,7 +432,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 }
 
 template <typename MsgT, typename BaseT>
-/*static*/ void SerializedMessenger::sendSerialMsgHandler(
+/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsgHandler(
   MsgT* msg_ptr, ActionEagerSend<MsgT, BaseT> eager_sender,
   HandlerType const& typed_handler, ActionDataSend data_sender
 ) {
@@ -465,7 +475,7 @@ template <typename MsgT, typename BaseT>
 
     vtAssertExpr(payload_msg == nullptr && data_sender != nullptr);
 
-    auto send_data = [=](NodeType dest){
+    auto send_data = [=](NodeType dest) -> messaging::PendingSend {
       auto const& node = theContext()->getNode();
       if (node != dest) {
         auto sys_msg = makeMessage<SerialWrapperMsgType<MsgT>>();
@@ -487,7 +497,7 @@ template <typename MsgT, typename BaseT>
           dest, print_ptr(sys_msg.get()), typed_handler
         );
 
-        theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
+        return theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
           dest, sys_msg.get(), send_serialized
         );
       } else {
@@ -500,11 +510,16 @@ template <typename MsgT, typename BaseT>
           "serialMsgHandler: local msg: handler={}\n", typed_handler
         );
 
+        messaging::PendingSend cur(nullptr);
+        auto const pending_epoch = cur.getEpoch();
+        theMsg()->pushEpoch(pending_epoch);
         runnable::Runnable<MsgT>::run(typed_handler,nullptr,tptr,node);
+        theMsg()->popEpoch(pending_epoch);
+        return cur;
       }
     };
 
-    data_sender(send_data);
+    return data_sender(send_data);
   } else {
     debug_print(
       serial_msg, node,
@@ -520,7 +535,7 @@ template <typename MsgT, typename BaseT>
     payload_msg->from_node = theContext()->getNode();
     envelopeSetRef(payload_msg->env, cur_ref);
 
-    eager_sender(payload_msg);
+    return eager_sender(payload_msg);
   }
 }
 
