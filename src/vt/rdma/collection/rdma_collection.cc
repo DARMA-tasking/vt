@@ -120,14 +120,14 @@ namespace vt { namespace rdma {
     // Send msg to get data
     RDMA_OpType const new_op = rdma->cur_op_++;
 
-    GetMessage* msg = new GetMessage(
+    auto msg = makeMessage<GetMessage>(
       new_op, this_node, rdma_handle, bytes, elm
     );
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
     }
     theMsg()->sendMsg<GetMessage, RDMAManager::getRDMAMsg>(
-      default_node, msg, [=]{ delete msg; }
+      default_node, msg.get()
     );
 
     rdma->pending_ops_.emplace(
@@ -190,7 +190,7 @@ namespace vt { namespace rdma {
 
     RDMA_OpType const new_op = rdma->cur_op_++;
 
-    PutMessage* msg = new PutMessage(
+    auto msg = makeMessage<PutMessage>(
       new_op, num_bytes, elm, tag, rdma_handle,
       action_after_put ? this_node : uninitialized_destination,
       this_node
@@ -210,7 +210,7 @@ namespace vt { namespace rdma {
     }
 
     theMsg()->sendMsg<PutMessage, RDMAManager::putRecvMsg>(
-      put_node, msg, send_payload, [=]{ delete msg; }
+      put_node, msg.get(), send_payload
     );
 
     if (action_after_put != nullptr) {
