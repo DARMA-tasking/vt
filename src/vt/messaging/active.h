@@ -629,7 +629,7 @@ struct ActiveMessenger {
   inline void pushEpoch(EpochType const& epoch);
 
   /*
-   * popEpoch(epoch) shall remove the top entry from epoch_size_, iif the size
+   * popEpoch(epoch) shall remove the top entry from epoch_size_, iff the size
    * is non-zero and the `epoch' passed, if `epoch != no_epoch', is equal to the
    * top of the `epoch_stack_.top()'; else, it shall remove any entry from the
    * top of the stack.
