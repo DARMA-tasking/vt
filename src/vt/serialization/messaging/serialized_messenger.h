@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
+#include "vt/messaging/pending_send.h"
 #include "vt/serialization/serialization.h"
 #include "vt/serialization/messaging/serialized_data_msg.h"
 
@@ -63,10 +64,11 @@ template <typename MsgT, typename BaseEagerMsgT>
 using SerializedEagerMsg = SerialEagerPayloadMsg<MsgT, BaseEagerMsgT>;
 
 template <typename MsgT, typename BaseEagerMsgT>
-using ActionEagerSend = std::function<void(
+using ActionEagerSend = std::function<messaging::PendingSend(
   MsgSharedPtr<SerializedEagerMsg<MsgT,BaseEagerMsgT>> msg
 )>;
-using ActionDataSend = std::function<void(ActionNodeType)>;
+using ActionNodeSendType = std::function<messaging::PendingSend(NodeType)>;
+using ActionDataSend = std::function<messaging::PendingSend(ActionNodeSendType)>;
 
 struct SerializedMessenger {
   template <typename UserMsgT>
@@ -87,73 +89,75 @@ struct SerializedMessenger {
   );
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
-  static void sendParserdesMsg(NodeType dest, MsgT* msg);
+  static messaging::PendingSend sendParserdesMsg(NodeType dest, MsgT* msg);
 
   template <typename FunctorT, typename MsgT, typename BaseT = Message>
-  static void sendParserdesMsg(NodeType dest, MsgT* msg);
+  static messaging::PendingSend sendParserdesMsg(NodeType dest, MsgT* msg);
 
   template <typename MsgT, typename BaseT = Message>
-  static void sendParserdesMsgHandler(
+  static messaging::PendingSend sendParserdesMsgHandler(
     NodeType dest, HandlerType const& handler, MsgT* msg
   );
 
   template <typename FunctorT, typename MsgT, typename BaseT = Message>
-  static void broadcastParserdesMsg(MsgT* msg);
+  static messaging::PendingSend broadcastParserdesMsg(MsgT* msg);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
-  static void broadcastParserdesMsg(MsgT* msg);
+  static messaging::PendingSend broadcastParserdesMsg(MsgT* msg);
 
   template <typename MsgT, typename BaseT = Message>
-  static void broadcastParserdesMsgHandler(MsgT* msg, HandlerType const& han);
+  static messaging::PendingSend broadcastParserdesMsgHandler(
+    MsgT* msg, HandlerType const& han
+  );
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
-  static void parserdesMsg(
+  static messaging::PendingSend parserdesMsg(
     MsgT* msg, bool is_bcast = true, NodeType dest = uninitialized_destination
   );
 
   template <typename FunctorT, typename MsgT, typename BaseT = Message>
-  static void parserdesMsg(
+  static messaging::PendingSend parserdesMsg(
     MsgT* msg, bool is_bcast = true, NodeType dest = uninitialized_destination
   );
 
   template <typename MsgT, typename BaseT = Message>
-  static void parserdesMsgHandler(
+  static messaging::PendingSend parserdesMsgHandler(
     MsgT* msg, HandlerType const& handler, bool is_bcast = true,
     NodeType dest = uninitialized_destination
   );
 
   template <typename FunctorT, typename MsgT, typename BaseT = Message>
-  static void sendSerialMsg(
+  static messaging::PendingSend sendSerialMsg(
     NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager = nullptr
   );
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
-  static void sendSerialMsg(
+  static messaging::PendingSend sendSerialMsg(
     NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager = nullptr
   );
 
   template <typename MsgT, typename BaseT = Message>
-  static void sendSerialMsgHandler(
+  static messaging::PendingSend sendSerialMsgHandler(
     NodeType dest, MsgT* msg, HandlerType const& handler,
     ActionEagerSend<MsgT, BaseT> eager_sender = nullptr
   );
 
   template <typename FunctorT, typename MsgT, typename BaseT = Message>
-  static void broadcastSerialMsg(MsgT* msg);
+  static messaging::PendingSend broadcastSerialMsg(MsgT* msg);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
-  static void broadcastSerialMsg(MsgT* msg);
+  static messaging::PendingSend broadcastSerialMsg(MsgT* msg);
 
   template <typename MsgT, typename BaseT = Message>
-  static void broadcastSerialMsgHandler(MsgT* msg, HandlerType const& han);
+  static messaging::PendingSend broadcastSerialMsgHandler(MsgT* msg, HandlerType const& han);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
-  static void sendSerialMsg(
+  static messaging::PendingSend sendSerialMsg(
     MsgT* msg, ActionEagerSend<MsgT, BaseT> eager, ActionDataSend sender
   );
 
   template <typename MsgT, typename BaseT = Message>
-  static void sendSerialMsgHandler(
+  static messaging::PendingSend sendSerialMsgHandler(
     MsgT* msg, ActionEagerSend<MsgT, BaseT> eager_sender,
     HandlerType const& typed_handler, ActionDataSend data_sender
   );

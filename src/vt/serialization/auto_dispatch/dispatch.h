@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
+#include "vt/messaging/pending_send.h"
 #include "vt/serialization/serialize_interface.h"
 
 #if HAS_SERIALIZATION_LIBRARY
@@ -59,46 +60,46 @@ namespace vt { namespace serialization { namespace auto_dispatch {
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 struct Sender {
-  static EventType sendMsg(
+  static messaging::PendingSend sendMsg(
     NodeType const& node, MsgT* msg, TagType const& tag
   );
 };
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 struct SenderSerialize {
-  static EventType sendMsg(
+  static messaging::PendingSend sendMsg(
     NodeType const& node, MsgT* msg, TagType const& tag
   );
-  static EventType sendMsgParserdes(
+  static messaging::PendingSend sendMsgParserdes(
     NodeType const& node, MsgT* msg, TagType const& tag
   );
 };
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 struct Broadcaster {
-  static EventType broadcastMsg(
+  static messaging::PendingSend broadcastMsg(
     MsgT* msg, TagType const& tag
   );
 };
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 struct BroadcasterSerialize {
-  static EventType broadcastMsg(
+  static messaging::PendingSend broadcastMsg(
     MsgT* msg, TagType const& tag
   );
-  static EventType broadcastMsgParserdes(
+  static messaging::PendingSend broadcastMsgParserdes(
     MsgT* msg, TagType const& tag
   );
 };
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename=void>
 struct RequiredSerialization {
-  static EventType sendMsg(
+  static messaging::PendingSend sendMsg(
     NodeType const& node, MsgT* msg, TagType const& tag = no_tag
   ) {
     return Sender<MsgT,f>::sendMsg(node,msg,tag);
   }
-  static EventType broadcastMsg(
+  static messaging::PendingSend broadcastMsg(
     MsgT* msg, TagType const& tag = no_tag
   ) {
     return Broadcaster<MsgT,f>::broadcastMsg(msg,tag);
@@ -114,12 +115,12 @@ struct RequiredSerialization<
     ::serdes::SerializableTraits<MsgT>::has_serialize_function
   >
 > {
-  static EventType sendMsg(
+  static messaging::PendingSend sendMsg(
     NodeType const& node, MsgT* msg, TagType const& tag = no_tag
   ) {
     return SenderSerialize<MsgT,f>::sendMsg(node,msg,tag);
   }
-  static EventType broadcastMsg(
+  static messaging::PendingSend broadcastMsg(
     MsgT* msg, TagType const& tag = no_tag
   ) {
     return BroadcasterSerialize<MsgT,f>::broadcastMsg(msg,tag);
@@ -134,12 +135,12 @@ struct RequiredSerialization<
     ::serdes::SerializableTraits<MsgT>::is_parserdes
   >
 > {
-  static EventType sendMsg(
+  static messaging::PendingSend sendMsg(
     NodeType const& node, MsgT* msg, TagType const& tag = no_tag
   ) {
     return SenderSerialize<MsgT,f>::sendMsgParserdes(node,msg,tag);
   }
-  static EventType broadcastMsg(
+  static messaging::PendingSend broadcastMsg(
     MsgT* msg, TagType const& tag = no_tag
   ) {
     return BroadcasterSerialize<MsgT,f>::broadcastMsgParserdes(

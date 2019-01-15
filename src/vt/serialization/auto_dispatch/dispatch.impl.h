@@ -59,14 +59,14 @@ namespace vt { namespace serialization { namespace auto_dispatch {
  * Regular message send/broadcast pass-though (acts as delegate)
  */
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType Sender<MsgT,f>::sendMsg(
+/*static*/ messaging::PendingSend Sender<MsgT,f>::sendMsg(
   NodeType const& node, MsgT* msg, TagType const& tag
 ) {
   return theMsg()->sendMsg<MsgT,f>(node,msg,tag);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType Broadcaster<MsgT,f>::broadcastMsg(
+/*static*/ messaging::PendingSend Broadcaster<MsgT,f>::broadcastMsg(
   MsgT* msg, TagType const& tag
 ) {
   return theMsg()->broadcastMsg<MsgT,f>(msg,tag);
@@ -77,45 +77,37 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
  * type traits
  */
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType SenderSerialize<MsgT,f>::sendMsgParserdes(
+/*static*/ messaging::PendingSend SenderSerialize<MsgT,f>::sendMsgParserdes(
   NodeType const& node, MsgT* msg, TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
-  SerializedMessenger::sendParserdesMsg<MsgT,f>(node,msg);
-  // @todo: forward event through chain
-  return no_event;
+  return SerializedMessenger::sendParserdesMsg<MsgT,f>(node,msg);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType SenderSerialize<MsgT,f>::sendMsg(
+/*static*/ messaging::PendingSend SenderSerialize<MsgT,f>::sendMsg(
   NodeType const& node, MsgT* msg, TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
-  SerializedMessenger::sendSerialMsg<MsgT,f>(node,msg);
-  // @todo: forward event through chain
-  return no_event;
+  return SerializedMessenger::sendSerialMsg<MsgT,f>(node,msg);
 }
 
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType BroadcasterSerialize<MsgT,f>::broadcastMsgParserdes(
+/*static*/ messaging::PendingSend BroadcasterSerialize<MsgT,f>::broadcastMsgParserdes(
   MsgT* msg, TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
-  SerializedMessenger::broadcastParserdesMsg<MsgT,f>(msg);
-  // @todo: forward event through chain
-  return no_event;
+  return SerializedMessenger::broadcastParserdesMsg<MsgT,f>(msg);
 }
 
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ EventType BroadcasterSerialize<MsgT,f>::broadcastMsg(
+/*static*/ messaging::PendingSend BroadcasterSerialize<MsgT,f>::broadcastMsg(
   MsgT* msg, TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
-  SerializedMessenger::broadcastSerialMsg<MsgT,f>(msg);
-  // @todo: forward event through chain
-  return no_event;
+  return SerializedMessenger::broadcastSerialMsg<MsgT,f>(msg);
 }
 
 }}} /* end namespace vt::serialization::auto_dispatch */
