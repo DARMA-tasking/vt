@@ -929,7 +929,7 @@ void TerminationDetector::makeRootedEpoch(
   epoch_ready_.emplace(epoch);
 
   if (!is_root) {
-    state.activateEpoch();
+    activateEpoch(epoch);
   }
 
   if (is_root && state.noLocalUnits()) {
