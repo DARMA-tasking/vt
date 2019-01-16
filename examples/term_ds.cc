@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
     auto msg = makeSharedMessage<TestMsg>();
     envelopeSetEpoch(msg->env, cur_epoch);
     theMsg()->sendMsg<TestMsg,test_handler>((my_node + 1) % num_nodes,msg);
+    theTerm()->finishedEpoch(cur_epoch);
   }
 
   while (!rt->isTerminated()) {
