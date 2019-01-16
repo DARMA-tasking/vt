@@ -51,7 +51,7 @@
 
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
-#include "vt/vrt/context/context_vrtheaders.h"
+#include "vt/vrt/context/context_vrt_funcs.h"
 
 namespace vt { namespace seq {
 

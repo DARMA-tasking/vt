@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
 #include "vt/activefn/activefn.h"
+#include "vt/vrt/collection/active/active_funcs.h"
 
 namespace vt { namespace vrt { namespace collection {
 

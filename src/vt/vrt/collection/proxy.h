@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          vrt_common.h
+//                          proxy.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,15 +42,18 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_VRT_COMMON_H
-#define INCLUDED_VRT_VRT_COMMON_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PROXY_H
+#define INCLUDED_VT_VRT_COLLECTION_PROXY_H
 
 #include "vt/config.h"
+#include "vt/vrt/proxy/collection_proxy.h"
+#include "vt/vrt/proxy/collection_elm_proxy.h"
 
 namespace vt { namespace vrt {
 
-static constexpr NodeType const default_collection_reduce_root_node = 0;
+template <typename ColT, typename IndexT=typename ColT::IndexType>
+using VirtualElmProxyType = collection::VrtElmProxy<ColT, IndexT>;
 
 }} /* end namespace vt::vrt */
 
-#endif /*INCLUDED_VRT_VRT_COMMON_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PROXY_H*/

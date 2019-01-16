@@ -51,6 +51,7 @@
 #include "vt/topos/location/manager.fwd.h"
 #include "vt/topos/location/utility/coord.h"
 #include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/proxy.h"
 
 #include <unordered_map>
 #include <functional>

@@ -49,6 +49,7 @@
 #include "vt/topos/location/message/msg.h"
 #include "vt/messaging/message.h"
 #include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/collection/proxy.h"
 #include "vt/vrt/vrt_common.h"
 
 #include <type_traits>

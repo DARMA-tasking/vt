@@ -51,7 +51,7 @@
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/collection/active/active_funcs.h"
-#include "vt/vrt/proxy/collection_proxy.h"
+#include "vt/vrt/collection/proxy.h"
 
 namespace vt { namespace pipe {
 
