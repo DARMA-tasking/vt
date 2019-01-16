@@ -62,12 +62,15 @@ struct PendingSend final {
   ) : msg_(in_msg), msg_size_(in_msg_size)
   {
     vtAssert(in_action == nullptr, "Must be nullptr");
+    handlePresetOrNoEpoch();
   }
   template <typename MsgT>
   PendingSend(MsgSharedPtr<MsgT> in_msg, SendActionType const& in_action)
     : msg_(in_msg.template to<BaseMsgType>()), msg_size_(sizeof(MsgT)),
       send_action_(in_action)
-  { }
+  {
+    handlePresetOrNoEpoch();
+  }
 
   explicit PendingSend(nullptr_t) { }
   PendingSend(PendingSend const&) = delete;
@@ -81,6 +84,7 @@ struct PendingSend final {
 private:
   void createEpoch();
   void sendMsg();
+  void handlePresetOrNoEpoch();
 
 private:
   MsgSharedPtr<BaseMsgType> msg_ = nullptr;

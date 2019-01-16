@@ -62,10 +62,17 @@ void PendingSend::release() {
 }
 
 EpochType PendingSend::getEpoch() {
-  if (epoch_ == no_epoch) {
-    createEpoch();
+  if (epoch_ != no_epoch) {
+    return epoch_;
   }
-  return epoch_;
+  if (msg_ != nullptr) {
+    auto is_epoch_msg = envelopeIsEpochType(msg_->env);
+    vtAbortIf(!is_epoch_msg, "Message must be able to hold an epoch");
+    createEpoch();
+    return epoch_;
+  } else {
+    vtAbort("Tried to get an epoch while not holding a valid message");
+  }
 }
 
 void PendingSend::createEpoch() {
@@ -73,12 +80,19 @@ void PendingSend::createEpoch() {
     msg_ != nullptr || send_action_ != nullptr,
     "Invariant that PendingSend hold message ^ epoch failed "
   );
-  epoch_ = theTerm()->makeEpochRooted();
-  envelopeSetEpoch(msg_->env, epoch_);
+  auto cur_msg_epoch = envelopeGetEpoch(msg_->env);
+  if (cur_msg_epoch == no_epoch) {
+    epoch_ = theTerm()->makeEpochRooted();
+    theMsg()->setEpochMessage(msg_, epoch_);
+  } else {
+    epoch_ = cur_msg_epoch;
+  }
   sendMsg();
 }
 
 void PendingSend::sendMsg() {
+  // Send the message saved directly or trigger the lambda for specialized sends
+  // from the pending holder
   if (send_action_ == nullptr) {
     theMsg()->sendMsgSized(msg_, msg_size_);
   } else {
@@ -86,6 +100,21 @@ void PendingSend::sendMsg() {
   }
   msg_ = nullptr;
   send_action_ = nullptr;
+}
+
+void PendingSend::handlePresetOrNoEpoch() {
+  if (envelopeIsEpochType(msg_->env)) {
+    // If there is an epoch already assigned, save it in the holder and send the
+    // message off
+    auto cur_msg_epoch = envelopeGetEpoch(msg_->env);
+    if (cur_msg_epoch != no_epoch) {
+      epoch_ = cur_msg_epoch;
+      sendMsg();
+    }
+  } else {
+    // If the message does not hold an epoch (control msg), send it immediately
+    sendMsg();
+  }
 }
 
 }} /* end namespace vt::messaging */
