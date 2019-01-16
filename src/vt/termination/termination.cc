@@ -796,6 +796,9 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
      */
   }
 
+  // Activate the epoch, which is necessary for a rooted epoch
+  activateEpoch(epoch);
+
   debug_print(
     term, node,
     "finishedEpoch: (after consume) epoch={}\n",
