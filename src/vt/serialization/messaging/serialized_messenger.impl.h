@@ -294,9 +294,9 @@ template <typename MsgT, typename BaseT>
   auto const& total_size = ptr_size + msg_size + han_size + size_size;
   auto const& tag = no_tag;
   if (is_bcast) {
-    theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag);
+    return theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag);
   } else {
-    theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag);
+    return theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag);
   }
 }
 
