@@ -74,7 +74,14 @@ struct PendingSend final {
 
   explicit PendingSend(nullptr_t) { }
   PendingSend(PendingSend const&) = delete;
-  PendingSend(PendingSend&&) = default;
+  PendingSend(PendingSend&& in)
+    : msg_(std::move(in.msg_)),
+      msg_size_(std::move(in.msg_size_)),
+      epoch_(std::move(in.epoch_)),
+      send_action_(std::move(in.send_action_))
+  {
+    in.send_action_ = nullptr;
+  }
 
   ~PendingSend();
 
