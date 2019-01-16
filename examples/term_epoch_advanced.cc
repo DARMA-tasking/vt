@@ -93,7 +93,12 @@ static void propagateHandler(PropagateMsg* msg) {
 static void sendMsgEpoch(
   EpochType const& epoch, bool const set_epoch, TTLType const& ttl
 ) {
-  NodeType const random_node = drand48() * num_nodes;
+  NodeType random_node = drand48() * num_nodes;
+  while (random_node == my_node) {
+    random_node = drand48() * num_nodes;
+  }
+  vtAssertExpr(random_node != my_node);
+
   PropagateMsg* msg = nullptr;
 
   if (ttl == no_ttl) {
@@ -107,12 +112,15 @@ static void sendMsgEpoch(
     theMsg()->setEpochMessage(msg, epoch);
   }
 
-  fmt::print("{}: sending msg: epoch={}, ttl={}\n", my_node, epoch, msg->life_time);
+  fmt::print(
+    "{}: sending msg: epoch={}, ttl={}, random_node={}\n",
+    my_node, epoch, msg->life_time, random_node
+  );
 
   theMsg()->sendMsg<PropagateMsg, propagateHandler>(random_node, msg);
 
   fmt::print(
-    "{}: sendMsgEpoch: epoch={}, node={}, ttl-{}\n",
+    "{}: sendMsgEpoch: epoch={}, node={}, ttl={}\n",
     my_node, epoch, random_node, ttl
   );
 }
@@ -133,10 +141,10 @@ int main(int argc, char** argv) {
     auto const& rooted_new_epoch = theTerm()->makeEpochRooted();
     ::fmt::print("{}: new epoch={}\n", my_node, rooted_new_epoch);
     sendMsgEpoch(rooted_new_epoch, true, 5);
-    theTerm()->activateEpoch(rooted_new_epoch);
     theTerm()->addAction(rooted_new_epoch, [=]{
       ::fmt::print("{}: epoch={}, action\n", my_node, rooted_new_epoch);
     });
+    theTerm()->finishedEpoch(rooted_new_epoch);
   }
 
   while (!rt->isTerminated()) {
