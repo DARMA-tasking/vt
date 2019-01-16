@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/send/sendable.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/messaging/pending_send.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -69,7 +70,7 @@ template <
   typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
 >
-void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
+messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
@@ -77,7 +78,10 @@ void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
    * @todo:
    *.  Directly reuse this proxy: static_cast<VrtElmProxy<IndexT>*>(this)
    */
-  return theCollection()->sendMsg<MsgT, f>(proxy, msg);
+  auto send = [proxy](MsgSharedPtr<BaseMsgType> msg){
+    theCollection()->sendMsg<MsgT, f>(proxy, msg.template to<MsgT>().get());
+  };
+  return messaging::PendingSend(promoteMsg(msg), send);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -85,7 +89,7 @@ template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
 >
-void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
+messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
@@ -93,7 +97,10 @@ void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
    * @todo:
    *.  Directly reuse this proxy: static_cast<VrtElmProxy<IndexT>*>(this)
    */
-  return theCollection()->sendMsg<MsgT, f>(proxy, msg);
+  auto send = [proxy](MsgSharedPtr<BaseMsgType> msg){
+    theCollection()->sendMsg<MsgT, f>(proxy, msg.template to<MsgT>().get());
+  };
+  return messaging::PendingSend(promoteMsg(msg), send);
 }
 
 }}} /* end namespace vt::vrt::collection */
