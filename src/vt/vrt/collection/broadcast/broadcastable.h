@@ -49,6 +49,7 @@
 #include "vt/vrt/proxy/base_collection_proxy.h"
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/collection/active/active_funcs.h"
+#include "vt/messaging/pending_send.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -64,13 +65,13 @@ struct Broadcastable : BaseProxyT {
     typename MsgT,
     ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
   >
-  void broadcast(MsgT* msg) const;
+  messaging::PendingSend broadcast(MsgT* msg) const;
 
   template <
     typename MsgT,
     ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
   >
-  void broadcast(MsgT* msg) const;
+  messaging::PendingSend broadcast(MsgT* msg) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

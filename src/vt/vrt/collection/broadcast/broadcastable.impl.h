@@ -63,9 +63,13 @@ template <
   typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
 >
-void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
+messaging::PendingSend
+Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg);
+  auto bcast = [proxy](MsgSharedPtr<BaseMsgType> msg){
+    theCollection()->broadcastMsg<MsgT, f>(proxy,msg.template to<MsgT>().get());
+  };
+  return messaging::PendingSend(promoteMsg(msg), bcast);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -73,9 +77,13 @@ template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
 >
-void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
+messaging::PendingSend
+Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg);
+  auto bcast = [proxy](MsgSharedPtr<BaseMsgType> msg){
+    theCollection()->broadcastMsg<MsgT, f>(proxy,msg.template to<MsgT>().get());
+  };
+  return messaging::PendingSend(promoteMsg(msg), bcast);
 }
 
 }}} /* end namespace vt::vrt::collection */
