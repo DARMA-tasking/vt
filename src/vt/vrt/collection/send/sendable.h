@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/active/active_funcs.h"
+#include "vt/messaging/pending_send.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -65,13 +66,13 @@ struct Sendable : BaseProxyT {
     typename MsgT,
     ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
   >
-  void send(MsgT* msg) const;
+  messaging::PendingSend send(MsgT* msg) const;
 
   template <
     typename MsgT,
     ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
   >
-  void send(MsgT* msg) const;
+  messaging::PendingSend send(MsgT* msg) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
