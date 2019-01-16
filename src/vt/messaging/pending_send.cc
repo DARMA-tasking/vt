@@ -73,6 +73,7 @@ EpochType PendingSend::getEpoch() {
   } else {
     vtAbort("Tried to get an epoch while not holding a valid message");
   }
+  return no_epoch;
 }
 
 void PendingSend::createEpoch() {
