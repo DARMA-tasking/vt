@@ -80,6 +80,7 @@ struct PendingSend final {
       epoch_(std::move(in.epoch_)),
       send_action_(std::move(in.send_action_))
   {
+    in.msg_ = nullptr;
     in.send_action_ = nullptr;
   }
 
