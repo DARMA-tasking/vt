@@ -61,6 +61,11 @@ void EpochWindow::initialize(EpochType const& epoch) {
        */
       epoch::EpochManip::setSeq(arch_epoch,0);
       archetype_epoch_ = arch_epoch;
+      debug_print(
+        term, node,
+        "initialize window: epoch={:x}, archetype epoch={:x}\n",
+        epoch, archetype_epoch_
+      );
       initialized_ = true;
     }
   } else {
