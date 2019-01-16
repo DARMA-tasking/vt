@@ -82,7 +82,11 @@ inline bool EpochWindow::isArchetypal(EpochType const& epoch) {
 bool EpochWindow::inWindow(EpochType const& epoch) const {
   vtAssertExpr(last_unresolved_epoch_ >= first_unresolved_epoch_);
   vtAssertExpr(initialized_);
-  return epoch < first_unresolved_epoch_;
+  if (first_unresolved_epoch_ == no_epoch) {
+    return false;
+  } else {
+    return epoch < first_unresolved_epoch_;
+  }
 }
 
 void EpochWindow::addEpoch(EpochType const& epoch) {
