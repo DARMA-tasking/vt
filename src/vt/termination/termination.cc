@@ -837,6 +837,7 @@ EpochType TerminationDetector::newEpochRooted(
       );
       iter->second.addChildEpoch(rooted_epoch);
     }
+    epoch_ready_.emplace(rooted_epoch);
     return rooted_epoch;
   } else {
     auto const& rooted_epoch = epoch::EpochManip::makeNewRootedEpoch();
