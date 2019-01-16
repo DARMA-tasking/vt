@@ -55,7 +55,7 @@
 namespace vt {
 
 using RDMA_PtrType                = void *;
-using RDMA_ElmType                = int64_t;
+using RDMA_ElmType                = uint64_t;
 using RDMA_BlockType              = int64_t;
 using RDMA_HandleType             = int64_t;
 using RDMA_HandlerType            = int64_t;

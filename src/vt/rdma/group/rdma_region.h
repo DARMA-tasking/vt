@@ -57,8 +57,8 @@ using RegionElmSizeType = int32_t;
 static constexpr RegionElmSizeType const no_elm_size = -1;
 
 struct Region {
-  RDMA_ElmType lo = no_rdma_elm;
-  RDMA_ElmType hi = no_rdma_elm;
+  RDMA_ElmType lo;
+  RDMA_ElmType hi;
   RDMA_ElmType sd = 1;
 
   RegionElmSizeType elm_size = no_elm_size;

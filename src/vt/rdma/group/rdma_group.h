@@ -97,7 +97,7 @@ struct Group {
   RDMA_MapType map;
 
   ByteType elm_size;
-  RDMA_ElmType num_total_elems = no_rdma_elm;
+  RDMA_ElmType num_total_elems;
   RDMA_BlockType num_blocks = no_rdma_block;
   bool unsized_ = false;
 };
