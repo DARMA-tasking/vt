@@ -47,7 +47,6 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
-
 #include "vt/transport.h"
 
 namespace vt { namespace tests { namespace unit {
@@ -56,74 +55,123 @@ namespace vt { namespace tests { namespace unit {
 	using namespace vt::tests::unit;
 
 	struct TestTermAction : TestParallelHarness {
-		using TestMsg = TestStaticBytesShortMsg<4>;
+		using TestMsg = TestStaticBytesNormalMsg<4>;
 
 		// count the number of msgs received
-		static int32_t num_ack;
+		static NodeType root;
+		static int ack_count;
+		static int sen_count;
+		static int rcv_count;
 
-		static void respond(TestMsg* msg){
-			num_ack++;
+		virtual void SetUp(){
+			TestParallelHarness::SetUp();
+
+			sen_count = 5;
+			rcv_count = 0;
+			ack_count = 0;
+			root = 0;
 		}
 
-		static void ping(TestMsg* msg){
+		virtual void TearDown(){
+			TestParallelHarness::TearDown();
+		}
+
+		// handlers
+		static void rcv_handler(TestMsg* msg){
 			auto ack = makeSharedMessage<TestMsg>();
-			theMsg()->sendMsg<TestMsg,respond>(0,ack);
+			theMsg()->sendMsg<TestMsg,ack_handler>(root,ack);
+
+			rcv_count++;
+		}
+
+		static void ack_handler(TestMsg* msg){
+			ack_count++;
 		}
 	};
 
-	// initialize it
-/*static*/ int32_t TestTermAction::num_ack = 0;
+/*static*/ NodeType TestTermAction::root;
+/*static*/ int TestTermAction::ack_count;
+/*static*/ int TestTermAction::sen_count;
+/*static*/ int TestTermAction::rcv_count;
 
-TEST_F(TestTermAction, test_termination_action_global_simple)
+
+TEST_F(TestTermAction, test_termination_action_global_broadcast)
 {
-	auto const &this_node = theContext()->getNode();
-	auto const &num_nodes = theContext()->getNumNodes();
-
-	if (num_nodes < 2){
-		return;
-	}
+	auto const& my_node = theContext()->getNode();
+	auto const& num_nodes = theContext()->getNumNodes();
 
 	// case 1: node 0 send a msg to a group of nodes
 	// check that all messages have been received before
 	// any action stored in 'addAction' is actually triggered.
-	if(this_node == 0)
-	{
-		// Create range for the group [1,num_nodes);
-		auto range = std::make_unique<::vt::group::region::Range>(1,num_nodes);
+	if(num_nodes > 1){
+		if(my_node == root){
+			for(int i=0; i < sen_count; ++i){
+				auto msg = makeSharedMessage<TestMsg>();
+				theMsg()->broadcastMsg<TestMsg,rcv_handler>(msg);
+			}
+		}
 
-		// The non-collective group is created by a single node based on a range or
-		// list of nodes. The lambda is executed once the group is created. By
-		// setting the group in the envelope of the message and broadcasting the
-		// message will arrive on the set of nodes included in the group
-		auto id = theGroup()->newGroup(std::move(range), [](GroupType group_id)
-		{
-			//fmt::print("Group is created: id={:x}\n", group_id);
-			auto msg = makeSharedMessage<TestMsg>();
-			envelopeSetGroup(msg->env, group_id);
-			theMsg()->broadcastMsg<TestMsg,ping>(msg);
-		});
+		theTerm()->addAction([=]{
+			if(my_node == root){
+				#if DEBUG_TEST_HARNESS_PRINT
+					fmt::print("root: {} ack(s) received.\n", ack_count);
+				#endif
+					
+				/*auto const& status = theTerm()->testEpochFinished(term::any_epoch_sentinel,nullptr);
+				if(status == term::TermStatusEnum::Finished){
+					fmt::print("root: yes global termination.");
+				}
+				EXPECT_EQ(status, term::TermStatusEnum::Finished);*/
 
-		// the given lambda should not be executed if there is still some
-		// messages not delivered.
-		theTerm()->addAction([]{
-			auto const cur_node = vt::theContext()->getNode();
-			auto const num_nodes = vt::theContext()->getNumNodes();
-			fmt::print("rank {}: {} ack(s) received.\n", cur_node,num_ack);
-			//fmt::print("{}: terminated.\n", cur_node);
-			// 'handler_count' is incremented if only if all messages sent by node 0
-			// has been received by each node of the group.
-			EXPECT_EQ(num_ack,num_nodes-1);
+				// 'handler_count' is incremented if only if all messages sent by node 0
+				// has been received by each node of the group.
+				int const expected = sen_count*(num_nodes-1);
+				EXPECT_EQ(ack_count,expected);
+			}
+			else {
+				EXPECT_EQ(rcv_count,sen_count);
+			}
 		});
 	}
 }
 
-TEST_F(TestTermAction, test_termination_action_global_recursive)
+TEST_F(TestTermAction, test_termination_action_epoch_broadcast)
 {
+	auto const& my_node = theContext()->getNode();
+	auto const& num_nodes = theContext()->getNumNodes();
 
+	// create a new rooted epoch
+	//auto const my_epoch = theTerm()->makeEpochRooted(true);
+	auto const my_epoch = theTerm()->makeEpochCollective();
+
+	// case 1: node 0 send a msg to a group of nodes
+	// check that all messages have been received before
+	// any action stored in 'addAction' is actually triggered.
+	if(num_nodes > 1){
+		if (my_node == root){
+			for(int i=0; i < sen_count; ++i){
+				auto msg = makeSharedMessage<TestMsg>();
+				vt::envelopeSetEpoch(msg->env, my_epoch);
+				theMsg()->broadcastMsg<TestMsg,rcv_handler>(msg);
+			}
+		}
+
+		theTerm()->addActionEpoch(my_epoch,[=]{
+			if(my_node == root){
+				#if DEBUG_TEST_HARNESS_PRINT
+					fmt::print("root: terminated");
+				#endif
+				int const expected = sen_count*(num_nodes-1);
+				EXPECT_EQ(ack_count,expected);
+			}
+			else {
+				EXPECT_EQ(rcv_count,sen_count);
+			}
+		});
+		theTerm()->finishedEpoch(my_epoch);
+	}
 }
 
-// todo using recursive messages
-// todo using epochs
 
 
 }}} // end namespace vt::tests::unit
