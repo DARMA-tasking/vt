@@ -14,6 +14,7 @@ set(
   collectives
   epoch
   pool
+  location
   sequencer
   termination
   mapping
