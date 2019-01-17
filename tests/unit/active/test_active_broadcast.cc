@@ -75,7 +75,7 @@ struct TestActiveBroadcast : TestParameterHarnessNode {
   static void test_handler(TestMsg* msg) {
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
-      fmt::print("{}: test_handler: cnt={}\n", this_node, handler_count);
+      fmt::print("{}: test_handler: cnt={}\n", this_node, ack_count);
     #endif
 
     handler_count++;
