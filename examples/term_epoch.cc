@@ -88,7 +88,11 @@ static void propagate_handler(PropagateMsg* msg) {
 }
 
 static void sendMsgEpoch(EpochType const& epoch, TTLType const& ttl) {
-  NodeType const random_node = drand48() * num_nodes;
+  NodeType random_node = drand48() * num_nodes;
+  while (random_node == my_node) {
+    random_node = drand48() * num_nodes;
+  }
+  vtAssertExpr(random_node != my_node);
   PropagateMsg* msg = nullptr;
 
   if (ttl == no_ttl) {
