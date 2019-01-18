@@ -67,15 +67,6 @@ TerminationDetector::TerminationDetector()
   epoch_coll_(std::make_unique<EpochWindow>())
 { }
 
-/*static*/ void TerminationDetector::propagateNewEpochHandler(TermMsg* msg) {
-  bool const from_child = true;
-  theTerm()->propagateNewEpoch(msg->new_epoch, from_child);
-}
-
-/*static*/ void TerminationDetector::readyEpochHandler(TermMsg* msg) {
-  theTerm()->readyNewEpoch(msg->new_epoch);
-}
-
 /*static*/ void TerminationDetector::makeRootedEpoch(TermMsg* msg) {
   bool const is_root = false;
   theTerm()->makeRootedEpoch(msg->new_epoch, is_root);
@@ -757,7 +748,7 @@ EpochType TerminationDetector::newEpochCollective(bool const child) {
   epoch_coll_->addEpoch(new_epoch);
   auto const from_child = false;
   produce(new_epoch,1);
-  propagateNewEpoch(new_epoch, from_child);
+  setupNewEpoch(new_epoch, from_child);
 
   if (child) {
     linkChildEpoch(new_epoch);
@@ -930,7 +921,7 @@ void TerminationDetector::makeRootedEpoch(
   epoch_ready_.emplace(epoch);
 
   if (!is_root) {
-    activateEpoch(epoch);
+    state.activateEpoch();
   }
 
   if (is_root && state.noLocalUnits()) {
@@ -967,60 +958,6 @@ void TerminationDetector::setupNewEpoch(
     state.notifyChildReceive();
   } else {
     state.notifyLocalTerminated();
-  }
-}
-
-void TerminationDetector::propagateNewEpoch(
-  EpochType const& new_epoch, bool const from_child
-) {
-  setupNewEpoch(new_epoch, from_child);
-
-  auto epoch_iter = epoch_state_.find(new_epoch);
-  auto& state = epoch_iter->second;
-  bool const& is_root_ = isRoot();
-  auto const& parent_ = getParent();
-  bool const& is_ready = state.readySubmitParent(false);
-
-  debug_print(
-    term, node,
-    "propagateNewEpoch: is_ready={}, is_root_={}, epoch={}, event_count={}, "
-    "children={}\n",
-    print_bool(is_ready), print_bool(is_root_), new_epoch,
-    state.getRecvChildCount(), state.getNumChildren()
-  );
-
-  if (is_ready) {
-    auto msg = makeSharedMessage<TermMsg>(new_epoch);
-    theMsg()->setTermMessage(msg);
-
-    if (is_root_) {
-      // broadcast ready to all
-      theMsg()->broadcastMsg<TermMsg, readyEpochHandler>(msg);
-    } else {
-      // propagate up the tree
-      theMsg()->sendMsg<TermMsg, propagateNewEpochHandler>(parent_, msg);
-    }
-
-    state.submitToParent(is_root_, true);
-
-    if (is_root_) {
-      readyNewEpoch(new_epoch);
-    }
-  }
-}
-
-void TerminationDetector::readyNewEpoch(EpochType const& new_epoch) {
-  auto& state = findOrCreateState(new_epoch, true);
-  state.activateEpoch();
-
-  debug_print(
-    term, node,
-    "readyNewEpoch: epoch={:x}: collective: first={:x}, last={:x}\n",
-    new_epoch, epoch_coll_->getFirst(), epoch_coll_->getLast()
-  );
-
-  if (state.readySubmitParent()) {
-    propagateEpoch(state);
   }
 }
 

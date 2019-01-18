@@ -184,7 +184,6 @@ private:
   void epochFinished(EpochType const& epoch, bool const cleanup);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void setupNewEpoch(EpochType const& new_epoch, bool const from_child);
-  void propagateNewEpoch(EpochType const& new_epoch, bool const from_child);
   void readyNewEpoch(EpochType const& new_epoch);
   void linkChildEpoch(EpochType const& epoch);
   void rootMakeEpoch(EpochType const& epoch, bool const child = false);
@@ -193,8 +192,6 @@ private:
   static void makeRootedEpoch(TermMsg* msg);
   static void inquireEpochFinished(TermFinishedMsg* msg);
   static void replyEpochFinished(TermFinishedReplyMsg* msg);
-  static void propagateNewEpochHandler(TermMsg* msg);
-  static void readyEpochHandler(TermMsg* msg);
   static void propagateEpochHandler(TermCounterMsg* msg);
   static void epochFinishedHandler(TermMsg* msg);
   static void epochContinueHandler(TermMsg* msg);
