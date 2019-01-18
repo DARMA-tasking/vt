@@ -186,7 +186,7 @@ void TerminationDetector::produceConsumeState(
 
   debug_print(
     term, node,
-    "produceConsumeState: epoch={}, event_count={}, l_prod={}, l_cons={}, "
+    "produceConsumeState: epoch={:x}, event_count={}, l_prod={}, l_cons={}, "
     "num_units={}, produce={}\n",
     state.getEpoch(), state.getRecvChildCount(), state.l_prod, state.l_cons, num_units,
     print_bool(produce)
@@ -265,7 +265,7 @@ TerminationDetector::getDSTerm(EpochType const& epoch) {
       auto const is_ds = epoch_category == ds_epoch;
       debug_print(
         termds, node,
-        "getDSTerm: epoch={:x}, category={}, ds_epoch={}, "
+        "getDSTerm: epoch={:x}, category={}, ds_epoch={:x}, "
         "is_rooted={}, is_ds={}\n",
         epoch, epoch_category, ds_epoch, is_rooted, is_ds
       );
@@ -295,7 +295,7 @@ void TerminationDetector::produceConsume(
 ) {
   debug_print(
     term, node,
-    "produceConsume: epoch={}, num_units={}, produce={}\n",
+    "produceConsume: epoch={:x}, num_units={}, produce={}\n",
     epoch, num_units, print_bool(produce)
   );
 
@@ -336,9 +336,9 @@ void TerminationDetector::propagateEpochExternalState(
 ) {
   debug_print(
     term, node,
-    "propagateEpochExternalState: epoch={}, prod={}, cons={}, "
-    "event_count={}\n",
-    state.getEpoch(), prod, cons, state.getRecvChildCount()
+    "propagateEpochExternalState: epoch={:x}, prod={}, cons={}, "
+    "event_count={}, wave={}\n",
+    state.getEpoch(), prod, cons, state.getRecvChildCount(), state.getCurWave()
   );
 
   state.g_prod1 += prod;
@@ -357,7 +357,7 @@ void TerminationDetector::propagateEpochExternal(
 ) {
   debug_print(
     term, node,
-    "propagateEpochExternal: epoch={}, prod={}, cons={}\n",
+    "propagateEpochExternal: epoch={:x}, prod={}, cons={}\n",
     epoch, prod, cons
   );
 
@@ -411,7 +411,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
   debug_print(
     term, node,
-    "propagateEpoch: epoch={}, l_prod={}, l_cons={}, event_count={}, "
+    "propagateEpoch: epoch={:x}, l_prod={}, l_cons={}, event_count={}, "
     "children={}, is_ready={}\n",
     state.getEpoch(), state.l_prod, state.l_cons, state.getRecvChildCount(),
     state.getNumChildren(), print_bool(is_ready)
@@ -423,7 +423,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
     debug_print(
       term, node,
-      "propagateEpoch: epoch={}, l_prod={}, l_cons={}, "
+      "propagateEpoch: epoch={:x}, l_prod={}, l_cons={}, "
       "g_prod1={}, g_cons1={}, event_count={}, children={}\n",
       state.getEpoch(), state.l_prod, state.l_cons, state.g_prod1, state.g_cons1,
       state.getRecvChildCount(), state.getNumChildren()
@@ -438,7 +438,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
       debug_print(
         term, node,
-        "propagateEpoch: sending to parent: {}, msg={}, epoch={}, wave={}\n",
+        "propagateEpoch: sending to parent: {}, msg={}, epoch={:x}, wave={}\n",
         parent_, print_ptr(msg), state.getEpoch(), state.getCurWave()
       );
 
@@ -451,7 +451,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       // four-counter method implementation
       debug_print(
         term, node,
-        "propagateEpoch [root]: epoch={}, g_prod1={}, g_cons1={}, "
+        "propagateEpoch [root]: epoch={:x}, g_prod1={}, g_cons1={}, "
         "g_prod2={}, g_cons2={}, detected_term={}\n",
         state.getEpoch(), state.g_prod1, state.g_cons1, state.g_prod2,
         state.g_cons2, is_term
@@ -520,7 +520,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         debug_print(
           term, node,
-          "propagateEpoch [root]: epoch={}, wave={}, continue\n",
+          "propagateEpoch [root]: epoch={:x}, wave={}, continue\n",
           state.getEpoch(), state.getCurWave()
         );
 
@@ -532,7 +532,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
     debug_print(
       term, node,
-      "propagateEpoch: epoch={}, is_root={}: reset counters\n",
+      "propagateEpoch: epoch={:x}, is_root={}: reset counters\n",
       state.getEpoch(), print_bool(is_root_)
     );
 
@@ -560,7 +560,7 @@ void TerminationDetector::epochFinished(
 
   debug_print(
     term, node,
-    "epochFinished: epoch={}, is_rooted_epoch={}\n",
+    "epochFinished: epoch={:x}, is_rooted_epoch={}\n",
     epoch, is_rooted_epoch
   );
 
@@ -622,7 +622,7 @@ void TerminationDetector::inquireFinished(
 
   debug_print(
     term, node,
-    "inquireFinished: epoch={}, is_rooted={}, root={}, is_ready={}, from={}\n",
+    "inquireFinished: epoch={:x}, is_rooted={}, root={}, is_ready={}, from={}\n",
     epoch, is_rooted, epoch_root_node, is_ready, from
   );
 
@@ -635,7 +635,7 @@ void TerminationDetector::replyFinished(
 ) {
   debug_print(
     term, node,
-    "replyFinished: epoch={}, is_finished={}\n",
+    "replyFinished: epoch={:x}, is_finished={}\n",
     epoch, is_finished
   );
 }
@@ -695,7 +695,7 @@ TermStatusEnum TerminationDetector::testEpochFinished(
 
   debug_print(
     term, node,
-    "testEpochFinished: epoch={}, pending={}, finished={}, remote={}\n",
+    "testEpochFinished: epoch={:x}, pending={}, finished={}, remote={}\n",
     epoch, status == TermStatusEnum::Pending, status == TermStatusEnum::Finished,
     status == TermStatusEnum::Remote
   );
@@ -735,7 +735,7 @@ void TerminationDetector::epochContinue(
 ) {
   debug_print(
     term, node,
-    "epochContinue: epoch={}, any={}, wave={}\n",
+    "epochContinue: epoch={:x}, any={}, wave={}\n",
     epoch, any_epoch_sentinel, wave
   );
 
@@ -783,7 +783,7 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 
   debug_print(
     term, node,
-    "finishedEpoch: epoch={}, exists={}\n",
+    "finishedEpoch: epoch={:x}, exists={}\n",
     epoch, ready_iter != epoch_ready_.end()
   );
 
@@ -801,7 +801,7 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 
   debug_print(
     term, node,
-    "finishedEpoch: (after consume) epoch={}\n",
+    "finishedEpoch: (after consume) epoch={:x}\n",
     epoch
   );
 }
@@ -877,7 +877,7 @@ void TerminationDetector::rootMakeEpoch(
 ) {
   debug_print(
     term, node,
-    "rootMakeEpoch: root={}, epoch={}\n",
+    "rootMakeEpoch: root={}, epoch={:x}\n",
     theContext()->getNode(), epoch
   );
 
@@ -903,7 +903,7 @@ void TerminationDetector::rootMakeEpoch(
 void TerminationDetector::activateEpoch(EpochType const& epoch) {
   debug_print(
     term, node,
-    "activateEpoch: epoch={}\n", epoch
+    "activateEpoch: epoch={:x}\n", epoch
   );
 
   auto& state = findOrCreateState(epoch, true);
@@ -924,7 +924,7 @@ void TerminationDetector::makeRootedEpoch(
 
   debug_print(
     term, node,
-    "makeRootedEpoch: epoch={}, is_root={}\n", epoch, is_root
+    "makeRootedEpoch: epoch={:x}, is_root={}\n", epoch, is_root
   );
 
   epoch_ready_.emplace(epoch);
@@ -956,7 +956,7 @@ void TerminationDetector::setupNewEpoch(
 
   debug_print(
     term, node,
-    "setupNewEpoch: new_epoch={}, found={}, count={}\n",
+    "setupNewEpoch: new_epoch={:x}, found={}, count={}\n",
     new_epoch, print_bool(found),
     (found ? epoch_iter->second.getRecvChildCount() : -1)
   );

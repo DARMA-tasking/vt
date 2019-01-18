@@ -54,7 +54,7 @@ namespace vt { namespace term {
 inline void TerminationDetector::produce(
   EpochType epoch, TermCounterType const& num_units
 ) {
-  debug_print(term, node, "Termination: produce: epoch={}\n",epoch);
+  debug_print(term, node, "Termination: produce: epoch={:x}\n",epoch);
   auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
   return produceConsume(in_epoch, num_units, true);
 }
@@ -62,7 +62,7 @@ inline void TerminationDetector::produce(
 inline void TerminationDetector::consume(
   EpochType epoch, TermCounterType const& num_units
 ) {
-  debug_print(term, node, "Termination: consume: epoch={}\n",epoch);
+  debug_print(term, node, "Termination: consume: epoch={:x}\n",epoch);
   auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
   return produceConsume(in_epoch, num_units, false);
 }

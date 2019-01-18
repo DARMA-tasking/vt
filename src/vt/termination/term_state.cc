@@ -87,7 +87,7 @@ void TermState::notifyChildReceive() {
 
   debug_print(
     term, node,
-    "notifyChildReceive: epoch={}, active={}, local_ready={}, "
+    "notifyChildReceive: epoch={:x}, active={}, local_ready={}, "
     "submitted_wave={}, recv={}, children={}\n",
     epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
     submitted_wave_, recv_child_count_, num_children_
@@ -139,7 +139,7 @@ bool TermState::readySubmitParent(bool const needs_active) const {
 
   debug_print(
     term, node,
-    "readySubmitParent: epoch={}, active={}, local_ready={}, "
+    "readySubmitParent: epoch={:x}, active={}, local_ready={}, "
     "sub_wave={}, cur_wave_={}, recv_child={}, num_child={}, term={}:"
     " ret={}\n",
     epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
@@ -159,7 +159,7 @@ TermState::TermState(
 {
   debug_print(
     term, node,
-    "TermState: constructor: epoch={}, num_children={}, active={}, "
+    "TermState: constructor: epoch={:x}, num_children={}, active={}, "
     "local_terminated={}\n",
     epoch_, num_children_, print_bool(epoch_active_), print_bool(local_terminated_)
   );
@@ -170,7 +170,7 @@ TermState::TermState(EpochType const& in_epoch, NodeType const& children)
 {
   debug_print(
     term, node,
-    "TermState: constructor: epoch={}, event={}\n", epoch_, recv_child_count_
+    "TermState: constructor: epoch={:x}, event={}\n", epoch_, recv_child_count_
   );
 }
 
