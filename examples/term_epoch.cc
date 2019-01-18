@@ -80,7 +80,7 @@ static void sendMsgEpoch(EpochType const& epoch, TTLType const& ttl = no_ttl);
 static void propagate_handler(PropagateMsg* msg) {
   EpochType const epoch = envelopeGetEpoch(msg->env);
   fmt::print(
-    "{}: propagate_handler: msg={}, epoch={}\n", my_node, print_ptr(msg), epoch
+    "{}: propagate_handler: msg={}, epoch={:x}\n", my_node, print_ptr(msg), epoch
   );
   if (msg->life_time > 0) {
     sendMsgEpoch(epoch, msg->life_time);
@@ -102,12 +102,12 @@ static void sendMsgEpoch(EpochType const& epoch, TTLType const& ttl) {
     theMsg()->setEpochMessage(msg, epoch);
   }
 
-  fmt::print("{}: sending msg: epoch={}, ttl={}\n", my_node, epoch, msg->life_time);
+  fmt::print("{}: sending msg: epoch={:x}, ttl={}\n", my_node, epoch, msg->life_time);
 
   theMsg()->sendMsg<PropagateMsg, propagate_handler>(random_node, msg);
 
   fmt::print(
-    "{}: sendMsgEpoch: epoch={}, node={}, ttl-{}\n",
+    "{}: sendMsgEpoch: epoch={:x}, node={}, ttl-{}\n",
     my_node, epoch, random_node, ttl
   );
 }
@@ -120,19 +120,19 @@ static void sendStartEpoch(EpochType const& epoch) {
 }
 
 static void next_epoch() {
-  fmt::print("{}: cur_epoch={}\n", my_node, cur_epoch);
+  fmt::print("{}: cur_epoch={:x}\n", my_node, cur_epoch);
 
   if (use_epoch) {
 
     if (cur_epoch + 1 < max_epochs) {
       cur_epoch = theTerm()->newEpoch();
 
-      fmt::print("{}: new cur_epoch={}\n", my_node, cur_epoch);
+      fmt::print("{}: new cur_epoch={:x}\n", my_node, cur_epoch);
 
       sendStartEpoch(cur_epoch);
 
       theTerm()->addAction(cur_epoch, []{
-        fmt::print("{}: running attached action: cur_epoch={}\n", my_node, cur_epoch);
+        fmt::print("{}: running attached action: cur_epoch={:x}\n", my_node, cur_epoch);
         next_epoch();
       });
       theTerm()->finishedEpoch(cur_epoch);
