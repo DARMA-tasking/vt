@@ -211,7 +211,7 @@ EventType ActiveMessenger::sendMsgBytes(
     "Destination {} should != this node", dest
   );
   vtAbortIf(
-    dest >= theContext()->getNumNodes(), "Invalid destination: {}", dest
+    dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}", dest
   );
 
   MPI_Isend(
@@ -365,7 +365,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     "Destination {} should != this node", dest
   );
   vtAbortIf(
-    dest >= theContext()->getNumNodes(),
+    dest >= theContext()->getNumNodes() || dest < 0,
     "Invalid destination: {}", dest
   );
 
