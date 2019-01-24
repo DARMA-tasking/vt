@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
+#include "vt/trace/trace.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/arguments/args.h"
 
