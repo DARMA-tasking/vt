@@ -52,6 +52,8 @@
 #include "data_message.h"
 #include "vt/transport.h"
 
+#define DEBUG_TERM_ACTION 0
+
 namespace vt { namespace tests { namespace unit {
 
 struct TestTermAction : vt::tests::unit::TestParallelHarness {
@@ -177,6 +179,13 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
       if(i not_eq me){
         // confirmation missing
         if(data[ep].out_[i] not_eq data[ep].ack_[i]){
+          #if DEBUG_TERM_ACTION
+            fmt::print(
+              "{}: propgate: sendPing to {}, out={}, degree={}\n",
+              me,i,data[ep].out_[i],data[ep].degree_+1
+            );
+          #endif
+
           // check subtree
           sendPing(i,data[ep].out_[i],ep);
           // more echoes outstanding
@@ -232,6 +241,14 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     data[ep].ack_[src] = msg->nb_in_;
     // decrease missing echoes counter
     data[ep].degree_--;
+
+    #if DEBUG_TERM_ACTION
+      fmt::print(
+        "{}: echoHandler: in={}, ack={}, degree={}\n",
+        me,msg->nb_in_,data[ep].ack_[src], data[ep].degree_
+      );
+    #endif
+
     // last echo checks whether all subtrees are quiet
     if(data[ep].degree_ == 0){
       propagate(ep);
@@ -250,6 +267,13 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     vtAssertExpr(me == msg->dst_);
     auto const& src = msg->src_;
     auto const& ep = msg->epoch_;
+
+    #if DEBUG_TERM_ACTION
+      fmt::print(
+        "{}: pingHandler: in={}, src={}, degree={}\n",
+        me,data[ep].in_[src],src,data[ep].degree_
+      );
+    #endif
 
     // if already engaged or subtree is quiet
     if(data[ep].degree_ > 0 or hasFinished(ep)){
