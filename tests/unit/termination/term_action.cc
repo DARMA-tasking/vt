@@ -45,6 +45,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <random>
+#include <map>
+#include <vector>
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
