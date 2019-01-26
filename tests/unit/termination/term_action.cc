@@ -125,9 +125,8 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   // for channel counting algorithm
   // ---------------------------------
   struct Metadata {
-
-    int degree_;
-    int activator_;
+    int degree_ = 0;
+    int activator_ = 0;
     std::vector<int> in_;       // Cij^-
     std::vector<int> out_;      // Cij^+
     std::vector<int> ack_;
