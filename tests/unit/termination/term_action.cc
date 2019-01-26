@@ -139,45 +139,36 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     Metadata(int act) : Metadata(){ activator_ = act; }
   };
 
-  // shortcuts for message sending
-  static void sendBasic(vt::NodeType dst, vt::EpochType ep){
+
+  template <typename MsgT, vt::ActiveTypedFnType<MsgT>* handler>
+  static void sendTermMsg(vt::NodeType dst, vt::NodeType count, vt::EpochType ep){
     vtAssertExpr(dst not_eq me);
-    auto msg = makeSharedMessage<BasicMsg>(me,dst,1,ep);
+    auto msg = makeSharedMessage<MsgT>(me,dst,count,ep);
     if(ep not_eq vt::no_epoch){
       vt::envelopeSetEpoch(msg->env,ep);
     }
-    vt::theMsg()->sendMsg<BasicMsg,basicHandler>(dst,msg);
+    vt::theMsg()->sendMsg<MsgT,handler>(dst,msg);
+  }
+
+  // shortcuts for message sending
+  static void sendBasic(vt::NodeType dst, vt::EpochType ep){
+    sendTermMsg<BasicMsg,basicHandler>(dst,1,ep);
     // increment outgoing message counter
     data[ep].out_[dst]++;
   }
 
   static void routeBasic(vt::NodeType dst, vt::NodeType ttl, vt::EpochType ep){
-    vtAssertExpr(dst not_eq me);
-    auto msg = makeSharedMessage<BasicMsg>(me,dst,ttl,ep);
-    if(ep not_eq vt::no_epoch){
-      vt::envelopeSetEpoch(msg->env,ep);
-    }
-    vt::theMsg()->sendMsg<BasicMsg,routedHandler>(dst,msg);
+    sendTermMsg<BasicMsg,routedHandler>(dst,ttl,ep);
     // increment outgoing message counter
     data[ep].out_[dst]++;
   }
 
-  static void sendPing(vt::NodeType dst, vt::NodeType count, vt::EpochType ep){
-    vtAssertExpr(dst not_eq me);
-    auto msg = makeSharedMessage<PingMsg>(me,dst,count,ep);
-    if(ep not_eq vt::no_epoch){
-      vt::envelopeSetEpoch(msg->env,ep);
-    }
-    vt::theMsg()->sendMsg<PingMsg,pingHandler>(dst,msg);
+  static void sendEcho(vt::NodeType dst, vt::NodeType count, vt::EpochType ep){
+    sendTermMsg<EchoMsg,echoHandler>(dst,count,ep);
   }
 
-  static void sendEcho(vt::NodeType dst, vt::NodeType count, vt::EpochType ep){
-    vtAssertExpr(dst not_eq me);
-    auto msg = makeSharedMessage<EchoMsg>(me,dst,count,ep);
-    if(ep not_eq vt::no_epoch){
-      vt::envelopeSetEpoch(msg->env,ep);
-    }
-    vt::theMsg()->sendMsg<EchoMsg,echoHandler>(dst,msg);
+  static void sendPing(vt::NodeType dst, vt::NodeType count, vt::EpochType ep){
+    sendTermMsg<PingMsg,pingHandler>(dst,count,ep);
   }
 
   // propagate check on current subtree
