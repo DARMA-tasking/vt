@@ -320,10 +320,8 @@ TEST_F(TestTermAction, test_term_detect_broadcast)
       sendBasic(i,vt::no_epoch);
     }
 
-    // retrieve counters from other nodes
-    for(int i=1; i < all; ++i){
-      sendPing(i,data[vt::no_epoch].out_[i],vt::no_epoch);
-    }
+    // start channel termination algorithm to verify correctness
+    propagate(vt::no_epoch);
 
     // check global termination
     theTerm()->addAction([=]{
@@ -353,9 +351,7 @@ TEST_F(TestTermAction, test_term_detect_routed)
     }
 
     // retrieve counters from other nodes
-    for(int i=1; i < all; ++i){
-      sendPing(i,data[vt::no_epoch].out_[i],vt::no_epoch);
-    }
+    propagate(vt::no_epoch);
 
     // check counters when everything is done
     theTerm()->addAction([=]{
@@ -395,9 +391,7 @@ TEST_F(TestTermAction, test_term_detect_epoch)
         routeBasic(dst,ttl,ep[i]);
       }
       // send signal for termination detection
-      for(int i=1; i < all; ++i){
-        sendPing(i,data[ep[i]].out_[i],ep[i]);
-      }
+      propagate(ep[i]);
     }
   }
   //
