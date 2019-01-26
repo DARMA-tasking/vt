@@ -224,7 +224,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     if (msg->ttl_ > 0){
       int const nb_rounds = static_cast<int>(drand48()*5);
       for(int k=0; k < nb_rounds; ++k){
-        int dst = (me+1 > all-1 ? 1: me+1);
+        int dst = (me+1 > all-1 ? 0: me+1);
         routeBasic(dst,msg->ttl_,msg->epoch_);
       }
     }
