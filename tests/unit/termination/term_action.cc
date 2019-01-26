@@ -225,8 +225,15 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     if (msg->ttl_ > 0){
       int const nb_rounds = static_cast<int>(drand48()*5);
       for(int k=0; k < nb_rounds; ++k){
-        int dst = (me+1 > all-1 ? 0: me+1);
-        routeBasic(dst,msg->ttl_,msg->epoch_);
+        // If we only have two nodes, the root and self-send are excluded; thus,
+        // we can not route another message
+        if (all-2 > 0) {
+          int dst = (me+1 > all-1 ? 1: me+1);
+          if (dst == me && dst == 1) dst++;
+          vtAssertExpr(dst < all);
+          vtAssertExpr(dst > 1 || me != 1);
+          routeBasic(dst,msg->ttl_,msg->epoch_);
+        }
       }
     }
   }
