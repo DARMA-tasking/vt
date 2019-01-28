@@ -139,49 +139,64 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
       ack_.resize(all,0);
     }
     Metadata(int act) : Metadata(){ activator_ = act; }
+    ~Metadata(){
+      in_.clear();
+      out_.clear();
+      ack_.clear();
+    }
   };
 
 
-  template <typename MsgT, vt::ActiveTypedFnType<MsgT>* handler>
-  static void sendTermMsg(vt::NodeType dst, vt::NodeType count, vt::EpochType ep){
+  template<typename Msg, vt::ActiveTypedFnType<Msg>* handler>
+  static void sendMsg(vt::NodeType dst, int count, vt::EpochType ep){
     vtAssertExpr(dst not_eq me);
-    auto msg = makeSharedMessage<MsgT>(me,dst,count,ep);
+    auto msg = makeSharedMessage<Msg>(me,dst,count,ep);
     if(ep not_eq vt::no_epoch){
       vt::envelopeSetEpoch(msg->env,ep);
     }
-    vt::theMsg()->sendMsg<MsgT,handler>(dst,msg);
+    vt::theMsg()->sendMsg<Msg,handler>(dst,msg);
   }
 
   // shortcuts for message sending
   static void sendBasic(vt::NodeType dst, vt::EpochType ep){
-    sendTermMsg<BasicMsg,basicHandler>(dst,1,ep);
+    sendMsg<BasicMsg,basicHandler>(dst,1,ep);
     // increment outgoing message counter
     data[ep].out_[dst]++;
   }
 
-  static void routeBasic(vt::NodeType dst, vt::NodeType ttl, vt::EpochType ep){
-    sendTermMsg<BasicMsg,routedHandler>(dst,ttl,ep);
+  static void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep){
+    sendMsg<BasicMsg,routedHandler>(dst,ttl,ep);
     // increment outgoing message counter
     data[ep].out_[dst]++;
   }
 
-  static void sendEcho(vt::NodeType dst, vt::NodeType count, vt::EpochType ep){
-    sendTermMsg<EchoMsg,echoHandler>(dst,count,ep);
+  static void sendEcho(vt::NodeType dst, int count, vt::EpochType ep){
+    sendMsg<EchoMsg,echoHandler>(dst,count,ep);
   }
 
-  static void sendPing(vt::NodeType dst, vt::NodeType count, vt::EpochType ep){
-    sendTermMsg<PingMsg,pingHandler>(dst,count,ep);
+  static void sendPing(vt::NodeType dst, int count, vt::EpochType ep){
+    sendMsg<PingMsg,pingHandler>(dst,count,ep);
+  }
+
+  static void initiate(vt::EpochType ep){
+    for(int j=1; j < all; ++j){
+      sendPing(j,data[ep].out_[j],ep);
+      // avoid potential negative degree
+      // it may occurs when an echo is
+      // directly sent to the root
+      data[ep].degree_++;
+    }
   }
 
   // propagate check on current subtree
   static void propagate(vt::EpochType ep){
-    for(int i=0; i < all; i++){
+    for(int i=1; i < all; ++i){
       if(i not_eq me){
         // confirmation missing
         if(data[ep].out_[i] not_eq data[ep].ack_[i]){
           #if DEBUG_TERM_ACTION
             fmt::print(
-              "{}: propgate: sendPing to {}, out={}, degree={}\n",
+              "{}: propagate: sendPing to {}, out={}, degree={}\n",
               me,i,data[ep].out_[i],data[ep].degree_+1
             );
           #endif
@@ -229,9 +244,9 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
         // we can not route another message
         if (all-2 > 0) {
           int dst = (me+1 > all-1 ? 1: me+1);
-          if (dst == me && dst == 1) dst++;
+          //if (dst == me && dst == 1) dst++;
           vtAssertExpr(dst < all);
-          vtAssertExpr(dst > 1 || me != 1);
+          //vtAssertExpr(dst > 1 || me != 1);
           routeBasic(dst,msg->ttl_,msg->epoch_);
         }
       }
@@ -301,10 +316,6 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     all = vt::theContext()->getNumNodes();
     vtAssert(all > 1, "There should be at least two nodes");
   }
-
-  virtual void TearDown(){
-    vt::tests::unit::TestParallelHarness::TearDown();
-  }
 };
 
 /*static*/ vt::NodeType TestTermAction::me;
@@ -321,10 +332,10 @@ TEST_F(TestTermAction, test_term_detect_broadcast)
     }
 
     // start channel termination algorithm to verify correctness
-    propagate(vt::no_epoch);
+    initiate(vt::no_epoch);
 
     // check global termination
-    theTerm()->addAction([=]{
+    theTerm()->addAction([]{
       EXPECT_TRUE(hasFinished(vt::no_epoch));
     });
   }
@@ -351,27 +362,25 @@ TEST_F(TestTermAction, test_term_detect_routed)
     }
 
     // retrieve counters from other nodes
-    propagate(vt::no_epoch);
+    initiate(vt::no_epoch);
 
     // check counters when everything is done
-    theTerm()->addAction([=]{
-      // check local termination
+    theTerm()->addAction([]{
       EXPECT_TRUE(hasFinished(vt::no_epoch));
     });
   }
 }
+
 
 TEST_F(TestTermAction, test_term_detect_epoch)
 {
   int const nb_ep = 4;
   vt::EpochType ep[nb_ep];
 
-
   // create epochs in a collective way
   for(int i=0; i < nb_ep; ++i){
     ep[i] = vt::theTerm()->makeEpochCollective();
   }
-
 
   if(me == root){
     std::random_device device;
@@ -390,8 +399,9 @@ TEST_F(TestTermAction, test_term_detect_epoch)
         int ttl = dist_ttl(engine);
         routeBasic(dst,ttl,ep[i]);
       }
-      // send signal for termination detection
-      propagate(ep[i]);
+      // send signal to initiate
+      // termination detection
+      initiate(ep[i]);
     }
   }
   //
