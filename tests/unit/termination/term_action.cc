@@ -46,7 +46,6 @@
 #include <gmock/gmock.h>
 #include <random>
 #include <unordered_map>
-#include <vector>
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
@@ -129,9 +128,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
       }
     }
 
-    ~Metadata(){
-      count_.clear();
-    };
+    ~Metadata(){ count_.clear(); };
   };
 
 
@@ -156,8 +153,9 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     vt::theMsg()->broadcastMsg<BasicMsg,handler>(msg);
     for(auto& active: data[ep].count_){
       auto const& dst = active.first;
+      auto& nb = active.second;
       if(dst not_eq me){
-        active.second.out_++;
+        nb.out_++;
       }
     }
   }
@@ -188,12 +186,15 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     vtAssert(me == root, "Only root may trigger termination check");
     for(auto& active: data[ep].count_){
       auto const& dst = active.first;
+
       if(dst not_eq me){
-        sendPing(dst,active.second.out_,ep);
-        // avoid potential negative degree
+        auto& nb = active.second;
+        auto& degree = data[ep].degree_;
+        // avoid potential negative degree.
         // it may occurs when an echo is
         // directly sent to the root
-        data[ep].degree_++;
+        sendPing(dst,nb.out_,ep);
+        degree++;
       }
     }
   }
@@ -203,18 +204,20 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     for(auto& active: data[ep].count_){
       auto const& dst = active.first;
       if(dst not_eq me){
+        auto& nb = active.second;
+        auto& degree = data[ep].degree_;
         // confirmation missing
-        if(active.second.out_ not_eq active.second.ack_){
+        if(nb.out_ not_eq nb.ack_){
           #if DEBUG_TERM_ACTION
             fmt::print(
               "{}: propagate: sendPing to {}, out={}, degree={}\n",
-              me,i,active.second.out_,data[ep].degree_+1
+              me,i,nb.out_,degree+1
             );
           #endif
           // check subtree
-          sendPing(dst,active.second.out_,ep);
+          sendPing(dst,nb.out_,ep);
           // more echoes outstanding
-          data[ep].degree_++;
+          degree++;
         }
       }
     }
@@ -226,7 +229,8 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     for(auto& active: data[ep].count_){
       auto const& dst = active.first;
       if(dst not_eq me){
-        if(active.second.out_ not_eq active.second.ack_){
+        auto const& nb = active.second;
+        if(nb.out_ not_eq nb.ack_){
           return false;
         }
       }
@@ -241,9 +245,8 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     auto const& src = msg->src_;
     // avoid self sending case
     if(me not_eq src){
-      auto const& ep = msg->epoch_;
-      // when Pj send to Pi, increment out_[i]
-      data[ep].count_[src].in_++;
+      auto& nb = data[msg->epoch_].count_[src];
+      nb.in_++;
     }
   }
 
@@ -267,29 +270,34 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   // on receipt of an echo message echo<m> from Pi
   static void echoHandler(CtrlMsg* msg){
     vtAssertExpr(me == msg->dst_);
+    // shortcuts for readability
     auto const& src = msg->src_;
     auto const& ep = msg->epoch_;
+    auto& degree = data[ep].degree_;
+    auto& nb_ack = data[ep].count_[src].ack_;
 
-    data[ep].count_[src].ack_ = msg->count_;
-    // decrease missing echoes counter
-    data[ep].degree_--;
+    // update ack and decrease missing echoes counter
+    nb_ack = msg->count_;
+    degree--;
 
     #if DEBUG_TERM_ACTION
       fmt::print(
         "{}: echoHandler: in={}, ack={}, degree={}\n",
-        me,msg->count_,data[ep].ack_[src], data[ep].degree_
+        me,msg->count_,nb_ack, data[ep].degree_
       );
     #endif
 
     // last echo checks whether all subtrees are quiet
-    if(data[ep].degree_ == 0){
+    if(degree == 0){
       propagate(ep);
     }
     // all echoes arrived, everything quiet
-    if(data[ep].degree_ == 0){
-      int const activator = data[ep].activator_;
-      if(me not_eq activator){
-        sendEcho(activator,data[ep].count_[activator].in_,ep);
+    if(degree == 0){
+      // echo to parent activator node
+      auto const& dst = data[ep].activator_;
+      auto const& nb = data[ep].count_[dst];
+      if(dst not_eq me){
+        sendEcho(dst,nb.in_,ep);
       }
     }
   }
@@ -299,20 +307,23 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     vtAssertExpr(me == msg->dst_);
     auto const& src = msg->src_;
     auto const& ep = msg->epoch_;
+    auto const& degree = data[ep].degree_;
+    auto const& nb = data[ep].count_[src];
+    auto& activator = data[ep].activator_;
 
     #if DEBUG_TERM_ACTION
       fmt::print(
         "{}: pingHandler: in={}, src={}, degree={}\n",
-        me,data[ep].in_[src],src,data[ep].degree_
+        me,nb.in_,src,degree
       );
     #endif
 
     // if already engaged or subtree is quiet
-    if(data[ep].degree_ > 0 or hasFinished(ep)){
-      sendEcho(src,data[ep].count_[src].in_,ep);
+    if(degree > 0 or hasFinished(ep)){
+      sendEcho(src,nb.in_,ep);
     }
     else {
-      data[ep].activator_ = src;
+      activator = src;
       propagate(ep);
     }
   }
@@ -401,11 +412,16 @@ TEST_F(TestTermAction, test_term_detect_epoch)
     for(int i=0; i < nb_ep; ++i){
       int rounds = dist_round(engine);
       // start computation
-      for(int k=0; k < rounds; ++k){
-        int dst = me + dist_dest(engine);
-        int ttl = dist_ttl(engine);
-        routeBasic(dst,ttl,ep[i]);
+      if(all > 2){
+        for(int k=0; k < rounds; ++k){
+          int dst = me + dist_dest(engine);
+          int ttl = dist_ttl(engine);
+          routeBasic(dst,ttl,ep[i]);
+        }
+      } else {
+        broadcast<basicHandler>(1,ep[i]);
       }
+
       // trigger termination detection
       trigger(ep[i]);
     }
