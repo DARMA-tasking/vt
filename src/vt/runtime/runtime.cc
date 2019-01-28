@@ -82,6 +82,7 @@
 namespace vt { namespace runtime {
 
 /*static*/ std::string Runtime::prog_name_ = "";
+/*static*/ bool Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
@@ -94,6 +95,7 @@ Runtime::Runtime(
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
+  sig_user_1_ = false;
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
@@ -112,8 +114,7 @@ void Runtime::pauseForDebugger() {
     FILE* f = fopen(node_str, "w+");
     fprintf(f, "%d", pid);
     fclose(f);
-
-    sleep(10);
+    while (!sig_user_1_);
   }
 }
 
@@ -136,6 +137,10 @@ void Runtime::pauseForDebugger() {
     }
   }
   std::exit(1);
+}
+
+/*static*/ void Runtime::sigHandlerUsr1(int sig) {
+  Runtime::sig_user_1_ = true;
 }
 
 /*static*/ void Runtime::sigHandler(int sig) {
@@ -199,6 +204,7 @@ void Runtime::setupSignalHandler() {
   if (!ArgType::vt_no_sigsegv) {
     signal(SIGSEGV, Runtime::sigHandler);
   }
+  signal(SIGUSR1, Runtime::sigHandlerUsr1);
 }
 
 void Runtime::setupSignalHandlerINT() {
