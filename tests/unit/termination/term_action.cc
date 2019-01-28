@@ -75,10 +75,10 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
       ttl_(ttl-1),
       epoch_(epoch) {}
     BasicMsg(vt::NodeType src, vt::NodeType dst, int ttl) : BasicMsg(src,dst,ttl,vt::no_epoch){}
-    BasicMsg(vt::NodeType src, vt::NodeType dst) : BasicMsg(src,dst,4,vt::no_epoch){}
+    BasicMsg(vt::NodeType src, vt::NodeType dst) : BasicMsg(src,dst,1,vt::no_epoch){}
 
     //
-    int ttl_ = 3;
+    int ttl_ = 0;
     vt::NodeType src_ = vt::uninitialized_destination;
     vt::NodeType dst_ = vt::uninitialized_destination;
     vt::EpochType epoch_ = vt::no_epoch;
@@ -139,6 +139,22 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
       vt::envelopeSetEpoch(msg->env,ep);
     }
     vt::theMsg()->sendMsg<Msg,handler>(dst,msg);
+  }
+
+  // note: only for basic messages,
+  // but different handlers may be used.
+  template<vt::ActiveTypedFnType<BasicMsg>* handler>
+  static void broadcast(int count, vt::EpochType ep){
+    auto msg = makeSharedMessage<BasicMsg>(me,vt::uninitialized_destination,count,ep);
+    if(ep not_eq vt::no_epoch){
+      vt::envelopeSetEpoch(msg->env,ep);
+    }
+    vt::theMsg()->broadcastMsg<BasicMsg,handler>(msg);
+    for(int dst=0; dst < all; ++dst){
+      if(dst not_eq me){
+        data[ep].out_[dst]++;
+      }
+    }
   }
 
   // shortcuts for message sending
@@ -209,14 +225,18 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     return true;
   }
 
-  // on receipt of a basic message
+  // on receipt of a basic message.
+  // note: msg->dst is uninitialized on broadcast,
+  // thus related assertion was removed.
   static void basicHandler(BasicMsg* msg){
-    vtAssertExpr(me == msg->dst_);
+    // avoid self sending
     auto const& src = msg->src_;
     vtAssertExpr(src < all);
-    auto const& ep = msg->epoch_;
-    // when Pj send to Pi, increment out_[i]
-    data[ep].in_[src]++;
+    if(me not_eq src){
+      auto const& ep = msg->epoch_;
+      // when Pj send to Pi, increment out_[i]
+      data[ep].in_[src]++;
+    }
   }
 
   static void routedHandler(BasicMsg* msg){
@@ -312,14 +332,11 @@ TEST_F(TestTermAction, test_term_detect_broadcast)
 {
   if(me == root){
     // start computation
-    for(int i=1; i < all; ++i){
-      sendBasic(i,vt::no_epoch);
-    }
-
-    // send signal to initiate termination detection
+    broadcast<basicHandler>(1,vt::no_epoch);
+    // trigger termination detection
     initiate(vt::no_epoch);
 
-    // check global termination
+    // check status
     theTerm()->addAction([]{
       EXPECT_TRUE(hasFinished(vt::no_epoch));
     });
@@ -328,7 +345,6 @@ TEST_F(TestTermAction, test_term_detect_broadcast)
 
 TEST_F(TestTermAction, test_term_detect_routed)
 {
-
   if(me == root){
 
     std::random_device device;
@@ -346,7 +362,7 @@ TEST_F(TestTermAction, test_term_detect_routed)
       routeBasic(dst,ttl,vt::no_epoch);
     }
 
-    // send signal to initiate termination detection
+    // trigger termination detection
     initiate(vt::no_epoch);
 
     // check status
