@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          term_term.cc
+//                          test_term.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -65,7 +65,6 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   static vt::NodeType all;
   static std::map<vt::EpochType,Metadata> data;
 
-
   // basic message
   struct BasicMsg : vt::Message {
 
@@ -88,38 +87,23 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   // -----------------------------------------
   // - control messages for channel counting -
   // -----------------------------------------
-  struct PingMsg : vt::Message {
+  struct CtrlMsg : vt::Message {
 
-    PingMsg() = default;
-    PingMsg(vt::NodeType src, vt::NodeType dst, int nb, vt::EpochType epoch) :
+    CtrlMsg() = default;
+    CtrlMsg(vt::NodeType src, vt::NodeType dst, int nb, vt::EpochType epoch) :
       src_(src),
       dst_(dst),
-      nb_out_(nb),
+      count_(nb),
       epoch_(epoch) {}
-    PingMsg(vt::NodeType src, vt::NodeType dst, int nb) : PingMsg(src,dst,nb,vt::no_epoch){}
-    PingMsg(vt::NodeType src, vt::NodeType dst) : PingMsg(src,dst,0,vt::no_epoch){}
+    CtrlMsg(vt::NodeType src, vt::NodeType dst, int nb) : CtrlMsg(src,dst,nb,vt::no_epoch){}
+    CtrlMsg(vt::NodeType src, vt::NodeType dst) : CtrlMsg(src,dst,0,vt::no_epoch){}
 
-    int nb_out_ = 0;
+    // nb of outgoing basic messages for 'pingHandler'
+    // nb of incoming basic messages for 'echoHandler'
+    int count_ = 0;
     vt::NodeType src_ = vt::uninitialized_destination;
     vt::NodeType dst_ = vt::uninitialized_destination;
-    vt::EpochType epoch_ = vt::no_epoch;
-  };
-
-  struct EchoMsg : vt::Message {
-
-    EchoMsg() = default;
-    EchoMsg(vt::NodeType src, vt::NodeType dst, int nb, vt::EpochType epoch) :
-      src_(src),
-      dst_(dst),
-      nb_in_(nb),
-      epoch_(epoch) {}
-    EchoMsg(vt::NodeType src, vt::NodeType dst, int nb) : EchoMsg(src,dst,nb,vt::no_epoch){}
-    EchoMsg(vt::NodeType src, vt::NodeType dst) : EchoMsg(src,dst,0,vt::no_epoch){}
-
-    int nb_in_ = 0;
-    vt::NodeType src_ = vt::uninitialized_destination;
-    vt::NodeType dst_ = vt::uninitialized_destination;
-    vt::EpochType epoch_ = vt::no_epoch;
+    vt::EpochType epoch_ = vt::no_epoch;    
   };
 
   // ---------------------------------
@@ -170,13 +154,15 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     data[ep].out_[dst]++;
   }
 
-  static void sendEcho(vt::NodeType dst, int count, vt::EpochType ep){
-    sendMsg<EchoMsg,echoHandler>(dst,count,ep);
+  static void sendPing(vt::NodeType dst, int count, vt::EpochType ep){
+    sendMsg<CtrlMsg,pingHandler>(dst,count,ep);
   }
 
-  static void sendPing(vt::NodeType dst, int count, vt::EpochType ep){
-    sendMsg<PingMsg,pingHandler>(dst,count,ep);
+  static void sendEcho(vt::NodeType dst, int count, vt::EpochType ep){
+    sendMsg<CtrlMsg,echoHandler>(dst,count,ep);
   }
+
+
 
   static void initiate(vt::EpochType ep){
     for(int j=1; j < all; ++j){
@@ -254,20 +240,19 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   }
 
   // on receipt of an echo message echo<m> from Pi
-  static void echoHandler(EchoMsg* msg){
+  static void echoHandler(CtrlMsg* msg){
     vtAssertExpr(me == msg->dst_);
-    int const src = msg->src_;
-    vtAssertExpr(src < all);
+    auto const& src = msg->src_;
     auto const& ep = msg->epoch_;
 
-    data[ep].ack_[src] = msg->nb_in_;
+    data[ep].ack_[src] = msg->count_;
     // decrease missing echoes counter
     data[ep].degree_--;
 
     #if DEBUG_TERM_ACTION
       fmt::print(
         "{}: echoHandler: in={}, ack={}, degree={}\n",
-        me,msg->nb_in_,data[ep].ack_[src], data[ep].degree_
+        me,msg->count_,data[ep].ack_[src], data[ep].degree_
       );
     #endif
 
@@ -285,7 +270,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   }
 
   // on receipt of a control message test<m> from Pi
-  static void pingHandler(PingMsg* msg){
+  static void pingHandler(CtrlMsg* msg){
     vtAssertExpr(me == msg->dst_);
     auto const& src = msg->src_;
     auto const& ep = msg->epoch_;
@@ -331,7 +316,7 @@ TEST_F(TestTermAction, test_term_detect_broadcast)
       sendBasic(i,vt::no_epoch);
     }
 
-    // start channel termination algorithm to verify correctness
+    // send signal to initiate termination detection
     initiate(vt::no_epoch);
 
     // check global termination
@@ -361,10 +346,10 @@ TEST_F(TestTermAction, test_term_detect_routed)
       routeBasic(dst,ttl,vt::no_epoch);
     }
 
-    // retrieve counters from other nodes
+    // send signal to initiate termination detection
     initiate(vt::no_epoch);
 
-    // check counters when everything is done
+    // check status
     theTerm()->addAction([]{
       EXPECT_TRUE(hasFinished(vt::no_epoch));
     });
@@ -399,8 +384,7 @@ TEST_F(TestTermAction, test_term_detect_epoch)
         int ttl = dist_ttl(engine);
         routeBasic(dst,ttl,ep[i]);
       }
-      // send signal to initiate
-      // termination detection
+      // send signal to initiate termination detection
       initiate(ep[i]);
     }
   }
