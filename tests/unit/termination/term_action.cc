@@ -183,9 +183,9 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     sendMsg<CtrlMsg,echoHandler>(dst,count,ep);
   }
 
-  // initiate check by root
-  static void initiate(vt::EpochType ep){
-    vtAssert(me == root, "Only root node can initiate termination check");
+  // trigger termination detection by root
+  static void trigger(vt::EpochType ep){
+    vtAssert(me == root, "Only root may trigger termination check");
     for(auto& active: data[ep].count_){
       auto const& dst = active.first;
       if(dst not_eq me){
@@ -204,7 +204,6 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
       auto const& dst = active.first;
       if(dst not_eq me){
         // confirmation missing
-        //if(data[ep].out_[i] not_eq data[ep].ack_[i]){
         if(active.second.out_ not_eq active.second.ack_){
           #if DEBUG_TERM_ACTION
             fmt::print(
@@ -252,18 +251,15 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     vtAssertExpr(me not_eq root);
     basicHandler(msg);
 
-    if (msg->ttl_ > 0){
+    if (all > 2 && msg->ttl_ > 0){
       int const nb_rounds = static_cast<int>(drand48()*5);
       for(int k=0; k < nb_rounds; ++k){
-        // If we only have two nodes, the root and self-send are excluded; thus,
-        // we can not route another message
-        if (all-2 > 0) {
-          int dst = (me+1 > all-1 ? 1: me+1);
-          //if (dst == me && dst == 1) dst++;
-          vtAssertExpr(dst < all);
-          //vtAssertExpr(dst > 1 || me != 1);
-          routeBasic(dst,msg->ttl_,msg->epoch_);
-        }
+        // note: root and self-send are excluded
+        int dst = (me+1 > all-1 ? 1: me+1);
+        if (dst == me && dst == 1) dst++;
+        vtAssertExpr(dst > 1 || me != 1);
+
+        routeBasic(dst,msg->ttl_,msg->epoch_);
       }
     }
   }
@@ -343,7 +339,7 @@ TEST_F(TestTermAction, test_term_detect_broadcast)
     // start computation
     broadcast<basicHandler>(1,vt::no_epoch);
     // trigger termination detection
-    initiate(vt::no_epoch);
+    trigger(vt::no_epoch);
 
     // check status
     theTerm()->addAction([]{
@@ -354,7 +350,8 @@ TEST_F(TestTermAction, test_term_detect_broadcast)
 
 TEST_F(TestTermAction, test_term_detect_routed)
 {
-  if(me == root){
+  // there should be at least 3 nodes for this case
+  if(all > 2 && me == root){
 
     std::random_device device;
     std::mt19937 engine(device());
@@ -372,7 +369,7 @@ TEST_F(TestTermAction, test_term_detect_routed)
     }
 
     // trigger termination detection
-    initiate(vt::no_epoch);
+    trigger(vt::no_epoch);
 
     // check status
     theTerm()->addAction([]{
@@ -410,7 +407,7 @@ TEST_F(TestTermAction, test_term_detect_epoch)
         routeBasic(dst,ttl,ep[i]);
       }
       // trigger termination detection
-      initiate(ep[i]);
+      trigger(ep[i]);
     }
   }
   //
