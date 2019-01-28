@@ -5,6 +5,7 @@ use warnings;
 
 use File::Basename;
 use lib dirname (__FILE__);
+use File::Temp qw(tempfile);
 
 require "args.pl";
 require "background.pl";
@@ -13,7 +14,7 @@ my $arg = Args->new();
 my $bkg = Background->new();
 
 my ($launch,$binary,$nodes,$user_args);
-my @launch_modes = ('mpi', 'gdb', 'xterm', 'xterm-gdb');
+my @launch_modes = ('mpi', 'debug', 'xterm', 'xterm-debug');
 
 $arg->add_required_arg("bin",       \$binary,      "");
 $arg->add_required_val("launch",    \$launch,      \@launch_modes);
@@ -33,7 +34,7 @@ sub launchMPI {
     my $mpibin = `which mpirun`;
     chomp $mpibin;
     my $mpi_launch = "$mpibin -n $nodes $binary --vt_pause";
-    print "$mpibin: $mpi_launch\n";
+    print "running mpibin: $mpi_launch\n";
     $bkg->run(\&run_cmd, [$mpi_launch]);
     #system($mpi_launch);
 }
@@ -43,7 +44,6 @@ sub removeOldPidFile {
     my $file = "prog-$i.pid";
     my $pid = 0;
     if (-e $file) {
-        print "removing old file: $file\n";
         unlink $file;
     }
 }
@@ -51,14 +51,13 @@ sub removeOldPidFile {
 sub launchXterm {
     my $i = shift;
     my $file = "prog-$i.pid";
-    print "waiting for file: $file\n";
+    # print "waiting for file: $file\n";
     while (!(-e $file)) { }
-    print "has file: $file\n";
+    # print "has file: $file\n";
     my $pid = 0;
     if (-e $file) {
         open FILE, "<", $file;
         foreach (<FILE>) {
-            print "i=$i:$_\n";
             $pid = $_;
         }
         close FILE;
@@ -68,48 +67,85 @@ sub launchXterm {
     }
     chomp $pid;
 
+    my $is_gdb = 0;
+    my $debugger = "";
+    if (!system('which lldb')) {
+        $debugger = `which lldb`;
+        $is_gdb = 0;
+    } else {
+        $debugger = `which gdb`;
+        $is_gdb = 1;
+    }
 
-    my $gdb = `which lldb`;
     my $xterm = `which xterm`;
-    chomp $gdb;
-    chomp $xterm;
-    print "GDB:$gdb\n";
-    print "XTERM:$xterm\n";
-
     my $mpibin = `which mpirun`;
+    chomp $debugger;
+    chomp $xterm;
     chomp $mpibin;
+    # print "debugger:$debugger, XTERM:$xterm, MPI:$mpibin\n";
 
-    my $lldb_xterm = "$xterm -hold -e $gdb -p $pid -o c";
-    print "$lldb_xterm: $lldb_xterm\n";
-    $bkg->run(\&run_cmd, [$lldb_xterm]);
+    my ($tmphandle, $tmpfile) = tempfile();
+    if ($is_gdb) {
+        print $tmphandle "file $binary\n";
+        print $tmphandle "attach $pid\n";
+        print $tmphandle "handle SIGUSR1 nostop pass\n";
+        print $tmphandle "signal SIGUSR1\n";
+    } else {
 
+        my $python_str = <<LLDBPYTHON
+import lldb
+
+def asyncContinue(debugger, command, result, dict):
+    debugger.SetAsync(True)
+    debugger.HandleCommand('process continue')
+
+def __lldb_init_module (debugger, dict):
+  debugger.HandleCommand('command script add -f vt_lldb_script.asyncContinue asyncContinue')
+LLDBPYTHON
+;
+        open my $python_file, ">", "vt_lldb_script.py";
+        print $python_file $python_str;
+        close $python_file;
+
+        print $tmphandle "file $binary\n";
+        print $tmphandle "process attach --pid $pid\n";
+        print $tmphandle "process handle --pass true --stop false --notify true SIGUSR1\n";
+        print $tmphandle "process status\n";
+        print $tmphandle "command script import vt_lldb_script.py\n";
+        print $tmphandle "asyncContinue\n";
+        print $tmphandle "process signal SIGUSR1\n";
+    }
+    close $tmphandle;
+
+    my $launch = "";
+
+    if ($is_gdb) {
+        $launch = "$xterm -title 'VT Node $i' -hold -e $debugger -x $tmpfile";
+    } else {
+        $launch = "$xterm -title 'VT Node $i' -hold -e $debugger -s $tmpfile";
+    }
+
+    print "launch: $launch\n";
+    # print "TMP FILE: $tmpfile\n";
+    $bkg->run(\&run_cmd, [$launch]);
 }
 
 ## Main part of the script that launches based on user selection
 
 if ($launch eq 'mpi') {
     &launchMPI();
-} elsif ($launch eq 'xterm-gdb') {
-    my $gdb = `which lldb`;
-    my $xterm = `which xterm`;
-    chomp $gdb;
-    chomp $xterm;
-    print "GDB:$gdb\n";
-    print "XTERM:$xterm\n";
-
+} elsif ($launch eq 'xterm-debug') {
     for (my $i = 0; $i < $nodes; $i++) {
-        print "$i: $nodes\n";
+        #print "$i: $nodes\n";
         &removeOldPidFile($i);
     }
 
     my $mpibin = `which mpirun`;
     chomp $mpibin;
-    my $mpi_launch = "$mpibin -n $nodes $binary $user_args";
-    print "$mpibin: $mpi_launch\n";
+    my $mpi_launch = "$mpibin -n $nodes $binary $user_args --vt_pause";
 
     $bkg->run(\&run_cmd, [$mpi_launch]);
     for (my $i = 0; $i < $nodes; $i++) {
-        print "$i: $nodes\n";
         &launchXterm($i);
     }
 }
