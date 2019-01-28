@@ -45,7 +45,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <random>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 #include "test_parallel_harness.h"
@@ -63,7 +63,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   static vt::NodeType me;
   static vt::NodeType root;
   static vt::NodeType all;
-  static std::map<vt::EpochType,Metadata> data;
+  static std::unordered_map<vt::EpochType,Metadata> data;
 
   // basic message
   struct BasicMsg : vt::Message {
@@ -84,9 +84,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     vt::EpochType epoch_ = vt::no_epoch;
   };
 
-  // -----------------------------------------
-  // - control messages for channel counting -
-  // -----------------------------------------
+  // control messages for channel counting
   struct CtrlMsg : vt::Message {
 
     CtrlMsg() = default;
@@ -106,28 +104,34 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     vt::EpochType epoch_ = vt::no_epoch;    
   };
 
-  // ---------------------------------
-  // meta-data per rank and per epoch
-  // for channel counting algorithm
-  // ---------------------------------
-  struct Metadata {
-    int degree_ = 0;
-    int activator_ = 0;
-    std::vector<int> in_;       // Cij^-
-    std::vector<int> out_;      // Cij^+
-    std::vector<int> ack_;
+  // message counters per rank and per channel.
+  // note: should be aggregated since we compare
+  // different counters of an unique rank.
+  // (thus an unique iterator)
+  struct MsgCount {
+    int in_ = 0;  // incoming
+    int out_ = 0; // outgoing
+    int ack_ = 0; // acknowledged
+  };
 
-    Metadata() : degree_(0),activator_(0){
-      out_.resize(all,0);
-      in_.resize(all,0);
-      ack_.resize(all,0);
+  // meta-data per rank and per epoch
+  // for channel counting algorithm.
+  struct Metadata {
+
+    int degree_ = 0;
+    vt::NodeType activator_ = 0;
+    std::unordered_map<vt::NodeType,MsgCount> count_;
+
+    Metadata() :
+      degree_(0), activator_(0) {
+      for (vt::NodeType dst=0; dst < all; ++dst){
+        count_[dst] = {0,0,0};
+      }
     }
-    Metadata(int act) : Metadata(){ activator_ = act; }
+
     ~Metadata(){
-      in_.clear();
-      out_.clear();
-      ack_.clear();
-    }
+      count_.clear();
+    };
   };
 
 
@@ -150,9 +154,10 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
       vt::envelopeSetEpoch(msg->env,ep);
     }
     vt::theMsg()->broadcastMsg<BasicMsg,handler>(msg);
-    for(int dst=0; dst < all; ++dst){
+    for(auto& active: data[ep].count_){
+      auto const& dst = active.first;
       if(dst not_eq me){
-        data[ep].out_[dst]++;
+        active.second.out_++;
       }
     }
   }
@@ -161,13 +166,13 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   static void sendBasic(vt::NodeType dst, vt::EpochType ep){
     sendMsg<BasicMsg,basicHandler>(dst,1,ep);
     // increment outgoing message counter
-    data[ep].out_[dst]++;
+    data[ep].count_[dst].out_++;
   }
 
   static void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep){
     sendMsg<BasicMsg,routedHandler>(dst,ttl,ep);
     // increment outgoing message counter
-    data[ep].out_[dst]++;
+    data[ep].count_[dst].out_++;
   }
 
   static void sendPing(vt::NodeType dst, int count, vt::EpochType ep){
@@ -181,30 +186,34 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   // initiate check by root
   static void initiate(vt::EpochType ep){
     vtAssert(me == root, "Only root node can initiate termination check");
-    for(int j=1; j < all; ++j){
-      sendPing(j,data[ep].out_[j],ep);
-      // avoid potential negative degree
-      // it may occurs when an echo is
-      // directly sent to the root
-      data[ep].degree_++;
+    for(auto& active: data[ep].count_){
+      auto const& dst = active.first;
+      if(dst not_eq me){
+        sendPing(dst,active.second.out_,ep);
+        // avoid potential negative degree
+        // it may occurs when an echo is
+        // directly sent to the root
+        data[ep].degree_++;
+      }
     }
   }
 
   // propagate check on current subtree
   static void propagate(vt::EpochType ep){
-    for(int i=1; i < all; ++i){
-      if(i not_eq me){
+    for(auto& active: data[ep].count_){
+      auto const& dst = active.first;
+      if(dst not_eq me){
         // confirmation missing
-        if(data[ep].out_[i] not_eq data[ep].ack_[i]){
+        //if(data[ep].out_[i] not_eq data[ep].ack_[i]){
+        if(active.second.out_ not_eq active.second.ack_){
           #if DEBUG_TERM_ACTION
             fmt::print(
               "{}: propagate: sendPing to {}, out={}, degree={}\n",
-              me,i,data[ep].out_[i],data[ep].degree_+1
+              me,i,active.second.out_,data[ep].degree_+1
             );
           #endif
-
           // check subtree
-          sendPing(i,data[ep].out_[i],ep);
+          sendPing(dst,active.second.out_,ep);
           // more echoes outstanding
           data[ep].degree_++;
         }
@@ -215,9 +224,10 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   // check local termination
   // check whether Cij^+ == Cij^-
   static bool hasFinished(vt::EpochType ep){
-    for(int i=0; i < all; ++i){
-      if(i not_eq me){
-        if(data[ep].out_[i] not_eq data[ep].ack_[i]){
+    for(auto& active: data[ep].count_){
+      auto const& dst = active.first;
+      if(dst not_eq me){
+        if(active.second.out_ not_eq active.second.ack_){
           return false;
         }
       }
@@ -229,13 +239,12 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   // note: msg->dst is uninitialized on broadcast,
   // thus related assertion was removed.
   static void basicHandler(BasicMsg* msg){
-    // avoid self sending
     auto const& src = msg->src_;
-    vtAssertExpr(src < all);
+    // avoid self sending case
     if(me not_eq src){
       auto const& ep = msg->epoch_;
       // when Pj send to Pi, increment out_[i]
-      data[ep].in_[src]++;
+      data[ep].count_[src].in_++;
     }
   }
 
@@ -265,7 +274,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     auto const& src = msg->src_;
     auto const& ep = msg->epoch_;
 
-    data[ep].ack_[src] = msg->count_;
+    data[ep].count_[src].ack_ = msg->count_;
     // decrease missing echoes counter
     data[ep].degree_--;
 
@@ -284,7 +293,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     if(data[ep].degree_ == 0){
       int const activator = data[ep].activator_;
       if(me not_eq activator){
-        sendEcho(activator,data[ep].in_[activator],ep);
+        sendEcho(activator,data[ep].count_[activator].in_,ep);
       }
     }
   }
@@ -304,7 +313,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
 
     // if already engaged or subtree is quiet
     if(data[ep].degree_ > 0 or hasFinished(ep)){
-      sendEcho(src,data[ep].in_[src],ep);
+      sendEcho(src,data[ep].count_[src].in_,ep);
     }
     else {
       data[ep].activator_ = src;
@@ -326,7 +335,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
 /*static*/ vt::NodeType TestTermAction::me;
 /*static*/ vt::NodeType TestTermAction::root;
 /*static*/ vt::NodeType TestTermAction::all;
-/*static*/ std::map<vt::EpochType,TestTermAction::Metadata> TestTermAction::data;
+/*static*/ std::unordered_map<vt::EpochType,TestTermAction::Metadata> TestTermAction::data;
 
 TEST_F(TestTermAction, test_term_detect_broadcast)
 {
@@ -400,7 +409,7 @@ TEST_F(TestTermAction, test_term_detect_epoch)
         int ttl = dist_ttl(engine);
         routeBasic(dst,ttl,ep[i]);
       }
-      // send signal to initiate termination detection
+      // trigger termination detection
       initiate(ep[i]);
     }
   }
