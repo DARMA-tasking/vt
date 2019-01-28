@@ -162,9 +162,9 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
     sendMsg<CtrlMsg,echoHandler>(dst,count,ep);
   }
 
-
-
+  // initiate check by root
   static void initiate(vt::EpochType ep){
+    vtAssert(me == root, "Only root node can initiate termination check");
     for(int j=1; j < all; ++j){
       sendPing(j,data[ep].out_[j],ep);
       // avoid potential negative degree
