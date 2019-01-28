@@ -102,6 +102,7 @@ protected:
   void setupSignalHandlerINT();
   void setupTerminateHandler();
   static void sigHandler(int sig);
+  static void sigHandlerUsr1(int sig);
   static void sigHandlerINT(int sig);
   static void termHandler();
 
@@ -131,6 +132,8 @@ public:
   #if backend_check_enabled(trace_enabled)
     ComponentPtrType<trace::Trace> theTrace = nullptr;
   #endif
+
+  static bool sig_user_1_;
 
 protected:
   bool finalize_on_term_ = false;
