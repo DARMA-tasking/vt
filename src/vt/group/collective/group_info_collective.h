@@ -90,6 +90,7 @@ public:
   bool isReady() const;
   void readyAction(ActionType const action);
   MPI_Comm getComm() const;
+  void freeComm();
 
 protected:
   void setupCollective();
@@ -146,6 +147,7 @@ private:
   std::list<ActionType> pending_ready_actions_ = {};
 
 private:
+  bool make_mpi_comm      = false;
   MPI_Comm mpi_group_comm = MPI_COMM_WORLD;
 };
 

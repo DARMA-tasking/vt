@@ -100,6 +100,13 @@ MPI_Comm InfoColl::getComm() const {
   return mpi_group_comm;
 }
 
+void InfoColl::freeComm() {
+  if (mpi_group_comm != MPI_COMM_WORLD) {
+    MPI_Comm_free(&mpi_group_comm);
+    mpi_group_comm = MPI_COMM_WORLD;
+  }
+}
+
 void InfoColl::setupCollective() {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
@@ -128,9 +135,11 @@ void InfoColl::setupCollective() {
     is_in_group, group_, parent, children, coll_wait_count_
   );
 
-  auto const cur_comm = theContext()->getComm();
-  int32_t const group_color = in_group;
-  MPI_Comm_split(cur_comm, group_color, this_node, &mpi_group_comm);
+  if (make_mpi_comm) {
+    auto const cur_comm = theContext()->getComm();
+    int32_t const group_color = in_group;
+    MPI_Comm_split(cur_comm, group_color, this_node, &mpi_group_comm);
+  }
 
   up_tree_cont_       = makeCollectiveContinuation(group_);
   down_tree_cont_     = theGroup()->nextCollectiveID();
