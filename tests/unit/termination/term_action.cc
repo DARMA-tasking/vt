@@ -55,7 +55,10 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestTermAction : vt::tests::unit::TestParallelHarness {
+// specify the order of 'addAction' w.r.t 'finishedEpoch'
+enum class ORDER : int { before, after, none };
+
+struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<ORDER> {
 
   struct Metadata; // forward-declaration for 'data'
 
@@ -329,13 +332,49 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
   }
 
   virtual void SetUp(){
-    vt::tests::unit::TestParallelHarness::SetUp();
+    vt::tests::unit::TestParallelHarnessParam<ORDER>::SetUp();
 
     // set ranks
     root = 0;
     me  = vt::theContext()->getNode();
     all = vt::theContext()->getNumNodes();
     vtAssert(all > 1, "There should be at least two nodes");
+  }
+
+  // assign action to be processed
+  // at the end of the epoch;
+  // trigger termination detection;
+  // and finalize epoch.
+  void finalize(vt::EpochType ep){
+
+    auto const& order = GetParam();
+
+    if(ep not_eq vt::no_epoch){
+      switch(order){
+        case ORDER::before :{
+          trigger(ep);
+          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+          vt::theTerm()->finishedEpoch(ep);
+          break;
+        }
+        case ORDER::after :{
+          trigger(ep);
+          vt::theTerm()->finishedEpoch(ep);
+          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+          break;
+        }
+        default: {
+          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+          trigger(ep);
+          vt::theTerm()->finishedEpoch(ep);
+          break;
+        }
+      }
+    } else {
+      // there is no issue when no epoch is used
+      trigger(vt::no_epoch);
+      vt::theTerm()->addAction([]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
+    }
   }
 };
 
@@ -344,7 +383,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarness {
 /*static*/ vt::NodeType TestTermAction::all;
 /*static*/ std::unordered_map<vt::EpochType,TestTermAction::Metadata> TestTermAction::data;
 
-TEST_F(TestTermAction, test_term_detect_broadcast)
+TEST_P(TestTermAction, test_term_detect_broadcast)
 {
   if(me == root){
     // start computation
@@ -359,7 +398,7 @@ TEST_F(TestTermAction, test_term_detect_broadcast)
   }
 }
 
-TEST_F(TestTermAction, test_term_detect_routed)
+TEST_P(TestTermAction, test_term_detect_routed)
 {
   // there should be at least 3 nodes for this case
   if(all > 2 && me == root){
@@ -390,7 +429,7 @@ TEST_F(TestTermAction, test_term_detect_routed)
 }
 
 
-TEST_F(TestTermAction, test_term_detect_collect_epoch)
+TEST_P(TestTermAction, test_term_detect_collect_epoch)
 {
   int const nb_ep = 4;
   vt::EpochType ep[nb_ep];
@@ -444,7 +483,7 @@ TEST_F(TestTermAction, test_term_detect_collect_epoch)
 }
 
 
-TEST_F(TestTermAction, test_term_detect_rooted_epoch)
+TEST_P(TestTermAction, test_term_detect_rooted_epoch)
 {
   if(me == root){
 
@@ -457,7 +496,6 @@ TEST_F(TestTermAction, test_term_detect_rooted_epoch)
     for(int i=1; i < nb_ep; ++i){
       ep[i] = epoch::EpochManip::next(ep[i-1]);
     }
-
     //
     std::random_device device;
     std::mt19937 engine(device());
@@ -486,19 +524,16 @@ TEST_F(TestTermAction, test_term_detect_rooted_epoch)
       } else {
         broadcast<basicHandler>(1,ep[i]);
       }
-
-      // check epoch termination
-      trigger(ep[i]);
-      // when epoch is finished, check that
-      // all messages have been delivered.
-      vt::theTerm()->addActionEpoch(ep[i],[&]{
-        EXPECT_TRUE(hasFinished(ep[i]));
-      });
-
-      // finalize epoch
-      vt::theTerm()->finishedEpoch(ep[i]);
+      //
+      finalize(ep[i]);
     }
   }
 }
+
+
+INSTANTIATE_TEST_CASE_P(
+  InstantiationName, TestTermAction,
+  ::testing::Values(ORDER::before, ORDER::after, ORDER::none)
+);
 
 }}} // end namespace vt::tests::unit
