@@ -395,7 +395,7 @@ TEST_F(TestTermAction, test_term_detect_collect_epoch)
   int const nb_ep = 4;
   vt::EpochType ep[nb_ep];
 
-  // create epochs in a collective way
+  // create epoch in a collective way
   for(int i=0; i < nb_ep; ++i){
     ep[i] = vt::theTerm()->makeEpochCollective();
   }
@@ -494,11 +494,11 @@ TEST_F(TestTermAction, test_term_detect_rooted_epoch)
       vt::theTerm()->addActionEpoch(ep[i],[&]{
         EXPECT_TRUE(hasFinished(ep[i]));
       });
+
       // finalize epoch
       vt::theTerm()->finishedEpoch(ep[i]);
     }
   }
-
 }
 
 }}} // end namespace vt::tests::unit
