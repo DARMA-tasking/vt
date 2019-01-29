@@ -346,40 +346,111 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     vtAssert(all > 1, "There should be at least two nodes");
   }
 
+  // create a sequence of rooted epochs by root node
+  std::vector<vt::EpochType> initRootedEpochSequence(int nb){
 
+    vtAssertExpr(nb > 0);
+    vtAssertExpr(me == root);
 
-  // assign action to be processed
-  // at the end of the epoch;
-  // trigger termination detection;
-  // and finalize epoch.
-  void finalize(vt::EpochType ep){
+    std::vector<vt::EpochType> seq(nb);
 
-    auto const& param = GetParam();
+    // create rooted epoch sequence
+    seq[0] = vt::theTerm()->makeEpochRooted(GetParam().useDS);
+    vtAssertExpr(root == epoch::EpochManip::node(seq[0]));
+    vtAssertExpr(epoch::EpochManip::isRooted(seq[0]));
 
-    if(ep not_eq vt::no_epoch){
-      switch(param.order){
-        case ORDER::after :{
-          trigger(ep);
-          vt::theTerm()->finishedEpoch(ep);
-          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
-          break;
+    for(int i=1; i < nb; ++i){
+      seq[i] = epoch::EpochManip::next(seq[i-1]);
+      vtAssertExpr(epoch::EpochManip::isRooted(seq[i]));
+    }
+    return seq;
+  }
+
+  // create a list of epochs in a collective way
+  std::vector<vt::EpochType> initCollectiveEpochs(int nb){
+    vtAssertExpr(nb > 0);
+
+    std::vector<vt::EpochType> epochs(nb);
+
+    // create epoch in a collective way
+    for(auto& ep : epochs){
+      ep = vt::theTerm()->makeEpochCollective();
+    }
+    return epochs;
+  }
+
+  // perform a fictive distributed computation for test purposes
+  void distributedComputation(std::vector<vt::EpochType> const& epochs){
+
+    std::random_device device;
+    std::mt19937 engine(device());
+    std::uniform_int_distribution<int> dist_ttl(1,10);
+    std::uniform_int_distribution<int> dist_dest(1,all-1);
+    std::uniform_int_distribution<int> dist_round(1,10);
+
+    for(auto const& ep: epochs){
+
+      #if DEBUG_TERM_ACTION
+        fmt::print(
+          "node:{}, i:{}, epoch: {}, is_rooted ? {}\n",
+          me, i, ep[i], epoch::EpochManip::isRooted(ep[i])
+        );
+      #endif
+
+      // process computation for current epoch
+      int rounds = dist_round(engine);
+      if(all > 2){
+        for(int k=0; k < rounds; ++k){
+          int dst = me + dist_dest(engine);
+          int ttl = dist_ttl(engine);
+          routeBasic(dst,ttl,ep);
         }
-        case ORDER::misc :{
-          trigger(ep);
-          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
-          vt::theTerm()->finishedEpoch(ep);
-          break;
-        }
-        default :{
-          trigger(ep);
-          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
-          vt::theTerm()->finishedEpoch(ep);
-          break;
-        }
+      } else {
+        broadcast<basicHandler>(1,ep);
       }
-    } else {
-      trigger(vt::no_epoch);
-      vt::theTerm()->addAction([]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
+    }
+  }
+
+  // assign action to be processed at the end
+  // of the epoch; trigger termination detection;
+  // and finalize epoch.
+  void finalizeByRoot(vt::EpochType ep){
+
+    if(me == root){
+      auto const& param = GetParam();
+
+      if(ep not_eq vt::no_epoch){
+        switch(param.order){
+          case ORDER::after :{
+            trigger(ep);
+            vt::theTerm()->finishedEpoch(ep);
+            vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+            break;
+          }
+          case ORDER::misc :{
+            trigger(ep);
+            vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+            vt::theTerm()->finishedEpoch(ep);
+            break;
+          }
+          default :{
+            vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+            trigger(ep);
+            vt::theTerm()->finishedEpoch(ep);
+            break;
+          }
+        }
+      } else {
+        trigger(vt::no_epoch);
+        vt::theTerm()->addAction([]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
+      }
+    }
+  }
+
+  // finalize the list or sequence of epochs
+  void finalizeByRoot(std::vector<vt::EpochType>& epochs){
+    for(auto& ep: epochs){
+      finalizeByRoot(ep);
     }
   }
 };
@@ -437,104 +508,39 @@ TEST_P(TestTermAction, test_term_detect_routed)
 
 TEST_P(TestTermAction, test_term_detect_collect_epoch)
 {
-  int const nb_ep = 4;
-  vt::EpochType ep[nb_ep];
-
-  // create epoch in a collective way
-  for(int i=0; i < nb_ep; ++i){
-    ep[i] = vt::theTerm()->makeEpochCollective();
-  }
+  auto epochs = initCollectiveEpochs(5);
 
   if(me == root){
-    std::random_device device;
-    std::mt19937 engine(device());
-
-    std::uniform_int_distribution<int> dist_ttl(1,10);
-    std::uniform_int_distribution<int> dist_dest(1,all-1);
-    std::uniform_int_distribution<int> dist_round(1,10);
-
-    // process for each epoch
-    for(int i=0; i < nb_ep; ++i){
-      int rounds = dist_round(engine);
-      // start computation
-      if(all > 2){
-        for(int k=0; k < rounds; ++k){
-          int dst = me + dist_dest(engine);
-          int ttl = dist_ttl(engine);
-          routeBasic(dst,ttl,ep[i]);
-        }
-      } else {
-        broadcast<basicHandler>(1,ep[i]);
-      }
-
-      // trigger termination detection
-      trigger(ep[i]);
+    // start computation
+    distributedComputation(epochs);
+    // trigger termination detect
+    for(auto& ep: epochs){
+      trigger(ep);
     }
   }
-  //
-  for(int i=0; i < nb_ep; ++i){
-    vt::theTerm()->finishedEpoch(ep[i]);
+
+  for(auto& ep: epochs){
+    vt::theTerm()->finishedEpoch(ep);
   }
 
+  // check that all messages related to a
+  // given epoch have been delivered
+  // nb: only consider root counters.
   if(me == root){
-    // check that all messages related to a
-    // given epoch have been delivered
-    // nb: only consider root counters.
-    for(int i=0; i < nb_ep; ++i){
-      vt::theTerm()->addActionEpoch(ep[i],[&]{
-        EXPECT_TRUE(hasFinished(ep[i]));
-      });
+    for(auto& ep: epochs){
+      vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
     }
   }
 }
 
 
+
 TEST_P(TestTermAction, test_term_detect_rooted_epoch)
 {
   if(me == root){
-
-    int const nb_ep = 5;
-    vt::EpochType ep[nb_ep];
-
-    auto const& param = GetParam();
-
-    // create rooted epoch sequence
-    ep[0] = vt::theTerm()->makeEpochRooted(param.useDS);
-    vtAssertExpr(root == epoch::EpochManip::node(ep[0]));
-    for(int i=1; i < nb_ep; ++i){
-      ep[i] = epoch::EpochManip::next(ep[i-1]);
-    }
-    //
-    std::random_device device;
-    std::mt19937 engine(device());
-    std::uniform_int_distribution<int> dist_ttl(1,10);
-    std::uniform_int_distribution<int> dist_dest(1,all-1);
-    std::uniform_int_distribution<int> dist_round(1,10);
-
-    for(int i=0; i < nb_ep; ++i){
-
-      #if DEBUG_TERM_ACTION
-        fmt::print(
-          "node:{}, i:{}, epoch: {}, is_rooted ? {}\n",
-          me, i, ep[i], epoch::EpochManip::isRooted(ep[i])
-        );
-      #endif
-      vtAssertExpr(epoch::EpochManip::isRooted(ep[i]));
-
-      // process computation for current epoch
-      int rounds = dist_round(engine);
-      if(all > 2){
-        for(int k=0; k < rounds; ++k){
-          int dst = me + dist_dest(engine);
-          int ttl = dist_ttl(engine);
-          routeBasic(dst,ttl,ep[i]);
-        }
-      } else {
-        broadcast<basicHandler>(1,ep[i]);
-      }
-      //
-      finalize(ep[i]);
-    }
+    auto sequence = initRootedEpochSequence(5);
+    distributedComputation(sequence);
+    finalizeByRoot(sequence);
   }
 }
 
