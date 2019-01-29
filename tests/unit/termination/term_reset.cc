@@ -69,7 +69,7 @@ struct TestTermReset : TestParallelHarness {
 
 TEST_F(TestTermReset, test_termination_reset_1) {
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes < 2) {
     return;
@@ -97,6 +97,10 @@ TEST_F(TestTermReset, test_termination_reset_1) {
     theTerm()->addAction([=]{
       EXPECT_EQ(handler_count, 1);
     });
+  }
+
+  while (!rt->isTerminated()) {
+    runScheduler();
   }
 }
 
