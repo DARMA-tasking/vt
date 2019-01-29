@@ -65,15 +65,15 @@ EpochType PendingSend::getEpoch() {
   if (epoch_ != no_epoch) {
     return epoch_;
   }
-  if (msg_ != nullptr) {
-    auto is_epoch_msg = envelopeIsEpochType(msg_->env);
-    vtAbortIf(!is_epoch_msg, "Message must be able to hold an epoch");
-    createEpoch();
-    return epoch_;
-  } else {
-    vtAbort("Tried to get an epoch while not holding a valid message");
+
+  if (msg_ == nullptr) {
+    return no_epoch;
   }
-  return no_epoch;
+
+  auto is_epoch_msg = envelopeIsEpochType(msg_->env);
+  vtAbortIf(!is_epoch_msg, "Message must be able to hold an epoch");
+  createEpoch();
+  return epoch_;
 }
 
 void PendingSend::createEpoch() {
@@ -116,6 +116,14 @@ void PendingSend::handlePresetOrNoEpoch() {
     // If the message does not hold an epoch (control msg), send it immediately
     sendMsg();
   }
+}
+
+void PendingSend::chainNextSend(std::function<PendingSend()> next) {
+  auto epoch = getEpoch();
+  if (epoch != no_epoch)
+    theTerm()->addAction(epoch, [=]{ *this = next(); });
+  else
+    *this = next();
 }
 
 }} /* end namespace vt::messaging */

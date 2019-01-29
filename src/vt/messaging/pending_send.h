@@ -83,11 +83,28 @@ struct PendingSend final {
     in.msg_ = nullptr;
     in.send_action_ = nullptr;
   }
+  PendingSend& operator=(PendingSend&& in)
+  {
+    vtAssert(msg_ == nullptr, "Should not be assigning over an unsent message");
+
+    msg_ = std::move(in.msg_);
+    in.msg_ = nullptr;
+
+    msg_size_ = std::move(in.msg_size_);
+    epoch_ = std::move(in.epoch_);
+
+    send_action_ = std::move(in.send_action_);
+    in.send_action_ = nullptr;
+
+    return *this;
+  }
 
   ~PendingSend();
 
   void release();
   EpochType getEpoch();
+
+  void chainNextSend(std::function<PendingSend()> next);
 
 private:
   void createEpoch();
