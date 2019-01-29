@@ -60,6 +60,8 @@ struct TestTermChaining : TestParallelHarness {
 
   static int32_t handler_count;
 
+  static vt::messaging::PendingSend pending;
+
   static void test_handler_reflector(TestMsg* msg) {
     fmt::print("reflector run\n");
 
@@ -83,9 +85,30 @@ struct TestTermChaining : TestParallelHarness {
     EXPECT_EQ(handler_count, 1);
     handler_count = 4;
   }
+
+  static void start_chain() {
+    auto msg = makeSharedMessage<TestMsg>();
+    pending = theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg);
+
+    pending.chainNextSend([&]{
+	fmt::print("nextsend run\n");
+
+	EXPECT_EQ(handler_count, 1);
+	auto msg2 = makeSharedMessage<TestMsg>();
+	return theMsg()->sendMsg<TestMsg, test_handler_chained>(0, msg2);
+      });
+    theTerm()->finishedEpoch(pending.getEpoch());
+  }
+
+  static void run_to_term() {
+    while (!rt->isTerminated()) {
+      runScheduler();
+    }
+  }
 };
 
 /*static*/ int32_t TestTermChaining::handler_count = 0;
+      /* static */ vt::messaging::PendingSend TestTermChaining::pending{nullptr};
 
 TEST_F(TestTermChaining, test_termination_chaining_1) {
   auto const& this_node = theContext()->getNode();
@@ -94,25 +117,18 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
   EXPECT_EQ(num_nodes, 2);
 
   if (this_node == 0) {
-    auto msg = makeSharedMessage<TestMsg>();
-    auto b = theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg);
-    b.chainNextSend([&]{
-	fmt::print("nextsend run\n");
-
-	EXPECT_EQ(handler_count, 10);
-	auto msg2 = makeSharedMessage<TestMsg>();
-	return theMsg()->sendMsg<TestMsg, test_handler_chained>(0, msg2);
-      });
-
-    while (!rt->isTerminated()) {
-      runScheduler();
-    }
+    start_chain();
+    fmt::print("before run 1\n");
+    run_to_term();
+    fmt::print("after run 1\n");
+    pending.release();
+    fmt::print("before run 2\n");
+    run_to_term();
+    fmt::print("after run 2\n");
 
     EXPECT_EQ(handler_count, 4);
   } else {
-    while (!rt->isTerminated()) {
-      runScheduler();
-    }
+    run_to_term();
   }
 }
 
