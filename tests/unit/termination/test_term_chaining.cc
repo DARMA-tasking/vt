@@ -56,20 +56,32 @@ using namespace vt;
 using namespace vt::tests::unit;
 
 struct TestTermChaining : TestParallelHarness {
-  using TestMsg = TestStaticBytesShortMsg<4>;
+  using TestMsg = EpochMessage;
 
   static int32_t handler_count;
 
   static void test_handler_reflector(TestMsg* msg) {
-    theMsg()->sendMsg<TestMsg, test_handler_response>(0, msg);
+    fmt::print("reflector run\n");
+
+    EXPECT_EQ(theContext()->getNode(), 1);
+    auto msg2 = makeSharedMessage<TestMsg>();
+    theMsg()->sendMsg<TestMsg, test_handler_response>(0, msg2);
   }
 
   static void test_handler_response(TestMsg* msg) {
+    fmt::print("response run\n");
+
+    EXPECT_EQ(theContext()->getNode(), 0);
+    EXPECT_EQ(handler_count, 0);
     handler_count++;
   }
 
   static void test_handler_chained(TestMsg* msg) {
+    fmt::print("chained run\n");
+
+    EXPECT_EQ(theContext()->getNode(), 0);
     EXPECT_EQ(handler_count, 1);
+    handler_count = 4;
   }
 };
 
@@ -77,23 +89,30 @@ struct TestTermChaining : TestParallelHarness {
 
 TEST_F(TestTermChaining, test_termination_chaining_1) {
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
-  if (num_nodes != 2) {
-    return;
-  }
+  EXPECT_EQ(num_nodes, 2);
 
   if (this_node == 0) {
     auto msg = makeSharedMessage<TestMsg>();
     auto b = theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg);
-    b.chainNextSend([]{ 
+    b.chainNextSend([&]{
+	fmt::print("nextsend run\n");
+
+	EXPECT_EQ(handler_count, 10);
 	auto msg2 = makeSharedMessage<TestMsg>();
 	return theMsg()->sendMsg<TestMsg, test_handler_chained>(0, msg2);
       });
-  }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
+    while (!rt->isTerminated()) {
+      runScheduler();
+    }
+
+    EXPECT_EQ(handler_count, 4);
+  } else {
+    while (!rt->isTerminated()) {
+      runScheduler();
+    }
   }
 }
 
