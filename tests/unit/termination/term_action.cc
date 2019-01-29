@@ -56,9 +56,14 @@
 namespace vt { namespace tests { namespace unit {
 
 // specify the order of 'addAction' w.r.t 'finishedEpoch'
-enum class ORDER : int { before, after, none };
+enum class ORDER : int { before, after, misc };
 
-struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<ORDER> {
+struct MyParam {
+  ORDER order = ORDER::before;
+  bool useDS = false;
+};
+
+struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
 
   struct Metadata; // forward-declaration for 'data'
 
@@ -332,7 +337,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<ORDER> {
   }
 
   virtual void SetUp(){
-    vt::tests::unit::TestParallelHarnessParam<ORDER>::SetUp();
+    vt::tests::unit::TestParallelHarnessParam<MyParam>::SetUp();
 
     // set ranks
     root = 0;
@@ -341,37 +346,38 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<ORDER> {
     vtAssert(all > 1, "There should be at least two nodes");
   }
 
+
+
   // assign action to be processed
   // at the end of the epoch;
   // trigger termination detection;
   // and finalize epoch.
   void finalize(vt::EpochType ep){
 
-    auto const& order = GetParam();
+    auto const& param = GetParam();
 
     if(ep not_eq vt::no_epoch){
-      switch(order){
-        case ORDER::before :{
-          trigger(ep);
-          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
-          vt::theTerm()->finishedEpoch(ep);
-          break;
-        }
+      switch(param.order){
         case ORDER::after :{
           trigger(ep);
           vt::theTerm()->finishedEpoch(ep);
           vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
           break;
         }
-        default: {
-          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+        case ORDER::misc :{
           trigger(ep);
+          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+          vt::theTerm()->finishedEpoch(ep);
+          break;
+        }
+        default :{
+          trigger(ep);
+          vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
           vt::theTerm()->finishedEpoch(ep);
           break;
         }
       }
     } else {
-      // there is no issue when no epoch is used
       trigger(vt::no_epoch);
       vt::theTerm()->addAction([]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
     }
@@ -490,8 +496,10 @@ TEST_P(TestTermAction, test_term_detect_rooted_epoch)
     int const nb_ep = 5;
     vt::EpochType ep[nb_ep];
 
+    auto const& param = GetParam();
+
     // create rooted epoch sequence
-    ep[0] = vt::theTerm()->makeEpochRooted();
+    ep[0] = vt::theTerm()->makeEpochRooted(param.useDS);
     vtAssertExpr(root == epoch::EpochManip::node(ep[0]));
     for(int i=1; i < nb_ep; ++i){
       ep[i] = epoch::EpochManip::next(ep[i-1]);
@@ -533,7 +541,11 @@ TEST_P(TestTermAction, test_term_detect_rooted_epoch)
 
 INSTANTIATE_TEST_CASE_P(
   InstantiationName, TestTermAction,
-  ::testing::Values(ORDER::before, ORDER::after, ORDER::none)
+  ::testing::Values(
+    MyParam{ORDER::before, false}, MyParam{ORDER::before, true},
+    MyParam{ORDER::after, false}, MyParam{ORDER::after, true},
+    MyParam{ORDER::misc, false}, MyParam{ORDER::misc, true}
+  )
 );
 
 }}} // end namespace vt::tests::unit
