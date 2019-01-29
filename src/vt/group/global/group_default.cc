@@ -149,7 +149,7 @@ namespace vt { namespace group { namespace global {
 
 /*static*/ EventType DefaultGroup::broadcast(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root, ActionType action
+  MsgSizeType const& size, bool const is_root
 ) {
   // By default use the default_group_->spanning_tree_
   auto const& msg = base.get();
@@ -168,17 +168,10 @@ namespace vt { namespace group { namespace global {
   );
 
   if (num_children > 0 || send_to_root) {
-    bool const& has_action = action != nullptr;
     EventRecordType* parent = nullptr;
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
       messaging::MPITag::ActiveMsgTag
     );
-
-    if (has_action) {
-      event = theEvent()->createParentEvent(node);
-      auto& holder = theEvent()->getEventHolder(event);
-      parent = holder.get_event();
-    }
 
     // Send to child nodes in the spanning tree
     if (num_children > 0) {
@@ -194,11 +187,8 @@ namespace vt { namespace group { namespace global {
 
         if (send) {
           auto const put_event = theMsg()->sendMsgBytesWithPut(
-            child, base, size, send_tag, action
+            child, base, size, send_tag
           );
-          if (has_action) {
-            parent->addEventToList(put_event);
-          }
         }
       });
     }
@@ -214,11 +204,8 @@ namespace vt { namespace group { namespace global {
       );
 
       auto const put_event = theMsg()->sendMsgBytesWithPut(
-        root_node, base, size, send_tag, action
+        root_node, base, size, send_tag
       );
-      if (has_action) {
-        parent->addEventToList(put_event);
-      }
     }
   }
 

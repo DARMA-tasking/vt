@@ -111,7 +111,7 @@ void CallbackProxyBcastDirect::trigger(MsgT* msg, PipeType const& pipe) {
   } else {
     auto dispatcher = theCollection()->getDispatcher(vrt_dispatch_han_);
     auto const& proxy = proxy_;
-    dispatcher->broadcast(proxy,msg,handler_,member_,nullptr);
+    dispatcher->broadcast(proxy,msg,handler_,member_);
   }
 }
 

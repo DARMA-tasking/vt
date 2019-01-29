@@ -157,7 +157,7 @@ static void boundaryFinished(bool const is_left) {
   if (wait_count == 0) {
     resid_val = kernel(cur_iter);
 
-    theRDMA()->putTypedData(jac_resid, &resid_val, 1, my_node, no_tag, no_action, []{
+    theRDMA()->putTypedData(jac_resid, &resid_val, 1, my_node, no_tag, []{
       theCollective()->barrierThen([]{
         if (cur_iter >= max_iterations) {
           finished();

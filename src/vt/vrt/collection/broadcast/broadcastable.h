@@ -64,13 +64,13 @@ struct Broadcastable : BaseProxyT {
     typename MsgT,
     ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
   >
-  void broadcast(MsgT* msg, ActionType act = nullptr) const;
+  void broadcast(MsgT* msg) const;
 
   template <
     typename MsgT,
     ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
   >
-  void broadcast(MsgT* msg, ActionType act = nullptr) const;
+  void broadcast(MsgT* msg) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

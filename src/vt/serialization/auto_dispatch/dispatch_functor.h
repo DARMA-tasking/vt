@@ -61,34 +61,34 @@ namespace vt { namespace serialization { namespace auto_dispatch {
 template <typename FunctorT, typename MsgT>
 struct SenderFunctor {
   static EventType sendMsg(
-    NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
+    NodeType const& node, MsgT* msg, TagType const& tag
   );
 };
 
 template <typename FunctorT, typename MsgT>
 struct SenderSerializeFunctor {
   static EventType sendMsg(
-    NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
+    NodeType const& node, MsgT* msg, TagType const& tag
   );
   static EventType sendMsgParserdes(
-    NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
+    NodeType const& node, MsgT* msg, TagType const& tag
   );
 };
 
 template <typename FunctorT, typename MsgT>
 struct BroadcasterFunctor {
   static EventType broadcastMsg(
-    MsgT* msg, TagType const& tag, ActionType action
+    MsgT* msg, TagType const& tag
   );
 };
 
 template <typename FunctorT, typename MsgT>
 struct BroadcasterSerializeFunctor {
   static EventType broadcastMsg(
-    MsgT* msg, TagType const& tag, ActionType action
+    MsgT* msg, TagType const& tag
   );
   static EventType broadcastMsgParserdes(
-    MsgT* msg, TagType const& tag, ActionType action
+    MsgT* msg, TagType const& tag
   );
 };
 
@@ -96,15 +96,14 @@ struct BroadcasterSerializeFunctor {
 template <typename FunctorT, typename MsgT, typename=void>
 struct RequiredSerializationFunctor {
   static EventType sendMsg(
-    NodeType const& node, MsgT* msg, TagType const& tag = no_tag,
-    ActionType action = nullptr
+    NodeType const& node, MsgT* msg, TagType const& tag = no_tag
   ) {
-    return SenderFunctor<FunctorT,MsgT>::sendMsg(node,msg,tag,action);
+    return SenderFunctor<FunctorT,MsgT>::sendMsg(node,msg,tag);
   }
   static EventType broadcastMsg(
-    MsgT* msg, TagType const& tag = no_tag, ActionType action = nullptr
+    MsgT* msg, TagType const& tag = no_tag
   ) {
-    return BroadcasterFunctor<FunctorT,MsgT>::broadcastMsg(msg,tag,action);
+    return BroadcasterFunctor<FunctorT,MsgT>::broadcastMsg(msg,tag);
   }
 };
 
@@ -118,16 +117,15 @@ struct RequiredSerializationFunctor<
   >
 > {
   static EventType sendMsg(
-    NodeType const& node, MsgT* msg, TagType const& tag = no_tag,
-    ActionType action = nullptr
+    NodeType const& node, MsgT* msg, TagType const& tag = no_tag
   ) {
-    return SenderSerializeFunctor<FunctorT,MsgT>::sendMsg(node,msg,tag,action);
+    return SenderSerializeFunctor<FunctorT,MsgT>::sendMsg(node,msg,tag);
   }
   static EventType broadcastMsg(
-    MsgT* msg, TagType const& tag = no_tag, ActionType action = nullptr
+    MsgT* msg, TagType const& tag = no_tag
   ) {
     return BroadcasterSerializeFunctor<FunctorT,MsgT>::broadcastMsg(
-      msg,tag,action
+      msg,tag
     );
   }
 };
@@ -140,18 +138,17 @@ struct RequiredSerializationFunctor<
   >
 > {
   static EventType sendMsg(
-    NodeType const& node, MsgT* msg, TagType const& tag = no_tag,
-    ActionType action = nullptr
+    NodeType const& node, MsgT* msg, TagType const& tag = no_tag
   ) {
     return SenderSerializeFunctor<FunctorT,MsgT>::sendMsgParserdes(
-      node,msg,tag,action
+      node,msg,tag
     );
   }
   static EventType broadcastMsg(
-    MsgT* msg, TagType const& tag = no_tag, ActionType action = nullptr
+    MsgT* msg, TagType const& tag = no_tag
   ) {
     return BroadcasterSerializeFunctor<FunctorT,MsgT>::broadcastMsgParserdes(
-      msg,tag,action
+      msg,tag
     );
   }
 };

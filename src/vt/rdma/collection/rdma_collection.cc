@@ -151,7 +151,6 @@ namespace vt { namespace rdma {
   RDMA_ElmType const& elm,
   RDMA_PtrType const& ptr,
   RDMA_PutSerialize on_demand_put_serialize,
-  ActionType cont,
   ActionType action_after_put,
   TagType const& tag
 ) {
@@ -197,11 +196,7 @@ namespace vt { namespace rdma {
     );
 
     auto send_payload = [&](Active::SendFnType send){
-      auto ret = send(put_ret, put_node, no_tag, [=]{
-        if (cont != nullptr) {
-          cont();
-        }
-      });
+      auto ret = send(put_ret, put_node, no_tag);
       msg->mpi_tag_to_recv = std::get<1>(ret);
     };
 
@@ -227,9 +222,6 @@ namespace vt { namespace rdma {
         debug_print(
           rdma, node, "putElement: local data is put\n"
         );
-        if (cont) {
-          cont();
-        }
         if (action_after_put) {
           action_after_put();
         }

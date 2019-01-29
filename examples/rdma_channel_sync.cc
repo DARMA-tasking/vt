@@ -98,7 +98,7 @@ static void put_channel_setup(TestMsg* msg) {
       int const num_elm = 2;
 
       if (use_paired_sync) {
-        theRDMA()->putTypedData(handle, my_data, num_elm, no_byte, no_action, [=]{
+        theRDMA()->putTypedData(handle, my_data, num_elm, no_byte, [=]{
           TestMsg* back = makeSharedMessage<TestMsg>(handle);
           theMsg()->sendMsg<TestMsg, read_data_fn>(0, back);
         });

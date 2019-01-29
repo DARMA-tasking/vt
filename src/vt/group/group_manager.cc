@@ -247,7 +247,7 @@ void GroupManager::initializeLocalGroup(
 
 /*static*/ EventType GroupManager::groupHandler(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const root, ActionType act, bool* const deliver
+  MsgSizeType const& size, bool const root, bool* const deliver
 ) {
   auto const& msg = reinterpret_cast<ShortMessage* const>(base.get());
   auto const& is_pipe = envelopeIsPipe(msg->env);
@@ -268,13 +268,13 @@ void GroupManager::initializeLocalGroup(
       // Deliver the message normally if it's not a the root of a broadcast
       *deliver = !root;
       if (group == default_group) {
-        return global::DefaultGroup::broadcast(base,from,size,root,act);
+        return global::DefaultGroup::broadcast(base,from,size,root);
       } else {
         auto const& is_collective_group = GroupIDBuilder::isCollective(group);
         if (is_collective_group) {
-          return theGroup()->sendGroupCollective(base,from,size,root,act,deliver);
+          return theGroup()->sendGroupCollective(base,from,size,root,deliver);
         } else {
-          return theGroup()->sendGroup(base,from,size,root,act,deliver);
+          return theGroup()->sendGroup(base,from,size,root,deliver);
         }
       }
     } else {
@@ -294,7 +294,7 @@ void GroupManager::initializeLocalGroup(
 
 EventType GroupManager::sendGroupCollective(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root, ActionType action,
+  MsgSizeType const& size, bool const is_root,
   bool* const deliver
 ) {
   auto const& send_tag = static_cast<messaging::MPI_TagType>(
@@ -307,7 +307,6 @@ EventType GroupManager::sendGroupCollective(
   auto const& info = *iter->second;
   auto const& in_group = info.inGroup();
   auto const& group_ready = info.isReady();
-  auto const& has_action = action != nullptr;
   EventRecordType* parent = nullptr;
 
   if (in_group && group_ready) {
@@ -343,12 +342,6 @@ EventType GroupManager::sendGroupCollective(
     );
 
     if ((num_children > 0 || send_to_root) && (!this_node_dest || first_send)) {
-      if (has_action) {
-        event = theEvent()->createParentEvent(node);
-        auto& holder = theEvent()->getEventHolder(event);
-        parent = holder.get_event();
-      }
-
       info.getTree()->foreachChild([&](NodeType child){
         bool const& send = child != dest;
 
@@ -361,11 +354,8 @@ EventType GroupManager::sendGroupCollective(
 
         if (send) {
           auto const put_event = theMsg()->sendMsgBytesWithPut(
-            child, base, size, send_tag, action
+            child, base, size, send_tag
           );
-          if (has_action) {
-            parent->addEventToList(put_event);
-          }
         }
       });
 
@@ -374,11 +364,8 @@ EventType GroupManager::sendGroupCollective(
        */
       if (send_to_root) {
         auto const put_event = theMsg()->sendMsgBytesWithPut(
-          root_node, base, size, send_tag, action
+          root_node, base, size, send_tag
         );
-        if (has_action) {
-          parent->addEventToList(put_event);
-        }
       }
 
       if (!first_send && this_node_dest) {
@@ -394,7 +381,7 @@ EventType GroupManager::sendGroupCollective(
     }
   } else if (in_group && !group_ready) {
     local_collective_group_info_.find(group)->second->readyAction([=]{
-      theGroup()->sendGroupCollective(base,from,size,is_root,action,deliver);
+      theGroup()->sendGroupCollective(base,from,size,is_root,deliver);
     });
     *deliver = true;
     return no_event;
@@ -407,11 +394,8 @@ EventType GroupManager::sendGroupCollective(
      *  must forward.
      */
     auto const put_event = theMsg()->sendMsgBytesWithPut(
-      root_node, base, size, send_tag, action
+      root_node, base, size, send_tag
     );
-    if (has_action) {
-      parent->addEventToList(put_event);
-    }
     /*
      *  Do not deliver on this node since it is not part of the group and will
      *  just forward to the root node.
@@ -423,7 +407,7 @@ EventType GroupManager::sendGroupCollective(
 
 EventType GroupManager::sendGroup(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root, ActionType action,
+  MsgSizeType const& size, bool const is_root,
   bool* const deliver
 ) {
   auto const& this_node = theContext()->getNode();
@@ -452,19 +436,12 @@ EventType GroupManager::sendGroup(
 
   auto send_to_node = [&](NodeType node) -> EventType {
     EventType event = no_event;
-    bool const& has_action = action != nullptr;
     EventRecordType* parent = nullptr;
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
       messaging::MPITag::ActiveMsgTag
     );
 
-    if (has_action) {
-      event = theEvent()->createParentEvent(this_node);
-      auto& holder = theEvent()->getEventHolder(event);
-      parent = holder.get_event();
-    }
-
-    return theMsg()->sendMsgBytesWithPut(node, base, size, send_tag, action);
+    return theMsg()->sendMsgBytesWithPut(node, base, size, send_tag);
   };
 
   EventType ret_event = no_event;
@@ -504,18 +481,11 @@ EventType GroupManager::sendGroup(
           info.default_spanning_tree_ != nullptr, "Must have spanning tree"
         );
 
-        bool const& has_action = action != nullptr;
         EventRecordType* parent = nullptr;
         auto const& send_tag = static_cast<messaging::MPI_TagType>(
           messaging::MPITag::ActiveMsgTag
         );
         auto const& num_children = info.default_spanning_tree_->getNumChildren();
-
-        if (has_action) {
-          ret_event = theEvent()->createParentEvent(this_node);
-          auto& holder = theEvent()->getEventHolder(ret_event);
-          parent = holder.get_event();
-        }
 
         // Send to child nodes in the group's spanning tree
         if (num_children > 0) {
@@ -528,11 +498,8 @@ EventType GroupManager::sendGroup(
 
             if (child != this_node) {
               auto const put_event = theMsg()->sendMsgBytesWithPut(
-                child, base, size, send_tag, action
+                child, base, size, send_tag
               );
-              if (has_action) {
-                parent->addEventToList(put_event);
-              }
             }
           });
         }

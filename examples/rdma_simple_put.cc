@@ -86,7 +86,6 @@ static void put_data_fn(TestMsg* msg) {
       (my_node-1)*local_data_len, no_tag, vt::rdma::rdma_default_byte_size,
       [=]{
         delete [] local_data;
-      }, [=]{
         fmt::print("{}: after put: sending msg back to 0\n", my_node);
         auto msg = makeSharedMessage<TestMsg>(my_node);
         msg->han = my_handle;

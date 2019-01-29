@@ -158,13 +158,13 @@ private:
 
   EventType sendGroup(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-    MsgSizeType const& size, bool const is_root, ActionType action,
+    MsgSizeType const& size, bool const is_root,
     bool* const deliver
   );
 
   EventType sendGroupCollective(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-    MsgSizeType const& size, bool const is_root, ActionType action,
+    MsgSizeType const& size, bool const is_root,
     bool* const deliver
   );
 
@@ -176,7 +176,7 @@ public:
 private:
   static EventType groupHandler(
     MsgSharedPtr<BaseMsgType> const& msg, NodeType const& from,
-    MsgSizeType const& msg_size, bool const is_root, ActionType new_action,
+    MsgSizeType const& msg_size, bool const is_root,
     bool* const deliver
   );
 

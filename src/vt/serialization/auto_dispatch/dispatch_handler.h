@@ -61,38 +61,34 @@ template <typename MsgT>
 struct SenderHandler {
   static EventType sendMsg(
     NodeType const& node, MsgT* msg, HandlerType const& handler,
-    TagType const& tag, ActionType action
+    TagType const& tag
   );
 };
 
 template <typename MsgT>
 struct SenderSerializeHandler {
   static EventType sendMsg(
-    NodeType const& node, MsgT* msg, HandlerType const& han, TagType const& tag,
-    ActionType action
+    NodeType const& node, MsgT* msg, HandlerType const& han, TagType const& tag
   );
   static EventType sendMsgParserdes(
-    NodeType const& node, HandlerType const& han, MsgT* msg, TagType const& tag,
-    ActionType action
+    NodeType const& node, HandlerType const& han, MsgT* msg, TagType const& tag
   );
 };
 
 template <typename MsgT>
 struct BroadcasterHandler {
   static EventType broadcastMsg(
-    MsgT* msg, HandlerType const& handler, TagType const& tag,
-    ActionType action
+    MsgT* msg, HandlerType const& handler, TagType const& tag
   );
 };
 
 template <typename MsgT>
 struct BroadcasterSerializeHandler {
   static EventType broadcastMsg(
-    MsgT* msg, HandlerType const& handler, TagType const& tag,
-    ActionType action
+    MsgT* msg, HandlerType const& handler, TagType const& tag
   );
   static EventType broadcastMsgParserdes(
-    MsgT* msg, HandlerType const& han, TagType const& tag, ActionType action
+    MsgT* msg, HandlerType const& han, TagType const& tag
   );
 };
 
@@ -100,15 +96,14 @@ template <typename MsgT, typename=void>
 struct RequiredSerializationHandler {
   static EventType sendMsg(
     NodeType const& node, MsgT* msg, HandlerType const& handler,
-    TagType const& tag = no_tag, ActionType action = nullptr
+    TagType const& tag = no_tag
   ) {
-    return SenderHandler<MsgT>::sendMsg(node,msg,handler,tag,action);
+    return SenderHandler<MsgT>::sendMsg(node,msg,handler,tag);
   }
   static EventType broadcastMsg(
-    MsgT* msg, HandlerType const& handler, TagType const& tag = no_tag,
-    ActionType action = nullptr
+    MsgT* msg, HandlerType const& handler, TagType const& tag = no_tag
   ) {
-    return BroadcasterHandler<MsgT>::broadcastMsg(msg,handler,tag,action);
+    return BroadcasterHandler<MsgT>::broadcastMsg(msg,handler,tag);
   }
 };
 
@@ -123,15 +118,14 @@ struct RequiredSerializationHandler<
 > {
   static EventType sendMsg(
     NodeType const& node, MsgT* msg, HandlerType const& han,
-    TagType const& tag = no_tag, ActionType action = nullptr
+    TagType const& tag = no_tag
   ) {
-    return SenderSerializeHandler<MsgT>::sendMsg(node,msg,han,tag,action);
+    return SenderSerializeHandler<MsgT>::sendMsg(node,msg,han,tag);
   }
   static EventType broadcastMsg(
-    MsgT* msg, HandlerType const& han, TagType const& tag = no_tag,
-    ActionType action = nullptr
+    MsgT* msg, HandlerType const& han, TagType const& tag = no_tag
   ) {
-    return BroadcasterSerializeHandler<MsgT>::broadcastMsg(msg,han,tag,action);
+    return BroadcasterSerializeHandler<MsgT>::broadcastMsg(msg,han,tag);
   }
 };
 
@@ -144,18 +138,17 @@ struct RequiredSerializationHandler<
 > {
   static EventType sendMsg(
     NodeType const& node, MsgT* msg, HandlerType const& han,
-    TagType const& tag = no_tag, ActionType action = nullptr
+    TagType const& tag = no_tag
   ) {
     return SenderSerializeHandler<MsgT>::sendMsgParserdes(
-      node,msg,han,tag,action
+      node,msg,han,tag
     );
   }
   static EventType broadcastMsg(
-    MsgT* msg, HandlerType const& han, TagType const& tag = no_tag,
-    ActionType action = nullptr
+    MsgT* msg, HandlerType const& han, TagType const& tag = no_tag
   ) {
     return BroadcasterSerializeHandler<MsgT>::broadcastMsgParserdes(
-      msg,han,tag,action
+      msg,han,tag
     );
   }
 };

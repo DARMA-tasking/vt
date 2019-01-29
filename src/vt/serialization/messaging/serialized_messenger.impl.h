@@ -290,11 +290,10 @@ template <typename MsgT, typename BaseT>
 
   auto const& total_size = ptr_size + msg_size + han_size + size_size;
   auto const& tag = no_tag;
-  auto const& act = no_action;
   if (is_bcast) {
-    theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag, act);
+    theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag);
   } else {
-    theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag, act);
+    theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag);
   }
 }
 
@@ -409,7 +408,7 @@ template <typename MsgT, typename BaseT>
     );
 
     theMsg()->broadcastMsgSz<SerialWrapperMsgType<MsgT>,serialMsgHandlerBcast>(
-      sys_msg.get(), total_size, no_tag, no_action
+      sys_msg.get(), total_size, no_tag
     );
   }
 }
@@ -471,9 +470,9 @@ template <typename MsgT, typename BaseT>
       if (node != dest) {
         auto sys_msg = makeMessage<SerialWrapperMsgType<MsgT>>();
         auto send_serialized = [=](Active::SendFnType send){
-          auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag, [=]{
-            std::free(ptr);
-          });
+          auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag);
+	  EventType event = std::get<0>(ret);
+	  theEvent()->attachAction(event, [=]{ std::free(ptr); });
           sys_msg->data_recv_tag = std::get<1>(ret);
         };
         auto cur_ref = envelopeGetRef(sys_msg->env);

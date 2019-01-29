@@ -103,12 +103,12 @@ struct VirtualContextManager {
 
   template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   void sendMsg(
-    VirtualProxyType const& toProxy, MsgT *const msg, ActionType act = nullptr
+    VirtualProxyType const& toProxy, MsgT *const msg
   );
 
   template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   void sendSerialMsg(
-    VirtualProxyType const& toProxy, MsgT *const msg, ActionType act = nullptr
+    VirtualProxyType const& toProxy, MsgT *const msg
   );
 
 private:

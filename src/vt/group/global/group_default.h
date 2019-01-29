@@ -76,7 +76,7 @@ struct DefaultGroup {
 public:
   static EventType broadcast(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-    MsgSizeType const& size, bool const is_root, ActionType action
+    MsgSizeType const& size, bool const is_root
   );
 
 private:

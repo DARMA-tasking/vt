@@ -107,7 +107,7 @@ TYPED_TEST_P(TestCsollectionIndexTypes, test_collection_index_1) {
         proxy[i].template send<MsgType,&ColType::handler>(msg);
       } else {
         theCollection()->sendMsg<MsgType,&ColType::handler>(
-          proxy[i], msg, nullptr
+          proxy[i], msg
         );
       }
     }

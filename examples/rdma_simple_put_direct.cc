@@ -80,7 +80,7 @@ static void putDataFn(TestMsg* msg) {
 
     int const num_elm = 2;
     int const offset = num_elm*(my_node-1);
-    theRDMA()->putTypedData(msg->han, my_data, num_elm, offset, no_action, [=]{
+    theRDMA()->putTypedData(msg->han, my_data, num_elm, offset, [=]{
       fmt::print(
         "{}: after put: sending msg back to 0: offset={}\n", my_node, offset
       );

@@ -94,7 +94,7 @@ void ActiveMessenger::packMsg(
 
 EventType ActiveMessenger::sendMsgBytesWithPut(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size, TagType const& send_tag, ActionType next_action
+  MsgSizeType const& msg_size, TagType const& send_tag
 ) {
   auto msg = base.get();
   auto const& is_term = envelopeIsTerm(msg->env);
@@ -151,15 +151,12 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     } else {
       auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
-        RDMA_GetType{put_ptr,put_size}, dest, env_tag, nullptr
+        RDMA_GetType{put_ptr,put_size}, dest, env_tag
       );
       auto const& ret_tag = std::get<1>(ret);
       auto const& put_event_send = std::get<0>(ret);
       if (ret_tag != env_tag) {
         envelopeSetPutTag(msg->env, ret_tag);
-      }
-      if (next_action) {
-        parent->addEventToList(put_event_send);
       }
     }
   } else if (is_put && is_put_packed) {
@@ -169,19 +166,15 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   }
 
   auto const& send_event = sendMsgBytes(
-    dest, base, new_msg_size, send_tag, next_action
+    dest, base, new_msg_size, send_tag
   );
-
-  if (next_action) {
-    parent->addEventToList(send_event);
-  }
 
   return new_event;
 }
 
 EventType ActiveMessenger::sendMsgBytes(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size, TagType const& send_tag, ActionType next_action
+  MsgSizeType const& msg_size, TagType const& send_tag
 ) {
   auto const& msg = base.get();
 
@@ -234,8 +227,7 @@ trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
 #endif
 
 EventType ActiveMessenger::sendMsgSized(
-  MsgSharedPtr<BaseMsgType> const& base, MsgSizeType const& msg_size,
-  ActionType next_action
+  MsgSharedPtr<BaseMsgType> const& base, MsgSizeType const& msg_size
 ) {
   auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
@@ -292,7 +284,7 @@ EventType ActiveMessenger::sendMsgSized(
 
   bool deliver = false;
   EventType const ret_event = group::GroupActiveAttorney::groupHandler(
-    base, uninitialized_destination, msg_size, true, next_action, &deliver
+    base, uninitialized_destination, msg_size, true, &deliver
   );
 
   EventType ret = no_event;
@@ -303,34 +295,12 @@ EventType ActiveMessenger::sendMsgSized(
     EventRecordType* parent = nullptr;
     EventType event = no_event;
 
-    if (next_action) {
-      event = theEvent()->createParentEvent(this_node_);
-      auto& holder = theEvent()->getEventHolder(event);
-      parent = holder.get_event();
-    }
-
     auto const send_put_event = sendMsgBytesWithPut(
-      dest, base, msg_size, send_tag, next_action
+      dest, base, msg_size, send_tag
     );
-
-    if (next_action) {
-      if (ret_event != no_event) {
-        parent->addEventToList(ret_event);
-      }
-      if (send_put_event != no_event) {
-        parent->addEventToList(send_put_event);
-      }
-      auto& holder = theEvent()->getEventHolder(event);
-      holder.attachAction(next_action);
-    }
 
     ret = event;
   } else {
-    if (ret_event != no_event && next_action) {
-      auto& holder = theEvent()->getEventHolder(ret_event);
-      holder.attachAction(next_action);
-    }
-
     ret = ret_event;
   }
 
@@ -338,8 +308,7 @@ EventType ActiveMessenger::sendMsgSized(
 }
 
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
-  RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
-  ActionType next_action
+  RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
 ) {
   auto const& data_ptr = std::get<0>(ptr);
   auto const& num_bytes = std::get<1>(ptr);
@@ -347,10 +316,6 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
-
-  if (next_action != nullptr) {
-    holder.attachAction(next_action);
-  }
 
   auto mpi_event = holder.get_event();
 
@@ -511,7 +476,7 @@ bool ActiveMessenger::handleActiveMsg(
 
   // Call group handler
   bool deliver = false;
-  GroupActiveAttorney::groupHandler(base, from, size, false, nullptr, &deliver);
+  GroupActiveAttorney::groupHandler(base, from, size, false, &deliver);
 
   auto const& is_term = envelopeIsTerm(msg->env);
 

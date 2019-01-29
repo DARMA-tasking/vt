@@ -62,12 +62,10 @@ struct DispatchCollectionBase {
 
 public:
   virtual void broadcast(
-    VirtualProxyType proxy, void* msg, HandlerType han, bool member,
-    ActionType action
+    VirtualProxyType proxy, void* msg, HandlerType han, bool member
   ) = 0;
   virtual void send(
-    VirtualProxyType proxy, void* idx, void* msg, HandlerType han, bool member,
-    ActionType action
+    VirtualProxyType proxy, void* idx, void* msg, HandlerType han, bool member
   ) = 0;
 
   template <typename=void>
@@ -84,12 +82,10 @@ template <typename ColT, typename MsgT>
 struct DispatchCollection final : DispatchCollectionBase {
 private:
   void broadcast(
-    VirtualProxyType proxy, void* msg, HandlerType han, bool member,
-    ActionType action
+    VirtualProxyType proxy, void* msg, HandlerType han, bool member
   ) override;
   void send(
-    VirtualProxyType proxy, void* idx, void* msg, HandlerType han, bool member,
-    ActionType action
+    VirtualProxyType proxy, void* idx, void* msg, HandlerType han, bool member
   ) override;
 };
 

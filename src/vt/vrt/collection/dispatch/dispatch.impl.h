@@ -57,21 +57,19 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename MsgT>
 void DispatchCollection<ColT,MsgT>::broadcast(
-  VirtualProxyType proxy, void* msg, HandlerType han, bool member,
-  ActionType action
+  VirtualProxyType proxy, void* msg, HandlerType han, bool member
 ) {
   using IdxT = typename ColT::IndexType;
   auto const msg_typed = reinterpret_cast<MsgT*>(msg);
   CollectionProxy<ColT,IdxT> typed_proxy{proxy};
   theCollection()->broadcastMsgWithHan<MsgT,ColT>(
-    typed_proxy,msg_typed,han,member,action,true
+    typed_proxy,msg_typed,han,member,true
   );
 }
 
 template <typename ColT, typename MsgT>
 void DispatchCollection<ColT,MsgT>::send(
-  VirtualProxyType proxy, void* idx, void* msg, HandlerType han, bool member,
-  ActionType action
+  VirtualProxyType proxy, void* idx, void* msg, HandlerType han, bool member
 ) {
   using IdxT = typename ColT::IndexType;
   auto const msg_typed = reinterpret_cast<MsgT*>(msg);
@@ -79,7 +77,7 @@ void DispatchCollection<ColT,MsgT>::send(
   auto const& idx_typed_ref = *idx_typed;
   VrtElmProxy<ColT,IdxT> typed_proxy{proxy,idx_typed_ref};
   theCollection()->sendMsgWithHan<MsgT,ColT>(
-    typed_proxy,msg_typed,han,member,action
+    typed_proxy,msg_typed,han,member
   );
 }
 

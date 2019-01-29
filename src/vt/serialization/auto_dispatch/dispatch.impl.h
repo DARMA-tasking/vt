@@ -60,16 +60,16 @@ namespace vt { namespace serialization { namespace auto_dispatch {
  */
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType Sender<MsgT,f>::sendMsg(
-  NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
+  NodeType const& node, MsgT* msg, TagType const& tag
 ) {
-  return theMsg()->sendMsg<MsgT,f>(node,msg,tag,action);
+  return theMsg()->sendMsg<MsgT,f>(node,msg,tag);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType Broadcaster<MsgT,f>::broadcastMsg(
-  MsgT* msg, TagType const& tag, ActionType action
+  MsgT* msg, TagType const& tag
 ) {
-  return theMsg()->broadcastMsg<MsgT,f>(msg,tag,action);
+  return theMsg()->broadcastMsg<MsgT,f>(msg,tag);
 }
 
 /*
@@ -78,7 +78,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
  */
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType SenderSerialize<MsgT,f>::sendMsgParserdes(
-  NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
+  NodeType const& node, MsgT* msg, TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   SerializedMessenger::sendParserdesMsg<MsgT,f>(node,msg);
@@ -88,7 +88,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType SenderSerialize<MsgT,f>::sendMsg(
-  NodeType const& node, MsgT* msg, TagType const& tag, ActionType action
+  NodeType const& node, MsgT* msg, TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   SerializedMessenger::sendSerialMsg<MsgT,f>(node,msg);
@@ -99,7 +99,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType BroadcasterSerialize<MsgT,f>::broadcastMsgParserdes(
-  MsgT* msg, TagType const& tag, ActionType action
+  MsgT* msg, TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   SerializedMessenger::broadcastParserdesMsg<MsgT,f>(msg);
@@ -110,7 +110,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ EventType BroadcasterSerialize<MsgT,f>::broadcastMsg(
-  MsgT* msg, TagType const& tag, ActionType action
+  MsgT* msg, TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   SerializedMessenger::broadcastSerialMsg<MsgT,f>(msg);

@@ -76,7 +76,6 @@ struct RDMACollectionManager {
     RDMA_ElmType const& elm,
     RDMA_PtrType const& ptr,
     RDMA_PutSerialize on_demand_put_serialize = no_action,
-    ActionType cont = no_action,
     ActionType action_after_put = no_action,
     TagType const& tag = no_tag
   );
