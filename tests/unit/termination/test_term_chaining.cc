@@ -65,6 +65,8 @@ struct TestTermChaining : TestParallelHarness {
   static void test_handler_reflector(TestMsg* msg) {
     fmt::print("reflector run\n");
 
+    handler_count = 12;
+
     EXPECT_EQ(theContext()->getNode(), 1);
     auto msg2 = makeSharedMessage<TestMsg>();
     theMsg()->sendMsg<TestMsg, test_handler_response>(0, msg2);
@@ -76,6 +78,14 @@ struct TestTermChaining : TestParallelHarness {
     EXPECT_EQ(theContext()->getNode(), 0);
     EXPECT_EQ(handler_count, 0);
     handler_count++;
+  }
+
+  static void test_handler_chainer(TestMsg* msg) {
+    fmt::print("chainer run\n");
+
+    handler_count = 13;
+    auto msg2 = makeSharedMessage<TestMsg>();
+    theMsg()->sendMsg<TestMsg, test_handler_chained>(0, msg2);
   }
 
   static void test_handler_chained(TestMsg* msg) {
@@ -95,7 +105,7 @@ struct TestTermChaining : TestParallelHarness {
 
 	EXPECT_EQ(handler_count, 1);
 	auto msg2 = makeSharedMessage<TestMsg>();
-	return theMsg()->sendMsg<TestMsg, test_handler_chained>(0, msg2);
+	return theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2);
       });
     theTerm()->finishedEpoch(pending.getEpoch());
   }
@@ -108,7 +118,7 @@ struct TestTermChaining : TestParallelHarness {
 };
 
 /*static*/ int32_t TestTermChaining::handler_count = 0;
-      /* static */ vt::messaging::PendingSend TestTermChaining::pending{nullptr};
+/*static*/ vt::messaging::PendingSend TestTermChaining::pending{nullptr};
 
 TEST_F(TestTermChaining, test_termination_chaining_1) {
   auto const& this_node = theContext()->getNode();
@@ -121,7 +131,8 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
     fmt::print("before run 1\n");
     run_to_term();
     fmt::print("after run 1\n");
-    pending.release();
+    theTerm()->finishedEpoch(pending.getEpoch());
+    //pending.release();
     fmt::print("before run 2\n");
     run_to_term();
     fmt::print("after run 2\n");
@@ -129,6 +140,9 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
     EXPECT_EQ(handler_count, 4);
   } else {
     run_to_term();
+    EXPECT_EQ(handler_count, 12);
+    run_to_term();
+    EXPECT_EQ(handler_count, 13);
   }
 }
 
