@@ -353,7 +353,7 @@ TEST_F(TestTermAction, test_term_detect_broadcast)
     trigger(vt::no_epoch);
 
     // check status
-    theTerm()->addAction([]{
+    vt::theTerm()->addAction([]{
       EXPECT_TRUE(hasFinished(vt::no_epoch));
     });
   }
@@ -383,14 +383,14 @@ TEST_F(TestTermAction, test_term_detect_routed)
     trigger(vt::no_epoch);
 
     // check status
-    theTerm()->addAction([]{
+    vt::theTerm()->addAction([]{
       EXPECT_TRUE(hasFinished(vt::no_epoch));
     });
   }
 }
 
 
-TEST_F(TestTermAction, test_term_detect_epoch)
+TEST_F(TestTermAction, test_term_detect_collect_epoch)
 {
   int const nb_ep = 4;
   vt::EpochType ep[nb_ep];
@@ -436,11 +436,69 @@ TEST_F(TestTermAction, test_term_detect_epoch)
     // given epoch have been delivered
     // nb: only consider root counters.
     for(int i=0; i < nb_ep; ++i){
-      theTerm()->addActionEpoch(ep[i],[&]{
+      vt::theTerm()->addActionEpoch(ep[i],[&]{
         EXPECT_TRUE(hasFinished(ep[i]));
       });
     }
   }
+}
+
+
+TEST_F(TestTermAction, test_term_detect_rooted_epoch)
+{
+  if(me == root){
+
+    int const nb_ep = 5;
+    vt::EpochType ep[nb_ep];
+
+    // create rooted epoch sequence
+    ep[0] = vt::theTerm()->makeEpochRooted();
+    vtAssertExpr(root == epoch::EpochManip::node(ep[0]));
+    for(int i=1; i < nb_ep; ++i){
+      ep[i] = epoch::EpochManip::next(ep[i-1]);
+    }
+
+    //
+    std::random_device device;
+    std::mt19937 engine(device());
+    std::uniform_int_distribution<int> dist_ttl(1,10);
+    std::uniform_int_distribution<int> dist_dest(1,all-1);
+    std::uniform_int_distribution<int> dist_round(1,10);
+
+    for(int i=0; i < nb_ep; ++i){
+
+      #if DEBUG_TERM_ACTION
+        fmt::print(
+          "node:{}, i:{}, epoch: {}, is_rooted ? {}\n",
+          me, i, ep[i], epoch::EpochManip::isRooted(ep[i])
+        );
+      #endif
+      vtAssertExpr(epoch::EpochManip::isRooted(ep[i]));
+
+      // process computation for current epoch
+      int rounds = dist_round(engine);
+      if(all > 2){
+        for(int k=0; k < rounds; ++k){
+          int dst = me + dist_dest(engine);
+          int ttl = dist_ttl(engine);
+          routeBasic(dst,ttl,ep[i]);
+        }
+      } else {
+        broadcast<basicHandler>(1,ep[i]);
+      }
+
+      // check epoch termination
+      trigger(ep[i]);
+      // when epoch is finished, check that
+      // all messages have been delivered.
+      vt::theTerm()->addActionEpoch(ep[i],[&]{
+        EXPECT_TRUE(hasFinished(ep[i]));
+      });
+      // finalize epoch
+      vt::theTerm()->finishedEpoch(ep[i]);
+    }
+  }
+
 }
 
 }}} // end namespace vt::tests::unit
