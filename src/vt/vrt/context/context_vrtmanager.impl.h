@@ -137,7 +137,7 @@ template <typename MsgT>
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void VirtualContextManager::sendSerialMsg(
-  VirtualProxyType const& toProxy, MsgT *const msg, ActionType act
+  VirtualProxyType const& toProxy, MsgT *const msg
 ) {
   if (theContext()->getWorker() == worker_id_comm_thread) {
     NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
@@ -165,7 +165,7 @@ void VirtualContextManager::sendSerialMsg(
         msg->setProxy(toProxy);
         theLocMan()->vrtContextLoc->routeMsgHandler<
           SerialMsgT, SerializedMessenger::payloadMsgHandler
-        >(toProxy, home_node, msg.get(), act);
+        >(toProxy, home_node, msg.get());
       },
       // custom data transfer lambda if above the eager threshold
       [=](ActionNodeType action){
@@ -176,7 +176,7 @@ void VirtualContextManager::sendSerialMsg(
     );
   } else {
     theWorkerGrp()->enqueueCommThread([=]{
-      theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, msg, act);
+      theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, msg);
     });
   }
 }
@@ -294,10 +294,8 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 void VirtualContextManager::sendMsg(
-  VirtualProxyType const& toProxy, MsgT *const raw_msg, ActionType act
+  VirtualProxyType const& toProxy, MsgT *const raw_msg
 ) {
-  // @todo: implement the action `act' after the routing is finished
-
   auto msg = promoteMsg(raw_msg);
 
   auto const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
@@ -314,7 +312,7 @@ void VirtualContextManager::sendMsg(
   );
 
   // route the message to the destination using the location manager
-  theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
+  theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg);
 }
 
 }}  // end namespace vt::vrt

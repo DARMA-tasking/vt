@@ -71,69 +71,64 @@ void ActiveMessenger::setTagMessage(MsgPtrT msg, TagType const& tag) {
 
 template <typename MsgT>
 EventType ActiveMessenger::sendMsg(
-  NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-  ActionType next_action
+  NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg
 ) {
-  return sendMsg<MsgT>(dest,han,msg.get(),next_action);
+  return sendMsg<MsgT>(dest,han,msg.get());
 }
 
 template <typename MsgT>
 EventType ActiveMessenger::sendMsg(
   NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-  TagType const& tag, ActionType next_action
+  TagType const& tag
 ) {
-  return sendMsg<MsgT>(dest,han,msg.get(),tag,next_action);
+  return sendMsg<MsgT>(dest,han,msg.get(),tag);
 }
 
 template <typename MsgT>
 EventType ActiveMessenger::sendMsg(
-  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag,
-  ActionType next_action
+  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag
 ) {
-  return sendMsg<MsgT>(han,msg.get(),tag,next_action);
+  return sendMsg<MsgT>(han,msg.get(),tag);
+}
+
+template <typename MessageT>
+EventType ActiveMessenger::sendMsg(
+  NodeType const& dest, HandlerType const& han, MessageT* const msg
+) {
+  return sendMsgSz<MessageT>(dest, han, msg, sizeof(MessageT));
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::sendMsg(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
-  ActionType next_action
-) {
-  return sendMsgSz<MessageT>(dest, han, msg, next_action, sizeof(MessageT));
-}
-
-template <typename MessageT>
-EventType ActiveMessenger::sendMsg(
-  NodeType const& dest, HandlerType const& han, MessageT* const msg,
-  TagType const& tag, ActionType next_action
+  TagType const& tag
 ) {
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsgSz<MessageT>(dest, han, msg, next_action, sizeof(MessageT));
+  return sendMsgSz<MessageT>(dest, han, msg, sizeof(MessageT));
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::sendMsgSz(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
-  ActionType next_action, ByteType const& msg_size
+  ByteType const& msg_size
 ) {
   envelopeSetup(msg->env, dest, han);
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  return sendMsgSized(base, msg_size, next_action);
+  return sendMsgSized(base, msg_size);
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::sendMsgHan(
-  HandlerType const& han, MessageT* const msg, TagType const& tag,
-  ActionType next_action
+  HandlerType const& han, MessageT* const msg, TagType const& tag
 ) {
-  return sendMsg(han,msg,tag,next_action);
+  return sendMsg(han,msg,tag);
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::sendMsg(
-  HandlerType const& han, MessageT* const msg, TagType const& tag,
-  ActionType next_action
+  HandlerType const& han, MessageT* const msg, TagType const& tag
 ) {
   auto const& dest = HandlerManagerType::getHandlerNode(han);
   vtAssert(
@@ -157,29 +152,27 @@ EventType ActiveMessenger::sendMsg(
     han, print_ptr(msg), tag
   );
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  return sendMsgSized(base, sizeof(MessageT), next_action);
+  return sendMsgSized(base, sizeof(MessageT));
+}
+
+template <typename MessageT>
+EventType ActiveMessenger::sendMsgAuto(
+  NodeType const& dest, HandlerType const& han, MessageT* const msg
+) {
+  return ActiveSendHandler<MessageT>::sendMsg(dest,msg,han,no_tag);
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::sendMsgAuto(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
-  ActionType act
+  TagType const& tag
 ) {
-  return ActiveSendHandler<MessageT>::sendMsg(dest,msg,han,no_tag,act);
-}
-
-template <typename MessageT>
-EventType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, HandlerType const& han, MessageT* const msg,
-  TagType const& tag, ActionType act
-) {
-  return ActiveSendHandler<MessageT>::sendMsg(dest,msg,han,tag,act);
+  return ActiveSendHandler<MessageT>::sendMsg(dest,msg,han,tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::broadcastMsgSz(
-  MessageT* const msg, ByteType const& msg_size, TagType const& tag,
-  ActionType next_action
+  MessageT* const msg, ByteType const& msg_size, TagType const& tag
 ) {
   auto const& is_term = envelopeIsTerm(msg->env);
   if (!is_term || backend_check_enabled(print_term_msgs)) {
@@ -195,33 +188,27 @@ EventType ActiveMessenger::broadcastMsgSz(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsgSz(this_node, han, msg, next_action, msg_size);
+  return sendMsgSz(this_node, han, msg, msg_size);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::broadcastMsg(
-  MessageT* const msg, TagType const& tag, ActionType next_action
+  MessageT* const msg, TagType const& tag
 ) {
-  return broadcastMsgSz<MessageT,f>(msg,sizeof(MessageT),no_tag,next_action);
-}
-
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-EventType ActiveMessenger::broadcastMsg(MessageT* const msg, ActionType act) {
-  return broadcastMsg<MessageT,f>(msg,no_tag,act);
+  return broadcastMsgSz<MessageT,f>(msg,sizeof(MessageT),no_tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, TagType const& tag,
-  ActionType next_action
+  NodeType const& dest, MessageT* const msg, TagType const& tag
 ) {
-  return sendMsgSz<MessageT,f>(dest, msg, sizeof(MessageT), tag, next_action);
+  return sendMsgSz<MessageT,f>(dest, msg, sizeof(MessageT), tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::sendMsgSz(
   NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
-  TagType const& tag, ActionType next_action
+  TagType const& tag
 ) {
   auto const& is_term = envelopeIsTerm(msg->env);
   if (!is_term || backend_check_enabled(print_term_msgs)) {
@@ -237,41 +224,33 @@ EventType ActiveMessenger::sendMsgSz(
     envelopeSetTag(msg->env, tag);
   }
   auto base = promoteMsg(msg).template to<BaseMsgType>();;
-  return sendMsgSized(base, msg_size, next_action);
-}
-
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-EventType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, ActionType act
-) {
-  return sendMsg<MessageT,f>(dest,msg,no_tag,act);
+  return sendMsgSized(base, msg_size);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, MessageT* const msg, TagType const& tag,
-  ActionType act
+  NodeType const& dest, MessageT* const msg, TagType const& tag
 ) {
-  return ActiveSend<MessageT,f>::sendMsg(dest,msg,tag,act);
+  return ActiveSend<MessageT,f>::sendMsg(dest,msg,tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, MessageT* const msg, ActionType act
+  NodeType const& dest, MessageT* const msg
 ) {
-  return ActiveSend<MessageT,f>::sendMsg(dest,msg,no_tag,act);
+  return ActiveSend<MessageT,f>::sendMsg(dest,msg,no_tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::broadcastMsgAuto(
-  MessageT* const msg, TagType const& tag, ActionType act
+  MessageT* const msg, TagType const& tag
 ) {
-  return ActiveSend<MessageT,f>::broadcastMsg(msg,tag,act);
+  return ActiveSend<MessageT,f>::broadcastMsg(msg,tag);
 }
 
 template <ActiveFnType* f, typename MessageT>
 EventType ActiveMessenger::broadcastMsg(
-  MessageT* const msg, TagType const& tag, ActionType next_action
+  MessageT* const msg, TagType const& tag
 ) {
   auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   auto const& this_node = theContext()->getNode();
@@ -279,18 +258,12 @@ EventType ActiveMessenger::broadcastMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsg(this_node, han, msg, next_action);
-}
-
-template <ActiveFnType* f, typename MessageT>
-EventType ActiveMessenger::broadcastMsg(MessageT* const msg, ActionType act) {
-  return broadcastMsg<f,MessageT>(msg,no_tag,act);
+  return sendMsg(this_node, han, msg);
 }
 
 template <ActiveFnType* f, typename MessageT>
 EventType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, TagType const& tag,
-  ActionType next_action
+  NodeType const& dest, MessageT* const msg, TagType const& tag
 ) {
   auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   envelopeSetup(msg->env, dest, han);
@@ -298,19 +271,19 @@ EventType ActiveMessenger::sendMsg(
     envelopeSetTag(msg->env, tag);
   }
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  return sendMsgSized(base, sizeof(MessageT), next_action);
+  return sendMsgSized(base, sizeof(MessageT));
 }
 
 template <ActiveFnType* f, typename MessageT>
 EventType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, ActionType act
+  NodeType const& dest, MessageT* const msg
 ) {
-  return sendMsg<f,MessageT>(dest,msg,no_tag,act);
+  return sendMsg<f,MessageT>(dest,msg,no_tag);
 }
 
 template <typename FunctorT, typename MessageT>
 EventType ActiveMessenger::broadcastMsg(
-  MessageT* const msg, TagType const& tag, ActionType next_action
+  MessageT* const msg, TagType const& tag
 ) {
   auto const& han =
     auto_registry::makeAutoHandlerFunctor<FunctorT, true, MessageT*>();
@@ -318,18 +291,12 @@ EventType ActiveMessenger::broadcastMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsg(theContext()->getNode(), han, msg, next_action);
-}
-
-template <typename FunctorT, typename MessageT>
-EventType ActiveMessenger::broadcastMsg(MessageT* const msg, ActionType act) {
-  return broadcastMsg<FunctorT,MessageT>(msg,no_tag,act);
+  return sendMsg(theContext()->getNode(), han, msg);
 }
 
 template <typename FunctorT, typename MessageT>
 EventType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, TagType const& tag,
-  ActionType next_action
+  NodeType const& dest, MessageT* const msg, TagType const& tag
 ) {
   auto const& han =
     auto_registry::makeAutoHandlerFunctor<FunctorT, true, MessageT*>();
@@ -338,124 +305,112 @@ EventType ActiveMessenger::sendMsg(
     envelopeSetTag(msg->env, tag);
   }
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  return sendMsgSized(base, sizeof(MessageT), next_action);
-}
-
-template <typename FunctorT, typename MessageT>
-EventType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, ActionType act
-) {
-  return sendMsg<FunctorT,MessageT>(dest,msg,no_tag,act);
+  return sendMsgSized(base, sizeof(MessageT));
 }
 
 template <typename FunctorT, typename MessageT>
 EventType ActiveMessenger::broadcastMsgAuto(
-  MessageT* const msg, TagType const& tag, ActionType act
+  MessageT* const msg, TagType const& tag
 ) {
-  return ActiveSendFunctor<FunctorT,MessageT>::broadcastMsg(msg,tag,act);
+  return ActiveSendFunctor<FunctorT,MessageT>::broadcastMsg(msg,tag);
 }
 
 template <typename FunctorT, typename MessageT>
 EventType ActiveMessenger::broadcastMsgAuto(
-  MessageT* const msg, ActionType act
+  MessageT* const msg
 ) {
-  return ActiveSendFunctor<FunctorT,MessageT>::broadcastMsg(msg,no_tag,act);
+  return ActiveSendFunctor<FunctorT,MessageT>::broadcastMsg(msg,no_tag);
 }
 
 template <typename FunctorT, typename MessageT>
 EventType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, MessageT* const msg, TagType const& tag,
-  ActionType act
+  NodeType const& dest, MessageT* const msg, TagType const& tag
 ) {
-  return ActiveSendFunctor<FunctorT,MessageT>::sendMsg(dest,msg,tag,act);
+  return ActiveSendFunctor<FunctorT,MessageT>::sendMsg(dest,msg,tag);
 }
 
 template <typename FunctorT, typename MessageT>
 EventType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, MessageT* const msg, ActionType act
+  NodeType const& dest, MessageT* const msg
 ) {
-  return ActiveSendFunctor<FunctorT,MessageT>::sendMsg(dest,msg,no_tag,act);
+  return ActiveSendFunctor<FunctorT,MessageT>::sendMsg(dest,msg,no_tag);
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::sendMsg(
   NodeType const& dest, HandlerType const& han, MessageT* const msg,
-  UserSendFnType send_payload_fn, ActionType next_action
+  UserSendFnType send_payload_fn
 ) {
   namespace ph = std::placeholders;
 
   // must send first so action payload function runs before the send
   auto f = std::bind(
-    &ActiveMessenger::sendData, this, ph::_1, ph::_2, ph::_3, ph::_4
+    &ActiveMessenger::sendData, this, ph::_1, ph::_2, ph::_3
   );
   send_payload_fn(f);
 
   // setup envelope
   envelopeSetup(msg->env, dest, han);
   auto base = promoteMsg(msg).template to<BaseMsgType>();
-  auto const& ret = sendMsgSized(base, sizeof(MessageT), next_action);
+  auto const& ret = sendMsgSized(base, sizeof(MessageT));
   return ret;
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn,
-  ActionType next_action
+  NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn
 ) {
   auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  return sendMsg<MessageT>(dest, han, msg, send_payload_fn, next_action);
+  return sendMsg<MessageT>(dest, han, msg, send_payload_fn);
 }
 
 template <typename MsgT>
 EventType ActiveMessenger::broadcastMsg(
-  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, ActionType act
+  HandlerType const& han, MsgSharedPtr<MsgT> const& msg
 ) {
-  return broadcastMsg<MsgT>(han,msg.get(),act);
+  return broadcastMsg<MsgT>(han,msg.get());
 }
 
 template <typename MsgT>
 EventType ActiveMessenger::broadcastMsg(
-  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag,
-  ActionType act
+  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag
 ) {
-  return broadcastMsg<MsgT>(han,msg.get(),tag,act);
+  return broadcastMsg<MsgT>(han,msg.get(),tag);
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::broadcastMsg(
-  HandlerType const& han, MessageT* const msg, ActionType next_action
+  HandlerType const& han, MessageT* const msg
 ) {
   auto const& this_node = theContext()->getNode();
   setBroadcastType(msg->env);
-  return sendMsg(this_node, han, msg, next_action);
+  return sendMsg(this_node, han, msg);
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::broadcastMsg(
-  HandlerType const& han, MessageT* const msg, TagType const& tag,
-  ActionType next_action
+  HandlerType const& han, MessageT* const msg, TagType const& tag
 ) {
   auto const& this_node = theContext()->getNode();
   setBroadcastType(msg->env);
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsg(this_node, han, msg, next_action);
+  return sendMsg(this_node, han, msg);
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::broadcastMsgAuto(
-  HandlerType const& han, MessageT* const msg, ActionType act
+  HandlerType const& han, MessageT* const msg
 ) {
-  return ActiveSendHandler<MessageT>::broadcastMsg(msg,han,no_tag,act);
+  return ActiveSendHandler<MessageT>::broadcastMsg(msg,han,no_tag);
 }
 
 template <typename MessageT>
 EventType ActiveMessenger::broadcastMsgAuto(
-  HandlerType const& han, MessageT* const msg, TagType const& tag,
-  ActionType act
+  HandlerType const& han, MessageT* const msg, TagType const& tag
 ) {
-  return ActiveSendHandler<MessageT>::broadcastMsg(msg,han,tag,act);
+  return ActiveSendHandler<MessageT>::broadcastMsg(msg,han,tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -470,7 +425,7 @@ EventType ActiveMessenger::sendDataCallback(
     "sendDataCallback: msg={}, this_han={}, dest={}\n",
     print_ptr(msg), this_han, dest
   );
-  return sendMsg<MessageT,f>(dest, msg, no_tag, nullptr);
+  return sendMsg<MessageT,f>(dest, msg, no_tag);
 }
 
 template <typename MessageT>

@@ -79,9 +79,6 @@ static void put_channel_setup(TestMsg* msg) {
     theRDMA()->putTypedData(
       handle, my_data, num_elm, no_byte, no_tag,
       [=]{
-        fmt::print("{}: local put finished\n", my_node);
-      },
-      [=]{
         TestMsg* back = makeSharedMessage<TestMsg>(handle);
         theMsg()->sendMsg<TestMsg, read_data_fn>(0, back);
       }

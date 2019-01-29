@@ -280,34 +280,33 @@ public:
   >
   void sendMsgUntypedHandler(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member, ActionType action,
+    HandlerType const& handler, bool const member,
     bool imm_context = true
   );
 
   template <typename MsgT, typename ColT>
   IsNotColMsgType<MsgT> sendMsgWithHan(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member, ActionType action
+    HandlerType const& handler, bool const member
   );
 
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> sendMsgWithHan(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member, ActionType action
+    HandlerType const& handler, bool const member
   );
 
   template <typename MsgT, typename ColT>
   void sendNormalMsg(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member, ActionType action
+    HandlerType const& handler, bool const member
   );
 
   template <
     typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
   >
   void sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
-    ActionType act = nullptr
+    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
   );
 
   template <
@@ -315,18 +314,17 @@ public:
     ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
   >
   void sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
-    ActionType act = nullptr
+    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   IsColMsgType<MsgT> sendMsg(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   IsNotColMsgType<MsgT> sendMsg(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <
@@ -335,7 +333,7 @@ public:
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
   IsColMsgType<MsgT> sendMsg(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <
@@ -344,12 +342,12 @@ public:
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
   IsNotColMsgType<MsgT> sendMsg(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   void sendMsgImpl(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <
@@ -358,7 +356,7 @@ public:
     ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
   >
   void sendMsgImpl(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
@@ -419,28 +417,28 @@ public:
   IsNotColMsgType<MsgT> broadcastMsgWithHan(
     CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
-    ActionType act = nullptr, bool instrument = true
+    bool instrument = true
   );
 
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> broadcastMsgWithHan(
     CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
-    ActionType act = nullptr, bool instrument = true
+    bool instrument = true
   );
 
   template <typename MsgT, typename ColT>
   void broadcastNormalMsg(
     CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
-    ActionType act = nullptr, bool instrument = true
+    bool instrument = true
   );
 
   template <typename MsgT, typename ColT, typename IdxT>
   void broadcastMsgUntypedHandler(
     CollectionProxyWrapType<ColT,IdxT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
-    ActionType act, bool instrument
+    bool instrument
   );
 
   // CollectionMessage non-detecting broadcast
@@ -450,7 +448,7 @@ public:
   >
   void broadcastMsg(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <
@@ -459,19 +457,19 @@ public:
   >
   void broadcastMsg(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   IsColMsgType<MsgT> broadcastMsg(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   IsNotColMsgType<MsgT> broadcastMsg(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <
@@ -481,7 +479,7 @@ public:
   >
   IsColMsgType<MsgT> broadcastMsg(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <
@@ -491,13 +489,13 @@ public:
   >
   IsNotColMsgType<MsgT> broadcastMsg(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   void broadcastMsgImpl(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <
@@ -507,7 +505,7 @@ public:
   >
   void broadcastMsgImpl(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <typename ColT, typename IndexT, typename MsgT>

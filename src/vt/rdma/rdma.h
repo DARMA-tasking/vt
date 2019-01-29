@@ -101,35 +101,35 @@ struct RDMAManager {
   void putTypedData(
     RDMA_HandleType const& rdma_handle, T ptr,
     ByteType const& num_elems, ByteType const& offset, TagType const& tag,
-    ActionType cont = no_action, ActionType action_after_put = no_action
+    ActionType action_after_put = no_action
   ) {
     ByteType const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
     ByteType const byte_offset = offset == no_byte ? 0 : sizeof(T)*offset;
     return putData(
       rdma_handle, static_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
-      sizeof(T), cont, action_after_put
+      sizeof(T), action_after_put
     );
   }
 
   template <typename T>
   void putTypedData(
     RDMA_HandleType const& han, T ptr, ByteType const& num_elems = no_byte,
-    ByteType const& offset = no_byte, ActionType cont = no_action,
+    ByteType const& offset = no_byte,
     ActionType action_after_put = no_action
   ) {
     return putTypedData<T>(
-      han, ptr, num_elems, offset, no_tag, cont, action_after_put
+      han, ptr, num_elems, offset, no_tag, action_after_put
     );
   }
 
   void putData(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
-    ByteType const& num_bytes, ActionType cont = no_action,
+    ByteType const& num_bytes,
     ActionType action_after_put = no_action
   ) {
     return putData(
       rdma_handle, ptr, num_bytes, no_byte, no_tag, rdma_default_byte_size,
-      cont, action_after_put
+      action_after_put
     );
   }
 
@@ -137,7 +137,7 @@ struct RDMAManager {
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& offset, TagType const& tag,
     ByteType const& elm_size = rdma_default_byte_size,
-    ActionType cont = no_action, ActionType action_after_put = no_action,
+    ActionType action_after_put = no_action,
     NodeType const& collective_node = uninitialized_destination,
     bool const direct_message_send = false
   );
@@ -153,7 +153,7 @@ struct RDMAManager {
   void putDataIntoBufCollective(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& elm_size, ByteType const& offset,
-    ActionType cont = no_action, ActionType after_put_action = no_action
+    ActionType after_put_action = no_action
   );
 
   void getDataIntoBufCollective(
@@ -169,7 +169,7 @@ struct RDMAManager {
 
   void putRegionTypeless(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
-    RDMA_RegionType const& region, ActionType cont, ActionType after_put_action
+    RDMA_RegionType const& region, ActionType after_put_action
   );
 
   template <typename T>
@@ -427,7 +427,7 @@ private:
   void sendDataChannel(
     RDMA_TypeType const& type, RDMA_HandleType const& han, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& offset, NodeType const& target,
-    NodeType const& non_target, ActionType cont, ActionType action_after_put
+    NodeType const& non_target, ActionType action_after_put
   );
 
   void createDirectChannel(

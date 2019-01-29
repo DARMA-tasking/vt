@@ -254,7 +254,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
   bool const serialize, EntityID const& id, NodeType const& home_node,
-  MsgSharedPtr<MessageT> msg, ActionType action
+  MsgSharedPtr<MessageT> msg
 ) {
   auto const& this_node = theContext()->getNode();
   NodeType route_to_node = uninitialized_destination;
@@ -304,7 +304,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
     home_node, route_to_node, serialize, id
   );
 
-  return routeMsgNode<MessageT>(serialize,id,home_node,route_to_node,msg,action);
+  return routeMsgNode<MessageT>(serialize,id,home_node,route_to_node,msg);
 }
 
 template <typename EntityID>
@@ -373,7 +373,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
   bool const serialize, EntityID const& id, NodeType const& home_node,
-  NodeType const& to_node, MsgSharedPtr<MessageT> msg, ActionType action
+  NodeType const& to_node, MsgSharedPtr<MessageT> msg
 ) {
   auto const& this_node = theContext()->getNode();
 
@@ -392,11 +392,11 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     if (serialize) {
       using ::vt::serialization::auto_dispatch::RequiredSerialization;
       RequiredSerialization<MessageT,msgHandler>::sendMsg(
-        to_node,msg.get(),no_tag,action
+        to_node,msg.get(),no_tag
       );
     } else {
       // send to the node discovered by the location manager
-      theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg.get(), action);
+      theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg.get());
     }
   } else {
     debug_print(
@@ -449,9 +449,6 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       );
 
       trigger_msg_handler_action(id);
-      if (action) {
-        action();
-      }
     } else {
       debug_print(
         location, node,
@@ -473,16 +470,13 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
         if (resolved == this_node) {
           trigger_msg_handler_action(id_);
-          if (action) {
-            action();
-          }
         } else {
           /*
            *  Recurse with the new updated node information. This occurs
            *  typically when an non-migrated registration occurs off the home
            *  node and messages are buffered, awaiting forwarding information.
            */
-          routeMsgNode<MessageT>(serialize,id_,home_node,resolved,msg,action);
+          routeMsgNode<MessageT>(serialize,id_,home_node,resolved,msg);
         }
       });
     }
@@ -501,39 +495,37 @@ void EntityLocationCoord<EntityID>::routeNonEagerAction(
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandler(
-  EntityID const& id, NodeType const& home_node, MessageT *m, ActionType action
+  EntityID const& id, NodeType const& home_node, MessageT *m
 ) {
   auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
   m->setHandler(handler);
   auto msg = promoteMsg(m);
-  return routeMsg<MessageT>(id,home_node,msg,action);
+  return routeMsg<MessageT>(id,home_node,msg);
 }
 
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgSerializeHandler(
-  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m,
-  ActionType action
+  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m
 ) {
   auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
   m->setHandler(handler);
-  return routeMsg<MessageT>(id,home_node,m,action,true);
+  return routeMsg<MessageT>(id,home_node,m,true);
 }
 
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgSerialize(
-  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m,
-  ActionType action
+  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m
 ) {
-  return routeMsg<MessageT>(id,home_node,m,action,true);
+  return routeMsg<MessageT>(id,home_node,m,true);
 }
 
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
   EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
-  ActionType act, bool const serialize, NodeType from_node
+  bool const serialize, NodeType from_node
 ) {
   auto const& from =
     from_node == uninitialized_destination ? theContext()->getNode() :
@@ -560,11 +552,11 @@ void EntityLocationCoord<EntityID>::routeMsg(
   msg->setLocInst(this_inst);
 
   if (use_eager && !serialize) {
-    routeMsgEager<MessageT>(serialize, id, home_node, msg, act);
+    routeMsgEager<MessageT>(serialize, id, home_node, msg);
   } else {
     // non-eager protocol: get location first then send message after resolution
     getLocation(id, home_node, [=](NodeType node) {
-      routeMsgNode<MessageT>(serialize, id, home_node, node, msg, act);
+      routeMsgNode<MessageT>(serialize, id, home_node, node, msg);
     });
   }
 }
@@ -643,7 +635,7 @@ template <typename MessageT>
 
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
-      loc->routeMsg(entity_id, home_node, msg, nullptr, serialize, from_node);
+      loc->routeMsg(entity_id, home_node, msg, serialize, from_node);
     }
   );
 }

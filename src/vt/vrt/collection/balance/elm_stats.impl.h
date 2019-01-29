@@ -146,7 +146,7 @@ void ComputeStats<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
   theCollection()->broadcastMsg<
     PhaseMsg<ColT>,
     ElementStats::computeStats<ColT>
-  >(proxy, phase_msg, nullptr, false);
+  >(proxy, phase_msg, false);
 }
 
 template <typename ColT>
@@ -215,7 +215,7 @@ void CollectedStats<ColT>::operator()(StatsMsg<ColT>* msg) {
 
   theCollection()->broadcastMsg<
     LoadStatsMsg<ColT>, ElementStats::statsIn<ColT>
-  >(msg->getProxy(), load_msg, nullptr, false);
+  >(msg->getProxy(), load_msg, false);
 }
 
 template <typename ColT>

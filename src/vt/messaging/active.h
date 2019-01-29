@@ -115,7 +115,7 @@ struct ActiveMessenger {
   using EventRecordType      = event::AsyncEvent::EventRecordType;
   using SendDataRetType      = std::tuple<EventType, TagType>;
   using SendFnType           = std::function<
-    SendDataRetType(RDMA_GetType,NodeType,TagType,ActionType)
+    SendDataRetType(RDMA_GetType,NodeType,TagType)
   >;
   using UserSendFnType       = std::function<void(SendFnType)>;
   using ContainerPendingType = std::unordered_map<TagType,PendingRecvType>;
@@ -160,49 +160,45 @@ struct ActiveMessenger {
   template <typename MessageT>
   EventType sendMsgSz(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    ActionType next_action, ByteType const& msg_size
+    ByteType const& msg_size
+  );
+
+  template <typename MessageT>
+  EventType sendMsg(
+    NodeType const& dest, HandlerType const& han, MessageT* const msg
   );
 
   template <typename MessageT>
   EventType sendMsg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    ActionType next_action = nullptr
+    TagType const& tag
   );
 
   template <typename MessageT>
   EventType sendMsg(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    TagType const& tag, ActionType next_action = nullptr
+    HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag
   );
 
-  template <typename MessageT>
+  template <typename MsgT>
   EventType sendMsg(
-    HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg
   );
 
   template <typename MsgT>
   EventType sendMsg(
     NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-    ActionType next_action = nullptr
-  );
-
-  template <typename MsgT>
-  EventType sendMsg(
-    NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-    TagType const& tag, ActionType next_action = nullptr
+    TagType const& tag
   );
 
   template <typename MsgT>
   EventType sendMsg(
     HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-    TagType const& tag = no_tag, ActionType next_action = nullptr
+    TagType const& tag = no_tag
   );
 
   template <typename MessageT>
   EventType sendMsgHan(
-    HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag
   );
 
   /*
@@ -211,14 +207,13 @@ struct ActiveMessenger {
    */
   template <typename MessageT>
   EventType sendMsgAuto(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    ActionType next_action = nullptr
+    NodeType const& dest, HandlerType const& han, MessageT* const msg
   );
 
   template <typename MessageT>
   EventType sendMsgAuto(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    TagType const& tag, ActionType next_action = nullptr
+    TagType const& tag
   );
 
   /*
@@ -245,33 +240,24 @@ struct ActiveMessenger {
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType broadcastMsgSz(
-    MessageT* const msg, ByteType const& msg_size, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    MessageT* const msg, ByteType const& msg_size, TagType const& tag = no_tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType broadcastMsg(MessageT* const msg, ActionType act);
-
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendMsgSz(
     NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
-    TagType const& tag = no_tag, ActionType next_action = nullptr
+    TagType const& tag = no_tag
   );
-
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act);
 
   /*
    *  Auto method for dispatching to the serialization framework if required
@@ -279,20 +265,17 @@ struct ActiveMessenger {
    */
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg, TagType const& tag,
-    ActionType next_action = nullptr
+    NodeType const& dest, MessageT* const msg, TagType const& tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg,
-    ActionType next_action = nullptr
+    NodeType const& dest, MessageT* const msg
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType broadcastMsgAuto(
-    MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag
   );
   /*
    *----------------------------------------------------------------------------
@@ -323,21 +306,16 @@ struct ActiveMessenger {
 
   template <ActiveFnType* f, typename MessageT>
   EventType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag
   );
-
-  template <ActiveFnType* f, typename MessageT>
-  EventType broadcastMsg(MessageT* const msg, ActionType act);
 
   template <ActiveFnType* f, typename MessageT>
   EventType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <ActiveFnType* f, typename MessageT>
-  EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act);
+  EventType sendMsg(NodeType const& dest, MessageT* const msg);
 
   /*
    *----------------------------------------------------------------------------
@@ -364,8 +342,7 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   EventType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <
@@ -373,29 +350,21 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   EventType broadcastMsgAuto(
-    MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
-  EventType broadcastMsg(MessageT* const msg, ActionType act);
-
-  template <
-    typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
-  >
-  EventType broadcastMsgAuto(MessageT* const msg, ActionType act);
+  EventType broadcastMsgAuto(MessageT* const msg);
 
   template <
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   EventType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag,
-    ActionType next_action = nullptr
+    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <
@@ -403,22 +372,15 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   EventType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg, TagType const& tag,
-    ActionType next_action = nullptr
+    NodeType const& dest, MessageT* const msg, TagType const& tag
   );
 
   template <
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
-  EventType sendMsg(NodeType const& dest, MessageT* const msg, ActionType act);
-
-  template <
-    typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
-  >
   EventType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg, ActionType act = nullptr
+    NodeType const& dest, MessageT* const msg
   );
 
   /*
@@ -439,36 +401,32 @@ struct ActiveMessenger {
   template <typename MessageT>
   EventType sendMsg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    UserSendFnType send_payload_fn, ActionType next_action = nullptr
+    UserSendFnType send_payload_fn
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EventType sendMsg(
-    NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn,
-    ActionType next_action = nullptr
+    NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn
   );
 
   template <typename MessageT>
   EventType broadcastMsg(
-    HandlerType const& han, MessageT* const msg, ActionType act = nullptr
+    HandlerType const& han, MessageT* const msg
   );
 
   template <typename MessageT>
   EventType broadcastMsg(
-    HandlerType const& han, MessageT* const msg, TagType const& tag,
-    ActionType act = nullptr
+    HandlerType const& han, MessageT* const msg, TagType const& tag
   );
 
   template <typename MsgT>
   EventType broadcastMsg(
-    HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-    ActionType act = nullptr
+    HandlerType const& han, MsgSharedPtr<MsgT> const& msg
   );
 
   template <typename MsgT>
   EventType broadcastMsg(
-    HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag,
-    ActionType act = nullptr
+    HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag
   );
 
   /*
@@ -477,13 +435,12 @@ struct ActiveMessenger {
    */
   template <typename MessageT>
   EventType broadcastMsgAuto(
-    HandlerType const& han, MessageT* const msg, ActionType act = nullptr
+    HandlerType const& han, MessageT* const msg
   );
 
   template <typename MessageT>
   EventType broadcastMsgAuto(
-    HandlerType const& han, MessageT* const msg, TagType const& tag,
-    ActionType act = nullptr
+    HandlerType const& han, MessageT* const msg, TagType const& tag
   );
 
   /*
@@ -530,8 +487,7 @@ struct ActiveMessenger {
   );
 
   SendDataRetType sendData(
-    RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
-    ActionType next_action = nullptr
+    RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
   );
 
   bool recvDataMsg(
@@ -552,8 +508,7 @@ struct ActiveMessenger {
   );
 
   EventType sendMsgSized(
-    MsgSharedPtr<BaseMsgType> const& msg, MsgSizeType const& msg_size,
-    ActionType next_action = nullptr
+    MsgSharedPtr<BaseMsgType> const& msg, MsgSizeType const& msg_size
   );
 
   void performTriggeredActions();
@@ -600,13 +555,12 @@ struct ActiveMessenger {
 
   EventType sendMsgBytes(
     NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-    MsgSizeType const& msg_size, TagType const& send_tag,
-    ActionType next_action
+    MsgSizeType const& msg_size, TagType const& send_tag
   );
 
   EventType sendMsgBytesWithPut(
     NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-    MsgSizeType const& msg_size, TagType const& send_tag, ActionType next_action
+    MsgSizeType const& msg_size, TagType const& send_tag
   );
 
   /*

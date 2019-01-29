@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
     // this message that causes a `get' races with the following `put'
     theMsg()->sendMsg<Msg, doGetHandler>(3, makeSharedMessage<Msg>());
     RDMACollectionManager::putElement(
-      my_handle, 1, test_data, serialize_put_fn, no_action, []{
+      my_handle, 1, test_data, serialize_put_fn, []{
         fmt::print("{}: put finished\n", my_node);
         theMsg()->sendMsg<Msg, doGetHandler>(1, makeSharedMessage<Msg>());
       }

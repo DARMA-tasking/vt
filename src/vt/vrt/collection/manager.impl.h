@@ -736,10 +736,10 @@ template <
 >
 void CollectionManager::broadcastMsg(
   CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-  MsgT *msg, ActionType act, bool instrument
+  MsgT *msg, bool instrument
 ) {
   using ColT = typename MsgT::CollectionType;
-  return broadcastMsg<MsgT,ColT,f>(proxy,msg,act,instrument);
+  return broadcastMsg<MsgT,ColT,f>(proxy,msg,instrument);
 }
 
 template <
@@ -748,29 +748,28 @@ template <
 >
 void CollectionManager::broadcastMsg(
   CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-  MsgT *msg, ActionType act, bool instrument
+  MsgT *msg, bool instrument
 ) {
   using ColT = typename MsgT::CollectionType;
-  return broadcastMsg<MsgT,ColT,f>(proxy,msg,act,instrument);
+  return broadcastMsg<MsgT,ColT,f>(proxy,msg,instrument);
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
 CollectionManager::IsColMsgType<MsgT>
 CollectionManager::broadcastMsg(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, ActionType act,
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
   bool instrument
 ) {
-  return broadcastMsgImpl<MsgT,ColT,f>(proxy,msg,act,instrument);
+  return broadcastMsgImpl<MsgT,ColT,f>(proxy,msg,instrument);
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
 CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::broadcastMsg(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, ActionType act,
-  bool instrument
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, bool instrument
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
-  return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,false,act,instrument);
+  return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,false,instrument);
 }
 
 template <
@@ -780,10 +779,10 @@ template <
 >
 CollectionManager::IsColMsgType<MsgT>
 CollectionManager::broadcastMsg(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, ActionType act,
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
   bool instrument
  ) {
-  return broadcastMsgImpl<MsgT,ColT,f>(proxy,msg,act,instrument);
+  return broadcastMsgImpl<MsgT,ColT,f>(proxy,msg,instrument);
 }
 
 template <
@@ -793,11 +792,10 @@ template <
 >
 CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::broadcastMsg(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, ActionType act,
-  bool instrument
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, bool instrument
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
-  return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,true,act,instrument);
+  return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,true,instrument);
 }
 
 template <
@@ -806,52 +804,50 @@ template <
   ActiveColMemberTypedFnType<MsgT,ColT> f
 >
 void CollectionManager::broadcastMsgImpl(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, ActionType act,
-  bool inst
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, bool inst
 ) {
   // register the user's handler
   auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
-  return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,true,act,inst);
+  return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,true,inst);
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
 void CollectionManager::broadcastMsgImpl(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, ActionType act,
-  bool inst
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, bool inst
 ) {
   // register the user's handler
   auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
-  return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,false,act,inst);
+  return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,false,inst);
 }
 
 template <typename MsgT, typename ColT>
 CollectionManager::IsColMsgType<MsgT>
 CollectionManager::broadcastMsgWithHan(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
-  HandlerType const& h, bool const mem, ActionType act, bool inst
+  HandlerType const& h, bool const mem, bool inst
 ) {
   using IdxT = typename ColT::IndexType;
-  return broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(proxy,msg,h,mem,act,inst);
+  return broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(proxy,msg,h,mem,inst);
 }
 
 template <typename MsgT, typename ColT>
 CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::broadcastMsgWithHan(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
-  HandlerType const& h, bool const mem, ActionType act, bool inst
+  HandlerType const& h, bool const mem, bool inst
 ) {
-  return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,mem,act,inst);
+  return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,mem,inst);
 }
 
 template <typename MsgT, typename ColT>
 void CollectionManager::broadcastNormalMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
   HandlerType const& handler, bool const member,
-  ActionType act, bool instrument
+  bool instrument
 ) {
   auto wrap_msg = makeSharedMessage<ColMsgWrap<ColT,MsgT>>(*msg);
   return broadcastMsgUntypedHandler<ColMsgWrap<ColT,MsgT>,ColT>(
-    proxy, wrap_msg, handler, member, act, instrument
+    proxy, wrap_msg, handler, member, instrument
   );
 }
 
@@ -879,7 +875,7 @@ template <typename MsgT>
 template <typename MsgT, typename ColT, typename IdxT>
 void CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *raw_msg,
-  HandlerType const& handler, bool const member, ActionType act, bool instrument
+  HandlerType const& handler, bool const member, bool instrument
 ) {
   auto const idx = makeVrtDispatch<MsgT,ColT>();
 
@@ -978,7 +974,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
       );
       theMsg()->pushEpoch(cur_epoch);
       theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
-        toProxy, msg.get(), handler, member, act, instrument
+        toProxy, msg.get(), handler, member, instrument
       );
       theMsg()->popEpoch();
       theTerm()->consume(cur_epoch);
@@ -1158,29 +1154,29 @@ template <typename MsgT, typename ColT>
 CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::sendMsgWithHan(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-  HandlerType const& handler, bool const member, ActionType action
+  HandlerType const& handler, bool const member
 ) {
-  return sendNormalMsg<MsgT,ColT>(proxy,msg,handler,member,action);
+  return sendNormalMsg<MsgT,ColT>(proxy,msg,handler,member);
 }
 
 template <typename MsgT, typename ColT>
 CollectionManager::IsColMsgType<MsgT>
 CollectionManager::sendMsgWithHan(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-  HandlerType const& handler, bool const member, ActionType action
+  HandlerType const& handler, bool const member
 ) {
   using IdxT = typename ColT::IndexType;
-  return sendMsgUntypedHandler<MsgT,ColT,IdxT>(proxy,msg,handler,member,action);
+  return sendMsgUntypedHandler<MsgT,ColT,IdxT>(proxy,msg,handler,member);
 }
 
 template <typename MsgT, typename ColT>
 void CollectionManager::sendNormalMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-  HandlerType const& handler, bool const member, ActionType action
+  HandlerType const& handler, bool const member
 ) {
   auto wrap_msg = makeSharedMessage<ColMsgWrap<ColT,MsgT>>(*msg);
   return sendMsgUntypedHandler<ColMsgWrap<ColT,MsgT>,ColT>(
-    proxy, wrap_msg, handler, member, action
+    proxy, wrap_msg, handler, member
   );
 }
 
@@ -1188,11 +1184,10 @@ template <
   typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
 >
 void CollectionManager::sendMsg(
-  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
-  ActionType act
+  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
 ) {
   using ColT = typename MsgT::CollectionType;
-  return sendMsg<MsgT,ColT,f>(proxy,msg,act);
+  return sendMsg<MsgT,ColT,f>(proxy,msg);
 }
 
 template <
@@ -1200,28 +1195,27 @@ template <
   ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
 >
 void CollectionManager::sendMsg(
-  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
-  ActionType act
+  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
 ) {
   using ColT = typename MsgT::CollectionType;
-  return sendMsg<MsgT,ColT,f>(proxy,msg,act);
+  return sendMsg<MsgT,ColT,f>(proxy,msg);
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
 CollectionManager::IsColMsgType<MsgT>
 CollectionManager::sendMsg(
-  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  return sendMsgImpl<MsgT,ColT,f>(proxy,msg,act);
+  return sendMsgImpl<MsgT,ColT,f>(proxy,msg);
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
 CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::sendMsg(
-  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
-  return sendNormalMsg<MsgT,ColT>(proxy,msg,h,false,act);
+  return sendNormalMsg<MsgT,ColT>(proxy,msg,h,false);
 }
 
 template <
@@ -1231,9 +1225,9 @@ template <
 >
 CollectionManager::IsColMsgType<MsgT>
 CollectionManager::sendMsg(
-  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  return sendMsgImpl<MsgT,ColT,f>(proxy,msg,act);
+  return sendMsgImpl<MsgT,ColT,f>(proxy,msg);
 }
 
 template <
@@ -1243,18 +1237,18 @@ template <
 >
 CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::sendMsg(
-  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
-  return sendNormalMsg<MsgT,ColT>(proxy,msg,h,true,act);
+  return sendNormalMsg<MsgT,ColT>(proxy,msg,h,true);
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
 void CollectionManager::sendMsgImpl(
-  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
-  return sendMsgUntypedHandler<MsgT>(proxy,msg,h,false,act);
+  return sendMsgUntypedHandler<MsgT>(proxy,msg,h,false);
 }
 
 template <
@@ -1263,16 +1257,16 @@ template <
   ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
 >
 void CollectionManager::sendMsgImpl(
-  VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
-  return sendMsgUntypedHandler<MsgT>(proxy,msg,h,true,act);
+  return sendMsgUntypedHandler<MsgT>(proxy,msg,h,true);
 }
 
 template <typename MsgT, typename ColT, typename IdxT>
 void CollectionManager::sendMsgUntypedHandler(
   VirtualElmProxyType<ColT> const& toProxy, MsgT *raw_msg,
-  HandlerType const& handler, bool const member, ActionType action,
+  HandlerType const& handler, bool const member,
   bool imm_context
 ) {
   // @todo: implement the action `action' after the routing is finished
@@ -1305,7 +1299,7 @@ void CollectionManager::sendMsgUntypedHandler(
     schedule<>([=]{
       theMsg()->pushEpoch(cur_epoch);
       theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
-        toProxy, msg.get(), handler, member, action, false
+        toProxy, msg.get(), handler, member, false
       );
       theMsg()->popEpoch();
       theTerm()->consume(cur_epoch);
@@ -1349,7 +1343,7 @@ void CollectionManager::sendMsgUntypedHandler(
     vtAssert(lm != nullptr, "LM must exist");
     lm->template routeMsgSerializeHandler<
       MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
-    >(toProxy, home_node, msg, action);
+    >(toProxy, home_node, msg);
 
     theMsg()->popEpoch();
   } else {
@@ -1375,7 +1369,7 @@ void CollectionManager::sendMsgUntypedHandler(
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       theMsg()->pushEpoch(cur_epoch);
       theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
-        toProxy, msg.get(), handler, member, action, false
+        toProxy, msg.get(), handler, member, false
       );
       theMsg()->popEpoch();
       theTerm()->consume(cur_epoch);
@@ -2750,7 +2744,7 @@ void CollectionManager::nextPhase(
     }
   );
   theCollection()->broadcastMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
-    proxy, msg, nullptr, instrument
+    proxy, msg, instrument
   );
 }
 

@@ -150,7 +150,7 @@ TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
         proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
       } else {
         theCollection()->sendMsg<MsgType,SendHandlers<ColType>::handler>(
-          proxy[i], msg, nullptr
+          proxy[i], msg
         );
       }
     }
@@ -175,7 +175,7 @@ TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
         proxy[i].template send<MsgType,&ColType::handler>(msg);
       } else {
         theCollection()->sendMsg<MsgType,&ColType::handler>(
-          proxy[i], msg, nullptr
+          proxy[i], msg
         );
       }
     }

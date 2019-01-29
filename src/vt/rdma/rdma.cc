@@ -82,7 +82,7 @@ namespace vt { namespace rdma {
       );
 
       auto send_payload = [&](Active::SendFnType send){
-        auto ret = send(data, recv_node, no_tag, [=]{ });
+        auto ret = send(data, recv_node, no_tag);
         new_msg->mpi_tag_to_recv = std::get<1>(ret);
         debug_print(
           rdma, node,
@@ -577,7 +577,7 @@ void RDMAManager::syncChannel(
 void RDMAManager::sendDataChannel(
   RDMA_TypeType const& type, RDMA_HandleType const& han, RDMA_PtrType const& ptr,
   ByteType const& num_bytes, ByteType const& offset, NodeType const& target,
-  NodeType const& non_target, ActionType cont, ActionType action_after_remote_op
+  NodeType const& non_target, ActionType action_after_remote_op
 ) {
   auto channel = findChannel(han, type, target, non_target, false, true);
 
@@ -585,15 +585,11 @@ void RDMAManager::sendDataChannel(
 
   debug_print(
     rdma, node,
-    "sendDataChannel: han={}, type={}, has:cont={}, "
+    "sendDataChannel: han={}, type={}, "
     "has:action_after_remote_op={}\n",
-    han, PRINT_CHANNEL_TYPE(type), cont != nullptr,
+    han, PRINT_CHANNEL_TYPE(type),
     action_after_remote_op != nullptr
   );
-
-  if (cont) {
-    cont();
-  }
 
   if (type == RDMA_TypeType::Put and action_after_remote_op) {
     syncRemotePutChannel(han, target, [=]{
@@ -613,7 +609,7 @@ void RDMAManager::sendDataChannel(
 void RDMAManager::putData(
   RDMA_HandleType const& han, RDMA_PtrType const& ptr, ByteType const& num_bytes,
   ByteType const& offset, TagType const& tag, ByteType const& elm_size,
-  ActionType cont, ActionType action_after_put, NodeType const& collective_node,
+  ActionType action_after_put, NodeType const& collective_node,
   bool const direct_message_send
 ) {
   auto const& this_node = theContext()->getNode();
@@ -631,7 +627,7 @@ void RDMAManager::putData(
 
   if (is_collective and collective_node == uninitialized_destination) {
     return putDataIntoBufCollective(
-      han, ptr, num_bytes, elm_size, offset, cont, action_after_put
+      han, ptr, num_bytes, elm_size, offset, action_after_put
     );
   } else {
     // non-collective put
@@ -647,7 +643,7 @@ void RDMAManager::putData(
       if (send_via_channel) {
         return sendDataChannel(
           RDMA_TypeType::Put, han, ptr, num_bytes, offset, put_node, non_target,
-          cont, action_after_put
+          action_after_put
         );
       } else {
         RDMA_OpType const new_op = cur_op_++;
@@ -656,7 +652,6 @@ void RDMAManager::putData(
 
         if (direct_put_pack) {
           PutMessage* msg = nullptr;
-          auto cur_cont = cont;
           if (direct_message_send) {
             msg = reinterpret_cast<PutMessage*>(ptr);
             msg->send_back =
@@ -675,10 +670,6 @@ void RDMAManager::putData(
             );
             auto msg_ptr = reinterpret_cast<char*>(msg) + sizeof(PutMessage);
             std::memcpy(msg_ptr, ptr, num_bytes);
-            if (cont) {
-              cont();
-            }
-            cur_cont = nullptr;
           }
 
           if (tag != no_tag) {
@@ -686,7 +677,7 @@ void RDMAManager::putData(
           }
 
           theMsg()->sendMsgSz<PutMessage,putRecvMsg>(
-            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag, cur_cont
+            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag
           );
 
           debug_print(
@@ -704,17 +695,7 @@ void RDMAManager::putData(
           );
 
           auto send_payload = [&](Active::SendFnType send){
-            auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag, [=]{
-		debug_print(
-                  rdma, node,
-		  "putData: execute payload fn: put_node={}, ptr={}, num_bytes={}, "
-		  "send_tag={}, offset={}\n",
-		  put_node, ptr, num_bytes, msg->mpi_tag_to_recv, offset
-		);
-              if (cont != nullptr) {
-                cont();
-              }
-            });
+            auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag);
             msg->mpi_tag_to_recv = std::get<1>(ret);
           };
 
@@ -761,9 +742,6 @@ void RDMAManager::putData(
             rdma, node,
             "putData: local data is put\n"
           );
-          if (cont) {
-            cont();
-          }
           if (action_after_put) {
             action_after_put();
           }
@@ -775,7 +753,7 @@ void RDMAManager::putData(
 
 void RDMAManager::putRegionTypeless(
   RDMA_HandleType const& han, RDMA_PtrType const& ptr,
-  RDMA_RegionType const& region, ActionType cont, ActionType after_put_action
+  RDMA_RegionType const& region, ActionType after_put_action
 ) {
   auto const& this_node = theContext()->getNode();
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
@@ -797,7 +775,7 @@ void RDMAManager::putRegionTypeless(
 
     auto group = state.group_info.get();
 
-    auto local_action = new Action(1, cont);
+    auto local_action = new Action(1, nullptr);
     auto remote_action = new Action(1, after_put_action);
 
     group->walk_region(region, [&](
@@ -826,7 +804,7 @@ void RDMAManager::putRegionTypeless(
 
       putData(
         han, ptr_offset, (hi-lo)*elm_size, block_offset, no_tag, elm_size,
-        [=]{ local_action->release(); }, [=]{ remote_action->release(); }, node
+        [=]{ remote_action->release(); }, node
       );
     });
 
@@ -912,7 +890,7 @@ void RDMAManager::getRegionTypeless(
 void RDMAManager::putDataIntoBufCollective(
   RDMA_HandleType const& han, RDMA_PtrType const& ptr,
   ByteType const& num_bytes, ByteType const& elm_size, ByteType const& offset,
-  ActionType cont, ActionType after_put_action
+  ActionType after_put_action
 ) {
   debug_print(
     rdma, node,
@@ -927,7 +905,7 @@ void RDMAManager::putDataIntoBufCollective(
     a_offset / elm_size, (a_offset + num_bytes)/elm_size, 1, elm_size
   );
 
-  return putRegionTypeless(han, ptr, region, cont, after_put_action);
+  return putRegionTypeless(han, ptr, region, after_put_action);
 }
 
 void RDMAManager::getDataIntoBufCollective(
@@ -992,7 +970,7 @@ void RDMAManager::getDataIntoBuf(
       if (send_via_channel) {
         return sendDataChannel(
           RDMA_TypeType::Get, han, ptr, num_bytes, offset, getNode, non_target,
-          nullptr, next_action
+          next_action
         );
       } else {
         RDMA_OpType const new_op = cur_op_++;

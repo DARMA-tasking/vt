@@ -63,11 +63,9 @@ template <
   typename MsgT,
   ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
 >
-void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(
-  MsgT* msg, ActionType cont
-) const {
+void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg,cont);
+  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -75,11 +73,9 @@ template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
 >
-void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(
-  MsgT* msg, ActionType cont
-) const {
+void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg,cont);
+  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg);
 }
 
 }}} /* end namespace vt::vrt::collection */

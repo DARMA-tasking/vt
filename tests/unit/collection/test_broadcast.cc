@@ -131,7 +131,7 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
     auto msg2 = makeSharedMessage<MsgType>(args);
     theCollection()->broadcastMsg<
       MsgType,BroadcastHandlers<ColType>::handler
-    >(proxy, msg2, nullptr);
+    >(proxy, msg2);
   }
 }
 
