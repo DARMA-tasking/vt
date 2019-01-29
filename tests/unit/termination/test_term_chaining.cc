@@ -110,9 +110,12 @@ struct TestTermChaining : TestParallelHarness {
     theTerm()->finishedEpoch(pending.getEpoch());
   }
 
-  static void run_to_term() {
+  static void run_to_term(bool last = false) {
     while (!rt->isTerminated()) {
       runScheduler();
+    }
+    if (!last) {
+      rt->reset();
     }
   }
 };
@@ -134,14 +137,14 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
     theTerm()->finishedEpoch(pending.getEpoch());
     //pending.release();
     fmt::print("before run 2\n");
-    run_to_term();
+    run_to_term(true);
     fmt::print("after run 2\n");
 
     EXPECT_EQ(handler_count, 4);
   } else {
     run_to_term();
     EXPECT_EQ(handler_count, 12);
-    run_to_term();
+    run_to_term(true);
     EXPECT_EQ(handler_count, 13);
   }
 }
