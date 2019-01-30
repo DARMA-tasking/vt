@@ -140,6 +140,11 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
   };
 
 
+  // -------------------------------------
+  // Handlers and methods involved in the
+  // channel counting detection algorithm
+  // -------------------------------------
+
   template<typename Msg, vt::ActiveTypedFnType<Msg>* handler>
   static void sendMsg(vt::NodeType dst, int count, vt::EpochType ep){
     vtAssertExpr(dst not_eq me);
@@ -346,6 +351,14 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     vtAssert(all > 1, "There should be at least two nodes");
   }
 
+  // ---------------------------------------------
+  // Methods used by parameterized test cases:
+  // 1. epoch initialization [rooted,collect]
+  // 2. fictive distributed computation
+  // 3. epoch finalization including termination
+  //   detection and status checking
+  // ---------------------------------------------
+
   // create a sequence of rooted epochs by root node
   std::vector<vt::EpochType> initRootedEpochSequence(int nb){
 
@@ -372,10 +385,9 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
 
     std::vector<vt::EpochType> epochs(nb);
 
-    // create epoch in a collective way
-    for(auto& ep : epochs){
+    for(auto& ep : epochs)
       ep = vt::theTerm()->makeEpochCollective();
-    }
+
     return epochs;
   }
 
@@ -442,16 +454,15 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
         }
       } else {
         trigger(vt::no_epoch);
-        vt::theTerm()->addAction([]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
+        vt::theTerm()->addAction([&]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
       }
     }
   }
 
   // finalize the list or sequence of epochs
   void finalizeByRoot(std::vector<vt::EpochType>& epochs){
-    for(auto& ep: epochs){
+    for(auto& ep: epochs)
       finalizeByRoot(ep);
-    }
   }
 };
 
@@ -460,52 +471,37 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
 /*static*/ vt::NodeType TestTermAction::all;
 /*static*/ std::unordered_map<vt::EpochType,TestTermAction::Metadata> TestTermAction::data;
 
+// simple broadcast test case
 TEST_P(TestTermAction, test_term_detect_broadcast)
 {
   if(me == root){
     // start computation
     broadcast<basicHandler>(1,vt::no_epoch);
-    // trigger termination detection
-    trigger(vt::no_epoch);
-
-    // check status
-    vt::theTerm()->addAction([]{
-      EXPECT_TRUE(hasFinished(vt::no_epoch));
-    });
+    // trigger detection and check status
+    finalizeByRoot(vt::no_epoch);
   }
 }
 
+// -----------
+// TEST CASES
+// -----------
+
+// routed messages test case
 TEST_P(TestTermAction, test_term_detect_routed)
 {
   // there should be at least 3 nodes for this case
   if(all > 2 && me == root){
 
-    std::random_device device;
-    std::mt19937 engine(device());
-
-    std::uniform_int_distribution<int> dist_ttl(1,10);
-    std::uniform_int_distribution<int> dist_dest(1,all-1);
-    std::uniform_int_distribution<int> dist_round(1,10);
-
-    int const rounds = dist_round(engine);
-    // start computation
-    for(int k=0; k < rounds; ++k){
-      int dst = me + dist_dest(engine);
-      int ttl = dist_ttl(engine);
-      routeBasic(dst,ttl,vt::no_epoch);
-    }
-
-    // trigger termination detection
-    trigger(vt::no_epoch);
-
-    // check status
-    vt::theTerm()->addAction([]{
-      EXPECT_TRUE(hasFinished(vt::no_epoch));
-    });
+    std::vector<vt::EpochType> no_epoch(1,vt::no_epoch);
+    //start computation
+    distributedComputation(no_epoch);
+    // trigger detection and check status
+    finalizeByRoot(no_epoch);
   }
 }
 
-
+// collective epochs test cases
+// parameterized by 'addAction' ordering
 TEST_P(TestTermAction, test_term_detect_collect_epoch)
 {
   auto epochs = initCollectiveEpochs(5);
@@ -513,28 +509,24 @@ TEST_P(TestTermAction, test_term_detect_collect_epoch)
   if(me == root){
     // start computation
     distributedComputation(epochs);
-    // trigger termination detect
-    for(auto& ep: epochs){
+    // trigger detection
+    for(auto& ep: epochs)
       trigger(ep);
-    }
   }
 
-  for(auto& ep: epochs){
+  // finalize epochs
+  for(auto& ep: epochs)
     vt::theTerm()->finishedEpoch(ep);
-  }
 
-  // check that all messages related to a
-  // given epoch have been delivered
-  // nb: only consider root counters.
+  // check status
   if(me == root){
-    for(auto& ep: epochs){
+    for(auto& ep: epochs)
       vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
-    }
   }
 }
 
-
-
+// sequence of rooted epochs test cases
+// parameterized by 'addAction' ordering and 'useDS'
 TEST_P(TestTermAction, test_term_detect_rooted_epoch)
 {
   if(me == root){
