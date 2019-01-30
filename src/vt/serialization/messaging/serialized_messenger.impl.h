@@ -510,12 +510,10 @@ template <typename MsgT, typename BaseT>
           "serialMsgHandler: local msg: handler={}\n", typed_handler
         );
 
-        messaging::PendingSend cur(nullptr);
-        auto const pending_epoch = cur.getEpoch();
-        theMsg()->pushEpoch(pending_epoch);
-        runnable::Runnable<MsgT>::run(typed_handler,nullptr,tptr,node);
-        theMsg()->popEpoch(pending_epoch);
-        return cur;
+        return messaging::PendingSend(msg, [=](MsgSharedPtr<BaseMsgType> in){
+          auto msg = in.template to<MsgT>();
+          runnable::Runnable<MsgT>::run(typed_handler,nullptr,msg.get(),node);
+        });
       }
     };
 
