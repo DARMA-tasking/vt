@@ -97,7 +97,14 @@ void PendingSend::sendMsg() {
   if (send_action_ == nullptr) {
     theMsg()->sendMsgSized(msg_, msg_size_);
   } else {
+    bool const has_epoch = epoch_ != no_epoch;
+    if (has_epoch) {
+      theMsg()->pushEpoch(epoch_);
+    }
     send_action_(msg_);
+    if (has_epoch) {
+      theMsg()->popEpoch(epoch_);
+    }
   }
   msg_ = nullptr;
   send_action_ = nullptr;
