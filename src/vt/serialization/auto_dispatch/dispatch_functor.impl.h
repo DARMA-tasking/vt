@@ -56,7 +56,7 @@
 namespace vt { namespace serialization { namespace auto_dispatch {
 
 /*
- * Regular message sned/braoadcast pass-though (acts as delegate)
+ * Regular message send/broadcast pass-though (acts as delegate)
  */
 template <typename FunctorT, typename MsgT>
 /*static*/ EventType SenderFunctor<FunctorT,MsgT>::sendMsg(
@@ -73,7 +73,7 @@ template <typename FunctorT, typename MsgT>
 }
 
 /*
- * Serialization message sned/braoadcast detected based on the is_serializable
+ * Serialization message send/broadcast detected based on the is_serializable
  * type traits
  */
 template <typename FunctorT, typename MsgT>
