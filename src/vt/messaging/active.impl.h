@@ -195,7 +195,7 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::broadcastMsg(
   MessageT* const msg, TagType const& tag
 ) {
-  return broadcastMsgSz<MessageT,f>(msg,sizeof(MessageT),no_tag);
+  return broadcastMsgSz<MessageT,f>(msg,sizeof(MessageT),tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
