@@ -112,8 +112,6 @@ struct TestTermChaining : TestParallelHarness {
 	theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2);
 	return vt::messaging::PendingSend(nullptr);
       });
-    theTerm()->finishedEpoch(pending.getEpoch());
-    //epoch = pending.getEpoch();
   }
 
   static void run_to_term() {
