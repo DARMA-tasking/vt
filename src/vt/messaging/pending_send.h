@@ -57,11 +57,9 @@ struct PendingSend final {
   using SendActionType = std::function<void(MsgSharedPtr<BaseMsgType>)>;
 
   PendingSend(
-    MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size,
-    ActionType const& in_action
+    MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size
   ) : msg_(in_msg), msg_size_(in_msg_size)
   {
-    vtAssert(in_action == nullptr, "Must be nullptr");
     handlePresetOrNoEpoch();
   }
   template <typename MsgT>
