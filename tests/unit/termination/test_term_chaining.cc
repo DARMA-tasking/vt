@@ -61,6 +61,7 @@ struct TestTermChaining : TestParallelHarness {
   static int32_t handler_count;
 
   static vt::messaging::PendingSend pending;
+  static vt::EpochType epoch;
 
   static void test_handler_reflector(TestMsg* msg) {
     fmt::print("reflector run\n");
@@ -83,7 +84,7 @@ struct TestTermChaining : TestParallelHarness {
   static void test_handler_chainer(TestMsg* msg) {
     fmt::print("chainer run\n");
 
-    handler_count = 13;
+    handler_count++;
     auto msg2 = makeSharedMessage<TestMsg>();
     theMsg()->sendMsg<TestMsg, test_handler_chained>(0, msg2);
   }
@@ -91,6 +92,7 @@ struct TestTermChaining : TestParallelHarness {
   static void test_handler_chained(TestMsg* msg) {
     fmt::print("chained run\n");
 
+    theTerm()->consume(epoch); // workaround for JL's noted TD issue of nesting inside collective epoch
     EXPECT_EQ(theContext()->getNode(), 0);
     EXPECT_EQ(handler_count, 1);
     handler_count = 4;
@@ -103,25 +105,32 @@ struct TestTermChaining : TestParallelHarness {
     pending.chainNextSend([&]{
 	fmt::print("nextsend run\n");
 
+	theTerm()->produce(epoch); // workaround for JL's noted TD issue of nesting inside collective epoch
+
 	EXPECT_EQ(handler_count, 1);
 	auto msg2 = makeSharedMessage<TestMsg>();
-	return theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2);
+	auto chained = theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2);
+	chained.release();
+	return chained;
       });
     theTerm()->finishedEpoch(pending.getEpoch());
+    //epoch = pending.getEpoch();
   }
 
-  static void run_to_term(bool last = false) {
-    while (!rt->isTerminated()) {
+  static void run_to_term() {
+    bool finished = false;
+
+    theTerm()->addAction(epoch, [&finished]{ finished = true; });
+
+    while (!finished) {
       runScheduler();
-    }
-    if (!last) {
-      rt->reset();
     }
   }
 };
 
 /*static*/ int32_t TestTermChaining::handler_count = 0;
 /*static*/ vt::messaging::PendingSend TestTermChaining::pending{nullptr};
+/*static*/ vt::EpochType TestTermChaining::epoch;
 
 TEST_F(TestTermChaining, test_termination_chaining_1) {
   auto const& this_node = theContext()->getNode();
@@ -130,22 +139,31 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
   if (num_nodes != 2)
     return;
 
+  epoch = theTerm()->makeEpochCollective();
+
   if (this_node == 0) {
     start_chain();
+    theTerm()->finishedEpoch(epoch);
     fmt::print("before run 1\n");
     run_to_term();
     fmt::print("after run 1\n");
+
+#if 0
     theTerm()->finishedEpoch(pending.getEpoch());
     //pending.release();
     fmt::print("before run 2\n");
     run_to_term(true);
     fmt::print("after run 2\n");
+#endif
 
     EXPECT_EQ(handler_count, 4);
   } else {
+    theTerm()->finishedEpoch(epoch);
     run_to_term();
+#if 0
     EXPECT_EQ(handler_count, 12);
     run_to_term(true);
+#endif
     EXPECT_EQ(handler_count, 13);
   }
 }
