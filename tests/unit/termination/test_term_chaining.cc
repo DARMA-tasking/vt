@@ -102,16 +102,15 @@ struct TestTermChaining : TestParallelHarness {
     auto msg = makeSharedMessage<TestMsg>();
     pending = theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg);
 
-    pending.chainNextSend([&]{
-	fmt::print("nextsend run\n");
+    theTerm()->produce(epoch); // workaround for JL's noted TD issue of nesting inside collective epoch
 
-	theTerm()->produce(epoch); // workaround for JL's noted TD issue of nesting inside collective epoch
+    pending.chainNextSend([]{
+	fmt::print("nextsend run\n");
 
 	EXPECT_EQ(handler_count, 1);
 	auto msg2 = makeSharedMessage<TestMsg>();
-	auto chained = theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2);
-	chained.release();
-	return chained;
+	theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2);
+	return vt::messaging::PendingSend(nullptr);
       });
     theTerm()->finishedEpoch(pending.getEpoch());
     //epoch = pending.getEpoch();
