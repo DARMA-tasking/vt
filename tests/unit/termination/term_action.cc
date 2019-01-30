@@ -51,7 +51,7 @@
 #include "data_message.h"
 #include "vt/transport.h"
 
-#define DEBUG_TERM_ACTION 0
+#define DEBUG_TERM_ACTION 2
 
 namespace vt { namespace tests { namespace unit {
 
@@ -147,8 +147,11 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
 
   template<typename Msg, vt::ActiveTypedFnType<Msg>* handler>
   static void sendMsg(vt::NodeType dst, int count, vt::EpochType ep){
+    vtAssertExpr(dst not_eq vt::uninitialized_destination);
     vtAssertExpr(dst not_eq me);
     auto msg = makeSharedMessage<Msg>(me,dst,count,ep);
+    vtAssertExpr(msg->src_ == me);
+
     if(ep not_eq vt::no_epoch){
       vt::envelopeSetEpoch(msg->env,ep);
     }
@@ -164,6 +167,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
       vt::envelopeSetEpoch(msg->env,ep);
     }
     vt::theMsg()->broadcastMsg<BasicMsg,handler>(msg);
+
     for(auto& active: data[ep].count_){
       auto const& dst = active.first;
       auto& nb = active.second;
@@ -174,12 +178,6 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
   }
 
   // shortcuts for message sending
-  static void sendBasic(vt::NodeType dst, vt::EpochType ep){
-    sendMsg<BasicMsg,basicHandler>(dst,1,ep);
-    // increment outgoing message counter
-    data[ep].count_[dst].out_++;
-  }
-
   static void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep){
     sendMsg<BasicMsg,routedHandler>(dst,ttl,ep);
     // increment outgoing message counter
@@ -191,16 +189,25 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
   }
 
   static void sendEcho(vt::NodeType dst, int count, vt::EpochType ep){
+    vtAssertExpr(dst >= 0);
+    #if DEBUG_TERM_ACTION == 1
+      fmt::print("rank:{} echo::dst {}",me,dst);
+    #endif
+    vtAssertExpr(dst not_eq vt::uninitialized_destination);
     sendMsg<CtrlMsg,echoHandler>(dst,count,ep);
   }
 
   // trigger termination detection by root
   static void trigger(vt::EpochType ep){
     vtAssert(me == root, "Only root may trigger termination check");
+
     for(auto& active: data[ep].count_){
       auto const& dst = active.first;
 
       if(dst not_eq me){
+        #if DEBUG_TERM_ACTION
+          fmt::print("rank:{} trigger dst {}\n", me, dst);
+        #endif
         auto& nb = active.second;
         auto& degree = data[ep].degree_;
         // avoid potential negative degree.
@@ -221,10 +228,10 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
         auto& degree = data[ep].degree_;
         // confirmation missing
         if(nb.out_ not_eq nb.ack_){
-          #if DEBUG_TERM_ACTION
+          #if DEBUG_TERM_ACTION == 1
             fmt::print(
-              "{}: propagate: sendPing to {}, out={}, degree={}\n",
-              me,i,nb.out_,degree+1
+              "rank {}: propagate: sendPing to {}, out={}, degree={}\n",
+              me,dst,nb.out_,degree+1
             );
           #endif
           // check subtree
@@ -268,12 +275,15 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     basicHandler(msg);
 
     if (all > 2 && msg->ttl_ > 0){
+      // avoid implicit cast
+      vt::NodeType const one = 1;
       int const nb_rounds = static_cast<int>(drand48()*5);
+
       for(int k=0; k < nb_rounds; ++k){
         // note: root and self-send are excluded
-        int dst = (me+1 > all-1 ? 1: me+1);
-        if (dst == me && dst == 1) dst++;
-        vtAssertExpr(dst > 1 || me != 1);
+        auto dst = (me+one > all-one ? one: me+one);
+        if (dst == me && dst == one) dst++;
+        vtAssertExpr(dst > one || me not_eq one);
 
         routeBasic(dst,msg->ttl_,msg->epoch_);
       }
@@ -293,10 +303,11 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     nb_ack = msg->count_;
     degree--;
 
-    #if DEBUG_TERM_ACTION
+    #if DEBUG_TERM_ACTION == 1
+      auto& nb_in = data[ep].count_[src].in_;
       fmt::print(
-        "{}: echoHandler: in={}, ack={}, degree={}\n",
-        me,msg->count_,nb_ack, data[ep].degree_
+        "rank {}: echoHandler: in={}, ack={}, degree={}\n",
+        me,nb_in,nb_ack, degree
       );
     #endif
 
@@ -324,7 +335,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     auto const& nb = data[ep].count_[src];
     auto& activator = data[ep].activator_;
 
-    #if DEBUG_TERM_ACTION
+    #if DEBUG_TERM_ACTION == 1
       fmt::print(
         "{}: pingHandler: in={}, src={}, degree={}\n",
         me,nb.in_,src,degree
@@ -379,16 +390,16 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     return seq;
   }
 
-  // create a list of epochs in a collective way
-  std::vector<vt::EpochType> initCollectiveEpochs(int nb){
+  // create a collective epoch sequence
+  std::vector<vt::EpochType> initCollectEpochSequence(int nb){
     vtAssertExpr(nb > 0);
 
-    std::vector<vt::EpochType> epochs(nb);
+    std::vector<vt::EpochType> seq(nb);
 
-    for(auto& ep : epochs)
+    for(auto& ep : seq)
       ep = vt::theTerm()->makeEpochCollective();
 
-    return epochs;
+    return seq;
   }
 
   // perform a fictive distributed computation for test purposes
@@ -403,10 +414,12 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     for(auto const& ep: epochs){
 
       #if DEBUG_TERM_ACTION
-        fmt::print(
-          "node:{}, i:{}, epoch: {}, is_rooted ? {}\n",
-          me, i, ep[i], epoch::EpochManip::isRooted(ep[i])
-        );
+        if(ep not_eq vt::no_epoch){
+          fmt::print(
+            "rank:{}, epoch: {}, is_rooted ? {}\n",
+            me, ep, epoch::EpochManip::isRooted(ep)
+          );
+        }
       #endif
 
       // process computation for current epoch
@@ -431,30 +444,79 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     if(me == root){
       auto const& param = GetParam();
 
+      #if DEBUG_TERM_ACTION
+        auto debug_log = [&](std::string const step, ORDER const order){
+          switch (order){
+            case ORDER::after: fmt::print("rank:{}: {} action - ORDER::after\n", me, step); break;
+            case ORDER::misc: fmt::print("rank:{}: {} action - ORDER::misc\n", me, step); break;
+            default: fmt::print("rank:{}: {} action - ORDER::before\n", me, step); break;
+          }
+          fflush(stdout);
+        };
+      #endif
+
       if(ep not_eq vt::no_epoch){
         switch(param.order){
           case ORDER::after :{
             trigger(ep);
             vt::theTerm()->finishedEpoch(ep);
-            vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+            #if DEBUG_TERM_ACTION
+              debug_log("before", param.order);
+              vt::theTerm()->addActionEpoch(ep,[&]{
+                debug_log("within", param.order);
+                EXPECT_TRUE(hasFinished(ep));
+                debug_log("completed", param.order);
+              });
+            #else
+              vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+            #endif
             break;
           }
           case ORDER::misc :{
             trigger(ep);
-            vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+            #if DEBUG_TERM_ACTION
+              debug_log("before", param.order);
+              vt::theTerm()->addActionEpoch(ep,[&]{
+                debug_log("within", param.order);
+                EXPECT_TRUE(hasFinished(ep));
+                debug_log("completed", param.order);
+              });
+            #else
+              vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+            #endif
             vt::theTerm()->finishedEpoch(ep);
             break;
           }
           default :{
-            vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+            #if DEBUG_TERM_ACTION
+              vt::theTerm()->addActionEpoch(ep,[&]{
+                debug_log("within", param.order);
+                EXPECT_TRUE(hasFinished(ep));
+                debug_log("completed", param.order);
+              });
+            #else
+              vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+            #endif
             trigger(ep);
+            #if DEBUG_TERM_ACTION
+              debug_log("before", param.order);
+            #endif
             vt::theTerm()->finishedEpoch(ep);
             break;
           }
         }
       } else {
         trigger(vt::no_epoch);
-        vt::theTerm()->addAction([&]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
+        #if DEBUG_TERM_ACTION
+          debug_log("before no_epoch", param.order);
+          vt::theTerm()->addAction([&]{
+            debug_log("within no_epoch", param.order);
+            EXPECT_TRUE(hasFinished(vt::no_epoch));
+            debug_log("completed no_epoch", param.order);
+          });
+        #else
+          vt::theTerm()->addAction([&]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
+        #endif
       }
     }
   }
@@ -486,6 +548,7 @@ TEST_P(TestTermAction, test_term_detect_broadcast)
 // TEST CASES
 // -----------
 
+
 // routed messages test case
 TEST_P(TestTermAction, test_term_detect_routed)
 {
@@ -504,23 +567,23 @@ TEST_P(TestTermAction, test_term_detect_routed)
 // parameterized by 'addAction' ordering
 TEST_P(TestTermAction, test_term_detect_collect_epoch)
 {
-  auto epochs = initCollectiveEpochs(5);
+  auto sequence = initCollectEpochSequence(5);
 
   if(me == root){
     // start computation
-    distributedComputation(epochs);
+    distributedComputation(sequence);
     // trigger detection
-    for(auto& ep: epochs)
+    for(auto& ep: sequence)
       trigger(ep);
   }
 
   // finalize epochs
-  for(auto& ep: epochs)
+  for(auto& ep: sequence)
     vt::theTerm()->finishedEpoch(ep);
 
   // check status
   if(me == root){
-    for(auto& ep: epochs)
+    for(auto& ep: sequence)
       vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
   }
 }
