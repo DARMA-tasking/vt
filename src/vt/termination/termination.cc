@@ -444,6 +444,14 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       );
 
     } else /*if (is_root) */ {
+
+      // Fix produced/consumed mismatch
+      // on rooted epoch propagation
+      if(epoch::EpochManip::isRooted(state.getEpoch())){
+        if(state.g_prod1 == (state.g_cons1+1))
+          state.g_cons1++;
+      }
+
       bool const& is_term =
         state.g_prod1 == state.g_cons1 and
         state.g_prod2 == state.g_cons2 and
