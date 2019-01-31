@@ -762,9 +762,7 @@ void TerminationDetector::linkChildEpoch(EpochType const& epoch) {
   // current epoch does not detect termination until the new epoch terminations
   auto const cur_epoch = theMsg()->getEpoch();
   if (cur_epoch != no_epoch && cur_epoch != term::any_epoch_sentinel) {
-    auto epoch_iter = epoch_state_.find(cur_epoch);
-    vtAssertExpr(epoch_iter != epoch_state_.end());
-    auto& state = epoch_iter->second;
+    auto& state = findOrCreateState(cur_epoch, false);
     state.addChildEpoch(cur_epoch);
   }
 }

@@ -110,7 +110,7 @@ public:
    * Deprecated interface for creating a new collective epoch for detecting
    * termination
    */
-  EpochType newEpoch(bool const child = false);
+  EpochType newEpoch(bool const child = true);
 
 public:
   /*
@@ -139,8 +139,8 @@ public:
   void finishedEpoch(EpochType const& epoch);
 
 public:
-  EpochType newEpochCollective(bool const child = false);
-  EpochType newEpochRooted(bool const useDS = false, bool const child = false);
+  EpochType newEpochCollective(bool const child = true);
+  EpochType newEpochRooted(bool const useDS = false, bool const child = true);
 
 private:
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
