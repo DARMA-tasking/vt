@@ -60,22 +60,26 @@ struct PendingSend final {
     MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size
   ) : msg_(in_msg), msg_size_(in_msg_size)
   {
-    handlePresetOrNoEpoch();
   }
   template <typename MsgT>
   PendingSend(MsgSharedPtr<MsgT> in_msg, SendActionType const& in_action)
     : msg_(in_msg.template to<BaseMsgType>()), msg_size_(sizeof(MsgT)),
       send_action_(in_action)
   {
-    handlePresetOrNoEpoch();
   }
 
   explicit PendingSend(nullptr_t) { }
-  PendingSend(PendingSend const&) = delete;
+  PendingSend(PendingSend &in)
+    : msg_(std::move(in.msg_)),
+      msg_size_(std::move(in.msg_size_)),
+      send_action_(std::move(in.send_action_))
+  {
+    in.msg_ = nullptr;
+    in.send_action_ = nullptr;
+  }
   PendingSend(PendingSend&& in)
     : msg_(std::move(in.msg_)),
       msg_size_(std::move(in.msg_size_)),
-      epoch_(std::move(in.epoch_)),
       send_action_(std::move(in.send_action_))
   {
     in.msg_ = nullptr;
@@ -89,7 +93,20 @@ struct PendingSend final {
     in.msg_ = nullptr;
 
     msg_size_ = std::move(in.msg_size_);
-    epoch_ = std::move(in.epoch_);
+
+    send_action_ = std::move(in.send_action_);
+    in.send_action_ = nullptr;
+
+    return *this;
+  }
+  PendingSend& operator=(PendingSend& in)
+  {
+    vtAssert(msg_ == nullptr, "Should not be assigning over an unsent message");
+
+    msg_ = std::move(in.msg_);
+    in.msg_ = nullptr;
+
+    msg_size_ = std::move(in.msg_size_);
 
     send_action_ = std::move(in.send_action_);
     in.send_action_ = nullptr;
@@ -97,22 +114,30 @@ struct PendingSend final {
     return *this;
   }
 
-  ~PendingSend();
+  ~PendingSend() { release(); }
 
-  void release();
-  EpochType getEpoch();
-
-  void chainNextSend(std::function<PendingSend()> next);
+  void release() {
+    if (msg_ != nullptr || send_action_ != nullptr) {
+      sendMsg();
+    }
+  }
 
 private:
-  void createEpoch();
-  void sendMsg();
-  void handlePresetOrNoEpoch();
+  void sendMsg() {
+    // Send the message saved directly or trigger the lambda for specialized sends
+    // from the pending holder
+    if (send_action_ == nullptr) {
+      theMsg()->sendMsgSized(msg_, msg_size_);
+    } else {
+      send_action_(msg_);
+    }
+    msg_ = nullptr;
+    send_action_ = nullptr;
+  }
 
 private:
   MsgSharedPtr<BaseMsgType> msg_ = nullptr;
   ByteType msg_size_ = -1;
-  EpochType epoch_ = no_epoch;
   SendActionType send_action_ = nullptr;
 };
 
