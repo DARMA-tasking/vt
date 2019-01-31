@@ -49,6 +49,11 @@
 namespace vt { namespace term {
 
 void TermState::addChildEpoch(EpochType const& epoch) {
+  debug_print(
+    term, node,
+    "addChildEpoch: epoch={:x}, child epoch={:x}\n", epoch_, epoch
+  );
+
   // Produce a single work unit for the child epoch so it can not finish while
   // this epoch is live
   theTerm()->produce(epoch,1);
@@ -56,7 +61,16 @@ void TermState::addChildEpoch(EpochType const& epoch) {
 }
 
 void TermState::clearChildren() {
+  debug_print(
+    term, node,
+    "clearChildren: epoch={:x}\n", epoch_
+  );
+
   for (auto&& cur_epoch : epoch_child_) {
+    debug_print(
+      term, node,
+      "clearChildren: epoch={:x}, child epoch={:x}\n", epoch_, cur_epoch
+    );
     theTerm()->consume(cur_epoch,1);
   }
   epoch_child_.clear();
