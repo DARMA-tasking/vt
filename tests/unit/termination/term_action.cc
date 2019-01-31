@@ -597,7 +597,7 @@ TEST_P(TestTermAction, test_term_detect_routed)
 // parameterized by 'addAction' ordering
 TEST_P(TestTermAction, test_term_detect_collect_epoch)
 {
-  auto sequence = initCollectEpochSequence(1);
+  auto sequence = initCollectEpochSequence(5);
 
   if(me == root){
     // start computation
@@ -625,7 +625,7 @@ TEST_P(TestTermAction, test_term_detect_collect_epoch)
 TEST_P(TestTermAction, test_term_detect_rooted_epoch)
 {
   if(me == root){
-    auto sequence = initRootedEpochSequence(1);
+    auto sequence = initRootedEpochSequence(5);
     distributedComputation(sequence);
     finalizeByRoot(sequence);
 
