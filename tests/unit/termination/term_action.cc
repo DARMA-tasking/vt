@@ -403,7 +403,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
   }
 
   // perform a fictive distributed computation for test purposes
-  void distributedComputation(std::vector<vt::EpochType> const& epochs){
+  void distributedComputation(vt::EpochType const& ep){
 
     std::random_device device;
     std::mt19937 engine(device());
@@ -411,78 +411,90 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     std::uniform_int_distribution<int> dist_dest(1,all-1);
     std::uniform_int_distribution<int> dist_round(1,10);
 
-    for(auto const& ep: epochs){
+    #if DEBUG_TERM_ACTION
+    if(ep not_eq vt::no_epoch){
+      fmt::print(
+        "rank:{}, epoch: {}, is_rooted ? {}\n",
+        me, ep, epoch::EpochManip::isRooted(ep)
+      );
+    }
+    #endif
 
-      #if DEBUG_TERM_ACTION
-        if(ep not_eq vt::no_epoch){
-          fmt::print(
-            "rank:{}, epoch: {}, is_rooted ? {}\n",
-            me, ep, epoch::EpochManip::isRooted(ep)
-          );
-        }
-      #endif
-
-      // process computation for current epoch
-      int rounds = dist_round(engine);
-      if(all > 2){
-        for(int k=0; k < rounds; ++k){
-          int dst = me + dist_dest(engine);
-          int ttl = dist_ttl(engine);
-          routeBasic(dst,ttl,ep);
-        }
-      } else {
-        broadcast<basicHandler>(1,ep);
+    // process computation for current epoch
+    int rounds = dist_round(engine);
+    if(all > 2){
+      for(int k=0; k < rounds; ++k){
+        int dst = me + dist_dest(engine);
+        int ttl = dist_ttl(engine);
+        routeBasic(dst,ttl,ep);
       }
+    } else {
+      broadcast<basicHandler>(1,ep);
     }
   }
 
   // assign action to be processed at the end
   // of the epoch; trigger termination detection;
   // and finalize epoch.
-  void finalizeByRoot(vt::EpochType ep){
+  void finalize(vt::EpochType ep){
 
-    if(me == root){
-      auto const& param = GetParam();
+    #if DEBUG_TERM_ACTION
+      auto debug_log = [&](std::string const step, MyParam const& param, vt::EpochType const& ep){
+        switch (param.order){
+          case ORDER::after:
+            fmt::print(
+              "rank:{}: epoch:{:x}, ORDER::after, {} action, is_rooted ? {}\n",
+              me, ep, step, epoch::EpochManip::isRooted(ep)
+            );
+            break;
+          case ORDER::misc:
+            fmt::print(
+              "rank:{}: epoch:{:x}, ORDER::misc, {} action, is_rooted ? {}\n",
+              me, ep, step, epoch::EpochManip::isRooted(ep)
+            );
+            break;
+          default:
+            fmt::print(
+              "rank:{}: epoch:{:x}, ORDER::before, {} action, is_rooted ? {}\n",
+              me, ep, step, epoch::EpochManip::isRooted(ep)
+            );
+            break;
+        }
+        fflush(stdout);
+      };
+    #endif
 
-
-
-      #if DEBUG_TERM_ACTION
-        auto debug_log = [&](std::string const step, MyParam const& param, vt::EpochType const& ep){
-          switch (param.order){
-            case ORDER::after:
-              fmt::print(
-                "rank:{}: epoch:{:x}, ORDER::after, {} action, is_rooted ? {}\n",
-                me, ep, step, epoch::EpochManip::isRooted(ep)
-              );
-              break;
-            case ORDER::misc:
-              fmt::print(
-                "rank:{}: epoch:{:x}, ORDER::misc, {} action, is_rooted ? {}\n",
-                me, ep, step, epoch::EpochManip::isRooted(ep)
-              );
-              break;
-            default:
-              fmt::print(
-                "rank:{}: epoch:{:x}, ORDER::before, {} action, is_rooted ? {}\n",
-                me, ep, step, epoch::EpochManip::isRooted(ep)
-              );
-              break;
-          }
-          fflush(stdout);
-        };
-      #endif
-
-        auto finish = [&](vt::EpochType& ep, MyParam const& param){
-          if(ep not_eq vt::no_epoch){
-            vt::theTerm()->finishedEpoch(ep);
-          }
-        };
-
+    auto finish = [&](vt::EpochType& ep){
       if(ep not_eq vt::no_epoch){
+        vt::theTerm()->finishedEpoch(ep);
+      }
+    };
+
+    // get instance test parameters
+    auto const& param = GetParam();
+
+    // 1. no epoch case
+    if(ep == vt::no_epoch){
+      if(me == root){
+        trigger(vt::no_epoch);
+        #if DEBUG_TERM_ACTION
+          debug_log("entering no_epoch", param,ep);
+          vt::theTerm()->addAction([&]{
+            debug_log("within no_epoch", param,ep);
+            EXPECT_TRUE(hasFinished(vt::no_epoch));
+            debug_log("leaving no_epoch", param,ep);
+          });
+        #else
+        vt::theTerm()->addAction([&]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
+        #endif
+      }
+    } else if(epoch::EpochManip::isRooted(ep)){
+      if(me == root){
+
         switch(param.order){
           case ORDER::after :{
             trigger(ep);
-            finish(ep,param);
+            finish(ep);
             #if DEBUG_TERM_ACTION
               debug_log("entering", param,ep);
               vt::theTerm()->addActionEpoch(ep,[&]{
@@ -502,13 +514,12 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
               vt::theTerm()->addActionEpoch(ep,[&]{
                 debug_log("within", param,ep);
                 EXPECT_TRUE(hasFinished(ep));
-
                 debug_log("leaving", param,ep);
               });
             #else
               vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
             #endif
-            finish(ep,param);
+            finish(ep);
             break;
           }
           default :{
@@ -516,7 +527,6 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
               vt::theTerm()->addActionEpoch(ep,[&]{
                 debug_log("within", param,ep);
                 EXPECT_TRUE(hasFinished(ep));
-
                 debug_log("leaving",param,ep);
               });
             #else
@@ -526,34 +536,23 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
             #if DEBUG_TERM_ACTION
               debug_log("entering", param,ep);
             #endif
-            finish(ep,param);
+            finish(ep);
             break;
           }
         }
-      } else {
-        trigger(vt::no_epoch);
-        #if DEBUG_TERM_ACTION
-          debug_log("entering no_epoch", param,ep);
-          vt::theTerm()->addAction([&]{
-            debug_log("within no_epoch", param,ep);
-            EXPECT_TRUE(hasFinished(vt::no_epoch));
-            debug_log("leaving no_epoch", param,ep);
-          });
-        #else
-          vt::theTerm()->addAction([&]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
-        #endif
+      }
+    } else /* it is a collective epoch */ {
+      // finalize epoch
+      finish(ep);
+      // check status
+      if(me == root){
+        vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
       }
     }
-  }
 
-  // finalize the list or sequence of epochs
-  void finalizeByRoot(std::vector<vt::EpochType>& epochs){
-    for(auto& ep: epochs){
-      finalizeByRoot(ep);
-      #if DEBUG_TERM_ACTION
-        fmt::print("rank:{}, epoch:{:x} completed\n",me,ep);
-      #endif
-    }
+    #if DEBUG_TERM_ACTION
+      fmt::print("rank:{}, epoch:{:x} completed\n",me,ep);
+    #endif
   }
 
 };
@@ -570,7 +569,7 @@ TEST_P(TestTermAction, test_term_detect_broadcast)
     // start computation
     broadcast<basicHandler>(1,vt::no_epoch);
     // trigger detection and check status
-    finalizeByRoot(vt::no_epoch);
+    finalize(vt::no_epoch);
   }
 }
 
@@ -584,12 +583,10 @@ TEST_P(TestTermAction, test_term_detect_routed)
 {
   // there should be at least 3 nodes for this case
   if(all > 2 && me == root){
-
-    std::vector<vt::EpochType> no_epoch(1,vt::no_epoch);
     //start computation
-    distributedComputation(no_epoch);
+    distributedComputation(vt::no_epoch);
     // trigger detection and check status
-    finalizeByRoot(no_epoch);
+    finalize(vt::no_epoch);
   }
 }
 
@@ -599,26 +596,15 @@ TEST_P(TestTermAction, test_term_detect_collect_epoch)
 {
   auto sequence = initCollectEpochSequence(5);
 
-  if(me == root){
-    // start computation
-    distributedComputation(sequence);
-    // trigger detection
-    for(auto& ep: sequence)
+  for(auto const& ep: sequence){
+    if(me == root){
+      distributedComputation(ep);
       trigger(ep);
-  }
-
-  // finalize epochs
-  for(auto& ep: sequence)
-    vt::theTerm()->finishedEpoch(ep);
-
-  // check status
-  if(me == root){
-    for(auto& ep: sequence)
-      vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
+    }
+    // finalize collective epoch
+    finalize(ep);
   }
 }
-
-
 
 // sequence of rooted epochs test cases
 // parameterized by 'addAction' ordering and 'useDS'
@@ -626,12 +612,13 @@ TEST_P(TestTermAction, test_term_detect_rooted_epoch)
 {
   if(me == root){
     auto sequence = initRootedEpochSequence(5);
-    distributedComputation(sequence);
-    finalizeByRoot(sequence);
 
+    for(auto const& ep: sequence){
+      distributedComputation(ep);
+      finalize(ep);
+    }
   }
 }
-
 
 
 INSTANTIATE_TEST_CASE_P(
