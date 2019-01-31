@@ -52,6 +52,7 @@
 #include "vt/transport.h"
 
 #define DEBUG_TERM_ACTION 2
+#define ENABLE_NESTED_EPOCHS 0
 
 namespace vt { namespace tests { namespace unit {
 
@@ -555,6 +556,48 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     #endif
   }
 
+  #if ENABLE_NESTED_EPOCHS
+    // nested collective epochs
+    void nestedCollectEpoch(int depth){
+      vtAssertExpr(depth > 0);
+
+      // all ranks should have the same depth
+      vt::theCollective()->barrier();
+      if(depth > 1)
+        nestedCollectEpoch(depth-1);
+
+      // init in a collective way
+      auto ep = vt::theTerm()->makeEpochCollective();
+
+      if(me == root){
+        distributedComputation(ep);
+        trigger(ep);
+      }
+      // finalize in a collective way
+      finalize(ep);
+    }
+
+    // nested rooted epochs
+    void nestedRootedEpoch(int depth){
+      vtAssertExpr(depth > 0);
+
+      // all ranks should have the same depth
+      vt::theCollective()->barrier();
+      if(depth > 1)
+        nestedRootedEpoch(depth-1);
+
+      if(me == root){
+        // init rooted epoch
+        auto ep = vt::theTerm()->makeEpochRooted(GetParam().useDS);
+        vtAssertExpr(root == epoch::EpochManip::node(ep));
+        vtAssertExpr(epoch::EpochManip::isRooted(ep));
+
+        distributedComputation(ep);
+        trigger(ep);
+        finalize(ep);
+      }
+    }
+  #endif
 };
 
 /*static*/ vt::NodeType TestTermAction::me;
@@ -620,6 +663,25 @@ TEST_P(TestTermAction, test_term_detect_rooted_epoch)
   }
 }
 
+#if ENABLE_NESTED_EPOCHS
+TEST_P(TestTermAction, test_term_detect_nested_collect_epoch)
+{
+  std::random_device device;
+  std::mt19937 engine(device());
+  std::uniform_int_distribution<int> depth(2,5);
+
+  nestedCollectEpoch(depth(engine));
+}
+
+TEST_P(TestTermAction, test_term_detect_nested_rooted_epoch)
+{
+  std::random_device device;
+  std::mt19937 engine(device());
+  std::uniform_int_distribution<int> depth(2,5);
+
+  nestedRootedEpoch(depth(engine));
+}
+#endif
 
 INSTANTIATE_TEST_CASE_P(
   InstantiationName, TestTermAction,
