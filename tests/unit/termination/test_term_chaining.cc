@@ -49,6 +49,7 @@
 #include "data_message.h"
 
 #include "vt/transport.h"
+#include "vt/messaging/dependent_send_chain.h"
 
 namespace vt { namespace tests { namespace unit {
 
@@ -60,7 +61,7 @@ struct TestTermChaining : TestParallelHarness {
 
   static int32_t handler_count;
 
-  static vt::messaging::PendingSend pending;
+  static vt::messaging::DependentSendChain chain;
   static vt::EpochType epoch;
 
   static void test_handler_reflector(TestMsg* msg) {
@@ -84,6 +85,7 @@ struct TestTermChaining : TestParallelHarness {
   static void test_handler_chainer(TestMsg* msg) {
     fmt::print("chainer run\n");
 
+    EXPECT_EQ(handler_count, 12);
     handler_count++;
     auto msg2 = makeSharedMessage<TestMsg>();
     theMsg()->sendMsg<TestMsg, test_handler_chained>(0, msg2);
@@ -100,18 +102,13 @@ struct TestTermChaining : TestParallelHarness {
 
   static void start_chain() {
     auto msg = makeSharedMessage<TestMsg>();
-    pending = theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg);
+    chain.add(theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg));
 
     theTerm()->produce(epoch); // workaround for JL's noted TD issue of nesting inside collective epoch
 
-    pending.chainNextSend([]{
-	fmt::print("nextsend run\n");
-
-	EXPECT_EQ(handler_count, 1);
-	auto msg2 = makeSharedMessage<TestMsg>();
-	theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2);
-	return vt::messaging::PendingSend(nullptr);
-      });
+    auto msg2 = makeSharedMessage<TestMsg>();
+    chain.add(theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2));
+    chain.done();
   }
 
   static void run_to_term() {
@@ -126,7 +123,7 @@ struct TestTermChaining : TestParallelHarness {
 };
 
 /*static*/ int32_t TestTermChaining::handler_count = 0;
-/*static*/ vt::messaging::PendingSend TestTermChaining::pending{nullptr};
+/*static*/ vt::messaging::DependentSendChain TestTermChaining::chain;
 /*static*/ vt::EpochType TestTermChaining::epoch;
 
 TEST_F(TestTermChaining, test_termination_chaining_1) {
@@ -145,22 +142,10 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
     run_to_term();
     fmt::print("after run 1\n");
 
-#if 0
-    theTerm()->finishedEpoch(pending.getEpoch());
-    //pending.release();
-    fmt::print("before run 2\n");
-    run_to_term(true);
-    fmt::print("after run 2\n");
-#endif
-
     EXPECT_EQ(handler_count, 4);
   } else {
     theTerm()->finishedEpoch(epoch);
     run_to_term();
-#if 0
-    EXPECT_EQ(handler_count, 12);
-    run_to_term(true);
-#endif
     EXPECT_EQ(handler_count, 13);
   }
 }
