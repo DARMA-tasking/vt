@@ -190,7 +190,7 @@ void TerminationDetector::produceConsumeState(
 
 void TerminationDetector::genProd(EpochType const& epoch) {
   vtAssertExpr(epoch != no_epoch);
-  if (epoch == term::any_epoch_sentinel) {
+  if (epoch != term::any_epoch_sentinel) {
     produce(epoch,1);
   } else {
     auto ptr = getDSTerm(epoch);
@@ -204,7 +204,7 @@ void TerminationDetector::genProd(EpochType const& epoch) {
 
 void TerminationDetector::genCons(EpochType const& epoch) {
   vtAssertExpr(epoch != no_epoch);
-  if (epoch == term::any_epoch_sentinel) {
+  if (epoch != term::any_epoch_sentinel) {
     consume(epoch,1);
   } else {
     auto ptr = getDSTerm(epoch);
