@@ -561,18 +561,19 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     void nestedCollectEpoch(int depth){
       vtAssertExpr(depth > 0);
 
+      // init in a collective way
+      auto ep = vt::theTerm()->makeEpochCollective();
+
       // all ranks should have the same depth
       vt::theCollective()->barrier();
       if(depth > 1)
         nestedCollectEpoch(depth-1);
 
-      // init in a collective way
-      auto ep = vt::theTerm()->makeEpochCollective();
-
       if(me == root){
         distributedComputation(ep);
         trigger(ep);
       }
+
       // finalize in a collective way
       finalize(ep);
     }
@@ -581,21 +582,25 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     void nestedRootedEpoch(int depth){
       vtAssertExpr(depth > 0);
 
+      auto* ep = new vt::EpochType(vt::no_epoch);
+
+      if(me == root){
+        *ep = vt::theTerm()->makeEpochRooted(GetParam().useDS);
+        vtAssertExpr(root == epoch::EpochManip::node(*ep));
+        vtAssertExpr(epoch::EpochManip::isRooted(*ep));
+      }
+
       // all ranks should have the same depth
       vt::theCollective()->barrier();
       if(depth > 1)
         nestedRootedEpoch(depth-1);
 
       if(me == root){
-        // init rooted epoch
-        auto ep = vt::theTerm()->makeEpochRooted(GetParam().useDS);
-        vtAssertExpr(root == epoch::EpochManip::node(ep));
-        vtAssertExpr(epoch::EpochManip::isRooted(ep));
-
-        distributedComputation(ep);
-        trigger(ep);
-        finalize(ep);
+        distributedComputation(*ep);
+        trigger(*ep);
+        finalize(*ep);
       }
+      delete ep;
     }
   #endif
 };
