@@ -63,8 +63,8 @@ namespace vt { namespace term {
 
 TerminationDetector::TerminationDetector()
   : collective::tree::Tree(collective::tree::tree_cons_tag_t),
-  any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
-  epoch_coll_(std::make_unique<EpochWindow>())
+    any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
+    epoch_coll_(std::make_unique<EpochWindow>())
 { }
 
 /*static*/ void TerminationDetector::makeRootedEpoch(TermMsg* msg) {
@@ -444,14 +444,6 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       );
 
     } else /*if (is_root) */ {
-
-      // Fix produced/consumed mismatch
-      // on rooted epoch propagation
-      if(epoch::EpochManip::isRooted(state.getEpoch())){
-        if(state.g_prod1 == (state.g_cons1+1))
-          state.g_cons1++;
-      }
-
       bool const& is_term =
         state.g_prod1 == state.g_cons1 and
         state.g_prod2 == state.g_cons2 and
@@ -486,12 +478,12 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
           if (
             state.constant_count >= ArgType::vt_hang_freq and
             state.constant_count %  ArgType::vt_hang_freq == 0
-          ) {
+            ) {
             if (
               state.num_print_constant == 0 or
               std::log(static_cast<double>(state.constant_count)) >
               state.num_print_constant
-            ) {
+              ) {
               auto node            = ::vt::debug::preNode();
               auto vt_pre          = ::vt::debug::vtPre();
               auto node_str        = ::vt::debug::proc(node);
@@ -500,31 +492,24 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
               auto bred            = ::vt::debug::bred();
               auto magenta         = ::vt::debug::magenta();
 
-              // debug additional infos
-              auto const& current  = state.getEpoch();
-              bool const is_rooted = epoch::EpochManip::isRooted(current);
-              bool const has_categ = epoch::EpochManip::hasCategory(current);
-              bool const useDS = has_categ
-                and epoch::EpochManip::category(current) == epoch::eEpochCategory::DijkstraScholtenEpoch;
-
               auto f1 = fmt::format(
                 "{}Termination hang detected:{} {}traversals={} epoch={:x} "
-                "produced={}{} {}consumed={}{} is_rooted ? {} useDS ? {}\n",
+                "produced={}{} {}consumed={}{}\n",
                 bred, reset,
                 magenta, state.constant_count, state.getEpoch(), state.g_prod1,
-                reset, magenta, state.g_cons1, reset, is_rooted, useDS
+                reset, magenta, state.g_cons1, reset
               );
               vt_print(term, "{}", f1);
               state.num_print_constant++;
 
-              #if !backend_check_enabled(production)
-                if (state.num_print_constant > 10) {
+#if !backend_check_enabled(production)
+              if (state.num_print_constant > 10) {
                   vtAbort(
                     "Hang detected (consumed != produced) for k tree "
                     "traversals, where k=", state.constant_count
                   );
                 }
-              #endif
+#endif
             }
           }
         }
@@ -718,28 +703,28 @@ TermStatusEnum TerminationDetector::testEpochFinished(
 
   if (action != nullptr) {
     switch (status) {
-    case TermStatusEnum::Finished:
-      action();
-      break;
-    case TermStatusEnum::Remote: {
-      auto iter = finished_actions_.find(epoch);
-      if (iter == finished_actions_.end()) {
-        finished_actions_.emplace(
-          std::piecewise_construct,
-          std::forward_as_tuple(epoch),
-          std::forward_as_tuple(std::vector<ActionType>{action})
-        );
-      } else {
-        iter->second.push_back(action);
+      case TermStatusEnum::Finished:
+        action();
+        break;
+      case TermStatusEnum::Remote: {
+        auto iter = finished_actions_.find(epoch);
+        if (iter == finished_actions_.end()) {
+          finished_actions_.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(epoch),
+            std::forward_as_tuple(std::vector<ActionType>{action})
+          );
+        } else {
+          iter->second.push_back(action);
+        }
+        break;
       }
-      break;
-    }
-    case TermStatusEnum::Pending:
-      // do nothing, action does not get triggered
-      break;
-    default:
-      vtAssertInfo(0, "Should not be reachable", epoch);
-      break;
+      case TermStatusEnum::Pending:
+        // do nothing, action does not get triggered
+        break;
+      default:
+        vtAssertInfo(0, "Should not be reachable", epoch);
+        break;
     }
   }
 
