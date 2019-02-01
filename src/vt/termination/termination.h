@@ -160,6 +160,7 @@ private:
     TermCounterType const& cons
   );
 
+public:
   EpochType getArchetype(EpochType const& epoch) const;
   EpochWindow* getWindow(EpochType const& epoch);
 
