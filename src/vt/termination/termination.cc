@@ -256,7 +256,7 @@ TerminationDetector::getDSTerm(EpochType const& epoch) {
       auto const is_ds = epoch_category == ds_epoch;
       debug_print(
         termds, node,
-        "getDSTerm: epoch={:x}, category={}, ds_epoch={:x}, "
+        "getDSTerm: epoch={:x}, category={}, ds_epoch={}, "
         "is_rooted={}, is_ds={}\n",
         epoch, epoch_category, ds_epoch, is_rooted, is_ds
       );
