@@ -62,9 +62,10 @@ enum class ORDER : int { before, after, misc };
 struct MyParam {
   ORDER order = ORDER::before;
   bool useDS = false;
+  int depth = 1;
 };
 
-struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
+struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<std::tuple<ORDER,bool,int>> {
 
   struct Metadata; // forward-declaration for 'data'
 
@@ -72,6 +73,9 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
   static vt::NodeType root;
   static vt::NodeType all;
   static std::unordered_map<vt::EpochType,Metadata> data;
+
+  // test parameters
+  MyParam param_;
 
   // basic message
   struct BasicMsg : vt::Message {
@@ -354,7 +358,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
   }
 
   virtual void SetUp(){
-    vt::tests::unit::TestParallelHarnessParam<MyParam>::SetUp();
+    vt::tests::unit::TestParallelHarnessParam<std::tuple<ORDER,bool,int>>::SetUp();
 
     // set ranks
     root = 0;
@@ -362,6 +366,12 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     all = vt::theContext()->getNumNodes();
     vtAssert(all > 1, "There should be at least two nodes");
 
+    // retrieve test parameters
+    auto const& values = GetParam();
+
+    param_.order = std::get<0>(values);
+    param_.useDS = std::get<1>(values);
+    param_.depth = std::get<2>(values);
   }
 
   // ---------------------------------------------
@@ -381,7 +391,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     std::vector<vt::EpochType> seq(nb);
 
     // create rooted epoch sequence
-    seq[0] = vt::theTerm()->makeEpochRooted(GetParam().useDS);
+    seq[0] = vt::theTerm()->makeEpochRooted(param_.useDS);
     vtAssertExpr(root == epoch::EpochManip::node(seq[0]));
     vtAssertExpr(epoch::EpochManip::isRooted(seq[0]));
 
@@ -435,36 +445,36 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     }
   }
 
+#if DEBUG_TERM_ACTION
+  void debug_log(std::string const step, vt::EpochType const& ep){
+    switch (param_.order){
+      case ORDER::after:
+        fmt::print(
+          "rank:{}: epoch:{:x}, ORDER::after, {} action, is_rooted ? {}\n",
+          me, ep, step, epoch::EpochManip::isRooted(ep)
+        );
+        break;
+      case ORDER::misc:
+        fmt::print(
+          "rank:{}: epoch:{:x}, ORDER::misc, {} action, is_rooted ? {}\n",
+          me, ep, step, epoch::EpochManip::isRooted(ep)
+        );
+        break;
+      default:
+        fmt::print(
+          "rank:{}: epoch:{:x}, ORDER::before, {} action, is_rooted ? {}\n",
+          me, ep, step, epoch::EpochManip::isRooted(ep)
+        );
+        break;
+    }
+    fflush(stdout);
+  }
+#endif
+
   // assign action to be processed at the end
   // of the epoch; trigger termination detection;
   // and finalize epoch.
   void finalize(vt::EpochType ep){
-
-    #if DEBUG_TERM_ACTION
-      auto debug_log = [&](std::string const step, MyParam const& param, vt::EpochType const& ep){
-        switch (param.order){
-          case ORDER::after:
-            fmt::print(
-              "rank:{}: epoch:{:x}, ORDER::after, {} action, is_rooted ? {}\n",
-              me, ep, step, epoch::EpochManip::isRooted(ep)
-            );
-            break;
-          case ORDER::misc:
-            fmt::print(
-              "rank:{}: epoch:{:x}, ORDER::misc, {} action, is_rooted ? {}\n",
-              me, ep, step, epoch::EpochManip::isRooted(ep)
-            );
-            break;
-          default:
-            fmt::print(
-              "rank:{}: epoch:{:x}, ORDER::before, {} action, is_rooted ? {}\n",
-              me, ep, step, epoch::EpochManip::isRooted(ep)
-            );
-            break;
-        }
-        fflush(stdout);
-      };
-    #endif
 
     auto finish = [&](vt::EpochType& ep){
       if(ep not_eq vt::no_epoch){
@@ -473,18 +483,18 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     };
 
     // get instance test parameters
-    auto const& param = GetParam();
+    //auto const& param = GetParam();
 
     // 1. no epoch case
     if(ep == vt::no_epoch){
       if(me == root){
         trigger(vt::no_epoch);
         #if DEBUG_TERM_ACTION
-          debug_log("entering no_epoch", param,ep);
+          debug_log("entering no_epoch", ep);
           vt::theTerm()->addAction([&]{
-            debug_log("within no_epoch", param,ep);
+            debug_log("within no_epoch", ep);
             EXPECT_TRUE(hasFinished(vt::no_epoch));
-            debug_log("leaving no_epoch", param,ep);
+            debug_log("leaving no_epoch", ep);
           });
         #else
         vt::theTerm()->addAction([&]{ EXPECT_TRUE(hasFinished(vt::no_epoch)); });
@@ -493,16 +503,16 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     } else if(epoch::EpochManip::isRooted(ep)){
       if(me == root){
 
-        switch(param.order){
+        switch(param_.order){
           case ORDER::after :{
             trigger(ep);
             finish(ep);
             #if DEBUG_TERM_ACTION
-              debug_log("entering", param,ep);
+              debug_log("entering", ep);
               vt::theTerm()->addActionEpoch(ep,[&]{
-                debug_log("within", param,ep);
+                debug_log("within", ep);
                 EXPECT_TRUE(hasFinished(ep));
-                debug_log("leaving", param,ep);
+                debug_log("leaving", ep);
               });
             #else
               vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
@@ -512,11 +522,11 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
           case ORDER::misc :{
             trigger(ep);
             #if DEBUG_TERM_ACTION
-              debug_log("entering", param,ep);
+              debug_log("entering", ep);
               vt::theTerm()->addActionEpoch(ep,[&]{
-                debug_log("within", param,ep);
+                debug_log("within", ep);
                 EXPECT_TRUE(hasFinished(ep));
-                debug_log("leaving", param,ep);
+                debug_log("leaving",ep);
               });
             #else
               vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
@@ -527,16 +537,16 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
           default :{
             #if DEBUG_TERM_ACTION
               vt::theTerm()->addActionEpoch(ep,[&]{
-                debug_log("within", param,ep);
+                debug_log("within", ep);
                 EXPECT_TRUE(hasFinished(ep));
-                debug_log("leaving",param,ep);
+                debug_log("leaving",ep);
               });
             #else
               vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(hasFinished(ep)); });
             #endif
             trigger(ep);
             #if DEBUG_TERM_ACTION
-              debug_log("entering", param,ep);
+              debug_log("entering", ep);
             #endif
             finish(ep);
             break;
@@ -544,7 +554,6 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
         }
       }
     } else /* it is a collective epoch */ {
-      // finalize epoch
       finish(ep);
       // check status
       if(me == root){
@@ -557,57 +566,56 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     #endif
   }
 
-  #if ENABLE_NESTED_EPOCHS
-    // nested collective epochs
-    void nestedCollectEpoch(int depth){
-      vtAssertExpr(depth > 0);
+#if ENABLE_NESTED_EPOCHS
+  // nested collective epochs
+  void nestedCollectEpoch(int depth){
+    vtAssertExpr(depth > 0);
 
+    // explicitly set 'child' epoch param
+    auto ep = vt::theTerm()->newEpochCollective(true);
+    vt::theTerm()->getWindow(ep)->addEpoch(ep);
+
+    // all ranks should have the same depth
+    vt::theCollective()->barrier();
+    if(depth > 1)
+      nestedCollectEpoch(depth-1);
+
+    if(me == root){
+      distributedComputation(ep);
+      trigger(ep);
+    }
+
+    finalize(ep);
+  }
+
+  // nested rooted epochs
+  void nestedRootedEpoch(int depth){
+    vtAssertExpr(depth > 0);
+
+    auto* ep = new vt::EpochType(vt::no_epoch);
+
+    if(me == root){
       // explicitly set 'child' epoch param
-      auto ep = vt::theTerm()->newEpochCollective(true);
-      vt::theTerm()->getWindow(ep)->addEpoch(ep);
+      *ep = vt::theTerm()->newEpochRooted(param_.useDS,true);
+      vt::theTerm()->getWindow(*ep)->addEpoch(*ep);
 
-      // all ranks should have the same depth
-      vt::theCollective()->barrier();
-      if(depth > 1)
-        nestedCollectEpoch(depth-1);
-
-      if(me == root){
-        distributedComputation(ep);
-        trigger(ep);
-      }
-
-      // finalize in a collective way
-      finalize(ep);
+      vtAssertExpr(root == epoch::EpochManip::node(*ep));
+      vtAssertExpr(epoch::EpochManip::isRooted(*ep));
     }
 
-    // nested rooted epochs
-    void nestedRootedEpoch(int depth){
-      vtAssertExpr(depth > 0);
+    // all ranks should have the same depth
+    vt::theCollective()->barrier();
+    if(depth > 1)
+      nestedRootedEpoch(depth-1);
 
-      auto* ep = new vt::EpochType(vt::no_epoch);
-
-      if(me == root){
-        // explicitly set 'child' epoch param
-        *ep = vt::theTerm()->newEpochRooted(GetParam().useDS,true);
-        vt::theTerm()->getWindow(*ep)->addEpoch(*ep);
-
-        vtAssertExpr(root == epoch::EpochManip::node(*ep));
-        vtAssertExpr(epoch::EpochManip::isRooted(*ep));
-      }
-
-      // all ranks should have the same depth
-      vt::theCollective()->barrier();
-      if(depth > 1)
-        nestedRootedEpoch(depth-1);
-
-      if(me == root){
-        distributedComputation(*ep);
-        trigger(*ep);
-        finalize(*ep);
-      }
-      delete ep;
+    if(me == root){
+      distributedComputation(*ep);
+      trigger(*ep);
+      finalize(*ep);
     }
-  #endif
+    delete ep;
+  }
+#endif
 };
 
 /*static*/ vt::NodeType TestTermAction::me;
@@ -676,24 +684,22 @@ TEST_P(TestTermAction, test_term_detect_rooted_epoch)
 #if ENABLE_NESTED_EPOCHS
 TEST_P(TestTermAction, test_term_detect_nested_collect_epoch)
 {
-    nestedCollectEpoch(5);//GetParam().depth);
-
+  nestedCollectEpoch(param_.depth);
 }
 
 TEST_P(TestTermAction, test_term_detect_nested_rooted_epoch)
 {
-   nestedRootedEpoch(5);//GetParam().depth);
+  nestedRootedEpoch(param_.depth);
   //ASSERT_EXIT(nestedRootedEpoch(5),::testing::ExitedWithCode(1),".*");
-  // ::testing::KilledBySignal(SIGABRT),".*");
 }
 #endif
 
 INSTANTIATE_TEST_CASE_P(
   InstantiationName, TestTermAction,
-    ::testing::Values(
-      MyParam{ORDER::before, false}, //MyParam{ORDER::before, true},
-      MyParam{ORDER::after, false}, //MyParam{ORDER::after, true},
-      MyParam{ORDER::misc, false}//, MyParam{ORDER::misc, true}
+    ::testing::Combine(
+      ::testing::Values(ORDER::before, ORDER::after, ORDER::misc),
+      ::testing::Values(false),
+      ::testing::Range(2,10,2)
     )
 );
 
