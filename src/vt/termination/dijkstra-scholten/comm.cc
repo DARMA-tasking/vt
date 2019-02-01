@@ -59,7 +59,7 @@ namespace vt { namespace term { namespace ds {
 ) {
   debug_print(
     termds, node,
-    "StateDS::requestAck: epoch={}, pred={}, cnt={}\n",
+    "StateDS::requestAck: epoch={:x}, pred={}, cnt={}\n",
     epoch, successor, cnt
   );
   auto const& node = theContext()->getNode();
@@ -73,7 +73,7 @@ namespace vt { namespace term { namespace ds {
 ) {
   debug_print(
     termds, node,
-    "StateDS::acknowledge: epoch={}, pred={}, cnt={}\n",
+    "StateDS::acknowledge: epoch={:x}, pred={}, cnt={}\n",
     epoch, predecessor, cnt
   );
   auto const& node = theContext()->getNode();
@@ -85,7 +85,7 @@ namespace vt { namespace term { namespace ds {
 /*static*/ void StateDS::rootTerminated(EpochType epoch) {
   debug_print(
     termds, node,
-    "StateDS::rootTerminated: epoch={}\n", epoch
+    "StateDS::rootTerminated: epoch={:x}\n", epoch
   );
   theTerm()->triggerAllEpochActions(epoch);
 }
