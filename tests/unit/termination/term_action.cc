@@ -52,7 +52,7 @@
 #include "vt/transport.h"
 
 #define DEBUG_TERM_ACTION 2
-#define ENABLE_NESTED_EPOCHS 0
+#define ENABLE_NESTED_EPOCHS 1
 
 namespace vt { namespace tests { namespace unit {
 
@@ -361,6 +361,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     me  = vt::theContext()->getNode();
     all = vt::theContext()->getNumNodes();
     vtAssert(all > 1, "There should be at least two nodes");
+
   }
 
   // ---------------------------------------------
@@ -561,8 +562,9 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
     void nestedCollectEpoch(int depth){
       vtAssertExpr(depth > 0);
 
-      // init in a collective way
-      auto ep = vt::theTerm()->makeEpochCollective();
+      // explicitly set 'child' epoch param
+      auto ep = vt::theTerm()->newEpochCollective(true);
+      vt::theTerm()->getWindow(ep)->addEpoch(ep);
 
       // all ranks should have the same depth
       vt::theCollective()->barrier();
@@ -585,7 +587,10 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<MyParam> {
       auto* ep = new vt::EpochType(vt::no_epoch);
 
       if(me == root){
-        *ep = vt::theTerm()->makeEpochRooted(GetParam().useDS);
+        // explicitly set 'child' epoch param
+        *ep = vt::theTerm()->newEpochRooted(GetParam().useDS,true);
+        vt::theTerm()->getWindow(*ep)->addEpoch(*ep);
+
         vtAssertExpr(root == epoch::EpochManip::node(*ep));
         vtAssertExpr(epoch::EpochManip::isRooted(*ep));
       }
@@ -671,30 +676,25 @@ TEST_P(TestTermAction, test_term_detect_rooted_epoch)
 #if ENABLE_NESTED_EPOCHS
 TEST_P(TestTermAction, test_term_detect_nested_collect_epoch)
 {
-  std::random_device device;
-  std::mt19937 engine(device());
-  std::uniform_int_distribution<int> depth(2,5);
+    nestedCollectEpoch(5);//GetParam().depth);
 
-  nestedCollectEpoch(depth(engine));
 }
 
 TEST_P(TestTermAction, test_term_detect_nested_rooted_epoch)
 {
-  std::random_device device;
-  std::mt19937 engine(device());
-  std::uniform_int_distribution<int> depth(2,5);
-
-  nestedRootedEpoch(depth(engine));
+   nestedRootedEpoch(5);//GetParam().depth);
+  //ASSERT_EXIT(nestedRootedEpoch(5),::testing::ExitedWithCode(1),".*");
+  // ::testing::KilledBySignal(SIGABRT),".*");
 }
 #endif
 
 INSTANTIATE_TEST_CASE_P(
   InstantiationName, TestTermAction,
-  ::testing::Values(
-    MyParam{ORDER::before, false}, MyParam{ORDER::before, true},
-    MyParam{ORDER::after, false}, MyParam{ORDER::after, true},
-    MyParam{ORDER::misc, false}, MyParam{ORDER::misc, true}
-  )
+    ::testing::Values(
+      MyParam{ORDER::before, false}, //MyParam{ORDER::before, true},
+      MyParam{ORDER::after, false}, //MyParam{ORDER::after, true},
+      MyParam{ORDER::misc, false}//, MyParam{ORDER::misc, true}
+    )
 );
 
 }}} // end namespace vt::tests::unit
