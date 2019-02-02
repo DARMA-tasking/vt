@@ -189,6 +189,11 @@ void TerminationDetector::produceConsumeState(
 }
 
 void TerminationDetector::genProd(EpochType const& epoch) {
+  debug_print(
+    termds, node,
+    "genProd: epoch={:x}\n", epoch
+  );
+
   vtAssertExpr(epoch != no_epoch);
   if (epoch != term::any_epoch_sentinel) {
     produce(epoch,1);
@@ -203,6 +208,11 @@ void TerminationDetector::genProd(EpochType const& epoch) {
 }
 
 void TerminationDetector::genCons(EpochType const& epoch) {
+  debug_print(
+    termds, node,
+    "genCons: epoch={:x}\n", epoch
+  );
+
   vtAssertExpr(epoch != no_epoch);
   if (epoch != term::any_epoch_sentinel) {
     consume(epoch,1);

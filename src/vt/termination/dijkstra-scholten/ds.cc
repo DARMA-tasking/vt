@@ -55,6 +55,11 @@ namespace vt { namespace term { namespace ds {
 
 template <typename CommType>
 void TermDS<CommType>::addChildEpoch(EpochType const& epoch) {
+  debug_print(
+    termds, node,
+    "addChildEpoch: epoch={:x}\n", epoch
+  );
+
   // Produce a single work unit for the child epoch so it can not finish while
   // this epoch is live
   theTerm()->genProd(epoch);
@@ -63,6 +68,11 @@ void TermDS<CommType>::addChildEpoch(EpochType const& epoch) {
 
 template <typename CommType>
 void TermDS<CommType>::clearChildren() {
+  debug_print(
+    termds, node,
+    "clearChildren: epoch={:x}\n", epoch_
+  );
+
   for (auto&& cur_epoch : children_) {
     theTerm()->genCons(cur_epoch);
   }
@@ -80,6 +90,11 @@ TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeType self_)
 
 template <typename CommType>
 void TermDS<CommType>::terminated() {
+  debug_print(
+    termds, node,
+    "terminated: epoch={:x}\n", epoch_
+  );
+
   CommType::rootTerminated(epoch_);
 }
 
