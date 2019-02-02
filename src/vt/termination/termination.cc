@@ -830,11 +830,14 @@ EpochType TerminationDetector::newEpochRooted(
       )
     );
     if (child) {
-      iter = term_.find(rooted_epoch);
-      vtAssertInfo(
-        iter != term_.end(), "New epoch must exist now", rooted_epoch, useDS
-      );
-      iter->second.addChildEpoch(rooted_epoch);
+      auto const cur_epoch = theMsg()->getEpoch();
+      if (cur_epoch != no_epoch && cur_epoch != term::any_epoch_sentinel) {
+        iter = term_.find(rooted_epoch);
+        vtAssertInfo(
+          iter != term_.end(), "New epoch must exist now", rooted_epoch, useDS
+        );
+        iter->second.addChildEpoch(rooted_epoch);
+      }
     }
     epoch_ready_.emplace(rooted_epoch);
     return rooted_epoch;
