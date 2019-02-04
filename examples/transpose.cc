@@ -292,7 +292,7 @@ static void solveGroupSetup(NodeType this_node, VirtualProxyType coll_proxy) {
         envelopeSetGroup(msg->env, group_id);
         theMsg()->broadcastMsg<SubSolveMsg,SubSolveInfo::subSolveHandler>(msg);
       }
-    }
+    }, true
   );
 
 }
