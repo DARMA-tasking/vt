@@ -75,10 +75,10 @@ GroupType GroupManager::newGroup(
 }
 
 GroupType GroupManager::newGroupCollective(
-  bool const in_group, ActionGroupType action
+  bool const in_group, ActionGroupType action, bool make_mpi_group
 ) {
   bool const is_static = true;
-  return newCollectiveGroup(in_group, is_static, action);
+  return newCollectiveGroup(in_group, is_static, action, make_mpi_group);
 }
 
 GroupType GroupManager::newGroupCollectiveLabel(GroupCollectiveLabelTagType) {
@@ -89,7 +89,8 @@ GroupType GroupManager::newGroupCollectiveLabel(GroupCollectiveLabelTagType) {
 }
 
 GroupType GroupManager::newCollectiveGroup(
-  bool const& is_in_group, bool const& is_static, ActionGroupType action
+  bool const& is_in_group, bool const& is_static, ActionGroupType action,
+  bool make_mpi_group
 ) {
   auto const& this_node = theContext()->getNode();
   auto new_id = next_collective_group_id_++;
@@ -98,7 +99,9 @@ GroupType GroupManager::newCollectiveGroup(
     new_id, this_node, is_collective, is_static
   );
   auto group_action = std::bind(action, group);
-  initializeLocalGroupCollective(group, is_static, group_action, is_in_group);
+  initializeLocalGroupCollective(
+    group, is_static, group_action, is_in_group, make_mpi_group
+  );
   return group;
 }
 
@@ -214,10 +217,10 @@ MPI_Comm GroupManager::getGroupComm(GroupType const& group_id) {
 
 void GroupManager::initializeLocalGroupCollective(
   GroupType const& group, bool const& is_static, ActionType action,
-  bool const in_group
+  bool const in_group, bool make_mpi_group
 ) {
   auto group_info = std::make_unique<GroupInfoType>(
-    info_collective_cons, action, group, in_group
+    info_collective_cons, action, group, in_group, make_mpi_group
   );
   auto group_ptr = group_info.get();
   local_collective_group_info_.emplace(

@@ -105,7 +105,9 @@ struct GroupManager {
   );
 
   GroupType newGroup(RegionPtrType in_region, ActionGroupType action);
-  GroupType newGroupCollective(bool const in_group, ActionGroupType action);
+  GroupType newGroupCollective(
+    bool const in_group, ActionGroupType action, bool make_mpi_group = false
+  );
   GroupType newGroupCollectiveLabel(GroupCollectiveLabelTagType);
   bool inGroup(GroupType const& group);
 
@@ -122,14 +124,15 @@ struct GroupManager {
 
 private:
   GroupType newCollectiveGroup(
-    bool const& in_group, bool const& is_static, ActionGroupType action
+    bool const& in_group, bool const& is_static, ActionGroupType action,
+    bool make_mpi_group = false
   );
   GroupType newLocalGroup(
     RegionPtrType in_region, bool const& is_static, ActionGroupType action
   );
   void initializeLocalGroupCollective(
     GroupType const& group, bool const& is_static, ActionType action,
-    bool const in_group
+    bool const in_group, bool make_mpi_group
   );
   void initializeLocalGroup(
     GroupType const& group, RegionPtrType in_region, bool const& is_static,

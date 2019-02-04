@@ -135,7 +135,7 @@ void InfoColl::setupCollective() {
     is_in_group, group_, parent, children, coll_wait_count_
   );
 
-  if (make_mpi_comm) {
+  if (make_mpi_group_) {
     auto const cur_comm = theContext()->getComm();
     int32_t const group_color = in_group;
     MPI_Comm_split(cur_comm, group_color, this_node, &mpi_group_comm);

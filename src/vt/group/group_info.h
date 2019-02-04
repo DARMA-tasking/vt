@@ -80,7 +80,7 @@ protected:
     bool const& in_is_collective, ActionType in_action,
     GroupType const in_group, bool const& in_is_remote,
     bool const& in_is_in_group, RegionPtrType in_region,
-    RegionType::SizeType const& in_total_size
+    RegionType::SizeType const& in_total_size, bool make_mpi_group
   );
 
   Info(
@@ -102,7 +102,7 @@ public:
 
   Info(
     InfoCollectiveConsType, ActionType in_action, GroupType const in_group,
-    bool const in_is_in_group
+    bool const in_is_in_group, bool make_mpi_group
   );
 
   friend struct GroupManager;

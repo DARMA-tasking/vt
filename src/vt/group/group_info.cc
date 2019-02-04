@@ -62,12 +62,12 @@ namespace vt { namespace group {
 Info::Info(
   bool const& in_is_collective, ActionType in_action, GroupType const in_group,
   bool const& in_is_remote, bool const& in_is_in_group, RegionPtrType in_region,
-  RegionType::SizeType const& in_total_size
+  RegionType::SizeType const& in_total_size, bool make_mpi_group
 ) : InfoRooted(
       in_is_remote, in_region ? std::move(in_region) : nullptr, in_total_size
     ),
     InfoColl(
-      in_is_in_group
+      in_is_in_group, make_mpi_group
     ),
     group_(in_group), is_collective_(in_is_collective),
     finished_setup_action_(in_action)
@@ -79,7 +79,7 @@ Info::Info(
   bool const& in_is_remote
 ) : Info(
       false, in_action, in_group, in_is_remote, false, std::move(in_region),
-      in_total_size
+      in_total_size, false
     )
 { }
 
@@ -103,8 +103,8 @@ Info::Info(
 
 Info::Info(
   InfoCollectiveConsType, ActionType in_action, GroupType const in_group,
-  bool const in_is_in_group
-) : Info(true, in_action, in_group, false, in_is_in_group, nullptr, 0)
+  bool const in_is_in_group, bool mpi
+) : Info(true, in_action, in_group, false, in_is_in_group, nullptr, 0, mpi)
 { }
 
 void Info::setup() {
