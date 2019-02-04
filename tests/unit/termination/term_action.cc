@@ -52,30 +52,27 @@
 #include "vt/transport.h"
 
 #define DEBUG_TERM_ACTION 2
-#define ENABLE_NESTED_EPOCHS 1
 
 namespace vt { namespace tests { namespace unit {
 
 // specify the order of 'addAction' w.r.t 'finishedEpoch'
 enum class ORDER : int { before, after, misc };
 
-struct MyParam {
-  ORDER order = ORDER::before;
-  bool useDS = false;
-  int depth = 1;
-};
+struct TestTermBase : vt::tests::unit::TestParallelHarnessParam<std::tuple<ORDER,bool,int>> {
 
-struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<std::tuple<ORDER,bool,int>> {
-
+protected:
   struct Metadata; // forward-declaration for 'data'
-
   static vt::NodeType me;
   static vt::NodeType root;
   static vt::NodeType all;
   static std::unordered_map<vt::EpochType,Metadata> data;
 
   // test parameters
-  MyParam param_;
+  struct {
+    ORDER order = ORDER::before;
+    bool useDS = false;
+    int depth = 1;
+  } param_;
 
   // basic message
   struct BasicMsg : vt::Message {
@@ -366,12 +363,8 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<std::tuple<ORD
     all = vt::theContext()->getNumNodes();
     vtAssert(all > 1, "There should be at least two nodes");
 
-    // retrieve test parameters
-    auto const& values = GetParam();
-
-    param_.order = std::get<0>(values);
-    param_.useDS = std::get<1>(values);
-    param_.depth = std::get<2>(values);
+    // set 'addAction" ordering parameter
+    param_.order = std::get<0>(GetParam());
   }
 
   // ---------------------------------------------
@@ -482,9 +475,6 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<std::tuple<ORD
       }
     };
 
-    // get instance test parameters
-    //auto const& param = GetParam();
-
     // 1. no epoch case
     if(ep == vt::no_epoch){
       if(me == root){
@@ -565,10 +555,41 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<std::tuple<ORD
       fmt::print("rank:{}, epoch:{:x} completed\n",me,ep);
     #endif
   }
+};
 
-#if ENABLE_NESTED_EPOCHS
-  // nested collective epochs
+/*static*/ vt::NodeType TestTermBase::me;
+/*static*/ vt::NodeType TestTermBase::root;
+/*static*/ vt::NodeType TestTermBase::all;
+/*static*/ std::unordered_map<vt::EpochType,TestTermBase::Metadata> TestTermBase::data;
+
+
+// -------------------------------------
+// DERIVED FIXTURES
+// note: use separate fixtures to reduce
+//       the number of instantiated tests
+// -------------------------------------
+
+// Rooted epochs case [useDS]
+struct TestTermRooted : TestTermBase {
+
+  virtual void SetUp(){
+    TestTermBase::SetUp();
+    // retrieve useDS parameter value
+    param_.useDS = std::get<1>(GetParam());
+  }
+};
+
+// Nested collective epochs case [depth]
+struct TestTermNestedCollect : TestTermBase {
+
+  virtual void SetUp(){
+    TestTermBase::SetUp();
+    // set nesting depth value
+    param_.depth = std::get<2>(GetParam());
+  }
+
   void nestedCollectEpoch(int depth){
+
     vtAssertExpr(depth > 0);
 
     // explicitly set 'child' epoch param
@@ -577,18 +598,27 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<std::tuple<ORD
 
     // all ranks should have the same depth
     vt::theCollective()->barrier();
-    if(depth > 1)
-      nestedCollectEpoch(depth-1);
+    if (depth > 1)
+      nestedCollectEpoch(depth - 1);
 
-    if(me == root){
+    if (me == root){
       distributedComputation(ep);
       trigger(ep);
     }
 
     finalize(ep);
   }
+};
 
-  // nested rooted epochs
+// Nested rooted epochs case [useDS,depth]
+struct TestTermNestedRooted : TestTermRooted {
+
+  virtual void SetUp(){
+    TestTermRooted::SetUp();
+    // set nesting depth value
+    param_.depth = std::get<2>(GetParam());
+  }
+
   void nestedRootedEpoch(int depth){
     vtAssertExpr(depth > 0);
 
@@ -615,16 +645,14 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<std::tuple<ORD
     }
     delete ep;
   }
-#endif
 };
 
-/*static*/ vt::NodeType TestTermAction::me;
-/*static*/ vt::NodeType TestTermAction::root;
-/*static*/ vt::NodeType TestTermAction::all;
-/*static*/ std::unordered_map<vt::EpochType,TestTermAction::Metadata> TestTermAction::data;
+// -----------
+// TEST CASES
+// -----------
 
-// simple broadcast test case
-TEST_P(TestTermAction, test_term_detect_broadcast)
+// simple broadcast
+TEST_P(TestTermBase, test_term_detect_broadcast)
 {
   if(me == root){
     // start computation
@@ -634,13 +662,8 @@ TEST_P(TestTermAction, test_term_detect_broadcast)
   }
 }
 
-// -----------
-// TEST CASES
-// -----------
-
-
-// routed messages test case
-TEST_P(TestTermAction, test_term_detect_routed)
+// routed messages
+TEST_P(TestTermBase, test_term_detect_routed)
 {
   // there should be at least 3 nodes for this case
   if(all > 2 && me == root){
@@ -651,9 +674,8 @@ TEST_P(TestTermAction, test_term_detect_routed)
   }
 }
 
-// collective epochs test cases
-// parameterized by 'addAction' ordering
-TEST_P(TestTermAction, test_term_detect_collect_epoch)
+// collective epochs
+TEST_P(TestTermBase, test_term_detect_collect_epoch)
 {
   auto sequence = initCollectEpochSequence(5);
 
@@ -667,9 +689,8 @@ TEST_P(TestTermAction, test_term_detect_collect_epoch)
   }
 }
 
-// sequence of rooted epochs test cases
-// parameterized by 'addAction' ordering and 'useDS'
-TEST_P(TestTermAction, test_term_detect_rooted_epoch)
+// rooted epochs
+TEST_P(TestTermRooted, test_term_detect_rooted_epoch)
 {
   if(me == root){
     auto sequence = initRootedEpochSequence(5);
@@ -681,26 +702,56 @@ TEST_P(TestTermAction, test_term_detect_rooted_epoch)
   }
 }
 
-#if ENABLE_NESTED_EPOCHS
-TEST_P(TestTermAction, test_term_detect_nested_collect_epoch)
+// nested collective epochs
+TEST_P(TestTermNestedCollect, test_term_detect_nested_collect_epoch)
 {
   nestedCollectEpoch(param_.depth);
 }
 
-TEST_P(TestTermAction, test_term_detect_nested_rooted_epoch)
+// nested rooted epochs
+TEST_P(TestTermNestedRooted, test_term_detect_nested_rooted_epoch)
 {
   nestedRootedEpoch(param_.depth);
-  //ASSERT_EXIT(nestedRootedEpoch(5),::testing::ExitedWithCode(1),".*");
 }
-#endif
+
+// -------------------------
+// testcases instantiation
+// -------------------------
 
 INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestTermAction,
-    ::testing::Combine(
-      ::testing::Values(ORDER::before, ORDER::after, ORDER::misc),
-      ::testing::Bool(),
-      ::testing::Range(2,10,2)
-    )
+  InstantiationName, TestTermBase,
+  ::testing::Combine(
+    ::testing::Values(ORDER::before, ORDER::after, ORDER::misc),
+    ::testing::Values(false),
+    ::testing::Values(1)
+  )
+);
+
+INSTANTIATE_TEST_CASE_P(
+  InstantiationName, TestTermNestedCollect,
+  ::testing::Combine(
+    ::testing::Values(ORDER::before, ORDER::after, ORDER::misc),
+    ::testing::Values(false),
+    ::testing::Range(2,10,2)
+  )
+);
+
+INSTANTIATE_TEST_CASE_P(
+  InstantiationName, TestTermRooted,
+  ::testing::Combine(
+    ::testing::Values(ORDER::before, ORDER::after, ORDER::misc),
+    ::testing::Bool(),
+    ::testing::Values(1)
+  )
+);
+
+INSTANTIATE_TEST_CASE_P(
+  InstantiationName, TestTermNestedRooted,
+  ::testing::Combine(
+    ::testing::Values(ORDER::before, ORDER::after, ORDER::misc),
+    ::testing::Bool(),
+    ::testing::Range(2,10,2)
+  )
 );
 
 }}} // end namespace vt::tests::unit
