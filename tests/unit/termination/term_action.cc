@@ -426,7 +426,7 @@ struct TestTermAction : vt::tests::unit::TestParallelHarnessParam<std::tuple<ORD
     #if DEBUG_TERM_ACTION
     if(ep not_eq vt::no_epoch){
       fmt::print(
-        "rank:{}, epoch: {}, is_rooted ? {}\n",
+        "rank:{}, epoch:{:x}, is_rooted ? {}\n",
         me, ep, epoch::EpochManip::isRooted(ep)
       );
     }
@@ -698,7 +698,7 @@ INSTANTIATE_TEST_CASE_P(
   InstantiationName, TestTermAction,
     ::testing::Combine(
       ::testing::Values(ORDER::before, ORDER::after, ORDER::misc),
-      ::testing::Values(false),
+      ::testing::Bool(),
       ::testing::Range(2,10,2)
     )
 );
