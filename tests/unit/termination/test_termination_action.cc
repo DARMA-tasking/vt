@@ -622,15 +622,15 @@ struct TestTermNestedRooted : TestTermRooted {
   void nestedRootedEpoch(int depth){
     vtAssertExpr(depth > 0);
 
-    auto* ep = new vt::EpochType(vt::no_epoch);
+    auto ep = vt::no_epoch;
 
     if(me == root){
       // explicitly set 'child' epoch param
-      *ep = vt::theTerm()->newEpochRooted(param_.useDS,true);
-      vt::theTerm()->getWindow(*ep)->addEpoch(*ep);
+      ep = vt::theTerm()->newEpochRooted(param_.useDS,true);
+      vt::theTerm()->getWindow(ep)->addEpoch(ep);
 
-      vtAssertExpr(root == epoch::EpochManip::node(*ep));
-      vtAssertExpr(epoch::EpochManip::isRooted(*ep));
+      vtAssertExpr(root == epoch::EpochManip::node(ep));
+      vtAssertExpr(epoch::EpochManip::isRooted(ep));
     }
 
     // all ranks should have the same depth
@@ -639,11 +639,10 @@ struct TestTermNestedRooted : TestTermRooted {
       nestedRootedEpoch(depth-1);
 
     if(me == root){
-      distributedComputation(*ep);
-      trigger(*ep);
-      finalize(*ep);
+      distributedComputation(ep);
+      trigger(ep);
+      finalize(ep);
     }
-    delete ep;
   }
 };
 
