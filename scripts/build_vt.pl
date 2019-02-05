@@ -125,12 +125,29 @@ if ($detector_on == 0) {
     $detector_on_str = "-Dvt_detector_disabled:BOOL=true ";
 }
 
+my $coverage=0;
+my $CXX_FLAGS= "";
+my $C_FLAGS= "";
+if ($build_mode eq "coverage") {
+   print STDERR  "Code coverage mode for Vt has been correctly detected";
+   $build_mode="debug";
+   $coverage=1;
+   $CXX_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
+   $C_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
+   print STDERR  "Coverage activated for VT";
+} else {
+   print STDERR  "Vt hasn't been correctly detected into a coverage mode";
+}
+
 print STDERR "=== Building vt ===\n";
 print STDERR "\tBuild mode:$build_mode\n";
 print STDERR "\tRoot=$root\n";
 print STDERR "\tLibroot=$libroot\n";
 print STDERR "\tVT dir name=$vt\n";
 print STDERR "\tCompiler suite=$compiler, cxx=$cxx, cc=$cc\n";
+if ($coverage == 1) {
+    print STDERR "\tCompiler flags=$compiler, cxx_flags=$CXX_FLAGS, c_flags=$C_FLAGS\n";
+}
 print STDERR "\tMPI Compiler suite=$compiler, mpicc=$mpi_cc, mpicxx=$mpi_cxx\n";
 print STDERR "\tAll tests/examples=$build_all_tests\n";
 print STDERR "\tVT installation directory=$vt_install\n";
@@ -147,7 +164,23 @@ cmake $source_base_dir                                                       \\
       -DCMAKE_VERBOSE_MAKEFILE:BOOL=$verbose                                 \\
       -DCMAKE_CXX_COMPILER=$cxx                                              \\
       -DCMAKE_C_COMPILER=$cc                                                 \\
-      ${mpi_str}                                                             \\
+      ${mpi_str}
+CMAKESTR
+;
+
+if ($coverage == 1) {
+chomp $str;
+$str = <<CMAKESTR
+    $str                                                                     \\
+    -DCMAKE_CXX_FLAGS=$CXX_FLAGS                                             \\
+    -DCMAKE_C_FLAGS=$C_FLAGS                                                 \\
+    -DCODE_COVERAGE_ENABLED=true
+CMAKESTR
+;
+}
+chomp $str;
+my $str = <<CMAKESTR
+      $str                                                                   \\
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                   \\
       ${trace_str}                                                           \\
       ${lb_str}                                                              \\

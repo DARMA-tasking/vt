@@ -22,6 +22,12 @@ include(cmake/link_vt.cmake)
 # Load all the packages that are required for VT
 include(cmake/load_packages.cmake)
 
+# Code coverage option of VT
+OPTION(CODE_COVERAGE_ENABLED FALSE)
+if(CODE_COVERAGE_ENABLED)
+    include(cmake/code_coverage.cmake)
+endif(CODE_COVERAGE_ENABLED)
+
 set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)
