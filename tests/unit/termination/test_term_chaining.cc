@@ -135,6 +135,8 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
 
   epoch = theTerm()->makeEpochCollective();
 
+  fmt::print("global collective epoch {:x}\n", epoch);
+
   if (this_node == 0) {
     theMsg()->pushEpoch(epoch);
     start_chain();
