@@ -63,7 +63,8 @@ void TermState::addChildEpoch(EpochType const& epoch) {
 void TermState::clearChildren() {
   debug_print(
     term, node,
-    "clearChildren: epoch={:x}\n", epoch_
+    "clearChildren: epoch={:x}, child epochs count={}\n", epoch_,
+    epoch_child_.size()
   );
 
   for (auto&& cur_epoch : epoch_child_) {

@@ -771,8 +771,17 @@ void TerminationDetector::linkChildEpoch(EpochType const& epoch) {
   // Add the current active epoch in the messenger as a child epoch so the
   // current epoch does not detect termination until the new epoch terminations
   auto const cur_epoch = theMsg()->getEpoch();
-  if (cur_epoch != no_epoch && cur_epoch != term::any_epoch_sentinel) {
-    auto& state = findOrCreateState(cur_epoch, false);
+  bool const do_link =
+    cur_epoch != no_epoch && cur_epoch != term::any_epoch_sentinel;
+
+  debug_print(
+    term, node,
+    "linkChildEpoch: do_link={}, parent={:x}, child={:x}\n",
+    do_link, cur_epoch, epoch
+  );
+
+  if (do_link) {
+    auto& state = findOrCreateState(epoch, false);
     state.addChildEpoch(cur_epoch);
   }
 }
