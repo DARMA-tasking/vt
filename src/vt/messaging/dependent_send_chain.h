@@ -60,15 +60,22 @@ class DependentSendChain final {
   // Add a task to the chain of work, with subsequent tasks dependent
   // on just that task
   void add(PendingSend&& link) {
-    // Note that last_epoch_ may be uninitialized until the
-    // checkInit() call inside add(EpochType, PendingSend)
+    checkInit();
 
     EpochType new_epoch = theTerm()->makeEpochRooted();
-    add(new_epoch, std::move(link));
+
+    theTerm()->addAction(last_epoch_, [new_epoch, ps = std::move(link)] () mutable {
+        theMsg()->pushEpoch(new_epoch);
+        ps.release();
+        theMsg()->popEpoch(new_epoch);
+        theTerm()->finishedEpoch(new_epoch);
+        });
+    last_epoch_ = new_epoch;
   }
 
-  // Add a task to the chain of work, with subsequent tasks dependent
-  // on all work occuring in the specified epoch
+  // Add a task to the chain of work to be run in the specified epoch,
+  // with subsequent tasks dependent on all work occuring in the
+  // specified epoch
   void add(EpochType new_epoch, PendingSend&& link) {
     checkInit();
 
@@ -76,7 +83,7 @@ class DependentSendChain final {
         theMsg()->pushEpoch(new_epoch);
         ps.release();
         theMsg()->popEpoch(new_epoch);
-        theTerm()->finishedEpoch(new_epoch);
+        // Note no call to finishedEpoch(new_epoch) here, since the caller may be reusing it
         });
     last_epoch_ = new_epoch;
   }
