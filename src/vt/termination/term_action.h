@@ -52,14 +52,53 @@
 
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 namespace vt { namespace term {
 
+struct CallableBase {
+protected:
+  CallableBase() = default;
+public:
+  CallableBase(CallableBase const&) = delete;
+  CallableBase(CallableBase&&) = default;
+  virtual ~CallableBase() = default;
+  virtual void invoke() = 0;
+};
+
+template <typename Callable>
+struct CallableHolder : CallableBase {
+  explicit CallableHolder(Callable&& in_c) : c_(std::move(in_c)) { }
+  CallableHolder(CallableHolder const&) = delete;
+  CallableHolder(CallableHolder&&) = default;
+
+protected:
+  constexpr Callable&& move() { return std::move(c_); }
+
+  template <typename... A>
+  auto operator()(A&&... a) -> decltype(auto) {
+    return c_(std::forward<A>(a)...);
+  }
+
+public:
+  virtual void invoke() override {
+    // Skipping arguments for now (ActionType use case)
+    this->operator()();
+  }
+
+private:
+  Callable&& c_;
+};
+
+
 struct TermAction : TermFinished {
-  using TermStateType = TermState;
-  using ActionContType = std::vector<ActionType>;
-  using EpochActionContType = std::unordered_map<EpochType,ActionContType>;
-  using EpochStateType = std::unordered_map<EpochType,TermStateType>;
+  using TermStateType         = TermState;
+  using ActionContType        = std::vector<ActionType>;
+  using CallableActionType    = std::unique_ptr<CallableBase>;
+  using CallableVecType       = std::vector<CallableActionType>;
+  using CallableContType      = std::unordered_map<EpochType,CallableVecType>;
+  using EpochActionContType   = std::unordered_map<EpochType,ActionContType>;
+  using EpochStateType        = std::unordered_map<EpochType,TermStateType>;
 
   TermAction() = default;
 
@@ -70,6 +109,9 @@ public:
   void addActionEpoch(EpochType const& epoch, ActionType action);
   void clearActions();
   void clearActionsEpoch(EpochType const& epoch);
+
+  template <typename Callable>
+  void addActionUnique(EpochType const& epoch, Callable&& c);
 
 public:
   /*
@@ -83,14 +125,19 @@ public:
 protected:
   void triggerAllActions(EpochType const& epoch, EpochStateType const& state);
   void triggerAllEpochActions(EpochType const& epoch);
+  void afterAddEpochAction(EpochType const& epoch);
 
 protected:
   // Container for hold global termination actions
   ActionContType global_term_actions_ = {};
   // Container to hold actions to perform when an epoch has terminated
   EpochActionContType epoch_actions_ = {};
+  // Container for "callables"; restricted in semantic wrt std::function
+  CallableContType epoch_callable_actions_ = {};
 };
 
 }} /* end namespace vt::term */
+
+#include "vt/termination/term_action.impl.h"
 
 #endif /*INCLUDED_TERMINATION_TERM_ACTION_H*/
