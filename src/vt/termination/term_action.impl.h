@@ -15,7 +15,6 @@ template <typename Callable>
 void TermAction::addActionUnique(EpochType const& epoch, Callable&& c) {
   std::unique_ptr<CallableBase> callable =
     std::make_unique<CallableHolder<Callable>>(std::move(c));
-  callable->invoke();
   auto iter = epoch_callable_actions_.find(epoch);
   if (iter == epoch_callable_actions_.end()) {
     CallableVecType vec;
