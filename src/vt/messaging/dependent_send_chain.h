@@ -57,14 +57,20 @@ class DependentSendChain final {
  public:
   DependentSendChain() { }
 
+  // Add a task to the chain of work, with subsequent tasks dependent
+  // on just that task
   void add(PendingSend&& link) {
-    // Done here rather than the constructor to make static
-    // initialization of an instance safe
-    if (last_epoch_ == no_epoch) {
-      reset();
-    }
+    // Note that last_epoch_ may be uninitialized until the
+    // checkInit() call inside add(EpochType, PendingSend)
 
     EpochType new_epoch = theTerm()->makeEpochRooted();
+    add(new_epoch, std::move(link));
+  }
+
+  // Add a task to the chain of work, with subsequent tasks dependent
+  // on all work occuring in the specified epoch
+  void add(EpochType new_epoch, PendingSend&& link) {
+    checkInit();
 
     theTerm()->addAction(last_epoch_, [new_epoch, ps = std::move(link)] () mutable {
         theMsg()->pushEpoch(new_epoch);
@@ -87,6 +93,14 @@ class DependentSendChain final {
   ~DependentSendChain() = default;
 
  private:
+  void checkInit() {
+    // Done here rather than the constructor to make static
+    // initialization of an instance safe
+    if (last_epoch_ == no_epoch) {
+      reset();
+    }
+  }
+
   void reset() {
     // Set up a 'closed' epoch so that we keep an invariant of always
     // having an epoch to call addAction on, rather than edge cases of

@@ -123,17 +123,9 @@ struct PendingSend final {
   }
 
 private:
-  void sendMsg() {
-    // Send the message saved directly or trigger the lambda for specialized sends
-    // from the pending holder
-    if (send_action_ == nullptr) {
-      theMsg()->sendMsgSized(msg_, msg_size_);
-    } else {
-      send_action_(msg_);
-    }
-    msg_ = nullptr;
-    send_action_ = nullptr;
-  }
+  // Send the message saved directly or trigger the lambda for
+  // specialized sends from the pending holder
+  void sendMsg();
 
 private:
   MsgSharedPtr<BaseMsgType> msg_ = nullptr;
