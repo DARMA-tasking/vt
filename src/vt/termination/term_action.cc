@@ -71,6 +71,15 @@ void TermAction::addAction(EpochType const& epoch, ActionType action) {
   return addActionEpoch(epoch,action);
 }
 
+void TermAction::afterAddEpochAction(EpochType const& epoch) {
+  /*
+   *  Produce a unit of any epoch type to inhibit global termination when
+   *  local termination of a specific epoch is waiting for detection
+   */
+  theTerm()->produce(term::any_epoch_sentinel);
+  testEpochFinished(epoch, [=]{ triggerAllEpochActions(epoch); });
+}
+
 void TermAction::addActionEpoch(EpochType const& epoch, ActionType action) {
   if (epoch == term::any_epoch_sentinel) {
     return addAction(action);
@@ -85,17 +94,8 @@ void TermAction::addActionEpoch(EpochType const& epoch, ActionType action) {
     } else {
       epoch_iter->second.emplace_back(action);
     }
-    /*
-     *  Produce a unit of any epoch type to inhibit global termination when
-     *  local termination of a specific epoch is waiting for detection
-     */
-    theTerm()->produce(term::any_epoch_sentinel);
-
-    auto const& status = testEpochFinished(epoch);
-    if (status == TermStatusEnum::Finished) {
-      triggerAllEpochActions(epoch);
-    }
   }
+  afterAddEpochAction(epoch);
 }
 
 void TermAction::clearActions() {
@@ -142,19 +142,32 @@ void TermAction::triggerAllActions(
 }
 
 void TermAction::triggerAllEpochActions(EpochType const& epoch) {
+  // Run through the normal ActionType elements associated with this epoch
+  std::size_t epoch_actions_count = 0;
   auto iter = epoch_actions_.find(epoch);
   if (iter != epoch_actions_.end()) {
-    auto const& epoch_actions_count = iter->second.size();
+    epoch_actions_count += iter->second.size();
     for (auto&& action : iter->second) {
       action();
     }
     epoch_actions_.erase(iter);
-    /*
-     *  Consume `size' units of any epoch type to match the production in
-     *  addActionEpoch() so global termination can now be detected
-     */
-    theTerm()->consume(term::any_epoch_sentinel, epoch_actions_count);
   }
+  // Run through the callables associated with this epoch
+  auto iter2 = epoch_callable_actions_.find(epoch);
+  if (iter2 != epoch_callable_actions_.end()) {
+    epoch_actions_count += iter2->second.size();
+
+    for (auto&& action : iter2->second) {
+      action->invoke();
+    }
+
+    epoch_callable_actions_.erase(iter2);
+  }
+  /*
+   *  Consume number of action units of any epoch type to match the production
+   *  in addActionEpoch() so global termination can now be detected
+   */
+  theTerm()->consume(term::any_epoch_sentinel, epoch_actions_count);
 }
 
 }} /* end namespace vt::term */
