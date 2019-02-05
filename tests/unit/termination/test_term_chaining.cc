@@ -136,15 +136,19 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
   epoch = theTerm()->makeEpochCollective();
 
   if (this_node == 0) {
+    theMsg()->pushEpoch(epoch);
     start_chain();
     theTerm()->finishedEpoch(epoch);
+    theMsg()->popEpoch(epoch);
     fmt::print("before run 1\n");
     run_to_term();
     fmt::print("after run 1\n");
 
     EXPECT_EQ(handler_count, 4);
   } else {
+    theMsg()->pushEpoch(epoch);
     theTerm()->finishedEpoch(epoch);
+    theMsg()->popEpoch(epoch);
     run_to_term();
     EXPECT_EQ(handler_count, 13);
   }
