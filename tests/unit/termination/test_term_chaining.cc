@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          term_chaining.cc
+//                      test_term_chaining.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
