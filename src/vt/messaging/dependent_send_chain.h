@@ -64,12 +64,19 @@ class DependentSendChain final {
 
     EpochType new_epoch = theTerm()->makeEpochRooted();
 
-    theTerm()->addAction(last_epoch_, [new_epoch, ps = std::move(link)] () mutable {
-        theMsg()->pushEpoch(new_epoch);
-        ps.release();
-        theMsg()->popEpoch(new_epoch);
-        theTerm()->finishedEpoch(new_epoch);
-        });
+    theTerm()->addActionUnique(last_epoch_, [new_epoch, ps = std::move(link)] () mutable {
+      theMsg()->pushEpoch(new_epoch);
+      ps.release();
+      theMsg()->popEpoch(new_epoch);
+      theTerm()->finishedEpoch(new_epoch);
+    });
+
+    // theTerm()->addAction(last_epoch_, [new_epoch, ps = std::move(link)] () mutable {
+    //     theMsg()->pushEpoch(new_epoch);
+    //     ps.release();
+    //     theMsg()->popEpoch(new_epoch);
+    //     theTerm()->finishedEpoch(new_epoch);
+    //     });
     last_epoch_ = new_epoch;
   }
 
@@ -79,18 +86,12 @@ class DependentSendChain final {
   void add(EpochType new_epoch, PendingSend&& link) {
     checkInit();
 
-    // Produce an event here, to be consumed when the send gets
-    // released, so that new_epoch doesn't appear to have completed in
-    // the interim
-    theTerm()->produce(new_epoch);
-
-    theTerm()->addAction(last_epoch_, [new_epoch, ps = std::move(link)] () mutable {
-        theMsg()->pushEpoch(new_epoch);
-        ps.release();
-        theMsg()->popEpoch(new_epoch);
-        theTerm()->consume(new_epoch);
-        // Note no call to finishedEpoch(new_epoch) here, since the caller may be reusing it
-        });
+    // theTerm()->addAction(last_epoch_, [new_epoch, ps = std::move(link)] () mutable {
+    //     theMsg()->pushEpoch(new_epoch);
+    //     ps.release();
+    //     theMsg()->popEpoch(new_epoch);
+    //     // Note no call to finishedEpoch(new_epoch) here, since the caller may be reusing it
+    //     });
     last_epoch_ = new_epoch;
   }
 
