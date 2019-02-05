@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
-#include "vt/epoch/epoch.h"
 
 #include <functional>
 

@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          pending_send.h
+//                     dependent_send_chain.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
