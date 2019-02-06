@@ -48,21 +48,21 @@
 namespace vt { namespace tests { namespace unit { namespace channel {
 
 Data::Data() : degree_(0), activator_(0) {
-  for (vt::NodeType dst=0; dst < all; ++dst){
+  for (vt::NodeType dst = 0; dst < all; ++dst) {
     count_[dst] = {0,0,0};
   }
 }
 
-Data::~Data(){ count_.clear(); }
+Data::~Data() { count_.clear(); }
 
 template<typename Msg, vt::ActiveTypedFnType<Msg>* handler>
-void sendMsg(vt::NodeType dst, int count, vt::EpochType ep){
+void sendMsg(vt::NodeType dst, int count, vt::EpochType ep) {
   vtAssertExpr(dst not_eq vt::uninitialized_destination);
   vtAssertExpr(dst not_eq me);
   auto msg = makeSharedMessage<Msg>(me,dst,count,ep);
   vtAssertExpr(msg->src_ == me);
 
-  if(ep not_eq vt::no_epoch){
+  if (ep not_eq vt::no_epoch) {
     vt::envelopeSetEpoch(msg->env,ep);
   }
   vt::theMsg()->sendMsg<Msg,handler>(dst,msg);
@@ -71,33 +71,33 @@ void sendMsg(vt::NodeType dst, int count, vt::EpochType ep){
 // note: only for basic messages,
 // but different handlers may be used.
 template<vt::ActiveTypedFnType<BasicMsg>* handler>
-void broadcast(int count, vt::EpochType ep){
+void broadcast(int count, vt::EpochType ep) {
   auto msg = makeSharedMessage<BasicMsg>(me,vt::uninitialized_destination,count,ep);
-  if(ep not_eq vt::no_epoch){
+  if (ep not_eq vt::no_epoch) {
     vt::envelopeSetEpoch(msg->env,ep);
   }
   vt::theMsg()->broadcastMsg<BasicMsg,handler>(msg);
 
-  for(auto&& active : data[ep].count_){
+  for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
     auto& nb = active.second;
-    if(dst not_eq me){
+    if (dst not_eq me) {
       nb.out_++;
     }
   }
 }
 
-void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep){
+void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep) {
   sendMsg<BasicMsg,routedHandler>(dst,ttl,ep);
   // increment outgoing message counter
   data[ep].count_[dst].out_++;
 }
 
-void sendPing(vt::NodeType dst, int count, vt::EpochType ep){
+void sendPing(vt::NodeType dst, int count, vt::EpochType ep) {
   sendMsg<CtrlMsg,pingHandler>(dst,count,ep);
 }
 
-void sendEcho(vt::NodeType dst, int count, vt::EpochType ep){
+void sendEcho(vt::NodeType dst, int count, vt::EpochType ep) {
   vtAssertExpr(dst >= 0);
 #if DEBUG_CHANNEL_COUNTING
   fmt::print("rank:{} echo::dst {}",me,dst);
@@ -110,25 +110,25 @@ void sendEcho(vt::NodeType dst, int count, vt::EpochType ep){
 // on receipt of a basic message.
 // note: msg->dst is uninitialized on broadcast,
 // thus related assertion was removed.
-void basicHandler(BasicMsg* msg){
+void basicHandler(BasicMsg* msg) {
   auto const& src = msg->src_;
   // avoid self sending case
-  if(me not_eq src){
+  if (me not_eq src) {
     auto& nb = data[msg->epoch_].count_[src];
     nb.in_++;
   }
 }
 
-void routedHandler(BasicMsg* msg){
+void routedHandler(BasicMsg* msg) {
   vtAssertExpr(me not_eq root);
   basicHandler(msg);
 
-  if (all > 2 && msg->ttl_ > 0){
+  if (all > 2 && msg->ttl_ > 0) {
     // avoid implicit cast
     vt::NodeType const one = 1;
     int const nb_rounds = static_cast<int>(drand48()*5);
 
-    for(int k=0; k < nb_rounds; ++k){
+    for (int k = 0; k < nb_rounds; ++k) {
       // note: root and self-send are excluded
       auto dst = (me+one > all-one ? one: me+one);
       if (dst == me && dst == one) dst++;
@@ -140,7 +140,7 @@ void routedHandler(BasicMsg* msg){
 }
 
 // on receipt of an echo message echo<m> from Pi
-void echoHandler(CtrlMsg* msg){
+void echoHandler(CtrlMsg* msg) {
   vtAssertExpr(me == msg->dst_);
   // shortcuts for readability
   auto const& src = msg->src_;
@@ -161,22 +161,22 @@ void echoHandler(CtrlMsg* msg){
 #endif
 
   // last echo checks whether all subtrees are quiet
-  if(degree == 0){
+  if (degree == 0) {
     propagate(ep);
   }
   // all echoes arrived, everything quiet
-  if(degree == 0){
+  if (degree == 0) {
     // echo to parent activator node
     auto const& dst = data[ep].activator_;
     auto const& nb = data[ep].count_[dst];
-    if(dst not_eq me){
+    if (dst not_eq me) {
       sendEcho(dst,nb.in_,ep);
     }
   }
 }
 
 // on receipt of a control message test<m> from Pi
-void pingHandler(CtrlMsg* msg){
+void pingHandler(CtrlMsg* msg) {
   vtAssertExpr(me == msg->dst_);
   auto const& src = msg->src_;
   auto const& ep = msg->epoch_;
@@ -192,7 +192,7 @@ void pingHandler(CtrlMsg* msg){
 #endif
 
   // if already engaged or subtree is quiet
-  if(degree > 0 or hasEnded(ep)){
+  if (degree > 0 or hasEnded(ep)) {
     sendEcho(src,nb.in_,ep);
   }
   else {
@@ -203,13 +203,13 @@ void pingHandler(CtrlMsg* msg){
 
 
 // trigger termination detection by root
-void trigger(vt::EpochType ep){
+void trigger(vt::EpochType ep) {
   vtAssert(me == root, "Only root may trigger termination check");
 
-  for(auto& active: data[ep].count_){
+  for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
 
-    if(dst not_eq me){
+    if (dst not_eq me) {
 #if DEBUG_CHANNEL_COUNTING
       fmt::print("rank:{} trigger dst {}\n", me, dst);
 #endif
@@ -225,14 +225,14 @@ void trigger(vt::EpochType ep){
 }
 
 // propagate check on current subtree
-void propagate(vt::EpochType ep){
-  for(auto& active: data[ep].count_){
+void propagate(vt::EpochType ep) {
+  for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
-    if(dst not_eq me){
+    if (dst not_eq me) {
       auto& nb = active.second;
       auto& degree = data[ep].degree_;
       // confirmation missing
-      if(nb.out_ not_eq nb.ack_){
+      if (nb.out_ not_eq nb.ack_) {
 #if DEBUG_CHANNEL_COUNTING
         fmt::print(
             "rank {}: propagate: sendPing to {}, out={}, degree={}\n",
@@ -249,12 +249,12 @@ void propagate(vt::EpochType ep){
 }
 
 // check local termination, i.e if Cij^+ == Cij^-
-bool hasEnded(vt::EpochType ep){
-  for(auto& active: data[ep].count_){
+bool hasEnded(vt::EpochType ep) {
+  for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
-    if(dst not_eq me){
+    if (dst not_eq me) {
       auto const& nb = active.second;
-      if(nb.out_ not_eq nb.ack_){
+      if (nb.out_ not_eq nb.ack_) {
         return false;
       }
     }

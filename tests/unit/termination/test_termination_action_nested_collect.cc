@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//              test_termination_action_nested_collect.h
+//              test_termination_action_nested_collect.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -48,7 +48,7 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestTermActionNestedCollectEpoch : action::BaseFixture {
 
-  void kernel(int depth){
+  void kernel(int depth) {
     vtAssertExpr(depth > 0);
 
     // explicitly set 'child' epoch param
@@ -61,7 +61,7 @@ struct TestTermActionNestedCollectEpoch : action::BaseFixture {
       kernel(depth-1);
     }
 
-    if (channel::me == channel::root){
+    if (channel::me == channel::root) {
       action::compute(ep);
       channel::trigger(ep);
     }
@@ -69,7 +69,7 @@ struct TestTermActionNestedCollectEpoch : action::BaseFixture {
   }
 };
 
-TEST_P(TestTermActionNestedCollectEpoch, test_term_detect_nested_collect_epoch){
+TEST_P(TestTermActionNestedCollectEpoch, test_term_detect_nested_collect_epoch) {
   kernel(depth_);
 }
 
@@ -83,6 +83,5 @@ INSTANTIATE_TEST_CASE_P(
     ::testing::Range(2,10,2)
   )
 );
-
 
 }}} // end namespace vt::tests::unit
