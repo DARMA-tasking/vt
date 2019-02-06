@@ -674,11 +674,11 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
 }
 
 bool Runtime::initialize(bool const force_now) {
-
-if (force_now) {
+  if (force_now) {
     initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();
     initializeOptionalComponents();
+    initializeErrorHandlers();
     sync();
     if (theContext->getNode() == 0) {
       printStartupBanner();
@@ -882,7 +882,6 @@ void Runtime::initializeComponents() {
   theMsg = std::make_unique<messaging::ActiveMessenger>();
   theSched = std::make_unique<sched::Scheduler>();
   initializeTrace();
-  initializeErrorHandlers();
   theTerm = std::make_unique<term::TerminationDetector>();
   theCollective = std::make_unique<collective::CollectiveAlg>();
   theGroup = std::make_unique<group::GroupManager>();
