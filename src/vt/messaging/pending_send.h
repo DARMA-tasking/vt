@@ -68,14 +68,6 @@ struct PendingSend final {
   }
 
   explicit PendingSend(nullptr_t) { }
-  PendingSend(PendingSend &in)
-    : msg_(std::move(in.msg_)),
-      msg_size_(std::move(in.msg_size_)),
-      send_action_(std::move(in.send_action_))
-  {
-    in.msg_ = nullptr;
-    in.send_action_ = nullptr;
-  }
   PendingSend(PendingSend&& in)
     : msg_(std::move(in.msg_)),
       msg_size_(std::move(in.msg_size_)),
@@ -84,34 +76,9 @@ struct PendingSend final {
     in.msg_ = nullptr;
     in.send_action_ = nullptr;
   }
-  PendingSend& operator=(PendingSend&& in)
-  {
-    vtAssert(msg_ == nullptr, "Should not be assigning over an unsent message");
 
-    msg_ = std::move(in.msg_);
-    in.msg_ = nullptr;
-
-    msg_size_ = std::move(in.msg_size_);
-
-    send_action_ = std::move(in.send_action_);
-    in.send_action_ = nullptr;
-
-    return *this;
-  }
-  PendingSend& operator=(PendingSend& in)
-  {
-    vtAssert(msg_ == nullptr, "Should not be assigning over an unsent message");
-
-    msg_ = std::move(in.msg_);
-    in.msg_ = nullptr;
-
-    msg_size_ = std::move(in.msg_size_);
-
-    send_action_ = std::move(in.send_action_);
-    in.send_action_ = nullptr;
-
-    return *this;
-  }
+  PendingSend& operator=(PendingSend&& in) = delete;
+  PendingSend& operator=(PendingSend& in) = delete;
 
   ~PendingSend() { release(); }
 
