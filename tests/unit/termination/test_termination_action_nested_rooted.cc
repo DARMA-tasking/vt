@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//              test_termination_action_nested_rooted.h
+//              test_termination_action_nested_rooted.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -48,12 +48,12 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestTermActionNestedRootedEpoch : action::BaseFixture {
 
-  void kernel(int depth){
+  void kernel(int depth) {
     vtAssertExpr(depth > 0);
 
     auto ep = vt::no_epoch;
 
-    if(channel::me == channel::root){
+    if (channel::me == channel::root) {
       // explicitly set 'child' epoch param
       ep = vt::theTerm()->newEpochRooted(useDS_,true);
       vt::theTerm()->getWindow(ep)->addEpoch(ep);
@@ -64,11 +64,11 @@ struct TestTermActionNestedRootedEpoch : action::BaseFixture {
 
     // all ranks should have the same depth
     vt::theCollective()->barrier();
-    if(depth > 1){
+    if (depth > 1) {
       kernel(depth-1);
     }
 
-    if(channel::me == channel::root){
+    if (channel::me == channel::root) {
       action::compute(ep);
       channel::trigger(ep);
       action::finalize(ep,order_);

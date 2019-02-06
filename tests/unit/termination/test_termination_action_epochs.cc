@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                   test_termination_action_epochs.h
+//                   test_termination_action_epochs.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -50,11 +50,11 @@ struct TestTermActionCollectEpoch : action::BaseFixture {};
 struct TestTermActionRootedEpoch : action::BaseFixture {};
 
 // collective epochs
-TEST_P(TestTermActionCollectEpoch, test_term_detect_collect_epoch){
+TEST_P(TestTermActionCollectEpoch, test_term_detect_collect_epoch) {
   auto&& sequence = action::newEpochSeq(5);
 
-  for(auto&& ep : sequence){
-    if(channel::me == channel::root){
+  for (auto&& ep : sequence) {
+    if (channel::me == channel::root) {
       action::compute(ep);
       channel::trigger(ep);
     }
@@ -63,11 +63,11 @@ TEST_P(TestTermActionCollectEpoch, test_term_detect_collect_epoch){
 }
 
 // rooted epochs
-TEST_P(TestTermActionRootedEpoch, test_term_detect_rooted_epoch){
-  if(channel::me == channel::root){
+TEST_P(TestTermActionRootedEpoch, test_term_detect_rooted_epoch) {
+  if (channel::me == channel::root) {
     auto&& sequence = action::newEpochSeq(5,true,useDS_);
 
-    for(auto&& ep : sequence){
+    for (auto&& ep : sequence) {
       action::compute(ep);
       action::finalize(ep,order_);
     }

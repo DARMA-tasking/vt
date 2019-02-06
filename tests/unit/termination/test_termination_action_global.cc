@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                  test_termination_action_global.h
+//                  test_termination_action_global.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -48,8 +48,8 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestTermActionGlobal : action::BaseFixture {};
 
-TEST_P(TestTermActionGlobal, test_term_detect_broadcast){
-  if(channel::me == channel::root){
+TEST_P(TestTermActionGlobal, test_term_detect_broadcast) {
+  if (channel::me == channel::root) {
     // start computation
     channel::broadcast<channel::basicHandler>(1,vt::no_epoch);
     // trigger detection and check status
@@ -58,9 +58,9 @@ TEST_P(TestTermActionGlobal, test_term_detect_broadcast){
 }
 
 // routed messages
-TEST_P(TestTermActionGlobal, test_term_detect_routed){
+TEST_P(TestTermActionGlobal, test_term_detect_routed) {
   // there should be at least 3 nodes for this case
-  if(channel::all > 2 and channel::me == channel::root){
+  if (channel::all > 2 and channel::me == channel::root) {
     //start computation
     action::compute(vt::no_epoch);
     // trigger detection and check status
