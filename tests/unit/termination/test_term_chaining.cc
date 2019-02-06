@@ -94,7 +94,6 @@ struct TestTermChaining : TestParallelHarness {
   static void test_handler_chained(TestMsg* msg) {
     fmt::print("chained run\n");
 
-    theTerm()->consume(epoch); // workaround for JL's noted TD issue of nesting inside collective epoch
     EXPECT_EQ(theContext()->getNode(), 0);
     EXPECT_EQ(handler_count, 1);
     handler_count = 4;
@@ -103,8 +102,6 @@ struct TestTermChaining : TestParallelHarness {
   static void start_chain() {
     auto msg = makeSharedMessage<TestMsg>();
     chain.add(theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg));
-
-    theTerm()->produce(epoch); // workaround for JL's noted TD issue of nesting inside collective epoch
 
     auto msg2 = makeSharedMessage<TestMsg>();
     chain.add(theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2));
