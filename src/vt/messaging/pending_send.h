@@ -76,7 +76,7 @@ struct PendingSend final {
     in.msg_ = nullptr;
     in.send_action_ = nullptr;
   }
-
+  PendingSend(const PendingSend&) = delete;
   PendingSend& operator=(PendingSend&& in) = delete;
   PendingSend& operator=(PendingSend& in) = delete;
 

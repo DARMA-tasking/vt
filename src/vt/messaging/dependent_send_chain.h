@@ -54,9 +54,10 @@
 namespace vt { namespace messaging {
 
 struct PendingClosure {
+  enum Treatment { CONSUME, FINISHED };
 
-  PendingClosure(PendingSend&& in_pending, EpochType const& in_epoch)
-    : pending_(std::move(in_pending)), epoch_(in_epoch)
+  PendingClosure(PendingSend&& in_pending, EpochType in_epoch, Treatment in_treatment)
+    : pending_(std::move(in_pending)), epoch_(in_epoch), epoch_treatment_(in_treatment)
   { }
   PendingClosure(PendingClosure const&) = delete;
   PendingClosure(PendingClosure&& in) = default;
@@ -65,12 +66,20 @@ struct PendingClosure {
     theMsg()->pushEpoch(epoch_);
     pending_.release();
     theMsg()->popEpoch(epoch_);
-    theTerm()->finishedEpoch(epoch_);
+    switch (epoch_treatment_) {
+    case FINISHED:
+      theTerm()->finishedEpoch(epoch_);
+      break;
+    case CONSUME:
+      theTerm()->consume(epoch_);
+      break;
+    }
   }
 
 private:
   PendingSend pending_;
   EpochType epoch_ = no_epoch;
+  Treatment epoch_treatment_;
 };
 
 class DependentSendChain final {
@@ -84,20 +93,10 @@ class DependentSendChain final {
 
     EpochType new_epoch = theTerm()->makeEpochRooted();
 
-    //
-    // PHIL: Either of these work perfectly fine!  PendingClosure can be deleted
-    // if you see fit. Or it can be kept if you like it better than this lambda
-    //
-
-    theTerm()->addActionUnique(last_epoch_, PendingClosure(std::move(link),new_epoch));
-
-    // theTerm()->addActionUnique(last_epoch_, [new_epoch, ps = std::move(link)] () mutable {
-    //   theMsg()->pushEpoch(new_epoch);
-    //   ps.release();
-    //   theMsg()->popEpoch(new_epoch);
-    //   theTerm()->finishedEpoch(new_epoch);
-    // });
-
+    theTerm()->addActionUnique(last_epoch_,
+                               PendingClosure(std::move(link),
+                                              new_epoch,
+                                              PendingClosure::FINISHED));
     last_epoch_ = new_epoch;
   }
 
@@ -107,12 +106,15 @@ class DependentSendChain final {
   void add(EpochType new_epoch, PendingSend&& link) {
     checkInit();
 
-    // theTerm()->addAction(last_epoch_, [new_epoch, ps = std::move(link)] () mutable {
-    //     theMsg()->pushEpoch(new_epoch);
-    //     ps.release();
-    //     theMsg()->popEpoch(new_epoch);
-    //     // Note no call to finishedEpoch(new_epoch) here, since the caller may be reusing it
-    //     });
+    // Produce an event here, to be consumed when the send gets
+    // released, so that new_epoch doesn't appear to have completed in
+    // the interim
+    theTerm()->produce(new_epoch);
+
+    theTerm()->addActionUnique(last_epoch_,
+                               PendingClosure(std::move(link),
+                                              new_epoch,
+                                              PendingClosure::CONSUME));
     last_epoch_ = new_epoch;
   }
 
