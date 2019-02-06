@@ -157,13 +157,6 @@ void TermAction::triggerAllEpochActions(EpochType const& epoch) {
   if (iter2 != epoch_callable_actions_.end()) {
     epoch_actions_count += iter2->second.size();
 
-    // auto&& vec = std::move(iter2->second);
-    // auto elm_iter = vec.begin();
-    // while (elm_iter != vec.end()) {
-    //   auto&& elm = std::move(*elm_iter);
-    //   elm->invoke();
-    //   ++elm_iter;
-    // }
     for (auto&& action : iter2->second) {
       action->invoke();
     }

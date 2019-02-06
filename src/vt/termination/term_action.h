@@ -87,7 +87,7 @@ public:
   }
 
 private:
-  Callable&& c_;
+  Callable c_;
 };
 
 
