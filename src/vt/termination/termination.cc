@@ -616,19 +616,22 @@ void TerminationDetector::inquireFinished(
     is_rooted, epoch_root_node, epoch, from
   );
 
-  auto const& finished = testEpochFinished(epoch,nullptr);
-  auto const& is_ready = finished == TermStatusEnum::Finished;
-
-  vtAssertExprInfo(finished != TermStatusEnum::Remote, epoch, from);
-
   debug_print(
     term, node,
-    "inquireFinished: epoch={:x}, is_rooted={}, root={}, is_ready={}, from={}\n",
-    epoch, is_rooted, epoch_root_node, is_ready, from
+    "inquireFinished: epoch={:x}, is_rooted={}, root={}, from={}\n",
+    epoch, is_rooted, epoch_root_node, from
   );
 
-  auto msg = makeMessage<TermFinishedReplyMsg>(epoch,is_ready);
-  theMsg()->sendMsg<TermFinishedReplyMsg,replyEpochFinished>(from,msg.get());
+  addAction(epoch, [=]{
+    debug_print(
+      term, node,
+      "inquireFinished: epoch={:x}, from={} ready trigger\n", epoch, from
+    );
+
+    bool const is_ready = true;
+    auto msg = makeMessage<TermFinishedReplyMsg>(epoch,is_ready);
+    theMsg()->sendMsg<TermFinishedReplyMsg,replyEpochFinished>(from,msg.get());
+  });
 }
 
 void TerminationDetector::replyFinished(
@@ -639,6 +642,15 @@ void TerminationDetector::replyFinished(
     "replyFinished: epoch={:x}, is_finished={}\n",
     epoch, is_finished
   );
+  vtAssertExpr(is_finished == true);
+
+  // Remove the entry for the pending status of this remote epoch
+  auto iter = epoch_wait_status_.find(epoch);
+  if (iter != epoch_wait_status_.end()) {
+    epoch_wait_status_.erase(iter);
+  }
+
+  epochFinished(epoch, false);
 }
 
 void TerminationDetector::updateResolvedEpochs(
@@ -659,9 +671,7 @@ void TerminationDetector::updateResolvedEpochs(
   }
 }
 
-TermStatusEnum TerminationDetector::testEpochFinished(
-  EpochType const& epoch, ActionType action
-) {
+TermStatusEnum TerminationDetector::testEpochFinished(EpochType const& epoch) {
   TermStatusEnum status = TermStatusEnum::Pending;
   auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
 
@@ -679,13 +689,17 @@ TermStatusEnum TerminationDetector::testEpochFinished(
         status = TermStatusEnum::Finished;
       }
     } else {
-      /*
-       * Send a message to the root node to find out whether this epoch is
-       * finished or not
-       */
+      auto iter = epoch_wait_status_.find(epoch);
+      if (iter == epoch_wait_status_.end()) {
+        /*
+         * Send a message to the root node to find out whether this epoch is
+         * finished or not
+         */
+        auto msg = makeMessage<TermFinishedMsg>(epoch,this_node);
+        theMsg()->sendMsg<TermFinishedMsg,inquireEpochFinished>(root,msg.get());
+        epoch_wait_status_.insert(epoch);
+      }
       status = TermStatusEnum::Remote;
-      auto msg = makeMessage<TermFinishedMsg>(epoch,this_node);
-      theMsg()->sendMsg<TermFinishedMsg,inquireEpochFinished>(root,msg.get());
     }
   } else {
     auto const& is_finished = epoch_coll_->isFinished(epoch);
@@ -700,33 +714,6 @@ TermStatusEnum TerminationDetector::testEpochFinished(
     epoch, status == TermStatusEnum::Pending, status == TermStatusEnum::Finished,
     status == TermStatusEnum::Remote
   );
-
-  if (action != nullptr) {
-    switch (status) {
-    case TermStatusEnum::Finished:
-      action();
-      break;
-    case TermStatusEnum::Remote: {
-      auto iter = finished_actions_.find(epoch);
-      if (iter == finished_actions_.end()) {
-        finished_actions_.emplace(
-          std::piecewise_construct,
-          std::forward_as_tuple(epoch),
-          std::forward_as_tuple(std::vector<ActionType>{action})
-        );
-      } else {
-        iter->second.push_back(action);
-      }
-      break;
-    }
-    case TermStatusEnum::Pending:
-      // do nothing, action does not get triggered
-      break;
-    default:
-      vtAssertInfo(0, "Should not be reachable", epoch);
-      break;
-    }
-  }
 
   return status;
 }
