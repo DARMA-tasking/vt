@@ -54,9 +54,7 @@ struct TestTermActionNestedRootedEpoch : action::BaseFixture {
     auto ep = vt::no_epoch;
 
     if (channel::me == channel::root) {
-      // explicitly set 'child' epoch param
-      ep = vt::theTerm()->newEpochRooted(useDS_,true);
-      vt::theTerm()->getWindow(ep)->addEpoch(ep);
+      ep = vt::theTerm()->makeEpochRooted(useDS_);
       // check that epoch is effectively rooted
       vtAssertExpr(channel::root == epoch::EpochManip::node(ep));
       vtAssertExpr(epoch::EpochManip::isRooted(ep));

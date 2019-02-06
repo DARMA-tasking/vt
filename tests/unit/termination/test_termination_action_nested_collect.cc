@@ -50,10 +50,7 @@ struct TestTermActionNestedCollectEpoch : action::BaseFixture {
 
   void kernel(int depth) {
     vtAssertExpr(depth > 0);
-
-    // explicitly set 'child' epoch param
-    auto ep = vt::theTerm()->newEpochCollective(true);
-    vt::theTerm()->getWindow(ep)->addEpoch(ep);
+    auto ep = vt::theTerm()->makeEpochCollective();
 
     // all ranks should have the same depth
     vt::theCollective()->barrier();
