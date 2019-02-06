@@ -674,11 +674,11 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
 }
 
 bool Runtime::initialize(bool const force_now) {
-
-if (force_now) {
+  if (force_now) {
     initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();
     initializeOptionalComponents();
+    initializeErrorHandlers();
     sync();
     if (theContext->getNode() == 0) {
       printStartupBanner();
@@ -923,6 +923,32 @@ void Runtime::finalizeTrace() {
       theTrace = nullptr;
     }
   );
+}
+
+namespace {
+  /**
+   * Error handler for MPI.
+   * Called on any MPI error with the context's communicator. Aborts
+   * the application. MPI calls are not guaranteed to work after
+   * an error.
+   *
+   * \param comm    the MPI communicator
+   * \param errc    pointer to the error code
+   */
+  void mpiErrorHandler(MPI_Comm *comm, int *errc, ...) {
+    int len = MPI_MAX_ERROR_STRING;
+    char msg[MPI_MAX_ERROR_STRING];
+    MPI_Error_string(*errc, msg, &len);
+    std::string err_msg(msg, len);
+
+    vtAbort("MPI Error: {} (code: {})", err_msg, *errc);
+  }
+}
+
+void Runtime::initializeErrorHandlers() {
+  MPI_Errhandler err_handler = 0;
+  MPI_Comm_create_errhandler(&mpiErrorHandler, &err_handler);
+  MPI_Comm_set_errhandler(theContext->getComm(), err_handler);
 }
 
 void Runtime::initializeOptionalComponents() {
