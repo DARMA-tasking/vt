@@ -60,9 +60,7 @@ enum struct TermStatusEnum : int8_t {
 };
 
 struct TermFinished {
-  virtual TermStatusEnum testEpochFinished(
-    EpochType const& epoch, ActionType action
-  ) = 0;
+  virtual TermStatusEnum testEpochFinished(EpochType const& epoch) = 0;
 
 protected:
   std::unordered_map<EpochType,std::vector<ActionType>> finished_actions_ = {};

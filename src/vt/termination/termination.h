@@ -175,9 +175,7 @@ public:
 
 public:
   // TermFinished interface
-  TermStatusEnum testEpochFinished(
-    EpochType const& epoch, ActionType action
-  ) override;
+  TermStatusEnum testEpochFinished(EpochType const& epoch) override;
 
 private:
   bool propagateEpoch(TermStateType& state);
@@ -207,6 +205,8 @@ private:
   std::unique_ptr<EpochWindow> epoch_coll_              = nullptr;
   // ready epoch list (misnomer: finishedEpoch was invoked)
   std::unordered_set<EpochType> epoch_ready_            = {};
+  // list of remote epochs pending status report of finished
+  std::unordered_set<EpochType> epoch_wait_status_      = {};
 };
 
 }} // end namespace vt::term
