@@ -172,9 +172,9 @@ void verify(vt::EpochType const& ep, Order const& order){
   }
 #else
   if (ep == vt::no_epoch) {
-    vt::theTerm()->addAction([&]{ channel::hasEnded(ep); });
+    vt::theTerm()->addAction([&]{ EXPECT_TRUE(channel::hasEnded(ep)); });
   } else {
-    vt::theTerm()->addActionEpoch(ep,[&]{ channel::hasEnded(ep); });
+    vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(channel::hasEnded(ep)); });
   }
 #endif
 }
