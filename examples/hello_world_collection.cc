@@ -219,10 +219,8 @@ int main(int argc, char** argv) {
 
     #if !LB_ENABLED
       for (int i = 0; i < num_elms; i++) {
-        auto msg = makeSharedMessage<ColMsg<MyCol>>(this_node);
-        proxy[i].send<ColMsg<MyCol>,colHan>(msg);
-        auto msg2 = makeSharedMessage<ColMsg<MyCol>>(this_node);
-        proxy[i].send<ColMsg<MyCol>,colHan2>(msg2);
+        proxy[i].send<ColMsg<MyCol>,colHan>(this_node);
+        proxy[i].send<ColMsg<MyCol>,colHan2>(this_node);
       }
     #endif
 
@@ -231,8 +229,7 @@ int main(int argc, char** argv) {
 
     #if LB_ENABLED
       for (int i = 0; i < num_elms; i++) {
-        auto msg = makeSharedMessage<ColMsg<MyCol>>(this_node, i);
-        proxy[i].send<ColMsg<MyCol>,method1>(msg);
+        proxy[i].send<ColMsg<MyCol>,method1>(this_node, i);
       }
       theTerm()->addEpochAction(epoch,[=]{
         theCollection()->nextPhase<MyCol>(proxy,0);

@@ -67,12 +67,24 @@ struct Sendable : BaseProxyT {
     ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
   >
   messaging::PendingSend send(MsgT* msg) const;
+  template <
+    typename MsgT,
+    ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f,
+    typename ...Args
+  >
+  messaging::PendingSend send(Args&& ...args) const;
 
   template <
     typename MsgT,
     ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
   >
   messaging::PendingSend send(MsgT* msg) const;
+  template <
+    typename MsgT,
+    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f,
+    typename ...Args
+  >
+  messaging::PendingSend send(Args&& ...args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

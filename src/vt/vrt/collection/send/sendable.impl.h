@@ -87,6 +87,16 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <
   typename MsgT,
+  ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f,
+  typename ...Args
+>
+messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Args&& ...args) const {
+  return this->send<MsgT, f>(makeSharedMessage<MsgT>(std::forward<Args...>(args...)));
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT,
   ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
 >
 messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
@@ -101,6 +111,16 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
     theCollection()->sendMsg<MsgT, f>(proxy, msg.template to<MsgT>().get());
   };
   return messaging::PendingSend(promoteMsg(msg), send);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT,
+  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f,
+  typename ...Args
+>
+messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Args&& ...args) const {
+  return this->send<MsgT, f>(makeSharedMessage<MsgT>(std::forward<Args...>(args...)));
 }
 
 }}} /* end namespace vt::vrt::collection */
