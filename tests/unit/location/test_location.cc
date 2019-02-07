@@ -230,23 +230,16 @@ TEST_F(TestLocation, test_migration_entities) {
     int32_t entity = arbitrary_entity_id + my_node;
 
     // Register the entity on the node 0
-
     theLocMan()->virtual_loc->registerEntity(entity, my_node);
 
     theCollective()->barrier();
 
     // migrate every nodes from n to n + 1 except for the lat one which move to 0
-    if (my_node < numNodes - 1) {
-      theLocMan()->virtual_loc->entityMigrated(entity, my_node + 1);
-    } else {
-      theLocMan()->virtual_loc->entityMigrated(entity, 0);
-    }
+    auto next_node = my_node == numNodes - 1 ? 0 : my_node + 1;
+    theLocMan()->virtual_loc->entityMigrated(entity, next_node);
 
-    if (my_node == 0) {
-      theLocMan()->virtual_loc->registerEntityMigrated(arbitrary_entity_id + numNodes - 1, my_node);
-    } else {
-      theLocMan()->virtual_loc->registerEntityMigrated(arbitrary_entity_id + my_node - 1, my_node);
-    }
+    auto previous_node_entity = my_node == 0 ? arbitrary_entity_id + numNodes - 1 : arbitrary_entity_id + my_node - 1;
+    theLocMan()->virtual_loc->registerEntityMigrated(previous_node_entity, my_node);
 
     theCollective()->barrier();
 
@@ -256,11 +249,8 @@ TEST_F(TestLocation, test_migration_entities) {
       bool succes= false;
       // The entity can be located on the node where it has been registered
       theLocMan()->virtual_loc->getLocation(arbitrary_entity_id + i, i, [i, &succes, my_node, numNodes](NodeType node) {
-        if (i + 1 < numNodes) {
-          EXPECT_EQ(i + 1, node);
-        } else {
-          EXPECT_EQ(0, node);
-        }
+        auto expectedNode = i + 1 < numNodes ? i + 1 : 0;
+        EXPECT_EQ(expectedNode, node);
 
         succes= true;
       });
