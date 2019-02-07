@@ -47,42 +47,39 @@ static void entityTestHandler(EntityMsg* msg) {
   auto const& node = theContext()->getNode();
 
 
-  if(!msg->large_message) {
+  if (!msg->large_message) {
     auto test_short_msg = makeMessage<MyShortTestMsg>(magic_number + node, node);
     auto const& short_msg_size = sizeof(*test_short_msg);
     bool correct_size = vt::location::small_msg_max_size >= short_msg_size;
-    if(!correct_size) {
+    if (!correct_size) {
       fmt::print(
-            "{}: Please update the short message size={} to be inferior or equal to the small_msg_max_size={}\n",
-            node, short_msg_size, vt::location::small_msg_max_size);
+        "{}: Please update the short message size={} to be inferior or equal to the small_msg_max_size={}\n",
+        node, short_msg_size, vt::location::small_msg_max_size);
       EXPECT_TRUE(correct_size);
     }
     fmt::print(
-          "{}: entityTestHandler entity={} from node={} and short message of size={}\n",
-          node, msg->entity, msg->home, short_msg_size
-          );
+      "{}: entityTestHandler entity={} from node={} and short message of size={}\n",
+      node, msg->entity, msg->home, short_msg_size
+      );
     theLocMan()->virtual_loc->routeMsg<MyShortTestMsg>(
-          msg->entity, msg->home, test_short_msg
-          );
-  }
-  else
-  {
+      msg->entity, msg->home, test_short_msg);
+  } else {
     auto test_long_msg = makeMessage<MyLongTestMsg>(magic_number + node, node);
     auto const& long_msg_size = sizeof(*test_long_msg);
     bool correct_size = vt::location::small_msg_max_size < long_msg_size;
-    if(!correct_size) {
+    if (!correct_size) {
       fmt::print(
-            "{}: Please update the long message size={} to be superior than the small_msg_max_size={}\n",
-            node, long_msg_size, vt::location::small_msg_max_size);
+        "{}: Please update the long message size={} to be superior than the small_msg_max_size={}\n",
+        node, long_msg_size, vt::location::small_msg_max_size);
       EXPECT_TRUE(correct_size);
     }
     fmt::print(
-          "{}: entityTestHandler entity={} from node={} and long message of size={}\n",
-          node, msg->entity, msg->home, long_msg_size
-          );
+      "{}: entityTestHandler entity={} from node={} and long message of size={}\n",
+      node, msg->entity, msg->home, long_msg_size
+      );
     theLocMan()->virtual_loc->routeMsg<MyLongTestMsg>(
-          msg->entity, msg->home, test_long_msg
-          );
+      msg->entity, msg->home, test_long_msg
+      );
   }
 }
 
@@ -97,16 +94,16 @@ TEST_F(TestLocation, test_registering_and_get_entity) {
   int32_t entity = arbitrary_entity_id;
 
   // Register the entity on the node 0
-  if(my_node == 0) {
+  if (my_node == 0) {
     theLocMan()->virtual_loc->registerEntity(entity, my_node);
   }
 
   bool succes= false;
-  theLocMan()->virtual_loc->getLocation(entity, 0, [&succes](NodeType node){
+  theLocMan()->virtual_loc->getLocation(entity, 0, [&succes](NodeType node) {
     EXPECT_EQ(0, node);
     succes= true;
   });
-  if(my_node == 0){
+  if (my_node == 0) {
     // this test can only be done for cases where getLocation is synchronous -> home_node
     EXPECT_TRUE(succes);
   }
@@ -127,21 +124,20 @@ TEST_F(TestLocation, test_registering_and_get_entities) {
 
   auto const& numNodes = theContext()->getNumNodes();
   // Every nodes to a get location on every entity
-  for(auto i = 0; i < numNodes; ++i) {
+  for (auto i = 0; i < numNodes; ++i) {
     bool succes= false;
     // The entity can be located on the node where it has been registered
-    theLocMan()->virtual_loc->getLocation(arbitrary_entity_id + i, i, [i, &succes, my_node](NodeType node){
+    theLocMan()->virtual_loc->getLocation(arbitrary_entity_id + i, i, [i, &succes, my_node](NodeType node) {
       // fmt::print("\n{}: test get location for ieme entity={} and find it on node={} when my_node is={}\n", theContext()->getNode(), i, node, my_node);
-      if(i == my_node) {
+      if (i == my_node) {
         EXPECT_EQ(theContext()->getNode(), node);
-      }
-      else {
+      } else {
         EXPECT_TRUE(theContext()->getNode() != node);
       }
       EXPECT_EQ(i, node);
       succes= true;
     });
-    if(i == my_node) {
+    if (i == my_node) {
       // this test can only be done for cases where getLocation is synchronous -> home_node
       EXPECT_TRUE(succes);
     }
@@ -162,10 +158,10 @@ TEST_F(TestLocation, test_unregistering_entities) {
 
   auto const& numNodes = theContext()->getNumNodes();
   // Every nodes to a get location on every entity
-  for(auto i = 0; i < numNodes; ++i) {
+  for (auto i = 0; i < numNodes; ++i) {
     bool succes= false;
     // The entity can be located on the node where it has been registered
-    theLocMan()->virtual_loc->getLocation(arbitrary_entity_id + i, i, [i, &succes, my_node](NodeType node){
+    theLocMan()->virtual_loc->getLocation(arbitrary_entity_id + i, i, [i, &succes, my_node](NodeType node) {
       // This lambda should not be executed if the unregisterEntity works correclty
       EXPECT_TRUE(false);
     });
@@ -175,7 +171,7 @@ TEST_F(TestLocation, test_unregistering_entities) {
 TEST_F(TestLocation, test_migration_entity) {
 
   auto const& numNodes = theContext()->getNumNodes();
-  if(numNodes > 1) {
+  if (numNodes > 1) {
     using namespace vt;
 
     auto const& my_node = theContext()->getNode();
@@ -185,11 +181,11 @@ TEST_F(TestLocation, test_migration_entity) {
     bool done = false;
 
     // Register the entity on the node 0
-    if(my_node == 0) {
+    if (my_node == 0) {
       theLocMan()->virtual_loc->registerEntity(entity, my_node);
     }
 
-    theLocMan()->virtual_loc->getLocation(entity, 0, [my_node,&done](NodeType node){
+    theLocMan()->virtual_loc->getLocation(entity, 0, [my_node,&done](NodeType node) {
       EXPECT_EQ(0, node);
       done = true;
     });
@@ -199,7 +195,7 @@ TEST_F(TestLocation, test_migration_entity) {
 
     theCollective()->barrier();
 
-    if(my_node == 0) {
+    if (my_node == 0) {
       theLocMan()->virtual_loc->entityMigrated(entity, 1);
     } else if (my_node == 1) {
       theLocMan()->virtual_loc->registerEntityMigrated(entity, my_node);
@@ -207,16 +203,15 @@ TEST_F(TestLocation, test_migration_entity) {
 
     theCollective()->barrier();
 
-    if(my_node > 1) {
-      theLocMan()->virtual_loc->getLocation(entity, 0, [my_node](NodeType node){
+    if (my_node > 1) {
+      theLocMan()->virtual_loc->getLocation(entity, 0, [my_node](NodeType node) {
         // fmt::print("this node={}: node={}\n", my_node, node);
         // If the 0 node isn't the good one, it's the expected one because it is also the cached one
         // A routMsg has been send to the last know node (the 0) one which is guarenty to know the correct node)
         EXPECT_EQ(0, node);
       });
-    }
-    else {
-      theLocMan()->virtual_loc->getLocation(entity, 0, [my_node](NodeType node){
+    } else {
+      theLocMan()->virtual_loc->getLocation(entity, 0, [my_node](NodeType node) {
         // fmt::print("this node={}: node={}\n", my_node, node);
         EXPECT_EQ(1, node);
       });
@@ -227,7 +222,7 @@ TEST_F(TestLocation, test_migration_entity) {
 TEST_F(TestLocation, test_migration_entities) {
 
   auto const& numNodes = theContext()->getNumNodes();
-  if(numNodes > 1) {
+  if (numNodes > 1) {
     using namespace vt;
 
     auto const& my_node = theContext()->getNode();
@@ -241,17 +236,15 @@ TEST_F(TestLocation, test_migration_entities) {
     theCollective()->barrier();
 
     // migrate every nodes from n to n + 1 except for the lat one which move to 0
-    if(my_node < numNodes - 1){
+    if (my_node < numNodes - 1) {
       theLocMan()->virtual_loc->entityMigrated(entity, my_node + 1);
-    }
-    else {
+    } else {
       theLocMan()->virtual_loc->entityMigrated(entity, 0);
     }
 
-    if(my_node == 0){
+    if (my_node == 0) {
       theLocMan()->virtual_loc->registerEntityMigrated(arbitrary_entity_id + numNodes - 1, my_node);
-    }
-    else{
+    } else {
       theLocMan()->virtual_loc->registerEntityMigrated(arbitrary_entity_id + my_node - 1, my_node);
     }
 
@@ -259,21 +252,20 @@ TEST_F(TestLocation, test_migration_entities) {
 
     auto const& numNodes = theContext()->getNumNodes();
     // Every nodes to a get location on every entity
-    for(auto i = 0; i < numNodes; ++i) {
+    for (auto i = 0; i < numNodes; ++i) {
       bool succes= false;
       // The entity can be located on the node where it has been registered
-      theLocMan()->virtual_loc->getLocation(arbitrary_entity_id + i, i, [i, &succes, my_node, numNodes](NodeType node){
-        if(i + 1 < numNodes) {
+      theLocMan()->virtual_loc->getLocation(arbitrary_entity_id + i, i, [i, &succes, my_node, numNodes](NodeType node) {
+        if (i + 1 < numNodes) {
           EXPECT_EQ(i + 1, node);
-        }
-        else {
+        } else {
           EXPECT_EQ(0, node);
         }
 
         succes= true;
       });
       // this test can only be done for cases where getLocation is synchronous -> local or cache
-      if(i == my_node ||  i + 1 == my_node){
+      if (i == my_node || i + 1 == my_node) {
         EXPECT_TRUE(succes);
       }
     }
@@ -283,7 +275,7 @@ TEST_F(TestLocation, test_migration_entities) {
 TEST_F(TestLocation, test_route_short_message) {
 
   auto const& numNodes = theContext()->getNumNodes();
-  if(numNodes > 1) {
+  if (numNodes > 1) {
     using namespace vt;
 
     auto const& my_node = theContext()->getNode();
@@ -291,20 +283,20 @@ TEST_F(TestLocation, test_route_short_message) {
     int32_t entity = arbitrary_entity_id;
 
     // Register the entity on the node 0
-    if(my_node == 0) {
+    if (my_node == 0) {
       int messageArrivedCount = 0;
       // Associate a message_action to the entity that is triggered when a message arrives for the entity
-      theLocMan()->virtual_loc->registerEntity(entity, my_node,  [my_node, &messageArrivedCount](BaseMessage* in_msg){
+      theLocMan()->virtual_loc->registerEntity(entity, my_node, [my_node, &messageArrivedCount](BaseMessage* in_msg) {
         auto msg = static_cast<MyShortTestMsg*>(in_msg);
-        fmt::print("{}: A message is arrived with data node={}: \n", theContext()->getNode(),  msg->data);
+        fmt::print("{}: A message is arrived with data node={}: \n", theContext()->getNode(), msg->data);
         EXPECT_EQ(msg->data, magic_number + msg->from_node);
         messageArrivedCount++;
       });
 
       // send messages for entity
       theMsg()->broadcastMsg<EntityMsg, entityTestHandler>(
-            makeSharedMessage<EntityMsg>(entity, my_node)
-            );
+        makeSharedMessage<EntityMsg>(entity, my_node)
+        );
 
       while (messageArrivedCount < numNodes - 1) { vt::runScheduler(); } {
         fmt::print("All messages are arrived \n");
@@ -317,7 +309,7 @@ TEST_F(TestLocation, test_route_short_message) {
 TEST_F(TestLocation, test_route_long_message) {
 
   auto const& numNodes = theContext()->getNumNodes();
-  if(numNodes > 1) {
+  if (numNodes > 1) {
     using namespace vt;
 
     auto const& my_node = theContext()->getNode();
@@ -325,12 +317,12 @@ TEST_F(TestLocation, test_route_long_message) {
     int32_t entity = arbitrary_entity_id;
 
     // Register the entity on the node 0
-    if(my_node == 0) {
+    if (my_node == 0) {
       int messageArrivedCount = 0;
       // Associate a message_action to the entity that is triggered when a message arrives for the entity
-      theLocMan()->virtual_loc->registerEntity(entity, my_node,  [my_node, &messageArrivedCount](BaseMessage* in_msg){
+      theLocMan()->virtual_loc->registerEntity(entity, my_node, [my_node, &messageArrivedCount](BaseMessage* in_msg) {
         auto msg = static_cast<MyLongTestMsg*>(in_msg);
-        fmt::print("{}: A message is arrived with data node={}: \n", theContext()->getNode(),  msg->data);
+        fmt::print("{}: A message is arrived with data node={}: \n", theContext()->getNode(), msg->data);
         EXPECT_EQ(msg->data, magic_number + msg->from_node);
         messageArrivedCount++;
       });
@@ -338,8 +330,8 @@ TEST_F(TestLocation, test_route_long_message) {
       // send long messages for entity
       bool long_message = true;
       theMsg()->broadcastMsg<EntityMsg, entityTestHandler>(
-            makeSharedMessage<EntityMsg>(entity, my_node, long_message)
-            );
+        makeSharedMessage<EntityMsg>(entity, my_node, long_message)
+        );
 
       while (messageArrivedCount < numNodes - 1) { vt::runScheduler(); } {
         fmt::print("All messages are arrived \n");
