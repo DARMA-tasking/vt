@@ -3,7 +3,11 @@
 
 namespace vt { namespace tests { namespace unit {
 
+
 struct TestLocation : TestParallelHarness {};
+// enable parameterized tests
+template <typename T>
+struct TestLocationRoute : TestParallelHarness {};
 
 TEST_F(TestLocation, test_registering_and_get_entity) {
 
@@ -182,80 +186,46 @@ TEST_F(TestLocation, test_migration_entities) {
   }
 }
 
-TEST_F(TestLocation, test_route_short_message) {
+TYPED_TEST_CASE_P(TestLocationRoute);
+TYPED_TEST_P(TestLocationRoute, test_route_message) {
 
+  auto const& my_node = vt::theContext()->getNode();
   auto const& numNodes = vt::theContext()->getNumNodes();
-  if (numNodes > 1) {
 
+  int entity = locat::arbitrary_entity;
 
-    auto const& my_node = vt::theContext()->getNode();
-
-    int entity = locat::arbitrary_entity;
-
-    // Register the entity on the node 0
-    if (my_node == 0) {
-      int messageArrivedCount = 0;
-      // Associate a message_action to the entity that is triggered when a message arrives for the entity
-      vt::theLocMan()->virtual_loc->registerEntity(
-        entity, my_node, [my_node, &messageArrivedCount](BaseMessage* in_msg) {
-          auto msg = static_cast<locat::MyShortTestMsg*>(in_msg);
-          fmt::print("{}: A message is arrived with data node={}: \n", vt::theContext()->getNode(), msg->data_);
-          EXPECT_EQ(msg->data_, locat::magic_number + msg->from_);
-          messageArrivedCount++;
-        }
-      );
-
-      // send messages for entity
-      vt::theMsg()->broadcastMsg<locat::EntityMsg, locat::entityTestHandler>(
-        vt::makeSharedMessage<locat::EntityMsg>(entity, my_node)
-        );
-
-      while (messageArrivedCount < numNodes - 1) { vt::runScheduler(); } {
-        fmt::print("All messages are arrived \n");
+  // Register the entity on the node 0
+  if (my_node == 0) {
+    int msg_count = 0;
+    // Associate a message_action to the entity that is triggered when a message arrives for the entity
+    vt::theLocMan()->virtual_loc->registerEntity(
+      entity,
+      my_node,
+      [&msg_count](BaseMessage* in_msg) {
+        auto msg = static_cast<TypeParam*>(in_msg);
+        auto dst = vt::theContext()->getNode();
+        fmt::print("{}: a message arrived with data: {}.\n",dst, msg->data_);
+        EXPECT_EQ(msg->data_, locat::magic_number + msg->from_);
+        msg_count++;
       }
-      EXPECT_EQ(messageArrivedCount, numNodes - 1);
-    }
+    );
+
+    // send long messages for entity
+    bool is_long = std::is_same<TypeParam,locat::MyLongTestMsg>::value;
+    auto msg = vt::makeSharedMessage<locat::EntityMsg>(entity, my_node, is_long);
+
+    vt::theMsg()->broadcastMsg<locat::EntityMsg, locat::entityTestHandler>(msg);
+
+    while (msg_count < numNodes - 1) { vt::runScheduler(); }
+
+    fmt::print("all messages have been arrived.\n");
+    EXPECT_EQ(msg_count, numNodes - 1);
   }
 }
 
-TEST_F(TestLocation, test_route_long_message) {
+using MsgTypes = testing::Types<locat::MyShortTestMsg, locat::MyLongTestMsg>;
 
-  auto const& numNodes = vt::theContext()->getNumNodes();
-  if (numNodes > 1) {
-
-
-    auto const& my_node = vt::theContext()->getNode();
-
-    int entity = locat::arbitrary_entity;
-
-    // Register the entity on the node 0
-    if (my_node == 0) {
-      int messageArrivedCount = 0;
-      // Associate a message_action to the entity that is triggered when a message arrives for the entity
-      vt::theLocMan()->virtual_loc->registerEntity(
-        entity, my_node, [my_node, &messageArrivedCount](BaseMessage* in_msg) {
-          auto msg = static_cast<locat::MyLongTestMsg*>(in_msg);
-          fmt::print(
-            "{}: A message is arrived with data node={}: \n",
-            vt::theContext()->getNode(), msg->data_
-          );
-          EXPECT_EQ(msg->data_, locat::magic_number + msg->from_);
-          messageArrivedCount++;
-        }
-      );
-
-      // send long messages for entity
-      bool long_message = true;
-      vt::theMsg()->broadcastMsg<locat::EntityMsg, locat::entityTestHandler>(
-        vt::makeSharedMessage<locat::EntityMsg>(entity, my_node, long_message)
-      );
-
-      while (messageArrivedCount < numNodes - 1) { vt::runScheduler(); } {
-        fmt::print("All messages are arrived \n");
-      }
-      EXPECT_EQ(messageArrivedCount, numNodes - 1);
-    }
-  }
-}
+REGISTER_TYPED_TEST_CASE_P(TestLocationRoute, test_route_message);
+INSTANTIATE_TYPED_TEST_CASE_P(Message, TestLocationRoute, MsgTypes);
 
 }}} // end namespace vt::tests::unit
