@@ -132,11 +132,6 @@ TEST_F(TestLocation, test_migration_entity) {
         // The protocol may actually eagerly update other nodes
         EXPECT_TRUE(node == 0 or node == 1);
       });
-    } else {
-      vt::theLocMan()->virtual_loc->getLocation(entity, 0, [my_node](vt::NodeType node) {
-        // fmt::print("this node={}: node={}\n", my_node, node);
-        EXPECT_EQ(1, node);
-      });
     }
   }
 }
