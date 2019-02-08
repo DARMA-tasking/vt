@@ -129,6 +129,8 @@ void entityTestHandler(EntityMsg* msg) {
   }
 }
 
+using MsgType = testing::Types<MyShortTestMsg, MyLongTestMsg>;
+
 }}}} // namespace vt::tests::unit::locat
 
 #endif /*INCLUDED_TEST_LOCATION_MESSAGE_H*/
