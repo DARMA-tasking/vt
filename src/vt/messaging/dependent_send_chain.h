@@ -100,6 +100,23 @@ class DependentSendChain final {
     last_epoch_ = new_epoch;
   }
 
+  void add(Action link) {
+    checkInit();
+
+    EpochType new_epoch = theTerm()->makeEpochRooted();
+
+    theTerm()->addActionUnique(last_epoch_, link);
+
+    last_epoch_ = new_epoch;
+  }
+
+  void addConcurrent(PendingSend&& link) {
+    theTerm()->addActionUnique(last_epoch_,
+                               PendingClosure(std::move(link),
+                                              new_epoch,
+                                              PendingClosure::FINISHED));
+  }
+
   // Add a task to the chain of work to be run in the specified epoch,
   // with subsequent tasks dependent on all work occuring in the
   // specified epoch
