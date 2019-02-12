@@ -249,7 +249,7 @@ TYPED_TEST_P(TestLocationRoute, test_route_message) {
     bool is_long = std::is_same<TypeParam,locat::MyLongTestMsg>::value;
     auto msg = vt::makeSharedMessage<locat::EntityMsg>(entity, my_node, is_long);
 
-    vt::theMsg()->broadcastMsg<locat::EntityMsg, locat::entityTestHandler>(msg);
+    vt::theMsg()->broadcastMsg< locat::EntityMsg, locat::entityTestHandler<TypeParam> >(msg);
 
     while (msg_count < numNodes - 1) { vt::runScheduler(); }
 

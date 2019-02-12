@@ -91,42 +91,31 @@ struct MyLongTestMsg : vt::LocationRoutedMsg<int, vt::Message> {
   double additional_data_[50];
 };
 
+template <typename MsgT>
 void entityTestHandler(EntityMsg* msg) {
 
   auto const& my_node = vt::theContext()->getNode();
+  auto test_msg = vt::makeMessage<MsgT>(magic_number + my_node, my_node);
+  auto const& test_msg_size = sizeof(*test_msg);
 
-  if (not msg->is_large_) {
-    auto test_short_msg = vt::makeMessage<MyShortTestMsg>(magic_number + my_node, my_node);
-    auto const& short_msg_size = sizeof(*test_short_msg);
-    bool correct_size = vt::location::small_msg_max_size >= short_msg_size;
+  // check message size
+  bool correct_size = (
+    msg->is_large_ ?
+      (vt::location::small_msg_max_size < test_msg_size) :
+      (vt::location::small_msg_max_size >= test_msg_size)
+  );
 
-    EXPECT_TRUE(correct_size);
+  EXPECT_TRUE(correct_size);
 
-    fmt::print(
-      "{}: entityTestHandler entity={} from node={} and short message of size={}\n",
-      my_node, msg->entity_, msg->home_, short_msg_size
-    );
+  fmt::print(
+    "{}: entityTestHandler: entity={} from node={} and {} message of size={}\n",
+    my_node, msg->entity_, msg->home_, (msg->is_large_ ? "long" : "short"), test_msg_size
+  );
 
-    vt::theLocMan()->virtual_loc->routeMsg<MyShortTestMsg>(
-      msg->entity_, msg->home_, test_short_msg
-    );
-
-  } else {
-    auto test_long_msg = vt::makeMessage<MyLongTestMsg>(magic_number + my_node, my_node);
-    auto const& long_msg_size = sizeof(*test_long_msg);
-    bool correct_size = vt::location::small_msg_max_size < long_msg_size;
-
-    EXPECT_TRUE(correct_size);
-
-    fmt::print(
-      "{}: entityTestHandler entity={} from node={} and long message of size={}\n",
-      my_node, msg->entity_, msg->home_, long_msg_size
-    );
-
-    vt::theLocMan()->virtual_loc->routeMsg<MyLongTestMsg>(
-      msg->entity_, msg->home_, test_long_msg
-    );
-  }
+  // route message
+  vt::theLocMan()->virtual_loc->routeMsg<MsgT>(
+    msg->entity_, msg->home_, test_msg
+  );
 }
 
 using MsgType = testing::Types<MyShortTestMsg, MyLongTestMsg>;
