@@ -228,6 +228,12 @@ void EntityLocationCoord<EntityID>::registerEntityMigrated(
 }
 
 template <typename EntityID>
+bool EntityLocationCoord<EntityID>::isCached(EntityID const& id) const {
+
+  return recs_.exists(id);
+}
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::insertPendingEntityAction(
   EntityID const& id, NodeActionType action
 ) {

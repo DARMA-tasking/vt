@@ -173,6 +173,8 @@ struct EntityLocationCoord : LocationCoord {
   );
   void printCurrentCache() const;
 
+  bool isCached(EntityID const& id) const;
+
 private:
   template <typename MessageT>
   static void msgHandler(MessageT *msg);
