@@ -48,12 +48,14 @@
 #include "data_message.h"
 #include "vt/transport.h"
 #include "test_parallel_harness.h"
+#define DEBUG_LOCATION_TESTS 0
 
 namespace vt { namespace tests { namespace unit { namespace locat {
 
 // constants used in test cases
 int const arbitrary_entity = 10;
-int const magic_number = 29;
+int const magic_number     = 29;
+int const invalid_entity   = -1;
 
 struct EntityMsg : vt::Message {
 
@@ -63,36 +65,36 @@ struct EntityMsg : vt::Message {
       is_large_(in_large)
   {}
 
-  int entity_;
-  vt::NodeType home_;
-  bool is_large_;
+  int entity_ = invalid_entity;
+  vt::NodeType home_ = vt::uninitialized_destination;
+  bool is_large_ = false;
 };
 
-struct MyShortTestMsg : vt::LocationRoutedMsg<int, vt::ShortMessage> {
+struct ShortMsg : vt::LocationRoutedMsg<int, vt::ShortMessage> {
 
-  MyShortTestMsg(int in_data, vt::NodeType in_from)
-    : data_(in_data),
+  ShortMsg(int in_entity, vt::NodeType in_from)
+    : entity_(in_entity),
       from_(in_from)
   {}
 
   vt::NodeType from_ = vt::uninitialized_destination;
-  int data_ = 0;
+  int entity_ = invalid_entity;
 };
 
-struct MyLongTestMsg : vt::LocationRoutedMsg<int, vt::Message> {
+struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
 
-  MyLongTestMsg(int in_data, vt::NodeType in_from)
-    : data_(in_data),
+  LongMsg(int in_entity, vt::NodeType in_from)
+    : entity_(in_entity),
       from_(in_from)
   {}
 
   vt::NodeType from_ = vt::uninitialized_destination;
-  int data_ = 0;
+  int entity_ = invalid_entity;
   double additional_data_[50];
 };
 
 template <typename MsgT>
-void entityTestHandler(EntityMsg* msg) {
+void routeTestHandler(EntityMsg* msg) {
 
   auto const& my_node = vt::theContext()->getNode();
   auto test_msg = vt::makeMessage<MsgT>(magic_number + my_node, my_node);
@@ -107,18 +109,22 @@ void entityTestHandler(EntityMsg* msg) {
 
   EXPECT_TRUE(correct_size);
 
-  fmt::print(
-    "{}: entityTestHandler: entity={} from node={} and {} message of size={}\n",
-    my_node, msg->entity_, msg->home_, (msg->is_large_ ? "long" : "short"), test_msg_size
-  );
+  #if DEBUG_LOCATION_TESTS
+    fmt::print(
+      "rank {}: routing entity:{}, home_node={}, {} message of {} bytes.\n",
+      my_node, msg->entity_, msg->home_, (msg->is_large_ ? "long" : "short"), test_msg_size
+    );
+  #endif
 
   // route message
-  vt::theLocMan()->virtual_loc->routeMsg<MsgT>(
-    msg->entity_, msg->home_, test_msg
-  );
+  vt::theLocMan()->virtual_loc->routeMsg<MsgT>(msg->entity_, msg->home_, test_msg);
 }
 
-using MsgType = testing::Types<MyShortTestMsg, MyLongTestMsg>;
+// check if the given entity is in the node cache
+bool isCached(int const entity) { return vt::theLocMan()->virtual_loc->isCached(entity); };
+
+// message types used for type-parameterized tests
+using MsgType = testing::Types<ShortMsg, LongMsg>;
 
 }}}} // namespace vt::tests::unit::locat
 
