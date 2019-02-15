@@ -121,7 +121,61 @@ void routeTestHandler(EntityMsg* msg) {
 }
 
 // check if the given entity is in the node cache
-bool isCached(int const entity) { return vt::theLocMan()->virtual_loc->isCached(entity); };
+bool isCached(int const entity) {
+  return vt::theLocMan()->virtual_loc->isCached(entity);
+};
+
+// check if the given entity should be stored in cache or not
+// depending on the situation:
+// - eager or non eager protocol
+// - current iteration
+// - (previous) home node or not
+template <typename MsgT>
+void verifyCacheConsistency(
+  int const entity, vt::NodeType const my_node,
+  vt::NodeType const home, vt::NodeType const new_home, int const nb_rounds
+) {
+
+  vt::theCollective()->barrier();
+  // the protocol is defined as eager for short and unserialized messages
+  bool const is_eager  = std::is_same<MsgT,ShortMsg>::value;
+
+  for (int iter = 0; iter < nb_rounds; ++iter) {
+    if (my_node not_eq home) {
+      // route entity message
+      auto msg = vt::makeMessage<MsgT>(entity, my_node);
+      vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg);
+
+      // check for cache updates
+      bool is_entity_cached = isCached(entity);
+      #if DEBUG_LOCATION_TESTS
+        fmt::print(
+          "iter:{}, rank {}: route_test: entityID={}, home_node={}, {} message of {} bytes, is in cache ? {}.\n",
+          iter, my_node, msg->data_, msg->from_, (is_long ? "long" : "short"), sizeof(*msg), is_entity_cached
+        );
+      #endif
+
+      if (not is_eager) {
+        // On non eager case: the location is first explicitly resolved
+        // and then the message is routed and the cache updated.
+        // Hence, the entity is not yet registered in cache after the
+        // first send, but will be for next ones.
+        EXPECT_TRUE(iter < 1 or is_entity_cached);
+      } else if(my_node not_eq new_home) {
+        // On eager case: the message is directly routed to the
+        // implicitly resolved location.
+        // Thus the cache is not updated in this case.
+        EXPECT_FALSE(is_entity_cached);
+      }
+    } else {
+      // The entity should be registered in the cache of the home node,
+      // regardless of the protocol (eager or not)
+      EXPECT_TRUE(isCached(entity));
+    }
+    // wait for the termination of all ranks
+    vt::theCollective()->barrier();
+  }
+}
 
 // message types used for type-parameterized tests
 using MsgType = testing::Types<ShortMsg, LongMsg>;
