@@ -266,7 +266,71 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
   }
 }
 
-REGISTER_TYPED_TEST_CASE_P(TestLocationRoute, test_route_entity);
+TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits){
+
+  auto const nb_nodes  = vt::theContext()->getNumNodes();
+  auto const my_node   = vt::theContext()->getNode();
+  auto const entity    = locat::arbitrary_entity;
+  auto const home      = 0;
+  auto const nb_rounds = 3;
+  auto nb_received     = 0;
+
+  // the protocol is defined as eager for short and unserialized messages
+  bool const is_eager  = std::is_same<TypeParam,locat::ShortMsg>::value;
+
+  // register entity and count received messages
+  if (my_node == home) {
+    vt::theLocMan()->virtual_loc->registerEntity(
+      entity, my_node, [&](vt::BaseMessage* msg){ nb_received++; }
+    );
+  }
+  vt::theCollective()->barrier();
+
+  for (int iter = 0; iter < nb_rounds; ++iter) {
+    if (my_node not_eq home) {
+      // route entity message
+      auto msg = vt::makeMessage<TypeParam>(entity, my_node);
+      vt::theLocMan()->virtual_loc->routeMsg<TypeParam>(entity, home, msg);
+
+      // check for cache updates
+      bool is_entity_cached = locat::isCached(entity);
+      #if DEBUG_LOCATION_TESTS
+        fmt::print(
+          "iter:{}, rank {}: route_test: entityID={}, home_node={}, {} message of {} bytes, is in cache ? {}.\n",
+          iter, my_node, msg->data_, msg->from_, (is_long ? "long" : "short"), sizeof(*msg), is_entity_cached
+        );
+      #endif
+
+      if (not is_eager) {
+        // On non eager case: the location is first explicitly resolved
+        // and then the message is routed and the cache updated.
+        // Hence, the entity is not yet registered in cache after the
+        // first send, but will be for next ones.
+        EXPECT_TRUE(iter < 1 or is_entity_cached);
+      } else {
+        // On eager case: the message is directly routed to the
+        // implicitly resolved location.
+        // Thus the cache is not updated in this case.
+        EXPECT_FALSE(is_entity_cached);
+      }
+    } else {
+      // The entity should be registered in the cache of the home node,
+      // regardless of the protocol (eager or not)
+      EXPECT_TRUE(locat::isCached(entity));
+    }
+    // wait for the termination of all ranks
+    vt::theCollective()->barrier();
+  }
+
+  // finalize
+  if (my_node == home) {
+    vt::theLocMan()->virtual_loc->unregisterEntity(entity);
+    EXPECT_EQ(nb_received, (nb_nodes - 1) * nb_rounds);
+    EXPECT_FALSE(locat::isCached(entity));
+  }
+}
+
+REGISTER_TYPED_TEST_CASE_P(TestLocationRoute, test_route_entity, test_entity_cache_hits);
 INSTANTIATE_TYPED_TEST_CASE_P(Message, TestLocationRoute, locat::MsgType);
 
 }}} // end namespace vt::tests::unit
