@@ -100,6 +100,7 @@ class DependentSendChain final {
     last_epoch_ = new_epoch;
   }
 
+#if 0
   void add(Action link) {
     checkInit();
 
@@ -116,6 +117,7 @@ class DependentSendChain final {
                                               new_epoch,
                                               PendingClosure::FINISHED));
   }
+#endif
 
   // Add a task to the chain of work to be run in the specified epoch,
   // with subsequent tasks dependent on all work occuring in the

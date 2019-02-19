@@ -71,6 +71,7 @@ class CollectionChainManager final {
     }
   }
 
+#if 0
   void nextStep(std::function<Action(Index)> step_action) {
     for (auto &entry : chains_) {
       auto& idx = entry.first;
@@ -88,6 +89,7 @@ class CollectionChainManager final {
         chain.addConcurrent(step_actions[i](idx));
     }
   }
+#endif
 
   // for a step with internal recursive communication and global inter-dependence
   void nextStepCollective(std::function<PendingSend(Index)> step_action) {
