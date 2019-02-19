@@ -526,6 +526,15 @@ public:
   template <typename ColT, typename IndexT, typename MsgT>
   void broadcastFromRoot(MsgT* msg);
 
+  /*
+   *  Fetch data from an element of a collection directly with collection
+   *  element handler.
+   */
+  template <typename FetchT, typename ColT, typename IdxT>
+  void fetch(
+    VirtualElmProxyType<ColT> const& proxy, FetchT *fetch, HandlerType han
+  );
+
 public:
   /*
    * Vrt collection type/handle registration for typeless dispatch

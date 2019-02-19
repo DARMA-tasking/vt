@@ -70,7 +70,8 @@ template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
 messaging::PendingSend Fetchable<ColT,IndexT,BaseProxyT>::fetch(
   vt::Fetch<FetchT>* fetch
 ) const {
-
+  // @todo: create the PendingSed and defer this op if needed?
+  theCollection()->fetch<FetchT,ColT,IndexT>(fetch);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -78,7 +79,10 @@ template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
 messaging::PendingSend Fetchable<ColT,IndexT,BaseProxyT>::fetch(
   FetchT& data_ref
 ) const {
-  //this->fetch(Fetch{data_ref});
+  // @todo: construct the vt::Fetch ptr from the data reference
+  //
+  // this->fetch(Fetch{data_ref});
+  //
 }
 
 
