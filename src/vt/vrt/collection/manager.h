@@ -821,6 +821,7 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vt/vrt/collection/manager.impl.h"
 #include "vt/vrt/collection/migrate/manager_migrate_attorney.impl.h"
 #include "vt/vrt/collection/send/sendable.impl.h"
+#include "vt/vrt/collection/fetchable/fetchable.impl.h"
 #include "vt/vrt/collection/gettable/gettable.impl.h"
 #include "vt/vrt/collection/reducable/reducable.impl.h"
 #include "vt/vrt/collection/insert/insertable.impl.h"
