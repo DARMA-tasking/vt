@@ -62,6 +62,7 @@ set(
         vrt/collection/balance/hierarchicallb
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb
+      vrt/collection/fetch
     lb/instrumentation
       lb/instrumentation/centralized
     lb/balancers
