@@ -72,11 +72,8 @@ HandlerType makeAutoHandlerCollectionMem(MsgT* const msg);
 
 AutoActiveCollectionMemType getAutoHandlerCollectionFetch(HandlerType handler);
 
-template <
-  typename ColT, typename MsgT, typename FetchT,
-  ActiveColFetchTypedFnType<MsgT, ColT, FetchT> f
->
-HandlerType makeAutoHandlerCollectionFetch(MsgT* const msg);
+template <typename ColT, typename T, ActiveColFetchTypedFnType<T, ColT> f>
+HandlerType makeAutoHandlerCollectionFetch();
 
 }} /* end namespace vt::auto_registry */
 

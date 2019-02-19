@@ -47,16 +47,15 @@
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
-#include "vt/vrt/collection/fetch/fetch_base.h"
 #include "vt/vrt/collection/fetch/fetch.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 using ActiveColFetchFnPtrType =
-  vt::FetchBase(UntypedCollection::*)(::vt::BaseMessage*);
+  void(UntypedCollection::*)(::vt::FetchBase*);
 
-template <typename MsgT, typename ColT, typename FetchT>
-using ActiveColMemberTypedFnType = vt::Fetch<FetchT>(ColT::*)(MsgT*);
+template <typename FetchT, typename ColT>
+using ActiveColFetchTypedFnType = void(ColT::*)(vt::Fetch<FetchT>*);
 
 }}} /* end namespace vt::vrt::collection */
 

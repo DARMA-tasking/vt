@@ -91,18 +91,14 @@ inline AutoActiveCollectionFetchType getAutoHandlerCollectionFetch(
   return getAutoRegistryGen<ContainerType>().at(handler).getFun();
 }
 
-template <
-  typename ColT, typename MsgT, typename FetchT,
-  ActiveColFetchTypedFnType<MsgT, ColT, FetchT> f
->
-inline HandlerType makeAutoHandlerCollectionFetch(MsgT* const msg) {
-  using FunctorT = FunctorAdapterMember<ActiveColFetchTypedFnType<MsgT, ColT, FetchT>, f>;
+template <typename ColT, typename T, ActiveColFetchTypedFnType<T, ColT> f>
+inline HandlerType makeAutoHandlerCollectionFetch() {
+  using FunctorT = FunctorAdapterMember<ActiveColFetchTypedFnType<T, ColT>, f>;
   using ContainerType = AutoActiveCollectionFetchContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionFetchType>;
   using FuncType = ActiveColFetchFnPtrType;
   return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
 }
-
 
 }} /* end namespace vt::auto_registry */
 

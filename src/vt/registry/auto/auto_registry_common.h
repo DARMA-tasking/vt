@@ -65,6 +65,7 @@ using AutoActiveType                = ActiveFnPtrType;
 using AutoActiveFunctorType         = ActiveFnPtrType;
 using AutoActiveVCType              = vrt::ActiveVirtualFnPtrType;
 using AutoActiveCollectionType      = vrt::collection::ActiveColFnPtrType;
+using AutoActiveCollectionMemType   = vrt::collection::ActiveColMemberFnPtrType;
 using AutoActiveCollectionFetchType = vrt::collection::ActiveColFetchFnPtrType;
 using AutoActiveMapType             = mapping::ActiveMapFnPtrType;
 using AutoActiveMapFunctorType      = mapping::ActiveMapFnPtrType;
