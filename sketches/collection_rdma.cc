@@ -22,13 +22,17 @@ int main(int argc, char** argv) {
     auto msg = vt::makeMessage<MyMsg>();
     proxy.broadcast<MyMsg,&MyCol::methond>(msg.get());
 
-    proxy[i].fetch<vt::Fetch<std::vector<int>>,&MyCol::getMyData>(
-      [](vt::Fetch<std::vector<int>> data) {
-        for (auto&& elm : *data) {
+    proxy[i].fetch<std::vector<int>,&MyCol::getMyData>(
+      [](vt::Fetch<std::vector<int>> const& data) {
+        for (auto&& elm : data) {
           fmt::print("printing fetched data elm={}\n",elm);
         }
       }
     );
+
+    std::vector<int> data;
+    proxy[i].fetch<std::vector<int>,&MyCol::getMyData>(data);
+
   }
 
   vt::finalize();
