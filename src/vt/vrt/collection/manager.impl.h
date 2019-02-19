@@ -2854,7 +2854,34 @@ template <typename FetchT, typename ColT, typename IdxT>
 void CollectionManager::fetch(
   VirtualElmProxyType<ColT> const& proxy, FetchT *fetch, HandlerType han
 ) {
+  auto const& col_proxy = proxy.getCollectionProxy();
+  auto const& elm_proxy = proxy.getElementProxy();
+  auto const& idx = elm_proxy.getIndex();
 
+  debug_print(
+    vrt_coll, node,
+    "fetch: col_proxy={:x}, handler={:x}\n", col_proxy, han
+  );
+
+  auto holder = findColHolder<ColT,IdxT>(col_proxy);
+  auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
+  bool const have_coll_info = holder != nullptr && found_constructed;
+
+  if (have_coll_info) {
+    auto elm_holder = findElmHolder<ColT,IdxT>(col_proxy);
+    bool const& locally_exists = elm_holder->exists(idx);
+    if (locally_exists) {
+
+    } else {
+
+    }
+  } else {
+    /*
+     * We are in the case where we know nothing of the collection and the fetch
+     * operation must be buffered until a future point. If the fetch happens
+     * before construction on a different node this case may occur.
+     */
+  }
 }
 
 }}} /* end namespace vt::vrt::collection */
