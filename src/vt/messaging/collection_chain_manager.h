@@ -60,7 +60,7 @@ class CollectionChainManager final {
   CollectionChainManager(CollectionChainManager&&) = delete;
 
   void addIndex(Index idx) {
-    chains.emplace(idx, {});
+    chains_.emplace(idx, {});
   }
 
   void nextStep(std::function<PendingSend(Index)> step_action) {
@@ -84,14 +84,14 @@ class CollectionChainManager final {
       auto& idx = entry.first;
       auto& chain = entry.second;
       chain.add(step_actions[0](idx));
-      for (int i = 1; i < step_actions.size() ++i)
+      for (int i = 1; i < step_actions.size(); ++i)
         chain.addConcurrent(step_actions[i](idx));
     }
   }
 
   // for a step with internal recursive communication and global inter-dependence
   void nextStepCollective(std::function<PendingSend(Index)> step_action) {
-    auto epoch = theTerm()->makeCollectiveEpoch();
+    auto epoch = theTerm()->makeEpochCollective();
 
     for (auto &entry : chains_) {
       auto& idx = entry.first;
