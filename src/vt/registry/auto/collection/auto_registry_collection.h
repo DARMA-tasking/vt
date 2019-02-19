@@ -70,7 +70,7 @@ template <
 >
 HandlerType makeAutoHandlerCollectionMem(MsgT* const msg);
 
-AutoActiveCollectionMemType getAutoHandlerCollectionFetch(HandlerType handler);
+AutoActiveCollectionFetchType getAutoHandlerCollectionFetch(HandlerType handler);
 
 template <typename ColT, typename T, ActiveColFetchTypedFnType<T, ColT> f>
 HandlerType makeAutoHandlerCollectionFetch();
