@@ -42,26 +42,119 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_BASE_H
-#define INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_BASE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_H
+#define INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/fetch/fetch_base.h"
+#include "vt/vrt/collection/fetch/span.h"
+
+#include <vector>
+#include <cstdlib>
 
 namespace vt { namespace vrt { namespace collection {
 
+template <typename DataT, typename Enable=void>
+struct FetchTraits;
+
+template <typename DataT>
+struct FetchTraits<
+  DataT,
+  typename std::enable_if_t<
+    std::is_same<DataT, std::vector<typename DataT::value_type>>::value
+  >
+> : Span<typename DataT::value_type> {
+
+  using ValueType = typename DataT::value_type;
+  using SpanType  = Span<ValueType>;
+
+  explicit FetchTraits(std::vector<ValueType>& in)
+    : SpanType(&in[0],in.size()),
+      ptr_(&in),
+      owning_(false)
+  { }
+  FetchTraits() : Span<ValueType>(SpanUnitializedTag) { }
+
+  void set(std::vector<ValueType>& in) {
+    auto const& init = SpanType::init();
+    if (init) {
+      vtAsserExpr(in.size() == SpanType::size(), "Sizes must be identical");
+      std::memcpy(SpanType::get(), &in[0], in.size()*sizeof(ValueType));
+    } else {
+      ptr_ = &in;
+      SpanType::set(&in[0], in.size());
+    }
+  }
+
+  void set(std::vector<ValueType>&& in) {
+    auto const& init = SpanType::init();
+    if (init) {
+      *ptr_ = std::move(in);
+    } else {
+      ptr_ = new std::vector<ValueType>(std::move(in));
+      owning_ = true;
+    }
+    SpanType::set(&(*ptr_)[0], ptr_->size());
+  }
+
+  std::vector<ValueType> const& operator*() { return *ptr_; }
+
+  virtual ~FetchTraits() {
+    if (ptr_ and owning_) {
+      delete ptr_;
+      ptr_ = nullptr;
+      owning_ = false;
+    }
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    SpanType::serialize(s);
+  }
+
+private:
+  std::vector<ValueType>* ptr_ = nullptr;
+  bool owning_ = false;
+};
+
 
 template <typename T>
-struct Fetch : FetchBase {
-  Fetch() = delete;
-  Fetch(Fetch const&) = default;
-  Fetch(Fetch&&) = default;
-  Fetch& operator=(Fetch const&) = default;
+struct FetchTraits<
+  T,
+  typename std::enable_if_t<std::is_arithmetic<T>::value>
+> : Span<T> {
 
-  virtual ~Fetch() = default;
+  FetchTraits(T* in, int64_t in_len)
+    : Span<T>(in,in_len)
+  { }
+  FetchTraits() : Span<T>(SpanUnitializedTag) { }
 
-  //Fetch(T
+  void set(T* in, int64_t len) {
+    auto const& init = Span<T>::init();
+    if (init) {
+      std::memcpy(Span<T>::get(), in, len*sizeof(T));
+    } else {
+      Span<T>::set(in, len);
+    }
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    Span<T>::serialize(s);
+  }
 };
+
+template <typename T>
+using Fetch = FetchTraits<T>;
+
+// template <typename T>
+// struct Fetch : FetchTraits<T> {
+//   Fetch() = delete;
+//   Fetch(Fetch const&) = default;
+//   Fetch(Fetch&&) = default;
+//   Fetch& operator=(Fetch const&) = default;
+//   virtual ~Fetch() = default;
+// };
 
 }}} /* end namespace vt::vrt::collection */
 
@@ -72,4 +165,4 @@ using Fetch = vrt::collection::Fetch<T>;
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_BASE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_H*/
