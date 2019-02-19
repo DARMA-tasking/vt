@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          auto_registry_collection.h
+//                          fetch_base.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,44 +42,34 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_H
-#define INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_BASE_H
+#define INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_BASE_H
 
 #include "vt/config.h"
-#include "vt/registry/auto/auto_registry_common.h"
-#include "vt/registry/auto/auto_registry_general.h"
-#include "vt/registry/registry.h"
-#include "vt/activefn/activefn.h"
-#include "vt/vrt/collection/active/active_funcs.h"
+#include "vt/vrt/collection/fetch/fetch_base.h"
 
-namespace vt { namespace auto_registry {
+namespace vt { namespace vrt { namespace collection {
 
-using namespace ::vt::vrt::collection;
 
-AutoActiveCollectionType getAutoHandlerCollection(HandlerType const& handler);
+template <typename T>
+struct Fetch : FetchBase {
+  Fetch() = delete;
+  Fetch(Fetch const&) = default;
+  Fetch(Fetch&&) = default;
+  Fetch& operator=(Fetch const&) = default;
 
-template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
-HandlerType makeAutoHandlerCollection(MsgT* const msg);
+  virtual ~Fetch() = default;
 
-AutoActiveCollectionMemType getAutoHandlerCollectionMem(
-  HandlerType const& handler
-);
+  //Fetch(T
+};
 
-template <
-  typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
->
-HandlerType makeAutoHandlerCollectionMem(MsgT* const msg);
+}}} /* end namespace vt::vrt::collection */
 
-AutoActiveCollectionMemType getAutoHandlerCollectionFetch(HandlerType handler);
+namespace vt {
 
-template <
-  typename ColT, typename MsgT, typename FetchT,
-  ActiveColFetchTypedFnType<MsgT, ColT, FetchT> f
->
-HandlerType makeAutoHandlerCollectionFetch(MsgT* const msg);
+template <typename T>
+using Fetch = vrt::collection::Fetch<T>;
 
-}} /* end namespace vt::auto_registry */
+} /* end namespace vt */
 
-#include "vt/registry/auto/collection/auto_registry_collection.impl.h"
-
-#endif /*INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_BASE_H*/
