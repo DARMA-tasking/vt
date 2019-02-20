@@ -567,7 +567,7 @@ bool ActiveMessenger::deliverActiveMsg(
 
     backend_enable_if(
       trace_enabled,
-      current_trace_context_  = from_node;
+      current_trace_context_  = envelopeGetTraceEvent(msg->env);
     );
 
     if (has_epoch) {
