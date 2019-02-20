@@ -65,7 +65,7 @@ struct Log {
   TraceEventIDType event = no_trace_event;
   TraceMsgLenType msg_len = 0;
   NodeType node = uninitialized_destination;
-  uint64_t idx = 0;
+  uint64_t idx1 = 0, idx2 = 0, idx3 = 0, idx4 = 0;
 
   Log(
     double const& in_time, TraceEntryIDType const& in_ep,
