@@ -51,6 +51,7 @@
 #include <zlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 namespace vt { namespace trace {
 
@@ -426,7 +427,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     case TraceConstantsType::BeginProcessing:
       gzprintf(
         file,
-        "%d %d %lu %lld %d %d %d 0 %d %d %d %d 0\n",
+        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
@@ -443,7 +444,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     case TraceConstantsType::EndProcessing:
       gzprintf(
         file,
-        "%d %d %lu %lld %d %d %d 0 %d %d %d %d 0\n",
+        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
