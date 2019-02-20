@@ -57,7 +57,7 @@ namespace vt { namespace runnable {
 
 template <typename MsgT, typename ElementT>
 /*static*/ void RunnableCollection<MsgT,ElementT>::run(
-  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node,
+  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from,
   bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
 ) {
   #if backend_check_enabled(trace_enabled)
@@ -68,6 +68,8 @@ template <typename MsgT, typename ElementT>
       handler, reg_enum
     );
     trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);
+    auto const this_node = theContext()->getNode();
+    auto const from_node = from != uninitialized_destination ? from : this_node;
   #endif
 
   #if backend_check_enabled(trace_enabled)
