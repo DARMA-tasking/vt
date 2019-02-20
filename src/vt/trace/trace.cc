@@ -144,7 +144,8 @@ void Trace::beginProcessing(
 
   debug_print(
     trace, node,
-    "event_start: ep={}, event={}, time={}\n", ep, event, time
+    "event_start: ep={}, event={}, time={}, from={}\n",
+    ep, event, time, from_node
   );
 
   log->node = from_node;
@@ -169,7 +170,8 @@ void Trace::endProcessing(
 
   debug_print(
     trace, node,
-    "event_stop: ep={}, event={}, time={}\n", ep, event, time
+    "event_stop: ep={}, event={}, time={}, from_node={}\n",
+    ep, event, time, from_node
   );
 
   log->node = from_node;
