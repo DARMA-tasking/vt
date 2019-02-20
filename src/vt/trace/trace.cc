@@ -267,7 +267,16 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     if (not open_events_.empty()) {
       traces_.push_back(
         new LogType(
-          log->time, open_events_.top()->ep, TraceConstantsType::EndProcessing
+          log->time,
+          open_events_.top()->ep,
+          TraceConstantsType::EndProcessing,
+          open_events_.top()->event,
+          open_events_.top()->msg_len,
+          open_events_.top()->node,
+          open_events_.top()->idx1,
+          open_events_.top()->idx2,
+          open_events_.top()->idx3,
+          open_events_.top()->idx4
         )
       );
     }
@@ -301,7 +310,16 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     if (not open_events_.empty()) {
       traces_.push_back(
         new LogType(
-          log->time, open_events_.top()->ep, TraceConstantsType::BeginProcessing
+          log->time,
+          open_events_.top()->ep,
+          TraceConstantsType::BeginProcessing,
+          open_events_.top()->event,
+          open_events_.top()->msg_len,
+          open_events_.top()->node,
+          open_events_.top()->idx1,
+          open_events_.top()->idx2,
+          open_events_.top()->idx3,
+          open_events_.top()->idx4
         )
       );
     }
