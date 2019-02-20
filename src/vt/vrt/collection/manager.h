@@ -530,10 +530,11 @@ public:
    *  Fetch data from an element of a collection directly with collection
    *  element handler.
    */
-  template <typename FetchT, typename ColT, typename IdxT>
-  void fetch(
-    VirtualElmProxyType<ColT> const& proxy, FetchT *fetch, HandlerType han
-  );
+  template <
+    typename FetchT, typename ColT, typename IdxT,
+    ActiveColFetchTypedFnType<FetchT,ColT>* f
+  >
+  void fetch(VirtualElmProxyType<ColT> const& proxy, FetchT *fetch);
 
 public:
   /*

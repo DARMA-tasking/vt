@@ -71,7 +71,10 @@ messaging::PendingSend Fetchable<ColT,IndexT,BaseProxyT>::fetch(
   vt::Fetch<FetchT>* fetch
 ) const {
   // @todo: create the PendingSed and defer this op if needed?
-  theCollection()->fetch<FetchT,ColT,IndexT>(fetch);
+  auto col_proxy = this->getCollectionProxy();
+  auto elm_proxy = this->getElementProxy();
+  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
+  theCollection()->fetch<FetchT,ColT,IndexT,f>(proxy,fetch);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>

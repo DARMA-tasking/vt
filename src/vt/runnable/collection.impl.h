@@ -57,43 +57,64 @@
 namespace vt { namespace runnable {
 
 template <typename MsgT, typename ElementT>
-/*static*/ void RunnableCollection<MsgT,ElementT>::run(
-  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from,
-  bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
+/*static*/ void RunnableCollection::run(
+  HandlerType handler, MsgT* msg, std::size_t msg_size, ElementT* elm,
+  NodeType from, bool member,
+  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
 ) {
-  #if backend_check_enabled(trace_enabled)
-    auto reg_enum = member ?
-      auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-      auto_registry::RegistryTypeEnum::RegVrtCollection;
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
-      handler, reg_enum
-    );
-    trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
-    auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
-    auto const from_node = from != uninitialized_destination ? from : ctx_node;
-  #endif
+  bool const is_fetch = false;
 
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->beginProcessing(
-      trace_id, sizeof(*msg), trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
+# if backend_check_enabled(trace_enabled)
+    trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);
+    RunnableCollection::prelude(
+      trace_event, msg_size, handler, from_node, member, is_fetch,
+      idx1, idx2, idx3, idx4
     );
-  #endif
+# endif
 
+  // Dispatching a regular message handler; test if its a pointer-to-member to
+  // C-style handler on the object
   if (member) {
     auto const func = auto_registry::getAutoHandlerCollectionMem(handler);
     (elm->*func)(msg);
   } else {
     auto const func = auto_registry::getAutoHandlerCollection(handler);
     func(msg, elm);
-  };
+  }
 
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(
-      trace_id, sizeof(*msg), trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
+# if backend_check_enabled(trace_enabled)
+    RunnableCollection::epilog(
+      trace_event, msg_size, from_node, member, is_fetch, idx1, idx2, idx3, idx4
     );
-  #endif
+# endif
+}
+
+template <typename FetchT, typename ElementT>
+/*static*/ void RunnableCollection::runFetch(
+  HandlerType handler, FetchT* msg, std::size_t fetch_size, ElementT* elm,
+  NodeType from_node, bool member,
+  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
+) {
+  bool const is_fetch = true;
+
+# if backend_check_enabled(trace_enabled)
+    RunnableCollection::prelude(
+      trace_event, fetch_size, handler, from_node, member, is_fetch,
+      idx1, idx2, idx3, idx4
+    );
+# endif
+
+  // Dispatching a fetch handler here, always a pointer-to-member function
+  // invocation
+  auto const func = auto_registry::getAutoHandlerCollectionFetch(handler);
+  (elm->*func)(msg);
+
+# if backend_check_enabled(trace_enabled)
+    RunnableCollection::epilog(
+      trace_event, fetch_size, from_node, member, is_fetch,
+      idx1, idx2, idx3, idx4
+    );
+# endif
 }
 
 }} /* end namespace vt::runnable */

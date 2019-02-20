@@ -46,10 +46,11 @@
 #define INCLUDED_VT_VRT_COLLECTION_FETCH_FETCH_BASE_H
 
 #include "vt/config.h"
+#include "vt/messaging/message/message.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-struct FetchBase {};
+struct FetchBase : messaging::BaseMsg {};
 
 }}} /* end namespace vt::vrt::collection */
 

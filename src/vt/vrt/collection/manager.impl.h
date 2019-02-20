@@ -336,6 +336,7 @@ CollectionManager::collectionAutoMsgDeliver(
   // offset
   void* raw_ptr = static_cast<void*>(base);
   auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
+  bool const is_fetch = false;
 
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
@@ -345,7 +346,7 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
   runnable::RunnableCollection<UserMsgT,UntypedCollection>::run(
-    han, user_msg_ptr, ptr, from, member, idx1, idx2, idx3, idx4
+    han, user_msg_ptr, ptr, from, member, is_fetch, idx1, idx2, idx3, idx4
   );
 }
 
@@ -360,6 +361,7 @@ CollectionManager::collectionAutoMsgDeliver(
   // offset
   void* raw_ptr = static_cast<void*>(base);
   auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
+  bool const is_fetch = false;
 
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
@@ -369,7 +371,7 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
   runnable::RunnableCollection<MsgT,UntypedCollection>::run(
-    han, msg, ptr, from, member, idx1, idx2, idx3, idx4
+    han, msg, ptr, from, member, is_fetch, idx1, idx2, idx3, idx4
   );
 }
 
@@ -2851,9 +2853,17 @@ getDispatcher(auto_registry::AutoHandlerType const& han) {
 }
 
 template <typename FetchT, typename ColT, typename IdxT>
+template <
+  typename FetchT, typename ColT, typename IdxT,
+  ActiveColFetchTypedFnType<FetchT,ColT>* f
+>
 void CollectionManager::fetch(
-  VirtualElmProxyType<ColT> const& proxy, FetchT *fetch, HandlerType han
+  VirtualElmProxyType<ColT> const& proxy, FetchT *fetch
 ) {
+  // Register the handler for the fetch operation
+  auto han = auto_registry::makeAutoHandlerCollectionFetch<ColT,FetchT,f>();
+
+  // Extract the raw collection proxy and element idx for lookup
   auto const& col_proxy = proxy.getCollectionProxy();
   auto const& elm_proxy = proxy.getElementProxy();
   auto const& idx = elm_proxy.getIndex();
@@ -2871,7 +2881,14 @@ void CollectionManager::fetch(
     auto elm_holder = findElmHolder<ColT,IdxT>(col_proxy);
     bool const& locally_exists = elm_holder->exists(idx);
     if (locally_exists) {
-
+      bool const is_fetch = true;
+      bool const member = true;
+      auto const from = theContext()->getNode();
+      auto elm = elm_holder->lookup(idx)->getCollection();;
+      runnable::RunnableCollection<FetchT,ColT>::run(
+        han, fetch, elm, from, member, is_fetch,
+        *reinterpret_cast<uint64_t const*>(elm->getIndex().raw())
+      );
     } else {
 
     }

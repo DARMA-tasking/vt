@@ -46,15 +46,37 @@
 #define INCLUDED_RUNNABLE_COLLECTION_H
 
 #include "vt/config.h"
+#include "vt/trace/trace_common.h"
+
+#include <cstdlib>
 
 namespace vt { namespace runnable {
 
-template <typename MsgT, typename ElementT>
 struct RunnableCollection {
+  template <typename MsgT, typename ElementT>
   static void run(
-    HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node,
-    bool member,
+    HandlerType handler, MsgT* msg, std::size_t msg_size, ElementT* elm,
+    NodeType from_node, bool member,
     uint64_t idx1 = 0, uint64_t idx2 = 0, uint64_t idx3 = 0, uint64_t idx4 = 0
+  );
+
+  template <typename FetchT, typename ElementT>
+  static void runFetch(
+    HandlerType handler, FetchT* fetch, std::size_t fetch_size, ElementT* elm,
+    NodeType from_node, bool member,
+    uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
+  );
+
+private:
+  static void prelude(
+    trace::TraceEventIDType trace_event, std::size_t msg_size,
+    HandlerType han, NodeType from_node, bool member, bool fetch,
+    uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
+  );
+  static void epilog(
+    trace::TraceEventIDType trace_event, std::size_t msg_size,
+    HandlerType han, NodeType from_node, bool member, bool fetch,
+    uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
   );
 };
 
