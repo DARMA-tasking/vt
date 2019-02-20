@@ -58,7 +58,7 @@ namespace vt { namespace runnable {
 template <typename MsgT, typename ElementT>
 /*static*/ void RunnableCollection<MsgT,ElementT>::run(
   HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node,
-  bool member, uint64_t idx
+  bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
 ) {
   #if backend_check_enabled(trace_enabled)
     auto reg_enum = member ?
@@ -73,7 +73,7 @@ template <typename MsgT, typename ElementT>
   #if backend_check_enabled(trace_enabled)
     theTrace()->beginProcessing(
       trace_id, sizeof(*msg), trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx
+      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
     );
   #endif
 
@@ -88,7 +88,7 @@ template <typename MsgT, typename ElementT>
   #if backend_check_enabled(trace_enabled)
     theTrace()->endProcessing(
       trace_id, sizeof(*msg), trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx
+      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
     );
   #endif
 }
