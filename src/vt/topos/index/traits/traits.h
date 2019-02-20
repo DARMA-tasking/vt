@@ -132,6 +132,12 @@ struct IndexTraits {
     std::string, toString_t, T
   >;
 
+  template <typename U>
+  using numDims_t = decltype(std::declval<U const&>().ndims());
+  using has_numDims = detection::is_detected_convertible<
+    int8_t, numDims_t, T
+  >;
+
   /*
    * This defines what it means to be an `Index'; i.e., the index concept.
    */
@@ -156,13 +162,14 @@ struct IndexTraits {
     /*
      * methods:
      *   packedSize(), indexIsByteCopyable(), uniqueBits(), foreach(),
-     *   toString()
+     *   toString(), ndims()
      */
     has_packedSize::value          and
     has_indexIsByteCopyable::value and
     has_uniqueBits::value          and
     has_foreach::value             and
-    has_toString::value;
+    has_toString::value            and
+    has_numDims::value;
 };
 
 }}  // end namespace vt::index
