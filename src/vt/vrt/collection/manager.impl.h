@@ -341,9 +341,9 @@ CollectionManager::collectionAutoMsgDeliver(
   // 4-dimensions
   auto const idx = base->getIndex();
   uint64_t const idx1 = idx[0];
-  uint64_t const idx2 = idx.getSize() > 1 ? idx[1] : 0;
-  uint64_t const idx3 = idx.getSize() > 2 ? idx[2] : 0;
-  uint64_t const idx4 = idx.getSize() > 3 ? idx[3] : 0;
+  uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
+  uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
+  uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
   runnable::RunnableCollection<UserMsgT,UntypedCollection>::run(
     han, user_msg_ptr, ptr, from, member, idx1, idx2, idx3, idx4
   );
@@ -365,9 +365,9 @@ CollectionManager::collectionAutoMsgDeliver(
   // 4-dimensions
   auto const idx = base->getIndex();
   uint64_t const idx1 = idx[0];
-  uint64_t const idx2 = idx.getSize() > 1 ? idx[1] : 0;
-  uint64_t const idx3 = idx.getSize() > 2 ? idx[2] : 0;
-  uint64_t const idx4 = idx.getSize() > 3 ? idx[3] : 0;
+  uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
+  uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
+  uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
   runnable::RunnableCollection<MsgT,UntypedCollection>::run(
     han, msg, ptr, from, member, idx1, idx2, idx3, idx4
   );
