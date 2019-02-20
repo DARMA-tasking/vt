@@ -187,7 +187,7 @@ void Trace::beginIdle(double const& time) {
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(
-    trace, node, "begin_idle: time=%f\n", time
+    trace, node, "begin_idle: time={}\n", time
   );
 
   log->node = theContext()->getNode();
@@ -202,7 +202,7 @@ void Trace::endIdle(double const& time) {
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(
-    trace, node, "end_idle: time=%f\n", time
+    trace, node, "end_idle: time={}\n", time
   );
 
   log->node = theContext()->getNode();
