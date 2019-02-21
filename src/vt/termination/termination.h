@@ -175,7 +175,7 @@ public:
 
 public:
   // TermFinished interface
-  TermStatusEnum testEpochFinished(EpochType const& epoch) override;
+  TermStatusEnum testEpochFinished(EpochType epoch) override;
 
 private:
   bool propagateEpoch(TermStateType& state);
