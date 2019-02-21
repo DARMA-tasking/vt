@@ -52,6 +52,7 @@
 #include "vt/registry/auto/collection/auto_registry_collection.h"
 #include "vt/trace/trace_common.h"
 #include "vt/messaging/envelope.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace runnable {
 
@@ -67,7 +68,7 @@ template <typename MsgT, typename ElementT>
     trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
       handler, reg_enum
     );
-    trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);
+    trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
     auto const this_node = theContext()->getNode();
     auto const from_node = from != uninitialized_destination ? from : this_node;
   #endif
