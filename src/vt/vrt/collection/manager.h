@@ -633,6 +633,17 @@ public:
     PhaseType const& cur_phase, ActionFinishedLBType continuation = nullptr
   );
 
+  /*
+   * The `elmReady` function is called by every element of every collection at
+   * the phase boundary for each local element residing on a node. Once all
+   * elements have invoked it, LB will commence.
+   */
+  template <typename ColT>
+  void elmReady(
+    VirtualElmProxyType<ColT> const& elm_proxy, PhaseType phase,
+    ActionFinishedLBType continuation = nullptr
+  );
+
   template <typename ColT>
   void computeStats(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
