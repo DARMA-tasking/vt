@@ -340,7 +340,7 @@ CollectionManager::collectionAutoMsgDeliver(
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
   auto const idx = base->getIndex();
-  uint64_t const idx1 = idx.ndims() > 1 ? idx[0] : 0;
+  uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
@@ -364,7 +364,7 @@ CollectionManager::collectionAutoMsgDeliver(
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
   auto const idx = base->getIndex();
-  uint64_t const idx1 = idx.ndims() > 1 ? idx[0] : 0;
+  uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
