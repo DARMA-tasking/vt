@@ -54,6 +54,7 @@
 #include <unordered_map>
 #include <tuple>
 #include <functional>
+#include <cstdio>
 #include <cstdlib>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -72,6 +73,10 @@ public:
   static void clearStats();
   static void releaseLB();
 
+  static void createStatsFile();
+  static void outputStatsFile();
+  static void closeStatsFile();
+
 private:
   static ElementIDType getNextElm();
 
@@ -81,6 +86,8 @@ public:
 public:
   static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
   static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
+private:
+  static FILE* stats_file_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

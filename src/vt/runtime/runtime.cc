@@ -398,10 +398,10 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
 
-    auto const fname = ArgType::vt_lb_stats_file_name;
+    auto const fname = ArgType::vt_lb_stats_file;
     if (fname != "") {
       auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
-      auto f12 = opt_on("--vt_lb_stats_file_name", f11);
+      auto f12 = opt_on("--vt_lb_stats_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
