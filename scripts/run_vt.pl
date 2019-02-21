@@ -107,7 +107,6 @@ LLDBPYTHON
         print $python_file $python_str;
         close $python_file;
 
-        print $tmphandle "file $binary\n";
         print $tmphandle "process attach --pid $pid\n";
         print $tmphandle "process handle --pass true --stop false --notify true SIGUSR1\n";
         print $tmphandle "process status\n";
