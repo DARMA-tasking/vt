@@ -604,7 +604,15 @@ public:
   );
 
   /*
-   *  LB-related operations on the collection
+   * ======================================================================
+   *              LB-related operations on the collection
+   * ======================================================================
+   */
+
+  /*
+   * The `nextPhase` function is called by a single node on the whole collection
+   * to indicate that LB is ready. This includes all collections and thus may
+   * require extra sync to invoke safely
    */
   template <typename ColT>
   void nextPhase(
