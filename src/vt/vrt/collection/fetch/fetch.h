@@ -97,6 +97,10 @@ struct FetchTraits<
     SpanType::set(&(*ptr_)[0], ptr_->size());
   }
 
+  std::size_t totalBytes() const {
+    return SpanType::init() ? SpanType::size() * sizeof(ValueType) : 0;
+  }
+
   std::vector<ValueType> const& operator*() { return *ptr_; }
 
   virtual ~FetchTraits() {
@@ -123,24 +127,30 @@ struct FetchTraits<
   T,
   typename std::enable_if_t<std::is_arithmetic<T>::value>
 > : Span<T> {
+  using ValueType = T;
+  using SpanType  = Span<ValueType>;
 
   FetchTraits(T* in, int64_t in_len)
-    : Span<T>(in,in_len)
+    : SpanType(in,in_len)
   { }
-  FetchTraits() : Span<T>(SpanUnitializedTag) { }
+  FetchTraits() : SpanType(SpanUnitializedTag) { }
 
   void set(T* in, int64_t len) {
-    auto const& init = Span<T>::init();
+    auto const& init = SpanType::init();
     if (init) {
-      std::memcpy(Span<T>::get(), in, len*sizeof(T));
+      std::memcpy(SpanType::get(), in, len*sizeof(T));
     } else {
-      Span<T>::set(in, len);
+      SpanType::set(in, len);
     }
+  }
+
+  std::size_t totalBytes() const {
+    return SpanType::init() ? SpanType::size() * sizeof(T) : 0;
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    Span<T>::serialize(s);
+    SpanType::serialize(s);
   }
 };
 
