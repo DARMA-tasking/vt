@@ -253,7 +253,7 @@ void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
   }
   break;
   default:
-    theCollection()->releaseLBContinuation();
+    ProcStats::releaseLB();
     break;
   }
 }
