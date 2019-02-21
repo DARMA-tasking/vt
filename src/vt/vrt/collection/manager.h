@@ -138,10 +138,16 @@ struct CollectionManager {
 
   virtual ~CollectionManager() {
     cleanupAll<>();
-    if (ArgType::vt_lb_stats) {
-      balance::ProcStats::outputStatsFile();
-      balance::ProcStats::clearStats();
-    }
+
+    // Statistics output when LB is enabled and appropriate flag is enabled
+    backend_enable_if(
+      lblite, {
+        if (ArgType::vt_lb_stats) {
+          balance::ProcStats::outputStatsFile();
+          balance::ProcStats::clearStats();
+        }
+      }
+    );
   }
 
   template <typename=void>
