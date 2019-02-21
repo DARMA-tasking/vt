@@ -2701,6 +2701,39 @@ void CollectionManager::makeCollectionReady(VirtualProxyType const proxy) {
 }
 
 template <typename ColT>
+void CollectionManager::elmReady(
+  VirtualElmProxyType<ColT> const& proxy, PhaseType phase,
+  ActionFinishedLBType cont
+) {
+  auto const& col_proxy = proxy.getCollectionProxy();
+  auto const& idx = proxy.getElementProxy().getIndex();
+  auto elm_holder = theCollection()->findElmHolder<ColT>(col_proxy);
+  vtAssert(
+    elm_holder != nullptr, "Must find element holder at elmReady",
+    col_proxy, phase
+  );
+  if (cont != nullptr) {
+    theTerm()->produce(term::any_epoch_sentinel);
+    lb_continuations_.push_back(cont);
+  }
+  if (elm_holder) {
+    vtAssert(
+      elm_holder->exists(),
+      "Collection element must be local and currently reside on this node"
+    );
+    elm_holder->addReady();
+    auto const num_ready = elm_holder->numReady();
+    auto const num_total = elm_holder->numElements();
+    if (num_ready == num_total) {
+      elm_holder->clearReady();
+      CollectionProxyWrapType<ColT> proxy(col_proxy);
+      auto msg = makeMessage<balance::PhaseMsg<ColT>>(phase, proxy);
+      balance::ElementStats::syncNextPhase<ColT>(msg.get());
+    }
+  }
+}
+
+template <typename ColT>
 void CollectionManager::nextPhase(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
   PhaseType const& cur_phase, ActionFinishedLBType continuation
