@@ -671,7 +671,7 @@ void TerminationDetector::updateResolvedEpochs(
   }
 }
 
-TermStatusEnum TerminationDetector::testEpochFinished(EpochType const& epoch) {
+TermStatusEnum TerminationDetector::testEpochFinished(EpochType epoch) {
   TermStatusEnum status = TermStatusEnum::Pending;
   auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
 

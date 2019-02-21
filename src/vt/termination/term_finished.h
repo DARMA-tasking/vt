@@ -60,7 +60,7 @@ enum struct TermStatusEnum : int8_t {
 };
 
 struct TermFinished {
-  virtual TermStatusEnum testEpochFinished(EpochType const& epoch) = 0;
+  virtual TermStatusEnum testEpochFinished(EpochType epoch) = 0;
 };
 
 }} /* end namespace vt::term */
