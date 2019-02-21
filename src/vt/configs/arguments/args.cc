@@ -80,6 +80,9 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_lb_file_name       = "balance.in";
 /*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
 /*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
+/*static*/ bool        ArgConfig::vt_lb_stats           = false;
+/*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
+/*static*/ std::string ArgConfig::vt_lb_stats_file_name = "stats.out";
 
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
