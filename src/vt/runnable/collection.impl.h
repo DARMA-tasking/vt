@@ -69,8 +69,8 @@ template <typename MsgT, typename ElementT>
       handler, reg_enum
     );
     trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
-    auto const this_node = theContext()->getNode();
-    auto const from_node = from != uninitialized_destination ? from : this_node;
+    auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
+    auto const from_node = from != uninitialized_destination ? from : ctx_node;
   #endif
 
   #if backend_check_enabled(trace_enabled)
