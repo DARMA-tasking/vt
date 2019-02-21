@@ -47,11 +47,13 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/runtime/runtime.h"
 
 #include <vector>
 #include <unordered_map>
 #include <string>
 #include <cstdio>
+#include <unistd.h>
 
 #include <fmt/format.h>
 
@@ -69,6 +71,8 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
 /*static*/ ProcStats::ElementIDType ProcStats::next_elm_ = 1;
 
 /*static*/ FILE* ProcStats::stats_file_ = nullptr;
+
+/*static*/ bool ProcStats::created_dir_ = false;
 
 /*static*/ void ProcStats::clearStats() {
   ProcStats::proc_data_.clear();
@@ -101,6 +105,21 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
     vrt_coll, node,
     "ProcStats: createStatsFile file={}\n", file_name
   );
+
+  // Node 0 creates the directory
+  if (not created_dir_ and node == 0) {
+    mkdir(dir.c_str(), S_IRWXU);
+    created_dir_ = true;
+  }
+
+  // Barrier: wait for node 0 to create directory before trying to put a file in
+  // the stats destination directory
+  if (curRT) {
+    curRT->systemSync();
+  } else {
+    // Something is wrong
+    vtAssert(false, "Trying to dump stats when VT runtime is deallocated?");
+  }
 
   stats_file_ = fopen(file_name.c_str(), "w+");
 }

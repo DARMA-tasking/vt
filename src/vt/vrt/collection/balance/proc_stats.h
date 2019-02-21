@@ -88,6 +88,7 @@ public:
   static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
 private:
   static FILE* stats_file_;
+  static bool created_dir_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
