@@ -85,7 +85,7 @@ public:
   static int32_t vt_lb_interval;
   static bool vt_lb_stats;
   static std::string vt_lb_stats_dir;
-  static std::string vt_lb_stats_file_name;
+  static std::string vt_lb_stats_file;
 
   static bool vt_no_detect_hang;
   static int64_t vt_hang_freq;
