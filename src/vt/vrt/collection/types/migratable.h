@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/types/migrate_hooks.h"
 #include "vt/vrt/collection/types/migratable.fwd.h"
 #include "vt/vrt/collection/balance/elm_stats.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -99,8 +100,10 @@ protected:
 
 protected:
   friend struct balance::ElementStats;
+  friend struct balance::ProcStats;
   balance::ElementStats stats_;
   balance::ElementStats& getStats() { return stats_; }
+  balance::ProcStats::ElementIDType stats_elm_id_ = 0;
 };
 
 }}} /* end namespace vt::vrt::collection */
