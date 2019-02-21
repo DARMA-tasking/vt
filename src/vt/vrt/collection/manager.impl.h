@@ -2710,24 +2710,58 @@ void CollectionManager::elmReady(
     elm_holder != nullptr, "Must find element holder at elmReady",
     col_proxy, phase
   );
+
+  debug_print(
+    vrt_coll, node,
+    "elmReady: proxy={:x}, idx={} ready at phase={}\n",
+    col_proxy, idx, phase
+  );
+
+
   if (cont != nullptr) {
     theTerm()->produce(term::any_epoch_sentinel);
     lb_continuations_.push_back(cont);
   }
   if (elm_holder) {
     vtAssert(
-      elm_holder->exists(),
+      elm_holder->exists(idx),
       "Collection element must be local and currently reside on this node"
     );
     elm_holder->addReady();
     auto const num_ready = elm_holder->numReady();
     auto const num_total = elm_holder->numElements();
+
+    debug_print(
+      vrt_coll, node,
+      "elmReady: proxy={:x}, ready={}, total={} at phase={}\n",
+      col_proxy, num_ready, num_total, phase
+    );
+
     if (num_ready == num_total) {
       elm_holder->clearReady();
-      CollectionProxyWrapType<ColT> proxy(col_proxy);
-      auto msg = makeMessage<balance::PhaseMsg<ColT>>(phase, proxy);
-      balance::ElementStats::syncNextPhase<ColT>(msg.get());
+
+      debug_print(
+        vrt_coll, node,
+        "elmReady: all local elements of proxy={:x} ready at phase={}\n",
+        col_proxy, phase
+      );
     }
+
+    using namespace balance;
+    CollectionProxyWrapType<ColT> proxy(col_proxy);
+    using MsgType = PhaseMsg<ColT>;
+    auto msg = makeMessage<MsgType>(phase, proxy);
+    backend_enable_if(lblite, msg->setLBLiteInstrument(false); );
+
+    debug_print(
+      vrt_coll, node,
+      "elmReady: invoking syncNextPhase on  proxy={:x}, at phase={}\n",
+      col_proxy, phase
+    );
+
+    theCollection()->sendMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
+      proxy.index(idx), msg.get()
+    );
   }
 }
 
