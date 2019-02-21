@@ -643,10 +643,14 @@ public:
   void checkReduceNoElements();
 
 private:
-  template <typename ColT, typename IndexT>
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
   CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
-  template <typename ColT, typename IndexT>
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
   Holder<ColT, IndexT>* findElmHolder(VirtualProxyType const& proxy);
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  Holder<ColT, IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy);
 
 public:
   template <typename ColT, typename IndexT>

@@ -2667,6 +2667,13 @@ Holder<ColT, IndexT>* CollectionManager::findElmHolder(
   }
 }
 
+template <typename ColT, typename IndexT>
+Holder<ColT, IndexT>* CollectionManager::findElmHolder(
+  CollectionProxyWrapType<ColT> proxy
+) {
+  return findElmHolder<ColT,IndexT>(proxy.getProxy());
+}
+
 template <typename>
 std::size_t CollectionManager::numCollections() {
   return UniversalIndexHolder<>::getNumCollections();
