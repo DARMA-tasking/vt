@@ -241,9 +241,10 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
         // count the number of routed messages received by the home node
         auto msg = static_cast<TypeParam*>(raw_msg);
         auto dst = vt::theContext()->getNode();
-        #if DEBUG_LOCATION_TESTS
-          fmt::print("{}: a message arrived with data: {}.\n", dst, msg->entity_);
-        #endif
+        debug_print(
+          location, node,
+          "rank:{} a message arrived for entity: {}\n", dst, msg->entity_
+        );
         EXPECT_EQ(msg->entity_, locat::magic_number + msg->from_);
         msg_count++;
       }
@@ -255,9 +256,11 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
     vt::theMsg()->broadcastMsg< locat::EntityMsg, locat::routeTestHandler<TypeParam> >(msg);
 
     while (msg_count < nb_nodes - 1) { vt::runScheduler(); }
-    #if DEBUG_LOCATION_TESTS
-      fmt::print("all messages have been arrived.\n");
-    #endif
+    debug_print(
+      location, node,
+      "all messages have been arrived.\n"
+    );
+
     EXPECT_EQ(msg_count, nb_nodes - 1);
   }
   // finalize
@@ -317,12 +320,11 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity){
     // receive migrated entity: register it and keep in cache
     vt::theLocMan()->virtual_loc->registerEntityMigrated(
       entity, my_node, [entity,&nb_received](vt::BaseMessage* in_msg) {
-        #if DEBUG_LOCATION_TESTS
-          fmt::print(
-            "rank:{}: a message arrived to me for a migrated entity {}.\n",
-            vt::theContext()->getNode(), entity
-          );
-        #endif
+        debug_print(
+          location, node,
+          "rank:{}: a message arrived to me for a migrated entity {}.\n",
+          vt::theContext()->getNode(), entity
+        );
         nb_received++;
       }
     );

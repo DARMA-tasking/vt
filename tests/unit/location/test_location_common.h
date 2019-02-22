@@ -48,7 +48,6 @@
 #include "data_message.h"
 #include "vt/transport.h"
 #include "test_parallel_harness.h"
-#define DEBUG_LOCATION_TESTS 0
 
 namespace vt { namespace tests { namespace unit { namespace locat {
 
@@ -96,7 +95,7 @@ struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
 template <typename MsgT>
 void routeTestHandler(EntityMsg* msg) {
 
-  auto const& my_node = vt::theContext()->getNode();
+  auto const my_node = vt::theContext()->getNode();
   auto test_msg = vt::makeMessage<MsgT>(magic_number + my_node, my_node);
   auto const& test_msg_size = sizeof(*test_msg);
 
@@ -109,13 +108,11 @@ void routeTestHandler(EntityMsg* msg) {
 
   EXPECT_TRUE(correct_size);
 
-  #if DEBUG_LOCATION_TESTS
-    fmt::print(
-      "rank {}: routing entity:{}, home_node={}, {} message of {} bytes.\n",
-      my_node, msg->entity_, msg->home_, (msg->is_large_ ? "long" : "short"), test_msg_size
-    );
-  #endif
-
+  debug_print(
+    location, node,
+    "rank {}: routing entity:{}, home_node={}, {} message of {} bytes.\n",
+    my_node, msg->entity_, msg->home_, (msg->is_large_ ? "long" : "short"), test_msg_size
+  );
   // route message
   vt::theLocMan()->virtual_loc->routeMsg<MsgT>(msg->entity_, msg->home_, test_msg);
 }
@@ -148,12 +145,12 @@ void verifyCacheConsistency(
 
       // check for cache updates
       bool is_entity_cached = isCached(entity);
-      #if DEBUG_LOCATION_TESTS
-        fmt::print(
-          "iter:{}, rank {}: route_test: entityID={}, home_node={}, {} message of {} bytes, is in cache ? {}.\n",
-          iter, my_node, msg->data_, msg->from_, (is_long ? "long" : "short"), sizeof(*msg), is_entity_cached
-        );
-      #endif
+
+      debug_print(
+        location, node,
+        "iter:{}, rank {}: route_test: entityID={}, home_node={}, {} message of {} bytes, is in cache ? {}.\n",
+        iter, my_node, msg->data_, msg->from_, (is_long ? "long" : "short"), sizeof(*msg), is_entity_cached
+      );
 
       if (not is_eager) {
         // On non eager case: the location is first explicitly resolved
