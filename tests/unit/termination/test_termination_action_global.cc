@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          test_active_broadcast.cc
+//                  test_termination_action_global.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,78 +42,41 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-#include "test_parallel_harness.h"
-#include "data_message.h"
-
-#include "vt/transport.h"
+#include "test_termination_action_common.h"
 
 namespace vt { namespace tests { namespace unit {
 
-using namespace vt;
-using namespace vt::tests::unit;
+struct TestTermActionGlobal : action::BaseFixture {};
 
-struct TestActiveBroadcast : TestParameterHarnessNode {
-  using TestMsg = TestStaticBytesShortMsg<4>;
-
-  static int handler_count;
-  static int num_msg_sent;
-
-  virtual void SetUp() {
-    TestParameterHarnessNode::SetUp();
-
-    handler_count = 0;
-    num_msg_sent = 16;
+TEST_P(TestTermActionGlobal, test_term_detect_broadcast) {
+  if (channel::me == channel::root) {
+    // start computation
+    channel::broadcast<channel::basicHandler>(1,vt::no_epoch);
+    // trigger detection and check status
+    action::finalize(vt::no_epoch,order_);
   }
+}
 
-  virtual void TearDown() {
-    TestParameterHarnessNode::TearDown();
-  }
-
-  static void test_handler(TestMsg* msg) {
-    #if DEBUG_TEST_HARNESS_PRINT
-      auto const& this_node = theContext()->getNode();
-      fmt::print("{}: test_handler: cnt={}\n", this_node, ack_count);
-    #endif
-
-    handler_count++;
-  }
-};
-
-/*static*/ int TestActiveBroadcast::handler_count;
-/*static*/ int TestActiveBroadcast::num_msg_sent;
-
-TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-
-  NodeType const& root = GetParam();
-
-  #if DEBUG_TEST_HARNESS_PRINT
-    fmt::print("test_type_safe_active_fn_bcast: node={}, root={}\n", my_node, root);
-  #endif
-
-  if (root < num_nodes) {
-    if (my_node == root) {
-      for (int i = 0; i < num_msg_sent; i++) {
-        auto msg = makeSharedMessage<TestMsg>();
-        theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
-      }
-    }
-
-    theTerm()->addAction([=]{
-      if (my_node != root) {
-        ASSERT_TRUE(handler_count == num_msg_sent);
-      }
-    });
+// routed messages
+TEST_P(TestTermActionGlobal, test_term_detect_routed) {
+  // there should be at least 3 nodes for this case
+  if (channel::all > 2 and channel::me == channel::root) {
+    //start computation
+    action::compute(vt::no_epoch);
+    // trigger detection and check status
+    action::finalize(vt::no_epoch,order_);
   }
 }
 
 INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestActiveBroadcast,
-  ::testing::Range(static_cast<NodeType>(0), static_cast<NodeType>(16), 1)
+  InstantiationName, TestTermActionGlobal,
+  ::testing::Combine(
+    ::testing::Values(
+      action::Order::before, action::Order::after, action::Order::misc
+    ),
+    ::testing::Values(false),
+    ::testing::Values(1)
+  )
 );
 
 }}} // end namespace vt::tests::unit

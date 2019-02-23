@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          test_active_broadcast.cc
+//                test_termination_channel_message.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,78 +42,54 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-#include "test_parallel_harness.h"
 #include "data_message.h"
-
 #include "vt/transport.h"
 
-namespace vt { namespace tests { namespace unit {
+#if !defined INCLUDED_TERMINATION_CHANNEL_MESSAGES_H
+#define INCLUDED_TERMINATION_CHANNEL_MESSAGES_H
 
-using namespace vt;
-using namespace vt::tests::unit;
+namespace vt { namespace tests { namespace unit { namespace channel {
 
-struct TestActiveBroadcast : TestParameterHarnessNode {
-  using TestMsg = TestStaticBytesShortMsg<4>;
+// basic message
+struct BasicMsg : vt::Message {
 
-  static int handler_count;
-  static int num_msg_sent;
+  BasicMsg() = default;
+  BasicMsg(vt::NodeType src, vt::NodeType dst, int ttl, vt::EpochType epoch)
+    : src_(src),
+      dst_(dst),
+      ttl_(ttl-1),
+      epoch_(epoch)
+  {}
+  BasicMsg(vt::NodeType src, vt::NodeType dst, int ttl) : BasicMsg(src,dst,ttl,vt::no_epoch) {}
+  BasicMsg(vt::NodeType src, vt::NodeType dst) : BasicMsg(src,dst,1,vt::no_epoch) {}
 
-  virtual void SetUp() {
-    TestParameterHarnessNode::SetUp();
-
-    handler_count = 0;
-    num_msg_sent = 16;
-  }
-
-  virtual void TearDown() {
-    TestParameterHarnessNode::TearDown();
-  }
-
-  static void test_handler(TestMsg* msg) {
-    #if DEBUG_TEST_HARNESS_PRINT
-      auto const& this_node = theContext()->getNode();
-      fmt::print("{}: test_handler: cnt={}\n", this_node, ack_count);
-    #endif
-
-    handler_count++;
-  }
+  //
+  int ttl_ = 0;
+  vt::NodeType src_ = vt::uninitialized_destination;
+  vt::NodeType dst_ = vt::uninitialized_destination;
+  vt::EpochType epoch_ = vt::no_epoch;
 };
 
-/*static*/ int TestActiveBroadcast::handler_count;
-/*static*/ int TestActiveBroadcast::num_msg_sent;
+// control messages
+struct CtrlMsg : vt::Message {
 
-TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  CtrlMsg() = default;
+  CtrlMsg(vt::NodeType src, vt::NodeType dst, int nb, vt::EpochType epoch)
+    : src_(src),
+      dst_(dst),
+      count_(nb),
+      epoch_(epoch)
+  {}
+  CtrlMsg(vt::NodeType src, vt::NodeType dst, int nb) : CtrlMsg(src,dst,nb,vt::no_epoch) {}
+  CtrlMsg(vt::NodeType src, vt::NodeType dst) : CtrlMsg(src,dst,0,vt::no_epoch) {}
 
-  NodeType const& root = GetParam();
+  // incoming/outgoing basic message count
+  int count_ = 0;
+  vt::NodeType src_ = vt::uninitialized_destination;
+  vt::NodeType dst_ = vt::uninitialized_destination;
+  vt::EpochType epoch_ = vt::no_epoch;
+};
 
-  #if DEBUG_TEST_HARNESS_PRINT
-    fmt::print("test_type_safe_active_fn_bcast: node={}, root={}\n", my_node, root);
-  #endif
+}}}} // end namespace vt::tests::unit::channel
 
-  if (root < num_nodes) {
-    if (my_node == root) {
-      for (int i = 0; i < num_msg_sent; i++) {
-        auto msg = makeSharedMessage<TestMsg>();
-        theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
-      }
-    }
-
-    theTerm()->addAction([=]{
-      if (my_node != root) {
-        ASSERT_TRUE(handler_count == num_msg_sent);
-      }
-    });
-  }
-}
-
-INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestActiveBroadcast,
-  ::testing::Range(static_cast<NodeType>(0), static_cast<NodeType>(16), 1)
-);
-
-}}} // end namespace vt::tests::unit
+#endif /*INCLUDED_TERMINATION_CHANNEL_MESSAGES_H*/

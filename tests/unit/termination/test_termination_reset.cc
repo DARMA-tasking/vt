@@ -61,7 +61,7 @@ struct TestTermReset : TestParallelHarness {
   static int32_t handler_count;
 
   static void test_handler(TestMsg* msg) {
-    handler_count++;
+    handler_count = 10;
   }
 };
 
@@ -69,7 +69,7 @@ struct TestTermReset : TestParallelHarness {
 
 TEST_F(TestTermReset, test_termination_reset_1) {
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes < 2) {
     return;
@@ -77,10 +77,10 @@ TEST_F(TestTermReset, test_termination_reset_1) {
 
   if (this_node == 0) {
     auto msg = makeSharedMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, test_handler>(1, msg);
+    theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
   } else if (this_node == 1) {
     theTerm()->addAction([=]{
-      EXPECT_EQ(handler_count, 1);
+      EXPECT_EQ(handler_count, 10);
     });
   }
 
@@ -90,12 +90,15 @@ TEST_F(TestTermReset, test_termination_reset_1) {
 
   rt->reset();
 
+  handler_count = 0;
+  theCollective()->barrier();
+
   if (this_node == 1) {
     auto msg = makeSharedMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, test_handler>(0, msg);
+    theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
   } else if (this_node == 0) {
     theTerm()->addAction([=]{
-      EXPECT_EQ(handler_count, 1);
+      EXPECT_EQ(handler_count, 10);
     });
   }
 }

@@ -15,6 +15,7 @@ set(
   epoch
   pool
   sequencer
+  termination
   mapping
   group
   serialization

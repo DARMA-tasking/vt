@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          test_active_broadcast.cc
+//                   test_termination_action_epochs.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,78 +42,58 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-#include "test_parallel_harness.h"
-#include "data_message.h"
-
-#include "vt/transport.h"
+#include "test_termination_action_common.h"
 
 namespace vt { namespace tests { namespace unit {
 
-using namespace vt;
-using namespace vt::tests::unit;
+struct TestTermActionCollectEpoch : action::BaseFixture {};
+struct TestTermActionRootedEpoch : action::BaseFixture {};
 
-struct TestActiveBroadcast : TestParameterHarnessNode {
-  using TestMsg = TestStaticBytesShortMsg<4>;
+// collective epochs
+TEST_P(TestTermActionCollectEpoch, test_term_detect_collect_epoch) {
+  auto&& sequence = action::newEpochSeq(5);
 
-  static int handler_count;
-  static int num_msg_sent;
-
-  virtual void SetUp() {
-    TestParameterHarnessNode::SetUp();
-
-    handler_count = 0;
-    num_msg_sent = 16;
-  }
-
-  virtual void TearDown() {
-    TestParameterHarnessNode::TearDown();
-  }
-
-  static void test_handler(TestMsg* msg) {
-    #if DEBUG_TEST_HARNESS_PRINT
-      auto const& this_node = theContext()->getNode();
-      fmt::print("{}: test_handler: cnt={}\n", this_node, ack_count);
-    #endif
-
-    handler_count++;
-  }
-};
-
-/*static*/ int TestActiveBroadcast::handler_count;
-/*static*/ int TestActiveBroadcast::num_msg_sent;
-
-TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-
-  NodeType const& root = GetParam();
-
-  #if DEBUG_TEST_HARNESS_PRINT
-    fmt::print("test_type_safe_active_fn_bcast: node={}, root={}\n", my_node, root);
-  #endif
-
-  if (root < num_nodes) {
-    if (my_node == root) {
-      for (int i = 0; i < num_msg_sent; i++) {
-        auto msg = makeSharedMessage<TestMsg>();
-        theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
-      }
+  for (auto&& ep : sequence) {
+    if (channel::me == channel::root) {
+      action::compute(ep);
+      channel::trigger(ep);
     }
+    action::finalize(ep,order_);
+  }
+}
 
-    theTerm()->addAction([=]{
-      if (my_node != root) {
-        ASSERT_TRUE(handler_count == num_msg_sent);
-      }
-    });
+// rooted epochs
+TEST_P(TestTermActionRootedEpoch, test_term_detect_rooted_epoch) {
+  if (channel::me == channel::root) {
+    auto&& sequence = action::newEpochSeq(5,true,useDS_);
+
+    for (auto&& ep : sequence) {
+      action::compute(ep);
+      action::finalize(ep,order_);
+    }
   }
 }
 
 INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestActiveBroadcast,
-  ::testing::Range(static_cast<NodeType>(0), static_cast<NodeType>(16), 1)
+  InstantiationName, TestTermActionCollectEpoch,
+  ::testing::Combine(
+    ::testing::Values(
+      action::Order::before, action::Order::after, action::Order::misc
+    ),
+    ::testing::Values(false),
+    ::testing::Values(1)
+  )
+);
+
+INSTANTIATE_TEST_CASE_P(
+  InstantiationName, TestTermActionRootedEpoch,
+  ::testing::Combine(
+    ::testing::Values(
+      action::Order::before, action::Order::after, action::Order::misc
+    ),
+    ::testing::Bool(),
+    ::testing::Values(1)
+  )
 );
 
 }}} // end namespace vt::tests::unit
