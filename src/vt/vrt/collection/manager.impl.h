@@ -2824,6 +2824,10 @@ bool CollectionManager::scheduler() {
   }
 }
 
+inline DispatchBasePtrType
+getDispatcher(auto_registry::AutoHandlerType const& han) {
+  return theCollection()->getDispatcher(han);
+}
 
 }}} /* end namespace vt::vrt::collection */
 

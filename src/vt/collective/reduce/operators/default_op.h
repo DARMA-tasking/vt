@@ -57,6 +57,7 @@
 #include "vt/collective/reduce/operators/functors/bit_and_op.h"
 #include "vt/collective/reduce/operators/functors/bit_or_op.h"
 #include "vt/collective/reduce/operators/functors/bit_xor_op.h"
+#include "vt/pipe/pipe_headers.h"
 
 #include <algorithm>
 

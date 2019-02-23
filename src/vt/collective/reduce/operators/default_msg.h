@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/collective/reduce/operators/default_op.h"
 #include "vt/collective/reduce/reduce_msg.h"
-#include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/pipe/pipe_callback_only.h"
 
 #include <array>
 #include <vector>

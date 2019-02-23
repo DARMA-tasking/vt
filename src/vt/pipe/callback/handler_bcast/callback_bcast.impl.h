@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/callback/handler_bcast/callback_bcast.h"
-#include "vt/pipe/pipe_manager.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
 #include "vt/runnable/general.h"

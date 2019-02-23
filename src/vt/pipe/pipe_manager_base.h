@@ -137,6 +137,14 @@ protected:
     DispatchFuncType fn = nullptr
   );
 
+  friend void triggerPipe(PipeType const& pipe);
+
+  template <typename MsgT>
+  friend void triggerPipeTyped(PipeType const& pipe, MsgT* msg);
+
+  template <typename MsgT>
+  friend void triggerPipeUnknown(PipeType const& pipe, MsgT* msg);
+
 protected:
   PipeType makePipeID(bool const persist, bool const send_back);
 

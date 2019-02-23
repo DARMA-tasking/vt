@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
 #include "vt/activefn/activefn.h"
-#include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/pipe/pipe_callback_only.h"
 
 #include <functional>
 

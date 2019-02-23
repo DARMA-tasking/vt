@@ -49,4 +49,10 @@
 #include "vt/pipe/pipe.h"
 #include "vt/pipe/pipe_manager.h"
 
+#include "vt/pipe/callback/handler_send/callback_send_tl.h"
+#include "vt/pipe/callback/handler_bcast/callback_bcast_tl.h"
+#include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast_tl.h"
+#include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.h"
+#include "vt/pipe/callback/anon/callback_anon_tl.h"
+
 #endif /*INCLUDED_PIPE_PIPE_HEADERS_H*/

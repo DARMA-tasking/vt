@@ -73,6 +73,9 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
     return;
   }
 
+  ctx = std::make_unique<Context>();
+  ctx->val = this_node;
+
   auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
   auto cb = theCB()->makeFunc<DataMsg,Context>(
     ctx.get(), [next](DataMsg* msg, Context* ctx){
@@ -90,6 +93,7 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
   theMsg()->sendMsg<CallbackDataMsg, test_handler>(next, msg);
 
   theTerm()->addAction([=]{
+    //fmt::print("{}: called={}\n", this_node, called);
     EXPECT_EQ(called, 500);
   });
 }

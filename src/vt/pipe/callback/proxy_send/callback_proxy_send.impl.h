@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          callback_anon.h
+//                    callback_proxy_send.impl.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,53 +42,30 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_H
-#define INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_PROXY_SEND_CALLBACK_PROXY_SEND_IMPL_H
+#define INCLUDED_VT_PIPE_CALLBACK_PROXY_SEND_CALLBACK_PROXY_SEND_IMPL_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
-#include "vt/pipe/signal/signal.h"
-#include "vt/pipe/msg/callback.h"
-#include "vt/pipe/callback/callback_base.h"
-
-#include <functional>
-#include <cassert>
-#include <type_traits>
+#include "vt/pipe/callback/proxy_send/callback_proxy_send.h"
+#include "vt/vrt/collection/manager.h"
 
 namespace vt { namespace pipe { namespace callback {
 
-template <typename MsgT>
-struct CallbackAnon : CallbackBase<signal::Signal<MsgT>> {
-  using SignalBaseType = typename signal::Signal<MsgT>;
-  using SignalType     = typename CallbackBase<SignalBaseType>::SignalType;
-  using SignalDataType = typename SignalType::DataType;
-  using CallbackFnType = std::function<void(SignalDataType)>;
-  using VoidSigType    = signal::SigVoidType;
-  template <typename T, typename U=void>
-  using IsVoidType     = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;
-  template <typename T, typename U=void>
-  using IsNotVoidType  = std::enable_if_t<!std::is_same<T,VoidSigType>::value,U>;
+template <typename ColT, typename MsgT>
+template <typename SerializerT>
+void CallbackProxySend<ColT,MsgT>::serialize(SerializerT& s) {
+  CallbackBase<SignalBaseType>::serializer(s);
+  s | proxy_ | idx_;
+  s | handler_;
+  s | member_;
+}
 
-  CallbackAnon() = default;
-  CallbackAnon(CallbackAnon const&) = default;
-  CallbackAnon(CallbackAnon&&) = default;
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s);
-
-private:
-  template <typename T>
-  IsVoidType<T> triggerDispatch(SignalDataType* data, PipeType const& pid);
-
-  template <typename T>
-  IsNotVoidType<T> triggerDispatch(SignalDataType* data, PipeType const& pid);
-
-  void trigger_(SignalDataType* data, PipeType const& pid) override;
-  void trigger_(SignalDataType* data) override;
-};
+template <typename ColT, typename MsgT>
+void CallbackProxySend<ColT,MsgT>::trigger_(SignalDataType* data) {
+  theCollection()->sendMsgWithHan(proxy_.index(idx_),data,handler_,member_);
+}
 
 }}} /* end namespace vt::pipe::callback */
 
-#include "vt/pipe/callback/anon/callback_anon.impl.h"
-
-#endif /*INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_PROXY_SEND_CALLBACK_PROXY_SEND_IMPL_H*/

@@ -50,7 +50,6 @@
 #include "vt/pipe/signal/signal.h"
 #include "vt/pipe/callback/callback_base.h"
 #include "vt/vrt/collection/active/active_funcs.h"
-#include "vt/vrt/collection/manager.h"
 
 #include <functional>
 #include <cassert>
@@ -76,19 +75,10 @@ struct CallbackProxyBcast : CallbackBase<signal::Signal<MsgT>> {
   { }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    CallbackBase<SignalBaseType>::serializer(s);
-    s | proxy_;
-    s | handler_;
-    s | member_;
-  }
+  void serialize(SerializerT& s);
 
 private:
-  void trigger_(SignalDataType* data) override {
-    theCollection()->broadcastMsgWithHan(
-      proxy_,data,handler_,member_,nullptr,true
-    );
-  }
+  void trigger_(SignalDataType* data) override;
 
 private:
   ProxyType proxy_     = {};

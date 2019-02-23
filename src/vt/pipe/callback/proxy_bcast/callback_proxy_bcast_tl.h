@@ -110,4 +110,6 @@ private:
 
 }}} /* end namespace vt::pipe::callback */
 
+#include "vt/pipe/callback/handler_bcast/callback_bcast_tl.impl.h"
+
 #endif /*INCLUDED_PIPE_CALLBACK_PROXY_BCAST_CALLBACK_PROXY_BCAST_TL_H*/

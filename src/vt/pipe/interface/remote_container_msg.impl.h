@@ -49,7 +49,7 @@
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/interface/remote_container_msg.h"
 #include "vt/pipe/id/pipe_id.h"
-#include "vt/pipe/pipe_manager.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/context/context.h"
 #include "vt/messaging/message.h"
 #include "vt/pipe/signal/signal.h"
@@ -130,7 +130,7 @@ void RemoteContainerMsg<MsgT,TupleT>::trigger(MsgU* data) {
   );
   if (is_send_back) {
     auto const& pipe = this->getPipe();
-    theCB()->triggerSendBack<MsgT>(pipe,data);
+    triggerSendBack<MsgT>(pipe,data);
   } else {
     triggerDirect(data);
   }

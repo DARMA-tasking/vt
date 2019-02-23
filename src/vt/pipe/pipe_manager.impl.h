@@ -45,6 +45,7 @@
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/pipe_manager.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/pipe/state/pipe_state.h"
 #include "vt/pipe/interface/remote_container_msg.h"
 #include "vt/pipe/interface/send_container.h"
@@ -139,6 +140,26 @@ Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
 template <typename ColT, typename MsgT, PipeManager::ColMemType<ColT,MsgT> f>
 Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
   return makeCallbackSingleProxyBcastDirect<ColT,MsgT,f>(proxy);
+}
+
+template <typename MsgT>
+void triggerSendBack(PipeType const& pipe, MsgT* data) {
+  return theCB()->triggerSendBack(pipe,data);
+}
+
+template <typename MsgT>
+void triggerPipeTyped(PipeType const& pipe, MsgT* msg) {
+  return theCB()->triggerPipeTyped(pipe,msg);
+}
+
+template <typename MsgT>
+void triggerPipeUnknown(PipeType const& pipe, MsgT* msg) {
+  return theCB()->triggerPipeUnknown(pipe,msg);
+}
+
+template <typename MsgT>
+void triggerCallbackMsgHan(MsgT* msg) {
+  return PipeManager::triggerCallbackMsgHan(msg);
 }
 
 }} /* end namespace vt::pipe */

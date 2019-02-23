@@ -60,6 +60,8 @@
 #include "vt/activefn/activefn.h"
 #include "vt/context/context.h"
 #include "vt/utils/static_checks/functor.h"
+#include "vt/registry/auto/collection/auto_registry_collection.h"
+#include "vt/vrt/collection/dispatch/registry.h"
 
 #include <memory>
 
@@ -220,7 +222,7 @@ PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(
     nullptr
   );
-  auto const& vrt_handler = theCollection()->getDispatchHandler<MsgT,ColT>();
+  auto const& vrt_handler = vrt::collection::makeVrtDispatch<MsgT,ColT>();
   bool const member = false;
   auto cb = CallbackT(
     callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,
@@ -248,7 +250,7 @@ PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto const& handler =
     auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(nullptr);
-  auto const& vrt_handler = theCollection()->getDispatchHandler<MsgT,ColT>();
+  auto const& vrt_handler = vrt::collection::makeVrtDispatch<MsgT,ColT>();
   bool const member = true;
   auto cb = CallbackT(
     callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,

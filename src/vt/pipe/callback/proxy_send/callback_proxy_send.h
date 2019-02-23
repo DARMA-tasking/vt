@@ -51,7 +51,7 @@
 #include "vt/pipe/callback/callback_base.h"
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/vrt/proxy/collection_elm_proxy.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/vrt/collection/proxy.h"
 
 #include <cassert>
 
@@ -82,19 +82,10 @@ struct CallbackProxySend : CallbackBase<signal::Signal<MsgT>> {
   { }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    CallbackBase<SignalBaseType>::serializer(s);
-    s | proxy_ | idx_;
-    s | handler_;
-    s | member_;
-  }
+  void serialize(SerializerT& s);
 
 private:
-  void trigger_(SignalDataType* data) override {
-    theCollection()->sendMsgWithHan(
-      proxy_.index(idx_),data,handler_,member_,nullptr
-    );
-  }
+  void trigger_(SignalDataType* data) override;
 
 private:
   ProxyType proxy_     = {};

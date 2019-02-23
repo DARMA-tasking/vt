@@ -100,4 +100,6 @@ private:
 
 }}} /* end namespace vt::pipe::callback */
 
+#include "vt/pipe/callback/handler_bcast/callback_bcast.impl.h"
+
 #endif /*INCLUDED_PIPE_CALLBACK_HANDLER_BCAST_CALLBACK_BCAST_H*/

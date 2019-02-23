@@ -50,8 +50,8 @@
 #include "vt/pipe/callback/callback_base_tl.h"
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast_tl.h"
 #include "vt/pipe/id/pipe_id.h"
-#include "vt/pipe/pipe_manager.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/pipe/pipe_manager.fwd.h"
+#include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/context/context.h"
@@ -74,7 +74,7 @@ void CallbackProxyBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     pipe, this_node
   );
   if (this_node == pipe_node) {
-    theCB()->triggerPipeTyped<MsgT>(pipe,msg);
+    triggerPipeTyped<MsgT>(pipe,msg);
   } else {
     /*
      * Set pipe type on the message envelope; use the group in the envelope in
@@ -82,9 +82,7 @@ void CallbackProxyBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
      */
     setPipeType(msg->env);
     envelopeSetGroup(msg->env,pipe);
-    theMsg()->sendMsgAuto<MsgT,PipeManager::triggerCallbackMsgHan>(
-      pipe_node,msg
-    );
+    theMsg()->sendMsgAuto<MsgT,triggerCallbackMsgHan>(pipe_node,msg);
   }
 }
 
@@ -107,9 +105,9 @@ void CallbackProxyBcastDirect::trigger(MsgT* msg, PipeType const& pipe) {
     pipe, this_node, handler_, vrt_dispatch_han_
   );
   if (this_node == pipe_node) {
-    theCB()->triggerPipeTyped<MsgT>(pipe,msg);
+    triggerPipeTyped<MsgT>(pipe,msg);
   } else {
-    auto dispatcher = theCollection()->getDispatcher(vrt_dispatch_han_);
+    auto dispatcher = vrt::collection::getDispatcher(vrt_dispatch_han_);
     auto const& proxy = proxy_;
     dispatcher->broadcast(proxy,msg,handler_,member_);
   }
