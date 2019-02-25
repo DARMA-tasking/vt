@@ -182,7 +182,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
 
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
-  auto const next_node = (my_node == nb_nodes - 1 ? 0 : my_node + 1);
+  auto const next_node = (my_node + 1) % nb_nodes;
   auto const entity    = locat::arbitrary_entity + my_node;
 
   // register the entity on the current node
