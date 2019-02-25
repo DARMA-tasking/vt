@@ -87,12 +87,14 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities) {
   // Wait for every nodes to be registered
   vt::theCollective()->barrier();
 
-  // Every nodes to a get location on every entity
+  int check_sum = 0;
+  bool success;
+
   for (auto i = 0; i < nb_nodes; ++i) {
-    bool success = false;
+    success = false;
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      locat::arbitrary_entity + i, i, [i, &success, my_node](vt::NodeType node) {
+      locat::arbitrary_entity + i, i, [i, &success, &check_sum, my_node](vt::NodeType node) {
 
         auto const cur = vt::theContext()->getNode();
         // let p: i == my_node and q: cur == node
@@ -100,11 +102,17 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities) {
         EXPECT_TRUE(i not_eq my_node or cur == node);
         EXPECT_EQ(i, node);
         success = true;
+        check_sum++;
       }
     );
+
+    while (not success) { vt::runScheduler(); }
+    vt::theCollective()->barrier();
+
     if (i == my_node) {
       // this test can only be done for cases where getLocation is synchronous -> home_node
       EXPECT_TRUE(success);
+      EXPECT_EQ(check_sum, i + 1);
     }
   }
 }
@@ -193,20 +201,36 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
   vt::theLocMan()->virtual_loc->registerEntityMigrated(previous_node_entity, my_node);
   vt::theCollective()->barrier();
 
-  // Every nodes to a get location on every entity
+  int check_sum = 0;
+  bool success;
+
   for (auto i = 0; i < nb_nodes; ++i) {
-    bool success = false;
+    success = false;
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      locat::arbitrary_entity + i, i, [i, &success, my_node, nb_nodes](vt::NodeType node) {
-        auto expected_node = (i + 1 < nb_nodes ? i + 1 : 0);
-        EXPECT_EQ(expected_node, node);
+      locat::arbitrary_entity + i, i,
+      [i, &success, &check_sum, my_node, nb_nodes](vt::NodeType found) {
+
+        auto expected = (i + 1) % nb_nodes;
+        EXPECT_EQ(expected, found);
         success = true;
+        check_sum++;
+
+        debug_print(
+          location, node,
+          "rank:{} get location of migrated entity {}: found={}, expected={}\n",
+          my_node, locat::arbitrary_entity + i, found, expected
+        );
       }
     );
+
+    while (not success) { vt::runScheduler(); }
+    vt::theCollective()->barrier();
+
     // this test can only be done for cases where getLocation is synchronous -> local or cache
     if (i == my_node || i + 1 == my_node) {
       EXPECT_TRUE(success);
+      EXPECT_EQ(check_sum, i + 1);
     }
   }
 }
