@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                    test_location_message.h
+//                    test_location_common.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TEST_LOCATION_MESSAGE_H
-#define INCLUDED_TEST_LOCATION_MESSAGE_H
+#if !defined INCLUDED_TEST_LOCATION_COMMON_H
+#define INCLUDED_TEST_LOCATION_COMMON_H
 
 #include "data_message.h"
 #include "vt/transport.h"
@@ -179,4 +179,4 @@ using MsgType = testing::Types<ShortMsg, LongMsg>;
 
 }}}} // namespace vt::tests::unit::locat
 
-#endif /*INCLUDED_TEST_LOCATION_MESSAGE_H*/
+#endif /*INCLUDED_TEST_LOCATION_COMMON_H*/
