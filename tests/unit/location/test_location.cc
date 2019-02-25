@@ -90,7 +90,7 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities) {
 
   // Every nodes to a get location on every entity
   for (auto i = 0; i < nb_nodes; ++i) {
-    bool success= false;
+    bool success = false;
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
       locat::arbitrary_entity + i, i, [i, &success, my_node](vt::NodeType node) {
@@ -124,12 +124,10 @@ TEST_F(TestLocation, test_unregister_multiple_entities) {
   // Wait for every nodes to be registered and unregister
   vt::theCollective()->barrier();
 
-  // Every nodes to a get location on every entity
   for (auto i = 0; i < nb_nodes; ++i) {
-    bool success = false;
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      locat::arbitrary_entity + i, i, [i, &success, my_node](vt::NodeType node) {
+      locat::arbitrary_entity + i, i, [](vt::NodeType node) {
         // This lambda should not be executed if the unregisterEntity works correctly
         FAIL() << "entity should have been yet unregistered";
       }
@@ -187,7 +185,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
   auto const next_node = (my_node == nb_nodes - 1 ? 0 : my_node + 1);
   auto const entity    = locat::arbitrary_entity + my_node;
 
-  // Register the entity on the node 0
+  // register the entity on the current node
   vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
   vt::theCollective()->barrier();
 
