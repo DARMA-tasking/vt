@@ -73,7 +73,6 @@ TEST_F(TestLocation, test_register_and_get_entity) {
   if (my_node == home) {
     // only performed if getLocation is synchronous, i.e on home_node
     EXPECT_TRUE(success);
-    vt::theLocMan()->virtual_loc->unregisterEntity(entity);
   }
 }
 
@@ -108,8 +107,6 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities) {
       EXPECT_TRUE(success);
     }
   }
-  // finalize
-  vt::theLocMan()->virtual_loc->unregisterEntity(entity);
 }
 
 TEST_F(TestLocation, test_unregister_multiple_entities) {
@@ -172,10 +169,6 @@ TEST_F(TestLocation, test_migrate_entity) {
       EXPECT_TRUE(node == old_home or node == new_home);
     });
   }
-  // finalize
-  if (my_node == new_home) {
-    vt::theLocMan()->virtual_loc->unregisterEntity(entity);
-  }
 }
 
 TEST_F(TestLocation, test_migrate_multiple_entities) {
@@ -215,10 +208,6 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
     if (i == my_node || i + 1 == my_node) {
       EXPECT_TRUE(success);
     }
-  }
-  // finalize
-  if (my_node == next_node) {
-    vt::theLocMan()->virtual_loc->unregisterEntity(entity);
   }
 }
 
@@ -261,10 +250,6 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
 
     EXPECT_EQ(msg_count, nb_nodes - 1);
   }
-  // finalize
-  if (my_node == home) {
-    vt::theLocMan()->virtual_loc->unregisterEntity(entity);
-  }
 }
 
 TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits){
@@ -288,9 +273,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits){
 
   // finalize
   if (my_node == home) {
-    vt::theLocMan()->virtual_loc->unregisterEntity(entity);
     EXPECT_EQ(nb_received, (nb_nodes - 1) * nb_rounds);
-    EXPECT_FALSE(locat::isCached(entity));
   }
 }
 
@@ -334,10 +317,8 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity){
 
     // finalize
   if (my_node == new_home) {
-    vt::theLocMan()->virtual_loc->unregisterEntity(entity);
     auto const min_expected_ack = (nb_nodes - 2) * nb_rounds;
     EXPECT_TRUE(nb_received >= min_expected_ack);
-    EXPECT_FALSE(locat::isCached(entity));
   }
 }
 
