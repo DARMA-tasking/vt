@@ -77,6 +77,7 @@ void TermAction::afterAddEpochAction(EpochType const& epoch) {
    *  local termination of a specific epoch is waiting for detection
    */
   theTerm()->produce(term::any_epoch_sentinel);
+
   auto const& status = testEpochFinished(epoch);
   if (status == TermStatusEnum::Finished) {
     triggerAllEpochActions(epoch);
