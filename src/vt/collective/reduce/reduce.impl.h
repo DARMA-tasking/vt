@@ -85,6 +85,30 @@ template <typename MessageT>
   runnable::Runnable<MessageT>::run(handler, nullptr, msg, from_node);
 }
 
+template <typename OpT, typename MsgT>
+EpochType Reduce::reduce(
+  NodeType const& root, MsgT* msg, Callback<MsgT> cb, TagType const& tag,
+  EpochType const& epoch, ReduceNumType const& num_contrib,
+  VirtualProxyType const& proxy
+) {
+  using ReduceCBType = collective::reduce::operators::ReduceCallback<MsgT>;
+  msg->setCallback(cb);
+  return reduce<MsgT,MsgT::template msgHandler<MsgT,OpT,ReduceCBType>>(
+    root,msg,tag,epoch,num_contrib,proxy
+  );
+}
+
+template <typename OpT, typename FunctorT, typename MsgT>
+EpochType Reduce::reduce(
+  NodeType const& root, MsgT* msg, TagType const& tag,
+  EpochType const& epoch, ReduceNumType const& num_contrib,
+  VirtualProxyType const& proxy
+) {
+  return reduce<MsgT,MsgT::template msgHandler<MsgT,OpT,FunctorT>>(
+    root,msg,tag,epoch,num_contrib,proxy
+  );
+}
+
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EpochType Reduce::reduce(
   NodeType const& root, MessageT* const msg, TagType const& tag,
