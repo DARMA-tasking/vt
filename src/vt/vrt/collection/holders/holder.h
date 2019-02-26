@@ -55,6 +55,7 @@
 
 #include <unordered_map>
 #include <tuple>
+#include <list>
 #include <memory>
 #include <functional>
 #include <cstdlib>
@@ -64,15 +65,18 @@ namespace vt { namespace vrt { namespace collection {
 template <typename ColT, typename IndexT>
 struct Holder {
   template <typename T, typename U>
-  using ContType = std::unordered_map<T, U>;
-  using CollectionType = CollectionBase<ColT, IndexT>;
-  using VirtualPtrType = std::unique_ptr<CollectionType>;
-  using LookupElementType = IndexT;
-  using InnerHolder = ElementHolder<ColT, IndexT>;
+  using ContType            = std::unordered_map<T, U>;
+  using CollectionType      = CollectionBase<ColT, IndexT>;
+  using VirtualPtrType      = std::unique_ptr<CollectionType>;
+  using LookupElementType   = IndexT;
+  using InnerHolder         = ElementHolder<ColT, IndexT>;
   using TypedIndexContainer = ContType<LookupElementType, InnerHolder>;
-  using FuncApplyType = std::function<void(IndexT const&, CollectionType*)>;
-  using FuncExprType = std::function<bool(IndexT const&)>;
-  using CountType = uint64_t;
+  using LBContFnType        = std::function<void()>;
+  using LBContListType      = std::list<LBContFnType>;
+  using TypedLBContainer    = ContType<LookupElementType, LBContListType>;
+  using FuncApplyType       = std::function<void(IndexT const&, CollectionType*)>;
+  using FuncExprType        = std::function<bool(IndexT const&)>;
+  using CountType           = uint64_t;
 
   bool exists(IndexT const& idx);
   InnerHolder& lookup(IndexT const& idx);
@@ -94,6 +98,9 @@ struct Holder {
   CountType numReady() const { return elements_ready_; }
   void addReady(CountType num = 1) { elements_ready_ += 1; }
   void clearReady() { elements_ready_ = 0; }
+  void addLBCont(IndexT const& idx, LBContFnType fn);
+  void runLBCont(IndexT const& idx);
+  void runLBCont();
 
   friend struct CollectionManager;
 
@@ -103,6 +110,7 @@ private:
   std::unordered_map<EpochType, CollectionMessage<ColT>*> bcasts_ = {};
   EpochType cur_bcast_epoch_                                      = 1;
   TypedIndexContainer vc_container_                               = {};
+  TypedLBContainer vc_lb_continuation_                            = {};
   bool is_destroyed_                                              = false;
   GroupType cur_group_                                            = no_group;
   bool use_group_                                                 = false;

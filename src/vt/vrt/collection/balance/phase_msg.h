@@ -56,15 +56,20 @@ template <typename ColT, typename BaseMsgT>
 struct PhaseMsgBase : BaseMsgT {
   using ProxyType = typename ColT::CollectionProxyType;
   PhaseMsgBase() = default;
-  PhaseMsgBase(PhaseType const& in_cur_phase, ProxyType const& in_proxy)
-    : cur_phase_(in_cur_phase), proxy_(in_proxy), BaseMsgT()
+  PhaseMsgBase(
+    PhaseType const& in_cur_phase, ProxyType const& in_proxy,
+    bool in_do_sync = true
+  ) : cur_phase_(in_cur_phase), proxy_(in_proxy), do_sync_(in_do_sync)
   { }
 
   ProxyType getProxy() const { return proxy_; }
   PhaseType getPhase() const { return cur_phase_; }
+  bool doSync() const { return do_sync_; }
+
 private:
   ProxyType proxy_ = {};
   PhaseType cur_phase_ = fst_lb_phase;
+  bool do_sync_ = true;
 };
 
 template <typename ColT>

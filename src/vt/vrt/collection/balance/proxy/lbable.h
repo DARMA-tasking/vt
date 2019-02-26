@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          proc_stats.impl.h
+//                          lbable.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,58 +42,37 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
 
-#include <vector>
-#include <unordered_map>
-#include <cassert>
-#include <cstdlib>
+#include <functional>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT>
-/*static*/ ProcStats::ElementIDType ProcStats::addProcStats(
-  VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-  PhaseType const& phase, TimeType const& time
-) {
-  // Assign a new element ID if it's the first time this runs
-  if (col_elm->stats_elm_id_ == 0) {
-    col_elm->stats_elm_id_ = ProcStats::getNextElm();
-  }
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct LBable : BaseProxyT {
+  using FinishedLBType = std::function<void()>;
 
-  auto const next_elm = col_elm->stats_elm_id_;
-
-  debug_print(
-    lb, node,
-    "ProcStats::addProcStats: element={}, phase={}, load={}\n",
-    next_elm, phase, time
+  LBable() = default;
+  LBable(
+    typename BaseProxyT::ProxyType const& in_proxy,
+    typename BaseProxyT::ElementProxyType const& in_elm
   );
 
-  proc_data_.resize(phase + 1);
-  auto elm_iter = proc_data_.at(phase).find(next_elm);
-  vtAssert(elm_iter == proc_data_.at(phase).end(), "Must not exist");
-  proc_data_.at(phase).emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(next_elm),
-    std::forward_as_tuple(time)
-  );
-  auto migrate_iter = proc_migrate_.find(next_elm);
-  if (migrate_iter == proc_migrate_.end()) {
-    proc_migrate_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(next_elm),
-      std::forward_as_tuple([elm_proxy,col_elm](NodeType node){
-        col_elm->migrate(node);
-      })
-    );
-  }
-  return next_elm;
-}
+  template <typename SerializerT>
+  void serialize(SerializerT& s);
 
-}}}} /* end namespace vt::vrt::collection::balance */
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  void LBsync(MsgT* msg, PhaseType p = no_lb_phase) const;
+  void LBsync(FinishedLBType cont, PhaseType p = no_lb_phase) const;
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H*/
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  void LB(MsgT* msg, PhaseType p = no_lb_phase) const;
+  void LB(FinishedLBType cont, PhaseType p = no_lb_phase) const;
+};
+
+}}} /* end namespace vt::vrt::collection */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H*/

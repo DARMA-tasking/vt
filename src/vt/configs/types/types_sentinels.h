@@ -86,6 +86,7 @@ static constexpr TagType const local_rdma_op_tag                   = s32empty;
 static constexpr GroupType const no_group                          = u64empty;
 static constexpr GroupType const default_group                     = 0xFFFFFFFF;
 static constexpr PhaseType const fst_lb_phase                      = 0;
+static constexpr PhaseType const no_lb_phase                       = u64empty;
 static constexpr PipeType const no_pipe                            = u64empty;
 
 }  // end namespace vt

@@ -636,21 +636,26 @@ public:
   );
 
   /*
-   * The `elmReady` function is called by every element of every collection at
+   * The `elm Ready` function is called by every element of every collection at
    * the phase boundary for each local element residing on a node. Once all
    * elements have invoked it, LB will commence.
    */
   template <typename ColT>
-  void elmReady(
-    VirtualElmProxyType<ColT> const& elm_proxy, PhaseType phase,
-    ActionFinishedLBType continuation = nullptr
+  void elmReadyLB(
+    VirtualElmProxyType<ColT> const& proxy, PhaseType phase,
+    bool do_sync, ActionFinishedLBType continuation
+  );
+
+  template <
+    typename MsgT, typename ColT, ActiveColMemberTypedFnType<MsgT,ColT> f
+  >
+  void elmReadyLB(
+    VirtualElmProxyType<ColT> const& proxy, PhaseType phase, MsgT* msg,
+    bool do_sync
   );
 
   template <typename ColT>
-  void computeStats(
-    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
-    PhaseType const& cur_phase
-  );
+  void elmFinishedLB(VirtualElmProxyType<ColT> const& proxy, PhaseType phase);
 
   template <typename=void>
   static void releaseLBPhase(CollectionPhaseMsg* msg);
@@ -819,6 +824,7 @@ private:
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
+  std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */
@@ -846,6 +852,7 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vt/vrt/collection/dispatch/registry.impl.h"
 #include "vt/vrt/collection/staged_token/token.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
+#include "vt/vrt/collection/balance/proxy/lbable.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"

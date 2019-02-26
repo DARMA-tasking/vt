@@ -62,8 +62,8 @@ namespace vt { namespace collective {
 
 template <typename T>
 using NoneOp = reduce::operators::None<T>;
-
 using NoneType = reduce::operators::NoneType;
+using None = NoneOp<NoneType>;
 
 }} /* end namespace vt::collective */
 

@@ -49,6 +49,7 @@
 #include "vt/vrt/proxy/base_collection_proxy.h"
 #include "vt/activefn/activefn.h"
 #include "vt/pipe/pipe_callback_only.h"
+#include "vt/collective/reduce/operators/functors/none_op.h"
 
 #include <functional>
 
@@ -65,7 +66,7 @@ struct Reducable : BaseProxyT {
   Reducable& operator=(Reducable const&) = default;
 
 
-  template <typename OpT, typename MsgT>
+  template <typename OpT = collective::None, typename MsgT>
   EpochType reduce(
     MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag

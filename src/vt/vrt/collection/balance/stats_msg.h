@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_STATS_MSG_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/messaging/message.h"
 #include "vt/timing/timing.h"
@@ -113,21 +114,6 @@ private:
   ProxyType proxy_ = {};
   PhaseType cur_phase_ = fst_lb_phase;
 };
-
-struct HierLBMsg : Message {
-  HierLBMsg() = default;
-  explicit HierLBMsg(PhaseType const& phase)
-    : cur_phase_(phase)
-  {}
-
-  PhaseType getPhase() const { return cur_phase_; }
-
-private:
-  PhaseType cur_phase_ = fst_lb_phase;
-};
-
-using GreedyLBMsg = HierLBMsg;
-using RotateLBMsg = HierLBMsg;
 
 }}}} /* end namespace vt::vrt::collection::balance */
 

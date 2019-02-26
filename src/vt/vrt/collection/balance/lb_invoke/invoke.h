@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          proc_stats.impl.h
+//                            invoke.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,58 +42,34 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
-
-#include <vector>
-#include <unordered_map>
-#include <cassert>
-#include <cstdlib>
+#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
+#include "vt/configs/arguments/args.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-template <typename ColT>
-/*static*/ ProcStats::ElementIDType ProcStats::addProcStats(
-  VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-  PhaseType const& phase, TimeType const& time
-) {
-  // Assign a new element ID if it's the first time this runs
-  if (col_elm->stats_elm_id_ == 0) {
-    col_elm->stats_elm_id_ = ProcStats::getNextElm();
-  }
+struct InvokeLB {
+  using ArgType = vt::arguments::ArgConfig;
 
-  auto const next_elm = col_elm->stats_elm_id_;
+  static LBType shouldInvoke(PhaseType phase, bool try_file = true);
+  static void startLB(PhaseType phase, LBType lb);
+  static void startLBCollective(InvokeMsg* msg);
+  static void startLBCollective(InvokeReduceMsg* msg);
+  static void startLBCollective(PhaseType phase, LBType lb);
+  static void releaseLB(PhaseType phase);
+  static void releaseLBCollective(InvokeMsg* msg);
+  static void releaseLBCollective(InvokeReduceMsg* msg);
+  static void releaseLBCollective(PhaseType phase);
 
-  debug_print(
-    lb, node,
-    "ProcStats::addProcStats: element={}, phase={}, load={}\n",
-    next_elm, phase, time
-  );
-
-  proc_data_.resize(phase + 1);
-  auto elm_iter = proc_data_.at(phase).find(next_elm);
-  vtAssert(elm_iter == proc_data_.at(phase).end(), "Must not exist");
-  proc_data_.at(phase).emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(next_elm),
-    std::forward_as_tuple(time)
-  );
-  auto migrate_iter = proc_migrate_.find(next_elm);
-  if (migrate_iter == proc_migrate_.end()) {
-    proc_migrate_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(next_elm),
-      std::forward_as_tuple([elm_proxy,col_elm](NodeType node){
-        col_elm->migrate(node);
-      })
-    );
-  }
-  return next_elm;
-}
+private:
+  static PhaseType cached_phase_;
+  static LBType cached_lb_;
+};
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H*/

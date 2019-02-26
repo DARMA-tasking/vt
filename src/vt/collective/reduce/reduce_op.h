@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          proc_stats.impl.h
+//                          reduce_op.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,58 +42,19 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_OP_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_OP_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/collective/reduce/operators/functors/none_op.h"
+#include "vt/collective/reduce/operators/functors/and_op.h"
+#include "vt/collective/reduce/operators/functors/or_op.h"
+#include "vt/collective/reduce/operators/functors/plus_op.h"
+#include "vt/collective/reduce/operators/functors/max_op.h"
+#include "vt/collective/reduce/operators/functors/min_op.h"
+#include "vt/collective/reduce/operators/functors/bit_and_op.h"
+#include "vt/collective/reduce/operators/functors/bit_or_op.h"
+#include "vt/collective/reduce/operators/functors/bit_xor_op.h"
+#include "vt/collective/reduce/operators/default_msg.h"
 
-#include <vector>
-#include <unordered_map>
-#include <cassert>
-#include <cstdlib>
-
-namespace vt { namespace vrt { namespace collection { namespace balance {
-
-template <typename ColT>
-/*static*/ ProcStats::ElementIDType ProcStats::addProcStats(
-  VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-  PhaseType const& phase, TimeType const& time
-) {
-  // Assign a new element ID if it's the first time this runs
-  if (col_elm->stats_elm_id_ == 0) {
-    col_elm->stats_elm_id_ = ProcStats::getNextElm();
-  }
-
-  auto const next_elm = col_elm->stats_elm_id_;
-
-  debug_print(
-    lb, node,
-    "ProcStats::addProcStats: element={}, phase={}, load={}\n",
-    next_elm, phase, time
-  );
-
-  proc_data_.resize(phase + 1);
-  auto elm_iter = proc_data_.at(phase).find(next_elm);
-  vtAssert(elm_iter == proc_data_.at(phase).end(), "Must not exist");
-  proc_data_.at(phase).emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(next_elm),
-    std::forward_as_tuple(time)
-  );
-  auto migrate_iter = proc_migrate_.find(next_elm);
-  if (migrate_iter == proc_migrate_.end()) {
-    proc_migrate_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(next_elm),
-      std::forward_as_tuple([elm_proxy,col_elm](NodeType node){
-        col_elm->migrate(node);
-      })
-    );
-  }
-  return next_elm;
-}
-
-}}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_OP_H*/
