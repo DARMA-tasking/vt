@@ -121,7 +121,7 @@ void IterCol::finished(ContinueMsg* msg) {
 
   auto proxy = getCollectionProxy();
   auto nmsg = makeMessage<IterMsg>(10,cur_iter);
-  proxy(idx).LB<IterMsg,&IterCol::nextIter>(nmsg.get());
+  proxy(idx).LB<IterMsg,&IterCol::nextIter>(nmsg);
 }
 
 void IterCol::nextIter(IterMsg* msg) {
