@@ -73,6 +73,16 @@ void LBable<ColT,IndexT,BaseProxyT>::LBsync(MsgT* msg, PhaseType p) const {
   return theCollection()->elmReadyLB<MsgT,ColT,f>(proxy,p,msg,true);
 }
 
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
+>
+void LBable<ColT,IndexT,BaseProxyT>::LBsync(Args&&... args) const {
+  return LBsync<MsgT,f>(makeMessage<MsgT>(args...));
+}
+
+
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
 void LBable<ColT,IndexT,BaseProxyT>::LBsync(
@@ -98,6 +108,14 @@ void LBable<ColT,IndexT,BaseProxyT>::LB(MsgT* msg, PhaseType p) const {
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
   return theCollection()->elmReadyLB<MsgT,ColT,f>(proxy,p,msg,false);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
+>
+void LBable<ColT,IndexT,BaseProxyT>::LB(Args&&... args) const {
+  return LB<MsgT,f>(makeMessage<MsgT>(args...));
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>

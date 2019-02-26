@@ -65,12 +65,20 @@ struct LBable : BaseProxyT {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
+  template <
+    typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
+  >
+  void LBsync(Args&&... args) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
   void LBsync(MsgT* msg, PhaseType p = no_lb_phase) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
   void LBsync(MsgSharedPtr<MsgT> msg, PhaseType p = no_lb_phase) const;
   void LBsync(FinishedLBType cont, PhaseType p = no_lb_phase) const;
 
+  template <
+    typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
+  >
+  void LB(Args&&... args) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
   void LB(MsgT* msg, PhaseType p = no_lb_phase) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
