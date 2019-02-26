@@ -71,6 +71,12 @@ struct Reducable : BaseProxyT {
     TagType const& tag = no_tag
   ) const;
 
+  template <typename OpT, typename FunctorT, typename MsgT>
+  EpochType reduce(
+    MsgT *const msg, EpochType const& epoch = no_epoch,
+    TagType const& tag = no_tag
+  ) const;
+
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   EpochType reduce(
     MsgT *const msg, EpochType const& epoch = no_epoch,

@@ -80,6 +80,20 @@ EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename OpT, typename FunctorT, typename MsgT>
+EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
+  MsgT *const msg, EpochType const& epoch, TagType const& tag
+) const {
+  auto const proxy = this->getProxy();
+  auto const root_node = 0;
+  return theCollection()->reduceMsg<
+    ColT,
+    MsgT,
+    MsgT::template msgHandler<MsgT, OpT, FunctorT>
+  >(proxy,msg,epoch,tag,root_node);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
 EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
   MsgT *const msg, EpochType const& epoch, TagType const& tag,
