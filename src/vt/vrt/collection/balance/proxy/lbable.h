@@ -46,6 +46,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H
 
 #include "vt/config.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 #include <functional>
 
@@ -66,10 +67,14 @@ struct LBable : BaseProxyT {
 
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
   void LBsync(MsgT* msg, PhaseType p = no_lb_phase) const;
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  void LBsync(MsgSharedPtr<MsgT> msg, PhaseType p = no_lb_phase) const;
   void LBsync(FinishedLBType cont, PhaseType p = no_lb_phase) const;
 
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
   void LB(MsgT* msg, PhaseType p = no_lb_phase) const;
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  void LB(MsgSharedPtr<MsgT> msg, PhaseType p = no_lb_phase) const;
   void LB(FinishedLBType cont, PhaseType p = no_lb_phase) const;
 };
 
