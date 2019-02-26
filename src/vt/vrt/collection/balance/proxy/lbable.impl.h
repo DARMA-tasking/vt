@@ -74,10 +74,21 @@ void LBable<ColT,IndexT,BaseProxyT>::LBsync(MsgT* msg, PhaseType p) const {
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+void LBable<ColT,IndexT,BaseProxyT>::LBsync(
+  MsgSharedPtr<MsgT> msg, PhaseType p
+) const {
+  return LBsync<MsgT,f>(msg.get(),p);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
 void LBable<ColT,IndexT,BaseProxyT>::LBsync(
   FinishedLBType cont, PhaseType p
 ) const {
-  return theCollection()->elmReadyLB<ColT>(*this,p,true,cont);
+  auto col_proxy = this->getCollectionProxy();
+  auto elm_proxy = this->getElementProxy();
+  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
+  return theCollection()->elmReadyLB<ColT>(proxy,p,true,cont);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -87,6 +98,14 @@ void LBable<ColT,IndexT,BaseProxyT>::LB(MsgT* msg, PhaseType p) const {
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
   return theCollection()->elmReadyLB<MsgT,ColT,f>(proxy,p,msg,false);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+void LBable<ColT,IndexT,BaseProxyT>::LB(
+  MsgSharedPtr<MsgT> msg, PhaseType p
+) const {
+  return LB<MsgT,f>(msg.get(),p);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
