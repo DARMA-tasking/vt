@@ -55,6 +55,12 @@ using namespace vt;
 using namespace vt::collective;
 using namespace vt::tests::unit;
 
+enum struct ReduceOP : int {
+  Plus = 0,
+  Max  = 1,
+  Min  = 2
+};
+
 struct MyReduceMsg : ReduceMsg {
   MyReduceMsg(int in_num)
     : num(in_num)
@@ -69,17 +75,11 @@ struct SysMsg : ReduceTMsg<int> {
   {}
 };
 
-struct Print {
-  void operator()(SysMsg* msg) {
-    fmt::print("final value={}\n", msg->getConstVal());
-  }
-};
 
 struct TestReduce : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
   static void reducePlus(MyReduceMsg* msg) {
-
     debug_print(
       vrt_coll, node,
       "cur={}: is_root={}, count={}, next={}, num={}\n",
@@ -88,7 +88,10 @@ struct TestReduce : TestParallelHarness {
     );
 
     if (msg->isRoot()) {
-      fmt::print("final num={}\n", msg->num);
+      debug_print(vrt_coll, node, "final value={}\n", msg->num);
+      auto n = vt::theContext()->getNumNodes();
+      // check expected result
+      EXPECT_EQ(msg->num, n * (n - 1)/2);
     } else {
       auto fst_msg = msg;
       auto cur_msg = msg->getNext<MyReduceMsg>();
@@ -105,6 +108,26 @@ struct TestReduce : TestParallelHarness {
         fst_msg->num += cur_msg->num;
         cur_msg = cur_msg->getNext<MyReduceMsg>();
       }
+    }
+  }
+};
+
+template <ReduceOP oper>
+struct Verify {
+
+  void operator()(SysMsg* msg) {
+    // print value
+    auto value = msg->getConstVal();
+    debug_print(vrt_coll, node, "final value={}\n", value);
+
+    // check result
+    auto n = vt::theContext()->getNumNodes();
+
+    switch (oper) {
+      case ReduceOP::Plus: EXPECT_EQ(value, n * (n - 1)/2); break;
+      case ReduceOP::Min:  EXPECT_EQ(value, 0); break;
+      case ReduceOP::Max:  EXPECT_EQ(value, n - 1); break;
+      default: vtAbort("Failure: should not be reached"); break;
     }
   }
 };
@@ -126,7 +149,7 @@ TEST_F(TestReduce, test_reduce_plus_default_op) {
   debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<
     SysMsg,
-    SysMsg::msgHandler<SysMsg,PlusOp<int>,Print>
+    SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<ReduceOP::Plus> >
   >(root, msg);
 }
 
@@ -138,7 +161,7 @@ TEST_F(TestReduce, test_reduce_max_default_op) {
   debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<
     SysMsg,
-    SysMsg::msgHandler<SysMsg,MaxOp<int>,Print>
+    SysMsg::msgHandler<SysMsg, MaxOp<int>, Verify<ReduceOP::Max> >
   >(root, msg);
 }
 
@@ -150,7 +173,7 @@ TEST_F(TestReduce, test_reduce_min_default_op) {
   debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<
     SysMsg,
-    SysMsg::msgHandler<SysMsg,MinOp<int>,Print>
+    SysMsg::msgHandler<SysMsg, MinOp<int>, Verify<ReduceOP::Min> >
   >(root, msg);
 }
 
