@@ -233,10 +233,7 @@ struct TestReduceCollection : TestParallelHarness {
     // fmt::print(
     //   "reduce_msg->vec.size()={}\n", reduce_msg->getConstVal().vec.size()
     // );
-    proxy.reduce<
-      SysMsgVec,
-      SysMsgVec::msgHandler<SysMsgVec,PlusOp<VectorPayload>,PrintVec>
-    >(reduce_msg);
+    proxy.reduce<PlusOp<VectorPayload>,PrintVec>(reduce_msg);
   }
 
   static void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
