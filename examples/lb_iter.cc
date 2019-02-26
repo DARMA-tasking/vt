@@ -55,56 +55,41 @@ static int32_t num_iter = 8;
 struct IterCol : Collection<IterCol,Index1D> {
   IterCol() = default;
 
+  struct ContinueMsg : collective::ReduceNoneMsg { };
+  struct IterMsg : CollectionMessage<IterCol> {
+    IterMsg() = default;
+    explicit IterMsg(int64_t const in_work_amt, int64_t const in_iter)
+      : iter_(in_iter), work_amt_(in_work_amt)
+    { }
+
+    int64_t iter_ = 0;
+    int64_t work_amt_ = 0;
+  };
+
+  void iterWork(IterMsg* msg);
+  void nextIter(IterMsg* msg);
+  void finished(ContinueMsg* msg);
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    Collection<IterCol,Index1D>::serialize(s);
+    s | cur_iter | data_2;
+  }
+
 private:
-  int data_1 = 29;
-public:
+  int64_t cur_iter = 0;
   float data_2 = 2.4f;
 };
 
-struct IterMsg : CollectionMessage<IterCol> {
-  IterMsg() = default;
-  explicit IterMsg(int64_t const in_work_amt, int64_t const in_iter)
-    : iter_(in_iter), work_amt_(in_work_amt)
-  { }
-
-  int64_t iter_ = 0;
-  int64_t work_amt_ = 0;
-};
-
-struct IterReduceMsg : collective::ReduceTMsg<NoneType> {};
-
-static int32_t cur_iter = 0;
 static TimeType cur_time = 0;
-static CollectionIndexProxy<IterCol,Index1D> proxy = {};
-
-static void startIter(int32_t const iter);
-
-struct FinishedIter {
-  void operator()(IterReduceMsg* raw_msg) {
-    auto msg = promoteMsg(raw_msg);
-    auto const new_time = ::vt::timing::Timing::getCurrentTime();
-    ::fmt::print(
-      "finished iteration: iter={},time={}\n",
-      cur_iter,new_time-cur_time
-    );
-    cur_iter++;
-    cur_time = new_time;
-    if (cur_iter < num_iter) {
-      theCollection()->nextPhase<IterCol>(proxy,cur_iter-1,[=]{
-        startIter(cur_iter);
-      });
-    }
-  }
-};
 
 static double weight = 1.0f;
 
-static void iterWork(IterMsg* msg, IterCol* col) {
+void IterCol::iterWork(IterMsg* msg) {
   double val = 0.1f;
   double val2 = 0.4f * msg->work_amt_;
-  auto const idx = col->getIndex().x();
+  auto const idx = getIndex().x();
   auto const iter = msg->iter_;
-  //::fmt::print("proc={}, idx={}, iter={}\n", theContext()->getNode(),idx,iter);
   int64_t const max_work = 1000 * weight;
   int64_t const mid_work = 100 * weight;
   int64_t const min_work = 1 * weight;
@@ -113,21 +98,39 @@ static void iterWork(IterMsg* msg, IterCol* col) {
     val *= val2 + i*29.4;
     val2 += 1.0;
   }
-  col->data_2 += val + val2;
+  data_2 += val + val2;
 
-  auto reduce_msg = makeSharedMessage<IterReduceMsg>();
-  theCollection()->reduceMsg<
-    IterCol,
-    IterReduceMsg,
-    IterReduceMsg::template msgHandler<
-      IterReduceMsg, collective::PlusOp<collective::NoneType>, FinishedIter
-    >
-  >(col->getCollectionProxy(), reduce_msg);
+  auto proxy = getCollectionProxy();
+  auto cmsg = makeMessage<ContinueMsg>();
+  auto cb = theCB()->makeBcast<IterCol,ContinueMsg,&IterCol::finished>(proxy);
+  proxy.reduce(cmsg.get(),cb);
 }
 
-static void startIter(int32_t const iter) {
-  auto msg = makeSharedMessage<IterMsg>(10,iter);
-  proxy.broadcast<IterMsg,iterWork>(msg);
+void IterCol::finished(ContinueMsg* msg) {
+  auto const idx = getIndex().x();
+
+  // fmt::print("idx={}, iter={}: finished\n", getIndex(), cur_iter);
+
+  if (idx == 0) {
+    auto const new_time = ::vt::timing::Timing::getCurrentTime();
+    ::fmt::print("iteration: iter={},time={}\n", cur_iter,new_time-cur_time);
+    cur_time = ::vt::timing::Timing::getCurrentTime();
+  }
+
+  cur_iter++;
+
+  auto proxy = getCollectionProxy();
+  auto nmsg = makeMessage<IterMsg>(10,cur_iter);
+  proxy(idx).LB<IterMsg,&IterCol::nextIter>(nmsg.get());
+}
+
+void IterCol::nextIter(IterMsg* msg) {
+  if (msg->iter_ < num_iter) {
+    auto proxy = getCollectionProxy();
+    auto idx = getIndex().x();
+    auto nmsg = makeMessage<IterMsg>(*msg);
+    proxy(idx).send<IterMsg,&IterCol::iterWork>(nmsg.get());
+  }
 }
 
 int main(int argc, char** argv) {
@@ -148,6 +151,8 @@ int main(int argc, char** argv) {
     num_iter = atoi(argv[3]);
   }
 
+  cur_time = ::vt::timing::Timing::getCurrentTime();
+
   if (this_node == 0) {
     ::fmt::print(
       "lb_iter: elms={}, weight={}, num_iter={}\n",
@@ -155,9 +160,9 @@ int main(int argc, char** argv) {
     );
 
     auto const& range = Index1D(num_elms);
-    proxy = theCollection()->construct<IterCol>(range);
-    cur_time = ::vt::timing::Timing::getCurrentTime();
-    startIter(0);
+    auto proxy = theCollection()->construct<IterCol>(range);
+    auto msg = makeMessage<IterCol::IterMsg>(10,0);
+    proxy.broadcast<IterCol::IterMsg,&IterCol::nextIter>(msg.get());
   }
 
   while (!rt->isTerminated()) {
