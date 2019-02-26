@@ -81,14 +81,14 @@ struct TestReduce : TestParallelHarness {
 
   static void reducePlus(MyReduceMsg* msg) {
     debug_print(
-      vrt_coll, node,
+      reduce, node,
       "cur={}: is_root={}, count={}, next={}, num={}\n",
       print_ptr(msg), print_bool(msg->isRoot()), msg->getCount(),
       print_ptr(msg->getNext<MyReduceMsg>()), msg->num
     );
 
     if (msg->isRoot()) {
-      debug_print(vrt_coll, node, "final value={}\n", msg->num);
+      debug_print(reduce, node, "final value={}\n", msg->num);
       auto n = vt::theContext()->getNumNodes();
       // check expected result
       EXPECT_EQ(msg->num, n * (n - 1)/2);
@@ -98,7 +98,7 @@ struct TestReduce : TestParallelHarness {
 
       while (cur_msg not_eq nullptr) {
         debug_print(
-          vrt_coll, node,
+          reduce, node,
           "while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
           print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->isRoot()),
           cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()),
@@ -118,7 +118,7 @@ struct Verify {
   void operator()(SysMsg* msg) {
     // print value
     auto value = msg->getConstVal();
-    debug_print(vrt_coll, node, "final value={}\n", value);
+    debug_print(reduce, node, "final value={}\n", value);
 
     // check result
     auto n = vt::theContext()->getNumNodes();
@@ -137,7 +137,7 @@ TEST_F(TestReduce, test_reduce_op) {
   auto const root = 0;
 
   auto msg = makeSharedMessage<MyReduceMsg>(my_node);
-  debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
+  debug_print(reduce, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<MyReduceMsg, reducePlus>(root, msg);
 }
 
@@ -146,7 +146,7 @@ TEST_F(TestReduce, test_reduce_plus_default_op) {
   auto const root = 0;
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
-  debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
+  debug_print(reduce, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<ReduceOP::Plus> >
@@ -158,7 +158,7 @@ TEST_F(TestReduce, test_reduce_max_default_op) {
   auto const root = 0;
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
-  debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
+  debug_print(reduce, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg, MaxOp<int>, Verify<ReduceOP::Max> >
@@ -170,7 +170,7 @@ TEST_F(TestReduce, test_reduce_min_default_op) {
   auto const root = 0;
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
-  debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
+  debug_print(reduce, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg, MinOp<int>, Verify<ReduceOP::Min> >
