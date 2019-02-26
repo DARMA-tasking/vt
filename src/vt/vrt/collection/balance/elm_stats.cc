@@ -56,7 +56,7 @@ void ElementStats::startTime() {
   cur_time_started_ = true;
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: startTime: time={}\n",
     start_time
   );
@@ -73,7 +73,7 @@ void ElementStats::stopTime() {
   }
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: stopTime: time={}, total={}, started={}\n",
     stop_time, total_time, started
   );
@@ -84,7 +84,7 @@ void ElementStats::setModelWeight(TimeType const& time) {
   addTime(time);
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: setModelWeight: time={}, cur_load={}\n",
     time, phase_timings_.at(cur_phase_)
   );
@@ -95,7 +95,7 @@ void ElementStats::addTime(TimeType const& time) {
   phase_timings_.at(cur_phase_) += time;
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: addTime: time={}, cur_load={}\n",
     time, phase_timings_.at(cur_phase_)
   );
@@ -103,7 +103,7 @@ void ElementStats::addTime(TimeType const& time) {
 
 void ElementStats::updatePhase(PhaseType const& inc) {
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: updatePhase: cur_phase_={}, inc={}\n",
     cur_phase_, inc
   );
@@ -120,7 +120,7 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
   auto const& total_load = phase_timings_.at(phase);
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: getLoad: load={}, phase={}, size={}\n",
     total_load, phase, phase_timings_.size()
   );

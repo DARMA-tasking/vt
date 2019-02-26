@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_TYPES_UNTYPED_H
 
 #include "vt/config.h"
+#include "vt/vrt/base/base.h"
 #include "vt/lb/migration/lb_migratable.h"
 
 namespace vt { namespace vrt { namespace collection {

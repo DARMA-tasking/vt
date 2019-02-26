@@ -884,7 +884,7 @@ std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
   return total_size;
 }
 
-/*static*/ void HierarchicalLB::hierLBHandler(balance::HierLBMsg* msg) {
+/*static*/ void HierarchicalLB::hierLBHandler(balance::StartLBMsg* msg) {
   auto const& phase = msg->getPhase();
   HierarchicalLB::hier_lb_inst = std::make_unique<HierarchicalLB>();
 

@@ -54,4 +54,8 @@ getDispatcher(auto_registry::AutoHandlerType const& han) {
   return theCollection()->getDispatcher(han);
 }
 
+void releaseLBPhase(CollectionPhaseMsg* msg) {
+  theCollection()->releaseLBPhase<>(msg);
+}
+
 }}} /* end namespace vt::vrt::collection */

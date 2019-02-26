@@ -50,6 +50,10 @@
 #include "vt/messaging/message/refs.h"
 #include "vt/messaging/message/smart_ptr_virtual.h"
 
+#include <iostream>
+
+#include "fmt/ostream.h"
+
 namespace vt { namespace messaging {
 
 #pragma GCC diagnostic push
@@ -173,6 +177,14 @@ struct MsgSharedPtr final {
     return ptr_ ? reinterpret_cast<MsgPtrType>(ptr_) : nullptr;
   }
 
+  friend std::ostream& operator<<(std::ostream&os, MsgSharedPtr<T> const& m) {
+    auto nrefs = m.valid() && m.shared_ ? envelopeGetRef(m.get()->env) : -1;
+    return os << "MsgSharedPtr("
+              <<              m.ptr_    << ","
+              << "shared=" << m.shared_ << ","
+              << "ref="    << nrefs
+              << ")";
+  }
 
 protected:
   inline void set(T* t) {

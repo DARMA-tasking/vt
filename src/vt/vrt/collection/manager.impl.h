@@ -2734,24 +2734,93 @@ void CollectionManager::makeCollectionReady(VirtualProxyType const proxy) {
 }
 
 template <typename ColT>
-void CollectionManager::elmReady(
-  VirtualElmProxyType<ColT> const& proxy, PhaseType phase,
-  ActionFinishedLBType cont
+void CollectionManager::elmFinishedLB(
+  VirtualElmProxyType<ColT> const& proxy, PhaseType phase
 ) {
   auto const& col_proxy = proxy.getCollectionProxy();
   auto const& idx = proxy.getElementProxy().getIndex();
-  auto elm_holder = theCollection()->findElmHolder<ColT>(col_proxy);
+  auto elm_holder = findElmHolder<ColT>(col_proxy);
   vtAssert(
-    elm_holder != nullptr, "Must find element holder at elmReady",
+    elm_holder != nullptr, "Must find element holder at elmFinishedLB",
+    col_proxy, phase
+  );
+  elm_holder->runLBCont(idx);
+}
+
+template <
+  typename MsgT, typename ColT, ActiveColMemberTypedFnType<MsgT,ColT> f
+>
+void CollectionManager::elmReadyLB(
+  VirtualElmProxyType<ColT> const& proxy, PhaseType phase, MsgT* msg,
+  bool do_sync
+) {
+  auto lb_han = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto pmsg = promoteMsg(msg);
+
+#if !backend_check_enabled(lblite)
+  theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
+  return;
+#endif
+
+  auto const& col_proxy = proxy.getCollectionProxy();
+  auto const& idx = proxy.getElementProxy().getIndex();
+  auto elm_holder = findElmHolder<ColT>(col_proxy);
+  vtAssert(
+    elm_holder != nullptr, "Must find element holder at elmReadyLB",
     col_proxy, phase
   );
 
   debug_print(
-    vrt_coll, node,
-    "elmReady: proxy={:x}, idx={} ready at phase={}\n",
-    col_proxy, idx, phase
+    lb, node,
+    "elmReadyLB: proxy={:x}, idx={}, phase={}, msg={}\n",
+    col_proxy, idx, phase, pmsg
   );
 
+  elm_holder->addLBCont(idx,[pmsg,proxy,lb_han]{
+    theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
+  });
+
+  auto iter = release_lb_.find(col_proxy);
+  if (iter == release_lb_.end()) {
+    release_lb_[col_proxy] = [this,col_proxy]{
+      auto elm_holder = findElmHolder<ColT>(col_proxy);
+      elm_holder->runLBCont();
+    };
+  }
+
+  elmReadyLB<ColT>(proxy,phase,do_sync,nullptr);
+}
+
+template <typename ColT>
+void CollectionManager::elmReadyLB(
+  VirtualElmProxyType<ColT> const& proxy, PhaseType in_phase,
+  bool do_sync, ActionFinishedLBType cont
+) {
+
+#if !backend_check_enabled(lblite)
+  cont();
+  return;
+#endif
+
+  auto const& col_proxy = proxy.getCollectionProxy();
+  auto const& idx = proxy.getElementProxy().getIndex();
+  auto elm_holder = findElmHolder<ColT>(col_proxy);
+
+  PhaseType phase = in_phase;
+  if (phase == no_lb_phase) {
+    phase = elm_holder->lookup(idx).getCollection()->stats_.getPhase();
+  }
+
+  vtAssert(
+    elm_holder != nullptr, "Must find element holder at elmReadyLB",
+    col_proxy, phase
+  );
+
+  debug_print(
+    lb, node,
+    "elmReadyLB: proxy={:x}, idx={} ready at phase={}\n",
+    col_proxy, idx, phase
+  );
 
   if (cont != nullptr) {
     theTerm()->produce(term::any_epoch_sentinel);
@@ -2767,8 +2836,8 @@ void CollectionManager::elmReady(
     auto const num_total = elm_holder->numElements();
 
     debug_print(
-      vrt_coll, node,
-      "elmReady: proxy={:x}, ready={}, total={} at phase={}\n",
+      lb, node,
+      "elmReadyLB: proxy={:x}, ready={}, total={} at phase={}\n",
       col_proxy, num_ready, num_total, phase
     );
 
@@ -2776,8 +2845,8 @@ void CollectionManager::elmReady(
       elm_holder->clearReady();
 
       debug_print(
-        vrt_coll, node,
-        "elmReady: all local elements of proxy={:x} ready at phase={}\n",
+        lb, node,
+        "elmReadyLB: all local elements of proxy={:x} ready at phase={}\n",
         col_proxy, phase
       );
     }
@@ -2785,12 +2854,12 @@ void CollectionManager::elmReady(
     using namespace balance;
     CollectionProxyWrapType<ColT> proxy(col_proxy);
     using MsgType = PhaseMsg<ColT>;
-    auto msg = makeMessage<MsgType>(phase, proxy);
+    auto msg = makeMessage<MsgType>(phase, proxy, do_sync);
     backend_enable_if(lblite, msg->setLBLiteInstrument(false); );
 
     debug_print(
-      vrt_coll, node,
-      "elmReady: invoking syncNextPhase on  proxy={:x}, at phase={}\n",
+      lb, node,
+      "elmReadyLB: invoking syncNextPhase on  proxy={:x}, at phase={}\n",
       col_proxy, phase
     );
 
@@ -2856,27 +2925,6 @@ void CollectionManager::nextPhase(
   );
 }
 
-template <typename ColT>
-void CollectionManager::computeStats(
-  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
-  PhaseType const& cur_phase
-) {
-  using namespace balance;
-  using MsgType = PhaseMsg<ColT>;
-  auto msg = makeSharedMessage<MsgType>(cur_phase,proxy);
-  auto const& instrument = false;
-
-  debug_print(
-    vrt_coll, node,
-    "computeStats: broadcasting: cur_phase={}\n",
-    cur_phase
-  );
-
-  theCollection()->broadcastMsg<MsgType,ElementStats::computeStats<ColT>>(
-    proxy, msg, nullptr, instrument
-  );
-}
-
 template <typename always_void>
 void CollectionManager::checkReduceNoElements() {
   // @todo
@@ -2898,6 +2946,10 @@ void CollectionManager::releaseLBContinuation() {
       elm();
     }
   }
+  for (auto&& elm : release_lb_) {
+    elm.second();
+  }
+  release_lb_.clear();
 }
 
 template <typename MsgT, typename ColT>

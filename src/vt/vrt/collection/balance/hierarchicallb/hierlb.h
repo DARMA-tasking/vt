@@ -52,6 +52,7 @@
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_strat.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/timing/timing.h"
 
 #include <unordered_map>
@@ -128,7 +129,7 @@ private:
   };
 
 public:
-  static void hierLBHandler(balance::HierLBMsg* msg);
+  static void hierLBHandler(balance::StartLBMsg* msg);
   static std::unique_ptr<HierarchicalLB> hier_lb_inst;
 
 private:

@@ -189,6 +189,43 @@ Holder<ColT,IndexT>::numElementsExpr(FuncExprType fn) const {
   return num_in;
 }
 
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::addLBCont(IndexT const& idx, LBContFnType fn) {
+  using MappedType = typename TypedLBContainer::mapped_type;
+  auto iter = vc_lb_continuation_.find(idx);
+  if (iter == vc_lb_continuation_.end()) {
+    vc_lb_continuation_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(idx),
+      std::forward_as_tuple(MappedType{})
+    );
+    iter = vc_lb_continuation_.find(idx);
+  }
+  vtAssert(iter != vc_lb_continuation_.end(), "Key must exist in map");
+  iter->second.push_back(fn);
+}
+
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::runLBCont(IndexT const& idx) {
+  auto iter = vc_lb_continuation_.find(idx);
+  if (iter != vc_lb_continuation_.end()) {
+    for (auto&& elm : iter->second) {
+      elm();
+    }
+    vc_lb_continuation_.erase(iter);
+  }
+}
+
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::runLBCont() {
+  for (auto&& idxc : vc_lb_continuation_) {
+    for (auto&& elm : idxc.second) {
+      elm();
+    }
+  }
+  vc_lb_continuation_.clear();
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H*/

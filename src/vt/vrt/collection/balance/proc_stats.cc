@@ -102,7 +102,7 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
   auto const file_name = fmt::format("{}/{}", dir, file);
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ProcStats: createStatsFile file={}\n", file_name
   );
 

@@ -67,7 +67,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 /*static*/ std::unique_ptr<GreedyLB> GreedyLB::greedy_lb_inst = nullptr;
 
-/*static*/ void GreedyLB::greedyLBHandler(balance::GreedyLBMsg* msg) {
+/*static*/ void GreedyLB::greedyLBHandler(balance::StartLBMsg* msg) {
   auto const& phase = msg->getPhase();
   GreedyLB::greedy_lb_inst = std::make_unique<GreedyLB>();
 

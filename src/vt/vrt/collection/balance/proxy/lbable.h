@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                          lbable.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,37 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
+
+#include <functional>
 
 namespace vt { namespace vrt { namespace collection {
 
-struct CollectionManager;
-struct CollectionPhaseMsg;
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct LBable : BaseProxyT {
+  using FinishedLBType = std::function<void()>;
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+  LBable() = default;
+  LBable(
+    typename BaseProxyT::ProxyType const& in_proxy,
+    typename BaseProxyT::ElementProxyType const& in_elm
+  );
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
+  template <typename SerializerT>
+  void serialize(SerializerT& s);
+
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  void LBsync(MsgT* msg, PhaseType p = no_lb_phase) const;
+  void LBsync(FinishedLBType cont, PhaseType p = no_lb_phase) const;
+
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  void LB(MsgT* msg, PhaseType p = no_lb_phase) const;
+  void LB(FinishedLBType cont, PhaseType p = no_lb_phase) const;
+};
 
 }}} /* end namespace vt::vrt::collection */
 
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H*/

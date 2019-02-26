@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                          reduce_op.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,19 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_OP_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_OP_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
+#include "vt/collective/reduce/operators/functors/none_op.h"
+#include "vt/collective/reduce/operators/functors/and_op.h"
+#include "vt/collective/reduce/operators/functors/or_op.h"
+#include "vt/collective/reduce/operators/functors/plus_op.h"
+#include "vt/collective/reduce/operators/functors/max_op.h"
+#include "vt/collective/reduce/operators/functors/min_op.h"
+#include "vt/collective/reduce/operators/functors/bit_and_op.h"
+#include "vt/collective/reduce/operators/functors/bit_or_op.h"
+#include "vt/collective/reduce/operators/functors/bit_xor_op.h"
+#include "vt/collective/reduce/operators/default_msg.h"
 
-namespace vt { namespace vrt { namespace collection {
-
-struct CollectionManager;
-struct CollectionPhaseMsg;
-
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
-
-void releaseLBPhase(CollectionPhaseMsg* msg);
-
-}}} /* end namespace vt::vrt::collection */
-
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_OP_H*/

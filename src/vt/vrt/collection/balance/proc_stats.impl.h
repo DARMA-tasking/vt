@@ -66,7 +66,7 @@ template <typename ColT>
   auto const next_elm = col_elm->stats_elm_id_;
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ProcStats::addProcStats: element={}, phase={}, load={}\n",
     next_elm, phase, time
   );

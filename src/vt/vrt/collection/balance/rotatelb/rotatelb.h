@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
+#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/timing/timing.h"
 
@@ -84,7 +85,7 @@ private:
 
 public:
   int64_t transfer_count = 0;
-  static void rotateLBHandler(balance::RotateLBMsg* msg);
+  static void rotateLBHandler(balance::StartLBMsg* msg);
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

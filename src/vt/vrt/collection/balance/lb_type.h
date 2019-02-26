@@ -60,6 +60,14 @@ enum struct LBType : int8_t {
   RotateLB         = 3
 };
 
+template <typename SerializerT>
+void serialize(SerializerT& s, LBType lb) {
+  using EnumDataType = typename std::underlying_type<LBType>::type;
+  EnumDataType val = static_cast<EnumDataType>(lb);
+  s | val;
+  lb = static_cast<LBType>(val);
+}
+
 }}}} /* end namespace vt::vrt::collection::balance */
 
 namespace std {

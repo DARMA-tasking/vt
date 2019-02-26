@@ -58,8 +58,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-static constexpr bool const lb_direct = true;
-
 struct ElementStats {
   using PhaseType = uint64_t;
   using ArgType   = vt::arguments::ArgConfig;
@@ -84,12 +82,6 @@ public:
   static void syncNextPhase(PhaseMsg<ColT>* msg, ColT* col);
 
   template <typename ColT>
-  static void computeStats(PhaseMsg<ColT>* msg, ColT* col);
-
-  template <typename ColT>
-  static void statsIn(LoadStatsMsg<ColT>* msg, ColT* col);
-
-  template <typename ColT>
   friend struct collection::Migratable;
 
 protected:
@@ -97,22 +89,6 @@ protected:
   TimeType cur_time_ = 0.0;
   PhaseType cur_phase_ = fst_lb_phase;
   std::vector<TimeType> phase_timings_ = {};
-};
-
-template <typename ColT>
-struct ComputeStats {
-  void operator()(PhaseReduceMsg<ColT>* msg);
-};
-
-template <typename ColT>
-struct CollectedStats {
-  void operator()(StatsMsg<ColT>* msg);
-};
-
-template <typename ColT>
-struct StartLB {
-  using ArgType = vt::arguments::ArgConfig;
-  void operator()(PhaseReduceMsg<ColT>* msg);
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
