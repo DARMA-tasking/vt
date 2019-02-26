@@ -56,9 +56,9 @@ using namespace vt::collective;
 using namespace vt::tests::unit;
 
 struct MyReduceMsg : ReduceMsg {
-  MyReduceMsg(int const& in_num)
+  MyReduceMsg(int in_num)
     : num(in_num)
-  { }
+  {}
 
   int num = 0;
 };
@@ -66,7 +66,7 @@ struct MyReduceMsg : ReduceMsg {
 struct SysMsg : ReduceTMsg<int> {
   explicit SysMsg(int in_num)
     : ReduceTMsg<int>(in_num)
-  { }
+  {}
 };
 
 struct Print {
@@ -78,12 +78,10 @@ struct Print {
 struct TestReduce : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
-  virtual void SetUp() {
-    TestParallelHarness::SetUp();
-  }
-
   static void reducePlus(MyReduceMsg* msg) {
-    fmt::print(
+
+    debug_print(
+      vrt_coll, node,
       "cur={}: is_root={}, count={}, next={}, num={}\n",
       print_ptr(msg), print_bool(msg->isRoot()), msg->getCount(),
       print_ptr(msg->getNext<MyReduceMsg>()), msg->num
@@ -92,10 +90,12 @@ struct TestReduce : TestParallelHarness {
     if (msg->isRoot()) {
       fmt::print("final num={}\n", msg->num);
     } else {
-      MyReduceMsg* fst_msg = msg;
-      MyReduceMsg* cur_msg = msg->getNext<MyReduceMsg>();
-      while (cur_msg != nullptr) {
-        fmt::print(
+      auto fst_msg = msg;
+      auto cur_msg = msg->getNext<MyReduceMsg>();
+
+      while (cur_msg not_eq nullptr) {
+        debug_print(
+          vrt_coll, node,
           "while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
           print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->isRoot()),
           cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()),
@@ -110,20 +110,20 @@ struct TestReduce : TestParallelHarness {
 };
 
 TEST_F(TestReduce, test_reduce_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
-  MyReduceMsg* msg = makeSharedMessage<MyReduceMsg>(my_node);
-  fmt::print("msg->num={}\n", msg->num);
+  auto msg = makeSharedMessage<MyReduceMsg>(my_node);
+  debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<MyReduceMsg, reducePlus>(root, msg);
 }
 
 TEST_F(TestReduce, test_reduce_plus_default_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
-  fmt::print("msg->num={}\n", msg->getConstVal());
+  debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg,PlusOp<int>,Print>
@@ -131,11 +131,11 @@ TEST_F(TestReduce, test_reduce_plus_default_op) {
 }
 
 TEST_F(TestReduce, test_reduce_max_default_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
-  fmt::print("msg->num={}\n", msg->getConstVal());
+  debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg,MaxOp<int>,Print>
@@ -143,11 +143,11 @@ TEST_F(TestReduce, test_reduce_max_default_op) {
 }
 
 TEST_F(TestReduce, test_reduce_min_default_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
-  fmt::print("msg->num={}\n", msg->getConstVal());
+  debug_print(vrt_coll, node, "msg->num={}\n", msg->num);
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg,MinOp<int>,Print>
