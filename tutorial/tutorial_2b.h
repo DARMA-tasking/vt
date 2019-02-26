@@ -98,10 +98,7 @@ void ReduceCol::reduceHandler(ColRedMsg* msg) {
   reduce_msg->getVal() = 100;
 
   // Invoke the reduce!
-  proxy.reduce<
-    ReduceMsg,
-    ReduceMsg::msgHandler<ReduceMsg, ReduceOp, PrintReduceResult>
-  >(reduce_msg);
+  proxy.reduce<ReduceOp,PrintReduceResult>(reduce_msg);
 }
 
 // Tutorial code to demonstrate reducing a collection
