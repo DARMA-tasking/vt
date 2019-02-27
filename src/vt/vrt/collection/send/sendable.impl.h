@@ -74,6 +74,18 @@ void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
+void Sendable<ColT,IndexT,BaseProxyT>::send(MsgSharedPtr<MsgT> msg) const {
+  return send<MsgT,f>(msg.get());
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f, typename... Args>
+void Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) const {
+  return send<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
 void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto col_proxy = this->getCollectionProxy();
@@ -81,6 +93,21 @@ void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
   return theCollection()->sendMsg<MsgT, f>(proxy, msg);
 }
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+void Sendable<ColT,IndexT,BaseProxyT>::send(MsgSharedPtr<MsgT> msg) const {
+  return send<MsgT,f>(msg.get());
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
+>
+void Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) const {
+  return send<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
 
 }}} /* end namespace vt::vrt::collection */
 
