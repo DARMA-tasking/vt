@@ -61,16 +61,10 @@ struct Sendable : BaseProxyT {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  template <
-    typename MsgT,
-    ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
-  >
+  template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
   void send(MsgT* msg) const;
 
-  template <
-    typename MsgT,
-    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
-  >
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
   void send(MsgT* msg) const;
 };
 
