@@ -131,6 +131,7 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
 
   #if backend_check_enabled(lblite)
     s | lb_lite_instrument_;
+    s | elm_;
   #endif
 }
 
@@ -163,6 +164,16 @@ bool CollectionMessage<ColT, BaseMsgT>::lbLiteInstrument() const {
 template <typename ColT, typename BaseMsgT>
 void CollectionMessage<ColT, BaseMsgT>::setLBLiteInstrument(bool const& val) {
   lb_lite_instrument_ = val;
+}
+
+template <typename ColT, typename BaseMsgT>
+balance::ElementIDType CollectionMessage<ColT, BaseMsgT>::getElm() const {
+  return elm_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setElm(balance::ElementIDType elm) {
+  elm_ = elm;
 }
 #endif
 

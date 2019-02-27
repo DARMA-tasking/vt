@@ -74,6 +74,7 @@
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 
 #include <memory>
 #include <vector>
@@ -803,6 +804,18 @@ private:
   );
 
 private:
+  template <typename MsgT>
+  static EpochType getCurrentEpoch(MsgT* msg);
+
+  template <typename=void>
+  static VirtualIDType curIdent_;
+
+  template <typename ColT>
+  static BcastBufferType<ColT> broadcasts_;
+
+  balance::ElementIDType getCurrentContext() const;
+  void setCurrentContext(balance::ElementIDType elm);
+
   CleanupListFnType cleanup_fns_;
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;
@@ -816,6 +829,7 @@ private:
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
+  balance::ElementIDType cur_context_elm_id_ = balance::no_element_id;
 };
 
 // These are static variables in class templates because Intel 18

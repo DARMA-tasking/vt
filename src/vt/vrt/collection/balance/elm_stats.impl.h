@@ -66,6 +66,7 @@ void ElementStats::serialize(Serializer& s) {
   s | cur_time_;
   s | cur_phase_;
   s | phase_timings_;
+  s | comm_;
 }
 
 template <typename ColT>

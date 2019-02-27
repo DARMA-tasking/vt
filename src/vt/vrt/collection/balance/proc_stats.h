@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/timing/timing.h"
@@ -60,7 +61,6 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ProcStats {
-  using ElementIDType = uint64_t;
   using MigrateFnType = std::function<void(NodeType)>;
 
 public:
@@ -79,7 +79,7 @@ private:
   static void createStatsFile();
   static void closeStatsFile();
 
-private:
+public:
   static ElementIDType getNextElm();
 
   // @todo: make these private and friend appropriate classes

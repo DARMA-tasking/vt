@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_TYPES_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
 
 #include <cstdlib>
@@ -56,7 +57,7 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct HierLBTypes {
-  using ObjIDType = balance::ProcStats::ElementIDType;
+  using ObjIDType = balance::ElementIDType;
   using ObjBinType = int32_t;
   using ObjBinListType = std::list<ObjIDType>;
   using ObjSampleType = std::map<ObjBinType, ObjBinListType>;
