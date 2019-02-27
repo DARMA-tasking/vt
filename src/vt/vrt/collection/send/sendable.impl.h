@@ -73,10 +73,6 @@ void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
-  /*
-   * @todo:
-   *.  Directly reuse this proxy: static_cast<VrtElmProxy<IndexT>*>(this)
-   */
   return theCollection()->sendMsg<MsgT, f>(proxy, msg);
 }
 
@@ -89,10 +85,6 @@ void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
-  /*
-   * @todo:
-   *.  Directly reuse this proxy: static_cast<VrtElmProxy<IndexT>*>(this)
-   */
   return theCollection()->sendMsg<MsgT, f>(proxy, msg);
 }
 
