@@ -60,37 +60,18 @@ struct TestColl : Collection<TestColl,IndexType> {
 
   virtual ~TestColl() {
     auto num_nodes = theContext()->getNumNodes();
-    vtAssertInfo(
-      counter_ == num_nodes, "Must be equal",
-      counter_, num_nodes, getIndex(), theContext()->getNode()
-    );
+    vtAssert(counter_ == 1, "Must be equal");
   }
 
   struct TestMsg : CollectionMessage<TestColl> { };
 
   void doWork(TestMsg* msg) {
-    auto const& this_node = theContext()->getNode();
     counter_++;
-    ::fmt::print(
-      "{}: doWork: idx={}, cnt={}\n", this_node, getIndex().x(), counter_
-    );
   }
 
 private:
   int32_t counter_ = 0;
 };
-
-template <typename ProxyT>
-struct ProxyMsg : Message {
-  ProxyMsg() = default;
-  explicit ProxyMsg(ProxyT const& in_proxy) : proxy_(in_proxy) { }
-  ProxyT proxy_ = {};
-};
-
-template <typename ProxyMsgT>
-static void proxyHandler(ProxyMsgT* msg) {
-  msg->proxy_.template broadcast<TestColl::TestMsg,&TestColl::doWork>();
-}
 
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
@@ -108,12 +89,7 @@ int main(int argc, char** argv) {
     using BaseIndexType = typename IndexType::DenseIndexType;
     auto const& range = IndexType(static_cast<BaseIndexType>(num_elms));
     auto proxy = theCollection()->construct<TestColl>(range);
-
     proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>();
-
-    using ProxyMsgType = ProxyMsg<decltype(proxy)>;
-    auto proxy_msg = makeSharedMessage<ProxyMsgType>(proxy);
-    theMsg()->broadcastMsg<ProxyMsgType,proxyHandler<ProxyMsgType>>(proxy_msg);
   }
 
   while (!rt->isTerminated()) {
