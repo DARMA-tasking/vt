@@ -70,7 +70,7 @@ inline void assertOutExpr(
   auto msg = "Assertion failed:";
   auto reason = "";
   auto assert_fail_str = stringizeMessage(msg,reason,cond,file,line,func,error);
-  ::vt::output(assert_fail_str,error,true,true,true);
+  ::vt::output(assert_fail_str,error,true,true,true,fail);
   auto const& stack = ::vt::debug::stack::dumpStack();
   auto const& list_str = std::get<1>(stack);
 
@@ -89,7 +89,7 @@ assertOut(
 ) {
   auto msg = "Assertion failed:";
   auto assert_fail_str = stringizeMessage(msg,str,cond,file,line,func,error);
-  ::vt::output(assert_fail_str,error,true,true,true);
+  ::vt::output(assert_fail_str,error,true,true,true,fail);
   if (fail) {
     vtAbort("Assertion failed");
   }

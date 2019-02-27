@@ -121,7 +121,7 @@ assertOutInfo(
     str_buf << cur;
   }
   str_buf << space << seperator << seperator;
-  ::vt::output(str_buf.str(),error,false,false,true);
+  ::vt::output(str_buf.str(),error,false,false,true,fail);
 
   if (fail) {
     vtAbort("Assertion failed");

@@ -73,9 +73,9 @@ inline void warning(
   std::string const buf = ::fmt::format(str, std::forward<Args>(args)...);
   auto inf = debug::stringizeMessage(msg,buf,"",file,line,func,error);
   if (quit) {
-    return ::vt::output(inf,error,true,true,true);
+    return ::vt::output(inf,error,true,true,true,true);
   } else {
-    return ::vt::output(inf,error,false,true,true);
+    return ::vt::output(inf,error,false,true,true,true);
   }
 }
 
