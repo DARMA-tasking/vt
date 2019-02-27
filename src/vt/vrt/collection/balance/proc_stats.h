@@ -73,8 +73,10 @@ public:
   static void clearStats();
   static void releaseLB();
 
-  static void createStatsFile();
   static void outputStatsFile();
+
+private:
+  static void createStatsFile();
   static void closeStatsFile();
 
 private:
