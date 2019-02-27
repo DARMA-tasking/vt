@@ -103,6 +103,18 @@ protected:
   int depth_   = 1;
 };
 
+struct SimpleFixture : TestParallelHarness {
+  virtual void SetUp() {
+      // explicit inheritance
+      TestParallelHarness::SetUp();
+      // set channel counting ranks
+      channel::root = 0;
+      channel::me   = vt::theContext()->getNode();
+      channel::all  = vt::theContext()->getNumNodes();
+      vtAssertExpr(channel::all > 1);
+  }
+};
+
 // epoch sequence creation
 std::vector<vt::EpochType> newEpochSeq(
   int nb=1, bool rooted=false, bool useDS=false
