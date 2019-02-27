@@ -66,6 +66,39 @@ void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
+void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(
+  MsgSharedPtr<MsgT> msg
+) const {
+  return broadcast<MsgT,f>(msg.get());
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
+>
+void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(Args&&... args) const {
+  return broadcast<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(
+  MsgSharedPtr<MsgT> msg
+) const {
+  return broadcast<MsgT,f>(msg.get());
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
+>
+void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(Args&&... args) const {
+  return broadcast<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
 void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
