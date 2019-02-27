@@ -336,9 +336,16 @@ CollectionManager::collectionAutoMsgDeliver(
   // offset
   void* raw_ptr = static_cast<void*>(base);
   auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
+
+  // Expand out the index for tracing purposes; Projections takes up to
+  // 4-dimensions
+  auto const idx = base->getIndex();
+  uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
+  uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
+  uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
+  uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
   runnable::RunnableCollection<UserMsgT,UntypedCollection>::run(
-    han, user_msg_ptr, ptr, from, member,
-    *reinterpret_cast<uint64_t const*>(base->getIndex().raw())
+    han, user_msg_ptr, ptr, from, member, idx1, idx2, idx3, idx4
   );
 }
 
@@ -353,9 +360,16 @@ CollectionManager::collectionAutoMsgDeliver(
   // offset
   void* raw_ptr = static_cast<void*>(base);
   auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
+
+  // Expand out the index for tracing purposes; Projections takes up to
+  // 4-dimensions
+  auto const idx = base->getIndex();
+  uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
+  uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
+  uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
+  uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
   runnable::RunnableCollection<MsgT,UntypedCollection>::run(
-    han, msg, ptr, from, member,
-    *reinterpret_cast<uint64_t const*>(base->getIndex().raw())
+    han, msg, ptr, from, member, idx1, idx2, idx3, idx4
   );
 }
 

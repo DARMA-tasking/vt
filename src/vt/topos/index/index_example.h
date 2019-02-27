@@ -91,6 +91,9 @@ struct ExampleIndex {
 
   // Pretty print an index as a std::string
   std::string toString() const;
+
+  // Must have a method for calculating the number of dimensions
+  int8_t ndims() const;
 };
 
 }} // end namespace vt::index

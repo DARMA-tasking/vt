@@ -52,13 +52,14 @@
 #include "vt/registry/auto/collection/auto_registry_collection.h"
 #include "vt/trace/trace_common.h"
 #include "vt/messaging/envelope.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace runnable {
 
 template <typename MsgT, typename ElementT>
 /*static*/ void RunnableCollection<MsgT,ElementT>::run(
-  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node,
-  bool member, uint64_t idx
+  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from,
+  bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
 ) {
   #if backend_check_enabled(trace_enabled)
     auto reg_enum = member ?
@@ -67,13 +68,15 @@ template <typename MsgT, typename ElementT>
     trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
       handler, reg_enum
     );
-    trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);
+    trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
+    auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
+    auto const from_node = from != uninitialized_destination ? from : ctx_node;
   #endif
 
   #if backend_check_enabled(trace_enabled)
     theTrace()->beginProcessing(
       trace_id, sizeof(*msg), trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx
+      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
     );
   #endif
 
@@ -88,7 +91,7 @@ template <typename MsgT, typename ElementT>
   #if backend_check_enabled(trace_enabled)
     theTrace()->endProcessing(
       trace_id, sizeof(*msg), trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx
+      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
     );
   #endif
 }

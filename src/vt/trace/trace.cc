@@ -51,6 +51,7 @@
 #include <zlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 namespace vt { namespace trace {
 
@@ -135,20 +136,25 @@ void Trace::setupNames(
 void Trace::beginProcessing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   TraceEventIDType const& event, NodeType const& from_node, double const& time,
-  uint64_t const idx
+  uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
+  uint64_t const idx4
 ) {
   auto const& type = TraceConstantsType::BeginProcessing;
   LogPtrType log = new LogType(time, ep, type);
 
   debug_print(
     trace, node,
-    "event_start: ep={}, event={}, time={}\n", ep, event, time
+    "event_start: ep={}, event={}, time={}, from={}\n",
+    ep, event, time, from_node
   );
 
   log->node = from_node;
   log->msg_len = len;
   log->event = event;
-  log->idx = idx;
+  log->idx1 = idx1;
+  log->idx2 = idx2;
+  log->idx3 = idx3;
+  log->idx4 = idx4;
 
   logEvent(log);
 }
@@ -156,20 +162,25 @@ void Trace::beginProcessing(
 void Trace::endProcessing(
   TraceEntryIDType const& ep, TraceMsgLenType const& len,
   TraceEventIDType const& event, NodeType const& from_node, double const& time,
-  uint64_t const idx
+  uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
+  uint64_t const idx4
 ) {
   auto const& type = TraceConstantsType::EndProcessing;
   LogPtrType log = new LogType(time, ep, type);
 
   debug_print(
     trace, node,
-    "event_stop: ep={}, event={}, time={}\n", ep, event, time
+    "event_stop: ep={}, event={}, time={}, from_node={}\n",
+    ep, event, time, from_node
   );
 
   log->node = from_node;
   log->msg_len = len;
   log->event = event;
-  log->idx = idx;
+  log->idx1 = idx1;
+  log->idx2 = idx2;
+  log->idx3 = idx3;
+  log->idx4 = idx4;
 
   logEvent(log);
 }
@@ -179,7 +190,7 @@ void Trace::beginIdle(double const& time) {
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(
-    trace, node, "begin_idle: time=%f\n", time
+    trace, node, "begin_idle: time={}\n", time
   );
 
   log->node = theContext()->getNode();
@@ -194,7 +205,7 @@ void Trace::endIdle(double const& time) {
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(
-    trace, node, "end_idle: time=%f\n", time
+    trace, node, "end_idle: time={}\n", time
   );
 
   log->node = theContext()->getNode();
@@ -256,7 +267,16 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     if (not open_events_.empty()) {
       traces_.push_back(
         new LogType(
-          log->time, open_events_.top()->ep, TraceConstantsType::EndProcessing
+          log->time,
+          open_events_.top()->ep,
+          TraceConstantsType::EndProcessing,
+          open_events_.top()->event,
+          open_events_.top()->msg_len,
+          open_events_.top()->node,
+          open_events_.top()->idx1,
+          open_events_.top()->idx2,
+          open_events_.top()->idx3,
+          open_events_.top()->idx4
         )
       );
     }
@@ -290,7 +310,16 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     if (not open_events_.empty()) {
       traces_.push_back(
         new LogType(
-          log->time, open_events_.top()->ep, TraceConstantsType::BeginProcessing
+          log->time,
+          open_events_.top()->ep,
+          TraceConstantsType::BeginProcessing,
+          open_events_.top()->event,
+          open_events_.top()->msg_len,
+          open_events_.top()->node,
+          open_events_.top()->idx1,
+          open_events_.top()->idx2,
+          open_events_.top()->idx3,
+          open_events_.top()->idx4
         )
       );
     }
@@ -418,7 +447,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     case TraceConstantsType::BeginProcessing:
       gzprintf(
         file,
-        "%d %d %lu %lld %d %d %d 0 %d 0 0 0 0\n",
+        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
@@ -426,13 +455,16 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
         log->event,
         log->node,
         log->msg_len,
-        log->idx
+        log->idx1,
+        log->idx2,
+        log->idx3,
+        log->idx4
       );
       break;
     case TraceConstantsType::EndProcessing:
       gzprintf(
         file,
-        "%d %d %lu %lld %d %d %d 0 %d 0 0 0 0\n",
+        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
@@ -440,7 +472,10 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
         log->event,
         log->node,
         log->msg_len,
-        log->idx
+        log->idx1,
+        log->idx2,
+        log->idx3,
+        log->idx4
       );
       break;
     case TraceConstantsType::BeginIdle:
