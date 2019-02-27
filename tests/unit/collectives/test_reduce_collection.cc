@@ -145,6 +145,11 @@ struct TestReduceCollection : TestParallelHarness {
     theCollection()->reduceMsg<MyCol,MyReduceMsg,reducePlus>(proxy, reduce_msg);
   }
 
+  //
+  // Using proxy.reduceExpr is broken and has fundamental flaws. Disabling this
+  // test with a macro
+  //
+#if ENABLE_REDUCE_EXPR
   static void colHanPartial(ColMsg* msg, MyCol* col) {
     auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
@@ -199,6 +204,7 @@ struct TestReduceCollection : TestParallelHarness {
       }
     );
   }
+#endif
 
   static void colHanVec(ColMsg* msg, MyCol* col) {
     auto const& node = theContext()->getNode();
@@ -295,6 +301,7 @@ TEST_F(TestReduceCollection, test_reduce_op) {
   }
 }
 
+#if ENABLE_REDUCE_EXPR
 TEST_F(TestReduceCollection, test_reduce_partial_op) {
   auto const& my_node = theContext()->getNode();
   auto const& root = 0;
@@ -307,6 +314,7 @@ TEST_F(TestReduceCollection, test_reduce_partial_op) {
     proxy.broadcast<ColMsg,colHanPartial>(msg);
   }
 }
+#endif
 
 TEST_F(TestReduceCollection, test_reduce_vec_op) {
   auto const& my_node = theContext()->getNode();
@@ -321,6 +329,7 @@ TEST_F(TestReduceCollection, test_reduce_vec_op) {
   }
 }
 
+#if ENABLE_REDUCE_EXPR
 TEST_F(TestReduceCollection, test_reduce_partial_proxy_op) {
   auto const& my_node = theContext()->getNode();
   auto const& root = 0;
@@ -333,6 +342,7 @@ TEST_F(TestReduceCollection, test_reduce_partial_proxy_op) {
     proxy.broadcast<ColMsg,colHanPartialProxy>(msg);
   }
 }
+#endif
 
 TEST_F(TestReduceCollection, test_reduce_vec_proxy_op) {
   auto const& my_node = theContext()->getNode();
@@ -360,6 +370,8 @@ TEST_F(TestReduceCollection, test_reduce_vec_proxy_callback_op) {
   }
 }
 
+
+#if ENABLE_REDUCE_EXPR
 TEST_F(TestReduceCollection, test_reduce_partial_multi_op) {
   auto const& my_node = theContext()->getNode();
   auto const& root = 0;
@@ -372,5 +384,6 @@ TEST_F(TestReduceCollection, test_reduce_partial_multi_op) {
     proxy.broadcast<ColMsg,colHanPartialMulti>(msg);
   }
 }
+#endif
 
 }}} // end namespace vt::tests::unit
