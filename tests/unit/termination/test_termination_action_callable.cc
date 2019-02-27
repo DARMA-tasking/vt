@@ -49,28 +49,41 @@
 
 namespace vt { namespace tests { namespace unit {
 
+static bool has_finished_1 = false;
+static bool has_finished_2 = false;
+static int num = 0;
+
 // no need for a parameterized fixture
 struct TestTermActionCallable : action::SimpleFixture {};
 
 TEST_F(TestTermActionCallable, test_add_action_unique) {
 
+  has_finished_1 = has_finished_2 = false;
+  num = 0;
+
+  vt::theCollective()->barrier();
+
   // create an epoch and a related termination flag
-  bool has_finished = false;
   auto ep = ::vt::theTerm()->makeEpochCollective();
 
   // assign an arbitrary action to be triggered at
   // the end of the epoch and toggle the previous flag.
   ::vt::theTerm()->addActionEpoch(ep, [&]{
-    debug_print(term, node, "current epoch:{x} finished\n", ep);
-    EXPECT_FALSE(has_finished);
-    has_finished = true;
+    debug_print(term, node, "current epoch:{:x} finished\n", ep);
+    EXPECT_FALSE(has_finished_1);
+    EXPECT_TRUE(has_finished_2 == false or num == 1);
+    has_finished_1 = true;
+    num++;
   });
 
   // assign a callable to be triggered after
   // the action submitted for the given epoch.
   ::vt::theTerm()->addActionUnique(ep, [&]{
-    debug_print(term, node, "trigger callable for epoch:{x}\n", ep);
-    EXPECT_TRUE(has_finished);
+    debug_print(term, node, "trigger callable for epoch:{:x}\n", ep);
+    EXPECT_FALSE(has_finished_2);
+    EXPECT_TRUE(has_finished_1 == false or num == 1);
+    has_finished_2 = true;
+    num++;
   });
 
   if (channel::me == channel::root) {
