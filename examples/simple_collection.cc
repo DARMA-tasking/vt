@@ -89,8 +89,7 @@ struct ProxyMsg : Message {
 
 template <typename ProxyMsgT>
 static void proxyHandler(ProxyMsgT* msg) {
-  auto msg_send = makeSharedMessage<TestColl::TestMsg>();
-  msg->proxy_.template broadcast<TestColl::TestMsg,&TestColl::doWork>(msg_send);
+  msg->proxy_.template broadcast<TestColl::TestMsg,&TestColl::doWork>();
 }
 
 int main(int argc, char** argv) {
@@ -110,8 +109,7 @@ int main(int argc, char** argv) {
     auto const& range = IndexType(static_cast<BaseIndexType>(num_elms));
     auto proxy = theCollection()->construct<TestColl>(range);
 
-    auto msg = makeSharedMessage<TestColl::TestMsg>();
-    proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>(msg);
+    proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>();
 
     using ProxyMsgType = ProxyMsg<decltype(proxy)>;
     auto proxy_msg = makeSharedMessage<ProxyMsgType>(proxy);
