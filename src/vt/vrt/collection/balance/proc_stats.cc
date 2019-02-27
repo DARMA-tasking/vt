@@ -127,6 +127,7 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
 /*static*/ void ProcStats::closeStatsFile() {
   if (stats_file_) {
     fclose(stats_file_);
+    stats_file_  = nullptr;
   }
 }
 
