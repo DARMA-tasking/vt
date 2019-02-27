@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          rotatelb.h
+//                            sizing.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,53 +42,65 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_ROTATELB_ROTATELB_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_ROTATELB_ROTATELB_H
+#if !defined INCLUDED_VT_SERIALIZATION_AUTO_SIZING_SIZING_H
+#define INCLUDED_VT_SERIALIZATION_AUTO_SIZING_SIZING_H
 
 #include "vt/config.h"
-#include "vt/messaging/message.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
-#include "vt/timing/timing.h"
+#include "vt/serialization/serialize_interface.h"
 
-#include <memory>
-#include <list>
-#include <map>
-#include <cstdlib>
-#include <unordered_map>
+#if HAS_SERIALIZATION_LIBRARY
+  #define HAS_DETECTION_COMPONENT 1
+  #include "serialization_library_headers.h"
+  #include "traits/serializable_traits.h"
+#endif
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+namespace vt { namespace serialization {
 
-struct RotateLBTypes {
-  using ObjIDType = balance::ElementIDType;
-  using ObjBinType = int32_t;
-  using ObjBinListType = std::list<ObjIDType>;
-  using ObjSampleType = std::map<ObjBinType, ObjBinListType>;
-  using LoadType = double;
-  using LoadProfileType = std::unordered_map<NodeType,LoadType>;
+template <typename MsgT, typename=void>
+struct Size {
+  static std::size_t getSize(MsgT* msg);
 };
 
-struct RotateObjMsg : ::vt::Message {};
-
-struct RotateLB : RotateLBTypes {
-  using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
-  using ProcStatsMsgType = balance::ProcStatsMsg;
-  using TransferType = std::map<NodeType, std::vector<ObjIDType>>;
-  using LoadType = double;
-
-  RotateLB() = default;
-
-private:
-  void finishedMigrate();
-  void procDataIn(ElementLoadType const& data_in);
-  static std::unique_ptr<RotateLB> rotate_lb_inst;
-
-public:
-  int64_t transfer_count = 0;
-  static void rotateLBHandler(balance::StartLBMsg* msg);
+#if HAS_SERIALIZATION_LIBRARY
+template <typename MsgT>
+struct Size<
+  MsgT,
+  typename std::enable_if_t<
+    ::serdes::SerializableTraits<MsgT>::has_serialize_function
+  >
+> {
+  static std::size_t getSize(MsgT* msg) {
+    return ::serialization::interface::getSize<MsgT>(*msg);
+  }
 };
 
-}}}} /* end namespace vt::vrt::collection::lb */
+template <typename MsgT>
+struct Size<
+  MsgT,
+  typename std::enable_if_t<
+    !::serdes::SerializableTraits<MsgT>::has_serialize_function
+  >
+> {
+  static std::size_t getSize(MsgT* msg) {
+    return sizeof(MsgT);
+  }
+};
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_ROTATELB_ROTATELB_H*/
+#else
+
+template <typename MsgT>
+struct Size<
+  MsgT,
+  typename std::enable_if_t<std::true_type>
+> {
+  static std::size_t getSize(MsgT* msg) {
+    return sizeof(MsgT);
+  }
+};
+
+#endif
+
+
+}} /* end namespace vt::serialization */
+
+#endif /*INCLUDED_VT_SERIALIZATION_AUTO_SIZING_SIZING_H*/

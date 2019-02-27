@@ -75,6 +75,7 @@
 #include "vt/termination/term_headers.h"
 #include "vt/serialization/serialization.h"
 #include "vt/serialization/auto_dispatch/dispatch.h"
+#include "vt/serialization/auto_sizing/sizing.h"
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
 
@@ -637,18 +638,34 @@ template <typename ColT, typename IndexT, typename MsgT>
         col_msg->lbLiteInstrument()
       );
       if (col_msg->lbLiteInstrument()) {
+        auto const elm_id = msg->getElm();
         auto& stats = col_ptr->getStats();
+        if (elm_id != balance::no_element_id) {
+          auto const msg_size = serialization::Size<MsgT>::getSize(msg);
+          stats.recvObjData(elm_id, msg_size);
+        }
         stats.startTime();
       }
     }
   );
 
+  // Set the current context (element ID) that is executing (having a message
+  // delivered). This is used for load balancing to build the communication
+  // graph
+  auto const elm_id = col_ptr->getElmID();
+  auto const prev_elm = theCollection()->getCurrentContext();
+  theCollection()->setCurrentContext(elm_id);
+
+  // Dispatch the handler after pushing the contextual epoch
   theMsg()->pushEpoch(cur_epoch);
   auto const from = col_msg->getFromNode();
   collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
     msg,col_ptr,sub_handler,member,from
   );
   theMsg()->popEpoch();
+
+  // Unset the element ID context
+  theCollection()->setCurrentContext(prev_elm);
 
   backend_enable_if(
     lblite, {
@@ -1333,6 +1350,13 @@ void CollectionManager::sendMsgUntypedHandler(
     msg->setVrtHandler(handler);
     msg->setProxy(toProxy);
     msg->setMember(member);
+
+#if backend_check_enabled(lblite)
+    auto const elm_id = getCurrentContext();
+    if (elm_id != balance::no_element_id) {
+      msg->setElm(elm_id);
+    }
+#endif
 
     debug_print(
       vrt_coll, node,

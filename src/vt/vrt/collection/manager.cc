@@ -58,4 +58,12 @@ void releaseLBPhase(CollectionPhaseMsg* msg) {
   theCollection()->releaseLBPhase<>(msg);
 }
 
+balance::ElementIDType CollectionManager::getCurrentContext() const {
+  return cur_context_elm_id_;
+}
+
+void CollectionManager::setCurrentContext(balance::ElementIDType elm) {
+  cur_context_elm_id_ = elm;
+}
+
 }}} /* end namespace vt::vrt::collection */

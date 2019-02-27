@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/collection/proxy.h"
 #include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 
 #include <type_traits>
 
@@ -107,6 +108,8 @@ struct CollectionMessage :
   #if backend_check_enabled(lblite)
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
+    balance::ElementIDType getElm() const;
+    void setElm(balance::ElementIDType elm);
   #endif
 
   // Explicitly write a parent serializer so derived user messages can contain
@@ -135,6 +138,7 @@ private:
      * (sendMsg,broadcastMsg) they are automatically instrumented
      */
     bool lb_lite_instrument_ = false;
+    balance::ElementIDType elm_ = 0;
   #endif
 };
 

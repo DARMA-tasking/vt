@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_IMPL_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
 
 #include <vector>
@@ -56,7 +57,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 template <typename ColT>
-/*static*/ ProcStats::ElementIDType ProcStats::addProcStats(
+/*static*/ ElementIDType ProcStats::addProcStats(
   VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
   PhaseType const& phase, TimeType const& time
 ) {

@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/elm_stats.fwd.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
@@ -55,12 +56,14 @@
 
 #include <cstdint>
 #include <vector>
+#include <tuple>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ElementStats {
-  using PhaseType = uint64_t;
-  using ArgType   = vt::arguments::ArgConfig;
+  using PhaseType       = uint64_t;
+  using ArgType         = vt::arguments::ArgConfig;
+  using ElementCommType = std::tuple<uint64_t,double>;
 
   ElementStats() = default;
   ElementStats(ElementStats const&) = default;
@@ -69,6 +72,7 @@ struct ElementStats {
   void startTime();
   void stopTime();
   void addTime(TimeType const& time);
+  void recvObjData(ElementIDType elm, double bytes);
   void setModelWeight(TimeType const& time);
   void updatePhase(PhaseType const& inc = 1);
   PhaseType getPhase() const;
@@ -89,6 +93,7 @@ protected:
   TimeType cur_time_ = 0.0;
   PhaseType cur_phase_ = fst_lb_phase;
   std::vector<TimeType> phase_timings_ = {};
+  std::vector<std::unordered_map<ElementIDType,ElementCommType>> comm_ = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

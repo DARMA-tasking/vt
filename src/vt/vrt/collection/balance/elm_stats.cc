@@ -79,6 +79,17 @@ void ElementStats::stopTime() {
   );
 }
 
+void ElementStats::recvObjData(ElementIDType elm, double bytes) {
+  comm_.resize(cur_phase_ + 1);
+  auto iter = comm_.at(cur_phase_).find(elm);
+  if (iter == comm_.at(cur_phase_).end()) {
+    comm_.at(cur_phase_)[elm] = std::make_tuple(1,bytes);
+  } else {
+    std::get<0>(comm_.at(cur_phase_)[elm])++;
+    std::get<1>(comm_.at(cur_phase_)[elm]) += bytes;
+  }
+}
+
 void ElementStats::setModelWeight(TimeType const& time) {
   cur_time_started_ = false;
   addTime(time);
