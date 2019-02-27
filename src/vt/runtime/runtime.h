@@ -96,6 +96,8 @@ struct Runtime {
 
   RuntimeInstType getInstanceID() const { return instance_; }
 
+  void systemSync() { sync(); }
+
 private:
   RuntimeInstType const instance_;
 

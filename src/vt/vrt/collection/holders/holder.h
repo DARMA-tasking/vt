@@ -91,6 +91,9 @@ struct Holder {
   void setGroupReady(bool const ready) { group_ready_ = ready; }
   NodeType groupRoot() const { return group_root_; }
   void setGroupRoot(NodeType const root) { group_root_ = root; }
+  CountType numReady() const { return elements_ready_; }
+  void addReady(CountType num = 1) { elements_ready_ += 1; }
+  void clearReady() { elements_ready_ = 0; }
 
   friend struct CollectionManager;
 
@@ -106,6 +109,7 @@ private:
   bool group_ready_                                               = false;
   NodeType group_root_                                            = 0;
   CountType num_erased_not_removed_                               = 0;
+  CountType elements_ready_                                       = 0;
 };
 
 }}} /* end namespace vt::vrt::collection */

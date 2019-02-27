@@ -46,10 +46,16 @@
 #include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
+#include "vt/configs/arguments/args.h"
+#include "vt/runtime/runtime.h"
 
 #include <vector>
 #include <unordered_map>
+#include <string>
+#include <cstdio>
+#include <unistd.h>
 
+#include <fmt/format.h>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -63,6 +69,10 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
   ProcStats::proc_migrate_ = {};
 
 /*static*/ ProcStats::ElementIDType ProcStats::next_elm_ = 1;
+
+/*static*/ FILE* ProcStats::stats_file_ = nullptr;
+
+/*static*/ bool ProcStats::created_dir_ = false;
 
 /*static*/ void ProcStats::clearStats() {
   ProcStats::proc_data_.clear();
@@ -81,6 +91,63 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
   auto msg = makeMessage<MsgType>();
   theMsg()->broadcastMsg<MsgType,CollectionManager::releaseLBPhase>(msg.get());
   CollectionManager::releaseLBPhase(msg.get());
+}
+
+/*static*/ void ProcStats::createStatsFile() {
+  using ArgType = vt::arguments::ArgConfig;
+  auto const node = theContext()->getNode();
+  auto const base_file = std::string(ArgType::vt_lb_stats_file);
+  auto const dir = std::string(ArgType::vt_lb_stats_dir);
+  auto const file = fmt::format("{}.{}.out", base_file, node);
+  auto const file_name = fmt::format("{}/{}", dir, file);
+
+  debug_print(
+    vrt_coll, node,
+    "ProcStats: createStatsFile file={}\n", file_name
+  );
+
+  // Node 0 creates the directory
+  if (not created_dir_ and node == 0) {
+    mkdir(dir.c_str(), S_IRWXU);
+    created_dir_ = true;
+  }
+
+  // Barrier: wait for node 0 to create directory before trying to put a file in
+  // the stats destination directory
+  if (curRT) {
+    curRT->systemSync();
+  } else {
+    // Something is wrong
+    vtAssert(false, "Trying to dump stats when VT runtime is deallocated?");
+  }
+
+  stats_file_ = fopen(file_name.c_str(), "w+");
+}
+
+/*static*/ void ProcStats::closeStatsFile() {
+  if (stats_file_) {
+    fclose(stats_file_);
+    stats_file_  = nullptr;
+  }
+}
+
+/*static*/ void ProcStats::outputStatsFile() {
+  if (stats_file_ == nullptr) {
+    createStatsFile();
+  }
+
+  vtAssertExpr(stats_file_ != nullptr);
+
+  auto const num_iters = ProcStats::proc_data_.size();
+  for (auto i = 0; i < num_iters; i++) {
+    for (auto&& elm : ProcStats::proc_data_.at(i)) {
+      auto obj_str = fmt::format("{},{},{}\n", i, elm.first, elm.second);
+      fprintf(stats_file_, "%s", obj_str.c_str());
+    }
+  }
+  fflush(stats_file_);
+
+  closeStatsFile();
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -368,6 +368,10 @@ void Runtime::printStartupBanner() {
       auto f9 = warn_cr("--vt_lb", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
+    if (ArgType::vt_lb_stats) {
+      auto f9 = warn_cr("--vt_lb_stats", "lblite");
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);
+    }
   #endif
 
   if (ArgType::vt_lb) {
@@ -389,6 +393,26 @@ void Runtime::printStartupBanner() {
       fmt::print("{}\t{}{}", vt_pre, a2, reset);
     }
   }
+
+  if (ArgType::vt_lb_stats) {
+    auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
+
+    auto const fname = ArgType::vt_lb_stats_file;
+    if (fname != "") {
+      auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
+      auto f12 = opt_on("--vt_lb_stats_file", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+
+    auto const fdir = ArgType::vt_lb_stats_dir;
+    if (fdir != "") {
+      auto f11 = fmt::format("LB stats directory \"{}\"", fdir);
+      auto f12 = opt_on("--vt_lb_stats_dir", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+  }
+
 
   #if !backend_check_enabled(trace_enabled)
     if (ArgType::vt_trace) {

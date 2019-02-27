@@ -80,6 +80,9 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_lb_file_name       = "balance.in";
 /*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
 /*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
+/*static*/ bool        ArgConfig::vt_lb_stats           = false;
+/*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
+/*static*/ std::string ArgConfig::vt_lb_stats_file      = "stats";
 
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
@@ -324,25 +327,36 @@ namespace vt { namespace arguments {
    * Flags for enabling load balancing and configuring it
    */
 
-  auto lb           = "Enable load balancing";
-  auto lb_file      = "Enable reading LB configuration from file";
-  auto lb_file_name = "LB configuration file to read";
-  auto lb_name      = "Name of the load balancer to use";
-  auto lb_interval  = "Load balancing interval";
+  auto lb            = "Enable load balancing";
+  auto lb_file       = "Enable reading LB configuration from file";
+  auto lb_file_name  = "LB configuration file to read";
+  auto lb_name       = "Name of the load balancer to use";
+  auto lb_interval   = "Load balancing interval";
+  auto lb_stats      = "Enable load balancing statistics";
+  auto lb_stats_dir  = "Load balancing statistics output directory";
+  auto lb_stats_file = "Load balancing statistics output file name";
   auto lbn = "NoLB";
   auto lbi = 1;
   auto lbf = "balance.in";
-  auto s = app.add_flag("--vt_lb",             vt_lb,            lb);
-  auto t = app.add_flag("--vt_lb_file",        vt_lb_file,       lb_file);
-  auto u = app.add_option("--vt_lb_file_name", vt_lb_file_name,  lb_file_name, lbf);
-  auto v = app.add_option("--vt_lb_name",      vt_lb_name,       lb_name,      lbn);
-  auto w = app.add_option("--vt_lb_interval",  vt_lb_interval,   lb_interval,  lbi);
+  auto lbd = "vt_lb_stats";
+  auto lbs = "stats";
+  auto s  = app.add_flag("--vt_lb",              vt_lb,             lb);
+  auto t  = app.add_flag("--vt_lb_file",         vt_lb_file,        lb_file);
+  auto u  = app.add_option("--vt_lb_file_name",  vt_lb_file_name,   lb_file_name, lbf);
+  auto v  = app.add_option("--vt_lb_name",       vt_lb_name,        lb_name,      lbn);
+  auto w  = app.add_option("--vt_lb_interval",   vt_lb_interval,    lb_interval,  lbi);
+  auto ww = app.add_flag("--vt_lb_stats",        vt_lb_stats,       lb_stats);
+  auto wx = app.add_option("--vt_lb_stats_dir",  vt_lb_stats_dir,   lb_stats_dir, lbd);
+  auto wy = app.add_option("--vt_lb_stats_file", vt_lb_stats_file,  lb_stats_file,lbs);
   auto debugLB = "Load Balancing";
   s->group(debugLB);
   t->group(debugLB);
   u->group(debugLB);
   v->group(debugLB);
   w->group(debugLB);
+  ww->group(debugLB);
+  wx->group(debugLB);
+  wy->group(debugLB);
 
   /*
    * Flags for controlling termination

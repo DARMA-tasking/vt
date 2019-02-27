@@ -71,6 +71,8 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/reduce/reduce_msg.h"
 #include "vt/collective/reduce/reduce_hash.h"
+#include "vt/configs/arguments/args.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 
 #include <memory>
 #include <vector>
@@ -113,6 +115,7 @@ struct CollectionManager {
   using CleanupListFnType = std::list<CleanupFnType>;
   using DispatchHandlerType = auto_registry::AutoHandlerType;
   using ActionVecType = std::vector<ActionType>;
+  using ArgType = vt::arguments::ArgConfig;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;
@@ -133,7 +136,19 @@ struct CollectionManager {
 
   CollectionManager() = default;
 
-  virtual ~CollectionManager() { cleanupAll<>(); }
+  virtual ~CollectionManager() {
+    cleanupAll<>();
+
+    // Statistics output when LB is enabled and appropriate flag is enabled
+    backend_enable_if(
+      lblite, {
+        if (ArgType::vt_lb_stats) {
+          balance::ProcStats::outputStatsFile();
+          balance::ProcStats::clearStats();
+        }
+      }
+    );
+  }
 
   template <typename=void>
   void cleanupAll();
@@ -604,7 +619,15 @@ public:
   );
 
   /*
-   *  LB-related operations on the collection
+   * ======================================================================
+   *              LB-related operations on the collection
+   * ======================================================================
+   */
+
+  /*
+   * The `nextPhase` function is called by a single node on the whole collection
+   * to indicate that LB is ready. This includes all collections and thus may
+   * require extra sync to invoke safely
    */
   template <typename ColT>
   void nextPhase(
@@ -643,10 +666,14 @@ public:
   void checkReduceNoElements();
 
 private:
-  template <typename ColT, typename IndexT>
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
   CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
-  template <typename ColT, typename IndexT>
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
   Holder<ColT, IndexT>* findElmHolder(VirtualProxyType const& proxy);
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  Holder<ColT, IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy);
 
 public:
   template <typename ColT, typename IndexT>

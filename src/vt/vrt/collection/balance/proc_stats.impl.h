@@ -60,7 +60,12 @@ template <typename ColT>
   VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
   PhaseType const& phase, TimeType const& time
 ) {
-  auto const& next_elm = ProcStats::getNextElm();
+  // Assign a new element ID if it's the first time this runs
+  if (col_elm->stats_elm_id_ == 0) {
+    col_elm->stats_elm_id_ = ProcStats::getNextElm();
+  }
+
+  auto const next_elm = col_elm->stats_elm_id_;
 
   debug_print(
     vrt_coll, node,
@@ -77,14 +82,15 @@ template <typename ColT>
     std::forward_as_tuple(time)
   );
   auto migrate_iter = proc_migrate_.find(next_elm);
-  vtAssert(migrate_iter == proc_migrate_.end(), "Migrate func must not exist");
-  proc_migrate_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(next_elm),
-    std::forward_as_tuple([elm_proxy,col_elm](NodeType node){
-      col_elm->migrate(node);
-    })
-  );
+  if (migrate_iter == proc_migrate_.end()) {
+    proc_migrate_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(next_elm),
+      std::forward_as_tuple([elm_proxy,col_elm](NodeType node){
+        col_elm->migrate(node);
+      })
+    );
+  }
   return next_elm;
 }
 
