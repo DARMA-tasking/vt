@@ -64,13 +64,17 @@ static constexpr HandlerType const blank_handler = 0;
 
 static constexpr BitCountType const auto_num_bits = 1;
 static constexpr BitCountType const functor_num_bits = 1;
+static constexpr BitCountType const objgroup_num_bits = 1;
 static constexpr BitCountType const handler_id_num_bits =
- BitCounterType<HandlerType>::value - (auto_num_bits + functor_num_bits);
+ BitCounterType<HandlerType>::value - (
+   auto_num_bits + functor_num_bits + objgroup_num_bits
+ );
 
 enum eHandlerBits {
   Auto       = 0,
   Functor    = eHandlerBits::Auto       + auto_num_bits,
-  Identifier = eHandlerBits::Functor    + functor_num_bits
+  ObjGroup   = eHandlerBits::Functor    + functor_num_bits,
+  Identifier = eHandlerBits::ObjGroup   + objgroup_num_bits
 };
 
 struct HandlerManager {
@@ -79,16 +83,20 @@ struct HandlerManager {
   HandlerManager() = default;
 
   static HandlerType makeHandler(
-    bool is_auto, bool is_functor, HandlerIdentifierType id
+    bool is_auto, bool is_functor, HandlerIdentifierType id,
+    bool is_objgroup = false
   );
   static void setHandlerIdentifier(
     HandlerType& han, HandlerIdentifierType ident
   );
+
   static HandlerIdentifierType getHandlerIdentifier(HandlerType han);
   static void setHandlerAuto(HandlerType& han, bool is_auto);
   static void setHandlerFunctor(HandlerType& han, bool is_functor);
+  static void setHandlerObjGroup(HandlerType& han, bool is_objgroup);
   static bool isHandlerAuto(HandlerType han);
   static bool isHandlerFunctor(HandlerType han);
+  static bool isHandlerObjGroup(HandlerType han);
 };
 
 } //end namespace vt
