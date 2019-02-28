@@ -86,6 +86,11 @@ trace::TraceEntryIDType theTraceID(
     return getAutoRegistryGen<ContType>().at(handler).theTraceID();
     break;
   }
+  case RegistryTypeEnum::RegObjGroup: {
+    using ContType = AutoActiveObjGroupContainerType;
+    return getAutoRegistryGen<ContType>().at(handler).theTraceID();
+    break;
+  }
   case RegistryTypeEnum::RegVrtCollection: {
     using ContType = AutoActiveCollectionContainerType;
     return getAutoRegistryGen<ContType>().at(handler).theTraceID();

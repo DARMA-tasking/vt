@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          features_defines.h
+//                            holder.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,75 +42,34 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_FEATURES_DEFINES
-#define INCLUDED_FEATURES_DEFINES
+#if !defined INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_H
+#define INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_H
 
-#include "meld_headers.h"
+#include "vt/config.h"
+#include "vt/objgroup/common.h"
+#include "vt/objgroup/holder/holder_base.h"
 
-/*
- * All the defined features/options for debugging and backend enable-ifs
- */
+#include <memory>
 
-// backend features, add any new ones to this list
-#define debug_no_feature(x) x
-#define debug_bit_check_overflow(x) x
-#define debug_trace_enabled(x) x
-#define debug_detector(x) x
-#define debug_lblite(x) x
-#define debug_openmp(x) x
-#define debug_production(x) x
-#define debug_stdthread(x) x
-#define debug_mpi_rdma(x) x
-#define debug_parserdes(x) x
-#define debug_print_term_msgs(x) x
-#define debug_default_threading(x) x
-#define debug_no_pool_alloc_env(x) x
-#define debug_memory_pool(x) x
+namespace vt { namespace objgroup { namespace holder {
 
-// distinct modes for debug
-#define debug_none(x) x
-#define debug_gen(x) x
-#define debug_runtime(x) x
-#define debug_active(x) x
-#define debug_term(x) x
-#define debug_termds(x) x
-#define debug_barrier(x) x
-#define debug_event(x) x
-#define debug_pipe(x) x
-#define debug_pool(x) x
-#define debug_reduce(x) x
-#define debug_rdma(x) x
-#define debug_rdma_channel(x) x
-#define debug_rdma_state(x) x
-#define debug_param(x) x
-#define debug_handler(x) x
-#define debug_hierlb(x) x
-#define debug_scatter(x) x
-#define debug_sequence(x) x
-#define debug_sequence_vrt(x) x
-#define debug_serial_msg(x) x
-#define debug_trace(x) x
-#define debug_location(x) x
-#define debug_lb(x) x
-#define debug_vrt(x) x
-#define debug_vrt_coll(x) x
-#define debug_worker(x) x
-#define debug_group(x) x
-#define debug_broadcast(x) x
-#define debug_objgroup(x) x
+template <typename ObjT>
+struct Holder final : HolderObjBase<ObjT> {
+  explicit Holder(std::unique_ptr<ObjT> in_obj)
+    : obj_(std::move(in_obj))
+  { }
 
-// contextual modes for debug
-#define debug_node(x) x
-#define debug_unknown(x) x
+  virtual ~Holder() = default;
 
-// global modes for debug
-#define debug_flush(x) x
-#define debug_startup(x) x
-#define debug_line_file(x) x
-#define debug_function(x) x
+public:
+  ObjT* get() override { return obj_.get(); }
+  bool exists() override { return obj_ != nullptr; }
+  void reset() override { obj_ = std::make_unique<ObjT>(); }
 
-// subclass modes
-#define debug_verbose(x) x
-#define debug_verbose_2(x) x
+private:
+  std::unique_ptr<ObjT> obj_ = nullptr;
+};
 
-#endif  /*INCLUDED_FEATURES_DEFINES*/
+}}} /* end namespace vt::objgroup::holder */
+
+#endif /*INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_H*/

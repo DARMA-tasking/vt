@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          general.h
+//                          proxy_bits.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,39 +42,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_GENERAL_H
-#define INCLUDED_RUNNABLE_GENERAL_H
+#if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_BITS_H
+#define INCLUDED_VT_OBJGROUP_PROXY_PROXY_BITS_H
 
 #include "vt/config.h"
-#include "vt/registry/registry.h"
-#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/utils/bits/bits_common.h"
 
-namespace vt { namespace runnable {
+namespace vt { namespace objgroup { namespace proxy {
 
-template <typename MsgT>
-struct Runnable {
-  template <typename... Args>
-  using FnParamType = void(*)(Args...);
+static constexpr BitCountType const objgrp_is_collective_num_bits = 1;
+static constexpr BitCountType const objgrp_node_num_bits =
+    BitCounterType<NodeType>::value;
+static constexpr BitCountType const objgrp_id_num_bits =
+    BitCounterType<ObjGroupIDType>::value;
+static constexpr BitCountType const objgrp_proxy_num_bits =
+    BitCounterType<ObjGroupProxyType>::value;
+static constexpr BitCountType const objgrp_idx_num_bits =
+   objgrp_proxy_num_bits -
+  (objgrp_is_collective_num_bits + objgrp_node_num_bits + objgrp_id_num_bits);
 
-  // Dispatch for normal active message handlers (functors, fn pointer, etc.)
-  static void run(
-    HandlerType handler, ActiveFnPtrType func, MsgT* msg, NodeType from_node,
-    TagType in_tag = no_tag
+enum eObjGroupProxyBits {
+  Collective = 0,
+  Node       = eObjGroupProxyBits::Collective + objgrp_is_collective_num_bits,
+  TypeIdx    = eObjGroupProxyBits::Node       + objgrp_idx_num_bits,
+  ID         = eObjGroupProxyBits::TypeIdx    + objgrp_node_num_bits
+};
+
+struct ObjGroupProxy {
+  // Creation of a new proxy with properties
+  static ObjGroupProxyType create(
+    ObjGroupIDType id, ObjTypeIdxType idx, NodeType node, bool coll
   );
 
-  // Dispatch for object groups: handler with node-local object ptr
-  static void runObj(HandlerType handler, MsgT* msg, NodeType from_node);
+  // Setters for mixing the proxy bits
+  static void setIsCollective(ObjGroupProxyType& proxy, bool is_coll);
+  static void setNode(ObjGroupProxyType& proxy, NodeType const& node);
+  static void setID(ObjGroupProxyType& proxy, ObjGroupIDType id);
+  static void setTypeIdx(ObjGroupProxyType& proxy, ObjTypeIdxType idx);
+
+  // Getters for obtaining info about the bit-pattern in the obj-group proxy
+  static bool isCollective(ObjGroupProxyType proxy);
+  static NodeType getNode(ObjGroupProxyType proxy);
+  static ObjGroupIDType getID(ObjGroupProxyType proxy);
+  static ObjTypeIdxType getTypeIdx(ObjGroupProxyType proxy);
 };
 
-struct RunnableVoid {
-  template <typename... Args>
-  using FnParamType = void(*)(Args...);
+}}} /* end namespace vt::objgroup::proxy */
 
-  static inline void run(HandlerType handler, NodeType from_node);
-};
-
-}} /* end namespace vt::runnable */
-
-#include "vt/runnable/general.impl.h"
-
-#endif /*INCLUDED_RUNNABLE_GENERAL_H*/
+#endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_BITS_H*/

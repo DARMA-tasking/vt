@@ -495,7 +495,8 @@ bool ActiveMessenger::deliverActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& in_from_node,
   bool insert
 ) {
-  auto msg = base.to<ShortMessage>().get();
+  using MsgType = ShortMessage;
+  auto msg = base.to<MsgType>().get();
 
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
@@ -512,6 +513,7 @@ bool ActiveMessenger::deliverActiveMsg(
   bool has_ex_handler = false;
   bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
+  bool const& is_obj = HandlerManagerType::isHandlerObjGroup(handler);
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
@@ -522,31 +524,31 @@ bool ActiveMessenger::deliverActiveMsg(
     );
   }
 
-  if (is_auto and is_functor) {
+  if (is_auto and is_functor and not is_obj) {
     active_fun = auto_registry::getAutoHandlerFunctor(handler);
-  } else if (is_auto) {
+  } else if (is_auto and not is_obj) {
     active_fun = auto_registry::getAutoHandler(handler);
-  } else {
+  } else if (not is_obj) {
     auto ret = theRegistry()->getHandler(handler, tag);
     if (ret != nullptr) {
       has_ex_handler = true;
     }
   }
 
-  bool const& has_action_handler = active_fun != no_action or has_ex_handler;
+  bool const& has_handler = active_fun != no_action or has_ex_handler or is_obj;
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
       "deliverActiveMsg: msg={}, handler={}, tag={}, is_auto={}, "
-      "is_functor={}, has_action_handler={}, insert={}\n",
+      "is_functor={}, has_handler={}, insert={}\n",
       print_ptr(msg), handler, tag, print_bool(is_auto),
-      print_bool(is_functor), print_bool(has_action_handler),
+      print_bool(is_functor), print_bool(has_handler),
       print_bool(insert)
     );
   }
 
-  if (has_action_handler) {
+  if (has_handler) {
     // the epoch_stack_ size after the epoch on the active message, if included
     // in the envelope, is pushed.
     EpochStackSizeType ep_stack_size = 0;
@@ -570,8 +572,13 @@ bool ActiveMessenger::deliverActiveMsg(
       ep_stack_size = epochPreludeHandler(cur_epoch);
     }
 
-    // run the active function
-    runnable::Runnable<ShortMessage>::run(handler,active_fun,msg,from_node,tag);
+    if (is_obj) {
+      // run the object-group handler
+      runnable::Runnable<MsgType>::runObj(handler,msg,from_node);
+    } else {
+      // run the normal active function handler
+      runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
+    }
 
     auto trigger = theRegistry()->getTrigger(handler);
     if (trigger) {
@@ -619,7 +626,7 @@ bool ActiveMessenger::deliverActiveMsg(
     theTerm()->recv(from_node,epoch);
   }
 
-  if (has_action_handler) {
+  if (has_handler) {
     if (!is_term || backend_check_enabled(print_term_msgs)) {
       debug_print(
         active, node,
@@ -633,7 +640,7 @@ bool ActiveMessenger::deliverActiveMsg(
     }
   }
 
-  return has_action_handler;
+  return has_handler;
 }
 
 bool ActiveMessenger::tryProcessIncomingMessage() {

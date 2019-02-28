@@ -53,6 +53,7 @@
 #include "vt/trace/trace_common.h"
 #include "vt/messaging/envelope.h"
 #include "vt/handler/handler.h"
+#include "vt/objgroup/manager.fwd.h"
 
 #include <cassert>
 
@@ -81,12 +82,16 @@ template <typename MsgT>
 
   bool is_functor = false;
   bool is_auto = false;
+  bool is_obj = false;
   bool bare_handler = false;
   auto_registry::NumArgsType num_args = 1;
 
   if (func == nullptr) {
     is_auto = HandlerManagerType::isHandlerAuto(handler);
     is_functor = HandlerManagerType::isHandlerFunctor(handler);
+    is_obj = HandlerManagerType::isHandlerObjGroup(handler);
+
+    vtAssert(not is_obj, "Must not be an object group handler");
 
     if (is_auto && is_functor) {
       func = auto_registry::getAutoHandlerFunctor(handler);
@@ -106,6 +111,36 @@ template <typename MsgT>
   } else if (!bare_handler) {
     func(msg);
   }
+
+  #if backend_check_enabled(trace_enabled)
+    theTrace()->endProcessing(trace_id, sizeof(MsgT), trace_event, from_node);
+  #endif
+}
+
+template <typename MsgT>
+/*static*/ inline void Runnable<MsgT>::runObj(
+  HandlerType handler, MsgT* msg, NodeType from_node
+) {
+  using HandlerManagerType = HandlerManager;
+
+  #if backend_check_enabled(trace_enabled)
+    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
+      handler, auto_registry::RegistryTypeEnum::RegObjGroup
+    );
+    trace::TraceEventIDType trace_event = trace::no_trace_event;
+    if (msg) {
+      trace_event = envelopeGetTraceEvent(msg->env);
+    }
+  #endif
+
+  #if backend_check_enabled(trace_enabled)
+    theTrace()->beginProcessing(trace_id, sizeof(MsgT), trace_event, from_node);
+  #endif
+
+  bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
+  vtAssert(is_obj, "Must be an object group handler");
+  auto pmsg = promoteMsg(msg);
+  objgroup::dispatchObjGroup(pmsg,handler);
 
   #if backend_check_enabled(trace_enabled)
     theTrace()->endProcessing(trace_id, sizeof(MsgT), trace_event, from_node);

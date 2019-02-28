@@ -56,6 +56,7 @@
 #include "vt/sequence/sequencer_headers.h"
 #include "vt/trace/trace.h"
 #include "vt/pipe/pipe_manager.h"
+#include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
@@ -674,6 +675,9 @@ void Runtime::printStartupBanner() {
   #if !backend_debug_enabled(broadcast)
     debug_warn_compile(broadcast)
   #endif
+  #if !backend_debug_enabled(objgroup)
+    debug_warn_compile(objgroup)
+  #endif
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);
@@ -903,6 +907,7 @@ void Runtime::initializeComponents() {
   thePool = std::make_unique<pool::Pool>();
 
   // Core components: enables more complex subsequent initialization
+  theObjGroup = std::make_unique<objgroup::ObjGroupManager>();
   theMsg = std::make_unique<messaging::ActiveMessenger>();
   theSched = std::make_unique<sched::Scheduler>();
   initializeTrace();
@@ -1040,6 +1045,7 @@ void Runtime::finalizeComponents() {
   theMsg = nullptr;
   theGroup = nullptr;
   theCB = nullptr;
+  theObjGroup = nullptr;
 
   // Helper components: thePool the last to be destructed because it handles
   // memory allocations

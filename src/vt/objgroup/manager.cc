@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          general.h
+//                            manager.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,39 +42,66 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_GENERAL_H
-#define INCLUDED_RUNNABLE_GENERAL_H
-
 #include "vt/config.h"
-#include "vt/registry/registry.h"
-#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/objgroup/common.h"
+#include "vt/objgroup/manager.h"
+#include "vt/context/context.h"
 
-namespace vt { namespace runnable {
+namespace vt { namespace objgroup {
 
-template <typename MsgT>
-struct Runnable {
-  template <typename... Args>
-  using FnParamType = void(*)(Args...);
-
-  // Dispatch for normal active message handlers (functors, fn pointer, etc.)
-  static void run(
-    HandlerType handler, ActiveFnPtrType func, MsgT* msg, NodeType from_node,
-    TagType in_tag = no_tag
+void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+  debug_print(
+    objgroup, node,
+    "dispatch: han={}\n", han
   );
+  auto iter = han_to_proxy_.find(han);
+  vtAssertExpr(iter != han_to_proxy_.end());
+  auto const proxy = iter->second;
+  auto dispatch_iter = dispatch_.find(proxy);
+  vtAssertExpr(dispatch_iter != dispatch_.end());
+  dispatch_iter->second->run(han,msg);
+}
 
-  // Dispatch for object groups: handler with node-local object ptr
-  static void runObj(HandlerType handler, MsgT* msg, NodeType from_node);
-};
+void ObjGroupManager::regHan(ObjGroupProxyType proxy, HandlerType han) {
+  auto iter = han_to_proxy_.find(han);
+  vtAssertExpr(iter == han_to_proxy_.end());
+  debug_print(
+    objgroup, node,
+    "regHan: registering han={}, proxy={:x}\n",
+    han, proxy
+  );
+  han_to_proxy_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(han),
+    std::forward_as_tuple(proxy)
+  );
+}
 
-struct RunnableVoid {
-  template <typename... Args>
-  using FnParamType = void(*)(Args...);
+ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
+  HolderBasePtrType base, ObjTypeIdxType idx
+) {
+  auto iter = cur_obj_id_.find(idx);
+  if (iter == cur_obj_id_.end()) {
+    cur_obj_id_[idx] = fst_obj_group_id;
+    iter = cur_obj_id_.find(idx);
+  }
+  vtAssert(iter != cur_obj_id_.end(), "Must have valid type idx lookup");
+  auto const id = iter->second++;
+  auto const node = theContext()->getNode();
+  auto const is_collective = true;
+  auto const proxy = proxy::ObjGroupProxy::create(id, idx, node, is_collective);
+  auto obj_iter = objs_.find(proxy);
+  vtAssert(obj_iter == objs_.end(), "Proxy must not exist in obj group map");
+  objs_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(proxy),
+    std::forward_as_tuple(std::move(base))
+  );
+  return proxy;
+}
 
-  static inline void run(HandlerType handler, NodeType from_node);
-};
+void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+  return theObjGroup()->dispatch(msg,han);
+}
 
-}} /* end namespace vt::runnable */
-
-#include "vt/runnable/general.impl.h"
-
-#endif /*INCLUDED_RUNNABLE_GENERAL_H*/
+}} /* end namespace vt::objgroup */

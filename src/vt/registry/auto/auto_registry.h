@@ -55,6 +55,7 @@
 
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/context/context_vrt.h"
+#include "vt/objgroup/active_func/active_func.h"
 
 #include <vector>
 #include <memory>
@@ -62,6 +63,11 @@
 namespace vt { namespace auto_registry {
 
 AutoActiveType getAutoHandler(HandlerType const& handler);
+
+AutoActiveObjGroupType getAutoHandlerObjGroup(HandlerType han);
+
+template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
+HandlerType makeAutoHandlerObjGroup();
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 HandlerType makeAutoHandler(MessageT* const msg);
