@@ -94,7 +94,7 @@ macro(find_package_local pkg_name pkg_directory pkg_other_name)
   endif()
 endmacro(find_package_local)
 
-macro(optional_pkg_directory pkg_name pkg_user_name)
+macro(optional_pkg_directory pkg_name pkg_user_name assume_found_if_hasparent)
   get_directory_property(hasParent PARENT_DIRECTORY)
   if(hasParent)
     # Skip MOST of this logic when this macro was not invoked from the

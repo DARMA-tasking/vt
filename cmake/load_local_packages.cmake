@@ -12,7 +12,7 @@ require_pkg_directory(detector "VT detector library")
 find_package_local(meld "${meld_DIR}" meld)
 find_package_local(detector "${detector_DIR}" detector)
 # optional directory for this package
-optional_pkg_directory(checkpoint "Serialization/Checkpoint")
+optional_pkg_directory(checkpoint "Serialization/Checkpoint" 1)
 # find the optional packages locally if identified
 if (${checkpoint_DIR_FOUND})
   find_package_local(checkpoint "${checkpoint_DIR}" checkpoint)
