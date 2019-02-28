@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          types_type.h
+//                      proxy_objgroup_elm.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,52 +42,48 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TYPES_TYPE
-#define INCLUDED_TYPES_TYPE
+#if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_ELM_H
+#define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_ELM_H
 
-#include "vt/configs/debug/debug_masterconfig.h"
+#include "vt/config.h"
+#include "vt/objgroup/common.h"
+#include "vt/objgroup/proxy/proxy_bits.h"
+#include "vt/objgroup/active_func/active_func.h"
+#include "vt/messaging/message/smart_ptr.h"
 
-#include <cstdint>
-#include <functional>
+namespace vt { namespace objgroup { namespace proxy {
 
-namespace vt {
+template <typename ObjT>
+struct ProxyElm {
 
-// Physical identifier types (nodes, cores, workers, etc.)
-using PhysicalResourceType    = int16_t;
-using NodeType                = PhysicalResourceType;
-using CoreType                = PhysicalResourceType;
-using WorkerCountType         = PhysicalResourceType;
-using WorkerIDType            = PhysicalResourceType;
+  ProxyElm() = default;
+  ProxyElm(ProxyElm const&) = default;
+  ProxyElm(ProxyElm&&) = default;
+  ProxyElm& operator=(ProxyElm const&) = default;
 
-// Runtime system entity types
-using HandlerType             = int64_t;
-using SeedType                = int64_t;
-using EnvelopeDataType        = int8_t;
-using EventType               = uint64_t;
-using EpochType               = uint64_t;
-using TagType                 = int32_t;
-using BarrierType             = uint64_t;
-using CollectiveAlgType       = uint64_t;
-using RefType                 = int16_t;
-using ByteType                = uint64_t;
-using BitCountType            = int32_t;
-using SerialByteType          = char;
-using ErrorCodeType           = int32_t;
-using VirtualProxyType        = uint64_t;
-using VirtualElmOnlyProxyType = uint64_t;
-using VirtualElmCountType     = int64_t;
-using UniqueIndexBitType      = uint64_t;
-using GroupType               = uint64_t;
-using MsgSizeType             = int32_t;
-using PhaseType               = uint64_t;
-using PipeType                = uint64_t;
-using ObjGroupProxyType       = uint64_t;
+  ProxyElm(ObjGroupProxyType in_proxy, NodeType in_node)
+    : proxy_(in_proxy), node_(in_node)
+  { }
 
-// Action types for attaching a closure to a runtime function
-using ActionType              = std::function<void()>;
-using ActionProxyType         = std::function<void(VirtualProxyType)>;
-using ActionNodeType          = std::function<void(NodeType)>;
+  /*
+   * Send a msg an object in this group with a handler
+   */
+  template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+  void send(MsgT* msg) const;
+  template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+  void send(MsgSharedPtr<MsgT> msg) const;
+  template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
+  void send(Args&&... args) const;
 
-}  // end namespace vt
+public:
+  template <typename SerializerT>
+  void serialize(SerializerT& s);
 
-#endif  /*INCLUDED_TYPES_TYPE*/
+private:
+  ObjGroupProxyType proxy_ = no_obj_group;
+  NodeType node_           = uninitialized_destination;
+};
+
+}}} /* end namespace vt::objgroup::proxy */
+
+#endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_ELM_H*/

@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          types_type.h
+//                        proxy_objgroup.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,52 +42,60 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TYPES_TYPE
-#define INCLUDED_TYPES_TYPE
+#if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_H
+#define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_H
 
-#include "vt/configs/debug/debug_masterconfig.h"
+#include "vt/config.h"
+#include "vt/objgroup/common.h"
+#include "vt/objgroup/proxy/proxy_bits.h"
+#include "vt/objgroup/proxy/proxy_objgroup_elm.h"
+#include "vt/objgroup/active_func/active_func.h"
+#include "vt/messaging/message/smart_ptr.h"
 
-#include <cstdint>
-#include <functional>
+namespace vt { namespace objgroup { namespace proxy {
 
-namespace vt {
+template <typename ObjT>
+struct Proxy {
 
-// Physical identifier types (nodes, cores, workers, etc.)
-using PhysicalResourceType    = int16_t;
-using NodeType                = PhysicalResourceType;
-using CoreType                = PhysicalResourceType;
-using WorkerCountType         = PhysicalResourceType;
-using WorkerIDType            = PhysicalResourceType;
+  Proxy() = default;
+  Proxy(Proxy const&) = default;
+  Proxy(Proxy&&) = default;
+  Proxy& operator=(Proxy const&) = default;
 
-// Runtime system entity types
-using HandlerType             = int64_t;
-using SeedType                = int64_t;
-using EnvelopeDataType        = int8_t;
-using EventType               = uint64_t;
-using EpochType               = uint64_t;
-using TagType                 = int32_t;
-using BarrierType             = uint64_t;
-using CollectiveAlgType       = uint64_t;
-using RefType                 = int16_t;
-using ByteType                = uint64_t;
-using BitCountType            = int32_t;
-using SerialByteType          = char;
-using ErrorCodeType           = int32_t;
-using VirtualProxyType        = uint64_t;
-using VirtualElmOnlyProxyType = uint64_t;
-using VirtualElmCountType     = int64_t;
-using UniqueIndexBitType      = uint64_t;
-using GroupType               = uint64_t;
-using MsgSizeType             = int32_t;
-using PhaseType               = uint64_t;
-using PipeType                = uint64_t;
-using ObjGroupProxyType       = uint64_t;
+  explicit Proxy(ObjGroupProxyType in_proxy)
+    : proxy_(in_proxy)
+  { }
 
-// Action types for attaching a closure to a runtime function
-using ActionType              = std::function<void()>;
-using ActionProxyType         = std::function<void(VirtualProxyType)>;
-using ActionNodeType          = std::function<void(NodeType)>;
+public:
 
-}  // end namespace vt
+  /*
+   * Broadcast a msg to this object group with a handler
+   */
+  template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+  void broadcast(MsgT* msg) const;
+  template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+  void broadcast(MsgSharedPtr<MsgT> msg) const;
+  template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
+  void broadcast(Args&&... args) const;
 
-#endif  /*INCLUDED_TYPES_TYPE*/
+  /*
+   * Get the local pointer to this object group residing in the current node
+   * context
+   */
+  ObjT* get() const;
+
+public:
+
+  /*
+   * Index the object group to get an element; can use operator[] or operator()
+   */
+  ProxyElm<ObjT> operator[](NodeType node) const;
+  ProxyElm<ObjT> operator()(NodeType node) const;
+
+private:
+  ObjGroupProxyType proxy_ = no_obj_group;
+};
+
+}}} /* end namespace vt::objgroup::proxy */
+
+#endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_H*/

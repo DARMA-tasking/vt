@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          types_type.h
+//                          proxy_bits.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,52 +42,41 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TYPES_TYPE
-#define INCLUDED_TYPES_TYPE
+#if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_BITS_H
+#define INCLUDED_VT_OBJGROUP_PROXY_PROXY_BITS_H
 
-#include "vt/configs/debug/debug_masterconfig.h"
+#include "vt/config.h"
+#include "vt/utils/bits/bits_common.h"
 
-#include <cstdint>
-#include <functional>
+namespace vt { namespace objgroup { namespace proxy {
 
-namespace vt {
+static constexpr BitCountType const objgrp_is_collective_num_bits = 1;
+static constexpr BitCountType const objgrp_node_num_bits =
+    BitCounterType<NodeType>::value;
+static constexpr BitCountType const objgrp_id_num_bits =
+    BitCounterType<ObjGroupIDType>::value;
 
-// Physical identifier types (nodes, cores, workers, etc.)
-using PhysicalResourceType    = int16_t;
-using NodeType                = PhysicalResourceType;
-using CoreType                = PhysicalResourceType;
-using WorkerCountType         = PhysicalResourceType;
-using WorkerIDType            = PhysicalResourceType;
+enum eObjGroupProxyBits {
+  Collective = 0,
+  Node       = eObjGroupProxyBits::Collective + objgrp_is_collective_num_bits,
+  ID         = eObjGroupProxyBits::Node       + objgrp_node_num_bits
+};
 
-// Runtime system entity types
-using HandlerType             = int64_t;
-using SeedType                = int64_t;
-using EnvelopeDataType        = int8_t;
-using EventType               = uint64_t;
-using EpochType               = uint64_t;
-using TagType                 = int32_t;
-using BarrierType             = uint64_t;
-using CollectiveAlgType       = uint64_t;
-using RefType                 = int16_t;
-using ByteType                = uint64_t;
-using BitCountType            = int32_t;
-using SerialByteType          = char;
-using ErrorCodeType           = int32_t;
-using VirtualProxyType        = uint64_t;
-using VirtualElmOnlyProxyType = uint64_t;
-using VirtualElmCountType     = int64_t;
-using UniqueIndexBitType      = uint64_t;
-using GroupType               = uint64_t;
-using MsgSizeType             = int32_t;
-using PhaseType               = uint64_t;
-using PipeType                = uint64_t;
-using ObjGroupProxyType       = uint64_t;
+struct ObjGroupProxy {
+  // Creation of a new proxy with properties
+  static ObjGroupProxyType create(ObjGroupIDType id, NodeType node, bool coll);
 
-// Action types for attaching a closure to a runtime function
-using ActionType              = std::function<void()>;
-using ActionProxyType         = std::function<void(VirtualProxyType)>;
-using ActionNodeType          = std::function<void(NodeType)>;
+  // Setters for mixing the proxy bits
+  static void setIsCollective(ObjGroupProxyType& proxy, bool is_coll);
+  static void setNode(ObjGroupProxyType& proxy, NodeType const& node);
+  static void setID(ObjGroupProxyType& proxy, ObjGroupIDType id);
 
-}  // end namespace vt
+  // Getters for obtaining info about the bit-pattern in the obj-group proxy
+  static bool isCollective(ObjGroupProxyType proxy);
+  static NodeType getNode(ObjGroupProxyType proxy);
+  static ObjGroupIDType getID(ObjGroupProxyType proxy);
+};
 
-#endif  /*INCLUDED_TYPES_TYPE*/
+}}} /* end namespace vt::objgroup::proxy */
+
+#endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_BITS_H*/
