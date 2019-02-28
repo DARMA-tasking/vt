@@ -56,10 +56,14 @@ struct Runnable {
   template <typename... Args>
   using FnParamType = void(*)(Args...);
 
+  // Dispatch for normal active message handlers (functors, fn pointer, etc.)
   static void run(
     HandlerType handler, ActiveFnPtrType func, MsgT* msg, NodeType from_node,
     TagType in_tag = no_tag
   );
+
+  // Dispatch for object groups: handler with node-local object ptr
+  static void runObj(HandlerType handler, MsgT* msg, NodeType from_node);
 };
 
 struct RunnableVoid {

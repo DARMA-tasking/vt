@@ -49,6 +49,8 @@ namespace vt { namespace objgroup {
 
 using ObjGroupIDType = uint32_t;
 
+struct BaseObj { };
+
 }} /* end namespace vt::objgroup */
 
 #endif /*INCLUDED_VT_OBJGROUP_COMMON_H*/

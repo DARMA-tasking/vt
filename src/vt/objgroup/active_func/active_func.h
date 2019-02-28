@@ -47,16 +47,14 @@
 
 #include "vt/objgroup/common.h"
 #include "vt/messaging/message.h"
-#include "vt/vrt/collection/types/headers.fwd.h"
-#include "vt/vrt/collection/active/active_funcs.h"
 
-namespace vt { namespace objgroup { namespace proxy {
+namespace vt { namespace objgroup {
 
-using ActiveObjAnyType = vrt::collection::ActiveColMemberFnPtrType;
+using ActiveObjAnyType = void(BaseObj::*)(vt::BaseMessage*);
 
 template <typename MsgT, typename ObjT>
-using ActiveObjType = vrt::collection::ActiveColMemberTypedFnType<MsgT,ObjT>;
+using ActiveObjType = void(ObjT::*)(MsgT*);
 
-}}} /* end namespace vt::objgroup::proxy */
+}} /* end namespace vt::objgroup */
 
 #endif /*INCLUDED_VT_OBJGROUP_ACTIVE_FUNC_ACTIVE_FUNC_H*/

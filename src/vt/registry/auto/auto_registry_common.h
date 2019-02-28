@@ -54,6 +54,7 @@
 #include "vt/vrt/context/context_vrt_funcs.h"
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/topos/mapping/mapping_function.h"
+#include "vt/objgroup/active_func/active_func.h"
 
 #include <vector>
 #include <cstdlib>
@@ -71,6 +72,7 @@ using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;
 using AutoActiveRDMAGetType       = ActiveRDMAGetFnPtrType;
 using AutoActiveRDMAPutType       = ActiveRDMAPutFnPtrType;
 using AutoActiveIndexType         = std::size_t;
+using AutoActiveObjGroupType      = objgroup::ActiveObjAnyType;
 
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;
@@ -85,7 +87,8 @@ enum struct RegistryTypeEnum {
   RegVrtCollectionMember,
   RegRDMAGet,
   RegRDMAPut,
-  RegIndex
+  RegIndex,
+  RegObjGroup
 };
 
 static struct NumArgsTagType { } NumArgsTag { };
@@ -147,6 +150,7 @@ using AutoActiveFunctorContainerType       = RegContType<AutoActiveFunctorType>;
 using AutoActiveRDMAGetContainerType       = RegContType<AutoActiveRDMAGetType>;
 using AutoActiveRDMAPutContainerType       = RegContType<AutoActiveRDMAPutType>;
 using AutoActiveIndexContainerType         = RegContType<AutoActiveIndexType>;
+using AutoActiveObjGroupContainerType      = RegContType<AutoActiveObjGroupType>;
 
 }} // end namespace vt::auto_registry
 
