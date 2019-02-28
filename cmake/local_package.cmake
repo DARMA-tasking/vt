@@ -8,7 +8,7 @@ macro(require_pkg_directory pkg_name pkg_user_name)
     # Note that this will also skip if you call this macro from
     # a subdirectory in your own package, so just don't do it!
 
-    #message(STATUS "skipping find_package for ${pkg_name}")
+    #message(STATUS "skipping require_pkg_directory for ${pkg_name}")
   else()
     #message(STATUS "require_directory: name=${pkg_name}")
     option(${pkg_name}_DIR "Root folder for ${pkg_user_name} installation" OFF)
