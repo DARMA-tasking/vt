@@ -60,7 +60,6 @@ static void hello_world(HelloMsg* msg) {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  std::cout << "initialisation is done for hello_world"<<std::endl;
   auto const& my_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
