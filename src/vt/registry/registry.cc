@@ -50,15 +50,10 @@ namespace vt { namespace registry {
 HandlerType Registry::registerNewHandler(
   ActiveClosureFnType fn, TagType const& tag, bool const& is_collective
 ) {
-  auto const& this_node = theContext()->getNode();
-
   HandlerType new_handle = 0;
   HandlerIdentifierType const& new_identifier =
     is_collective ? cur_ident_collective_++ : cur_ident_++;
 
-  HandlerManagerType::setHandlerNode(
-    new_handle, is_collective ? uninitialized_destination : this_node
-  );
   HandlerManagerType::setHandlerIdentifier(new_handle, new_identifier);
 
   if (tag == no_tag) {

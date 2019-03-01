@@ -48,7 +48,7 @@
 namespace vt {
 
 /*static*/ HandlerType HandlerManager::makeHandler(
-  bool const& is_auto, bool const& is_functor, HandlerIdentifierType const& id
+  bool is_auto, bool is_functor, HandlerIdentifierType id
 ) {
   HandlerType new_han = blank_handler;
   HandlerManager::setHandlerAuto(new_han, is_auto);
@@ -64,50 +64,38 @@ namespace vt {
   return new_han;
 }
 
-/*static*/ NodeType HandlerManager::getHandlerNode(HandlerType const& han) {
-  return BitPackerType::getField<HandlerBitsType::Node, node_num_bits, NodeType>(han);
-}
-
 /*static*/ HandlerIdentifierType HandlerManager::getHandlerIdentifier(
-  HandlerType const& han
+  HandlerType han
 ) {
   return BitPackerType::getField<
     HandlerBitsType::Identifier, handler_id_num_bits, HandlerIdentifierType
   >(han);
 }
 
-/*static*/ void HandlerManager::setHandlerNode(
-  HandlerType& han, NodeType const& node
-) {
-  BitPackerType::setField<HandlerBitsType::Node, node_num_bits>(han, node);
-}
-
 /*static*/ void HandlerManager::setHandlerIdentifier(
-  HandlerType& han, HandlerIdentifierType const& id
+  HandlerType& han, HandlerIdentifierType id
 ) {
   BitPackerType::setField<HandlerBitsType::Identifier, handler_id_num_bits>(
     han, id
   );
 }
 
-/*static*/ void HandlerManager::setHandlerAuto(
-  HandlerType& han, bool const& is_auto
-) {
+/*static*/ void HandlerManager::setHandlerAuto(HandlerType& han, bool is_auto) {
   BitPackerType::boolSetField<HandlerBitsType::Auto>(han, is_auto);
 }
 
 /*static*/ void HandlerManager::setHandlerFunctor(
-  HandlerType& han, bool const& is_functor
+  HandlerType& han, bool is_functor
 ) {
   BitPackerType::boolSetField<HandlerBitsType::Functor>(han, is_functor);
 }
 
-/*static*/ bool HandlerManager::isHandlerAuto(HandlerType const& han) {
+/*static*/ bool HandlerManager::isHandlerAuto(HandlerType han) {
   return BitPackerType::boolGetField<HandlerBitsType::Auto>(han);
 }
 
-/*static*/ bool HandlerManager::isHandlerFunctor(HandlerType const& han) {
+/*static*/ bool HandlerManager::isHandlerFunctor(HandlerType han) {
   return BitPackerType::boolGetField<HandlerBitsType::Functor>(han);
 }
 
-} // end namespace vt
+} // end vt

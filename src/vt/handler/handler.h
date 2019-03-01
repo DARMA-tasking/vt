@@ -56,7 +56,7 @@
 
 namespace vt {
 
-using HandlerIdentifierType = int16_t;
+using HandlerIdentifierType = uint64_t;
 
 static constexpr HandlerIdentifierType const first_handle_identifier = 1;
 static constexpr HandlerIdentifierType const uninitialized_handle_identifier = -1;
@@ -65,13 +65,12 @@ static constexpr HandlerType const blank_handler = 0;
 static constexpr BitCountType const auto_num_bits = 1;
 static constexpr BitCountType const functor_num_bits = 1;
 static constexpr BitCountType const handler_id_num_bits =
-  BitCounterType<HandlerIdentifierType>::value;
+ BitCounterType<HandlerType>::value - (auto_num_bits + functor_num_bits);
 
 enum eHandlerBits {
   Auto       = 0,
   Functor    = eHandlerBits::Auto       + auto_num_bits,
-  Identifier = eHandlerBits::Functor    + functor_num_bits,
-  Node       = eHandlerBits::Identifier + handler_id_num_bits,
+  Identifier = eHandlerBits::Functor    + functor_num_bits
 };
 
 struct HandlerManager {
@@ -80,18 +79,16 @@ struct HandlerManager {
   HandlerManager() = default;
 
   static HandlerType makeHandler(
-    bool const& is_auto, bool const& is_functor, HandlerIdentifierType const& id
+    bool is_auto, bool is_functor, HandlerIdentifierType id
   );
-  static NodeType getHandlerNode(HandlerType const& han);
-  static void setHandlerNode(HandlerType& han, NodeType const& node);
   static void setHandlerIdentifier(
-    HandlerType& han, HandlerIdentifierType const& ident
+    HandlerType& han, HandlerIdentifierType ident
   );
-  static HandlerIdentifierType getHandlerIdentifier(HandlerType const& han);
-  static void setHandlerAuto(HandlerType& han, bool const& is_auto);
-  static void setHandlerFunctor(HandlerType& han, bool const& is_functor);
-  static bool isHandlerAuto(HandlerType const& han);
-  static bool isHandlerFunctor(HandlerType const& han);
+  static HandlerIdentifierType getHandlerIdentifier(HandlerType han);
+  static void setHandlerAuto(HandlerType& han, bool is_auto);
+  static void setHandlerFunctor(HandlerType& han, bool is_functor);
+  static bool isHandlerAuto(HandlerType han);
+  static bool isHandlerFunctor(HandlerType han);
 };
 
 } //end namespace vt

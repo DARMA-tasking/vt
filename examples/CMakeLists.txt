@@ -10,11 +10,7 @@ set(
   rdma_simple_channel
   rdma_channel_sync
   rdma_collective
-  callback
-  callback_new
   ctx_callback
-  reinstate
-  tagged_handler
   param
   hello_world_functor
   test_seq

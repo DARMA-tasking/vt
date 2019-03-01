@@ -505,9 +505,6 @@ bool ActiveMessenger::deliverActiveMsg(
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
   auto const& is_tag = envelopeIsTagType(msg->env);
   auto const& tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
-  auto const& callback =
-    envelopeIsCallbackType(msg->env) ?
-    CallbackMessage::getCallbackMessage(msg) : uninitialized_handler;
   auto const& from_node = is_bcast ? dest : in_from_node;
 
   ActiveFnPtrType active_fun = nullptr;
@@ -561,7 +558,6 @@ bool ActiveMessenger::deliverActiveMsg(
     // set the current handler so the user can request it in the context of an
     // active fun
     current_handler_context_  = handler;
-    current_callback_context_ = callback;
     current_node_context_     = from_node;
     current_epoch_context_    = cur_epoch;
 
@@ -584,7 +580,6 @@ bool ActiveMessenger::deliverActiveMsg(
 
     // unset current handler
     current_handler_context_  = uninitialized_handler;
-    current_callback_context_ = uninitialized_handler;
     current_node_context_     = uninitialized_destination;
     current_epoch_context_    = no_epoch;
 
@@ -833,10 +828,6 @@ void ActiveMessenger::unregisterHandlerFn(
 
 HandlerType ActiveMessenger::getCurrentHandler() const {
   return current_handler_context_;
-}
-
-HandlerType ActiveMessenger::getCurrentCallback() const {
-  return current_callback_context_;
 }
 
 EpochType ActiveMessenger::getCurrentEpoch() const {
