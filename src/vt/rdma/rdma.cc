@@ -44,6 +44,7 @@
 
 #include "vt/rdma/rdma.h"
 #include "vt/messaging/active.h"
+#include "vt/pipe/pipe_headers.h"
 
 #include <cstring>
 
@@ -272,7 +273,7 @@ namespace vt { namespace rdma {
 
   if (not msg->has_bytes) {
     auto cbmsg = makeMessage<GetInfoChannel>(num_bytes);
-    theMsg()->sendCallback(cbmsg.get());
+    msg->cb.send(cbmsg.get());
   }
 
   theRDMA()->createDirectChannelInternal(
@@ -283,8 +284,7 @@ namespace vt { namespace rdma {
 
 /*static*/ void RDMAManager::removeChannel(DestroyChannel* msg) {
   theRDMA()->removeDirectChannel(msg->han);
-  auto cbmsg = makeMessage<CallbackMessage>();
-  theMsg()->sendCallback(cbmsg.get());
+  msg->cb.send();
 }
 
 /*static*/ void RDMAManager::remoteChannel(ChannelMessage* msg) {
@@ -299,10 +299,7 @@ namespace vt { namespace rdma {
   );
 
   theRDMA()->createDirectChannelInternal(
-    msg->type, msg->han, msg->non_target, [=]{
-      auto cbmsg = makeMessage<CallbackMessage>();
-      theMsg()->sendCallback(cbmsg.get());
-    },
+    msg->type, msg->han, msg->non_target, [=]{ msg->cb.send(); },
     target, msg->channel_tag, msg->num_bytes
   );
 }
@@ -1107,15 +1104,12 @@ void RDMAManager::setupChannelWithRemote(
       han, dest, override_target, target
     );
 
-    auto msg = makeSharedMessage<ChannelMessage>(
-      type, han, num_bytes, tag, dest, override_target
+    auto cb = theCB()->makeFunc([=]{ action(); });
+    auto msg = makeMessage<ChannelMessage>(
+      type, han, num_bytes, tag, cb, dest, override_target
     );
 
-    theMsg()->sendDataCallback<ChannelMessage, remoteChannel>(
-      other_node, msg, [=](vt::BaseMessage*){
-        action();
-      }
-    );
+    theMsg()->sendMsg<ChannelMessage, remoteChannel>(other_node, msg.get());
 
     return createDirectChannelInternal(
       type, han, dest, nullptr, target, tag, num_bytes
@@ -1304,20 +1298,18 @@ void RDMAManager::createDirectChannelInternal(
       "Should not have a tag assigned at this point"
     );
 
-    auto msg = makeSharedMessage<CreateChannel>(
-      type, han, unique_channel_tag, target, this_node
+    auto cb = theCB()->makeFunc<GetInfoChannel>([=](GetInfoChannel* msg){
+      auto const& num_bytes = msg->num_bytes;
+      createDirectChannelFinish(
+        type, han, non_target, action, unique_channel_tag, is_target, num_bytes,
+        override_target
+      );
+    });
+    auto msg = makeMessage<CreateChannel>(
+      type, han, unique_channel_tag, target, this_node, cb
     );
 
-    theMsg()->sendDataCallback<CreateChannel, setupChannel>(
-      target, msg, [=](vt::BaseMessage* in_msg){
-        GetInfoChannel& info = *static_cast<GetInfoChannel*>(in_msg);
-        auto const& num_bytes = info.num_bytes;
-        createDirectChannelFinish(
-          type, han, non_target, action, unique_channel_tag, is_target, num_bytes,
-          override_target
-        );
-      }
-    );
+    theMsg()->sendMsg<CreateChannel, setupChannel>(target, msg.get());
   } else {
     return createDirectChannelFinish(
       type, han, non_target, action, channel_tag, is_target, num_bytes,
@@ -1343,23 +1335,22 @@ void RDMAManager::removeDirectChannel(
   auto const target = getTarget(han, override_target);
 
   if (this_node != target) {
-    DestroyChannel* msg = makeSharedMessage<DestroyChannel>(
-      RDMA_TypeType::Get, han, no_byte, no_tag
-    );
-    theMsg()->sendDataCallback<DestroyChannel, removeChannel>(
-      target, msg, [=](vt::BaseMessage* in_msg){
-        auto iter = channels_.find(
-          makeChannelLookup(han,RDMA_TypeType::Put,target,this_node)
-        );
-        if (iter != channels_.end()) {
-          iter->second.freeChannel();
-          channels_.erase(iter);
-        }
-        if (action) {
-          action();
-        }
+    auto cb = theCB()->makeFunc([=]{
+      auto iter = channels_.find(
+        makeChannelLookup(han,RDMA_TypeType::Put,target,this_node)
+      );
+      if (iter != channels_.end()) {
+        iter->second.freeChannel();
+        channels_.erase(iter);
       }
+      if (action) {
+        action();
+      }
+    });
+    auto msg = makeMessage<DestroyChannel>(
+      RDMA_TypeType::Get, han, no_byte, no_tag, cb
     );
+    theMsg()->sendMsg<DestroyChannel, removeChannel>(target, msg.get());
   } else {
     auto iter = channels_.find(
       makeChannelLookup(han,RDMA_TypeType::Get,target,this_node)

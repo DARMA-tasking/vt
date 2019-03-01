@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/messaging/message.h"
 #include "vt/rdma/rdma_common.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
 
 namespace vt { namespace rdma {
 
@@ -106,15 +107,23 @@ struct RDMAOpFinishedMessage : ActiveMessage<EnvelopeT> {
   RDMA_OpType op_id = no_rdma_op;
 };
 
-struct CreateChannel : vt::CallbackMessage {
+struct GetInfoChannel : vt::Message {
+  explicit GetInfoChannel(ByteType in_num_bytes)
+    : num_bytes(in_num_bytes)
+  { }
+
+  ByteType num_bytes = no_byte;
+};
+
+struct CreateChannel : vt::Message {
   using RDMA_TypeType = Type;
 
   CreateChannel(
     RDMA_TypeType const& in_type, RDMA_HandleType const& in_han,
     TagType const& in_channel_tag, NodeType const& in_target,
-    NodeType const& in_non_target
-  ) : CallbackMessage(), channel_tag(in_channel_tag), rdma_handle(in_han),
-      type(in_type), target(in_target), non_target(in_non_target)
+    NodeType const& in_non_target, Callback<GetInfoChannel> in_cb
+  ) : channel_tag(in_channel_tag), rdma_handle(in_han),
+      type(in_type), target(in_target), non_target(in_non_target), cb(in_cb)
   { }
 
   bool has_bytes = false;
@@ -123,27 +132,21 @@ struct CreateChannel : vt::CallbackMessage {
   RDMA_TypeType type = uninitialized_rdma_type;
   NodeType target = uninitialized_destination;
   NodeType non_target = uninitialized_destination;
+  Callback<GetInfoChannel> cb;
 };
 
-struct GetInfoChannel : vt::CallbackMessage {
-  explicit GetInfoChannel(ByteType const& in_num_bytes)
-    : CallbackMessage(), num_bytes(in_num_bytes)
-  { }
-
-  ByteType num_bytes = no_byte;
-};
-
-struct ChannelMessage : vt::CallbackMessage {
+struct ChannelMessage : vt::Message {
   using RDMA_TypeType = Type;
 
   ChannelMessage(
     RDMA_TypeType const& in_type, RDMA_HandleType const& in_han,
     ByteType const& in_num_bytes, TagType const& in_channel_tag,
+    Callback<> in_cb,
     NodeType const& in_non_target = uninitialized_destination,
     NodeType const& in_override_target = uninitialized_destination
-  ) : CallbackMessage(), channel_tag(in_channel_tag), type(in_type),
+  ) : channel_tag(in_channel_tag), type(in_type),
       han(in_han), num_bytes(in_num_bytes), non_target(in_non_target),
-      override_target(in_override_target)
+      override_target(in_override_target), cb(in_cb)
   { }
 
   TagType channel_tag = no_tag;
@@ -152,6 +155,7 @@ struct ChannelMessage : vt::CallbackMessage {
   ByteType num_bytes = no_byte;
   NodeType non_target = uninitialized_destination;
   NodeType override_target = uninitialized_destination;
+  Callback<> cb;
 };
 
 using GetMessage = RequestDataMessage<EpochTagEnvelope>;

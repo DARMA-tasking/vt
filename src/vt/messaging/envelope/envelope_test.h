@@ -70,9 +70,6 @@ inline bool envelopeIsEpochType(Env const& env);
 template <typename Env>
 inline bool envelopeIsTagType(Env const& env);
 
-template <typename Env>
-inline bool envelopeIsCallbackType(Env const& env);
-
 }} //end namespace vt::messaging
 
 #include "vt/messaging/envelope/envelope_test.impl.h"

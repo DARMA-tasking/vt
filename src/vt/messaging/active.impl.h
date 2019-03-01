@@ -84,13 +84,6 @@ EventType ActiveMessenger::sendMsg(
   return sendMsg<MsgT>(dest,han,msg.get(),tag);
 }
 
-template <typename MsgT>
-EventType ActiveMessenger::sendMsg(
-  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag
-) {
-  return sendMsg<MsgT>(han,msg.get(),tag);
-}
-
 template <typename MessageT>
 EventType ActiveMessenger::sendMsg(
   NodeType const& dest, HandlerType const& han, MessageT* const msg
@@ -117,42 +110,6 @@ EventType ActiveMessenger::sendMsgSz(
   envelopeSetup(msg->env, dest, han);
   auto base = promoteMsg(msg).template to<BaseMsgType>();
   return sendMsgSized(base, msg_size);
-}
-
-template <typename MessageT>
-EventType ActiveMessenger::sendMsgHan(
-  HandlerType const& han, MessageT* const msg, TagType const& tag
-) {
-  return sendMsg(han,msg,tag);
-}
-
-template <typename MessageT>
-EventType ActiveMessenger::sendMsg(
-  HandlerType const& han, MessageT* const msg, TagType const& tag
-) {
-  auto const& dest = HandlerManagerType::getHandlerNode(han);
-  vtAssert(
-    dest != uninitialized_destination,
-    "Destination must be known in handler"
-  );
-  envelopeSetup(msg->env, dest, han);
-  if (tag != no_tag) {
-    envelopeSetTag(msg->env, tag);
-  }
-  auto const& is_term = envelopeIsTerm(msg->env);
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
-    debug_print(
-      pool, node,
-      "sendMsg of indirect han={}, dest={}, tag={}\n", han, dest, tag
-    );
-  }
-  debug_print(
-    active, node,
-    "sendMsg: (handler) han={}, msg={}, tag={}\n",
-    han, print_ptr(msg), tag
-  );
-  auto base = promoteMsg(msg).template to<BaseMsgType>();
-  return sendMsgSized(base, sizeof(MessageT));
 }
 
 template <typename MessageT>
@@ -414,49 +371,6 @@ EventType ActiveMessenger::broadcastMsgAuto(
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-EventType ActiveMessenger::sendDataCallback(
-  NodeType const& dest, MessageT* const msg, ActiveClosureFnType fn
-) {
-  auto const& this_han = registerNewHandler(fn, no_tag);
-  auto cb = static_cast<CallbackMessage*>(msg);
-  cb->setCallback(this_han);
-  debug_print(
-    active, node,
-    "sendDataCallback: msg={}, this_han={}, dest={}\n",
-    print_ptr(msg), this_han, dest
-  );
-  return sendMsg<MessageT,f>(dest, msg, no_tag);
-}
-
-template <typename MessageT>
-void ActiveMessenger::sendDataCallback(
-  HandlerType const& han, NodeType const& dest, MessageT* const msg,
-  ActiveClosureFnType fn
-) {
-  auto const& this_han = registerNewHandler(fn, no_tag);
-  auto cb = static_cast<CallbackMessage*>(msg);
-  cb->setCallback(this_han);
-  debug_print(
-    active, node,
-    "sendDataCallback: msg={}, han={}, dest={}\n",
-    print_ptr(msg), han, dest
-  );
-  sendMsg(dest, han, msg);
-}
-
-template <typename MessageT>
-void ActiveMessenger::sendCallback(MessageT* const msg) {
-  auto const& han_callback = getCurrentCallback();
-  debug_print(
-    active, node,
-    "sendCallback: msg={}, han_callback={}\n",
-    print_ptr(msg), han_callback
-  );
-  sendMsgHan<MessageT>(han_callback, msg);
-}
-
-
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 void ActiveMessenger::trigger(std::function<void(vt::BaseMessage*)> fn) {
   auto const& han = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
   theRegistry()->saveTrigger(han, /*reinterpret_cast<active_function_t>(*/fn);
@@ -495,7 +409,7 @@ inline void ActiveMessenger::epochEpilogHandler(
     ep_stack_size, cur_stack_size,
     cur_stack_size > 0 ? epoch_stack_.top() : no_epoch,
     current_handler_context_, current_epoch_context_, current_node_context_,
-    current_callback_context_, cur_epoch
+    cur_epoch
   );
   vtAssertNotExpr(cur_stack_size == 0);
   while (cur_stack_size > ep_stack_size) {
