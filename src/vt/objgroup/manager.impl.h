@@ -112,6 +112,19 @@ ObjGroupManager::makeCollective(MakeFnType<ObjT> fn) {
 }
 
 template <typename ObjT>
+void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
+  auto const proxy_bits = proxy.getProxy();
+  auto iter = dispatch_.find(proxy_bits);
+  if (iter != dispatch_.end()) {
+    dispatch_.erase(iter);
+  }
+  auto obj_iter = objs_.find(proxy_bits);
+  if (obj_iter != objs_.end()) {
+    objs_.erase(obj_iter);
+  }
+}
+
+template <typename ObjT>
 void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
   auto iter = dispatch_.find(proxy);
   vtAssertExpr(iter == dispatch_.end());

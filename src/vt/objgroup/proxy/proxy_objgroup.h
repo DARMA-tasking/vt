@@ -84,6 +84,8 @@ public:
    */
   ObjT* get() const;
 
+  ObjGroupProxyType getProxy() const { return proxy_; }
+
 public:
 
   /*
