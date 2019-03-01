@@ -44,9 +44,19 @@
 
 #include "vt/transport.h"
 
-struct MyObjGroup {
-  MyObjGroup() = default;
+struct MyMsg : vt::Message {
+  MyMsg(int in_a, int in_b) : a(in_a), b(in_b) { }
+  int a = 0, b = 0;
 };
+
+struct MyObjGroup {
+  void handler(MyMsg* msg) {
+    auto node = vt::theContext()->getNode();
+    fmt::print("{}: handler on a={}, b={}\n", node);
+  }
+};
+
+struct MyObjGroup2 { };
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv, nullptr);
@@ -54,7 +64,12 @@ int main(int argc, char** argv) {
   auto const& this_node = vt::theContext()->getNode();
   auto const& num_nodes = vt::theContext()->getNumNodes();
 
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjGroup>();
+  auto proxya = vt::theObjGroup()->makeCollective<MyObjGroup>();
+  auto proxyb = vt::theObjGroup()->makeCollective<MyObjGroup2>();
+
+  if (this_node == 0) {
+    proxya[1].send<MyMsg,&MyObjGroup::handler>(10,20);
+  }
 
   vt::finalize();
 
