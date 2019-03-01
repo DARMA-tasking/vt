@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          transport.h
+//                          dispatch.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,42 +42,34 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRANSPORT_H
-#define INCLUDED_TRANSPORT_H
+#if !defined INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_H
+#define INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_H
 
 #include "vt/config.h"
-#include "vt/collective/tree/tree.h"
-#include "vt/pool/pool.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/message.h"
-#include "vt/activefn/activefn.h"
-#include "vt/context/context.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/collective/collective.h"
-#include "vt/event/event.h"
-#include "vt/registry/registry.h"
-#include "vt/messaging/active.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/event/event_msgs.h"
-#include "vt/termination/termination.h"
-#include "vt/rdma/rdma_headers.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/topos/location/location_headers.h"
-#include "vt/topos/index/index.h"
-#include "vt/topos/mapping/mapping_headers.h"
-#include "vt/vrt/context/context_vrtheaders.h"
-#include "vt/vrt/collection/collection_headers.h"
-#include "vt/serialization/serialization.h"
-#include "vt/standalone/vt_main.h"
-#include "vt/utils/tls/tls.h"
-#include "vt/utils/atomic/atomic.h"
-#include "vt/group/group_headers.h"
-#include "vt/epoch/epoch_headers.h"
-#include "vt/pipe/pipe_headers.h"
-#include "vt/objgroup/headers.h"
+#include "vt/objgroup/common.h"
+#include "vt/objgroup/dispatch/dispatch_base.h"
+#include "vt/messaging/message/smart_ptr.h"
 
-#endif /*INCLUDED_TRANSPORT_H*/
+namespace vt { namespace objgroup { namespace dispatch {
+
+template <typename ObjT>
+struct Dispatch final : DispatchBase {
+  Dispatch() = delete;
+  Dispatch(Dispatch const&) = delete;
+  Dispatch(Dispatch&&) = default;
+
+  Dispatch(ObjGroupProxyType in_proxy, ObjT* in_obj)
+    : DispatchBase(in_proxy), obj_(in_obj)
+  { }
+
+  void run(HandlerType han, MsgSharedPtr<ShortMessage> msg) override;
+
+private:
+  ObjT* obj_ = nullptr;
+};
+
+}}} /* end namespace vt::objgroup::dispatch */
+
+#include "vt/objgroup/dispatch/dispatch.impl.h"
+
+#endif /*INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_H*/

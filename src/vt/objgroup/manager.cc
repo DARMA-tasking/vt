@@ -45,9 +45,42 @@
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/manager.h"
+#include "vt/context/context.h"
 
 namespace vt { namespace objgroup {
 
-/*static*/ ObjGroupIDType ObjGroupManager::cur_obj_id_ = 1;
+void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+  auto iter = han_to_proxy_.find(han);
+  vtAssertExpr(iter != han_to_proxy_.end());
+  auto const proxy = iter->second;
+  auto dispatch_iter = dispatch_.find(proxy);
+  vtAssertExpr(dispatch_iter != dispatch_.end());
+  dispatch_iter->second->run(han,msg);
+}
+
+void ObjGroupManager::regHan(ObjGroupProxyType proxy, HandlerType han) {
+  auto iter = han_to_proxy_.find(han);
+  vtAssertExpr(iter == han_to_proxy_.end());
+  han_to_proxy_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(han),
+    std::forward_as_tuple(proxy)
+  );
+}
+
+ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(HolderBasePtrType base) {
+  auto const node = theContext()->getNode();
+  auto const id = cur_obj_id_++;
+  auto const is_collective = true;
+  auto const coll_proxy = proxy::ObjGroupProxy::create(id, node, is_collective);
+  auto iter = objs_.find(coll_proxy);
+  vtAssert(iter == objs_.end(), "Proxy must not exist in obj group map");
+  objs_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(coll_proxy),
+    std::forward_as_tuple(std::move(base))
+  );
+  return coll_proxy;
+}
 
 }} /* end namespace vt::objgroup */

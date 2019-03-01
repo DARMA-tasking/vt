@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          transport.h
+//                          manager.impl.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,42 +42,47 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRANSPORT_H
-#define INCLUDED_TRANSPORT_H
+#if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
+#define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
 #include "vt/config.h"
-#include "vt/collective/tree/tree.h"
-#include "vt/pool/pool.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/message.h"
-#include "vt/activefn/activefn.h"
-#include "vt/context/context.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/collective/collective.h"
-#include "vt/event/event.h"
-#include "vt/registry/registry.h"
-#include "vt/messaging/active.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/event/event_msgs.h"
-#include "vt/termination/termination.h"
-#include "vt/rdma/rdma_headers.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/topos/location/location_headers.h"
-#include "vt/topos/index/index.h"
-#include "vt/topos/mapping/mapping_headers.h"
-#include "vt/vrt/context/context_vrtheaders.h"
-#include "vt/vrt/collection/collection_headers.h"
-#include "vt/serialization/serialization.h"
-#include "vt/standalone/vt_main.h"
-#include "vt/utils/tls/tls.h"
-#include "vt/utils/atomic/atomic.h"
-#include "vt/group/group_headers.h"
-#include "vt/epoch/epoch_headers.h"
-#include "vt/pipe/pipe_headers.h"
-#include "vt/objgroup/headers.h"
+#include "vt/objgroup/common.h"
+#include "vt/objgroup/manager.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/objgroup/holder/holder.h"
+#include "vt/objgroup/dispatch/dispatch.h"
 
-#endif /*INCLUDED_TRANSPORT_H*/
+#include <memory>
+
+namespace vt { namespace objgroup {
+
+template <typename ObjT>
+ObjGroupManager::ProxyType<ObjT>
+ObjGroupManager::makeCollective(std::unique_ptr<ObjT> obj) {
+  vtAssert(obj !=  nullptr, "Must be a valid obj pointer");
+  auto obj_ptr = obj.get();
+  auto holder_base = std::make_unique<holder::Holder<ObjT>>(std::move(obj));
+  auto const proxy = makeCollectiveImpl(std::move(holder_base));
+  regObjProxy<ObjT>(obj_ptr, proxy);
+  return ProxyType<ObjT>{proxy};
+}
+
+template <typename ObjT>
+void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
+  auto iter = dispatch_.find(proxy);
+  vtAssertExpr(iter == dispatch_.end());
+  // auto obj_iter = objs_<ObjT>.find(proxy);
+  // vtAssertExpr(obj_iter == objs_<ObjT>.end());
+  // auto obj  = obj_iter->second->get();
+  auto base = std::make_unique<dispatch::Dispatch<ObjT>>(proxy,obj);
+  dispatch_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(proxy),
+    std::forward_as_tuple(base)
+  );
+}
+
+
+}} /* end namespace vt::objgroup */
+
+#endif /*INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H*/

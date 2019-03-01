@@ -46,5 +46,6 @@
 #define INCLUDED_VT_OBJGROUP_HEADERS_H
 
 #include "vt/objgroup/common.h"
+#include "vt/objgroup/manager.h"
 
 #endif /*INCLUDED_VT_OBJGROUP_HEADERS_H*/

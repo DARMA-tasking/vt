@@ -47,20 +47,21 @@
 
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
+#include "vt/objgroup/holder/holder_base.h"
 
 namespace vt { namespace objgroup { namespace holder {
 
-struct HolderBase { };
-
 template <typename ObjT>
 struct Holder : HolderBase {
-
   explicit Holder(std::unique_ptr<ObjT> in_obj)
     : obj_(std::move(in_obj))
   { }
 
+  virtual ~Holder() = default;
+
 public:
-  ObjT* get() { return obj_.get(); }
+  void* get() override { return static_cast<void*>(obj_.get()); }
+  bool exists() override { return obj_ != nullptr; }
 
 private:
   std::unique_ptr<ObjT> obj_ = nullptr;

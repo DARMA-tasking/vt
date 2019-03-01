@@ -47,11 +47,11 @@
 
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
+#include "vt/objgroup/manager.fwd.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/holder/holder.h"
+#include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/messaging/message/message.h"
-
-#include "vt/registry/auto/auto_registry.h"
 
 #include <memory>
 #include <functional>
@@ -61,16 +61,19 @@ namespace vt { namespace objgroup {
 
 struct ObjGroupManager {
   template <typename ObjT>
-  using ProxyType       = proxy::Proxy<ObjT>;
+  using ProxyType           = proxy::Proxy<ObjT>;
   template <typename ObjT>
-  using ProxyElmType    = proxy::ProxyElm<ObjT>;
+  using ProxyElmType        = proxy::ProxyElm<ObjT>;
   template <typename ObjT>
-  using MakeFnType      = std::function<std::unique_ptr<ObjT>()>;
-  template <typename ObjT>
-  using HolderPtr       = std::unique_ptr<holder::Holder<ObjT>>;
-  template <typename MsgT>
-  using DispatchMsgType = std::function<void(HandlerType,MsgSharedPtr<MsgT>)>;
-  using DispatchFnType  = DispatchMsgType<ShortMessage>;
+  using MakeFnType          = std::function<std::unique_ptr<ObjT>()>;
+  using HolderBaseType      = holder::HolderBase;
+  using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
+  // template <typename ObjT>
+  // using HolderPtr           = std::unique_ptr<holder::Holder<ObjT>>;
+  using DispatchBaseType    = dispatch::DispatchBase;
+  using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
+
+  ObjGroupManager() = default;
 
   /*
    * Creation of a new object group across the distributed system. For now,
@@ -81,17 +84,27 @@ struct ObjGroupManager {
   ProxyType<ObjT> makeObjGroup();
 
   template <typename ObjT>
-  ProxyType<ObjT> makeObjGroupCollective(TagType tag = no_tag);
+  ProxyType<ObjT> makeCollective(TagType tag = no_tag);
   template <typename ObjT>
-  ProxyType<ObjT> makeObjGroupCollective(std::unique_ptr<ObjT> obj);
+  ProxyType<ObjT> makeCollective(std::unique_ptr<ObjT> obj);
   template <typename ObjT>
-  ProxyType<ObjT> makeObjGroupCollective(MakeFnType<ObjT> fn);
+  ProxyType<ObjT> makeCollective(MakeFnType<ObjT> fn);
+  template <typename ObjT>
+  ProxyType<ObjT> makeCollective(ObjT* obj);
 
   /*
    * Deletion of a live object group across the system
    */
   template <typename ObjT>
-  void rmObjGroupCollective(ProxyType<ObjT> proxy);
+  void destroyCollective(ProxyType<ObjT> proxy);
+
+  /*
+   * Update of a live object group across the system
+   */
+  template <typename ObjT>
+  void update(ProxyElmType<ObjT> proxy);
+  template <typename ObjT>
+  void update(ProxyType<ObjT> proxy);
 
   /*
    * Send/broadcast messages to obj group handlers
@@ -116,58 +129,29 @@ struct ObjGroupManager {
   /*
    * Dispatch to a live obj group pointer with a handler
    */
-  void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
-    auto iter = han_to_proxy_.find(han);
-    vtAssertExpr(iter != han_to_proxy_.end());
-    auto const proxy = iter->second;
-    auto dispatch_iter = dispatch_.find(proxy);
-    vtAssertExpr(dispatch_iter != dispatch_.end());
-    auto fn = dispatch_iter->second;
-    fn(han,msg);
-  }
+  void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 
 private:
-  void regHan(ObjGroupProxyType proxy, HandlerType han) {
-    auto iter = han_to_proxy_.find(han);
-    vtAssertExpr(iter == han_to_proxy_.end());
-    han_to_proxy_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(han),
-      std::forward_as_tuple(proxy)
-    );
-  }
+  ObjGroupProxyType makeCollectiveImpl(HolderBasePtrType base_holder);
+
+  void regHan(ObjGroupProxyType proxy, HandlerType han);
 
   template <typename ObjT>
-  void regDeliver(ObjGroupProxyType proxy) {
-    auto iter = dispatch_.find(proxy);
-    vtAssertExpr(iter == dispatch_.end());
-    auto obj_iter = objs_<ObjT>.find(proxy);
-    vtAssertExpr(obj_iter == objs_<ObjT>.end());
-    auto obj  = obj_iter->second->get();
-    auto deliver_fn = [obj](HandlerType han, MsgSharedPtr<ShortMessage> msg) {
-      auto func = auto_registry::getAutoHandlerObjGroup(han);
-      (obj->*func)(msg.get());
-    };
-    dispatch_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(proxy),
-      std::forward_as_tuple(deliver_fn)
-    );
-  }
+  void regObjProxy(ObjT* obj, ObjGroupProxyType proxy);
 
 private:
-  template <typename ObjT>
-  static std::unordered_map<ObjGroupProxyType,HolderPtr<ObjT>> objs_;
-  static ObjGroupIDType cur_obj_id_;
-  static std::unordered_map<HandlerType,ObjGroupProxyType> han_to_proxy_;
-  static std::unordered_map<ObjGroupProxyType,DispatchFnType> dispatch_;
+  // The current obj ID, sequential on each node for collective construction
+  ObjGroupIDType cur_obj_id_ = 1;
+  // Map handler to obj group proxy; when message arrives determine obj group
+  std::unordered_map<HandlerType,ObjGroupProxyType> han_to_proxy_;
+  // Function to dispatch to the base class for type-erasure to run handler
+  std::unordered_map<ObjGroupProxyType,DispatchBasePtrType> dispatch_;
+  // Type-erased pointers to the objects held on this node
+  std::unordered_map<ObjGroupProxyType,HolderBasePtrType> objs_;
 };
 
-template <typename ObjT>
-/*static*/
-std::unordered_map<ObjGroupProxyType,ObjGroupManager::HolderPtr<ObjT>>
-ObjGroupManager::objs_ = {};
-
 }} /* end namespace vt::objgroup */
+
+#include "vt/objgroup/manager.impl.h"
 
 #endif /*INCLUDED_VT_OBJGROUP_MANAGER_H*/
