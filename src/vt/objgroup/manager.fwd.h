@@ -46,10 +46,13 @@
 #define INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
 
 #include "vt/config.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 namespace vt { namespace objgroup {
 
 struct ObjGroupManager;
+
+void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 
 }} /* end namespace vt::objgroup */
 

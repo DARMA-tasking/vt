@@ -53,6 +53,7 @@
 #include "vt/trace/trace_common.h"
 #include "vt/messaging/envelope.h"
 #include "vt/handler/handler.h"
+#include "vt/objgroup/manager.fwd.h"
 
 #include <cassert>
 
@@ -138,9 +139,8 @@ template <typename MsgT>
 
   bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
   vtAssert(is_obj, "Must be an object group handler");
-
-  // auto xmsg = promoteMsg(msg);
-  // theObjGroup()->dispatch(xmsg,handler);
+  auto pmsg = promoteMsg(msg);
+  objgroup::dispatchObjGroup(pmsg,handler);
 
   #if backend_check_enabled(trace_enabled)
     theTrace()->endProcessing(trace_id, sizeof(MsgT), trace_event, from_node);

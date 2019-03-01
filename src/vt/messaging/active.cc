@@ -495,7 +495,8 @@ bool ActiveMessenger::deliverActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& in_from_node,
   bool insert
 ) {
-  auto msg = base.to<ShortMessage>().get();
+  using MsgType = ShortMessage;
+  auto msg = base.to<MsgType>().get();
 
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_bcast = envelopeIsBcast(msg->env);
@@ -573,10 +574,10 @@ bool ActiveMessenger::deliverActiveMsg(
 
     if (is_obj) {
       // run the object-group handler
-      runnable::Runnable<ShortMessage>::run(handler,active_fun,msg,from_node,tag);
+      runnable::Runnable<MsgType>::runObj(handler,msg,from_node);
     } else {
       // run the normal active function handler
-      runnable::Runnable<ShortMessage>::run(handler,active_fun,msg,from_node,tag);
+      runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
     }
 
     auto trigger = theRegistry()->getTrigger(handler);

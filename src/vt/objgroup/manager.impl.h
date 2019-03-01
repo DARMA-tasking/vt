@@ -50,6 +50,8 @@
 #include "vt/objgroup/manager.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/holder/holder.h"
+#include "vt/objgroup/holder/holder_user.h"
+#include "vt/objgroup/holder/holder_basic.h"
 #include "vt/objgroup/dispatch/dispatch.h"
 
 #include <memory>
@@ -57,28 +59,69 @@
 namespace vt { namespace objgroup {
 
 template <typename ObjT>
+ObjGroupManager::ProxyType<ObjT> ObjGroupManager::makeObjGroup() {
+  vtAssert(0, "Rooted makeObjGroup not implemented yet");
+  return ProxyType<ObjT>();
+}
+
+template <typename ObjT>
+ObjGroupManager::ProxyType<ObjT>
+ObjGroupManager::makeCollective(TagType tag) {
+  vtAssert(tag == no_tag, "Tags for object groups are not implemented yet");
+  return makeCollective<ObjT>(std::make_unique<ObjT>());
+}
+
+template <typename ObjT>
+ObjGroupManager::ProxyType<ObjT>
+ObjGroupManager::makeCollective(ObjT* obj) {
+  vtAssert(obj !=  nullptr, "Must be a valid obj pointer");
+  auto holder_base = std::make_unique<holder::HolderBasic<ObjT>>(obj);
+  return makeCollectiveObj<ObjT>(obj,std::move(holder_base));
+}
+
+template <template <typename> class UserPtr, typename ObjT>
+ObjGroupManager::ProxyType<ObjT>
+ObjGroupManager::makeCollective(UserPtr<ObjT> obj) {
+  auto obj_ptr = *obj;
+  vtAssert(obj_ptr !=  nullptr, "Must be a valid obj pointer");
+  auto holder_base = std::make_unique<holder::HolderUser<UserPtr,ObjT>>(obj);
+  return makeCollectiveObj<ObjT>(obj_ptr,std::move(holder_base));
+}
+
+template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
 ObjGroupManager::makeCollective(std::unique_ptr<ObjT> obj) {
   vtAssert(obj !=  nullptr, "Must be a valid obj pointer");
   auto obj_ptr = obj.get();
   auto holder_base = std::make_unique<holder::Holder<ObjT>>(std::move(obj));
-  auto const proxy = makeCollectiveImpl(std::move(holder_base));
-  regObjProxy<ObjT>(obj_ptr, proxy);
+  return makeCollectiveObj<ObjT>(obj_ptr,std::move(holder_base));
+}
+
+template <typename ObjT>
+ObjGroupManager::ProxyType<ObjT>
+ObjGroupManager::makeCollectiveObj(ObjT* obj, HolderBasePtrType holder) {
+  auto const proxy = makeCollectiveImpl(std::move(holder));
+  regObjProxy<ObjT>(obj, proxy);
   return ProxyType<ObjT>{proxy};
+}
+
+template <typename ObjT>
+ObjGroupManager::ProxyType<ObjT>
+ObjGroupManager::makeCollective(MakeFnType<ObjT> fn) {
+  auto obj = fn();
+  return makeCollective<ObjT>(std::move(obj));
 }
 
 template <typename ObjT>
 void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
   auto iter = dispatch_.find(proxy);
   vtAssertExpr(iter == dispatch_.end());
-  // auto obj_iter = objs_<ObjT>.find(proxy);
-  // vtAssertExpr(obj_iter == objs_<ObjT>.end());
-  // auto obj  = obj_iter->second->get();
-  auto base = std::make_unique<dispatch::Dispatch<ObjT>>(proxy,obj);
+  DispatchBasePtrType base =
+    std::make_unique<dispatch::Dispatch<ObjT>>(proxy,obj);
   dispatch_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(proxy),
-    std::forward_as_tuple(base)
+    std::forward_as_tuple(std::move(base))
   );
 }
 

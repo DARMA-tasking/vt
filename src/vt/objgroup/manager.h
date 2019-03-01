@@ -50,6 +50,8 @@
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/holder/holder.h"
+#include "vt/objgroup/holder/holder_user.h"
+#include "vt/objgroup/holder/holder_basic.h"
 #include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/messaging/message/message.h"
 
@@ -68,8 +70,6 @@ struct ObjGroupManager {
   using MakeFnType          = std::function<std::unique_ptr<ObjT>()>;
   using HolderBaseType      = holder::HolderBase;
   using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
-  // template <typename ObjT>
-  // using HolderPtr           = std::unique_ptr<holder::Holder<ObjT>>;
   using DispatchBaseType    = dispatch::DispatchBase;
   using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
 
@@ -91,6 +91,8 @@ struct ObjGroupManager {
   ProxyType<ObjT> makeCollective(MakeFnType<ObjT> fn);
   template <typename ObjT>
   ProxyType<ObjT> makeCollective(ObjT* obj);
+  template <template <typename> class UserPtr, typename ObjT>
+  ProxyType<ObjT> makeCollective(UserPtr<ObjT> obj);
 
   /*
    * Deletion of a live object group across the system
@@ -133,6 +135,9 @@ struct ObjGroupManager {
 
 private:
   ObjGroupProxyType makeCollectiveImpl(HolderBasePtrType base_holder);
+
+  template <typename ObjT>
+  ProxyType<ObjT> makeCollectiveObj(ObjT* obj, HolderBasePtrType base_holder);
 
   void regHan(ObjGroupProxyType proxy, HandlerType han);
 
