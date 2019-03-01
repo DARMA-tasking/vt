@@ -64,11 +64,10 @@ ObjGroupManager::ProxyType<ObjT> ObjGroupManager::makeObjGroup() {
   return ProxyType<ObjT>();
 }
 
-template <typename ObjT>
+template <typename ObjT, typename... Args>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(TagType tag) {
-  vtAssert(tag == no_tag, "Tags for object groups are not implemented yet");
-  return makeCollective<ObjT>(std::make_unique<ObjT>());
+ObjGroupManager::makeCollective(Args&&... args) {
+  return makeCollective<ObjT>(std::make_unique<ObjT>(std::forward<Args>...));
 }
 
 template <typename ObjT>

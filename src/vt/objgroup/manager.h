@@ -83,8 +83,8 @@ struct ObjGroupManager {
   template <typename ObjT>
   ProxyType<ObjT> makeObjGroup();
 
-  template <typename ObjT>
-  ProxyType<ObjT> makeCollective(TagType tag = no_tag);
+  template <typename ObjT, typename... Args>
+  ProxyType<ObjT> makeCollective(Args&&... args);
   template <typename ObjT>
   ProxyType<ObjT> makeCollective(std::unique_ptr<ObjT> obj);
   template <typename ObjT>
