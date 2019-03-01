@@ -43,6 +43,7 @@ set(
   reduce
   transpose
   tutorial
+  objgroup
 )
 
 if (CMAKE_NO_BUILD_EXAMPLES)
