@@ -34,7 +34,7 @@ set(
   cmake_vt_debug_modes_all
   "gen, runtime, active, term, termds, barrier, pipe,   \
    pool, reduce, rdma, rdma_channel, handler,           \
-   hierlb, scatter, serial_msg, trace,                  \
+   hierlb, scatter, serial_msg, trace, objgroup,        \
    location, lb, vrt_coll, group, broadcast, flush"
 )
 

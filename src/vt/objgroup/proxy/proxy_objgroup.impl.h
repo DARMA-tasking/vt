@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          dispatch_base.h
+//                      proxy_objgroup.impl.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,40 +42,50 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_BASE_H
-#define INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_BASE_H
+#if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
+#define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
-#include "vt/messaging/message/smart_ptr.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/objgroup/manager.h"
 
-namespace vt { namespace objgroup { namespace dispatch {
+namespace vt { namespace objgroup { namespace proxy {
 
-/*
- * DispatchBase implements type erasure to dispatch to a obj group without
- * encoding the message directly in the message (as an alternative to using a
- * std::function)
- */
+template <typename ObjT>
+template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+void Proxy<ObjT>::broadcast(MsgT* msg) const {
+  return broadcast<MsgT,fn>(promoteMsg(msg));
+}
 
-struct DispatchBase {
-  explicit DispatchBase(ObjGroupProxyType in_proxy)
-    : proxy_(in_proxy)
-  { }
+template <typename ObjT>
+template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+void Proxy<ObjT>::broadcast(MsgSharedPtr<MsgT> msg) const {
+  auto proxy = Proxy<ObjT>(*this);
+  theObjGroup()->broadcast<ObjT,MsgT,fn>(proxy,msg);
+}
 
-  virtual ~DispatchBase() = default;
+template <typename ObjT>
+template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
+void Proxy<ObjT>::broadcast(Args&&... args) const {
+  return broadcast<MsgT,fn>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
 
-  /*
-   * Dispatch to the handler; the base is closed around the proper object
-   * pointer that is type-erased here
-   */
-  virtual void run(HandlerType han, MsgSharedPtr<ShortMessage> msg) = 0;
+template <typename ObjT>
+ObjT* Proxy<ObjT>::get() const {
 
-  ObjGroupProxyType proxy() const { return proxy_; }
+}
 
-private:
-  ObjGroupProxyType proxy_ = no_obj_group;
-};
+template <typename ObjT>
+ProxyElm<ObjT> Proxy<ObjT>::operator[](NodeType node) const {
+  return ProxyElm<ObjT>(proxy_,node);
+}
 
-}}} /* end namespace vt::objgroup::dispatch */
+template <typename ObjT>
+ProxyElm<ObjT> Proxy<ObjT>::operator()(NodeType node) const {
+  return ProxyElm<ObjT>(proxy_,node);
+}
 
-#endif /*INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_BASE_H*/
+}}} /* end namespace vt::objgroup::proxy */
+
+#endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H*/

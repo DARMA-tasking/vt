@@ -52,7 +52,7 @@
 namespace vt { namespace objgroup { namespace holder {
 
 template <typename ObjT>
-struct HolderBasic : HolderBase {
+struct HolderBasic final : HolderObjBase<ObjT> {
   explicit HolderBasic(ObjT* in_obj)
     : obj_(in_obj)
   { }
@@ -60,13 +60,15 @@ struct HolderBasic : HolderBase {
   virtual ~HolderBasic() = default;
 
 public:
-  void* get() override { return static_cast<void*>(obj_); }
+  ObjT* get() override { return obj_; }
   bool exists() override { return obj_ != nullptr; }
+  void reset() override { vtAssert(false, "HolderBasic is not resetable"); }
 
 private:
   ObjT* obj_ = nullptr;
 };
 
 }}} /* end namespace vt::objgroup::holder */
+
 
 #endif /*INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_BASIC_H*/

@@ -83,14 +83,19 @@ struct ObjGroupManager {
   template <typename ObjT>
   ProxyType<ObjT> makeObjGroup();
 
+  // Make obj group with the constructor args to the obj
   template <typename ObjT, typename... Args>
   ProxyType<ObjT> makeCollective(Args&&... args);
+  // Make obj group with a std::unique_ptr to the obj
   template <typename ObjT>
   ProxyType<ObjT> makeCollective(std::unique_ptr<ObjT> obj);
+  // Make obj group with fn for creating the obj
   template <typename ObjT>
   ProxyType<ObjT> makeCollective(MakeFnType<ObjT> fn);
+  // Make obj group with non-owning ptr to the object
   template <typename ObjT>
   ProxyType<ObjT> makeCollective(ObjT* obj);
+  // Make obj group with specialized smart ptr (e.g., RCP, shared_ptr, etc.)
   template <template <typename> class UserPtr, typename ObjT>
   ProxyType<ObjT> makeCollective(UserPtr<ObjT> obj);
 
@@ -123,10 +128,9 @@ struct ObjGroupManager {
    */
 
   template <typename ObjT>
-  void get(ProxyType<ObjT> proxy);
-
+  ObjT* get(ProxyType<ObjT> proxy);
   template <typename ObjT>
-  void get(ProxyElmType<ObjT> proxy);
+  ObjT* get(ProxyElmType<ObjT> proxy);
 
   /*
    * Dispatch to a live obj group pointer with a handler
@@ -134,7 +138,7 @@ struct ObjGroupManager {
   void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 
 private:
-  ObjGroupProxyType makeCollectiveImpl(HolderBasePtrType base_holder);
+  ObjGroupProxyType makeCollectiveImpl(HolderBasePtrType b, ObjTypeIdxType idx);
 
   template <typename ObjT>
   ProxyType<ObjT> makeCollectiveObj(ObjT* obj, HolderBasePtrType base_holder);
@@ -146,7 +150,7 @@ private:
 
 private:
   // The current obj ID, sequential on each node for collective construction
-  ObjGroupIDType cur_obj_id_ = 1;
+  std::unordered_map<ObjTypeIdxType,ObjGroupIDType> cur_obj_id_;
   // Map handler to obj group proxy; when message arrives determine obj group
   std::unordered_map<HandlerType,ObjGroupProxyType> han_to_proxy_;
   // Function to dispatch to the base class for type-erasure to run handler
@@ -158,5 +162,7 @@ private:
 }} /* end namespace vt::objgroup */
 
 #include "vt/objgroup/manager.impl.h"
+#include "vt/objgroup/proxy/proxy_objgroup_elm.impl.h"
+#include "vt/objgroup/proxy/proxy_objgroup.impl.h"
 
 #endif /*INCLUDED_VT_OBJGROUP_MANAGER_H*/

@@ -52,7 +52,7 @@
 namespace vt { namespace objgroup { namespace holder {
 
 template <template <typename> class UserPtr, typename ObjT>
-struct HolderUser : HolderBase {
+struct HolderUser final : HolderObjBase<ObjT> {
   explicit HolderUser(UserPtr<ObjT> in_obj)
     : obj_(in_obj)
   { }
@@ -60,8 +60,9 @@ struct HolderUser : HolderBase {
   virtual ~HolderUser() = default;
 
 public:
-  void* get() override { return static_cast<void*>(*obj_); }
+  ObjT* get() override { return *obj_; }
   bool exists() override { return obj_ != nullptr; }
+  void reset() override { obj_ = UserPtr<ObjT>();  }
 
 private:
   UserPtr<ObjT> obj_ = nullptr;

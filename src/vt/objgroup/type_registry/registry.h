@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          dispatch_base.h
+//                           registry.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,40 +42,39 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_BASE_H
-#define INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_BASE_H
+#if !defined INCLUDED_VT_OBJGROUP_TYPE_REGISTRY_REGISTRY_H
+#define INCLUDED_VT_OBJGROUP_TYPE_REGISTRY_REGISTRY_H
 
 #include "vt/config.h"
-#include "vt/objgroup/common.h"
-#include "vt/messaging/message/smart_ptr.h"
+#include "vt/registry/auto/auto_registry_common.h"
 
-namespace vt { namespace objgroup { namespace dispatch {
+#include <vector>
 
-/*
- * DispatchBase implements type erasure to dispatch to a obj group without
- * encoding the message directly in the message (as an alternative to using a
- * std::function)
- */
+namespace vt { namespace objgroup { namespace registry {
 
-struct DispatchBase {
-  explicit DispatchBase(ObjGroupProxyType in_proxy)
-    : proxy_(in_proxy)
-  { }
+using AutoHandlerType = auto_registry::AutoHandlerType;
+using RegistryType = std::vector<int>;
 
-  virtual ~DispatchBase() = default;
+inline RegistryType& getRegistry();
 
-  /*
-   * Dispatch to the handler; the base is closed around the proper object
-   * pointer that is type-erased here
-   */
-  virtual void run(HandlerType han, MsgSharedPtr<ShortMessage> msg) = 0;
-
-  ObjGroupProxyType proxy() const { return proxy_; }
-
-private:
-  ObjGroupProxyType proxy_ = no_obj_group;
+template <typename ObjT>
+struct Registrar {
+  Registrar();
+  AutoHandlerType index;
 };
 
-}}} /* end namespace vt::objgroup::dispatch */
+template <typename ObjT>
+struct Type {
+  static AutoHandlerType const idx;
+};
 
-#endif /*INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_BASE_H*/
+inline AutoHandlerType getObjIdx(AutoHandlerType han);
+
+template <typename ObjT>
+inline AutoHandlerType makeObjIdx();
+
+}}} /* end namespace vt::objgroup::registry */
+
+#include "vt/objgroup/type_registry/registry.impl.h"
+
+#endif /*INCLUDED_VT_OBJGROUP_TYPE_REGISTRY_REGISTRY_H*/

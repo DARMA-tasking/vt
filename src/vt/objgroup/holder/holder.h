@@ -49,10 +49,12 @@
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/holder/holder_base.h"
 
+#include <memory>
+
 namespace vt { namespace objgroup { namespace holder {
 
 template <typename ObjT>
-struct Holder : HolderBase {
+struct Holder final : HolderObjBase<ObjT> {
   explicit Holder(std::unique_ptr<ObjT> in_obj)
     : obj_(std::move(in_obj))
   { }
@@ -60,8 +62,9 @@ struct Holder : HolderBase {
   virtual ~Holder() = default;
 
 public:
-  void* get() override { return static_cast<void*>(obj_.get()); }
+  ObjT* get() override { return obj_.get(); }
   bool exists() override { return obj_ != nullptr; }
+  void reset() override { obj_ = std::make_unique<ObjT>(); }
 
 private:
   std::unique_ptr<ObjT> obj_ = nullptr;

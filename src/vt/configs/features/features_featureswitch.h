@@ -67,6 +67,7 @@
     hierlb,                "HierarchicalLB",                            \
     lb,                    "lb",                                        \
     location,              "location",                                  \
+    objgroup,              "objgroup",                                  \
     param,                 "parameterization",                          \
     pipe,                  "pipe",                                      \
     pool,                  "pool",                                      \

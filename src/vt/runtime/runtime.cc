@@ -675,6 +675,9 @@ void Runtime::printStartupBanner() {
   #if !backend_debug_enabled(broadcast)
     debug_warn_compile(broadcast)
   #endif
+  #if !backend_debug_enabled(objgroup)
+    debug_warn_compile(objgroup)
+  #endif
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);

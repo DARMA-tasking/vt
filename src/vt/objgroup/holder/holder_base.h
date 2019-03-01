@@ -51,8 +51,15 @@
 namespace vt { namespace objgroup { namespace holder {
 
 struct HolderBase {
-  virtual void* get() = 0;
+  virtual ~HolderBase() = default;
   virtual bool exists() = 0;
+  virtual void reset() = 0;
+};
+
+template <typename ObjT>
+struct HolderObjBase : HolderBase {
+  virtual ~HolderObjBase() = default;
+  virtual ObjT* get() = 0;
 };
 
 }}} /* end namespace vt::objgroup::holder */

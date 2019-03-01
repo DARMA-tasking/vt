@@ -53,6 +53,9 @@
 #include "vt/objgroup/holder/holder_user.h"
 #include "vt/objgroup/holder/holder_basic.h"
 #include "vt/objgroup/dispatch/dispatch.h"
+#include "vt/objgroup/type_registry/registry.h"
+#include "vt/registry/auto/auto_registry.h"
+#include "vt/messaging/active.h"
 
 #include <memory>
 
@@ -99,7 +102,13 @@ ObjGroupManager::makeCollective(std::unique_ptr<ObjT> obj) {
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
 ObjGroupManager::makeCollectiveObj(ObjT* obj, HolderBasePtrType holder) {
-  auto const proxy = makeCollectiveImpl(std::move(holder));
+  auto const obj_type_idx = registry::makeObjIdx<ObjT>();
+  auto const proxy = makeCollectiveImpl(std::move(holder),obj_type_idx);
+  debug_print(
+    objgroup, node,
+    "makeCollectiveObj: obj_type_idx={}, proxy={:x}\n",
+    obj_type_idx, proxy
+  );
   regObjProxy<ObjT>(obj, proxy);
   return ProxyType<ObjT>{proxy};
 }
@@ -114,6 +123,10 @@ ObjGroupManager::makeCollective(MakeFnType<ObjT> fn) {
 template <typename ObjT>
 void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   auto const proxy_bits = proxy.getProxy();
+  debug_print(
+    objgroup, node,
+    "destroyCollective: proxy={:x}\n", proxy
+  );
   auto iter = dispatch_.find(proxy_bits);
   if (iter != dispatch_.end()) {
     dispatch_.erase(iter);
@@ -128,15 +141,72 @@ template <typename ObjT>
 void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
   auto iter = dispatch_.find(proxy);
   vtAssertExpr(iter == dispatch_.end());
-  DispatchBasePtrType base =
-    std::make_unique<dispatch::Dispatch<ObjT>>(proxy,obj);
+  debug_print(
+    objgroup, node,
+    "regObjProxy: obj={}, proxy={:x}\n",
+    print_ptr(obj), proxy
+  );
+  DispatchBasePtrType b = std::make_unique<dispatch::Dispatch<ObjT>>(proxy,obj);
   dispatch_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(proxy),
-    std::forward_as_tuple(std::move(base))
+    std::forward_as_tuple(std::move(b))
   );
 }
 
+template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
+  auto const proxy_bits = proxy.getProxy();
+  auto const dest_node = proxy.getNode();
+  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>();
+  regHan(proxy_bits,han);
+  theMsg()->sendMsgAuto<MsgT>(dest_node,han,msg.get(),no_tag);
+}
+
+template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
+  auto const proxy_bits = proxy.getProxy();
+  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>();
+  regHan(proxy_bits,han);
+  theMsg()->broadcastMsgAuto<MsgT>(han,msg.get(),no_tag);
+}
+
+template <typename ObjT>
+ObjT* ObjGroupManager::get(ProxyType<ObjT> proxy) {
+  auto const this_node = theContext()->getNode();
+  return get<ObjT>(ProxyElmType<ObjT>(proxy.getProxy(),this_node));
+}
+
+template <typename ObjT>
+ObjT* ObjGroupManager::get(ProxyElmType<ObjT> proxy) {
+  auto const this_node = theContext()->getNode();
+  vtAssert(this_node == proxy.getNode(), "You can only get a local obj");
+  auto const proxy_bits = proxy.getProxy();
+  auto iter = objs_.find(proxy_bits);
+  vtAssert(iter != objs_.end(), "Obj must exist on this node");
+  HolderBaseType* holder = iter->second.get();
+  auto obj_holder = static_cast<holder::HolderObjBase<ObjT>*>(holder);
+  auto obj = obj_holder->get();
+  return obj;
+}
+
+template <typename ObjT>
+void ObjGroupManager::update(ProxyElmType<ObjT> proxy) {
+  auto const this_node = theContext()->getNode();
+  vtAssert(this_node == proxy.getNode(), "You can only update a local obj");
+  auto const proxy_bits = proxy.getProxy();
+  auto iter = objs_.find(proxy_bits);
+  vtAssert(iter != objs_.end(), "Obj must exist on this node");
+  HolderBaseType* holder = iter->second.get();
+  auto obj_holder = static_cast<holder::HolderObjBase<ObjT>*>(holder);
+  obj_holder->reset();
+}
+
+template <typename ObjT>
+void ObjGroupManager::update(ProxyType<ObjT> proxy) {
+  auto const this_node = theContext()->getNode();
+  return update<ObjT>(ProxyElmType<ObjT>(proxy.getProxy(),this_node));
+}
 
 }} /* end namespace vt::objgroup */
 

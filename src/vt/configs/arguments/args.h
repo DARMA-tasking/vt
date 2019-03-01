@@ -122,6 +122,7 @@ public:
   static bool vt_debug_worker;
   static bool vt_debug_group;
   static bool vt_debug_broadcast;
+  static bool vt_debug_objgroup;
 
   static bool vt_user_1;
   static bool vt_user_2;

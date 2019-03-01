@@ -75,6 +75,12 @@ struct ProxyElm {
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
   void send(Args&&... args) const;
 
+  void update() const;
+  ObjT* get() const;
+
+  ObjGroupProxyType getProxy() const { return proxy_; }
+  NodeType getNode() const { return node_; }
+
 public:
   template <typename SerializerT>
   void serialize(SerializerT& s);

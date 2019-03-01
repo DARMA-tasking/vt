@@ -62,6 +62,8 @@ struct Dispatch final : DispatchBase {
     : DispatchBase(in_proxy), obj_(in_obj)
   { }
 
+  virtual ~Dispatch() = default;
+
   void run(HandlerType han, MsgSharedPtr<ShortMessage> msg) override;
 
 private:

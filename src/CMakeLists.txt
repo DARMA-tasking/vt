@@ -76,6 +76,7 @@ set(
       registry/auto/vc registry/auto/rdma registry/auto/index
     objgroup
       objgroup/proxy objgroup/holder objgroup/active_func objgroup/dispatch
+      objgroup/type_registry
 
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})

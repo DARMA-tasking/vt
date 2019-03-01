@@ -48,6 +48,9 @@
 namespace vt { namespace objgroup {
 
 using ObjGroupIDType = uint32_t;
+using ObjTypeIdxType = uint16_t;
+
+static constexpr ObjGroupIDType const fst_obj_group_id = 1;
 
 struct BaseObj { };
 
