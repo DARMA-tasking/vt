@@ -49,7 +49,7 @@
 #include "vt/transport.h"
 #include "test_parallel_harness.h"
 
-namespace vt { namespace tests { namespace unit { namespace locat {
+namespace vt { namespace tests { namespace unit { namespace location {
 
 // constants used in test cases
 int const arbitrary_entity = 10;
@@ -110,11 +110,13 @@ void routeTestHandler(EntityMsg* msg) {
 
   debug_print(
     location, node,
-    "rank {}: routing entity:{}, home_node={}, {} message of {} bytes.\n",
-    my_node, msg->entity_, msg->home_, (msg->is_large_ ? "long" : "short"), test_msg_size
+    "routeTestHandler: entity={}, home={}, bytes={}\n",
+    msg->entity_, msg->home_, test_msg_size
   );
   // route message
-  vt::theLocMan()->virtual_loc->routeMsg<MsgT>(msg->entity_, msg->home_, test_msg);
+  vt::theLocMan()->virtual_loc->routeMsg<MsgT>(
+    msg->entity_, msg->home_, test_msg
+  );
 }
 
 // check if the given entity is in the node cache
@@ -135,7 +137,7 @@ void verifyCacheConsistency(
 
   vt::theCollective()->barrier();
   // the protocol is defined as eager for short and unserialized messages
-  bool const is_eager  = std::is_same<MsgT,ShortMsg>::value;
+  bool const is_eager = std::is_same<MsgT,ShortMsg>::value;
 
   for (int iter = 0; iter < nb_rounds; ++iter) {
     if (my_node not_eq home) {
@@ -148,8 +150,9 @@ void verifyCacheConsistency(
 
       debug_print(
         location, node,
-        "iter:{}, rank {}: route_test: entityID={}, home_node={}, message of {} bytes, is in cache ? {}.\n",
-        iter, my_node, msg->data_, msg->from_, sizeof(*msg), is_entity_cached
+        "vertifyCacheConsistency: iter={}, entityID={}, home={}, bytes={}, "
+        "in cache={}\n",
+        iter, msg->entity_, msg->from_, sizeof(*msg), is_entity_cached
       );
 
       if (not is_eager) {
@@ -177,6 +180,6 @@ void verifyCacheConsistency(
 // message types used for type-parameterized tests
 using MsgType = testing::Types<ShortMsg, LongMsg>;
 
-}}}} // namespace vt::tests::unit::locat
+}}}} // namespace vt::tests::unit::location
 
 #endif /*INCLUDED_TEST_LOCATION_COMMON_H*/

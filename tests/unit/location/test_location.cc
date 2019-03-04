@@ -55,7 +55,7 @@ TEST_F(TestLocation, test_register_and_get_entity) {
 
   auto const my_node = vt::theContext()->getNode();
   auto const home    = 0;
-  auto const entity  = locat::arbitrary_entity;
+  auto const entity  = location::arbitrary_entity;
 
   // Register the entity on the node 0
   if (my_node == home) {
@@ -80,7 +80,7 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities) {
 
   auto const my_node  = vt::theContext()->getNode();
   auto const nb_nodes = vt::theContext()->getNumNodes();
-  auto const entity   = locat::arbitrary_entity + my_node;
+  auto const entity   = location::arbitrary_entity + my_node;
 
   // Register the entity on the current node
   vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
@@ -94,8 +94,8 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities) {
     success = false;
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      locat::arbitrary_entity + i, i, [i, &success, &check_sum, my_node](vt::NodeType node) {
-
+      location::arbitrary_entity + i, i,
+      [i, &success, &check_sum, my_node](vt::NodeType node) {
         auto const cur = vt::theContext()->getNode();
         // let p: i == my_node and q: cur == node
         // we have: p implies q == not(p) or q
@@ -110,7 +110,8 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities) {
     vt::theCollective()->barrier();
 
     if (i == my_node) {
-      // this test can only be done for cases where getLocation is synchronous -> home_node
+      // this test can only be done for cases where getLocation is synchronous
+      // -> home_node
       EXPECT_TRUE(success);
       EXPECT_EQ(check_sum, i + 1);
     }
@@ -121,7 +122,7 @@ TEST_F(TestLocation, test_unregister_multiple_entities) {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
-  auto const entity   = locat::arbitrary_entity + my_node;
+  auto const entity   = location::arbitrary_entity + my_node;
 
   vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
   vt::theLocMan()->virtual_loc->unregisterEntity(entity);
@@ -132,8 +133,9 @@ TEST_F(TestLocation, test_unregister_multiple_entities) {
   for (auto i = 0; i < nb_nodes; ++i) {
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      locat::arbitrary_entity + i, i, [](vt::NodeType node) {
-        // This lambda should not be executed if the unregisterEntity works correctly
+      location::arbitrary_entity + i, i, [](vt::NodeType node) {
+        // This lambda should not be executed if the unregisterEntity works
+        // correctly
         FAIL() << "entity should have been yet unregistered";
       }
     );
@@ -144,7 +146,7 @@ TEST_F(TestLocation, test_migrate_entity) {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
-  auto const entity   = locat::arbitrary_entity;
+  auto const entity   = location::arbitrary_entity;
   auto const old_home = 0;
   auto const new_home = 1;
 
@@ -154,10 +156,12 @@ TEST_F(TestLocation, test_migrate_entity) {
   }
 
   bool done = false;
-  vt::theLocMan()->virtual_loc->getLocation(entity, old_home, [old_home,&done](vt::NodeType node) {
-    EXPECT_EQ(old_home, node);
-    done = true;
-  });
+  vt::theLocMan()->virtual_loc->getLocation(
+    entity, old_home, [old_home,&done](vt::NodeType node) {
+      EXPECT_EQ(old_home, node);
+      done = true;
+    }
+  );
 
   while (not done) { vt::runScheduler(); }
   vt::theCollective()->barrier();
@@ -171,11 +175,13 @@ TEST_F(TestLocation, test_migrate_entity) {
   vt::theCollective()->barrier();
 
   if (my_node > 1) {
-    vt::theLocMan()->virtual_loc->getLocation(entity, old_home, [old_home,new_home](vt::NodeType node) {
-      // Edit: the expected node can be either 0 (initial) or 1 (migrated)
-      // The protocol may actually eagerly update other nodes
-      EXPECT_TRUE(node == old_home or node == new_home);
-    });
+    vt::theLocMan()->virtual_loc->getLocation(
+      entity, old_home, [old_home,new_home](vt::NodeType node) {
+        // Edit: the expected node can be either 0 (initial) or 1 (migrated)
+        // The protocol may actually eagerly update other nodes
+        EXPECT_TRUE(node == old_home or node == new_home);
+      }
+    );
   }
 }
 
@@ -184,7 +190,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
   auto const next_node = (my_node + 1) % nb_nodes;
-  auto const entity    = locat::arbitrary_entity + my_node;
+  auto const entity    = location::arbitrary_entity + my_node;
 
   // register the entity on the current node
   vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
@@ -193,12 +199,12 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
   // shift entity node to the right (modulo nb_nodes)
   vt::theLocMan()->virtual_loc->entityMigrated(entity, next_node);
 
-  auto previous_node_entity = (
+  auto prev_node = (
     my_node == 0 ?
-      locat::arbitrary_entity + nb_nodes - 1 :
-      locat::arbitrary_entity + my_node - 1
+      location::arbitrary_entity + nb_nodes - 1 :
+      location::arbitrary_entity + my_node - 1
   );
-  vt::theLocMan()->virtual_loc->registerEntityMigrated(previous_node_entity, my_node);
+  vt::theLocMan()->virtual_loc->registerEntityMigrated(prev_node, my_node);
   vt::theCollective()->barrier();
 
   int check_sum = 0;
@@ -208,7 +214,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
     success = false;
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      locat::arbitrary_entity + i, i,
+      location::arbitrary_entity + i, i,
       [i, &success, &check_sum, my_node, nb_nodes](vt::NodeType found) {
 
         auto expected = (i + 1) % nb_nodes;
@@ -218,8 +224,8 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
 
         debug_print(
           location, node,
-          "rank:{} get location of migrated entity {}: found={}, expected={}\n",
-          my_node, locat::arbitrary_entity + i, found, expected
+          "TestLocation: get loc migrated entity={}: found={}, expected={}\n",
+          location::arbitrary_entity + i, found, expected
         );
       }
     );
@@ -227,7 +233,8 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
     while (not success) { vt::runScheduler(); }
     vt::theCollective()->barrier();
 
-    // this test can only be done for cases where getLocation is synchronous -> local or cache
+    // this test can only be done for cases where getLocation is synchronous ->
+    // local or cache
     if (i == my_node || i + 1 == my_node) {
       EXPECT_TRUE(success);
       EXPECT_EQ(check_sum, i + 1);
@@ -240,7 +247,7 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
-  auto const entity   = locat::arbitrary_entity;
+  auto const entity   = location::arbitrary_entity;
   auto const home     = 0;
 
   // Register the entity on the node 0
@@ -254,22 +261,24 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
         auto dst = vt::theContext()->getNode();
         debug_print(
           location, node,
-          "rank:{} a message arrived for entity: {}\n", dst, msg->entity_
+          "TestLocationRoute: message arrived for entity={}\n", msg->entity_
         );
-        EXPECT_EQ(msg->entity_, locat::magic_number + msg->from_);
+        EXPECT_EQ(msg->entity_, location::magic_number + msg->from_);
         msg_count++;
       }
     );
 
     // send long messages for entity
-    bool is_long = std::is_same<TypeParam,locat::LongMsg>::value;
-    auto msg = vt::makeSharedMessage<locat::EntityMsg>(entity, my_node, is_long);
-    vt::theMsg()->broadcastMsg< locat::EntityMsg, locat::routeTestHandler<TypeParam> >(msg);
+    using MsgType = location::EntityMsg;
+    bool is_long = std::is_same<TypeParam,location::LongMsg>::value;
+    auto msg = vt::makeSharedMessage<MsgType>(entity, my_node, is_long);
+    vt::theMsg()->broadcastMsg<MsgType, location::routeTestHandler<TypeParam>>(msg);
 
     while (msg_count < nb_nodes - 1) { vt::runScheduler(); }
+
     debug_print(
       location, node,
-      "all messages have been arrived.\n"
+      "TestLocationRoute: all messages have been arrived\n"
     );
 
     EXPECT_EQ(msg_count, nb_nodes - 1);
@@ -280,7 +289,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits){
 
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
-  auto const entity    = locat::arbitrary_entity;
+  auto const entity    = location::arbitrary_entity;
   auto const home      = 0;
   auto const nb_rounds = 3;
   auto nb_received     = 0;
@@ -293,7 +302,9 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits){
   }
 
   // check cache consistency for the given entity
-  locat::verifyCacheConsistency<TypeParam>(entity, my_node, home, home, nb_rounds);
+  unit::location::verifyCacheConsistency<TypeParam>(
+    entity, my_node, home, home, nb_rounds
+  );
 
   // finalize
   if (my_node == home) {
@@ -305,7 +316,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity){
 
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
-  auto const entity    = locat::arbitrary_entity;
+  auto const entity    = location::arbitrary_entity;
   auto const home      = 0;
   auto const new_home  = 3;
   auto const nb_rounds = 3;
@@ -320,26 +331,28 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity){
   if (my_node == home) {
     // migrate entity: unregister it but keep its id in cache
     vt::theLocMan()->virtual_loc->entityMigrated(entity, new_home);
-    EXPECT_TRUE(locat::isCached(entity));
+    EXPECT_TRUE(location::isCached(entity));
   } else if (my_node == new_home) {
     // receive migrated entity: register it and keep in cache
     vt::theLocMan()->virtual_loc->registerEntityMigrated(
       entity, my_node, [entity,&nb_received](vt::BaseMessage* in_msg) {
         debug_print(
           location, node,
-          "rank:{}: a message arrived to me for a migrated entity {}.\n",
-          vt::theContext()->getNode(), entity
+          "TestLocationRoute: message arrived to me for a migrated entity={}\n",
+          entity
         );
         nb_received++;
       }
     );
-    EXPECT_TRUE(locat::isCached(entity));
+    EXPECT_TRUE(location::isCached(entity));
   }
 
   // check cache consistency for the given entity
-  locat::verifyCacheConsistency<TypeParam>(entity, my_node, home, new_home, nb_rounds);
+  location::verifyCacheConsistency<TypeParam>(
+    entity, my_node, home, new_home, nb_rounds
+  );
 
-    // finalize
+  // finalize
   if (my_node == new_home) {
     auto const min_expected_ack = (nb_nodes - 2) * nb_rounds;
     EXPECT_TRUE(nb_received >= min_expected_ack);
@@ -347,8 +360,9 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity){
 }
 
 REGISTER_TYPED_TEST_CASE_P(
-  TestLocationRoute, test_route_entity, test_entity_cache_hits, test_entity_cache_migrated_entity
+  TestLocationRoute,
+  test_route_entity, test_entity_cache_hits, test_entity_cache_migrated_entity
 );
-INSTANTIATE_TYPED_TEST_CASE_P(Message, TestLocationRoute, locat::MsgType);
+INSTANTIATE_TYPED_TEST_CASE_P(Message, TestLocationRoute, location::MsgType);
 
 }}} // end namespace vt::tests::unit
