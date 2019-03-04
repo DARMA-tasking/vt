@@ -43,18 +43,23 @@
 */
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
-
 #include "vt/transport.h"
+
+#define ENABLE_REDUCE_EXPR 0
 
 namespace vt { namespace tests { namespace unit {
 
 using namespace vt;
 using namespace vt::collective;
 using namespace vt::tests::unit;
+
+namespace reduce {
+  int const collect_size = 32;
+  int const index_tresh  = 8;
+} // namespace reduce
 
 struct MyReduceMsg : ReduceMsg {
   MyReduceMsg(int const& in_num) : num(in_num) {}
@@ -94,9 +99,12 @@ struct SysMsgVec : ReduceTMsg<VectorPayload> {
   }
 };
 
-struct PrintVec {
+
+struct CheckVec {
   void operator()(SysMsgVec* msg) {
-    fmt::print("final size={}\n", msg->getConstVal().vec.size());
+    auto const size = msg->getConstVal().vec.size();
+    debug_print(reduce, node, "final vec.size={}\n", size);
+    EXPECT_EQ(size, reduce::collect_size * 2);
   }
 };
 
@@ -104,11 +112,10 @@ struct MyCol : Collection<MyCol, Index1D> {
   MyCol()
     : Collection<MyCol, Index1D>()
   {
-    auto const& node = theContext()->getNode();
-    auto const& idx = getIndex();
-    fmt::print(
-      "{}: constructing MyCol on node={}: idx.x()={}, ptr={}\n",
-      node, node, idx.x(), print_ptr(this)
+    debug_print(
+      reduce, node
+      "constructing MyCol on node={}: idx.x()={}, ptr={}\n",
+      theContext()->getNode(), getIndex().x(), print_ptr(this)
     );
   }
 
@@ -120,29 +127,28 @@ struct ColMsg : CollectionMessage<MyCol> {
 
   ColMsg() = default;
   ColMsg(NodeType const& in_from_node)
-    : CollectionMessage<MyCol>(), from_node(in_from_node)
-  { }
+    : CollectionMessage<MyCol>(),\
+      from_node(in_from_node)
+  {}
 };
 
 struct TestReduceCollection : TestParallelHarness {
-  using TestMsg = TestStaticBytesShortMsg<4>;
-
-  virtual void SetUp() {
-    TestParallelHarness::SetUp();
-  }
 
   static void colHan(ColMsg* msg, MyCol* col) {
-    auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
-    // fmt::print(
-    //   "{}: colHan received: ptr={}, idx={}, getIndex={}\n",
-    //   node, print_ptr(col), idx.x(), col->getIndex().x()
-    // );
+    debug_print(
+      reduce, node,
+      "colHan: received: ptr={}, idx={}, getIndex={}\n",
+       print_ptr(col), idx.x(), col->getIndex().x()
+    );
 
     auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
     auto proxy = col->getProxy();
-    // fmt::print("reduce_msg->num={}\n", reduce_msg->num);
-    theCollection()->reduceMsg<MyCol,MyReduceMsg,reducePlus>(proxy, reduce_msg);
+    debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
+
+    theCollection()->reduceMsg<
+      MyCol, MyReduceMsg, reducePlus<reduce::collect_size>
+    >(proxy, reduce_msg);
   }
 
   //
@@ -151,134 +157,156 @@ struct TestReduceCollection : TestParallelHarness {
   //
 #if ENABLE_REDUCE_EXPR
   static void colHanPartial(ColMsg* msg, MyCol* col) {
-    auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
-    // fmt::print(
-    //   "{}: colHan received: ptr={}, idx={}, getIndex={}\n",
-    //   node, print_ptr(col), idx.x(), col->getIndex().x()
-    // );
+
+    debug_print(
+      reduce, node,
+      "colHanPartial: received: ptr={}, idx={}, getIndex={}\n",
+      print_ptr(col), idx.x(), col->getIndex().x()
+    );
 
     auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
     auto proxy = col->getProxy();
-    //fmt::print("reduce_msg->num={}\n", reduce_msg->num);
-    theCollection()->reduceMsgExpr<MyCol,MyReduceMsg,reducePlus>(
-      proxy,reduce_msg, [](Index1D const& idx) -> bool {
-        return idx.x() < 8;
+    debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
+
+    theCollection()->reduceMsgExpr<
+      MyCol, MyReduceMsg, reducePlus<reduce::index_tresh>
+    >(
+      proxy,reduce_msg, [](Index1D const idx) -> bool {
+        return idx.x() < reduce::index_tresh;
       }
     );
   }
 
   static void colHanPartialMulti(ColMsg* msg, MyCol* col) {
-    auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
-    auto const& grouping = idx.x() % 8;
-    // fmt::print(
-    //   "{}: colHan received: ptr={}, idx={}, getIndex={}\n",
-    //   node, print_ptr(col), idx.x(), col->getIndex().x()
-    // );
+    auto const& grouping = idx.x() % reduce::index_tresh;
+
+    debug_print(
+      reduce, node,
+      "colHanPartialMulti: received: ptr={}, idx={}, getIndex={}\n",
+      print_ptr(col), idx.x(), col->getIndex().x()
+    );
 
     auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
     auto proxy = col->getProxy();
-    //fmt::print("reduce_msg->num={}\n", reduce_msg->num);
-    theCollection()->reduceMsgExpr<MyCol,MyReduceMsg,reducePlus>(
+    debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
+
+    theCollection()->reduceMsgExpr<
+      MyCol, MyReduceMsg, reducePlus<reduce::index_tresh>
+    >(
       proxy,reduce_msg, [=](Index1D const& idx) -> bool {
-        return idx.x() % 8 == grouping;
+        return idx.x() % reduce::index_tresh == grouping;
       }, no_epoch, grouping
     );
   }
 
   static void colHanPartialProxy(ColMsg* msg, MyCol* col) {
-    auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
-    // fmt::print(
-    //   "{}: colHan received: ptr={}, idx={}, getIndex={}\n",
-    //   node, print_ptr(col), idx.x(), col->getIndex().x()
-    // );
+
+    debug_print(
+      reduce, node,
+      "colHanPartialProxy: received: ptr={}, idx={}, getIndex={}\n",
+      print_ptr(col), idx.x(), col->getIndex().x()
+    );
 
     auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
     auto proxy = col->getCollectionProxy();
-    //fmt::print("reduce_msg->num={}\n", reduce_msg->num);
-    proxy.reduceExpr<MyReduceMsg,reducePlus>(
+    debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
+
+    proxy.reduceExpr< MyReduceMsg, reducePlus<reduce::index_tresh> >(
       reduce_msg, [](Index1D const& idx) -> bool {
-        return idx.x() < 8;
+        return idx.x() < reduce::index_tresh;
       }
     );
   }
 #endif
 
   static void colHanVec(ColMsg* msg, MyCol* col) {
-    auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
-    // fmt::print(
-    //   "{}: colHanVec received: ptr={}, idx={}, getIndex={}\n",
-    //   node, print_ptr(col), idx.x(), col->getIndex().x()
-    // );
+    debug_print(
+      reduce, node,
+      "colHanPartialProxy: received: ptr={}, idx={}, getIndex={}\n",
+      print_ptr(col), idx.x(), col->getIndex().x()
+    );
 
     auto reduce_msg = makeSharedMessage<SysMsgVec>(static_cast<double>(idx.x()));
     auto proxy = col->getProxy();
-    // fmt::print(
-    //   "reduce_msg->vec.size()={}\n", reduce_msg->getConstVal().vec.size()
-    // );
+    debug_print(
+      reduce, node,
+      "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
+    );
+
     theCollection()->reduceMsg<
       MyCol,
       SysMsgVec,
-      SysMsgVec::msgHandler<SysMsgVec,PlusOp<VectorPayload>,PrintVec>
+      SysMsgVec::msgHandler<SysMsgVec,PlusOp<VectorPayload>,CheckVec>
     >(proxy, reduce_msg);
   }
 
   static void colHanVecProxy(ColMsg* msg, MyCol* col) {
-    auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
-    // fmt::print(
-    //   "{}: colHanVec received: ptr={}, idx={}, getIndex={}\n",
-    //   node, print_ptr(col), idx.x(), col->getIndex().x()
-    // );
+    debug_print(
+      reduce, node,
+      "colHanVecProxy: received: ptr={}, idx={}, getIndex={}\n",
+      print_ptr(col), idx.x(), col->getIndex().x()
+    );
 
     auto reduce_msg = makeSharedMessage<SysMsgVec>(static_cast<double>(idx.x()));
     auto proxy = col->getCollectionProxy();
-    // fmt::print(
-    //   "reduce_msg->vec.size()={}\n", reduce_msg->getConstVal().vec.size()
-    // );
-    proxy.reduce<PlusOp<VectorPayload>,PrintVec>(reduce_msg);
+    debug_print(
+      reduce, node,
+      "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
+    );
+    proxy.reduce<PlusOp<VectorPayload>,CheckVec>(reduce_msg);
   }
 
   static void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
-    auto const& node = theContext()->getNode();
     auto const& idx = col->getIndex();
-    // fmt::print(
-    //   "{}: colHanVec received: ptr={}, idx={}, getIndex={}\n",
-    //   node, print_ptr(col), idx.x(), col->getIndex().x()
-    // );
+    debug_print(
+      reduce, node,
+      "colHanVecProxyCB: received: ptr={}, idx={}, getIndex={}\n",
+      print_ptr(col), idx.x(), col->getIndex().x()
+    );
 
     auto reduce_msg = makeSharedMessage<SysMsgVec>(static_cast<double>(idx.x()));
     auto proxy = col->getCollectionProxy();
-    // fmt::print(
-    //   "reduce_msg->vec.size()={}\n", reduce_msg->getConstVal().vec.size()
-    // );
-    auto cb = theCB()->makeSend<PrintVec>(0);
+    debug_print(
+      reduce, node,
+      "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
+    );
+
+    auto cb = theCB()->makeSend<CheckVec>(0);
     vtAssertExpr(cb.valid());
-    proxy.reduce<PlusOp<VectorPayload>>(reduce_msg,cb);
+    proxy.reduce< PlusOp<VectorPayload> >(reduce_msg,cb);
   }
 
+  template <int size>
   static void reducePlus(MyReduceMsg* msg) {
-    fmt::print(
-      "{}: cur={}: is_root={}, count={}, next={}, num={}\n",
-      theContext()->getNode(), print_ptr(msg), print_bool(msg->isRoot()),
+    vtAssertExpr(size > 0);
+    debug_print(
+      reduce, node,
+      "reducePlus: cur={}: is_root={}, count={}, next={}, num={}\n",
+      print_ptr(msg), print_bool(msg->isRoot()),
       msg->getCount(), print_ptr(msg->getNext<MyReduceMsg>()), msg->num
     );
 
     if (msg->isRoot()) {
-      fmt::print("{}: final num={}\n", theContext()->getNode(), msg->num);
+      debug_print(reduce, node,"reducePlus: final num={}\n", msg->num);
+
+      // check expected result w.r.t size
+      auto const value = msg->num;
+      EXPECT_EQ(value, size * (size - 1) / 2);
+
     } else {
-      MyReduceMsg* fst_msg = msg;
-      MyReduceMsg* cur_msg = msg->getNext<MyReduceMsg>();
+      auto fst_msg = msg;
+      auto cur_msg = msg->getNext<MyReduceMsg>();
       while (cur_msg != nullptr) {
-        fmt::print(
-          "{}: while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
-          theContext()->getNode(),
+        debug_print(
+          reduce, node,
+          "reducePlus: while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
           print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->isRoot()),
-          cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()),
-          cur_msg->num
+          cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()), cur_msg->num
         );
 
         fst_msg->num += cur_msg->num;
@@ -289,98 +317,86 @@ struct TestReduceCollection : TestParallelHarness {
 };
 
 TEST_F(TestReduceCollection, test_reduce_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
-  auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
+  if (my_node == root) {
+    auto const& range = Index1D(reduce::collect_size);
     auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(this_node);
+    auto msg = new ColMsg(my_node);
     proxy.broadcast<ColMsg,colHan>(msg);
   }
 }
 
-#if ENABLE_REDUCE_EXPR
-TEST_F(TestReduceCollection, test_reduce_partial_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
-
-  auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(this_node);
-    proxy.broadcast<ColMsg,colHanPartial>(msg);
-  }
-}
-#endif
-
 TEST_F(TestReduceCollection, test_reduce_vec_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
-  auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
+  if (my_node == root) {
+    auto const& range = Index1D(reduce::collect_size);
     auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(this_node);
+    auto msg = new ColMsg(my_node);
     proxy.broadcast<ColMsg,colHanVec>(msg);
   }
 }
 
-#if ENABLE_REDUCE_EXPR
-TEST_F(TestReduceCollection, test_reduce_partial_proxy_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
-
-  auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(this_node);
-    proxy.broadcast<ColMsg,colHanPartialProxy>(msg);
-  }
-}
-#endif
-
 TEST_F(TestReduceCollection, test_reduce_vec_proxy_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
-  auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
+  if (my_node == root) {
+    auto const& range = Index1D(reduce::collect_size);
     auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(this_node);
+    auto msg = new ColMsg(my_node);
     proxy.broadcast<ColMsg,colHanVecProxy>(msg);
   }
 }
 
 TEST_F(TestReduceCollection, test_reduce_vec_proxy_callback_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
-  auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
+  if (my_node == root) {
+    auto const& range = Index1D(reduce::collect_size);
     auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(this_node);
+    auto msg = new ColMsg(my_node);
     proxy.broadcast<ColMsg,colHanVecProxyCB>(msg);
   }
 }
 
-
 #if ENABLE_REDUCE_EXPR
-TEST_F(TestReduceCollection, test_reduce_partial_multi_op) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
+TEST_F(TestReduceCollection, test_reduce_partial_op) {
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
-  auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    auto const& range = Index1D(128);
+  if (my_node == root) {
+    auto const& range = Index1D(reduce::collect_size);
     auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(this_node);
+    auto msg = new ColMsg(my_node);
+    proxy.broadcast<ColMsg,colHanPartial>(msg);
+  }
+}
+
+TEST_F(TestReduceCollection, test_reduce_partial_proxy_op) {
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
+
+  if (my_node == root) {
+    auto const& range = Index1D(reduce::collect_size);
+    auto proxy = theCollection()->construct<MyCol>(range);
+    auto msg = new ColMsg(my_node);
+    proxy.broadcast<ColMsg,colHanPartialProxy>(msg);
+  }
+}
+
+TEST_F(TestReduceCollection, test_reduce_partial_multi_op) {
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
+
+  if (my_node == root) {
+    auto const& range = Index1D(reduce::collect_size * 4);
+    auto proxy = theCollection()->construct<MyCol>(range);
+    auto msg = new ColMsg(my_node);
     proxy.broadcast<ColMsg,colHanPartialMulti>(msg);
   }
 }
