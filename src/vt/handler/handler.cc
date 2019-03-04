@@ -48,7 +48,8 @@
 namespace vt {
 
 /*static*/ HandlerType HandlerManager::makeHandler(
-  bool is_auto, bool is_functor, HandlerIdentifierType id, bool is_objgroup
+  bool is_auto, bool is_functor, HandlerIdentifierType id, bool is_objgroup,
+  HandlerControlType control
 ) {
   HandlerType new_han = blank_handler;
   HandlerManager::setHandlerAuto(new_han, is_auto);
@@ -56,11 +57,15 @@ namespace vt {
   HandlerManager::setHandlerFunctor(new_han, is_functor);
   HandlerManager::setHandlerIdentifier(new_han, id);
 
+  if (control != 0) {
+    HandlerManager::setHandlerControl(new_han, control);
+  }
+
   debug_print(
     handler, node,
     "HandlerManager::makeHandler: is_functor={}, is_auto={}, is_objgroup={},"
-    " id={}, han={}\n",
-    is_functor, is_auto, is_objgroup, id, new_han
+    " id={:x}, control={:x}, han={:x}\n",
+    is_functor, is_auto, is_objgroup, id, control, new_han
   );
 
   return new_han;
@@ -74,11 +79,27 @@ namespace vt {
   >(han);
 }
 
+/*static*/ HandlerControlType HandlerManager::getHandlerControl(
+  HandlerType han
+) {
+  return BitPackerType::getField<
+    HandlerBitsType::Control, control_num_bits, HandlerControlType
+  >(han);
+}
+
 /*static*/ void HandlerManager::setHandlerIdentifier(
   HandlerType& han, HandlerIdentifierType id
 ) {
   BitPackerType::setField<HandlerBitsType::Identifier, handler_id_num_bits>(
     han, id
+  );
+}
+
+/*static*/ void HandlerManager::setHandlerControl(
+  HandlerType& han, HandlerControlType control
+) {
+  BitPackerType::setField<HandlerBitsType::Control, control_num_bits>(
+    han, control
   );
 }
 
