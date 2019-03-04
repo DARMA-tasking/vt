@@ -53,7 +53,6 @@ namespace vt { namespace objgroup { namespace holder {
 struct HolderBase {
   virtual ~HolderBase() = default;
   virtual bool exists() = 0;
-  virtual void reset() = 0;
 };
 
 template <typename ObjT>

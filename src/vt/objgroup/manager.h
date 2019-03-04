@@ -107,12 +107,13 @@ struct ObjGroupManager {
   void destroyCollective(ProxyType<ObjT> proxy);
 
   /*
-   * Update of a live object group across the system
+   * Update a live object; swap in a new object with args to delete and
+   * reconstruct the object
    */
-  template <typename ObjT>
-  void update(ProxyElmType<ObjT> proxy);
-  template <typename ObjT>
-  void update(ProxyType<ObjT> proxy);
+  template <typename ObjT, typename... Args>
+  void update(ProxyElmType<ObjT> proxy, Args&&... args);
+  template <typename ObjT, typename... Args>
+  void update(ProxyType<ObjT> proxy, Args&&... args);
 
   /*
    * Send/broadcast messages to obj group handlers

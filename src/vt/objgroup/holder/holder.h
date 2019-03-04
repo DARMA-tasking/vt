@@ -64,7 +64,11 @@ struct Holder final : HolderObjBase<ObjT> {
 public:
   ObjT* get() override { return obj_.get(); }
   bool exists() override { return obj_ != nullptr; }
-  void reset() override { obj_ = std::make_unique<ObjT>(); }
+
+  template <typename... Args>
+  void reset(Args&&... args) {
+    obj_ = std::make_unique<ObjT>(std::forward<Args>(args)...);
+  }
 
 private:
   std::unique_ptr<ObjT> obj_ = nullptr;

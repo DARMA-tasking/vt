@@ -62,7 +62,11 @@ struct HolderUser final : HolderObjBase<ObjT> {
 public:
   ObjT* get() override { return *obj_; }
   bool exists() override { return obj_ != nullptr; }
-  void reset() override { obj_ = UserPtr<ObjT>();  }
+
+  template <typename... Args>
+  void reset(Args&&... args) {
+    obj_ = UserPtr<ObjT>(std::forward<Args>(args)...);
+  }
 
 private:
   UserPtr<ObjT> obj_ = nullptr;

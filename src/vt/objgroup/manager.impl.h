@@ -213,8 +213,8 @@ ObjT* ObjGroupManager::get(ProxyElmType<ObjT> proxy) {
   return obj;
 }
 
-template <typename ObjT>
-void ObjGroupManager::update(ProxyElmType<ObjT> proxy) {
+template <typename ObjT, typename... Args>
+void ObjGroupManager::update(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto const this_node = theContext()->getNode();
   vtAssert(this_node == proxy.getNode(), "You can only update a local obj");
   auto const proxy_bits = proxy.getProxy();
@@ -222,13 +222,14 @@ void ObjGroupManager::update(ProxyElmType<ObjT> proxy) {
   vtAssert(iter != objs_.end(), "Obj must exist on this node");
   HolderBaseType* holder = iter->second.get();
   auto obj_holder = static_cast<holder::HolderObjBase<ObjT>*>(holder);
-  obj_holder->reset();
+  obj_holder->reset(std::forward<Args>(args)...);
 }
 
-template <typename ObjT>
-void ObjGroupManager::update(ProxyType<ObjT> proxy) {
+template <typename ObjT, typename... Args>
+void ObjGroupManager::update(ProxyType<ObjT> proxy, Args&&... args) {
   auto const this_node = theContext()->getNode();
-  return update<ObjT>(ProxyElmType<ObjT>(proxy.getProxy(),this_node));
+  auto const elm_proxy = ProxyElmType<ObjT>(proxy.getProxy(),this_node);
+  return update<ObjT>(elm_proxy,std::forward<Args>(args)...);
 }
 
 }} /* end namespace vt::objgroup */
