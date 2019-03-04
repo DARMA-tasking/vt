@@ -97,6 +97,13 @@ struct GroupManager {
 
   GroupManager();
 
+  virtual ~GroupManager() {
+    for (auto&& elm : cleanup_actions_) {
+      elm();
+    }
+    cleanup_actions_.clear();
+  }
+
   void setupDefaultGroup();
 
   GroupType newGroup(
@@ -143,6 +150,8 @@ private:
     RegionType::SizeType const& group_size
   );
 
+  template <typename T>
+  void pushCleanupAction();
   template <typename T>
   RemoteOperationIDType registerContinuationT(ActionTType<T> action);
   template <typename T>
@@ -192,6 +201,7 @@ private:
   RemoteOperationIDType cur_id_                       = 0;
   RemoteOperationIDType cur_collective_id_            = 0xFFFFFFFF00000000;
   ActionContainerType   continuation_actions_         = {};
+  ActionListType        cleanup_actions_              = {};
 
   template <typename T>
   static ActionContainerTType<T> continuation_actions_t_;
