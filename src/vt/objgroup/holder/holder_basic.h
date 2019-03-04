@@ -62,7 +62,11 @@ struct HolderBasic final : HolderObjBase<ObjT> {
 public:
   ObjT* get() override { return obj_; }
   bool exists() override { return obj_ != nullptr; }
-  void reset() override { vtAssert(false, "HolderBasic is not resetable"); }
+
+  template <typename... Args>
+  void reset(Args&&... args) {
+    vtAssert(false, "HolderBasic is not resetable");
+  }
 
 private:
   ObjT* obj_ = nullptr;
