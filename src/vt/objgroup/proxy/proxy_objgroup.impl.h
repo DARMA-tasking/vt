@@ -73,7 +73,8 @@ void Proxy<ObjT>::broadcast(Args&&... args) const {
 
 template <typename ObjT>
 ObjT* Proxy<ObjT>::get() const {
-
+  auto proxy = Proxy<ObjT>(*this);
+  return theObjGroup()->get<ObjT>(proxy);
 }
 
 template <typename ObjT>
