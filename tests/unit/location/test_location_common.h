@@ -148,8 +148,8 @@ void verifyCacheConsistency(
 
       debug_print(
         location, node,
-        "iter:{}, rank {}: route_test: entityID={}, home_node={}, {} message of {} bytes, is in cache ? {}.\n",
-        iter, my_node, msg->data_, msg->from_, (is_long ? "long" : "short"), sizeof(*msg), is_entity_cached
+        "iter:{}, rank {}: route_test: entityID={}, home_node={}, message of {} bytes, is in cache ? {}.\n",
+        iter, my_node, msg->data_, msg->from_, sizeof(*msg), is_entity_cached
       );
 
       if (not is_eager) {
