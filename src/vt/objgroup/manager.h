@@ -143,16 +143,12 @@ private:
   template <typename ObjT>
   ProxyType<ObjT> makeCollectiveObj(ObjT* obj, HolderBasePtrType base_holder);
 
-  void regHan(ObjGroupProxyType proxy, HandlerType han);
-
   template <typename ObjT>
   void regObjProxy(ObjT* obj, ObjGroupProxyType proxy);
 
 private:
   // The current obj ID, sequential on each node for collective construction
   std::unordered_map<ObjTypeIdxType,ObjGroupIDType> cur_obj_id_;
-  // Map handler to obj group proxy; when message arrives determine obj group
-  std::unordered_map<HandlerType,ObjGroupProxyType> han_to_proxy_;
   // Function to dispatch to the base class for type-erasure to run handler
   std::unordered_map<ObjGroupProxyType,DispatchBasePtrType> dispatch_;
   // Type-erased pointers to the objects held on this node

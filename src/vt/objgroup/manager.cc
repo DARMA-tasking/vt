@@ -45,36 +45,26 @@
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/manager.h"
+#include "vt/objgroup/proxy/proxy_bits.h"
+#include "vt/objgroup/type_registry/registry.h"
 #include "vt/context/context.h"
 
 namespace vt { namespace objgroup {
 
 void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+  auto base_func = auto_registry::getAutoHandlerObjGroup(han);
+  // Extract the control-bit sequence from the handler
+  auto const ctrl = HandlerManager::getHandlerControl(han);
+  auto const type_idx = auto_registry::getAutoHandlerObjTypeIdx(han);
   debug_print(
     objgroup, node,
-    "dispatch: han={}\n", han
+    "dispatch: type_idx={:x}, ctrl={:x}, han={:x}\n", type_idx, ctrl, han
   );
-  auto iter = han_to_proxy_.find(han);
-  vtAssertExpr(iter != han_to_proxy_.end());
-  auto const proxy = iter->second;
+  auto const node = 0;
+  auto const proxy = proxy::ObjGroupProxy::create(ctrl,type_idx,node,true);
   auto dispatch_iter = dispatch_.find(proxy);
   vtAssertExpr(dispatch_iter != dispatch_.end());
   dispatch_iter->second->run(han,msg);
-}
-
-void ObjGroupManager::regHan(ObjGroupProxyType proxy, HandlerType han) {
-  auto iter = han_to_proxy_.find(han);
-  vtAssertExpr(iter == han_to_proxy_.end());
-  debug_print(
-    objgroup, node,
-    "regHan: registering han={}, proxy={:x}\n",
-    han, proxy
-  );
-  han_to_proxy_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(han),
-    std::forward_as_tuple(proxy)
-  );
 }
 
 ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
@@ -101,6 +91,10 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
 }
 
 void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+  debug_print(
+    objgroup, node,
+    "dispatchObjGroup: han={:x}\n", han
+  );
   return theObjGroup()->dispatch(msg,han);
 }
 

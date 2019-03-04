@@ -51,6 +51,7 @@
 namespace vt { namespace objgroup { namespace proxy {
 
 static constexpr BitCountType const objgrp_is_collective_num_bits = 1;
+static constexpr BitCountType const objgrp_control_num_bits = 1;
 static constexpr BitCountType const objgrp_node_num_bits =
     BitCounterType<NodeType>::value;
 static constexpr BitCountType const objgrp_id_num_bits =
@@ -62,7 +63,8 @@ static constexpr BitCountType const objgrp_idx_num_bits =
   (objgrp_is_collective_num_bits + objgrp_node_num_bits + objgrp_id_num_bits);
 
 enum eObjGroupProxyBits {
-  Collective = 0,
+  ObjGroup   = 0,
+  Collective = eObjGroupProxyBits::ObjGroup   + objgrp_control_num_bits,
   Node       = eObjGroupProxyBits::Collective + objgrp_is_collective_num_bits,
   TypeIdx    = eObjGroupProxyBits::Node       + objgrp_idx_num_bits,
   ID         = eObjGroupProxyBits::TypeIdx    + objgrp_node_num_bits
@@ -75,12 +77,14 @@ struct ObjGroupProxy {
   );
 
   // Setters for mixing the proxy bits
+  static void setControl(ObjGroupProxyType& proxy, bool is_objgroup = true);
   static void setIsCollective(ObjGroupProxyType& proxy, bool is_coll);
   static void setNode(ObjGroupProxyType& proxy, NodeType const& node);
   static void setID(ObjGroupProxyType& proxy, ObjGroupIDType id);
   static void setTypeIdx(ObjGroupProxyType& proxy, ObjTypeIdxType idx);
 
   // Getters for obtaining info about the bit-pattern in the obj-group proxy
+  static bool isControl(ObjGroupProxyType proxy);
   static bool isCollective(ObjGroupProxyType proxy);
   static NodeType getNode(ObjGroupProxyType proxy);
   static ObjGroupIDType getID(ObjGroupProxyType proxy);

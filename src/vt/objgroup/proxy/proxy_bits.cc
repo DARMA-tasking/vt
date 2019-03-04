@@ -55,12 +55,19 @@ namespace vt { namespace objgroup { namespace proxy {
   NodeType const target_node = is_collective ? default_node : node;
   ObjGroupProxyType new_proxy = 0;
 
+  setControl(new_proxy);
   setIsCollective(new_proxy, is_collective);
   setNode(new_proxy, target_node);
   setID(new_proxy, id);
   setTypeIdx(new_proxy, idx);
 
   return new_proxy;
+}
+
+/*static*/ void ObjGroupProxy::setControl(
+  ObjGroupProxyType& proxy, bool is_objgroup
+) {
+  BitPackerType::boolSetField<eObjGroupProxyBits::ObjGroup>(proxy, is_objgroup);
 }
 
 /*static*/ void ObjGroupProxy::setIsCollective(
@@ -91,6 +98,10 @@ namespace vt { namespace objgroup { namespace proxy {
   BitPackerType::setField<eObjGroupProxyBits::TypeIdx, objgrp_idx_num_bits>(
     proxy, idx
   );
+}
+
+/*static*/ bool ObjGroupProxy::isControl(ObjGroupProxyType proxy) {
+  return BitPackerType::boolGetField<eObjGroupProxyBits::ObjGroup>(proxy);
 }
 
 /*static*/ bool ObjGroupProxy::isCollective(ObjGroupProxyType proxy) {
