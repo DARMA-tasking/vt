@@ -49,6 +49,7 @@
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/manager.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/objgroup/proxy/proxy_bits.h"
 #include "vt/objgroup/holder/holder.h"
 #include "vt/objgroup/holder/holder_user.h"
 #include "vt/objgroup/holder/holder_basic.h"
@@ -158,16 +159,28 @@ template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
 void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const proxy_bits = proxy.getProxy();
   auto const dest_node = proxy.getNode();
-  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>();
-  regHan(proxy_bits,han);
+  auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
+  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
+  auto const num_nodes = theContext()->getNumNodes();
+  vtAssert(dest_node < num_nodes, "Invalid node (must be < num_nodes)");
+  debug_print(
+    objgroup, node,
+    "ObjGroupManager::send: proxy={:x}, node={}, ctrl={:x}, han={:x}\n",
+    proxy_bits, dest_node, ctrl, han
+  );
   theMsg()->sendMsgAuto<MsgT>(dest_node,han,msg.get(),no_tag);
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
 void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const proxy_bits = proxy.getProxy();
-  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>();
-  regHan(proxy_bits,han);
+  auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
+  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
+  debug_print(
+    objgroup, node,
+    "ObjGroupManager::broadcast: proxy={:x}, ctrl={:x}, han={:x}\n",
+    proxy_bits, ctrl, han
+  );
   theMsg()->broadcastMsgAuto<MsgT>(han,msg.get(),no_tag);
 }
 

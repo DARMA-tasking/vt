@@ -65,9 +65,10 @@ namespace vt { namespace auto_registry {
 AutoActiveType getAutoHandler(HandlerType const& handler);
 
 AutoActiveObjGroupType getAutoHandlerObjGroup(HandlerType han);
+AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han);
 
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
-HandlerType makeAutoHandlerObjGroup();
+HandlerType makeAutoHandlerObjGroup(HandlerControlType control);
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 HandlerType makeAutoHandler(MessageT* const msg);

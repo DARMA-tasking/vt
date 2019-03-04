@@ -97,12 +97,14 @@ template <typename FnT>
 struct AutoRegInfo {
   FnT activeFunT;
   NumArgsType args_ = 1;
+  AutoHandlerType obj_idx_ = -1;
 
   #if backend_check_enabled(trace_enabled)
     trace::TraceEntryIDType event_id;
     AutoRegInfo(
-      FnT const& in_active_fun_t, trace::TraceEntryIDType const& in_event_id
-    ) : activeFunT(in_active_fun_t), event_id(in_event_id)
+      FnT const& in_active_fun_t, AutoHandlerType in_obj_idx,
+      trace::TraceEntryIDType const& in_event_id
+    ) : activeFunT(in_active_fun_t), obj_idx_(in_obj_idx), event_id(in_event_id)
     { }
     AutoRegInfo(
       NumArgsTagType,
@@ -114,8 +116,8 @@ struct AutoRegInfo {
       return event_id;
     }
   #else
-    explicit AutoRegInfo(FnT const& in_active_fun_t)
-      : activeFunT(in_active_fun_t)
+    explicit AutoRegInfo(FnT const& in_active_fun_t, AutoHandlerType in_obj_idx)
+      : activeFunT(in_active_fun_t), obj_idx_(in_obj_idx)
     { }
     AutoRegInfo(
       NumArgsTagType,
@@ -123,6 +125,10 @@ struct AutoRegInfo {
     ) : activeFunT(in_active_fun_t), args_(in_args)
     { }
   #endif
+
+  AutoHandlerType getObjIdx() const {
+    return obj_idx_;
+  }
 
   NumArgsType getNumArgs() const {
     return args_;
