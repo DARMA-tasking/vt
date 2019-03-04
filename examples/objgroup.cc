@@ -52,11 +52,9 @@ struct MyMsg : vt::Message {
 struct MyObjGroup {
   void handler(MyMsg* msg) {
     auto node = vt::theContext()->getNode();
-    fmt::print("{}: handler on a={}, b={}\n", node);
+    fmt::print("{}: MyObjGroup::handler on a={}, b={}\n", node, msg->a, msg->b);
   }
 };
-
-struct MyObjGroup2 { };
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv, nullptr);
@@ -64,11 +62,20 @@ int main(int argc, char** argv) {
   auto const& this_node = vt::theContext()->getNode();
   auto const& num_nodes = vt::theContext()->getNumNodes();
 
-  auto proxya = vt::theObjGroup()->makeCollective<MyObjGroup>();
-  auto proxyb = vt::theObjGroup()->makeCollective<MyObjGroup2>();
+  if (num_nodes < 2) {
+    return 0;
+  }
+
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjGroup>();
 
   if (this_node == 0) {
-    proxya[1].send<MyMsg,&MyObjGroup::handler>(10,20);
+    proxy[0].send<MyMsg,&MyObjGroup::handler>(5,10);
+    proxy[1].send<MyMsg,&MyObjGroup::handler>(10,20);
+    proxy.broadcast<MyMsg,&MyObjGroup::handler>(400,500);
+  }
+
+  while (!vt::rt->isTerminated()) {
+    vt::runScheduler();
   }
 
   vt::finalize();
