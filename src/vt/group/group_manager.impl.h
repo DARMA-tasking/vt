@@ -117,11 +117,6 @@ void GroupManager::registerContinuationT(
     }
     waiting_cont_<T>.clear();
   }
-
-  cleanup_actions_.push_back([]{
-    continuation_actions_t_<T>.clear();
-    waiting_cont_<T>.clear();
-  });
 }
 
 template <typename T>
