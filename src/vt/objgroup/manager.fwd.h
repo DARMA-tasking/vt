@@ -53,6 +53,7 @@ namespace vt { namespace objgroup {
 struct ObjGroupManager;
 
 void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+bool scheduler();
 
 }} /* end namespace vt::objgroup */
 
