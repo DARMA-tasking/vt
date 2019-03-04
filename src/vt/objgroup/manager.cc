@@ -90,6 +90,21 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
   return proxy;
 }
 
+bool ObjGroupManager::scheduler() {
+  if (work_units_.size() == 0) {
+    return false;
+  } else {
+    auto unit = work_units_.back();
+    work_units_.pop_back();
+    unit();
+    return true;
+  }
+}
+
+bool scheduler() {
+  return theObjGroup()->scheduler();
+}
+
 void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   debug_print(
     objgroup, node,

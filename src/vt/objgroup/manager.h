@@ -58,6 +58,7 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
+#include <deque>
 
 namespace vt { namespace objgroup {
 
@@ -137,6 +138,11 @@ struct ObjGroupManager {
    */
   void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 
+  /*
+   * Run the scheduler to push along postponed events (such as self sends)
+   */
+  bool scheduler();
+
 private:
   ObjGroupProxyType makeCollectiveImpl(HolderBasePtrType b, ObjTypeIdxType idx);
 
@@ -153,6 +159,8 @@ private:
   std::unordered_map<ObjGroupProxyType,DispatchBasePtrType> dispatch_;
   // Type-erased pointers to the objects held on this node
   std::unordered_map<ObjGroupProxyType,HolderBasePtrType> objs_;
+  // Work units to be scheduled
+  std::deque<ActionType> work_units_;
 };
 
 }} /* end namespace vt::objgroup */

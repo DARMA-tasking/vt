@@ -162,13 +162,20 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
   auto const num_nodes = theContext()->getNumNodes();
+  auto const this_node = theContext()->getNode();
   vtAssert(dest_node < num_nodes, "Invalid node (must be < num_nodes)");
   debug_print(
     objgroup, node,
     "ObjGroupManager::send: proxy={:x}, node={}, ctrl={:x}, han={:x}\n",
     proxy_bits, dest_node, ctrl, han
   );
-  theMsg()->sendMsgAuto<MsgT>(dest_node,han,msg.get(),no_tag);
+  if (dest_node != this_node) {
+    theMsg()->sendMsgAuto<MsgT>(dest_node,han,msg.get(),no_tag);
+  } else {
+    // Schedule the work of dispatching the message handler for later
+    auto umsg = msg.template to<ShortMessage>();
+    work_units_.push_back([umsg,han]{ theObjGroup()->dispatch(umsg,han); });
+  }
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
@@ -182,6 +189,9 @@ void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
     proxy_bits, ctrl, han
   );
   theMsg()->broadcastMsgAuto<MsgT>(han,msg.get(),no_tag);
+  // Schedule delivery on this node for the objgroup
+  auto umsg = msg.template to<ShortMessage>();
+  work_units_.push_back([umsg,han]{ theObjGroup()->dispatch(umsg,han); });
 }
 
 template <typename ObjT>
