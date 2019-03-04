@@ -263,7 +263,7 @@ EventType ActiveMessenger::sendMsgSized(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "sendMsgSized: dest={}, handler={}, is_bcast={}, is_put={}\n",
+      "sendMsgSized: dest={}, handler={:x}, is_bcast={}, is_put={}\n",
       dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
       print_bool(envelopeIsPut(msg->env))
     );
@@ -540,11 +540,10 @@ bool ActiveMessenger::deliverActiveMsg(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "deliverActiveMsg: msg={}, handler={}, tag={}, is_auto={}, "
-      "is_functor={}, has_handler={}, insert={}\n",
-      print_ptr(msg), handler, tag, print_bool(is_auto),
-      print_bool(is_functor), print_bool(has_handler),
-      print_bool(insert)
+      "deliverActiveMsg: msg={}, handler={:x}, tag={}, is_auto={}, "
+      "is_functor={}, is_obj_group={}, has_handler={}, insert={}\n",
+      print_ptr(msg), handler, tag, is_auto, is_functor, is_obj,
+      has_handler, insert
     );
   }
 
