@@ -123,8 +123,8 @@ struct ColMsg : CollectionMessage<MyCol> {
   ColMsg() = default;
 
   ColMsg(NodeType const& in_from_node)
-    : CollectionMessage<MyCol>(), \
-      from_node(in_from_node) {}
+    : from_node(in_from_node)
+  {}
 };
 
 template <int expected, bool check = true>
