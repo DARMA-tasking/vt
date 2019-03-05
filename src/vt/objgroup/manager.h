@@ -59,6 +59,7 @@
 #include <functional>
 #include <unordered_map>
 #include <deque>
+#include <vector>
 
 namespace vt { namespace objgroup {
 
@@ -73,6 +74,7 @@ struct ObjGroupManager {
   using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
   using DispatchBaseType    = dispatch::DispatchBase;
   using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
+  using MsgContainerType    = std::vector<MsgSharedPtr<ShortMessage>>;
 
   ObjGroupManager() = default;
 
@@ -162,6 +164,8 @@ private:
   std::unordered_map<ObjGroupProxyType,HolderBasePtrType> objs_;
   // Work units to be scheduled
   std::deque<ActionType> work_units_;
+  // Messages that are pending creation for delivery
+  std::unordered_map<ObjGroupProxyType,MsgContainerType> pending_;
 };
 
 }} /* end namespace vt::objgroup */
