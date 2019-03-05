@@ -77,11 +77,13 @@ struct ReduceMsg : ::vt::Message, ReduceLink {
   TagType reduce_tag_ = no_tag;
   EpochType reduce_epoch_ = no_epoch;
   VirtualProxyType reduce_proxy_ = no_vrt_proxy;
+  ObjGroupProxyType reduce_objgroup_ = no_obj_group;
   HandlerType combine_handler_ = uninitialized_handler;
 
   template <typename SerializerT>
   void invokeSerialize(SerializerT& s) {
     s | reduce_root_ | reduce_tag_ | reduce_epoch_ | reduce_proxy_;
+    s | reduce_objgroup_;
     s | combine_handler_;
   }
 };

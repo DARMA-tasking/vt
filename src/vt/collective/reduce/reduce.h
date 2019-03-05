@@ -74,14 +74,15 @@ struct Reduce : virtual collective::tree::Tree {
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   EpochType reduce(
-    NodeType const& root, MessageT* const msg, TagType const& tag = no_tag,
-    EpochType const& epoch = no_epoch, ReduceNumType const& num_contrib = 1,
-    VirtualProxyType const& proxy = no_vrt_proxy
+    NodeType root, MessageT* const msg, TagType tag = no_tag,
+    EpochType epoch = no_epoch, ReduceNumType num_contrib = 1,
+    VirtualProxyType proxy = no_vrt_proxy,
+    ObjGroupProxyType obj_group = no_obj_group
   );
 
   template <typename MessageT>
   void reduceAddMsg(
-    MessageT* msg, bool const local, ReduceNumType const& num_contrib = -1
+    MessageT* msg, bool const local, ReduceNumType num_contrib = -1
   );
 
   template <typename MessageT>
@@ -93,8 +94,8 @@ struct Reduce : virtual collective::tree::Tree {
    */
   template <typename MessageT>
   void startReduce(
-    TagType const& tag, EpochType const& epoch, VirtualProxyType const& proxy,
-    bool use_num_contrib = true
+    TagType tag, EpochType epoch, VirtualProxyType proxy,
+    ObjGroupProxyType objgroup, bool use_num_contrib = true
   );
 
   template <typename MessageT>

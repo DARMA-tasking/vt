@@ -51,8 +51,10 @@
 
 namespace vt { namespace collective { namespace reduce {
 
-using ReduceIdentifierType = std::tuple<TagType,EpochType,VirtualProxyType>;
-using ReduceEpochLookupType = std::tuple<VirtualProxyType,TagType>;
+using ReduceIdentifierType =
+  std::tuple<TagType,EpochType,VirtualProxyType,ObjGroupProxyType>;
+using ReduceEpochLookupType =
+  std::tuple<VirtualProxyType,TagType,ObjGroupProxyType>;
 
 }}} /* end namespace vt::collective::reduce */
 
@@ -67,7 +69,8 @@ struct hash<ReduceIDType> {
     auto const& combined =
       std::hash<vt::TagType>()(std::get<0>(in)) ^
       std::hash<vt::EpochType>()(std::get<1>(in)) ^
-      std::hash<vt::VirtualProxyType>()(std::get<2>(in));
+      std::hash<vt::VirtualProxyType>()(std::get<2>(in)) ^
+      std::hash<vt::ObjGroupProxyType>()(std::get<3>(in));
     return combined;
   }
 };
@@ -77,7 +80,8 @@ struct hash<ReduceLookupType> {
   size_t operator()(ReduceLookupType const& in) const {
     auto const& combined =
       std::hash<vt::VirtualProxyType>()(std::get<0>(in)) ^
-      std::hash<vt::TagType>()(std::get<1>(in));
+      std::hash<vt::TagType>()(std::get<1>(in)) ^
+      std::hash<vt::ObjGroupProxyType>()(std::get<2>(in));
     return combined;
   }
 };
