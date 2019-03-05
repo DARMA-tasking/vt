@@ -127,9 +127,8 @@ struct ColMsg : CollectionMessage<MyCol> {
       from_node(in_from_node) {}
 };
 
-template <int size>
+template <int expected, bool check = true>
 void reducePlus(MyReduceMsg* msg) {
-  vtAssertExpr(size > 0);
   debug_print(
     reduce, node,
     "reducePlus: cur={}: is_root={}, count={}, next={}, num={}\n",
@@ -138,12 +137,11 @@ void reducePlus(MyReduceMsg* msg) {
   );
 
   if (msg->isRoot()) {
-    debug_print(reduce, node, "reducePlus: final num={}\n", msg->num);
-
-    // check expected result w.r.t size
-    auto const value = msg->num;
-    EXPECT_EQ(value, size * (size - 1) / 2);
-
+    int const value = msg->num;
+    debug_print(reduce, node, "reducePlus: final num={}\n", value);
+    if (check) {
+      EXPECT_EQ(value, expected);
+    }
   } else {
     auto fst_msg = msg;
     auto cur_msg = msg->getNext<MyReduceMsg>();
