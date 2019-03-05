@@ -153,6 +153,16 @@ void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
     std::forward_as_tuple(proxy),
     std::forward_as_tuple(std::move(b))
   );
+  auto pending_iter = pending_.find(proxy);
+  if (pending_iter != pending_.end()) {
+    for (auto&& msg : pending_iter->second) {
+      work_units_.push_back([msg]{
+        auto const handler = envelopeGetHandler(msg->env);
+        theObjGroup()->dispatch(msg,handler);
+      });
+    }
+    pending_.erase(pending_iter);
+  }
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>

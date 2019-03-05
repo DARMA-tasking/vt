@@ -63,8 +63,11 @@ void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) 
   auto const node = 0;
   auto const proxy = proxy::ObjGroupProxy::create(ctrl,type_idx,node,true);
   auto dispatch_iter = dispatch_.find(proxy);
-  vtAssertExpr(dispatch_iter != dispatch_.end());
-  dispatch_iter->second->run(han,msg);
+  if (dispatch_iter == dispatch_.end()) {
+    pending_[proxy].push_back(msg);
+  } else {
+    dispatch_iter->second->run(han,msg);
+  }
 }
 
 ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
