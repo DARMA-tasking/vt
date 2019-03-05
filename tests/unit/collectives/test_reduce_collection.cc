@@ -46,97 +46,42 @@
 
 namespace vt { namespace tests { namespace unit {
 
-using namespace vt;
-using namespace vt::collective;
-using namespace vt::tests::unit;
-using namespace vt::tests::unit::reduce;
+struct TestReduceCollection : TestParallelHarnessParam<int> {};
 
-struct TestReduceCollection : TestParallelHarness {};
+TEST_P(TestReduceCollection, test_reduce_op) {
+  using namespace reduce;
 
-TEST_F(TestReduceCollection, test_reduce_op) {
   auto const my_node = theContext()->getNode();
   auto const root = 0;
 
   if (my_node == root) {
-    auto const& range = Index1D(collect_size);
+    auto reduce_case = GetParam();
+    auto size = (reduce_case == 5 ? collect_size * 4 : collect_size);
+    auto const& range = Index1D(size);
     auto proxy = theCollection()->construct<MyCol>(range);
     auto msg = new ColMsg(my_node);
-    proxy.broadcast<ColMsg,colHanBasic>(msg);
+
+    switch (reduce_case) {
+      case 0: proxy.broadcast<ColMsg, colHanBasic>(msg); break;
+      case 1: proxy.broadcast<ColMsg, colHanVec>(msg); break;
+      case 2: proxy.broadcast<ColMsg, colHanVecProxy>(msg); break;
+      case 3: proxy.broadcast<ColMsg, colHanVecProxyCB>(msg); break;
+      #if ENABLE_REDUCE_EXPR
+        case 4: proxy.broadcast<ColMsg, colHanPartial>(msg); break;
+        case 5: proxy.broadcast<ColMsg, colHanPartialMulti>(msg); break;
+        case 6: proxy.broadcast<ColMsg, colHanPartialProxy>(msg); break;
+      #endif
+      default: vtAbort("Failure: should not be reached");
+    }
   }
 }
 
-TEST_F(TestReduceCollection, test_reduce_vec_op) {
-  auto const my_node = theContext()->getNode();
-  auto const root = 0;
-
-  if (my_node == root) {
-    auto const& range = Index1D(collect_size);
-    auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(my_node);
-    proxy.broadcast<ColMsg,colHanVec>(msg);
-  }
-}
-
-TEST_F(TestReduceCollection, test_reduce_vec_proxy_op) {
-  auto const my_node = theContext()->getNode();
-  auto const root = 0;
-
-  if (my_node == root) {
-    auto const& range = Index1D(collect_size);
-    auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(my_node);
-    proxy.broadcast<ColMsg,colHanVecProxy>(msg);
-  }
-}
-
-TEST_F(TestReduceCollection, test_reduce_vec_proxy_callback_op) {
-  auto const my_node = theContext()->getNode();
-  auto const root = 0;
-
-  if (my_node == root) {
-    auto const& range = Index1D(collect_size);
-    auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(my_node);
-    proxy.broadcast<ColMsg,colHanVecProxyCB>(msg);
-  }
-}
-
-#if ENABLE_REDUCE_EXPR
-TEST_F(TestReduceCollection, test_reduce_partial_op) {
-  auto const my_node = theContext()->getNode();
-  auto const root = 0;
-
-  if (my_node == root) {
-    auto const& range = Index1D(collect_size);
-    auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(my_node);
-    proxy.broadcast<ColMsg,colHanPartial>(msg);
-  }
-}
-
-TEST_F(TestReduceCollection, test_reduce_partial_proxy_op) {
-  auto const my_node = theContext()->getNode();
-  auto const root = 0;
-
-  if (my_node == root) {
-    auto const& range = Index1D(collect_size);
-    auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(my_node);
-    proxy.broadcast<ColMsg,colHanPartialProxy>(msg);
-  }
-}
-
-TEST_F(TestReduceCollection, test_reduce_partial_multi_op) {
-  auto const my_node = theContext()->getNode();
-  auto const root = 0;
-
-  if (my_node == root) {
-    auto const& range = Index1D(collect_size * 4);
-    auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = new ColMsg(my_node);
-    proxy.broadcast<ColMsg,colHanPartialMulti>(msg);
-  }
-}
-#endif
+INSTANTIATE_TEST_CASE_P(
+  #if ENABLE_REDUCE_EXPR
+    InstantiationName, TestReduceCollection, ::testing::Range(0, 7)
+  #else
+    InstantiationName, TestReduceCollection, ::testing::Range(0, 4)
+  #endif
+);
 
 }}} // end namespace vt::tests::unit
