@@ -65,36 +65,49 @@ void Sendable<ColT,IndexT,BaseProxyT>::serialize(SerializerT& s) {
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-template <
-  typename MsgT,
-  ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
->
+template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
 void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
-  /*
-   * @todo:
-   *.  Directly reuse this proxy: static_cast<VrtElmProxy<IndexT>*>(this)
-   */
   return theCollection()->sendMsg<MsgT, f>(proxy, msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-template <
-  typename MsgT,
-  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
->
+template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
+void Sendable<ColT,IndexT,BaseProxyT>::send(MsgSharedPtr<MsgT> msg) const {
+  return send<MsgT,f>(msg.get());
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f, typename... Args>
+void Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) const {
+  return send<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
 void Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
-  /*
-   * @todo:
-   *.  Directly reuse this proxy: static_cast<VrtElmProxy<IndexT>*>(this)
-   */
   return theCollection()->sendMsg<MsgT, f>(proxy, msg);
 }
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+void Sendable<ColT,IndexT,BaseProxyT>::send(MsgSharedPtr<MsgT> msg) const {
+  return send<MsgT,f>(msg.get());
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
+>
+void Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) const {
+  return send<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
 
 }}} /* end namespace vt::vrt::collection */
 

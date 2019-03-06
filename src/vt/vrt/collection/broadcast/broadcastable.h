@@ -49,6 +49,7 @@
 #include "vt/vrt/proxy/base_collection_proxy.h"
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/collection/active/active_funcs.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -60,17 +61,23 @@ struct Broadcastable : BaseProxyT {
   Broadcastable(VirtualProxyType const in_proxy);
   Broadcastable& operator=(Broadcastable const&) = default;
 
-  template <
-    typename MsgT,
-    ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
-  >
+  template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
   void broadcast(MsgT* msg) const;
+  template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
+  void broadcast(MsgSharedPtr<MsgT> msg) const;
+  template <
+    typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
+  >
+  void broadcast(Args&&... args) const;
 
-  template <
-    typename MsgT,
-    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
-  >
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
   void broadcast(MsgT* msg) const;
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+  void broadcast(MsgSharedPtr<MsgT> msg) const;
+  template <
+    typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
+  >
+  void broadcast(Args&&... args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

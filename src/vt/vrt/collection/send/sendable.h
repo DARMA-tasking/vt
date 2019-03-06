@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/active/active_funcs.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -61,17 +62,21 @@ struct Sendable : BaseProxyT {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  template <
-    typename MsgT,
-    ActiveColTypedFnType<MsgT, typename MsgT::CollectionType> *f
-  >
+  template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
   void send(MsgT* msg) const;
+  template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
+  void send(MsgSharedPtr<MsgT> msg) const;
+  template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f, typename... Args>
+  void send(Args&&... args) const;
 
-  template <
-    typename MsgT,
-    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
-  >
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
   void send(MsgT* msg) const;
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  void send(MsgSharedPtr<MsgT> msg) const;
+  template <
+    typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
+  >
+  void send(Args&&... args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

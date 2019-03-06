@@ -66,6 +66,11 @@ MsgSharedPtr<MsgT> makeMessage(Args&&... args) {
   return promoteMsgOwner<MsgT>(msg);
 }
 
+template <typename MsgT, typename... Args>
+MsgSharedPtr<MsgT> makeMsg(Args&&... args) {
+  return makeMessage<MsgT>(std::forward<Args>(args)...);
+}
+
 template <typename MessageT, typename... Args>
 MessageT* makeSharedMessageSz(std::size_t size, Args&&... args) {
   MessageT* msg = new (size) MessageT{std::forward<Args>(args)...};
