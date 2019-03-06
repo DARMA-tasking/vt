@@ -92,6 +92,15 @@ struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
   double additional_data_[50];
 };
 
+struct SerialMsg : ShortMsg {
+
+  SerialMsg(int in_entity, vt::NodeType in_from)
+    : ShortMsg(in_entity, in_from)
+  {
+    setSerialize(true);
+  }
+};
+
 template <typename MsgT>
 void routeTestHandler(EntityMsg* msg) {
 
@@ -134,8 +143,6 @@ void verifyCacheConsistency(
   int const entity, vt::NodeType const my_node,
   vt::NodeType const home, vt::NodeType const new_home, int const nb_rounds
 ) {
-  // the protocol is defined as eager for short and unserialized messages
-  bool const is_eager = std::is_same<MsgT,ShortMsg>::value;
 
   for (int iter = 0; iter < nb_rounds; ++iter) {
     // create an epoch for the current round, and
@@ -144,16 +151,25 @@ void verifyCacheConsistency(
     // correctly delivered before.
     auto epoch = vt::theTerm()->makeEpochCollective();
 
+    // create an entity message to route
+    auto msg = vt::makeMessage<MsgT>(entity, my_node);
+    // check if should be serialized or not
+    bool serialize = msg->getSerialize();
+
     vt::theTerm()->addAction(epoch, [=]{
       if (my_node not_eq home) {
+
+        // check the routing protocol to be used by the manager.
+        bool is_eager = theLocMan()->virtual_loc->useEagerProtocol(msg);
+
         // check for cache updates
         bool is_entity_cached = isCached(entity);
 
         debug_print(
           location, node,
           "verifyCacheConsistency: iter={}, entityID={}, home={}, bytes={}, "
-          "in cache={}\n",
-          iter, entity, my_node, sizeof(MsgT), is_entity_cached
+          "in cache={}, serialize={}\n",
+          iter, entity, msg->from_, sizeof(*msg), is_entity_cached, serialize
         );
 
         if (not is_eager) {
@@ -177,8 +193,7 @@ void verifyCacheConsistency(
 
     if (my_node not_eq home) {
       // route entity message
-      auto msg = vt::makeMessage<MsgT>(entity, my_node);
-      vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg);
+      vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg, serialize);
     }
     // wait for all ranks and finish the epoch
     vt::theCollective()->barrier();
@@ -187,7 +202,7 @@ void verifyCacheConsistency(
 }
 
 // message types used for type-parameterized tests
-using MsgType = testing::Types<ShortMsg, LongMsg>;
+using MsgType = testing::Types<ShortMsg, LongMsg, SerialMsg>;
 
 }}}} // namespace vt::tests::unit::location
 
