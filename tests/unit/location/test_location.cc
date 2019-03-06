@@ -319,7 +319,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity){
   auto const entity    = location::arbitrary_entity;
   auto const home      = 0;
   auto const new_home  = 3;
-  auto const nb_rounds = 3;
+  auto const nb_rounds = 5;
   auto nb_received     = 0;
 
   // register entity
