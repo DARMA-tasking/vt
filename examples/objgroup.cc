@@ -49,11 +49,21 @@ struct MyMsg : vt::Message {
   int a = 0, b = 0;
 };
 
+struct MyObjGroup;
+
+objgroup::proxy::Proxy<MyObjGroup> proxy;
+
 struct MyObjGroup {
   void handler(MyMsg* msg) {
     auto node = vt::theContext()->getNode();
     fmt::print("{}: MyObjGroup::handler on a={}, b={}\n", node, msg->a, msg->b);
   }
+  void handler2(MyMsg* msg) {
+    auto node = vt::theContext()->getNode();
+    //auto proxy 
+  }
+private:
+  int data1 = 0, data2 = 0;
 };
 
 int main(int argc, char** argv) {
@@ -66,12 +76,13 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjGroup>();
+  proxy = vt::theObjGroup()->makeCollective<MyObjGroup>();
 
   if (this_node == 0) {
     proxy[0].send<MyMsg,&MyObjGroup::handler>(5,10);
     proxy[1].send<MyMsg,&MyObjGroup::handler>(10,20);
     proxy.broadcast<MyMsg,&MyObjGroup::handler>(400,500);
+    proxy.broadcast<MyMsg,&MyObjGroup::handler2>(400,500);
   }
 
   while (!vt::rt->isTerminated()) {

@@ -128,6 +128,15 @@ struct ObjGroupManager {
   void broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
   /*
+   * Reduce over an obj group
+   */
+
+  template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+  void reduce(
+    ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg, EpochType epoch, TagType tag
+  );
+
+  /*
    * Get access to the local instance of a particular object group
    */
 

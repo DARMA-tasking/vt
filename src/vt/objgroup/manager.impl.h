@@ -56,6 +56,7 @@
 #include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/objgroup/type_registry/registry.h"
 #include "vt/registry/auto/auto_registry.h"
+#include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
 
 #include <memory>
@@ -202,6 +203,18 @@ void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   // Schedule delivery on this node for the objgroup
   auto umsg = msg.template to<ShortMessage>();
   work_units_.push_back([umsg,han]{ theObjGroup()->dispatch(umsg,han); });
+}
+
+template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+void ObjGroupManager::reduce(
+  ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg, EpochType epoch, TagType tag
+) {
+  auto const root = 0;
+  auto const contrib = 1;
+  auto const objgroup = proxy.getProxy();
+  theCollective()->reduce<MsgT,f>(
+    root, msg.get(), tag, epoch, contrib, no_vrt_proxy, objgroup
+  );
 }
 
 template <typename ObjT>

@@ -51,6 +51,7 @@
 #include "vt/objgroup/proxy/proxy_objgroup_elm.h"
 #include "vt/objgroup/active_func/active_func.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -77,6 +78,26 @@ public:
   void broadcast(MsgSharedPtr<MsgT> msg) const;
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
   void broadcast(Args&&... args) const;
+
+  /*
+   * Reduce over the objgroup
+   */
+
+  template <typename OpT, typename MsgT>
+  EpochType reduce(
+    MsgSharedPtr<MsgT> msg, Callback<MsgT> cb, EpochType epoch = no_epoch,
+    TagType tag = no_tag
+  ) const;
+
+  template <typename OpT, typename FunctorT, typename MsgT>
+  EpochType reduce(
+    MsgSharedPtr<MsgT> msg, EpochType epoch = no_epoch, TagType tag = no_tag
+  ) const;
+
+  template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+  EpochType reduce(
+    MsgSharedPtr<MsgT> msg, EpochType epoch = no_epoch, TagType tag = no_tag
+  ) const;
 
   /*
    * Get the local pointer to this object group residing in the current node
