@@ -89,7 +89,7 @@ struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
 
   vt::NodeType from_ = vt::uninitialized_destination;
   int entity_ = invalid_entity;
-  double additional_data_[50];
+  char additional_data_[vt::location::small_msg_max_size];
 };
 
 struct SerialMsg : ShortMsg {
