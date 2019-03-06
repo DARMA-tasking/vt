@@ -65,6 +65,8 @@ using NoneOp = reduce::operators::None<T>;
 
 using NoneType = reduce::operators::NoneType;
 
+using None = NoneOp<NoneType>;
+
 }} /* end namespace vt::collective */
 
 #endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H*/

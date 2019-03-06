@@ -147,6 +147,8 @@ using ReduceArrMsg = reduce::operators::ReduceArrMsg<T,N>;
 template <typename T>
 using ReduceTMsg = reduce::operators::ReduceTMsg<T>;
 
+using ReduceNoneMsg = reduce::operators::ReduceTMsg<NoneType>;
+
 }} /* end namespace vt::collective */
 
 #endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H*/
