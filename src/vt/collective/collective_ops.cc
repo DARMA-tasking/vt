@@ -148,7 +148,7 @@ void CollectiveAnyOps<instance>::abort(
 template <RuntimeInstType instance>
 void CollectiveAnyOps<instance>::output(
   std::string const str, ErrorCodeType const code, bool error, bool decorate,
-  bool formatted
+  bool formatted, bool abort_out
 ) {
   auto tls_rt = curRT;
   auto rt = tls_rt ? tls_rt : ::vt::rt;
@@ -157,7 +157,7 @@ void CollectiveAnyOps<instance>::output(
   } else {
     ::fmt::print(str.c_str());
   }
-  if (error) {
+  if (error and abort_out) {
     vt::abort("Assertion Failed", 129);
   }
 }
@@ -175,9 +175,9 @@ void abort(std::string const str, ErrorCodeType const code) {
 
 void output(
   std::string const str, ErrorCodeType const code, bool error, bool decorate,
-  bool formatted
+  bool formatted, bool abort_out
 ) {
-  return CollectiveOps::output(str,code,error,decorate,formatted);
+  return CollectiveOps::output(str,code,error,decorate,formatted,abort_out);
 }
 
 } //end namespace vt

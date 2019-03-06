@@ -76,7 +76,8 @@ struct CollectiveAnyOps {
   static void abort(std::string const str = "", ErrorCodeType const code = 0);
   static void output(
     std::string const str = "", ErrorCodeType const code = 1,
-    bool error = false, bool decorate = true, bool formatted = false
+    bool error = false, bool decorate = true, bool formatted = false,
+    bool abort_out = false
   );
 
   static HandlerType registerHandler(ActiveClosureFnType fn);
@@ -88,7 +89,7 @@ using CollectiveOps = CollectiveAnyOps<collective_default_inst>;
 void abort(std::string const str = "", ErrorCodeType const code = 1);
 void output(
   std::string const str = "", ErrorCodeType const code = 1, bool error = false,
-  bool decorate = true
+  bool decorate = true, bool abort_out = false
 );
 
 } //end namespace vt

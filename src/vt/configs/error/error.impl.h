@@ -85,7 +85,7 @@ displayLoc(
 ) {
   auto msg = "vtAbort() Invoked";
   auto const inf = debug::stringizeMessage(msg,str,"",file,line,func,error);
-  return ::vt::output(inf,error,true,true,true);
+  return ::vt::output(inf,error,true,true,true,true);
 }
 
 template <typename... Args>
@@ -99,7 +99,7 @@ displayLoc(
   auto msg = "vtAbort() Invoked";
   std::string const buf = ::fmt::format(str,std::forward<Args>(args)...);
   auto const inf = debug::stringizeMessage(msg,buf,"",file,line,func,error);
-  return ::vt::output(inf,error,true,true,true);
+  return ::vt::output(inf,error,true,true,true,true);
 }
 
 }} /* end namespace vt::error */

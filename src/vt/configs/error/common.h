@@ -62,7 +62,9 @@ namespace vt {
 
 // Forward declare abort and output signatures, defined in collective ops
 void abort(std::string const str, ErrorCodeType const code);
-void output(std::string const str, ErrorCodeType const code, bool, bool, bool);
+void output(
+  std::string const str, ErrorCodeType const code, bool, bool, bool, bool
+);
 
 namespace debug {
 
