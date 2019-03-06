@@ -57,10 +57,16 @@
 #include "vt/collective/reduce/operators/functors/bit_and_op.h"
 #include "vt/collective/reduce/operators/functors/bit_or_op.h"
 #include "vt/collective/reduce/operators/functors/bit_xor_op.h"
+#include "vt/pipe/pipe_headers.h"
 
 #include <algorithm>
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
+
+template <typename T = void>
+struct ReduceCallback {
+  void operator()(T* t) const { /* do nothing */ }
+};
 
 template <typename T = void>
 struct ReduceCombine {
@@ -74,10 +80,24 @@ public:
   template <typename MsgT, typename Op, typename ActOp>
   static void msgHandler(MsgT* msg) {
     if (msg->isRoot()) {
-      ActOp()(msg);
+      auto cb = msg->getCallback();
+      debug_print(
+        reduce, node,
+        "ROOT: reduce root: valid={}, ptr={}\n", cb.valid(), print_ptr(msg)
+      );
+      if (cb.valid()) {
+        cb.template send<MsgT>(msg);
+      } else {
+        ActOp()(msg);
+      }
     } else {
       MsgT* fst_msg = msg;
       MsgT* cur_msg = msg->template getNext<MsgT>();
+      debug_print(
+        reduce, node,
+        "leaf: fst valid={}, ptr={}\n", fst_msg->getCallback().valid(),
+        print_ptr(fst_msg)
+      );
       while (cur_msg != nullptr) {
         ReduceCombine<>::combine<MsgT,Op,ActOp>(fst_msg, cur_msg);
         cur_msg = cur_msg->template getNext<MsgT>();

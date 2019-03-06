@@ -89,4 +89,6 @@ private:
 
 }}} /* end namespace vt::pipe::interface */
 
+#include "vt/pipe/interface/send_container.impl.h"
+
 #endif /*INCLUDED_PIPE_INTERFACE_SEND_CONTAINER_H*/

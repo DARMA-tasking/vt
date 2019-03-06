@@ -48,9 +48,9 @@
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/callback/anon/callback_anon.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/pipe/signal/signal.h"
 #include "vt/pipe/msg/callback.h"
-#include "vt/pipe/pipe_manager.h"
 #include "vt/messaging/active.h"
 #include "vt/messaging/envelope.h"
 #include "vt/context/context.h"
@@ -78,10 +78,10 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
     pid, pipe_node
   );
   if (this_node == pipe_node) {
-    theCB()->triggerPipe(pid);
+    triggerPipe(pid);
   } else {
     auto msg = makeSharedMessage<CallbackMsg>(pid);
-    theMsg()->sendMsg<CallbackMsg,PipeManager::triggerCallbackHan>(
+    theMsg()->sendMsg<CallbackMsg,triggerCallbackHan>(
       pipe_node, msg
     );
   }
@@ -100,7 +100,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
     pid, pipe_node
   );
   if (this_node == pipe_node) {
-    theCB()->triggerPipeTyped<T>(pid,data);
+    triggerPipeTyped<T>(pid,data);
   } else {
     /*
      * Set pipe type on the message envelope; use the group in the envelope in
@@ -108,7 +108,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
      */
     setPipeType(data->env);
     envelopeSetGroup(data->env,pid);
-    theMsg()->sendMsgAuto<T,PipeManager::triggerCallbackMsgHan>(pipe_node, data);
+    theMsg()->sendMsgAuto<T,triggerCallbackMsgHan>(pipe_node, data);
   }
 }
 

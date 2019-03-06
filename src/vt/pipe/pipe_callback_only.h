@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          none_op.h
+//                      pipe_callback_only.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,31 +42,10 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H
-#define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H
 
-#include "vt/config.h"
+#if !defined INCLUDED_VT_PIPE_PIPE_CALLBACK_ONLY_H
+#define INCLUDED_VT_PIPE_PIPE_CALLBACK_ONLY_H
 
-namespace vt { namespace collective { namespace reduce { namespace operators {
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
 
-using NoneType = char;
-
-template <typename T>
-struct None {
-  void operator()(T& v1, T const& v2) {}
-};
-
-}}}} /* end namespace vt::collective::reduce::operators */
-
-namespace vt { namespace collective {
-
-template <typename T>
-using NoneOp = reduce::operators::None<T>;
-
-using NoneType = reduce::operators::NoneType;
-
-using None = NoneOp<NoneType>;
-
-}} /* end namespace vt::collective */
-
-#endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_CALLBACK_ONLY_H*/

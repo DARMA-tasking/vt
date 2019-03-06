@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          none_op.h
+//                    callback_proxy_bcast.impl.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,31 +42,30 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H
-#define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_PROXY_BCAST_CALLBACK_PROXY_BCAST_IMPL_H
+#define INCLUDED_VT_PIPE_CALLBACK_PROXY_BCAST_CALLBACK_PROXY_BCAST_IMPL_H
 
 #include "vt/config.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.h"
+#include "vt/vrt/collection/manager.h"
 
-namespace vt { namespace collective { namespace reduce { namespace operators {
+namespace vt { namespace pipe { namespace callback {
 
-using NoneType = char;
+template <typename ColT, typename MsgT>
+template <typename SerializerT>
+void CallbackProxyBcast<ColT,MsgT>::serialize(SerializerT& s) {
+  CallbackBase<SignalBaseType>::serializer(s);
+  s | proxy_;
+  s | handler_;
+  s | member_;
+}
 
-template <typename T>
-struct None {
-  void operator()(T& v1, T const& v2) {}
-};
+template <typename ColT, typename MsgT>
+void CallbackProxyBcast<ColT,MsgT>::trigger_(SignalDataType* data) {
+  theCollection()->broadcastMsgWithHan(proxy_,data,handler_,member_,true);
+}
 
-}}}} /* end namespace vt::collective::reduce::operators */
+}}} /* end namespace vt::pipe::callback */
 
-namespace vt { namespace collective {
-
-template <typename T>
-using NoneOp = reduce::operators::None<T>;
-
-using NoneType = reduce::operators::NoneType;
-
-using None = NoneOp<NoneType>;
-
-}} /* end namespace vt::collective */
-
-#endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_PROXY_BCAST_CALLBACK_PROXY_BCAST_IMPL_H*/

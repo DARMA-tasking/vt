@@ -100,4 +100,6 @@ private:
 
 }}} /* end namespace vt::pipe::signal */
 
+#include "vt/pipe/signal/signal_holder.impl.h"
+
 #endif /*INCLUDED_PIPE_SIGNAL_SIGNAL_HOLDER_H*/

@@ -59,6 +59,9 @@ struct PipeManagerTL : virtual PipeManagerBase {
   template <typename ColT, typename MsgT>
   using ColHanType = vrt::collection::ActiveColTypedFnType<MsgT,ColT>;
 
+  template <typename ColT, typename MsgT>
+  using ColMemType = vrt::collection::ActiveColMemberTypedFnType<MsgT,ColT>;
+
   template <typename ColT>
   using ColProxyType = CollectionProxy<ColT,typename ColT::IndexType>;
 
@@ -122,9 +125,17 @@ struct PipeManagerTL : virtual PipeManagerBase {
   template <typename T, typename U, typename CbkT = DefType<T>>
   CbkT makeCallbackSingleAnon(U* u, FuncMsgCtxType<T, U> fn);
 
+  template <typename U, typename CbkT = DefType<V>>
+  CbkT makeCallbackSingleAnon(U* u, FuncCtxType<U> fn);
+
   // Single active message collection proxy send
   template <
     typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
+
+  template <
+    typename ColT, typename T, ColMemType<ColT,T> f, typename CbkT = DefType<T>
   >
   CbkT makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
 
@@ -137,6 +148,12 @@ struct PipeManagerTL : virtual PipeManagerBase {
   // Single active message collection proxy bcast direct
   template <
     typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy);
+
+  // Single active message collection proxy bcast direct (member)
+  template <
+    typename ColT, typename T, ColMemType<ColT,T> f, typename CbkT = DefType<T>
   >
   CbkT makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy);
 

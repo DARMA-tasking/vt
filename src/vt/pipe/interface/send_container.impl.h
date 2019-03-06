@@ -49,7 +49,7 @@
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/interface/send_container.h"
 #include "vt/pipe/id/pipe_id.h"
-#include "vt/pipe/pipe_manager.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 
 #include <tuple>
 #include <utility>
@@ -76,7 +76,7 @@ void SendContainer<DataT,Args...>::trigger(DataT data) {
   bool const& is_send_back = isSendBack();
   if (is_send_back) {
     auto const& pipe = this->getPipe();
-    theCB()->triggerSendBack<DataT>(pipe,data);
+    triggerSendBack<DataT>(pipe,data);
   } else {
     triggerDirect(data);
   }

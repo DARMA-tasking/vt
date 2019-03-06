@@ -649,14 +649,8 @@ void InfoColl::finalize() {
 
     auto const& root = 0;
     auto msg = makeSharedMessage<FinishedReduceMsg>(group_);
-    theCollective()->reduce<
-      FinishedReduceMsg,
-      FinishedReduceMsg::msgHandler<
-        FinishedReduceMsg,
-        collective::PlusOp<collective::NoneType>,
-        CollSetupFinished
-      >
-    >(root,msg);
+    using OpType = collective::PlusOp<collective::NoneType>;
+    theCollective()->reduce<OpType,CollSetupFinished>(root,msg);
   }
 }
 

@@ -46,10 +46,24 @@
 #define INCLUDED_PIPE_PIPE_MANAGER_FWD_H
 
 #include "vt/config.h"
+//#include "vt/pipe/msg/callback.h"
 
 namespace vt { namespace pipe {
 
 struct PipeManager;
+struct CallbackMsg;
+
+template <typename MsgT>
+void triggerSendBack(PipeType const& pipe, MsgT* data);
+template <typename MsgT>
+void triggerPipeTyped(PipeType const& pipe, MsgT* msg);
+template <typename MsgT>
+void triggerPipeUnknown(PipeType const& pipe, MsgT* msg);
+void triggerPipe(PipeType const& pipe);
+
+template <typename MsgT>
+void triggerCallbackMsgHan(MsgT* msg);
+void triggerCallbackHan(CallbackMsg* msg);
 
 }} /* end namespace vt::pipe */
 

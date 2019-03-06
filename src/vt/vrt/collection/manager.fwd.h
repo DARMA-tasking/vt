@@ -46,10 +46,14 @@
 #define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/dispatch/dispatch.h"
+#include "vt/vrt/collection/dispatch/registry.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 struct CollectionManager;
+
+DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
 
 }}} /* end namespace vt::vrt::collection */
 

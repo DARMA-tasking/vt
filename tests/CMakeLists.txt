@@ -19,6 +19,7 @@ set(
   mapping
   group
   serialization
+  pipe
   tls
   atomic
   memory

@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          none_op.h
+//                    test_reduce_collection.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,31 +42,48 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H
-#define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H
+#include "test_reduce_collection_handler.h"
 
-#include "vt/config.h"
+namespace vt { namespace tests { namespace unit {
 
-namespace vt { namespace collective { namespace reduce { namespace operators {
+struct TestReduceCollection : TestParallelHarnessParam<int> {};
 
-using NoneType = char;
+TEST_P(TestReduceCollection, test_reduce_op) {
+  using namespace reduce;
 
-template <typename T>
-struct None {
-  void operator()(T& v1, T const& v2) {}
-};
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
-}}}} /* end namespace vt::collective::reduce::operators */
+  if (my_node == root) {
+    auto reduce_case = GetParam();
+    auto size = (reduce_case == 5 ? collect_size * 4 : collect_size);
+    auto const& range = Index1D(size);
+    auto proxy = theCollection()->construct<MyCol>(range);
+    auto msg = makeSharedMessage<ColMsg>(my_node);
 
-namespace vt { namespace collective {
+    switch (reduce_case) {
+      case 0: proxy.broadcast<ColMsg, colHanBasic>(msg); break;
+      case 1: proxy.broadcast<ColMsg, colHanVec>(msg); break;
+      case 2: proxy.broadcast<ColMsg, colHanVecProxy>(msg); break;
+      case 3: proxy.broadcast<ColMsg, colHanVecProxyCB>(msg); break;
+      case 4: proxy.broadcast<ColMsg, colHanNoneCB>(msg); break;
 
-template <typename T>
-using NoneOp = reduce::operators::None<T>;
+      #if ENABLE_REDUCE_EXPR_CALLBACK
+        case 4: proxy.broadcast<ColMsg, colHanPartial>(msg); break;
+        case 5: proxy.broadcast<ColMsg, colHanPartialMulti>(msg); break;
+        case 6: proxy.broadcast<ColMsg, colHanPartialProxy>(msg); break;
+      #endif
+      default: vtAbort("Failure: should not be reached");
+    }
+  }
+}
 
-using NoneType = reduce::operators::NoneType;
+INSTANTIATE_TEST_CASE_P(
+  #if ENABLE_REDUCE_EXPR_CALLBACK
+    InstantiationName, TestReduceCollection, ::testing::Range(0, 7)
+  #else
+    InstantiationName, TestReduceCollection, ::testing::Range(0, 5)
+  #endif
+);
 
-using None = NoneOp<NoneType>;
-
-}} /* end namespace vt::collective */
-
-#endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_NONE_OP_H*/
+}}} // end namespace vt::tests::unit

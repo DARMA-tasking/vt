@@ -104,4 +104,6 @@ private:
 
 }}} /* end namespace vt::pipe::callback */
 
+#include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.impl.h"
+
 #endif /*INCLUDED_PIPE_CALLBACK_PROXY_SEND_CALLBACK_PROXY_SEND_TL_H*/

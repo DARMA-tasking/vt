@@ -79,6 +79,21 @@ struct Reduce : virtual collective::tree::Tree {
     VirtualProxyType const& proxy = no_vrt_proxy
   );
 
+  template <typename OpT, typename MsgT>
+  EpochType reduce(
+    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    TagType const& tag = no_tag, EpochType const& epoch = no_epoch,
+    ReduceNumType const& num_contrib = 1,
+    VirtualProxyType const& proxy = no_vrt_proxy
+  );
+
+  template <typename OpT, typename FunctorT, typename MsgT>
+  EpochType reduce(
+    NodeType const& root, MsgT* msg, TagType const& tag = no_tag,
+    EpochType const& epoch = no_epoch, ReduceNumType const& num_contrib = 1,
+    VirtualProxyType const& proxy = no_vrt_proxy
+  );
+
   template <typename MessageT>
   void reduceAddMsg(
     MessageT* msg, bool const local, ReduceNumType const& num_contrib = -1

@@ -74,4 +74,6 @@ public:
 
 }}} /* end namespace vt::pipe::callback */
 
+#include "vt/pipe/callback/anon/callback_anon_tl.impl.h"
+
 #endif /*INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_TL_H*/

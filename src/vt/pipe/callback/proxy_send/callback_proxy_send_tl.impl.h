@@ -50,7 +50,7 @@
 #include "vt/pipe/callback/callback_base_tl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.h"
 #include "vt/pipe/id/pipe_id.h"
-#include "vt/pipe/pipe_manager.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
 
@@ -71,7 +71,7 @@ void CallbackProxySendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     pipe, this_node
   );
   if (this_node == pipe_node) {
-    theCB()->triggerPipeTyped<MsgT>(pipe,msg);
+    triggerPipeTyped<MsgT>(pipe,msg);
   } else {
     /*
      * Set pipe type on the message envelope; use the group in the envelope in
@@ -79,7 +79,7 @@ void CallbackProxySendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
      */
     setPipeType(msg->env);
     envelopeSetGroup(msg->env,pipe);
-    theMsg()->sendMsg<MsgT,PipeManager::triggerCallbackMsgHan>(pipe_node,msg);
+    theMsg()->sendMsg<MsgT,triggerCallbackMsgHan>(pipe_node,msg);
   }
 }
 

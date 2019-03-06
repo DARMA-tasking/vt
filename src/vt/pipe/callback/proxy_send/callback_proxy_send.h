@@ -51,7 +51,7 @@
 #include "vt/pipe/callback/callback_base.h"
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/vrt/proxy/collection_elm_proxy.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/vrt/collection/proxy.h"
 
 #include <cassert>
 
@@ -68,36 +68,30 @@ struct CallbackProxySend : CallbackBase<signal::Signal<MsgT>> {
   using MessageType      = MsgT;
 
   CallbackProxySend(
-    HandlerType const& in_handler, IndexedProxyType const& in_proxy
+    HandlerType const& in_handler, IndexedProxyType const& in_proxy,
+    bool const& in_member
   ) : proxy_(in_proxy.getCollectionProxy()),
       idx_(in_proxy.getElementProxy().getIndex()),
-      handler_(in_handler)
+      handler_(in_handler), member_(in_member)
   { }
 
   CallbackProxySend(
     HandlerType const& in_handler, ProxyType const& in_proxy,
-    IndexType const& in_idx
-  ) : proxy_(in_proxy), idx_(in_idx), handler_(in_handler)
+    IndexType const& in_idx, bool const& in_member
+  ) : proxy_(in_proxy), idx_(in_idx), handler_(in_handler), member_(in_member)
   { }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    CallbackBase<SignalBaseType>::serializer(s);
-    s | proxy_ | idx_;
-    s | handler_;
-  }
+  void serialize(SerializerT& s);
 
 private:
-  void trigger_(SignalDataType* data) override {
-    theCollection()->sendMsgUntypedHandler(
-      proxy_[idx_],data,handler_,false,nullptr
-    );
-  }
+  void trigger_(SignalDataType* data) override;
 
 private:
   ProxyType proxy_     = {};
   IndexType idx_       = {};
   HandlerType handler_ = uninitialized_handler;
+  bool member_         = false;
 };
 
 }}} /* end namespace vt::pipe::callback */

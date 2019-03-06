@@ -103,4 +103,6 @@ private:
 
 }}} /* end namespace vt::pipe::interface */
 
+#include "vt/pipe/interface/remote_container_msg.impl.h"
+
 #endif /*INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_MSG_H*/

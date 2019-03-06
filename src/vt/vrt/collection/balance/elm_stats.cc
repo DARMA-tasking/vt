@@ -66,13 +66,27 @@ void ElementStats::stopTime() {
   auto const& stop_time = timing::Timing::getCurrentTime();
   auto const& total_time = stop_time - cur_time_;
   //vtAssert(cur_time_started_, "Must have started time");
-  cur_time_started_ = false;
-  addTime(total_time);
+  auto const started = cur_time_started_;
+  if (started) {
+    cur_time_started_ = false;
+    addTime(total_time);
+  }
 
   debug_print(
     vrt_coll, node,
-    "ElementStats: stopTime: time={}, total={}\n",
+    "ElementStats: stopTime: time={}, total={}, started={}\n",
     stop_time, total_time
+  );
+}
+
+void ElementStats::setModelWeight(TimeType const& time) {
+  cur_time_started_ = false;
+  addTime(time);
+
+  debug_print(
+    vrt_coll, node,
+    "ElementStats: setModelWeight: time={}, cur_load={}\n",
+    time, phase_timings_.at(cur_phase_)
   );
 }
 

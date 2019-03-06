@@ -69,6 +69,8 @@ struct PipeManagerBase {
   using FuncMsgType      = std::function<void(MsgT*)>;
   template <typename MsgT, typename ContextT>
   using FuncMsgCtxType   = std::function<void(MsgT*, ContextT*)>;
+  template <typename ContextT>
+  using FuncCtxType      = std::function<void(ContextT*)>;
   using FuncType         = std::function<void(void)>;
   using FuncVoidType     = std::function<void(void)>;
   using DispatchFuncType = PipeState::DispatchFuncType;
@@ -134,6 +136,14 @@ protected:
     RefType num_listeners, RefType num_reg_listeners,
     DispatchFuncType fn = nullptr
   );
+
+  friend void triggerPipe(PipeType const& pipe);
+
+  template <typename MsgT>
+  friend void triggerPipeTyped(PipeType const& pipe, MsgT* msg);
+
+  template <typename MsgT>
+  friend void triggerPipeUnknown(PipeType const& pipe, MsgT* msg);
 
 protected:
   PipeType makePipeID(bool const persist, bool const send_back);

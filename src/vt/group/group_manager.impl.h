@@ -68,7 +68,20 @@ template <typename T>
 GroupManager::waiting_cont_ = {};
 
 template <typename T>
+void GroupManager::pushCleanupAction() {
+  // Push the typeless cleanup actions
+  if (continuation_actions_t_<T>.size() == 0) {
+    cleanup_actions_.push_back([]{ continuation_actions_t_<T>.clear(); });
+  }
+  if (waiting_cont_<T>.size() == 0) {
+    cleanup_actions_.push_back([]{ waiting_cont_<T>.clear(); });
+  }
+}
+
+template <typename T>
 RemoteOperationIDType GroupManager::registerContinuationT(ActionTType<T> act) {
+  pushCleanupAction<T>();
+
   RemoteOperationIDType next_id = cur_id_++;
   continuation_actions_t_<T>.emplace(
     std::piecewise_construct,
@@ -93,6 +106,8 @@ void GroupManager::registerContinuationT(
     verbose, group, node,
     "GroupManager::registerContinuationT: op={:x}\n", op
   );
+
+  pushCleanupAction<T>();
 
   continuation_actions_t_<T>[op].push_back(action);
   auto iter = waiting_cont_<T>.find(op);

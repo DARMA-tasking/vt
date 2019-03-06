@@ -47,15 +47,13 @@
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/pipe/callback/callback_base_tl.h"
 #include "vt/pipe/callback/anon/callback_anon_tl.h"
 #include "vt/pipe/id/pipe_id.h"
 #include "vt/pipe/msg/callback.h"
-#include "vt/pipe/pipe_manager.h"
-#include "vt/activefn/activefn.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -72,7 +70,7 @@ void CallbackAnonTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     pipe, this_node
   );
   if (this_node == pipe_node) {
-    theCB()->triggerPipeTyped<MsgT>(pipe,msg);
+    triggerPipeTyped<MsgT>(pipe,msg);
   } else {
     /*
      * Set pipe type on the message envelope; use the group in the envelope in
@@ -80,9 +78,7 @@ void CallbackAnonTypeless::trigger(MsgT* msg, PipeType const& pipe) {
      */
     setPipeType(msg->env);
     envelopeSetGroup(msg->env,pipe);
-    theMsg()->sendMsgAuto<MsgT,PipeManager::triggerCallbackMsgHan>(
-      pipe_node,msg
-    );
+    theMsg()->sendMsgAuto<MsgT,triggerCallbackMsgHan>(pipe_node,msg);
   }
 }
 

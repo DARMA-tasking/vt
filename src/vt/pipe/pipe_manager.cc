@@ -45,6 +45,7 @@
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/pipe_manager.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/group/group_common.h"
 #include "vt/group/group_manager.h"
 
@@ -58,6 +59,15 @@ PipeManager::PipeManager() {
 
 Callback<PipeManager::Void> PipeManager::makeFunc(FuncVoidType fn) {
   return makeCallbackSingleAnonVoid<Callback<Void>>(fn);
+}
+
+// Functions pulled out of PipeManager for header deps, forward to manager
+void triggerPipe(PipeType const& pipe) {
+  return theCB()->triggerPipe(pipe);
+}
+
+void triggerCallbackHan(CallbackMsg* msg) {
+  return PipeManager::triggerCallbackHan(msg);
 }
 
 }} /* end namespace vt::pipe */

@@ -48,7 +48,6 @@
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/callback/handler_send/callback_send.h"
-#include "vt/pipe/pipe_manager.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
 #include "vt/runnable/general.h"
