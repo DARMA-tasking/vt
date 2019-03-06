@@ -66,6 +66,7 @@ TEST_P(TestReduceCollection, test_reduce_op) {
       case 1: proxy.broadcast<ColMsg, colHanVec>(msg); break;
       case 2: proxy.broadcast<ColMsg, colHanVecProxy>(msg); break;
       case 3: proxy.broadcast<ColMsg, colHanVecProxyCB>(msg); break;
+      case 4: proxy.broadcast<ColMsg, colHanNoneCB>(msg); break;
 
       #if ENABLE_REDUCE_EXPR_CALLBACK
         case 4: proxy.broadcast<ColMsg, colHanPartial>(msg); break;
@@ -81,7 +82,7 @@ INSTANTIATE_TEST_CASE_P(
   #if ENABLE_REDUCE_EXPR_CALLBACK
     InstantiationName, TestReduceCollection, ::testing::Range(0, 7)
   #else
-    InstantiationName, TestReduceCollection, ::testing::Range(0, 4)
+    InstantiationName, TestReduceCollection, ::testing::Range(0, 5)
   #endif
 );
 

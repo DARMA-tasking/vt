@@ -131,6 +131,21 @@ void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
   proxy.reduce<vt::collective::PlusOp<VectorPayload>>(reduce_msg,cb);
 }
 
+void colHanNoneCB(ColMsg* msg, MyCol* col) {
+  auto const& idx = col->getIndex();
+  debug_print(
+    reduce, node,
+    "colHanNoneCB: received: ptr={}, idx={}, getIndex={}\n",
+    print_ptr(col), idx.x(), col->getIndex().x()
+  );
+
+  auto rmsg = vt::makeMessage<MyReduceNoneMsg>();
+  auto proxy = col->getCollectionProxy();
+  auto cb = vt::theCB()->makeSend<NoneReduce>(0);
+  vtAssertExpr(cb.valid());
+  proxy.reduce(rmsg.get(),cb);
+}
+
 // Using reduceExpr with callback is broken and has fundamental flaws.
 // These tests are disabled for now.
 #if ENABLE_REDUCE_EXPR_CALLBACK

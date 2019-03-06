@@ -63,6 +63,8 @@ struct MyReduceMsg : vt::collective::ReduceMsg {
   int num = 0;
 };
 
+struct MyReduceNoneMsg : vt::collective::ReduceNoneMsg { };
+
 struct VectorPayload {
   VectorPayload() = default;
 
@@ -102,6 +104,10 @@ struct CheckVec {
     debug_print(reduce, node, "final vec.size={}\n", size);
     EXPECT_EQ(size, reduce::collect_size * 2);
   }
+};
+
+struct NoneReduce {
+  void operator()(MyReduceNoneMsg* msg) { }
 };
 
 struct MyCol : Collection<MyCol, Index1D> {
