@@ -651,7 +651,7 @@ void InfoColl::finalize() {
     }
 
     auto const& root = 0;
-    TagType const reduce_tag = 0xFEEDFEED;
+    TagType const reduce_tag = collective::reduce::generateUniqueTag(group_);
     auto msg = makeSharedMessage<FinishedReduceMsg>(group_);
     using OpType = collective::PlusOp<collective::NoneType>;
     theCollective()->reduce<OpType,CollSetupFinished>(root,msg,reduce_tag);
