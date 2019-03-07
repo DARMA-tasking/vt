@@ -651,9 +651,10 @@ void InfoColl::finalize() {
     }
 
     auto const& root = 0;
+    TagType const reduce_tag = 0xFEEDFEED;
     auto msg = makeSharedMessage<FinishedReduceMsg>(group_);
     using OpType = collective::PlusOp<collective::NoneType>;
-    theCollective()->reduce<OpType,CollSetupFinished>(root,msg);
+    theCollective()->reduce<OpType,CollSetupFinished>(root,msg,reduce_tag);
   }
 }
 
