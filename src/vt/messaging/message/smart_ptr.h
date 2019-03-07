@@ -212,7 +212,7 @@ inline messaging::MsgSharedPtr<T> promoteMsgOwner(T* const msg) {
 template <typename T>
 inline messaging::MsgSharedPtr<T> promoteMsg(MsgSharedPtr<T> msg) {
   vtAssert(msg->has_owner_, "promoteMsg shared ptr must have owner");
-  return MsgSharedPtr<T>{messaging::MsgInitNonOwnerTag,msg};
+  return MsgSharedPtr<T>{messaging::MsgInitNonOwnerTag,msg.get()};
 }
 
 template <typename T>
