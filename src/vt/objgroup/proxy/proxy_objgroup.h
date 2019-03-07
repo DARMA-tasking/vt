@@ -51,6 +51,9 @@
 #include "vt/objgroup/proxy/proxy_objgroup_elm.h"
 #include "vt/objgroup/active_func/active_func.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/pipe/pipe_callback_only.h"
+#include "vt/collective/reduce/operators/functors/none_op.h"
+#include "vt/utils/static_checks/msg_ptr.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -77,6 +80,39 @@ public:
   void broadcast(MsgSharedPtr<MsgT> msg) const;
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
   void broadcast(Args&&... args) const;
+
+  /*
+   * Reduce over the objgroup
+   */
+
+  template <
+    typename OpT = collective::None,
+    typename MsgPtrT,
+    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
+  >
+  EpochType reduce(
+    MsgPtrT msg, Callback<MsgT> cb, EpochType epoch = no_epoch,
+    TagType tag = no_tag
+  ) const;
+
+  template <
+    typename OpT = collective::None,
+    typename FunctorT,
+    typename MsgPtrT,
+    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
+  >
+  EpochType reduce(
+    MsgPtrT msg, EpochType epoch = no_epoch, TagType tag = no_tag
+  ) const;
+
+  template <
+    typename MsgPtrT,
+    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
+    ActiveTypedFnType<MsgT> *f
+  >
+  EpochType reduce(
+    MsgPtrT msg, EpochType epoch = no_epoch, TagType tag = no_tag
+  ) const;
 
   /*
    * Get the local pointer to this object group residing in the current node

@@ -49,6 +49,9 @@
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/manager.h"
+#include "vt/collective/collective_alg.h"
+#include "vt/collective/reduce/operators/default_op.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -69,6 +72,42 @@ template <typename ObjT>
 template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
 void Proxy<ObjT>::broadcast(Args&&... args) const {
   return broadcast<MsgT,fn>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename ObjT>
+template <typename OpT, typename MsgPtrT, typename MsgT>
+EpochType Proxy<ObjT>::reduce(
+  MsgPtrT inmsg, Callback<MsgT> cb, EpochType epoch, TagType tag
+) const {
+  using CallbackType = collective::reduce::operators::ReduceCallback<MsgT>;
+  auto proxy = Proxy<ObjT>(*this);
+  auto msg = promoteMsg(inmsg);
+  msg->setCallback(cb);
+  return theObjGroup()->reduce<
+    ObjT, MsgT, MsgT::template msgHandler<MsgT, OpT, CallbackType>
+  >(proxy,msg,epoch,tag);
+}
+
+template <typename ObjT>
+template <typename OpT, typename FunctorT, typename MsgPtrT, typename MsgT>
+EpochType Proxy<ObjT>::reduce(
+  MsgPtrT inmsg, EpochType epoch, TagType tag
+) const {
+  auto proxy = Proxy<ObjT>(*this);
+  auto msg = promoteMsg(inmsg);
+  return theObjGroup()->reduce<
+    ObjT, MsgT, MsgT::template msgHandler<MsgT, OpT, FunctorT>
+  >(proxy,msg,epoch,tag);
+}
+
+template <typename ObjT>
+template <typename MsgPtrT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+EpochType Proxy<ObjT>::reduce(
+  MsgPtrT inmsg, EpochType epoch, TagType tag
+) const {
+  auto proxy = Proxy<ObjT>(*this);
+  auto msg = promoteMsg(inmsg);
+  return theObjGroup()->reduce<MsgT,f>(proxy,msg,epoch,tag);
 }
 
 template <typename ObjT>
