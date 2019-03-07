@@ -105,7 +105,8 @@ template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
 ObjGroupManager::makeCollectiveObj(ObjT* obj, HolderBasePtrType holder) {
   auto const obj_type_idx = registry::makeObjIdx<ObjT>();
-  auto const proxy = makeCollectiveImpl(std::move(holder),obj_type_idx);
+  auto const obj_ptr = reinterpret_cast<void*>(obj);
+  auto const proxy = makeCollectiveImpl(std::move(holder),obj_type_idx,obj_ptr);
   debug_print(
     objgroup, node,
     "makeCollectiveObj: obj_type_idx={}, proxy={:x}\n",
@@ -245,7 +246,16 @@ void ObjGroupManager::update(ProxyElmType<ObjT> proxy, Args&&... args) {
   vtAssert(iter != objs_.end(), "Obj must exist on this node");
   HolderBaseType* holder = iter->second.get();
   auto obj_holder = static_cast<holder::HolderObjBase<ObjT>*>(holder);
+
+  auto const cur_obj_ptr = obj_holder->get();
+  auto map_iter = obj_to_proxy_.find(cur_obj_ptr);
+  vtAssert(map_iter != obj_to_proxy_.end(), "Object pointer must exist in map");
+  obj_to_proxy_.erase(map_iter);
+
   obj_holder->reset(std::forward<Args>(args)...);
+
+  auto const new_obj_ptr = obj_holder->get();
+  obj_to_proxy_[new_obj_ptr] = proxy_bits;
 }
 
 template <typename ObjT, typename... Args>
@@ -253,6 +263,18 @@ void ObjGroupManager::update(ProxyType<ObjT> proxy, Args&&... args) {
   auto const this_node = theContext()->getNode();
   auto const elm_proxy = ProxyElmType<ObjT>(proxy.getProxy(),this_node);
   return update<ObjT>(elm_proxy,std::forward<Args>(args)...);
+}
+
+template <typename ObjT>
+typename ObjGroupManager::ProxyType<ObjT> ObjGroupManager::proxy(ObjT* obj) {
+  auto map_iter = obj_to_proxy_.find(obj);
+  vtAssert(map_iter != obj_to_proxy_.end(), "Object pointer does not exist");
+  return ProxyType<ObjT>(map_iter->second);
+}
+
+template <typename ObjT>
+typename ObjGroupManager::ProxyElmType<ObjT> ObjGroupManager::proxyElm(ObjT* obj) {
+  return proxy<ObjT>(obj).operator()(theContext()->getNode());
 }
 
 }} /* end namespace vt::objgroup */

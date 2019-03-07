@@ -146,6 +146,15 @@ struct ObjGroupManager {
   ObjT* get(ProxyElmType<ObjT> proxy);
 
   /*
+   * Get the proxy to an obj group from a pointer to the object
+   */
+
+  template <typename ObjT>
+  ProxyType<ObjT> proxy(ObjT* obj);
+  template <typename ObjT>
+  ProxyElmType<ObjT> proxyElm(ObjT* obj);
+
+  /*
    * Dispatch to a live obj group pointer with a handler
    */
   void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
@@ -156,7 +165,9 @@ struct ObjGroupManager {
   bool scheduler();
 
 private:
-  ObjGroupProxyType makeCollectiveImpl(HolderBasePtrType b, ObjTypeIdxType idx);
+  ObjGroupProxyType makeCollectiveImpl(
+    HolderBasePtrType b, ObjTypeIdxType idx, void* obj_ptr
+  );
 
   template <typename ObjT>
   ProxyType<ObjT> makeCollectiveObj(ObjT* obj, HolderBasePtrType base_holder);
@@ -171,6 +182,8 @@ private:
   std::unordered_map<ObjGroupProxyType,DispatchBasePtrType> dispatch_;
   // Type-erased pointers to the objects held on this node
   std::unordered_map<ObjGroupProxyType,HolderBasePtrType> objs_;
+  // Reverse lookup map from an object pointer to the proxy
+  std::unordered_map<void*,ObjGroupProxyType> obj_to_proxy_;
   // Work units to be scheduled
   std::deque<ActionType> work_units_;
   // Messages that are pending creation for delivery

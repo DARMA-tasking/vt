@@ -71,7 +71,7 @@ void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) 
 }
 
 ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
-  HolderBasePtrType base, ObjTypeIdxType idx
+  HolderBasePtrType base, ObjTypeIdxType idx, void* obj_ptr
 ) {
   auto iter = cur_obj_id_.find(idx);
   if (iter == cur_obj_id_.end()) {
@@ -83,6 +83,10 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
   auto const node = theContext()->getNode();
   auto const is_collective = true;
   auto const proxy = proxy::ObjGroupProxy::create(id, idx, node, is_collective);
+
+  vtAssertExpr(obj_to_proxy_.find(obj_ptr) == obj_to_proxy_.end());
+  obj_to_proxy_[obj_ptr] = proxy;
+
   auto obj_iter = objs_.find(proxy);
   vtAssert(obj_iter == objs_.end(), "Proxy must not exist in obj group map");
   objs_.emplace(
