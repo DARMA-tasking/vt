@@ -104,7 +104,7 @@ struct PipeManagerBase {
   void addListener(PipeType const& pipe, FuncMsgType<MsgT> fn);
   void addListenerVoid(PipeType const& pipe, FuncType fn);
 
-private:
+protected:
   template <typename MsgT, typename ListenerT>
   PipeType makeCallbackAny(
     bool const& persist, ListenerT&& fn, bool const& dispatch = false,
