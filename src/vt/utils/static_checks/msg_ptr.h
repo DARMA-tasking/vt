@@ -56,12 +56,15 @@ namespace vt { namespace util {
  */
 
 template <typename MsgT>
-struct MsgPtrType {
+struct MsgPtrType;
+
+template <typename MsgT>
+struct MsgPtrType<MsgSharedPtr<MsgT>> {
   using MsgType = MsgT;
 };
 
 template <typename MsgT>
-struct MsgPtrType<MsgSharedPtr<MsgT>> {
+struct MsgPtrType<MsgT*> {
   using MsgType = MsgT;
 };
 
