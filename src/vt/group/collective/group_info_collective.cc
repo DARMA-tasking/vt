@@ -651,10 +651,16 @@ void InfoColl::finalize() {
     }
 
     auto const& root = 0;
+    // use a specific tag and epoch to isolate the involved reduction
+    // from possible interference with other reductions.
     TagType const reduce_tag = collective::reduce::generateUniqueTag(group_);
+    EpochType const step_epoch = static_cast<EpochType>(group_);
+
     auto msg = makeSharedMessage<FinishedReduceMsg>(group_);
     using OpType = collective::PlusOp<collective::NoneType>;
-    theCollective()->reduce<OpType,CollSetupFinished>(root,msg,reduce_tag);
+    theCollective()->reduce<OpType,CollSetupFinished>(
+      root, msg, reduce_tag, step_epoch
+    );
   }
 }
 
