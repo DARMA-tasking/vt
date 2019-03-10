@@ -1104,7 +1104,7 @@ void RDMAManager::setupChannelWithRemote(
       han, dest, override_target, target
     );
 
-    auto cb = theCB()->makeFunc([=]{ action(); });
+    auto cb = theCB()->makeFunc(action);
     auto msg = makeMessage<ChannelMessage>(
       type, han, num_bytes, tag, cb, dest, override_target
     );
