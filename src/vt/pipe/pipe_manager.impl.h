@@ -117,6 +117,11 @@ Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
   return makeCallbackSingleProxySend<ColT,MsgT,f>(proxy);
 }
 
+template <typename ObjT, typename MsgT, PipeManager::ObjMemType<ObjT,MsgT> f>
+Callback<MsgT> PipeManager::makeSend(objgroup::proxy::ProxyElm<ObjT> proxy) {
+  return makeCallbackObjGrpSend<ObjT,MsgT,f>(proxy);
+}
+
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 Callback<MsgT> PipeManager::makeBcast() {
   return makeCallbackSingleBcast<MsgT,f>(true);
@@ -140,6 +145,11 @@ Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
 template <typename ColT, typename MsgT, PipeManager::ColMemType<ColT,MsgT> f>
 Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
   return makeCallbackSingleProxyBcastDirect<ColT,MsgT,f>(proxy);
+}
+
+template <typename ObjT, typename MsgT, PipeManager::ObjMemType<ObjT,MsgT> f>
+Callback<MsgT> PipeManager::makeBcast(objgroup::proxy::Proxy<ObjT> proxy) {
+  return makeCallbackObjGrpBcast<ObjT,MsgT,f>(proxy);
 }
 
 template <typename MsgT>

@@ -51,6 +51,13 @@
 
 namespace vt { namespace objgroup {
 
+void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+  // Schedule the work of dispatching the message handler for later
+  theObjGroup()->work_units_.push_back(
+    [msg,han]{ theObjGroup()->dispatch(msg,han); }
+  );
+}
+
 void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   auto base_func = auto_registry::getAutoHandlerObjGroup(han);
   // Extract the control-bit sequence from the handler

@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                           manager.fwd.h
+//                         manager.static.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,33 +42,37 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
-#define INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
+#if !defined INCLUDED_VT_OBJGROUP_MANAGER_STATIC_H
+#define INCLUDED_VT_OBJGROUP_MANAGER_STATIC_H
 
 #include "vt/config.h"
-#include "vt/messaging/message/smart_ptr.h"
+#include "vt/objgroup/common.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace objgroup {
 
-struct ObjGroupManager;
-
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
-bool scheduler();
+template <typename MsgT>
+void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const this_node = theContext()->getNode();
+  vtAssert(dest_node < num_nodes, "Invalid node (must be < num_nodes)");
+  if (dest_node != this_node) {
+    theMsg()->sendMsgAuto<MsgT>(dest_node,han,msg.get(),no_tag);
+  } else {
+    // Schedule the work of dispatching the message handler for later
+    auto umsg = msg.template to<ShortMessage>();
+    scheduleMsg(umsg,han);
+  }
+}
 
 template <typename MsgT>
-void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
-template <typename MsgT>
-void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
+  theMsg()->broadcastMsgAuto<MsgT>(han,msg.get(),no_tag);
+  // Schedule delivery on this node for the objgroup
+  auto umsg = msg.template to<ShortMessage>();
+  scheduleMsg(umsg,han);
+}
 
 }} /* end namespace vt::objgroup */
 
-namespace vt {
-
-extern objgroup::ObjGroupManager* theObjGroup();
-
-} // end namespace vt
-
-#include "vt/objgroup/manager.static.h"
-
-#endif /*INCLUDED_VT_OBJGROUP_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_OBJGROUP_MANAGER_STATIC_H*/

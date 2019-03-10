@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                           manager.fwd.h
+//                  callback_objgroup_bcast.impl.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,33 +42,28 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
-#define INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
+
+#if !defined INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_BCAST_CALLBACK_OBJGROUP_BCAST_IMPL_H
+#define INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_BCAST_CALLBACK_OBJGROUP_BCAST_IMPL_H
 
 #include "vt/config.h"
-#include "vt/messaging/message/smart_ptr.h"
+#include "vt/pipe/callback/objgroup_bcast/callback_objgroup_bcast.h"
+#include "vt/objgroup/manager.fwd.h"
 
-namespace vt { namespace objgroup {
+namespace vt { namespace pipe { namespace callback {
 
-struct ObjGroupManager;
-
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
-bool scheduler();
+template <typename SerializerT>
+void CallbackObjGroupBcast::serialize(SerializerT& s) {
+  CallbackBaseTL<CallbackObjGroupBcast>::serialize(s);
+  s | handler_ | objgroup_;
+}
 
 template <typename MsgT>
-void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
-template <typename MsgT>
-void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+void CallbackObjGroupBcast::trigger(MsgT* in_msg, PipeType const& pipe) {
+  auto msg = promoteMsg(in_msg);
+  objgroup::broadcast<MsgT>(msg,handler_);
+}
 
-}} /* end namespace vt::objgroup */
+}}} /* end namespace vt::pipe::callback */
 
-namespace vt {
-
-extern objgroup::ObjGroupManager* theObjGroup();
-
-} // end namespace vt
-
-#include "vt/objgroup/manager.static.h"
-
-#endif /*INCLUDED_VT_OBJGROUP_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_BCAST_CALLBACK_OBJGROUP_BCAST_IMPL_H*/

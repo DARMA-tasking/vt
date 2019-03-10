@@ -62,6 +62,8 @@ static struct RawSendColMsgTagType  { } RawSendColMsgTag  { };
 static struct RawBcastColMsgTagType { } RawBcastColMsgTag { };
 static struct RawSendColDirTagType  { } RawSendColDirTag  { };
 static struct RawBcastColDirTagType { } RawBcastColDirTag { };
+static struct RawSendObjGrpTagType  { } RawSendObjGrpTag  { };
+static struct RawBcastObjGrpTagType { } RawBcastObjGrpTag { };
 
 template <typename MsgT>
 struct CallbackTyped;
@@ -99,6 +101,14 @@ struct CallbackRawBaseSingle {
     RawSendColDirTagType, PipeType const& in_pipe,
     HandlerType const& in_handler, AutoHandlerType const& in_vrt_handler,
     void* index_bits
+  );
+  CallbackRawBaseSingle(
+    RawBcastObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+    ObjGroupProxyType in_proxy
+  );
+  CallbackRawBaseSingle(
+    RawSendObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+    ObjGroupProxyType in_proxy, NodeType in_node
   );
 
   template <typename MsgT>
@@ -180,6 +190,20 @@ struct CallbackTyped : CallbackRawBaseSingle {
     void* index_bits
   ) : CallbackRawBaseSingle(
         RawSendColDirTag,in_pipe,in_handler,in_vrt_handler,index_bits
+      )
+  { }
+  CallbackTyped(
+    RawBcastObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+    ObjGroupProxyType in_proxy
+  )  : CallbackRawBaseSingle(
+        RawBcastObjGrpTag,in_pipe,in_handler,in_proxy
+      )
+  { }
+  CallbackTyped(
+    RawSendObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+    ObjGroupProxyType in_proxy, NodeType in_node
+  )  : CallbackRawBaseSingle(
+        RawSendObjGrpTag,in_pipe,in_handler,in_proxy,in_node
       )
   { }
 

@@ -52,6 +52,9 @@
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/vrt/collection/proxy.h"
+#include "vt/objgroup/active_func/active_func.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/objgroup/proxy/proxy_objgroup_elm.h"
 
 namespace vt { namespace pipe {
 
@@ -61,6 +64,9 @@ struct PipeManagerTL : virtual PipeManagerBase {
 
   template <typename ColT, typename MsgT>
   using ColMemType = vrt::collection::ActiveColMemberTypedFnType<MsgT,ColT>;
+
+  template <typename ObjT, typename MsgT>
+  using ObjMemType = objgroup::ActiveObjType<MsgT,ObjT>;
 
   template <typename ColT>
   using ColProxyType = CollectionProxy<ColT,typename ColT::IndexType>;
@@ -138,6 +144,19 @@ struct PipeManagerTL : virtual PipeManagerBase {
     typename ColT, typename T, ColMemType<ColT,T> f, typename CbkT = DefType<T>
   >
   CbkT makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
+
+  // Obj group send callback
+  template <
+    typename ObjT, typename T, ObjMemType<ObjT,T> f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackObjGrpSend(objgroup::proxy::ProxyElm<ObjT> proxy);
+
+  // Obj group bcast callback
+  template <
+    typename ObjT, typename T, ObjMemType<ObjT,T> f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackObjGrpBcast(objgroup::proxy::Proxy<ObjT> proxy);
+
 
   // Single active message collection proxy bcast
   template <

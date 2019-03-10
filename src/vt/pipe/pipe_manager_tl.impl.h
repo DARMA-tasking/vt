@@ -57,11 +57,14 @@
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.h"
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast_tl.h"
+#include "vt/pipe/callback/objgroup_send/callback_objgroup_send.h"
+#include "vt/pipe/callback/objgroup_bcast/callback_objgroup_bcast.h"
 #include "vt/activefn/activefn.h"
 #include "vt/context/context.h"
 #include "vt/utils/static_checks/functor.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
 #include "vt/vrt/collection/dispatch/registry.h"
+#include "vt/objgroup/proxy/proxy_bits.h"
 
 #include <memory>
 
@@ -184,6 +187,48 @@ PipeManagerTL::makeCallbackSingleProxySend(typename ColT::ProxyType proxy) {
   );
   return cb;
 }
+
+template <
+  typename ObjT, typename MsgT, PipeManagerTL::ObjMemType<ObjT,MsgT> fn,
+  typename CallbackT
+>
+CallbackT
+PipeManagerTL::makeCallbackObjGrpSend(objgroup::proxy::ProxyElm<ObjT> proxy) {
+  bool const persist = true;
+  bool const send_back = false;
+  bool const dispatch = true;
+  auto const& pipe_id = makePipeID(persist,send_back);
+  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
+  auto const proxy_bits = proxy.getProxy();
+  auto const dest_node = proxy.getNode();
+  auto const ctrl = objgroup::proxy::ObjGroupProxy::getID(proxy_bits);
+  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
+  auto cb = CallbackT(
+    callback::cbunion::RawSendObjGrpTag,pipe_id,han,proxy_bits,dest_node
+  );
+  return cb;
+}
+
+template <
+  typename ObjT, typename MsgT, PipeManagerTL::ObjMemType<ObjT,MsgT> fn,
+  typename CallbackT
+>
+CallbackT
+PipeManagerTL::makeCallbackObjGrpBcast(objgroup::proxy::Proxy<ObjT> proxy) {
+  bool const persist = true;
+  bool const send_back = false;
+  bool const dispatch = true;
+  auto const& pipe_id = makePipeID(persist,send_back);
+  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
+  auto const proxy_bits = proxy.getProxy();
+  auto const ctrl = objgroup::proxy::ObjGroupProxy::getID(proxy_bits);
+  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
+  auto cb = CallbackT(
+    callback::cbunion::RawBcastObjGrpTag,pipe_id,han,proxy_bits
+  );
+  return cb;
+}
+
 
 // Single active message collection proxy bcast
 template <

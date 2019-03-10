@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                           manager.fwd.h
+//                    callback_objgroup_send.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,33 +42,47 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
-#define INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
+
+#if !defined INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_SEND_CALLBACK_OBJGROUP_SEND_H
+#define INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_SEND_CALLBACK_OBJGROUP_SEND_H
 
 #include "vt/config.h"
-#include "vt/messaging/message/smart_ptr.h"
+#include "vt/pipe/pipe_common.h"
+#include "vt/pipe/callback/callback_base_tl.h"
+#include "vt/registry/auto/auto_registry_common.h"
 
-namespace vt { namespace objgroup {
+namespace vt { namespace pipe { namespace callback {
 
-struct ObjGroupManager;
+struct CallbackObjGroupSend : CallbackBaseTL<CallbackObjGroupSend> {
+  CallbackObjGroupSend() = default;
+  CallbackObjGroupSend(
+    HandlerType in_han, ObjGroupProxyType in_objgroup, NodeType in_node
+  ) : handler_(in_han), objgroup_(in_objgroup), node_(in_node)
+  { }
 
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
-bool scheduler();
+  template <typename SerializerT>
+  void serialize(SerializerT& s);
 
-template <typename MsgT>
-void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
-template <typename MsgT>
-void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+  bool operator==(CallbackObjGroupSend const& other) const {
+    return other.handler_ == handler_ and other.objgroup_ == objgroup_;
+  }
 
-}} /* end namespace vt::objgroup */
+public:
+  template <typename MsgT>
+  void trigger(MsgT* msg, PipeType const& pipe);
 
-namespace vt {
+  void triggerVoid(PipeType const& pipe) {
+    vtAssert(0, "Must not be void");
+  }
 
-extern objgroup::ObjGroupManager* theObjGroup();
+private:
+  HandlerType handler_        = uninitialized_handler;
+  ObjGroupProxyType objgroup_ = no_obj_group;
+  NodeType node_              = uninitialized_destination;
+};
 
-} // end namespace vt
+}}} /* end namespace vt::pipe::callback */
 
-#include "vt/objgroup/manager.static.h"
+#include "vt/pipe/callback/objgroup_send/callback_objgroup_send.impl.h"
 
-#endif /*INCLUDED_VT_OBJGROUP_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_SEND_CALLBACK_OBJGROUP_SEND_H*/

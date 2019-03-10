@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                           manager.fwd.h
+//                   callback_objgroup_send.fwd.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,33 +42,15 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
-#define INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_SEND_CALLBACK_OBJGROUP_SEND_FWD_H
+#define INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_SEND_CALLBACK_OBJGROUP_SEND_FWD_H
 
 #include "vt/config.h"
-#include "vt/messaging/message/smart_ptr.h"
 
-namespace vt { namespace objgroup {
+namespace vt { namespace pipe { namespace callback {
 
-struct ObjGroupManager;
+struct CallbackObjGroupSend;
 
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
-bool scheduler();
+}}} /* end namespace vt::pipe::callback */
 
-template <typename MsgT>
-void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
-template <typename MsgT>
-void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han);
-
-}} /* end namespace vt::objgroup */
-
-namespace vt {
-
-extern objgroup::ObjGroupManager* theObjGroup();
-
-} // end namespace vt
-
-#include "vt/objgroup/manager.static.h"
-
-#endif /*INCLUDED_VT_OBJGROUP_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_SEND_CALLBACK_OBJGROUP_SEND_FWD_H*/

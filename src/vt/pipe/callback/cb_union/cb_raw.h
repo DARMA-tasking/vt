@@ -50,6 +50,8 @@
 #include "vt/pipe/callback/handler_bcast/callback_bcast_tl.h"
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast_tl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.h"
+#include "vt/pipe/callback/objgroup_bcast/callback_objgroup_bcast.h"
+#include "vt/pipe/callback/objgroup_send/callback_objgroup_send.h"
 #include "vt/pipe/callback/anon/callback_anon_tl.h"
 
 #include <cstdlib>
@@ -98,6 +100,20 @@ struct SendColDirCB : CallbackProxyBcastDirect {
   SendColDirCB() = default;
 };
 
+struct BcastObjGrpCB : CallbackObjGroupBcast {
+  BcastObjGrpCB() = default;
+  BcastObjGrpCB(HandlerType in_handler, ObjGroupProxyType in_proxy)
+    : CallbackObjGroupBcast(in_handler, in_proxy)
+  { }
+};
+
+struct SendObjGrpCB : CallbackObjGroupSend {
+  SendObjGrpCB() = default;
+  SendObjGrpCB(HandlerType in_handler, ObjGroupProxyType in_proxy, NodeType in_n)
+    : CallbackObjGroupSend(in_handler, in_proxy, in_n)
+  { }
+};
+
 union CallbackUnion {
 
   CallbackUnion() : anon_cb_(AnonCB{}) { }
@@ -105,13 +121,15 @@ union CallbackUnion {
   CallbackUnion(CallbackUnion&&) = default;
   CallbackUnion& operator=(CallbackUnion const&) = default;
 
-  explicit CallbackUnion(SendMsgCB const& in)     : send_msg_cb_(in)      { }
-  explicit CallbackUnion(BcastMsgCB const& in)    : bcast_msg_cb_(in)     { }
-  explicit CallbackUnion(SendColMsgCB const& in)  : send_col_msg_cb_(in)  { }
-  explicit CallbackUnion(BcastColMsgCB const& in) : bcast_col_msg_cb_(in) { }
-  explicit CallbackUnion(BcastColDirCB const& in) : bcast_col_dir_cb_(in) { }
-  explicit CallbackUnion(SendColDirCB const& in)  : send_col_dir_cb_(in)  { }
-  explicit CallbackUnion(AnonCB const& in)        : anon_cb_(in)          { }
+  explicit CallbackUnion(SendMsgCB const& in)       : send_msg_cb_(in)      { }
+  explicit CallbackUnion(BcastMsgCB const& in)      : bcast_msg_cb_(in)     { }
+  explicit CallbackUnion(SendColMsgCB const& in)    : send_col_msg_cb_(in)  { }
+  explicit CallbackUnion(BcastColMsgCB const& in)   : bcast_col_msg_cb_(in) { }
+  explicit CallbackUnion(BcastColDirCB const& in)   : bcast_col_dir_cb_(in) { }
+  explicit CallbackUnion(SendColDirCB const& in)    : send_col_dir_cb_(in)  { }
+  explicit CallbackUnion(AnonCB const& in)          : anon_cb_(in)          { }
+  explicit CallbackUnion(BcastObjGrpCB const& in)   : bcast_obj_cb_(in)     { }
+  explicit CallbackUnion(SendObjGrpCB const& in)    : send_obj_cb_(in)      { }
 
   AnonCB        anon_cb_;
   SendMsgCB     send_msg_cb_;
@@ -120,6 +138,8 @@ union CallbackUnion {
   BcastColMsgCB bcast_col_msg_cb_;
   BcastColDirCB bcast_col_dir_cb_;
   SendColDirCB  send_col_dir_cb_;
+  BcastObjGrpCB bcast_obj_cb_;
+  SendObjGrpCB  send_obj_cb_;
 };
 
 enum struct CallbackEnum : int8_t {
@@ -130,7 +150,9 @@ enum struct CallbackEnum : int8_t {
   BcastColMsgCB = 4,
   BcastColDirCB = 5,
   SendColDirCB  = 6,
-  AnonCB        = 7
+  AnonCB        = 7,
+  BcastObjGrpCB = 8,
+  SendObjGrpCB  = 9
 };
 
 struct GeneralCallback {
@@ -160,6 +182,12 @@ struct GeneralCallback {
   explicit GeneralCallback(SendColDirCB const& in)
     : u_(in), active_(CallbackEnum::SendColDirCB)
   { }
+  explicit GeneralCallback(BcastObjGrpCB const& in)
+    : u_(in), active_(CallbackEnum::BcastObjGrpCB)
+  { }
+  explicit GeneralCallback(SendObjGrpCB const& in)
+    : u_(in), active_(CallbackEnum::SendObjGrpCB)
+  { }
 
   bool operator==(GeneralCallback const& other) const {
     bool const same_active = other.active_ == active_;
@@ -177,6 +205,10 @@ struct GeneralCallback {
         return u_.bcast_col_msg_cb_ == other.u_.bcast_col_msg_cb_;
       case CallbackEnum::BcastColDirCB:
         return u_.bcast_col_dir_cb_ == other.u_.bcast_col_dir_cb_;
+      case CallbackEnum::BcastObjGrpCB:
+        return u_.bcast_obj_cb_ == other.u_.bcast_obj_cb_;
+      case CallbackEnum::SendObjGrpCB:
+        return u_.send_obj_cb_ == other.u_.send_obj_cb_;
       case CallbackEnum::NoCB: return true;
       default: return false;
       }
@@ -209,6 +241,12 @@ struct GeneralCallback {
       break;
     case CallbackEnum::BcastColDirCB:
       s | u_.bcast_col_dir_cb_;
+      break;
+    case CallbackEnum::BcastObjGrpCB:
+      s | u_.bcast_obj_cb_;
+      break;
+    case CallbackEnum::SendObjGrpCB:
+      s | u_.send_obj_cb_;
       break;
     case CallbackEnum::NoCB:
       // Serializing empty callback!

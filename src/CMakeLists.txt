@@ -36,6 +36,8 @@ set(
       pipe/callback/handler_bcast
       pipe/callback/proxy_send
       pipe/callback/proxy_bcast
+      pipe/callback/objgroup_send
+      pipe/callback/objgroup_bcast
       pipe/callback/anon
       pipe/callback/cb_union
     termination/dijkstra-scholten

@@ -123,7 +123,6 @@ struct ObjGroupManager {
 
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
-
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
@@ -164,6 +163,16 @@ struct ObjGroupManager {
    */
   bool scheduler();
 
+  /*
+   * Untyped calls for broadcasting or sending msgs to an obj group
+   */
+  template <typename MsgT>
+  void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
+  template <typename MsgT>
+  void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
+
+  friend void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+
 private:
   ObjGroupProxyType makeCollectiveImpl(
     HolderBasePtrType b, ObjTypeIdxType idx, void* obj_ptr
@@ -192,8 +201,8 @@ private:
 
 }} /* end namespace vt::objgroup */
 
-#include "vt/objgroup/manager.impl.h"
 #include "vt/objgroup/proxy/proxy_objgroup_elm.impl.h"
 #include "vt/objgroup/proxy/proxy_objgroup.impl.h"
+#include "vt/objgroup/manager.impl.h"
 
 #endif /*INCLUDED_VT_OBJGROUP_MANAGER_H*/

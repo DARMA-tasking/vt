@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                           manager.fwd.h
+//                        default_op.impl.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,33 +42,45 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
-#define INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
+#if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_IMPL_H
+#define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_IMPL_H
 
 #include "vt/config.h"
-#include "vt/messaging/message/smart_ptr.h"
+#include "vt/collective/reduce/operators/default_op.h"
+#include "vt/pipe/pipe_headers.h"
 
-namespace vt { namespace objgroup {
+namespace vt { namespace collective { namespace reduce { namespace operators {
 
-struct ObjGroupManager;
+template <typename T>
+template <typename MsgT, typename Op, typename ActOp>
+/*static*/ void ReduceCombine<T>::msgHandler(MsgT* msg) {
+  if (msg->isRoot()) {
+    auto cb = msg->getCallback();
+    debug_print(
 
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
-bool scheduler();
+      reduce, node,
+      "ROOT: reduce root: valid={}, ptr={}\n", cb.valid(), print_ptr(msg)
+    );
+    if (cb.valid()) {
+      cb.template send<MsgT>(msg);
+    } else {
+      ActOp()(msg);
+    }
+  } else {
+    MsgT* fst_msg = msg;
+    MsgT* cur_msg = msg->template getNext<MsgT>();
+    debug_print(
+      reduce, node,
+      "leaf: fst valid={}, ptr={}\n", fst_msg->getCallback().valid(),
+      print_ptr(fst_msg)
+    );
+    while (cur_msg != nullptr) {
+      ReduceCombine<>::combine<MsgT,Op,ActOp>(fst_msg, cur_msg);
+      cur_msg = cur_msg->template getNext<MsgT>();
+    }
+  }
+}
 
-template <typename MsgT>
-void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
-template <typename MsgT>
-void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+}}}} /* end namespace vt::collective::reduce::operators */
 
-}} /* end namespace vt::objgroup */
-
-namespace vt {
-
-extern objgroup::ObjGroupManager* theObjGroup();
-
-} // end namespace vt
-
-#include "vt/objgroup/manager.static.h"
-
-#endif /*INCLUDED_VT_OBJGROUP_MANAGER_FWD_H*/
+#endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_IMPL_H*/

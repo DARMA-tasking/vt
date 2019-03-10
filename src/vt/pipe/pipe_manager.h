@@ -56,6 +56,8 @@
 #include "vt/pipe/callback/anon/callback_anon.fwd.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
 #include "vt/activefn/activefn.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/objgroup/proxy/proxy_objgroup_elm.h"
 
 #include <unordered_map>
 #include <functional>
@@ -100,6 +102,8 @@ struct PipeManager : PipeManagerTL, PipeManagerTyped {
   Callback<MsgT> makeSend(typename ColT::ProxyType proxy);
   template <typename ColT, typename MsgT, ColMemType<ColT,MsgT> f>
   Callback<MsgT> makeSend(typename ColT::ProxyType proxy);
+  template <typename ObjT, typename MsgT, ObjMemType<ObjT,MsgT> f>
+  Callback<MsgT> makeSend(objgroup::proxy::ProxyElm<ObjT> proxy);
 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   Callback<MsgT> makeBcast();
@@ -114,6 +118,8 @@ struct PipeManager : PipeManagerTL, PipeManagerTyped {
   Callback<MsgT> makeBcast(ColProxyType<ColT> proxy);
   template <typename ColT, typename MsgT, ColMemType<ColT,MsgT> f>
   Callback<MsgT> makeBcast(ColProxyType<ColT> proxy);
+  template <typename ObjT, typename MsgT, ObjMemType<ObjT,MsgT> f>
+  Callback<MsgT> makeBcast(objgroup::proxy::Proxy<ObjT> proxy);
 
 
 public:
