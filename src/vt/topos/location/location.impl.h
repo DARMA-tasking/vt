@@ -228,6 +228,21 @@ void EntityLocationCoord<EntityID>::registerEntityMigrated(
 }
 
 template <typename EntityID>
+bool EntityLocationCoord<EntityID>::isCached(EntityID const& id) const {
+  return recs_.exists(id);
+}
+
+template <typename EntityID>
+template <typename MessageT>
+bool EntityLocationCoord<EntityID>::useEagerProtocol(MsgSharedPtr<MessageT> msg) const {
+
+  bool const is_small = sizeof(*msg) < small_msg_max_size;
+  bool const is_serialized = msg->getSerialize();
+  // could change according to entity type or another criterion
+  return is_small and not is_serialized;
+}
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::insertPendingEntityAction(
   EntityID const& id, NodeActionType action
 ) {
@@ -537,21 +552,20 @@ void EntityLocationCoord<EntityID>::routeMsg(
   msg->setLocFromNode(from);
   msg->setSerialize(serialize);
 
-  auto const& msg_size = sizeof(*msg);
-  bool const& is_large_msg = msg_size > small_msg_max_size;
-  bool const& use_eager = not is_large_msg;
+  auto const msg_size = sizeof(*msg);
+  bool const use_eager = useEagerProtocol(msg);
 
   debug_print(
     location, node,
     "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
     "serialize={}, in_from={}, from={}, msg{}, msg from={}\n",
-    this_inst, home_node, msg_size, is_large_msg, use_eager, serialize,
-    from_node, from, print_ptr(msg.get()), msg->getLocFromNode()
+    this_inst, home_node, msg_size, msg_size > small_msg_max_size, use_eager,
+    serialize, from_node, from, print_ptr(msg.get()), msg->getLocFromNode()
   );
 
   msg->setLocInst(this_inst);
 
-  if (use_eager && !serialize) {
+  if (use_eager) {
     routeMsgEager<MessageT>(serialize, id, home_node, msg);
   } else {
     // non-eager protocol: get location first then send message after resolution
