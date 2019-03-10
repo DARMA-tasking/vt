@@ -75,9 +75,6 @@ template <typename Env>
 inline void setTagType(Env& env);
 
 template <typename Env>
-inline void setCallbackType(Env& env);
-
-template <typename Env>
 inline void envelopeSetHandler(Env& env, HandlerType const& handler);
 
 template <typename Env>

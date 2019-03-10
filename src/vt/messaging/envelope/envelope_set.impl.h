@@ -87,11 +87,6 @@ inline void setTagType(Env& env) {
 }
 
 template <typename Env>
-inline void setCallbackType(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvCallback;
-}
-
-template <typename Env>
 inline void envelopeSetHandler(Env& env, HandlerType const& handler) {
   reinterpret_cast<Envelope*>(&env)->han = handler;
 }

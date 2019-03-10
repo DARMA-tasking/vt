@@ -174,11 +174,6 @@ struct ActiveMessenger {
     TagType const& tag
   );
 
-  template <typename MessageT>
-  EventType sendMsg(
-    HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag
-  );
-
   template <typename MsgT>
   EventType sendMsg(
     NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg
@@ -188,17 +183,6 @@ struct ActiveMessenger {
   EventType sendMsg(
     NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
     TagType const& tag
-  );
-
-  template <typename MsgT>
-  EventType sendMsg(
-    HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-    TagType const& tag = no_tag
-  );
-
-  template <typename MessageT>
-  EventType sendMsgHan(
-    HandlerType const& han, MessageT* const msg, TagType const& tag = no_tag
   );
 
   /*
@@ -449,35 +433,6 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
 
-   /*----------------------------------------------------------------------------
-   *                            Send Message Callback
-   *----------------------------------------------------------------------------
-   *
-   * Send message *callback* variants (automatically allow user to callback upon
-   * message arrival)
-   *
-   *----------------------------------------------------------------------------
-   */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendDataCallback(
-    NodeType const& dest, MessageT* const msg, ActiveClosureFnType fn
-  );
-
-  template <typename MessageT>
-  void sendDataCallback(
-    HandlerType const& han, NodeType const& dest, MessageT* const msg,
-    ActiveClosureFnType fn
-  );
-
-  template <typename MessageT>
-  void sendCallback(MessageT* const msg);
-
-  /*
-   *----------------------------------------------------------------------------
-   *                        End Send Message Callback
-   *----------------------------------------------------------------------------
-   */
-
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void trigger(std::function<void(vt::BaseMessage*)> fn);
 
@@ -532,7 +487,6 @@ struct ActiveMessenger {
   );
 
   HandlerType getCurrentHandler() const;
-  HandlerType getCurrentCallback() const;
   NodeType getFromNodeCurrentHandler() const;
   EpochType getCurrentEpoch() const;
 
@@ -611,7 +565,6 @@ private:
   #endif
 
   HandlerType current_handler_context_  = uninitialized_handler;
-  HandlerType current_callback_context_ = uninitialized_handler;
   NodeType current_node_context_        = uninitialized_destination;
   EpochType current_epoch_context_      = no_epoch;
   EpochType global_epoch_               = no_epoch;

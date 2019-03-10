@@ -88,12 +88,6 @@ inline bool envelopeIsTagType(Env const& env) {
     (1 << eEnvType::EnvTagType);
 }
 
-template <typename Env>
-inline bool envelopeIsCallbackType(Env const& env) {
-  return reinterpret_cast<Envelope const*>(&env)->type &
-    (1 << eEnvType::EnvCallback);
-}
-
 }} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TEST_IMPL_H*/
