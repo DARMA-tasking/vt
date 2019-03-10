@@ -63,11 +63,11 @@
 
 namespace vt { namespace objgroup {
 
-template <typename ObjT>
-ObjGroupManager::ProxyType<ObjT> ObjGroupManager::makeObjGroup() {
-  vtAssert(0, "Rooted makeObjGroup not implemented yet");
-  return ProxyType<ObjT>();
-}
+// template <typename ObjT>
+// ObjGroupManager::ProxyType<ObjT> ObjGroupManager::makeObjGroup() {
+//   vtAssert(0, "Rooted makeObjGroup not implemented yet");
+//   return ProxyType<ObjT>();
+// }
 
 template <typename ObjT, typename... Args>
 ObjGroupManager::ProxyType<ObjT>

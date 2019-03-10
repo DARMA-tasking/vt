@@ -83,8 +83,6 @@ struct ObjGroupManager {
    * these use the default group which includes all the nodes in the
    * communicator
    */
-  template <typename ObjT>
-  ProxyType<ObjT> makeObjGroup();
 
   // Make obj group with the constructor args to the obj
   template <typename ObjT, typename... Args>
