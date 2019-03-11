@@ -24,6 +24,7 @@ set(
   tls
   atomic
   memory
+  objgroup
 )
 
 option(CMAKE_NO_BUILD_TESTS "Enable VT tests to be built" OFF)
