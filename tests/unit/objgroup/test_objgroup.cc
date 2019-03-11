@@ -61,4 +61,44 @@ struct TestObjGroup : TestParallelHarness {
   }
 };
 
+TEST_F(TestObjGroup, test_proxy_construct_send) {
+
+  auto const my_node = vt::theContext()->getNode();
+  auto const epoch = vt::theTerm()->makeEpochCollective();
+
+  // create object group using object constructor or a raw pointer.
+  // EDIT: cannot create group using a smart pointer (unique, shared)
+  // due to overload resolution issue related to variadic constructor.
+  MyObjB obj(0xFFFFFFFF);
+  auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>(&obj);
+  //auto obj_ptr = std::make_shared<MyObjB>(tag);
+  //auto proxy3 = vt::theObjGroup()->makeCollective<MyObjB>(obj_ptr); // fails
+  //auto proxy4 = vt::theObjGroup()->makeCollective<MyObjB>(tag); // fails
+
+  if (my_node == 0) {
+    proxy1[0].send<MyMsg, &MyObjA::handler>();
+    proxy1[0].send<MyMsg, &MyObjA::handler>();
+    proxy1[1].send<MyMsg, &MyObjA::handler>();
+  } else if (my_node == 1) {
+    proxy2.broadcast<MyMsg, &MyObjB::handler>();
+  }
+
+  // check received messages for each group
+  vt::theTerm()->addAction(epoch, [=]{
+    auto obj1 = vt::theObjGroup()->get(proxy1);
+    auto obj2 = vt::theObjGroup()->get(proxy2);
+
+    switch (my_node) {
+      case 0:  EXPECT_EQ(obj1->recv_, 2); break;
+      case 1:  EXPECT_EQ(obj1->recv_, 1); break;
+      default: EXPECT_EQ(obj1->recv_, 0); break;
+    }
+    EXPECT_EQ(obj2->recv_, 1);
+  });
+
+  vt::theCollective()->barrier();
+  vt::theTerm()->finishedEpoch(epoch);
+}
+
 }}} // end namespace vt::tests::unit
