@@ -56,6 +56,13 @@ struct MyMsg : vt::Message {
   vt::NodeType from_ = vt::uninitialized_destination;
 };
 
+struct SysMsg : vt::collective::ReduceTMsg<int> {
+  SysMsg() = delete;
+  explicit SysMsg(int in_num)
+    : vt::collective::ReduceTMsg<int>(in_num)
+  {}
+};
+
 struct MyObjA {
 
   MyObjA() : id_(++next_id) {}
@@ -100,6 +107,21 @@ struct MyObjB {
 
 /*static*/ int MyObjA::next_id = 0;
 /*static*/ int MyObjB::next_id = 0;
+
+template <int test>
+struct Verify {
+  void operator()(SysMsg* msg) {
+    auto const n = vt::theContext()->getNumNodes();
+    auto const value = msg->getConstVal();
+
+    switch (test) {
+      case 1: EXPECT_EQ(value, n * (n - 1)/2); break;
+      case 2: EXPECT_EQ(value, n * 4); break;
+      case 3: EXPECT_EQ(value, n - 1); break;
+      default: vtAbort("Failure: should not be reached"); break;
+    }
+  }
+};
 
 }}} // end namespace vt::tests::unit
 

@@ -105,4 +105,41 @@ TEST_F(TestObjGroup, test_proxy_construct_send) {
   vt::theTerm()->finishedEpoch(epoch);
 }
 
+TEST_F(TestObjGroup, test_proxy_reduce) {
+
+  auto const my_node = vt::theContext()->getNode();
+  auto const epoch = vt::theTerm()->makeEpochCollective();
+
+  // create two proxy instances of a same object group type
+  auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
+
+  // the three reductions should not interfere each other, even if
+  // performed by the same subset of nodes within the same epoch.
+  using namespace vt::collective;
+  auto msg1 = vt::makeMessage<SysMsg>(my_node);
+  vt::theObjGroup()->reduce<
+    MyObjA,
+    SysMsg,
+    SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<1> >
+  >(proxy1, msg1, epoch, vt::no_tag);
+
+  auto msg2 = vt::makeMessage<SysMsg>(4);
+  vt::theObjGroup()->reduce<
+    MyObjA,
+    SysMsg,
+    SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<2> >
+  >(proxy2, msg2, epoch, vt::no_tag);
+
+  auto msg3 = vt::makeMessage<SysMsg>(my_node);
+  vt::theObjGroup()->reduce<
+    MyObjA,
+    SysMsg,
+    SysMsg::msgHandler<SysMsg, MaxOp<int>, Verify<3> >
+  >(proxy3, msg3, epoch, vt::no_tag);
+
+  vt::theTerm()->finishedEpoch(epoch);
+}
+
 }}} // end namespace vt::tests::unit
