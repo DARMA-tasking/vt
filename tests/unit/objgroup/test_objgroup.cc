@@ -88,6 +88,33 @@ TEST_F(TestObjGroup, test_proxy_object_getter) {
   EXPECT_TRUE(obj2->id_ < obj3->id_);
 }
 
+TEST_F(TestObjGroup, test_proxy_schedule) {
+
+  // create a proxy to a object group
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+
+  // self-send a message and then broadcast
+  auto my_node = vt::theContext()->getNode();
+  proxy[my_node].send<MyMsg, &MyObjA::handler>();
+  proxy.broadcast<MyMsg, &MyObjA::handler>();
+
+  auto obj = proxy.get();
+  debug_print(
+    objgroup, node,
+    "obj->recv:{} before running scheduler\n", obj->recv_
+  );
+
+  // run the object group scheduler to push
+  // along postponed events
+  while (vt::theObjGroup()->scheduler()) {}
+
+  debug_print(
+    objgroup, node,
+    "obj->recv:{} after running scheduler\n", obj->recv_
+  );
+  EXPECT_EQ(obj->recv_, 2);
+}
+
 TEST_F(TestObjGroup, test_proxy_construct_send) {
 
   auto const my_node = vt::theContext()->getNode();
