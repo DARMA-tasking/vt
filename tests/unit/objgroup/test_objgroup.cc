@@ -88,9 +88,9 @@ TEST_F(TestObjGroup, test_proxy_construct_send) {
 
   // check received messages for each group
   vt::theTerm()->addAction(epoch, [=]{
-    auto obj1 = vt::theObjGroup()->get(proxy1);
-    auto obj2 = vt::theObjGroup()->get(proxy2);
-    auto obj3 = vt::theObjGroup()->get(proxy3);
+    auto obj1 = proxy1.get();
+    auto obj2 = proxy2.get();
+    auto obj3 = proxy3.get();
 
     switch (my_node) {
       case 0:  EXPECT_EQ(obj1->recv_, 2); break;
@@ -124,6 +124,7 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
     SysMsg,
     SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<1> >
   >(proxy1, msg1, epoch, vt::no_tag);
+  //proxy1.reduce<SysMsg, Verify<1>>(msg1, epoch, vt::no_tag); // bad construct ?
 
   auto msg2 = vt::makeMessage<SysMsg>(4);
   vt::theObjGroup()->reduce<
