@@ -54,7 +54,7 @@
   #include "traits/serializable_traits.h"
 #endif
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace fetch {
 
 static struct SpanUnitializedTagType { } SpanUnitializedTag { };
 
@@ -71,8 +71,8 @@ struct Span : FetchBase {
   Span(Span&&) = default;
   Span& operator=(Span const&) = default;
 
-public:
-  void size() const { return len_; }
+protected:
+  int64_t size() const { return len_; }
   T* data() const { return data_; }
   T& operator[](int64_t u) const { return data_[u]; }
   bool init() const { return init_; }
@@ -80,6 +80,14 @@ public:
   void set(T* data, int64_t len) {
     data_ = data;
     len_ = len;
+    init_ = true;
+  }
+
+  void copySpan(Span<T> span) {
+    vtAssertExpr(span.len_ == len_);
+    for (auto i = 0; i < len_; i++) {
+      data_[i] = span.data_[i];
+    }
   }
 
 public:
@@ -95,6 +103,6 @@ private:
   int64_t len_ = 0;
 };
 
-}}} /* end namespace vt::vrt::collection */
+}} /* end namespace vt::fetch */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_FETCH_SPAN_H*/
