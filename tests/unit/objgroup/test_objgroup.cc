@@ -183,8 +183,9 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
   auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
   auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>();
   auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy4 = vt::theObjGroup()->makeCollective<MyObjA>();
 
-  // the three reductions should not interfere each other, even if
+  // the four reductions should not interfere each other, even if
   // performed by the same subset of nodes within the same epoch.
   using namespace vt::collective;
   auto msg1 = vt::makeMessage<SysMsg>(my_node);
@@ -201,12 +202,21 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
     SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<2> >
   >(proxy2, msg2, epoch, vt::no_tag);
 
+  // the proxy should be able to do perform reduction
+  // on any valid operator and data type.
   auto msg3 = vt::makeMessage<SysMsg>(my_node);
   vt::theObjGroup()->reduce<
     MyObjA,
     SysMsg,
     SysMsg::msgHandler<SysMsg, MaxOp<int>, Verify<3> >
   >(proxy3, msg3, epoch, vt::no_tag);
+
+  auto msg4 = vt::makeMessage<VecMsg>(my_node);
+  vt::theObjGroup()->reduce<
+    MyObjA,
+    VecMsg,
+    VecMsg::msgHandler<VecMsg, PlusOp<VectorPayload>, Verify<4> >
+  >(proxy4, msg4, epoch, vt::no_tag);
 
   vt::theTerm()->finishedEpoch(epoch);
 }

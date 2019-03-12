@@ -105,6 +105,39 @@ struct MyObjB {
   static int next_id;
 };
 
+struct VectorPayload {
+  VectorPayload() = default;
+
+  friend VectorPayload operator+(VectorPayload v1, VectorPayload const& v2) {
+    for (auto&& elm : v2.vec_) {
+      v1.vec_.push_back(elm);
+    }
+    return v1;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | vec_;
+  }
+
+  std::vector<int> vec_;
+};
+
+struct VecMsg : vt::collective::ReduceTMsg<VectorPayload> {
+  VecMsg() = default;
+
+  explicit VecMsg(int in_num) : ReduceTMsg<VectorPayload>() {
+    auto& vec = getVal().vec_;
+    vec.push_back(in_num);
+    vec.push_back(in_num + 1);
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    ReduceTMsg<VectorPayload>::invokeSerialize(s);
+  }
+};
+
 /*static*/ int MyObjA::next_id = 0;
 /*static*/ int MyObjB::next_id = 0;
 
@@ -120,6 +153,12 @@ struct Verify {
       case 3: EXPECT_EQ(value, n - 1); break;
       default: vtAbort("Failure: should not be reached"); break;
     }
+  }
+
+  void operator()(VecMsg* msg) {
+    auto final_size = msg->getConstVal().vec_.size();
+    auto n = vt::theContext()->getNumNodes();
+    EXPECT_EQ(final_size, n * 2);
   }
 };
 
