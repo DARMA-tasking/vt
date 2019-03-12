@@ -61,6 +61,33 @@ struct TestObjGroup : TestParallelHarness {
   }
 };
 
+TEST_F(TestObjGroup, test_proxy_object_getter) {
+
+  // create a proxy to a object group
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+
+  // check the uniqueness of the stored instance.
+  // both object getters should return a pointer to the same instance.
+  auto obj_ori = proxy.get();
+  auto obj_get = vt::theObjGroup()->get(proxy);
+  EXPECT_EQ(obj_ori->id_, obj_get->id_);
+
+  // check that retrieved proxy and the original one are really the same.
+  auto proxy_ori_bits = proxy.getProxy();
+  auto proxy_get_bits = vt::theObjGroup()->proxy(obj_ori).getProxy();
+  EXPECT_EQ(proxy_ori_bits, proxy_get_bits);
+
+  // check that creating multiple proxies from a same object group type
+  // will actually create different instance of this object group.
+  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto obj1 = obj_ori;
+  auto obj2 = proxy2.get();
+  auto obj3 = proxy3.get();
+  EXPECT_TRUE(obj1->id_ < obj2->id_);
+  EXPECT_TRUE(obj2->id_ < obj3->id_);
+}
+
 TEST_F(TestObjGroup, test_proxy_construct_send) {
 
   auto const my_node = vt::theContext()->getNode();
@@ -73,9 +100,6 @@ TEST_F(TestObjGroup, test_proxy_construct_send) {
   auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
   auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>(&obj);
   auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
-  //auto obj_ptr = std::make_shared<MyObjB>(tag);
-  //auto proxy3 = vt::theObjGroup()->makeCollective<MyObjB>(obj_ptr); // fails
-  //auto proxy4 = vt::theObjGroup()->makeCollective<MyObjB>(tag); // fails
 
   if (my_node == 0) {
     proxy1[0].send<MyMsg, &MyObjA::handler>();
@@ -124,7 +148,6 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
     SysMsg,
     SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<1> >
   >(proxy1, msg1, epoch, vt::no_tag);
-  //proxy1.reduce<SysMsg, Verify<1>>(msg1, epoch, vt::no_tag); // bad construct ?
 
   auto msg2 = vt::makeMessage<SysMsg>(4);
   vt::theObjGroup()->reduce<
