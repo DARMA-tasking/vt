@@ -43,6 +43,7 @@
 */
 
 #include "test_objgroup_common.h"
+#define RESET_PROXY_FIXED 0
 
 namespace vt { namespace tests { namespace unit {
 
@@ -86,6 +87,24 @@ TEST_F(TestObjGroup, test_proxy_object_getter) {
   auto obj3 = proxy3.get();
   EXPECT_TRUE(obj1->id_ < obj2->id_);
   EXPECT_TRUE(obj2->id_ < obj3->id_);
+}
+
+TEST_F(TestObjGroup, test_proxy_update) {
+
+  // create a proxy to a object group
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto const obj1 = proxy.get();
+
+  #if RESET_PROXY_FIXED
+    // update the group object for the proxy
+    // EDIT: compile-time error here: no member named 'reset'
+    // in 'vt::objgroup::holder::HolderObjBase<MyObjA>'
+    vt::theObjGroup()->update(proxy);
+
+    // should normally have two distinct instances
+    auto const obj2 = proxy.get();
+    EXPECT_TRUE(obj1->id_ < obj2->id_);
+  #endif
 }
 
 TEST_F(TestObjGroup, test_proxy_schedule) {
