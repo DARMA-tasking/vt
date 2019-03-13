@@ -59,6 +59,28 @@ struct TestObjGroup : TestParallelHarness {
     MyObjA::next_id = 0;
     MyObjB::next_id = 0;
   }
+
+  template <int test = 0>
+  struct Verify {
+    // check reduction results for scalar ops
+    void operator()(SysMsg* msg) {
+      auto const n = vt::theContext()->getNumNodes();
+      auto const value = msg->getConstVal();
+
+      switch (test) {
+        case 1: EXPECT_EQ(value, n * (n - 1)/2); break;
+        case 2: EXPECT_EQ(value, n * 4); break;
+        case 3: EXPECT_EQ(value, n - 1); break;
+        default: vtAbort("Failure: should not be reached"); break;
+      }
+    }
+    // check reduction result for vector append
+    void operator()(VecMsg* msg) {
+      auto final_size = msg->getConstVal().vec_.size();
+      auto n = vt::theContext()->getNumNodes();
+      EXPECT_EQ(final_size, n * 2);
+    }
+  };
 };
 
 TEST_F(TestObjGroup, test_proxy_object_getter) {
@@ -213,7 +235,7 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
   vt::theObjGroup()->reduce<
     MyObjA,
     VecMsg,
-    VecMsg::msgHandler<VecMsg, PlusOp<VectorPayload>, Verify<4> >
+    VecMsg::msgHandler<VecMsg, PlusOp<VectorPayload>, Verify<> >
   >(proxy4, msg4, epoch, vt::no_tag);
 
   vt::theTerm()->finishedEpoch(epoch);

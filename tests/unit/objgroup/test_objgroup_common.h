@@ -66,8 +66,11 @@ struct SysMsg : vt::collective::ReduceTMsg<int> {
 struct MyObjA {
 
   MyObjA() : id_(++next_id) {}
-  MyObjA(const MyObjA& obj) = default;
-  MyObjA(MyObjA&&) = default;
+  MyObjA(const MyObjA& obj) = delete;
+  MyObjA& operator=(const MyObjA& obj) = delete;
+  MyObjA(MyObjA&&) noexcept = default;
+  MyObjA& operator=(MyObjA&& obj) noexcept = default;
+  ~MyObjA() = default;
 
   void handler(MyMsg* msg) {
     debug_print(
@@ -86,8 +89,12 @@ struct MyObjA {
 struct MyObjB {
 
   MyObjB() = delete;
-  MyObjB(const MyObjB& obj) = default;
-  MyObjB(MyObjB&&) = default;
+  MyObjB(const MyObjB& obj) = delete;
+  MyObjB& operator=(const MyObjB& obj) = delete;
+  MyObjB(MyObjB&&) noexcept = default;
+  MyObjB& operator=(MyObjB&& obj) noexcept = default;
+  ~MyObjB() = default;
+
   explicit MyObjB(int in_data) : id_(++next_id), data_(in_data) {}
 
   void handler(MyMsg* msg) {
@@ -140,28 +147,6 @@ struct VecMsg : vt::collective::ReduceTMsg<VectorPayload> {
 
 /*static*/ int MyObjA::next_id = 0;
 /*static*/ int MyObjB::next_id = 0;
-
-template <int test>
-struct Verify {
-  void operator()(SysMsg* msg) {
-    auto const n = vt::theContext()->getNumNodes();
-    auto const value = msg->getConstVal();
-
-    switch (test) {
-      case 1: EXPECT_EQ(value, n * (n - 1)/2); break;
-      case 2: EXPECT_EQ(value, n * 4); break;
-      case 3: EXPECT_EQ(value, n - 1); break;
-      default: vtAbort("Failure: should not be reached"); break;
-    }
-  }
-
-  void operator()(VecMsg* msg) {
-    auto final_size = msg->getConstVal().vec_.size();
-    auto n = vt::theContext()->getNumNodes();
-    EXPECT_EQ(final_size, n * 2);
-  }
-};
-
 }}} // end namespace vt::tests::unit
 
 #endif /*INCLUDED_TEST_OBJGROUP_COMMON_H*/
