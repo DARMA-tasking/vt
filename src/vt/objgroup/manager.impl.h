@@ -245,7 +245,7 @@ void ObjGroupManager::update(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto iter = objs_.find(proxy_bits);
   vtAssert(iter != objs_.end(), "Obj must exist on this node");
   HolderBaseType* holder = iter->second.get();
-  auto obj_holder = static_cast<holder::HolderObjBase<ObjT>*>(holder);
+  auto obj_holder = static_cast<holder::Holder<ObjT>*>(holder);
 
   auto const cur_obj_ptr = obj_holder->get();
   auto map_iter = obj_to_proxy_.find(cur_obj_ptr);
