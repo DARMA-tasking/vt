@@ -138,12 +138,9 @@ TEST_F(TestObjGroup, test_proxy_construct_send) {
 
   auto const my_node = vt::theContext()->getNode();
 
-  // create object group using object constructor or a raw pointer.
-  // EDIT: cannot create group using a smart pointer (unique, shared)
-  // due to overload resolution issue related to variadic constructor.
-  MyObjB obj(1);
+  // create object groups and retrieve proxies
   auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
-  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>(&obj);
+  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>(1);
   auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
 
   if (my_node == 0) {

@@ -72,7 +72,7 @@ namespace vt { namespace objgroup {
 template <typename ObjT, typename... Args>
 ObjGroupManager::ProxyType<ObjT>
 ObjGroupManager::makeCollective(Args&&... args) {
-  return makeCollective<ObjT>(std::make_unique<ObjT>(std::forward<Args>...));
+  return makeCollective<ObjT>(std::make_unique<ObjT>(std::forward<Args>(args)...));
 }
 
 template <typename ObjT>
