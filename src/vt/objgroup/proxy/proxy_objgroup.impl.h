@@ -107,7 +107,7 @@ EpochType Proxy<ObjT>::reduce(
 ) const {
   auto proxy = Proxy<ObjT>(*this);
   auto msg = promoteMsg(inmsg);
-  return theObjGroup()->reduce<MsgT,f>(proxy,msg,epoch,tag);
+  return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,epoch,tag);
 }
 
 template <typename ObjT>

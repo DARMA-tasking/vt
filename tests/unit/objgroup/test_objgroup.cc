@@ -43,6 +43,7 @@
 */
 
 #include "test_objgroup_common.h"
+#include <typeinfo>
 
 namespace vt { namespace tests { namespace unit {
 
@@ -60,7 +61,7 @@ struct TestObjGroup : TestParallelHarness {
     MyObjB::next_id = 0;
   }
 
-  template <int test = 0>
+  template <int test>
   struct Verify {
     // check reduction results for scalar ops
     void operator()(SysMsg* msg) {
@@ -199,44 +200,27 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
   auto const my_node = vt::theContext()->getNode();
   auto const epoch = vt::theTerm()->makeEpochCollective();
 
-  // create two proxy instances of a same object group type
+  // create four proxy instances of a same object group type
   auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
   auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>();
   auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
   auto proxy4 = vt::theObjGroup()->makeCollective<MyObjA>();
 
-  // the four reductions should not interfere each other, even if
-  // performed by the same subset of nodes within the same epoch.
-  using namespace vt::collective;
   auto msg1 = vt::makeMessage<SysMsg>(my_node);
-  vt::theObjGroup()->reduce<
-    MyObjA,
-    SysMsg,
-    SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<1> >
-  >(proxy1, msg1, epoch, vt::no_tag);
-
   auto msg2 = vt::makeMessage<SysMsg>(4);
-  vt::theObjGroup()->reduce<
-    MyObjA,
-    SysMsg,
-    SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<2> >
-  >(proxy2, msg2, epoch, vt::no_tag);
-
-  // the proxy should be able to do perform reduction
-  // on any valid operator and data type.
   auto msg3 = vt::makeMessage<SysMsg>(my_node);
-  vt::theObjGroup()->reduce<
-    MyObjA,
-    SysMsg,
-    SysMsg::msgHandler<SysMsg, MaxOp<int>, Verify<3> >
-  >(proxy3, msg3, epoch, vt::no_tag);
-
   auto msg4 = vt::makeMessage<VecMsg>(my_node);
-  vt::theObjGroup()->reduce<
-    MyObjA,
-    VecMsg,
-    VecMsg::msgHandler<VecMsg, PlusOp<VectorPayload>, Verify<> >
-  >(proxy4, msg4, epoch, vt::no_tag);
+
+  // Multiple reductions should not interfere each other, even if
+  // performed by the same subset of nodes within the same epoch.
+  // Proxies should be able to do perform reduction
+  // on any valid operator and data type.
+  using namespace vt::collective;
+
+  proxy1.reduce<PlusOp<int>, Verify<1>>(msg1, epoch);
+  proxy2.reduce<PlusOp<int>, Verify<2>>(msg2, epoch);
+  proxy3.reduce< MaxOp<int>, Verify<3>>(msg3, epoch);
+  proxy4.reduce<PlusOp<VectorPayload>, Verify<4>>(msg4, epoch);
 
   vt::theTerm()->finishedEpoch(epoch);
 }
