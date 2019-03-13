@@ -63,6 +63,11 @@ struct TestObjGroup : TestParallelHarness {
 
   template <int test>
   struct Verify {
+
+    Verify() = default;
+    Verify(int value) : expected_(value) {}
+    ~Verify() = default;
+
     // check reduction results for scalar ops
     void operator()(SysMsg* msg) {
       auto const n = vt::theContext()->getNumNodes();
@@ -72,6 +77,7 @@ struct TestObjGroup : TestParallelHarness {
         case 1: EXPECT_EQ(value, n * (n - 1)/2); break;
         case 2: EXPECT_EQ(value, n * 4); break;
         case 3: EXPECT_EQ(value, n - 1); break;
+        case 4: EXPECT_EQ(value, expected_); break;
         default: vtAbort("Failure: should not be reached"); break;
       }
     }
@@ -81,6 +87,8 @@ struct TestObjGroup : TestParallelHarness {
       auto n = vt::theContext()->getNumNodes();
       EXPECT_EQ(final_size, n * 2);
     }
+    // for reduction values not depending on ranks
+    int expected_ = 0;
   };
 };
 
