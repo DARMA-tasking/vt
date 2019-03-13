@@ -84,6 +84,30 @@ struct TestObjGroup : TestParallelHarness {
   };
 };
 
+TEST_F(TestObjGroup, test_construct) {
+
+  // create object groups and retrieve proxies
+  auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>(1);
+  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjB>(new MyObjB(1));
+  auto proxy4 = vt::theObjGroup()->makeCollective<MyObjB>(
+    std::make_unique<MyObjB>(1)
+  );
+
+  // retrieve object group from proxies
+  auto obj1 = proxy1.get();
+  auto obj2 = proxy2.get();
+  auto obj3 = proxy3.get();
+  auto obj4 = proxy4.get();
+
+  EXPECT_EQ(obj1->id_, 1);
+  EXPECT_EQ(obj2->id_, 1);
+  EXPECT_EQ(obj3->id_, 2);
+  EXPECT_EQ(obj3->data_, obj2->data_);
+  EXPECT_EQ(obj4->id_, 3);
+  EXPECT_EQ(obj4->data_, obj3->data_);
+}
+
 TEST_F(TestObjGroup, test_proxy_object_getter) {
 
   // create a proxy to a object group
@@ -158,7 +182,7 @@ TEST_F(TestObjGroup, test_proxy_schedule) {
   EXPECT_EQ(obj->recv_, 2);
 }
 
-TEST_F(TestObjGroup, test_proxy_construct_send) {
+TEST_F(TestObjGroup, test_proxy_callbacks) {
 
   auto const my_node = vt::theContext()->getNode();
 

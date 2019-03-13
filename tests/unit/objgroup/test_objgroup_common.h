@@ -89,8 +89,8 @@ struct MyObjA {
 struct MyObjB {
 
   MyObjB() = delete;
-  MyObjB(const MyObjB& obj) = delete;
-  MyObjB& operator=(const MyObjB& obj) = delete;
+  MyObjB(const MyObjB& obj) = default;
+  MyObjB& operator=(const MyObjB& obj) = default;
   MyObjB(MyObjB&&) noexcept = default;
   MyObjB& operator=(MyObjB&& obj) noexcept = default;
   ~MyObjB() = default;
