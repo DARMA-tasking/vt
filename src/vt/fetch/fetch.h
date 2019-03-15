@@ -102,7 +102,7 @@ template <typename T>
 struct PtrTraits<std::vector<T>> {
   using BaseType = typename PtrTraits<T>::BaseType;
   static constexpr bool arith = PtrTraits<T>::arith;
-  static constexpr bool vector = true;
+  static constexpr bool vec = true;
   static constexpr bool array = false;
   static constexpr std::size_t dims = 1 + PtrTraits<T>::dims;
 };
@@ -152,7 +152,7 @@ struct Internal final {
 
   Internal() = delete;
   Internal(Internal const& i) = delete;
-  Internal(std::nullptr_t) : refs_(nullptr), read_(nullptr), id_(ID())  { }
+  Internal(std::nullptr_t) : refs_(nullptr), read_(nullptr)             { }
   Internal(IntNewTagType)  : refs_(new int), read_(new int), id_(ID())  { reset(); }
   Internal(Internal&& i)   : refs_(i.refs_), read_(i.read_), id_(i.id_) { inc(); }
   Internal(IntReadTagType, Internal const& i)
@@ -185,6 +185,7 @@ struct Internal final {
     }
   }
   void free() {
+    clearDep();
     vtAssertExpr(refs_ != nullptr);
     vtAssertExpr(read_ != nullptr);
     delete refs_;
@@ -208,12 +209,30 @@ struct Internal final {
   void decRead() { if (read_) (*read_)--; dec(); tryReadFree(); }
   int getRead() const { return read_ ? *read_ : -1; }
 
+  bool valid() const { return id_ != no_fetch; }
+
+  void dep(Internal* in, bool read) {
+    if (dep_) { clearDep(); }
+    dep_ = in;
+    dep_read_ = read;
+    vtAssertExpr(dep_ != nullptr);
+    if (dep_read_) dep_->incRead(); else dep_->inc();
+  }
+  void clearDep() {
+    if (dep_) {
+      if (dep_read_) dep_->decRead(); else dep_->dec();
+      dep_ = nullptr;
+    }
+  }
+
   static FetchType ID() { return theFetch()->newID(); }
 
 protected:
-  int* refs_    = nullptr;
-  int* read_    = nullptr;
-  FetchType id_ = no_fetch;
+  int* refs_     = nullptr;
+  int* read_     = nullptr;
+  FetchType id_  = no_fetch;
+  Internal* dep_ = nullptr;
+  bool dep_read_ = false;
 };
 
 namespace trait {
@@ -483,7 +502,7 @@ struct FetchPayload<
     span_->update(alloc_.get(),len);
   }
 
-  void update(T* in_data, int64_t len) {
+  void update(ValueType* in_data, int64_t len) {
     span_->set(in_data,len);
   }
 
@@ -521,31 +540,31 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   FetchCtrl() = default;
   FetchCtrl(FetchCtrl<T,Trait>&&) = default;
   FetchCtrl(FetchPendingTagType, std::string in_tag = "")
-    : id_(theFetch()->newID()), ctrl_(InternalNewTag), uninit_(false),
+    : id_(theFetch()->newID()), ctrl_(InternalNewTag), init_(true),
       tag_(in_tag)
   { }
 
   FetchCtrl(FetchCtrl<T,Trait> const& in)
     : DisableCopyCons<Trait::Copy>(in),
       id_(in.id_), ctrl_(in.ctrl_,Trait::Read),
-      uninit_(in.uninit_), tag_(in.tag_),
+      init_(in.init_), tag_(in.tag_),
       payload_(FetchPayload<T>(PayloadRefTag, in.payload_))
   {
-    vtAssertExpr(not in.pending() and not in.uninit_);
+    vtAssertExpr(in.init_);
   }
 
   template <typename U, typename Trait2>
   FetchCtrl(FetchCopyTagType, FetchCtrl<U,Trait2> const& in)
-    : id_(theFetch()->newID()), ctrl_(InternalNewTag), uninit_(in.uninit_),
+    : id_(theFetch()->newID()), ctrl_(InternalNewTag), init_(in.init_),
       tag_(in.tag_)
   {
-    vtAssertExpr(not in.pending() and not in.uninit_);
+    vtAssertExpr(not in.pending() and in.init_);
     payload_ = FetchPayload<T>(PayloadCopyTag, in.payload_);
   }
 
   template <typename U, typename Trait2>
   FetchCtrl(FetchFromPendingTagType, FetchCtrl<U,Trait2> const& in)
-    : id_(in.id_), ctrl_(in.ctrl_), uninit_(in.uninit_),
+    : id_(in.id_), ctrl_(in.ctrl_), init_(in.init_),
       tag_(in.tag_), payload_(nullptr)
   {
     vtAssertExpr(in.pending());
@@ -553,7 +572,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
 
   template <typename Trait2>
   FetchCtrl(FetchCtrl<T,Trait2>&& in)
-    : id_(in.id_), ctrl_(in.ctrl_,Trait2::Read), uninit_(in.uninit_),
+    : id_(in.id_), ctrl_(in.ctrl_,Trait2::Read), init_(in.init_),
       tag_(in.tag_), payload_(std::move(in.payload_))
   { }
 
@@ -570,10 +589,10 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   >
   FetchCtrl(FetchCtrl<U,Trait2> const& in)
     : id_(in.id_), ctrl_(in.ctrl_,Trait::Read),
-      uninit_(in.uninit_), tag_(in.tag_),
+      init_(in.init_), tag_(in.tag_),
       payload_(FetchPayload<T>(PayloadRefTag, in.payload_))
   {
-    vtAssertExpr(not in.pending() and not in.uninit_);
+    vtAssertExpr(in.init_);
   }
 
 
@@ -599,8 +618,8 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
       PtrTraits<T>::arith and PtrTraits<T>::dims == 1 and not PtrTraits<T>::vec, U
     >::type
   >
-  void satisfy(T* ptr, int64_t len) {
-    payload_->update(ptr, len);
+  void satisfy(ValueType* ptr, int64_t len) {
+    payload_.update(ptr, len);
     theFetch()->notifyReady(id_);
   }
 
@@ -615,7 +634,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
     >::type
   >
   void satisfy(std::vector<ValueType>&& in) {
-    payload_->update(std::move(in));
+    payload_.update(std::move(in));
     theFetch()->notifyReady(id_);
   }
 
@@ -626,7 +645,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
     >::type
   >
   void satisfy(std::vector<ValueType>* const in) {
-    payload_->update(in);
+    payload_.update(in);
     theFetch()->notifyReady(id_);
   }
 
@@ -642,7 +661,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
     >::type
   >
   void satisfyAlloc(int64_t len) {
-    payload_->allocate(len);
+    payload_.allocate(len);
     theFetch()->notifyReady(id_);
   }
 
@@ -685,12 +704,12 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
 
   template <typename U = T, typename Trait2 = Trait>
   FetchCtrl<U,Trait2> copy() {
-    vtAssertExpr(not pending() and not uninit_);
+    vtAssertExpr(not pending() and init_);
     return FetchCtrl<U,Trait2>(FetchCopyTag,*this);
   }
 
   FetchCtrl<T,typename Trait::AddRead> read() {
-    vtAssertExpr(not uninit_);
+    vtAssertExpr(init_);
     return FetchCtrl<T,typename Trait::AddRead>(*this);
   }
 
@@ -703,13 +722,25 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   friend struct FetchCtrl;
 
 private:
-  FetchType id_             = no_fetch;
+  FetchType id_             = no_fetch; // @todo: remove?
   Internal ctrl_            = nullptr;
-  bool uninit_              = true;
+  bool init_                = false;
   std::string tag_          = "";
   FetchPayload<T> payload_  = nullptr;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+/* Implement wrappers for creating and managing vt::fetch::Fetch<T> */
+
+template <typename T, typename Trait = Default>
+FetchCtrl<T,Trait> makePending(std::string tag = "") {
+  return FetchCtrl<T,Trait>(FetchPendingTag, tag);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 /*
  * Main FetchImpl specializations
