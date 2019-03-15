@@ -65,6 +65,7 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
+#include "vt/fetch/manager.h"
 
 #include <cassert>
 
@@ -123,6 +124,7 @@ location::LocationManager*  theLocMan()         { return CUR_RT->theLocMan.get()
 CollectionManagerType*      theCollection()     { return CUR_RT->theCollection.get();     }
 group::GroupManager*        theGroup()          { return CUR_RT->theGroup.get();          }
 pipe::PipeManager*          theCB()             { return CUR_RT->theCB.get();             }
+fetch::FetchManager*        theFetch()          { return CUR_RT->theFetch.get();          }
 
 #if backend_check_enabled(trace_enabled)
 trace::Trace*               theTrace()          { return CUR_RT->theTrace.get();          }

@@ -66,6 +66,7 @@
 #include "vt/configs/arguments/args.h"
 #include "vt/configs/error/stack_out.h"
 #include "vt/configs/error/pretty_print_stack.h"
+#include "vt/fetch/manager.h"
 
 #include <memory>
 #include <iostream>
@@ -910,6 +911,7 @@ void Runtime::initializeComponents() {
   theCollective = std::make_unique<collective::CollectiveAlg>();
   theGroup = std::make_unique<group::GroupManager>();
   theCB = std::make_unique<pipe::PipeManager>();
+  theFetch = std::make_unique<fetch::FetchManager>();
 
   // Advanced runtime components: not required for basic messaging
   theRDMA = std::make_unique<rdma::RDMAManager>();
@@ -1040,6 +1042,7 @@ void Runtime::finalizeComponents() {
   theMsg = nullptr;
   theGroup = nullptr;
   theCB = nullptr;
+  theFetch = nullptr;
 
   // Helper components: thePool the last to be destructed because it handles
   // memory allocations

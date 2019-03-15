@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                             span.h
+//                            fetch_id.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,67 +42,43 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_FETCH_SPAN_H
-#define INCLUDED_VT_VRT_COLLECTION_FETCH_SPAN_H
-
 #include "vt/config.h"
-#include "vt/vrt/collection/fetch/fetch_base.h"
-
-#if HAS_SERIALIZATION_LIBRARY
-  #define HAS_DETECTION_COMPONENT 1
-  #include "serialization_library_headers.h"
-  #include "traits/serializable_traits.h"
-#endif
+#include "vt/fetch/fetch_id.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace fetch {
 
-static struct SpanUnitializedTagType { } SpanUnitializedTag { };
+/*static*/ FetchType FetchIDBuilder::make(FetchSeqIDType seq_id, NodeType node) {
+  FetchType id = 0;
+  setNode(id, node);
+  setID(id, seq_id);
 
-template <typename T>
-struct Span : FetchBase {
-  Span() = delete;
-  explicit Span(SpanUnitializedTagType)
-    : init_(false), data_(nullptr), len_(0)
-  { }
-  Span(T* in_data, int64_t in_len)
-    : init_(true), data_(in_data), len_(in_len)
-  { }
-  Span(Span const&) = default;
-  Span(Span&&) = default;
-  Span& operator=(Span const&) = default;
+  debug_print(
+    fetch, node,
+    "FetchIDBuilder::make: seq_id={}, node={}, id={:x}\n", seq_id, node, id
+  );
 
-protected:
-  int64_t size() const { return len_; }
-  T* data() const { return data_; }
-  T& operator[](int64_t u) const { return data_[u]; }
-  bool init() const { return init_; }
+  return id;
+}
 
-  void set(T* data, int64_t len) {
-    data_ = data;
-    len_ = len;
-    init_ = true;
-  }
+/*static*/ NodeType FetchIDBuilder::getNode(FetchType id) {
+  return BitPackerType::getField<
+    eFetchLayout::Node, node_num_bits, NodeType
+  >(id);
+}
 
-  void copySpan(Span<T> span) {
-    vtAssertExpr(span.len_ == len_);
-    for (auto i = 0; i < len_; i++) {
-      data_[i] = span.data_[i];
-    }
-  }
+/*static*/ void FetchIDBuilder::setNode(FetchType& id, NodeType node) {
+  BitPackerType::setField<eFetchLayout::Node, node_num_bits>(id, node);
+}
 
-public:
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | init_ | len_;
-    serdes::serializeArray(s, data_, len_);
-  }
+/*static*/ void FetchIDBuilder::setID(FetchType& id, FetchSeqIDType seq_id) {
+  BitPackerType::setField<eFetchLayout::ID, seq_num_bits>(id,seq_id);
+}
 
-private:
-  bool init_ = false;
-  T* data_ = nullptr;
-  int64_t len_ = 0;
-};
+/*static*/ FetchSeqIDType FetchIDBuilder::getEventIdentifier(FetchType id) {
+  return BitPackerType::getField<
+    eFetchLayout::ID,seq_num_bits,FetchSeqIDType
+  >(id);
+}
 
 }} /* end namespace vt::fetch */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_FETCH_SPAN_H*/

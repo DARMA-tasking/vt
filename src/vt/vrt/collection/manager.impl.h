@@ -2855,7 +2855,6 @@ getDispatcher(auto_registry::AutoHandlerType const& han) {
   return theCollection()->getDispatcher(han);
 }
 
-template <typename FetchT, typename ColT, typename IdxT>
 template <
   typename FetchT, typename ColT, typename IdxT,
   ActiveColFetchTypedFnType<FetchT,ColT>* f

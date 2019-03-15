@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/fetchable/fetchable.h"
-#include "vt/vrt/collection/fetch/fetch.h"
+// #include "vt/vrt/collection/fetch/fetch.h"
 #include "vt/vrt/collection/active/active_funcs_fetch.h"
 
 namespace vt { namespace vrt { namespace collection {
@@ -65,28 +65,28 @@ void Fetchable<ColT,IndexT,BaseProxyT>::serialize(SerializerT& s) {
   BaseProxyT::serialize(s);
 }
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
-messaging::PendingSend Fetchable<ColT,IndexT,BaseProxyT>::fetch(
-  vt::Fetch<FetchT>* fetch
-) const {
-  // @todo: create the PendingSed and defer this op if needed?
-  auto col_proxy = this->getCollectionProxy();
-  auto elm_proxy = this->getElementProxy();
-  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
-  theCollection()->fetch<FetchT,ColT,IndexT,f>(proxy,fetch);
-}
+// template <typename ColT, typename IndexT, typename BaseProxyT>
+// template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
+// void Fetchable<ColT,IndexT,BaseProxyT>::fetch(
+//   vt::Fetch<FetchT>* fetch
+// ) const {
+//   // @todo: create the PendingSed and defer this op if needed?
+//   auto col_proxy = this->getCollectionProxy();
+//   auto elm_proxy = this->getElementProxy();
+//   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
+//   theCollection()->fetch<FetchT,ColT,IndexT,f>(proxy,fetch);
+// }
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
-messaging::PendingSend Fetchable<ColT,IndexT,BaseProxyT>::fetch(
-  FetchT& data_ref
-) const {
-  // @todo: construct the vt::Fetch ptr from the data reference
-  //
-  // this->fetch(Fetch{data_ref});
-  //
-}
+// template <typename ColT, typename IndexT, typename BaseProxyT>
+// template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
+// void Fetchable<ColT,IndexT,BaseProxyT>::fetch(
+//   FetchT& data_ref
+// ) const {
+//   // @todo: construct the vt::Fetch ptr from the data reference
+//   //
+//   // this->fetch(Fetch{data_ref});
+//   //
+// }
 
 
 }}} /* end namespace vt::vrt::collection */

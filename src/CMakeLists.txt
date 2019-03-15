@@ -42,6 +42,7 @@ set(
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
+    fetch
     topos/location
       topos/location/cache topos/location/message topos/location/record
       topos/location/utility
@@ -62,7 +63,6 @@ set(
         vrt/collection/balance/hierarchicallb
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb
-      vrt/collection/fetch
     lb/instrumentation
       lb/instrumentation/centralized
     lb/balancers

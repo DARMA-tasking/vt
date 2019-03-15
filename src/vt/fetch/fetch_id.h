@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          collection.cc
+//                            fetch_id.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,50 +42,30 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_FETCH_FETCH_ID_H
+#define INCLUDED_VT_FETCH_FETCH_ID_H
+
 #include "vt/config.h"
-#include "vt/runnable/collection.h"
-#include "vt/messaging/active.h"
-#include "vt/context/context.h"
-#include "vt/trace/trace_common.h"
 
-namespace vt { namespace runnable {
+namespace vt { namespace fetch {
 
-/*static*/ void RunnableCollection::prelude(
-  trace::TraceEventIDType trace_event, std::size_t msg_size,
-  HandlerType han, NodeType from, bool member, bool fetch,
-  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
-) {
-  #if backend_check_enabled(trace_enabled)
-    auto reg_enum = fetch ?
-      auto_registry::RegistryTypeEnum::RegVrtCollectionFetch : (
-        member ?
-        auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-        auto_registry::RegistryTypeEnum::RegVrtCollection
-      );
+using FetchSeqIDType = int32_t;
 
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(han, reg_enum);
-    trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
-    auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
-    auto const from_node = from != uninitialized_destination ? from : ctx_node;
+static constexpr BitCountType const seq_num_bits = 32;
 
-    theTrace()->beginProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-    );
-  #endif
-}
+enum eFetchLayout {
+  Node       = 0,
+  ID         = eFetchLayout::Node + node_num_bits
+};
 
-/*static*/ void RunnableCollection::epilog(
-  trace::TraceEventIDType trace_event, std::size_t msg_size,
-  HandlerType han, NodeType from_node, bool member, bool fetch,
-  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
-) {
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-    );
-  #endif
-}
+struct FetchIDBuilder {
+  static FetchType make(FetchSeqIDType id, NodeType node);
+  static NodeType getNode(FetchType id);
+  static void setNode(FetchType& id, NodeType node);
+  static void setID(FetchType& id, FetchSeqIDType seq_id);
+  static FetchSeqIDType getEventIdentifier(FetchType id);
+};
 
-}} /* end namespace vt::runnable */
+}} /* end namespace vt::fetch */
+
+#endif /*INCLUDED_VT_FETCH_FETCH_ID_H*/

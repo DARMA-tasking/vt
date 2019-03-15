@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          collection.cc
+//                         manager.fwd.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,50 +42,13 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/runnable/collection.h"
-#include "vt/messaging/active.h"
-#include "vt/context/context.h"
-#include "vt/trace/trace_common.h"
+#if !defined INCLUDED_VT_FETCH_MANAGER_FWD_H
+#define INCLUDED_VT_FETCH_MANAGER_FWD_H
 
-namespace vt { namespace runnable {
+namespace vt {
 
-/*static*/ void RunnableCollection::prelude(
-  trace::TraceEventIDType trace_event, std::size_t msg_size,
-  HandlerType han, NodeType from, bool member, bool fetch,
-  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
-) {
-  #if backend_check_enabled(trace_enabled)
-    auto reg_enum = fetch ?
-      auto_registry::RegistryTypeEnum::RegVrtCollectionFetch : (
-        member ?
-        auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-        auto_registry::RegistryTypeEnum::RegVrtCollection
-      );
+extern fetch::FetchManager* theFetch();
 
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(han, reg_enum);
-    trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
-    auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
-    auto const from_node = from != uninitialized_destination ? from : ctx_node;
+} /* end namespace vt */
 
-    theTrace()->beginProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-    );
-  #endif
-}
-
-/*static*/ void RunnableCollection::epilog(
-  trace::TraceEventIDType trace_event, std::size_t msg_size,
-  HandlerType han, NodeType from_node, bool member, bool fetch,
-  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
-) {
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-    );
-  #endif
-}
-
-}} /* end namespace vt::runnable */
+#endif /*INCLUDED_VT_FETCH_MANAGER_FWD_H*/

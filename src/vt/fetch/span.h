@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          collection.cc
+//                             span.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,50 +42,67 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_FETCH_SPAN_H
+#define INCLUDED_VT_VRT_COLLECTION_FETCH_SPAN_H
+
 #include "vt/config.h"
-#include "vt/runnable/collection.h"
-#include "vt/messaging/active.h"
-#include "vt/context/context.h"
-#include "vt/trace/trace_common.h"
+#include "vt/fetch/fetch_base.h"
 
-namespace vt { namespace runnable {
+#if HAS_SERIALIZATION_LIBRARY
+  #define HAS_DETECTION_COMPONENT 1
+  #include "serialization_library_headers.h"
+  #include "traits/serializable_traits.h"
+#endif
 
-/*static*/ void RunnableCollection::prelude(
-  trace::TraceEventIDType trace_event, std::size_t msg_size,
-  HandlerType han, NodeType from, bool member, bool fetch,
-  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
-) {
-  #if backend_check_enabled(trace_enabled)
-    auto reg_enum = fetch ?
-      auto_registry::RegistryTypeEnum::RegVrtCollectionFetch : (
-        member ?
-        auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-        auto_registry::RegistryTypeEnum::RegVrtCollection
-      );
+namespace vt { namespace fetch {
 
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(han, reg_enum);
-    trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
-    auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
-    auto const from_node = from != uninitialized_destination ? from : ctx_node;
+static struct SpanUnitializedTagType { } SpanUnitializedTag { };
 
-    theTrace()->beginProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-    );
-  #endif
-}
+template <typename T>
+struct Span : FetchBase {
+  Span() = delete;
+  explicit Span(SpanUnitializedTagType)
+    : init_(false), data_(nullptr), len_(0)
+  { }
+  Span(T* in_data, int64_t in_len)
+    : init_(true), data_(in_data), len_(in_len)
+  { }
+  Span(Span const&) = default;
+  Span(Span&&) = default;
+  Span& operator=(Span const&) = default;
 
-/*static*/ void RunnableCollection::epilog(
-  trace::TraceEventIDType trace_event, std::size_t msg_size,
-  HandlerType han, NodeType from_node, bool member, bool fetch,
-  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
-) {
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-    );
-  #endif
-}
+public:
+  int64_t size() const { return len_; }
+  T* data() const { return data_; }
+  T& operator[](int64_t u) const { return data_[u]; }
+  bool init() const { return init_; }
 
-}} /* end namespace vt::runnable */
+  void set(T* data, int64_t len) {
+    data_ = data;
+    len_ = len;
+    init_ = true;
+  }
+
+  void copySpan(Span<T> span) {
+    vtAssertExpr(span.len_ == len_);
+    for (auto i = 0; i < len_; i++) {
+      data_[i] = span.data_[i];
+    }
+  }
+
+public:
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | init_ | len_;
+    serdes::serializeArray(s, data_, len_);
+  }
+
+private:
+  bool init_ = false;
+  T* data_ = nullptr;
+  int64_t len_ = 0;
+};
+
+}} /* end namespace vt::fetch */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_FETCH_SPAN_H*/

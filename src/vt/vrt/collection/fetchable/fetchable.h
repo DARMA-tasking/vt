@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/active/active_funcs_fetch.h"
-#include "vt/vrt/collection/fetch/fetch.h"
+// #include "vt/vrt/collection/fetch/fetch.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -62,11 +62,11 @@ struct Fetchable : BaseProxyT {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
-  messaging::PendingSend fetch(vt::Fetch<FetchT>* fetch) const;
+  // template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
+  // void fetch(vt::Fetch<FetchT>* fetch) const;
 
-  template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
-  messaging::PendingSend fetch(FetchT& data_ref) const;
+  // template <typename FetchT, ActiveColFetchTypedFnType<FetchT,ColT> *f>
+  // void fetch(FetchT& data_ref) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
