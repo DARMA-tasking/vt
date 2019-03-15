@@ -54,7 +54,7 @@
 #include <string>
 #include <unistd.h>
 
-#include <fmt/format.h>
+#include "fmt/format.h"
 
 namespace vt { namespace debug {
 

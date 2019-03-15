@@ -232,3 +232,17 @@ export(
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
+
+install(
+  DIRECTORY                "CLI"
+  DESTINATION              ${VT_EXTERNAL_DESTINATION}
+  CONFIGURATIONS           ${build_type_list}
+  FILES_MATCHING PATTERN   "*"
+)
+
+install(
+  DIRECTORY                "fmt"
+  DESTINATION              ${VT_EXTERNAL_DESTINATION}
+  CONFIGURATIONS           ${build_type_list}
+  FILES_MATCHING PATTERN   "*"
+)

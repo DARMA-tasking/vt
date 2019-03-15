@@ -55,7 +55,7 @@
 #include <cstdio>
 #include <unistd.h>
 
-#include <fmt/format.h>
+#include "fmt/format.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
