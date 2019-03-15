@@ -210,6 +210,7 @@ struct Internal final {
   int getRead() const { return read_ ? *read_ : -1; }
 
   bool valid() const { return id_ != no_fetch; }
+  FetchType getID() const { return id_; }
 
   void dep(Internal* in, bool read) {
     if (dep_) { clearDep(); }
@@ -227,7 +228,7 @@ struct Internal final {
 
   static FetchType ID() { return theFetch()->newID(); }
 
-protected:
+private:
   int* refs_     = nullptr;
   int* read_     = nullptr;
   FetchType id_  = no_fetch;
@@ -540,14 +541,12 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   FetchCtrl() = default;
   FetchCtrl(FetchCtrl<T,Trait>&&) = default;
   FetchCtrl(FetchPendingTagType, std::string in_tag = "")
-    : id_(theFetch()->newID()), ctrl_(InternalNewTag), init_(true),
-      tag_(in_tag)
+    : ctrl_(InternalNewTag), init_(true), tag_(in_tag)
   { }
 
   FetchCtrl(FetchCtrl<T,Trait> const& in)
     : DisableCopyCons<Trait::Copy>(in),
-      id_(in.id_), ctrl_(in.ctrl_,Trait::Read),
-      init_(in.init_), tag_(in.tag_),
+      ctrl_(in.ctrl_,Trait::Read), init_(in.init_), tag_(in.tag_),
       payload_(FetchPayload<T>(PayloadRefTag, in.payload_))
   {
     vtAssertExpr(in.init_);
@@ -555,8 +554,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
 
   template <typename U, typename Trait2>
   FetchCtrl(FetchCopyTagType, FetchCtrl<U,Trait2> const& in)
-    : id_(theFetch()->newID()), ctrl_(InternalNewTag), init_(in.init_),
-      tag_(in.tag_)
+    : ctrl_(InternalNewTag), init_(in.init_), tag_(in.tag_)
   {
     vtAssertExpr(not in.pending() and in.init_);
     payload_ = FetchPayload<T>(PayloadCopyTag, in.payload_);
@@ -564,15 +562,14 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
 
   template <typename U, typename Trait2>
   FetchCtrl(FetchFromPendingTagType, FetchCtrl<U,Trait2> const& in)
-    : id_(in.id_), ctrl_(in.ctrl_), init_(in.init_),
-      tag_(in.tag_), payload_(nullptr)
+    : ctrl_(in.ctrl_), init_(in.init_), tag_(in.tag_), payload_(nullptr)
   {
     vtAssertExpr(in.pending());
   }
 
   template <typename Trait2>
   FetchCtrl(FetchCtrl<T,Trait2>&& in)
-    : id_(in.id_), ctrl_(in.ctrl_,Trait2::Read), init_(in.init_),
+    : ctrl_(in.ctrl_,Trait2::Read), init_(in.init_),
       tag_(in.tag_), payload_(std::move(in.payload_))
   { }
 
@@ -588,13 +585,17 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
     >
   >
   FetchCtrl(FetchCtrl<U,Trait2> const& in)
-    : id_(in.id_), ctrl_(in.ctrl_,Trait::Read),
-      init_(in.init_), tag_(in.tag_),
+    : ctrl_(in.ctrl_,Trait::Read), init_(in.init_), tag_(in.tag_),
       payload_(FetchPayload<T>(PayloadRefTag, in.payload_))
   {
     vtAssertExpr(in.init_);
   }
 
+
+  FetchType getID() const {
+    vtAssertExpr(ctrl_.valid());
+    return ctrl_.getID();
+  }
 
   // @todo:
   //   - FetchCtrl constructors w/data immediately
@@ -603,7 +604,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   /* ///////////////////////////////////////////////////////////////////////////
    * Three types of satisfaction could be implemented:
    *   1) With a pointer or reference to existing data
-   *   2) With an existing FetchCtrl *currently, not implemented*
+   *   2) With an existing FetchCtrl
    *   3) With a new allocation
    * ///////////////////////////////////////////////////////////////////////////
    */
@@ -620,7 +621,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   >
   void satisfy(ValueType* ptr, int64_t len) {
     payload_.update(ptr, len);
-    theFetch()->notifyReady(id_);
+    theFetch()->notifyReady(getID());
   }
 
   /*
@@ -635,7 +636,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   >
   void satisfy(std::vector<ValueType>&& in) {
     payload_.update(std::move(in));
-    theFetch()->notifyReady(id_);
+    theFetch()->notifyReady(getID());
   }
 
   template <
@@ -646,7 +647,19 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   >
   void satisfy(std::vector<ValueType>* const in) {
     payload_.update(in);
-    theFetch()->notifyReady(id_);
+    theFetch()->notifyReady(getID());
+  }
+
+  /*
+   * Satisfy from an existing FetchCtrl
+   */
+
+  template <typename U = T, typename Trait2 = Trait>
+  void satisfy(FetchCtrl<U,Trait2>& in) {
+    vtAssertExpr(not in.pending() and in.ctrl_ not_eq nullptr);
+    ctrl_.dep(&in.ctrl_, Trait2::Read);
+    payload_ = FetchPayload<T>(PayloadRefTag, in.payload_);
+    theFetch()->notifyReady(getID());
   }
 
   /*
@@ -662,7 +675,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   >
   void satisfyAlloc(int64_t len) {
     payload_.allocate(len);
-    theFetch()->notifyReady(id_);
+    theFetch()->notifyReady(getID());
   }
 
   /*
@@ -670,7 +683,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
    */
   void whenReady(ActionType action) {
     if (pending()) {
-      theFetch()->whenReady(id_,action);
+      theFetch()->whenReady(getID(),action);
     } else {
       action();
     }
@@ -722,7 +735,6 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   friend struct FetchCtrl;
 
 private:
-  FetchType id_             = no_fetch; // @todo: remove?
   Internal ctrl_            = nullptr;
   bool init_                = false;
   std::string tag_          = "";
