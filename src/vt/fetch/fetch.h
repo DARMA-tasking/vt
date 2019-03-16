@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          fetch_base.h
+//                            fetch.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
