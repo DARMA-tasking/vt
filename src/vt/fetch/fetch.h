@@ -135,6 +135,17 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
     vtAssertExpr(in.init_);
   }
 
+  /*
+   * Copy-assignment operator has by-default reference semantics as expected
+   */
+  Fetch<T,Trait>& operator=(Fetch<T,Trait> const& in) {
+    if (this != &in) {
+      ctrl_ = Ctrl(in.ctrl_,Trait::Read);
+      init_ = in.init_;
+      payload_ = FetchPayload<T>(PayloadRefTag, in.payload_);
+    }
+    return *this;
+  }
 
   FetchType getID() const {
     vtAssertExpr(ctrl_.valid());
@@ -237,7 +248,7 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
   /*
    * Trigger action when the data is ready if state is pending on data
    */
-  void whenReady(ActionType action) {
+  void onReady(ActionType action) {
     if (pending()) {
       theFetch()->whenReady(getID(),action);
     } else {
@@ -248,7 +259,7 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
   /*
    * Trigger action when all outstanding reads are complete
    */
-  void whenFinishRead(ActionType action) {
+  void afterRead(ActionType action) {
     if (ctrl_.getRead() == 0) {
       action();
     } else {

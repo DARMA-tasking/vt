@@ -69,6 +69,18 @@ struct Ctrl final {
   { if (read) incRead(); else inc(); }
 
   Ctrl& operator=(std::nullptr_t) { clear(); return *this; }
+  Ctrl& operator=(Ctrl const& in) {
+    if (this != &in) {
+      clear();
+      refs_     = in.refs_;
+      read_     = in.read_;
+      id_       = in.id_;
+      dep_      = in.dep_;
+      is_read_  = in.is_read_;
+      dep_read_ = in.dep_read_;
+    }
+    return *this;
+  }
 
   bool operator==(Ctrl const& i) const { return id_ == i.id_; }
   bool operator!=(Ctrl const& i) const { return id_ != i.id_; }
