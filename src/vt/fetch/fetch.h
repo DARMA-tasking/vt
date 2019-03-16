@@ -230,6 +230,18 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
     theFetch()->notifyReady(getID());
   }
 
+  template <
+    typename... Args,
+    typename U = void,
+    typename   = typename std::enable_if<
+      not (PtrTraits<T>::arith and PtrTraits<T>::dims == 1), U
+    >::type
+  >
+  void satisfyAlloc(Args&&... args) {
+    payload_.allocate(std::forward<Args>(args)...);
+    theFetch()->notifyReady(getID());
+  }
+
   /*
    * Trigger action when the data is ready if state is pending on data
    */
@@ -350,7 +362,7 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
       not (PtrTraits<T>::dims == 1) or PtrTraits<T>::vec, U
     >::type
   >
-  auto size(Args&&... args) {
+  decltype(auto) size(Args&&... args) {
     return payload_.get()->size(std::forward<Args>(args)...);
   }
 
@@ -371,7 +383,7 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
       not (PtrTraits<T>::dims == 1) or PtrTraits<T>::vec, U
     >::type
   >
-  auto operator[](Args&&... args) {
+  decltype(auto) operator[](Args&&... args) {
     return payload_.get()->operator[](std::forward<Args>(args)...);
   }
 
@@ -389,7 +401,7 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
    * Overload that may use useful for Kokkos::Views
    */
   template <typename... Args>
-  auto operator()(Args&&... args) {
+  decltype(auto) operator()(Args&&... args) {
     return payload_.get()->operator()(std::forward<Args>(args)...);
   }
 
