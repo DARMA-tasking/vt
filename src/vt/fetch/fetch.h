@@ -431,7 +431,7 @@ struct FetchPayload<
 
   void allocate(int64_t len) {
     alloc_ = std::make_unique<std::vector<ValueType>>(len);
-    span_->update(&alloc_->at(0),len);
+    span_->set(&alloc_->at(0),len);
     *impl_ = alloc_.get();
   }
 
@@ -464,9 +464,9 @@ struct FetchPayload<
     return span_->data();
   }
 
-  std::vector<ValueType>& get() const {
+  std::vector<ValueType>* get() const {
     vtAssertExpr(span_->init());
-    return **(impl_.get());
+    return *(impl_.get());
   }
 
 
@@ -541,6 +541,12 @@ struct FetchPayload<
     vtAssertExpr(span_->init());
     return span_->data();
   }
+
+  ValueType* get() const {
+    return getPtr();
+  }
+
+  int64_t size() const { return span_->size(); }
 
   bool pending() const { return not span_->init(); }
   bool ready() const { return not pending(); }
@@ -731,11 +737,16 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
    * Trigger action when all outstanding reads are complete
    */
   void whenFinishRead(ActionType action) {
-    theFetch()->whenFinishRead(getID(),action);
+    if (ctrl_.getRead() == 0) {
+      action();
+    } else {
+      theFetch()->whenFinishRead(getID(),action);
+    }
   }
 
   bool pending() const { return payload_.pending(); }
   bool ready() const { return not pending(); }
+  bool hasReads() const { return ctrl_.getRead() > 0; }
 
   template <typename U = T, typename Trait2 = Trait>
   FetchCtrl<U,Trait2> copy() {
@@ -777,10 +788,11 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   template <
     typename U = void,
     typename   = typename std::enable_if<
-      not (PtrTraits<T>::arith and PtrTraits<T>::dims == 1) or PtrTraits<T>::vec, U
+      (not (PtrTraits<T>::arith and PtrTraits<T>::dims == 1) or PtrTraits<T>::vec)
+      and Trait::Read, U
     >::type
   >
-  T const& get() const { return payload_.get(); }
+  T const& get() const { return *payload_.get(); }
 
   template <
     typename U = void,
@@ -789,8 +801,89 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
       and not Trait::Read, U
     >::type
   >
-  T& get() const { return payload_.get(); }
+  T& get() const { return *payload_.get(); }
 
+  /*
+   * Syntactic sugar for getting data
+   */
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<Trait::Read, U>::type
+  >
+  T const& operator*() { return *payload_.get(); }
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<Trait::Read, U>::type
+  >
+  T const* operator->() { return payload_.get(); }
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<not Trait::Read, U>::type
+  >
+  T& operator*() { return *payload_.get(); }
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<not Trait::Read, U>::type
+  >
+  T* operator->() { return payload_.get(); }
+
+  /*
+   * Syntactic sugar for forwarding size, paren, and bracket operators
+   */
+
+  template <
+    typename... Args,
+    typename U = void,
+    typename   = typename std::enable_if<
+      not (PtrTraits<T>::dims == 1) or PtrTraits<T>::vec, U
+    >::type
+  >
+  auto size(Args&&... args) {
+    return payload_.get()->size(std::forward<Args>(args)...);
+  }
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<
+      PtrTraits<T>::dims == 1 and not PtrTraits<T>::vec, U
+    >::type
+  >
+  int64_t size() {
+    return payload_.size();
+  }
+
+  template <
+    typename... Args,
+    typename U = void,
+    typename   = typename std::enable_if<
+      not (PtrTraits<T>::dims == 1) or PtrTraits<T>::vec, U
+    >::type
+  >
+  auto operator[](Args&&... args) {
+    return payload_.get()->operator[](std::forward<Args>(args)...);
+  }
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<
+      PtrTraits<T>::dims == 1 and not PtrTraits<T>::vec, U
+    >::type
+  >
+  ValueType& operator[](int64_t val) {
+    return *(payload_.get() + val);
+  }
+
+  /*
+   * Overload that may use useful for Kokkos::Views
+   */
+  template <typename... Args>
+  auto operator()(Args&&... args) {
+    return payload_.get()->operator()(std::forward<Args>(args)...);
+  }
 
   template <typename U, typename V>
   friend struct FetchCtrl;
