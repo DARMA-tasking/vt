@@ -269,7 +269,7 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
 
   bool pending() const { return payload_.pending(); }
   bool ready() const { return not pending(); }
-  bool hasReads() const { return ctrl_.getRead() > 0; }
+  bool hasRead() const { return ctrl_.getRead() > 0; }
 
   template <typename U = T, typename Trait2 = Trait>
   Fetch<U,Trait2> copy() {
