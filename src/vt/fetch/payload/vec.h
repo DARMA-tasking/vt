@@ -138,7 +138,7 @@ struct FetchPayload<
   bool ready() const { return not pending(); }
 
   template <typename U, typename V>
-  friend struct FetchCtrl;
+  friend struct Fetch;
   template <typename U, typename V>
   friend struct FetchPayload;
 
