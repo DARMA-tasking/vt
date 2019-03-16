@@ -400,24 +400,25 @@ struct FetchPayload<
   using SpanType  = Span<ValueType>;
 
   FetchPayload(std::nullptr_t)
-    : span_(std::make_shared<SpanType>(SpanUnitializedTag))
+    : span_(std::make_shared<SpanType>(SpanUnitializedTag)),
+      impl_(std::make_shared<std::vector<ValueType>*>(nullptr))
   { }
   FetchPayload(PayloadNewTagType, int64_t len)
     : alloc_(std::make_unique<std::vector<ValueType>>(len)),
-      span_(std::make_shared<SpanType>(&alloc_->at(0),len))
-  { }
-  FetchPayload(PayloadRefTagType, std::shared_ptr<SpanType> in_span)
-    : span_(in_span)
+      span_(std::make_shared<SpanType>(&alloc_->at(0),len)),
+      impl_(std::make_shared<std::vector<ValueType>*>(alloc_.get()))
   { }
   FetchPayload(PayloadRefTagType, FetchPayload<T> const& in)
-    : span_(in.span_)
+    : span_(in.span_), impl_(in.impl_)
   { }
   FetchPayload(PayloadMoveTagType, FetchPayload<T>&& in)
-    : alloc_(std::move(alloc_)), span_(std::move(in.span_))
+    : alloc_(std::move(alloc_)), span_(std::move(in.span_)),
+      impl_(std::move(in.impl_))
   { }
   FetchPayload(PayloadCopyTagType, std::shared_ptr<SpanType> in_span)
     : alloc_(std::make_unique<std::vector<ValueType>>(in_span->size())),
-      span_(std::make_shared<SpanType>(&alloc_->at(0),in_span->size()))
+      span_(std::make_shared<SpanType>(&alloc_->at(0),in_span->size())),
+      impl_(std::make_shared<std::vector<ValueType>*>(alloc_.get()))
   {
     vtAssertExpr(in_span->init());
     span_->copySpan(*in_span);
@@ -430,22 +431,43 @@ struct FetchPayload<
   void allocate(int64_t len) {
     alloc_ = std::make_unique<std::vector<ValueType>>(len);
     span_->update(&alloc_->at(0),len);
+    *impl_ = alloc_.get();
+  }
+
+  template  <typename U>
+  void updateInternal(FetchPayload<U> const& in) {
+    *span_ = *in.span_;
+    *impl_ = *in.impl_;
   }
 
   void update(std::vector<ValueType>&& in) {
     alloc_ = std::make_unique<std::vector<ValueType>>(std::move(in));
     span_->set(&alloc_->at(0),alloc_->size());
+    *impl_ = alloc_.get();
   }
 
   void update(std::vector<ValueType> const& in) {
     alloc_ = std::make_unique<std::vector<ValueType>>(in);
     span_->set(&alloc_->at(0),alloc_->size());
+    *impl_ = alloc_.get();
   }
 
   void update(std::vector<ValueType>* const ptr) {
     alloc_ = nullptr;
     span_->set(&ptr->at(0),ptr->size());
+    *impl_ = ptr;
   }
+
+  ValueType* getPtr() const {
+    vtAssertExpr(span_->init());
+    return span_->data();
+  }
+
+  std::vector<ValueType>& get() const {
+    vtAssertExpr(span_->init());
+    return **(impl_.get());
+  }
+
 
   bool pending() const { return not span_->init(); }
   bool ready() const { return not pending(); }
@@ -456,8 +478,9 @@ struct FetchPayload<
   friend struct FetchPayload;
 
 private:
-  std::unique_ptr<std::vector<ValueType>> alloc_ = nullptr;
-  std::shared_ptr<SpanType>               span_  = nullptr;
+  std::unique_ptr<std::vector<ValueType>>  alloc_ = nullptr;
+  std::shared_ptr<SpanType>                span_  = nullptr;
+  std::shared_ptr<std::vector<ValueType>*> impl_  = nullptr;
 };
 
 template <typename T>
@@ -498,13 +521,24 @@ struct FetchPayload<
     : FetchPayload(PayloadCopyTag, in.span_)
   { }
 
+  template  <typename U>
+  void updateInternal(FetchPayload<U> const& in) {
+    *span_ = *in.span_;
+  }
+
   void allocate(int64_t len) {
     alloc_ = std::make_unique<ValueType[]>(len);
     span_->update(alloc_.get(),len);
   }
 
   void update(ValueType* in_data, int64_t len) {
+    fmt::print("calling update: data={}, len={}\n", print_ptr(in_data), len);
     span_->set(in_data,len);
+  }
+
+  ValueType* getPtr() const {
+    vtAssertExpr(span_->init());
+    return span_->data();
   }
 
   bool pending() const { return not span_->init(); }
@@ -658,7 +692,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   void satisfy(FetchCtrl<U,Trait2>& in) {
     vtAssertExpr(not in.pending() and in.ctrl_ not_eq nullptr);
     ctrl_.dep(&in.ctrl_, Trait2::Read);
-    payload_ = FetchPayload<T>(PayloadRefTag, in.payload_);
+    payload_.updateInternal(in.payload_);
     theFetch()->notifyReady(getID());
   }
 
@@ -726,10 +760,44 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
     return FetchCtrl<T,typename Trait::AddRead>(*this);
   }
 
-  // void allocate(int64_t len) {
-  //   alloc_ = std::make_unique<ValueType[]>(len);
-  //   SpanType::set(alloc_.get(), len);
-  // }
+  /*
+   * Interface for actually accesses the data, type of reference/pointer
+   * conditionalized on whether it's a Trait::Read or not
+   */
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<
+      PtrTraits<T>::arith and PtrTraits<T>::dims == 1, U
+    >::type
+  >
+  ValueType* getRaw() const { return payload_.getPtr(); }
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<
+      PtrTraits<T>::arith and PtrTraits<T>::dims == 1 and not PtrTraits<T>::vec, U
+    >::type
+  >
+  ValueType* get() const { return payload_.getPtr(); }
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<
+      not (PtrTraits<T>::arith and PtrTraits<T>::dims == 1) or PtrTraits<T>::vec, U
+    >::type
+  >
+  T const& get() const { return payload_.get(); }
+
+  template <
+    typename U = void,
+    typename   = typename std::enable_if<
+      (not (PtrTraits<T>::arith and PtrTraits<T>::dims == 1) or PtrTraits<T>::vec)
+      and not Trait::Read, U
+    >::type
+  >
+  T& get() const { return payload_.get(); }
+
 
   template <typename U, typename V>
   friend struct FetchCtrl;
