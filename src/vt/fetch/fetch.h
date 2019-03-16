@@ -159,7 +159,7 @@ struct Internal final {
     : refs_(i.refs_), read_(i.read_), id_(i.id_)
   { incRead(); }
   Internal(Internal const& i, bool read)
-    : refs_(i.refs_), read_(i.read_), id_(i.id_)
+    : refs_(i.refs_), read_(i.read_), id_(i.id_), is_read_(read)
   { if (read) incRead(); else inc(); }
 
   Internal& operator=(std::nullptr_t) { clear(); return *this; }
@@ -172,10 +172,10 @@ struct Internal final {
   ~Internal() { clear(); }
 
   void reset() { *refs_ = 1; *read_ = 0; }
-  void clear() { dec(); tryFree(); }
+  void clear() { if (is_read_) decRead(); else dec(); tryFree(); }
   void tryFree() {
     if (getRef() == 0) {
-      vtAssertExpr(read_ != nullptr && *read_ == 0);
+      vtAssertExpr(read_ != nullptr and *read_ == 0);
       free();
     }
   }
@@ -233,6 +233,7 @@ private:
   int* read_     = nullptr;
   FetchType id_  = no_fetch;
   Internal* dep_ = nullptr;
+  bool is_read_  = false;
   bool dep_read_ = false;
 };
 
@@ -570,17 +571,19 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
 
   using ValueType = typename PtrTraits<T>::BaseType;
 
+  static_assert(PtrTraits<T>::dims < 2, "Dimensions beyond 1 not supported");
+
   virtual ~FetchCtrl() = default;
 
   FetchCtrl() = default;
   FetchCtrl(FetchCtrl<T,Trait>&&) = default;
   FetchCtrl(FetchPendingTagType, std::string in_tag = "")
-    : ctrl_(InternalNewTag), init_(true), tag_(in_tag)
+    : ctrl_(InternalNewTag), init_(true)
   { }
 
   FetchCtrl(FetchCtrl<T,Trait> const& in)
     : DisableCopyCons<Trait::Copy>(in),
-      ctrl_(in.ctrl_,Trait::Read), init_(in.init_), tag_(in.tag_),
+      ctrl_(in.ctrl_,Trait::Read), init_(in.init_),
       payload_(FetchPayload<T>(PayloadRefTag, in.payload_))
   {
     vtAssertExpr(in.init_);
@@ -588,15 +591,16 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
 
   template <typename U, typename Trait2>
   FetchCtrl(FetchCopyTagType, FetchCtrl<U,Trait2> const& in)
-    : ctrl_(InternalNewTag), init_(in.init_), tag_(in.tag_)
+    : ctrl_(InternalNewTag), init_(in.init_)
   {
     vtAssertExpr(not in.pending() and in.init_);
     payload_ = FetchPayload<T>(PayloadCopyTag, in.payload_);
   }
 
+  // @todo: remove this? semantic changed to allow refs of pending by default
   template <typename U, typename Trait2>
   FetchCtrl(FetchFromPendingTagType, FetchCtrl<U,Trait2> const& in)
-    : ctrl_(in.ctrl_), init_(in.init_), tag_(in.tag_), payload_(nullptr)
+    : ctrl_(in.ctrl_), init_(in.init_), payload_(nullptr)
   {
     vtAssertExpr(in.pending());
   }
@@ -604,7 +608,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   template <typename Trait2>
   FetchCtrl(FetchCtrl<T,Trait2>&& in)
     : ctrl_(in.ctrl_,Trait2::Read), init_(in.init_),
-      tag_(in.tag_), payload_(std::move(in.payload_))
+      payload_(std::move(in.payload_))
   { }
 
   /*
@@ -619,7 +623,7 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
     >
   >
   FetchCtrl(FetchCtrl<U,Trait2> const& in)
-    : ctrl_(in.ctrl_,Trait::Read), init_(in.init_), tag_(in.tag_),
+    : ctrl_(in.ctrl_,Trait::Read), init_(in.init_),
       payload_(FetchPayload<T>(PayloadRefTag, in.payload_))
   {
     vtAssertExpr(in.init_);
@@ -723,28 +727,12 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
     }
   }
 
-
-  // template <
-  //   typename U = T,
-  //   typename Trait2 = Trait,
-  //   typename = typename std::enable_if_t<
-  //     ConvTraits<T,U>::conv and Down<Trait,Trait2>::is
-  //   >
-  // >
-  // FetchCtrl(FetchCtrl<U,Trait2> const& in)
-  //   : SpanType(in), ctrl_(in.ctrl_,Trait2::Read)
-  // { }
-
-
-  // template <typename U, typename Trait2>
-  // FetchCtrl(FetchCopyTagType, FetchCtrl<U,Trait2> const& in)
-  //   : SpanType(SpanUnitializedTag),
-  //     ctrl_(InternalNewTag),
-  //     alloc_(std::make_unique<ValueType[]>(in.length()))
-  // {
-  //   SpanType::set(alloc_.get(),in.length());
-  //   SpanType::copySpan(in);
-  // }
+  /*
+   * Trigger action when all outstanding reads are complete
+   */
+  void whenFinishRead(ActionType action) {
+    theFetch()->whenFinishRead(getID(),action);
+  }
 
   bool pending() const { return payload_.pending(); }
   bool ready() const { return not pending(); }
@@ -758,6 +746,11 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
   FetchCtrl<T,typename Trait::AddRead> read() {
     vtAssertExpr(init_);
     return FetchCtrl<T,typename Trait::AddRead>(*this);
+  }
+
+  FetchCtrl<T,Trait> ref() {
+    vtAssertExpr(init_);
+    return FetchCtrl<T,Trait>(*this);
   }
 
   /*
@@ -805,7 +798,6 @@ struct FetchCtrl : DisableCopyCons<Trait::Copy> {
 private:
   Internal ctrl_            = nullptr;
   bool init_                = false;
-  std::string tag_          = "";
   FetchPayload<T> payload_  = nullptr;
 };
 

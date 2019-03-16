@@ -79,6 +79,13 @@ struct FetchManager {
     vtAssert(read_iter == when_ready_read_.end(), "Read triggers must be fired");
     // Trigger all the free actions
     trigger(id, when_free_);
+    //
+    // Remove any tagged lookups (@todo: implement this feature)?
+    //
+    // auto tag_iter = tag_lookup_.find(id);
+    // if (tag_iter != tag_lookup_.end()) {
+    //   tag_lookup_.erase(tag_iter);
+    // }
   }
 
   void freeFetchRead(FetchType id) {
@@ -89,6 +96,12 @@ struct FetchManager {
   FetchType newID() {
     auto const this_node = theContext()->getNode();
     return FetchIDBuilder::make(cur_seq_id_++, this_node);
+  }
+
+  void registerTag(FetchType id, std::string const& in_tag) {
+    if (in_tag != "") {
+      tag_lookup_[id] = in_tag;
+    }
   }
 
 private:
@@ -106,6 +119,7 @@ private:
   std::unordered_map<FetchType, ActionListType> when_ready_      = {};
   std::unordered_map<FetchType, ActionListType> when_ready_read_ = {};
   std::unordered_map<FetchType, ActionListType> when_free_       = {};
+  std::unordered_map<FetchType, std::string>    tag_lookup_      = {};
   FetchSeqIDType cur_seq_id_                                     = 1;
 };
 
