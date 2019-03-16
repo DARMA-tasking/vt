@@ -72,13 +72,13 @@ namespace vt { namespace fetch {
  * vt::Fetch<int>
  */
 
-struct FetchCopyTagType { } FetchCopyTag { };
+
 
 template <typename T, typename Trait = Default>
 struct Fetch;
 
+static struct FetchCopyTagType        { } FetchCopyTag        { };
 static struct FetchPendingTagType     { } FetchPendingTag     { };
-static struct FetchFromPendingTagType { } FetchFromPendingTag { };
 
 template <typename T, typename Trait>
 struct Fetch : DisableCopyCons<Trait::Copy> {
@@ -109,14 +109,6 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
   {
     vtAssertExpr(not in.pending() and in.init_);
     payload_ = FetchPayload<T>(PayloadCopyTag, in.payload_);
-  }
-
-  // @todo: remove this? semantic changed to allow refs of pending by default
-  template <typename U, typename Trait2>
-  Fetch(FetchFromPendingTagType, Fetch<U,Trait2> const& in)
-    : ctrl_(in.ctrl_), init_(in.init_), payload_(nullptr)
-  {
-    vtAssertExpr(in.pending());
   }
 
   template <typename Trait2>
