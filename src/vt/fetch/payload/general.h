@@ -115,6 +115,12 @@ struct FetchPayload<
     return *(impl_.get());
   }
 
+  std::size_t bytes() const {
+    vtAssertExpr(init_);
+    // @todo: This is incorrect...maybe we need the serializer for this?
+    return impl_->size() * sizeof(8);
+  }
+
   bool pending() const { return not init_; }
   bool ready() const { return not pending(); }
 

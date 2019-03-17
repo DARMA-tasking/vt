@@ -133,6 +133,10 @@ struct FetchPayload<
     return *(impl_.get());
   }
 
+  std::size_t bytes() const {
+    vtAssertExpr(span_->init());
+    return span_->size() * sizeof(ValueType);
+  }
 
   bool pending() const { return not span_->init(); }
   bool ready() const { return not pending(); }

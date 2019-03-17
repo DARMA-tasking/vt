@@ -119,6 +119,11 @@ struct FetchPayload<
   bool pending() const { return not span_->init(); }
   bool ready() const { return not pending(); }
 
+  std::size_t bytes() const {
+    vtAssertExpr(span_->init());
+    return span_->size() * sizeof(ValueType);
+  }
+
   template <typename U, typename V>
   friend struct Fetch;
   template <typename U, typename V>

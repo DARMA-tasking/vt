@@ -48,15 +48,15 @@
 #include "vt/config.h"
 #include "vt/messaging/message/message.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace fetch {
 
 struct FetchBase : messaging::BaseMsg {};
 
-}}} /* end namespace vt::vrt::collection */
+}} /* end namespace vt::fetch */
 
 namespace vt {
 
-using FetchBase = vrt::collection::FetchBase;
+using FetchBase = fetch::FetchBase;
 
 } /* end namespace vt */
 

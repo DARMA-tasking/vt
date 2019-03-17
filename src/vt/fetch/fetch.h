@@ -81,7 +81,7 @@ static struct FetchCopyTagType        { } FetchCopyTag        { };
 static struct FetchPendingTagType     { } FetchPendingTag     { };
 
 template <typename T, typename Trait>
-struct Fetch : DisableCopyCons<Trait::Copy> {
+struct Fetch : DisableCopyCons<Trait::Copy>, FetchBase {
 
   using ValueType = typename PtrTraits<T>::BaseType;
 
@@ -407,6 +407,15 @@ struct Fetch : DisableCopyCons<Trait::Copy> {
   decltype(auto) operator()(Args&&... args) {
     return payload_.get()->operator()(std::forward<Args>(args)...);
   }
+
+  /*
+   * Get the total bytes for this Fetch: used for tracing, etc.
+   */
+  std::size_t totalBytes() {
+    vtAssertExpr(init_);
+    return payload_.bytes();
+  }
+
 
   template <typename U, typename V>
   friend struct Fetch;
