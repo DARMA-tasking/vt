@@ -30,6 +30,7 @@ function(link_target_with_vt)
     LINK_CHECKPOINT
     LINK_MELD
     LINK_DETECTOR
+    LINK_CLI11
   )
   set(
     multiValueArg
@@ -109,6 +110,8 @@ function(link_target_with_vt)
       message(STATUS "link_target_with_vt: fmt=${ARG_LINK_FMT}")
     endif()
     target_compile_definitions(${ARG_TARGET} PUBLIC FMT_HEADER_ONLY=1)
+    target_include_directories(${ARG_TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/lib/fmt)
+    target_include_directories(${ARG_TARGET} INTERFACE ${CMAKE_INSTALL_PREFIX}/include)
   endif()
 
   if (NOT DEFINED ARG_LINK_CHECKPOINT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_CHECKPOINT)
@@ -144,6 +147,14 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} vt::lib::detector
     )
+  endif()
+
+  if (NOT DEFINED ARG_LINK_CLI11 AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_CLI11)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: cli11=${ARG_LINK_CLI11}")
+    endif()
+    target_include_directories(${ARG_TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/lib/CLI)
+    target_include_directories(${ARG_TARGET} INTERFACE ${CMAKE_INSTALL_PREFIX}/include)
   endif()
 
   if (NOT DEFINED ARG_LINK_OPENMP AND DEFAULT_THREADING STREQUAL openmp OR ARG_LINK_OPENMP)

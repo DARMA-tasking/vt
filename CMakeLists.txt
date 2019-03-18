@@ -37,6 +37,8 @@ include(cmake/build_git_info.cmake)
 
 # Add subdirectories for tests and examples
 add_subdirectory(${PROJECT_LIB_DIR}/context)
+add_subdirectory(${PROJECT_LIB_DIR}/CLI)
+add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 add_subdirectory(src)
 
 add_custom_target(examples)
