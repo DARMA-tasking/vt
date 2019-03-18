@@ -637,6 +637,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const sub_handler = col_msg->getVrtHandler();
   auto const member = col_msg->getMember();
   auto const col_ptr = inner_holder.getCollection();
+  auto const is_fetch = col_msg->getFetch();
 
   debug_print(
     vrt_coll, node,
@@ -2860,7 +2861,7 @@ template <
   ActiveColFetchTypedFnType<FetchT,ColT>* f
 >
 void CollectionManager::fetch(
-  VirtualElmProxyType<ColT> const& proxy, FetchT *fetch
+  VirtualElmProxyType<ColT> const& proxy, FetchT fetch
 ) {
   // Register the handler for the fetch operation
   auto han = auto_registry::makeAutoHandlerCollectionFetch<ColT,FetchT,f>();
@@ -2888,19 +2889,28 @@ void CollectionManager::fetch(
       auto const from = theContext()->getNode();
       auto elm = elm_holder->lookup(idx)->getCollection();;
 
-      auto const fetch_size = fetch->totalBytes();
+      auto const fetch_size = fetch.totalBytes();
       auto const idx = elm->getIndex();
       uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
       uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
       uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
       uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
 
-      runnable::RunnableCollection::runFetch<FetchT,ColT>(
-        han, fetch, fetch_size, elm, from, member, is_fetch,
+      runnable::RunnableCollection::run<FetchT,ColT>(
+        han, &fetch, fetch_size, elm, from, member, is_fetch,
         idx1, idx2, idx3, idx4
       );
     } else {
+      auto const fetch_pending = fetch.pending();
+      if (fetch_pending) {
+        // No data must be sent; this is a get operation
 
+        // lm->template routeMsgSerializeHandler<
+        //   MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
+        // >(toProxy, home_node, msg);
+      } else {
+        // Data must be sent; this is a put operation
+      }
     }
   } else {
     /*

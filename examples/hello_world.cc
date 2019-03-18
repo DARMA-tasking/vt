@@ -43,6 +43,7 @@
 */
 
 #include "vt/transport.h"
+#include "vt/fetch/fetch.h"
 #include <cstdlib>
 
 using namespace vt;
@@ -57,10 +58,12 @@ static void hello_world(HelloMsg* msg) {
   fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
 }
 
+// static void fetchHan(vt::Fetch<int*,vt::fetch::Read>* fetch) {
+// }
+
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  std::cout << "initialisation is done for hello_world"<<std::endl;
   auto const& my_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
@@ -69,6 +72,77 @@ int main(int argc, char** argv) {
     CollectiveOps::finalize();
     return 0;
   }
+
+  using T = vt::fetch::PtrTraits<int**>;
+  using Z = vt::fetch::PtrTraits<int*>;
+  using U = vt::fetch::PtrTraits<std::vector<int>>;
+  static_assert(T::dims == 2, "Must be 2");
+  static_assert(U::dims == 1, "Must be 1");
+  static_assert(Z::dims == 1, "Must be 1");
+  static_assert(U::vec, "Must be vector");
+  static_assert(std::is_same<typename U::BaseType, int>::value, "Must be type");
+  static_assert(std::is_same<typename Z::BaseType, int>::value, "Must be type");
+  //static_assert(vt::fetch::ConvTraits<U,Z>::conv, "Must be conv");
+
+  using X = vt::fetch::Fetch<int*,vt::fetch::Read>;
+  using Y = vt::fetch::Fetch<std::vector<int>,vt::fetch::Read>;
+  using MM = vt::fetch::Fetch<int*>;
+
+  if (0) {
+    auto z = MM();
+    X zz(z.read());
+
+    //x.whenReady([]{
+
+    auto x = X();
+    auto y = Y();
+    auto const& val = *y;
+    X m(y.copy<int*>());
+    Y k(y);
+    Y n(x.copy<std::vector<int>>());
+    //X t(x);
+  }
+
+  vt::fetch::Fetch<int*> fff;
+  if (1 && my_node == 0) {
+    vt::fetch::Fetch<int*> m = vt::fetch::makePending<int*>();
+    int* ptr = new int[10];
+    ptr[0] = 10;
+    ptr[1] = 11;
+    m.satisfy(ptr, 10);
+
+    vt::fetch::Fetch<int*> f = vt::fetch::makePending<int*>();
+    vt::fetch::Fetch<int*> g = f;
+    f.onReady([=]{ fmt::print("ready: {}\n", f.get()[0]); });
+    g.onReady([=]{ fmt::print("ready\n"); });
+    fff = f;
+
+    vt::fetch::Fetch<int*,vt::fetch::Read> h = f;
+    h.onReady([=]{ fmt::print("ready read: {}\n", f.get()[1]); });
+    g.satisfy(m);
+    h.afterRead([=]{ fmt::print("FIN ready read\n"); });
+
+    auto vec = vt::fetch::makePending<std::vector<double>>();
+    vec.satisfyAlloc(100);
+    vec->at(0) = 10;
+    vec->at(1) = 11;
+    fmt::print("size={}, val={}\n", vec.size(), vec[1]);
+
+    auto d2 = vt::fetch::makePending<double*>();
+    d2.satisfy(vec);
+    fmt::print("size={}, val={}\n", d2.size(), d2[1]);
+
+    auto d3 = vt::fetch::makePending<std::unordered_map<int,int>>();
+    d3.satisfyAlloc();
+    d3[10] = 20;
+    fmt::print("valx={}\n",d3[10]);
+
+    auto d4 = vt::fetch::makePending<double>();
+    d4.satisfyAlloc();
+    *d4 = 10.3f;
+    fmt::print("valx={}\n",*d4);
+  }
+
 
   if (my_node == 0) {
     auto msg = makeSharedMessage<HelloMsg>(my_node);
