@@ -16,16 +16,21 @@ if (${enable_gtest})
   # Instead of explicitly including (include(FindGTest)), call find_package
   # which automatically searches the module include path. This is the preferred
   # mechanism for utilizing a package script.
-  find_package(GTest REQUIRED)
+  if(NOT projHasParent)
+    find_package(GTest REQUIRED)
 
-  if(GTEST_FOUND)
-    set(GTEST_DIR "${GTEST_ROOT}")
+    if(GTEST_FOUND)
+      set(GTEST_DIR "${GTEST_ROOT}")
+    else()
+      message(
+        FATAL_ERROR
+        "Gtest not found, not building tests. "
+        "Please specify valid directory with -Dgtest_DIR="
+      )
+    endif()
   else()
-    message(
-      FATAL_ERROR
-      "Gtest not found, not building tests. "
-      "Please specify valid directory with -Dgtest_DIR="
-    )
+    include(cmake-modules/GoogleTest.cmake)
+    set(GTEST_BOTH_LIBRARIES gtest gtest_main)
   endif()
 
   set(VT_HAS_GTEST TRUE)

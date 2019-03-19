@@ -1,4 +1,4 @@
-
+get_directory_property(projHasParent PARENT_DIRECTORY)
 
 # Local packages that VT depends on (meld/detector/checkpoint)
 include(cmake/load_local_packages.cmake)
