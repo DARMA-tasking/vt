@@ -171,7 +171,7 @@ namespace vt {
 backend_enable_if(
   trace_enabled,
   extern trace::Trace* theTrace();
-);
+)
 
 }
 

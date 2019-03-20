@@ -67,9 +67,9 @@ struct TestTLS : TestHarness { };
 static constexpr int const num_vals = 128;
 
 // Test TLS: w/o initializer, single thread, global variable
-DeclareTLS(int, test_noinit_single_thd);
+DeclareTLS(int, test_noinit_single_thd)
 #define IS_TLS 0
-DeclareInitVar(IS_TLS, int, test_var_noinit_single_thd, 0);
+DeclareInitVar(IS_TLS, int, test_var_noinit_single_thd, 0)
 
 TEST_F(TestTLS, basic_tls_noinit_single_thd) {
   using namespace vt::util::tls;
@@ -90,7 +90,7 @@ TEST_F(TestTLS, basic_var_tls_noinit_single_thd) {
 }
 
 // Test TLS: w/o initializer, single thread, static global variable
-DeclareStaticTLS(int, test_noinit_static_single_thd);
+DeclareStaticTLS(int, test_noinit_static_single_thd)
 
 TEST_F(TestTLS, basic_tls_noinit_static_single_thd) {
   using namespace vt::util::tls;
@@ -103,9 +103,9 @@ TEST_F(TestTLS, basic_tls_noinit_static_single_thd) {
 
 // Test TLS: w/o initializer, single thread, class static variable
 struct TestClsStatic {
-  DeclareClassInsideTLS(TestClsStatic, int, test_noinit_class_single_thd);
+  DeclareClassInsideTLS(TestClsStatic, int, test_noinit_class_single_thd)
 };
-DeclareClassOutsideTLS(TestClsStatic, int, test_noinit_class_single_thd);
+DeclareClassOutsideTLS(TestClsStatic, int, test_noinit_class_single_thd)
 
 TEST_F(TestTLS, basic_tls_noinit_class_single_thd) {
   using namespace vt::util::tls;
@@ -121,9 +121,9 @@ static constexpr int const init_val = 29;
 
 // Test TLS: w/initializer, single thread, class static variable
 struct TestClsStaticInit {
-  DeclareClassInsideInitTLS(TestClsStaticInit, int, test_init_class_single_thd, init_val);
+  DeclareClassInsideInitTLS(TestClsStaticInit, int, test_init_class_single_thd, init_val)
 };
-DeclareClassOutsideInitTLS(TestClsStaticInit, int, test_init_class_single_thd, init_val);
+DeclareClassOutsideInitTLS(TestClsStaticInit, int, test_init_class_single_thd, init_val)
 
 TEST_F(TestTLS, basic_tls_init_class_single_thd) {
   using namespace vt::util::tls;
@@ -137,7 +137,7 @@ TEST_F(TestTLS, basic_tls_init_class_single_thd) {
 }
 
 // Test TLS: w/initializer, single thread, global variable
-DeclareInitTLS(int, test_init_single_thd, init_val);
+DeclareInitTLS(int, test_init_single_thd, init_val)
 
 TEST_F(TestTLS, basic_tls_init_single_thd) {
   using namespace vt::util::tls;
@@ -151,7 +151,7 @@ TEST_F(TestTLS, basic_tls_init_single_thd) {
 }
 
 // Test TLS: w/initializer, single thread, static global variable
-DeclareStaticInitTLS(int, test_init_static_single_thd, init_val);
+DeclareStaticInitTLS(int, test_init_static_single_thd, init_val)
 
 TEST_F(TestTLS, basic_tls_init_static_single_thd) {
   using namespace vt::util::tls;
@@ -167,28 +167,28 @@ TEST_F(TestTLS, basic_tls_init_static_single_thd) {
 static constexpr WorkerCountType const num_workers = 8;
 
 // Test TLS: w/o initializer, multi thread, global variable
-DeclareTLS(int, test_noinit_multi_thd);
+DeclareTLS(int, test_noinit_multi_thd)
 
 // Test TLS: w/initializer, multi thread, global variable
-DeclareInitTLS(int, test_init_multi_thd, init_val);
+DeclareInitTLS(int, test_init_multi_thd, init_val)
 
 // Test TLS: w/o initializer, multi thread, static global variable
-DeclareStaticTLS(int, test_noinit_static_multi_thd);
+DeclareStaticTLS(int, test_noinit_static_multi_thd)
 
 // Test TLS: w/initializer, multi thread, static global variable
-DeclareStaticInitTLS(int, test_init_static_multi_thd, init_val);
+DeclareStaticInitTLS(int, test_init_static_multi_thd, init_val)
 
 // Test TLS: w/o initializer, single thread, class static variable
 struct TestClsMultiStatic {
-  DeclareClassInsideTLS(TestClsMultiStatic, int, test_noinit_class_multi_thd);
+  DeclareClassInsideTLS(TestClsMultiStatic, int, test_noinit_class_multi_thd)
 };
-DeclareClassOutsideTLS(TestClsMultiStatic, int, test_noinit_class_multi_thd);
+DeclareClassOutsideTLS(TestClsMultiStatic, int, test_noinit_class_multi_thd)
 
 // Test TLS: winitializer, single thread, class static variable
 struct TestClsMultiInitStatic {
-  DeclareClassInsideInitTLS(TestClsMultiInitStatic, int, test_init_class_multi_thd, init_val);
+  DeclareClassInsideInitTLS(TestClsMultiInitStatic, int, test_init_class_multi_thd, init_val)
 };
-DeclareClassOutsideInitTLS(TestClsMultiInitStatic, int, test_init_class_multi_thd, init_val);
+DeclareClassOutsideInitTLS(TestClsMultiInitStatic, int, test_init_class_multi_thd, init_val)
 
 static void testTLSMulti(
   bool const is_static, bool const is_init, bool const is_class = false

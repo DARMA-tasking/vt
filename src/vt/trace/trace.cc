@@ -383,11 +383,11 @@ bool Trace::checkEnabled() {
 
 void Trace::enableTracing() {
   enabled_ = true;
-};
+}
 
 void Trace::disableTracing() {
   enabled_ = false;
-};
+}
 
 void Trace::writeTracesFile() {
   auto const& node = theContext()->getNode();

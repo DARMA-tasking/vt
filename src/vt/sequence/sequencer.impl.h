@@ -119,7 +119,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(UserSeqFunType const& fn) {
   );
 
   return sequenced(context_->getSeq(), fn);
-};
+}
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(

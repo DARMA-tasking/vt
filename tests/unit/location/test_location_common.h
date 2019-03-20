@@ -131,7 +131,7 @@ void routeTestHandler(EntityMsg* msg) {
 // check if the given entity is in the node cache
 bool isCached(int const entity) {
   return vt::theLocMan()->virtual_loc->isCached(entity);
-};
+}
 
 // check if the given entity should be stored in cache or not
 // depending on the situation:

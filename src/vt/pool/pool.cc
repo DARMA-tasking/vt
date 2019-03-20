@@ -225,7 +225,7 @@ void Pool::dealloc(void* const buf) {
   if (!success) {
     defaultDealloc(ptr_actual);
   }
-};
+}
 
 Pool::SizeType Pool::remainingSize(void* const buf) {
   #if backend_check_enabled(memory_pool)

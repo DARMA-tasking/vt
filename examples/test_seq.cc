@@ -68,7 +68,7 @@ struct EmptyMsg : vt::Message {
 #define PRINT_SEQUENCE(args...)
 #endif
 
-SEQUENCE_REGISTER_HANDLER(EmptyMsg, action1);
+SEQUENCE_REGISTER_HANDLER(EmptyMsg, action1)
 
 #pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeq(SeqType const& seq_id) {

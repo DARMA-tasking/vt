@@ -77,7 +77,7 @@ static void callback_fn(DataMsg* msg, MyContext* ctx) {
   for (auto&& elm : msg->vec_) {
     ::fmt::print("\t elm={}\n", elm);
   }
-};
+}
 
 static void handler(Msg* msg) {
   auto cb = msg->cb;
