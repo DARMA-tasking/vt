@@ -56,6 +56,49 @@ namespace vt { namespace auto_registry {
 
 using namespace mapping;
 
+/*
+ * Functor variants
+ */
+
+template <typename FunctorT, typename... Args>
+inline HandlerType makeAutoHandlerFunctorView() {
+  using ContainerType = AutoActiveViewFunctorContainerType;
+  using RegInfoType   = AutoRegInfoType<AutoActiveViewFunctorType>;
+  using FuncType      = ActiveViewFnPtrType;
+  using RunnableType  = RunnableFunctor<
+    FunctorT, ContainerType, RegInfoType, FuncType, true, Args...
+  >;
+  auto const& han = HandlerManagerType::makeHandler(true, true, RunnableType::idx);
+  debug_print(
+    handler, node,
+    "makeAutoSliceHandlerFunctorMap: handler={}\n", han
+  );
+  return han;
+}
+
+inline AutoActiveViewFunctorType getAutoHandlerFunctorView(
+  HandlerType const& han
+) {
+  using ContainerType    = AutoActiveViewFunctorContainerType;
+  auto const& id         = HandlerManagerType::getHandlerIdentifier(han);
+  bool const& is_auto    = HandlerManagerType::isHandlerAuto(han);
+  bool const& is_functor = HandlerManagerType::isHandlerFunctor(han);
+
+  debug_print(
+    handler, node,
+    "getAutoSliceHandlerFunctorMap: handler={}, id={}, is_auto={}, is_functor={}\n",
+    han, id, print_bool(is_auto), print_bool(is_functor)
+  );
+
+  vtAssertExpr(is_functor and is_auto);
+
+  return getAutoRegistryGen<ContainerType>().at(id).getFun();
+}
+
+/*
+ * Function variants
+ */
+
 template <
   typename IndexT, typename IndexU,
   ActiveViewTypedFnType<IndexT, IndexU>* f
@@ -83,6 +126,15 @@ inline AutoActiveViewType getAutoHandlerView(HandlerType const& handler) {
     "getAutoSliceHandlerMap: id={}, handler={}\n", id, handler
   );
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
+}
+
+inline AutoActiveViewType getHandlerView(HandlerType const& han) {
+  bool const is_functor = HandlerManagerType::isHandlerFunctor(han);
+  if (is_functor) {
+    return getAutoHandlerFunctorView(han);
+  } else {
+    return getAutoHandlerView(han);
+  }
 }
 
 }} /* end namespace vt::auto_registry */

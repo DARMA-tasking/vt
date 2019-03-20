@@ -56,15 +56,20 @@ namespace vt { namespace auto_registry {
 
 using namespace mapping;
 
-// register the relative indexing handler of a view
+// register the provided view indexing handler
+template <typename FunctorT, typename... Args>
+HandlerType makeAutoHandlerFunctorView();
+
 template <
   typename IndexT, typename IndexU,
   ActiveViewTypedFnType<IndexT, IndexU>* f
 >
 HandlerType makeAutoHandlerView();
 
-// retrieve a registered relative indexing handler
+// retrieve a registered view indexing handler
+AutoActiveViewFunctorType getAutoHandlerFunctorView(HandlerType const& han);
 AutoActiveViewType getAutoHandlerView(HandlerType const& handler);
+AutoActiveViewType getHandlerView(HandlerType const& han);
 
 }} // end namespace vt::auto_registry
 
