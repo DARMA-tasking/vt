@@ -144,7 +144,6 @@ TEST_F(TestLocation, test_unregister_multiple_entities) {
 
 TEST_F(TestLocation, test_migrate_entity) {
 
-  auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
   auto const entity   = location::arbitrary_entity;
   auto const old_home = 0;
@@ -258,7 +257,6 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
       entity, my_node, [&msg_count](vt::BaseMessage* raw_msg) {
         // count the number of routed messages received by the home node
         auto msg = static_cast<TypeParam*>(raw_msg);
-        auto dst = vt::theContext()->getNode();
         debug_print(
           location, node,
           "TestLocationRoute: message arrived for entity={}\n", msg->entity_

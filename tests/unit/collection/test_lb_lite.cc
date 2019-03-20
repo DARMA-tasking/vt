@@ -176,8 +176,6 @@ static void startIter(int32_t const iter, ColProxyType proxy) {
 struct TestLB : TestParallelHarness { };
 
 TEST_F(TestLB, test_lb_1) {
-  auto const& my_node = theContext()->getNode();
-  auto const& root = 0;
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const& range = Index1D(32);
@@ -188,8 +186,6 @@ TEST_F(TestLB, test_lb_1) {
 }
 
 // TEST_F(TestLB, test_lb_multi_1) {
-//   auto const& my_node = theContext()->getNode();
-//   auto const& root = 0;
 //   auto const& this_node = theContext()->getNode();
 //   if (this_node == 0) {
 //     auto const& range = Index1D(64);
@@ -202,8 +198,6 @@ TEST_F(TestLB, test_lb_1) {
 // }
 
 // TEST_F(TestLB, test_lb_multi_2) {
-//   auto const& my_node = theContext()->getNode();
-//   auto const& root = 0;
 //   auto const& this_node = theContext()->getNode();
 //   if (this_node == 0) {
 //     auto const& range = Index1D(32);

@@ -116,9 +116,7 @@ inline NodeType blockMapDenseFlatIndex(
   double const& elms_as_dbl = static_cast<double>(num_elems);
   double const& res_as_dbl = static_cast<double>(num_resources);
   double const& bin_floor_dbl = std::floor(elms_as_dbl / res_as_dbl);
-  double const& bin_ceil_dbl = std::floor(elms_as_dbl / res_as_dbl);
   IndexElmType const& bin_size_floor = static_cast<IndexElmType>(bin_floor_dbl);
-  IndexElmType const& bin_size_ceil = static_cast<IndexElmType>(bin_ceil_dbl);
   IndexElmType const& rem_elms = num_elems % num_resources;
   IndexElmType const& num_first_set = rem_elms * (bin_size_floor + 1);
 

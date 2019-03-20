@@ -70,6 +70,7 @@ static void msgHandlerX(MyDataMsg* msg);
 static inline void activeMessageBroadcast() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * The theMsg()->broadcastMsg(..) will send the message to every node in the

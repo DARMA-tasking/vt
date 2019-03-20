@@ -48,8 +48,6 @@
 using namespace vt;
 using namespace vt::group;
 
-static GroupType this_group = no_group;
-
 struct TestMsg;
 
 struct MyReduceMsg : collective::ReduceMsg {

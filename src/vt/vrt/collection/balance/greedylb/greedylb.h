@@ -113,7 +113,7 @@ private:
   ElementLoadType const* stats = nullptr;
   ObjSampleType obj_sample, load_over;
   std::size_t load_over_size = 0;
-  int64_t migrates_expected = 0, transfer_count = 0;
+  int64_t transfer_count = 0;
   TransferType transfers;
 };
 

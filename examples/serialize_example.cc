@@ -212,9 +212,6 @@ void testSerializeTupleVector() {
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-
   testSerializeVector();
   testSerializeTuple();
   testSerializeByteUserClass();

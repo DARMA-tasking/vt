@@ -71,9 +71,6 @@ inline void assertOutExpr(
   auto reason = "";
   auto assert_fail_str = stringizeMessage(msg,reason,cond,file,line,func,error);
   ::vt::output(assert_fail_str,error,true,true,true,fail);
-  auto const& stack = ::vt::debug::stack::dumpStack();
-  auto const& list_str = std::get<1>(stack);
-
   if (fail) {
     vtAbort("Assertion failed");
   }

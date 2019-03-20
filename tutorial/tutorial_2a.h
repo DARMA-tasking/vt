@@ -76,6 +76,7 @@ void MyCol::msgHandler(MyCollMsg* msg) {
 static inline void collection() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * This is an example of creating a virtual context collection with an index

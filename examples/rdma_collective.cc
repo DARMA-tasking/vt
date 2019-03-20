@@ -51,11 +51,12 @@ static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
 
 static RDMA_HandleType my_handle = no_rdma_handle;
-static HandlerType test_han = uninitialized_handler;
 
+#if backend_check_enabled(mpi_rdma)
 static int const my_data_len = 8;
-static int const local_data_len = 24;
 static double* my_data = nullptr;
+#endif
+static int const local_data_len = 24;
 static double* local_data = nullptr;
 
 struct TestMsg : vt::Message {
@@ -64,6 +65,7 @@ struct TestMsg : vt::Message {
   TestMsg(RDMA_HandleType const& in_han) : Message(), han(in_han) { }
 };
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void announce(TestMsg* msg) {
   auto const& rdma_handle = msg->han;
 

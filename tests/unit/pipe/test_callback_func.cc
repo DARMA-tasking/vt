@@ -22,7 +22,7 @@ static int32_t called = 0;
 
 struct TestCallbackFunc : TestParallelHarness {
   static void test_handler(CallbackMsg* msg) {
-    auto const& this_node = theContext()->getNode();
+    //auto const& this_node = theContext()->getNode();
     //fmt::print("{}: test_handler\n", this_node);
     msg->cb_.send();
   }

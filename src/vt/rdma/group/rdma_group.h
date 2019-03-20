@@ -72,7 +72,7 @@ struct Group {
   void walk_region(RDMA_RegionType const& region, Walker&& walk) {
     RDMA_ElmType lo = region.lo;
     RDMA_ElmType hi = region.hi;
-    RDMA_ElmType elm_lo, elm_hi = lo;
+    RDMA_ElmType elm_hi = lo;
     RDMA_BlockType blk_lo;
     NodeType cur_node;
 
@@ -82,7 +82,6 @@ struct Group {
     while (elm_hi < hi) {
       auto const& ret = map.elm_map(lo, num_total_elems, num_blocks);
       blk_lo = std::get<0>(ret);
-      elm_lo = std::get<1>(ret);
       elm_hi = std::get<2>(ret);
       cur_node = map.block_map(blk_lo, num_blocks);
 

@@ -96,12 +96,11 @@ private:
 private:
   bool is_target_ = false;
 
-  bool initialized_ = false, locked_ = false, flushed_ = true;
+  bool initialized_ = false, locked_ = false;
   RDMA_HandleType const rdma_handle_ = no_rdma_handle;
   RDMA_GroupPosType target_pos_ = no_group_pos;
   RDMA_GroupPosType non_target_pos_ = no_group_pos;
   NodeType target_ = uninitialized_destination;
-  NodeType my_node_ = uninitialized_destination;
   NodeType non_target_ = uninitialized_destination;
   ByteType num_bytes_ = no_byte;
   RDMA_PtrType ptr_ = no_rdma_ptr;

@@ -250,11 +250,11 @@ void State::getData(
     RDMA_GetFunctionType get_fn =
       tag == no_tag or get_any_tag ? rdma_get_fn :
       std::get<0>(get_tag_holder.find(tag)->second);
-    ::vt::HandlerType const reg_han =
-      tag == no_tag or get_any_tag ? this_get_handler :
-      std::get<2>(get_tag_holder.find(tag)->second);
 
     #if backend_check_enabled(trace_enabled)
+      ::vt::HandlerType const reg_han =
+        tag == no_tag or get_any_tag ? this_get_handler :
+        std::get<2>(get_tag_holder.find(tag)->second);
       trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
         reg_han, auto_registry::RegistryTypeEnum::RegRDMAGet
       );
@@ -316,11 +316,11 @@ void State::putData(
     RDMA_PutFunctionType put_fn =
       tag == no_tag or put_any_tag ? rdma_put_fn :
       std::get<0>(put_tag_holder.find(tag)->second);
-    ::vt::HandlerType const reg_han =
-      tag == no_tag or put_any_tag ? this_put_handler :
-      std::get<2>(put_tag_holder.find(tag)->second);
 
     #if backend_check_enabled(trace_enabled)
+      ::vt::HandlerType const reg_han =
+        tag == no_tag or put_any_tag ? this_put_handler :
+        std::get<2>(put_tag_holder.find(tag)->second);
       trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
         reg_han, auto_registry::RegistryTypeEnum::RegRDMAPut
       );

@@ -186,7 +186,6 @@ void InfoColl::setupCollective() {
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
-      auto const& from = theMsg()->getFromNodeCurrentHandler();
       iter->second->newRoot(msg.get());
     }
   );

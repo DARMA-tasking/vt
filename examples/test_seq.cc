@@ -70,6 +70,7 @@ struct EmptyMsg : vt::Message {
 
 SEQUENCE_REGISTER_HANDLER(EmptyMsg, action1);
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeq(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeq: executing sequence\n");
 
@@ -113,6 +114,7 @@ static void mySeq(SeqType const& seq_id) {
   });
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeqParallel(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeqParallel: executing sequence\n");
 
@@ -152,6 +154,7 @@ static void mySeqFor(SeqType const& seq_id) {
   });
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeqSingleNode(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeqSingleNode: executing sequence\n");
 
@@ -188,6 +191,7 @@ static void mySeqSingleNode(SeqType const& seq_id) {
   });
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void simpleSeq(SeqType const& seq_id) {
   PRINT_SEQUENCE("simpleSeq: executing sequence: seq_id={}\n", seq_id);
 

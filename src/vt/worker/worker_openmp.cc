@@ -62,7 +62,7 @@ namespace vt { namespace worker {
 OMPWorker::OMPWorker(
   WorkerIDType const& in_worker_id_, WorkerIDType const& in_num_thds,
   WorkerFinishedFnType finished_fn
-) : worker_id_(in_worker_id_), num_thds_(in_num_thds), finished_fn_(finished_fn)
+) : worker_id_(in_worker_id_), finished_fn_(finished_fn)
 { }
 
 void OMPWorker::enqueue(WorkUnitType const& work_unit) {

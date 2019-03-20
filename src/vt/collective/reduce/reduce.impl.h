@@ -77,7 +77,6 @@ template <typename MessageT>
 template <typename MessageT>
 /*static*/ void Reduce::reduceRootRecv(MessageT* msg) {
   auto const& handler = msg->combine_handler_;
-  auto active_fun = auto_registry::getAutoHandler(handler);
   msg->next_ = nullptr;
   msg->count_ = 1;
   msg->is_root_ = true;
@@ -243,7 +242,6 @@ void Reduce::startReduce(
         *  applying the reduction operator
         */
       auto const& handler = state.combine_handler_;
-      auto active_fun = auto_registry::getAutoHandler(handler);
       auto const& from_node = theMsg()->getFromNodeCurrentHandler();
       runnable::Runnable<MessageT>::run(
         handler,nullptr,static_cast<MessageT*>(state.msgs[0].get()),from_node

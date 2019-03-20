@@ -145,7 +145,7 @@ static void put_fn(
     my_node, print_ptr(ptr), num_bytes, tag, offset
   );
 
-  auto const& ret_ptr = obtain_data_ptr(offset, ptr, true);
+  obtain_data_ptr(offset, ptr, true);
 }
 
 static RDMA_PutRetType serialize_put_fn(RDMA_PutRetType put_in) {

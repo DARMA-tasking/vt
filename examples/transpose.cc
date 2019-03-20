@@ -268,6 +268,7 @@ static void solveGroupSetup(NodeType this_node, VirtualProxyType coll_proxy) {
   auto const& is_even_node = this_node % 2 == 0;
 
   auto const& the_comm = theContext()->getComm();
+  (void)the_comm;  // don't warn about unused variable
 
   // This is how you would explicitly create/get a new communicator for this
   // group. Because of the change I made, there is automatically one created for
@@ -284,7 +285,7 @@ static void solveGroupSetup(NodeType this_node, VirtualProxyType coll_proxy) {
     this_node, is_even_node
   );
 
-  auto solve_group = theGroup()->newGroupCollective(
+  theGroup()->newGroupCollective(
     is_even_node, [=](GroupType group_id){
       fmt::print("Group is created: id={:x}\n", group_id);
       if (this_node == 1) {
@@ -316,7 +317,6 @@ int main(int argc, char** argv) {
   ::vt::CollectiveOps::initialize(argc,argv);
 
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
 
   if (this_node == 0) {
     auto const& range = Index1D(num_pieces);

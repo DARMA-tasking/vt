@@ -94,7 +94,6 @@ void PipeManagerBase::triggerPipeTyped(PipeType const& pipe, MsgT* msg) {
 
 template <typename MsgT>
 void PipeManagerBase::triggerPipeUnknown(PipeType const& pipe, MsgT* msg) {
-  using SignalType = signal::Signal<MsgT>;
   auto iter = pipe_state_.find(pipe);
   vtAssert(iter != pipe_state_.end(), "Pipe state must exist");
 

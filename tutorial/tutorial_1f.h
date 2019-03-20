@@ -58,6 +58,7 @@ static void msgHandlerGroupB(MySimpleMsg2* msg);
 static inline void activeMessageGroupCollective() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * This is an example of the collective group creation and broadcast to that
@@ -87,6 +88,7 @@ static inline void activeMessageGroupCollective() {
       }
     }
   );
+  (void)group;  // don't warn about unused variable
 }
 
 // Message handler

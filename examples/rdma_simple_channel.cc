@@ -50,10 +50,14 @@ using namespace vt;
 static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
 
+#if backend_check_enabled(mpi_rdma)
 static RDMA_HandleType my_handle_1 = no_rdma_handle;
+#endif
 
 static int const put_len = 2;
+#if backend_check_enabled(mpi_rdma)
 static int const my_data_len = 8;
+#endif
 static double* my_data = nullptr;
 
 struct TestMsg : vt::Message {
@@ -69,6 +73,7 @@ static void read_data_fn(TestMsg* msg) {
   }
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void put_channel_setup(TestMsg* msg) {
   auto const& handle = msg->han;
 

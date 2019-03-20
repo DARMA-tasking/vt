@@ -93,7 +93,6 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
 
   if (this_node == 0) {
     my_global_ctx.x = 1283;

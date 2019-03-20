@@ -107,7 +107,6 @@ void PipeManagerTL::addListenerFunctor(
   CallbackT const& cb, NodeType const& node
 ) {
   using MsgT = typename util::FunctorExtractor<FunctorT>::MessageType;
-  auto const& new_pipe_id = makePipeID(true,false);
   auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
   addListenerAny<MsgT>(
     cb.getPipe(), std::make_unique<callback::CallbackSend<MsgT>>(han,node)
@@ -118,7 +117,6 @@ template <typename FunctorT, typename CallbackT>
 void PipeManagerTL::addListenerFunctorVoid(
   CallbackT const& cb, NodeType const& node
 ) {
-  auto const& new_pipe_id = makePipeID(true,false);
   auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT,true>();
   addListenerAny<signal::SigVoidType>(
     cb.getPipe(), std::make_unique<callback::CallbackSend<signal::SigVoidType>>(
@@ -132,7 +130,6 @@ void PipeManagerTL::addListenerFunctorBcast(
   CallbackT const& cb, bool const& inc
 ) {
   using MsgT = typename util::FunctorExtractor<FunctorT>::MessageType;
-  auto const& new_pipe_id = makePipeID(true,false);
   auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
   addListenerAny<MsgT>(
     cb.getPipe(), std::make_unique<callback::CallbackBcast<MsgT>>(han,inc)

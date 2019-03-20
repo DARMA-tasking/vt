@@ -99,7 +99,6 @@ void Trace::setupNames(
   dir_name_ = in_dir_name;
   start_time_ = getCurrentTime();
 
-  bool have_cur_directory = true;
   char cur_dir[1024];
   if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
     vtAssert(false, "Must have current directory");
@@ -110,7 +109,7 @@ void Trace::setupNames(
   }
 
   if (theContext()->getNode() == 0) {
-    auto const dir_ret = mkdir(full_dir_name.c_str(), S_IRWXU);
+    mkdir(full_dir_name.c_str(), S_IRWXU);
     //vtAssert(dir_ret != -1, "Must be able to make directory");
   }
 
@@ -392,7 +391,6 @@ void Trace::disableTracing() {
 
 void Trace::writeTracesFile() {
   auto const& node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
 
   debug_print(
     trace, node,
@@ -542,7 +540,6 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
 }
 
 /*static*/ void Trace::outputControlFile(std::ofstream& file) {
-  auto const& node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
   auto const& num_event_types =

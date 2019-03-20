@@ -83,7 +83,6 @@ struct TestScatter : TestParallelHarness {
 TEST_F(TestScatter, test_scatter_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const& root = 0;
 
   if (this_node == 0) {
     auto const& elm_size = sizeof(int) * num_elms;

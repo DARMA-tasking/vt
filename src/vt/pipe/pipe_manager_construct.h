@@ -109,7 +109,6 @@ static T&& build(HandlerType han, Tuple t, std::index_sequence<I...>) {
 
 template <std::size_t size, typename T, typename... Args>
 static T&& build(HandlerType han, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
   return std::move(build<T>(han, t, std::make_index_sequence<size>{}));
 }
 

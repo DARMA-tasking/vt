@@ -61,6 +61,7 @@ struct ReduceResult {
     NodeType const num_nodes = ::vt::theContext()->getNumNodes();
     fmt::print("reduction value={}\n", msg->getConstVal());
     assert(num_nodes * 50 == msg->getConstVal());
+    (void)num_nodes;  // don't warn about unused value when not debugging
   }
 };
 
@@ -68,7 +69,9 @@ struct ReduceResult {
 // Tutorial code to demonstrate using a callback
 static inline void activeMessageReduce() {
   NodeType const this_node = ::vt::theContext()->getNode();
+  (void)this_node;  // don't warn about unused variable
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * Perform reduction over all the nodes.

@@ -158,7 +158,6 @@ private:
   std::string trace_name_     = "";
   bool enabled_               = true;
   bool idle_begun_            = false;
-  bool use_directory_         = false;
   double start_time_          = 0.0;
   std::string full_trace_name = "";
   std::string full_sts_name   = "";

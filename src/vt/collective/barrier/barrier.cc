@@ -160,7 +160,7 @@ void Barrier::contBarrier(
 
   BarrierType const barrier = is_named ? named : cur_unnamed_barrier_++;
 
-  auto& barrier_state = insertFindBarrier(is_named, is_wait, barrier, fn);
+  insertFindBarrier(is_named, is_wait, barrier, fn);
 
   debug_print(
     barrier, node,

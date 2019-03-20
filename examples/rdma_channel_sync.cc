@@ -53,7 +53,9 @@ static NodeType num_nodes = uninitialized_destination;
 static RDMA_HandleType my_handle_1 = no_rdma_handle;
 
 static int const put_len = 2;
+#if backend_check_enabled(mpi_rdma)
 static int const my_data_len = 8;
+#endif
 static double* my_data = nullptr;
 
 static bool use_paired_sync = true;

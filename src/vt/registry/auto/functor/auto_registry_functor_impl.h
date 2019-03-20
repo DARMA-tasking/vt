@@ -136,8 +136,6 @@ RegistrarFunctor<FunctorT, RegT, InfoT, FnT>::RegistrarFunctor() {
 
 inline NumArgsType getAutoHandlerFunctorArgs(HandlerType const& han) {
   auto const& id = HandlerManagerType::getHandlerIdentifier(han);
-  bool const& is_auto = HandlerManagerType::isHandlerAuto(han);
-  bool const& is_functor = HandlerManagerType::isHandlerFunctor(han);
 
   using ContainerType = AutoActiveFunctorContainerType;
   return getAutoRegistryGen<ContainerType>().at(id).getNumArgs();

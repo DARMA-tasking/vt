@@ -82,6 +82,7 @@ static inline void activeMessageGroupRoot() {
     });
     // The `id' that is returned from the newGroup invocation, can be used
     // anywhere in the system to broadcast (multicast) to this group.
+    (void)id;  // don't warn about unused variable
   }
 }
 

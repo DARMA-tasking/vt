@@ -85,7 +85,9 @@ struct PrintReduceResult {
 
 void ReduceCol::reduceHandler(ColRedMsg* msg) {
   auto cur_node = theContext()->getNode();
+  (void)cur_node;  // don't warn about unused variable
   auto idx = this->getIndex();
+  (void)idx;  // don't warn about unused variable
 
   //::fmt::print("MyCol::reduceHandler index={}, node={}\n", idx.x(), cur_node);
 
@@ -105,6 +107,7 @@ void ReduceCol::reduceHandler(ColRedMsg* msg) {
 static inline void collectionReduce() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * This is an example of reducing over a virtual context collection

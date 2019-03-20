@@ -56,7 +56,6 @@ using namespace vt::tests::unit;
 
 static constexpr int const val1 = 20;
 static constexpr int const val2 = 21;
-static constexpr int const val3 = 22;
 static constexpr int const test_val = 129;
 
 struct TestCtx : ::vt::vrt::VirtualContext {
@@ -102,8 +101,6 @@ TEST_F(TestSerialMessengerVirtual, test_serial_messenger_1) {
   auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    using TupleType = std::tuple<int, int>;
-
     auto proxy = theVirtualManager()->makeVirtual<TestCtx>();
     auto msg = makeSharedMessage<DataMsg>();
     msg->init();

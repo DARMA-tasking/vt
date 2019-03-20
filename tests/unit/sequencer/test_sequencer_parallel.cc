@@ -96,11 +96,13 @@ struct TestSequencerParallelParam : TestParallelHarnessParam<CountType> {
     std::atomic<OrderType>* order, int wait_n, int num_pars, int start_order
   ) {
     theSeq()->wait_closure<MessageT, f>(no_tag, [=](MessageT* msg){
+      #if DEBUG_TEST_HARNESS_PRINT
       std::stringstream str_build;
       str_build << "PAR-";
       str_build << wait_n;
       auto str = str_build.str().c_str();
       DEBUG_PRINT_SEQ_NESTED(*order, wait_n, str);
+      #endif
       OrderType const result = order->fetch_add(1);
       EXPECT_TRUE(result >= start_order or result <= start_order + num_pars);
     });
@@ -203,11 +205,13 @@ struct TestSequencerParallel : TestParallelHarness {
     std::atomic<OrderType>* order, int wait_n, int num_pars, int start_order
   ) {
     theSeq()->wait_closure<MessageT, f>(no_tag, [=](MessageT* msg){
+      #if DEBUG_TEST_HARNESS_PRINT
       std::stringstream str_build;
       str_build << "PAR-";
       str_build << wait_n;
       auto str = str_build.str().c_str();
       DEBUG_PRINT_SEQ_NESTED(*order, wait_n, str);
+      #endif
       OrderType const result = order->fetch_add(1);
       EXPECT_TRUE(result >= start_order or result <= start_order + num_pars);
     });

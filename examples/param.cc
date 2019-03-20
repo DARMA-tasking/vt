@@ -50,14 +50,17 @@ using namespace vt;
 static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void fnTest(int a, int b, bool x) {
   fmt::print("fn: a={}, b={}, x={}\n", a, b, x ? "true" : "false");
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void fnTest2(int x, int y) {
   fmt::print("fn2: x={},y={}\n",x,y);
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void fnTest3(int x, double y) {
   fmt::print("fn3: x={},y={}\n",x,y);
 }

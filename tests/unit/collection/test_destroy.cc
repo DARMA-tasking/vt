@@ -107,7 +107,6 @@ struct TestDestroy : TestParallelHarness { };
 static constexpr int32_t const num_elms_per_node = 8;
 
 TEST_F(TestDestroy, test_destroy_1) {
-  auto const& root = 0;
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == 0) {

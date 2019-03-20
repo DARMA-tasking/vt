@@ -77,8 +77,6 @@ namespace vt {namespace vrt {
   setVirtualRemoteID  (new_proxy, id);
   setVirtualRemoteNode(new_proxy, this_node);
 
-  auto const& id1 = VirtualProxyBuilder::getVirtualID(new_proxy);
-
   return new_proxy;
 }
 

@@ -87,7 +87,6 @@ struct TestInsert : TestParallelHarness { };
 static constexpr int32_t const num_elms_per_node = 8;
 
 TEST_F(TestInsert, test_insert_dense_1) {
-  auto const& root = 0;
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == 0) {
@@ -106,7 +105,6 @@ TEST_F(TestInsert, test_insert_dense_1) {
 }
 
 TEST_F(TestInsert, test_insert_sparse_1) {
-  auto const& root = 0;
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == 0) {
@@ -125,7 +123,6 @@ TEST_F(TestInsert, test_insert_sparse_1) {
 }
 
 TEST_F(TestInsert, test_insert_dense_node_1) {
-  auto const& root = 0;
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == 0) {
@@ -146,7 +143,6 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
 }
 
 TEST_F(TestInsert, test_insert_sparse_node_1) {
-  auto const& root = 0;
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == 0) {
@@ -167,7 +163,6 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
 }
 
 TEST_F(TestInsert, test_insert_send_dense_node_1) {
-  auto const& root = 0;
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == 0) {
@@ -193,7 +188,6 @@ TEST_F(TestInsert, test_insert_send_dense_node_1) {
 }
 
 TEST_F(TestInsert, test_insert_send_sparse_node_1) {
-  auto const& root = 0;
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == 0) {

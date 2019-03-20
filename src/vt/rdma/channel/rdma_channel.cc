@@ -89,8 +89,8 @@ void
 Channel::initChannelGroup() {
   debug_print(
     rdma_channel, node,
-    "channel: initChannelGroup: target={}, non_target={}, my_node={}, han={}\n",
-    target_, non_target_, my_node_, rdma_handle_
+    "channel: initChannelGroup: target={}, non_target={}, han={}\n",
+    target_, non_target_, rdma_handle_
   );
 
   MPI_Group world;

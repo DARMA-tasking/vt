@@ -37,12 +37,10 @@ static int32_t called = 0;
 
 struct TestCallbackBcast : TestParallelHarness {
   static void testHandler(CallbackDataMsg* msg) {
-    auto const& n = theContext()->getNode();
     auto nmsg = makeSharedMessage<DataMsg>(1,2,3);
     msg->cb_.send(nmsg);
   }
   static void testHandlerEmpty(CallbackMsg* msg) {
-    auto const& n = theContext()->getNode();
     msg->cb_.send();
   }
 };
@@ -70,8 +68,6 @@ struct CallbackFunctorEmpty {
 };
 
 TEST_F(TestCallbackBcast, test_callback_bcast_1) {
-  auto const& this_node = theContext()->getNode();
-
   called = 0;
 
   theCollective()->barrier();
@@ -86,7 +82,6 @@ TEST_F(TestCallbackBcast, test_callback_bcast_1) {
 }
 
 TEST_F(TestCallbackBcast, test_callback_bcast_2) {
-  auto const& this_node = theContext()->getNode();
   called = 0;
 
   theCollective()->barrier();
@@ -101,7 +96,6 @@ TEST_F(TestCallbackBcast, test_callback_bcast_2) {
 }
 
 TEST_F(TestCallbackBcast, test_callback_bcast_3) {
-  auto const& this_node = theContext()->getNode();
   called = 0;
 
   theCollective()->barrier();

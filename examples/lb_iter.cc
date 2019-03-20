@@ -103,7 +103,7 @@ static void iterWork(IterMsg* msg, IterCol* col) {
   double val = 0.1f;
   double val2 = 0.4f * msg->work_amt_;
   auto const idx = col->getIndex().x();
-  auto const iter = msg->iter_;
+  //auto const iter = msg->iter_;
   //::fmt::print("proc={}, idx={}, iter={}\n", theContext()->getNode(),idx,iter);
   int64_t const max_work = 1000 * weight;
   int64_t const mid_work = 100 * weight;
@@ -134,7 +134,6 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
 
   int32_t num_elms = default_num_elms;
 

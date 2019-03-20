@@ -187,7 +187,6 @@ namespace vt { namespace arguments {
   auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
   auto abort  = "Do not dump stack traces when vtAabort(..) is invoked";
   auto file   = "Dump stack traces to file instead of stdout";
-  auto name   = "Name of file to dump stack backtrace";
   auto dir    = "Name of directory to write stack files";
   auto mod    = "Write stack dump if (node % vt_stack_mod) == 0";
   auto g = app.add_flag("--vt_no_warn_stack",   vt_no_warn_stack,   warn);

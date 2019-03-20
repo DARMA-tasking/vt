@@ -87,7 +87,9 @@ int main(int argc, char **argv) {
   if (my_node == 1) {
 
     auto vrtc1 = theVirtualManager()->makeVirtual<HelloVrtContext>(10);
+    (void)vrtc1;
     auto vrtc2 = theVirtualManager()->makeVirtual<HelloVrtContext>(20);
+    (void)vrtc2;
 
     // auto temp1 = theVrtCManager->getVrtContextByID(vrtc1);
     // auto hello1 = static_cast<HelloVrtContext*>(temp1);
