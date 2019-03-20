@@ -49,7 +49,7 @@ namespace vt {namespace vrt {
 
 /*static*/ VirtualProxyType VirtualProxyBuilder::createProxy(
   VirtualIDType const& id, NodeType const& node, bool const& is_coll,
-  bool const& is_migratable, bool const& is_distributed
+  bool const& is_migratable, bool const& is_distributed, bool const& is_view
 ) {
   constexpr NodeType const default_remote_node = 0;
   VirtualProxyType new_proxy = 0;
@@ -57,6 +57,7 @@ namespace vt {namespace vrt {
 
   setIsCollection(new_proxy, is_coll);
   setIsMigratable(new_proxy, is_migratable);
+  setIsView      (new_proxy, is_view);
   setIsRemote    (new_proxy, is_distributed);
   setVirtualNode (new_proxy, remote_node);
   setVirtualID   (new_proxy, id);
@@ -66,12 +67,14 @@ namespace vt {namespace vrt {
 
 /*static*/ VirtualProxyType VirtualProxyBuilder::createRemoteProxy(
   VirtualRemoteIDType const& id, NodeType const& this_node,
-  NodeType const& target_node, bool const& is_coll, bool const& is_migratable
+  NodeType const& target_node, bool const& is_coll, bool const& is_migratable,
+  bool const& is_view
 ) {
   VirtualProxyType new_proxy = 0;
 
   setIsCollection     (new_proxy, is_coll);
   setIsMigratable     (new_proxy, is_migratable);
+  setIsView           (new_proxy, is_view);
   setIsRemote         (new_proxy, true);
   setVirtualNode      (new_proxy, target_node);
   setVirtualRemoteID  (new_proxy, id);
@@ -86,6 +89,12 @@ namespace vt {namespace vrt {
   VirtualProxyType& proxy, bool const& is_coll
 ) {
   BitPackerType::boolSetField<eVirtualProxyBits::Collection>(proxy, is_coll);
+}
+
+/*static*/ void VirtualProxyBuilder::setIsView(
+  VirtualProxyType& proxy, bool const& is_view
+)  {
+  BitPackerType::boolSetField<eVirtualProxyBits::Collection>(proxy, is_view);
 }
 
 /*static*/ void VirtualProxyBuilder::setIsMigratable(
@@ -142,6 +151,12 @@ namespace vt {namespace vrt {
   VirtualProxyType const& proxy
 ) {
   return BitPackerType::boolGetField<eVirtualProxyBits::Migratable>(proxy);
+}
+
+/*static*/ bool VirtualProxyBuilder::isView(
+  VirtualProxyType const& proxy
+) {
+  return BitPackerType::boolGetField<eVirtualProxyBits::View>(proxy);
 }
 
 /*static*/ bool VirtualProxyBuilder::isRemote(
