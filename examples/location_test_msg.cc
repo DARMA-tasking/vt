@@ -69,8 +69,8 @@ struct MyTestMsg : LocationRoutedMsg<EntityType, ShortMessage> {
   int data = 0;
 
   MyTestMsg(int const& in_data, NodeType const& in_from_node)
-    : LocationRoutedMsg<EntityType,ShortMessage>(), data(in_data),
-    from_node(in_from_node)
+    : LocationRoutedMsg<EntityType,ShortMessage>(),
+      from_node(in_from_node), data(in_data)
   { }
 };
 

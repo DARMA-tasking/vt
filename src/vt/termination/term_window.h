@@ -55,7 +55,7 @@ namespace vt { namespace term {
 struct EpochWindow {
 
   explicit EpochWindow(bool const in_conform = true)
-    : conform_archetype_(in_conform), initialized_(!in_conform)
+    : initialized_(!in_conform), conform_archetype_(in_conform)
   { }
 
 private:

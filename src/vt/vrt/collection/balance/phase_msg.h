@@ -57,7 +57,7 @@ struct PhaseMsgBase : BaseMsgT {
   using ProxyType = typename ColT::CollectionProxyType;
   PhaseMsgBase() = default;
   PhaseMsgBase(PhaseType const& in_cur_phase, ProxyType const& in_proxy)
-    : cur_phase_(in_cur_phase), proxy_(in_proxy), BaseMsgT()
+    : BaseMsgT(), proxy_(in_proxy), cur_phase_(in_cur_phase)
   { }
 
   ProxyType getProxy() const { return proxy_; }

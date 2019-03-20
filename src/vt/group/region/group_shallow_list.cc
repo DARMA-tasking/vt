@@ -52,7 +52,7 @@
 namespace vt { namespace group { namespace region {
 
 ShallowList::ShallowList(BoundType const* in_bound, SizeType const& in_size)
-  : bound_(in_bound), size_(in_size)
+  : size_(in_size), bound_(in_bound)
 { }
 
 ShallowList::ShallowList(List const& in_list)

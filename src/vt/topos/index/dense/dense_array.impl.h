@@ -62,19 +62,19 @@ namespace vt { namespace index {
 template <typename IndexType, NumDimensionsType ndim>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(
   std::array<IndexType, ndim> in_array
-) : dims(in_array), BaseIndex()
+) : BaseIndex(), dims(in_array)
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(
   std::initializer_list<IndexType> vals
-) : dims{vals}, BaseIndex()
+) : BaseIndex(), dims{vals}
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
 template <typename... Idxs, typename>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(Idxs&&... init)
-  : dims({init...}), BaseIndex()
+  : BaseIndex(), dims({init...})
 { }
 
 template <typename IndexType, NumDimensionsType ndim>

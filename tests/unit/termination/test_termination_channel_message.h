@@ -55,9 +55,9 @@ struct BasicMsg : vt::Message {
 
   BasicMsg() = default;
   BasicMsg(vt::NodeType src, vt::NodeType dst, int ttl, vt::EpochType epoch)
-    : src_(src),
+    : ttl_(ttl-1),
+      src_(src),
       dst_(dst),
-      ttl_(ttl-1),
       epoch_(epoch)
   {}
   BasicMsg(vt::NodeType src, vt::NodeType dst, int ttl) : BasicMsg(src,dst,ttl,vt::no_epoch) {}
@@ -75,9 +75,9 @@ struct CtrlMsg : vt::Message {
 
   CtrlMsg() = default;
   CtrlMsg(vt::NodeType src, vt::NodeType dst, int nb, vt::EpochType epoch)
-    : src_(src),
+    : count_(nb),
+      src_(src),
       dst_(dst),
-      count_(nb),
       epoch_(epoch)
   {}
   CtrlMsg(vt::NodeType src, vt::NodeType dst, int nb) : CtrlMsg(src,dst,nb,vt::no_epoch) {}
