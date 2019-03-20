@@ -49,6 +49,7 @@
 #include "vt/utils/atomic/atomic.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
+#include "vt/registry/auto/view/auto_registry_view.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/messaging/message.h"
 #include "vt/runnable/vrt.h"
