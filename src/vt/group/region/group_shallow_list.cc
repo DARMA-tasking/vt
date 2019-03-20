@@ -83,6 +83,7 @@ ShallowList::ShallowList(ListType const& in_list)
 /*virtual*/ ShallowList::ListType const& ShallowList::makeList() {
   vtAssert(0, "Can not be implemented for ShallowList");
   assert(false);
+  return empty_list;
 }
 
 /*virtual*/ bool ShallowList::isList() const {
