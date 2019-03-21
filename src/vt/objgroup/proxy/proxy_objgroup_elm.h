@@ -53,6 +53,8 @@
 
 namespace vt { namespace objgroup { namespace proxy {
 
+static struct ObjGroupReconstructTagType { } ObjGroupReconstructTag { };
+
 template <typename ObjT>
 struct ProxyElm {
 
@@ -75,7 +77,9 @@ struct ProxyElm {
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
   void send(Args&&... args) const;
 
-  void update() const;
+  template <typename... Args>
+  void update(ObjGroupReconstructTagType, Args&&... args) const;
+
   ObjT* get() const;
 
   ObjGroupProxyType getProxy() const { return proxy_; }

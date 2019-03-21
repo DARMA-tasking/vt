@@ -78,9 +78,10 @@ void ProxyElm<ObjT>::serialize(SerializerT& s) {
 }
 
 template <typename ObjT>
-void ProxyElm<ObjT>::update() const {
+template <typename... Args>
+void ProxyElm<ObjT>::update(ObjGroupReconstructTagType, Args&&... args) const {
   auto proxy = ProxyElm<ObjT>(*this);
-  theObjGroup()->update<ObjT>(proxy);
+  theObjGroup()->update<ObjT>(proxy,std::forward<Args>(args)...);
 }
 
 template <typename ObjT>
