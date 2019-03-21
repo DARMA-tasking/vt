@@ -5,6 +5,7 @@ set(TOP_LEVEL_SUBDIRS
   epoch
   group
   messaging
+  objgroup
   pool
   pipe
   rdma
