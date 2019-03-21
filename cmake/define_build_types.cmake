@@ -126,12 +126,13 @@ endforeach()
 
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  $<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug>
-  $<$<CONFIG:debug_v1>:${PROJECT_BIN_DIR}/debug_v1>
-  $<$<CONFIG:debug_v2>:${PROJECT_BIN_DIR}/debug_v2>
-  $<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>
-  $<$<CONFIG:debug_trace>:${PROJECT_BIN_DIR}/debug_trace>
-  $<$<CONFIG:release_trace>:${PROJECT_BIN_DIR}/release_trace>
+  $<BUILD_INTERFACE:$<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug>>
+  $<BUILD_INTERFACE:$<$<CONFIG:debug_v1>:${PROJECT_BIN_DIR}/debug_v1>>
+  $<BUILD_INTERFACE:$<$<CONFIG:debug_v2>:${PROJECT_BIN_DIR}/debug_v2>>
+  $<BUILD_INTERFACE:$<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>>
+  $<BUILD_INTERFACE:$<$<CONFIG:debug_trace>:${PROJECT_BIN_DIR}/debug_trace>>
+  $<BUILD_INTERFACE:$<$<CONFIG:release_trace>:${PROJECT_BIN_DIR}/release_trace>>
+  $<INSTALL_INTERFACE:include>
 )
 
 set(
