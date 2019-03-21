@@ -63,17 +63,17 @@
 
 #define print_colorize(color, str, str2)                                \
   ((::vt::debug::ttyc()) ?                                              \
-   (std::string(color) + std::string(str) + std::string("\33[00m") +    \
+   (std::string(color) + std::string(str) + std::string("\033[00m") +    \
     std::string(str2)) :                                                \
    std::string(str) + std::string(str2))
 
-#define vt_print_colorize print_colorize("\33[32;1m", "vt", ":")
+#define vt_print_colorize print_colorize("\033[32;1m", "vt", ":")
 
 #define type_print_colorize(debug_type)                                 \
-  print_colorize("\33[32m", debug_pretty_print(debug_type), ":")
+  print_colorize("\033[32m", debug_pretty_print(debug_type), ":")
 
 #define proc_print_colorize(proc)                                       \
-  print_colorize("\e[34m", "[" +std::to_string(proc) + "]", "")
+  print_colorize("\033[34m", "[" +std::to_string(proc) + "]", "")
 
 #define debug_decorated_prefix(debug_stamp, debug_type) "{} {} {} "
 
