@@ -148,9 +148,10 @@ TEST_F(TestObjGroup, test_proxy_update) {
   // create a proxy to a object group
   auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
   auto const obj1 = proxy.get();
+  auto const node = vt::theContext()->getNode();
 
   // update the group object for the proxy
-  vt::theObjGroup()->update(proxy);
+  proxy[node].update(objgroup::proxy::ObjGroupReconstructTag);
 
   // should normally have two distinct instances
   auto const obj2 = proxy.get();
@@ -176,18 +177,17 @@ TEST_F(TestObjGroup, test_proxy_schedule) {
   auto obj = proxy.get();
   debug_print(
     objgroup, node,
-    "obj->recv:{} before running scheduler\n", obj->recv_
+    "obj->recv:{} before term\n", obj->recv_
   );
 
-  // run the object group scheduler to push
-  // along postponed events
-  while (vt::theObjGroup()->scheduler()) {}
-
-  debug_print(
-    objgroup, node,
-    "obj->recv:{} after running scheduler\n", obj->recv_
-  );
-  EXPECT_EQ(obj->recv_, 2);
+  // wait for term and check state to ensure all expected events executed
+  theTerm()->addAction([=]{
+    debug_print(
+      objgroup, node,
+      "obj->recv:{} after term\n", obj->recv_
+    );
+    EXPECT_EQ(obj->recv_, 2);
+  });
 }
 
 TEST_F(TestObjGroup, test_proxy_callbacks) {
@@ -208,23 +208,21 @@ TEST_F(TestObjGroup, test_proxy_callbacks) {
     proxy3[0].send<MyMsg, &MyObjA::handler>();
   }
 
-  vt::theCollective()->barrier();
+  // wait for term and check state to ensure all expected events executed
+  theTerm()->addAction([=]{
+    // check received messages for each group
+    auto obj1 = proxy1.get();
+    auto obj2 = proxy2.get();
+    auto obj3 = proxy3.get();
 
-  // wait for all events to be processed (for all proxies)
-  while (vt::theObjGroup()->scheduler()) {}
-
-  // check received messages for each group
-  auto obj1 = proxy1.get();
-  auto obj2 = proxy2.get();
-  auto obj3 = proxy3.get();
-
-  switch (my_node) {
+    switch (my_node) {
     case 0:  EXPECT_EQ(obj1->recv_, 2); break;
     case 1:  EXPECT_EQ(obj1->recv_, 1); break;
     default: EXPECT_EQ(obj1->recv_, 0); break;
-  }
-  EXPECT_EQ(obj2->recv_, 1);
-  EXPECT_EQ(obj3->recv_, my_node == 0 ? 1 : 0);
+    }
+    EXPECT_EQ(obj2->recv_, 1);
+    EXPECT_EQ(obj3->recv_, my_node == 0 ? 1 : 0);
+  });
 }
 
 TEST_F(TestObjGroup, test_proxy_reduce) {
