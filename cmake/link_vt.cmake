@@ -158,7 +158,7 @@ function(link_target_with_vt)
     )
   endif()
 
-  if (NOT DEFINED ARG_LINK_OPENMP AND DEFAULT_THREADING STREQUAL openmp OR ARG_LINK_OPENMP)
+  if (DEFAULT_THREADING STREQUAL openmp)
     if (${ARG_DEBUG_LINK})
       message(
         STATUS
