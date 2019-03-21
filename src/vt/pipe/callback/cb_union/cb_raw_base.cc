@@ -80,7 +80,19 @@ CallbackRawBaseSingle::CallbackRawBaseSingle(
   HandlerType const& in_handler, AutoHandlerType const& in_vrt,
   bool const& in_member, VirtualProxyType const& in_proxy
 ) : pipe_(in_pipe), cb_(BcastColDirCB{in_handler,in_vrt,in_member,in_proxy})
- { }
+{ }
+
+CallbackRawBaseSingle::CallbackRawBaseSingle(
+  RawBcastObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+  ObjGroupProxyType in_proxy
+) : pipe_(in_pipe),  cb_(BcastObjGrpCB{in_handler,in_proxy})
+{ }
+
+CallbackRawBaseSingle::CallbackRawBaseSingle(
+  RawSendObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+  ObjGroupProxyType in_proxy, NodeType in_node
+) : pipe_(in_pipe),  cb_(SendObjGrpCB{in_handler,in_proxy,in_node})
+{ }
 
 // CallbackRawBaseSingle::CallbackRawBaseSingle(
 //   RawSendColDirTagType, PipeType const& in_pipe,
@@ -110,6 +122,12 @@ void CallbackRawBaseSingle::send() {
     vtAssert(0, "void dispatch not allowed for bcast collection msg callback");
     break;
   case CallbackEnum::SendColDirCB:
+    vtAssert(0, "void dispatch not allowed for send collection msg callback");
+    break;
+  case CallbackEnum::BcastObjGrpCB:
+    vtAssert(0, "void dispatch not allowed for bcast collection msg callback");
+    break;
+  case CallbackEnum::SendObjGrpCB:
     vtAssert(0, "void dispatch not allowed for send collection msg callback");
     break;
   default:

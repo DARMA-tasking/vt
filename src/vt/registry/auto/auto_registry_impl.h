@@ -48,11 +48,37 @@
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/registry/auto/auto_registry.h"
 #include "vt/utils/demangle/demangle.h"
+#include "vt/objgroup/active_func/active_func.h"
 
 #include <vector>
 #include <memory>
 
 namespace vt { namespace auto_registry {
+
+inline AutoActiveObjGroupType getAutoHandlerObjGroup(HandlerType han) {
+  using ContainerType = AutoActiveObjGroupContainerType;
+  auto const id = HandlerManagerType::getHandlerIdentifier(han);
+  return getAutoRegistryGen<ContainerType>().at(id).getFun();
+}
+
+inline AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han) {
+  using ContainerType = AutoActiveObjGroupContainerType;
+  auto const id = HandlerManagerType::getHandlerIdentifier(han);
+  return getAutoRegistryGen<ContainerType>().at(id).getObjIdx();
+}
+
+template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
+inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
+  using FunctorT = FunctorAdapterMember<
+    objgroup::ActiveObjType<MsgT, ObjT>, f, ObjT
+  >;
+  using ContainerType = AutoActiveObjGroupContainerType;
+  using RegInfoType = AutoRegInfoType<AutoActiveObjGroupType>;
+  using FuncType = objgroup::ActiveObjAnyType;
+  using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
+  auto const obj = true;
+  return HandlerManagerType::makeHandler(true, false, RunType::idx, obj, ctrl);
+}
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) {

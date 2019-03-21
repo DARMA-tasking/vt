@@ -58,19 +58,30 @@ namespace vt {
 
 using HandlerIdentifierType = uint64_t;
 
+// HandlerControlType: u32-bit field, limited to 20 bits in pattern
+using HandlerControlType = uint32_t;
+
 static constexpr HandlerIdentifierType const first_handle_identifier = 1;
 static constexpr HandlerIdentifierType const uninitialized_handle_identifier = -1;
 static constexpr HandlerType const blank_handler = 0;
 
 static constexpr BitCountType const auto_num_bits = 1;
 static constexpr BitCountType const functor_num_bits = 1;
+static constexpr BitCountType const objgroup_num_bits = 1;
+static constexpr BitCountType const control_num_bits = 20;
 static constexpr BitCountType const handler_id_num_bits =
- BitCounterType<HandlerType>::value - (auto_num_bits + functor_num_bits);
+ BitCounterType<HandlerType>::value - (
+   auto_num_bits + functor_num_bits + objgroup_num_bits + control_num_bits
+ );
 
+// eHandlerBits::ObjGroup identifies the handler as targeting an objgroup; the
+// control bits are an extensible field used for module-specific sub-handlers
 enum eHandlerBits {
-  Auto       = 0,
+  ObjGroup   = 0,
+  Auto       = eHandlerBits::ObjGroup   + objgroup_num_bits,
   Functor    = eHandlerBits::Auto       + auto_num_bits,
-  Identifier = eHandlerBits::Functor    + functor_num_bits
+  Control    = eHandlerBits::Functor    + functor_num_bits,
+  Identifier = eHandlerBits::Control    + control_num_bits
 };
 
 struct HandlerManager {
@@ -79,16 +90,20 @@ struct HandlerManager {
   HandlerManager() = default;
 
   static HandlerType makeHandler(
-    bool is_auto, bool is_functor, HandlerIdentifierType id
+    bool is_auto, bool is_functor, HandlerIdentifierType id,
+    bool is_objgroup = false, HandlerControlType control = 0
   );
-  static void setHandlerIdentifier(
-    HandlerType& han, HandlerIdentifierType ident
-  );
+  static void setHandlerIdentifier(HandlerType& han, HandlerIdentifierType id);
+  static void setHandlerControl(HandlerType& han, HandlerControlType control);
+
   static HandlerIdentifierType getHandlerIdentifier(HandlerType han);
+  static HandlerControlType getHandlerControl(HandlerType han);
   static void setHandlerAuto(HandlerType& han, bool is_auto);
   static void setHandlerFunctor(HandlerType& han, bool is_functor);
+  static void setHandlerObjGroup(HandlerType& han, bool is_objgroup);
   static bool isHandlerAuto(HandlerType han);
   static bool isHandlerFunctor(HandlerType han);
+  static bool isHandlerObjGroup(HandlerType han);
 };
 
 } //end namespace vt

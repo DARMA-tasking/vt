@@ -119,6 +119,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_worker       = false;
 /*static*/ bool        ArgConfig::vt_debug_group        = false;
 /*static*/ bool        ArgConfig::vt_debug_broadcast    = false;
+/*static*/ bool        ArgConfig::vt_debug_objgroup     = false;
 
 /*static*/ bool        ArgConfig::vt_user_1             = false;
 /*static*/ bool        ArgConfig::vt_user_2             = false;
@@ -260,6 +261,7 @@ namespace vt { namespace arguments {
   auto abp = "Enable debug_worker       = \"" debug_pp(worker)       "\"";
   auto bbp = "Enable debug_group        = \"" debug_pp(group)        "\"";
   auto cbp = "Enable debug_broadcast    = \"" debug_pp(broadcast)    "\"";
+  auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
 
   auto r  = app.add_flag("--vt_debug_all",          vt_debug_all,          rp);
   auto aa = app.add_flag("--vt_debug_none",         vt_debug_none,         aap);
@@ -291,6 +293,7 @@ namespace vt { namespace arguments {
   auto ab = app.add_flag("--vt_debug_worker",       vt_debug_worker,       abp);
   auto bb = app.add_flag("--vt_debug_group",        vt_debug_group,        bbp);
   auto cb = app.add_flag("--vt_debug_broadcast",    vt_debug_broadcast,    cbp);
+  auto db = app.add_flag("--vt_debug_objgroup",     vt_debug_objgroup,     dbp);
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
   r->group(debugGroup);
   aa->group(debugGroup);
@@ -322,6 +325,7 @@ namespace vt { namespace arguments {
   ab->group(debugGroup);
   bb->group(debugGroup);
   cb->group(debugGroup);
+  db->group(debugGroup);
 
   /*
    * Flags for enabling load balancing and configuring it

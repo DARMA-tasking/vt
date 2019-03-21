@@ -52,6 +52,7 @@ namespace vt { namespace auto_registry {
 template <typename F, F* f>
 struct FunctorAdapter {
   using FunctionPtrType = F*;
+  using ObjType = void;
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
@@ -61,9 +62,10 @@ struct FunctorAdapter {
    }
 };
 
-template <typename F, F f>
+template <typename F, F f, typename ObjT = void>
 struct FunctorAdapterMember {
   using FunctionPtrType = F;
+  using ObjType = ObjT;
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
@@ -102,6 +104,7 @@ template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
 struct RunnableGen {
   using ActFnType = ActFnT;
   using FunctionPtrType = typename ActFnT::FunctionPtrType;
+  using ObjType = typename ActFnT::ObjType;
 
   static AutoHandlerType const idx;
   static constexpr FunctionPtrType getFunction();

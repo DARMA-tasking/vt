@@ -36,6 +36,8 @@ set(
       pipe/callback/handler_bcast
       pipe/callback/proxy_send
       pipe/callback/proxy_bcast
+      pipe/callback/objgroup_send
+      pipe/callback/objgroup_bcast
       pipe/callback/anon
       pipe/callback/cb_union
     termination/dijkstra-scholten
@@ -74,6 +76,9 @@ set(
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
       registry/auto/vc registry/auto/rdma registry/auto/index
+    objgroup
+      objgroup/proxy objgroup/holder objgroup/active_func objgroup/dispatch
+      objgroup/type_registry
 
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})

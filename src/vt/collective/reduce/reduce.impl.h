@@ -64,7 +64,7 @@ template <typename MessageT>
     "reduceUp: tag={}, epoch={}, vrt={}, msg={}\n",
     msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_, print_ptr(msg)
   );
-  auto const& grp = envelopeGetGroup(msg->env);
+  auto const grp = envelopeGetGroup(msg->env);
   if (grp == default_group) {
     theCollective()->reduceAddMsg<MessageT>(msg,false);
     theCollective()->reduceNewMsg<MessageT>(msg);
@@ -111,26 +111,26 @@ EpochType Reduce::reduce(
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EpochType Reduce::reduce(
-  NodeType const& root, MessageT* const msg, TagType const& tag,
-  EpochType const& epoch, ReduceNumType const& num_contrib,
-  VirtualProxyType const& proxy
+  NodeType root, MessageT* const msg, TagType tag, EpochType epoch,
+  ReduceNumType num_contrib, VirtualProxyType proxy, ObjGroupProxyType objgroup
 ) {
   if (group_ != default_group) {
     envelopeSetGroup(msg->env, group_);
   }
-  HandlerType const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   msg->combine_handler_ = han;
   msg->reduce_tag_ = tag;
   msg->reduce_root_ = root;
   msg->reduce_proxy_ = proxy;
+  msg->reduce_objgroup_ = objgroup;
   debug_print(
     reduce, node,
-    "reduce: tag={}, epoch={}, vrt={}, num_contrib={}, msg={}, ref={}\n",
-    msg->reduce_tag_, msg->reduce_epoch_,
-    msg->reduce_proxy_, num_contrib, print_ptr(msg), envelopeGetRef(msg->env)
+    "reduce: tag={}, epoch={}, vrt={}, objgrp={}, contrib={}, msg={}, ref={}\n",
+    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_,
+    msg->reduce_objgroup_, num_contrib, print_ptr(msg), envelopeGetRef(msg->env)
   );
   if (epoch == no_epoch) {
-    auto reduce_epoch_lookup = std::make_tuple(proxy,tag);
+    auto reduce_epoch_lookup = std::make_tuple(proxy,tag,objgroup);
     auto iter = next_epoch_for_tag_.find(reduce_epoch_lookup);
     if (iter == next_epoch_for_tag_.end()) {
       next_epoch_for_tag_.emplace(
@@ -152,10 +152,13 @@ EpochType Reduce::reduce(
 
 template <typename MessageT>
 void Reduce::reduceAddMsg(
-  MessageT* msg, bool const local, ReduceNumType const& num_contrib
+  MessageT* msg, bool const local, ReduceNumType num_contrib
 ) {
   auto lookup = ReduceIdentifierType{
-    msg->reduce_tag_,msg->reduce_epoch_,msg->reduce_proxy_
+    msg->reduce_tag_,
+    msg->reduce_epoch_,
+    msg->reduce_proxy_,
+    msg->reduce_objgroup_
   };
   auto live_iter = live_reductions_.find(lookup);
   if (live_iter == live_reductions_.end()) {
@@ -191,10 +194,10 @@ void Reduce::reduceAddMsg(
 
 template <typename MessageT>
 void Reduce::startReduce(
-  TagType const& tag, EpochType const& epoch, VirtualProxyType const& proxy,
-  bool use_num_contrib
+  TagType tag, EpochType epoch, VirtualProxyType proxy,
+  ObjGroupProxyType objgroup, bool use_num_contrib
 ) {
-  auto lookup = ReduceIdentifierType{tag,epoch,proxy};
+  auto lookup = ReduceIdentifierType{tag,epoch,proxy,objgroup};
   auto live_iter = live_reductions_.find(lookup);
   auto& state = live_iter->second;
 
@@ -295,7 +298,10 @@ void Reduce::startReduce(
 template <typename MessageT>
 void Reduce::reduceNewMsg(MessageT* msg) {
   return startReduce<MessageT>(
-    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_
+    msg->reduce_tag_,
+    msg->reduce_epoch_,
+    msg->reduce_proxy_,
+    msg->reduce_objgroup_
   );
 }
 

@@ -154,6 +154,7 @@ public:
   ComponentPtrType<vrt::collection::CollectionManager> theCollection;
   ComponentPtrType<group::GroupManager> theGroup;
   ComponentPtrType<pipe::PipeManager> theCB;
+  ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;

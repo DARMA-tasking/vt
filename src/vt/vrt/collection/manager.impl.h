@@ -1071,7 +1071,7 @@ EpochType CollectionManager::reduceMsgExpr(
       num_elms = elm_holder->numElementsExpr(expr_fn);
     }
 
-    auto reduce_id = std::make_tuple(col_proxy,tag);
+    auto reduce_id = std::make_tuple(col_proxy,tag,no_obj_group);
     auto epoch_iter = reduce_cur_epoch_.find(reduce_id);
     EpochType cur_epoch = epoch;
     if (epoch == no_epoch && epoch_iter != reduce_cur_epoch_.end()) {

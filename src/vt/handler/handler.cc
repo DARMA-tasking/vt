@@ -48,17 +48,24 @@
 namespace vt {
 
 /*static*/ HandlerType HandlerManager::makeHandler(
-  bool is_auto, bool is_functor, HandlerIdentifierType id
+  bool is_auto, bool is_functor, HandlerIdentifierType id, bool is_objgroup,
+  HandlerControlType control
 ) {
   HandlerType new_han = blank_handler;
   HandlerManager::setHandlerAuto(new_han, is_auto);
+  HandlerManager::setHandlerObjGroup(new_han, is_objgroup);
   HandlerManager::setHandlerFunctor(new_han, is_functor);
   HandlerManager::setHandlerIdentifier(new_han, id);
 
+  if (control != 0) {
+    HandlerManager::setHandlerControl(new_han, control);
+  }
+
   debug_print(
     handler, node,
-    "HandlerManager::makeHandler: is_functor={}, is_auto={}, id={}, han={}\n",
-    print_bool(is_functor), print_bool(is_auto), id, new_han
+    "HandlerManager::makeHandler: is_functor={}, is_auto={}, is_objgroup={},"
+    " id={:x}, control={:x}, han={:x}\n",
+    is_functor, is_auto, is_objgroup, id, control, new_han
   );
 
   return new_han;
@@ -72,6 +79,14 @@ namespace vt {
   >(han);
 }
 
+/*static*/ HandlerControlType HandlerManager::getHandlerControl(
+  HandlerType han
+) {
+  return BitPackerType::getField<
+    HandlerBitsType::Control, control_num_bits, HandlerControlType
+  >(han);
+}
+
 /*static*/ void HandlerManager::setHandlerIdentifier(
   HandlerType& han, HandlerIdentifierType id
 ) {
@@ -80,8 +95,22 @@ namespace vt {
   );
 }
 
+/*static*/ void HandlerManager::setHandlerControl(
+  HandlerType& han, HandlerControlType control
+) {
+  BitPackerType::setField<HandlerBitsType::Control, control_num_bits>(
+    han, control
+  );
+}
+
 /*static*/ void HandlerManager::setHandlerAuto(HandlerType& han, bool is_auto) {
   BitPackerType::boolSetField<HandlerBitsType::Auto>(han, is_auto);
+}
+
+/*static*/ void HandlerManager::setHandlerObjGroup(
+  HandlerType& han, bool is_objgroup
+) {
+  BitPackerType::boolSetField<HandlerBitsType::ObjGroup>(han, is_objgroup);
 }
 
 /*static*/ void HandlerManager::setHandlerFunctor(
@@ -98,4 +127,9 @@ namespace vt {
   return BitPackerType::boolGetField<HandlerBitsType::Functor>(han);
 }
 
-} // end vt
+/*static*/ bool HandlerManager::isHandlerObjGroup(HandlerType han) {
+  return BitPackerType::boolGetField<HandlerBitsType::ObjGroup>(han);
+}
+
+} // end namespace vt
+

@@ -56,6 +56,8 @@
 #include "vt/pipe/callback/handler_bcast/callback_bcast.fwd.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.fwd.h"
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast_tl.fwd.h"
+#include "vt/pipe/callback/objgroup_send/callback_objgroup_send.fwd.h"
+#include "vt/pipe/callback/objgroup_bcast/callback_objgroup_bcast.fwd.h"
 #include "vt/pipe/callback/anon/callback_anon_tl.fwd.h"
 
 #include <functional>
@@ -88,6 +90,8 @@ struct PipeManagerBase {
   friend struct pipe::callback::CallbackProxyBcastTypeless;
   friend struct pipe::callback::CallbackProxySendDirect;
   friend struct pipe::callback::CallbackProxyBcastDirect;
+  friend struct pipe::callback::CallbackObjGroupSend;
+  friend struct pipe::callback::CallbackObjGroupBcast;
 
   PipeType makeCallbackFuncVoid(
     bool const& persist, FuncType fn, bool const& dispatch = false,

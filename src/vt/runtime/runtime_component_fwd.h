@@ -50,6 +50,9 @@ struct GroupManager;
 namespace pipe {
 struct PipeManager;
 }
+namespace objgroup {
+struct ObjGroupManager;
+}
 
 #if backend_check_enabled(trace_enabled)
 namespace trace {
