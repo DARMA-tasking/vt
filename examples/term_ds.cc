@@ -60,9 +60,9 @@ static void test_handler(TestMsg* msg) {
   num--;
 
   if (num > 0) {
-    auto msg = makeSharedMessage<TestMsg>();
-    envelopeSetEpoch(msg->env, cur_epoch);
-    theMsg()->sendMsg<TestMsg,test_handler>((my_node + 1) % num_nodes,msg);
+    auto msg2 = makeSharedMessage<TestMsg>();
+    envelopeSetEpoch(msg2->env, cur_epoch);
+    theMsg()->sendMsg<TestMsg,test_handler>((my_node + 1) % num_nodes,msg2);
   }
 }
 

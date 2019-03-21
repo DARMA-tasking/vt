@@ -111,9 +111,9 @@ void compute(vt::EpochType const& ep) {
  */
 void finalize(vt::EpochType const ep, Order const& order) {
 
-  auto finish = [&](vt::EpochType const& ep) {
-    if (ep not_eq vt::no_epoch) {
-      vt::theTerm()->finishedEpoch(ep);
+  auto finish = [&](vt::EpochType const& my_ep) {
+    if (my_ep not_eq vt::no_epoch) {
+      vt::theTerm()->finishedEpoch(my_ep);
     }
   };
 
@@ -158,10 +158,10 @@ void finalize(vt::EpochType const ep, Order const& order) {
 
 void verify(vt::EpochType const& ep, Order const& order){
 #if DEBUG_TERM_ACTION
-  auto hasEnded = [](vt::EpochType const& ep, Order const& order){
-    print("within", ep, order);
-    EXPECT_TRUE(channel::hasEnded(ep));
-    print("leaving", ep, order);
+  auto hasEnded = [](vt::EpochType const& my_ep, Order const& my_order){
+    print("within", my_ep, my_order);
+    EXPECT_TRUE(channel::hasEnded(my_ep));
+    print("leaving", my_ep, my_order);
   };
 
   print("entering", ep, order);

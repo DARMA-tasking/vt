@@ -122,10 +122,10 @@ struct SubSolveInfo {
 struct Block : Collection<Block,Index1D> {
 
   Block() = default;
-  Block(int num_elm, int num_pieces) {
+  Block(int num_elm, int n_pieces) {
     ::fmt::print(
       "construct: node={}, elm={}, pieces={}\n",
-      theContext()->getNode(), num_elm, num_pieces
+      theContext()->getNode(), num_elm, n_pieces
     );
   }
 
@@ -230,11 +230,11 @@ template <typename IndexT>
       solver_info.have_blocks_++;
     } else {
       // It's a remote collection block
-      auto msg = makeSharedMessage<RequestDataMsg<Block>>(this_node);
+      auto msg2 = makeSharedMessage<RequestDataMsg<Block>>(this_node);
       // Here we will send "this_node" to indicate which nod it should come back
       // to.  Eventually, I will implement a "sub_rank" in VT which can use the
       // sub-rank instead of the global node id.
-      proxy[block_id].send<RequestDataMsg<Block>,&Block::dataRequest>(msg);
+      proxy[block_id].send<RequestDataMsg<Block>,&Block::dataRequest>(msg2);
     }
   }
 

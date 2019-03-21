@@ -85,9 +85,9 @@ bool EventRecord::testMPIEventReady() {
 
   MPI_Test(req, &flag, &stat);
 
-  bool const ready = flag == 1;
+  bool const mpiready = flag == 1;
 
-  if (ready and msg_ != nullptr and isSharedMessage(msg_.get())) {
+  if (mpiready and msg_ != nullptr and isSharedMessage(msg_.get())) {
     debug_print(
       verbose, active, node,
       "testMPIEventRead: deref: msg={}\n",
@@ -96,7 +96,7 @@ bool EventRecord::testMPIEventReady() {
     msg_ = nullptr;
   }
 
-  return ready;
+  return mpiready;
 }
 
 bool EventRecord::testNormalEventReady() {
@@ -104,16 +104,16 @@ bool EventRecord::testNormalEventReady() {
 }
 
 bool EventRecord::testParentEventReady() {
-  bool ready = true;
+  bool parent_ready = true;
   auto events = getEventList();
   for (auto&& e : *events) {
-    ready &=
+    parent_ready &=
       theEvent()->testEventComplete(e) == AsyncEvent::EventStateType::EventReady;
   }
-  if (ready) {
+  if (parent_ready) {
     events->clear();
   }
-  return ready;
+  return parent_ready;
 }
 
 EventType EventRecord::getEventID() const {

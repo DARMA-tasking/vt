@@ -102,7 +102,6 @@ TEST_F(TestPool, pool_alloc) {
 
   using CharType = unsigned char;
 
-  static constexpr size_t const max_bytes = 16384;
   static constexpr CharType const init_val = 'z';
 
   std::unique_ptr<pool::Pool> testPool = std::make_unique<pool::Pool>();

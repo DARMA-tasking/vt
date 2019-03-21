@@ -100,8 +100,8 @@ void ColA::work(TestMsg* msg) {
 
   if (getIndex().x() == 2) {
     auto const& proxy = getCollectionProxy();
-    auto const& msg = makeSharedMessage<TestMsg>();
-    proxy.broadcast<TestMsg,&ColA::work2>(msg);
+    auto const& msg2 = makeSharedMessage<TestMsg>();
+    proxy.broadcast<TestMsg,&ColA::work2>(msg2);
   }
 
   auto reduce_msg = makeSharedMessage<MyReduceMsg>(getIndex().x());

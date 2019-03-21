@@ -67,7 +67,7 @@ namespace vt { namespace rdma {
     msg, msg->is_user_msg, msg->rdma_handle, msg_tag, msg->num_bytes,
     msg->offset, false, nullptr, recv_node,
     [msg_tag,op_id,recv_node,handle](RDMA_GetType data){
-      auto const& this_node = theContext()->getNode();
+      auto const& my_node = theContext()->getNode();
       debug_print(
         rdma, node, "data is ready\n"
       );
@@ -77,7 +77,7 @@ namespace vt { namespace rdma {
       // auto const& num_bytes = std::get<1>(data);
 
       auto new_msg = makeSharedMessage<GetBackMessage>(
-        op_id, std::get<1>(data), 0u, no_tag, handle, this_node
+        op_id, std::get<1>(data), 0u, no_tag, handle, my_node
       );
 
       auto send_payload = [&](Active::SendFnType send){
@@ -848,11 +848,11 @@ void RDMAManager::getRegionTypeless(
 
       getDataIntoBuf(
         han, ptr_offset, (hi-lo)*elm_size, block_offset, no_tag, [=]{
-          auto const& node = theContext()->getNode();
+          auto const& my_node = theContext()->getNode();
           debug_print(
             rdma, node,
             "{}: walk_region: trigger: action={}\n",
-            node, print_ptr_const(&action)
+            my_node, print_ptr_const(&action)
           );
           action->release();
         }, elm_size, node
@@ -1277,9 +1277,9 @@ void RDMAManager::createDirectChannelInternal(
     );
 
     auto cb = theCB()->makeFunc<GetInfoChannel>([=](GetInfoChannel* msg){
-      auto const& num_bytes = msg->num_bytes;
+      auto const& my_num_bytes = msg->num_bytes;
       createDirectChannelFinish(
-        type, han, non_target, action, unique_channel_tag, is_target, num_bytes,
+        type, han, non_target, action, unique_channel_tag, is_target, my_num_bytes,
         override_target
       );
     });

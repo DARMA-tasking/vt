@@ -80,8 +80,8 @@ static inline void activeMessageGroupCollective() {
       fmt::print("Group is created: id={:x}\n", group_id);
 
       // In this example, node 1 broadcasts to the group of even nodes
-      auto const this_node = ::vt::theContext()->getNode();
-      if (this_node == 1) {
+      auto const my_node = ::vt::theContext()->getNode();
+      if (my_node == 1) {
         auto msg = makeSharedMessage<MySimpleMsg2>();
         envelopeSetGroup(msg->env, group_id);
         theMsg()->broadcastMsg<MySimpleMsg2,msgHandlerGroupB>(msg);

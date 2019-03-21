@@ -286,13 +286,13 @@ struct TestSequencerParallel : TestParallelHarness {
     });
 
     theSeq()->sequenced([]{
-      SeqType const seq_id = theSeq()->getCurrentSeq();
+      SeqType const my_seq_id = theSeq()->getCurrentSeq();
 
       std::atomic<OrderType>* order_ptr = &seq_ordering_;
       auto fn1 = std::bind(waitParNum<TestMsg, seqParHan4>, order_ptr, 1, 2, 2);
       auto fn2 = std::bind(waitParNum<TestMsg, seqParHan4>, order_ptr, 2, 2, 2);
 
-      theSeq()->parallel(seq_id, fn1, fn2);
+      theSeq()->parallel(my_seq_id, fn1, fn2);
     });
 
     theSeq()->wait<TestMsg, seqParHan4>([](TestMsg* msg){

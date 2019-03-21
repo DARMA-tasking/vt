@@ -161,11 +161,11 @@ void VirtualContextManager::sendSerialMsg(
     >(
       msg,
       // custom send lambda to route the message
-      [=](MsgSharedPtr<SerialMsgT> msg){
-        msg->setProxy(toProxy);
+      [=](MsgSharedPtr<SerialMsgT> mymsg){
+        mymsg->setProxy(toProxy);
         theLocMan()->vrtContextLoc->routeMsgHandler<
           SerialMsgT, SerializedMessenger::payloadMsgHandler
-        >(toProxy, home_node, msg.get());
+        >(toProxy, home_node, mymsg.get());
       },
       // custom data transfer lambda if above the eager threshold
       [=](ActionNodeType action){

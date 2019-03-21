@@ -87,9 +87,9 @@ static void put_data_fn(TestMsg* msg) {
       [=]{
         delete [] local_data;
         fmt::print("{}: after put: sending msg back to 0\n", my_node);
-        auto msg = makeSharedMessage<TestMsg>(my_node);
-        msg->han = my_handle;
-        theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg);
+        auto msg2 = makeSharedMessage<TestMsg>(my_node);
+        msg2->han = my_handle;
+        theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg2);
       }
     );
   }

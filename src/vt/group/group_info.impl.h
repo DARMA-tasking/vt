@@ -115,8 +115,8 @@ template <typename MsgT>
 
     if (op_id != no_op_id) {
       // Send back message
-      auto msg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
-      theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(parent, msg);
+      auto retmsg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
+      theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(parent, retmsg);
     }
   } else {
     debug_print(
@@ -148,9 +148,9 @@ template <typename MsgT>
           parent, op_id
         );
 
-        auto msg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
+        auto contmsg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
         theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
-          parent, msg
+          parent, contmsg
         );
       }
     };

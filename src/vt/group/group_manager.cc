@@ -453,18 +453,18 @@ EventType GroupManager::sendGroup(
         return no_event;
       }
     } else {
-      auto iter = remote_group_info_.find(group);
+      auto remote_iter = remote_group_info_.find(group);
 
       debug_print(
         broadcast, node,
         "GroupManager::sendGroup: *send* remote size={}, from={}, found={}, "
         "dest={}, group={:x}, is_root={} \n",
-        size, from, iter != remote_group_info_.end(), dest, group,
+        size, from, remote_iter != remote_group_info_.end(), dest, group,
         is_root
       );
 
-      if (iter != remote_group_info_.end() && (!this_node_dest || first_send)) {
-        auto& info = *iter->second;
+      if (remote_iter != remote_group_info_.end() && (!this_node_dest || first_send)) {
+        auto& info = *remote_iter->second;
         vtAssert(!info.is_forward_, "Must not be a forward");
         vtAssert(
           info.default_spanning_tree_ != nullptr, "Must have spanning tree"

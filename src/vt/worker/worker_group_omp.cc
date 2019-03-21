@@ -160,9 +160,9 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
       comm_fn();
 
       // once the comm function exits the program is terminated
-      for (auto thd = 0; thd < num_workers_; thd++) {
-        debug_print( worker, node, "comm: calling join thd={}\n", thd );
-        worker_state_[thd]->join();
+      for (auto thr = 0; thr < num_workers_; thr++) {
+        debug_print( worker, node, "comm: calling join thd={}\n", thr );
+        worker_state_[thr]->join();
       }
     }
   }

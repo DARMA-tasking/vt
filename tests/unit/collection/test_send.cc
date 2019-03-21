@@ -134,13 +134,13 @@ TYPED_TEST_CASE_P(TestCollectionSendMem);
 TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
   using ColType = TypeParam;
   using MsgType = typename ColType::MsgType;
-  using ParamType = typename ColType::ParamType;
+  using TestParamType = typename ColType::ParamType;
 
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const& col_size = 32;
     auto range = TestIndex(col_size);
-    ParamType args = ConstructTuple<ParamType>::construct();
+    TestParamType args = ConstructTuple<TestParamType>::construct();
     auto proxy = theCollection()->construct<ColType>(range);
     for (int i = 0; i < col_size; i++) {
       auto msg = makeSharedMessage<MsgType>(args);
@@ -159,13 +159,13 @@ TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
 TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
   using ColType = TypeParam;
   using MsgType = typename ColType::MsgType;
-  using ParamType = typename ColType::ParamType;
+  using TestParamType = typename ColType::ParamType;
 
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const& col_size = 32;
     auto range = TestIndex(col_size);
-    ParamType args = ConstructTuple<ParamType>::construct();
+    TestParamType args = ConstructTuple<TestParamType>::construct();
     auto proxy = theCollection()->construct<ColType>(range);
     for (int i = 0; i < col_size; i++) {
       auto msg = makeSharedMessage<MsgType>(args);

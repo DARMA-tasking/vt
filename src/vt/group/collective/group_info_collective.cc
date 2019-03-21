@@ -299,12 +299,12 @@ void InfoColl::upTree() {
         group, is_root, root_node, msg_list.size()
       );
 
-      auto const& subtree = static_cast<NodeType>(0);
+      auto const& subtree_zero = static_cast<NodeType>(0);
       auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
         msg_in_group.size()-1
       );
       auto msg = makeSharedMessage<GroupCollectiveMsg>(
-        group,new_root_cont_,true,subtree,root_node,0,extra
+        group,new_root_cont_,true,subtree_zero,root_node,0,extra
       );
       theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
 
@@ -337,10 +337,10 @@ void InfoColl::upTree() {
     auto const& total_subtree = static_cast<NodeType>(subtree + sub);
     auto const& level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
-    auto msg = makeSharedMessage<GroupCollectiveMsg>(
+    auto cmsg = makeSharedMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,level
     );
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
+    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, cmsg);
 
     for (auto&& msg : msg_in_group) {
       span_children_.push_back(msg->getChild());

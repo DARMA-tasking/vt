@@ -79,7 +79,7 @@ struct MyContext { };
 static MyContext ctx = {};
 
 // A message handler with context used as the target for a callback
-static void callbackCtx(DataMsg* msg, MyContext* ctx) {
+static void callbackCtx(DataMsg* msg, MyContext* cbctx) {
   NodeType const cur_node = ::vt::theContext()->getNode();
   ::fmt::print("{}: triggering context callback\n", cur_node);
 }

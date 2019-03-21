@@ -115,10 +115,10 @@ void InfoRooted::setupRooted() {
         if (finished_setup_action_ != nullptr) {
           op = theGroup()->registerContinuation(finished_setup_action_);
         }
-        auto const& size = static_cast<NodeType>(region_list_.size());
+        auto const& listsize = static_cast<NodeType>(region_list_.size());
         region::ShallowList lst(region_list_);
         auto msg = makeSharedMessage<GroupListMsg>(
-          low_node, size, group_, op, size, this_node, &lst
+          low_node, listsize, group_, op, listsize, this_node, &lst
         );
         is_forward_ = true;
         forward_node_ = low_node;
@@ -136,9 +136,9 @@ void InfoRooted::setupRooted() {
       if (finished_setup_action_ != nullptr) {
         op = theGroup()->registerContinuation(finished_setup_action_);
       }
-      auto const& size = static_cast<NodeType>(region_->getSize());
+      auto const& regsize = static_cast<NodeType>(region_->getSize());
       auto msg = makeSharedMessage<GroupRangeMsg>(
-        low_node, size, group_, op, size, this_node,
+        low_node, regsize, group_, op, regsize, this_node,
         static_cast<region::Range*>(region_.get())
       );
       is_forward_ = true;

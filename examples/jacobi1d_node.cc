@@ -263,8 +263,8 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
         theMsg()->broadcastMsg<JacobiKernelMsg, doKernel>(
           makeSharedMessage<JacobiKernelMsg>(cur_iter)
         );
-        JacobiKernelMsg msg(cur_iter);
-        doKernel(&msg);
+        JacobiKernelMsg kmsg(cur_iter);
+        doKernel(&kmsg);
       }
     } else {
       finished();

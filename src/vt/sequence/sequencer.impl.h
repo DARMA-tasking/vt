@@ -247,9 +247,9 @@ void TaggedSequencer<SeqTag, SeqTrigger>::enqueueSeqList(SeqType const& seq_id) 
   SeqListType& lst = getSeqList(seq_id);
   if (lst.isReady()) {
     auto run_list = [this,seq_id]{
-      SeqListType& lst = getSeqList(seq_id);
-      if (lst.isReady()) {
-        lst.expandNextNode();
+      SeqListType& mylst = getSeqList(seq_id);
+      if (mylst.isReady()) {
+        mylst.expandNextNode();
       }
     };
     enqueue(run_list);

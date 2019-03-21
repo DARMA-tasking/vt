@@ -273,7 +273,7 @@ GroupType CollectionManager::createGroupCollection(
     in_group, [proxy,vid](GroupType new_group){
       auto const& group_root = theGroup()->groupRoot(new_group);
       auto const& is_group_default = theGroup()->groupDefault(new_group);
-      auto const& in_group = theGroup()->inGroup(new_group);
+      auto const& my_in_group = theGroup()->inGroup(new_group);
       auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
       elm_holder->setGroup(new_group);
       elm_holder->setUseGroup(!is_group_default);
@@ -290,7 +290,7 @@ GroupType CollectionManager::createGroupCollection(
         group_root, is_group_default
       );
 
-      if (!is_group_default && in_group) {
+      if (!is_group_default && my_in_group) {
         uint64_t const group_tag_mask = 0x0fff0000;
         auto group_msg = makeSharedMessage<CollectionGroupMsg>(proxy,new_group);
         auto const& group_tag_id = vid | group_tag_mask;
@@ -2217,10 +2217,10 @@ template <typename ColT, typename IndexT>
 
   if (node != uninitialized_destination) {
     auto send = [untyped_proxy,node]{
-      auto msg = makeSharedMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
+      auto smsg = makeSharedMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
       theMsg()->sendMsg<
         ActInsertMsg<ColT,IndexT>,actInsertHandler<ColT,IndexT>
-      >(node,msg);
+      >(node,smsg);
     };
     return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_, send);
   } else {
