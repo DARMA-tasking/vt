@@ -14,5 +14,3 @@ include(cmake/load_cli11_package.cmake)
 # Google test package
 include(cmake/load_gtest_package.cmake)
 
-# Discover and load threading configuration
-include(cmake/load_threading_package.cmake)
