@@ -69,6 +69,7 @@
 #include "vt/vrt/collection/holders/insert_context_holder.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
+#include "vt/registry/auto/view/auto_registry_view.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/topos/mapping/mapping_headers.h"
@@ -77,6 +78,7 @@
 #include "vt/serialization/auto_dispatch/dispatch.h"
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
+#include "manager.h"
 
 #include <tuple>
 #include <utility>
@@ -552,6 +554,27 @@ template <typename>
 }
 
 template <typename>
+/*static*/ void CollectionManager::viewGroupFinishedHan(ViewGroupMsg* msg) {
+
+  auto const& new_proxy = msg->getProxy();
+  bool const is_view = VirtualProxyBuilder::isView(new_proxy);
+  vtAssertExpr(is_view);
+
+  // need an explicitly reference
+  auto& buffer_group = theCollection()->buffered_group_;
+
+  // trigger all buffered actions
+  auto iter = buffer_group.find(new_proxy);
+  if (iter != buffer_group.end()) {
+    for (auto&& action : iter->second) {
+      action(new_proxy);
+    }
+    iter->second.clear();
+    buffer_group.erase(iter);
+  }
+}
+
+template <typename>
 /*static*/ void CollectionManager::collectionFinishedHan(
   CollectionConsMsg* msg
 ) {
@@ -589,6 +612,15 @@ template <typename>
     collectionFinishedHan(new_msg.get());
   } else {
     // do nothing
+  }
+}
+
+template <typename>
+/*static*/ void CollectionManager::viewGroupReduceHan(ViewGroupMsg* msg) {
+
+  if (msg->isRoot()) {
+    auto new_msg = makeSharedMessage<ViewGroupMsg>(*msg);
+    theMsg()->broadcastMsg<ViewGroupMsg,viewGroupFinishedHan>(new_msg);
   }
 }
 
@@ -1983,6 +2015,21 @@ CollectionManager::constructMap(
   CollectionManager::distConstruct<MsgType>(create_msg_local.get());
 
   return CollectionProxyWrapType<ColT, typename ColT::IndexType>{new_proxy};
+}
+
+inline void CollectionManager::setViewReady(VirtualProxyType const& proxy) {
+  view_group_ready_[proxy] = true;
+}
+
+inline bool CollectionManager::isViewReady(VirtualProxyType const& proxy) {
+  // todo check that proxy exists
+  return view_group_ready_[proxy];
+}
+
+inline void CollectionManager::assignGroup(
+  VirtualProxyType const& proxy, GroupType const& group
+) {
+  view_group_[proxy] = group;
 }
 
 inline void CollectionManager::insertCollectionInfo(

@@ -73,6 +73,7 @@
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/topos/mapping/mapping_function.h"
 
 #include <memory>
 #include <vector>
@@ -235,6 +236,13 @@ private:
     VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
   );
 
+  /*
+   * Private interface for view group creation
+   */
+
+  void setViewReady(VirtualProxyType const& proxy);
+  bool isViewReady(VirtualProxyType const& proxy);
+  void assignGroup(VirtualProxyType const& proxy, GroupType const& group);
 
 public:
   template <typename ColT>
@@ -576,6 +584,12 @@ public:
   template <typename=void>
   static void collectionGroupFinishedHan(CollectionGroupMsg* msg);
 
+  template <typename=void>
+  static void viewGroupReduceHan(ViewGroupMsg* msg);
+
+  template <typename=void>
+  static void viewGroupFinishedHan(ViewGroupMsg* msg);
+
   /*
    *  Automatic group creation for each collection instance for broadcasts
    *  (optimization) and reduce (correctness)
@@ -806,6 +820,8 @@ private:
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
+  std::unordered_map<VirtualProxyType,GroupType> view_group_ = {};
+  std::unordered_map<VirtualProxyType,bool> view_group_ready_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
 };
