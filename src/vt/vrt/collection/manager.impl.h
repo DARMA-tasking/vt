@@ -2018,6 +2018,58 @@ CollectionManager::constructMap(
 }
 
 
+template <
+  typename ColT, typename IndexT, typename IndexU,
+  mapping::ActiveViewTypedFnType<IndexT, IndexU>* index_remap
+>
+CollectionProxy<ColT, IndexU> CollectionManager::slice(
+  CollectionProxy<ColT, IndexT> const& col_proxy,
+  IndexT const& old_range,
+  IndexU const& new_range,
+  EpochType const& epoch,
+  TagType const& tag
+) {
+  // message type for view group creation
+  using MsgT = ViewCreateMsg<ColT, IndexT, IndexU>;
+  // retrieve the virtual old proxy
+  auto const old_proxy = col_proxy.getProxy();
+
+  // check that the collection is static and already built
+  bool const is_static_collec   = ColT::isStaticSized();
+  bool const is_already_built   = (constructed_.find(old_proxy) != constructed_.end());
+  bool const is_view_old_proxy = VirtualProxyBuilder::isView(old_proxy);
+
+  vtAssert(is_static_collec, "Only view of static collections are managed");
+  vtAssert(is_already_built, "Collection should be already built");
+  vtAssert(not is_view_old_proxy, "View of a view are not allowed for now");
+
+  // register the user defined filtering function, so it can be invoked on other nodes
+  auto const new_view_han = auto_registry::makeAutoHandlerView<IndexT, IndexU, index_remap>();
+  auto const old_view_han = uninitialized_handler;
+  auto const mapping_id  = UniversalIndexHolder<>::getMap(old_proxy);
+
+  // create a new proxy
+  auto new_proxy = makeNewCollectionProxy();
+
+  // broadcast view group creation request
+  auto msg = makeMessage<MsgT>(
+    old_proxy, new_proxy,
+    old_range, new_range,
+    old_view_han, new_view_han, mapping_id
+  );
+
+  SerializedMessenger::broadcastSerialMsg<MsgT, createViewGroup<MsgT>>(msg);
+
+  // apply it locally
+  createViewGroup<MsgT>(msg);
+
+  // buffer all view pending requests
+  bufferViewRequest<ColT>(new_proxy, epoch, tag);
+
+  // create the real new proxy
+  return CollectionProxy<ColT, IndexU>{new_proxy};
+}
+
 template <typename SysMsgT>
 /*static*/ void CollectionManager::createViewGroup(SysMsgT* msg) {
   using ColT   = typename SysMsgT::ColT;

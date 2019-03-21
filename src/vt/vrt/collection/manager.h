@@ -224,6 +224,23 @@ struct CollectionManager {
   );
 
   /*
+   *      CollectionManager::slice<ColT, IndexT>
+   *
+   *  Build a view with relative indexing of a collection slice.
+   */
+  template <
+    typename ColT, typename IndexT, typename IndexU,
+    mapping::ActiveViewTypedFnType<IndexT, IndexU>* index_remap
+  >
+  CollectionProxy<ColT, IndexU> slice(
+    CollectionProxy<ColT, IndexT> const& col_proxy,
+    IndexT const& old_range,
+    IndexU const& new_range,
+    EpochType const& epoch = no_epoch,
+    TagType const& tag = no_tag
+  );
+
+  /*
    *      CollectionManager::constructInsert<ColT, MapFnT>
    *
    *  Construct virtual context collection with insertions by the user before
