@@ -2017,6 +2017,89 @@ CollectionManager::constructMap(
   return CollectionProxyWrapType<ColT, typename ColT::IndexType>{new_proxy};
 }
 
+template <typename SysMsgT>
+/*static*/ void CollectionManager::createViewGroup(SysMsgT* msg) {
+  using ColT   = typename SysMsgT::ColT;
+  using IndexT = typename SysMsgT::IndexT;
+  using IndexU = typename SysMsgT::IndexU;
+
+  constexpr IndexU const uninitialized_index = -1;
+  auto const nb_nodes = theContext()->getNumNodes();
+  auto const my_node  = theContext()->getNode();
+
+  // retrieve view creation data
+  auto const& old_proxy = msg->old_proxy_;
+  auto const& new_proxy = msg->new_proxy_;
+  auto const& old_range = msg->old_range_;
+  auto const& new_range = msg->old_range_;
+  auto const& old_view  = msg->old_view_han_;
+  auto const& new_view  = msg->new_view_han_;
+  auto const& mapping   = msg->col_map_id_;
+
+  bool const is_view_old = VirtualProxyBuilder::isView(old_proxy);
+  bool const is_view_new = VirtualProxyBuilder::isView(new_proxy);
+  vtAssert(not is_view_old, "View of a view are not yet supported");
+  vtAssert(    is_view_new, "New proxy should be a view one");
+
+  //auto const col_node_map = getDefaultMap<ColT>();
+  auto const col_node_map = auto_registry::getHandlerMap(mapping);
+  auto const new_view_map = auto_registry::getHandlerView(new_view);
+  auto const old_view_map = (is_view_old ? auto_registry::getHandlerView(old_view) : nullptr);
+
+  bool in_group = false;
+
+  old_range.foreach([&](IndexT idx) mutable {
+    // no need to recheck if already resolved
+    if (not in_group) {
+      // todo update below if old_proxy is already a view
+      auto const cur_idx = static_cast<vt::index::BaseIndex*>(&idx);
+      auto const max_idx = static_cast<vt::index::BaseIndex*>(&old_range);
+      // use the collection mapping to know if current node
+      // should be in the new group or not.
+      auto const mapped_node = col_node_map(cur_idx, max_idx, nb_nodes);
+
+      if (my_node == mapped_node) {
+        IndexT const old_index = (is_view_old ? old_view_map(idx) : idx);
+        IndexU const new_index = new_view_map(old_index);
+        in_group = (new_index > uninitialized_index and new_index < new_range);
+      }
+    }
+  });
+
+  // create the view group
+  auto const virtual_id = VirtualProxyBuilder::getVirtualID(new_proxy);
+
+  auto const group_id = theGroup()->newGroupCollective(
+    in_group, [new_proxy, virtual_id](GroupType new_group){
+
+      auto const& root       = theGroup()->groupRoot(new_group);
+      auto const& is_default = theGroup()->groupDefault(new_group);
+      auto const& in_group   = theGroup()->inGroup(new_group);
+
+      theCollection()->setViewReady(new_proxy);
+
+      // notify all for finalization step
+      if (not is_default and in_group) {
+        uint64_t const group_tag_mask = 0x0ff00000;
+        auto tag = virtual_id | group_tag_mask;
+        auto msg = makeSharedMessage<ViewGroupMsg>(new_proxy, new_group);
+
+        theGroup()->groupReduce(new_group)->reduce<
+          ViewGroupMsg, viewGroupReduceHan
+        >(root, msg, tag);
+
+      } else if (is_default) {
+        // trigger the group finished handler directly.
+        auto new_msg = makeMessage<ViewGroupMsg>(new_proxy, new_group);
+        theCollection()->viewGroupFinishedHan<>(new_msg.get());
+      }
+    }
+  );
+  // assign the group id to the new proxy
+  theCollection()->assignGroup(new_proxy, group_id);
+}
+
+
 inline void CollectionManager::setViewReady(VirtualProxyType const& proxy) {
   view_group_ready_[proxy] = true;
 }

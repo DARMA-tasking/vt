@@ -239,6 +239,8 @@ private:
   /*
    * Private interface for view group creation
    */
+  template <typename SysMsgT>
+  static void createViewGroup(SysMsgT* msg);
 
   void setViewReady(VirtualProxyType const& proxy);
   bool isViewReady(VirtualProxyType const& proxy);
