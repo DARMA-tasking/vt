@@ -61,6 +61,8 @@ struct TestObjGroup : TestParallelHarness {
     MyObjB::next_id = 0;
   }
 
+  static int32_t total_verify_expected_;
+
   template <int test>
   struct Verify {
 
@@ -80,17 +82,21 @@ struct TestObjGroup : TestParallelHarness {
         case 4: EXPECT_EQ(value, expected_); break;
         default: vtAbort("Failure: should not be reached"); break;
       }
+      total_verify_expected_++;
     }
     // check reduction result for vector append
     void operator()(VecMsg* msg) {
       auto final_size = msg->getConstVal().vec_.size();
       auto n = vt::theContext()->getNumNodes();
       EXPECT_EQ(final_size, n * 2);
+      total_verify_expected_++;
     }
     // for reduction values not depending on ranks
     int expected_ = 0;
   };
 };
+
+/*static*/ int32_t TestObjGroup::total_verify_expected_ = 0;
 
 TEST_F(TestObjGroup, test_construct) {
 
@@ -171,6 +177,7 @@ TEST_F(TestObjGroup, test_proxy_schedule) {
 
   // self-send a message and then broadcast
   auto my_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
   proxy[my_node].send<MyMsg, &MyObjA::handler>();
   proxy.broadcast<MyMsg, &MyObjA::handler>();
 
@@ -186,7 +193,7 @@ TEST_F(TestObjGroup, test_proxy_schedule) {
       objgroup, node,
       "obj->recv:{} after term\n", obj->recv_
     );
-    EXPECT_EQ(obj->recv_, 2);
+    EXPECT_EQ(obj->recv_, num_nodes + 1);
   });
 }
 
@@ -226,9 +233,11 @@ TEST_F(TestObjGroup, test_proxy_callbacks) {
 }
 
 TEST_F(TestObjGroup, test_proxy_reduce) {
-
   auto const my_node = vt::theContext()->getNode();
-  auto const epoch = vt::theTerm()->makeEpochCollective();
+
+  TestObjGroup::total_verify_expected_ = 0;
+
+  vt::theCollective()->barrier();
 
   // create four proxy instances of a same object group type
   auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
@@ -247,12 +256,17 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
   // on any valid operator and data type.
   using namespace vt::collective;
 
-  proxy1.reduce<PlusOp<int>, Verify<1>>(msg1, epoch);
-  proxy2.reduce<PlusOp<int>, Verify<2>>(msg2, epoch);
-  proxy3.reduce< MaxOp<int>, Verify<3>>(msg3, epoch);
-  proxy4.reduce<PlusOp<VectorPayload>, Verify<4>>(msg4, epoch);
+  proxy1.reduce<PlusOp<int>, Verify<1>>(msg1);
+  proxy2.reduce<PlusOp<int>, Verify<2>>(msg2);
+  proxy3.reduce< MaxOp<int>, Verify<3>>(msg3);
+  proxy4.reduce<PlusOp<VectorPayload>, Verify<4>>(msg4);
 
-  vt::theTerm()->finishedEpoch(epoch);
+  theTerm()->addAction([=]{
+    auto const root_node = 0;
+    if (my_node == root_node) {
+      EXPECT_EQ(TestObjGroup::total_verify_expected_, 4);
+    }
+  });
 }
 
 }}} // end namespace vt::tests::unit
