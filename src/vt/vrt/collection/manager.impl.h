@@ -2017,6 +2017,7 @@ CollectionManager::constructMap(
   return CollectionProxyWrapType<ColT, typename ColT::IndexType>{new_proxy};
 }
 
+
 template <typename SysMsgT>
 /*static*/ void CollectionManager::createViewGroup(SysMsgT* msg) {
   using ColT   = typename SysMsgT::ColT;
@@ -2097,6 +2098,37 @@ template <typename SysMsgT>
   );
   // assign the group id to the new proxy
   theCollection()->assignGroup(new_proxy, group_id);
+}
+
+template <typename ColT>
+void CollectionManager::bufferViewRequest(
+  VirtualProxyType const& proxy,
+  EpochType const& epoch,
+  TagType const& tag
+) {
+
+  // check if view group creation is finished
+  bool const is_ready = theCollection()->isViewReady(proxy);
+
+  // Buffer operations if not yet ready
+  if (not is_ready) {
+    auto iter = buffered_group_.find(proxy);
+    if (iter == buffered_group_.end()) {
+      buffered_group_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(proxy),
+        std::forward_as_tuple(ActionContainerType{})
+      );
+      iter = buffered_group_.find(proxy);
+    }
+    theTerm()->produce(term::any_epoch_sentinel);
+
+    iter->second.push_back([=](VirtualProxyType /*ignored*/){
+      theTerm()->consume(term::any_epoch_sentinel);
+      // buffer requests until group is ready
+      theCollection()->bufferViewRequest<ColT>(proxy, epoch, tag);
+    });
+  }
 }
 
 

@@ -242,6 +242,12 @@ private:
   template <typename SysMsgT>
   static void createViewGroup(SysMsgT* msg);
 
+  template <typename ColT>
+  void bufferViewRequest(
+    VirtualProxyType const& proxy,
+    EpochType const& epoch = no_epoch, TagType const& tag = no_tag
+  );
+
   void setViewReady(VirtualProxyType const& proxy);
   bool isViewReady(VirtualProxyType const& proxy);
   void assignGroup(VirtualProxyType const& proxy, GroupType const& group);
