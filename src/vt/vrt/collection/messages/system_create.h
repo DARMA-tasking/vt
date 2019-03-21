@@ -91,6 +91,48 @@ struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
   VirtualProxyType proxy = {};
 };
 
+// message type for collection view distributed construction.
+template <typename ColT, typename IndexT, typename IndexU>
+struct ViewCreateMsg : ::vt::collective::reduce::ReduceMsg {
+
+  VirtualProxyType old_proxy_    = no_vrt_proxy;
+  VirtualProxyType new_proxy_    = no_vrt_proxy;
+  IndexT           old_range_    = 0;
+  IndexU           new_range_    = 0;
+  HandlerType      old_view_han_ = uninitialized_handler;
+  HandlerType      new_view_han_ = uninitialized_handler;
+  HandlerType      col_map_id_   = uninitialized_handler;
+
+
+  ViewCreateMsg() = default;
+
+  ViewCreateMsg(
+    VirtualProxyType const& in_old_proxy,
+    VirtualProxyType const& in_new_proxy,
+    IndexT           const& in_old_range,
+    IndexU           const& in_new_range,
+    HandlerType      const& in_old_view_han,
+    HandlerType      const& in_new_view_han,
+    HandlerType      const& in_col_map
+  ) : old_proxy_   (in_old_proxy),
+      new_proxy_   (in_new_proxy),
+      old_range_   (in_old_range),
+      new_range_   (in_new_range),
+      old_view_han_(in_old_view_han),
+      new_view_han_(in_new_view_han),
+      col_map_id_  (in_col_map)
+  {}
+
+  ~ViewCreateMsg() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | old_proxy_ | new_proxy_
+      | old_range_ | new_range_
+      | old_view_han_ | new_view_han_ | col_map_id_;
+  }
+};
+
 struct CollectionGroupMsg : CollectionConsMsg {
   CollectionGroupMsg() = default;
   CollectionGroupMsg(
@@ -103,6 +145,8 @@ struct CollectionGroupMsg : CollectionConsMsg {
 private:
   GroupType group_ = no_group;
 };
+
+struct ViewGroupMsg : CollectionGroupMsg {};
 
 struct FinishedUpdateMsg : ::vt::collective::reduce::ReduceMsg {
   FinishedUpdateMsg() = default;
