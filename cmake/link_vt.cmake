@@ -166,4 +166,8 @@ function(link_target_with_vt)
       ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} ${ARG_CUSTOM_LINK_ARGS}
      )
   endif()
+
+  get_target_property(TARGET_LINKS ${ARG_TARGET} LINK_LIBRARIES)
+  message(STATUS "Link libraries: ${TARGET_LINKS}")
+
 endfunction()
