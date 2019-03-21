@@ -136,6 +136,25 @@ EpochType Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
   );
 }
 
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename IndexU, mapping::ActiveViewTypedFnType<IndexT, IndexU>* remap
+>
+Reducable<ColT, IndexU, BaseProxyT>
+Reducable<ColT, IndexT, BaseProxyT>::slice(
+  IndexT const& old_range,
+  IndexU const& new_range,
+  EpochType const& epoch,
+  TagType const& tag
+) const {
+
+  auto const proxy = this->getProxy();
+  return theCollection()->slice<IndexT, IndexU, remap>(
+    proxy, old_range, new_range, epoch, tag
+  );
+}
+
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_REDUCABLE_REDUCABLE_IMPL_H*/

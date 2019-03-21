@@ -65,7 +65,6 @@ struct Reducable : BaseProxyT {
   explicit Reducable(VirtualProxyType const in_proxy);
   Reducable& operator=(Reducable const&) = default;
 
-
   template <typename OpT = collective::None, typename MsgT>
   EpochType reduce(
     MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch = no_epoch,
@@ -104,6 +103,17 @@ struct Reducable : BaseProxyT {
     TagType const& tag,
     IndexT const& idx
   ) const;
+
+  template <
+    typename IndexU, mapping::ActiveViewTypedFnType<IndexT, IndexU>* remap
+  >
+  Reducable<ColT, IndexU, BaseProxyT> slice(
+    IndexT const& old_range,
+    IndexU const& new_range,
+    EpochType const& epoch = no_epoch,
+    TagType const& tag = no_tag
+  ) const;
+
 };
 
 }}} /* end namespace vt::vrt::collection */
