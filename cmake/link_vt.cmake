@@ -158,24 +158,6 @@ function(link_target_with_vt)
     )
   endif()
 
-  if (DEFAULT_THREADING STREQUAL openmp)
-    if (${ARG_DEBUG_LINK})
-      message(
-        STATUS
-        "link_target_with_vt: dt=${DEFAULT_THREADING}, omp=${ARG_LINK_OPENMP}"
-      )
-    endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} OpenMP::OpenMP_CXX
-    )
-  elseif (NOT DEFINED ARG_LINK_STDTHREAD AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_STDTHREAD)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt(..): stdthread=${ARG_LINK_STDTHREAD}")
-    endif()
-    # @todo: is there something that needs to be done for std::threads to work
-    # in all cases, perhaps "-pthread"?
-  endif()
-
   if (${ARG_CUSTOM_LINK_ARGS})
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: custom=${ARG_CUSTOM_LINK_ARGS}")
