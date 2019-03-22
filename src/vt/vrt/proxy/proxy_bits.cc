@@ -94,7 +94,7 @@ namespace vt {namespace vrt {
 /*static*/ void VirtualProxyBuilder::setIsView(
   VirtualProxyType& proxy, bool const& is_view
 )  {
-  BitPackerType::boolSetField<eVirtualProxyBits::Collection>(proxy, is_view);
+  BitPackerType::boolSetField<eVirtualProxyBits::View>(proxy, is_view);
 }
 
 /*static*/ void VirtualProxyBuilder::setIsMigratable(
