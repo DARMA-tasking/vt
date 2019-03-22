@@ -149,7 +149,7 @@ Reducable<ColT, IndexT, BaseProxyT>::slice(
 ) const {
 
   auto const proxy = this->getProxy();
-  return theCollection()->slice<IndexT, IndexU, remap>(
+  return theCollection()->slice<ColT, IndexT, IndexU, remap>(
     proxy, old_range, new_range, epoch, tag
   );
 }
