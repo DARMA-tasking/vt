@@ -2052,7 +2052,7 @@ CollectionProxy<ColT, IndexU> CollectionManager::slice(
   auto new_proxy = makeNewCollectionProxy();
 
   // broadcast view group creation request
-  auto msg = makeMessage<MsgT>(
+  auto msg = makeSharedMessage<MsgT>(
     old_proxy, new_proxy,
     old_range, new_range,
     old_view_han, new_view_han, mapping_id
@@ -2072,11 +2072,9 @@ CollectionProxy<ColT, IndexU> CollectionManager::slice(
 
 template <typename SysMsgT>
 /*static*/ void CollectionManager::createViewGroup(SysMsgT* msg) {
-  using ColT   = typename SysMsgT::ColT;
-  using IndexT = typename SysMsgT::IndexT;
-  using IndexU = typename SysMsgT::IndexU;
+  using IndexOld = typename SysMsgT::IndexOld;
+  using IndexNew = typename SysMsgT::IndexNew;
 
-  constexpr IndexU const uninitialized_index = -1;
   auto const nb_nodes = theContext()->getNumNodes();
   auto const my_node  = theContext()->getNode();
 
@@ -2084,7 +2082,7 @@ template <typename SysMsgT>
   auto const& old_proxy = msg->old_proxy_;
   auto const& new_proxy = msg->new_proxy_;
   auto const& old_range = msg->old_range_;
-  auto const& new_range = msg->old_range_;
+  auto const& new_range = msg->new_range_;
   auto const& old_view  = msg->old_view_han_;
   auto const& new_view  = msg->new_view_han_;
   auto const& mapping   = msg->col_map_id_;
@@ -2094,27 +2092,29 @@ template <typename SysMsgT>
   vtAssert(not is_view_old, "View of a view are not yet supported");
   vtAssert(    is_view_new, "New proxy should be a view one");
 
-  //auto const col_node_map = getDefaultMap<ColT>();
-  auto const col_node_map = auto_registry::getHandlerMap(mapping);
-  auto const new_view_map = auto_registry::getHandlerView(new_view);
-  auto const old_view_map = (is_view_old ? auto_registry::getHandlerView(old_view) : nullptr);
+  //auto const col_node_map = getDefaultMap<CollecType>();
+  auto const node_mapping  = auto_registry::getHandlerMap(mapping);
+  auto const new_index_map = auto_registry::getHandlerView(new_view);
+  auto const old_index_map = (is_view_old ? auto_registry::getHandlerView(old_view) : nullptr);
 
   bool in_group = false;
+  auto range = static_cast<IndexOld>(old_range);
 
-  old_range.foreach([&](IndexT idx) mutable {
+  range.foreach([&](IndexOld idx) mutable {
     // no need to recheck if already resolved
     if (not in_group) {
       // todo update below if old_proxy is already a view
-      auto const cur_idx = static_cast<vt::index::BaseIndex*>(&idx);
-      auto const max_idx = static_cast<vt::index::BaseIndex*>(&old_range);
+      auto cur = static_cast<vt::index::BaseIndex*>(&idx);
+      auto max = static_cast<vt::index::BaseIndex*>(&range);
       // use the collection mapping to know if current node
       // should be in the new group or not.
-      auto const mapped_node = col_node_map(cur_idx, max_idx, nb_nodes);
+      auto const mapped_node = node_mapping(cur, max, nb_nodes);
 
       if (my_node == mapped_node) {
-        IndexT const old_index = (is_view_old ? old_view_map(idx) : idx);
-        IndexU const new_index = new_view_map(old_index);
-        in_group = (new_index > uninitialized_index and new_index < new_range);
+        auto old_index = (is_view_old ? old_index_map(cur) : *cur);
+        auto new_base  = new_index_map(&old_index);
+        auto new_index = reinterpret_cast<IndexNew&>(new_base);
+        in_group = new_index < new_range;
       }
     }
   });

@@ -229,7 +229,7 @@ struct CollectionManager {
    *  Build a view with relative indexing of a collection slice.
    */
   template <
-    typename ColT, typename IndexT, typename IndexU,
+    typename ColT, typename IndexT = typename ColT::IndexType, typename IndexU,
     mapping::ActiveViewTypedFnType<IndexT, IndexU>* index_remap
   >
   CollectionProxy<ColT, IndexU> slice(
@@ -268,6 +268,9 @@ private:
   void setViewReady(VirtualProxyType const& proxy);
   bool isViewReady(VirtualProxyType const& proxy);
   void assignGroup(VirtualProxyType const& proxy, GroupType const& group);
+
+  // todo: retrieve typed proxy from virtual proxy builder
+
 
 public:
   template <typename ColT>
