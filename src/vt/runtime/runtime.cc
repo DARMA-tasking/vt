@@ -584,9 +584,10 @@ void Runtime::printStartupBanner() {
     }                                                         \
   } while (0);
 
-  // #define debug_print_force(feature, opt, arg...)         \
-  //   debug_print_context(backend_debug, feature, opt, arg)
-
+  /*
+  #define debug_print_force(feature, opt, arg...)         \
+    debug_print_context(backend_debug, feature, opt, arg)
+  */
 
   #if !backend_debug_enabled(none)
     debug_warn_compile(none)

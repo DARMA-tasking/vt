@@ -231,11 +231,15 @@ extern runtime::Runtime* curRT;
 #define debug_print_regular(debug_type, main_fmt, main_arg...)  \
   debug_virtual_ctx_none(debug_type, main_fmt, main_arg)
 
-// #define debug_print_array(debug_type, main_fmt, main_arg...)  \
-//   debug_virtual_ctx_1(debug_type, "idx={}", thisIndex, main_fmt, ##main_arg)
+/*
+#define debug_print_array(debug_type, main_fmt, main_arg...)  \
+  debug_virtual_ctx_1(debug_type, "idx={}", thisIndex, main_fmt, ##main_arg)
+*/
 
-// #define debug_print_aoth(debug_type, main_fmt, main_arg...)             \
-//   debug_virtual_ctx_1(debug_type, "idx={}", this_index, main_fmt, main_arg)
+/*
+#define debug_print_aoth(debug_type, main_fmt, main_arg...)             \
+  debug_virtual_ctx_1(debug_type, "idx={}", this_index, main_fmt, main_arg)
+*/
 
 #define debug_print_node(debug_type, main_fmt, main_arg...)             \
   if (debug_argument_option(debug_type) or debug_all_option) {          \
@@ -245,19 +249,23 @@ extern runtime::Runtime* curRT;
     )                                                                   \
   }
 
-  // debug_virtual_ctx_1(                                                  \
-  //   debug_type,                                                         \
-  //   "worker={}", print_ctx_comm_worker,                                 \
-  //   main_fmt, main_arg                                                  \
-  // )
+  /*
+  debug_virtual_ctx_1(                                                  \
+    debug_type,                                                         \
+    "worker={}", print_ctx_comm_worker,                                 \
+    main_fmt, main_arg                                                  \
+  )
+  */
 
 #define debug_print_unknown(debug_type, main_fmt, main_arg...)          \
   if (debug_argument_option(debug_type) or debug_all_option) {          \
     debug_virtual_proc_ctx_none(debug_type, -1, main_fmt, main_arg)     \
   }
 
-// #define debug_print_pe(debug_type, proc, main_fmt, main_arg...)   \
-//   debug_virtual_proc_ctx_none(debug_type, proc, main_fmt, main_arg)
+/*
+#define debug_print_pe(debug_type, proc, main_fmt, main_arg...)   \
+  debug_virtual_proc_ctx_none(debug_type, proc, main_fmt, main_arg)
+*/
 
 #define debug_print_uid(debug_type, main_fmt, main_arg...)           \
   debug_virtual_ctx_2(                                               \
