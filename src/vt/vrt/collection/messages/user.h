@@ -138,12 +138,33 @@ private:
   #endif
 };
 
+
+template <typename ColT, typename IndexU, typename BaseMsgT = ::vt::Message>
+struct CollectViewMessage : CollectionMessage<ColT, BaseMsgT> {
+
+public:
+  CollectViewMessage() = delete;
+
+  explicit CollectViewMessage(VirtualProxyType const& proxy)
+    : CollectionMessage<ColT, BaseMsgT>(),
+      view_proxy_(proxy)
+  {}
+
+  vt::VirtualProxyType const& getProxy() { return view_proxy_; }
+
+private:
+  vt::VirtualProxyType view_proxy_ = vt::no_vrt_proxy;
+};
+
 }}} /* end namespace vt::vrt::collection */
 
 namespace vt {
 
 template <typename ColT, typename MsgT = ::vt::Message>
 using CollectionMessage = vrt::collection::CollectionMessage<ColT, MsgT>;
+
+template <typename ColT, typename IndexU, typename MsgT = ::vt::Message>
+using CollectViewMessage = vrt::collection::CollectViewMessage<ColT, IndexU, MsgT>;
 
 } /* end namespace vt */
 

@@ -95,22 +95,25 @@ struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
 template <typename ColT, typename IndexT, typename IndexU>
 struct ViewCreateMsg : ::vt::collective::reduce::ReduceMsg {
 
+  using CollectionType = ColT;
+  using IndexOld = IndexT;
+  using IndexNew = IndexU;
+
   VirtualProxyType old_proxy_    = no_vrt_proxy;
   VirtualProxyType new_proxy_    = no_vrt_proxy;
-  IndexT           old_range_    = 0;
-  IndexU           new_range_    = 0;
+  IndexOld         old_range_    = {};
+  IndexNew         new_range_    = {};
   HandlerType      old_view_han_ = uninitialized_handler;
   HandlerType      new_view_han_ = uninitialized_handler;
   HandlerType      col_map_id_   = uninitialized_handler;
-
 
   ViewCreateMsg() = default;
 
   ViewCreateMsg(
     VirtualProxyType const& in_old_proxy,
     VirtualProxyType const& in_new_proxy,
-    IndexT           const& in_old_range,
-    IndexU           const& in_new_range,
+    IndexOld         const& in_old_range,
+    IndexNew         const& in_new_range,
     HandlerType      const& in_old_view_han,
     HandlerType      const& in_new_view_han,
     HandlerType      const& in_col_map
@@ -146,7 +149,24 @@ private:
   GroupType group_ = no_group;
 };
 
-struct ViewGroupMsg : CollectionGroupMsg {};
+struct ViewGroupMsg : ::vt::collective::reduce::ReduceMsg {
+
+public:
+  ViewGroupMsg() = delete;
+
+  ViewGroupMsg(VirtualProxyType const& in_proxy, GroupType const& in_group)
+    : ::vt::collective::reduce::ReduceMsg(),
+      proxy_(in_proxy),
+      group_(in_group)
+  {}
+
+  VirtualProxyType const& getProxy() const { return proxy_; }
+  GroupType const& getGroup() const { return group_; }
+
+private:
+  GroupType group_ = no_group;
+  VirtualProxyType proxy_ = no_vrt_proxy;
+};
 
 struct FinishedUpdateMsg : ::vt::collective::reduce::ReduceMsg {
   FinishedUpdateMsg() = default;
