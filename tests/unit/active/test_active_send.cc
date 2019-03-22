@@ -43,7 +43,6 @@
 */
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "test_parallel_harness.h"
 #include "data_message.h"

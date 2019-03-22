@@ -43,7 +43,6 @@
 */
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include <tuple>
 #include <type_traits>
