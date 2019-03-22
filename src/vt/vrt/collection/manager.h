@@ -729,7 +729,7 @@ private:
   void destroyMatching(CollectionProxyWrapType<ColT,IndexT> const& proxy);
 
 protected:
-  VirtualProxyType makeNewCollectionProxy();
+  VirtualProxyType makeNewCollectionProxy(bool is_view = false);
 
   void insertCollectionInfo(
     VirtualProxyType const& proxy, HandlerType const& map,

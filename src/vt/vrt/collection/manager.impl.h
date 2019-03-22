@@ -2049,7 +2049,9 @@ CollectionProxy<ColT, IndexU> CollectionManager::slice(
   auto const mapping_id  = UniversalIndexHolder<>::getMap(old_proxy);
 
   // create a new proxy
-  auto new_proxy = makeNewCollectionProxy();
+  auto const new_proxy = makeNewCollectionProxy(true);
+  bool const is_view_new_proxy = VirtualProxyBuilder::isView(new_proxy);
+  vtAssertExpr(is_view_new_proxy);
 
   // broadcast view group creation request
   auto msg = makeSharedMessage<MsgT>(
@@ -2206,9 +2208,11 @@ inline void CollectionManager::insertCollectionInfo(
   UniversalIndexHolder<>::insertMap(proxy,map_han,insert_epoch);
 }
 
-inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
+inline VirtualProxyType CollectionManager::makeNewCollectionProxy(bool is_view) {
   auto const& node = theContext()->getNode();
-  return VirtualProxyBuilder::createProxy(curIdent_<>++, node, true, true);
+  return VirtualProxyBuilder::createProxy(
+    curIdent_<>++, node, true, true, false, is_view
+  );
 }
 
 /*
