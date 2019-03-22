@@ -74,6 +74,9 @@ struct CollectionBase : Indexable<ColT, IndexT> {
   ProxyType getElementProxy(IndexT const& idx) const;
   CollectionProxyType getCollectionProxy() const;
 
+  template <typename IndexU>
+  CollectionProxy<ColT, IndexU> getView(VirtualProxyType const& in_proxy) const;
+
   bool isStatic() const;
 
   static bool isStaticSized();

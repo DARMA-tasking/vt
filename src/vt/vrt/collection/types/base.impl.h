@@ -87,6 +87,14 @@ CollectionBase<ColT, IndexT>::getCollectionProxy() const {
 }
 
 template <typename ColT, typename IndexT>
+template <typename IndexU>
+CollectionProxy<ColT, IndexU>
+CollectionBase <ColT, IndexT>::getView(VirtualProxyType const& proxy) const {
+  vtAssertExpr(proxy != no_vrt_proxy);
+  return CollectionProxy<ColT, IndexU>{proxy};
+}
+
+template <typename ColT, typename IndexT>
 bool CollectionBase<ColT, IndexT>::isStatic() const {
   return hasStaticSize_ && elmsFixedAtCreation_;
 }
