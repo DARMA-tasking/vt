@@ -93,7 +93,7 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
       set_tests_properties(
         ${${CUR_TEST_LIST}}
         PROPERTIES TIMEOUT 60
-        FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
+        FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is"
         PASS_REGULAR_EXPRESSION "PASSED"
       )
     endforeach()
