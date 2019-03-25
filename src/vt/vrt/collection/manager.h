@@ -104,7 +104,7 @@ struct CollectionManager {
   >;
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using CollectionProxyWrapType = CollectionProxy<ColT,IndexT>;
-  using ReduceIDType = ::vt::collective::reduce::ReduceEpochLookupType;
+  using ReduceIDType = ::vt::collective::reduce::ReduceSeqLookupType;
   template <typename ColT>
   using EpochBcastType = std::unordered_map<EpochType,CollectionMessage<ColT>*>;
   template <typename ColT>
@@ -395,33 +395,32 @@ public:
    *  Reduce all elements of a collection
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceMsg(
+  SequentialIDType reduceMsg(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-    MsgT *const msg, EpochType const& epoch = no_epoch,
-    TagType const& tag = no_tag,
-    NodeType const& root_node = uninitialized_destination
+    MsgT *const msg, SequentialIDType seq = no_seq_id,
+    TagType tag = no_tag, NodeType root_node = uninitialized_destination
   );
 
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceMsg(
+  SequentialIDType reduceMsg(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-    MsgT *const msg, EpochType const& epoch, TagType const& tag,
+    MsgT *const msg, SequentialIDType seq, TagType tag,
     typename ColT::IndexType const& idx
   );
 
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceMsgExpr(
+  SequentialIDType reduceMsgExpr(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-    EpochType const& epoch = no_epoch, TagType const& tag = no_tag,
-    NodeType const& root_node = uninitialized_destination
+    SequentialIDType seq = no_seq_id, TagType tag = no_tag,
+    NodeType root_node = uninitialized_destination
   );
 
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceMsgExpr(
+  SequentialIDType reduceMsgExpr(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-    EpochType const& epoch, TagType const& tag,
+    SequentialIDType seq, TagType tag,
     typename ColT::IndexType const& idx
   );
 
@@ -801,7 +800,7 @@ private:
   BufferedActionType buffered_bcasts_;
   BufferedActionType buffered_group_;
   std::unordered_set<VirtualProxyType> constructed_;
-  std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
+  std::unordered_map<ReduceIDType,SequentialIDType> reduce_cur_seq_;
   std::vector<ActionFinishedLBType> lb_continuations_ = {};
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};

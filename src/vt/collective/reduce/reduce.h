@@ -73,25 +73,25 @@ struct Reduce : virtual collective::tree::Tree {
   Reduce(GroupType const& group, collective::tree::Tree* in_tree);
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EpochType reduce(
+  SequentialIDType reduce(
     NodeType root, MessageT* const msg, TagType tag = no_tag,
-    EpochType epoch = no_epoch, ReduceNumType num_contrib = 1,
+    SequentialIDType seq = no_seq_id, ReduceNumType num_contrib = 1,
     VirtualProxyType proxy = no_vrt_proxy,
     ObjGroupProxyType obj_group = no_obj_group
   );
 
   template <typename OpT, typename MsgT>
-  EpochType reduce(
+  SequentialIDType reduce(
     NodeType const& root, MsgT* msg, Callback<MsgT> cb,
-    TagType const& tag = no_tag, EpochType const& epoch = no_epoch,
+    TagType const& tag = no_tag, SequentialIDType const& seq = no_seq_id,
     ReduceNumType const& num_contrib = 1,
     VirtualProxyType const& proxy = no_vrt_proxy
   );
 
   template <typename OpT, typename FunctorT, typename MsgT>
-  EpochType reduce(
+  SequentialIDType reduce(
     NodeType const& root, MsgT* msg, TagType const& tag = no_tag,
-    EpochType const& epoch = no_epoch, ReduceNumType const& num_contrib = 1,
+    SequentialIDType const& seq = no_seq_id, ReduceNumType const& num_contrib = 1,
     VirtualProxyType const& proxy = no_vrt_proxy
   );
 
@@ -109,7 +109,7 @@ struct Reduce : virtual collective::tree::Tree {
    */
   template <typename MessageT>
   void startReduce(
-    TagType tag, EpochType epoch, VirtualProxyType proxy,
+    TagType tag, SequentialIDType seq, VirtualProxyType proxy,
     ObjGroupProxyType objgroup, bool use_num_contrib = true
   );
 
@@ -119,7 +119,7 @@ struct Reduce : virtual collective::tree::Tree {
   static void reduceUp(MessageT* msg);
 
 private:
-  std::unordered_map<ReduceEpochLookupType,EpochType> next_epoch_for_tag_;
+  std::unordered_map<ReduceSeqLookupType,SequentialIDType> next_seq_for_tag_;
   std::unordered_map<ReduceIdentifierType,ReduceStateType> live_reductions_;
   GroupType group_ = default_group;
 };

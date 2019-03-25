@@ -88,6 +88,8 @@ static constexpr GroupType const default_group                     = 0xFFFFFFFF;
 static constexpr PhaseType const fst_lb_phase                      = 0;
 static constexpr PipeType const no_pipe                            = u64empty;
 static constexpr ObjGroupProxyType const no_obj_group              = u64empty;
+static constexpr SequentialIDType const no_seq_id                  = u64empty;
+static constexpr SequentialIDType const first_seq_id               = 1;
 
 }  // end namespace vt
 
