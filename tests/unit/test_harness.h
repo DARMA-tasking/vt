@@ -45,7 +45,6 @@
 #define __VIRTUAL_TRANSPORT_TEST_HARNESS__
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include <vector>
 #include <string>

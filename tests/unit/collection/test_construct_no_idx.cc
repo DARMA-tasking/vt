@@ -43,7 +43,6 @@
 */
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "test_collection_common.h"
 #include "test_collection_construct_common.h"

@@ -55,7 +55,6 @@
 #include <fmt/ostream.h>
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include <cstdint>
 #include <tuple>

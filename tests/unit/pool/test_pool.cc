@@ -45,7 +45,6 @@
 #include <cstring>
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "test_harness.h"
 #include "test_parallel_harness.h"
