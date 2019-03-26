@@ -134,7 +134,7 @@ if ($build_mode eq "coverage") {
 }
 
 print STDERR "=== Building vt ===\n";
-print STDERR  "\tCode coverage mode enabled" if $coverage == 1;
+print STDERR  "\tCode coverage mode enabled\n" if $coverage == 1;
 print STDERR "\tBuild mode:$build_mode\n";
 print STDERR "\tRoot=$root\n";
 print STDERR "\tLibroot=$libroot\n";
