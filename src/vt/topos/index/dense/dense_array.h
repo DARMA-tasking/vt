@@ -96,7 +96,8 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   template <
     typename... Idxs,
     typename = typename std::enable_if<
-      util::meta_type_eq<IndexType, typename std::decay<Idxs>::type...>::value
+      util::meta_type_eq<IndexType, typename std::decay<Idxs>::type...>::value and
+      sizeof...(Idxs) == ndim
     >::type
   >
   explicit DenseIndexArray(Idxs&&... init);
