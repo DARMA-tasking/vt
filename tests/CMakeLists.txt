@@ -85,6 +85,7 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
           TARGET                 ${UNIT_TEST}
           WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
           TEST_SUFFIX            _proc_${PROC}
+          TEST_PREFIX            vt:
           TEST_LIST              ${CUR_TEST_LIST}
           EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
         )
