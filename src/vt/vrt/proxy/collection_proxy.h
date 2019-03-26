@@ -75,7 +75,9 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   template <
     typename Tp,
     typename   = typename std::enable_if<
-      std::is_same<typename IndexT::BuildIndexType, Tp>::value, Tp
+      std::is_same<
+        typename IndexT::BuildIndexType, typename std::decay<Tp>::type
+      >::value, Tp
     >::type
   >
   ElmProxyType operator[](Tp&& tp) const;
@@ -83,7 +85,9 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   template <
     typename Tp, typename... Tn,
     typename   = typename std::enable_if<
-      std::is_same<typename IndexT::BuildIndexType, Tp>::value, Tp
+      std::is_same<
+        typename IndexT::BuildIndexType, typename std::decay<Tp>::type
+      >::value, Tp
     >::type
   >
   ElmProxyType operator()(Tp&& tp, Tn&&... tn) const;
@@ -91,7 +95,9 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   template <
     typename IndexU,
     typename   = typename std::enable_if<
-      not std::is_same<typename IndexT::BuildIndexType, IndexU>::value, IndexU
+      not std::is_same<
+        typename IndexT::BuildIndexType, typename std::decay<IndexU>::type
+      >::value, IndexU
     >::type
   >
   ElmProxyType operator[](IndexU const& idx) const;
@@ -99,7 +105,9 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   template <
     typename IndexU,
     typename   = typename std::enable_if<
-      not std::is_same<typename IndexT::BuildIndexType, IndexU>::value, IndexU
+      not std::is_same<
+        typename IndexT::BuildIndexType, typename std::decay<IndexU>::type
+      >::value, IndexU
     >::type
   >
   ElmProxyType operator()(IndexU const& idx) const;
