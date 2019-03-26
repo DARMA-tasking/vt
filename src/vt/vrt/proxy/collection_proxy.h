@@ -75,7 +75,7 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   template <
     typename Tp,
     typename   = typename std::enable_if<
-      std::is_same<
+      std::is_convertible<
         typename IndexT::BuildIndexType, typename std::decay<Tp>::type
       >::value, Tp
     >::type
@@ -85,7 +85,7 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   template <
     typename Tp, typename... Tn,
     typename   = typename std::enable_if<
-      std::is_same<
+      std::is_convertible<
         typename IndexT::BuildIndexType, typename std::decay<Tp>::type
       >::value, Tp
     >::type
