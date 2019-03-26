@@ -2845,11 +2845,6 @@ bool CollectionManager::scheduler() {
   }
 }
 
-inline DispatchBasePtrType
-getDispatcher(auto_registry::AutoHandlerType const& han) {
-  return theCollection()->getDispatcher(han);
-}
-
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_IMPL_H*/
