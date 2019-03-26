@@ -127,17 +127,14 @@ my $coverage=0;
 my $CXX_FLAGS= "";
 my $C_FLAGS= "";
 if ($build_mode eq "coverage") {
-   print STDERR  "Code coverage mode for Vt has been correctly detected";
    $build_mode="debug";
    $coverage=1;
    $CXX_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
    $C_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
-   print STDERR  "Coverage activated for VT";
-} else {
-   print STDERR  "Vt hasn't been correctly detected into a coverage mode";
 }
 
 print STDERR "=== Building vt ===\n";
+print STDERR  "\tCode coverage mode enabled" if $coverage == 1;
 print STDERR "\tBuild mode:$build_mode\n";
 print STDERR "\tRoot=$root\n";
 print STDERR "\tLibroot=$libroot\n";
