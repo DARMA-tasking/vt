@@ -65,6 +65,10 @@ struct ExampleIndex {
   using ApplyType = std::function<void(ExampleIndex)>;
   using IsByteCopyable = serialization::ByteCopyTrait;
 
+  // An index must have build index type used to forward operands to the
+  // constructor during proxy building
+  using BuildIndexType = int32_t;
+
   // An index must have a default constructor
   ExampleIndex() = default;
 
