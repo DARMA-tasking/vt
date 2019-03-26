@@ -86,6 +86,7 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
   using DenseArraySizeType = uint64_t;
   using DenseIndexType = IndexType;
+  using BuildIndexType = IndexType;
 
   DenseIndexArray() = default;
   DenseIndexArray(DenseIndexArray const&) = default;
