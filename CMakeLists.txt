@@ -5,7 +5,7 @@ set(VIRTUAL_TRANSPORT_LIBRARY vt)
 set(FCONTEXT_LIBRARY fcontext)
 
 # Set the local module path so custom cmake scripts can be located automatically
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules/")
 
 # Try to find ccache to speed up compilation
 find_program(ccache_binary ccache)

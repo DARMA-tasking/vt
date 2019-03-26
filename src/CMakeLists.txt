@@ -203,7 +203,7 @@ include(../cmake/define_build_types.cmake)
 
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/src>
   $<INSTALL_INTERFACE:${VT_EXTERNAL_DESTINATION}>
 )
 
