@@ -132,9 +132,10 @@ if ($build_mode eq "coverage") {
    $CXX_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
    $C_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
 }
+my $cov_enabled = $coverage == 1 ? "enabled" : "disabled";
 
 print STDERR "=== Building vt ===\n";
-print STDERR  "\tCode coverage mode enabled\n" if $coverage == 1;
+print STDERR  "\tCode coverage mode $cov_enabled\n";
 print STDERR "\tBuild mode:$build_mode\n";
 print STDERR "\tRoot=$root\n";
 print STDERR "\tLibroot=$libroot\n";
