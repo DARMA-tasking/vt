@@ -95,9 +95,7 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   template <
     typename IndexU,
     typename   = typename std::enable_if<
-      not std::is_same<
-        typename IndexT::BuildIndexType, typename std::decay<IndexU>::type
-      >::value, IndexU
+      std::is_same<IndexT, typename std::decay<IndexU>::type>::value, IndexU
     >::type
   >
   ElmProxyType operator[](IndexU const& idx) const;
@@ -105,9 +103,7 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   template <
     typename IndexU,
     typename   = typename std::enable_if<
-      not std::is_same<
-        typename IndexT::BuildIndexType, typename std::decay<IndexU>::type
-      >::value, IndexU
+      std::is_same<IndexT, typename std::decay<IndexU>::type>::value, IndexU
     >::type
   >
   ElmProxyType operator()(IndexU const& idx) const;
