@@ -48,7 +48,7 @@
 #include <string>
 #include <vector>
 
-#include <CLI/CLI.hpp>
+#include "CLI/CLI11.hpp"
 
 namespace vt { namespace arguments {
 

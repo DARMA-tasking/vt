@@ -48,7 +48,7 @@
 #include "vt/configs/debug/debug_config.h"
 #include "vt/configs/debug/debug_colorize.h"
 
-#include <fmt/format.h>
+#include "fmt/format.h"
 
 #define debug_flush_to_out(config, stdout)       \
   debug_cond_enabled(config, flush, fflush(stdout))

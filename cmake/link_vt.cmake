@@ -109,9 +109,8 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: fmt=${ARG_LINK_FMT}")
     endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} fmt::fmt
-    )
+    target_compile_definitions(${ARG_TARGET} PUBLIC FMT_HEADER_ONLY=1)
+    target_include_directories(${ARG_TARGET} PRIVATE ${PROJECT_BASE_DIR}/lib/fmt)
   endif()
 
   if (NOT DEFINED ARG_LINK_CHECKPOINT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_CHECKPOINT)
@@ -153,9 +152,7 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: cli11=${ARG_LINK_CLI11}")
     endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} CLI11::CLI11
-    )
+    target_include_directories(${ARG_TARGET} PRIVATE ${PROJECT_BASE_DIR}/lib/CLI)
   endif()
 
   if (NOT DEFINED ARG_LINK_OPENMP AND DEFAULT_THREADING STREQUAL openmp OR ARG_LINK_OPENMP)

@@ -58,7 +58,7 @@
 #include <string>
 #include <cassert>
 
-#include <fmt/format.h>
+#include "fmt/format.h"
 
 namespace vt { namespace debug { namespace assert {
 

@@ -51,7 +51,6 @@ fi
 
 meld_dir=/Users/jliffla/codes/vt/meld-install
 detector_dir=/Users/jliffla/codes/vt/detector-install
-fmt_dir=/Users/jliffla/codes/vt/fmt-install
 
 if test $# -gt 4
 then
@@ -117,5 +116,4 @@ cmake ${SOURCE_BASE_DIR}                                                    \
       -Dcheckpoint_DIR=${serialization_dir}                                 \
       -Dmeld_DIR=${meld_dir}                                                \
       -Ddetector_DIR=${detector_dir}                                        \
-      -Dfmt_DIR=${fmt_dir}                                                  \
       -Dgtest_DIR=${gtest_dir}

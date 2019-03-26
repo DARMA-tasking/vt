@@ -9,7 +9,7 @@ use lib dirname (__FILE__);
 require "args.pl";
 
 my ($build_mode,$compiler,$has_serial,$build_all_tests,$vt_install);
-my ($vt,$root,$detector,$meld,$checkpoint,$fmt,$gtest,$cli11);
+my ($vt,$root,$detector,$meld,$checkpoint,$gtest);
 my ($compiler_cxx,$compiler_c,$mpi_cc,$mpi_cxx,$mpi_exec);
 my $libroot = "";
 my $atomic = "";
@@ -46,8 +46,6 @@ $arg->add_optional_arg("mpi_exec",    \$mpi_exec,     "");
 $arg->add_optional_func("detector",   \$detector,   "detector-install",   \&mk);
 $arg->add_optional_func("meld",       \$meld,       "meld-install",       \&mk);
 $arg->add_optional_func("checkpoint", \$checkpoint, "checkpoint-install", \&mk);
-$arg->add_optional_func("fmt",        \$fmt,        "fmt-install",        \&mk);
-$arg->add_optional_func("cli11",      \$cli11,      "cli11-install",      \&mk);
 $arg->add_optional_func("gtest",      \$gtest,      "gtest-install",      \&mk);
 
 $arg->add_optional_arg("dry_run",     \$dry_run,     0);
@@ -155,7 +153,6 @@ print STDERR "\tCheckpoint=$has_serial, path=$checkpoint\n";
 print STDERR "\tMeld path=$meld\n";
 print STDERR "\tDetector path=$detector\n";
 print STDERR "\tGoogle gtest path=$gtest\n";
-print STDERR "\tFMT lib path=$fmt\n";
 
 my $str =  <<CMAKESTR
 cmake $source_base_dir                                                       \\
@@ -188,8 +185,6 @@ my $str = <<CMAKESTR
       -Dcheckpoint_DIR=$checkpoint                                           \\
       -Dmeld_DIR=$meld                                                       \\
       -Ddetector_DIR=$detector                                               \\
-      -Dfmt_DIR=$fmt                                                         \\
-      -DCLI11_DIR=$cli11                                                     \\
       -Dgtest_DIR=$gtest                                                     \\
       -DGTEST_ROOT=$gtest                                                    \\
       $fast_str                                                              \\

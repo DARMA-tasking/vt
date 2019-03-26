@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-#include <CLI/CLI.hpp>
+#include "CLI/CLI11.hpp"
 
 namespace vt { namespace arguments {
 
