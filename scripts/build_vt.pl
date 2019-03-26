@@ -173,7 +173,7 @@ CMAKESTR
 ;
 }
 chomp $str;
-my $str = <<CMAKESTR
+my $finalstr = <<CMAKESTR
       $str                                                                   \\
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                   \\
       ${trace_str}                                                           \\
@@ -189,11 +189,11 @@ my $str = <<CMAKESTR
       ${build_all_str}
 CMAKESTR
 ;
-#print "$str\n";
+#print "$finalstr\n";
 if ($dry_run eq "true") {
-    print "$str\n";
+    print "$finalstr\n";
 } else {
-    system "$str 2>&1";
+    system "$finalstr 2>&1";
 }
 
 # Why is this needed in some cases?
