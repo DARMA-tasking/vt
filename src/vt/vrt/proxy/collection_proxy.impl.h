@@ -61,23 +61,23 @@ CollectionProxy<ColT, IndexT>::CollectionProxy(
 template <typename ColT, typename IndexT>
 template <typename... IndexArgsT>
 typename CollectionProxy<ColT, IndexT>::ElmProxyType
-CollectionProxy<ColT, IndexT>::index_build(IndexArgsT&&... args) const {
+CollectionProxy<ColT, IndexT>::indexArgs(IndexArgsT&&... args) const {
   using BaseIndexType = typename IndexT::DenseIndexType;
   return index(IndexT(static_cast<BaseIndexType>(args)...));
 }
 
 template <typename ColT, typename IndexT>
-template <typename... IndexArgsT>
+template <typename Tp, typename _unused>
 typename CollectionProxy<ColT, IndexT>::ElmProxyType
-CollectionProxy<ColT, IndexT>::operator[](IndexArgsT&&... args) const {
-  return index_build(std::forward<IndexArgsT>(args)...);
+CollectionProxy<ColT, IndexT>::operator[](Tp&& tp) const {
+  return indexArgs(std::forward<Tp>(tp));
 }
 
 template <typename ColT, typename IndexT>
-template <typename... IndexArgsT>
+template <typename Tp, typename... Tn, typename _unused>
 typename CollectionProxy<ColT, IndexT>::ElmProxyType
-CollectionProxy<ColT, IndexT>::operator()(IndexArgsT&&... args) const {
-  return index_build(std::forward<IndexArgsT>(args)...);
+CollectionProxy<ColT, IndexT>::operator()(Tp&& tp, Tn&&... tn) const {
+  return indexArgs(std::forward<Tp>(tp),std::forward<Tn>(tn)...);
 }
 
 template <typename ColT, typename IndexT>
@@ -87,14 +87,16 @@ CollectionProxy<ColT, IndexT>::index(IndexT const& idx) const {
 }
 
 template <typename ColT, typename IndexT>
+template <typename IndexU, typename _unused>
 typename CollectionProxy<ColT, IndexT>::ElmProxyType
-CollectionProxy<ColT, IndexT>::operator[](IndexT const& idx) const {
+CollectionProxy<ColT, IndexT>::operator[](IndexU const& idx) const {
   return index(idx);
 }
 
 template <typename ColT, typename IndexT>
+template <typename IndexU, typename _unused>
 typename CollectionProxy<ColT, IndexT>::ElmProxyType
-CollectionProxy<ColT, IndexT>::operator()(IndexT const& idx) const {
+CollectionProxy<ColT, IndexT>::operator()(IndexU const& idx) const {
   return index(idx);
 }
 
