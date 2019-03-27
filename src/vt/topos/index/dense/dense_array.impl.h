@@ -74,7 +74,7 @@ DenseIndexArray<IndexType, ndim>::DenseIndexArray(
 template <typename IndexType, NumDimensionsType ndim>
 template <typename... Idxs, typename>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(Idxs&&... init)
-  : BaseIndex(), dims({init...})
+  : BaseIndex(), dims({{init...}})
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
@@ -127,7 +127,7 @@ void DenseIndexArray<IndexType, ndim>::foreach(
 ) const {
   ThisIndexType idx;
   ThisIndexType max = in_max;
-  std::array<IndexType, ndim> vec = {0};
+  std::array<IndexType, ndim> vec = {{0}};
   for (auto sz = 0; sz < max.getSize(); sz++) {
     fn(ThisIndexType(vec));
     for (auto i = 0; i < ndim; i++) {
