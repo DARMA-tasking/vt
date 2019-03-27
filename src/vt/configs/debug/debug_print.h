@@ -47,6 +47,7 @@
 
 #include "vt/configs/debug/debug_config.h"
 #include "vt/configs/debug/debug_colorize.h"
+#include "vt/configs/debug/debug_var_unused.h"
 
 #include "fmt/format.h"
 
@@ -288,14 +289,15 @@ extern runtime::Runtime* curRT;
   debug_print_pe(feature, fst_arg_as_pe, arg)
 
 #define debug_print(feature, maybe_ctx, arg...)                         \
-  meld_eval_2(                                                         \
+  meld_eval_2(                                                          \
     debug_print_recur_call(backend_debug,feature,maybe_ctx,arg)         \
   )
 
 #define debug_print_normal(config, feature, ctx, arg...)                \
-  debug_cond_enabled(                                                   \
+  debug_cond_enabled_else(                                              \
     config, feature,                                                    \
-    debug_print_context(config, feature, ctx, arg)                      \
+    debug_print_context(config, feature, ctx, arg),                     \
+    debug_print_force_use(arg)                                          \
   )
 
 #define debug_print_handle_subclass(config, sub, feature, ctx, arg...)  \
@@ -303,10 +305,11 @@ extern runtime::Runtime* curRT;
     config,                                                             \
     feature,                                                            \
     debug_print_context(config, feature, ctx, arg),                     \
-    debug_cond_enabled(                                                 \
+    debug_cond_enabled_else(                                            \
       config,                                                           \
       sub,                                                              \
-      debug_print_context(config, feature, ctx, arg)                    \
+      debug_print_context(config, feature, ctx, arg),                   \
+      debug_print_force_use(arg)                                        \
     )                                                                   \
   )                                                                     \
 
@@ -322,10 +325,11 @@ extern runtime::Runtime* curRT;
       config,                                                           \
       feature,                                                          \
       debug_print_recur_2(config, maybe_ctx, arg),                      \
-      debug_cond_enabled(                                               \
+      debug_cond_enabled_else(                                          \
         config,                                                         \
         maybe_ctx,                                                      \
-        debug_print_context(config, maybe_ctx, arg)                     \
+        debug_print_context(config, maybe_ctx, arg),                    \
+        debug_print_force_use(arg)                                      \
       )                                                                 \
     )                                                                   \
   )
@@ -336,9 +340,10 @@ extern runtime::Runtime* curRT;
       feature, meld_eval_2(debug_list_subclass_printfn_kv)              \
     )                                                                   \
   )(                                                                    \
-    debug_cond_enabled(                                                 \
+    debug_cond_enabled_else(                                            \
       config, feature,                                                  \
-      debug_print_normal(config, maybe_ctx, arg)                        \
+      debug_print_normal(config, maybe_ctx, arg),                       \
+      debug_print_force_use_strip1(arg)                                 \
     )                                                                   \
   )(                                                                    \
     debug_print_recur_inner(config, feature, maybe_ctx, arg)            \
