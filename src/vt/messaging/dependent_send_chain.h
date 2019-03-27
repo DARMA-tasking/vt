@@ -142,9 +142,9 @@ class DependentSendChain final {
   }
 
   DependentSendChain            (const DependentSendChain&) = delete;
-  DependentSendChain            (DependentSendChain&&)      = delete;
+  DependentSendChain            (DependentSendChain&&)      = default;
   DependentSendChain& operator= (const DependentSendChain&) = delete;
-  DependentSendChain& operator= (DependentSendChain&&)      = delete;
+  DependentSendChain& operator= (DependentSendChain&&)      = default;
 
   ~DependentSendChain() = default;
 

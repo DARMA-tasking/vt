@@ -60,7 +60,7 @@ class CollectionChainManager final {
   CollectionChainManager(CollectionChainManager&&) = delete;
 
   void addIndex(Index idx) {
-    chains_.emplace(idx, {});
+    chains_[idx] = DependentSendChain();
   }
 
   void nextStep(std::function<PendingSend(Index)> step_action) {
@@ -102,6 +102,12 @@ class CollectionChainManager final {
     }
 
     theTerm()->finishedEpoch(epoch);
+  }
+
+  void phaseDone() {
+    for (auto &entry : chains_) {
+      entry.second.done();
+    }
   }
 
  private:
