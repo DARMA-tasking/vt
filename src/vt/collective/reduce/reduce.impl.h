@@ -210,31 +210,32 @@ void Reduce::startReduce(
   );
 
   if (use_num_contrib) {
-    ready = nmsgs == getNumChildren() + state.num_contrib_;
+    ready = nmsgs == static_cast<decltype(nmsgs)>(getNumChildren() + state.num_contrib_);
   } else {
-    ready = nmsgs == getNumChildren() + state.num_local_contrib_;
+    ready = nmsgs == static_cast<decltype(nmsgs)>(getNumChildren() + state.num_local_contrib_);
   }
 
   if (ready) {
     // Combine messages
     if (state.msgs.size() > 1) {
-      for (int i = 0; i < state.msgs.size(); i++) {
-        bool const has_next = i+1 < state.msgs.size();
+      auto size = state.msgs.size();
+      for (decltype(size) i = 0; i < size; i++) {
+        bool const has_next = i+1 < size;
         state.msgs[i]->next_ = has_next ? state.msgs[i+1].get() : nullptr;
-        state.msgs[i]->count_ = state.msgs.size() - i;
+        state.msgs[i]->count_ = size - i;
         state.msgs[i]->is_root_ = false;
 
         debug_print(
           reduce, node,
           "i={} next={} has_next={} count={} msgs.size()={}, ref={}\n",
           i, print_ptr(state.msgs[i]->next_), has_next, state.msgs[i]->count_,
-          state.msgs.size(), envelopeGetRef(state.msgs[i]->env)
+          size, envelopeGetRef(state.msgs[i]->env)
         );
       }
 
       debug_print(
         reduce, node,
-        "msgs.size()={}\n", state.msgs.size()
+        "msgs.size()={}\n", size
       );
 
        /*

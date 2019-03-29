@@ -337,7 +337,7 @@ void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
     } while (found);
   }
 
-  for (auto i = 0; i < obj_sample.size(); i++) {
+  for (size_t i = 0; i < obj_sample.size(); i++) {
     auto obj_iter = obj_sample.find(i);
     if (obj_iter != obj_sample.end() && obj_iter->second.size() == 0) {
       obj_sample.erase(obj_iter);
@@ -645,11 +645,11 @@ void HierarchicalLB::lbTreeUp(
   }
 
   vtAssert(
-    child_msgs <= children.size(),
+    static_cast<size_t>(child_msgs) <= children.size(),
     "Number of children must be greater or less than"
   );
 
-  if (child_msgs == children.size()) {
+  if (static_cast<size_t>(child_msgs) == children.size()) {
     if (this_node == hierlb_root) {
       debug_print(
         hierlb, node,

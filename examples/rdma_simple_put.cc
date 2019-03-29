@@ -105,7 +105,8 @@ static void put_handler_fn(
     my_node, print_ptr(my_data), print_ptr(in_ptr), in_num_bytes, tag, offset
   );
 
-  for (auto i = 0; i < in_num_bytes/sizeof(double); i++) {
+  auto count = in_num_bytes/sizeof(double);
+  for (decltype(count) i = 0; i < count; i++) {
     ::fmt::print(
       "{}: put_handler_fn: data[{}] = {}\n",
       my_node, i, static_cast<double*>(in_ptr)[i]

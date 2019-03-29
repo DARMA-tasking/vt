@@ -139,7 +139,7 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
   vtAssertExpr(stats_file_ != nullptr);
 
   auto const num_iters = ProcStats::proc_data_.size();
-  for (auto i = 0; i < num_iters; i++) {
+  for (size_t i = 0; i < num_iters; i++) {
     for (auto&& elm : ProcStats::proc_data_.at(i)) {
       auto obj_str = fmt::format("{},{},{}\n", i, elm.first, elm.second);
       fprintf(stats_file_, "%s", obj_str.c_str());

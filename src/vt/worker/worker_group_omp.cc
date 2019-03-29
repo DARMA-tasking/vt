@@ -193,7 +193,10 @@ void WorkerGroupOMP::enqueueForWorker(
   WorkerIDType const& worker_id, WorkUnitType const& work_unit
 ) {
   vtAssert(initialized_, "Must be initialized to enqueue");
-  vtAssert(worker_id < worker_state_.size(), "Worker ID must be valid");
+  vtAssert(
+    static_cast<size_t>(worker_id) < worker_state_.size(),
+    "Worker ID must be valid"
+  );
 
   #if WORKER_OMP_VERBOSE
   debug_print(worker, node, "WorkerGroupOMP: enqueue for id={}\n", worker_id);

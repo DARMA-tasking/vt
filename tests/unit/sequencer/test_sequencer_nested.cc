@@ -93,15 +93,15 @@ struct TestSequencerNested : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 2);
+      EXPECT_EQ(seq_ordering_++, 2U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->sequenced([]{
       theSeq()->wait<TestMsg, testSeqNested>([](TestMsg* msg){
-        EXPECT_EQ(seq_ordering_++, 1);
+        EXPECT_EQ(seq_ordering_++, 1U);
       });
     });
   }
@@ -110,19 +110,19 @@ struct TestSequencerNested : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 3);
+      EXPECT_EQ(seq_ordering_++, 3U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, testSeqNestedMulti>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     theSeq()->sequenced([]{
       theSeq()->wait<TestMsg, testSeqNestedMulti>([](TestMsg* msg){
-        EXPECT_EQ(seq_ordering_++, 2);
+        EXPECT_EQ(seq_ordering_++, 2U);
       });
     });
   }
@@ -131,28 +131,28 @@ struct TestSequencerNested : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 4);
+      EXPECT_EQ(seq_ordering_++, 4U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, testSeqNestedSingleHan>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     theSeq()->sequenced([]{
       theSeq()->sequenced([]{
         theSeq()->sequenced([]{
           theSeq()->wait<TestMsg, testSeqNestedSingleHan>([](TestMsg* msg){
-            EXPECT_EQ(seq_ordering_++, 2);
+            EXPECT_EQ(seq_ordering_++, 2U);
           });
         });
       });
     });
 
     theSeq()->wait<TestMsg, testSeqNestedSingleHan>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 3);
+      EXPECT_EQ(seq_ordering_++, 3U);
     });
   }
 
@@ -160,21 +160,21 @@ struct TestSequencerNested : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 5);
+      EXPECT_EQ(seq_ordering_++, 5U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     theSeq()->sequenced([]{
       theSeq()->sequenced([]{
         theSeq()->sequenced([]{
           theSeq()->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
-            EXPECT_EQ(seq_ordering_++, 2);
+            EXPECT_EQ(seq_ordering_++, 2U);
           });
         });
       });
@@ -184,14 +184,14 @@ struct TestSequencerNested : TestParallelHarness {
       theSeq()->sequenced([]{
         theSeq()->sequenced([]{
           theSeq()->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
-            EXPECT_EQ(seq_ordering_++, 3);
+            EXPECT_EQ(seq_ordering_++, 3U);
           });
         });
       });
     });
 
     theSeq()->wait<TestMsg, testSeqNestedSingle2Han>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 4);
+      EXPECT_EQ(seq_ordering_++, 4U);
     });
   }
 
@@ -199,7 +199,7 @@ struct TestSequencerNested : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 9);
+      EXPECT_EQ(seq_ordering_++, 9U);
       return;
     }
 
@@ -207,52 +207,52 @@ struct TestSequencerNested : TestParallelHarness {
       fmt::print("testSeqDeepNested: seq_id={}, ordering={}\n", seq_id, seq_ordering_.load());
     #endif
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, testSeqDeepNestedHan>(1, [](TestMsg* msg){
       DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 1);
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     theSeq()->sequenced([]{
       theSeq()->wait<TestMsg, testSeqDeepNestedHan>(2, [](TestMsg* msg){
         DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 2);
-        EXPECT_EQ(seq_ordering_++, 2);
+        EXPECT_EQ(seq_ordering_++, 2U);
       });
 
       theSeq()->wait<TestMsg, testSeqDeepNestedHan>(3, [](TestMsg* msg){
         DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 3);
-        EXPECT_EQ(seq_ordering_++, 3);
+        EXPECT_EQ(seq_ordering_++, 3U);
       });
 
       theSeq()->sequenced([]{
         theSeq()->wait<TestMsg, testSeqDeepNestedHan>(4, [](TestMsg* msg){
           DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 4);
-          EXPECT_EQ(seq_ordering_++, 4);
+          EXPECT_EQ(seq_ordering_++, 4U);
         });
 
         theSeq()->sequenced([]{
           theSeq()->wait<TestMsg, testSeqDeepNestedHan>(5, [](TestMsg* msg){
             DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 5);
-            EXPECT_EQ(seq_ordering_++, 5);
+            EXPECT_EQ(seq_ordering_++, 5U);
           });
         });
 
         theSeq()->wait<TestMsg, testSeqDeepNestedHan>(6, [](TestMsg* msg){
           DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 6);
-          EXPECT_EQ(seq_ordering_++, 6);
+          EXPECT_EQ(seq_ordering_++, 6U);
         });
       });
 
       theSeq()->wait<TestMsg, testSeqDeepNestedHan>(7, [](TestMsg* msg){
         DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 7);
-        EXPECT_EQ(seq_ordering_++, 7);
+        EXPECT_EQ(seq_ordering_++, 7U);
       });
     });
 
     theSeq()->wait<TestMsg, testSeqDeepNestedHan>(8, [](TestMsg* msg){
       DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 8);
-      EXPECT_EQ(seq_ordering_++, 8);
+      EXPECT_EQ(seq_ordering_++, 8U);
     });
   }
 

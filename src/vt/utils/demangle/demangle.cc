@@ -74,8 +74,9 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   CountType const start_sentinel = -1;
   CountType start                = start_sentinel;
 
+  CountType limit = str.size() - adapt_start_mem.size() - 1;
   bool found_member = false;
-  for (CountType i = 0; i < str.size() - adapt_start_mem.size() - 1; i++) {
+  for (CountType i = 0; i < limit; i++) {
     auto const substr = str.substr(i, adapt_start_mem.size());
     debug_print(
       verbose, gen, node,
@@ -93,7 +94,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   }
 
   if (not found_member) {
-    for (CountType i = 0; i < str.size() - adapt_start.size() - 1; i++) {
+    for (CountType i = 0; i < limit; i++) {
       auto const substr = str.substr(i, adapt_start.size());
       debug_print(
         verbose, gen, node,
@@ -217,7 +218,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 # elif defined(__GNUC__)
   std::string func_name_no_template = {};
   CountType temp_in = 0, temp_out = 0;
-  for (int i = 0; i < func_name.size(); i++) {
+  for (size_t i = 0; i < func_name.size(); i++) {
     if (func_name[i] == '<') { temp_in++;  };
     if (func_name[i] == '>') { temp_out++; };
     if (temp_in == temp_out && func_name[i] != '>') {
@@ -234,9 +235,9 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   std::string const delim_str = {"::"};
   CountType cur_func_piece = 0;
   std::vector<std::string> func_name_pieces(cur_func_piece + 1);
-  for (int i = 0; i < func_name.size(); i++) {
+  for (size_t i = 0; i < func_name.size(); i++) {
     if (
-      func_name.size() - 1   >    i + 1           &&
+      func_name.size() - 1   >    i + 1U          &&
       func_name[i    ]       ==   delim_str[0]    &&
       func_name[i + 1]       ==   delim_str[1]
     ) {
@@ -308,7 +309,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
   if (found_member) {
     CountType pstart = 0;
-    for (auto i = 0; i < clean_params.size(); i++) {
+    for (size_t i = 0; i < clean_params.size(); i++) {
       if (clean_params[i] == '*') {
         pstart = i+3;
         break;

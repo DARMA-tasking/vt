@@ -88,7 +88,7 @@ struct TestObjGroup : TestParallelHarness {
     void operator()(VecMsg* msg) {
       auto final_size = msg->getConstVal().vec_.size();
       auto n = vt::theContext()->getNumNodes();
-      EXPECT_EQ(final_size, n * 2);
+      EXPECT_EQ(final_size, n * 2U);
       total_verify_expected_++;
     }
     // for reduction values not depending on ranks

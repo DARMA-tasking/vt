@@ -89,7 +89,8 @@ List::List(ListType&& in_list) : list_(std::move(in_list)) { }
 List::List(List const& in_other, BoundType in_remove_extent) {
   auto const& list = in_other.list_;
   ListType new_list;
-  for (auto elm = in_remove_extent; elm < list.size(); elm++) {
+  auto old_size = list.size();
+  for (decltype(old_size) elm = in_remove_extent; elm < old_size; elm++) {
     new_list.push_back(list[elm]);
   }
   list_ = std::move(new_list);
@@ -100,7 +101,7 @@ List::List(
   BoundType const* const list, SizeType const& size, bool const& is_sorted
 ) {
   ListType new_list;
-  for (auto elm = 0; elm < size; elm++) {
+  for (SizeType elm = 0; elm < size; elm++) {
     new_list.push_back(list[elm]);
   }
   list_ = std::move(new_list);
@@ -120,7 +121,8 @@ List::List(
 
 /*virtual*/ List::RegionUPtrType List::tail() const {
   ListType list;
-  for (int i = 1; i < getSize(); i++) {
+  auto size = getSize();
+  for (decltype(size) i = 1; i < size; i++) {
     list.push_back(list_[i]);
   }
   return std::make_unique<List>(std::move(list));
@@ -133,7 +135,7 @@ List::List(
   );
 
   ListType l1, l2;
-  for (int i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     if (i < size/2) {
       l1.push_back(list_[i]);
     } else {

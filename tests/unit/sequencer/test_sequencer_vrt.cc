@@ -88,18 +88,18 @@ struct TestSequencerVirtual : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == FinalizeAtomicValue) {
-      EXPECT_EQ(seq_ordering_++, 2);
+      EXPECT_EQ(seq_ordering_++, 2U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan1>([](
       TestMsg* msg, VirtualType* vrt
     ){
       //fmt::print("wait is triggered: msg={}, vrt={}\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr);
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
   }
 
@@ -107,18 +107,18 @@ struct TestSequencerVirtual : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == FinalizeAtomicValue) {
-      EXPECT_EQ(seq_ordering_++, 3);
+      EXPECT_EQ(seq_ordering_++, 3U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan2>([](
       TestMsg* msg, VirtualType* vrt
     ){
       //fmt::print("wait is triggered: msg={}, vrt={}\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr);
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan2>([](
@@ -126,7 +126,7 @@ struct TestSequencerVirtual : TestParallelHarness {
     ){
       //fmt::print("wait is triggered: msg={}, vrt={}\n", msg, vrt);
       EXPECT_EQ(vrt, test_vrt_ptr);
-      EXPECT_EQ(seq_ordering_++, 2);
+      EXPECT_EQ(seq_ordering_++, 2U);
     });
   }
 
@@ -134,11 +134,11 @@ struct TestSequencerVirtual : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == FinalizeAtomicValue) {
-      EXPECT_EQ(seq_ordering_++, 2);
+      EXPECT_EQ(seq_ordering_++, 2U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan3>([](
       TestMsg* msg, VirtualType* vrt
@@ -148,7 +148,7 @@ struct TestSequencerVirtual : TestParallelHarness {
         print_ptr(msg), print_ptr(vrt)
       );
       EXPECT_EQ(vrt, test_vrt_ptr_a);
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
   }
 
@@ -156,11 +156,11 @@ struct TestSequencerVirtual : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == FinalizeAtomicValue) {
-      EXPECT_EQ(seq_ordering_++, 2);
+      EXPECT_EQ(seq_ordering_++, 2U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theVirtualSeq()->wait<VirtualType, TestMsg, testSeqHan3>([](
       TestMsg* msg, VirtualType* vrt
@@ -170,7 +170,7 @@ struct TestSequencerVirtual : TestParallelHarness {
         print_ptr(msg), print_ptr(vrt)
       );
       EXPECT_EQ(vrt, test_vrt_ptr_b);
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
   }
 };

@@ -68,14 +68,14 @@ struct TestScatter : TestParallelHarness {
         "ptr={}, *ptr={}\n", print_ptr(int_ptr), *int_ptr
       );
     #endif
-    for (auto i = 0; i < num_elms; i++) {
+    for (std::size_t i = 0; i < num_elms; i++) {
       #if DEBUG_SCATTER
         ::fmt::print(
           "i={}: this_node={}: val={}, expected={}\n",
           i, this_node, int_ptr[i], this_node * 10 + i
         );
       #endif
-      EXPECT_EQ(int_ptr[i], this_node * 10 + i);
+      EXPECT_EQ(static_cast<std::size_t>(int_ptr[i]), this_node * 10 + i);
     }
   }
 };
@@ -90,7 +90,7 @@ TEST_F(TestScatter, test_scatter_1) {
     theCollective()->scatter<int,scatterHan>(
       total_size,elm_size,nullptr,[](NodeType node, void* ptr){
         auto ptr_out = reinterpret_cast<int*>(ptr);
-        for (auto i = 0; i < num_elms; i++) {
+        for (std::size_t i = 0; i < num_elms; i++) {
           *(ptr_out + i) = node * 10 + i;
         }
       }

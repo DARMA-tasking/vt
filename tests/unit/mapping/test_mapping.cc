@@ -80,7 +80,7 @@ TEST_F(TestMapping, test_mapping_block_1d) {
     map_cnt[node]++;
   }
 
-  EXPECT_EQ(map_cnt.size(), nnodes);
+  EXPECT_EQ(map_cnt.size(), static_cast<size_t>(nnodes));
 
   Index1D::IndexSizeType map_count_fst = map_cnt[0];
 
@@ -125,7 +125,7 @@ TEST_F(TestMapping, test_mapping_block_2d) {
       }
     }
 
-    EXPECT_EQ(map_cnt.size(), nnodes);
+    EXPECT_EQ(map_cnt.size(), static_cast<size_t>(nnodes));
 
     Index2D::IndexSizeType map_count_fst = map_cnt[0];
 
@@ -173,7 +173,7 @@ TEST_F(TestMapping, test_mapping_block_3d) {
       }
     }
 
-    EXPECT_EQ(map_cnt.size(), nnodes);
+    EXPECT_EQ(map_cnt.size(), static_cast<size_t>(nnodes));
 
     Index3D::IndexSizeType map_count_fst = map_cnt[0];
 

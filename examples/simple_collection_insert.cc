@@ -97,8 +97,8 @@ int main(int argc, char** argv) {
   auto const& range = IndexType(static_cast<BaseIndexType>(num_elms));
   auto token = theCollection()->constructInsert<TestColl>(range);
 
-  for (auto i = 0; i < default_num_elms; i++) {
-    if (i % num_nodes == this_node) {
+  for (size_t i = 0; i < default_num_elms; i++) {
+    if (i % num_nodes == static_cast<size_t>(this_node)) {
       fmt::print("node={}: inserting {}\n", this_node, i);
       token[i].insert();
     }

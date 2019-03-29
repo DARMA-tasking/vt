@@ -89,7 +89,7 @@ template <typename BitType, typename BitField>
   //   start, len, field, comp, sizeof(BitField), comp & gen_bit_mask(len),
   //   gen_bit_mask(len)
   // );
-  return len < sizeof(BitField) * 8 ?
+  return static_cast<size_t>(len) < sizeof(BitField) * 8 ?
     static_cast<BitType>(comp & gen_bit_mask(len)) :
     static_cast<BitType>(comp);
 }

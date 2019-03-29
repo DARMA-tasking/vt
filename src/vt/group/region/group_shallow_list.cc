@@ -72,7 +72,7 @@ ShallowList::ShallowList(ListType const& in_list)
 }
 
 /*virtual*/ bool ShallowList::contains(NodeType const& node) {
-  for (int i = 0; i < size_; i++) {
+  for (decltype(size_) i = 0; i < size_; i++) {
     if (bound_[i] == node) {
       return true;
     }

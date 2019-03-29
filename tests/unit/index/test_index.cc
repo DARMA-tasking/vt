@@ -69,7 +69,7 @@ TEST_F(TestIndex, test_index_1d) {
 
   EXPECT_EQ(idx[0], val);
   EXPECT_EQ(idx.x(), val);
-  EXPECT_EQ(idx.getSize(), val);
+  EXPECT_EQ(idx.getSize(), static_cast<decltype(idx.getSize())>(val));
   EXPECT_EQ(idx.get(0), val);
 }
 
@@ -89,7 +89,7 @@ TEST_F(TestIndex, test_index_2d) {
   EXPECT_EQ(idx.y(), val2);
   EXPECT_EQ(idx.get(1), val2);
 
-  EXPECT_EQ(idx.getSize(), val1 * val2);
+  EXPECT_EQ(idx.getSize(), static_cast<decltype(idx.getSize())>(val1 * val2));
 }
 
 TEST_F(TestIndex, test_index_3d) {
@@ -113,7 +113,7 @@ TEST_F(TestIndex, test_index_3d) {
   EXPECT_EQ(idx.z(), val3);
   EXPECT_EQ(idx.get(2), val3);
 
-  EXPECT_EQ(idx.getSize(), val1 * val2 * val3);
+  EXPECT_EQ(idx.getSize(), static_cast<decltype(idx.getSize())>(val1 * val2 * val3));
 }
 
 }}} // end namespace vt::tests::unit

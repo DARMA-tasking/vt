@@ -100,7 +100,7 @@ TYPED_TEST_P(TestCsollectionIndexTypes, test_collection_index_1) {
     auto const& col_size = 32;
     auto range = IndexType(static_cast<BaseIndexType>(col_size));
     auto proxy = theCollection()->construct<ColType>(range);
-    for (BaseIndexType i = 0; i < col_size; i++) {
+    for (BaseIndexType i = 0; i < static_cast<BaseIndexType>(col_size); i++) {
       auto msg = makeSharedMessage<MsgType>(34);
       if (i % 2 == 0) {
         proxy[i].template send<MsgType,&ColType::handler>(msg);

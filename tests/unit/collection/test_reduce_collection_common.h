@@ -102,7 +102,7 @@ struct CheckVec {
   void operator()(SysMsgVec* msg) {
     auto const size = msg->getConstVal().vec.size();
     debug_print(reduce, node, "final vec.size={}\n", size);
-    EXPECT_EQ(size, reduce::collect_size * 2);
+    EXPECT_EQ(size, reduce::collect_size * 2U);
   }
 };
 

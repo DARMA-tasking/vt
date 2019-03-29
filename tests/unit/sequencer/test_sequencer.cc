@@ -83,18 +83,18 @@ struct TestSequencer : TestParallelHarness {
     #endif
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 2);
+      EXPECT_EQ(seq_ordering_++, 2U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, testSeqHan>([](TestMsg* msg){
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("testSingleWaitFn running wait\n");
       #endif
 
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
   }
 
@@ -102,14 +102,14 @@ struct TestSequencer : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 2);
+      EXPECT_EQ(seq_ordering_++, 2U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, testSeqTaggedHan>(single_tag, [](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
   }
 
@@ -117,11 +117,11 @@ struct TestSequencer : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 3);
+      EXPECT_EQ(seq_ordering_++, 3U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, testSeqMultiHan>([](TestMsg* msg){
       EXPECT_TRUE(seq_ordering_ == 1 or seq_ordering_ == 2);
@@ -137,17 +137,17 @@ struct TestSequencer : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 3);
+      EXPECT_EQ(seq_ordering_++, 3U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, testSeqMultiTaggedHan>(single_tag, [](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
     theSeq()->wait<TestMsg, testSeqMultiTaggedHan>(single_tag_2, [](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 2);
+      EXPECT_EQ(seq_ordering_++, 2U);
     });
   }
 };

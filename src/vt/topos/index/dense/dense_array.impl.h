@@ -127,8 +127,9 @@ void DenseIndexArray<IndexType, ndim>::foreach(
 ) const {
   ThisIndexType idx;
   ThisIndexType max = in_max;
+  auto size = max.getSize();
   std::array<IndexType, ndim> vec = {{0}};
-  for (auto sz = 0; sz < max.getSize(); sz++) {
+  for (decltype(size) sz = 0; sz < size; sz++) {
     fn(ThisIndexType(vec));
     for (auto i = 0; i < ndim; i++) {
       if (vec[i] + 1 < max[i]) {
