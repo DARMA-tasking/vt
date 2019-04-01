@@ -46,7 +46,6 @@
 namespace example {
 // default collection size
 static constexpr int const default_size = 16;
-static int received = 0;
 
 // the collection to be sliced
 struct MyCol : vt::Collection<MyCol, vt::Index1D> {
@@ -64,17 +63,21 @@ using ViewMsg = vt::CollectViewMessage<MyCol>;
 
 // index filtering for the slice
 static bool filter(vt::Index1D* idx) {
-  return idx->x() % 4 == 0;
+  return idx->x() % 2 == 0;
 }
 
 // the slice broadcast handler
 static void printElem(ViewMsg* msg, MyCol* col) {
+  // print element received by current node
+  auto const& node  = vt::theContext()->getNode();
+  auto const& index = col->getIndex();
 
-  fmt::print("ok cool, I will print new index here\n");
-  received++;
+  fmt::print(
+    "node:{} got elem:{}\n", node, index.x()
+  );
 }
 
-} // end namespace
+} // end namespace example
 
 
 int main(int argc, char** argv) {
@@ -86,8 +89,11 @@ int main(int argc, char** argv) {
   auto const epoch = vt::theTerm()->makeEpochCollective();
 
   if (node == root) {
+
     auto range = vt::Index1D(example::default_size);
     auto proxy = vt::theCollection()->construct<example::MyCol>(range);
+
+    fmt::print("root: slice collection and keep only even elements\n");
 
     // slice the initial range
     auto slice = vt::Index1D(range.x() / 2);
@@ -104,8 +110,6 @@ int main(int argc, char** argv) {
   while (not vt::rt->isTerminated()) {
     vt::runScheduler();
   }
-
-  fmt::print("node:{} received:{}\n", node, example::received);
 
   // finalize the runtime and exit
   vt::CollectiveOps::finalize();
