@@ -229,17 +229,16 @@ struct CollectionManager {
    *  Build a view with relative indexing of a collection slice.
    */
   template <
-    typename ColT, typename IndexT = typename ColT::IndexType, typename IndexU,
-    mapping::ActiveViewTypedFnType<IndexT, IndexU>* index_remap
+    typename ColT, typename IndexT = typename ColT::IndexType,
+    mapping::ActiveViewTypedFnType<IndexT>* filter
   >
-  CollectionProxy<ColT, IndexU> slice(
+  CollectionProxy<ColT, IndexT> slice(
     CollectionProxy<ColT, IndexT> const& col_proxy,
     IndexT const& old_range,
-    IndexU const& new_range,
+    IndexT const& new_range,
     EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag
   );
-
 
 private:
   /*

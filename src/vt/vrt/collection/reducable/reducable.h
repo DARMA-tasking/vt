@@ -104,12 +104,10 @@ struct Reducable : BaseProxyT {
     IndexT const& idx
   ) const;
 
-  template <
-    typename IndexU, mapping::ActiveViewTypedFnType<IndexT, IndexU>* remap
-  >
-  Reducable<ColT, IndexU, BaseProxyT> slice(
+  template <mapping::ActiveViewTypedFnType<IndexT>* filter>
+  Reducable<ColT, IndexT, BaseProxyT> slice(
     IndexT const& old_range,
-    IndexU const& new_range,
+    IndexT const& new_range,
     EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag
   ) const;

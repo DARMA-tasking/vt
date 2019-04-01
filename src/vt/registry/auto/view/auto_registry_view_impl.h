@@ -99,12 +99,9 @@ inline AutoActiveViewFunctorType getAutoHandlerFunctorView(
  * Function variants
  */
 
-template <
-  typename IndexT, typename IndexU,
-  ActiveViewTypedFnType<IndexT, IndexU>* f
->
+template <typename IndexT, ActiveViewTypedFnType<IndexT>* f>
 inline HandlerType makeAutoHandlerView() {
-  using FunctorType   = FunctorAdapter<ActiveViewTypedFnType<IndexT, IndexU>, f>;
+  using FunctorType   = FunctorAdapter<ActiveViewTypedFnType<IndexT>, f>;
   using ContainerType = AutoActiveViewContainerType;
   using RegInfoType   = AutoRegInfoType<AutoActiveViewType>;
   using FuncType      = ActiveViewFnPtrType;

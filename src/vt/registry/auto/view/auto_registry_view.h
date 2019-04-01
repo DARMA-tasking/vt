@@ -60,10 +60,7 @@ using namespace mapping;
 template <typename FunctorT, typename... Args>
 HandlerType makeAutoHandlerFunctorView();
 
-template <
-  typename IndexT, typename IndexU,
-  ActiveViewTypedFnType<IndexT, IndexU>* f
->
+template <typename IndexT, ActiveViewTypedFnType<IndexT>* f>
 HandlerType makeAutoHandlerView();
 
 // retrieve a registered view indexing handler

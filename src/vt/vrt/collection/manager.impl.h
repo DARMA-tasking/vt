@@ -2030,18 +2030,18 @@ CollectionManager::constructMap(
 
 
 template <
-  typename ColT, typename IndexT, typename IndexU,
-  mapping::ActiveViewTypedFnType<IndexT, IndexU>* index_remap
+  typename ColT, typename IndexT,
+  mapping::ActiveViewTypedFnType<IndexT>* filter
 >
-CollectionProxy<ColT, IndexU> CollectionManager::slice(
+CollectionProxy<ColT, IndexT> CollectionManager::slice(
   CollectionProxy<ColT, IndexT> const& col_proxy,
   IndexT const& old_range,
-  IndexU const& new_range,
+  IndexT const& new_range,
   EpochType const& epoch,
   TagType const& tag
 ) {
   // message type for view group creation
-  using MsgT = ViewCreateMsg<ColT, IndexT, IndexU>;
+  using MsgT = ViewCreateMsg<ColT, IndexT, IndexT>;
 
   // check that the collection is static and already built
   auto const old_proxy  = col_proxy.getProxy();
@@ -2068,9 +2068,9 @@ CollectionProxy<ColT, IndexU> CollectionManager::slice(
   vtAssert(not is_view_old_proxy, "View of a view are not allowed for now");
 
   // register the user defined filtering function, so it can be invoked on other nodes
-  auto const new_view_han = auto_registry::makeAutoHandlerView<IndexT, IndexU, index_remap>();
+  auto const new_view_han = auto_registry::makeAutoHandlerView<IndexT,filter>();
   auto const old_view_han = uninitialized_handler;
-  auto const mapping_id  = UniversalIndexHolder<>::getMap(old_proxy);
+  auto const mapping_id   = UniversalIndexHolder<>::getMap(old_proxy);
 
   // create a new proxy
   auto const new_proxy = makeNewCollectionProxy(true);
@@ -2095,7 +2095,7 @@ CollectionProxy<ColT, IndexU> CollectionManager::slice(
   createViewGroup<MsgT>(msg);
 
   // create the real new proxy
-  return CollectionProxy<ColT, IndexU>{new_proxy};
+  return CollectionProxy<ColT, IndexT>{new_proxy};
 }
 
 template <typename SysMsgT>
@@ -2126,19 +2126,19 @@ template <typename SysMsgT>
 
   debug_print(
     vrt_coll, node,
-    "createViewGroup: old_proxy:{:x}, new_proxy:{:x}\n",
+    "creating group for view: old_proxy={:x}, new_proxy={:x}\n",
     old_proxy, new_proxy
   );
 
   //auto const col_node_map = getDefaultMap<CollecType>();
-  auto const node_mapping  = auto_registry::getHandlerMap(mapping);
-  auto const new_index_map = auto_registry::getHandlerView(new_view);
-  auto const old_index_map = (is_view_old ? auto_registry::getHandlerView(old_view) : nullptr);
+  auto const node_mapping = auto_registry::getHandlerMap(mapping);
+  auto const new_filter   = auto_registry::getHandlerView(new_view);
+  auto const old_filter   = (is_view_old ? auto_registry::getHandlerView(old_view) : nullptr);
 
   bool in_group = false;
-  auto range = static_cast<IndexOld>(old_range);
+  auto range = static_cast<IndexNew>(new_range);
 
-  range.foreach([&](IndexOld idx) mutable {
+  range.foreach([&](IndexNew idx) mutable {
     // no need to recheck if already resolved
     if (not in_group) {
       // todo update below if old_proxy is already a view
@@ -2150,15 +2150,15 @@ template <typename SysMsgT>
 
       if (my_node == mapped_node) {
         //auto old_index = (is_view_old ? old_index_map(cur) : *cur);
-        auto new_base = new_index_map(cur);
-        //void* untyped = static_cast<void*>(&new_base);
-        //auto new_index = static_cast<IndexNew*>(&new_base);
-        in_group = new_base.x() < new_range.x();
-
+//        auto new_base = new_index_map(cur);
+//        //void* untyped = static_cast<void*>(&new_base);
+//        //auto new_index = static_cast<IndexNew*>(&new_base);
+//        in_group = new_base.x() < new_range.x();
+        in_group = new_filter(cur);
         debug_print(
           vrt_coll, node,
-          "createViewGroup: idx.x:{}, is_mapped, new_index:{}, in_group:{}\n",
-          idx.x(), new_base.x(), in_group
+          "filtering indices for view: node:{}, idx.x={}, in_group={}\n",
+          my_node, idx.x(), in_group
         );
       }
     }
@@ -2173,8 +2173,6 @@ template <typename SysMsgT>
       auto const& root       = theGroup()->groupRoot(new_group);
       auto const& is_default = theGroup()->groupDefault(new_group);
       auto const& in_group   = theGroup()->inGroup(new_group);
-
-
 
       debug_print(
         vrt_coll, node,
@@ -2202,8 +2200,8 @@ template <typename SysMsgT>
 
   debug_print(
     vrt_coll, node,
-    "createViewGroup: view group created, group_id:{}\n",
-    group_id
+    "group created for view proxy={:x}, group_id={}\n",
+    new_proxy, group_id
   );
   // assign the group id to the new proxy
   theCollection()->assignGroup(new_proxy, group_id);
