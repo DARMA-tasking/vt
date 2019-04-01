@@ -81,7 +81,8 @@ void CollectionMessage<ColT, BaseMsgT>::setProxy(
 }
 
 template <typename ColT, typename BaseMsgT>
-VirtualProxyType CollectionMessage<ColT, BaseMsgT>::getBcastProxy() const {
+VirtualProxyType
+CollectionMessage<ColT, BaseMsgT>::getBcastProxy() const {
   return bcast_proxy_;
 }
 
@@ -98,7 +99,9 @@ EpochType CollectionMessage<ColT, BaseMsgT>::getBcastEpoch() const {
 }
 
 template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT, BaseMsgT>::setBcastEpoch(EpochType const& epoch) {
+void CollectionMessage<ColT, BaseMsgT>::setBcastEpoch(
+  EpochType const& epoch
+) {
   bcast_epoch_ = epoch;
 }
 
@@ -136,23 +139,57 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
 }
 
 template <typename ColT, typename BaseMsgT>
-bool CollectionMessage<ColT,BaseMsgT>::getMember() const {
+bool CollectionMessage<ColT, BaseMsgT>::getMember() const {
   return member_;
 }
 
 template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT,BaseMsgT>::setMember(bool const& member) {
+void CollectionMessage<ColT, BaseMsgT>::setMember(bool const& member) {
   member_ = member;
 }
 
 template <typename ColT, typename BaseMsgT>
-bool CollectionMessage<ColT,BaseMsgT>::getWrap() const {
+bool CollectionMessage<ColT, BaseMsgT>::getWrap() const {
   return is_wrap_;
 }
 
 template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT,BaseMsgT>::setWrap(bool const& wrap) {
+void CollectionMessage<ColT, BaseMsgT>::setWrap(bool const& wrap) {
   is_wrap_ = wrap;
+}
+
+template <typename ColT, typename BaseMsgT>
+bool CollectionMessage<ColT, BaseMsgT>::isView() const {
+  return is_view_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setViewFlag(bool const& in_view) {
+  is_view_ = in_view;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setViewProxy(
+  vt::VirtualProxyType const& proxy
+) {
+  view_proxy_ = proxy;
+}
+
+template <typename ColT, typename BaseMsgT>
+VirtualProxyType const& CollectionMessage<ColT, BaseMsgT>::getViewProxy() {
+  return view_proxy_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setViewHandler(
+  vt::HandlerType const& in_handler
+) {
+  view_handler_ = in_handler;
+}
+
+template <typename ColT, typename BaseMsgT>
+HandlerType CollectionMessage<ColT, BaseMsgT>::getViewHandler() const {
+  return view_handler_;
 }
 
 #if backend_check_enabled(lblite)

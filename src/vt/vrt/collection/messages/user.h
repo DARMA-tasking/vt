@@ -104,6 +104,14 @@ struct CollectionMessage :
   bool getWrap() const;
   void setWrap(bool const& wrap);
 
+  void setViewFlag(bool const& in_view);
+  void setViewProxy(VirtualProxyType const& proxy);
+  void setViewHandler(HandlerType const& in_handler);
+
+  bool isView() const;
+  VirtualProxyType const& getViewProxy();
+  HandlerType getViewHandler() const;
+
   #if backend_check_enabled(lblite)
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
@@ -120,13 +128,17 @@ struct CollectionMessage :
   friend struct CollectionManager;
 
 private:
-  VirtualProxyType bcast_proxy_{};
-  VirtualElmProxyType<ColT, IndexType> to_proxy_{};
-  HandlerType vt_sub_handler_ = uninitialized_handler;
+  VirtualElmProxyType<ColT, IndexType> to_proxy_ = {};
+  VirtualProxyType bcast_proxy_ = no_vrt_proxy;
+  VirtualProxyType view_proxy_  = no_vrt_proxy;
+  HandlerType view_handler_     = uninitialized_handler;
+  HandlerType vt_sub_handler_   = uninitialized_handler;
+
+  NodeType from_node_    = uninitialized_destination;
   EpochType bcast_epoch_ = no_epoch;
-  NodeType from_node_ = uninitialized_destination;
-  bool member_ = false;
+  bool member_  = false;
   bool is_wrap_ = false;
+  bool is_view_ = false;
 
   #if backend_check_enabled(lblite)
     /*
@@ -138,32 +150,26 @@ private:
   #endif
 };
 
-
-template <typename ColT, typename IndexU, typename BaseMsgT = ::vt::Message>
+template <
+  typename ColT, typename IndexT = typename ColT::IndexType,
+  typename BaseMsgT = ::vt::Message
+>
 struct CollectViewMessage : CollectionMessage<ColT, BaseMsgT> {
 
-public:
+  using ViewTraits = col_proxy::Chain1<ColT, IndexT>;
+  using Base = CollectionMessage<ColT, BaseMsgT>;
+
   CollectViewMessage() = delete;
+  CollectViewMessage(CollectViewMessage const&) = default;
+  CollectViewMessage(CollectViewMessage&&) noexcept = default;
+  ~CollectViewMessage() = default;
 
-  explicit CollectViewMessage(VirtualProxyType const& proxy)
-    : CollectionMessage<ColT, BaseMsgT>(),
-      view_proxy_(proxy)
-  {}
-
-  void setViewProxy(vt::VirtualProxyType const& proxy) { view_proxy_ = proxy; }
-  vt::VirtualProxyType const& getViewProxy() { return view_proxy_; }
-
-  void setViewHandler(vt::HandlerType const& in_handler) {
-    view_handler_ = in_handler;
+  explicit CollectViewMessage(ViewTraits& in_view) : Base() {
+    auto proxy = in_view.getProxy();
+    bool is_view = VirtualProxyBuilder::isView(proxy);
+    Base::setViewProxy(proxy);
+    Base::setViewFlag(is_view);
   }
-
-  vt::HandlerType getViewHandler() const {
-    return view_handler_;
-  }
-
-private:
-  vt::VirtualProxyType view_proxy_ = vt::no_vrt_proxy;
-  vt::HandlerType view_handler_ = vt::uninitialized_handler;
 };
 
 }}} /* end namespace vt::vrt::collection */
@@ -173,8 +179,12 @@ namespace vt {
 template <typename ColT, typename MsgT = ::vt::Message>
 using CollectionMessage = vrt::collection::CollectionMessage<ColT, MsgT>;
 
-template <typename ColT, typename IndexU, typename MsgT = ::vt::Message>
-using CollectViewMessage = vrt::collection::CollectViewMessage<ColT, IndexU, MsgT>;
+template <
+  typename ColT,
+  typename IndexT = typename ColT::IndexType,
+  typename MsgT = ::vt::Message
+>
+using CollectViewMessage = vrt::collection::CollectViewMessage<ColT, IndexT, MsgT>;
 
 } /* end namespace vt */
 
