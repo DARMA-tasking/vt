@@ -58,7 +58,7 @@ using ActiveMapFnPtrType = NodeType(*)(
 
 template <typename IndexCur, typename IndexNew = IndexCur>
 using ActiveViewTypedFnType = IndexNew(IndexCur*);
-using ActiveViewFnPtrType = index::BaseIndex(*)(index::BaseIndex*);
+using ActiveViewFnPtrType = vt::Index1D(*)(index::BaseIndex*);
 
 using ActiveSeedMapFnType = NodeType(SeedType, NodeType);
 using ActiveSeedMapFnPtrType = ActiveSeedMapFnType*;
