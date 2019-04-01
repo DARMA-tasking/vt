@@ -46,6 +46,7 @@
 namespace example {
 // default collection size
 static constexpr int const default_size = 16;
+static int received = 0;
 
 // the collection to be sliced
 struct MyCol : vt::Collection<MyCol, vt::Index1D> {
@@ -63,21 +64,26 @@ using ViewMsg = vt::CollectViewMessage<MyCol, vt::Index1D>;
 
 // the slice view relative indexing function
 static vt::Index1D filter(vt::Index1D* idx) {
-  return vt::Index1D(idx->x() % 4);
+  const auto& cur = idx->x();
+  return vt::Index1D(cur % 4 == 0 ? (cur / 4) : -1);
 }
 
 // the slice broadcast handler
 static void printElem(ViewMsg* msg, MyCol* col) {
 
-  auto const& my_node = vt::theContext()->getNode();
-  auto const& proxy   = msg->getProxy();
-  auto const& section = col->getView<vt::Index1D>(proxy);
-  auto const& index   = col->getIndex();
+  fmt::print("ok cool, I will print new index here\n");
 
-  fmt::print(
-    "node {}: print elem: index.x():{}, slice.x():{}\n",
-    my_node, index.x(), section[index.x()]
-  );
+//  auto const& my_node = vt::theContext()->getNode();
+//  auto const& proxy   = msg->getProxy();
+//  auto const& section = col->getView<vt::Index1D>(proxy);
+//  auto const& index   = col->getIndex();
+//
+//  fmt::print(
+//    "node {}: print elem: index.x():{}\n",
+//    my_node, index.x(), section[index.x()]
+//  );
+
+  received++;
 }
 
 } // end namespace
@@ -89,32 +95,31 @@ int main(int argc, char** argv) {
 
   auto const my_node = vt::theContext()->getNode();
   auto const root = vt::NodeType(0);
+
   auto const epoch = vt::theTerm()->makeEpochCollective();
 
   if (my_node == root) {
     auto range = vt::Index1D(example::default_size);
     auto proxy = vt::theCollection()->construct<example::MyCol>(range);
 
-    // ensure that the collection is built before moving on
-    vt::theTerm()->addAction(epoch, [&]{
-      // slice the initial range
-      auto slice = vt::Index1D(range.x() / 2);
-      // create a view to the sliced collection
-      auto section = proxy.slice<vt::Index1D, &example::filter>(range, slice);
-      // broadcast to print elements values
-      auto msg = vt::makeMessage<example::ViewMsg>(section.getProxy());
-      section.broadcast<example::ViewMsg, &example::printElem>(msg);
-    });
-
-    vt::theTerm()->finishedEpoch(epoch);
-  } else {
-    vt::theTerm()->finishedEpoch(epoch);
+    // slice the initial range
+    auto slice = vt::Index1D(range.x() / 2);
+    // create a view to the sliced collection
+    auto section = proxy.slice<vt::Index1D, &example::filter>(range, slice, epoch);
+    // broadcast to each slice element
+    auto virtual_proxy = section.getProxy();
+    section.broadcast<example::ViewMsg, &example::printElem>(virtual_proxy);
   }
+
+  vt::theCollective()->barrier();
+  vt::theTerm()->finishedEpoch(epoch);
 
   // spin until termination
   while (not vt::rt->isTerminated()) {
     vt::runScheduler();
   }
+
+  fmt::print("node:{} received:{}\n", my_node, example::received);
 
   // finalize the runtime and exit
   vt::CollectiveOps::finalize();
