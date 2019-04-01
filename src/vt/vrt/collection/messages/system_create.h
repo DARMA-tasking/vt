@@ -106,6 +106,8 @@ struct ViewCreateMsg : ::vt::collective::reduce::ReduceMsg {
   HandlerType      old_view_han_ = uninitialized_handler;
   HandlerType      new_view_han_ = uninitialized_handler;
   HandlerType      col_map_id_   = uninitialized_handler;
+  EpochType        epoch_        = no_epoch;
+  TagType          tag_          = no_tag;
 
   ViewCreateMsg() = default;
 
@@ -116,14 +118,18 @@ struct ViewCreateMsg : ::vt::collective::reduce::ReduceMsg {
     IndexNew         const& in_new_range,
     HandlerType      const& in_old_view_han,
     HandlerType      const& in_new_view_han,
-    HandlerType      const& in_col_map
+    HandlerType      const& in_col_map,
+    EpochType        const& in_epoch,
+    TagType          const& in_tag
   ) : old_proxy_   (in_old_proxy),
       new_proxy_   (in_new_proxy),
       old_range_   (in_old_range),
       new_range_   (in_new_range),
       old_view_han_(in_old_view_han),
       new_view_han_(in_new_view_han),
-      col_map_id_  (in_col_map)
+      col_map_id_  (in_col_map),
+      epoch_       (in_epoch),
+      tag_         (in_tag)
   {}
 
   ~ViewCreateMsg() = default;
@@ -154,7 +160,9 @@ struct ViewGroupMsg : ::vt::collective::reduce::ReduceMsg {
 public:
   ViewGroupMsg() = delete;
 
-  ViewGroupMsg(VirtualProxyType const& in_proxy, GroupType const& in_group)
+  ViewGroupMsg(
+    VirtualProxyType const& in_proxy, GroupType const& in_group = no_group
+  )
     : ::vt::collective::reduce::ReduceMsg(),
       proxy_(in_proxy),
       group_(in_group)
