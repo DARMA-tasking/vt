@@ -405,8 +405,8 @@ template <typename ColT, typename IndexT, typename MsgT>
     ) {
       debug_print(
         vrt_coll, node,
-        "broadcast: apply to element: epoch={}, bcast_epoch={}\n",
-        msg->bcast_epoch_, base->cur_bcast_epoch_
+        "broadcast: apply to element: idx.x()={}, epoch={}, bcast_epoch={}\n",
+        idx.x(), msg->bcast_epoch_, base->cur_bcast_epoch_
       );
       if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
         vtAssert(base != nullptr, "Must be valid pointer");
@@ -426,6 +426,11 @@ template <typename ColT, typename IndexT, typename MsgT>
             }
           }
         );
+
+        // EDIT here: check if view and filter indices if it is the case
+//        auto const view_proxy = msg->getProxy();
+//        auto const view_handler = msg->getViewHandler();
+//        auto const index_map = auto_registry::getHandlerView(view_handler);
 
         // be very careful here, do not touch `base' after running the active
         // message because it might have migrated out and be invalid
@@ -536,13 +541,14 @@ template <typename>
 /*static*/ void CollectionManager::collectionGroupFinishedHan(
   CollectionGroupMsg* msg
 ) {
+
   auto const& proxy = msg->getProxy();
   auto& buffered = theCollection()->buffered_group_;
   auto iter = buffered.find(proxy);
   debug_print(
     vrt_coll, node,
-    "collectionGroupFinishedHan: proxy={:x}, buffered size={}\n",
-    proxy, (iter != buffered.end() ? iter->second.size() : 0)
+    "collectionGroupFinishedHan: proxy={:x}, buffered size={}, epoch:{}\n",
+    proxy, (iter != buffered.end() ? iter->second.size() : 0), theMsg()->getEpoch()
   );
   if (iter != buffered.end()) {
     for (auto&& elm : iter->second) {
@@ -551,28 +557,13 @@ template <typename>
     iter->second.clear();
     buffered.erase(iter);
   }
+
+//  auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
+//  elm_holder.setGroupReady(true);
 }
 
-template <typename>
-/*static*/ void CollectionManager::viewGroupFinishedHan(ViewGroupMsg* msg) {
 
-  auto const& new_proxy = msg->getProxy();
-  bool const is_view = VirtualProxyBuilder::isView(new_proxy);
-  vtAssertExpr(is_view);
 
-  // need an explicitly reference
-  auto& buffer_group = theCollection()->buffered_group_;
-
-  // trigger all buffered actions
-  auto iter = buffer_group.find(new_proxy);
-  if (iter != buffer_group.end()) {
-    for (auto&& action : iter->second) {
-      action(new_proxy);
-    }
-    iter->second.clear();
-    buffer_group.erase(iter);
-  }
-}
 
 template <typename>
 /*static*/ void CollectionManager::collectionFinishedHan(
@@ -615,14 +606,6 @@ template <typename>
   }
 }
 
-template <typename>
-/*static*/ void CollectionManager::viewGroupReduceHan(ViewGroupMsg* msg) {
-
-  if (msg->isRoot()) {
-    auto new_msg = makeSharedMessage<ViewGroupMsg>(*msg);
-    theMsg()->broadcastMsg<ViewGroupMsg,viewGroupFinishedHan>(new_msg);
-  }
-}
 
 template <typename>
 /*static*/ void CollectionManager::collectionGroupReduceHan(
@@ -797,6 +780,10 @@ void CollectionManager::broadcastMsg(
   MsgT *msg, bool instrument
 ) {
   using ColT = typename MsgT::CollectionType;
+  debug_print(
+    vrt_coll, node,
+    "broadcasting message to group"
+  );
   return broadcastMsg<MsgT,ColT,f>(proxy,msg,instrument);
 }
 
@@ -930,9 +917,25 @@ void CollectionManager::broadcastMsgUntypedHandler(
     "broadcastMsgUntypedHandler: msg={}, idx={}\n",
     print_ptr(raw_msg), idx
   );
+  std::fflush(stdout);
+  std::fflush(stderr);
+
+  // update to handle view case
+  auto const cur_proxy = toProxy.getProxy();
+  bool const is_view_proxy = VirtualProxyBuilder::isView(cur_proxy);
+  bool is_view_ready = not is_view_proxy or isViewReady(cur_proxy);
+
+  //vtAssertExpr(is_view_ready);
+
+  while (not is_view_ready) {
+    runScheduler();
+    is_view_ready = not is_view_proxy or isViewReady(cur_proxy);
+  }
+
 
   auto const& this_node = theContext()->getNode();
-  auto const& col_proxy = toProxy.getProxy();
+  auto const& col_proxy = view_parent_[cur_proxy];
+  //auto const& col_proxy = toProxy.getProxy();
 
   auto msg = promoteMsg(raw_msg);
 
@@ -954,14 +957,18 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
   debug_print(
     vrt_coll, node,
-    "broadcastMsgUntypedHandler: col_proxy={:x}, found={}, cur_epoch={}\n",
-    col_proxy, found_constructed, cur_epoch
+    "broadcastMsgUntypedHandler: col_proxy={:x}, cur_proxy={:x}, found={}, cur_epoch={}, is_view={}\n",
+    col_proxy, cur_proxy, found_constructed, cur_epoch, is_view_proxy
   );
 
-  if (holder != nullptr && found_constructed) {
+  std::fflush(stdout);
+  std::fflush(stderr);
+
+  if (holder != nullptr and found_constructed and is_view_ready) {
     // save the user's handler in the message
     msg->setVrtHandler(handler);
     msg->setBcastProxy(col_proxy);
+    msg->setViewProxy(cur_proxy);
     msg->setFromNode(this_node);
     msg->setMember(member);
 
@@ -987,11 +994,13 @@ void CollectionManager::broadcastMsgUntypedHandler(
       broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
     }
   } else {
-    auto iter = buffered_bcasts_.find(col_proxy);
+    //auto iter = buffered_bcasts_.find(col_proxy);
+    auto iter = buffered_bcasts_.find(cur_proxy);
     if (iter == buffered_bcasts_.end()) {
       buffered_bcasts_.emplace(
         std::piecewise_construct,
-        std::forward_as_tuple(col_proxy),
+        //std::forward_as_tuple(col_proxy),
+        std::forward_as_tuple(cur_proxy),
         std::forward_as_tuple(ActionContainerType{})
       );
       iter = buffered_bcasts_.find(col_proxy);
@@ -2014,6 +2023,8 @@ CollectionManager::constructMap(
   create_msg_local->info = info;
   CollectionManager::distConstruct<MsgType>(create_msg_local.get());
 
+  view_parent_[new_proxy] = new_proxy;
+
   return CollectionProxyWrapType<ColT, typename ColT::IndexType>{new_proxy};
 }
 
@@ -2031,15 +2042,28 @@ CollectionProxy<ColT, IndexU> CollectionManager::slice(
 ) {
   // message type for view group creation
   using MsgT = ViewCreateMsg<ColT, IndexT, IndexU>;
-  // retrieve the virtual old proxy
-  auto const old_proxy = col_proxy.getProxy();
 
   // check that the collection is static and already built
-  bool const is_static_collec   = ColT::isStaticSized();
-  bool const is_already_built   = (constructed_.find(old_proxy) != constructed_.end());
+  auto const old_proxy  = col_proxy.getProxy();
+  auto const elm_holder = theCollection()->findElmHolder<ColT,IndexT>(old_proxy);
+
+  bool group_ready = elm_holder->groupReady();
+  bool no_pending = (buffered_group_.find(old_proxy) == buffered_group_.end());
+  bool finished = group_ready and no_pending;
+
+  while (not finished) {
+    // spin until collection group is ready
+    vt::runScheduler();
+    group_ready = elm_holder->groupReady();
+    no_pending = (buffered_group_.find(old_proxy) == buffered_group_.end());
+    finished = group_ready and no_pending;
+  }
+
+  bool const is_static  = ColT::isStaticSized();
+  bool const is_already_built  = (constructed_.find(old_proxy) != constructed_.end());
   bool const is_view_old_proxy = VirtualProxyBuilder::isView(old_proxy);
 
-  vtAssert(is_static_collec, "Only view of static collections are managed");
+  vtAssert(is_static, "Only view of static collections are managed");
   vtAssert(is_already_built, "Collection should be already built");
   vtAssert(not is_view_old_proxy, "View of a view are not allowed for now");
 
@@ -2053,20 +2077,22 @@ CollectionProxy<ColT, IndexU> CollectionManager::slice(
   bool const is_view_new_proxy = VirtualProxyBuilder::isView(new_proxy);
   vtAssertExpr(is_view_new_proxy);
 
+  // set some flags
+  theCollection()->setViewReady(false);
+  view_parent_[new_proxy] = old_proxy;
+
   // broadcast view group creation request
   auto msg = makeSharedMessage<MsgT>(
     old_proxy, new_proxy,
     old_range, new_range,
-    old_view_han, new_view_han, mapping_id
+    old_view_han, new_view_han, mapping_id,
+    epoch, tag
   );
 
   SerializedMessenger::broadcastSerialMsg<MsgT, createViewGroup<MsgT>>(msg);
 
   // apply it locally
   createViewGroup<MsgT>(msg);
-
-  // buffer all view pending requests
-  bufferViewRequest<ColT>(new_proxy, epoch, tag);
 
   // create the real new proxy
   return CollectionProxy<ColT, IndexU>{new_proxy};
@@ -2076,6 +2102,7 @@ template <typename SysMsgT>
 /*static*/ void CollectionManager::createViewGroup(SysMsgT* msg) {
   using IndexOld = typename SysMsgT::IndexOld;
   using IndexNew = typename SysMsgT::IndexNew;
+  using CollectType = typename SysMsgT::CollectionType;
 
   auto const nb_nodes = theContext()->getNumNodes();
   auto const my_node  = theContext()->getNode();
@@ -2088,11 +2115,20 @@ template <typename SysMsgT>
   auto const& old_view  = msg->old_view_han_;
   auto const& new_view  = msg->new_view_han_;
   auto const& mapping   = msg->col_map_id_;
+  auto const& epoch     = msg->epoch_;
+  auto const& tag       = msg->tag_;
+
 
   bool const is_view_old = VirtualProxyBuilder::isView(old_proxy);
   bool const is_view_new = VirtualProxyBuilder::isView(new_proxy);
   vtAssert(not is_view_old, "View of a view are not yet supported");
   vtAssert(    is_view_new, "New proxy should be a view one");
+
+  debug_print(
+    vrt_coll, node,
+    "createViewGroup: old_proxy:{:x}, new_proxy:{:x}\n",
+    old_proxy, new_proxy
+  );
 
   //auto const col_node_map = getDefaultMap<CollecType>();
   auto const node_mapping  = auto_registry::getHandlerMap(mapping);
@@ -2113,10 +2149,17 @@ template <typename SysMsgT>
       auto const mapped_node = node_mapping(cur, max, nb_nodes);
 
       if (my_node == mapped_node) {
-        auto old_index = (is_view_old ? old_index_map(cur) : *cur);
-        auto new_base  = new_index_map(&old_index);
-        auto new_index = reinterpret_cast<IndexNew&>(new_base);
-        in_group = new_index < new_range;
+        //auto old_index = (is_view_old ? old_index_map(cur) : *cur);
+        auto new_base = new_index_map(cur);
+        //void* untyped = static_cast<void*>(&new_base);
+        //auto new_index = static_cast<IndexNew*>(&new_base);
+        in_group = new_base.x() < new_range.x();
+
+        debug_print(
+          vrt_coll, node,
+          "createViewGroup: idx.x:{}, is_mapped, new_index:{}, in_group:{}\n",
+          idx.x(), new_base.x(), in_group
+        );
       }
     }
   });
@@ -2131,36 +2174,102 @@ template <typename SysMsgT>
       auto const& is_default = theGroup()->groupDefault(new_group);
       auto const& in_group   = theGroup()->inGroup(new_group);
 
-      theCollection()->setViewReady(new_proxy);
+
+
+      debug_print(
+        vrt_coll, node,
+        "is view group ready ? {}\n",
+        theCollection()->isViewReady(new_proxy)
+      );
 
       // notify all for finalization step
       if (not is_default and in_group) {
-        uint64_t const group_tag_mask = 0x0ff00000;
-        auto tag = virtual_id | group_tag_mask;
-        auto msg = makeSharedMessage<ViewGroupMsg>(new_proxy, new_group);
+        uint64_t const group_tag_mask = 0x0ff0f000;
+        TagType const tag = virtual_id | group_tag_mask;
+        auto group_msg = makeSharedMessage<ViewGroupMsg>(new_proxy, new_group);
 
         theGroup()->groupReduce(new_group)->reduce<
-          ViewGroupMsg, viewGroupReduceHan
-        >(root, msg, tag);
+          ViewGroupMsg, reduceViewHan
+        >(root, group_msg, tag);
 
       } else if (is_default) {
         // trigger the group finished handler directly.
         auto new_msg = makeMessage<ViewGroupMsg>(new_proxy, new_group);
-        theCollection()->viewGroupFinishedHan<>(new_msg.get());
+        theCollection()->finishViewHan<>(new_msg.get());
       }
     }
   );
+
+  debug_print(
+    vrt_coll, node,
+    "createViewGroup: view group created, group_id:{}\n",
+    group_id
+  );
   // assign the group id to the new proxy
   theCollection()->assignGroup(new_proxy, group_id);
+
+  // buffer all view pending requests
+  theCollection()->bufferViewAction<CollectType>(new_proxy, epoch, tag);
+}
+
+template <typename>
+/*static*/ void CollectionManager::reduceViewHan(ViewGroupMsg* msg) {
+
+  debug_print(
+    vrt_coll, node,
+    "reduceViewHan: proxy={:x}, root={}, group={}\n",
+    msg->getProxy(), msg->isRoot(), msg->getGroup()
+  );
+
+  if (msg->isRoot()) {
+    auto new_msg = makeSharedMessage<ViewGroupMsg>(*msg);
+    theMsg()->broadcastMsg<ViewGroupMsg,finishViewHan>(new_msg);
+  }
+  // not sure here
+  finishViewHan<>(msg);
+}
+
+template <typename>
+/*static*/ void CollectionManager::finishViewHan(ViewGroupMsg* msg) {
+
+  auto const& proxy = msg->getProxy();
+  bool const is_view = VirtualProxyBuilder::isView(proxy);
+  vtAssertExpr(is_view);
+
+  // need an explicitly reference
+  auto& buffer_group = theCollection()->buffered_group_;
+
+  // trigger all buffered actions
+  auto iter = buffer_group.find(proxy);
+
+  if (iter != buffer_group.end()) {
+    for (auto&& action : iter->second) {
+      action(proxy);
+      debug_print(
+        vrt_coll, node,
+        "running buffered view group action, proxy: {}\n",
+        proxy
+      );
+    }
+    iter->second.clear();
+    buffer_group.erase(iter);
+  }
+
+  debug_print(
+    vrt_coll, node,
+    "view group action finished, proxy: {}, epoch:{:x}\n",
+    proxy, theMsg()->getEpoch()
+  );
+
+  theCollection()->setViewReady(proxy);
 }
 
 template <typename ColT>
-void CollectionManager::bufferViewRequest(
+void CollectionManager::bufferViewAction(
   VirtualProxyType const& proxy,
   EpochType const& epoch,
   TagType const& tag
 ) {
-
   // check if view group creation is finished
   bool const is_ready = theCollection()->isViewReady(proxy);
 
@@ -2175,24 +2284,35 @@ void CollectionManager::bufferViewRequest(
       );
       iter = buffered_group_.find(proxy);
     }
-    theTerm()->produce(term::any_epoch_sentinel);
+    vtAssert(iter != buffered_group_.end(), "Must exist");
 
-    iter->second.push_back([=](VirtualProxyType /*ignored*/){
-      theTerm()->consume(term::any_epoch_sentinel);
+    debug_print(
+      vrt_coll, node,
+      "buffering view requests of proxy:{:x}",
+      proxy
+    );
+
+    //theTerm()->produce(epoch);
+    auto const cur_epoch = theMsg()->getEpoch();
+
+    iter->second.push_back([=](VirtualProxyType /*ignored*/) {
+      //theMsg()->pushEpoch(cur_epoch);
       // buffer requests until group is ready
-      theCollection()->bufferViewRequest<ColT>(proxy, epoch, tag);
+      //theTerm()->consume(epoch);
+      theCollection()->bufferViewAction<ColT>(proxy, epoch, tag);
+      //theMsg()->popEpoch();
     });
   }
 }
 
 
 inline void CollectionManager::setViewReady(VirtualProxyType const& proxy) {
-  view_group_ready_[proxy] = true;
+  view_ready_[proxy] = true;
 }
 
 inline bool CollectionManager::isViewReady(VirtualProxyType const& proxy) {
-  // todo check that proxy exists
-  return view_group_ready_[proxy];
+  auto const& found = view_ready_.find(proxy);
+  return (found != view_ready_.end() and found->second);
 }
 
 inline void CollectionManager::assignGroup(

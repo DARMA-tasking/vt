@@ -240,6 +240,30 @@ struct CollectionManager {
     TagType const& tag = no_tag
   );
 
+
+private:
+  /*
+   * Private interface for view group creation
+   */
+  template <typename SysMsgT>
+  static void createViewGroup(SysMsgT* msg);
+
+  template <typename ColT>
+  void bufferViewAction(
+    VirtualProxyType const& proxy,
+    EpochType const& epoch = no_epoch, TagType const& tag = no_tag
+  );
+
+  void setViewReady(VirtualProxyType const& proxy);
+  bool isViewReady(VirtualProxyType const& proxy);
+  void assignGroup(VirtualProxyType const& proxy, GroupType const& group);
+
+  // handlers for view creation
+  template <typename = void>
+  static void reduceViewHan(ViewGroupMsg* msg);
+  template <typename = void>
+  static void finishViewHan(ViewGroupMsg* msg);
+
   /*
    *      CollectionManager::constructInsert<ColT, MapFnT>
    *
@@ -252,24 +276,6 @@ private:
   void staticInsert(
     VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
   );
-
-  /*
-   * Private interface for view group creation
-   */
-  template <typename SysMsgT>
-  static void createViewGroup(SysMsgT* msg);
-
-  template <typename ColT>
-  void bufferViewRequest(
-    VirtualProxyType const& proxy,
-    EpochType const& epoch = no_epoch, TagType const& tag = no_tag
-  );
-
-  void setViewReady(VirtualProxyType const& proxy);
-  bool isViewReady(VirtualProxyType const& proxy);
-  void assignGroup(VirtualProxyType const& proxy, GroupType const& group);
-
-  // todo: retrieve typed proxy from virtual proxy builder
 
 
 public:
@@ -612,11 +618,6 @@ public:
   template <typename=void>
   static void collectionGroupFinishedHan(CollectionGroupMsg* msg);
 
-  template <typename=void>
-  static void viewGroupReduceHan(ViewGroupMsg* msg);
-
-  template <typename=void>
-  static void viewGroupFinishedHan(ViewGroupMsg* msg);
 
   /*
    *  Automatic group creation for each collection instance for broadcasts
@@ -838,6 +839,7 @@ private:
   template <typename ColT>
   static BcastBufferType<ColT> broadcasts_;
 
+
   CleanupListFnType cleanup_fns_;
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;
@@ -848,10 +850,12 @@ private:
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
-  std::unordered_map<VirtualProxyType,GroupType> view_group_ = {};
-  std::unordered_map<VirtualProxyType,bool> view_group_ready_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
+  // view infos data structures
+  std::unordered_map<VirtualProxyType, GroupType> view_group_ = {};
+  std::unordered_map<VirtualProxyType, bool> view_ready_ = {};
+  std::unordered_map<VirtualProxyType, VirtualProxyType> view_parent_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */
