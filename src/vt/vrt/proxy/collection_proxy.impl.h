@@ -59,6 +59,12 @@ CollectionProxy<ColT, IndexT>::CollectionProxy(
 { }
 
 template <typename ColT, typename IndexT>
+CollectionProxy<ColT, IndexT>::CollectionProxy(
+  VirtualProxyType const in_proxy, IndexT const in_range
+) : ProxyCollectionTraits<ColT, IndexT>(in_proxy, in_range)
+{ }
+
+template <typename ColT, typename IndexT>
 template <typename... IndexArgsT>
 typename CollectionProxy<ColT, IndexT>::ElmProxyType
 CollectionProxy<ColT, IndexT>::index_build(IndexArgsT&&... args) const {
@@ -83,6 +89,7 @@ CollectionProxy<ColT, IndexT>::operator()(IndexArgsT&&... args) const {
 template <typename ColT, typename IndexT>
 typename CollectionProxy<ColT, IndexT>::ElmProxyType
 CollectionProxy<ColT, IndexT>::index(IndexT const& idx) const {
+  // todo: update here for relative indexing
   return ElmProxyType{this->proxy_,BaseElmProxy<ColT, IndexT>{idx}};
 }
 

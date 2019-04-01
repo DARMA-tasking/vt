@@ -59,10 +59,20 @@ Broadcastable<ColT,IndexT,BaseProxyT>::Broadcastable(
 { }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
+Broadcastable<ColT,IndexT,BaseProxyT>::Broadcastable(
+  VirtualProxyType const in_proxy, IndexT const in_range
+) : BaseProxyT(in_proxy, in_range)
+{ }
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
 void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg);
+  auto range = this->getRange();
+
+  return theCollection()->broadcastMsg<MsgT, f>(
+    CollectionProxy<ColT, IndexT>{proxy, range}, msg
+  );
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -95,14 +105,6 @@ template <
 >
 void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(Args&&... args) const {
   return broadcast<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
-}
-
-
-template <typename ColT, typename IndexT, typename BaseProxyT>
-template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
-  auto proxy = this->getProxy();
-  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg);
 }
 
 }}} /* end namespace vt::vrt::collection */

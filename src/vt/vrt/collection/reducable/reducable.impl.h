@@ -59,6 +59,13 @@ Reducable<ColT,IndexT,BaseProxyT>::Reducable(VirtualProxyType const in_proxy)
 { }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
+Reducable<ColT,IndexT,BaseProxyT>::Reducable(
+  VirtualProxyType const in_proxy, IndexT const in_range
+)
+  : BaseProxyT(in_proxy, in_range)
+{ }
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename OpT, typename MsgT>
 EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
   MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch, TagType const& tag

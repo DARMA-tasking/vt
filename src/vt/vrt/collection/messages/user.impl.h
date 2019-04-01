@@ -159,6 +159,18 @@ void CollectionMessage<ColT, BaseMsgT>::setWrap(bool const& wrap) {
 }
 
 template <typename ColT, typename BaseMsgT>
+typename ColT::IndexType CollectionMessage<ColT, BaseMsgT>::getRange() const {
+  return range_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setRange(
+  typename ColT::IndexType const& in_range
+) {
+  range_ = in_range;
+}
+
+template <typename ColT, typename BaseMsgT>
 bool CollectionMessage<ColT, BaseMsgT>::isView() const {
   return is_view_;
 }

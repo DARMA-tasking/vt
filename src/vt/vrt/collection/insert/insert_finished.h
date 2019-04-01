@@ -58,6 +58,7 @@ struct InsertFinished : BaseProxyT {
   InsertFinished(InsertFinished const&) = default;
   InsertFinished(InsertFinished&&) = default;
   explicit InsertFinished(VirtualProxyType const in_proxy);
+  InsertFinished(VirtualProxyType const in_proxy, IndexT const in_range);
   InsertFinished& operator=(InsertFinished const&) = default;
 
   void finishedInserting(ActionType action = nullptr) const;

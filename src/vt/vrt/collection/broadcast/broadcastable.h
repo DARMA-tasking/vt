@@ -59,6 +59,7 @@ struct Broadcastable : BaseProxyT {
   Broadcastable(Broadcastable const&) = default;
   Broadcastable(Broadcastable&&) = default;
   Broadcastable(VirtualProxyType const in_proxy);
+  Broadcastable(VirtualProxyType const in_proxy, IndexT const in_range);
   Broadcastable& operator=(Broadcastable const&) = default;
 
   template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>

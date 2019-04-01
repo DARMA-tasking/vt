@@ -57,8 +57,31 @@ BaseCollectionProxy<ColT, IndexT>::BaseCollectionProxy(
 { }
 
 template <typename ColT, typename IndexT>
+BaseCollectionProxy<ColT, IndexT>::BaseCollectionProxy(
+  VirtualProxyType const in_proxy, IndexT const in_range
+) : proxy_(in_proxy),
+    range_(in_range)
+{ }
+
+template <typename ColT, typename IndexT>
+void BaseCollectionProxy<ColT, IndexT>::setRange(IndexT const& in_range) {
+  range_ = in_range;
+}
+
+template <typename ColT, typename IndexT>
+IndexT const& BaseCollectionProxy<ColT, IndexT>::getRange() const {
+  return range_;
+}
+
+template <typename ColT, typename IndexT>
 VirtualProxyType BaseCollectionProxy<ColT, IndexT>::getProxy() const {
   return proxy_;
+}
+
+template <typename ColT, typename IndexT>
+template <typename SerializerT>
+void BaseCollectionProxy<ColT, IndexT>::serialize(SerializerT& s) {
+  s | proxy_;
 }
 
 }}} /* end namespace vt::vrt::collection */

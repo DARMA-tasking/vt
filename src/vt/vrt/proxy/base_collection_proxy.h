@@ -58,19 +58,19 @@ struct BaseCollectionProxy {
   BaseCollectionProxy() = default;
   BaseCollectionProxy(BaseCollectionProxy const&) = default;
   BaseCollectionProxy(BaseCollectionProxy&&) = default;
+  BaseCollectionProxy& operator=(BaseCollectionProxy const&) = default;
   explicit BaseCollectionProxy(VirtualProxyType const in_proxy);
-  BaseCollectionProxy& operator=(
-    BaseCollectionProxy const&
-  ) = default;
+  BaseCollectionProxy(VirtualProxyType const in_proxy, IndexT const in_range);
 
   VirtualProxyType getProxy() const;
+  IndexType const& getRange() const;
+  void setRange(IndexType const& in_range);
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | proxy_;
-  }
+  void serialize(SerializerT& s);
 
 protected:
+  IndexType range_ = {};
   VirtualProxyType proxy_ = no_vrt_proxy;
 };
 

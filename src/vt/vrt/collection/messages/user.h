@@ -104,6 +104,9 @@ struct CollectionMessage :
   bool getWrap() const;
   void setWrap(bool const& wrap);
 
+  IndexType getRange() const;
+  void setRange(IndexType const& in_range);
+
   void setViewFlag(bool const& in_view);
   void setViewProxy(VirtualProxyType const& proxy);
   void setViewHandler(HandlerType const& in_handler);
@@ -136,6 +139,7 @@ private:
 
   NodeType from_node_    = uninitialized_destination;
   EpochType bcast_epoch_ = no_epoch;
+  IndexType range_       = {};
   bool member_  = false;
   bool is_wrap_ = false;
   bool is_view_ = false;

@@ -78,6 +78,9 @@ struct ProxyCollectionTraits : col_proxy::Chain1<ColT,IndexT> {
   explicit ProxyCollectionTraits(VirtualProxyType const in_proxy)
     : col_proxy::Chain1<ColT,IndexT>(in_proxy)
   {}
+  ProxyCollectionTraits(VirtualProxyType const in_proxy, IndexT const in_range)
+    : col_proxy::Chain1<ColT,IndexT>(in_proxy, in_range)
+  {}
   ProxyCollectionTraits& operator=(ProxyCollectionTraits const&) = default;
 };
 

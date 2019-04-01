@@ -63,6 +63,7 @@ struct Reducable : BaseProxyT {
   Reducable(Reducable const&) = default;
   Reducable(Reducable&&) = default;
   explicit Reducable(VirtualProxyType const in_proxy);
+  Reducable(VirtualProxyType const in_proxy, IndexT const in_range);
   Reducable& operator=(Reducable const&) = default;
 
   template <typename OpT = collective::None, typename MsgT>

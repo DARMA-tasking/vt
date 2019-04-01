@@ -64,9 +64,9 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
 
   CollectionProxy() = default;
   CollectionProxy(CollectionProxy const&) = default;
-  CollectionProxy(VirtualProxyType const in_proxy);
-
   CollectionProxy& operator=(CollectionProxy const&) = default;
+  CollectionProxy(VirtualProxyType const in_proxy);
+  CollectionProxy(VirtualProxyType const in_proxy, IndexT const in_range);
 
   template <typename... IndexArgsT>
   ElmProxyType index_build(IndexArgsT&&... idx) const;

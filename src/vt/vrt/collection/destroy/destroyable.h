@@ -56,6 +56,7 @@ struct Destroyable : BaseProxyT {
   Destroyable(Destroyable const&) = default;
   Destroyable(Destroyable&&) = default;
   explicit Destroyable(VirtualProxyType const in_proxy);
+  Destroyable(VirtualProxyType const in_proxy, IndexT const in_range);
   Destroyable& operator=(Destroyable const&) = default;
 
   void destroy() const;
