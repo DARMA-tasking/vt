@@ -150,10 +150,20 @@ public:
       view_proxy_(proxy)
   {}
 
-  vt::VirtualProxyType const& getProxy() { return view_proxy_; }
+  void setViewProxy(vt::VirtualProxyType const& proxy) { view_proxy_ = proxy; }
+  vt::VirtualProxyType const& getViewProxy() { return view_proxy_; }
+
+  void setViewHandler(vt::HandlerType const& in_handler) {
+    view_handler_ = in_handler;
+  }
+
+  vt::HandlerType getViewHandler() const {
+    return view_handler_;
+  }
 
 private:
   vt::VirtualProxyType view_proxy_ = vt::no_vrt_proxy;
+  vt::HandlerType view_handler_ = vt::uninitialized_handler;
 };
 
 }}} /* end namespace vt::vrt::collection */
