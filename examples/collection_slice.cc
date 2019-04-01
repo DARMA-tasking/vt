@@ -93,12 +93,13 @@ int main(int argc, char** argv) {
     auto range = vt::Index1D(example::default_size);
     auto proxy = vt::theCollection()->construct<example::MyCol>(range);
 
-    fmt::print("root: slice collection and keep only even elements\n");
+    fmt::print("root: halve collection, then keep only even elements\n");
 
     // slice the initial range
     auto slice = vt::Index1D(range.x() / 2);
     // create a view to the sliced collection
     auto section = proxy.slice<&example::filter>(range, slice, epoch);
+
     // create a message and broadcast to each slice element
     section.broadcast<example::ViewMsg, &example::printElem>(section);
   }

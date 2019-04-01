@@ -854,6 +854,7 @@ private:
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
   // view infos data structures
+  // todo: pack into a single data structure
   std::unordered_map<VirtualProxyType, HandlerType> view_han_ = {};
   std::unordered_map<VirtualProxyType, GroupType> view_group_ = {};
   std::unordered_map<VirtualProxyType, bool> view_ready_ = {};

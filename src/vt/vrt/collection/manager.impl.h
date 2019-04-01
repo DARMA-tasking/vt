@@ -396,14 +396,15 @@ template <typename ColT, typename IndexT, typename MsgT>
   if (elm_holder) {
 
     auto const handler = col_msg->getVrtHandler();
-    auto const member = col_msg->getMember();
+    auto const member  = col_msg->getMember();
+    auto const range   = col_msg->getRange();
 
     debug_print(
       vrt_coll, node,
       "broadcast apply: size={}\n", elm_holder->numElements()
     );
 
-    elm_holder->foreach([col_msg,msg,handler,member](
+    elm_holder->foreach([col_msg, msg, handler, member, range](
       IndexT idx, CollectionBase<ColT,IndexT>* base
     ) {
       debug_print(
@@ -437,14 +438,13 @@ template <typename ColT, typename IndexT, typename MsgT>
         auto const view_proxy = msg->getViewProxy();
 
         if (view_proxy != no_vrt_proxy) {
-//          bool const is_view  = msg->isView(cur_proxy);
-//          vtAssert(is_view, "Should be a view");
           auto const view_han = msg->getViewHandler();
           vtAssert(view_han != uninitialized_handler, "Should be registered");
 
           auto const filter = auto_registry::getHandlerView(view_han);
           auto base_idx = static_cast<vt::index::BaseIndex*>(&idx);
-          process_elem = filter(base_idx);
+          // todo: make it multi-dimensional
+          process_elem = idx.x() < range.x() and filter(base_idx);
         }
 
         if (process_elem) {
@@ -797,18 +797,13 @@ void CollectionManager::broadcastMsg(
   MsgT *msg, bool instrument
 ) {
   using ColT = typename MsgT::CollectionType;
-  debug_print(
-    vrt_coll, node,
-    "broadcasting message to group"
-  );
   return broadcastMsg<MsgT,ColT,f>(proxy,msg,instrument);
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
 CollectionManager::IsColMsgType<MsgT>
 CollectionManager::broadcastMsg(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
-  bool instrument
+  CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, bool instrument
 ) {
   return broadcastMsgImpl<MsgT,ColT,f>(proxy,msg,instrument);
 }
@@ -945,6 +940,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
   // update to handle view case
   auto const cur_proxy = toProxy.getProxy();
+  auto const cur_range = toProxy.getRange();
   bool const is_view   = VirtualProxyBuilder::isView(cur_proxy);
   auto const view_han  = getViewHandler(cur_proxy);
   bool ready = false;
@@ -985,6 +981,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
       msg->setViewFlag(true);
       msg->setViewProxy(cur_proxy);
       msg->setViewHandler(view_han);
+      msg->setRange(cur_range);
     }
 
     auto const bnode = VirtualProxyBuilder::getVirtualNode(col_proxy);
@@ -2038,7 +2035,7 @@ CollectionManager::constructMap(
 
   view_parent_[new_proxy] = new_proxy;
 
-  return CollectionProxyWrapType<ColT, typename ColT::IndexType>{new_proxy};
+  return CollectionProxyWrapType<ColT, IndexT>{new_proxy, range};
 }
 
 
@@ -2111,7 +2108,7 @@ CollectionProxy<ColT, IndexT> CollectionManager::slice(
   createViewGroup<MsgT>(msg);
 
   // create the real new proxy
-  return CollectionProxy<ColT, IndexT>{new_proxy};
+  return CollectionProxy<ColT, IndexT>{new_proxy, new_range};
 }
 
 template <typename SysMsgT>
@@ -2152,25 +2149,23 @@ template <typename SysMsgT>
   auto const old_filter   = (is_view_old ? auto_registry::getHandlerView(old_view) : nullptr);
 
   bool in_group = false;
-  auto range = static_cast<IndexNew>(new_range);
+  auto copy_range = new_range;
 
-  range.foreach([&](IndexNew idx) mutable {
+  new_range.foreach([&](IndexNew idx) mutable {
     // no need to recheck if already resolved
     if (not in_group) {
       // todo update below if old_proxy is already a view
       auto cur = static_cast<vt::index::BaseIndex*>(&idx);
-      auto max = static_cast<vt::index::BaseIndex*>(&range);
+      auto max = static_cast<vt::index::BaseIndex*>(&copy_range);
       // use the collection mapping to know if current node
       // should be in the new group or not.
       auto const mapped_node = node_mapping(cur, max, nb_nodes);
 
       if (my_node == mapped_node) {
         //auto old_index = (is_view_old ? old_index_map(cur) : *cur);
-//        auto new_base = new_index_map(cur);
-//        //void* untyped = static_cast<void*>(&new_base);
-//        //auto new_index = static_cast<IndexNew*>(&new_base);
-//        in_group = new_base.x() < new_range.x();
+        // todo: update here for nested slices
         in_group = new_filter(cur);
+
         debug_print(
           vrt_coll, node,
           "filtering indices for view: node:{}, idx.x={}, in_group={}\n",
@@ -2189,12 +2184,6 @@ template <typename SysMsgT>
       auto const& root       = theGroup()->groupRoot(new_group);
       auto const& is_default = theGroup()->groupDefault(new_group);
       auto const& in_group   = theGroup()->inGroup(new_group);
-
-      debug_print(
-        vrt_coll, node,
-        "is view group ready ? {}\n",
-        theCollection()->isViewReady(new_proxy)
-      );
 
       // notify all for finalization step
       if (not is_default and in_group) {
