@@ -394,14 +394,17 @@ template <typename ColT, typename IndexT, typename MsgT>
   );
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(bcast_proxy);
   if (elm_holder) {
+
     auto const handler = col_msg->getVrtHandler();
     auto const member = col_msg->getMember();
+
     debug_print(
       vrt_coll, node,
       "broadcast apply: size={}\n", elm_holder->numElements()
     );
+
     elm_holder->foreach([col_msg,msg,handler,member](
-      IndexT const& idx, CollectionBase<ColT,IndexT>* base
+      IndexT idx, CollectionBase<ColT,IndexT>* base
     ) {
       debug_print(
         vrt_coll, node,
@@ -427,17 +430,31 @@ template <typename ColT, typename IndexT, typename MsgT>
           }
         );
 
-        // EDIT here: check if view and filter indices if it is the case
-//        auto const view_proxy = msg->getProxy();
-//        auto const view_handler = msg->getViewHandler();
-//        auto const index_map = auto_registry::getHandlerView(view_handler);
+        bool process_elem = true;
 
-        // be very careful here, do not touch `base' after running the active
-        // message because it might have migrated out and be invalid
-        auto const from = col_msg->getFromNode();
-        collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
-          msg,base,handler,member,from
-        );
+        // check if current proxy is actually a view
+        // and apply filtering if so
+        auto const view_proxy = msg->getViewProxy();
+
+        if (view_proxy != no_vrt_proxy) {
+//          bool const is_view  = msg->isView(cur_proxy);
+//          vtAssert(is_view, "Should be a view");
+          auto const view_han = msg->getViewHandler();
+          vtAssert(view_han != uninitialized_handler, "Should be registered");
+
+          auto const filter = auto_registry::getHandlerView(view_han);
+          auto base_idx = static_cast<vt::index::BaseIndex*>(&idx);
+          process_elem = filter(base_idx);
+        }
+
+        if (process_elem) {
+          // be very careful here, do not touch `base' after running the active
+          // message because it might have migrated out and be invalid
+          auto const from = col_msg->getFromNode();
+          collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
+            msg,base,handler,member,from
+          );
+        }
 
         backend_enable_if(
           lblite, {
@@ -910,43 +927,38 @@ void CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *raw_msg,
   HandlerType const& handler, bool const member, bool instrument
 ) {
+
   auto const idx = makeVrtDispatch<MsgT,ColT>();
+  auto const this_node = theContext()->getNode();
+  auto msg = promoteMsg(raw_msg);
 
   debug_print(
     vrt_coll, node,
     "broadcastMsgUntypedHandler: msg={}, idx={}\n",
     print_ptr(raw_msg), idx
   );
-  std::fflush(stdout);
-  std::fflush(stderr);
-
-  // update to handle view case
-  auto const cur_proxy = toProxy.getProxy();
-  bool const is_view_proxy = VirtualProxyBuilder::isView(cur_proxy);
-  bool is_view_ready = not is_view_proxy or isViewReady(cur_proxy);
-
-  //vtAssertExpr(is_view_ready);
-
-  while (not is_view_ready) {
-    runScheduler();
-    is_view_ready = not is_view_proxy or isViewReady(cur_proxy);
-  }
-
-
-  auto const& this_node = theContext()->getNode();
-  auto const& col_proxy = view_parent_[cur_proxy];
-  //auto const& col_proxy = toProxy.getProxy();
-
-  auto msg = promoteMsg(raw_msg);
 
   backend_enable_if(
     lblite,
     msg->setLBLiteInstrument(instrument);
   );
 
+  // update to handle view case
+  auto const cur_proxy = toProxy.getProxy();
+  bool const is_view   = VirtualProxyBuilder::isView(cur_proxy);
+  auto const view_han  = getViewHandler(cur_proxy);
+  bool ready = false;
+
+  do {
+    runScheduler();
+    ready = not is_view or isViewReady(cur_proxy);
+  } while (not ready);
+
   // @todo: implement the action `act' after the routing is finished
+  auto const col_proxy = view_parent_[cur_proxy];
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
-  auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
+  bool already_built = constructed_.find(col_proxy) != constructed_.end();
+  ready &= (holder != nullptr) and already_built;
 
   auto const& cur_epoch = getCurrentEpoch(msg.get());
 
@@ -957,20 +969,23 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
   debug_print(
     vrt_coll, node,
-    "broadcastMsgUntypedHandler: col_proxy={:x}, cur_proxy={:x}, found={}, cur_epoch={}, is_view={}\n",
-    col_proxy, cur_proxy, found_constructed, cur_epoch, is_view_proxy
+    "broadcastMsgUntypedHandler: "
+    "col_proxy={:x}, cur_proxy={:x}, cur_epoch={:x}, ready={}, is_view={}\n",
+    col_proxy, cur_proxy, cur_epoch, ready, is_view
   );
 
-  std::fflush(stdout);
-  std::fflush(stderr);
-
-  if (holder != nullptr and found_constructed and is_view_ready) {
+  if (ready) {
     // save the user's handler in the message
     msg->setVrtHandler(handler);
     msg->setBcastProxy(col_proxy);
-    msg->setViewProxy(cur_proxy);
     msg->setFromNode(this_node);
     msg->setMember(member);
+
+    if (is_view) {
+      msg->setViewFlag(true);
+      msg->setViewProxy(cur_proxy);
+      msg->setViewHandler(view_han);
+    }
 
     auto const bnode = VirtualProxyBuilder::getVirtualNode(col_proxy);
 
@@ -994,12 +1009,10 @@ void CollectionManager::broadcastMsgUntypedHandler(
       broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
     }
   } else {
-    //auto iter = buffered_bcasts_.find(col_proxy);
     auto iter = buffered_bcasts_.find(cur_proxy);
     if (iter == buffered_bcasts_.end()) {
       buffered_bcasts_.emplace(
         std::piecewise_construct,
-        //std::forward_as_tuple(col_proxy),
         std::forward_as_tuple(cur_proxy),
         std::forward_as_tuple(ActionContainerType{})
       );
@@ -1009,23 +1022,23 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
     debug_print(
       vrt_coll, node,
-      "broadcastMsgUntypedHandler: pushing into buffered sends: col_proxy={:x}\n",
-      col_proxy
+      "broadcastMsgUntypedHandler: pushing into buffered sends: cur_proxy={:x}\n",
+      cur_proxy
     );
 
     theTerm()->produce(cur_epoch);
 
     debug_print(
       vrt_coll, node,
-      "broadcastMsgUntypedHandler: col_proxy={:x}, cur_epoch={}, buffering\n",
-      col_proxy, cur_epoch
+      "broadcastMsgUntypedHandler: cur_proxy={:x}, cur_epoch={}, buffering\n",
+      cur_proxy, cur_epoch
     );
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
       debug_print(
         vrt_coll, node,
-        "broadcastMsgUntypedHandler: col_proxy={:x}, running buffered\n",
-        col_proxy
+        "broadcastMsgUntypedHandler: cur_proxy={:x}, running buffered\n",
+        cur_proxy
       );
       theMsg()->pushEpoch(cur_epoch);
       theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
@@ -2077,6 +2090,9 @@ CollectionProxy<ColT, IndexT> CollectionManager::slice(
   bool const is_view_new_proxy = VirtualProxyBuilder::isView(new_proxy);
   vtAssertExpr(is_view_new_proxy);
 
+  // save handler type for further queries
+  saveViewHandler(new_proxy, new_view_han);
+
   // set some flags
   theCollection()->setViewReady(false);
   view_parent_[new_proxy] = old_proxy;
@@ -2290,19 +2306,13 @@ void CollectionManager::bufferViewAction(
       proxy
     );
 
-    //theTerm()->produce(epoch);
     auto const cur_epoch = theMsg()->getEpoch();
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/) {
-      //theMsg()->pushEpoch(cur_epoch);
-      // buffer requests until group is ready
-      //theTerm()->consume(epoch);
       theCollection()->bufferViewAction<ColT>(proxy, epoch, tag);
-      //theMsg()->popEpoch();
     });
   }
 }
-
 
 inline void CollectionManager::setViewReady(VirtualProxyType const& proxy) {
   view_ready_[proxy] = true;
@@ -2317,6 +2327,19 @@ inline void CollectionManager::assignGroup(
   VirtualProxyType const& proxy, GroupType const& group
 ) {
   view_group_[proxy] = group;
+}
+
+inline void CollectionManager::saveViewHandler(
+  VirtualProxyType const& proxy, HandlerType const& han
+) {
+  view_han_[proxy] = han;
+}
+
+inline HandlerType const& CollectionManager::getViewHandler(
+  VirtualProxyType const& proxy
+) const {
+  auto const& found = view_han_.find(proxy);
+  return (found != view_han_.end() ? found->second : uninitialized_handler);
 }
 
 inline void CollectionManager::insertCollectionInfo(

@@ -253,6 +253,8 @@ private:
     EpochType const& epoch = no_epoch, TagType const& tag = no_tag
   );
 
+  void saveViewHandler(VirtualProxyType const& proxy, HandlerType const& han);
+  HandlerType const& getViewHandler(VirtualProxyType const& proxy) const;
   void setViewReady(VirtualProxyType const& proxy);
   bool isViewReady(VirtualProxyType const& proxy);
   void assignGroup(VirtualProxyType const& proxy, GroupType const& group);
@@ -852,6 +854,7 @@ private:
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
   // view infos data structures
+  std::unordered_map<VirtualProxyType, HandlerType> view_han_ = {};
   std::unordered_map<VirtualProxyType, GroupType> view_group_ = {};
   std::unordered_map<VirtualProxyType, bool> view_ready_ = {};
   std::unordered_map<VirtualProxyType, VirtualProxyType> view_parent_ = {};
