@@ -63,11 +63,11 @@ static constexpr BitCountType const virtual_remote_id_num_bits =
 
 enum eVirtualProxyBits {
   Collection = 0,
-  Migratable = eVirtualProxyBits::Collection + virtual_is_collection_num_bits,
+  View       = eVirtualProxyBits::Collection + virtual_is_view_num_bits,
+  Migratable = eVirtualProxyBits::View       + virtual_is_collection_num_bits,
   Remote     = eVirtualProxyBits::Migratable + virtual_is_migratable_num_bits,
   Node       = eVirtualProxyBits::Remote     + virtual_is_remote_num_bits,
-  ID         = eVirtualProxyBits::Node       + virtual_node_num_bits,
-  View       = eVirtualProxyBits::ID         + virtual_id_num_bits
+  ID         = eVirtualProxyBits::Node       + virtual_node_num_bits
 };
 
 enum eVirtualProxyRemoteBits {
