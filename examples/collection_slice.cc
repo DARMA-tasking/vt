@@ -99,7 +99,6 @@ int main(int argc, char** argv) {
     auto slice = vt::Index1D(range.x() / 2);
     // create a view to the sliced collection
     auto section = proxy.slice<&example::filter>(range, slice, epoch);
-
     // create a message and broadcast to each slice element
     section.broadcast<example::ViewMsg, &example::printElem>(section);
   }

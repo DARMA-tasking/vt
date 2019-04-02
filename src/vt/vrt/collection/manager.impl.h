@@ -409,8 +409,8 @@ template <typename ColT, typename IndexT, typename MsgT>
     ) {
       debug_print(
         vrt_coll, node,
-        "broadcast: apply to element: idx.x()={}, epoch={}, bcast_epoch={}\n",
-        idx.x(), msg->bcast_epoch_, base->cur_bcast_epoch_
+        "broadcast: apply to element: idx={}, epoch={}, bcast_epoch={}\n",
+        print_index(idx), msg->bcast_epoch_, base->cur_bcast_epoch_
       );
       if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
         vtAssert(base != nullptr, "Must be valid pointer");
@@ -443,8 +443,8 @@ template <typename ColT, typename IndexT, typename MsgT>
 
           auto const filter = auto_registry::getHandlerView(view_han);
           auto base_idx = static_cast<vt::index::BaseIndex*>(&idx);
-          // todo: make it multi-dimensional
-          process_elem = idx.x() < range.x() and filter(base_idx);
+          // nb: multi-dimensional
+          process_elem = idx < range and filter(base_idx);
         }
 
         if (process_elem) {
@@ -2168,8 +2168,8 @@ template <typename SysMsgT>
 
         debug_print(
           vrt_coll, node,
-          "filtering indices for view: node:{}, idx.x={}, in_group={}\n",
-          my_node, idx.x(), in_group
+          "filtering indices for view: node:{}, idx={}, in_group={}\n",
+          my_node, print_index(idx), in_group
         );
       }
     }
@@ -2329,6 +2329,34 @@ inline HandlerType const& CollectionManager::getViewHandler(
 ) const {
   auto const& found = view_han_.find(proxy);
   return (found != view_han_.end() ? found->second : uninitialized_handler);
+}
+
+template <typename IndexT>
+inline bool operator<(IndexT const& index, IndexT const& range) {
+  auto const nb_dims = range.ndims();
+  vtAssert(nb_dims > 0, "Invalid index type");
+  vtAssert(index.ndims() == nb_dims, "Invalid index type");
+
+  for (int i = 0; i < nb_dims; ++i) {
+    if (index[i] >= range[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template <typename IndexT>
+inline bool same(IndexT const& index, IndexT const& other) {
+  auto const nb_dims = other.ndims();
+  vtAssert(nb_dims > 0, "Invalid index type");
+  vtAssert(index.ndims() == nb_dims, "Invalid index type");
+
+  for (int i = 0; i < nb_dims; ++i) {
+    if (not(index[i] == other[i])) {
+      return false;
+    }
+  }
+  return true;
 }
 
 inline void CollectionManager::insertCollectionInfo(
@@ -2831,8 +2859,7 @@ MigrateStatus CollectionManager::migrateOut(
 
  debug_print(
    vrt_coll, node,
-   "migrateOut: col_proxy={:x}, this_node={}, dest={}, "
-   "idx={}\n",
+   "migrateOut: col_proxy={:x}, this_node={}, dest={}, idx={}\n",
    col_proxy, this_node, dest, print_index(idx)
  );
 

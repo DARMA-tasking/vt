@@ -265,6 +265,14 @@ private:
   template <typename = void>
   static void finishViewHan(ViewGroupMsg* msg);
 
+  // check that current index (of any dimension) is in range
+  template <typename IndexT>
+  friend bool operator<(IndexT const& index, IndexT const& range);
+
+  // have issue due to ambiguous overload, so use a simple function
+  template <typename IndexT>
+  friend bool same(IndexT const& index, IndexT const& other);
+
   /*
    *      CollectionManager::constructInsert<ColT, MapFnT>
    *
@@ -272,7 +280,6 @@ private:
    *  the collection is used. The collection is still statically sized and must
    *  be finalized before use.
    */
-private:
   template <typename ColT, typename... Args>
   void staticInsert(
     VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
