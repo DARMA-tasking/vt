@@ -62,6 +62,8 @@ struct InsertFinished : BaseProxyT {
   InsertFinished& operator=(InsertFinished const&) = default;
 
   void finishedInserting(ActionType action = nullptr) const;
+  IndexT resolveIndex(IndexT const& idx) const;
+  VirtualProxyType resolveProxy(VirtualProxyType const& proxy) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
