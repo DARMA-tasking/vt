@@ -73,10 +73,10 @@ private:
     Index1D idx_;
     std::vector<double> tcur_, told_;
     std::vector<double> rhs_;
-    size_t iter_, objDone_;
-    size_t msgReceived_, totalReceive_;
-    size_t numObjs_;
-    size_t numRowsPerObject_;
+    size_t iter_ = 0, objDone_ = 0;
+    size_t msgReceived_ = 0, totalReceive_ = 0;
+    size_t numObjs_ = 1;
+    size_t numRowsPerObject_ = 1;
     size_t maxIter_ = 5;
 
 public:
@@ -86,7 +86,8 @@ public:
     LinearPb1DJacobi(Index1D in_idx)
             : vt::Collection<LinearPb1DJacobi,Index1D>(), idx_(in_idx),
             tcur_(), told_(), rhs_(), iter_(0), objDone_(0),
-            msgReceived_(0), totalReceive_(0)
+            msgReceived_(0), totalReceive_(0),
+            numObjs_(1), numRowsPerObject_(1), maxIter_(5)
     { }
 
 
@@ -97,9 +98,9 @@ public:
 
     struct LPMsg : vt::CollectionMessage<LinearPb1DJacobi> {
 
-        size_t numObjects;
-        size_t nRowPerObject;
-        size_t iterMax;
+        size_t numObjects = 0;
+        size_t nRowPerObject = 0;
+        size_t iterMax = 0;
 
         LPMsg() = default;
 
@@ -114,7 +115,7 @@ public:
     struct VecMsg : vt::CollectionMessage<LinearPb1DJacobi> {
 
         IndexType from_index;
-        double val;
+        double val = 0.0;
 
         VecMsg() = default;
         VecMsg(IndexType const& in_index, double const& ref) :
@@ -127,6 +128,7 @@ public:
 
     struct NormReduceMsg : vt::collective::ReduceMsg {
         double norm = 0.0;
+        NormReduceMsg() = default;
         NormReduceMsg(double const& val) : norm(val) {}
     };
 
@@ -160,7 +162,7 @@ public:
     }
 
     struct IterMsg : CollectionMessage<LinearPb1DJacobi> {
-        size_t iterMax;
+        size_t iterMax = 0;
         IterMsg() = default;
         IterMsg(size_t imax) : CollectionMessage<LinearPb1DJacobi>(),
                                iterMax(imax)
@@ -283,7 +285,8 @@ public:
         told_.assign(numRowsPerObject_ + 2, 0.0);
         rhs_.assign(numRowsPerObject_ + 2, 0.0);
 
-        for (size_t ii = 0; ii < tcur_.size() + 2; ++ii) {
+        for (size_t ii = 0; ii < tcur_.size(); ++ii) {
+//            tcur_[ii] = ii;
             tcur_[ii] = std::rand() / (double(RAND_MAX) + 1.0);
         }
 
@@ -344,16 +347,16 @@ int main(int argc, char** argv) {
         );
     } else {
         if (argc == 2) {
-            num_objs = atoi(argv[1]);
+            num_objs = (size_t) atoi(argv[1]);
         }
         else if (argc == 3) {
-            num_objs = atoi(argv[1]);
-            numRowsPerObject = atoi(argv[2]);
+            num_objs = (size_t) atoi(argv[1]);
+            numRowsPerObject = (size_t) atoi(argv[2]);
         }
         else if (argc == 4) {
-            num_objs = atoi(argv[1]);
-            numRowsPerObject = atoi(argv[2]);
-            maxIter = atoi(argv[3]);
+            num_objs = (size_t) atoi(argv[1]);
+            numRowsPerObject = (size_t) atoi(argv[2]);
+            maxIter = (size_t) atoi(argv[3]);
         }
         else {
             std::string const buf = fmt::format(
