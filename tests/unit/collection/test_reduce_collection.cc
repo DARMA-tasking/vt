@@ -78,12 +78,14 @@ TEST_P(TestReduceCollection, test_reduce_op) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
-  #if ENABLE_REDUCE_EXPR_CALLBACK
+#if ENABLE_REDUCE_EXPR_CALLBACK
+  INSTANTIATE_TEST_CASE_P(
     InstantiationName, TestReduceCollection, ::testing::Range(0, 7)
-  #else
+  );
+#else
+  INSTANTIATE_TEST_CASE_P(
     InstantiationName, TestReduceCollection, ::testing::Range(0, 5)
-  #endif
-);
+  );
+#endif
 
 }}} // end namespace vt::tests::unit
