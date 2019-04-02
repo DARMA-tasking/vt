@@ -259,11 +259,18 @@ private:
   bool isViewReady(VirtualProxyType const& proxy);
   void assignGroup(VirtualProxyType const& proxy, GroupType const& group);
 
+  template <typename IndexT>
+  void setRange(VirtualProxyType const& proxy, IndexT const& range);
+  void setDim(VirtualProxyType const& proxy, int8_t dim);
+  void setParent(VirtualProxyType const& proxy, VirtualProxyType const& parent);
+
   // handlers for view creation
   template <typename = void>
   static void reduceViewHan(ViewGroupMsg* msg);
   template <typename = void>
   static void finishViewHan(ViewGroupMsg* msg);
+
+public:
 
   // check that current index (of any dimension) is in range
   template <typename IndexT>
@@ -271,7 +278,20 @@ private:
 
   // have issue due to ambiguous overload, so use a simple function
   template <typename IndexT>
-  friend bool same(IndexT const& index, IndexT const& other);
+  friend bool matches(IndexT const& index, IndexT const& other);
+
+  template <typename IndexT>
+  IndexT const& getRange(VirtualProxyType const& proxy) const;
+
+  int8_t getDim(VirtualProxyType const& proxy) const;
+  VirtualProxyType const& getParent(VirtualProxyType const& proxy) const;
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  IndexT resolveIndex(
+    VirtualProxyType const& view_proxy,
+    VirtualProxyType const& base_proxy,
+    IndexT const& view_index
+  ) const;
 
   /*
    *      CollectionManager::constructInsert<ColT, MapFnT>
@@ -280,6 +300,7 @@ private:
    *  the collection is used. The collection is still statically sized and must
    *  be finalized before use.
    */
+private:
   template <typename ColT, typename... Args>
   void staticInsert(
     VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
@@ -860,12 +881,16 @@ private:
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
-  // view infos data structures
+
   // todo: pack into a single data structure
-  std::unordered_map<VirtualProxyType, HandlerType> view_han_ = {};
-  std::unordered_map<VirtualProxyType, GroupType> view_group_ = {};
-  std::unordered_map<VirtualProxyType, bool> view_ready_ = {};
-  std::unordered_map<VirtualProxyType, VirtualProxyType> view_parent_ = {};
+  template <typename IndexT>
+  static std::unordered_map<VirtualProxyType, IndexT> view_range_;
+
+  std::unordered_map<VirtualProxyType, int8_t>           view_dimen_   = {};
+  std::unordered_map<VirtualProxyType, bool>             view_ready_   = {};
+  std::unordered_map<VirtualProxyType, GroupType>        view_group_   = {};
+  std::unordered_map<VirtualProxyType, HandlerType>      view_handler_ = {};
+  std::unordered_map<VirtualProxyType, VirtualProxyType> view_parent_  = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

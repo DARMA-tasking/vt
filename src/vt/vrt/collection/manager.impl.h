@@ -98,6 +98,10 @@ template <typename ColT>
 /*static*/ CollectionManager::BcastBufferType<ColT>
 CollectionManager::broadcasts_ = {};
 
+template <typename IndexT>
+std::unordered_map<VirtualProxyType, IndexT>
+/*static*/ CollectionManager::view_range_ = {};
+
 template <typename>
 void CollectionManager::cleanupAll() {
   /*
@@ -156,6 +160,13 @@ template <typename SysMsgT>
   auto const& map_han = msg->map;
   // Get the range for the construction
   auto range = msg->info.range_;
+  // Get the proxy/collection dimension
+  auto const dim = range.ndims();
+
+  // save proxy meta-data
+  theCollection()->setParent(proxy, proxy);
+  theCollection()->setDim(proxy, dim);
+  theCollection()->setRange(proxy, range);
 
   theCollection()->insertCollectionInfo(proxy,msg->map,insert_epoch);
 
@@ -2033,8 +2044,6 @@ CollectionManager::constructMap(
   create_msg_local->info = info;
   CollectionManager::distConstruct<MsgType>(create_msg_local.get());
 
-  view_parent_[new_proxy] = new_proxy;
-
   return CollectionProxyWrapType<ColT, IndexT>{new_proxy, range};
 }
 
@@ -2092,7 +2101,6 @@ CollectionProxy<ColT, IndexT> CollectionManager::slice(
 
   // set some flags
   theCollection()->setViewReady(false);
-  view_parent_[new_proxy] = old_proxy;
 
   // broadcast view group creation request
   auto msg = makeSharedMessage<MsgT>(
@@ -2131,10 +2139,17 @@ template <typename SysMsgT>
   auto const& epoch     = msg->epoch_;
   auto const& tag       = msg->tag_;
 
+  auto const dim = new_range.ndims();
+  vtAssert(dim == old_range.ndims(), "Dimension mismatch");
+
+  // save proxy meta-data
+  theCollection()->setParent(new_proxy, old_proxy);
+  theCollection()->setDim(new_proxy, dim);
+  theCollection()->setRange(new_proxy, new_range);
 
   bool const is_view_old = VirtualProxyBuilder::isView(old_proxy);
   bool const is_view_new = VirtualProxyBuilder::isView(new_proxy);
-  vtAssert(not is_view_old, "View of a view are not yet supported");
+  vtAssert(not is_view_old, "Nested views not yet supported");
   vtAssert(    is_view_new, "New proxy should be a view one");
 
   debug_print(
@@ -2321,23 +2336,36 @@ inline void CollectionManager::assignGroup(
 inline void CollectionManager::saveViewHandler(
   VirtualProxyType const& proxy, HandlerType const& han
 ) {
-  view_han_[proxy] = han;
+  view_handler_[proxy] = han;
 }
 
 inline HandlerType const& CollectionManager::getViewHandler(
   VirtualProxyType const& proxy
 ) const {
-  auto const& found = view_han_.find(proxy);
-  return (found != view_han_.end() ? found->second : uninitialized_handler);
+  auto const& found = view_handler_.find(proxy);
+  return (found != view_handler_.end() ? found->second : uninitialized_handler);
+}
+
+inline VirtualProxyType const& CollectionManager::getParent(
+  VirtualProxyType const& proxy
+) const {
+  auto const& found = view_parent_.find(proxy);
+  return (found != view_parent_.end() ? found->second : proxy);
+}
+
+inline void CollectionManager::setParent(
+  VirtualProxyType const& proxy, VirtualProxyType const& parent
+) {
+  view_parent_[proxy] = parent;
 }
 
 template <typename IndexT>
 inline bool operator<(IndexT const& index, IndexT const& range) {
-  auto const nb_dims = range.ndims();
-  vtAssert(nb_dims > 0, "Invalid index type");
-  vtAssert(index.ndims() == nb_dims, "Invalid index type");
+  auto const dim = range.ndims();
+  vtAssert(dim > 0, "Invalid index type");
+  vtAssert(index.ndims() == dim, "Invalid index type");
 
-  for (int i = 0; i < nb_dims; ++i) {
+  for (int i = 0; i < dim; ++i) {
     if (index[i] >= range[i]) {
       return false;
     }
@@ -2346,17 +2374,102 @@ inline bool operator<(IndexT const& index, IndexT const& range) {
 }
 
 template <typename IndexT>
-inline bool same(IndexT const& index, IndexT const& other) {
-  auto const nb_dims = other.ndims();
-  vtAssert(nb_dims > 0, "Invalid index type");
-  vtAssert(index.ndims() == nb_dims, "Invalid index type");
+inline bool matches(IndexT const& index, IndexT const& other) {
+  auto const dim = other.ndims();
+  vtAssert(dim > 0, "Invalid index type");
+  vtAssert(index.ndims() == dim, "Invalid index type");
 
-  for (int i = 0; i < nb_dims; ++i) {
+  for (int i = 0; i < dim; ++i) {
     if (not(index[i] == other[i])) {
       return false;
     }
   }
   return true;
+}
+
+template <typename IndexT>
+inline IndexT const& CollectionManager::getRange(
+  VirtualProxyType const& proxy
+) const {
+  auto const& found = view_range_<IndexT>.find(proxy);
+  vtAssert(found != view_range_<IndexT>.end(), "Must be already set");
+  return found->second;
+}
+
+template <typename IndexT>
+void CollectionManager::setRange(
+  VirtualProxyType const& proxy, IndexT const& range
+) {
+  view_range_<IndexT>[proxy] = range;
+}
+
+inline int8_t CollectionManager::getDim(VirtualProxyType const& proxy) const {
+
+  auto const& found = view_dimen_.find(proxy);
+  vtAssert(found != view_dimen_.end(), "Must be already set");
+  return found->second;
+}
+
+inline void CollectionManager::setDim(
+  VirtualProxyType const& proxy, int8_t dim
+) {
+  vtAssert(dim > 0, "Invalid dimension");
+  view_dimen_[proxy] = dim;
+}
+
+template <typename ColT, typename IndexT>
+IndexT CollectionManager::resolveIndex(
+  VirtualProxyType const& view_proxy,
+  VirtualProxyType const& base_proxy,
+  IndexT const& new_idx
+) const {
+
+  bool const indirect = VirtualProxyBuilder::isView(view_proxy);
+  auto const view_range = getRange<IndexT>(view_proxy);
+  vtAssert(new_idx < view_range, "Index out-of-range");
+
+  if (indirect) {
+    bool const nested = VirtualProxyBuilder::isView(base_proxy);
+    vtAssert(not nested, "Both proxies should not be all views");
+
+    // retrieve view data and filtering method
+    auto const dimension  = getDim(base_proxy);
+    auto const view_han   = getViewHandler(view_proxy);
+    auto const in_slice   = auto_registry::getHandlerView(view_han);
+    auto const base_range = getRange<IndexT>(base_proxy);
+
+    bool resolved = false;
+    IndexT old_idx = {};    // previous value of 'cur_idx'
+    IndexT rel_idx = {};    // relative index of 'cur_idx'
+    IndexT abs_idx = {};    // absolute index of 'new_idx'
+
+    base_range.foreach([&](IndexT cur_idx) {
+      if (not resolved) {
+        auto raw_idx = static_cast<vt::index::BaseIndex*>(&cur_idx);
+
+        if (in_slice(raw_idx)) {
+          // increment the right component of the relative index
+          for (int i = 0; i < dimension; ++i) {
+            if (old_idx[i] != cur_idx[i]) {
+              rel_idx[i]++;
+            }
+          }
+          // check if relative index matches view index
+          if (matches(new_idx, rel_idx)) {
+            abs_idx = cur_idx;
+            resolved = true;
+          }
+          old_idx = cur_idx;
+        }
+      }
+    });
+
+    vtAssert(resolved, "Absolute index should be resolved now");
+    return abs_idx;
+  } else {
+    // no indirection in this case
+    return new_idx;
+  }
 }
 
 inline void CollectionManager::insertCollectionInfo(
