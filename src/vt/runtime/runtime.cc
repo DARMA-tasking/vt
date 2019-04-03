@@ -852,7 +852,7 @@ void Runtime::output(
 void Runtime::terminationHandler() {
   debug_print(
     runtime, node,
-    "Runtime: executing registered termination handler\n",
+    "Runtime: executing registered termination handler\n"
   );
 
   runtime_active_ = false;
