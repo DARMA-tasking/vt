@@ -65,11 +65,17 @@ using ViewMsg = vt::CollectViewMessage<MyCol>;
 struct ElemMsg : ViewMsg {
   using Index = ViewMsg::IndexType;
 
-  ElemMsg(int in_idx) : index_(in_idx) {}
+  ElemMsg(int in_idx, int in_size)
+    : index_(in_idx),
+      size_(in_size)
+  {}
+
   Index const& getIndex() const { return index_; }
+  int getSize() const { return size_; }
 
 private:
   Index index_ = {};
+  int size_ = 0;
 };
 
 // index filtering for the slice
@@ -90,10 +96,11 @@ static void showIndex(ElemMsg* msg, MyCol* col) {
   auto const& node = vt::theContext()->getNode();
   auto const& rel_index = msg->getIndex();
   auto const& abs_index = col->getIndex();
+  auto const& size = msg->getSize();
 
   fmt::print(
-    "rank:{} slice[{}] -> mycol[{}]\n",
-    node, rel_index.x(), abs_index.x()
+    "rank:{} slice[{}] -> mycol[{}], size={}\n",
+    node, rel_index.x(), abs_index.x(), size
   );
 }
 
@@ -110,21 +117,22 @@ int main(int argc, char** argv) {
 
   if (node == root) {
 
-    auto const range = vt::Index1D(example::default_size);
-    auto const half  = vt::Index1D(range.x() / 2);
-    auto const elems = int(half.x() / 2);
-
     fmt::print("root: build collection, halve it, then keep only even elems\n");
 
-    // create the distributed collection
+    auto const range = vt::Index1D(example::default_size);
+    auto const half  = vt::Index1D(range.x() / 2);
+
+    // create a distributed collection
     auto proxy = vt::theCollection()->construct<example::MyCol>(range);
-    // create a view to the sliced collection
+    // create a view to the slice
     auto slice = proxy.slice<&example::filter>(range, half, epoch);
+    // retrieve the actual size of the slice
+    auto const size = slice.size();
     // create a message and broadcast to each slice element
     slice.broadcast<example::ViewMsg, &example::showElem>();
-    // each element of the slice sends a message
-    for (int i = 0; i < elems; ++i) {
-      slice[i].send<example::ElemMsg, &example::showIndex>(i);
+    // each slice element sends a message
+    for (int i = 0; i < size; ++i) {
+      slice[i].send<example::ElemMsg, &example::showIndex>(i, size);
     }
   }
 
