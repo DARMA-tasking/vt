@@ -45,7 +45,7 @@
 #if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_VAR_UNUSED_H
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_VAR_UNUSED_H
 
-#include <utility>
+#include <tuple>
 
 #define debug_print_force_use(arg...)           vt::debug::useVars(arg);
 #define debug_print_force_use_strip1(_, arg...) vt::debug::useVars(arg);
@@ -53,24 +53,8 @@
 namespace vt { namespace debug {
 
 template <typename... Args>
-struct Unused;
-
-template <typename T, typename... Args>
-struct Unused<T, Args...> {
-  static void forceUse(T&& tp, Args&&... args) {
-    (void)(tp);
-    Unused<Args...>::forceUse(std::forward<Args>(args)...);
-  }
-};
-
-template <>
-struct Unused<> {
-  static void forceUse() { }
-};
-
-template <typename... Args>
 void useVars(Args&&... args) {
-  Unused<Args...>::forceUse(std::forward<Args>(args)...);
+  (void)(std::make_tuple(std::forward<Args>(args)...));
 }
 
 }} /* end namespace vt::debug */
