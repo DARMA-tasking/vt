@@ -56,7 +56,8 @@
 // The initial guess for x is random.
 // The exact solution is the vector 0.
 //
-// The size of the matrix A is (number of objects) * (number of rows per object)
+// The matrix A is square and invertible.
+// The number of rows is ((number of objects) * (number of rows per object))
 //
 
 using namespace ::vt;
@@ -129,7 +130,8 @@ public:
     struct NormReduceMsg : vt::collective::ReduceMsg {
         double norm = 0.0;
         NormReduceMsg() = default;
-        NormReduceMsg(double const& val) : norm(val) {}
+        NormReduceMsg(double const ref) : norm(ref)
+        { }
     };
 
 
@@ -140,7 +142,7 @@ public:
                     theContext()->getNode(), msg->norm);
         } else {
             NormReduceMsg* fst_msg = msg;
-            NormReduceMsg* cur_msg = msg->getNext<NormReduceMsg>();
+            auto cur_msg = msg->getNext<NormReduceMsg>();
             while (cur_msg != nullptr) {
                 fst_msg->norm = (fst_msg->norm > cur_msg->norm) ?
                                 fst_msg->norm : cur_msg->norm;
@@ -161,11 +163,12 @@ public:
 
     }
 
+
     struct IterMsg : CollectionMessage<LinearPb1DJacobi> {
-        size_t iterMax = 0;
+        size_t iterID = 0;
         IterMsg() = default;
         IterMsg(size_t imax) : CollectionMessage<LinearPb1DJacobi>(),
-                               iterMax(imax)
+                               iterID(imax)
         { }
     };
 
@@ -188,12 +191,12 @@ public:
     }
 
 
-    void countObjects(VecMsg *msg) {
+    void countObjects(IterMsg *msg) {
 
         if (idx_.x())
             return;
 
-        if (msg->val == double(iter_))
+        if ((iter_ <= msg->iterID) and (msg->iterID <= iter_+1))
             objDone_ += 1;
 
         if (objDone_ == numObjs_) {
@@ -225,13 +228,14 @@ public:
         iter_ += 1;
 
         auto proxy = this->getCollectionProxy();
-        auto doneMsg = vt::makeSharedMessage< VecMsg >(idx_, iter_);
-        theCollection()->sendMsg< LinearPb1DJacobi::VecMsg,
+        auto doneMsg = vt::makeSharedMessage< IterMsg >(iter_);
+        theCollection()->sendMsg< LinearPb1DJacobi::IterMsg,
                 &LinearPb1DJacobi::countObjects > (proxy(0), doneMsg);
 
         memcpy(&told_[0], &tcur_[0], sizeof(double)*tcur_.size());
 
     }
+
 
     void exchange(VecMsg *msg) {
 
@@ -260,6 +264,11 @@ public:
 
         // Routine to send information to a different object
 
+        if (numObjs_ == 1) {
+            doIteration();
+            return;
+        }
+
         //--- Send the values to the left
         auto proxy = this->getCollectionProxy();
         if (idx_.x() > 0) {
@@ -286,7 +295,6 @@ public:
         rhs_.assign(numRowsPerObject_ + 2, 0.0);
 
         for (size_t ii = 0; ii < tcur_.size(); ++ii) {
-//            tcur_[ii] = ii;
             tcur_[ii] = std::rand() / (double(RAND_MAX) + 1.0);
         }
 
@@ -347,16 +355,16 @@ int main(int argc, char** argv) {
         );
     } else {
         if (argc == 2) {
-            num_objs = (size_t) atoi(argv[1]);
+            num_objs = (size_t) strtol(argv[1], nullptr, 10);
         }
         else if (argc == 3) {
-            num_objs = (size_t) atoi(argv[1]);
-            numRowsPerObject = (size_t) atoi(argv[2]);
+            num_objs = (size_t) strtol(argv[1], nullptr, 10);
+            numRowsPerObject = (size_t) strtol(argv[2], nullptr, 10);
         }
         else if (argc == 4) {
-            num_objs = (size_t) atoi(argv[1]);
-            numRowsPerObject = (size_t) atoi(argv[2]);
-            maxIter = (size_t) atoi(argv[3]);
+            num_objs = (size_t) strtol(argv[1], nullptr, 10);
+            numRowsPerObject = (size_t) strtol(argv[2], nullptr, 10);
+            maxIter = (size_t) strtol(argv[3], nullptr, 10);
         }
         else {
             std::string const buf = fmt::format(
