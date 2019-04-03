@@ -154,25 +154,30 @@ private:
   #endif
 };
 
-template <
-  typename ColT, typename IndexT = typename ColT::IndexType,
-  typename BaseMsgT = ::vt::Message
->
-struct CollectViewMessage : CollectionMessage<ColT, BaseMsgT> {
+template <typename ColT>
+struct CollectViewMessage : CollectionMessage<ColT> {
 
-  using ViewTraits = col_proxy::Chain1<ColT, IndexT>;
-  using Base = CollectionMessage<ColT, BaseMsgT>;
+protected:
+  using CollectType = ColT;
+  using IndexType   = typename CollectType::IndexType;
+  using ViewType    = col_proxy::Chain1<CollectType, IndexType>;
 
-  CollectViewMessage() = delete;
+private:
+  using BaseMsg = CollectionMessage<CollectType>;
+
+public:
+  // enable default constructor to allow the user to
+  // explicitely set 'is_view_' and 'view_proxy_' afterwards.
+  CollectViewMessage() = default;
   CollectViewMessage(CollectViewMessage const&) = default;
   CollectViewMessage(CollectViewMessage&&) noexcept = default;
   ~CollectViewMessage() = default;
 
-  explicit CollectViewMessage(ViewTraits& in_view) : Base() {
+  explicit CollectViewMessage(ViewType const& in_view) : BaseMsg() {
     auto proxy = in_view.getProxy();
     bool is_view = VirtualProxyBuilder::isView(proxy);
-    Base::setViewProxy(proxy);
-    Base::setViewFlag(is_view);
+    BaseMsg::setViewProxy(proxy);
+    BaseMsg::setViewFlag(is_view);
   }
 };
 
@@ -183,12 +188,8 @@ namespace vt {
 template <typename ColT, typename MsgT = ::vt::Message>
 using CollectionMessage = vrt::collection::CollectionMessage<ColT, MsgT>;
 
-template <
-  typename ColT,
-  typename IndexT = typename ColT::IndexType,
-  typename MsgT = ::vt::Message
->
-using CollectViewMessage = vrt::collection::CollectViewMessage<ColT, IndexT, MsgT>;
+template <typename ColT>
+using CollectViewMessage = vrt::collection::CollectViewMessage<ColT>;
 
 } /* end namespace vt */
 

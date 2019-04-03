@@ -69,10 +69,7 @@ template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
 void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
   auto range = this->getRange();
-
-  return theCollection()->broadcastMsg<MsgT, f>(
-    CollectionProxy<ColT, IndexT>{proxy, range}, msg
-  );
+  return theCollection()->broadcastMsg<MsgT, f>({proxy, range}, msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -88,7 +85,13 @@ template <
   typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
 >
 void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(Args&&... args) const {
-  return broadcast<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  // automatically set virtual proxy id in case of a view
+  auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+  auto const& proxy  = this->getProxy();
+  bool const is_view = VirtualProxyBuilder::isView(proxy);
+  msg->setViewFlag(is_view);
+  msg->setViewProxy(is_view ? proxy : no_vrt_proxy);
+  return broadcast<MsgT, f>(msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -104,7 +107,13 @@ template <
   typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
 >
 void Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(Args&&... args) const {
-  return broadcast<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  // automatically set virtual proxy id in case of a view
+  auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+  auto const& proxy  = this->getProxy();
+  bool const is_view = VirtualProxyBuilder::isView(proxy);
+  msg->setViewFlag(is_view);
+  msg->setViewProxy(is_view ? proxy : no_vrt_proxy);
+  return broadcast<MsgT, f>(msg);
 }
 
 }}} /* end namespace vt::vrt::collection */
