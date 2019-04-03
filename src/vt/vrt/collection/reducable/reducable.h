@@ -55,6 +55,10 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+// forward declaration
+template <typename ColT, typename IndexT>
+struct CollectionProxy;
+
 template <typename ColT, typename IndexT, typename BaseProxyT>
 struct Reducable : BaseProxyT {
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
@@ -106,7 +110,7 @@ struct Reducable : BaseProxyT {
   ) const;
 
   template <mapping::ActiveViewTypedFnType<IndexT>* filter>
-  Reducable<ColT, IndexT, BaseProxyT> slice(
+  CollectionProxy<ColT, IndexT> slice(
     IndexT const& old_range,
     IndexT const& new_range,
     EpochType const& epoch = no_epoch,
