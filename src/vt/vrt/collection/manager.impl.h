@@ -1059,11 +1059,84 @@ void CollectionManager::broadcastMsgUntypedHandler(
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+EpochType CollectionManager::reduceMsgView(
+  CollectionProxy<ColT> const& view,
+  MsgT* const raw_msg,
+  EpochType const& epoch,
+  TagType const& tag,
+  NodeType const& root
+) {
+  using IndexT = typename ColT::IndexType;
+
+  auto const view_proxy = view.getProxy();
+
+  while (not isViewReady(view_proxy)) {
+    runScheduler();
+  }
+
+  // buffer all requests if group not ready
+  bufferViewAction<ColT>(view_proxy, epoch, tag);
+
+  // get a shared pointer on raw_msg
+  auto msg = promoteMsg(raw_msg);
+
+  // get actual slice size and group
+  auto const size  = theCollection()->getSize<ColT>(view_proxy);
+  auto const group = theCollection()->getGroup(view_proxy);
+  bool const use_group = (group != default_group);
+
+  // set epochs for the reduction
+  auto reduce_id   = std::make_tuple(view_proxy,tag);
+  auto epoch_iter  = reduce_cur_epoch_.find(reduce_id);
+  bool empty_epoch = (epoch == no_epoch and epoch_iter != reduce_cur_epoch_.end());
+  auto cur_epoch   = (empty_epoch ? epoch_iter->second : epoch);
+  auto ret_epoch   = no_epoch;
+
+  auto my_root = (
+    root == uninitialized_destination ?
+      default_collection_reduce_root_node : root
+  );
+
+  debug_print(
+    reduce, node,
+    "init reduce on view={:x}, epoch={}, size={}, tag={}\n",
+    view_proxy, cur_epoch, size, tag
+  );
+
+  if (use_group) {
+    ret_epoch = theGroup()->groupReduce(group)->template reduce<MsgT, f>(
+      my_root, msg.get(), tag, cur_epoch, size, view_proxy
+    );
+  } else {
+    ret_epoch = theCollective()->reduce<MsgT, f>(
+      my_root, msg.get(), tag, cur_epoch, size, view_proxy
+    );
+  }
+
+  if (epoch_iter == reduce_cur_epoch_.end()) {
+    reduce_cur_epoch_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(reduce_id),
+      std::forward_as_tuple(ret_epoch)
+    );
+  }
+  return ret_epoch;
+}
+
+
+template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 EpochType CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
   MsgT *const raw_msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
   EpochType const& epoch, TagType const& tag, NodeType const& root
 ) {
+
+  // check if view and run the adequate method
+  auto const& proxy = toProxy.getProxy();
+  if (VirtualProxyBuilder::isView(proxy)) {
+    return reduceMsgView<ColT, MsgT, f>(toProxy, raw_msg, epoch, tag, root);
+  }
+
   using IndexT = typename ColT::IndexType;
 
   auto msg = promoteMsg(raw_msg);
@@ -1073,7 +1146,7 @@ EpochType CollectionManager::reduceMsgExpr(
     "reduceMsg: msg={}\n", print_ptr(raw_msg)
   );
 
-  auto const& col_proxy = toProxy.getProxy();
+  auto const& col_proxy = proxy;
 
   // @todo: implement the action `act' after the routing is finished
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
@@ -2331,6 +2404,13 @@ inline void CollectionManager::assignGroup(
   VirtualProxyType const& proxy, GroupType const& group
 ) {
   view_group_[proxy] = group;
+}
+
+inline VirtualProxyType const& CollectionManager::getGroup(
+  VirtualProxyType const& proxy
+) const {
+  auto const& found = view_group_.find(proxy);
+  return (found != view_group_.end() ? found->second : default_group);
 }
 
 inline void CollectionManager::saveViewHandler(

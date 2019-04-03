@@ -261,6 +261,7 @@ private:
   void setViewReady(VirtualProxyType const& proxy);
   bool isViewReady(VirtualProxyType const& proxy) const;
   void assignGroup(VirtualProxyType const& proxy, GroupType const& group);
+  GroupType const& getGroup(VirtualProxyType const& proxy) const;
 
   template <typename IndexT>
   void setRange(VirtualProxyType const& proxy, IndexT const& range);
@@ -497,6 +498,12 @@ public:
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
     EpochType const& epoch, TagType const& tag,
     typename ColT::IndexType const& idx
+  );
+
+  template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+  EpochType reduceMsgView(
+    CollectionProxy<ColT> const& view, MsgT* const raw_msg,
+    EpochType const& epoch, TagType const& tag, NodeType const& root
   );
 
   /*

@@ -60,6 +60,8 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
 
 // collection view message type
 using ViewMsg = vt::CollectViewMessage<MyCol>;
+// message type for elems reduce
+using SysMsg = vt::collective::ReduceTMsg<int>;
 
 // view element message type
 struct ElemMsg : ViewMsg {
@@ -83,6 +85,13 @@ static bool filter(vt::Index1D* idx) {
   return idx->x() % 2 == 0;
 }
 
+// print reduction result
+struct ShowResult {
+  void operator()(SysMsg* msg) {
+    fmt::print("final value: {}", msg->getConstVal());
+  }
+};
+
 // the slice broadcast handler
 static void showElem(ViewMsg* msg, MyCol* col) {
 
@@ -96,12 +105,23 @@ static void showIndex(ElemMsg* msg, MyCol* col) {
   auto const& node = vt::theContext()->getNode();
   auto const& rel_index = msg->getIndex();
   auto const& abs_index = col->getIndex();
-  auto const& size = msg->getSize();
+  auto const& size  = msg->getSize();
 
   fmt::print(
     "rank:{} slice[{}] -> mycol[{}], size={}\n",
     node, rel_index.x(), abs_index.x(), size
   );
+}
+
+static void reduce(ViewMsg* msg, MyCol* col) {
+  // perform a reduction
+  auto proxy  = msg->getViewProxy();
+  auto range  = msg->getRange();
+  auto elem   = col->getIndex().x();
+  auto sysmsg = vt::makeSharedMessage<SysMsg>(elem);
+  auto slice  = vt::CollectionProxy<MyCol>(proxy, range);
+
+  slice.reduce<vt::collective::PlusOp<int>, ShowResult, SysMsg>(sysmsg);
 }
 
 } // end namespace example
@@ -134,6 +154,8 @@ int main(int argc, char** argv) {
     for (int i = 0; i < size; ++i) {
       slice[i].send<example::ElemMsg, &example::showIndex>(i, size);
     }
+    // FIXME: initiate a reduction on slice elements
+    //slice.broadcast<example::ViewMsg, &example::reduce>();
   }
 
   vt::theCollective()->barrier();
