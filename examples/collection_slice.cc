@@ -61,19 +61,39 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
 // collection view message type
 using ViewMsg = vt::CollectViewMessage<MyCol>;
 
+// view element message type
+struct ElemMsg : ViewMsg {
+  using Index = ViewMsg::IndexType;
+
+  ElemMsg(int in_idx) : index_(in_idx) {}
+  Index const& getIndex() const { return index_; }
+
+private:
+  Index index_ = {};
+};
+
 // index filtering for the slice
 static bool filter(vt::Index1D* idx) {
   return idx->x() % 2 == 0;
 }
 
 // the slice broadcast handler
-static void printElem(ViewMsg* msg, MyCol* col) {
-  // print element received by current node
-  auto const& node  = vt::theContext()->getNode();
-  auto const& index = col->getIndex();
+static void showElem(ViewMsg* msg, MyCol* col) {
+
+  auto const& node = vt::theContext()->getNode();
+  auto const& elem = col->getIndex().x();
+  fmt::print("rank:{} got mycol[{}]\n", node, elem);
+}
+
+static void showIndex(ElemMsg* msg, MyCol* col) {
+
+  auto const& node = vt::theContext()->getNode();
+  auto const& rel_index = msg->getIndex();
+  auto const& abs_index = col->getIndex();
 
   fmt::print(
-    "node:{} got elem:{}\n", node, index.x()
+    "rank:{} slice[{}] -> mycol[{}]\n",
+    node, rel_index.x(), abs_index.x()
   );
 }
 
@@ -90,17 +110,22 @@ int main(int argc, char** argv) {
 
   if (node == root) {
 
-    auto range = vt::Index1D(example::default_size);
+    auto const range = vt::Index1D(example::default_size);
+    auto const half  = vt::Index1D(range.x() / 2);
+    auto const elems = int(half.x() / 2);
+
+    fmt::print("root: build collection, halve it, then keep only even elems\n");
+
+    // create the distributed collection
     auto proxy = vt::theCollection()->construct<example::MyCol>(range);
-
-    fmt::print("root: halve collection, then keep only even elements\n");
-
-    // slice the initial range
-    auto slice = vt::Index1D(range.x() / 2);
     // create a view to the sliced collection
-    auto section = proxy.slice<&example::filter>(range, slice, epoch);
+    auto slice = proxy.slice<&example::filter>(range, half, epoch);
     // create a message and broadcast to each slice element
-    section.broadcast<example::ViewMsg, &example::printElem>(section);
+    slice.broadcast<example::ViewMsg, &example::showElem>();
+    // each element of the slice sends a message
+    for (int i = 0; i < elems; ++i) {
+      slice[i].send<example::ElemMsg, &example::showIndex>(i);
+    }
   }
 
   vt::theCollective()->barrier();
