@@ -149,17 +149,23 @@ use warnings;
         }
     }
 
+    sub isHelp {
+        my $val = shift;
+        return $val eq "-h" || $val eq "--help" || $val eq "-help";
+    }
+
     sub parse_arguments {
         my $self             = shift;
         my @args             = @_;
         my %input_params     = %{$self->{input_params}};
         my %input_params_pos = %{$self->{input_params_pos}};
         my $verbose          = $self->{verbose};
+        my $passed_help      = 0;
+
+        # Save whether the help option was passed as an argument
         for (@args) {
-            if ($_ eq "-h" || $_ eq "--help" || $_ eq "-help") {
-                $self->print_arguments();
-                exit 2;
-            }
+            my $is_help = &isHelp($_);
+            $passed_help ||= $is_help;
         }
 
         print "ARGS: @args\n" if $verbose == 1;
@@ -169,6 +175,8 @@ use warnings;
 
         my $arg_position = 0;
         for (@args) {
+            next if &isHelp($_) == 1;
+
             my $found_match = 0;
             my @spl         = split /=/,$_;
 
@@ -273,6 +281,11 @@ use warnings;
 
 
             print "$_:matched=$is_matched\n" if $verbose == 1;
+        }
+
+        if ($passed_help) {
+            $self->print_arguments();
+            exit 2;
         }
     }
 }
