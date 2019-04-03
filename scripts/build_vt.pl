@@ -127,17 +127,15 @@ my $coverage=0;
 my $CXX_FLAGS= "";
 my $C_FLAGS= "";
 if ($build_mode eq "coverage") {
-   print STDERR  "Code coverage mode for Vt has been correctly detected";
    $build_mode="debug";
    $coverage=1;
    $CXX_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
    $C_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
-   print STDERR  "Coverage activated for VT";
-} else {
-   print STDERR  "Vt hasn't been correctly detected into a coverage mode";
 }
+my $cov_enabled = $coverage == 1 ? "enabled" : "disabled";
 
 print STDERR "=== Building vt ===\n";
+print STDERR  "\tCode coverage mode $cov_enabled\n";
 print STDERR "\tBuild mode:$build_mode\n";
 print STDERR "\tRoot=$root\n";
 print STDERR "\tLibroot=$libroot\n";
@@ -176,7 +174,7 @@ CMAKESTR
 ;
 }
 chomp $str;
-my $str = <<CMAKESTR
+my $finalstr = <<CMAKESTR
       $str                                                                   \\
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                   \\
       ${trace_str}                                                           \\
@@ -192,11 +190,11 @@ my $str = <<CMAKESTR
       ${build_all_str}
 CMAKESTR
 ;
-#print "$str\n";
+#print "$finalstr\n";
 if ($dry_run eq "true") {
-    print "$str\n";
+    print "$finalstr\n";
 } else {
-    system "$str 2>&1";
+    system "$finalstr 2>&1";
 }
 
 # Why is this needed in some cases?
