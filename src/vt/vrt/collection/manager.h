@@ -240,6 +240,9 @@ struct CollectionManager {
     TagType const& tag = no_tag
   );
 
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  int getSize(VirtualProxyType const& proxy) const;
+
 private:
   /*
    * Private interface for view group creation
@@ -256,7 +259,7 @@ private:
   void saveViewHandler(VirtualProxyType const& proxy, HandlerType const& han);
   HandlerType const& getViewHandler(VirtualProxyType const& proxy) const;
   void setViewReady(VirtualProxyType const& proxy);
-  bool isViewReady(VirtualProxyType const& proxy);
+  bool isViewReady(VirtualProxyType const& proxy) const;
   void assignGroup(VirtualProxyType const& proxy, GroupType const& group);
 
   template <typename IndexT>
@@ -739,13 +742,13 @@ public:
 
 private:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
+  CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy) const;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  Holder<ColT, IndexT>* findElmHolder(VirtualProxyType const& proxy);
+  Holder<ColT, IndexT>* findElmHolder(VirtualProxyType const& proxy) const;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  Holder<ColT, IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy);
+  Holder<ColT, IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy) const;
 
 public:
   template <typename ColT, typename IndexT>

@@ -64,6 +64,7 @@ struct InsertFinished : BaseProxyT {
   void finishedInserting(ActionType action = nullptr) const;
   IndexT resolveIndex(IndexT const& idx) const;
   VirtualProxyType resolveProxy(VirtualProxyType const& proxy) const;
+  int size() const;
 };
 
 }}} /* end namespace vt::vrt::collection */

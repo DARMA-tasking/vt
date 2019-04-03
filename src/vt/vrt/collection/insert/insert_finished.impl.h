@@ -88,6 +88,12 @@ VirtualProxyType InsertFinished<ColT,IndexT,BaseProxyT>::resolveProxy(
   return theCollection()->getParent(proxy);
 }
 
+template <typename ColT, typename IndexT, typename BaseProxyT>
+int InsertFinished<ColT,IndexT,BaseProxyT>::size() const {
+  auto const proxy = this->getProxy();
+  return theCollection()->getSize<ColT, IndexT>(proxy);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H*/

@@ -2322,7 +2322,7 @@ inline void CollectionManager::setViewReady(VirtualProxyType const& proxy) {
   view_ready_[proxy] = true;
 }
 
-inline bool CollectionManager::isViewReady(VirtualProxyType const& proxy) {
+inline bool CollectionManager::isViewReady(VirtualProxyType const& proxy) const {
   auto const& found = view_ready_.find(proxy);
   return (found != view_ready_.end() and found->second);
 }
@@ -2415,6 +2415,37 @@ inline void CollectionManager::setDim(
 ) {
   vtAssert(dim > 0, "Invalid dimension");
   view_dimen_[proxy] = dim;
+}
+
+template <typename ColT, typename IndexT>
+int CollectionManager::getSize(VirtualProxyType const& proxy) const {
+  // (!) the collection is assumed to be already built
+  bool const is_view = VirtualProxyBuilder::isView(proxy);
+
+  // filter elems if view
+  if (is_view) {
+    while(not isViewReady(proxy)) {
+      runScheduler();
+    }
+
+    auto const view_han = getViewHandler(proxy);
+    auto const in_slice = auto_registry::getHandlerView(view_han);
+    auto const range = getRange<IndexT>(proxy);
+
+    int count = 0;
+    range.foreach([&](IndexT idx) {
+      auto raw_idx = static_cast<vt::index::BaseIndex*>(&idx);
+      if (in_slice(raw_idx)) {
+        count++;
+      }
+    });
+    return count;
+  } else {
+    auto const parent = getParent(proxy);
+    vtAssert(parent == proxy, "The proxy should be its own parent");
+    auto container = findElmHolder<ColT,IndexT>(parent);
+    return container->numElements();
+  }
 }
 
 template <typename ColT, typename IndexT>
@@ -3145,7 +3176,7 @@ void CollectionManager::destroyMatching(
 template <typename ColT, typename IndexT>
 CollectionHolder<ColT, IndexT>* CollectionManager::findColHolder(
   VirtualProxyType const& proxy
-) {
+) const {
   #pragma sst global proxy_container_
   auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
@@ -3160,7 +3191,7 @@ CollectionHolder<ColT, IndexT>* CollectionManager::findColHolder(
 template <typename ColT, typename IndexT>
 Holder<ColT, IndexT>* CollectionManager::findElmHolder(
   VirtualProxyType const& proxy
-) {
+) const {
   auto ret = findColHolder<ColT, IndexT>(proxy);
   if (ret != nullptr) {
     return &ret->holder_;
@@ -3172,7 +3203,7 @@ Holder<ColT, IndexT>* CollectionManager::findElmHolder(
 template <typename ColT, typename IndexT>
 Holder<ColT, IndexT>* CollectionManager::findElmHolder(
   CollectionProxyWrapType<ColT> proxy
-) {
+) const {
   return findElmHolder<ColT,IndexT>(proxy.getProxy());
 }
 
