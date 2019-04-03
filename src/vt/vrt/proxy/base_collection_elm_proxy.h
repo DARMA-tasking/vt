@@ -59,17 +59,21 @@ struct BaseCollectionElmProxy {
 
   BaseCollectionElmProxy() = default;
   BaseCollectionElmProxy(
-    ProxyType const& in_col_proxy, ElementProxyType const& in_elm_proxy
+    ProxyType const& in_col_proxy,
+    ElementProxyType const& in_elm_proxy,
+    ProxyType const& in_view_proxy
   );
 
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
   ProxyType getCollectionProxy() const { return col_proxy_; }
+  ProxyType getViewProxy() const { return view_proxy_; }
   ElementProxyType getElementProxy() const { return elm_proxy_; }
 
 protected:
-  ProxyType col_proxy_ = no_vrt_proxy;
+  ProxyType col_proxy_  = no_vrt_proxy;
+  ProxyType view_proxy_ = no_vrt_proxy;
   ElementProxyType elm_proxy_{virtual_proxy_elm_empty_tag};
 };
 

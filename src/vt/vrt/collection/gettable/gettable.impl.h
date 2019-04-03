@@ -54,8 +54,9 @@ namespace vt { namespace vrt { namespace collection {
 template <typename ColT, typename IndexT, typename BaseProxyT>
 Gettable<ColT,IndexT,BaseProxyT>::Gettable(
   typename BaseProxyT::ProxyType const& in_proxy,
-  typename BaseProxyT::ElementProxyType const& in_elm
-) : BaseProxyT(in_proxy, in_elm)
+  typename BaseProxyT::ElementProxyType const& in_elm,
+  typename BaseProxyT::ProxyType const& in_view_proxy
+) : BaseProxyT(in_proxy, in_elm, in_view_proxy)
 { }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>

@@ -56,7 +56,8 @@ struct Sendable : BaseProxyT {
   Sendable() = default;
   Sendable(
     typename BaseProxyT::ProxyType const& in_proxy,
-    typename BaseProxyT::ElementProxyType const& in_elm
+    typename BaseProxyT::ElementProxyType const& in_elm,
+    typename BaseProxyT::ProxyType const& in_view_proxy
   );
 
   template <typename SerializerT>

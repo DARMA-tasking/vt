@@ -69,13 +69,17 @@ using Chain1 = Sendable<ColT,IndexT,Chain2<ColT,IndexT>>;
 
 template <typename ColT, typename IndexT>
 struct ProxyCollectionElmTraits : elm_proxy::Chain1<ColT,IndexT> {
+
+  using Base = elm_proxy::Chain1<ColT,IndexT>;
+
   ProxyCollectionElmTraits() = default;
   ProxyCollectionElmTraits(ProxyCollectionElmTraits const&) = default;
   ProxyCollectionElmTraits(ProxyCollectionElmTraits&&) = default;
   ProxyCollectionElmTraits(
-    typename elm_proxy::Chain1<ColT,IndexT>::ProxyType const& in_proxy,
-    typename elm_proxy::Chain1<ColT,IndexT>::ElementProxyType const& in_elm
-  ) : elm_proxy::Chain1<ColT,IndexT>(in_proxy,in_elm)
+    typename Base::ProxyType const& in_proxy,
+    typename Base::ElementProxyType const& in_elm,
+    typename Base::ProxyType const& in_view_proxy = no_vrt_proxy
+  ) : Base(in_proxy, in_elm, in_view_proxy)
   {}
   ProxyCollectionElmTraits& operator=(ProxyCollectionElmTraits const&) = default;
 };

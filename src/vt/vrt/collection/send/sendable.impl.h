@@ -54,8 +54,9 @@ namespace vt { namespace vrt { namespace collection {
 template <typename ColT, typename IndexT, typename BaseProxyT>
 Sendable<ColT,IndexT,BaseProxyT>::Sendable(
   typename BaseProxyT::ProxyType const& in_proxy,
-  typename BaseProxyT::ElementProxyType const& in_elm
-) : BaseProxyT(in_proxy, in_elm)
+  typename BaseProxyT::ElementProxyType const& in_elm,
+  typename BaseProxyT::ProxyType const& in_view_proxy
+) : BaseProxyT(in_proxy, in_elm, in_view_proxy)
 { }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -82,7 +83,14 @@ void Sendable<ColT,IndexT,BaseProxyT>::send(MsgSharedPtr<MsgT> msg) const {
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f, typename... Args>
 void Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) const {
-  return send<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  // 'MsgT' should be an instance of 'CollectionMessage'
+  auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+  auto const& proxy  = this->getViewProxy();
+  bool const is_view = VirtualProxyBuilder::isView(proxy);
+  msg->setViewFlag(is_view);
+  msg->setViewProxy(is_view ? proxy : no_vrt_proxy);
+  return send<MsgT,f>(msg);
+  //return send<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -105,7 +113,13 @@ template <
   typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
 >
 void Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) const {
-  return send<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  // 'MsgT' should be an instance of 'CollectionMessage'
+  auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+  auto const& proxy  = this->getViewProxy();
+  bool const is_view = VirtualProxyBuilder::isView(proxy);
+  msg->setViewFlag(is_view);
+  msg->setViewProxy(is_view ? proxy : no_vrt_proxy);
+  return send<MsgT,f>(msg);
 }
 
 

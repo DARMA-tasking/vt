@@ -55,7 +55,8 @@ struct Gettable : BaseProxyT {
   Gettable() = default;
   Gettable(
     typename BaseProxyT::ProxyType const& in_proxy,
-    typename BaseProxyT::ElementProxyType const& in_elm
+    typename BaseProxyT::ElementProxyType const& in_elm,
+    typename BaseProxyT::ProxyType const& in_view_proxy
   );
 
   template <typename SerializerT>
