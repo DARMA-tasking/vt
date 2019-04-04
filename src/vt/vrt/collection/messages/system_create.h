@@ -138,7 +138,8 @@ struct ViewCreateMsg : ::vt::collective::reduce::ReduceMsg {
   void serialize(SerializerT& s) {
     s | old_proxy_ | new_proxy_
       | old_range_ | new_range_
-      | old_view_han_ | new_view_han_ | col_map_id_;
+      | old_view_han_ | new_view_han_ | col_map_id_
+      | epoch_ | tag_;
   }
 };
 

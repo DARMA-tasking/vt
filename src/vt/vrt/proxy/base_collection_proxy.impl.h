@@ -81,7 +81,7 @@ VirtualProxyType BaseCollectionProxy<ColT, IndexT>::getProxy() const {
 template <typename ColT, typename IndexT>
 template <typename SerializerT>
 void BaseCollectionProxy<ColT, IndexT>::serialize(SerializerT& s) {
-  s | proxy_;
+  s | proxy_ | range_;
 }
 
 }}} /* end namespace vt::vrt::collection */
