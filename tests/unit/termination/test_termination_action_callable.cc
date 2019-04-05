@@ -49,48 +49,58 @@
 
 namespace vt { namespace tests { namespace unit {
 
-static bool has_finished_1 = false;
-static bool has_finished_2 = false;
+static bool finished[2] = {false, false};
 static int num = 0;
 
 // no need for a parameterized fixture
-struct TestTermCallable : action::SimpleFixture {};
+struct TestTermCallable : action::SimpleFixture {
 
-TEST_F(TestTermCallable, test_add_action_unique) {
+  void verify(int cur) {
+    int const nxt = (cur + 1) % 2;
+    EXPECT_FALSE(finished[cur]);
+    EXPECT_TRUE(not finished[nxt] or num == 1);
+    finished[cur] = true;
+    num++;
+  }
+};
 
-  has_finished_1 = has_finished_2 = false;
+TEST_F(TestTermCallable, test_add_action_unique) /*NOLINT*/{
+
+  finished[0] = finished[1] = false;
   num = 0;
 
   vt::theCollective()->barrier();
 
   // create an epoch and a related termination flag
-  auto ep = ::vt::theTerm()->makeEpochCollective();
+  auto epoch = ::vt::theTerm()->makeEpochCollective();
 
   // assign an arbitrary action to be triggered at
   // the end of the epoch and toggle the previous flag.
-  ::vt::theTerm()->addActionEpoch(ep, [&]{
-    debug_print(term, node, "current epoch:{:x} finished\n", ep);
-    EXPECT_FALSE(has_finished_1);
-    EXPECT_TRUE(not has_finished_2 or num == 1);
-    has_finished_1 = true;
-    num++;
+  ::vt::theTerm()->addActionEpoch(epoch, [&]{
+    debug_print(
+      term, node,
+      "current epoch:{:x} finished\n",
+      epoch
+    );
+    verify(0);
   });
 
   // assign a callable to be triggered after
   // the action submitted for the given epoch.
-  ::vt::theTerm()->addActionUnique(ep, [&]{
-    debug_print(term, node, "trigger callable for epoch:{:x}\n", ep);
-    EXPECT_FALSE(has_finished_2);
-    EXPECT_TRUE(has_finished_1 == false or num == 1);
-    has_finished_2 = true;
-    num++;
+  ::vt::theTerm()->addActionUnique(epoch, [&]{
+    debug_print(
+      term, node,
+      "trigger callable for epoch:{:x}\n",
+      epoch
+    );
+    verify(1);
   });
 
   if (channel::node == channel::root) {
-    action::compute(ep);
+    action::compute(epoch);
   }
 
-  ::vt::theTerm()->finishedEpoch(ep);
+  ::vt::theTerm()->finishedEpoch(epoch);
 }
 
 }}} // namespace vt::tests::unit::action
