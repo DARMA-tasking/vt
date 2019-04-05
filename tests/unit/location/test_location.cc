@@ -51,7 +51,7 @@ struct TestLocation : TestParallelHarness {};
 template <typename MsgT>
 struct TestLocationRoute : TestLocation {};
 
-TEST_F(TestLocation, test_register_and_get_entity) {
+TEST_F(TestLocation, test_register_and_get_entity) /* NOLINT */ {
 
   auto const my_node = vt::theContext()->getNode();
   auto const home    = 0;
@@ -71,12 +71,11 @@ TEST_F(TestLocation, test_register_and_get_entity) {
   );
 
   if (my_node == home) {
-    // only performed if getLocation is synchronous, i.e on home_node
     EXPECT_TRUE(success);
   }
 }
 
-TEST_F(TestLocation, test_register_and_get_multiple_entities) {
+TEST_F(TestLocation, test_register_and_get_multiple_entities)  /* NOLINT */ {
 
   auto const my_node  = vt::theContext()->getNode();
   auto const nb_nodes = vt::theContext()->getNumNodes();
@@ -106,19 +105,20 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities) {
       }
     );
 
-    while (not success) { vt::runScheduler(); }
+    while (not success) {
+      vt::runScheduler();
+    }
+
     vt::theCollective()->barrier();
 
     if (i == my_node) {
-      // this test can only be done for cases where getLocation is synchronous
-      // -> home_node
       EXPECT_TRUE(success);
       EXPECT_EQ(check_sum, i + 1);
     }
   }
 }
 
-TEST_F(TestLocation, test_unregister_multiple_entities) {
+TEST_F(TestLocation, test_unregister_multiple_entities) /* NOLINT */ {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
@@ -142,7 +142,7 @@ TEST_F(TestLocation, test_unregister_multiple_entities) {
   }
 }
 
-TEST_F(TestLocation, test_migrate_entity) {
+TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
 
   auto const my_node  = vt::theContext()->getNode();
   auto const entity   = location::arbitrary_entity;
@@ -162,7 +162,10 @@ TEST_F(TestLocation, test_migrate_entity) {
     }
   );
 
-  while (not done) { vt::runScheduler(); }
+  while (not done) {
+    vt::runScheduler();
+  }
+
   vt::theCollective()->barrier();
 
   if (my_node == old_home) {
@@ -184,7 +187,7 @@ TEST_F(TestLocation, test_migrate_entity) {
   }
 }
 
-TEST_F(TestLocation, test_migrate_multiple_entities) {
+TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
 
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
@@ -229,7 +232,10 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
       }
     );
 
-    while (not success) { vt::runScheduler(); }
+    while (not success) {
+      vt::runScheduler();
+    }
+
     vt::theCollective()->barrier();
 
     // this test can only be done for cases where getLocation is synchronous ->
@@ -241,8 +247,8 @@ TEST_F(TestLocation, test_migrate_multiple_entities) {
   }
 }
 
-TYPED_TEST_CASE_P(TestLocationRoute);
-TYPED_TEST_P(TestLocationRoute, test_route_entity) {
+TYPED_TEST_CASE_P(TestLocationRoute);  /* NOLINT */
+TYPED_TEST_P(TestLocationRoute, test_route_entity)  /* NOLINT */ {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
@@ -283,7 +289,7 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
   }
 }
 
-TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits){
+TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits) /* NOLINT */ {
 
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
@@ -310,7 +316,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits){
   }
 }
 
-TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity){
+TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
 
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
@@ -357,10 +363,12 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity){
   }
 }
 
-REGISTER_TYPED_TEST_CASE_P(
+REGISTER_TYPED_TEST_CASE_P /* NOLINT */ (
   TestLocationRoute,
   test_route_entity, test_entity_cache_hits, test_entity_cache_migrated_entity
 );
-INSTANTIATE_TYPED_TEST_CASE_P(Message, TestLocationRoute, location::MsgType);
+INSTANTIATE_TYPED_TEST_CASE_P /* NOLINT */ (
+  Message, TestLocationRoute, location::MsgType
+);
 
 }}} // end namespace vt::tests::unit
