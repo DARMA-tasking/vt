@@ -45,6 +45,7 @@
 #include "vt/transport.h"
 
 #include <cstdlib>
+#include <inttypes.h>
 
 using namespace vt;
 
@@ -77,8 +78,8 @@ int main(int argc, char** argv) {
     ::fmt::print(
       "epoch={}, seq={}\n", rooted, get_seq
     );
-    printf("epoch %llu , %llx : seq %llu , %llx\n", rooted, rooted, get_seq, get_seq);
-    printf("epoch %llu , %llx : seq %llu , %llx\n", next, next, next_seq, next_seq);
+    printf("epoch %" PRIu64 " , %" PRIx64 " : seq %" PRIu64 " , %" PRIx64 "\n", rooted, rooted, get_seq, get_seq);
+    printf("epoch %" PRIu64 " , %" PRIx64 " : seq %" PRIu64 " , %" PRIx64 "\n", next, next, next_seq, next_seq);
   }
 
   while (!rt->isTerminated()) {
