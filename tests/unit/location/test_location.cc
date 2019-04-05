@@ -70,6 +70,12 @@ TEST_F(TestLocation, test_register_and_get_entity) /* NOLINT */ {
     }
   );
 
+  while (not success) {
+    vt::runScheduler();
+  }
+
+  vt::theCollective()->barrier();
+
   if (my_node == home) {
     EXPECT_TRUE(success);
   }
