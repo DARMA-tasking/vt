@@ -58,7 +58,9 @@ struct TestTermNestedCollect : action::BaseFixture {
     if (channel::node == channel::root) {
       action::compute(epoch);
       channel::trigger(epoch);
+      action::add(epoch, order_);
     }
+    vt::theCollective()->barrier();
     action::finalize(epoch, order_);
   }
 };

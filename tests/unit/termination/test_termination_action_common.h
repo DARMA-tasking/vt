@@ -68,7 +68,9 @@ std::unordered_map<vt::EpochType,channel::Data> channel::data;
 namespace vt { namespace tests { namespace unit { namespace action {
 // shortcuts
 using epoch_manip = ::vt::epoch::EpochManip;
-using Base = TestParallelHarnessParam<std::tuple<int,bool,int>>;
+using Base = TestParallelHarnessParam<std::tuple<int, bool, int>>;
+
+static bool ok = false;
 
 struct BaseFixture : Base {
   void SetUp() override {
@@ -111,8 +113,14 @@ std::vector<vt::EpochType> generateEpochs(
 );
 // fictive distributed computation
 void compute(vt::EpochType const& epoch);
-// check epoch termination
-void verify(vt::EpochType const& epoch, int order);
+// add the termination checker algorithm as a pending action
+void add(vt::EpochType const& epoch, int order);
+// finish the epoch
+void finish(vt::EpochType const& epoch);
+// set the flag indicating that the current
+// epoch of the sequence is finished
+inline void setOk(vt::Message* /*unused*/) { ok = true; }
+
 
 /*
  * at the end of a given epoch:
