@@ -49,8 +49,6 @@
 #if !defined INCLUDED_TERMINATION_CHANNEL_COUNTING_H
 #define INCLUDED_TERMINATION_CHANNEL_COUNTING_H
 
-#define DEBUG_CHANNEL_COUNTING 0
-
 /*
  * channel counting termination detection.
  * all methods are required to be static,

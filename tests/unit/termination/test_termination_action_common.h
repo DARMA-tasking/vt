@@ -52,8 +52,6 @@
 #if !defined INCLUDED_TERMINATION_ACTION_COMMON_H
 #define INCLUDED_TERMINATION_ACTION_COMMON_H
 
-#define DEBUG_TERM_ACTION 2
-
 using namespace vt::tests::unit;
 // set channel counting ranks
 vt::NodeType channel::root = vt::uninitialized_destination;
@@ -124,9 +122,6 @@ void verify(vt::EpochType const& epoch, int order);
  */
 void finalize(vt::EpochType const& epoch, int order);
 
-#if DEBUG_TERM_ACTION
-  void print(std::string step, vt::EpochType const& epoch, int order);
-#endif
 }}}} // end namespace vt::tests::unit::action
 
 #include "test_termination_action_common.impl.h"
