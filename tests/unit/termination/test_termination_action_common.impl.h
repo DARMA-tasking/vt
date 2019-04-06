@@ -74,19 +74,19 @@ std::vector<vt::EpochType> generateEpochs(int nb, bool rooted, bool useDS) {
 }
 
 // fictive distributed computation of a given epoch
-void compute(vt::EpochType const& ep) {
+void compute(vt::EpochType const& epoch) {
 
   std::random_device device;
   std::mt19937 engine(device());
-  std::uniform_int_distribution<int> dist_ttl(1,10);
-  std::uniform_int_distribution<int> dist_dest(1,channel::all-1);
-  std::uniform_int_distribution<int> dist_round(1,10);
+  std::uniform_int_distribution<int> dist_ttl(1, 10);
+  std::uniform_int_distribution<int> dist_dest(1, channel::all - 1);
+  std::uniform_int_distribution<int> dist_round(1, 10);
 
-  if(ep != vt::no_epoch){
+  if(epoch != vt::no_epoch){
     debug_print(
       term, node,
       "rank:{}, epoch:{:x}, is_rooted ? {}\n",
-      channel::node, ep, epoch::EpochManip::isRooted(ep)
+      channel::node, epoch, epoch::EpochManip::isRooted(epoch)
     );
   }
 
@@ -96,10 +96,10 @@ void compute(vt::EpochType const& ep) {
     for (int k = 0; k < rounds; ++k) {
       int dst = channel::node + dist_dest(engine);
       int ttl = dist_ttl(engine);
-      channel::routeBasic(dst,ttl,ep);
+      channel::routeBasic(dst, ttl, epoch);
     }
   } else {
-    channel::broadcast<channel::basicHandler>(1,ep);
+    channel::broadcast<channel::basicHandler>(1, epoch);
   }
 }
 
@@ -107,7 +107,7 @@ void finish(vt::EpochType const& epoch) {
   if (epoch != vt::no_epoch) {
     vt::theTerm()->finishedEpoch(epoch);
   }
-};
+}
 
 /*
  * at the end of a given epoch:

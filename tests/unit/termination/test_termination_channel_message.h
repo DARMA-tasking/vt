@@ -53,9 +53,9 @@ namespace vt { namespace tests { namespace unit { namespace channel {
 // basic message
 struct BasicMsg : vt::Message {
 
-  int ttl_ = 0;        // time to live for message routing
   vt::NodeType  src_   = vt::uninitialized_destination;
   vt::NodeType  dst_   = vt::uninitialized_destination;
+  int           ttl_   = 0; // time to live for message routing
   vt::EpochType epoch_ = vt::no_epoch;
 
   BasicMsg() = default;
@@ -74,9 +74,9 @@ struct BasicMsg : vt::Message {
 // control messages
 struct CtrlMsg : vt::Message {
 
-  int count_ = 0;      // incoming/outgoing basic message count
   vt::NodeType  src_   = vt::uninitialized_destination;
   vt::NodeType  dst_   = vt::uninitialized_destination;
+  int           count_ = 0; // incoming/outgoing basic message count
   vt::EpochType epoch_ = vt::no_epoch;
 
   CtrlMsg() = default;
