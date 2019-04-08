@@ -53,11 +53,16 @@
 // This code applies a few steps of the Jacobi iteration to
 // the linear system  A x = 0
 // where is the tridiagonal matrix with pattern [-1 2 -1]
-// The initial guess for x is random.
+// The initial guess for x is a made-up non-zero vector.
 // The exact solution is the vector 0.
 //
 // The matrix A is square and invertible.
 // The number of rows is ((number of objects) * (number of rows per object))
+//
+// Such a matrix A is obtained when using 2nd-order finite difference
+// for discretizing (-d^2 u /dx^2 = f) on [0, 1] with homogeneous
+// Dirichlet condition (u(0) = u(1) = 0) using a uniform grid
+// with grid size 1 / ((number of objects) * (number of rows per object) + 1)
 //
 
 using namespace ::vt;
@@ -65,6 +70,7 @@ using namespace ::vt;
 
 static constexpr std::size_t const default_nrow_object = 8;
 static constexpr std::size_t const default_num_objs = 4;
+static constexpr double const default_tol = 1.0e-02;
 
 
 struct LinearPb1DJacobi : vt::Collection<LinearPb1DJacobi,Index1D> {
@@ -74,21 +80,23 @@ private:
     Index1D idx_;
     std::vector<double> tcur_, told_;
     std::vector<double> rhs_;
-    size_t iter_ = 0, objDone_ = 0;
+    size_t iter_ = 0;
     size_t msgReceived_ = 0, totalReceive_ = 0;
     size_t numObjs_ = 1;
     size_t numRowsPerObject_ = 1;
-    size_t maxIter_ = 5;
+    size_t maxIter_ = 8;
+    double normRes_ = 0.0;
 
 public:
 
     LinearPb1DJacobi() = default;
 
-    LinearPb1DJacobi(Index1D in_idx)
+    explicit LinearPb1DJacobi(Index1D in_idx)
             : vt::Collection<LinearPb1DJacobi,Index1D>(), idx_(in_idx),
-            tcur_(), told_(), rhs_(), iter_(0), objDone_(0),
+            tcur_(), told_(), rhs_(), iter_(0),
             msgReceived_(0), totalReceive_(0),
-            numObjs_(1), numRowsPerObject_(1), maxIter_(5)
+            numObjs_(1), numRowsPerObject_(1), maxIter_(8),
+            normRes_(0.0)
     { }
 
 
@@ -113,101 +121,96 @@ public:
     };
 
 
-    struct VecMsg : vt::CollectionMessage<LinearPb1DJacobi> {
-
-        IndexType from_index;
-        double val = 0.0;
-
-        VecMsg() = default;
-        VecMsg(IndexType const& in_index, double const& ref) :
-                vt::CollectionMessage<LinearPb1DJacobi>(),
-                from_index(in_index), val(ref)
-        { }
-
-    };
-
-
-    struct NormReduceMsg : vt::collective::ReduceMsg {
-        double norm = 0.0;
-        NormReduceMsg() = default;
-        NormReduceMsg(double const ref) : norm(ref)
-        { }
-    };
-
-
-    static void reduceNorm(NormReduceMsg* msg) {
-
-        if (msg->isRoot()) {
-            fmt::print(" Norm >> at root {}: final {} \n",
-                    theContext()->getNode(), msg->norm);
-        } else {
-            NormReduceMsg* fst_msg = msg;
-            auto cur_msg = msg->getNext<NormReduceMsg>();
-            while (cur_msg != nullptr) {
-                fst_msg->norm = (fst_msg->norm > cur_msg->norm) ?
-                                fst_msg->norm : cur_msg->norm;
-                cur_msg = cur_msg->getNext<NormReduceMsg>();
-            }
-        }
-
-    }
-
     void checkCompletion() {
 
-        if ((iter_ < maxIter_) && (idx_.x() == 0)) {
+        if ((iter_ <= maxIter_) and (normRes_ >= default_tol)) {
+            std::cout << " ### ITER " << iter_ ;
+            std::cout << " >> Residual Norm = " << normRes_ << "\n";
             auto proxy = this->getCollectionProxy();
             auto loopMsg = makeSharedMessage< LinearPb1DJacobi::BlankMsg >();
             proxy.broadcast< LinearPb1DJacobi::BlankMsg,
                             &LinearPb1DJacobi::sendInfo>(loopMsg);
         }
+        else if (iter_ > maxIter_) {
+            std::cout << "\n Maximum Number of Iterations Reached. \n\n";
+        }
+        else {
+            std::cout << "\n Max-Norm Residual Reduced by " << default_tol;
+            std::cout << "\n\n";
+        }
 
     }
 
 
-    struct IterMsg : CollectionMessage<LinearPb1DJacobi> {
-        size_t iterID = 0;
-        IterMsg() = default;
-        IterMsg(size_t imax) : CollectionMessage<LinearPb1DJacobi>(),
-                               iterID(imax)
+    struct ReduxMsg : vt::collective::ReduceTMsg<double> {
+
+        LinearPb1DJacobi *linearpb_;
+
+        explicit ReduxMsg(double in_val, LinearPb1DJacobi *pbref)
+            : ReduceTMsg<double>(in_val), linearpb_(pbref)
         { }
+    };
+
+
+    void setNormResidual(double val) { normRes_ = val; };
+
+
+    struct SetNorm {
+        void operator()(ReduxMsg* msg) {
+            if (msg->isRoot()) {
+                msg->linearpb_->setNormResidual(msg->getConstVal());
+                msg->linearpb_->checkCompletion();
+            }
+        }
     };
 
 
     void getNorm(BlankMsg *msg) {
 
+        //
+        // Compute the maximum entries among the rows on this object
+        // We do not take into account the "ghost" entries
+        // as they may be "out of date".
+        //
         double maxNorm = 0.0;
-        for (auto val : tcur_) {
+
+        for (size_t ii = 1; ii < tcur_.size()-1; ++ii) {
+            double val = tcur_[ii];
             maxNorm = (maxNorm > abs(val)) ? maxNorm : abs(val);
         }
 
-        auto reduce_msg = makeSharedMessage<NormReduceMsg>(maxNorm);
         auto proxy = this->getCollectionProxy();
-        theCollection()->reduceMsg< LinearPb1DJacobi,
-                LinearPb1DJacobi::NormReduceMsg,
-                LinearPb1DJacobi::reduceNorm >(proxy, reduce_msg);
-
-        checkCompletion();
+        auto msg2 = makeSharedMessage<ReduxMsg>(maxNorm, this);
+        theCollection()->reduceMsg<
+                LinearPb1DJacobi,
+                ReduxMsg,
+                ReduxMsg::template msgHandler<
+                        ReduxMsg, collective::MaxOp<double>, SetNorm >
+                        >(proxy, msg2);
 
     }
 
 
-    void countObjects(IterMsg *msg) {
+    struct DoneStepMsg : vt::collective::ReduceTMsg<int> {
 
-        if (idx_.x())
-            return;
+        LinearPb1DJacobi *linearpb_;
 
-        if ((iter_ <= msg->iterID) and (msg->iterID <= iter_+1))
-            objDone_ += 1;
+        explicit DoneStepMsg(int in_val, LinearPb1DJacobi *pbref)
+                : ReduceTMsg<int>(in_val), linearpb_(pbref)
+        { }
+    };
 
-        if (objDone_ == numObjs_) {
-            objDone_ = 0;
-            auto proxy = this->getCollectionProxy();
-            auto normMsg = makeSharedMessage< LinearPb1DJacobi::BlankMsg >();
-            proxy.broadcast< LinearPb1DJacobi::BlankMsg,
-                           &LinearPb1DJacobi::getNorm >(normMsg);
+
+    struct CountDone {
+        void operator()(DoneStepMsg* msg) {
+            if (msg->isRoot()) {
+                auto proxy = msg->linearpb_->getCollectionProxy();
+                auto normMsg = makeSharedMessage< LinearPb1DJacobi::BlankMsg >();
+                proxy.broadcast< LinearPb1DJacobi::BlankMsg,
+                        &LinearPb1DJacobi::getNorm >(normMsg);
+            }
         }
-
-    }
+    };
 
 
     void doIteration() {
@@ -227,14 +230,38 @@ public:
 
         iter_ += 1;
 
-        auto proxy = this->getCollectionProxy();
-        auto doneMsg = vt::makeSharedMessage< IterMsg >(iter_);
-        theCollection()->sendMsg< LinearPb1DJacobi::IterMsg,
-                &LinearPb1DJacobi::countObjects > (proxy(0), doneMsg);
+        std::copy(tcur_.begin(), tcur_.end(), told_.begin());
 
-        memcpy(&told_[0], &tcur_[0], sizeof(double)*tcur_.size());
+        auto proxy = this->getCollectionProxy();
+        auto msg = makeSharedMessage<DoneStepMsg>(1, this);
+        theCollection()->reduceMsg<
+                LinearPb1DJacobi,
+                DoneStepMsg,
+                DoneStepMsg::template msgHandler<
+                        DoneStepMsg, collective::PlusOp<int>, CountDone >
+                >(proxy, msg);
 
     }
+
+
+    struct VecMsg : vt::CollectionMessage<LinearPb1DJacobi> {
+
+        IndexType from_index;
+        double val = 0.0;
+
+        VecMsg() = default;
+        VecMsg(IndexType const& in_index, double const& ref) :
+                vt::CollectionMessage<LinearPb1DJacobi>(),
+                from_index(in_index), val(ref)
+        { }
+
+        template <typename Serializer>
+        void serialize(Serializer& s) {
+            s | from_index;
+            s | val;
+        }
+
+    };
 
 
     void exchange(VecMsg *msg) {
@@ -262,18 +289,26 @@ public:
 
     void sendInfo(BlankMsg *msg) {
 
-        // Routine to send information to a different object
-
+        //
+        // Treat the particular case of 1 object
+        // where no communication is needed.
+        // Without this treatment, the code would not iterate.
+        //
         if (numObjs_ == 1) {
             doIteration();
             return;
         }
+        //---------------------------------------
+
+        //
+        // Routine to send information to a different object
+        //
 
         //--- Send the values to the left
         auto proxy = this->getCollectionProxy();
         if (idx_.x() > 0) {
             auto leftMsg = vt::makeSharedMessage< VecMsg >(idx_, told_[1]);
-            theCollection()->sendMsg< LinearPb1DJacobi::VecMsg,
+            vt::theCollection()->sendMsg< LinearPb1DJacobi::VecMsg,
                     &LinearPb1DJacobi::exchange > (proxy(idx_.x()-1), leftMsg);
         }
 
@@ -281,8 +316,13 @@ public:
         if (idx_.x() < numObjs_ - 1) {
             auto rightMsg = vt::makeSharedMessage< VecMsg >(idx_,
                                    told_[numRowsPerObject_]);
-            theCollection()->sendMsg< LinearPb1DJacobi::VecMsg,
+            vt::theCollection()->sendMsg< LinearPb1DJacobi::VecMsg,
                     &LinearPb1DJacobi::exchange > (proxy(idx_.x()+1), rightMsg);
+            //
+            // --- Alternative syntax
+            //
+            //proxy[idx_.x()+1].send< LinearPb1DJacobi::VecMsg,
+            //        &LinearPb1DJacobi::exchange >(rightMsg);
         }
 
     }
@@ -294,8 +334,12 @@ public:
         told_.assign(numRowsPerObject_ + 2, 0.0);
         rhs_.assign(numRowsPerObject_ + 2, 0.0);
 
+        double h = 1.0 / (numRowsPerObject_ * numObjs_ + 1.0);
+        int nf = 3 * int(numRowsPerObject_ * numObjs_ + 1) / 4;
+
         for (size_t ii = 0; ii < tcur_.size(); ++ii) {
-            tcur_[ii] = std::rand() / (double(RAND_MAX) + 1.0);
+            double x0 = ( numRowsPerObject_ * idx_.x() + ii) * h;
+            tcur_[ii] = sin(nf * M_PI * x0 * x0);
         }
 
         totalReceive_ = 2;
@@ -310,7 +354,7 @@ public:
             totalReceive_ -= 1;
         }
 
-        memcpy(&told_[0], &tcur_[0], sizeof(double)*tcur_.size());
+        std::copy(tcur_.begin(), tcur_.end(), told_.begin());
 
     }
 
@@ -330,6 +374,11 @@ public:
             auto loopMsg = makeSharedMessage< LinearPb1DJacobi::BlankMsg >();
             proxy.broadcast< LinearPb1DJacobi::BlankMsg,
                             &LinearPb1DJacobi::sendInfo >(loopMsg);
+            //
+            // --- Alternative syntax
+            //
+            //vt::theCollection()->broadcastMsg< LinearPb1DJacobi::BlankMsg,
+            //        &LinearPb1DJacobi::sendInfo >(proxy, loopMsg);
         }
 
     }
@@ -339,16 +388,12 @@ public:
 
 int main(int argc, char** argv) {
 
-    CollectiveOps::initialize(argc, argv);
-
-    auto const& this_node = theContext()->getNode();
-    auto const& num_nodes = theContext()->getNumNodes();
-
     size_t num_objs = default_num_objs;
     size_t numRowsPerObject = default_nrow_object;
     size_t maxIter = 5;
 
     std::string name(argv[0]);
+
     if (argc == 1) {
         ::fmt::print(
                 stderr, "{}: using default arguments since none provided\n", name
@@ -367,18 +412,17 @@ int main(int argc, char** argv) {
             maxIter = (size_t) strtol(argv[3], nullptr, 10);
         }
         else {
-            std::string const buf = fmt::format(
-                    "usage: {} <num-objects> <num-rows-per-object> <maxiter>",
+            ::fmt::print(stderr,
+                    "usage: {} <num-objects> <num-rows-per-object> <maxiter>\n",
                     name);
-            if (this_node == 0) {
-                CollectiveOps::output(buf);
-                CollectiveOps::finalize();
-                return 1;
-            }
-            CollectiveOps::finalize();
             return 1;
         }
     }
+
+    CollectiveOps::initialize(argc, argv);
+
+    auto const& this_node = theContext()->getNode();
+    auto const& num_nodes = theContext()->getNumNodes();
 
     if (this_node == 0) {
 
