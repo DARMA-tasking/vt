@@ -198,22 +198,35 @@ void Reduce::startReduce(
   auto live_iter = live_reductions_.find(lookup);
   auto& state = live_iter->second;
 
-  auto const& nmsgs = state.msgs.size();
-  bool ready = false;
-
   debug_print(
     reduce, node,
     "startReduce: tag={}, epoch={}, vrt={}, msg={}, children={}, contrib_={}\n",
     tag, epoch, proxy, state.msgs.size(), getNumChildren(), state.num_contrib_
   );
 
-  if (use_num_contrib) {
-    ready = nmsgs == getNumChildren() + state.num_contrib_;
-  } else {
-    ready = nmsgs == getNumChildren() + state.num_local_contrib_;
-  }
+  auto nb_messages = state.msgs.size();
+  auto nb_contribs = (
+    use_num_contrib ? state.num_contrib_ : state.num_local_contrib_
+  );
+  auto nb_children = getNumChildren();
+  ready = (nb_messages == nb_children + nb_contribs);
+
+  debug_print(
+    reduce, node,
+    "startReduce: epoch={}, proxy={}, ready={},"
+    "use_num_contrib={}, state.msgs.size={}"
+    " state.num_contrib_={}, state.num_local_contrib_={}\n",
+    epoch, proxy, ready, use_num_contrib, nb_messages,
+    state.num_contrib_, state.num_local_contrib_
+  );
+
 
   if (ready) {
+    debug_print(
+      reduce, node,
+      "startReduce: epoch={}, proxy={}, ready={}, state.msgs.size()={}\n",
+      epoch, proxy, ready, state.msgs.size()
+    );
     // Combine messages
     if (state.msgs.size() > 1) {
       for (int i = 0; i < state.msgs.size(); i++) {
