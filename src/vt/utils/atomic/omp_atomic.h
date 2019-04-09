@@ -73,11 +73,14 @@ struct AtomicOMP {
 
   T fetch_add(T const in) {
     T tmp;
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-value"
     #pragma omp atomic capture
     {
       tmp = value_;
       value_ += in;
     }
+    #pragma GCC diagnostic pop
     return tmp;
   }
 
@@ -93,11 +96,14 @@ struct AtomicOMP {
 
   T fetch_sub(T const in) {
     T tmp;
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-value"
     #pragma omp atomic capture
     {
       tmp = value_;
       value_ -= in;
     }
+    #pragma GCC diagnostic pop
     return tmp;
   }
 
