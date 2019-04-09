@@ -47,56 +47,60 @@
 #include <cstdlib>
 #include <cassert>
 
-using namespace ::vt;
-using namespace ::vt::collective;
-using namespace ::vt::mapping;
+static constexpr std::size_t const default_collection_size = 32;
+static int nb_elems = 0;
 
-static constexpr std::size_t const default_num_elms = 64;
+using IndexType = vt::IdxType1D<std::size_t>;
 
-using IndexType = IdxType1D<std::size_t>;
-
-struct TestColl : Collection<TestColl,IndexType> {
-  TestColl() = default;
-
-  virtual ~TestColl() {
-    auto num_nodes = theContext()->getNumNodes();
-    vtAssert(counter_ == 1, "Must be equal");
+struct MyCol : vt::Collection<MyCol,IndexType> {
+  MyCol() {
+    fmt::print(
+      "node[{}]: building mycol: idx.x()={}\n",
+      vt::theContext()->getNode(), getIndex().x()
+    );
   }
 
-  struct TestMsg : CollectionMessage<TestColl> { };
-
-  void doWork(TestMsg* msg) {
-    counter_++;
+  virtual ~MyCol() {
+    auto const nb_nodes = vt::theContext()->getNumNodes();
+    auto const expected = static_cast<int>(nb_elems / nb_nodes);
+    vtAssert(counter == expected, "Must be equal");
   }
 
-private:
-  int32_t counter_ = 0;
+  struct ColMsg : vt::CollectionMessage<MyCol> {};
+
+  static void doWork(ColMsg* msg, MyCol* col) {
+    counter++;
+    fmt::print(
+      "node[{}]: do work on mycol[{}]\n",
+      vt::theContext()->getNode(), col->getIndex().x()
+    );
+  }
+
+  static int counter;
 };
 
+/*static*/ int MyCol::counter = 0;
+
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::CollectiveOps::initialize(argc, argv);
 
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const root = vt::NodeType(0);
+  auto const node = vt::theContext()->getNode();
 
-  int32_t num_elms = default_num_elms;
+  nb_elems = (argc > 1 ? std::atoi(argv[1]) : default_collection_size);
+  vtAssert(nb_elems > 0, "Invalid number of elems");
 
-  if (argc > 1) {
-    num_elms = atoi(argv[1]);
-  }
-
-  if (this_node == 0) {
+  if (node == root) {
     using BaseIndexType = typename IndexType::DenseIndexType;
-    auto const& range = IndexType(static_cast<BaseIndexType>(num_elms));
-    auto proxy = theCollection()->construct<TestColl>(range);
-    proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>();
+    auto const& range = IndexType(static_cast<BaseIndexType>(nb_elems));
+    auto proxy = vt::theCollection()->construct<MyCol>(range);
+    proxy.broadcast<MyCol::ColMsg, &MyCol::doWork>();
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
+  while (not vt::rt->isTerminated()) {
+    vt::runScheduler();
   }
 
-  CollectiveOps::finalize();
-
-  return 0;
+  vt::CollectiveOps::finalize();
+  return EXIT_SUCCESS;
 }

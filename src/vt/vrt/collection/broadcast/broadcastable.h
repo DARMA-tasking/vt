@@ -58,7 +58,7 @@ struct Broadcastable : BaseProxyT {
   Broadcastable() = default;
   Broadcastable(Broadcastable const&) = default;
   Broadcastable(Broadcastable&&) = default;
-  Broadcastable(VirtualProxyType const in_proxy);
+  explicit Broadcastable(VirtualProxyType const in_proxy);
   Broadcastable(VirtualProxyType const in_proxy, IndexT const in_range);
   Broadcastable& operator=(Broadcastable const&) = default;
 
