@@ -66,10 +66,13 @@ static constexpr NodeType const min_region_size = 1;
 static constexpr NodeType const default_num_children = 2;
 static constexpr size_t const max_region_list_size = 4;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct InfoRootedConsType {} info_rooted_cons {};
 static struct InfoRootedLocalConsType {} info_rooted_local_cons {};
 static struct InfoRootedRemoteConsType {} info_rooted_remote_cons {};
 static struct InfoCollectiveConsType {} info_collective_cons {};
+#pragma GCC diagnostic pop
 
 struct Info : InfoRooted, InfoColl {
   using TreeType = collective::tree::Tree;

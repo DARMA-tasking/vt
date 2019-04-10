@@ -53,8 +53,11 @@
 
 namespace vt { namespace collective { namespace tree {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma sst keep
 static struct DefaultTreeConstructTag { } tree_cons_tag_t { };
+#pragma GCC diagnostic pop
 
 struct Tree {
   using NodeListType = std::vector<NodeType>;

@@ -52,10 +52,13 @@
 
 namespace vt { namespace pipe { namespace callback {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct CallbackPersistTagType   {} CallbackPersistTag   {};
 static struct CallbackSingleUseTagType {} CallbackSingleUseTag {};
 static struct CallbackMultiUseTagType  {} CallbackMultiUseTag  {};
 static struct CallbackExplicitTagType  {} CallbackExplicitTag  {};
+#pragma GCC diagnostic pop
 
 template <typename SignalT>
 struct CallbackBase {

@@ -53,7 +53,10 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct virtual_proxy_elm_empty { } virtual_proxy_elm_empty_tag { };
+#pragma GCC diagnostic pop
 
 template <typename ColT, typename IndexT>
 struct BaseElmProxy {

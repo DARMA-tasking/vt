@@ -58,7 +58,10 @@ using RemoteOperationIDType = size_t;
 
 static constexpr RemoteOperationIDType const no_op_id = -1;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct GroupCollectiveLabelTagType { } GroupCollectiveLabelTag { };
+#pragma GCC diagnostic pop
 
 }} /* end namespace vt::group */
 
