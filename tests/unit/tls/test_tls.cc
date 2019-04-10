@@ -52,6 +52,8 @@
 
 #include "vt/transport.h"
 
+#if !backend_no_threading
+
 #if backend_check_enabled(openmp)
   #include <omp.h>
 #else
@@ -392,3 +394,5 @@ TEST_F(TestTLS, basic_tls_init_class_multi_thd_std) {
 #endif
 
 }}} // end namespace vt::tests::unit
+
+#endif
