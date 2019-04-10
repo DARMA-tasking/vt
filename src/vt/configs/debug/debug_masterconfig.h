@@ -65,7 +65,7 @@
 )
 #endif
 
-#define default_threading openmp
+#define default_threading
 
 #define backend_features backend_options_on(                             \
   default_threading, memory_pool, cmake_config_features                  \

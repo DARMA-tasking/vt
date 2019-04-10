@@ -24,9 +24,4 @@ elseif(USE_OPENMP)
       "valid OpenMP in compiler"
     )
   endif()
-elseif(OpenMP_FOUND) #no default specified
-  config_for_openmp()
-else() #no default specified
-  message("OpenMP not found: using std::thread for workers")
-  config_for_std_thread()
 endif()
