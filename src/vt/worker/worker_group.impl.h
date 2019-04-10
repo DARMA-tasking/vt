@@ -113,7 +113,7 @@ void WorkerGroupAny<WorkerT>::enqueueForWorker(
   WorkerIDType const& worker_id, WorkUnitType const& work_unit
 ) {
   vtAssert(initialized_, "Must be initialized to enqueue");
-  vtAssert(worker_id < workers_.size(), "Worker ID must be valid");
+  vtAssert((size_t)worker_id < workers_.size(), "Worker ID must be valid");
 
   this->enqueued();
   workers_[worker_id]->enqueue(work_unit);
@@ -162,7 +162,7 @@ void WorkerGroupAny<WorkerT>::spawnWorkers() {
     "WorkerGroup: spawnWorkers: num_workers_={}\n", num_workers_
   );
 
-  vtAssert(workers_.size() >= num_workers_, "Must be correct size");
+  vtAssert(workers_.size() >= (size_t)num_workers_, "Must be correct size");
 
   for (int i = 0; i < num_workers_; i++) {
     WorkerIDType const worker_id = i;
