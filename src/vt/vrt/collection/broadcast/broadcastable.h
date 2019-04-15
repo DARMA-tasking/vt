@@ -50,6 +50,7 @@
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/messaging/pending_send.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -62,22 +63,22 @@ struct Broadcastable : BaseProxyT {
   Broadcastable& operator=(Broadcastable const&) = default;
 
   template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
-  void broadcast(MsgT* msg) const;
+  messaging::PendingSend broadcast(MsgT* msg) const;
   template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
-  void broadcast(MsgSharedPtr<MsgT> msg) const;
+  messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
   template <
     typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
   >
-  void broadcast(Args&&... args) const;
+  messaging::PendingSend broadcast(Args&&... args) const;
 
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-  void broadcast(MsgT* msg) const;
+  messaging::PendingSend broadcast(MsgT* msg) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-  void broadcast(MsgSharedPtr<MsgT> msg) const;
+  messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
   template <
     typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
   >
-  void broadcast(Args&&... args) const;
+  messaging::PendingSend broadcast(Args&&... args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
