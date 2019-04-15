@@ -94,6 +94,7 @@ class CollectionChainManager final {
   // for a step with internal recursive communication and global inter-dependence
   void nextStepCollective(std::function<PendingSend(Index)> step_action) {
     auto epoch = theTerm()->makeEpochCollective();
+    vt::theMsg()->pushEpoch(epoch);
 
     for (auto &entry : chains_) {
       auto& idx = entry.first;
@@ -101,6 +102,7 @@ class CollectionChainManager final {
       chain.add(epoch, step_action(idx));
     }
 
+    vt::theMsg()->popEpoch(epoch);
     theTerm()->finishedEpoch(epoch);
   }
 
