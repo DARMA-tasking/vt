@@ -678,7 +678,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
-void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
+messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   auto msg = promoteMsg(raw_msg);
 
   // broadcast to all nodes
@@ -723,7 +723,7 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
     theTerm()->produce(cur_epoch, num_nodes);
   }
 
-  theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
+  auto ret = theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
     msg.get()
   );
   if (!send_group) {
@@ -731,13 +731,15 @@ void CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   }
 
   theMsg()->popEpoch();
+
+  return ret;
 }
 
 template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
 >
-void CollectionManager::broadcastMsg(
+messaging::PendingSend CollectionManager::broadcastMsg(
   CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
   MsgT *msg, bool instrument
 ) {
@@ -749,7 +751,7 @@ template <
   typename MsgT,
   ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
 >
-void CollectionManager::broadcastMsg(
+messaging::PendingSend CollectionManager::broadcastMsg(
   CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
   MsgT *msg, bool instrument
 ) {
@@ -806,7 +808,7 @@ template <
   typename ColT,
   ActiveColMemberTypedFnType<MsgT,ColT> f
 >
-void CollectionManager::broadcastMsgImpl(
+messaging::PendingSend CollectionManager::broadcastMsgImpl(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, bool inst
 ) {
   // register the user's handler
@@ -815,7 +817,7 @@ void CollectionManager::broadcastMsgImpl(
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-void CollectionManager::broadcastMsgImpl(
+messaging::PendingSend CollectionManager::broadcastMsgImpl(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, bool inst
 ) {
   // register the user's handler
@@ -843,7 +845,7 @@ CollectionManager::broadcastMsgWithHan(
 }
 
 template <typename MsgT, typename ColT>
-void CollectionManager::broadcastNormalMsg(
+messaging::PendingSend CollectionManager::broadcastNormalMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
   HandlerType const& handler, bool const member,
   bool instrument
@@ -876,7 +878,7 @@ template <typename MsgT>
 }
 
 template <typename MsgT, typename ColT, typename IdxT>
-void CollectionManager::broadcastMsgUntypedHandler(
+messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *raw_msg,
   HandlerType const& handler, bool const member, bool instrument
 ) {
@@ -931,7 +933,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
         col_proxy, bnode, handler, cur_epoch
       );
 
-      theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(
+      return theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(
         bnode,msg.get()
       );
     } else {
@@ -940,7 +942,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
         "broadcasting msg to collection: msg={}, handler={}\n",
         print_ptr(raw_msg), handler
       );
-      broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
+      return broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
     }
   } else {
     auto iter = buffered_bcasts_.find(col_proxy);
@@ -981,6 +983,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
       theMsg()->popEpoch();
       theTerm()->consume(cur_epoch);
     });
+    return messaging::PendingSend(nullptr);
   }
 }
 
@@ -1173,7 +1176,7 @@ CollectionManager::sendMsgWithHan(
 }
 
 template <typename MsgT, typename ColT>
-void CollectionManager::sendNormalMsg(
+messaging::PendingSend CollectionManager::sendNormalMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
   HandlerType const& handler, bool const member
 ) {
@@ -1186,7 +1189,7 @@ void CollectionManager::sendNormalMsg(
 template <
   typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
 >
-void CollectionManager::sendMsg(
+messaging::PendingSend CollectionManager::sendMsg(
   VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
 ) {
   using ColT = typename MsgT::CollectionType;
@@ -1197,7 +1200,7 @@ template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
 >
-void CollectionManager::sendMsg(
+messaging::PendingSend CollectionManager::sendMsg(
   VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
 ) {
   using ColT = typename MsgT::CollectionType;
@@ -1247,7 +1250,7 @@ CollectionManager::sendMsg(
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-void CollectionManager::sendMsgImpl(
+messaging::PendingSend CollectionManager::sendMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
@@ -1259,7 +1262,7 @@ template <
   typename ColT,
   ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
 >
-void CollectionManager::sendMsgImpl(
+messaging::PendingSend CollectionManager::sendMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
@@ -1267,13 +1270,11 @@ void CollectionManager::sendMsgImpl(
 }
 
 template <typename MsgT, typename ColT, typename IdxT>
-void CollectionManager::sendMsgUntypedHandler(
+messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   VirtualElmProxyType<ColT> const& toProxy, MsgT *raw_msg,
   HandlerType const& handler, bool const member,
   bool imm_context
 ) {
-  // @todo: implement the action `action' after the routing is finished
-
   auto const& col_proxy = toProxy.getCollectionProxy();
   auto const& elm_proxy = toProxy.getElementProxy();
 
@@ -1298,15 +1299,16 @@ void CollectionManager::sendMsgUntypedHandler(
 
   if (imm_context) {
     theTerm()->produce(cur_epoch);
-    schedule<>([=]{
-      theMsg()->pushEpoch(cur_epoch);
-      theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
-        toProxy, msg.get(), handler, member, false
-      );
-      theMsg()->popEpoch();
-      theTerm()->consume(cur_epoch);
+    return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
+      schedule<>([=]{
+        theMsg()->pushEpoch(cur_epoch);
+        theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
+          toProxy, reinterpret_cast<MsgT*>(inner_msg.get()), handler, member, false
+        );
+        theMsg()->popEpoch();
+        theTerm()->consume(cur_epoch);
+      });
     });
-    return;
   } else {
     theTerm()->produce(cur_epoch);
   }
@@ -1377,6 +1379,7 @@ void CollectionManager::sendMsgUntypedHandler(
       theTerm()->consume(cur_epoch);
     });
   }
+  return messaging::PendingSend(nullptr);
 }
 
 template <typename ColT, typename IndexT>

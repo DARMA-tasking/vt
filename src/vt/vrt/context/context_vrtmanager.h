@@ -50,6 +50,7 @@
 
 #include "vt/config.h"
 #include "vt/context/context.h"
+#include "vt/messaging/pending_send.h"
 #include "vt/vrt/context/context_vrt.h"
 #include "vt/vrt/context/context_vrt_funcs.h"
 #include "vt/vrt/context/context_vrtmessage.h"
@@ -102,12 +103,12 @@ struct VirtualContextManager {
   void destoryVirtualByProxy(VirtualProxyType const& proxy);
 
   template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-  void sendMsg(
+  messaging::PendingSend sendMsg(
     VirtualProxyType const& toProxy, MsgT *const msg
   );
 
   template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-  void sendSerialMsg(
+  messaging::PendingSend sendSerialMsg(
     VirtualProxyType const& toProxy, MsgT *const msg
   );
 

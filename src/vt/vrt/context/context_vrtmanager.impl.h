@@ -136,7 +136,7 @@ template <typename MsgT>
 }
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-void VirtualContextManager::sendSerialMsg(
+messaging::PendingSend VirtualContextManager::sendSerialMsg(
   VirtualProxyType const& toProxy, MsgT *const msg
 ) {
   if (theContext()->getWorker() == worker_id_comm_thread) {
@@ -156,28 +156,43 @@ void VirtualContextManager::sendSerialMsg(
     using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
 
     // route the message to the destination using the location manager
-    SerializedMessenger::sendSerialMsg<
-      MsgT, virtualTypedMsgHandler<MsgT>, VirtualMessage
-    >(
-      msg,
-      // custom send lambda to route the message
-      [=](MsgSharedPtr<SerialMsgT> mymsg){
-        mymsg->setProxy(toProxy);
-        theLocMan()->vrtContextLoc->routeMsgHandler<
-          SerialMsgT, SerializedMessenger::payloadMsgHandler
-        >(toProxy, home_node, mymsg.get());
-      },
-      // custom data transfer lambda if above the eager threshold
-      [=](ActionNodeType action){
-        theLocMan()->vrtContextLoc->routeNonEagerAction(
-          toProxy, home_node, action
+    auto promoted_msg = promoteMsg(msg);
+    messaging::PendingSend pending(
+      promoted_msg, [=](MsgVirtualPtr<BaseMsgType> mymsg){
+        SerializedMessenger::sendSerialMsg<
+          MsgT, virtualTypedMsgHandler<MsgT>, VirtualMessage
+        >(
+          reinterpret_cast<MsgT*>(mymsg.get()),
+          // custom send lambda to route the message
+          [=](MsgSharedPtr<SerialMsgT> innermsg) -> messaging::PendingSend {
+            innermsg->setProxy(toProxy);
+            theLocMan()->vrtContextLoc->routeMsgHandler<
+              SerialMsgT, SerializedMessenger::payloadMsgHandler
+            >(toProxy, home_node, innermsg.get());
+            return messaging::PendingSend(nullptr);
+          },
+          // custom data transfer lambda if above the eager threshold
+          [=](ActionNodeSendType action) -> messaging::PendingSend {
+            auto captured_action = [=](NodeType node){ action(node); };
+            theLocMan()->vrtContextLoc->routeNonEagerAction(
+              toProxy, home_node, captured_action
+            );
+            return messaging::PendingSend(nullptr);
+          }
         );
       }
     );
+    return pending;
   } else {
-    theWorkerGrp()->enqueueCommThread([=]{
-      theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, msg);
-    });
+    auto promoted_msg = promoteMsg(msg);
+    return messaging::PendingSend(
+      promoted_msg, [=](MsgVirtualPtr<BaseMsgType> mymsg) {
+        theWorkerGrp()->enqueueCommThread([=]{
+          auto typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
+          theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, typed_msg);
+        });
+      }
+    );
   }
 }
 
@@ -293,7 +308,7 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
 }
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-void VirtualContextManager::sendMsg(
+messaging::PendingSend VirtualContextManager::sendMsg(
   VirtualProxyType const& toProxy, MsgT *const raw_msg
 ) {
   auto msg = promoteMsg(raw_msg);
@@ -311,8 +326,12 @@ void VirtualContextManager::sendMsg(
     print_ptr(msg.get()), han, home_node
   );
 
-  // route the message to the destination using the location manager
-  theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg);
+  return messaging::PendingSend(
+    msg, [=](MsgVirtualPtr<BaseMsgType> mymsg){
+    // route the message to the destination using the location manager
+      auto msg_shared = promoteMsg(reinterpret_cast<MsgT*>(mymsg.get()));
+      theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg_shared);
+  });
 }
 
 }}  // end namespace vt::vrt

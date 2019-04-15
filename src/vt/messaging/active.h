@@ -53,6 +53,7 @@
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/active.fwd.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/messaging/pending_send.h"
 #include "vt/event/event.h"
 #include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
@@ -125,6 +126,7 @@ struct ActiveMessenger {
   using MaybeReadyType       = std::vector<ReadyHanTagType>;
   using HandlerManagerType   = HandlerManager;
   using EpochStackType       = std::stack<EpochType>;
+  using PendingSendType      = PendingSend;
 
   ActiveMessenger();
 
@@ -158,29 +160,29 @@ struct ActiveMessenger {
    */
 
   template <typename MessageT>
-  EventType sendMsgSz(
+  PendingSendType sendMsgSz(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
     ByteType const& msg_size
   );
 
   template <typename MessageT>
-  EventType sendMsg(
+  PendingSendType sendMsg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg
   );
 
   template <typename MessageT>
-  EventType sendMsg(
+  PendingSendType sendMsg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
     TagType const& tag
   );
 
   template <typename MsgT>
-  EventType sendMsg(
+  PendingSendType sendMsg(
     NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg
   );
 
   template <typename MsgT>
-  EventType sendMsg(
+  PendingSendType sendMsg(
     NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
     TagType const& tag
   );
@@ -190,12 +192,12 @@ struct ActiveMessenger {
    *  based on examining compile-time traits of the message
    */
   template <typename MessageT>
-  EventType sendMsgAuto(
+  PendingSendType sendMsgAuto(
     NodeType const& dest, HandlerType const& han, MessageT* const msg
   );
 
   template <typename MessageT>
-  EventType sendMsgAuto(
+  PendingSendType sendMsgAuto(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
     TagType const& tag
   );
@@ -223,22 +225,22 @@ struct ActiveMessenger {
    */
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType broadcastMsgSz(
+  PendingSendType broadcastMsgSz(
     MessageT* const msg, ByteType const& msg_size, TagType const& tag = no_tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType broadcastMsg(
+  PendingSendType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendMsg(
+  PendingSendType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendMsgSz(
+  PendingSendType sendMsgSz(
     NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
     TagType const& tag = no_tag
   );
@@ -248,17 +250,17 @@ struct ActiveMessenger {
    *  based on examining compile-time traits of the message
    */
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendMsgAuto(
+  PendingSendType sendMsgAuto(
     NodeType const& dest, MessageT* const msg, TagType const& tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendMsgAuto(
+  PendingSendType sendMsgAuto(
     NodeType const& dest, MessageT* const msg
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType broadcastMsgAuto(
+  PendingSendType broadcastMsgAuto(
     MessageT* const msg, TagType const& tag = no_tag
   );
   /*
@@ -289,17 +291,17 @@ struct ActiveMessenger {
    */
 
   template <ActiveFnType* f, typename MessageT>
-  EventType broadcastMsg(
+  PendingSendType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <ActiveFnType* f, typename MessageT>
-  EventType sendMsg(
+  PendingSendType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
   );
 
   template <ActiveFnType* f, typename MessageT>
-  EventType sendMsg(NodeType const& dest, MessageT* const msg);
+  PendingSendType sendMsg(NodeType const& dest, MessageT* const msg);
 
   /*
    *----------------------------------------------------------------------------
@@ -325,7 +327,7 @@ struct ActiveMessenger {
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
-  EventType broadcastMsg(
+  PendingSendType broadcastMsg(
     MessageT* const msg, TagType const& tag = no_tag
   );
 
@@ -333,7 +335,7 @@ struct ActiveMessenger {
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
-  EventType broadcastMsgAuto(
+  PendingSendType broadcastMsgAuto(
     MessageT* const msg, TagType const& tag = no_tag
   );
 
@@ -341,13 +343,13 @@ struct ActiveMessenger {
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
-  EventType broadcastMsgAuto(MessageT* const msg);
+  PendingSendType broadcastMsgAuto(MessageT* const msg);
 
   template <
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
-  EventType sendMsg(
+  PendingSendType sendMsg(
     NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
   );
 
@@ -355,7 +357,7 @@ struct ActiveMessenger {
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
-  EventType sendMsgAuto(
+  PendingSendType sendMsgAuto(
     NodeType const& dest, MessageT* const msg, TagType const& tag
   );
 
@@ -363,7 +365,7 @@ struct ActiveMessenger {
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
-  EventType sendMsgAuto(
+  PendingSendType sendMsgAuto(
     NodeType const& dest, MessageT* const msg
   );
 
@@ -383,33 +385,33 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
   template <typename MessageT>
-  EventType sendMsg(
+  PendingSendType sendMsg(
     NodeType const& dest, HandlerType const& han, MessageT* const msg,
     UserSendFnType send_payload_fn
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EventType sendMsg(
+  PendingSendType sendMsg(
     NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn
   );
 
   template <typename MessageT>
-  EventType broadcastMsg(
+  PendingSendType broadcastMsg(
     HandlerType const& han, MessageT* const msg
   );
 
   template <typename MessageT>
-  EventType broadcastMsg(
+  PendingSendType broadcastMsg(
     HandlerType const& han, MessageT* const msg, TagType const& tag
   );
 
   template <typename MsgT>
-  EventType broadcastMsg(
+  PendingSendType broadcastMsg(
     HandlerType const& han, MsgSharedPtr<MsgT> const& msg
   );
 
   template <typename MsgT>
-  EventType broadcastMsg(
+  PendingSendType broadcastMsg(
     HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag
   );
 
@@ -418,12 +420,12 @@ struct ActiveMessenger {
    *  based on examining compile-time traits of the message
    */
   template <typename MessageT>
-  EventType broadcastMsgAuto(
+  PendingSendType broadcastMsgAuto(
     HandlerType const& han, MessageT* const msg
   );
 
   template <typename MessageT>
-  EventType broadcastMsgAuto(
+  PendingSendType broadcastMsgAuto(
     HandlerType const& han, MessageT* const msg, TagType const& tag
   );
 
