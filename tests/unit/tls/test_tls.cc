@@ -256,7 +256,6 @@ TEST_F(TestTLS, basic_tls_init_multi_thd_openmp) {
 
   #pragma omp parallel num_threads(num_workers + 1)
   {
-    WorkerIDType const thd = omp_get_thread_num();
     testTLSMulti(false, true);
   }
 }
@@ -266,7 +265,6 @@ TEST_F(TestTLS, basic_tls_noinit_static_multi_thd_openmp) {
 
   #pragma omp parallel num_threads(num_workers + 1)
   {
-    WorkerIDType const thd = omp_get_thread_num();
     testTLSMulti(true, false);
   }
 }
@@ -276,7 +274,6 @@ TEST_F(TestTLS, basic_tls_init_static_multi_thd_openmp) {
 
   #pragma omp parallel num_threads(num_workers + 1)
   {
-    WorkerIDType const thd = omp_get_thread_num();
     testTLSMulti(true, true);
   }
 }
@@ -286,7 +283,6 @@ TEST_F(TestTLS, basic_tls_noinit_class_multi_thd_openmp) {
 
   #pragma omp parallel num_threads(num_workers + 1)
   {
-    WorkerIDType const thd = omp_get_thread_num();
     testTLSMulti(false, false, true);
   }
 }
@@ -296,7 +292,6 @@ TEST_F(TestTLS, basic_tls_init_class_multi_thd_openmp) {
 
   #pragma omp parallel num_threads(num_workers + 1)
   {
-    WorkerIDType const thd = omp_get_thread_num();
     testTLSMulti(false, true, true);
   }
 }
