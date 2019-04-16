@@ -69,9 +69,9 @@ TEST_P(TestReduceCollection, test_reduce_op) {
       case 4: proxy.broadcast<ColMsg, colHanNoneCB>(msg); break;
 
       #if ENABLE_REDUCE_EXPR_CALLBACK
-        case 4: proxy.broadcast<ColMsg, colHanPartial>(msg); break;
-        case 5: proxy.broadcast<ColMsg, colHanPartialMulti>(msg); break;
-        case 6: proxy.broadcast<ColMsg, colHanPartialProxy>(msg); break;
+        case 5: proxy.broadcast<ColMsg, colHanPartial>(msg); break;
+        case 6: proxy.broadcast<ColMsg, colHanPartialMulti>(msg); break;
+        case 7: proxy.broadcast<ColMsg, colHanPartialProxy>(msg); break;
       #endif
       default: vtAbort("Failure: should not be reached");
     }
@@ -80,7 +80,7 @@ TEST_P(TestReduceCollection, test_reduce_op) {
 
 #if ENABLE_REDUCE_EXPR_CALLBACK
   INSTANTIATE_TEST_CASE_P(
-    InstantiationName, TestReduceCollection, ::testing::Range(0, 7)
+    InstantiationName, TestReduceCollection, ::testing::Range(0, 8)
   );
 #else
   INSTANTIATE_TEST_CASE_P(
