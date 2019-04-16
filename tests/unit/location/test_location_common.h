@@ -76,9 +76,8 @@ struct ShortMsg : vt::LocationRoutedMsg<int, vt::ShortMessage> {
       entity_(in_entity)
   {}
 
-  int entity_ = invalid_entity;
   vt::NodeType from_ = vt::uninitialized_destination;
-
+  int entity_ = invalid_entity;
 };
 
 struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
