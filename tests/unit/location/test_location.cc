@@ -188,7 +188,7 @@ TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
 
     if (my_node > 1) {
       vt::theLocMan()->virtual_loc->getLocation(
-        entity, old_home, [old_home,new_home](vt::NodeType node) {
+        entity, old_home, [=](vt::NodeType node) {
           // Edit: the expected node can be either 0 (initial) or 1 (migrated)
           // The protocol may actually eagerly update other nodes
           EXPECT_TRUE(node == old_home or node == new_home);
@@ -204,10 +204,9 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
 
   // cannot perform entity migration if less than 3 nodes
   if (nb_nodes > 2) {
-    auto const nb_nodes = vt::theContext()->getNumNodes();
-    auto const my_node = vt::theContext()->getNode();
+    auto const my_node   = vt::theContext()->getNode();
     auto const next_node = (my_node + 1) % nb_nodes;
-    auto const entity = location::default_entity + my_node;
+    auto const entity    = location::default_entity + my_node;
 
     // register the entity on the current node
     vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
@@ -232,7 +231,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
       // The entity can be located on the node where it has been registered
       vt::theLocMan()->virtual_loc->getLocation(
         location::default_entity + i, i,
-        [i, &success, &check_sum, my_node, nb_nodes](vt::NodeType found) {
+        [i, &success, &check_sum, nb_nodes](vt::NodeType found) {
 
           auto expected = (i + 1) % nb_nodes;
           EXPECT_EQ(expected, found);
@@ -283,7 +282,7 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity)  /* NOLINT */ {
           location, node,
           "TestLocationRoute: message arrived for entity={}\n", msg->entity_
         );
-        EXPECT_EQ(msg->entity_, location::magic_number + msg->from_);
+        EXPECT_EQ(msg->entity_, location::offset + msg->from_);
         msg_count++;
       }
     );

@@ -52,8 +52,8 @@
 namespace vt { namespace tests { namespace unit { namespace location {
 
 // constants used in test cases
+int const offset         = 29;
 int const default_entity = 10;
-int const magic_number   = 29;
 int const invalid_entity = -1;
 
 struct EntityMsg : vt::Message {
@@ -76,23 +76,24 @@ struct ShortMsg : vt::LocationRoutedMsg<int, vt::ShortMessage> {
       entity_(in_entity)
   {}
 
-  vt::NodeType from_ = vt::uninitialized_destination;
   int entity_ = invalid_entity;
+  vt::NodeType from_ = vt::uninitialized_destination;
+
 };
 
 struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
 
   LongMsg(int in_entity, vt::NodeType in_from)
     : from_(in_from),
-      entity_(in_entity)
+      entity_(in_entity),
+      data_ ()
   {
     std::memset(data_, 0, vt::location::small_msg_max_size);
   }
 
-
   vt::NodeType from_ = vt::uninitialized_destination;
   int entity_ = invalid_entity;
-  char data_[vt::location::small_msg_max_size];
+  char data_[vt::location::small_msg_max_size] = "";
 };
 
 struct SerialMsg : ShortMsg {
@@ -107,7 +108,7 @@ template <typename MsgT>
 void routeTestHandler(EntityMsg* msg) {
 
   auto const my_node = vt::theContext()->getNode();
-  auto test_msg = vt::makeMessage<MsgT>(magic_number + my_node, my_node);
+  auto test_msg = vt::makeMessage<MsgT>(offset + my_node, my_node);
   auto const& test_msg_size = sizeof(*test_msg);
 
   // check message size
