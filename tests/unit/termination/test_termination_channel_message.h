@@ -53,41 +53,43 @@ namespace vt { namespace tests { namespace unit { namespace channel {
 // basic message
 struct BasicMsg : vt::Message {
 
-  BasicMsg() = default;
-  BasicMsg(vt::NodeType src, vt::NodeType dst, int ttl, vt::EpochType epoch)
-    : ttl_(ttl-1),
-      src_(src),
-      dst_(dst),
-      epoch_(epoch)
-  {}
-  BasicMsg(vt::NodeType src, vt::NodeType dst, int ttl) : BasicMsg(src,dst,ttl,vt::no_epoch) {}
-  BasicMsg(vt::NodeType src, vt::NodeType dst) : BasicMsg(src,dst,1,vt::no_epoch) {}
-
-  //
-  int ttl_ = 0;
-  vt::NodeType src_ = vt::uninitialized_destination;
-  vt::NodeType dst_ = vt::uninitialized_destination;
+  int           ttl_   = 0; // time to live for message routing
+  vt::NodeType  src_   = vt::uninitialized_destination;
+  vt::NodeType  dst_   = vt::uninitialized_destination;
   vt::EpochType epoch_ = vt::no_epoch;
+
+  BasicMsg() = default;
+  BasicMsg(
+    vt::NodeType in_src, vt::NodeType in_dst,
+    int in_ttl = 1, vt::EpochType in_epoch = vt::no_epoch
+  ) : ttl_  (in_ttl - 1),
+      src_  (in_src),
+      dst_  (in_dst),
+      epoch_(in_epoch)
+  {}
+
+  ~BasicMsg() = default;
 };
 
 // control messages
 struct CtrlMsg : vt::Message {
 
-  CtrlMsg() = default;
-  CtrlMsg(vt::NodeType src, vt::NodeType dst, int nb, vt::EpochType epoch)
-    : count_(nb),
-      src_(src),
-      dst_(dst),
-      epoch_(epoch)
-  {}
-  CtrlMsg(vt::NodeType src, vt::NodeType dst, int nb) : CtrlMsg(src,dst,nb,vt::no_epoch) {}
-  CtrlMsg(vt::NodeType src, vt::NodeType dst) : CtrlMsg(src,dst,0,vt::no_epoch) {}
-
-  // incoming/outgoing basic message count
-  int count_ = 0;
-  vt::NodeType src_ = vt::uninitialized_destination;
-  vt::NodeType dst_ = vt::uninitialized_destination;
+  int           count_ = 0; // incoming/outgoing basic message count
+  vt::NodeType  src_   = vt::uninitialized_destination;
+  vt::NodeType  dst_   = vt::uninitialized_destination;
   vt::EpochType epoch_ = vt::no_epoch;
+
+  CtrlMsg() = default;
+  CtrlMsg(
+    vt::NodeType in_src, vt::NodeType in_dst,
+    int in_nb = 0, vt::EpochType in_epoch = vt::no_epoch
+  ) : count_(in_nb),
+      src_  (in_src),
+      dst_  (in_dst),
+      epoch_(in_epoch)
+  {}
+
+  ~CtrlMsg() = default;
 };
 
 }}}} // end namespace vt::tests::unit::channel

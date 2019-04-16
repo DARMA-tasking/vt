@@ -48,58 +48,64 @@
 namespace vt { namespace tests { namespace unit { namespace action {
 
 // epoch sequence creation [rooted,collect]
-std::vector<vt::EpochType> newEpochSeq(int nb, bool rooted, bool useDS) {
-
-  vtAssertExpr(nb > 0);
-  std::vector<vt::EpochType> seq(nb);
+std::vector<vt::EpochType> generateEpochs(int nb, bool rooted, bool useDS) {
+  vtAssert(nb > 0, "Invalid epoch sequence size");
+  // the epoch sequence to be generated
+  std::vector<vt::EpochType> sequence(nb);
 
   if (rooted) {
-    vtAssertExpr(channel::me == channel::root);
+    vtAssert(channel::node == channel::root, "Node should be root");
     // create rooted epoch sequence
-    seq[0] = vt::theTerm()->makeEpochRooted(useDS);
-    vtAssertExpr(channel::root == epoch::EpochManip::node(seq[0]));
-    vtAssertExpr(epoch::EpochManip::isRooted(seq[0]));
+    sequence[0] = vt::theTerm()->makeEpochRooted(useDS);
+    vtAssert(channel::root == epoch_manip::node(sequence[0]), "Should be root");
+    vtAssert(epoch_manip::isRooted(sequence[0]), "First epoch should be rooted");
 
-    for (int i=1; i < nb; ++i){
-      seq[i] = epoch::EpochManip::next(seq[i-1]);
-      vtAssertExpr(epoch::EpochManip::isRooted(seq[i]));
+    for (int i = 1; i < nb; ++i){
+      sequence[i] = epoch_manip::next(sequence[i - 1]);
+      vtAssert(epoch_manip::isRooted(sequence[i]), "Next epoch should be rooted");
     }
   } else /*collective*/ {
-    for (auto&& ep : seq) {
-      ep = vt::theTerm()->makeEpochCollective();
+    for (auto&& epoch : sequence) {
+      epoch = vt::theTerm()->makeEpochCollective();
+      vt::theCollective()->barrier();
     }
   }
-  return seq;
+  return sequence;
 }
 
 // fictive distributed computation of a given epoch
-void compute(vt::EpochType const& ep) {
+void compute(vt::EpochType const& epoch) {
 
   std::random_device device;
   std::mt19937 engine(device());
-  std::uniform_int_distribution<int> dist_ttl(1,10);
-  std::uniform_int_distribution<int> dist_dest(1,channel::all-1);
-  std::uniform_int_distribution<int> dist_round(1,10);
+  std::uniform_int_distribution<int> dist_ttl(1, 10);
+  std::uniform_int_distribution<int> dist_dest(1, channel::all - 1);
+  std::uniform_int_distribution<int> dist_round(1, 10);
 
-  #if DEBUG_TERM_ACTION
-    if(ep not_eq vt::no_epoch){
-      fmt::print(
-        "rank:{}, epoch:{:x}, is_rooted ? {}\n",
-        channel::me, ep, epoch::EpochManip::isRooted(ep)
-      );
-    }
-  #endif
+  if(epoch != vt::no_epoch){
+    debug_print(
+      term, node,
+      "rank:{}, epoch:{:x}, is_rooted ? {}\n",
+      channel::node, epoch, epoch::EpochManip::isRooted(epoch)
+    );
+  }
 
   // process computation for current epoch
   int rounds = dist_round(engine);
   if (channel::all > 2) {
     for (int k = 0; k < rounds; ++k) {
-      int dst = channel::me + dist_dest(engine);
+      int dst = channel::node + dist_dest(engine);
       int ttl = dist_ttl(engine);
-      channel::routeBasic(dst,ttl,ep);
+      channel::routeBasic(dst, ttl, epoch);
     }
   } else {
-    channel::broadcast<channel::basicHandler>(1,ep);
+    channel::broadcast<channel::basicHandler>(1, epoch);
+  }
+}
+
+void finish(vt::EpochType const& epoch) {
+  if (epoch != vt::no_epoch) {
+    vt::theTerm()->finishedEpoch(epoch);
   }
 }
 
@@ -109,97 +115,58 @@ void compute(vt::EpochType const& ep) {
  * - trigger termination detection
  * - finish epoch
  */
-void finalize(vt::EpochType const ep, Order const& order) {
+void finalize(vt::EpochType const& epoch, int order) {
 
-  auto finish = [&](vt::EpochType const& my_ep) {
-    if (my_ep not_eq vt::no_epoch) {
-      vt::theTerm()->finishedEpoch(my_ep);
+  if (epoch == vt::no_epoch) {
+    if (channel::node == channel::root) {
+      channel::trigger(epoch);
+      add(epoch, order);
     }
-  };
-
-  if (ep == vt::no_epoch) {
-    if (channel::me == channel::root) {
-      channel::trigger(ep);
-      verify(ep,order);
-    }
-  } else if (epoch::EpochManip::isRooted(ep)) /* real rooted epoch */ {
-    if (channel::me == channel::root) {
-
+  } else if (epoch_manip::isRooted(epoch)) /*rooted epoch*/ {
+    if (channel::node == channel::root) {
+      using channel::trigger;
       switch(order){
-        case Order::after: {
-          channel::trigger(ep);
-          finish(ep);
-          verify(ep,order);
-          break;
-        }
-        case Order::misc: {
-          channel::trigger(ep);
-          verify(ep,order);
-          finish(ep);
-          break;
-        }
-        default: {
-          verify(ep, order);
-          channel::trigger(ep);
-          finish(ep);
-          break;
-        }
+        case 0: { add(epoch, order); trigger(epoch); finish(epoch); break; }
+        case 1: { trigger(epoch); finish(epoch); add(epoch, order); break; }
+        case 2: { trigger(epoch); add(epoch, order); finish(epoch); break; }
+        default: vtAbort("Should not be reached");
       }
     }
-  } else /* real collective epoch */ {
-    finish(ep);
-    if (channel::me == channel::root) { verify(ep,order); }
+  } else /*collective epoch*/ {
+    finish(epoch);
+    vt::theCollective()->barrier();
+    // spin until termination of the epoch
+    while (not ok) { vt::rt->runScheduler(); }
   }
-
-#if DEBUG_TERM_ACTION
-  fmt::print("rank:{}, epoch:{:x} completed\n", channel::me, ep);
-#endif
 }
 
-void verify(vt::EpochType const& ep, Order const& order){
-#if DEBUG_TERM_ACTION
-  auto hasEnded = [](vt::EpochType const& my_ep, Order const& my_order){
-    print("within", my_ep, my_order);
-    EXPECT_TRUE(channel::hasEnded(my_ep));
-    print("leaving", my_ep, my_order);
-  };
-
-  print("entering", ep, order);
-  if(ep == vt::no_epoch){
-    vt::theTerm()->addAction([&]{ hasEnded(ep,order); });
-  } else {
-    vt::theTerm()->addActionEpoch(ep,[&]{ hasEnded(ep,order); });
+void add(vt::EpochType const& epoch, int order){
+  if (channel::node == channel::root) {
+    if (epoch == vt::no_epoch) {
+      vt::theTerm()->addAction([&]{
+        debug_print(
+          term, node,
+          "rank:{}: global epoch completed [order={}]\n",
+          channel::node, order
+        );
+        // check channel counters
+        EXPECT_TRUE(channel::hasEnded(vt::no_epoch));
+      });
+    } else {
+      vt::theTerm()->addAction(epoch, [&]{
+        debug_print(
+          term, node,
+          "rank:{}: epoch={:x} completed [order={}, rooted={}]\n",
+          channel::node, epoch, order, epoch_manip::isRooted(epoch)
+        );
+        // check channel counters
+        EXPECT_TRUE(channel::hasEnded(epoch));
+        ok = true;
+        auto msg = vt::makeMessage<vt::Message>();
+        vt::theMsg()->broadcastMsg<vt::Message, &setOk>(msg.get());
+      });
+    }
   }
-#else
-  if (ep == vt::no_epoch) {
-    vt::theTerm()->addAction([&]{ EXPECT_TRUE(channel::hasEnded(ep)); });
-  } else {
-    vt::theTerm()->addActionEpoch(ep,[&]{ EXPECT_TRUE(channel::hasEnded(ep)); });
-  }
-#endif
-}
-
-
-void print(std::string step, vt::EpochType const& ep, Order const& order) {
-#if DEBUG_TERM_ACTION
-  std::string text = "";
-
-  switch (order) {
-    case Order::after: text = "order::after"; break;
-    case Order::misc: text = "order::misc"; break;
-    default: text = "order::before"; break;
-  }
-
-  if (ep not_eq vt::no_epoch) {
-    fmt::print(
-      "rank:{}: epoch:{:x}, {}, {} action, is_rooted ? {}\n",
-      channel::me, ep, text, step, epoch::EpochManip::isRooted(ep)
-    );
-  } else /* no_epoch */ {
-    fmt::print("rank:{}: no_epoch, {}, {} action\n", channel::me, text, step);
-  }
-  fflush(stdout);
-#endif
 }
 
 }}}} // end namespace vt::tests::unit::action

@@ -46,38 +46,35 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestTermActionNestedCollectEpoch : action::BaseFixture {
-
+struct TestTermNestedCollect : action::BaseFixture {
   void kernel(int depth) {
-    vtAssertExpr(depth > 0);
-    auto ep = vt::theTerm()->makeEpochCollective();
+    vtAssert(depth > 0, "Wrong depth");
+    auto epoch = vt::theTerm()->makeEpochCollective();
 
     // all ranks should have the same depth
     vt::theCollective()->barrier();
-    if (depth > 1) {
-      kernel(depth-1);
-    }
+    if (depth > 1) { kernel(depth - 1); }
 
-    if (channel::me == channel::root) {
-      action::compute(ep);
-      channel::trigger(ep);
+    if (channel::node == channel::root) {
+      action::compute(epoch);
+      channel::trigger(epoch);
+      action::add(epoch, order_);
     }
-    action::finalize(ep,order_);
+    vt::theCollective()->barrier();
+    action::finalize(epoch, order_);
   }
 };
 
-TEST_P(TestTermActionNestedCollectEpoch, test_term_detect_nested_collect_epoch) {
+TEST_P(TestTermNestedCollect, test_term_detect_nested_collect_epoch)/*NOLINT*/{
   kernel(depth_);
 }
 
-INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestTermActionNestedCollectEpoch,
+INSTANTIATE_TEST_CASE_P /* NOLINT */(
+  InstantiationName, TestTermNestedCollect,
   ::testing::Combine(
-    ::testing::Values(
-      action::Order::before, action::Order::after, action::Order::misc
-    ),
+    ::testing::Range(0, 3),
     ::testing::Values(false),
-    ::testing::Range(2,10,2)
+    ::testing::Range(2, 10, 2)
   )
 );
 

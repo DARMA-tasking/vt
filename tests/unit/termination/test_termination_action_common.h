@@ -52,12 +52,10 @@
 #if !defined INCLUDED_TERMINATION_ACTION_COMMON_H
 #define INCLUDED_TERMINATION_ACTION_COMMON_H
 
-#define DEBUG_TERM_ACTION 2
-
 using namespace vt::tests::unit;
 // set channel counting ranks
 vt::NodeType channel::root = vt::uninitialized_destination;
-vt::NodeType channel::me   = vt::uninitialized_destination;
+vt::NodeType channel::node = vt::uninitialized_destination;
 vt::NodeType channel::all  = vt::uninitialized_destination;
 std::unordered_map<vt::EpochType,channel::Data> channel::data;
 
@@ -68,24 +66,19 @@ std::unordered_map<vt::EpochType,channel::Data> channel::data;
  * - nested epochs termination.
  */
 namespace vt { namespace tests { namespace unit { namespace action {
+// shortcuts
+using epoch_manip = ::vt::epoch::EpochManip;
+using Base = TestParallelHarnessParam<std::tuple<int, bool, int>>;
 
-// ordering of 'addAction' with respect to 'finishedEpoch'
-enum struct Order : int32_t {
-  before = 0,
-  after  = 1,
-  misc   = 2
-};
-
-using Base = TestParallelHarnessParam<std::tuple<Order,bool,int>>;
+static bool ok = false;
 
 struct BaseFixture : Base {
-
-  virtual void SetUp(){
+  void SetUp() override {
     // explicit inheritance
     Base::SetUp();
     // set channel counting ranks
     channel::root = 0;
-    channel::me   = vt::theContext()->getNode();
+    channel::node = vt::theContext()->getNode();
     channel::all  = vt::theContext()->getNumNodes();
     vtAssert(channel::all > 1, "There should be at least two nodes");
 
@@ -97,31 +90,37 @@ struct BaseFixture : Base {
   }
 
 protected:
-  Order order_ = Order::before;
-  bool useDS_  = false;
-  int depth_   = 1;
+  int  order_ = 0;
+  bool useDS_ = false;
+  int  depth_ = 1;
 };
 
 struct SimpleFixture : TestParallelHarness {
-  virtual void SetUp() {
-      // explicit inheritance
-      TestParallelHarness::SetUp();
-      // set channel counting ranks
-      channel::root = 0;
-      channel::me   = vt::theContext()->getNode();
-      channel::all  = vt::theContext()->getNumNodes();
-      vtAssertExpr(channel::all > 1);
+  void SetUp() override {
+    // explicit inheritance
+    TestParallelHarness::SetUp();
+    // set channel counting ranks
+    channel::root = 0;
+    channel::node = vt::theContext()->getNode();
+    channel::all  = vt::theContext()->getNumNodes();
+    vtAssert(channel::all > 1, "Should use at least two nodes");
   }
 };
 
 // epoch sequence creation
-std::vector<vt::EpochType> newEpochSeq(
-  int nb=1, bool rooted=false, bool useDS=false
+std::vector<vt::EpochType> generateEpochs(
+  int nb = 1, bool rooted = false, bool useDS = false
 );
 // fictive distributed computation
-void compute(vt::EpochType const& ep);
-// check epoch termination
-void verify(vt::EpochType const& ep, Order const& order);
+void compute(vt::EpochType const& epoch);
+// add the termination checker algorithm as a pending action
+void add(vt::EpochType const& epoch, int order);
+// finish the epoch
+void finish(vt::EpochType const& epoch);
+// set the flag indicating that the current
+// epoch of the sequence is finished
+inline void setOk(vt::Message* /*unused*/) { ok = true; }
+
 
 /*
  * at the end of a given epoch:
@@ -129,11 +128,8 @@ void verify(vt::EpochType const& ep, Order const& order);
  * - trigger termination detection
  * - finish epoch
  */
-void finalize(vt::EpochType const ep, Order const& order);
+void finalize(vt::EpochType const& epoch, int order);
 
-#if DEBUG_TERM_ACTION
-  void print(std::string step, vt::EpochType const& ep, Order const& order);
-#endif
 }}}} // end namespace vt::tests::unit::action
 
 #include "test_termination_action_common.impl.h"
