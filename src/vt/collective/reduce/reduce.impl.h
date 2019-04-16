@@ -61,8 +61,8 @@ template <typename MessageT>
 /*static*/ void Reduce::reduceUp(MessageT* msg) {
   debug_print(
     reduce, node,
-    "reduceUp: tag={}, epoch={}, vrt={}, msg={}\n",
-    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_, print_ptr(msg)
+    "reduceUp: tag={}, seq={}, vrt={}, msg={}\n",
+    msg->reduce_tag_, msg->reduce_seq_, msg->reduce_proxy_, print_ptr(msg)
   );
   auto const grp = envelopeGetGroup(msg->env);
   if (grp == default_group) {
@@ -85,32 +85,32 @@ template <typename MessageT>
 }
 
 template <typename OpT, typename MsgT>
-EpochType Reduce::reduce(
+SequentialIDType Reduce::reduce(
   NodeType const& root, MsgT* msg, Callback<MsgT> cb, TagType const& tag,
-  EpochType const& epoch, ReduceNumType const& num_contrib,
+  SequentialIDType const& seq, ReduceNumType const& num_contrib,
   VirtualProxyType const& proxy
 ) {
   using ReduceCBType = collective::reduce::operators::ReduceCallback<MsgT>;
   msg->setCallback(cb);
   return reduce<MsgT,MsgT::template msgHandler<MsgT,OpT,ReduceCBType>>(
-    root,msg,tag,epoch,num_contrib,proxy
+    root,msg,tag,seq,num_contrib,proxy
   );
 }
 
 template <typename OpT, typename FunctorT, typename MsgT>
-EpochType Reduce::reduce(
+SequentialIDType Reduce::reduce(
   NodeType const& root, MsgT* msg, TagType const& tag,
-  EpochType const& epoch, ReduceNumType const& num_contrib,
+  SequentialIDType const& seq, ReduceNumType const& num_contrib,
   VirtualProxyType const& proxy
 ) {
   return reduce<MsgT,MsgT::template msgHandler<MsgT,OpT,FunctorT>>(
-    root,msg,tag,epoch,num_contrib,proxy
+    root,msg,tag,seq,num_contrib,proxy
   );
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-EpochType Reduce::reduce(
-  NodeType root, MessageT* const msg, TagType tag, EpochType epoch,
+SequentialIDType Reduce::reduce(
+  NodeType root, MessageT* const msg, TagType tag, SequentialIDType seq,
   ReduceNumType num_contrib, VirtualProxyType proxy, ObjGroupProxyType objgroup
 ) {
   if (group_ != default_group) {
@@ -124,29 +124,29 @@ EpochType Reduce::reduce(
   msg->reduce_objgroup_ = objgroup;
   debug_print(
     reduce, node,
-    "reduce: tag={}, epoch={}, vrt={}, objgrp={}, contrib={}, msg={}, ref={}\n",
-    msg->reduce_tag_, msg->reduce_epoch_, msg->reduce_proxy_,
+    "reduce: tag={}, seq={}, vrt={}, objgrp={}, contrib={}, msg={}, ref={}\n",
+    msg->reduce_tag_, msg->reduce_seq_, msg->reduce_proxy_,
     msg->reduce_objgroup_, num_contrib, print_ptr(msg), envelopeGetRef(msg->env)
   );
-  if (epoch == no_epoch) {
-    auto reduce_epoch_lookup = std::make_tuple(proxy,tag,objgroup);
-    auto iter = next_epoch_for_tag_.find(reduce_epoch_lookup);
-    if (iter == next_epoch_for_tag_.end()) {
-      next_epoch_for_tag_.emplace(
+  if (seq == no_seq_id) {
+    auto reduce_seq_lookup = std::make_tuple(proxy,tag,objgroup);
+    auto iter = next_seq_for_tag_.find(reduce_seq_lookup);
+    if (iter == next_seq_for_tag_.end()) {
+      next_seq_for_tag_.emplace(
         std::piecewise_construct,
-        std::forward_as_tuple(reduce_epoch_lookup),
-        std::forward_as_tuple(EpochType{1})
+        std::forward_as_tuple(reduce_seq_lookup),
+        std::forward_as_tuple(SequentialIDType{1})
       );
-      iter = next_epoch_for_tag_.find(reduce_epoch_lookup);
+      iter = next_seq_for_tag_.find(reduce_seq_lookup);
     }
-    vtAssert(iter != next_epoch_for_tag_.end(), "Must exist now");
-    msg->reduce_epoch_ = iter->second++;
+    vtAssert(iter != next_seq_for_tag_.end(), "Must exist now");
+    msg->reduce_seq_ = iter->second++;
   } else {
-    msg->reduce_epoch_ = epoch;
+    msg->reduce_seq_ = seq;
   }
   reduceAddMsg<MessageT>(msg,true,num_contrib);
   reduceNewMsg<MessageT>(msg);
-  return msg->reduce_epoch_;
+  return msg->reduce_seq_;
 }
 
 template <typename MessageT>
@@ -155,7 +155,7 @@ void Reduce::reduceAddMsg(
 ) {
   auto lookup = ReduceIdentifierType{
     msg->reduce_tag_,
-    msg->reduce_epoch_,
+    msg->reduce_seq_,
     msg->reduce_proxy_,
     msg->reduce_objgroup_
   };
@@ -166,7 +166,7 @@ void Reduce::reduceAddMsg(
       std::piecewise_construct,
       std::forward_as_tuple(lookup),
       std::forward_as_tuple(ReduceState{
-        msg->reduce_tag_,msg->reduce_epoch_,num_contrib_state
+        msg->reduce_tag_,msg->reduce_seq_,num_contrib_state
       })
     );
     live_iter = live_reductions_.find(lookup);
@@ -193,10 +193,10 @@ void Reduce::reduceAddMsg(
 
 template <typename MessageT>
 void Reduce::startReduce(
-  TagType tag, EpochType epoch, VirtualProxyType proxy,
+  TagType tag, SequentialIDType seq, VirtualProxyType proxy,
   ObjGroupProxyType objgroup, bool use_num_contrib
 ) {
-  auto lookup = ReduceIdentifierType{tag,epoch,proxy,objgroup};
+  auto lookup = ReduceIdentifierType{tag,seq,proxy,objgroup};
   auto live_iter = live_reductions_.find(lookup);
   auto& state = live_iter->second;
 
@@ -205,8 +205,8 @@ void Reduce::startReduce(
 
   debug_print(
     reduce, node,
-    "startReduce: tag={}, epoch={}, vrt={}, msg={}, children={}, contrib_={}\n",
-    tag, epoch, proxy, state.msgs.size(), getNumChildren(), state.num_contrib_
+    "startReduce: tag={}, seq={}, vrt={}, msg={}, children={}, contrib_={}\n",
+    tag, seq, proxy, state.msgs.size(), getNumChildren(), state.num_contrib_
   );
 
   if (use_num_contrib) {
@@ -298,7 +298,7 @@ template <typename MessageT>
 void Reduce::reduceNewMsg(MessageT* msg) {
   return startReduce<MessageT>(
     msg->reduce_tag_,
-    msg->reduce_epoch_,
+    msg->reduce_seq_,
     msg->reduce_proxy_,
     msg->reduce_objgroup_
   );
