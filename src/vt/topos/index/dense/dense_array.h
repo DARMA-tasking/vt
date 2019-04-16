@@ -101,7 +101,6 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   >
   explicit DenseIndexArray(Idxs&&... init);
 
-  DenseIndexArray(std::initializer_list<IndexType> vals);
   DenseIndexArray(std::array<IndexType, ndim> in_array);
   DenseIndexArray(DenseIndexArraySingleInitTag, IndexType const& init_value);
 
