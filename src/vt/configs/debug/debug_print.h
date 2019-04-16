@@ -63,17 +63,17 @@
 
 #define print_colorize(color, str, str2)                                \
   ((::vt::debug::ttyc()) ?                                              \
-   (std::string(color) + std::string(str) + std::string("\33[00m") +    \
+   (std::string(color) + std::string(str) + std::string("\033[00m") +    \
     std::string(str2)) :                                                \
    std::string(str) + std::string(str2))
 
-#define vt_print_colorize print_colorize("\33[32;1m", "vt", ":")
+#define vt_print_colorize print_colorize("\033[32;1m", "vt", ":")
 
 #define type_print_colorize(debug_type)                                 \
-  print_colorize("\33[32m", debug_pretty_print(debug_type), ":")
+  print_colorize("\033[32m", debug_pretty_print(debug_type), ":")
 
 #define proc_print_colorize(proc)                                       \
-  print_colorize("\e[34m", "[" +std::to_string(proc) + "]", "")
+  print_colorize("\033[34m", "[" +std::to_string(proc) + "]", "")
 
 #define debug_decorated_prefix(debug_stamp, debug_type) "{} {} {} "
 
@@ -231,11 +231,15 @@ extern runtime::Runtime* curRT;
 #define debug_print_regular(debug_type, main_fmt, main_arg...)  \
   debug_virtual_ctx_none(debug_type, main_fmt, main_arg)
 
-// #define debug_print_array(debug_type, main_fmt, main_arg...)  \
-//   debug_virtual_ctx_1(debug_type, "idx={}", thisIndex, main_fmt, ##main_arg)
+/*
+#define debug_print_array(debug_type, main_fmt, main_arg...)  \
+  debug_virtual_ctx_1(debug_type, "idx={}", thisIndex, main_fmt, ##main_arg)
+*/
 
-// #define debug_print_aoth(debug_type, main_fmt, main_arg...)             \
-//   debug_virtual_ctx_1(debug_type, "idx={}", this_index, main_fmt, main_arg)
+/*
+#define debug_print_aoth(debug_type, main_fmt, main_arg...)             \
+  debug_virtual_ctx_1(debug_type, "idx={}", this_index, main_fmt, main_arg)
+*/
 
 #define debug_print_node(debug_type, main_fmt, main_arg...)             \
   if (debug_argument_option(debug_type) or debug_all_option) {          \
@@ -245,19 +249,23 @@ extern runtime::Runtime* curRT;
     )                                                                   \
   }
 
-  // debug_virtual_ctx_1(                                                  \
-  //   debug_type,                                                         \
-  //   "worker={}", print_ctx_comm_worker,                                 \
-  //   main_fmt, main_arg                                                  \
-  // )
+  /*
+  debug_virtual_ctx_1(                                                  \
+    debug_type,                                                         \
+    "worker={}", print_ctx_comm_worker,                                 \
+    main_fmt, main_arg                                                  \
+  )
+  */
 
 #define debug_print_unknown(debug_type, main_fmt, main_arg...)          \
   if (debug_argument_option(debug_type) or debug_all_option) {          \
     debug_virtual_proc_ctx_none(debug_type, -1, main_fmt, main_arg)     \
   }
 
-// #define debug_print_pe(debug_type, proc, main_fmt, main_arg...)   \
-//   debug_virtual_proc_ctx_none(debug_type, proc, main_fmt, main_arg)
+/*
+#define debug_print_pe(debug_type, proc, main_fmt, main_arg...)   \
+  debug_virtual_proc_ctx_none(debug_type, proc, main_fmt, main_arg)
+*/
 
 #define debug_print_uid(debug_type, main_fmt, main_arg...)           \
   debug_virtual_ctx_2(                                               \

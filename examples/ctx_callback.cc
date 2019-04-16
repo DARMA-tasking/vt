@@ -77,7 +77,7 @@ static void callback_fn(DataMsg* msg, MyContext* ctx) {
   for (auto&& elm : msg->vec_) {
     ::fmt::print("\t elm={}\n", elm);
   }
-};
+}
 
 static void handler(Msg* msg) {
   auto cb = msg->cb;
@@ -93,7 +93,6 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
 
   if (this_node == 0) {
     my_global_ctx.x = 1283;

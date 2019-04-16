@@ -160,9 +160,9 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
       comm_fn();
 
       // once the comm function exits the program is terminated
-      for (auto thd = 0; thd < num_workers_; thd++) {
-        debug_print( worker, node, "comm: calling join thd={}\n", thd );
-        worker_state_[thd]->join();
+      for (auto thr = 0; thr < num_workers_; thr++) {
+        debug_print( worker, node, "comm: calling join thd={}\n", thr );
+        worker_state_[thr]->join();
       }
     }
   }
@@ -193,7 +193,10 @@ void WorkerGroupOMP::enqueueForWorker(
   WorkerIDType const& worker_id, WorkUnitType const& work_unit
 ) {
   vtAssert(initialized_, "Must be initialized to enqueue");
-  vtAssert(worker_id < worker_state_.size(), "Worker ID must be valid");
+  vtAssert(
+    static_cast<size_t>(worker_id) < worker_state_.size(),
+    "Worker ID must be valid"
+  );
 
   #if WORKER_OMP_VERBOSE
   debug_print(worker, node, "WorkerGroupOMP: enqueue for id={}\n", worker_id);

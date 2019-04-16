@@ -53,7 +53,10 @@
 
 namespace vt { namespace objgroup { namespace proxy {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct ObjGroupReconstructTagType { } ObjGroupReconstructTag { };
+#pragma GCC diagnostic pop
 
 template <typename ObjT>
 struct ProxyElm {

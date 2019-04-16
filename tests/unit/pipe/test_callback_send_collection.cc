@@ -33,16 +33,12 @@ struct CallbackDataMsg : vt::Message {
   Callback<DataMsg> cb_;
 };
 
-static int32_t called = 0;
-
 struct TestCallbackSendCollection : TestParallelHarness {
   static void testHandler(CallbackDataMsg* msg) {
-    auto const& n = theContext()->getNode();
     auto nmsg = makeSharedMessage<DataMsg>(8,9,10);
     msg->cb_.send(nmsg);
   }
   static void testHandlerEmpty(CallbackMsg* msg) {
-    auto const& n = theContext()->getNode();
     msg->cb_.send();
   }
 };

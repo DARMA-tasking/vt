@@ -120,7 +120,7 @@ struct ConstructParams {
     IndexType idx, Tuple args, std::index_sequence<I...>
   ) {
     return theCollection()->constructCollective<ColT>(
-      idx,[=](IndexType idx) {
+      idx,[=](IndexType my_idx) {
         return std::make_unique<ColT>(std::get<I>(args)...);
       }
     );
@@ -143,14 +143,14 @@ TYPED_TEST_CASE_P(TestConstructDist);
 TYPED_TEST_P(TestConstruct, test_construct_1) {
   using ColType   = TypeParam;
   using MsgType   = typename ColType::MsgType;
-  using ParamType = typename ColType::ParamType;
+  using TestParamType = typename ColType::ParamType;
 
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const& col_size = 32;
     auto rng = TestIndex(col_size);
-    ParamType args = ConstructTuple<ParamType>::construct();
-    auto proxy = ConstructParams<ColType,ParamType>::constructTup(rng,args);
+    TestParamType args = ConstructTuple<TestParamType>::construct();
+    auto proxy = ConstructParams<ColType,TestParamType>::constructTup(rng,args);
     auto msg = makeSharedMessage<MsgType>();
     proxy.template broadcast<
       MsgType,
@@ -162,12 +162,12 @@ TYPED_TEST_P(TestConstruct, test_construct_1) {
 TYPED_TEST_P(TestConstructDist, test_construct_distributed_1) {
   using ColType   = TypeParam;
   using MsgType   = typename ColType::MsgType;
-  using ParamType = typename ColType::ParamType;
+  using TestParamType = typename ColType::ParamType;
 
   auto const& col_size = 32;
   auto rng = TestIndex(col_size);
-  ParamType args = ConstructTuple<ParamType>::construct();
-  auto proxy = ConstructParams<ColType,ParamType>::constructTupCollective(
+  TestParamType args = ConstructTuple<TestParamType>::construct();
+  auto proxy = ConstructParams<ColType,TestParamType>::constructTupCollective(
     rng,args
   );
   auto msg = makeSharedMessage<MsgType>();

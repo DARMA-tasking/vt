@@ -186,7 +186,6 @@ void InfoColl::setupCollective() {
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
-      auto const& from = theMsg()->getFromNodeCurrentHandler();
       iter->second->newRoot(msg.get());
     }
   );
@@ -219,7 +218,8 @@ void InfoColl::atRoot() {
 
 void InfoColl::upTree() {
   vtAssert(
-    msgs_.size() - extra_count_  == coll_wait_count_ - 1, "Must be equal"
+    msgs_.size() - extra_count_  == static_cast<size_t>(coll_wait_count_ - 1),
+    "Must be equal"
   );
   decltype(msgs_) msg_in_group = {};
   std::size_t subtree = 0;
@@ -260,7 +260,10 @@ void InfoColl::upTree() {
         "InfoColl::upTree: is_in_group={}, subtree={}, num_nodes={}\n",
         is_in_group, subtree, theContext()->getNumNodes()
       );
-      if (subtree + 1 == theContext()->getNumNodes() && is_in_group) {
+      if (
+        subtree + 1 == static_cast<std::size_t>(theContext()->getNumNodes()) &&
+        is_in_group
+      ) {
         /*
          *  This will allow bypassing using this spanning tree because it is
          *  equivalent in terms of functionality, although the spanning tree may
@@ -300,16 +303,16 @@ void InfoColl::upTree() {
         group, is_root, root_node, msg_list.size()
       );
 
-      auto const& subtree = static_cast<NodeType>(0);
+      auto const& subtree_zero = static_cast<NodeType>(0);
       auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
         msg_in_group.size()-1
       );
       auto msg = makeSharedMessage<GroupCollectiveMsg>(
-        group,new_root_cont_,true,subtree,root_node,0,extra
+        group,new_root_cont_,true,subtree_zero,root_node,0,extra
       );
       theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
 
-      for (int i = 1; i < msg_list.size(); i++) {
+      for (std::size_t i = 1; i < msg_list.size(); i++) {
         debug_print(
           group, node,
           "InfoColl::upTree: ROOT group={:x}, new_root={}, sending to={}\n",
@@ -338,10 +341,10 @@ void InfoColl::upTree() {
     auto const& total_subtree = static_cast<NodeType>(subtree + sub);
     auto const& level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
-    auto msg = makeSharedMessage<GroupCollectiveMsg>(
+    auto cmsg = makeSharedMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,level
     );
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
+    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, cmsg);
 
     for (auto&& msg : msg_in_group) {
       span_children_.push_back(msg->getChild());

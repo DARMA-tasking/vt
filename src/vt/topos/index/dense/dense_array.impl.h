@@ -62,19 +62,19 @@ namespace vt { namespace index {
 template <typename IndexType, NumDimensionsType ndim>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(
   std::array<IndexType, ndim> in_array
-) : dims(in_array), BaseIndex()
+) : BaseIndex(), dims(in_array)
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(
   std::initializer_list<IndexType> vals
-) : dims{vals}, BaseIndex()
+) : BaseIndex(), dims{vals}
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
 template <typename... Idxs, typename>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(Idxs&&... init)
-  : dims({init...}), BaseIndex()
+  : BaseIndex(), dims({{init...}})
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
@@ -127,8 +127,9 @@ void DenseIndexArray<IndexType, ndim>::foreach(
 ) const {
   ThisIndexType idx;
   ThisIndexType max = in_max;
-  std::array<IndexType, ndim> vec = {0};
-  for (auto sz = 0; sz < max.getSize(); sz++) {
+  auto size = max.getSize();
+  std::array<IndexType, ndim> vec = {{0}};
+  for (decltype(size) sz = 0; sz < size; sz++) {
     fn(ThisIndexType(vec));
     for (auto i = 0; i < ndim; i++) {
       if (vec[i] + 1 < max[i]) {

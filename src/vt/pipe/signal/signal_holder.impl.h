@@ -153,7 +153,6 @@ void SignalHolder<SignalT>::setCount(
 
 template <typename SignalT>
 void SignalHolder<SignalT>::deliverAll(PipeType const& pid, DataPtrType data) {
-  auto const& count = getCount(pid);
   auto iter = listeners_.find(pid);
   if (iter != listeners_.end()) {
     auto liter = iter->second.begin();

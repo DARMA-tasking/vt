@@ -54,7 +54,10 @@
 
 namespace vt { namespace seq {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct SeqULTConstTag { } seq_ult_cons_tag_t { };
+#pragma GCC diagnostic pop
 
 void seq_context_fn(fcontext::ContextFuncTransfer t);
 

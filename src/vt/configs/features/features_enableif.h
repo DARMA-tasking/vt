@@ -56,8 +56,10 @@
 #define debug_local_options_on(options...) options
 
 // #define debug_resolve_op(option) debug_ ## option(option),
-// #define debug_resolve_options(options...)             \
-//   meld_meta_map(meld_map, debug_resolve_op, ##options)
+/*
+#define debug_resolve_options(options...)             \
+  meld_meta_map(meld_map, debug_resolve_op, ##options)
+*/
 
 #define backend_options_on(arg...) arg
 #define backend_str_join(tok1,tok2) tok2 ## tok1

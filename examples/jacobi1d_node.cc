@@ -184,8 +184,9 @@ static void doKernel(JacobiKernelMsg* msg) {
   auto const& iter = msg->iter;
 
   double* const c1 = msg->iter % 2 == 0 ? t1 : t2;
+  #if DEBUG_JACOBI
   double* const c2 = msg->iter % 2 != 0 ? t1 : t2;
-
+  #endif
   auto const& l_bound = (blk_size * my_node) - 1;
   auto const& r_bound = ((blk_size + 1) * my_node) + 1;
 
@@ -262,8 +263,8 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
         theMsg()->broadcastMsg<JacobiKernelMsg, doKernel>(
           makeSharedMessage<JacobiKernelMsg>(cur_iter)
         );
-        JacobiKernelMsg msg(cur_iter);
-        doKernel(&msg);
+        JacobiKernelMsg kmsg(cur_iter);
+        doKernel(&kmsg);
       }
     } else {
       finished();

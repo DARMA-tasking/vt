@@ -65,7 +65,6 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   auto const& this_node = theContext()->getNode();
   auto const& event_id = createNormalEvent(this_node);
   auto& holder = getEventHolder(event_id);
-  EventRecordType& norm_event = *holder.get_event();
 
   auto trigger = [=]{
     callable();

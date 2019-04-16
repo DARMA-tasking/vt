@@ -76,7 +76,7 @@ TEST_F(TestGroup, test_group_range_construct_1) {
   auto const& hi = num_nodes / 2;
   if (this_node == 0) {
     auto list = std::make_unique<region::Range>(lo,hi);
-    auto const& group_id = theGroup()->newGroup(
+    theGroup()->newGroup(
       std::move(list), [](GroupType group){
         fmt::print("Group is created: group={:x}\n", group);
         auto msg = makeSharedMessage<TestMsg>();
@@ -102,7 +102,7 @@ TEST_F(TestGroup, test_group_range_construct_2) {
   auto const& hi = std::min(num_nodes,static_cast<NodeType>(5));
   if (this_node == 0) {
     auto list = std::make_unique<region::Range>(lo,hi);
-    auto const& group_id = theGroup()->newGroup(
+    theGroup()->newGroup(
       std::move(list), [](GroupType group){
         fmt::print("Group is created: group={:x}\n", group);
         auto msg = makeSharedMessage<TestMsg>();
@@ -128,7 +128,6 @@ TEST_F(TestGroup, test_group_collective_construct_1) {
   theGroup()->newGroupCollective(
     node_filter, [=](GroupType group) {
       auto const& in_group = theGroup()->inGroup(group);
-      auto const& root_node = theGroup()->groupRoot(group);
       auto const& is_default_group = theGroup()->groupDefault(group);
       EXPECT_EQ(in_group, node_filter);
       EXPECT_EQ(is_default_group, false);
@@ -154,7 +153,6 @@ TEST_F(TestGroup, test_group_collective_construct_1) {
 //   theGroup()->newGroupCollective(
 //     node_filter, [=](GroupType group) {
 //       auto const& in_group = theGroup()->inGroup(group);
-//       auto const& root_node = theGroup()->groupRoot(group);
 //       auto const& is_default_group = theGroup()->groupDefault(group);
 //       ::fmt::print("{}: new group collective lambda\n", this_node);
 //       EXPECT_EQ(in_group, node_filter);

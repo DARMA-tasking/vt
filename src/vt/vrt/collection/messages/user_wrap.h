@@ -69,13 +69,13 @@ struct ColMsgWrap : CollectionMessage<ColT,BaseMsgT> {
   ColMsgWrap() = default;
 
   explicit ColMsgWrap(UserMsgT&& msg)
-    : msg_(std::move(msg)),
-      CollectionMessage<ColT,BaseMsgT>(ColMsgWrapTag)
+    : CollectionMessage<ColT,BaseMsgT>(ColMsgWrapTag),
+      msg_(std::move(msg))
   { }
 
   explicit ColMsgWrap(UserMsgT const& msg)
-    : msg_(msg),
-      CollectionMessage<ColT,BaseMsgT>(ColMsgWrapTag)
+    : CollectionMessage<ColT,BaseMsgT>(ColMsgWrapTag),
+      msg_(msg)
   { }
 
   UserMsgT& getMsg() { return msg_; }

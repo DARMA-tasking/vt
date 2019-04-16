@@ -129,8 +129,8 @@ void RemoteContainerMsg<MsgT,TupleT>::trigger(MsgU* data) {
     pipe, is_send_back, std::tuple_size<decltype(trigger_list_)>()
   );
   if (is_send_back) {
-    auto const& pipe = this->getPipe();
-    triggerSendBack<MsgT>(pipe,data);
+    auto const& retpipe = this->getPipe();
+    triggerSendBack<MsgT>(retpipe,data);
   } else {
     triggerDirect(data);
   }

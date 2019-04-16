@@ -160,7 +160,7 @@ void Barrier::contBarrier(
 
   BarrierType const barrier = is_named ? named : cur_unnamed_barrier_++;
 
-  auto& barrier_state = insertFindBarrier(is_named, is_wait, barrier, fn);
+  insertFindBarrier(is_named, is_wait, barrier, fn);
 
   debug_print(
     barrier, node,
@@ -192,9 +192,9 @@ void Barrier::barrierUp(
   bool const& is_named, bool const& is_wait, BarrierType const& barrier,
   bool const& skip_term
 ) {
-  auto const& num_children_ = getNumChildren();
-  bool const& is_root_ = isRoot();
-  auto const& parent_ = getParent();
+  auto const& num_children = getNumChildren();
+  bool const& is_root = isRoot();
+  auto const& parent = getParent();
 
   // ToDo: Why we call this function again? (if you come from contBarrier,
   // ToDo: this is already called)
@@ -202,7 +202,7 @@ void Barrier::barrierUp(
 
   barrier_state.recv_event_count += 1;
 
-  bool const is_ready = barrier_state.recv_event_count == num_children_ + 1;
+  bool const is_ready = barrier_state.recv_event_count == num_children + 1;
 
   debug_print(
     barrier, node,
@@ -211,7 +211,7 @@ void Barrier::barrierUp(
   );
 
   if (is_ready) {
-    if (not is_root_) {
+    if (not is_root) {
       auto msg = makeSharedMessage<BarrierMsg>(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol
       if (skip_term) {
@@ -221,7 +221,7 @@ void Barrier::barrierUp(
         barrier, node,
         "barrierUp: barrier={}\n", barrier
       );
-      theMsg()->sendMsg<BarrierMsg, barrierUp>(parent_, msg);
+      theMsg()->sendMsg<BarrierMsg, barrierUp>(parent, msg);
     } else {
       auto msg = makeSharedMessage<BarrierMsg>(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol

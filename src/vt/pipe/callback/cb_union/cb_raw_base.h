@@ -55,6 +55,8 @@
 
 namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct RawAnonTagType        { } RawAnonTag        { };
 static struct RawSendMsgTagType     { } RawSendMsgTag     { };
 static struct RawBcastMsgTagType    { } RawBcastMsgTag    { };
@@ -64,6 +66,7 @@ static struct RawSendColDirTagType  { } RawSendColDirTag  { };
 static struct RawBcastColDirTagType { } RawBcastColDirTag { };
 static struct RawSendObjGrpTagType  { } RawSendObjGrpTag  { };
 static struct RawBcastObjGrpTagType { } RawBcastObjGrpTag { };
+#pragma GCC diagnostic pop
 
 template <typename MsgT>
 struct CallbackTyped;

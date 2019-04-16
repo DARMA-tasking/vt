@@ -71,7 +71,7 @@ static void tell_handle(TestMsg* msg) {
           "{}: data arrived: data={}, num_bytes={}\n",
           my_node, print_ptr(data), num_bytes
         );
-        for (auto i = 0; i < num_elems; i++) {
+        for (size_t i = 0; i < num_elems; i++) {
           fmt::print("\t: my_data[{}] = {}\n", i, ptr[i]);
         }
       }

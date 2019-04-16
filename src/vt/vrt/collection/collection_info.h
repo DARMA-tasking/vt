@@ -58,8 +58,8 @@ struct CollectionInfo {
   CollectionInfo(
     IndexT const& in_range, bool const in_immediate,
     NodeType const& in_from_node, VirtualProxyType in_proxy
-  ) : range_(in_range), immediate_(in_immediate), proxy_(in_proxy),
-      from_node_(in_from_node)
+  ) : immediate_(in_immediate), proxy_(in_proxy),
+      from_node_(in_from_node), range_(in_range)
   { }
 
   template <typename SerializerT>

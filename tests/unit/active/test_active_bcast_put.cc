@@ -92,8 +92,8 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
 
     EXPECT_EQ(put_size * sizeof(int), size);
 
-    for (int i = 0; i < put_size; i++) {
-      EXPECT_EQ(ptr[i], i + 1);
+    for (size_t i = 0; i < put_size; i++) {
+      EXPECT_EQ(static_cast<size_t>(ptr[i]), i + 1);
     }
 
     handler_count++;
@@ -116,7 +116,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
 
   std::vector<int> put_payload;
 
-  for (int i = 0; i < put_size; i++) {
+  for (size_t i = 0; i < put_size; i++) {
     put_payload.push_back(i + 1);
   }
 

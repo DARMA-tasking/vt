@@ -96,6 +96,7 @@ struct MsgHandlerB {
 static inline void activeMessageNode() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * A basic active message send essentially does an

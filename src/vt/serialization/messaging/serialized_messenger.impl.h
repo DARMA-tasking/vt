@@ -491,9 +491,9 @@ template <typename MsgT, typename BaseT>
           dest, sys_msg.get(), send_serialized
         );
       } else {
-        auto msg = makeMessage<MsgT>();
-        auto tptr = deserialize<MsgT>(ptr, ptr_size, msg.get());
-        messageResetDeserdes(msg);
+        auto localmsg = makeMessage<MsgT>();
+        auto tptr = deserialize<MsgT>(ptr, ptr_size, localmsg.get());
+        messageResetDeserdes(localmsg);
 
         debug_print(
           serial_msg, node,

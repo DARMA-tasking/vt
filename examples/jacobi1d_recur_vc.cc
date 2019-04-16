@@ -128,7 +128,6 @@ int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
   auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
 
   if (my_node == 0) {
     auto root = theVirtualManager()->makeVirtual<Jacobi1D>(0, total_size, -1);

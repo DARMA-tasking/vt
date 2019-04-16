@@ -94,9 +94,9 @@ int main(int argc, char** argv) {
     );
     this_group = theGroup()->newGroup(std::move(list), [](GroupType group){
       fmt::print("Group is created\n");
-      auto msg = makeSharedMessage<HelloGroupMsg>();
-      envelopeSetGroup(msg->env, group);
-      theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg);
+      auto gmsg = makeSharedMessage<HelloGroupMsg>();
+      envelopeSetGroup(gmsg->env, group);
+      theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(gmsg);
     });
   }
 

@@ -83,9 +83,6 @@ private:
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-
   int32_t num_elms = default_num_elms;
 
   if (argc > 1) {

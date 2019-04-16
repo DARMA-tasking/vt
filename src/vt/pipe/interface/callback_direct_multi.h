@@ -57,7 +57,10 @@
 
 namespace vt { namespace pipe { namespace interface {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct CallbackDirectSendMultiTagType {} CallbackDirectSendMultiTag { };
+#pragma GCC diagnostic pop
 
 template <typename MsgT, typename TupleT>
 struct CallbackDirectSendMulti : RemoteContainerMsg<MsgT,TupleT> {

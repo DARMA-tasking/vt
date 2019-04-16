@@ -75,14 +75,14 @@ static void doGetHandler(Msg* m) {
       "{}: data arrived: data={}, num_bytes={}\n",
       my_node, print_ptr(data), num_bytes
     );
-    for (auto i = 0; i < num_elems; i++) {
+    for (size_t i = 0; i < num_elems; i++) {
       fmt::print("\t: my_data[{}] = {}\n", i, ptr[i]);
     }
   });
 }
 
 static void initData(ByteType const& offset, double* const data_ptr) {
-  for (auto i = 0; i < rdma_num_elements; i++) {
+  for (RDMA_ElmType i = 0; i < rdma_num_elements; i++) {
     data_ptr[i] = i * 1.0 * (offset + 1);
   }
 }
@@ -145,7 +145,7 @@ static void put_fn(
     my_node, print_ptr(ptr), num_bytes, tag, offset
   );
 
-  auto const& ret_ptr = obtain_data_ptr(offset, ptr, true);
+  obtain_data_ptr(offset, ptr, true);
 }
 
 static RDMA_PutRetType serialize_put_fn(RDMA_PutRetType put_in) {

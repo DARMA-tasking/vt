@@ -422,7 +422,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       msg->getLocFromNode()
     );
 
-    auto trigger_msg_handler_action = [=](EntityID const& id) {
+    auto trigger_msg_handler_action = [=](EntityID const& hid) {
       bool const& has_handler = msg->hasHandler();
       auto const& from = msg->getLocFromNode();
       if (has_handler) {
@@ -432,18 +432,18 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           location, node,
           "EntityLocationCoord: apply direct handler action: "
           "id={}, from={}, handler={}, ref={}\n",
-          id, from, handler, envelopeGetRef(msg->env)
+          hid, from, handler, envelopeGetRef(msg->env)
         );
         runnable::Runnable<MessageT>::run(handler, active_fn, msg.get(), from);
       } else {
-        auto reg_han_iter = local_registered_msg_han_.find(id);
+        auto reg_han_iter = local_registered_msg_han_.find(hid);
         vtAssert(
           reg_han_iter != local_registered_msg_han_.end(),
           "Message handler must exist for location manager routed msg"
         );
         debug_print(
           location, node,
-          "EntityLocationCoord: no direct handler: id={}\n", id
+          "EntityLocationCoord: no direct handler: id={}\n", hid
         );
         reg_han_iter->second.applyRegisteredActionMsg(msg.get());
       }
@@ -474,16 +474,16 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       EntityID id_ = id;
       // buffer the message here, the entity will be registered in the future
       insertPendingEntityAction(id_, [=](NodeType resolved) {
-        auto const& this_node = theContext()->getNode();
+        auto const& my_node = theContext()->getNode();
 
         debug_print(
           location, node,
           "EntityLocationCoord: routeMsgNode: trigger action: resolved={}, "
           "this_node={}, id={}, ref={}\n",
-          resolved, this_node, id_, envelopeGetRef(msg->env)
+          resolved, my_node, id_, envelopeGetRef(msg->env)
         );
 
-        if (resolved == this_node) {
+        if (resolved == my_node) {
           trigger_msg_handler_action(id_);
         } else {
           /*
@@ -667,11 +667,11 @@ template <typename EntityID>
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
       loc->getLocation(entity, home_node, [=](NodeType node) {
-        auto msg = makeSharedMessage<LocMsgType>(
+        auto msg2 = makeSharedMessage<LocMsgType>(
           inst, entity, event_id, ask_node, home_node
         );
-        msg->setResolvedNode(node);
-        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg);
+        msg2->setResolvedNode(node);
+        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2);
       });
     }
   );

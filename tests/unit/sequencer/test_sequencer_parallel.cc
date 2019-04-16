@@ -96,13 +96,18 @@ struct TestSequencerParallelParam : TestParallelHarnessParam<CountType> {
     std::atomic<OrderType>* order, int wait_n, int num_pars, int start_order
   ) {
     theSeq()->wait_closure<MessageT, f>(no_tag, [=](MessageT* msg){
+      #if DEBUG_TEST_HARNESS_PRINT
       std::stringstream str_build;
       str_build << "PAR-";
       str_build << wait_n;
       auto str = str_build.str().c_str();
       DEBUG_PRINT_SEQ_NESTED(*order, wait_n, str);
+      #endif
       OrderType const result = order->fetch_add(1);
-      EXPECT_TRUE(result >= start_order or result <= start_order + num_pars);
+      EXPECT_TRUE(
+        result >= static_cast<OrderType>(start_order) or
+        result <= static_cast<OrderType>(start_order + num_pars)
+      );
     });
   }
 
@@ -119,7 +124,7 @@ struct TestSequencerParallelParam : TestParallelHarnessParam<CountType> {
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     std::atomic<OrderType>* order_ptr = &seq_ordering_;
 
@@ -175,13 +180,13 @@ struct TestSequencerParallel : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 3);
+      EXPECT_EQ(seq_ordering_++, 3U);
       return;
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->parallel(seq_id, []{
       theSeq()->wait<TestMsg, seqParHan1>([](TestMsg* msg){
@@ -203,13 +208,18 @@ struct TestSequencerParallel : TestParallelHarness {
     std::atomic<OrderType>* order, int wait_n, int num_pars, int start_order
   ) {
     theSeq()->wait_closure<MessageT, f>(no_tag, [=](MessageT* msg){
+      #if DEBUG_TEST_HARNESS_PRINT
       std::stringstream str_build;
       str_build << "PAR-";
       str_build << wait_n;
       auto str = str_build.str().c_str();
       DEBUG_PRINT_SEQ_NESTED(*order, wait_n, str);
+      #endif
       OrderType const result = order->fetch_add(1);
-      EXPECT_TRUE(result >= start_order or result <= start_order + num_pars);
+      EXPECT_TRUE(
+        result >= static_cast<OrderType>(start_order) or
+        result <= static_cast<OrderType>(start_order + num_pars)
+      );
     });
   }
 
@@ -217,16 +227,16 @@ struct TestSequencerParallel : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 4);
+      EXPECT_EQ(seq_ordering_++, 4U);
       return;
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, seqParHan2>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     std::atomic<OrderType>* order_ptr = &seq_ordering_;
@@ -241,16 +251,16 @@ struct TestSequencerParallel : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 5);
+      EXPECT_EQ(seq_ordering_++, 5U);
       return;
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, seqParHan3>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     std::atomic<OrderType>* order_ptr = &seq_ordering_;
@@ -261,7 +271,7 @@ struct TestSequencerParallel : TestParallelHarness {
     theSeq()->parallel(seq_id, fn1, fn2);
 
     theSeq()->wait<TestMsg, seqParHan3>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 4);
+      EXPECT_EQ(seq_ordering_++, 4U);
     });
   }
 
@@ -269,30 +279,30 @@ struct TestSequencerParallel : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 5);
+      EXPECT_EQ(seq_ordering_++, 5U);
       return;
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, seqParHan4>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     theSeq()->sequenced([]{
-      SeqType const seq_id = theSeq()->getCurrentSeq();
+      SeqType const my_seq_id = theSeq()->getCurrentSeq();
 
       std::atomic<OrderType>* order_ptr = &seq_ordering_;
       auto fn1 = std::bind(waitParNum<TestMsg, seqParHan4>, order_ptr, 1, 2, 2);
       auto fn2 = std::bind(waitParNum<TestMsg, seqParHan4>, order_ptr, 2, 2, 2);
 
-      theSeq()->parallel(seq_id, fn1, fn2);
+      theSeq()->parallel(my_seq_id, fn1, fn2);
     });
 
     theSeq()->wait<TestMsg, seqParHan4>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 4);
+      EXPECT_EQ(seq_ordering_++, 4U);
     });
   }
 };

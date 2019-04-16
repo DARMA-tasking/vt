@@ -104,9 +104,9 @@ static void finishedPing(FinishedPingMsg<num_bytes>* msg) {
   printTiming(num_bytes);
 
   if (num_bytes != max_bytes) {
-    auto msg = makeSharedMessage<PingMsg<num_bytes * 2>>();
+    auto pmsg = makeSharedMessage<PingMsg<num_bytes * 2>>();
     theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong>(
-      pong_node, msg
+      pong_node, pmsg
     );
   }
 }

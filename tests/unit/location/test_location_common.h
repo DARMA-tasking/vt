@@ -72,8 +72,8 @@ struct EntityMsg : vt::Message {
 struct ShortMsg : vt::LocationRoutedMsg<int, vt::ShortMessage> {
 
   ShortMsg(int in_entity, vt::NodeType in_from)
-    : entity_(in_entity),
-      from_(in_from)
+    : from_(in_from),
+      entity_(in_entity)
   {}
 
   vt::NodeType from_ = vt::uninitialized_destination;
@@ -83,8 +83,8 @@ struct ShortMsg : vt::LocationRoutedMsg<int, vt::ShortMessage> {
 struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
 
   LongMsg(int in_entity, vt::NodeType in_from)
-    : entity_(in_entity),
-      from_(in_from)
+    : from_(in_from),
+      entity_(in_entity)
   {}
 
   vt::NodeType from_ = vt::uninitialized_destination;
@@ -131,7 +131,7 @@ void routeTestHandler(EntityMsg* msg) {
 // check if the given entity is in the node cache
 bool isCached(int const entity) {
   return vt::theLocMan()->virtual_loc->isCached(entity);
-};
+}
 
 // check if the given entity should be stored in cache or not
 // depending on the situation:

@@ -129,6 +129,7 @@ static void colHan2(ColMsg<MyCol>* msg, MyCol* col) {
   );
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void method1(ColMsg<MyCol>* msg, MyCol* col) {
   auto const& node = theContext()->getNode();
   fmt::print(
@@ -166,6 +167,7 @@ static void colHan(ColMsg<MyCol>* msg, MyCol* col) {
   #endif
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void colHanOther(ColMsg<OtherColl>* msg, OtherColl* col) {
   auto const& node = theContext()->getNode();
   fmt::print(
@@ -182,6 +184,7 @@ struct HelloMsg : vt::Message {
   { }
 };
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void hello_world(HelloMsg* msg) {
   fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
 }

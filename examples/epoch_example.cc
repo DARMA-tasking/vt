@@ -45,6 +45,7 @@
 #include "vt/transport.h"
 
 #include <cstdlib>
+#include <inttypes.h>
 
 using namespace vt;
 
@@ -68,17 +69,15 @@ int main(int argc, char** argv) {
     auto const next = epoch::EpochManip::next(rooted);
     auto const next_seq = epoch::EpochManip::seq(next);
 
-    ::fmt::print(
+    fmt::print(
       "rooted epoch={}, is_rooted={}, has_cat={}, is_user={}, get_seq={}, "
       "node={}, next={}, next_seq={}, num={}, end={}\n",
       rooted, is_rooted, has_category, is_user, get_seq, ep_node, next,
       next_seq, epoch::epoch_seq_num_bits, epoch::eEpochLayout::EpochSentinelEnd
     );
-    ::fmt::print(
-      "epoch={}, seq={}\n", rooted, get_seq
-    );
-    printf("epoch %llu , %llx : seq %llu , %llx\n", rooted, rooted, get_seq, get_seq);
-    printf("epoch %llu , %llx : seq %llu , %llx\n", next, next, next_seq, next_seq);
+    fmt::print("epoch={}, seq={}\n", rooted, get_seq);
+    fmt::print("epoch {}, {:x} : seq {}, {:x}\n", rooted, rooted, get_seq, get_seq);
+    fmt::print("epoch {}, {:x} : seq {}, {:x}\n", next, next, next_seq, next_seq);
   }
 
   while (!rt->isTerminated()) {

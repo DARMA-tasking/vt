@@ -69,9 +69,9 @@ Pool::ePoolSize Pool::getPoolType(
   size_t const& num_bytes, size_t const& oversize
 ) {
   auto const& total_bytes = num_bytes + oversize;
-  if (total_bytes <= small_msg->getNumBytes()) {
+  if (total_bytes <= static_cast<size_t>(small_msg->getNumBytes())) {
     return ePoolSize::Small;
-  } else if (total_bytes <= medium_msg->getNumBytes()) {
+  } else if (total_bytes <= static_cast<size_t>(medium_msg->getNumBytes())) {
     return ePoolSize::Medium;
   } else {
     return ePoolSize::Malloc;
@@ -118,13 +118,15 @@ void* Pool::pooledAlloc(
   if (pool_type == ePoolSize::Small) {
     auto pool = comm_thread ? small_msg.get() : s_msg_worker_[worker].get();
     vtAssert(
-      (comm_thread || s_msg_worker_.size() > worker), "Must have worker pool"
+      (comm_thread || s_msg_worker_.size() > static_cast<size_t>(worker)),
+      "Must have worker pool"
     );
     ret = pool->alloc(num_bytes, oversize);
   } else if (pool_type == ePoolSize::Medium) {
     auto pool = comm_thread ? medium_msg.get() : m_msg_worker_[worker].get();
     vtAssert(
-      (comm_thread || m_msg_worker_.size() > worker), "Must have worker pool"
+      (comm_thread || m_msg_worker_.size() > static_cast<size_t>(worker)),
+      "Must have worker pool"
     );
     ret = pool->alloc(num_bytes, oversize);
   } else {
@@ -225,7 +227,7 @@ void Pool::dealloc(void* const buf) {
   if (!success) {
     defaultDealloc(ptr_actual);
   }
-};
+}
 
 Pool::SizeType Pool::remainingSize(void* const buf) {
   #if backend_check_enabled(memory_pool)

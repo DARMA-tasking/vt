@@ -168,7 +168,6 @@ namespace vt { namespace group { namespace global {
   );
 
   if (num_children > 0 || send_to_root) {
-    EventRecordType* parent = nullptr;
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
       messaging::MPITag::ActiveMsgTag
     );
@@ -186,9 +185,7 @@ namespace vt { namespace group { namespace global {
         );
 
         if (send) {
-          auto const put_event = theMsg()->sendMsgBytesWithPut(
-            child, base, size, send_tag
-          );
+          theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
         }
       });
     }
@@ -203,9 +200,7 @@ namespace vt { namespace group { namespace global {
         print_bool(is_root), root_node, dest, print_ptr(msg)
       );
 
-      auto const put_event = theMsg()->sendMsgBytesWithPut(
-        root_node, base, size, send_tag
-      );
+      theMsg()->sendMsgBytesWithPut(root_node, base, size, send_tag);
     }
   }
 

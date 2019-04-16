@@ -52,11 +52,11 @@
 namespace vt {
 
 // Physical identifier sentinel values (nodes, cores, workers, etc.)
-static constexpr NodeType const uninitialized_destination          = 0xFFFF;
-static constexpr WorkerCountType const no_workers                  = 0xFFFF;
-static constexpr WorkerIDType const no_worker_id                   = 0xFFFE;
-static constexpr WorkerIDType const worker_id_comm_thread          = 0xFEED;
-static constexpr WorkerIDType const comm_debug_print               = -1;
+static constexpr NodeType const uninitialized_destination          = static_cast<NodeType>(0xFFFF);
+static constexpr WorkerCountType const no_workers                  = static_cast<WorkerCountType>(0xFFFF);
+static constexpr WorkerIDType const no_worker_id                   = static_cast<WorkerIDType>(0xFFFE);
+static constexpr WorkerIDType const worker_id_comm_thread          = static_cast<WorkerIDType>(0xFEED);
+static constexpr WorkerIDType const comm_debug_print               = static_cast<WorkerIDType>(-1);
 
 // Runtime default `empty' sentinel value
 static constexpr uint64_t const u64empty = 0xFFFFFFFFFFFFFFFF;

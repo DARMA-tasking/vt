@@ -56,8 +56,6 @@ namespace vt { namespace rdma {
   auto const recv_node = msg->requesting;
   auto const handle = msg->rdma_handle;
 
-  auto const& this_node = theContext()->getNode();
-
   debug_print(
     rdma, node,
     "theMsg: han={}, is_user={}, tag={}, bytes={}\n",
@@ -69,7 +67,7 @@ namespace vt { namespace rdma {
     msg, msg->is_user_msg, msg->rdma_handle, msg_tag, msg->num_bytes,
     msg->offset, false, nullptr, recv_node,
     [msg_tag,op_id,recv_node,handle](RDMA_GetType data){
-      auto const& this_node = theContext()->getNode();
+      auto const& my_node = theContext()->getNode();
       debug_print(
         rdma, node, "data is ready\n"
       );
@@ -79,7 +77,7 @@ namespace vt { namespace rdma {
       // auto const& num_bytes = std::get<1>(data);
 
       auto new_msg = makeSharedMessage<GetBackMessage>(
-        op_id, std::get<1>(data), 0u, no_tag, handle, this_node
+        op_id, std::get<1>(data), 0u, no_tag, handle, my_node
       );
 
       auto send_payload = [&](Active::SendFnType send){
@@ -122,7 +120,6 @@ namespace vt { namespace rdma {
   );
 
   if (get_ptr == nullptr) {
-    auto const op_id = msg->op_id;
     theMsg()->recvDataMsg(
       msg->mpi_tag_to_recv, msg->send_back,
       [=](RDMA_GetType ptr, ActionType deleter){
@@ -147,10 +144,7 @@ namespace vt { namespace rdma {
 }
 
 /*static*/ void RDMAManager::putBackMsg(PutBackMessage* msg) {
-  auto const msg_tag = envelopeGetTag(msg->env);
   auto const op_id = msg->op_id;
-
-  auto const& this_node = theContext()->getNode();
 
   debug_print(
     rdma, node,
@@ -167,8 +161,6 @@ namespace vt { namespace rdma {
   auto const recv_node = msg->recv_node;
   auto const recv_tag = msg->mpi_tag_to_recv;
   auto const direct = msg->packed_direct;
-
-  auto const& this_node = theContext()->getNode();
 
   debug_print(
     rdma, node,
@@ -260,8 +252,6 @@ namespace vt { namespace rdma {
 }
 
 /*static*/ void RDMAManager::setupChannel(CreateChannel* msg) {
-  auto const& this_node = theContext()->getNode();
-
   debug_print(
     rdma_channel, node,
     "setupChannel: han={}, target={}, non_target={}, "
@@ -288,7 +278,6 @@ namespace vt { namespace rdma {
 }
 
 /*static*/ void RDMAManager::remoteChannel(ChannelMessage* msg) {
-  auto const& this_node = theContext()->getNode();
   auto const target = getTarget(msg->han, msg->override_target);
 
   debug_print(
@@ -549,8 +538,6 @@ void RDMAManager::syncChannel(
   bool const& is_local, RDMA_HandleType const& han, RDMA_TypeType const& type,
   NodeType const& target, NodeType const& non_target, ActionType const& action
 ) {
-  auto const& this_node = theContext()->getNode();
-
   debug_print(
     rdma_channel, node,
     "syncChannel: is_local={}, han={}, target={}, non_target={}, type={}\n",
@@ -752,7 +739,6 @@ void RDMAManager::putRegionTypeless(
   RDMA_HandleType const& han, RDMA_PtrType const& ptr,
   RDMA_RegionType const& region, ActionType after_put_action
 ) {
-  auto const& this_node = theContext()->getNode();
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 
   if (is_collective) {
@@ -783,7 +769,6 @@ void RDMAManager::putRegionTypeless(
       auto const& blk_hi = std::get<2>(rng);
       auto const& elm_size = region.elm_size;
       auto const& rlo = region.lo;
-      auto const& rhi = region.hi;
       auto const& roffset = lo - rlo;
       auto const& ptr_offset = static_cast<char*>(ptr) + (roffset * elm_size);
       auto const& block_offset = (lo - blk_lo) * elm_size;
@@ -818,7 +803,6 @@ void RDMAManager::getRegionTypeless(
   RDMA_HandleType const& han, RDMA_PtrType const& ptr,
   RDMA_RegionType const& region, ActionType next_action
 ) {
-  auto const& this_node = theContext()->getNode();
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 
   if (is_collective) {
@@ -849,7 +833,6 @@ void RDMAManager::getRegionTypeless(
       auto const& blk_hi = std::get<2>(rng);
       auto const& elm_size = region.elm_size;
       auto const& rlo = region.lo;
-      auto const& rhi = region.hi;
       auto const& roffset = lo - rlo;
       auto const& ptr_offset = static_cast<char*>(ptr) + (roffset * elm_size);
       auto const& block_offset = (lo - blk_lo) * elm_size;
@@ -865,11 +848,11 @@ void RDMAManager::getRegionTypeless(
 
       getDataIntoBuf(
         han, ptr_offset, (hi-lo)*elm_size, block_offset, no_tag, [=]{
-          auto const& node = theContext()->getNode();
+          auto const& my_node = theContext()->getNode();
           debug_print(
             rdma, node,
             "{}: walk_region: trigger: action={}\n",
-            node, print_ptr_const(&action)
+            my_node, print_ptr_const(&action)
           );
           action->release();
         }, elm_size, node
@@ -895,8 +878,6 @@ void RDMAManager::putDataIntoBufCollective(
     han,ptr,num_bytes,offset
   );
 
-  auto const& num_elems = num_bytes / (elm_size / rdma_default_byte_size);
-
   auto const& a_offset = offset == no_offset ? 0 : offset;
   RDMA_RegionType const region(
     a_offset / elm_size, (a_offset + num_bytes)/elm_size, 1, elm_size
@@ -914,8 +895,6 @@ void RDMAManager::getDataIntoBufCollective(
     "getDataIntoBufCollective: han={}, ptr={}, bytes={}, offset={}\n",
     han,ptr,num_bytes,offset
   );
-
-  auto const& num_elems = num_bytes / (elm_size / rdma_default_byte_size);
 
   auto const& a_offset = offset == no_offset ? 0 : offset;
   RDMA_RegionType const region(
@@ -1141,7 +1120,6 @@ void RDMAManager::createDirectChannelFinish(
   ActionType const& action, TagType const& channel_tag, bool const& is_target,
   ByteType const& num_bytes, NodeType const& override_target
 ) {
-  auto const& this_node = theContext()->getNode();
   auto const target = getTarget(han, override_target);
 
   RDMA_PtrType target_ptr = no_rdma_ptr;
@@ -1299,9 +1277,9 @@ void RDMAManager::createDirectChannelInternal(
     );
 
     auto cb = theCB()->makeFunc<GetInfoChannel>([=](GetInfoChannel* msg){
-      auto const& num_bytes = msg->num_bytes;
+      auto const& my_num_bytes = msg->num_bytes;
       createDirectChannelFinish(
-        type, han, non_target, action, unique_channel_tag, is_target, num_bytes,
+        type, han, non_target, action, unique_channel_tag, is_target, my_num_bytes,
         override_target
       );
     });

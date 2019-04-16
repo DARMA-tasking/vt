@@ -115,6 +115,7 @@ static void msgSerialA(ParticleMsg* msg);
 static inline void activeMessageSerialization() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * The theMsg()->sendMsgAuto(..) will serialize the message sent to the

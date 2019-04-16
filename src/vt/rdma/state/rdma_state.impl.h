@@ -58,8 +58,6 @@ template <typename MsgT, typename FuncT, ActiveTypedRDMAGetFnType<MsgT>* f>
 RDMA_HandlerType State::setRDMAGetFn(
   MsgT* msg, FuncT const& fn, bool const& any_tag, TagType const& tag
 ) {
-  auto const& this_node = theContext()->getNode();
-
   debug_print(
     rdma_state, node,
     "setRDMAGetFn: GET tag={}, handle={}, any_tag={}\n",
@@ -97,8 +95,6 @@ RDMA_HandlerType State::setRDMAPutFn(
   MsgT* msg, FuncT const& fn, bool const& any_tag, TagType const& tag
 ) {
   RDMA_HandlerType const handler = makeRdmaHandler(RDMA_TypeType::Put);
-
-  auto const& this_node = theContext()->getNode();
 
   debug_print(
     rdma_state, node,

@@ -187,7 +187,6 @@ namespace vt { namespace arguments {
   auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
   auto abort  = "Do not dump stack traces when vtAabort(..) is invoked";
   auto file   = "Dump stack traces to file instead of stdout";
-  auto name   = "Name of file to dump stack backtrace";
   auto dir    = "Name of directory to write stack files";
   auto mod    = "Write stack dump if (node % vt_stack_mod) == 0";
   auto g = app.add_flag("--vt_no_warn_stack",   vt_no_warn_stack,   warn);
@@ -425,8 +424,8 @@ namespace vt { namespace arguments {
   app.allow_extras(true);
   try {
     app.parse(args);
-  } catch (CLI::Error &e) {
-    return app.exit(e);
+  } catch (CLI::Error &ex) {
+    return app.exit(ex);
   }
 
   /*
@@ -438,9 +437,9 @@ namespace vt { namespace arguments {
 
   // Reverse iterate (CLI11 reverses the order when they modify the args)
   for (auto iter = args.rbegin(); iter != args.rend(); ++iter) {
-    for (auto i = 0; i < argc; i++) {
-      if (std::string(argv[i]) == *iter) {
-        ret_idx.push_back(i);
+    for (auto ii = 0; ii < argc; ii++) {
+      if (std::string(argv[ii]) == *iter) {
+        ret_idx.push_back(ii);
       }
     }
     ret_args.push_back(*iter);
@@ -449,8 +448,8 @@ namespace vt { namespace arguments {
   // Use the saved index to setup the new_argv and new_argc
   int new_argc = ret_args.size();
   char** new_argv = new char*[new_argc];
-  for (auto i = 0; i < new_argc; i++) {
-    new_argv[i] = argv[ret_idx[i]];
+  for (auto ii = 0; ii < new_argc; ii++) {
+    new_argv[ii] = argv[ret_idx[ii]];
   }
 
   // Set them back with all vt arguments elided

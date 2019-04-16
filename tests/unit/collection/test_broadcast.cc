@@ -113,13 +113,13 @@ TYPED_TEST_CASE_P(TestBroadcast);
 TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
   using ColType = TypeParam;
   using MsgType = typename ColType::MsgType;
-  using ParamType = typename ColType::ParamType;
+  using TestParamType = typename ColType::ParamType;
 
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const& col_size = 32;
     auto range = TestIndex(col_size);
-    ParamType args = ConstructTuple<ParamType>::construct();
+    TestParamType args = ConstructTuple<TestParamType>::construct();
     auto proxy = theCollection()->construct<ColType>(range);
     auto msg = makeSharedMessage<MsgType>(args);
     proxy.template broadcast<

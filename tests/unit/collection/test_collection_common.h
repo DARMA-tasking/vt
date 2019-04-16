@@ -139,12 +139,12 @@ struct ConstructTuple {
     }                                                                   \
 };
 
-CONSTRUCT_TUPLE_TYPE(std::string,magic_string_);
-CONSTRUCT_TUPLE_TYPE(int32_t,magic_int32_t_);
-CONSTRUCT_TUPLE_TYPE(int64_t,magic_int64_t_);
-CONSTRUCT_TUPLE_TYPE(test_data::A,magic_A_t_);
-CONSTRUCT_TUPLE_TYPE(test_data::B,magic_B_t_);
-CONSTRUCT_TUPLE_TYPE(test_data::C,magic_C_t_);
+CONSTRUCT_TUPLE_TYPE(std::string,magic_string_)
+CONSTRUCT_TUPLE_TYPE(int32_t,magic_int32_t_)
+CONSTRUCT_TUPLE_TYPE(int64_t,magic_int64_t_)
+CONSTRUCT_TUPLE_TYPE(test_data::A,magic_A_t_)
+CONSTRUCT_TUPLE_TYPE(test_data::B,magic_B_t_)
+CONSTRUCT_TUPLE_TYPE(test_data::C,magic_C_t_)
 
 }}} // end namespace vt::tests::unit
 

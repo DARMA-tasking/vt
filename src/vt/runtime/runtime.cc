@@ -331,7 +331,7 @@ void Runtime::printStartupBanner() {
   fmt::print("{}{}{}", vt_pre, f5, reset);
   fmt::print("{}{}{}", vt_pre, f6, reset);
   fmt::print("{}{}{}", vt_pre, f7, reset);
-  for (auto i = 1; i < features.size(); i++) {
+  for (size_t i = 1; i < features.size(); i++) {
     fmt::print("{}\t{}\n", vt_pre, emph(features.at(i)));
   }
 
@@ -584,9 +584,10 @@ void Runtime::printStartupBanner() {
     }                                                         \
   } while (0);
 
-  // #define debug_print_force(feature, opt, arg...)         \
-  //   debug_print_context(backend_debug, feature, opt, arg)
-
+  /*
+  #define debug_print_force(feature, opt, arg...)         \
+    debug_print_context(backend_debug, feature, opt, arg)
+  */
 
   #if !backend_debug_enabled(none)
     debug_warn_compile(none)

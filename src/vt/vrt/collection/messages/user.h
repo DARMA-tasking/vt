@@ -61,7 +61,10 @@ using RoutedMessageType = LocationRoutedMsg<
   ::vt::vrt::VirtualElmProxyType<ColT, typename ColT::IndexType>, MessageT
 >;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct ColMsgWrapTagType { } ColMsgWrapTag { };
+#pragma GCC diagnostic pop
 
 template <typename ColT, typename BaseMsgT = ::vt::Message>
 struct CollectionMessage :

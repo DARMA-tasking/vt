@@ -137,9 +137,9 @@ void CollectiveAnyOps<instance>::abort(
   std::string const str, ErrorCodeType const code
 ) {
   auto tls_rt = curRT;
-  auto rt = tls_rt ? tls_rt : ::vt::rt;
-  if (rt) {
-    rt->abort(str, code);
+  auto myrt = tls_rt ? tls_rt : ::vt::rt;
+  if (myrt) {
+    myrt->abort(str, code);
   } else {
     std::exit(code);
   }
@@ -151,9 +151,9 @@ void CollectiveAnyOps<instance>::output(
   bool formatted, bool abort_out
 ) {
   auto tls_rt = curRT;
-  auto rt = tls_rt ? tls_rt : ::vt::rt;
-  if (rt) {
-    rt->output(str,code,error,decorate,formatted);
+  auto myrt = tls_rt ? tls_rt : ::vt::rt;
+  if (myrt) {
+    myrt->output(str,code,error,decorate,formatted);
   } else {
     ::fmt::print(str.c_str());
   }

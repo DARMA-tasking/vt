@@ -91,7 +91,7 @@ struct LocationManager {
 
   static LocInstType cur_loc_inst;
 
-  PtrType<VrtLocType> virtual_loc = std::make_unique<VrtLocType>();;
+  PtrType<VrtLocType> virtual_loc = std::make_unique<VrtLocType>();
   PtrType<VrtLocProxyType> vrtContextLoc = std::make_unique<VrtLocProxyType>();
 
   template <typename ColT, typename IndexT>

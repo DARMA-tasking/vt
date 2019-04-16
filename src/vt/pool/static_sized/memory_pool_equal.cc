@@ -73,7 +73,7 @@ template <int64_t num_bytes_t>
   //   );
   // }
 
-  for (int i = cur_slot_; i < holder_.size(); i++) {
+  for (size_t i = cur_slot_; i < holder_.size(); i++) {
     free(holder_.at(i));
   }
 }
@@ -82,12 +82,12 @@ template <int64_t num_bytes_t>
 void* MemoryPoolEqual<num_bytes_t>::alloc(
   size_t const& sz, size_t const& oversize
 ) {
-  if (cur_slot_ + 1 >= holder_.size()) {
+  if (static_cast<size_t>(cur_slot_ + 1) >= holder_.size()) {
     resizePool();
   }
 
   vtAssert(
-    cur_slot_+1 < holder_.size(),
+    static_cast<size_t>(cur_slot_+1) < holder_.size(),
     "Must be within pool size, add capability to grow"
   );
 
@@ -132,7 +132,7 @@ void MemoryPoolEqual<num_bytes_t>::resizePool() {
 
   holder_.resize(new_size);
 
-  for (auto i = cur_size; i < holder_.size(); i++) {
+  for (auto i = cur_size; i < new_size; i++) {
     holder_[i] = static_cast<void*>(malloc(num_full_bytes_));
   }
 }

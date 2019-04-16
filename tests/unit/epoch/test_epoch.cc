@@ -70,10 +70,10 @@ TEST_F(TestEpoch, basic_test_first_epoch_unrooted_1) {
   EXPECT_TRUE(!is_rooted);
   EXPECT_TRUE(!is_user);
   EXPECT_TRUE(!has_category);
-  EXPECT_EQ(get_seq, 1);
+  EXPECT_EQ(get_seq, 1U);
   EXPECT_EQ(ep_node, 0);
-  EXPECT_EQ(next, 2);
-  EXPECT_EQ(next_seq, 2);
+  EXPECT_EQ(next, 2U);
+  EXPECT_EQ(next_seq, 2U);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_unrooted_1) {

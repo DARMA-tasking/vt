@@ -59,10 +59,13 @@
 
 namespace vt { namespace seq {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct SeqNodeParentTag { } seq_node_parent_tag_t { };
 static struct SeqNodeLeafTag { } seq_node_leaf_tag_t { };
 static struct SeqNodeParallelTag { } seq_node_parallel_tag_t { };
 static struct SeqNodeUniversalTag { } seq_node_universal_tag_t { };
+#pragma GCC diagnostic pop
 
 struct SeqNode : std::enable_shared_from_this<SeqNode> {
   using SizeType = uint64_t;

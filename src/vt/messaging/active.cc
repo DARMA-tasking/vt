@@ -110,8 +110,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   }
 
   EventType new_event = theEvent()->createParentEvent(this_node_);
-  auto& holder = theEvent()->getEventHolder(new_event);
-  EventRecordType* parent = holder.get_event();
 
   MsgSizeType new_msg_size = msg_size;
 
@@ -143,7 +141,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
       );
     }
     if (direct_buf_pack) {
-      auto msg_size_ptr = static_cast<intptr_t>(msg_size);
       packMsg(msg, msg_size, put_ptr, put_size);
       new_msg_size += put_size;
       envelopeSetPutTag(msg->env, PutPackedTag);
@@ -154,7 +151,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
         RDMA_GetType{put_ptr,put_size}, dest, env_tag
       );
       auto const& ret_tag = std::get<1>(ret);
-      auto const& put_event_send = std::get<0>(ret);
       if (ret_tag != env_tag) {
         envelopeSetPutTag(msg->env, ret_tag);
       }
@@ -165,9 +161,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     new_msg_size += put_size;
   }
 
-  auto const& send_event = sendMsgBytes(
-    dest, base, new_msg_size, send_tag
-  );
+  sendMsgBytes(dest, base, new_msg_size, send_tag);
 
   return new_event;
 }
@@ -237,7 +231,6 @@ EventType ActiveMessenger::sendMsgSized(
   auto const& is_bcast = envelopeIsBcast(msg->env);
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_epoch = envelopeIsEpochType(msg->env);
-  auto const& is_shared = isSharedMessage(msg);
 
   backend_enable_if(
     trace_enabled, {
@@ -290,14 +283,9 @@ EventType ActiveMessenger::sendMsgSized(
   EventType ret = no_event;
 
   if (deliver) {
-    auto const& is_put = envelopeIsPut(msg->env);
-
-    EventRecordType* parent = nullptr;
     EventType event = no_event;
 
-    auto const send_put_event = sendMsgBytesWithPut(
-      dest, base, msg_size, send_tag
-    );
+    sendMsgBytesWithPut(dest, base, msg_size, send_tag);
 
     ret = event;
   } else {

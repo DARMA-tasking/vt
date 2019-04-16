@@ -114,7 +114,7 @@ static constexpr CountType const max_seq_depth = 8;
         (NODE), msg                                                     \
       );                                                                \
       auto const total = (wait_cnt * seg_cnt) + wait_pre + wait_post;   \
-      for (int i = 0; i < total; i++) {                                 \
+      for (CountType i = 0; i < total; i++) {                           \
         TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
         theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                           \
           (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
@@ -151,11 +151,11 @@ static constexpr CountType const max_seq_depth = 8;
       return;                                                           \
     }                                                                   \
                                                                         \
-    EXPECT_EQ(seq_ordering_++, 0);                                      \
+    EXPECT_EQ(seq_ordering_++, 0U);                                     \
                                                                         \
     theSeq()->wait_closure<NumWaitsMsg, numWaitHan>(                    \
       no_tag, [](NumWaitsMsg* m){                                       \
-        EXPECT_EQ(seq_ordering_++, 1);                                  \
+        EXPECT_EQ(seq_ordering_++, 1U);                                 \
         num_waits = m->info[0];                                         \
         nwaits_pre = m->info[1];                                        \
         nwaits_post = m->info[2];                                       \
@@ -165,7 +165,7 @@ static constexpr CountType const max_seq_depth = 8;
     );                                                                  \
                                                                         \
     theSeq()->sequenced([=]{                                            \
-      for (int wb = 0; wb < nwaits_pre; wb++) {                         \
+      for (uint32_t wb = 0; wb < nwaits_pre; wb++) {                    \
         theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                      \
           no_tag, [=](MSG_TYPE* msg){                                   \
             CountType const this_wait = wb + nwait_offset;              \
@@ -175,12 +175,12 @@ static constexpr CountType const max_seq_depth = 8;
         );                                                              \
       }                                                                 \
                                                                         \
-      for (int nseg = 0; nseg < num_segs; nseg++) {                     \
+      for (uint32_t nseg = 0; nseg < num_segs; nseg++) {                \
         theSeq()->sequenced([=]{                                        \
           DEBUG_PRINT("nseg={}:num_waits={}\n",nseg,num_waits);         \
           DEBUG_PRINT_SEQ(seq_ordering_, 0, "start-sequenced");         \
           seqDepth(depth, [=]{                                          \
-            for (int w = 0; w < num_waits; w++) {                       \
+            for (uint32_t w = 0; w < num_waits; w++) {                  \
               theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                \
                 no_tag, [=](MSG_TYPE* msg){                             \
                   CountType const this_wait =                           \
@@ -194,7 +194,7 @@ static constexpr CountType const max_seq_depth = 8;
         });                                                             \
       }                                                                 \
                                                                         \
-      for (int wa = 0; wa < nwaits_post; wa++) {                        \
+      for (uint32_t wa = 0; wa < nwaits_post; wa++) {                   \
         theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                      \
           no_tag, [=](MSG_TYPE* msg){                                   \
             CountType const this_wait =                                 \

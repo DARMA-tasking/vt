@@ -184,7 +184,6 @@ void GroupManager::initializeRemoteGroup(
   GroupType const& group, RegionPtrType in_region, bool const& is_static,
   RegionType::SizeType const& group_size
 ) {
-  bool const remote = true;
   auto group_info = std::make_unique<GroupInfoType>(
     info_rooted_remote_cons, std::move(in_region), group, group_size
   );
@@ -235,7 +234,6 @@ void GroupManager::initializeLocalGroup(
   GroupType const& group, RegionPtrType in_region, bool const& is_static,
   ActionType action, RegionType::SizeType const& group_size
 ) {
-  bool const remote = false;
   auto group_info = std::make_unique<GroupInfoType>(
     info_rooted_local_cons, std::move(in_region), action, group, group_size
   );
@@ -310,7 +308,6 @@ EventType GroupManager::sendGroupCollective(
   auto const& info = *iter->second;
   auto const& in_group = info.inGroup();
   auto const& group_ready = info.isReady();
-  EventRecordType* parent = nullptr;
 
   if (in_group && group_ready) {
     auto const& this_node = theContext()->getNode();
@@ -335,7 +332,6 @@ EventType GroupManager::sendGroupCollective(
     EventType event = no_event;
     auto const& tree = info.getTree();
     auto const& num_children = tree->getNumChildren();
-    auto const& node = theContext()->getNode();
 
     debug_print(
       group, node,
@@ -356,9 +352,7 @@ EventType GroupManager::sendGroupCollective(
         );
 
         if (send) {
-          auto const put_event = theMsg()->sendMsgBytesWithPut(
-            child, base, size, send_tag
-          );
+          theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
         }
       });
 
@@ -366,9 +360,7 @@ EventType GroupManager::sendGroupCollective(
        *  Send message to the root node of the group
        */
       if (send_to_root) {
-        auto const put_event = theMsg()->sendMsgBytesWithPut(
-          root_node, base, size, send_tag
-        );
+        theMsg()->sendMsgBytesWithPut(root_node, base, size, send_tag);
       }
 
       if (!first_send && this_node_dest) {
@@ -427,19 +419,13 @@ EventType GroupManager::sendGroup(
   );
 
   auto const& group_node = GroupIDBuilder::getNode(group);
-  auto const& group_static = GroupIDBuilder::isStatic(group);
   auto const& group_collective = GroupIDBuilder::isCollective(group);
-  auto const& send_tag = static_cast<messaging::MPI_TagType>(
-    messaging::MPITag::ActiveMsgTag
-  );
 
   vtAssert(
     !group_collective, "Collective groups are not supported"
   );
 
   auto send_to_node = [&](NodeType node) -> EventType {
-    EventType event = no_event;
-    EventRecordType* parent = nullptr;
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
       messaging::MPITag::ActiveMsgTag
     );
@@ -467,24 +453,23 @@ EventType GroupManager::sendGroup(
         return no_event;
       }
     } else {
-      auto iter = remote_group_info_.find(group);
+      auto remote_iter = remote_group_info_.find(group);
 
       debug_print(
         broadcast, node,
         "GroupManager::sendGroup: *send* remote size={}, from={}, found={}, "
         "dest={}, group={:x}, is_root={} \n",
-        size, from, iter != remote_group_info_.end(), dest, group,
+        size, from, remote_iter != remote_group_info_.end(), dest, group,
         is_root
       );
 
-      if (iter != remote_group_info_.end() && (!this_node_dest || first_send)) {
-        auto& info = *iter->second;
+      if (remote_iter != remote_group_info_.end() && (!this_node_dest || first_send)) {
+        auto& info = *remote_iter->second;
         vtAssert(!info.is_forward_, "Must not be a forward");
         vtAssert(
           info.default_spanning_tree_ != nullptr, "Must have spanning tree"
         );
 
-        EventRecordType* parent = nullptr;
         auto const& send_tag = static_cast<messaging::MPI_TagType>(
           messaging::MPITag::ActiveMsgTag
         );
@@ -500,9 +485,7 @@ EventType GroupManager::sendGroup(
             );
 
             if (child != this_node) {
-              auto const put_event = theMsg()->sendMsgBytesWithPut(
-                child, base, size, send_tag
-              );
+              theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
             }
           });
         }

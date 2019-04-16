@@ -51,7 +51,6 @@ using namespace vt;
 int main(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
 
-  auto const& my_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
   Index2D idx(2, 3);

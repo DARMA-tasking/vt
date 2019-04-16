@@ -63,7 +63,7 @@ struct TestMsg : vt::ShortMessage {
 
 struct TestMappingRegistry : TestParallelHarness {
   static void test_handler(TestMsg* msg) {
-    auto const& this_node = theContext()->getNode();
+    //auto const& this_node = theContext()->getNode();
     //fmt::print("{}: test_handler: han={}\n", this_node, msg->han);
     auto fn = auto_registry::getAutoHandlerMap(msg->han);
 

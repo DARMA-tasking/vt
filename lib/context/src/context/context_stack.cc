@@ -88,6 +88,8 @@ FContextStackType allocatePageSizedStackInner(size_t const size_in) {
     "default size=%ld, size_in=%ld\n",
     max_page_size, min_page_size, sys_page_size, default_size, size_in
   );
+  #else
+  (void)max_page_size;
   #endif
 
   if (alloc_size == 0) {

@@ -55,9 +55,9 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_1) {
   ctx->val = this_node;
 
   auto cb = theCB()->makeFunc<Context>(
-    ctx.get(), [](Context* ctx){
+    ctx.get(), [](Context* my_ctx){
       called = 200;
-      EXPECT_EQ(ctx->val, theContext()->getNode());
+      EXPECT_EQ(my_ctx->val, theContext()->getNode());
     }
   );
   cb.send();
@@ -77,10 +77,9 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
 
   auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
   auto cb = theCB()->makeFunc<DataMsg,Context>(
-    ctx.get(), [next](DataMsg* msg, Context* ctx){
-      auto const& n = theContext()->getNode();
+    ctx.get(), [next](DataMsg* msg, Context* my_ctx){
       called = 500;
-      EXPECT_EQ(ctx->val, theContext()->getNode());
+      EXPECT_EQ(my_ctx->val, theContext()->getNode());
       //fmt::print("{}: a={},b={},c={}\n",n,msg->a,msg->b,msg->c);
       EXPECT_EQ(msg->a, next+1);
       EXPECT_EQ(msg->b, next+2);

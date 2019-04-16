@@ -59,8 +59,8 @@ namespace vt { namespace pipe { namespace callback {
 template <typename SignalT>
 AnonListener<SignalT>::AnonListener(
   CallbackFnType const& in_fn, bool is_persist, RefType refs
-) : fn_(in_fn),
-    CallbackBase<SignalT>(CallbackExplicitTag, is_persist, refs)
+) : CallbackBase<SignalT>(CallbackExplicitTag, is_persist, refs),
+    fn_(in_fn)
 { }
 
 template <typename SignalT>

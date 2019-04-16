@@ -264,7 +264,7 @@ void GreedyLB::runBalancer(
   }
   std::make_heap(nodes.begin(), nodes.end(), CompProcType());
   auto lb_size = recs.size();
-  for (auto i = 0; i < lb_size; i++) {
+  for (size_t i = 0; i < lb_size; i++) {
     std::pop_heap(recs.begin(), recs.end(), CompRecType());
     auto max_rec = recs.back();
     recs.pop_back();
@@ -333,7 +333,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
   theTerm()->addActionEpoch(epoch,[this]{
     this->finishedTransferExchange();
   });
-  for (auto i = 0; i < num_recs; i++) {
+  for (decltype(+num_recs) i = 0; i < num_recs; i++) {
     auto const& to_node = objGetNode(recs[i]);
     auto const& new_obj_id = objSetNode(this_node,recs[i]);
     debug_print(
@@ -385,7 +385,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       auto const& proc = node_transfer[node];
       auto const& rec_size = proc.size();
       *ptr_out = rec_size;
-      for (auto i = 0; i < rec_size; i++) {
+      for (size_t i = 0; i < rec_size; i++) {
         *(ptr_out + i + 1) = proc[i];
       }
     }
@@ -437,7 +437,7 @@ void GreedyLB::calcLoadOver() {
     }
   }
 
-  for (auto i = 0; i < obj_sample.size(); i++) {
+  for (size_t i = 0; i < obj_sample.size(); i++) {
     auto obj_iter = obj_sample.find(i);
     if (obj_iter != obj_sample.end() && obj_iter->second.size() == 0) {
       obj_sample.erase(obj_iter);

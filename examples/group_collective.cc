@@ -62,6 +62,7 @@ struct HelloGroupMsg : ::vt::Message {
   HelloGroupMsg() = default;
 };
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void hello_world(HelloMsg* msg) {
   fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
 }
@@ -96,8 +97,8 @@ int main(int argc, char** argv) {
 
   srand48(my_node * 29);
 
-  auto const& random_node_filter = drand48() < 0.5;
-  auto const& even_node_filter   = my_node % 2 == 0;
+  //auto const& random_node_filter = drand48() < 0.5;
+  //auto const& even_node_filter   = my_node % 2 == 0;
   auto const& odd_node_filter    = my_node % 2 == 1;
 
   this_group = theGroup()->newGroupCollective(

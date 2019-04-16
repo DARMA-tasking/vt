@@ -94,7 +94,6 @@ void PipeManagerBase::triggerPipeTyped(PipeType const& pipe, MsgT* msg) {
 
 template <typename MsgT>
 void PipeManagerBase::triggerPipeUnknown(PipeType const& pipe, MsgT* msg) {
-  using SignalType = signal::Signal<MsgT>;
   auto iter = pipe_state_.find(pipe);
   vtAssert(iter != pipe_state_.end(), "Pipe state must exist");
 
@@ -184,11 +183,11 @@ void PipeManagerBase::addListenerAny(PipeType const& pipe, ListenerT&& fn) {
   vtAssert(iter != pipe_state_.end(), "Pipe state must exist");
   auto& state = iter->second;
   if (!state.hasDispatch()) {
-    auto fn = [pipe](void* input) {
+    auto fn2 = [pipe](void* input) {
       auto data = reinterpret_cast<typename SignalType::DataPtrType>(input);
       signal_holder_<SignalType>.deliverAll(pipe,data);
     };
-    state.setDispatch(fn);
+    state.setDispatch(fn2);
   }
   return registerCallback<SignalType>(pipe, std::move(fn));
 }

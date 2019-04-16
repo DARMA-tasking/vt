@@ -119,7 +119,7 @@ struct TestSerialMessenger : TestParallelHarness {
 
   template <typename TupleT>
   static void testBcastHandler(DataMsg<TupleT>* msg) {
-    auto const& node = theContext()->getNode();
+    //auto const& node = theContext()->getNode();
     //fmt::print("{}:testBcastHandler\n",node);
     return testHandler<TupleT>(msg);
   }

@@ -72,11 +72,11 @@ struct TestSequencerFor : TestParallelHarness {
     #endif
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 11);
+      EXPECT_EQ(seq_ordering_++, 11U);
       return;
     }
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->for_loop(0, end_range, 1, [](vt::seq::ForIndex i) {
       theSeq()->wait_closure<TestMsg, testSeqForHan>(no_tag, [=](TestMsg* msg){
@@ -84,7 +84,7 @@ struct TestSequencerFor : TestParallelHarness {
           fmt::print("testSeqForFn running wait\n");
         #endif
 
-        EXPECT_EQ(seq_ordering_++, i+1);
+        EXPECT_EQ(seq_ordering_++, static_cast<size_t>(i+1));
       });
     });
   }

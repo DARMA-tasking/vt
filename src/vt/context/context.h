@@ -89,7 +89,7 @@ private:
   WorkerCountType numWorkers_ = no_workers;
   bool is_comm_world_ = true;
   MPI_Comm communicator_ = MPI_COMM_WORLD;
-  DeclareClassInsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id);
+  DeclareClassInsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
 };
 
 }} // end namespace vt::ctx

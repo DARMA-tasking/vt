@@ -68,8 +68,9 @@ struct EmptyMsg : vt::Message {
 #define PRINT_SEQUENCE(args...)
 #endif
 
-SEQUENCE_REGISTER_HANDLER(EmptyMsg, action1);
+SEQUENCE_REGISTER_HANDLER(EmptyMsg, action1)
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeq(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeq: executing sequence\n");
 
@@ -79,9 +80,9 @@ static void mySeq(SeqType const& seq_id) {
 
   theSeq()->sequenced([]{
     PRINT_SEQUENCE("action1 sequenced_block triggered\n");
-    auto const& my_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNode();
     theMsg()->sendMsg<EmptyMsg, action1>(
-      my_node, makeSharedMessage<EmptyMsg>(), 20
+      this_node, makeSharedMessage<EmptyMsg>(), 20
     );
   });
 
@@ -113,6 +114,7 @@ static void mySeq(SeqType const& seq_id) {
   });
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeqParallel(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeqParallel: executing sequence\n");
 
@@ -152,6 +154,7 @@ static void mySeqFor(SeqType const& seq_id) {
   });
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeqSingleNode(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeqSingleNode: executing sequence\n");
 
@@ -188,13 +191,14 @@ static void mySeqSingleNode(SeqType const& seq_id) {
   });
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void simpleSeq(SeqType const& seq_id) {
   PRINT_SEQUENCE("simpleSeq: executing sequence: seq_id={}\n", seq_id);
 
   theSeq()->wait<EmptyMsg, action1>(10, [](EmptyMsg* msg){
-    auto const& seq_id = theSeq()->getCurrentSeq();
+    auto const& cur_seq_id = theSeq()->getCurrentSeq();
     PRINT_SEQUENCE(
-      "simpleSeq: seq={}: w1 triggered: msg={}\n", seq_id, print_ptr(msg)
+      "simpleSeq: seq={}: w1 triggered: msg={}\n", cur_seq_id, print_ptr(msg)
     );
   });
 
@@ -210,16 +214,16 @@ static void simpleSeq(SeqType const& seq_id) {
   });
 
   theSeq()->wait<EmptyMsg, action1>(20, [](EmptyMsg* msg){
-    auto const& seq_id = theSeq()->getCurrentSeq();
+    auto const& cur_seq_id = theSeq()->getCurrentSeq();
     PRINT_SEQUENCE(
-      "simpleSeq: seq={}: w2 triggered: msg={}\n", seq_id, print_ptr(msg)
+      "simpleSeq: seq={}: w2 triggered: msg={}\n", cur_seq_id, print_ptr(msg)
     );
     theMsg()->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>(), 30);
   });
 
   theSeq()->wait<EmptyMsg, action1>(30, [](EmptyMsg* msg){
-    auto const& seq_id = theSeq()->getCurrentSeq();
-    PRINT_SEQUENCE("simpleSeq: seq={}: w3 triggered\n", seq_id);
+    auto const& cur_seq_id = theSeq()->getCurrentSeq();
+    PRINT_SEQUENCE("simpleSeq: seq={}: w3 triggered\n", cur_seq_id);
   });
 
   theSeq()->sequenced([]{
@@ -247,8 +251,8 @@ static void simpleSeq(SeqType const& seq_id) {
   });
 
   theSeq()->wait<EmptyMsg, action1>(40, [](EmptyMsg* msg){
-    auto const& seq_id = theSeq()->getCurrentSeq();
-    PRINT_SEQUENCE("simpleSeq: seq={}: w4 triggered\n", seq_id);
+    auto const& cur_seq_id = theSeq()->getCurrentSeq();
+    PRINT_SEQUENCE("simpleSeq: seq={}: w4 triggered\n", cur_seq_id);
   });
 }
 

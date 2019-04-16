@@ -134,10 +134,7 @@ template <typename SysMsgT>
 /*static*/ void CollectionManager::distConstruct(SysMsgT* msg) {
   using ColT        = typename SysMsgT::CollectionType;
   using IndexT      = typename SysMsgT::IndexType;
-  using Args        = typename SysMsgT::ArgsTupleType;
   using BaseIdxType = vt::index::BaseIndex;
-
-  static constexpr auto num_args = std::tuple_size<Args>::value;
 
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
@@ -205,6 +202,8 @@ template <typename SysMsgT>
             num_elms, cur_idx, &msg->tup
           );
         #else
+          using Args = typename SysMsgT::ArgsTupleType;
+          static constexpr auto num_args = std::tuple_size<Args>::value;
           auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
             num_elms, cur_idx, &msg->tup, std::make_index_sequence<num_args>{}
           );
@@ -274,7 +273,7 @@ GroupType CollectionManager::createGroupCollection(
     in_group, [proxy,vid](GroupType new_group){
       auto const& group_root = theGroup()->groupRoot(new_group);
       auto const& is_group_default = theGroup()->groupDefault(new_group);
-      auto const& in_group = theGroup()->inGroup(new_group);
+      auto const& my_in_group = theGroup()->inGroup(new_group);
       auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
       elm_holder->setGroup(new_group);
       elm_holder->setUseGroup(!is_group_default);
@@ -291,7 +290,7 @@ GroupType CollectionManager::createGroupCollection(
         group_root, is_group_default
       );
 
-      if (!is_group_default && in_group) {
+      if (!is_group_default && my_in_group) {
         uint64_t const group_tag_mask = 0x0fff0000;
         auto group_msg = makeSharedMessage<CollectionGroupMsg>(proxy,new_group);
         auto const& group_tag_id = vid | group_tag_mask;
@@ -377,7 +376,6 @@ template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionBcastHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const bcast_proxy = col_msg->getBcastProxy();
-  auto const is_wrap = col_msg->getWrap();
   auto const& untyped_proxy = bcast_proxy;
   auto const& group = envelopeGetGroup(msg->env);
   auto const& cur_epoch = theMsg()->getEpoch();
@@ -449,10 +447,10 @@ template <typename ColT, typename IndexT, typename MsgT>
    */
   auto col_holder = theCollection()->findColHolder<ColT,IndexT>(untyped_proxy);
   if (!col_holder->is_static_) {
-    auto const& epoch = msg->bcast_epoch_;
     /*
      * @todo: buffer the broadcasts only when needed and clean up appropriately
      */
+    // auto const& epoch = msg->bcast_epoch_;
     // theCollection()->bufferBroadcastMsg<ColT>(untyped_proxy, epoch, msg);
   }
   /*
@@ -1144,7 +1142,6 @@ EpochType CollectionManager::reduceMsgExpr(
   vtAssert(constructed, "Must be constructed");
   auto col_holder = findColHolder<ColT,IndexT>(untyped_proxy);
   auto max_idx = col_holder->max_idx;
-  auto const& this_node = theContext()->getNode();
   auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
   auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
   vtAssert(insert_epoch != no_epoch, "Epoch should be valid");
@@ -1534,7 +1531,7 @@ CollectionManager::constructCollectiveMap(
 
   // Invoke getCollectionLM() to create a new location manager instance for this
   // collection
-  auto loc = theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
+  theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
 
   debug_print(
     vrt_coll, node,
@@ -1702,7 +1699,6 @@ void CollectionManager::staticInsert(
   using IdxContextHolder = InsertContextHolder<IndexT>;
   using BaseIdxType      = vt::index::BaseIndex;
 
-  auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
   auto map_han = UniversalIndexHolder<>::getMap(proxy);
@@ -1711,8 +1707,6 @@ void CollectionManager::staticInsert(
   IdxContextHolder::set(&idx,proxy);
 
   auto tuple = std::make_tuple(std::forward<Args>(args)...);
-
-  static constexpr auto num_args = std::tuple_size<decltype(tuple)>::value;
 
   auto holder = findColHolder<ColT, IndexT>(proxy);
 
@@ -1731,6 +1725,7 @@ void CollectionManager::staticInsert(
       num_elms, idx, &tuple
     );
   #else
+    static constexpr auto num_args = std::tuple_size<decltype(tuple)>::value;
     auto elm_ptr = CollectionManager::runConstructor<ColT, IndexT>(
       num_elms, idx, &tuple, std::make_index_sequence<num_args>{}
     );
@@ -1778,7 +1773,7 @@ InsertToken<ColT> CollectionManager::constructInsert(
 
   // Invoke getCollectionLM() to create a new location manager instance for this
   // collection
-  auto loc = theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
+  theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
 
   // Start the local collection initiation process, lcoal meta-info about the
   // collection. Insert epoch is `no_epoch` because dynamic insertions are not
@@ -1951,7 +1946,6 @@ CollectionManager::constructMap(
 
   auto const& new_proxy = makeNewCollectionProxy();
   auto const& is_static = ColT::isStaticSized();
-  auto lm = theLocMan()->getCollectionLM<ColT, IndexT>(new_proxy);
   auto const& node = theContext()->getNode();
   auto create_msg = makeMessage<MsgType>(
     map_handler, ArgsTupleType{std::forward<Args>(args)...}
@@ -2108,7 +2102,6 @@ template <typename ColT, typename IndexT>
 void CollectionManager::finishedInsertEpoch(
   CollectionProxyWrapType<ColT,IndexT> const& proxy, EpochType const& epoch
 ) {
-  auto const& this_node = theContext()->getNode();
   auto const& untyped_proxy = proxy.getProxy();
 
   debug_print(
@@ -2224,10 +2217,10 @@ template <typename ColT, typename IndexT>
 
   if (node != uninitialized_destination) {
     auto send = [untyped_proxy,node]{
-      auto msg = makeSharedMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
+      auto smsg = makeSharedMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
       theMsg()->sendMsg<
         ActInsertMsg<ColT,IndexT>,actInsertHandler<ColT,IndexT>
-      >(node,msg);
+      >(node,smsg);
     };
     return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_, send);
   } else {
@@ -2604,9 +2597,7 @@ MigrateStatus CollectionManager::migrateIn(
    */
   vc_raw_ptr->preMigrateIn();
 
-  auto const& elm_proxy = CollectionProxy<ColT, IndexT>(proxy).operator()(
-    idx
-  );
+  CollectionProxy<ColT, IndexT>(proxy).operator()(idx);
 
   bool const is_static = ColT::isStaticSized();
   auto const& home_node = uninitialized_destination;

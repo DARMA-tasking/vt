@@ -79,7 +79,7 @@ struct MyContext { };
 static MyContext ctx = {};
 
 // A message handler with context used as the target for a callback
-static void callbackCtx(DataMsg* msg, MyContext* ctx) {
+static void callbackCtx(DataMsg* msg, MyContext* cbctx) {
   NodeType const cur_node = ::vt::theContext()->getNode();
   ::fmt::print("{}: triggering context callback\n", cur_node);
 }
@@ -89,6 +89,7 @@ static void callbackCtx(DataMsg* msg, MyContext* ctx) {
 static inline void activeMessageCallback() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * Callbacks allow one to generalize the notion of an endpoint with a abstract

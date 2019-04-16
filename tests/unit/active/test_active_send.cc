@@ -78,10 +78,10 @@ struct TestActiveSend : TestParallelHarness {
   }
 
   static void test_handler_2(PutTestMessage* msg) {
-    auto const& this_node = theContext()->getNode();
     auto ptr = static_cast<int*>(msg->getPut());
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
+      auto const& this_node = theContext()->getNode();
       fmt::print("{}: test_handler_2: size={}, ptr={}\n", this_node, size, ptr);
     #endif
     EXPECT_EQ(2 * sizeof(int), size);
@@ -91,10 +91,10 @@ struct TestActiveSend : TestParallelHarness {
   }
 
   static void test_handler_3(PutTestMessage* msg) {
-    auto const& this_node = theContext()->getNode();
     auto ptr = static_cast<int*>(msg->getPut());
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
+      auto const& this_node = theContext()->getNode();
       fmt::print("{}: test_handler_3: size={}, ptr={}\n", this_node, size, ptr);
     #endif
     EXPECT_EQ(10 * sizeof(int), size);

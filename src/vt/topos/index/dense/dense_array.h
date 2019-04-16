@@ -72,7 +72,10 @@ using NumDimensionsType = int8_t;
 template <typename IndexType, NumDimensionsType ndim = 1>
 struct DenseIndexArray;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct DenseIndexArraySingleInitTag { } dense_single_value_tag { };
+#pragma GCC diagnostic pop
 
 template <typename IndexType, NumDimensionsType ndim>
 struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {

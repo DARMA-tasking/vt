@@ -91,7 +91,10 @@ enum struct RegistryTypeEnum {
   RegObjGroup
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct NumArgsTagType { } NumArgsTag { };
+#pragma GCC diagnostic pop
 
 template <typename FnT>
 struct AutoRegInfo {

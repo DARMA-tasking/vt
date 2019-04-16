@@ -52,7 +52,7 @@
 namespace vt { namespace group { namespace region {
 
 ShallowList::ShallowList(BoundType const* in_bound, SizeType const& in_size)
-  : bound_(in_bound), size_(in_size)
+  : size_(in_size), bound_(in_bound)
 { }
 
 ShallowList::ShallowList(List const& in_list)
@@ -72,7 +72,7 @@ ShallowList::ShallowList(ListType const& in_list)
 }
 
 /*virtual*/ bool ShallowList::contains(NodeType const& node) {
-  for (int i = 0; i < size_; i++) {
+  for (decltype(size_) i = 0; i < size_; i++) {
     if (bound_[i] == node) {
       return true;
     }
@@ -83,6 +83,7 @@ ShallowList::ShallowList(ListType const& in_list)
 /*virtual*/ ShallowList::ListType const& ShallowList::makeList() {
   vtAssert(0, "Can not be implemented for ShallowList");
   assert(false);
+  return empty_list;
 }
 
 /*virtual*/ bool ShallowList::isList() const {

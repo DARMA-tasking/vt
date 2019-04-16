@@ -51,8 +51,11 @@
 
 namespace vt { namespace messaging {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct MsgInitOwnerType { } MsgInitOwnerTag { };
 static struct MsgInitNonOwnerType { } MsgInitNonOwnerTag { };
+#pragma GCC diagnostic pop
 
 template <typename T>
 struct MsgSharedPtr {

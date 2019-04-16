@@ -64,7 +64,7 @@ struct ShallowList : Region {
   virtual SizeType getSize() const override;
   virtual void sort() override;
   virtual bool contains(NodeType const& node) override;
-  virtual ListType const& makeList [[noreturn]] () override;
+  virtual ListType const& makeList () override;
   virtual bool isList() const override;
   virtual BoundType head() const override;
   virtual RegionUPtrType tail() const override;
@@ -76,6 +76,7 @@ struct ShallowList : Region {
 private:
   SizeType size_ = 0;
   BoundType const* bound_ = nullptr;
+  ListType empty_list;  // just to make the compiler stop whining
 };
 
 }}} /* end namespace vt::group::region */

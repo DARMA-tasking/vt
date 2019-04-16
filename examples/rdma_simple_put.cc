@@ -87,9 +87,9 @@ static void put_data_fn(TestMsg* msg) {
       [=]{
         delete [] local_data;
         fmt::print("{}: after put: sending msg back to 0\n", my_node);
-        auto msg = makeSharedMessage<TestMsg>(my_node);
-        msg->han = my_handle;
-        theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg);
+        auto msg2 = makeSharedMessage<TestMsg>(my_node);
+        msg2->han = my_handle;
+        theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg2);
       }
     );
   }
@@ -105,7 +105,8 @@ static void put_handler_fn(
     my_node, print_ptr(my_data), print_ptr(in_ptr), in_num_bytes, tag, offset
   );
 
-  for (auto i = 0; i < in_num_bytes/sizeof(double); i++) {
+  auto count = in_num_bytes/sizeof(double);
+  for (decltype(count) i = 0; i < count; i++) {
     ::fmt::print(
       "{}: put_handler_fn: data[{}] = {}\n",
       my_node, i, static_cast<double*>(in_ptr)[i]

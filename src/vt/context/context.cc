@@ -102,7 +102,7 @@ void Context::setDefaultWorker() {
   setWorker(worker_id_comm_thread);
 }
 
-DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id);
+DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
 
 }}  // end namespace vt::ctx
 

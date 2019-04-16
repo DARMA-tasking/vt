@@ -58,6 +58,7 @@ static void msgHandlerGroupB(MySimpleMsg2* msg);
 static inline void activeMessageGroupCollective() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * This is an example of the collective group creation and broadcast to that
@@ -79,14 +80,15 @@ static inline void activeMessageGroupCollective() {
       fmt::print("Group is created: id={:x}\n", group_id);
 
       // In this example, node 1 broadcasts to the group of even nodes
-      auto const this_node = ::vt::theContext()->getNode();
-      if (this_node == 1) {
+      auto const my_node = ::vt::theContext()->getNode();
+      if (my_node == 1) {
         auto msg = makeSharedMessage<MySimpleMsg2>();
         envelopeSetGroup(msg->env, group_id);
         theMsg()->broadcastMsg<MySimpleMsg2,msgHandlerGroupB>(msg);
       }
     }
   );
+  (void)group;  // don't warn about unused variable
 }
 
 // Message handler

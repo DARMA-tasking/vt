@@ -63,6 +63,7 @@ static void recurHandler(ExampleMsg* msg);
 static inline void activeMessageTerm() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about unused variable
 
   /*
    * Termination will allow us to track a subcomputation with causality to

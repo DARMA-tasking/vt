@@ -68,7 +68,6 @@ using DumpStackType   = std::tuple<std::string,StackVectorType>;
  */
 inline DumpStackType dumpStack(int skip = 0) {
   void* callstack[128];
-  char buf[1024];
   int const max_frames = sizeof(callstack) / sizeof(callstack[0]);
   int num_frames = backtrace(callstack, max_frames);
   char** symbols = backtrace_symbols(callstack, num_frames);

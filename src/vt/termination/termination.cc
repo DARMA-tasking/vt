@@ -407,8 +407,8 @@ void TerminationDetector::freeEpoch(EpochType const& epoch) {
 
 bool TerminationDetector::propagateEpoch(TermStateType& state) {
   bool const& is_ready = state.readySubmitParent();
-  bool const& is_root_ = isRoot();
-  auto const& parent_ = getParent();
+  bool const& is_root = isRoot();
+  auto const& parent = getParent();
 
   debug_print(
     term, node,
@@ -430,17 +430,17 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       state.getRecvChildCount(), state.getNumChildren()
     );
 
-    if (not is_root_) {
+    if (not is_root) {
       auto msg = makeSharedMessage<TermCounterMsg>(
         state.getEpoch(), state.g_prod1, state.g_cons1
       );
       theMsg()->setTermMessage(msg);
-      theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(parent_, msg);
+      theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(parent, msg);
 
       debug_print(
         term, node,
         "propagateEpoch: sending to parent: {}, msg={}, epoch={:x}, wave={}\n",
-        parent_, print_ptr(msg), state.getEpoch(), state.getCurWave()
+        parent, print_ptr(msg), state.getEpoch(), state.getCurWave()
       );
 
     } else /*if (is_root) */ {
@@ -542,12 +542,12 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     debug_print(
       term, node,
       "propagateEpoch: epoch={:x}, is_root={}: reset counters\n",
-      state.getEpoch(), print_bool(is_root_)
+      state.getEpoch(), print_bool(is_root)
     );
 
     // reset counters
     state.g_prod1 = state.g_cons1 = 0;
-    state.submitToParent(is_root_);
+    state.submitToParent(is_root);
   }
 
   return is_ready;

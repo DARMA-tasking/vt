@@ -94,7 +94,6 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
   auto msg = promoteMsg(raw_msg);
 
   auto const sub_handler = msg->getVrtHandler();
-  auto const vc_active_fn = auto_registry::getAutoHandlerVC(sub_handler);
   auto const vc_ptr = vrt_ptr_.get();
 
   vtAssert(vc_ptr != nullptr, "Must be valid pointer");
@@ -126,7 +125,6 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
 
 void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {
   bool const is_constructed = is_constructed_.load();
-  bool enqueued = true;
 
   debug_print(
     vrt, node,
@@ -134,7 +132,7 @@ void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {
   );
 
   if (is_constructed) {
-    enqueued = enqueueWorkUnit(msg);
+    enqueueWorkUnit(msg);
   } else {
     msg_buffer_.push(msg);
   }

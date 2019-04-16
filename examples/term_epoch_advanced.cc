@@ -51,16 +51,10 @@ using namespace vt;
 static NodeType my_node = uninitialized_destination;
 static NodeType num_nodes = uninitialized_destination;
 
-static EpochType cur_epoch = no_epoch;
-
 using TTLType = int32_t;
 
-static constexpr EpochType const max_epochs = 5;
 static constexpr TTLType const max_life_time = 5;
 static constexpr TTLType const no_ttl = -1000;
-static constexpr int32_t const max_msgs_per_node = 5;
-
-static bool use_epoch = true;
 
 struct PropagateMsg : vt::Message {
   NodeType from = uninitialized_destination;
