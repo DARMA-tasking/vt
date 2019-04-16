@@ -65,7 +65,7 @@ struct ReduceState {
 
   ReduceVecType msgs               = {};
   TagType tag_                     = no_tag;
-  SequentialIDType seq_id_          = no_seq_id;
+  SequentialIDType seq_id_         = no_seq_id;
   ReduceNumType num_contrib_       = 1;
   ReduceNumType num_local_contrib_ = 0;
   HandlerType combine_handler_     = uninitialized_handler;
