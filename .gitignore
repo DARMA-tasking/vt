@@ -1,4 +1,5 @@
 *~
+build
 transport
 lib/*-build
 .emacs.desktop
