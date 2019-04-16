@@ -3,7 +3,7 @@ project(vt)
 
 include(cmake/turn_on_warnings.cmake)
 
-set(VIRTUAL_TRANSPORT_LIBRARY vt)
+set(VIRTUAL_TRANSPORT_LIBRARY vt CACHE INTERNAL "" FORCE )
 set(FCONTEXT_LIBRARY fcontext)
 
 # Set the local module path so custom cmake scripts can be located automatically
