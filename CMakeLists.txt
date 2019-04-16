@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(vt)
 
+include(cmake/turn_on_warnings.cmake)
+
 set(VIRTUAL_TRANSPORT_LIBRARY vt)
 set(FCONTEXT_LIBRARY fcontext)
 
