@@ -58,9 +58,9 @@ Data::~Data() { count_.clear(); }
 template<typename Msg, vt::ActiveTypedFnType<Msg>* handler>
 void sendMsg(vt::NodeType dst, int count, vt::EpochType ep) {
   vtAssertExpr(dst not_eq vt::uninitialized_destination);
-  vtAssertExpr(dst not_eq me);
-  auto msg = makeSharedMessage<Msg>(me,dst,count,ep);
-  vtAssertExpr(msg->src_ == me);
+  vtAssertExpr(dst not_eq node);
+  auto msg = makeSharedMessage<Msg>(node,dst,count,ep);
+  vtAssertExpr(msg->src_ == node);
 
   if (ep not_eq vt::no_epoch) {
     vt::envelopeSetEpoch(msg->env,ep);
@@ -72,7 +72,7 @@ void sendMsg(vt::NodeType dst, int count, vt::EpochType ep) {
 // but different handlers may be used.
 template<vt::ActiveTypedFnType<BasicMsg>* handler>
 void broadcast(int count, vt::EpochType ep) {
-  auto msg = makeSharedMessage<BasicMsg>(me,vt::uninitialized_destination,count,ep);
+  auto msg = makeSharedMessage<BasicMsg>(node,vt::uninitialized_destination,count,ep);
   if (ep not_eq vt::no_epoch) {
     vt::envelopeSetEpoch(msg->env,ep);
   }
@@ -81,7 +81,7 @@ void broadcast(int count, vt::EpochType ep) {
   for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
     auto& nb = active.second;
-    if (dst not_eq me) {
+    if (dst not_eq node) {
       nb.out_++;
     }
   }
@@ -100,7 +100,7 @@ void sendPing(vt::NodeType dst, int count, vt::EpochType ep) {
 void sendEcho(vt::NodeType dst, int count, vt::EpochType ep) {
   vtAssertExpr(dst >= 0);
 #if DEBUG_CHANNEL_COUNTING
-  fmt::print("rank:{} echo::dst {}",me,dst);
+  fmt::print("rank:{} echo::dst {}",node,dst);
 #endif
   vtAssertExpr(dst not_eq vt::uninitialized_destination);
   sendMsg<CtrlMsg,echoHandler>(dst,count,ep);
@@ -113,14 +113,14 @@ void sendEcho(vt::NodeType dst, int count, vt::EpochType ep) {
 void basicHandler(BasicMsg* msg) {
   auto const& src = msg->src_;
   // avoid self sending case
-  if (me not_eq src) {
+  if (node not_eq src) {
     auto& nb = data[msg->epoch_].count_[src];
     nb.in_++;
   }
 }
 
 void routedHandler(BasicMsg* msg) {
-  vtAssertExpr(me not_eq root);
+  vtAssertExpr(node not_eq root);
   basicHandler(msg);
 
   if (all > 2 && msg->ttl_ > 0) {
@@ -130,9 +130,9 @@ void routedHandler(BasicMsg* msg) {
 
     for (int k = 0; k < nb_rounds; ++k) {
       // note: root and self-send are excluded
-      auto dst = (me+one > all-one ? one: me+one);
-      if (dst == me && dst == one) dst++;
-      vtAssertExpr(dst > one || me not_eq one);
+      auto dst = (node+one > all-one ? one: node+one);
+      if (dst == node && dst == one) dst++;
+      vtAssertExpr(dst > one || node not_eq one);
 
       routeBasic(dst,msg->ttl_,msg->epoch_);
     }
@@ -141,7 +141,7 @@ void routedHandler(BasicMsg* msg) {
 
 // on receipt of an echo message echo<m> from Pi
 void echoHandler(CtrlMsg* msg) {
-  vtAssertExpr(me == msg->dst_);
+  vtAssertExpr(node == msg->dst_);
   // shortcuts for readability
   auto const& src = msg->src_;
   auto const& ep = msg->epoch_;
@@ -156,7 +156,7 @@ void echoHandler(CtrlMsg* msg) {
   auto& nb_in = data[ep].count_[src].in_;
     fmt::print(
       "rank {}: echoHandler: in={}, ack={}, degree={}\n",
-      me,nb_in,nb_ack, degree
+      node,nb_in,nb_ack, degree
     );
 #endif
 
@@ -169,7 +169,7 @@ void echoHandler(CtrlMsg* msg) {
     // echo to parent activator node
     auto const& dst = data[ep].activator_;
     auto const& nb = data[ep].count_[dst];
-    if (dst not_eq me) {
+    if (dst not_eq node) {
       sendEcho(dst,nb.in_,ep);
     }
   }
@@ -177,7 +177,7 @@ void echoHandler(CtrlMsg* msg) {
 
 // on receipt of a control message test<m> from Pi
 void pingHandler(CtrlMsg* msg) {
-  vtAssertExpr(me == msg->dst_);
+  vtAssertExpr(node == msg->dst_);
   auto const& src = msg->src_;
   auto const& ep = msg->epoch_;
   auto const& degree = data[ep].degree_;
@@ -187,7 +187,7 @@ void pingHandler(CtrlMsg* msg) {
 #if DEBUG_CHANNEL_COUNTING
   fmt::print(
       "{}: pingHandler: in={}, src={}, degree={}\n",
-      me,nb.in_,src,degree
+      node,nb.in_,src,degree
     );
 #endif
 
@@ -204,14 +204,14 @@ void pingHandler(CtrlMsg* msg) {
 
 // trigger termination detection by root
 void trigger(vt::EpochType ep) {
-  vtAssert(me == root, "Only root may trigger termination check");
+  vtAssert(node == root, "Only root may trigger termination check");
 
   for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
 
-    if (dst not_eq me) {
+    if (dst not_eq node) {
 #if DEBUG_CHANNEL_COUNTING
-      fmt::print("rank:{} trigger dst {}\n", me, dst);
+      fmt::print("rank:{} trigger dst {}\n", node, dst);
 #endif
       auto& nb = active.second;
       auto& degree = data[ep].degree_;
@@ -228,7 +228,7 @@ void trigger(vt::EpochType ep) {
 void propagate(vt::EpochType ep) {
   for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
-    if (dst not_eq me) {
+    if (dst not_eq node) {
       auto& nb = active.second;
       auto& degree = data[ep].degree_;
       // confirmation missing
@@ -236,7 +236,7 @@ void propagate(vt::EpochType ep) {
 #if DEBUG_CHANNEL_COUNTING
         fmt::print(
             "rank {}: propagate: sendPing to {}, out={}, degree={}\n",
-            me,dst,nb.out_,degree+1
+            node,dst,nb.out_,degree+1
           );
 #endif
         // check subtree
@@ -252,7 +252,7 @@ void propagate(vt::EpochType ep) {
 bool hasEnded(vt::EpochType ep) {
   for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
-    if (dst not_eq me) {
+    if (dst not_eq node) {
       auto const& nb = active.second;
       if (nb.out_ not_eq nb.ack_) {
         return false;

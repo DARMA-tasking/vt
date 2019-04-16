@@ -99,7 +99,7 @@ void propagate(vt::EpochType ep);
 bool hasEnded(vt::EpochType ep);
 
 // ranks
-extern vt::NodeType me;
+extern vt::NodeType node;
 extern vt::NodeType root;
 extern vt::NodeType all;
 // channel counters per epoch and per rank

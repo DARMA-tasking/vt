@@ -57,7 +57,7 @@
 using namespace vt::tests::unit;
 // set channel counting ranks
 vt::NodeType channel::root = vt::uninitialized_destination;
-vt::NodeType channel::me   = vt::uninitialized_destination;
+vt::NodeType channel::node = vt::uninitialized_destination;
 vt::NodeType channel::all  = vt::uninitialized_destination;
 std::unordered_map<vt::EpochType,channel::Data> channel::data;
 
@@ -68,24 +68,17 @@ std::unordered_map<vt::EpochType,channel::Data> channel::data;
  * - nested epochs termination.
  */
 namespace vt { namespace tests { namespace unit { namespace action {
-
-// ordering of 'addAction' with respect to 'finishedEpoch'
-enum struct Order : int32_t {
-  before = 0,
-  after  = 1,
-  misc   = 2
-};
-
-using Base = TestParallelHarnessParam<std::tuple<Order,bool,int>>;
+// shortcuts
+using epoch_manip = ::vt::epoch::EpochManip;
+using Base = TestParallelHarnessParam<std::tuple<int,bool,int>>;
 
 struct BaseFixture : Base {
-
-  virtual void SetUp(){
+  void SetUp() override {
     // explicit inheritance
     Base::SetUp();
     // set channel counting ranks
     channel::root = 0;
-    channel::me   = vt::theContext()->getNode();
+    channel::node = vt::theContext()->getNode();
     channel::all  = vt::theContext()->getNumNodes();
     vtAssert(channel::all > 1, "There should be at least two nodes");
 
@@ -97,31 +90,31 @@ struct BaseFixture : Base {
   }
 
 protected:
-  Order order_ = Order::before;
-  bool useDS_  = false;
-  int depth_   = 1;
+  int  order_ = 0;
+  bool useDS_ = false;
+  int  depth_ = 1;
 };
 
 struct SimpleFixture : TestParallelHarness {
-  virtual void SetUp() {
-      // explicit inheritance
-      TestParallelHarness::SetUp();
-      // set channel counting ranks
-      channel::root = 0;
-      channel::me   = vt::theContext()->getNode();
-      channel::all  = vt::theContext()->getNumNodes();
-      vtAssertExpr(channel::all > 1);
+  void SetUp() override {
+    // explicit inheritance
+    TestParallelHarness::SetUp();
+    // set channel counting ranks
+    channel::root = 0;
+    channel::node = vt::theContext()->getNode();
+    channel::all  = vt::theContext()->getNumNodes();
+    vtAssert(channel::all > 1, "Should use at least two nodes");
   }
 };
 
 // epoch sequence creation
-std::vector<vt::EpochType> newEpochSeq(
-  int nb=1, bool rooted=false, bool useDS=false
+std::vector<vt::EpochType> generateEpochs(
+  int nb = 1, bool rooted = false, bool useDS = false
 );
 // fictive distributed computation
-void compute(vt::EpochType const& ep);
+void compute(vt::EpochType const& epoch);
 // check epoch termination
-void verify(vt::EpochType const& ep, Order const& order);
+void verify(vt::EpochType const& epoch, int order);
 
 /*
  * at the end of a given epoch:
@@ -129,10 +122,10 @@ void verify(vt::EpochType const& ep, Order const& order);
  * - trigger termination detection
  * - finish epoch
  */
-void finalize(vt::EpochType const ep, Order const& order);
+void finalize(vt::EpochType const& epoch, int order);
 
 #if DEBUG_TERM_ACTION
-  void print(std::string step, vt::EpochType const& ep, Order const& order);
+  void print(std::string step, vt::EpochType const& epoch, int order);
 #endif
 }}}} // end namespace vt::tests::unit::action
 

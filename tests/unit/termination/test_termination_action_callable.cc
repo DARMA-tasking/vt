@@ -54,9 +54,9 @@ static bool has_finished_2 = false;
 static int num = 0;
 
 // no need for a parameterized fixture
-struct TestTermActionCallable : action::SimpleFixture {};
+struct TestTermCallable : action::SimpleFixture {};
 
-TEST_F(TestTermActionCallable, test_add_action_unique) {
+TEST_F(TestTermCallable, test_add_action_unique) {
 
   has_finished_1 = has_finished_2 = false;
   num = 0;
@@ -71,7 +71,7 @@ TEST_F(TestTermActionCallable, test_add_action_unique) {
   ::vt::theTerm()->addActionEpoch(ep, [&]{
     debug_print(term, node, "current epoch:{:x} finished\n", ep);
     EXPECT_FALSE(has_finished_1);
-    EXPECT_TRUE(has_finished_2 == false or num == 1);
+    EXPECT_TRUE(not has_finished_2 or num == 1);
     has_finished_1 = true;
     num++;
   });
@@ -86,7 +86,7 @@ TEST_F(TestTermActionCallable, test_add_action_unique) {
     num++;
   });
 
-  if (channel::me == channel::root) {
+  if (channel::node == channel::root) {
     action::compute(ep);
   }
 
