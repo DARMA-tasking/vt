@@ -55,7 +55,7 @@ TEST_F(TestLocation, test_register_and_get_entity) /* NOLINT */ {
 
   auto const my_node = vt::theContext()->getNode();
   auto const home    = 0;
-  auto const entity  = location::arbitrary_entity;
+  auto const entity  = location::default_entity;
 
   // Register the entity on the node 0
   if (my_node == home) {
@@ -85,7 +85,7 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities)  /* NOLINT */ {
 
   auto const my_node  = vt::theContext()->getNode();
   auto const nb_nodes = vt::theContext()->getNumNodes();
-  auto const entity   = location::arbitrary_entity + my_node;
+  auto const entity   = location::default_entity + my_node;
 
   // Register the entity on the current node
   vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
@@ -99,12 +99,12 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities)  /* NOLINT */ {
     success = false;
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      location::arbitrary_entity + i, i,
+      location::default_entity + i, i,
       [i, &success, &check_sum, my_node](vt::NodeType node) {
         auto const cur = vt::theContext()->getNode();
         // let p: i == my_node and q: cur == node
         // we have: p implies q == not(p) or q
-        EXPECT_TRUE(i not_eq my_node or cur == node);
+        EXPECT_TRUE(i != my_node or cur == node);
         EXPECT_EQ(i, node);
         success = true;
         check_sum++;
@@ -128,7 +128,7 @@ TEST_F(TestLocation, test_unregister_multiple_entities) /* NOLINT */ {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
-  auto const entity   = location::arbitrary_entity + my_node;
+  auto const entity   = location::default_entity + my_node;
 
   vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
   vt::theLocMan()->virtual_loc->unregisterEntity(entity);
@@ -139,7 +139,7 @@ TEST_F(TestLocation, test_unregister_multiple_entities) /* NOLINT */ {
   for (auto i = 0; i < nb_nodes; ++i) {
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      location::arbitrary_entity + i, i, [](vt::NodeType node) {
+      location::default_entity + i, i, [](vt::NodeType node) {
         // This lambda should not be executed if the unregisterEntity works
         // correctly
         FAIL() << "entity should have been yet unregistered";
@@ -151,7 +151,7 @@ TEST_F(TestLocation, test_unregister_multiple_entities) /* NOLINT */ {
 TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
 
   auto const my_node  = vt::theContext()->getNode();
-  auto const entity   = location::arbitrary_entity;
+  auto const entity   = location::default_entity;
   auto const old_home = 0;
   auto const new_home = 1;
 
@@ -198,7 +198,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
   auto const next_node = (my_node + 1) % nb_nodes;
-  auto const entity    = location::arbitrary_entity + my_node;
+  auto const entity    = location::default_entity + my_node;
 
   // register the entity on the current node
   vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
@@ -209,8 +209,8 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
 
   auto prev_node = (
     my_node == 0 ?
-      location::arbitrary_entity + nb_nodes - 1 :
-      location::arbitrary_entity + my_node - 1
+      location::default_entity + nb_nodes - 1 :
+      location::default_entity + my_node - 1
   );
   vt::theLocMan()->virtual_loc->registerEntityMigrated(prev_node, my_node);
   vt::theCollective()->barrier();
@@ -222,7 +222,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
     success = false;
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      location::arbitrary_entity + i, i,
+      location::default_entity + i, i,
       [i, &success, &check_sum, my_node, nb_nodes](vt::NodeType found) {
 
         auto expected = (i + 1) % nb_nodes;
@@ -233,7 +233,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
         debug_print(
           location, node,
           "TestLocation: get loc migrated entity={}: found={}, expected={}\n",
-          location::arbitrary_entity + i, found, expected
+          location::default_entity + i, found, expected
         );
       }
     );
@@ -258,7 +258,7 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity)  /* NOLINT */ {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
-  auto const entity   = location::arbitrary_entity;
+  auto const entity   = location::default_entity;
   auto const home     = 0;
 
   // Register the entity on the node 0
@@ -299,7 +299,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits) /* NOLINT */ {
 
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
-  auto const entity    = location::arbitrary_entity;
+  auto const entity    = location::default_entity;
   auto const home      = 0;
   auto const nb_rounds = 3;
   auto nb_received     = 0;
@@ -326,7 +326,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
 
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
-  auto const entity    = location::arbitrary_entity;
+  auto const entity    = location::default_entity;
   auto const home      = 0;
   auto const new_home  = 3;
   auto const nb_rounds = 5;

@@ -52,15 +52,15 @@
 namespace vt { namespace tests { namespace unit { namespace location {
 
 // constants used in test cases
-int const arbitrary_entity = 10;
-int const magic_number     = 29;
-int const invalid_entity   = -1;
+int const default_entity = 10;
+int const magic_number   = 29;
+int const invalid_entity = -1;
 
 struct EntityMsg : vt::Message {
 
   EntityMsg(int in_entity, vt::NodeType in_home, bool in_large = false)
-    : entity_(in_entity),
-      home_(in_home),
+    : entity_  (in_entity),
+      home_    (in_home),
       is_large_(in_large)
   {}
 
@@ -85,15 +85,17 @@ struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
   LongMsg(int in_entity, vt::NodeType in_from)
     : from_(in_from),
       entity_(in_entity)
-  {}
+  {
+    std::memset(data_, 0, vt::location::small_msg_max_size);
+  }
+
 
   vt::NodeType from_ = vt::uninitialized_destination;
   int entity_ = invalid_entity;
-  char additional_data_[vt::location::small_msg_max_size];
+  char data_[vt::location::small_msg_max_size];
 };
 
 struct SerialMsg : ShortMsg {
-
   SerialMsg(int in_entity, vt::NodeType in_from)
     : ShortMsg(in_entity, in_from)
   {
