@@ -69,7 +69,7 @@ namespace vt { namespace util { namespace tls {
 #define ExternImplTLS(tlcls, type, var)                                      \
   InnerTLS(tlcls, type, var, , , extern, )
 #define AccessImplTLS(var)                                                   \
-  decltype(TagTLS(var))::get()
+  TagTLS(var).get()
 
 // Variants for static file TLS variables
 #define DeclareStImplTLS(tlcls, type, var)                                   \
@@ -101,7 +101,7 @@ namespace vt { namespace util { namespace tls {
   InnerClsOutTLS(tlcls, cls, type, var, InitTempTLS(init), InitStrTLS(var))
 // Variant for static class TLS variables access
 #define AccessClsImplTLS(cls, var)                                           \
-  decltype(cls::TagTLS(var))::get()
+  cls::TagTLS(var).get()
 
 }}} /* end namespace vt::util::tls */
 

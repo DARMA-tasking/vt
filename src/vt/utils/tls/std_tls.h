@@ -53,16 +53,20 @@ namespace vt { namespace util { namespace tls {
 
 template <typename T, char const* tag, T val = T{}>
 struct ThreadLocalInitSTD {
-  static T& get() { return value_; }
+  T& get() { access_++; return value_; }
+  int64_t numAccess() const { return access_; }
 private:
   static thread_local T value_;
+  int64_t access_ = 0;
 };
 
 template <typename T, char const* tag>
 struct ThreadLocalSTD {
-  static T& get() { return value_; }
+  T& get() { access_++; return value_; }
+  int64_t numAccess() const { return access_; }
 private:
   static thread_local T value_;
+  int64_t access_ = 0;
 };
 
 template <typename T, char const* tag, T val>

@@ -54,7 +54,8 @@ namespace vt { namespace util { namespace tls {
 
 template <typename T, char const* tag, T val>
 struct ThreadLocalInitOMP {
-  static T& get() { return value_; }
+  T& get() { access_++; return value_; }
+  int64_t numAccess() const { return access_; }
 private:
   #if defined(__GNUC__)
     static thread_local T value_;
@@ -62,11 +63,13 @@ private:
     static T value_;
     #pragma omp threadprivate (value_)
   #endif
+  int64_t access_ = 0;
 };
 
 template <typename T, char const* tag>
 struct ThreadLocalOMP {
-  static T& get() { return value_; }
+  T& get() { access_++; return value_; }
+  int64_t numAccess() const { return access_; }
 private:
   #if defined(__GNUC__)
     static thread_local T value_;
@@ -74,6 +77,7 @@ private:
     static T value_;
     #pragma omp threadprivate (value_)
   #endif
+  int64_t access_ = 0;
 };
 
 #if defined(__GNUC__)
