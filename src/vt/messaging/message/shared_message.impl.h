@@ -50,10 +50,25 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/pool/pool.h"
 
+#if HAS_SERIALIZATION_LIBRARY
+  #include "serialization_library_headers.h"
+#endif
+
 namespace vt {
+
+template <typename MsgT>
+void messageTypeChecks() {
+  static_assert(
+    std::is_trivially_destructible<MsgT>::value or
+    serdes::SerializableTraits<MsgT>::has_serialize_function,
+    "All messages must either be trivially destructible or "
+    "have a valid serialization function associated with them"
+  );
+}
 
 template <typename MsgT, typename... Args>
 MsgT* makeSharedMessage(Args&&... args) {
+  messageTypeChecks<MsgT>();
   auto msg = new MsgT{std::forward<Args>(args)...};
   envelopeSetRef(msg->env, 1);
   msg->has_owner_ = false;
@@ -62,6 +77,7 @@ MsgT* makeSharedMessage(Args&&... args) {
 
 template <typename MsgT, typename... Args>
 MsgSharedPtr<MsgT> makeMessage(Args&&... args) {
+  messageTypeChecks<MsgT>();
   auto msg = makeSharedMessage<MsgT>(std::forward<Args>(args)...);
   return promoteMsgOwner<MsgT>(msg);
 }
