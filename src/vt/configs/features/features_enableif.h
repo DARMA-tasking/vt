@@ -126,7 +126,7 @@
   )
 #define debug_cond_enabled_else(config, feature, if_true, if_false)     \
   debug_cond_clause(                                                    \
-    debug_check_enabled_shortcut(unconfig,feature),if_true,if_false       \
+    debug_check_enabled_shortcut(config,feature),if_true,if_false       \
   )
 #define debug_cond(condition, if_true)                          \
   debug_cond_clause(condition,if_true,)
