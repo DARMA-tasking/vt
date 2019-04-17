@@ -86,6 +86,18 @@ using EpochTagEnvelope = messaging::EpochTagActiveEnvelope;
 static_assert(std::is_pod<EpochEnvelope>(),    "EpochEnvelope must be POD");
 static_assert(std::is_pod<TagEnvelope>(),      "TagEnvelope must be POD");
 static_assert(std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD");
+static_assert(
+  std::is_trivially_destructible<EpochEnvelope>(),
+  "EpochEnvelope must be trivial"
+);
+static_assert(
+  std::is_trivially_destructible<TagEnvelope>(),
+  "TagEnvelope must be trivial"
+);
+static_assert(
+  std::is_trivially_destructible<EpochTagEnvelope>(),
+  "EpochTagEnvelope must be trivial"
+);
 
 } /* end namespace vt */
 
