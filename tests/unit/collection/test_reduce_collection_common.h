@@ -114,7 +114,7 @@ struct MyCol : Collection<MyCol, Index1D> {
   MyCol()
     : Collection<MyCol, Index1D>() {
     debug_print(
-      reduce, node
+      reduce, node,
       "constructing MyCol on node={}: idx.x()={}, ptr={}\n",
       theContext()->getNode(), getIndex().x(), print_ptr(this)
     );
