@@ -143,7 +143,8 @@ struct GroupListMsg : GroupInfoMsg<GroupMsg<::vt::PayloadMessage>> {
 
 
 struct GroupRangeMsg : GroupInfoMsg<GroupMsg<::vt::Message>> {
-  using RangeType = region::Range;
+  using RangeType     = region::Range;
+  using RangeDataType = region::RangeData;
 
   GroupRangeMsg() = default;
   GroupRangeMsg(
@@ -154,13 +155,14 @@ struct GroupRangeMsg : GroupInfoMsg<GroupMsg<::vt::Message>> {
   ) : GroupInfoMsg(
         in_root_node, in_num_nodes, in_group, in_op, in_total_num_nodes,
         in_parent_node
-      ), group_range_(*in_range)
+      ),
+      group_range_(RangeDataType(*in_range))
   { }
 
-  RangeType getRange() const { return group_range_; }
+  RangeType getRange() const { return group_range_.getRange(); }
 
 private:
-  RangeType group_range_;
+  RangeDataType group_range_;
 };
 
 }} /* end namespace vt::group */
