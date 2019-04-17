@@ -54,9 +54,9 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct CountMsg : ::vt::Message
-{
-  static std::size_t alloc_count;
+namespace {
+struct CountMsg : ::vt::Message {
+  static int alloc_count;
 
   CountMsg() { ++alloc_count; }
   CountMsg( const CountMsg &other ) { ++alloc_count; }
@@ -71,7 +71,8 @@ struct CountMsg : ::vt::Message
   ~CountMsg() { --alloc_count; }
 };
 
-std::size_t CountMsg::alloc_count = 0;
+int CountMsg::alloc_count = 0;
+}
 
 struct SendLifetimeRegression : TestParallelHarness {
   using TestMsg = CountMsg;
