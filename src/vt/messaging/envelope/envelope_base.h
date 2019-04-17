@@ -73,6 +73,7 @@ namespace vt {
 using Envelope = messaging::ActiveEnvelope;
 
 static_assert(std::is_pod<Envelope>(), "Envelope must be POD");
+static_assert(std::is_trivially_destructible<Envelope>(), "Envelope must be trivially destructible");
 
 } /* end namespace vt */
 
