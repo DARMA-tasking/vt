@@ -53,7 +53,6 @@
 #include "vt/topos/location/utility/entity.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/serialization/auto_dispatch/dispatch.h"
 #include "vt/runnable/general.h"
 
 #include <cstdint>
@@ -403,16 +402,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   if (to_node != this_node) {
     // set the instance on the message to deliver to the correct manager
     msg->setLocInst(this_inst);
-
-    if (serialize) {
-      using ::vt::serialization::auto_dispatch::RequiredSerialization;
-      RequiredSerialization<MessageT,msgHandler>::sendMsg(
-        to_node,msg.get(),no_tag
-      );
-    } else {
-      // send to the node discovered by the location manager
-      theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg.get());
-    }
+    // send to the node discovered by the location manager
+    theMsg()->sendMsgAuto<MessageT, msgHandler>(to_node, msg.get());
   } else {
     debug_print(
       location, node,
