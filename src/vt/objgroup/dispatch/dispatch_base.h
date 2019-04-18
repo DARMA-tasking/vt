@@ -68,7 +68,7 @@ struct DispatchBase {
    * Dispatch to the handler; the base is closed around the proper object
    * pointer that is type-erased here
    */
-  virtual void run(HandlerType han, MsgSharedPtr<ShortMessage> msg) = 0;
+  virtual void run(HandlerType han, BaseMessage* msg) = 0;
 
   ObjGroupProxyType proxy() const { return proxy_; }
 

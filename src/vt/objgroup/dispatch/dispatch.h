@@ -64,7 +64,7 @@ struct Dispatch final : DispatchBase {
 
   virtual ~Dispatch() = default;
 
-  void run(HandlerType han, MsgSharedPtr<ShortMessage> msg) override;
+  void run(HandlerType han, BaseMessage* msg) override;
 
 private:
   ObjT* obj_ = nullptr;

@@ -52,12 +52,12 @@
 namespace vt { namespace objgroup { namespace dispatch {
 
 template <typename ObjT>
-void Dispatch<ObjT>::run(HandlerType han, MsgSharedPtr<ShortMessage> msg) {
+void Dispatch<ObjT>::run(HandlerType han, BaseMessage* msg) {
   using ActiveFnType = void(ObjT::*)(vt::BaseMessage*);
   vtAssert(obj_ != nullptr, "Must have a valid object");
   auto base_func = auto_registry::getAutoHandlerObjGroup(han);
   auto type_func = reinterpret_cast<ActiveFnType>(base_func);
-  (obj_->*type_func)(msg.get());
+  (obj_->*type_func)(msg);
 }
 
 }}} /* end namespace vt::objgroup::dispatch */

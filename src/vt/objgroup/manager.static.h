@@ -60,8 +60,7 @@ void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
     theMsg()->sendMsgAuto<MsgT>(dest_node,han,msg.get(),no_tag);
   } else {
     // Schedule the work of dispatching the message handler for later
-    auto umsg = msg.template to<ShortMessage>();
-    scheduleMsg(umsg,han);
+    scheduleMsg(msg.template toVirtual<ShortMessage>(),han);
   }
 }
 
@@ -69,8 +68,7 @@ template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
   theMsg()->broadcastMsgAuto<MsgT>(han,msg.get(),no_tag);
   // Schedule delivery on this node for the objgroup
-  auto umsg = msg.template to<ShortMessage>();
-  scheduleMsg(umsg,han);
+  scheduleMsg(msg.template toVirtual<ShortMessage>(),han);
 }
 
 }} /* end namespace vt::objgroup */

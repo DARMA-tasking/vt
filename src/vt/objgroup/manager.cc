@@ -48,17 +48,11 @@
 #include "vt/objgroup/proxy/proxy_bits.h"
 #include "vt/objgroup/type_registry/registry.h"
 #include "vt/context/context.h"
+#include "vt/messaging/message/smart_ptr_virtual.h"
 
 namespace vt { namespace objgroup {
 
-void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
-  // Schedule the work of dispatching the message handler for later
-  theObjGroup()->work_units_.push_back(
-    [msg,han]{ theObjGroup()->dispatch(msg,han); }
-  );
-}
-
-void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+void ObjGroupManager::dispatch(MsgVirtualPtrAny msg, HandlerType han) {
   // Extract the control-bit sequence from the handler
   auto const ctrl = HandlerManager::getHandlerControl(han);
   auto const type_idx = auto_registry::getAutoHandlerObjTypeIdx(han);
@@ -72,7 +66,7 @@ void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) 
   if (dispatch_iter == dispatch_.end()) {
     pending_[proxy].push_back(msg);
   } else {
-    dispatch_iter->second->run(han,msg);
+    dispatch_iter->second->run(han,msg.get());
   }
 }
 
@@ -118,12 +112,19 @@ bool scheduler() {
   return theObjGroup()->scheduler();
 }
 
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han) {
   debug_print(
     objgroup, node,
     "dispatchObjGroup: han={:x}\n", han
   );
   return theObjGroup()->dispatch(msg,han);
+}
+
+void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han) {
+  // Schedule the work of dispatching the message handler for later
+  theObjGroup()->work_units_.push_back(
+    [msg,han]{ theObjGroup()->dispatch(msg,han); }
+  );
 }
 
 }} /* end namespace vt::objgroup */
