@@ -343,9 +343,11 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 
 template <typename MsgT, typename BaseT>
 /*static*/ void SerializedMessenger::broadcastSerialMsgHandler(
-  MsgT* msg, HandlerType const& han
+  MsgT* msg_ptr, HandlerType const& han
 ) {
   using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
+
+  auto msg = promoteMsg(msg_ptr);
 
   MsgSharedPtr<SerialEagerPayloadMsg<MsgT,BaseT>> payload_msg = nullptr;
   MsgSharedPtr<SerialWrapperMsgType<MsgT>> sys_msg = nullptr;
@@ -353,7 +355,7 @@ template <typename MsgT, typename BaseT>
   auto sys_size = sizeof(typename decltype(sys_msg)::MsgType);
 
   auto serialized_msg = serialize(
-    *msg, [&](SizeType size) -> SerialByteType* {
+    *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
       if (size >= serialized_msg_eager_size) {
         sys_msg = makeMessageSz<SerialWrapperMsgType<MsgT>>(ptr_size);
