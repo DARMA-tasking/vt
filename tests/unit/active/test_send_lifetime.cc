@@ -91,6 +91,7 @@ struct SendLifetimeRegression : TestParallelHarness {
 
     from_node = 0;
     to_node = 1;
+    TestMsg::alloc_count = 0;
   }
 
   virtual void TearDown() {
@@ -130,7 +131,7 @@ TEST_F(SendLifetimeRegression, send_one_dest) {
         fmt::print("{}: sendMsg: i={}\n", my_node, i);
       #endif
       auto msg = makeSharedMessage<TestMsg>();
-      theMsg()->sendMsg<TestMsg, test_handler>(1, msg);
+      theMsg()->sendMsgAuto<TestMsg, test_handler>(1, msg);
     }
   } else if (my_node == to_node) {
     theTerm()->addAction([=]{

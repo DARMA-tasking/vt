@@ -85,6 +85,7 @@ struct BcastLifetimeRegression : TestParameterHarnessNode {
 
     handler_count = 0;
     num_msg_sent = 16;
+    TestMsg::alloc_count = 0;
   }
 
   virtual void TearDown() {
@@ -120,7 +121,7 @@ TEST_P(BcastLifetimeRegression, bcast_all) {
     if (my_node == root) {
       for (int i = 0; i < num_msg_sent; i++) {
         auto msg = makeSharedMessage<TestMsg>();
-        theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
+        theMsg()->broadcastMsgAuto<TestMsg, test_handler>(msg);
       }
     }
 
