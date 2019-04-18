@@ -49,7 +49,6 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/serialization/auto_dispatch/dispatch.h"
 #include "vt/messaging/active.h"
 #include "vt/runnable/general.h"
 #include "vt/group/group_headers.h"
@@ -159,21 +158,18 @@ void Reduce::reduceAddMsg(
     msg->reduce_proxy_,
     msg->reduce_objgroup_
   };
-  auto live_iter = live_reductions_.find(lookup);
-  if (live_iter == live_reductions_.end()) {
+
+  auto exists = ReduceStateHolder::exists<MessageT>(group_,lookup);
+  if (not exists) {
     auto num_contrib_state = num_contrib == -1 ? 1 : num_contrib;
-    live_reductions_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(lookup),
-      std::forward_as_tuple(ReduceState{
-        msg->reduce_tag_,msg->reduce_seq_,num_contrib_state
-      })
+    ReduceState<MessageT> state(
+      msg->reduce_tag_,msg->reduce_seq_,num_contrib_state
     );
-    live_iter = live_reductions_.find(lookup);
-    vtAssertExpr(live_iter != live_reductions_.end());
+    ReduceStateHolder::insert<MessageT>(group_,lookup,std::move(state));
   }
-  auto& state = live_iter->second;
-  auto msg_ptr = promoteMsg(msg).template to<ReduceMsg>();;
+
+  auto state = ReduceStateHolder::find<MessageT>(group_,lookup);
+  auto msg_ptr = promoteMsg(msg);
   state.msgs.push_back(msg_ptr);
   if (num_contrib != -1) {
     state.num_contrib_ = num_contrib;
@@ -197,8 +193,7 @@ void Reduce::startReduce(
   ObjGroupProxyType objgroup, bool use_num_contrib
 ) {
   auto lookup = ReduceIdentifierType{tag,seq,proxy,objgroup};
-  auto live_iter = live_reductions_.find(lookup);
-  auto& state = live_iter->second;
+  auto state = ReduceStateHolder::find<MessageT>(group_,lookup);
 
   auto const& nmsgs = state.msgs.size();
   bool ready = false;
@@ -285,11 +280,7 @@ void Reduce::startReduce(
         reduce, node,
         "reduce send to parent: parent={}\n", parent
       );
-      using SendDispatch =
-        serialization::auto_dispatch::RequiredSerialization<
-          MessageT, reduceUp<MessageT>
-        >;
-      SendDispatch::sendMsg(parent,typed_msg);
+      theMsg()->sendMsgAuto<MessageT,reduceUp<MessageT>>(parent,typed_msg);
     }
   }
 }

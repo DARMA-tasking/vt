@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          reduce_state.h
+//                          reduce_state_holder.impl.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,37 +42,73 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
-#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_IMPL_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_IMPL_H
 
 #include "vt/config.h"
-#include "vt/collective/reduce/reduce_msg.h"
-#include "vt/messaging/message.h"
-
-#include <vector>
-#include <cstdint>
 
 namespace vt { namespace collective { namespace reduce {
 
 template <typename T>
-struct ReduceState {
-  using ReduceNumType = int32_t;
-  using ReduceVecType = std::vector<MsgSharedPtr<T>>;
+/*static*/ bool ReduceStateHolder::exists(
+  GroupType group, ReduceIDType const& id
+) {
+  auto group_iter = state_lookup_<T>.find(group);
+  if (group_iter == state_lookup_<T>.end()) {
+    return false;
+  } else {
+    auto id_iter = group_iter->second.find(id);
+    if (id_iter == group_iter->second.end()) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+}
 
-  ReduceState(
-    TagType in_tag_, SequentialIDType in_seq_id_, ReduceNumType in_num_contrib
-  ) : tag_(in_tag_), seq_id_(in_seq_id_), num_contrib_(in_num_contrib)
-  { }
+template <typename T>
+/*static*/ typename ReduceStateHolder::ReduceStateType<T>&
+ReduceStateHolder::find(GroupType group, ReduceIDType const& id) {
+  auto group_iter = state_lookup_<T>.find(group);
+  vtAssertExpr(group_iter != state_lookup_<T>.end());
+  auto id_iter = group_iter->second.find(id);
+  vtAssertExpr(id_iter != group_iter->second.end());
+  return id_iter->second;
+}
 
-  ReduceVecType msgs               = {};
-  TagType tag_                     = no_tag;
-  SequentialIDType seq_id_         = no_seq_id;
-  ReduceNumType num_contrib_       = 1;
-  ReduceNumType num_local_contrib_ = 0;
-  HandlerType combine_handler_     = uninitialized_handler;
-  NodeType reduce_root_            = uninitialized_destination;
-};
+template <typename T>
+/*static*/ void ReduceStateHolder::erase(
+  GroupType group, ReduceIDType const& id
+) {
+  auto group_iter = state_lookup_<T>.find(group);
+  if (group_iter != state_lookup_<T>.end()) {
+    auto id_iter = group_iter->second.find(id);
+    if (id_iter == group_iter->second.end()) {
+      state_lookup_<T>.erase(group_iter);
+    } else {
+      group_iter->second.erase(id_iter);
+      if (group_iter->second.size == 0) {
+        state_lookup_<T>.erase(group_iter);
+      }
+    }
+  }
+}
+
+template <typename T>
+/*static*/ void ReduceStateHolder::insert(
+  GroupType group, ReduceIDType const& id, ReduceStateType<T>&& state
+) {
+  state_lookup_<T>[group].emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(id),
+    std::forward_as_tuple(std::move(state))
+  );
+}
+
+template <typename T>
+/*static*/ typename ReduceStateHolder::GroupLookupType<T>
+ReduceStateHolder::state_lookup_ = {};
 
 }}} /* end namespace vt::collective::reduce */
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_IMPL_H*/
