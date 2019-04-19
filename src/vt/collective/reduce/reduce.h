@@ -123,7 +123,6 @@ struct Reduce : virtual collective::tree::Tree {
 
 private:
   std::unordered_map<ReduceSeqLookupType,SequentialIDType> next_seq_for_tag_;
-  // std::unordered_map<ReduceIdentifierType,ReduceStateType> live_reductions_;
   GroupType group_ = default_group;
 };
 

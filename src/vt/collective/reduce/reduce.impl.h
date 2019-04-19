@@ -58,12 +58,12 @@ namespace vt { namespace collective { namespace reduce {
 
 template <typename MessageT>
 /*static*/ void Reduce::reduceUp(MessageT* msg) {
+  auto const grp = envelopeGetGroup(msg->env);
   debug_print(
     reduce, node,
-    "reduceUp: tag={}, seq={}, vrt={}, msg={}\n",
-    msg->reduce_tag_, msg->reduce_seq_, msg->reduce_proxy_, print_ptr(msg)
+    "reduceUp: group={:x}, tag={}, seq={}, vrt={}, msg={}\n",
+    grp, msg->reduce_tag_, msg->reduce_seq_, msg->reduce_proxy_, print_ptr(msg)
   );
-  auto const grp = envelopeGetGroup(msg->env);
   if (grp == default_group) {
     theCollective()->reduceAddMsg<MessageT>(msg,false);
     theCollective()->reduceNewMsg<MessageT>(msg);
@@ -123,8 +123,9 @@ SequentialIDType Reduce::reduce(
   msg->reduce_objgroup_ = objgroup;
   debug_print(
     reduce, node,
-    "reduce: tag={}, seq={}, vrt={}, objgrp={}, contrib={}, msg={}, ref={}\n",
-    msg->reduce_tag_, msg->reduce_seq_, msg->reduce_proxy_,
+    "reduce: group={:x}, tag={}, seq={}, vrt={}, objgrp={}, contrib={}, "
+    "msg={}, ref={}\n",
+    group_, msg->reduce_tag_, msg->reduce_seq_, msg->reduce_proxy_,
     msg->reduce_objgroup_, num_contrib, print_ptr(msg), envelopeGetRef(msg->env)
   );
   if (seq == no_seq_id) {
@@ -168,7 +169,7 @@ void Reduce::reduceAddMsg(
     ReduceStateHolder::insert<MessageT>(group_,lookup,std::move(state));
   }
 
-  auto state = ReduceStateHolder::find<MessageT>(group_,lookup);
+  auto& state = ReduceStateHolder::find<MessageT>(group_,lookup);
   auto msg_ptr = promoteMsg(msg);
   state.msgs.push_back(msg_ptr);
   if (num_contrib != -1) {
@@ -181,8 +182,8 @@ void Reduce::reduceAddMsg(
   state.reduce_root_ = msg->reduce_root_;
   debug_print(
     reduce, node,
-    "reduceAddMsg: msg={}, contrib={}, msgs.size()={}, ref={}\n",
-    print_ptr(msg), state.num_contrib_,
+    "reduceAddMsg: group={:x}, msg={}, contrib={}, msgs.size()={}, ref={}\n",
+    group_, print_ptr(msg), state.num_contrib_,
     state.msgs.size(), envelopeGetRef(msg->env)
   );
 }
@@ -193,22 +194,20 @@ void Reduce::startReduce(
   ObjGroupProxyType objgroup, bool use_num_contrib
 ) {
   auto lookup = ReduceIdentifierType{tag,seq,proxy,objgroup};
-  auto state = ReduceStateHolder::find<MessageT>(group_,lookup);
+  auto& state = ReduceStateHolder::find<MessageT>(group_,lookup);
 
   auto const& nmsgs = state.msgs.size();
-  bool ready = false;
+  auto const contrib =
+    use_num_contrib ? state.num_contrib_ : state.num_local_contrib_;
+  bool ready = nmsgs == static_cast<decltype(nmsgs)>(getNumChildren() + contrib);
 
   debug_print(
     reduce, node,
-    "startReduce: tag={}, seq={}, vrt={}, msg={}, children={}, contrib_={}\n",
-    tag, seq, proxy, state.msgs.size(), getNumChildren(), state.num_contrib_
+    "startReduce: group={:x}, tag={}, seq={}, vrt={}, msg={}, children={}, "
+    "contrib_={}, local_contrib_={}, nmsgs={}, ready={}\n",
+    group_, tag, seq, proxy, state.msgs.size(), getNumChildren(),
+    state.num_contrib_, state.num_local_contrib_, nmsgs, ready
   );
-
-  if (use_num_contrib) {
-    ready = nmsgs == static_cast<decltype(nmsgs)>(getNumChildren() + state.num_contrib_);
-  } else {
-    ready = nmsgs == static_cast<decltype(nmsgs)>(getNumChildren() + state.num_local_contrib_);
-  }
 
   if (ready) {
     // Combine messages
