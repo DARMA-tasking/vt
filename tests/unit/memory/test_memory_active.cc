@@ -107,7 +107,40 @@ TYPED_TEST_P(TestMemoryActive, test_memory_remote_send) {
   });
 }
 
-REGISTER_TYPED_TEST_CASE_P(TestMemoryActive, test_memory_remote_send);
+TYPED_TEST_P(TestMemoryActive, test_memory_remote_broadcast) {
+  using MsgType = TypeParam;
+
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  std::vector<MsgSharedPtr<MsgType>> msgs;
+
+  if (num_nodes > 1) {
+    for (int i = 0; i < num_msg_sent; i++) {
+      auto msg = makeMessage<MsgType>();
+      msgs.push_back(msg);
+      theMsg()->broadcastMsgAuto<MsgType,TestMemoryActive<MsgType>::test_handler>(
+        msg.get()
+      );
+    }
+  }
+
+  theTerm()->addAction([=]{
+    /*
+     *  Explicitly call event cleanup so any pending MPI requests get tested and
+     *  thus the memory gets freed (or dereferenced)---the corresponding
+     *  messages we are checking for a correct reference count go to 1
+     */
+    theEvent()->cleanup();
+    for (auto&& msg : msgs) {
+      // We expect 1 reference due to the messageRef above
+      EXPECT_EQ(envelopeGetRef(msg->env), 1);
+    }
+  });
+}
+
+REGISTER_TYPED_TEST_CASE_P(
+  TestMemoryActive, test_memory_remote_send, test_memory_remote_broadcast
+);
 
 using MsgShort = testing::Types<
   TestMemoryActiveMsg<TestStaticBytesShortMsg>::TestMsgA,
