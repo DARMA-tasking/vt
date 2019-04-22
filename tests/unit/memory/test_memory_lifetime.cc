@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                   test_active_send_lifetime.cc
+//                     test_memory_lifetime.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -69,12 +69,20 @@ struct SerialTrackMsg : ::vt::Message {
   static int32_t alloc_count;
 };
 
+template <typename MsgT>
+struct CallbackMsg : vt::Message {
+  CallbackMsg() = default;
+  CallbackMsg(Callback<MsgT> in_cb) : cb_(in_cb) { }
+
+  Callback<MsgT> cb_;
+};
+
 int32_t SerialTrackMsg::alloc_count = 0;
 
-struct TestMemoryLifetime : TestParallelHarness {
-  using NormalTestMsg = TrackMsg;
-  using SerialTestMsg = SerialTrackMsg;
+using NormalTestMsg = TrackMsg;
+using SerialTestMsg = SerialTrackMsg;
 
+struct TestMemoryLifetime : TestParallelHarness {
   virtual void SetUp() {
     TestParallelHarness::SetUp();
     SerialTestMsg::alloc_count = 0;
@@ -97,6 +105,9 @@ int32_t TestMemoryLifetime::local_count = 0;
 
 static constexpr int32_t const num_msgs_sent = 32;
 
+////////////////////////////////////////////////////////////////////////////////
+// Active message send, serialized
+////////////////////////////////////////////////////////////////////////////////
 TEST_F(TestMemoryLifetime, test_active_send_serial_lifetime_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
@@ -119,6 +130,9 @@ TEST_F(TestMemoryLifetime, test_active_send_serial_lifetime_1) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Active message broadcast, serialized
+////////////////////////////////////////////////////////////////////////////////
 TEST_F(TestMemoryLifetime, test_active_bcast_serial_lifetime_1) {
   auto const& num_nodes = theContext()->getNumNodes();
 
@@ -139,6 +153,9 @@ TEST_F(TestMemoryLifetime, test_active_bcast_serial_lifetime_1) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Active message send, non-serialized, MsgT*
+////////////////////////////////////////////////////////////////////////////////
 TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
@@ -164,6 +181,9 @@ TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_1) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Active message send, non-serialized, MsgSharedPtr
+////////////////////////////////////////////////////////////////////////////////
 TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_2) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
@@ -187,6 +207,9 @@ TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_2) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Active message broadcast, non-serialized, MsgT*
+////////////////////////////////////////////////////////////////////////////////
 TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_1) {
   auto const& num_nodes = theContext()->getNumNodes();
 
@@ -210,6 +233,9 @@ TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_1) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Active message broadcast, non-serialized, MsgSharedPtr
+////////////////////////////////////////////////////////////////////////////////
 TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_2) {
   auto const& num_nodes = theContext()->getNumNodes();
 
@@ -228,6 +254,73 @@ TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_2) {
     theTerm()->addAction([=]{
       EXPECT_EQ(local_count, num_msgs_sent*(num_nodes-1));
     });
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Callback func, non-serialized
+////////////////////////////////////////////////////////////////////////////////
+static void callbackHan(CallbackMsg<NormalTestMsg>* msg) {
+  auto send_msg = makeMessage<NormalTestMsg>();
+  msg->cb_.send(send_msg.get());
+
+  theTerm()->addAction([send_msg]{
+    // Call event cleanup all pending MPI requests to clear
+    theEvent()->cleanup();
+    EXPECT_EQ(envelopeGetRef(send_msg->env), 1);
+  });
+}
+
+TEST_F(TestMemoryLifetime, test_active_send_callback_lifetime_1) {
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  if (num_nodes > 1) {
+    auto cb = theCB()->makeFunc<NormalTestMsg>([](NormalTestMsg* msg){ });
+
+    for (int i = 0; i < num_msgs_sent; i++) {
+      auto msg = makeMessage<CallbackMsg<NormalTestMsg>>(cb);
+      theMsg()->broadcastMsg<CallbackMsg<NormalTestMsg>, callbackHan>(msg.get());
+
+      theTerm()->addAction([msg]{
+        // Call event cleanup all pending MPI requests to clear
+        theEvent()->cleanup();
+        EXPECT_EQ(envelopeGetRef(msg->env), 1);
+      });
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Callback func, serialized
+////////////////////////////////////////////////////////////////////////////////
+static void callbackHan(CallbackMsg<SerialTestMsg>* msg) {
+  auto send_msg = makeMessage<SerialTestMsg>();
+  msg->cb_.send(send_msg.get());
+
+  theTerm()->addAction([send_msg]{
+    // Call event cleanup all pending MPI requests to clear
+    theEvent()->cleanup();
+    EXPECT_EQ(envelopeGetRef(send_msg->env), 1);
+  });
+}
+
+TEST_F(TestMemoryLifetime, test_active_serial_callback_lifetime_1) {
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  if (num_nodes > 1) {
+    auto cb = theCB()->makeFunc<SerialTestMsg>([](SerialTestMsg* msg){ });
+
+    for (int i = 0; i < num_msgs_sent; i++) {
+      auto msg = makeMessage<CallbackMsg<SerialTestMsg>>(cb);
+      theMsg()->broadcastMsg<CallbackMsg<SerialTestMsg>, callbackHan>(msg.get());
+
+      theTerm()->addAction([msg]{
+        // Call event cleanup all pending MPI requests to clear
+        theEvent()->cleanup();
+        EXPECT_EQ(envelopeGetRef(msg->env), 1);
+      });
+    }
   }
 }
 
