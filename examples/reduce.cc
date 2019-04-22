@@ -1,117 +1,251 @@
-/*
-//@HEADER
-// ************************************************************************
+
+
 //
-//                          reduce.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+// This code computes a composite trapezoidal rule for the integral
+// \int_{0}^{1} f(x) dx
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// The function 'f' is defined in the code.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// The interval [0, 1] is broken into uniform sub-intervals of length
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// H = 1.0 / (# of objects)
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// Each sub-interval [xi, xi + H] is broken into smaller parts of length
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// h = H / (# of parts per object)
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact darma@sandia.gov
-//
-// ************************************************************************
-//@HEADER
-*/
+
 
 #include "vt/transport.h"
+#include <cmath>
 #include <cstdlib>
 
-using namespace vt;
 
-#define BCAST_DEBUG 0
+using namespace ::vt;
 
-static constexpr int32_t const num_bcasts = 4;
-static NodeType my_node = uninitialized_destination;
-static int32_t count = 0;
 
-struct Msg : vt::Message {
-  NodeType broot;
+static constexpr std::size_t const default_nparts_object = 8;
+static constexpr std::size_t const default_num_objs = 4;
+static constexpr std::size_t const verbose = 1;
 
-  Msg(NodeType const& in_broot) : Message(), broot(in_broot) { }
-};
+static bool root_reduce_finished = false;
+static double exactIntegral = 0.0;
 
-static void bcastTest(Msg* msg) {
-  auto const& root = msg->broot;
 
-  #if BCAST_DEBUG
-  fmt::print("{}: bcastTestHandler root={}\n", theContext()->getNode(), msg->broot);
-  #endif
+//
+// Function 'f' to integrate over [0, 1]
+//
 
-  vtAssert(
-      root != my_node, "Broadcast should deliver to all but this node"
-  );
 
-  count++;
+double f(double x) {
+  //----
+  //exactIntegral = 1.0 / 3.0;
+  //return x*x;
+  //----
+  exactIntegral = M_2_PI;
+  return sin(M_PI * x);
 }
 
-int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
 
-  my_node = theContext()->getNode();
+struct Integration1D : vt::Collection<Integration1D,Index1D> {
 
-  if (theContext()->getNumNodes() == 1) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
-    return 0;
-  }
+private:
 
-  NodeType from_node = uninitialized_destination;
+  size_t numObjs_ = default_num_objs;
+  size_t numPartsPerObject_ = default_nparts_object;
+  double quadValue = 0.0;
 
-  if (argc > 1) {
-    from_node = atoi(argv[1]);
-  }
+public:
 
-  int32_t const expected = num_bcasts *
-    (from_node == uninitialized_destination ? theContext()->getNumNodes() - 1 : (
-      from_node == my_node ? 0 : 1
-    ));
+  explicit Integration1D()
+    : vt::Collection<Integration1D, Index1D>(),
+      numObjs_(default_num_objs), numPartsPerObject_(default_nparts_object),
+      quadValue(0.0)
+  { }
 
-  theTerm()->addAction([=]{
-    fmt::print("[{}] verify: count={}, expected={}\n", my_node, count, expected);
-    vtAssertExpr(count == expected);
-  });
+  //
+  // QuadSum: structure used for the reduction without callback
+  //
+  struct QuadSum {
 
-  if (from_node == uninitialized_destination or from_node == my_node) {
-    fmt::print("[{}] broadcast_test: broadcasting {} times\n", my_node, num_bcasts);
-    for (int i = 0; i < num_bcasts; i++) {
-      theMsg()->broadcastMsg<Msg, bcastTest>(makeSharedMessage<Msg>(my_node));
+    void operator()(vt::collective::ReduceTMsg<double>* msg) {
+      //
+      // The root index knows the reduced value.
+      // It is obtained with ' msg->getConstVal() '
+      //
+      std::cout << " ## The integral over [0, 1] is "
+                << msg->getConstVal()
+                << "\n";
+      std::cout << " ## The absolute error is "
+                << abs(msg->getConstVal() - exactIntegral)
+                << "\n";
+      //
+      // Set the 'root_reduce_finished' variable to true.
+      //
+      root_reduce_finished = true;
     }
+
+  };
+
+  struct CheckIntegral {
+
+    void operator()(vt::collective::ReduceTMsg<double>* msg) {
+      std::cout << " >> The numerical value for the integral over [0, 1] is "
+                << msg->getConstVal()
+                << "\n";
+      std::cout << " >> The absolute error is "
+                << abs(msg->getConstVal() - exactIntegral)
+                << "\n";
+      //
+      // Set the 'root_reduce_finished' variable to true.
+      //
+      root_reduce_finished = true;
+    }
+
+  };
+
+  struct InitMsg : vt::CollectionMessage<Integration1D> {
+
+    size_t numObjects = 0;
+    size_t nIntervalPerObject = 0;
+
+    InitMsg() = default;
+
+    InitMsg(const size_t nobjs, const size_t nint) :
+      CollectionMessage<Integration1D>(),
+      numObjects(nobjs), nIntervalPerObject(nint)
+    { }
+
+  };
+
+  void compute(InitMsg *msg) {
+
+    numObjs_ = msg->numObjects;
+    numPartsPerObject_ = msg->nIntervalPerObject;
+
+    //
+    // Compute the integral with the trapezoidal rule
+    // over the interval [a, b]
+    //
+    // a = numPartsPerObject_ * (IndexID) * h
+    //
+    // b = a + numPartsPerObject_ * h
+    //
+    // where h = 1.0 / (numPartsPerObject_ * numObjs_ )
+    //
+    // Since 0 <= (IndexID) < numObjs_, the union of these intervals
+    // covers [0, 1]
+    //
+
+    double h = 1.0 / (numPartsPerObject_ * numObjs_ );
+    double quadsum = 0.0;
+
+    double a = numPartsPerObject_ * getIndex().x() * h;
+
+    //
+    // Apply composite trapezoidal rule over
+    //
+    // [a, a + numPartsPerObject_ * h]
+    //
+    for (size_t ii = 0; ii < numPartsPerObject_; ++ii) {
+      double x0 = a + ii * h;
+      /* --- Trapeze Quadrature Rule over the interval [x0, x0+h] */
+      quadsum += 0.5 * h * ( f(x0) + f(x0+h) );
+    }
+
+    if (verbose > 0) {
+      double b = a + numPartsPerObject_ * h;
+      std::cout << " Interval [" << a << ", " << b << "] "
+                << ", on node " << theContext()->getNode()
+                << " & object " << getIndex().x()
+                << ", has integral " << quadsum
+                << "\n";
+    }
+
+    //
+    // Reduce the partial sum to get the integral over [0, 1]
+    //
+
+    auto proxy = this->getCollectionProxy();
+    auto msgCB = vt::makeSharedMessage<
+      vt::collective::ReduceTMsg<double>
+      >(quadsum);
+    auto cback = vt::theCB()->makeSend<CheckIntegral>(0);
+    proxy.reduce<vt::collective::PlusOp<double>>(msgCB,cback);
+
+    //
+    // Syntax without a callback function:
+    //
+//    auto proxy = this->getCollectionProxy();
+//    auto msg2 = vt::makeSharedMessage<
+//      vt::collective::ReduceTMsg<double>
+//      >(quadsum);
+//    proxy.reduce<collective::PlusOp<double>, QuadSum>(msg2);
+
+  }
+
+};
+
+
+int main(int argc, char** argv) {
+
+  size_t num_objs = default_num_objs;
+  size_t numIntPerObject = default_nparts_object;
+
+  std::string name(argv[0]);
+
+  if (argc == 1) {
+    ::fmt::print(
+      stderr, "{}: using default arguments since none provided\n", name
+    );
+  } else {
+    if (argc == 2) {
+      num_objs = (size_t) strtol(argv[1], nullptr, 10);
+    }
+    else if (argc == 3) {
+      num_objs = (size_t) strtol(argv[1], nullptr, 10);
+      numIntPerObject = (size_t) strtol(argv[2], nullptr, 10);
+    }
+    else {
+      ::fmt::print(stderr,
+                   "usage: {} <num-objects> <num-interval-per-object>\n",
+                   name);
+      return 1;
+    }
+  }
+
+  vt::CollectiveOps::initialize(argc, argv);
+
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  if (this_node == 0) {
+    //
+    // Create the interval decomposition into objects
+    //
+    using BaseIndexType = typename Index1D::DenseIndexType;
+    auto const& range = Index1D(static_cast<BaseIndexType>(num_objs));
+
+    auto proxy = vt::theCollection()->construct<Integration1D>(range);
+    auto rootMsg = makeSharedMessage< Integration1D::InitMsg >
+      (num_objs, numIntPerObject);
+    proxy.broadcast<Integration1D::InitMsg,&Integration1D::compute>(rootMsg);
   }
 
   while (!rt->isTerminated()) {
     runScheduler();
   }
 
-  CollectiveOps::finalize();
+  // Add something like this to validate the reduction.
+  // Create the variable root_reduce_finished as a static variable,
+  // which is only checked on one node.
+  theTerm()->addAction([]{
+    vtAssertExpr(root_reduce_finished == true);
+  });
+
+  vt::CollectiveOps::finalize();
 
   return 0;
+
 }
+
