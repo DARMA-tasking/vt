@@ -100,7 +100,7 @@ TYPED_TEST_P(TestMemoryActive, test_memory_remote_send) {
      *  messages we are checking for a correct reference count go to 1
      */
     theEvent()->cleanup();
-    for (auto msg : msgs) {
+    for (auto&& msg : msgs) {
       // We expect 1 reference due to the messageRef above
       EXPECT_EQ(envelopeGetRef(msg->env), 1);
     }
