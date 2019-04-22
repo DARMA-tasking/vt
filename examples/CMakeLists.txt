@@ -41,7 +41,6 @@ set(
   group_example_1
   group_collective
   reduce
-  reduce_integral
   transpose
   tutorial
   objgroup
