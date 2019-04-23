@@ -194,8 +194,9 @@ public:
 
     if (verbose > 0) {
       double b = a + numPartsPerObject_ * h;
-      ::fmt::print(" Interval [{}, {}], on node {} & object {}, has integral {} \n",
-				a, b, theContext()->getNode(), getIndex().x(), quadsum);
+      ::fmt::print(" Interval [{}, {}], on node {} & object {}, "
+                   "has integral {}.\n", a, b, theContext()->getNode(),
+                   getIndex().x(), quadsum);
     }
 
     //
