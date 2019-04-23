@@ -49,10 +49,7 @@
 
 namespace vt { namespace collective { namespace reduce {
 
-inline TagType generateUniqueTag(GroupType const& group) {
-  // could be updated in the future
-  return static_cast<TagType>(std::hash<GroupType>()(group));
-}
+static constexpr int32_t const create_group_tag = 0x0EEF0EEF;
 
 }}} /* end namespace vt::collective::reduce */
 #endif /*INCLUDED_COLLECTIVE_REDUCE_TAGS_H*/
