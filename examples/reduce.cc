@@ -231,10 +231,18 @@ int main(int argc, char** argv) {
 
   std::string name(argv[0]);
 
+  vt::CollectiveOps::initialize(argc, argv);
+
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
   if (argc == 1) {
-    ::fmt::print(
-      stderr, "{}: using default arguments since none provided\n", name
-    );
+    if (this_node == 0) {
+      ::fmt::print(
+        stderr, "{}: using default arguments since none provided\n", name
+      );
+    }
+    num_objs = default_num_objs * num_nodes;
   } else {
     if (argc == 2) {
       num_objs = (size_t) strtol(argv[1], nullptr, 10);
@@ -250,10 +258,6 @@ int main(int argc, char** argv) {
       return 1;
     }
   }
-
-  vt::CollectiveOps::initialize(argc, argv);
-
-  auto const& this_node = theContext()->getNode();
 
   if (this_node == 0) {
     //
