@@ -146,7 +146,7 @@ TEST_F(TestReduce, test_reduce_plus_default_op) {
   auto const root = 0;
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->num);
+  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<ReduceOP::Plus> >
@@ -158,7 +158,7 @@ TEST_F(TestReduce, test_reduce_max_default_op) {
   auto const root = 0;
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->num);
+  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg, MaxOp<int>, Verify<ReduceOP::Max> >
@@ -170,7 +170,7 @@ TEST_F(TestReduce, test_reduce_min_default_op) {
   auto const root = 0;
 
   auto msg = makeSharedMessage<SysMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->num);
+  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg, MinOp<int>, Verify<ReduceOP::Min> >
