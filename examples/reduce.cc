@@ -194,15 +194,8 @@ public:
 
     if (verbose > 0) {
       double b = a + numPartsPerObject_ * h;
-      ::fmt::print(" ## The integral over [0, 1] is {}\n",
-                   msg->getConstVal());
-      ::fmt::print(" ## The absolute error is {}\n",
-                   abs(msg->getConstVal() - exactIntegral));
-      std::cout << " Interval [" << a << ", " << b << "] "
-                << ", on node " << theContext()->getNode()
-                << " & object " << getIndex().x()
-                << ", has integral " << quadsum
-                << "\n";
+      ::fmt::print(" Interval [{}, {}], on node {} & object {}, has integral {} \n",
+				a, b, theContext()->getNode(), getIndex().x(), quadsum);
     }
 
     //
@@ -260,7 +253,6 @@ int main(int argc, char** argv) {
   vt::CollectiveOps::initialize(argc, argv);
 
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
 
   if (this_node == 0) {
     //
