@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/collective/reduce/reduce.fwd.h"
 #include "vt/collective/reduce/reduce_hash.h"
+#include "vt/collective/reduce/reduce_tags.h"
 #include "vt/collective/reduce/reduce_state.h"
 #include "vt/collective/reduce/reduce_msg.h"
 #include "vt/collective/reduce/operators/default_msg.h"
