@@ -129,7 +129,7 @@ template <typename MsgT>
 
     std::vector<RegionType::BoundType> local_nodes;
 
-    auto parent_cont = [parent,group,op_id]{
+    auto parent_cont = [parent,group,op_id,this_node]{
       auto iter = theGroup()->remote_group_info_.find(group);
       vtAssertExpr(iter != theGroup()->remote_group_info_.end());
       auto info = iter->second.get();
@@ -148,10 +148,14 @@ template <typename MsgT>
           parent, op_id
         );
 
-        auto contmsg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
-        theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
-          parent, contmsg
-        );
+        auto contmsg = makeMessage<GroupOnlyMsg>(group, op_id);
+        if (parent != this_node) {
+          theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
+            parent, contmsg.get()
+          );
+        } else {
+          Info::groupTriggerHandler(contmsg.get());
+        }
       }
     };
 
@@ -168,10 +172,14 @@ template <typename MsgT>
 
       auto op1 = theGroup()->registerContinuation(parent_cont);
       auto l1 = static_cast<RangeType*>(region.get());
-      auto c_msg = makeSharedMessage<MsgT>(
+      auto c_msg = makeMessage<MsgT>(
         c, c_size, group, op1, group_total_size, this_node, l1
       );
-      theMsg()->sendMsg<MsgT, groupSetupHandler>(c, c_msg);
+      if (c != this_node) {
+        theMsg()->sendMsg<MsgT, groupSetupHandler>(c, c_msg.get());
+      } else {
+        groupSetupHandler(c_msg.get());
+      }
     });
 
     auto const& num_children = local_nodes.size();

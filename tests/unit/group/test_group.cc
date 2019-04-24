@@ -72,8 +72,8 @@ struct TestGroup : TestParallelHarness {
 TEST_F(TestGroup, test_group_range_construct_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const& lo = 0;
-  auto const& hi = num_nodes / 2;
+  NodeType const lo = 0;
+  NodeType const hi = num_nodes / 2;
   if (this_node == 0) {
     auto list = std::make_unique<region::Range>(lo,hi);
     theGroup()->newGroup(
@@ -98,8 +98,9 @@ TEST_F(TestGroup, test_group_range_construct_1) {
 TEST_F(TestGroup, test_group_range_construct_2) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const& lo = 1;
-  auto const& hi = std::min(num_nodes,static_cast<NodeType>(5));
+  NodeType const lo = 1;
+  NodeType const max_val = 5;
+  NodeType const hi = std::min<NodeType>(num_nodes,max_val);
   if (this_node == 0) {
     auto list = std::make_unique<region::Range>(lo,hi);
     theGroup()->newGroup(
@@ -124,7 +125,7 @@ TEST_F(TestGroup, test_group_range_construct_2) {
 TEST_F(TestGroup, test_group_collective_construct_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const& node_filter = this_node % 2 == 0;
+  bool const node_filter = this_node % 2 == 0;
   theGroup()->newGroupCollective(
     node_filter, [=](GroupType group) {
       auto const& in_group = theGroup()->inGroup(group);

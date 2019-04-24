@@ -117,14 +117,18 @@ void InfoRooted::setupRooted() {
         }
         auto const& listsize = static_cast<NodeType>(region_list_.size());
         region::ShallowList lst(region_list_);
-        auto msg = makeSharedMessage<GroupListMsg>(
+        auto msg = makeMessage<GroupListMsg>(
           low_node, listsize, group_, op, listsize, this_node, &lst
         );
         is_forward_ = true;
         forward_node_ = low_node;
-        theMsg()->sendMsg<GroupListMsg, Info::groupSetupHandler>(
-          low_node, msg
-        );
+        if (this_node != low_node) {
+          theMsg()->sendMsg<GroupListMsg, Info::groupSetupHandler>(
+            low_node, msg.get()
+          );
+        } else {
+          Info::groupSetupHandler(msg.get());
+        }
       }
     } else {
       debug_print(
@@ -137,15 +141,19 @@ void InfoRooted::setupRooted() {
         op = theGroup()->registerContinuation(finished_setup_action_);
       }
       auto const& regsize = static_cast<NodeType>(region_->getSize());
-      auto msg = makeSharedMessage<GroupRangeMsg>(
+      auto msg = makeMessage<GroupRangeMsg>(
         low_node, regsize, group_, op, regsize, this_node,
         static_cast<region::Range*>(region_.get())
       );
       is_forward_ = true;
       forward_node_ = low_node;
-      theMsg()->sendMsg<GroupRangeMsg, Info::groupSetupHandler>(
-        low_node, msg
-      );
+      if (this_node != low_node) {
+        theMsg()->sendMsg<GroupRangeMsg, Info::groupSetupHandler>(
+          low_node, msg.get()
+        );
+      } else {
+        Info::groupSetupHandler(msg.get());
+      }
     }
   }
 }
