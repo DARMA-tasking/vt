@@ -119,7 +119,7 @@ public:
       ::fmt::print(" ## The integral over [0, 1] is {}\n",
                    msg->getConstVal());
       ::fmt::print(" ## The absolute error is {}\n",
-                   abs(msg->getConstVal() - exactIntegral));
+                   std::fabs(msg->getConstVal() - exactIntegral));
       //
       // Set the 'root_reduce_finished' variable to true.
       //
@@ -134,7 +134,7 @@ public:
       ::fmt::print(" >> The integral over [0, 1] is {}\n",
                    msg->getConstVal());
       ::fmt::print(" >> The absolute error is {}\n",
-                   abs(msg->getConstVal() - exactIntegral));
+                   std::fabs(msg->getConstVal() - exactIntegral));
       //
       // Set the 'root_reduce_finished' variable to true.
       //
