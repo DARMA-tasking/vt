@@ -266,7 +266,7 @@ void ObjGroupManager::update(ProxyType<ObjT> proxy, Args&&... args) {
 }
 
 template <typename ObjT>
-typename ObjGroupManager::ProxyType<ObjT> ObjGroupManager::proxy(ObjT* obj) {
+typename ObjGroupManager::ProxyType<ObjT> ObjGroupManager::getProxy(ObjT* obj) {
   auto map_iter = obj_to_proxy_.find(obj);
   vtAssert(map_iter != obj_to_proxy_.end(), "Object pointer does not exist");
   return ProxyType<ObjT>(map_iter->second);
@@ -274,7 +274,7 @@ typename ObjGroupManager::ProxyType<ObjT> ObjGroupManager::proxy(ObjT* obj) {
 
 template <typename ObjT>
 typename ObjGroupManager::ProxyElmType<ObjT> ObjGroupManager::proxyElm(ObjT* obj) {
-  return proxy<ObjT>(obj).operator()(theContext()->getNode());
+  return getProxy<ObjT>(obj).operator()(theContext()->getNode());
 }
 
 }} /* end namespace vt::objgroup */
