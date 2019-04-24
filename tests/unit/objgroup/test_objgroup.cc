@@ -135,7 +135,7 @@ TEST_F(TestObjGroup, test_proxy_object_getter) {
 
   // check that retrieved proxy and the original one are really the same.
   auto proxy_ori_bits = proxy.getProxy();
-  auto proxy_get_bits = vt::theObjGroup()->proxy(obj_ori).getProxy();
+  auto proxy_get_bits = vt::theObjGroup()->getProxy(obj_ori).getProxy();
   EXPECT_EQ(proxy_ori_bits, proxy_get_bits);
 
   // check that creating multiple proxies from a same object group type

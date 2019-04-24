@@ -147,7 +147,7 @@ struct ObjGroupManager {
    */
 
   template <typename ObjT>
-  ProxyType<ObjT> proxy(ObjT* obj);
+  ProxyType<ObjT> getProxy(ObjT* obj);
   template <typename ObjT>
   ProxyElmType<ObjT> proxyElm(ObjT* obj);
 
