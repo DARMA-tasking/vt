@@ -64,6 +64,7 @@ using HandlerType             = int64_t;
 using SeedType                = int64_t;
 using EnvelopeDataType        = int8_t;
 using EventType               = uint64_t;
+using SequentialIDType        = uint64_t;
 using EpochType               = uint64_t;
 using TagType                 = int32_t;
 using BarrierType             = uint64_t;

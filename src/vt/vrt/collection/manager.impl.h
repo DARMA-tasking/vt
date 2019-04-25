@@ -995,10 +995,10 @@ void CollectionManager::broadcastMsgUntypedHandler(
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType CollectionManager::reduceMsgExpr(
+SequentialIDType CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
   MsgT *const raw_msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-  EpochType const& epoch, TagType const& tag, NodeType const& root
+  SequentialIDType seq, TagType tag, NodeType root
 ) {
   using IndexT = typename ColT::IndexType;
 
@@ -1055,11 +1055,11 @@ EpochType CollectionManager::reduceMsgExpr(
       );
       theTerm()->consume(term::any_epoch_sentinel);
       theCollection()->reduceMsgExpr<ColT,MsgT,f>(
-        toProxy,msg.get(),expr_fn,epoch,tag,root
+        toProxy,msg.get(),expr_fn,seq,tag,root
       );
     });
 
-    return no_epoch;
+    return no_seq_id;
   } else if (found_constructed && elm_holder) {
     std::size_t num_elms = 0;
 
@@ -1070,70 +1070,70 @@ EpochType CollectionManager::reduceMsgExpr(
     }
 
     auto reduce_id = std::make_tuple(col_proxy,tag,no_obj_group);
-    auto epoch_iter = reduce_cur_epoch_.find(reduce_id);
-    EpochType cur_epoch = epoch;
-    if (epoch == no_epoch && epoch_iter != reduce_cur_epoch_.end()) {
-      cur_epoch = epoch_iter->second;
+    auto seq_iter = reduce_cur_seq_.find(reduce_id);
+    SequentialIDType cur_seq = seq;
+    if (seq == no_seq_id && seq_iter != reduce_cur_seq_.end()) {
+      cur_seq = seq_iter->second;
     }
-    EpochType ret_epoch = no_epoch;
+    SequentialIDType ret_seq = no_seq_id;
 
     auto const& root_node =
       root == uninitialized_destination ? default_collection_reduce_root_node :
       root;
 
     if (use_group) {
-      ret_epoch = theGroup()->groupReduce(group)->template reduce<MsgT,f>(
-        root_node,msg.get(),tag,cur_epoch,num_elms,col_proxy
+      ret_seq = theGroup()->groupReduce(group)->template reduce<MsgT,f>(
+        root_node,msg.get(),tag,cur_seq,num_elms,col_proxy
       );
     } else {
-      ret_epoch = theCollective()->reduce<MsgT,f>(
-        root_node,msg.get(),tag,cur_epoch,num_elms,col_proxy
+      ret_seq = theCollective()->reduce<MsgT,f>(
+        root_node,msg.get(),tag,cur_seq,num_elms,col_proxy
       );
     }
     debug_print(
       vrt_coll, node,
-      "reduceMsg: col_proxy={:x}, epoch={}, num_elms={}, tag={}\n",
-      col_proxy, cur_epoch, num_elms, tag
+      "reduceMsg: col_proxy={:x}, seq={}, num_elms={}, tag={}\n",
+      col_proxy, cur_seq, num_elms, tag
     );
-    if (epoch_iter == reduce_cur_epoch_.end()) {
-      reduce_cur_epoch_.emplace(
+    if (seq_iter == reduce_cur_seq_.end()) {
+      reduce_cur_seq_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(reduce_id),
-        std::forward_as_tuple(ret_epoch)
+        std::forward_as_tuple(ret_seq)
       );
     }
 
-    return ret_epoch;
+    return ret_seq;
   } else {
     // @todo: implement this
     vtAssertExpr(0);
-    return no_epoch;
+    return no_seq_id;
   }
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType CollectionManager::reduceMsg(
+SequentialIDType CollectionManager::reduceMsg(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-  MsgT *const msg, EpochType const& epoch, TagType const& tag,
-  NodeType const& root
+  MsgT *const msg, SequentialIDType seq, TagType tag,
+  NodeType root
 ) {
-  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag,root);
+  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,seq,tag,root);
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType CollectionManager::reduceMsg(
+SequentialIDType CollectionManager::reduceMsg(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-  MsgT *const msg, EpochType const& epoch, TagType const& tag,
+  MsgT *const msg, SequentialIDType seq, TagType tag,
   typename ColT::IndexType const& idx
 ) {
-  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag,idx);
+  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,seq,tag,idx);
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType CollectionManager::reduceMsgExpr(
+SequentialIDType CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
   MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-  EpochType const& epoch, TagType const& tag,
+  SequentialIDType seq, TagType tag,
   typename ColT::IndexType const& idx
 ) {
   using IndexT = typename ColT::IndexType;
@@ -1160,7 +1160,7 @@ EpochType CollectionManager::reduceMsgExpr(
     reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
     theContext()->getNumNodes()
   );
-  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,epoch,tag,mapped_node);
+  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,seq,tag,mapped_node);
 }
 
 template <typename MsgT, typename ColT>

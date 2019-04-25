@@ -138,6 +138,11 @@ struct IndexTraits {
     int8_t, numDims_t, T
   >;
 
+
+  template <typename U>
+  using build_index_t = typename U::BuildIndexType;
+  using has_build_index = detection::is_detected<build_index_t, T>;
+
   /*
    * This defines what it means to be an `Index'; i.e., the index concept.
    */
@@ -155,10 +160,11 @@ struct IndexTraits {
     has_operator_eq::value         and
     /*
      *  typedefs:
-     *    IndexSizeType, IsByteCopyable
+     *    IndexSizeType, IsByteCopyable, BuildIndexType
      */
     has_IndexSizeType::value       and
     has_IsByteCopyable::value      and
+    has_build_index::value         and
     /*
      * methods:
      *   packedSize(), indexIsByteCopyable(), uniqueBits(), foreach(),

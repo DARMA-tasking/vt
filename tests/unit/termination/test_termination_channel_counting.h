@@ -49,8 +49,6 @@
 #if !defined INCLUDED_TERMINATION_CHANNEL_COUNTING_H
 #define INCLUDED_TERMINATION_CHANNEL_COUNTING_H
 
-#define DEBUG_CHANNEL_COUNTING 0
-
 /*
  * channel counting termination detection.
  * all methods are required to be static,
@@ -99,7 +97,7 @@ void propagate(vt::EpochType ep);
 bool hasEnded(vt::EpochType ep);
 
 // ranks
-extern vt::NodeType me;
+extern vt::NodeType node;
 extern vt::NodeType root;
 extern vt::NodeType all;
 // channel counters per epoch and per rank

@@ -46,51 +46,50 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestTermActionCollectEpoch : action::BaseFixture {};
-struct TestTermActionRootedEpoch : action::BaseFixture {};
+struct TestTermCollect : action::BaseFixture {};
+struct TestTermRooted  : action::BaseFixture {};
 
 // collective epochs
-TEST_P(TestTermActionCollectEpoch, test_term_detect_collect_epoch) {
-  auto&& sequence = action::newEpochSeq(5);
+TEST_P(TestTermCollect, test_term_detect_collect_epoch) /* NOLINT */{
+  auto&& sequence = action::generateEpochs(5);
 
-  for (auto&& ep : sequence) {
-    if (channel::me == channel::root) {
-      action::compute(ep);
-      channel::trigger(ep);
+  for (auto&& epoch : sequence) {
+    action::ok = false;
+    if (channel::node == channel::root) {
+      action::compute(epoch);
+      channel::trigger(epoch);
+      action::add(epoch, order_);
     }
-    action::finalize(ep,order_);
+    vt::theCollective()->barrier();
+    action::finalize(epoch, order_);
   }
 }
 
 // rooted epochs
-TEST_P(TestTermActionRootedEpoch, test_term_detect_rooted_epoch) {
-  if (channel::me == channel::root) {
-    auto&& sequence = action::newEpochSeq(5,true,useDS_);
+TEST_P(TestTermRooted, test_term_detect_rooted_epoch) /* NOLINT */{
+  if (channel::node == channel::root) {
+    auto&& sequence = action::generateEpochs(5, true, useDS_);
 
-    for (auto&& ep : sequence) {
-      action::compute(ep);
-      action::finalize(ep,order_);
+    for (auto&& epoch : sequence) {
+      action::compute(epoch);
+      action::finalize(epoch, order_);
     }
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestTermActionCollectEpoch,
+INSTANTIATE_TEST_CASE_P /* NOLINT */(
+  InstantiationName, TestTermCollect,
   ::testing::Combine(
-    ::testing::Values(
-      action::Order::before, action::Order::after, action::Order::misc
-    ),
+    ::testing::Range(0, 4),
     ::testing::Values(false),
     ::testing::Values(1)
   )
 );
 
-INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestTermActionRootedEpoch,
+INSTANTIATE_TEST_CASE_P /* NOLINT */(
+  InstantiationName, TestTermRooted,
   ::testing::Combine(
-    ::testing::Values(
-      action::Order::before, action::Order::after, action::Order::misc
-    ),
+    ::testing::Range(0, 3),
     ::testing::Bool(),
     ::testing::Values(1)
   )

@@ -69,15 +69,44 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   CollectionProxy& operator=(CollectionProxy const&) = default;
 
   template <typename... IndexArgsT>
-  ElmProxyType index_build(IndexArgsT&&... idx) const;
-  template <typename... IndexArgsT>
-  ElmProxyType operator[](IndexArgsT&&... idx) const;
-  template <typename... IndexArgsT>
-  ElmProxyType operator()(IndexArgsT&&... idx) const;
-
+  ElmProxyType indexArgs(IndexArgsT&&... idx) const;
   ElmProxyType index(IndexT const& idx) const;
-  ElmProxyType operator[](IndexT const& idx) const;
-  ElmProxyType operator()(IndexT const& idx) const;
+
+  template <
+    typename Tp,
+    typename   = typename std::enable_if<
+      std::is_convertible<
+        typename IndexT::BuildIndexType, typename std::decay<Tp>::type
+      >::value, Tp
+    >::type
+  >
+  ElmProxyType operator[](Tp&& tp) const;
+
+  template <
+    typename Tp, typename... Tn,
+    typename   = typename std::enable_if<
+      std::is_convertible<
+        typename IndexT::BuildIndexType, typename std::decay<Tp>::type
+      >::value, Tp
+    >::type
+  >
+  ElmProxyType operator()(Tp&& tp, Tn&&... tn) const;
+
+  template <
+    typename IndexU,
+    typename   = typename std::enable_if<
+      std::is_same<IndexT, typename std::decay<IndexU>::type>::value, IndexU
+    >::type
+  >
+  ElmProxyType operator[](IndexU const& idx) const;
+
+  template <
+    typename IndexU,
+    typename   = typename std::enable_if<
+      std::is_same<IndexT, typename std::decay<IndexU>::type>::value, IndexU
+    >::type
+  >
+  ElmProxyType operator()(IndexU const& idx) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

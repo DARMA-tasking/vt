@@ -86,6 +86,7 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
   using DenseArraySizeType = uint64_t;
   using DenseIndexType = IndexType;
+  using BuildIndexType = IndexType;
 
   DenseIndexArray() = default;
   DenseIndexArray(DenseIndexArray const&) = default;
@@ -95,12 +96,12 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   template <
     typename... Idxs,
     typename = typename std::enable_if<
-      util::meta_type_eq<IndexType, typename std::decay<Idxs>::type...>::value
+      util::meta_type_eq<IndexType, typename std::decay<Idxs>::type...>::value and
+      sizeof...(Idxs) == ndim
     >::type
   >
   explicit DenseIndexArray(Idxs&&... init);
 
-  DenseIndexArray(std::initializer_list<IndexType> vals);
   DenseIndexArray(std::array<IndexType, ndim> in_array);
   DenseIndexArray(DenseIndexArraySingleInitTag, IndexType const& init_value);
 

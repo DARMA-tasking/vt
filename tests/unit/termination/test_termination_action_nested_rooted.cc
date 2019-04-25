@@ -46,46 +46,42 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestTermActionNestedRootedEpoch : action::BaseFixture {
+struct TestTermNestedRooted : action::BaseFixture {
 
   void kernel(int depth) {
-    vtAssertExpr(depth > 0);
+    vtAssert(depth > 0, "Wrong depth");
+    using epoch_manip = ::vt::epoch::EpochManip;
+    auto epoch = vt::no_epoch;
 
-    auto ep = vt::no_epoch;
-
-    if (channel::me == channel::root) {
-      ep = vt::theTerm()->makeEpochRooted(useDS_);
+    if (channel::node == channel::root) {
+      epoch = vt::theTerm()->makeEpochRooted(useDS_);
       // check that epoch is effectively rooted
-      vtAssertExpr(channel::root == epoch::EpochManip::node(ep));
-      vtAssertExpr(epoch::EpochManip::isRooted(ep));
+      vtAssert(channel::root == epoch_manip::node(epoch), "Node should be root");
+      vtAssert(epoch_manip::isRooted(epoch), "Epoch should be rooted");
     }
 
     // all ranks should have the same depth
     vt::theCollective()->barrier();
-    if (depth > 1) {
-      kernel(depth-1);
-    }
+    if (depth > 1) { kernel(depth - 1); }
 
-    if (channel::me == channel::root) {
-      action::compute(ep);
-      channel::trigger(ep);
-      action::finalize(ep,order_);
+    if (channel::node == channel::root) {
+      action::compute(epoch);
+      channel::trigger(epoch);
+      action::finalize(epoch, order_);
     }
   }
 };
 
-TEST_P(TestTermActionNestedRootedEpoch, test_term_detect_nested_rooted_epoch) {
+TEST_P(TestTermNestedRooted, test_term_detect_nested_rooted_epoch) /* NOLINT */{
   kernel(depth_);
 }
 
-INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestTermActionNestedRootedEpoch,
+INSTANTIATE_TEST_CASE_P /*NOLINT*/(
+  InstantiationName, TestTermNestedRooted,
   ::testing::Combine(
-    ::testing::Values(
-      action::Order::before, action::Order::after, action::Order::misc
-    ),
+    ::testing::Range(0, 3),
     ::testing::Bool(),
-    ::testing::Range(2,10,2)
+    ::testing::Range(2, 10, 2)
   )
 );
 

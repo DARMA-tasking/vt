@@ -66,12 +66,6 @@ DenseIndexArray<IndexType, ndim>::DenseIndexArray(
 { }
 
 template <typename IndexType, NumDimensionsType ndim>
-DenseIndexArray<IndexType, ndim>::DenseIndexArray(
-  std::initializer_list<IndexType> vals
-) : BaseIndex(), dims{vals}
-{ }
-
-template <typename IndexType, NumDimensionsType ndim>
 template <typename... Idxs, typename>
 DenseIndexArray<IndexType, ndim>::DenseIndexArray(Idxs&&... init)
   : BaseIndex(), dims({{init...}})

@@ -46,34 +46,32 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestTermActionGlobal : action::BaseFixture {};
+struct TestTermGlobal : action::BaseFixture {};
 
-TEST_P(TestTermActionGlobal, test_term_detect_broadcast) {
-  if (channel::me == channel::root) {
+TEST_P(TestTermGlobal, test_term_detect_broadcast) /* NOLINT*/{
+  if (channel::node == channel::root) {
     // start computation
-    channel::broadcast<channel::basicHandler>(1,vt::no_epoch);
+    channel::broadcast<channel::basicHandler>(1, vt::no_epoch);
     // trigger detection and check status
-    action::finalize(vt::no_epoch,order_);
+    action::finalize(vt::no_epoch, order_);
   }
 }
 
 // routed messages
-TEST_P(TestTermActionGlobal, test_term_detect_routed) {
+TEST_P(TestTermGlobal, test_term_detect_routed) /* NOLINT*/{
   // there should be at least 3 nodes for this case
-  if (channel::all > 2 and channel::me == channel::root) {
+  if (channel::all > 2 and channel::node == channel::root) {
     //start computation
     action::compute(vt::no_epoch);
     // trigger detection and check status
-    action::finalize(vt::no_epoch,order_);
+    action::finalize(vt::no_epoch, order_);
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestTermActionGlobal,
+INSTANTIATE_TEST_CASE_P /* NOLINT*/(
+  InstantiationName, TestTermGlobal,
   ::testing::Combine(
-    ::testing::Values(
-      action::Order::before, action::Order::after, action::Order::misc
-    ),
+    ::testing::Range(0, 3),
     ::testing::Values(false),
     ::testing::Values(1)
   )
