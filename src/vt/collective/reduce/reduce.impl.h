@@ -209,7 +209,7 @@ void Reduce::startReduce(
     use_num_contrib ? state.num_contrib_ : state.num_local_contrib_
   );
   auto nb_children = getNumChildren();
-  ready = (nb_messages == nb_children + nb_contribs);
+  bool ready = (nb_messages == nb_children + nb_contribs);
 
   debug_print(
     reduce, node,

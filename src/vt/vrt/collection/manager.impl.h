@@ -1076,10 +1076,6 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
     auto const view_proxy = view.getProxy();
 
-    while (not isViewReady(view_proxy)) {
-      runScheduler();
-    }
-
     // buffer all requests if group not ready
     bufferViewAction<ColT>(view_proxy, epoch, tag);
 
@@ -1097,11 +1093,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
     bool empty_epoch = (epoch == no_epoch and epoch_iter != reduce_cur_epoch_.end());
     auto cur_epoch   = (empty_epoch ? epoch_iter->second : epoch);
     auto ret_epoch   = no_epoch;
-
-    auto my_root = (
-      root == uninitialized_destination ?
-        default_collection_reduce_root_node : root
-    );
+    auto my_root     = theGroup()->groupRoot(group);
 
     debug_print(
       reduce, node,
@@ -1109,15 +1101,10 @@ void CollectionManager::broadcastMsgUntypedHandler(
       view_proxy, cur_epoch, size, tag
     );
 
-    if (use_group) {
-      ret_epoch = theGroup()->groupReduce(group)->template reduce<MsgT, f>(
-        my_root, msg.get(), tag, cur_epoch, size, view_proxy
-      );
-    } else {
-      ret_epoch = theCollective()->reduce<MsgT, f>(
-        my_root, msg.get(), tag, cur_epoch, size, view_proxy
-      );
-    }
+    auto reducable = theGroup()->groupReduce(group);
+    ret_epoch = reducable->template reduce<MsgT,f>(
+      my_root, msg.get(), tag, cur_epoch, size, view_proxy
+    );
 
     if (epoch_iter == reduce_cur_epoch_.end()) {
       reduce_cur_epoch_.emplace(
