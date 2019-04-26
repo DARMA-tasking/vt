@@ -456,6 +456,11 @@ template <typename ColT, typename IndexT, typename MsgT>
           auto base_idx = static_cast<vt::index::BaseIndex*>(&idx);
           // nb: multi-dimensional
           process_elem = idx < range and filter(base_idx);
+          debug_print(
+            vrt_coll, node,
+            "idx.x()={}, range={}, process_elem={}, idx < range={}\n",
+            idx.x(), range.x(), process_elem, idx < range
+          );
         }
 
         if (process_elem) {
@@ -2137,27 +2142,24 @@ CollectionProxy<ColT, IndexT> CollectionManager::slice(
 
   // check that the collection is static and already built
   auto const old_proxy  = col_proxy.getProxy();
-  auto const elm_holder = theCollection()->findElmHolder<ColT,IndexT>(old_proxy);
 
-  bool group_ready = elm_holder->groupReady();
-  bool no_pending = (buffered_group_.find(old_proxy) == buffered_group_.end());
-  bool finished = group_ready and no_pending;
+  bool ready = false;
 
-  while (not finished) {
+  do {
     // spin until collection group is ready
     vt::runScheduler();
-    group_ready = elm_holder->groupReady();
-    no_pending = (buffered_group_.find(old_proxy) == buffered_group_.end());
-    finished = group_ready and no_pending;
-  }
+    bool is_built    = (constructed_.find(old_proxy) != constructed_.end());
+    bool no_pending  = (buffered_group_.find(old_proxy) == buffered_group_.end());
+    auto elm_holder  = theCollection()->findElmHolder<ColT,IndexT>(old_proxy);
+    bool group_ready = elm_holder and elm_holder->groupReady();
+    ready = is_built and no_pending and group_ready;
+  } while (not ready);
 
-  bool const is_static  = ColT::isStaticSized();
-  bool const is_already_built  = (constructed_.find(old_proxy) != constructed_.end());
-  bool const is_view_old_proxy = VirtualProxyBuilder::isView(old_proxy);
+  bool const is_static = ColT::isStaticSized();
+  bool const is_nested = VirtualProxyBuilder::isView(old_proxy);
 
   vtAssert(is_static, "Only view of static collections are managed");
-  vtAssert(is_already_built, "Collection should be already built");
-  vtAssert(not is_view_old_proxy, "View of a view are not allowed for now");
+  vtAssert(not is_nested, "View of a view are not allowed for now");
 
   // register the user defined filtering function, so it can be invoked on other nodes
   auto const new_view_han = auto_registry::makeAutoHandlerView<IndexT,filter>();
@@ -2361,8 +2363,17 @@ void CollectionManager::bufferViewAction(
   EpochType const& epoch,
   TagType const& tag
 ) {
+
+  using IndexT = typename ColT::IndexType;
+
   // check if view group creation is finished
-  bool const is_ready = theCollection()->isViewReady(proxy);
+  //bool const is_ready = theCollection()->isViewReady(proxy);
+  auto const old_proxy   = CollectionManager::getParent(proxy);
+  bool const is_built    = (constructed_.find(old_proxy) != constructed_.end());
+  auto const elm_holder  = theCollection()->findElmHolder<ColT,IndexT>(old_proxy);
+  bool const group_ready = elm_holder and elm_holder->groupReady();
+  bool const view_ready  = theCollection()->isViewReady(proxy);
+  bool const is_ready    = is_built and group_ready and view_ready;
 
   // Buffer operations if not yet ready
   if (not is_ready) {
