@@ -73,8 +73,7 @@ void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   theMsg()->broadcastMsgAuto<MsgT>(handler_, msg);
   if (include_sender_) {
     auto nmsg = makeMessage<MsgT>(*msg);
-    auto short_msg = nmsg.template to<ShortMessage>().get();
-    runnable::Runnable<ShortMessage>::run(handler_,nullptr,short_msg,this_node);
+    runnable::Runnable<MsgT>::run(handler_,nullptr,nmsg.get(),this_node);
   }
 }
 

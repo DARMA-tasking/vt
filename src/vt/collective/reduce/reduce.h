@@ -50,6 +50,7 @@
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/collective/reduce/reduce_tags.h"
 #include "vt/collective/reduce/reduce_state.h"
+#include "vt/collective/reduce/reduce_state_holder.h"
 #include "vt/collective/reduce/reduce_msg.h"
 #include "vt/collective/reduce/operators/default_msg.h"
 #include "vt/collective/reduce/operators/default_op.h"
@@ -67,8 +68,9 @@
 namespace vt { namespace collective { namespace reduce {
 
 struct Reduce : virtual collective::tree::Tree {
-  using ReduceStateType = ReduceState;
-  using ReduceNumType = ReduceState::ReduceNumType;
+  template <typename T>
+  using ReduceStateType = ReduceState<T>;
+  using ReduceNumType   = typename ReduceState<void>::ReduceNumType;
 
   Reduce();
   Reduce(GroupType const& group, collective::tree::Tree* in_tree);
@@ -121,7 +123,6 @@ struct Reduce : virtual collective::tree::Tree {
 
 private:
   std::unordered_map<ReduceSeqLookupType,SequentialIDType> next_seq_for_tag_;
-  std::unordered_map<ReduceIdentifierType,ReduceStateType> live_reductions_;
   GroupType group_ = default_group;
 };
 

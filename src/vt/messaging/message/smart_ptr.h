@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/messaging/message/message.h"
 #include "vt/messaging/message/refs.h"
+#include "vt/messaging/message/smart_ptr_virtual.h"
 
 namespace vt { namespace messaging {
 
@@ -58,7 +59,7 @@ static struct MsgInitNonOwnerType { } MsgInitNonOwnerTag { };
 #pragma GCC diagnostic pop
 
 template <typename T>
-struct MsgSharedPtr {
+struct MsgSharedPtr final {
   using MsgType        = T;
   using MsgPtrType     = MsgType*;
   using BaseMsgType    = BaseMessage;
@@ -98,7 +99,7 @@ struct MsgSharedPtr {
   template <typename U>
   explicit MsgSharedPtr(MsgSharedPtr<U> const& in) : ptr_(in.get()) { ref(); }
 
-  virtual ~MsgSharedPtr() {
+  ~MsgSharedPtr() {
     clear();
   }
 
@@ -107,7 +108,19 @@ struct MsgSharedPtr {
   explicit operator MsgPtrType() const { return get(); }
 
   template <typename U>
-  MsgSharedPtr<U> to() const { return MsgSharedPtr<U>{*this}; }
+  MsgSharedPtr<U> to() const {
+    static_assert(
+      std::is_trivially_destructible<T>(),
+      "Message shall not be downcast unless trivially destructible"
+    );
+
+    return MsgSharedPtr<U>{*this};
+  }
+
+  template <typename U>
+  MsgVirtualPtr<U> toVirtual() const {
+    return MsgVirtualPtr<U>(*this);
+  }
 
   MsgSharedPtr<T>& operator=(std::nullptr_t) { clear(); return *this; }
   MsgSharedPtr<T>& operator=(MsgSharedPtr<T> const& n) { set(n); return *this; }
@@ -226,8 +239,6 @@ inline messaging::MsgSharedPtr<T> promoteMsg(T* msg) {
     return MsgSharedPtr<T>{messaging::MsgInitNonOwnerTag,msg};
   }
 }
-
-// using MsgSharedAnyPtr = messaging::MsgSharedPtr<BaseMessage>;
 
 } /* end namespace vt */
 

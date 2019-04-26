@@ -54,6 +54,7 @@
 #include "vt/objgroup/holder/holder_basic.h"
 #include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/messaging/message/message.h"
+#include "vt/messaging/message/smart_ptr_virtual.h"
 
 #include <memory>
 #include <functional>
@@ -74,7 +75,7 @@ struct ObjGroupManager {
   using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
   using DispatchBaseType    = dispatch::DispatchBase;
   using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
-  using MsgContainerType    = std::vector<MsgSharedPtr<ShortMessage>>;
+  using MsgContainerType    = std::vector<MsgVirtualPtrAny>;
 
   ObjGroupManager() = default;
 
@@ -154,7 +155,7 @@ struct ObjGroupManager {
   /*
    * Dispatch to a live obj group pointer with a handler
    */
-  void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+  void dispatch(MsgVirtualPtrAny msg, HandlerType han);
 
   /*
    * Run the scheduler to push along postponed events (such as self sends)
@@ -169,7 +170,7 @@ struct ObjGroupManager {
   template <typename MsgT>
   void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 
-  friend void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+  friend void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han);
 
 private:
   ObjGroupProxyType makeCollectiveImpl(

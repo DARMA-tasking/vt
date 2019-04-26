@@ -50,6 +50,7 @@
 #include "vt/pool/pool.h"
 
 #include <typeinfo>
+#include <type_traits>
 
 namespace vt { namespace messaging {
 
@@ -160,6 +161,19 @@ using EpochTagMessage = messaging::ActiveMsg<EpochTagEnvelope>;
 using Message         = EpochTagMessage;
 
 using BaseMsgType     = ShortMessage;
+
+static_assert(
+  std::is_trivially_destructible<ShortMessage>::value,
+  "ShortMessage must be trivial destructible"
+);
+static_assert(
+  std::is_trivially_destructible<EpochMessage>::value,
+  "EpochMessage must be trivial destructible"
+);
+static_assert(
+  std::is_trivially_destructible<EpochTagMessage>::value,
+  "EpochTagMessage must be trivial destructible"
+);
 
 } // end namespace vt
 

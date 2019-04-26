@@ -140,7 +140,7 @@ template <typename MsgT>
   bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
   vtAssert(is_obj, "Must be an object group handler");
   auto pmsg = promoteMsg(msg);
-  objgroup::dispatchObjGroup(pmsg,handler);
+  objgroup::dispatchObjGroup(pmsg.template toVirtual<ShortMessage>(),handler);
 
   #if backend_check_enabled(trace_enabled)
     theTrace()->endProcessing(trace_id, sizeof(MsgT), trace_event, from_node);

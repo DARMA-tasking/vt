@@ -131,6 +131,11 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 EventType ActiveMessenger::broadcastMsgSz(
   MessageT* const msg, ByteType const& msg_size, TagType const& tag
 ) {
+  static_assert(
+    std::is_trivially_destructible<MessageT>(),
+    "Message bcast without serialization must be trivially destructible"
+  );
+
   auto const& is_term = envelopeIsTerm(msg->env);
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
@@ -167,6 +172,11 @@ EventType ActiveMessenger::sendMsgSz(
   NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
   TagType const& tag
 ) {
+  static_assert(
+    std::is_trivially_destructible<MessageT>(),
+    "Message sent without serialization must be trivially destructible"
+  );
+
   auto const& is_term = envelopeIsTerm(msg->env);
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(

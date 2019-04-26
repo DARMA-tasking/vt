@@ -94,13 +94,13 @@ template <typename UserMsgT>
     group_, handler, ptr_size
   );
 
-  auto user_msg = makeMessage<UserMsgT>();
   auto ptr_offset =
     reinterpret_cast<char*>(sys_msg) + sizeof(SerialWrapperMsgType<UserMsgT>);
-  auto t_ptr = deserialize<UserMsgT>(ptr_offset,ptr_size,user_msg.get());
+  auto user_msg = makeMessage<UserMsgT>();
+  deserializeInPlace<UserMsgT>(ptr_offset,ptr_size,user_msg.get());
   messageResetDeserdes(user_msg);
   runnable::Runnable<UserMsgT>::run(
-    handler, nullptr, t_ptr, sys_msg->from_node
+    handler, nullptr, user_msg.get(), sys_msg->from_node
   );
 }
 
@@ -126,7 +126,7 @@ template <typename UserMsgT>
       auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
       auto ptr_size = std::get<1>(ptr);
       auto msg = makeMessage<UserMsgT>();
-      auto tptr = deserialize<UserMsgT>(raw_ptr, ptr_size, msg.get());
+      deserializeInPlace<UserMsgT>(raw_ptr, ptr_size, msg.get());
       messageResetDeserdes(msg);
 
       debug_print(
@@ -136,8 +136,7 @@ template <typename UserMsgT>
         handler, recv_tag, envelopeGetEpoch(msg->env)
       );
 
-      runnable::Runnable<UserMsgT>::run(handler, nullptr, tptr, node);
-
+      runnable::Runnable<UserMsgT>::run(handler, nullptr, msg.get(), node);
       action();
     }
   );
@@ -150,7 +149,7 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   auto const handler = sys_msg->handler;
 
   auto user_msg = makeMessage<UserMsgT>();
-  auto tptr = deserialize<UserMsgT>(
+  deserializeInPlace<UserMsgT>(
     sys_msg->payload.data(), sys_msg->bytes, user_msg.get()
   );
   messageResetDeserdes(user_msg);
@@ -167,7 +166,7 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   );
 
   runnable::Runnable<UserMsgT>::run(
-    handler, nullptr, tptr, sys_msg->from_node
+    handler, nullptr, user_msg.get(), sys_msg->from_node
   );
 }
 
@@ -344,9 +343,11 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 
 template <typename MsgT, typename BaseT>
 /*static*/ void SerializedMessenger::broadcastSerialMsgHandler(
-  MsgT* msg, HandlerType const& han
+  MsgT* msg_ptr, HandlerType const& han
 ) {
   using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
+
+  auto msg = promoteMsg(msg_ptr);
 
   MsgSharedPtr<SerialEagerPayloadMsg<MsgT,BaseT>> payload_msg = nullptr;
   MsgSharedPtr<SerialWrapperMsgType<MsgT>> sys_msg = nullptr;
@@ -354,7 +355,7 @@ template <typename MsgT, typename BaseT>
   auto sys_size = sizeof(typename decltype(sys_msg)::MsgType);
 
   auto serialized_msg = serialize(
-    *msg, [&](SizeType size) -> SerialByteType* {
+    *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
       if (size >= serialized_msg_eager_size) {
         sys_msg = makeMessageSz<SerialWrapperMsgType<MsgT>>(ptr_size);
@@ -491,16 +492,16 @@ template <typename MsgT, typename BaseT>
           dest, sys_msg.get(), send_serialized
         );
       } else {
-        auto localmsg = makeMessage<MsgT>();
-        auto tptr = deserialize<MsgT>(ptr, ptr_size, localmsg.get());
-        messageResetDeserdes(localmsg);
+        auto user_msg = makeMessage<MsgT>();
+        deserializeInPlace<MsgT>(ptr, ptr_size, user_msg.get());
+        messageResetDeserdes(user_msg);
 
         debug_print(
           serial_msg, node,
           "serialMsgHandler: local msg: handler={}\n", typed_handler
         );
 
-        runnable::Runnable<MsgT>::run(typed_handler,nullptr,tptr,node);
+        runnable::Runnable<MsgT>::run(typed_handler,nullptr,user_msg.get(),node);
       }
     };
 

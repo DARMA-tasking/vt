@@ -47,19 +47,20 @@
 
 #include "vt/config.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/messaging/message/smart_ptr_virtual.h"
 
 namespace vt { namespace objgroup {
 
 struct ObjGroupManager;
 
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han);
 bool scheduler();
 
 template <typename MsgT>
 void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
 template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han);
 
 }} /* end namespace vt::objgroup */
 

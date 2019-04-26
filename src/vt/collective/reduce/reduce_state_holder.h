@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          reduce_state.h
+//                          reduce_state_holder.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,37 +42,48 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
-#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_H
 
 #include "vt/config.h"
-#include "vt/collective/reduce/reduce_msg.h"
-#include "vt/messaging/message.h"
+#include "vt/collective/reduce/reduce_state.h"
+#include "vt/collective/reduce/reduce_hash.h"
 
-#include <vector>
-#include <cstdint>
+#include <unordered_map>
 
 namespace vt { namespace collective { namespace reduce {
 
-template <typename T>
-struct ReduceState {
-  using ReduceNumType = int32_t;
-  using ReduceVecType = std::vector<MsgSharedPtr<T>>;
+struct ReduceStateHolder {
+  using ReduceIDType    = ReduceIdentifierType;
+  template <typename T>
+  using ReduceStateType = ReduceState<T>;
+  template <typename T>
+  using LookupType      = std::unordered_map<ReduceIDType,ReduceStateType<T>>;
+  template <typename T>
+  using GroupLookupType = std::unordered_map<GroupType, LookupType<T>>;
 
-  ReduceState(
-    TagType in_tag_, SequentialIDType in_seq_id_, ReduceNumType in_num_contrib
-  ) : tag_(in_tag_), seq_id_(in_seq_id_), num_contrib_(in_num_contrib)
-  { }
+public:
+  template <typename T>
+  static bool exists(GroupType group, ReduceIDType const& id);
 
-  ReduceVecType msgs               = {};
-  TagType tag_                     = no_tag;
-  SequentialIDType seq_id_         = no_seq_id;
-  ReduceNumType num_contrib_       = 1;
-  ReduceNumType num_local_contrib_ = 0;
-  HandlerType combine_handler_     = uninitialized_handler;
-  NodeType reduce_root_            = uninitialized_destination;
+  template <typename T>
+  static ReduceStateType<T>& find(GroupType group, ReduceIDType const& id);
+
+  template <typename T>
+  static void erase(GroupType group, ReduceIDType const& id);
+
+  template <typename T>
+  static void insert(
+    GroupType group, ReduceIDType const& id, ReduceStateType<T>&& state
+  );
+
+private:
+  template <typename T>
+  static GroupLookupType<T> state_lookup_;
 };
 
 }}} /* end namespace vt::collective::reduce */
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H*/
+#include "vt/collective/reduce/reduce_state_holder.impl.h"
+
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_H*/

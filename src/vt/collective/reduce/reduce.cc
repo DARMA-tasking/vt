@@ -66,8 +66,8 @@ Reduce::Reduce(GroupType const& group, collective::tree::Tree* in_tree)
 {
   debug_print(
     reduce, node,
-    "Reduce constructor: children={}, parent={}\n",
-    getNumChildren(), getParent()
+    "Reduce constructor: children={}, parent={}, group={:x}\n",
+    getNumChildren(), getParent(), group
   );
 }
 

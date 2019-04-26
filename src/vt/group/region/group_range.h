@@ -52,6 +52,8 @@
 
 namespace vt { namespace group { namespace region {
 
+struct RangeData;
+
 struct Range : Region {
   Range(
     BoundType const& in_lo, BoundType const& in_hi, BoundType const& stride = 1
@@ -73,12 +75,42 @@ struct Range : Region {
   virtual RegionUPtrType copy() const override;
   virtual void splitN(int nsplits, ApplyFnType apply) const override;
 
+  friend struct RangeData;
+
 private:
   BoundType const lo_ = uninitialized_destination;
   BoundType const hi_ = uninitialized_destination;
   BoundType const stride_ = 1;
   bool made_list_ = false;
   ListType list_;
+};
+
+/*
+ * A wrapper class for putting range data in a byte-copyable message w/o
+ * virtualization and inheritance
+ */
+struct RangeData {
+  using BoundType = NodeType;
+  using ListType  = std::vector<BoundType>;
+
+  RangeData() = default;
+  RangeData(Range const& r)
+    : lo_(r.lo_),
+      hi_(r.hi_),
+      stride_(r.stride_)
+  {
+    vtAssertExpr(not r.made_list_);
+  }
+
+public:
+  Range getRange() const {
+    return Range(lo_, hi_, stride_);
+  }
+
+private:
+  BoundType lo_ = uninitialized_destination;
+  BoundType hi_ = uninitialized_destination;
+  BoundType stride_ = 1;
 };
 
 }}} /* end namespace vt::group::region */

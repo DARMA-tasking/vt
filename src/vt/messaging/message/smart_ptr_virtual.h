@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          reduce_state.h
+//                          smart_ptr_virtual.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,37 +42,50 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
-#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H
 
 #include "vt/config.h"
-#include "vt/collective/reduce/reduce_msg.h"
-#include "vt/messaging/message.h"
+#include "vt/messaging/message/message.h"
 
-#include <vector>
-#include <cstdint>
-
-namespace vt { namespace collective { namespace reduce {
+namespace vt { namespace messaging {
 
 template <typename T>
-struct ReduceState {
-  using ReduceNumType = int32_t;
-  using ReduceVecType = std::vector<MsgSharedPtr<T>>;
+struct MsgSharedPtr;
 
-  ReduceState(
-    TagType in_tag_, SequentialIDType in_seq_id_, ReduceNumType in_num_contrib
-  ) : tag_(in_tag_), seq_id_(in_seq_id_), num_contrib_(in_num_contrib)
+template <typename T>
+struct MsgVirtualPtr final {
+
+  template <typename U>
+  explicit MsgVirtualPtr(MsgSharedPtr<U> in_ptr)
+    : ptr_(MsgSharedPtr<T>(in_ptr)),
+      closure_([in_ptr]{ })
   { }
 
-  ReduceVecType msgs               = {};
-  TagType tag_                     = no_tag;
-  SequentialIDType seq_id_         = no_seq_id;
-  ReduceNumType num_contrib_       = 1;
-  ReduceNumType num_local_contrib_ = 0;
-  HandlerType combine_handler_     = uninitialized_handler;
-  NodeType reduce_root_            = uninitialized_destination;
+  template <typename U>
+  explicit MsgVirtualPtr(MsgVirtualPtr<U> in_vrt)
+    : ptr_(MsgSharedPtr<T>(in_vrt.ptr_)),
+      closure_(in_vrt.closure_)
+  { }
+
+  inline T* get() const { return ptr_.get(); }
+  inline T* operator->() const { return ptr_.get(); }
+  inline T& operator*() const { return *ptr_.get(); }
+
+private:
+  MsgSharedPtr<T> ptr_ = nullptr;
+  std::function<void()> closure_ = nullptr;
 };
 
-}}} /* end namespace vt::collective::reduce */
+}} /* end namespace vt::messaging */
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H*/
+namespace vt {
+
+template <typename U>
+using MsgVirtualPtr = messaging::MsgVirtualPtr<U>;
+
+using MsgVirtualPtrAny = messaging::MsgVirtualPtr<ShortMessage>;
+
+} /* end namespace vt */
+
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H*/
