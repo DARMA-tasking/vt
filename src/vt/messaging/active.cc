@@ -232,26 +232,24 @@ EventType ActiveMessenger::sendMsgSized(
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_epoch = envelopeIsEpochType(msg->env);
 
-  backend_enable_if(
-    trace_enabled, {
-      auto const& handler = envelopeGetHandler(msg->env);
-      bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
-      if (is_auto) {
-        trace::TraceEntryIDType ep = auto_registry::theTraceID(
-          handler, auto_registry::RegistryTypeEnum::RegGeneral
+  #if backend_check_enabled(trace_enabled)
+    auto const& handler = envelopeGetHandler(msg->env);
+    bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
+    if (is_auto) {
+      trace::TraceEntryIDType ep = auto_registry::theTraceID(
+        handler, auto_registry::RegistryTypeEnum::RegGeneral
+      );
+      if (not is_bcast) {
+        trace::TraceEventIDType event = theTrace()->messageCreation(ep, msg_size);
+        envelopeSetTraceEvent(msg->env, event);
+      } else if (is_bcast and dest == this_node_) {
+        trace::TraceEventIDType event = theTrace()->messageCreationBcast(
+          ep, msg_size
         );
-        if (not is_bcast) {
-          trace::TraceEventIDType event = theTrace()->messageCreation(ep, msg_size);
-          envelopeSetTraceEvent(msg->env, event);
-        } else if (is_bcast and dest == this_node_) {
-          trace::TraceEventIDType event = theTrace()->messageCreationBcast(
-            ep, msg_size
-          );
-          envelopeSetTraceEvent(msg->env, event);
-        }
+        envelopeSetTraceEvent(msg->env, event);
       }
     }
-  );
+  #endif
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
@@ -550,10 +548,9 @@ bool ActiveMessenger::deliverActiveMsg(
     current_node_context_     = from_node;
     current_epoch_context_    = cur_epoch;
 
-    backend_enable_if(
-      trace_enabled,
+    #if backend_check_enabled(trace_enabled)
       current_trace_context_  = envelopeGetTraceEvent(msg->env);
-    );
+    #endif
 
     if (has_epoch) {
       ep_stack_size = epochPreludeHandler(cur_epoch);
@@ -577,10 +574,9 @@ bool ActiveMessenger::deliverActiveMsg(
     current_node_context_     = uninitialized_destination;
     current_epoch_context_    = no_epoch;
 
-    backend_enable_if(
-      trace_enabled,
+    #if backend_check_enabled(trace_enabled)
       current_trace_context_  = trace::no_trace_event;
-    );
+    #endif
 
     if (has_epoch) {
       epochEpilogHandler(cur_epoch,ep_stack_size);

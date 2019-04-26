@@ -67,13 +67,11 @@ Trace::Trace() {
 }
 
 /*static*/ void Trace::traceBeginIdleTrigger() {
-  backend_enable_if(
-    trace_enabled, {
-      if (not theTrace()->inIdleEvent()) {
-        theTrace()->beginIdle();
-      }
+  #if backend_check_enabled(trace_enabled)
+    if (not theTrace()->inIdleEvent()) {
+      theTrace()->beginIdle();
     }
-  );
+  #endif
 }
 
 void Trace::initialize() {

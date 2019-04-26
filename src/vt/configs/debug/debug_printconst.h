@@ -42,10 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_DEBUG_PRINT_CONST
-#define INCLUDED_DEBUG_PRINT_CONST
-
-#include "meld_headers.h"
+#if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINTCONST_H
+#define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINTCONST_H
 
 /*
  * Specific convienence methods for printing
@@ -68,4 +66,4 @@
     )                                                          \
   )                                                            \
 
-#endif  /*INCLUDED_DEBUG_PRINT_CONST*/
+#endif /*INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINTCONST_H*/

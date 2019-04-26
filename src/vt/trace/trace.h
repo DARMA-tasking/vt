@@ -168,10 +168,9 @@ private:
 
 namespace vt {
 
-backend_enable_if(
-  trace_enabled,
+#if backend_check_enabled(trace_enabled)
   extern trace::Trace* theTrace();
-)
+#endif
 
 }
 

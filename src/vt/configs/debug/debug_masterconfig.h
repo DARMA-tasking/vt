@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_DEBUG_MASTER_CONFIG
-#define INCLUDED_DEBUG_MASTER_CONFIG
+#if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_MASTERCONFIG_H
+#define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_MASTERCONFIG_H
 
 #include <cmake_config.h>
 
@@ -55,31 +55,39 @@
 #define debug_enabled cmake_config_debug_enabled
 #define debug_force_enabled 0
 
+#include "vt/configs/debug/debug_config.h"
 #include "vt/configs/debug/debug_print.h"
 
+namespace vt { namespace config {
+
 #if !debug_enabled
-#define backend_debug_modes backend_options_on(none)
+using DefaultConfig = Configuration<
+  static_cast<CatEnum>(CatEnum::none),
+  static_cast<CtxEnum>(0ull),
+  static_cast<ModeEnum>(0ull)
+>;
 #else
-#define backend_debug_modes backend_options_on(                          \
-  cmake_config_debug_modes                                               \
-)
+#define vt_backend_debug_categories cmake_config_debug_modes
+using DefaultConfig = Configuration<
+  static_cast<CatEnum>(
+    vt_backend_debug_categories | CatEnum::none
+  ),
+  static_cast<CtxEnum>(
+    CtxEnum::node |
+    CtxEnum::unknown
+  ),
+  static_cast<ModeEnum>(
+    ModeEnum::normal |
+    ModeEnum::flush
+  )
+>;
 #endif
 
-#define default_threading openmp
+}} /* end namespace vt::config */
 
-#define backend_features backend_options_on(                             \
-  default_threading, memory_pool, cmake_config_features                  \
-)
-
-#define backend_debug_contexts backend_options_on(                       \
-  node, locale, unknown                                                  \
-)
-
-#define backend_defaults backend_options_on(                             \
-  startup                                                                \
-)
+#define vt_default_threading openmp
 
 #define backend_no_threading                                             \
   !backend_check_enabled(openmp) && !backend_check_enabled(stdthread)
 
-#endif  /*INCLUDED_DEBUG_MASTER_CONFIG*/
+#endif /*INCLUDED_VT_CONFIGS_DEBUG_DEBUG_MASTERCONFIG_H*/

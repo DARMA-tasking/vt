@@ -228,7 +228,7 @@ namespace vt { namespace arguments {
    * Flags for controlling debug print output at runtime
    */
 
-  #define debug_pp(opt) debug_pretty_print(opt)
+  #define debug_pp(opt) +std::string(vt::config::PrettyPrintCat<config::opt>::str)+
 
   auto rp  = "Enable all debug prints";
   auto aap = "Enable debug_none         = \"" debug_pp(none)         "\"";

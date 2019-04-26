@@ -32,49 +32,86 @@ endif()
 
 set(
   cmake_vt_debug_modes_all
-  "gen, runtime, active, term, termds, barrier, pipe,   \
-   pool, reduce, rdma, rdma_channel, handler,           \
-   hierlb, scatter, serial_msg, trace, objgroup,        \
-   location, lb, vrt_coll, group, broadcast, flush"
+  "CatEnum::gen          | \
+   CatEnum::runtime      | \
+   CatEnum::active       | \
+   CatEnum::term         | \
+   CatEnum::termds       | \
+   CatEnum::barrier      | \
+   CatEnum::pipe         | \
+   CatEnum:: pool        | \
+   CatEnum::reduce       | \
+   CatEnum::rdma         | \
+   CatEnum::rdma_channel | \
+   CatEnum::handler      | \
+   CatEnum::hierlb       | \
+   CatEnum::scatter      | \
+   CatEnum::serial_msg   | \
+   CatEnum::trace        | \
+   CatEnum::objgroup     | \
+   CatEnum::location     | \
+   CatEnum::lb           | \
+   CatEnum::vrt_coll     | \
+   CatEnum::group        | \
+   CatEnum::broadcast      \
+   "
 )
 
 if (${vt_detector_disabled})
   message(STATUS "Building VT with detector disabled")
-  set(cmake_vt_detector " ")
+  set(vt_feature_cmake_detector "0")
 else()
-  set(cmake_vt_detector "detector, ")
+  set(vt_feature_cmake_detector "1")
 endif()
 
 if (${vt_lb_enabled})
   message(STATUS "Building VT with load balancing enabled")
-  set(cmake_vt_lb "lblite, ")
+  set(vt_feature_cmake_lblite "1")
 else()
-  set(cmake_vt_lb " ")
+  set(vt_feature_cmake_lblite "0")
 endif()
 
 if (${vt_trace_enabled})
   message(STATUS "Building VT with tracing enabled")
-  set(cmake_vt_trace "trace_enabled ")
+  set(vt_feature_cmake_trace_enabled "1")
 else()
-  set(cmake_vt_trace " ")
+  set(vt_feature_cmake_trace_enabled "0")
 endif()
 
+if (${vt_bit_check_overflow})
+  message(STATUS "Building VT with bit check overflow")
+  set(vt_feature_cmake_bit_check_overflow "1")
+else()
+  set(vt_feature_cmake_bit_check_overflow "0")
+endif()
+
+set(vt_feature_cmake_no_feature "0")
+set(vt_feature_cmake_production "0")
+
+set (vt_feature_cmake_mpi_rdma "0")
+set (vt_feature_cmake_parserdes "0")
+set (vt_feature_cmake_print_term_msgs "0")
+set (vt_feature_cmake_default_threading "1")
+set (vt_feature_cmake_no_pool_alloc_env "0")
+set (vt_feature_cmake_memory_pool "1")
+
 set(cmake_vt_debug_modes_debug_trace           "${cmake_vt_debug_modes_all}")
-set(cmake_vt_debug_modes_release_trace         "flush")
+set(cmake_vt_debug_modes_release_trace         "")
 set(cmake_vt_debug_modes_debug                 "${cmake_vt_debug_modes_all}")
-set(cmake_vt_debug_modes_release               "flush")
-set(cmake_vt_features_debug_trace              "${cmake_vt_detector} ${cmake_vt_lb} trace_enabled")
-set(cmake_vt_features_release_trace            "${cmake_vt_detector} ${cmake_vt_lb} trace_enabled")
-set(cmake_vt_features_debug_v2                 "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-set(cmake_vt_features_debug_v1                 "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-set(cmake_vt_features_debug                    "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-set(cmake_vt_features_release                  "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
+set(cmake_vt_debug_modes_release               "")
 set(cmake_config_debug_enabled_debug_trace     1)
 set(cmake_config_debug_enabled_release_trace   0)
 set(cmake_config_debug_enabled_debug_v2        1)
 set(cmake_config_debug_enabled_debug_v1        1)
 set(cmake_config_debug_enabled_debug           ${VT_DEBUG_MODE_ON})
 set(cmake_config_debug_enabled_release         0)
+
+# set(cmake_vt_features_debug_trace              "${cmake_vt_detector} ${cmake_vt_lb} trace_enabled")
+# set(cmake_vt_features_release_trace            "${cmake_vt_detector} ${cmake_vt_lb} trace_enabled")
+# set(cmake_vt_features_debug_v2                 "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
+# set(cmake_vt_features_debug_v1                 "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
+# set(cmake_vt_features_debug                    "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
+# set(cmake_vt_features_release                  "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
 
 #message(STATUS "build types=${CMAKE_CONFIGURATION_TYPES}")
 
@@ -88,10 +125,23 @@ foreach(cur_build_type ${CMAKE_CONFIGURATION_TYPES})
     ${cmake_vt_debug_modes_${cur_build_type}}
   )
 
-  set(
-    cmake_vt_features
-    ${cmake_vt_features_${cur_build_type}}
-  )
+  if (cur_build_type STREQUAL "debug_trace")
+    set(vt_feature_cmake_trace_enabled "1")
+  endif()
+
+  if (cur_build_type STREQUAL "release_trace")
+    set(vt_feature_cmake_trace_enabled "1")
+    set(vt_feature_cmake_production "1")
+  endif()
+
+  if (cur_build_type STREQUAL "release")
+    set(vt_feature_cmake_production "1")
+  endif()
+
+  # set(
+  #   cmake_vt_features
+  #   ${cmake_vt_features_${cur_build_type}}
+  # )
 
   set(
     cmake_config_debug_enabled

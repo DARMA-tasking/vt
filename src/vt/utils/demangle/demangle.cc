@@ -63,8 +63,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   std::string clean_funcname  = {};
   std::string clean_params    = {};
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT before: adapt={}\n", str
   );
 
@@ -78,13 +78,13 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   bool found_member = false;
   for (CountType i = 0; i < limit; i++) {
     auto const substr = str.substr(i, adapt_start_mem.size());
-    debug_print(
-      verbose, gen, node,
+    debug_print_verbose(
+      gen, node,
       "ADAPT XX substr: substr={}\n", substr
     );
     if (substr == adapt_start_mem) {
-      debug_print(
-        verbose, gen, node,
+      debug_print_verbose(
+        gen, node,
         "ADAPT substr: substr={}\n", substr
       );
       start = i;
@@ -96,13 +96,13 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   if (not found_member) {
     for (CountType i = 0; i < limit; i++) {
       auto const substr = str.substr(i, adapt_start.size());
-      debug_print(
-        verbose, gen, node,
+      debug_print_verbose(
+        gen, node,
         "ADAPT XX substr: substr={}\n", substr
       );
       if (substr == adapt_start) {
-        debug_print(
-          verbose, gen, node,
+        debug_print_verbose(
+          gen, node,
           "ADAPT substr: substr={}\n", substr
         );
         start = i;
@@ -141,8 +141,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   func_adapt_params = str;
 # endif
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: adapt={}\n", func_adapt_params
   );
 
@@ -185,8 +185,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   }
 
   for (auto&& elm : pieces) {
-    debug_print(
-      verbose, gen, node,
+    debug_print_verbose(
+      gen, node,
       "ADAPT: split: adapt={}\n", elm
     );
   }
@@ -205,12 +205,12 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     auto const func_name = pieces[1];
 #   endif
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: func_args: adapt={}\n", func_args
   );
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: func_name: adapt={}\n", func_name
   );
 
@@ -226,8 +226,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     }
   }
   func_name = DemanglerUtils::removeSpaces(func_name_no_template);
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: func_name_no_template: adapt={}\n", func_name_no_template
   );
 # endif
@@ -251,8 +251,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
   #if backend_check_enabled(verbose) && backend_check_enabled(gen)
     for (auto&& elm : func_name_pieces) {
-      debug_print(
-        verbose, gen, node,
+      debug_print_verbose(
+        gen, node,
         "ADAPT: func_name piece: adapt={}\n", elm
       );
     }
@@ -264,8 +264,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     fused_namespace = "::";
   } else {
     for (auto iter = func_name_pieces.begin(); iter != func_name_pieces.end() - 1; ++iter) {
-      debug_print(
-        verbose, gen, node,
+      debug_print_verbose(
+        gen, node,
         "ADAPT: NS piece: adapt={}\n", *iter
       );
       fused_namespace += *iter + "::";
@@ -298,8 +298,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
                           init_offset,
       func_args.size() - (init_offset) - 1
     );
-    debug_print(
-      verbose, gen, node,
+    debug_print_verbose(
+      gen, node,
       "ADAPT: args={}\n", args
     );
     clean_params = DemanglerUtils::removeSpaces(args);
@@ -318,8 +318,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     clean_params = clean_params.substr(pstart,clean_params.size());
   }
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: \n"
     "\t CLEAN namespace = \"{}\" \n"
     "\t CLEAN  funcname = \"{}\" \n"
@@ -337,8 +337,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 ActiveFunctorDemangler::parseActiveFunctorName(
   std::string const& name, std::string const& args
 ) {
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "parseActiveFunctorName: \n"
     "\t input name = \"{}\" \n"
     "\t input args = \"{}\" \n",
@@ -347,8 +347,8 @@ ActiveFunctorDemangler::parseActiveFunctorName(
 
   auto const ret = ActiveFunctionDemangler::parseActiveFunctionName(name);
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "parseActiveFunctorName: \n"
     "\t CLEAN namespace = \"{}\" \n"
     "\t CLEAN funcname = \"{}\" \n",

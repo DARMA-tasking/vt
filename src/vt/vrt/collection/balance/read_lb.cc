@@ -80,7 +80,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /*static*/ SpecEntry const* ReadLBSpec::entry(SpecIndex const& idx) {
   auto spec_iter = spec_.find(idx);
   debug_print(
-    lblite, node,
+    lb, node,
     "idx={},idx-mod={},found={},size={},num_entries={}\n",
     idx,
     idx % num_entries_,
@@ -155,7 +155,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
         std::forward_as_tuple(SpecEntry{spec_index,lb_name,lb_min,lb_max})
       );
       debug_print(
-        lblite, node,
+        lb, node,
         "{}: insert: idx={},size={},name={},min={},max={}\n",
         theContext()->getNode(),
         spec_index,
@@ -168,7 +168,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
       auto const& this_node = theContext()->getNode();
       if (this_node == 0 && lb_name != "") {
         vt_print(
-          lblite,
+          lb,
           "valid LB not found: \"name={},iter={},min={},max={}\"\n",
           this_node, lb_name, lb_iter, lb_min, lb_max
         );

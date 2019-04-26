@@ -56,14 +56,14 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
   auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
   if (this_node == 0) {
     vt_print(
-      lblite,
+      lb,
       "RotateLB: procDataIn: stats size={}, next_node={}\n",
       data_in.size(), next_node
     );
     fflush(stdout);
   }
   debug_print(
-    lblite, node,
+    lb, node,
     "RotateLB::procDataIn: size={}, next_node={}\n",
     data_in.size(), next_node
   );
@@ -74,7 +74,7 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
     auto const& obj = stat.first;
     auto const& load = stat.second;
     debug_print(
-      lblite, node,
+      lb, node,
       "\t RotateLB::procDataIn: obj={}, load={}\n",
       obj, load
     );
@@ -89,7 +89,7 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
 
 void RotateLB::finishedMigrate() {
   debug_print(
-    lblite, node,
+    lb, node,
     "RotateLB::finishedMigrate: transfer_count={}\n",
     transfer_count
   );
@@ -104,7 +104,7 @@ void RotateLB::finishedMigrate() {
   RotateLB::rotate_lb_inst = std::make_unique<RotateLB>();
   vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase);
   debug_print(
-    lblite, node,
+    lb, node,
     "\t RotateLB::rotateLBHandler: phase={}\n", phase
   );
   RotateLB::rotate_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);

@@ -42,95 +42,27 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_FEATURES_FEATURE_SWITCH
-#define INCLUDED_FEATURES_FEATURE_SWITCH
+#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
+#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
 
-#include "meld_headers.h"
 #include "vt/configs/features/features_defines.h"
 
 /*
- * Key-value maps for various options and features that can be statically turned
- * on and off
+ * Strings for various vt features
  */
 
-#define debug_list_holder(arg...) arg
+#define vt_feature_str_bit_check_overflow "Check bitfield overflow"
+#define vt_feature_str_detector           "C++ Trait Detector"
+#define vt_feature_str_lblite             "Load Balancing for Collections"
+#define vt_feature_str_memory_pool        "Memory Pooling"
+#define vt_feature_str_mpi_rdma           "Native RDMA with MPI"
+#define vt_feature_str_no_feature         "No feature"
+#define vt_feature_str_no_pool_alloc_env  "No memory pool envelope"
+#define vt_feature_str_openmp             "OpenMP Threading"
+#define vt_feature_str_parserdes          "Partial Inline Serialization"
+#define vt_feature_str_print_term_msgs    "Print Termination Control Messages"
+#define vt_feature_str_production         "Production Build"
+#define vt_feature_str_stdthread          "std::thread Threading"
+#define vt_feature_str_trace_enabled      "Tracing Projections"
 
-#define debug_list_debug_modes                                          \
-  debug_list_holder(                                                    \
-    active,                "active",                                    \
-    barrier,               "barrier",                                   \
-    broadcast,             "bcast",                                     \
-    event,                 "event",                                     \
-    gen,                   "general",                                   \
-    group,                 "group",                                     \
-    handler,               "handler",                                   \
-    hierlb,                "HierarchicalLB",                            \
-    lb,                    "lb",                                        \
-    location,              "location",                                  \
-    objgroup,              "objgroup",                                  \
-    param,                 "parameterization",                          \
-    pipe,                  "pipe",                                      \
-    pool,                  "pool",                                      \
-    reduce,                "reduce",                                    \
-    rdma,                  "RDMA",                                      \
-    rdma_channel,          "RDMA Channel",                              \
-    rdma_state,            "RDMA State",                                \
-    runtime,               "runtime",                                   \
-    scatter,               "scatter",                                   \
-    sequence,              "sequencer",                                 \
-    sequence_vrt,          "sequencer-vrt",                             \
-    serial_msg,            "serialized-msg",                            \
-    term,                  "termination",                               \
-    termds,                "dijkstra-scholten-TD",                      \
-    trace,                 "trace",                                     \
-    vrt,                   "vc",                                        \
-    vrt_coll,              "vcc",                                       \
-    worker,                "worker"                                     \
-  )
-
-#define debug_list_debug_options                                        \
-  debug_list_holder(                                                    \
-    flush,                 "flush all debug prints",                    \
-    function,              "print function context_debug",              \
-    line_file,             "print line/file debug",                     \
-    startup,               "startup sequence"                           \
-  )
-
-#define debug_list_features                                             \
-  debug_list_holder(                                                    \
-    bit_check_overflow,    "Check bitfield overflow",                   \
-    detector,              "C++ Trait Detector",                        \
-    lblite,                "Load Balancing for Collections",            \
-    memory_pool,           "Memory Pooling",                            \
-    mpi_rdma,              "Native RDMA with MPI",                      \
-    no_feature,            "No feature",                                \
-    no_pool_alloc_env,     "No memory pool envelope",                   \
-    openmp,                "OpenMP Threading",                          \
-    parserdes,             "Partial Inline Serialization",              \
-    print_term_msgs,       "Print Termination Control Messages",        \
-    production,            "Production Build",                          \
-    stdthread,             "std::thread Threading",                     \
-    trace_enabled,         "Tracing Projections"                        \
-  )
-
-#define debug_list_contexts                                             \
-  debug_list_holder(                                                    \
-    node,                  "Print current node",                        \
-    unknown,               "Print no processor"                         \
-  )
-
-#define debug_list_subclass                                             \
-  debug_list_holder(                                                    \
-    verbose,               "verbose",                                   \
-    verbose_2,             "verbose_2"                                  \
-  )
-
-#define debug_list_all                          \
-  debug_list_holder(                            \
-    debug_list_debug_modes,                     \
-    debug_list_features,                        \
-    debug_list_debug_options,                   \
-    debug_list_contexts                         \
-  )
-
-#endif  /*INCLUDED_FEATURES_FEATURE_SWITCH*/
+#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/

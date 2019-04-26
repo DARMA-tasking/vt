@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_DEBUG_DEBUG_FMT_H
-#define INCLUDED_CONFIGS_DEBUG_DEBUG_FMT_H
+#if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_FMT_H
+#define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_FMT_H
 
 #include "vt/config.h"
 
@@ -65,4 +65,4 @@ inline std::ostream& printEnum(std::ostream& os, EnumT const& val) {
 
 }} /* end namespace vt::debug */
 
-#endif /*INCLUDED_CONFIGS_DEBUG_DEBUG_FMT_H*/
+#endif /*INCLUDED_VT_CONFIGS_DEBUG_DEBUG_FMT_H*/

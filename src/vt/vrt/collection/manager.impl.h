@@ -167,8 +167,8 @@ template <typename SysMsgT>
     );
 
     range.foreach([&](IndexT cur_idx) mutable {
-      debug_print(
-        verbose, vrt_coll, node,
+      debug_print_verbose(
+        vrt_coll, node,
         "running foreach: before map: cur_idx={}, range={}\n",
         cur_idx.toString(), range.toString()
       );
@@ -408,20 +408,17 @@ template <typename ColT, typename IndexT, typename MsgT>
         vtAssert(base != nullptr, "Must be valid pointer");
         base->cur_bcast_epoch_++;
 
-        backend_enable_if(
-          lblite, {
-            debug_print(
-              vrt_coll, node,
-              "broadcast: apply to element: instrument={}\n",
-              msg->lbLiteInstrument()
-            );
-
-            if (msg->lbLiteInstrument()) {
-              auto& stats = base->getStats();
-              stats.startTime();
-            }
+        #if backend_check_enabled(lblite)
+          debug_print(
+            vrt_coll, node,
+            "broadcast: apply to element: instrument={}\n",
+            msg->lbLiteInstrument()
+          );
+          if (msg->lbLiteInstrument()) {
+            auto& stats = base->getStats();
+            stats.startTime();
           }
-        );
+        #endif
 
         // be very careful here, do not touch `base' after running the active
         // message because it might have migrated out and be invalid
@@ -430,14 +427,12 @@ template <typename ColT, typename IndexT, typename MsgT>
           msg,base,handler,member,from
         );
 
-        backend_enable_if(
-          lblite, {
-            if (msg->lbLiteInstrument()) {
-              auto& stats = base->getStats();
-              stats.stopTime();
-            }
+        #if backend_check_enabled(lblite)
+          if (msg->lbLiteInstrument()) {
+            auto& stats = base->getStats();
+            stats.stopTime();
           }
-        );
+        #endif
       }
     });
   }
@@ -641,19 +636,17 @@ template <typename ColT, typename IndexT, typename MsgT>
     sub_handler, member, cur_epoch, idx, exists
   );
 
-  backend_enable_if(
-    lblite, {
-      debug_print(
-        vrt_coll, node,
-        "collectionMsgTypedHandler: receive msg: instrument={}\n",
-        col_msg->lbLiteInstrument()
-      );
-      if (col_msg->lbLiteInstrument()) {
-        auto& stats = col_ptr->getStats();
-        stats.startTime();
-      }
+  #if backend_check_enabled(lblite)
+    debug_print(
+      vrt_coll, node,
+      "collectionMsgTypedHandler: receive msg: instrument={}\n",
+      col_msg->lbLiteInstrument()
+    );
+    if (col_msg->lbLiteInstrument()) {
+      auto& stats = col_ptr->getStats();
+      stats.startTime();
     }
-  );
+  #endif
 
   theMsg()->pushEpoch(cur_epoch);
   auto const from = col_msg->getFromNode();
@@ -662,14 +655,12 @@ template <typename ColT, typename IndexT, typename MsgT>
   );
   theMsg()->popEpoch();
 
-  backend_enable_if(
-    lblite, {
-      if (col_msg->lbLiteInstrument()) {
-        auto& stats = col_ptr->getStats();
-        stats.stopTime();
-      }
+  #if backend_check_enabled(lblite)
+    if (col_msg->lbLiteInstrument()) {
+      auto& stats = col_ptr->getStats();
+      stats.stopTime();
     }
-  );
+  #endif
 
   theTerm()->consume(cur_epoch);
 }
@@ -902,10 +893,9 @@ void CollectionManager::broadcastMsgUntypedHandler(
 
   auto msg = promoteMsg(raw_msg);
 
-  backend_enable_if(
-    lblite,
+  #if backend_check_enabled(lblite)
     msg->setLBLiteInstrument(instrument);
-  );
+  #endif
 
   // @todo: implement the action `act' after the routing is finished
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
@@ -1289,10 +1279,9 @@ void CollectionManager::sendMsgUntypedHandler(
 
   auto msg = promoteMsg(raw_msg);
 
-  backend_enable_if(
-    lblite,
+  #if backend_check_enabled(lblite)
     msg->setLBLiteInstrument(true);
-  );
+  #endif
 
   auto const& cur_epoch = getCurrentEpoch(msg.get());
 
@@ -1558,8 +1547,8 @@ CollectionManager::constructCollectiveMap(
     using VirtualElmPtr    = VirtualPtrType<ColT,IndexT>;
     using IdxContextHolder = InsertContextHolder<IndexT>;
 
-    debug_print(
-      verbose, vrt_coll, node,
+    debug_print_verbose(
+      vrt_coll, node,
       "construct (dist): foreach: map: cur_idx={}, index range={}\n",
       cur_idx.toString(), range.toString()
     );
@@ -1569,8 +1558,8 @@ CollectionManager::constructCollectiveMap(
 
     auto mapped_node = fn(cur, max, num_nodes);
 
-    debug_print(
-      verbose, vrt_coll, node,
+    debug_print_verbose(
+      vrt_coll, node,
       "construct (dist): foreach: cur_idx={}, mapped_node={}\n",
       cur_idx.toString(), mapped_node
     );
@@ -1591,8 +1580,8 @@ CollectionManager::constructCollectiveMap(
       // of element being constructed
       VirtualElmPtr elm_ptr = user_construct_fn(cur_idx);
 
-      debug_print(
-        verbose, vrt_coll, node,
+      debug_print_verbose(
+        vrt_coll, node,
         "construct (dist): ptr={}\n", print_ptr(elm_ptr.get())
       );
 
@@ -1610,8 +1599,8 @@ CollectionManager::constructCollectiveMap(
       // Clear the current index context
       IdxContextHolder::clear();
 
-      debug_print(
-        /*verbose, */vrt_coll, node,
+      debug_print_verbose(
+        vrt_coll, node,
         "construct (dist): new local elm: num_elm={}, proxy={:x}, cur_idx={}\n",
         num_elms, proxy, cur_idx.toString()
       );
@@ -1731,8 +1720,8 @@ void CollectionManager::staticInsert(
     );
   #endif
 
-  debug_print(
-    verbose, vrt_coll, node,
+  debug_print_verbose(
+    vrt_coll, node,
     "construct (staticInsert): ptr={}\n", print_ptr(elm_ptr.get())
   );
 
@@ -2747,16 +2736,15 @@ void CollectionManager::nextPhase(
     }
   }
 
-  backend_enable_if(
-    lblite, {
-      msg->setLBLiteInstrument(instrument);
-      debug_print(
-        vrt_coll, node,
-        "nextPhase: broadcasting: instrument={}, cur_phase={}\n",
-        msg->lbLiteInstrument(), cur_phase
-      );
-    }
-  );
+  #if backend_check_enabled(lblite)
+    msg->setLBLiteInstrument(instrument);
+    debug_print(
+      vrt_coll, node,
+      "nextPhase: broadcasting: instrument={}, cur_phase={}\n",
+      msg->lbLiteInstrument(), cur_phase
+    );
+  #endif
+
   theCollection()->broadcastMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
     proxy, msg, instrument
   );

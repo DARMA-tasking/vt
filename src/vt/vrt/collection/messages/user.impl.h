@@ -129,10 +129,9 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
   s | member_;
   s | is_wrap_;
 
-  backend_enable_if(
-    lblite,
+  #if backend_check_enabled(lblite)
     s | lb_lite_instrument_;
-  );
+  #endif
 }
 
 template <typename ColT, typename BaseMsgT>
