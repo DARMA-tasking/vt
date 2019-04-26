@@ -43,10 +43,6 @@
 */
 #include "vt/transport.h"
 
-// reduction on sparse views or collections are broken
-// so disable it for now.
-#define FIXED_SPARSE_REDUCE 0
-
 namespace example {
 // default collection size
 static constexpr int const default_size = 16;

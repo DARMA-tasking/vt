@@ -87,6 +87,10 @@
 #include <cstdlib>
 #include <deque>
 
+// reduction on sparse views or collections are broken
+// so disable it for now.
+#define FIXED_SPARSE_REDUCE 0
+
 namespace vt { namespace vrt { namespace collection {
 
 struct CollectionManager {
