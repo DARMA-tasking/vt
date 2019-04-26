@@ -43,6 +43,10 @@
 */
 #include "vt/transport.h"
 
+// reduction on sparse views or collections are broken
+// so disable it for now.
+#define FIXED_SPARSE_REDUCE 0
+
 namespace example {
 // default collection size
 static constexpr int const default_size = 16;
@@ -60,8 +64,6 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
 
 // collection view message type
 using ViewMsg = vt::CollectViewMessage<MyCol>;
-// message type for elems reduce
-using SysMsg = vt::collective::ReduceTMsg<int>;
 
 // view element message type
 struct ElemMsg : ViewMsg {
@@ -85,13 +87,6 @@ static bool filter(vt::Index1D* idx) {
   return idx->x() % 2 == 0;
 }
 
-// print reduction result
-struct ShowResult {
-  void operator()(SysMsg* msg) {
-    fmt::print("final value: {}", msg->getConstVal());
-  }
-};
-
 // the slice broadcast handler
 static void showElem(ViewMsg* msg, MyCol* col) {
 
@@ -113,17 +108,25 @@ static void showIndex(ElemMsg* msg, MyCol* col) {
   );
 }
 
-static void reduce(ViewMsg* msg, MyCol* col) {
-  // perform a reduction
-  auto proxy  = msg->getViewProxy();
-  auto range  = msg->getRange();
-  auto elem   = col->getIndex().x();
-  auto sysmsg = vt::makeSharedMessage<SysMsg>(elem);
-  auto slice  = vt::CollectionProxy<MyCol>(proxy, range);
+#if FIXED_SPARSE_REDUCE
+  using SysMsg = vt::collective::ReduceTMsg<int>;
 
-  slice.reduce<vt::collective::PlusOp<int>, ShowResult, SysMsg>(sysmsg);
-}
+  struct ShowResult {
+    void operator()(SysMsg* msg) {
+      fmt::print("reduced value: {}\n", msg->getConstVal());
+    }
+  };
 
+  static void reduce(ViewMsg* msg, MyCol* col) {
+    auto elem   = col->getIndex().x();
+    auto proxy  = msg->getViewProxy();
+    auto range  = msg->getRange();
+    auto slice  = vt::CollectionProxy<MyCol>(proxy, range);
+    auto sysmsg = vt::makeSharedMessage<SysMsg>(elem);
+
+    slice.reduce<vt::collective::PlusOp<int>, ShowResult>(sysmsg);
+  }
+#endif
 } // end namespace example
 
 
@@ -135,27 +138,31 @@ int main(int argc, char** argv) {
   auto const node  = vt::theContext()->getNode();
   auto const epoch = vt::theTerm()->makeEpochCollective();
 
-  if (node == root) {
+  vt::CollectionProxy<example::MyCol> slice {};
 
-    fmt::print("root: build collection, halve it, then keep only even elems\n");
+  if (node == root) {
 
     auto const range = vt::Index1D(example::default_size);
     auto const half  = vt::Index1D(range.x() / 2);
 
+    fmt::print("root: build collection, halve it, then keep only even elems\n");
+
     // create a distributed collection
     auto proxy = vt::theCollection()->construct<example::MyCol>(range);
     // create a view to the slice
-    auto slice = proxy.slice<&example::filter>(range, half, epoch);
-    // retrieve the actual size of the slice
-    auto const size = slice.size();
+    slice = proxy.slice<&example::filter>(range, half, epoch);
     // create a message and broadcast to each slice element
     slice.broadcast<example::ViewMsg, &example::showElem>();
+    // retrieve the actual size of the slice
+    auto const size = slice.size();
     // each slice element sends a message
     for (int i = 0; i < size; ++i) {
       slice[i].send<example::ElemMsg, &example::showIndex>(i, size);
     }
-    // FIXME: initiate a reduction on slice elements
-    //slice.broadcast<example::ViewMsg, &example::reduce>();
+
+    #if FIXED_SPARSE_REDUCE
+      proxy.broadcast<example::ViewMsg, &example::reduce>();
+    #endif
   }
 
   vt::theCollective()->barrier();
