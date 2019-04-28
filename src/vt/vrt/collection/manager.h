@@ -64,6 +64,7 @@
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/staged_token/token.h"
+#include "vt/vrt/collection/proxy.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/messaging/message.h"
@@ -299,6 +300,12 @@ public:
     VirtualProxyType const& view_proxy,
     VirtualProxyType const& base_proxy,
     IndexT const& view_index
+  ) const;
+
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  ViewProxyData<IndexT> resolveView(
+    VirtualProxyType const& view_proxy, IndexT const& view_idx
   ) const;
 
   /*

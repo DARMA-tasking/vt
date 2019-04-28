@@ -54,6 +54,29 @@ namespace vt { namespace vrt {
 template <typename ColT, typename IndexT=typename ColT::IndexType>
 using VirtualElmProxyType = collection::VrtElmProxy<ColT, IndexT>;
 
+template <typename IndexT>
+struct ViewProxyData {
+
+public:
+  ViewProxyData() = delete;
+  ViewProxyData (
+    VirtualProxyType const& in_proxy,
+    IndexT const& in_index,
+    IndexT const& in_range
+  ) : proxy(in_proxy),
+      index(in_index),
+      range(in_range)
+  {};
+  ViewProxyData(ViewProxyData const&) = default;
+  ViewProxyData(ViewProxyData&&) = default;
+  ~ViewProxyData() = default;
+
+  VirtualProxyType proxy = no_vrt_proxy;
+  IndexT index {};
+  IndexT range {};
+};
+
+
 }} /* end namespace vt::vrt */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_PROXY_H*/

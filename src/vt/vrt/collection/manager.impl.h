@@ -2586,6 +2586,74 @@ IndexT CollectionManager::resolveIndex(
   }
 }
 
+template <typename ColT, typename IndexT>
+ViewProxyData<IndexT> CollectionManager::resolveView(
+  VirtualProxyType const& view_proxy,
+  IndexT const& view_idx
+) const {
+  auto const& view_range = getRange<IndexT>(view_proxy);
+  vtAssert(view_idx < view_range, "Index out-of-range");
+
+  ViewProxyData<IndexT> current {view_proxy, view_idx, view_range};
+  ViewProxyData<IndexT> parent {};
+
+  if (VirtualProxyBuilder::isView(view_proxy)) {
+    std::stack<ViewProxyData<IndexT>> stack;
+    stack.push(current);
+
+    do {
+      current = stack.pop();
+      parent.proxy = getParent(current.proxy);
+      parent.range = getRange<IndexT>(parent.proxy);
+
+      // retrieve view data and filtering method
+      auto const dimension  = getDim(parent.proxy);
+      auto const cur_han    = getViewHandler(current.proxy);
+      auto const in_slice   = auto_registry::getHandlerView(cur_han);
+      auto const base_range = getRange<IndexT>(parent.proxy);
+
+      bool resolved = false;
+      IndexT old_idx = {};    // previous value of 'par_idx'
+      IndexT rel_idx = {};    // relative index of 'par_idx'
+      IndexT abs_idx = {};    // absolute index of 'cur_idx'
+      IndexT cur_idx = current.index;
+
+      base_range.foreach([&](IndexT par_idx) {
+        if (not resolved) {
+          auto raw_idx = static_cast<vt::index::BaseIndex*>(&par_idx);
+
+          if (in_slice(raw_idx)) {
+            // increment the right component of the relative index
+            for (int i = 0; i < dimension; ++i) {
+              if (old_idx[i] != par_idx[i]) {
+                rel_idx[i]++;
+              }
+            }
+            // check if relative index matches view index
+            if (matches(cur_idx, rel_idx)) {
+              abs_idx = par_idx;
+              resolved = true;
+            }
+            old_idx = par_idx;
+          }
+        }
+      });
+
+      vtAssert(resolved, "Absolute index should be resolved now");
+      // set parent view index
+      parent.index = abs_idx;
+
+      if (VirtualProxyBuilder::isView(parent.proxy)) {
+        stack.push(parent);
+      }
+    } while (not stack.empty());
+
+    return parent;
+  } else /* not a view */{
+    return current;
+  }
+}
+
 inline void CollectionManager::insertCollectionInfo(
   VirtualProxyType const& proxy, HandlerType const& map_han,
   EpochType const& insert_epoch
