@@ -146,7 +146,6 @@ EpochType Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <mapping::ActiveViewTypedFnType<IndexT>* filter>
 CollectionProxy<ColT, IndexT> Reducable<ColT, IndexT, BaseProxyT>::slice(
-  IndexT const& old_range,
   IndexT const& new_range,
   EpochType const& epoch,
   TagType const& tag
@@ -154,7 +153,7 @@ CollectionProxy<ColT, IndexT> Reducable<ColT, IndexT, BaseProxyT>::slice(
 
   auto const proxy = this->getProxy();
   return theCollection()->slice<ColT, IndexT, filter>(
-    proxy, old_range, new_range, epoch, tag
+    proxy, new_range, epoch, tag
   );
 }
 

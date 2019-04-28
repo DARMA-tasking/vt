@@ -111,7 +111,6 @@ struct Reducable : BaseProxyT {
 
   template <mapping::ActiveViewTypedFnType<IndexT>* filter>
   CollectionProxy<ColT, IndexT> slice(
-    IndexT const& old_range,
     IndexT const& new_range,
     EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag

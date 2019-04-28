@@ -237,8 +237,7 @@ struct CollectionManager {
     mapping::ActiveViewTypedFnType<IndexT>* filter
   >
   CollectionProxy<ColT, IndexT> slice(
-    CollectionProxy<ColT, IndexT> const& col_proxy,
-    IndexT const& old_range,
+    CollectionProxy<ColT, IndexT> const& proxy,
     IndexT const& new_range,
     EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag
@@ -283,6 +282,9 @@ public:
   // check that current index (of any dimension) is in range
   template <typename IndexT>
   friend bool operator<(IndexT const& index, IndexT const& range);
+
+  template <typename IndexT>
+  friend bool operator<=(IndexT const& index, IndexT const& range);
 
   // have issue due to ambiguous overload, so use a simple function
   template <typename IndexT>

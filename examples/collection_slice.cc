@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
     // create a distributed collection
     auto proxy = vt::theCollection()->construct<example::MyCol>(range);
     // create a view to the slice
-    slice = proxy.slice<&example::filter>(range, half, epoch);
+    slice = proxy.slice<&example::filter>(half, epoch);
     // create a message and broadcast to each slice element
     slice.broadcast<example::ViewMsg, &example::showElem>();
     // retrieve the actual size of the slice

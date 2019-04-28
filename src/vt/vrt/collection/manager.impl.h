@@ -2124,7 +2124,6 @@ template <
 >
 CollectionProxy<ColT, IndexT> CollectionManager::slice(
   CollectionProxy<ColT, IndexT> const& proxy,
-  IndexT const& old_range,
   IndexT const& new_range,
   EpochType const& epoch,
   TagType const& tag
@@ -2148,9 +2147,11 @@ CollectionProxy<ColT, IndexT> CollectionManager::slice(
     ready = is_built and no_pending and group_ready;
   } while (not ready);
 
+  IndexT const& old_range = getRange<IndexT>(old_proxy);
+  vtAssert(new_range <= old_range, "Invalid slice range");
+
   bool const is_static = ColT::isStaticSized();
   bool const is_nested = VirtualProxyBuilder::isView(old_proxy);
-
   vtAssert(is_static, "Only view of static collections are managed");
 
   // register the user defined filtering function,
@@ -2451,6 +2452,20 @@ inline bool operator<(IndexT const& index, IndexT const& range) {
 
   for (int i = 0; i < dim; ++i) {
     if (index[i] >= range[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template <typename IndexT>
+inline bool operator<=(IndexT const& index, IndexT const& range) {
+  auto const dim = range.ndims();
+  vtAssert(dim > 0, "Invalid index type");
+  vtAssert(index.ndims() == dim, "Invalid index type");
+
+  for (int i = 0; i < dim; ++i) {
+    if (index[i] > range[i]) {
       return false;
     }
   }

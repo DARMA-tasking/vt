@@ -150,7 +150,7 @@ TEST_F(TestSlicing, test_collect_slice) {
     // build the distributed collection and get a proxy on it
     auto proxy = vt::theCollection()->construct<MyCol>(range);
     // create a view to the slice
-    slice = proxy.slice<&filter>(range, half, epoch);
+    slice = proxy.slice<&filter>(half, epoch);
     // create a message and broadcast to each slice element
     slice.broadcast<ViewMsg, &checkElem>();
 
@@ -175,8 +175,8 @@ TEST_F(TestSlicing, test_relative_indexing) {
     auto const range = vt::Index1D(nb_nodes * 4);
     // create the distributed collection
     auto proxy = vt::theCollection()->construct<MyCol>(range);
-    // create a view to the slice
-    slice = proxy.slice<&filter>(range, range, epoch);
+    // use same range but keep only even elems
+    slice = proxy.slice<&filter>(range, epoch);
     // retrieve the actual size of the slice
     auto const size = slice.size();
     // each slice element sends a message
@@ -207,8 +207,8 @@ TEST_F(TestSlicing, test_chained_slicing) {
 
     // 1. create a slice of a slice
     auto proxy = vt::theCollection()->construct<MyCol>(col_range);
-    section = proxy.slice<&filter>(col_range, sec_range, epoch);
-    nested = section.slice<&filter>(sec_range, new_range, epoch);
+    section = proxy.slice<&filter>(sec_range, epoch);
+    nested = section.slice<&filter>(new_range, epoch);
     nested.broadcast<ViewMsg, &checkElem>();
 
     // 2. check relative indexing
