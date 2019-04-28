@@ -50,6 +50,30 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+template <typename IndexT>
+struct ViewProxyData {
+
+public:
+  ViewProxyData() = default;
+  ViewProxyData (
+    VirtualProxyType const& in_proxy,
+    IndexT const& in_index,
+    IndexT const& in_range
+  ) : proxy(in_proxy),
+      index(in_index),
+      range(in_range)
+  {};
+  ViewProxyData(ViewProxyData const&) = default;
+  ViewProxyData(ViewProxyData&&) = default;
+  ViewProxyData& operator=(ViewProxyData const&) = default;
+  ViewProxyData& operator=(ViewProxyData&&) = default;
+  ~ViewProxyData() = default;
+
+  VirtualProxyType proxy = no_vrt_proxy;
+  IndexT index {};
+  IndexT range {};
+};
+
 template <typename ColT, typename IndexT>
 struct BaseCollectionProxy {
   using CollectionType = ColT;

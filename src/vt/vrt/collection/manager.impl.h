@@ -967,7 +967,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
   } while (not ready);
 
   // @todo: implement the action `act' after the routing is finished
-  auto const col_proxy = view_parent_[cur_proxy];
+  auto const col_proxy = getColProxy(cur_proxy);
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
   bool already_built = constructed_.find(col_proxy) != constructed_.end();
   ready &= (holder != nullptr) and already_built;
@@ -1029,7 +1029,7 @@ void CollectionManager::broadcastMsgUntypedHandler(
         std::forward_as_tuple(cur_proxy),
         std::forward_as_tuple(ActionContainerType{})
       );
-      iter = buffered_bcasts_.find(col_proxy);
+      iter = buffered_bcasts_.find(cur_proxy);
     }
     vtAssert(iter != buffered_bcasts_.end(), "Must exist");
 
@@ -2123,7 +2123,7 @@ template <
   mapping::ActiveViewTypedFnType<IndexT>* filter
 >
 CollectionProxy<ColT, IndexT> CollectionManager::slice(
-  CollectionProxy<ColT, IndexT> const& col_proxy,
+  CollectionProxy<ColT, IndexT> const& proxy,
   IndexT const& old_range,
   IndexT const& new_range,
   EpochType const& epoch,
@@ -2133,16 +2133,17 @@ CollectionProxy<ColT, IndexT> CollectionManager::slice(
   using MsgT = ViewCreateMsg<ColT, IndexT, IndexT>;
 
   // check that the collection is static and already built
-  auto const old_proxy  = col_proxy.getProxy();
+  auto const old_proxy = proxy.getProxy();
+  auto const col_proxy = getColProxy(old_proxy);
 
   bool ready = false;
 
   do {
     // spin until collection group is ready
     vt::runScheduler();
-    bool is_built    = (constructed_.find(old_proxy) != constructed_.end());
-    bool no_pending  = (buffered_group_.find(old_proxy) == buffered_group_.end());
-    auto elm_holder  = theCollection()->findElmHolder<ColT,IndexT>(old_proxy);
+    bool is_built    = (constructed_.find(col_proxy) != constructed_.end());
+    bool no_pending  = (buffered_group_.find(col_proxy) == buffered_group_.end());
+    auto elm_holder  = theCollection()->findElmHolder<ColT,IndexT>(col_proxy);
     bool group_ready = elm_holder and elm_holder->groupReady();
     ready = is_built and no_pending and group_ready;
   } while (not ready);
@@ -2151,12 +2152,12 @@ CollectionProxy<ColT, IndexT> CollectionManager::slice(
   bool const is_nested = VirtualProxyBuilder::isView(old_proxy);
 
   vtAssert(is_static, "Only view of static collections are managed");
-  vtAssert(not is_nested, "View of a view are not allowed for now");
 
-  // register the user defined filtering function, so it can be invoked on other nodes
-  auto const new_view_han = auto_registry::makeAutoHandlerView<IndexT,filter>();
-  auto const old_view_han = uninitialized_handler;
-  auto const mapping_id   = UniversalIndexHolder<>::getMap(old_proxy);
+  // register the user defined filtering function,
+  // so it can be invoked on other nodes
+  auto const new_han = auto_registry::makeAutoHandlerView<IndexT,filter>();
+  auto const old_han = (is_nested ? getViewHandler(old_proxy) : uninitialized_handler);
+  auto const mapping_id = UniversalIndexHolder<>::getMap(col_proxy);
 
   // create a new proxy
   auto const new_proxy = makeNewCollectionProxy(true);
@@ -2164,7 +2165,7 @@ CollectionProxy<ColT, IndexT> CollectionManager::slice(
   vtAssertExpr(is_view_new_proxy);
 
   // save handler type for further queries
-  saveViewHandler(new_proxy, new_view_han);
+  saveViewHandler(new_proxy, new_han);
 
   // set some flags
   theCollection()->setViewReady(false);
@@ -2173,7 +2174,7 @@ CollectionProxy<ColT, IndexT> CollectionManager::slice(
   auto msg = makeSharedMessage<MsgT>(
     old_proxy, new_proxy,
     old_range, new_range,
-    old_view_han, new_view_han, mapping_id,
+    old_han, new_han, mapping_id,
     epoch, tag
   );
 
@@ -2216,8 +2217,7 @@ template <typename SysMsgT>
 
   bool const is_view_old = VirtualProxyBuilder::isView(old_proxy);
   bool const is_view_new = VirtualProxyBuilder::isView(new_proxy);
-  vtAssert(not is_view_old, "Nested views not yet supported");
-  vtAssert(    is_view_new, "New proxy should be a view one");
+  vtAssert(is_view_new, "New proxy should be a view one");
 
   debug_print(
     vrt_coll, node,
@@ -2227,31 +2227,32 @@ template <typename SysMsgT>
 
   //auto const col_node_map = getDefaultMap<CollecType>();
   auto const node_mapping = auto_registry::getHandlerMap(mapping);
-  auto const new_filter   = auto_registry::getHandlerView(new_view);
-  auto const old_filter   = (is_view_old ? auto_registry::getHandlerView(old_view) : nullptr);
+  auto const in_slice     = auto_registry::getHandlerView(new_view);
 
   bool in_group = false;
   auto copy_range = new_range;
 
-  new_range.foreach([&](IndexNew idx) mutable {
+  new_range.foreach([&](IndexNew current) mutable {
     // no need to recheck if already resolved
     if (not in_group) {
       // todo update below if old_proxy is already a view
-      auto cur = static_cast<vt::index::BaseIndex*>(&idx);
+      auto cur = static_cast<vt::index::BaseIndex*>(&current);
       auto max = static_cast<vt::index::BaseIndex*>(&copy_range);
+
       // use the collection mapping to know if current node
       // should be in the new group or not.
+      // nb: no need index resolving since node mapping rely only on ranges,
+      // provided that range of the view is less than that of the collection.
       auto const mapped_node = node_mapping(cur, max, nb_nodes);
 
       if (my_node == mapped_node) {
-        //auto old_index = (is_view_old ? old_index_map(cur) : *cur);
-        // todo: update here for nested slices
-        in_group = new_filter(cur);
+        auto raw_idx = static_cast<vt::index::BaseIndex*>(&current);
+        in_group = in_slice(raw_idx);
 
         debug_print(
           vrt_coll, node,
           "filtering indices for view: node:{}, idx={}, in_group={}\n",
-          my_node, print_index(idx), in_group
+          my_node, print_index(current), in_group
         );
       }
     }
@@ -2531,6 +2532,31 @@ int CollectionManager::getSize(VirtualProxyType const& proxy) const {
   }
 }
 
+inline VirtualProxyType CollectionManager::getColProxy(
+  VirtualProxyType const& proxy
+) const {
+
+  if (VirtualProxyBuilder::isView(proxy)) {
+    VirtualProxyType parent = no_vrt_proxy;
+
+    std::stack<VirtualProxyType> stack;
+    stack.push(proxy);
+
+    do {
+      auto current = stack.top();
+      stack.pop();
+      parent = CollectionManager::getParent(current);
+      if (VirtualProxyBuilder::isView(parent)) {
+        stack.push(parent);
+      }
+    } while (not stack.empty());
+    return parent;
+  }
+  else {
+    return proxy;
+  }
+}
+
 template <typename ColT, typename IndexT>
 IndexT CollectionManager::resolveIndex(
   VirtualProxyType const& view_proxy,
@@ -2602,7 +2628,8 @@ ViewProxyData<IndexT> CollectionManager::resolveView(
     stack.push(current);
 
     do {
-      current = stack.pop();
+      current = stack.top();
+      stack.pop();
       parent.proxy = getParent(current.proxy);
       parent.range = getRange<IndexT>(parent.proxy);
 

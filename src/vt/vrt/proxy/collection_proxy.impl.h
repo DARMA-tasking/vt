@@ -91,8 +91,9 @@ typename CollectionProxy<ColT, IndexT>::ElmProxyType
 CollectionProxy<ColT, IndexT>::index(IndexT const& idx) const {
 
   if (VirtualProxyBuilder::isView(this->proxy_)) {
-    auto const& col_proxy = this->resolveProxy(this->proxy_);
-    auto const& col_index = this->resolveIndex(idx);
+    auto resolved = this->resolveView(this->proxy_, idx);
+    auto const& col_proxy = resolved.proxy;
+    auto const& col_index = resolved.index;
     return ElmProxyType{col_proxy, BaseElmProxy<ColT, IndexT>{col_index}};
   } else {
     return ElmProxyType{this->proxy_, BaseElmProxy<ColT, IndexT>{idx}};

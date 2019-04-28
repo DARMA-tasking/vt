@@ -73,19 +73,10 @@ void InsertFinished<ColT,IndexT,BaseProxyT>::finishedInserting(
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-IndexT InsertFinished<ColT,IndexT,BaseProxyT>::resolveIndex(
-  IndexT const& idx
+ViewProxyData<IndexT> InsertFinished<ColT,IndexT,BaseProxyT>::resolveView(
+  VirtualProxyType const& proxy, IndexT const& idx
 ) const {
-  auto const& cur_proxy = this->getProxy();
-  auto const& col_proxy = theCollection()->getParent(cur_proxy);
-  return theCollection()->resolveIndex<ColT, IndexT>(cur_proxy, col_proxy, idx);
-}
-
-template <typename ColT, typename IndexT, typename BaseProxyT>
-VirtualProxyType InsertFinished<ColT,IndexT,BaseProxyT>::resolveProxy(
-  VirtualProxyType const& proxy
-) const {
-  return theCollection()->getParent(proxy);
+  return theCollection()->resolveView<ColT, IndexT>(proxy, idx);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>

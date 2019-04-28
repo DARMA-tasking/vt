@@ -64,7 +64,6 @@
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/staged_token/token.h"
-#include "vt/vrt/collection/proxy.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/messaging/message.h"
@@ -294,6 +293,7 @@ public:
 
   int8_t getDim(VirtualProxyType const& proxy) const;
   VirtualProxyType const& getParent(VirtualProxyType const& proxy) const;
+  VirtualProxyType getColProxy(VirtualProxyType const& proxy) const;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   IndexT resolveIndex(

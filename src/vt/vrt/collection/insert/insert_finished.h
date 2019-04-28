@@ -64,6 +64,10 @@ struct InsertFinished : BaseProxyT {
   void finishedInserting(ActionType action = nullptr) const;
   IndexT resolveIndex(IndexT const& idx) const;
   VirtualProxyType resolveProxy(VirtualProxyType const& proxy) const;
+  ViewProxyData<IndexT> resolveView(
+    VirtualProxyType const& proxy, IndexT const& idx
+  ) const;
+
   int size() const;
 };
 
