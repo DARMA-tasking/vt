@@ -49,6 +49,20 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestSlicing : TestParallelHarness {
 
+  static vt::NodeType root;
+  static vt::NodeType nb_nodes;
+  static vt::NodeType total_received;
+
+  void SetUp() override {
+    TestParallelHarness::SetUp();
+    nb_nodes = vt::theContext()->getNumNodes();
+    EXPECT_TRUE(nb_nodes > 1);
+
+    // reset counter
+    total_received = 0;
+    vt::theCollective()->barrier();
+  }
+
   struct MyCol : vt::Collection<MyCol, vt::Index1D> {};
   using ViewMsg = vt::CollectViewMessage<MyCol>;
   using AckMsg  = vt::Message;
@@ -68,9 +82,6 @@ struct TestSlicing : TestParallelHarness {
     Index index_ = {};
     int size_ = 0;
   };
-
-  static vt::NodeType total_received;
-  static vt::NodeType root;
 
   // index filtering function for the slice
   static bool filter(vt::Index1D* idx) {
@@ -102,11 +113,13 @@ struct TestSlicing : TestParallelHarness {
     );
   }
 
+  template <bool nested = false>
   static void checkIndex(ElemMsg* msg, MyCol* col) {
 
     auto const& rel_idx = msg->getIndex().x();
     auto const& abs_idx = col->getIndex().x();
-    EXPECT_EQ(rel_idx * 2, abs_idx);
+    auto const offset = (nested ? 4 : 2);
+    EXPECT_EQ(rel_idx * offset, abs_idx);
 
     debug_print(
       vrt_coll, node,
@@ -116,10 +129,13 @@ struct TestSlicing : TestParallelHarness {
   }
 };
 
-/*static*/ vt::NodeType TestSlicing::total_received = 0;
 /*static*/ vt::NodeType TestSlicing::root = 0;
+/*static*/ vt::NodeType TestSlicing::nb_nodes = 0; // intialized in SetUp()
+/*static*/ vt::NodeType TestSlicing::total_received = 0;
 
-TEST_F(TestSlicing, test_slice) {
+TEST_F(TestSlicing, test_collect_slice) {
+
+  EXPECT_EQ(total_received, 0);
 
   auto const node  = vt::theContext()->getNode();
   auto const epoch = vt::theTerm()->makeEpochCollective();
@@ -128,9 +144,8 @@ TEST_F(TestSlicing, test_slice) {
 
   if (node == root) {
     // create collection, halve it and then keep only even elements
-    auto const nb_nodes = vt::theContext()->getNumNodes();
-    auto const range    = vt::Index1D(nb_nodes * 4);
-    auto const half     = vt::Index1D(range.x() / 2);
+    auto const range = vt::Index1D(nb_nodes * 4);
+    auto const half  = vt::Index1D(range.x() / 2);
 
     // build the distributed collection and get a proxy on it
     auto proxy = vt::theCollection()->construct<MyCol>(range);
@@ -157,8 +172,7 @@ TEST_F(TestSlicing, test_relative_indexing) {
   vt::CollectionProxy<MyCol> slice {};
 
   if (node == root) {
-    auto const nb_nodes = vt::theContext()->getNumNodes();
-    auto const range    = vt::Index1D(nb_nodes * 4);
+    auto const range = vt::Index1D(nb_nodes * 4);
     // create the distributed collection
     auto proxy = vt::theCollection()->construct<MyCol>(range);
     // create a view to the slice
@@ -167,8 +181,48 @@ TEST_F(TestSlicing, test_relative_indexing) {
     auto const size = slice.size();
     // each slice element sends a message
     for (int i = 0; i < size; ++i) {
-      slice[i].send<ElemMsg, &checkIndex>(i, size);
+      slice[i].send<ElemMsg, &checkIndex<false>>(i, size);
     }
+  }
+
+  vt::theCollective()->barrier();
+  vt::theTerm()->finishedEpoch(epoch);
+}
+
+TEST_F(TestSlicing, test_chained_slicing) {
+
+  EXPECT_EQ(total_received, 0);
+
+  auto const node  = vt::theContext()->getNode();
+  auto const epoch = vt::theTerm()->makeEpochCollective();
+
+  vt::CollectionProxy<MyCol> section {};
+  vt::CollectionProxy<MyCol> nested {};
+
+  if (node == root) {
+
+    auto const col_range = vt::Index1D(nb_nodes * 4);
+    auto const sec_range = vt::Index1D(col_range.x() / 2);
+    auto const new_range = vt::Index1D(sec_range.x() / 2);
+
+    // 1. create a slice of a slice
+    auto proxy = vt::theCollection()->construct<MyCol>(col_range);
+    section = proxy.slice<&filter>(col_range, sec_range, epoch);
+    nested = section.slice<&filter>(sec_range, new_range, epoch);
+    nested.broadcast<ViewMsg, &checkElem>();
+
+    // 2. check relative indexing
+    auto const size = nested.size();
+    for (int i = 0; i < size; ++i) {
+      nested[i].send<ElemMsg, &checkIndex<true>>(i, size);
+    }
+
+    // 3. check element count
+    vt::theTerm()->addAction(epoch, [=]{
+      auto const expected = nb_nodes / 2;
+      EXPECT_EQ(size, expected);
+      EXPECT_EQ(total_received, expected);
+    });
   }
 
   vt::theCollective()->barrier();
