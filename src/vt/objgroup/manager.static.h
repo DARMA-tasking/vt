@@ -52,6 +52,26 @@
 namespace vt { namespace objgroup {
 
 template <typename MsgT>
+EpochType getCurrentEpochObjGroup(MsgSharedPtr<MsgT> const& msg) {
+  auto const& any_epoch = term::any_epoch_sentinel;
+  auto const& msg_epoch = envelopeGetEpoch(msg->env);
+
+  // Prefer the epoch on the msg before the current handler epoch
+  if (msg_epoch != no_epoch and msg_epoch != any_epoch) {
+    // It has a valid non-global epoch, use it
+    return msg_epoch;
+  } else {
+    // Otherwise, use the active messenger's current epoch on the stack
+    auto const& epoch_state = theMsg()->getEpoch();
+    vtAssert(
+      epoch_state != no_epoch, "Must have a valid epoch here",
+      epoch_state, msg_epoch, no_epoch, any_epoch
+    );
+    return epoch_state;
+  }
+}
+
+template <typename MsgT>
 void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
   auto const num_nodes = theContext()->getNumNodes();
   auto const this_node = theContext()->getNode();
@@ -59,18 +79,23 @@ void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
   if (dest_node != this_node) {
     theMsg()->sendMsgAuto<MsgT>(dest_node,han,msg.get(),no_tag);
   } else {
+  // Get the current epoch for the message
+    auto const cur_epoch = getCurrentEpochObjGroup(msg);
     // Schedule the work of dispatching the message handler for later
     auto umsg = msg.template to<ShortMessage>();
-    scheduleMsg(umsg,han);
+    scheduleMsg(umsg,han,cur_epoch);
   }
 }
 
 template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
+  // Get the current epoch for the message
+  auto const cur_epoch = getCurrentEpochObjGroup(msg);
+  // Broadcast the message
   theMsg()->broadcastMsgAuto<MsgT>(han,msg.get(),no_tag);
   // Schedule delivery on this node for the objgroup
   auto umsg = msg.template to<ShortMessage>();
-  scheduleMsg(umsg,han);
+  scheduleMsg(umsg,han,cur_epoch);
 }
 
 }} /* end namespace vt::objgroup */

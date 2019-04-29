@@ -59,7 +59,7 @@ template <typename MsgT>
 void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
 template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch);
 
 }} /* end namespace vt::objgroup */
 

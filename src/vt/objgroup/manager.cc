@@ -51,13 +51,6 @@
 
 namespace vt { namespace objgroup {
 
-void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
-  // Schedule the work of dispatching the message handler for later
-  theObjGroup()->work_units_.push_back(
-    [msg,han]{ theObjGroup()->dispatch(msg,han); }
-  );
-}
-
 void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   // Extract the control-bit sequence from the handler
   auto const ctrl = HandlerManager::getHandlerControl(han);
@@ -124,6 +117,17 @@ void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
     "dispatchObjGroup: han={:x}\n", han
   );
   return theObjGroup()->dispatch(msg,han);
+}
+
+void scheduleMsg(MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch) {
+  theTerm()->produce(epoch);
+  // Schedule the work of dispatching the message handler for later
+  theObjGroup()->work_units_.push_back([msg,han,epoch]{
+    theMsg()->pushEpoch(epoch);
+    theObjGroup()->dispatch(msg,han);
+    theMsg()->popEpoch();
+    theTerm()->consume(epoch);
+  });
 }
 
 }} /* end namespace vt::objgroup */
