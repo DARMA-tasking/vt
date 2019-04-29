@@ -170,7 +170,7 @@ struct ObjGroupManager {
   template <typename MsgT>
   void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 
-  friend void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han);
+  friend void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType ep);
 
 private:
   ObjGroupProxyType makeCollectiveImpl(
