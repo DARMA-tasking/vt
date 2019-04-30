@@ -64,13 +64,14 @@
 #define argsToString(...) # __VA_ARGS__
 
 #if backend_check_enabled(production)
-  #define vtAssert(cond,str)
-  #define vtAssertInfo(cond,str,...)
-  #define vtAssertNot(cond,str)
-  #define vtAssertNotInfo(cond,str,...)
-  #define vtAssertNotExpr(cond)
-  #define vtAssertExpr(cond)
-  #define vtWarnInfo(cond,str,...)
+  #define vtAssert(cond,str)            vt_force_use(cond)
+  #define vtAssertInfo(cond,str,...)    vt_force_use(cond,__VA_ARGS__)
+  #define vtAssertNot(cond,str)         vt_force_use(cond)
+  #define vtAssertNotInfo(cond,str,...) vt_force_use(cond,__VA_ARGS__)
+  #define vtAssertNotExpr(cond)         vt_force_use(cond)
+  #define vtAssertExpr(cond)            vt_force_use(cond)
+  #define vtAssertExprInfo(cond,...)    vt_force_use(cond,__VA_ARGS__)
+  #define vtWarnInfo(cond,str,...)      vt_force_use(cond,__VA_ARGS__)
 #else
   #define vtAssertImpl(fail,cond,str)                                   \
     do {                                                                \

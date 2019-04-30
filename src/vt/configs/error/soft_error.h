@@ -113,8 +113,8 @@ inline void warning(
 #if backend_check_enabled(production)
   #define vtWarn(str)
   #define vtWarnCode(error,str)
-  #define vtWarnIf(cond,str)
-  #define vtWarnIfCode(error,cond,str)
+  #define vtWarnIf(cond,str)           vt_force_use(cond)
+  #define vtWarnIfCode(error,cond,str) vt_force_use(cond)
   #define vtWarnFail(str)
   #define vtWarnFailCode(error,str)
 #else

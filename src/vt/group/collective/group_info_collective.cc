@@ -548,7 +548,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
     getGroupID(), msg->getChild(), from
   );
 
-  vtAssert(collective_, "Must be valid");
+  vtAssert(collective_ != nullptr, "Must be valid");
 
   if (collective_->span_children_.size() < 4) {
     collective_->span_children_.push_back(msg->getChild());
@@ -722,8 +722,8 @@ void InfoColl::readyAction(ActionType const action) {
 }
 
 InfoColl::TreeType* InfoColl::getTree() const {
-  vtAssert(collective_       , "Collective must exist");
-  vtAssert(collective_->span_, "Spanning tree must exist");
+  vtAssert(collective_ != nullptr, "Collective must exist");
+  vtAssert(collective_->span_ != nullptr, "Spanning tree must exist");
   vtAssert(in_phase_two_     , "Must be in phase two");
   vtAssert(has_root_         , "Root node must be known by this node");
   vtAssert(
