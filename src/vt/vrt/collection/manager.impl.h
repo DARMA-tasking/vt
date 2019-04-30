@@ -867,7 +867,7 @@ template <typename MsgT>
   } else {
     // Otherwise, use the active messenger's current epoch on the stack
     auto const& epoch_state = theMsg()->getEpoch();
-    vtAssert(
+    vtAssertInfo(
       epoch_state != no_epoch, "Must have a valid epoch here",
       print_ptr(msg), epoch_state, msg_epoch, no_epoch, any_epoch
     );

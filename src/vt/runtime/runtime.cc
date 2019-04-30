@@ -941,7 +941,8 @@ namespace {
     MPI_Error_string(*errc, msg, &len);
     std::string err_msg(msg, len);
 
-    vtAbort("MPI Error: {} (code: {})", err_msg, *errc);
+    fmt::print("{} (code: {})", err_msg, *errc);
+    vtAbort("MPI Error");
   }
 }
 

@@ -64,17 +64,19 @@
 #define argsToString(...) # __VA_ARGS__
 
 #if backend_check_enabled(production)
-  #define vtAssert(cond,str,...)
+  #define vtAssert(cond,str)
   #define vtAssertInfo(cond,str,...)
-  #define vtAssertNot(cond,str,...)
+  #define vtAssertNot(cond,str)
   #define vtAssertNotInfo(cond,str,...)
+  #define vtAssertNotExpr(cond)
   #define vtAssertExpr(cond)
+  #define vtWarnInfo(cond,str,...)
 #else
-  #define vtAssertImpl(fail,cond,str,...)                               \
+  #define vtAssertImpl(fail,cond,str)                                   \
     do {                                                                \
       if (!(cond)) {                                                    \
         ::vt::debug::assert::assertOut(                                 \
-          fail,#cond,str,DEBUG_LOCATION,1, outputArgsImpl(__VA_ARGS__)  \
+          fail,#cond,str,DEBUG_LOCATION,1,std::make_tuple()             \
         );                                                              \
       }                                                                 \
     } while (false)
@@ -100,21 +102,21 @@
     vtAssertArgImpl(fail,cond,#cond,__VA_ARGS__)
 
   #if backend_check_enabled(assert_no_fail)
-    #define vtAssert(cond,str,...)     vtAssertImpl(false,cond,str,__VA_ARGS__)
+    #define vtAssert(cond,str)         vtAssertImpl(false,cond,str)
     #define vtAssertInfo(cond,str,...) vtAssertArgImpl(false,cond,str,__VA_ARGS__)
     #define vtAssertExpr(cond)         vtAssertExprImpl(false,cond)
     #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(false,cond,__VA_ARGS__)
     #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
   #else
-    #define vtAssert(cond,str,...)     vtAssertImpl(true,cond,str,__VA_ARGS__)
+    #define vtAssert(cond,str)         vtAssertImpl(true,cond,str)
     #define vtAssertInfo(cond,str,...) vtAssertArgImpl(true,cond,str,__VA_ARGS__)
     #define vtAssertExpr(cond)         vtAssertExprImpl(true,cond)
     #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(true,cond,__VA_ARGS__)
     #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
   #endif
 
-  #define vtAssertNot(cond,str,...) vtAssert(INVERT_COND(cond),str,__VA_ARGS__)
-  #define vtAssertNotExpr(cond)     vtAssertExpr(INVERT_COND(cond))
+  #define vtAssertNot(cond,str)        vtAssert(INVERT_COND(cond),str)
+  #define vtAssertNotExpr(cond)        vtAssertExpr(INVERT_COND(cond))
   #define vtAssertNotInfo(cond,str,...)                              \
     vtAssertInfo(INVERT_COND(cond),str,__VA_ARGS__)
 #endif

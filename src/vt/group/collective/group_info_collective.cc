@@ -279,8 +279,7 @@ void InfoColl::upTree() {
       return;
     } else {
       if (msg_in_group.size() == 0) {
-        auto const& group_ = getGroupID();
-        vtAbort("A group must have at least a single node {}",group_);
+        vtAbort("A group must have at least a single node {}");
       }
       /*
        *  Sort nodes to find the largest node to make it the root of the whole

@@ -514,7 +514,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
                 if (state.num_print_constant > 10) {
                   vtAbort(
                     "Hang detected (consumed != produced) for k tree "
-                    "traversals, where k=", state.constant_count
+                    "traversals"
                   );
                 }
               #endif
