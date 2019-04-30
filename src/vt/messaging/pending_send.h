@@ -53,19 +53,18 @@
 namespace vt { namespace messaging {
 
 struct PendingSend final {
-  using SendActionType = std::function<void(MsgSharedPtr<BaseMsgType>)>;
+  using SendActionType = std::function<void(MsgVirtualPtr<BaseMsgType>)>;
 
-  PendingSend(
-    MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size
-  ) : msg_(in_msg), msg_size_(in_msg_size)
-  {
-  }
+  PendingSend(MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size)
+    : msg_(in_msg.template toVirtual<BaseMsgType>())
+    , msg_size_(in_msg_size)
+  { }
   template <typename MsgT>
   PendingSend(MsgSharedPtr<MsgT> in_msg, SendActionType const& in_action)
-    : msg_(in_msg.template to<BaseMsgType>()), msg_size_(sizeof(MsgT)),
-      send_action_(in_action)
-  {
-  }
+    : msg_(in_msg.template toVirtual<BaseMsgType>())
+    , msg_size_(sizeof(MsgT))
+    , send_action_(in_action)
+  { }
 
   explicit PendingSend(nullptr_t) { }
   PendingSend(PendingSend&& in)
@@ -94,7 +93,7 @@ private:
   void sendMsg();
 
 private:
-  MsgSharedPtr<BaseMsgType> msg_ = nullptr;
+  MsgVirtualPtr<BaseMsgType> msg_ = nullptr;
   ByteType msg_size_ = -1;
   SendActionType send_action_ = nullptr;
 };

@@ -511,9 +511,8 @@ template <typename MsgT, typename BaseT>
           "serialMsgHandler: local msg: handler={}\n", typed_handler
         );
 
-        return messaging::PendingSend(msg, [=](MsgSharedPtr<BaseMsgType> in){
-          auto mymsg = in.template to<MsgT>();
-          runnable::Runnable<MsgT>::run(typed_handler,nullptr,mymsg.get(),node);
+        return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> in){
+          runnable::Runnable<MsgT>::run(typed_handler,nullptr,msg.get(),node);
         });
       }
     };
