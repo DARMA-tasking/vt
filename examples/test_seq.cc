@@ -60,7 +60,7 @@ struct EmptyMsg : vt::Message {
 #define PRINT_SEQUENCE(...)                                             \
   do {                                                                  \
     vt_print(                                                           \
-      seq, __VA_ARGS__                                                  \
+      sequence, __VA_ARGS__                                             \
     );                                                                  \
   } while (0);
 #else
