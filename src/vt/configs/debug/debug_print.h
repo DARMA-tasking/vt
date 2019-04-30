@@ -51,15 +51,20 @@
 
 #include <fmt/format.h>
 
-// #define debug_flush_to_out(config, stdout)       \
-//   debug_cond_enabled(config, flush, fflush(stdout))
+/*
+   === Debug file/line/func functionality ===
 
-// #define debug_file_line_args ,__FILE__, __LINE__
+#define debug_file_line_args ,__FILE__, __LINE__
 
-// #define debug_file_arg                                \
-//   debug_test(backend,line_file, debug_file_line_args, )
-// #define debug_file_fmt                          \
-//   debug_test(backend,line_file, "{}:{} ", )
+#define debug_file_arg
+  debug_test(backend,line_file, debug_file_line_args, )
+#define debug_file_fmt
+  debug_test(backend,line_file, "{}:{} ", )
+
+#define vt_type_print_colorize(debug_type)
+  vt_print_colorize_impl("\033[32m", debug_pretty_print(debug_type), ":")
+
+*/
 
 #define vt_print_colorize_impl(color, str, str2)                        \
   ((::vt::debug::ttyc()) ?                                              \
@@ -68,9 +73,6 @@
    std::string(str) + std::string(str2))
 
 #define vt_print_colorize vt_print_colorize_impl("\033[32;1m", "vt", ":")
-
-// #define vt_type_print_colorize(debug_type)                               \
-//   vt_print_colorize_impl("\033[32m", debug_pretty_print(debug_type), ":")
 
 #define vt_proc_print_colorize(proc)                                     \
   vt_print_colorize_impl("\033[34m", "[" + std::to_string(proc) + "]", "")
