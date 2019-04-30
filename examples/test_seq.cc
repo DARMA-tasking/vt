@@ -57,11 +57,10 @@ struct EmptyMsg : vt::Message {
 #define PRINT_SEQUENCE_ON 1
 
 #if PRINT_SEQUENCE_ON
-#define PRINT_SEQUENCE(str, ...)                                        \
+#define PRINT_SEQUENCE(...)                                             \
   do {                                                                  \
-    fmt::print(                                                         \
-      "{}: seq_id={}: " str, theContext()->getNode(),                   \
-      theSeq()->getCurrentSeq(), ## __VA_ARGS__                         \
+    vt_print(                                                           \
+      seq, __VA_ARGS__                                                  \
     );                                                                  \
   } while (0);
 #else
