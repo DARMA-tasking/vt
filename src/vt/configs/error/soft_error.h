@@ -65,7 +65,8 @@ namespace vt {
 
 
 template <typename... Args>
-inline void warningImpl(
+inline std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value != 0>
+warningImpl(
   std::string const& str, ErrorCodeType error, bool quit,
   std::string const& file, int const line, std::string const& func,
   Args&&... args
@@ -73,6 +74,22 @@ inline void warningImpl(
   auto msg = "vtWarn() Invoked";
   std::string const buf = ::fmt::format(str, std::forward<Args>(args)...);
   auto inf = debug::stringizeMessage(msg,buf,"",file,line,func,error);
+  if (quit) {
+    return ::vt::output(inf,error,true,true,true,true);
+  } else {
+    return ::vt::output(inf,error,false,true,true,true);
+  }
+}
+
+template <typename... Args>
+inline std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
+warningImpl(
+  std::string const& str, ErrorCodeType error, bool quit,
+  std::string const& file, int const line, std::string const& func,
+  Args&&... args
+) {
+  auto msg = "vtWarn() Invoked";
+  auto inf = debug::stringizeMessage(msg,str,"",file,line,func,error);
   if (quit) {
     return ::vt::output(inf,error,true,true,true,true);
   } else {
