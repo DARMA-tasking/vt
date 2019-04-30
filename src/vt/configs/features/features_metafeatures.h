@@ -70,7 +70,7 @@
   CatEnum::term         | \
   CatEnum::trace        | \
   CatEnum::vrt          | \
-  CatEnum::vrt          | \
+  CatEnum::vrt_coll     | \
   CatEnum::worker
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_METAFEATURES_H*/
