@@ -55,18 +55,18 @@ using namespace vt::mapping;
 
 #define DEBUG_START_EXAMPLE 0
 
-#define DEBUG_PRINTER_START(str, args...)                               \
+#define DEBUG_PRINTER_START(str, ...)                                   \
   do{                                                                   \
     fmt::print(                                                         \
       "node={},worker={}: " str,                                        \
-      theContext()->getNode(), theContext()->getWorker(), args          \
+      theContext()->getNode(), theContext()->getWorker(), __VA_ARGS__   \
     );                                                                  \
   } while (false);
 
 #if DEBUG_START_EXAMPLE
-  #define DEBUG_PRINT_START(str, args...) DEBUG_PRINTER_START(str, args)
+  #define DEBUG_PRINT_START(str, ...) DEBUG_PRINTER_START(str, __VA_ARGS__)
 #else
-  #define DEBUG_PRINT_START(str, args...)
+  #define DEBUG_PRINT_START(str, ...)
 #endif
 
 struct ProxyMsg : vt::vrt::VirtualMessage {

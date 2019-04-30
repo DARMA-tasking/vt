@@ -60,33 +60,33 @@
 #include <type_traits>
 
 #if backend_check_enabled(production)
-  #define vtAbort(str,args...)                                            \
-    ::vt::error::display(str,1  outputArgsImpl(args));
-  #define vtAbortCode(xy,str,args...)                                     \
-    ::vt::error::display(str,xy outputArgsImpl(args));
+  #define vtAbort(str,...)                                            \
+    ::vt::error::display(str,1,  outputArgsImpl(__VA_ARGS__));
+  #define vtAbortCode(xy,str,...)                                     \
+    ::vt::error::display(str,xy, outputArgsImpl(__VA_ARGS__));
 #else
-  #define vtAbort(str,args...)                                            \
-    ::vt::error::displayLoc(str,1, DEBUG_LOCATION outputArgsImpl(args));
-  #define vtAbortCode(xy,str,args...)                                     \
-    ::vt::error::displayLoc(str,xy,DEBUG_LOCATION outputArgsImpl(args));
+  #define vtAbort(str,...)                                            \
+    ::vt::error::displayLoc(str,1, DEBUG_LOCATION, outputArgsImpl(__VA_ARGS__));
+  #define vtAbortCode(xy,str,...)                                     \
+    ::vt::error::displayLoc(str,xy,DEBUG_LOCATION, outputArgsImpl(__VA_ARGS__));
 #endif
 
-#define vtAbortIf(cond,str,args...)                                       \
-  do {                                                                    \
-    if ((cond)) {                                                         \
-      vtAbort(str,args);                                                  \
-    }                                                                     \
+#define vtAbortIf(cond,str,...)                                         \
+  do {                                                                  \
+    if ((cond)) {                                                       \
+      vtAbort(str,__VA_ARGS__);                                         \
+    }                                                                   \
   } while (false)
-#define vtAbortIfCode(code,cond,str,args...)                              \
-  do {                                                                    \
-    if ((cond)) {                                                         \
-      vtAbortCode(code,str,args);                                         \
-    }                                                                     \
+#define vtAbortIfCode(code,cond,str,...)                                \
+  do {                                                                  \
+    if ((cond)) {                                                       \
+      vtAbortCode(code,str,__VA_ARGS__);                                \
+    }                                                                   \
   } while (false)
 
-#define vtAbortIfNot(cond,str,args...)                                    \
-  vtAbortIf(INVERT_COND(cond),str,args)
-#define vtAbortIfNotCode(code,cond,str,args...)                           \
-  vtAbortIfCode(code,INVERT_COND(cond),str,args)
+#define vtAbortIfNot(cond,str,...)                                    \
+  vtAbortIf(INVERT_COND(cond),str,__VA_ARGS__)
+#define vtAbortIfNotCode(code,cond,str,...)                           \
+  vtAbortIfCode(code,INVERT_COND(cond),str,__VA_ARGS__)
 
 #endif /*INCLUDED_CONFIGS_ERROR_HARD_ERROR_H*/

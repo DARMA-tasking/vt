@@ -63,8 +63,9 @@
 
 namespace vt {
 
+
 template <typename... Args>
-inline void warning(
+inline void warningImpl(
   std::string const& str, ErrorCodeType error, bool quit,
   std::string const& file, int const line, std::string const& func,
   Args&&... args
@@ -79,40 +80,68 @@ inline void warning(
   }
 }
 
+template <typename Tuple, size_t... I>
+inline void warningImplTup(
+  std::string const& str, ErrorCodeType error, bool quit,
+  std::string const& file, int const line, std::string const& func,
+  Tuple&& tup, std::index_sequence<I...>
+) {
+  warningImpl(
+    str,error,quit,file,line,func,
+    std::forward<typename std::tuple_element<I,Tuple>::type>(
+      std::get<I>(tup)
+    )...
+  );
+}
+
+template <typename... Args>
+inline void warning(
+  std::string const& str, ErrorCodeType error, bool quit,
+  std::string const& file, int const line, std::string const& func,
+  std::tuple<Args...>&& tup
+) {
+  static constexpr auto size = std::tuple_size<std::tuple<Args...>>::value;
+  warningImplTup(
+    str,error,quit,file,line,func,
+    std::forward<std::tuple<Args...>>(tup),
+    std::make_index_sequence<size>{}
+  );
+}
+
 } /* end namespace vt */
 
 #if backend_check_enabled(production)
-  #define vtWarn(str,args...)
-  #define vtWarnCode(error,str,args...)
-  #define vtWarnIf(cond,str,args...)
-  #define vtWarnIfCode(error,cond,str,args...)
-  #define vtWarnFail(str,args...)
-  #define vtWarnFailCode(error,str,args...)
+  #define vtWarn(str,...)
+  #define vtWarnCode(error,str,...)
+  #define vtWarnIf(cond,str,...)
+  #define vtWarnIfCode(error,cond,str,...)
+  #define vtWarnFail(str,...)
+  #define vtWarnFailCode(error,str,...)
 #else
-  #define vtWarn(str,args...)                                             \
-    ::vt::warning(str,1,    false, DEBUG_LOCATION  outputArgsImpl(args));
-  #define vtWarnCode(code,str,args...)                                    \
-    ::vt::warning(str,code, false, DEBUG_LOCATION  outputArgsImpl(args));
-  #define vtWarnFail(str,args...)                                         \
-    ::vt::warning(str,1,    true,  DEBUG_LOCATION  outputArgsImpl(args));
-  #define vtWarnFailCode(code,str,args...)                                \
-    ::vt::warning(str,code, true,  DEBUG_LOCATION  outputArgsImpl(args));
-  #define vtWarnIf(cond,str,args...)                                      \
+  #define vtWarn(str,...)                                             \
+    ::vt::warning(str,1,    false, DEBUG_LOCATION, outputArgsImpl(__VA_ARGS__));
+  #define vtWarnCode(code,str,...)                                    \
+    ::vt::warning(str,code, false, DEBUG_LOCATION, outputArgsImpl(__VA_ARGS__));
+  #define vtWarnFail(str,...)                                         \
+    ::vt::warning(str,1,    true,  DEBUG_LOCATION, outputArgsImpl(__VA_ARGS__));
+  #define vtWarnFailCode(code,str,...)                                \
+    ::vt::warning(str,code, true,  DEBUG_LOCATION, outputArgsImpl(__VA_ARGS__));
+  #define vtWarnIf(cond,str,...)                                      \
     do {                                                                  \
       if (cond) {                                                         \
-        vtWarn(str,args);                                                 \
+        vtWarn(str,__VA_ARGS__);                                          \
       }                                                                   \
     } while (false)
-  #define vtWarnIfCode(code,cond,str,args...)                             \
+  #define vtWarnIfCode(code,cond,str,...)                                 \
     do {                                                                  \
       if (cond) {                                                         \
-        vtWarnCode(code,str,args);                                        \
+        vtWarnCode(code,str,__VA_ARGS__);                                 \
       }                                                                   \
     } while (false)
-  #define vtWarnIfNot(cond,str,args...)                                   \
-    vtWarnIf(INVERT_COND(cond),str,args)
-  #define vtWarnIfNotCode(code,cond,str,args...)                          \
-    vtWarnIfCode(code,INVERT_COND(cond),str,args)
+  #define vtWarnIfNot(cond,str,...)                                   \
+    vtWarnIf(INVERT_COND(cond),str,__VA_ARGS__)
+  #define vtWarnIfNotCode(code,cond,str,...)                          \
+    vtWarnIfCode(code,INVERT_COND(cond),str,__VA_ARGS__)
 #endif
 
 #endif /*INCLUDED_CONFIGS_ERROR_SOFT_ERROR_H*/

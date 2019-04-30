@@ -63,11 +63,11 @@ using namespace vt::tests::unit;
       (LABEL), seq_id, (ORDER).load(), (CUR)                            \
     );                                                                  \
   } while (false);
-#define DEBUG_PRINT(str, args...)                                       \
-  do { fmt::print(str, args); } while (false);
+#define DEBUG_PRINT(str, ...)                                           \
+  do { fmt::print(str, __VA_ARGS__); } while (false);
 #else
 #define DEBUG_PRINT_SEQ(ORDER, CUR, LABEL)
-#define DEBUG_PRINT(str, args...)
+#define DEBUG_PRINT(str, ...)
 #endif
 
 namespace vt { namespace tests { namespace unit {

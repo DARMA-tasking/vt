@@ -82,7 +82,7 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 assertOut(
   bool fail, std::string const cond, std::string const& str,
   std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error, Args... args
+  ErrorCodeType error, std::tuple<Args...>&& tup
 ) {
   auto msg = "Assertion failed:";
   auto assert_fail_str = stringizeMessage(msg,str,cond,file,line,func,error);
@@ -95,16 +95,46 @@ assertOut(
 template <typename... Args>
 inline
 std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value != 0>
-assertOut(
+assertOutImpl(
   bool fail, std::string const cond, std::string const& str,
   std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error, Args... args
+  ErrorCodeType error, Args&&... args
 ) {
-  auto const arg_str = ::fmt::format(str,args...);
-  assertOut(false,cond,arg_str,file,line,func,error);
+  auto const arg_str = ::fmt::format(str,std::forward<Args>(args)...);
+  assertOut(false,cond,arg_str,file,line,func,error,std::make_tuple());
   if (fail) {
     vtAbort("Assertion failed");
   }
+}
+
+template <typename Tuple, size_t... I>
+inline void assertOutImplTup(
+  bool fail, std::string const cond, std::string const& str,
+  std::string const& file, int const line, std::string const& func,
+  ErrorCodeType error, Tuple&& tup, std::index_sequence<I...>
+) {
+  assertOutImpl(
+    fail,cond,str,file,line,func,error,
+    std::forward<typename std::tuple_element<I,Tuple>::type>(
+      std::get<I>(tup)
+    )...
+  );
+}
+
+template <typename... Args>
+inline
+std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value != 0>
+assertOut(
+  bool fail, std::string const cond, std::string const& str,
+  std::string const& file, int const line, std::string const& func,
+  ErrorCodeType error, std::tuple<Args...>&& tup
+) {
+  static constexpr auto size = std::tuple_size<std::tuple<Args...>>::value;
+  assertOutImplTup(
+    fail,cond,str,file,line,func,error,
+    std::forward<std::tuple<Args...>>(tup),
+    std::make_index_sequence<size>{}
+  );
 }
 
 }}} /* end namespace vt::debug::assert */

@@ -47,9 +47,6 @@
 
 #include <tuple>
 
-// #define debug_print_force_use(...)           vt::debug::useVars(__VA_ARGS__);
-// #define debug_print_force_use_strip1(_, ...) vt::debug::useVars(__VA_ARGS__);
-
 namespace vt { namespace debug {
 
 template <typename... Args>
