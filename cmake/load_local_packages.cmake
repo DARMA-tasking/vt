@@ -6,10 +6,8 @@
 include(cmake/local_package.cmake)
 
 # require directories for these packages
-require_pkg_directory(meld "VT meld library")
 require_pkg_directory(detector "VT detector library")
 # find these required packages locally
-find_package_local(meld "${meld_DIR}" meld)
 find_package_local(detector "${detector_DIR}" detector)
 # optional directory for this package
 optional_pkg_directory(checkpoint "Serialization/Checkpoint" 1)

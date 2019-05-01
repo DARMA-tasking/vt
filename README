@@ -31,12 +31,11 @@ If threading enabled:
 
 Required:
   -- fmt,        (https://github.com/fmtlib/fmt)
-  -- meld,       (VT ecosystem)
   -- detector,   (VT ecosystem)
   -- checkpoint, (VT ecosystem)
   -- MPI,        (mpich/openmpi/mvapich)
 
-The components `meld`, `detector`, and `checkpoint` can be found within the VT
+The components `detector`, and `checkpoint` can be found within the VT
 ecosystem. They are separate repositories but are exported as separate cmake
 packages for reusability.
 
@@ -85,7 +84,7 @@ $ perl ./auto.pl build_mode=debug                                              \
 
 =========== Manual Build ============
 
-To start out, obtain `fmt', `googletest', `detector`, `meld`, and `checkpoint`
+To start out, obtain `fmt', `googletest', `detector`, and `checkpoint`
 (in that order). Stitch them up with cmake, by passing the appropriate paths as
 they are built.
 

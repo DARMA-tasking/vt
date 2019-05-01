@@ -17,9 +17,6 @@ endif()
 
 find_dependency(MPI REQUIRED)
 
-set (meld_DIR @meld_DIR@)
-find_dependency(meld REQUIRED HINTS @meld_DIR@)
-
 set (detector_DIR @detector_DIR@)
 find_dependency(detector REQUIRED HINTS @detector_DIR@)
 
@@ -36,5 +33,4 @@ set (VT_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include")
 set (VT_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
 
 set(VT_HAS_DETECTOR "TRUE")
-set(VT_HAS_MELD "TRUE")
 set(VT_HAS_FMT "TRUE")

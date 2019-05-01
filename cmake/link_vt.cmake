@@ -28,7 +28,6 @@ function(link_target_with_vt)
     LINK_ZLIB
     LINK_FCONTEXT
     LINK_CHECKPOINT
-    LINK_MELD
     LINK_DETECTOR
     LINK_CLI11
   )
@@ -127,19 +126,6 @@ function(link_target_with_vt)
     else()
       message(FATAL_ERROR "Trying to link with nonexistent checkpoint library")
     endif()
-  endif()
-
-  if (NOT DEFINED ARG_LINK_MELD AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MELD)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: meld=${ARG_LINK_MELD}")
-    endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} vt::lib::meld
-    )
-    # set_target_properties(
-    #   ${VIRTUAL_TRANSPORT_LIBRARY}
-    #   PROPERTIES INTERFACE_LINK_LIBRARIES vt::lib::meld
-    # )
   endif()
 
   if (NOT DEFINED ARG_LINK_DETECTOR AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_DETECTOR)
