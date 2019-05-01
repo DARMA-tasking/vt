@@ -484,22 +484,22 @@ bool ActiveMessenger::deliverActiveMsg(
   using MsgType = ShortMessage;
   auto msg = base.to<MsgType>().get();
 
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
-  auto const& dest = envelopeGetDest(msg->env);
-  auto const& handler = envelopeGetHandler(msg->env);
-  auto const& epoch = envelopeIsEpochType(msg->env) ?
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_bcast = envelopeIsBcast(msg->env);
+  auto const dest = envelopeGetDest(msg->env);
+  auto const handler = envelopeGetHandler(msg->env);
+  auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const& is_tag = envelopeIsTagType(msg->env);
-  auto const& tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
-  auto const& from_node = is_bcast ? dest : in_from_node;
+  auto const is_tag = envelopeIsTagType(msg->env);
+  auto const tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
+  auto const from_node = is_bcast ? dest : in_from_node;
 
   ActiveFnPtrType active_fun = nullptr;
 
   bool has_ex_handler = false;
-  bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
-  bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
-  bool const& is_obj = HandlerManagerType::isHandlerObjGroup(handler);
+  bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
+  bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
+  bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
@@ -521,7 +521,7 @@ bool ActiveMessenger::deliverActiveMsg(
     }
   }
 
-  bool const& has_handler = active_fun != no_action or has_ex_handler or is_obj;
+  bool const has_handler = active_fun != no_action or has_ex_handler or is_obj;
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
@@ -538,9 +538,9 @@ bool ActiveMessenger::deliverActiveMsg(
     // in the envelope, is pushed.
     EpochStackSizeType ep_stack_size = 0;
 
-    auto const& env_epoch    = not (epoch == term::any_epoch_sentinel);
-    auto const& has_epoch    = env_epoch and epoch != no_epoch;
-    auto const& cur_epoch    = env_epoch ? epoch : no_epoch;
+    auto const env_epoch    = not (epoch == term::any_epoch_sentinel);
+    auto const has_epoch    = env_epoch and epoch != no_epoch;
+    auto const cur_epoch    = env_epoch ? epoch : no_epoch;
 
     // set the current handler so the user can request it in the context of an
     // active fun
