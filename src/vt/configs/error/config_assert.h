@@ -61,7 +61,49 @@
 #include <tuple>
 #include <type_traits>
 
-#define argsToString(...) # __VA_ARGS__
+#define PP_NARG(...)  PP_NARG_(__VA_ARGS__,PP_RSEQ_N())
+#define PP_NARG_(...) PP_ARG_N(__VA_ARGS__)
+
+#define PP_ARG_N(                                  \
+    _1, _2, _3, _4, _5, _6, _7, _8, _9,_10,        \
+    _11,_12,_13,_14,_15,_16,_17,_18,_19,_20,       \
+    _21,_22,_23,_24,_25,_26,_27,_28,_29,_30,       \
+    _31,_32,_33,_34,_35,_36,_37,_38,_39,_40,       \
+    _41,_42,_43,_44,_45,_46,_47,_48,_49,_50,       \
+    _51,_52,_53,_54,_55,_56,_57,_58,_59,_60,       \
+    _61,_62,_63, N, ...                            \
+  ) N
+
+#define PP_RSEQ_N()                    \
+    63,62,61,60,                       \
+    59,58,57,56,55,54,53,52,51,50,     \
+    49,48,47,46,45,44,43,42,41,40,     \
+    39,38,37,36,35,34,33,32,31,30,     \
+    29,28,27,26,25,24,23,22,21,20,     \
+    19,18,17,16,15,14,13,12,11,10,     \
+    9,8,7,6,5,4,3,2,1,0
+
+#define vt_paste_macro(a,b) a ## b
+#define vt_xpaste(a,b) vt_paste_macro(a,b)
+
+#define vt_applyx1(X,a)                    X(a)
+#define vt_applyx2(X,a,b)                  X(a) X(b)
+#define vt_applyx3(X,a,b,c)                X(a) X(b) X(c)
+#define vt_applyx4(X,a,b,c,d)              X(a) X(b) X(c) X(d)
+#define vt_applyx5(X,a,b,c,d,e)            X(a) X(b) X(c) X(d) X(e)
+#define vt_applyx6(X,a,b,c,d,e,f)          X(a) X(b) X(c) X(d) X(e) X(f)
+#define vt_applyx7(X,a,b,c,d,e,f,g)        X(a) X(b) X(c) X(d) X(e) X(f) X(g)
+#define vt_applyx8(X,a,b,c,d,e,f,g,h)      X(a) X(b) X(c) X(d) X(e) X(f) X(g) X(h)
+#define vt_applyx9(X,a,b,c,d,e,f,g,h,i)    X(a) X(b) X(c) X(d) X(e) X(f) X(g) X(h) X(i)
+#define vt_applyx10(X,a,b,c,d,e,f,g,h,i,j) X(a) X(b) X(c) X(d) X(e) X(f) X(g) X(h) X(i) X(j)
+
+#define vt_applyx_(M, func, ...) M(func, __VA_ARGS__)
+#define vt_applyxn(func,...) vt_applyx_(                     \
+    vt_xpaste(vt_applyx, PP_NARG(__VA_ARGS__)), func, __VA_ARGS__  \
+  )
+
+#define vt_make_list_strings(a) #a,
+#define argsToString(...) vt_applyxn(vt_make_list_strings,__VA_ARGS__)
 
 #if backend_check_enabled(production)
   #define vtAssert(cond,str)            vt_force_use(cond)
@@ -94,8 +136,8 @@
       if (!(cond)) {                                                    \
         ::vt::debug::assert::assertOutInfo(                             \
           fail,#cond,str,DEBUG_LOCATION,1,                              \
-          std::make_tuple(argsToString(__VA_ARGS__)),                   \
-          outputArgsImpl(__VA_ARGS__)                                   \
+          std::make_tuple(argsToString(__VA_ARGS__)""),                 \
+          std::make_tuple(__VA_ARGS__,"")                               \
         );                                                              \
       }                                                                 \
     } while (false)
