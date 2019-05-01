@@ -158,11 +158,11 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
     // route the message to the destination using the location manager
     auto promoted_msg = promoteMsg(msg);
     messaging::PendingSend pending(
-      promoted_msg, [=](MsgSharedPtr<BaseMsgType> mymsg){
+      promoted_msg, [=](MsgVirtualPtr<BaseMsgType> mymsg){
         SerializedMessenger::sendSerialMsg<
           MsgT, virtualTypedMsgHandler<MsgT>, VirtualMessage
         >(
-          mymsg.template to<MsgT>().get(),
+          reinterpret_cast<MsgT*>(mymsg.get()),
           // custom send lambda to route the message
           [=](MsgSharedPtr<SerialMsgT> innermsg) -> messaging::PendingSend {
             innermsg->setProxy(toProxy);
@@ -186,9 +186,9 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
   } else {
     auto promoted_msg = promoteMsg(msg);
     return messaging::PendingSend(
-      promoted_msg, [=](MsgSharedPtr<BaseMsgType> mymsg) {
+      promoted_msg, [=](MsgVirtualPtr<BaseMsgType> mymsg) {
         theWorkerGrp()->enqueueCommThread([=]{
-          auto typed_msg = mymsg.template to<MsgT>().get();
+          auto typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
           theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, typed_msg);
         });
       }
@@ -327,11 +327,10 @@ messaging::PendingSend VirtualContextManager::sendMsg(
   );
 
   return messaging::PendingSend(
-    msg, [=](MsgSharedPtr<BaseMsgType> mymsg){
+    msg, [=](MsgVirtualPtr<BaseMsgType> mymsg){
     // route the message to the destination using the location manager
-      theLocMan()->vrtContextLoc->routeMsg(
-        toProxy, home_node, mymsg.template to<MsgT>()
-      );
+      auto msg_shared = promoteMsg(reinterpret_cast<MsgT*>(mymsg.get()));
+      theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg_shared);
   });
 }
 

@@ -1310,16 +1310,16 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
   if (imm_context) {
     theTerm()->produce(cur_epoch);
-    return messaging::PendingSend(msg, [=](MsgSharedPtr<BaseMsgType> inner_msg){
-        schedule<>([=]{
-            theMsg()->pushEpoch(cur_epoch);
-            theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
-                                                                   toProxy, (MsgT*)inner_msg.get(), handler, member, false
-                                                                   );
-            theMsg()->popEpoch();
-            theTerm()->consume(cur_epoch);
-          });
-          });
+    return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
+      schedule<>([=]{
+        theMsg()->pushEpoch(cur_epoch);
+        theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
+          toProxy, reinterpret_cast<MsgT*>(inner_msg.get()), handler, member, false
+        );
+        theMsg()->popEpoch();
+        theTerm()->consume(cur_epoch);
+      });
+    });
   } else {
     theTerm()->produce(cur_epoch);
   }
