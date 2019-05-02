@@ -75,7 +75,7 @@ namespace vt { namespace group { namespace global {
 /*static*/ void DefaultGroup::newPhaseSendChildren(PhaseType const& phase) {
    // Initialize spanning tree for default group `default_group'
   vtAssert(
-    default_group_->spanning_tree_,
+    default_group_->spanning_tree_ != nullptr,
     "Must have valid tree when entering new phase"
   );
   if (default_group_->spanning_tree_->getNumChildren() > 0) {

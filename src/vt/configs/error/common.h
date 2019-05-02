@@ -45,13 +45,11 @@
 #if !defined INCLUDED_CONFIGS_ERROR_COMMON_H
 #define INCLUDED_CONFIGS_ERROR_COMMON_H
 
-#include "meld_headers.h"
 #include "vt/configs/types/types_type.h"
 
-#define outputArgsImpl(args...)                                         \
-  meld_if_stmt(                                                         \
-    meld_to_bool(_meld_is_empty(args))                                  \
-  )()(,args)                                                            \
+#include <tuple>
+
+#define outputArgsImpl(...) std::make_tuple(__VA_ARGS__)
 
 #define INVERT_COND(cond) (!(cond))
 #define DEBUG_LOCATION __FILE__,__LINE__,__func__

@@ -82,7 +82,7 @@ INSTANTIATE_TEST_CASE_P /*NOLINT*/(
     ::testing::Range(0, 3),
     ::testing::Bool(),
     ::testing::Range(2, 10, 2)
-  )
+  ),
 );
 
 }}} // end namespace vt::tests::unit

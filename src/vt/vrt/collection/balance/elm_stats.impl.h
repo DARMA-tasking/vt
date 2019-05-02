@@ -247,7 +247,7 @@ void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
 
   if (this_node == 0) {
     vt_print(
-      lblite,
+      lb,
       "StartLB: phase={}, balancer={}, name={}\n",
       msg->getPhase(),
       static_cast<typename std::underlying_type<LBType>::type>(the_lb),

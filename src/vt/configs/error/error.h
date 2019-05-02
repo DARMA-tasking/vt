@@ -71,7 +71,7 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 displayLoc(
   std::string const& str, ErrorCodeType error,
   std::string const& file, int const line, std::string const& func,
-  Args&&... args
+  std::tuple<Args...>&& tup
 );
 
 template <typename... Args>
@@ -80,7 +80,7 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value != 0>
 displayLoc(
   std::string const& str, ErrorCodeType error,
   std::string const& file, int const line, std::string const& func,
-  Args&&... args
+  std::tuple<Args...>&& tup
 );
 
 }} /* end namespace vt::error */

@@ -42,99 +42,45 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_DEBUG_PRINT
-#define INCLUDED_DEBUG_PRINT
+#if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINT_H
+#define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINT_H
 
 #include "vt/configs/debug/debug_config.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/debug/debug_var_unused.h"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
-#define debug_flush_to_out(config, stdout)       \
-  debug_cond_enabled(config, flush, fflush(stdout))
+/*
+   === Debug file/line/func functionality ===
 
 #define debug_file_line_args ,__FILE__, __LINE__
 
-#define debug_file_arg                                \
+#define debug_file_arg
   debug_test(backend,line_file, debug_file_line_args, )
-#define debug_file_fmt                          \
+#define debug_file_fmt
   debug_test(backend,line_file, "{}:{} ", )
 
-#define print_colorize(color, str, str2)                                \
+#define vt_type_print_colorize(debug_type)
+  vt_print_colorize_impl("\033[32m", debug_pretty_print(debug_type), ":")
+
+*/
+
+#define vt_print_colorize_impl(color, str, str2)                        \
   ((::vt::debug::ttyc()) ?                                              \
-   (std::string(color) + std::string(str) + std::string("\033[00m") +    \
+   (std::string(color) + std::string(str) + std::string("\033[00m") +   \
     std::string(str2)) :                                                \
    std::string(str) + std::string(str2))
 
-#define vt_print_colorize print_colorize("\033[32;1m", "vt", ":")
+#define vt_print_colorize vt_print_colorize_impl("\033[32;1m", "vt", ":")
 
-#define type_print_colorize(debug_type)                                 \
-  print_colorize("\033[32m", debug_pretty_print(debug_type), ":")
-
-#define proc_print_colorize(proc)                                       \
-  print_colorize("\033[34m", "[" +std::to_string(proc) + "]", "")
-
-#define debug_decorated_prefix(debug_stamp, debug_type) "{} {} {} "
+#define vt_proc_print_colorize(proc)                                     \
+  vt_print_colorize_impl("\033[34m", "[" + std::to_string(proc) + "]", "")
 
 #define debug_argument_option(opt)                                      \
   ::vt::arguments::ArgConfig::vt_debug_ ## opt
 
 #define debug_all_option ::vt::arguments::ArgConfig::vt_debug_all
-
-#define debug_decorated(                                                \
-  PRINTER,                                                              \
-  debug_type, debug_stamp,                                              \
-  proc,                                                                 \
-  has_ctx_1, c1_fmt, c1_arg,                                            \
-  has_ctx_2, c2_fmt, c2_arg,                                            \
-  main_fmt, main_arg...                                                 \
-)                                                                       \
-  do {                                                                  \
-    meld_if_stmt(meld_to_bool(has_ctx_1))(                              \
-      meld_if_stmt(meld_to_bool(has_ctx_2))(                            \
-        PRINTER(                                                        \
-          debug_decorated_prefix(debug_stamp, debug_type)               \
-          c1_fmt " " c2_fmt ": " debug_file_fmt main_fmt,               \
-          vt_print_colorize,                                            \
-          proc_print_colorize(proc),                                    \
-          type_print_colorize(debug_type),                              \
-          c1_arg, c2_arg debug_file_arg                                 \
-          meld_if_stmt(                                                 \
-            meld_to_bool(_meld_is_empty(main_arg))                      \
-          )()(,main_arg)                                                \
-        );                                                              \
-      )(                                                                \
-        PRINTER(                                                        \
-          debug_decorated_prefix(debug_stamp, debug_type)               \
-          c1_fmt ": " debug_file_fmt main_fmt,                          \
-          vt_print_colorize,                                            \
-          proc_print_colorize(proc),                                    \
-          type_print_colorize(debug_type),                              \
-          c1_arg debug_file_arg                                         \
-          meld_if_stmt(                                                 \
-            meld_to_bool(_meld_is_empty(main_arg))                      \
-          )()(,main_arg)                                                \
-        );                                                              \
-      )                                                                 \
-    )(                                                                  \
-      PRINTER(                                                          \
-        debug_decorated_prefix(debug_stamp, debug_type)                 \
-        debug_file_fmt main_fmt,                                        \
-        vt_print_colorize,                                              \
-        proc_print_colorize(proc),                                      \
-        type_print_colorize(debug_type)                                 \
-        debug_file_arg                                                  \
-        meld_if_stmt(                                                   \
-          meld_to_bool(_meld_is_empty(main_arg))                        \
-        )()(,main_arg)                                                  \
-      );                                                                \
-    )                                                                   \
-    debug_flush_to_out(config, stdout);                                 \
-  } while (0);
-
-#define ctx_true 1
-#define ctx_false 0
 
 namespace vt { namespace runtime {
 struct Runtime;
@@ -142,254 +88,176 @@ struct Runtime;
 extern runtime::Runtime* curRT;
 } /* end namespace vt */
 
-#define print_ctx_node   (                                              \
-    ::vt::curRT != nullptr ?                                            \
-      (::vt::theContext()->getNode()) :                                 \
-      static_cast<NodeType>(-1)                                         \
-  )
-#define print_ctx_worker   (                                            \
-    ::vt::curRT != nullptr ?                                            \
-      (::vt::theContext()->getWorker()) :                               \
-      static_cast<NodeType>(-1)                                         \
-  )
-#define print_ctx_comm_worker                                           \
-  (print_ctx_worker == ::vt::worker_id_comm_thread) ?                   \
-  ::vt::comm_debug_print :                                              \
-  print_ctx_worker
+#define debug_print_impl(inconfig, inmode, cat, ctx, ...)               \
+  vt::config::ApplyOp<                                                  \
+    vt::config::DebugPrintOp,                                           \
+    inconfig,                                                           \
+    vt::config::CatEnum::cat,                                           \
+    vt::config::CtxEnum::ctx,                                           \
+    vt::config::ModeEnum::inmode                                        \
+  >::apply(debug_argument_option(cat), __VA_ARGS__)
 
-#define debug_virtual(                                                  \
-  debug_type,                                                           \
-  has_c1, c1_fmt, c1_arg,                                               \
-  has_c2, c2_fmt, c2_arg,                                               \
-  main_fmt, main_arg...                                                 \
-)                                                                       \
-  debug_virtual_pe(                                                     \
-    debug_type, print_ctx_node,                                         \
-    has_c1, c1_fmt, c1_arg,                                             \
-    has_c2, c2_fmt, c2_arg,                                             \
-    main_fmt, ##main_arg                                                \
-  )                                                                     \
-
-#define debug_virtual_pe(                                               \
-  debug_type, proc,                                                     \
-  has_c1, c1_fmt, c1_arg,                                               \
-  has_c2, c2_fmt, c2_arg,                                               \
-  main_fmt, main_arg...                                                 \
-)                                                                       \
-  debug_decorated(                                                      \
-    ::fmt::print, debug_type, "vt", proc,                               \
-    has_c1, c1_fmt, c1_arg,                                             \
-    has_c2, c2_fmt, c2_arg,                                             \
-    main_fmt, ##main_arg                                                \
+#define debug_print(feature, ctx, ...)                                  \
+  debug_print_impl(                                                     \
+    vt::config::DefaultConfig, normal, feature, ctx, __VA_ARGS__        \
   )
 
-#define debug_virtual_ctx_2(                                            \
-  debug_type,                                                           \
-  c1_fmt, c1_arg,                                                       \
-  c2_fmt, c2_arg,                                                       \
-  main_fmt, main_arg...                                                 \
-)                                                                       \
-  debug_virtual(                                                        \
-    debug_type,                                                         \
-    ctx_true, c1_fmt, c1_arg,                                           \
-    ctx_true, c2_fmt, c2_arg,                                           \
-    main_fmt, ##main_arg                                                \
-  )                                                                     \
-
-#define debug_virtual_ctx_1(                                            \
-  debug_type,                                                           \
-  c1_fmt, c1_arg,                                                       \
-  main_fmt, main_arg...                                                 \
-)                                                                       \
-  debug_virtual(                                                        \
-    debug_type,                                                         \
-    ctx_true,  c1_fmt, c1_arg,                                          \
-    ctx_false, "{}",   "",                                              \
-    main_fmt, ##main_arg                                                \
-  )                                                                     \
-
-#define debug_virtual_proc_ctx_none(                                    \
-  debug_type, proc,                                                     \
-  main_fmt, main_arg...                                                 \
-)                                                                       \
-  debug_virtual_pe(                                                     \
-    debug_type, proc,                                                   \
-    ctx_false, "{}", "",                                                \
-    ctx_false, "{}", "",                                                \
-    main_fmt, ##main_arg                                                \
-  )                                                                     \
-
-#define debug_virtual_ctx_none(                                         \
-  debug_type,                                                           \
-  main_fmt, main_arg...                                                 \
-)                                                                       \
-  debug_virtual_proc_ctx_none(                                          \
-    debug_type, print_ctx_node, main_fmt, ##main_arg                    \
+#define debug_print_verbose(feature, ctx, ...)                          \
+  debug_print_impl(                                                     \
+    vt::config::DefaultConfig, verbose, feature, ctx, __VA_ARGS__       \
   )
 
-// define a set of debug print variants that are each unsed by some set of modes
-#define debug_print_regular(debug_type, main_fmt, main_arg...)  \
-  debug_virtual_ctx_none(debug_type, main_fmt, main_arg)
+#define vt_make_config(feature)                                          \
+  vt::config::Configuration<                                             \
+    static_cast<vt::config::CatEnum>(                                    \
+      vt::config::DefaultConfig::category | vt::config::CatEnum::feature \
+    ),                                                                   \
+    vt::config::DefaultConfig::context,                                  \
+    vt::config::DefaultConfig::mode                                      \
+  >
 
-/*
-#define debug_print_array(debug_type, main_fmt, main_arg...)  \
-  debug_virtual_ctx_1(debug_type, "idx={}", thisIndex, main_fmt, ##main_arg)
-*/
-
-/*
-#define debug_print_aoth(debug_type, main_fmt, main_arg...)             \
-  debug_virtual_ctx_1(debug_type, "idx={}", this_index, main_fmt, main_arg)
-*/
-
-#define debug_print_node(debug_type, main_fmt, main_arg...)             \
-  if (debug_argument_option(debug_type) or debug_all_option) {          \
-    debug_virtual_ctx_none(                                             \
-      debug_type,                                                       \
-      main_fmt, main_arg                                                \
-    )                                                                   \
-  }
-
-  /*
-  debug_virtual_ctx_1(                                                  \
-    debug_type,                                                         \
-    "worker={}", print_ctx_comm_worker,                                 \
-    main_fmt, main_arg                                                  \
-  )
-  */
-
-#define debug_print_unknown(debug_type, main_fmt, main_arg...)          \
-  if (debug_argument_option(debug_type) or debug_all_option) {          \
-    debug_virtual_proc_ctx_none(debug_type, -1, main_fmt, main_arg)     \
-  }
-
-/*
-#define debug_print_pe(debug_type, proc, main_fmt, main_arg...)   \
-  debug_virtual_proc_ctx_none(debug_type, proc, main_fmt, main_arg)
-*/
-
-#define debug_print_uid(debug_type, main_fmt, main_arg...)           \
-  debug_virtual_ctx_2(                                               \
-    debug_type,                                                      \
-    "idx={}", thisIndex,                                             \
-    "uid={}", task_collection_id.unique_id,                          \
-    main_fmt, main_arg                                               \
-  )
-
-#define verbose_info(debug_type, main_fmt, main_arg...) \
-  debug_virtual_ctx_none(debug_type, main_fmt, main_arg)
-#define verbose_info_pe(debug_type, proc, main_fmt, main_arg...)  \
-  debug_virtual_proc_ctx_none(debug_type, proc, main_fmt, main_arg)
-
-#define vt_print(debug_type, main_fmt, main_arg...)                  \
-  do {                                                               \
-    if (!::vt::arguments::ArgConfig::vt_quiet) {                     \
-      verbose_info(debug_type,main_fmt,main_arg);                    \
-    }                                                                \
-  } while(0);
-
-#define virtual_fatal_error(str)                  \
-  do {                                            \
-    ::fmt::print(stderr, str);                    \
-    exit(229);                                    \
-  } while (0);
-
-#define debug_print_locale(feature, fst_arg_as_pe, arg...) \
-  debug_print_pe(feature, fst_arg_as_pe, arg)
-
-#define debug_print(feature, maybe_ctx, arg...)                         \
-  meld_eval_2(                                                          \
-    debug_print_recur_call(backend_debug,feature,maybe_ctx,arg)         \
-  )
-
-#define debug_print_normal(config, feature, ctx, arg...)                \
-  debug_cond_enabled_else(                                              \
-    config, feature,                                                    \
-    debug_print_context(config, feature, ctx, arg),                     \
-    debug_print_force_use(arg)                                          \
-  )
-
-#define debug_print_handle_subclass(config, sub, feature, ctx, arg...)  \
-  debug_cond_enabled_else(                                              \
-    config,                                                             \
-    feature,                                                            \
-    debug_print_context(config, feature, ctx, arg),                     \
-    debug_cond_enabled_else(                                            \
-      config,                                                           \
-      sub,                                                              \
-      debug_print_context(config, feature, ctx, arg),                   \
-      debug_print_force_use(arg)                                        \
-    )                                                                   \
-  )                                                                     \
-
-#define debug_print_recur_inner(config, feature, maybe_ctx, arg...)     \
-  meld_if_stmt(                                                         \
-    debug_lookup_is_printer(                                            \
-      maybe_ctx, meld_eval_2(debug_list_contexts_printfn_kv)            \
-    )                                                                   \
-  )(                                                                    \
-    debug_print_normal(config, feature, maybe_ctx, arg)                 \
-  )(                                                                    \
-    debug_cond_enabled_else(                                            \
-      config,                                                           \
-      feature,                                                          \
-      debug_print_recur_2(config, maybe_ctx, arg),                      \
-      debug_cond_enabled_else(                                          \
-        config,                                                         \
-        maybe_ctx,                                                      \
-        debug_print_context(config, maybe_ctx, arg),                    \
-        debug_print_force_use(arg)                                      \
-      )                                                                 \
-    )                                                                   \
-  )
-
-#define debug_print_recur(config, feature, maybe_ctx, arg...)           \
-  meld_if_stmt(                                                         \
-    debug_lookup_is_printer(                                            \
-      feature, meld_eval_2(debug_list_subclass_printfn_kv)              \
-    )                                                                   \
-  )(                                                                    \
-    debug_cond_enabled_else(                                            \
-      config, feature,                                                  \
-      debug_print_normal(config, maybe_ctx, arg),                       \
-      debug_print_force_use_strip1(arg)                                 \
-    )                                                                   \
-  )(                                                                    \
-    debug_print_recur_inner(config, feature, maybe_ctx, arg)            \
-  )
-
-#define debug_print_recur_2(config, feature, maybe_ctx, arg...)         \
-  meld_if_stmt(                                                         \
-    debug_lookup_is_printer(                                            \
-      maybe_ctx, meld_eval_2(debug_list_contexts_printfn_kv)            \
-    )                                                                   \
-  )(                                                                    \
-    debug_print_context(config, feature, maybe_ctx, arg)                \
-  )(                                                                    \
-    debug_print_context(config, maybe_ctx, arg)                         \
-  )
-
-#define _debug__print_recur() debug_print_recur
-#define debug_print_recur_call debug_print_recur
-
-// check all special subclass tokens in the future
-#define debug_print_check_subclass(config, feature, opt, arg...)  \
-  meld_if_stmt(                                                   \
-    meld_token_compare(feature, verbose)                          \
-  )(                                                              \
-    debug_print_handle_subclass(feature, opt, arg)                \
-  )(                                                              \
-    debug_print_normal(config, feature, opt, arg)                 \
+#define debug_print_force_impl(feature, ctx, ...)                       \
+  debug_print_impl(                                                     \
+    vt_make_config(feature), normal, feature, ctx, __VA_ARGS__          \
   )
 
 #if debug_force_enabled
   //#warning "Debug force is enabled"
-  #define debug_print_force(feature, opt, arg...)         \
-    debug_print_context(backend_debug, feature, opt, arg)
+  #define debug_print_force(feature, ctx, ...)                          \
+    debug_print_force_impl(                                             \
+      feature, ctx, __VA_ARGS__                                         \
+    )
 #else
   //#warning "Debug force is not enabled"
   #define debug_print_force debug_print
 #endif
 
+#define vt_print(feature, ...)                                          \
+  do {                                                                  \
+    if (!::vt::arguments::ArgConfig::vt_quiet) {                        \
+      debug_print_force_impl(feature, node, __VA_ARGS__);               \
+    }                                                                   \
+  } while(0);
+
 #define backend_debug_print debug_print
 
-#endif  /*INCLUDED_DEBUG_PRINT*/
+#define vt_option_check_enabled(mode, bit) ((mode & bit) not_eq 0)
+
+namespace vt { namespace debug {
+
+NodeType preNode();
+
+}} /* end naamespace vt::ctx */
+
+namespace vt { namespace config {
+
+template <CatEnum cat, CtxEnum ctx, ModeEnum mod>
+struct DebugPrintOp;
+
+template <CatEnum cat, ModeEnum mod, typename Arg, typename... Args>
+static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
+  auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
+  fmt::print(
+    "{} {} {} {}",
+    vt_print_colorize,
+    vt_proc_print_colorize(node),
+    vt_print_colorize_impl("\033[32m",  PrettyPrintCat<cat>::print(), ":"),
+    user
+  );
+  if (vt_option_check_enabled(mod, ModeEnum::flush)) {
+    fflush(stdout);
+  }
+}
+
+template <CatEnum cat, ModeEnum mod>
+struct DebugPrintOp<cat, CtxEnum::node, mod> {
+  template <typename Arg, typename... Args>
+  void operator()(bool const& rt_option, Arg&& arg, Args&&... args) {
+    if (rt_option or vt::arguments::ArgConfig::vt_debug_all) {
+      auto no_node = static_cast<NodeType>(-1);
+      auto node = vt::curRT != nullptr ? vt::debug::preNode() : no_node;
+      debugPrintImpl<cat,mod>(node,std::forward<Arg>(arg),std::forward<Args>(args)...);
+    }
+  }
+};
+
+template <CatEnum cat, ModeEnum mod>
+struct DebugPrintOp<cat, CtxEnum::unknown, mod> {
+  template <typename Arg, typename... Args>
+  void operator()(bool const& rt_option, Arg&& arg, Args&&... args) {
+    if (rt_option or vt::arguments::ArgConfig::vt_debug_all) {
+      debugPrintImpl<cat,mod>(-1,std::forward<Arg>(arg),std::forward<Args>(args)...);
+    }
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// DispatchOp specializations
+////////////////////////////////////////////////////////////////////////////////
+
+template <
+  template <CatEnum,CtxEnum,ModeEnum> class Op, typename C,
+  CatEnum cat, CtxEnum ctx, ModeEnum mode
+>
+struct DispatchOp {
+  template <typename... Args>
+  static void apply(bool const& op, Args&&... args) {
+    return Op<cat,ctx,mode>()(op,std::forward<Args>(args)...);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Context overloads
+////////////////////////////////////////////////////////////////////////////////
+
+template <
+  template <CatEnum,CtxEnum,ModeEnum> class Op,
+  typename C,
+  CatEnum cat, CtxEnum ctx, ModeEnum mod,
+  typename Enable=void
+>
+struct CheckEnabled {
+  template <typename... Args>
+  static void apply(bool const&, Args&&... args) {
+    return vt::debug::useVars(std::forward<Args>(args)...);
+  }
+};
+
+template <
+  template <CatEnum,CtxEnum,ModeEnum> class Op,
+  typename C,
+  CatEnum cat, CtxEnum ctx, ModeEnum mod
+>
+struct CheckEnabled<
+  Op, C,
+  cat, ctx, mod,
+  typename std::enable_if_t<
+    (C::context  & ctx) not_eq 0 and
+    (C::category & cat) not_eq 0 and
+    (C::mode     & mod) not_eq 0
+  >
+> {
+  template <typename... Args>
+  static void apply(bool const& op, Args&&... args) {
+    return DispatchOp<Op,C,cat,ctx,mod>::apply(op,std::forward<Args>(args)...);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Apply the operation
+////////////////////////////////////////////////////////////////////////////////
+
+template <
+  template <CatEnum,CtxEnum,ModeEnum> class Op, typename C,
+  CatEnum cat, CtxEnum ctx, ModeEnum mod
+>
+struct ApplyOp {
+  template <typename... Args>
+  static void apply(bool const& op, Args&&... args) {
+    return CheckEnabled<Op,C,cat,ctx,mod>::apply(op,std::forward<Args>(args)...);
+  }
+};
+
+}} /* end namespace vt::config */
+
+#endif /*INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINT_H*/

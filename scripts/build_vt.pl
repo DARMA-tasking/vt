@@ -9,7 +9,7 @@ use lib dirname (__FILE__);
 require "args.pl";
 
 my ($build_mode,$compiler,$has_serial,$build_all_tests,$vt_install);
-my ($vt,$root,$detector,$meld,$checkpoint,$gtest);
+my ($vt,$root,$detector,$checkpoint,$gtest);
 my ($compiler_cxx,$compiler_c,$mpi_cc,$mpi_cxx,$mpi_exec);
 my $libroot = "";
 my $atomic = "";
@@ -44,7 +44,6 @@ $arg->add_optional_arg("mpi_cxx",     \$mpi_cxx,      "");
 $arg->add_optional_arg("mpi_exec",    \$mpi_exec,     "");
 
 $arg->add_optional_func("detector",   \$detector,   "detector-install",   \&mk);
-$arg->add_optional_func("meld",       \$meld,       "meld-install",       \&mk);
 $arg->add_optional_func("checkpoint", \$checkpoint, "checkpoint-install", \&mk);
 $arg->add_optional_func("gtest",      \$gtest,      "gtest-install",      \&mk);
 
@@ -148,7 +147,6 @@ print STDERR "\tMPI Compiler suite=$compiler, mpicc=$mpi_cc, mpicxx=$mpi_cxx\n";
 print STDERR "\tAll tests/examples=$build_all_tests\n";
 print STDERR "\tVT installation directory=$vt_install\n";
 print STDERR "\tCheckpoint=$has_serial, path=$checkpoint\n";
-print STDERR "\tMeld path=$meld\n";
 print STDERR "\tDetector path=$detector\n";
 print STDERR "\tGoogle gtest path=$gtest\n";
 
@@ -181,7 +179,6 @@ my $finalstr = <<CMAKESTR
       ${lb_str}                                                              \\
       ${detector_on_str}                                                     \\
       -Dcheckpoint_DIR=$checkpoint                                           \\
-      -Dmeld_DIR=$meld                                                       \\
       -Ddetector_DIR=$detector                                               \\
       -Dgtest_DIR=$gtest                                                     \\
       -DGTEST_ROOT=$gtest                                                    \\

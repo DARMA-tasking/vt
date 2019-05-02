@@ -80,11 +80,11 @@ TEST_P(TestReduceCollection, test_reduce_op) {
 
 #if ENABLE_REDUCE_EXPR_CALLBACK
   INSTANTIATE_TEST_CASE_P(
-    InstantiationName, TestReduceCollection, ::testing::Range(0, 8)
+    InstantiationName, TestReduceCollection, ::testing::Range(0, 8),
   );
 #else
   INSTANTIATE_TEST_CASE_P(
-    InstantiationName, TestReduceCollection, ::testing::Range(0, 5)
+    InstantiationName, TestReduceCollection, ::testing::Range(0, 5),
   );
 #endif
 

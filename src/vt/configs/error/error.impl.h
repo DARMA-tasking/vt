@@ -81,17 +81,18 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 displayLoc(
   std::string const& str, ErrorCodeType error,
   std::string const& file, int const line, std::string const& func,
-  Args&&... args
+  std::tuple<Args...>&& tup
 ) {
   auto msg = "vtAbort() Invoked";
   auto const inf = debug::stringizeMessage(msg,str,"",file,line,func,error);
   return ::vt::output(inf,error,true,true,true,true);
 }
 
+
 template <typename... Args>
 inline
 std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value != 0>
-displayLoc(
+displayLocImpl(
   std::string const& str, ErrorCodeType error,
   std::string const& file, int const line, std::string const& func,
   Args&&... args
@@ -100,6 +101,36 @@ displayLoc(
   std::string const buf = ::fmt::format(str,std::forward<Args>(args)...);
   auto const inf = debug::stringizeMessage(msg,buf,"",file,line,func,error);
   return ::vt::output(inf,error,true,true,true,true);
+}
+
+template <typename Tuple, size_t... I>
+inline void displayLocImplTup(
+  std::string const& str, ErrorCodeType error,
+  std::string const& file, int const line, std::string const& func,
+  Tuple&& tup, std::index_sequence<I...>
+) {
+  displayLocImpl(
+    str,error,file,line,func,
+    std::forward<typename std::tuple_element<I,Tuple>::type>(
+      std::get<I>(tup)
+    )...
+  );
+}
+
+template <typename... Args>
+inline
+std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value != 0>
+displayLoc(
+  std::string const& str, ErrorCodeType error,
+  std::string const& file, int const line, std::string const& func,
+  std::tuple<Args...>&& tup
+) {
+  static constexpr auto size = std::tuple_size<std::tuple<Args...>>::value;
+  displayLocImplTup(
+    str,error,file,line,func,
+    std::forward<std::tuple<Args...>>(tup),
+    std::make_index_sequence<size>{}
+  );
 }
 
 }} /* end namespace vt::error */

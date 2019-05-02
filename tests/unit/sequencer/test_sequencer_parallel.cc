@@ -164,7 +164,7 @@ TEST_P(TestSequencerParallelParam, test_seq_parallel_param) {
 
 INSTANTIATE_TEST_CASE_P(
   test_seq_parallel_param, TestSequencerParallelParam,
-  ::testing::Range(static_cast<CountType>(0), static_cast<CountType>(16), 1)
+  ::testing::Range(static_cast<CountType>(0), static_cast<CountType>(16), 1),
 );
 
 struct TestSequencerParallel : TestParallelHarness {

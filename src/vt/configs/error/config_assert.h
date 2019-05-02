@@ -61,32 +61,65 @@
 #include <tuple>
 #include <type_traits>
 
-#define argStringFunc(list_element, ___, not_last)                      \
-  meld_if_stmt(not_last)(                                               \
-    std::string(#list_element),                                         \
-  )(                                                                    \
-    std::string(#list_element)                                          \
-  )                                                                     \
+#define PP_NARG(...)  PP_NARG_(__VA_ARGS__,PP_RSEQ_N())
+#define PP_NARG_(...) PP_ARG_N(__VA_ARGS__)
 
-#define argIdentity(arg) arg
+#define PP_ARG_N(                                  \
+    _1, _2, _3, _4, _5, _6, _7, _8, _9,_10,        \
+    _11,_12,_13,_14,_15,_16,_17,_18,_19,_20,       \
+    _21,_22,_23,_24,_25,_26,_27,_28,_29,_30,       \
+    _31,_32,_33,_34,_35,_36,_37,_38,_39,_40,       \
+    _41,_42,_43,_44,_45,_46,_47,_48,_49,_50,       \
+    _51,_52,_53,_54,_55,_56,_57,_58,_59,_60,       \
+    _61,_62,_63, N, ...                            \
+  ) N
 
-#define argsToString(args...)                                           \
-  meld_eval(                                                            \
-    meld_map_trans_single(argStringFunc,argIdentity,argIdentity,args)   \
+#define PP_RSEQ_N()                    \
+    63,62,61,60,                       \
+    59,58,57,56,55,54,53,52,51,50,     \
+    49,48,47,46,45,44,43,42,41,40,     \
+    39,38,37,36,35,34,33,32,31,30,     \
+    29,28,27,26,25,24,23,22,21,20,     \
+    19,18,17,16,15,14,13,12,11,10,     \
+    9,8,7,6,5,4,3,2,1,0
+
+#define vt_paste_macro(a,b) a ## b
+#define vt_xpaste(a,b) vt_paste_macro(a,b)
+
+#define vt_applyx1(X,a)                    X(a)
+#define vt_applyx2(X,a,b)                  X(a) X(b)
+#define vt_applyx3(X,a,b,c)                X(a) X(b) X(c)
+#define vt_applyx4(X,a,b,c,d)              X(a) X(b) X(c) X(d)
+#define vt_applyx5(X,a,b,c,d,e)            X(a) X(b) X(c) X(d) X(e)
+#define vt_applyx6(X,a,b,c,d,e,f)          X(a) X(b) X(c) X(d) X(e) X(f)
+#define vt_applyx7(X,a,b,c,d,e,f,g)        X(a) X(b) X(c) X(d) X(e) X(f) X(g)
+#define vt_applyx8(X,a,b,c,d,e,f,g,h)      X(a) X(b) X(c) X(d) X(e) X(f) X(g) X(h)
+#define vt_applyx9(X,a,b,c,d,e,f,g,h,i)    X(a) X(b) X(c) X(d) X(e) X(f) X(g) X(h) X(i)
+#define vt_applyx10(X,a,b,c,d,e,f,g,h,i,j) X(a) X(b) X(c) X(d) X(e) X(f) X(g) X(h) X(i) X(j)
+
+#define vt_applyx_(M, func, ...) M(func, __VA_ARGS__)
+#define vt_applyxn(func,...) vt_applyx_(                     \
+    vt_xpaste(vt_applyx, PP_NARG(__VA_ARGS__)), func, __VA_ARGS__  \
   )
 
+#define vt_make_list_strings(a) #a,
+#define argsToString(...) vt_applyxn(vt_make_list_strings,__VA_ARGS__)
+
 #if backend_check_enabled(production)
-  #define vtAssert(cond,str,args...)
-  #define vtAssertInfo(cond,str,args...)
-  #define vtAssertNot(cond,str,args...)
-  #define vtAssertNotInfo(cond,str,args...)
-  #define vtAssertExpr(cond)
+  #define vtAssert(cond,str)            vt_force_use(cond)
+  #define vtAssertInfo(cond,str,...)    vt_force_use(cond,__VA_ARGS__)
+  #define vtAssertNot(cond,str)         vt_force_use(cond)
+  #define vtAssertNotInfo(cond,str,...) vt_force_use(cond,__VA_ARGS__)
+  #define vtAssertNotExpr(cond)         vt_force_use(cond)
+  #define vtAssertExpr(cond)            vt_force_use(cond)
+  #define vtAssertExprInfo(cond,...)    vt_force_use(cond,__VA_ARGS__)
+  #define vtWarnInfo(cond,str,...)      vt_force_use(cond,__VA_ARGS__)
 #else
-  #define vtAssertImpl(fail,cond,str,args...)                           \
+  #define vtAssertImpl(fail,cond,str)                                   \
     do {                                                                \
       if (!(cond)) {                                                    \
         ::vt::debug::assert::assertOut(                                 \
-          fail,#cond,str,DEBUG_LOCATION,1 outputArgsImpl(args)          \
+          fail,#cond,str,DEBUG_LOCATION,1,std::make_tuple()             \
         );                                                              \
       }                                                                 \
     } while (false)
@@ -98,36 +131,37 @@
         );                                                              \
       }                                                                 \
     } while (false)
-  #define vtAssertArgImpl(fail,cond,str,args...)                        \
+  #define vtAssertArgImpl(fail,cond,str,...)                            \
     do {                                                                \
       if (!(cond)) {                                                    \
-        auto tup = std::make_tuple(argsToString(args));                 \
         ::vt::debug::assert::assertOutInfo(                             \
-          fail,#cond,str,DEBUG_LOCATION,1,tup outputArgsImpl(args)      \
+          fail,#cond,str,DEBUG_LOCATION,1,                              \
+          std::make_tuple(argsToString(__VA_ARGS__)""),                 \
+          std::make_tuple(__VA_ARGS__,"")                               \
         );                                                              \
       }                                                                 \
     } while (false)
-  #define vtAssertExprArgImpl(fail,cond,args...)                        \
-    vtAssertArgImpl(fail,cond,#cond,args)
+  #define vtAssertExprArgImpl(fail,cond,...)                            \
+    vtAssertArgImpl(fail,cond,#cond,__VA_ARGS__)
 
   #if backend_check_enabled(assert_no_fail)
-    #define vtAssert(cond,str,args...)     vtAssertImpl(false,cond,str,args)
-    #define vtAssertInfo(cond,str,args...) vtAssertArgImpl(false,cond,str,args)
-    #define vtAssertExpr(cond)             vtAssertExprImpl(false,cond)
-    #define vtAssertExprInfo(cond,args...) vtAssertExprArgImpl(false,cond,args)
-    #define vtWarnInfo(cond,str,args...)   vtAssertArgImpl(false,cond,str,args)
+    #define vtAssert(cond,str)         vtAssertImpl(false,cond,str)
+    #define vtAssertInfo(cond,str,...) vtAssertArgImpl(false,cond,str,__VA_ARGS__)
+    #define vtAssertExpr(cond)         vtAssertExprImpl(false,cond)
+    #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(false,cond,__VA_ARGS__)
+    #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
   #else
-    #define vtAssert(cond,str,args...)     vtAssertImpl(true,cond,str,args)
-    #define vtAssertInfo(cond,str,args...) vtAssertArgImpl(true,cond,str,args)
-    #define vtAssertExpr(cond)             vtAssertExprImpl(true,cond)
-    #define vtAssertExprInfo(cond,args...) vtAssertExprArgImpl(true,cond,args)
-    #define vtWarnInfo(cond,str,args...)   vtAssertArgImpl(false,cond,str,args)
+    #define vtAssert(cond,str)         vtAssertImpl(true,cond,str)
+    #define vtAssertInfo(cond,str,...) vtAssertArgImpl(true,cond,str,__VA_ARGS__)
+    #define vtAssertExpr(cond)         vtAssertExprImpl(true,cond)
+    #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(true,cond,__VA_ARGS__)
+    #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
   #endif
 
-  #define vtAssertNot(cond,str,args...) vtAssert(INVERT_COND(cond),str,args)
-  #define vtAssertNotExpr(cond)         vtAssertExpr(INVERT_COND(cond))
-  #define vtAssertNotInfo(cond,str,args...)                              \
-    vtAssertInfo(INVERT_COND(cond),str,args)
+  #define vtAssertNot(cond,str)        vtAssert(INVERT_COND(cond),str)
+  #define vtAssertNotExpr(cond)        vtAssertExpr(INVERT_COND(cond))
+  #define vtAssertNotInfo(cond,str,...)                              \
+    vtAssertInfo(INVERT_COND(cond),str,__VA_ARGS__)
 #endif
 
 #endif /*INCLUDED_CONFIGS_ERROR_CONFIG_ASSERT_H*/

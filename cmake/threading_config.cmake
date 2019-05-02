@@ -9,6 +9,9 @@ function(config_for_openmp)
     "CXX FLAGS=\"${OpenMP_CXX_FLAGS}\""
   )
 
+  set(vt_feature_cmake_openmp "1" PARENT_SCOPE)
+  set(vt_feature_cmake_stdthread "0" PARENT_SCOPE)
+
   #
   # The OpenMP compiler and linker flags are handled through the target instead
   # of manually setting the flags for VT:
@@ -21,4 +24,7 @@ endfunction(config_for_openmp)
 
 function(config_for_std_thread)
   set(DEFAULT_THREADING stdthread PARENT_SCOPE)
+
+  set(vt_feature_cmake_openmp "0" PARENT_SCOPE)
+  set(vt_feature_cmake_stdthread "1" PARENT_SCOPE)
 endfunction(config_for_std_thread)

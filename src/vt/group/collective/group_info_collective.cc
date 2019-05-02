@@ -279,8 +279,7 @@ void InfoColl::upTree() {
       return;
     } else {
       if (msg_in_group.size() == 0) {
-        auto const& group_ = getGroupID();
-        vtAbort("A group must have at least a single node {}",group_);
+        vtAbort("A group must have at least a single node {}");
       }
       /*
        *  Sort nodes to find the largest node to make it the root of the whole
@@ -463,8 +462,8 @@ void InfoColl::newRoot(GroupCollectiveMsg* msg) {
 }
 
 NodeType InfoColl::getRoot() const {
-  debug_print(
-    verbose, group, node,
+  debug_print_verbose(
+    group, node,
     "InfoColl::getRoot: group={:x}, has_root_={}, known_root_node_={}\n",
     getGroupID(), has_root_, known_root_node_
   );
@@ -549,7 +548,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
     getGroupID(), msg->getChild(), from
   );
 
-  vtAssert(collective_, "Must be valid");
+  vtAssert(collective_ != nullptr, "Must be valid");
 
   if (collective_->span_children_.size() < 4) {
     collective_->span_children_.push_back(msg->getChild());
@@ -608,25 +607,25 @@ void InfoColl::finalize() {
 
   if (in_phase_two_ && send_down_finished_ == send_down_) {
 
-      #if backend_debug_enabled(group)
-        char buf[256];
-        buf[0] = '\0';
-        int cur = 0;
-        for (auto&& elm : collective_->span_children_) {
-          cur += sprintf(buf + cur, "%d,", elm);
-        }
+    if (vt_backend_debug_enabled(group)) {
+      char buf[256];
+      buf[0] = '\0';
+      int cur = 0;
+      for (auto&& elm : collective_->span_children_) {
+        cur += sprintf(buf + cur, "%d,", elm);
+      }
 
-        auto const& num_children = collective_->span_children_.size();
-        debug_print(
-          group, node,
-          "InfoColl::finalize: group={:x}, send_down_={}, "
-          "send_down_finished_={}, in_phase_two_={}, in_group={}, "
-          "has_root_={}, known_root_node_={}, is_new_root_={}, num={}, sub={},"
-          "children={}\n",
-          group_, send_down_, send_down_finished_, in_phase_two_, is_in_group,
-          has_root_, known_root_node_, is_new_root_, num_children, subtree_, buf
-        );
-     #endif
+      auto const& num_children = collective_->span_children_.size();
+      debug_print(
+        group, node,
+        "InfoColl::finalize: group={:x}, send_down_={}, "
+        "send_down_finished_={}, in_phase_two_={}, in_group={}, "
+        "has_root_={}, known_root_node_={}, is_new_root_={}, num={}, sub={},"
+        "children={}\n",
+        group_, send_down_, send_down_finished_, in_phase_two_, is_in_group,
+        has_root_, known_root_node_, is_new_root_, num_children, subtree_, buf
+      );
+    }
 
     auto const& children = collective_->getChildren();
     for (auto&& c : children) {
@@ -667,8 +666,8 @@ void InfoColl::finalize() {
 void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
   auto const& new_root = msg->getRoot();
   vtAssert(new_root != uninitialized_destination, "Must have root node");
-  debug_print(
-    verbose, group, node,
+  debug_print_verbose(
+    group, node,
     "InfoColl::finalizeTree: group={:x}, new_root={}\n",
     msg->getGroup(), new_root
   );
@@ -723,8 +722,8 @@ void InfoColl::readyAction(ActionType const action) {
 }
 
 InfoColl::TreeType* InfoColl::getTree() const {
-  vtAssert(collective_       , "Collective must exist");
-  vtAssert(collective_->span_, "Spanning tree must exist");
+  vtAssert(collective_ != nullptr, "Collective must exist");
+  vtAssert(collective_->span_ != nullptr, "Spanning tree must exist");
   vtAssert(in_phase_two_     , "Must be in phase two");
   vtAssert(has_root_         , "Root node must be known by this node");
   vtAssert(

@@ -288,9 +288,13 @@ void Runtime::printStartupBanner() {
   std::string thd = !has_workers ? std::string("") :
     std::string(", worker threading: ") +
     std::string(
-      backend_enable_if_else(
-        openmp, "OpenMP", backend_enable_if_else(stdthread, "std::thread", "")
-      )
+      #if backend_check_enabled(openmp)
+        "OpenMP"
+      #elif backend_check_enabled(stdthread)
+        "std::thread"
+      #else
+        ""
+      #endif
    );
   std::string cnt = !has_workers ? std::string("") :
     (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
@@ -309,7 +313,47 @@ void Runtime::printStartupBanner() {
   auto emph     = [=](std::string s) -> std::string { return debug::emph(s); };
   auto reg      = [=](std::string s) -> std::string { return debug::reg(s);  };
 
-  std::vector<std::string> features = {"" backend_print_all_features(0) };
+  std::vector<std::string> features;
+
+#if backend_check_enabled(vt_feature_bit_check_overflow)
+  features.push_back(vt_feature_str_bit_check_overflow);
+#endif
+#if backend_check_enabled(vt_feature_trace_enabled)
+  features.push_back(vt_feature_str_trace_enabled);
+#endif
+#if backend_check_enabled(vt_feature_detector)
+  features.push_back(vt_feature_str_detector);
+#endif
+#if backend_check_enabled(vt_feature_lblite)
+  features.push_back(vt_feature_str_lblite);
+#endif
+#if backend_check_enabled(vt_feature_openmp)
+  features.push_back(vt_feature_str_openmp);
+#endif
+#if backend_check_enabled(vt_feature_production)
+  features.push_back(vt_feature_str_production);
+#endif
+#if backend_check_enabled(vt_feature_stdthread)
+  features.push_back(vt_feature_str_stdthread);
+#endif
+#if backend_check_enabled(vt_feature_mpi_rdma)
+  features.push_back(vt_feature_str_mpi_rdma);
+#endif
+#if backend_check_enabled(vt_feature_parserdes)
+  features.push_back(vt_feature_str_parserdes);
+#endif
+#if backend_check_enabled(vt_feature_print_term_msgs)
+  features.push_back(vt_feature_str_print_term_msgs);
+#endif
+#if backend_check_enabled(vt_feature_default_threading)
+  features.push_back(vt_feature_str_default_threading);
+#endif
+#if backend_check_enabled(vt_feature_no_pool_alloc_env)
+  features.push_back(vt_feature_str_no_pool_alloc_env);
+#endif
+#if backend_check_enabled(vt_feature_memory_pool)
+  features.push_back(vt_feature_str_memory_pool);
+#endif
 
   std::string dirty = "";
   if (strncmp(vt_git_clean_status.c_str(), "DIRTY", 5) == 0) {
@@ -576,109 +620,43 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-#define debug_warn_compile(opt)                               \
-  do {                                                        \
-    if (ArgType::vt_debug_ ## opt) {                          \
-      auto f9 = warn_cr("--vt_debug_" #opt, "debug_" #opt);   \
-      fmt::print("{}\t{}{}", vt_pre, f9, reset);              \
-    }                                                         \
+#define vt_runtime_debug_warn_compile(opt)                              \
+  do {                                                                  \
+    if (!vt_backend_debug_enabled(opt) and ArgType::vt_debug_ ## opt) { \
+      auto f9 = warn_cr("--vt_debug_" #opt, "debug_" #opt);             \
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);                        \
+    }                                                                   \
   } while (0);
 
-  /*
-  #define debug_print_force(feature, opt, arg...)         \
-    debug_print_context(backend_debug, feature, opt, arg)
-  */
-
-  #if !backend_debug_enabled(none)
-    debug_warn_compile(none)
-  #endif
-  #if !backend_debug_enabled(gen)
-    debug_warn_compile(gen)
-  #endif
-  #if !backend_debug_enabled(runtime)
-    debug_warn_compile(runtime)
-  #endif
-  #if !backend_debug_enabled(active)
-    debug_warn_compile(active)
-  #endif
-  #if !backend_debug_enabled(term)
-    debug_warn_compile(term)
-  #endif
-  #if !backend_debug_enabled(termds)
-    debug_warn_compile(termds)
-  #endif
-  #if !backend_debug_enabled(barrier)
-    debug_warn_compile(barrier)
-  #endif
-  #if !backend_debug_enabled(event)
-    debug_warn_compile(event)
-  #endif
-  #if !backend_debug_enabled(pipe)
-    debug_warn_compile(pipe)
-  #endif
-  #if !backend_debug_enabled(pool)
-    debug_warn_compile(pool)
-  #endif
-  #if !backend_debug_enabled(reduce)
-    debug_warn_compile(reduce)
-  #endif
-  #if !backend_debug_enabled(rdma)
-    debug_warn_compile(rdma)
-  #endif
-  #if !backend_debug_enabled(rdma_channel)
-    debug_warn_compile(rdma_channel)
-  #endif
-  #if !backend_debug_enabled(rdma_state)
-    debug_warn_compile(rdma_state)
-  #endif
-  #if !backend_debug_enabled(param)
-    debug_warn_compile(param)
-  #endif
-  #if !backend_debug_enabled(handler)
-    debug_warn_compile(handler)
-  #endif
-  #if !backend_debug_enabled(hierlb)
-    debug_warn_compile(hierlb)
-  #endif
-  #if !backend_debug_enabled(scatter)
-      debug_warn_compile(scatter)
-  #endif
-  #if !backend_debug_enabled(sequence)
-    debug_warn_compile(sequence)
-  #endif
-  #if !backend_debug_enabled(sequence_vrt)
-    debug_warn_compile(sequence_vrt)
-  #endif
-  #if !backend_debug_enabled(serial_msg)
-    debug_warn_compile(serial_msg)
-  #endif
-  #if !backend_debug_enabled(trace)
-    debug_warn_compile(trace)
-  #endif
-  #if !backend_debug_enabled(location)
-    debug_warn_compile(location)
-  #endif
-  #if !backend_debug_enabled(lb)
-    debug_warn_compile(lb)
-  #endif
-  #if !backend_debug_enabled(vrt)
-    debug_warn_compile(vrt)
-  #endif
-  #if !backend_debug_enabled(vrt_coll)
-    debug_warn_compile(vrt_coll)
-  #endif
-  #if !backend_debug_enabled(worker)
-    debug_warn_compile(worker)
-  #endif
-  #if !backend_debug_enabled(group)
-    debug_warn_compile(group)
-  #endif
-  #if !backend_debug_enabled(broadcast)
-    debug_warn_compile(broadcast)
-  #endif
-  #if !backend_debug_enabled(objgroup)
-    debug_warn_compile(objgroup)
-  #endif
+  vt_runtime_debug_warn_compile(none)
+  vt_runtime_debug_warn_compile(gen)
+  vt_runtime_debug_warn_compile(runtime)
+  vt_runtime_debug_warn_compile(active)
+  vt_runtime_debug_warn_compile(term)
+  vt_runtime_debug_warn_compile(termds)
+  vt_runtime_debug_warn_compile(barrier)
+  vt_runtime_debug_warn_compile(event)
+  vt_runtime_debug_warn_compile(pipe)
+  vt_runtime_debug_warn_compile(pool)
+  vt_runtime_debug_warn_compile(reduce)
+  vt_runtime_debug_warn_compile(rdma)
+  vt_runtime_debug_warn_compile(rdma_channel)
+  vt_runtime_debug_warn_compile(rdma_state)
+  vt_runtime_debug_warn_compile(param)
+  vt_runtime_debug_warn_compile(handler)
+  vt_runtime_debug_warn_compile(hierlb)
+  vt_runtime_debug_warn_compile(scatter)
+  vt_runtime_debug_warn_compile(sequence)
+  vt_runtime_debug_warn_compile(sequence_vrt)
+  vt_runtime_debug_warn_compile(serial_msg)
+  vt_runtime_debug_warn_compile(trace)
+  vt_runtime_debug_warn_compile(location)
+  vt_runtime_debug_warn_compile(vrt)
+  vt_runtime_debug_warn_compile(vrt_coll)
+  vt_runtime_debug_warn_compile(worker)
+  vt_runtime_debug_warn_compile(group)
+  vt_runtime_debug_warn_compile(broadcast)
+  vt_runtime_debug_warn_compile(objgroup)
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);
@@ -930,29 +908,21 @@ void Runtime::initializeComponents() {
 }
 
 void Runtime::initializeTrace() {
-  backend_enable_if(
-    trace_enabled, {
-      theTrace = std::make_unique<trace::Trace>();
-    }
-  );
+  #if backend_check_enabled(trace_enabled)
+    theTrace = std::make_unique<trace::Trace>();
 
-  backend_enable_if(
-    trace_enabled, {
-      std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-      auto const& node = theContext->getNode();
-      theTrace->setupNames(
-        name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
-      );
-    }
-  );
+    std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
+    auto const& node = theContext->getNode();
+    theTrace->setupNames(
+      name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
+    );
+  #endif
 }
 
 void Runtime::finalizeTrace() {
-  backend_enable_if(
-    trace_enabled, {
-      theTrace = nullptr;
-    }
-  );
+  #if backend_check_enabled(trace_enabled)
+    theTrace = nullptr;
+  #endif
 }
 
 namespace {
@@ -971,7 +941,8 @@ namespace {
     MPI_Error_string(*errc, msg, &len);
     std::string err_msg(msg, len);
 
-    vtAbort("MPI Error: {} (code: {})", err_msg, *errc);
+    fmt::print("{} (code: {})", err_msg, *errc);
+    vtAbort("MPI Error");
   }
 }
 

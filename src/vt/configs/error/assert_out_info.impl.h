@@ -68,9 +68,11 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 assertOutInfo(
   bool fail, std::string const cond, std::string const& str,
   std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error, std::tuple<Args2...> tup, Args... args
+  ErrorCodeType error, std::tuple<Args2...>&& tup, std::tuple<Args...>&& t2
 ) {
-  return assertOut(fail,cond,str,file,line,func,error,args...);
+  return assertOut(
+    fail,cond,str,file,line,func,error,std::forward<std::tuple<Args...>>(t2)
+  );
 }
 
 template <typename... Args, typename... Args2>
@@ -79,7 +81,7 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value != 0>
 assertOutInfo(
   bool fail, std::string const cond, std::string const& str,
   std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error, std::tuple<Args2...> t1, Args... args
+  ErrorCodeType error, std::tuple<Args2...>&& t1, std::tuple<Args...>&& t2
 ) {
   using KeyType = std::tuple<Args2...>;
   using ValueType = std::tuple<Args...>;
@@ -87,11 +89,10 @@ assertOutInfo(
   using PrinterType = util::error::PrinterNameValue<size-1,KeyType,ValueType>;
 
   // Output the standard assert message
-  assertOut(false,cond,str,file,line,func,error);
+  assertOut(false,cond,str,file,line,func,error,std::make_tuple());
 
   // Output each expression computed passed to the function along with the
   // computed value of that passed expression
-  auto const t2 = std::make_tuple(args...);
   auto varlist = PrinterType::make(t1,t2);
 
   auto node      = debug::preNode();

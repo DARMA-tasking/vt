@@ -66,7 +66,7 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 assertOut(
   bool fail, std::string const cond, std::string const& str,
   std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error, Args... args
+  ErrorCodeType error, std::tuple<Args...>&& args
 );
 
 template <typename... Args>
@@ -75,7 +75,7 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value != 0>
 assertOut(
   bool fail, std::string const cond, std::string const& str,
   std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error, Args... args
+  ErrorCodeType error, std::tuple<Args...>&& args
 );
 
 }}} /* end namespace vt::debug::assert */

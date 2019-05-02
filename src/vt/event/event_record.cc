@@ -88,8 +88,8 @@ bool EventRecord::testMPIEventReady() {
   bool const mpiready = flag == 1;
 
   if (mpiready and msg_ != nullptr and isSharedMessage(msg_.get())) {
-    debug_print(
-      verbose, active, node,
+    debug_print_verbose(
+      active, node,
       "testMPIEventRead: deref: msg={}\n",
       print_ptr(msg_.get())
     );
