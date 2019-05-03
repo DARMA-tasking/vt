@@ -440,6 +440,7 @@ namespace vt { namespace arguments {
     for (auto ii = 0; ii < argc; ii++) {
       if (std::string(argv[ii]) == *iter) {
         ret_idx.push_back(ii);
+		break;
       }
     }
     ret_args.push_back(*iter);
