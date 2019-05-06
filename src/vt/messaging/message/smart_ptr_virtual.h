@@ -86,7 +86,7 @@ private:
   MsgSharedPtr<T> ptr_ = nullptr;
   std::function<void()> closure_ = nullptr;
 
-  friend class PendingSend;
+  friend struct PendingSend;
   MsgSharedPtr<T>& getShared() { return ptr_; }
 };
 
