@@ -67,6 +67,7 @@
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/messaging/message.h"
+#include "vt/messaging/pending_send.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/reduce/reduce_msg.h"
@@ -121,9 +122,9 @@ struct CollectionManager {
   using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;
 
   template <typename T, typename U=void>
-  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
+  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg, messaging::PendingSend>;
   template <typename T, typename U=void>
-  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
+  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg, messaging::PendingSend>;
 
   template <typename ColT, typename UserMsgT, typename T, typename U=void>
   using IsWrapType = std::enable_if_t<
@@ -291,7 +292,7 @@ public:
     typename ColT = typename MsgT::CollectionType,
     typename IdxT = typename ColT::IndexType
   >
-  void sendMsgUntypedHandler(
+  messaging::PendingSend sendMsgUntypedHandler(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
     bool imm_context = true
@@ -310,7 +311,7 @@ public:
   );
 
   template <typename MsgT, typename ColT>
-  void sendNormalMsg(
+  messaging::PendingSend sendNormalMsg(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member
   );
@@ -318,7 +319,7 @@ public:
   template <
     typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
   >
-  void sendMsg(
+  messaging::PendingSend sendMsg(
     VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
   );
 
@@ -326,7 +327,7 @@ public:
     typename MsgT,
     ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
   >
-  void sendMsg(
+  messaging::PendingSend sendMsg(
     VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
   );
 
@@ -359,7 +360,7 @@ public:
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  void sendMsgImpl(
+  messaging::PendingSend sendMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -368,7 +369,7 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
   >
-  void sendMsgImpl(
+  messaging::PendingSend sendMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -440,14 +441,14 @@ public:
   );
 
   template <typename MsgT, typename ColT>
-  void broadcastNormalMsg(
+  messaging::PendingSend broadcastNormalMsg(
     CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
     bool instrument = true
   );
 
   template <typename MsgT, typename ColT, typename IdxT>
-  void broadcastMsgUntypedHandler(
+  messaging::PendingSend broadcastMsgUntypedHandler(
     CollectionProxyWrapType<ColT,IdxT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
     bool instrument
@@ -458,7 +459,7 @@ public:
     typename MsgT,
     ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
   >
-  void broadcastMsg(
+  messaging::PendingSend broadcastMsg(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -467,7 +468,7 @@ public:
     typename MsgT,
     ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
   >
-  void broadcastMsg(
+  messaging::PendingSend broadcastMsg(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -505,7 +506,7 @@ public:
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  void broadcastMsgImpl(
+  messaging::PendingSend broadcastMsgImpl(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -515,13 +516,13 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  void broadcastMsgImpl(
+  messaging::PendingSend broadcastMsgImpl(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
 
   template <typename ColT, typename IndexT, typename MsgT>
-  void broadcastFromRoot(MsgT* msg);
+  messaging::PendingSend broadcastFromRoot(MsgT* msg);
 
 public:
   /*

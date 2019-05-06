@@ -68,13 +68,26 @@ struct MsgVirtualPtr final {
       closure_(in_vrt.closure_)
   { }
 
+  MsgVirtualPtr(std::nullptr_t) { }
+
+  inline void operator=(std::nullptr_t)
+  {
+    ptr_ = nullptr;
+    closure_ = nullptr;
+  }
+
   inline T* get() const { return ptr_.get(); }
   inline T* operator->() const { return ptr_.get(); }
   inline T& operator*() const { return *ptr_.get(); }
+  inline bool operator==(std::nullptr_t) const { return ptr_ == nullptr; }
+  inline bool operator!=(std::nullptr_t) const { return ptr_ != nullptr; }
 
 private:
   MsgSharedPtr<T> ptr_ = nullptr;
   std::function<void()> closure_ = nullptr;
+
+  friend struct PendingSend;
+  MsgSharedPtr<T>& getShared() { return ptr_; }
 };
 
 }} /* end namespace vt::messaging */

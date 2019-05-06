@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          broadcastable.h
+//                          pending_send.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,45 +42,19 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_H
-#define INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_H
-
-#include "vt/config.h"
-#include "vt/vrt/proxy/base_collection_proxy.h"
-#include "vt/activefn/activefn.h"
-#include "vt/vrt/collection/active/active_funcs.h"
-#include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
+#include "vt/messaging/active.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace messaging {
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-struct Broadcastable : BaseProxyT {
-  Broadcastable() = default;
-  Broadcastable(Broadcastable const&) = default;
-  Broadcastable(Broadcastable&&) = default;
-  Broadcastable(VirtualProxyType const in_proxy);
-  Broadcastable& operator=(Broadcastable const&) = default;
+void PendingSend::sendMsg() {
+  if (send_action_ == nullptr) {
+    theMsg()->sendMsgSized(msg_.getShared(), msg_size_);
+  } else {
+    send_action_(msg_);
+  }
+  msg_ = nullptr;
+  send_action_ = nullptr;
+}
 
-  template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
-  messaging::PendingSend broadcast(MsgT* msg) const;
-  template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
-  messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
-  template <
-    typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
-  >
-  messaging::PendingSend broadcast(Args&&... args) const;
-
-  template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-  messaging::PendingSend broadcast(MsgT* msg) const;
-  template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-  messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
-  template <
-    typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
-  >
-  messaging::PendingSend broadcast(Args&&... args) const;
-};
-
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_H*/
+}}

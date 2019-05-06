@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/messaging/pending_send.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -63,20 +64,20 @@ struct Sendable : BaseProxyT {
   void serialize(SerializerT& s);
 
   template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
-  void send(MsgT* msg) const;
+  messaging::PendingSend send(MsgT* msg) const;
   template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
-  void send(MsgSharedPtr<MsgT> msg) const;
+  messaging::PendingSend send(MsgSharedPtr<MsgT> msg) const;
   template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f, typename... Args>
-  void send(Args&&... args) const;
+  messaging::PendingSend send(Args&&... args) const;
 
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
-  void send(MsgT* msg) const;
+  messaging::PendingSend send(MsgT* msg) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
-  void send(MsgSharedPtr<MsgT> msg) const;
+  messaging::PendingSend send(MsgSharedPtr<MsgT> msg) const;
   template <
     typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
   >
-  void send(Args&&... args) const;
+  messaging::PendingSend send(Args&&... args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

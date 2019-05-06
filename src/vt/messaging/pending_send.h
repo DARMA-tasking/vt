@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          broadcastable.h
+//                          pending_send.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,45 +42,62 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_H
-#define INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_H
+#if !defined INCLUDED_VT_MESSAGING_PENDING_SEND_H
+#define INCLUDED_VT_MESSAGING_PENDING_SEND_H
 
 #include "vt/config.h"
-#include "vt/vrt/proxy/base_collection_proxy.h"
-#include "vt/activefn/activefn.h"
-#include "vt/vrt/collection/active/active_funcs.h"
-#include "vt/messaging/message/smart_ptr.h"
-#include "vt/messaging/pending_send.h"
+#include "vt/messaging/message.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <functional>
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-struct Broadcastable : BaseProxyT {
-  Broadcastable() = default;
-  Broadcastable(Broadcastable const&) = default;
-  Broadcastable(Broadcastable&&) = default;
-  Broadcastable(VirtualProxyType const in_proxy);
-  Broadcastable& operator=(Broadcastable const&) = default;
+namespace vt { namespace messaging {
 
-  template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
-  messaging::PendingSend broadcast(MsgT* msg) const;
-  template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
-  messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
-  template <
-    typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
-  >
-  messaging::PendingSend broadcast(Args&&... args) const;
+struct PendingSend final {
+  using SendActionType = std::function<void(MsgVirtualPtr<BaseMsgType>)>;
 
-  template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-  messaging::PendingSend broadcast(MsgT* msg) const;
-  template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-  messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
-  template <
-    typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
-  >
-  messaging::PendingSend broadcast(Args&&... args) const;
+  PendingSend(MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size)
+    : msg_(in_msg.template toVirtual<BaseMsgType>())
+    , msg_size_(in_msg_size)
+  { }
+  template <typename MsgT>
+  PendingSend(MsgSharedPtr<MsgT> in_msg, SendActionType const& in_action)
+    : msg_(in_msg.template toVirtual<BaseMsgType>())
+    , msg_size_(sizeof(MsgT))
+    , send_action_(in_action)
+  { }
+
+  explicit PendingSend(nullptr_t) { }
+  PendingSend(PendingSend&& in)
+    : msg_(std::move(in.msg_)),
+      msg_size_(std::move(in.msg_size_)),
+      send_action_(std::move(in.send_action_))
+  {
+    in.msg_ = nullptr;
+    in.send_action_ = nullptr;
+  }
+  PendingSend(const PendingSend&) = delete;
+  PendingSend& operator=(PendingSend&& in) = delete;
+  PendingSend& operator=(PendingSend& in) = delete;
+
+  ~PendingSend() { release(); }
+
+  void release() {
+    if (msg_ != nullptr || send_action_ != nullptr) {
+      sendMsg();
+    }
+  }
+
+private:
+  // Send the message saved directly or trigger the lambda for
+  // specialized sends from the pending holder
+  void sendMsg();
+
+private:
+  MsgVirtualPtr<BaseMsgType> msg_ = nullptr;
+  ByteType msg_size_ = -1;
+  SendActionType send_action_ = nullptr;
 };
 
-}}} /* end namespace vt::vrt::collection */
+}} /* end namespace vt::messaging */
 
-#endif /*INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_H*/
+#endif /*INCLUDED_VT_MESSAGING_PENDING_SEND_H*/
