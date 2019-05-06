@@ -116,49 +116,32 @@ public:
 
 
   struct ReduxMsg : vt::collective::ReduceTMsg<double> {
-
-    LinearPb1DJacobi *linearpb_ = nullptr;
-
     ReduxMsg() = default;
-
-    explicit ReduxMsg(double in_val, LinearPb1DJacobi *pbref)
-      : ReduceTMsg<double>(in_val), linearpb_(pbref)
-    { }
-
+    explicit ReduxMsg(double in_val) : ReduceTMsg<double>(in_val) { }
   };
 
 
-  struct CheckComplete {
+  void checkCompleteCB(ReduxMsg* msg) {
+    double normRes = msg->getConstVal();
+    auto iter = iter_;
+    auto maxIter= maxIter_;
 
-    void operator()(ReduxMsg* msg) {
-
+    if ((iter <= maxIter) and (normRes >= default_tol)) {
+      ::fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter, normRes);
       //
-      // Only the 'root' object for the reduction will visit
-      // this function
+      // Start a new iteration
       //
-
-      double normRes = msg->getConstVal();
-      auto iter = msg->linearpb_->iter_;
-      auto maxIter= msg->linearpb_->maxIter_;
-
-      if ((iter <= maxIter) and (normRes >= default_tol)) {
-        ::fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter, normRes);
-        //
-        // Start a new iteration
-        //
-        auto proxy = msg->linearpb_->getCollectionProxy();
-        auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
-        proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
-      }
-      else if (iter > maxIter) {
-        ::fmt::print("\n Maximum Number of Iterations Reached. \n\n");
-      }
-      else {
-        ::fmt::print("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
-      }
-
+      auto proxy = this->getCollectionProxy();
+      auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
+      proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
     }
-  };
+    else if (iter > maxIter) {
+      ::fmt::print("\n Maximum Number of Iterations Reached. \n\n");
+    }
+    else {
+      ::fmt::print("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
+    }
+  }
 
 
   void doIteration() {
@@ -196,8 +179,11 @@ public:
     }
 
     auto proxy = this->getCollectionProxy();
-    auto msg2 = makeSharedMessage<ReduxMsg>(maxNorm, this);
-    proxy.reduce<collective::MaxOp<double>, CheckComplete>(msg2);
+    auto cb = theCB()->makeSend<
+      LinearPb1DJacobi,ReduxMsg,&LinearPb1DJacobi::checkCompleteCB
+    >(proxy[0]);
+    auto msg2 = makeMessage<ReduxMsg>(maxNorm);
+    proxy.reduce<collective::MaxOp<double>>(msg2.get(),cb);
 
   }
 
@@ -328,13 +314,10 @@ public:
     // Initialize the starting vector
     init();
 
-    // Ask all objects to run through the 'sendInfo' routine.
-    if (getIndex().x() == 0) {
-      auto proxy = this->getCollectionProxy();
-      auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
-      proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
-    }
-
+    auto proxy = this->getCollectionProxy();
+    auto idx = this->getIndex();
+    auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
+    proxy[idx].send<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
   }
 
 };
