@@ -147,10 +147,8 @@ public:
         // Start a new iteration
         //
         auto proxy = msg->linearpb_->getCollectionProxy();
-        auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
-        proxy.broadcast<
-          LinearPb1DJacobi::BlankMsg, &LinearPb1DJacobi::sendInfo
-        >(loopMsg);
+        auto loopMsg = makeSharedMessage<BlankMsg>();
+        proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
       }
       else if (iter > maxIter) {
         ::fmt::print("\n Maximum Number of Iterations Reached. \n\n");
@@ -268,22 +266,13 @@ public:
     // Routine to send information to a different object
     //
 
-    auto myIdx = getIndex().x();
+    size_t const myIdx = getIndex().x();
 
     //--- Send the values to the left
     auto proxy = this->getCollectionProxy();
     if (myIdx > 0) {
       auto leftMsg = vt::makeSharedMessage<VecMsg>(myIdx, told_[1]);
-      vt::theCollection()->sendMsg<
-        LinearPb1DJacobi::VecMsg, &LinearPb1DJacobi::exchange
-      >(proxy(myIdx-1), leftMsg);
-      //
-      // --- Alternative syntax
-      //
-      // proxy[myIdx-1].send<
-      //   LinearPb1DJacobi::VecMsg,
-      //   &LinearPb1DJacobi::exchange
-      // >(leftMsg);
+      proxy[myIdx-1].send<VecMsg, &LinearPb1DJacobi::exchange>(leftMsg);
     }
 
     //--- Send values to the right
@@ -291,18 +280,8 @@ public:
       auto rightMsg = vt::makeSharedMessage<VecMsg>(
         myIdx, told_[numRowsPerObject_]
       );
-      vt::theCollection()->sendMsg<
-        LinearPb1DJacobi::VecMsg, &LinearPb1DJacobi::exchange
-      >(proxy(myIdx+1), rightMsg);
-      //
-      // --- Alternative syntax
-      //
-      // proxy[myIdx+1].send<
-      //   LinearPb1DJacobi::VecMsg,
-      //   &LinearPb1DJacobi::exchange
-      // >(rightMsg);
+      proxy[myIdx+1].send<VecMsg, &LinearPb1DJacobi::exchange>(rightMsg);
     }
-
   }
 
 
@@ -315,7 +294,7 @@ public:
     double h = 1.0 / (numRowsPerObject_ * numObjs_ + 1.0);
     int nf = 3 * int(numRowsPerObject_ * numObjs_ + 1) / 4;
 
-    auto myIdx = getIndex().x();
+    size_t const myIdx = getIndex().x();
 
     for (size_t ii = 0; ii < tcur_.size(); ++ii) {
       double x0 = ( numRowsPerObject_ * myIdx + ii) * h;
@@ -351,15 +330,8 @@ public:
     // Ask all objects to run through the 'sendInfo' routine.
     if (getIndex().x() == 0) {
       auto proxy = this->getCollectionProxy();
-      auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
-      proxy.broadcast<LinearPb1DJacobi::BlankMsg, &LinearPb1DJacobi::sendInfo>(
-        loopMsg
-      );
-      //
-      // --- Alternative syntax
-      //
-      //vt::theCollection()->broadcastMsg<LinearPb1DJacobi::BlankMsg,
-      //        &LinearPb1DJacobi::sendInfo>(proxy, loopMsg);
+      auto loopMsg = makeSharedMessage<BlankMsg>();
+      proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
     }
 
   }

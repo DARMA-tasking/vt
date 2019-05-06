@@ -148,10 +148,7 @@ public:
         //
         auto proxy = msg->linearpb_->getCollectionProxy();
         auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
-        proxy.broadcast<
-          LinearPb1DJacobi::BlankMsg,
-          &LinearPb1DJacobi::sendInfo
-        >(loopMsg);
+        proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
       }
       else if (iter > maxIter) {
         ::fmt::print("\n Maximum Number of Iterations Reached. \n\n");
@@ -275,16 +272,7 @@ public:
     auto proxy = this->getCollectionProxy();
     if (myIdx > 0) {
       auto leftMsg = vt::makeSharedMessage<VecMsg>(myIdx, told_[1]);
-      vt::theCollection()->sendMsg<
-        LinearPb1DJacobi::VecMsg, &LinearPb1DJacobi::exchange
-      >(proxy(myIdx-1), leftMsg);
-      //
-      // --- Alternative syntax
-      //
-      // proxy[myIdx-1].send<
-      //   LinearPb1DJacobi::VecMsg,
-      //   &LinearPb1DJacobi::exchange
-      // >(leftMsg);
+      proxy[myIdx-1].send<VecMsg, &LinearPb1DJacobi::exchange>(leftMsg);
     }
 
     //--- Send values to the right
@@ -292,16 +280,7 @@ public:
       auto rightMsg = vt::makeSharedMessage<VecMsg>(
         myIdx, told_[numRowsPerObject_]
       );
-      vt::theCollection()->sendMsg<
-        LinearPb1DJacobi::VecMsg, &LinearPb1DJacobi::exchange
-      >(proxy(myIdx+1), rightMsg);
-      //
-      // --- Alternative syntax
-      //
-      // proxy[myIdx+1].send<
-      //   LinearPb1DJacobi::VecMsg,
-      //   &LinearPb1DJacobi::exchange
-      // >(rightMsg);
+      proxy[myIdx+1].send<VecMsg,&LinearPb1DJacobi::exchange>(rightMsg);
     }
 
   }
@@ -353,16 +332,7 @@ public:
     if (getIndex().x() == 0) {
       auto proxy = this->getCollectionProxy();
       auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
-      proxy.broadcast<LinearPb1DJacobi::BlankMsg, &LinearPb1DJacobi::sendInfo>(
-        loopMsg
-      );
-      //
-      // --- Alternative syntax
-      //
-      //vt::theCollection()->broadcastMsg<
-      //  LinearPb1DJacobi::BlankMsg,
-      //  &LinearPb1DJacobi::sendInfo
-      //>(proxy, loopMsg);
+      proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
     }
 
   }
