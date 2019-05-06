@@ -85,7 +85,7 @@ then
     build_all=""
 else
     #echo "Setting no build all for ${has_all}"
-    build_all="-DCMAKE_NO_BUILD_TESTS=1 -DCMAKE_NO_BUILD_EXAMPLES=1"
+    build_all="-DVT_NO_BUILD_TESTS=1 -DVT_NO_BUILD_EXAMPLES=1"
 fi
 
 (>&2 echo "=== Building vt ===")

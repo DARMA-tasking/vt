@@ -46,9 +46,9 @@ set(
   objgroup
 )
 
-if (CMAKE_NO_BUILD_EXAMPLES)
+if (VT_NO_BUILD_EXAMPLES)
   message(
-    STATUS "VT: not building examples because CMAKE_NO_BUILD_EXAMPLES is set"
+    STATUS "VT: not building examples because VT_NO_BUILD_EXAMPLES is set"
   )
 else()
   foreach(EXAMPLE_NAME ${PROJECT_EXAMPLES_LIST})

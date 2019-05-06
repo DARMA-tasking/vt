@@ -92,7 +92,7 @@ my $build_all_str = "";
 if ($build_all_tests > 0) {
     $build_all_str = "";
 } else {
-    $build_all_str = "-DCMAKE_NO_BUILD_TESTS=1 -DCMAKE_NO_BUILD_EXAMPLES=1";
+    $build_all_str = "-DVT_NO_BUILD_TESTS=1 -DVT_NO_BUILD_EXAMPLES=1";
 }
 
 if ($atomic ne "") {

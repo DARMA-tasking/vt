@@ -27,9 +27,9 @@ set(
   objgroup
 )
 
-option(CMAKE_NO_BUILD_TESTS "Enable VT tests to be built" OFF)
+option(VT_NO_BUILD_TESTS "Disable building VT tests" OFF)
 
-if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
+if (${VT_HAS_GTEST} AND NOT ${VT_NO_BUILD_TESTS})
   set(
     TEST_HEADER_FILES
     ${PROJECT_TEST_UNIT_DIR}/test_harness.h
@@ -100,20 +100,20 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
     endforeach()
   endforeach()
 else()
-  if (${CMAKE_NO_BUILD_TESTS})
+  if (${VT_NO_BUILD_TESTS})
     message(
       STATUS
-      "VT: not building unit tests because CMAKE_NO_BUILD_TESTS is set"
+      "VT: not building unit tests because VT_NO_BUILD_TESTS is set"
     )
   else()
     message(STATUS "VT: not building unit tests because not VT_HAS_GTEST")
   endif()
 endif()
 
-if (${CMAKE_NO_BUILD_TESTS})
+if (${VT_NO_BUILD_TESTS})
   message(
     STATUS
-    "VT: not building performance tests because CMAKE_NO_BUILD_TESTS is set"
+    "VT: not building performance tests because VT_NO_BUILD_TESTS is set"
   )
 else()
   foreach(PERF_TEST ${PROJECT_PERF_TESTS})
