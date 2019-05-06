@@ -355,27 +355,28 @@ int main(int argc, char** argv) {
 
   if (argc == 1) {
     if (this_node == 0) {
-      ::fmt::print(
+      fmt::print(
         stderr, "{}: using default arguments since none provided\n", name
       );
     }
     num_objs = default_num_objs * num_nodes;
   } else if (argc == 2) {
-    num_objs = (size_t) strtol(argv[1], nullptr, 10);
+    num_objs = static_cast<size_t>(strtol(argv[1], nullptr, 10));
   }
   else if (argc == 3) {
-    num_objs = (size_t) strtol(argv[1], nullptr, 10);
-    numRowsPerObject = (size_t) strtol(argv[2], nullptr, 10);
+    num_objs = static_cast<size_t>(strtol(argv[1], nullptr, 10));
+    numRowsPerObject = static_cast<size_t>(strtol(argv[2], nullptr, 10));
   }
   else if (argc == 4) {
-    num_objs = (size_t) strtol(argv[1], nullptr, 10);
-    numRowsPerObject = (size_t) strtol(argv[2], nullptr, 10);
-    maxIter = (size_t) strtol(argv[3], nullptr, 10);
+    num_objs = static_cast<size_t>(strtol(argv[1], nullptr, 10));
+    numRowsPerObject = static_cast<size_t>(strtol(argv[2], nullptr, 10));
+    maxIter = static_cast<size_t>(strtol(argv[3], nullptr, 10));
   }
   else {
-    ::fmt::print(stderr,
-                 "usage: {} <num-objects> <num-rows-per-object> <maxiter>\n",
-                 name);
+    fmt::print(
+      stderr, "usage: {} <num-objects> <num-rows-per-object> <maxiter>\n",
+      name
+    );
     return 1;
   }
 
