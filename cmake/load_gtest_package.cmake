@@ -3,20 +3,20 @@
 #  Load the google test and ctest package (optional)
 #
 
-# Google test cmake option and package setup
-option(
-  enable_gtest "Enable google test framework: -Dgtest_DIR= to specify path" ON
-)
+if(NOT projHasParent)
+  # Google test cmake option and package setup
+  option(
+    enable_gtest "Enable google test framework: -Dgtest_DIR= to specify path" ON
+  )
 
-if (${enable_gtest})
-  if (${gtest_DIR})
-    set(GTEST_ROOT "${gtest_DIR}" CACHE PATH "Path to googletest")
-  endif()
+  if (${enable_gtest})
+    if (${gtest_DIR})
+      set(GTEST_ROOT "${gtest_DIR}" CACHE PATH "Path to googletest")
+    endif()
 
-  # Instead of explicitly including (include(FindGTest)), call find_package
-  # which automatically searches the module include path. This is the preferred
-  # mechanism for utilizing a package script.
-  if(NOT projHasParent)
+    # Instead of explicitly including (include(FindGTest)), call find_package
+    # which automatically searches the module include path. This is the preferred
+    # mechanism for utilizing a package script.
     find_package(GTest REQUIRED)
 
     if(GTEST_FOUND)
@@ -28,18 +28,22 @@ if (${enable_gtest})
         "Please specify valid directory with -Dgtest_DIR="
       )
     endif()
+    set(VT_HAS_GTEST TRUE)
   else()
+    message(
+      STATUS
+      "Gtest is disabled; not building tests. To enable set -Denable_gtest=true."
+      )
+    set(VT_HAS_GTEST FALSE)
+  endif()
+else()  # building as TPL
+  if (NOT DISABLE_TPL_GTEST)
     include(cmake-modules/GoogleTest.cmake)
     set(GTEST_BOTH_LIBRARIES gtest gtest_main)
+    set(VT_HAS_GTEST TRUE)
+  else()
+    set(VT_HAS_GTEST FALSE)
   endif()
-
-  set(VT_HAS_GTEST TRUE)
-else()
-  message(
-    STATUS
-    "Gtest is disabled; not building tests. To enable set -Denable_gtest=true."
-    )
-  set(VT_HAS_GTEST FALSE)
 endif()
 
 include (CTest)
