@@ -65,6 +65,13 @@ template <typename MsgT>
   TagType in_tag
 ) {
   using HandlerManagerType = HandlerManager;
+  bool is_obj = HandlerManagerType::isHandlerObjGroup(handler);
+
+  // Dispatch to runObj if we are dealing with an
+  // obj handler
+  if (is_obj) {
+    return runObj(handler, msg, from_node);
+  }
 
   #if backend_check_enabled(trace_enabled)
     trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
@@ -82,7 +89,6 @@ template <typename MsgT>
 
   bool is_functor = false;
   bool is_auto = false;
-  bool is_obj = false;
   bool bare_handler = false;
   auto_registry::NumArgsType num_args = 1;
 
@@ -91,7 +97,7 @@ template <typename MsgT>
     is_functor = HandlerManagerType::isHandlerFunctor(handler);
     is_obj = HandlerManagerType::isHandlerObjGroup(handler);
 
-    vtAssert(not is_obj, "Must not be an object group handler");
+    vtAssert(not is_obj, "Must not be an object handler");
 
     if (is_auto && is_functor) {
       func = auto_registry::getAutoHandlerFunctor(handler);
