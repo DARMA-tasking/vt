@@ -120,11 +120,15 @@ void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han) {
   return theObjGroup()->dispatch(msg,han);
 }
 
-void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han) {
+void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch) {
+  theTerm()->produce(epoch);
   // Schedule the work of dispatching the message handler for later
-  theObjGroup()->work_units_.push_back(
-    [msg,han]{ theObjGroup()->dispatch(msg,han); }
-  );
+  theObjGroup()->work_units_.push_back([msg,han,epoch]{
+    theMsg()->pushEpoch(epoch);
+    theObjGroup()->dispatch(msg,han);
+    theMsg()->popEpoch();
+    theTerm()->consume(epoch);
+  });
 }
 
 }} /* end namespace vt::objgroup */
