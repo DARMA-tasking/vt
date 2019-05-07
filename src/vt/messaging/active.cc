@@ -556,13 +556,7 @@ bool ActiveMessenger::deliverActiveMsg(
       ep_stack_size = epochPreludeHandler(cur_epoch);
     }
 
-    if (is_obj) {
-      // run the object-group handler
-      runnable::Runnable<MsgType>::runObj(handler,msg,from_node);
-    } else {
-      // run the normal active function handler
-      runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
-    }
+    runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
 
     auto reg_trigger = theRegistry()->getTrigger(handler);
     if (reg_trigger) {
