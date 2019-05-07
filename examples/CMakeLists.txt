@@ -28,6 +28,8 @@ set(
   hello_world_vc
   jacobi1d_recur_vc
   jacobi1d_node
+  jacobi1d_vt
+  jacobi2d_vt
   serialize_example
   hello_world_vc_remote
   hello_world_collection
