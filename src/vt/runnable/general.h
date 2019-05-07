@@ -63,7 +63,6 @@ struct Runnable {
   );
 
 private:
-  
   // Dispatch for object groups: handler with node-local object ptr
   static void runObj(HandlerType handler, MsgT* msg, NodeType from_node);
 };
