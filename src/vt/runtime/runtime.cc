@@ -315,43 +315,40 @@ void Runtime::printStartupBanner() {
 
   std::vector<std::string> features;
 
-#if backend_check_enabled(vt_feature_bit_check_overflow)
+#if backend_check_enabled(bit_check_overflow)
   features.push_back(vt_feature_str_bit_check_overflow);
 #endif
-#if backend_check_enabled(vt_feature_trace_enabled)
+#if backend_check_enabled(trace_enabled)
   features.push_back(vt_feature_str_trace_enabled);
 #endif
-#if backend_check_enabled(vt_feature_detector)
+#if backend_check_enabled(detector)
   features.push_back(vt_feature_str_detector);
 #endif
-#if backend_check_enabled(vt_feature_lblite)
+#if backend_check_enabled(lblite)
   features.push_back(vt_feature_str_lblite);
 #endif
-#if backend_check_enabled(vt_feature_openmp)
+#if backend_check_enabled(openmp)
   features.push_back(vt_feature_str_openmp);
 #endif
-#if backend_check_enabled(vt_feature_production)
+#if backend_check_enabled(production)
   features.push_back(vt_feature_str_production);
 #endif
-#if backend_check_enabled(vt_feature_stdthread)
+#if backend_check_enabled(stdthread)
   features.push_back(vt_feature_str_stdthread);
 #endif
-#if backend_check_enabled(vt_feature_mpi_rdma)
+#if backend_check_enabled(mpi_rdma)
   features.push_back(vt_feature_str_mpi_rdma);
 #endif
-#if backend_check_enabled(vt_feature_parserdes)
+#if backend_check_enabled(parserdes)
   features.push_back(vt_feature_str_parserdes);
 #endif
-#if backend_check_enabled(vt_feature_print_term_msgs)
+#if backend_check_enabled(print_term_msgs)
   features.push_back(vt_feature_str_print_term_msgs);
 #endif
-#if backend_check_enabled(vt_feature_default_threading)
-  features.push_back(vt_feature_str_default_threading);
-#endif
-#if backend_check_enabled(vt_feature_no_pool_alloc_env)
+#if backend_check_enabled(no_pool_alloc_env)
   features.push_back(vt_feature_str_no_pool_alloc_env);
 #endif
-#if backend_check_enabled(vt_feature_memory_pool)
+#if backend_check_enabled(memory_pool)
   features.push_back(vt_feature_str_memory_pool);
 #endif
 
