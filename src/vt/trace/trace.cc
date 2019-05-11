@@ -213,10 +213,10 @@ void Trace::addUserEvent(UserEventIDType event) {
   logEvent(log);
 }
 
-void Trace::addUserManualEvent(UserSpecEventIDType event) {
+void Trace::addUserEventManual(UserSpecEventIDType event) {
   debug_print(
     trace, node,
-    "Trace::addUserManualEvent: event={:x}\n",
+    "Trace::addUserEventManual: event={:x}\n",
     event
   );
 
@@ -233,19 +233,57 @@ void Trace::addUserEventBracketed(UserEventIDType event, double begin, double en
 
   auto const type = TraceConstantsType::UserEventPair;
 
-  LogPtrType log_b = new LogType(begin, type, event);
+  LogPtrType log_b = new LogType(begin, type, event, true);
   logEvent(log_b);
 
-  LogPtrType log_e = new LogType(end, type, event);
+  LogPtrType log_e = new LogType(end, type, event, false);
   logEvent(log_e);
 }
 
-void Trace::addUserManualEventBracketed(
+void Trace::addUserEventBracketedBegin(UserEventIDType event) {
+  debug_print(
+    trace, node,
+    "Trace::addUserEventBracketedBegin: event={:x}\n",
+    event
+  );
+
+  auto const type = TraceConstantsType::BeginUserEventPair;
+  auto const time = getCurrentTime();
+
+  LogPtrType log = new LogType(time, type, event, true);
+  logEvent(log);
+}
+
+void Trace::addUserEventBracketedEnd(UserEventIDType event) {
+  debug_print(
+    trace, node,
+    "Trace::addUserEventBracketedEnd: event={:x}\n",
+    event
+  );
+
+  auto const type = TraceConstantsType::EndUserEventPair;
+  auto const time = getCurrentTime();
+
+  LogPtrType log = new LogType(time, type, event, false);
+  logEvent(log);
+}
+
+void Trace::addUserEventBracketedManualBegin(UserSpecEventIDType event) {
+  auto id = user_event.createEvent(true, false, 0, event);
+  addUserEventBracketedBegin(id);
+}
+
+void Trace::addUserEventBracketedManualEnd(UserSpecEventIDType event) {
+  auto id = user_event.createEvent(true, false, 0, event);
+  addUserEventBracketedEnd(id);
+}
+
+void Trace::addUserEventBracketedManual(
   UserSpecEventIDType event, double begin, double end
 ) {
   debug_print(
     trace, node,
-    "Trace::addUserManualEventBracketed: event={:x}, begin={}, end={}\n",
+    "Trace::addUserEventBracketedManual: event={:x}, begin={}, end={}\n",
     event, begin, end
   );
 
@@ -497,6 +535,10 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     return basic_create();
   case TraceConstantsType::UserEvent:
   case TraceConstantsType::UserEventPair:
+    return log->user_start ? basic_new_event_create() : basic_no_event_create();
+    break;
+  case TraceConstantsType::BeginUserEventPair:
+  case TraceConstantsType::EndUserEventPair:
     return basic_new_event_create();
   default:
     vtAssert(0, "Not implemented");

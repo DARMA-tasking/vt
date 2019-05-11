@@ -122,11 +122,15 @@ struct Trace {
   void registerUserEventManual(std::string const& name, UserSpecEventIDType id);
 
   void addUserEvent(UserEventIDType event);
-  void addUserManualEvent(UserSpecEventIDType event);
+  void addUserEventManual(UserSpecEventIDType event);
   void addUserEventBracketed(UserEventIDType event, double begin, double end);
-  void addUserManualEventBracketed(
+  void addUserEventBracketedManual(
     UserSpecEventIDType event, double begin, double end
   );
+  void addUserEventBracketedBegin(UserEventIDType event);
+  void addUserEventBracketedEnd(UserEventIDType event);
+  void addUserEventBracketedManualBegin(UserSpecEventIDType event);
+  void addUserEventBracketedManualEnd(UserSpecEventIDType event);
   void addUserNote(std::string const& note);
   void addUserData(int32_t data);
   void addUserBracketedNote(

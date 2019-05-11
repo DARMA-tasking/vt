@@ -71,6 +71,7 @@ struct Log {
   UserDataType user_supplied_data = 0;
   double end_time = 0.0;
   UserEventIDType user_event = 0;
+  bool user_start = false;
 
   void setUserNote(std::string const& note) {
     user_supplied_note = note;
@@ -100,8 +101,9 @@ struct Log {
 
   Log(
     double const in_time, TraceConstantsType const in_type,
-    UserEventIDType in_user_event
-  ) : time(in_time), type(in_type), user_event(in_user_event)
+    UserEventIDType in_user_event, bool in_user_start
+  ) : time(in_time), type(in_type), user_event(in_user_event),
+      user_start(in_user_start)
   { }
 
   Log(
