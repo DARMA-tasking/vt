@@ -56,12 +56,10 @@
 
 namespace vt {
 
-using namespace ::vt::runtime;
+static constexpr runtime::RuntimeInstType const collective_default_inst =
+  runtime::RuntimeInstType::DefaultInstance;
 
-static constexpr RuntimeInstType const collective_default_inst =
-  RuntimeInstType::DefaultInstance;
-
-template <RuntimeInstType instance = collective_default_inst>
+template <runtime::RuntimeInstType instance = collective_default_inst>
 struct CollectiveAnyOps {
   // The general methods that interact with the managed runtime holder
   static RuntimePtrType initialize(
