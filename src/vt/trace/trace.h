@@ -99,34 +99,34 @@ struct Trace {
   );
 
   void beginProcessing(
-    TraceEntryIDType const& ep, TraceMsgLenType const& len,
-    TraceEventIDType const& event, NodeType const& from_node,
-    double const& time = getCurrentTime(),
+    TraceEntryIDType const ep, TraceMsgLenType const len,
+    TraceEventIDType const event, NodeType const from_node,
+    double const time = getCurrentTime(),
     uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
     uint64_t const idx4 = 0
   );
   void endProcessing(
-    TraceEntryIDType const& ep, TraceMsgLenType const& len,
-    TraceEventIDType const& event, NodeType const& from_node,
-    double const& time = getCurrentTime(),
+    TraceEntryIDType const ep, TraceMsgLenType const len,
+    TraceEventIDType const event, NodeType const from_node,
+    double const time = getCurrentTime(),
     uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
     uint64_t const idx4 = 0
   );
 
-  void beginIdle(double const& time = getCurrentTime());
-  void endIdle(double const& time = getCurrentTime());
+  void beginIdle(double const time = getCurrentTime());
+  void endIdle(double const time = getCurrentTime());
 
   TraceEventIDType messageCreation(
-    TraceEntryIDType const& ep, TraceMsgLenType const& len,
-    double const& time = getCurrentTime()
+    TraceEntryIDType const ep, TraceMsgLenType const len,
+    double const time = getCurrentTime()
   );
   TraceEventIDType messageCreationBcast(
-    TraceEntryIDType const& ep, TraceMsgLenType const& len,
-    double const& time = getCurrentTime()
+    TraceEntryIDType const ep, TraceMsgLenType const len,
+    double const time = getCurrentTime()
   );
   TraceEventIDType messageRecv(
-    TraceEntryIDType const& ep, TraceMsgLenType const& len,
-    NodeType const& from_node, double const& time = getCurrentTime()
+    TraceEntryIDType const ep, TraceMsgLenType const len,
+    NodeType const from_node, double const time = getCurrentTime()
   );
   TraceEventIDType logEvent(LogPtrType log);
 
@@ -140,13 +140,13 @@ struct Trace {
 
   static double getCurrentTime();
   static void outputControlFile(std::ofstream& file);
-  static TimeIntegerType timeToInt(double const& time);
+  static TimeIntegerType timeToInt(double const time);
   static void traceBeginIdleTrigger();
   static void outputHeader(
-    NodeType const& node, double const& start, gzFile file
+    NodeType const node, double const start, gzFile file
   );
   static void outputFooter(
-    NodeType const& node, double const& start, gzFile file
+    NodeType const node, double const start, gzFile file
   );
 
 private:
