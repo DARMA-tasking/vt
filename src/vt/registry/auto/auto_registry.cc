@@ -76,7 +76,6 @@ trace::TraceEntryIDType theTraceID(
       return getAutoRegistryGen<ContType>().at(han_id).theTraceID();
     } else {
       using ContType = AutoActiveMapFunctorContainerType;
-      auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
       return getAutoRegistryGen<ContType>().at(han_id).theTraceID();
     }
     break;
