@@ -44,6 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/collective/basic.h"
+#include "vt/collective/startup.h"
 #include "vt/collective/collective_ops.h"
 
 namespace vt {

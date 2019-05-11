@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          collective.h
+//                          startup.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,12 +42,43 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_COLLECTIVE_H
-#define INCLUDED_VT_COLLECTIVE_COLLECTIVE_H
-
 #include "vt/config.h"
-#include "vt/collective/basic.h"
 #include "vt/collective/startup.h"
 #include "vt/collective/collective_ops.h"
+#include "vt/runtime/runtime_headers.h"
+#include "vt/context/context.h"
 
-#endif /*INCLUDED_VT_COLLECTIVE_COLLECTIVE_H*/
+namespace vt {
+
+// vt::{initialize,finalize} for main ::vt namespace
+RuntimePtrType initialize(
+  int& argc, char**& argv, WorkerCountType const num_workers,
+  bool is_interop, MPI_Comm* comm
+) {
+  return CollectiveOps::initialize(argc,argv,num_workers,is_interop,comm);
+}
+
+RuntimePtrType initialize(int& argc, char**& argv, MPI_Comm* comm) {
+  bool const is_interop = comm != nullptr;
+  return CollectiveOps::initialize(argc,argv,no_workers,is_interop,comm);
+}
+
+RuntimePtrType initialize(MPI_Comm* comm) {
+  int argc = 0;
+  char** argv = nullptr;
+  return CollectiveOps::initialize(argc,argv,no_workers,true,comm);
+}
+
+void finalize(RuntimePtrType in_rt) {
+  if (in_rt) {
+    return CollectiveOps::finalize(std::move(in_rt));
+  } else {
+    return CollectiveOps::finalize(nullptr);
+  }
+}
+
+void finalize() {
+  CollectiveOps::finalize(nullptr);
+}
+
+} /* end namespace vt */

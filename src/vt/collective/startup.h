@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          collective.h
+//                          startup.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,12 +42,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_COLLECTIVE_H
-#define INCLUDED_VT_COLLECTIVE_COLLECTIVE_H
+#if !defined INCLUDED_VT_COLLECTIVE_STARTUP_H
+#define INCLUDED_VT_COLLECTIVE_STARTUP_H
 
 #include "vt/config.h"
-#include "vt/collective/basic.h"
-#include "vt/collective/startup.h"
-#include "vt/collective/collective_ops.h"
+#include "vt/runtime/runtime_headers.h"
 
-#endif /*INCLUDED_VT_COLLECTIVE_COLLECTIVE_H*/
+namespace vt {
+
+RuntimePtrType initialize(
+  int& argc, char**& argv, WorkerCountType const num_workers,
+  bool is_interop = false, MPI_Comm* comm = nullptr
+);
+RuntimePtrType initialize(int& argc, char**& argv, MPI_Comm* comm = nullptr);
+RuntimePtrType initialize(MPI_Comm* comm = nullptr);
+
+void finalize(RuntimePtrType in_rt);
+void finalize();
+
+} /* end namespace vt */
+
+#endif /*INCLUDED_VT_COLLECTIVE_STARTUP_H*/

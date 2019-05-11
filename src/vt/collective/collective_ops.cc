@@ -167,15 +167,4 @@ HandlerType CollectiveAnyOps<instance>::registerHandler(ActiveClosureFnType fn) 
 
 template struct CollectiveAnyOps<collective_default_inst>;
 
-void abort(std::string const str, ErrorCodeType const code) {
-  return CollectiveOps::abort(str,code);
-}
-
-void output(
-  std::string const str, ErrorCodeType const code, bool error, bool decorate,
-  bool formatted, bool abort_out
-) {
-  return CollectiveOps::output(str,code,error,decorate,formatted,abort_out);
-}
-
-} //end namespace vt
+} /* end namespace vt */
