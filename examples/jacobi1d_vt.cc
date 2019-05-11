@@ -131,7 +131,7 @@ public:
     auto const maxIter = maxIter_;
 
     if ((iter <= maxIter) and (normRes >= default_tol)) {
-      ::fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter, normRes);
+      fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter, normRes);
       //
       // Start a new iteration
       //
@@ -140,10 +140,10 @@ public:
       proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
     }
     else if (iter > maxIter) {
-      ::fmt::print("\n Maximum Number of Iterations Reached. \n\n");
+      fmt::print("\n Maximum Number of Iterations Reached. \n\n");
     }
-    else {
-      ::fmt::print("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
+    else{
+      fmt::print("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
     }
   }
 
@@ -216,7 +216,7 @@ public:
 
     // Receive and treat the message from a neighboring object.
 
-    auto myIdx = getIndex().x();
+    const IdxBase myIdx = getIndex().x();
 
     if (myIdx > msg->from_index) {
       this->told_[0] = msg->val;
@@ -255,7 +255,7 @@ public:
     // Routine to send information to a different object
     //
 
-    size_t const myIdx = getIndex().x();
+	vt::IdxBase const myIdx = getIndex().x();
 
     //--- Send the values to the left
     auto proxy = this->getCollectionProxy();
@@ -265,7 +265,7 @@ public:
     }
 
     //--- Send values to the right
-    if (myIdx < numObjs_ - 1) {
+    if (size_t(myIdx) < numObjs_ - 1) {
       auto rightMsg = vt::makeSharedMessage<VecMsg>(
         myIdx, told_[numRowsPerObject_]
       );

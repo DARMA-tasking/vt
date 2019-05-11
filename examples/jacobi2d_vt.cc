@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          jacobi1d_vt.cc
+//                          jacobi2d_vt.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,11 +42,17 @@
 //@HEADER
 */
 
+#include "vt/transport.h"
+
+#include <cstdlib>
+#include <cassert>
+#include <iostream>
+
 
 //
 // This code applies a few steps of the Jacobi iteration to
 // the linear system  A x = 0
-// where is the tridiagonal matrix with pattern [-1 2 -1]
+// where is a banded symmetric positive definite matrix.
 // The initial guess for x is a made-up non-zero vector.
 // The exact solution is the vector 0.
 //
@@ -54,17 +60,18 @@
 // The number of rows is ((number of objects) * (number of rows per object))
 //
 // Such a matrix A is obtained when using 2nd-order finite difference
-// for discretizing (-d^2 u /dx^2 = f) on [0, 1] with homogeneous
-// Dirichlet condition (u(0) = u(1) = 0) using a uniform grid
-// with grid size 1 / ((number of objects) * (number of rows per object) + 1)
+// for discretizing
 //
-
-
-#include "vt/transport.h"
-
-#include <cstdlib>
-#include <cassert>
-#include <iostream>
+// -d^2 u / dx^2 -d^2 u / dy^2 = f   on  [0, 1] x [0, 1]
+//
+// with homogeneous Dirichlet condition
+//
+// u = 0 on the boundary of [0, 1] x [0, 1]
+//
+// using a uniform grid with grid size
+//
+// 1 / ((number of objects) * (number of rows per object) + 1)
+//
 
 
 using namespace ::vt;
@@ -75,41 +82,50 @@ static constexpr std::size_t const default_num_objs = 4;
 static constexpr double const default_tol = 1.0e-02;
 
 
-struct LinearPb1DJacobi : vt::Collection<LinearPb1DJacobi,Index1D> {
+struct LinearPb2DJacobi : vt::Collection<LinearPb2DJacobi,Index2D> {
 
 private:
 
+  Index2D idx_;
   std::vector<double> tcur_, told_;
   std::vector<double> rhs_;
   size_t iter_ = 0;
   size_t msgReceived_ = 0, totalReceive_ = 0;
-  size_t numObjs_ = 1;
-  size_t numRowsPerObject_ = 1;
-  size_t maxIter_ = 8;
+  size_t numObjsX_ = 1, numObjsY_ = 1;
+  size_t numRowsPerObject_ = default_nrow_object;
+  size_t maxIter_ = 5;
+  double normRes_ = 0.0;
 
 public:
 
-  explicit LinearPb1DJacobi() :
-    tcur_(), told_(), rhs_(), iter_(0),
-    msgReceived_(0), totalReceive_(0),
-    numObjs_(1), numRowsPerObject_(1), maxIter_(8)
+  LinearPb2DJacobi() = default;
+
+  explicit LinearPb2DJacobi(Index2D in_idx)
+    : vt::Collection<LinearPb2DJacobi,Index2D>(), idx_(in_idx),
+      tcur_(), told_(), rhs_(), iter_(0),
+      msgReceived_(0), totalReceive_(0),
+      numObjsX_(1), numObjsY_(1),
+      numRowsPerObject_(default_nrow_object),
+      maxIter_(5), normRes_(0.0)
   { }
 
 
-  using BlankMsg = vt::CollectionMessage<LinearPb1DJacobi>;
+  struct BlankMsg : vt::CollectionMessage<LinearPb2DJacobi> {
+    BlankMsg() = default;
+  };
 
 
-  struct LPMsg : vt::CollectionMessage<LinearPb1DJacobi> {
+  struct LPMsg : vt::CollectionMessage<LinearPb2DJacobi> {
 
-    size_t numObjects = 0;
-    size_t nRowPerObject = 0;
-    size_t iterMax = 0;
+    size_t numXObjs = 0;
+    size_t numYObjs = 0;
+    size_t numIter = 0;
 
     LPMsg() = default;
 
-    LPMsg(const size_t nobjs, const size_t nrow, const size_t itMax) :
-      CollectionMessage<LinearPb1DJacobi>(),
-      numObjects(nobjs), nRowPerObject(nrow), iterMax(itMax)
+    LPMsg(const size_t nx, const size_t ny, const size_t nref) :
+      CollectionMessage<LinearPb2DJacobi>(),
+      numXObjs(nx), numYObjs(ny), numIter(nref)
     { }
 
   };
@@ -122,46 +138,76 @@ public:
 
 
   void checkCompleteCB(ReduxMsg* msg) {
-    double normRes = msg->getConstVal();
-    auto iter = iter_;
-    auto maxIter= maxIter_;
+    //
+    // Only one object for the reduction will visit
+    // this function
+    //
+
+    const double normRes = msg->getConstVal();
+    const size_t iter = iter_;
+    const size_t maxIter = maxIter_;
 
     if ((iter <= maxIter) and (normRes >= default_tol)) {
-      ::fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter, normRes);
+      fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter, normRes);
       //
       // Start a new iteration
       //
-      auto proxy = this->getCollectionProxy();
-      auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
-      proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
+      auto proxy = getCollectionProxy();
+      auto loopMsg = makeSharedMessage<BlankMsg>();
+      proxy.broadcast<BlankMsg, &LinearPb2DJacobi::sendInfo>(loopMsg);
     }
     else if (iter > maxIter) {
-      ::fmt::print("\n Maximum Number of Iterations Reached. \n\n");
+      fmt::print("\n Maximum Number of Iterations Reached. \n\n");
     }
-    else {
-      ::fmt::print("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
+    else{
+      fmt::print("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
     }
   }
 
 
   void doIteration() {
 
-    iter_ += 1;
+    //
+    //--- Copy ghost values
+    //
+
+    size_t ldx = numRowsPerObject_ + 2;
+    size_t ldy = numRowsPerObject_ + 2;
+
+    for (size_t jx = 0; jx < ldx; ++jx)
+      tcur_[jx] = told_[jx];
+
+    for (size_t jx = 0; jx < ldx; ++jx)
+      tcur_[jx + (ldy-1) * ldx] = told_[jx + (ldy-1) * ldx];
+
+    for (size_t jy = 0; jy < ldy; ++jy)
+      tcur_[jy * ldx] = told_[jy * ldx];
+
+    for (size_t jy = 0; jy < ldy; ++jy)
+      tcur_[ldx-1 + jy * ldx] = told_[ldx-1 + jy * ldx];
 
     //
-    //--- Copy extremal values
+    //--- Update my row values
     //
-    tcur_[0] = told_[0];
-    tcur_[numRowsPerObject_+1] = told_[numRowsPerObject_+1];
 
-    //
-    //---- Jacobi iteration step
-    //---- A tridiagonal matrix = "tridiag" ( [-1.0  2.0  -1.0] )
-    //---- rhs_ right hand side vector
-    //
-    for (size_t ii = 1; ii <= numRowsPerObject_; ++ii) {
-      tcur_[ii] = 0.5*(rhs_[ii] + told_[ii-1] + told_[ii+1]);
+    for (size_t iy = 1; iy <= numRowsPerObject_; ++iy) {
+      for (size_t ix = 1; ix <= numRowsPerObject_; ++ix) {
+        //
+        //---- Jacobi iteration step for
+        //---- A banded matrix for the 5-point stencil
+        //---- [ 0.0  -1.0   0.0]
+        //---- [-1.0   4.0  -1.0]
+        //---- [ 0.0  -1.0   0.0]
+        //---- rhs_ right hand side vector
+        //
+        size_t node = ix + iy * ldx;
+        tcur_[node] = 0.25 * (rhs_[node]
+                              + told_[node - 1] + told_[node + 1]
+                              + told_[node - ldx] + told_[node + ldx]);
+      }
     }
+
+    iter_ += 1;
 
     std::copy(tcur_.begin(), tcur_.end(), told_.begin());
 
@@ -173,30 +219,31 @@ public:
 
     double maxNorm = 0.0;
 
-    for (size_t ii = 1; ii < tcur_.size()-1; ++ii) {
-      double val = tcur_[ii];
-      maxNorm = (maxNorm > std::fabs(val)) ? maxNorm : std::fabs(val);
+    for (size_t iy = 1; iy <= numRowsPerObject_; ++iy) {
+      for (size_t ix = 1; ix <= numRowsPerObject_; ++ix) {
+        size_t node = ix + iy * ldx;
+        double val = tcur_[node];
+        maxNorm = (maxNorm > abs(val)) ? maxNorm : abs(val);
+      }
     }
 
     auto proxy = this->getCollectionProxy();
     auto cb = theCB()->makeSend<
-      LinearPb1DJacobi,ReduxMsg,&LinearPb1DJacobi::checkCompleteCB
-    >(proxy[0]);
+      LinearPb2DJacobi,ReduxMsg,&LinearPb2DJacobi::checkCompleteCB
+    >(proxy(0,0));
     auto msg2 = makeMessage<ReduxMsg>(maxNorm);
     proxy.reduce<collective::MaxOp<double>>(msg2.get(),cb);
 
   }
 
+  struct VecMsg : vt::CollectionMessage<LinearPb2DJacobi> {
 
-  struct VecMsg : vt::CollectionMessage<LinearPb1DJacobi> {
-
-    IdxBase from_index = 0;
-    double val = 0.0;
+    IndexType from_index;
+    std::vector<double> val;
 
     VecMsg() = default;
-
-    VecMsg(IdxBase const& in_index, double const& ref) :
-      vt::CollectionMessage<LinearPb1DJacobi>(),
+    VecMsg(IndexType const& in_index, const std::vector<double> &ref) :
+      vt::CollectionMessage<LinearPb2DJacobi>(),
       from_index(in_index), val(ref)
     { }
 
@@ -213,19 +260,30 @@ public:
 
     // Receive and treat the message from a neighboring object.
 
-    auto myIdx = getIndex().x();
-
-    if (myIdx > msg->from_index) {
-      this->told_[0] = msg->val;
+    if (this->idx_.x() > msg->from_index.x()) {
+      const size_t ldx = numRowsPerObject_ + 2;
+      for (size_t jy = 0; jy < msg->val.size(); ++jy) {
+        this->told_[jy*ldx] = msg->val[jy];
+      }
+      msgReceived_ += 1;
+    }
+    else if (this->idx_.x() < msg->from_index.x()) {
+      const size_t ldx = numRowsPerObject_ + 2;
+      for (size_t jy = 0; jy < msg->val.size(); ++jy) {
+        this->told_[numRowsPerObject_ + 1 + jy*ldx] = msg->val[jy];
+      }
+      msgReceived_ += 1;
+    }
+    else if (this->idx_.y() > msg->from_index.y()) {
+      std::copy(msg->val.begin(), msg->val.end(), this->told_.begin());
+      msgReceived_ += 1;
+    }
+    else if (this->idx_.y() < msg->from_index.y()) {
+      std::copy(msg->val.begin(), msg->val.end(),
+                &this->told_[(numRowsPerObject_ + 1)*(numRowsPerObject_ + 2)]);
       msgReceived_ += 1;
     }
 
-    if (myIdx < msg->from_index) {
-      this->told_[numRowsPerObject_ + 1] = msg->val;
-      msgReceived_ += 1;
-    }
-
-    // Check whether this 'object' has received all the expected messages.
     if (msgReceived_ == totalReceive_) {
       msgReceived_ = 0;
       doIteration();
@@ -241,32 +299,58 @@ public:
     // where no communication is needed.
     // Without this treatment, the code would not iterate.
     //
-
-    if (numObjs_ == 1) {
+    if (numObjsX_*numObjsY_ <= 1) {
       doIteration();
       return;
     }
     //---------------------------------------
 
     //
-    // Routine to send information to a different object
+    // Routine to send information to a neighboring object
     //
 
-    auto myIdx = getIndex().x();
-
-    //--- Send the values to the left
     auto proxy = this->getCollectionProxy();
-    if (myIdx > 0) {
-      auto leftMsg = vt::makeSharedMessage<VecMsg>(myIdx, told_[1]);
-      proxy[myIdx-1].send<VecMsg, &LinearPb1DJacobi::exchange>(leftMsg);
+
+    if (idx_.x() > 0) {
+      std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
+      for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
+        tcopy[jy] = told_[1 + jy * (numRowsPerObject_ + 2)];
+      auto leftX = vt::makeSharedMessage< VecMsg >(idx_, tcopy);
+      theCollection()->sendMsg< 
+        LinearPb2DJacobi::VecMsg, &LinearPb2DJacobi::exchange 
+      > (proxy(idx_.x()-1, idx_.y()), leftX);
     }
 
-    //--- Send values to the right
-    if (myIdx < numObjs_ - 1) {
-      auto rightMsg = vt::makeSharedMessage<VecMsg>(
-        myIdx, told_[numRowsPerObject_]
-      );
-      proxy[myIdx+1].send<VecMsg,&LinearPb1DJacobi::exchange>(rightMsg);
+    if (idx_.y() > 0) {
+      std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
+      for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
+        tcopy[jx] = told_[jx + (numRowsPerObject_ + 2)];
+      auto bottomY = vt::makeSharedMessage< VecMsg >(idx_, tcopy);
+      theCollection()->sendMsg< 
+        LinearPb2DJacobi::VecMsg, &LinearPb2DJacobi::exchange 
+      > (proxy(idx_.x(), idx_.y()-1), bottomY);
+    }
+
+    if (size_t(idx_.x()) < numObjsX_ - 1) {
+      std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
+      for (size_t jy = 1; jy <= numRowsPerObject_; ++jy) {
+        tcopy[jy] = told_[numRowsPerObject_ +
+                          jy * (numRowsPerObject_ + 2)];
+      }
+      auto rightX = vt::makeSharedMessage< VecMsg >(idx_, tcopy);
+      theCollection()->sendMsg< 
+        LinearPb2DJacobi::VecMsg, &LinearPb2DJacobi::exchange 
+      > (proxy(idx_.x()+1, idx_.y()), rightX);
+    }
+
+    if (size_t(idx_.y()) < numObjsY_ - 1) {
+      std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
+      for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
+        tcopy[jx] = told_[jx + numRowsPerObject_ * (numRowsPerObject_ + 2)];
+      auto topY = vt::makeSharedMessage< VecMsg >(idx_, tcopy);
+      theCollection()->sendMsg< 
+        LinearPb2DJacobi::VecMsg, &LinearPb2DJacobi::exchange 
+      > (proxy(idx_.x(), idx_.y()+1), topY);
     }
 
   }
@@ -274,29 +358,66 @@ public:
 
   void init() {
 
-    tcur_.assign(numRowsPerObject_ + 2, 0.0);
-    told_.assign(numRowsPerObject_ + 2, 0.0);
-    rhs_.assign(numRowsPerObject_ + 2, 0.0);
+    //--- Each object will work with (numRowsPerObject_ + 2) unknowns
+    //--- or (numRowsPerObject_ + 2) rows of the matrix
+    size_t ldx = numRowsPerObject_ + 2, ldy = ldx;
 
-    double h = 1.0 / (numRowsPerObject_ * numObjs_ + 1.0);
-    int nf = 3 * int(numRowsPerObject_ * numObjs_ + 1) / 4;
+    size_t vecSize = ldx * ldy;
+    tcur_.assign(vecSize, 0.0);
+    told_.assign(vecSize, 0.0);
+    rhs_.assign(vecSize, 0.0);
 
-    auto myIdx = getIndex().x();
+    //
+    // Set the initial vector to the values of
+    // a "high-frequency" function
+    //
 
-    for (size_t ii = 0; ii < tcur_.size(); ++ii) {
-      double x0 = ( numRowsPerObject_ * myIdx + ii) * h;
-      tcur_[ii] = sin(nf * M_PI * x0 * x0);
+    double hx = 1.0 / (numRowsPerObject_ * numObjsX_ + 1.0);
+    double hy = 1.0 / (numRowsPerObject_ * numObjsY_ + 1.0);
+
+    size_t maxNObjs = (size_t) std::max(numObjsX_, numObjsY_);
+    int nf = 3 * int(numRowsPerObject_ * maxNObjs + 1) / 4;
+
+    for (size_t iy = 0; iy < ldy; ++iy) {
+      for (size_t ix = 0; ix < ldx; ++ix) {
+        double x0 = ( numRowsPerObject_ * idx_.x() + ix) * hx;
+        double y0 = ( numRowsPerObject_ * idx_.y() + iy) * hy;
+        size_t node = ix + iy * ldx;
+        tcur_[node] = sin(nf * M_PI * (x0 * x0 + y0 * y0));
+      }
     }
 
-    totalReceive_ = 2;
+    totalReceive_ = 4;
 
-    if (myIdx == 0) {
-      tcur_[0] = 0.0;
+    //
+    //--- The unknowns correspond to the interior nodes
+    //--- of a regular orthogonal grid on [0, 1] x [0, 1]
+    //--- The total number of grid points in X-direction is
+    //--- (numRowsPerObject_ * numObjsX_) + 2
+    //--- The total number of grid points in Y-direction is
+    //--- (numRowsPerObject_ * numObjsY_) + 2
+    //
+    if (idx_.x() == 0) {
+      for (size_t jy = 0; jy < ldy; ++jy)
+        tcur_[jy * ldy] = 0.0;
       totalReceive_ -= 1;
     }
 
-    if (myIdx == numObjs_ - 1) {
-      tcur_[numRowsPerObject_+1] = 0.0;
+    if (idx_.y() == 0) {
+      for (size_t jx = 0; jx < ldx; ++jx)
+        tcur_[jx] = 0.0;
+      totalReceive_ -= 1;
+    }
+
+    if (numObjsX_ == size_t(idx_.x()) + 1) {
+      for (size_t jy = 0; jy < ldy; ++jy)
+        tcur_[jy * ldy + (ldx - 1)] = 0.0;
+      totalReceive_ -= 1;
+    }
+
+    if (numObjsY_ == size_t(idx_.y()) + 1) {
+      for (size_t jx = 0; jx < ldx; ++jx)
+        tcur_[jx + (ldx - 1)*ldy] = 0.0;
       totalReceive_ -= 1;
     }
 
@@ -307,17 +428,19 @@ public:
 
   void solve(LPMsg* msg) {
 
-    numObjs_ = msg->numObjects;
-    numRowsPerObject_ = msg->nRowPerObject;
-    maxIter_ = msg->iterMax;
+    numObjsX_ = msg->numXObjs;
+    numObjsY_ = msg->numYObjs;
+    maxIter_ = msg->numIter;
 
     // Initialize the starting vector
     init();
 
+    // Start the algorithm with a neighbor-to-neighbor communication
     auto proxy = this->getCollectionProxy();
-    auto idx = this->getIndex();
-    auto loopMsg = makeSharedMessage<LinearPb1DJacobi::BlankMsg>();
-    proxy[idx].send<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
+    auto idx = getIndex();
+    auto loopMsg = makeSharedMessage< LinearPb2DJacobi::BlankMsg >();
+    proxy[idx].send< BlankMsg, &LinearPb2DJacobi::sendInfo >(loopMsg);
+
   }
 
 };
@@ -325,55 +448,71 @@ public:
 
 int main(int argc, char** argv) {
 
-  size_t num_objs = default_num_objs;
-  size_t numRowsPerObject = default_nrow_object;
-  size_t maxIter = 8;
+  size_t numX_objs = default_num_objs;
+  size_t numY_objs = default_num_objs;
+  size_t maxIter = 10;
 
   std::string name(argv[0]);
 
   vt::CollectiveOps::initialize(argc, argv);
 
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
 
   if (argc == 1) {
-    if (this_node == 0) {
-      fmt::print(
-        stderr, "{}: using default arguments since none provided\n", name
-      );
-    }
-    num_objs = default_num_objs * num_nodes;
-  } else if (argc == 2) {
-    num_objs = static_cast<size_t>(strtol(argv[1], nullptr, 10));
-  }
-  else if (argc == 3) {
-    num_objs = static_cast<size_t>(strtol(argv[1], nullptr, 10));
-    numRowsPerObject = static_cast<size_t>(strtol(argv[2], nullptr, 10));
-  }
-  else if (argc == 4) {
-    num_objs = static_cast<size_t>(strtol(argv[1], nullptr, 10));
-    numRowsPerObject = static_cast<size_t>(strtol(argv[2], nullptr, 10));
-    maxIter = static_cast<size_t>(strtol(argv[3], nullptr, 10));
-  }
-  else {
     fmt::print(
-      stderr, "usage: {} <num-objects> <num-rows-per-object> <maxiter>\n",
-      name
+      stderr, "{}: using default arguments since none provided\n", name
     );
-    return 1;
+  } else {
+    if (argc == 3) {
+      numX_objs = (size_t) strtol(argv[1], nullptr, 10);
+      numY_objs = (size_t) strtol(argv[2], nullptr, 10);
+    }
+    else if (argc == 4) {
+      numX_objs = (size_t) strtol(argv[1], nullptr, 10);
+      numY_objs = (size_t) strtol(argv[2], nullptr, 10);
+      maxIter = (size_t) strtol(argv[3], nullptr, 10);
+    }
+    else {
+      fmt::print(
+        stderr, "usage: {} <num-objects-X-direction> <num-objects-Y-direction> <maxiter>\n",
+        name
+      );
+      return 1;
+    }
   }
+
+  /* --- Print information about the simulation */
+
+  fmt::print(
+    stdout, "\n - Solve the linear system for the Laplacian with homogeneous Dirichlet"
+    " on [0, 1] x [0, 1]\n"
+  );
+  fmt::print(stdout, " - Second-order centered finite difference\n");
+  fmt::print(
+    stdout, " - Uniform grid with ({} x {} = {}) points in the x-direction and "
+	" ({} x {} = {}) points in the y-direction\n", 
+	numX_objs, default_nrow_object, numX_objs * default_nrow_object,
+	numY_objs, default_nrow_object, numY_objs * default_nrow_object
+  );
+  fmt::print(stdout, " - Maximum number of iterations {}\n", maxIter);
+  fmt::print(stdout, " - Convergence tolerance {}\n", default_tol);
+  fmt::print(stdout, "\n");
 
   if (this_node == 0) {
 
     // Create the decomposition into objects
-    using BaseIndexType = typename Index1D::DenseIndexType;
-    auto const& range = Index1D(static_cast<BaseIndexType>(num_objs));
-
-    auto proxy = vt::theCollection()->construct<LinearPb1DJacobi>(range);
-    auto rootMsg = makeSharedMessage<LinearPb1DJacobi::LPMsg>(
-      num_objs, numRowsPerObject, maxIter
+    using BaseIndexType = typename Index2D::DenseIndexType;
+    auto const& range = Index2D(
+      static_cast<BaseIndexType>(numX_objs),
+      static_cast<BaseIndexType>(numY_objs)
     );
-    proxy.broadcast<LinearPb1DJacobi::LPMsg,&LinearPb1DJacobi::solve>(rootMsg);
+    auto proxy = vt::theCollection()->construct<LinearPb2DJacobi>(range);
+    auto rootMsg = makeSharedMessage< LinearPb2DJacobi::LPMsg >(
+      numX_objs,
+      numY_objs,
+      maxIter
+    );
+    proxy.broadcast<LinearPb2DJacobi::LPMsg,&LinearPb2DJacobi::solve>(rootMsg);
 
   }
 
@@ -386,4 +525,3 @@ int main(int argc, char** argv) {
   return 0;
 
 }
-
