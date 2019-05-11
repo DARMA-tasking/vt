@@ -45,40 +45,37 @@
 #include "vt/transport.h"
 #include <cstdlib>
 
-using namespace vt;
-
 struct HelloMsg : vt::Message {
-  int from;
+  HelloMsg(vt::NodeType in_from) : from(in_from) { }
 
-  HelloMsg(int const& in_from) : from(in_from) { }
+  vt::NodeType from = 0;
 };
 
 static void hello_world(HelloMsg* msg) {
-  fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
+  vt::NodeType this_node = vt::theContext()->getNode();
+  fmt::print("{}: Hello from node {}\n", this_node, msg->from);
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
-    return 0;
+    return vt::rerror("requires at least 2 nodes");
   }
 
-  if (my_node == 0) {
-    auto msg = makeSharedMessage<HelloMsg>(my_node);
-    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
+  if (this_node == 0) {
+    auto msg = vt::makeSharedMessage<HelloMsg>(this_node);
+    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
+  while (!vt::rt->isTerminated()) {
+    vt::runScheduler();
   }
 
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
