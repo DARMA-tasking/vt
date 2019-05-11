@@ -54,6 +54,7 @@
 #include "vt/trace/trace_event.h"
 #include "vt/trace/trace_containers.h"
 #include "vt/trace/trace_log.h"
+#include "vt/trace/trace_user_event.h"
 
 #include <cstdint>
 #include <cassert>
@@ -116,6 +117,23 @@ struct Trace {
   void beginIdle(double const time = getCurrentTime());
   void endIdle(double const time = getCurrentTime());
 
+  UserEventIDType registerUserEventColl(std::string const& name);
+  UserEventIDType registerUserEventRoot(std::string const& name);
+  void registerUserEventManual(std::string const& name, UserSpecEventIDType id);
+
+  void addUserEvent(UserEventIDType event);
+  void addUserManualEvent(UserSpecEventIDType event);
+  void addUserEventBracketed(UserEventIDType event, double begin, double end);
+  void addUserManualEventBracketed(
+    UserSpecEventIDType event, double begin, double end
+  );
+  void addUserNote(std::string const& note);
+  void addUserData(int32_t data);
+  void addUserBracketedNote(
+    double const begin, double const end, std::string const& note,
+    TraceEventIDType const event = no_trace_event
+  );
+
   TraceEventIDType messageCreation(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     double const time = getCurrentTime()
@@ -149,19 +167,25 @@ struct Trace {
     NodeType const node, double const start, gzFile file
   );
 
+  friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
+
+private:
+  void editLastEntry(std::function<void(LogPtrType)> fn);
+
 private:
   TraceContainerType traces_;
   TraceStackType open_events_;
-  TraceEventIDType cur_event_ = 1;
-  std::string dir_name_       = "";
-  std::string prog_name_      = "";
-  std::string trace_name_     = "";
-  bool enabled_               = true;
-  bool idle_begun_            = false;
-  double start_time_          = 0.0;
-  std::string full_trace_name = "";
-  std::string full_sts_name   = "";
-  std::string full_dir_name   = "";
+  TraceEventIDType cur_event_   = 1;
+  std::string dir_name_         = "";
+  std::string prog_name_        = "";
+  std::string trace_name_       = "";
+  bool enabled_                 = true;
+  bool idle_begun_              = false;
+  double start_time_            = 0.0;
+  std::string full_trace_name   = "";
+  std::string full_sts_name     = "";
+  std::string full_dir_name     = "";
+  UserEventRegistry user_event  = {};
 };
 
 }} //end namespace vt::trace

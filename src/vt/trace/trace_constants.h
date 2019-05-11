@@ -80,8 +80,13 @@ enum class eTraceConstants : int32_t {
   UserSuppliedBracketedNote = 29,
   EndPhase                  = 30,
   SurrogateBlock            = 31,
-  UserStat                  = 32
+  UserStat                  = 32,
+  BeginUserEventPair        = 98,
+  EndUserEventPair          = 99,
+  UserEventPair             = 100
 };
+
+
 
 enum eTraceEnvelopeTypes {
   NewChareMsg     = 1,

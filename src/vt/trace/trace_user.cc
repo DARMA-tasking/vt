@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          transport.h
+//                          trace_user.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,42 +42,67 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TRANSPORT_H
-#define INCLUDED_VT_TRANSPORT_H
-
 #include "vt/config.h"
-#include "vt/collective/tree/tree.h"
-#include "vt/pool/pool.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/message.h"
-#include "vt/activefn/activefn.h"
-#include "vt/context/context.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/collective/collective.h"
-#include "vt/event/event.h"
-#include "vt/registry/registry.h"
-#include "vt/messaging/active.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/event/event_msgs.h"
-#include "vt/termination/termination.h"
-#include "vt/rdma/rdma_headers.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace_headers.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/topos/location/location_headers.h"
-#include "vt/topos/index/index.h"
-#include "vt/topos/mapping/mapping_headers.h"
-#include "vt/vrt/context/context_vrtheaders.h"
-#include "vt/vrt/collection/collection_headers.h"
-#include "vt/serialization/serialization.h"
-#include "vt/standalone/vt_main.h"
-#include "vt/utils/tls/tls.h"
-#include "vt/utils/atomic/atomic.h"
-#include "vt/group/group_headers.h"
-#include "vt/epoch/epoch_headers.h"
-#include "vt/pipe/pipe_headers.h"
-#include "vt/objgroup/headers.h"
+#include "vt/trace/trace_common.h"
+#include "vt/trace/trace.h"
+#include "vt/trace/trace_user.h"
 
-#endif /*INCLUDED_VT_TRANSPORT_H*/
+#include <string>
+#include <unordered_map>
+
+namespace vt { namespace trace {
+
+void addUserNote(std::string const& note) {
+#if backend_check_enabled(trace_enabled)
+  theTrace()->addUserNote(note);
+#endif
+}
+
+void addUserData(int32_t data) {
+#if backend_check_enabled(trace_enabled)
+  theTrace()->addUserData(data);
+#endif
+}
+
+void addUserBracketedNote(
+  double const begin, double const end, std::string const& note,
+  TraceEventIDType const event
+) {
+#if backend_check_enabled(trace_enabled)
+  theTrace()->addUserBracketedNote(begin, end, note, event);
+#endif
+}
+
+#if backend_check_enabled(trace_enabled)
+struct UserSplitHolder final {
+  static std::unordered_map<std::string, double> split_;
+};
+
+/*static*/ std::unordered_map<std::string, double> UserSplitHolder::split_ = {};
+#endif
+
+void addUserNotePre(std::string const& note, TraceEventIDType const) {
+#if backend_check_enabled(trace_enabled)
+  auto iter = UserSplitHolder::split_.find(note);
+  vtAssertExpr(iter == UserSplitHolder::split_.end());
+  UserSplitHolder::split_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(note),
+    std::forward_as_tuple(Trace::getCurrentTime())
+  );
+#endif
+}
+
+void addUserNoteEpi(std::string const& in_note, TraceEventIDType const event) {
+#if backend_check_enabled(trace_enabled)
+  auto iter = UserSplitHolder::split_.find(in_note);
+  vtAssertExpr(iter != UserSplitHolder::split_.end());
+  auto begin = iter->second;
+  auto end = Trace::getCurrentTime();
+  theTrace()->addUserBracketedNote(begin, end, in_note, event);
+  UserSplitHolder::split_.erase(iter);
+#endif
+}
+
+
+}} /* end namespace vt::trace */
