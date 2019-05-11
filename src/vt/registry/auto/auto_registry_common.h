@@ -113,7 +113,7 @@ struct AutoRegInfo {
       NumArgsTagType,
       FnT const& in_active_fun_t, trace::TraceEntryIDType const& in_event_id,
       NumArgsType const& in_args
-    ) : activeFunT(in_active_fun_t), event_id(in_event_id), args_(in_args)
+    ) : activeFunT(in_active_fun_t), args_(in_args), event_id(in_event_id)
     { }
     trace::TraceEntryIDType theTraceID() const {
       return event_id;
