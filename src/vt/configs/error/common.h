@@ -46,6 +46,7 @@
 #define INCLUDED_CONFIGS_ERROR_COMMON_H
 
 #include "vt/configs/types/types_type.h"
+#include "vt/collective/basic.h"
 
 #include <tuple>
 
@@ -57,12 +58,6 @@
 #include <string>
 
 namespace vt {
-
-// Forward declare abort and output signatures, defined in collective ops
-void abort(std::string const str, ErrorCodeType const code);
-void output(
-  std::string const str, ErrorCodeType const code, bool, bool, bool, bool
-);
 
 namespace debug {
 

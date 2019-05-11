@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          collective_ops.h
+//                          basic.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,47 +42,27 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
-
 #include "vt/config.h"
-#include "vt/context/context.h"
-#include "vt/runtime/runtime_headers.h"
-#include "vt/registry/registry.h"
-
-#include <string>
-
-#include <mpi.h>
+#include "vt/collective/basic.h"
+#include "vt/collective/collective_ops.h"
 
 namespace vt {
 
-static constexpr runtime::RuntimeInstType const collective_default_inst =
-  runtime::RuntimeInstType::DefaultInstance;
+void abort(std::string const str, int32_t const code) {
+  return CollectiveOps::abort(str,code);
+}
 
-template <runtime::RuntimeInstType instance = collective_default_inst>
-struct CollectiveAnyOps {
-  // The general methods that interact with the managed runtime holder
-  static RuntimePtrType initialize(
-    int& argc, char**& argv, WorkerCountType const num_workers = no_workers,
-    bool is_interop = false, MPI_Comm* comm = nullptr
-  );
-  static void finalize(RuntimePtrType in_rt = nullptr);
-  static void scheduleThenFinalize(
-    RuntimePtrType in_rt = nullptr, WorkerCountType const workers = no_workers
-  );
-  static void setCurrentRuntimeTLS(RuntimeUnsafePtrType in_rt = nullptr);
-  static void abort(std::string const str = "", ErrorCodeType const code = 0);
-  static void output(
-    std::string const str = "", ErrorCodeType const code = 1,
-    bool error = false, bool decorate = true, bool formatted = false,
-    bool abort_out = false
-  );
+void output(
+  std::string const str, int32_t const code, bool error, bool formatted,
+  bool decorate, bool abort_out
+) {
+  return CollectiveOps::output(str,code,error,decorate,formatted,abort_out);
+}
 
-  static HandlerType registerHandler(ActiveClosureFnType fn);
-};
+int rerror(char const* str) {
+  vt::output(std::string(str));
+  vt::finalize();
+  return 0;
+}
 
-using CollectiveOps = CollectiveAnyOps<collective_default_inst>;
-
-} //end namespace vt
-
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H*/
+} /* end namespace vt */

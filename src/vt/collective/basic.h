@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          collective_ops.h
+//                          basic.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,47 +42,20 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
-
-#include "vt/config.h"
-#include "vt/context/context.h"
-#include "vt/runtime/runtime_headers.h"
-#include "vt/registry/registry.h"
+#if !defined INCLUDED_VT_COLLECTIVE_BASIC_H
+#define INCLUDED_VT_COLLECTIVE_BASIC_H
 
 #include <string>
 
-#include <mpi.h>
-
 namespace vt {
 
-static constexpr runtime::RuntimeInstType const collective_default_inst =
-  runtime::RuntimeInstType::DefaultInstance;
+void abort(std::string const str = "", int32_t const code = 1);
+void output(
+  std::string const str, int32_t const code = 1, bool error = false,
+  bool decorate = true, bool formatted = false, bool abort_out = false
+);
+int rerror(char const* str);
 
-template <runtime::RuntimeInstType instance = collective_default_inst>
-struct CollectiveAnyOps {
-  // The general methods that interact with the managed runtime holder
-  static RuntimePtrType initialize(
-    int& argc, char**& argv, WorkerCountType const num_workers = no_workers,
-    bool is_interop = false, MPI_Comm* comm = nullptr
-  );
-  static void finalize(RuntimePtrType in_rt = nullptr);
-  static void scheduleThenFinalize(
-    RuntimePtrType in_rt = nullptr, WorkerCountType const workers = no_workers
-  );
-  static void setCurrentRuntimeTLS(RuntimeUnsafePtrType in_rt = nullptr);
-  static void abort(std::string const str = "", ErrorCodeType const code = 0);
-  static void output(
-    std::string const str = "", ErrorCodeType const code = 1,
-    bool error = false, bool decorate = true, bool formatted = false,
-    bool abort_out = false
-  );
+} /* end namespace vt */
 
-  static HandlerType registerHandler(ActiveClosureFnType fn);
-};
-
-using CollectiveOps = CollectiveAnyOps<collective_default_inst>;
-
-} //end namespace vt
-
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_BASIC_H*/
