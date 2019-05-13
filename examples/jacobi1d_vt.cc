@@ -98,6 +98,7 @@ public:
 
   using BlankMsg = vt::CollectionMessage<LinearPb1DJacobi>;
 
+  struct InitMsg : vt::collective::ReduceNoneMsg { };
 
   struct LPMsg : vt::CollectionMessage<LinearPb1DJacobi> {
 
@@ -131,7 +132,7 @@ public:
     auto const maxIter = maxIter_;
 
     if ((iter <= maxIter) and (normRes >= default_tol)) {
-      ::fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter, normRes);
+      fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter, normRes);
       //
       // Start a new iteration
       //
@@ -140,10 +141,10 @@ public:
       proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg);
     }
     else if (iter > maxIter) {
-      ::fmt::print("\n Maximum Number of Iterations Reached. \n\n");
+      fmt::print("\n Maximum Number of Iterations Reached. \n\n");
     }
-    else {
-      ::fmt::print("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
+    else{
+      fmt::print("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
     }
   }
 
@@ -216,7 +217,7 @@ public:
 
     // Receive and treat the message from a neighboring object.
 
-    auto myIdx = getIndex().x();
+    const IdxBase myIdx = getIndex().x();
 
     if (myIdx > msg->from_index) {
       this->told_[0] = msg->val;
@@ -236,6 +237,9 @@ public:
 
   }
 
+  void doneInit(InitMsg *msg) {
+    sendInfo(nullptr);
+  }
 
   void sendInfo(BlankMsg *msg) {
 
@@ -255,7 +259,7 @@ public:
     // Routine to send information to a different object
     //
 
-    size_t const myIdx = getIndex().x();
+    vt::IdxBase const myIdx = getIndex().x();
 
     //--- Send the values to the left
     auto proxy = this->getCollectionProxy();
@@ -265,7 +269,7 @@ public:
     }
 
     //--- Send values to the right
-    if (myIdx < numObjs_ - 1) {
+    if (size_t(myIdx) < numObjs_ - 1) {
       auto rightMsg = vt::makeSharedMessage<VecMsg>(
         myIdx, told_[numRowsPerObject_]
       );
@@ -316,12 +320,13 @@ public:
     // Initialize the starting vector
     init();
 
-    // Ask all objects to run through the 'sendInfo' routine.
+    // Wait for all initializations to complete, reduce, and then:
+    // Start the algorithm with a neighbor-to-neighbor communication
+    using CollType = LinearPb1DJacobi;
     auto proxy = this->getCollectionProxy();
-    auto idx = getIndex();
-    auto loopMsg = makeSharedMessage<BlankMsg>();
-    proxy[idx].send<BlankMsg,&LinearPb1DJacobi::sendInfo>(loopMsg);
-
+    auto cb = theCB()->makeBcast<CollType, InitMsg, &CollType::doneInit>(proxy);
+    auto empty = makeMessage<InitMsg>();
+    proxy.reduce(empty.get(),cb);
   }
 
 };
