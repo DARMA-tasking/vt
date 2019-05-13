@@ -76,6 +76,21 @@ HandlerType makeAutoHandler(MessageT* const msg);
 template <typename T, T value>
 HandlerType makeAutoHandler();
 
+template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
+void setHandlerTraceNameObjGroup(
+  HandlerControlType ctrl, std::string const& name, std::string const& parent = ""
+);
+
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+void setHandlerTraceName(std::string const& name, std::string const& parent = "");
+
+template <typename T, T value>
+void setHandlerTraceName(std::string const& name, std::string const& parent = "");
+
+void setTraceName(
+  trace::TraceEntryIDType id, std::string const& name, std::string const& parent
+);
+
 }} // end namespace vt::auto_registry
 
 #include "vt/registry/auto/auto_registry_impl.h"

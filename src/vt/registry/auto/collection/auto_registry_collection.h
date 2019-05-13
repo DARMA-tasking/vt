@@ -70,6 +70,12 @@ template <
 >
 HandlerType makeAutoHandlerCollectionMem(MsgT* const msg);
 
+template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
+void setHandlerTraceNameColl(std::string const& name, std::string const& parent = "");
+
+template <typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+void setHandlerTraceNameCollMem(std::string const& name, std::string const& parent = "");
+
 }} /* end namespace vt::auto_registry */
 
 #include "vt/registry/auto/collection/auto_registry_collection.impl.h"
