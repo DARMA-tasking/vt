@@ -192,7 +192,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   }
 
   vtAssertInfo(
-    pieces.size() == 2, "Must be two pieces", pieces[0]
+    pieces.size() >= 2, "Must be two pieces", pieces[0]
   );
 
   auto const func_args = pieces[0];
