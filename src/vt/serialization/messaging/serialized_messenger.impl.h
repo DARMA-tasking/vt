@@ -394,8 +394,8 @@ template <typename MsgT, typename BaseT>
 
     debug_print(
       serial_msg, node,
-      "broadcastSerialMsg: han={}, size={}, serialized_msg_eager_size={}, "
-      "group={:x}\n",
+      "broadcastSerialMsg (eager): han={}, size={}, "
+      "serialized_msg_eager_size={}, group={:x}\n",
       han, ptr_size, serialized_msg_eager_size, group_
     );
 
@@ -406,14 +406,15 @@ template <typename MsgT, typename BaseT>
     auto const& total_size = ptr_size + sys_size;
 
     sys_msg->handler = han;
+    sys_msg->env = msg->env;
     sys_msg->from_node = theContext()->getNode();
     sys_msg->ptr_size = ptr_size;
     envelopeSetGroup(sys_msg->env, group_);
 
     debug_print(
       serial_msg, node,
-      "broadcastSerialMsg: container: han={}, sys_size={}, ptr_size={}, "
-      "total_size={}, group={:x}\n",
+      "broadcastSerialMsg (non-eager): container: han={}, sys_size={}, "
+      "ptr_size={}, total_size={}, group={:x}\n",
       han, sys_size, ptr_size, total_size, group_
     );
 
