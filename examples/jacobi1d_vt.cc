@@ -255,7 +255,7 @@ public:
     // Routine to send information to a different object
     //
 
-	vt::IdxBase const myIdx = getIndex().x();
+    vt::IdxBase const myIdx = getIndex().x();
 
     //--- Send the values to the left
     auto proxy = this->getCollectionProxy();

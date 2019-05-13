@@ -310,47 +310,41 @@ public:
     //
 
     auto proxy = this->getCollectionProxy();
+    auto const x = idx_.x();
+    auto const y = idx_.y();
 
-    if (idx_.x() > 0) {
+    if (x > 0) {
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
         tcopy[jy] = told_[1 + jy * (numRowsPerObject_ + 2)];
-      auto leftX = vt::makeSharedMessage< VecMsg >(idx_, tcopy);
-      theCollection()->sendMsg< 
-        LinearPb2DJacobi::VecMsg, &LinearPb2DJacobi::exchange 
-      > (proxy(idx_.x()-1, idx_.y()), leftX);
+      auto leftX = makeSharedMessage<VecMsg>(idx_, tcopy);
+      proxy(x-1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(leftX);
     }
 
-    if (idx_.y() > 0) {
+    if (y > 0) {
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + (numRowsPerObject_ + 2)];
-      auto bottomY = vt::makeSharedMessage< VecMsg >(idx_, tcopy);
-      theCollection()->sendMsg< 
-        LinearPb2DJacobi::VecMsg, &LinearPb2DJacobi::exchange 
-      > (proxy(idx_.x(), idx_.y()-1), bottomY);
+      auto bottomY = makeSharedMessage<VecMsg>(idx_, tcopy);
+      proxy(x, y-1).send<VecMsg, &LinearPb2DJacobi::exchange>(bottomY);
     }
 
-    if (size_t(idx_.x()) < numObjsX_ - 1) {
+    if (size_t(x) < numObjsX_ - 1) {
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jy = 1; jy <= numRowsPerObject_; ++jy) {
         tcopy[jy] = told_[numRowsPerObject_ +
                           jy * (numRowsPerObject_ + 2)];
       }
-      auto rightX = vt::makeSharedMessage< VecMsg >(idx_, tcopy);
-      theCollection()->sendMsg< 
-        LinearPb2DJacobi::VecMsg, &LinearPb2DJacobi::exchange 
-      > (proxy(idx_.x()+1, idx_.y()), rightX);
+      auto rightX = makeSharedMessage<VecMsg>(idx_, tcopy);
+      proxy(x+1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(rightX);
     }
 
-    if (size_t(idx_.y()) < numObjsY_ - 1) {
+    if (size_t(y) < numObjsY_ - 1) {
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + numRowsPerObject_ * (numRowsPerObject_ + 2)];
-      auto topY = vt::makeSharedMessage< VecMsg >(idx_, tcopy);
-      theCollection()->sendMsg< 
-        LinearPb2DJacobi::VecMsg, &LinearPb2DJacobi::exchange 
-      > (proxy(idx_.x(), idx_.y()+1), topY);
+      auto topY = makeSharedMessage<VecMsg>(idx_, tcopy);
+      proxy(x, y+1).send<VecMsg, &LinearPb2DJacobi::exchange>(topY);
     }
 
   }
@@ -438,9 +432,8 @@ public:
     // Start the algorithm with a neighbor-to-neighbor communication
     auto proxy = this->getCollectionProxy();
     auto idx = getIndex();
-    auto loopMsg = makeSharedMessage< LinearPb2DJacobi::BlankMsg >();
-    proxy[idx].send< BlankMsg, &LinearPb2DJacobi::sendInfo >(loopMsg);
-
+    auto loopMsg = makeSharedMessage<BlankMsg>();
+    proxy[idx].send<BlankMsg, &LinearPb2DJacobi::sendInfo>(loopMsg);
   }
 
 };
@@ -459,9 +452,11 @@ int main(int argc, char** argv) {
   auto const& this_node = theContext()->getNode();
 
   if (argc == 1) {
-    fmt::print(
-      stderr, "{}: using default arguments since none provided\n", name
-    );
+    if (this_node == 0) {
+      fmt::print(
+        stderr, "{}: using default arguments since none provided\n", name
+      );
+    }
   } else {
     if (argc == 3) {
       numX_objs = (size_t) strtol(argv[1], nullptr, 10);
@@ -483,20 +478,22 @@ int main(int argc, char** argv) {
 
   /* --- Print information about the simulation */
 
-  fmt::print(
-    stdout, "\n - Solve the linear system for the Laplacian with homogeneous Dirichlet"
-    " on [0, 1] x [0, 1]\n"
-  );
-  fmt::print(stdout, " - Second-order centered finite difference\n");
-  fmt::print(
-    stdout, " - Uniform grid with ({} x {} = {}) points in the x-direction and "
-	" ({} x {} = {}) points in the y-direction\n", 
-	numX_objs, default_nrow_object, numX_objs * default_nrow_object,
-	numY_objs, default_nrow_object, numY_objs * default_nrow_object
-  );
-  fmt::print(stdout, " - Maximum number of iterations {}\n", maxIter);
-  fmt::print(stdout, " - Convergence tolerance {}\n", default_tol);
-  fmt::print(stdout, "\n");
+  if (this_node == 0) {
+    fmt::print(
+      stdout, "\n - Solve the linear system for the Laplacian with homogeneous Dirichlet"
+      " on [0, 1] x [0, 1]\n"
+    );
+    fmt::print(stdout, " - Second-order centered finite difference\n");
+    fmt::print(
+      stdout, " - Uniform grid with ({} x {} = {}) points in the x-direction and "
+      " ({} x {} = {}) points in the y-direction\n",
+      numX_objs, default_nrow_object, numX_objs * default_nrow_object,
+      numY_objs, default_nrow_object, numY_objs * default_nrow_object
+    );
+    fmt::print(stdout, " - Maximum number of iterations {}\n", maxIter);
+    fmt::print(stdout, " - Convergence tolerance {}\n", default_tol);
+    fmt::print(stdout, "\n");
+  }
 
   if (this_node == 0) {
 
@@ -507,7 +504,7 @@ int main(int argc, char** argv) {
       static_cast<BaseIndexType>(numY_objs)
     );
     auto proxy = vt::theCollection()->construct<LinearPb2DJacobi>(range);
-    auto rootMsg = makeSharedMessage< LinearPb2DJacobi::LPMsg >(
+    auto rootMsg = makeSharedMessage<LinearPb2DJacobi::LPMsg>(
       numX_objs,
       numY_objs,
       maxIter
