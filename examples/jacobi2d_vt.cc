@@ -110,10 +110,9 @@ public:
   { }
 
 
-  struct BlankMsg : vt::CollectionMessage<LinearPb2DJacobi> {
-    BlankMsg() = default;
-  };
+  struct BlankMsg : vt::CollectionMessage<LinearPb2DJacobi> { };
 
+  struct InitMsg : vt::collective::ReduceNoneMsg { };
 
   struct LPMsg : vt::CollectionMessage<LinearPb2DJacobi> {
 
@@ -291,6 +290,9 @@ public:
 
   }
 
+  void doneInit(InitMsg *msg) {
+    sendInfo(nullptr);
+  }
 
   void sendInfo(BlankMsg *msg) {
 
@@ -429,11 +431,13 @@ public:
     // Initialize the starting vector
     init();
 
+    // Wait for all initializations to complete, reduce, and then:
     // Start the algorithm with a neighbor-to-neighbor communication
+    using CollType = LinearPb2DJacobi;
     auto proxy = this->getCollectionProxy();
-    auto idx = getIndex();
-    auto loopMsg = makeSharedMessage<BlankMsg>();
-    proxy[idx].send<BlankMsg, &LinearPb2DJacobi::sendInfo>(loopMsg);
+    auto cb = theCB()->makeBcast<CollType, InitMsg, &CollType::doneInit>(proxy);
+    auto empty = makeMessage<InitMsg>();
+    proxy.reduce(empty.get(),cb);
   }
 
 };
