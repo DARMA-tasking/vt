@@ -98,6 +98,7 @@ public:
 
   using BlankMsg = vt::CollectionMessage<LinearPb1DJacobi>;
 
+  struct InitMsg : vt::collective::ReduceNoneMsg { };
 
   struct LPMsg : vt::CollectionMessage<LinearPb1DJacobi> {
 
@@ -236,6 +237,9 @@ public:
 
   }
 
+  void doneInit(InitMsg *msg) {
+    sendInfo(nullptr);
+  }
 
   void sendInfo(BlankMsg *msg) {
 
@@ -316,12 +320,13 @@ public:
     // Initialize the starting vector
     init();
 
-    // Ask all objects to run through the 'sendInfo' routine.
+    // Wait for all initializations to complete, reduce, and then:
+    // Start the algorithm with a neighbor-to-neighbor communication
+    using CollType = LinearPb1DJacobi;
     auto proxy = this->getCollectionProxy();
-    auto idx = getIndex();
-    auto loopMsg = makeSharedMessage<BlankMsg>();
-    proxy[idx].send<BlankMsg,&LinearPb1DJacobi::sendInfo>(loopMsg);
-
+    auto cb = theCB()->makeBcast<CollType, InitMsg, &CollType::doneInit>(proxy);
+    auto empty = makeMessage<InitMsg>();
+    proxy.reduce(empty.get(),cb);
   }
 
 };
