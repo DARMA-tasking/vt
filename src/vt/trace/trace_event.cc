@@ -82,10 +82,7 @@ TraceEntryIDType EventClass::theEventSeq() const {
 
 Event::Event(std::string const& in_event, TraceEntryIDType const& in_event_type)
   : EventClass(in_event), this_event_type_(in_event_type)
-{
-  auto const& event_hash =  std::hash<std::string>{}(in_event);
-  this_event_type_ = event_hash;
-}
+{ }
 
 TraceEntryIDType Event::theEventTypeId() const {
   return this_event_type_;
