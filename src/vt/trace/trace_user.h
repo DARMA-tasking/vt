@@ -52,6 +52,11 @@
 
 namespace vt { namespace trace {
 
+UserEventIDType registerEventCollective(std::string const& name);
+UserEventIDType registerEventRooted(std::string const& name);
+
+void addUserEvent(UserEventIDType event);
+void addUserEventBracketed(UserEventIDType event, double begin, double end);
 void addUserNote(std::string const& note);
 void addUserData(int32_t data);
 void addUserBracketedNote(
@@ -63,6 +68,29 @@ void addUserNotePre(std::string const& note, TraceEventIDType const event);
 void addUserNoteEpi(std::string const& note, TraceEventIDType const event);
 
 #if backend_check_enabled(trace_enabled)
+
+struct TraceScopedEvent final {
+  explicit TraceScopedEvent(UserEventIDType event)
+    : begin_(Trace::getCurrentTime()),
+      event_(event)
+  { }
+
+  ~TraceScopedEvent() { end(); }
+
+  void end() {
+    if (not ended_) {
+      end_ = Trace::getCurrentTime();
+      ended_ = true;
+      theTrace()->addUserEventBracketed(event_, begin_, end_);
+    }
+  }
+
+private:
+  double begin_          = 0.0;
+  double end_            = 0.0;
+  UserEventIDType event_ = 0;
+  bool ended_            = false;
+};
 
 struct TraceScopedNote final {
   TraceScopedNote(
@@ -99,6 +127,12 @@ struct TraceScopedNote final {
 
   void end() { }
   void setEvent(TraceEventIDType const in_event) { }
+};
+
+struct TraceScopedEvent final {
+  TraceScopedNote(UserEventIDType) { }
+
+  void end() { }
 };
 
 #endif

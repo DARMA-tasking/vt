@@ -63,6 +63,7 @@ struct EventClass {
   TraceEntryIDType theEventSeqId() const;
 
   std::string theEventName() const;
+  void setEventName(std::string const& in_str);
   void setEventSeq(TraceEntryIDType const& seq);
   TraceEntryIDType theEventSeq() const;
 

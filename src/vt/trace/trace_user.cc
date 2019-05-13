@@ -52,6 +52,34 @@
 
 namespace vt { namespace trace {
 
+UserEventIDType registerEventCollective(std::string const& name) {
+#if backend_check_enabled(trace_enabled)
+  return theTrace()->registerUserEventColl(name);
+#else
+  return 0;
+#endif
+}
+
+UserEventIDType registerEventRooted(std::string const& name) {
+#if backend_check_enabled(trace_enabled)
+  return theTrace()->registerUserEventRoot(name);
+#else
+  return 0;
+#endif
+}
+
+void addUserEvent(UserEventIDType event) {
+#if backend_check_enabled(trace_enabled)
+  theTrace()->addUserEvent(event);
+#endif
+}
+
+void addUserEventBracketed(UserEventIDType event, double begin, double end) {
+#if backend_check_enabled(trace_enabled)
+  theTrace()->addUserEventBracketed(event, begin, end);
+#endif
+}
+
 void addUserNote(std::string const& note) {
 #if backend_check_enabled(trace_enabled)
   theTrace()->addUserNote(note);

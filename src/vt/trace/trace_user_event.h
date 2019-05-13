@@ -101,6 +101,10 @@ struct UserEventRegistry {
     std::string const& in_event_name, UserSpecEventIDType id
   );
 
+  std::unordered_map<UserEventIDType, std::string> const& getEvents() const {
+    return user_event_;
+  }
+
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 private:

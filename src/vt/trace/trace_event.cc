@@ -68,6 +68,10 @@ std::string EventClass::theEventName() const {
   return event;
 }
 
+void EventClass::setEventName(std::string const& in_str) {
+  event = in_str;
+}
+
 void EventClass::setEventSeq(TraceEntryIDType const& seq) {
   this_event_seq_ = seq;
 }

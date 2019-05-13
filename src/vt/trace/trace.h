@@ -161,7 +161,7 @@ struct Trace {
   bool inIdleEvent() const;
 
   static double getCurrentTime();
-  static void outputControlFile(std::ofstream& file);
+  void outputControlFile(std::ofstream& file);
   static TimeIntegerType timeToInt(double const time);
   static void traceBeginIdleTrigger();
   static void outputHeader(

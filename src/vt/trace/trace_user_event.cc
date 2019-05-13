@@ -107,7 +107,7 @@ void UserEventRegistry::insertEvent(
   UserEventIDType event, std::string const& name
 ) {
   auto iter = user_event_.find(event);
-  vtAssert(iter != user_event_.end(),  "Event already exists");
+  vtAssert(iter == user_event_.end(),  "Event already exists");
   user_event_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(event),

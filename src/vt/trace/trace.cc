@@ -209,7 +209,8 @@ void Trace::addUserEvent(UserEventIDType event) {
   auto const type = TraceConstantsType::UserEvent;
   auto const time = getCurrentTime();
 
-  LogPtrType log = new LogType(time, type, event);
+  LogPtrType log = new LogType(time, type, event, true);
+  log->node = theContext()->getNode();
   logEvent(log);
 }
 
@@ -234,9 +235,11 @@ void Trace::addUserEventBracketed(UserEventIDType event, double begin, double en
   auto const type = TraceConstantsType::UserEventPair;
 
   LogPtrType log_b = new LogType(begin, type, event, true);
+  log_b->node = theContext()->getNode();
   logEvent(log_b);
 
   LogPtrType log_e = new LogType(end, type, event, false);
+  log_e->node = theContext()->getNode();
   logEvent(log_e);
 }
 
@@ -251,6 +254,7 @@ void Trace::addUserEventBracketedBegin(UserEventIDType event) {
   auto const time = getCurrentTime();
 
   LogPtrType log = new LogType(time, type, event, true);
+  log->node = theContext()->getNode();
   logEvent(log);
 }
 
@@ -265,6 +269,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
   auto const time = getCurrentTime();
 
   LogPtrType log = new LogType(time, type, event, false);
+  log->node = theContext()->getNode();
   logEvent(log);
 }
 
@@ -512,6 +517,14 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     return log->event;
   };
 
+  auto basic_cur_event = [&]() -> TraceEventIDType {
+    traces_.push_back(log);
+
+    log->event = cur_event_;
+
+    return log->event;
+  };
+
   auto basic_create = [&]() -> TraceEventIDType {
     traces_.push_back(log);
     return log->event;
@@ -535,7 +548,7 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     return basic_create();
   case TraceConstantsType::UserEvent:
   case TraceConstantsType::UserEventPair:
-    return log->user_start ? basic_new_event_create() : basic_no_event_create();
+    return log->user_start ? basic_cur_event() : basic_new_event_create();
     break;
   case TraceConstantsType::BeginUserEventPair:
   case TraceConstantsType::EndUserEventPair:
@@ -703,6 +716,21 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
         log->msg_len
       );
       break;
+    case TraceConstantsType::UserEvent:
+    case TraceConstantsType::UserEventPair:
+    case TraceConstantsType::BeginUserEventPair:
+    case TraceConstantsType::EndUserEventPair:
+      gzprintf(
+        file,
+        "%d %d %lld %d %d %d\n",
+        type,
+        log->user_event,
+        converted_time,
+        log->event,
+        log->node,
+        0
+      );
+      break;
     case TraceConstantsType::UserSupplied:
       gzprintf(
         file,
@@ -753,12 +781,13 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   return timing::Timing::getCurrentTime();
 }
 
-/*static*/ void Trace::outputControlFile(std::ofstream& file) {
+void Trace::outputControlFile(std::ofstream& file) {
   auto const num_nodes = theContext()->getNumNodes();
 
   auto const num_event_types =
     TraceContainersType::getEventTypeContainer().size();
   auto const num_events = TraceContainersType::getEventContainer().size();
+  auto const num_user_events = user_event.getEvents().size();
 
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
@@ -769,7 +798,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
        << "TOTAL_EPS " << num_events << "\n"
        << "TOTAL_MSGS 1\n"
        << "TOTAL_PSEUDOS 0\n"
-       << "TOTAL_EVENTS 0"
+       << "TOTAL_EVENTS " << num_user_events
        << std::endl;
 
   ContainerEventSortedType sorted_event;
@@ -817,8 +846,19 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   }
 
   file << "MESSAGE 0 0\n"
-       << "TOTAL_STATS 0\n"
-       << "TOTAL_FUNCTIONS 0\n"
+       << "TOTAL_STATS 0\n";
+
+  for (auto&& elm : user_event.getEvents()) {
+    auto const id = elm.first;
+    auto const name = elm.second;
+
+    file << "EVENT "
+         << id << " "
+         << name << " "
+         << std::endl;
+  }
+
+  file << "TOTAL_FUNCTIONS 0\n"
        << "END\n"
        << std::endl;
 }
