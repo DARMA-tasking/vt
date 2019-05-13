@@ -56,6 +56,7 @@
 #include "vt/termination/dijkstra-scholten/ds.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/configs/debug/debug_colorize.h"
+#include "vt/utils/wrapper/field_wrapper.h"
 
 #include <memory>
 
@@ -677,6 +678,21 @@ void TerminationDetector::updateResolvedEpochs(
   } else {
     epoch_coll_->closeEpoch(epoch);
   }
+
+  //
+  auto const epoch_seq = epoch::EpochManip::seq(epoch);
+  if (rooted) {
+    vt::utils::FieldWrapper< vt::utils::fieldName::RootedEpochSeq,
+      vt::EpochType, vt::epoch::epoch_seq_num_bits
+      >::clean(epoch_seq);
+  }
+  else {
+    vt::utils::FieldWrapper< vt::utils::fieldName::NonRootedEpochSeq,
+      vt::EpochType, vt::epoch::epoch_seq_num_bits
+      >::clean(epoch_seq);
+  }
+  //
+
 }
 
 TermStatusEnum TerminationDetector::testEpochFinished(EpochType epoch) {

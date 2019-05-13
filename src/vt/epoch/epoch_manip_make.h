@@ -51,6 +51,7 @@
 #include "vt/context/context.h"
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
+#include "vt/utils/wrapper/field_wrapper.h"
 
 namespace vt { namespace epoch {
 
@@ -87,7 +88,12 @@ namespace vt { namespace epoch {
     auto const new_epoch = makeEpoch(
       cur_non_rooted_,false,uninitialized_destination,is_user,category
     );
-    cur_non_rooted_++;
+    //
+    vt::utils::FieldWrapper< vt::utils::fieldName::NonRootedEpochSeq,
+      vt::EpochType, vt::epoch::epoch_seq_num_bits
+      >::increment(cur_non_rooted_);
+    //                    
+    //cur_non_rooted_++;
     return new_epoch;
   }
 }
@@ -109,7 +115,12 @@ namespace vt { namespace epoch {
   auto const& next_rooted_epoch = EpochManip::makeEpoch(
     cur_rooted_,true,root_node,is_user,category
   );
-  cur_rooted_++;
+  //
+  vt::utils::FieldWrapper< vt::utils::fieldName::RootedEpochSeq,
+    vt::EpochType, vt::epoch::epoch_seq_num_bits
+    >::increment(cur_rooted_);
+  //                    
+  //cur_rooted_++;
   return next_rooted_epoch;
 }
 
