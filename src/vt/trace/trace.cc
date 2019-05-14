@@ -728,7 +728,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     case TraceConstantsType::EndUserEventPair:
       gzprintf(
         file,
-        "%d %d %lld %d %d %d\n",
+        "%d %lld %lld %d %d %d\n",
         type,
         log->user_event,
         converted_time,
