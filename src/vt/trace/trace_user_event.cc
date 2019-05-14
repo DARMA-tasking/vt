@@ -74,7 +74,7 @@ UserEventIDType UserEventRegistry::createEvent(
 
 UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
   auto id_hash = static_cast<uint16_t>(std::hash<std::string>{}(in_event_name));
-  id_hash = id_hash & 0xEFFF;
+  id_hash = id_hash & 0x0FFF;
   auto ret = newEventImpl(false, false, in_event_name, id_hash, true);
   auto id = std::get<0>(ret);
   auto inserted = std::get<1>(ret);
