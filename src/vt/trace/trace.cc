@@ -189,6 +189,10 @@ UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
   return user_event.rooted(name);
 }
 
+UserEventIDType Trace::registerUserEventHash(std::string const& name) {
+  return user_event.hash(name);
+}
+
 void Trace::registerUserEventManual(
   std::string const& name, UserSpecEventIDType id
 ) {
@@ -196,7 +200,9 @@ void Trace::registerUserEventManual(
 }
 
 void insertNewUserEvent(UserEventIDType event, std::string const& name) {
-  theTrace()->user_event.insertEvent(event, name);
+  #if backend_check_enabled(trace_enabled)
+    theTrace()->user_event.insertEvent(event, name);
+  #endif
 }
 
 void Trace::addUserEvent(UserEventIDType event) {

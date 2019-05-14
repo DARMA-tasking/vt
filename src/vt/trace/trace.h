@@ -119,6 +119,7 @@ struct Trace {
 
   UserEventIDType registerUserEventColl(std::string const& name);
   UserEventIDType registerUserEventRoot(std::string const& name);
+  UserEventIDType registerUserEventHash(std::string const& name);
   void registerUserEventManual(std::string const& name, UserSpecEventIDType id);
 
   void addUserEvent(UserEventIDType event);

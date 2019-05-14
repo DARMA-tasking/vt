@@ -60,13 +60,15 @@ namespace vt { namespace trace {
 static constexpr BitCountType const user_bits = BitCounterType<UserEventIDType>::value;
 static constexpr BitCountType const root_bits = 1;
 static constexpr BitCountType const manu_bits = 1;
+static constexpr BitCountType const hash_bits = 1;
 static constexpr BitCountType const node_bits = BitCounterType<NodeType>::value;
 static constexpr BitCountType const spec_bits = user_bits - (root_bits + node_bits);
 
 enum eUserEventLayoutBits {
   Manu  = 0,
   Root  = eUserEventLayoutBits::Manu + manu_bits,
-  Node  = eUserEventLayoutBits::Root + root_bits,
+  Hash  = eUserEventLayoutBits::Root + root_bits,
+  Node  = eUserEventLayoutBits::Hash + hash_bits,
   ID    = eUserEventLayoutBits::Node + node_bits
 };
 
@@ -92,9 +94,12 @@ struct UserEventRegistry {
 
   static void newEventHan(NewUserEventMsg* msg);
 
-  UserEventIDType
-  createEvent(bool user, bool rooted, NodeType in_node, UserSpecEventIDType id);
+  UserEventIDType createEvent(
+    bool user, bool rooted, NodeType in_node, UserSpecEventIDType id,
+    bool hash = false
+  );
 
+  UserEventIDType hash(std::string const& in_event_name);
   UserEventIDType collective(std::string const& in_event_name);
   UserEventIDType rooted(std::string const& in_event_name);
   UserEventIDType user(
@@ -108,11 +113,12 @@ struct UserEventRegistry {
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 private:
-  UserEventIDType newEventImpl(
-    bool user, bool rooted, std::string const& in_event, UserSpecEventIDType id
+  std::tuple<UserEventIDType, bool> newEventImpl(
+    bool user, bool rooted, std::string const& in_event, UserSpecEventIDType id,
+    bool hash = false
   );
 
-  void insertEvent(UserEventIDType event, std::string const& name);
+  bool insertEvent(UserEventIDType event, std::string const& name);
 
 private:
   UserSpecEventIDType cur_root_event_                          = 1;

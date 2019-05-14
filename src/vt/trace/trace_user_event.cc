@@ -51,14 +51,18 @@
 namespace vt { namespace trace {
 
 UserEventIDType UserEventRegistry::createEvent(
-  bool user, bool rooted, NodeType in_node, UserSpecEventIDType id
+  bool user, bool rooted, NodeType in_node, UserSpecEventIDType id,
+  bool hash
 ) {
   constexpr NodeType const default_node = 0;
   NodeType const node = rooted ? in_node : default_node;
   UserEventIDType event = 0;
   BitPackerType::boolSetField<eUserEventLayoutBits::Manu>(event, user);
   BitPackerType::boolSetField<eUserEventLayoutBits::Root>(event, rooted);
-  BitPackerType::setField<eUserEventLayoutBits::Node, node_bits>(event, node);
+  BitPackerType::boolSetField<eUserEventLayoutBits::Hash>(event, hash);
+  if (rooted and not hash) {
+    BitPackerType::setField<eUserEventLayoutBits::Node, node_bits>(event, node);
+  }
   BitPackerType::setField<eUserEventLayoutBits::ID, spec_bits>(event, id);
   return event;
 }
@@ -68,12 +72,29 @@ UserEventIDType UserEventRegistry::createEvent(
   insertNewUserEvent(msg->id_, msg->name_);
 }
 
+UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
+  auto id_hash = std::hash<std::string>{}(in_event_name);
+  auto ret = newEventImpl(false, false, in_event_name, id_hash, true);
+  auto id = std::get<0>(ret);
+  auto inserted = std::get<1>(ret);
+  if (inserted) {
+    auto const node  = theContext()->getNode();
+    if (node != 0) {
+      auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
+      theMsg()->sendMsgAuto<NewUserEventMsg,newEventHan>(0, msg.get());
+    }
+  }
+  return id;
+}
+
 UserEventIDType UserEventRegistry::collective(std::string const& in_event_name) {
-  return newEventImpl(false, false, in_event_name, cur_coll_event_++);
+  auto ret = newEventImpl(false, false, in_event_name, cur_coll_event_++);
+  return std::get<0>(ret);
 }
 
 UserEventIDType UserEventRegistry::rooted(std::string const& in_event_name) {
-  auto id = newEventImpl(false, true, in_event_name, cur_root_event_++);
+  auto ret = newEventImpl(false, true, in_event_name, cur_root_event_++);
+  auto id = std::get<0>(ret);
   auto const node  = theContext()->getNode();
   if (node != 0) {
     auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
@@ -85,7 +106,8 @@ UserEventIDType UserEventRegistry::rooted(std::string const& in_event_name) {
 UserEventIDType UserEventRegistry::user(
   std::string const& in_event_name, UserSpecEventIDType seq
 ) {
-  auto id = newEventImpl(true, false, in_event_name, seq);
+  auto ret = newEventImpl(true, false, in_event_name, seq);
+  auto id = std::get<0>(ret);
   auto const node  = theContext()->getNode();
   if (node != 0) {
     auto msg = makeMessage<NewUserEventMsg>(true, id, in_event_name);
@@ -94,25 +116,30 @@ UserEventIDType UserEventRegistry::user(
   return id;
 }
 
-UserEventIDType UserEventRegistry::newEventImpl(
-  bool user, bool rooted, std::string const& in_event, UserSpecEventIDType id
+std::tuple<UserEventIDType, bool> UserEventRegistry::newEventImpl(
+  bool user, bool rooted, std::string const& in_event, UserSpecEventIDType id,
+  bool hash
 ) {
   auto const node  = theContext()->getNode();
-  auto const event = createEvent(user, rooted, node, id);
-  insertEvent(event, in_event);
-  return event;
+  auto const event = createEvent(user, rooted, node, id, hash);
+  auto const inserted = insertEvent(event, in_event);
+  return std::make_tuple(event, inserted);
 }
 
-void UserEventRegistry::insertEvent(
+bool UserEventRegistry::insertEvent(
   UserEventIDType event, std::string const& name
 ) {
   auto iter = user_event_.find(event);
-  vtAssert(iter == user_event_.end(),  "Event already exists");
-  user_event_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(event),
-    std::forward_as_tuple(name)
-  );
+  if (iter == user_event_.end()) {
+    user_event_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(event),
+      std::forward_as_tuple(name)
+    );
+    return true;
+  } else {
+    return false;
+  }
 }
 
 
