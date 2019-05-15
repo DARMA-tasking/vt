@@ -60,10 +60,8 @@ template <typename ColT>
   VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
   PhaseType const& phase, TimeType const& time
 ) {
-  // Assign a new element ID if it's the first time this runs
-  if (col_elm->stats_elm_id_ == 0) {
-    col_elm->stats_elm_id_ = ProcStats::getNextElm();
-  }
+  // Always assign a new element ID so the node is correct (for now)
+  col_elm->stats_elm_id_ = ProcStats::getNextElm();
 
   auto const next_elm = col_elm->stats_elm_id_;
 
