@@ -196,7 +196,7 @@ void Reduce::startReduce(
   auto lookup = ReduceIdentifierType{tag,seq,proxy,objgroup};
   auto& state = ReduceStateHolder::find<MessageT>(group_,lookup);
 
-  auto const& nmsgs = state.msgs.size();
+  std::size_t const& nmsgs = state.msgs.size();
   auto const contrib =
     use_num_contrib ? state.num_contrib_ : state.num_local_contrib_;
   bool ready = nmsgs == static_cast<decltype(nmsgs)>(getNumChildren() + contrib);
