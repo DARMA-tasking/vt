@@ -60,8 +60,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /*static*/ LBType InvokeLB::cached_lb_ = LBType::NoLB;
 
 /*static*/ LBType InvokeLB::shouldInvoke(PhaseType phase, bool try_file) {
-  auto const& this_node = theContext()->getNode();
-
   debug_print(
     lb, node,
     "LBInvoke::shouldInvoke: phase={}, try_file={}, cached_phase_={}, lb={}\n",
@@ -119,7 +117,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
   if (this_node == 0 and not ArgType::vt_lb_quiet) {
     vt_print(
-      lblite,
+      lb,
       "InvokeLB::startLB: phase={}, balancer={}, name={}\n",
       phase,
       static_cast<typename std::underlying_type<LBType>::type>(lb),
