@@ -75,7 +75,7 @@ void ElementStats::stopTime() {
   debug_print(
     vrt_coll, node,
     "ElementStats: stopTime: time={}, total={}, started={}\n",
-    stop_time, total_time
+    stop_time, total_time, started
   );
 }
 
