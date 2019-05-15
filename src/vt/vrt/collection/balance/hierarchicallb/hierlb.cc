@@ -456,7 +456,11 @@ void HierarchicalLB::transfer(
     );
 
     auto iter = balance::ProcStats::proc_migrate_.find(elm);
-    vtAssert(iter != balance::ProcStats::proc_migrate_.end(), "Must exist");
+    vtAssertInfo(
+      iter != balance::ProcStats::proc_migrate_.end(), "Must exist",
+      elm, list.size(), from, theContext()->getNode(), transfer_count,
+      balance::ProcStats::proc_migrate_.size()
+    );
     iter->second(from);
   }
 }

@@ -88,23 +88,23 @@ struct Runtime;
 extern runtime::Runtime* curRT;
 } /* end namespace vt */
 
-#define debug_print_impl(inconfig, inmode, cat, ctx, ...)               \
+#define debug_print_impl(force, inconfig, inmode, cat, ctx, ...)        \
   vt::config::ApplyOp<                                                  \
     vt::config::DebugPrintOp,                                           \
     inconfig,                                                           \
     vt::config::CatEnum::cat,                                           \
     vt::config::CtxEnum::ctx,                                           \
     vt::config::ModeEnum::inmode                                        \
-  >::apply(debug_argument_option(cat), __VA_ARGS__)
+  >::apply(debug_argument_option(cat) or force, __VA_ARGS__)
 
 #define debug_print(feature, ctx, ...)                                  \
   debug_print_impl(                                                     \
-    vt::config::DefaultConfig, normal, feature, ctx, __VA_ARGS__        \
+    false, vt::config::DefaultConfig, normal, feature, ctx, __VA_ARGS__ \
   )
 
 #define debug_print_verbose(feature, ctx, ...)                          \
   debug_print_impl(                                                     \
-    vt::config::DefaultConfig, verbose, feature, ctx, __VA_ARGS__       \
+    false, vt::config::DefaultConfig, verbose, feature, ctx, __VA_ARGS__ \
   )
 
 #define vt_make_config(feature)                                          \
@@ -118,7 +118,7 @@ extern runtime::Runtime* curRT;
 
 #define debug_print_force_impl(feature, ctx, ...)                       \
   debug_print_impl(                                                     \
-    vt_make_config(feature), normal, feature, ctx, __VA_ARGS__          \
+    true, vt_make_config(feature), normal, feature, ctx, __VA_ARGS__    \
   )
 
 #if debug_force_enabled
@@ -172,7 +172,7 @@ static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
 template <CatEnum cat, ModeEnum mod>
 struct DebugPrintOp<cat, CtxEnum::node, mod> {
   template <typename Arg, typename... Args>
-  void operator()(bool const& rt_option, Arg&& arg, Args&&... args) {
+  void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
     if (rt_option or vt::arguments::ArgConfig::vt_debug_all) {
       auto no_node = static_cast<NodeType>(-1);
       auto node = vt::curRT != nullptr ? vt::debug::preNode() : no_node;
@@ -184,7 +184,7 @@ struct DebugPrintOp<cat, CtxEnum::node, mod> {
 template <CatEnum cat, ModeEnum mod>
 struct DebugPrintOp<cat, CtxEnum::unknown, mod> {
   template <typename Arg, typename... Args>
-  void operator()(bool const& rt_option, Arg&& arg, Args&&... args) {
+  void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
     if (rt_option or vt::arguments::ArgConfig::vt_debug_all) {
       debugPrintImpl<cat,mod>(-1,std::forward<Arg>(arg),std::forward<Args>(args)...);
     }
@@ -201,7 +201,7 @@ template <
 >
 struct DispatchOp {
   template <typename... Args>
-  static void apply(bool const& op, Args&&... args) {
+  static void apply(bool const op, Args&&... args) {
     return Op<cat,ctx,mode>()(op,std::forward<Args>(args)...);
   }
 };
@@ -218,7 +218,7 @@ template <
 >
 struct CheckEnabled {
   template <typename... Args>
-  static void apply(bool const&, Args&&... args) {
+  static void apply(bool const, Args&&... args) {
     return vt::debug::useVars(std::forward<Args>(args)...);
   }
 };
@@ -238,7 +238,7 @@ struct CheckEnabled<
   >
 > {
   template <typename... Args>
-  static void apply(bool const& op, Args&&... args) {
+  static void apply(bool const op, Args&&... args) {
     return DispatchOp<Op,C,cat,ctx,mod>::apply(op,std::forward<Args>(args)...);
   }
 };
@@ -253,7 +253,7 @@ template <
 >
 struct ApplyOp {
   template <typename... Args>
-  static void apply(bool const& op, Args&&... args) {
+  static void apply(bool const op, Args&&... args) {
     return CheckEnabled<Op,C,cat,ctx,mod>::apply(op,std::forward<Args>(args)...);
   }
 };

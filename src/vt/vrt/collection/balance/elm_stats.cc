@@ -51,7 +51,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void ElementStats::startTime() {
-  auto const& start_time = timing::Timing::getCurrentTime();
+  auto const start_time = timing::Timing::getCurrentTime();
   cur_time_ = start_time;
   cur_time_started_ = true;
 
@@ -63,8 +63,8 @@ void ElementStats::startTime() {
 }
 
 void ElementStats::stopTime() {
-  auto const& stop_time = timing::Timing::getCurrentTime();
-  auto const& total_time = stop_time - cur_time_;
+  auto const stop_time = timing::Timing::getCurrentTime();
+  auto const total_time = stop_time - cur_time_;
   //vtAssert(cur_time_started_, "Must have started time");
   auto const started = cur_time_started_;
   if (started) {
@@ -75,7 +75,7 @@ void ElementStats::stopTime() {
   debug_print(
     vrt_coll, node,
     "ElementStats: stopTime: time={}, total={}, started={}\n",
-    stop_time, total_time
+    stop_time, total_time, started
   );
 }
 
