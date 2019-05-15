@@ -236,7 +236,7 @@ void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
   } else {
     vtAssert(ArgType::vt_lb_interval != 0, "LB Interval must not be 0");
     if (phase % ArgType::vt_lb_interval == 0) {
-      for (auto&& elm : lb_names_<>) {
+      for (auto&& elm : lb_names_) {
         if (elm.second == ArgType::vt_lb_name) {
           the_lb = elm.first;
           break;
@@ -251,7 +251,7 @@ void StartLB<ColT>::operator()(PhaseReduceMsg<ColT>* msg) {
       "StartLB: phase={}, balancer={}, name={}\n",
       msg->getPhase(),
       static_cast<typename std::underlying_type<LBType>::type>(the_lb),
-      lb_names_<>[the_lb]
+      lb_names_[the_lb]
     );
   }
 

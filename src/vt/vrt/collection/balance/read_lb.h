@@ -71,7 +71,7 @@ struct SpecEntry {
   double min() const { return lb_min_; }
   double max() const { return lb_max_; }
   LBType getLB() const {
-    for (auto&& elm : lb_names_<>) {
+    for (auto&& elm : lb_names_) {
       if (lb_name_ == elm.second) {
         return elm.first;
       }
