@@ -222,7 +222,7 @@ public:
       for (size_t ix = 1; ix <= numRowsPerObject_; ++ix) {
         size_t node = ix + iy * ldx;
         double val = tcur_[node];
-        maxNorm = (maxNorm > abs(val)) ? maxNorm : abs(val);
+        maxNorm = (maxNorm > std::fabs(val)) ? maxNorm : std::fabs(val);
       }
     }
 
