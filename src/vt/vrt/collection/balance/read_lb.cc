@@ -141,7 +141,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
     }
 
     bool valid_lb_found = false;
-    for (auto&& elm : lb_names_<>) {
+    for (auto&& elm : lb_names_) {
       if (lb_name == elm.second) {
         valid_lb_found = true;
       }
