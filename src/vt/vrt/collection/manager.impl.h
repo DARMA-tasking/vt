@@ -2765,7 +2765,7 @@ void CollectionManager::elmFinishedLB(
   auto const& col_proxy = proxy.getCollectionProxy();
   auto const& idx = proxy.getElementProxy().getIndex();
   auto elm_holder = findElmHolder<ColT>(col_proxy);
-  vtAssert(
+  vtAssertInfo(
     elm_holder != nullptr, "Must find element holder at elmFinishedLB",
     col_proxy, phase
   );
@@ -2790,7 +2790,7 @@ void CollectionManager::elmReadyLB(
   auto const& col_proxy = proxy.getCollectionProxy();
   auto const& idx = proxy.getElementProxy().getIndex();
   auto elm_holder = findElmHolder<ColT>(col_proxy);
-  vtAssert(
+  vtAssertInfo(
     elm_holder != nullptr, "Must find element holder at elmReadyLB",
     col_proxy, phase
   );
@@ -2808,8 +2808,8 @@ void CollectionManager::elmReadyLB(
   auto iter = release_lb_.find(col_proxy);
   if (iter == release_lb_.end()) {
     release_lb_[col_proxy] = [this,col_proxy]{
-      auto elm_holder = findElmHolder<ColT>(col_proxy);
-      elm_holder->runLBCont();
+      auto cur_elm_holder = findElmHolder<ColT>(col_proxy);
+      cur_elm_holder->runLBCont();
     };
   }
 
@@ -2836,7 +2836,7 @@ void CollectionManager::elmReadyLB(
     phase = elm_holder->lookup(idx).getCollection()->stats_.getPhase();
   }
 
-  vtAssert(
+  vtAssertInfo(
     elm_holder != nullptr, "Must find element holder at elmReadyLB",
     col_proxy, phase
   );
@@ -2877,9 +2877,9 @@ void CollectionManager::elmReadyLB(
     }
 
     using namespace balance;
-    CollectionProxyWrapType<ColT> proxy(col_proxy);
+    CollectionProxyWrapType<ColT> cur_proxy(col_proxy);
     using MsgType = PhaseMsg<ColT>;
-    auto msg = makeMessage<MsgType>(phase, proxy, do_sync);
+    auto msg = makeMessage<MsgType>(phase, cur_proxy, do_sync);
     backend_enable_if(lblite, msg->setLBLiteInstrument(false); );
 
     debug_print(
@@ -2889,7 +2889,7 @@ void CollectionManager::elmReadyLB(
     );
 
     theCollection()->sendMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
-      proxy.index(idx), msg.get()
+      cur_proxy[idx], msg.get()
     );
   }
 }

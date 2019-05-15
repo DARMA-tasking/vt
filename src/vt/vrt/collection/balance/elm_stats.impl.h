@@ -114,8 +114,8 @@ template <typename ColT>
     }
 
     if (lb != LBType::NoLB or do_sync) {
-      auto msg = makeMessage<MsgType>(cur_phase,lb);
-      proxy.reduce(msg.get(),cb_);
+      auto nmsg = makeMessage<MsgType>(cur_phase,lb);
+      proxy.reduce(nmsg.get(),cb_);
     } else {
       theCollection()->elmFinishedLB(elm_proxy,cur_phase);
     }
