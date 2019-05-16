@@ -50,6 +50,7 @@
 #include "vt/activefn/activefn.h"
 #include "vt/pipe/pipe_callback_only.h"
 #include "vt/collective/reduce/operators/functors/none_op.h"
+#include "vt/collective/reduce/operators/callback_op.h"
 
 #include <functional>
 
@@ -66,13 +67,24 @@ struct Reducable : BaseProxyT {
   Reducable& operator=(Reducable const&) = default;
 
 
-  template <typename OpT = collective::None, typename MsgT>
+  template <
+    typename OpT = collective::None,
+    typename MsgT,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
+      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >
   EpochType reduce(
     MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag
   ) const;
 
-  template <typename OpT, typename FunctorT, typename MsgT>
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
+  >
   EpochType reduce(
     MsgT *const msg, EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag
