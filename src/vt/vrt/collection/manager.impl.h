@@ -1566,7 +1566,7 @@ CollectionManager::constructCollectiveMap(
       cur_idx.toString(), mapped_node
     );
 
-    if (this_node == mapped_node) {
+    if (theContext()->getNode() == mapped_node) {
       // // Check the current context index, asserting that it's nullptr (there can
       // // only be one live creation context at time)
       // auto const ctx_idx = IdxContextHolder::index();
