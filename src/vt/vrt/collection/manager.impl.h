@@ -379,6 +379,10 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const& group = envelopeGetGroup(msg->env);
   auto const& cur_epoch = theMsg()->getEpoch();
   auto const& msg_epoch = envelopeGetEpoch(msg->env);
+
+  // Call into the scheduler to make progress
+  theEvent()->scheduler(); theEvent()->scheduler();
+
   theMsg()->pushEpoch(cur_epoch);
   debug_print(
     vrt_coll, node,
@@ -403,6 +407,8 @@ template <typename ColT, typename IndexT, typename MsgT>
         "broadcast: apply to element: epoch={}, bcast_epoch={}\n",
         msg->bcast_epoch_, base->cur_bcast_epoch_
       );
+      // Call into the scheduler to make progress
+      theEvent()->scheduler(); theEvent()->scheduler();
       if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
         vtAssert(base != nullptr, "Must be valid pointer");
         base->cur_bcast_epoch_++;
