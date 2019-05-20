@@ -1500,7 +1500,6 @@ CollectionManager::constructCollectiveMap(
   using IndexT         = typename ColT::IndexType;
   using TypedProxyType = CollectionProxyWrapType<ColT>;
 
-  auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
 
   // Register the collection mapping function
