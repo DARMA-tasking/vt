@@ -54,6 +54,7 @@
 #include "vt/collective/reduce/reduce_msg.h"
 #include "vt/collective/reduce/operators/default_msg.h"
 #include "vt/collective/reduce/operators/default_op.h"
+#include "vt/collective/reduce/operators/callback_op.h"
 #include "vt/messaging/active.h"
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/message.h"
@@ -83,7 +84,13 @@ struct Reduce : virtual collective::tree::Tree {
     ObjGroupProxyType obj_group = no_obj_group
   );
 
-  template <typename OpT, typename MsgT>
+  template <
+    typename OpT,
+    typename MsgT,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
+      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >
   SequentialIDType reduce(
     NodeType const& root, MsgT* msg, Callback<MsgT> cb,
     TagType const& tag = no_tag, SequentialIDType const& seq = no_seq_id,
@@ -91,7 +98,12 @@ struct Reduce : virtual collective::tree::Tree {
     VirtualProxyType const& proxy = no_vrt_proxy
   );
 
-  template <typename OpT, typename FunctorT, typename MsgT>
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
+  >
   SequentialIDType reduce(
     NodeType const& root, MsgT* msg, TagType const& tag = no_tag,
     SequentialIDType const& seq = no_seq_id, ReduceNumType const& num_contrib = 1,
