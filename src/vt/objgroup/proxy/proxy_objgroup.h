@@ -53,6 +53,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/pipe/pipe_callback_only.h"
 #include "vt/collective/reduce/operators/functors/none_op.h"
+#include "vt/collective/reduce/operators/callback_op.h"
 #include "vt/utils/static_checks/msg_ptr.h"
 
 namespace vt { namespace objgroup { namespace proxy {
@@ -88,7 +89,10 @@ public:
   template <
     typename OpT = collective::None,
     typename MsgPtrT,
-    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
+    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
+      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
+    >
   >
   EpochType reduce(
     MsgPtrT msg, Callback<MsgT> cb, EpochType epoch = no_epoch,
@@ -99,7 +103,8 @@ public:
     typename OpT = collective::None,
     typename FunctorT,
     typename MsgPtrT,
-    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
+    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
   >
   EpochType reduce(
     MsgPtrT msg, EpochType epoch = no_epoch, TagType tag = no_tag
