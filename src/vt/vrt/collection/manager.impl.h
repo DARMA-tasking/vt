@@ -136,7 +136,6 @@ template <typename SysMsgT>
   using IndexT      = typename SysMsgT::IndexType;
   using BaseIdxType = vt::index::BaseIndex;
 
-  auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
 
   auto& info = msg->info;
@@ -144,11 +143,11 @@ template <typename SysMsgT>
   // The VirtualProxyType for this construction
   auto proxy = info.getProxy();
   // The insert epoch for this collection
-  auto const& insert_epoch = info.getInsertEpoch();
+  auto const insert_epoch = info.getInsertEpoch();
   // Count the number of elements locally created here
   int64_t num_elements_created = 0;
   // Get the mapping function handle
-  auto const& map_han = msg->map;
+  auto const map_han = msg->map;
   // Get the range for the construction
   auto range = msg->info.range_;
 
@@ -158,7 +157,7 @@ template <typename SysMsgT>
     // Get the handler function
     auto fn = auto_registry::getHandlerMap(map_han);
     // Total count across the statically sized collection
-    auto const& num_elms = info.range_.getSize();
+    std::size_t num_elms = info.range_.getSize();
 
     debug_print(
       vrt_coll, node,
@@ -184,7 +183,7 @@ template <typename SysMsgT>
         mapped_node, cur_idx.toString(), range.toString()
       );
 
-      if (this_node == mapped_node) {
+      if (theContext()->getNode() == mapped_node) {
         using IdxContextHolder = InsertContextHolder<IndexT>;
 
         // Actually construct the element. If the detector is enabled, call the
@@ -1567,7 +1566,7 @@ CollectionManager::constructCollectiveMap(
       cur_idx.toString(), mapped_node
     );
 
-    if (this_node == mapped_node) {
+    if (theContext()->getNode() == mapped_node) {
       // // Check the current context index, asserting that it's nullptr (there can
       // // only be one live creation context at time)
       // auto const ctx_idx = IdxContextHolder::index();
