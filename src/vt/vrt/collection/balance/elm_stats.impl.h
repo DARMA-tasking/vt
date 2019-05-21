@@ -109,26 +109,10 @@ template <typename ColT>
       before_ready, after_ready, ready
     );
     if (ready) {
-      theCollection()->reduceMsg<
-        ColT,
-        PhaseReduceMsg<ColT>,
-        PhaseReduceMsg<ColT>::template msgHandler<
-          PhaseReduceMsg<ColT>,
-          collective::PlusOp<collective::NoneType>,
-          FunctorStartLBType
-        >
-      >(proxy, phase_msg, no_epoch, cur_phase);
+      proxy.template reduce<collective::None,FunctorStartLBType>(phase_msg, no_epoch, cur_phase);
     }
   } else {
-    theCollection()->reduceMsg<
-      ColT,
-      PhaseReduceMsg<ColT>,
-      PhaseReduceMsg<ColT>::template msgHandler<
-        PhaseReduceMsg<ColT>,
-        collective::PlusOp<collective::NoneType>,
-        FunctorStatsType
-      >
-    >(proxy, phase_msg, no_epoch, cur_phase);
+    proxy.template reduce <collective::None,FunctorStatsType>(phase_msg, no_epoch, cur_phase);
   }
 }
 
@@ -164,13 +148,9 @@ template <typename ColT>
     print_ptr(col), col->getIndex().x(), cur_phase, total_load
   );
 
-  theCollection()->reduceMsg<
-    ColT,
-    MsgType,
-    MsgType::template msgHandler<
-      MsgType, collective::PlusOp<LoadData>, CollectedStats<ColT>
-    >
-  >(proxy, stats_msg, no_epoch, cur_phase);
+  proxy.template reduce<
+    collective::PlusOp<LoadData>, CollectedStats<ColT>
+  >(stats_msg, no_epoch, cur_phase);
 }
 
 template <typename ColT>
@@ -190,15 +170,7 @@ template <typename ColT>
   ProcStats::addProcStats<ColT>(elm_proxy, col, msg->getPhase(), total_load);
 
   auto phase_msg = makeSharedMessage<PhaseReduceMsg<ColT>>(cur_phase,proxy);
-  theCollection()->reduceMsg<
-    ColT,
-    PhaseReduceMsg<ColT>,
-    PhaseReduceMsg<ColT>::template msgHandler<
-      PhaseReduceMsg<ColT>,
-      collective::PlusOp<collective::NoneType>,
-      StartLB<ColT>
-    >
-  >(proxy, phase_msg, no_epoch, cur_phase);
+  proxy.template reduce<collective::None, StartLB<ColT>>(phase_msg, no_epoch, cur_phase);
 }
 
 template <typename ColT>
