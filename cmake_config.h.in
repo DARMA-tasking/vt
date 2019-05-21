@@ -61,3 +61,4 @@
 #define vt_feature_cmake_default_threading   @vt_feature_cmake_default_threading@
 #define vt_feature_cmake_no_pool_alloc_env   @vt_feature_cmake_no_pool_alloc_env@
 #define vt_feature_cmake_memory_pool         @vt_feature_cmake_memory_pool@
+#define vt_feature_cmake_cons_multi_idx      @vt_feature_cmake_cons_multi_idx@

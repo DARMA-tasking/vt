@@ -196,7 +196,7 @@ template <typename SysMsgT>
         // is often very handy
         IdxContextHolder::set(&cur_idx,proxy);
 
-        #if backend_check_enabled(detector)
+        #if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
           auto new_vc = DerefCons::derefTuple<ColT, IndexT, decltype(msg->tup)>(
             num_elms, cur_idx, &msg->tup
           );
@@ -1710,7 +1710,7 @@ void CollectionManager::staticInsert(
   auto const max = static_cast<BaseIdxType*>(&range);
   auto const& home_node = fn(cur, max, num_nodes);
 
-  #if backend_check_enabled(detector)
+  #if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
     auto elm_ptr = DerefCons::derefTuple<ColT, IndexT, decltype(tuple)>(
       num_elms, idx, &tuple
     );
@@ -2370,7 +2370,7 @@ void CollectionManager::insert(
       // index during the constructor
       IdxContextHolder::set(&idx,untyped_proxy);
 
-      #if backend_check_enabled(detector)
+      #if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
         auto new_vc = DerefCons::derefTuple<ColT,IndexT,std::tuple<>>(
           num_elms, idx, &tup
         );

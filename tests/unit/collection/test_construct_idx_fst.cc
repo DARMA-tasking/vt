@@ -87,7 +87,7 @@ using CollectionTestTypes = testing::Types<
 
 // Only enable this test if the detector is enabled since they depend on
 // detecting constructor index
-#if backend_check_enabled(detector)
+#if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
 
   INSTANTIATE_TYPED_TEST_CASE_P(
     test_construct_idx_fst, TestConstruct, CollectionTestTypes

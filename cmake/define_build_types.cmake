@@ -94,6 +94,7 @@ set (vt_feature_cmake_print_term_msgs "0")
 set (vt_feature_cmake_default_threading "1")
 set (vt_feature_cmake_no_pool_alloc_env "0")
 set (vt_feature_cmake_memory_pool "1")
+set (vt_feature_cmake_cons_multi_idx "0")
 
 set(cmake_vt_debug_modes_debug_trace           "${cmake_vt_debug_modes_all}")
 set(cmake_vt_debug_modes_release_trace         "")
