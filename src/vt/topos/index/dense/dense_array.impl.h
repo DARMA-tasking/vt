@@ -119,7 +119,6 @@ template <typename IndexType, NumDimensionsType ndim>
 void DenseIndexArray<IndexType, ndim>::foreach(
   ThisIndexType in_max, ApplyType fn
 ) const {
-  ThisIndexType idx;
   ThisIndexType max = in_max;
   auto size = max.getSize();
   std::array<IndexType, ndim> vec = {{0}};

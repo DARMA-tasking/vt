@@ -110,7 +110,7 @@ struct PrettyPrintCat;
 #define vt_option_category_pretty_print(option, option_string)           \
   template <>                                                            \
   struct PrettyPrintCat<CatEnum::option> {                               \
-    static constexpr char const* const print() { return option_string; } \
+    static constexpr char const* print() { return option_string; } \
     static constexpr char const* const str = option_string;              \
   };
 
@@ -155,7 +155,7 @@ struct PrettyPrintCtx;
 #define vt_option_context_pretty_print(option, option_string)            \
   template <>                                                            \
   struct PrettyPrintCtx<CtxEnum::option> {                               \
-    static constexpr char const* const print() { return option_string; } \
+    static constexpr char const* print() { return option_string; } \
     static constexpr char const* const str = option_string;              \
   };
 
@@ -172,7 +172,7 @@ struct PrettyPrintMode;
 #define vt_option_mode_pretty_print(option, option_string)               \
   template <>                                                            \
   struct PrettyPrintMode<ModeEnum::option> {                             \
-    static constexpr char const* const print() { return option_string; } \
+    static constexpr char const* print() { return option_string; } \
     static constexpr char const* const str = option_string;              \
   };
 

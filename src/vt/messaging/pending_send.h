@@ -94,7 +94,7 @@ private:
 
 private:
   MsgVirtualPtr<BaseMsgType> msg_ = nullptr;
-  ByteType msg_size_ = -1;
+  ByteType msg_size_ = no_byte;
   SendActionType send_action_ = nullptr;
 };
 
