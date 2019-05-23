@@ -343,23 +343,18 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
   switch (log->type) {
   case TraceConstantsType::BeginProcessing:
     return grouped_begin();
-    break;
   case TraceConstantsType::EndProcessing:
     return grouped_end();
-    break;
   case TraceConstantsType::Creation:
   case TraceConstantsType::CreationBcast:
   case TraceConstantsType::MessageRecv:
     return basic_new_event_create();
-    break;
   case TraceConstantsType::BeginIdle:
   case TraceConstantsType::EndIdle:
     return basic_no_event_create();
-    break;
   default:
     vtAssert(0, "Not implemented");
     return 0;
-    break;
   }
 }
 

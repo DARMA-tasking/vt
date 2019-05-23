@@ -478,6 +478,7 @@ private:
       return state.setRDMAGetFn<MsgT,FunctionT,f>(msg, fn, any_tag, tag);
     } else {
       vtAssert(0, "Should be unreachable");
+      return no_rdma_handle;
     }
   }
 
@@ -509,6 +510,7 @@ private:
       return state.setRDMAPutFn<MsgT,FunctionT,f>(msg, fn, any_tag, tag);
     } else {
       vtAssert(0, "Should be unreachable");
+      return no_rdma_handle;
     }
   }
 

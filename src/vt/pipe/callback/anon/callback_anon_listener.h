@@ -69,6 +69,7 @@ struct AnonListener : CallbackBase<SignalT> {
 
 private:
   void trigger_(SignalDataType* data) override;
+  void trigger_(SignalDataType* data, PipeType const& pipe_id) override;
 
 private:
   CallbackFnType fn_ = nullptr;

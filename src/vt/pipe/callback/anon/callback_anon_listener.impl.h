@@ -75,6 +75,11 @@ void AnonListener<SignalT>::trigger_(SignalDataType* data) {
   fn_(data);
 }
 
+template <typename SignalT>
+void AnonListener<SignalT>::trigger_(SignalDataType* data, PipeType const& pipe_id) {
+  return trigger_(data);
+}
+
 }}} /* end namespace vt::pipe::callback */
 
 #endif /*INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_LISTENER_IMPL_H*/

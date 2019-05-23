@@ -88,7 +88,7 @@ void ActiveMessenger::packMsg(
     size, ptr_bytes, print_ptr(ptr)
   );
 
-  char* const msg_buffer = reinterpret_cast<char* const>(msg) + size;
+  char* const msg_buffer = reinterpret_cast<char*>(msg) + size;
   std::memcpy(msg_buffer, ptr, ptr_bytes);
 }
 

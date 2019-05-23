@@ -85,7 +85,6 @@ void SeqList::expandNextNode() {
   case SeqNodeStateEnumType::WaitingNextState:
   case SeqNodeStateEnumType::NoMoreExpansionsState:
     return;
-    break;
   case SeqNodeStateEnumType::KeepExpandingState:
     expandNextNode();
     break;

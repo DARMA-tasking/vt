@@ -144,13 +144,10 @@ bool EventRecord::testReady() {
   switch (type_) {
   case EventRecordType::MPI_EventRecord:
     return testMPIEventReady();
-    break;
   case EventRecordType::NormalEventRecord:
     return testNormalEventReady();
-    break;
   case EventRecordType::ParentEventRecord:
     return testParentEventReady();
-    break;
   case EventRecordType::Invalid:
     vtAssert(0, "Testing readiness of invalid event record");
     break;
