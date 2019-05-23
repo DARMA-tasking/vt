@@ -83,12 +83,8 @@ struct Registry {
     HandlerType const& han, TagType const& tag = no_tag
   );
   ActiveClosureFnType getHandlerNoTag(HandlerType const& han);
-  ActiveClosureFnType getTrigger(HandlerType const& han);
-
-  void saveTrigger(HandlerType const& han, ActiveClosureFnType fn);
 
 private:
-  ContainerType triggers_;
   ContainerType registered_;
   HanTagContainerType tagged_registered_;
   HandlerIdentifierType cur_ident_collective_ = first_handle_identifier;

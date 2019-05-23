@@ -435,9 +435,6 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
 
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  void trigger(std::function<void(vt::BaseMessage*)> fn);
-
   void packMsg(
     MessageType const msg, MsgSizeType const& size, void* ptr,
     MsgSizeType const& ptr_bytes

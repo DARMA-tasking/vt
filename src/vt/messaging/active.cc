@@ -558,11 +558,6 @@ bool ActiveMessenger::deliverActiveMsg(
 
     runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
 
-    auto reg_trigger = theRegistry()->getTrigger(handler);
-    if (reg_trigger) {
-      reg_trigger(msg);
-    }
-
     // unset current handler
     current_handler_context_  = uninitialized_handler;
     current_node_context_     = uninitialized_destination;

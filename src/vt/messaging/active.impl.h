@@ -385,12 +385,6 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   return ActiveSendHandler<MessageT>::broadcastMsg(msg,han,tag);
 }
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-void ActiveMessenger::trigger(std::function<void(vt::BaseMessage*)> fn) {
-  auto const& han = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
-  theRegistry()->saveTrigger(han, /*reinterpret_cast<active_function_t>(*/fn);
-}
-
 inline ActiveMessenger::EpochStackSizeType
 ActiveMessenger::epochPreludeHandler(EpochType const& cur_epoch) {
   debug_print(
