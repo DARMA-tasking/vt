@@ -59,7 +59,7 @@ using TraceEntryIDType = std::hash<std::string>::result_type;
 using TraceEventIDType = uint32_t;
 using TraceMsgLenType = size_t;
 
-static constexpr TraceEntryIDType const no_trace_entry_id = -1;
+static constexpr TraceEntryIDType const no_trace_entry_id = u64empty;
 static constexpr TraceEventIDType const no_trace_event = 0;
 static constexpr NodeType const designated_root_node = 0;
 static constexpr int64_t const trace_reserve_count = 1048576;

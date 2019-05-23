@@ -110,20 +110,6 @@ ActiveClosureFnType Registry::getHandlerNoTag(HandlerType const& han) {
   }
 }
 
-ActiveClosureFnType Registry::getTrigger(HandlerType const& han) {
-  auto iter = triggers_.find(han);
-  if (iter != triggers_.end()) {
-    return iter->second;
-  } else {
-    return nullptr;
-  }
-}
-
-void Registry::saveTrigger(HandlerType const& han, ActiveClosureFnType fn) {
-  fmt::print("save_trigger: han={}\n", han);
-  triggers_[han] = fn;
-}
-
 ActiveClosureFnType Registry::getHandler(
   HandlerType const& han, TagType const& tag
 ) {

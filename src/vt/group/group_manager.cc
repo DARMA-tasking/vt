@@ -250,7 +250,7 @@ void GroupManager::initializeLocalGroup(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
   MsgSizeType const& size, bool const root, bool* const deliver
 ) {
-  auto const& msg = reinterpret_cast<ShortMessage* const>(base.get());
+  auto const& msg = reinterpret_cast<ShortMessage*>(base.get());
   auto const& is_pipe = envelopeIsPipe(msg->env);
 
   if (!is_pipe) {

@@ -136,16 +136,12 @@ SeqNode::SizeType SeqNode::getSize() const {
   switch (type_) {
   case TypeEnum::LeafNode:
     return payload_.funcs ? payload_.funcs->size() : 0;
-    break;
   case TypeEnum::ParentNode:
     return payload_.children ? payload_.children->size() : 0;
-    break;
   case TypeEnum::ParallelNode:
     return payload_.parallel ? payload_.parallel->getSize() : 0;
-    break;
   case TypeEnum::InvalidNode:
     return 0;
-    break;
   default:
     vtAssert(0, "Should not be reachable");
     return 0;
@@ -390,16 +386,12 @@ SeqNodeStateEnumType SeqNode::expandNext() {
   switch (type_) {
   case TypeEnum::LeafNode:
     return expandLeafNode();
-    break;
   case TypeEnum::ParentNode:
     return expandParentNode();
-    break;
   case TypeEnum::ParallelNode:
     return payload_.parallel->expandParallelNode(this->shared_from_this());
-    break;
   case TypeEnum::InvalidNode:
     return SeqNodeStateEnumType::InvalidState;
-    break;
   default:
     vtAssert(0, "This should never happen");
   }

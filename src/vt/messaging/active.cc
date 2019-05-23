@@ -88,7 +88,7 @@ void ActiveMessenger::packMsg(
     size, ptr_bytes, print_ptr(ptr)
   );
 
-  char* const msg_buffer = reinterpret_cast<char* const>(msg) + size;
+  char* const msg_buffer = reinterpret_cast<char*>(msg) + size;
   std::memcpy(msg_buffer, ptr, ptr_bytes);
 }
 
@@ -557,11 +557,6 @@ bool ActiveMessenger::deliverActiveMsg(
     }
 
     runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
-
-    auto reg_trigger = theRegistry()->getTrigger(handler);
-    if (reg_trigger) {
-      reg_trigger(msg);
-    }
 
     // unset current handler
     current_handler_context_  = uninitialized_handler;

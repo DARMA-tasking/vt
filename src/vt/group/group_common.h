@@ -56,7 +56,7 @@ static constexpr GroupIDType const no_group_id = 0xFFFFFFFF;
 
 using RemoteOperationIDType = size_t;
 
-static constexpr RemoteOperationIDType const no_op_id = -1;
+static constexpr RemoteOperationIDType const no_op_id = u64empty;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"

@@ -164,7 +164,7 @@ public:
     ComponentPtrType<trace::Trace> theTrace = nullptr;
   #endif
 
-  static bool sig_user_1_;
+  static bool volatile sig_user_1_;
 
 protected:
   bool finalize_on_term_ = false;

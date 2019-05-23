@@ -83,7 +83,7 @@
 namespace vt { namespace runtime {
 
 /*static*/ std::string Runtime::prog_name_ = "";
-/*static*/ bool Runtime::sig_user_1_ = false;
+/*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,

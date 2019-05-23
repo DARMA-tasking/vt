@@ -119,7 +119,7 @@ LLDBPYTHON
     my $launch = "";
 
     if ($is_gdb) {
-        $launch = "$xterm -title 'VT Node $i' -hold -e $debugger -x $tmpfile";
+        $launch = "$xterm -title 'VT Node $i' -hold -e $debugger -x $tmpfile -quiet";
     } else {
         $launch = "$xterm -title 'VT Node $i' -hold -e $debugger -s $tmpfile";
     }

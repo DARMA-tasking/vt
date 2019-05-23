@@ -218,7 +218,7 @@ namespace vt { namespace rdma {
   } else {
     // Local put
     theRDMA()->triggerPutRecvData(
-      rdma_handle, tag, ptr, local_rdma_op_tag, elm, [=](){
+      rdma_handle, tag, ptr, static_cast<ByteType>(local_rdma_op_tag), elm, [=](){
         debug_print(
           rdma, node, "putElement: local data is put\n"
         );
