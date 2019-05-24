@@ -134,6 +134,14 @@ void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   if (iter != dispatch_.end()) {
     dispatch_.erase(iter);
   }
+  //
+  auto const proxy_id = proxy::ObjGroupProxy::getID(proxy);
+  vt::utils::FieldWrapper<
+    vt::utils::fieldName::ObjGroupSeq,
+    vt::objgroup::ObjGroupIDType,
+    vt::objgroup::proxy::objgrp_id_num_bits
+  >::clean(proxy_id);
+  //
   auto obj_iter = objs_.find(proxy_bits);
   if (obj_iter != objs_.end()) {
     objs_.erase(obj_iter);

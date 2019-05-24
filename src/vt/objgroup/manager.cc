@@ -79,7 +79,14 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
     iter = cur_obj_id_.find(idx);
   }
   vtAssert(iter != cur_obj_id_.end(), "Must have valid type idx lookup");
-  auto const id = iter->second++;
+  ////
+  auto const id = iter->second;
+  vt::utils::FieldWrapper<
+    vt::utils::fieldName::ObjGroupSeq,
+    vt::objgroup::ObjGroupIDType,
+    vt::objgroup::proxy::objgrp_id_num_bits
+  >::increment(iter->second);
+  ////
   auto const node = theContext()->getNode();
   auto const is_collective = true;
   auto const proxy = proxy::ObjGroupProxy::create(id, idx, node, is_collective);

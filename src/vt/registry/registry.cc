@@ -44,6 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/registry/registry.h"
+#include "vt/utils/wrapper/field_wrapper.h"
 
 namespace vt { namespace registry {
 
@@ -53,6 +54,21 @@ HandlerType Registry::registerNewHandler(
   HandlerType new_handle = 0;
   HandlerIdentifierType const& new_identifier =
     is_collective ? cur_ident_collective_++ : cur_ident_++;
+
+  if (is_collective) {
+    vt::utils::FieldWrapper<
+      vt::utils::fieldName::RegistryHandlerCollectiveSeq,
+      vt::HandlerIdentifierType,
+      vt::handler_id_num_bits
+      >::increment(cur_ident_collective_);
+  }
+  else {
+    vt::utils::FieldWrapper<
+      vt::utils::fieldName::RegistryHandlerSeq,
+      vt::HandlerIdentifierType,
+      vt::handler_id_num_bits
+    >::increment(cur_ident_);
+  }
 
   HandlerManagerType::setHandlerIdentifier(new_handle, new_identifier);
 

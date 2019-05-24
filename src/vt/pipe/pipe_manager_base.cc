@@ -149,6 +149,10 @@ void PipeManagerBase::generalSignalTrigger(PipeType const& pipe) {
   if (automatic) {
     if (state.finished()) {
       // Remove from the list of active pipe states
+      const PipeIDType pipeSeq = PipeIDBuilder::getPipeID(pipe);
+      vt::utils::FieldWrapper< vt::utils::fieldName::PipeSeq,
+        vt::pipe::PipeIDType, vt::pipe::pipe_id_num_bits
+      >::clean(pipeSeq);
       pipe_state_.erase(iter);
     }
   }
@@ -188,7 +192,10 @@ void PipeManagerBase::triggerPipe(PipeType const& pipe) {
 
 PipeType PipeManagerBase::makePipeID(bool const persist, bool const send_back) {
   auto const& this_node = theContext()->getNode();
-  auto const next_id = cur_pipe_id_++;
+  auto const next_id = cur_pipe_id_;
+  vt::utils::FieldWrapper< vt::utils::fieldName::PipeSeq,
+    vt::pipe::PipeIDType, vt::pipe::pipe_id_num_bits
+  >::increment(cur_pipe_id_);
   auto const pipe_id = PipeIDBuilder::createPipeID(
     next_id,this_node,send_back,persist
   );

@@ -217,8 +217,12 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
     );
     info = std::make_unique<RemoteVrtInfo>(this_node, return_proxy);
   } else {
-    auto next_req = cur_request_id++;
-
+    auto next_req = cur_request_id;
+    vt::utils::FieldWrapper<
+      vt::utils::fieldName::VirtualRequestSeq,
+      vt::vrt::VirtualRequestIDType,
+      BitCounterType<vt::vrt::VirtualRequestIDType>::value
+      >::increment(cur_request_id);
     // insert a pending request to trigger the action
     pending_request_.emplace(
       std::piecewise_construct,

@@ -83,7 +83,11 @@ GroupType GroupManager::newGroupCollective(
 
 GroupType GroupManager::newGroupCollectiveLabel(GroupCollectiveLabelTagType) {
   auto const& this_node = theContext()->getNode();
-  auto next_id = next_collective_group_id_++;
+  auto const next_id = next_collective_group_id_;
+  vt::utils::FieldWrapper<
+      vt::utils::fieldName::CollectiveGroupSeq,
+      vt::group::GroupIDType, vt::group::group_id_num_bits
+      >::increment(next_collective_group_id_);
   auto const& id = GroupIDBuilder::createGroupID(next_id,this_node,true,true);
   return id;
 }
@@ -93,7 +97,11 @@ GroupType GroupManager::newCollectiveGroup(
   bool make_mpi_group
 ) {
   auto const& this_node = theContext()->getNode();
-  auto new_id = next_collective_group_id_++;
+  auto const new_id = next_collective_group_id_;
+  vt::utils::FieldWrapper<
+    vt::utils::fieldName::CollectiveGroupSeq,
+    vt::group::GroupIDType, vt::group::group_id_num_bits
+  >::increment(next_collective_group_id_);
   bool const is_collective = true;
   auto const& group = GroupIDBuilder::createGroupID(
     new_id, this_node, is_collective, is_static
@@ -109,7 +117,11 @@ GroupType GroupManager::newLocalGroup(
   RegionPtrType in_region, bool const& is_static, ActionGroupType action
 ) {
   auto const& this_node = theContext()->getNode();
-  auto new_id = next_group_id_++;
+  auto const new_id = next_group_id_;
+  vt::utils::FieldWrapper<
+    vt::utils::fieldName::GroupSeq,
+    vt::group::GroupIDType, vt::group::group_id_num_bits
+  >::increment(next_group_id_);
   bool const is_collective = false;
   auto const& group = GroupIDBuilder::createGroupID(
     new_id, this_node, is_collective, is_static
@@ -156,6 +168,10 @@ bool GroupManager::groupDefault(GroupType const& group) const {
 
 RemoteOperationIDType GroupManager::registerContinuation(ActionType action) {
   RemoteOperationIDType next_id = cur_id_++;
+//  vt::utils::FieldWrapper<
+//    vt::utils::fieldName::CollectiveGroupSeq,
+//    vt::group::RemoteOperationIDType, vt::group::group_id_num_bits
+//  >::increment(cur_id_);
   continuation_actions_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(next_id),

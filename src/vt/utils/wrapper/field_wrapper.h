@@ -58,7 +58,17 @@ namespace vt { namespace utils {
 
 enum struct fieldName {
   NonRootedEpochSeq,
-  RootedEpochSeq
+  RootedEpochSeq,
+  CollectiveGroupSeq,
+  EventTypeSeq,
+  GroupSeq,
+  ObjGroupSeq,
+  PipeSeq,
+  RegistryHandlerCollectiveSeq,
+  RegistryHandlerSeq,
+  VirtualRemoteSeq,
+  VirtualRequestSeq,
+  VirtualSeq
 };
 
 
@@ -68,7 +78,11 @@ struct FieldWrapper {
 private:
 
   static constexpr FieldType const first_ = (FieldType) 1;
-  static constexpr FieldType const last_ = (((FieldType) 1) << len) - 1;
+
+  // for unsigned int: (1 << (len-1)) + ((1 << (len-1)) - 1)
+  // do we need signed int?
+  // TODO : check the constatn value!!!
+  static constexpr FieldType const last_ = (((FieldType) 1) << (len-2));
 
   static FieldType cur_width_;
   static FieldType cur_tail_;
@@ -113,7 +127,7 @@ template<fieldName wrapField, typename FieldType, BitCountType len>
   if (cur_width_ == last_) {
     seqID = (FieldType) 0;
     vt::abort("Out of Free Identifiers", 999);
-	return;
+    return;
   }
   cur_width_ = cur_width_ + 1;
   seqID = next(seqID);

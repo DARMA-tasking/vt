@@ -102,7 +102,12 @@ void VirtualContextManager::insertVirtualContext(
 }
 
 VirtualProxyType VirtualContextManager::generateNewProxy() {
-  return VirtualProxyBuilder::createProxy(curIdent_++, myNode_);
+  const VirtualIDType nextId = curIdent_;
+  vt::utils::FieldWrapper<
+    vt::utils::fieldName::VirtualSeq,
+    vt::vrt::VirtualIDType, vt::vrt::virtual_id_num_bits
+  >::increment(curIdent_);
+  return VirtualProxyBuilder::createProxy(nextId, myNode_);
 }
 
 VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
@@ -114,7 +119,12 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
     curRemoteID_.emplace(node, 1);
     iter = curRemoteID_.find(node);
   }
-  return iter->second++;
+  VirtualRemoteIDType result = iter->second;
+  vt::utils::FieldWrapper<
+    vt::utils::fieldName::VirtualRemoteSeq,
+    vt::vrt::VirtualRemoteIDType, vt::vrt::virtual_remote_id_num_bits
+  >::increment(iter->second);
+  return result;
 }
 
 /*static*/ void VirtualContextManager::virtualMsgHandler(BaseMessage* msg) {
@@ -160,6 +170,12 @@ void VirtualContextManager::recvVirtualProxy(
   vtAssert(
     pending_iter == pending_request_.end(), "Must be valid pending request"
   );
+
+  vt::utils::FieldWrapper<
+    vt::utils::fieldName::VirtualRequestSeq,
+    vt::vrt::VirtualRequestIDType,
+    BitCounterType<vt::vrt::VirtualRequestIDType>::value
+    >::clean(id);
 
   auto& pending_req = pending_iter->second;
   pending_req.action(proxy);
@@ -213,6 +229,18 @@ void VirtualContextManager::destroyVirtualByID(
   auto& holder = is_remote ? remote_holder_ : holder_;
   auto iter = holder.find(lookupID);
   vtAssert(iter != holder.end(), "Virtual ID must exist");
+  if (is_remote) {
+    vt::utils::FieldWrapper<
+      vt::utils::fieldName::VirtualRemoteSeq,
+      vt::vrt::VirtualRemoteIDType, vt::vrt::virtual_remote_id_num_bits
+    >::clean(lookupID);
+  }
+  else {
+    vt::utils::FieldWrapper<
+      vt::utils::fieldName::VirtualSeq,
+      vt::vrt::VirtualIDType, vt::vrt::virtual_id_num_bits
+    >::clean(lookupID);
+  }
   holder.erase(iter);
 }
 
