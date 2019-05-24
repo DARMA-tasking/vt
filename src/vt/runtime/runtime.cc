@@ -137,7 +137,7 @@ void Runtime::pauseForDebugger() {
       ::fmt::print("\n");
     }
   }
-  std::exit(1);
+  std::_Exit(EXIT_FAILURE);
 }
 
 /*static*/ void Runtime::sigHandlerUsr1(int sig) {
@@ -157,7 +157,7 @@ void Runtime::pauseForDebugger() {
       ::fmt::print("\n");
     }
   }
-  std::exit(1);
+  std::_Exit(EXIT_FAILURE);
 }
 
 /*static*/ void Runtime::termHandler() {
@@ -173,7 +173,7 @@ void Runtime::pauseForDebugger() {
       ::fmt::print("\n");
     }
   }
-  std::exit(1);
+  std::_Exit(EXIT_FAILURE);
 }
 
 /*static*/ bool Runtime::nodeStackWrite() {
@@ -753,10 +753,10 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
     auto const comm = theContext->getComm();
     MPI_Abort(comm, 129);
   } else {
-    _Exit(code);
+	std::_Exit(code);
+    // @todo: why will this not compile with clang!!?
+    //quick_exit(code);
   }
-  // @todo: why will this not compile with clang!!?
-  //quick_exit(code);
 }
 
 void Runtime::output(
