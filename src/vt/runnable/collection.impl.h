@@ -53,6 +53,7 @@
 #include "vt/trace/trace_common.h"
 #include "vt/messaging/envelope.h"
 #include "vt/messaging/active.h"
+#include "vt/serialization/sizer.h"
 
 namespace vt { namespace runnable {
 
@@ -74,8 +75,9 @@ template <typename MsgT, typename ElementT>
   #endif
 
   #if backend_check_enabled(trace_enabled)
+    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
     theTrace()->beginProcessing(
-      trace_id, sizeof(*msg), trace_event, from_node,
+      trace_id, msg_size, trace_event, from_node,
       trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
     );
   #endif
@@ -90,7 +92,7 @@ template <typename MsgT, typename ElementT>
 
   #if backend_check_enabled(trace_enabled)
     theTrace()->endProcessing(
-      trace_id, sizeof(*msg), trace_event, from_node,
+      trace_id, msg_size, trace_event, from_node,
       trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
     );
   #endif

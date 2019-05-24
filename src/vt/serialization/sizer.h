@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          vrt.impl.h
+//                          sizer.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,44 +42,43 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_VRT_IMPL_H
-#define INCLUDED_RUNNABLE_VRT_IMPL_H
+#if !defined INCLUDED_VT_SERIALIZATION_SIZER_H
+#define INCLUDED_VT_SERIALIZATION_SIZER_H
 
 #include "vt/config.h"
-#include "vt/runnable/vrt.h"
-#include "vt/registry/auto/auto_registry_common.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/registry/auto/vc/auto_registry_vc.h"
-#include "vt/trace/trace_common.h"
-#include "vt/messaging/envelope.h"
-#include "vt/serialization/sizer.h"
+#include "vt/serialization/serialize_interface.h"
 
-namespace vt { namespace runnable {
+#if HAS_SERIALIZATION_LIBRARY
+  #define HAS_DETECTION_COMPONENT 1
+  #include "serialization_library_headers.h"
+  #include "traits/serializable_traits.h"
+#endif
 
-template <typename MsgT, typename ElementT>
-/*static*/ void RunnableVrt<MsgT,ElementT>::run(
-  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node
-) {
-  #if backend_check_enabled(trace_enabled)
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
-      handler, auto_registry::RegistryTypeEnum::RegVrt
-    );
-    trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);
-  #endif
+namespace vt { namespace serialization {
 
-  #if backend_check_enabled(trace_enabled)
-    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
-    theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
-  #endif
+template <typename MsgT, typename=void>
+struct MsgSizer {
+  static std::size_t get(MsgT* msg) {
+    return sizeof(*msg);
+  }
+};
 
-  auto const func = auto_registry::getAutoHandlerVC(handler);
-  func(msg, elm);
+#if HAS_SERIALIZATION_LIBRARY
+template <typename MsgT>
+struct MsgSizer<
+  MsgT,
+  typename std::enable_if_t<
+    ::serdes::SerializableTraits<MsgT>::has_serialize_function
+  >
+> {
+  static std::size_t get(MsgT* msg) {
+    auto& msg_ref = *msg;
+    return ::serialization::interface::getSize<MsgT>(msg_ref);
+  }
+};
 
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(trace_id, msg_size, trace_event, from_node);
-  #endif
-}
+#endif
 
-}} /* end namespace vt::runnable */
+}} /* end namespace vt::serialization */
 
-#endif /*INCLUDED_RUNNABLE_VRT_IMPL_H*/
+#endif /*INCLUDED_VT_SERIALIZATION_SIZER_H*/

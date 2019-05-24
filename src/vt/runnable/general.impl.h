@@ -54,6 +54,7 @@
 #include "vt/messaging/envelope.h"
 #include "vt/handler/handler.h"
 #include "vt/objgroup/manager.fwd.h"
+#include "vt/serialization/sizer.h"
 
 #include <cassert>
 
@@ -84,7 +85,8 @@ template <typename MsgT>
   #endif
 
   #if backend_check_enabled(trace_enabled)
-    theTrace()->beginProcessing(trace_id, sizeof(MsgT), trace_event, from_node);
+    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
+    theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
   #endif
 
   bool is_functor = false;
@@ -119,7 +121,7 @@ template <typename MsgT>
   }
 
   #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(trace_id, sizeof(MsgT), trace_event, from_node);
+    theTrace()->endProcessing(trace_id, msg_size, trace_event, from_node);
   #endif
 }
 
@@ -140,7 +142,8 @@ template <typename MsgT>
   #endif
 
   #if backend_check_enabled(trace_enabled)
-    theTrace()->beginProcessing(trace_id, sizeof(MsgT), trace_event, from_node);
+    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
+    theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
   #endif
 
   bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
@@ -149,7 +152,7 @@ template <typename MsgT>
   objgroup::dispatchObjGroup(pmsg.template toVirtual<ShortMessage>(),handler);
 
   #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(trace_id, sizeof(MsgT), trace_event, from_node);
+    theTrace()->endProcessing(trace_id, msg_size, trace_event, from_node);
   #endif
 }
 
