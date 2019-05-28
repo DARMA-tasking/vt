@@ -112,9 +112,9 @@ template <typename LocType>
 ) {
   auto inst_iter = loc_insts.find(inst);
   if (inst_iter == loc_insts.end()) {
-    auto pending_iter = pending_inst_<LocType>.find(inst);
-    if (pending_iter == pending_inst_<LocType>.end()) {
-      pending_inst_<LocType>.emplace(
+    auto pending_iter = details::PendingInst<LocType>::pending_inst_.find(inst);
+    if (pending_iter == details::PendingInst<LocType>::pending_inst_.end()) {
+      details::PendingInst<LocType>::pending_inst_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(inst),
         std::forward_as_tuple(PendingContainerType<LocType>{action})
@@ -136,19 +136,22 @@ template <typename LocType>
     std::forward_as_tuple(static_cast<LocCoordPtrType>(ptr))
   );
 
-  auto iter = pending_inst_<LocType>.find(inst);
-  if (iter != pending_inst_<LocType>.end()) {
+  auto iter = details::PendingInst<LocType>::pending_inst_.find(inst);
+  if (iter != details::PendingInst<LocType>::pending_inst_.end()) {
     for (auto&& elm : iter->second) {
       elm(ptr);
     }
-    pending_inst_<LocType>.erase(iter);
+    details::PendingInst<LocType>::pending_inst_.erase(iter);
   }
 }
 
+
+namespace details {
 template <typename LocType>
 /*static*/ std::unordered_map<
   LocInstType, LocationManager::PendingContainerType<LocType>
-> LocationManager::pending_inst_;
+> PendingInst<LocType>::pending_inst_;
+}
 
 }} /* end namespace vt::location */
 
