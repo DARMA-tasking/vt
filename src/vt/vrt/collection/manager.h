@@ -788,12 +788,6 @@ private:
   static EpochType getCurrentEpoch(MsgT* msg);
 
 private:
-  template <typename=void>
-  static VirtualIDType curIdent_;
-
-  template <typename ColT>
-  static BcastBufferType<ColT> broadcasts_;
-
   CleanupListFnType cleanup_fns_;
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;
@@ -807,6 +801,23 @@ private:
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
 };
+
+// These are static variables in class templates because Intel 18
+// dislikes static class member variable templates
+namespace details
+{
+  template <typename T>
+  struct CurIdent
+  {
+    static VirtualIDType m_;
+  };
+
+  template <typename ColT>
+  struct Broadcasts
+  {
+    static typename CollectionManager::BcastBufferType<ColT> m_;
+  };
+}
 
 }}} /* end namespace vt::vrt::collection */
 

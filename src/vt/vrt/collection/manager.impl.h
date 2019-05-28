@@ -89,12 +89,14 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename>
-/*static*/ VirtualIDType CollectionManager::curIdent_ = 0;
+namespace details {
+template <typename T>
+/*static*/ VirtualIDType CurIdent<T>::m_ = 0;
 
 template <typename ColT>
 /*static*/ CollectionManager::BcastBufferType<ColT>
-CollectionManager::broadcasts_ = {};
+Broadcasts<ColT>::m_ = {};
+}
 
 template <typename>
 void CollectionManager::cleanupAll() {
@@ -469,12 +471,12 @@ template <typename ColT, typename MsgT>
 void CollectionManager::bufferBroadcastMsg(
   VirtualProxyType const& proxy, EpochType const& epoch, MsgT* msg
 ) {
-  auto proxy_iter = broadcasts_<ColT>.find(proxy);
-  if (proxy_iter == broadcasts_<ColT>.end()) {
-    if (broadcasts_<ColT>.size() == 0) {
-      cleanup_fns_.push_back([]{ broadcasts_<ColT>.clear(); });
+  auto proxy_iter = details::Broadcasts<ColT>::m_.find(proxy);
+  if (proxy_iter == details::Broadcasts<ColT>::m_.end()) {
+    if (details::Broadcasts<ColT>::m_.size() == 0) {
+      cleanup_fns_.push_back([]{ details::Broadcasts<ColT>::m_.clear(); });
     }
-    broadcasts_<ColT>.emplace(
+    details::Broadcasts<ColT>::m_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(proxy),
       std::forward_as_tuple(
@@ -499,8 +501,8 @@ template <typename ColT>
 void CollectionManager::clearBufferedBroadcastMsg(
   VirtualProxyType const& proxy, EpochType const& epoch
 ) {
-  auto proxy_iter = broadcasts_<ColT>.find(proxy);
-  if (proxy_iter != broadcasts_<ColT>.end()) {
+  auto proxy_iter = details::Broadcasts<ColT>::m_.find(proxy);
+  if (proxy_iter != details::Broadcasts<ColT>::m_.end()) {
     auto epoch_iter = proxy_iter->second.find(epoch);
     if (epoch_iter != proxy_iter->second.end()) {
       proxy_iter->second.erase(epoch_iter);
@@ -512,8 +514,8 @@ template <typename ColT, typename MsgT>
 CollectionMessage<ColT>* CollectionManager::getBufferedBroadcastMsg(
   VirtualProxyType const& proxy, EpochType const& epoch
 ) {
-  auto proxy_iter = broadcasts_<ColT>.find(proxy);
-  if (proxy_iter != broadcasts_<ColT>.end()) {
+  auto proxy_iter = details::Broadcasts<ColT>::m_.find(proxy);
+  if (proxy_iter != details::Broadcasts<ColT>::m_.end()) {
     auto epoch_iter = proxy_iter->second.find(epoch);
     if (epoch_iter != proxy_iter->second.end()) {
       return proxy_iter->second->second;
@@ -1978,7 +1980,7 @@ inline void CollectionManager::insertCollectionInfo(
 
 inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
   auto const& node = theContext()->getNode();
-  return VirtualProxyBuilder::createProxy(curIdent_<>++, node, true, true);
+  return VirtualProxyBuilder::createProxy(details::CurIdent<void>::m_++, node, true, true);
 }
 
 /*
