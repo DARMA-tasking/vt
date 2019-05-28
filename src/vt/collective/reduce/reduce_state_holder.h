@@ -53,33 +53,26 @@
 
 namespace vt { namespace collective { namespace reduce {
 
+template <typename T>
 struct ReduceStateHolder {
   using ReduceIDType    = ReduceIdentifierType;
-  template <typename T>
   using ReduceStateType = ReduceState<T>;
-  template <typename T>
-  using LookupType      = std::unordered_map<ReduceIDType,ReduceStateType<T>>;
-  template <typename T>
-  using GroupLookupType = std::unordered_map<GroupType, LookupType<T>>;
+  using LookupType      = std::unordered_map<ReduceIDType,ReduceStateType>;
+  using GroupLookupType = std::unordered_map<GroupType, LookupType>;
 
 public:
-  template <typename T>
   static bool exists(GroupType group, ReduceIDType const& id);
 
-  template <typename T>
-  static ReduceStateType<T>& find(GroupType group, ReduceIDType const& id);
+  static ReduceStateType& find(GroupType group, ReduceIDType const& id);
 
-  template <typename T>
   static void erase(GroupType group, ReduceIDType const& id);
 
-  template <typename T>
   static void insert(
-    GroupType group, ReduceIDType const& id, ReduceStateType<T>&& state
+    GroupType group, ReduceIDType const& id, ReduceStateType&& state
   );
 
 private:
-  template <typename T>
-  static GroupLookupType<T> state_lookup_;
+  static GroupLookupType state_lookup_;
 };
 
 }}} /* end namespace vt::collective::reduce */

@@ -50,11 +50,11 @@
 namespace vt { namespace collective { namespace reduce {
 
 template <typename T>
-/*static*/ bool ReduceStateHolder::exists(
+/*static*/ bool ReduceStateHolder<T>::exists(
   GroupType group, ReduceIDType const& id
 ) {
-  auto group_iter = state_lookup_<T>.find(group);
-  if (group_iter == state_lookup_<T>.end()) {
+  auto group_iter = state_lookup_.find(group);
+  if (group_iter == state_lookup_.end()) {
     return false;
   } else {
     auto id_iter = group_iter->second.find(id);
@@ -67,38 +67,38 @@ template <typename T>
 }
 
 template <typename T>
-/*static*/ typename ReduceStateHolder::ReduceStateType<T>&
-ReduceStateHolder::find(GroupType group, ReduceIDType const& id) {
-  auto group_iter = state_lookup_<T>.find(group);
-  vtAssertExpr(group_iter != state_lookup_<T>.end());
+/*static*/ typename ReduceStateHolder<T>::ReduceStateType&
+ReduceStateHolder<T>::find(GroupType group, ReduceIDType const& id) {
+  auto group_iter = state_lookup_.find(group);
+  vtAssertExpr(group_iter != state_lookup_.end());
   auto id_iter = group_iter->second.find(id);
   vtAssertExpr(id_iter != group_iter->second.end());
   return id_iter->second;
 }
 
 template <typename T>
-/*static*/ void ReduceStateHolder::erase(
+/*static*/ void ReduceStateHolder<T>::erase(
   GroupType group, ReduceIDType const& id
 ) {
-  auto group_iter = state_lookup_<T>.find(group);
-  if (group_iter != state_lookup_<T>.end()) {
+  auto group_iter = state_lookup_.find(group);
+  if (group_iter != state_lookup_.end()) {
     auto id_iter = group_iter->second.find(id);
     if (id_iter == group_iter->second.end()) {
-      state_lookup_<T>.erase(group_iter);
+      state_lookup_.erase(group_iter);
     } else {
       group_iter->second.erase(id_iter);
       if (group_iter->second.size == 0) {
-        state_lookup_<T>.erase(group_iter);
+        state_lookup_.erase(group_iter);
       }
     }
   }
 }
 
 template <typename T>
-/*static*/ void ReduceStateHolder::insert(
-  GroupType group, ReduceIDType const& id, ReduceStateType<T>&& state
+/*static*/ void ReduceStateHolder<T>::insert(
+  GroupType group, ReduceIDType const& id, ReduceStateType&& state
 ) {
-  state_lookup_<T>[group].emplace(
+  state_lookup_[group].emplace(
     std::piecewise_construct,
     std::forward_as_tuple(id),
     std::forward_as_tuple(std::move(state))
@@ -106,8 +106,8 @@ template <typename T>
 }
 
 template <typename T>
-/*static*/ typename ReduceStateHolder::GroupLookupType<T>
-ReduceStateHolder::state_lookup_ = {};
+/*static*/ typename ReduceStateHolder<T>::GroupLookupType
+ReduceStateHolder<T>::state_lookup_ = {};
 
 }}} /* end namespace vt::collective::reduce */
 
