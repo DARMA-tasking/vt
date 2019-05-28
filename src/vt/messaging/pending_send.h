@@ -49,6 +49,7 @@
 #include "vt/messaging/message.h"
 
 #include <functional>
+#include <cstddef>
 
 namespace vt { namespace messaging {
 
@@ -66,7 +67,7 @@ struct PendingSend final {
     , send_action_(in_action)
   { }
 
-  explicit PendingSend(nullptr_t) { }
+  explicit PendingSend(std::nullptr_t) { }
   PendingSend(PendingSend&& in)
     : msg_(std::move(in.msg_)),
       msg_size_(std::move(in.msg_size_)),
