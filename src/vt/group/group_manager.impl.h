@@ -60,76 +60,76 @@
 namespace vt { namespace group {
 
 template <typename T>
-/*static*/ GroupManager::ActionContainerTType<T>
-GroupManager::continuation_actions_t_ = {};
+/*static*/ typename GroupManagerT<T>::ActionContainerTType
+GroupManagerT<T>::continuation_actions_t_ = {};
 
 template <typename T>
 /*static*/ std::unordered_map<RemoteOperationIDType,std::vector<T>>
-GroupManager::waiting_cont_ = {};
+GroupManagerT<T>::waiting_cont_ = {};
 
 template <typename T>
-void GroupManager::pushCleanupAction() {
+void GroupManagerT<T>::pushCleanupAction() {
   // Push the typeless cleanup actions
-  if (continuation_actions_t_<T>.size() == 0) {
-    cleanup_actions_.push_back([]{ continuation_actions_t_<T>.clear(); });
+  if (continuation_actions_t_.size() == 0) {
+    theGroup()->addCleanupAction([]{ continuation_actions_t_.clear(); });
   }
-  if (waiting_cont_<T>.size() == 0) {
-    cleanup_actions_.push_back([]{ waiting_cont_<T>.clear(); });
+  if (waiting_cont_.size() == 0) {
+    theGroup()->addCleanupAction([]{ waiting_cont_.clear(); });
   }
 }
 
 template <typename T>
-RemoteOperationIDType GroupManager::registerContinuationT(ActionTType<T> act) {
-  pushCleanupAction<T>();
+RemoteOperationIDType GroupManagerT<T>::registerContinuationT(ActionTType act) {
+  pushCleanupAction();
 
-  RemoteOperationIDType next_id = cur_id_++;
-  continuation_actions_t_<T>.emplace(
+  RemoteOperationIDType next_id = theGroup()->getNextID();
+  continuation_actions_t_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(next_id),
-    std::forward_as_tuple(ActionListTType<T>{act})
+    std::forward_as_tuple(ActionListTType{act})
   );
-  auto iter = waiting_cont_<T>.find(next_id);
-  if (iter != waiting_cont_<T>.end()) {
+  auto iter = waiting_cont_.find(next_id);
+  if (iter != waiting_cont_.end()) {
     for (auto&& elm : iter->second) {
       act(elm);
     }
-    waiting_cont_<T>.clear();
+    waiting_cont_.clear();
   }
   return next_id;
 }
 
 template <typename T>
-void GroupManager::registerContinuationT(
-  RemoteOperationIDType const& op, ActionTType<T> action
+void GroupManagerT<T>::registerContinuationT(
+  RemoteOperationIDType const& op, ActionTType action
 ) {
   debug_print_verbose(
     group, node,
     "GroupManager::registerContinuationT: op={:x}\n", op
   );
 
-  pushCleanupAction<T>();
+  pushCleanupAction();
 
-  continuation_actions_t_<T>[op].push_back(action);
-  auto iter = waiting_cont_<T>.find(op);
-  if (iter != waiting_cont_<T>.end()) {
+  continuation_actions_t_[op].push_back(action);
+  auto iter = waiting_cont_.find(op);
+  if (iter != waiting_cont_.end()) {
     for (auto&& elm : iter->second) {
       action(elm);
     }
-    waiting_cont_<T>.clear();
+    waiting_cont_.clear();
   }
 }
 
 template <typename T>
-void GroupManager::triggerContinuationT(
+void GroupManagerT<T>::triggerContinuationT(
   RemoteOperationIDType const& op, T t
 ) {
-  auto iter = continuation_actions_t_<T>.find(op);
-  auto const& found = iter != continuation_actions_t_<T>.end();
+  auto iter = continuation_actions_t_.find(op);
+  auto const& found = iter != continuation_actions_t_.end();
 
   debug_print_verbose(
     group, node,
     "GroupManager::triggerContinuationT: op={:x}, found={}, size={}\n",
-    op, found, continuation_actions_t_<T>.size()
+    op, found, continuation_actions_t_.size()
   );
 
   if (found) {
@@ -137,15 +137,15 @@ void GroupManager::triggerContinuationT(
       elm(t);
     }
   } else {
-    auto iter_wait = waiting_cont_<T>.find(op);
-    if (iter_wait == waiting_cont_<T>.end()) {
-      waiting_cont_<T>.emplace(
+    auto iter_wait = waiting_cont_.find(op);
+    if (iter_wait == waiting_cont_.end()) {
+      waiting_cont_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(op),
         std::forward_as_tuple(std::vector<T>{t})
       );
     } else {
-      waiting_cont_<T>[op].push_back(t);
+      waiting_cont_[op].push_back(t);
     }
   }
 }

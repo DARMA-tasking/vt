@@ -84,14 +84,6 @@ struct GroupManager {
   using ActionContainerType = std::unordered_map<
     RemoteOperationIDType, ActionListType
   >;
-  template <typename T>
-  using ActionTType = std::function<void(T)>;
-  template <typename T>
-  using ActionListTType = std::vector<ActionTType<T>>;
-  template <typename T>
-  using ActionContainerTType = std::unordered_map<
-    RemoteOperationIDType, ActionListTType<T>
-  >;
   using ReduceType = collective::reduce::Reduce;
   using ReducePtrType = ReduceType*;
 
@@ -150,16 +142,6 @@ private:
     RegionType::SizeType const& group_size
   );
 
-  template <typename T>
-  void pushCleanupAction();
-  template <typename T>
-  RemoteOperationIDType registerContinuationT(ActionTType<T> action);
-  template <typename T>
-  void registerContinuationT(
-    RemoteOperationIDType const& op, ActionTType<T> a
-  );
-  template <typename T>
-  void triggerContinuationT(RemoteOperationIDType const& op, T t);
   RemoteOperationIDType nextCollectiveID() { return cur_collective_id_++; }
 
   RemoteOperationIDType registerContinuation(ActionType action);
@@ -185,6 +167,9 @@ public:
   NodeType groupRoot(GroupType const& group) const;
   bool groupDefault(GroupType const& group) const;
 
+  void addCleanupAction(ActionType action);
+  RemoteOperationIDType getNextID();
+
 private:
   static EventType groupHandler(
     MsgSharedPtr<BaseMsgType> const& msg, NodeType const& from,
@@ -202,10 +187,29 @@ private:
   RemoteOperationIDType cur_collective_id_            = 0xFFFFFFFF00000000;
   ActionContainerType   continuation_actions_         = {};
   ActionListType        cleanup_actions_              = {};
+};
 
-  template <typename T>
-  static ActionContainerTType<T> continuation_actions_t_;
-  template <typename T>
+// This is a separate template class because Intel 18 didn't like
+// static members that were variable templates. These are all the
+// members of GroupManager that were under a template <typename T>
+template <typename T>
+struct GroupManagerT : public GroupManager
+{
+  using ActionTType = std::function<void(T)>;
+  using ActionListTType = std::vector<ActionTType>;
+  using ActionContainerTType = std::unordered_map<
+    RemoteOperationIDType, ActionListTType
+  >;
+
+  GroupManagerT() = default;
+
+  static void pushCleanupAction();
+  static RemoteOperationIDType registerContinuationT(ActionTType action);
+  static void registerContinuationT(RemoteOperationIDType const& op, ActionTType a);
+  static void triggerContinuationT(RemoteOperationIDType const& op, T t);
+
+private:
+  static ActionContainerTType continuation_actions_t_;
   static std::unordered_map<RemoteOperationIDType,std::vector<T>> waiting_cont_;
 };
 
