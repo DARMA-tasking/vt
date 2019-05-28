@@ -157,16 +157,16 @@ void Reduce::reduceAddMsg(
     msg->reduce_objgroup_
   };
 
-  auto exists = ReduceStateHolder::exists<MessageT>(group_,lookup);
+  auto exists = ReduceStateHolder<MessageT>::exists(group_,lookup);
   if (not exists) {
     auto num_contrib_state = num_contrib == -1 ? 1 : num_contrib;
     ReduceState<MessageT> state(
       msg->reduce_tag_,msg->reduce_seq_,num_contrib_state
     );
-    ReduceStateHolder::insert<MessageT>(group_,lookup,std::move(state));
+    ReduceStateHolder<MessageT>::insert(group_,lookup,std::move(state));
   }
 
-  auto& state = ReduceStateHolder::find<MessageT>(group_,lookup);
+  auto& state = ReduceStateHolder<MessageT>::find(group_,lookup);
   auto msg_ptr = promoteMsg(msg);
   state.msgs.push_back(msg_ptr);
   if (num_contrib != -1) {
@@ -191,7 +191,7 @@ void Reduce::startReduce(
   ObjGroupProxyType objgroup, bool use_num_contrib
 ) {
   auto lookup = ReduceIdentifierType{tag,seq,proxy,objgroup};
-  auto& state = ReduceStateHolder::find<MessageT>(group_,lookup);
+  auto& state = ReduceStateHolder<MessageT>::find(group_,lookup);
 
   std::size_t nmsgs = state.msgs.size();
   auto const contrib =
