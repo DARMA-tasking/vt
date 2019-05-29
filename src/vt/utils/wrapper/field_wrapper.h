@@ -72,17 +72,20 @@ enum struct fieldName {
 };
 
 
+template< typename T, typename BitCountType >
+constexpr T maxWrap(BitCountType len) {
+  return (len == 1) ? 0 : (maxWrap<T,BitCountType>(len-1) << 1) + 1;
+};
+
+
 template<fieldName wrapField, typename FieldType, BitCountType len>
-struct FieldWrapper {
+struct FieldWrapper
+{
 
 private:
 
-  static constexpr FieldType const first_ = (FieldType) 1;
-
-  // for unsigned int: (1 << (len-1)) + ((1 << (len-1)) - 1)
-  // do we need signed int?
-  // TODO : check the constatn value!!!
-  static constexpr FieldType const last_ = (((FieldType) 1) << (len-2));
+  static constexpr FieldType first_ = static_cast<FieldType>(1);
+  static constexpr FieldType last_ = maxWrap<FieldType, BitCountType>(len);
 
   static FieldType cur_width_;
   static FieldType cur_tail_;
@@ -104,13 +107,13 @@ public:
 template<fieldName wrapField, typename FieldType, BitCountType len>
 /*static*/ FieldType FieldWrapper<
   wrapField, FieldType, len
-  >::cur_width_ = (FieldType) 0;
+  >::cur_width_ = static_cast<FieldType>(0);
 
 
 template<fieldName wrapField, typename FieldType, BitCountType len>
 /*static*/ FieldType FieldWrapper<
   wrapField, FieldType, len
-  >::cur_tail_ = (FieldType) 1;
+  >::cur_tail_ = first_;
 
 
 template<fieldName wrapField, typename FieldType, BitCountType len>
@@ -125,7 +128,7 @@ template<fieldName wrapField, typename FieldType, BitCountType len>
   >::increment(FieldType &seqID)
 {
   if (cur_width_ == last_) {
-    seqID = (FieldType) 0;
+    seqID = static_cast<FieldType>(0);
     vt::abort("Out of Free Identifiers", 999);
     return;
   }
