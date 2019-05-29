@@ -139,7 +139,7 @@ void CollectiveAnyOps<instance>::abort(
   if (myrt) {
     myrt->abort(str, code);
   } else {
-    std::exit(code);
+    std::_Exit(code);
   }
 }
 
