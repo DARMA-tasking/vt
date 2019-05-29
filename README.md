@@ -2,24 +2,24 @@
 
 ## Introduction : What is *vt*?
 
-**vt** is an active messaging layer that utilizes C++ object virtualization to
-manage virtual endpoints with automatic location management. **vt** is directly
+*vt* is an active messaging layer that utilizes C++ object virtualization to
+manage virtual endpoints with automatic location management. *vt* is directly
 built on top of MPI to provide efficient portability across different machine
 architectures. Empowered with virtualization, **vt** can automatically perform
 dynamic load balancing to schedule scientific applications across diverse
 platforms with minimal user input.
 
-**vt** abstracts the concept of a `node`/`rank`/`worker`/`thread` so a program
-can be written in terms of virtual entities that are location independent. Thus,
+*vt* abstracts the concept of a `node`/`rank`/`worker`/`thread` so a program can
+be written in terms of virtual entities that are location independent. Thus,
 they can be automatically migrated and thereby executed on varying hardware
 resources without explicit programmer mapping, location, and communication
 management.
 
 ## Building
 
-**vt** can be built with `cmake`.
+*vt* can be built with `cmake`.
 
-To build **vt**, one must obtain the following dependencies:
+To build *vt*, one must obtain the following dependencies:
 
 ### Optional:
 
@@ -31,19 +31,17 @@ To build **vt**, one must obtain the following dependencies:
   - `std::thread`s (default from C++ compiler)
 
 #### Required:
-  - fmt,        ([https://github.com/fmtlib/fmt](https://github.com/fmtlib/fmt))
-  - CLI11 ([https://github.com/CLIUtils/CLI11](https://github.com/CLIUtils/CLI11))
-  - meld,       (VT ecosystem)
-  - detector,   (VT ecosystem)
-  - checkpoint, (VT ecosystem)
+  - detector,   (*vt* ecosystem)
+  - checkpoint, (*vt* ecosystem)
   - MPI,        (mpich/openmpi/mvapich)
 
 ### Automatic build
 
 The "auto" builder is located here: [git@github.com:darma-mpi-backend/vt-auto-build.git]()
 
-To learn how to use to auto builder follow the directions in the repository. The
-options to the script can be found by executing this on the command line:
+To learn how to use to auto builder follow the directions in the `vt-auto-build`
+repository. The options to the script can be found by executing this on the
+command line:
 
 ```bash
 $ git clone git@github.com:darma-mpi-backend/vt-auto-build.git
@@ -59,7 +57,6 @@ $ perl ./auto.pl --help
     vt_build_mode    |  false      |                     |
     root_dir         |  false      | <path>              |  <path>
     build_tests      |  false      | 1                   |  1
-    fmt              |  false      |                     |
     kokkos           |  false      |                     |
     build_kokkos     |  false      | 0                   |  0
     prefix           |  false      |                     |
@@ -81,20 +78,17 @@ $ perl ./auto.pl build_mode=debug compiler_c=clang-3.9     \
 ```
 ###  Manual Build
 
-To start out, obtain `fmt`, `gtest`, `detector`, `meld`, and `checkpoint`
-(in that order). Stitch them up with cmake, by passing the appropriate paths as
-they are built.
-
-  `gtest`: [git@github.com:google/googletest.git]()
-        `fmt`: [git@github.com:fmtlib/fmt.git]()
+To start out, obtain `gtest`, `detector`, and `checkpoint` (in that
+order). Stitch them up with cmake, by passing the appropriate paths as they are
+built.
 
 Build and install them.
 
-Once all the dependencies are properly installed, point **vt** cmake to the install
-paths of each one of them. To build **vt**, the script located at
+Once all the dependencies are properly installed, point *vt* cmake to the
+install paths of each one of them. To build *vt*, the script located at
 `vt/scripts/build_pl.pl` can be run to configure `cmake` for building. The
-following is an example of using the script to configure with openmpi and clang
-3.9 compilers:
+following is an example of how to use the script to configure with `openmpi` and
+`clang 3.9` compilers:
 
 ```bash
 $ mkdir vt-build
@@ -106,8 +100,8 @@ $ perl ../vt/scripts/build_vt.pl build_mode=debug compiler=clang               \
 
 Run cmake and enjoy!
 
-If one builds **vt** with testing, `make test` can be executed to run the unit
-and integration tests. The components `meld`, `detector`, and `checkpoint` can
-be found within the **vt** ecosystem. They are separate repositories but are
-exported as separate cmake packages for reusability.
+If *vt* is built with testing, `make test` can be executed to run the unit and
+integration tests. The components `detector`, and `checkpoint` can be found
+within the *vt* ecosystem. They are separate repositories but are exported as
+separate cmake packages for reusability.
 
