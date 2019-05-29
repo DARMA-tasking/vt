@@ -68,6 +68,10 @@ std::string EventClass::theEventName() const {
   return event;
 }
 
+void EventClass::setEventName(std::string const& in_str) {
+  event = in_str;
+}
+
 void EventClass::setEventSeq(TraceEntryIDType const& seq) {
   this_event_seq_ = seq;
 }
@@ -78,10 +82,7 @@ TraceEntryIDType EventClass::theEventSeq() const {
 
 Event::Event(std::string const& in_event, TraceEntryIDType const& in_event_type)
   : EventClass(in_event), this_event_type_(in_event_type)
-{
-  auto const& event_hash =  std::hash<std::string>{}(in_event);
-  this_event_type_ = event_hash;
-}
+{ }
 
 TraceEntryIDType Event::theEventTypeId() const {
   return this_event_type_;

@@ -168,6 +168,16 @@ void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+void ObjGroupManager::setTraceName(
+  ProxyType<ObjT> proxy, std::string const& name, std::string const& parent
+) {
+  auto const proxy_bits = proxy.getProxy();
+  auto const dest_node = proxy.getNode();
+  auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
+  auto_registry::setHandlerTraceNameObjGroup<ObjT,MsgT,fn>(ctrl, name, parent);
+}
+
+template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
 void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const proxy_bits = proxy.getProxy();
   auto const dest_node = proxy.getNode();

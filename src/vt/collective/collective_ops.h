@@ -56,12 +56,10 @@
 
 namespace vt {
 
-using namespace ::vt::runtime;
+static constexpr runtime::RuntimeInstType const collective_default_inst =
+  runtime::RuntimeInstType::DefaultInstance;
 
-static constexpr RuntimeInstType const collective_default_inst =
-  RuntimeInstType::DefaultInstance;
-
-template <RuntimeInstType instance = collective_default_inst>
+template <runtime::RuntimeInstType instance = collective_default_inst>
 struct CollectiveAnyOps {
   // The general methods that interact with the managed runtime holder
   static RuntimePtrType initialize(
@@ -84,13 +82,6 @@ struct CollectiveAnyOps {
 };
 
 using CollectiveOps = CollectiveAnyOps<collective_default_inst>;
-
-// Export the default CollectiveOps::{abort,output} to the vt namespace
-void abort(std::string const str = "", ErrorCodeType const code = 1);
-void output(
-  std::string const str = "", ErrorCodeType const code = 1, bool error = false,
-  bool decorate = true, bool abort_out = false
-);
 
 } //end namespace vt
 

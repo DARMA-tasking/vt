@@ -90,7 +90,7 @@ void Trace::setupNames(
   std::string const& in_prog_name, std::string const& in_trace_name,
   std::string const& in_dir_name
 ) {
-  auto const& node = theContext()->getNode();
+  auto const node = theContext()->getNode();
 
   prog_name_ = in_prog_name;
   trace_name_ = in_trace_name;
@@ -130,13 +130,185 @@ void Trace::setupNames(
   writeTracesFile();
 }
 
+void Trace::addUserNote(std::string const& note) {
+  debug_print(
+    trace, node,
+    "Trace::addUserNote: note={}\n",
+    note
+  );
+
+  auto const type = TraceConstantsType::UserSuppliedNote;
+  auto const time = getCurrentTime();
+
+  LogPtrType log = new LogType(time, type);
+  logEvent(log);
+
+  editLastEntry([note](LogPtrType entry) {
+    entry->setUserNote(note);
+  });
+}
+
+void Trace::addUserData(int32_t data) {
+  debug_print(
+    trace, node,
+    "Trace::addUserData: data={}\n",
+    data
+  );
+
+  auto const type = TraceConstantsType::UserSupplied;
+  auto const time = getCurrentTime();
+
+  LogPtrType log = new LogType(time, type);
+  logEvent(log);
+
+  editLastEntry([data](LogPtrType entry) {
+    entry->setUserData(data);
+  });
+}
+
+void Trace::addUserBracketedNote(
+  double const begin, double const end, std::string const& note,
+  TraceEventIDType const event
+) {
+  debug_print(
+    trace, node,
+    "Trace::addUserBracketedNote: begin={}, end={}, note={}, event={}\n",
+    begin, end, note, event
+  );
+
+  auto const type = TraceConstantsType::UserSuppliedBracketedNote;
+  LogPtrType log = new LogType(begin, end, type, note, event);
+  logEvent(log);
+}
+
+UserEventIDType Trace::registerUserEventColl(std::string const& name) {
+  return user_event.collective(name);
+}
+
+UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
+  return user_event.rooted(name);
+}
+
+UserEventIDType Trace::registerUserEventHash(std::string const& name) {
+  return user_event.hash(name);
+}
+
+void Trace::registerUserEventManual(
+  std::string const& name, UserSpecEventIDType id
+) {
+  user_event.user(name, id);
+}
+
+void insertNewUserEvent(UserEventIDType event, std::string const& name) {
+  #if backend_check_enabled(trace_enabled)
+    theTrace()->user_event.insertEvent(event, name);
+  #endif
+}
+
+void Trace::addUserEvent(UserEventIDType event) {
+  debug_print(
+    trace, node,
+    "Trace::addUserEvent: event={:x}\n",
+    event
+  );
+
+  auto const type = TraceConstantsType::UserEvent;
+  auto const time = getCurrentTime();
+
+  LogPtrType log = new LogType(time, type, event, true);
+  log->node = theContext()->getNode();
+  logEvent(log);
+}
+
+void Trace::addUserEventManual(UserSpecEventIDType event) {
+  debug_print(
+    trace, node,
+    "Trace::addUserEventManual: event={:x}\n",
+    event
+  );
+
+  auto id = user_event.createEvent(true, false, 0, event);
+  addUserEvent(id);
+}
+
+void Trace::addUserEventBracketed(UserEventIDType event, double begin, double end) {
+  debug_print(
+    trace, node,
+    "Trace::addUserEventBracketed: event={:x}, begin={}, end={}\n",
+    event, begin, end
+  );
+
+  auto const type = TraceConstantsType::UserEventPair;
+
+  LogPtrType log_b = new LogType(begin, type, event, true);
+  log_b->node = theContext()->getNode();
+  logEvent(log_b);
+
+  LogPtrType log_e = new LogType(end, type, event, false);
+  log_e->node = theContext()->getNode();
+  logEvent(log_e);
+}
+
+void Trace::addUserEventBracketedBegin(UserEventIDType event) {
+  debug_print(
+    trace, node,
+    "Trace::addUserEventBracketedBegin: event={:x}\n",
+    event
+  );
+
+  auto const type = TraceConstantsType::BeginUserEventPair;
+  auto const time = getCurrentTime();
+
+  LogPtrType log = new LogType(time, type, event, true);
+  log->node = theContext()->getNode();
+  logEvent(log);
+}
+
+void Trace::addUserEventBracketedEnd(UserEventIDType event) {
+  debug_print(
+    trace, node,
+    "Trace::addUserEventBracketedEnd: event={:x}\n",
+    event
+  );
+
+  auto const type = TraceConstantsType::EndUserEventPair;
+  auto const time = getCurrentTime();
+
+  LogPtrType log = new LogType(time, type, event, false);
+  log->node = theContext()->getNode();
+  logEvent(log);
+}
+
+void Trace::addUserEventBracketedManualBegin(UserSpecEventIDType event) {
+  auto id = user_event.createEvent(true, false, 0, event);
+  addUserEventBracketedBegin(id);
+}
+
+void Trace::addUserEventBracketedManualEnd(UserSpecEventIDType event) {
+  auto id = user_event.createEvent(true, false, 0, event);
+  addUserEventBracketedEnd(id);
+}
+
+void Trace::addUserEventBracketedManual(
+  UserSpecEventIDType event, double begin, double end
+) {
+  debug_print(
+    trace, node,
+    "Trace::addUserEventBracketedManual: event={:x}, begin={}, end={}\n",
+    event, begin, end
+  );
+
+  auto id = user_event.createEvent(true, false, 0, event);
+  addUserEventBracketed(id, begin, end);
+}
+
 void Trace::beginProcessing(
-  TraceEntryIDType const& ep, TraceMsgLenType const& len,
-  TraceEventIDType const& event, NodeType const& from_node, double const& time,
+  TraceEntryIDType const ep, TraceMsgLenType const len,
+  TraceEventIDType const event, NodeType const from_node, double const time,
   uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
   uint64_t const idx4
 ) {
-  auto const& type = TraceConstantsType::BeginProcessing;
+  auto const type = TraceConstantsType::BeginProcessing;
   LogPtrType log = new LogType(time, ep, type);
 
   debug_print(
@@ -157,12 +329,12 @@ void Trace::beginProcessing(
 }
 
 void Trace::endProcessing(
-  TraceEntryIDType const& ep, TraceMsgLenType const& len,
-  TraceEventIDType const& event, NodeType const& from_node, double const& time,
+  TraceEntryIDType const ep, TraceMsgLenType const len,
+  TraceEventIDType const event, NodeType const from_node, double const time,
   uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
   uint64_t const idx4
 ) {
-  auto const& type = TraceConstantsType::EndProcessing;
+  auto const type = TraceConstantsType::EndProcessing;
   LogPtrType log = new LogType(time, ep, type);
 
   debug_print(
@@ -182,8 +354,8 @@ void Trace::endProcessing(
   logEvent(log);
 }
 
-void Trace::beginIdle(double const& time) {
-  auto const& type = TraceConstantsType::BeginIdle;
+void Trace::beginIdle(double const time) {
+  auto const type = TraceConstantsType::BeginIdle;
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(
@@ -197,8 +369,8 @@ void Trace::beginIdle(double const& time) {
   idle_begun_ = true;
 }
 
-void Trace::endIdle(double const& time) {
-  auto const& type = TraceConstantsType::EndIdle;
+void Trace::endIdle(double const time) {
+  auto const type = TraceConstantsType::EndIdle;
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(
@@ -213,9 +385,9 @@ void Trace::endIdle(double const& time) {
 }
 
 TraceEventIDType Trace::messageCreation(
-  TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
+  TraceEntryIDType const ep, TraceMsgLenType const len, double const time
 ) {
-  auto const& type = TraceConstantsType::Creation;
+  auto const type = TraceConstantsType::Creation;
   LogPtrType log = new LogType(time, ep, type);
 
   log->node = theContext()->getNode();
@@ -225,9 +397,9 @@ TraceEventIDType Trace::messageCreation(
 }
 
 TraceEventIDType Trace::messageCreationBcast(
-  TraceEntryIDType const& ep, TraceMsgLenType const& len, double const& time
+  TraceEntryIDType const ep, TraceMsgLenType const len, double const time
 ) {
-  auto const& type = TraceConstantsType::CreationBcast;
+  auto const type = TraceConstantsType::CreationBcast;
   LogPtrType log = new LogType(time, ep, type);
 
   log->node = theContext()->getNode();
@@ -237,15 +409,26 @@ TraceEventIDType Trace::messageCreationBcast(
 }
 
 TraceEventIDType Trace::messageRecv(
-  TraceEntryIDType const& ep, TraceMsgLenType const& len,
-  NodeType const& from_node, double const& time
+  TraceEntryIDType const ep, TraceMsgLenType const len,
+  NodeType const from_node, double const time
 ) {
-  auto const& type = TraceConstantsType::MessageRecv;
+  auto const type = TraceConstantsType::MessageRecv;
   LogPtrType log = new LogType(time, ep, type);
 
   log->node = from_node;
 
   return logEvent(log);
+}
+
+void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
+  if (not enabled_ || not checkEnabled()) {
+    return;
+  }
+
+  auto const trace_cont_size = traces_.size();
+  if (trace_cont_size > 0) {
+    fn(traces_.at(trace_cont_size - 1));
+  }
 }
 
 TraceEventIDType Trace::logEvent(LogPtrType log) {
@@ -340,6 +523,19 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     return log->event;
   };
 
+  auto basic_cur_event = [&]() -> TraceEventIDType {
+    traces_.push_back(log);
+
+    log->event = cur_event_;
+
+    return log->event;
+  };
+
+  auto basic_create = [&]() -> TraceEventIDType {
+    traces_.push_back(log);
+    return log->event;
+  };
+
   switch (log->type) {
   case TraceConstantsType::BeginProcessing:
     return grouped_begin();
@@ -352,6 +548,17 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
   case TraceConstantsType::BeginIdle:
   case TraceConstantsType::EndIdle:
     return basic_no_event_create();
+  case TraceConstantsType::UserSupplied:
+  case TraceConstantsType::UserSuppliedNote:
+  case TraceConstantsType::UserSuppliedBracketedNote:
+    return basic_create();
+  case TraceConstantsType::UserEvent:
+  case TraceConstantsType::UserEventPair:
+    return log->user_start ? basic_cur_event() : basic_new_event_create();
+    break;
+  case TraceConstantsType::BeginUserEventPair:
+  case TraceConstantsType::EndUserEventPair:
+    return basic_new_event_create();
   default:
     vtAssert(0, "Not implemented");
     return 0;
@@ -360,7 +567,7 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
 
 bool Trace::checkEnabled() {
   if (ArgType::vt_trace) {
-    auto const& node = theContext()->getNode();
+    auto const node = theContext()->getNode();
     if (ArgType::vt_trace_mod == 0) {
       return true;
     } else if (node % ArgType::vt_trace_mod == 1) {
@@ -383,7 +590,7 @@ void Trace::disableTracing() {
 }
 
 void Trace::writeTracesFile() {
-  auto const& node = theContext()->getNode();
+  auto const node = theContext()->getNode();
 
   debug_print(
     trace, node,
@@ -415,11 +622,11 @@ void Trace::writeTracesFile() {
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   for (auto&& log : traces) {
-    auto const& converted_time = timeToInt(log->time - start_time_);
+    auto const converted_time = timeToInt(log->time - start_time_);
 
-    auto const& type = static_cast<
+    auto const type = static_cast<
       std::underlying_type<decltype(log->type)>::type
-        >(log->type);
+    >(log->type);
 
     auto event_iter = TraceContainersType::getEventContainer().find(log->ep);
 
@@ -429,10 +636,10 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
       "Event must exist that was logged"
     );
 
-    auto const& event_seq_id = log->ep == no_trace_entry_id ?
+    auto const event_seq_id = log->ep == no_trace_entry_id ?
       no_trace_entry_id : event_iter->second.theEventSeq();
 
-    auto const& num_nodes = theContext()->getNumNodes();
+    auto const num_nodes = theContext()->getNumNodes();
 
     switch (log->type) {
     case TraceConstantsType::BeginProcessing:
@@ -515,11 +722,59 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
         log->msg_len
       );
       break;
+    case TraceConstantsType::UserEvent:
+    case TraceConstantsType::UserEventPair:
+    case TraceConstantsType::BeginUserEventPair:
+    case TraceConstantsType::EndUserEventPair:
+      gzprintf(
+        file,
+        "%d %lld %lld %d %d %d\n",
+        type,
+        log->user_event,
+        converted_time,
+        log->event,
+        log->node,
+        0
+      );
+      break;
+    case TraceConstantsType::UserSupplied:
+      gzprintf(
+        file,
+        "%d %d %lld\n",
+        type,
+        log->user_supplied_data,
+        converted_time
+      );
+      break;
+    case TraceConstantsType::UserSuppliedNote:
+      gzprintf(
+        file,
+        "%d %lld %zu %s\n",
+        type,
+        converted_time,
+        log->user_supplied_note.length(),
+        log->user_supplied_note.c_str()
+      );
+      break;
+    case TraceConstantsType::UserSuppliedBracketedNote: {
+      auto const converted_end_time = timeToInt(log->end_time - start_time_);
+      gzprintf(
+        file,
+        "%d %lld %lld %d %zu %s\n",
+        type,
+        converted_time,
+        converted_end_time,
+        log->event,
+        log->user_supplied_note.length(),
+        log->user_supplied_note.c_str()
+      );
+      break;
+    }
     case TraceConstantsType::MessageRecv:
-      vtAssertExpr(0);
+      vtAssert(false, "Message receive log type unimplemented");
       break;
     default:
-      vtAssertExpr(0);
+      vtAssertInfo(false, "Unimplemented log type", converted_time, log->node);
     }
 
     delete log;
@@ -532,12 +787,13 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   return timing::Timing::getCurrentTime();
 }
 
-/*static*/ void Trace::outputControlFile(std::ofstream& file) {
-  auto const& num_nodes = theContext()->getNumNodes();
+void Trace::outputControlFile(std::ofstream& file) {
+  auto const num_nodes = theContext()->getNumNodes();
 
-  auto const& num_event_types =
+  auto const num_event_types =
     TraceContainersType::getEventTypeContainer().size();
-  auto const& num_events = TraceContainersType::getEventContainer().size();
+  auto const num_events = TraceContainersType::getEventContainer().size();
+  auto const num_user_events = user_event.getEvents().size();
 
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
@@ -548,7 +804,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
        << "TOTAL_EPS " << num_events << "\n"
        << "TOTAL_MSGS 1\n"
        << "TOTAL_PSEUDOS 0\n"
-       << "TOTAL_EVENTS 0"
+       << "TOTAL_EVENTS " << num_user_events
        << std::endl;
 
   ContainerEventSortedType sorted_event;
@@ -571,10 +827,10 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   }
 
   for (auto&& event : sorted_event_type) {
-    auto const& name = event.first->theEventName();
-    auto const& id = event.first->theEventSeq();
+    auto const name = event.first->theEventName();
+    auto const id = event.first->theEventSeq();
 
-    auto const& out_name = std::string("::" + name);
+    auto const out_name = std::string("::" + name);
 
     file << "CHARE "
          << id << " "
@@ -583,9 +839,9 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   }
 
   for (auto&& event : sorted_event) {
-    auto const& name = event.first->theEventName();
-    auto const& type = event.first->theEventTypeSeq();
-    auto const& id = event.first->theEventSeq();
+    auto const name = event.first->theEventName();
+    auto const type = event.first->theEventTypeSeq();
+    auto const id = event.first->theEventSeq();
 
     file << "ENTRY CHARE "
          << id << " "
@@ -596,14 +852,25 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   }
 
   file << "MESSAGE 0 0\n"
-       << "TOTAL_STATS 0\n"
-       << "TOTAL_FUNCTIONS 0\n"
+       << "TOTAL_STATS 0\n";
+
+  for (auto&& elm : user_event.getEvents()) {
+    auto const id = elm.first;
+    auto const name = elm.second;
+
+    file << "EVENT "
+         << id << " "
+         << name << " "
+         << std::endl;
+  }
+
+  file << "TOTAL_FUNCTIONS 0\n"
        << "END\n"
        << std::endl;
 }
 
 /*static*/ void Trace::outputHeader(
-  NodeType const& node, double const& start, gzFile file
+  NodeType const node, double const start, gzFile file
 ) {
   // Output header for projections file
   gzprintf(file, "PROJECTIONS-RECORD 0\n");
@@ -612,14 +879,14 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
 }
 
 /*static*/ void Trace::outputFooter(
-  NodeType const& node, double const& start, gzFile file
+  NodeType const node, double const start, gzFile file
 ) {
   // Output footer for projections file, '7' means COMPUTATION_END to
   // Projections
   gzprintf(file, "7 %lld\n", timeToInt(getCurrentTime() - start));
 }
 
-/*static*/ Trace::TimeIntegerType Trace::timeToInt(double const& time) {
+/*static*/ Trace::TimeIntegerType Trace::timeToInt(double const time) {
   return static_cast<TimeIntegerType>(time * 1e6);
 }
 

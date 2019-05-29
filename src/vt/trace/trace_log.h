@@ -56,8 +56,9 @@
 namespace vt { namespace trace {
 
 struct Log {
-  using LogPtrType = std::shared_ptr<Log>;
+  using LogPtrType         = std::shared_ptr<Log>;
   using TraceConstantsType = eTraceConstants;
+  using UserDataType       = int32_t;
 
   double time = 0.0;
   TraceEntryIDType ep = no_trace_entry_id;
@@ -66,10 +67,54 @@ struct Log {
   TraceMsgLenType msg_len = 0;
   NodeType node = uninitialized_destination;
   uint64_t idx1 = 0, idx2 = 0, idx3 = 0, idx4 = 0;
+  std::string user_supplied_note = "";
+  UserDataType user_supplied_data = 0;
+  double end_time = 0.0;
+  UserEventIDType user_event = 0;
+  bool user_start = false;
+
+  void setUserNote(std::string const& note) {
+    user_supplied_note = note;
+  }
+
+  void setUserData(UserDataType data) {
+    user_supplied_data = data;
+  }
 
   Log(
-    double const& in_time, TraceEntryIDType const& in_ep,
-    TraceConstantsType const& in_type, TraceMsgLenType const& in_msg_len = 0
+    double const in_begin_time, double const in_end_time,
+    TraceConstantsType const in_type, std::string const& in_note,
+    TraceEventIDType const in_event
+  ) : time(in_begin_time), type(in_type), event(in_event),
+      user_supplied_note(in_note), end_time(in_end_time)
+  { }
+
+  Log(
+    double const in_time, TraceConstantsType const in_type,
+    std::string const& in_note
+  ) : time(in_time), type(in_type), user_supplied_note(in_note)
+  { }
+
+  Log(double const in_time, TraceConstantsType const in_type)
+    : time(in_time), type(in_type)
+  { }
+
+  Log(
+    double const in_time, TraceConstantsType const in_type,
+    UserEventIDType in_user_event, bool in_user_start
+  ) : time(in_time), type(in_type), user_event(in_user_event),
+      user_start(in_user_start)
+  { }
+
+  Log(
+    double const in_time, TraceConstantsType const in_type,
+    UserDataType const in_data
+  ) : time(in_time), type(in_type), user_supplied_data(in_data)
+  { }
+
+  Log(
+    double const in_time, TraceEntryIDType const in_ep,
+    TraceConstantsType const in_type, TraceMsgLenType const in_msg_len = 0
   ) : time(in_time), ep(in_ep), type(in_type), msg_len(in_msg_len)
   { }
 

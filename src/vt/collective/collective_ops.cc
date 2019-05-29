@@ -54,9 +54,7 @@
 
 namespace vt {
 
-using namespace ::vt::runtime;
-
-template <RuntimeInstType instance>
+template <runtime::RuntimeInstType instance>
 RuntimePtrType CollectiveAnyOps<instance>::initialize(
   int& argc, char**& argv, WorkerCountType const num_workers,
   bool is_interop, MPI_Comm* comm
@@ -72,7 +70,7 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
 
 #pragma sst global rt
   auto rt_ptr = RuntimeInst<instance>::rt.get();
-  if (instance == RuntimeInstType::DefaultInstance) {
+  if (instance == runtime::RuntimeInstType::DefaultInstance) {
     // Set global variable for default instance for backward compatibility
     ::vt::rt = rt_ptr;
     curRT = rt_ptr;
@@ -83,14 +81,14 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
   return runtime::makeRuntimePtr(rt_ptr);
 }
 
-template <RuntimeInstType instance>
+template <runtime::RuntimeInstType instance>
 void CollectiveAnyOps<instance>::setCurrentRuntimeTLS(RuntimeUnsafePtrType in) {
   bool const has_rt = in != nullptr;
   auto rt_use = has_rt ? in : ::vt::rt;
   curRT = rt_use;
 }
 
-template <RuntimeInstType instance>
+template <runtime::RuntimeInstType instance>
 void CollectiveAnyOps<instance>::scheduleThenFinalize(
   RuntimePtrType in_rt, WorkerCountType const workers
 ) {
@@ -112,7 +110,7 @@ void CollectiveAnyOps<instance>::scheduleThenFinalize(
   CollectiveAnyOps<instance>::finalize(has_rt ? std::move(in_rt) : nullptr);
 }
 
-template <RuntimeInstType instance>
+template <runtime::RuntimeInstType instance>
 void CollectiveAnyOps<instance>::finalize(RuntimePtrType in_rt) {
   using vt::runtime::RuntimeInst;
   using vt::runtime::Runtime;
@@ -121,7 +119,7 @@ void CollectiveAnyOps<instance>::finalize(RuntimePtrType in_rt) {
 #pragma sst global rt
   RuntimeInst<instance>::rt = nullptr;
 
-  if (instance == RuntimeInstType::DefaultInstance) {
+  if (instance == runtime::RuntimeInstType::DefaultInstance) {
     // Set global variable for default instance for backward compatibility
     ::vt::rt = nullptr;
     curRT = nullptr;
@@ -132,7 +130,7 @@ void CollectiveAnyOps<instance>::finalize(RuntimePtrType in_rt) {
   }
 }
 
-template <RuntimeInstType instance>
+template <runtime::RuntimeInstType instance>
 void CollectiveAnyOps<instance>::abort(
   std::string const str, ErrorCodeType const code
 ) {
@@ -145,7 +143,7 @@ void CollectiveAnyOps<instance>::abort(
   }
 }
 
-template <RuntimeInstType instance>
+template <runtime::RuntimeInstType instance>
 void CollectiveAnyOps<instance>::output(
   std::string const str, ErrorCodeType const code, bool error, bool decorate,
   bool formatted, bool abort_out
@@ -162,22 +160,11 @@ void CollectiveAnyOps<instance>::output(
   }
 }
 
-template <RuntimeInstType instance>
+template <runtime::RuntimeInstType instance>
 HandlerType CollectiveAnyOps<instance>::registerHandler(ActiveClosureFnType fn) {
   return theRegistry()->registerActiveHandler(fn);
 }
 
 template struct CollectiveAnyOps<collective_default_inst>;
 
-void abort(std::string const str, ErrorCodeType const code) {
-  return CollectiveOps::abort(str,code);
-}
-
-void output(
-  std::string const str, ErrorCodeType const code, bool error, bool decorate,
-  bool formatted, bool abort_out
-) {
-  return CollectiveOps::output(str,code,error,decorate,formatted,abort_out);
-}
-
-} //end namespace vt
+} /* end namespace vt */

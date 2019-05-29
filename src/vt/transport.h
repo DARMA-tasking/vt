@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRANSPORT_H
-#define INCLUDED_TRANSPORT_H
+#if !defined INCLUDED_VT_TRANSPORT_H
+#define INCLUDED_VT_TRANSPORT_H
 
 #include "vt/config.h"
 #include "vt/collective/tree/tree.h"
@@ -64,7 +64,7 @@
 #include "vt/rdma/rdma_headers.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace.h"
+#include "vt/trace/trace_headers.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/topos/index/index.h"
@@ -80,4 +80,4 @@
 #include "vt/pipe/pipe_headers.h"
 #include "vt/objgroup/headers.h"
 
-#endif /*INCLUDED_TRANSPORT_H*/
+#endif /*INCLUDED_VT_TRANSPORT_H*/

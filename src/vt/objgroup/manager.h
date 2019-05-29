@@ -126,6 +126,14 @@ struct ObjGroupManager {
   void broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
   /*
+   * Set the tracing name for objgroup
+   */
+  template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+  void setTraceName(
+    ProxyType<ObjT> proxy, std::string const& name, std::string const& parent = ""
+  );
+
+  /*
    * Reduce over an obj group
    */
 

@@ -26,10 +26,12 @@ set(
   # Add component along with sub-directories
     configs/debug configs/features configs/types configs/error configs/arguments
     configs/generated
-    collective/barrier collective/tree
-    collective/reduce/
-      collective/reduce/operators collective/reduce/functors
-    collective/scatter/
+    collective
+      collective/barrier
+      collective/tree
+      collective/scatter/
+      collective/reduce/
+        collective/reduce/operators collective/reduce/functors
     group/id group/region group/global group/msg group/collective group/rooted
     group/base
     pipe/id pipe/msg pipe/state pipe/signal pipe/interface pipe/callback

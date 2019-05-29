@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          auto_registry_collection.h
+//                          vt.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,42 +42,9 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_H
-#define INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_H
+#if !defined INCLUDED_VT_VT_H
+#define INCLUDED_VT_VT_H
 
-#include "vt/config.h"
-#include "vt/registry/auto/auto_registry_common.h"
-#include "vt/registry/auto/auto_registry_general.h"
-#include "vt/registry/registry.h"
-#include "vt/activefn/activefn.h"
-#include "vt/vrt/collection/active/active_funcs.h"
+#include "vt/transport.h"
 
-namespace vt { namespace auto_registry {
-
-using namespace ::vt::vrt::collection;
-
-AutoActiveCollectionType getAutoHandlerCollection(HandlerType const& handler);
-
-template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
-HandlerType makeAutoHandlerCollection(MsgT* const msg);
-
-AutoActiveCollectionMemType getAutoHandlerCollectionMem(
-  HandlerType const& handler
-);
-
-template <
-  typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
->
-HandlerType makeAutoHandlerCollectionMem(MsgT* const msg);
-
-template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
-void setHandlerTraceNameColl(std::string const& name, std::string const& parent = "");
-
-template <typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-void setHandlerTraceNameCollMem(std::string const& name, std::string const& parent = "");
-
-}} /* end namespace vt::auto_registry */
-
-#include "vt/registry/auto/collection/auto_registry_collection.impl.h"
-
-#endif /*INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_H*/
+#endif /*INCLUDED_VT_VT_H*/
