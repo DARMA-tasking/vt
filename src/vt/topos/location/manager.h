@@ -108,17 +108,24 @@ public:
   template <typename LocType>
   static void applyInstance(LocInstType const inst, ActionLocInstType<LocType> action);
 
-  template <typename LocType>
-  static std::unordered_map<
-    LocInstType, PendingContainerType<LocType>
-  > pending_inst_;
-
 protected:
   CollectionContainerType collectionLoc;
 
  private:
   static LocInstContainerType loc_insts;
 };
+
+// This is split out into a separate class to address the inability of
+// Intel 18 to process static member variable templates
+namespace details {
+template <typename LocType>
+struct PendingInst
+{
+  static std::unordered_map<
+    LocInstType, LocationManager::PendingContainerType<LocType>
+  > pending_inst_;
+};
+}
 
 }} /* end namespace vt::location */
 

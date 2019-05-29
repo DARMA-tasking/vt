@@ -508,4 +508,12 @@ GroupManager::GroupManager() {
   global::DefaultGroup::setupDefaultTree();
 }
 
+void GroupManager::addCleanupAction(ActionType action) {
+  cleanup_actions_.push_back(action);
+}
+
+RemoteOperationIDType GroupManager::getNextID(){
+  return cur_id_++;
+}
+
 }} /* end namespace vt::group */
