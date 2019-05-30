@@ -62,7 +62,8 @@ using HandlerIdentifierType = uint64_t;
 using HandlerControlType = uint32_t;
 
 static constexpr HandlerIdentifierType const first_handle_identifier = 1;
-static constexpr HandlerIdentifierType const uninitialized_handle_identifier = -1;
+static constexpr HandlerIdentifierType const uninitialized_handle_identifier
+  = u64empty;
 static constexpr HandlerType const blank_handler = 0;
 
 static constexpr BitCountType const auto_num_bits = 1;

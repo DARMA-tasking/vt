@@ -200,7 +200,11 @@ EventType AsyncEvent::createEvent(
   EventRecordTypeType const& type, NodeType const& node
 ) {
   EventType const event = EventManagerType::makeEvent(cur_event_, node);
-  cur_event_++;
+  //
+  vt::utils::FieldWrapper< vt::utils::fieldName::EventTypeSeq,
+    vt::event::EventIdentifierType, vt::event::event_identifier_num_bits
+    >::increment(cur_event_);
+  //
 
   auto et = std::make_unique<EventRecordType>(type, event);
 
@@ -231,6 +235,12 @@ EventType AsyncEvent::createParentEvent(NodeType const& node) {
 }
 
 void AsyncEvent::removeEventID(EventType const& event) {
+  //
+  auto eventID = EventIDManager::getEventIdentifier(event);
+  vt::utils::FieldWrapper< vt::utils::fieldName::EventTypeSeq,
+    vt::event::EventIdentifierType, vt::event::event_identifier_num_bits
+  >::clean(eventID);
+  //
   lookup_container_.erase(event);
 }
 
@@ -287,7 +297,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
     if (event->testReady()) {
       holder.executeActions();
       polling_event_container_.erase(iter);
-      lookup_container_.erase(id);
+      removeEventID(id);
       return;
     }
 

@@ -57,18 +57,18 @@ namespace vt { namespace utils {
 
 
 enum struct fieldName {
-  NonRootedEpochSeq,
-  RootedEpochSeq,
+  NonRootedEpochSeq,              // Wrapped
+  RootedEpochSeq,                 // Wrapped
   CollectiveGroupSeq,
-  EventTypeSeq,
+  EventTypeSeq,                   // Wrapped
   GroupSeq,
-  ObjGroupSeq,
-  PipeSeq,
+  ObjGroupSeq,                    // Wrapped
+  PipeSeq,                        // Wrapped
   RegistryHandlerCollectiveSeq,
   RegistryHandlerSeq,
-  VirtualRemoteSeq,
-  VirtualRequestSeq,
-  VirtualSeq
+  VirtualRemoteSeq,               // Wrapped
+  VirtualRequestSeq,              // Wrapped
+  VirtualSeq                      // Wrapped
 };
 
 

@@ -168,10 +168,6 @@ bool GroupManager::groupDefault(GroupType const& group) const {
 
 RemoteOperationIDType GroupManager::registerContinuation(ActionType action) {
   RemoteOperationIDType next_id = cur_id_++;
-//  vt::utils::FieldWrapper<
-//    vt::utils::fieldName::CollectiveGroupSeq,
-//    vt::group::RemoteOperationIDType, vt::group::group_id_num_bits
-//  >::increment(cur_id_);
   continuation_actions_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(next_id),

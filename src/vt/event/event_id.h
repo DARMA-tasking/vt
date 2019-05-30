@@ -50,7 +50,7 @@
 
 namespace vt { namespace event {
 
-using EventIdentifierType = int32_t;
+using EventIdentifierType = EventType;
 
 static constexpr BitCountType const event_identifier_num_bits = 32;
 

@@ -60,7 +60,7 @@ using WorkerCountType         = PhysicalResourceType;
 using WorkerIDType            = PhysicalResourceType;
 
 // Runtime system entity types
-using HandlerType             = int64_t;
+using HandlerType             = uint64_t;
 using SeedType                = int64_t;
 using EnvelopeDataType        = int8_t;
 using EventType               = uint64_t;

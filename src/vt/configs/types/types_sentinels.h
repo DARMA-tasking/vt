@@ -66,17 +66,17 @@ static constexpr int32_t  const s32empty = 0xFEEDFEED;
 
 // Runtime identifier sentinel values
 static constexpr int const num_check_actions                       = 8;
-static constexpr EpochType const no_epoch                          = -1;
+static constexpr EpochType const no_epoch                          = u64empty;
 static constexpr TagType const no_tag                              = -1;
-static constexpr EventType const no_event                          = -1;
-static constexpr BarrierType const no_barrier                      = -1;
+static constexpr EventType const no_event                          = u64empty;
+static constexpr BarrierType const no_barrier                      = u64empty;
 static constexpr RDMA_HandleType const no_rdma_handle              = -1;
-static constexpr ByteType const no_byte                            = -1;
-static constexpr ByteType const no_offset                          = -1;
+static constexpr ByteType const no_byte                            = u64empty;
+static constexpr ByteType const no_offset                          = u64empty;
 static constexpr auto no_action                                    = nullptr;
 static constexpr RDMA_PtrType const no_rdma_ptr                    = nullptr;
 static constexpr VirtualProxyType const no_vrt_proxy               = u64empty;
-static constexpr HandlerType const uninitialized_handler           = -1;
+static constexpr HandlerType const uninitialized_handler           = u64empty;
 static constexpr RDMA_HandlerType const uninitialized_rdma_handler = -1;
 static constexpr RefType const not_shared_message                  = -1000;
 static constexpr RDMA_BlockType const no_rdma_block                = -1;

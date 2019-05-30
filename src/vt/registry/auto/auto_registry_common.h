@@ -78,6 +78,8 @@ using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = int32_t;
 using NumArgsType = int16_t;
 
+static constexpr AutoHandlerType const not_set_auto_handler = static_cast<AutoHandlerType>(-1);
+
 enum struct RegistryTypeEnum {
   RegGeneral = 1,
   RegMap,

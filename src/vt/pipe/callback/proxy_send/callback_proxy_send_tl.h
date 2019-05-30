@@ -97,7 +97,7 @@ public:
   }
 
 private:
-  AutoHandlerType vrt_dispatch_han_ = uninitialized_handler;
+  AutoHandlerType vrt_dispatch_han_ = auto_registry::not_set_auto_handler;
   HandlerType handler_ = uninitialized_handler;
 };
 

@@ -106,7 +106,7 @@ struct AsyncEvent {
 
 private:
   // next event id
-  EventType cur_event_ = 0;
+  EventIdentifierType cur_event_ = 0;
 
   // std::list of events
   TypedEventContainerType event_container_;
