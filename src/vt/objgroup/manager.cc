@@ -69,6 +69,10 @@ void ObjGroupManager::dispatch(MsgVirtualPtrAny msg, HandlerType han) {
     type_idx, ctrl, han, dispatch_iter != dispatch_.end()
   );
   if (dispatch_iter == dispatch_.end()) {
+    auto const epoch = envelopeGetEpoch(msg->env);
+    if (epoch != no_epoch and epoch != term::any_epoch_sentinel) {
+      theTerm()->produce(epoch);
+    }
     pending_[proxy].push_back(msg);
   } else {
     dispatch_iter->second->run(han,msg.get());
@@ -132,6 +136,7 @@ void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch) {
   // Schedule the work of dispatching the message handler for later
   theObjGroup()->work_units_.push_back([msg,han,epoch]{
     theObjGroup()->dispatch(msg,han);
+    theTerm()->consume(epoch);
   });
 }
 

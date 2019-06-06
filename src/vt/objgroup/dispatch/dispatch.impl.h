@@ -59,7 +59,6 @@ void Dispatch<ObjT>::run(HandlerType han, BaseMessage* msg) {
   auto tmsg = static_cast<vt::Message*>(msg);
   auto cur_epoch = envelopeGetEpoch(tmsg->env);
   if (cur_epoch != no_epoch) {
-    theTerm()->consume(cur_epoch);
     theMsg()->pushEpoch(cur_epoch);
   }
   auto base_func = auto_registry::getAutoHandlerObjGroup(han);
