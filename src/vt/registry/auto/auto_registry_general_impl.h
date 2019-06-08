@@ -59,7 +59,6 @@ RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
   index = reg.size();
 
   auto fn = ActFnT::getFunction();
-  auto obj_idx = objgroup::registry::makeObjIdx<typename ActFnT::ObjType>();
 
   #if backend_check_enabled(trace_enabled)
   using Tn = typename ActFnT::ActFnType;
@@ -70,9 +69,9 @@ RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
     parsed_type_name.getNamespace(), parsed_type_name.getFuncParams()
   );
 
-  reg.emplace_back(InfoT{reinterpret_cast<FnT>(fn), obj_idx, trace_ep});
+  reg.emplace_back(InfoT{reinterpret_cast<FnT>(fn), -1, trace_ep});
   #else
-  reg.emplace_back(InfoT{reinterpret_cast<FnT>(fn), obj_idx});
+  reg.emplace_back(InfoT{reinterpret_cast<FnT>(fn), -1});
   #endif
 }
 

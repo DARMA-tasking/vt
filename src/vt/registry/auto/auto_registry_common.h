@@ -133,6 +133,10 @@ struct AutoRegInfo {
     return obj_idx_;
   }
 
+  void setObjIdx(AutoHandlerType const obj_idx) {
+    obj_idx_ = obj_idx;
+  }
+
   NumArgsType getNumArgs() const {
     return args_;
   }

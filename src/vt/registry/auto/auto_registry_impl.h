@@ -77,7 +77,11 @@ inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
   using FuncType = objgroup::ActiveObjAnyType;
   using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
   auto const obj = true;
-  return HandlerManagerType::makeHandler(true, false, RunType::idx, obj, ctrl);
+  auto const idx = RunType::idx;
+  auto const han = HandlerManagerType::makeHandler(true, false, idx, obj, ctrl);
+  auto obj_idx = objgroup::registry::makeObjIdx<ObjT>();
+  getAutoRegistryGen<ContainerType>().at(idx).setObjIdx(obj_idx);
+  return han;
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
