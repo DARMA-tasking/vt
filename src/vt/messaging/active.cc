@@ -172,11 +172,11 @@ EventType ActiveMessenger::sendMsgBytes(
 ) {
   auto const& msg = base.get();
 
-  auto const& epoch = envelopeIsEpochType(msg->env) ?
+  auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const& is_shared = isSharedMessage(msg);
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
+  auto const is_shared = isSharedMessage(msg);
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_bcast = envelopeIsBcast(msg->env);
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
@@ -227,14 +227,14 @@ EventType ActiveMessenger::sendMsgSized(
 
   auto msg = base.get();
 
-  auto const& dest = envelopeGetDest(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_epoch = envelopeIsEpochType(msg->env);
+  auto const dest = envelopeGetDest(msg->env);
+  auto const is_bcast = envelopeIsBcast(msg->env);
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_epoch = envelopeIsEpochType(msg->env);
 
   #if backend_check_enabled(trace_enabled)
-    auto const& handler = envelopeGetHandler(msg->env);
-    bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
+    auto const handler = envelopeGetHandler(msg->env);
+    bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
     if (is_auto) {
       trace::TraceEntryIDType ep = auto_registry::theTraceID(
         handler, auto_registry::RegistryTypeEnum::RegGeneral
@@ -341,7 +341,7 @@ bool ActiveMessenger::processDataMsgRecv() {
   auto iter = pending_recvs_.begin();
 
   for (; iter != pending_recvs_.end(); ++iter) {
-    auto const& done = recvDataMsgBuffer(
+    auto const done = recvDataMsgBuffer(
       iter->second.user_buf, iter->first, iter->second.recv_node,
       false, iter->second.dealloc_user_buf, iter->second.cont
     );
@@ -464,7 +464,7 @@ bool ActiveMessenger::handleActiveMsg(
   bool deliver = false;
   GroupActiveAttorney::groupHandler(base, from, size, false, &deliver);
 
-  auto const& is_term = envelopeIsTerm(msg->env);
+  auto const is_term = envelopeIsTerm(msg->env);
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
@@ -634,7 +634,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
       char* buf = static_cast<char*>(std::malloc(num_probe_bytes));
     #endif
 
-    NodeType const& sender = stat.MPI_SOURCE;
+    NodeType const sender = stat.MPI_SOURCE;
 
     MPI_Recv(
       buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
@@ -645,8 +645,8 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
     messageConvertToShared(msg);
     auto base = promoteMsgOwner(msg);
 
-    auto const& is_term = envelopeIsTerm(msg->env);
-    auto const& is_put = envelopeIsPut(msg->env);
+    auto const is_term = envelopeIsTerm(msg->env);
+    auto const is_put = envelopeIsPut(msg->env);
     bool put_finished = false;
 
     if (!is_term || backend_check_enabled(print_term_msgs)) {

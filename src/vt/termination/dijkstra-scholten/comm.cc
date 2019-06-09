@@ -55,29 +55,31 @@
 namespace vt { namespace term { namespace ds {
 
 /*static*/ void StateDS::requestAck(
-  EpochType epoch, Endpoint successor, int64_t cnt
+  EpochType epoch, Endpoint successor, int64_t count
 ) {
   debug_print(
     termds, node,
-    "StateDS::requestAck: epoch={:x}, pred={}, cnt={}\n",
-    epoch, successor, cnt
+    "StateDS::requestAck: epoch={:x}, successor={}, count={}\n",
+    epoch, successor, count
   );
-  auto const& node = theContext()->getNode();
-  auto msg = makeSharedMessage<AckMsg>(epoch,node,successor,cnt);
+  auto const node = theContext()->getNode();
+  vtAssertExpr(successor != node);
+  auto msg = makeSharedMessage<AckMsg>(epoch,node,successor,count);
   theMsg()->setTermMessage(msg);
   theMsg()->sendMsg<AckMsg,requestAckHan>(successor,msg);
 }
 
 /*static*/ void StateDS::acknowledge(
-  EpochType epoch, Endpoint predecessor, int64_t cnt
+  EpochType epoch, Endpoint predecessor, int64_t count
 ) {
   debug_print(
     termds, node,
-    "StateDS::acknowledge: epoch={:x}, pred={}, cnt={}\n",
-    epoch, predecessor, cnt
+    "StateDS::acknowledge: epoch={:x}, predecessor={}, count={}\n",
+    epoch, predecessor, count
   );
-  auto const& node = theContext()->getNode();
-  auto msg = makeSharedMessage<AckMsg>(epoch,node,predecessor,cnt);
+  auto const node = theContext()->getNode();
+  vtAssertExpr(predecessor != node);
+  auto msg = makeSharedMessage<AckMsg>(epoch,node,predecessor,count);
   theMsg()->setTermMessage(msg);
   theMsg()->sendMsg<AckMsg,acknowledgeHan>(predecessor,msg);
 }
