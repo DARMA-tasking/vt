@@ -62,7 +62,7 @@ void TermDS<CommType>::addChildEpoch(EpochType const& epoch) {
 
   // Produce a single work unit for the child epoch so it can not finish while
   // this epoch is live
-  theTerm()->genProd(epoch);
+  theTerm()->produce(epoch);
   children_.push_back(epoch);
 }
 
@@ -74,7 +74,7 @@ void TermDS<CommType>::clearChildren() {
   );
 
   for (auto&& cur_epoch : children_) {
-    theTerm()->genCons(cur_epoch);
+    theTerm()->consume(cur_epoch);
   }
   children_.clear();
 }
@@ -106,10 +106,10 @@ void TermDS<CommType>::setRoot(bool isRoot) {
 }
 
 template <typename CommType>
-void TermDS<CommType>::msgSent(NodeType successor) {
+void TermDS<CommType>::msgSent(NodeType successor, CountType count) {
   debug_print(
     termds, node,
-    "{} sent message to {}\n", self, successor
+    "msgSent: from={} sent count={} message to {}\n", self, count, successor
   );
   vtAssertInfo(
     1 && (C == processedSum - (ackedArbitrary + ackedParent)),
@@ -117,7 +117,12 @@ void TermDS<CommType>::msgSent(NodeType successor) {
     ackedParent, reqedParent, outstanding.size(), engagementMessageCount,
     parent
   );
-  D++;
+  // Test for the self-send case that delays termination with local debt
+  if (successor == self) {
+    lD += count;
+  } else {
+    D += count;
+  }
 }
 
 template <typename CommType>
@@ -147,7 +152,7 @@ void TermDS<CommType>::doneSending() {
 }
 
 template <typename CommType>
-void TermDS<CommType>::msgProcessed(NodeType const predecessor) {
+void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
   vtAssertInfo(
     4 && (C == processedSum - (ackedArbitrary + ackedParent)),
     "DS-invariant", C, D, processedSum, ackedArbitrary,
@@ -155,35 +160,45 @@ void TermDS<CommType>::msgProcessed(NodeType const predecessor) {
     parent
   );
 
-  C++;
-  processedSum++;
+  bool const self_pred = predecessor == self;
+
+  // Test for the self-process case that delays termination with local credit
+  if (self_pred) {
+    lC += count;
+    vtAssertExpr(lC <= lD);
+    // Must be engaged for a local credit/processing to increase
+    vtAssertExpr(not (outstanding.size() == 0));
+  } else {
+    C += count;
+    processedSum += count;
+  }
 
   if (outstanding.size() == 0) {
     debug_print(
       termds, node,
       "got engagement message from new parent={}, count={}, D={}\n",
-      predecessor, 1, D
+      predecessor, count, D
     );
 
     parent = predecessor;
-    engagementMessageCount = 1;
-    outstanding.push_front(AckRequest(predecessor, 1));
-  } else {
+    engagementMessageCount = count;
+    outstanding.push_front(AckRequest(predecessor, count));
+  } else if (not self_pred) {
     typename AckReqListType::iterator iter = outstanding.begin();
     ++iter;
     for (; iter != outstanding.end(); ++iter) {
       if (iter->pred == predecessor) {
-        iter->count++;
+        iter->count += count;
         break;
       }
     }
     if (iter == outstanding.end()) {
-      outstanding.push_back(AckRequest(predecessor, 1));
+      outstanding.push_back(AckRequest(predecessor, count));
     }
   }
 
   if (predecessor == parent) {
-    reqedParent += 1;
+    reqedParent += count;
   }
 
   tryAck();
@@ -231,12 +246,12 @@ void TermDS<CommType>::tryLast() {
   debug_print(
     termds, node,
     "tryLast: parent={}, D={}, C={}, emc={}, reqedParent={}, "
-    "ackedParent={}, outstanding.size()={}\n",
+    "ackedParent={}, outstanding.size()={}, lC={}, lD={}\n",
     parent, D, C, engagementMessageCount, reqedParent, ackedParent,
-    outstanding.size()
+    outstanding.size(), lC, lD
   );
 
-  if (outstanding.size() != 1) {
+  if (outstanding.size() != 1 or lC not_eq lD) {
     return;
   }
 

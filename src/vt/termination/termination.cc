@@ -170,7 +170,8 @@ TerminationDetector::findOrCreateState(EpochType const& epoch, bool is_ready) {
 }
 
 void TerminationDetector::produceConsumeState(
-  TermStateType& state, TermCounterType const& num_units, bool produce
+  TermStateType& state, TermCounterType const num_units, bool produce,
+  NodeType node
 ) {
   auto& counter = produce ? state.l_prod : state.l_cons;
   counter += num_units;
@@ -178,9 +179,9 @@ void TerminationDetector::produceConsumeState(
   debug_print(
     term, node,
     "produceConsumeState: epoch={:x}, event_count={}, l_prod={}, l_cons={}, "
-    "num_units={}, produce={}\n",
+    "num_units={}, produce={}, node={}\n",
     state.getEpoch(), state.getRecvChildCount(), state.l_prod, state.l_cons, num_units,
-    print_bool(produce)
+    print_bool(produce), node
   );
 
   if (state.readySubmitParent()) {
@@ -188,123 +189,86 @@ void TerminationDetector::produceConsumeState(
   }
 }
 
-void TerminationDetector::genProd(EpochType const& epoch) {
-  debug_print(
-    termds, node,
-    "genProd: epoch={:x}\n", epoch
-  );
-
-  vtAssertExpr(epoch != no_epoch);
-  if (epoch != term::any_epoch_sentinel) {
-    produce(epoch,1);
-  } else {
-    auto ptr = getDSTerm(epoch);
-    if (ptr) {
-      vtAbort("Failure: cannot perform a general produce for DS");
-    } else {
-      produce(epoch,1);
-    }
-  }
-}
-
-void TerminationDetector::genCons(EpochType const& epoch) {
-  debug_print(
-    termds, node,
-    "genCons: epoch={:x}\n", epoch
-  );
-
-  vtAssertExpr(epoch != no_epoch);
-  if (epoch != term::any_epoch_sentinel) {
-    consume(epoch,1);
-  } else {
-    auto ptr = getDSTerm(epoch);
-    if (ptr) {
-      vtAbort("Failure: cannot perform a general consume for DS");
-    } else {
-      consume(epoch,1);
-    }
-  }
-}
-
-void TerminationDetector::send(NodeType const& node, EpochType const& epoch) {
+void TerminationDetector::produceDS(
+  EpochType epoch, TermCounterType num_units, NodeType node
+) {
   auto ptr = getDSTerm(epoch);
+  vtAssertExprInfo(ptr != nullptr, epoch, num_units, node);
   if (ptr) {
     debug_print(
       termds, node,
-      "send: (DS) epoch={:x}, successor={}\n",
-      epoch, node
+      "send: (DS) epoch={:x}, num={}, successor={}\n",
+      epoch, num_units, node
     );
-    ptr->msgSent(node);
+    ptr->msgSent(node,num_units);
   }
 }
 
-void TerminationDetector::recv(NodeType const& node, EpochType const& epoch) {
+void TerminationDetector::consumeDS(
+  EpochType epoch, TermCounterType num_units, NodeType node
+) {
   auto ptr = getDSTerm(epoch);
+  vtAssertExprInfo(ptr != nullptr, epoch, num_units, node);
   if (ptr) {
     debug_print(
       termds, node,
-      "recv: (DS) epoch={:x}, predecessor={}\n",
-      epoch, node
+      "recv: (DS) epoch={:x}, num={}, predecessor={}\n",
+      epoch, num_units, node
     );
-    ptr->msgProcessed(node);
+    ptr->msgProcessed(node,num_units);
   }
 }
 
 TerminationDetector::TermStateDSType*
-TerminationDetector::getDSTerm(EpochType const& epoch) {
-  if (epoch != no_epoch) {
-    auto const is_rooted = epoch::EpochManip::isRooted(epoch);
-    debug_print(
-      termds, node,
-      "getDSTerm: epoch={:x}, no_epoch={:x}, any_epoch_sentinel={:x}, "
-      "is_rooted={}\n",
-      epoch, no_epoch, any_epoch_sentinel, is_rooted
-    );
-    if (epoch != any_epoch_sentinel && is_rooted) {
-      auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
-      auto const epoch_category = epoch::EpochManip::category(epoch);
-      auto const is_ds = epoch_category == ds_epoch;
-      debug_print(
-        termds, node,
-        "getDSTerm: epoch={:x}, category={}, ds_epoch={}, "
-        "is_rooted={}, is_ds={}\n",
-        epoch, epoch_category, ds_epoch, is_rooted, is_ds
+TerminationDetector::getDSTerm(EpochType epoch) {
+  debug_print(
+    termds, node,
+    "getDSTerm: epoch={:x}, is_rooted={}, is_ds={}\n",
+    epoch, isRooted(epoch), isDS(epoch)
+  );
+  if (isDS(epoch)) {
+    auto iter = term_.find(epoch);
+    if (iter == term_.end()) {
+      auto const this_node = theContext()->getNode();
+      term_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(epoch),
+        std::forward_as_tuple(
+          TerminatorType{epoch,false,this_node}
+        )
       );
-      if (is_ds) {
-        auto iter = term_.find(epoch);
-        if (iter == term_.end()) {
-          auto const this_node = theContext()->getNode();
-          term_.emplace(
-            std::piecewise_construct,
-            std::forward_as_tuple(epoch),
-            std::forward_as_tuple(
-              TerminatorType{epoch,false,this_node}
-            )
-          );
-          iter = term_.find(epoch);
-          vtAssert(iter != term_.end(), "Must exist");
-        }
-        return &iter->second;
-      }
+      iter = term_.find(epoch);
+      vtAssert(iter != term_.end(), "Must exist");
     }
+    return &iter->second;
+  } else {
+    return nullptr;
   }
-  return nullptr;
 }
 
 void TerminationDetector::produceConsume(
-  EpochType const& epoch, TermCounterType const& num_units, bool produce
+  EpochType epoch, TermCounterType num_units, bool produce, NodeType node
 ) {
   debug_print(
     term, node,
-    "produceConsume: epoch={:x}, num_units={}, produce={}\n",
-    epoch, num_units, print_bool(produce)
+    "produceConsume: epoch={:x}, num_units={}, produce={}, node={}\n",
+    epoch, num_units, print_bool(produce), node
   );
 
-  produceConsumeState(any_epoch_state_, num_units, produce);
+  produceConsumeState(any_epoch_state_, num_units, produce, node);
 
   if (epoch != any_epoch_sentinel) {
-    auto& state = findOrCreateState(epoch, false);
-    produceConsumeState(state, num_units, produce);
+    if (isDS(epoch)) {
+      auto ds_term = getDSTerm(epoch);
+      if (produce) {
+        ds_term->msgSent(node,num_units);
+      } else {
+        ds_term->msgProcessed(node,num_units);
+      }
+    } else {
+      auto& state = findOrCreateState(epoch, false);
+      produceConsumeState(state, num_units, produce, node);
+    }
   }
 }
 

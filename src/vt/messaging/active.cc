@@ -207,8 +207,7 @@ EventType ActiveMessenger::sendMsgBytes(
   );
 
   if (not is_term) {
-    theTerm()->produce(epoch);
-    theTerm()->send(dest,epoch);
+    theTerm()->produce(epoch,1,dest);
   }
 
   return event_id;
@@ -325,7 +324,9 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     mpi_event->getRequest()
   );
 
-  theTerm()->produce(term::any_epoch_sentinel);
+  // Assume that any raw data send/recv is paired with a message with an epoch
+  // if required to inhibit early termination of that epoch
+  theTerm()->produce(term::any_epoch_sentinel,1,dest);
 
   return SendDataRetType{event_id,send_tag};
 }
@@ -419,7 +420,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
         dealloc_buf();
       }
 
-      theTerm()->consume(term::any_epoch_sentinel);
+      theTerm()->consume(term::any_epoch_sentinel,1,stat.MPI_SOURCE);
 
       return true;
     } else {
@@ -571,6 +572,9 @@ bool ActiveMessenger::deliverActiveMsg(
       epochEpilogHandler(cur_epoch,ep_stack_size);
     }
 
+    if (not is_term) {
+      theTerm()->consume(epoch,1,from_node);
+    }
   } else {
     if (insert) {
       auto iter = pending_handler_msgs_.find(handler);
@@ -583,32 +587,6 @@ bool ActiveMessenger::deliverActiveMsg(
       } else {
         iter->second.push_back(BufferedMsgType{base,from_node});
       }
-      if (!is_term || backend_check_enabled(print_term_msgs)) {
-        debug_print(
-          active, node,
-          "deliverActiveMsg: inserting han={}, msg={}, ref={}, list size={}\n",
-          handler, print_ptr(msg), envelopeGetRef(msg->env),
-          pending_handler_msgs_.find(handler)->second.size()
-        );
-      }
-    }
-  }
-
-  if (!is_term) {
-    theTerm()->recv(from_node,epoch);
-  }
-
-  if (has_handler) {
-    if (!is_term || backend_check_enabled(print_term_msgs)) {
-      debug_print(
-        active, node,
-        "deliverActiveMsg: deref msg={}, ref={}, is_bcast={}, dest={}\n",
-        print_ptr(msg), envelopeGetRef(msg->env), print_bool(is_bcast), dest
-      );
-    }
-
-    if (!is_term) {
-      theTerm()->consume(epoch);
     }
   }
 

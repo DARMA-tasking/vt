@@ -86,10 +86,10 @@ struct TermDS {
   virtual ~TermDS() = default;
 
   void setRoot(bool isRoot);
-  void msgSent(NodeType successor);
+  void msgSent(NodeType successor, CountType count);
   void gotAck(CountType count);
   void doneSending();
-  void msgProcessed(NodeType const predecessor);
+  void msgProcessed(NodeType predecessor, CountType count);
   void needAck(NodeType const predecessor, CountType const count);
   void tryAck();
   void terminated();
@@ -113,6 +113,8 @@ protected:
   CountType D                       = 0;
   CountType processedSum            = 0;
   EpochType epoch_                  = no_epoch;
+  CountType lC                      = 0;
+  CountType lD                      = 0;
   AckReqListType outstanding        = {};
   std::vector<EpochType> children_  = {};
 };

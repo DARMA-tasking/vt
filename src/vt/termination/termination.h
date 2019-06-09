@@ -88,19 +88,22 @@ struct TerminationDetector :
    *
    ***************************************************************************/
   void produce(
-    EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
+    EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
+    NodeType node = uninitialized_destination
   );
   void consume(
-    EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
+    EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
+    NodeType node = uninitialized_destination
   );
-  void send(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
-  void recv(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
-  void genProd(EpochType const& epoch);
-  void genCons(EpochType const& epoch);
+  void produceDS(EpochType epoch, TermCounterType num_units, NodeType node);
+  void consumeDS(EpochType epoch, TermCounterType num_units, NodeType node);
   /***************************************************************************/
 
   friend struct ds::StateDS;
-  TermStateDSType* getDSTerm(EpochType const& epoch);
+
+  bool isRooted(EpochType epoch);
+  bool isDS(EpochType epoch);
+  TermStateDSType* getDSTerm(EpochType epoch);
 
   void resetGlobalTerm();
   void freeEpoch(EpochType const& epoch);
@@ -146,11 +149,12 @@ private:
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
   void cleanupEpoch(EpochType const& epoch);
   void produceConsumeState(
-    TermStateType& state, TermCounterType const& num_units, bool produce
+    TermStateType& state, TermCounterType const num_units, bool produce,
+    NodeType node
   );
   void produceConsume(
-    EpochType const& epoch = any_epoch_sentinel,
-    TermCounterType const& num_units = 1, bool produce = true
+    EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
+    bool produce = true, NodeType node = uninitialized_destination
   );
   void propagateEpochExternalState(
     TermStateType& state, TermCounterType const& prod, TermCounterType const& cons
