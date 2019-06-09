@@ -65,7 +65,7 @@ void Dispatch<ObjT>::run(HandlerType han, BaseMessage* msg) {
   auto type_func = reinterpret_cast<ActiveFnType>(base_func);
   (obj_->*type_func)(msg);
   if (cur_epoch != no_epoch) {
-    theMsg()->popEpoch();
+    theMsg()->popEpoch(cur_epoch);
   }
 }
 
