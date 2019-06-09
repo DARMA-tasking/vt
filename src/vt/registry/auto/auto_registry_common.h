@@ -58,6 +58,7 @@
 
 #include <vector>
 #include <cstdlib>
+#include <functional>
 
 namespace vt { namespace auto_registry {
 
@@ -98,16 +99,19 @@ static struct NumArgsTagType { } NumArgsTag { };
 
 template <typename FnT>
 struct AutoRegInfo {
+  using GenFnType = std::function<AutoHandlerType()>;
+
   FnT activeFunT;
   NumArgsType args_ = 1;
   AutoHandlerType obj_idx_ = -1;
+  GenFnType gen_obj_idx_ = nullptr;
 
   #if backend_check_enabled(trace_enabled)
     trace::TraceEntryIDType event_id;
     AutoRegInfo(
-      FnT const& in_active_fun_t, AutoHandlerType in_obj_idx,
+      FnT const& in_active_fun_t, GenFnType in_gen,
       trace::TraceEntryIDType const& in_event_id
-    ) : activeFunT(in_active_fun_t), obj_idx_(in_obj_idx), event_id(in_event_id)
+    ) : activeFunT(in_active_fun_t), gen_obj_idx_(in_gen), event_id(in_event_id)
     { }
     AutoRegInfo(
       NumArgsTagType,
@@ -119,8 +123,8 @@ struct AutoRegInfo {
       return event_id;
     }
   #else
-    explicit AutoRegInfo(FnT const& in_active_fun_t, AutoHandlerType in_obj_idx)
-      : activeFunT(in_active_fun_t), obj_idx_(in_obj_idx)
+    explicit AutoRegInfo(FnT const& in_active_fun_t, GenFnType in_gen)
+      : activeFunT(in_active_fun_t), gen_obj_idx_(in_gen)
     { }
     AutoRegInfo(
       NumArgsTagType,
@@ -129,7 +133,10 @@ struct AutoRegInfo {
     { }
   #endif
 
-  AutoHandlerType getObjIdx() const {
+  AutoHandlerType getObjIdx() {
+    if (obj_idx_ == -1 and gen_obj_idx_ != nullptr) {
+      obj_idx_ = gen_obj_idx_();
+    }
     return obj_idx_;
   }
 
