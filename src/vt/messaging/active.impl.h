@@ -481,7 +481,7 @@ inline EpochType ActiveMessenger::popEpoch(EpochType const& epoch) {
    */
   auto const& non_zero = epoch_stack_.size() > 0;
   vtAssertExprInfo(
-    non_zero and epoch_stack_.top() == epoch,
+    non_zero and (epoch_stack_.top() == epoch or epoch == no_epoch),
     epoch, non_zero, epoch_stack_.top()
   );
   if (epoch == no_epoch) {
