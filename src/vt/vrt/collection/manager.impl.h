@@ -602,7 +602,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionMsgTypedHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const entity_proxy = col_msg->getProxy();
-  auto const cur_epoch = getCurrentEpoch(msg);
+  auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
   auto const& col = entity_proxy.getCollectionProxy();
   auto const& elm = entity_proxy.getElementProxy();
   auto const& idx = elm.getIndex();
@@ -690,7 +690,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   vtAssert(this_node == bcast_node, "Must be the bcast node");
 
   auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
-  auto const cur_epoch = getCurrentEpoch(msg.get());
+  auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
   theMsg()->pushEpoch(cur_epoch);
 
   msg->setBcastEpoch(bcast_epoch);
@@ -852,27 +852,6 @@ messaging::PendingSend CollectionManager::broadcastNormalMsg(
   );
 }
 
-template <typename MsgT>
-/*static*/ EpochType CollectionManager::getCurrentEpoch(MsgT* msg) {
-  auto const& any_epoch = term::any_epoch_sentinel;
-  auto const& msg_epoch = envelopeGetEpoch(msg->env);
-
-  // Prefer the epoch on the msg before the current handler epoch
-  if (msg_epoch != no_epoch and msg_epoch != any_epoch) {
-    // It has a valid non-global epoch, which should be used for tracking it's
-    // causality
-    return msg_epoch;
-  } else {
-    // Otherwise, use the active messenger's current epoch on the stack
-    auto const& epoch_state = theMsg()->getEpoch();
-    vtAssertInfo(
-      epoch_state != no_epoch, "Must have a valid epoch here",
-      print_ptr(msg), epoch_state, msg_epoch, no_epoch, any_epoch
-    );
-    return epoch_state;
-  }
-}
-
 template <typename MsgT, typename ColT, typename IdxT>
 messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *raw_msg,
@@ -899,12 +878,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
 
-  auto const& cur_epoch = getCurrentEpoch(msg.get());
-
-  auto msg_epoch = envelopeGetEpoch(msg->env);
-  if (msg_epoch == no_epoch) {
-    envelopeSetEpoch(msg->env, cur_epoch);
-  }
+  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
 
   debug_print(
     vrt_coll, node,
@@ -1280,12 +1254,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     msg->setLBLiteInstrument(true);
   #endif
 
-  auto const& cur_epoch = getCurrentEpoch(msg.get());
-
-  auto msg_epoch = envelopeGetEpoch(msg->env);
-  if (msg_epoch == no_epoch) {
-    envelopeSetEpoch(msg->env, cur_epoch);
-  }
+  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
 
   debug_print(
     vrt_coll, node,

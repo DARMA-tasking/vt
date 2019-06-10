@@ -497,6 +497,48 @@ inline EpochType ActiveMessenger::getEpoch() const {
   return getGlobalEpoch();
 }
 
+template <typename MsgT>
+inline EpochType ActiveMessenger::getEpochContextMsg(MsgT* msg) {
+  auto const any_epoch = term::any_epoch_sentinel;
+  auto const msg_epoch = envelopeGetEpoch(msg->env);
+
+  // Prefer the epoch on the msg before the current handler epoch
+  if (msg_epoch != no_epoch and msg_epoch != any_epoch) {
+    // It has a valid (possibly global) epoch, use it
+    return msg_epoch;
+  } else {
+    // Otherwise, use the active messenger's current epoch on the stack
+    auto const ctx_epoch = getEpoch();
+    vtAssertInfo(
+      ctx_epoch != no_epoch, "Must have a valid epoch here",
+      ctx_epoch, msg_epoch, no_epoch, any_epoch
+    );
+    return ctx_epoch;
+  }
+}
+
+template <typename MsgT>
+inline EpochType ActiveMessenger::getEpochContextMsg(
+  MsgSharedPtr<MsgT> const& msg
+) {
+  return getEpochContextMsg(msg.get());
+}
+
+template <typename MsgT>
+inline EpochType ActiveMessenger::setupEpochMsg(MsgT* msg) {
+  auto const epoch = getEpochContextMsg(msg);
+  bool const msg_no_epoch = envelopeGetEpoch(msg->env) == no_epoch;
+  if (msg_no_epoch and epoch != term::any_epoch_sentinel) {
+    setEpochMessage(msg, epoch);
+  }
+  return epoch;
+}
+
+template <typename MsgT>
+inline EpochType ActiveMessenger::setupEpochMsg(MsgSharedPtr<MsgT> const& msg) {
+  return setupEpochMsg(msg.get());
+}
+
 }} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ACTIVE_IMPL_H*/

@@ -260,16 +260,7 @@ EventType ActiveMessenger::sendMsgSized(
   }
 
   if (is_epoch) {
-    // Propagate current epoch on the top of the epoch stack
-    auto epoch = envelopeGetEpoch(msg->env);
-
-    // Only propagate only if the epoch is not set already
-    if (epoch == no_epoch) {
-      auto const cur_epoch = getGlobalEpoch();
-      if (cur_epoch != term::any_epoch_sentinel && cur_epoch != no_epoch) {
-        setEpochMessage(msg, cur_epoch);
-      }
-    }
+    setupEpochMsg(msg);
   }
 
   bool deliver = false;
