@@ -160,7 +160,11 @@ void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
     for (auto&& msg : pending_iter->second) {
       work_units_.push_back([msg]{
         auto const handler = envelopeGetHandler(msg->env);
+        auto const epoch = envelopeGetEpoch(msg->env);
         theObjGroup()->dispatch(msg,handler);
+        if (epoch != no_epoch) {
+          theTerm()->consume(epoch);
+        }
       });
     }
     pending_.erase(pending_iter);

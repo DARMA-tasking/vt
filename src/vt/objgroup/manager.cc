@@ -63,7 +63,16 @@ void ObjGroupManager::dispatch(MsgVirtualPtrAny msg, HandlerType han) {
   auto const node = 0;
   auto const proxy = proxy::ObjGroupProxy::create(ctrl,type_idx,node,true);
   auto dispatch_iter = dispatch_.find(proxy);
+  debug_print(
+    objgroup, node,
+    "dispatch: try type_idx={:x}, ctrl={:x}, han={:x}, has dispatch={}\n",
+    type_idx, ctrl, han, dispatch_iter != dispatch_.end()
+  );
   if (dispatch_iter == dispatch_.end()) {
+    auto const epoch = envelopeGetEpoch(msg->env);
+    if (epoch != no_epoch and epoch != term::any_epoch_sentinel) {
+      theTerm()->produce(epoch);
+    }
     pending_[proxy].push_back(msg);
   } else {
     dispatch_iter->second->run(han,msg.get());
@@ -121,12 +130,12 @@ void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han) {
 }
 
 void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch) {
+  // Produce here, consume when the dispatcher actually runs---it might be
+  // delayed
   theTerm()->produce(epoch);
   // Schedule the work of dispatching the message handler for later
   theObjGroup()->work_units_.push_back([msg,han,epoch]{
-    theMsg()->pushEpoch(epoch);
     theObjGroup()->dispatch(msg,han);
-    theMsg()->popEpoch();
     theTerm()->consume(epoch);
   });
 }
