@@ -529,24 +529,25 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
 void TerminationDetector::epochFinished(
   EpochType const& epoch, bool const cleanup
 ) {
-  auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
-
   debug_print(
     term, node,
-    "epochFinished: epoch={:x}, is_rooted_epoch={}\n",
-    epoch, is_rooted_epoch
+    "epochFinished: epoch={:x}, is_rooted_epoch={}, is_ds={}\n",
+    epoch, isRooted(epoch), isDS(epoch)
   );
 
   // Clear all the children epochs that are nested by this epoch (waiting on it
   // to complete)
-  auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
-  auto const epoch_category = epoch::EpochManip::category(epoch);
-  auto const is_ds = epoch_category == ds_epoch;
-  if (!is_rooted_epoch || (is_rooted_epoch && !is_ds)) {
+  if (isDS(epoch)) {
+    auto ptr = getDSTerm(epoch);
+    vtAssertExpr(ptr != nullptr);
+    if (ptr) {
+      ptr->clearChildren();
+    }
+  } else {
     if (epoch != term::any_epoch_sentinel) {
       auto iter = epoch_state_.find(epoch);
       vtAssertExprInfo(
-        iter != epoch_state_.end(), epoch, cleanup, is_rooted_epoch
+        iter != epoch_state_.end(), epoch, cleanup, isRooted(epoch)
       );
       if (iter != epoch_state_.end()) {
         iter->second.clearChildren();
@@ -556,14 +557,6 @@ void TerminationDetector::epochFinished(
       // epochs as children, it does not need for correctness (and this would be
       // expensive)
     }
-  } else {
-    vtAssertExpr(is_ds);
-    vtAssertExpr(ds_epoch == epoch_category);
-    auto ptr = getDSTerm(epoch);
-    vtAssertExpr(ptr != nullptr);
-    if (ptr) {
-      ptr->clearChildren();
-    }
   }
 
   triggerAllActions(epoch,epoch_state_);
@@ -572,7 +565,7 @@ void TerminationDetector::epochFinished(
     cleanupEpoch(epoch);
   }
 
-  updateResolvedEpochs(epoch, is_rooted_epoch);
+  updateResolvedEpochs(epoch, isRooted(epoch));
 }
 
 void TerminationDetector::inquireFinished(
