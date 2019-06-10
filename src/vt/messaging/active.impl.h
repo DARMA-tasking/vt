@@ -480,6 +480,10 @@ inline EpochType ActiveMessenger::popEpoch(EpochType const& epoch) {
    * top of the stack.
    */
   auto const& non_zero = epoch_stack_.size() > 0;
+  vtAssertExprInfo(
+    non_zero and epoch_stack_.top() == epoch,
+    epoch, non_zero, epoch_stack_.top()
+  );
   if (epoch == no_epoch) {
     return non_zero ? epoch_stack_.pop(),epoch_stack_.top() : no_epoch;
   } else {
