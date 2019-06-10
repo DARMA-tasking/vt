@@ -681,7 +681,6 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
 
   // broadcast to all nodes
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
   auto const& proxy = msg->getBcastProxy();
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
   auto const bcast_node = VirtualProxyBuilder::getVirtualNode(proxy);
