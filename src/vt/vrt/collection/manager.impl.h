@@ -461,7 +461,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     bcast_proxy, col_msg->getVrtHandler(), col_msg->getBcastEpoch(),
     cur_epoch, msg_epoch, group, default_group
   );
-  theMsg()->popEpoch();
+  theMsg()->popEpoch(cur_epoch);
 }
 
 template <typename ColT, typename MsgT>
@@ -651,7 +651,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
     msg,col_ptr,sub_handler,member,from
   );
-  theMsg()->popEpoch();
+  theMsg()->popEpoch(cur_epoch);
 
   #if backend_check_enabled(lblite)
     if (col_msg->lbLiteInstrument()) {
@@ -726,7 +726,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
     collectionBcastHandler<ColT,IndexT,MsgT>(msg.get());
   }
 
-  theMsg()->popEpoch();
+  theMsg()->popEpoch(cur_epoch);
 
   return ret;
 }
@@ -976,7 +976,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
       theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, instrument
       );
-      theMsg()->popEpoch();
+      theMsg()->popEpoch(cur_epoch);
       theTerm()->consume(cur_epoch);
     });
     return messaging::PendingSend(nullptr);
@@ -1301,7 +1301,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
         theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
           toProxy, reinterpret_cast<MsgT*>(inner_msg.get()), handler, member, false
         );
-        theMsg()->popEpoch();
+        theMsg()->popEpoch(cur_epoch);
         theTerm()->consume(cur_epoch);
       });
     });
@@ -1345,7 +1345,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
       MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
     >(toProxy, home_node, msg);
 
-    theMsg()->popEpoch();
+    theMsg()->popEpoch(cur_epoch);
   } else {
     auto iter = buffered_sends_.find(toProxy.getCollectionProxy());
     if (iter == buffered_sends_.end()) {
@@ -1371,7 +1371,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
       theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, false
       );
-      theMsg()->popEpoch();
+      theMsg()->popEpoch(cur_epoch);
       theTerm()->consume(cur_epoch);
     });
   }
