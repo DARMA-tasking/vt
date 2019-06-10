@@ -461,9 +461,6 @@ template <typename ColT, typename IndexT, typename MsgT>
     bcast_proxy, col_msg->getVrtHandler(), col_msg->getBcastEpoch(),
     cur_epoch, msg_epoch, group, default_group
   );
-  if (group == default_group) {
-    theTerm()->consume(cur_epoch);
-  }
   theMsg()->popEpoch();
 }
 
@@ -720,8 +717,6 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   if (send_group) {
     auto const& group = elm_holder->group();
     envelopeSetGroup(msg->env, group);
-  } else {
-    theTerm()->produce(cur_epoch, num_nodes);
   }
 
   auto ret = theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
