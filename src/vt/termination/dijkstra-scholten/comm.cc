@@ -89,7 +89,7 @@ namespace vt { namespace term { namespace ds {
     termds, node,
     "StateDS::rootTerminated: epoch={:x}\n", epoch
   );
-  theTerm()->triggerAllEpochActions(epoch);
+  theTerm()->epochTerminated(epoch);
 }
 
 /*static*/ StateDS::TerminatorType*

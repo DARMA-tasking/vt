@@ -77,7 +77,7 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
 }
 
 /*static*/ void TerminationDetector::epochTerminatedHandler(TermMsg* msg) {
-  theTerm()->epochTerminated(msg->new_epoch, true);
+  theTerm()->epochTerminated(msg->new_epoch);
 }
 
 /*static*/ void TerminationDetector::epochContinueHandler(TermMsg* msg) {
@@ -403,7 +403,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         state.setTerminated();
 
-        epochTerminated(state.getEpoch(), false);
+        epochTerminated(state.getEpoch());
       } else {
         if (!ArgType::vt_no_detect_hang) {
           // Counts are the same as previous iteration
@@ -493,16 +493,21 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
 void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
   if (epoch != any_epoch_sentinel) {
-    auto epoch_iter = epoch_state_.find(epoch);
-    if (epoch_iter != epoch_state_.end()) {
-      epoch_state_.erase(epoch_iter);
+    if (isDS(epoch)) {
+      auto ds_term_iter = term_.find(epoch);
+      if (ds_term_iter != term_.end()) {
+        term_.erase(ds_term_iter);
+      }
+    } else {
+      auto epoch_iter = epoch_state_.find(epoch);
+      if (epoch_iter != epoch_state_.end()) {
+        epoch_state_.erase(epoch_iter);
+      }
     }
   }
 }
 
-void TerminationDetector::epochTerminated(
-  EpochType const& epoch, bool const cleanup
-) {
+void TerminationDetector::epochTerminated(EpochType const& epoch) {
   debug_print(
     term, node,
     "epochTerminated: epoch={:x}, is_rooted_epoch={}, is_ds={}\n",
@@ -524,13 +529,14 @@ void TerminationDetector::epochTerminated(
     }
   }
 
-  triggerAllActions(epoch,epoch_state_);
+  // Trigger actions associated with epoch
+  triggerAllActions(epoch);
 
-  if (cleanup) {
-    cleanupEpoch(epoch);
-  }
+  // Update the window for the epoch archetype
+  updateResolvedEpochs(epoch);
 
-  updateResolvedEpochs(epoch, isRooted(epoch));
+  // Cleanup epoch meta-data
+  cleanupEpoch(epoch);
 }
 
 void TerminationDetector::inquireTerminated(
@@ -580,24 +586,19 @@ void TerminationDetector::replyTerminated(
     epoch_wait_status_.erase(iter);
   }
 
-  epochTerminated(epoch, false);
+  epochTerminated(epoch);
 }
 
-void TerminationDetector::updateResolvedEpochs(
-  EpochType const& epoch, bool const rooted
-) {
-  debug_print(
-    term, node,
-    "updateResolvedEpoch: epoch={:x}, rooted={}, "
-    "collective: first={:x}, last={:x}\n",
-    epoch, rooted, epoch_coll_->getFirst(), epoch_coll_->getLast()
-  );
+void TerminationDetector::updateResolvedEpochs(EpochType const& epoch) {
+  if (epoch != any_epoch_sentinel) {
+    debug_print(
+      term, node,
+      "updateResolvedEpoch: epoch={:x}, rooted={}, "
+      "collective: first={:x}, last={:x}\n",
+      epoch, isRooted(epoch), epoch_coll_->getFirst(), epoch_coll_->getLast()
+    );
 
-  if (rooted) {
-    auto window = getWindow(epoch);
-    window->closeEpoch(epoch);
-  } else {
-    epoch_coll_->closeEpoch(epoch);
+    getWindow(epoch)->closeEpoch(epoch);
   }
 }
 
@@ -704,10 +705,6 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   if (ready_iter == epoch_ready_.end()) {
     epoch_ready_.emplace(epoch);
     consume(epoch,1);
-  } else {
-    /*
-     * Do nothing: the epoch as already been in "finished" state on this node
-     */
   }
 
   // Activate the epoch, which is necessary for a rooted epoch
@@ -758,6 +755,7 @@ EpochType TerminationDetector::makeEpochRootedDS(bool child, EpochType parent) {
 
   // Create DS term where this node is the root
   getDSTerm(epoch, true);
+  getWindow(epoch)->addEpoch(epoch);
 
   if (child) {
     linkChildEpoch(epoch,parent);

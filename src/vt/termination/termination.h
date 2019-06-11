@@ -163,7 +163,7 @@ private:
   EpochWindow* getWindow(EpochType const& epoch);
 
 private:
-  void updateResolvedEpochs(EpochType const& epoch, bool const rooted);
+  void updateResolvedEpochs(EpochType const& epoch);
   void inquireTerminated(EpochType const& epoch, NodeType const& from_node);
   void replyTerminated(EpochType const& epoch, bool const& is_terminated);
 
@@ -178,7 +178,7 @@ public:
 
 private:
   bool propagateEpoch(TermStateType& state);
-  void epochTerminated(EpochType const& epoch, bool const cleanup);
+  void epochTerminated(EpochType const& epoch);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void setupNewEpoch(EpochType const& epoch);
   void readyNewEpoch(EpochType const& epoch);

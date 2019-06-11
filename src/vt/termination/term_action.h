@@ -113,17 +113,8 @@ public:
   template <typename Callable>
   void addActionUnique(EpochType const& epoch, Callable&& c);
 
-public:
-  /*
-   * Deprecated methods for adding a termination action
-   */
-  [[deprecated("Replaced by `addAction' or `addActionEpoch'")]]
-  void attachEpochTermAction(EpochType const& epoch, ActionType action);
-  [[deprecated("Replaced by `addAction'")]]
-  void attachGlobalTermAction(ActionType action);
-
 protected:
-  void triggerAllActions(EpochType const& epoch, EpochStateType const& state);
+  void triggerAllActions(EpochType const& epoch);
   void triggerAllEpochActions(EpochType const& epoch);
   void afterAddEpochAction(EpochType const& epoch);
 
