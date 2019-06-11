@@ -698,7 +698,7 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 
   debug_print(
     term, node,
-    "finishedEpoch: epoch={:x}, exists={}\n",
+    "finishedEpoch: epoch={:x}, finished={}\n",
     epoch, ready_iter != epoch_ready_.end()
   );
 
@@ -707,7 +707,6 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
     consume(epoch,1);
   }
 
-  // Activate the epoch, which is necessary for a rooted epoch
   activateEpoch(epoch);
 
   debug_print(
@@ -740,7 +739,7 @@ EpochType TerminationDetector::makeEpochRootedNorm(bool child, EpochType parent)
   makeRootedHan(epoch,true);
 
   if (child) {
-    linkChildEpoch(epoch);
+    linkChildEpoch(epoch,parent);
   }
 
   return epoch;
@@ -756,6 +755,7 @@ EpochType TerminationDetector::makeEpochRootedDS(bool child, EpochType parent) {
   // Create DS term where this node is the root
   getDSTerm(epoch, true);
   getWindow(epoch)->addEpoch(epoch);
+  produce(epoch,1);
 
   if (child) {
     linkChildEpoch(epoch,parent);
@@ -766,9 +766,6 @@ EpochType TerminationDetector::makeEpochRootedDS(bool child, EpochType parent) {
     "makeEpochRootedDS: child={}, parent={:x}, epoch={:x}\n",
     child, parent, epoch
   );
-
-  // Insert into ready since DS epochs are not delayed for finishedEpoch
-  epoch_ready_.emplace(epoch);
 
   return epoch;
 }
@@ -826,23 +823,25 @@ EpochType TerminationDetector::makeEpoch(
 }
 
 void TerminationDetector::activateEpoch(EpochType const& epoch) {
-  debug_print(
-    term, node,
-    "activateEpoch: epoch={:x}\n", epoch
-  );
+  if (!isDS(epoch)) {
+    debug_print(
+      term, node,
+      "activateEpoch: epoch={:x}\n", epoch
+    );
 
-  auto& state = findOrCreateState(epoch, true);
-  state.activateEpoch();
-  state.notifyLocalTerminated();
-  if (state.readySubmitParent()) {
-    propagateEpoch(state);
+    auto& state = findOrCreateState(epoch, true);
+    state.activateEpoch();
+    state.notifyLocalTerminated();
+    if (state.readySubmitParent()) {
+      propagateEpoch(state);
+    }
   }
 }
 
 void TerminationDetector::makeRootedHan(EpochType const& epoch, bool is_root) {
   bool const is_ready = !is_root;
 
-  auto& state = findOrCreateState(epoch, is_ready);
+  findOrCreateState(epoch, is_ready);
   getWindow(epoch)->addEpoch(epoch);
 
   debug_print(
@@ -850,23 +849,11 @@ void TerminationDetector::makeRootedHan(EpochType const& epoch, bool is_root) {
     "makeRootedHan: epoch={:x}, is_root={}\n", epoch, is_root
   );
 
-  epoch_ready_.emplace(epoch);
+  produce(epoch,1);
 
+  // The user calls finishedEpoch on the root for a non-DS rooted epoch
   if (!is_root) {
-    activateEpoch(epoch);
-  }
-
-  if (is_root && state.noLocalUnits()) {
-    /*
-     *  Do not submit parent at the root if no units have been produced at the
-     *  root: a false positive is possible if termination starts immediately
-     *  because it may finish before any unit is produced or consumed with the
-     *  new rooted epoch
-     */
-  } else {
-    if (state.readySubmitParent()) {
-      propagateEpoch(state);
-    }
+    finishedEpoch(epoch);
   }
 }
 
