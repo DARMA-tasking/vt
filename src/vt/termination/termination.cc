@@ -255,6 +255,11 @@ void TerminationDetector::produceConsume(
     epoch, num_units, print_bool(produce), node
   );
 
+  // If a node is not passed, use the current node (self-prod/cons)
+  if (node == uninitialized_destination) {
+    node = theContext()->getNode();
+  }
+
   produceConsumeState(any_epoch_state_, num_units, produce, node);
 
   if (epoch != any_epoch_sentinel) {
