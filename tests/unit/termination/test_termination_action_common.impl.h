@@ -61,7 +61,7 @@ std::vector<vt::EpochType> generateEpochs(int nb, bool rooted, bool useDS) {
     vtAssert(epoch_manip::isRooted(sequence[0]), "First epoch should be rooted");
 
     for (int i = 1; i < nb; ++i){
-      sequence[i] = epoch_manip::next(sequence[i - 1]);
+      sequence[i] = vt::theTerm()->makeEpochRooted(useDS);
       vtAssert(epoch_manip::isRooted(sequence[i]), "Next epoch should be rooted");
     }
   } else /*collective*/ {
