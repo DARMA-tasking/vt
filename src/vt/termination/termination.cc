@@ -779,6 +779,13 @@ EpochType TerminationDetector::newEpochRooted(
    *  identifier, which is distinct and has the node embedded in it to
    *  distinguish it from all other epochs
    */
+
+  debug_print(
+    term, node,
+    "newEpochRooted: root={}, is_ds={}, child={}\n",
+    theContext()->getNode(), useDS, child
+  );
+
   if (useDS) {
     auto const& rooted_epoch = epoch::EpochManip::makeNewRootedEpoch(
       false, epoch::eEpochCategory::DijkstraScholtenEpoch
@@ -805,6 +812,13 @@ EpochType TerminationDetector::newEpochRooted(
         iter->second.addChildEpoch(rooted_epoch);
       }
     }
+
+    debug_print(
+      term, node,
+      "newEpochRooted: root={}, is_ds={}, child={}, epoch={:x}\n",
+      theContext()->getNode(), useDS, child, rooted_epoch
+    );
+
     epoch_ready_.emplace(rooted_epoch);
     return rooted_epoch;
   } else {
