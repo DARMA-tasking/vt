@@ -95,8 +95,6 @@ struct TerminationDetector :
     EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
     NodeType node = uninitialized_destination
   );
-  void produceDS(EpochType epoch, TermCounterType num_units, NodeType node);
-  void consumeDS(EpochType epoch, TermCounterType num_units, NodeType node);
   /***************************************************************************/
 
   friend struct ds::StateDS;

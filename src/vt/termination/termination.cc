@@ -188,36 +188,6 @@ void TerminationDetector::produceConsumeState(
   }
 }
 
-void TerminationDetector::produceDS(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  auto ptr = getDSTerm(epoch);
-  vtAssertExprInfo(ptr != nullptr, epoch, num_units, node);
-  if (ptr) {
-    debug_print(
-      termds, node,
-      "send: (DS) epoch={:x}, num={}, successor={}\n",
-      epoch, num_units, node
-    );
-    ptr->msgSent(node,num_units);
-  }
-}
-
-void TerminationDetector::consumeDS(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  auto ptr = getDSTerm(epoch);
-  vtAssertExprInfo(ptr != nullptr, epoch, num_units, node);
-  if (ptr) {
-    debug_print(
-      termds, node,
-      "recv: (DS) epoch={:x}, num={}, predecessor={}\n",
-      epoch, num_units, node
-    );
-    ptr->msgProcessed(node,num_units);
-  }
-}
-
 TerminationDetector::TermStateDSType*
 TerminationDetector::getDSTerm(EpochType epoch, bool is_root) {
   debug_print(
