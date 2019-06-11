@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
   }
 
   if (0) {
-    cur_epoch = theTerm()->newEpoch();
+    cur_epoch = theTerm()->newEpochCollective();
 
     fmt::print("{}: new cur_epoch={}\n", my_node, cur_epoch);
 
