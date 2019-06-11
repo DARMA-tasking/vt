@@ -128,9 +128,11 @@ public:
   /*
    * Interface for making epochs for termination detection
    */
-  EpochType makeEpochRooted(bool const useDS = false);
-  EpochType makeEpochCollective();
-  EpochType makeEpoch(bool const is_collective, bool const useDS = false);
+  EpochType makeEpochRooted(bool useDS = false, EpochType parent = no_epoch);
+  EpochType makeEpochCollective(EpochType parent = no_epoch);
+  EpochType makeEpoch(
+    bool is_coll, bool useDS = false, EpochType parent = no_epoch
+  );
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
 
@@ -178,9 +180,9 @@ private:
   bool propagateEpoch(TermStateType& state);
   void epochFinished(EpochType const& epoch, bool const cleanup);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
-  void setupNewEpoch(EpochType const& new_epoch, bool const from_child);
-  void readyNewEpoch(EpochType const& new_epoch);
-  void linkChildEpoch(EpochType const& epoch);
+  void setupNewEpoch(EpochType const& epoch);
+  void readyNewEpoch(EpochType const& epoch);
+  void linkChildEpoch(EpochType const& epoch, EpochType parent = no_epoch);
   void rootMakeEpoch(EpochType const& epoch, bool const child = false);
   void makeRootedEpoch(EpochType const& epoch, bool const is_root);
 

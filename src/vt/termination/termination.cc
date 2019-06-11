@@ -710,34 +710,41 @@ void TerminationDetector::epochContinue(
 }
 
 EpochType TerminationDetector::newEpochCollective(bool const child) {
-  auto const& new_epoch = epoch::EpochManip::makeNewEpoch();
-  vtAssertExpr(epoch_coll_ != nullptr);
-  epoch_coll_->addEpoch(new_epoch);
-  auto const from_child = false;
-  produce(new_epoch,1);
-  setupNewEpoch(new_epoch, from_child);
+  auto const epoch = epoch::EpochManip::makeNewEpoch();
+
+  debug_print(
+    term, node,
+    "newEpochCollective: epoch={:x}, child={}\n",
+    epoch, child
+  );
+
+  getWindow(epoch)->addEpoch(epoch);
+  produce(epoch,1);
+  setupNewEpoch(epoch);
 
   if (child) {
-    linkChildEpoch(new_epoch);
+    linkChildEpoch(epoch);
   }
 
-  return new_epoch;
+  return epoch;
 }
 
-void TerminationDetector::linkChildEpoch(EpochType const& epoch) {
+void TerminationDetector::linkChildEpoch(
+  EpochType const& epoch, EpochType parent
+) {
   // Add the current active epoch in the messenger as a child epoch so the
   // current epoch does not detect termination until the new epoch terminations
-  auto const cur_epoch = theMsg()->getEpoch();
-  bool const do_link =
+  auto const cur_epoch = parent != no_epoch ? parent : theMsg()->getEpoch();
+  bool const has_parent =
     cur_epoch != no_epoch && cur_epoch != term::any_epoch_sentinel;
 
   debug_print(
     term, node,
-    "linkChildEpoch: do_link={}, parent={:x}, child={:x}\n",
-    do_link, cur_epoch, epoch
+    "linkChildEpoch: has_parent={}, parent={:x}, cur={:x}, epoch={:x}\n",
+    has_parent, parent, cur_epoch, epoch
   );
 
-  if (do_link) {
+  if (has_parent) {
     auto& state = findOrCreateState(epoch, false);
     state.addChildEpoch(cur_epoch);
   }
@@ -828,18 +835,18 @@ EpochType TerminationDetector::newEpochRooted(
   }
 }
 
-EpochType TerminationDetector::makeEpochRooted(bool const useDS) {
-  return makeEpoch(false,useDS);
+EpochType TerminationDetector::makeEpochRooted(bool useDS, EpochType parent) {
+  return makeEpoch(false,useDS,parent);
 }
 
-EpochType TerminationDetector::makeEpochCollective() {
-  return makeEpoch(true);
+EpochType TerminationDetector::makeEpochCollective(EpochType parent) {
+  return makeEpoch(true,false,parent);
 }
 
-EpochType TerminationDetector::makeEpoch(bool const is_coll, bool const useDS) {
-  auto const epoch = is_coll ? newEpochCollective() : makeEpochRooted(useDS);
-  getWindow(epoch)->addEpoch(epoch);
-  return epoch;
+EpochType TerminationDetector::makeEpoch(
+  bool is_coll, bool useDS, EpochType parent
+) {
+  return is_coll ? newEpochCollective(parent) : makeEpochRooted(useDS,parent);
 }
 
 void TerminationDetector::rootMakeEpoch(
@@ -917,27 +924,20 @@ void TerminationDetector::makeRootedEpoch(
   }
 }
 
-void TerminationDetector::setupNewEpoch(
-  EpochType const& new_epoch, bool const from_child
-) {
-  auto epoch_iter = epoch_state_.find(new_epoch);
+void TerminationDetector::setupNewEpoch(EpochType const& epoch) {
+  auto epoch_iter = epoch_state_.find(epoch);
 
   bool const found = epoch_iter != epoch_state_.end();
 
   debug_print(
     term, node,
-    "setupNewEpoch: new_epoch={:x}, found={}, count={}\n",
-    new_epoch, print_bool(found),
+    "setupNewEpoch: epoch={:x}, found={}, count={}\n",
+    epoch, print_bool(found),
     (found ? epoch_iter->second.getRecvChildCount() : -1)
   );
 
-  auto& state = findOrCreateState(new_epoch, false);
-
-  if (from_child) {
-    state.notifyChildReceive();
-  } else {
-    state.notifyLocalTerminated();
-  }
+  auto& state = findOrCreateState(epoch, false);
+  state.notifyLocalTerminated();
 }
 
 }} // end namespace vt::term
