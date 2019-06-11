@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
     num_elms = atoi(argv[1]);
   }
 
-  auto const epoch = theTerm()->newEpoch();
+  auto const epoch = theTerm()->newEpochCollective();
   theMsg()->setGlobalEpoch(epoch);
 
   if (this_node == 0) {
