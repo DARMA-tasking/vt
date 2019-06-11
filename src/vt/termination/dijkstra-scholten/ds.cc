@@ -70,10 +70,15 @@ template <typename CommType>
 void TermDS<CommType>::clearChildren() {
   debug_print(
     termds, node,
-    "clearChildren: epoch={:x}\n", epoch_
+    "clearChildren: epoch={:x}, children.size()={}\n",
+    epoch_, children_.size()
   );
 
   for (auto&& cur_epoch : children_) {
+    debug_print(
+      termds, node,
+      "clearChildren: epoch={:x}, child epoch={:x}\n", epoch_, cur_epoch
+    );
     theTerm()->consume(cur_epoch);
   }
   children_.clear();
