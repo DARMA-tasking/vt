@@ -211,7 +211,7 @@ int main(int argc, char** argv) {
 
   #if 1
   #if LB_ENABLED
-    EpochType const epoch = theTerm()->newEpochCollective();
+    EpochType const epoch = theTerm()->makeEpochCollective();
     theMsg()->setGlobalEpoch(epoch);
   #endif
 

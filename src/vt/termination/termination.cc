@@ -709,26 +709,6 @@ void TerminationDetector::epochContinue(
   theTerm()->maybePropagate();
 }
 
-EpochType TerminationDetector::newEpochCollective(bool const child) {
-  auto const epoch = epoch::EpochManip::makeNewEpoch();
-
-  debug_print(
-    term, node,
-    "newEpochCollective: epoch={:x}, child={}\n",
-    epoch, child
-  );
-
-  getWindow(epoch)->addEpoch(epoch);
-  produce(epoch,1);
-  setupNewEpoch(epoch);
-
-  if (child) {
-    linkChildEpoch(epoch);
-  }
-
-  return epoch;
-}
-
 void TerminationDetector::linkChildEpoch(
   EpochType const& epoch, EpochType parent
 ) {
@@ -778,8 +758,8 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   );
 }
 
-EpochType TerminationDetector::newEpochRooted(
-  bool const useDS, bool const child
+EpochType TerminationDetector::makeEpochRooted(
+  bool useDS, bool child, EpochType parent
 ) {
   /*
    *  This method should only be called by the root node for the rooted epoch
@@ -789,8 +769,8 @@ EpochType TerminationDetector::newEpochRooted(
 
   debug_print(
     term, node,
-    "newEpochRooted: root={}, is_ds={}, child={}\n",
-    theContext()->getNode(), useDS, child
+    "makeEpochRooted: root={}, is_ds={}, child={}, parent={:x}\n",
+    theContext()->getNode(), useDS, child, parent
   );
 
   if (useDS) {
@@ -822,7 +802,7 @@ EpochType TerminationDetector::newEpochRooted(
 
     debug_print(
       term, node,
-      "newEpochRooted: root={}, is_ds={}, child={}, epoch={:x}\n",
+      "makeEpochRooted: root={}, is_ds={}, child={}, new epoch={:x}\n",
       theContext()->getNode(), useDS, child, rooted_epoch
     );
 
@@ -835,18 +815,34 @@ EpochType TerminationDetector::newEpochRooted(
   }
 }
 
-EpochType TerminationDetector::makeEpochRooted(bool useDS, EpochType parent) {
-  return makeEpoch(false,useDS,parent);
-}
+EpochType TerminationDetector::makeEpochCollective(
+  bool child, EpochType parent
+) {
+  auto const epoch = epoch::EpochManip::makeNewEpoch();
 
-EpochType TerminationDetector::makeEpochCollective(EpochType parent) {
-  return makeEpoch(true,false,parent);
+  debug_print(
+    term, node,
+    "makeEpochCollective: epoch={:x}, child={}, parent={:x}\n",
+    epoch, child, parent
+  );
+
+  getWindow(epoch)->addEpoch(epoch);
+  produce(epoch,1);
+  setupNewEpoch(epoch);
+
+  if (child) {
+    linkChildEpoch(epoch,parent);
+  }
+
+  return epoch;
 }
 
 EpochType TerminationDetector::makeEpoch(
-  bool is_coll, bool useDS, EpochType parent
+  bool is_coll, bool useDS, bool child, EpochType parent
 ) {
-  return is_coll ? newEpochCollective(parent) : makeEpochRooted(useDS,parent);
+  return is_coll ?
+    makeEpochCollective(child,parent) :
+    makeEpochRooted(useDS,child,parent);
 }
 
 void TerminationDetector::rootMakeEpoch(

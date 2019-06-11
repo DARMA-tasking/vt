@@ -381,7 +381,7 @@ void HierarchicalLB::startMigrations() {
   auto const& this_node = theContext()->getNode();
   TransferType transfer_list;
 
-  auto const epoch = theTerm()->newEpochCollective();
+  auto const epoch = theTerm()->makeEpochCollective();
   theTerm()->addActionEpoch(epoch,[this]{
     this->finishedTransferExchange();
   });

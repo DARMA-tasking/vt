@@ -129,7 +129,7 @@ static void next_epoch() {
   if (use_epoch) {
 
     if (cur_epoch + 1 < max_epochs) {
-      cur_epoch = theTerm()->newEpochCollective();
+      cur_epoch = theTerm()->makeEpochCollective();
 
       fmt::print("{}: new cur_epoch={:x}\n", my_node, cur_epoch);
 

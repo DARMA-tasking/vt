@@ -73,7 +73,7 @@ static inline void activeMessageTerm() {
    */
 
   // Create a new epoch: this is a collective invocation
-  auto const new_epoch = theTerm()->newEpochCollective();
+  auto const new_epoch = theTerm()->makeEpochCollective();
 
   if (this_node == 0) {
     auto msg = vt::makeSharedMessage<ExampleMsg>(8);

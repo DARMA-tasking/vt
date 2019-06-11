@@ -128,17 +128,15 @@ public:
   /*
    * Interface for making epochs for termination detection
    */
-  EpochType makeEpochRooted(bool useDS = false, EpochType parent = no_epoch);
-  EpochType makeEpochCollective(EpochType parent = no_epoch);
+  EpochType makeEpochRooted(
+    bool useDS = false, bool child = true, EpochType parent = no_epoch
+  );
+  EpochType makeEpochCollective(bool child = true, EpochType parent = no_epoch);
   EpochType makeEpoch(
-    bool is_coll, bool useDS = false, EpochType parent = no_epoch
+    bool is_coll, bool useDS = false, bool child = true, EpochType parent = no_epoch
   );
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
-
-public:
-  EpochType newEpochCollective(bool const child = true);
-  EpochType newEpochRooted(bool const useDS = false, bool const child = true);
 
 private:
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);

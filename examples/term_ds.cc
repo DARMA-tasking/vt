@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
   }
 
   if (0) {
-    cur_epoch = theTerm()->newEpochCollective();
+    cur_epoch = theTerm()->makeEpochCollective();
 
     fmt::print("{}: new cur_epoch={}\n", my_node, cur_epoch);
 
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
   }
 
   if (my_node == 0) {
-    cur_epoch = theTerm()->newEpochRooted(true);
+    cur_epoch = theTerm()->makeEpochRooted(true);
 
     theTerm()->addAction(cur_epoch, []{
       fmt::print("{}: running attached action: cur_epoch={}\n", my_node, cur_epoch);
