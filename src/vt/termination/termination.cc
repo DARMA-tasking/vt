@@ -836,18 +836,10 @@ EpochType TerminationDetector::makeEpochCollective() {
   return makeEpoch(true);
 }
 
-EpochType TerminationDetector::makeEpoch(
-  bool const is_collective, bool const useDS
-) {
-  if (is_collective) {
-    auto const& epoch = newEpochCollective();
-    getWindow(epoch)->addEpoch(epoch);
-    return epoch;
-  } else {
-    auto const& epoch = newEpochRooted(useDS);
-    getWindow(epoch)->addEpoch(epoch);
-    return epoch;
-  }
+EpochType TerminationDetector::makeEpoch(bool const is_coll, bool const useDS) {
+  auto const epoch = is_coll ? newEpochCollective() : makeEpochRooted(useDS);
+  getWindow(epoch)->addEpoch(epoch);
+  return epoch;
 }
 
 EpochType TerminationDetector::newEpoch(bool const child) {
