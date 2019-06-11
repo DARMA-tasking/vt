@@ -842,10 +842,6 @@ EpochType TerminationDetector::makeEpoch(bool const is_coll, bool const useDS) {
   return epoch;
 }
 
-EpochType TerminationDetector::newEpoch(bool const child) {
-  return newEpochCollective(child);
-}
-
 void TerminationDetector::rootMakeEpoch(
   EpochType const& epoch, bool const child
 ) {

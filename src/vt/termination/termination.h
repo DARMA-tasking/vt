@@ -110,13 +110,6 @@ struct TerminationDetector :
 
 public:
   /*
-   * Deprecated interface for creating a new collective epoch for detecting
-   * termination
-   */
-  EpochType newEpoch(bool const child = true);
-
-public:
-  /*
    * Interface for scoped epochs using C++ lexical scopes to encapsulate epoch
    * regimes
    */
@@ -133,7 +126,7 @@ public:
 
 public:
   /*
-   * New interface for making epochs for termination detection
+   * Interface for making epochs for termination detection
    */
   EpochType makeEpochRooted(bool const useDS = false);
   EpochType makeEpochCollective();
