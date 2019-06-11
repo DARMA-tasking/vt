@@ -103,7 +103,7 @@ struct TerminationDetector :
 
   bool isRooted(EpochType epoch);
   bool isDS(EpochType epoch);
-  TermStateDSType* getDSTerm(EpochType epoch);
+  TermStateDSType* getDSTerm(EpochType epoch, bool is_root = false);
 
   void resetGlobalTerm();
   void freeEpoch(EpochType const& epoch);
@@ -137,6 +137,10 @@ public:
   );
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
+
+private:
+  EpochType makeEpochRootedNorm(bool child, EpochType parent);
+  EpochType makeEpochRootedDS(bool child, EpochType parent);
 
 private:
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
@@ -180,11 +184,10 @@ private:
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void setupNewEpoch(EpochType const& epoch);
   void readyNewEpoch(EpochType const& epoch);
-  void linkChildEpoch(EpochType const& epoch, EpochType parent = no_epoch);
-  void rootMakeEpoch(EpochType const& epoch, bool const child = false);
-  void makeRootedEpoch(EpochType const& epoch, bool const is_root);
+  void linkChildEpoch(EpochType epoch, EpochType parent = no_epoch);
+  void makeRootedHan(EpochType const& epoch, bool is_root);
 
-  static void makeRootedEpoch(TermMsg* msg);
+  static void makeRootedHandler(TermMsg* msg);
   static void inquireEpochFinished(TermFinishedMsg* msg);
   static void replyEpochFinished(TermFinishedReplyMsg* msg);
   static void propagateEpochHandler(TermCounterMsg* msg);

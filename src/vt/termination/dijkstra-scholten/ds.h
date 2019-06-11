@@ -99,8 +99,8 @@ private:
   void tryLast();
 
 public:
-  void addChildEpoch(EpochType const& epoch);
-  void clearChildren();
+  void addParentEpoch(EpochType const& in_parent);
+  void clearParents();
 
 protected:
   NodeType parent                   = uninitialized_destination;
@@ -116,7 +116,7 @@ protected:
   CountType lC                      = 0;
   CountType lD                      = 0;
   AckReqListType outstanding        = {};
-  std::vector<EpochType> children_  = {};
+  std::vector<EpochType> parents_   = {};
 };
 
 }}} /* end namespace vt::term::ds */

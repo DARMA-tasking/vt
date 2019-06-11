@@ -67,9 +67,8 @@ TerminationDetector::TerminationDetector()
   epoch_coll_(std::make_unique<EpochWindow>())
 { }
 
-/*static*/ void TerminationDetector::makeRootedEpoch(TermMsg* msg) {
-  bool const is_root = false;
-  theTerm()->makeRootedEpoch(msg->new_epoch, is_root);
+/*static*/ void TerminationDetector::makeRootedHandler(TermMsg* msg) {
+  theTerm()->makeRootedHan(msg->new_epoch, false);
 }
 
 /*static*/ void
@@ -220,7 +219,7 @@ void TerminationDetector::consumeDS(
 }
 
 TerminationDetector::TermStateDSType*
-TerminationDetector::getDSTerm(EpochType epoch) {
+TerminationDetector::getDSTerm(EpochType epoch, bool is_root) {
   debug_print(
     termds, node,
     "getDSTerm: epoch={:x}, is_rooted={}, is_ds={}\n",
@@ -234,7 +233,7 @@ TerminationDetector::getDSTerm(EpochType epoch) {
         std::piecewise_construct,
         std::forward_as_tuple(epoch),
         std::forward_as_tuple(
-          TerminatorType{epoch,false,this_node}
+          TerminatorType{epoch,is_root,this_node}
         )
       );
       iter = term_.find(epoch);
@@ -543,20 +542,11 @@ void TerminationDetector::epochFinished(
   // Clear all the children epochs that are nested by this epoch (waiting on it
   // to complete)
   if (isDS(epoch)) {
-    auto ptr = getDSTerm(epoch);
-    vtAssertExpr(ptr != nullptr);
-    if (ptr) {
-      ptr->clearChildren();
-    }
+    getDSTerm(epoch)->clearParents();
   } else {
     if (epoch != term::any_epoch_sentinel) {
-      auto iter = epoch_state_.find(epoch);
-      vtAssertExprInfo(
-        iter != epoch_state_.end(), epoch, cleanup, isRooted(epoch)
-      );
-      if (iter != epoch_state_.end()) {
-        iter->second.clearChildren();
-      }
+      vtAssertExpr(epoch_state_.find(epoch) != epoch_state_.end());
+      findOrCreateState(epoch, false).clearParents();
     } else {
       // Although in theory the term::any_epoch_sentinel could track all other
       // epochs as children, it does not need for correctness (and this would be
@@ -709,24 +699,26 @@ void TerminationDetector::epochContinue(
   theTerm()->maybePropagate();
 }
 
-void TerminationDetector::linkChildEpoch(
-  EpochType const& epoch, EpochType parent
-) {
-  // Add the current active epoch in the messenger as a child epoch so the
+void TerminationDetector::linkChildEpoch(EpochType child, EpochType parent) {
+  // Add the current active epoch in the messenger as a parent epoch so the
   // current epoch does not detect termination until the new epoch terminations
-  auto const cur_epoch = parent != no_epoch ? parent : theMsg()->getEpoch();
+  auto const parent_epoch = parent != no_epoch ? parent : theMsg()->getEpoch();
   bool const has_parent =
-    cur_epoch != no_epoch && cur_epoch != term::any_epoch_sentinel;
+    parent_epoch != no_epoch && parent_epoch != term::any_epoch_sentinel;
 
   debug_print(
     term, node,
-    "linkChildEpoch: has_parent={}, parent={:x}, cur={:x}, epoch={:x}\n",
-    has_parent, parent, cur_epoch, epoch
+    "linkChildEpoch: has_parent={}, in parent={:x}, cur={:x}, child={:x}\n",
+    has_parent, parent, theMsg()->getEpoch(), child
   );
 
   if (has_parent) {
-    auto& state = findOrCreateState(epoch, false);
-    state.addChildEpoch(cur_epoch);
+    if (isDS(child)) {
+      getDSTerm(child)->addParentEpoch(parent_epoch);
+    } else {
+      auto& state = findOrCreateState(child, false);
+      state.addParentEpoch(parent_epoch);
+    }
   }
 }
 
@@ -758,6 +750,61 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   );
 }
 
+EpochType TerminationDetector::makeEpochRootedNorm(bool child, EpochType parent) {
+  auto const epoch = epoch::EpochManip::makeNewRootedEpoch();
+
+  debug_print(
+    term, node,
+    "makeEpochRootedNorm: root={}, child={}, epoch={:x}, parent={:x}\n",
+    theContext()->getNode(), child, epoch, parent
+  );
+
+  /*
+   *  Broadcast new rooted epoch to all other nodes to start processing this
+   *  epoch
+   */
+  auto msg = makeSharedMessage<TermMsg>(epoch);
+  theMsg()->setTermMessage(msg);
+  theMsg()->broadcastMsg<TermMsg,makeRootedHandler>(msg);
+
+  /*
+   *  Setup the new rooted epoch locally on the root node (this node)
+   */
+  makeRootedHan(epoch,true);
+
+  if (child) {
+    linkChildEpoch(epoch);
+  }
+
+  return epoch;
+
+}
+
+EpochType TerminationDetector::makeEpochRootedDS(bool child, EpochType parent) {
+  auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
+  auto const epoch = epoch::EpochManip::makeNewRootedEpoch(false, ds_cat);
+
+  vtAssert(term_.find(epoch) == term_.end(), "New epoch must not exist");
+
+  // Create DS term where this node is the root
+  getDSTerm(epoch, true);
+
+  if (child) {
+    linkChildEpoch(epoch,parent);
+  }
+
+  debug_print(
+    term, node,
+    "makeEpochRootedDS: child={}, parent={:x}, epoch={:x}\n",
+    child, parent, epoch
+  );
+
+  // Insert into ready since DS epochs are not delayed for finishedEpoch
+  epoch_ready_.emplace(epoch);
+
+  return epoch;
+}
+
 EpochType TerminationDetector::makeEpochRooted(
   bool useDS, bool child, EpochType parent
 ) {
@@ -774,44 +821,9 @@ EpochType TerminationDetector::makeEpochRooted(
   );
 
   if (useDS) {
-    auto const rooted_epoch = epoch::EpochManip::makeNewRootedEpoch(
-      false, epoch::eEpochCategory::DijkstraScholtenEpoch
-    );
-    auto const this_node = theContext()->getNode();
-    auto iter = term_.find(rooted_epoch);
-    vtAssertInfo(
-      iter == term_.end(), "New epoch must not exist", rooted_epoch, useDS
-    );
-    term_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(rooted_epoch),
-      std::forward_as_tuple(
-        TerminatorType{rooted_epoch,true,this_node}
-      )
-    );
-    if (child) {
-      auto const cur_epoch = theMsg()->getEpoch();
-      if (cur_epoch != no_epoch && cur_epoch != term::any_epoch_sentinel) {
-        iter = term_.find(rooted_epoch);
-        vtAssertInfo(
-          iter != term_.end(), "New epoch must exist now", rooted_epoch, useDS
-        );
-        iter->second.addChildEpoch(rooted_epoch);
-      }
-    }
-
-    debug_print(
-      term, node,
-      "makeEpochRooted: root={}, is_ds={}, child={}, new epoch={:x}\n",
-      theContext()->getNode(), useDS, child, rooted_epoch
-    );
-
-    epoch_ready_.emplace(rooted_epoch);
-    return rooted_epoch;
+    return makeEpochRootedDS(child,parent);
   } else {
-    auto const rooted_epoch = epoch::EpochManip::makeNewRootedEpoch();
-    rootMakeEpoch(rooted_epoch,child);
-    return rooted_epoch;
+    return makeEpochRootedNorm(child,parent);
   }
 }
 
@@ -845,34 +857,6 @@ EpochType TerminationDetector::makeEpoch(
     makeEpochRooted(useDS,child,parent);
 }
 
-void TerminationDetector::rootMakeEpoch(
-  EpochType const& epoch, bool const child
-) {
-  debug_print(
-    term, node,
-    "rootMakeEpoch: root={}, epoch={:x}\n",
-    theContext()->getNode(), epoch
-  );
-
-  /*
-   *  Broadcast new rooted epoch to all other nodes to start processing this
-   *  epoch
-   */
-  auto msg = makeSharedMessage<TermMsg>(epoch);
-  theMsg()->setTermMessage(msg);
-  theMsg()->broadcastMsg<TermMsg,makeRootedEpoch>(msg);
-  /*
-   *  Setup the new rooted epoch locally on the root node (this node)
-   */
-  bool const is_root = true;
-  makeRootedEpoch(epoch,is_root);
-
-
-  if (child) {
-    linkChildEpoch(epoch);
-  }
-}
-
 void TerminationDetector::activateEpoch(EpochType const& epoch) {
   debug_print(
     term, node,
@@ -887,17 +871,15 @@ void TerminationDetector::activateEpoch(EpochType const& epoch) {
   }
 }
 
-void TerminationDetector::makeRootedEpoch(
-  EpochType const& epoch, bool const is_root
-) {
+void TerminationDetector::makeRootedHan(EpochType const& epoch, bool is_root) {
   bool const is_ready = !is_root;
-  auto& state = findOrCreateState(epoch, is_ready);
 
+  auto& state = findOrCreateState(epoch, is_ready);
   getWindow(epoch)->addEpoch(epoch);
 
   debug_print(
     term, node,
-    "makeRootedEpoch: epoch={:x}, is_root={}\n", epoch, is_root
+    "makeRootedHan: epoch={:x}, is_root={}\n", epoch, is_root
   );
 
   epoch_ready_.emplace(epoch);
