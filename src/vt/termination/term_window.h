@@ -68,7 +68,7 @@ public:
   EpochType getLast()  const { return last_unresolved_epoch_; }
 
   bool inWindow(EpochType const& epoch) const;
-  bool isFinished(EpochType const& epoch) const;
+  bool isTerminated(EpochType const& epoch) const;
   void addEpoch(EpochType const& epoch);
   void closeEpoch(EpochType const& epoch);
 
@@ -81,12 +81,12 @@ private:
   bool initialized_                       = false;
   // Should the epoch conform to an archetype?
   bool conform_archetype_                 = true;
-  // The first unresolved epoch in the window: all epoch <= this are finished
+  // The first unresolved epoch in the window: all epoch <= this are terminated
   EpochType first_unresolved_epoch_       = no_epoch;
   // The last unresolved epoch in the current window
   EpochType last_unresolved_epoch_        = no_epoch;
-  // The set of epochs finished that are not represented by the window
-  std::unordered_set<EpochType> finished_ = {};
+  // The set of epochs terminated that are not represented by the window
+  std::unordered_set<EpochType> terminated_ = {};
 };
 
 }} /* end namespace vt::term */

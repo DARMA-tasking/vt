@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          term_finished.h
+//                          term_terminated.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERM_FINISHED_H
-#define INCLUDED_TERMINATION_TERM_FINISHED_H
+#if !defined INCLUDED_VT_TERMINATION_TERM_TERMINATED_H
+#define INCLUDED_VT_TERMINATION_TERM_TERMINATED_H
 
 #include "vt/config.h"
 #include "vt/termination/term_common.h"
@@ -54,15 +54,15 @@
 namespace vt { namespace term {
 
 enum struct TermStatusEnum : int8_t {
-  Finished = 0,
-  Pending  = 1,
-  Remote   = 2
+  Terminated = 0,
+  Pending    = 1,
+  Remote     = 2
 };
 
-struct TermFinished {
-  virtual TermStatusEnum testEpochFinished(EpochType epoch) = 0;
+struct TermTerminated {
+  virtual TermStatusEnum testEpochTerminated(EpochType epoch) = 0;
 };
 
 }} /* end namespace vt::term */
 
-#endif /*INCLUDED_TERMINATION_TERM_FINISHED_H*/
+#endif /*INCLUDED_VT_TERMINATION_TERM_TERMINATED_H*/

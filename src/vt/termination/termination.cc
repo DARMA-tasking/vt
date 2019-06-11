@@ -76,24 +76,24 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
   theTerm()->propagateEpochExternal(msg->epoch, msg->prod, msg->cons);
 }
 
-/*static*/ void TerminationDetector::epochFinishedHandler(TermMsg* msg) {
-  theTerm()->epochFinished(msg->new_epoch, true);
+/*static*/ void TerminationDetector::epochTerminatedHandler(TermMsg* msg) {
+  theTerm()->epochTerminated(msg->new_epoch, true);
 }
 
 /*static*/ void TerminationDetector::epochContinueHandler(TermMsg* msg) {
   theTerm()->epochContinue(msg->new_epoch, msg->wave);
 }
 
-/*static*/ void TerminationDetector::inquireEpochFinished(
-  TermFinishedMsg* msg
+/*static*/ void TerminationDetector::inquireEpochTerminated(
+  TermTerminatedMsg* msg
 ) {
-  theTerm()->inquireFinished(msg->getEpoch(),msg->getFromNode());
+  theTerm()->inquireTerminated(msg->getEpoch(),msg->getFromNode());
 }
 
-/*static*/ void TerminationDetector::replyEpochFinished(
-  TermFinishedReplyMsg* msg
+/*static*/ void TerminationDetector::replyEpochTerminated(
+  TermTerminatedReplyMsg* msg
 ) {
-  theTerm()->replyFinished(msg->getEpoch(),msg->isFinished());
+  theTerm()->replyTerminated(msg->getEpoch(),msg->isTerminated());
 }
 
 EpochType TerminationDetector::getArchetype(EpochType const& epoch) const {
@@ -429,11 +429,11 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       if (is_term) {
         auto msg = makeSharedMessage<TermMsg>(state.getEpoch());
         theMsg()->setTermMessage(msg);
-        theMsg()->broadcastMsg<TermMsg, epochFinishedHandler>(msg);
+        theMsg()->broadcastMsg<TermMsg, epochTerminatedHandler>(msg);
 
         state.setTerminated();
 
-        epochFinished(state.getEpoch(), false);
+        epochTerminated(state.getEpoch(), false);
       } else {
         if (!ArgType::vt_no_detect_hang) {
           // Counts are the same as previous iteration
@@ -530,12 +530,12 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
   }
 }
 
-void TerminationDetector::epochFinished(
+void TerminationDetector::epochTerminated(
   EpochType const& epoch, bool const cleanup
 ) {
   debug_print(
     term, node,
-    "epochFinished: epoch={:x}, is_rooted_epoch={}, is_ds={}\n",
+    "epochTerminated: epoch={:x}, is_rooted_epoch={}, is_ds={}\n",
     epoch, isRooted(epoch), isDS(epoch)
   );
 
@@ -563,7 +563,7 @@ void TerminationDetector::epochFinished(
   updateResolvedEpochs(epoch, isRooted(epoch));
 }
 
-void TerminationDetector::inquireFinished(
+void TerminationDetector::inquireTerminated(
   EpochType const& epoch, NodeType const& from
 ) {
   auto const& is_rooted = epoch::EpochManip::isRooted(epoch);
@@ -578,31 +578,31 @@ void TerminationDetector::inquireFinished(
 
   debug_print(
     term, node,
-    "inquireFinished: epoch={:x}, is_rooted={}, root={}, from={}\n",
+    "inquireTerminated: epoch={:x}, is_rooted={}, root={}, from={}\n",
     epoch, is_rooted, epoch_root_node, from
   );
 
   addAction(epoch, [=]{
     debug_print(
       term, node,
-      "inquireFinished: epoch={:x}, from={} ready trigger\n", epoch, from
+      "inquireTerminated: epoch={:x}, from={} ready trigger\n", epoch, from
     );
 
     bool const is_ready = true;
-    auto msg = makeMessage<TermFinishedReplyMsg>(epoch,is_ready);
-    theMsg()->sendMsg<TermFinishedReplyMsg,replyEpochFinished>(from,msg.get());
+    auto msg = makeMessage<TermTerminatedReplyMsg>(epoch,is_ready);
+    theMsg()->sendMsg<TermTerminatedReplyMsg,replyEpochTerminated>(from,msg.get());
   });
 }
 
-void TerminationDetector::replyFinished(
-  EpochType const& epoch, bool const& is_finished
+void TerminationDetector::replyTerminated(
+  EpochType const& epoch, bool const& is_terminated
 ) {
   debug_print(
     term, node,
-    "replyFinished: epoch={:x}, is_finished={}\n",
-    epoch, is_finished
+    "replyTerminated: epoch={:x}, is_terminated={}\n",
+    epoch, is_terminated
   );
-  vtAssertExpr(is_finished == true);
+  vtAssertExpr(is_terminated == true);
 
   // Remove the entry for the pending status of this remote epoch
   auto iter = epoch_wait_status_.find(epoch);
@@ -610,7 +610,7 @@ void TerminationDetector::replyFinished(
     epoch_wait_status_.erase(iter);
   }
 
-  epochFinished(epoch, false);
+  epochTerminated(epoch, false);
 }
 
 void TerminationDetector::updateResolvedEpochs(
@@ -631,7 +631,7 @@ void TerminationDetector::updateResolvedEpochs(
   }
 }
 
-TermStatusEnum TerminationDetector::testEpochFinished(EpochType epoch) {
+TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
   TermStatusEnum status = TermStatusEnum::Pending;
   auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
 
@@ -641,37 +641,37 @@ TermStatusEnum TerminationDetector::testEpochFinished(EpochType epoch) {
     if (root == this_node) {
       /*
        * The idea here is that if this is executed on the root, it must have
-       * valid info on whether the rooted live or finished
+       * valid info on whether the rooted live or terminated
        */
       auto window = getWindow(epoch);
-      auto is_finished = window->isFinished(epoch);
-      if (is_finished) {
-        status = TermStatusEnum::Finished;
+      auto is_terminated = window->isTerminated(epoch);
+      if (is_terminated) {
+        status = TermStatusEnum::Terminated;
       }
     } else {
       auto iter = epoch_wait_status_.find(epoch);
       if (iter == epoch_wait_status_.end()) {
         /*
          * Send a message to the root node to find out whether this epoch is
-         * finished or not
+         * terminated or not
          */
-        auto msg = makeMessage<TermFinishedMsg>(epoch,this_node);
-        theMsg()->sendMsg<TermFinishedMsg,inquireEpochFinished>(root,msg.get());
+        auto msg = makeMessage<TermTerminatedMsg>(epoch,this_node);
+        theMsg()->sendMsg<TermTerminatedMsg,inquireEpochTerminated>(root,msg.get());
         epoch_wait_status_.insert(epoch);
       }
       status = TermStatusEnum::Remote;
     }
   } else {
-    auto const& is_finished = epoch_coll_->isFinished(epoch);
-    if (is_finished) {
-      status = TermStatusEnum::Finished;
+    auto const& is_terminated = epoch_coll_->isTerminated(epoch);
+    if (is_terminated) {
+      status = TermStatusEnum::Terminated;
     }
   }
 
   debug_print(
     term, node,
-    "testEpochFinished: epoch={:x}, pending={}, finished={}, remote={}\n",
-    epoch, status == TermStatusEnum::Pending, status == TermStatusEnum::Finished,
+    "testEpochTerminated: epoch={:x}, pending={}, terminated={}, remote={}\n",
+    epoch, status == TermStatusEnum::Pending, status == TermStatusEnum::Terminated,
     status == TermStatusEnum::Remote
   );
 

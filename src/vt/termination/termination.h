@@ -166,8 +166,8 @@ private:
 
 private:
   void updateResolvedEpochs(EpochType const& epoch, bool const rooted);
-  void inquireFinished(EpochType const& epoch, NodeType const& from_node);
-  void replyFinished(EpochType const& epoch, bool const& is_finished);
+  void inquireTerminated(EpochType const& epoch, NodeType const& from_node);
+  void replyTerminated(EpochType const& epoch, bool const& is_terminated);
 
 public:
   void setLocalTerminated(bool const terminated, bool const no_local = true);
@@ -175,12 +175,12 @@ public:
   TermCounterType getNumUnits() const;
 
 public:
-  // TermFinished interface
-  TermStatusEnum testEpochFinished(EpochType epoch) override;
+  // TermTerminated interface
+  TermStatusEnum testEpochTerminated(EpochType epoch) override;
 
 private:
   bool propagateEpoch(TermStateType& state);
-  void epochFinished(EpochType const& epoch, bool const cleanup);
+  void epochTerminated(EpochType const& epoch, bool const cleanup);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void setupNewEpoch(EpochType const& epoch);
   void readyNewEpoch(EpochType const& epoch);
@@ -188,10 +188,10 @@ private:
   void makeRootedHan(EpochType const& epoch, bool is_root);
 
   static void makeRootedHandler(TermMsg* msg);
-  static void inquireEpochFinished(TermFinishedMsg* msg);
-  static void replyEpochFinished(TermFinishedReplyMsg* msg);
+  static void inquireEpochTerminated(TermTerminatedMsg* msg);
+  static void replyEpochTerminated(TermTerminatedReplyMsg* msg);
   static void propagateEpochHandler(TermCounterMsg* msg);
-  static void epochFinishedHandler(TermMsg* msg);
+  static void epochTerminatedHandler(TermMsg* msg);
   static void epochContinueHandler(TermMsg* msg);
 
 private:
