@@ -787,7 +787,7 @@ EpochType TerminationDetector::newEpochRooted(
   );
 
   if (useDS) {
-    auto const& rooted_epoch = epoch::EpochManip::makeNewRootedEpoch(
+    auto const rooted_epoch = epoch::EpochManip::makeNewRootedEpoch(
       false, epoch::eEpochCategory::DijkstraScholtenEpoch
     );
     auto const this_node = theContext()->getNode();
@@ -822,7 +822,7 @@ EpochType TerminationDetector::newEpochRooted(
     epoch_ready_.emplace(rooted_epoch);
     return rooted_epoch;
   } else {
-    auto const& rooted_epoch = epoch::EpochManip::makeNewRootedEpoch();
+    auto const rooted_epoch = epoch::EpochManip::makeNewRootedEpoch();
     rootMakeEpoch(rooted_epoch,child);
     return rooted_epoch;
   }
