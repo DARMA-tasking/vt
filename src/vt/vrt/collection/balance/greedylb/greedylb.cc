@@ -328,7 +328,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     "recvObjsDirect: num_recs={}\n", num_recs
   );
   TransferType transfer_list;
-  auto const epoch = theTerm()->newEpoch();
+  auto const epoch = theTerm()->newEpochCollective();
   theMsg()->pushEpoch(epoch);
   theTerm()->addActionEpoch(epoch,[this]{
     this->finishedTransferExchange();

@@ -67,7 +67,7 @@ void RotateLB::procDataIn(ElementLoadType const& data_in) {
     "RotateLB::procDataIn: size={}, next_node={}\n",
     data_in.size(), next_node
   );
-  auto const epoch = theTerm()->newEpoch();
+  auto const epoch = theTerm()->newEpochCollective();
   theMsg()->pushEpoch(epoch);
   theTerm()->addActionEpoch(epoch,[this]{ this->finishedMigrate(); });
   for (auto&& stat : data_in) {
