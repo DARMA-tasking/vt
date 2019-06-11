@@ -109,8 +109,11 @@ template <typename CommType>
 void TermDS<CommType>::msgSent(NodeType successor, CountType count) {
   debug_print(
     termds, node,
-    "msgSent: from={} sent count={} message to {}\n", self, count, successor
+    "msgSent: epoch={:x}, from={}, count={} to={}\n",
+    epoch_, self, count, successor
   );
+  vtAssertExpr(successor >= 0);
+
   vtAssertInfo(
     1 && (C == processedSum - (ackedArbitrary + ackedParent)),
     "DS-invariant", C, D, processedSum, ackedArbitrary,
@@ -136,7 +139,7 @@ void TermDS<CommType>::gotAck(CountType count) {
   D -= count;
   debug_print(
     termds, node,
-    "gotAck count={}, D={}\n", count, D
+    "gotAck: epoch={:x}, count={}, D={}\n", epoch_, count, D
   );
   tryLast();
 }
@@ -160,12 +163,21 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
     parent
   );
 
+  vtAssertExpr(predecessor >= 0);
+
   bool const self_pred = predecessor == self;
+
+  debug_print(
+    termds, node,
+    "msgProcessed: epoch={:x}, to={}, count={} from={}, lC={}, lD={}, "
+    "parent={}, outstanding.size()={}\n",
+    epoch_, self, count, predecessor, lC, lD, parent, outstanding.size()
+  );
 
   // Test for the self-process case that delays termination with local credit
   if (self_pred) {
     lC += count;
-    vtAssertExpr(lC <= lD);
+    vtAssertExprInfo(lC <= lD, lC, lD, epoch_, predecessor, count, C, D, parent);
     // Must be engaged for a local credit/processing to increase
     vtAssertExpr(not (outstanding.size() == 0));
   } else {
@@ -245,9 +257,9 @@ template <typename CommType>
 void TermDS<CommType>::tryLast() {
   debug_print(
     termds, node,
-    "tryLast: parent={}, D={}, C={}, emc={}, reqedParent={}, "
+    "tryLast: epoch={:x}, parent={}, D={}, C={}, emc={}, reqedParent={}, "
     "ackedParent={}, outstanding.size()={}, lC={}, lD={}\n",
-    parent, D, C, engagementMessageCount, reqedParent, ackedParent,
+    epoch_, parent, D, C, engagementMessageCount, reqedParent, ackedParent,
     outstanding.size(), lC, lD
   );
 
