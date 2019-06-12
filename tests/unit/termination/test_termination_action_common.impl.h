@@ -143,7 +143,7 @@ void finalize(vt::EpochType const& epoch, int order) {
 void add(vt::EpochType const& epoch, int order){
   if (channel::node == channel::root) {
     if (epoch == vt::no_epoch) {
-      vt::theTerm()->addAction([&]{
+      vt::theTerm()->addAction([=]{
         debug_print(
           term, node,
           "rank:{}: global epoch completed [order={}]\n",
@@ -153,7 +153,7 @@ void add(vt::EpochType const& epoch, int order){
         EXPECT_TRUE(channel::hasEnded(vt::no_epoch));
       });
     } else {
-      vt::theTerm()->addAction(epoch, [&]{
+      vt::theTerm()->addAction(epoch, [=]{
         debug_print(
           term, node,
           "rank:{}: epoch={:x} completed [order={}, rooted={}]\n",
