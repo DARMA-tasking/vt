@@ -175,7 +175,7 @@ void TerminationDetector::produceConsumeState(
   auto& counter = produce ? state.l_prod : state.l_cons;
   counter += num_units;
 
-  debug_print(
+  debug_print_verbose(
     term, node,
     "produceConsumeState: epoch={:x}, event_count={}, l_prod={}, l_cons={}, "
     "num_units={}, produce={}, node={}\n",
@@ -190,7 +190,7 @@ void TerminationDetector::produceConsumeState(
 
 TerminationDetector::TermStateDSType*
 TerminationDetector::getDSTerm(EpochType epoch, bool is_root) {
-  debug_print(
+  debug_print_verbose(
     termds, node,
     "getDSTerm: epoch={:x}, is_rooted={}, is_ds={}\n",
     epoch, isRooted(epoch), isDS(epoch)
@@ -220,8 +220,9 @@ void TerminationDetector::produceConsume(
 ) {
   debug_print(
     term, node,
-    "produceConsume: epoch={:x}, num_units={}, produce={}, node={}\n",
-    epoch, num_units, print_bool(produce), node
+    "produceConsume: epoch={:x}, rooted={}, ds={}, count={}, produce={}, "
+    "node={}\n",
+    epoch, isRooted(epoch), isDS(epoch), num_units, produce, node
   );
 
   // If a node is not passed, use the current node (self-prod/cons)
@@ -273,7 +274,7 @@ void TerminationDetector::maybePropagate() {
 void TerminationDetector::propagateEpochExternalState(
   TermStateType& state, TermCounterType const& prod, TermCounterType const& cons
 ) {
-  debug_print(
+  debug_print_verbose(
     term, node,
     "propagateEpochExternalState: epoch={:x}, prod={}, cons={}, "
     "event_count={}, wave={}\n",
@@ -294,7 +295,7 @@ void TerminationDetector::propagateEpochExternal(
   EpochType const& epoch, TermCounterType const& prod,
   TermCounterType const& cons
 ) {
-  debug_print(
+  debug_print_verbose(
     term, node,
     "propagateEpochExternal: epoch={:x}, prod={}, cons={}\n",
     epoch, prod, cons
@@ -348,7 +349,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
   bool const& is_root = isRoot();
   auto const& parent = getParent();
 
-  debug_print(
+  debug_print_verbose(
     term, node,
     "propagateEpoch: epoch={:x}, l_prod={}, l_cons={}, event_count={}, "
     "children={}, is_ready={}\n",
@@ -360,7 +361,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     state.g_prod1 += state.l_prod;
     state.g_cons1 += state.l_cons;
 
-    debug_print(
+    debug_print_verbose(
       term, node,
       "propagateEpoch: epoch={:x}, l_prod={}, l_cons={}, "
       "g_prod1={}, g_cons1={}, event_count={}, children={}\n",
@@ -375,7 +376,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       theMsg()->setTermMessage(msg);
       theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(parent, msg);
 
-      debug_print(
+      debug_print_verbose(
         term, node,
         "propagateEpoch: sending to parent: {}, msg={}, epoch={:x}, wave={}\n",
         parent, print_ptr(msg), state.getEpoch(), state.getCurWave()
@@ -465,7 +466,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         state.g_prod1 = state.g_cons1 = 0;
         state.setCurWave(state.getCurWave() + 1);
 
-        debug_print(
+        debug_print_verbose(
           term, node,
           "propagateEpoch [root]: epoch={:x}, wave={}, continue\n",
           state.getEpoch(), state.getCurWave()
@@ -477,7 +478,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       }
     }
 
-    debug_print(
+    debug_print_verbose(
       term, node,
       "propagateEpoch: epoch={:x}, is_root={}: reset counters\n",
       state.getEpoch(), print_bool(is_root)
@@ -654,8 +655,8 @@ void TerminationDetector::epochContinue(
 ) {
   debug_print(
     term, node,
-    "epochContinue: epoch={:x}, any={}, wave={}\n",
-    epoch, any_epoch_sentinel, wave
+    "epochContinue: epoch={:x}, wave={}\n",
+    epoch, wave
   );
 
   if (epoch == any_epoch_sentinel) {

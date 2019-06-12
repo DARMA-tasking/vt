@@ -100,7 +100,7 @@ TermState::EventCountType TermState::getRecvChildCount() const {
 void TermState::notifyChildReceive() {
   recv_child_count_++;
 
-  debug_print(
+  debug_print_verbose(
     term, node,
     "notifyChildReceive: epoch={:x}, active={}, local_ready={}, "
     "submitted_wave={}, recv={}, children={}\n",
@@ -152,7 +152,7 @@ bool TermState::readySubmitParent(bool const needs_active) const {
     recv_child_count_ == num_children_ and local_terminated_ and
     submitted_wave_ == cur_wave_ - 1 and not term_detected_;
 
-  debug_print(
+  debug_print_verbose(
     term, node,
     "readySubmitParent: epoch={:x}, active={}, local_ready={}, "
     "sub_wave={}, cur_wave_={}, recv_child={}, num_child={}, term={}:"

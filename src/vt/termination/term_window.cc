@@ -90,7 +90,7 @@ bool EpochWindow::inWindow(EpochType const& epoch) const {
 }
 
 void EpochWindow::addEpoch(EpochType const& epoch) {
-  debug_print(
+  debug_print_verbose(
     term, node,
     "addEpoch: (before) epoch={:x}, unresolved: first={:x}, last={:x}\n",
     epoch, first_unresolved_epoch_, last_unresolved_epoch_
@@ -131,7 +131,7 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
 }
 
 void EpochWindow::closeEpoch(EpochType const& epoch) {
-  debug_print(
+  debug_print_verbose(
     term, node,
     "closeEpoch: (before) epoch={:x}, unresolved: first={:x}, last={:x}\n",
     epoch, first_unresolved_epoch_, last_unresolved_epoch_
@@ -170,7 +170,7 @@ void EpochWindow::closeEpoch(EpochType const& epoch) {
     if (terminated_.size() > 0) {
       auto iter = terminated_.begin();
       while (iter != terminated_.end() && *iter == first_unresolved_epoch_) {
-        debug_print(
+        debug_print_verbose(
           term, node,
           "closeEpoch: epoch={:x}, unresolved: first={:x}, last={:x}:"
           "inc while: found terminated epoch={:x}\n",
