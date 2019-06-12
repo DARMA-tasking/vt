@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/epoch/epoch_manip.h"
 
-#include <unordered_set>
+#include <set>
 
 namespace vt { namespace term {
 
@@ -86,7 +86,7 @@ private:
   // The last unresolved epoch in the current window
   EpochType last_unresolved_epoch_        = no_epoch;
   // The set of epochs terminated that are not represented by the window
-  std::unordered_set<EpochType> terminated_ = {};
+  std::set<EpochType> terminated_         = {};
 };
 
 }} /* end namespace vt::term */
