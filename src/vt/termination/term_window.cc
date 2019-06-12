@@ -179,6 +179,9 @@ void EpochWindow::closeEpoch(EpochType const& epoch) {
         );
 
         first_unresolved_epoch_++;
+        last_unresolved_epoch_ = std::max(
+          last_unresolved_epoch_, first_unresolved_epoch_
+        );
         iter = terminated_.erase(iter);
       }
     }
