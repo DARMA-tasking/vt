@@ -77,7 +77,8 @@ using DefaultConfig = Configuration<
     CtxEnum::unknown
   ),
   static_cast<ModeEnum>(
-    ModeEnum::normal |
+    ModeEnum::verbose |
+    ModeEnum::normal  |
     ModeEnum::flush
   )
 >;
