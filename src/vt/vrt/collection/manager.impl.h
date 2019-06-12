@@ -659,8 +659,6 @@ template <typename ColT, typename IndexT, typename MsgT>
       stats.stopTime();
     }
   #endif
-
-  theTerm()->consume(cur_epoch);
 }
 
 template <typename ColT, typename IndexT>
@@ -1273,8 +1271,6 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
         theTerm()->consume(cur_epoch);
       });
     });
-  } else {
-    theTerm()->produce(cur_epoch);
   }
 
   // auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
