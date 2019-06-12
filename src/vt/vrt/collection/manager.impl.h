@@ -2597,9 +2597,19 @@ template <typename ColT, typename IndexT>
 void CollectionManager::destroyMatching(
   CollectionProxyWrapType<ColT,IndexT> const& proxy
 ) {
-  UniversalIndexHolder<>::destroyCollection(proxy.getProxy());
-  auto elm_holder = findElmHolder<ColT,IndexT>(proxy.getProxy());
+  auto const untyped_proxy = proxy.getProxy();
+  UniversalIndexHolder<>::destroyCollection(untyped_proxy);
+  auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
   elm_holder->destroyAll();
+
+  auto const is_static = ColT::isStaticSized();
+  if (not is_static) {
+    auto const& this_node = theContext()->getNode();
+    auto const cons_node = VirtualProxyBuilder::getVirtualNode(untyped_proxy);
+    if (cons_node == this_node) {
+      finishedInserting(proxy, nullptr);
+    }
+  }
 }
 
 template <typename ColT, typename IndexT>
