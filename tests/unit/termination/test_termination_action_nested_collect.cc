@@ -47,13 +47,13 @@
 namespace vt { namespace tests { namespace unit {
 
 struct TestTermNestedCollect : action::BaseFixture {
-  void kernel(int depth) {
+  void kernel(int depth, EpochType parent) {
     vtAssert(depth > 0, "Wrong depth");
-    auto epoch = vt::theTerm()->makeEpochCollective();
+    auto epoch = vt::theTerm()->makeEpochCollective(true, parent);
 
     // all ranks should have the same depth
     vt::theCollective()->barrier();
-    if (depth > 1) { kernel(depth - 1); }
+    if (depth > 1) { kernel(depth - 1, epoch); }
 
     if (channel::node == channel::root) {
       action::compute(epoch);
@@ -66,7 +66,7 @@ struct TestTermNestedCollect : action::BaseFixture {
 };
 
 TEST_P(TestTermNestedCollect, test_term_detect_nested_collect_epoch)/*NOLINT*/{
-  kernel(depth_);
+  kernel(depth_, no_epoch);
 }
 
 INSTANTIATE_TEST_CASE_P /* NOLINT */(
