@@ -1949,13 +1949,14 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
 
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::insertHandler(InsertMsg<ColT,IndexT>* msg) {
+  auto const from = theMsg()->getFromNodeCurrentHandler();
   auto const& epoch = msg->epoch_;
   auto const& g_epoch = msg->g_epoch_;
   theCollection()->insert<ColT,IndexT>(
     msg->proxy_,msg->idx_,msg->construct_node_
   );
-  theTerm()->consume(epoch);
-  theTerm()->consume(g_epoch);
+  theTerm()->consume(epoch,1,from);
+  theTerm()->consume(g_epoch,1,from);
 }
 
 template <typename ColT, typename IndexT>
@@ -2361,8 +2362,8 @@ void CollectionManager::insert(
       auto msg = makeSharedMessage<InsertMsg<ColT,IndexT>>(
         proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,cur_epoch
       );
-      theTerm()->produce(insert_epoch);
-      theTerm()->produce(cur_epoch);
+      theTerm()->produce(insert_epoch,1,insert_node);
+      theTerm()->produce(cur_epoch,1,insert_node);
       theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
         insert_node,msg
       );
