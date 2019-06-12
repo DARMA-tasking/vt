@@ -1910,6 +1910,7 @@ CollectionManager::constructMap(
 
   if (!is_static) {
     auto const& insert_epoch = theTerm()->makeEpochRooted(false,false);
+    theTerm()->finishNoActivateEpoch(insert_epoch);
     info.setInsertEpoch(insert_epoch);
     setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
   }
@@ -2069,6 +2070,7 @@ void CollectionManager::finishedInsertEpoch(
    *  Add trigger for the next insertion phase/epoch finishing
    */
   auto const& next_insert_epoch = theTerm()->makeEpochRooted(false,false);
+  theTerm()->finishNoActivateEpoch(next_insert_epoch);
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,next_insert_epoch);
 
   auto msg = makeSharedMessage<UpdateInsertMsg<ColT,IndexT>>(
