@@ -137,7 +137,10 @@ public:
   void finishedEpoch(EpochType const& epoch);
   void finishNoActivateEpoch(EpochType const& epoch);
 
-private:
+public:
+  /*
+   * Directly call into a specific type of rooted epoch, can not be overridden
+   */
   EpochType makeEpochRootedNorm(bool child, EpochType parent);
   EpochType makeEpochRootedDS(bool child, EpochType parent);
 
