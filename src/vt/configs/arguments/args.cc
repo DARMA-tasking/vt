@@ -90,6 +90,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_pause              = false;
 
 /*static*/ bool        ArgConfig::vt_debug_all          = false;
+/*static*/ bool        ArgConfig::vt_debug_verbose      = false;
 /*static*/ bool        ArgConfig::vt_debug_none         = false;
 /*static*/ bool        ArgConfig::vt_debug_gen          = false;
 /*static*/ bool        ArgConfig::vt_debug_runtime      = false;
@@ -231,6 +232,7 @@ namespace vt { namespace arguments {
   #define debug_pp(opt) +std::string(vt::config::PrettyPrintCat<config::opt>::str)+
 
   auto rp  = "Enable all debug prints";
+  auto rq  = "Enable verbose debug prints";
   auto aap = "Enable debug_none         = \"" debug_pp(none)         "\"";
   auto bap = "Enable debug_gen          = \"" debug_pp(gen)          "\"";
   auto cap = "Enable debug_runtime      = \"" debug_pp(runtime)      "\"";
@@ -263,6 +265,7 @@ namespace vt { namespace arguments {
   auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
 
   auto r  = app.add_flag("--vt_debug_all",          vt_debug_all,          rp);
+  auto r1 = app.add_flag("--vt_debug_verbose",      vt_debug_verbose,      rq);
   auto aa = app.add_flag("--vt_debug_none",         vt_debug_none,         aap);
   auto ba = app.add_flag("--vt_debug_gen",          vt_debug_gen,          bap);
   auto ca = app.add_flag("--vt_debug_runtime",      vt_debug_runtime,      cap);
@@ -295,6 +298,7 @@ namespace vt { namespace arguments {
   auto db = app.add_flag("--vt_debug_objgroup",     vt_debug_objgroup,     dbp);
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
   r->group(debugGroup);
+  r1->group(debugGroup);
   aa->group(debugGroup);
   ba->group(debugGroup);
   ca->group(debugGroup);
