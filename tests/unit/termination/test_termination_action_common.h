@@ -87,6 +87,13 @@ struct BaseFixture : Base {
     order_ = std::get<0>(values);
     useDS_ = std::get<1>(values);
     depth_ = std::get<2>(values);
+
+    debug_print(
+      term, node,
+      "BaseFixture::setup: order_={}, useDS_={}, depth_={}\n",
+      order_, useDS_, depth_
+    );
+
   }
 
 protected:

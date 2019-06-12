@@ -117,6 +117,12 @@ void finish(vt::EpochType const& epoch) {
  */
 void finalize(vt::EpochType const& epoch, int order) {
 
+  debug_print(
+    term, node,
+    "finalize: epoch={:x}, order={}, rooted={}\n",
+    epoch, order, epoch_manip::isRooted(epoch)
+  );
+
   if (epoch == vt::no_epoch) {
     if (channel::node == channel::root) {
       channel::trigger(epoch);
