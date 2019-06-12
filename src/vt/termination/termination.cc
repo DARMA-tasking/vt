@@ -788,7 +788,13 @@ EpochType TerminationDetector::makeEpochRooted(
     theContext()->getNode(), useDS, child, parent
   );
 
-  if (useDS) {
+  bool const force_use_ds = vt::arguments::ArgConfig::vt_term_rooted_use_ds;
+  bool const force_use_wave = vt::arguments::ArgConfig::vt_term_rooted_use_wave;
+
+  // Both force options should never be turned on
+  vtAssertExpr(not (force_use_ds and force_use_wave));
+
+  if ((useDS or force_use_ds) and not force_use_wave) {
     return makeEpochRootedDS(child,parent);
   } else {
     return makeEpochRootedNorm(child,parent);

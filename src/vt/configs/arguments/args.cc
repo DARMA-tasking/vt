@@ -84,6 +84,8 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
 /*static*/ std::string ArgConfig::vt_lb_stats_file      = "stats";
 
+/*static*/ bool        ArgConfig::vt_term_rooted_use_ds = false;
+/*static*/ bool        ArgConfig::vt_term_rooted_use_wave = false;
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
 
@@ -371,11 +373,17 @@ namespace vt { namespace arguments {
 
   auto hang         = "Disable termination hang detection";
   auto hang_freq    = "The number of tree traversals before a hang is detected";
+  auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
+  auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
   auto hfd          = 1024;
-  auto x = app.add_flag("--vt_no_detect_hang", vt_no_detect_hang, hang);
-  auto y = app.add_option("--vt_hang_freq",    vt_hang_freq,      hang_freq, hfd);
+  auto x  = app.add_flag("--vt_no_detect_hang",       vt_no_detect_hang,       hang);
+  auto x1 = app.add_flag("--vt_term_rooted_use_ds",   vt_term_rooted_use_ds,   ds);
+  auto x2 = app.add_flag("--vt_term_rooted_use_wave", vt_term_rooted_use_wave, wave);
+  auto y = app.add_option("--vt_hang_freq",           vt_hang_freq,      hang_freq, hfd);
   auto debugTerm = "Termination";
   x->group(debugTerm);
+  x1->group(debugTerm);
+  x2->group(debugTerm);
   y->group(debugTerm);
 
   /*
