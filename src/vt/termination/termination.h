@@ -135,6 +135,7 @@ public:
   );
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
+  void finishNoActivateEpoch(EpochType const& epoch);
 
 private:
   EpochType makeEpochRootedNorm(bool child, EpochType parent);

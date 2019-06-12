@@ -693,20 +693,22 @@ void TerminationDetector::linkChildEpoch(EpochType child, EpochType parent) {
   }
 }
 
-void TerminationDetector::finishedEpoch(EpochType const& epoch) {
+void TerminationDetector::finishNoActivateEpoch(EpochType const& epoch) {
   auto ready_iter = epoch_ready_.find(epoch);
-
-  debug_print(
-    term, node,
-    "finishedEpoch: epoch={:x}, finished={}\n",
-    epoch, ready_iter != epoch_ready_.end()
-  );
-
   if (ready_iter == epoch_ready_.end()) {
     epoch_ready_.emplace(epoch);
     consume(epoch,1);
   }
+}
 
+void TerminationDetector::finishedEpoch(EpochType const& epoch) {
+  debug_print(
+    term, node,
+    "finishedEpoch: epoch={:x}, finished={}\n",
+    epoch, epoch_ready_.find(epoch) != epoch_ready_.end()
+  );
+
+  finishNoActivateEpoch(epoch);
   activateEpoch(epoch);
 
   debug_print(
