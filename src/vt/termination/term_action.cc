@@ -68,7 +68,7 @@ void TermAction::afterAddEpochAction(EpochType const& epoch) {
    */
   theTerm()->produce(term::any_epoch_sentinel);
 
-  auto const& status = testEpochTerminated(epoch);
+  auto const status = testEpochTerminated(epoch);
   if (status == TermStatusEnum::Terminated) {
     triggerAllEpochActions(epoch);
   }
