@@ -92,6 +92,7 @@ struct EntireHolder {
     VirtualProxyType, InnerHolderPtr
   >;
   static void insert(VirtualProxyType const& proxy, InnerHolderPtr ptr);
+  static void remove(VirtualProxyType const& proxy);
   static ProxyContainerType proxy_container_;
 };
 

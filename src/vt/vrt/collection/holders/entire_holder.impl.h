@@ -181,6 +181,16 @@ template <typename ColT, typename IndexT>
 }
 
 template <typename ColT, typename IndexT>
+/*static*/ void EntireHolder<ColT, IndexT>::remove(
+  VirtualProxyType const& proxy
+) {
+  auto iter = proxy_container_.find(proxy);
+  if (iter != proxy_container_.end()) {
+    proxy_container_.erase(iter);
+  }
+}
+
+template <typename ColT, typename IndexT>
 /*static*/ typename EntireHolder<ColT, IndexT>::ProxyContainerType
 EntireHolder<ColT, IndexT>::proxy_container_;
 

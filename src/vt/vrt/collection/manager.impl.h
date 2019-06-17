@@ -101,10 +101,6 @@ Broadcasts<ColT>::m_ = {};
 template <typename>
 void CollectionManager::cleanupAll() {
   /*
-   *  Destroy all the current live collections
-   */
-  destroyCollections<>();
-  /*
    *  Run the cleanup functions for type-specific cleanup that can not be
    *  performed without capturing the type of each collection
    */
@@ -1490,6 +1486,11 @@ CollectionManager::constructCollectiveMap(
     proxy, is_static
   );
 
+  // Insert action on cleanup for this collection
+  cleanup_fns_.push_back([=]{
+    destroyMatching(typed_proxy);
+  });
+
   // Start the local collection initiation process, lcoal meta-info about the
   // collection. Insert epoch is `no_epoch` because dynamic insertions are not
   // allowed when using SPMD distributed construction currently
@@ -1910,6 +1911,11 @@ CollectionManager::constructMap(
     info.setInsertEpoch(insert_epoch);
     setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
   }
+
+  cleanup_fns_.push_back([=]{
+    CollectionProxyWrapType<ColT, typename ColT::IndexType> typed(new_proxy);
+    destroyMatching(typed);
+  });
 
   create_msg->info = info;
 
@@ -2607,6 +2613,8 @@ void CollectionManager::destroyMatching(
       finishedInserting(proxy, nullptr);
     }
   }
+
+  EntireHolder<ColT, IndexT>::remove(untyped_proxy);
 }
 
 template <typename ColT, typename IndexT>
