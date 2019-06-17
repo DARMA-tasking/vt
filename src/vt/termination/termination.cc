@@ -515,7 +515,7 @@ void TerminationDetector::epochTerminated(EpochType const& epoch) {
     epoch, isRooted(epoch), isDS(epoch)
   );
 
-  // Clear all the children epochs that are nested by this epoch (waiting on it
+  // Clear all the parent epochs that are nested by this epoch (waiting on it
   // to complete)
   if (isDS(epoch)) {
     getDSTerm(epoch)->clearParents();

@@ -60,7 +60,7 @@ void TermDS<CommType>::addParentEpoch(EpochType const& in_parent) {
     "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
   );
 
-  // Produce a single work unit for the child epoch so it can not finish while
+  // Produce a single work unit for the parent epoch so it can not finish while
   // this epoch is live
   theTerm()->produce(in_parent,1);
   parents_.push_back(in_parent);
