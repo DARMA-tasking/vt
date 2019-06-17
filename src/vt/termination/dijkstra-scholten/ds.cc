@@ -106,7 +106,7 @@ void TermDS<CommType>::terminated() {
 template <typename CommType>
 void TermDS<CommType>::setRoot(bool isRoot) {
   if (isRoot) {
-    outstanding.push_back(AckRequest(NodeType(), 0));
+    outstanding.push_back(AckRequest(self, 0));
   }
 }
 
