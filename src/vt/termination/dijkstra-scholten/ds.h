@@ -99,7 +99,7 @@ private:
   void tryLast();
 
 public:
-  void addParentEpoch(EpochType const& in_parent);
+  void addParentEpoch(EpochType const in_parent);
   void clearParents();
 
 protected:

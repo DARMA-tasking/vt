@@ -54,7 +54,7 @@
 namespace vt { namespace term { namespace ds {
 
 template <typename CommType>
-void TermDS<CommType>::addParentEpoch(EpochType const& in_parent) {
+void TermDS<CommType>::addParentEpoch(EpochType const in_parent) {
   debug_print(
     termds, node,
     "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent

@@ -48,7 +48,7 @@
 
 namespace vt { namespace term {
 
-void TermState::addParentEpoch(EpochType const& parent) {
+void TermState::addParentEpoch(EpochType const parent) {
   debug_print(
     term, node,
     "addParentEpoch: epoch={:x}, parent={:x}\n", epoch_, parent

@@ -72,7 +72,7 @@ struct TermState {
   void setCurWave(TermWaveType const& wave);
   NodeType getNumChildren() const;
   bool noLocalUnits() const;
-  void addParentEpoch(EpochType const& epoch);
+  void addParentEpoch(EpochType const epoch);
   void clearParents();
 
   TermState(
