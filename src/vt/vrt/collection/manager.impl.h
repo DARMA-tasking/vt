@@ -2603,7 +2603,9 @@ void CollectionManager::destroyMatching(
   auto const untyped_proxy = proxy.getProxy();
   UniversalIndexHolder<>::destroyCollection(untyped_proxy);
   auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
-  elm_holder->destroyAll();
+  if (elm_holder) {
+    elm_holder->destroyAll();
+  }
 
   auto const is_static = ColT::isStaticSized();
   if (not is_static) {

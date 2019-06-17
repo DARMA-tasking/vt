@@ -69,8 +69,9 @@ template <typename always_void_>
   VirtualProxyType const proxy
 ) {
   auto iter = live_collections_.find(proxy);
-  vtAssert(iter != live_collections_.end(), "Collection must exist");
-  live_collections_.erase(iter);
+  if (iter != live_collections_.end()) {
+    live_collections_.erase(iter);
+  }
 }
 
 template <typename always_void_>
