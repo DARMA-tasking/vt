@@ -719,12 +719,12 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   );
 }
 
-EpochType TerminationDetector::makeEpochRootedNorm(bool child, EpochType parent) {
+EpochType TerminationDetector::makeEpochRootedWave(bool child, EpochType parent) {
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch();
 
   debug_print(
     term, node,
-    "makeEpochRootedNorm: root={}, child={}, epoch={:x}, parent={:x}\n",
+    "makeEpochRootedWave: root={}, child={}, epoch={:x}, parent={:x}\n",
     theContext()->getNode(), child, epoch, parent
   );
 
@@ -797,7 +797,7 @@ EpochType TerminationDetector::makeEpochRooted(
   if ((useDS or force_use_ds) and not force_use_wave) {
     return makeEpochRootedDS(child,parent);
   } else {
-    return makeEpochRootedNorm(child,parent);
+    return makeEpochRootedWave(child,parent);
   }
 }
 
