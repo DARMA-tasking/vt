@@ -140,7 +140,7 @@ TEST_P(TestEpochParam, basic_test_epoch_category_1) {
   EpochType const start_seq  = GetParam();
   auto const epoch           = epoch::EpochManip::makeEpoch(
     start_seq, false, uninitialized_destination, false,
-    epoch::eEpochCategory::InsertEpoch
+    epoch::eEpochCategory::DependentEpoch
   );
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
   auto const is_user         = epoch::EpochManip::isUser(epoch);
@@ -157,14 +157,14 @@ TEST_P(TestEpochParam, basic_test_epoch_category_1) {
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, 0);
   EXPECT_EQ(next_seq, start_seq + 1);
-  EXPECT_EQ(cat, epoch::eEpochCategory::InsertEpoch);
+  EXPECT_EQ(cat, epoch::eEpochCategory::DependentEpoch);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_all_1) {
   auto const& n              = 48;
   EpochType const start_seq  = GetParam();
   auto const epoch           = epoch::EpochManip::makeEpoch(
-    start_seq, true, n, true, epoch::eEpochCategory::InsertEpoch
+    start_seq, true, n, true, epoch::eEpochCategory::DependentEpoch
   );
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
   auto const is_user         = epoch::EpochManip::isUser(epoch);
@@ -181,7 +181,7 @@ TEST_P(TestEpochParam, basic_test_epoch_all_1) {
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, n);
   EXPECT_EQ(next_seq, start_seq + 1);
-  EXPECT_EQ(cat, epoch::eEpochCategory::InsertEpoch);
+  EXPECT_EQ(cat, epoch::eEpochCategory::DependentEpoch);
 }
 
 INSTANTIATE_TEST_CASE_P(
