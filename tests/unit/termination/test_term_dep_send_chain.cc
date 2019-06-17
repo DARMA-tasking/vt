@@ -72,7 +72,8 @@ double calcVal(int i, vt::Index2D idx) {
 struct MyObjGroup;
 
 struct MyCol : vt::Collection<MyCol,vt::Index2D> {
-  MyCol() {
+  MyCol() = default;
+  MyCol(NodeType num, int k) : max_x(static_cast<int>(num)), max_y(k) {
     idx = getIndex();
   }
 
@@ -90,11 +91,13 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   struct OpVMsg : vt::CollectionMessage<MyCol> {
     OpVMsg() = default;
     OpVMsg(std::vector<double> in) : vec(in) { }
+    OpVMsg(std::vector<double> in, int step_) : vec(in), step(step_) { }
     template <typename SerializerT>
     void serialize(SerializerT& s) {
-      s | vec;
+      s | vec | step;
     }
     std::vector<double> vec = {};
+    int step = 0;
   };
 
   struct ProxyMsg : vt::CollectionMessage<MyCol> {
@@ -109,11 +112,15 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     int num = 0;
   };
 
-  static constexpr int const num_steps = 5;
+  static constexpr int const num_steps = 6;
 
   void checkExpectedStep(int expected) {
     EXPECT_EQ(step / num_steps, iter);
     EXPECT_EQ(step % num_steps, expected);
+  }
+
+  void checkIncExpectedStep(int expected) {
+    checkExpectedStep(expected);
     step++;
     if (expected == num_steps - 1) {
       iter++;
@@ -121,7 +128,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
   void op1(OpMsg* msg) {
-    checkExpectedStep(0);
+    checkIncExpectedStep(0);
     EXPECT_EQ(msg->a, calcVal(1,idx));
     EXPECT_EQ(msg->b, calcVal(2,idx));
     // fmt::print(
@@ -130,7 +137,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
   void op2(OpMsg* msg) {
-    checkExpectedStep(1);
+    checkIncExpectedStep(1);
     EXPECT_EQ(msg->a, calcVal(3,idx));
     EXPECT_EQ(msg->b, calcVal(4,idx));
     // fmt::print(
@@ -139,7 +146,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
   void op3(OpVMsg* msg) {
-    checkExpectedStep(2);
+    checkIncExpectedStep(2);
     for (auto i = 0; i < 10; i++) {
       EXPECT_EQ(msg->vec[i], idx.x()*i + idx.y());
     }
@@ -147,11 +154,12 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
   void op4(ProxyMsg* msg) {
+    checkExpectedStep(3);
     // fmt::print("op4: idx={}, iter={}\n", idx, iter);
     msg->cb.send(new OpIdxMsg(idx));
   }
   void op4Impl(OpMsg* msg) {
-    checkExpectedStep(3);
+    checkIncExpectedStep(3);
     EXPECT_EQ(msg->a, calcVal(5,idx));
     EXPECT_EQ(msg->b, calcVal(6,idx));
     // fmt::print(
@@ -160,12 +168,63 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
   void op5(OpMsg* msg) {
-    checkExpectedStep(4);
+    checkIncExpectedStep(4);
     EXPECT_EQ(msg->a, calcVal(7,idx));
     EXPECT_EQ(msg->b, calcVal(8,idx));
     // fmt::print(
     //   "op2: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
     // );
+  }
+
+  void op6(OpMsg* msg) {
+    // Do not increment step until all op6Impl msgs are received to check
+    // correctness
+    checkExpectedStep(5);
+    EXPECT_EQ(msg->a, calcVal(9,idx));
+    EXPECT_EQ(msg->b, calcVal(10,idx));
+    auto proxy = this->getCollectionProxy();
+    auto xp1 = idx.x() + 1 < max_x ? idx.x() + 1 : 0;
+    auto yp1 = idx.y() + 1 < max_y ? idx.y() + 1 : 0;
+    auto xm1 = idx.x() - 1 >= 0 ? idx.x() - 1 : max_x - 1;
+    auto ym1 = idx.y() - 1 >= 0 ? idx.y() - 1 : max_y - 1;
+    std::vector<double> v = { 1.0, 2.0, 3.0 };
+    proxy(xp1,idx.y()).template send<OpVMsg, &MyCol::op6Impl>(new OpVMsg(v));
+    proxy(xm1,idx.y()).template send<OpVMsg, &MyCol::op6Impl>(new OpVMsg(v));
+    proxy(idx.x(),yp1).template send<OpVMsg, &MyCol::op6Impl>(new OpVMsg(v));
+    proxy(idx.x(),ym1).template send<OpVMsg, &MyCol::op6Impl>(new OpVMsg(v));
+    // fmt::print(
+    //   "op6: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
+    // );
+    started_op6_ = true;
+    processOp6Impl();
+  }
+  void op6Impl(OpVMsg* msg) {
+    if (not started_op6_) {
+      op6_msgs_.push(vt::promoteMsg(msg));
+      return;
+    }
+
+    checkExpectedStep(5);
+    op6_counter_++;
+    // fmt::print(
+    //   "op6Impl: idx={}, iter={}, counter={}, step={}\n",
+    //   idx, iter, op6_counter_, step
+    // );
+    if (op6_counter_ == 4) {
+      // Only increment once all these are received
+      checkIncExpectedStep(5);
+      op6_counter_ = 0;
+      started_op6_ = false;
+    }
+
+    processOp6Impl();
+  }
+  void processOp6Impl() {
+    if (op6_msgs_.size() > 0) {
+      auto t = op6_msgs_.top();
+      op6_msgs_.pop();
+      op6Impl(t.get());
+    }
   }
 
   void finalCheck(FinalMsg* msg) {
@@ -179,12 +238,23 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     EXPECT_TRUE(final_check);
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    vt::Collection<MyCol,vt::Index2D>::serialize(s);
+    s | iter | step | idx | final_check | max_x | max_y | started_op6_;
+    s | op6_counter_;
+    op6_msgs_ = {};
+  }
 
 private:
   int iter = 0;
   int step = 0;
   vt::Index2D idx;
   bool final_check = false;
+  int max_x = 0, max_y = 0;
+  bool started_op6_ = false;
+  int op6_counter_ = 0;
+  std::stack<MsgSharedPtr<OpVMsg>> op6_msgs_;
 };
 
 struct MyObjGroup {
@@ -205,7 +275,7 @@ struct MyObjGroup {
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy = vt::theCollection()->constructCollective<MyCol>(
       range, [=](vt::Index2D idx) {
-        return std::make_unique<MyCol>();
+        return std::make_unique<MyCol>(num_nodes, k);
       }
     );
 
@@ -274,6 +344,14 @@ struct MyObjGroup {
     });
   }
 
+  void op6() {
+    chains_->nextStepCollective([=](vt::Index2D idx) {
+      auto a = calcVal(9,idx);
+      auto b = calcVal(10,idx);
+      return backend_proxy(idx).template send<OpMsg, &MyCol::op6>(new OpMsg(a,b));
+    });
+  }
+
   void finishUpdate() {
     bool vt_working = true;
     chains_->phaseDone();
@@ -308,7 +386,7 @@ private:
 };
 
 TEST_F(TestTermDepSendChain, test_term_dep_send_chain) {
-  //auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const k = 4;
   auto const iter = 100;
@@ -318,12 +396,17 @@ TEST_F(TestTermDepSendChain, test_term_dep_send_chain) {
   local->makeColl(num_nodes,k);
 
   for (int t = 0; t < iter; t++) {
+    if (this_node == 0) {
+      fmt::print("start iter={}, k={}, max_iter={}\n", t, k, iter);
+    }
+
     local->startUpdate();
     local->op1();
     local->op2();
     local->op3();
     local->op4();
     local->op5();
+    local->op6();
     local->finishUpdate();
   }
 
