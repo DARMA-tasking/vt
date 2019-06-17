@@ -112,7 +112,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     int num = 0;
   };
 
-  static constexpr int const num_steps = 6;
+  static constexpr int const num_steps = 7;
 
   void checkExpectedStep(int expected) {
     EXPECT_EQ(step / num_steps, iter);
@@ -172,7 +172,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     EXPECT_EQ(msg->a, calcVal(7,idx));
     EXPECT_EQ(msg->b, calcVal(8,idx));
     // fmt::print(
-    //   "op2: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
+    //   "op5: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
     // );
   }
 
@@ -225,6 +225,15 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
       op6_msgs_.pop();
       op6Impl(t.get());
     }
+  }
+
+  void op7(OpMsg* msg) {
+    checkIncExpectedStep(6);
+    EXPECT_EQ(msg->a, calcVal(11,idx));
+    EXPECT_EQ(msg->b, calcVal(12,idx));
+    // fmt::print(
+    //   "op7: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
+    // );
   }
 
   void finalCheck(FinalMsg* msg) {
@@ -352,6 +361,14 @@ struct MyObjGroup {
     });
   }
 
+  void op7() {
+    chains_->nextStep([=](vt::Index2D idx) {
+      auto a = calcVal(11,idx);
+      auto b = calcVal(12,idx);
+      return backend_proxy(idx).template send<OpMsg, &MyCol::op7>(new OpMsg(a,b));
+    });
+  }
+
   void finishUpdate() {
     bool vt_working = true;
     chains_->phaseDone();
@@ -407,6 +424,7 @@ TEST_F(TestTermDepSendChain, test_term_dep_send_chain) {
     local->op4();
     local->op5();
     local->op6();
+    local->op7();
     local->finishUpdate();
   }
 
