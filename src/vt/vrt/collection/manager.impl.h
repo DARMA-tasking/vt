@@ -104,10 +104,19 @@ void CollectionManager::cleanupAll() {
    *  Run the cleanup functions for type-specific cleanup that can not be
    *  performed without capturing the type of each collection
    */
-  for (auto fn : cleanup_fns_) {
-    fn();
+  int num_cleanup = 0;
+  int tot_cleanup = static_cast<int>(cleanup_fns_.size());
+  auto iter = cleanup_fns_.begin();
+  while (iter != cleanup_fns_.end()) {
+    auto lst = std::move(iter->second);
+    iter = cleanup_fns_.erase(iter);
+    num_cleanup++;
+    for (auto fn : lst) {
+      fn();
+    }
   }
-  cleanup_fns_.clear();
+  vtAssertExpr(cleanup_fns_.size() == 0);
+  vtAssertExpr(num_cleanup == tot_cleanup);
 }
 
 template <typename>
@@ -467,7 +476,7 @@ void CollectionManager::bufferBroadcastMsg(
   auto proxy_iter = details::Broadcasts<ColT>::m_.find(proxy);
   if (proxy_iter == details::Broadcasts<ColT>::m_.end()) {
     if (details::Broadcasts<ColT>::m_.size() == 0) {
-      cleanup_fns_.push_back([]{ details::Broadcasts<ColT>::m_.clear(); });
+      cleanup_fns_[proxy].push_back([]{ details::Broadcasts<ColT>::m_.clear(); });
     }
     details::Broadcasts<ColT>::m_.emplace(
       std::piecewise_construct,
@@ -1487,7 +1496,7 @@ CollectionManager::constructCollectiveMap(
   );
 
   // Insert action on cleanup for this collection
-  cleanup_fns_.push_back([=]{
+  cleanup_fns_[proxy].push_back([=]{
     destroyMatching(typed_proxy);
   });
 
@@ -1912,7 +1921,7 @@ CollectionManager::constructMap(
     setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
   }
 
-  cleanup_fns_.push_back([=]{
+  cleanup_fns_[new_proxy].push_back([=]{
     CollectionProxyWrapType<ColT, typename ColT::IndexType> typed(new_proxy);
     destroyMatching(typed);
   });
@@ -2617,6 +2626,11 @@ void CollectionManager::destroyMatching(
   }
 
   EntireHolder<ColT, IndexT>::remove(untyped_proxy);
+
+  auto iter = cleanup_fns_.find(untyped_proxy);
+  if (iter != cleanup_fns_.end()) {
+    cleanup_fns_.erase(iter);
+  }
 }
 
 template <typename ColT, typename IndexT>
