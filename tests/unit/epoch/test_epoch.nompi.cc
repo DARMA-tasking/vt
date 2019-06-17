@@ -96,7 +96,7 @@ TEST_P(TestEpochParam, basic_test_epoch_category_1) {
   auto const start_seq       = GetParam();
   auto epoch                 = epoch::EpochManip::generateEpoch(
     false, uninitialized_destination,
-    epoch::eEpochCategory::InsertEpoch
+    epoch::eEpochCategory::DependentEpoch
   );
   epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
@@ -105,14 +105,14 @@ TEST_P(TestEpochParam, basic_test_epoch_category_1) {
 
   EXPECT_TRUE(!is_rooted);
   EXPECT_EQ(get_seq, start_seq);
-  EXPECT_EQ(cat, epoch::eEpochCategory::InsertEpoch);
+  EXPECT_EQ(cat, epoch::eEpochCategory::DependentEpoch);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_all_1) {
   auto const& n              = 48;
   auto const start_seq       = GetParam();
   auto epoch                 = epoch::EpochManip::generateEpoch(
-    true, n, epoch::eEpochCategory::InsertEpoch
+    true, n, epoch::eEpochCategory::DependentEpoch
   );
   epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
@@ -123,7 +123,7 @@ TEST_P(TestEpochParam, basic_test_epoch_all_1) {
   EXPECT_TRUE(is_rooted);
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, n);
-  EXPECT_EQ(cat, epoch::eEpochCategory::InsertEpoch);
+  EXPECT_EQ(cat, epoch::eEpochCategory::DependentEpoch);
 }
 
 INSTANTIATE_TEST_SUITE_P(

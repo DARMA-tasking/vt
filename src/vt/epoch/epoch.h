@@ -115,7 +115,7 @@ static constexpr BitCountType const epoch_category_num_bits = 2;
  */
 enum struct eEpochCategory : int8_t {
   NoCategoryEpoch       = 0x0,
-  InsertEpoch           = 0x1,
+  DependentEpoch        = 0x1,
   DijkstraScholtenEpoch = 0x2
 };
 
