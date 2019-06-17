@@ -55,7 +55,7 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct TestTermDepSendChain : TestParallelHarness { };
+struct TestTermDepSendChain : TestParallelHarnessParam<std::tuple<bool, int>> { };
 
 struct TestMsg1 : vt::Message {
   TestMsg1() = default;
@@ -245,6 +245,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
 
   virtual ~MyCol() {
     EXPECT_TRUE(final_check);
+    //fmt::print("destructor idx={}, final={}\n", getIndex(), final_check);
   }
 
   template <typename SerializerT>
@@ -402,18 +403,23 @@ private:
   std::unique_ptr<vt::messaging::CollectionChainSet<vt::Index2D>> chains_ = nullptr;
 };
 
-TEST_F(TestTermDepSendChain, test_term_dep_send_chain) {
+TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const k = 4;
   auto const iter = 100;
+  auto const& tup = GetParam();
+  auto const use_ds = std::get<0>(tup);
+  auto const k = std::get<1>(tup);
+
+  vt::arguments::ArgConfig::vt_term_rooted_use_wave = !use_ds;
+  vt::arguments::ArgConfig::vt_term_rooted_use_ds = use_ds;
 
   auto local = std::make_unique<MyObjGroup>();
   local->makeVT();
   local->makeColl(num_nodes,k);
 
   for (int t = 0; t < iter; t++) {
-    if (this_node == 0) {
+    if (this_node == 0 && t % 10 == 0) {
       fmt::print("start iter={}, k={}, max_iter={}\n", t, k, iter);
     }
 
@@ -430,5 +436,13 @@ TEST_F(TestTermDepSendChain, test_term_dep_send_chain) {
 
   local->finalCheck(iter);
 }
+
+INSTANTIATE_TEST_CASE_P(
+  InstantiationName, TestTermDepSendChain,
+  ::testing::Combine(
+    ::testing::Bool(),
+    ::testing::Range(1, 8)
+  ),
+);
 
 }}} // end namespace vt::tests::unit
