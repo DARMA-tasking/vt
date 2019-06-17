@@ -88,11 +88,14 @@ public:
   static std::string vt_lb_stats_file;
 
   static bool vt_no_detect_hang;
+  static bool vt_term_rooted_use_ds;
+  static bool vt_term_rooted_use_wave;
   static int64_t vt_hang_freq;
 
   static bool vt_pause;
 
   static bool vt_debug_all;
+  static bool vt_debug_verbose;
   static bool vt_debug_none;
   static bool vt_debug_gen;
   static bool vt_debug_runtime;

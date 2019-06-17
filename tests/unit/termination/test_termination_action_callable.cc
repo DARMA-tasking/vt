@@ -76,7 +76,7 @@ TEST_F(TestTermCallable, test_add_action_unique) /*NOLINT*/{
 
   // assign an arbitrary action to be triggered at
   // the end of the epoch and toggle the previous flag.
-  ::vt::theTerm()->addActionEpoch(epoch, [&]{
+  ::vt::theTerm()->addActionEpoch(epoch, [=]{
     debug_print(
       term, node,
       "current epoch:{:x} finished\n",
@@ -87,7 +87,7 @@ TEST_F(TestTermCallable, test_add_action_unique) /*NOLINT*/{
 
   // assign a callable to be triggered after
   // the action submitted for the given epoch.
-  ::vt::theTerm()->addActionUnique(epoch, [&]{
+  ::vt::theTerm()->addActionUnique(epoch, [=]{
     debug_print(
       term, node,
       "trigger callable for epoch:{:x}\n",

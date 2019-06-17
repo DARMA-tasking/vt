@@ -156,16 +156,19 @@ struct DebugPrintOp;
 
 template <CatEnum cat, ModeEnum mod, typename Arg, typename... Args>
 static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
-  auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
-  fmt::print(
-    "{} {} {} {}",
-    vt_print_colorize,
-    vt_proc_print_colorize(node),
-    vt_print_colorize_impl("\033[32m",  PrettyPrintCat<cat>::print(), ":"),
-    user
-  );
-  if (vt_option_check_enabled(mod, ModeEnum::flush)) {
-    fflush(stdout);
+  bool const verb = vt_option_check_enabled(mod, ModeEnum::verbose);
+  if ((verb and ::vt::arguments::ArgConfig::vt_debug_verbose) or not verb) {
+    auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
+    fmt::print(
+      "{} {} {} {}",
+      vt_print_colorize,
+      vt_proc_print_colorize(node),
+      vt_print_colorize_impl("\033[32m",  PrettyPrintCat<cat>::print(), ":"),
+      user
+    );
+    if (vt_option_check_enabled(mod, ModeEnum::flush)) {
+      fflush(stdout);
+    }
   }
 }
 

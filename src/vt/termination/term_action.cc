@@ -49,16 +49,6 @@
 
 namespace vt { namespace term {
 
-/* deprecated termination action methods */
-void TermAction::attachEpochTermAction(EpochType const& epoch, ActionType action) {
-  return addActionEpoch(epoch,action);
-}
-
-void TermAction::attachGlobalTermAction(ActionType action) {
-  return addAction(action);
-}
-/* end deprecated termination action methods */
-
 void TermAction::addDefaultAction(ActionType action) {
   return addAction(action);
 }
@@ -78,8 +68,8 @@ void TermAction::afterAddEpochAction(EpochType const& epoch) {
    */
   theTerm()->produce(term::any_epoch_sentinel);
 
-  auto const& status = testEpochFinished(epoch);
-  if (status == TermStatusEnum::Finished) {
+  auto const status = testEpochTerminated(epoch);
+  if (status == TermStatusEnum::Terminated) {
     triggerAllEpochActions(epoch);
   }
 }
@@ -123,18 +113,8 @@ void TermAction::clearActionsEpoch(EpochType const& epoch) {
   }
 }
 
-void TermAction::triggerAllActions(
-  EpochType const& epoch, EpochStateType const& epoch_state
-) {
+void TermAction::triggerAllActions(EpochType const& epoch) {
   if (epoch == term::any_epoch_sentinel) {
-    /*
-     *  Trigger both any epoch actions and epoch-specific actions if epoch ==
-     *  term::any_epoch_sentinel.
-     */
-    for (auto&& state : epoch_state) {
-      triggerAllEpochActions(state.first);
-    }
-
     for (auto&& action : global_term_actions_) {
       action();
     }

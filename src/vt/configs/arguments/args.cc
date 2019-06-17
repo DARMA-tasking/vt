@@ -84,12 +84,15 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
 /*static*/ std::string ArgConfig::vt_lb_stats_file      = "stats";
 
+/*static*/ bool        ArgConfig::vt_term_rooted_use_ds = false;
+/*static*/ bool        ArgConfig::vt_term_rooted_use_wave = false;
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
 
 /*static*/ bool        ArgConfig::vt_pause              = false;
 
 /*static*/ bool        ArgConfig::vt_debug_all          = false;
+/*static*/ bool        ArgConfig::vt_debug_verbose      = false;
 /*static*/ bool        ArgConfig::vt_debug_none         = false;
 /*static*/ bool        ArgConfig::vt_debug_gen          = false;
 /*static*/ bool        ArgConfig::vt_debug_runtime      = false;
@@ -231,6 +234,7 @@ namespace vt { namespace arguments {
   #define debug_pp(opt) +std::string(vt::config::PrettyPrintCat<config::opt>::str)+
 
   auto rp  = "Enable all debug prints";
+  auto rq  = "Enable verbose debug prints";
   auto aap = "Enable debug_none         = \"" debug_pp(none)         "\"";
   auto bap = "Enable debug_gen          = \"" debug_pp(gen)          "\"";
   auto cap = "Enable debug_runtime      = \"" debug_pp(runtime)      "\"";
@@ -263,6 +267,7 @@ namespace vt { namespace arguments {
   auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
 
   auto r  = app.add_flag("--vt_debug_all",          vt_debug_all,          rp);
+  auto r1 = app.add_flag("--vt_debug_verbose",      vt_debug_verbose,      rq);
   auto aa = app.add_flag("--vt_debug_none",         vt_debug_none,         aap);
   auto ba = app.add_flag("--vt_debug_gen",          vt_debug_gen,          bap);
   auto ca = app.add_flag("--vt_debug_runtime",      vt_debug_runtime,      cap);
@@ -295,6 +300,7 @@ namespace vt { namespace arguments {
   auto db = app.add_flag("--vt_debug_objgroup",     vt_debug_objgroup,     dbp);
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
   r->group(debugGroup);
+  r1->group(debugGroup);
   aa->group(debugGroup);
   ba->group(debugGroup);
   ca->group(debugGroup);
@@ -367,11 +373,17 @@ namespace vt { namespace arguments {
 
   auto hang         = "Disable termination hang detection";
   auto hang_freq    = "The number of tree traversals before a hang is detected";
+  auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
+  auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
   auto hfd          = 1024;
-  auto x = app.add_flag("--vt_no_detect_hang", vt_no_detect_hang, hang);
-  auto y = app.add_option("--vt_hang_freq",    vt_hang_freq,      hang_freq, hfd);
+  auto x  = app.add_flag("--vt_no_detect_hang",       vt_no_detect_hang,       hang);
+  auto x1 = app.add_flag("--vt_term_rooted_use_ds",   vt_term_rooted_use_ds,   ds);
+  auto x2 = app.add_flag("--vt_term_rooted_use_wave", vt_term_rooted_use_wave, wave);
+  auto y = app.add_option("--vt_hang_freq",           vt_hang_freq,      hang_freq, hfd);
   auto debugTerm = "Termination";
   x->group(debugTerm);
+  x1->group(debugTerm);
+  x2->group(debugTerm);
   y->group(debugTerm);
 
   /*

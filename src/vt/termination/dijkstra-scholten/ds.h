@@ -86,10 +86,10 @@ struct TermDS {
   virtual ~TermDS() = default;
 
   void setRoot(bool isRoot);
-  void msgSent(NodeType successor);
+  void msgSent(NodeType successor, CountType count);
   void gotAck(CountType count);
   void doneSending();
-  void msgProcessed(NodeType const predecessor);
+  void msgProcessed(NodeType predecessor, CountType count);
   void needAck(NodeType const predecessor, CountType const count);
   void tryAck();
   void terminated();
@@ -99,8 +99,8 @@ private:
   void tryLast();
 
 public:
-  void addChildEpoch(EpochType const& epoch);
-  void clearChildren();
+  void addParentEpoch(EpochType const in_parent);
+  void clearParents();
 
 protected:
   NodeType parent                   = uninitialized_destination;
@@ -113,8 +113,10 @@ protected:
   CountType D                       = 0;
   CountType processedSum            = 0;
   EpochType epoch_                  = no_epoch;
+  CountType lC                      = 0;
+  CountType lD                      = 0;
   AckReqListType outstanding        = {};
-  std::vector<EpochType> children_  = {};
+  std::vector<EpochType> parents_   = {};
 };
 
 }}} /* end namespace vt::term::ds */

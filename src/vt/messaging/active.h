@@ -548,6 +548,21 @@ struct ActiveMessenger {
    */
   inline EpochType getEpoch() const;
 
+  /*
+   * Get/set the epoch for a message so an operation on it can be safely delayed
+   */
+  template <typename MsgT>
+  inline EpochType getEpochContextMsg(MsgT* msg);
+
+  template <typename MsgT>
+  inline EpochType getEpochContextMsg(MsgSharedPtr<MsgT> const& msg);
+
+  template <typename MsgT>
+  inline EpochType setupEpochMsg(MsgT* msg);
+
+  template <typename MsgT>
+  inline EpochType setupEpochMsg(MsgSharedPtr<MsgT> const& msg);
+
 private:
   using EpochStackSizeType = typename EpochStackType::size_type;
 

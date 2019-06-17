@@ -48,33 +48,33 @@
 
 namespace vt { namespace term {
 
-void TermState::addChildEpoch(EpochType const& epoch) {
+void TermState::addParentEpoch(EpochType const parent) {
   debug_print(
     term, node,
-    "addChildEpoch: epoch={:x}, child epoch={:x}\n", epoch_, epoch
+    "addParentEpoch: epoch={:x}, parent={:x}\n", epoch_, parent
   );
 
-  // Produce a single work unit for the child epoch so it can not finish while
+  // Produce a single work unit on the parent epoch so it can not finish while
   // this epoch is live
-  theTerm()->produce(epoch,1);
-  epoch_child_.push_back(epoch);
+  theTerm()->produce(parent,1);
+  parents_.push_back(parent);
 }
 
-void TermState::clearChildren() {
+void TermState::clearParents() {
   debug_print(
     term, node,
-    "clearChildren: epoch={:x}, child epochs count={}\n", epoch_,
-    epoch_child_.size()
+    "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
+    parents_.size()
   );
 
-  for (auto&& cur_epoch : epoch_child_) {
+  for (auto&& parent : parents_) {
     debug_print(
       term, node,
-      "clearChildren: epoch={:x}, child epoch={:x}\n", epoch_, cur_epoch
+      "clearParents: epoch={:x}, parent={:x}\n", epoch_, parent
     );
-    theTerm()->consume(cur_epoch,1);
+    theTerm()->consume(parent,1);
   }
-  epoch_child_.clear();
+  parents_.clear();
 }
 
 TermWaveType TermState::getCurWave() const {
@@ -100,7 +100,7 @@ TermState::EventCountType TermState::getRecvChildCount() const {
 void TermState::notifyChildReceive() {
   recv_child_count_++;
 
-  debug_print(
+  debug_print_verbose(
     term, node,
     "notifyChildReceive: epoch={:x}, active={}, local_ready={}, "
     "submitted_wave={}, recv={}, children={}\n",
@@ -152,7 +152,7 @@ bool TermState::readySubmitParent(bool const needs_active) const {
     recv_child_count_ == num_children_ and local_terminated_ and
     submitted_wave_ == cur_wave_ - 1 and not term_detected_;
 
-  debug_print(
+  debug_print_verbose(
     term, node,
     "readySubmitParent: epoch={:x}, active={}, local_ready={}, "
     "sub_wave={}, cur_wave_={}, recv_child={}, num_child={}, term={}:"

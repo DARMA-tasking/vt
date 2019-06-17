@@ -60,10 +60,10 @@ struct TermMsg : vt::ShortMessage {
   { }
 };
 
-struct TermFinishedMsg : vt::Message {
+struct TermTerminatedMsg : vt::Message {
 
-  TermFinishedMsg() = default;
-  TermFinishedMsg(EpochType const& in_epoch, NodeType const& in_from_node)
+  TermTerminatedMsg() = default;
+  TermTerminatedMsg(EpochType const& in_epoch, NodeType const& in_from_node)
     : epoch_(in_epoch), from_node_(in_from_node)
   { }
 
@@ -75,15 +75,15 @@ private:
   NodeType from_node_ = uninitialized_destination;
 };
 
-struct TermFinishedReplyMsg : vt::Message {
+struct TermTerminatedReplyMsg : vt::Message {
 
-  TermFinishedReplyMsg() = default;
-  TermFinishedReplyMsg(EpochType const& in_epoch, bool const& in_finished)
+  TermTerminatedReplyMsg() = default;
+  TermTerminatedReplyMsg(EpochType const& in_epoch, bool const& in_finished)
     : epoch_(in_epoch), finished_(in_finished)
   { }
 
   EpochType getEpoch() const { return epoch_; }
-  bool isFinished() const { return finished_; }
+  bool isTerminated() const { return finished_; }
 
 private:
   EpochType epoch_ = no_epoch;

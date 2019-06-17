@@ -54,29 +54,34 @@
 namespace vt { namespace term { namespace ds {
 
 template <typename CommType>
-void TermDS<CommType>::addChildEpoch(EpochType const& epoch) {
+void TermDS<CommType>::addParentEpoch(EpochType const in_parent) {
   debug_print(
     termds, node,
-    "addChildEpoch: epoch={:x}\n", epoch
+    "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
   );
 
-  // Produce a single work unit for the child epoch so it can not finish while
+  // Produce a single work unit for the parent epoch so it can not finish while
   // this epoch is live
-  theTerm()->genProd(epoch);
-  children_.push_back(epoch);
+  theTerm()->produce(in_parent,1);
+  parents_.push_back(in_parent);
 }
 
 template <typename CommType>
-void TermDS<CommType>::clearChildren() {
+void TermDS<CommType>::clearParents() {
   debug_print(
     termds, node,
-    "clearChildren: epoch={:x}\n", epoch_
+    "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
+    parents_.size()
   );
 
-  for (auto&& cur_epoch : children_) {
-    theTerm()->genCons(cur_epoch);
+  for (auto&& in_parent : parents_) {
+    debug_print(
+      termds, node,
+      "clearParents: epoch={:x}, parent={:x}\n", epoch_, in_parent
+    );
+    theTerm()->consume(in_parent,1);
   }
-  children_.clear();
+  parents_.clear();
 }
 
 template <typename CommType>
@@ -106,18 +111,26 @@ void TermDS<CommType>::setRoot(bool isRoot) {
 }
 
 template <typename CommType>
-void TermDS<CommType>::msgSent(NodeType successor) {
-  debug_print(
-    termds, node,
-    "{} sent message to {}\n", self, successor
-  );
+void TermDS<CommType>::msgSent(NodeType successor, CountType count) {
+  vtAssertExpr(successor >= 0);
   vtAssertInfo(
     1 && (C == processedSum - (ackedArbitrary + ackedParent)),
     "DS-invariant", C, D, processedSum, ackedArbitrary,
     ackedParent, reqedParent, outstanding.size(), engagementMessageCount,
     parent
   );
-  D++;
+  // Test for the self-send case that delays termination with local debt
+  if (successor == self) {
+    lD += count;
+  } else {
+    D += count;
+  }
+
+  debug_print(
+    termds, node,
+    "msgSent: epoch={:x}, to={}, count={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, successor, count, C, D, lC, lD
+  );
 }
 
 template <typename CommType>
@@ -131,7 +144,8 @@ void TermDS<CommType>::gotAck(CountType count) {
   D -= count;
   debug_print(
     termds, node,
-    "gotAck count={}, D={}\n", count, D
+    "gotAck: epoch={:x}, count={}, parent={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, count, parent, C, D, lC, lD
   );
   tryLast();
 }
@@ -147,7 +161,7 @@ void TermDS<CommType>::doneSending() {
 }
 
 template <typename CommType>
-void TermDS<CommType>::msgProcessed(NodeType const predecessor) {
+void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
   vtAssertInfo(
     4 && (C == processedSum - (ackedArbitrary + ackedParent)),
     "DS-invariant", C, D, processedSum, ackedArbitrary,
@@ -155,35 +169,55 @@ void TermDS<CommType>::msgProcessed(NodeType const predecessor) {
     parent
   );
 
-  C++;
-  processedSum++;
+  vtAssertExpr(predecessor >= 0);
+
+  bool const self_pred = predecessor == self;
+
+  // Test for the self-process case that delays termination with local credit
+  if (self_pred) {
+    lC += count;
+    vtAssertExprInfo(lC <= lD, lC, lD, epoch_, predecessor, count, C, D, parent);
+    // Must be engaged for a local credit/processing to increase
+    vtAssertExpr(not (outstanding.size() == 0));
+  } else {
+    C += count;
+    processedSum += count;
+  }
+
+  debug_print(
+    termds, node,
+    "msgProcessed: epoch={:x}, from={}, count={}, "
+    "parent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, predecessor, count, parent, outstanding.size(),
+    C, D, lC, lD
+  );
 
   if (outstanding.size() == 0) {
     debug_print(
       termds, node,
-      "got engagement message from new parent={}, count={}, D={}\n",
-      predecessor, 1, D
+      "msgProcessed: engagement with new parent={}, count={}, C={}, D={}\n",
+      predecessor, count, C, D
     );
 
     parent = predecessor;
-    engagementMessageCount = 1;
-    outstanding.push_front(AckRequest(predecessor, 1));
-  } else {
+    engagementMessageCount = count;
+    outstanding.push_front(AckRequest(predecessor, count));
+  } else if (not self_pred) {
     typename AckReqListType::iterator iter = outstanding.begin();
     ++iter;
     for (; iter != outstanding.end(); ++iter) {
       if (iter->pred == predecessor) {
-        iter->count++;
+        iter->count += count;
         break;
       }
     }
     if (iter == outstanding.end()) {
-      outstanding.push_back(AckRequest(predecessor, 1));
+      outstanding.push_back(AckRequest(predecessor, count));
     }
   }
 
   if (predecessor == parent) {
-    reqedParent += 1;
+    reqedParent += count;
   }
 
   tryAck();
@@ -208,6 +242,14 @@ void TermDS<CommType>::tryAck() {
     return;
   }
 
+  debug_print(
+    termds, node,
+    "tryAck: epoch={:x}, parent={}, emc={}, reqedParent={}, "
+    "ackedParent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, parent, engagementMessageCount, reqedParent, ackedParent,
+    outstanding.size(), C, D, lC, lD
+  );
+
   AckRequest a = outstanding.back();
   if (C >= a.count) {
     C -= a.count;
@@ -230,13 +272,13 @@ template <typename CommType>
 void TermDS<CommType>::tryLast() {
   debug_print(
     termds, node,
-    "tryLast: parent={}, D={}, C={}, emc={}, reqedParent={}, "
-    "ackedParent={}, outstanding.size()={}\n",
-    parent, D, C, engagementMessageCount, reqedParent, ackedParent,
-    outstanding.size()
+    "tryLast: epoch={:x}, parent={}, emc={}, reqedParent={}, "
+    "ackedParent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, parent, engagementMessageCount, reqedParent, ackedParent,
+    outstanding.size(), C, D, lC, lD
   );
 
-  if (outstanding.size() != 1) {
+  if (outstanding.size() != 1 or lC not_eq lD) {
     return;
   }
 

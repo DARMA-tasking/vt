@@ -72,8 +72,8 @@ struct TermState {
   void setCurWave(TermWaveType const& wave);
   NodeType getNumChildren() const;
   bool noLocalUnits() const;
-  void addChildEpoch(EpochType const& epoch);
-  void clearChildren();
+  void addParentEpoch(EpochType const epoch);
+  void clearParents();
 
   TermState(
     EpochType const& in_epoch, bool const in_local_terminated, bool const active,
@@ -108,7 +108,7 @@ private:
   EpochType epoch_                            = no_epoch;
   TermWaveType cur_wave_                      = 0;
   TermWaveType  submitted_wave_               = -1;
-  std::vector<EpochType> epoch_child_         = {};
+  std::vector<EpochType> parents_             = {};
 };
 
 }} //end namespace vt::term

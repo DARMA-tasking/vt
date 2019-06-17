@@ -461,10 +461,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     bcast_proxy, col_msg->getVrtHandler(), col_msg->getBcastEpoch(),
     cur_epoch, msg_epoch, group, default_group
   );
-  if (group == default_group) {
-    theTerm()->consume(cur_epoch);
-  }
-  theMsg()->popEpoch();
+  theMsg()->popEpoch(cur_epoch);
 }
 
 template <typename ColT, typename MsgT>
@@ -605,7 +602,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionMsgTypedHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const entity_proxy = col_msg->getProxy();
-  auto const cur_epoch = getCurrentEpoch(msg);
+  auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
   auto const& col = entity_proxy.getCollectionProxy();
   auto const& elm = entity_proxy.getElementProxy();
   auto const& idx = elm.getIndex();
@@ -654,7 +651,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
     msg,col_ptr,sub_handler,member,from
   );
-  theMsg()->popEpoch();
+  theMsg()->popEpoch(cur_epoch);
 
   #if backend_check_enabled(lblite)
     if (col_msg->lbLiteInstrument()) {
@@ -662,8 +659,6 @@ template <typename ColT, typename IndexT, typename MsgT>
       stats.stopTime();
     }
   #endif
-
-  theTerm()->consume(cur_epoch);
 }
 
 template <typename ColT, typename IndexT>
@@ -684,7 +679,6 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
 
   // broadcast to all nodes
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
   auto const& proxy = msg->getBcastProxy();
   auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
   auto const bcast_node = VirtualProxyBuilder::getVirtualNode(proxy);
@@ -693,7 +687,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   vtAssert(this_node == bcast_node, "Must be the bcast node");
 
   auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
-  auto const cur_epoch = getCurrentEpoch(msg.get());
+  auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
   theMsg()->pushEpoch(cur_epoch);
 
   msg->setBcastEpoch(bcast_epoch);
@@ -720,8 +714,6 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   if (send_group) {
     auto const& group = elm_holder->group();
     envelopeSetGroup(msg->env, group);
-  } else {
-    theTerm()->produce(cur_epoch, num_nodes);
   }
 
   auto ret = theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
@@ -731,7 +723,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
     collectionBcastHandler<ColT,IndexT,MsgT>(msg.get());
   }
 
-  theMsg()->popEpoch();
+  theMsg()->popEpoch(cur_epoch);
 
   return ret;
 }
@@ -857,27 +849,6 @@ messaging::PendingSend CollectionManager::broadcastNormalMsg(
   );
 }
 
-template <typename MsgT>
-/*static*/ EpochType CollectionManager::getCurrentEpoch(MsgT* msg) {
-  auto const& any_epoch = term::any_epoch_sentinel;
-  auto const& msg_epoch = envelopeGetEpoch(msg->env);
-
-  // Prefer the epoch on the msg before the current handler epoch
-  if (msg_epoch != no_epoch and msg_epoch != any_epoch) {
-    // It has a valid non-global epoch, which should be used for tracking it's
-    // causality
-    return msg_epoch;
-  } else {
-    // Otherwise, use the active messenger's current epoch on the stack
-    auto const& epoch_state = theMsg()->getEpoch();
-    vtAssertInfo(
-      epoch_state != no_epoch, "Must have a valid epoch here",
-      print_ptr(msg), epoch_state, msg_epoch, no_epoch, any_epoch
-    );
-    return epoch_state;
-  }
-}
-
 template <typename MsgT, typename ColT, typename IdxT>
 messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *raw_msg,
@@ -904,12 +875,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   auto holder = findColHolder<ColT,IdxT>(col_proxy);
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
 
-  auto const& cur_epoch = getCurrentEpoch(msg.get());
-
-  auto msg_epoch = envelopeGetEpoch(msg->env);
-  if (msg_epoch == no_epoch) {
-    envelopeSetEpoch(msg->env, cur_epoch);
-  }
+  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
 
   debug_print(
     vrt_coll, node,
@@ -981,7 +947,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
       theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, instrument
       );
-      theMsg()->popEpoch();
+      theMsg()->popEpoch(cur_epoch);
       theTerm()->consume(cur_epoch);
     });
     return messaging::PendingSend(nullptr);
@@ -1285,12 +1251,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     msg->setLBLiteInstrument(true);
   #endif
 
-  auto const& cur_epoch = getCurrentEpoch(msg.get());
-
-  auto msg_epoch = envelopeGetEpoch(msg->env);
-  if (msg_epoch == no_epoch) {
-    envelopeSetEpoch(msg->env, cur_epoch);
-  }
+  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
 
   debug_print(
     vrt_coll, node,
@@ -1306,12 +1267,10 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
         theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
           toProxy, reinterpret_cast<MsgT*>(inner_msg.get()), handler, member, false
         );
-        theMsg()->popEpoch();
+        theMsg()->popEpoch(cur_epoch);
         theTerm()->consume(cur_epoch);
       });
     });
-  } else {
-    theTerm()->produce(cur_epoch);
   }
 
   // auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
@@ -1350,7 +1309,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
       MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
     >(toProxy, home_node, msg);
 
-    theMsg()->popEpoch();
+    theMsg()->popEpoch(cur_epoch);
   } else {
     auto iter = buffered_sends_.find(toProxy.getCollectionProxy());
     if (iter == buffered_sends_.end()) {
@@ -1376,7 +1335,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
       theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, false
       );
-      theMsg()->popEpoch();
+      theMsg()->popEpoch(cur_epoch);
       theTerm()->consume(cur_epoch);
     });
   }
@@ -1946,7 +1905,8 @@ CollectionManager::constructMap(
   CollectionInfo<ColT, IndexT> info(range, is_static, node, new_proxy);
 
   if (!is_static) {
-    auto const& insert_epoch = theTerm()->newEpochRooted(false,false);
+    auto const& insert_epoch = theTerm()->makeEpochRootedWave(false,no_epoch);
+    theTerm()->finishNoActivateEpoch(insert_epoch);
     info.setInsertEpoch(insert_epoch);
     setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
   }
@@ -1989,13 +1949,14 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
 
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::insertHandler(InsertMsg<ColT,IndexT>* msg) {
+  auto const from = theMsg()->getFromNodeCurrentHandler();
   auto const& epoch = msg->epoch_;
   auto const& g_epoch = msg->g_epoch_;
   theCollection()->insert<ColT,IndexT>(
     msg->proxy_,msg->idx_,msg->construct_node_
   );
-  theTerm()->consume(epoch);
-  theTerm()->consume(g_epoch);
+  theTerm()->consume(epoch,1,from);
+  theTerm()->consume(g_epoch,1,from);
 }
 
 template <typename ColT, typename IndexT>
@@ -2105,7 +2066,8 @@ void CollectionManager::finishedInsertEpoch(
   /*
    *  Add trigger for the next insertion phase/epoch finishing
    */
-  auto const& next_insert_epoch = theTerm()->newEpochRooted(false,false);
+  auto const& next_insert_epoch = theTerm()->makeEpochRootedWave(false,no_epoch);
+  theTerm()->finishNoActivateEpoch(next_insert_epoch);
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,next_insert_epoch);
 
   auto msg = makeSharedMessage<UpdateInsertMsg<ColT,IndexT>>(
@@ -2400,8 +2362,8 @@ void CollectionManager::insert(
       auto msg = makeSharedMessage<InsertMsg<ColT,IndexT>>(
         proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,cur_epoch
       );
-      theTerm()->produce(insert_epoch);
-      theTerm()->produce(cur_epoch);
+      theTerm()->produce(insert_epoch,1,insert_node);
+      theTerm()->produce(cur_epoch,1,insert_node);
       theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
         insert_node,msg
       );
@@ -2632,9 +2594,19 @@ template <typename ColT, typename IndexT>
 void CollectionManager::destroyMatching(
   CollectionProxyWrapType<ColT,IndexT> const& proxy
 ) {
-  UniversalIndexHolder<>::destroyCollection(proxy.getProxy());
-  auto elm_holder = findElmHolder<ColT,IndexT>(proxy.getProxy());
+  auto const untyped_proxy = proxy.getProxy();
+  UniversalIndexHolder<>::destroyCollection(untyped_proxy);
+  auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
   elm_holder->destroyAll();
+
+  auto const is_static = ColT::isStaticSized();
+  if (not is_static) {
+    auto const& this_node = theContext()->getNode();
+    auto const cons_node = VirtualProxyBuilder::getVirtualNode(untyped_proxy);
+    if (cons_node == this_node) {
+      finishedInserting(proxy, nullptr);
+    }
+  }
 }
 
 template <typename ColT, typename IndexT>

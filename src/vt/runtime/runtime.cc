@@ -499,6 +499,19 @@ void Runtime::printStartupBanner() {
   }
   #endif
 
+
+  if (ArgType::vt_term_rooted_use_ds) {
+    auto f11 = fmt::format("Forcing the use of Dijkstra-Scholten for rooted TD");
+    auto f12 = opt_on("--vt_term_rooted_use_ds", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_term_rooted_use_wave) {
+    auto f11 = fmt::format("Forcing the use of 4-counter wave-based for rooted TD");
+    auto f12 = opt_on("--vt_term_rooted_use_wave", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_no_detect_hang) {
     auto f11 = fmt::format("Disabling termination hang detection");
     auto f12 = opt_on("--vt_no_detect_hang", f11);

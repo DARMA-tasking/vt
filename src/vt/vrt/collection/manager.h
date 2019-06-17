@@ -784,10 +784,6 @@ private:
   );
 
 private:
-  template <typename MsgT>
-  static EpochType getCurrentEpoch(MsgT* msg);
-
-private:
   CleanupListFnType cleanup_fns_;
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;

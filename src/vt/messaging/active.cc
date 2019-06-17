@@ -172,11 +172,11 @@ EventType ActiveMessenger::sendMsgBytes(
 ) {
   auto const& msg = base.get();
 
-  auto const& epoch = envelopeIsEpochType(msg->env) ?
+  auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const& is_shared = isSharedMessage(msg);
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
+  auto const is_shared = isSharedMessage(msg);
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_bcast = envelopeIsBcast(msg->env);
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
@@ -207,8 +207,7 @@ EventType ActiveMessenger::sendMsgBytes(
   );
 
   if (not is_term) {
-    theTerm()->produce(epoch);
-    theTerm()->send(dest,epoch);
+    theTerm()->produce(epoch,1,dest);
   }
 
   return event_id;
@@ -227,14 +226,14 @@ EventType ActiveMessenger::sendMsgSized(
 
   auto msg = base.get();
 
-  auto const& dest = envelopeGetDest(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_epoch = envelopeIsEpochType(msg->env);
+  auto const dest = envelopeGetDest(msg->env);
+  auto const is_bcast = envelopeIsBcast(msg->env);
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_epoch = envelopeIsEpochType(msg->env);
 
   #if backend_check_enabled(trace_enabled)
-    auto const& handler = envelopeGetHandler(msg->env);
-    bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
+    auto const handler = envelopeGetHandler(msg->env);
+    bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
     if (is_auto) {
       trace::TraceEntryIDType ep = auto_registry::theTraceID(
         handler, auto_registry::RegistryTypeEnum::RegGeneral
@@ -261,16 +260,7 @@ EventType ActiveMessenger::sendMsgSized(
   }
 
   if (is_epoch) {
-    // Propagate current epoch on the top of the epoch stack
-    auto epoch = envelopeGetEpoch(msg->env);
-
-    // Only propagate only if the epoch is not set already
-    if (epoch == no_epoch) {
-      auto const cur_epoch = getGlobalEpoch();
-      if (cur_epoch != term::any_epoch_sentinel && cur_epoch != no_epoch) {
-        setEpochMessage(msg, cur_epoch);
-      }
-    }
+    setupEpochMsg(msg);
   }
 
   bool deliver = false;
@@ -325,7 +315,9 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     mpi_event->getRequest()
   );
 
-  theTerm()->produce(term::any_epoch_sentinel);
+  // Assume that any raw data send/recv is paired with a message with an epoch
+  // if required to inhibit early termination of that epoch
+  theTerm()->produce(term::any_epoch_sentinel,1,dest);
 
   return SendDataRetType{event_id,send_tag};
 }
@@ -341,7 +333,7 @@ bool ActiveMessenger::processDataMsgRecv() {
   auto iter = pending_recvs_.begin();
 
   for (; iter != pending_recvs_.end(); ++iter) {
-    auto const& done = recvDataMsgBuffer(
+    auto const done = recvDataMsgBuffer(
       iter->second.user_buf, iter->first, iter->second.recv_node,
       false, iter->second.dealloc_user_buf, iter->second.cont
     );
@@ -419,7 +411,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
         dealloc_buf();
       }
 
-      theTerm()->consume(term::any_epoch_sentinel);
+      theTerm()->consume(term::any_epoch_sentinel,1,stat.MPI_SOURCE);
 
       return true;
     } else {
@@ -464,7 +456,7 @@ bool ActiveMessenger::handleActiveMsg(
   bool deliver = false;
   GroupActiveAttorney::groupHandler(base, from, size, false, &deliver);
 
-  auto const& is_term = envelopeIsTerm(msg->env);
+  auto const is_term = envelopeIsTerm(msg->env);
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
@@ -571,6 +563,9 @@ bool ActiveMessenger::deliverActiveMsg(
       epochEpilogHandler(cur_epoch,ep_stack_size);
     }
 
+    if (not is_term) {
+      theTerm()->consume(epoch,1,from_node);
+    }
   } else {
     if (insert) {
       auto iter = pending_handler_msgs_.find(handler);
@@ -583,32 +578,6 @@ bool ActiveMessenger::deliverActiveMsg(
       } else {
         iter->second.push_back(BufferedMsgType{base,from_node});
       }
-      if (!is_term || backend_check_enabled(print_term_msgs)) {
-        debug_print(
-          active, node,
-          "deliverActiveMsg: inserting han={}, msg={}, ref={}, list size={}\n",
-          handler, print_ptr(msg), envelopeGetRef(msg->env),
-          pending_handler_msgs_.find(handler)->second.size()
-        );
-      }
-    }
-  }
-
-  if (!is_term) {
-    theTerm()->recv(from_node,epoch);
-  }
-
-  if (has_handler) {
-    if (!is_term || backend_check_enabled(print_term_msgs)) {
-      debug_print(
-        active, node,
-        "deliverActiveMsg: deref msg={}, ref={}, is_bcast={}, dest={}\n",
-        print_ptr(msg), envelopeGetRef(msg->env), print_bool(is_bcast), dest
-      );
-    }
-
-    if (!is_term) {
-      theTerm()->consume(epoch);
     }
   }
 
@@ -634,7 +603,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
       char* buf = static_cast<char*>(std::malloc(num_probe_bytes));
     #endif
 
-    NodeType const& sender = stat.MPI_SOURCE;
+    NodeType const sender = stat.MPI_SOURCE;
 
     MPI_Recv(
       buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
@@ -645,8 +614,8 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
     messageConvertToShared(msg);
     auto base = promoteMsgOwner(msg);
 
-    auto const& is_term = envelopeIsTerm(msg->env);
-    auto const& is_put = envelopeIsPut(msg->env);
+    auto const is_term = envelopeIsTerm(msg->env);
+    auto const is_put = envelopeIsPut(msg->env);
     bool put_finished = false;
 
     if (!is_term || backend_check_enabled(print_term_msgs)) {

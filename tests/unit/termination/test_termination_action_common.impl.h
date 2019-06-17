@@ -61,7 +61,7 @@ std::vector<vt::EpochType> generateEpochs(int nb, bool rooted, bool useDS) {
     vtAssert(epoch_manip::isRooted(sequence[0]), "First epoch should be rooted");
 
     for (int i = 1; i < nb; ++i){
-      sequence[i] = epoch_manip::next(sequence[i - 1]);
+      sequence[i] = vt::theTerm()->makeEpochRooted(useDS);
       vtAssert(epoch_manip::isRooted(sequence[i]), "Next epoch should be rooted");
     }
   } else /*collective*/ {
@@ -117,6 +117,12 @@ void finish(vt::EpochType const& epoch) {
  */
 void finalize(vt::EpochType const& epoch, int order) {
 
+  debug_print(
+    term, node,
+    "finalize: epoch={:x}, order={}, rooted={}\n",
+    epoch, order, epoch_manip::isRooted(epoch)
+  );
+
   if (epoch == vt::no_epoch) {
     if (channel::node == channel::root) {
       channel::trigger(epoch);
@@ -143,7 +149,7 @@ void finalize(vt::EpochType const& epoch, int order) {
 void add(vt::EpochType const& epoch, int order){
   if (channel::node == channel::root) {
     if (epoch == vt::no_epoch) {
-      vt::theTerm()->addAction([&]{
+      vt::theTerm()->addAction([=]{
         debug_print(
           term, node,
           "rank:{}: global epoch completed [order={}]\n",
@@ -153,7 +159,7 @@ void add(vt::EpochType const& epoch, int order){
         EXPECT_TRUE(channel::hasEnded(vt::no_epoch));
       });
     } else {
-      vt::theTerm()->addAction(epoch, [&]{
+      vt::theTerm()->addAction(epoch, [=]{
         debug_print(
           term, node,
           "rank:{}: epoch={:x} completed [order={}, rooted={}]\n",

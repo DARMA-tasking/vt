@@ -52,19 +52,35 @@
 namespace vt { namespace term {
 
 inline void TerminationDetector::produce(
-  EpochType epoch, TermCounterType const& num_units
+  EpochType epoch, TermCounterType num_units, NodeType node
 ) {
-  debug_print(term, node, "Termination: produce: epoch={:x}\n",epoch);
+  debug_print_verbose(term, node, "produce: epoch={:x}, node={}\n", epoch, node);
   auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, true);
+  return produceConsume(in_epoch, num_units, true, node);
 }
 
 inline void TerminationDetector::consume(
-  EpochType epoch, TermCounterType const& num_units
+  EpochType epoch, TermCounterType num_units, NodeType node
 ) {
-  debug_print(term, node, "Termination: consume: epoch={:x}\n",epoch);
+  debug_print_verbose(term, node, "consume: epoch={:x}, node={}\n", epoch, node);
   auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, false);
+  return produceConsume(in_epoch, num_units, false, node);
+}
+
+inline bool TerminationDetector::isRooted(EpochType epoch) {
+  bool const is_sentinel = epoch == any_epoch_sentinel or epoch == no_epoch;
+  return is_sentinel ? false : epoch::EpochManip::isRooted(epoch);
+}
+
+inline bool TerminationDetector::isDS(EpochType epoch) {
+  if (isRooted(epoch)) {
+    auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
+    auto const epoch_category = epoch::EpochManip::category(epoch);
+    auto const is_ds = epoch_category == ds_epoch;
+    return is_ds;
+  } else {
+    return false;
+  }
 }
 
 }} /* end namespace vt::term */

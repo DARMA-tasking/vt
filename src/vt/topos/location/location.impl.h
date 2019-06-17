@@ -390,13 +390,15 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   NodeType const& to_node, MsgSharedPtr<MessageT> msg
 ) {
   auto const& this_node = theContext()->getNode();
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
     location, node,
     "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: inst={}, "
-    "serialize={}, home_node={}, id={}, ref={}, from={}, msg={}\n",
+    "serialize={}, home_node={}, id={}, ref={}, from={}, msg={}, epoch={:x}\n",
     to_node, this_node, this_inst, serialize, home_node, id,
-    envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg.get())
+    envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg.get()),
+    epoch
   );
 
   if (to_node != this_node) {
@@ -408,10 +410,12 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     debug_print(
       location, node,
       "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: "
-      "home_node={}, ref={}, from={}: apply here\n",
+      "home_node={}, ref={}, from={}, epoch={:x}: apply here\n",
       to_node, this_node, home_node, envelopeGetRef(msg->env),
-      msg->getLocFromNode()
+      msg->getLocFromNode(), epoch
     );
+
+    theTerm()->produce(epoch);
 
     auto trigger_msg_handler_action = [=](EntityID const& hid) {
       bool const& has_handler = msg->hasHandler();
@@ -451,10 +455,14 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     if (reg_iter != local_registered_.end()) {
       debug_print(
         location, node,
-        "EntityLocationCoord: routeMsgNode: running actions\n"
+        "EntityLocationCoord: routeMsgNode: epoch={:x} running actions\n",
+        epoch
       );
 
+      theMsg()->pushEpoch(epoch);
       trigger_msg_handler_action(id);
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     } else {
       debug_print(
         location, node,
@@ -470,10 +478,11 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         debug_print(
           location, node,
           "EntityLocationCoord: routeMsgNode: trigger action: resolved={}, "
-          "this_node={}, id={}, ref={}\n",
-          resolved, my_node, id_, envelopeGetRef(msg->env)
+          "this_node={}, id={}, ref={}, epoch={:x}\n",
+          resolved, my_node, id_, envelopeGetRef(msg->env), epoch
         );
 
+        theMsg()->pushEpoch(epoch);
         if (resolved == my_node) {
           trigger_msg_handler_action(id_);
         } else {
@@ -484,6 +493,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
            */
           routeMsgNode<MessageT>(serialize,id_,home_node,resolved,msg);
         }
+        theMsg()->popEpoch(epoch);
+        theTerm()->consume(epoch);
       });
     }
   }
@@ -533,7 +544,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
   EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
   bool const serialize, NodeType from_node
 ) {
-  auto const& from =
+  auto const from =
     from_node == uninitialized_destination ? theContext()->getNode() :
     from_node;
 
@@ -545,23 +556,31 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
   auto const msg_size = sizeof(*msg);
   bool const use_eager = useEagerProtocol(msg);
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
     location, node,
     "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
-    "serialize={}, in_from={}, from={}, msg{}, msg from={}\n",
+    "serialize={}, in_from={}, from={}, msg{}, msg from={}, epoch={:x}\n",
     this_inst, home_node, msg_size, msg_size > small_msg_max_size, use_eager,
-    serialize, from_node, from, print_ptr(msg.get()), msg->getLocFromNode()
+    serialize, from_node, from, print_ptr(msg.get()), msg->getLocFromNode(),
+    epoch
   );
 
   msg->setLocInst(this_inst);
 
   if (use_eager) {
+    theMsg()->pushEpoch(epoch);
     routeMsgEager<MessageT>(serialize, id, home_node, msg);
+    theMsg()->popEpoch(epoch);
   } else {
+    theTerm()->produce(epoch);
     // non-eager protocol: get location first then send message after resolution
     getLocation(id, home_node, [=](NodeType node) {
+      theMsg()->pushEpoch(epoch);
       routeMsgNode<MessageT>(serialize, id, home_node, node, msg);
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     });
   }
 }
@@ -630,17 +649,23 @@ template <typename MessageT>
   auto const& inst = msg->getLocInst();
   auto const& serialize = msg->getSerialize();
   auto const& from_node = msg->getLocFromNode();
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
     location, node,
-    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}\n",
+    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}, "
+    "epoch={:x}\n",
     print_ptr(msg.get()), envelopeGetRef(msg->env), inst, serialize, entity_id,
-    from_node
+    from_node, epoch
   );
 
+  theTerm()->produce(epoch);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
+      theMsg()->pushEpoch(epoch);
       loc->routeMsg(entity_id, home_node, msg, serialize, from_node);
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     }
   );
 }
@@ -655,15 +680,40 @@ template <typename EntityID>
   auto const& entity = msg->entity;
   auto const& home_node = msg->home_node;
   auto const& ask_node = msg->ask_node;
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
+
+  debug_print(
+    location, node,
+    "getLocationHandler: event_id={}, home={}, ask={}, epoch={:x}\n",
+    event_id, home_node, ask_node, epoch
+  );
+
+  theTerm()->produce(epoch);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
+      theMsg()->pushEpoch(epoch);
+
+      debug_print(
+        location, node,
+        "getLocationHandler: calling getLocation event_id={}, epoch={:x}\n",
+        event_id, epoch
+      );
+
       loc->getLocation(entity, home_node, [=](NodeType node) {
+        debug_print(
+          location, node,
+          "getLocation: (action) event_id={}, epoch={:x}\n",
+          event_id, epoch
+        );
+
         auto msg2 = makeSharedMessage<LocMsgType>(
           inst, entity, event_id, ask_node, home_node
         );
         msg2->setResolvedNode(node);
         theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2);
       });
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     }
   );
 }
@@ -676,21 +726,26 @@ template <typename EntityID>
   auto const& event_id = msg->loc_event;
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
     location, node,
-    "updateLocation: event_id={}, resolved={}, id={}\n",
-    event_id, msg->resolved_node, entity
+    "updateLocation: event_id={}, resolved={}, id={}, epoch={:x}\n",
+    event_id, msg->resolved_node, entity, epoch
   );
 
+  theTerm()->produce(epoch);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
+      theMsg()->pushEpoch(epoch);
       debug_print(
         location, node,
         "updateLocation: event_id={}, running pending: resolved={}, id={}\n",
         event_id, msg->resolved_node, entity
       );
       loc->updatePendingRequest(event_id, entity, msg->resolved_node);
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     }
   );
 }

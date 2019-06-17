@@ -107,7 +107,7 @@ struct TestTermChaining : TestParallelHarness {
     vt::theTerm()->finishedEpoch(epoch1);
 
     EpochType epoch2 = theTerm()->makeEpochRooted();
-    vt::theMsg()->pushEpoch(epoch1);
+    vt::theMsg()->pushEpoch(epoch2);
     auto msg2 = makeSharedMessage<TestMsg>();
     chain.add(epoch2, theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2));
     vt::theMsg()->popEpoch(epoch2);

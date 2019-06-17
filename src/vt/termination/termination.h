@@ -88,29 +88,23 @@ struct TerminationDetector :
    *
    ***************************************************************************/
   void produce(
-    EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
+    EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
+    NodeType node = uninitialized_destination
   );
   void consume(
-    EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
+    EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
+    NodeType node = uninitialized_destination
   );
-  void send(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
-  void recv(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
-  void genProd(EpochType const& epoch);
-  void genCons(EpochType const& epoch);
   /***************************************************************************/
 
   friend struct ds::StateDS;
-  TermStateDSType* getDSTerm(EpochType const& epoch);
+
+  bool isRooted(EpochType epoch);
+  bool isDS(EpochType epoch);
+  TermStateDSType* getDSTerm(EpochType epoch, bool is_root = false);
 
   void resetGlobalTerm();
   void freeEpoch(EpochType const& epoch);
-
-public:
-  /*
-   * Deprecated interface for creating a new collective epoch for detecting
-   * termination
-   */
-  EpochType newEpoch(bool const child = true);
 
 public:
   /*
@@ -130,27 +124,36 @@ public:
 
 public:
   /*
-   * New interface for making epochs for termination detection
+   * Interface for making epochs for termination detection
    */
-  EpochType makeEpochRooted(bool const useDS = false);
-  EpochType makeEpochCollective();
-  EpochType makeEpoch(bool const is_collective, bool const useDS = false);
+  EpochType makeEpochRooted(
+    bool useDS = false, bool child = true, EpochType parent = no_epoch
+  );
+  EpochType makeEpochCollective(bool child = true, EpochType parent = no_epoch);
+  EpochType makeEpoch(
+    bool is_coll, bool useDS = false, bool child = true, EpochType parent = no_epoch
+  );
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
+  void finishNoActivateEpoch(EpochType const& epoch);
 
 public:
-  EpochType newEpochCollective(bool const child = true);
-  EpochType newEpochRooted(bool const useDS = false, bool const child = true);
+  /*
+   * Directly call into a specific type of rooted epoch, can not be overridden
+   */
+  EpochType makeEpochRootedWave(bool child, EpochType parent);
+  EpochType makeEpochRootedDS(bool child, EpochType parent);
 
 private:
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
   void cleanupEpoch(EpochType const& epoch);
   void produceConsumeState(
-    TermStateType& state, TermCounterType const& num_units, bool produce
+    TermStateType& state, TermCounterType const num_units, bool produce,
+    NodeType node
   );
   void produceConsume(
-    EpochType const& epoch = any_epoch_sentinel,
-    TermCounterType const& num_units = 1, bool produce = true
+    EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
+    bool produce = true, NodeType node = uninitialized_destination
   );
   void propagateEpochExternalState(
     TermStateType& state, TermCounterType const& prod, TermCounterType const& cons
@@ -164,9 +167,9 @@ private:
   EpochWindow* getWindow(EpochType const& epoch);
 
 private:
-  void updateResolvedEpochs(EpochType const& epoch, bool const rooted);
-  void inquireFinished(EpochType const& epoch, NodeType const& from_node);
-  void replyFinished(EpochType const& epoch, bool const& is_finished);
+  void updateResolvedEpochs(EpochType const& epoch);
+  void inquireTerminated(EpochType const& epoch, NodeType const& from_node);
+  void replyTerminated(EpochType const& epoch, bool const& is_terminated);
 
 public:
   void setLocalTerminated(bool const terminated, bool const no_local = true);
@@ -174,24 +177,23 @@ public:
   TermCounterType getNumUnits() const;
 
 public:
-  // TermFinished interface
-  TermStatusEnum testEpochFinished(EpochType epoch) override;
+  // TermTerminated interface
+  TermStatusEnum testEpochTerminated(EpochType epoch) override;
 
 private:
   bool propagateEpoch(TermStateType& state);
-  void epochFinished(EpochType const& epoch, bool const cleanup);
+  void epochTerminated(EpochType const& epoch);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
-  void setupNewEpoch(EpochType const& new_epoch, bool const from_child);
-  void readyNewEpoch(EpochType const& new_epoch);
-  void linkChildEpoch(EpochType const& epoch);
-  void rootMakeEpoch(EpochType const& epoch, bool const child = false);
-  void makeRootedEpoch(EpochType const& epoch, bool const is_root);
+  void setupNewEpoch(EpochType const& epoch);
+  void readyNewEpoch(EpochType const& epoch);
+  void linkChildEpoch(EpochType epoch, EpochType parent = no_epoch);
+  void makeRootedHan(EpochType const& epoch, bool is_root);
 
-  static void makeRootedEpoch(TermMsg* msg);
-  static void inquireEpochFinished(TermFinishedMsg* msg);
-  static void replyEpochFinished(TermFinishedReplyMsg* msg);
+  static void makeRootedHandler(TermMsg* msg);
+  static void inquireEpochTerminated(TermTerminatedMsg* msg);
+  static void replyEpochTerminated(TermTerminatedReplyMsg* msg);
   static void propagateEpochHandler(TermCounterMsg* msg);
-  static void epochFinishedHandler(TermMsg* msg);
+  static void epochTerminatedHandler(TermMsg* msg);
   static void epochContinueHandler(TermMsg* msg);
 
 private:
