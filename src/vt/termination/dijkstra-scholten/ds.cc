@@ -173,12 +173,20 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
 
   bool const self_pred = predecessor == self;
 
+  debug_print_verbose(
+    termds, node,
+    "msgProcessed: (pre) epoch={:x}, from={}, count={}, "
+    "parent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, predecessor, count, parent, outstanding.size(),
+    C, D, lC, lD
+  );
+
   // Test for the self-process case that delays termination with local credit
   if (self_pred) {
     lC += count;
     vtAssertExprInfo(lC <= lD, lC, lD, epoch_, predecessor, count, C, D, parent);
-    // Must be engaged for a local credit/processing to increase
-    vtAssertExpr(not (outstanding.size() == 0));
+    // May not be engaged if msgProcessed is not called before a local prod/cons
+    // occurs
   } else {
     C += count;
     processedSum += count;
@@ -192,11 +200,12 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
     C, D, lC, lD
   );
 
-  if (outstanding.size() == 0) {
+  if (outstanding.size() == 0 and not self_pred) {
     debug_print(
       termds, node,
-      "msgProcessed: engagement with new parent={}, count={}, C={}, D={}\n",
-      predecessor, count, C, D
+      "msgProcessed: engagement with new parent={}, epoch={:x}, count={}, "
+      "C={}, D={}, lC={}, lD={}\n",
+      predecessor, epoch_, count, C, D, lC, lD
     );
 
     parent = predecessor;
