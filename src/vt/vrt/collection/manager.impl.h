@@ -2448,10 +2448,20 @@ MigrateStatus CollectionManager::migrate(
   VrtElmProxy<ColT, typename ColT::IndexType> proxy, NodeType const& dest
 ) {
   using IndexT = typename ColT::IndexType;
-  auto const& col_proxy = proxy.getCollectionProxy();
-  auto const& elm_proxy = proxy.getElementProxy();
-  auto const& idx = elm_proxy.getIndex();
-  return migrateOut<ColT,IndexT>(col_proxy, idx, dest);
+  auto const col_proxy = proxy.getCollectionProxy();
+  auto const elm_proxy = proxy.getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+
+  auto const epoch = theMsg()->getEpoch();
+  theTerm()->produce(epoch);
+  schedule<>([=]{
+    theMsg()->pushEpoch(epoch);
+    migrateOut<ColT,IndexT>(col_proxy, idx, dest);
+    theMsg()->popEpoch(epoch);
+    theTerm()->consume(epoch);
+  });
+
+  return MigrateStatus::PendingLocalAction;
 }
 
 template <typename ColT, typename IndexT>
@@ -2586,8 +2596,8 @@ MigrateStatus CollectionManager::migrateIn(
   CollectionProxy<ColT, IndexT>(proxy).operator()(idx);
 
   bool const is_static = ColT::isStaticSized();
-  auto const& home_node = uninitialized_destination;
-  auto const& inserted = insertCollectionElement<ColT, IndexT>(
+  auto const home_node = uninitialized_destination;
+  auto const inserted = insertCollectionElement<ColT, IndexT>(
     std::move(vrt_elm_ptr), idx, max, map_han, proxy, is_static,
     home_node, true, from
   );
