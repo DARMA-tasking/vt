@@ -208,6 +208,12 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityMigrated(
   EntityID const& id, NodeType const& new_node
 ) {
+  debug_print(
+    location, node,
+    "EntityLocationCoord: entityMigrated: id={}, new_node={}\n",
+    id, new_node
+  );
+
   auto reg_iter = local_registered_.find(id);
 
   if (reg_iter != local_registered_.end()) {
