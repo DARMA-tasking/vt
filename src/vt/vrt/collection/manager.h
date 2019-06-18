@@ -752,6 +752,9 @@ public:
     ActionType insert_action = nullptr
   );
 
+  template <typename ColT>
+  void addCleanupFn(VirtualProxyType proxy);
+
 private:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   void finishedInsertEpoch(

@@ -137,6 +137,14 @@ CollectionManager::runConstructor(
   );
 }
 
+template <typename ColT>
+void CollectionManager::addCleanupFn(VirtualProxyType proxy) {
+  cleanup_fns_[proxy].push_back([=]{
+    CollectionProxyWrapType<ColT> typed_proxy(proxy);
+    destroyMatching(typed_proxy);
+  });
+}
+
 template <typename SysMsgT>
 /*static*/ void CollectionManager::distConstruct(SysMsgT* msg) {
   using ColT        = typename SysMsgT::CollectionType;
@@ -159,6 +167,9 @@ template <typename SysMsgT>
   auto range = msg->info.range_;
 
   theCollection()->insertCollectionInfo(proxy,msg->map,insert_epoch);
+
+  // Add the cleanup function for this node
+  theCollection()->addCleanupFn<ColT>(proxy);
 
   if (info.immediate_) {
     // Get the handler function
@@ -1260,8 +1271,9 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
   debug_print(
     vrt_coll, node,
-    "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={}, imm_context={}\n",
-    col_proxy, cur_epoch, imm_context
+    "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={}, idx={}, "
+    "handler={}, imm_context={}\n",
+    col_proxy, cur_epoch, elm_proxy.getIndex(), handler, imm_context
   );
 
   if (imm_context) {
@@ -1496,9 +1508,7 @@ CollectionManager::constructCollectiveMap(
   );
 
   // Insert action on cleanup for this collection
-  cleanup_fns_[proxy].push_back([=]{
-    destroyMatching(typed_proxy);
-  });
+  theCollection()->addCleanupFn<ColT>(proxy);
 
   // Start the local collection initiation process, lcoal meta-info about the
   // collection. Insert epoch is `no_epoch` because dynamic insertions are not
@@ -1920,11 +1930,6 @@ CollectionManager::constructMap(
     info.setInsertEpoch(insert_epoch);
     setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
   }
-
-  cleanup_fns_[new_proxy].push_back([=]{
-    CollectionProxyWrapType<ColT, typename ColT::IndexType> typed(new_proxy);
-    destroyMatching(typed);
-  });
 
   create_msg->info = info;
 
@@ -2609,6 +2614,12 @@ template <typename ColT, typename IndexT>
 void CollectionManager::destroyMatching(
   CollectionProxyWrapType<ColT,IndexT> const& proxy
 ) {
+  debug_print(
+    vrt_coll, node,
+    "destroyMatching: proxy={:x}\n",
+    proxy.getProxy()
+  );
+
   auto const untyped_proxy = proxy.getProxy();
   UniversalIndexHolder<>::destroyCollection(untyped_proxy);
   auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
