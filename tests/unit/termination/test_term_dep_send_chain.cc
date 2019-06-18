@@ -423,6 +423,16 @@ struct MyObjGroup {
     });
   }
 
+  void startup() {
+    // Produce on global epoch so on a single node it does not terminate early
+    vt::theTerm()->produce(vt::term::any_epoch_sentinel);
+  }
+
+  void shutdown() {
+    // Consume on global epoch to match the startup produce
+    vt::theTerm()->consume(vt::term::any_epoch_sentinel);
+  }
+
 private:
   // Has an update been started
   bool started_ = false;
@@ -449,6 +459,7 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
   vt::arguments::ArgConfig::vt_term_rooted_use_ds = use_ds;
 
   auto local = std::make_unique<MyObjGroup>();
+  local->startup();
   local->makeVT();
   local->makeColl(num_nodes,k);
 
@@ -474,6 +485,7 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
   }
 
   local->finalCheck(iter);
+  local->shutdown();
 }
 
 
