@@ -2607,7 +2607,14 @@ template <typename ColT, typename IndexT>
 void CollectionManager::incomingDestroy(
   CollectionProxyWrapType<ColT,IndexT> const& proxy
 ) {
-  destroyMatching<ColT,IndexT>(proxy);
+  auto iter = cleanup_fns_.find(proxy.getProxy());
+  if (iter != cleanup_fns_.end()) {
+    auto fns = std::move(iter->second);
+    cleanup_fns_.erase(iter);
+    for (auto fn : fns) {
+      fn();
+    }
+  }
 }
 
 template <typename ColT, typename IndexT>
