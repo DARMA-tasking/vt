@@ -55,7 +55,8 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct TestTermDepSendChain : TestParallelHarnessParam<std::tuple<bool, int>> { };
+struct TestTermDepSendChain :
+    TestParallelHarnessParam<std::tuple<bool, int, bool>> { };
 
 struct TestMsg1 : vt::Message {
   TestMsg1() = default;
@@ -236,6 +237,22 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     // );
   }
 
+  void doMigrate(OpMsg* msg) {
+    checkExpectedStep(0);
+    EXPECT_EQ(msg->a, calcVal(13,idx));
+    EXPECT_EQ(msg->b, calcVal(14,idx));
+
+    fmt::print(
+      "doMigrate: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
+    );
+
+    migrating = true;
+    auto node = vt::theContext()->getNode();
+    auto num = vt::theContext()->getNumNodes();
+    auto next = node + 1 < num ? node + 1 : 0;
+    this->migrate(next);
+  }
+
   void finalCheck(FinalMsg* msg) {
     auto num_iter = msg->num;
     EXPECT_EQ(step / num_steps, num_iter);
@@ -244,14 +261,21 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
   virtual ~MyCol() {
-    EXPECT_TRUE(final_check);
-    //fmt::print("destructor idx={}, final={}\n", getIndex(), final_check);
+    EXPECT_TRUE(final_check or migrating);
+    // fmt::print(
+    //   "destructor idx={}, final={}, mig={}\n",
+    //   getIndex(), final_check, migrating
+    // );
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     vt::Collection<MyCol,vt::Index2D>::serialize(s);
     s | iter | step | idx | final_check | max_x | max_y | started_op6_;
+    s | migrating;
+    if (s.isUnpacking()) {
+      migrating = false;
+    }
     s | op6_counter_;
     op6_msgs_ = {};
   }
@@ -264,6 +288,7 @@ private:
   int max_x = 0, max_y = 0;
   bool started_op6_ = false;
   int op6_counter_ = 0;
+  bool migrating = false;
   std::stack<MsgSharedPtr<OpVMsg>> op6_msgs_;
 };
 
@@ -370,6 +395,14 @@ struct MyObjGroup {
     });
   }
 
+  void doMigrate() {
+    chains_->nextStep([=](vt::Index2D idx) {
+      auto a = calcVal(13,idx);
+      auto b = calcVal(14,idx);
+      return backend_proxy(idx).template send<OpMsg, &MyCol::doMigrate>(new OpMsg(a,b));
+    });
+  }
+
   void finishUpdate() {
     bool vt_working = true;
     chains_->phaseDone();
@@ -406,10 +439,11 @@ private:
 TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const iter = 100;
+  auto const iter = 50;
   auto const& tup = GetParam();
   auto const use_ds = std::get<0>(tup);
   auto const k = std::get<1>(tup);
+  auto const migrate = std::get<2>(tup);
 
   vt::arguments::ArgConfig::vt_term_rooted_use_wave = !use_ds;
   vt::arguments::ArgConfig::vt_term_rooted_use_ds = use_ds;
@@ -419,7 +453,7 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
   local->makeColl(num_nodes,k);
 
   for (int t = 0; t < iter; t++) {
-    if (this_node == 0 && t % 10 == 0) {
+    if (this_node == 0 && t % 5 == 0) {
       fmt::print("start iter={}, k={}, max_iter={}\n", t, k, iter);
     }
 
@@ -431,18 +465,48 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
     local->op5();
     local->op6();
     local->op7();
+
+    if (migrate && t > 0 && t % 5 == 0) {
+      local->doMigrate();
+    }
+
     local->finishUpdate();
   }
 
   local->finalCheck(iter);
 }
 
+
+struct PrintParam {
+  template <typename ParamType>
+  std::string operator()(testing::TestParamInfo<ParamType> const& val) const {
+    auto const ds = std::get<0>(val.param);
+    auto const k = std::get<1>(val.param);
+    auto const migrate = std::get<2>(val.param);
+    return fmt::format("DS{}K{}MIGRATE{}", ds, k, migrate);
+  }
+};
+
+// Test Wave-epoch with a narrower set of parameters since large k is very slow
 INSTANTIATE_TEST_CASE_P(
-  InstantiationName, TestTermDepSendChain,
+  DepSendChainInputExplodeWave, TestTermDepSendChain,
   ::testing::Combine(
-    ::testing::Bool(),
-    ::testing::Range(1, 8)
+    ::testing::Values(false),
+    ::testing::Values(1, 2),
+    ::testing::Bool()
   ),
+  PrintParam()
+);
+
+// Test DS-epoch with a broader set of parameters since it is quick
+INSTANTIATE_TEST_CASE_P(
+  DepSendChainInputExplodeDS, TestTermDepSendChain,
+  ::testing::Combine(
+    ::testing::Values(true),
+    ::testing::Range(1, 8),
+    ::testing::Bool()
+  ),
+  PrintParam()
 );
 
 }}} // end namespace vt::tests::unit
