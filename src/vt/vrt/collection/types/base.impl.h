@@ -98,15 +98,9 @@ template <typename ColT, typename IndexT>
 
 template <typename ColT, typename IndexT>
 /*virtual*/ void CollectionBase<ColT, IndexT>::migrate(NodeType const& node) {
-  auto const& collection_proxy = this->getProxy();
-  auto const& collection_index = this->getIndex();
-  auto const& migrate_status = CollectionElmAttorney<ColT,IndexT>::migrateOut(
-    collection_proxy, collection_index, node
-  );
-  vtAssert(
-    migrate_status == MigrateStatus::MigratedToRemote,
-    "Required be immediate, valid migration currently"
-  );
+  auto const proxy = this->getCollectionProxy();
+  auto const index = this->getIndex();
+  CollectionElmAttorney<ColT,IndexT>::migrate(proxy(index), node);
 }
 
 template <typename ColT, typename IndexT>

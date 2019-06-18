@@ -63,6 +63,14 @@ template <typename ColT, typename IndexT>
   return theCollection()->migrateOut<ColT,IndexT>(proxy,idx,dest);
 }
 
+
+template <typename ColT, typename IndexT>
+/*static*/ void CollectionElmAttorney<ColT, IndexT>::migrate(
+  VrtElmProxy<ColT, typename ColT::IndexType> proxy, NodeType dest
+) {
+  theCollection()->migrate<ColT>(proxy,dest);
+}
+
 template <typename ColT, typename IndexT>
 /*static*/ MigrateStatus CollectionElmAttorney<ColT, IndexT>::migrateIn(
   VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
