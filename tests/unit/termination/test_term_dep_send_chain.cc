@@ -236,6 +236,22 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     // );
   }
 
+  void doMigrate(OpMsg* msg) {
+    checkExpectedStep(0);
+    EXPECT_EQ(msg->a, calcVal(13,idx));
+    EXPECT_EQ(msg->b, calcVal(14,idx));
+
+    fmt::print(
+      "doMigrate: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
+    );
+
+    migrating = true;
+    auto node = vt::theContext()->getNode();
+    auto num = vt::theContext()->getNumNodes();
+    auto next = node + 1 < num ? node + 1 : 0;
+    this->migrate(next);
+  }
+
   void finalCheck(FinalMsg* msg) {
     auto num_iter = msg->num;
     EXPECT_EQ(step / num_steps, num_iter);
@@ -244,14 +260,21 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
   virtual ~MyCol() {
-    EXPECT_TRUE(final_check);
-    //fmt::print("destructor idx={}, final={}\n", getIndex(), final_check);
+    EXPECT_TRUE(final_check or migrating);
+    fmt::print(
+      "destructor idx={}, final={}, mig={}\n",
+      getIndex(), final_check, migrating
+    );
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     vt::Collection<MyCol,vt::Index2D>::serialize(s);
     s | iter | step | idx | final_check | max_x | max_y | started_op6_;
+    s | migrating;
+    if (s.isUnpacking()) {
+      migrating = false;
+    }
     s | op6_counter_;
     op6_msgs_ = {};
   }
@@ -264,6 +287,7 @@ private:
   int max_x = 0, max_y = 0;
   bool started_op6_ = false;
   int op6_counter_ = 0;
+  bool migrating = false;
   std::stack<MsgSharedPtr<OpVMsg>> op6_msgs_;
 };
 
@@ -370,6 +394,14 @@ struct MyObjGroup {
     });
   }
 
+  void doMigrate() {
+    chains_->nextStep([=](vt::Index2D idx) {
+      auto a = calcVal(13,idx);
+      auto b = calcVal(14,idx);
+      return backend_proxy(idx).template send<OpMsg, &MyCol::doMigrate>(new OpMsg(a,b));
+    });
+  }
+
   void finishUpdate() {
     bool vt_working = true;
     chains_->phaseDone();
@@ -431,6 +463,11 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
     local->op5();
     local->op6();
     local->op7();
+
+    if (t > 0 && t % 10 == 0) {
+      local->doMigrate();
+    }
+
     local->finishUpdate();
   }
 
