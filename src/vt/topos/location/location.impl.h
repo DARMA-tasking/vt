@@ -335,8 +335,8 @@ void EntityLocationCoord<EntityID>::getLocation(
       "EntityLocationCoord: getLocation: entity is local\n"
     );
 
-    action(this_node);
     recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+    action(this_node);
     return;
   } else {
     bool const& rec_exists = recs_.exists(id);
