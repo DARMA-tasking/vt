@@ -80,6 +80,7 @@ struct Holder {
   VirtualPtrType remove(IndexT const& idx);
   void destroyAll();
   bool isDestroyed() const;
+  void cleanupExists();
   bool foreach(FuncApplyType fn);
   typename TypedIndexContainer::size_type numElements() const;
   typename TypedIndexContainer::size_type numElementsExpr(FuncExprType f) const;
