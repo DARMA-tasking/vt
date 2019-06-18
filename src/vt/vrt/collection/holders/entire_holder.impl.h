@@ -69,8 +69,9 @@ template <typename always_void_>
   VirtualProxyType const proxy
 ) {
   auto iter = live_collections_.find(proxy);
-  vtAssert(iter != live_collections_.end(), "Collection must exist");
-  live_collections_.erase(iter);
+  if (iter != live_collections_.end()) {
+    live_collections_.erase(iter);
+  }
 }
 
 template <typename always_void_>
@@ -178,6 +179,16 @@ template <typename ColT, typename IndexT>
     std::forward_as_tuple(proxy),
     std::forward_as_tuple(ptr)
   );
+}
+
+template <typename ColT, typename IndexT>
+/*static*/ void EntireHolder<ColT, IndexT>::remove(
+  VirtualProxyType const& proxy
+) {
+  auto iter = proxy_container_.find(proxy);
+  if (iter != proxy_container_.end()) {
+    proxy_container_.erase(iter);
+  }
 }
 
 template <typename ColT, typename IndexT>

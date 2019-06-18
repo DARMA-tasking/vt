@@ -208,6 +208,12 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityMigrated(
   EntityID const& id, NodeType const& new_node
 ) {
+  debug_print(
+    location, node,
+    "EntityLocationCoord: entityMigrated: id={}, new_node={}\n",
+    id, new_node
+  );
+
   auto reg_iter = local_registered_.find(id);
 
   if (reg_iter != local_registered_.end()) {
@@ -335,8 +341,8 @@ void EntityLocationCoord<EntityID>::getLocation(
       "EntityLocationCoord: getLocation: entity is local\n"
     );
 
-    action(this_node);
     recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+    action(this_node);
     return;
   } else {
     bool const& rec_exists = recs_.exists(id);

@@ -101,17 +101,22 @@ Broadcasts<ColT>::m_ = {};
 template <typename>
 void CollectionManager::cleanupAll() {
   /*
-   *  Destroy all the current live collections
-   */
-  destroyCollections<>();
-  /*
    *  Run the cleanup functions for type-specific cleanup that can not be
    *  performed without capturing the type of each collection
    */
-  for (auto fn : cleanup_fns_) {
-    fn();
+  int num_cleanup = 0;
+  int tot_cleanup = static_cast<int>(cleanup_fns_.size());
+  auto iter = cleanup_fns_.begin();
+  while (iter != cleanup_fns_.end()) {
+    auto lst = std::move(iter->second);
+    iter = cleanup_fns_.erase(iter);
+    num_cleanup++;
+    for (auto fn : lst) {
+      fn();
+    }
   }
-  cleanup_fns_.clear();
+  vtAssertExpr(cleanup_fns_.size() == 0);
+  vtAssertExpr(num_cleanup == tot_cleanup);
 }
 
 template <typename>
@@ -130,6 +135,14 @@ CollectionManager::runConstructor(
       std::get<I>(*tup)
     )...
   );
+}
+
+template <typename ColT>
+void CollectionManager::addCleanupFn(VirtualProxyType proxy) {
+  cleanup_fns_[proxy].push_back([=]{
+    CollectionProxyWrapType<ColT> typed_proxy(proxy);
+    destroyMatching(typed_proxy);
+  });
 }
 
 template <typename SysMsgT>
@@ -154,6 +167,9 @@ template <typename SysMsgT>
   auto range = msg->info.range_;
 
   theCollection()->insertCollectionInfo(proxy,msg->map,insert_epoch);
+
+  // Add the cleanup function for this node
+  theCollection()->addCleanupFn<ColT>(proxy);
 
   if (info.immediate_) {
     // Get the handler function
@@ -384,8 +400,8 @@ template <typename ColT, typename IndexT, typename MsgT>
   theMsg()->pushEpoch(cur_epoch);
   debug_print(
     vrt_coll, node,
-    "collectionBcastHandler: bcast_proxy={:x}, han={}, bcast epoch={}, "
-    "epoch={}, msg epoch={}, group={}, default group={}\n",
+    "collectionBcastHandler: bcast_proxy={:x}, han={}, bcast epoch={:x}, "
+    "epoch={:x}, msg epoch={:x}, group={}, default group={}\n",
     bcast_proxy, col_msg->getVrtHandler(), col_msg->getBcastEpoch(),
     cur_epoch, msg_epoch, group, default_group
   );
@@ -456,8 +472,8 @@ template <typename ColT, typename IndexT, typename MsgT>
    */
   debug_print(
     vrt_coll, node,
-    "collectionBcastHandler: (consume) bcast_proxy={:x}, han={}, bcast epoch={}, "
-    "epoch={}, msg epoch={}, group={}, default group={}\n",
+    "collectionBcastHandler: (consume) bcast_proxy={:x}, han={}, bcast epoch={:x}, "
+    "epoch={:x}, msg epoch={:x}, group={}, default group={}\n",
     bcast_proxy, col_msg->getVrtHandler(), col_msg->getBcastEpoch(),
     cur_epoch, msg_epoch, group, default_group
   );
@@ -471,7 +487,7 @@ void CollectionManager::bufferBroadcastMsg(
   auto proxy_iter = details::Broadcasts<ColT>::m_.find(proxy);
   if (proxy_iter == details::Broadcasts<ColT>::m_.end()) {
     if (details::Broadcasts<ColT>::m_.size() == 0) {
-      cleanup_fns_.push_back([]{ details::Broadcasts<ColT>::m_.clear(); });
+      cleanup_fns_[proxy].push_back([]{ details::Broadcasts<ColT>::m_.clear(); });
     }
     details::Broadcasts<ColT>::m_.emplace(
       std::piecewise_construct,
@@ -608,11 +624,11 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const& idx = elm.getIndex();
   auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(col);
 
-  bool const& exists = elm_holder->exists(idx);
+  bool const exists = elm_holder->exists(idx);
 
   debug_print(
     vrt_coll, node,
-    "collectionMsgTypedHandler: exists={}, idx={}, cur_epoch={}\n",
+    "collectionMsgTypedHandler: exists={}, idx={}, cur_epoch={:x}\n",
     exists, idx, cur_epoch
   );
 
@@ -705,7 +721,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   debug_print(
     vrt_coll, node,
     "broadcastFromRoot: proxy={:x}, bcast epoch={}, han={}, group_ready={}, "
-    "group_active={}, use_group={}, send_group={}, group={:x}, cur_epoch={}\n",
+    "group_active={}, use_group={}, send_group={}, group={:x}, cur_epoch={:x}\n",
     proxy, msg->getBcastEpoch(), msg->getVrtHandler(),
     group_ready, send_group, use_group, send_group,
     use_group ? elm_holder->group() : default_group, cur_epoch
@@ -879,7 +895,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 
   debug_print(
     vrt_coll, node,
-    "broadcastMsgUntypedHandler: col_proxy={:x}, found={}, cur_epoch={}\n",
+    "broadcastMsgUntypedHandler: col_proxy={:x}, found={}, cur_epoch={:x}\n",
     col_proxy, found_constructed, cur_epoch
   );
 
@@ -896,7 +912,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
       debug_print(
         vrt_coll, node,
         "broadcastMsgUntypedHandler: col_proxy={:x}, sending to root node={}, "
-        "handler={}, cur_epoch={}\n",
+        "handler={}, cur_epoch={:x}\n",
         col_proxy, bnode, handler, cur_epoch
       );
 
@@ -933,7 +949,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 
     debug_print(
       vrt_coll, node,
-      "broadcastMsgUntypedHandler: col_proxy={:x}, cur_epoch={}, buffering\n",
+      "broadcastMsgUntypedHandler: col_proxy={:x}, cur_epoch={:x}, buffering\n",
       col_proxy, cur_epoch
     );
 
@@ -1255,8 +1271,9 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
   debug_print(
     vrt_coll, node,
-    "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={}, imm_context={}\n",
-    col_proxy, cur_epoch, imm_context
+    "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={:x}, idx={}, "
+    "handler={}, imm_context={}\n",
+    col_proxy, cur_epoch, elm_proxy.getIndex(), handler, imm_context
   );
 
   if (imm_context) {
@@ -1391,14 +1408,26 @@ bool CollectionManager::insertCollectionElement(
   }
 
   auto elm_holder = findElmHolder<ColT,IndexT>(proxy);
-  auto const& elm_exists = elm_holder->exists(idx);
+  auto const elm_exists = elm_holder->exists(idx);
+
+  debug_print(
+    vrt_coll, node,
+    "insertCollectionElement: elm_exists={}, proxy={:x}, idx={}\n",
+    elm_exists, proxy, idx
+  );
 
   if (elm_exists) {
     return false;
   }
   vtAssert(!elm_exists, "Must not exist at this point");
 
-  auto const& destroyed = elm_holder->isDestroyed();
+  auto const destroyed = elm_holder->isDestroyed();
+
+  debug_print(
+    vrt_coll, node,
+    "insertCollectionElement: destroyed={}, proxy={:x}, idx={}\n",
+    destroyed, proxy, idx
+  );
 
   if (!destroyed) {
     elm_holder->insert(idx, typename Holder<ColT, IndexT>::InnerHolder{
@@ -1489,6 +1518,9 @@ CollectionManager::constructCollectiveMap(
     "construct (dist): proxy={:x}, is_static={}\n",
     proxy, is_static
   );
+
+  // Insert action on cleanup for this collection
+  theCollection()->addCleanupFn<ColT>(proxy);
 
   // Start the local collection initiation process, lcoal meta-info about the
   // collection. Insert epoch is `no_epoch` because dynamic insertions are not
@@ -2416,10 +2448,20 @@ MigrateStatus CollectionManager::migrate(
   VrtElmProxy<ColT, typename ColT::IndexType> proxy, NodeType const& dest
 ) {
   using IndexT = typename ColT::IndexType;
-  auto const& col_proxy = proxy.getCollectionProxy();
-  auto const& elm_proxy = proxy.getElementProxy();
-  auto const& idx = elm_proxy.getIndex();
-  return migrateOut<ColT,IndexT>(col_proxy, idx, dest);
+  auto const col_proxy = proxy.getCollectionProxy();
+  auto const elm_proxy = proxy.getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+
+  auto const epoch = theMsg()->getEpoch();
+  theTerm()->produce(epoch);
+  schedule<>([=]{
+    theMsg()->pushEpoch(epoch);
+    migrateOut<ColT,IndexT>(col_proxy, idx, dest);
+    theMsg()->popEpoch(epoch);
+    theTerm()->consume(epoch);
+  });
+
+  return MigrateStatus::PendingLocalAction;
 }
 
 template <typename ColT, typename IndexT>
@@ -2446,14 +2488,14 @@ MigrateStatus CollectionManager::migrateOut(
 
    #if backend_check_enabled(runtime_checks)
    {
-     bool const& exists = elm_holder->exists(idx);
+     bool const exists = elm_holder->exists(idx);
      vtAssert(
        exists, "Local element must exist here for migration to occur"
      );
    }
    #endif
 
-   bool const& exists = elm_holder->exists(idx);
+   bool const exists = elm_holder->exists(idx);
    if (!exists) {
      return MigrateStatus::ElementNotLocal;
    }
@@ -2554,8 +2596,8 @@ MigrateStatus CollectionManager::migrateIn(
   CollectionProxy<ColT, IndexT>(proxy).operator()(idx);
 
   bool const is_static = ColT::isStaticSized();
-  auto const& home_node = uninitialized_destination;
-  auto const& inserted = insertCollectionElement<ColT, IndexT>(
+  auto const home_node = uninitialized_destination;
+  auto const inserted = insertCollectionElement<ColT, IndexT>(
     std::move(vrt_elm_ptr), idx, max, map_han, proxy, is_static,
     home_node, true, from
   );
@@ -2587,17 +2629,32 @@ template <typename ColT, typename IndexT>
 void CollectionManager::incomingDestroy(
   CollectionProxyWrapType<ColT,IndexT> const& proxy
 ) {
-  destroyMatching<ColT,IndexT>(proxy);
+  auto iter = cleanup_fns_.find(proxy.getProxy());
+  if (iter != cleanup_fns_.end()) {
+    auto fns = std::move(iter->second);
+    cleanup_fns_.erase(iter);
+    for (auto fn : fns) {
+      fn();
+    }
+  }
 }
 
 template <typename ColT, typename IndexT>
 void CollectionManager::destroyMatching(
   CollectionProxyWrapType<ColT,IndexT> const& proxy
 ) {
+  debug_print(
+    vrt_coll, node,
+    "destroyMatching: proxy={:x}\n",
+    proxy.getProxy()
+  );
+
   auto const untyped_proxy = proxy.getProxy();
   UniversalIndexHolder<>::destroyCollection(untyped_proxy);
   auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
-  elm_holder->destroyAll();
+  if (elm_holder) {
+    elm_holder->destroyAll();
+  }
 
   auto const is_static = ColT::isStaticSized();
   if (not is_static) {
@@ -2606,6 +2663,13 @@ void CollectionManager::destroyMatching(
     if (cons_node == this_node) {
       finishedInserting(proxy, nullptr);
     }
+  }
+
+  EntireHolder<ColT, IndexT>::remove(untyped_proxy);
+
+  auto iter = cleanup_fns_.find(untyped_proxy);
+  if (iter != cleanup_fns_.end()) {
+    cleanup_fns_.erase(iter);
   }
 }
 

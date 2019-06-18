@@ -59,15 +59,24 @@ template <typename ColT, typename IndexT>
 bool Holder<ColT, IndexT>::exists(IndexT const& idx ) {
   auto& container = vc_container_;
   auto iter = container.find(idx);
-  return iter != container.end();
+  return iter != container.end() and not iter->second.erased_;
 }
 
 template <typename ColT, typename IndexT>
 void Holder<ColT, IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
   vtAssert(!is_destroyed_, "Must not be destroyed to insert a new element");
+  vtAssert(!exists(idx), "Should not exist to insert element");
 
   auto const& lookup = idx;
   auto& container = vc_container_;
+
+  auto iter = container.find(lookup);
+  if (iter != container.end()) {
+    vtAssert(iter->second.erased_, "Must be in erased state");
+    num_erased_not_removed_--;
+    container.erase(iter);
+  }
+
   /*
    * This assertion no longer valid due to delayed erasure. In fact, the inner
    * holder VC pointer may be nullptr but set to erased. The move should deal
@@ -130,6 +139,19 @@ bool Holder<ColT, IndexT>::isDestroyed() const {
 }
 
 template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::cleanupExists() {
+  auto& container = vc_container_;
+  for (auto iter = container.begin(); iter != container.end(); ) {
+    if (iter->second.erased_) {
+      num_erased_not_removed_--;
+      iter = container.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
+}
+
+template <typename ColT, typename IndexT>
 bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   static uint64_t num_reentrant = 0;
 
@@ -146,14 +168,7 @@ bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   num_reentrant--;
 
   if (num_reentrant == 0) {
-    for (auto iter = container.begin(); iter != container.end(); ) {
-      if (iter->second.erased_) {
-        num_erased_not_removed_--;
-        iter = container.erase(iter);
-      } else {
-        ++iter;
-      }
-    }
+    cleanupExists();
   }
   return true;
 }

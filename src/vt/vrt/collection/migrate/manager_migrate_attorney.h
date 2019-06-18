@@ -69,6 +69,10 @@ struct CollectionElmAttorney {
   friend struct Migratable<ColT>;
 
 private:
+  static void migrate(
+    VrtElmProxy<ColT, typename ColT::IndexType> proxy, NodeType dest
+  );
+
   static MigrateStatus migrateOut(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& dest
   );

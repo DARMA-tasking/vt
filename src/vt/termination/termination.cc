@@ -358,6 +358,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
   );
 
   if (is_ready) {
+    bool is_term = false;
+
     state.g_prod1 += state.l_prod;
     state.g_cons1 += state.l_cons;
 
@@ -381,9 +383,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         "propagateEpoch: sending to parent: {}, msg={}, epoch={:x}, wave={}\n",
         parent, print_ptr(msg), state.getEpoch(), state.getCurWave()
       );
-
     } else /*if (is_root) */ {
-      bool const& is_term =
+      is_term =
         state.g_prod1 == state.g_cons1 and
         state.g_prod2 == state.g_cons2 and
         state.g_prod1 == state.g_prod2;
@@ -478,21 +479,29 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       }
     }
 
-    debug_print_verbose(
-      term, node,
-      "propagateEpoch: epoch={:x}, is_root={}: reset counters\n",
-      state.getEpoch(), print_bool(is_root)
-    );
+    if (not is_term) {
+      debug_print_verbose(
+        term, node,
+        "propagateEpoch: epoch={:x}, is_root={}: reset counters\n",
+        state.getEpoch(), print_bool(is_root)
+      );
 
-    // reset counters
-    state.g_prod1 = state.g_cons1 = 0;
-    state.submitToParent(is_root);
+      // reset counters
+      state.g_prod1 = state.g_cons1 = 0;
+      state.submitToParent(is_root);
+    }
   }
 
   return is_ready;
 }
 
 void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
+  debug_print(
+    term, node,
+    "cleanupEpoch: epoch={:x}, is_rooted_epoch={}, is_ds={}\n",
+    epoch, isRooted(epoch), isDS(epoch)
+  );
+
   if (epoch != any_epoch_sentinel) {
     if (isDS(epoch)) {
       auto ds_term_iter = term_.find(epoch);
@@ -535,9 +544,6 @@ void TerminationDetector::epochTerminated(EpochType const& epoch) {
 
   // Update the window for the epoch archetype
   updateResolvedEpochs(epoch);
-
-  // Cleanup epoch meta-data
-  cleanupEpoch(epoch);
 }
 
 void TerminationDetector::inquireTerminated(

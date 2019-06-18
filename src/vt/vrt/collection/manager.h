@@ -113,7 +113,7 @@ struct CollectionManager {
     VirtualProxyType, EpochBcastType<ColT>
   >;
   using CleanupFnType = std::function<void()>;
-  using CleanupListFnType = std::list<CleanupFnType>;
+  using CleanupListFnType = std::unordered_map<VirtualProxyType,std::list<CleanupFnType>>;
   using DispatchHandlerType = auto_registry::AutoHandlerType;
   using ActionVecType = std::vector<ActionType>;
   using ArgType = vt::arguments::ArgConfig;
@@ -751,6 +751,9 @@ public:
     CollectionProxyWrapType<ColT,IndexT> const& proxy,
     ActionType insert_action = nullptr
   );
+
+  template <typename ColT>
+  void addCleanupFn(VirtualProxyType proxy);
 
 private:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
