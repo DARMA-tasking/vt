@@ -152,6 +152,14 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    */
   static void setSeq(EpochType& epoch, EpochType::ImplType const seq);
 
+  /**
+   * \brief Combine eEpochCategory elements
+   *
+   * \param[in] c1 category 1
+   * \param[in] c2 category 2
+   */
+  static eEpochCategory makeCat(eEpochCategory c1, eEpochCategory c2);
+
   /*
    * General (stateless) methods for creating a epoch with certain properties
    * based on a current sequence number

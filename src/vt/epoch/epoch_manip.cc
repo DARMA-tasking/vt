@@ -190,6 +190,14 @@ void EpochManip::setCategory(EpochType& epoch, eEpochCategory const cat) {
   >(*epoch,cat);
 }
 
+/*static*/ inline eEpochCategory EpochManip::makeCat(
+  eEpochCategory c1, eEpochCategory c2
+) {
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  auto ret = static_cast<T>(c1) | static_cast<T>(c2);
+  return static_cast<eEpochCategory>(ret);
+}
+
 /*static*/
 void EpochManip::setNode(EpochType& epoch, NodeType const node) {
   vtAssert(isRooted(epoch), "Must be rooted to manipulate the node");
