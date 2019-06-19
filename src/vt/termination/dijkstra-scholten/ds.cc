@@ -54,41 +54,10 @@
 namespace vt { namespace term { namespace ds {
 
 template <typename CommType>
-void TermDS<CommType>::addParentEpoch(EpochType const in_parent) {
-  debug_print(
-    termds, node,
-    "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
-  );
-
-  // Produce a single work unit for the parent epoch so it can not finish while
-  // this epoch is live
-  theTerm()->produce(in_parent,1);
-  parents_.push_back(in_parent);
-}
-
-template <typename CommType>
-void TermDS<CommType>::clearParents() {
-  debug_print(
-    termds, node,
-    "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-    parents_.size()
-  );
-
-  for (auto&& in_parent : parents_) {
-    debug_print(
-      termds, node,
-      "clearParents: epoch={:x}, parent={:x}\n", epoch_, in_parent
-    );
-    theTerm()->consume(in_parent,1);
-  }
-  parents_.clear();
-}
-
-template <typename CommType>
 TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeType self_)
-  : parent(-1), self(self_), C(0), ackedArbitrary(0), ackedParent(0),
-    reqedParent(0), engagementMessageCount(0), D(0), processedSum(C),
-    epoch_(in_epoch)
+  : EpochRelation(in_epoch, true),
+    parent(-1), self(self_), C(0), ackedArbitrary(0), ackedParent(0),
+    reqedParent(0), engagementMessageCount(0), D(0), processedSum(C)
 {
   setRoot(isRoot_);
 }

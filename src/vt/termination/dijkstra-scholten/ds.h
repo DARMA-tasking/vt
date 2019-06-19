@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/termination/dijkstra-scholten/ack_request.h"
 #include "vt/termination/dijkstra-scholten/comm.fwd.h"
+#include "vt/termination/term_parent.h"
 
 #include <cstdlib>
 #include <map>
@@ -75,7 +76,7 @@ namespace vt { namespace term { namespace ds {
  */
 
 template <typename CommType>
-struct TermDS {
+struct TermDS : EpochRelation {
   using CountType = int64_t;
   using AckReqListType = std::list<AckRequest>;
 
@@ -98,10 +99,6 @@ struct TermDS {
 private:
   void tryLast();
 
-public:
-  void addParentEpoch(EpochType const in_parent);
-  void clearParents();
-
 protected:
   NodeType parent                   = uninitialized_destination;
   NodeType self                     = uninitialized_destination;
@@ -112,11 +109,9 @@ protected:
   CountType engagementMessageCount  = 0;
   CountType D                       = 0;
   CountType processedSum            = 0;
-  EpochType epoch_                  = no_epoch;
   CountType lC                      = 0;
   CountType lD                      = 0;
   AckReqListType outstanding        = {};
-  std::vector<EpochType> parents_   = {};
 };
 
 }}} /* end namespace vt::term::ds */
