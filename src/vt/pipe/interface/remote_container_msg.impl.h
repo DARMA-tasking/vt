@@ -77,7 +77,7 @@ RemoteContainerMsg<MsgT,TupleT>::RemoteContainerMsg(
 
 template <typename MsgT, typename TupleT>
 template <typename MsgU, typename CallbackT>
-RemoteContainerMsg<MsgT,TupleT>::IsVoidType<MsgU>
+typename RemoteContainerMsg<MsgT,TupleT>::template IsVoidType<MsgU>
 RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU*) {
   auto const& pid = BaseContainer<MsgT>::getPipe();
   constexpr auto multi_callback = std::tuple_size<decltype(trigger_list_)>();
@@ -91,7 +91,7 @@ RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU*) {
 
 template <typename MsgT, typename TupleT>
 template <typename MsgU, typename CallbackT>
-RemoteContainerMsg<MsgT,TupleT>::IsNotVoidType<MsgU>
+typename RemoteContainerMsg<MsgT,TupleT>::template IsNotVoidType<MsgU>
 RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
   auto const& pid = BaseContainer<MsgT>::getPipe();
   auto const& multi_callback = std::tuple_size<decltype(trigger_list_)>() > 0;

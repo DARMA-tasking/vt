@@ -80,7 +80,7 @@ void CallbackSend<MsgT>::trigger_(SignalDataType* data) {
 
 template <typename MsgT>
 template <typename T>
-CallbackSend<MsgT>::IsVoidType<T>
+typename CallbackSend<MsgT>::template IsVoidType<T>
 CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
   debug_print(
@@ -98,7 +98,7 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
 
 template <typename MsgT>
 template <typename T>
-CallbackSend<MsgT>::IsNotVoidType<T>
+typename CallbackSend<MsgT>::template IsNotVoidType<T>
 CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
   debug_print(

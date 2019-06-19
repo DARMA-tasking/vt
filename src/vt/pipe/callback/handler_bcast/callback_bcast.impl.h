@@ -83,7 +83,7 @@ void CallbackBcast<MsgT>::trigger_(SignalDataType* data) {
 
 template <typename MsgT>
 template <typename T>
-CallbackBcast<MsgT>::IsVoidType<T>
+typename CallbackBcast<MsgT>::template IsVoidType<T>
 CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
   debug_print(
@@ -100,7 +100,7 @@ CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) 
 
 template <typename MsgT>
 template <typename T>
-CallbackBcast<MsgT>::IsNotVoidType<T>
+typename CallbackBcast<MsgT>::template IsNotVoidType<T>
 CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
   debug_print(

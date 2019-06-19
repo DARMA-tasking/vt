@@ -67,7 +67,7 @@ void CallbackAnon<MsgT>::serialize(SerializerT& s) {
 
 template <typename MsgT>
 template <typename T>
-CallbackAnon<MsgT>::IsVoidType<T>
+typename CallbackAnon<MsgT>::template IsVoidType<T>
 CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   // Overload when the signal is void
   auto const& this_node = theContext()->getNode();
@@ -89,7 +89,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
 
 template <typename MsgT>
 template <typename T>
-CallbackAnon<MsgT>::IsNotVoidType<T>
+typename CallbackAnon<MsgT>::template IsNotVoidType<T>
 CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   // Overload when the signal is non-void
   auto const& this_node = theContext()->getNode();
