@@ -87,6 +87,11 @@ inline void setTagType(Env& env) {
 }
 
 template <typename Env>
+inline void setSystemType(Env& env) {
+  reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvSystem;
+}
+
+template <typename Env>
 inline void envelopeSetHandler(Env& env, HandlerType const& handler) {
   reinterpret_cast<Envelope*>(&env)->han = handler;
 }

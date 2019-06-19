@@ -64,7 +64,8 @@ enum eEnvelopeType {
   EnvBroadcast = 3,
   EnvEpochType = 4,
   EnvTagType   = 5,
-  EnvPackedPut = 6
+  EnvPackedPut = 6,
+  EnvSystem    = 7
 };
 
 static constexpr BitCountType const envelope_num_bits = 8;
