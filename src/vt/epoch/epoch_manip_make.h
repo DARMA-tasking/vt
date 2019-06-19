@@ -128,6 +128,14 @@ namespace vt { namespace epoch {
   return epoch + 1;
 }
 
+/*static*/ inline eEpochCategory EpochManip::makeCat(
+  eEpochCategory c1, eEpochCategory c2
+) {
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  auto ret = static_cast<T>(c1) | static_cast<T>(c2);
+  return static_cast<eEpochCategory>(ret);
+}
+
 }} /* end namespace vt::epoch */
 
 #endif /*INCLUDED_EPOCH_EPOCH_MANIP_MAKE_H*/

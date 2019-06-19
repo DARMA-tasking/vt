@@ -110,6 +110,11 @@ struct EpochManip {
   );
   static EpochType next(EpochType const& epoch);
 
+  /*
+   * Combine eEpochCategory elements
+   */
+  static eEpochCategory makeCat(eEpochCategory c1, eEpochCategory c2);
+
 private:
   static EpochType nextSlow(EpochType const& epoch);
   static EpochType nextFast(EpochType const& epoch);
