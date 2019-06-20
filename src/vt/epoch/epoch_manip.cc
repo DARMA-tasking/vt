@@ -148,6 +148,29 @@ EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
   return BitPackerType::boolGetField<field,size,ImplType>(*epoch);
 }
 
+/*static*/ bool EpochManip::isDS(EpochType epoch) {
+  using T = typename std::underlying_type<epoch::eEpochCategory>::type;
+  if (isRooted(epoch)) {
+    auto const ds_bit = epoch::eEpochCategory::DijkstraScholtenEpoch;
+    auto const cat = category(epoch);
+    bool const is_ds = static_cast<T>(cat) & static_cast<T>(ds_bit);
+    return is_ds;
+  } else {
+    return false;
+  }
+}
+
+/*static*/ bool EpochManip::isDep(EpochType epoch) {
+  using T = typename std::underlying_type<epoch::eEpochCategory>::type;
+  if (epoch == no_epoch or epoch == term::any_epoch_sentinel) {
+    return false;
+  }
+  auto const dep_bit = epoch::eEpochCategory::DependentEpoch;
+  auto const cat = epoch::EpochManip::category(epoch);
+  bool const is_dep = static_cast<T>(cat) & static_cast<T>(dep_bit);
+  return is_dep;
+}
+
 /*static*/ eEpochCategory EpochManip::category(EpochType const& epoch) {
   return BitPackerType::getField<
     eEpochRoot::rEpochCategory, epoch_category_num_bits, eEpochCategory
@@ -190,7 +213,7 @@ void EpochManip::setCategory(EpochType& epoch, eEpochCategory const cat) {
   >(*epoch,cat);
 }
 
-/*static*/ inline eEpochCategory EpochManip::makeCat(
+/*static*/ eEpochCategory EpochManip::makeCat(
   eEpochCategory c1, eEpochCategory c2
 ) {
   using T = typename std::underlying_type<eEpochCategory>::type;

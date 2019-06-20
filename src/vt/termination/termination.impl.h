@@ -73,26 +73,11 @@ inline void TerminationDetector::consume(
 }
 
 /*static*/ inline bool TerminationDetector::isDS(EpochType epoch) {
-  using T = typename std::underlying_type<epoch::eEpochCategory>::type;
-  if (isRooted(epoch)) {
-    auto const ds_bit = epoch::eEpochCategory::DijkstraScholtenEpoch;
-    auto const cat = epoch::EpochManip::category(epoch);
-    bool const is_ds = static_cast<T>(cat) & static_cast<T>(ds_bit);
-    return is_ds;
-  } else {
-    return false;
-  }
+  return epoch::EpochManip::isDS(epoch);
 }
 
 /*static*/ inline bool TerminationDetector::isDep(EpochType epoch) {
-  using T = typename std::underlying_type<epoch::eEpochCategory>::type;
-  if (epoch == no_epoch or epoch == term::any_epoch_sentinel) {
-    return false;
-  }
-  auto const dep_bit = epoch::eEpochCategory::DependentEpoch;
-  auto const cat = epoch::EpochManip::category(epoch);
-  bool const is_dep = static_cast<T>(cat) & static_cast<T>(dep_bit);
-  return is_dep;
+  return epoch::EpochManip::isDep(epoch);
 }
 
 inline void TerminationDetector::produceConsumeState(

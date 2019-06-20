@@ -243,23 +243,27 @@ public:
    *
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
    * \param[in] parent parent epoch that waits for this new epoch
+   * \param[in] is_dep whether it's a dependent epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochRooted(
     UseDS use_ds = UseDS{true},
-    ParentEpochCapture parent = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{},
+    bool is_dep = false
   );
 
   /**
    * \brief Create a new collective epoch
    *
    * \param[in] parent parent epoch that waits for this new epoch
+   * \param[in] is_dep whether it's a dependent epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochCollective(
-    ParentEpochCapture parent = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{},
+    bool is_dep = false
   );
 
   /**
@@ -268,13 +272,15 @@ public:
    * \param[in] label epoch label for debugging purposes
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
    * \param[in] parent parent epoch that waits for this new epoch
+   * \param[in] is_dep whether it's a dependent epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochRooted(
     std::string const& label,
     UseDS use_ds = UseDS{true},
-    ParentEpochCapture parent = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{},
+    bool is_dep = false
   );
 
   /**
@@ -282,12 +288,14 @@ public:
    *
    * \param[in] label epoch label for debugging purposes
    * \param[in] parent parent epoch that waits for this new epoch
+   * \param[in] is_dep whether it's a dependent epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochCollective(
     std::string const& label,
-    ParentEpochCapture parent = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{},
+    bool is_dep = false
   );
 
   /**
@@ -297,6 +305,7 @@ public:
    * \param[in] is_coll whether to create a collective or rooted epoch
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
    * \param[in] parent parent epoch that waits for this new epoch
+   * \param[in] is_dep whether it's a dependent epoch
    *
    * \return the new epoch
    */
@@ -304,7 +313,8 @@ public:
     std::string const& label,
     bool is_coll,
     UseDS use_ds = UseDS{false},
-    ParentEpochCapture parent = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{},
+    bool is_dep = false
   );
 
   /**
@@ -327,6 +337,7 @@ public:
    * \param[in] label epoch label for debugging purposes
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
    * \param[in] parent parent epoch that waits for this new epoch
+   * \param[in] is_dep whether it's a dependent epoch
    */
   void initializeRootedEpoch(
     EpochType const epoch,
@@ -358,6 +369,54 @@ public:
    */
   void finishNoActivateEpoch(EpochType const& epoch);
 
+  /**
+   * \brief Release a dependent epoch
+   *
+   *  \param[in] epoch the epoch to release
+   */
+  void releaseEpoch(EpochType epoch);
+
+  /**
+   * \brief Action to run on release of a dependent epoch
+   *
+   * \param[in] epoch the epoch
+   * \param[in] action the action
+   */
+  void onReleaseEpoch(EpochType epoch, ActionType action);
+
+  /**
+   * \brief Test if an epoch is dependent and if it is, if that epoch has been released
+   *
+   * \param[in] epoch the epoch
+   *
+   * \return if it is released
+   */
+  bool epochReleased(EpochType epoch);
+
+private:
+  /**
+   * \brief When an epoch is terminated, we know it's released so we can cleanup
+   *
+   *  \param[in] epoch the epoch to cleanup
+   */
+  void cleanupReleasedEpoch(EpochType epoch);
+
+  /**
+   * \brief Run all actions when an epoch is released
+   *
+   * \param[in] epoch the epoch to run actions for
+   */
+  void runReleaseEpochActions(EpochType epoch);
+
+  /**
+   * \brief Check if all epoch successors are released
+   *
+   * \param[in] epoch the epoch to check
+   *
+   * \return whether they are all released
+   */
+  bool epochSuccessorsReleased(EpochType epoch);
+
 public:
   /*
    * Directly call into a specific type of rooted epoch, can not be overridden
@@ -368,11 +427,13 @@ public:
    *
    * \param[in] parent parent epoch that waits for this new epoch
    * \param[in] label epoch label for debugging purposes
+   * \param[in] is_dep whether it's a dependent epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochRootedWave(
-    ParentEpochCapture parent, std::string const& label = ""
+    ParentEpochCapture parent, std::string const& label = "",
+    bool is_dep = false
   );
 
   /**
@@ -380,11 +441,13 @@ public:
    *
    * \param[in] parent parent epoch that waits for this new epoch
    * \param[in] label epoch label for debugging purposes
+   * \param[in] is_dep whether it's a dependent epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochRootedDS(
-    ParentEpochCapture parent, std::string const& label = ""
+    ParentEpochCapture parent, std::string const& label = "",
+    bool is_dep = false
   );
 
   /**
@@ -823,16 +886,22 @@ public:
   // hang detector termination state
   TermStateType hang_;
 private:
+  using ActionListType = std::list<ActionType>;
+
   // epoch termination state
-  EpochContainerType<TermStateType> epoch_state_        = {};
+  EpochContainerType<TermStateType> epoch_state_ = {};
   // ready epoch list (misnomer: finishedEpoch was invoked)
-  std::unordered_set<EpochType> epoch_ready_            = {};
+  std::unordered_set<EpochType> epoch_ready_ = {};
   // list of remote epochs pending status report of finished
-  std::unordered_set<EpochType> epoch_wait_status_      = {};
+  std::unordered_set<EpochType> epoch_wait_status_ = {};
   // has printed epoch graph during abort
-  bool has_printed_epoch_graph                          = false;
+  bool has_printed_epoch_graph = false;
   NodeType this_node_ = uninitialized_destination;
   EpochStackType epoch_stack_;
+  // released epoch list for dependent epochs
+  std::unordered_set<EpochType> epoch_released_ = {};
+  // release epoch action list for dependent epochs
+  std::unordered_map<EpochType, ActionListType> epoch_release_action_ = {};
 };
 
 }} // end namespace vt::term

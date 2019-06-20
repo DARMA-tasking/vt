@@ -90,6 +90,24 @@ struct EpochManip : runtime::component::Component<EpochManip> {
   static bool isRooted(EpochType const& epoch);
 
   /**
+   * \brief Gets whether an epoch is DS or onot
+   *
+   * \param[in] epoch the epoch
+   *
+   * \return whether it is DS
+   */
+  static bool isDS(EpochType epoch);
+
+  /**
+   * \brief Gets whether an epoch is dependent or onot
+   *
+   * \param[in] epoch the epoch
+   *
+   * \return whether it is dependent
+   */
+  static bool isDep(EpochType epoch);
+
+  /**
    * \brief Gets the \c eEpochCategory of a given epoch
    *
    * \param[in] epoch the epoch to operate on

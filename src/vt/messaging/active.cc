@@ -934,12 +934,13 @@ void ActiveMessenger::prepareActiveMsgToRun(
   using MsgType = ShortMessage;
   auto msg = base.to<MsgType>().get();
 
-  auto const is_term = envelopeIsTerm(msg->env);
-  auto const is_bcast = envelopeIsBcast(msg->env);
-  auto const dest = envelopeGetDest(msg->env);
-  auto const handler = envelopeGetHandler(msg->env);
-  auto const epoch = envelopeIsEpochType(msg->env) ?
+  auto const is_term   = envelopeIsTerm(msg->env);
+  auto const is_bcast  = envelopeIsBcast(msg->env);
+  auto const dest      = envelopeGetDest(msg->env);
+  auto const handler   = envelopeGetHandler(msg->env);
+  auto const epoch     = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
+
   auto const from_node = is_bcast ? dest : in_from_node;
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
@@ -963,6 +964,13 @@ void ActiveMessenger::prepareActiveMsgToRun(
   if (is_obj) {
     objgroup::dispatchObjGroup(base, handler, from_node, cont);
   } else {
+    if (epoch != term::any_epoch_sentinel and epoch::EpochManip::isDep(epoch)) {
+      if (not theTerm()->epochReleased(epoch)) {
+        pending_epoch_msgs_[epoch].emplace_back(base, from_node);
+        return;
+      }
+    }
+
     runnable::makeRunnable(base, not is_term, handler, from_node)
       .withContinuation(cont)
       .withTDEpochFromMsg(is_term)
@@ -978,6 +986,17 @@ void ActiveMessenger::prepareActiveMsgToRun(
   if (not is_term) {
     theTerm()->consume(epoch,1,in_from_node);
     theTerm()->hangDetectRecv();
+  }
+}
+
+void ActiveMessenger::releaseEpochMsgs(EpochType epoch) {
+  auto iter = pending_epoch_msgs_.find(epoch);
+  if (iter != pending_epoch_msgs_.end()) {
+    auto msgs = std::move(iter->second);
+    pending_epoch_msgs_.erase(iter);
+    for (auto&& m : msgs) {
+      prepareActiveMsgToRun(m.buffered_msg, m.from_node, true, m.cont);
+    }
   }
 }
 

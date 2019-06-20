@@ -268,7 +268,7 @@ struct BufferedActiveMsg {
 
   BufferedActiveMsg(
     MessageType const& in_buffered_msg, NodeType const& in_from_node,
-    ActionType in_cont
+    ActionType in_cont = nullptr
   ) : buffered_msg(in_buffered_msg), from_node(in_from_node), cont(in_cont)
   { }
 
@@ -327,6 +327,8 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   using SendFnType           = std::function<SendInfo(PtrLenPairType,NodeType,TagType)>;
   using UserSendFnType       = std::function<void(SendFnType)>;
   using ContainerPendingType = std::unordered_map<TagType,PendingRecvType>;
+  using MsgContType          = std::list<BufferedMsgType>;
+  using EpochWaitType        = std::unordered_map<EpochType, MsgContType>;
   using ReadyHanTagType      = std::tuple<HandlerType, TagType>;
   using HandlerManagerType   = HandlerManager;
   using PendingSendType      = PendingSend;
@@ -1650,6 +1652,13 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   # endif
   }
 
+  /*
+   * \brief Deliver messages that are now released with a dependent epoch
+   *
+   * \param[in] epoch the epoch to release
+   */
+  void releaseEpochMsgs(EpochType epoch);
+
 private:
   /**
    * \internal \brief Allocate a new, unused tag.
@@ -1764,6 +1773,7 @@ private:
   elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_data_ = {};
   elm::ElementLBData bare_handler_lb_data_;
   MPI_Comm comm_ = MPI_COMM_NULL;
+  EpochWaitType pending_epoch_msgs_                           = {};
 };
 
 }} // end namespace vt::messaging
