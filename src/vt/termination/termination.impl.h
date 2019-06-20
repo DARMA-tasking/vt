@@ -67,20 +67,20 @@ inline void TerminationDetector::consume(
   return produceConsume(in_epoch, num_units, false, node);
 }
 
-inline bool TerminationDetector::isRooted(EpochType epoch) {
+inline bool TerminationDetector::isRooted(EpochType epoch) const {
   bool const is_sentinel = epoch == any_epoch_sentinel or epoch == no_epoch;
   return is_sentinel ? false : epoch::EpochManip::isRooted(epoch);
 }
 
-inline bool TerminationDetector::isDS(EpochType epoch) {
-  if (isRooted(epoch)) {
-    auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
-    auto const epoch_category = epoch::EpochManip::category(epoch);
-    auto const is_ds = epoch_category == ds_epoch;
-    return is_ds;
-  } else {
+inline bool TerminationDetector::isDS(EpochType epoch) const {
+  if (not isRooted(epoch)) {
     return false;
   }
+  return epoch::EpochManip::isDS(epoch);
+}
+
+inline bool TerminationDetector::isDep(EpochType epoch) const {
+  return epoch::EpochManip::isDep(epoch);
 }
 
 }} /* end namespace vt::term */
