@@ -107,9 +107,15 @@ EpochType TerminationDetector::getArchetype(EpochType const& epoch) const {
 }
 
 EpochWindow* TerminationDetector::getWindow(EpochType const& epoch) {
-  auto const is_rooted = epoch::EpochManip::isRooted(epoch);
-  if (is_rooted) {
-    auto const& arch_epoch = getArchetype(epoch);
+  auto const arch_epoch = getArchetype(epoch);
+
+  debug_print_verbose(
+    term, node,
+    "getWindow: epoch={:x}, rooted={}, isDep={}, arch_epoch={:x}\n",
+    epoch, isRooted(epoch), isDep(epoch), arch_epoch
+  );
+
+  if (arch_epoch != 0) {
     auto iter = epoch_arch_.find(arch_epoch);
     if (iter == epoch_arch_.end()) {
       epoch_arch_.emplace(
@@ -1164,6 +1170,11 @@ bool TerminationDetector::epochReleased(EpochType epoch) {
   if (not is_dep) {
     return true;
   }
+
+  debug_print(
+    term, node,
+    "epochReleased: epoch={:x}, is_dep={}\n", epoch, is_dep
+  );
 
   // Terminated epochs are always released
   bool const is_term = getWindow(epoch)->isTerminated(epoch);
