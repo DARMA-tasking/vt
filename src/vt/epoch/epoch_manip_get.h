@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
 #include "vt/epoch/epoch_manip.h"
+#include "vt/termination/term_common.h"
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
 
@@ -83,6 +84,28 @@ namespace vt { namespace epoch {
   return BitPackerType::getField<
     eEpochLayout::EpochSequential, epoch_seq_num_bits, EpochType
   >(epoch);
+}
+
+/*static*/ inline bool EpochManip::isDS(EpochType epoch) {
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  if (epoch == no_epoch or epoch == term::any_epoch_sentinel) {
+    return false;
+  }
+  static constexpr auto ds_bit = eEpochCategory::DijkstraScholtenEpoch;
+  auto const cat = epoch::EpochManip::category(epoch);
+  bool const is_ds = static_cast<T>(cat) & static_cast<T>(ds_bit);
+  return is_ds;
+}
+
+/*static*/ inline bool EpochManip::isDep(EpochType epoch) {
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  if (epoch == no_epoch or epoch == term::any_epoch_sentinel) {
+    return false;
+  }
+  static constexpr auto dep_bit = eEpochCategory::DependentEpoch;
+  auto const cat = epoch::EpochManip::category(epoch);
+  bool const is_dep = static_cast<T>(cat) & static_cast<T>(dep_bit);
+  return is_dep;
 }
 
 }} /* end namespace vt::epoch */

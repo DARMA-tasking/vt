@@ -115,6 +115,12 @@ struct EpochManip {
    */
   static eEpochCategory makeCat(eEpochCategory c1, eEpochCategory c2);
 
+  /*
+   * Test category bit w/o extracting whole category field (single |)
+   */
+  static bool isDS(EpochType epoch);
+  static bool isDep(EpochType epoch);
+
 private:
   static EpochType nextSlow(EpochType const& epoch);
   static EpochType nextFast(EpochType const& epoch);
