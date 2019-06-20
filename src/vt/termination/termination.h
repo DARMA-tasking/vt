@@ -52,6 +52,7 @@
 #include "vt/termination/term_action.h"
 #include "vt/termination/term_interface.h"
 #include "vt/termination/term_window.h"
+#include "vt/termination/term_parent.h"
 #include "vt/termination/dijkstra-scholten/ds_headers.h"
 #include "vt/epoch/epoch.h"
 #include "vt/activefn/activefn.h"
@@ -78,6 +79,7 @@ struct TerminationDetector :
   using TermStateDSType    = term::ds::StateDS::TerminatorType;
   using WindowType         = std::unique_ptr<EpochWindow>;
   using ArgType            = vt::arguments::ArgConfig;
+  using ParentBagType      = EpochRelation::ParentBagType;
 
   TerminationDetector();
 

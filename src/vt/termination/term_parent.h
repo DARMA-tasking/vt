@@ -53,6 +53,7 @@
 namespace vt { namespace term {
 
 struct EpochRelation {
+  using ParentBagType = std::unordered_set<EpochType>;
 
   EpochRelation(EpochType in_epoch, bool in_is_ds)
     : epoch_(in_epoch), is_ds_(in_is_ds)
@@ -62,6 +63,7 @@ struct EpochRelation {
   void clearParents();
   bool hasParent() const;
   std::size_t numParents() const;
+  ParentBagType const& getParents() const { return parents_; }
 
 protected:
   // The epoch for the this relation
@@ -71,7 +73,7 @@ private:
   // Is this a DS-epoch
   bool is_ds_ = false;
   // The parent epochs for a given epoch
-  std::unordered_set<EpochType> parents_ = {};
+  ParentBagType parents_ = {};
 };
 
 }} /* end namespace vt::term */
