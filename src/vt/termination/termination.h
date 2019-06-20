@@ -143,22 +143,71 @@ public:
    * Interface for making epochs for termination detection
    */
   EpochType makeEpochRooted(
-    bool useDS = false, bool child = true, EpochType parent = no_epoch
+    bool useDS = false, bool child = true, EpochType parent = no_epoch,
+    bool is_dep = false
   );
-  EpochType makeEpochCollective(bool child = true, EpochType parent = no_epoch);
+  EpochType makeEpochCollective(
+    bool child = true, EpochType parent = no_epoch, bool is_dep = false
+  );
   EpochType makeEpoch(
-    bool is_coll, bool useDS = false, bool child = true, EpochType parent = no_epoch
+    bool is_coll, bool useDS = false, bool child = true,
+    EpochType parent = no_epoch, bool is_dep = false
   );
-  void activateEpoch(EpochType const& epoch);
+
+  /*
+   * Interface to make "dependent" epochs which are not ready-by-default
+   *
+   *      Interaction modes between e_parent <- e_child epochs
+   *
+   *  (1) dep    <- dep     (+)
+   *  (2) dep    <- no-dep  (+, only after release)
+   *  (3) no-dep <- dep     (+)
+   *  (4) no-dep <- no-dep  (+, current)
+   *
+   */
+  EpochType makeEpochRootedDep(
+    bool useDS = true, bool child = true, EpochType parent = no_epoch
+  );
+  EpochType makeEpochCollectiveDep(
+    bool child = true, EpochType parent = no_epoch
+  );
+
+  /*
+   * Release a dependent epoch, register action on release
+   */
+  void releaseEpoch(EpochType epoch);
+  void onReleaseEpoch(EpochType epoch, ActionType action);
+
+  /*
+   * Test if an epoch is dependent and if it is, if that epoch has been released
+   */
+  bool epochReleased(EpochType epoch);
+
+  /*
+   * Tell the system an epoch will not have more events added locally. Must be
+   * called once for a rooted epoch and on every node for a collective.
+   */
   void finishedEpoch(EpochType const& epoch);
+
+  /*
+   * Advanced interface: finishedEpoch calls both of these functions, which can
+   * be split apart in more complex use cases
+   */
+  void activateEpoch(EpochType const& epoch);
   void finishNoActivateEpoch(EpochType const& epoch);
+
+private:
+  ParentBagType const& getParents(EpochType epoch);
+  void cleanupReleasedEpoch(EpochType epoch);
+  void runReleaseEpochActions(EpochType epoch);
+  bool epochParentReleased(EpochType epoch);
 
 public:
   /*
    * Directly call into a specific type of rooted epoch, can not be overridden
    */
-  EpochType makeEpochRootedWave(bool child, EpochType parent);
-  EpochType makeEpochRootedDS(bool child, EpochType parent);
+  EpochType makeEpochRootedWave(bool child, EpochType parent, bool dep = false);
+  EpochType makeEpochRootedDS(bool child, EpochType parent, bool dep = false);
 
 private:
   enum CallFromEnum { Root, NonRoot };
@@ -249,17 +298,21 @@ private:
   // hang detector termination state
   TermStateType hang_;
   // epoch termination state
-  EpochContainerType<TermStateType> epoch_state_        = {};
+  EpochContainerType<TermStateType> epoch_state_                            = {};
   // epoch window container for specific archetyped epochs
-  std::unordered_map<EpochType,WindowType> epoch_arch_  = {};
+  std::unordered_map<EpochType,WindowType> epoch_arch_                      = {};
   // epoch window for basic collective epochs
-  std::unique_ptr<EpochWindow> epoch_coll_              = nullptr;
+  std::unique_ptr<EpochWindow> epoch_coll_                                  = nullptr;
   // ready epoch list (misnomer: finishedEpoch was invoked)
-  std::unordered_set<EpochType> epoch_ready_            = {};
+  std::unordered_set<EpochType> epoch_ready_                                = {};
   // list of remote epochs pending status report of finished
-  std::unordered_set<EpochType> epoch_wait_status_      = {};
+  std::unordered_set<EpochType> epoch_wait_status_                          = {};
   // has printed epoch graph during abort
-  bool has_printed_epoch_graph                          = false;
+  bool has_printed_epoch_graph                                              = false;
+  // released epoch list for dependent epochs
+  std::unordered_set<EpochType> epoch_released_                             = {};
+  // release epoch action list for dependent epochs
+  std::unordered_map<EpochType,std::list<ActionType>> epoch_release_action_ = {};
 };
 
 }} // end namespace vt::term

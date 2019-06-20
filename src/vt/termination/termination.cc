@@ -1050,7 +1050,10 @@ EpochType TerminationDetector::makeEpochRooted(
 EpochType TerminationDetector::makeEpochCollective(
   bool has_dep, EpochType successor
 ) {
-  auto const epoch = epoch::EpochManip::makeNewEpoch();
+  auto const dep   = epoch::eEpochCategory::DependentEpoch;
+  auto const cat   = is_dep ? dep : epoch::eEpochCategory::NoCategoryEpoch;
+  auto const node  = epoch::default_epoch_node;
+  auto const epoch = epoch::EpochManip::makeNewEpoch(false, node, false, cat);
 
   debug_print(
     term, node,
@@ -1075,6 +1078,133 @@ EpochType TerminationDetector::makeEpoch(
   return is_coll ?
     makeEpochCollective(has_dep, successor) :
     makeEpochRooted(useDS,has_dep, successor);
+}
+
+EpochType TerminationDetector::makeEpochRootedDep(
+  bool useDS, bool child, EpochType parent
+) {
+  return makeEpochRooted(useDS,child,parent,true);
+}
+
+EpochType TerminationDetector::makeEpochCollectiveDep(
+  bool child, EpochType parent
+) {
+  return makeEpochCollective(child,parent,true);
+}
+
+void TerminationDetector::releaseEpoch(EpochType epoch) {
+  bool const is_dep = isDep(epoch);
+
+  if (is_dep) {
+    // Put the epoch in the released set, which is not conclusive due to
+    // parentage, which effects the status. An epoch is *released* iff the epoch
+    // is in the released set and all parents are *released* (or there are no
+    // parents). The epoch any_epoch_sentinel does not count as a parent.
+    epoch_released_.insert(epoch);
+
+    bool const is_released = epochReleased(epoch);
+    if (is_released) {
+      runReleaseEpochActions(epoch);
+    } else {
+      // Enqueue continuations to potentially release this epoch since the
+      // child-parent graph is not inverted (one-way knowledge)
+      auto const& parents = getParents(epoch);
+      vtAssert(parents.size() > 0, "Must have unreleased parents in this case");
+      for (auto&& parent : parents) {
+        if (not epochReleased(parent)) {
+          onReleaseEpoch(parent, [epoch]{ theTerm()->releaseEpoch(epoch); });
+        }
+      }
+    }
+  } else {
+    // The user might have made a mistake if they are trying to release an epoch
+    // that is released-by-default (not dependent)
+    vtWarn("Trying to release non-dependent epoch");
+  }
+}
+
+void TerminationDetector::runReleaseEpochActions(EpochType epoch) {
+  auto iter = epoch_release_action_.find(epoch);
+  if (iter != epoch_release_action_.end()) {
+    auto actions = std::move(iter->second);
+    epoch_release_action_.erase(iter);
+    for (auto&& fn : actions) {
+      fn();
+    }
+  }
+  theMsg()->releaseEpochMsgs(epoch);
+}
+
+void TerminationDetector::onReleaseEpoch(EpochType epoch, ActionType action) {
+  // Run an action if an epoch has been released
+  bool const is_dep = isDep(epoch);
+  if (not is_dep or (is_dep and epochReleased(epoch))) {
+    action();
+  } else {
+    epoch_release_action_[epoch].push_back(action);
+  }
+}
+
+bool TerminationDetector::epochParentReleased(EpochType epoch) {
+  //  Test of all parents of a given epoch are released
+  bool released = true;
+  auto const& parents = getParents(epoch);
+  if (parents.size() != 0) {
+    for (auto&& parent : parents) {
+      released &= epochReleased(parent);
+    }
+  }
+  return released;
+}
+
+bool TerminationDetector::epochReleased(EpochType epoch) {
+  // Because of case (2), ignore dep <- no-dep because this should not be called
+  // unless dep is released
+  bool const is_dep = isDep(epoch);
+  if (not is_dep) {
+    return true;
+  }
+
+  // Terminated epochs are always released
+  bool const is_term = getWindow(epoch)->isTerminated(epoch);
+  if (is_term) {
+    return true;
+  }
+
+  // All parents must be released for an epoch to be released even if its in the
+  // release set. Epochs are put in the release set early as to reduce tracking
+  // of epoch "release chains"
+  bool const is_parent_released = epochParentReleased(epoch);
+  if (not is_parent_released) {
+    return false;
+  }
+
+  // Check the release set
+  auto iter = epoch_released_.find(epoch);
+  return iter != epoch_released_.end();
+}
+
+TerminationDetector::ParentBagType const&
+TerminationDetector::getParents(EpochType epoch) {
+  if (isDS(epoch)) {
+    return getDSTerm(epoch)->getParents();
+  } else {
+    auto& state = findOrCreateState(epoch, false);
+    return state.getParents();
+  }
+}
+
+void TerminationDetector::cleanupReleasedEpoch(EpochType epoch) {
+  bool const is_dep = isDep(epoch);
+  if (is_dep) {
+    bool const is_term = getWindow(epoch)->isTerminated(epoch);
+    if (is_term) {
+      auto iter = epoch_released_.find(epoch);
+      if (iter != epoch_released_.end()) {
+        epoch_released_.erase(iter);
+      }
+    }
+  }
 }
 
 void TerminationDetector::activateEpoch(EpochType const& epoch) {

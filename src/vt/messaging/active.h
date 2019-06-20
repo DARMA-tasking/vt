@@ -167,6 +167,7 @@ struct ActiveMessenger {
   using ContainerPendingType = std::unordered_map<TagType,PendingRecvType>;
   using MsgContType          = std::list<BufferedMsgType>;
   using ContWaitType         = std::unordered_map<HandlerType, MsgContType>;
+  using EpochWaitType        = std::unordered_map<EpochType, MsgContType>;
   using ReadyHanTagType      = std::tuple<HandlerType, TagType>;
   using MaybeReadyType       = std::vector<ReadyHanTagType>;
   using HandlerManagerType   = HandlerManager;
@@ -637,6 +638,11 @@ struct ActiveMessenger {
     send_listen_.clear();
   }
 
+  /*
+   * Deliver messages that are now released with a dependent epoch
+   */
+  void releaseEpochMsgs(EpochType epoch);
+
 private:
   bool testPendingActiveMsgAsyncRecv();
   bool testPendingDataMsgAsyncRecv();
@@ -660,16 +666,16 @@ private:
     trace::UserEventIDType trace_isend     = 0;
   #endif
 
-  HandlerType current_handler_context_                    = uninitialized_handler;
-  NodeType current_node_context_                          = uninitialized_destination;
-  EpochType current_epoch_context_                        = no_epoch;
-  PriorityType current_priority_context_                  = no_priority;
-  PriorityLevelType current_priority_level_context_       = no_priority_level;
-  EpochType global_epoch_                                 = no_epoch;
-  MaybeReadyType maybe_ready_tag_han_                     = {};
-  ContWaitType pending_handler_msgs_                      = {};
-  ContainerPendingType pending_recvs_                     = {};
-  TagType cur_direct_buffer_tag_                          = starting_direct_buffer_tag;
+  HandlerType current_handler_context_                      = uninitialized_handler;
+  NodeType current_node_context_                            = uninitialized_destination;
+  EpochType current_epoch_context_                          = no_epoch;
+  PriorityType current_priority_context_                    = no_priority;
+  PriorityLevelType current_priority_level_context_         = no_priority_level;
+  EpochType global_epoch_                                   = no_epoch;
+  MaybeReadyType maybe_ready_tag_han_                       = {};
+  ContWaitType pending_handler_msgs_                        = {};
+  ContainerPendingType pending_recvs_                       = {};
+  TagType cur_direct_buffer_tag_                            = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
   std::vector<ListenerType> send_listen_                    = {};
   IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv = {};
