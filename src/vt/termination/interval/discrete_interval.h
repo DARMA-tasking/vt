@@ -346,8 +346,9 @@ private:
     if (it not_eq set_.begin()) {
       auto prev = std::prev(it);
       if (it->tangent(*prev) == PositionType::TangentLeft) {
-        it->join(*prev, PositionType::TangentLeft);
+        auto tmp = *prev;
         set_.erase(prev);
+        it->join(tmp, PositionType::TangentLeft);
       }
     }
     return it;
@@ -358,8 +359,9 @@ private:
     auto next = std::next(it);
     if (it not_eq set_.end()) {
       if (it->tangent(*next) == PositionType::TangentRight) {
-        it->join(*next, PositionType::TangentRight);
+        auto tmp = *next;
         set_.erase(next);
+        it->join(tmp, PositionType::TangentRight);
       }
     }
     return it;
