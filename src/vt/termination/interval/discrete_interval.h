@@ -348,7 +348,8 @@ private:
       if (it->tangent(*prev) == PositionType::TangentLeft) {
         auto tmp = *prev;
         set_.erase(prev);
-        it->join(tmp, PositionType::TangentLeft);
+        auto& to_fuse = const_cast<IntervalType&>(*it);
+        to_fuse.join(tmp, PositionType::TangentLeft);
       }
     }
     return it;
@@ -361,7 +362,8 @@ private:
       if (it->tangent(*next) == PositionType::TangentRight) {
         auto tmp = *next;
         set_.erase(next);
-        it->join(tmp, PositionType::TangentRight);
+        auto& to_fuse = const_cast<IntervalType&>(*it);
+        to_fuse.join(tmp, PositionType::TangentRight);
       }
     }
     return it;
