@@ -94,14 +94,6 @@ public:
     return val >= lb_ and val <= ub_;
   }
 
-  void expandBy(DomainT const& val) {
-    if (val > 0) {
-      ub_ += val;
-    } else {
-      lb_ -= val;
-    }
-  }
-
   enum struct PositionEnum : int {
     TangentLeft = -1,
     NotTangent   = 0,
@@ -304,12 +296,19 @@ private:
     bool is_lower = lb_ == val;
     bool is_upper = ub_ == val;
     if (is_lower) {
-      lb_++;
+      if (set_.size() > 0) {
+        lb_ = set_.begin()->lower();
+      } else {
+        lb_ = 0;
+      }
     }
     if (is_upper) {
-      ub_++;
+      if (set_.size() > 0) {
+        ub_ = std::prev(set_.end())->upper();
+      } else {
+        ub_ = 0;
+      }
     }
-    // @todo update the true valid range
   }
 
   void updateGlobal(IntervalType const& i) {
