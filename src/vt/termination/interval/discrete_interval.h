@@ -296,11 +296,11 @@ private:
   IteratorType insertSet(IteratorType it, IntervalType&& i) {
     // Insert into the set
     auto ret = set_.emplace_hint(it,std::move(i));
-    vtAssert(ret.second,                  "Should be a valid insert");
-    vtAssert(ret.first not_eq set_.end(), "Must be valid insert---live iterator");
+    vtAssert(ret != it,             "Should be a valid insert");
+    vtAssert(ret not_eq set_.end(), "Must be valid insert---live iterator");
 
     // Fuse interval set elements that are now tangent after this insertion
-    return hint_ = join(ret.first);
+    return hint_ = join(ret);
   }
 
   bool existsGlobal(DomainT const& val) const {
