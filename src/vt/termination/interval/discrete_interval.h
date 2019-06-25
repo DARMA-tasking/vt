@@ -345,8 +345,8 @@ private:
     vtAssertExpr(it not_eq set_.end());
     if (it not_eq set_.begin()) {
       auto prev = std::prev(it);
-      if (it->tangent(prev) == PositionType::TangentLeft) {
-        it->join(prev, PositionType::TangentLeft);
+      if (it->tangent(*prev) == PositionType::TangentLeft) {
+        it->join(*prev, PositionType::TangentLeft);
         set_.erase(prev);
       }
     }
@@ -357,8 +357,8 @@ private:
     vtAssertExpr(it not_eq set_.end());
     auto next = std::next(it);
     if (it not_eq set_.end()) {
-      if (it->tangent(next) == PositionType::TangentRight) {
-        it->join(next, PositionType::TangentRight);
+      if (it->tangent(*next) == PositionType::TangentRight) {
+        it->join(*next, PositionType::TangentRight);
         set_.erase(next);
       }
     }
