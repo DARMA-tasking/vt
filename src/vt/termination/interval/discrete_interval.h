@@ -78,8 +78,19 @@ public:
   DomainT width() const { return (ub_-lb_)+1; }
   bool    valid() const { lb_ <= ub_; }
 
-  template <typename DomainU>
-  bool in(DomainU&& val) const {
+  void setUpper(DomainT const& val) {
+    ub_ = val;
+    vtAssert(val >= lb_, "Upper must be greater than lower bound");
+    vtAssert(valid(),    "Interval must remain valid");
+  }
+
+  void setLower(DomainT const& val) {
+    lb_ = val;
+    vtAssert(ub_ >= val, "Lower must be less than upper bound");
+    vtAssert(valid(),    "Interval must remain valid");
+  }
+
+  bool in(DomainT const& val) const {
     return val >= lb_ and val <= ub_;
   }
 
@@ -133,6 +144,11 @@ public:
     }
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | lb_ | ub_;
+  }
+
 public:
   template <typename IntT, typename IntU>
   static bool less(IntT&& i1, IntU&& i2) {
@@ -161,61 +177,6 @@ struct IntervalCompare {
     return IntervalType::less(i1,i2);
   }
 };
-
-
-// template <typename T>
-// struct Node {
-//   template <typename T>
-//   using PtrType = std::unique_ptr<Node<T>>;
-
-//   Node() = default;
-//   explicit Node(T z) : x_(z), y_(z) { }
-
-//   bool inLocal(T z) const { return z >= x_ and z <= y; }
-
-//   bool in(T z) {
-//     if (inLocal(z)) {
-//       return true;
-//     } else {
-//       if (z < x_) {
-//         return c1_ ? c1_->in(z) : false;
-//       } else {
-//         return c2_ ? c2_->in(z) : false;
-//       }
-//     }
-//   }
-
-//   void insert(T z, bool new_insert = false) {
-//     if (inLocal(z)) {
-//       vtAssertInfo(
-//         not new_insert, "Element insertion in interval exists", z, x_, y_
-//       );
-//       return;
-//     }
-
-//     if (z < x_) {
-//       // test expand OR create node
-//       c1_->insert(z);
-//     } else {
-//       // test expand OR create node
-//       c2_->insert(z);
-//     }
-//   }
-
-//   bool hasChildren() const {
-//     return c1 != nullptr or c2 != nullptr;
-//   }
-
-//   void testInvariants() const {
-//     vtAssertExpr(x_ <= y_);
-//   }
-
-// private:
-//   T x_ = 0;
-//   T y_ = 0;
-//   PtrType c1_ = nullptr;
-//   PtrType c2_ = nullptr;
-// };
 
 template <
   typename DomainT,
@@ -273,6 +234,45 @@ struct IntervalSetBase {
     return insertSet(it,std::move(i));
   }
 
+  void erase(DomainT const& val) {
+    vtAssert(existsGlobal(val), "This element must exist in the set");
+    auto iter = set_.find(val);
+    bool in_set = iter != set_.end();
+    vtAssert(in_set, "The element must exist in a interval bucket");
+    if (in_set) {
+      eraseGlobal(val);
+      if (iter->width() == 1) {
+        bool invalid_hint = iter == iter_;
+        auto ret = set_.erase(iter);
+        if (invalid_hint) {
+          iter_ = ret;
+        }
+      } else if (iter->upper() == val) {
+        iter->setUpper(iter->upper() - 1);
+      } else if (iter->lower() == val) {
+        iter->setUpper(iter->lower() + 1);
+      } else {
+        // Splice the interval into two pieces
+        vtAssert(iter->width() > 2, "Interval width must be greater than 2");
+        iter->setUpper(val - 1);
+        IntervalType i(val+1, iter->upper());
+        insertSet(iter,std::move(i));
+      }
+    }
+  }
+
+  bool exists(DomainT const& val) const {
+    if (not existsGlobal(val)) {
+      return false;
+    }
+    auto iter = set_.find(val);
+    bool in_set = iter != set_.end();
+    if (in_set) {
+      vtAssert(iter->in(val), "Value must exists in range");
+    }
+    return in_set;
+  }
+
   void clear() {
     set_.clear();
     lb_ = ub_ = 0;
@@ -286,13 +286,7 @@ struct IntervalSetBase {
 
 private:
 
-  template <
-    typename DomainU,
-    typename = std::enable_if_t<
-      std::is_same<std::remove_reference_t<DomainU>, DomainT>::value
-    >
-  >
-  IteratorType insertSet(IteratorType it, IntervalType i) {
+  IteratorType insertSet(IteratorType it, IntervalType&& i) {
     // Insert into the set
     auto ret = set_.emplace_hint(it,std::move(i));
     vtAssert(ret.second,                  "Should be a valid insert");
@@ -300,6 +294,22 @@ private:
 
     // Fuse interval set elements that are now tangent after this insertion
     return iter_ = join(ret.first);
+  }
+
+  bool existsGlobal(DomainT const& val) const {
+    return val >= lb_ and val <= ub_;
+  }
+
+  void eraseGlobal(DomainT const& val) {
+    bool is_lower = lb_ == val;
+    bool is_upper = ub_ == val;
+    if (is_lower) {
+      lb_++;
+    }
+    if (is_upper) {
+      ub_++;
+    }
+    // @todo update the true valid range
   }
 
   void updateGlobal(IntervalType const& i) {
