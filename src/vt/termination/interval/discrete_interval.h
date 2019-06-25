@@ -172,17 +172,20 @@ struct IntervalCompare {
 
 template <
   typename DomainT,
-  typename CompareT,
-  template <class, class> class IntervalT,
-  template <class, class> class OrderedSetT
+  typename DomainCompareT,
+  DomainT sentinel,
+  template <class>                 class AllocatorT,
+  template <class, class, DomainT> class IntervalT,
+  template <class, class, class>   class OrderedSetT
 >
 struct IntervalSetBase {
   using DomainType          = DomainT;
-  using IntervalType        = IntervalT<DomainT, CompareT>;
-  using IntervalCompareType = IntervalCompare<DomainT>;
-  using OrderedSetType      = OrderedSetT<IntervalType, IntervalCompareType>;
+  using IntervalType        = IntervalT<DomainT, DomainCompareT, sentinel>;
+  using CompareType         = IntervalCompare<DomainT>;
+  using AllocType           = AllocatorT<IntervalType>;
+  using OrderedSetType      = OrderedSetT<IntervalType, CompareType, AllocType>;
   using IteratorType        = typename OrderedSetType::iterator;
-  using PositionType        = typename OrderedSetType::PositionEnum;
+  using PositionType        = typename IntervalType::PositionEnum;
 
   IntervalSetBase() : iter_(set_.end()) { }
   IntervalSetBase(IntervalSetBase const&) = default;
@@ -357,6 +360,18 @@ private:
   IteratorType iter_  = {};
 };
 
+
 }}} /* end namespace vt::term::interval */
+
+namespace vt {
+
+template <typename DomainT>
+using IntervalSet =
+  term::interval::IntervalSetBase<
+    DomainT, std::less<DomainT>, DomainT{}, std::allocator,
+    term::interval::Interval, std::set
+  >;
+
+} /* end namespace vt */
 
 #endif /*INCLUDED_VT_TERMINATION_INTERVAL_DISCRETE_INTERVAL_H*/
