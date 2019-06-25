@@ -187,7 +187,7 @@ struct IntervalSetBase {
   using IteratorType        = typename OrderedSetType::iterator;
   using PositionType        = typename IntervalType::PositionEnum;
 
-  IntervalSetBase() : iter_(set_.end()) { }
+  IntervalSetBase() : hint_(set_.end()) { }
   IntervalSetBase(IntervalSetBase const&) = default;
   IntervalSetBase(IntervalSetBase&&) = default;
 
@@ -201,9 +201,9 @@ struct IntervalSetBase {
     IntervalType i(std::forward<DomainU>(val));
 
     // Expand the global bounds in this interval set
-    updateGlobal(i);
+    insertGlobal(i);
 
-    return insertSet(iter_,std::move(i));
+    return insertSet(hint_,std::move(i));
   }
 
   template <
@@ -217,7 +217,7 @@ struct IntervalSetBase {
     IntervalType i(std::forward<DomainU>(val));
 
     // Expand the global bounds in this interval set
-    updateGlobal(i);
+    insertGlobal(i);
 
     // If the val is tangent to the hint iterator, directly update
     auto pos = it->tangent(i);
@@ -237,10 +237,10 @@ struct IntervalSetBase {
     if (in_set) {
       eraseGlobal(val);
       if (iter->width() == 1) {
-        bool invalid_hint = iter == iter_;
+        bool invalid_hint = iter == hint_;
         auto ret = set_.erase(iter);
         if (invalid_hint) {
-          iter_ = ret;
+          hint_ = ret;
         }
       } else if (iter->upper() == val) {
         iter->setUpper(iter->upper() - 1);
@@ -271,13 +271,25 @@ struct IntervalSetBase {
   void clear() {
     set_.clear();
     lb_ = ub_ = 0;
-    iter_ = set_.end();
+    hint_ = set_.end();
   }
 
   DomainT range() const { return ub_ - lb_; }
   DomainT lower() const { return lb_; }
   DomainT upper() const { return ub_; }
   bool    empty() const { return set_.size() == 0; }
+
+  std::size_t size() const { return elms_; }
+  std::size_t compressedSize() const { return set_.size(); }
+
+  float compression() const {
+    if (set_.size() > 0) {
+      return static_cast<double>(elms_) / static_cast<double>(set_.size());
+    } else {
+      vtAssert(elms_ == 0, "Number of elements must be zero is set is empty");
+      return 1.0f;
+    }
+  }
 
 private:
 
@@ -288,7 +300,7 @@ private:
     vtAssert(ret.first not_eq set_.end(), "Must be valid insert---live iterator");
 
     // Fuse interval set elements that are now tangent after this insertion
-    return iter_ = join(ret.first);
+    return hint_ = join(ret.first);
   }
 
   bool existsGlobal(DomainT const& val) const {
@@ -312,12 +324,16 @@ private:
         ub_ = 0;
       }
     }
+    // Decrement count of non-compressed elements
+    elms_--;
   }
 
-  void updateGlobal(IntervalType const& i) {
+  void insertGlobal(IntervalType const& i) {
     // Expand the global bounds in this interval set
     lb_ = std::min<DomainT>(lb_, i.lower());
     ub_ = std::max<DomainT>(ub_, i.upper());
+    // Decrement count of non-compressed elements
+    elms_++;
   }
 
   IteratorType join(IteratorType it) {
@@ -357,7 +373,9 @@ private:
   // The set of all the interval ranges
   OrderedSetType set_ = {};
   // The previous insert iterator for quick lookup
-  IteratorType iter_  = {};
+  IteratorType hint_  = {};
+  // Not required for correctness: count of non-compressed elements
+  std::size_t elms_   = 0;
 };
 
 
