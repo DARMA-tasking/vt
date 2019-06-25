@@ -111,7 +111,7 @@ public:
    *                    gap            gap
    */
 
-  PositionEnum tangent(IntervalType const& i, DomainT gap = 1) {
+  PositionEnum tangent(IntervalType const& i, DomainT gap = 1) const {
     if (lb_ == i.ub_ + gap) {
       return PositionEnum::TangentLeft;
     } else if (ub_ == i.lb_ - gap) {
