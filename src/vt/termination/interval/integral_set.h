@@ -86,7 +86,9 @@ struct IntegralSetBase {
   template <
     typename DomainU,
     typename = std::enable_if_t<
-      std::is_same<std::remove_reference_t<DomainU>, DomainT>::value
+      std::is_same<
+        std::remove_const_t<std::remove_reference_t<DomainU>>, DomainT
+      >::value
     >
   >
   IteratorType insert(DomainU&& val) {
@@ -101,7 +103,9 @@ struct IntegralSetBase {
   template <
     typename DomainU,
     typename = std::enable_if_t<
-      std::is_same<std::remove_reference_t<DomainU>, DomainT>::value
+      std::is_same<
+        std::remove_const_t<std::remove_reference_t<DomainU>>, DomainT
+      >::value
     >
   >
   IteratorType insert(IteratorType it, DomainU&& val) {
