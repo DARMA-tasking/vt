@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          discrete_interval.h
+//                          integral_set.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,10 +42,11 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_INTERVAL_DISCRETE_INTERVAL_H
-#define INCLUDED_VT_TERMINATION_INTERVAL_DISCRETE_INTERVAL_H
+#if !defined INCLUDED_VT_TERMINATION_INTERVAL_INTEGRAL_SET_H
+#define INCLUDED_VT_TERMINATION_INTERVAL_INTEGRAL_SET_H
 
 #include "vt/config.h"
+#include "vt/termination/interval/interval.h"
 
 #include <algorithm>
 #include <iterator>
@@ -53,148 +54,12 @@
 namespace vt { namespace term { namespace interval {
 
 /*
- * Discrete interval tree for encoding non-overlapping integer ranges in a tree
+ * Discrete interval tree for encoding a set of partially tangent,
+ * non-overlapping integral values into interval ranges seamlessly in a
+ * tree. Maintains a "DIET" data structure: Discrete Interval Encoding
+ * Tree. When inserting contiguous elements in order, the storage (non-bit) and
+ * time is constant O(1).
  */
-
-template <
-  typename DomainT,
-  typename CompareT = std::less<DomainT>,
-  DomainT sentinel = DomainT()
->
-struct Interval {
-  using IntervalType = Interval<DomainT, CompareT, sentinel>;
-  using DomainType   = DomainT;
-
-  Interval() = default;
-  Interval(Interval const&) = default;
-  Interval(Interval&&) = default;
-  Interval& operator=(Interval const&) = default;
-
-  Interval(DomainT const& val) : lb_(val), ub_(val) { }
-  Interval(DomainT const& lb, DomainT const& ub) : lb_(lb), ub_(ub) { }
-
-public:
-  DomainT lower() const { return lb_; }
-  DomainT upper() const { return ub_; }
-  DomainT width() const { return (ub_-lb_)+1; }
-  bool    valid() const { lb_ <= ub_; }
-
-  DomainT get(std::size_t i) const { return lb_ + i; }
-
-  void setUpper(DomainT const& val) {
-    ub_ = val;
-    vtAssert(val >= lb_, "Upper must be greater than lower bound");
-    vtAssert(valid(),    "Interval must remain valid");
-  }
-
-  void setLower(DomainT const& val) {
-    lb_ = val;
-    vtAssert(ub_ >= val, "Lower must be less than upper bound");
-    vtAssert(valid(),    "Interval must remain valid");
-  }
-
-  bool in(DomainT const& val) const {
-    return val >= lb_ and val <= ub_;
-  }
-
-  enum struct PositionEnum : int {
-    TangentLeft = -1,
-    NotTangent   = 0,
-    TangentRight = 1
-  };
-
-  /*
-   * Determine if a input interval is tangent to this interval within a
-   * specified grap.
-   *
-   *        TangentLeft                   TangentRight
-   *       |------i-----| lb_        ub_ |------i-----|
-   *                      |----this----|
-   *                     ^              ^
-   *                    gap            gap
-   */
-
-  PositionEnum tangent(IntervalType const& i, DomainT gap = 1) const {
-    if (lb_ == i.ub_ + gap) {
-      return PositionEnum::TangentLeft;
-    } else if (ub_ == i.lb_ - gap) {
-      return PositionEnum::TangentRight;
-    } else {
-      return PositionEnum::NotTangent;
-    }
-  }
-
-  void join(IntervalType const& i, PositionEnum pos) {
-    switch (pos) {
-    case PositionEnum::TangentLeft:
-      vtAssertExpr(lb_ == i.upper() + 1);
-      lb_ = std::min<DomainT>(lb_, i.lower());
-      break;
-    case PositionEnum::TangentRight:
-      vtAssertExpr(ub_ == i.lower() - 1);
-      ub_ = std::max<DomainT>(ub_, i.upper());
-      break;
-    default:
-      vtAssert(false, "Must have tangent position to join");
-    }
-  }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | lb_ | ub_;
-  }
-
-  bool operator==(IntervalType const& i) const { return i.lb_ == lb_ and i.ub_ == ub_; }
-  bool operator!=(IntervalType const& i) const { return !(*this == i); }
-
-public:
-  template <typename IntT, typename IntU>
-  static bool intersects(IntT&& i1, IntU&& i2) {
-    bool ret = i1.lower() <= i2.upper() and i2.lower() <= i1.upper();
-    debug_print(
-      gen, node,
-      "Interval intersects: i1={}, i2={}, op:{}<={}={} and {}<={}={} => {}\n",
-      i1, i2,
-      i1.lower(), i2.upper(), i1.lower() <= i2.upper(),
-      i2.lower(), i1.upper(), i2.lower() <= i1.upper(),
-      ret
-    );
-    return ret;
-  }
-
-  template <typename IntT, typename IntU>
-  static bool less(IntT&& i1, IntU&& i2) {
-    return i1.lower() < i2.lower() and i1.upper() < i2.lower();
-  }
-
-  friend bool operator<(IntervalType const& i1, IntervalType const& i2);
-
-  template <typename T, typename U, DomainT v>
-  friend std::ostream& operator<<(std::ostream& os, Interval<T,U,v> const& i) {
-    os << "itv[" << i.lower() << "," << i.upper() << "]";
-    return os;
-  }
-
-private:
-  DomainT lb_ = sentinel;
-  DomainT ub_ = sentinel;
-};
-
-template <typename DomainT, typename CompareT, DomainT sentinel>
-bool operator<(
-  Interval<DomainT, CompareT, sentinel> const& i1,
-  Interval<DomainT, CompareT, sentinel> const& i2
-) {
-  return Interval<DomainT, CompareT, sentinel>::less(i1,i2);
-}
-
-template <typename DomainT>
-struct IntervalCompare {
-  using IntervalType = Interval<DomainT>;
-  bool operator()(IntervalType const& i1, IntervalType const& i2) const {
-    return IntervalType::less(i1,i2);
-  }
-};
 
 template <
   typename DomainT,
@@ -204,7 +69,7 @@ template <
   template <class, class, DomainT> class IntervalT,
   template <class, class, class>   class OrderedSetT
 >
-struct IntervalSetBase {
+struct IntegralSetBase {
   using DomainType          = DomainT;
   using IntervalType        = IntervalT<DomainT, DomainCompareT, sentinel>;
   using CompareType         = IntervalCompare<DomainT>;
@@ -213,9 +78,9 @@ struct IntervalSetBase {
   using IteratorType        = typename OrderedSetType::iterator;
   using PositionType        = typename IntervalType::PositionEnum;
 
-  IntervalSetBase() : hint_(set_.end()) { }
-  IntervalSetBase(IntervalSetBase const&) = default;
-  IntervalSetBase(IntervalSetBase&&) = default;
+  IntegralSetBase() : hint_(set_.end()) { }
+  IntegralSetBase(IntegralSetBase const&) = default;
+  IntegralSetBase(IntegralSetBase&&) = default;
 
   template <
     typename DomainU,
@@ -482,6 +347,39 @@ public:
   IteratorType irbegin() { return set_.rbegin(); }
   IteratorType irend()   { return set_.rend(); }
 
+public:
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | lb_ | ub_;
+    s | set_;
+
+    //
+    // @todo Use a more efficient unpack (like the following) so insertions are
+    // O(1) since the elements are already in sorted order when they are
+    // serialized
+    //
+    // typename OrderedSetType::size_type size = set_.size();
+    // s | size;
+    // if (s.isUnpacking()) {
+    //   auto iter = set_.end();
+    //   for (typename OrderedSetType::size_type = 0; i < size; i++) {
+    //     typename OrderedSetType::value_type elm = {};
+    //     s | elm;
+    //     iter = set_.insert(iter,elm)
+    //   }
+    // } else {
+    //   for (auto&& i : set_) {
+    //     s | i;
+    //   }
+    // }
+
+    if (s.isUnpacking()) {
+      hint_ = set_.end();
+    }
+    s | elms_;
+  }
+
 private:
   // The lower bound for the entire set
   DomainT lb_         = 0;
@@ -500,16 +398,13 @@ private:
 
 namespace vt {
 
-template <typename DomainT, typename CompareT = std::less<DomainT>>
-using Interval = term::interval::Interval<DomainT, CompareT>;
-
 template <typename DomainT>
-using IntervalSet =
-  term::interval::IntervalSetBase<
+using IntegralSet =
+  term::interval::IntegralSetBase<
     DomainT, std::less<DomainT>, DomainT{}, std::allocator,
     term::interval::Interval, std::set
   >;
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VT_TERMINATION_INTERVAL_DISCRETE_INTERVAL_H*/
+#endif /*INCLUDED_VT_TERMINATION_INTERVAL_INTEGRAL_SET_H*/
