@@ -115,24 +115,30 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
 void EpochWindow::closeEpoch(EpochType const& epoch) {
   debug_print_verbose(
     term, node,
-    "closeEpoch: (before) epoch={:x}, unresolved: first={:x}, last={:x}\n",
-    epoch, active_.lower(), active_.upper()
+    "closeEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
+    "compression={}\n",
+    epoch, active_.lower(), active_.upper(), active_.size(),
+    active_.compression()
   );
 
   active_.erase(epoch);
 
   debug_print(
     term, node,
-    "closeEpoch: (after) epoch={:x}, unresolved: first={:x}, last={:x}\n",
-    epoch, active_.lower(), active_.upper()
+    "closeEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
+    "compression={}\n",
+    epoch, active_.lower(), active_.upper(), active_.size(),
+    active_.compression()
   );
 }
 
 bool EpochWindow::isTerminated(EpochType const& epoch) const {
   debug_print(
     term, node,
-    "isTerminated: epoch={:x}, first={:x}, last={:x}\n",
-    epoch, active_.lower(), active_.upper()
+    "isTerminated: epoch={:x}, first={:x}, last={:x}, num={}, "
+    "compression={}\n",
+    epoch, active_.lower(), active_.upper(), active_.size(),
+    active_.compression()
   );
 
   return not active_.exists(epoch);
