@@ -311,6 +311,19 @@ struct IntervalSetBase {
     }
   }
 
+  void dumpState() const {
+    debug_print(
+      gen, node,
+      "OrderedSet: bounds=[{},{}] size={}, compressedSize={}, compression={}\n",
+      lb_, ub_, size(), compressedSize(), compression()
+    );
+    std::size_t c = 0;
+    for (auto&& i : set_) {
+      debug_print(gen, node, "\t interval {} : {}\n", c, i);
+      c++;
+    }
+  }
+
 private:
 
   IteratorType insertSet(IteratorType it, IntervalType&& i) {
