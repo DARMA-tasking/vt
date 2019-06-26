@@ -137,7 +137,7 @@ struct IntegralSetBase {
       } else if (iter->upper() == val) {
         iter->setUpper(iter->upper() - 1);
       } else if (iter->lower() == val) {
-        iter->setUpper(iter->lower() + 1);
+        iter->setLower(iter->lower() + 1);
       } else {
         // Splice the interval into two pieces
         vtAssert(iter->width() > 2, "Interval width must be greater than 2");
