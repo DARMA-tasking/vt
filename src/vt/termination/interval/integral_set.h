@@ -159,7 +159,6 @@ struct IntegralSetBase {
     );
     vtAssert(in_set, "The element must exist in a interval bucket");
     if (in_set) {
-      eraseGlobal(val);
       if (iter->width() == 1) {
         bool invalid_hint = iter == hint_;
         auto ret = set_.erase(iter);
@@ -181,6 +180,7 @@ struct IntegralSetBase {
         IntervalType i(val+1, ub);
         insertSet(iter,std::move(i));
       }
+      eraseGlobal(val);
     }
   }
 
