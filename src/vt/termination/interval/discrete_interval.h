@@ -158,7 +158,7 @@ public:
 
   template <typename IntT, typename IntU>
   static bool less(IntT&& i1, IntU&& i2) {
-    return i1.lower() <= i2.upper() and i2.lower() <= i1.upper();
+    return i1.lower() < i2.lower() and i1.upper() < i2.lower();
   }
 
   friend bool operator<(IntervalType const& i1, IntervalType const& i2);
