@@ -329,7 +329,7 @@ private:
   IteratorType insertSet(IteratorType it, IntervalType&& i) {
     // Insert into the set
     auto ret = set_.emplace_hint(it,std::move(i));
-    vtAssert(ret != it,             "Should be a valid insert");
+    vtAssert(ret not_eq it,         "Should be a valid insert");
     vtAssert(ret not_eq set_.end(), "Must be valid insert---live iterator");
 
     // Fuse interval set elements that are now tangent after this insertion
