@@ -68,7 +68,7 @@ struct Interval {
   Interval(Interval&&) = default;
   Interval& operator=(Interval const&) = default;
 
-  Interval(DomainT const& val) : lb_(val), ub_(val) { }
+  explicit Interval(DomainT const& val) : lb_(val), ub_(val) { }
   Interval(DomainT const& lb, DomainT const& ub) : lb_(lb), ub_(ub) { }
 
 public:
