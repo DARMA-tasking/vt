@@ -47,8 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/epoch/epoch_manip.h"
-
-#include <set>
+#include "vt/termination/interval/integral_set.h"
 
 namespace vt { namespace term {
 
@@ -64,15 +63,12 @@ private:
 public:
   void initialize(EpochType const& epoch);
 
-  EpochType getFirst() const { return first_unresolved_epoch_; }
-  EpochType getLast()  const { return last_unresolved_epoch_; }
+  EpochType getFirst() const { return active_.lower(); }
+  EpochType getLast()  const { return active_.upper(); }
 
-  bool inWindow(EpochType const& epoch) const;
   bool isTerminated(EpochType const& epoch) const;
   void addEpoch(EpochType const& epoch);
   void closeEpoch(EpochType const& epoch);
-
-  void clean(EpochType const& epoch);
 
 private:
   // The archetypical epoch for this window container (category,rooted,user,..)
@@ -81,12 +77,8 @@ private:
   bool initialized_                       = false;
   // Should the epoch conform to an archetype?
   bool conform_archetype_                 = true;
-  // The first unresolved epoch in the window: all epoch <= this are terminated
-  EpochType first_unresolved_epoch_       = no_epoch;
-  // The last unresolved epoch in the current window
-  EpochType last_unresolved_epoch_        = no_epoch;
   // The set of epochs terminated that are not represented by the window
-  std::set<EpochType> terminated_         = {};
+  vt::IntegralSet<EpochType> active_      = {};
 };
 
 }} /* end namespace vt::term */

@@ -324,9 +324,6 @@ void TerminationDetector::freeEpoch(EpochType const& epoch) {
     }
   }
 
-  auto window = getWindow(epoch);
-  window->clean(epoch);
-
   // Clean up any actions lambdas associated with epoch
   {
     auto iter = epoch_actions_.find(epoch);

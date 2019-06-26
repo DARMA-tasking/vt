@@ -79,21 +79,13 @@ inline bool EpochWindow::isArchetypal(EpochType const& epoch) {
   return epoch_arch == archetype_epoch_;
 }
 
-bool EpochWindow::inWindow(EpochType const& epoch) const {
-  vtAssertExpr(last_unresolved_epoch_ >= first_unresolved_epoch_);
-  vtAssertExpr(initialized_);
-  if (first_unresolved_epoch_ == no_epoch) {
-    return false;
-  } else {
-    return epoch < first_unresolved_epoch_;
-  }
-}
-
 void EpochWindow::addEpoch(EpochType const& epoch) {
   debug_print_verbose(
     term, node,
-    "addEpoch: (before) epoch={:x}, unresolved: first={:x}, last={:x}\n",
-    epoch, first_unresolved_epoch_, last_unresolved_epoch_
+    "addEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
+    "compression={}\n",
+    epoch, active_.lower(), active_.upper(), active_.size(),
+    active_.compression()
   );
 
   if (!initialized_) {
@@ -105,28 +97,18 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
 
     vtAssertExprInfo(
       is_epoch_arch, epoch, is_epoch_arch, archetype_epoch_,
-      initialized_, first_unresolved_epoch_, last_unresolved_epoch_,
-      terminated_.size()
+      initialized_, active_.lower(), active_.upper(), active_.size()
     );
   }
 
-  if (first_unresolved_epoch_ == no_epoch) {
-    vtAssertExpr(last_unresolved_epoch_ == no_epoch);
-    /*
-     * Set the first and last epoch, since this is the first time this window
-     * is being initialized for the given epoch configuration
-     */
-    first_unresolved_epoch_ = last_unresolved_epoch_ = epoch;
-  } else {
-    last_unresolved_epoch_ = std::max(last_unresolved_epoch_, epoch);
-  }
-
-  vtAssertExpr(last_unresolved_epoch_ >= first_unresolved_epoch_);
+  active_.insert(epoch);
 
   debug_print(
     term, node,
-    "addEpoch: (after) epoch={:x}, unresolved: first={:x}, last={:x}\n",
-    epoch, first_unresolved_epoch_, last_unresolved_epoch_
+    "addEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
+    "compression={}\n",
+    epoch, active_.lower(), active_.upper(), active_.size(),
+    active_.compression()
   );
 }
 
@@ -134,93 +116,26 @@ void EpochWindow::closeEpoch(EpochType const& epoch) {
   debug_print_verbose(
     term, node,
     "closeEpoch: (before) epoch={:x}, unresolved: first={:x}, last={:x}\n",
-    epoch, first_unresolved_epoch_, last_unresolved_epoch_
+    epoch, active_.lower(), active_.upper()
   );
 
-  /*
-   * If this is the first_unresolved_epoch_, i.e., the epoch is resolved
-   * sequentially wrt to the other similarity-typed epochs, then we just
-   * increment the first
-   */
-  bool insert_into_terminated = true;
-
-  if (first_unresolved_epoch_ == epoch) {
-    debug_print(
-      term, node,
-      "closeEpoch: epoch={:x}, unresolved: first={:x}, last={:x}, inc\n",
-      epoch, first_unresolved_epoch_, last_unresolved_epoch_
-    );
-
-    /*
-     *  Do not insert because it is within the new resolved window and thus
-     *  all terminated operations will be complete
-     */
-    insert_into_terminated = false;
-
-    first_unresolved_epoch_++;
-    if (last_unresolved_epoch_ == first_unresolved_epoch_ - 1) {
-      last_unresolved_epoch_ = first_unresolved_epoch_;
-    }
-    vtAssertExpr(last_unresolved_epoch_ >= first_unresolved_epoch_);
-
-    /*
-     * Transitively move out-of-order terminated epochs out of the terminated
-     * container as the unresolved epoch windows is closed
-     */
-    if (terminated_.size() > 0) {
-      auto iter = terminated_.begin();
-      while (iter != terminated_.end() && *iter == first_unresolved_epoch_) {
-        debug_print_verbose(
-          term, node,
-          "closeEpoch: epoch={:x}, unresolved: first={:x}, last={:x}:"
-          "inc while: found terminated epoch={:x}\n",
-          epoch, first_unresolved_epoch_, last_unresolved_epoch_,
-          *iter
-        );
-
-        first_unresolved_epoch_++;
-        last_unresolved_epoch_ = std::max(
-          last_unresolved_epoch_, first_unresolved_epoch_
-        );
-        iter = terminated_.erase(iter);
-      }
-    }
-  }
-
-  if (insert_into_terminated) {
-    terminated_.insert(epoch);
-  }
+  active_.erase(epoch);
 
   debug_print(
     term, node,
     "closeEpoch: (after) epoch={:x}, unresolved: first={:x}, last={:x}\n",
-    epoch, first_unresolved_epoch_, last_unresolved_epoch_
+    epoch, active_.lower(), active_.upper()
   );
 }
 
 bool EpochWindow::isTerminated(EpochType const& epoch) const {
-  auto const in_window = inWindow(epoch);
-
   debug_print(
     term, node,
-    "isTerminated: epoch={:x}, first={:x}, last={:x}, in_window={}\n",
-    epoch, first_unresolved_epoch_, last_unresolved_epoch_,
-    in_window
+    "isTerminated: epoch={:x}, first={:x}, last={:x}\n",
+    epoch, active_.lower(), active_.upper()
   );
 
-  if (in_window) {
-    return true;
-  } else {
-    auto iter = terminated_.find(epoch);
-    return iter != terminated_.end();
-  }
-}
-
-void EpochWindow::clean(EpochType const& epoch) {
-  auto iter = terminated_.find(epoch);
-  if (iter != terminated_.end()) {
-    terminated_.erase(iter);
-  }
+  return not active_.exists(epoch);
 }
 
 }} /* end namespace vt::term */
