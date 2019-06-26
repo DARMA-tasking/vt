@@ -467,10 +467,17 @@ public:
   using ForwardIter  = IntervalSetIter<IteratorType>;
   using ReverseIter  = std::reverse_iterator<ForwardIter>;
 
+  // Per-element iterators
   ForwardIter begin()  { return ForwardIter(set_.begin(),0); }
   ForwardIter end()    { return ForwardIter(set_.end(),0); }
   ReverseIter rbegin() { return ReverseIter(end()); }
   ReverseIter rend()   { return ReverseIter(begin()); }
+
+  // Per-interval iterators
+  IteratorType ibegin()  { return set_.begin(); }
+  IteratorType iend()    { return set_.end(); }
+  IteratorType irbegin() { return set_.rbegin(); }
+  IteratorType irend()   { return set_.rend(); }
 
 private:
   // The lower bound for the entire set
