@@ -147,7 +147,7 @@ struct IntegralSetBase {
         auto& to_split = const_cast<IntervalType&>(*iter);
         to_split.setLower(iter->lower() + 1);
       } else {
-        // Splice the interval into two pieces
+        // Slice the interval into two interval nodes
         vtAssert(iter->width() > 2, "Interval width must be greater than 2");
         auto ub = iter->upper();
         auto& to_split = const_cast<IntervalType&>(*iter);
