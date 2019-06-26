@@ -163,6 +163,12 @@ public:
 
   friend bool operator<(IntervalType const& i1, IntervalType const& i2);
 
+  template <typename T, typename U, DomainT v>
+  friend std::ostream& operator<<(std::ostream& os, Interval<T,U,v> const& i) {
+    os << "itv[" << i.lower() << "," << i.upper() << "]";
+    return os;
+  }
+
 private:
   DomainT lb_ = sentinel;
   DomainT ub_ = sentinel;
