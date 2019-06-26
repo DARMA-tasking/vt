@@ -500,6 +500,9 @@ private:
 
 namespace vt {
 
+template <typename DomainT, typename CompareT = std::less<DomainT>>
+using Interval = term::interval::Interval<DomainT, CompareT>;
+
 template <typename DomainT>
 using IntervalSet =
   term::interval::IntervalSetBase<
