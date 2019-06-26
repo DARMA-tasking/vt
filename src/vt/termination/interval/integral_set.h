@@ -50,6 +50,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <set>
 
 namespace vt { namespace term { namespace interval {
 
