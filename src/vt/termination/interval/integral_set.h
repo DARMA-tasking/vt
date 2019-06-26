@@ -249,10 +249,15 @@ private:
   }
 
   void insertGlobal(IntervalType const& i) {
-    // Expand the global bounds in this interval set
-    lb_ = std::min<DomainT>(lb_, i.lower());
-    ub_ = std::max<DomainT>(ub_, i.upper());
-    // Decrement count of non-compressed elements
+    if (elms_ == 0) {
+      lb_ = i.lower();
+      ub_ = i.upper();
+    } else {
+      // Expand the global bounds in this interval set
+      lb_ = std::min<DomainT>(lb_, i.lower());
+      ub_ = std::max<DomainT>(ub_, i.upper());
+    }
+    // Increment count of non-compressed elements
     elms_++;
   }
 
