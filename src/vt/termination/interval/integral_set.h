@@ -123,8 +123,14 @@ struct IntegralSetBase {
 
   void erase(DomainT const& val) {
     vtAssert(existsGlobal(val), "This element must exist in the set");
-    auto iter = set_.find(val);
+    IntervalType j(val);
+    auto iter = set_.find(j);
     bool in_set = iter != set_.end();
+    debug_print(
+      gen, node,
+      "OrderedSet: erase: bounds=[{},{}] size={}, comp={}, val={}, in={}\n",
+      lb_, ub_, size(), compressedSize(), j, in_set
+    );
     vtAssert(in_set, "The element must exist in a interval bucket");
     if (in_set) {
       eraseGlobal(val);
@@ -143,9 +149,10 @@ struct IntegralSetBase {
       } else {
         // Splice the interval into two pieces
         vtAssert(iter->width() > 2, "Interval width must be greater than 2");
+        auto ub = iter->upper();
         auto& to_split = const_cast<IntervalType&>(*iter);
         to_split.setUpper(val - 1);
-        IntervalType i(val+1, iter->upper());
+        IntervalType i(val+1, ub);
         insertSet(iter,std::move(i));
       }
     }
@@ -155,7 +162,8 @@ struct IntegralSetBase {
     if (not existsGlobal(val)) {
       return false;
     }
-    auto iter = set_.find(val);
+    IntervalType i(val);
+    auto iter = set_.find(i);
     bool in_set = iter != set_.end();
     if (in_set) {
       vtAssert(iter->in(val), "Value must exists in range");
