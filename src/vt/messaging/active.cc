@@ -604,7 +604,10 @@ bool ActiveMessenger::deliverActiveMsg(
   auto const tag       = is_tag ? envelopeGetTag(msg->env) : no_tag;
   auto const from_node = is_bcast ? dest : in_from_node;
 
-  if (epoch != term::any_epoch_sentinel and epoch::EpochManip::isDep(epoch)) {
+  bool const is_any    = epoch == term::any_epoch_sentinel;
+  bool const is_obj    = HandlerManagerType::isHandlerObjGroup(handler);
+
+  if (not is_any and not is_obj and epoch::EpochManip::isDep(epoch)) {
     if (not theTerm()->epochReleased(epoch)) {
       pending_epoch_msgs_[epoch].push_back(BufferedMsgType{base,from_node});
       return false;
@@ -615,7 +618,6 @@ bool ActiveMessenger::deliverActiveMsg(
 
   bool const is_auto    = HandlerManagerType::isHandlerAuto(handler);
   bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
-  bool const is_obj     = HandlerManagerType::isHandlerObjGroup(handler);
 
   debug_print_verbose(
     active, node,
