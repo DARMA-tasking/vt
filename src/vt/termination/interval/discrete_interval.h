@@ -452,6 +452,8 @@ public:
       return *this;
     }
 
+    Iter operator++(int) { Iter ret = *this; ++(*this); return ret; }
+    Iter operator--(int) { Iter ret = *this; --(*this); return ret; }
     bool operator==(Iter i) const { return i.impl_ == impl_ and i.cur_ == cur_; }
     bool operator!=(Iter i) const { return !(*this == i); }
     pointer operator*() const { return impl_->get(cur_); }
