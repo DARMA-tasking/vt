@@ -92,12 +92,7 @@ struct IntegralSetBase {
     >
   >
   IteratorType insert(DomainU&& val) {
-    IntervalType i(std::forward<DomainU>(val));
-
-    // Expand the global bounds in this interval set
-    insertGlobal(i);
-
-    return insertSet(hint_,std::move(i));
+    return insertInterval(IntervalType(std::forward<DomainU>(val)));
   }
 
   template <
@@ -110,8 +105,34 @@ struct IntegralSetBase {
   >
   IteratorType insert(IteratorType it, DomainU&& val) {
     vtAsserExpr(it not_eq set_.end());
-    IntervalType i(std::forward<DomainU>(val));
+    return insertInterval(IntervalType(std::forward<DomainU>(val)));
+  }
 
+  template <
+    typename IntervalU,
+    typename = std::enable_if_t<
+      std::is_same<
+        std::remove_const_t<std::remove_reference_t<IntervalU>>, IntervalType
+      >::value
+    >
+  >
+  IteratorType insertInterval(IntervalU&& i) {
+    // Expand the global bounds in this interval set
+    insertGlobal(i);
+
+    // Insert interval into the compressed tree
+    return insertSet(hint_,std::move(i));
+  }
+
+  template <
+    typename IntervalU,
+    typename = std::enable_if_t<
+      std::is_same<
+        std::remove_const_t<std::remove_reference_t<IntervalU>>, IntervalType
+      >::value
+    >
+  >
+  IteratorType insertInterval(IteratorType it, IntervalU&& i) {
     // Expand the global bounds in this interval set
     insertGlobal(i);
 
@@ -122,6 +143,7 @@ struct IntegralSetBase {
       return it;
     }
 
+    // Insert interval into the compressed tree
     return insertSet(it,std::move(i));
   }
 
