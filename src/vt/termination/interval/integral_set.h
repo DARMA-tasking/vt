@@ -191,7 +191,7 @@ struct IntegralSetBase {
 
   float compression() const {
     if (set_.size() > 0) {
-      return static_cast<double>(elms_) / static_cast<double>(set_.size());
+      return static_cast<float>(elms_) / static_cast<float>(set_.size());
     } else {
       vtAssert(elms_ == 0, "Number of elements must be zero is set is empty");
       return 1.0f;
