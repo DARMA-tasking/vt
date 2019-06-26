@@ -144,6 +144,9 @@ public:
     s | lb_ | ub_;
   }
 
+  bool operator==(IntervalType const& i) const { return i.lb_ == lb_ and i.ub_ == ub_; }
+  bool operator!=(IntervalType const& i) const { return !(*this == i); }
+
 public:
   template <typename IntT, typename IntU>
   static bool intersects(IntT&& i1, IntU&& i2) {
