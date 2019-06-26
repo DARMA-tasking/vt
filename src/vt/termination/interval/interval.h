@@ -75,7 +75,7 @@ public:
   DomainT lower() const { return lb_; }
   DomainT upper() const { return ub_; }
   DomainT width() const { return (ub_-lb_)+1; }
-  bool    valid() const { lb_ <= ub_; }
+  bool    valid() const { return lb_ <= ub_; }
 
   DomainT get(std::size_t i) const { return lb_ + i; }
 
