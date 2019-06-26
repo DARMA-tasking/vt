@@ -135,13 +135,16 @@ struct IntegralSetBase {
           hint_ = ret;
         }
       } else if (iter->upper() == val) {
-        iter->setUpper(iter->upper() - 1);
+        auto& to_split = const_cast<IntervalType&>(*iter);
+        to_split.setUpper(iter->upper() - 1);
       } else if (iter->lower() == val) {
-        iter->setLower(iter->lower() + 1);
+        auto& to_split = const_cast<IntervalType&>(*iter);
+        to_split.setLower(iter->lower() + 1);
       } else {
         // Splice the interval into two pieces
         vtAssert(iter->width() > 2, "Interval width must be greater than 2");
-        iter->setUpper(val - 1);
+        auto& to_split = const_cast<IntervalType&>(*iter);
+        to_split.setUpper(val - 1);
         IntervalType i(val+1, iter->upper());
         insertSet(iter,std::move(i));
       }
