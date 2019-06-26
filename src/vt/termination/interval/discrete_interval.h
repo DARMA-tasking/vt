@@ -48,6 +48,7 @@
 #include "vt/config.h"
 
 #include <algorithm>
+#include <iterator>
 
 namespace vt { namespace term { namespace interval {
 
@@ -77,6 +78,8 @@ public:
   DomainT upper() const { return ub_; }
   DomainT width() const { return (ub_-lb_)+1; }
   bool    valid() const { lb_ <= ub_; }
+
+  DomainT get(std::size_t i) const { return lb_ + i; }
 
   void setUpper(DomainT const& val) {
     ub_ = val;
@@ -401,6 +404,71 @@ private:
     }
     return it;
   }
+
+public:
+
+  //
+  // This might be needed in the future for C++17 (std::make_reverse_iterator)
+  //
+  // using iterator_category = std::bidirectional_iterator_tag;
+  // using difference_type   = DomainT;
+  // using value_type        = DomainT;
+  // using pointer           = DomainT*;
+  // using reference         = DomainT&;
+
+  template <typename Impl>
+  struct IntervalSetIter :
+    std::iterator<std::bidirectional_iterator_tag, DomainT, DomainT>
+  {
+    using Iter              = IntervalSetIter;
+    using iterator_category = std::bidirectional_iterator_tag;
+    using difference_type   = DomainT;
+    using value_type        = DomainT;
+    using pointer           = DomainT;
+    using reference         = DomainT;
+
+    IntervalSetIter(Impl in_impl, std::size_t in_cur)
+      : impl_(in_impl),
+        cur_(in_cur)
+    { }
+
+    Iter& operator++() {
+      if (impl_->lower() + cur_ < impl_->upper()) {
+        cur_++;
+      } else {
+        cur_ = 0;
+        impl_ = std::next(impl_);
+      }
+      return *this;
+    }
+
+    Iter& operator--() {
+      if (cur_ == 0) {
+        impl_ = std::prev(impl_);
+        cur_ = impl_->width() - 1;
+      } else {
+        cur_--;
+      }
+      return *this;
+    }
+
+    bool operator==(Iter i) const { return i.impl_ == impl_ and i.cur_ == cur_; }
+    bool operator!=(Iter i) const { return !(*this == i); }
+    pointer operator*() const { return impl_->get(cur_); }
+    reference operator->() const { return impl_->get(cur_); }
+
+  private:
+    Impl impl_       = {};
+    std::size_t cur_ = 0;
+  };
+
+  using ForwardIter  = IntervalSetIter<IteratorType>;
+  using ReverseIter  = std::reverse_iterator<ForwardIter>;
+
+  ForwardIter begin()  { return ForwardIter(set_.begin(),0); }
+  ForwardIter end()    { return ForwardIter(set_.end(),0); }
+  ReverseIter rbegin() { return ReverseIter(end()); }
+  ReverseIter rend()   { return ReverseIter(begin()); }
 
 private:
   // The lower bound for the entire set
