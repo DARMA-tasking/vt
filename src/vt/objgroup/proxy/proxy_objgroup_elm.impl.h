@@ -90,6 +90,24 @@ ObjT* ProxyElm<ObjT>::get() const {
   return theObjGroup()->get<ObjT>(proxy);
 }
 
+template <typename ObjT>
+bool ProxyElm<ObjT>::isReleased(EpochType const& epoch) {
+  auto proxy = ProxyElm<ObjT>(*this);
+  return theObjGroup()->isReleased<ObjT>(proxy,epoch);
+}
+
+template <typename ObjT>
+void ProxyElm<ObjT>::whenReleased(EpochType const& epoch, ActionType action) {
+  auto proxy = ProxyElm<ObjT>(*this);
+  return theObjGroup()->whenReleased<ObjT>(proxy,epoch,action);
+}
+
+template <typename ObjT>
+void ProxyElm<ObjT>::release(EpochType const& epoch) {
+  auto proxy = ProxyElm<ObjT>(*this);
+  return theObjGroup()->release<ObjT>(proxy,epoch);
+}
+
 }}} /* end namespace vt::objgroup::proxy */
 
 #endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_ELM_IMPL_H*/

@@ -53,6 +53,7 @@
 #include "vt/objgroup/holder/holder_user.h"
 #include "vt/objgroup/holder/holder_basic.h"
 #include "vt/objgroup/dispatch/dispatch.h"
+#include "vt/objgroup/system_msg.h"
 #include "vt/messaging/message/message.h"
 #include "vt/messaging/message/smart_ptr.h"
 
@@ -143,6 +144,19 @@ struct ObjGroupManager {
   EpochType reduce(
     ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg, EpochType epoch, TagType tag
   );
+
+  /*
+   * Manage dependent epochs for a given element
+   */
+
+  template <typename ObjT>
+  bool isReleased(ProxyElmType<ObjT> proxy, EpochType const& epoch);
+  template <typename ObjT>
+  void whenReleased(ProxyElmType<ObjT> proxy, EpochType const& epoch, ActionType act);
+  template <typename ObjT>
+  void release(ProxyElmType<ObjT> proxy, EpochType const& epoch);
+  template <typename ObjT>
+  static void releaseHan(ReleaseMsg<ObjT>* msg);
 
   /*
    * Get access to the local instance of a particular object group

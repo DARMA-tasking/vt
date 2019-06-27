@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/termination/interval/epoch_release_set.h"
 
 namespace vt { namespace objgroup { namespace dispatch {
 
@@ -58,8 +59,8 @@ namespace vt { namespace objgroup { namespace dispatch {
  */
 
 struct DispatchBase {
-  explicit DispatchBase(ObjGroupProxyType in_proxy)
-    : proxy_(in_proxy)
+  DispatchBase(ObjGroupProxyType in_proxy, EpochReleaseSet::ReleaseFnType fn)
+    : proxy_(in_proxy), release_(fn)
   { }
 
   virtual ~DispatchBase() = default;
@@ -68,13 +69,22 @@ struct DispatchBase {
    * Dispatch to the handler; the base is closed around the proper object
    * pointer that is type-erased here
    */
-  virtual void run(HandlerType han, BaseMessage* msg) = 0;
+
+  virtual void run(HandlerType han, MsgVirtualPtrAny msg) = 0;
   virtual void* objPtr() const = 0;
 
   ObjGroupProxyType proxy() const { return proxy_; }
 
+  bool isReleased(EpochType const& ep) { return release_.isReleased(ep); }
+  void releaseEpoch(EpochType const& ep) { return release_.release(ep); }
+  void whenReleased(EpochType const& ep, ActionType act) {
+    release_.whenReleased(ep,act);
+  }
+
 private:
   ObjGroupProxyType proxy_ = no_obj_group;
+protected:
+  EpochReleaseSet release_;
 };
 
 }}} /* end namespace vt::objgroup::dispatch */

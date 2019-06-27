@@ -274,6 +274,57 @@ void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   broadcast<MsgT>(msg,han);
 }
 
+
+template <typename ObjT>
+bool ObjGroupManager::isReleased(ProxyElmType<ObjT> elm, EpochType const& epoch) {
+  auto const this_node = theContext()->getNode();
+  auto proxy = elm.getProxy();
+  auto node = elm.getNode();
+  if (node == this_node) {
+    auto iter = dispatch_.find(proxy);
+    vtAssert(iter != dispatch_.end(), "Dispatcher must exist");
+    return iter->second->isReleased(epoch);
+  } else {
+    vtAssert(false, "Not allowed to test release on non-local objgroup elm");
+  }
+}
+
+template <typename ObjT>
+void ObjGroupManager::whenReleased(
+  ProxyElmType<ObjT> elm, EpochType const& epoch, ActionType action
+) {
+  auto const this_node = theContext()->getNode();
+  auto proxy = elm.getProxy();
+  auto node = elm.getNode();
+  if (node == this_node) {
+    auto iter = dispatch_.find(proxy);
+    vtAssert(iter != dispatch_.end(), "Dispatcher must exist");
+    iter->second->whenReleased(epoch,action);
+  } else {
+    vtAssert(false, "Not allowed to register action on non-local objgroup elm");
+  }
+}
+
+template <typename ObjT>
+void ObjGroupManager::release(ProxyElmType<ObjT> elm, EpochType const& epoch) {
+  auto const this_node = theContext()->getNode();
+  auto proxy = elm.getProxy();
+  auto node = elm.getNode();
+  if (node == this_node) {
+    auto iter = dispatch_.find(proxy);
+    vtAssert(iter != dispatch_.end(), "Dispatcher must exist");
+    iter->second->release(epoch);
+  } else {
+    auto msg = makeMessage<ReleaseMsg<ObjT>>(elm,epoch);
+    theMsg()->sendMsg<ReleaseMsg<ObjT>,ObjGroupManager::releaseHan<ObjT>>(node,msg);
+  }
+}
+
+template <typename ObjT>
+/*static*/ void ObjGroupManager::releaseHan(ReleaseMsg<ObjT>* msg) {
+  theObjGroup()->release<ObjT>(msg->proxy_,msg->epoch_);
+}
+
 template <typename MsgT>
 void ObjGroupManager::send(
   MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node

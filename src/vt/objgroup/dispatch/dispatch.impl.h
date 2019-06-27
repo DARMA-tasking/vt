@@ -52,18 +52,24 @@
 namespace vt { namespace objgroup { namespace dispatch {
 
 template <typename ObjT>
-void Dispatch<ObjT>::run(HandlerType han, BaseMessage* msg) {
+void Dispatch<ObjT>::run(HandlerType han, MsgVirtualPtrAny msg) {
   using ActiveFnType = void(ObjT::*)(vt::BaseMessage*);
   vtAssert(obj_ != nullptr, "Must have a valid object");
-  // Consume if there is an epoch for this message
-  auto tmsg = static_cast<vt::Message*>(msg);
-  auto cur_epoch = envelopeGetEpoch(tmsg->env);
+
+  auto base = static_cast<vt::BaseMessage*>(msg.get());
+  auto cur_epoch = envelopeGetEpoch(msg->env);
+
+  if (not release_.isReleased(cur_epoch)) {
+    release_.buffer(cur_epoch,msg);
+    return;
+  }
+
   if (cur_epoch != no_epoch) {
     theMsg()->pushEpoch(cur_epoch);
   }
   auto base_func = auto_registry::getAutoHandlerObjGroup(han);
   auto type_func = reinterpret_cast<ActiveFnType>(base_func);
-  (obj_->*type_func)(msg);
+  (obj_->*type_func)(base);
   if (cur_epoch != no_epoch) {
     theMsg()->popEpoch(cur_epoch);
   }

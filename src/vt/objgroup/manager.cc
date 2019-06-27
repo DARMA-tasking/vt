@@ -79,7 +79,7 @@ void ObjGroupManager::dispatch(MsgVirtualPtrAny msg, HandlerType han) {
     }
     pending_[proxy].push_back(msg);
   } else {
-    dispatch_iter->second->run(han,msg.get());
+    dispatch_iter->second->run(han,msg);
   }
 }
 

@@ -88,6 +88,13 @@ struct ProxyElm {
   ObjGroupProxyType getProxy() const { return proxy_; }
   NodeType getNode() const { return node_; }
 
+  /*
+   * Proxy operations for releasing dependent epochs
+   */
+  bool isReleased(EpochType const& epoch);
+  void whenReleased(EpochType const& epoch, ActionType action);
+  void release(EpochType const& epoch);
+
 public:
   template <typename SerializerT>
   void serialize(SerializerT& s);
