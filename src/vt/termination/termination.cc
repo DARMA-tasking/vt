@@ -1205,6 +1205,10 @@ TerminationDetector::getParents(EpochType epoch) {
   }
 }
 
+bool TerminationDetector::isTerm(EpochType epoch) {
+  return getWindow(epoch)->isTerminated(epoch);
+}
+
 void TerminationDetector::cleanupReleasedEpoch(EpochType epoch) {
   bool const is_dep = isDep(epoch);
   if (is_dep) {
