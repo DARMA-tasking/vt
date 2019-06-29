@@ -47,30 +47,24 @@
 
 namespace vt { namespace term {
 
-void EpochWindow::initialize(EpochType const& epoch) {
-  if (conform_archetype_) {
-    vtAssertExpr(archetype_epoch_ == no_epoch);
-    vtAssertExpr(!initialized_);
-    if (archetype_epoch_ == no_epoch) {
-      auto arch_epoch = epoch;
-      /*
-       *  Set the sequence to zero so the archetype can be compared easily to
-       *  incoming epochs to check that they match all the fields. The window
-       *  relies on the sequentiality of same-typed epochs to create a
-       *  resolved/unresolved window of open epochs.
-       */
-      epoch::EpochManip::setSeq(arch_epoch,0);
-      archetype_epoch_ = arch_epoch;
-      debug_print(
-        term, node,
-        "initialize window: epoch={:x}, archetype epoch={:x}\n",
-        epoch, archetype_epoch_
-      );
-      initialized_ = true;
-    }
-  } else {
-    vtAssertExpr(conform_archetype_ && initialized_);
-  }
+EpochWindow::EpochWindow(EpochType const& epoch) {
+  auto arch_epoch = epoch;
+  /*
+   *  Set the sequence to zero so the archetype can be compared easily to
+   *  incoming epochs to check that they match all the fields. The window
+   *  relies on the sequentiality of same-typed epochs to create a
+   *  resolved/unresolved window of open epochs.
+   */
+  epoch::EpochManip::setSeq(arch_epoch,0);
+  archetype_epoch_ = arch_epoch;
+
+  active_ = vt::IntegralSet<EpochType>(archetype_epoch_);
+
+  debug_print(
+    term, node,
+    "initialize window: epoch={:x}, archetype epoch={:x}\n",
+    epoch, archetype_epoch_
+  );
 }
 
 inline bool EpochWindow::isArchetypal(EpochType const& epoch) {
@@ -88,18 +82,12 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
     active_.compression()
   );
 
-  if (!initialized_) {
-    initialize(epoch);
-  }
+  auto is_epoch_arch = isArchetypal(epoch);
 
-  if (conform_archetype_) {
-    auto is_epoch_arch = isArchetypal(epoch);
-
-    vtAssertExprInfo(
-      is_epoch_arch, epoch, is_epoch_arch, archetype_epoch_,
-      initialized_, active_.lower(), active_.upper(), active_.size()
-    );
-  }
+  vtAssertExprInfo(
+    is_epoch_arch, epoch, is_epoch_arch, archetype_epoch_,
+    active_.lower(), active_.upper(), active_.size()
+  );
 
   active_.insert(epoch);
 

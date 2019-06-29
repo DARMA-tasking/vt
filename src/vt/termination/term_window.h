@@ -53,9 +53,7 @@ namespace vt { namespace term {
 
 struct EpochWindow {
 
-  explicit EpochWindow(bool const in_conform = true)
-    : initialized_(!in_conform), conform_archetype_(in_conform)
-  { }
+  explicit EpochWindow(EpochType const& in_epoch);
 
 private:
   inline bool isArchetypal(EpochType const& epoch);
@@ -73,10 +71,6 @@ public:
 private:
   // The archetypical epoch for this window container (category,rooted,user,..)
   EpochType archetype_epoch_              = no_epoch;
-  // Has this window been initialized with an archetype?
-  bool initialized_                       = false;
-  // Should the epoch conform to an archetype?
-  bool conform_archetype_                 = true;
   // The set of epochs terminated that are not represented by the window
   vt::IntegralSet<EpochType> active_      = {};
 };

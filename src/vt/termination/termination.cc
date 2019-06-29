@@ -61,10 +61,12 @@
 
 namespace vt { namespace term {
 
+static EpochType const arch_epoch_coll = 0ull;
+
 TerminationDetector::TerminationDetector()
   : collective::tree::Tree(collective::tree::tree_cons_tag_t),
   any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
-  epoch_coll_(std::make_unique<EpochWindow>())
+  epoch_coll_(std::make_unique<EpochWindow>(arch_epoch_coll))
 { }
 
 /*static*/ void TerminationDetector::makeRootedHandler(TermMsg* msg) {
@@ -111,10 +113,9 @@ EpochWindow* TerminationDetector::getWindow(EpochType const& epoch) {
       epoch_arch_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(arch_epoch),
-        std::forward_as_tuple(std::make_unique<EpochWindow>(true))
+        std::forward_as_tuple(std::make_unique<EpochWindow>(arch_epoch))
       );
       iter = epoch_arch_.find(arch_epoch);
-      iter->second->initialize(epoch);
     }
     return iter->second.get();
   } else {
