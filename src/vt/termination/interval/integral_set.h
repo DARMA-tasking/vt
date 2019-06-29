@@ -82,6 +82,13 @@ struct IntegralSetBase {
   IntegralSetBase() : hint_(set_.end()) { }
   IntegralSetBase(IntegralSetBase const&) = default;
   IntegralSetBase(IntegralSetBase&&) = default;
+  IntegralSetBase& operator=(IntegralSetBase const&) = default;
+
+  explicit IntegralSetBase(DomainT base)
+    : lb_(base),
+      ub_(base),
+      hint_(set_.end())
+  { }
 
   template <
     typename DomainU,
