@@ -92,12 +92,34 @@ struct EpochReleaseSet {
 
   bool isReleased(EpochType const& epoch) {
     bool const is_dep = epoch::EpochManip::isDep(epoch);
+
+    debug_print(
+      gen, node,
+      "isReleased: epoch={:x}, is_dep={}\n",
+      epoch, is_dep
+    );
+
     if (is_dep) {
       bool const is_term = theTerm()->isTerm(epoch);
+
+      debug_print(
+        gen, node,
+        "isReleased: epoch={:x}, is_dep={}, is_term={}\n",
+        epoch, is_dep, is_term
+      );
+
       if (is_term) {
         return true;
       } else {
-        return map_.get(epoch).exists(epoch);
+        auto exists = map_.get(epoch).exists(epoch);
+
+        debug_print(
+          gen, node,
+          "isReleased: epoch={:x}, is_dep={}, exists={}\n",
+          epoch, is_dep, exists
+        );
+
+        return exists;
       }
     } else {
       return true;
