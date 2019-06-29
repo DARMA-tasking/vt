@@ -62,7 +62,17 @@ struct CategoryMap {
 
   vt::IntegralSet<EpochType>& get(EpochType const& epoch) {
     auto cat = categorize(epoch);
-    return map_[cat];
+    auto iter = map_.find(cat);
+    if (iter == map_.end()) {
+      map_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(cat),
+        std::forward_as_tuple(vt::IntegralSet<EpochType>(cat))
+      );
+      iter = map_.find(cat);
+    }
+    vtAssertExpr(iter != map_.end());
+    return iter->second;
   }
 
   void cleanup(EpochType const& epoch) {
