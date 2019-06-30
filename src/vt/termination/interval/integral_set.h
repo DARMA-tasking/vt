@@ -88,7 +88,13 @@ struct IntegralSetBase {
     : lb_(base),
       ub_(base),
       hint_(set_.end())
-  { }
+  {
+    debug_print(
+      gen, node,
+      "OrderedSet: construct: bounds=[{:x},{:x}] elms_={}, is_end={}\n",
+      lb_, ub_, elms_, hint_ == set_.end()
+    );
+ }
 
   template <
     typename DomainU,
@@ -99,6 +105,11 @@ struct IntegralSetBase {
     >
   >
   IteratorType insert(DomainU&& val) {
+    debug_print(
+      gen, node,
+      "OrderedSet: insert: bounds=[{:x},{:x}] elms_={}, is_end={}\n",
+      lb_, ub_, elms_, hint_ == set_.end()
+    );
     return insertInterval(IntervalType(std::forward<DomainU>(val)));
   }
 
@@ -124,6 +135,12 @@ struct IntegralSetBase {
     >
   >
   IteratorType insertInterval(IntervalU&& i) {
+    debug_print(
+      gen, node,
+      "OrderedSet: insertInterval: bounds=[{:x},{:x}] elms_={}, i={}, is_end={}\n",
+      lb_, ub_, elms_, i, hint_ == set_.end()
+    );
+
     // Expand the global bounds in this interval set
     insertGlobal(i);
 
@@ -161,7 +178,7 @@ struct IntegralSetBase {
     bool in_set = iter != set_.end();
     debug_print(
       gen, node,
-      "OrderedSet: erase: bounds=[{},{}] size={}, comp={}, val={}, in={}\n",
+      "OrderedSet: erase: bounds=[{:x},{:x}] size={}, comp={}, val={}, in={}\n",
       lb_, ub_, size(), compressedSize(), j, in_set
     );
     vtAssert(in_set, "The element must exist in a interval bucket");
@@ -230,7 +247,7 @@ struct IntegralSetBase {
   void dumpState() const {
     debug_print(
       gen, node,
-      "OrderedSet: bounds=[{},{}] size={}, compressedSize={}, compression={}\n",
+      "OrderedSet: bounds=[{:x},{:x}] size={}, compressedSize={}, compression={}\n",
       lb_, ub_, size(), compressedSize(), compression()
     );
     std::size_t c = 0;
@@ -243,6 +260,12 @@ struct IntegralSetBase {
 private:
 
   IteratorType insertSet(IteratorType it, IntervalType&& i) {
+    debug_print(
+      gen, node,
+      "OrderedSet: insertSet: bounds=[{:x},{:x}] elms_={}, i={}, is_end={}\n",
+      lb_, ub_, elms_, i, it == set_.end()
+    );
+
     // Insert into the set
     auto ret = set_.emplace_hint(it,std::move(i));
     vtAssert(ret not_eq it,         "Should be a valid insert");
@@ -278,6 +301,12 @@ private:
   }
 
   void insertGlobal(IntervalType const& i) {
+    debug_print(
+      gen, node,
+      "OrderedSet: insertGlobal: bounds=[{:x},{:x}] elms_={}, i={}\n",
+      lb_, ub_, elms_, i
+    );
+
     if (elms_ == 0) {
       lb_ = i.lower();
       ub_ = i.upper();
@@ -291,6 +320,12 @@ private:
   }
 
   IteratorType join(IteratorType it) {
+    debug_print(
+      gen, node,
+      "OrderedSet: join: bounds=[{:x},{:x}] elms_={}\n",
+      lb_, ub_, elms_
+    );
+
     auto it2 = joinLeft(it);
     return joinRight(it2);
   }
