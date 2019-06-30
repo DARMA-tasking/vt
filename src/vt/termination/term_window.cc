@@ -47,7 +47,9 @@
 
 namespace vt { namespace term {
 
-EpochWindow::EpochWindow(EpochType const& epoch) {
+EpochWindow::EpochWindow(EpochType const& epoch)
+  : term_(epoch)
+ {
   auto arch_epoch = epoch;
   /*
    *  Set the sequence to zero so the archetype can be compared easily to
@@ -58,7 +60,7 @@ EpochWindow::EpochWindow(EpochType const& epoch) {
   epoch::EpochManip::setSeq(arch_epoch,0);
   archetype_epoch_ = arch_epoch;
 
-  active_ = vt::IntegralSet<EpochType>(archetype_epoch_);
+  vtAssertExpr(epoch == archetype_epoch_);
 
   debug_print(
     term, node,
@@ -78,25 +80,29 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
     term, node,
     "addEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, active_.lower(), active_.upper(), active_.size(),
-    active_.compression()
+    epoch, term_.lower(), term_.upper(), term_.size(),
+    term_.compression()
   );
 
   auto is_epoch_arch = isArchetypal(epoch);
 
   vtAssertExprInfo(
     is_epoch_arch, epoch, is_epoch_arch, archetype_epoch_,
-    active_.lower(), active_.upper(), active_.size()
+    term_.lower(), term_.upper(), term_.size()
   );
 
-  active_.insert(epoch);
+  // We should possibly perform some error checking once we wrap around in case
+  // of pending actions
+  if (term_.exists(epoch)) {
+    term_.erase(epoch);
+  }
 
   debug_print(
     term, node,
     "addEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, active_.lower(), active_.upper(), active_.size(),
-    active_.compression()
+    epoch, term_.lower(), term_.upper(), term_.size(),
+    term_.compression()
   );
 }
 
@@ -105,18 +111,18 @@ void EpochWindow::closeEpoch(EpochType const& epoch) {
     term, node,
     "closeEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, active_.lower(), active_.upper(), active_.size(),
-    active_.compression()
+    epoch, term_.lower(), term_.upper(), term_.size(),
+    term_.compression()
   );
 
-  active_.erase(epoch);
+  term_.insert(epoch);
 
   debug_print(
     term, node,
     "closeEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, active_.lower(), active_.upper(), active_.size(),
-    active_.compression()
+    epoch, term_.lower(), term_.upper(), term_.size(),
+    term_.compression()
   );
 }
 
@@ -125,11 +131,11 @@ bool EpochWindow::isTerminated(EpochType const& epoch) const {
     term, node,
     "isTerminated: epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, active_.lower(), active_.upper(), active_.size(),
-    active_.compression()
+    epoch, term_.lower(), term_.upper(), term_.size(),
+    term_.compression()
   );
 
-  return not active_.exists(epoch);
+  return term_.exists(epoch);
 }
 
 }} /* end namespace vt::term */
