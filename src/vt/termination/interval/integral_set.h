@@ -141,11 +141,13 @@ struct IntegralSetBase {
       lb_, ub_, elms_, i, hint_ == set_.end()
     );
 
+    auto iter = elms_ == 0 ? set_.end() : hint_;
+
     // Expand the global bounds in this interval set
     insertGlobal(i);
 
     // Insert interval into the compressed tree
-    return insertSet(hint_,std::move(i));
+    return insertSet(iter,std::move(i));
   }
 
   template <
@@ -267,7 +269,7 @@ private:
     );
 
     // Insert into the set
-    auto ret = set_.emplace_hint(it,std::move(i));
+    auto ret = set_.insert(it,std::move(i));
     vtAssert(ret not_eq it,         "Should be a valid insert");
     vtAssert(ret not_eq set_.end(), "Must be valid insert---live iterator");
 
