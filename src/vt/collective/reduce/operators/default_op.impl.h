@@ -57,7 +57,6 @@ template <typename MsgT, typename Op, typename ActOp>
   if (msg->isRoot()) {
     auto cb = msg->getCallback();
     debug_print(
-
       reduce, node,
       "ROOT: reduce root: valid={}, ptr={}\n", cb.valid(), print_ptr(msg)
     );
