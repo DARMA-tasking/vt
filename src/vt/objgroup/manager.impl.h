@@ -313,10 +313,12 @@ void ObjGroupManager::release(ProxyElmType<ObjT> elm, EpochType const& epoch) {
   if (node == this_node) {
     auto iter = dispatch_.find(proxy);
     vtAssert(iter != dispatch_.end(), "Dispatcher must exist");
-    iter->second->release(epoch);
+    iter->second->releaseEpoch(epoch);
   } else {
     auto msg = makeMessage<ReleaseMsg<ObjT>>(elm,epoch);
-    theMsg()->sendMsg<ReleaseMsg<ObjT>,ObjGroupManager::releaseHan<ObjT>>(node,msg);
+    theMsg()->sendMsg<ReleaseMsg<ObjT>,ObjGroupManager::releaseHan<ObjT>>(
+      node,msg.get()
+    );
   }
 }
 
