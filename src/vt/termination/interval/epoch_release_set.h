@@ -64,6 +64,12 @@ struct EpochReleaseSet {
   explicit EpochReleaseSet(ReleaseFnType in_fn) : release_fn_(in_fn) { }
 
   void release(EpochType const& epoch) {
+    debug_print(
+      gen, node,
+      "release: epoch={:x}\n",
+      epoch
+    );
+
     // Insert into integral set
     map_.get(epoch).insert(epoch);
 
@@ -73,6 +79,12 @@ struct EpochReleaseSet {
       auto lst = std::move(iter->second);
       wait_.erase(iter);
       for (auto&& msg : lst) {
+        debug_print(
+          gen, node,
+          "release: epoch={:x}, running msg={}, consume\n",
+          epoch, print_ptr(msg.get())
+        );
+
         release_fn_(msg);
         theTerm()->consume(epoch);
       }
@@ -132,6 +144,12 @@ struct EpochReleaseSet {
   }
 
   void buffer(EpochType const& epoch, MsgVirtualPtrAny msg) {
+    debug_print(
+      gen, node,
+      "buffer: epoch={:x}, buffering msg={}, produce, num={}\n",
+      epoch, print_ptr(msg.get()), wait_[epoch].size()
+    );
+
     theTerm()->produce(epoch);
     wait_[epoch].push_back(msg);
   }
