@@ -111,6 +111,7 @@ void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   s | elmsFixedAtCreation_;
   s | cur_bcast_epoch_;
   s | numElems_;
+  s | release_;
 }
 
 template <typename ColT, typename IndexT>

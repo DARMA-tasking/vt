@@ -54,6 +54,7 @@
 #include "vt/vrt/collection/types/untyped.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/proxy/collection_proxy.h"
+#include "vt/termination/interval/epoch_release_set.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -90,11 +91,18 @@ struct CollectionBase : Indexable<ColT, IndexT> {
 
   friend struct CollectionManager;
 
+  bool isReleased(EpochType const& ep) { return release_.isReleased(ep); }
+  void releaseEpoch(EpochType const& ep) { return release_.release(ep); }
+  void whenReleased(EpochType const& ep, ActionType act) {
+    release_.whenReleased(ep,act);
+  }
+
 protected:
   VirtualElmCountType numElems_ = no_elms;
   EpochType cur_bcast_epoch_ = 0;
   bool hasStaticSize_ = true;
   bool elmsFixedAtCreation_ = true;
+  EpochReleaseSet release_;
 };
 
 }}} /* end namespace vt::vrt::collection */

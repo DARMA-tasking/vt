@@ -445,6 +445,7 @@ template <typename ColT, typename IndexT, typename MsgT>
         "broadcast: apply to element: epoch={}, bcast_epoch={}\n",
         msg->bcast_epoch_, base->cur_bcast_epoch_
       );
+
       vtAssert(base != nullptr, "Must be valid pointer");
       base->cur_bcast_epoch_++;
 
@@ -703,6 +704,11 @@ template <typename ColT, typename IndexT, typename MsgT>
     sub_handler, member, cur_epoch, idx, exists
   );
 
+  auto pmsg = promoteMsg(msg);
+  if (not col_ptr->release_.isReleased(cur_epoch)) {
+    col_ptr->release_.buffer(cur_epoch,pmsg);
+    return;
+  }
 
   #if backend_check_enabled(lblite)
     debug_print(

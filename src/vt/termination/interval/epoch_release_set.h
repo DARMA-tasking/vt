@@ -61,6 +61,7 @@ namespace vt { namespace term { namespace interval {
 struct EpochReleaseSet {
   using ReleaseFnType = std::function<void(MsgVirtualPtrAny)>;
 
+  EpochReleaseSet() = default;
   explicit EpochReleaseSet(ReleaseFnType in_fn) : release_fn_(in_fn) { }
 
   void release(EpochType const& epoch) {
@@ -159,6 +160,18 @@ struct EpochReleaseSet {
       action();
     } else {
       action_[epoch].push_back(action);
+    }
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    if (not s.isUnpacking()) {
+      vtAssertExpr(wait_.size() == 0);
+      vtAssertExpr(action_.size() == 0);
+    }
+    s | map_;
+    if (s.isUnpacking()) {
+      release_fn_ = nullptr;
     }
   }
 

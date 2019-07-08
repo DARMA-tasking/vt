@@ -83,6 +83,11 @@ struct CategoryMap {
     }
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | map_;
+  }
+
 private:
   std::unordered_map<EpochType, vt::IntegralSet<EpochType>> map_ = {};
 };
