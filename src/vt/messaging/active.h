@@ -59,6 +59,7 @@
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/trace/trace_common.h"
 #include "vt/utils/static_checks/functor.h"
+#include "vt/termination/term_common.h"
 
 #include <type_traits>
 #include <tuple>
@@ -87,12 +88,14 @@ struct PendingRecv {
   RDMA_ContinuationDeleteType cont = nullptr;
   ActionType dealloc_user_buf = nullptr;
   NodeType recv_node = uninitialized_destination;
+  EpochType epoch_ = term::any_epoch_sentinel;
 
   PendingRecv(
     void* in_user_buf, RDMA_ContinuationDeleteType in_cont,
-    ActionType in_dealloc_user_buf, NodeType node
+    ActionType in_dealloc_user_buf, NodeType node, EpochType epoch
   ) : user_buf(in_user_buf), cont(in_cont),
-      dealloc_user_buf(in_dealloc_user_buf), recv_node(node)
+      dealloc_user_buf(in_dealloc_user_buf), recv_node(node),
+      epoch_(epoch)
   { }
 };
 
@@ -451,14 +454,16 @@ struct ActiveMessenger {
 
   bool recvDataMsg(
     TagType const& tag, NodeType const& recv_node, bool const& enqueue,
-    RDMA_ContinuationDeleteType next = nullptr
+    RDMA_ContinuationDeleteType next = nullptr,
+    EpochType epoch = term::any_epoch_sentinel
   );
 
   bool recvDataMsgBuffer(
     void* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
-    RDMA_ContinuationDeleteType next = nullptr
+    RDMA_ContinuationDeleteType next = nullptr,
+    EpochType epoch = term::any_epoch_sentinel
   );
 
   EventType sendMsgSized(

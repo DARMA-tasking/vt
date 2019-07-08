@@ -317,7 +317,8 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   // Assume that any raw data send/recv is paired with a message with an epoch
   // if required to inhibit early termination of that epoch
-  theTerm()->produce(term::any_epoch_sentinel,1,dest);
+  auto const cur_epoch = getEpoch();
+  theTerm()->produce(cur_epoch,1,dest);
 
   return SendDataRetType{event_id,send_tag};
 }
@@ -325,7 +326,8 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 bool ActiveMessenger::recvDataMsg(
   TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next
 ) {
-  return recvDataMsg(tag, node, true, next);
+  auto const cur_epoch = getEpoch();
+  return recvDataMsg(tag, node, true, next, cur_epoch);
 }
 
 bool ActiveMessenger::processDataMsgRecv() {
@@ -335,7 +337,8 @@ bool ActiveMessenger::processDataMsgRecv() {
   for (; iter != pending_recvs_.end(); ++iter) {
     auto const done = recvDataMsgBuffer(
       iter->second.user_buf, iter->first, iter->second.recv_node,
-      false, iter->second.dealloc_user_buf, iter->second.cont
+      false, iter->second.dealloc_user_buf, iter->second.cont,
+      iter->second.epoch_
     );
     if (done) {
       erase = true;
@@ -354,7 +357,7 @@ bool ActiveMessenger::processDataMsgRecv() {
 bool ActiveMessenger::recvDataMsgBuffer(
   void* const user_buf, TagType const& tag, NodeType const& node,
   bool const& enqueue, ActionType dealloc_user_buf,
-  RDMA_ContinuationDeleteType next
+  RDMA_ContinuationDeleteType next, EpochType epoch
 ) {
   if (not enqueue) {
     CountType num_probe_bytes;
@@ -403,6 +406,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
         }
       };
 
+      pushEpoch(epoch);
+
       if (next != nullptr) {
         next(RDMA_GetType{buf,num_probe_bytes}, [=]{
           dealloc_buf();
@@ -411,7 +416,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
         dealloc_buf();
       }
 
-      theTerm()->consume(term::any_epoch_sentinel,1,stat.MPI_SOURCE);
+      popEpoch(epoch);
+      theTerm()->consume(epoch,1,stat.MPI_SOURCE);
 
       return true;
     } else {
@@ -427,7 +433,9 @@ bool ActiveMessenger::recvDataMsgBuffer(
     pending_recvs_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(tag),
-      std::forward_as_tuple(PendingRecvType{user_buf,next,dealloc_user_buf,node})
+      std::forward_as_tuple(
+        PendingRecvType{user_buf,next,dealloc_user_buf,node,epoch}
+      )
     );
     return false;
   }
@@ -435,9 +443,9 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
 bool ActiveMessenger::recvDataMsg(
   TagType const& tag, NodeType const& recv_node, bool const& enqueue,
-  RDMA_ContinuationDeleteType next
+  RDMA_ContinuationDeleteType next, EpochType epoch
 ) {
-  return recvDataMsgBuffer(nullptr, tag, recv_node, enqueue, nullptr, next);
+  return recvDataMsgBuffer(nullptr, tag, recv_node, enqueue, nullptr, next, epoch);
 }
 
 NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
