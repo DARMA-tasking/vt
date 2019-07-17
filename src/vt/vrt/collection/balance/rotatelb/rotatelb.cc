@@ -93,9 +93,7 @@ void RotateLB::finishedMigrate() {
     "RotateLB::finishedMigrate: transfer_count={}\n",
     transfer_count
   );
-  balance::ProcStats::proc_migrate_.clear();
-  balance::ProcStats::proc_data_.clear();
-  balance::ProcStats::next_elm_ = 1;
+  balance::ProcStats::clearStats();
   theCollection()->releaseLBContinuation();
 }
 
