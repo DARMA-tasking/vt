@@ -63,7 +63,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   debug_print(
     lb, node,
     "LBInvoke::shouldInvoke: phase={}, try_file={}, cached_phase_={}, lb={}\n",
-    phase, try_file, cached_phase_, lb_names_<>[cached_lb_]
+    phase, try_file, cached_phase_, lb_names_[cached_lb_]
   );
 
   if (phase == cached_phase_) {
@@ -85,7 +85,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   } else {
     vtAssert(ArgType::vt_lb_interval != 0, "LB Interval must not be 0");
     if (phase % ArgType::vt_lb_interval == 0) {
-      for (auto&& elm : lb_names_<>) {
+      for (auto&& elm : lb_names_) {
         if (elm.second == ArgType::vt_lb_name) {
           the_lb = elm.first;
           break;
@@ -97,7 +97,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   debug_print(
     lb, node,
     "LBInvoke::shouldInvoke: phase={}, return lb_={}\n",
-    phase, lb_names_<>[the_lb]
+    phase, lb_names_[the_lb]
   );
 
   cached_lb_ = the_lb;
@@ -121,7 +121,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
       "InvokeLB::startLB: phase={}, balancer={}, name={}\n",
       phase,
       static_cast<typename std::underlying_type<LBType>::type>(lb),
-      lb_names_<>[lb]
+      lb_names_[lb]
     );
   }
 
