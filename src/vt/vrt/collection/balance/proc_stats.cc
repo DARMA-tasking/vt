@@ -61,11 +61,14 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/
 std::vector<std::unordered_map<ElementIDType,TimeType>>
-ProcStats::proc_data_ = {};
+  ProcStats::proc_data_ = {};
 
 /*static*/
 std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   ProcStats::proc_migrate_ = {};
+
+/*static*/ std::unordered_map<ElementIDType,ElementIDType>
+  ProcStats::proc_temp_to_perm_ =  {};
 
 /*static*/ ElementIDType ProcStats::next_elm_ = 1;
 
@@ -76,6 +79,7 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 /*static*/ void ProcStats::clearStats() {
   ProcStats::proc_data_.clear();
   ProcStats::proc_migrate_.clear();
+  ProcStats::proc_temp_to_perm_.clear();
   next_elm_ = 1;
 }
 
@@ -140,7 +144,10 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   auto const num_iters = ProcStats::proc_data_.size();
   for (size_t i = 0; i < num_iters; i++) {
     for (auto&& elm : ProcStats::proc_data_.at(i)) {
-      auto obj_str = fmt::format("{},{},{}\n", i, elm.first, elm.second);
+      auto iter = ProcStats::proc_temp_to_perm_.find(elm.first);
+      vtAssert(iter != ProcStats::proc_temp_to_perm_.end(), "Temp ID must exist");
+      auto perm_id = iter->second;
+      auto obj_str = fmt::format("{},{},{}\n", i, perm_id, elm.second);
       fprintf(stats_file_, "%s", obj_str.c_str());
     }
   }

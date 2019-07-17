@@ -99,6 +99,7 @@ struct Migratable : MigrateHookBase {
   virtual void destroy();
 
   balance::ElementIDType getElmID() const { return stats_elm_id_; }
+  balance::ElementIDType getTempID() const { return temp_elm_id_; }
 
 protected:
   template <typename Serializer>
@@ -110,6 +111,7 @@ protected:
   balance::ElementStats stats_;
   balance::ElementStats& getStats() { return stats_; }
   balance::ElementIDType stats_elm_id_ = 0;
+  balance::ElementIDType temp_elm_id_ = 0;
 };
 
 }}} /* end namespace vt::vrt::collection */

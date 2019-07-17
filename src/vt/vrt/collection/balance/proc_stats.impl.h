@@ -62,35 +62,36 @@ template <typename ColT>
   PhaseType const& phase, TimeType const& time
 ) {
   // Always assign a new element ID so the node is correct (for now)
-  col_elm->stats_elm_id_ = ProcStats::getNextElm();
+  col_elm->temp_elm_id_ = ProcStats::getNextElm();
 
-  auto const next_elm = col_elm->stats_elm_id_;
+  auto const temp_id = col_elm->temp_elm_id_;
 
   debug_print(
     lb, node,
-    "ProcStats::addProcStats: element={}, phase={}, load={}\n",
-    next_elm, phase, time
+    "ProcStats::addProcStats: temp_id={}, perm_id={}, phase={}, load={}\n",
+    col_elm->temp_elm_id_, col_elm->stats_elm_id_, phase, time
   );
 
   proc_data_.resize(phase + 1);
-  auto elm_iter = proc_data_.at(phase).find(next_elm);
+  auto elm_iter = proc_data_.at(phase).find(temp_id);
   vtAssert(elm_iter == proc_data_.at(phase).end(), "Must not exist");
   proc_data_.at(phase).emplace(
     std::piecewise_construct,
-    std::forward_as_tuple(next_elm),
+    std::forward_as_tuple(temp_id),
     std::forward_as_tuple(time)
   );
-  auto migrate_iter = proc_migrate_.find(next_elm);
+  proc_temp_to_perm_[temp_id] = col_elm->stats_elm_id_;
+  auto migrate_iter = proc_migrate_.find(temp_id);
   if (migrate_iter == proc_migrate_.end()) {
     proc_migrate_.emplace(
       std::piecewise_construct,
-      std::forward_as_tuple(next_elm),
+      std::forward_as_tuple(temp_id),
       std::forward_as_tuple([elm_proxy,col_elm](NodeType node){
         col_elm->migrate(node);
       })
     );
   }
-  return next_elm;
+  return temp_id;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

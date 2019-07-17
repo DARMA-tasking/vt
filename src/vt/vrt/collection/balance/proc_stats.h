@@ -88,6 +88,7 @@ public:
 public:
   static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
   static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
+  static std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
 private:
   static FILE* stats_file_;
   static bool created_dir_;
