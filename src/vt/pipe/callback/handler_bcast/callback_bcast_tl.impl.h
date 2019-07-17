@@ -71,7 +71,9 @@ void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     pipe, this_node, include_sender_
   );
   theMsg()->broadcastMsgAuto<MsgT>(handler_, msg);
-  if (include_sender_) {
+  auto msg_group = envelopeGetGroup(msg->env);
+  bool const is_default = msg_group == default_group;
+  if (include_sender_ and is_default) {
     auto nmsg = makeMessage<MsgT>(*msg);
     runnable::Runnable<MsgT>::run(handler_,nullptr,nmsg.get(),this_node);
   }
