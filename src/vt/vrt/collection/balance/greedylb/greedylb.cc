@@ -313,7 +313,7 @@ void GreedyLB::finishedTransferExchange() {
     );
     fflush(stdout);
   }
-  balance::ProcStats::clearStats();
+  balance::ProcStats::startIterCleanup();
   theCollection()->releaseLBContinuation();
 }
 

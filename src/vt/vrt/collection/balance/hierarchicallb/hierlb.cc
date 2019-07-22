@@ -371,7 +371,7 @@ void HierarchicalLB::finishedTransferExchange() {
     );
     fflush(stdout);
   }
-  balance::ProcStats::clearStats();
+  balance::ProcStats::startIterCleanup();
   theCollection()->releaseLBContinuation();
 }
 

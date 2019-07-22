@@ -83,6 +83,26 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   next_elm_ = 1;
 }
 
+/*static*/ void ProcStats::startIterCleanup() {
+  // Convert the temp ID proc_data_ for the last iteration into perm ID for
+  // stats output
+  auto const phase = proc_data_.size() - 1;
+  auto const prev_data = std::move(proc_data_[phase]);
+  std::unordered_map<ElementIDType,TimeType> new_data;
+  for (auto& elm : prev_data) {
+    auto iter = proc_temp_to_perm_.find(elm.first);
+    vtAssert(iter != proc_temp_to_perm_.end(), "Temp ID must exist");
+    auto perm_id = iter->second;
+    new_data[perm_id] = elm.second;
+  }
+  proc_data_[phase] = std::move(new_data);
+
+  // Create migrate lambdas and temp to perm map since LB is complete
+  ProcStats::proc_migrate_.clear();
+  ProcStats::proc_temp_to_perm_.clear();
+  next_elm_ = 1;
+}
+
 /*static*/ ElementIDType ProcStats::getNextElm() {
   auto const& this_node = theContext()->getNode();
   auto elm = next_elm_++;
@@ -142,12 +162,12 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   vtAssertExpr(stats_file_ != nullptr);
 
   auto const num_iters = ProcStats::proc_data_.size();
+
+  vt_print(lb, "outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
+
   for (size_t i = 0; i < num_iters; i++) {
     for (auto&& elm : ProcStats::proc_data_.at(i)) {
-      auto iter = ProcStats::proc_temp_to_perm_.find(elm.first);
-      vtAssert(iter != ProcStats::proc_temp_to_perm_.end(), "Temp ID must exist");
-      auto perm_id = iter->second;
-      auto obj_str = fmt::format("{},{},{}\n", i, perm_id, elm.second);
+      auto obj_str = fmt::format("{},{},{}\n", i, elm.first, elm.second);
       fprintf(stats_file_, "%s", obj_str.c_str());
     }
   }

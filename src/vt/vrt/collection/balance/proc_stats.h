@@ -71,6 +71,7 @@ public:
   );
 
   static void clearStats();
+  static void startIterCleanup();
   static void releaseLB();
 
   static void outputStatsFile();
