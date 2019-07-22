@@ -89,7 +89,6 @@ void IterCol::iterWork(IterMsg* msg) {
   double val = 0.1f;
   double val2 = 0.4f * msg->work_amt_;
   auto const idx = getIndex().x();
-  auto const iter = msg->iter_;
   int64_t const max_work = 1000 * weight;
   int64_t const mid_work = 100 * weight;
   int64_t const min_work = 1 * weight;
