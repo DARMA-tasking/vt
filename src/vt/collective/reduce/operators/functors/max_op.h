@@ -58,6 +58,22 @@ struct MaxOp {
   }
 };
 
+template <typename T>
+struct MaxOp< std::vector<T> > {
+  void operator()(std::vector<T>& v1, std::vector<T> const& v2) {
+    for (size_t ii = 0; ii < v1.size(); ++ii)
+      v1[ii] = std::max(v1[ii], v2[ii]);
+  }
+};
+
+template <typename T, std::size_t N>
+struct MaxOp< std::array<T, N> > {
+  void operator()(std::array<T, N>& v1, std::array<T, N> const& v2) {
+    for (size_t ii = 0; ii < N; ++ii)
+      v1[ii] = std::max(v1[ii], v2[ii]);
+  }
+};
+
 }}}} /* end namespace vt::collective::reduce::operators */
 
 namespace vt { namespace collective {
