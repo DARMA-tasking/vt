@@ -51,7 +51,8 @@ std::unordered_map<LBType,std::string> lb_names_ = {
   {LBType::NoLB,           std::string{"NoLB"          }},
   {LBType::GreedyLB,       std::string{"GreedyLB"      }},
   {LBType::HierarchicalLB, std::string{"HierarchicalLB"}},
-  {LBType::RotateLB,       std::string{"RotateLB"      }}
+  {LBType::RotateLB,       std::string{"RotateLB"      }},
+  {LBType::GossipLB,       std::string{"GossipLB"      }}
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

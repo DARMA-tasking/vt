@@ -54,6 +54,7 @@
 #include "vt/messaging/active.fwd.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
+#include "vt/messaging/listener.h"
 #include "vt/event/event.h"
 #include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
@@ -127,6 +128,7 @@ struct ActiveMessenger {
   using HandlerManagerType   = HandlerManager;
   using EpochStackType       = std::stack<EpochType>;
   using PendingSendType      = PendingSend;
+  using ListenerType         = std::unique_ptr<Listener>;
 
   ActiveMessenger();
 
@@ -563,6 +565,15 @@ struct ActiveMessenger {
   template <typename MsgT>
   inline EpochType setupEpochMsg(MsgSharedPtr<MsgT> const& msg);
 
+  template <typename L>
+  void addSendListener(std::unique_ptr<L> ptr) {
+    send_listen_.push_back(std::move(ptr));
+  }
+
+  void clearListeners() {
+    send_listen_.clear();
+  }
+
 private:
   using EpochStackSizeType = typename EpochStackType::size_type;
 
@@ -578,15 +589,16 @@ private:
     trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
   #endif
 
-  HandlerType current_handler_context_  = uninitialized_handler;
-  NodeType current_node_context_        = uninitialized_destination;
-  EpochType current_epoch_context_      = no_epoch;
-  EpochType global_epoch_               = no_epoch;
-  MaybeReadyType maybe_ready_tag_han_   = {};
-  ContWaitType pending_handler_msgs_    = {};
-  ContainerPendingType pending_recvs_   = {};
-  TagType cur_direct_buffer_tag_        = starting_direct_buffer_tag;
+  HandlerType current_handler_context_   = uninitialized_handler;
+  NodeType current_node_context_         = uninitialized_destination;
+  EpochType current_epoch_context_       = no_epoch;
+  EpochType global_epoch_                = no_epoch;
+  MaybeReadyType maybe_ready_tag_han_    = {};
+  ContWaitType pending_handler_msgs_     = {};
+  ContainerPendingType pending_recvs_    = {};
+  TagType cur_direct_buffer_tag_         = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
+  std::vector<ListenerType> send_listen_ = {};
 };
 
 }} // end namespace vt::messaging

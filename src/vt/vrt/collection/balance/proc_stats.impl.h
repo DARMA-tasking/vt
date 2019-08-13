@@ -59,7 +59,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 template <typename ColT>
 /*static*/ ElementIDType ProcStats::addProcStats(
   VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-  PhaseType const& phase, TimeType const& time
+  PhaseType const& phase, TimeType const& time, CommMapType const& comm
 ) {
   // Always assign a new element ID so the node is correct (for now)
   col_elm->temp_elm_id_ = ProcStats::getNextElm();
@@ -80,6 +80,12 @@ template <typename ColT>
     std::forward_as_tuple(temp_id),
     std::forward_as_tuple(time)
   );
+
+  proc_comm_.resize(phase + 1);
+  for (auto&& c : comm) {
+    proc_comm_.at(phase)[c.first] += c.second;
+  }
+
   proc_temp_to_perm_[temp_id] = col_elm->stats_elm_id_;
   auto migrate_iter = proc_migrate_.find(temp_id);
   if (migrate_iter == proc_migrate_.end()) {

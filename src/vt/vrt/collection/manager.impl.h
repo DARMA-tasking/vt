@@ -64,6 +64,7 @@
 #include "vt/vrt/collection/destroy/destroy_msg.h"
 #include "vt/vrt/collection/destroy/destroy_handlers.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
+#include "vt/vrt/collection/balance/lb_listener.h"
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/holders/insert_context_holder.h"
@@ -433,9 +434,33 @@ template <typename ColT, typename IndexT, typename MsgT>
             msg->lbLiteInstrument()
           );
           if (msg->lbLiteInstrument()) {
+            recordStats(base, msg);
             auto& stats = base->getStats();
             stats.startTime();
           }
+
+          // Set the current context (element ID) that is executing (having a message
+          // delivered). This is used for load balancing to build the communication
+          // graph
+          auto const elm_id = base->getElmID();
+          auto const prev_elm = theCollection()->getCurrentContext();
+          theCollection()->setCurrentContext(elm_id);
+
+          debug_print(
+            vrt_coll, node,
+            "collectionBcastHandler: setting current context={}\n",
+            elm_id
+          );
+
+          std::unique_ptr<messaging::Listener> listener =
+            std::make_unique<balance::LBListener>(
+              [&](NodeType dest, MsgSizeType size, bool bcast){
+                auto& stats = base->getStats();
+                stats.recvToNode(dest, elm_id, size, bcast);
+              }
+            );
+          theMsg()->addSendListener(std::move(listener));
+
         #endif
 
         // be very careful here, do not touch `base' after running the active
@@ -446,6 +471,11 @@ template <typename ColT, typename IndexT, typename MsgT>
         );
 
         #if backend_check_enabled(lblite)
+          theMsg()->clearListeners();
+
+          // Unset the element ID context
+          theCollection()->setCurrentContext(prev_elm);
+
           if (msg->lbLiteInstrument()) {
             auto& stats = base->getStats();
             stats.stopTime();
@@ -659,22 +689,24 @@ template <typename ColT, typename IndexT, typename MsgT>
       col_msg->lbLiteInstrument()
     );
     if (col_msg->lbLiteInstrument()) {
-      auto const elm_id = msg->getElm();
+      recordStats(col_ptr, msg);
       auto& stats = col_ptr->getStats();
-      if (elm_id != balance::no_element_id) {
-        auto const msg_size = serialization::Size<MsgT>::getSize(msg);
-        stats.recvObjData(elm_id, msg_size);
-      }
       stats.startTime();
     }
-  #endif
 
-  // Set the current context (element ID) that is executing (having a message
-  // delivered). This is used for load balancing to build the communication
-  // graph
-  auto const elm_id = col_ptr->getElmID();
-  auto const prev_elm = theCollection()->getCurrentContext();
-  theCollection()->setCurrentContext(elm_id);
+    // Set the current context (element ID) that is executing (having a message
+    // delivered). This is used for load balancing to build the communication
+    // graph
+    auto const elm_id = col_ptr->getElmID();
+    auto const prev_elm = theCollection()->getCurrentContext();
+    theCollection()->setCurrentContext(elm_id);
+
+    debug_print(
+      vrt_coll, node,
+      "collectionMsgTypedHandler: setting current context={}\n",
+      elm_id
+    );
+  #endif
 
   // Dispatch the handler after pushing the contextual epoch
   theMsg()->pushEpoch(cur_epoch);
@@ -684,16 +716,47 @@ template <typename ColT, typename IndexT, typename MsgT>
   );
   theMsg()->popEpoch(cur_epoch);
 
-  // Unset the element ID context
-  theCollection()->setCurrentContext(prev_elm);
-
   #if backend_check_enabled(lblite)
+    // Unset the element ID context
+    theCollection()->setCurrentContext(prev_elm);
+
     if (col_msg->lbLiteInstrument()) {
       auto& stats = col_ptr->getStats();
       stats.stopTime();
     }
   #endif
 }
+
+template <typename ColT, typename MsgT>
+/*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
+  auto const to = col_ptr->getElmID();
+  auto const from = msg->getElm();
+  auto& stats = col_ptr->getStats();
+  auto const msg_size = serialization::Size<MsgT>::getSize(msg);
+  auto const cat = msg->getCat();
+  debug_print(
+    vrt_coll, node,
+    "recordStats: receive msg: to={}, from={}, no={}, size={}, category={}\n",
+    to, from, balance::no_element_id, msg_size,
+    static_cast<typename std::underlying_type<balance::CommCategory>::type>(cat)
+  );
+  if (
+    cat == balance::CommCategory::SendRecv or
+    cat == balance::CommCategory::Broadcast
+  ) {
+    vtAssert(from != balance::no_element_id, "Must not be no element ID");
+    bool bcast = cat == balance::CommCategory::SendRecv ? false : true;
+    stats.recvObjData(to, from, msg_size, bcast);
+  } else if (
+    cat == balance::CommCategory::NodeToCollection or
+    cat == balance::CommCategory::NodeToCollectionBcast
+  ) {
+    bool bcast = cat == balance::CommCategory::NodeToCollection ? false : true;
+    auto nfrom = msg->getFromNode();
+    stats.recvFromNode(to, nfrom, msg_size, bcast);
+  }
+}
+
 
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::collectionMsgHandler(BaseMessage* msg) {
@@ -901,8 +964,27 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 
   auto msg = promoteMsg(raw_msg);
 
+  msg->setFromNode(this_node);
+
   #if backend_check_enabled(lblite)
     msg->setLBLiteInstrument(instrument);
+  #endif
+
+  #if backend_check_enabled(lblite)
+    auto const elm_id = getCurrentContext();
+
+    debug_print(
+      vrt_coll, node,
+      "broadcasting msg: LB current elm context={}\n",
+      elm_id
+    );
+
+    if (elm_id != balance::no_element_id) {
+      msg->setElm(elm_id);
+      msg->setCat(balance::CommCategory::Broadcast);
+    } else {
+      msg->setCat(balance::CommCategory::NodeToCollection);
+    }
   #endif
 
   // @todo: implement the action `act' after the routing is finished
@@ -921,7 +1003,6 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
     // save the user's handler in the message
     msg->setVrtHandler(handler);
     msg->setBcastProxy(col_proxy);
-    msg->setFromNode(this_node);
     msg->setMember(member);
 
     auto const bnode = VirtualProxyBuilder::getVirtualNode(col_proxy);
@@ -1281,9 +1362,31 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
   auto msg = promoteMsg(raw_msg);
 
-  #if backend_check_enabled(lblite)
-    msg->setLBLiteInstrument(true);
-  #endif
+  if (imm_context) {
+    #if backend_check_enabled(lblite)
+      msg->setLBLiteInstrument(true);
+    #endif
+
+    #if backend_check_enabled(lblite)
+      auto const elm_id = getCurrentContext();
+
+      debug_print(
+        vrt_coll, node,
+        "sending msg: LB current elm context={}\n",
+        elm_id
+      );
+
+      if (elm_id != balance::no_element_id) {
+        msg->setElm(elm_id);
+        msg->setCat(balance::CommCategory::SendRecv);
+      } else {
+        msg->setCat(balance::CommCategory::NodeToCollection);
+      }
+    #endif
+
+    auto const& from_node = theContext()->getNode();
+    msg->setFromNode(from_node);
+  }
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
 
@@ -1330,13 +1433,6 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     msg->setVrtHandler(handler);
     msg->setProxy(toProxy);
     msg->setMember(member);
-
-#if backend_check_enabled(lblite)
-    auto const elm_id = getCurrentContext();
-    if (elm_id != balance::no_element_id) {
-      msg->setElm(elm_id);
-    }
-#endif
 
     debug_print(
       vrt_coll, node,

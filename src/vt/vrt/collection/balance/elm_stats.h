@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/elm_stats.fwd.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
@@ -63,7 +64,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct ElementStats {
   using PhaseType       = uint64_t;
   using ArgType         = vt::arguments::ArgConfig;
-  using ElementCommType = std::tuple<uint64_t,double>;
 
   ElementStats() = default;
   ElementStats(ElementStats const&) = default;
@@ -72,11 +72,14 @@ struct ElementStats {
   void startTime();
   void stopTime();
   void addTime(TimeType const& time);
-  void recvObjData(ElementIDType elm, double bytes);
+  void recvObjData(ElementIDType to, ElementIDType from, double bytes, bool bcast);
+  void recvFromNode(ElementIDType to, NodeType from, double bytes, bool bcast);
+  void recvToNode(NodeType to, ElementIDType from, double bytes, bool bcast);
   void setModelWeight(TimeType const& time);
   void updatePhase(PhaseType const& inc = 1);
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;
+  CommMapType const& getComm(PhaseType const& phase);
 
   template <typename Serializer>
   void serialize(Serializer& s);
@@ -93,7 +96,7 @@ protected:
   TimeType cur_time_ = 0.0;
   PhaseType cur_phase_ = fst_lb_phase;
   std::vector<TimeType> phase_timings_ = {};
-  std::vector<std::unordered_map<ElementIDType,ElementCommType>> comm_ = {};
+  std::vector<CommMapType> comm_ = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

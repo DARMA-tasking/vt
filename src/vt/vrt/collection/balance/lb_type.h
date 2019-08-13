@@ -57,7 +57,8 @@ enum struct LBType : int8_t {
   NoLB             = 0,
   GreedyLB         = 1,
   HierarchicalLB   = 2,
-  RotateLB         = 3
+  RotateLB         = 3,
+  GossipLB         = 4
 };
 
 template <typename SerializerT>

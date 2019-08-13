@@ -391,6 +391,9 @@ public:
   template <typename ColT, typename IndexT, typename MsgT>
   static void collectionMsgTypedHandler(MsgT* msg);
 
+  template <typename ColT, typename MsgT>
+  static void recordStats(ColT* col_ptr, MsgT* msg);
+
   /*
    *  Reduce all elements of a collection
    */

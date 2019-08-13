@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          proc_stats.h
+//                          lb_listener.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,63 +42,29 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
-#include "vt/vrt/collection/balance/phase_msg.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
-#include "vt/timing/timing.h"
+#include "vt/messaging/listener.h"
 
-#include <vector>
-#include <unordered_map>
-#include <tuple>
 #include <functional>
-#include <cstdio>
-#include <cstdlib>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct ProcStats {
-  using MigrateFnType = std::function<void(NodeType)>;
+struct LBListener final : messaging::Listener {
+  using FnType = std::function<void(NodeType, MsgSizeType, bool)>;
 
-public:
-  template <typename ColT>
-  static ElementIDType addProcStats(
-    VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-    PhaseType const& phase, TimeType const& time, CommMapType const& comm
-  );
+  explicit LBListener(FnType fn) : fn_(fn) { }
 
-  static void clearStats();
-  static void startIterCleanup();
-  static void releaseLB();
-
-  static void outputStatsFile();
+  void send(NodeType dest, MsgSizeType size, bool bcast) override {
+    fn_(dest,size,bcast);
+  }
 
 private:
-  static void createStatsFile();
-  static void closeStatsFile();
-
-public:
-  static ElementIDType getNextElm();
-
-  // @todo: make these private and friend appropriate classes
-public:
-  static ElementIDType next_elm_;
-public:
-  static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
-  static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
-  static std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
-  static std::vector<CommMapType> proc_comm_;
-private:
-  static FILE* stats_file_;
-  static bool created_dir_;
+  FnType fn_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#include "vt/vrt/collection/balance/proc_stats.impl.h"
-
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H*/

@@ -79,15 +79,28 @@ void ElementStats::stopTime() {
   );
 }
 
-void ElementStats::recvObjData(ElementIDType elm, double bytes) {
+void ElementStats::recvObjData(
+  ElementIDType to, ElementIDType from, double bytes, bool bcast
+) {
   comm_.resize(cur_phase_ + 1);
-  auto iter = comm_.at(cur_phase_).find(elm);
-  if (iter == comm_.at(cur_phase_).end()) {
-    comm_.at(cur_phase_)[elm] = std::make_tuple(1,bytes);
-  } else {
-    std::get<0>(comm_.at(cur_phase_)[elm])++;
-    std::get<1>(comm_.at(cur_phase_)[elm]) += bytes;
-  }
+  LBCommKey key(LBCommKey::CollectionTag{}, from, to, bcast);
+  comm_.at(cur_phase_)[key] += bytes;
+}
+
+void ElementStats::recvFromNode(
+  ElementIDType to, NodeType from, double bytes, bool bcast
+) {
+  comm_.resize(cur_phase_ + 1);
+  LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, to, bcast);
+  comm_.at(cur_phase_)[key] += bytes;
+}
+
+void ElementStats::recvToNode(
+  NodeType to, ElementIDType from, double bytes, bool bcast
+) {
+  comm_.resize(cur_phase_ + 1);
+  LBCommKey key(LBCommKey::CollectionToNodeTag{}, from, to, bcast);
+  comm_.at(cur_phase_)[key] += bytes;
 }
 
 void ElementStats::setModelWeight(TimeType const& time) {
@@ -138,6 +151,21 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
 
   vtAssert(phase_timings_.size() >= phase, "Must have phase");
   return total_load;
+}
+
+
+CommMapType const&
+ElementStats::getComm(PhaseType const& phase) {
+  comm_.resize(phase + 1);
+  auto const& phase_comm = comm_[phase];
+
+  debug_print(
+    lb, node,
+    "ElementStats: getComm: comm size={}, phase={}\n",
+    phase_comm.size(), phase
+  );
+
+  return phase_comm;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

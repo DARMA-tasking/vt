@@ -63,6 +63,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 std::vector<std::unordered_map<ElementIDType,TimeType>>
   ProcStats::proc_data_ = {};
 
+/*static*/ std::vector<CommMapType> ProcStats::proc_comm_ = {};
+
 /*static*/
 std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   ProcStats::proc_migrate_ = {};
@@ -169,6 +171,41 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
     for (auto&& elm : ProcStats::proc_data_.at(i)) {
       auto obj_str = fmt::format("{},{},{}\n", i, elm.first, elm.second);
       fprintf(stats_file_, "%s", obj_str.c_str());
+    }
+    for (auto&& elm : ProcStats::proc_comm_.at(i)) {
+      using E = typename std::underlying_type<CommCategory>::type;
+
+      auto const& key = elm.first;
+      auto const& val = elm.second;
+      auto const cat = static_cast<E>(key.cat_);
+
+      if (
+        key.cat_ == CommCategory::SendRecv or
+        key.cat_ == CommCategory::Broadcast
+      ) {
+        auto const to   = key.toObj();
+        auto const from = key.fromObj();
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        fprintf(stats_file_, "%s", obj_str.c_str());
+      } else if (
+        key.cat_ == CommCategory::NodeToCollection or
+        key.cat_ == CommCategory::NodeToCollectionBcast
+      ) {
+        auto const to   = key.toObj();
+        auto const from = key.fromNode();
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        fprintf(stats_file_, "%s", obj_str.c_str());
+      } else if (
+        key.cat_ == CommCategory::CollectionToNode or
+        key.cat_ == CommCategory::CollectionToNodeBcast
+      ) {
+        auto const to   = key.toNode();
+        auto const from = key.fromObj();
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        fprintf(stats_file_, "%s", obj_str.c_str());
+      } else {
+        vtAssert(false, "Invalid balance::CommCategory enum value");
+      }
     }
   }
   fflush(stats_file_);

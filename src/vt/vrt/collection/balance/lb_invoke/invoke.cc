@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
+#include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 
@@ -135,6 +136,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
     break;
   case LBType::RotateLB:
     lb::RotateLB::rotateLBHandler(msg.get());
+    break;
+  case LBType::GossipLB:
+    lb::GossipLB::gossipLBHandler(msg.get());
     break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB to startLBCollective");

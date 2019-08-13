@@ -52,6 +52,7 @@
 #include "vt/vrt/collection/proxy.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/lb_comm.h"
 
 #include <type_traits>
 
@@ -113,6 +114,8 @@ struct CollectionMessage :
     void setLBLiteInstrument(bool const& val);
     balance::ElementIDType getElm() const;
     void setElm(balance::ElementIDType elm);
+    balance::CommCategory getCat() const;
+    void setCat(balance::CommCategory cat);
   #endif
 
   // Explicitly write a parent serializer so derived user messages can contain
@@ -142,6 +145,7 @@ private:
      */
     bool lb_lite_instrument_ = false;
     balance::ElementIDType elm_ = 0;
+    balance::CommCategory cat_ = balance::CommCategory::SendRecv;
   #endif
 };
 

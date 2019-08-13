@@ -132,6 +132,7 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
   #if backend_check_enabled(lblite)
     s | lb_lite_instrument_;
     s | elm_;
+    balance::serializeCommCategory(s, cat_);
   #endif
 }
 
@@ -175,6 +176,18 @@ template <typename ColT, typename BaseMsgT>
 void CollectionMessage<ColT, BaseMsgT>::setElm(balance::ElementIDType elm) {
   elm_ = elm;
 }
+
+template <typename ColT, typename BaseMsgT>
+balance::CommCategory CollectionMessage<ColT, BaseMsgT>::getCat() const {
+  return cat_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setCat(balance::CommCategory cat) {
+  cat_ = cat;
+}
+
+
 #endif
 
 }}} /* end namespace vt::vrt::collection */
