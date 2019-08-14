@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                          gossiplb.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,21 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct CollectionManager;
-struct CollectionPhaseMsg;
+struct GossipLB {
+  GossipLB() = default;
+  GossipLB(GossipLB const&) = delete;
+  GossipLB(GossipLB&&) = default;
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+  static void gossipLBHandler(balance::StartLBMsg* msg) { }
+};
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
+}}}} /* end namespace vt::vrt::collection::lb */
 
-}}} /* end namespace vt::vrt::collection */
-
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H*/

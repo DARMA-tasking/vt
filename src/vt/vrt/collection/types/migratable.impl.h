@@ -56,6 +56,7 @@ void Migratable<ColT>::serialize(Serializer& s) {
   MigrateHookBase::serialize(s);
   s | stats_;
   s | stats_elm_id_;
+  s | temp_elm_id_;
 }
 
 template <typename ColT>

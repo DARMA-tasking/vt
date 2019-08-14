@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                           invoke_msg.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,30 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_MSG_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
+#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/collective/reduce/reduce_op.h"
+#include "vt/messaging/message.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct CollectionManager;
-struct CollectionPhaseMsg;
+template <typename MsgT>
+struct InvokeBaseMsg : MsgT {
+  InvokeBaseMsg() = default;
+  InvokeBaseMsg(PhaseType in_phase, LBType in_lb)
+    : phase_(in_phase), lb_(in_lb)
+  { }
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+  PhaseType phase_ = 0;
+  LBType lb_ = LBType::NoLB;
+};
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
+using InvokeMsg       = InvokeBaseMsg<vt::Message>;
+using InvokeReduceMsg = InvokeBaseMsg<collective::ReduceNoneMsg>;
 
-}}} /* end namespace vt::vrt::collection */
+}}}} /* end namespace vt::vrt::collection::balance */
 
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_MSG_H*/

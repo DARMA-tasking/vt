@@ -93,13 +93,11 @@ void RotateLB::finishedMigrate() {
     "RotateLB::finishedMigrate: transfer_count={}\n",
     transfer_count
   );
-  balance::ProcStats::proc_migrate_.clear();
-  balance::ProcStats::proc_data_.clear();
-  balance::ProcStats::next_elm_ = 1;
+  balance::ProcStats::startIterCleanup();
   theCollection()->releaseLBContinuation();
 }
 
-/*static*/ void RotateLB::rotateLBHandler(balance::RotateLBMsg* msg) {
+/*static*/ void RotateLB::rotateLBHandler(balance::StartLBMsg* msg) {
   auto const& phase = msg->getPhase();
   RotateLB::rotate_lb_inst = std::make_unique<RotateLB>();
   vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase);

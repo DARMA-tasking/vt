@@ -67,13 +67,18 @@ set(
         vrt/collection/balance/hierarchicallb
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb
+        vrt/collection/balance/gossiplb
+        vrt/collection/balance/lb_invoke
+        vrt/collection/balance/proxy
     lb/instrumentation
       lb/instrumentation/centralized
     lb/balancers
       lb/balancers/centralized
         lb/balancers/centralized/impls
     lb/migration
-    serialization/messaging serialization/traits serialization/auto_dispatch
+    serialization
+      serialization/messaging serialization/traits serialization/auto_dispatch
+      serialization/sizing
     utils/demangle utils/container utils/bits utils/mutex
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
     registry/auto

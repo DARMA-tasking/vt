@@ -46,6 +46,8 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/elm_stats.fwd.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
@@ -55,14 +57,13 @@
 
 #include <cstdint>
 #include <vector>
+#include <tuple>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-static constexpr bool const lb_direct = true;
-
 struct ElementStats {
-  using PhaseType = uint64_t;
-  using ArgType   = vt::arguments::ArgConfig;
+  using PhaseType       = uint64_t;
+  using ArgType         = vt::arguments::ArgConfig;
 
   ElementStats() = default;
   ElementStats(ElementStats const&) = default;
@@ -71,10 +72,14 @@ struct ElementStats {
   void startTime();
   void stopTime();
   void addTime(TimeType const& time);
+  void recvObjData(ElementIDType to, ElementIDType from, double bytes, bool bcast);
+  void recvFromNode(ElementIDType to, NodeType from, double bytes, bool bcast);
+  void recvToNode(NodeType to, ElementIDType from, double bytes, bool bcast);
   void setModelWeight(TimeType const& time);
   void updatePhase(PhaseType const& inc = 1);
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;
+  CommMapType const& getComm(PhaseType const& phase);
 
   template <typename Serializer>
   void serialize(Serializer& s);
@@ -84,12 +89,6 @@ public:
   static void syncNextPhase(PhaseMsg<ColT>* msg, ColT* col);
 
   template <typename ColT>
-  static void computeStats(PhaseMsg<ColT>* msg, ColT* col);
-
-  template <typename ColT>
-  static void statsIn(LoadStatsMsg<ColT>* msg, ColT* col);
-
-  template <typename ColT>
   friend struct collection::Migratable;
 
 protected:
@@ -97,22 +96,7 @@ protected:
   TimeType cur_time_ = 0.0;
   PhaseType cur_phase_ = fst_lb_phase;
   std::vector<TimeType> phase_timings_ = {};
-};
-
-template <typename ColT>
-struct ComputeStats {
-  void operator()(PhaseReduceMsg<ColT>* msg);
-};
-
-template <typename ColT>
-struct CollectedStats {
-  void operator()(StatsMsg<ColT>* msg);
-};
-
-template <typename ColT>
-struct StartLB {
-  using ArgType = vt::arguments::ArgConfig;
-  void operator()(PhaseReduceMsg<ColT>* msg);
+  std::vector<CommMapType> comm_ = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

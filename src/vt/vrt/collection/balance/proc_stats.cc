@@ -60,15 +60,19 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/
-std::vector<
-  std::unordered_map<ProcStats::ElementIDType,TimeType>
-> ProcStats::proc_data_ = {};
+std::vector<std::unordered_map<ElementIDType,TimeType>>
+  ProcStats::proc_data_ = {};
+
+/*static*/ std::vector<CommMapType> ProcStats::proc_comm_ = {};
 
 /*static*/
-std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
+std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   ProcStats::proc_migrate_ = {};
 
-/*static*/ ProcStats::ElementIDType ProcStats::next_elm_ = 1;
+/*static*/ std::unordered_map<ElementIDType,ElementIDType>
+  ProcStats::proc_temp_to_perm_ =  {};
+
+/*static*/ ElementIDType ProcStats::next_elm_ = 1;
 
 /*static*/ FILE* ProcStats::stats_file_ = nullptr;
 
@@ -77,10 +81,31 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
 /*static*/ void ProcStats::clearStats() {
   ProcStats::proc_data_.clear();
   ProcStats::proc_migrate_.clear();
+  ProcStats::proc_temp_to_perm_.clear();
   next_elm_ = 1;
 }
 
-/*static*/ ProcStats::ElementIDType ProcStats::getNextElm() {
+/*static*/ void ProcStats::startIterCleanup() {
+  // Convert the temp ID proc_data_ for the last iteration into perm ID for
+  // stats output
+  auto const phase = proc_data_.size() - 1;
+  auto const prev_data = std::move(proc_data_[phase]);
+  std::unordered_map<ElementIDType,TimeType> new_data;
+  for (auto& elm : prev_data) {
+    auto iter = proc_temp_to_perm_.find(elm.first);
+    vtAssert(iter != proc_temp_to_perm_.end(), "Temp ID must exist");
+    auto perm_id = iter->second;
+    new_data[perm_id] = elm.second;
+  }
+  proc_data_[phase] = std::move(new_data);
+
+  // Create migrate lambdas and temp to perm map since LB is complete
+  ProcStats::proc_migrate_.clear();
+  ProcStats::proc_temp_to_perm_.clear();
+  next_elm_ = 1;
+}
+
+/*static*/ ElementIDType ProcStats::getNextElm() {
   auto const& this_node = theContext()->getNode();
   auto elm = next_elm_++;
   return (elm << 32) | this_node;
@@ -102,7 +127,7 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
   auto const file_name = fmt::format("{}/{}", dir, file);
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ProcStats: createStatsFile file={}\n", file_name
   );
 
@@ -139,10 +164,48 @@ std::unordered_map<ProcStats::ElementIDType,ProcStats::MigrateFnType>
   vtAssertExpr(stats_file_ != nullptr);
 
   auto const num_iters = ProcStats::proc_data_.size();
+
+  vt_print(lb, "outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
+
   for (size_t i = 0; i < num_iters; i++) {
     for (auto&& elm : ProcStats::proc_data_.at(i)) {
       auto obj_str = fmt::format("{},{},{}\n", i, elm.first, elm.second);
       fprintf(stats_file_, "%s", obj_str.c_str());
+    }
+    for (auto&& elm : ProcStats::proc_comm_.at(i)) {
+      using E = typename std::underlying_type<CommCategory>::type;
+
+      auto const& key = elm.first;
+      auto const& val = elm.second;
+      auto const cat = static_cast<E>(key.cat_);
+
+      if (
+        key.cat_ == CommCategory::SendRecv or
+        key.cat_ == CommCategory::Broadcast
+      ) {
+        auto const to   = key.toObj();
+        auto const from = key.fromObj();
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        fprintf(stats_file_, "%s", obj_str.c_str());
+      } else if (
+        key.cat_ == CommCategory::NodeToCollection or
+        key.cat_ == CommCategory::NodeToCollectionBcast
+      ) {
+        auto const to   = key.toObj();
+        auto const from = key.fromNode();
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        fprintf(stats_file_, "%s", obj_str.c_str());
+      } else if (
+        key.cat_ == CommCategory::CollectionToNode or
+        key.cat_ == CommCategory::CollectionToNodeBcast
+      ) {
+        auto const to   = key.toNode();
+        auto const from = key.fromObj();
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        fprintf(stats_file_, "%s", obj_str.c_str());
+      } else {
+        vtAssert(false, "Invalid balance::CommCategory enum value");
+      }
     }
   }
   fflush(stats_file_);

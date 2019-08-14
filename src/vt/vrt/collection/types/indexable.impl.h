@@ -57,7 +57,9 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 Indexable<ColT,IndexT>::Indexable(IndexT&& in_index)
-  : Migratable<ColT>(), index_(std::move(in_index)), set_index_(true)
+  : Migratable<ColT>(),
+    index_(std::move(in_index)),
+    set_index_(true)
 { }
 
 

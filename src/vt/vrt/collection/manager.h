@@ -74,6 +74,7 @@
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 
 #include <memory>
 #include <vector>
@@ -390,6 +391,9 @@ public:
   template <typename ColT, typename IndexT, typename MsgT>
   static void collectionMsgTypedHandler(MsgT* msg);
 
+  template <typename ColT, typename MsgT>
+  static void recordStats(ColT* col_ptr, MsgT* msg);
+
   /*
    *  Reduce all elements of a collection
    */
@@ -633,11 +637,27 @@ public:
     PhaseType const& cur_phase, ActionFinishedLBType continuation = nullptr
   );
 
+  /*
+   * The `elm Ready` function is called by every element of every collection at
+   * the phase boundary for each local element residing on a node. Once all
+   * elements have invoked it, LB will commence.
+   */
   template <typename ColT>
-  void computeStats(
-    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
-    PhaseType const& cur_phase
+  void elmReadyLB(
+    VirtualElmProxyType<ColT> const& proxy, PhaseType phase,
+    bool do_sync, ActionFinishedLBType continuation
   );
+
+  template <
+    typename MsgT, typename ColT, ActiveColMemberTypedFnType<MsgT,ColT> f
+  >
+  void elmReadyLB(
+    VirtualElmProxyType<ColT> const& proxy, PhaseType phase, MsgT* msg,
+    bool do_sync
+  );
+
+  template <typename ColT>
+  void elmFinishedLB(VirtualElmProxyType<ColT> const& proxy, PhaseType phase);
 
   template <typename=void>
   static void releaseLBPhase(CollectionPhaseMsg* msg);
@@ -787,6 +807,18 @@ private:
   );
 
 private:
+  template <typename MsgT>
+  static EpochType getCurrentEpoch(MsgT* msg);
+
+  template <typename=void>
+  static VirtualIDType curIdent_;
+
+  template <typename ColT>
+  static BcastBufferType<ColT> broadcasts_;
+
+  balance::ElementIDType getCurrentContext() const;
+  void setCurrentContext(balance::ElementIDType elm);
+
   CleanupListFnType cleanup_fns_;
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;
@@ -799,6 +831,8 @@ private:
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
+  std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
+  balance::ElementIDType cur_context_elm_id_ = balance::no_element_id;
 };
 
 // These are static variables in class templates because Intel 18
@@ -843,6 +877,7 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vt/vrt/collection/dispatch/registry.impl.h"
 #include "vt/vrt/collection/staged_token/token.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
+#include "vt/vrt/collection/balance/proxy/lbable.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"

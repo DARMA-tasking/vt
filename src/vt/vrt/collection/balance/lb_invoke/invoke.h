@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                            invoke.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,34 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
+#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
+#include "vt/configs/arguments/args.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct CollectionManager;
-struct CollectionPhaseMsg;
+struct InvokeLB {
+  using ArgType = vt::arguments::ArgConfig;
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+  static LBType shouldInvoke(PhaseType phase, bool try_file = true);
+  static void startLB(PhaseType phase, LBType lb);
+  static void startLBCollective(InvokeMsg* msg);
+  static void startLBCollective(InvokeReduceMsg* msg);
+  static void startLBCollective(PhaseType phase, LBType lb);
+  static void releaseLB(PhaseType phase);
+  static void releaseLBCollective(InvokeMsg* msg);
+  static void releaseLBCollective(InvokeReduceMsg* msg);
+  static void releaseLBCollective(PhaseType phase);
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
+private:
+  static PhaseType cached_phase_;
+  static LBType cached_lb_;
+};
 
-}}} /* end namespace vt::vrt::collection */
+}}}} /* end namespace vt::vrt::collection::balance */
 
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H*/

@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                          listener.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,17 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_MESSAGING_LISTENER_H
+#define INCLUDED_VT_MESSAGING_LISTENER_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace messaging {
 
-struct CollectionManager;
-struct CollectionPhaseMsg;
+struct Listener {
+  virtual void send(NodeType dest, MsgSizeType size, bool bcast) = 0;
+};
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+}} /* end namespace vt::messaging */
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
-
-}}} /* end namespace vt::vrt::collection */
-
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_MESSAGING_LISTENER_H*/

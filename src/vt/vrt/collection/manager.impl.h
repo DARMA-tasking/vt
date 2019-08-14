@@ -64,6 +64,7 @@
 #include "vt/vrt/collection/destroy/destroy_msg.h"
 #include "vt/vrt/collection/destroy/destroy_handlers.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
+#include "vt/vrt/collection/balance/lb_listener.h"
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/holders/insert_context_holder.h"
@@ -75,6 +76,7 @@
 #include "vt/termination/term_headers.h"
 #include "vt/serialization/serialization.h"
 #include "vt/serialization/auto_dispatch/dispatch.h"
+#include "vt/serialization/auto_sizing/sizing.h"
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
 
@@ -432,9 +434,33 @@ template <typename ColT, typename IndexT, typename MsgT>
             msg->lbLiteInstrument()
           );
           if (msg->lbLiteInstrument()) {
+            recordStats(base, msg);
             auto& stats = base->getStats();
             stats.startTime();
           }
+
+          // Set the current context (element ID) that is executing (having a message
+          // delivered). This is used for load balancing to build the communication
+          // graph
+          auto const elm_id = base->getElmID();
+          auto const prev_elm = theCollection()->getCurrentContext();
+          theCollection()->setCurrentContext(elm_id);
+
+          debug_print(
+            vrt_coll, node,
+            "collectionBcastHandler: setting current context={}\n",
+            elm_id
+          );
+
+          std::unique_ptr<messaging::Listener> listener =
+            std::make_unique<balance::LBListener>(
+              [&](NodeType dest, MsgSizeType size, bool bcast){
+                auto& stats = base->getStats();
+                stats.recvToNode(dest, elm_id, size, bcast);
+              }
+            );
+          theMsg()->addSendListener(std::move(listener));
+
         #endif
 
         // be very careful here, do not touch `base' after running the active
@@ -445,6 +471,11 @@ template <typename ColT, typename IndexT, typename MsgT>
         );
 
         #if backend_check_enabled(lblite)
+          theMsg()->clearListeners();
+
+          // Unset the element ID context
+          theCollection()->setCurrentContext(prev_elm);
+
           if (msg->lbLiteInstrument()) {
             auto& stats = base->getStats();
             stats.stopTime();
@@ -650,6 +681,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     sub_handler, member, cur_epoch, idx, exists
   );
 
+
   #if backend_check_enabled(lblite)
     debug_print(
       vrt_coll, node,
@@ -657,11 +689,35 @@ template <typename ColT, typename IndexT, typename MsgT>
       col_msg->lbLiteInstrument()
     );
     if (col_msg->lbLiteInstrument()) {
+      recordStats(col_ptr, msg);
       auto& stats = col_ptr->getStats();
       stats.startTime();
     }
+
+    // Set the current context (element ID) that is executing (having a message
+    // delivered). This is used for load balancing to build the communication
+    // graph
+    auto const elm_id = col_ptr->getElmID();
+    auto const prev_elm = theCollection()->getCurrentContext();
+    theCollection()->setCurrentContext(elm_id);
+
+    debug_print(
+      vrt_coll, node,
+      "collectionMsgTypedHandler: setting current context={}\n",
+      elm_id
+    );
+
+    std::unique_ptr<messaging::Listener> listener =
+      std::make_unique<balance::LBListener>(
+        [&](NodeType dest, MsgSizeType size, bool bcast){
+          auto& stats = col_ptr->getStats();
+          stats.recvToNode(dest, elm_id, size, bcast);
+        }
+      );
+    theMsg()->addSendListener(std::move(listener));
   #endif
 
+  // Dispatch the handler after pushing the contextual epoch
   theMsg()->pushEpoch(cur_epoch);
   auto const from = col_msg->getFromNode();
   collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
@@ -670,12 +726,48 @@ template <typename ColT, typename IndexT, typename MsgT>
   theMsg()->popEpoch(cur_epoch);
 
   #if backend_check_enabled(lblite)
+    theMsg()->clearListeners();
+
+    // Unset the element ID context
+    theCollection()->setCurrentContext(prev_elm);
+
     if (col_msg->lbLiteInstrument()) {
       auto& stats = col_ptr->getStats();
       stats.stopTime();
     }
   #endif
 }
+
+template <typename ColT, typename MsgT>
+/*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
+  auto const to = col_ptr->getElmID();
+  auto const from = msg->getElm();
+  auto& stats = col_ptr->getStats();
+  auto const msg_size = serialization::Size<MsgT>::getSize(msg);
+  auto const cat = msg->getCat();
+  debug_print(
+    vrt_coll, node,
+    "recordStats: receive msg: to={}, from={}, no={}, size={}, category={}\n",
+    to, from, balance::no_element_id, msg_size,
+    static_cast<typename std::underlying_type<balance::CommCategory>::type>(cat)
+  );
+  if (
+    cat == balance::CommCategory::SendRecv or
+    cat == balance::CommCategory::Broadcast
+  ) {
+    vtAssert(from != balance::no_element_id, "Must not be no element ID");
+    bool bcast = cat == balance::CommCategory::SendRecv ? false : true;
+    stats.recvObjData(to, from, msg_size, bcast);
+  } else if (
+    cat == balance::CommCategory::NodeToCollection or
+    cat == balance::CommCategory::NodeToCollectionBcast
+  ) {
+    bool bcast = cat == balance::CommCategory::NodeToCollection ? false : true;
+    auto nfrom = msg->getFromNode();
+    stats.recvFromNode(to, nfrom, msg_size, bcast);
+  }
+}
+
 
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::collectionMsgHandler(BaseMessage* msg) {
@@ -883,8 +975,27 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 
   auto msg = promoteMsg(raw_msg);
 
+  msg->setFromNode(this_node);
+
   #if backend_check_enabled(lblite)
     msg->setLBLiteInstrument(instrument);
+  #endif
+
+  #if backend_check_enabled(lblite)
+    auto const elm_id = getCurrentContext();
+
+    debug_print(
+      vrt_coll, node,
+      "broadcasting msg: LB current elm context={}\n",
+      elm_id
+    );
+
+    if (elm_id != balance::no_element_id) {
+      msg->setElm(elm_id);
+      msg->setCat(balance::CommCategory::Broadcast);
+    } else {
+      msg->setCat(balance::CommCategory::NodeToCollection);
+    }
   #endif
 
   // @todo: implement the action `act' after the routing is finished
@@ -903,7 +1014,6 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
     // save the user's handler in the message
     msg->setVrtHandler(handler);
     msg->setBcastProxy(col_proxy);
-    msg->setFromNode(this_node);
     msg->setMember(member);
 
     auto const bnode = VirtualProxyBuilder::getVirtualNode(col_proxy);
@@ -1263,9 +1373,31 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
   auto msg = promoteMsg(raw_msg);
 
-  #if backend_check_enabled(lblite)
-    msg->setLBLiteInstrument(true);
-  #endif
+  if (imm_context) {
+    #if backend_check_enabled(lblite)
+      msg->setLBLiteInstrument(true);
+    #endif
+
+    #if backend_check_enabled(lblite)
+      auto const elm_id = getCurrentContext();
+
+      debug_print(
+        vrt_coll, node,
+        "sending msg: LB current elm context={}\n",
+        elm_id
+      );
+
+      if (elm_id != balance::no_element_id) {
+        msg->setElm(elm_id);
+        msg->setCat(balance::CommCategory::SendRecv);
+      } else {
+        msg->setCat(balance::CommCategory::NodeToCollection);
+      }
+    #endif
+
+    auto const& from_node = theContext()->getNode();
+    msg->setFromNode(from_node);
+  }
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
 
@@ -2734,6 +2866,145 @@ void CollectionManager::makeCollectionReady(VirtualProxyType const proxy) {
 }
 
 template <typename ColT>
+void CollectionManager::elmFinishedLB(
+  VirtualElmProxyType<ColT> const& proxy, PhaseType phase
+) {
+  auto const& col_proxy = proxy.getCollectionProxy();
+  auto const& idx = proxy.getElementProxy().getIndex();
+  auto elm_holder = findElmHolder<ColT>(col_proxy);
+  vtAssertInfo(
+    elm_holder != nullptr, "Must find element holder at elmFinishedLB",
+    col_proxy, phase
+  );
+  elm_holder->runLBCont(idx);
+}
+
+template <
+  typename MsgT, typename ColT, ActiveColMemberTypedFnType<MsgT,ColT> f
+>
+void CollectionManager::elmReadyLB(
+  VirtualElmProxyType<ColT> const& proxy, PhaseType phase, MsgT* msg,
+  bool do_sync
+) {
+  auto lb_han = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto pmsg = promoteMsg(msg);
+
+#if !backend_check_enabled(lblite)
+  theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
+  return;
+#endif
+
+  auto const& col_proxy = proxy.getCollectionProxy();
+  auto const& idx = proxy.getElementProxy().getIndex();
+  auto elm_holder = findElmHolder<ColT>(col_proxy);
+  vtAssertInfo(
+    elm_holder != nullptr, "Must find element holder at elmReadyLB",
+    col_proxy, phase
+  );
+
+  debug_print(
+    lb, node,
+    "elmReadyLB: proxy={:x}, idx={}, phase={}, msg={}\n",
+    col_proxy, idx, phase, pmsg
+  );
+
+  elm_holder->addLBCont(idx,[pmsg,proxy,lb_han]{
+    theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
+  });
+
+  auto iter = release_lb_.find(col_proxy);
+  if (iter == release_lb_.end()) {
+    release_lb_[col_proxy] = [this,col_proxy]{
+      auto cur_elm_holder = findElmHolder<ColT>(col_proxy);
+      cur_elm_holder->runLBCont();
+    };
+  }
+
+  elmReadyLB<ColT>(proxy,phase,do_sync,nullptr);
+}
+
+template <typename ColT>
+void CollectionManager::elmReadyLB(
+  VirtualElmProxyType<ColT> const& proxy, PhaseType in_phase,
+  bool do_sync, ActionFinishedLBType cont
+) {
+
+#if !backend_check_enabled(lblite)
+  cont();
+  return;
+#endif
+
+  auto const& col_proxy = proxy.getCollectionProxy();
+  auto const& idx = proxy.getElementProxy().getIndex();
+  auto elm_holder = findElmHolder<ColT>(col_proxy);
+
+  PhaseType phase = in_phase;
+  if (phase == no_lb_phase) {
+    phase = elm_holder->lookup(idx).getCollection()->stats_.getPhase();
+  }
+
+  vtAssertInfo(
+    elm_holder != nullptr, "Must find element holder at elmReadyLB",
+    col_proxy, phase
+  );
+
+  debug_print(
+    lb, node,
+    "elmReadyLB: proxy={:x}, idx={} ready at phase={}\n",
+    col_proxy, idx, phase
+  );
+
+  if (cont != nullptr) {
+    theTerm()->produce(term::any_epoch_sentinel);
+    lb_continuations_.push_back(cont);
+  }
+  if (elm_holder) {
+    vtAssert(
+      elm_holder->exists(idx),
+      "Collection element must be local and currently reside on this node"
+    );
+    elm_holder->addReady();
+    auto const num_ready = elm_holder->numReady();
+    auto const num_total = elm_holder->numElements();
+
+    debug_print(
+      lb, node,
+      "elmReadyLB: proxy={:x}, ready={}, total={} at phase={}\n",
+      col_proxy, num_ready, num_total, phase
+    );
+
+    if (num_ready == num_total) {
+      elm_holder->clearReady();
+
+      debug_print(
+        lb, node,
+        "elmReadyLB: all local elements of proxy={:x} ready at phase={}\n",
+        col_proxy, phase
+      );
+    }
+
+    using namespace balance;
+    CollectionProxyWrapType<ColT> cur_proxy(col_proxy);
+    using MsgType = PhaseMsg<ColT>;
+    auto msg = makeMessage<MsgType>(phase, cur_proxy, do_sync);
+
+#if backend_check_enabled(lblite)
+    msg->setLBLiteInstrument(false);
+#endif
+
+    debug_print(
+      lb, node,
+      "elmReadyLB: invoking syncNextPhase on  proxy={:x}, at phase={}\n",
+      col_proxy, phase
+    );
+
+    theCollection()->sendMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
+      cur_proxy[idx], msg.get()
+    );
+  }
+}
+
+template <typename ColT>
 void CollectionManager::nextPhase(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
   PhaseType const& cur_phase, ActionFinishedLBType continuation
@@ -2789,27 +3060,6 @@ void CollectionManager::nextPhase(
   );
 }
 
-template <typename ColT>
-void CollectionManager::computeStats(
-  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
-  PhaseType const& cur_phase
-) {
-  using namespace balance;
-  using MsgType = PhaseMsg<ColT>;
-  auto msg = makeSharedMessage<MsgType>(cur_phase,proxy);
-  auto const& instrument = false;
-
-  debug_print(
-    vrt_coll, node,
-    "computeStats: broadcasting: cur_phase={}\n",
-    cur_phase
-  );
-
-  theCollection()->broadcastMsg<MsgType,ElementStats::computeStats<ColT>>(
-    proxy, msg, nullptr, instrument
-  );
-}
-
 template <typename always_void>
 void CollectionManager::checkReduceNoElements() {
   // @todo
@@ -2831,6 +3081,10 @@ void CollectionManager::releaseLBContinuation() {
       elm();
     }
   }
+  for (auto&& elm : release_lb_) {
+    elm.second();
+  }
+  release_lb_.clear();
 }
 
 template <typename MsgT, typename ColT>

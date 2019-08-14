@@ -57,8 +57,17 @@ enum struct LBType : int8_t {
   NoLB             = 0,
   GreedyLB         = 1,
   HierarchicalLB   = 2,
-  RotateLB         = 3
+  RotateLB         = 3,
+  GossipLB         = 4
 };
+
+template <typename SerializerT>
+void serialize(SerializerT& s, LBType lb) {
+  using EnumDataType = typename std::underlying_type<LBType>::type;
+  EnumDataType val = static_cast<EnumDataType>(lb);
+  s | val;
+  lb = static_cast<LBType>(val);
+}
 
 }}}} /* end namespace vt::vrt::collection::balance */
 

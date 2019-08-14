@@ -371,9 +371,7 @@ void HierarchicalLB::finishedTransferExchange() {
     );
     fflush(stdout);
   }
-  balance::ProcStats::proc_migrate_.clear();
-  balance::ProcStats::proc_data_.clear();
-  balance::ProcStats::next_elm_ = 1;
+  balance::ProcStats::startIterCleanup();
   theCollection()->releaseLBContinuation();
 }
 
@@ -884,7 +882,7 @@ std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
   return total_size;
 }
 
-/*static*/ void HierarchicalLB::hierLBHandler(balance::HierLBMsg* msg) {
+/*static*/ void HierarchicalLB::hierLBHandler(balance::StartLBMsg* msg) {
   auto const& phase = msg->getPhase();
   HierarchicalLB::hier_lb_inst = std::make_unique<HierarchicalLB>();
 

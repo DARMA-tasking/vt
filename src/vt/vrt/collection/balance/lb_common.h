@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                          lb_common.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,19 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <cstdlib>
 
-struct CollectionManager;
-struct CollectionPhaseMsg;
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+using ElementIDType = uint64_t;
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
+static constexpr ElementIDType const no_element_id = 0;
 
-}}} /* end namespace vt::vrt::collection */
+}}}} /* end namespace vt::vrt::collection::balance */
 
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H*/

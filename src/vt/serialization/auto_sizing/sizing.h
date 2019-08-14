@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                            sizing.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,65 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_SERIALIZATION_AUTO_SIZING_SIZING_H
+#define INCLUDED_VT_SERIALIZATION_AUTO_SIZING_SIZING_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
+#include "vt/serialization/serialize_interface.h"
 
-namespace vt { namespace vrt { namespace collection {
+#if HAS_SERIALIZATION_LIBRARY
+  #define HAS_DETECTION_COMPONENT 1
+  #include "serialization_library_headers.h"
+  #include "traits/serializable_traits.h"
+#endif
 
-struct CollectionManager;
-struct CollectionPhaseMsg;
+namespace vt { namespace serialization {
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+template <typename MsgT, typename=void>
+struct Size {
+  static std::size_t getSize(MsgT* msg);
+};
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
+#if HAS_SERIALIZATION_LIBRARY
+template <typename MsgT>
+struct Size<
+  MsgT,
+  typename std::enable_if_t<
+    ::serdes::SerializableTraits<MsgT>::has_serialize_function
+  >
+> {
+  static std::size_t getSize(MsgT* msg) {
+    return ::serialization::interface::getSize<MsgT>(*msg);
+  }
+};
 
-}}} /* end namespace vt::vrt::collection */
+template <typename MsgT>
+struct Size<
+  MsgT,
+  typename std::enable_if_t<
+    !::serdes::SerializableTraits<MsgT>::has_serialize_function
+  >
+> {
+  static std::size_t getSize(MsgT* msg) {
+    return sizeof(MsgT);
+  }
+};
 
-namespace vt {
+#else
 
-extern vrt::collection::CollectionManager* theCollection();
+template <typename MsgT>
+struct Size<
+  MsgT,
+  typename std::enable_if_t<std::true_type>
+> {
+  static std::size_t getSize(MsgT* msg) {
+    return sizeof(MsgT);
+  }
+};
 
-}  // end namespace vt
+#endif
 
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+
+}} /* end namespace vt::serialization */
+
+#endif /*INCLUDED_VT_SERIALIZATION_AUTO_SIZING_SIZING_H*/

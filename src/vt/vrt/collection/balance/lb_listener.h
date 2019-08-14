@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                          lb_listener.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,29 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
+#include "vt/messaging/listener.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <functional>
 
-struct CollectionManager;
-struct CollectionPhaseMsg;
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+struct LBListener final : messaging::Listener {
+  using FnType = std::function<void(NodeType, MsgSizeType, bool)>;
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
+  explicit LBListener(FnType fn) : fn_(fn) { }
 
-}}} /* end namespace vt::vrt::collection */
+  void send(NodeType dest, MsgSizeType size, bool bcast) override {
+    fn_(dest,size,bcast);
+  }
 
-namespace vt {
+private:
+  FnType fn_ = nullptr;
+};
 
-extern vrt::collection::CollectionManager* theCollection();
+}}}} /* end namespace vt::vrt::collection::balance */
 
-}  // end namespace vt
-
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H*/

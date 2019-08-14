@@ -56,7 +56,7 @@ void ElementStats::startTime() {
   cur_time_started_ = true;
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: startTime: time={}\n",
     start_time
   );
@@ -73,10 +73,34 @@ void ElementStats::stopTime() {
   }
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: stopTime: time={}, total={}, started={}\n",
     stop_time, total_time, started
   );
+}
+
+void ElementStats::recvObjData(
+  ElementIDType to, ElementIDType from, double bytes, bool bcast
+) {
+  comm_.resize(cur_phase_ + 1);
+  LBCommKey key(LBCommKey::CollectionTag{}, from, to, bcast);
+  comm_.at(cur_phase_)[key] += bytes;
+}
+
+void ElementStats::recvFromNode(
+  ElementIDType to, NodeType from, double bytes, bool bcast
+) {
+  comm_.resize(cur_phase_ + 1);
+  LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, to, bcast);
+  comm_.at(cur_phase_)[key] += bytes;
+}
+
+void ElementStats::recvToNode(
+  NodeType to, ElementIDType from, double bytes, bool bcast
+) {
+  comm_.resize(cur_phase_ + 1);
+  LBCommKey key(LBCommKey::CollectionToNodeTag{}, from, to, bcast);
+  comm_.at(cur_phase_)[key] += bytes;
 }
 
 void ElementStats::setModelWeight(TimeType const& time) {
@@ -84,7 +108,7 @@ void ElementStats::setModelWeight(TimeType const& time) {
   addTime(time);
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: setModelWeight: time={}, cur_load={}\n",
     time, phase_timings_.at(cur_phase_)
   );
@@ -95,7 +119,7 @@ void ElementStats::addTime(TimeType const& time) {
   phase_timings_.at(cur_phase_) += time;
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: addTime: time={}, cur_load={}\n",
     time, phase_timings_.at(cur_phase_)
   );
@@ -103,7 +127,7 @@ void ElementStats::addTime(TimeType const& time) {
 
 void ElementStats::updatePhase(PhaseType const& inc) {
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: updatePhase: cur_phase_={}, inc={}\n",
     cur_phase_, inc
   );
@@ -120,13 +144,28 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
   auto const& total_load = phase_timings_.at(phase);
 
   debug_print(
-    vrt_coll, node,
+    lb, node,
     "ElementStats: getLoad: load={}, phase={}, size={}\n",
     total_load, phase, phase_timings_.size()
   );
 
   vtAssert(phase_timings_.size() >= phase, "Must have phase");
   return total_load;
+}
+
+
+CommMapType const&
+ElementStats::getComm(PhaseType const& phase) {
+  comm_.resize(phase + 1);
+  auto const& phase_comm = comm_[phase];
+
+  debug_print(
+    lb, node,
+    "ElementStats: getComm: comm size={}, phase={}\n",
+    phase_comm.size(), phase
+  );
+
+  return phase_comm;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

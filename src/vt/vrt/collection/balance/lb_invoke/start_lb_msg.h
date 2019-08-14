@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.fwd.h
+//                           start_lb_msg.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,28 +42,26 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_START_LB_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_START_LB_MSG_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
+#include "vt/messaging/message.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct CollectionManager;
-struct CollectionPhaseMsg;
+struct StartLBMsg : vt::Message {
+  StartLBMsg() = default;
+  explicit StartLBMsg(PhaseType const& phase)
+    : cur_phase_(phase)
+  {}
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+  PhaseType getPhase() const { return cur_phase_; }
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
+private:
+  PhaseType cur_phase_ = fst_lb_phase;
+};
 
-}}} /* end namespace vt::vrt::collection */
+}}}} /* end namespace vt::vrt::collection::balance */
 
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_START_LB_MSG_H*/

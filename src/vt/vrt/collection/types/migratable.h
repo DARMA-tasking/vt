@@ -50,6 +50,7 @@
 #include "vt/vrt/base/base.h"
 #include "vt/vrt/collection/types/migrate_hooks.h"
 #include "vt/vrt/collection/types/migratable.fwd.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/elm_stats.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
 
@@ -57,7 +58,10 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT>
 struct Migratable : MigrateHookBase {
-  Migratable() = default;
+
+  Migratable()
+    : stats_elm_id_(balance::ProcStats::getNextElm())
+  { }
 
   /*
    * The user or runtime system can invoke this method at any time (when a valid
@@ -94,6 +98,9 @@ struct Migratable : MigrateHookBase {
    */
   virtual void destroy();
 
+  balance::ElementIDType getElmID() const { return stats_elm_id_; }
+  balance::ElementIDType getTempID() const { return temp_elm_id_; }
+
 protected:
   template <typename Serializer>
   void serialize(Serializer& s);
@@ -103,7 +110,8 @@ protected:
   friend struct balance::ProcStats;
   balance::ElementStats stats_;
   balance::ElementStats& getStats() { return stats_; }
-  balance::ProcStats::ElementIDType stats_elm_id_ = 0;
+  balance::ElementIDType stats_elm_id_ = 0;
+  balance::ElementIDType temp_elm_id_ = 0;
 };
 
 }}} /* end namespace vt::vrt::collection */
