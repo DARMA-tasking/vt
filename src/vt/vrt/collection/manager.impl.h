@@ -2987,7 +2987,10 @@ void CollectionManager::elmReadyLB(
     CollectionProxyWrapType<ColT> cur_proxy(col_proxy);
     using MsgType = PhaseMsg<ColT>;
     auto msg = makeMessage<MsgType>(phase, cur_proxy, do_sync);
-    backend_enable_if(lblite, msg->setLBLiteInstrument(false); );
+
+#if backend_check_enabled(lblite)
+    msg->setLBLiteInstrument(false);
+#endif
 
     debug_print(
       lb, node,
