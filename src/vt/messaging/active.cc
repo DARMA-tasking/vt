@@ -323,6 +323,10 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   // if required to inhibit early termination of that epoch
   theTerm()->produce(term::any_epoch_sentinel,1,dest);
 
+  for (auto&& l : send_listen_) {
+    l->send(dest, num_bytes, false);
+  }
+
   return SendDataRetType{event_id,send_tag};
 }
 

@@ -706,6 +706,15 @@ template <typename ColT, typename IndexT, typename MsgT>
       "collectionMsgTypedHandler: setting current context={}\n",
       elm_id
     );
+
+    std::unique_ptr<messaging::Listener> listener =
+      std::make_unique<balance::LBListener>(
+        [&](NodeType dest, MsgSizeType size, bool bcast){
+          auto& stats = col_ptr->getStats();
+          stats.recvToNode(dest, elm_id, size, bcast);
+        }
+      );
+    theMsg()->addSendListener(std::move(listener));
   #endif
 
   // Dispatch the handler after pushing the contextual epoch
@@ -717,6 +726,8 @@ template <typename ColT, typename IndexT, typename MsgT>
   theMsg()->popEpoch(cur_epoch);
 
   #if backend_check_enabled(lblite)
+    theMsg()->clearListeners();
+
     // Unset the element ID context
     theCollection()->setCurrentContext(prev_elm);
 
