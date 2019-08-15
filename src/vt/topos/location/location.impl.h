@@ -171,6 +171,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
       auto msg = makeSharedMessage<LocMsgType>(
         this_inst, id, no_location_event_id, ask_node, home
       );
+      setSystemType(msg->env);
       msg->setResolvedNode(this_node);
       theMsg()->sendMsg<LocMsgType, updateLocation>(home, msg);
     }
@@ -360,6 +361,7 @@ void EntityLocationCoord<EntityID>::getLocation(
         auto msg = makeSharedMessage<LocMsgType>(
           this_inst, id, event_id, this_node, home_node
         );
+        setSystemType(msg->env);
         theMsg()->sendMsg<LocMsgType, getLocationHandler>(home_node, msg);
         // save a pending action when information about location arrives
         pending_actions_.emplace(
@@ -715,6 +717,7 @@ template <typename EntityID>
         auto msg2 = makeSharedMessage<LocMsgType>(
           inst, entity, event_id, ask_node, home_node
         );
+        setSystemType(msg2->env);
         msg2->setResolvedNode(node);
         theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2);
       });
