@@ -61,14 +61,18 @@ struct GroupMsg : MsgT {
 
   GroupMsg(GroupType const& in_group, RemoteOperationIDType const& in_op)
     : MsgT(), group_(in_group), op_id_(in_op)
-  { }
+  {
+    setSystemType(this->env);
+  }
 
   GroupMsg(
     GroupType const& in_group, RemoteOperationIDType const& in_op,
     NodeType const& in_root, bool const& in_default_group
   ) : MsgT(), group_(in_group), op_id_(in_op), root_(in_root),
       default_group_(in_default_group)
-  { }
+  {
+    setSystemType(this->env);
+  }
 
   GroupType getGroup() const { return group_; }
   RemoteOperationIDType getOpID() const { return op_id_; }
@@ -99,7 +103,9 @@ struct GroupInfoMsg : MsgT {
   ) : MsgT(in_group, in_op), root_node_(in_root_node),
       num_nodes_(in_num_nodes), total_num_nodes_(in_total_num_nodes),
       parent_node_(in_parent_node)
-  { }
+  {
+    setSystemType(this->env);
+  }
 
   NodeType getRoot() const { return root_node_; }
   NodeType getCount() const { return num_nodes_; }
@@ -133,6 +139,7 @@ struct GroupListMsg : GroupInfoMsg<GroupMsg<::vt::PayloadMessage>> {
       in_range->getBound(),
       in_range->getSize() * sizeof(RangeType::BoundType)
     );
+    setSystemType(this->env);
   }
 
   RangeType getRange() {
@@ -157,7 +164,9 @@ struct GroupRangeMsg : GroupInfoMsg<GroupMsg<::vt::Message>> {
         in_parent_node
       ),
       group_range_(RangeDataType(*in_range))
-  { }
+  {
+    setSystemType(this->env);
+  }
 
   RangeType getRange() const { return group_range_.getRange(); }
 

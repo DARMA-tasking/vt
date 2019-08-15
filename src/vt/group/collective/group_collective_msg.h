@@ -67,7 +67,9 @@ struct GroupCollectiveInfoMsg : MsgT {
   ) : MsgT(in_group, in_op), is_in_group(in_is_in_group),
       child_node_(in_child_node), subtree_size_(in_subtree),
       extra_nodes_(extra_nodes), level_(level)
-  { }
+  {
+    setSystemType(this->env);
+  }
 
   NodeType getChild() const { return child_node_; }
   NodeType getSubtreeSize() const { return subtree_size_; }
