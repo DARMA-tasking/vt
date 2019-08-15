@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/broadcast/broadcastable.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/vrt/collection/messages/release_msg.h"
 #include "vt/vrt/collection/manager.h"
 
 namespace vt { namespace vrt { namespace collection {
@@ -103,6 +104,17 @@ template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
 messaging::PendingSend Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
   return theCollection()->broadcastMsg<MsgT, f>(proxy,msg);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+void Broadcastable<ColT,IndexT,BaseProxyT>::release(EpochType const& epoch) const {
+  auto untyped_proxy = this->getProxy();
+  using BaseT = CollectionBase<ColT, IndexT>;
+  using MsgT  = ReleaseMsg<BaseT>;
+  vt::CollectionProxy<BaseT, IndexT> base{untyped_proxy};
+  auto msg = makeMessage<MsgT>(epoch);
+  setSystemType(msg->env);
+  base.template broadcast<MsgT, &BaseT::template releaseHandler<MsgT>>(msg);
 }
 
 }}} /* end namespace vt::vrt::collection */

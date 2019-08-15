@@ -79,6 +79,8 @@ struct Broadcastable : BaseProxyT {
     typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
   >
   messaging::PendingSend broadcast(Args&&... args) const;
+
+  void release(EpochType const& epoch) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
