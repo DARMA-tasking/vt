@@ -3266,6 +3266,7 @@ void CollectionManager::release(
       using MsgT  = ReleaseMsg<BaseT>;
       vt::CollectionProxy<BaseT, IdxT> base{col_proxy};
       auto msg = makeMessage<MsgT>(epoch);
+      setSystemType(msg->env);
       base[idx].template send<MsgT, &BaseT::template releaseHandler<MsgT>>(msg);
     }
   } else {
