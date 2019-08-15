@@ -450,8 +450,9 @@ template <typename ColT, typename IndexT, typename MsgT>
       vtAssert(base != nullptr, "Must be valid pointer");
       base->cur_bcast_epoch_++;
 
+      auto is_sys = envelopeIsSystemType(msg->env);
       auto pmsg = promoteMsg(msg);
-      if (not base->release_.isReleased(msg_epoch)) {
+      if (not is_sys and not base->release_.isReleased(msg_epoch)) {
         base->release_.buffer(msg_epoch,pmsg.template toVirtual<ShortMessage>());
       } else {
 
@@ -711,8 +712,9 @@ template <typename ColT, typename IndexT, typename MsgT>
     sub_handler, member, cur_epoch, idx, exists
   );
 
+  auto is_sys = envelopeIsSystemType(msg->env);
   auto pmsg = promoteMsg(msg);
-  if (not col_ptr->release_.isReleased(cur_epoch)) {
+  if (not is_sys and not col_ptr->release_.isReleased(cur_epoch)) {
     col_ptr->release_.buffer(cur_epoch,pmsg.template toVirtual<ShortMessage>());
     return;
   }
