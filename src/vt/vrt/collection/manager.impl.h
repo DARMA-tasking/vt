@@ -1604,8 +1604,10 @@ bool CollectionManager::insertCollectionElement(
   );
 
   if (!destroyed) {
-    vc->getEpochRelease().setReleaseFn([](MsgVirtualPtrAny msg){
+    vc->getEpochRelease().setReleaseFn([=](MsgVirtualPtrAny msg){
+      auto cproxy = CollectionProxy<ColT,IndexT>{proxy};
       auto tmsg = reinterpret_cast<CollectionMessage<ColT>*>(msg.get());
+      tmsg->setProxy(cproxy[idx]);
       theCollection()->collectionMsgTypedHandler<ColT,IndexT>(tmsg);
     });
 
@@ -3254,9 +3256,17 @@ void CollectionManager::release(
   if (elm_holder) {
     bool const exists = elm_holder->exists(idx);
     if (exists) {
-      return elm_holder->lookup(idx).getCollection()->release(epoch);
+      return elm_holder->lookup(idx).getCollection()->releaseEpoch(epoch);
     } else {
-      proxy.template send<ReleaseMsg<ColT>,&ColT::releaseHandler>(epoch);
+      // Must downcast to the base collection type (and recreate the proxy) so
+      // the proxy does not mismatch the derived user type with base type when
+      // building the active member handler for the collection type
+      using IdxT  = typename ColT::IndexType;
+      using BaseT = CollectionBase<ColT, IdxT>;
+      using MsgT  = ReleaseMsg<BaseT>;
+      vt::CollectionProxy<BaseT, IdxT> base{col_proxy};
+      auto msg = makeMessage<MsgT>(epoch);
+      base[idx].template send<MsgT, &BaseT::template releaseHandler<MsgT>>(msg);
     }
   } else {
     buffered_sends_[col_proxy].push_back([=](VirtualProxyType) {
@@ -3264,9 +3274,6 @@ void CollectionManager::release(
     });
   }
 }
-
-
-
 
 }}} /* end namespace vt::vrt::collection */
 
