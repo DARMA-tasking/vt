@@ -55,6 +55,7 @@
 #include "vt/vrt/collection/collection_info.h"
 #include "vt/vrt/collection/messages/user.h"
 #include "vt/vrt/collection/messages/user_wrap.h"
+#include "vt/vrt/collection/messages/release_msg.h"
 #include "vt/vrt/collection/types/type_attorney.h"
 #include "vt/vrt/collection/defaults/default_map.h"
 #include "vt/vrt/collection/constructor/coll_constructors_deref.h"
@@ -437,7 +438,7 @@ template <typename ColT, typename IndexT, typename MsgT>
       vrt_coll, node,
       "broadcast apply: size={}\n", elm_holder->numElements()
     );
-    elm_holder->foreach([col_msg,msg,handler,member](
+    elm_holder->foreach([col_msg,msg,handler,member,msg_epoch](
       IndexT const& idx, CollectionBase<ColT,IndexT>* base
     ) {
       debug_print(
@@ -449,17 +450,10 @@ template <typename ColT, typename IndexT, typename MsgT>
       vtAssert(base != nullptr, "Must be valid pointer");
       base->cur_bcast_epoch_++;
 
-      #if backend_check_enabled(lblite)
-        debug_print(
-          vrt_coll, node,
-          "broadcast: apply to element: instrument={}\n",
-          msg->lbLiteInstrument()
-        );
-        if (msg->lbLiteInstrument()) {
-          recordStats(base, msg);
-          auto& stats = base->getStats();
-          stats.startTime();
-        }
+      auto pmsg = promoteMsg(msg);
+      if (not base->release_.isReleased(msg_epoch)) {
+        base->release_.buffer(msg_epoch,pmsg.template toVirtual<ShortMessage>());
+      } else {
 
         // Set the current context (element ID) that is executing (having a message
         // delivered). This is used for load balancing to build the communication
@@ -477,34 +471,47 @@ template <typename ColT, typename IndexT, typename MsgT>
           perm_elm_id, temp_elm_id
         );
 
-        std::unique_ptr<messaging::Listener> listener =
-          std::make_unique<balance::LBListener>(
-            [&](NodeType dest, MsgSizeType size, bool bcast){
-              auto& stats = base->getStats();
-              stats.recvToNode(dest, perm_elm_id, temp_elm_id, size, bcast);
-            }
+        #if backend_check_enabled(lblite)
+          debug_print(
+            vrt_coll, node,
+            "broadcast: apply to element: instrument={}\n",
+            msg->lbLiteInstrument()
           );
-        theMsg()->addSendListener(std::move(listener));
-      #endif
+          if (msg->lbLiteInstrument()) {
+            recordStats(base, msg);
+            auto& stats = base->getStats();
+            stats.startTime();
+          }
 
-      // be very careful here, do not touch `base' after running the active
-      // message because it might have migrated out and be invalid
-      auto const from = col_msg->getFromNode();
-      collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
-        msg,base,handler,member,from
-      );
+          std::unique_ptr<messaging::Listener> listener =
+            std::make_unique<balance::LBListener>(
+              [&](NodeType dest, MsgSizeType size, bool bcast){
+                auto& stats = base->getStats();
+                stats.recvToNode(dest, elm_id, size, bcast);
+              }
+            );
+          theMsg()->addSendListener(std::move(listener));
+        #endif
 
-      #if backend_check_enabled(lblite)
-        theMsg()->clearListeners();
+        // be very careful here, do not touch `base' after running the active
+        // message because it might have migrated out and be invalid
+        auto const from = col_msg->getFromNode();
+        collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
+          msg,base,handler,member,from
+        );
 
         // Unset the element ID context
         theCollection()->setCurrentContext(perm_prev_elm, temp_prev_elm);
 
-        if (msg->lbLiteInstrument()) {
-          auto& stats = base->getStats();
-          stats.stopTime();
-        }
-      #endif
+        #if backend_check_enabled(lblite)
+          theMsg()->clearListeners();
+
+          if (msg->lbLiteInstrument()) {
+            auto& stats = base->getStats();
+            stats.stopTime();
+          }
+        #endif
+      }
     });
   }
   /*
@@ -706,7 +713,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 
   auto pmsg = promoteMsg(msg);
   if (not col_ptr->release_.isReleased(cur_epoch)) {
-    col_ptr->release_.buffer(cur_epoch,pmsg);
+    col_ptr->release_.buffer(cur_epoch,pmsg.template toVirtual<ShortMessage>());
     return;
   }
 
@@ -1597,6 +1604,11 @@ bool CollectionManager::insertCollectionElement(
   );
 
   if (!destroyed) {
+    vc->getEpochRelease().setReleaseFn([](MsgVirtualPtrAny msg){
+      auto tmsg = reinterpret_cast<CollectionMessage<ColT>*>(msg.get());
+      theCollection()->collectionMsgTypedHandler<ColT,IndexT>(tmsg);
+    });
+
     elm_holder->insert(idx, typename Holder<ColT, IndexT>::InnerHolder{
       std::move(vc), map_han, max_idx
     });
@@ -1739,7 +1751,13 @@ CollectionManager::constructCollectiveMap(
 
       // Invoke the user's construct function with a single argument---the index
       // of element being constructed
-      VirtualElmPtr elm_ptr = user_construct_fn(cur_idx);
+      VirtualElmPtr elm_ptr;
+
+      if (user_construct_fn != nullptr) {
+        elm_ptr = user_construct_fn(cur_idx);
+      } else {
+        elm_ptr = std::make_unique<ColT>();
+      }
 
       debug_print_verbose(
         vrt_coll, node,
@@ -3164,6 +3182,91 @@ DispatchBasePtrType
 CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
 }
+
+template <typename always_void>
+void CollectionManager::schedule(ActionType action) {
+  work_units_.push_back(action);
+}
+
+template <typename always_void>
+bool CollectionManager::scheduler() {
+  if (work_units_.size() == 0) {
+    return false;
+  } else {
+    auto unit = work_units_.back();
+    work_units_.pop_back();
+    unit();
+    return true;
+  }
+}
+
+template <typename ColT>
+bool CollectionManager::isReleased(
+  VirtualElmProxyType<ColT> proxy, EpochType const& epoch
+) {
+  auto const col_proxy = proxy.getCollectionProxy();
+  auto const idx = proxy.getElementProxy().getIndex();
+  auto elm_holder = findElmHolder<ColT>(col_proxy);
+  vtAssert(elm_holder != nullptr, "Element must be registered here");
+  if (elm_holder) {
+    bool const exists = elm_holder->exists(idx);
+    if (exists) {
+      return elm_holder->lookup(idx).getCollection()->isReleased(epoch);
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+template <typename ColT>
+void CollectionManager::whenReleased(
+  VirtualElmProxyType<ColT> proxy, EpochType const& epoch,
+  ActionType action
+) {
+  auto const col_proxy = proxy.getCollectionProxy();
+  auto const idx = proxy.getElementProxy().getIndex();
+  auto elm_holder = findElmHolder<ColT>(col_proxy);
+  vtAssert(elm_holder != nullptr, "Element must be registered here");
+  if (elm_holder) {
+    bool const exists = elm_holder->exists(idx);
+    if (exists) {
+      return elm_holder->lookup(idx).getCollection()->whenReleased(epoch,action);
+    } else {
+      vtAssert(false, "Not allowed to register action on non-local collection elm");
+    }
+  } else {
+    buffered_sends_[col_proxy].push_back([=](VirtualProxyType) {
+      theCollection()->whenReleased(proxy,epoch,action);
+    });
+  }
+}
+
+template <typename ColT>
+void CollectionManager::release(
+  VirtualElmProxyType<ColT> proxy, EpochType const& epoch
+) {
+  auto const col_proxy = proxy.getCollectionProxy();
+  auto const idx = proxy.getElementProxy().getIndex();
+  auto elm_holder = findElmHolder<ColT>(col_proxy);
+  vtAssert(elm_holder != nullptr, "Element must be registered here");
+  if (elm_holder) {
+    bool const exists = elm_holder->exists(idx);
+    if (exists) {
+      return elm_holder->lookup(idx).getCollection()->release(epoch);
+    } else {
+      proxy.template send<ReleaseMsg<ColT>,&ColT::releaseHandler>(epoch);
+    }
+  } else {
+    buffered_sends_[col_proxy].push_back([=](VirtualProxyType) {
+      theCollection()->release(proxy,epoch);
+    });
+  }
+}
+
+
+
 
 }}} /* end namespace vt::vrt::collection */
 

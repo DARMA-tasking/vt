@@ -195,13 +195,13 @@ struct CollectionManager {
     typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   CollectionProxyWrapType<ColT> constructCollective(
-    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn = nullptr,
     TagType const& tag = no_tag
   );
 
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollective(
-    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn = nullptr,
     TagType const& tag = no_tag
   );
 
@@ -816,6 +816,26 @@ private:
     HandlerType const& map_han
   );
 
+public:
+
+  /*
+   * Manage dependent epochs for a given element
+   */
+
+  template <typename ColT>
+  bool isReleased(VirtualElmProxyType<ColT> proxy, EpochType const& epoch);
+
+  template <typename ColT>
+  void whenReleased(
+    VirtualElmProxyType<ColT> proxy, EpochType const& epoch, ActionType act
+  );
+
+  template <typename ColT>
+  void release(VirtualElmProxyType<ColT> proxy, EpochType const& epoch);
+
+  template <typename ColT>
+  static void releaseHan(ReleaseMsg<ColT>* msg);
+
 private:
   template <typename MsgT>
   static EpochType getCurrentEpoch(MsgT* msg);
@@ -885,6 +905,7 @@ namespace details
 #include "vt/vrt/collection/staged_token/token.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
 #include "vt/vrt/collection/balance/proxy/lbable.impl.h"
+#include "vt/vrt/collection/release/releaseable.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"

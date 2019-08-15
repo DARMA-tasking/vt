@@ -53,13 +53,17 @@
 #include "vt/vrt/collection/gettable/gettable.h"
 #include "vt/vrt/collection/insert/insertable.h"
 #include "vt/vrt/collection/balance/proxy/lbable.h"
+#include "vt/vrt/collection/release/releaseable.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 namespace elm_proxy {
 
 template <typename ColT, typename IndexT>
-using Chain4 = LBable<ColT,IndexT,BaseCollectionElmProxy<ColT,IndexT>>;
+using Chain5 = Releaseable<ColT,IndexT,BaseCollectionElmProxy<ColT,IndexT>>;
+
+template <typename ColT, typename IndexT>
+using Chain4 = LBable<ColT,IndexT,Chain5<ColT,IndexT>>;
 
 template <typename ColT, typename IndexT>
 using Chain3 = Gettable<ColT,IndexT,Chain4<ColT,IndexT>>;

@@ -64,6 +64,8 @@ struct EpochReleaseSet {
   EpochReleaseSet() = default;
   explicit EpochReleaseSet(ReleaseFnType in_fn) : release_fn_(in_fn) { }
 
+  void setReleaseFn(ReleaseFnType in_fn) { release_fn_ = in_fn; }
+
   void release(EpochType const& epoch) {
     debug_print(
       gen, node,
