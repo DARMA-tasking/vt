@@ -159,9 +159,14 @@ void GreedyLB::loadStats(
   avg_load = total_load / num_nodes;
   max_load = in_max_load;
 
-  auto const& diff = max_load - avg_load;
-  auto const& diff_percent = (diff / avg_load) * 100.0f;
-  bool const& should_lb = diff_percent > greedy_tolerance;
+  auto const diff = max_load - avg_load;
+  double diff_percent = 0.0;
+  bool should_lb = false;
+
+  if (avg_load > 0.0000000001) {
+    diff_percent = (diff / avg_load) * 100.0f;
+    should_lb = diff_percent > greedy_tolerance;
+  }
 
   if (should_lb && greedy_auto_threshold) {
     this_threshold = std::min(
