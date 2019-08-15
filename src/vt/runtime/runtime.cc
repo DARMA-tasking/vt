@@ -552,6 +552,16 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_no_terminate) {
+    auto f11 = fmt::format("Disabling std::terminate signal handling");
+    auto f12 = opt_on("--vt_no_terminate", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("std::terminate signal handling enabled by default");
+    auto f12 = opt_inverse("--vt_no_terminate", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_no_color) {
     auto f11 = fmt::format("Disabling color output");
     auto f12 = opt_on("--vt_no_color", f11);
