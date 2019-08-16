@@ -82,12 +82,14 @@ vt::CollectionProxy<MyCol,vt::Index1D> cproxy;
 
 void MyCol::handlerA(HelloMsg2* msg) {
   auto node = vt::theContext()->getNode();
-  fmt::print("{}: MyCol::handlerA on from={}\n", node, msg->from);
+  auto idx = this->getIndex();
+  fmt::print("{}: {}: MyCol::handlerA on from={}\n", node, idx, msg->from);
 }
 
 void MyCol::handlerB(HelloMsg2* msg) {
   auto node = vt::theContext()->getNode();
-  fmt::print("{}: MyCol::handlerB on from={}\n", node, msg->from);
+  auto idx = this->getIndex();
+  fmt::print("{}: {}: MyCol::handlerB on from={}\n", node, idx, msg->from);
 }
 
 //vt::EpochType epoch = vt::no_epoch;
