@@ -103,6 +103,9 @@ static void testHan(HelloMsg* msg) {
 
   proxy[next].release(msg->ep);
 
+  // if (node == 0) {
+  //   cproxy.release(msg->ep);
+  // }
   for (int i = node * 10; i < (node+1)*10; i++) {
     cproxy[i].release(msg->ep);
   }
