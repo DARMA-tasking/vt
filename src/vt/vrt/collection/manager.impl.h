@@ -3260,16 +3260,12 @@ void CollectionManager::release(
     if (exists) {
       return elm_holder->lookup(idx).getCollection()->releaseEpoch(epoch);
     } else {
-      // Must downcast to the base collection type (and recreate the proxy) so
-      // the proxy does not mismatch the derived user type with base type when
-      // building the active member handler for the collection type
       using IdxT  = typename ColT::IndexType;
       using BaseT = CollectionBase<ColT, IdxT>;
       using MsgT  = ReleaseMsg<BaseT>;
-      vt::CollectionProxy<BaseT, IdxT> base{col_proxy};
       auto msg = makeMessage<MsgT>(epoch);
       setSystemType(msg->env);
-      base[idx].template send<MsgT, &BaseT::template releaseHandler<MsgT>>(msg);
+      proxy.template send<MsgT, BaseT::template releaseHandler<MsgT, ColT>>(msg);
     }
   } else {
     buffered_sends_[col_proxy].push_back([=](VirtualProxyType) {

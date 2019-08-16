@@ -98,7 +98,6 @@ messaging::PendingSend Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(Args&&..
   return broadcast<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 
-
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
 messaging::PendingSend Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
@@ -110,11 +109,11 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 void Broadcastable<ColT,IndexT,BaseProxyT>::release(EpochType const& epoch) const {
   auto untyped_proxy = this->getProxy();
   using BaseT = CollectionBase<ColT, IndexT>;
-  using MsgT  = ReleaseMsg<BaseT>;
-  vt::CollectionProxy<BaseT, IndexT> base{untyped_proxy};
+  using MsgT  = ReleaseMsg<ColT>;
+  vt::CollectionProxy<ColT, IndexT> base{untyped_proxy};
   auto msg = makeMessage<MsgT>(epoch);
   setSystemType(msg->env);
-  base.template broadcast<MsgT, &BaseT::template releaseHandler<MsgT>>(msg);
+  base.template broadcast<MsgT, BaseT::template releaseHandler<MsgT, ColT>>(msg);
 }
 
 }}} /* end namespace vt::vrt::collection */

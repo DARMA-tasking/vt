@@ -92,8 +92,10 @@ struct CollectionBase : Indexable<ColT, IndexT> {
 
   friend struct CollectionManager;
 
-  template <typename MsgT>
-  void releaseHandler(MsgT* msg) { releaseEpoch(msg->epoch_); }
+  template <typename MsgT, typename ColU>
+  static void releaseHandler(MsgT* msg, ColU* col) {
+    col->releaseEpoch(msg->epoch_);
+  }
 
   bool isReleased(EpochType const& ep) { return release_.isReleased(ep); }
   void releaseEpoch(EpochType const& ep) { return release_.release(ep); }
