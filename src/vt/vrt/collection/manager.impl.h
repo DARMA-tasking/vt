@@ -3262,7 +3262,7 @@ void CollectionManager::release(
     } else {
       using IdxT  = typename ColT::IndexType;
       using BaseT = CollectionBase<ColT, IdxT>;
-      using MsgT  = ReleaseMsg<BaseT>;
+      using MsgT  = ReleaseMsg<ColT>;
       auto msg = makeMessage<MsgT>(epoch);
       setSystemType(msg->env);
       proxy.template send<MsgT, BaseT::template releaseHandler<MsgT, ColT>>(msg);
