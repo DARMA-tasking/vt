@@ -450,7 +450,7 @@ template <typename ColT, typename IndexT, typename MsgT>
       vtAssert(base != nullptr, "Must be valid pointer");
       base->cur_bcast_epoch_++;
 
-      auto is_sys = envelopeIsSystemType(msg->env);
+      auto is_sys = msg->getSystem();
       auto pmsg = promoteMsg(msg);
       if (not is_sys and not base->release_.isReleased(msg_epoch)) {
         base->release_.buffer(msg_epoch,pmsg.template toVirtual<ShortMessage>());
@@ -712,7 +712,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     sub_handler, member, cur_epoch, idx, exists
   );
 
-  auto is_sys = envelopeIsSystemType(msg->env);
+  auto is_sys = msg->getSystem();
   auto pmsg = promoteMsg(msg);
   if (not is_sys and not col_ptr->release_.isReleased(cur_epoch)) {
     col_ptr->release_.buffer(cur_epoch,pmsg.template toVirtual<ShortMessage>());
@@ -866,6 +866,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
     envelopeSetGroup(msg->env, group);
   }
 
+  setSystemType(msg->env);
   auto ret = theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
     msg.get()
   );
@@ -1068,7 +1069,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
         "handler={}, cur_epoch={:x}\n",
         col_proxy, bnode, handler, cur_epoch
       );
-
+      setSystemType(msg->env);
       return theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(
         bnode,msg.get()
       );
@@ -2453,6 +2454,7 @@ void CollectionManager::finishedInserting(
   } else {
     auto node = insert_action ? this_node : uninitialized_destination;
     auto msg = makeSharedMessage<DoneInsertMsg<ColT,IndexT>>(proxy,node);
+    setSystemType(msg->env);
     theMsg()->sendMsg<DoneInsertMsg<ColT,IndexT>,doneInsertHandler<ColT,IndexT>>(
       cons_node,msg
     );
@@ -2591,6 +2593,7 @@ void CollectionManager::insert(
       );
       theTerm()->produce(insert_epoch,1,insert_node);
       theTerm()->produce(cur_epoch,1,insert_node);
+      setSystemType(msg->env);
       theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
         insert_node,msg
       );
@@ -2729,7 +2732,7 @@ MigrateStatus CollectionManager::migrateOut(
    auto msg = makeSharedMessage<MigrateMsgType>(
      proxy, this_node, dest, map_fn, range, &typed_col_ref
    );
-
+   setSystemType(msg->env);
    theMsg()->sendMsgAuto<
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
    >(dest, msg);
@@ -3265,6 +3268,7 @@ void CollectionManager::release(
       using MsgT  = ReleaseMsg<ColT>;
       auto msg = makeMessage<MsgT>(epoch);
       setSystemType(msg->env);
+      msg->setSystem(true);
       proxy.template send<MsgT, BaseT::template releaseHandler<MsgT, ColT>>(msg);
     }
   } else {

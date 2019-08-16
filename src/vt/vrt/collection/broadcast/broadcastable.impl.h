@@ -113,6 +113,7 @@ void Broadcastable<ColT,IndexT,BaseProxyT>::release(EpochType const& epoch) cons
   vt::CollectionProxy<ColT, IndexT> base{untyped_proxy};
   auto msg = makeMessage<MsgT>(epoch);
   setSystemType(msg->env);
+  msg->setSystem(true);
   base.template broadcast<MsgT, BaseT::template releaseHandler<MsgT, ColT>>(msg);
 }
 
