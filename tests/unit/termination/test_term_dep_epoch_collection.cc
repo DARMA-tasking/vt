@@ -64,18 +64,18 @@ struct TestDep : vt::Collection<TestDep,vt::Index1D> {
   };
 
   void depHandler(TestMsg* msg) {
-    auto const& node = theContext()->getNode();
-    auto idx = this->getIndex();
+    // auto const& node = theContext()->getNode();
+    // auto idx = this->getIndex();
     num_dep++;
-    fmt::print("{}: {}: depHandler: num_dep={}\n", node, idx, num_dep);
+    // fmt::print("{}: {}: depHandler: num_dep={}\n", node, idx, num_dep);
     EXPECT_EQ(num_non_dep, 1);
   }
 
   void nonDepHandler(TestMsg* msg) {
-    auto const& node = theContext()->getNode();
-    auto idx = this->getIndex();
+    // auto const& node = theContext()->getNode();
+    // auto idx = this->getIndex();
     num_non_dep++;
-    fmt::print("{}: {}: nonDepHandler: num_non_dep={}\n", node, idx, num_non_dep);
+    // fmt::print("{}: {}: nonDepHandler: num_non_dep={}\n", node, idx, num_non_dep);
     EXPECT_EQ(num_dep, 0);
   }
 
@@ -107,7 +107,6 @@ TEST_F(TestTermDepEpochCollection, test_term_dep_epoch_collection) {
   if (bcast) {
     for (int i = 0; i < k; i++) {
       auto msg = vt::makeSharedMessage<TestMsg>();
-      //vt::envelopeSetEpoch(msg->env, epoch);
       proxy.template broadcast<TestMsg, &TestDep::depHandler>(msg);
     }
   } else {
