@@ -69,12 +69,21 @@ struct EpochReleaseSet {
   void release(EpochType const& epoch) {
     debug_print(
       gen, node,
-      "release: epoch={:x}\n",
-      epoch
+      "({}): release: epoch={:x}\n",
+      print_ptr(this), epoch
     );
 
-    // Insert into integral set
-    map_.get(epoch).insert(epoch);
+    auto exists = map_.get(epoch).exists(epoch);
+    if (not exists) {
+      // Insert into integral set
+      map_.get(epoch).insert(epoch);
+    } else {
+      debug_print(
+        gen, node,
+        "({}): release: trying to release epoch={:x} again!\n",
+        print_ptr(this), epoch
+      );
+    }
 
     // Trigger functions on the buffered messages with released epoch
     auto iter = wait_.find(epoch);
