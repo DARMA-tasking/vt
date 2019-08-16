@@ -151,7 +151,10 @@ struct EpochReleaseSet {
   }
 
   void notifyTerminated(EpochType const& epoch) {
-    map_.get(epoch).erase(epoch);
+    auto exists = map_.get(epoch).exists(epoch);
+    if (exists) {
+      map_.get(epoch).erase(epoch);
+    }
     map_.cleanup(epoch);
   }
 
