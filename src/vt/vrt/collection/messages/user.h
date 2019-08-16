@@ -109,6 +109,9 @@ struct CollectionMessage :
   bool getWrap() const;
   void setWrap(bool const& wrap);
 
+  bool getSystem() const;
+  void setSystem(bool const is_system);
+
   #if backend_check_enabled(lblite)
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
@@ -137,6 +140,7 @@ private:
   NodeType from_node_ = uninitialized_destination;
   bool member_ = false;
   bool is_wrap_ = false;
+  bool is_system_ = false;
 
   #if backend_check_enabled(lblite)
     /*

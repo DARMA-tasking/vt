@@ -128,6 +128,7 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
   s | bcast_epoch_;
   s | member_;
   s | is_wrap_;
+  s | is_system_;
 
   #if backend_check_enabled(lblite)
     s | lb_lite_instrument_;
@@ -155,6 +156,16 @@ bool CollectionMessage<ColT,BaseMsgT>::getWrap() const {
 template <typename ColT, typename BaseMsgT>
 void CollectionMessage<ColT,BaseMsgT>::setWrap(bool const& wrap) {
   is_wrap_ = wrap;
+}
+
+template <typename ColT, typename BaseMsgT>
+bool CollectionMessage<ColT,BaseMsgT>::getSystem() const {
+  return is_system_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT,BaseMsgT>::setSystem(bool const is_system) {
+  is_system_ = is_system;
 }
 
 #if backend_check_enabled(lblite)
