@@ -79,12 +79,12 @@ TEST_F(TestIntegralSet, test_interval_set) {
   EXPECT_EQ(i.size(), 9);
 
   for (auto&& e : elms) {
-    EXPECT_EQ(i.exists(e), true);
+    EXPECT_EQ(i.contains(e), true);
   }
 
   for (int k = 0; k < 20; k++) {
     auto in_t = t.find(k) != t.end();
-    EXPECT_EQ(i.exists(k), in_t);
+    EXPECT_EQ(i.contains(k), in_t);
   }
 
   auto ti = t.begin();
@@ -118,7 +118,7 @@ TEST_F(TestIntegralSet, test_interval_set_2) {
   int num = 0;
   for (int k = 0; k < 10000; k += 2) {
     i.insert(k);
-    EXPECT_TRUE(i.exists(k));
+    EXPECT_TRUE(i.contains(k));
     num++;
   }
 
@@ -132,7 +132,7 @@ TEST_F(TestIntegralSet, test_interval_set_2) {
 
   for (int k = 1; k < 10000; k += 2) {
     i.insert(k);
-    EXPECT_TRUE(i.exists(k));
+    EXPECT_TRUE(i.contains(k));
     num++;
   }
 
@@ -146,7 +146,7 @@ TEST_F(TestIntegralSet, test_interval_set_2) {
 
   for (int k = 1; k < 10000; k += 2) {
     i.erase(k);
-    EXPECT_FALSE(i.exists(k));
+    EXPECT_FALSE(i.contains(k));
     num--;
   }
 
@@ -160,7 +160,7 @@ TEST_F(TestIntegralSet, test_interval_set_2) {
 
   for (int k = 1; k < 10000; k += 2) {
     i.insert(k);
-    EXPECT_TRUE(i.exists(k));
+    EXPECT_TRUE(i.contains(k));
     num++;
   }
 

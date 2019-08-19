@@ -210,6 +210,7 @@ struct IntegralSetBase {
     }
   }
 
+  bool contains(DomainT const& val) const { return exists(val); }
   bool exists(DomainT const& val) const {
     if (not existsGlobal(val)) {
       return false;

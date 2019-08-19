@@ -93,7 +93,7 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
 
   // We should possibly perform some error checking once we wrap around in case
   // of pending actions
-  if (term_.exists(epoch)) {
+  if (term_.contains(epoch)) {
     term_.erase(epoch);
   }
 
@@ -135,7 +135,7 @@ bool EpochWindow::isTerminated(EpochType const& epoch) const {
     term_.compression()
   );
 
-  return term_.exists(epoch);
+  return term_.contains(epoch);
 }
 
 }} /* end namespace vt::term */
