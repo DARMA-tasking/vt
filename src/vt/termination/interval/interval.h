@@ -103,7 +103,7 @@ public:
 
   /*
    * Determine if a input interval is tangent to this interval within a
-   * specified grap.
+   * specified gap.
    *
    *        TangentLeft                   TangentRight
    *       |------i-----| lb_        ub_ |------i-----|
