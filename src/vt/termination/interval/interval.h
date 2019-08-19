@@ -94,7 +94,7 @@ public:
     vtAssert(valid(),    "Interval must remain valid");
   }
 
-  bool in(DomainT const& val) const {
+  bool contains(DomainT const& val) const {
     return val >= lb_ and val <= ub_;
   }
 

@@ -218,7 +218,7 @@ struct IntegralSetBase {
     auto iter = set_.find(i);
     bool in_set = iter != set_.end();
     if (in_set) {
-      vtAssert(iter->in(val), "Value must exists in range");
+      vtAssert(iter->contains(val), "Value must be contained in range");
     }
     return in_set;
   }
