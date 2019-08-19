@@ -77,7 +77,10 @@ public:
   DomainT width() const { return (ub_-lb_)+1; }
   bool    valid() const { return lb_ <= ub_; }
 
-  DomainT get(std::size_t i) const { return lb_ + i; }
+  DomainT get(std::size_t i) const {
+    vtAssert(lb_ + i <= ub_, "Must be in interval range");
+    return lb_ + i;
+  }
 
   void setUpper(DomainT const& val) {
     ub_ = val;
