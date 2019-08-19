@@ -154,6 +154,18 @@ public:
   bool operator!=(IntervalType const& i) const { return !(*this == i); }
 
 public:
+  /*
+   * Determine if two intervals intersect:
+   *
+   *
+   *.         [i1.lower(), ..., i1.upper()]
+   *                           ^          ^
+   *                           |          |
+   *                           [i2.lower(), ...,  i2.upper()]
+   *
+   * Two intervals intersect iff:
+   *      (i2.lower() <= i1.upper()) && (i1.lower() <= i2.upper())
+   */
   template <typename IntT, typename IntU>
   static bool intersects(IntT&& i1, IntU&& i2) {
     bool ret = i1.lower() <= i2.upper() and i2.lower() <= i1.upper();
