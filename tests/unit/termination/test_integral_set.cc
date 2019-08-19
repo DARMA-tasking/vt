@@ -72,6 +72,7 @@ TEST_F(TestIntegralSet, test_interval_set) {
       "size={}, compressed size={}, ratio={}\n",
       i.size(), i.compressedSize(), i.compression()
     );
+    EXPECT_EQ(i.size(), t.size());
     //i.dumpState();
   }
 
@@ -91,12 +92,15 @@ TEST_F(TestIntegralSet, test_interval_set) {
     EXPECT_EQ(e, *ti);
     ++ti;
   }
+  EXPECT_EQ(ti, t.end());
+
   auto tr = t.rbegin();
   for (auto iter = i.rbegin(); iter != i.rend(); ++iter) {
     auto const& e = *iter;
     EXPECT_EQ(e, *tr);
     ++tr;
   }
+  EXPECT_EQ(tr, t.rend());
 
   auto in = i.ibegin();
   EXPECT_EQ(*in, vt::Interval<int>(2,2));
@@ -104,6 +108,8 @@ TEST_F(TestIntegralSet, test_interval_set) {
   EXPECT_EQ(*in, vt::Interval<int>(5,10));
   ++in;
   EXPECT_EQ(*in, vt::Interval<int>(13,14));
+  ++in;
+  EXPECT_EQ(in, i.iend());
 }
 
 TEST_F(TestIntegralSet, test_interval_set_2) {
