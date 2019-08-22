@@ -49,12 +49,37 @@
 
 #include <cstdlib>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace vrt { namespace collection {
+namespace balance {
 
 using ElementIDType = uint64_t;
 
 static constexpr ElementIDType const no_element_id = 0;
 
-}}}} /* end namespace vt::vrt::collection::balance */
+} /* end namespace balance */
+
+namespace lb {
+
+enum struct StatisticQuantity : int8_t {
+  min, max, avg, std, var, skw, kur, car, imb, npr, sum
+};
+
+enum struct Statistic : int8_t {
+  W_l, W_c, W_t,
+
+  // W_l_min, W_l_max, W_l_avg, W_l_std, W_l_var, W_l_skewness, W_l_kurtosis,
+  // W_c_min, W_c_max, W_c_avg, W_c_std, W_c_var, W_c_skewness, W_c_kurtosis,
+  // W_t_min, W_t_max, W_t_avg, W_t_std, W_t_var, W_t_skewness, W_t_kurtosis,
+  // ObjectCardinality,
+  ObjectRatio,
+  // EdgeCardinality,
+  EdgeRatio,
+  // ExternalEdgesCardinality,
+  // InternalEdgesCardinality
+};
+
+} /* end namespace lb */
+
+}}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H*/

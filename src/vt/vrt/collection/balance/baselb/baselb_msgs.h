@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          rotatelb.h
+//                          baselb_msgs.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,41 +42,40 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_ROTATELB_ROTATELB_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_ROTATELB_ROTATELB_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_MSGS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_MSGS_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
-#include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/timing/timing.h"
-
-#include <memory>
-#include <list>
-#include <map>
-#include <cstdlib>
-#include <unordered_map>
+#include "vt/collective/reduce/reduce.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct RotateObjMsg : ::vt::Message {};
+template <typename Transfer>
+struct TransferMsg : vt::Message {
+  TransferMsg() = default;
+  explicit TransferMsg(Transfer const& in_transfer)
+    : transfer_(in_transfer)
+  { }
 
-struct RotateLB : BaseLB {
-  RotateLB() = default;
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | transfer_;
+  }
 
-  void init(objgroup::proxy::Proxy<RotateLB> in_proxy);
-  void runLB() override;
-
-  double getDefaultMinThreshold()  const override { return 0.0;  }
-  double getDefaultMaxThreshold()  const override { return 0.0;  }
-  bool   getDefaultAutoThreshold() const override { return true; }
+  Transfer const& getTransfer() const { return transfer_; }
 
 private:
-  objgroup::proxy::Proxy<RotateLB> proxy = {};
+  Transfer transfer_;
+};
+
+struct CountMsg : vt::collective::ReduceTMsg<int32_t> {
+  CountMsg() = delete;
+  explicit CountMsg(int32_t in_num)
+    : vt::collective::ReduceTMsg<int32_t>(in_num)
+  {}
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_ROTATELB_ROTATELB_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_MSGS_H*/

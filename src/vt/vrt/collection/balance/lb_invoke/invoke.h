@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
+#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/configs/arguments/args.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -64,6 +65,9 @@ struct InvokeLB {
   static void releaseLBCollective(InvokeMsg* msg);
   static void releaseLBCollective(InvokeReduceMsg* msg);
   static void releaseLBCollective(PhaseType phase);
+
+  template <typename LB>
+  static objgroup::proxy::Proxy<LB> makeLB(MsgSharedPtr<StartLBMsg> msg);
 
 private:
   static PhaseType cached_phase_;

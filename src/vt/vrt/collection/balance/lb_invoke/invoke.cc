@@ -113,6 +113,16 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   return startLBCollective(msg->phase_, msg->lb_);
 }
 
+template <typename LB>
+/*static*/ objgroup::proxy::Proxy<LB>
+InvokeLB::makeLB(MsgSharedPtr<StartLBMsg> msg) {
+  auto proxy = theObjGroup()->makeCollective<LB>();
+  proxy.get()->init(proxy);
+  auto base_proxy = objgroup::proxy::Proxy<lb::BaseLB>{proxy.getProxy()};
+  proxy.get()->template startLBHandler(msg.get(), base_proxy);
+  return proxy;
+}
+
 /*static*/ void InvokeLB::startLBCollective(PhaseType phase, LBType lb) {
   auto const& this_node = theContext()->getNode();
 
@@ -129,16 +139,16 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   auto msg = makeMessage<StartLBMsg>(phase);
   switch (lb) {
   case LBType::HierarchicalLB:
-    lb::HierarchicalLB::hierLBHandler(msg.get());
+    makeLB<lb::HierarchicalLB>(msg);
     break;
   case LBType::GreedyLB:
-    lb::GreedyLB::greedyLBHandler(msg.get());
+    makeLB<lb::GreedyLB>(msg);
     break;
   case LBType::RotateLB:
-    lb::RotateLB::rotateLBHandler(msg.get());
+    makeLB<lb::RotateLB>(msg);
     break;
   case LBType::GossipLB:
-    lb::GossipLB::gossipLBHandler(msg.get());
+    makeLB<lb::GossipLB>(msg);
     break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB to startLBCollective");

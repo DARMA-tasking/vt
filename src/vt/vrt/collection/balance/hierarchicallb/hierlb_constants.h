@@ -58,12 +58,6 @@ static constexpr double   const hierlb_no_load_sentinel = -1.0f;
 static constexpr double   const hierlb_tolerance        = 5.0f;
 static constexpr bool     const hierlb_auto_threshold_p = true;
 
-#if backend_check_enabled(parserdes)
-  #define hierlb_use_parserdes 0
-#else
-  #define hierlb_use_parserdes 0
-#endif
-
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_CONSTANTS_H*/
