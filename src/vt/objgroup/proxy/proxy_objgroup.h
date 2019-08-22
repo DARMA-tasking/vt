@@ -140,6 +140,11 @@ public:
   template <typename DerivedT>
   Proxy<DerivedT> upcast() const;
 
+  /*
+   * Destruct the objgroup collectively
+   */
+  void destroyCollective() const;
+
 public:
 
   /*

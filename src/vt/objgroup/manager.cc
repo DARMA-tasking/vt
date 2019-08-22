@@ -52,6 +52,10 @@
 
 namespace vt { namespace objgroup {
 
+ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
+  return proxy;
+}
+
 void ObjGroupManager::dispatch(MsgVirtualPtrAny msg, HandlerType han) {
   // Extract the control-bit sequence from the handler
   auto const ctrl = HandlerManager::getHandlerControl(han);

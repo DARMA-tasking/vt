@@ -126,10 +126,21 @@ ObjGroupManager::makeCollective(MakeFnType<ObjT> fn) {
 template <typename ObjT>
 void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   auto const proxy_bits = proxy.getProxy();
+  auto derived_iter = derived_to_bases_.find(proxy_bits);
   debug_print(
     objgroup, node,
-    "destroyCollective: proxy={:x}\n", proxy
+    "destroyCollective: proxy={:x}, num bases={}\n", proxy_bits,
+    derived_iter != derived_to_bases_.end() ? derived_iter->second.size() : 0
   );
+  if (derived_iter != derived_to_bases_.end()) {
+    auto base_set = derived_iter->second;
+    for (auto&& base_proxy : base_set) {
+      auto iter = dispatch_.find(base_proxy);
+      if (iter != dispatch_.end()) {
+        dispatch_.erase(iter);
+      }
+    }
+  }
   auto iter = dispatch_.find(proxy_bits);
   if (iter != dispatch_.end()) {
     dispatch_.erase(iter);

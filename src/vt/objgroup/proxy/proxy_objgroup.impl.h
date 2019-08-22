@@ -151,9 +151,13 @@ Proxy<DerivedT> Proxy<ObjT>::upcast() const {
 }
 
 template <typename ObjT>
+void Proxy<ObjT>::destroyCollective() const {
+  return theObjGroup()->destroyCollective<ObjT>(*this);
+}
+
+template <typename ObjT>
 ObjGroupProxyType Proxy<ObjT>::getProxy() const {
   return proxy_;
-  //return theObjGroup()->getProxy(proxy_);
 }
 
 }}} /* end namespace vt::objgroup::proxy */
