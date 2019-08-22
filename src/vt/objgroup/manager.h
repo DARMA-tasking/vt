@@ -61,6 +61,7 @@
 #include <unordered_map>
 #include <deque>
 #include <vector>
+#include <set>
 
 namespace vt { namespace objgroup {
 
@@ -76,6 +77,7 @@ struct ObjGroupManager {
   using DispatchBaseType    = dispatch::DispatchBase;
   using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
   using MsgContainerType    = std::vector<MsgVirtualPtrAny>;
+  using BaseProxyListType   = std::set<ObjGroupProxyType>;
 
   ObjGroupManager() = default;
 
@@ -178,6 +180,17 @@ struct ObjGroupManager {
   template <typename MsgT>
   void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 
+  /*
+   * Run the scheduler to push along postponed events (such as self sends)
+   */
+  template <typename ObjT, typename BaseT>
+  void downcast(ProxyType<ObjT> proxy);
+  template <typename ObjT, typename DerivedT>
+  void upcast(ProxyType<ObjT> proxy);
+  template <typename ObjT, typename BaseT>
+  void registerBaseCollective(ProxyType<ObjT> proxy);
+  ObjGroupProxyType getProxy(ObjGroupProxyType proxy);
+
   friend void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType ep);
 
 private:
@@ -204,6 +217,8 @@ private:
   std::deque<ActionType> work_units_;
   // Messages that are pending creation for delivery
   std::unordered_map<ObjGroupProxyType,MsgContainerType> pending_;
+  // Map from base class type proxies to registered derived proxy
+  std::unordered_map<ObjGroupProxyType,BaseProxyListType> derived_to_bases_;
 };
 
 }} /* end namespace vt::objgroup */
