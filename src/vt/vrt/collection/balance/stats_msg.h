@@ -62,11 +62,16 @@ struct LoadData {
   LoadData(TimeType const y)
     : max_(y), sum_(y), min_(y), avg_(y), M2_(0.0f), M3_(0.0f), M4_(0.0f),
       N_(1), P_(y not_eq 0.0f)
-  { }
+  {
+    debug_print(lb, node, "LoadData: in={}\n", y);
+  }
 
   friend LoadData operator+(LoadData a1, LoadData const& a2) {
+    debug_print(lb, node, "operator+: a1.N_={}, a2.N_={}\n", a1.N_, a2.N_);
+    debug_print(lb, node, "operator+: a1.avg_={}, a2.avg_={}\n", a1.avg_, a2.avg_);
+
     int32_t N            = a1.N_ + a2.N_;
-    double delta         = a1.avg_ - a2.avg_;
+    double delta         = a2.avg_ - a1.avg_;
     double delta_sur_N   = delta / static_cast<double>(N);
     double delta2_sur_N2 = delta_sur_N * delta_sur_N;
     int32_t n2           = a1.N_ * a1.N_;
@@ -93,7 +98,7 @@ struct LoadData {
     a1.N_    = N;
     a1.min_  = std::min(a1.min_, a2.min_);
     a1.max_  = std::max(a1.max_, a2.max_);
-    a1.sum_  = a1.sum_ + a2.sum_;
+    a1.sum_ += a2.sum_;
     a1.P_   += a2.P_;
 
     return a1;
@@ -119,7 +124,7 @@ struct LoadData {
     return nvar_inv * var_inv * M4_ - 3.;
   }
   TimeType I() const { return (max() / avg()) - 1.0f; }
-  int32_t  stdev() const { return std::sqrt(variance()); }
+  TimeType stdev() const { return std::sqrt(variance()); }
   int32_t  npr() const { return P_; }
 
   TimeType max_ = 0.0;

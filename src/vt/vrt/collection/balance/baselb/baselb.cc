@@ -179,13 +179,17 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   stats[the_stat][lb::StatisticQuantity::skw] = skewness;
   stats[the_stat][lb::StatisticQuantity::kur] = kurtosis;
 
-  fmt::print(
-    "statsHandler:"
-    " max={}, min={}, sum={}, avg={}, var={}, stdev={}, nproc={}, cardinality={} "
-    "skewness={}, kurtosis={}, npr={}, imb={}, num_stats={}\n",
-    max, min, sum, avg, var, stdev, npr, car, skewness, kurtosis, npr, imb,
-    stats.size()
-  );
+  if (theContext()->getNode() == 0) {
+    vt_print(
+      lb,
+      "BaseLB:"
+      " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
+      " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
+      " npr={}, imb={:.2f}, num_stats={}\n",
+      max, min, sum, avg, var, stdev, npr, car, skewness, kurtosis, npr, imb,
+      stats.size()
+    );
+  }
 
   if (stats.size() == 1) {
     finishedStats();
@@ -233,8 +237,6 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
-  vtAssert(migration_epoch_ != no_epoch, "Must call startMigrationCollective");
-
   auto& migrator = balance::ProcStats::proc_migrate_;
   auto iter = migrator.find(obj_id);
   auto from = objGetNode(obj_id);
@@ -259,15 +261,15 @@ void BaseLB::finalize(CountMsg* msg) {
   auto const& this_node = theContext()->getNode();
   debug_print(
     lb, node,
-    "finished all object migrations: total migration count={}\n",
-    global_count
+    "BaseLB::finalize: finished migrations: local migration count={}\n",
+    local_migration_count_
   );
   if (this_node == 0) {
     auto const total_time = timing::Timing::getCurrentTime() - start_time_;
     vt_print(
       lb,
-      "migrationDone: LB total time={}, local migration count={}\n",
-      total_time, local_migration_count_
+      "BaseLB::finalize: LB total time={}, total migration count={}\n",
+      total_time, global_count
     );
     fflush(stdout);
   }
@@ -276,6 +278,11 @@ void BaseLB::finalize(CountMsg* msg) {
 }
 
 void BaseLB::migrationDone() {
+  debug_print(
+    lb, node,
+    "BaseLB::migrationDone: start reduce local migration count={}\n",
+    local_migration_count_
+  );
   auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
   auto msg = makeMessage<CountMsg>(local_migration_count_);
   proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);

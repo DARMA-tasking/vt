@@ -167,32 +167,26 @@ double HierarchicalLB::getSumLoad() const {
 void HierarchicalLB::loadStats() {
   auto const& this_node = theContext()->getNode();
   auto avg_load = getAvgLoad();
-  auto max_load = getMaxLoad();
   auto total_load = getSumLoad();
+  auto I = stats.at(lb::Statistic::W_l).at(lb::StatisticQuantity::imb);
 
-  auto const diff = max_load - avg_load;
-  double diff_percent = 0.0;
   bool should_lb = false;
 
   if (avg_load > 0.0000000001) {
-    diff_percent = (diff / avg_load) * 100.0f;
-    should_lb = diff_percent > hierlb_tolerance;
+    should_lb = I > hierlb_tolerance;
   }
 
   if (auto_threshold) {
-    this_threshold = std::min(
-      std::max(1.0f - (diff_percent / 100.0f), min_threshold), max_threshold
-    );
+    this_threshold = std::min(std::max(1.0f - I, min_threshold), max_threshold);
   }
 
   if (this_node == 0) {
     vt_print(
       hierlb,
-      "loadStats: this_load={}, total_load={}, avg_load={}, "
-      "max_load={}, diff={}, diff_percent={}, should_lb={}, auto={}, "
-      "threshold={}\n",
-      this_load, total_load, avg_load, max_load, diff, diff_percent,
-      should_lb, auto_threshold, this_threshold
+      "loadStats: load={:.2f}, total={:.2f}, avg={:.2f}, I={:.2f},"
+      "should_lb={}, auto={}, threshold={}\n",
+      this_load, total_load, avg_load, I, should_lb, auto_threshold,
+      this_threshold
     );
     fflush(stdout);
   }

@@ -59,6 +59,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/ PhaseType InvokeLB::cached_phase_ = no_lb_phase;
 /*static*/ LBType InvokeLB::cached_lb_ = LBType::NoLB;
+/*static*/ std::function<void()> InvokeLB::destroy_ = nullptr;
 
 /*static*/ LBType InvokeLB::shouldInvoke(PhaseType phase, bool try_file) {
   debug_print(
@@ -118,8 +119,9 @@ template <typename LB>
 InvokeLB::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto proxy = theObjGroup()->makeCollective<LB>();
   proxy.get()->init(proxy);
-  auto base_proxy = objgroup::proxy::Proxy<lb::BaseLB>{proxy.getProxy()};
+  auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   proxy.get()->template startLBHandler(msg.get(), base_proxy);
+  destroy_ = [proxy]{ proxy.destroyCollective(); };
   return proxy;
 }
 
@@ -138,18 +140,10 @@ InvokeLB::makeLB(MsgSharedPtr<StartLBMsg> msg) {
 
   auto msg = makeMessage<StartLBMsg>(phase);
   switch (lb) {
-  case LBType::HierarchicalLB:
-    makeLB<lb::HierarchicalLB>(msg);
-    break;
-  case LBType::GreedyLB:
-    makeLB<lb::GreedyLB>(msg);
-    break;
-  case LBType::RotateLB:
-    makeLB<lb::RotateLB>(msg);
-    break;
-  case LBType::GossipLB:
-    makeLB<lb::GossipLB>(msg);
-    break;
+  case LBType::HierarchicalLB: makeLB<lb::HierarchicalLB>(msg); break;
+  case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
+  case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
+  case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB to startLBCollective");
     break;
@@ -182,6 +176,11 @@ InvokeLB::makeLB(MsgSharedPtr<StartLBMsg> msg) {
 
 /*static*/ void InvokeLB::releaseLBCollective(PhaseType phase) {
   auto msg = makeMessage<CollectionPhaseMsg>();
+  // Destruct the objgroup that was used for LB
+  if (destroy_ != nullptr) {
+    destroy_();
+    destroy_ = nullptr;
+  }
   releaseLBPhase(msg.get());
 }
 
