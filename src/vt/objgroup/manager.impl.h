@@ -143,6 +143,11 @@ void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   }
   auto iter = dispatch_.find(proxy_bits);
   if (iter != dispatch_.end()) {
+    auto ptr = iter->second->objPtr();
+    auto obj_iter = obj_to_proxy_.find(ptr);
+    if (obj_iter != obj_to_proxy_.end()) {
+      obj_to_proxy_.erase(obj_iter);
+    }
     dispatch_.erase(iter);
   }
   auto obj_iter = objs_.find(proxy_bits);
