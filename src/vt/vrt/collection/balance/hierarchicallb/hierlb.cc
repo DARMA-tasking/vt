@@ -171,6 +171,7 @@ void HierarchicalLB::loadStats() {
   auto I = stats.at(lb::Statistic::W_l).at(lb::StatisticQuantity::imb);
 
   bool should_lb = false;
+  this_load_begin = this_load;
 
   if (avg_load > 0.0000000001) {
     should_lb = I > hierlb_tolerance;
