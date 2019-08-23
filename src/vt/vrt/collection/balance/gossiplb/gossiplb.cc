@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          gossiplb.h
+//                          gossiplb.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,43 +42,46 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H
-
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
+#include "vt/context/context.h"
 
+#include <cstdint>
 #include <random>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct GossipLB : BaseLB {
-  GossipLB() = default;
-  GossipLB(GossipLB const&) = delete;
-  GossipLB(GossipLB&&) = default;
+void GossipLB::init(objgroup::proxy::Proxy<GossipLB> in_proxy) {
+  proxy = in_proxy;
+}
 
-  void init(objgroup::proxy::Proxy<GossipLB> in_proxy);
-  void runLB() override;
+void GossipLB::runLB() {
+  this->inform();
+}
 
-  double getDefaultMinThreshold()  const override { return 0.0;  }
-  double getDefaultMaxThreshold()  const override { return 0.0;  }
-  bool   getDefaultAutoThreshold() const override { return true; }
+void GossipLB::inform() {
+  for (int i = 0; i < f; i++) {
+    propagateInfo();
+  }
+}
 
-protected:
-  void inform();
-  void decide();
-  void migrate();
+void GossipLB::propagateInfo() {
+  // First, randomly select a node
 
-  void propagateInfo();
+  auto const num_nodes = theContext()->getNumNodes();
+  std::uniform_int_distribution<NodeType> dist(0, num_nodes - 2);
+  std::mt19937 gen(seed());
 
-private:
-  uint8_t f               = 0;
-  uint8_t k               = 0;
-  uint8_t k_cur           = 0;
-  std::random_device seed;
-  objgroup::proxy::Proxy<GossipLB> proxy = {};
-};
+  dist(gen);
+}
+
+void GossipLB::decide() {
+  vtAssertExpr(false);
+}
+
+void GossipLB::migrate() {
+  vtAssertExpr(false);
+}
 
 }}}} /* end namespace vt::vrt::collection::lb */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H*/
