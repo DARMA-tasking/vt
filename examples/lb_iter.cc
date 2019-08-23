@@ -81,6 +81,7 @@ private:
   float data_2 = 2.4f;
 };
 
+static bool touch = true;
 static TimeType cur_time = 0;
 
 static double weight = 1.0f;
@@ -106,14 +107,13 @@ void IterCol::iterWork(IterMsg* msg) {
 }
 
 void IterCol::finished(ContinueMsg* msg) {
+  auto const this_node = vt::theContext()->getNode();
   auto const idx = getIndex().x();
 
-  // fmt::print("idx={}, iter={}: finished\n", getIndex(), cur_iter);
-
-  if (idx == 0) {
-    auto const new_time = ::vt::timing::Timing::getCurrentTime();
-    ::fmt::print("iteration: iter={},time={}\n", cur_iter,new_time-cur_time);
-    cur_time = ::vt::timing::Timing::getCurrentTime();
+  if (not touch && this_node == 0) {
+    auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
+    ::fmt::print("iteration: iter={},time={}\n", cur_iter, total_time);
+    touch = not touch;
   }
 
   cur_iter++;
@@ -123,6 +123,13 @@ void IterCol::finished(ContinueMsg* msg) {
 }
 
 void IterCol::nextIter(IterMsg* msg) {
+  auto const this_node = vt::theContext()->getNode();
+
+  if (touch && this_node == 0) {
+    cur_time = vt::timing::Timing::getCurrentTime();
+    touch = not touch;
+  }
+
   if (msg->iter_ < num_iter) {
     auto proxy = getCollectionProxy();
     auto idx = getIndex().x();
@@ -147,8 +154,6 @@ int main(int argc, char** argv) {
   if (argc > 3) {
     num_iter = atoi(argv[3]);
   }
-
-  cur_time = ::vt::timing::Timing::getCurrentTime();
 
   if (this_node == 0) {
     ::fmt::print(
