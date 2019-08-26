@@ -104,6 +104,7 @@ struct BaseLB {
   virtual void runLB() = 0;
 
 private:
+  void computeStatisticsOver(Statistic stats);
   void readLB(PhaseType phase);
 
 protected:
@@ -127,6 +128,7 @@ protected:
   objgroup::proxy::Proxy<BaseLB> proxy_ = {};
   int32_t local_migration_count_        = 0;
   PhaseType phase_                      = 0;
+  int32_t num_reduce_stats_             = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance::lb */

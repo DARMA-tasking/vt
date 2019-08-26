@@ -43,9 +43,12 @@
 */
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace vrt { namespace collection {
+
+namespace balance {
 
 std::unordered_map<LBType,std::string> lb_names_ = {
   {LBType::NoLB,           std::string{"NoLB"          }},
@@ -55,4 +58,21 @@ std::unordered_map<LBType,std::string> lb_names_ = {
   {LBType::GossipLB,       std::string{"GossipLB"      }}
 };
 
-}}}} /* end namespace vt::vrt::collection::balance */
+} /* end namespace balance */
+
+namespace lb {
+
+std::unordered_map<Statistic,std::string> lb_stat_name_ = {
+  {Statistic::P_l,         std::string{"P_l"}},
+  {Statistic::P_c,         std::string{"P_c"}},
+  {Statistic::P_t,         std::string{"P_t"}},
+  {Statistic::O_l,         std::string{"O_l"}},
+  {Statistic::O_c,         std::string{"O_c"}},
+  {Statistic::O_t,         std::string{"O_t"}},
+  {Statistic::ObjectRatio, std::string{"ObjectRatio"}},
+  {Statistic::EdgeRatio,   std::string{"EdgeRatio"}}
+};
+
+} /* end namespace lb */
+
+}}} /* end namespace vt::vrt::collection::balance */

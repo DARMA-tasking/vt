@@ -154,10 +154,15 @@ private:
 struct ProcStatsMsg : collective::ReduceTMsg<LoadData> {
   ProcStatsMsg() = default;
   ProcStatsMsg(lb::Statistic in_stat, TimeType const in_total_load)
-    : ReduceTMsg<LoadData>({in_total_load})
+    : ReduceTMsg<LoadData>({in_total_load}),
+      stat_(in_stat)
+  { }
+  ProcStatsMsg(lb::Statistic in_stat, LoadData&& ld)
+    : ReduceTMsg<LoadData>(std::move(ld)),
+      stat_(in_stat)
   { }
 
-  lb::Statistic stat_ = lb::Statistic::W_l;
+  lb::Statistic stat_ = lb::Statistic::P_l;
 };
 
 template <typename ColT>

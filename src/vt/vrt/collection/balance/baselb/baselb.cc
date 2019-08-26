@@ -182,16 +182,17 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   if (theContext()->getNode() == 0) {
     vt_print(
       lb,
-      "BaseLB:"
+      "BaseLB: Statistic={}: "
       " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
       " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
       " npr={}, imb={:.2f}, num_stats={}\n",
+      lb_stat_name_[the_stat],
       max, min, sum, avg, var, stdev, npr, car, skewness, kurtosis, npr, imb,
       stats.size()
     );
   }
 
-  if (stats.size() == 1) {
+  if (stats.size() == num_reduce_stats_) {
     finishedStats();
   }
 }
@@ -297,19 +298,53 @@ void BaseLB::finishedStats() {
 }
 
 void BaseLB::computeStatistics() {
-  using ReduceOp = collective::PlusOp<balance::LoadData>;
-
   debug_print(
     lb, node,
     "computeStatistics: this_load={}\n", this_load
   );
 
-  // Perform the reduction for W_l -> load only
-  auto cb = vt::theCB()->makeBcast<BaseLB, StatsMsgType, &BaseLB::statsHandler>(proxy_);
-  auto msg = makeMessage<StatsMsgType>(Statistic::W_l, this_load);
-  proxy_.template reduce<ReduceOp>(msg,cb);
+  computeStatisticsOver(Statistic::P_l);
+  computeStatisticsOver(Statistic::O_l);
 
-  // @todo: add W_c, and W_t
+  // @todo: add P_c, P_t, O_c, O_t
+}
+
+void BaseLB::computeStatisticsOver(Statistic stat) {
+  using ReduceOp = collective::PlusOp<balance::LoadData>;
+
+  num_reduce_stats_++;
+
+  auto cb = vt::theCB()->makeBcast<BaseLB, StatsMsgType, &BaseLB::statsHandler>(proxy_);
+
+  switch (stat) {
+  case Statistic::P_l: {
+    // Perform the reduction for P_l -> load only
+    auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_load);
+    proxy_.template reduce<ReduceOp>(msg,cb);
+  }
+  break;
+  case Statistic::O_l: {
+    auto const& objs = *load_data;
+    std::vector<balance::LoadData> lds;
+    for (auto&& elm : objs) {
+      lds.emplace_back(balance::LoadData(elm.second));
+    }
+    for (int i = 1; i < lds.size(); i++) {
+      lds[0] = lds[0] + lds[i];
+    }
+    balance::LoadData reduce_ld(0.0f);
+    if (lds.size() > 0) {
+      reduce_ld = lds[0];
+    }
+    // Perform the reduction for O_l -> object load only
+    auto msg = makeMessage<StatsMsgType>(Statistic::O_l, std::move(reduce_ld));
+    proxy_.template reduce<ReduceOp>(msg,cb);
+  }
+  break;
+  default:
+    break;
+  }
+
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
