@@ -1,28 +1,5 @@
 
-function(add_configuration_type config_type)
-  if (NOT DEFINED CMAKE_CONFIGURATION_TYPES)
-    set(CMAKE_CONFIGURATION_TYPES "debug;release" CACHE STRING "" FORCE)
-  endif()
-  if (CMAKE_CONFIGURATION_TYPES)
-    list(APPEND            CMAKE_CONFIGURATION_TYPES ${config_type})
-    list(REMOVE_DUPLICATES CMAKE_CONFIGURATION_TYPES)
-    set(
-      CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}"
-      CACHE STRING "Specialized configurations"
-      FORCE
-    )
-  endif()
-endfunction()
-
-add_configuration_type(debug_trace)
-add_configuration_type(release_trace)
-
-add_configuration_type(debug_v1)
-add_configuration_type(debug_v2)
-
-# set(VIRTUAL_TRANSPORT_LIBRARY_DV1 vt-debug_v1)
-# set(VIRTUAL_TRANSPORT_LIBRARY_DV2 vt-debug_v2)
-# set(VIRTUAL_TRANSPORT_LIBRARY_REL vt-release)
+set(CMAKE_CONFIGURATION_TYPES "debug;release" CACHE STRING "" FORCE)
 
 if (${VT_DEBUG_FAST})
   set(VT_DEBUG_MODE_ON 0)
@@ -96,25 +73,10 @@ set (vt_feature_cmake_no_pool_alloc_env "0")
 set (vt_feature_cmake_memory_pool "1")
 set (vt_feature_cmake_cons_multi_idx "0")
 
-set(cmake_vt_debug_modes_debug_trace           "${cmake_vt_debug_modes_all}")
-set(cmake_vt_debug_modes_release_trace         "")
 set(cmake_vt_debug_modes_debug                 "${cmake_vt_debug_modes_all}")
 set(cmake_vt_debug_modes_release               "")
-set(cmake_config_debug_enabled_debug_trace     1)
-set(cmake_config_debug_enabled_release_trace   0)
-set(cmake_config_debug_enabled_debug_v2        1)
-set(cmake_config_debug_enabled_debug_v1        1)
 set(cmake_config_debug_enabled_debug           ${VT_DEBUG_MODE_ON})
 set(cmake_config_debug_enabled_release         0)
-
-# set(cmake_vt_features_debug_trace              "${cmake_vt_detector} ${cmake_vt_lb} trace_enabled")
-# set(cmake_vt_features_release_trace            "${cmake_vt_detector} ${cmake_vt_lb} trace_enabled")
-# set(cmake_vt_features_debug_v2                 "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-# set(cmake_vt_features_debug_v1                 "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-# set(cmake_vt_features_debug                    "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-# set(cmake_vt_features_release                  "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-
-#message(STATUS "build types=${CMAKE_CONFIGURATION_TYPES}")
 
 set(build_type_list)
 
@@ -126,23 +88,9 @@ foreach(cur_build_type ${CMAKE_CONFIGURATION_TYPES})
     ${cmake_vt_debug_modes_${cur_build_type}}
   )
 
-  if (cur_build_type STREQUAL "debug_trace")
-    set(vt_feature_cmake_trace_enabled "1")
-  endif()
-
-  if (cur_build_type STREQUAL "release_trace")
-    set(vt_feature_cmake_trace_enabled "1")
-    set(vt_feature_cmake_production "1")
-  endif()
-
   if (cur_build_type STREQUAL "release")
     set(vt_feature_cmake_production "1")
   endif()
-
-  # set(
-  #   cmake_vt_features
-  #   ${cmake_vt_features_${cur_build_type}}
-  # )
 
   set(
     cmake_config_debug_enabled
@@ -178,33 +126,7 @@ endforeach()
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:$<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug>>
-  $<BUILD_INTERFACE:$<$<CONFIG:debug_v1>:${PROJECT_BIN_DIR}/debug_v1>>
-  $<BUILD_INTERFACE:$<$<CONFIG:debug_v2>:${PROJECT_BIN_DIR}/debug_v2>>
   $<BUILD_INTERFACE:$<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>>
-  $<BUILD_INTERFACE:$<$<CONFIG:debug_trace>:${PROJECT_BIN_DIR}/debug_trace>>
-  $<BUILD_INTERFACE:$<$<CONFIG:release_trace>:${PROJECT_BIN_DIR}/release_trace>>
   $<INSTALL_INTERFACE:include>
 )
 
-set(
-  CXX_FLAGS_STRICT
-  "-Wpedantic;"
-  "-Wall;"
-  "-Wabi;"
-  "-Wno-unknown-pragmas;"
-  "-Wno-gnu-zero-variadic-macro-arguments;"
-  "-Wno-variadic-macros;"
-  "-Wno-extra-semi;"
-)
-
-set(
-  LINKER_FLAGS_STRING
-  "-Wl;"
-  "--warn-unresolved-symbols;"
-  "--warn-once;"
-)
-
-target_compile_options(
-  ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  $<$<CONFIG:debug_v2>:${CXX_FLAGS_STRICT}>
-)
