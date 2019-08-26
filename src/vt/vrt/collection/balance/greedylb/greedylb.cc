@@ -79,32 +79,27 @@ void GreedyLB::runLB() {
 void GreedyLB::loadStats() {
   auto const& this_node = theContext()->getNode();
   auto avg_load = getAvgLoad();
-  auto max_load = getMaxLoad();
   auto total_load = getSumLoad();
+  auto I = stats.at(lb::Statistic::W_l).at(lb::StatisticQuantity::imb);
 
-  auto const diff = max_load - avg_load;
-  double diff_percent = 0.0;
   bool should_lb = false;
+  this_load_begin = this_load;
 
   if (avg_load > 0.0000000001) {
-    diff_percent = (diff / avg_load) * 100.0f;
-    should_lb = diff_percent > greedy_tolerance;
+    should_lb = I > greedy_tolerance;
   }
 
-  if (should_lb && greedy_auto_threshold) {
-    this_threshold = std::min(
-      std::max(1.0f - (diff_percent / 100.0f), greedy_threshold),
-      greedy_max_threshold
-    );
+  if (auto_threshold) {
+    this_threshold = std::min(std::max(1.0f - I, min_threshold), max_threshold);
   }
 
   if (this_node == 0) {
     vt_print(
       lb,
-      "loadStats: this_load={}, total_load={}, avg_load={}, max_load={}, "
-      "diff={}, diff_percent={}, should_lb={}, auto={}, threshold={}\n",
-      this_load, total_load, avg_load, max_load, diff, diff_percent,
-      should_lb, greedy_auto_threshold, this_threshold
+      "loadStats: load={:.2f}, total={:.2f}, avg={:.2f}, I={:.2f},"
+      "should_lb={}, auto={}, threshold={}\n",
+      this_load, total_load, avg_load, I, should_lb, auto_threshold,
+      this_threshold
     );
     fflush(stdout);
   }
@@ -145,7 +140,7 @@ void GreedyLB::reduceCollect() {
     this_load, this_load_begin, load_over.size()
   );
   using MsgType = GreedyCollectMsg;
-  auto cb = vt::theCB()->makeBcast<GreedyLB, MsgType, &GreedyLB::collectHandler>(proxy);
+  auto cb = vt::theCB()->makeSend<GreedyLB, MsgType, &GreedyLB::collectHandler>(proxy[0]);
   auto msg = makeSharedMessage<MsgType>(load_over,this_load);
   proxy.template reduce<collective::PlusOp<GreedyPayload>>(msg,cb);
 }
@@ -227,8 +222,8 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
   theMsg()->pushEpoch(epoch);
 
   for (decltype(+num_recs) i = 0; i < num_recs; i++) {
-    auto const& to_node = objGetNode(recs[i]);
-    auto const& new_obj_id = objSetNode(this_node,recs[i]);
+    auto const to_node = objGetNode(recs[i]);
+    auto const new_obj_id = objSetNode(this_node,recs[i]);
     debug_print(
       lb, node,
       "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}, "
@@ -245,6 +240,10 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
 }
 
 /*static*/ void GreedyLB::recvObjsHan(GreedyLBTypes::ObjIDType* objs) {
+  debug_print(
+    lb, node,
+    "recvObjsHan: num_recs={}\n", *objs
+  );
   scatter_proxy.get()->recvObjsDirect(objs);
 }
 
@@ -256,7 +255,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
     auto const& node = elm.node_;
     auto const& recs = elm.recs_;
     for (auto&& rec : recs) {
-      auto const& cur_node = objGetNode(rec);
+      auto const cur_node = objGetNode(rec);
       // transfer required from `cur_node' to `node'
       if (cur_node != node) {
         auto const new_obj_id = objSetNode(node, rec);
