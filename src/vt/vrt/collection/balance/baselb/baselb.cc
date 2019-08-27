@@ -77,11 +77,11 @@ void BaseLB::startLBHandler(
   computeStatistics();
 }
 
-BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) {
+BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) const {
   return load * 1000;
 }
 
-BaseLB::ObjBinType BaseLB::histogramSample(LoadType const& load) {
+BaseLB::ObjBinType BaseLB::histogramSample(LoadType const& load) const {
   auto const bin_size = getBinSize();
   ObjBinType const bin =
     ((static_cast<int32_t>(load)) / bin_size * bin_size)
@@ -289,8 +289,8 @@ void BaseLB::migrationDone() {
   proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);
 }
 
-NodeType BaseLB::objGetNode(ObjIDType const id) {
-  return id & 0x0000000FFFFFFFF;
+NodeType BaseLB::objGetNode(ObjIDType const id) const {
+  return balance::objGetNode(id);
 }
 
 void BaseLB::finishedStats() {
@@ -306,7 +306,31 @@ void BaseLB::computeStatistics() {
   computeStatisticsOver(Statistic::P_l);
   computeStatisticsOver(Statistic::O_l);
 
+  if (comm_aware_) {
+    computeStatisticsOver(Statistic::P_c);
+    computeStatisticsOver(Statistic::O_c);
+  }
   // @todo: add P_c, P_t, O_c, O_t
+}
+
+balance::LoadData&& BaseLB::reduceVec(std::vector<balance::LoadData>&& vec) const {
+  balance::LoadData reduce_ld(0.0f);
+  if (vec.size() == 0) {
+    return std::move(reduce_ld);
+  } else {
+    for (int i = 1; i < vec.size(); i++) {
+      vec[0] = vec[0] + vec[i];
+    }
+    return std::move(vec[0]);
+  }
+}
+
+bool BaseLB::isCollectiveComm(balance::CommCategory cat) const {
+  bool is_collective =
+    cat == balance::CommCategory::Broadcast or
+    cat == balance::CommCategory::CollectionToNodeBcast or
+    cat == balance::CommCategory::NodeToCollectionBcast;
+  return is_collective;
 }
 
 void BaseLB::computeStatisticsOver(Statistic stat) {
@@ -318,26 +342,48 @@ void BaseLB::computeStatisticsOver(Statistic stat) {
 
   switch (stat) {
   case Statistic::P_l: {
-    // Perform the reduction for P_l -> load only
+    // Perform the reduction for P_l -> processor load only
     auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_load);
     proxy_.template reduce<ReduceOp>(msg,cb);
   }
   break;
-  case Statistic::O_l: {
-    auto const& objs = *load_data;
+  case Statistic::P_c: {
+    // Perform the reduction for P_c -> processor comm only
+    double comm_load = 0.0;
+    for (auto&& elm : *comm_data) {
+      if (not comm_collectives_ and isCollectiveComm(elm.first.cat_)) {
+        continue;
+      }
+      if (elm.first.onNode() or elm.first.selfEdge()) {
+        continue;
+      }
+      //vt_print(lb, "comm_load={}, elm={}\n", comm_load, elm.second);
+      comm_load += elm.second;
+    }
+    auto msg = makeMessage<StatsMsgType>(Statistic::P_c, comm_load);
+    proxy_.template reduce<ReduceOp>(msg,cb);
+  }
+  break;
+  case Statistic::O_c: {
+    // Perform the reduction for O_c -> object comm only
     std::vector<balance::LoadData> lds;
-    for (auto&& elm : objs) {
+    for (auto&& elm : *comm_data) {
+      // Only count object-to-object direct edges in the O_c statistics
+      if (elm.first.cat_ == balance::CommCategory::SendRecv and not elm.first.selfEdge()) {
+        lds.emplace_back(balance::LoadData(elm.second));
+      }
+    }
+    auto msg = makeMessage<StatsMsgType>(Statistic::O_c, reduceVec(std::move(lds)));
+    proxy_.template reduce<ReduceOp>(msg,cb);
+  }
+  break;
+  case Statistic::O_l: {
+    // Perform the reduction for O_l -> object load only
+    std::vector<balance::LoadData> lds;
+    for (auto&& elm : *load_data) {
       lds.emplace_back(balance::LoadData(elm.second));
     }
-    for (int i = 1; i < lds.size(); i++) {
-      lds[0] = lds[0] + lds[i];
-    }
-    balance::LoadData reduce_ld(0.0f);
-    if (lds.size() > 0) {
-      reduce_ld = lds[0];
-    }
-    // Perform the reduction for O_l -> object load only
-    auto msg = makeMessage<StatsMsgType>(Statistic::O_l, std::move(reduce_ld));
+    auto msg = makeMessage<StatsMsgType>(Statistic::O_l, reduceVec(std::move(lds)));
     proxy_.template reduce<ReduceOp>(msg,cb);
   }
   break;

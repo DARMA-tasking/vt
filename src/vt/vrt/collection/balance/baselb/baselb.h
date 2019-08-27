@@ -77,8 +77,13 @@ struct BaseLB {
   using QuantityType     = std::map<StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<Statistic, QuantityType>;
 
-  explicit BaseLB(int32_t in_bin_size = default_bin_size)
-    : bin_size_(in_bin_size)
+  explicit BaseLB(
+    bool in_comm_aware = false,
+    bool in_comm_collectives = false,
+    int32_t in_bin_size = default_bin_size
+  ) : bin_size_(in_bin_size),
+      comm_aware_(in_comm_aware),
+      comm_collectives_(in_comm_collectives)
   { }
 
   void startLBHandler(balance::StartLBMsg* msg, objgroup::proxy::Proxy<BaseLB> proxy);
@@ -87,10 +92,10 @@ struct BaseLB {
   void statsHandler(StatsMsgType* msg);
   void finishedStats();
 
-  ObjBinType histogramSample(LoadType const& load);
-  LoadType loadMilli(LoadType const& load);
+  ObjBinType histogramSample(LoadType const& load) const;
+  LoadType loadMilli(LoadType const& load) const;
   int32_t getBinSize() const { return bin_size_; }
-  NodeType objGetNode(ObjIDType const id);
+  NodeType objGetNode(ObjIDType const id) const;
 
   EpochType getMigrationEpoch() const;
   EpochType startMigrationCollective();
@@ -104,6 +109,8 @@ struct BaseLB {
   virtual void runLB() = 0;
 
 private:
+  balance::LoadData&& reduceVec(std::vector<balance::LoadData>&& vec) const;
+  bool isCollectiveComm(balance::CommCategory cat) const;
   void computeStatisticsOver(Statistic stats);
   void readLB(PhaseType phase);
 
@@ -129,6 +136,8 @@ protected:
   int32_t local_migration_count_        = 0;
   PhaseType phase_                      = 0;
   int32_t num_reduce_stats_             = 0;
+  bool comm_aware_                      = false;
+  bool comm_collectives_                = false;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance::lb */

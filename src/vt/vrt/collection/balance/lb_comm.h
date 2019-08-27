@@ -74,6 +74,10 @@ void serializeCommCategory(SerializerT& s, CommCategory& cat) {
   serializeEnum<SerializerT, CommCategory>(s, cat);
 }
 
+inline NodeType objGetNode(ElementIDType const id) {
+  return id & 0x0000000FFFFFFFF;
+}
+
 struct LBCommKey {
 
   struct CollectionTag { };
@@ -122,6 +126,20 @@ struct LBCommKey {
   ElementIDType toObjTemp()    const { return to_temp_; }
   ElementIDType fromNode()     const { return nfrom_; }
   ElementIDType toNode()       const { return nto_; }
+
+  bool selfEdge() const { return cat_ == CommCategory::SendRecv and from_ == to_; }
+  bool offNode() const {
+    if (cat_ == CommCategory::SendRecv) {
+      return objGetNode(from_temp_) != objGetNode(to_temp_);
+    } else if (cat_ == CommCategory::CollectionToNode) {
+      return objGetNode(from_temp_) != nto_;
+    } else if (cat_ == CommCategory::NodeToCollection) {
+      return objGetNode(to_temp_) != nfrom_;
+    } else {
+      return true;
+    }
+  }
+  bool onNode() const { return !offNode(); }
 
   bool operator==(LBCommKey const& k) const {
     return
