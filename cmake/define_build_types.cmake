@@ -100,10 +100,10 @@ foreach(cur_build_type ${CMAKE_CONFIGURATION_TYPES})
 
   if (cur_build_type STREQUAL "release")
     set(vt_feature_cmake_production "1")
-  endif()
-
-  if (cur_build_type STREQUAL "relwithdebinfo")
+  elseif (cur_build_type STREQUAL "relwithdebinfo")
     set(vt_feature_cmake_production "1")
+  else()
+    set(vt_feature_cmake_production "0")
   endif()
 
   set(
