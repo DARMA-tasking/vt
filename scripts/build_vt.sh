@@ -4,7 +4,7 @@ if test $# -lt 1
 then
     echo                                                \
         "usage: $0 "                                    \
-       "<build-mode=debug|release> "                    \
+       "<build-mode=debug|release|relwithdebinfo> "     \
        "<compiler=clang|gnu> "                          \
        "[ <has-serialization=0|1> ] "                   \
        "[ <build-all-tests=0|1> ] "                     \
