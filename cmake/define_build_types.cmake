@@ -1,5 +1,5 @@
 
-set(CMAKE_CONFIGURATION_TYPES "debug;release" CACHE STRING "" FORCE)
+set(CMAKE_CONFIGURATION_TYPES "debug;release;relwithdebinfo" CACHE STRING "" FORCE)
 
 if (${VT_DEBUG_FAST})
   set(VT_DEBUG_MODE_ON 0)
@@ -74,8 +74,10 @@ set (vt_feature_cmake_memory_pool "1")
 set (vt_feature_cmake_cons_multi_idx "0")
 
 set(cmake_vt_debug_modes_debug                 "${cmake_vt_debug_modes_all}")
+set(cmake_vt_debug_modes_relwithdebinfo        "")
 set(cmake_vt_debug_modes_release               "")
 set(cmake_config_debug_enabled_debug           ${VT_DEBUG_MODE_ON})
+set(cmake_config_debug_enabled_relwithdebinfo  0)
 set(cmake_config_debug_enabled_release         0)
 
 set(build_type_list)
@@ -89,6 +91,10 @@ foreach(cur_build_type ${CMAKE_CONFIGURATION_TYPES})
   )
 
   if (cur_build_type STREQUAL "release")
+    set(vt_feature_cmake_production "1")
+  endif()
+
+  if (cur_build_type STREQUAL "relwithdebinfo")
     set(vt_feature_cmake_production "1")
   endif()
 
@@ -126,6 +132,7 @@ endforeach()
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:$<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug>>
+  $<BUILD_INTERFACE:$<$<CONFIG:relwithdebinfo>:${PROJECT_BIN_DIR}/relwithdebinfo>>
   $<BUILD_INTERFACE:$<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>>
   $<INSTALL_INTERFACE:include>
 )
