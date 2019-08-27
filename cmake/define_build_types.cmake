@@ -1,4 +1,9 @@
-string(TOLOWER ${CMAKE_BUILD_TYPE} LC_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
+  message(WARNING "No CMAKE_BUILD_TYPE detected")
+  set(LC_BUILD_TYPE "undefined")
+else()
+  string(TOLOWER ${CMAKE_BUILD_TYPE} LC_BUILD_TYPE)
+endif()
 
 if (NOT DEFINED CMAKE_CONFIGURATION_TYPES)
   set(VT_CONFIG_TYPES "debug" "release" "relwithdebinfo")
@@ -93,17 +98,22 @@ set(build_type_list)
 foreach(cur_build_type ${CMAKE_CONFIGURATION_TYPES})
   #message(STATUS "generating for build type=${cur_build_type}")
 
+  if (NOT DEFINED cmake_vt_debug_modes_${cur_build_type})
+    set(cmake_vt_debug_modes_${cur_build_type} "")
+  endif()
+  if (NOT DEFINED cmake_config_debug_enabled_${cur_build_type})
+    set(cmake_config_debug_enabled_${cur_build_type} 0)
+  endif()
+
   set(
     cmake_vt_debug_modes
     ${cmake_vt_debug_modes_${cur_build_type}}
   )
 
-  if (cur_build_type STREQUAL "release")
-    set(vt_feature_cmake_production "1")
-  elseif (cur_build_type STREQUAL "relwithdebinfo")
-    set(vt_feature_cmake_production "1")
-  else()
+  if (cur_build_type STREQUAL "debug")
     set(vt_feature_cmake_production "0")
+  else()
+    set(vt_feature_cmake_production "1")
   endif()
 
   set(
@@ -143,6 +153,7 @@ target_include_directories(
   $<BUILD_INTERFACE:$<$<CONFIG:relwithdebinfo>:${PROJECT_BIN_DIR}/relwithdebinfo>>
   $<BUILD_INTERFACE:$<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>>
   $<BUILD_INTERFACE:$<$<CONFIG:${LC_BUILD_TYPE}>:${PROJECT_BIN_DIR}/${LC_BUILD_TYPE}>>
+  $<BUILD_INTERFACE:$<$<CONFIG:>:${PROJECT_BIN_DIR}/undefined>>
   $<INSTALL_INTERFACE:include>
 )
 
