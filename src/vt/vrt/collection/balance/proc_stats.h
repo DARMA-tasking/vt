@@ -91,6 +91,7 @@ public:
   static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
   static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
   static std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
+  static std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;
   static std::vector<CommMapType> proc_comm_;
 private:
   static FILE* stats_file_;

@@ -63,7 +63,7 @@ struct LoadData {
     : max_(y), sum_(y), min_(y), avg_(y), M2_(0.0f), M3_(0.0f), M4_(0.0f),
       N_(1), P_(y not_eq 0.0f)
   {
-    debug_print(lb, node, "LoadData: in={}\n", y);
+    debug_print(lb, node, "LoadData: in={}, N_={}\n", y, N_);
   }
 
   friend LoadData operator+(LoadData a1, LoadData const& a2) {

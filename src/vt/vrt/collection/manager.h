@@ -816,8 +816,11 @@ private:
   template <typename ColT>
   static BcastBufferType<ColT> broadcasts_;
 
-  balance::ElementIDType getCurrentContext() const;
-  void setCurrentContext(balance::ElementIDType elm);
+  balance::ElementIDType getCurrentContextTemp() const;
+  balance::ElementIDType getCurrentContextPerm() const;
+  void setCurrentContext(
+    balance::ElementIDType elm_perm, balance::ElementIDType elm_temp
+  );
 
   CleanupListFnType cleanup_fns_;
   BufferedActionType buffered_sends_;
@@ -832,7 +835,8 @@ private:
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
-  balance::ElementIDType cur_context_elm_id_ = balance::no_element_id;
+  balance::ElementIDType cur_context_temp_elm_id_ = balance::no_element_id;
+  balance::ElementIDType cur_context_perm_elm_id_ = balance::no_element_id;
 };
 
 // These are static variables in class templates because Intel 18

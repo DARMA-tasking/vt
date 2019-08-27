@@ -72,9 +72,18 @@ struct ElementStats {
   void startTime();
   void stopTime();
   void addTime(TimeType const& time);
-  void recvObjData(ElementIDType to, ElementIDType from, double bytes, bool bcast);
-  void recvFromNode(ElementIDType to, NodeType from, double bytes, bool bcast);
-  void recvToNode(NodeType to, ElementIDType from, double bytes, bool bcast);
+  void recvObjData(
+    ElementIDType to_perm, ElementIDType to_temp,
+    ElementIDType from_perm, ElementIDType from_temp, double bytes, bool bcast
+  );
+  void recvFromNode(
+    ElementIDType to_perm, ElementIDType to_temp, NodeType from,
+    double bytes, bool bcast
+  );
+  void recvToNode(
+    NodeType to, ElementIDType from_perm, ElementIDType from_temp,
+    double bytes, bool bcast
+  );
   void setModelWeight(TimeType const& time);
   void updatePhase(PhaseType const& inc = 1);
   PhaseType getPhase() const;

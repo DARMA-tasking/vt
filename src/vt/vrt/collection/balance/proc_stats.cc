@@ -72,6 +72,9 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 /*static*/ std::unordered_map<ElementIDType,ElementIDType>
   ProcStats::proc_temp_to_perm_ =  {};
 
+/*static*/ std::unordered_map<ElementIDType,ElementIDType>
+  ProcStats::proc_perm_to_temp_ =  {};
+
 /*static*/ ElementIDType ProcStats::next_elm_ = 1;
 
 /*static*/ FILE* ProcStats::stats_file_ = nullptr;
@@ -79,9 +82,11 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 /*static*/ bool ProcStats::created_dir_ = false;
 
 /*static*/ void ProcStats::clearStats() {
+  ProcStats::proc_comm_.clear();
   ProcStats::proc_data_.clear();
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
+  ProcStats::proc_perm_to_temp_.clear();
   next_elm_ = 1;
 }
 
@@ -102,7 +107,7 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   // Create migrate lambdas and temp to perm map since LB is complete
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
-  next_elm_ = 1;
+  ProcStats::proc_perm_to_temp_.clear();
 }
 
 /*static*/ ElementIDType ProcStats::getNextElm() {

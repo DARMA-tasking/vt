@@ -61,15 +61,15 @@ template <typename ColT>
   VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
   PhaseType const& phase, TimeType const& time, CommMapType const& comm
 ) {
-  // Always assign a new element ID so the node is correct (for now)
-  col_elm->temp_elm_id_ = ProcStats::getNextElm();
+  // A new temp ID gets assigned when a object is migrated into a node
 
   auto const temp_id = col_elm->temp_elm_id_;
+  auto const perm_id = col_elm->stats_elm_id_;
 
   debug_print(
     lb, node,
     "ProcStats::addProcStats: temp_id={}, perm_id={}, phase={}, load={}\n",
-    col_elm->temp_elm_id_, col_elm->stats_elm_id_, phase, time
+    temp_id, perm_id, phase, time
   );
 
   proc_data_.resize(phase + 1);
@@ -86,7 +86,9 @@ template <typename ColT>
     proc_comm_.at(phase)[c.first] += c.second;
   }
 
-  proc_temp_to_perm_[temp_id] = col_elm->stats_elm_id_;
+  proc_temp_to_perm_[temp_id] = perm_id;
+  proc_perm_to_temp_[perm_id] = temp_id;
+
   auto migrate_iter = proc_migrate_.find(temp_id);
   if (migrate_iter == proc_migrate_.end()) {
     proc_migrate_.emplace(
