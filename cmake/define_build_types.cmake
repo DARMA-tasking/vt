@@ -6,13 +6,16 @@ else()
 endif()
 
 if (NOT DEFINED CMAKE_CONFIGURATION_TYPES)
-  set(VT_CONFIG_TYPES "debug" "release" "relwithdebinfo")
+  set(VT_CONFIG_TYPES ${LC_BUILD_TYPE} "debug" "release" "relwithdebinfo")
 else()
-  set(VT_CONFIG_TYPES ${CMAKE_CONFIGURATION_TYPES})
+  set(VT_CONFIG_TYPES ${LC_BUILD_TYPE})
+  foreach(type ${CMAKE_CONFIGURATION_TYPES})
+    string(TOLOWER ${type} tmp_lowercase_type)
+    list(APPEND VT_CONFIG_TYPES ${tmp_lowercase_type})
+  endforeach(type)
+  unset(tmp_lowercase_type)
 endif()
-list(APPEND VT_CONFIG_TYPES ${LC_BUILD_TYPE})
 list(REMOVE_DUPLICATES VT_CONFIG_TYPES)
-set(CMAKE_CONFIGURATION_TYPES "${VT_CONFIG_TYPES}" CACHE STRING "" FORCE)
 
 if (${VT_DEBUG_FAST})
   set(VT_DEBUG_MODE_ON 0)
@@ -95,7 +98,7 @@ set(cmake_config_debug_enabled_release         0)
 
 set(build_type_list)
 
-foreach(cur_build_type ${CMAKE_CONFIGURATION_TYPES})
+foreach(cur_build_type ${VT_CONFIG_TYPES})
   #message(STATUS "generating for build type=${cur_build_type}")
 
   if (NOT DEFINED cmake_vt_debug_modes_${cur_build_type})
@@ -152,7 +155,7 @@ target_include_directories(
   $<BUILD_INTERFACE:$<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug>>
   $<BUILD_INTERFACE:$<$<CONFIG:relwithdebinfo>:${PROJECT_BIN_DIR}/relwithdebinfo>>
   $<BUILD_INTERFACE:$<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>>
-  $<BUILD_INTERFACE:$<$<CONFIG:${LC_BUILD_TYPE}>:${PROJECT_BIN_DIR}/${LC_BUILD_TYPE}>>
+  $<BUILD_INTERFACE:$<$<CONFIG:${CMAKE_BUILD_TYPE}>:${PROJECT_BIN_DIR}/${LC_BUILD_TYPE}>>
   $<BUILD_INTERFACE:$<$<CONFIG:>:${PROJECT_BIN_DIR}/undefined>>
   $<INSTALL_INTERFACE:include>
 )
