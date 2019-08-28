@@ -96,8 +96,6 @@ set(cmake_config_debug_enabled_debug           ${VT_DEBUG_MODE_ON})
 set(cmake_config_debug_enabled_relwithdebinfo  0)
 set(cmake_config_debug_enabled_release         0)
 
-set(build_type_list)
-
 foreach(cur_build_type ${VT_CONFIG_TYPES})
   #message(STATUS "generating for build type=${cur_build_type}")
 
@@ -136,19 +134,14 @@ foreach(cur_build_type ${VT_CONFIG_TYPES})
   )
 
   string(TOUPPER ${cur_build_type} cur_build_type_upper)
-
   set(CMAKE_${cur_build_type_upper}_POSTFIX "-${cur_build_type}")
-
-  list(APPEND build_type_list ${cur_build_type})
-
   set_target_properties(
     ${VIRTUAL_TRANSPORT_LIBRARY}
     PROPERTIES ${cur_build_type_upper}_POSTFIX "-${cur_build_type}"
   )
 endforeach()
 
-# message(STATUS "build type list=${build_type_list}")
-# message(STATUS "build type=${CMAKE_BUILD_TYPE}")
+# message(STATUS "chosen build type=${CMAKE_BUILD_TYPE}")
 
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
