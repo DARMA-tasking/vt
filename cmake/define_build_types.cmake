@@ -100,6 +100,11 @@ set(cmake_config_debug_enabled_debug           ${VT_DEBUG_MODE_ON})
 set(cmake_config_debug_enabled_relwithdebinfo  0)
 set(cmake_config_debug_enabled_release         0)
 
+set(
+  cmake_vt_modes
+  ${cmake_vt_debug_modes_all}
+)
+
 # this loop executes over all known build types, not just the selected one
 foreach(loop_build_type ${VT_CONFIG_TYPES})
   #message(STATUS "generating for build type=${loop_build_type}")

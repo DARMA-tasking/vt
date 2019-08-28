@@ -107,19 +107,26 @@ extern runtime::Runtime* curRT;
     false, vt::config::DefaultConfig, verbose, feature, ctx, __VA_ARGS__ \
   )
 
-#define vt_make_config(feature)                                          \
+#define vt_make_config(feature, cftype)                                  \
   vt::config::Configuration<                                             \
     static_cast<vt::config::CatEnum>(                                    \
-      vt::config::DefaultConfig::category | vt::config::CatEnum::feature \
+      vt::config::cftype::category | vt::config::CatEnum::feature        \
     ),                                                                   \
-    vt::config::DefaultConfig::context,                                  \
-    vt::config::DefaultConfig::mode                                      \
+    vt::config::cftype::context,                                         \
+    vt::config::cftype::mode                                             \
   >
 
-#define debug_print_force_impl(feature, ctx, ...)                       \
+#define config_print_force_impl(cftype, feature, ctx, ...)              \
   debug_print_impl(                                                     \
-    true, vt_make_config(feature), normal, feature, ctx, __VA_ARGS__    \
+    true, vt_make_config(feature, cftype), normal, feature, ctx,        \
+    __VA_ARGS__                                                         \
   )
+
+#define vt_print_force_impl(feature, ctx, ...)                          \
+  config_print_force_impl(VTPrintConfig, feature, ctx, __VA_ARGS__)
+
+#define debug_print_force_impl(feature, ctx, ...)                       \
+  config_print_force_impl(DefaultConfig, feature, ctx, __VA_ARGS__)
 
 #if debug_force_enabled
   //#warning "Debug force is enabled"
@@ -135,7 +142,7 @@ extern runtime::Runtime* curRT;
 #define vt_print(feature, ...)                                          \
   do {                                                                  \
     if (!::vt::arguments::ArgConfig::vt_quiet) {                        \
-      debug_print_force_impl(feature, node, __VA_ARGS__);               \
+      vt_print_force_impl(feature, node, __VA_ARGS__);                  \
     }                                                                   \
   } while(0);
 
