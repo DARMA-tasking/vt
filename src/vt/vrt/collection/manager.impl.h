@@ -347,6 +347,8 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
   NodeType from
 ) {
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+
   auto& user_msg = msg->getMsg();
   auto user_msg_ptr = &user_msg;
   // Be careful with type casting here..convert to typeless before
@@ -357,14 +359,23 @@ CollectionManager::collectionAutoMsgDeliver(
 
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
-  auto const idx = base->getIndex();
+  auto idx = base->getIndex();
   uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+
+  // Set the current context index, enabling the user to query the index of
+  // their collection element
+  auto const proxy = base->getProxy();
+  IdxContextHolder::set(&idx,proxy);
+
   runnable::RunnableCollection<UserMsgT,UntypedCollection>::run(
     han, user_msg_ptr, ptr, from, member, idx1, idx2, idx3, idx4
   );
+
+  // Clear the current index context
+  IdxContextHolder::clear();
 }
 
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
@@ -373,6 +384,8 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
   NodeType from
 ) {
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+
   // Be careful with type casting here..convert to typeless before
   // reinterpreting the pointer so the compiler does not produce the wrong
   // offset
@@ -381,14 +394,23 @@ CollectionManager::collectionAutoMsgDeliver(
 
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
-  auto const idx = base->getIndex();
+  auto idx = base->getIndex();
   uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+
+  // Set the current context index, enabling the user to query the index of
+  // their collection element
+  auto const proxy = base->getProxy();
+  IdxContextHolder::set(&idx,proxy);
+
   runnable::RunnableCollection<MsgT,UntypedCollection>::run(
     han, msg, ptr, from, member, idx1, idx2, idx3, idx4
   );
+
+  // Clear the current index context
+  IdxContextHolder::clear();
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
