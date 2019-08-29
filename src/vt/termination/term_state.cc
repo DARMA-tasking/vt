@@ -48,35 +48,6 @@
 
 namespace vt { namespace term {
 
-void TermState::addParentEpoch(EpochType const parent) {
-  debug_print(
-    term, node,
-    "addParentEpoch: epoch={:x}, parent={:x}\n", epoch_, parent
-  );
-
-  // Produce a single work unit on the parent epoch so it can not finish while
-  // this epoch is live
-  theTerm()->produce(parent,1);
-  parents_.push_back(parent);
-}
-
-void TermState::clearParents() {
-  debug_print(
-    term, node,
-    "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-    parents_.size()
-  );
-
-  for (auto&& parent : parents_) {
-    debug_print(
-      term, node,
-      "clearParents: epoch={:x}, parent={:x}\n", epoch_, parent
-    );
-    theTerm()->consume(parent,1);
-  }
-  parents_.clear();
-}
-
 TermWaveType TermState::getCurWave() const {
   return cur_wave_;
 }
@@ -169,8 +140,9 @@ TermState::TermState(
   EpochType const& in_epoch, bool const in_local_terminated, bool const active,
   NodeType const& children
 )
-  : local_terminated_(in_local_terminated), epoch_active_(active),
-    num_children_(children), epoch_(in_epoch)
+  : EpochRelation(in_epoch, false),
+    local_terminated_(in_local_terminated), epoch_active_(active),
+    num_children_(children)
 {
   debug_print(
     term, node,
@@ -181,7 +153,7 @@ TermState::TermState(
 }
 
 TermState::TermState(EpochType const& in_epoch, NodeType const& children)
-  : num_children_(children), epoch_(in_epoch)
+  : EpochRelation(in_epoch, false), num_children_(children)
 {
   debug_print(
     term, node,

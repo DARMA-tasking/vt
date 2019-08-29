@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/context/context.h"
 #include "vt/termination/term_common.h"
+#include "vt/termination/term_parent.h"
 
 #include <vector>
 #include <cstdlib>
@@ -55,7 +56,7 @@
 
 namespace vt { namespace term {
 
-struct TermState {
+struct TermState : EpochRelation {
   using EventCountType = int32_t;
 
   void notifyChildReceive();
@@ -72,8 +73,6 @@ struct TermState {
   void setCurWave(TermWaveType const& wave);
   NodeType getNumChildren() const;
   bool noLocalUnits() const;
-  void addParentEpoch(EpochType const epoch);
-  void clearParents();
 
   TermState(
     EpochType const& in_epoch, bool const in_local_terminated, bool const active,
@@ -105,10 +104,8 @@ private:
 
   EventCountType recv_child_count_            = 0;
   NodeType num_children_                      = uninitialized_destination;
-  EpochType epoch_                            = no_epoch;
   TermWaveType cur_wave_                      = 0;
   TermWaveType  submitted_wave_               = -1;
-  std::vector<EpochType> parents_             = {};
 };
 
 }} //end namespace vt::term
