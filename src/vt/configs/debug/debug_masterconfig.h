@@ -84,6 +84,23 @@ using DefaultConfig = Configuration<
 >;
 #endif
 
+#define vt_backend_categories cmake_config_modes
+using VTPrintConfig = Configuration<
+  static_cast<CatEnum>(
+    vt_backend_categories | CatEnum::none
+  ),
+  static_cast<CtxEnum>(
+    CtxEnum::node |
+    CtxEnum::unknown
+  ),
+  static_cast<ModeEnum>(
+    ModeEnum::verbose |
+    ModeEnum::normal  |
+    ModeEnum::flush
+  )
+>;
+
+
 }} /* end namespace vt::config */
 
 #define vt_default_threading openmp
