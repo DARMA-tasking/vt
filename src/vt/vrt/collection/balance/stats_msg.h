@@ -154,7 +154,7 @@ private:
 struct ProcStatsMsg : collective::ReduceTMsg<LoadData> {
   ProcStatsMsg() = default;
   ProcStatsMsg(lb::Statistic in_stat, TimeType const in_total_load)
-    : ReduceTMsg<LoadData>({in_total_load}),
+    : ReduceTMsg<LoadData>(LoadData(in_total_load)),
       stat_(in_stat)
   { }
   ProcStatsMsg(lb::Statistic in_stat, LoadData&& ld)

@@ -193,7 +193,7 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
     );
   }
 
-  if (stats.size() == num_reduce_stats_) {
+  if (stats.size() == static_cast<std::size_t>(num_reduce_stats_)) {
     finishedStats();
   }
 }
@@ -314,15 +314,15 @@ void BaseLB::computeStatistics() {
   // @todo: add P_c, P_t, O_c, O_t
 }
 
-balance::LoadData&& BaseLB::reduceVec(std::vector<balance::LoadData>&& vec) const {
+balance::LoadData BaseLB::reduceVec(std::vector<balance::LoadData>&& vec) const {
   balance::LoadData reduce_ld(0.0f);
   if (vec.size() == 0) {
-    return std::move(reduce_ld);
+    return reduce_ld;
   } else {
-    for (int i = 1; i < vec.size(); i++) {
+    for (std::size_t i = 1; i < vec.size(); i++) {
       vec[0] = vec[0] + vec[i];
     }
-    return std::move(vec[0]);
+    return vec[0];
   }
 }
 

@@ -109,7 +109,7 @@ struct BaseLB {
   virtual void runLB() = 0;
 
 private:
-  balance::LoadData&& reduceVec(std::vector<balance::LoadData>&& vec) const;
+  balance::LoadData reduceVec(std::vector<balance::LoadData>&& vec) const;
   bool isCollectiveComm(balance::CommCategory cat) const;
   void computeStatisticsOver(Statistic stats);
   void readLB(PhaseType phase);
