@@ -66,11 +66,12 @@ int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   auto const this_node = vt::theContext()->getNode();
-  auto const num_nodes = vt::theContext()->getNumNodes();
 
-  vtAssertExpr(argc == 2);
-
-  pings = atoi(argv[1]);
+  if (argc == 2) {
+    pings = atoi(argv[1]);
+  } else {
+    pings = 10;
+  }
 
   if (this_node == 0) {
     fmt::print(
