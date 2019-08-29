@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.cc
+//                          baselb_msgs.h
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -42,35 +42,40 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_MSGS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_MSGS_H
+
 #include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/base/base.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/messaging/message.h"
+#include "vt/collective/reduce/reduce.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-DispatchBasePtrType
-getDispatcher(auto_registry::AutoHandlerType const& han) {
-  return theCollection()->getDispatcher(han);
-}
+template <typename Transfer>
+struct TransferMsg : vt::Message {
+  TransferMsg() = default;
+  explicit TransferMsg(Transfer const& in_transfer)
+    : transfer_(in_transfer)
+  { }
 
-void releaseLBPhase(CollectionPhaseMsg* msg) {
-  theCollection()->releaseLBPhase<>(msg);
-}
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | transfer_;
+  }
 
-balance::ElementIDType CollectionManager::getCurrentContextPerm() const {
-  return cur_context_perm_elm_id_;
-}
+  Transfer const& getTransfer() const { return transfer_; }
 
-balance::ElementIDType CollectionManager::getCurrentContextTemp() const {
-  return cur_context_temp_elm_id_;
-}
+private:
+  Transfer transfer_;
+};
 
-void CollectionManager::setCurrentContext(
-  balance::ElementIDType perm, balance::ElementIDType temp
-) {
-  cur_context_perm_elm_id_ = perm;
-  cur_context_temp_elm_id_ = temp;
-}
+struct CountMsg : vt::collective::ReduceTMsg<int32_t> {
+  CountMsg() = delete;
+  explicit CountMsg(int32_t in_num)
+    : vt::collective::ReduceTMsg<int32_t>(in_num)
+  {}
+};
 
-}}} /* end namespace vt::vrt::collection */
+}}}} /* end namespace vt::vrt::collection::lb */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_MSGS_H*/

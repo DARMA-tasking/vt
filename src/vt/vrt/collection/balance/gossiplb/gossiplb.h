@@ -46,15 +46,37 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
+
+#include <random>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct GossipLB {
+struct GossipLB : BaseLB {
   GossipLB() = default;
   GossipLB(GossipLB const&) = delete;
   GossipLB(GossipLB&&) = default;
 
-  static void gossipLBHandler(balance::StartLBMsg* msg) { }
+  void init(objgroup::proxy::Proxy<GossipLB> in_proxy);
+  void runLB() override;
+
+  double getDefaultMinThreshold()  const override { return 0.0;  }
+  double getDefaultMaxThreshold()  const override { return 0.0;  }
+  bool   getDefaultAutoThreshold() const override { return true; }
+
+protected:
+  void inform();
+  void decide();
+  void migrate();
+
+  void propagateInfo();
+
+private:
+  uint8_t f               = 0;
+  // uint8_t k               = 0;
+  // uint8_t k_cur           = 0;
+  std::random_device seed;
+  objgroup::proxy::Proxy<GossipLB> proxy = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

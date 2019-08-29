@@ -126,6 +126,40 @@ ProxyElm<ObjT> Proxy<ObjT>::operator()(NodeType node) const {
   return ProxyElm<ObjT>(proxy_,node);
 }
 
+template <typename ObjT>
+template <typename BaseT>
+Proxy<BaseT> Proxy<ObjT>::registerBaseCollective() const {
+  static_assert(std::is_base_of<BaseT, ObjT>::value, "BaseT must be base");
+  theObjGroup()->registerBaseCollective<ObjT, BaseT>(*this);
+  return Proxy<BaseT>(proxy_);
+}
+
+template <typename ObjT>
+template <typename BaseT>
+Proxy<BaseT> Proxy<ObjT>::downcast() const {
+  static_assert(std::is_base_of<BaseT, ObjT>::value, "BaseT must be base");
+  theObjGroup()->downcast<ObjT, BaseT>(*this);
+  return Proxy<BaseT>(proxy_);
+}
+
+template <typename ObjT>
+template <typename DerivedT>
+Proxy<DerivedT> Proxy<ObjT>::upcast() const {
+  static_assert(std::is_base_of<ObjT, DerivedT>::value, "Must be base of DerivedT");
+  theObjGroup()->upcast<ObjT, DerivedT>(*this);
+  return Proxy<DerivedT>(proxy_);
+}
+
+template <typename ObjT>
+void Proxy<ObjT>::destroyCollective() const {
+  return theObjGroup()->destroyCollective<ObjT>(*this);
+}
+
+template <typename ObjT>
+ObjGroupProxyType Proxy<ObjT>::getProxy() const {
+  return proxy_;
+}
+
 }}} /* end namespace vt::objgroup::proxy */
 
 #endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H*/

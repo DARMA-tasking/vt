@@ -60,7 +60,8 @@ template <typename ColT>
 struct Migratable : MigrateHookBase {
 
   Migratable()
-    : stats_elm_id_(balance::ProcStats::getNextElm())
+    : stats_elm_id_(balance::ProcStats::getNextElm()),
+      temp_elm_id_(balance::ProcStats::getNextElm())
   { }
 
   /*

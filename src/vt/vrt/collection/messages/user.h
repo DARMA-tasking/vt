@@ -113,7 +113,8 @@ struct CollectionMessage :
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
     balance::ElementIDType getElm() const;
-    void setElm(balance::ElementIDType elm);
+    balance::ElementIDType getElmTemp() const;
+    void setElm(balance::ElementIDType perm, balance::ElementIDType temp);
     balance::CommCategory getCat() const;
     void setCat(balance::CommCategory cat);
   #endif
@@ -144,7 +145,8 @@ private:
      * (sendMsg,broadcastMsg) they are automatically instrumented
      */
     bool lb_lite_instrument_ = false;
-    balance::ElementIDType elm_ = 0;
+    balance::ElementIDType elm_perm_ = 0;
+    balance::ElementIDType elm_temp_ = 0;
     balance::CommCategory cat_ = balance::CommCategory::SendRecv;
   #endif
 };

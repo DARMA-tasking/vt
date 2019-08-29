@@ -52,6 +52,10 @@
 
 namespace vt { namespace objgroup {
 
+ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
+  return proxy;
+}
+
 void ObjGroupManager::dispatch(MsgVirtualPtrAny msg, HandlerType han) {
   // Extract the control-bit sequence from the handler
   auto const ctrl = HandlerManager::getHandlerControl(han);
@@ -93,7 +97,6 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
   auto const is_collective = true;
   auto const proxy = proxy::ObjGroupProxy::create(id, idx, node, is_collective);
 
-  vtAssertExpr(obj_to_proxy_.find(obj_ptr) == obj_to_proxy_.end());
   obj_to_proxy_[obj_ptr] = proxy;
 
   auto obj_iter = objs_.find(proxy);

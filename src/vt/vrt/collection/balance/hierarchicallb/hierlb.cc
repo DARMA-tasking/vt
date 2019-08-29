@@ -58,6 +58,7 @@
 #include "vt/context/context.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
+#include "vt/objgroup/headers.h"
 
 #include <unordered_map>
 #include <memory>
@@ -67,8 +68,9 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-/*static*/
-std::unique_ptr<HierarchicalLB> HierarchicalLB::hier_lb_inst = nullptr;
+void HierarchicalLB::init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy) {
+  proxy = in_proxy;
+}
 
 void HierarchicalLB::setupTree(double const threshold) {
   vtAssert(
@@ -150,104 +152,42 @@ void HierarchicalLB::setupTree(double const threshold) {
   );
 }
 
-HierarchicalLB::ObjBinType HierarchicalLB::histogramSample(
-  LoadType const& load
-) {
-  ObjBinType const bin =
-    ((static_cast<int32_t>(load)) / hierlb_bin_size * hierlb_bin_size)
-    + hierlb_bin_size;
-  return bin;
+double HierarchicalLB::getAvgLoad() const {
+  return stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
 }
 
-HierarchicalLB::LoadType HierarchicalLB::loadMilli(LoadType const& load) {
-  return load * 1000;
+double HierarchicalLB::getMaxLoad() const {
+  return stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
 }
 
-void HierarchicalLB::procDataIn(ElementLoadType const& data_in) {
+double HierarchicalLB::getSumLoad() const {
+  return stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::sum);
+}
+
+void HierarchicalLB::loadStats() {
   auto const& this_node = theContext()->getNode();
-  debug_print(
-    hierlb, node,
-    "{}: procDataIn: size={}\n", this_node, data_in.size()
-  );
-  for (auto&& stat : data_in) {
-    auto const& obj = stat.first;
-    auto const& load = stat.second;
-    auto const& load_milli = loadMilli(load);
-    auto const& bin = histogramSample(load_milli);
-    this_load += load_milli;
-    obj_sample[bin].push_back(obj);
+  auto avg_load = getAvgLoad();
+  auto total_load = getSumLoad();
+  auto I = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
 
-    debug_print(
-      hierlb, node,
-      "\t {}: procDataIn: this_load={}, obj={}, load={}, load_milli={}, bin={}\n",
-      this_node, this_load, obj, load, load_milli, bin
-    );
-  }
-  this_load_begin = this_load;
-  stats = &data_in;
-}
-
-void HierarchicalLB::HierAvgLoad::operator()(balance::ProcStatsMsg* msg) {
-  auto nmsg = makeSharedMessage<balance::ProcStatsMsg>(*msg);
-  theMsg()->broadcastMsg<
-    balance::ProcStatsMsg, HierarchicalLB::loadStatsHandler
-  >(nmsg);
-  auto nmsg_root = makeSharedMessage<balance::ProcStatsMsg>(*msg);
-  HierarchicalLB::loadStatsHandler(nmsg_root);
-}
-
-/*static*/ void HierarchicalLB::loadStatsHandler(ProcStatsMsgType* msg) {
-  auto const& lmax = msg->getConstVal().loadMax();
-  auto const& lsum = msg->getConstVal().loadSum();
-  HierarchicalLB::hier_lb_inst->loadStats(lsum,lmax);
-}
-
-void HierarchicalLB::reduceLoad() {
-  debug_print(
-    hierlb, node,
-    "reduceLoad: this_load={}\n", this_load
-  );
-  auto msg = makeSharedMessage<ProcStatsMsgType>(this_load);
-  theCollective()->reduce<
-    ProcStatsMsgType,
-    ProcStatsMsgType::template msgHandler<
-      ProcStatsMsgType, collective::PlusOp<balance::LoadData>, HierAvgLoad
-    >
-  >(hierlb_root,msg);
-}
-
-void HierarchicalLB::loadStats(
-  LoadType const& total_load, LoadType const& in_max_load
-) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-  avg_load = total_load / num_nodes;
-  max_load = in_max_load;
-
-  auto const diff = max_load - avg_load;
-  double diff_percent = 0.0;
   bool should_lb = false;
+  this_load_begin = this_load;
 
   if (avg_load > 0.0000000001) {
-    diff_percent = (diff / avg_load) * 100.0f;
-    should_lb = diff_percent > hierlb_tolerance;
+    should_lb = I > hierlb_tolerance;
   }
 
-  if (hierlb_auto_threshold) {
-    this_threshold = std::min(
-      std::max(1.0f - (diff_percent / 100.0f), hierlb_threshold),
-      hierlb_max_threshold
-    );
+  if (auto_threshold) {
+    this_threshold = std::min(std::max(1.0f - I, min_threshold), max_threshold);
   }
 
   if (this_node == 0) {
     vt_print(
       hierlb,
-      "loadStats: this_load={}, total_load={}, avg_load={}, "
-      "max_load={}, diff={}, diff_percent={}, should_lb={}, auto={}, "
-      "threshold={}\n",
-      this_load, total_load, avg_load, max_load, diff, diff_percent,
-      should_lb, hierlb_auto_threshold, this_threshold
+      "loadStats: load={:.2f}, total={:.2f}, avg={:.2f}, I={:.2f},"
+      "should_lb={}, auto={}, threshold={}\n",
+      this_load, total_load, avg_load, I, should_lb, auto_threshold,
+      this_threshold
     );
     fflush(stdout);
   }
@@ -269,12 +209,12 @@ void HierarchicalLB::loadStats(
     }
   } else {
     // release continuation for next iteration
-    finishedTransferExchange();
+    migrationDone();
   }
 }
 
 void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
-  auto const threshold = this_threshold * avg_load;
+  auto const threshold = this_threshold * getAvgLoad();
   auto const obj_id = bin_list.back();
 
   if (load_over.find(bin) == load_over.end()) {
@@ -286,8 +226,8 @@ void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   load_over[bin].push_back(obj_id);
   bin_list.pop_back();
 
-  auto obj_iter = stats->find(obj_id);
-  vtAssert(obj_iter != stats->end(), "Obj must exist in stats");
+  auto obj_iter = load_data->find(obj_id);
+  vtAssert(obj_iter != load_data->end(), "Obj must exist in stats");
   auto const& obj_time_milli = loadMilli(obj_iter->second);
 
   this_load -= obj_time_milli;
@@ -301,12 +241,12 @@ void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
 }
 
 void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
-  auto const threshold = this_threshold * avg_load;
+  auto const threshold = this_threshold * getAvgLoad();
 
   debug_print(
     hierlb, node,
     "calcLoadOver: this_load={}, avg_load={}, threshold={}\n",
-    this_load, avg_load, threshold
+    this_load, getAvgLoad(), threshold
   );
 
   if (extract == HeapExtractEnum::LoadOverLessThan) {
@@ -350,153 +290,35 @@ void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
   }
 }
 
-/*static*/ void HierarchicalLB::downTreeHandler(LBTreeDownMsg* msg) {
-  HierarchicalLB::hier_lb_inst->downTree(
-    msg->getFrom(), msg->getExcess(), msg->getFinalChild()
-  );
-}
-
-NodeType HierarchicalLB::objGetNode(ObjIDType const& id) {
-  return id & 0x0000000FFFFFFFF;
-}
-
-void HierarchicalLB::finishedTransferExchange() {
-  auto const& this_node = theContext()->getNode();
-  debug_print(
-    hierlb, node,
-    "finished all transfers: count={}\n",
-    transfer_count
-  );
-  if (this_node == 0) {
-    auto const& total_time = timing::Timing::getCurrentTime() - start_time_;
-    vt_print(
-      hierlb,
-      "loadStats: total_time={}, transfer_count={}\n",
-      total_time, transfer_count
-    );
-    fflush(stdout);
-  }
-  balance::ProcStats::startIterCleanup();
-  theCollection()->releaseLBContinuation();
+void HierarchicalLB::downTreeHandler(LBTreeDownMsg* msg) {
+  return downTree(msg->getFrom(), msg->getExcess(), msg->getFinalChild());
 }
 
 void HierarchicalLB::startMigrations() {
-  auto const& this_node = theContext()->getNode();
-  TransferType transfer_list;
+  debug_print(
+    hierlb, node,
+    "startMigrations\n"
+  );
 
-  auto const epoch = theTerm()->makeEpochCollective();
-  theTerm()->addActionEpoch(epoch,[this]{
-    this->finishedTransferExchange();
-  });
+  startMigrationCollective();
+
+  auto const this_node = theContext()->getNode();
 
   for (auto&& bin : taken_objs) {
     for (auto&& obj_id : bin.second) {
-      auto const& node = objGetNode(obj_id);
-
-      if (node != this_node) {
-        migrates_expected++;
-
-        debug_print(
-          hierlb, node,
-          "startMigrations, obj_id={}, node={}\n",
-          obj_id, node
-        );
-
-        transfer_list[node].push_back(obj_id);
-      }
+      migrateObjectTo(obj_id, this_node);
     }
   }
 
-  debug_print(
-    hierlb, node,
-    "startMigrations, transfer_list.size()={}\n",
-    transfer_list.size()
-  );
-
-  for (auto&& trans : transfer_list) {
-    transferSend(trans.first, this_node, trans.second, epoch);
-  }
-
-  theTerm()->finishedEpoch(epoch);
-}
-
-void HierarchicalLB::transferSend(
-  NodeType node, NodeType from, std::vector<ObjIDType> const& transfer,
-  EpochType const& epoch
-) {
-  vtAssertExprInfo(
-    node != theContext()->getNode(), node, parent, bottom_parent,
-    transfer.size(), from
-  );
-  #if hierlb_use_parserdes
-    auto const& size =
-      transfer.size() * sizeof(ObjIDType) + (sizeof(std::size_t) * 2);
-    auto msg = makeSharedMessageSz<TransferMsg>(size,from,transfer);
-    envelopeSetEpoch(msg->env, epoch);
-    SerializedMessenger::sendParserdesMsg<TransferMsg,transferHan>(node,msg);
-  #else
-    auto msg = makeSharedMessage<TransferMsg>(from,transfer);
-    envelopeSetEpoch(msg->env, epoch);
-    SerializedMessenger::sendSerialMsg<TransferMsg,transferHan>(node,msg);
-  #endif
-}
-
-void HierarchicalLB::transfer(
-  NodeType from, std::vector<ObjIDType> const& list
-) {
-  auto trans_iter = transfers.find(from);
-
-  vtAssert(trans_iter == transfers.end(), "There must not be an entry");
-
-  transfers[from] = list;
-  transfer_count += list.size();
-
-  for (auto&& elm : list) {
-    debug_print(
-      hierlb, node,
-      "transfer: list.size()={}, elm={}\n",
-      list.size(), elm
-    );
-
-    auto iter = balance::ProcStats::proc_migrate_.find(elm);
-    vtAssertInfo(
-      iter != balance::ProcStats::proc_migrate_.end(), "Must exist",
-      elm, list.size(), from, theContext()->getNode(), transfer_count,
-      balance::ProcStats::proc_migrate_.size()
-    );
-    iter->second(from);
-  }
-}
-
-/*static*/ void HierarchicalLB::transferHan(TransferMsg* msg) {
-  HierarchicalLB::hier_lb_inst->transfer(msg->getFrom(), msg->getTransfer());
+  finishMigrationCollective();
 }
 
 void HierarchicalLB::downTreeSend(
   NodeType const node, NodeType const from, ObjSampleType const& excess,
   bool const final_child, std::size_t const& approx_size
 ) {
-  // vtAssertExprInfo(
-  //   node != theContext()->getNode(), node, from, excess.size(),
-  //   final_child, approx_size, parent, bottom_parent
-  // );
-  auto this_node = theContext()->getNode();
-  if (node != this_node) {
-    #if hierlb_use_parserdes
-      auto msg = makeSharedMessageSz<LBTreeDownMsg>(
-        approx_size,from,excess,final_child
-      );
-      SerializedMessenger::sendParserdesMsg<LBTreeDownMsg,downTreeHandler>(
-        node,msg
-      );
-    #else
-      auto msg = makeSharedMessage<LBTreeDownMsg>(from,excess,final_child);
-      SerializedMessenger::sendSerialMsg<LBTreeDownMsg,downTreeHandler>(node,msg);
-    #endif
-  } else {
-    auto msg = makeMessage<LBTreeDownMsg>(from,excess,final_child);
-    downTreeHandler(msg.get());
-  }
+  auto msg = makeMessage<LBTreeDownMsg>(from,excess,final_child);
+  proxy[node].template send<LBTreeDownMsg,&HierarchicalLB::downTreeHandler>(msg);
 }
 
 void HierarchicalLB::downTree(
@@ -528,7 +350,7 @@ void HierarchicalLB::downTree(
     debug_print(
       hierlb, node,
       "downTree: this_load_begin={}, new load profile={}, avg_load={}\n",
-      this_load_begin, this_load, avg_load
+      this_load_begin, this_load, getAvgLoad()
     );
 
     startMigrations();
@@ -538,10 +360,9 @@ void HierarchicalLB::downTree(
   }
 }
 
-/*static*/ void HierarchicalLB::lbTreeUpHandler(LBTreeUpMsg* msg) {
-  HierarchicalLB::hier_lb_inst->lbTreeUp(
-    msg->getChildLoad(), msg->getChild(), msg->getLoad(),
-    msg->getChildSize()
+void HierarchicalLB::lbTreeUpHandler(LBTreeUpMsg* msg) {
+  lbTreeUp(
+    msg->getChildLoad(), msg->getChild(), msg->getLoad(), msg->getChildSize()
   );
 }
 
@@ -554,25 +375,8 @@ void HierarchicalLB::lbTreeUpSend(
   ObjSampleType const& load, NodeType const child_size,
   std::size_t const& load_size_approx
 ) {
-  // vtAssertExprInfo(
-  //   node != theContext()->getNode(), node, child, child_load, child_size,
-  //   parent, bottom_parent, load_size_approx
-  // );
-  auto this_node = theContext()->getNode();
-  if (node != this_node) {
-    #if hierlb_use_parserdes
-      auto msg = makeSharedMessageSz<LBTreeUpMsg>(
-        load_size_approx,child_load,child,load,child_size
-      );
-      SerializedMessenger::sendParserdesMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
-    #else
-      auto msg = makeSharedMessage<LBTreeUpMsg>(child_load,child,load,child_size);
-      SerializedMessenger::sendSerialMsg<LBTreeUpMsg,lbTreeUpHandler>(node,msg);
-    #endif
-  } else {
-    auto msg = makeMessage<LBTreeUpMsg>(child_load,child,load,child_size);
-    lbTreeUpHandler(msg.get());
-  }
+  auto msg = makeMessage<LBTreeUpMsg>(child_load,child,load,child_size);
+  proxy[node].template send<LBTreeUpMsg,&HierarchicalLB::lbTreeUpHandler>(msg);
 }
 
 void HierarchicalLB::lbTreeUp(
@@ -587,7 +391,7 @@ void HierarchicalLB::lbTreeUp(
     "child_msgs={}, children.size()={}, agg_node_size={}, "
     "avg_load={}, child_avg={}, incoming load.size={}\n",
     child, child_load, child_size, child_msgs+1, children.size(),
-    agg_node_size + child_size, avg_load, child_load/child_size,
+    agg_node_size + child_size, getAvgLoad(), child_load/child_size,
     load.size()
   );
 
@@ -721,14 +525,14 @@ void HierarchicalLB::sendDownTree() {
   while (cIter != given_objs.rend()) {
     auto c = findMinChild();
     int const weight = c->node_size;
-    double const threshold = avg_load * weight * this_threshold;
+    double const threshold = getAvgLoad() * weight * this_threshold;
 
     debug_print(
       hierlb, node,
       "\t sendDownTree: distribute min child: c={}, child={}, cur_load={}, "
       "weight={}, avg_load={}, threshold={}\n",
       print_ptr(c), c ? c->node : -1, c ? c->cur_load : -1.0,
-      weight, avg_load, threshold
+      weight, getAvgLoad(), threshold
     );
 
     if (c == nullptr || weight == 0) {
@@ -800,7 +604,7 @@ void HierarchicalLB::distributeAmoungChildren() {
   while (cIter != given_objs.rend()) {
     HierLBChild* c = findMinChild();
     int const weight = c->node_size;
-    double const threshold = avg_load * weight * this_threshold;
+    double const threshold = getAvgLoad() * weight * this_threshold;
 
     debug_print(
       hierlb, node,
@@ -809,7 +613,7 @@ void HierarchicalLB::distributeAmoungChildren() {
       print_ptr(c),
       c ? c->node : -1,
       c ? c->cur_load : -1.0,
-      weight, avg_load, threshold
+      weight, getAvgLoad(), threshold
     );
 
     if (c == nullptr || c->cur_load > threshold || weight == 0) {
@@ -887,48 +691,9 @@ std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
   return total_size;
 }
 
-/*static*/ void HierarchicalLB::hierLBHandler(balance::StartLBMsg* msg) {
-  auto const& phase = msg->getPhase();
-  HierarchicalLB::hier_lb_inst = std::make_unique<HierarchicalLB>();
-
-  using namespace balance;
-  ReadLBSpec::openFile();
-  ReadLBSpec::readFile();
-
-  bool fallback = true;
-  bool has_spec = ReadLBSpec::hasSpec();
-  if (has_spec) {
-    auto spec = ReadLBSpec::entry(phase);
-    if (spec) {
-      bool has_min_only = false;
-      if (spec->hasMin()) {
-        HierarchicalLB::hier_lb_inst->hierlb_threshold = spec->min();
-        has_min_only = true;
-      }
-      if (spec->hasMax()) {
-        HierarchicalLB::hier_lb_inst->hierlb_max_threshold = spec->max();
-        has_min_only = false;
-      }
-      if (has_min_only) {
-        HierarchicalLB::hier_lb_inst->hierlb_auto_threshold = false;
-      }
-      fallback = false;
-    }
-  }
-
-  if (fallback) {
-    HierarchicalLB::hier_lb_inst->hierlb_max_threshold = hierlb_max_threshold_p;
-    HierarchicalLB::hier_lb_inst->hierlb_threshold = hierlb_threshold_p;
-    HierarchicalLB::hier_lb_inst->hierlb_auto_threshold = hierlb_auto_threshold_p;
-  }
-
-  HierarchicalLB::hier_lb_inst->start_time_ = timing::Timing::getCurrentTime();
-  HierarchicalLB::hier_lb_inst->setupTree(
-    HierarchicalLB::hier_lb_inst->hierlb_threshold
-  );
-  vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase);
-  HierarchicalLB::hier_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
-  HierarchicalLB::hier_lb_inst->reduceLoad();
+void HierarchicalLB::runLB() {
+  setupTree(min_threshold);
+  loadStats();
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

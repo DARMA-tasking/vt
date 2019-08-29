@@ -125,7 +125,25 @@ public:
    */
   ObjT* get() const;
 
-  ObjGroupProxyType getProxy() const { return proxy_; }
+  /*
+   * Get the underlying proxy bits that are used to identify the objgroup
+   */
+  ObjGroupProxyType getProxy() const;
+
+  /*
+   * Up- and down-cast the proxy---important due to type registration
+   */
+  template <typename BaseT>
+  Proxy<BaseT> registerBaseCollective() const;
+  template <typename BaseT>
+  Proxy<BaseT> downcast() const;
+  template <typename DerivedT>
+  Proxy<DerivedT> upcast() const;
+
+  /*
+   * Destruct the objgroup collectively
+   */
+  void destroyCollective() const;
 
 public:
 

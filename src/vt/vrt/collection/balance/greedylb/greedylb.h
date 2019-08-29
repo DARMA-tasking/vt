@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/balance/greedylb/greedylb_constants.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb_msgs.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/timing/timing.h"
 
@@ -62,60 +63,58 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct GreedyLB : GreedyLBTypes {
-  using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
-  using ProcStatsMsgType = balance::ProcStatsMsg;
-  using TransferType = std::map<NodeType, std::vector<ObjIDType>>;
-  using LoadType = double;
+struct GreedyLB : BaseLB {
+  using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
+  using TransferType     = std::map<NodeType, std::vector<ObjIDType>>;
+  using LoadType         = double;
+  using LoadProfileType  = std::unordered_map<NodeType,LoadType>;
 
   GreedyLB() = default;
 
-public:
-  void procDataIn(ElementLoadType const& data_in);
+  void init(objgroup::proxy::Proxy<GreedyLB> in_proxy);
+  void runLB() override;
+
+  double getDefaultMinThreshold()  const override {
+    return greedy_threshold_p;
+  }
+  double getDefaultMaxThreshold()  const override {
+    return greedy_max_threshold_p;
+  }
+  bool   getDefaultAutoThreshold() const override {
+    return greedy_auto_threshold_p;
+  }
 
 private:
-  LoadType loadMilli(LoadType const& load);
-  void reduceLoad();
-  void loadStats(LoadType const& avg_load, LoadType const& max_load);
-  static void loadStatsHandler(ProcStatsMsgType* msg);
-  ObjBinType histogramSample(LoadType const& load);
+  double getAvgLoad() const;
+  double getMaxLoad() const;
+  double getSumLoad() const;
+
+  void loadStats();
   void finishedLB();
   void reduceCollect();
   void calcLoadOver();
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void runBalancer(ObjSampleType&& objs, LoadProfileType&& profile);
   void transferObjs(std::vector<GreedyProc>&& load);
-  NodeType objGetNode(ObjIDType const& id);
   ObjIDType objSetNode(NodeType const& node, ObjIDType const& id);
   void recvObjsDirect(GreedyLBTypes::ObjIDType* objs);
   void finishedTransferExchange();
+  void collectHandler(GreedyCollectMsg* msg);
+
+  // This must stay static due to limitations in the scatter implementation
+  // (does not work with objgroups)
   static void recvObjsHan(GreedyLBTypes::ObjIDType* objs);
-
-  struct GreedyAvgLoad {
-    void operator()(balance::ProcStatsMsg* msg);
-  };
-
-  struct CentralCollect {
-    void operator()(GreedyCollectMsg* msg);
-  };
-
-public:
-  static void greedyLBHandler(balance::StartLBMsg* msg);
-  static std::unique_ptr<GreedyLB> greedy_lb_inst;
+  static objgroup::proxy::Proxy<GreedyLB> scatter_proxy;
 
 private:
   double greedy_max_threshold = 0.0f;
   double greedy_threshold = 0.0f;
   bool greedy_auto_threshold = true;
   double this_threshold = 0.0f;
-  TimeType start_time_ = 0.0f;
-  LoadType avg_load = 0.0f, max_load = 0.0f;
-  LoadType this_load = 0.0f, this_load_begin = 0.0f;
-  ElementLoadType const* stats = nullptr;
-  ObjSampleType obj_sample, load_over;
+  LoadType this_load_begin = 0.0f;
+  ObjSampleType load_over;
   std::size_t load_over_size = 0;
-  int64_t transfer_count = 0;
-  TransferType transfers;
+  objgroup::proxy::Proxy<GreedyLB> proxy = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

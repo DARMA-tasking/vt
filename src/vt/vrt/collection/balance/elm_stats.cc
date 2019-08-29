@@ -80,26 +80,29 @@ void ElementStats::stopTime() {
 }
 
 void ElementStats::recvObjData(
-  ElementIDType to, ElementIDType from, double bytes, bool bcast
+  ElementIDType pto, ElementIDType tto,
+  ElementIDType pfrom, ElementIDType tfrom, double bytes, bool bcast
 ) {
   comm_.resize(cur_phase_ + 1);
-  LBCommKey key(LBCommKey::CollectionTag{}, from, to, bcast);
+  LBCommKey key(LBCommKey::CollectionTag{}, pfrom, tfrom, pto, tto, bcast);
   comm_.at(cur_phase_)[key] += bytes;
 }
 
 void ElementStats::recvFromNode(
-  ElementIDType to, NodeType from, double bytes, bool bcast
+  ElementIDType pto, ElementIDType tto, NodeType from,
+  double bytes, bool bcast
 ) {
   comm_.resize(cur_phase_ + 1);
-  LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, to, bcast);
+  LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, pto, tto, bcast);
   comm_.at(cur_phase_)[key] += bytes;
 }
 
 void ElementStats::recvToNode(
-  NodeType to, ElementIDType from, double bytes, bool bcast
+  NodeType to, ElementIDType pfrom, ElementIDType tfrom,
+  double bytes, bool bcast
 ) {
   comm_.resize(cur_phase_ + 1);
-  LBCommKey key(LBCommKey::CollectionToNodeTag{}, from, to, bcast);
+  LBCommKey key(LBCommKey::CollectionToNodeTag{}, pfrom, tfrom, to, bcast);
   comm_.at(cur_phase_)[key] += bytes;
 }
 

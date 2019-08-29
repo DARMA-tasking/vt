@@ -55,14 +55,8 @@ static constexpr NodeType const hierlb_nary             = 2;
 static constexpr NodeType const hierlb_root             = 0;
 static constexpr int32_t  const hierlb_bin_size         = 10;
 static constexpr double   const hierlb_no_load_sentinel = -1.0f;
-static constexpr double   const hierlb_tolerance        = 5.0f;
+static constexpr double   const hierlb_tolerance        = 0.05f;
 static constexpr bool     const hierlb_auto_threshold_p = true;
-
-#if backend_check_enabled(parserdes)
-  #define hierlb_use_parserdes 0
-#else
-  #define hierlb_use_parserdes 0
-#endif
 
 }}}} /* end namespace vt::vrt::collection::lb */
 

@@ -126,12 +126,28 @@ ObjGroupManager::makeCollective(MakeFnType<ObjT> fn) {
 template <typename ObjT>
 void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   auto const proxy_bits = proxy.getProxy();
+  auto derived_iter = derived_to_bases_.find(proxy_bits);
   debug_print(
     objgroup, node,
-    "destroyCollective: proxy={:x}\n", proxy
+    "destroyCollective: proxy={:x}, num bases={}\n", proxy_bits,
+    derived_iter != derived_to_bases_.end() ? derived_iter->second.size() : 0
   );
+  if (derived_iter != derived_to_bases_.end()) {
+    auto base_set = derived_iter->second;
+    for (auto&& base_proxy : base_set) {
+      auto iter = dispatch_.find(base_proxy);
+      if (iter != dispatch_.end()) {
+        dispatch_.erase(iter);
+      }
+    }
+  }
   auto iter = dispatch_.find(proxy_bits);
   if (iter != dispatch_.end()) {
+    auto ptr = iter->second->objPtr();
+    auto obj_iter = obj_to_proxy_.find(ptr);
+    if (obj_iter != obj_to_proxy_.end()) {
+      obj_to_proxy_.erase(obj_iter);
+    }
     dispatch_.erase(iter);
   }
   auto obj_iter = objs_.find(proxy_bits);
@@ -169,6 +185,56 @@ void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
     }
     pending_.erase(pending_iter);
   }
+}
+
+
+template <typename ObjT, typename BaseT>
+void ObjGroupManager::registerBaseCollective(ProxyType<ObjT> proxy) {
+  auto const derived = proxy.getProxy();
+  auto base_proxy = derived;
+  auto const base_idx = registry::makeObjIdx<BaseT>();
+  proxy::ObjGroupProxy::setTypeIdx(base_proxy, base_idx);
+  debug_print(
+    objgroup, node,
+    "ObjGroupManager::registerBaseCollective: derived={:x}, base={:x}\n",
+    derived, base_proxy
+  );
+  derived_to_bases_[derived].insert(base_proxy);
+  auto iter = dispatch_.find(derived);
+  vtAssertExpr(iter != dispatch_.end());
+  if (iter != dispatch_.end()) {
+    void* obj_ptr = iter->second->objPtr();
+    auto ptr = static_cast<BaseT*>(obj_ptr);
+    DispatchBasePtrType b = std::make_unique<dispatch::Dispatch<BaseT>>(base_proxy,ptr);
+    dispatch_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(base_proxy),
+      std::forward_as_tuple(std::move(b))
+    );
+  }
+}
+
+template <typename ObjT, typename BaseT>
+void ObjGroupManager::downcast(ProxyType<ObjT> proxy) {
+  auto const derived = proxy.getProxy();
+  auto base_proxy = derived;
+  auto const base_idx = registry::makeObjIdx<BaseT>();
+  proxy::ObjGroupProxy::setTypeIdx(base_proxy, base_idx);
+  debug_print(
+    objgroup, node,
+    "ObjGroupManager::downcast: derived={:x}, base={:x}\n",
+    derived, base_proxy
+  );
+  auto iter = derived_to_bases_[derived].find(base_proxy);
+  if (iter == derived_to_bases_[derived].end()) {
+    vtAssert(
+      false, "Invoke registerBaseCollective on base class before downcast"
+    );
+  }
+}
+
+template <typename ObjT, typename DerivedT>
+void ObjGroupManager::upcast(ProxyType<ObjT> proxy) {
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>

@@ -2,7 +2,7 @@
 //@HEADER
 // ************************************************************************
 //
-//                          manager.cc
+//                          gossiplb.cc
 //                     vt (Virtual Transport)
 //                  Copyright (C) 2018 NTESS, LLC
 //
@@ -43,34 +43,45 @@
 */
 
 #include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/base/base.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
+#include "vt/context/context.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <cstdint>
+#include <random>
 
-DispatchBasePtrType
-getDispatcher(auto_registry::AutoHandlerType const& han) {
-  return theCollection()->getDispatcher(han);
+namespace vt { namespace vrt { namespace collection { namespace lb {
+
+void GossipLB::init(objgroup::proxy::Proxy<GossipLB> in_proxy) {
+  proxy = in_proxy;
 }
 
-void releaseLBPhase(CollectionPhaseMsg* msg) {
-  theCollection()->releaseLBPhase<>(msg);
+void GossipLB::runLB() {
+  this->inform();
 }
 
-balance::ElementIDType CollectionManager::getCurrentContextPerm() const {
-  return cur_context_perm_elm_id_;
+void GossipLB::inform() {
+  for (int i = 0; i < f; i++) {
+    propagateInfo();
+  }
 }
 
-balance::ElementIDType CollectionManager::getCurrentContextTemp() const {
-  return cur_context_temp_elm_id_;
+void GossipLB::propagateInfo() {
+  // First, randomly select a node
+
+  auto const num_nodes = theContext()->getNumNodes();
+  std::uniform_int_distribution<NodeType> dist(0, num_nodes - 2);
+  std::mt19937 gen(seed());
+
+  dist(gen);
 }
 
-void CollectionManager::setCurrentContext(
-  balance::ElementIDType perm, balance::ElementIDType temp
-) {
-  cur_context_perm_elm_id_ = perm;
-  cur_context_temp_elm_id_ = temp;
+void GossipLB::decide() {
+  vtAssertExpr(false);
 }
 
-}}} /* end namespace vt::vrt::collection */
+void GossipLB::migrate() {
+  vtAssertExpr(false);
+}
+
+}}}} /* end namespace vt::vrt::collection::lb */

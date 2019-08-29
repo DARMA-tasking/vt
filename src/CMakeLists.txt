@@ -64,6 +64,7 @@ set(
       vrt/collection/dispatch vrt/collection/gettable
       vrt/collection/staged_token
       vrt/collection/balance
+        vrt/collection/balance/baselb
         vrt/collection/balance/hierarchicallb
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb

@@ -69,6 +69,7 @@ struct DispatchBase {
    * pointer that is type-erased here
    */
   virtual void run(HandlerType han, BaseMessage* msg) = 0;
+  virtual void* objPtr() const = 0;
 
   ObjGroupProxyType proxy() const { return proxy_; }
 

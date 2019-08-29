@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/timing/timing.h"
 
 #include <memory>
@@ -60,33 +61,20 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct RotateLBTypes {
-  using ObjIDType = balance::ElementIDType;
-  using ObjBinType = int32_t;
-  using ObjBinListType = std::list<ObjIDType>;
-  using ObjSampleType = std::map<ObjBinType, ObjBinListType>;
-  using LoadType = double;
-  using LoadProfileType = std::unordered_map<NodeType,LoadType>;
-};
-
 struct RotateObjMsg : ::vt::Message {};
 
-struct RotateLB : RotateLBTypes {
-  using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
-  using ProcStatsMsgType = balance::ProcStatsMsg;
-  using TransferType = std::map<NodeType, std::vector<ObjIDType>>;
-  using LoadType = double;
-
+struct RotateLB : BaseLB {
   RotateLB() = default;
 
-private:
-  void finishedMigrate();
-  void procDataIn(ElementLoadType const& data_in);
-  static std::unique_ptr<RotateLB> rotate_lb_inst;
+  void init(objgroup::proxy::Proxy<RotateLB> in_proxy);
+  void runLB() override;
 
-public:
-  int64_t transfer_count = 0;
-  static void rotateLBHandler(balance::StartLBMsg* msg);
+  double getDefaultMinThreshold()  const override { return 0.0;  }
+  double getDefaultMaxThreshold()  const override { return 0.0;  }
+  bool   getDefaultAutoThreshold() const override { return true; }
+
+private:
+  objgroup::proxy::Proxy<RotateLB> proxy = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

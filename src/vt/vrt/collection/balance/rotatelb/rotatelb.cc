@@ -50,65 +50,39 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-void RotateLB::procDataIn(ElementLoadType const& data_in) {
+void RotateLB::init(objgroup::proxy::Proxy<RotateLB> in_proxy) {
+  proxy = in_proxy;
+}
+
+void RotateLB::runLB() {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
+
   if (this_node == 0) {
     vt_print(
       lb,
-      "RotateLB: procDataIn: stats size={}, next_node={}\n",
-      data_in.size(), next_node
+      "RotateLB: runLB: next_node={}\n",
+      next_node
     );
     fflush(stdout);
   }
-  debug_print(
-    lb, node,
-    "RotateLB::procDataIn: size={}, next_node={}\n",
-    data_in.size(), next_node
-  );
-  auto const epoch = theTerm()->makeEpochCollective();
-  theMsg()->pushEpoch(epoch);
-  theTerm()->addActionEpoch(epoch,[this]{ this->finishedMigrate(); });
-  for (auto&& stat : data_in) {
+
+  startMigrationCollective();
+
+  for (auto&& stat : *load_data) {
     auto const& obj = stat.first;
     auto const& load = stat.second;
     debug_print(
       lb, node,
-      "\t RotateLB::procDataIn: obj={}, load={}\n",
-      obj, load
+      "\t RotateLB::migrating object to: obj={}, load={}, to_node={}\n",
+      obj, load, next_node
     );
-    auto iter = balance::ProcStats::proc_migrate_.find(obj);
-    vtAssert(iter != balance::ProcStats::proc_migrate_.end(), "Must exist");
-    transfer_count++;
-    iter->second(next_node);
+    migrateObjectTo(obj, next_node);
   }
-  theTerm()->finishedEpoch(epoch);
-  theMsg()->popEpoch();
-}
 
-void RotateLB::finishedMigrate() {
-  debug_print(
-    lb, node,
-    "RotateLB::finishedMigrate: transfer_count={}\n",
-    transfer_count
-  );
-  balance::ProcStats::startIterCleanup();
-  theCollection()->releaseLBContinuation();
+  finishMigrationCollective();
 }
-
-/*static*/ void RotateLB::rotateLBHandler(balance::StartLBMsg* msg) {
-  auto const& phase = msg->getPhase();
-  RotateLB::rotate_lb_inst = std::make_unique<RotateLB>();
-  vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase);
-  debug_print(
-    lb, node,
-    "\t RotateLB::rotateLBHandler: phase={}\n", phase
-  );
-  RotateLB::rotate_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
-}
-
-/*static*/ std::unique_ptr<RotateLB> RotateLB::rotate_lb_inst;
 
 }}}} /* end namespace vt::vrt::collection::lb */
 

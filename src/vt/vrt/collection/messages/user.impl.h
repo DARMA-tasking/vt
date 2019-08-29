@@ -131,7 +131,8 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
 
   #if backend_check_enabled(lblite)
     s | lb_lite_instrument_;
-    s | elm_;
+    s | elm_perm_;
+    s | elm_temp_;
     balance::serializeCommCategory(s, cat_);
   #endif
 }
@@ -169,12 +170,20 @@ void CollectionMessage<ColT, BaseMsgT>::setLBLiteInstrument(bool const& val) {
 
 template <typename ColT, typename BaseMsgT>
 balance::ElementIDType CollectionMessage<ColT, BaseMsgT>::getElm() const {
-  return elm_;
+  return elm_perm_;
 }
 
 template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT, BaseMsgT>::setElm(balance::ElementIDType elm) {
-  elm_ = elm;
+void CollectionMessage<ColT, BaseMsgT>::setElm(
+  balance::ElementIDType perm, balance::ElementIDType temp
+) {
+  elm_perm_ = perm;
+  elm_temp_ = temp;
+}
+
+template <typename ColT, typename BaseMsgT>
+balance::ElementIDType CollectionMessage<ColT, BaseMsgT>::getElmTemp() const {
+  return elm_temp_;
 }
 
 template <typename ColT, typename BaseMsgT>

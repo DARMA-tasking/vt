@@ -46,6 +46,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMM_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 
 #include <unordered_map>
 
@@ -73,6 +74,10 @@ void serializeCommCategory(SerializerT& s, CommCategory& cat) {
   serializeEnum<SerializerT, CommCategory>(s, cat);
 }
 
+inline NodeType objGetNode(ElementIDType const id) {
+  return id & 0x0000000FFFFFFFF;
+}
+
 struct LBCommKey {
 
   struct CollectionTag { };
@@ -84,29 +89,57 @@ struct LBCommKey {
   LBCommKey(LBCommKey&&) = default;
   LBCommKey& operator=(LBCommKey const&) = default;
 
-  LBCommKey(CollectionTag, ElementIDType from, ElementIDType to, bool bcast)
-    : from_(from), to_(to),
+  LBCommKey(
+    CollectionTag,
+    ElementIDType from, ElementIDType from_temp,
+    ElementIDType to,   ElementIDType to_temp,
+    bool bcast
+  ) : from_(from), from_temp_(from_temp), to_(to), to_temp_(to_temp),
       cat_(bcast ? CommCategory::Broadcast : CommCategory::SendRecv)
   { }
-  LBCommKey(CollectionToNodeTag, ElementIDType from, NodeType to, bool bcast)
-    : from_(from), nto_(to),
+  LBCommKey(
+    CollectionToNodeTag,
+    ElementIDType from, ElementIDType from_temp, NodeType to,
+    bool bcast
+  ) : from_(from), from_temp_(from_temp), nto_(to),
       cat_(bcast ? CommCategory::CollectionToNodeBcast : CommCategory::CollectionToNode)
   { }
-  LBCommKey(NodeToCollectionTag, NodeType from, ElementIDType to, bool bcast)
-    : to_(to), nfrom_(from),
+  LBCommKey(
+    NodeToCollectionTag,
+    NodeType from, ElementIDType to, ElementIDType to_temp,
+    bool bcast
+  ) : to_(to), to_temp_(to_temp), nfrom_(from),
       cat_(bcast ? CommCategory::NodeToCollectionBcast : CommCategory::NodeToCollection)
   { }
 
-  ElementIDType from_ = no_element_id;
-  ElementIDType to_   = no_element_id;
-  NodeType nfrom_     = uninitialized_destination;
-  NodeType nto_       = uninitialized_destination;
-  CommCategory  cat_  = CommCategory::SendRecv;
+  ElementIDType from_      = no_element_id;
+  ElementIDType from_temp_ = no_element_id;
+  ElementIDType to_        = no_element_id;
+  ElementIDType to_temp_   = no_element_id;
+  NodeType nfrom_          = uninitialized_destination;
+  NodeType nto_            = uninitialized_destination;
+  CommCategory  cat_       = CommCategory::SendRecv;
 
-  ElementIDType fromObj()  const { return from_; }
-  ElementIDType toObj()    const { return to_; }
-  ElementIDType fromNode() const { return nfrom_; }
-  ElementIDType toNode()   const { return nto_; }
+  ElementIDType fromObj()      const { return from_; }
+  ElementIDType toObj()        const { return to_; }
+  ElementIDType fromObjTemp()  const { return from_temp_; }
+  ElementIDType toObjTemp()    const { return to_temp_; }
+  ElementIDType fromNode()     const { return nfrom_; }
+  ElementIDType toNode()       const { return nto_; }
+
+  bool selfEdge() const { return cat_ == CommCategory::SendRecv and from_ == to_; }
+  bool offNode() const {
+    if (cat_ == CommCategory::SendRecv) {
+      return objGetNode(from_temp_) != objGetNode(to_temp_);
+    } else if (cat_ == CommCategory::CollectionToNode) {
+      return objGetNode(from_temp_) != nto_;
+    } else if (cat_ == CommCategory::NodeToCollection) {
+      return objGetNode(to_temp_) != nfrom_;
+    } else {
+      return true;
+    }
+  }
+  bool onNode() const { return !offNode(); }
 
   bool operator==(LBCommKey const& k) const {
     return
@@ -117,7 +150,7 @@ struct LBCommKey {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | from_ | to_ | nfrom_ | nto_;
+    s | from_ | to_ | from_temp_ | to_temp_ | nfrom_ | nto_;
     serializeCommCategory(s, cat_);
   }
 };
