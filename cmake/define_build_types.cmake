@@ -1,35 +1,32 @@
+# need a lower-case subdirectory name to use for the chosen build type
+if (NOT CMAKE_BUILD_TYPE)
+  message(WARNING "No CMAKE_BUILD_TYPE detected")
+  set(lower_CMAKE_BUILD_TYPE "undefined")
+else()
+  string(TOLOWER ${CMAKE_BUILD_TYPE} lower_CMAKE_BUILD_TYPE)
+endif()
 
-function(add_configuration_type config_type)
-  if (NOT DEFINED CMAKE_CONFIGURATION_TYPES)
-    set(CMAKE_CONFIGURATION_TYPES "debug;release" CACHE STRING "" FORCE)
-  endif()
-  if (CMAKE_CONFIGURATION_TYPES)
-    list(APPEND            CMAKE_CONFIGURATION_TYPES ${config_type})
-    list(REMOVE_DUPLICATES CMAKE_CONFIGURATION_TYPES)
-    set(
-      CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}"
-      CACHE STRING "Specialized configurations"
-      FORCE
-    )
-  endif()
-endfunction()
+# enumerate configurations we will support
+if (NOT DEFINED CMAKE_CONFIGURATION_TYPES)
+  set(VT_CONFIG_TYPES ${lower_CMAKE_BUILD_TYPE} "debug" "release" "relwithdebinfo")
+else()
+  set(VT_CONFIG_TYPES ${lower_CMAKE_BUILD_TYPE})
+  foreach(type ${CMAKE_CONFIGURATION_TYPES})
+    string(TOLOWER ${type} tmp_lowercase_type)
+    list(APPEND VT_CONFIG_TYPES ${tmp_lowercase_type})
+  endforeach(type)
+  unset(tmp_lowercase_type)
+endif()
+list(REMOVE_DUPLICATES VT_CONFIG_TYPES)
 
-add_configuration_type(debug_trace)
-add_configuration_type(release_trace)
-
-add_configuration_type(debug_v1)
-add_configuration_type(debug_v2)
-
-# set(VIRTUAL_TRANSPORT_LIBRARY_DV1 vt-debug_v1)
-# set(VIRTUAL_TRANSPORT_LIBRARY_DV2 vt-debug_v2)
-# set(VIRTUAL_TRANSPORT_LIBRARY_REL vt-release)
-
+# to speedup compiling, we can disable debug_print
 if (${VT_DEBUG_FAST})
   set(VT_DEBUG_MODE_ON 0)
 else()
   set(VT_DEBUG_MODE_ON 1)
 endif()
 
+# all debug_print and vt_print categories we can potentially compile in
 set(
   cmake_vt_debug_modes_all
   "CatEnum::gen          | \
@@ -96,115 +93,76 @@ set (vt_feature_cmake_no_pool_alloc_env "0")
 set (vt_feature_cmake_memory_pool "1")
 set (vt_feature_cmake_cons_multi_idx "0")
 
-set(cmake_vt_debug_modes_debug_trace           "${cmake_vt_debug_modes_all}")
-set(cmake_vt_debug_modes_release_trace         "")
 set(cmake_vt_debug_modes_debug                 "${cmake_vt_debug_modes_all}")
+set(cmake_vt_debug_modes_relwithdebinfo        "")
 set(cmake_vt_debug_modes_release               "")
-set(cmake_config_debug_enabled_debug_trace     1)
-set(cmake_config_debug_enabled_release_trace   0)
-set(cmake_config_debug_enabled_debug_v2        1)
-set(cmake_config_debug_enabled_debug_v1        1)
 set(cmake_config_debug_enabled_debug           ${VT_DEBUG_MODE_ON})
+set(cmake_config_debug_enabled_relwithdebinfo  0)
 set(cmake_config_debug_enabled_release         0)
 
-# set(cmake_vt_features_debug_trace              "${cmake_vt_detector} ${cmake_vt_lb} trace_enabled")
-# set(cmake_vt_features_release_trace            "${cmake_vt_detector} ${cmake_vt_lb} trace_enabled")
-# set(cmake_vt_features_debug_v2                 "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-# set(cmake_vt_features_debug_v1                 "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-# set(cmake_vt_features_debug                    "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
-# set(cmake_vt_features_release                  "${cmake_vt_detector} ${cmake_vt_lb} ${cmake_vt_trace}")
+# this loop executes over all known build types, not just the selected one
+foreach(loop_build_type ${VT_CONFIG_TYPES})
+  #message(STATUS "generating for build type=${loop_build_type}")
 
-#message(STATUS "build types=${CMAKE_CONFIGURATION_TYPES}")
+  # disable debug_print for unfamiliar build types
+  if (NOT DEFINED cmake_vt_debug_modes_${loop_build_type})
+    set(cmake_vt_debug_modes_${loop_build_type} "")
+  endif()
+  if (NOT DEFINED cmake_config_debug_enabled_${loop_build_type})
+    set(cmake_config_debug_enabled_${loop_build_type} 0)
+  endif()
 
-set(build_type_list)
-
-foreach(cur_build_type ${CMAKE_CONFIGURATION_TYPES})
-  #message(STATUS "generating for build type=${cur_build_type}")
-
+  # use the debug_print modes specified for this build type before the loop
   set(
     cmake_vt_debug_modes
-    ${cmake_vt_debug_modes_${cur_build_type}}
+    ${cmake_vt_debug_modes_${loop_build_type}}
   )
 
-  if (cur_build_type STREQUAL "debug_trace")
-    set(vt_feature_cmake_trace_enabled "1")
-  endif()
-
-  if (cur_build_type STREQUAL "release_trace")
-    set(vt_feature_cmake_trace_enabled "1")
+  # assume production mode for everything except debug
+  if (loop_build_type STREQUAL "debug")
+    set(vt_feature_cmake_production "0")
+  else()
     set(vt_feature_cmake_production "1")
   endif()
 
-  if (cur_build_type STREQUAL "release")
-    set(vt_feature_cmake_production "1")
-  endif()
-
-  # set(
-  #   cmake_vt_features
-  #   ${cmake_vt_features_${cur_build_type}}
-  # )
-
+  # use the debug_print configuration specified for this build type before the loop
   set(
     cmake_config_debug_enabled
-    ${cmake_config_debug_enabled_${cur_build_type}}
+    ${cmake_config_debug_enabled_${loop_build_type}}
   )
 
+  # put the config file in a subdirectory corresponding to the lower case build name
   configure_file(
     ${PROJECT_BASE_DIR}/cmake_config.h.in
-    ${PROJECT_BIN_DIR}/${cur_build_type}/cmake_config.h @ONLY
+    ${PROJECT_BIN_DIR}/${loop_build_type}/cmake_config.h @ONLY
   )
 
+  # install the correct config file when this build is selected
   install(
-    FILES            "${PROJECT_BINARY_DIR}/${cur_build_type}/cmake_config.h"
+    FILES            "${PROJECT_BINARY_DIR}/${loop_build_type}/cmake_config.h"
     DESTINATION      include
-    CONFIGURATIONS   ${cur_build_type}
+    CONFIGURATIONS   ${loop_build_type}
   )
 
-  string(TOUPPER ${cur_build_type} cur_build_type_upper)
-
-  set(CMAKE_${cur_build_type_upper}_POSTFIX "-${cur_build_type}")
-
-  list(APPEND build_type_list ${cur_build_type})
-
+  # append the lower-case build type to the library name
+  string(TOUPPER ${loop_build_type} loop_build_type_upper)
+  set(CMAKE_${loop_build_type_upper}_POSTFIX "-${loop_build_type}")
   set_target_properties(
     ${VIRTUAL_TRANSPORT_LIBRARY}
-    PROPERTIES ${cur_build_type_upper}_POSTFIX "-${cur_build_type}"
+    PROPERTIES ${loop_build_type_upper}_POSTFIX "-${loop_build_type}"
   )
 endforeach()
 
-# message(STATUS "build type list=${build_type_list}")
-# message(STATUS "build type=${CMAKE_BUILD_TYPE}")
+# message(STATUS "chosen build type=${CMAKE_BUILD_TYPE}")
 
+# build types below are not case sensitive (but the directories are)
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:$<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug>>
-  $<BUILD_INTERFACE:$<$<CONFIG:debug_v1>:${PROJECT_BIN_DIR}/debug_v1>>
-  $<BUILD_INTERFACE:$<$<CONFIG:debug_v2>:${PROJECT_BIN_DIR}/debug_v2>>
+  $<BUILD_INTERFACE:$<$<CONFIG:relwithdebinfo>:${PROJECT_BIN_DIR}/relwithdebinfo>>
   $<BUILD_INTERFACE:$<$<CONFIG:release>:${PROJECT_BIN_DIR}/release>>
-  $<BUILD_INTERFACE:$<$<CONFIG:debug_trace>:${PROJECT_BIN_DIR}/debug_trace>>
-  $<BUILD_INTERFACE:$<$<CONFIG:release_trace>:${PROJECT_BIN_DIR}/release_trace>>
+  $<BUILD_INTERFACE:$<$<CONFIG:${CMAKE_BUILD_TYPE}>:${PROJECT_BIN_DIR}/${lower_CMAKE_BUILD_TYPE}>>
+  $<BUILD_INTERFACE:$<$<CONFIG:>:${PROJECT_BIN_DIR}/undefined>>
   $<INSTALL_INTERFACE:include>
 )
 
-set(
-  CXX_FLAGS_STRICT
-  "-Wpedantic;"
-  "-Wall;"
-  "-Wabi;"
-  "-Wno-unknown-pragmas;"
-  "-Wno-gnu-zero-variadic-macro-arguments;"
-  "-Wno-variadic-macros;"
-  "-Wno-extra-semi;"
-)
-
-set(
-  LINKER_FLAGS_STRING
-  "-Wl;"
-  "--warn-unresolved-symbols;"
-  "--warn-once;"
-)
-
-target_compile_options(
-  ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  $<$<CONFIG:debug_v2>:${CXX_FLAGS_STRICT}>
-)
