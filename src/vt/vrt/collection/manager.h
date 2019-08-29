@@ -270,8 +270,8 @@ public:
   template <typename SysMsgT>
   static void distConstruct(SysMsgT* msg);
 
-  // Query the current index: this function can only be called legally during
-  // the constructor of a virtual collection element
+  // Query the current index: this function can be called legally during
+  // the constructor of a virtual collection element and when it is running
   template <typename IndexT>
   static IndexT* queryIndexContext();
   template <typename IndexT>
