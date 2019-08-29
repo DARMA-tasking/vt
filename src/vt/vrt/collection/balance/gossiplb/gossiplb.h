@@ -73,8 +73,8 @@ protected:
 
 private:
   uint8_t f               = 0;
-  uint8_t k               = 0;
-  uint8_t k_cur           = 0;
+  // uint8_t k               = 0;
+  // uint8_t k_cur           = 0;
   std::random_device seed;
   objgroup::proxy::Proxy<GossipLB> proxy = {};
 };
