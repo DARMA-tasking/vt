@@ -76,6 +76,11 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
   LBType the_lb = LBType::NoLB;
 
+  // --vt_lb is not enabled, thus do not run the load balancer
+  if (not ArgType::vt_lb) {
+    return the_lb;
+  }
+
   if (ArgType::vt_lb_file and try_file) {
     auto const file_name = ArgType::vt_lb_file_name;
     ReadLBSpec::openFile(file_name);
