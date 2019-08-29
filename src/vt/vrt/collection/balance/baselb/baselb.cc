@@ -161,10 +161,10 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   auto npr      = in.npr();
   auto car      = in.N_;
   auto imb      = in.I();
-  auto var      = in.variance();
-  auto stdev    = in.stdev();
-  auto skewness = in.skewness();
-  auto kurtosis = in.kurtosis();
+  auto var      = in.var();
+  auto stdv     = in.stdv();
+  auto skew     = in.skew();
+  auto krte     = in.krte();
   auto the_stat = msg->stat_;
 
   stats[the_stat][lb::StatisticQuantity::max] = max;
@@ -176,9 +176,9 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   stats[the_stat][lb::StatisticQuantity::var] = var;
   stats[the_stat][lb::StatisticQuantity::npr] = npr;
   stats[the_stat][lb::StatisticQuantity::imb] = imb;
-  stats[the_stat][lb::StatisticQuantity::std] = stdev;
-  stats[the_stat][lb::StatisticQuantity::skw] = skewness;
-  stats[the_stat][lb::StatisticQuantity::kur] = kurtosis;
+  stats[the_stat][lb::StatisticQuantity::std] = stdv;
+  stats[the_stat][lb::StatisticQuantity::skw] = skew;
+  stats[the_stat][lb::StatisticQuantity::kur] = krte;
 
   if (theContext()->getNode() == 0) {
     vt_print(
@@ -188,7 +188,7 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
       " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
       " npr={}, imb={:.2f}, num_stats={}\n",
       lb_stat_name_[the_stat],
-      max, min, sum, avg, var, stdev, npr, car, skewness, kurtosis, npr, imb,
+      max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
       stats.size()
     );
   }

@@ -108,15 +108,15 @@ struct LoadData {
   TimeType sum() const { return sum_; }
   TimeType min() const { return min_; }
   TimeType avg() const { return avg_; }
-  TimeType variance() const { return M2_ * (1.0f / N_); }
-  TimeType skewness() const {
+  TimeType var() const { return M2_ * (1.0f / N_); }
+  TimeType skew() const {
     double nm1 = N_ - 1;
     double inv_n = 1. / N_;
     double var_inv = nm1 / M2_;
     double nvar_inv = var_inv * inv_n;
     return nvar_inv * std::sqrt( var_inv ) * M3_;
   }
-  TimeType kurtosis() const {
+  TimeType krte() const {
     double nm1 = N_ - 1;
     double inv_n = 1. / N_;
     double var_inv = nm1 / M2_;
@@ -124,7 +124,7 @@ struct LoadData {
     return nvar_inv * var_inv * M4_ - 3.;
   }
   TimeType I() const { return (max() / avg()) - 1.0f; }
-  TimeType stdev() const { return std::sqrt(variance()); }
+  TimeType stdv() const { return std::sqrt(var()); }
   int32_t  npr() const { return P_; }
 
   TimeType max_ = 0.0;
