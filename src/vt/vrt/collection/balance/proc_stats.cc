@@ -64,6 +64,10 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 std::vector<std::unordered_map<ElementIDType,TimeType>>
   ProcStats::proc_data_ = {};
 
+/*static*/
+std::vector<std::unordered_map<ElementIDType,TimeType>>
+  ProcStats::proc_data_in_ = {};
+
 /*static*/ std::vector<CommMapType> ProcStats::proc_comm_ = {};
 
 /*static*/
@@ -85,6 +89,7 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 /*static*/ void ProcStats::clearStats() {
   ProcStats::proc_comm_.clear();
   ProcStats::proc_data_.clear();
+  ProcStats::proc_data_in_.clear();
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
   ProcStats::proc_perm_to_temp_.clear();
@@ -217,6 +222,52 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   fflush(stats_file_);
 
   closeStatsFile();
+
+  // TORM Test the VOM reader
+  inputStatsFile("/Users/perrinel/Dev/vt-auto-build/build-vt-all-gcc/vt/vt-build/statsoutput",
+                 "statgreedy");
+}
+
+/*static*/ void ProcStats::inputStatsFile(std::string const& dir,  std::string const& base_file) {
+
+  using namespace std;
+
+  // todo if File exist
+  auto const node = theContext()->getNode();
+  auto const file = fmt::format("{}.{}.out", base_file, node);
+  auto const file_name = fmt::format("{}/{}", dir, file);
+
+  FILE * pFile = fopen (file_name.c_str(), "r");
+
+  // TODO loop on num_iters
+  //  auto const num_iters = ProcStats::proc_data_.size();
+  auto elements = std::unordered_map<ElementIDType,TimeType> ();
+
+  // Format of a line :size_t,ElementIDType,TimeType
+  size_t c1;
+  ElementIDType c2;
+  TimeType c3;
+  char separator;
+  while (!feof(pFile)) {
+    fscanf (pFile, "%zi", &c1);
+    fscanf (pFile, "%c", &separator);
+    fscanf (pFile, "%lli", &c2);
+    fscanf (pFile, "%c", &separator);
+    fscanf (pFile, "%lf", &c3);
+    fscanf (pFile, "%c", &separator);
+    if(separator==',')
+    {
+      // Communication dectected : break the loop until we use num_iter
+      // and/or communication
+      break;
+    }
+    else
+    {
+      elements.emplace (c2, c3);
+      ProcStats::proc_data_in_.push_back(elements);
+    }
+  }
+  fclose(pFile);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
