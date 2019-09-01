@@ -178,6 +178,7 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 
   vt_print(lb, "outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
 
+  std::cout << "Number of iter: " << num_iters << std::endl;
   for (size_t i = 0; i < num_iters; i++) {
     for (auto&& elm : ProcStats::proc_data_.at(i)) {
       auto obj_str = fmt::format("{},{},{}\n", i, elm.first, elm.second);
@@ -222,22 +223,22 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   fflush(stats_file_);
 
   closeStatsFile();
-
-  // TORM Test the VOM reader
-  inputStatsFile("/Users/perrinel/Dev/vt-auto-build/build-vt-all-gcc/vt/vt-build/statsoutput",
-                 "statgreedy");
 }
 
-/*static*/ void ProcStats::inputStatsFile(std::string const& dir,  std::string const& base_file) {
+/*static*/ void ProcStats::inputStatsFile() {
 
-  using namespace std;
+  using ArgType = vt::arguments::ArgConfig;
 
   // todo if File exist
   auto const node = theContext()->getNode();
+  auto const base_file = std::string(ArgType::vt_lb_stats_file_in);
+  auto const dir = std::string(ArgType::vt_lb_stats_dir_in);
   auto const file = fmt::format("{}.{}.out", base_file, node);
   auto const file_name = fmt::format("{}/{}", dir, file);
 
-  FILE * pFile = fopen (file_name.c_str(), "r");
+  vt_print(lb, "inputStatFile: file={}, iter={}\n", file_name, 0);
+
+  FILE * pFile = std::fopen (file_name.c_str(), "r");
 
   // TODO loop on num_iters
   //  auto const num_iters = ProcStats::proc_data_.size();
@@ -265,9 +266,14 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
     {
       elements.emplace (c2, c3);
       ProcStats::proc_data_in_.push_back(elements);
+
+      vt_print(lb, " {}{}\n", c2, c3);
+
+      auto eltEnd = elements.find(c2);
+      vt_print(lb, "v{}{}\n", eltEnd->first, eltEnd->second);
     }
   }
-  fclose(pFile);
+  std::fclose(pFile);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

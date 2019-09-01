@@ -60,6 +60,7 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/generated/vt_git_revision.h"
@@ -453,6 +454,20 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_lb_stats_dir", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+
+    auto const fnamein = ArgType::vt_lb_stats_file_in;
+    if (fnamein != "") {
+      auto f11 = fmt::format("LB stats file name in \"{}.0.out\"", fnamein);
+      auto f12 = opt_on("--vt_lb_stats_file_in", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+
+    auto const fdirin = ArgType::vt_lb_stats_dir_in;
+    if (fdirin != "") {
+      auto f11 = fmt::format("LB stats directory in \"{}\"", fdirin);
+      auto f12 = opt_on("--vt_lb_stats_dir_in", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
 
 
@@ -498,7 +513,6 @@ void Runtime::printStartupBanner() {
     }
   }
   #endif
-
 
   if (ArgType::vt_term_rooted_use_ds) {
     auto f11 = fmt::format("Forcing the use of Dijkstra-Scholten for rooted TD");
@@ -704,6 +718,11 @@ bool Runtime::initialize(bool const force_now) {
     initializeComponents();
     initializeOptionalComponents();
     initializeErrorHandlers();
+#if backend_check_enabled(lblite)
+  if (ArgType::vt_lb_stats) {
+    vrt::collection::balance::ProcStats::inputStatsFile();
+  }
+#endif
     sync();
     if (theContext->getNode() == 0) {
       printStartupBanner();
