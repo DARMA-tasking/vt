@@ -76,7 +76,7 @@ public:
   static void releaseLB();
 
   static void outputStatsFile();
-  static void inputStatsFile(std::string const& dir,  std::string const& base_file);
+  static void inputStatsFile();
 
 private:
   static void createStatsFile();
