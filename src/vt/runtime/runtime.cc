@@ -61,6 +61,7 @@
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/balance/stats_lb_reader.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/generated/vt_git_revision.h"
@@ -720,7 +721,7 @@ bool Runtime::initialize(bool const force_now) {
     initializeErrorHandlers();
 #if backend_check_enabled(lblite)
   if (ArgType::vt_lb_stats) {
-    vrt::collection::balance::StatsLBReader::init();
+    vrt::collection::balance::ProcStats::inputStatsFile();
   }
 #endif
     sync();
