@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
 
 #include "vt/config.h"
+#include "vt/configs/arguments/args.h"
 #include "vt/vrt/collection/balance/elm_stats.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
@@ -91,7 +92,12 @@ template <typename ColT>
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
 
-  ProcStats::addProcStats<ColT>(elm_proxy, col, cur_phase, total_load, comm);
+#if backend_check_enabled(lblite)
+  // Test if VOM file come from argument meaning ProcStats is already filled.
+  if (ArgType::vt_lb_stats and !ArgType::vt_lb_stats_file_in.empty() ) {
+    ProcStats::addProcStats<ColT>(elm_proxy, col, cur_phase, total_load, comm);
+  }
+#endif
 
   auto const before_ready = theCollection()->numReadyCollections();
   theCollection()->makeCollectionReady(untyped_proxy);
