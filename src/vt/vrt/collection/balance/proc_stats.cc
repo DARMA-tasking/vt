@@ -240,7 +240,11 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   FILE * pFile = std::fopen (file_name.c_str(), "r");
 
   // TODO loop on num_iters
-  //  auto const num_iters = ProcStats::proc_data_.size();
+  // Create a map for each different value of the first column
+  // we should assume that every new values on the first column come
+  // just after the end of the communication.
+  // Finally the pattern is Load0, Com0, Load1, Com1, ..., LoadN, ComN
+  // where 0, 1, ..., N are the values of the first column
   auto elements = std::unordered_map<ElementIDType,TimeType> ();
 
   // Format of a line :size_t,ElementIDType,TimeType
@@ -264,15 +268,11 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
     else
     {
       elements.emplace (c2, c3);
-      ProcStats::proc_data_in_.push_back(elements);
-
-      vt_print(lb, " {}{}\n", c2, c3);
-
-      auto eltEnd = elements.find(c2);
-      vt_print(lb, "v{}{}\n", eltEnd->first, eltEnd->second);
     }
   }
   std::fclose(pFile);
+
+  ProcStats::proc_data_.push_back(elements);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
