@@ -136,19 +136,9 @@ struct CollectionManager {
     !std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
   >;
 
-  CollectionManager() = default;
+  CollectionManager();
 
-  virtual ~CollectionManager() {
-    cleanupAll<>();
-
-    // Statistics output when LB is enabled and appropriate flag is enabled
-    #if backend_check_enabled(lblite)
-      if (ArgType::vt_lb_stats) {
-        balance::ProcStats::outputStatsFile();
-        balance::ProcStats::clearStats();
-      }
-    #endif
-  }
+  virtual ~CollectionManager();
 
   template <typename=void>
   void cleanupAll();
@@ -635,6 +625,26 @@ public:
   void nextPhase(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
     PhaseType const& cur_phase, ActionFinishedLBType continuation = nullptr
+  );
+
+  /*
+   * The function 'startPhaseRooted' starts, in a rooted manner, the next phase
+   * of the LB without inquiring about the state of the collections. A single
+   * node calls it and the registered runLB funcs are invoked to collect up
+   * statistics and run appropriately. Continuation runs when LB is complete.
+   */
+  void startPhaseRooted(
+    ActionFinishedLBType fn, PhaseType lb_phase = no_lb_phase
+  );
+
+  /*
+   * The function 'startPhaseCollective' starts, in a collective manner, the
+   * next phase of the LB without inquiring about the state of the
+   * collections. The LB starts immediately after collecting statistics and the
+   * continuation executes at completion
+   */
+  void startPhaseCollective(
+    ActionFinishedLBType fn, PhaseType lb_phase = no_lb_phase
   );
 
   /*

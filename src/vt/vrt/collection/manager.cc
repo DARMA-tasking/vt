@@ -46,8 +46,61 @@
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/base/base.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
 
 namespace vt { namespace vrt { namespace collection {
+
+CollectionManager::CollectionManager() {
+  #if backend_check_enabled(lblite)
+    balance::LBManager::init();
+  #endif
+}
+
+/*virtual*/ CollectionManager::~CollectionManager() {
+  cleanupAll<>();
+
+  // Statistics output when LB is enabled and appropriate flag is enabled
+#if backend_check_enabled(lblite)
+  if (ArgType::vt_lb_stats) {
+    balance::ProcStats::outputStatsFile();
+    balance::ProcStats::clearStats();
+  }
+
+  // Destroy the LBManager
+  balance::LBManager::destroy();
+#endif
+}
+
+struct StartRootedMsg : vt::Message {
+  StartRootedMsg() = default;
+  explicit StartRootedMsg(PhaseType in_phase) : phase_(in_phase) { }
+  PhaseType phase_;
+};
+
+static void startRootedBroadcast(StartRootedMsg* msg) {
+  theCollection()->startPhaseCollective(nullptr, msg->phase_);
+}
+
+void CollectionManager::startPhaseRooted(
+  ActionFinishedLBType fn, PhaseType lb_phase
+) {
+  auto msg = makeSharedMessage<StartRootedMsg>(lb_phase);
+  theMsg()->broadcastMsg<StartRootedMsg, startRootedBroadcast>(msg);
+  startPhaseCollective(fn, lb_phase);
+}
+
+void CollectionManager::startPhaseCollective(
+  ActionFinishedLBType fn, PhaseType lb_phase
+) {
+  UniversalIndexHolder<>::runLB(lb_phase);
+  if (fn != nullptr) {
+    theTerm()->produce(term::any_epoch_sentinel);
+    lb_continuations_.push_back(fn);
+  } else {
+    auto proxy = balance::LBManager::getProxy();
+    proxy.get()->waitLBCollective();
+  }
+}
 
 DispatchBasePtrType
 getDispatcher(auto_registry::AutoHandlerType const& han) {

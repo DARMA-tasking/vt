@@ -107,7 +107,7 @@ void BaseLB::importProcessorData(
     this_load += load_milli;
     obj_sample[bin].push_back(obj);
 
-    debug_print(
+    debug_print_verbose(
       lb, node,
       "\t {}: importProcessorData: this_load={}, obj={}, load={}, "
       "load_milli={}, bin={}\n",
@@ -205,6 +205,7 @@ EpochType BaseLB::getMigrationEpoch() const {
 EpochType BaseLB::startMigrationCollective() {
   migration_epoch_ = theTerm()->makeEpochCollective();
   theTerm()->addAction(migration_epoch_, [this]{ this->migrationDone(); });
+  theMsg()->pushEpoch(migration_epoch_);
   return migration_epoch_;
 }
 
@@ -213,6 +214,9 @@ void BaseLB::finishMigrationCollective() {
     transferSend(elm.first, elm.second, migration_epoch_);
   }
 
+  off_node_migrate_.clear();
+
+  theMsg()->popEpoch(migration_epoch_);
   theTerm()->finishedEpoch(migration_epoch_);
 }
 
@@ -276,7 +280,7 @@ void BaseLB::finalize(CountMsg* msg) {
     fflush(stdout);
   }
   balance::ProcStats::startIterCleanup();
-  balance::InvokeLB::releaseLBCollective(phase_);
+  balance::LBManager::finishedRunningLB(phase_);
 }
 
 void BaseLB::migrationDone() {

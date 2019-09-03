@@ -58,19 +58,22 @@ struct PhaseMsgBase : BaseMsgT {
   PhaseMsgBase() = default;
 
   PhaseMsgBase(
-    PhaseType const& in_cur_phase, ProxyType const& in_proxy,
-    bool in_do_sync = true
-  ) : proxy_(in_proxy), cur_phase_(in_cur_phase), do_sync_(in_do_sync)
+    PhaseType const in_cur_phase, ProxyType const in_proxy,
+    bool in_do_sync, bool in_manual
+  ) : proxy_(in_proxy), cur_phase_(in_cur_phase), do_sync_(in_do_sync),
+      manual_(in_manual)
   { }
 
   ProxyType getProxy() const { return proxy_; }
   PhaseType getPhase() const { return cur_phase_; }
   bool doSync() const { return do_sync_; }
+  bool manual() const { return manual_; }
 
 private:
   ProxyType proxy_ = {};
   PhaseType cur_phase_ = fst_lb_phase;
   bool do_sync_ = true;
+  bool manual_ = false;
 };
 
 template <typename ColT>

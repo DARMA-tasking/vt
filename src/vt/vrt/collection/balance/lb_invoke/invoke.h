@@ -50,31 +50,83 @@
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/objgroup/headers.h"
 
 #include <functional>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct InvokeLB {
+struct LBManager {
   using ArgType = vt::arguments::ArgConfig;
 
-  static LBType shouldInvoke(PhaseType phase, bool try_file = true);
-  static void startLB(PhaseType phase, LBType lb);
-  static void startLBCollective(InvokeMsg* msg);
-  static void startLBCollective(InvokeReduceMsg* msg);
-  static void startLBCollective(PhaseType phase, LBType lb);
-  static void releaseLB(PhaseType phase);
-  static void releaseLBCollective(InvokeMsg* msg);
-  static void releaseLBCollective(InvokeReduceMsg* msg);
-  static void releaseLBCollective(PhaseType phase);
+  LBManager() = default;
+  LBManager(LBManager const&) = delete;
+  LBManager(LBManager&&) = default;
 
+  static void init() {
+    LBManager::proxy_ = theObjGroup()->makeCollective<LBManager>();
+  }
+
+  static void destroy() {
+    theObjGroup()->destroyCollective(LBManager::proxy_);
+  }
+
+public:
+  /*
+   * Decide which LB to invoke given a certain phase
+   */
+  LBType decideLBToRun(PhaseType phase, bool try_file = true);
+
+  /*
+   * Collectively wait for LB, used to invoke without consideration of readiness
+   * of the state of live collections
+   */
+  void waitLBCollective();
+
+  /*
+   * Get the proxy for the LBManager
+   */
+  static objgroup::proxy::Proxy<LBManager> getProxy() { return proxy_; }
+
+  /*
+   * Tell the manage the LB is finished. This should *not* be called by the
+   * user, only by load balancers. Not private/protected as friending every LBs
+   * adds too much overhead
+   */
+  static void finishedRunningLB(PhaseType phase);
+
+protected:
+  void collectiveImpl(
+    PhaseType phase, LBType lb, bool manual, std::size_t num_calls = 1
+  );
+  void releaseImpl(PhaseType phase, std::size_t num_calls = 0);
+  void releaseNow(PhaseType phase);
+
+public:
+  template <typename MsgT>
+  void sysLB(MsgT* msg) {
+    debug_print(lb, node, "sysLB\n");
+    return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
+  }
+  template <typename MsgT>
+  void sysReleaseLB(MsgT* msg) {
+    debug_print(lb, node, "sysReleaseLB\n");
+    return releaseImpl(msg->phase_, msg->num_collections_);
+  }
+
+protected:
   template <typename LB>
-  static objgroup::proxy::Proxy<LB> makeLB(MsgSharedPtr<StartLBMsg> msg);
+  objgroup::proxy::Proxy<LB> makeLB(MsgSharedPtr<StartLBMsg> msg);
 
 private:
-  static PhaseType cached_phase_;
-  static LBType cached_lb_;
-  static std::function<void()> destroy_;
+  std::size_t num_invocations_             = 0;
+  std::size_t num_release_                 = 0;
+  PhaseType cached_phase_                  = no_lb_phase;
+  LBType cached_lb_                        = LBType::NoLB;
+  std::function<void()> destroy_lb_        = nullptr;
+  bool synced_in_lb_                       = true;
+
+  static objgroup::proxy::Proxy<LBManager> proxy_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

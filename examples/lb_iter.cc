@@ -55,7 +55,9 @@ static int32_t num_iter = 8;
 struct IterCol : Collection<IterCol,Index1D> {
   IterCol() = default;
 
-  struct ContinueMsg : collective::ReduceNoneMsg { };
+  struct ContinueMsg : collective::ReduceNoneMsg {
+    vt::CollectionProxy<IterCol,Index1D> proxy;
+  };
   struct IterMsg : CollectionMessage<IterCol> {
     IterMsg() = default;
     explicit IterMsg(int64_t const in_work_amt, int64_t const in_iter)
@@ -86,6 +88,30 @@ static TimeType cur_time = 0;
 
 static double weight = 1.0f;
 
+void finishedNode(int64_t iter) {
+  auto const this_node = vt::theContext()->getNode();
+  if (not touch && this_node == 0) {
+    auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
+    ::fmt::print("iteration: iter={},time={}\n", iter, total_time);
+    touch = not touch;
+  }
+}
+
+void nodeLBHandler(IterCol::ContinueMsg* msg) {
+  static int64_t iter = 0;
+
+  finishedNode(iter);
+  iter++;
+
+  auto proxy = msg->proxy;
+
+  vt::theCollection()->startPhaseCollective([=]{
+    if (vt::theContext()->getNode() == 0) {
+      proxy.template broadcast<IterCol::IterMsg,&IterCol::nextIter>(10,iter);
+    }
+  });
+}
+
 void IterCol::iterWork(IterMsg* msg) {
   double val = 0.1f;
   double val2 = 0.4f * msg->work_amt_;
@@ -100,30 +126,37 @@ void IterCol::iterWork(IterMsg* msg) {
   }
   data_2 += val + val2;
 
+  auto const this_node = vt::theContext()->getNode();
+  if (idx == 0) {
+    fmt::print("{}: iterWork: idx={}\n", this_node, getIndex());
+  }
+
   auto proxy = getCollectionProxy();
   auto cmsg = makeMessage<ContinueMsg>();
-  auto cb = theCB()->makeBcast<IterCol,ContinueMsg,&IterCol::finished>(proxy);
+  cmsg->proxy = proxy;
+
+  // auto cb = theCB()->makeBcast<IterCol,ContinueMsg,&IterCol::finished>(proxy);
+  // proxy.reduce(cmsg.get(),cb);
+
+  auto cb = theCB()->makeBcast<ContinueMsg,nodeLBHandler>();
   proxy.reduce(cmsg.get(),cb);
 }
 
 void IterCol::finished(ContinueMsg* msg) {
-  auto const this_node = vt::theContext()->getNode();
   auto const idx = getIndex().x();
 
-  if (not touch && this_node == 0) {
-    auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
-    ::fmt::print("iteration: iter={},time={}\n", cur_iter, total_time);
-    touch = not touch;
-  }
+  finishedNode(cur_iter);
 
   cur_iter++;
 
   auto proxy = getCollectionProxy();
-  proxy(idx).LB<IterMsg,&IterCol::nextIter>(10,cur_iter);
+  proxy[idx].LB<IterMsg,&IterCol::nextIter>(10,cur_iter);
 }
 
 void IterCol::nextIter(IterMsg* msg) {
   auto const this_node = vt::theContext()->getNode();
+
+  //fmt::print("{}: nextIter: idx={}\n", this_node, getIndex());
 
   if (touch && this_node == 0) {
     cur_time = vt::timing::Timing::getCurrentTime();
