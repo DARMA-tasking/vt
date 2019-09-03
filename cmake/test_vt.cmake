@@ -51,6 +51,7 @@ function(run_executable_with_mpi)
   set_tests_properties(
     ${ARG_TARGET_NAME}
     PROPERTIES TIMEOUT 60
+    PROCESSORS ${ARG_TARGET_NPROC}
   )
 endfunction()
 
