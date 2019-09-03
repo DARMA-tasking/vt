@@ -3063,7 +3063,7 @@ void CollectionManager::nextPhase(
 ) {
   using namespace balance;
   using MsgType = PhaseMsg<ColT>;
-  auto msg = makeSharedMessage<MsgType>(cur_phase, proxy);
+  auto msg = makeSharedMessage<MsgType>(cur_phase, proxy, true, false);
   auto const instrument = false;
 
   debug_print(
