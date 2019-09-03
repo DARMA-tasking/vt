@@ -55,7 +55,7 @@ void ElementStats::startTime() {
   cur_time_ = start_time;
   cur_time_started_ = true;
 
-  debug_print(
+  debug_print_verbose(
     lb, node,
     "ElementStats: startTime: time={}\n",
     start_time
@@ -72,7 +72,7 @@ void ElementStats::stopTime() {
     addTime(total_time);
   }
 
-  debug_print(
+  debug_print_verbose(
     lb, node,
     "ElementStats: stopTime: time={}, total={}, started={}\n",
     stop_time, total_time, started

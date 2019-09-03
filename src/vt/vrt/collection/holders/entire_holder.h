@@ -61,6 +61,7 @@ struct UniversalIndexHolder {
   static void destroyCollection(VirtualProxyType const proxy);
   static bool readyNextPhase();
   static void makeCollectionReady(VirtualProxyType const proxy);
+  static void runLB(PhaseType phase);
   static void resetPhase();
   static std::size_t getNumCollections();
   static std::size_t getNumReadyCollections();

@@ -57,14 +57,12 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/*static*/ PhaseType InvokeLB::cached_phase_ = no_lb_phase;
-/*static*/ LBType InvokeLB::cached_lb_ = LBType::NoLB;
-/*static*/ std::function<void()> InvokeLB::destroy_ = nullptr;
+/*static*/ objgroup::proxy::Proxy<LBManager> LBManager::proxy_;
 
-/*static*/ LBType InvokeLB::shouldInvoke(PhaseType phase, bool try_file) {
+LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   debug_print(
     lb, node,
-    "LBInvoke::shouldInvoke: phase={}, try_file={}, cached_phase_={}, lb={}\n",
+    "LBManager::decideLBToRun: phase={}, try_file={}, cached_phase_={}, lb={}\n",
     phase, try_file, cached_phase_, lb_names_[cached_lb_]
   );
 
@@ -103,7 +101,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
   debug_print(
     lb, node,
-    "LBInvoke::shouldInvoke: phase={}, return lb_={}\n",
+    "LBManager::decidedLBToRun: phase={}, return lb_={}\n",
     phase, lb_names_[the_lb]
   );
 
@@ -111,90 +109,129 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   return the_lb;
 }
 
-/*static*/ void InvokeLB::startLBCollective(InvokeMsg* msg) {
-  return startLBCollective(msg->phase_, msg->lb_);
-}
-
-/*static*/ void InvokeLB::startLBCollective(InvokeReduceMsg* msg) {
-  return startLBCollective(msg->phase_, msg->lb_);
-}
-
 template <typename LB>
-/*static*/ objgroup::proxy::Proxy<LB>
-InvokeLB::makeLB(MsgSharedPtr<StartLBMsg> msg) {
+objgroup::proxy::Proxy<LB>
+LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto proxy = theObjGroup()->makeCollective<LB>();
   proxy.get()->init(proxy);
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   proxy.get()->template startLBHandler(msg.get(), base_proxy);
-  destroy_ = [proxy]{ proxy.destroyCollective(); };
+  destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
   return proxy;
 }
 
-/*static*/ void InvokeLB::startLBCollective(PhaseType phase, LBType lb) {
-  auto const& this_node = theContext()->getNode();
+void LBManager::collectiveImpl(
+  PhaseType phase, LBType lb, bool manual, std::size_t num_calls
+) {
+  debug_print(
+    lb, node,
+    "collectiveImpl: phase={}, manual={}, num_invocations_={}, num_calls={}, "
+    "num_release={}\n",
+    phase, manual, num_invocations_, num_calls, num_release_
+  );
 
-  if (this_node == 0 and not ArgType::vt_lb_quiet) {
+  num_invocations_++;
+
+  if (num_invocations_ == num_calls) {
+    auto const& this_node = theContext()->getNode();
+
+    if (this_node == 0 and not ArgType::vt_lb_quiet) {
+      debug_print(
+        lb, node,
+        "LBManager::collectiveImpl: phase={}, balancer={}, name={}\n",
+        phase,
+        static_cast<typename std::underlying_type<LBType>::type>(lb),
+        lb_names_[lb]
+      );
+    }
+
+    auto msg = makeMessage<StartLBMsg>(phase);
+    switch (lb) {
+    case LBType::HierarchicalLB: makeLB<lb::HierarchicalLB>(msg); break;
+    case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
+    case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
+    case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
+    case LBType::NoLB:
+      vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
+      break;
+    default:
+      vtAssert(false, "A valid LB must be passed to collectiveImpl");
+      break;
+    }
+  }
+}
+
+void LBManager::waitLBCollective() {
+  debug_print(
+    lb, node,
+    "waitLBCollective (begin)\n"
+  );
+
+  //
+  // The invocation should only happen collectively across the whole all nodes.
+  //
+  theTerm()->produce();
+  while (synced_in_lb_) {
+    vt::runScheduler();
+  }
+  synced_in_lb_ = true;
+  theTerm()->consume();
+
+  debug_print(
+    lb, node,
+    "waitLBCollective (end)\n"
+  );
+}
+
+/*static*/ void LBManager::finishedRunningLB(PhaseType phase) {
+  debug_print(
+    lb, node,
+    "finishedRunningLB\n"
+  );
+  auto proxy = getProxy();
+  proxy.get()->releaseImpl(phase);
+}
+
+void LBManager::releaseImpl(PhaseType phase, std::size_t num_calls) {
+  debug_print(
+    lb, node,
+    "releaseImpl: phase={}, num_invocations_={}, num_calls={}, num_release={}\n",
+    phase, num_invocations_, num_calls, num_release_
+  );
+
+  vtAssert(
+    num_calls != 0 or
+    num_invocations_ > 0, "Must be automatically invoked to releaseImpl"
+  );
+  num_release_++;
+  if (num_release_ == num_calls or num_release_ == num_invocations_) {
+    releaseNow(phase);
+  }
+}
+
+void LBManager::releaseNow(PhaseType phase) {
+  debug_print(lb, node, "releaseNow\n");
+
+  auto this_node = theContext()->getNode();
+
+  if (this_node == 0) {
     vt_print(
       lb,
-      "InvokeLB::startLB: phase={}, balancer={}, name={}\n",
-      phase,
-      static_cast<typename std::underlying_type<LBType>::type>(lb),
-      lb_names_[lb]
+      "LBManaager::releaseNow: finished LB, phase={}, invocations={}\n",
+      phase, num_invocations_
     );
   }
 
-  auto msg = makeMessage<StartLBMsg>(phase);
-  switch (lb) {
-  case LBType::HierarchicalLB: makeLB<lb::HierarchicalLB>(msg); break;
-  case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
-  case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
-  case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
-  case LBType::NoLB:
-    vtAssert(false, "LBType::NoLB is not a valid LB to startLBCollective");
-    break;
-  default:
-    vtAssert(false, "A valid LB must be passed to startLBCollective");
-    break;
-  }
-
-}
-
-/*static*/ void InvokeLB::startLB(PhaseType phase, LBType lb) {
-  //
-  // The invocation should only happen on a single node. It can be any node, but
-  // this function limits the invocation to node 0 to potentially catch when the
-  // user invokes it multiple times incorrectly.
-  //
-  auto const& this_node = theContext()->getNode();
-  vtAssert(this_node == 0, "InvokeLB::startLB should be invoked from node 0");
-
-  auto msg = makeMessage<InvokeMsg>(phase,lb);
-  theMsg()->broadcastMsg<InvokeMsg,InvokeLB::startLBCollective>(msg.get());
-  InvokeLB::startLBCollective(msg.get());
-}
-
-/*static*/ void InvokeLB::releaseLB(PhaseType phase) {
-  auto msg = makeMessage<InvokeMsg>(phase,LBType::NoLB);
-  theMsg()->broadcastMsg<InvokeMsg,InvokeLB::releaseLBCollective>(msg.get());
-  InvokeLB::releaseLBCollective(msg.get());
-}
-
-/*static*/ void InvokeLB::releaseLBCollective(PhaseType phase) {
   auto msg = makeMessage<CollectionPhaseMsg>();
+
   // Destruct the objgroup that was used for LB
-  if (destroy_ != nullptr) {
-    destroy_();
-    destroy_ = nullptr;
+  if (destroy_lb_ != nullptr) {
+    destroy_lb_();
+    destroy_lb_ = nullptr;
   }
   releaseLBPhase(msg.get());
-}
-
-/*static*/ void InvokeLB::releaseLBCollective(InvokeReduceMsg* msg) {
-  return releaseLBCollective(msg->phase_);
-}
-
-/*static*/ void InvokeLB::releaseLBCollective(InvokeMsg* msg) {
-  return releaseLBCollective(msg->phase_);
+  synced_in_lb_ = false;
+  num_invocations_ = num_release_ = 0;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

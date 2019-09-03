@@ -65,6 +65,14 @@ template <typename always_void_>
 }
 
 template <typename always_void_>
+/*static*/ void UniversalIndexHolder<always_void_>::runLB(PhaseType phase) {
+  for (auto&& elm : live_collections_) {
+    auto base_holder = elm.second;
+    base_holder->runLB(phase);
+  }
+}
+
+template <typename always_void_>
 /*static*/ void UniversalIndexHolder<always_void_>::destroyCollection(
   VirtualProxyType const proxy
 ) {

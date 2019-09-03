@@ -110,7 +110,9 @@ protected:
   friend struct balance::ElementStats;
   friend struct balance::ProcStats;
   balance::ElementStats stats_;
+public:
   balance::ElementStats& getStats() { return stats_; }
+protected:
   balance::ElementIDType stats_elm_id_ = 0;
   balance::ElementIDType temp_elm_id_ = 0;
 };

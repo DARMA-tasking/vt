@@ -104,23 +104,30 @@ template <typename ColT>
     before_ready, after_ready, ready
   );
 
-  if (ready) {
-    using MsgType = InvokeReduceMsg;
-    auto const do_sync = msg->doSync();
-    auto const lb = InvokeLB::shouldInvoke(cur_phase);
-    Callback<MsgType> cb_;
-    if (lb != LBType::NoLB) {
-      cb_ = theCB()->makeBcast<MsgType,InvokeLB::startLBCollective>();
-    } else if (do_sync) {
-      cb_ = theCB()->makeBcast<MsgType,InvokeLB::releaseLBCollective>();
-    }
+  using MsgType = InvokeReduceMsg;
 
-    if (lb != LBType::NoLB or do_sync) {
-      auto nmsg = makeMessage<MsgType>(cur_phase,lb);
-      proxy.reduce(nmsg.get(),cb_);
-    } else {
+  auto lb_man = LBManager::getProxy();
+
+  auto const lb = lb_man.get()->decideLBToRun(cur_phase);
+  bool const must_run_lb = lb != LBType::NoLB;
+  auto const num_collections = theCollection()->numCollections<>();
+  auto const do_sync = msg->doSync();
+  auto nmsg = makeMessage<MsgType>(cur_phase,lb,msg->manual(),num_collections);
+
+  if (must_run_lb) {
+    auto cb = theCB()->makeBcast<LBManager,MsgType,&LBManager::sysLB<MsgType>>(lb_man);
+    proxy.reduce(nmsg.get(),cb);
+  } else {
+
+    // Preemptively release the element directly, doing cleanup later after a
+    // collection reduction. This allows work to start early while still
+    // releasing the node-level LB continuations needed for cleanup
+    if (lb == LBType::NoLB and not do_sync) {
       theCollection()->elmFinishedLB(elm_proxy,cur_phase);
     }
+
+    auto cb = theCB()->makeBcast<LBManager,MsgType,&LBManager::sysReleaseLB<MsgType>>(lb_man);
+    proxy.reduce(nmsg.get(),cb);
   }
 }
 

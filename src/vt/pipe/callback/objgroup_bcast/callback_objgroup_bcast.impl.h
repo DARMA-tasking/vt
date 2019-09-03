@@ -61,6 +61,7 @@ void CallbackObjGroupBcast::serialize(SerializerT& s) {
 template <typename MsgT>
 void CallbackObjGroupBcast::trigger(MsgT* in_msg, PipeType const& pipe) {
   auto msg = promoteMsg(in_msg);
+  envelopeSetGroup(msg->env, default_group);
   objgroup::broadcast<MsgT>(msg,handler_);
 }
 

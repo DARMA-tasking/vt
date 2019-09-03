@@ -55,12 +55,16 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 template <typename MsgT>
 struct InvokeBaseMsg : MsgT {
   InvokeBaseMsg() = default;
-  InvokeBaseMsg(PhaseType in_phase, LBType in_lb)
-    : phase_(in_phase), lb_(in_lb)
+  InvokeBaseMsg(
+    PhaseType in_phase, LBType in_lb, bool manual, std::size_t in_num_colls = 1
+  ) : phase_(in_phase), lb_(in_lb), manual_(manual),
+      num_collections_(in_num_colls)
   { }
 
-  PhaseType phase_ = 0;
-  LBType lb_ = LBType::NoLB;
+  PhaseType phase_             = 0;
+  LBType lb_                   = LBType::NoLB;
+  bool manual_                 = false;
+  std::size_t num_collections_ = 0;
 };
 
 using InvokeMsg       = InvokeBaseMsg<vt::Message>;

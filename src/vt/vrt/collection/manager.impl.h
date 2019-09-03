@@ -2929,22 +2929,26 @@ void CollectionManager::elmReadyLB(
   return;
 #endif
 
-  auto const& col_proxy = proxy.getCollectionProxy();
-  auto const& idx = proxy.getElementProxy().getIndex();
+  auto const col_proxy = proxy.getCollectionProxy();
+  auto const idx = proxy.getElementProxy().getIndex();
   auto elm_holder = findElmHolder<ColT>(col_proxy);
   vtAssertInfo(
     elm_holder != nullptr, "Must find element holder at elmReadyLB",
     col_proxy, phase
   );
 
+  auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
+
   debug_print(
     lb, node,
-    "elmReadyLB: proxy={:x}, idx={}, phase={}, msg={}\n",
-    col_proxy, idx, phase, pmsg
+    "elmReadyLB: proxy={:x}, idx={}, phase={}, msg={}, epoch={:x}\n",
+    col_proxy, idx, phase, pmsg, cur_epoch
   );
 
-  elm_holder->addLBCont(idx,[pmsg,proxy,lb_han]{
+  theTerm()->produce(cur_epoch);
+  elm_holder->addLBCont(idx,[pmsg,proxy,lb_han,cur_epoch,idx]{
     theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
+    theTerm()->consume(cur_epoch);
   });
 
   auto iter = release_lb_.find(col_proxy);
@@ -2964,18 +2968,29 @@ void CollectionManager::elmReadyLB(
   bool do_sync, ActionFinishedLBType cont
 ) {
 
+  debug_print(
+    lb, node,
+    "elmReadyLB: index={} ready at sync={}, phase={}\n",
+    proxy.getElementProxy().getIndex(), do_sync, in_phase
+  );
+
 #if !backend_check_enabled(lblite)
   cont();
   return;
 #endif
 
-  auto const& col_proxy = proxy.getCollectionProxy();
-  auto const& idx = proxy.getElementProxy().getIndex();
+  auto const col_proxy = proxy.getCollectionProxy();
+  auto const idx = proxy.getElementProxy().getIndex();
   auto elm_holder = findElmHolder<ColT>(col_proxy);
 
   PhaseType phase = in_phase;
   if (phase == no_lb_phase) {
-    phase = elm_holder->lookup(idx).getCollection()->stats_.getPhase();
+    bool const elm_exists = elm_holder->exists(idx);
+    if (!(elm_exists)) fmt::print("Element must exist idx={}\n", idx);
+    auto& holder = elm_holder->lookup(idx);
+    auto elm = holder.getCollection();
+    if (!(elm != nullptr)) fmt::print("Must have valid element");
+    phase = elm->stats_.getPhase();
   }
 
   vtAssertInfo(
@@ -2994,6 +3009,8 @@ void CollectionManager::elmReadyLB(
     lb_continuations_.push_back(cont);
   }
   if (elm_holder) {
+    debug_print(lb, node, "has elm_holder: exists={}\n", elm_holder->exists(idx));
+
     vtAssert(
       elm_holder->exists(idx),
       "Collection element must be local and currently reside on this node"
@@ -3021,7 +3038,7 @@ void CollectionManager::elmReadyLB(
     using namespace balance;
     CollectionProxyWrapType<ColT> cur_proxy(col_proxy);
     using MsgType = PhaseMsg<ColT>;
-    auto msg = makeMessage<MsgType>(phase, cur_proxy, do_sync);
+    auto msg = makeMessage<MsgType>(phase, cur_proxy, do_sync, false);
 
 #if backend_check_enabled(lblite)
     msg->setLBLiteInstrument(false);
@@ -3047,7 +3064,7 @@ void CollectionManager::nextPhase(
   using namespace balance;
   using MsgType = PhaseMsg<ColT>;
   auto msg = makeSharedMessage<MsgType>(cur_phase, proxy);
-  auto const& instrument = false;
+  auto const instrument = false;
 
   debug_print(
     vrt_coll, node,
@@ -3107,6 +3124,10 @@ template <typename always_void>
 
 template <typename>
 void CollectionManager::releaseLBContinuation() {
+  debug_print(
+    lb, node,
+    "releaseLBContinuation\n"
+  );
   UniversalIndexHolder<>::resetPhase();
   if (lb_continuations_.size() > 0) {
     auto continuations = lb_continuations_;

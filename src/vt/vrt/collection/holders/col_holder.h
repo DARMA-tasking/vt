@@ -58,6 +58,7 @@ struct CollectionHolder : BaseHolder {
   );
 
   void destroy() override;
+  void runLB(PhaseType phase) override;
 
   bool is_static_ = false;
   HandlerType map_fn = uninitialized_handler;
