@@ -54,13 +54,9 @@ namespace vt { namespace term { namespace interval {
  * representation.
  */
 
-template <
-  typename DomainT,
-  typename CompareT = std::less<DomainT>,
-  DomainT sentinel = DomainT()
->
+template <typename DomainT, DomainT sentinel = DomainT()>
 struct Interval {
-  using IntervalType = Interval<DomainT, CompareT, sentinel>;
+  using IntervalType = Interval<DomainT, sentinel>;
   using DomainType   = DomainT;
 
   Interval() = default;
@@ -189,8 +185,8 @@ public:
 
   friend bool operator<(IntervalType const& i1, IntervalType const& i2);
 
-  template <typename T, typename U, DomainT v>
-  friend std::ostream& operator<<(std::ostream& os, Interval<T,U,v> const& i) {
+  template <typename T, DomainT v>
+  friend std::ostream& operator<<(std::ostream& os, Interval<T,v> const& i) {
     os << "itv[" << i.lower() << "," << i.upper() << "]";
     return os;
   }
@@ -200,12 +196,11 @@ private:
   DomainT ub_ = sentinel;
 };
 
-template <typename DomainT, typename CompareT, DomainT sentinel>
+template <typename DomainT, DomainT sentinel>
 bool operator<(
-  Interval<DomainT, CompareT, sentinel> const& i1,
-  Interval<DomainT, CompareT, sentinel> const& i2
+  Interval<DomainT, sentinel> const& i1, Interval<DomainT, sentinel> const& i2
 ) {
-  return Interval<DomainT, CompareT, sentinel>::less(i1,i2);
+  return Interval<DomainT, sentinel>::less(i1,i2);
 }
 
 template <typename DomainT>
@@ -220,8 +215,11 @@ struct IntervalCompare {
 
 namespace vt {
 
-template <typename DomainT, typename CompareT = std::less<DomainT>>
-using Interval = term::interval::Interval<DomainT, CompareT>;
+template <typename DomainT>
+using IntervalCompare = term::interval::IntervalCompare<DomainT>;
+
+template <typename DomainT>
+using Interval = term::interval::Interval<DomainT>;
 
 } /* end namespace vt */
 

@@ -64,16 +64,16 @@ namespace vt { namespace term { namespace interval {
 
 template <
   typename DomainT,
-  typename DomainCompareT,
   DomainT sentinel,
   template <class>                 class AllocatorT,
-  template <class, class, DomainT> class IntervalT,
-  template <class, class, class>   class OrderedSetT
+  template <class, DomainT>        class IntervalT,
+  template <class, class, class>   class OrderedSetT,
+  template <class>                 class IntervalCompareT
 >
 struct IntegralSetBase {
   using DomainType          = DomainT;
-  using IntervalType        = IntervalT<DomainT, DomainCompareT, sentinel>;
-  using CompareType         = IntervalCompare<DomainT>;
+  using IntervalType        = IntervalT<DomainT, sentinel>;
+  using CompareType         = IntervalCompareT<DomainT>;
   using AllocType           = AllocatorT<IntervalType>;
   using OrderedSetType      = OrderedSetT<IntervalType, CompareType, AllocType>;
   using IteratorType        = typename OrderedSetType::iterator;
@@ -492,8 +492,12 @@ namespace vt {
 template <typename DomainT>
 using IntegralSet =
   term::interval::IntegralSetBase<
-    DomainT, std::less<DomainT>, DomainT{}, std::allocator,
-    term::interval::Interval, std::set
+    DomainT,
+    DomainT{},
+    std::allocator,
+    term::interval::Interval,
+    std::set,
+    IntervalCompare
   >;
 
 } /* end namespace vt */
