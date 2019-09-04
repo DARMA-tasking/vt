@@ -61,8 +61,8 @@ private:
 public:
   void initialize(EpochType const& epoch);
 
-  EpochType getFirst() const { return term_.lower(); }
-  EpochType getLast()  const { return term_.upper(); }
+  EpochType getFirst() const { return terminated_epochs_.lower(); }
+  EpochType getLast()  const { return terminated_epochs_.upper(); }
 
   bool isTerminated(EpochType const& epoch) const;
   void addEpoch(EpochType const& epoch);
@@ -72,7 +72,7 @@ private:
   // The archetypical epoch for this window container (category,rooted,user,..)
   EpochType archetype_epoch_              = no_epoch;
   // The set of epochs terminated
-  vt::IntegralSet<EpochType> term_;
+  vt::IntegralSet<EpochType> terminated_epochs_;
 };
 
 }} /* end namespace vt::term */

@@ -48,7 +48,7 @@
 namespace vt { namespace term {
 
 EpochWindow::EpochWindow(EpochType const& epoch)
-  : term_(epoch)
+  : terminated_epochs_(epoch)
  {
   auto arch_epoch = epoch;
   /*
@@ -80,29 +80,30 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
     term, node,
     "addEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, term_.lower(), term_.upper(), term_.size(),
-    term_.compression()
+    epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
+    terminated_epochs_.size(), terminated_epochs_.compression()
   );
 
   auto is_epoch_arch = isArchetypal(epoch);
 
   vtAssertExprInfo(
     is_epoch_arch, epoch, is_epoch_arch, archetype_epoch_,
-    term_.lower(), term_.upper(), term_.size()
+    terminated_epochs_.lower(), terminated_epochs_.upper(),
+    terminated_epochs_.size()
   );
 
   // We should possibly perform some error checking once we wrap around in case
   // of pending actions
-  if (term_.contains(epoch)) {
-    term_.erase(epoch);
+  if (terminated_epochs_.contains(epoch)) {
+    terminated_epochs_.erase(epoch);
   }
 
   debug_print(
     term, node,
     "addEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, term_.lower(), term_.upper(), term_.size(),
-    term_.compression()
+    epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
+    terminated_epochs_.size(), termin_.compression()
   );
 }
 
@@ -111,18 +112,18 @@ void EpochWindow::closeEpoch(EpochType const& epoch) {
     term, node,
     "closeEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, term_.lower(), term_.upper(), term_.size(),
-    term_.compression()
+    epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
+    terminated_epochs_.size(), terminated_epochs_.compression()
   );
 
-  term_.insert(epoch);
+  terminated_epochs_.insert(epoch);
 
   debug_print(
     term, node,
     "closeEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, term_.lower(), term_.upper(), term_.size(),
-    term_.compression()
+    epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
+    terminated_epochs_.size(), terminated_epochs_.compression()
   );
 }
 
@@ -131,11 +132,11 @@ bool EpochWindow::isTerminated(EpochType const& epoch) const {
     term, node,
     "isTerminated: epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, term_.lower(), term_.upper(), term_.size(),
-    term_.compression()
+    epoch, terminated_epochs_.lower(), terminated_epochs_.upper(), term_.size(),
+    terminated_epochs_.compression()
   );
 
-  return term_.contains(epoch);
+  return terminated_epochs_.contains(epoch);
 }
 
 }} /* end namespace vt::term */
