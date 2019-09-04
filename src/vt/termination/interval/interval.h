@@ -75,7 +75,7 @@ public:
   DomainT lower() const { return lb_; }
   DomainT upper() const { return ub_; }
   DomainT width() const { return (ub_-lb_)+1; }
-  bool    valid() const { return lb_ != sentinel and ub != sentinel and lb_ <= ub_; }
+  bool    valid() const { return lb_ != sentinel and ub_ != sentinel and lb_ <= ub_; }
 
   DomainT get(std::size_t i) const {
     vtAssert(lb_ not_eq sentinel, "Lower bound must be valid");
