@@ -71,6 +71,7 @@ CollectionManager::CollectionManager() {
 #endif
 }
 
+#if backend_check_enabled(lblite)
 struct StartRootedMsg : vt::Message {
   StartRootedMsg() = default;
   explicit StartRootedMsg(PhaseType in_phase) : phase_(in_phase) { }
@@ -80,6 +81,7 @@ struct StartRootedMsg : vt::Message {
 static void startRootedBroadcast(StartRootedMsg* msg) {
   theCollection()->startPhaseCollective(nullptr, msg->phase_);
 }
+#endif
 
 void CollectionManager::startPhaseRooted(
   ActionFinishedLBType fn, PhaseType lb_phase
