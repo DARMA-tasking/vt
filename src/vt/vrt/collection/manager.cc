@@ -84,14 +84,21 @@ static void startRootedBroadcast(StartRootedMsg* msg) {
 void CollectionManager::startPhaseRooted(
   ActionFinishedLBType fn, PhaseType lb_phase
 ) {
+#if backend_check_enabled(lblite)
   auto msg = makeSharedMessage<StartRootedMsg>(lb_phase);
   theMsg()->broadcastMsg<StartRootedMsg, startRootedBroadcast>(msg);
   startPhaseCollective(fn, lb_phase);
+#else
+  if (fn != nullptr) {
+    fn();
+  }
+#endif
 }
 
 void CollectionManager::startPhaseCollective(
   ActionFinishedLBType fn, PhaseType lb_phase
 ) {
+#if backend_check_enabled(lblite)
   UniversalIndexHolder<>::runLB(lb_phase);
   if (fn != nullptr) {
     theTerm()->produce(term::any_epoch_sentinel);
@@ -100,6 +107,11 @@ void CollectionManager::startPhaseCollective(
     auto proxy = balance::LBManager::getProxy();
     proxy.get()->waitLBCollective();
   }
+#else
+  if (fn != nullptr) {
+    fn();
+  }
+#endif
 }
 
 DispatchBasePtrType
