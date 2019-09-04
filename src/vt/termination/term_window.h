@@ -53,19 +53,56 @@ namespace vt { namespace term {
 
 struct EpochWindow {
 
+  /*
+   * Holds the set of terminated epochs for a given archetype. An archetype is
+   * an epoch that belongs to a certain category. The window tracks the state of
+   * all the epochs in that category. Because only one category of epoch (high
+   * bits the same) are in a single category the window will eventually be
+   * contiguous.
+   *
+   * The wrap around case happens when an epoch exists in the window and then is
+   * re-activated. This case is handled in `addEpoch` by checking for existence
+   * in the integral set before using it.
+   */
+
   explicit EpochWindow(EpochType const& in_epoch);
 
 private:
+  /*
+   * Does a given epoch match the archetype that this window holds
+   */
   inline bool isArchetypal(EpochType const& epoch);
 
 public:
+  /*
+   * Initialize the window for a given archetype: category of an epoch based on
+   * high bits.
+   */
   void initialize(EpochType const& epoch);
 
+  /*
+   * Get the first terminated epoch in the window
+   */
   EpochType getFirst() const { return terminated_epochs_.lower(); }
+  /*
+   * Get the last terminated epoch in the window
+   */
   EpochType getLast()  const { return terminated_epochs_.upper(); }
 
+  /*
+   * Check if an epoch is terminated or not: exists in the set
+   */
   bool isTerminated(EpochType const& epoch) const;
+
+  /*
+   * Activate an epoch: goes from the state terminated to non-terminated if the
+   * epoch has wrapped around
+   */
   void addEpoch(EpochType const& epoch);
+
+  /*
+   * Terminated an active epoch by adding it to the sett
+   */
   void closeEpoch(EpochType const& epoch);
 
 private:
