@@ -75,10 +75,12 @@ public:
   DomainT lower() const { return lb_; }
   DomainT upper() const { return ub_; }
   DomainT width() const { return (ub_-lb_)+1; }
-  bool    valid() const { return lb_ <= ub_; }
+  bool    valid() const { return lb_ != sentinel and ub != sentinel and lb_ <= ub_; }
 
   DomainT get(std::size_t i) const {
-    vtAssert(lb_ + i <= ub_, "Must be in interval range");
+    vtAssert(lb_ not_eq sentinel, "Lower bound must be valid");
+    vtAssert(ub_ not_eq sentinel, "Upper bound must be valid");
+    vtAssert(lb_ + i <= ub_,      "Must be in interval range");
     return lb_ + i;
   }
 
@@ -134,11 +136,11 @@ public:
     switch (pos) {
     case PositionEnum::TangentLeft:
       vtAssertExpr(lb_ == i.upper() + 1);
-      lb_ = std::min<DomainT>(lb_, i.lower());
+      lb_ = i.lower();
       break;
     case PositionEnum::TangentRight:
       vtAssertExpr(ub_ == i.lower() - 1);
-      ub_ = std::max<DomainT>(ub_, i.upper());
+      ub_ = i.upper();
       break;
     default:
       vtAssert(false, "Must have tangent position to join");

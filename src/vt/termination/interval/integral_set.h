@@ -162,6 +162,9 @@ struct IntegralSetBase {
     // Expand the global bounds in this interval set
     insertGlobal(i);
 
+    // Must be valid iterator to call this overload
+    vtAssert(it != set_.end(), "Must be valid iterator");
+
     // If the val is tangent to the hint iterator, directly update
     auto pos = it->tangent(i);
     if (pos not_eq PositionType::NotTangent) {
