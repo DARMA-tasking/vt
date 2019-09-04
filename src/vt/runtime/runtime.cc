@@ -96,10 +96,38 @@ Runtime::Runtime(
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
+  parsed_arg = true;
   sig_user_1_ = false;
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
+}
+
+Runtime::Runtime(
+  bool const interop_mode, 
+  RuntimeInstType const in_instance
+)  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
+     num_workers_(no_workers), communicator_(nullptr), user_argc_(0),
+     user_argv_(nullptr)
+{
+  sig_user_1_ = false;
+}
+
+void Runtime::setArgConfigs(
+  int &argc,
+  char**& argv,
+  int &yaml_arg,
+  char**& yaml_argv
+)
+{
+  ArgType::parse(argc, argv);
+  if (argc > 0) {
+    prog_name_ = std::string(argv[0]);
+  }
+  setupSignalHandler(); // -> use ArgType::vt_no_sigsegv
+  setupSignalHandlerINT();  // -> use ArgType::vt_no_sigint
+  setupTerminateHandler(); //-> use ArgType::vt_no_terminate
+  parsed_arg = true;
 }
 
 bool Runtime::hasSchedRun() const {
@@ -701,6 +729,11 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
 }
 
 bool Runtime::initialize(bool const force_now) {
+  //--- Test whether (command-line, input file) arguments
+  //--- have been parsed.
+  if (!parsed_arg)
+    return false;
+  //
   if (force_now) {
     initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();

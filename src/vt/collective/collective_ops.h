@@ -66,6 +66,17 @@ struct CollectiveAnyOps {
     int& argc, char**& argv, WorkerCountType const num_workers = no_workers,
     bool is_interop = false, MPI_Comm* comm = nullptr
   );
+
+  ///
+  /// \brief Allocate routine to allow for two-step initialization
+  /// with configuration from command line and input (YAML) file
+  ///
+  static RuntimePtrType allocate(
+    bool is_interop = false,
+    WorkerCountType const num_workers = no_workers,
+	MPI_Comm* comm = nullptr
+  );
+
   static void finalize(RuntimePtrType in_rt = nullptr);
   static void scheduleThenFinalize(
     RuntimePtrType in_rt = nullptr, WorkerCountType const workers = no_workers

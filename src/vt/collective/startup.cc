@@ -69,6 +69,14 @@ RuntimePtrType initialize(MPI_Comm* comm) {
   return CollectiveOps::initialize(argc,argv,no_workers,true,comm);
 }
 
+RuntimePtrType allocate(
+  bool is_interop,
+  WorkerCountType const num_workers,
+  MPI_Comm* comm
+) {
+  return CollectiveOps::allocate(is_interop, no_workers, comm);
+}
+
 void finalize(RuntimePtrType in_rt) {
   if (in_rt) {
     return CollectiveOps::finalize(std::move(in_rt));

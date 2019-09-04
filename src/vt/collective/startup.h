@@ -57,6 +57,11 @@ RuntimePtrType initialize(
 RuntimePtrType initialize(int& argc, char**& argv, MPI_Comm* comm = nullptr);
 RuntimePtrType initialize(MPI_Comm* comm = nullptr);
 
+RuntimePtrType allocate(bool is_interop = false, 
+  WorkerCountType const num_workers = no_workers,
+  MPI_Comm* comm = nullptr
+);
+
 void finalize(RuntimePtrType in_rt);
 void finalize();
 

@@ -72,11 +72,27 @@ struct Runtime {
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
   );
 
+  Runtime(
+    bool const interop_mode = false,
+    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
+  );
+
   Runtime(Runtime const&) = delete;
   Runtime(Runtime&&) = delete;
   Runtime& operator=(Runtime const&) = delete;
 
   virtual ~Runtime();
+
+  void setArgConfigs(int &argc, char**& argv) {
+	  int yaml_zero = 0;
+	  char** yaml_null = nullptr;
+	  this->setArgConfigs(argc, argv, yaml_zero, yaml_null);
+  }
+
+  void setArgConfigs(int &argc, char**& argv, int &yaml_arg, char**& yaml_argv);
+
+  void setMPIComm(MPI_Comm* in_comm) { communicator_ = in_comm; }
+  void setNumWorkers(WorkerCountType in_num_workers) { num_workers_ = in_num_workers; }
 
   bool isTerminated() const { return not runtime_active_; }
   bool isFinializeble() const { return initialized_ and not finalized_; }
@@ -175,6 +191,7 @@ protected:
   MPI_Comm* communicator_ = nullptr;
   int user_argc_ = 0;
   char** user_argv_ = nullptr;
+  bool parsed_arg = false;
 };
 
 }} /* end namespace vt::runtime */
