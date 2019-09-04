@@ -39,10 +39,11 @@ do
      read -r firstline<$file
      id=${firstline:0:2}
 
-     if [ "$id" != "$licencePrefix1" -o "$id" != "$licencePrefix2" -o "$id" != "$licencePrefix3" ]
+     if [ "$id" == "$licencePrefix1" -o "$id" == "$licencePrefix2" -o "$id" == "$licencePrefix3" ]
      then
         sed -i.bak  '1d' "$file"
      else
+        echo "NoLicense found"
         endCondition="1"
      fi
      if [ "$id" == "$licencePrefix3" ]
