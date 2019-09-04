@@ -103,7 +103,7 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
     "addEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
-    terminated_epochs_.size(), termin_.compression()
+    terminated_epochs_.size(), terminated_epochs_.compression()
   );
 }
 
@@ -132,8 +132,8 @@ bool EpochWindow::isTerminated(EpochType const& epoch) const {
     term, node,
     "isTerminated: epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, terminated_epochs_.lower(), terminated_epochs_.upper(), term_.size(),
-    terminated_epochs_.compression()
+    epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
+    terminated_epochs_.size(), terminated_epochs_.compression()
   );
 
   return terminated_epochs_.contains(epoch);
