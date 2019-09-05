@@ -84,12 +84,14 @@ struct Runtime {
   virtual ~Runtime();
 
   void setArgConfigs(int &argc, char**& argv) {
-	  int yaml_zero = 0;
-	  char** yaml_null = nullptr;
-	  this->setArgConfigs(argc, argv, yaml_zero, yaml_null);
+	  std::vector<std::string> fileArg;
+	  this->setArgConfigs(argc, argv, fileArg);
   }
 
-  void setArgConfigs(int &argc, char**& argv, int &yaml_arg, char**& yaml_argv);
+  void setArgConfigs(
+    int &argc, char**& argv, 
+	const std::vector<std::string> &fileArg
+  );
 
   void setMPIComm(MPI_Comm* in_comm) { communicator_ = in_comm; }
   void setNumWorkers(WorkerCountType in_num_workers) { num_workers_ = in_num_workers; }
@@ -136,6 +138,8 @@ protected:
   void finalizeTrace();
   void finalizeComponents();
   void finalizeOptionalComponents();
+
+  void parseAndSetup(int& argc, char**& argv);
 
   void sync();
   void setup();

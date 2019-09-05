@@ -92,15 +92,8 @@ Runtime::Runtime(
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
      user_argv_(argv)
 {
-  ArgType::parse(argc, argv);
-  if (argc > 0) {
-    prog_name_ = std::string(argv[0]);
-  }
-  parsed_arg = true;
+  parseAndSetup(argc, argv);
   sig_user_1_ = false;
-  setupSignalHandler();
-  setupSignalHandlerINT();
-  setupTerminateHandler();
 }
 
 Runtime::Runtime(
@@ -113,21 +106,63 @@ Runtime::Runtime(
   sig_user_1_ = false;
 }
 
-void Runtime::setArgConfigs(
+void Runtime::parseAndSetup(
   int &argc,
-  char**& argv,
-  int &yaml_arg,
-  char**& yaml_argv
+  char**& argv
 )
 {
   ArgType::parse(argc, argv);
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
-  setupSignalHandler(); // -> use ArgType::vt_no_sigsegv
-  setupSignalHandlerINT();  // -> use ArgType::vt_no_sigint
-  setupTerminateHandler(); //-> use ArgType::vt_no_terminate
   parsed_arg = true;
+  setupSignalHandler();
+  setupSignalHandlerINT();
+  setupTerminateHandler();
+}
+
+void Runtime::setArgConfigs(
+  int &argc,
+  char**& argv,
+  const std::vector<std::string> &fileArg
+)
+{
+
+  // Precedence rule:
+  //
+  // CLI will take the first value in case of multiple occurences
+  // for the same parameter.
+  //
+  //  This precedence rule is enforced for:
+  //  vt_lb_name, vt_lb_interval, vt_lb_file, vt_lb_file_name
+  //
+
+  //--- Combine the two list of arguments
+  std::vector<std::string> ret_args;
+  ret_args.reserve(argc + fileArg.size());
+  for (auto i = 0; i < argc; i++) {
+    ret_args.push_back(std::string(argv[i]));
+  }
+
+  for (auto myarg : fileArg) {
+    ret_args.push_back(myarg);
+  }
+
+  // Use the saved index to setup the new_argv and new_argc
+  int new_argc = ret_args.size();
+  char** new_argv = new char*[new_argc];
+  for (int ii = 0; ii < new_argc; ii++) {
+    new_argv[ii] = new char[ret_args[ii].length() + 1];
+	std::strcpy(new_argv[ii], ret_args[ii].c_str());
+  }
+
+  //--- Set them back with all vt arguments elided
+  argc = new_argc;
+  argv = new_argv;
+
+  //--- Parse the argument list
+  parseAndSetup(argc, argv);
+
 }
 
 bool Runtime::hasSchedRun() const {
