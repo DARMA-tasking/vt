@@ -79,10 +79,29 @@ enum struct Statistic : int8_t {
   // InternalEdgesCardinality
 };
 
-extern std::unordered_map<Statistic,std::string> lb_stat_name_;
-
 } /* end namespace lb */
 
 }}} /* end namespace vt::vrt::collection */
+
+namespace std {
+
+using StatisticType = vt::vrt::collection::lb::Statistic;
+
+template <>
+struct hash<StatisticType> {
+  size_t operator()(StatisticType const& in) const {
+    using StatisticUnderType = typename std::underlying_type<StatisticType>::type;
+    auto const val = static_cast<StatisticUnderType>(in);
+    return std::hash<StatisticUnderType>()(val);
+  }
+};
+
+} /* end namespace std */
+
+namespace vt { namespace vrt { namespace collection { namespace lb {
+
+extern std::unordered_map<Statistic,std::string> lb_stat_name_;
+
+}}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H*/
