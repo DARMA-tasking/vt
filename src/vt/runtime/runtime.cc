@@ -132,9 +132,8 @@ void Runtime::setArgConfigs(
   //
   // CLI will take the first value in case of multiple occurences
   // for the same parameter.
-  //
-  //  This precedence rule is enforced for:
-  //  vt_lb_name, vt_lb_interval, vt_lb_file, vt_lb_file_name
+  // Here values from the command line will appear before
+  // values from the input file.
   //
 
   //--- Combine the two list of arguments

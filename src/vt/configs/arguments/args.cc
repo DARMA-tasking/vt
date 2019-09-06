@@ -149,6 +149,13 @@ namespace vt { namespace arguments {
 
   // fmt::print("argc={}, argv={}\n", argc, print_ptr(argv));
 
+  //
+  // Default options to pass to all subcommands
+  // https://cliutils.gitlab.io/CLI11Tutorial/chapters/options.html
+  // CLI allows to handle multiple occurences of one argument
+  //
+  app.option_defaults()->multi_option_policy(CLI::MultiOptionPolicy::TakeFirst);
+
   /*
    * Flags for controlling the colorization of output from vt
    */
@@ -371,16 +378,6 @@ namespace vt { namespace arguments {
   wx->group(debugLB);
   wy->group(debugLB);
 
-  //
-  // CLI allows to handle multiple occurences of one argument
-  // https://cliutils.gitlab.io/CLI11Tutorial/chapters/options.html
-  //
-  s->multi_option_policy(CLI::MultiOptionPolicy::TakeFirst);
-  t->multi_option_policy(CLI::MultiOptionPolicy::TakeFirst);
-  u->multi_option_policy(CLI::MultiOptionPolicy::TakeFirst);
-  v->multi_option_policy(CLI::MultiOptionPolicy::TakeFirst);
-  w->multi_option_policy(CLI::MultiOptionPolicy::TakeFirst);
-  
   /*
    * Flags for controlling termination
    */
