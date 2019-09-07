@@ -20,6 +20,13 @@ echo "Running on root=$dir, license=$license, pattern=$pattern"
 
 allfiles=$(find $dir -iname "$pattern")
 
+licencePrefix1="/*"
+licencePrefix2="//"
+licencePrefix3="*/"
+
+
+str2="Learn Bash"
+
 for file in $allfiles
 do
    filename=$(basename $file)
@@ -27,7 +34,26 @@ do
    licensetmp=$(mktemp)
    filetmp=$(mktemp)
    echo "Running on file=$file, dir=$filedir, license=$license, tmp=$filetmp"
-   sed 's/\<file-name.h\>/'$filename'/g' $license > $licensetmp
+   endCondition=0
+   while [ "$endCondition" != "1" ]; do
+     read -r firstline<$file
+     id=${firstline:0:2}
+
+     if [ "$id" == "$licencePrefix1" -o "$id" == "$licencePrefix2" -o "$id" == "$licencePrefix3" ]
+     then
+        sed -i.bak  '1d' "$file"
+     else
+        echo "NoLicense found"
+        endCondition="1"
+     fi
+     if [ "$id" == "$licencePrefix3" ]
+     then
+        endCondition="1"
+     fi
+     #code for passing id to other script file as parameter
+   done< "$file"
+   rm $file.bak
+   sed 's/\<file-name\>/'$filename'/g' $license > $licensetmp
    cat $licensetmp $file > $filetmp
    mv $filetmp $file
 done
