@@ -5,9 +5,14 @@ use File::Find::Rule;
 use strict;
 use warnings;
 
-my ($path, $template, $extension) = @ARGV;
-my @files = File::Find::Rule->file()->name($extension)->in($path);
+my ($path, $template, $extension) = ($ARGV[0], "license-template", "*.*");
 
+$template  = $ARGV[1] if (@ARGV > 1);
+$extension = $ARGV[2] if (@ARGV > 2);
+
+print "Running: $path $template $extension\n";
+
+my @files = File::Find::Rule->file()->name($extension)->in($path);
 
 sub make_header {
     my ($file, $out) = @_;
@@ -72,5 +77,6 @@ for my $file (@files) {
     chomp $temp;
 
     print `mv $temp $file`;
+    #print "EXECUTE: mv $temp $file\n";
 }
 
