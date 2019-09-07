@@ -55,11 +55,16 @@ for my $file (@files) {
 
 
     if (!$output_header) {
+        close $out;
+        $temp = `mktemp`;
+        open $out, ">$temp" or die "Can't access $temp\n";
         open DESC, "<$file" or die "Can't access $file\n";
+        print $out "/*";
         &make_header($file, $out);
         for (<DESC>) {
             print $out "$_";
         }
+        print $out "*/";
         close DESC;
     }
 
