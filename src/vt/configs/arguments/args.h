@@ -51,101 +51,113 @@
 
 namespace vt { namespace arguments {
 
-struct ArgConfig {
-
-  static int parse(int& argc, char**& argv);
+struct Configs {
 
 public:
-  static bool vt_color;
-  static bool vt_no_color;
-  static bool vt_auto_color;
-  static bool vt_quiet;
 
-  static bool vt_no_sigint;
-  static bool vt_no_sigsegv;
-  static bool vt_no_terminate;
+  bool vt_color = true;
+  bool vt_no_color = false;
+  bool vt_auto_color = false;
+  bool vt_quiet = false;
 
-  static bool vt_no_warn_stack;
-  static bool vt_no_assert_stack;
-  static bool vt_no_abort_stack;
-  static bool vt_no_stack;
-  static std::string vt_stack_file;
-  static std::string vt_stack_dir;
-  static int32_t vt_stack_mod;
+  bool vt_no_sigint = false;
+  bool vt_no_sigsegv = false;
+  bool vt_no_terminate = false;
 
-  static bool vt_trace;
-  static std::string vt_trace_file;
-  static std::string vt_trace_dir;
-  static int32_t vt_trace_mod;
+  bool vt_no_warn_stack = false;
+  bool vt_no_assert_stack = false;
+  bool vt_no_abort_stack = false;
+  bool vt_no_stack = false;
+  std::string vt_stack_file = "";
+  std::string vt_stack_dir = "";
+  int32_t vt_stack_mod = 1;
 
-  static bool vt_lb;
-  static bool vt_lb_file;
-  static bool vt_lb_quiet;
-  static std::string vt_lb_file_name;
-  static std::string vt_lb_name;
-  static int32_t vt_lb_interval;
-  static bool vt_lb_stats;
-  static std::string vt_lb_stats_dir;
-  static std::string vt_lb_stats_file;
+  bool vt_trace = false;
+  std::string vt_trace_file = "";
+  std::string vt_trace_dir = "";
+  int32_t vt_trace_mod = 1;
 
-  static bool vt_no_detect_hang;
-  static bool vt_term_rooted_use_ds;
-  static bool vt_term_rooted_use_wave;
-  static int64_t vt_hang_freq;
+  bool vt_lb = false;
+  bool vt_lb_file = false;
+  bool vt_lb_quiet = false;
+  std::string vt_lb_file_name = "balance.in";
+  std::string vt_lb_name = "NoLB";
+  int32_t vt_lb_interval = 1;
+  bool vt_lb_stats = false;
+  std::string vt_lb_stats_dir = "vt_lb_stats";
+  std::string vt_lb_stats_file = "stats";
 
-  static bool vt_pause;
+  bool vt_no_detect_hang = false;
+  bool vt_term_rooted_use_ds = false;
+  bool vt_term_rooted_use_wave = false;
+  int64_t vt_hang_freq = 1024;
 
-  static bool vt_debug_all;
-  static bool vt_debug_verbose;
-  static bool vt_debug_none;
-  static bool vt_debug_gen;
-  static bool vt_debug_runtime;
-  static bool vt_debug_active;
-  static bool vt_debug_term;
-  static bool vt_debug_termds;
-  static bool vt_debug_barrier;
-  static bool vt_debug_event;
-  static bool vt_debug_pipe;
-  static bool vt_debug_pool;
-  static bool vt_debug_reduce;
-  static bool vt_debug_rdma;
-  static bool vt_debug_rdma_channel;
-  static bool vt_debug_rdma_state;
-  static bool vt_debug_param;
-  static bool vt_debug_handler;
-  static bool vt_debug_hierlb;
-  static bool vt_debug_scatter;
-  static bool vt_debug_sequence;
-  static bool vt_debug_sequence_vrt;
-  static bool vt_debug_serial_msg;
-  static bool vt_debug_trace;
-  static bool vt_debug_location;
-  static bool vt_debug_lb;
-  static bool vt_debug_vrt;
-  static bool vt_debug_vrt_coll;
-  static bool vt_debug_worker;
-  static bool vt_debug_group;
-  static bool vt_debug_broadcast;
-  static bool vt_debug_objgroup;
+  bool vt_pause = false;
 
-  static bool vt_user_1;
-  static bool vt_user_2;
-  static bool vt_user_3;
-  static int32_t vt_user_int_1;
-  static int32_t vt_user_int_2;
-  static int32_t vt_user_int_3;
-  static std::string vt_user_str_1;
-  static std::string vt_user_str_2;
-  static std::string vt_user_str_3;
+  bool vt_debug_all = false;
+  bool vt_debug_verbose = false;
+  bool vt_debug_none = false;
+  bool vt_debug_gen = false;
+  bool vt_debug_runtime = false;
+  bool vt_debug_active = false;
+  bool vt_debug_term = false;
+  bool vt_debug_termds = false;
+  bool vt_debug_barrier = false;
+  bool vt_debug_event = false;
+  bool vt_debug_pipe = false;
+  bool vt_debug_pool = false;
+  bool vt_debug_reduce = false;
+  bool vt_debug_rdma = false;
+  bool vt_debug_rdma_channel = false;
+  bool vt_debug_rdma_state = false;
+  bool vt_debug_param = false;
+  bool vt_debug_handler = false;
+  bool vt_debug_hierlb = false;
+  bool vt_debug_scatter = false;
+  bool vt_debug_sequence = false;
+  bool vt_debug_sequence_vrt = false;
+  bool vt_debug_serial_msg = false;
+  bool vt_debug_trace = false;
+  bool vt_debug_location = false;
+  bool vt_debug_lb = false;
+  bool vt_debug_vrt = false;
+  bool vt_debug_vrt_coll = false;
+  bool vt_debug_worker = false;
+  bool vt_debug_group = false;
+  bool vt_debug_broadcast = false;
+  bool vt_debug_objgroup = false;
+
+  bool vt_user_1 = false;
+  bool vt_user_2 = false;
+  bool vt_user_3 = false;
+  int32_t vt_user_int_1 = 0;
+  int32_t vt_user_int_2 = 0;
+  int32_t vt_user_int_3 = 0;
+  std::string vt_user_str_1 = "";
+  std::string vt_user_str_2 = "";
+  std::string vt_user_str_3 = "";
+
+};
+
+
+struct Args {
+
+  static int parse(int& argc, char**& argv, const Configs &ref);
+
+public:
+  static Configs config;
 
 private:
   static CLI::App app;
   static bool parsed;
+
 };
 
-inline bool user1() { return ArgConfig::vt_user_1; }
-inline bool user2() { return ArgConfig::vt_user_2; }
-inline bool user3() { return ArgConfig::vt_user_3; }
+
+inline bool user1() { return Args::config.vt_user_1; }
+inline bool user2() { return Args::config.vt_user_2; }
+inline bool user3() { return Args::config.vt_user_3; }
+
 
 }} /* end namespace vt::arguments */
 

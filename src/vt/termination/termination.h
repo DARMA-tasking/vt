@@ -78,7 +78,6 @@ struct TerminationDetector :
   using TermStateType      = TermState;
   using TermStateDSType    = term::ds::StateDS::TerminatorType;
   using WindowType         = std::unique_ptr<EpochWindow>;
-  using ArgType            = vt::arguments::ArgConfig;
   using ParentBagType      = EpochRelation::ParentBagType;
 
   TerminationDetector();

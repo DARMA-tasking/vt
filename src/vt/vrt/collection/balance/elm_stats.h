@@ -63,7 +63,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ElementStats {
   using PhaseType       = uint64_t;
-  using ArgType         = vt::arguments::ArgConfig;
 
   ElementStats() = default;
   ElementStats(ElementStats const&) = default;

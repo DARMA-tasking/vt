@@ -55,6 +55,8 @@
 
 namespace vt { namespace trace {
 
+using ArgVT = vt::arguments::Args;
+
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
     start_time_(getCurrentTime())
@@ -102,8 +104,8 @@ void Trace::setupNames(
     vtAssert(false, "Must have current directory");
   }
 
-  if (ArgType::vt_trace_dir != "") {
-    full_dir_name = std::string(cur_dir) + "/" + ArgType::vt_trace_dir + "/";
+  if (ArgVT::config.vt_trace_dir != "") {
+    full_dir_name = std::string(cur_dir) + "/" + ArgVT::config.vt_trace_dir + "/";
   }
 
   if (theContext()->getNode() == 0) {
@@ -117,9 +119,9 @@ void Trace::setupNames(
   auto const prog_name = pc[pc.size()-1];
 
   auto const node_str = "." + std::to_string(node) + ".log.gz";
-  if (ArgType::vt_trace_file != "") {
-    full_trace_name = full_dir_name + "/" + ArgType::vt_trace_file + node_str;
-    full_sts_name   = full_dir_name + "/" + ArgType::vt_trace_file + ".sts";
+  if (ArgVT::config.vt_trace_file != "") {
+    full_trace_name = full_dir_name + "/" + ArgVT::config.vt_trace_file + node_str;
+    full_sts_name   = full_dir_name + "/" + ArgVT::config.vt_trace_file + ".sts";
   } else {
     full_trace_name = full_dir_name + "/" + trace_name;
     full_sts_name   = full_dir_name + "/" + prog_name + ".sts";
@@ -566,11 +568,11 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
 }
 
 bool Trace::checkEnabled() {
-  if (ArgType::vt_trace) {
+  if (ArgVT::config.vt_trace) {
     auto const node = theContext()->getNode();
-    if (ArgType::vt_trace_mod == 0) {
+    if (ArgVT::config.vt_trace_mod == 0) {
       return true;
-    } else if (node % ArgType::vt_trace_mod == 1) {
+    } else if (node % ArgVT::config.vt_trace_mod == 1) {
       return true;
     } else {
       return false;

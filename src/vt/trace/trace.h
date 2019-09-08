@@ -80,7 +80,6 @@ struct Trace {
   using LogPtrType          = LogType*;
   using TraceContainerType  = std::vector<LogPtrType>;
   using TraceStackType      = std::stack<LogPtrType>;
-  using ArgType             = vt::arguments::ArgConfig;
 
   Trace();
   Trace(std::string const& in_prog_name, std::string const& in_trace_name);

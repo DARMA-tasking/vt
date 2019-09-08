@@ -57,6 +57,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+using ArgVT = vt::arguments::Args;
+
 /*static*/ objgroup::proxy::Proxy<LBManager> LBManager::proxy_;
 
 LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
@@ -75,12 +77,12 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   LBType the_lb = LBType::NoLB;
 
   // --vt_lb is not enabled, thus do not run the load balancer
-  if (not ArgType::vt_lb) {
+  if (not ArgVT::config.vt_lb) {
     return the_lb;
   }
 
-  if (ArgType::vt_lb_file and try_file) {
-    auto const file_name = ArgType::vt_lb_file_name;
+  if (ArgVT::config.vt_lb_file and try_file) {
+    auto const file_name = ArgVT::config.vt_lb_file_name;
     ReadLBSpec::openFile(file_name);
     ReadLBSpec::readFile();
     bool const has_spec = ReadLBSpec::hasSpec();
@@ -88,10 +90,10 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
       the_lb = ReadLBSpec::getLB(phase);
     }
   } else {
-    vtAssert(ArgType::vt_lb_interval != 0, "LB Interval must not be 0");
-    if (phase % ArgType::vt_lb_interval == 0) {
+    vtAssert(ArgVT::config.vt_lb_interval != 0, "LB Interval must not be 0");
+    if (phase % ArgVT::config.vt_lb_interval == 0) {
       for (auto&& elm : lb_names_) {
-        if (elm.second == ArgType::vt_lb_name) {
+        if (elm.second == ArgVT::config.vt_lb_name) {
           the_lb = elm.first;
           break;
         }
@@ -135,7 +137,7 @@ void LBManager::collectiveImpl(
   if (num_invocations_ == num_calls) {
     auto const& this_node = theContext()->getNode();
 
-    if (this_node == 0 and not ArgType::vt_lb_quiet) {
+    if (this_node == 0 and not ArgVT::config.vt_lb_quiet) {
       debug_print(
         lb, node,
         "LBManager::collectiveImpl: phase={}, balancer={}, name={}\n",

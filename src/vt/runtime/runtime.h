@@ -63,7 +63,6 @@ namespace vt { namespace runtime {
 struct Runtime {
   template <typename ComponentT>
   using ComponentPtrType = std::unique_ptr<ComponentT>;
-  using ArgType = vt::arguments::ArgConfig;
 
   Runtime(
     int& argc, char**& argv,
@@ -84,13 +83,13 @@ struct Runtime {
   virtual ~Runtime();
 
   void setArgConfigs(int &argc, char**& argv) {
-	  std::vector<std::string> fileArg;
-	  this->setArgConfigs(argc, argv, fileArg);
+	  const vt::arguments::Configs myDefault;
+	  this->setArgConfigs(argc, argv, myDefault);
   }
 
   void setArgConfigs(
     int &argc, char**& argv, 
-	const std::vector<std::string> &fileArg
+	const vt::arguments::Configs &ref
   );
 
   void setMPIComm(MPI_Comm* in_comm) { communicator_ = in_comm; }
@@ -139,7 +138,7 @@ protected:
   void finalizeComponents();
   void finalizeOptionalComponents();
 
-  void parseAndSetup(int& argc, char**& argv);
+  void parseAndSetup(int& argc, char**& argv, const vt::arguments::Configs &ref);
 
   void sync();
   void setup();

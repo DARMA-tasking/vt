@@ -59,8 +59,8 @@ inline auto istty() -> bool {
 }
 
 inline auto ttyc() -> bool {
-  auto nocolor = arguments::ArgConfig::vt_no_color ? false : true;
-  auto tty = arguments::ArgConfig::vt_auto_color ? istty() : nocolor;
+  auto nocolor = arguments::Args::config.vt_no_color ? false : true;
+  auto tty = arguments::Args::config.vt_auto_color ? istty() : nocolor;
   return tty;
 }
 

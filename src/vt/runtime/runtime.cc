@@ -85,6 +85,8 @@ namespace vt { namespace runtime {
 /*static*/ std::string Runtime::prog_name_ = "";
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
+using ArgVT = vt::arguments::Args;
+
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
   bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
@@ -92,7 +94,8 @@ Runtime::Runtime(
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
      user_argv_(argv)
 {
-  parseAndSetup(argc, argv);
+  vt::arguments::Configs myDefault;
+  parseAndSetup(argc, argv, myDefault);
   sig_user_1_ = false;
 }
 
@@ -108,10 +111,11 @@ Runtime::Runtime(
 
 void Runtime::parseAndSetup(
   int &argc,
-  char**& argv
+  char**& argv,
+  const vt::arguments::Configs &ref
 )
 {
-  ArgType::parse(argc, argv);
+  vt::arguments::Args::parse(argc, argv, ref);
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
@@ -124,43 +128,11 @@ void Runtime::parseAndSetup(
 void Runtime::setArgConfigs(
   int &argc,
   char**& argv,
-  const std::vector<std::string> &fileArg
+  const vt::arguments::Configs &ref
 )
 {
 
-  // Precedence rule:
-  //
-  // CLI will take the first value in case of multiple occurences
-  // for the same parameter.
-  // Here values from the command line will appear before
-  // values from the input file.
-  //
-
-  //--- Combine the two list of arguments
-  std::vector<std::string> ret_args;
-  ret_args.reserve(argc + fileArg.size());
-  for (auto i = 0; i < argc; i++) {
-    ret_args.push_back(std::string(argv[i]));
-  }
-
-  for (auto myarg : fileArg) {
-    ret_args.push_back(myarg);
-  }
-
-  // Use the saved index to setup the new_argv and new_argc
-  int new_argc = ret_args.size();
-  char** new_argv = new char*[new_argc];
-  for (int ii = 0; ii < new_argc; ii++) {
-    new_argv[ii] = new char[ret_args[ii].length() + 1];
-	std::strcpy(new_argv[ii], ret_args[ii].c_str());
-  }
-
-  //--- Set them back with all vt arguments elided
-  argc = new_argc;
-  argv = new_argv;
-
-  //--- Parse the argument list
-  parseAndSetup(argc, argv);
+  parseAndSetup(argc, argv, ref);
 
 }
 
@@ -169,7 +141,7 @@ bool Runtime::hasSchedRun() const {
 }
 
 void Runtime::pauseForDebugger() {
-  if (ArgType::vt_pause) {
+  if (ArgVT::config.vt_pause) {
     char node_str[256];
     auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
     sprintf(node_str, "prog-%d.pid", node);
@@ -192,7 +164,7 @@ void Runtime::pauseForDebugger() {
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-    if (ArgType::vt_stack_file != "") {
+    if (ArgVT::config.vt_stack_file != "") {
       Runtime::writeToFile(stack_pretty);
     } else {
       ::fmt::print("{}", stack_pretty);
@@ -212,7 +184,7 @@ void Runtime::pauseForDebugger() {
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (ArgType::vt_stack_file != "") {
+    if (ArgVT::config.vt_stack_file != "") {
       Runtime::writeToFile(std::get<0>(stack));
     } else {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
@@ -228,7 +200,7 @@ void Runtime::pauseForDebugger() {
   ::fmt::print("{}Caught std::terminate \n", vt_pre);
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (ArgType::vt_stack_file != "") {
+    if (ArgVT::config.vt_stack_file != "") {
       Runtime::writeToFile(std::get<0>(stack));
     } else {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
@@ -242,9 +214,9 @@ void Runtime::pauseForDebugger() {
   auto const& node = debug::preNode();
   if (node == uninitialized_destination) {
     return true;
-  } else if (ArgType::vt_stack_mod == 0) {
+  } else if (ArgVT::config.vt_stack_mod == 0) {
     return true;
-  } else if (node % ArgType::vt_stack_mod == 0) {
+  } else if (node % ArgVT::config.vt_stack_mod == 0) {
     return true;
   } else {
     return false;
@@ -253,10 +225,10 @@ void Runtime::pauseForDebugger() {
 
 /*static*/ void Runtime::writeToFile(std::string const& str) {
   std::string app_name = prog_name_ == "" ? "prog" : prog_name_;
-  std::string name = ArgType::vt_stack_file == "" ? app_name : ArgType::vt_stack_file;
+  std::string name = ArgVT::config.vt_stack_file == "" ? app_name : ArgVT::config.vt_stack_file;
   auto const& node = debug::preNode();
   std::string file = name + "." + std::to_string(node) + ".stack.out";
-  std::string dir  = ArgType::vt_stack_dir == "" ? "" : ArgType::vt_stack_dir + "/";
+  std::string dir  = ArgVT::config.vt_stack_dir == "" ? "" : ArgVT::config.vt_stack_dir + "/";
   std::string path = dir + file;
   FILE* f = fopen(path.c_str(), "w+");
   fprintf(f, "%s", str.c_str());
@@ -264,20 +236,20 @@ void Runtime::pauseForDebugger() {
 }
 
 void Runtime::setupSignalHandler() {
-  if (!ArgType::vt_no_sigsegv) {
+  if (!ArgVT::config.vt_no_sigsegv) {
     signal(SIGSEGV, Runtime::sigHandler);
   }
   signal(SIGUSR1, Runtime::sigHandlerUsr1);
 }
 
 void Runtime::setupSignalHandlerINT() {
-  if (!ArgType::vt_no_sigint) {
+  if (!ArgVT::config.vt_no_sigint) {
     signal(SIGINT, Runtime::sigHandlerINT);
   }
 }
 
 void Runtime::setupTerminateHandler() {
-  if (!ArgType::vt_no_terminate) {
+  if (!ArgVT::config.vt_no_terminate) {
     std::set_terminate(termHandler);
   }
 }
@@ -330,7 +302,7 @@ bool Runtime::tryFinalize() {
 
 void Runtime::printStartupBanner() {
   // If --vt_quiet is set, immediately exit printing nothing during startup
-  if (ArgType::vt_quiet) {
+  if (ArgVT::config.vt_quiet) {
     return;
   }
 
@@ -468,48 +440,48 @@ void Runtime::printStartupBanner() {
   fmt::print("{}{}{}", vt_pre, f8, reset);
 
   #if !backend_check_enabled(lblite)
-    if (ArgType::vt_lb) {
+    if (ArgVT::config.vt_lb) {
       auto f9 = warn_cr("--vt_lb", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
-    if (ArgType::vt_lb_stats) {
+    if (ArgVT::config.vt_lb_stats) {
       auto f9 = warn_cr("--vt_lb_stats", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
   #endif
 
-  if (ArgType::vt_lb) {
+  if (ArgVT::config.vt_lb) {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    if (ArgType::vt_lb_file) {
+    if (ArgVT::config.vt_lb_file) {
       auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
       fmt::print("{}\t{}{}", vt_pre, f10, reset);
-      auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
+      auto f12 = fmt::format("Reading file \"{}\"", ArgVT::config.vt_lb_file_name);
       auto f11 = opt_on("--vt_lb_file_name", f12);
       fmt::print("{}\t{}{}", vt_pre, f11, reset);
     } else {
-      auto a3 = fmt::format("Load balancer name: \"{}\"", ArgType::vt_lb_name);
+      auto a3 = fmt::format("Load balancer name: \"{}\"", ArgVT::config.vt_lb_name);
       auto a4 = opt_on("--vt_lb_name", a3);
       fmt::print("{}\t{}{}", vt_pre, a4, reset);
       auto a1 =
-        fmt::format("Load balancing interval = {}", ArgType::vt_lb_interval);
+        fmt::format("Load balancing interval = {}", ArgVT::config.vt_lb_interval);
       auto a2 = opt_on("--vt_lb_interval", a1);
       fmt::print("{}\t{}{}", vt_pre, a2, reset);
     }
   }
 
-  if (ArgType::vt_lb_stats) {
+  if (ArgVT::config.vt_lb_stats) {
     auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
 
-    auto const fname = ArgType::vt_lb_stats_file;
+    auto const fname = ArgVT::config.vt_lb_stats_file;
     if (fname != "") {
       auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
       auto f12 = opt_on("--vt_lb_stats_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fdir = ArgType::vt_lb_stats_dir;
+    auto const fdir = ArgVT::config.vt_lb_stats_dir;
     if (fdir != "") {
       auto f11 = fmt::format("LB stats directory \"{}\"", fdir);
       auto f12 = opt_on("--vt_lb_stats_dir", f11);
@@ -519,17 +491,17 @@ void Runtime::printStartupBanner() {
 
 
   #if !backend_check_enabled(trace_enabled)
-    if (ArgType::vt_trace) {
+    if (ArgVT::config.vt_trace) {
       auto f9 = warn_cr("--vt_trace", "trace_enabled");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
   #endif
 
   #if backend_check_enabled(trace_enabled)
-  if (ArgType::vt_trace) {
+  if (ArgVT::config.vt_trace) {
     auto f9 = opt_on("--vt_trace", "Tracing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    if (ArgType::vt_trace_file != "") {
+    if (ArgVT::config.vt_trace_file != "") {
       auto f11 = fmt::format("Trace file name \"{}\"", theTrace->getTraceName());
       auto f12 = opt_on("--vt_trace_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -540,8 +512,8 @@ void Runtime::printStartupBanner() {
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
     }
-    if (ArgType::vt_trace_dir != "") {
-      auto f11 = fmt::format("Directory \"{}\"", ArgType::vt_trace_dir);
+    if (ArgVT::config.vt_trace_dir != "") {
+      auto f11 = fmt::format("Directory \"{}\"", ArgVT::config.vt_trace_dir);
       auto f12 = opt_on("--vt_trace_dir", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     } else {
@@ -553,8 +525,8 @@ void Runtime::printStartupBanner() {
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
     }
-    if (ArgType::vt_trace_mod != 0) {
-      auto f11 = fmt::format("Output every {} files ", ArgType::vt_trace_mod);
+    if (ArgVT::config.vt_trace_mod != 0) {
+      auto f11 = fmt::format("Output every {} files ", ArgVT::config.vt_trace_mod);
       auto f12 = opt_on("--vt_trace_mod", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
@@ -562,19 +534,19 @@ void Runtime::printStartupBanner() {
   #endif
 
 
-  if (ArgType::vt_term_rooted_use_ds) {
+  if (ArgVT::config.vt_term_rooted_use_ds) {
     auto f11 = fmt::format("Forcing the use of Dijkstra-Scholten for rooted TD");
     auto f12 = opt_on("--vt_term_rooted_use_ds", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_term_rooted_use_wave) {
+  if (ArgVT::config.vt_term_rooted_use_wave) {
     auto f11 = fmt::format("Forcing the use of 4-counter wave-based for rooted TD");
     auto f12 = opt_on("--vt_term_rooted_use_wave", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_no_detect_hang) {
+  if (ArgVT::config.vt_no_detect_hang) {
     auto f11 = fmt::format("Disabling termination hang detection");
     auto f12 = opt_on("--vt_no_detect_hang", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -584,17 +556,17 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (!ArgType::vt_no_detect_hang) {
-    if (ArgType::vt_hang_freq != 0) {
+  if (!ArgVT::config.vt_no_detect_hang) {
+    if (ArgVT::config.vt_hang_freq != 0) {
       auto f11 = fmt::format(
-        "Detecting hang every {} tree traversals ", ArgType::vt_hang_freq
+        "Detecting hang every {} tree traversals ", ArgVT::config.vt_hang_freq
       );
       auto f12 = opt_on("--vt_hang_detect", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
   }
 
-  if (ArgType::vt_no_sigint) {
+  if (ArgVT::config.vt_no_sigint) {
     auto f11 = fmt::format("Disabling SIGINT signal handling");
     auto f12 = opt_on("--vt_no_SIGINT", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -604,7 +576,7 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_no_sigsegv) {
+  if (ArgVT::config.vt_no_sigsegv) {
     auto f11 = fmt::format("Disabling SIGSEGV signal handling");
     auto f12 = opt_on("--vt_no_SIGSEGV", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -614,7 +586,7 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_no_terminate) {
+  if (ArgVT::config.vt_no_terminate) {
     auto f11 = fmt::format("Disabling std::terminate signal handling");
     auto f12 = opt_on("--vt_no_terminate", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -624,12 +596,12 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_no_color) {
+  if (ArgVT::config.vt_no_color) {
     auto f11 = fmt::format("Disabling color output");
     auto f12 = opt_on("--vt_no_color", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   } else {
-    if (ArgType::vt_auto_color) {
+    if (ArgVT::config.vt_auto_color) {
       auto f11 = fmt::format("Automatic TTY detection for color output");
       auto f12 = opt_on("--vt_auto_color", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -640,7 +612,7 @@ void Runtime::printStartupBanner() {
     }
   }
 
-  if (ArgType::vt_no_stack) {
+  if (ArgVT::config.vt_no_stack) {
     auto f11 = fmt::format("Disabling all stack dumps");
     auto f12 = opt_on("--vt_no_stack", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -650,53 +622,53 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_no_warn_stack) {
+  if (ArgVT::config.vt_no_warn_stack) {
     auto f11 = fmt::format("Disabling all stack dumps on vtWarn(..)");
     auto f12 = opt_on("--vt_no_warn_stack", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_no_assert_stack) {
+  if (ArgVT::config.vt_no_assert_stack) {
     auto f11 = fmt::format("Disabling all stack dumps on vtAssert(..)");
     auto f12 = opt_on("--vt_no_assert_stack", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_no_abort_stack) {
+  if (ArgVT::config.vt_no_abort_stack) {
     auto f11 = fmt::format("Disabling all stack dumps on vtAbort(..)");
     auto f12 = opt_on("--vt_no_abort_stack", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_stack_file != "") {
+  if (ArgVT::config.vt_stack_file != "") {
     auto f11 = fmt::format(
-      "Output stack dumps with file name {}", ArgType::vt_stack_file
+      "Output stack dumps with file name {}", ArgVT::config.vt_stack_file
     );
     auto f12 = opt_on("--vt_stack_file", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_stack_dir != "") {
-    auto f11 = fmt::format("Output stack dumps to {}", ArgType::vt_stack_dir);
+  if (ArgVT::config.vt_stack_dir != "") {
+    auto f11 = fmt::format("Output stack dumps to {}", ArgVT::config.vt_stack_dir);
     auto f12 = opt_on("--vt_stack_dir", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_stack_mod != 0) {
+  if (ArgVT::config.vt_stack_mod != 0) {
     auto f11 = fmt::format(
-      "Output stack dumps every {} files ", ArgType::vt_stack_mod
+      "Output stack dumps every {} files ", ArgVT::config.vt_stack_mod
     );
     auto f12 = opt_on("--vt_stack_mod", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_pause) {
+  if (ArgVT::config.vt_pause) {
     auto f11 = fmt::format("Enabled debug pause at startup");
     auto f12 = opt_on("--vt_pause", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (ArgType::vt_debug_all) {
+  if (ArgVT::config.vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
     auto f12 = opt_on("--vt_debug_all", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -704,7 +676,7 @@ void Runtime::printStartupBanner() {
 
 #define vt_runtime_debug_warn_compile(opt)                              \
   do {                                                                  \
-    if (!vt_backend_debug_enabled(opt) and ArgType::vt_debug_ ## opt) { \
+    if (!vt_backend_debug_enabled(opt) and ArgVT::config.vt_debug_ ## opt) { \
       auto f9 = warn_cr("--vt_debug_" #opt, "debug_" #opt);             \
       fmt::print("{}\t{}{}", vt_pre, f9, reset);                        \
     }                                                                   \
@@ -746,7 +718,7 @@ void Runtime::printStartupBanner() {
 
 void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   // If --vt_quiet is set, immediately exit printing nothing during startup
-  if (ArgType::vt_quiet) {
+  if (ArgVT::config.vt_quiet) {
     return;
   }
   auto green    = debug::green();
@@ -894,15 +866,15 @@ void Runtime::output(
     fmt::print(stderr, "{}\n", prefix);
   }
 
-  if (!ArgType::vt_no_stack) {
-    bool const on_abort = !ArgType::vt_no_abort_stack;
-    bool const on_warn = !ArgType::vt_no_warn_stack;
+  if (!ArgVT::config.vt_no_stack) {
+    bool const on_abort = !ArgVT::config.vt_no_abort_stack;
+    bool const on_warn = !ArgVT::config.vt_no_warn_stack;
     bool const dump = (error && on_abort) || (!error && on_warn);
     if (dump) {
       if (Runtime::nodeStackWrite()) {
         auto stack = debug::stack::dumpStack();
         auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-        if (ArgType::vt_stack_file != "") {
+        if (ArgVT::config.vt_stack_file != "") {
           Runtime::writeToFile(stack_pretty);
         } else {
           fmt::print("{}", stack_pretty);
@@ -943,7 +915,7 @@ void Runtime::setup() {
     MPI_Barrier(theContext->getComm());
   });
 
-  if (ArgType::vt_pause) {
+  if (ArgVT::config.vt_pause) {
     pauseForDebugger();
   }
 

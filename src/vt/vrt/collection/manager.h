@@ -117,7 +117,6 @@ struct CollectionManager {
   using CleanupListFnType = std::unordered_map<VirtualProxyType,std::list<CleanupFnType>>;
   using DispatchHandlerType = auto_registry::AutoHandlerType;
   using ActionVecType = std::vector<ActionType>;
-  using ArgType = vt::arguments::ArgConfig;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;

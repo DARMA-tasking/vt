@@ -124,10 +124,10 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 }
 
 /*static*/ void ProcStats::createStatsFile() {
-  using ArgType = vt::arguments::ArgConfig;
+  using ArgVT = vt::arguments::Args;
   auto const node = theContext()->getNode();
-  auto const base_file = std::string(ArgType::vt_lb_stats_file);
-  auto const dir = std::string(ArgType::vt_lb_stats_dir);
+  auto const base_file = std::string(ArgVT::config.vt_lb_stats_file);
+  auto const dir = std::string(ArgVT::config.vt_lb_stats_dir);
   auto const file = fmt::format("{}.{}.out", base_file, node);
   auto const file_name = fmt::format("{}/{}", dir, file);
 

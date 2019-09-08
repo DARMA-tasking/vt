@@ -50,6 +50,8 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+using ArgVT = vt::arguments::Args;
+
 CollectionManager::CollectionManager() {
   #if backend_check_enabled(lblite)
     balance::LBManager::init();
@@ -61,7 +63,7 @@ CollectionManager::CollectionManager() {
 
   // Statistics output when LB is enabled and appropriate flag is enabled
 #if backend_check_enabled(lblite)
-  if (ArgType::vt_lb_stats) {
+  if (ArgVT::config.vt_lb_stats) {
     balance::ProcStats::outputStatsFile();
     balance::ProcStats::clearStats();
   }

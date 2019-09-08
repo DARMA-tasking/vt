@@ -57,7 +57,6 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LBManager {
-  using ArgType = vt::arguments::ArgConfig;
 
   LBManager() = default;
   LBManager(LBManager const&) = delete;

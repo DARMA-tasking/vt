@@ -61,6 +61,8 @@
 
 namespace vt { namespace term {
 
+using ArgVT = vt::arguments::Args;
+
 TerminationDetector::TerminationDetector()
   : collective::tree::Tree(collective::tree::tree_cons_tag_t),
   any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
@@ -345,6 +347,7 @@ void TerminationDetector::freeEpoch(EpochType const& epoch) {
 }
 
 bool TerminationDetector::propagateEpoch(TermStateType& state) {
+
   bool const& is_ready = state.readySubmitParent();
   bool const& is_root = isRoot();
   auto const& parent = getParent();
@@ -407,7 +410,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         epochTerminated(state.getEpoch());
       } else {
-        if (!ArgType::vt_no_detect_hang) {
+        if (!ArgVT::config.vt_no_detect_hang) {
           // Counts are the same as previous iteration
           if (state.g_prod2 == state.g_prod1 && state.g_cons2 == state.g_cons1) {
             state.constant_count++;
@@ -416,8 +419,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
           }
 
           if (
-            state.constant_count >= ArgType::vt_hang_freq and
-            state.constant_count %  ArgType::vt_hang_freq == 0
+            state.constant_count >= ArgVT::config.vt_hang_freq and
+            state.constant_count %  ArgVT::config.vt_hang_freq == 0
           ) {
             if (
               state.num_print_constant == 0 or
@@ -794,8 +797,8 @@ EpochType TerminationDetector::makeEpochRooted(
     theContext()->getNode(), useDS, child, parent
   );
 
-  bool const force_use_ds = vt::arguments::ArgConfig::vt_term_rooted_use_ds;
-  bool const force_use_wave = vt::arguments::ArgConfig::vt_term_rooted_use_wave;
+  bool const force_use_ds = ArgVT::config.vt_term_rooted_use_ds;
+  bool const force_use_wave = ArgVT::config.vt_term_rooted_use_wave;
 
   // Both force options should never be turned on
   vtAssertExpr(not (force_use_ds and force_use_wave));
