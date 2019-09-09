@@ -238,6 +238,7 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 
   vt_print(lb, "inputStatFile: file={}, iter={}\n", file_name, 0);
 
+  // TODO verify fopen sucess
   FILE * pFile = std::fopen (file_name.c_str(), "r");
 
   // TODO loop on num_iters
@@ -252,25 +253,38 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   size_t c1;
   ElementIDType c2;
   TimeType c3;
+  CommBytesType c4;
+  using E = typename std::underlying_type<CommCategory>::type;
+  E c5;
+  bool finished = false;
   char separator;
-  while (!feof(pFile)) {
-    fscanf (pFile, "%zi", &c1);
-    fscanf (pFile, "%c", &separator);
-    fscanf (pFile, "%lli", &c2);
-    fscanf (pFile, "%c", &separator);
-    fscanf (pFile, "%lf", &c3);
-    fscanf (pFile, "%c", &separator);
-    if(separator==',')
+  fpos_t pos;
+  while (!finished) {
+    if(fscanf(pFile, "%zi %c %lli %c %lf", &c1, &separator, &c2, &separator, &c3) > 0)
     {
-      // Communication dectected : break the loop until we use num_iter
-      // and/or communication
-      break;
+      fgetpos (pFile,&pos);
+      fscanf (pFile, "%c", &separator);
+      if(separator == ',')
+      {
+        // COM detected, read the end of line and do nothing else
+        int res = fscanf (pFile, "%lf %c %hhi", &c4, &separator, &c5);
+        vtAssertExpr(res == 3);
+      }
+      else
+      {
+        // Load detected, create the new element
+        fsetpos (pFile,&pos);
+        elements.emplace (c2, c3);
+      }
     }
     else
     {
-      elements.emplace (c2, c3);
+      finished = true;
     }
   }
+
+  vt_print(lb, "Closing the file...\n");
+
   std::fclose(pFile);
 
   ProcStats::proc_data_.push_back(elements);
