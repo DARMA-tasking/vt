@@ -451,16 +451,18 @@ namespace vt { namespace arguments {
    */
   std::vector<std::string> ret_args;
   std::vector<std::size_t> ret_idx;
+  int item = 0;
 
-  // Reverse iterate (CLI11 reverses the order when they modify the args)
-  for (auto iter = args.rbegin(); iter != args.rend(); ++iter) {
-    for (auto ii = 0; ii < argc; ii++) {
-      if (std::string(argv[ii]) == *iter) {
+  // Iterate forward (CLI11 reverses the order when it modifies the args)
+  for (auto&& skipped : args) {
+    for (auto ii = item; ii < argc; ii++) {
+      if (std::string(argv[ii]) == skipped) {
         ret_idx.push_back(ii);
+        item++;
         break;
       }
     }
-    ret_args.push_back(*iter);
+    ret_args.push_back(skipped);
   }
 
   // Use the saved index to setup the new_argv and new_argc
