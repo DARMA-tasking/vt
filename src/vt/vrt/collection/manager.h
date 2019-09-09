@@ -266,6 +266,8 @@ public:
   static IndexT* queryIndexContext();
   template <typename IndexT>
   static VirtualProxyType queryProxyContext();
+  template <typename IndexT>
+  static bool hasContext();
 
   // Async reduce for new collection construction coordination wrt meta-datt
   template <typename ColT>

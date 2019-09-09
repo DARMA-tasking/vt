@@ -1971,17 +1971,19 @@ template <typename ColT, typename ParamT, typename... Args>
 template <typename IndexT>
 /*static*/ IndexT* CollectionManager::queryIndexContext() {
   using IdxContextHolder = InsertContextHolder<IndexT>;
-  auto const idx = IdxContextHolder::index();
-  vtAssertExpr(idx != nullptr);
-  return idx;
+  return IdxContextHolder::index();
 }
 
 template <typename IndexT>
 /*static*/ VirtualProxyType CollectionManager::queryProxyContext() {
   using IdxContextHolder = InsertContextHolder<IndexT>;
-  auto const proxy = IdxContextHolder::proxy();
-  vtAssertExpr(proxy != no_vrt_proxy);
-  return proxy;
+  return IdxContextHolder::proxy();
+}
+
+template <typename IndexT>
+/*static*/ bool CollectionManager::hasContext() {
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+  return IdxContextHolder::hasContext();
 }
 
 template <typename ColT, typename... Args>
