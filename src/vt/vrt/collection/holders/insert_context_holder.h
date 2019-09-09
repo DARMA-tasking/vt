@@ -65,13 +65,15 @@ struct InsertContextHolder {
   }
 
   static IndexT* index() {
-    vtAssertExpr(ctx_idx != nullptr);
     return ctx_idx;
   }
 
   static VirtualProxyType proxy() {
-    vtAssertExpr(ctx_proxy != no_vrt_proxy);
     return ctx_proxy;
+  }
+
+  static bool hasContext() {
+    return ctx_idx != nullptr and ctx_proxy != no_vrt_proxy;
   }
 
 private:
