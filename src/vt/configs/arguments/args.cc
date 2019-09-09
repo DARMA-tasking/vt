@@ -142,8 +142,9 @@ namespace vt { namespace arguments {
     return 0;
   }
 
+  // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
-  for (auto i = 0; i < argc; i++) {
+  for (auto i = argc-1; i > 0; i--) {
     args.push_back(std::string(argv[i]));
   }
 
