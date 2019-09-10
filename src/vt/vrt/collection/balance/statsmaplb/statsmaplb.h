@@ -67,6 +67,8 @@ struct StatsMapLB : BaseLB {
   bool   getDefaultAutoThreshold() const override { return true; }
 
 private:
+  void loadPhaseChangedMap();
+  std::vector<bool> phase_changed_map_;
   objgroup::proxy::Proxy<StatsMapLB> proxy = {};
 };
 
