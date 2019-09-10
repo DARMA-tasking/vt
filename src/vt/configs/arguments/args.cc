@@ -60,12 +60,19 @@ namespace vt { namespace arguments {
 
 /*static*/ int Args::parse(
   int& argc, char**& argv, 
-  const Configs &ref
+  const Configs *ref
 ) 
 {
 
-  if (parsed || argc == 0 || argv == nullptr) {
+  if (parsed)
     return 0;
+
+  if (argc == 0 || argv == nullptr) {
+	if (ref == nullptr)
+	  return 0;
+	//
+    config = *ref;
+	return 1;
   }
 
   std::vector<std::string> args;
@@ -317,11 +324,11 @@ namespace vt { namespace arguments {
   auto hang_freq    = "The number of tree traversals before a hang is detected";
   auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
   auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
+  auto hfd          = 1024;
   auto x  = app.add_flag("--vt_no_detect_hang",       config.vt_no_detect_hang,       hang);
   auto x1 = app.add_flag("--vt_term_rooted_use_ds",   config.vt_term_rooted_use_ds,   ds);
   auto x2 = app.add_flag("--vt_term_rooted_use_wave", config.vt_term_rooted_use_wave, wave);
-  auto y = app.add_option("--vt_hang_freq",           config.vt_hang_freq,      hang_freq, 
-		  ref.vt_hang_freq);
+  auto y = app.add_option("--vt_hang_freq",           config.vt_hang_freq, hang_freq, hfd);
   auto debugTerm = "Termination";
   x->group(debugTerm);
   x1->group(debugTerm);
@@ -412,7 +419,234 @@ namespace vt { namespace arguments {
   argv = new_argv;
 
   parsed = true;
-  return 1;
+
+  if (ref == nullptr)
+    return 1;
+
+  //
+  // Treat the configuration from the files
+  //
+
+  if (a->count() == 0)
+    config.vt_color = ref->vt_color;
+
+  if (b->count() == 0)
+    config.vt_no_color = ref->vt_no_color;
+
+  if (c->count() == 0)
+    config.vt_auto_color = ref->vt_auto_color;
+
+  if (a1->count() == 0)
+    config.vt_quiet = ref->vt_quiet;
+
+  //------
+
+  if (d->count() == 0)
+    config.vt_no_sigint = ref->vt_no_sigint;
+
+  if (e->count() == 0)
+    config.vt_no_sigsegv = ref->vt_no_sigsegv;
+
+  if (f->count() == 0)
+    config.vt_no_terminate = ref->vt_no_terminate;
+
+  //------
+
+  if (g->count() == 0)
+    config.vt_no_warn_stack = ref->vt_no_warn_stack;
+
+  if (h->count() == 0)
+    config.vt_no_assert_stack = ref->vt_no_assert_stack;
+
+  if (i->count() == 0)
+    config.vt_no_abort_stack = ref->vt_no_abort_stack;
+
+  if (j->count() == 0)
+    config.vt_no_stack = ref->vt_no_stack;
+
+  if (k->count() == 0)
+    config.vt_stack_file = ref->vt_stack_file;
+
+  if (l->count() == 0)
+    config.vt_stack_dir = ref->vt_stack_dir;
+
+  if (m->count() == 0)
+    config.vt_stack_mod = ref->vt_stack_mod;
+
+  //------
+
+  if (n->count() == 0)
+    config.vt_trace = ref->vt_trace;
+
+  if (o->count() == 0)
+    config.vt_trace_file = ref->vt_trace_file;
+
+  if (p->count() == 0)
+    config.vt_trace_dir = ref->vt_trace_dir;
+
+  if (q->count() == 0)
+    config.vt_trace_mod = ref->vt_trace_mod;
+
+  //------
+
+  if (r->count() == 0)
+    config.vt_debug_all = ref->vt_debug_all;
+
+  if (r1->count() == 0)
+    config.vt_debug_verbose = ref->vt_debug_verbose;
+
+  if (aa->count() == 0)
+    config.vt_debug_none = ref->vt_debug_none;
+
+  if (ba->count() == 0)
+    config.vt_debug_gen = ref->vt_debug_gen;
+
+  if (ca->count() == 0)
+    config.vt_debug_runtime = ref->vt_debug_runtime;
+
+  if (da->count() == 0)
+    config.vt_debug_active = ref->vt_debug_active;
+
+  if (ea->count() == 0)
+    config.vt_debug_term = ref->vt_debug_term;
+
+  if (fa->count() == 0)
+    config.vt_debug_termds = ref->vt_debug_termds;
+
+  if (ga->count() == 0)
+    config.vt_debug_barrier = ref->vt_debug_barrier;
+
+  if (ha->count() == 0)
+    config.vt_debug_event = ref->vt_debug_event;
+
+  if (ia->count() == 0)
+    config.vt_debug_pipe = ref->vt_debug_pipe;
+
+  if (ja->count() == 0)
+    config.vt_debug_pool = ref->vt_debug_pool;
+
+  if (ka->count() == 0)
+    config.vt_debug_reduce = ref->vt_debug_reduce;
+
+  if (la->count() == 0)
+    config.vt_debug_rdma = ref->vt_debug_rdma;
+
+  if (ma->count() == 0)
+    config.vt_debug_rdma_channel = ref->vt_debug_rdma_channel;
+
+  if (na->count() == 0)
+    config.vt_debug_rdma_state = ref->vt_debug_rdma_state;
+
+  if (oa->count() == 0)
+    config.vt_debug_param = ref->vt_debug_param;
+
+  if (pa->count() == 0)
+    config.vt_debug_handler = ref->vt_debug_handler;
+
+  if (qa->count() == 0)
+    config.vt_debug_hierlb = ref->vt_debug_hierlb;
+
+  if (ra->count() == 0)
+    config.vt_debug_scatter = ref->vt_debug_scatter;
+
+  if (sa->count() == 0)
+    config.vt_debug_sequence = ref->vt_debug_sequence;
+
+  if (ta->count() == 0)
+    config.vt_debug_sequence_vrt = ref->vt_debug_sequence_vrt;
+
+  if (ua->count() == 0)
+    config.vt_debug_serial_msg = ref->vt_debug_serial_msg;
+
+  if (va->count() == 0)
+    config.vt_debug_trace = ref->vt_debug_trace;
+
+  if (wa->count() == 0)
+    config.vt_debug_location = ref->vt_debug_location;
+
+  if (xa->count() == 0)
+    config.vt_debug_lb = ref->vt_debug_lb;
+
+  if (ya->count() == 0)
+    config.vt_debug_vrt = ref->vt_debug_vrt;
+
+  if (za->count() == 0)
+    config.vt_debug_vrt_coll = ref->vt_debug_vrt_coll;
+
+  if (ab->count() == 0)
+    config.vt_debug_worker = ref->vt_debug_worker;
+
+  if (bb->count() == 0)
+    config.vt_debug_group = ref->vt_debug_group;
+
+  if (cb->count() == 0)
+    config.vt_debug_broadcast = ref->vt_debug_broadcast;
+
+  if (db->count() == 0)
+    config.vt_debug_objgroup = ref->vt_debug_objgroup;
+
+  //------
+
+  if (s->count() == 0)
+    config.vt_lb = ref->vt_lb;
+
+  if (t->count() == 0)
+    config.vt_lb_file = ref->vt_lb_file;
+
+  if (t1->count() == 0)
+    config.vt_lb_quiet = ref->vt_lb_quiet;
+
+  if (u->count() == 0)
+    config.vt_lb_file_name = ref->vt_lb_file_name;
+
+  if (v->count() == 0)
+    config.vt_lb_name = ref->vt_lb_name;
+
+  if (w->count() == 0)
+    config.vt_lb_interval = ref->vt_lb_interval;
+
+  if (ww->count() == 0)
+    config.vt_lb_stats = ref->vt_lb_stats;
+
+  if (wx->count() == 0)
+    config.vt_lb_stats_dir = ref->vt_lb_stats_dir;
+
+  if (wy->count() == 0)
+    config.vt_lb_stats_file = ref->vt_lb_stats_file;
+
+  //------
+
+  if (u1->count() == 0)
+    config.vt_user_1 = ref->vt_user_1;
+
+  if (u2->count() == 0)
+    config.vt_user_2 = ref->vt_user_2;
+
+  if (u3->count() == 0)
+    config.vt_user_3 = ref->vt_user_3;
+
+  if (ui1->count() == 0)
+    config.vt_user_int_1 = ref->vt_user_int_1;
+
+  if (ui2->count() == 0)
+    config.vt_user_int_2 = ref->vt_user_int_2;
+
+  if (ui3->count() == 0)
+    config.vt_user_int_3 = ref->vt_user_int_3;
+
+  if (us1->count() == 0)
+    config.vt_user_str_1 = ref->vt_user_str_1;
+
+  if (us2->count() == 0)
+    config.vt_user_str_2 = ref->vt_user_str_2;
+
+  if (us3->count() == 0)
+    config.vt_user_str_3 = ref->vt_user_str_3;
+
+  //------
+
+  return 2;
+
 }
 
 }} /* end namespace vt::arguments */

@@ -138,7 +138,8 @@ protected:
   void finalizeComponents();
   void finalizeOptionalComponents();
 
-  void parseAndSetup(int& argc, char**& argv, const vt::arguments::Configs &ref);
+  void parseAndSetup(int& argc, char**& argv,
+		  const vt::arguments::Configs *ref);
 
   void sync();
   void setup();

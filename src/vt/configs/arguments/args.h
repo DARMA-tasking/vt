@@ -142,7 +142,7 @@ public:
 
 struct Args {
 
-  static int parse(int& argc, char**& argv, const Configs &ref);
+  static int parse(int& argc, char**& argv, const Configs *ref = nullptr);
 
 public:
   static Configs config;

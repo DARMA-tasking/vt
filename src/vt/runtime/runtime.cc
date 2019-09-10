@@ -94,8 +94,7 @@ Runtime::Runtime(
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
      user_argv_(argv)
 {
-  vt::arguments::Configs myDefault;
-  parseAndSetup(argc, argv, myDefault);
+  parseAndSetup(argc, argv, nullptr);
   sig_user_1_ = false;
 }
 
@@ -112,7 +111,7 @@ Runtime::Runtime(
 void Runtime::parseAndSetup(
   int &argc,
   char**& argv,
-  const vt::arguments::Configs &ref
+  const vt::arguments::Configs *ref
 )
 {
   vt::arguments::Args::parse(argc, argv, ref);
@@ -131,9 +130,7 @@ void Runtime::setArgConfigs(
   const vt::arguments::Configs &ref
 )
 {
-
-  parseAndSetup(argc, argv, ref);
-
+  parseAndSetup(argc, argv, &ref);
 }
 
 bool Runtime::hasSchedRun() const {
