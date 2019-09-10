@@ -66,7 +66,7 @@ std::vector<std::unordered_map<ElementIDType,TimeType>>
 
 /*static*/
 std::vector<std::unordered_map<ElementIDType,TimeType>>
-  ProcStats::proc_data_in_ = {};
+  ProcStats::user_specified_map_changed_ = {};
 
 /*static*/ std::vector<CommMapType> ProcStats::proc_comm_ = {};
 
@@ -89,7 +89,7 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 /*static*/ void ProcStats::clearStats() {
   ProcStats::proc_comm_.clear();
   ProcStats::proc_data_.clear();
-  ProcStats::proc_data_in_.clear();
+  ProcStats::user_specified_map_changed_.clear();
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
   ProcStats::proc_perm_to_temp_.clear();
@@ -249,45 +249,36 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   // where 0, 1, ..., N are the values of the first column
   auto elements = std::unordered_map<ElementIDType,TimeType> ();
 
-  // Format of a line :size_t,ElementIDType,TimeType
+  // Load: Format of a line :size_t,ElementIDType,TimeType
   size_t c1;
   ElementIDType c2;
   TimeType c3;
   CommBytesType c4;
   using E = typename std::underlying_type<CommCategory>::type;
   E c5;
-  bool finished = false;
   char separator;
   fpos_t pos;
+  bool finished = false;
   while (!finished) {
-    if(fscanf(pFile, "%zi %c %lli %c %lf", &c1, &separator, &c2, &separator, &c3) > 0)
-    {
+    if (fscanf(pFile, "%zi %c %lli %c %lf", &c1, &separator, &c2, &separator, &c3) > 0) {
       fgetpos (pFile,&pos);
       fscanf (pFile, "%c", &separator);
-      if(separator == ',')
-      {
+      if (separator == ',') {
         // COM detected, read the end of line and do nothing else
         int res = fscanf (pFile, "%lf %c %hhi", &c4, &separator, &c5);
         vtAssertExpr(res == 3);
-      }
-      else
-      {
+      } else {
         // Load detected, create the new element
         fsetpos (pFile,&pos);
         elements.emplace (c2, c3);
       }
-    }
-    else
-    {
+    } else {
       finished = true;
     }
   }
-
-  vt_print(lb, "Closing the file...\n");
-
   std::fclose(pFile);
 
-  ProcStats::proc_data_.push_back(elements);
+  ProcStats::user_specified_map_changed_.push_back(elements);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
