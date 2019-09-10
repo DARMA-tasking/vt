@@ -49,13 +49,20 @@
 
 #include "CLI/CLI11.hpp"
 
+#include <memory>
+
 namespace vt { namespace arguments {
+
+struct Config;
 
 struct ArgConfig {
 
+  static void setup();
   static int parse(int& argc, char**& argv);
+  static void resolve();
 
 public:
+  static std::unique_ptr<Config> conf;
   static bool vt_color;
   static bool vt_no_color;
   static bool vt_auto_color;

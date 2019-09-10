@@ -44,6 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/arg.h"
 
 #include <string>
 #include <vector>
@@ -137,6 +138,44 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::parsed                = false;
 
+/*static*/ std::unique_ptr<Config> ArgConfig::conf = nullptr;
+
+/*static*/ void ArgConfig::setup() {
+  conf = std::make_unique<Config>(&app);
+
+  conf->addOption("--vt_color",      vt_color);
+  conf->addOption("--vt_no_color",   vt_no_color);
+  conf->addOption("--vt_auto_color", vt_auto_color);
+  conf->addOption("--vt_quiet",      vt_quiet);
+
+  //////////////////////////////////////////////////////////////////////
+  // @todo finish adding the entire list of options here
+  //////////////////////////////////////////////////////////////////////
+
+  auto no_color = conf->getOption<bool>("--vt_no_color");
+  no_color->printOnlyWhenOn("Disabling color output");
+
+  //
+  // This interface needs work:
+  //
+  // auto auto_color = conf->getOption<bool>("--vt_auto_color");
+  // auto_color->printWhenOnOff(
+  //   "Automatic TTY detection for color output",
+  //   "Color output enabled by default"
+  // );
+}
+
+/*static*/ void ArgConfig::resolve() {
+  vtAssert(conf != nullptr, "Must have a valid configuration object");
+  conf->resolveOptions();
+
+  //////////////////////////////////////////////////////////////////////
+  // @todo as the Runtime calls resolve on each Anchorp, print_value_ and
+  // print_condtion_ should be used to replace a lot of the repetitive code in
+  // the startup banner
+  //////////////////////////////////////////////////////////////////////
+}
+
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
   if (parsed || argc == 0 || argv == nullptr) {
     return 0;
@@ -157,17 +196,21 @@ namespace vt { namespace arguments {
   auto always = "Always colorize output";
   auto never  = "Never colorize output";
   auto maybe  = "Use isatty to determine colorization of output";
-  auto a  = app.add_flag("-c,--vt_color",      vt_color,      always);
-  auto b  = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
-  auto c  = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe);
-  auto a1 = app.add_flag("-q,--vt_quiet",      vt_quiet,      quiet);
-  auto outputGroup = "Output Control";
+  auto a  = conf->addCmd("--vt_color",      vt_color,      always);
+  auto b  = conf->addCmd("--vt_no_color",   vt_no_color,   never);
+  auto c  = conf->addCmd("--vt_auto_color", vt_auto_color, maybe);
+  auto a1 = conf->addCmd("--vt_quiet",      vt_quiet,      quiet);
+  auto outputGroup = std::make_shared<Group>("Output Control");
   a->group(outputGroup);
   b->group(outputGroup);
   c->group(outputGroup);
   a1->group(outputGroup);
   b->excludes(a);
   b->excludes(c);
+
+  //////////////////////////////////////////////////////////////////////
+  // @todo finish converting all this code
+  //////////////////////////////////////////////////////////////////////
 
   /*
    * Flags for controlling the signals that VT tries to catch

@@ -53,6 +53,7 @@
 
 
 #define backend_check_enabled(test_option) (vt_feature_ ## test_option != 0)
+#define backend_feature_string(test_option) #test_option
 
 #define vt_backend_debug_enabled(test_option)                                \
   ((vt::config::DefaultConfig::category & vt::config::CatEnum::test_option) != 0)
