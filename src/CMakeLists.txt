@@ -69,6 +69,7 @@ set(
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb
         vrt/collection/balance/gossiplb
+        vrt/collection/balance/statsmaplb
         vrt/collection/balance/lb_invoke
         vrt/collection/balance/proxy
     lb/instrumentation
