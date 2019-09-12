@@ -466,9 +466,10 @@ namespace vt { namespace arguments {
   }
 
   // Use the saved index to setup the new_argv and new_argc
-  int new_argc = ret_args.size();
-  char** new_argv = new char*[new_argc];
-  for (auto ii = 0; ii < new_argc; ii++) {
+  int new_argc = ret_args.size() + 1;
+  char** new_argv = new char*[new_argc + 1];
+  new_argv[0] = argv[0];
+  for (auto ii = 1; ii < new_argc; ii++) {
     new_argv[ii] = argv[ret_idx[ii]];
   }
 
