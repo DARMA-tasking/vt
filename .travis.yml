@@ -1,0 +1,55 @@
+sudo: true
+dist: trusty
+language: cpp
+matrix:
+  include:
+  - os: linux
+    addons:
+      apt:
+        sources:
+          - llvm-toolchain-trusty-3.9
+        packages:
+          - clang-3.9
+    env:
+      - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+  - os: linux
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-8
+    env:
+      - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+addons:
+  apt:
+    packages:
+    - lcov
+    - mpich
+    - curl
+before_install:
+- eval "${MATRIX_EVAL}"
+- export CHECKPOINT=$PWD/checkpoint
+- git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
+- export DETECTOR=$PWD/detector
+- git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git
+install:
+- cd $DETECTOR
+- mkdir build
+- cd build
+- cmake -DCMAKE_INSTALL_PREFIX=$DETECTOR/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC  ..
+- make
+- make install
+- cd $CHECKPOINT
+- mkdir build
+- cd build
+- cmake -DCMAKE_INSTALL_PREFIX=$CHECKPOINT/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -Ddetector_DIR=$DETECTOR/install  ..
+- make
+- make install
+script:
+- cd $TRAVIS_BUILD_DIR
+- mkdir build
+- cd build
+- cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -Ddetector_DIR=$DETECTOR -Dcheckpoint_DIR=$CHECKPOINT ../
+- make
+- make test
