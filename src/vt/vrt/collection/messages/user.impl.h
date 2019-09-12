@@ -133,7 +133,7 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
     s | lb_lite_instrument_;
     s | elm_perm_;
     s | elm_temp_;
-    balance::serializeCommCategory(s, cat_);
+    s | cat_;
   #endif
 }
 
