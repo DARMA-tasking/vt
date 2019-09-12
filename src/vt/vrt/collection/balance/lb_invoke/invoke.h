@@ -68,6 +68,11 @@ struct InvokeLB {
   static void releaseLBCollective(InvokeReduceMsg* msg);
   static void releaseLBCollective(PhaseType phase);
 
+  using ReduceMsgType = collective::ReduceVecMsg<bool>;
+  void doneReduce(ReduceMsgType* msg) {
+
+  }
+
   template <typename LB>
   static objgroup::proxy::Proxy<LB> makeLB(MsgSharedPtr<StartLBMsg> msg);
 

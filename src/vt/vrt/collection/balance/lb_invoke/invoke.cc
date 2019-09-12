@@ -197,6 +197,7 @@ InvokeLB::makeLB(MsgSharedPtr<StartLBMsg> msg) {
 
 /*static*/ void InvokeLB::releaseLBCollective(InvokeMsg* msg) {
   return releaseLBCollective(msg->phase_);
+
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

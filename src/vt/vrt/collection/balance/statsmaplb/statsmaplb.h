@@ -47,6 +47,8 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
+#include "vt/collective/reduce/operators/functors/or_op.h"
 
 #include <random>
 
@@ -63,6 +65,12 @@ struct StatsMapLB : BaseLB {
   double getDefaultMinThreshold()  const override { return 0.0;  }
   double getDefaultMaxThreshold()  const override { return 0.0;  }
   bool   getDefaultAutoThreshold() const override { return true; }
+
+   void doReduce() {
+//     auto cb = theCB()->makeBcast<StatsMapLB,balance::InvokeLB::ReduceMsgType,&balance::InvokeLB::doneReduce>(proxy);
+//     auto msg = makeMessage<balance::InvokeLB::ReduceMsgType>(phase_changed_map_);
+//     proxy.reduce<collective::reduce::operators::OrOp<std::vector<int>>>(msg.get(),cb);
+   }
 
 
 private:
