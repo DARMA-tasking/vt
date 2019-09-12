@@ -51,9 +51,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 CollectionManager::CollectionManager() {
-  #if backend_check_enabled(lblite)
-    balance::LBManager::init();
-  #endif
+  balance::LBManager::init();
 }
 
 /*virtual*/ CollectionManager::~CollectionManager() {
@@ -65,10 +63,10 @@ CollectionManager::CollectionManager() {
     balance::ProcStats::outputStatsFile();
     balance::ProcStats::clearStats();
   }
+#endif
 
   // Destroy the LBManager
   balance::LBManager::destroy();
-#endif
 }
 
 #if backend_check_enabled(lblite)
