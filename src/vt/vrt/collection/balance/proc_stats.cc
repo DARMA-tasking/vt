@@ -258,6 +258,7 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   char separator;
   fpos_t pos;
   bool finished = false;
+  size_t c1PreviousValue = 0;
   while (!finished) {
     if (fscanf(pFile, "%zi %c %lli %c %lf", &c1, &separator, &c2, &separator, &c3) > 0) {
       fgetpos (pFile,&pos);
@@ -269,15 +270,25 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
       } else {
         // Load detected, create the new element
         fsetpos (pFile,&pos);
-        elements.emplace (c2, c3);
+        if (c1PreviousValue != c1) {
+          c1PreviousValue = c1;
+          ProcStats::user_specified_map_changed_.push_back(elements);
+          elements = std::unordered_map<ElementIDType,TimeType> ();
+          elements.emplace (c2, c3);
+        } else {
+          elements.emplace (c2, c3);
+        }
       }
     } else {
       finished = true;
     }
   }
-  std::fclose(pFile);
 
-  ProcStats::user_specified_map_changed_.push_back(elements);
+  if (!elements.empty()) {
+    ProcStats::user_specified_map_changed_.push_back(elements);
+  }
+
+  std::fclose(pFile);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
