@@ -1,6 +1,9 @@
 sudo: true
 dist: xenial
 language: cpp
+cache:
+  directories:
+  - mpich
 matrix:
   include:
   - os: linux
@@ -33,6 +36,7 @@ before_install:
 - git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
 - export DETECTOR=$PWD/detector
 - git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git
+- sh ./scripts/get_mpich.sh
 install:
 - cd $DETECTOR
 - mkdir build
