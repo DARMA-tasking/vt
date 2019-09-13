@@ -19,6 +19,7 @@ matrix:
           - libc++abi-dev
           - ninja-build
           - libmpich-dev
+          - mpich
     env:
       - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
       - CPP_LINKER_FLAGS="-stdlib=libc++ -lc++abi"
