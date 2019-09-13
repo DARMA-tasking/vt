@@ -64,6 +64,7 @@ before_install:
 - export PATH=$PWD/mpich/bin/:$PATH
 - ls ${MPICH_ROOT}
 - ls $PWD/mpich/lib
+- ccache -s
 - echo $PATH
 - wget https://github.com/google/googletest/archive/release-1.8.0.tar.gz -O /tmp/gtest.tar.gz
 - tar -xvf /tmp/gtest.tar.gz
