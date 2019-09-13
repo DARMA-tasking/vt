@@ -40,18 +40,19 @@ matrix:
 #      - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 #      - CPP_LINKER_FLAGS="-stdlib=libc++ -lc++abi"
 #      - CPP_CXX_FLAGS="-stdlib=libc++"
-#  - os: linux
-#    addons:
-#      apt:
-#        sources:
-#        - ubuntu-toolchain-r-test
-#        packages:
-#        - g++-6
-#        - libomp-dev
-#        - ninja-build
-#        - libmpich-dev
-#    env:
-#      - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+  - os: linux
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-6
+        - libomp-dev
+        - ninja-build
+        - libmpich-dev
+        - mpich
+    env:
+      - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 #  - os: linux
 #    addons:
 #      apt:
