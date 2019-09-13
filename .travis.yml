@@ -15,7 +15,8 @@ matrix:
         packages:
           - clang-3.9
           - libomp-dev
-          - libc++
+          - libc++-dev
+          - libc++abi-dev
     env:
       - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
       - CPP_LIB_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=-stdlib=libc++ -DCMAKE_CXX_FLAGS=-stdlib=libc++"
