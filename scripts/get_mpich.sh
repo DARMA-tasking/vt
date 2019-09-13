@@ -4,7 +4,7 @@ dir=$(pwd)
 
 echo "dir=$dir"
 
-if [ -f ./mpich/install/lib/libmpich.so ]; then
+if [ -f ./mpich/lib/libmpi.so ]; then
     echo "libmpich.so found -- nothing to build."
 else
     echo "Downloading mpich source."
