@@ -83,6 +83,8 @@ public:
    */
   void waitLBCollective();
 
+  void doneReduce();
+
   /*
    * Get the proxy for the LBManager
    */
