@@ -1,6 +1,10 @@
 #!/bin/sh
 
-if [ -f ../mpich/lib/libmpich.so ]; then
+dir=$(pwd)
+
+echo "dir=$dir"
+
+if [ -f ./mpich/install/lib/libmpich.so ]; then
     echo "libmpich.so found -- nothing to build."
 else
     echo "Downloading mpich source."
