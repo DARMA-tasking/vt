@@ -57,6 +57,6 @@ script:
 - which mpicc
 - which mpic++
 - which mpicxx
-- cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_C_COMPILER=mpicc -Ddetector_DIR=$DETECTOR/install -Dcheckpoint_DIR=$CHECKPOINT/install ../
+- cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=./mpich/bin/mpicxx -DCMAKE_C_COMPILER=./mpich/bin/mpicc -Ddetector_DIR=$DETECTOR/install -Dcheckpoint_DIR=$CHECKPOINT/install ../
 - make
 - make test
