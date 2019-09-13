@@ -39,11 +39,22 @@ before_install:
 - ls -l $PWD/mpich/bin
 - ls -l $PWD/mpich/lib
 - echo $PATH
+
+- wget https://github.com/google/googletest/archive/release-1.8.0.tar.gz -O /tmp/gtest.tar.gz
+- tar -xvf /tmp/gtest.tar.gz
+- git clone -b release-1.8.1 --depth 1 git@github.com:google/googletest.git
+- export GTEST=$PWD/googletest
 - git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
 - export DETECTOR=$PWD/detector
 - git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git
 - sh ./scripts/get_mpich.sh
 install:
+- cd GTEST
+- mkdir build
+- cd build
+- cmake -DCMAKE_INSTALL_PREFIX=$GTEST/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC  ..
+- make
+- make install
 - cd $DETECTOR
 - mkdir build
 - cd build
@@ -63,6 +74,6 @@ script:
 - which mpicc
 - which mpic++
 - which mpicxx
-- cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DMPI_C_COMPILER=mpicc -DMPI_CXX_COMPILER=mpicxx -Ddetector_DIR=$DETECTOR/install -Dcheckpoint_DIR=$CHECKPOINT/install ../
+- cmake -Dgtest_DIR=$GTEST/install -Dgtest_ROOT=$GTEST/install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DMPI_C_COMPILER=mpicc -DMPI_CXX_COMPILER=mpicxx -Ddetector_DIR=$DETECTOR/install -Dcheckpoint_DIR=$CHECKPOINT/install ../
 - make
 - make test
