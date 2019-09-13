@@ -18,6 +18,7 @@ matrix:
           - libc++-dev
           - libc++abi-dev
           - ninja-build
+          - libmpich-dev
     env:
       - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
       - CPP_LINKER_FLAGS="-stdlib=libc++ -lc++abi"
@@ -31,6 +32,7 @@ matrix:
         - g++-6
         - libomp-dev
         - ninja-build
+        - libmpich-dev
     env:
       - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 #  - os: linux
@@ -73,7 +75,7 @@ before_install:
 - git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
 - export DETECTOR=$PWD/detector
 - git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git
-- sh ./scripts/get_mpich.sh
+#- sh ./scripts/get_mpich.sh
 install:
 - cd $GTEST
 - mkdir build
