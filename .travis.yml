@@ -16,6 +16,7 @@ matrix:
           - libomp-dev
           - libc++-dev
           - libc++abi-dev
+          - ninja-build
     env:
       - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
       - CPP_LINKER_FLAGS="-stdlib=libc++ -lc++abi"
@@ -28,6 +29,7 @@ matrix:
         packages:
         - g++-6
         - libomp-dev
+        - ninja-build
     env:
       - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 #  - os: linux
@@ -97,6 +99,6 @@ script:
 - which mpicc
 - which mpic++
 - which mpicxx
-- cmake -DVT_NO_BUILD_EXAMPLES=1 -Dgtest_DIR=$GTEST/install -DGTEST_ROOT=$GTEST/install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DMPI_C_COMPILER=mpicc -DMPI_CXX_COMPILER=mpicxx -Ddetector_DIR=$DETECTOR/install -DCMAKE_CXX_FLAGS=$CPP_CXX_FLAGS -DCMAKE_EXE_LINKER_FLAGS=$CPP_LINKER_FLAGS -DCMAKE_PREFIX_PATH="$GTEST/install" -Dcheckpoint_DIR=$CHECKPOINT/install  ../
-- make -j2
+- cmake -GNinja -DVT_NO_BUILD_EXAMPLES=1 -Dgtest_DIR=$GTEST/install -DGTEST_ROOT=$GTEST/install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DMPI_C_COMPILER=mpicc -DMPI_CXX_COMPILER=mpicxx -Ddetector_DIR=$DETECTOR/install -DCMAKE_CXX_FLAGS=$CPP_CXX_FLAGS -DCMAKE_EXE_LINKER_FLAGS=$CPP_LINKER_FLAGS -DCMAKE_PREFIX_PATH="$GTEST/install" -Dcheckpoint_DIR=$CHECKPOINT/install  ../
+- ninja
 - make test
