@@ -39,42 +39,42 @@ matrix:
       - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
       - CPP_LINKER_FLAGS="-stdlib=libc++ -lc++abi"
       - CPP_CXX_FLAGS="-stdlib=libc++"
-  - os: linux
-    addons:
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        packages:
-        - g++-6
-        - libomp-dev
-        - ninja-build
-        - libmpich-dev
-    env:
-      - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-  - os: linux
-    addons:
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        packages:
-        - g++-7
-        - libomp-dev
-        - ninja-build
-        - libmpich-dev
-    env:
-      - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-  - os: linux
-    addons:
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        packages:
-        - g++-8
-        - libomp-dev
-        - ninja-build
-        - libmpich-dev
-    env:
-      - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+#  - os: linux
+#    addons:
+#      apt:
+#        sources:
+#        - ubuntu-toolchain-r-test
+#        packages:
+#        - g++-6
+#        - libomp-dev
+#        - ninja-build
+#        - libmpich-dev
+#    env:
+#      - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+#  - os: linux
+#    addons:
+#      apt:
+#        sources:
+#        - ubuntu-toolchain-r-test
+#        packages:
+#        - g++-7
+#        - libomp-dev
+#        - ninja-build
+#        - libmpich-dev
+#    env:
+#      - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+#  - os: linux
+#    addons:
+#      apt:
+#        sources:
+#        - ubuntu-toolchain-r-test
+#        packages:
+#        - g++-8
+#        - libomp-dev
+#        - ninja-build
+#        - libmpich-dev
+#    env:
+#      - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 addons:
   apt:
     packages:
@@ -86,6 +86,8 @@ before_install:
 - export CHECKPOINT=$PWD/checkpoint
 - export MPICH_ROOT=$PWD/mpich/bin/
 - export PATH=$PWD/mpich/bin/:$PATH
+- which mpiexec
+- which mpirun
 - ccache -s
 - echo $PATH
 - wget https://github.com/google/googletest/archive/release-1.8.0.tar.gz -O /tmp/gtest.tar.gz
