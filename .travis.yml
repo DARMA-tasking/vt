@@ -1,10 +1,9 @@
 sudo: true
 dist: bionic
 language: cpp
-cache:
+cache: ccache
   directories:
   - mpich
-cache: ccache
 matrix:
   include:
   - os: linux
