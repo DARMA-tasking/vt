@@ -35,6 +35,9 @@ before_install:
 - eval "${MATRIX_EVAL}"
 - export CHECKPOINT=$PWD/checkpoint
 - export MPICH_ROOT=$PWD/mpich/bin/
+- export PATH=$PWD/mpich/bin/:$PATH
+- ls -l $PWD/mpich/bin
+- ls -l $PWD/mpich/lib
 - echo $PATH
 - git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
 - export DETECTOR=$PWD/detector
@@ -60,6 +63,6 @@ script:
 - which mpicc
 - which mpic++
 - which mpicxx
-- cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_C_COMPILER=mpicc -Ddetector_DIR=$DETECTOR/install -Dcheckpoint_DIR=$CHECKPOINT/install ../
+- cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DMPI_C_COMPILER=mpicc -DMPI_CXX_COMPILER=mpicxx -Ddetector_DIR=$DETECTOR/install -Dcheckpoint_DIR=$CHECKPOINT/install ../
 - make
 - make test
