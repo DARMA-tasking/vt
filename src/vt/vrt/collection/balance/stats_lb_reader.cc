@@ -44,8 +44,6 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/stats_lb_reader.h"
-#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
-#include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
 #include "vt/configs/arguments/args.h"
@@ -67,21 +65,14 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 std::vector<std::unordered_map<ElementIDType,TimeType>>
   StatsLBReader::user_specified_map_changed_ = {};
 
-/*static*/
-StatsLBReader::VectorDiffPhase
-StatsLBReader::phase_changed_map_ = {};
-
 /*static*/ FILE* StatsLBReader::stats_file_ = nullptr;
 
 /*static*/ bool StatsLBReader::created_dir_ = false;
 
 /*static*/ void StatsLBReader::init() {
-  // Create the new class dedicated to the input reader
   StatsLBReader::proxy_ = theObjGroup()->makeCollective<StatsLBReader>();
+  // Create the new class dedicated to the input reader
   proxy_.get()->inputStatsFile();
-  proxy_.get()->loadPhaseChangedMap();
-  proxy_.get()->doReduce();
-
 }
 
 /*static*/ void StatsLBReader::destroy() {
@@ -163,52 +154,6 @@ StatsLBReader::phase_changed_map_ = {};
   }
 
   std::fclose(pFile);
-}
-
-/*static*/ void StatsLBReader::loadPhaseChangedMap() {
-  auto const num_iters = StatsLBReader::user_specified_map_changed_.size() - 1;
-  vt_print(lb, "StatsLBReader::loadPhaseChangedMap size : {}\n", num_iters);
-  StatsLBReader::phase_changed_map_.vec_.resize(num_iters);
-
-  for (size_t i = 0; i < num_iters; i++) {
-    auto elms = StatsLBReader::user_specified_map_changed_.at(i);
-    auto elmsNext = StatsLBReader::user_specified_map_changed_.at(i + 1);
-
-    // elmsNext is different from elms if at least one of its element is different
-    if (elmsNext.size() != elms.size()) {
-      StatsLBReader::phase_changed_map_.vec_[i] = true;
-    }
-
-    auto elmsIte = elms.begin();
-    auto elmsNextIte = elmsNext.begin();
-
-    bool currentPhaseChanged = false;
-
-    while ((elmsIte != elms.end()) && !currentPhaseChanged) {
-     if ((elmsIte->first != elmsNextIte->first) ||
-         (elmsIte->second != elmsNextIte->second)
-         ) {
-      currentPhaseChanged = true;
-     }
-
-     elmsIte++;
-     elmsNextIte++;
-    }
-
-   StatsLBReader::phase_changed_map_.vec_[i] = currentPhaseChanged;
-  }
-}
-
-void StatsLBReader::doneReduce(VecPhaseMsg *msg) {
-    vt_print(lb, "StatsLBReader::doneReduce with msg of size {}\n", msg->getConstVal().vec_.size());
-}
-
-void StatsLBReader::doReduce() {
-    vt_print(lb, "StatsLBReader::doReduce {} \n", StatsLBReader::phase_changed_map_.vec_.size());
-
-    auto cb = theCB()->makeBcast<StatsLBReader,VecPhaseMsg, &StatsLBReader::doneReduce>(this->getProxy());
-    auto msg = makeMessage<VecPhaseMsg>(StatsLBReader::phase_changed_map_);
-    this->getProxy().reduce<collective::OrOp<VectorDiffPhase>>(msg.get(),cb);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

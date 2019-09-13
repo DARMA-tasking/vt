@@ -64,41 +64,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct StatsLBReader {
 
-  struct VectorDiffPhase {
-    VectorDiffPhase() = default;
-
-
-    friend VectorDiffPhase operator||(VectorDiffPhase v1, VectorDiffPhase const& v2) {
-      for (size_t ii = 0; ii < v1.vec_.size(); ++ii) {
-        v1.vec_[ii] = v1.vec_[ii] or v2.vec_[ii];
-      }
-      return v1;
-    }
-
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      s | vec_;
-    }
-
-    std::vector<bool> vec_;
-  };
-
-  struct VecPhaseMsg : vt::collective::ReduceTMsg<VectorDiffPhase> {
-    VecPhaseMsg() = default;
-
-    explicit VecPhaseMsg(VectorDiffPhase phase) : ReduceTMsg<VectorDiffPhase>() {
-      getVal().vec_ = phase.vec_;
-    }
-
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      ReduceTMsg<VectorDiffPhase>::invokeSerialize(s);
-    }
-  };
-
-  StatsLBReader() = default;
-  StatsLBReader(StatsLBReader const&) = delete;
-  StatsLBReader(StatsLBReader&&) = default;
+    StatsLBReader() = default;
+    StatsLBReader(StatsLBReader const&) = delete;
+    StatsLBReader(StatsLBReader&&) = default;
 
   static void init();
   static void destroy();
@@ -106,10 +74,6 @@ struct StatsLBReader {
 public:
   static void clearStats();
   static void inputStatsFile();
-  static void loadPhaseChangedMap();
-
-  void doneReduce(VecPhaseMsg *msg);
-  void doReduce();
 
 private:
   static void createStatsFile();
@@ -118,7 +82,6 @@ private:
 
 public:
   static std::vector<std::unordered_map<ElementIDType,TimeType>> user_specified_map_changed_;
-  static VectorDiffPhase phase_changed_map_;
 
   /*
    * Get the proxy for the StatsLBReader
@@ -129,7 +92,6 @@ private:
   static FILE* stats_file_;
   static bool created_dir_;
   static objgroup::proxy::Proxy<StatsLBReader> proxy_;
-
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
