@@ -183,7 +183,10 @@ public:
     return i1.lower() < i2.lower() and i1.upper() < i2.lower();
   }
 
-  friend bool operator<(IntervalType const& i1, IntervalType const& i2);
+  template <typename DomainU, DomainT sentinel2>
+  friend bool operator<(
+    Interval<DomainU, sentinel2> const& i1, Interval<DomainU, sentinel2> const& i2
+  );
 
   template <typename T, DomainT v>
   friend std::ostream& operator<<(std::ostream& os, Interval<T,v> const& i) {
