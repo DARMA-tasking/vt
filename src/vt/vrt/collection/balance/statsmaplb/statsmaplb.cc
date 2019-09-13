@@ -66,16 +66,13 @@ void StatsMapLB::runLB() {
   // TODO: Check if we keep the import and the compute calls
   importProcessorData(in_load_stats, in_comm_stats);
   computeStatistics();
-
-  loadPhaseChangedMap();
-
   startMigrationCollective();
 
   auto const& this_node = theContext()->getNode();
 
-  vtAssertExpr(phase_changed_map_.size() >= phase_);
+//  vtAssertExpr(balance::StatsLBReader::getProxy()->phase_changed_map_.size() >= phase_);
 
-  if (phase_changed_map_[phase_]) {
+//  if (balance::StatsLBReader::phase_changed_map_[phase_]) {
     for (auto&& stat : *load_data) {
       auto const& obj = stat.first;
       auto const& load = stat.second;
@@ -86,42 +83,10 @@ void StatsMapLB::runLB() {
       );
       migrateObjectTo(balance::ProcStats::proc_perm_to_temp_[obj], this_node);
     }
-  }
+//  }
 
   finishMigrationCollective();
 }
 
-void StatsMapLB::loadPhaseChangedMap() {
-  auto const num_iters = balance::ProcStats::proc_data_.size() - 1;
-  phase_changed_map_.resize(num_iters);
-
-  for (size_t i = 0; i < num_iters; i++) {
-    auto elms = balance::ProcStats::proc_data_.at(i);
-    auto elmsNext = balance::ProcStats::proc_data_.at(i + 1);
-
-    // elmsNext is different from elms if at least one of its element is different
-    if (elmsNext.size() != elms.size()) {
-      phase_changed_map_[i] = true;
-    }
-
-    auto elmsIte = elms.begin();
-    auto elmsNextIte = elmsNext.begin();
-
-    bool currentPhaseChanged = false;
-
-    while ((elmsIte != elms.end()) && !currentPhaseChanged) {
-     if ((elmsIte->first != elmsNextIte->first) ||
-         (elmsIte->second != elmsNextIte->second)
-         ) {
-      currentPhaseChanged = true;
-     }
-
-     elmsIte++;
-     elmsNextIte++;
-    }
-
-    phase_changed_map_[i] = currentPhaseChanged;
-  }
-}
 
 }}}} /* end namespace vt::vrt::collection::lb */

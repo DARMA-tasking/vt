@@ -74,6 +74,9 @@ struct StatsLBReader {
 public:
   static void clearStats();
   static void inputStatsFile();
+  static void loadPhaseChangedMap();
+
+  void doReduce();
 
 private:
   static void createStatsFile();
@@ -82,6 +85,7 @@ private:
 
 public:
   static std::vector<std::unordered_map<ElementIDType,TimeType>> user_specified_map_changed_;
+  static std::vector<bool> phase_changed_map_;
 
   /*
    * Get the proxy for the StatsLBReader
@@ -92,6 +96,7 @@ private:
   static FILE* stats_file_;
   static bool created_dir_;
   static objgroup::proxy::Proxy<StatsLBReader> proxy_;
+
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
