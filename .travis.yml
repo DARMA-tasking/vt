@@ -42,7 +42,7 @@ before_install:
 
 - wget https://github.com/google/googletest/archive/release-1.8.0.tar.gz -O /tmp/gtest.tar.gz
 - tar -xvf /tmp/gtest.tar.gz
-- git clone -b release-1.8.1 --depth 1 git@github.com:google/googletest.git
+- git clone -b release-1.8.1 --depth 1 https://github.com/google/googletest.git
 - export GTEST=$PWD/googletest
 - git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
 - export DETECTOR=$PWD/detector
