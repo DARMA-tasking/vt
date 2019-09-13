@@ -35,7 +35,6 @@ before_install:
 - eval "${MATRIX_EVAL}"
 - export CHECKPOINT=$PWD/checkpoint
 - export MPICH_ROOT=$PWD/mpich/bin/
-- export PATH=$PWD/mpich/bin/:$PATH
 - echo $PATH
 - git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
 - export DETECTOR=$PWD/detector
