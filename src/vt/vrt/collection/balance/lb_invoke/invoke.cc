@@ -185,6 +185,10 @@ void LBManager::waitLBCollective() {
   );
 }
 
+void LBManager::doneReduce() {
+
+}
+
 /*static*/ void LBManager::finishedRunningLB(PhaseType phase) {
   debug_print(
     lb, node,
