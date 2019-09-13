@@ -1,5 +1,5 @@
 sudo: true
-dist: xenial
+dist: bionic
 language: cpp
 cache:
   directories:
@@ -11,7 +11,7 @@ matrix:
     addons:
       apt:
         sources:
-          - llvm-toolchain-trusty-3.9
+          - llvm-toolchain-3.9
         packages:
           - clang-3.9
           - libomp-dev
