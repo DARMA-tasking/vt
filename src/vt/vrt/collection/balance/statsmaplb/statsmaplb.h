@@ -66,16 +66,7 @@ struct StatsMapLB : BaseLB {
   double getDefaultMaxThreshold()  const override { return 0.0;  }
   bool   getDefaultAutoThreshold() const override { return true; }
 
-   void doReduce() {
-//     auto cb = theCB()->makeBcast<StatsMapLB,balance::InvokeLB::ReduceMsgType,&balance::InvokeLB::doneReduce>(proxy);
-//     auto msg = makeMessage<balance::InvokeLB::ReduceMsgType>(phase_changed_map_);
-//     proxy.reduce<collective::reduce::operators::OrOp<std::vector<int>>>(msg.get(),cb);
-   }
-
-
 private:
-  void loadPhaseChangedMap();
-  std::vector<bool> phase_changed_map_;
   objgroup::proxy::Proxy<StatsMapLB> proxy = {};
 };
 
