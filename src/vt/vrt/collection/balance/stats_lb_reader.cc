@@ -44,6 +44,8 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/stats_lb_reader.h"
+#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
+#include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
 #include "vt/configs/arguments/args.h"
@@ -65,6 +67,10 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 std::vector<std::unordered_map<ElementIDType,TimeType>>
   StatsLBReader::user_specified_map_changed_ = {};
 
+/*static*/
+std::vector<bool>
+StatsLBReader::phase_changed_map_ = {};
+
 /*static*/ FILE* StatsLBReader::stats_file_ = nullptr;
 
 /*static*/ bool StatsLBReader::created_dir_ = false;
@@ -73,6 +79,9 @@ std::vector<std::unordered_map<ElementIDType,TimeType>>
   StatsLBReader::proxy_ = theObjGroup()->makeCollective<StatsLBReader>();
   // Create the new class dedicated to the input reader
   proxy_.get()->inputStatsFile();
+
+  proxy_.get()->loadPhaseChangedMap();
+
 }
 
 /*static*/ void StatsLBReader::destroy() {
@@ -154,6 +163,49 @@ std::vector<std::unordered_map<ElementIDType,TimeType>>
   }
 
   std::fclose(pFile);
+}
+
+/*static*/ void StatsLBReader::loadPhaseChangedMap() {
+  auto const num_iters = balance::ProcStats::proc_data_.size() - 1;
+  StatsLBReader::phase_changed_map_.resize(num_iters);
+
+  for (size_t i = 0; i < num_iters; i++) {
+    auto elms = balance::ProcStats::proc_data_.at(i);
+    auto elmsNext = balance::ProcStats::proc_data_.at(i + 1);
+
+    // elmsNext is different from elms if at least one of its element is different
+    if (elmsNext.size() != elms.size()) {
+      StatsLBReader::phase_changed_map_[i] = true;
+    }
+
+    auto elmsIte = elms.begin();
+    auto elmsNextIte = elmsNext.begin();
+
+    bool currentPhaseChanged = false;
+
+    while ((elmsIte != elms.end()) && !currentPhaseChanged) {
+     if ((elmsIte->first != elmsNextIte->first) ||
+         (elmsIte->second != elmsNextIte->second)
+         ) {
+      currentPhaseChanged = true;
+     }
+
+     elmsIte++;
+     elmsNextIte++;
+    }
+
+   StatsLBReader::phase_changed_map_[i] = currentPhaseChanged;
+  }
+}
+
+void StatsLBReader::doReduce() {
+    vt_print(lb, "StatsLBReader::doReduce\n");
+
+    using ReduceMsgType = collective::ReduceVecMsg<bool>;
+
+//    auto cb = theCB()->makeBcast<lb::StatsMapLB,ReduceMsgType,&balance::LBManager::doneReduce>(this->getProxy());
+//    auto msg = makeMessage<MsgType>(phase_changed_map_);
+//    this->getProxy().reduce<collective::reduce::operators::OrOp<std::vector<int>>>(msg.get(),cb);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
