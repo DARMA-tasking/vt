@@ -5,13 +5,13 @@ dir=$(pwd)
 
 echo "dir=$dir"
 
-if [ -d ./mpich/lib]; then
+if [ -d ./mpich/lib ]; then
     echo "mpich lib exists"
     files=$(ls ./mpich/lib)
     echo "files=$files"
 fi
 
-if [ -d ./../mpich/lib]; then
+if [ -d ./../mpich/lib ]; then
     echo "../mpich lib exists"
     files=$(ls ./../mpich/lib)
     echo "files=$files"
