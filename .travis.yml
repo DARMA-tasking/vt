@@ -4,6 +4,7 @@ language: cpp
 cache:
   directories:
   - mpich
+cache: ccache
 matrix:
   include:
   - os: linux
