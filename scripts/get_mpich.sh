@@ -2,9 +2,22 @@
 
 dir=$(pwd)
 
+
 echo "dir=$dir"
 
-if [ -f ./mpich/lib/libmpi.so ]; then
+if [ -d ./mpich/lib]; then
+    echo "mpich lib exists"
+    files=$(ls ./mpich/lib)
+    echo "files=$files"
+fi
+
+if [ -d ./../mpich/lib]; then
+    echo "../mpich lib exists"
+    files=$(ls ./../mpich/lib)
+    echo "files=$files"
+fi
+
+if [ -f ./mpich/lib/pkgconfig ]; then
     echo "libmpich.so found -- nothing to build."
 else
     echo "Downloading mpich source."
