@@ -61,8 +61,6 @@ before_install:
 - export CHECKPOINT=$PWD/checkpoint
 - export MPICH_ROOT=$PWD/mpich/bin/
 - export PATH=$PWD/mpich/bin/:$PATH
-- ls ${MPICH_ROOT}
-- ls $PWD/mpich/lib
 - ccache -s
 - echo $PATH
 - wget https://github.com/google/googletest/archive/release-1.8.0.tar.gz -O /tmp/gtest.tar.gz
