@@ -13,7 +13,7 @@ matrix:
           - llvm-toolchain-trusty-3.9
         packages:
           - clang-3.9
-          - mpich
+          - libomp-dev
     env:
       - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
   - os: linux
@@ -75,5 +75,5 @@ script:
 - which mpic++
 - which mpicxx
 - cmake -Dgtest_DIR=$GTEST/install -DGTEST_ROOT=$GTEST/install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DMPI_C_COMPILER=mpicc -DMPI_CXX_COMPILER=mpicxx -Ddetector_DIR=$DETECTOR/install -DCMAKE_PREFIX_PATH="$GTEST/install" -Dcheckpoint_DIR=$CHECKPOINT/install ../
-- make
+- make -j3
 - make test
