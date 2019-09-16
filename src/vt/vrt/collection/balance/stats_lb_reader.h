@@ -76,6 +76,7 @@ public:
   static void inputStatsFile();
   static void loadPhaseChangedMap();
 
+  void doneReduce(collective::ReduceVecMsg<bool> *msg);
   void doReduce();
 
 private:
