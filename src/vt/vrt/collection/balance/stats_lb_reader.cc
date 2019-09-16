@@ -76,11 +76,11 @@ StatsLBReader::phase_changed_map_ = {};
 /*static*/ bool StatsLBReader::created_dir_ = false;
 
 /*static*/ void StatsLBReader::init() {
-  StatsLBReader::proxy_ = theObjGroup()->makeCollective<StatsLBReader>();
   // Create the new class dedicated to the input reader
+  StatsLBReader::proxy_ = theObjGroup()->makeCollective<StatsLBReader>();
   proxy_.get()->inputStatsFile();
-
   proxy_.get()->loadPhaseChangedMap();
+  proxy_.get()->doReduce();
 
 }
 
@@ -166,12 +166,12 @@ StatsLBReader::phase_changed_map_ = {};
 }
 
 /*static*/ void StatsLBReader::loadPhaseChangedMap() {
-  auto const num_iters = balance::ProcStats::proc_data_.size() - 1;
+  auto const num_iters = StatsLBReader::user_specified_map_changed_.size() - 1;
   StatsLBReader::phase_changed_map_.resize(num_iters);
 
   for (size_t i = 0; i < num_iters; i++) {
-    auto elms = balance::ProcStats::proc_data_.at(i);
-    auto elmsNext = balance::ProcStats::proc_data_.at(i + 1);
+    auto elms = StatsLBReader::user_specified_map_changed_.at(i);
+    auto elmsNext = StatsLBReader::user_specified_map_changed_.at(i + 1);
 
     // elmsNext is different from elms if at least one of its element is different
     if (elmsNext.size() != elms.size()) {
@@ -198,14 +198,18 @@ StatsLBReader::phase_changed_map_ = {};
   }
 }
 
+void StatsLBReader::doneReduce(collective::ReduceVecMsg<bool> *msg) {
+    vt_print(lb, "StatsLBReader::doneReduce\n");
+}
+
 void StatsLBReader::doReduce() {
     vt_print(lb, "StatsLBReader::doReduce\n");
 
     using ReduceMsgType = collective::ReduceVecMsg<bool>;
 
-//    auto cb = theCB()->makeBcast<lb::StatsMapLB,ReduceMsgType,&balance::LBManager::doneReduce>(this->getProxy());
-//    auto msg = makeMessage<MsgType>(phase_changed_map_);
-//    this->getProxy().reduce<collective::reduce::operators::OrOp<std::vector<int>>>(msg.get(),cb);
+    auto cb = theCB()->makeBcast<StatsLBReader,ReduceMsgType, &StatsLBReader::doneReduce>(this->getProxy());
+    auto msg = makeMessage<ReduceMsgType>(StatsLBReader::phase_changed_map_);
+//    this->getProxy().reduce<collective::OrOp<std::vector<bool>>>(msg.get(),cb);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
