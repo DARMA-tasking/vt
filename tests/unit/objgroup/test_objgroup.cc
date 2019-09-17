@@ -154,6 +154,7 @@ TEST_F(TestObjGroup, test_proxy_update) {
   // create a proxy to a object group
   auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
   auto const obj1 = proxy.get();
+  auto const obj1_id = obj1->id_;
   auto const node = vt::theContext()->getNode();
 
   // update the group object for the proxy
@@ -165,9 +166,9 @@ TEST_F(TestObjGroup, test_proxy_update) {
   debug_print(
     objgroup, node,
     "test_proxy_update: obj1->id_:{}, obj2->id_:{}",
-    obj1->id_, obj2->id_
+    obj1_id, obj2->id_
   );
-  EXPECT_TRUE(obj1->id_ < obj2->id_);
+  EXPECT_TRUE(obj1_id < obj2->id_);
 }
 
 TEST_F(TestObjGroup, test_proxy_schedule) {
