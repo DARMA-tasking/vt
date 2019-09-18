@@ -56,6 +56,13 @@ namespace vt { namespace messaging {
 ActiveMessenger::ActiveMessenger()
   : this_node_(theContext()->getNode())
 {
+  #if backend_check_enabled(trace_enabled)
+    trace_iprobe    = trace::registerEventCollective("MPI_Iprobe");
+    trace_get_count = trace::registerEventCollective("MPI_Get_count");
+    trace_recv      = trace::registerEventCollective("MPI_Recv");
+    trace_isend     = trace::registerEventCollective("MPI_Isend");
+  #endif
+
   /*
    * Push the default epoch into the stack so it is always at the bottom of the
    * stack during execution until the AM's destructor is invoked
@@ -201,10 +208,16 @@ EventType ActiveMessenger::sendMsgBytes(
     dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}"
   );
 
-  MPI_Isend(
-    msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-    mpi_event->getRequest()
-  );
+  {
+    #if backend_check_enabled(trace_enabled)
+      trace::TraceScopedEvent guard(trace_isend);
+    #endif
+
+    MPI_Isend(
+      msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
+      mpi_event->getRequest()
+    );
+  }
 
   if (not is_term) {
     theTerm()->produce(epoch,1,dest);
@@ -314,10 +327,16 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     "Invalid destination: {}"
   );
 
-  MPI_Isend(
-    data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-    mpi_event->getRequest()
-  );
+  {
+    #if backend_check_enabled(trace_enabled)
+      trace::TraceScopedEvent guard(trace_isend);
+    #endif
+
+    MPI_Isend(
+      data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
+      mpi_event->getRequest()
+    );
+  }
 
   // Assume that any raw data send/recv is paired with a message with an epoch
   // if required to inhibit early termination of that epoch
@@ -369,13 +388,25 @@ bool ActiveMessenger::recvDataMsgBuffer(
     MPI_Status stat;
     int flag;
 
-    MPI_Iprobe(
-      node == uninitialized_destination ? MPI_ANY_SOURCE : node,
-      tag, theContext()->getComm(), &flag, &stat
-    );
+    {
+      #if backend_check_enabled(trace_enabled)
+        trace::TraceScopedEvent guard(trace_iprobe);
+      #endif
+
+      MPI_Iprobe(
+        node == uninitialized_destination ? MPI_ANY_SOURCE : node,
+        tag, theContext()->getComm(), &flag, &stat
+      );
+    }
 
     if (flag == 1) {
-      MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+      {
+        #if backend_check_enabled(trace_enabled)
+          trace::TraceScopedEvent guard(trace_get_count);
+        #endif
+
+        MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+      }
 
       char* buf =
         user_buf == nullptr ?
@@ -388,10 +419,16 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
         static_cast<char*>(user_buf);
 
-      MPI_Recv(
-        buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
-        theContext()->getComm(), MPI_STATUS_IGNORE
-      );
+      {
+        #if backend_check_enabled(trace_enabled)
+          trace::TraceScopedEvent guard(trace_recv);
+        #endif
+
+        MPI_Recv(
+          buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
+          theContext()->getComm(), MPI_STATUS_IGNORE
+        );
+      }
 
       auto dealloc_buf = [=]{
         debug_print(
@@ -597,13 +634,25 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
   MPI_Status stat;
   int flag;
 
-  MPI_Iprobe(
-    MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
-    theContext()->getComm(), &flag, &stat
-  );
+  {
+    #if backend_check_enabled(trace_enabled)
+      trace::TraceScopedEvent guard(trace_iprobe);
+    #endif
+
+    MPI_Iprobe(
+      MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
+      theContext()->getComm(), &flag, &stat
+    );
+  }
 
   if (flag == 1) {
-    MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+    {
+      #if backend_check_enabled(trace_enabled)
+        trace::TraceScopedEvent guard(trace_get_count);
+      #endif
+
+      MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+    }
 
     #if backend_check_enabled(memory_pool)
       char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
@@ -613,10 +662,16 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
     NodeType const sender = stat.MPI_SOURCE;
 
-    MPI_Recv(
-      buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
-      theContext()->getComm(), MPI_STATUS_IGNORE
-    );
+    {
+      #if backend_check_enabled(trace_enabled)
+        trace::TraceScopedEvent guard(trace_recv);
+      #endif
+
+      MPI_Recv(
+        buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
+        theContext()->getComm(), MPI_STATUS_IGNORE
+      );
+    }
 
     auto msg = reinterpret_cast<MessageType>(buf);
     messageConvertToShared(msg);

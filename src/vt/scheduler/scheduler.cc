@@ -65,9 +65,22 @@ namespace vt { namespace sched {
 Scheduler::Scheduler() {
   event_triggers.resize(SchedulerEventType::SchedulerEventSize + 1);
   event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
+
+  #if backend_check_enabled(trace_enabled)
+    trace_start_scheduler = trace::registerEventCollective(
+      "Scheduler::schedulerImpl (begin)"
+    );
+    trace_stop_scheduler = trace::registerEventCollective(
+      "Scheduler::schedulerImpl (end)"
+    );
+  #endif
 }
 
 bool Scheduler::schedulerImpl() {
+  #if backend_check_enabled(trace_enabled)
+    trace::addUserEvent(trace_start_scheduler);
+  #endif
+
   bool scheduled_work = false;
 
   bool const msg_sch = theMsg()->scheduler();
@@ -90,6 +103,10 @@ bool Scheduler::schedulerImpl() {
   if (scheduled_work) {
     is_idle = false;
   }
+
+  #if backend_check_enabled(trace_enabled)
+    trace::addUserEvent(trace_stop_scheduler);
+  #endif
 
   return scheduled_work;
 }

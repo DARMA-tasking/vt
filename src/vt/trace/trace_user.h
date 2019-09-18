@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/trace/trace_common.h"
+#include "vt/timing/timing.h"
 
 #include <string>
 
@@ -72,7 +73,7 @@ void addUserNoteEpi(std::string const& note, TraceEventIDType const event);
 
 struct TraceScopedEventHash final {
   explicit TraceScopedEventHash(std::string const& in_str)
-    : begin_(Trace::getCurrentTime()),
+    : begin_(timing::Timing::getCurrentTime()),
       str_(in_str)
   {
     event_ = registerEventHashed(str_);
@@ -82,7 +83,7 @@ struct TraceScopedEventHash final {
 
   void end() {
     if (not ended_) {
-      end_ = Trace::getCurrentTime();
+      end_ = timing::Timing::getCurrentTime();
       ended_ = true;
       theTrace()->addUserEventBracketed(event_, begin_, end_);
     }
@@ -98,7 +99,7 @@ private:
 
 struct TraceScopedEvent final {
   explicit TraceScopedEvent(UserEventIDType event)
-    : begin_(Trace::getCurrentTime()),
+    : begin_(timing::Timing::getCurrentTime()),
       event_(event)
   { }
 
@@ -106,7 +107,7 @@ struct TraceScopedEvent final {
 
   void end() {
     if (not ended_) {
-      end_ = Trace::getCurrentTime();
+      end_ = timing::Timing::getCurrentTime();
       ended_ = true;
       theTrace()->addUserEventBracketed(event_, begin_, end_);
     }
@@ -122,18 +123,18 @@ private:
 struct TraceScopedNote final {
   TraceScopedNote(
     std::string const& in_note, TraceEventIDType const in_event = no_trace_event
-  ) : begin_(Trace::getCurrentTime()),
+  ) : begin_(timing::Timing::getCurrentTime()),
       event_(in_event),
       note_(in_note)
   { }
 
   ~TraceScopedNote() {
-    end_ = Trace::getCurrentTime();
+    end_ = timing::Timing::getCurrentTime();
     theTrace()->addUserBracketedNote(begin_, end_, note_, event_);
   }
 
   void end() {
-    end_ = Trace::getCurrentTime();
+    end_ = timing::Timing::getCurrentTime();
   }
 
   void setEvent(TraceEventIDType const in_event) {

@@ -47,6 +47,10 @@
 
 #include "vt/config.h"
 
+#if backend_check_enabled(trace_enabled)
+  #include "vt/trace/trace_headers.h"
+#endif
+
 #include <cassert>
 #include <vector>
 #include <list>
@@ -87,6 +91,11 @@ private:
 
   EventTriggerContType event_triggers;
   EventTriggerContType event_triggers_once;
+
+  #if backend_check_enabled(trace_enabled)
+    trace::UserEventIDType trace_start_scheduler = 0;
+    trace::UserEventIDType trace_stop_scheduler = 0;
+  #endif
 };
 
 }} //end namespace vt::scheduler

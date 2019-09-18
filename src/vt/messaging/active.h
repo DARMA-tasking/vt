@@ -61,6 +61,10 @@
 #include "vt/trace/trace_common.h"
 #include "vt/utils/static_checks/functor.h"
 
+#if backend_check_enabled(trace_enabled)
+  #include "vt/trace/trace_headers.h"
+#endif
+
 #include <type_traits>
 #include <tuple>
 #include <vector>
@@ -587,6 +591,10 @@ private:
 
   #if backend_check_enabled(trace_enabled)
     trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
+    trace::UserEventIDType trace_iprobe    = 0;
+    trace::UserEventIDType trace_get_count = 0;
+    trace::UserEventIDType trace_recv      = 0;
+    trace::UserEventIDType trace_isend     = 0;
   #endif
 
   HandlerType current_handler_context_   = uninitialized_handler;
