@@ -96,7 +96,7 @@ inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) 
 }
 
 template <typename T, T value>
-inline HandlerType makeAutoHandler() {
+inline HandlerType makeAutoHandlerParam() {
   using FunctorT = FunctorAdapter<T, value>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
@@ -146,7 +146,7 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 template <typename T, T value>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
-  auto const handler = makeAutoHandler<T,value>();
+  auto const handler = makeAutoHandlerParam<T,value>();
   auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegGeneral);
   setTraceName(trace_id, name, parent);
 #endif
