@@ -121,7 +121,7 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: fmt=${ARG_LINK_FMT}")
     endif()
-    target_compile_definitions(${ARG_TARGET} PUBLIC FMT_HEADER_ONLY=1)
+    target_compile_definitions(${ARG_TARGET} PUBLIC FMT_HEADER_ONLY=1 FMT_USE_USER_DEFINED_LITERALS=0)
     target_include_directories(${ARG_TARGET} PUBLIC
       $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/fmt>
       $<INSTALL_INTERFACE:include/fmt>
