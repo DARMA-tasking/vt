@@ -390,7 +390,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
     {
       #if backend_check_enabled(trace_enabled)
-        trace::TraceScopedEvent guard(trace_iprobe);
+      //trace::TraceScopedEvent guard(trace_iprobe);
       #endif
 
       MPI_Iprobe(
@@ -636,7 +636,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
   {
     #if backend_check_enabled(trace_enabled)
-      trace::TraceScopedEvent guard(trace_iprobe);
+    //trace::TraceScopedEvent guard(trace_iprobe);
     #endif
 
     MPI_Iprobe(

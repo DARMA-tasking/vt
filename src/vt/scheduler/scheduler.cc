@@ -78,7 +78,7 @@ Scheduler::Scheduler() {
 
 bool Scheduler::schedulerImpl() {
   #if backend_check_enabled(trace_enabled)
-    trace::addUserEvent(trace_start_scheduler);
+  //trace::addUserEvent(trace_start_scheduler);
   #endif
 
   bool scheduled_work = false;
@@ -105,7 +105,7 @@ bool Scheduler::schedulerImpl() {
   }
 
   #if backend_check_enabled(trace_enabled)
-    trace::addUserEvent(trace_stop_scheduler);
+  //trace::addUserEvent(trace_stop_scheduler);
   #endif
 
   return scheduled_work;
