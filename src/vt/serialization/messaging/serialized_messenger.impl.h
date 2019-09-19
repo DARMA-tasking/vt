@@ -114,14 +114,17 @@ template <typename UserMsgT>
   debug_print(
     serial_msg, node,
     "serialMsgHandler: non-eager, recvDataMsg: msg={}, handler={}, "
-    "recv_tag={}, epoch={}\n",
-    print_ptr(sys_msg), handler, recv_tag, envelopeGetEpoch(sys_msg->env)
+    "recv_tag={}, epoch={}, epoch state: {:x}\n",
+    print_ptr(sys_msg), handler, recv_tag, envelopeGetEpoch(sys_msg->env),
+    theMsg()->getEpoch()
   );
+
+  const auto capture_epoch = envelopeIsEpochType(sys_msg->env) ? envelopeGetEpoch(sys_msg->env) : term::any_epoch_sentinel;
 
   auto node = sys_msg->from_node;
   theMsg()->recvDataMsg(
     recv_tag, sys_msg->from_node,
-    [handler,recv_tag,node](RDMA_GetType ptr, ActionType action){
+    [handler,recv_tag,node, capture_epoch](RDMA_GetType ptr, ActionType action){
       // be careful here not to use "msg", it is no longer valid
       auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
       auto ptr_size = std::get<1>(ptr);
@@ -129,15 +132,17 @@ template <typename UserMsgT>
       deserializeInPlace<UserMsgT>(raw_ptr, ptr_size, msg.get());
       messageResetDeserdes(msg);
 
+      theMsg()->pushEpoch(capture_epoch);
       debug_print(
         serial_msg, node,
         "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={},"
-        "epoch={}\n",
-        handler, recv_tag, envelopeGetEpoch(msg->env)
+        "epoch={:x}, epoch state: {:x}\n",
+        handler, recv_tag, envelopeGetEpoch(msg->env), theMsg()->getEpoch()
       );
 
       runnable::Runnable<UserMsgT>::run(handler, nullptr, msg.get(), node);
       action();
+      theMsg()->popEpoch(capture_epoch);
     }
   );
 }
