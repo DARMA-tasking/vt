@@ -74,7 +74,7 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 HandlerType makeAutoHandler(MessageT* const msg);
 
 template <typename T, T value>
-HandlerType makeAutoHandler();
+HandlerType makeAutoHandlerParam();
 
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 void setHandlerTraceNameObjGroup(
