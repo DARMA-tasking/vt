@@ -157,7 +157,7 @@ struct Param {
     NodeType const& dest, Tuple tup,
     NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
-    auto const& han = auto_registry::makeAutoHandler<T,value>();
+    auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
     return sendDataTuple(dest, han, std::forward<Tuple>(tup));
   }
 
@@ -166,7 +166,7 @@ struct Param {
     NodeType const& dest, DataMsg<std::tuple<Args...>>* msg,
     NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
-    auto const& han = auto_registry::makeAutoHandler<T,value>();
+    auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
     msg->sub_han = han;
     return sendDataMsg(dest, han, msg);
   }
@@ -176,7 +176,7 @@ struct Param {
     NodeType const& dest, NonType<T, value> __attribute__((unused)) non,
     Args&&... a
   ) {
-    auto const& han = auto_registry::makeAutoHandler<T,value>();
+    auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
 
     staticCheckCopyable<Args...>();
 

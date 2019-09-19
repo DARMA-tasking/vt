@@ -55,7 +55,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 HandlerType makeAutoHandler(MsgT* const msg);
 
 template <typename T, T value>
-HandlerType makeAutoHandler();
+HandlerType makeAutoHandlerParam();
 
 template <typename T, bool is_msg, typename... Args>
 HandlerType makeAutoHandlerFunctor();
