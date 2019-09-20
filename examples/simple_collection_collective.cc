@@ -51,32 +51,43 @@ using namespace ::vt;
 using namespace ::vt::collective;
 using namespace ::vt::mapping;
 
-static constexpr std::size_t const default_num_elms = 64;
+static constexpr std::size_t const default_num_elms = 16;
 
-using IndexType = IdxType1D<std::size_t>;
-
-struct TestColl : Collection<TestColl,IndexType> {
+struct TestColl : Collection<TestColl,vt::Index1D> {
   TestColl() = default;
 
-  virtual ~TestColl() {
-    auto num_nodes = theContext()->getNumNodes();
-    vtAssertInfo(
-      counter_ == num_nodes, "Must be equal",
-      counter_, num_nodes, getIndex(), theContext()->getNode()
-    );
-  }
-
-  struct TestMsg : CollectionMessage<TestColl> { };
+  struct TestMsg : CollectionMessage<TestColl> {
+    vt::Callback<vt::collective::ReduceNoneMsg> cb;
+  };
 
   void doWork(TestMsg* msg) {
-    auto const& this_node = theContext()->getNode();
-    counter_++;
-    ::fmt::print(
-      "{}: doWork: idx={}, cnt={}\n", this_node, getIndex().x(), counter_
-    );
+    auto proxy = this->getCollectionProxy();
+    auto idx = this->getIndex().x();
+    proxy[idx].template registerHandle<double*, &TestColl::handle>();
+
+    auto prev = idx - 1 >= 0 ? idx - 1 : default_num_elms - 1;
+    auto next = idx + 1 < default_num_elms ? idx + 1 : 0;
+    proxy[prev].template connect<double*, &TestColl::handle>(vt::Index1D(idx));
+    proxy[next].template connect<double*, &TestColl::handle>(vt::Index1D(idx));
+
+    auto nmsg = vt::makeMessage<vt::collective::ReduceNoneMsg>();
+    proxy.reduce(nmsg.get(),msg->cb);
   }
 
-private:
+  void testHandle(TestMsg* msg) {
+    auto proxy = this->getCollectionProxy();
+    auto idx = this->getIndex().x();
+    auto prev = idx - 1 >= 0 ? idx - 1 : default_num_elms - 1;
+    auto next = idx + 1 < default_num_elms ? idx + 1 : 0;
+
+    auto val = proxy[next].template atomicGetAccum<double*, &TestColl::handle>(idx);
+    fmt::print("next idx={}: val={}\n", idx, val);
+
+    auto var = proxy[prev].template atomicGetAccum<double*, &TestColl::handle>(idx);
+    fmt::print("prev idx={}: val={}\n", idx, var);
+  }
+
+  vt::Handle<double*> handle;
   int32_t counter_ = 0;
 };
 
@@ -89,16 +100,36 @@ int main(int argc, char** argv) {
     num_elms = atoi(argv[1]);
   }
 
-  using BaseIndexType = typename IndexType::DenseIndexType;
-  auto const& range = IndexType(static_cast<BaseIndexType>(num_elms));
+  auto const& range = vt::Index1D(num_elms);
   auto proxy = theCollection()->constructCollective<TestColl>(
-    range, [](IndexType idx){
+    range, [](vt::Index1D idx){
       return std::make_unique<TestColl>();
     }
   );
 
-  auto msg = makeSharedMessage<TestColl::TestMsg>();
-  proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>(msg);
+  if (vt::theContext()->getNode() == 0) {
+    bool done = false;
+    auto cb = theCB()->makeFunc<vt::collective::ReduceNoneMsg>(
+      [&](vt::collective::ReduceNoneMsg*){
+        done = true;
+      }
+    );
+    auto msg = makeSharedMessage<TestColl::TestMsg>();
+    msg->cb = cb;
+    proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>(msg);
+    while (not done) vt::runScheduler();
+    fmt::print("done!\n");
+  }
+
+  fmt::print("try barrier!\n");
+  theCollective()->barrier();
+
+  proxy.finishHandleCollective<double*, &TestColl::handle>();
+
+  if (vt::theContext()->getNode() == 0) {
+    auto msg = makeSharedMessage<TestColl::TestMsg>();
+    proxy.broadcast<TestColl::TestMsg,&TestColl::testHandle>(msg);
+  }
 
   while (!rt->isTerminated()) {
     runScheduler();
