@@ -63,6 +63,7 @@ set(
       vrt/collection/insert vrt/collection/reducable vrt/collection/mapped_node
       vrt/collection/dispatch vrt/collection/gettable
       vrt/collection/staged_token
+      vrt/collection/rma
       vrt/collection/balance
         vrt/collection/balance/baselb
         vrt/collection/balance/hierarchicallb

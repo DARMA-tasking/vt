@@ -84,6 +84,20 @@ inline HandlerType makeAutoHandlerCollectionMem(MsgT* const msg) {
   return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
 }
 
+template <typename ColT, typename HanT, ActiveHandleTypedFnType<HanT, ColT> f>
+inline HandlerType makeAutoHandlerCollectionHan() {
+  using FunctorT = FunctorAdapterMember<ActiveHandleTypedFnType<HanT, ColT>, f>;
+  using ContainerType = AutoActiveCollectionHanContainerType;
+  using RegInfoType = AutoRegInfoType<AutoActiveCollectionHanType>;
+  using FuncType = ActiveHandleFnPtrType;
+  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+}
+
+inline AutoActiveCollectionHanType getAutoHandlerCollectionHan(HandlerType han) {
+  using ContainerType = AutoActiveCollectionHanContainerType;
+  return getAutoRegistryGen<ContainerType>().at(han).getFun();
+}
+
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 void setHandlerTraceNameColl(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)

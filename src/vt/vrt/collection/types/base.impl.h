@@ -111,10 +111,18 @@ void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   s | elmsFixedAtCreation_;
   s | cur_bcast_epoch_;
   s | numElems_;
+  s | global_local_;
 }
 
 template <typename ColT, typename IndexT>
 /*virtual*/ CollectionBase<ColT, IndexT>::~CollectionBase() {}
+
+template <typename ColT, typename IndexT>
+void CollectionBase<ColT, IndexT>::addHandleConnection(
+  HandleType han, IndexT idx, int local, NodeType rank
+) {
+  global_local_[han][idx] = std::make_tuple(rank,local);
+}
 
 template <typename ColT, typename IndexT>
 void CollectionBase<ColT, IndexT>::setSize(VirtualElmCountType const& elms) {

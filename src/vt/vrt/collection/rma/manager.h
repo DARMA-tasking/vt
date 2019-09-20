@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              proxy_elm_traits.h
+//                                  manager.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,53 +42,73 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
-#define INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_RMA_MANAGER_H
+#define INCLUDED_VT_VRT_COLLECTION_RMA_MANAGER_H
 
 #include "vt/config.h"
-#include "vt/vrt/proxy/base_collection_elm_proxy.h"
-#include "vt/vrt/proxy/base_elm_proxy.h"
-#include "vt/vrt/collection/send/sendable.h"
-#include "vt/vrt/collection/balance/proxy/lbable.h"
-#include "vt/vrt/collection/gettable/gettable.h"
-#include "vt/vrt/collection/insert/insertable.h"
-#include "vt/vrt/collection/balance/proxy/lbable.h"
-#include "vt/vrt/collection/rma/handlable.h"
+#include "vt/vrt/collection/rma/connect_msg.h"
+#include "vt/vrt/collection/rma/connected_msg.h"
+#include "vt/vrt/collection/rma/count_msg.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <unordered_map>
+#include <unordered_set>
+#include <map>
+#include <vector>
+#include <memory>
 
-namespace elm_proxy {
+namespace vt { namespace vrt { namespace collection { namespace rma {
 
-template <typename ColT, typename IndexT>
-using Chain5 = Handlable<ColT,IndexT,BaseCollectionElmProxy<ColT,IndexT>>;
+struct Payload {
+  Payload(MPI_Win in_window, int in_count, void* in_ptr)
+    : window(in_window), count(in_count), ptr(in_ptr)
+  { }
 
-template <typename ColT, typename IndexT>
-using Chain4 = LBable<ColT,IndexT,Chain5<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain3 = Gettable<ColT,IndexT,Chain4<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain2 = ElmInsertable<ColT,IndexT,Chain3<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain1 = Sendable<ColT,IndexT,Chain2<ColT,IndexT>>;
-
-} /* end namespace proxy */
-
-template <typename ColT, typename IndexT>
-struct ProxyCollectionElmTraits : elm_proxy::Chain1<ColT,IndexT> {
-  ProxyCollectionElmTraits() = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits const&) = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits&&) = default;
-  ProxyCollectionElmTraits(
-    typename elm_proxy::Chain1<ColT,IndexT>::ProxyType const& in_proxy,
-    typename elm_proxy::Chain1<ColT,IndexT>::ElementProxyType const& in_elm
-  ) : elm_proxy::Chain1<ColT,IndexT>(in_proxy,in_elm)
-  {}
-  ProxyCollectionElmTraits& operator=(ProxyCollectionElmTraits const&) = default;
+  MPI_Win window;
+  int count = 0;
+  void* ptr = nullptr;
 };
 
-}}} /* end namespace vt::vrt::collection */
+struct Manager {
+  template <typename ColT>
+  static void connect(ConnectMsg<ColT>* msg, ColT* col);
 
-#endif /*INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H*/
+  template <typename ColT>
+  static void connected(ConnectedMsg<ColT>* msg, ColT* col);
+
+  template <typename ColT>
+  static void finish(HandleType handle);
+
+  template <typename ColT>
+  static void addLocalHandle(HandleType handle, typename ColT::IndexType idx);
+
+  template <typename ColT>
+  static void finishLocalCount(CountMsg<ColT>* msg);
+
+  template <typename ColT>
+  static int atomicGetAccum(HandleType handle, int rank, int slot, int val);
+
+private:
+  static std::unordered_map<HandleType, int> handle_slot;
+
+  template <typename IndexT>
+  static std::unordered_map<HandleType, std::map<IndexT, int>> local_offsets;
+
+  static std::unordered_map<HandleType, VirtualProxyType> handle_to_proxy;
+
+  template <typename IndexT>
+  static std::unordered_map<HandleType, std::unordered_set<IndexT>> local_handles;
+
+  template <typename ColT>
+  static std::unordered_map<HandleType, std::unique_ptr<Payload>> payload_;
+
+  template <typename IndexT>
+  static std::unordered_map<
+    HandleType, std::unordered_map<IndexT, std::vector<IndexT>>
+  > remote_accessors;
+};
+
+}}}} /* end namespace vt::vrt::collection::rma */
+
+#include "vt/vrt/collection/rma/manager.impl.h"
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_RMA_MANAGER_H*/

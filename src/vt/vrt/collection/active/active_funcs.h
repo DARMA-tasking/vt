@@ -49,6 +49,7 @@
 #include "vt/messaging/message.h"
 #include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vt/vrt/collection/types/headers.fwd.h"
+#include "vt/vrt/collection/rma/handle.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -64,6 +65,11 @@ using ActiveColMemberFnPtrType =
 
 template <typename MsgT, typename ColT>
 using ActiveColMemberTypedFnType = void(ColT::*)(MsgT*);
+
+using ActiveHandleFnPtrType = ::vt::BaseHandle (UntypedCollection::*);
+
+template <typename HanT, typename ColT>
+using ActiveHandleTypedFnType = vt::Handle<HanT> (ColT::*);
 
 }}} /* end namespace vt::vrt::collection */
 

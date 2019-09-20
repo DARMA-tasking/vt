@@ -894,6 +894,8 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vt/vrt/collection/staged_token/token.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
 #include "vt/vrt/collection/balance/proxy/lbable.impl.h"
+#include "vt/vrt/collection/rma/handlable.impl.h"
+#include "vt/vrt/collection/rma/collective_handle.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"

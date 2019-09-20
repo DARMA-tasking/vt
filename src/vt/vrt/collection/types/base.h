@@ -88,6 +88,8 @@ struct CollectionBase : Indexable<ColT, IndexT> {
   template <typename Serializer>
   void serialize(Serializer& s);
 
+  void addHandleConnection(HandleType han, IndexT idx, int local, NodeType rank);
+
   friend struct CollectionManager;
 
 protected:
@@ -95,6 +97,10 @@ protected:
   EpochType cur_bcast_epoch_ = 0;
   bool hasStaticSize_ = true;
   bool elmsFixedAtCreation_ = true;
+public:
+  std::unordered_map<
+    HandleType, std::unordered_map<IndexT, std::tuple<NodeType, int>>
+  > global_local_;
 };
 
 }}} /* end namespace vt::vrt::collection */

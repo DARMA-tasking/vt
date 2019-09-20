@@ -67,6 +67,7 @@ using AutoActiveFunctorType       = ActiveFnPtrType;
 using AutoActiveVCType            = vrt::ActiveVirtualFnPtrType;
 using AutoActiveCollectionType    = vrt::collection::ActiveColFnPtrType;
 using AutoActiveCollectionMemType = vrt::collection::ActiveColMemberFnPtrType;
+using AutoActiveCollectionHanType = vrt::collection::ActiveHandleFnPtrType;
 using AutoActiveMapType           = mapping::ActiveMapFnPtrType;
 using AutoActiveMapFunctorType    = mapping::ActiveMapFnPtrType;
 using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;
@@ -86,6 +87,7 @@ enum struct RegistryTypeEnum {
   RegSeed,
   RegVrtCollection,
   RegVrtCollectionMember,
+  RegVrtCollectionHandle,
   RegRDMAGet,
   RegRDMAPut,
   RegIndex,
@@ -163,6 +165,7 @@ using AutoActiveContainerType              = RegContType<AutoActiveType>;
 using AutoActiveVCContainerType            = RegContType<AutoActiveVCType>;
 using AutoActiveCollectionContainerType    = RegContType<AutoActiveCollectionType>;
 using AutoActiveCollectionMemContainerType = RegContType<AutoActiveCollectionMemType>;
+using AutoActiveCollectionHanContainerType = RegContType<AutoActiveCollectionHanType>;
 using AutoActiveMapContainerType           = RegContType<AutoActiveMapType>;
 using AutoActiveMapFunctorContainerType    = RegContType<AutoActiveMapFunctorType>;
 using AutoActiveSeedMapContainerType       = RegContType<AutoActiveSeedMapType>;

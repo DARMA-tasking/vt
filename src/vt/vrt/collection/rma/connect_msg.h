@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              proxy_elm_traits.h
+//                                connect_msg.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,53 +42,30 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
-#define INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_RMA_CONNECT_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_RMA_CONNECT_MSG_H
 
 #include "vt/config.h"
-#include "vt/vrt/proxy/base_collection_elm_proxy.h"
-#include "vt/vrt/proxy/base_elm_proxy.h"
-#include "vt/vrt/collection/send/sendable.h"
-#include "vt/vrt/collection/balance/proxy/lbable.h"
-#include "vt/vrt/collection/gettable/gettable.h"
-#include "vt/vrt/collection/insert/insertable.h"
-#include "vt/vrt/collection/balance/proxy/lbable.h"
-#include "vt/vrt/collection/rma/handlable.h"
+#include "vt/vrt/collection/messages/user.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace rma {
 
-namespace elm_proxy {
+template <typename ColT>
+struct ConnectMsg : CollectionMessage<ColT> {
+  using IndexType = typename ColT::IndexType;
 
-template <typename ColT, typename IndexT>
-using Chain5 = Handlable<ColT,IndexT,BaseCollectionElmProxy<ColT,IndexT>>;
+  ConnectMsg(HandleType in_handle, IndexType in_from)
+    : handle_(in_handle), from_(in_from)
+  { }
 
-template <typename ColT, typename IndexT>
-using Chain4 = LBable<ColT,IndexT,Chain5<ColT,IndexT>>;
+  IndexType from() const { return from_; }
+  HandleType handle() const { return handle_; }
 
-template <typename ColT, typename IndexT>
-using Chain3 = Gettable<ColT,IndexT,Chain4<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain2 = ElmInsertable<ColT,IndexT,Chain3<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain1 = Sendable<ColT,IndexT,Chain2<ColT,IndexT>>;
-
-} /* end namespace proxy */
-
-template <typename ColT, typename IndexT>
-struct ProxyCollectionElmTraits : elm_proxy::Chain1<ColT,IndexT> {
-  ProxyCollectionElmTraits() = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits const&) = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits&&) = default;
-  ProxyCollectionElmTraits(
-    typename elm_proxy::Chain1<ColT,IndexT>::ProxyType const& in_proxy,
-    typename elm_proxy::Chain1<ColT,IndexT>::ElementProxyType const& in_elm
-  ) : elm_proxy::Chain1<ColT,IndexT>(in_proxy,in_elm)
-  {}
-  ProxyCollectionElmTraits& operator=(ProxyCollectionElmTraits const&) = default;
+private:
+  HandleType handle_ = 0;
+  IndexType from_    = {};
 };
 
-}}} /* end namespace vt::vrt::collection */
+}}}} /* end namespace vt::vrt::collection::rma */
 
-#endif /*INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_RMA_CONNECT_MSG_H*/

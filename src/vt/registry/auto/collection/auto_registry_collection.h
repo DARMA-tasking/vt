@@ -70,6 +70,11 @@ template <
 >
 HandlerType makeAutoHandlerCollectionMem(MsgT* const msg);
 
+template <typename ColT, typename HanT, ActiveHandleTypedFnType<HanT, ColT> f>
+HandlerType makeAutoHandlerCollectionHan();
+
+AutoActiveCollectionHanType getAutoHandlerCollectionHan(HandlerType han);
+
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 void setHandlerTraceNameColl(std::string const& name, std::string const& parent = "");
 
