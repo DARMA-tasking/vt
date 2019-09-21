@@ -81,8 +81,8 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
     print_ptr(in_vrt_ptr.get())
   );
 
-  msg_buffer_.attach([this,ptr](VirtualMessage* msg){
-    theWorkerGrp()->enqueueCommThread([=]{
+  msg_buffer_.attach([this](VirtualMessage* msg){
+    theWorkerGrp()->enqueueCommThread([this,msg]{
       enqueueWorkUnit(msg);
     });
   });

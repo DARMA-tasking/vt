@@ -2952,7 +2952,7 @@ void CollectionManager::elmReadyLB(
   );
 
   theTerm()->produce(cur_epoch);
-  elm_holder->addLBCont(idx,[pmsg,proxy,lb_han,cur_epoch,idx]{
+  elm_holder->addLBCont(idx,[pmsg,proxy,lb_han,cur_epoch]{
     theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
     theTerm()->consume(cur_epoch);
   });
