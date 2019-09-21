@@ -62,6 +62,24 @@ private:
   HandleType handle_ = 0;
 };
 
+template <typename ColT, typename T>
+struct RankCountMsg : collective::ReduceTMsg<T> {
+  RankCountMsg() = default;
+  RankCountMsg(HandleType in_handle, T const& val)
+    : collective::ReduceTMsg<T>(val), handle_(in_handle)
+  { }
+
+  HandleType handle() const { return handle_; }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    collective::ReduceTMsg<T>::invokeSerialize(s);
+  }
+
+private:
+  HandleType handle_ = 0;
+};
+
 }}}} /* end namespace vt::vrt::collection::rma */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_RMA_COUNT_MSG_H*/

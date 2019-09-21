@@ -55,6 +55,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <tuple>
 
 namespace vt { namespace vrt { namespace collection { namespace rma {
 
@@ -84,6 +85,9 @@ struct Manager {
   template <typename ColT>
   static void finishLocalCount(CountMsg<ColT>* msg);
 
+  template <typename ColT, typename T>
+  static void finishRankMap(RankCountMsg<ColT, T>* msg);
+
   template <typename ColT>
   static int atomicGetAccum(HandleType handle, int rank, int slot, int val);
 
@@ -103,7 +107,11 @@ private:
 
   template <typename IndexT>
   static std::unordered_map<
-    HandleType, std::unordered_map<IndexT, std::vector<IndexT>>
+    HandleType,
+    std::unordered_map<
+      IndexT,
+      std::vector<std::tuple<IndexT, NodeType>>
+    >
   > remote_accessors;
 };
 

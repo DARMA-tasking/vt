@@ -48,18 +48,23 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/rma/count_msg.h"
 
+#include <tuple>
+
 namespace vt { namespace vrt { namespace collection { namespace rma {
 
 template <typename ColT>
 /*static*/ void Manager::connect(ConnectMsg<ColT>* msg, ColT* col) {
   using IndexType = typename ColT::IndexType;
-  remote_accessors<IndexType>[msg->handle()][col->getIndex()].push_back(msg->from());
+  auto const from_rank = msg->rank();
+  remote_accessors<IndexType>[msg->handle()][col->getIndex()].push_back(
+    std::make_tuple(msg->from(), from_rank)
+  );
   handle_to_proxy[msg->handle()] = col->getProxy();
 
   debug_print(
     gen, node,
-    "Manager::connect: handle={}, idx={}, from={}\n",
-    msg->handle(), col->getIndex(), msg->from()
+    "Manager::connect: handle={}, idx={}, from={}, from_rank={}\n",
+    msg->handle(), col->getIndex(), msg->from(), from_rank
   );
 }
 
@@ -91,29 +96,61 @@ template <typename ColT>
   //auto epoch = theTerm()->makeCollectiveEpoch();
   //theMsg()->pushEpoch(epoch);
 
+  using RankMapType = std::unordered_map<IndexType, std::set<NodeType>>;
+
+  // Collect all remote nodes for each index for group creation
+  RankMapType remote_nodes;
+
   auto rank = theContext()->getNode();
   auto proxy_bits = handle_to_proxy[handle];
   auto& remotes = remote_accessors<IndexType>[handle];
   for (auto&& idx : local_handles<IndexType>[handle]) {
     auto cur_slot = local_offsets<IndexType>[handle][idx];
     for (auto&& connector : remotes[idx]) {
+      auto remote_idx = std::get<0>(connector);
+      auto remote_rank = std::get<1>(connector);
       CollectionProxy<ColT, IndexType> col_proxy(proxy_bits);
-      col_proxy[connector].template send<ConnectedMsg<ColT>,Manager::connected<ColT>>(
+      col_proxy[remote_idx].template send<ConnectedMsg<ColT>,Manager::connected<ColT>>(
         handle, idx, cur_slot, rank
       );
+      // Insert remote rank that communicates with this handle index
+      remote_nodes[idx].insert(remote_rank);
     }
   }
 
   //theMsg()->pop(epoch);
 
+  // Reduction to count the max number of indices on any node for symmetric
+  // allocation of atomic fetch buffers
   int const num_local_handles = local_offsets<IndexType>[handle].size();
   auto msg = makeMessage<CountMsg<ColT>>(handle, num_local_handles);
   auto cb = theCB()->makeBcast<CountMsg<ColT>,Manager::finishLocalCount<ColT>>();
   theCollective()->reduce<collective::MaxOp<int>>(0,msg.get(),cb);
 
+  // Special reduction to gather all the remote node sets for each index to
+  // create the MPI_Group for each one
+  auto rmsg = makeMessage<RankCountMsg<ColT, RankMapType>>(handle, remote_nodes);
+  auto cb2 = theCB()->makeBcast<
+    RankCountMsg<ColT, RankMapType>, Manager::finishRankMap<ColT, RankMapType>
+  >();
+  theCollective()->reduce<collective::UnionOp<RankMapType>>(0,rmsg.get(),cb2);
+
   do {
     vt::runScheduler();
   } while (payload_<ColT>.find(handle) == payload_<ColT>.end());
+}
+
+template <typename ColT, typename T>
+/*static*/ void Manager::finishRankMap(RankCountMsg<ColT, T>* msg) {
+  auto const handle = msg->handle();
+  auto const& map = msg->getConstVal();
+
+  debug_print(
+    gen, node,
+    "Manager::finishRankMap: handle={}, indices={}\n",
+    handle, map.size()
+  );
+
 }
 
 template <typename ColT>
@@ -173,7 +210,11 @@ template <typename IndexT>
 
 template <typename IndexT>
 /*static*/ std::unordered_map<
-  HandleType, std::unordered_map<IndexT, std::vector<IndexT>>
+  HandleType,
+  std::unordered_map<
+    IndexT,
+    std::vector<std::tuple<IndexT, NodeType>>
+  >
 > Manager::remote_accessors = {};
 
 template <typename IndexT>

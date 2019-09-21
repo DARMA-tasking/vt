@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 default_op.h
+//                                  union_op.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,44 +42,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_H
-#define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_UNION_OP_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_UNION_OP_H
 
 #include "vt/config.h"
-#include "vt/collective/reduce/reduce_msg.h"
-#include "vt/collective/reduce/operators/default_msg.h"
-#include "vt/collective/reduce/operators/callback_op.h"
-#include "vt/collective/reduce/operators/functors/none_op.h"
-#include "vt/collective/reduce/operators/functors/and_op.h"
-#include "vt/collective/reduce/operators/functors/or_op.h"
-#include "vt/collective/reduce/operators/functors/plus_op.h"
-#include "vt/collective/reduce/operators/functors/max_op.h"
-#include "vt/collective/reduce/operators/functors/min_op.h"
-#include "vt/collective/reduce/operators/functors/bit_and_op.h"
-#include "vt/collective/reduce/operators/functors/bit_or_op.h"
-#include "vt/collective/reduce/operators/functors/bit_xor_op.h"
-#include "vt/collective/reduce/operators/functors/union_op.h"
-#include "vt/pipe/pipe_callback_only.h"
-
-#include <algorithm>
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
-template <typename T = void>
-struct ReduceCombine {
-  ReduceCombine() = default;
-private:
-  template <typename MsgT, typename Op, typename ActOp>
-  static void combine(MsgT* m1, MsgT* m2) {
-    Op()(m1->getVal(), m2->getConstVal());
+template <typename T>
+struct UnionOp;
+
+template <typename T>
+struct UnionOp<std::set<T>> {
+  void operator()(std::set<T>& v1, std::set<T> const& v2) {
+    v1.insert(v2.begin(), v2.end());
   }
-public:
-  template <typename MsgT, typename Op, typename ActOp>
-  static void msgHandler(MsgT* msg);
+};
+
+template <typename T, typename U>
+struct UnionOp<std::unordered_map<T, std::set<U>>> {
+  void operator()(
+    std::unordered_map<T, std::set<U>>& v1,
+    std::unordered_map<T, std::set<U>> const& v2
+  ) {
+    for (auto&& elm : v2) {
+      v1[elm.first].insert(elm.second.begin(), elm.second.end());
+    }
+  }
 };
 
 }}}} /* end namespace vt::collective::reduce::operators */
 
-#include "vt/collective/reduce/operators/default_op.impl.h"
+namespace vt { namespace collective {
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_H*/
+template <typename T>
+using UnionOp = reduce::operators::UnionOp<T>;
+
+}} /* end namespace vt::collective */
+
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_UNION_OP_H*/

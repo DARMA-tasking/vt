@@ -54,16 +54,18 @@ template <typename ColT>
 struct ConnectMsg : CollectionMessage<ColT> {
   using IndexType = typename ColT::IndexType;
 
-  ConnectMsg(HandleType in_handle, IndexType in_from)
-    : handle_(in_handle), from_(in_from)
+  ConnectMsg(HandleType in_handle, IndexType in_from, NodeType in_rank)
+    : handle_(in_handle), from_(in_from), rank_(in_rank)
   { }
 
   IndexType from() const { return from_; }
   HandleType handle() const { return handle_; }
+  NodeType rank() const { return rank_; }
 
 private:
   HandleType handle_ = 0;
   IndexType from_    = {};
+  NodeType rank_     = uninitialized_destination;
 };
 
 }}}} /* end namespace vt::vrt::collection::rma */

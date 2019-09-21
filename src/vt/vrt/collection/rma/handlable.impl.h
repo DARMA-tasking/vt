@@ -73,8 +73,6 @@ template <typename HanT, ActiveHandleTypedFnType<HanT,ColT> f>
 int Handlable<ColT,IndexT,BaseProxyT>::atomicGetAccum(int val) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
-  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
-
   auto tproxy = CollectionProxy<ColT, IndexT>(col_proxy);
 
   auto this_idx = theCollection()->queryIndexContext<IndexT>();
@@ -98,19 +96,17 @@ void Handlable<ColT,IndexT,BaseProxyT>::connect(
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
-
+  auto rank = theContext()->getNode();
   auto handle = auto_registry::makeAutoHandlerCollectionHan<ColT,HanT,f>();
   proxy.template send<rma::ConnectMsg<ColT>, rma::Manager::connect<ColT>>(
-    static_cast<HandleType>(handle), from
+    static_cast<HandleType>(handle), from, rank
   );
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename HanT, ActiveHandleTypedFnType<HanT,ColT> f>
 void Handlable<ColT,IndexT,BaseProxyT>::registerHandle() const {
-  // auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
-  //auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
 
   auto handle = auto_registry::makeAutoHandlerCollectionHan<ColT,HanT,f>();
   rma::Manager::addLocalHandle<ColT>(
