@@ -66,6 +66,9 @@ struct Handlable : BaseProxyT {
   int atomicPush(int elms, HanT data) const;
 
   template <typename HanT, ActiveHandleTypedFnType<HanT,ColT> f>
+  int atomicPop(HanT data) const;
+
+  template <typename HanT, ActiveHandleTypedFnType<HanT,ColT> f>
   int atomicGetAccum(int val) const;
 
   template <typename HanT, ActiveHandleTypedFnType<HanT,ColT> f>

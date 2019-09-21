@@ -233,6 +233,53 @@ template <typename ColT>
 }
 
 template <typename ColT, typename HanT, typename IdxT>
+/*static*/ int Manager::pop(
+  HandleType handle, int rank2, int slot2, IdxT idx, HanT data
+) {
+  using IndexType = typename ColT::IndexType;
+
+  vtAssertExpr(payload_<ColT>.find(handle) != payload_<ColT>.end());
+  auto payload = payload_<ColT>[handle].get();
+  auto window = payload->window;
+  auto count = payload->count;
+
+  int rank = theContext()->getNode();
+  auto slot = local_offsets<IndexType>[handle][idx];
+
+  int val = -1;
+  int res = -1;
+  MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, window);
+  MPI_Get_accumulate(
+    &val, 1, MPI_INT,
+    &res, 1, MPI_INT,
+    rank, slot, count, MPI_INT, MPI_REPLACE, window
+  );
+  MPI_Win_unlock(rank, window);
+
+  vtAssertExpr(res >= 0);
+  vtAssertExpr(windows_<ColT>[handle].find(idx) != windows_<ColT>[handle].end());
+
+  auto meta = windows_<ColT>[handle][idx].get();
+  auto dwin = meta->window;
+  auto dgrp = meta->group;
+  int drank = -1;
+
+  auto comm = theContext()->getComm();
+  MPI_Group world;
+  MPI_Comm_group(comm, &world);
+  MPI_Group_translate_ranks(world, 1, &rank, dgrp, &drank);
+
+  MPI_Win_lock(MPI_LOCK_EXCLUSIVE, drank, 0, dwin);
+  MPI_Get(
+    data, res, MPI_DOUBLE,
+    drank, 0, res, MPI_DOUBLE, dwin
+  );
+  MPI_Win_unlock(drank, dwin);
+
+  return res;
+}
+
+template <typename ColT, typename HanT, typename IdxT>
 /*static*/ int Manager::push(
   HandleType handle, int rank, int slot, IdxT idx, int elms, HanT data
 ) {
