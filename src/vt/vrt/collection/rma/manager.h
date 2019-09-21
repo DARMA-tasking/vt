@@ -64,6 +64,10 @@ struct Payload {
     : window(in_window), count(in_count), ptr(in_ptr)
   { }
 
+  ~Payload() {
+    MPI_Win_free(&window);
+  }
+
   MPI_Win window;
   int count = 0;
   void* ptr = nullptr;
@@ -78,12 +82,19 @@ struct IndexWindow {
       rank_set(in_rank_set)
   { }
 
+  ~IndexWindow() {
+    MPI_Group_free(&group);
+    MPI_Comm_free(&comm);
+    MPI_Win_free(&window);
+  }
+
   bool owns_idx = false;
   MPI_Group group;
   int size = 0;
   std::vector<int> rank_set;
   MPI_Win window;
   MPI_Comm comm;
+  void* base = nullptr;
 };
 
 struct Manager {
@@ -121,6 +132,8 @@ private:
 
   template <typename ColT>
   static std::unordered_map<HandleType, std::unique_ptr<Payload>> payload_;
+
+  static std::unordered_map<HandleType, bool> setup_done_;
 
   template <typename ColT>
   static std::unordered_map<

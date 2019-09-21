@@ -55,6 +55,8 @@ namespace vt { namespace vrt { namespace collection { namespace rma {
 
 /*static*/ std::unordered_map<HandleType, int> Manager::handle_slot = {};
 
+/*static*/ std::unordered_map<HandleType, bool> Manager::setup_done_ = {};
+
 }}}} /* end namespace vt::vrt::collection::rma */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_RMA_MANAGER_CC*/

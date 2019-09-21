@@ -142,6 +142,10 @@ template <typename ColT>
     RankCountMsg<ColT, RankMapType>, Manager::finishRankMap<ColT, RankMapType>
   >();
   theCollective()->reduce<collective::UnionOp<RankMapType>>(0,rmsg.get(),cb2);
+
+  do {
+    vt::runScheduler();
+  } while (setup_done_.find(handle) == setup_done_.end());
 }
 
 template <typename ColT, typename T>
@@ -173,40 +177,45 @@ template <typename ColT, typename T>
     MPI_Group idx_group;
     MPI_Group_incl(world, set.size(), &vec[0], &idx_group);
 
-    // auto win_create_ret = MPI_Win_create(
-    //   ptr_, num_bytes_, rdma_elm_size, MPI_INFO_NULL, channel_comm_, &window_
-    // );
-
     // Save the group so a window can be created
     if (local_in_set) {
       windows_<ColT>[handle][idx] = std::make_unique<IndexWindow>(
         local_owns_idx, idx_group, set.size(), vec
       );
-      auto win = windows_<ColT>[handle][idx].get();
+      auto meta = windows_<ColT>[handle][idx].get();
 
       MPI_Comm idx_comm;
       MPI_Comm_create_group(comm, idx_group, idx.x(), &idx_comm);
 
-      win->comm = idx_comm;
+      meta->comm = idx_comm;
+
+      MPI_Win win;
+      //MPI_Win_create_dynamic(MPI_INFO_NULL, meta->comm, &win);
+      void* base = nullptr;
 
       if (local_owns_idx) {
         // Should allocate a non-null window
+        MPI_Alloc_mem(1000 * sizeof(double), MPI_INFO_NULL, &base);
+        //MPI_Win_attach(win, base, 1000 * sizeof(double));
+        MPI_Win_create(base, sizeof(double), 1000, MPI_INFO_NULL, meta->comm, &win);
+
+        meta->base = base;
       } else {
         // Allocate a null window, only communicates with the idx
+        MPI_Win_create(MPI_BOTTOM, 0, 1, MPI_INFO_NULL, meta->comm, &win);
       }
+
+      meta->window = win;
     }
   }
 
+  setup_done_[handle] = true;
 }
 
 template <typename ColT>
 /*static*/ void Manager::finishLocalCount(CountMsg<ColT>* msg) {
   auto const handle = msg->handle();
   auto const count = msg->getVal();
-
-// int MPI_Win_allocate
-// (MPI_Aint size, int disp_unit, MPI_Info info,
-// MPI_Comm comm, void *baseptr, MPI_Win *win)
 
   int ret = 0;
   void* ptr = nullptr;
