@@ -116,6 +116,29 @@ struct TestColl : Collection<TestColl,vt::Index1D> {
     proxy.reduce(nmsg.get(),msg->cb);
   }
 
+  void readHandle(TestMsg* msg) {
+    auto proxy = this->getCollectionProxy();
+    auto idx = this->getIndex().x();
+
+    {
+      int maxelems = 100;
+      std::unique_ptr<double[]> array = std::make_unique<double[]>(maxelems);
+      for (int i = 0; i < maxelems; i++) {
+        array.get()[i] = 0;
+      }
+      auto data = array.get();
+      auto elms = proxy[idx].template atomicPop<double*, &TestColl::handle>(data);
+      fmt::print("read idx={}: elms={}\n", idx, elms);
+
+      for (int i = 0; i < elms; i++) {
+        fmt::print("\t read elm idx={}: elms={}\n", idx, data[i]);
+      }
+    }
+
+    auto nmsg = vt::makeMessage<vt::collective::ReduceNoneMsg>();
+    proxy.reduce(nmsg.get(),msg->cb);
+  }
+
   vt::Handle<double*> handle;
   int32_t counter_ = 0;
 };
@@ -159,6 +182,16 @@ int main(int argc, char** argv) {
     msg->cb = cb;
     while (not done) vt::runScheduler();
     fmt::print("done push!\n");
+  }
+
+  if (vt::theContext()->getNode() == 0) {
+    bool done = false;
+    auto cb = theCB()->makeFunc([&]{ done = true; });
+    auto msg = makeSharedMessage<TestColl::TestMsg>();
+    proxy.broadcast<TestColl::TestMsg,&TestColl::readHandle>(msg);
+    msg->cb = cb;
+    while (not done) vt::runScheduler();
+    fmt::print("done read!\n");
   }
 
   while (!rt->isTerminated()) {
