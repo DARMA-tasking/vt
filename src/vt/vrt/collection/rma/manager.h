@@ -119,6 +119,15 @@ struct Manager {
   template <typename ColT>
   static int atomicGetAccum(HandleType handle, int rank, int slot, int val);
 
+  template <
+    typename ColT,
+    typename HanT,
+    typename IdxT = typename ColT::IndexType
+  >
+  static int push(
+    HandleType handle, int rank, int slot, IdxT idx, int elms, HanT data
+  );
+
 private:
   static std::unordered_map<HandleType, int> handle_slot;
 

@@ -65,7 +65,23 @@ void Handlable<ColT,IndexT,BaseProxyT>::serialize(SerializerT& s) {
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename HanT, ActiveHandleTypedFnType<HanT,ColT> f>
-void Handlable<ColT,IndexT,BaseProxyT>::atomicPush(HanT* data) const {
+int Handlable<ColT,IndexT,BaseProxyT>::atomicPush(int elms, HanT data) const {
+  auto col_proxy = this->getCollectionProxy();
+  auto elm_proxy = this->getElementProxy();
+  auto tproxy = CollectionProxy<ColT, IndexT>(col_proxy);
+
+  auto this_idx = theCollection()->queryIndexContext<IndexT>();
+
+  auto ptr = tproxy[*this_idx].tryGetLocalPtr();
+  vtAssert(ptr != nullptr, "Must be valid pointer");
+  auto handle = auto_registry::makeAutoHandlerCollectionHan<ColT,HanT,f>();
+
+  auto idx = elm_proxy.getIndex();
+  auto tup = ptr->global_local_[handle][idx];
+  auto rank = std::get<0>(tup);
+  auto slot = std::get<1>(tup);
+
+  return rma::Manager::push<ColT, HanT>(handle, rank, slot, idx, elms, data);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>

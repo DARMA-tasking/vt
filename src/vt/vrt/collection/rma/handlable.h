@@ -63,7 +63,7 @@ struct Handlable : BaseProxyT {
   void serialize(SerializerT& s);
 
   template <typename HanT, ActiveHandleTypedFnType<HanT,ColT> f>
-  void atomicPush(HanT* data) const;
+  int atomicPush(int elms, HanT data) const;
 
   template <typename HanT, ActiveHandleTypedFnType<HanT,ColT> f>
   int atomicGetAccum(int val) const;

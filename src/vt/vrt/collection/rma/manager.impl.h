@@ -232,6 +232,51 @@ template <typename ColT>
   payload_<ColT>[handle] = std::move(payload);
 }
 
+template <typename ColT, typename HanT, typename IdxT>
+/*static*/ int Manager::push(
+  HandleType handle, int rank, int slot, IdxT idx, int elms, HanT data
+) {
+  vtAssertExpr(payload_<ColT>.find(handle) != payload_<ColT>.end());
+  auto payload = payload_<ColT>[handle].get();
+  auto window = payload->window;
+  auto count = payload->count;
+  int res = -1;
+  MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, window);
+  MPI_Get_accumulate(
+    &elms, 1, MPI_INT,
+    &res, 1, MPI_INT,
+    rank, slot, count, MPI_INT, MPI_SUM, window
+  );
+  MPI_Win_unlock(rank, window);
+
+  vtAssertExpr(res >= 0);
+  vtAssertExpr(windows_<ColT>[handle].find(idx) != windows_<ColT>[handle].end());
+
+  auto meta = windows_<ColT>[handle][idx].get();
+  auto dwin = meta->window;
+  auto dgrp = meta->group;
+  int drank = -1;
+
+  auto comm = theContext()->getComm();
+  MPI_Group world;
+  MPI_Comm_group(comm, &world);
+  MPI_Group_translate_ranks(world, 1, &rank, dgrp, &drank);
+
+  HanT out = static_cast<HanT>(malloc(sizeof(double) * elms));
+
+  MPI_Win_lock(MPI_LOCK_SHARED, drank, 0, dwin);
+  MPI_Get_accumulate(
+    data, elms, MPI_DOUBLE,
+    out, elms, MPI_DOUBLE,
+    drank, res, elms, MPI_DOUBLE, MPI_REPLACE, dwin
+  );
+  MPI_Win_unlock(drank, dwin);
+
+  std::free(out);
+
+  return res;
+}
+
 template <typename ColT>
 /*static*/ int Manager::atomicGetAccum(
   HandleType handle, int rank, int slot, int val
