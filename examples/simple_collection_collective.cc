@@ -80,14 +80,40 @@ struct TestColl : Collection<TestColl,vt::Index1D> {
     auto prev = idx - 1 >= 0 ? idx - 1 : default_num_elms - 1;
     auto next = idx + 1 < default_num_elms ? idx + 1 : 0;
 
-    auto val = proxy[next].template atomicGetAccum<double*, &TestColl::handle>(idx);
-    fmt::print("next idx={}: val={}\n", idx, val);
+    // auto val = proxy[next].template atomicGetAccum<double*, &TestColl::handle>(idx);
+    // fmt::print("next idx={}: val={}\n", idx, val);
 
-    auto var = proxy[prev].template atomicGetAccum<double*, &TestColl::handle>(idx);
-    fmt::print("prev idx={}: val={}\n", idx, var);
+    // auto var = proxy[prev].template atomicGetAccum<double*, &TestColl::handle>(idx);
+    // fmt::print("prev idx={}: val={}\n", idx, var);
 
-    auto val2 = proxy[next].template atomicGetAccum<double*, &TestColl::handle>(idx);
-    fmt::print("next2 idx={}: val={}\n", idx, val2);
+    // auto val2 = proxy[next].template atomicGetAccum<double*, &TestColl::handle>(idx);
+    // fmt::print("next2 idx={}: val={}\n", idx, val2);
+
+    {
+      int elms = 10;
+      std::unique_ptr<double[]> array = std::make_unique<double[]>(elms);
+      for (int i = 0; i < elms; i++) {
+        array.get()[i] = idx;
+      }
+      auto data = array.get();
+      auto val = proxy[next].template atomicPush<double*, &TestColl::handle>(elms, data);
+      fmt::print("next idx={}: val={}\n", idx, val);
+    }
+
+    {
+      int elms = 10;
+      std::unique_ptr<double[]> array = std::make_unique<double[]>(elms);
+      for (int i = 0; i < elms; i++) {
+        array.get()[i] = -idx;
+      }
+      auto data = array.get();
+      auto val = proxy[prev].template atomicPush<double*, &TestColl::handle>(elms, data);
+      fmt::print("prev idx={}: val={}\n", idx, val);
+    }
+
+
+    auto nmsg = vt::makeMessage<vt::collective::ReduceNoneMsg>();
+    proxy.reduce(nmsg.get(),msg->cb);
   }
 
   vt::Handle<double*> handle;
@@ -126,8 +152,13 @@ int main(int argc, char** argv) {
   proxy.finishHandleCollective<double*, &TestColl::handle>();
 
   if (vt::theContext()->getNode() == 0) {
+    bool done = false;
+    auto cb = theCB()->makeFunc([&]{ done = true; });
     auto msg = makeSharedMessage<TestColl::TestMsg>();
     proxy.broadcast<TestColl::TestMsg,&TestColl::testHandle>(msg);
+    msg->cb = cb;
+    while (not done) vt::runScheduler();
+    fmt::print("done push!\n");
   }
 
   while (!rt->isTerminated()) {
