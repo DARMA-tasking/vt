@@ -69,6 +69,22 @@ struct Payload {
   void* ptr = nullptr;
 };
 
+struct IndexWindow {
+  IndexWindow(
+    bool in_owns, MPI_Group in_group, int in_size, std::vector<int> in_rank_set
+  ) : owns_idx(in_owns),
+      group(in_group),
+      size(in_size),
+      rank_set(in_rank_set)
+  { }
+
+  bool owns_idx = false;
+  MPI_Group group;
+  int size = 0;
+  std::vector<int> rank_set;
+  MPI_Win window;
+};
+
 struct Manager {
   template <typename ColT>
   static void connect(ConnectMsg<ColT>* msg, ColT* col);

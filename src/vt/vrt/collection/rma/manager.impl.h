@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/rma/count_msg.h"
 
 #include <tuple>
+#include <vector>
 
 namespace vt { namespace vrt { namespace collection { namespace rma {
 
@@ -96,12 +97,12 @@ template <typename ColT>
   //auto epoch = theTerm()->makeCollectiveEpoch();
   //theMsg()->pushEpoch(epoch);
 
-  using RankMapType = std::unordered_map<IndexType, std::set<NodeType>>;
+  using RankMapType = std::map<IndexType, std::set<NodeType>>;
 
   // Collect all remote nodes for each index for group creation
   RankMapType remote_nodes;
 
-  auto rank = theContext()->getNode();
+  auto local_rank = theContext()->getNode();
   auto proxy_bits = handle_to_proxy[handle];
   auto& remotes = remote_accessors<IndexType>[handle];
   for (auto&& idx : local_handles<IndexType>[handle]) {
@@ -111,11 +112,14 @@ template <typename ColT>
       auto remote_rank = std::get<1>(connector);
       CollectionProxy<ColT, IndexType> col_proxy(proxy_bits);
       col_proxy[remote_idx].template send<ConnectedMsg<ColT>,Manager::connected<ColT>>(
-        handle, idx, cur_slot, rank
+        handle, idx, cur_slot, local_rank
       );
       // Insert remote rank that communicates with this handle index
       remote_nodes[idx].insert(remote_rank);
     }
+    // Insert the local rank that owns the index as it will be part of the newly
+    // formed MPI_Group
+    remote_nodes[idx].insert(local_rank);
   }
 
   //theMsg()->pop(epoch);
@@ -127,6 +131,10 @@ template <typename ColT>
   auto cb = theCB()->makeBcast<CountMsg<ColT>,Manager::finishLocalCount<ColT>>();
   theCollective()->reduce<collective::MaxOp<int>>(0,msg.get(),cb);
 
+  do {
+    vt::runScheduler();
+  } while (payload_<ColT>.find(handle) == payload_<ColT>.end());
+
   // Special reduction to gather all the remote node sets for each index to
   // create the MPI_Group for each one
   auto rmsg = makeMessage<RankCountMsg<ColT, RankMapType>>(handle, remote_nodes);
@@ -134,22 +142,46 @@ template <typename ColT>
     RankCountMsg<ColT, RankMapType>, Manager::finishRankMap<ColT, RankMapType>
   >();
   theCollective()->reduce<collective::UnionOp<RankMapType>>(0,rmsg.get(),cb2);
-
-  do {
-    vt::runScheduler();
-  } while (payload_<ColT>.find(handle) == payload_<ColT>.end());
 }
 
 template <typename ColT, typename T>
 /*static*/ void Manager::finishRankMap(RankCountMsg<ColT, T>* msg) {
+  using IndexType = typename ColT::IndexType;
+
   auto const handle = msg->handle();
   auto const& map = msg->getConstVal();
+  auto const local_rank = theContext()->getNode();
+  auto comm = theContext()->getComm();
+  auto const& local_idx = local_handles<IndexType>[handle];
 
   debug_print(
     gen, node,
     "Manager::finishRankMap: handle={}, indices={}\n",
     handle, map.size()
   );
+
+  MPI_Group world;
+  MPI_Comm_group(comm, &world);
+
+  for (auto&& idx_rank_set : map) {
+    auto const idx = idx_rank_set.first;
+    auto const set = idx_rank_set.second;
+    bool local_in_set = set.find(local_rank) != set.end();
+    bool local_owns_idx = local_idx.find(idx) != local_idx.end();
+    std::vector<int> vec(set.begin(), set.end());
+
+    MPI_Group idx_group;
+    MPI_Group_incl(world, set.size(), &vec[0], &idx_group);
+
+    // Save the group so a window can be created
+    if (local_in_set) {
+      if (local_owns_idx) {
+        // Should allocate a non-null window
+      } else {
+        // Allocate a null window, only communicates with the idx
+      }
+    }
+  }
 
 }
 

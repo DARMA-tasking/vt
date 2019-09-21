@@ -71,6 +71,18 @@ struct UnionOp<std::unordered_map<T, std::set<U>>> {
   }
 };
 
+template <typename T, typename U>
+struct UnionOp<std::map<T, std::set<U>>> {
+  void operator()(
+    std::map<T, std::set<U>>& v1,
+    std::map<T, std::set<U>> const& v2
+  ) {
+    for (auto&& elm : v2) {
+      v1[elm.first].insert(elm.second.begin(), elm.second.end());
+    }
+  }
+};
+
 }}}} /* end namespace vt::collective::reduce::operators */
 
 namespace vt { namespace collective {
