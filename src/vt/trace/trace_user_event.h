@@ -76,7 +76,7 @@ void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 struct UserEventRegistry {
 
-  struct NewUserEventMsg : vt::Message {
+  struct NewUserEventMsg : vt::Message, serdes::Base<NewUserEventMsg> {
     NewUserEventMsg() = default;
     NewUserEventMsg(bool in_user, UserEventIDType in_id, std::string in_name)
       : user_(in_user), id_(in_id), name_(in_name)

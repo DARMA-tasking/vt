@@ -235,14 +235,13 @@ public:
 
   }
 
-  struct VecMsg : vt::CollectionMessage<LinearPb2DJacobi> {
+  struct VecMsg : serdes::Base<VecMsg>, vt::CollectionMessage<LinearPb2DJacobi> {
 
     IndexType from_index;
     std::vector<double> val;
 
     VecMsg() = default;
     VecMsg(IndexType const& in_index, const std::vector<double> &ref) :
-      vt::CollectionMessage<LinearPb2DJacobi>(),
       from_index(in_index), val(ref)
     { }
 

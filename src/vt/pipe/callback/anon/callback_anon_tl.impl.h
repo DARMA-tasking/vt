@@ -57,9 +57,6 @@
 
 namespace vt { namespace pipe { namespace callback {
 
-template <typename SerializerT>
-void CallbackAnonTypeless::serialize(SerializerT& s) {}
-
 template <typename MsgT>
 void CallbackAnonTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();

@@ -52,11 +52,8 @@
 
 namespace vt { namespace pipe { namespace callback {
 
-struct CallbackProxyBcastTypeless : CallbackBaseTL<CallbackProxyBcastTypeless> {
+struct CallbackProxyBcastTypeless : serdes::Inherit<CallbackProxyBcastTypeless, CallbackBaseTL<CallbackProxyBcastTypeless>, serdes::EmptySerialize> {
   CallbackProxyBcastTypeless() = default;
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s);
 
   bool operator==(CallbackProxyBcastTypeless const& other) const {
     return true;
@@ -71,7 +68,7 @@ public:
   }
 };
 
-struct CallbackProxyBcastDirect : CallbackBaseTL<CallbackProxyBcastDirect> {
+struct CallbackProxyBcastDirect : serdes::Inherit<CallbackProxyBcastDirect, CallbackBaseTL<CallbackProxyBcastDirect>> {
   using AutoHandlerType = auto_registry::AutoHandlerType;
 
   CallbackProxyBcastDirect() = default;

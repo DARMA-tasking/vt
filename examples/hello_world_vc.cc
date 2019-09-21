@@ -56,15 +56,16 @@ struct HelloMsg : vt::Message {
   { }
 };
 
-struct TestMsg : vt::vrt::VirtualMessage {
+struct TestMsg : serdes::Inherit<TestMsg, vt::vrt::VirtualMessage, serdes::EmptySerialize> {
   int from = 0;
 
+  TestMsg() = default;
   TestMsg(int const& in_from)
-    : VirtualMessage(), from(in_from)
+    : from(in_from)
   { }
 };
 
-struct MyVC : vt::vrt::VirtualContext {
+struct MyVC : serdes::Inherit<MyVC, vt::vrt::VirtualContext, serdes::EmptySerialize> {
   int my_data = 10;
 
   MyVC(int const& my_data_in) : my_data(my_data_in) { }

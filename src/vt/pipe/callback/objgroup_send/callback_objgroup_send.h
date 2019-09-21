@@ -53,7 +53,7 @@
 
 namespace vt { namespace pipe { namespace callback {
 
-struct CallbackObjGroupSend : CallbackBaseTL<CallbackObjGroupSend> {
+struct CallbackObjGroupSend : serdes::Inherit<CallbackObjGroupSend, CallbackBaseTL<CallbackObjGroupSend>> {
   CallbackObjGroupSend() = default;
   CallbackObjGroupSend(
     HandlerType in_han, ObjGroupProxyType in_objgroup, NodeType in_node

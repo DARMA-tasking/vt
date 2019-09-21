@@ -60,57 +60,57 @@
 
 namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
-struct AnonCB : CallbackAnonTypeless { };
+struct AnonCB : serdes::Inherit<AnonCB, CallbackAnonTypeless, serdes::EmptySerialize> { };
 
-struct SendMsgCB : CallbackSendTypeless {
+struct SendMsgCB : serdes::Inherit<SendMsgCB, CallbackSendTypeless, serdes::EmptySerialize> {
   SendMsgCB() = default;
   SendMsgCB(
     HandlerType const& in_handler, NodeType const& in_send_node
-  ) : CallbackSendTypeless(in_handler, in_send_node)
+  ) : Inherit(in_handler, in_send_node)
   { }
 };
 
-struct BcastMsgCB : CallbackBcastTypeless {
+struct BcastMsgCB : serdes::Inherit<BcastMsgCB, CallbackBcastTypeless, serdes::EmptySerialize> {
   BcastMsgCB() = default;
   BcastMsgCB(
     HandlerType const& in_handler, bool const& in_include
-  ) : CallbackBcastTypeless(in_handler, in_include)
+  ) : Inherit(in_handler, in_include)
   { }
 };
 
-struct SendColMsgCB : CallbackProxySendTypeless {
+struct SendColMsgCB : serdes::Inherit<SendColMsgCB, CallbackProxySendTypeless, serdes::EmptySerialize> {
   SendColMsgCB() = default;
 };
 
-struct BcastColMsgCB : CallbackProxyBcastTypeless {
+struct BcastColMsgCB : serdes::Inherit<BcastColMsgCB, CallbackProxyBcastTypeless, serdes::EmptySerialize> {
   BcastColMsgCB() = default;
 };
 
-struct BcastColDirCB : CallbackProxyBcastDirect {
+struct BcastColDirCB : serdes::Inherit<BcastColDirCB, CallbackProxyBcastDirect, serdes::EmptySerialize> {
   BcastColDirCB() = default;
   BcastColDirCB(
     HandlerType const& in_handler,
     CallbackProxyBcastDirect::AutoHandlerType const& in_vrt_handler,
     bool const& in_member, VirtualProxyType const& in_proxy
-  ) : CallbackProxyBcastDirect(in_handler, in_vrt_handler, in_member, in_proxy)
+  ) : Inherit(in_handler, in_vrt_handler, in_member, in_proxy)
   { }
 };
 
-struct SendColDirCB : CallbackProxyBcastDirect {
+struct SendColDirCB : serdes::Inherit<SendColDirCB, CallbackProxyBcastDirect, serdes::EmptySerialize> {
   SendColDirCB() = default;
 };
 
-struct BcastObjGrpCB : CallbackObjGroupBcast {
+struct BcastObjGrpCB : serdes::Inherit<BcastObjGrpCB, CallbackObjGroupBcast, serdes::EmptySerialize> {
   BcastObjGrpCB() = default;
   BcastObjGrpCB(HandlerType in_handler, ObjGroupProxyType in_proxy)
-    : CallbackObjGroupBcast(in_handler, in_proxy)
+    : Inherit(in_handler, in_proxy)
   { }
 };
 
-struct SendObjGrpCB : CallbackObjGroupSend {
+struct SendObjGrpCB : serdes::Inherit<SendObjGrpCB, CallbackObjGroupSend, serdes::EmptySerialize> {
   SendObjGrpCB() = default;
   SendObjGrpCB(HandlerType in_handler, ObjGroupProxyType in_proxy, NodeType in_n)
-    : CallbackObjGroupSend(in_handler, in_proxy, in_n)
+    : Inherit(in_handler, in_proxy, in_n)
   { }
 };
 
@@ -155,7 +155,7 @@ enum struct CallbackEnum : int8_t {
   SendObjGrpCB  = 9
 };
 
-struct GeneralCallback {
+struct GeneralCallback : serdes::Base<GeneralCallback> {
   GeneralCallback() = default;
   GeneralCallback(GeneralCallback const&) = default;
   GeneralCallback(GeneralCallback&&) = default;

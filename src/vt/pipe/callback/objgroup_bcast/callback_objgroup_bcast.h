@@ -52,7 +52,7 @@
 
 namespace vt { namespace pipe { namespace callback {
 
-struct CallbackObjGroupBcast : CallbackBaseTL<CallbackObjGroupBcast> {
+struct CallbackObjGroupBcast : serdes::Inherit<CallbackObjGroupBcast, CallbackBaseTL<CallbackObjGroupBcast>> {
   CallbackObjGroupBcast() = default;
   CallbackObjGroupBcast(
     HandlerType const& in_han, ObjGroupProxyType const& in_objgroup

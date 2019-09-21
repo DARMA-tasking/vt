@@ -52,7 +52,7 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 template <typename Transfer>
-struct TransferMsg : vt::Message {
+struct TransferMsg : vt::Message, serdes::Base<TransferMsg<Transfer>> {
   TransferMsg() = default;
   explicit TransferMsg(Transfer const& in_transfer)
     : transfer_(in_transfer)

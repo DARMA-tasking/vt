@@ -53,7 +53,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct LBTreeUpMsg : HierLBTypes, ::vt::Message {
+struct LBTreeUpMsg : HierLBTypes, ::vt::Message, serdes::Base<LBTreeUpMsg> {
   using LoadType = double;
 
   LBTreeUpMsg() = default;
@@ -90,7 +90,7 @@ private:
   NodeType child_size_ = 0;
 };
 
-struct LBTreeDownMsg : HierLBTypes, ::vt::Message {
+struct LBTreeDownMsg : HierLBTypes, ::vt::Message, serdes::Base<LBTreeDownMsg> {
   using LoadType = double;
 
   LBTreeDownMsg() = default;

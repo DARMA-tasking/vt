@@ -53,7 +53,7 @@ struct MyContext {
   int x = 29;
 };
 
-struct DataMsg : Message {
+struct DataMsg : Message, serdes::Base<DataMsg> {
   DataMsg() = default;
 
   template <typename SerializerT>

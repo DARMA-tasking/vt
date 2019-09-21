@@ -55,7 +55,6 @@ namespace vt { namespace pipe { namespace callback {
 template <typename ColT, typename MsgT>
 template <typename SerializerT>
 void CallbackProxyBcast<ColT,MsgT>::serialize(SerializerT& s) {
-  CallbackBase<SignalBaseType>::serializer(s);
   s | proxy_;
   s | handler_;
   s | member_;

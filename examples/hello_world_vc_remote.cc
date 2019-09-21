@@ -48,11 +48,12 @@
 using namespace vt;
 using namespace vt::vrt;
 
-struct TestMsg : vt::vrt::VirtualMessage {
+struct TestMsg : serdes::Inherit<TestMsg, vt::vrt::VirtualMessage, serdes::EmptySerialize> {
   int from = 0;
+  TestMsg() = default;
 
   TestMsg(int const& in_from)
-    : VirtualMessage(), from(in_from)
+    : Inherit(), from(in_from)
   { }
 };
 

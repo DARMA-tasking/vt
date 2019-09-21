@@ -52,11 +52,8 @@
 
 namespace vt { namespace pipe { namespace callback {
 
-struct CallbackProxySendTypeless : CallbackBaseTL<CallbackProxySendTypeless> {
+struct CallbackProxySendTypeless : serdes::Inherit<CallbackProxySendTypeless, CallbackBaseTL<CallbackProxySendTypeless>, serdes::EmptySerialize> {
   CallbackProxySendTypeless() = default;
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s);
 
   bool operator==(CallbackProxySendTypeless const& other) const {
     return true;

@@ -61,9 +61,6 @@
 
 namespace vt { namespace pipe { namespace callback {
 
-template <typename SerializerT>
-void CallbackProxyBcastTypeless::serialize(SerializerT& s) {}
-
 template <typename MsgT>
 void CallbackProxyBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();

@@ -59,7 +59,7 @@ namespace vt { namespace vrt { namespace collection {
 template <
   typename RemoteInfo, typename ArgsTuple, typename CollectionT, typename IndexT
 >
-struct CollectionCreateMsg : ::vt::Message {
+struct CollectionCreateMsg : ::vt::Message, serdes::Base<CollectionCreateMsg<RemoteInfo, ArgsTuple, CollectionT, IndexT>> {
   using CollectionType = CollectionT;
   using IndexType = IndexT;
   using ArgsTupleType = ArgsTuple;

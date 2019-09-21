@@ -49,10 +49,11 @@
 #include "vt/lb/lb_types.h"
 #include "vt/timing/timing.h"
 #include "vt/timing/timing_type.h"
+#include <traits/serializable_traits.h>
 
 namespace vt { namespace lb { namespace instrumentation {
 
-struct Entry {
+struct Entry : serdes::Base<Entry> {
   Entry() = default;
   Entry(TimeType const& in_begin, TimeType const& in_end)
     : begin_(in_begin), end_(in_end)

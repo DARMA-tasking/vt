@@ -51,13 +51,14 @@ using namespace vt::vrt;
 static constexpr int64_t const total_size = 1024;
 static constexpr int64_t const block_size = 64;
 
-struct CreateJacobi1DMsg : vt::vrt::VirtualMessage {
+struct CreateJacobi1DMsg : serdes::Inherit<CreateJacobi1DMsg, vt::vrt::VirtualMessage, serdes::EmptySerialize> {
   VirtualProxyType parent;
   int64_t lo = 0, hi = 0;
 
+  CreateJacobi1DMsg() = default;
   CreateJacobi1DMsg(
     int64_t const& in_lo, int64_t const& in_hi, VirtualProxyType in_parent
-  ) : VirtualMessage(), parent(in_parent), lo(in_lo), hi(in_hi)
+  ) : Inherit(), parent(in_parent), lo(in_lo), hi(in_hi)
   { }
 };
 

@@ -53,7 +53,6 @@ namespace vt { namespace pipe { namespace callback {
 
 template <typename SerializerT>
 void CallbackObjGroupSend::serialize(SerializerT& s) {
-  CallbackBaseTL<CallbackObjGroupSend>::serialize(s);
   s | handler_ | objgroup_ | node_;
 }
 

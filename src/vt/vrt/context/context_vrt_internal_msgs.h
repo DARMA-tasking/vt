@@ -56,7 +56,7 @@
 namespace vt { namespace vrt {
 
 template <typename RemoteInfo, typename ArgsTuple, typename VirtualContextT>
-struct VrtConstructMsg : Message {
+struct VrtConstructMsg : Message, serdes::Base<VrtConstructMsg<RemoteInfo, ArgsTuple, VirtualContext>> {
   using VirtualContextType = VirtualContextT;
   using ArgsTupleType = ArgsTuple;
 

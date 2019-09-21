@@ -57,7 +57,7 @@
 
 namespace vt { namespace lb { namespace instrumentation {
 
-struct CollectMsg : ::vt::collective::reduce::ReduceMsg {
+struct CollectMsg : ::vt::collective::reduce::ReduceMsg, serdes::Base<CollectMsg> {
   CollectMsg() = default;
 
   CollectMsg(
@@ -70,6 +70,7 @@ struct CollectMsg : ::vt::collective::reduce::ReduceMsg {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
+    ReduceMsg::invokeSerialize(s);
     s | entries_;
     s | phase_;
   }

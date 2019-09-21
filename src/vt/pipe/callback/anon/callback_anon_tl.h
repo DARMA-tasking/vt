@@ -56,7 +56,7 @@
 
 namespace vt { namespace pipe { namespace callback {
 
-struct CallbackAnonTypeless : CallbackBaseTL<CallbackAnonTypeless> {
+struct CallbackAnonTypeless : serdes::Inherit<CallbackAnonTypeless, CallbackBaseTL<CallbackAnonTypeless>, serdes::EmptySerialize> {
   CallbackAnonTypeless() = default;
 
   template <typename SerializerT>

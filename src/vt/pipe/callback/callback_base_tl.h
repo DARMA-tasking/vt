@@ -47,15 +47,13 @@
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
+#include <traits/serializable_traits.h>
 
 namespace vt { namespace pipe { namespace callback {
 
 template <typename CallbackT>
-struct CallbackBaseTL {
+struct CallbackBaseTL : serdes::Base<CallbackBaseTL<CallbackT>, serdes::EmptySerialize> {
   CallbackBaseTL() = default;
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) { }
 
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe) {

@@ -52,7 +52,7 @@
 
 namespace vt { namespace pipe { namespace callback {
 
-struct CallbackSendTypeless : CallbackBaseTL<CallbackSendTypeless> {
+struct CallbackSendTypeless : serdes::Inherit<CallbackSendTypeless, CallbackBaseTL<CallbackSendTypeless>> {
   CallbackSendTypeless() = default;
   CallbackSendTypeless(CallbackSendTypeless const&) = default;
   CallbackSendTypeless(CallbackSendTypeless&&) = default;

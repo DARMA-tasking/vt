@@ -48,7 +48,7 @@
 #include <cstdlib>
 #include <array>
 
-struct PingMsg : vt::Message {
+struct PingMsg : vt::Message, serdes::Base<PingMsg> {
   PingMsg() = default;
   explicit PingMsg(int64_t size) {
     payload_.resize(size);

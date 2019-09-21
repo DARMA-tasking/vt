@@ -48,11 +48,12 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/context/context_vrt_fwd.h"
+#include <traits/serializable_traits.h>
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-struct CollectionInfo {
+struct CollectionInfo : serdes::Base<CollectionInfo<ColT, IndexT>> {
   CollectionInfo() = default;
   CollectionInfo(CollectionInfo const&) = default;
   CollectionInfo(

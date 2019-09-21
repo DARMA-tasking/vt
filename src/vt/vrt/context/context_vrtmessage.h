@@ -59,7 +59,7 @@ template <typename MessageT>
 using RoutedMessageType = LocationRoutedMsg<VirtualProxyType, MessageT>;
 
 struct VirtualMessage :
-    RoutedMessageType<vt::Message>, serialization::ByteCopyTrait
+  serdes::Inherit<VirtualMessage, RoutedMessageType<vt::Message>>, serialization::ByteCopyTrait
 {
   // By default, the `VirtualMessage' is byte copyable for serialization, but
   // derived classes may not be. The serialization::ByteCopyTrait specifies this
@@ -98,7 +98,7 @@ struct VirtualMessage :
   }
 
   template <typename SerializerT>
-  void serializeThis(SerializerT& s) {
+  void serialize(SerializerT& s) {
     s | vt_sub_handler_;
     s | to_proxy_;
     s | execute_comm_thd_;

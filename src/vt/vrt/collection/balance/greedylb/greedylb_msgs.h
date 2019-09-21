@@ -55,7 +55,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct GreedyPayload : GreedyLBTypes {
+struct GreedyPayload : GreedyLBTypes, serdes::Base<GreedyPayload> {
   GreedyPayload() = default;
   GreedyPayload(ObjSampleType const& in_sample, LoadType const& in_profile)
     : sample_(in_sample)
@@ -107,7 +107,7 @@ protected:
   ObjSampleType sample_;
 };
 
-struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
+struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload>, serdes::Base<GreedyCollectMsg> {
   GreedyCollectMsg() = default;
   GreedyCollectMsg(ObjSampleType const& in_load, LoadType const& in_profile)
     : collective::ReduceTMsg<GreedyPayload>(GreedyPayload{in_load,in_profile})

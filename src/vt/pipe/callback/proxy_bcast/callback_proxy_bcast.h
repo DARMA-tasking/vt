@@ -57,7 +57,7 @@
 namespace vt { namespace pipe { namespace callback {
 
 template <typename ColT, typename MsgT>
-struct CallbackProxyBcast : CallbackBase<signal::Signal<MsgT>> {
+struct CallbackProxyBcast : serdes::Inherit<CallbackProxyBcast<ColT, MsgT>, CallbackBase<signal::Signal<MsgT>>> {
   using SignalBaseType  = typename signal::Signal<MsgT>;
   using SignalType      = typename CallbackBase<SignalBaseType>::SignalType;
   using SignalDataType  = typename SignalType::DataType;

@@ -51,7 +51,7 @@ namespace vt { namespace tutorial {
 /*
  * Some user defined data structures
  */
-struct Particle {
+struct Particle : serdes::Base<Particle> {
   Particle() = default;
   Particle(double in_x, double in_y, double in_z)
     : x(in_x), y(in_y), z(in_z)
@@ -65,7 +65,7 @@ struct Particle {
   double x, y, z;
 };
 
-struct Data {
+struct Data : serdes::Base<Data> {
   int a;
 
   template <typename SerializerT>
@@ -77,7 +77,7 @@ struct Data {
 //                  VT Base Message
 //                 \----------------/
 //                  \              /
-struct ParticleMsg : ::vt::Message {
+struct ParticleMsg : ::vt::Message, serdes::Base<ParticleMsg> {
   ParticleMsg() = default;
 
   ParticleMsg(int in_x, int in_y, int in_z)

@@ -62,7 +62,7 @@ struct RequestDataMsg : CollectionMessage<ColT> {
   NodeType node_;
 };
 
-struct DataMsg : ::vt::Message {
+struct DataMsg : ::vt::Message, serdes::Base<DataMsg> {
   DataMsg() = default;
 
   DataMsg(std::vector<double> const& payload_in, int from_idx_in)

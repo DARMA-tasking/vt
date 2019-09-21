@@ -71,7 +71,7 @@ static struct RawBcastObjGrpTagType { } RawBcastObjGrpTag { };
 template <typename MsgT>
 struct CallbackTyped;
 
-struct CallbackRawBaseSingle {
+struct CallbackRawBaseSingle : serdes::Base<CallbackRawBaseSingle> {
   using AutoHandlerType = auto_registry::AutoHandlerType;
 
   CallbackRawBaseSingle() = default;
@@ -147,12 +147,14 @@ protected:
 };
 
 template <typename MsgT>
-struct CallbackTyped : CallbackRawBaseSingle {
+struct CallbackTyped : serdes::Inherit<CallbackTyped<MsgT>, CallbackRawBaseSingle> {
   using VoidSigType   = signal::SigVoidType;
   template <typename T, typename U=void>
   using IsVoidType    = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;
   template <typename T, typename U=void>
   using IsNotVoidType = std::enable_if_t<!std::is_same<T,VoidSigType>::value,U>;
+
+  using Inherit = serdes::Inherit<CallbackTyped<MsgT>, CallbackRawBaseSingle>;
 
   CallbackTyped() = default;
   CallbackTyped(CallbackTyped const&) = default;
@@ -163,49 +165,49 @@ struct CallbackTyped : CallbackRawBaseSingle {
   CallbackTyped(
     RawSendMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
     NodeType const& in_node
-  ) : CallbackRawBaseSingle(RawSendMsgTag,in_pipe,in_handler,in_node)
+  ) : Inherit(RawSendMsgTag,in_pipe,in_handler,in_node)
   { }
   CallbackTyped(
     RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
     bool const& in_inc
-  )  : CallbackRawBaseSingle(RawBcastMsgTag,in_pipe,in_handler,in_inc)
+  )  : Inherit(RawBcastMsgTag,in_pipe,in_handler,in_inc)
   { }
   CallbackTyped(RawAnonTagType, PipeType const& in_pipe)
-    : CallbackRawBaseSingle(RawAnonTag,in_pipe)
+    : Inherit(RawAnonTag,in_pipe)
   { }
   CallbackTyped(RawSendColMsgTagType, PipeType const& in_pipe)
-    : CallbackRawBaseSingle(RawSendColMsgTag,in_pipe)
+    : Inherit(RawSendColMsgTag,in_pipe)
   { }
   CallbackTyped(RawBcastColMsgTagType, PipeType const& in_pipe)
-    : CallbackRawBaseSingle(RawBcastColMsgTag,in_pipe)
+    : Inherit(RawBcastColMsgTag,in_pipe)
   { }
   CallbackTyped(
     RawBcastColDirTagType, PipeType const& in_pipe,
-    HandlerType const& in_handler, AutoHandlerType const& in_vrt,
+    HandlerType const& in_handler, CallbackRawBaseSingle::AutoHandlerType const& in_vrt,
     bool const& in_member, VirtualProxyType const& in_proxy
-  ) : CallbackRawBaseSingle(
+  ) : Inherit(
         RawBcastColDirTag,in_pipe,in_handler,in_vrt,in_member,in_proxy
       )
   { }
   CallbackTyped(
     RawSendColDirTagType, PipeType const& in_pipe,
-    HandlerType const& in_handler, AutoHandlerType const& in_vrt_handler,
+    HandlerType const& in_handler, CallbackRawBaseSingle::AutoHandlerType const& in_vrt_handler,
     void* index_bits
-  ) : CallbackRawBaseSingle(
+  ) : Inherit(
         RawSendColDirTag,in_pipe,in_handler,in_vrt_handler,index_bits
       )
   { }
   CallbackTyped(
     RawBcastObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
     ObjGroupProxyType in_proxy
-  )  : CallbackRawBaseSingle(
+  )  : Inherit(
         RawBcastObjGrpTag,in_pipe,in_handler,in_proxy
       )
   { }
   CallbackTyped(
     RawSendObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
     ObjGroupProxyType in_proxy, NodeType in_node
-  )  : CallbackRawBaseSingle(
+  )  : Inherit(
         RawSendObjGrpTag,in_pipe,in_handler,in_proxy,in_node
       )
   { }
@@ -219,17 +221,17 @@ struct CallbackTyped : CallbackRawBaseSingle {
 
   template <typename CallbackT>
   bool equal(CallbackT const& other) const {
-    return other.pipe_ == pipe_ && other.cb_ == cb_;
+    return other.pipe_ == this->pipe_ && other.cb_ == this->cb_;
   }
 
   // Conversion operators to typed from untyped
   CallbackTyped(CallbackRawBaseSingle const& other) {
-    pipe_ = other.pipe_;
-    cb_   = other.cb_;
+    this->pipe_ = other.pipe_;
+    this->cb_   = other.cb_;
   }
   CallbackTyped(CallbackRawBaseSingle&& other) {
-    pipe_ = std::move(other.pipe_);
-    cb_   = std::move(other.cb_);
+    this->pipe_ = std::move(other.pipe_);
+    this->cb_   = std::move(other.cb_);
   }
 
   template <typename MsgU>
@@ -244,10 +246,7 @@ struct CallbackTyped : CallbackRawBaseSingle {
   }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    CallbackRawBaseSingle::serialize(s);
-  }
-
+  void serialize(SerializerT& s) { }
 };
 
 }}}} /* end namespace vt::pipe::callback::cbunion */

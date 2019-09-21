@@ -64,7 +64,7 @@ struct MyTest3ByteSerializable {
   }
 };
 
-struct MyTest2 {
+struct MyTest2 : serdes::Base<MyTest2> {
   int c = 41;
 
   template <typename Serializer>
@@ -78,7 +78,7 @@ struct MyTest2 {
   }
 };
 
-struct MyTest {
+struct MyTest : serdes::Base<MyTest> {
   int a = 29, b = 31;
   MyTest2 my_test_2;
 
@@ -120,7 +120,8 @@ void testSerializeVector() {
 }
 
 void testSerializeUserClass() {
-  MyTest my_test_inst{10};
+  MyTest my_test_inst;
+  my_test_inst.a = 10;
 
   my_test_inst.print();
 
