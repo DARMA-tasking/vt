@@ -173,8 +173,22 @@ template <typename ColT, typename T>
     MPI_Group idx_group;
     MPI_Group_incl(world, set.size(), &vec[0], &idx_group);
 
+    // auto win_create_ret = MPI_Win_create(
+    //   ptr_, num_bytes_, rdma_elm_size, MPI_INFO_NULL, channel_comm_, &window_
+    // );
+
     // Save the group so a window can be created
     if (local_in_set) {
+      windows_<ColT>[handle][idx] = std::make_unique<IndexWindow>(
+        local_owns_idx, idx_group, set.size(), vec
+      );
+      auto win = windows_<ColT>[handle][idx].get();
+
+      MPI_Comm idx_comm;
+      MPI_Comm_create_group(comm, idx_group, idx.x(), &idx_comm);
+
+      win->comm = idx_comm;
+
       if (local_owns_idx) {
         // Should allocate a non-null window
       } else {
@@ -256,6 +270,12 @@ template <typename IndexT>
 template <typename ColT>
 /*static*/ std::unordered_map<HandleType, std::unique_ptr<Payload>>
   Manager::payload_ = {};
+
+template <typename ColT>
+/*static*/ std::unordered_map<
+  HandleType,
+  std::unordered_map<typename ColT::IndexType, std::unique_ptr<IndexWindow>>
+> Manager::windows_ = {};
 
 
 }}}} /* end namespace vt::vrt::collection::rma */

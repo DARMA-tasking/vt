@@ -83,6 +83,7 @@ struct IndexWindow {
   int size = 0;
   std::vector<int> rank_set;
   MPI_Win window;
+  MPI_Comm comm;
 };
 
 struct Manager {
@@ -120,6 +121,12 @@ private:
 
   template <typename ColT>
   static std::unordered_map<HandleType, std::unique_ptr<Payload>> payload_;
+
+  template <typename ColT>
+  static std::unordered_map<
+    HandleType,
+    std::unordered_map<typename ColT::IndexType, std::unique_ptr<IndexWindow>>
+  > windows_;
 
   template <typename IndexT>
   static std::unordered_map<
