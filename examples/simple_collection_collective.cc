@@ -85,6 +85,9 @@ struct TestColl : Collection<TestColl,vt::Index1D> {
 
     auto var = proxy[prev].template atomicGetAccum<double*, &TestColl::handle>(idx);
     fmt::print("prev idx={}: val={}\n", idx, var);
+
+    auto val2 = proxy[next].template atomicGetAccum<double*, &TestColl::handle>(idx);
+    fmt::print("next2 idx={}: val={}\n", idx, val2);
   }
 
   vt::Handle<double*> handle;
@@ -109,11 +112,7 @@ int main(int argc, char** argv) {
 
   if (vt::theContext()->getNode() == 0) {
     bool done = false;
-    auto cb = theCB()->makeFunc<vt::collective::ReduceNoneMsg>(
-      [&](vt::collective::ReduceNoneMsg*){
-        done = true;
-      }
-    );
+    auto cb = theCB()->makeFunc([&]{ done = true; });
     auto msg = makeSharedMessage<TestColl::TestMsg>();
     msg->cb = cb;
     proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>(msg);
