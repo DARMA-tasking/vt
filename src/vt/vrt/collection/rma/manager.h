@@ -107,6 +107,9 @@ struct Manager {
   template <typename ColT>
   static void finish(HandleType handle);
 
+  // template <typename ColT>
+  // static void flush();
+
   template <typename ColT>
   static void addLocalHandle(HandleType handle, typename ColT::IndexType idx);
 

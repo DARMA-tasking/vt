@@ -196,8 +196,17 @@ template <typename ColT, typename T>
       if (local_owns_idx) {
         // Should allocate a non-null window
         MPI_Alloc_mem(1000 * sizeof(double), MPI_INFO_NULL, &base);
+
+        double* based = static_cast<double*>(base);
+        for (int i = 0; i < 1000; i++) {
+          based[i] = 0;
+        }
+
         //MPI_Win_attach(win, base, 1000 * sizeof(double));
-        MPI_Win_create(base, sizeof(double), 1000, MPI_INFO_NULL, meta->comm, &win);
+        MPI_Win_create(
+          base, 1000*sizeof(double), sizeof(double), MPI_INFO_NULL, meta->comm,
+          &win
+        );
 
         meta->base = base;
       } else {
@@ -211,6 +220,18 @@ template <typename ColT, typename T>
 
   setup_done_[handle] = true;
 }
+
+// template <typename ColT>
+// /*static*/ void Manager::flush() {
+//   HandleType handle = 0;
+
+//   for (auto&& elm : windows_<ColT>[handle]) {
+//     auto idx = elm.first;
+//     auto ptr = elm.second.get();
+
+//     //MPI_Win_fence(0,ptr->window);
+//   }
+// }
 
 template <typename ColT>
 /*static*/ void Manager::finishLocalCount(CountMsg<ColT>* msg) {
@@ -311,12 +332,23 @@ template <typename ColT, typename HanT, typename IdxT>
 
   HanT out = static_cast<HanT>(malloc(sizeof(double) * elms));
 
+  fmt::print("push: drank={}, elms={}, res={}\n", drank, elms, res);
+
+  // for (int i = 0; i < elms; i++) {
+  //   fmt::print("push: i={}, data[i]={}\n", i, data[i]);
+  // }
+
   MPI_Win_lock(MPI_LOCK_SHARED, drank, 0, dwin);
+  // MPI_Put(
+  //   data, elms, MPI_DOUBLE,
+  //   drank, res, elms, MPI_DOUBLE, dwin
+  // );
   MPI_Get_accumulate(
     data, elms, MPI_DOUBLE,
     out, elms, MPI_DOUBLE,
     drank, res, elms, MPI_DOUBLE, MPI_REPLACE, dwin
   );
+  MPI_Win_flush_local(drank, dwin);
   MPI_Win_unlock(drank, dwin);
 
   std::free(out);
