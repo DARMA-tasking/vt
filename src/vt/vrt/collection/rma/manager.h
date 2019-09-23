@@ -136,7 +136,25 @@ struct Manager {
     typename HanT,
     typename IdxT = typename ColT::IndexType
   >
+  static int pushConcurrent(
+    HandleType handle, int rank, int slot, IdxT idx, int elms, HanT data
+  );
+
+  template <
+    typename ColT,
+    typename HanT,
+    typename IdxT = typename ColT::IndexType
+  >
   static int pop(HandleType handle, int rank, int slot, IdxT idx, HanT data);
+
+  template <
+    typename ColT,
+    typename HanT,
+    typename IdxT = typename ColT::IndexType
+  >
+  static int popConcurrent(
+    HandleType handle, int rank, int slot, IdxT idx, HanT data
+  );
 
 private:
   static std::unordered_map<HandleType, int> handle_slot;

@@ -273,7 +273,7 @@ template <typename ColT, typename HanT, typename IdxT>
   MPI_Get_accumulate(
     &val, 1, MPI_INT,
     &res, 1, MPI_INT,
-    rank, slot, count, MPI_INT, MPI_REPLACE, window
+    rank, slot, 1, MPI_INT, MPI_REPLACE, window
   );
   MPI_Win_unlock(rank, window);
 
@@ -301,6 +301,76 @@ template <typename ColT, typename HanT, typename IdxT>
 }
 
 template <typename ColT, typename HanT, typename IdxT>
+/*static*/ int Manager::popConcurrent(
+  HandleType handle, int rank2, int slot2, IdxT idx, HanT data
+) {
+  using IndexType = typename ColT::IndexType;
+
+  vtAssertExpr(payload_<ColT>.find(handle) != payload_<ColT>.end());
+  auto payload = payload_<ColT>[handle].get();
+  auto window = payload->window;
+  auto count = payload->count;
+
+  int rank = theContext()->getNode();
+  auto slot = local_offsets<IndexType>[handle][idx];
+
+  int val = -1;
+  int res = -1;
+  MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, window);
+  MPI_Get_accumulate(
+    &val, 1, MPI_INT,
+    &res, 1, MPI_INT,
+    rank, slot, 1, MPI_INT, MPI_REPLACE, window
+  );
+  MPI_Win_unlock(rank, window);
+
+  fmt::print("pop: res={}, val={}\n", res, val);
+
+  vtAssertExpr(res >= 0);
+  vtAssertExpr(windows_<ColT>[handle].find(idx) != windows_<ColT>[handle].end());
+
+  auto meta = windows_<ColT>[handle][idx].get();
+  auto dwin = meta->window;
+  auto dgrp = meta->group;
+  int drank = -1;
+
+  auto comm = theContext()->getComm();
+  MPI_Group world;
+  MPI_Comm_group(comm, &world);
+  MPI_Group_translate_ranks(world, 1, &rank, dgrp, &drank);
+
+  HanT in = static_cast<HanT>(malloc(sizeof(double) * res));
+  for (int i = 0; i < res; i++) {
+    in[i] = 0.0;
+  }
+
+  MPI_Win_lock(MPI_LOCK_EXCLUSIVE, drank, 0, dwin);
+  MPI_Get_accumulate(
+    in, res, MPI_DOUBLE,
+    data, res, MPI_DOUBLE,
+    drank, 0, res, MPI_DOUBLE, MPI_REPLACE, dwin
+  );
+  MPI_Win_unlock(drank, dwin);
+
+  // Replace with 0 now, to re-use the buffer
+  int val2 = 0;
+  int res2 = -1;
+  MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, window);
+  MPI_Get_accumulate(
+    &val2, 1, MPI_INT,
+    &res2, 1, MPI_INT,
+    rank, slot, 1, MPI_INT, MPI_REPLACE, window
+  );
+
+  fmt::print("pop: res2={}, val2={}\n", res2, val2);
+
+  vtAssertExpr(res2 == -1);
+  MPI_Win_unlock(rank, window);
+
+  return res;
+}
+
+template <typename ColT, typename HanT, typename IdxT>
 /*static*/ int Manager::push(
   HandleType handle, int rank, int slot, IdxT idx, int elms, HanT data
 ) {
@@ -309,12 +379,14 @@ template <typename ColT, typename HanT, typename IdxT>
   auto window = payload->window;
   auto count = payload->count;
   int res = -1;
+
   MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, window);
-  MPI_Get_accumulate(
-    &elms, 1, MPI_INT,
-    &res, 1, MPI_INT,
-    rank, slot, count, MPI_INT, MPI_SUM, window
-  );
+  // MPI_Get_accumulate(
+  //   &elms, 1, MPI_INT,
+  //   &res, 1, MPI_INT,
+  //   rank, slot, count, MPI_INT, MPI_SUM, window
+  // );
+  MPI_Fetch_and_op(&elms, &res, MPI_INT, rank, slot, MPI_SUM, window);
   MPI_Win_unlock(rank, window);
 
   vtAssertExpr(res >= 0);
@@ -346,10 +418,69 @@ template <typename ColT, typename HanT, typename IdxT>
   MPI_Get_accumulate(
     data, elms, MPI_DOUBLE,
     out, elms, MPI_DOUBLE,
+    drank, 0, elms, MPI_DOUBLE, MPI_REPLACE, dwin
+  );
+  MPI_Win_flush_local(drank, dwin);
+  MPI_Win_unlock(drank, dwin);
+
+  std::free(out);
+
+  return res;
+}
+
+template <typename ColT, typename HanT, typename IdxT>
+/*static*/ int Manager::pushConcurrent(
+  HandleType handle, int rank, int slot, IdxT idx, int elms, HanT data
+) {
+  vtAssertExpr(payload_<ColT>.find(handle) != payload_<ColT>.end());
+  auto payload = payload_<ColT>[handle].get();
+  auto window = payload->window;
+  auto count = payload->count;
+  int res = -1;
+
+  MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, window);
+  do {
+    int val = 0;
+    MPI_Fetch_and_op(&val, &res, MPI_INT, rank, slot, MPI_SUM, window);
+    if (res != -1) {
+      int new_elms = elms + res;
+      int out = -1;
+      MPI_Compare_and_swap(&new_elms, &res, &out, MPI_INT, rank, slot, window);
+      if (out == res) {
+        break;
+      }
+    }
+  } while (true);
+
+  // Hold the lock until the get_accumulate occurs
+  //MPI_Win_unlock(rank, window);
+
+  vtAssertExpr(res >= 0);
+  vtAssertExpr(windows_<ColT>[handle].find(idx) != windows_<ColT>[handle].end());
+
+  auto meta = windows_<ColT>[handle][idx].get();
+  auto dwin = meta->window;
+  auto dgrp = meta->group;
+  int drank = -1;
+
+  auto comm = theContext()->getComm();
+  MPI_Group world;
+  MPI_Comm_group(comm, &world);
+  MPI_Group_translate_ranks(world, 1, &rank, dgrp, &drank);
+
+  HanT out = static_cast<HanT>(malloc(sizeof(double) * elms));
+
+  fmt::print("pushConcurrent: drank={}, elms={}, res={}\n", drank, elms, res);
+
+  MPI_Win_lock(MPI_LOCK_SHARED, drank, 0, dwin);
+  MPI_Get_accumulate(
+    data, elms, MPI_DOUBLE,
+    out, elms, MPI_DOUBLE,
     drank, res, elms, MPI_DOUBLE, MPI_REPLACE, dwin
   );
   MPI_Win_flush_local(drank, dwin);
   MPI_Win_unlock(drank, dwin);
+  MPI_Win_unlock(rank, window);
 
   std::free(out);
 

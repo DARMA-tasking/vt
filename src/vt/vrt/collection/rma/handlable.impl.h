@@ -81,7 +81,7 @@ int Handlable<ColT,IndexT,BaseProxyT>::atomicPush(int elms, HanT data) const {
   auto rank = std::get<0>(tup);
   auto slot = std::get<1>(tup);
 
-  return rma::Manager::push<ColT, HanT>(handle, rank, slot, idx, elms, data);
+  return rma::Manager::pushConcurrent<ColT, HanT>(handle, rank, slot, idx, elms, data);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -102,7 +102,7 @@ int Handlable<ColT,IndexT,BaseProxyT>::atomicPop(HanT data) const {
   auto rank = std::get<0>(tup);
   auto slot = std::get<1>(tup);
 
-  return rma::Manager::pop<ColT, HanT>(handle, rank, slot, idx, data);
+  return rma::Manager::popConcurrent<ColT, HanT>(handle, rank, slot, idx, data);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>

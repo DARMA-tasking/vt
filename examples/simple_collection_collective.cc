@@ -90,7 +90,7 @@ struct TestColl : Collection<TestColl,vt::Index1D> {
     // fmt::print("next2 idx={}: val={}\n", idx, val2);
 
     {
-      int elms = 10;
+      int elms = 2;
       std::unique_ptr<double[]> array = std::make_unique<double[]>(elms);
       for (int i = 0; i < elms; i++) {
         array.get()[i] = idx;
@@ -101,15 +101,26 @@ struct TestColl : Collection<TestColl,vt::Index1D> {
     }
 
     {
-      int elms = 10;
+      int elms = 2;
       std::unique_ptr<double[]> array = std::make_unique<double[]>(elms);
       for (int i = 0; i < elms; i++) {
         array.get()[i] = -idx;
       }
       auto data = array.get();
-      auto val = proxy[prev].template atomicPush<double*, &TestColl::handle>(elms, data);
-      fmt::print("prev idx={}: val={}\n", idx, val);
+      auto val = proxy[next].template atomicPush<double*, &TestColl::handle>(elms, data);
+      fmt::print("next idx={}: val={}\n", idx, val);
     }
+
+    // {
+    //   int elms = 10;
+    //   std::unique_ptr<double[]> array = std::make_unique<double[]>(elms);
+    //   for (int i = 0; i < elms; i++) {
+    //     array.get()[i] = idx;
+    //   }
+    //   auto data = array.get();
+    //   auto val = proxy[next].template atomicPush<double*, &TestColl::handle>(elms, data);
+    //   fmt::print("prev idx={}: val={}\n", idx, val);
+    // }
 
 
     auto nmsg = vt::makeMessage<vt::collective::ReduceNoneMsg>();
@@ -131,7 +142,9 @@ struct TestColl : Collection<TestColl,vt::Index1D> {
       fmt::print("read idx={}: elms={}\n", idx, elms);
 
       for (int i = 0; i < elms; i++) {
-        fmt::print("\t read elm idx={}: elms={}\n", idx, data[i]);
+        //if (i > 9 and data[i] != 0.0) {
+        fmt::print("\t read elm idx={}: i={}, elms={}\n", idx, i, data[i]);
+        //}
       }
     }
 
@@ -183,6 +196,9 @@ int main(int argc, char** argv) {
     while (not done) vt::runScheduler();
     fmt::print("done push!\n");
   }
+
+  fmt::print("try barrier 2!\n");
+  theCollective()->barrier();
 
   if (vt::theContext()->getNode() == 0) {
     bool done = false;
