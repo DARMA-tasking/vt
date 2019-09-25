@@ -336,7 +336,7 @@ bool ActiveMessenger::recvDataMsg(
   return recvDataMsg(tag, node, true, next);
 }
 
-bool ActiveMessenger::processDataMsgRecv() {
+bool ActiveMessenger::tryProcessDataMsgRecv() {
   bool erase = false;
   auto iter = pending_recvs_.begin();
 
@@ -608,7 +608,7 @@ bool ActiveMessenger::deliverActiveMsg(
   return has_handler;
 }
 
-bool ActiveMessenger::tryProcessIncomingMessage() {
+bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   CountType num_probe_bytes;
   MPI_Status stat;
   int flag;
@@ -636,14 +636,14 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
     );
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
-    in_progress_irecv.emplace_back(std::move(recv_holder));
+    in_progress_active_msg_irecv.emplace_back(std::move(recv_holder));
     return true;
   } else {
     return false;
   }
 }
 
-void ActiveMessenger::finishPendingAsyncRecv(InProgressIRecv irecv) {
+void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv irecv) {
   auto buf = irecv.buf;
   auto num_probe_bytes = irecv.probe_bytes;
   auto sender = irecv.sender;
@@ -659,7 +659,7 @@ void ActiveMessenger::finishPendingAsyncRecv(InProgressIRecv irecv) {
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "tryProcessIncoming: msg_size={}, sender={}, is_put={}, is_bcast={}, "
+      "finishPendingActiveMsgAsyncRecv: msg_size={}, sender={}, is_put={}, is_bcast={}, "
       "handler={}\n",
       num_probe_bytes, sender, print_bool(is_put),
       print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
@@ -679,7 +679,7 @@ void ActiveMessenger::finishPendingAsyncRecv(InProgressIRecv irecv) {
       if (!is_term || backend_check_enabled(print_term_msgs)) {
 	debug_print(
 	  active, node,
-          "tryProcessIncoming: packed put: ptr={}, msg_size={}, put_size={}\n",
+          "finishPendingActiveMsgAsyncRecv: packed put: ptr={}, msg_size={}, put_size={}\n",
 	  put_ptr, msg_size, put_size
 	);
       }
@@ -702,16 +702,16 @@ void ActiveMessenger::finishPendingAsyncRecv(InProgressIRecv irecv) {
   }
 }
 
-bool ActiveMessenger::testPendingAsyncRecv() {
+bool ActiveMessenger::testPendingActiveMsgAsyncRecv() {
   bool processed = false;
-  for (auto iter = in_progress_irecv.begin(); iter != in_progress_irecv.end(); ++iter) {
+  for (auto iter = in_progress_active_msg_irecv.begin(); iter != in_progress_active_msg_irecv.end(); ++iter) {
     int flag = 0;
     MPI_Status stat;
     MPI_Test(&(iter->req), &flag, &stat);
     if (flag == 1) {
       auto elm = std::move(*iter);
-      finishPendingAsyncRecv(std::move(elm));
-      iter = in_progress_irecv.erase(iter);
+      finishPendingActiveMsgAsyncRecv(std::move(elm));
+      iter = in_progress_active_msg_irecv.erase(iter);
       processed = true;
     }
   }
@@ -735,14 +735,14 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
 }
 
 bool ActiveMessenger::scheduler() {
-  bool const processed = tryProcessIncomingMessage();
-  bool const processed_data_msg = processDataMsgRecv();
+  bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
+  bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   processMaybeReadyHanTag();
-  bool const received_active_msg = testPendingAsyncRecv();
+  bool const received_active_msg = testPendingActiveMsgAsyncRecv();
   bool const received_data_msg = testPendingDataMsgAsyncRecv();
 
-  return processed or processed_data_msg or received_active_msg or
-         received_data_msg;
+  return started_irecv_active_msg or started_irecv_data_msg or
+         received_active_msg or received_data_msg;
 }
 
 bool ActiveMessenger::isLocalTerm() {

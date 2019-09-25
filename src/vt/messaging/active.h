@@ -502,8 +502,8 @@ struct ActiveMessenger {
   );
 
   void performTriggeredActions();
-  bool tryProcessIncomingMessage();
-  bool processDataMsgRecv();
+  bool tryProcessIncomingActiveMsg();
+  bool tryProcessDataMsgRecv();
   bool scheduler();
   bool isLocalTerm();
 
@@ -609,9 +609,9 @@ struct ActiveMessenger {
   }
 
 private:
-  bool testPendingAsyncRecv();
+  bool testPendingActiveMsgAsyncRecv();
   bool testPendingDataMsgAsyncRecv();
-  void finishPendingAsyncRecv(InProgressIRecv irecv);
+  void finishPendingActiveMsgAsyncRecv(InProgressIRecv irecv);
   void finishPendingDataMsgAsyncRecv(InProgressDataIRecv irecv);
 
 private:
@@ -638,9 +638,9 @@ private:
   ContainerPendingType pending_recvs_            = {};
   TagType cur_direct_buffer_tag_                 = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
-  std::vector<ListenerType> send_listen_         = {};
-  std::list<InProgressIRecv> in_progress_irecv   = {};
-  std::list<InProgressDataIRecv> in_progress_data_irecv = {};
+  std::vector<ListenerType> send_listen_                  = {};
+  std::list<InProgressIRecv> in_progress_active_msg_irecv = {};
+  std::list<InProgressDataIRecv> in_progress_data_irecv   = {};
 };
 
 }} // end namespace vt::messaging
