@@ -76,7 +76,6 @@ public:
   static void releaseLB();
 
   static void outputStatsFile();
-  static void inputStatsFile();
 
 private:
   static void createStatsFile();
@@ -90,7 +89,6 @@ public:
   static ElementIDType next_elm_;
 public:
   static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
-  static std::vector<std::unordered_map<ElementIDType,TimeType>> user_specified_map_changed_;
   static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
   static std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
   static std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;

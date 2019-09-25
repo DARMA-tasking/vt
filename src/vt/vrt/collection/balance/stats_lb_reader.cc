@@ -208,8 +208,8 @@ void StatsLBReader::doReduce() {
     using ReduceMsgType = collective::ReduceVecMsg<bool>;
 
     auto cb = theCB()->makeBcast<StatsLBReader,ReduceMsgType, &StatsLBReader::doneReduce>(this->getProxy());
-    auto msg = makeMessage<ReduceMsgType>(StatsLBReader::phase_changed_map_);
-//    this->getProxy().reduce<collective::OrOp<std::vector<bool>>>(msg.get(),cb);
+    auto msg = makeMessage<ReduceMsgType>(this->getProxy().get()->phase_changed_map_);
+    this->getProxy().reduce<collective::OrOp<std::vector<bool>>>(msg.get(),cb);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
