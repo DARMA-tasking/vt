@@ -64,10 +64,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 std::vector<std::unordered_map<ElementIDType,TimeType>>
   ProcStats::proc_data_ = {};
 
-/*static*/
-std::vector<std::unordered_map<ElementIDType,TimeType>>
-  ProcStats::user_specified_map_changed_ = {};
-
 /*static*/ std::vector<CommMapType> ProcStats::proc_comm_ = {};
 
 /*static*/
@@ -89,7 +85,6 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 /*static*/ void ProcStats::clearStats() {
   ProcStats::proc_comm_.clear();
   ProcStats::proc_data_.clear();
-  ProcStats::user_specified_map_changed_.clear();
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
   ProcStats::proc_perm_to_temp_.clear();
@@ -178,7 +173,6 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 
   vt_print(lb, "outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
 
-  std::cout << "Number of iter: " << num_iters << std::endl;
   for (size_t i = 0; i < num_iters; i++) {
     for (auto&& elm : ProcStats::proc_data_.at(i)) {
       auto obj_str = fmt::format("{},{},{}\n", i, elm.first, elm.second);
@@ -223,73 +217,6 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   fflush(stats_file_);
 
   closeStatsFile();
-}
-
-/*static*/ void ProcStats::inputStatsFile() {
-
-  using ArgType = vt::arguments::ArgConfig;
-
-  // todo if File exist
-  auto const node = theContext()->getNode();
-  auto const base_file = std::string(ArgType::vt_lb_stats_file_in);
-  auto const dir = std::string(ArgType::vt_lb_stats_dir_in);
-  auto const file = fmt::format("{}.{}.out", base_file, node);
-  auto const file_name = fmt::format("{}/{}", dir, file);
-
-  vt_print(lb, "inputStatFile: file={}, iter={}\n", file_name, 0);
-
-  // TODO verify fopen sucess
-  FILE * pFile = std::fopen (file_name.c_str(), "r");
-
-  // TODO loop on num_iters
-  // Create a map for each different value of the first column
-  // we should assume that every new values on the first column come
-  // just after the end of the communication.
-  // Finally the pattern is Load0, Com0, Load1, Com1, ..., LoadN, ComN
-  // where 0, 1, ..., N are the values of the first column
-  auto elements = std::unordered_map<ElementIDType,TimeType> ();
-
-  // Load: Format of a line :size_t,ElementIDType,TimeType
-  size_t c1;
-  ElementIDType c2;
-  TimeType c3;
-  CommBytesType c4;
-  using E = typename std::underlying_type<CommCategory>::type;
-  E c5;
-  char separator;
-  fpos_t pos;
-  bool finished = false;
-  size_t c1PreviousValue = 0;
-  while (!finished) {
-    if (fscanf(pFile, "%zi %c %lli %c %lf", &c1, &separator, &c2, &separator, &c3) > 0) {
-      fgetpos (pFile,&pos);
-      fscanf (pFile, "%c", &separator);
-      if (separator == ',') {
-        // COM detected, read the end of line and do nothing else
-        int res = fscanf (pFile, "%lf %c %hhi", &c4, &separator, &c5);
-        vtAssertExpr(res == 3);
-      } else {
-        // Load detected, create the new element
-        fsetpos (pFile,&pos);
-        if (c1PreviousValue != c1) {
-          c1PreviousValue = c1;
-          ProcStats::user_specified_map_changed_.push_back(elements);
-          elements = std::unordered_map<ElementIDType,TimeType> ();
-          elements.emplace (c2, c3);
-        } else {
-          elements.emplace (c2, c3);
-        }
-      }
-    } else {
-      finished = true;
-    }
-  }
-
-  if (!elements.empty()) {
-    ProcStats::user_specified_map_changed_.push_back(elements);
-  }
-
-  std::fclose(pFile);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
