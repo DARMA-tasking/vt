@@ -388,39 +388,18 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
         static_cast<char*>(user_buf);
 
-      MPI_Recv(
+      NodeType const sender = stat.MPI_SOURCE;
+
+      MPI_Request req;
+      MPI_Irecv(
         buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
-        theContext()->getComm(), MPI_STATUS_IGNORE
+        theContext()->getComm(), &req
       );
 
-      auto dealloc_buf = [=]{
-        debug_print(
-          active, node,
-          "recvDataMsgBuffer: continuation user_buf={}, buf={}, tag={}\n",
-          user_buf, buf, tag
-        );
-
-        if (user_buf == nullptr) {
-          #if backend_check_enabled(memory_pool)
-            thePool()->dealloc(buf);
-          #else
-            std::free(buf);
-          #endif
-        } else if (dealloc_user_buf != nullptr and user_buf != nullptr) {
-          dealloc_user_buf();
-        }
+      InProgressDataIRecv recv_holder{
+        buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next
       };
-
-      if (next != nullptr) {
-        next(RDMA_GetType{buf,num_probe_bytes}, [=]{
-          dealloc_buf();
-        });
-      } else {
-        dealloc_buf();
-      }
-
-      theTerm()->consume(term::any_epoch_sentinel,1,stat.MPI_SOURCE);
-
+      in_progress_data_irecv.emplace_back(std::move(recv_holder));
       return true;
     } else {
       return false;
@@ -439,6 +418,43 @@ bool ActiveMessenger::recvDataMsgBuffer(
     );
     return false;
   }
+}
+
+void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv irecv) {
+  auto buf = irecv.buf;
+  auto num_probe_bytes = irecv.probe_bytes;
+  auto sender = irecv.sender;
+  auto user_buf = irecv.user_buf;
+  auto dealloc_user_buf = irecv.dealloc_user_buf;
+  auto next = irecv.next;
+
+  auto dealloc_buf = [=]{
+    debug_print(
+      active, node,
+      "finishPendingDataMsgAsyncRecv: continuation user_buf={}, buf={}\n",
+      user_buf, buf
+    );
+
+    if (user_buf == nullptr) {
+      #if backend_check_enabled(memory_pool)
+        thePool()->dealloc(buf);
+      #else
+        std::free(buf);
+      #endif
+    } else if (dealloc_user_buf != nullptr and user_buf != nullptr) {
+      dealloc_user_buf();
+    }
+  };
+
+  if (next != nullptr) {
+    next(RDMA_GetType{buf,num_probe_bytes}, [=]{
+      dealloc_buf();
+    });
+  } else {
+    dealloc_buf();
+  }
+
+  theTerm()->consume(term::any_epoch_sentinel,1,sender);
 }
 
 bool ActiveMessenger::recvDataMsg(
@@ -702,13 +718,31 @@ bool ActiveMessenger::testPendingAsyncRecv() {
   return processed;
 }
 
+bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
+  bool processed = false;
+  for (auto iter = in_progress_data_irecv.begin(); iter != in_progress_data_irecv.end(); ++iter) {
+    int flag = 0;
+    MPI_Status stat;
+    MPI_Test(&(iter->req), &flag, &stat);
+    if (flag == 1) {
+      auto elm = std::move(*iter);
+      finishPendingDataMsgAsyncRecv(std::move(elm));
+      iter = in_progress_data_irecv.erase(iter);
+      processed = true;
+    }
+  }
+  return processed;
+}
+
 bool ActiveMessenger::scheduler() {
   bool const processed = tryProcessIncomingMessage();
   bool const processed_data_msg = processDataMsgRecv();
   processMaybeReadyHanTag();
   bool const received_active_msg = testPendingAsyncRecv();
+  bool const received_data_msg = testPendingDataMsgAsyncRecv();
 
-  return processed or processed_data_msg or received_active_msg;
+  return processed or processed_data_msg or received_active_msg or
+         received_data_msg;
 }
 
 bool ActiveMessenger::isLocalTerm() {
