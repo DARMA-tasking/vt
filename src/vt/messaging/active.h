@@ -114,6 +114,23 @@ struct InProgressIRecv {
   MPI_Request req;
 };
 
+struct InProgressDataIRecv : public InProgressIRecv {
+  InProgressDataIRecv(
+    char* in_buf, CountType in_probe_bytes, NodeType in_sender,
+    MPI_Request in_req, void* const in_user_buf,
+    ActionType in_dealloc_user_buf,
+    RDMA_ContinuationDeleteType in_next
+  ) : InProgressIRecv{in_buf, in_probe_bytes, in_sender, in_req},
+      user_buf(in_user_buf), dealloc_user_buf(in_dealloc_user_buf),
+      next(in_next)
+  { }
+  InProgressDataIRecv(InProgressDataIRecv&&) = default;
+
+  void* const user_buf;
+  ActionType dealloc_user_buf;
+  RDMA_ContinuationDeleteType next;
+};
+
 struct BufferedActiveMsg {
   using MessageType = MsgSharedPtr<BaseMsgType>;
 
@@ -593,7 +610,9 @@ struct ActiveMessenger {
 
 private:
   bool testPendingAsyncRecv();
+  bool testPendingDataMsgAsyncRecv();
   void finishPendingAsyncRecv(InProgressIRecv irecv);
+  void finishPendingDataMsgAsyncRecv(InProgressDataIRecv irecv);
 
 private:
   using EpochStackSizeType = typename EpochStackType::size_type;
@@ -621,6 +640,7 @@ private:
   EpochStackType epoch_stack_;
   std::vector<ListenerType> send_listen_         = {};
   std::list<InProgressIRecv> in_progress_irecv   = {};
+  std::list<InProgressDataIRecv> in_progress_data_irecv = {};
 };
 
 }} // end namespace vt::messaging
