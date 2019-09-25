@@ -205,14 +205,26 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
       //
    }
 
+   /// \brief Returns the description of the anchor
+   /// \return Description
+   std::string getDescription() const { return description_; }
+
+   /// \brief Returns the group name of the anchor
+   /// \return Group
+   std::string getGroup() const { return group_; }
+
    /// \brief Returns the name of the anchor
-   /// \returns Name of the option
+   /// \return Name of the option
    std::string getName() const { return name_; }
 
 // Function to add if 'needed'
 //      void needs(std::shared_ptr<AnchorBase> const &opt) {
 //         needs_.insert(opt);
 //      }
+
+  /// \brief Virtual determining whether precedence rules are
+  /// resolved
+  virtual bool isResolved() const = 0;
 
    /// \brief Virtual function to resolve precedence rules
    virtual void resolve() = 0;
@@ -221,6 +233,18 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
    ///
    /// \param[in] grp_ String for the name of the group
    void setGroup(const std::string &grp_) { group_ = grp_; }
+
+   /// \brief Virtual function returning resolved value
+   /// \returns Resolved value
+   virtual std::string valueToString() const = 0;
+
+   /// \brief Virtual function returning context for resolved value
+   /// \returns Context
+   virtual std::string valueContext() const = 0;
+
+   /// \brief Virtual function returning context for resolved value
+   /// \returns Default value
+   virtual std::string valueDefault() const = 0;
 
 protected:
 
@@ -231,7 +255,7 @@ protected:
    ///
    AnchorBase(std::string name, std::string desc) :
       name_(std::move(name)),
-      group_(),
+      group_("Default"),
       description_(std::move(desc)),
       ordering_(),
       needs_(),
@@ -249,6 +273,8 @@ protected:
 
    //--- Map from 'context' flag to an ordered flag.
    static std::map<const context, const orderCtxt> emap_;
+
+   //--- Map from 'context' flag to a descriptive string.
    static std::map<const context, const std::string> smap_;
 
    std::string name_ = {};
@@ -289,6 +315,7 @@ public:
        specifications_(),
        hasNewDefault_(false),
        isResolved_(false),
+       resolved_ctxt_(context::dFault),
        resolved_instance_(),
        resolved_to_default_(false),
        always_print_(false),
@@ -354,6 +381,27 @@ public:
       }
       ordering_[origin] = orderCtxt::MAX;
    }
+
+   //
+   // Information about resolved instance
+   //
+
+   /// \brief Function to determine whether the precedence rules
+   /// have been applied or not.
+   /// \returns Boolean
+   bool isResolved() const override { return isResolved_; }
+
+   /// \brief Virtual function returning resolved value
+   /// \returns Resolved value
+   std::string valueToString() const override;
+
+   /// \brief Virtual function returning context for resolved value
+   /// \returns Context
+   std::string valueContext() const override;
+
+   /// \brief Virtual function returning default value
+   /// \returns Default value
+   std::string valueDefault() const override;
 
    //
    //--- Printing routines
@@ -458,9 +506,7 @@ protected:
    /// \param[in] ctxt Context for the instance
    /// \param[in] value Value specified by the instance
    ///
-   void addGeneralInstance(
-      context ctxt,
-      const T &value);
+   void addGeneralInstance(context ctxt, const T &value);
 
    /// \brief Checks whether two 'excluded' options have specifications
    ///         in addition to their default ones.
@@ -477,10 +523,11 @@ protected:
    std::map< context, Instance<T> > specifications_ = {};
    bool hasNewDefault_ = false;
    bool isResolved_ = false;
+   context resolved_ctxt_ = context::dFault;
    Instance<T> resolved_instance_ = {};
    bool resolved_to_default_ = false;
 
-   //--- Printing functions
+   //--- Parameters related to printing
    bool always_print_ = false;
    bool always_print_startup_ = false;
    std::function<std::string(T const& value)> print_value_ = nullptr;
@@ -495,7 +542,9 @@ struct ArgSetup {
 
 public:
 
-   ArgSetup(std::string description = "") : 
+   /// \brief Constructor
+   /// \param[in] Description of the application as a string
+   ArgSetup(std::string description = "") :
      app_(description), options_(), parsed(false)
    { }
 
@@ -534,14 +583,21 @@ public:
                                         const std::string &desc = {}
     )
     {
+       std::string sname;
+       try {
+          sname = verifyName(name);
+       }
+       catch (const std::exception &e) {
+          throw;
+       }
        //
        // Implementation for an integral flag
        //
-       auto iter = options_.find(name);
+       auto iter = options_.find(sname);
        if (iter == options_.end()) {
           // @todo: stop using default for warn_override and get this from runtime?
-          auto anchor = std::make_shared< Anchor<T> >(anchor_value, name, desc);
-          options_[name] = anchor;
+          auto anchor = std::make_shared< Anchor<T> >(anchor_value, sname, desc);
+          options_[sname] = anchor;
           //
           // Insert the flag into CLI app
           //
@@ -550,9 +606,8 @@ public:
              anchor->addGeneralInstance(context::commandLine, anchor_value);
              return true;
           };
-          auto opt = app_.add_option(name, fun, desc, true);
-          if(opt->get_positional())
-             throw CLI::IncorrectConstruction::PositionalFlag(name);
+          std::string cli_name = std::string("--") + sname;
+          auto opt = app_.add_option(cli_name, fun, desc, true);
           opt->type_size(0);
           opt->type_name(CLI::detail::type_name<T>());
           //
@@ -593,14 +648,21 @@ public:
                                        const std::string &desc = {}
     )
     {
+       std::string sname;
+       try {
+          sname = verifyName(name);
+       }
+       catch (const std::exception &e) {
+          throw;
+       }
        //
        // Implementation for a boolean flag
        //
-       auto iter = options_.find(name);
+       auto iter = options_.find(sname);
        if (iter == options_.end()) {
           // @todo: stop using default for warn_override and get this from runtime?
-          auto anchor = std::make_shared< Anchor<T> >(anchor_value, name, desc);
-          options_[name] = anchor;
+          auto anchor = std::make_shared< Anchor<T> >(anchor_value, sname, desc);
+          options_[sname] = anchor;
           //
           // Insert the flag into CLI app
           //
@@ -609,9 +671,8 @@ public:
              anchor->addGeneralInstance(context::commandLine, anchor_value);
              return (res.size() == 1);
           };
-          auto opt = app_.add_option(name, fun, desc);
-          if(opt->get_positional())
-             throw CLI::IncorrectConstruction::PositionalFlag(name);
+          std::string cli_name = std::string("--") + sname;
+          auto opt = app_.add_option(cli_name, fun, desc);
           opt->type_size(0);
           opt->multi_option_policy(CLI::MultiOptionPolicy::TakeLast);
           //
@@ -650,7 +711,7 @@ public:
                                          T& anchor_value,
                                          const std::string &desc = ""
     );
-    
+
    /// \brief Parse the command line inputs and resolve the precedence rules
    ///
    /// \param[in,out] argc Number of arguments
@@ -699,6 +760,24 @@ public:
       const T& anchor_value
    );
 
+   /// \brief Create string to output the configuration, i.e.
+   /// the values of all the options.
+   ///
+   /// \param[in] default_also Boolean to identify whether or not to print
+   /// default value
+   /// \param[in] write_description Boolean to turn on/off the printing
+   /// of the parameter description
+   /// \param[in] prefix String containing a prefix to add before each
+   /// option name
+   ///
+   /// \return String describing all the options
+   ///
+   /// \note Creates a string in the ".INI" formatted
+   /// (INI format: https://cliutils.gitlab.io/CLI11Tutorial/chapters/config.html )
+   std::string to_config(bool default_also,
+      bool write_description, std::string prefix
+   ) const;
+
 protected:
 
    /// \brief Parse the command line arguments
@@ -717,6 +796,17 @@ protected:
          opt.second->resolve();
       }
    }
+
+   /// \brief Function to verify that a string is acceptable
+   ///
+   /// \param[in] name String to verifyName
+   ///
+   /// \return 'Cleaned-up' string
+   ///
+   /// \note This function removes any '-' characters at the start
+   /// and verify that the remaining characters are acceptable.
+   ///
+   std::string verifyName(const std::string &name) const;
 
 private:
 
