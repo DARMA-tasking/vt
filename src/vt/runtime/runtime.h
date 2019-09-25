@@ -82,16 +82,6 @@ struct Runtime {
 
   virtual ~Runtime();
 
-  void setArgConfigs(int &argc, char**& argv) {
-	  const vt::arguments::Configs myDefault;
-	  this->setArgConfigs(argc, argv, myDefault);
-  }
-
-  void setArgConfigs(
-    int &argc, char**& argv, 
-	const vt::arguments::Configs &ref
-  );
-
   void setMPIComm(MPI_Comm* in_comm) { communicator_ = in_comm; }
   void setNumWorkers(WorkerCountType in_num_workers) { num_workers_ = in_num_workers; }
 
@@ -138,8 +128,7 @@ protected:
   void finalizeComponents();
   void finalizeOptionalComponents();
 
-  void parseAndSetup(int& argc, char**& argv,
-		  const vt::arguments::Configs *ref);
+  void parseAndSetup(int& argc, char**& argv);
 
   void sync();
   void setup();

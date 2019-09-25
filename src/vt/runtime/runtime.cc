@@ -92,9 +92,10 @@ Runtime::Runtime(
   bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
-     user_argv_(argv)
+     user_argv_(argv), parsed_arg(false)
 {
-  parseAndSetup(argc, argv, nullptr);
+  ArgVT::initialize();
+  parseAndSetup(argc, argv);
   sig_user_1_ = false;
 }
 
@@ -103,18 +104,17 @@ Runtime::Runtime(
   RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(no_workers), communicator_(nullptr), user_argc_(0),
-     user_argv_(nullptr)
+     user_argv_(nullptr), parsed_arg(false)
 {
   sig_user_1_ = false;
 }
 
 void Runtime::parseAndSetup(
   int &argc,
-  char**& argv,
-  const vt::arguments::Configs *ref
+  char**& argv
 )
 {
-  vt::arguments::Args::parse(argc, argv, ref);
+  ArgVT::setup_.parseResolve(argc, argv);
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
@@ -122,15 +122,6 @@ void Runtime::parseAndSetup(
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
-}
-
-void Runtime::setArgConfigs(
-  int &argc,
-  char**& argv,
-  const vt::arguments::Configs &ref
-)
-{
-  parseAndSetup(argc, argv, &ref);
 }
 
 bool Runtime::hasSchedRun() const {

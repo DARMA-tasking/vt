@@ -50,44 +50,31 @@
 
 #include "CLI/CLI11.hpp"
 
+
 namespace vt { namespace arguments {
 
 
-/*static*/ CLI::App    Args::app{"vt"};
+//--- Initialization of static variables for vt::AnchorBase
+/* static */ std::map<const context, const AnchorBase::orderCtxt> AnchorBase::emap_ =
+         {{std::make_pair(context::dFault, AnchorBase::orderCtxt::dFault),
+            std::make_pair(context::commandLine, AnchorBase::orderCtxt::commandLine),
+            std::make_pair(context::thirdParty, AnchorBase::orderCtxt::thirdParty)
+         }};
+
+/* static */ std::map<const context, const std::string> AnchorBase::smap_ =
+   {{std::make_pair(context::dFault, "Default Value"),
+       std::make_pair(context::commandLine, "Command Line"),
+       std::make_pair(context::thirdParty, "Third-Party Context")
+    }};
+
+
+//--- Initialization of static variables for vt::AnchorBase
+/*static*/ ArgSetup Args::setup_ = {"vt"};
 /*static*/ Configs Args::config = {};
-/*static*/ bool Args::parsed = false;
 
 
-/*static*/ int Args::parse(
-  int& argc, char**& argv, 
-  const Configs *ref
-) 
+/*static*/ void Args::initialize()
 {
-
-  if (parsed)
-    return 0;
-
-  if (argc == 0 || argv == nullptr) {
-	if (ref == nullptr)
-	  return 0;
-	//
-    config = *ref;
-	return 1;
-  }
-
-  std::vector<std::string> args;
-  for (auto i = 0; i < argc; i++) {
-    args.push_back(std::string(argv[i]));
-  }
-
-  // fmt::print("argc={}, argv={}\n", argc, print_ptr(argv));
-
-  //
-  // Default options to pass to all subcommands
-  // https://cliutils.gitlab.io/CLI11Tutorial/chapters/options.html
-  // CLI allows to handle multiple occurences of one argument
-  //
-  //app.option_defaults()->multi_option_policy(CLI::MultiOptionPolicy::TakeFirst);
 
   /*
    * Flags for controlling the colorization of output from vt
@@ -96,15 +83,15 @@ namespace vt { namespace arguments {
   auto always = "Always colorize output";
   auto never  = "Never colorize output";
   auto maybe  = "Use isatty to determine colorization of output";
-  auto a  = app.add_flag("-c,--vt_color",      config.vt_color,      always);
-  auto b  = app.add_flag("-n,--vt_no_color",   config.vt_no_color,   never);
-  auto c  = app.add_flag("-a,--vt_auto_color", config.vt_auto_color, maybe);
-  auto a1 = app.add_flag("-q,--vt_quiet",      config.vt_quiet,      quiet);
+  auto a  = setup_.addFlag("--vt_color",      config.vt_color,      always);
+  auto b  = setup_.addFlag("--vt_no_color",   config.vt_no_color,   never);
+  auto c  = setup_.addFlag("--vt_auto_color", config.vt_auto_color, maybe);
+  auto a1 = setup_.addFlag("--vt_quiet",      config.vt_quiet,      quiet);
   auto outputGroup = "Output Control";
-  a->group(outputGroup);
-  b->group(outputGroup);
-  c->group(outputGroup);
-  a1->group(outputGroup);
+  a->setGroup(outputGroup);
+  b->setGroup(outputGroup);
+  c->setGroup(outputGroup);
+  a1->setGroup(outputGroup);
   b->excludes(a);
   b->excludes(c);
 
@@ -114,13 +101,13 @@ namespace vt { namespace arguments {
   auto no_sigint      = "Do not register signal handler for SIGINT";
   auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
   auto no_terminate   = "Do not register handler for std::terminate";
-  auto d = app.add_flag("--vt_no_SIGINT",    config.vt_no_sigint,    no_sigint);
-  auto e = app.add_flag("--vt_no_SIGSEGV",   config.vt_no_sigsegv,   no_sigsegv);
-  auto f = app.add_flag("--vt_no_terminate", config.vt_no_terminate, no_terminate);
+  auto d = setup_.addFlag("--vt_no_SIGINT",    config.vt_no_sigint,    no_sigint);
+  auto e = setup_.addFlag("--vt_no_SIGSEGV",   config.vt_no_sigsegv,   no_sigsegv);
+  auto f = setup_.addFlag("--vt_no_terminate", config.vt_no_terminate, no_terminate);
   auto signalGroup = "Signa Handling";
-  d->group(signalGroup);
-  e->group(signalGroup);
-  f->group(signalGroup);
+  d->setGroup(signalGroup);
+  e->setGroup(signalGroup);
+  f->setGroup(signalGroup);
 
 
   /*
@@ -133,21 +120,21 @@ namespace vt { namespace arguments {
   auto file   = "Dump stack traces to file instead of stdout";
   auto dir    = "Name of directory to write stack files";
   auto mod    = "Write stack dump if (node % vt_stack_mod) == 0";
-  auto g = app.add_flag("--vt_no_warn_stack",   config.vt_no_warn_stack,   warn);
-  auto h = app.add_flag("--vt_no_assert_stack", config.vt_no_assert_stack, assert);
-  auto i = app.add_flag("--vt_no_abort_stack",  config.vt_no_abort_stack,  abort);
-  auto j = app.add_flag("--vt_no_stack",        config.vt_no_stack,        stack);
-  auto k = app.add_option("--vt_stack_file",    config.vt_stack_file,      file);
-  auto l = app.add_option("--vt_stack_dir",     config.vt_stack_dir,       dir);
-  auto m = app.add_option("--vt_stack_mod",     config.vt_stack_mod,       mod);
+  auto g = setup_.addFlag("--vt_no_warn_stack",   config.vt_no_warn_stack,   warn);
+  auto h = setup_.addFlag("--vt_no_assert_stack", config.vt_no_assert_stack, assert);
+  auto i = setup_.addFlag("--vt_no_abort_stack",  config.vt_no_abort_stack,  abort);
+  auto j = setup_.addFlag("--vt_no_stack",        config.vt_no_stack,        stack);
+  auto k = setup_.addOption("--vt_stack_file",    config.vt_stack_file,      file);
+  auto l = setup_.addOption("--vt_stack_dir",     config.vt_stack_dir,       dir);
+  auto m = setup_.addOption("--vt_stack_mod",     config.vt_stack_mod,       mod);
   auto stackGroup = "Dump Stack Backtrace";
-  g->group(stackGroup);
-  h->group(stackGroup);
-  i->group(stackGroup);
-  j->group(stackGroup);
-  k->group(stackGroup);
-  l->group(stackGroup);
-  m->group(stackGroup);
+  g->setGroup(stackGroup);
+  h->setGroup(stackGroup);
+  i->setGroup(stackGroup);
+  j->setGroup(stackGroup);
+  k->setGroup(stackGroup);
+  l->setGroup(stackGroup);
+  m->setGroup(stackGroup);
 
 
   /*
@@ -157,15 +144,15 @@ namespace vt { namespace arguments {
   auto tfile  = "Name of trace files";
   auto tdir   = "Name of directory for trace files";
   auto tmod   = "Output trace file if (node % vt_stack_mod) == 0";
-  auto n = app.add_flag("--vt_trace",        config.vt_trace,       trace);
-  auto o = app.add_option("--vt_trace_file", config.vt_trace_file,  tfile, "");
-  auto p = app.add_option("--vt_trace_dir",  config.vt_trace_dir,   tdir,  "");
-  auto q = app.add_option("--vt_trace_mod",  config.vt_trace_mod,   tmod,  1);
+  auto n = setup_.addFlag("--vt_trace",        config.vt_trace,       trace);
+  auto o = setup_.addOption("--vt_trace_file", config.vt_trace_file,  tfile);
+  auto p = setup_.addOption("--vt_trace_dir",  config.vt_trace_dir,   tdir);
+  auto q = setup_.addOption("--vt_trace_mod",  config.vt_trace_mod,   tmod);
   auto traceGroup = "Tracing Configuration";
-  n->group(traceGroup);
-  o->group(traceGroup);
-  p->group(traceGroup);
-  q->group(traceGroup);
+  n->setGroup(traceGroup);
+  o->setGroup(traceGroup);
+  p->setGroup(traceGroup);
+  q->setGroup(traceGroup);
 
 
   /*
@@ -207,71 +194,71 @@ namespace vt { namespace arguments {
   auto cbp = "Enable debug_broadcast    = \"" debug_pp(broadcast)    "\"";
   auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
 
-  auto r  = app.add_flag("--vt_debug_all",          config.vt_debug_all,          rp);
-  auto r1 = app.add_flag("--vt_debug_verbose",      config.vt_debug_verbose,      rq);
-  auto aa = app.add_flag("--vt_debug_none",         config.vt_debug_none,         aap);
-  auto ba = app.add_flag("--vt_debug_gen",          config.vt_debug_gen,          bap);
-  auto ca = app.add_flag("--vt_debug_runtime",      config.vt_debug_runtime,      cap);
-  auto da = app.add_flag("--vt_debug_active",       config.vt_debug_active,       dap);
-  auto ea = app.add_flag("--vt_debug_term",         config.vt_debug_term,         eap);
-  auto fa = app.add_flag("--vt_debug_termds",       config.vt_debug_termds,       fap);
-  auto ga = app.add_flag("--vt_debug_barrier",      config.vt_debug_barrier,      gap);
-  auto ha = app.add_flag("--vt_debug_event",        config.vt_debug_event,        hap);
-  auto ia = app.add_flag("--vt_debug_pipe",         config.vt_debug_pipe,         iap);
-  auto ja = app.add_flag("--vt_debug_pool",         config.vt_debug_pool,         jap);
-  auto ka = app.add_flag("--vt_debug_reduce",       config.vt_debug_reduce,       kap);
-  auto la = app.add_flag("--vt_debug_rdma",         config.vt_debug_rdma,         lap);
-  auto ma = app.add_flag("--vt_debug_rdma_channel", config.vt_debug_rdma_channel, map);
-  auto na = app.add_flag("--vt_debug_rdma_state",   config.vt_debug_rdma_state,   nap);
-  auto oa = app.add_flag("--vt_debug_param",        config.vt_debug_param,        oap);
-  auto pa = app.add_flag("--vt_debug_handler",      config.vt_debug_handler,      pap);
-  auto qa = app.add_flag("--vt_debug_hierlb",       config.vt_debug_hierlb,       qap);
-  auto ra = app.add_flag("--vt_debug_scatter",      config.vt_debug_scatter,      rap);
-  auto sa = app.add_flag("--vt_debug_sequence",     config.vt_debug_sequence,     sap);
-  auto ta = app.add_flag("--vt_debug_sequence_vrt", config.vt_debug_sequence_vrt, tap);
-  auto ua = app.add_flag("--vt_debug_serial_msg",   config.vt_debug_serial_msg,   uap);
-  auto va = app.add_flag("--vt_debug_trace",        config.vt_debug_trace,        vap);
-  auto wa = app.add_flag("--vt_debug_location",     config.vt_debug_location,     wap);
-  auto xa = app.add_flag("--vt_debug_lb",           config.vt_debug_lb,           xap);
-  auto ya = app.add_flag("--vt_debug_vrt",          config.vt_debug_vrt,          yap);
-  auto za = app.add_flag("--vt_debug_vrt_coll",     config.vt_debug_vrt_coll,     zap);
-  auto ab = app.add_flag("--vt_debug_worker",       config.vt_debug_worker,       abp);
-  auto bb = app.add_flag("--vt_debug_group",        config.vt_debug_group,        bbp);
-  auto cb = app.add_flag("--vt_debug_broadcast",    config.vt_debug_broadcast,    cbp);
-  auto db = app.add_flag("--vt_debug_objgroup",     config.vt_debug_objgroup,     dbp);
+  auto r  = setup_.addFlag("--vt_debug_all",          config.vt_debug_all,          rp);
+  auto r1 = setup_.addFlag("--vt_debug_verbose",      config.vt_debug_verbose,      rq);
+  auto aa = setup_.addFlag("--vt_debug_none",         config.vt_debug_none,         aap);
+  auto ba = setup_.addFlag("--vt_debug_gen",          config.vt_debug_gen,          bap);
+  auto ca = setup_.addFlag("--vt_debug_runtime",      config.vt_debug_runtime,      cap);
+  auto da = setup_.addFlag("--vt_debug_active",       config.vt_debug_active,       dap);
+  auto ea = setup_.addFlag("--vt_debug_term",         config.vt_debug_term,         eap);
+  auto fa = setup_.addFlag("--vt_debug_termds",       config.vt_debug_termds,       fap);
+  auto ga = setup_.addFlag("--vt_debug_barrier",      config.vt_debug_barrier,      gap);
+  auto ha = setup_.addFlag("--vt_debug_event",        config.vt_debug_event,        hap);
+  auto ia = setup_.addFlag("--vt_debug_pipe",         config.vt_debug_pipe,         iap);
+  auto ja = setup_.addFlag("--vt_debug_pool",         config.vt_debug_pool,         jap);
+  auto ka = setup_.addFlag("--vt_debug_reduce",       config.vt_debug_reduce,       kap);
+  auto la = setup_.addFlag("--vt_debug_rdma",         config.vt_debug_rdma,         lap);
+  auto ma = setup_.addFlag("--vt_debug_rdma_channel", config.vt_debug_rdma_channel, map);
+  auto na = setup_.addFlag("--vt_debug_rdma_state",   config.vt_debug_rdma_state,   nap);
+  auto oa = setup_.addFlag("--vt_debug_param",        config.vt_debug_param,        oap);
+  auto pa = setup_.addFlag("--vt_debug_handler",      config.vt_debug_handler,      pap);
+  auto qa = setup_.addFlag("--vt_debug_hierlb",       config.vt_debug_hierlb,       qap);
+  auto ra = setup_.addFlag("--vt_debug_scatter",      config.vt_debug_scatter,      rap);
+  auto sa = setup_.addFlag("--vt_debug_sequence",     config.vt_debug_sequence,     sap);
+  auto ta = setup_.addFlag("--vt_debug_sequence_vrt", config.vt_debug_sequence_vrt, tap);
+  auto ua = setup_.addFlag("--vt_debug_serial_msg",   config.vt_debug_serial_msg,   uap);
+  auto va = setup_.addFlag("--vt_debug_trace",        config.vt_debug_trace,        vap);
+  auto wa = setup_.addFlag("--vt_debug_location",     config.vt_debug_location,     wap);
+  auto xa = setup_.addFlag("--vt_debug_lb",           config.vt_debug_lb,           xap);
+  auto ya = setup_.addFlag("--vt_debug_vrt",          config.vt_debug_vrt,          yap);
+  auto za = setup_.addFlag("--vt_debug_vrt_coll",     config.vt_debug_vrt_coll,     zap);
+  auto ab = setup_.addFlag("--vt_debug_worker",       config.vt_debug_worker,       abp);
+  auto bb = setup_.addFlag("--vt_debug_group",        config.vt_debug_group,        bbp);
+  auto cb = setup_.addFlag("--vt_debug_broadcast",    config.vt_debug_broadcast,    cbp);
+  auto db = setup_.addFlag("--vt_debug_objgroup",     config.vt_debug_objgroup,     dbp);
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
-  r->group(debugGroup);
-  r1->group(debugGroup);
-  aa->group(debugGroup);
-  ba->group(debugGroup);
-  ca->group(debugGroup);
-  da->group(debugGroup);
-  ea->group(debugGroup);
-  fa->group(debugGroup);
-  ga->group(debugGroup);
-  ha->group(debugGroup);
-  ia->group(debugGroup);
-  ja->group(debugGroup);
-  ka->group(debugGroup);
-  la->group(debugGroup);
-  ma->group(debugGroup);
-  na->group(debugGroup);
-  oa->group(debugGroup);
-  pa->group(debugGroup);
-  qa->group(debugGroup);
-  ra->group(debugGroup);
-  sa->group(debugGroup);
-  ta->group(debugGroup);
-  ua->group(debugGroup);
-  va->group(debugGroup);
-  xa->group(debugGroup);
-  wa->group(debugGroup);
-  ya->group(debugGroup);
-  za->group(debugGroup);
-  ab->group(debugGroup);
-  bb->group(debugGroup);
-  cb->group(debugGroup);
-  db->group(debugGroup);
+  r->setGroup(debugGroup);
+  r1->setGroup(debugGroup);
+  aa->setGroup(debugGroup);
+  ba->setGroup(debugGroup);
+  ca->setGroup(debugGroup);
+  da->setGroup(debugGroup);
+  ea->setGroup(debugGroup);
+  fa->setGroup(debugGroup);
+  ga->setGroup(debugGroup);
+  ha->setGroup(debugGroup);
+  ia->setGroup(debugGroup);
+  ja->setGroup(debugGroup);
+  ka->setGroup(debugGroup);
+  la->setGroup(debugGroup);
+  ma->setGroup(debugGroup);
+  na->setGroup(debugGroup);
+  oa->setGroup(debugGroup);
+  pa->setGroup(debugGroup);
+  qa->setGroup(debugGroup);
+  ra->setGroup(debugGroup);
+  sa->setGroup(debugGroup);
+  ta->setGroup(debugGroup);
+  ua->setGroup(debugGroup);
+  va->setGroup(debugGroup);
+  xa->setGroup(debugGroup);
+  wa->setGroup(debugGroup);
+  ya->setGroup(debugGroup);
+  za->setGroup(debugGroup);
+  ab->setGroup(debugGroup);
+  bb->setGroup(debugGroup);
+  cb->setGroup(debugGroup);
+  db->setGroup(debugGroup);
 
   /*
    * Flags for enabling load balancing and configuring it
@@ -286,35 +273,25 @@ namespace vt { namespace arguments {
   auto lb_stats      = "Enable load balancing statistics";
   auto lb_stats_dir  = "Load balancing statistics output directory";
   auto lb_stats_file = "Load balancing statistics output file name";
-  auto lbn = "NoLB";
-  auto lbi = 1;
-  auto lbf = "balance.in";
-  auto lbd = "vt_lb_stats";
-  auto lbs = "stats";
-  auto s  = app.add_flag("--vt_lb",              config.vt_lb,            lb);
-  auto t  = app.add_flag("--vt_lb_file",         config.vt_lb_file,       lb_file);
-  auto t1 = app.add_flag("--vt_lb_quiet",        config.vt_lb_quiet,      lb_quiet);
-  auto u  = app.add_option("--vt_lb_file_name",  config.vt_lb_file_name,  lb_file_name, 
-		  lbf);
-  auto v  = app.add_option("--vt_lb_name",       config.vt_lb_name,       lb_name,      
-		  lbn);
-  auto w  = app.add_option("--vt_lb_interval",   config.vt_lb_interval,   lb_interval,  
-		  lbi);
-  auto ww = app.add_flag("--vt_lb_stats",        config.vt_lb_stats,      lb_stats);
-  auto wx = app.add_option("--vt_lb_stats_dir",  config.vt_lb_stats_dir,  lb_stats_dir, 
-		  lbd);
-  auto wy = app.add_option("--vt_lb_stats_file", config.vt_lb_stats_file, lb_stats_file,
-		  lbs);
+  auto s  = setup_.addFlag("--vt_lb",              config.vt_lb,            lb);
+  auto t  = setup_.addFlag("--vt_lb_file",         config.vt_lb_file,       lb_file);
+  auto t1 = setup_.addFlag("--vt_lb_quiet",        config.vt_lb_quiet,      lb_quiet);
+  auto u  = setup_.addOption("--vt_lb_file_name",  config.vt_lb_file_name,  lb_file_name);
+  auto v  = setup_.addOption("--vt_lb_name",       config.vt_lb_name,       lb_name);
+  auto w  = setup_.addOption("--vt_lb_interval",   config.vt_lb_interval,   lb_interval);
+  auto ww = setup_.addFlag("--vt_lb_stats",        config.vt_lb_stats,      lb_stats);
+  auto wx = setup_.addOption("--vt_lb_stats_dir",  config.vt_lb_stats_dir,  lb_stats_dir);
+  auto wy = setup_.addOption("--vt_lb_stats_file", config.vt_lb_stats_file, lb_stats_file);
   auto debugLB = "Load Balancing";
-  s->group(debugLB);
-  t->group(debugLB);
-  t1->group(debugLB);
-  u->group(debugLB);
-  v->group(debugLB);
-  w->group(debugLB);
-  ww->group(debugLB);
-  wx->group(debugLB);
-  wy->group(debugLB);
+  s->setGroup(debugLB);
+  t->setGroup(debugLB);
+  t1->setGroup(debugLB);
+  u->setGroup(debugLB);
+  v->setGroup(debugLB);
+  w->setGroup(debugLB);
+  ww->setGroup(debugLB);
+  wx->setGroup(debugLB);
+  wy->setGroup(debugLB);
 
   /*
    * Flags for controlling termination
@@ -324,25 +301,24 @@ namespace vt { namespace arguments {
   auto hang_freq    = "The number of tree traversals before a hang is detected";
   auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
   auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
-  auto hfd          = 1024;
-  auto x  = app.add_flag("--vt_no_detect_hang",       config.vt_no_detect_hang,       hang);
-  auto x1 = app.add_flag("--vt_term_rooted_use_ds",   config.vt_term_rooted_use_ds,   ds);
-  auto x2 = app.add_flag("--vt_term_rooted_use_wave", config.vt_term_rooted_use_wave, wave);
-  auto y = app.add_option("--vt_hang_freq",           config.vt_hang_freq, hang_freq, hfd);
+  auto x  = setup_.addFlag("--vt_no_detect_hang",       config.vt_no_detect_hang,       hang);
+  auto x1 = setup_.addFlag("--vt_term_rooted_use_ds",   config.vt_term_rooted_use_ds,   ds);
+  auto x2 = setup_.addFlag("--vt_term_rooted_use_wave", config.vt_term_rooted_use_wave, wave);
+  auto y = setup_.addOption("--vt_hang_freq",           config.vt_hang_freq, hang_freq);
   auto debugTerm = "Termination";
-  x->group(debugTerm);
-  x1->group(debugTerm);
-  x2->group(debugTerm);
-  y->group(debugTerm);
+  x->setGroup(debugTerm);
+  x1->setGroup(debugTerm);
+  x2->setGroup(debugTerm);
+  y->setGroup(debugTerm);
 
   /*
    * Flags for controlling termination
    */
 
   auto pause        = "Pause at startup so GDB/LLDB can be attached";
-  auto z = app.add_flag("--vt_pause", config.vt_pause, pause);
+  auto z = setup_.addFlag("--vt_pause", config.vt_pause, pause);
   auto launchTerm = "Debugging/Launch";
-  z->group(launchTerm);
+  z->setGroup(launchTerm);
 
   /*
    * User option flags for convenience; VT will parse these and the app can use
@@ -358,35 +334,198 @@ namespace vt { namespace arguments {
   auto userstr1 = "User Option 1c (std::string)";
   auto userstr2 = "User Option 2c (std::string)";
   auto userstr3 = "User Option 3c (std::string)";
-  auto u1  = app.add_flag("--vt_user_1", config.vt_user_1, user1);
-  auto u2  = app.add_flag("--vt_user_2", config.vt_user_2, user2);
-  auto u3  = app.add_flag("--vt_user_3", config.vt_user_3, user3);
-  auto ui1 = app.add_option("--vt_user_int_1", config.vt_user_int_1, userint1);
-  auto ui2 = app.add_option("--vt_user_int_2", config.vt_user_int_2, userint2);
-  auto ui3 = app.add_option("--vt_user_int_3", config.vt_user_int_3, userint3);
-  auto us1 = app.add_option("--vt_user_str_1", config.vt_user_str_1, userstr1);
-  auto us2 = app.add_option("--vt_user_str_2", config.vt_user_str_2, userstr2);
-  auto us3 = app.add_option("--vt_user_str_3", config.vt_user_str_3, userstr3);
+  auto u1  = setup_.addFlag("--vt_user_1", config.vt_user_1, user1);
+  auto u2  = setup_.addFlag("--vt_user_2", config.vt_user_2, user2);
+  auto u3  = setup_.addFlag("--vt_user_3", config.vt_user_3, user3);
+  auto ui1 = setup_.addOption("--vt_user_int_1", config.vt_user_int_1, userint1);
+  auto ui2 = setup_.addOption("--vt_user_int_2", config.vt_user_int_2, userint2);
+  auto ui3 = setup_.addOption("--vt_user_int_3", config.vt_user_int_3, userint3);
+  auto us1 = setup_.addOption("--vt_user_str_1", config.vt_user_str_1, userstr1);
+  auto us2 = setup_.addOption("--vt_user_str_2", config.vt_user_str_2, userstr2);
+  auto us3 = setup_.addOption("--vt_user_str_3", config.vt_user_str_3, userstr3);
   auto userOpts = "User Options";
-  u1->group(userOpts);
-  u2->group(userOpts);
-  u3->group(userOpts);
-  ui1->group(userOpts);
-  ui2->group(userOpts);
-  ui3->group(userOpts);
-  us1->group(userOpts);
-  us2->group(userOpts);
-  us3->group(userOpts);
+  u1->setGroup(userOpts);
+  u2->setGroup(userOpts);
+  u3->setGroup(userOpts);
+  ui1->setGroup(userOpts);
+  ui2->setGroup(userOpts);
+  ui3->setGroup(userOpts);
+  us1->setGroup(userOpts);
+  us2->setGroup(userOpts);
+  us3->setGroup(userOpts);
 
+}
+
+
+/* ------------------------------------------------- */
+
+
+template< typename T>
+void Anchor<T>::addGeneralInstance(
+      context ctxt,
+      const T &value)
+{
+   //---
+   // Does not allow to specify a 'dFault' instance
+   if (ctxt == context::dFault) {
+      std::string code = std::string(__func__)
+                         + std::string("::")
+                         + std::string(" Default for ") + smap_[ctxt]
+                         + std::string(" Can Not Be Added ");
+      throw std::runtime_error(code);
+   }
+   //---
+   if (specifications_.count(ctxt) > 0) {
+      std::string code = std::string(__func__)
+                         + std::string(" Context ") + smap_[ctxt]
+                         + std::string(" Already Inserted ");
+      throw std::runtime_error(code);
+   }
+   //----
+   auto myCase = Instance<T>(value, this);
+   specifications_.insert(std::make_pair(ctxt, myCase));
+   if ((ordering_.count(ctxt) == 0) || (ordering_[ctxt] != orderCtxt::MAX))
+      ordering_[ctxt] = emap_[ctxt];
+}
+
+
+/* ------------------------------------------------- */
+
+
+template< typename T>
+void Anchor<T>::checkExcludes() const {
+   for(auto opt_ex : excludes_) {
+      // Check whether the 'excluded' options have specifications
+      // in addition to their default ones.
+      if ((opt_ex->count() > 1) && (this->count() > 1)) {
+         std::string code = std::string(__func__)
+                            + std::string("::") + name_
+                            + std::string(" excludes ")
+                            + opt_ex->getName();
+         throw std::runtime_error(code);
+      }
+   }
+}
+
+
+/* ------------------------------------------------- */
+
+
+template< typename T>
+void Anchor<T>::resolve() {
+   if (isResolved_)
+      return;
+   //
+   try {
+      checkExcludes();
+   }
+   catch (const std::exception &e) {
+      throw;
+   }
+   //
+   int cmax = 0;
+   context resolved_ctxt = context::dFault;
+   for (const auto &iter : specifications_) {
+      auto my_ctxt = iter.first;
+      if ((ordering_.count(my_ctxt) > 0) &&
+          (static_cast<int>(ordering_[my_ctxt]) > cmax)) {
+         resolved_ctxt = my_ctxt;
+         resolved_instance_ = iter.second;
+         cmax = static_cast<int>(ordering_[my_ctxt]);
+      }
+   }
+   //
+   value_ = resolved_instance_.getValue();
+   if ((cmax <= 1) || (resolved_ctxt == context::dFault))
+      resolved_to_default_ = true;
+   //
+   isResolved_ = true;
+}
+
+
+/* ------------------------------------------------- */
+
+
+template <typename T>
+std::shared_ptr<Anchor<T>> ArgSetup::addOption(
+    const std::string &name,
+    T& anchor_value,
+    const std::string &desc
+)
+{
+   auto iter = options_.find(name);
+   if (iter == options_.end()) {
+      // @todo: stop using default for warn_override and get this from runtime?
+      auto anchor = std::make_shared<Anchor<T> >(anchor_value, name, desc);
+      options_[name] = anchor;
+      //
+      // Insert the option into CLI app
+      //
+      CLI::callback_t fun = [&anchor,&anchor_value](CLI::results_t res) {
+         bool myFlag = CLI::detail::lexical_cast(res[0], anchor_value);
+         anchor->addGeneralInstance(context::commandLine, anchor_value);
+         return myFlag;
+      };
+      auto opt = app_.add_option(name, fun, desc, true);
+      opt->type_name(CLI::detail::type_name<T>());
+      //
+      std::stringstream out;
+      out << anchor_value;
+      opt->default_str(out.str());
+      //
+      return anchor;
+   } else {
+      auto base = iter->second;
+      auto anchor = std::static_pointer_cast<Anchor<T>>(base);
+      return anchor;
+   }
+}
+
+
+/* ------------------------------------------------- */
+
+
+template <typename T>
+std::shared_ptr<Anchor<T>> ArgSetup::setNewDefaultValue(
+   const std::string &name,
+   const T& anchor_value
+) {
+   auto optPtr = this->getOption<T>(name);
+   if (optPtr == nullptr) {
+      std::string code = std::string(__func__)
+      + std::string(" Name ") + name
+      + std::string(" Can Not Be Found ");
+      throw std::runtime_error(code);
+   }
+   optPtr->setNewDefaultValue(anchor_value);
+   return optPtr;
+}
+
+
+/* ------------------------------------------------- */
+
+
+int ArgSetup::parse(int& argc, char**& argv)
+{
+
+  if (parsed)
+    return 0;
+
+  std::vector<std::string> args;
+  for (auto i = 0; i < argc; i++) {
+    args.push_back(std::string(argv[i]));
+  }
+
+  // fmt::print("argc={}, argv={}\n", argc, print_ptr(argv));
 
   /*
    * Run the parser!
    */
-  app.allow_extras(true);
+  app_.allow_extras(true);
   try {
-    app.parse(args);
+    app_.parse(args);
   } catch (CLI::Error &ex) {
-    return app.exit(ex);
+    return app_.exit(ex);
   }
 
   /*
@@ -420,233 +559,10 @@ namespace vt { namespace arguments {
 
   parsed = true;
 
-  if (ref == nullptr)
-    return 1;
-
-  //
-  // Treat the configuration from the files
-  //
-
-  if (a->count() == 0)
-    config.vt_color = ref->vt_color;
-
-  if (b->count() == 0)
-    config.vt_no_color = ref->vt_no_color;
-
-  if (c->count() == 0)
-    config.vt_auto_color = ref->vt_auto_color;
-
-  if (a1->count() == 0)
-    config.vt_quiet = ref->vt_quiet;
-
-  //------
-
-  if (d->count() == 0)
-    config.vt_no_sigint = ref->vt_no_sigint;
-
-  if (e->count() == 0)
-    config.vt_no_sigsegv = ref->vt_no_sigsegv;
-
-  if (f->count() == 0)
-    config.vt_no_terminate = ref->vt_no_terminate;
-
-  //------
-
-  if (g->count() == 0)
-    config.vt_no_warn_stack = ref->vt_no_warn_stack;
-
-  if (h->count() == 0)
-    config.vt_no_assert_stack = ref->vt_no_assert_stack;
-
-  if (i->count() == 0)
-    config.vt_no_abort_stack = ref->vt_no_abort_stack;
-
-  if (j->count() == 0)
-    config.vt_no_stack = ref->vt_no_stack;
-
-  if (k->count() == 0)
-    config.vt_stack_file = ref->vt_stack_file;
-
-  if (l->count() == 0)
-    config.vt_stack_dir = ref->vt_stack_dir;
-
-  if (m->count() == 0)
-    config.vt_stack_mod = ref->vt_stack_mod;
-
-  //------
-
-  if (n->count() == 0)
-    config.vt_trace = ref->vt_trace;
-
-  if (o->count() == 0)
-    config.vt_trace_file = ref->vt_trace_file;
-
-  if (p->count() == 0)
-    config.vt_trace_dir = ref->vt_trace_dir;
-
-  if (q->count() == 0)
-    config.vt_trace_mod = ref->vt_trace_mod;
-
-  //------
-
-  if (r->count() == 0)
-    config.vt_debug_all = ref->vt_debug_all;
-
-  if (r1->count() == 0)
-    config.vt_debug_verbose = ref->vt_debug_verbose;
-
-  if (aa->count() == 0)
-    config.vt_debug_none = ref->vt_debug_none;
-
-  if (ba->count() == 0)
-    config.vt_debug_gen = ref->vt_debug_gen;
-
-  if (ca->count() == 0)
-    config.vt_debug_runtime = ref->vt_debug_runtime;
-
-  if (da->count() == 0)
-    config.vt_debug_active = ref->vt_debug_active;
-
-  if (ea->count() == 0)
-    config.vt_debug_term = ref->vt_debug_term;
-
-  if (fa->count() == 0)
-    config.vt_debug_termds = ref->vt_debug_termds;
-
-  if (ga->count() == 0)
-    config.vt_debug_barrier = ref->vt_debug_barrier;
-
-  if (ha->count() == 0)
-    config.vt_debug_event = ref->vt_debug_event;
-
-  if (ia->count() == 0)
-    config.vt_debug_pipe = ref->vt_debug_pipe;
-
-  if (ja->count() == 0)
-    config.vt_debug_pool = ref->vt_debug_pool;
-
-  if (ka->count() == 0)
-    config.vt_debug_reduce = ref->vt_debug_reduce;
-
-  if (la->count() == 0)
-    config.vt_debug_rdma = ref->vt_debug_rdma;
-
-  if (ma->count() == 0)
-    config.vt_debug_rdma_channel = ref->vt_debug_rdma_channel;
-
-  if (na->count() == 0)
-    config.vt_debug_rdma_state = ref->vt_debug_rdma_state;
-
-  if (oa->count() == 0)
-    config.vt_debug_param = ref->vt_debug_param;
-
-  if (pa->count() == 0)
-    config.vt_debug_handler = ref->vt_debug_handler;
-
-  if (qa->count() == 0)
-    config.vt_debug_hierlb = ref->vt_debug_hierlb;
-
-  if (ra->count() == 0)
-    config.vt_debug_scatter = ref->vt_debug_scatter;
-
-  if (sa->count() == 0)
-    config.vt_debug_sequence = ref->vt_debug_sequence;
-
-  if (ta->count() == 0)
-    config.vt_debug_sequence_vrt = ref->vt_debug_sequence_vrt;
-
-  if (ua->count() == 0)
-    config.vt_debug_serial_msg = ref->vt_debug_serial_msg;
-
-  if (va->count() == 0)
-    config.vt_debug_trace = ref->vt_debug_trace;
-
-  if (wa->count() == 0)
-    config.vt_debug_location = ref->vt_debug_location;
-
-  if (xa->count() == 0)
-    config.vt_debug_lb = ref->vt_debug_lb;
-
-  if (ya->count() == 0)
-    config.vt_debug_vrt = ref->vt_debug_vrt;
-
-  if (za->count() == 0)
-    config.vt_debug_vrt_coll = ref->vt_debug_vrt_coll;
-
-  if (ab->count() == 0)
-    config.vt_debug_worker = ref->vt_debug_worker;
-
-  if (bb->count() == 0)
-    config.vt_debug_group = ref->vt_debug_group;
-
-  if (cb->count() == 0)
-    config.vt_debug_broadcast = ref->vt_debug_broadcast;
-
-  if (db->count() == 0)
-    config.vt_debug_objgroup = ref->vt_debug_objgroup;
-
-  //------
-
-  if (s->count() == 0)
-    config.vt_lb = ref->vt_lb;
-
-  if (t->count() == 0)
-    config.vt_lb_file = ref->vt_lb_file;
-
-  if (t1->count() == 0)
-    config.vt_lb_quiet = ref->vt_lb_quiet;
-
-  if (u->count() == 0)
-    config.vt_lb_file_name = ref->vt_lb_file_name;
-
-  if (v->count() == 0)
-    config.vt_lb_name = ref->vt_lb_name;
-
-  if (w->count() == 0)
-    config.vt_lb_interval = ref->vt_lb_interval;
-
-  if (ww->count() == 0)
-    config.vt_lb_stats = ref->vt_lb_stats;
-
-  if (wx->count() == 0)
-    config.vt_lb_stats_dir = ref->vt_lb_stats_dir;
-
-  if (wy->count() == 0)
-    config.vt_lb_stats_file = ref->vt_lb_stats_file;
-
-  //------
-
-  if (u1->count() == 0)
-    config.vt_user_1 = ref->vt_user_1;
-
-  if (u2->count() == 0)
-    config.vt_user_2 = ref->vt_user_2;
-
-  if (u3->count() == 0)
-    config.vt_user_3 = ref->vt_user_3;
-
-  if (ui1->count() == 0)
-    config.vt_user_int_1 = ref->vt_user_int_1;
-
-  if (ui2->count() == 0)
-    config.vt_user_int_2 = ref->vt_user_int_2;
-
-  if (ui3->count() == 0)
-    config.vt_user_int_3 = ref->vt_user_int_3;
-
-  if (us1->count() == 0)
-    config.vt_user_str_1 = ref->vt_user_str_1;
-
-  if (us2->count() == 0)
-    config.vt_user_str_2 = ref->vt_user_str_2;
-
-  if (us3->count() == 0)
-    config.vt_user_str_3 = ref->vt_user_str_3;
-
-  //------
-
-  return 2;
+  return 0;
 
 }
 
+
 }} /* end namespace vt::arguments */
+
