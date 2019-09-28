@@ -56,8 +56,8 @@ struct GossipLB : BaseLB {
 
 public: // ctors
   GossipLB() = default;
+
   GossipLB(GossipLB const&) = delete;
-  GossipLB(GossipLB&&) = default;
 
   virtual ~GossipLB() {}
 
