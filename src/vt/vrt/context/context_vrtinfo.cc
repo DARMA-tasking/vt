@@ -73,8 +73,6 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
   vrt_ptr_ = std::move(in_vrt_ptr);
   is_constructed_ = true;
 
-  VirtualContext* ptr = vrt_ptr_.get();
-
   debug_print(
     vrt, node,
     "setVirtualContextPtr: set ptr={}, attaching process fn\n",
