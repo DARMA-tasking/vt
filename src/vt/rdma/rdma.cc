@@ -110,7 +110,6 @@ namespace vt { namespace rdma {
   auto get_ptr = std::get<0>(direct);
   auto get_ptr_action = std::get<1>(direct);
 
-  auto const& this_node = theContext()->getNode();
   debug_print(
     rdma, node,
     "getRecvMsg: op={}, tag={}, bytes={}, get_ptr={}, "
