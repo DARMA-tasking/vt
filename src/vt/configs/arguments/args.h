@@ -46,11 +46,10 @@
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
 #include <map>
-#include <unordered_map>
+#include <memory>
 
 #include "vt/config.h"
 
-#include "fmt/format.h"
 #include "CLI/CLI11.hpp"
 
 namespace vt { namespace arguments {
@@ -147,42 +146,6 @@ public:
 //--- Build enum for the context
 enum class context : std::uint8_t {dFault, commandLine, thirdParty};
 
-
-struct AnchorBase;
-
-
-template< typename T>
-struct Instance {
-
-public:
-
-   /// \brief Constructor
-   ///
-   /// \param[in] ref
-   /// \param[in] parent Pointer for the parent anchor
-   explicit Instance(const T &ref, AnchorBase *parent)
-      : value_(ref), parent_(parent)
-   { }
-
-   /// \brief Dummy Constructor
-   Instance() : value_(), parent_(nullptr) { }
-
-   /// \brief Sets new value for the instance
-   ///
-   /// \param ref New value to insert for the instance
-   void setNewValue(const T &ref) { value_ = ref; }
-
-   /// \brief Returns the value for the current instance
-   ///
-   /// \returns Value of the current instance
-   const T& getValue() const { return value_; }
-
-protected:
-   T value_ = {};
-   AnchorBase *parent_ = nullptr;
-};
-
-
 /// \brief Virtual class for storing an option/flag
 struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
 
@@ -222,9 +185,12 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
 //         needs_.insert(opt);
 //      }
 
-  /// \brief Virtual determining whether precedence rules are
-  /// resolved
+  /// \brief Virtual function determining whether precedence rules
+  /// have been resolved
   virtual bool isResolved() const = 0;
+
+  /// \brief Virtual function to print information
+  virtual void print() = 0;
 
    /// \brief Virtual function to resolve precedence rules
    virtual void resolve() = 0;
@@ -240,11 +206,11 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
 
    /// \brief Virtual function returning context for resolved value
    /// \returns Context
-   virtual std::string valueContext() const = 0;
+   virtual std::string resolved_Context() const = 0;
 
    /// \brief Virtual function returning context for resolved value
    /// \returns Default value
-   virtual std::string valueDefault() const = 0;
+   virtual std::string anchorDefault() const = 0;
 
 protected:
 
@@ -293,6 +259,8 @@ protected:
 };
 
 
+class Printer;
+
 /// \brief Template class for storing an option/flag
 template< typename T>
 struct Anchor : public AnchorBase {
@@ -310,23 +278,7 @@ public:
       T& var,
       const std::string &name,
       const std::string &desc
-   ) : AnchorBase(name, desc),
-       value_(var),
-       specifications_(),
-       hasNewDefault_(false),
-       isResolved_(false),
-       resolved_ctxt_(context::dFault),
-       resolved_instance_(),
-       resolved_to_default_(false),
-       always_print_(false),
-       always_print_startup_(false),
-       print_value_(nullptr),
-       print_condition_(nullptr)
-   {
-      auto myCase = Instance<T>(var, this);
-      specifications_.insert(std::make_pair(context::dFault, myCase));
-      ordering_[context::dFault] = orderCtxt::dFault;
-   }
+   );
 
    /// \brief Add instance from a third party with a specific value
    ///
@@ -382,9 +334,10 @@ public:
       ordering_[origin] = orderCtxt::MAX;
    }
 
-   //
-   // Information about resolved instance
-   //
+   /// \brief Returns the value for the current instance
+   ///
+   /// \returns Value of the current instance
+   const T& getValue() const { return value_; }
 
    /// \brief Function to determine whether the precedence rules
    /// have been applied or not.
@@ -397,107 +350,35 @@ public:
 
    /// \brief Virtual function returning context for resolved value
    /// \returns Context
-   std::string valueContext() const override;
+   std::string resolved_Context() const override;
 
    /// \brief Virtual function returning default value
    /// \returns Default value
-   std::string valueDefault() const override;
+   std::string anchorDefault() const override;
 
    //
    //--- Printing routines
    //
 
-   void printAlways(bool always) {
-      always_print_startup_ = always;
-      print_condition_ = [](T const&) -> bool { return true; };
-   }
+   /// \brief Printing routine about the anchor
+   void print() override;
 
-   void printIf(std::function<void()> fn) {
-      print_condition_ = [=](T const&) -> bool { fn(); };
-   }
+   /// \brief Set the printing message for the banner as a warning
+   ///
+   /// \param[in] String to display for the anchor
+   void setBannerMsg_On(std::string msg_on, std::function<bool()> fun = nullptr);
 
-   void printWhen(std::function<bool(T const& value)> cond) {
-      print_condition_ = cond;
-   }
+   /// \brief Set the printing message for the banner as a warning
+   ///
+   /// \param[in] String to display when the anchor is active
+   /// \param[in] String to display when the anchor is off
+   void setBannerMsg_OnOff(std::string msg_on, std::string msg_off,
+		   std::function<bool()> fun = nullptr);
 
-   void setPrinter(std::function<std::string(T const& value)> in) {
-      print_value_ = in;
-   }
-
-   template <typename U>
-   using IsBoolTrait =
-      typename std::enable_if<std::is_same<U, bool>::value, T>::type;
-
-   template <typename U>
-   using IsNotBoolTrait =
-      typename std::enable_if<not std::is_same<U, bool>::value, T>::type;
-
-   template <typename U = T>
-   void printWhenOff(
-      std::string off_str, IsBoolTrait<U>* __attribute__((unused)) u = nullptr
-   ) {
-      print_condition_ = [](T const& val) -> bool { return val == false; };
-      print_value_ = [=](T const&) -> std::string { return off_str; };
-   }
-
-   template <typename U = T>
-   void printWhenOn(
-      std::string on_str, IsBoolTrait<U>* __attribute__((unused)) u = nullptr
-   ) {
-      print_condition_ = [](T const& val) -> bool { return val == true; };
-      print_value_ = [=](T const&) -> std::string { return on_str; };
-   }
-
-   template <typename U = T>
-   void printWhenOnOff(
-      std::string on_str, std::string off_str,
-      IsBoolTrait<U>* __attribute__((unused)) u = nullptr
-   ) {
-      printAlways(true);
-      print_value_ = [=](T const& val) -> std::string {
-         return val ? on_str : off_str;
-      };
-   }
-
-   template <typename U = T>
-   void printWhenValueNot(
-      T in_val, std::string val_str,
-      IsNotBoolTrait<U>* __attribute__((unused)) u = nullptr
-   ) {
-      print_condition_ = [=](T const& val) -> bool { return val != in_val; };
-      print_value_ = [=](T const& val) -> std::string {
-             return fmt::format(val_str, val);
-      };
-   }
-
-   template <typename U = T>
-   void printValueWhenNotDefault(
-      std::string val_str,
-      IsNotBoolTrait<U>* __attribute__((unused)) u = nullptr
-   ) {
-      printValueWhenDefaultTest(false, val_str);
-   }
-
-   template <typename U = T>
-   void printValueWhenDefault(
-      std::string val_str,
-      IsNotBoolTrait<U>* __attribute__((unused)) u = nullptr
-   ) {
-      printValueWhenDefaultTest(true, val_str);
-   }
-
-   template <typename U = T>
-   void printValueWhenDefaultTest(
-      bool is_default, std::string val_str,
-      IsNotBoolTrait<U>* __attribute__((unused)) u = nullptr
-   ) {
-      print_condition_ = [=](T const& val) -> bool {
-         return is_default == resolved_to_default_;
-      };
-      print_value_ = [=](T const& val) -> std::string {
-         return fmt::format(val_str, val);
-      };
-   }
+   /// \brief Set the printing message for the banner as a warning
+   ///
+   /// \param[in] String to display for the anchor
+   void setBannerMsg_Warning(std::string msg, std::function<bool()> fun = nullptr);
 
 protected:
 
@@ -519,6 +400,39 @@ protected:
 
 protected:
 
+   //--- Class for storing each instance of one anchor
+   template< typename U = T>
+   struct Instance {
+
+   public:
+
+      /// \brief Constructor
+      ///
+      /// \param[in] ref
+      /// \param[in] parent Pointer for the parent anchor
+      explicit Instance(const U &ref, AnchorBase *parent)
+         : value_(ref), parent_(parent)
+      { }
+
+      /// \brief Dummy Constructor
+      Instance() : value_(), parent_(nullptr) { }
+
+      /// \brief Sets new value for the instance
+      ///
+      /// \param ref New value to insert for the instance
+      void setNewValue(const U &ref) { value_ = ref; }
+
+      /// \brief Returns the value for the current instance
+      ///
+      /// \returns Value of the current instance
+      const U& getValue() const { return value_; }
+
+   protected:
+      U value_ = {};
+      AnchorBase *parent_ = nullptr;
+   };
+   //---
+
    T& value_ = {};
    std::map< context, Instance<T> > specifications_ = {};
    bool hasNewDefault_ = false;
@@ -532,6 +446,8 @@ protected:
    bool always_print_startup_ = false;
    std::function<std::string(T const& value)> print_value_ = nullptr;
    std::function<bool(T const& value)> print_condition_    = nullptr;
+
+   std::unique_ptr<Printer> azerty;
 
 };
 
@@ -596,6 +512,7 @@ public:
        auto iter = options_.find(sname);
        if (iter == options_.end()) {
           // @todo: stop using default for warn_override and get this from runtime?
+		  // @todo: Ask JL about this comment
           auto anchor = std::make_shared< Anchor<T> >(anchor_value, sname, desc);
           options_[sname] = anchor;
           //
@@ -661,6 +578,7 @@ public:
        auto iter = options_.find(sname);
        if (iter == options_.end()) {
           // @todo: stop using default for warn_override and get this from runtime?
+		  // @todo: Ask JL about this comment
           auto anchor = std::make_shared< Anchor<T> >(anchor_value, sname, desc);
           options_[sname] = anchor;
           //
@@ -721,15 +639,7 @@ public:
    ///
    /// \note At exit, the configuration parameters will be set.
    ///
-   void parseResolve(int &argc, char** &argv) {
-      try {
-         parse(argc, argv);
-         resolveOptions();
-      }
-      catch (const std::exception &e) {
-         throw;
-      }
-   }
+   void parseResolve(int &argc, char** &argv);
 
     //
     // --- Printing routines
@@ -737,12 +647,7 @@ public:
 
     /// \brief Print the list of options and instances
     ///
-    void print()
-    {
-//         for (const auto &opt : options_) {
-//            //opt.second->printWhenOn();
-//         }
-    }
+    void printBanner() const;
 
    /// \brief Set new default value for a specified name
    ///
@@ -778,7 +683,19 @@ public:
       bool write_description, std::string prefix
    ) const;
 
-protected:
+   /// \brief Gather the list of all group names
+   ///
+   /// \returns List of group names
+   std::vector<std::string> getGroupList() const;
+
+   /// \brief Get the list of options for a given group name
+   ///
+   /// \param[in] gname Name of group to study
+   /// \returns List of options in the group
+   std::map< std::string, std::shared_ptr<AnchorBase> >
+        getGroupOptions(const std::string &gname) const;
+
+private:
 
    /// \brief Parse the command line arguments
    ///
@@ -811,7 +728,7 @@ protected:
 private:
 
   CLI::App app_;
-  std::unordered_map<std::string, std::shared_ptr<AnchorBase> > options_ = {};
+  std::map<std::string, std::shared_ptr<AnchorBase> > options_ = {};
 
 public:
 
@@ -832,6 +749,12 @@ public:
   /// \brief Routine to initialize the configuration parameters
   /// and to set their default values.
   static void initialize();
+
+private:
+
+  /// \brief Routine to initialize the debug parameters
+  /// and to set their default values.
+  static void initialize_debug();
 
 };
 
