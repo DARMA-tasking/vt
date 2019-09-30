@@ -98,7 +98,7 @@ struct AsyncEvent {
   EventStateType testEventComplete(EventType const& event);
   EventType attachAction(EventType const& event, ActionType callable);
   void testEventsTrigger(int const& num_events = num_check_actions);
-  bool scheduler();
+  bool progress();
   bool isLocalTerm();
 
   static void eventFinished(EventFinishedMsg* msg);

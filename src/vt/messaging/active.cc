@@ -508,13 +508,18 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     }
   };
 
-  if (next != nullptr) {
-    next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
-  } else {
-    dealloc_buf();
-  }
 
-  theTerm()->consume(term::any_epoch_sentinel,1,sender);
+  if (next == nullptr) {
+    dealloc_buf();
+    theTerm()->consume(term::any_epoch_sentinel,1,sender);
+  } else {
+    // If we have a continuation, schedule to run later
+    auto run = [=]{
+      next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
+      theTerm()->consume(term::any_epoch_sentinel,1,sender);
+    };
+    theSched()->enqueue(run);
+  }
 }
 
 bool ActiveMessenger::recvDataMsg(
@@ -528,7 +533,22 @@ NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
   return current_node_context_;
 }
 
-bool ActiveMessenger::handleActiveMsg(
+void ActiveMessenger::scheduleActiveMsg(
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSizeType const& size, bool insert
+) {
+  debug_print_verbose(
+    active, node,
+    "scheduleActiveMsg: msg={}, from={}, size={}, insert={}\n",
+    print_ptr(base.get()), from, size, insert
+  );
+
+  // Enqueue the message for processing
+  auto run = [=]{ processActiveMsg(base, from, size, insert); };
+  theSched()->enqueue(run);
+}
+
+bool ActiveMessenger::processActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
   MsgSizeType const& size, bool insert
 ) {
@@ -545,7 +565,7 @@ bool ActiveMessenger::handleActiveMsg(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "handleActiveMsg: msg={}, ref={}, deliver={}\n",
+      "processActiveMsg: msg={}, ref={}, deliver={}\n",
       print_ptr(msg), envelopeGetRef(msg->env), print_bool(deliver)
     );
   }
@@ -773,14 +793,14 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
         put_tag, sender,
         [=](RDMA_GetType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-          handleActiveMsg(base, sender, num_probe_bytes, true);
+          scheduleActiveMsg(base, sender, num_probe_bytes, true);
         }
      );
     }
   }
 
   if (!is_put || put_finished) {
-    handleActiveMsg(base, sender, msg_bytes, true);
+    scheduleActiveMsg(base, sender, msg_bytes, true);
   }
 }
 
@@ -800,7 +820,7 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
   );
 }
 
-bool ActiveMessenger::scheduler() {
+bool ActiveMessenger::progress() {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   processMaybeReadyHanTag();
@@ -809,12 +829,6 @@ bool ActiveMessenger::scheduler() {
 
   return started_irecv_active_msg or started_irecv_data_msg or
          received_active_msg or received_data_msg;
-}
-
-bool ActiveMessenger::isLocalTerm() {
-  bool const no_pending_msgs = pending_handler_msgs_.size() == 0;
-  bool const no_pending_recvs = pending_recvs_.size() == 0;
-  return no_pending_msgs and no_pending_recvs;
 }
 
 void ActiveMessenger::processMaybeReadyHanTag() {

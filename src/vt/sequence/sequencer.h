@@ -141,7 +141,7 @@ struct TaggedSequencer {
 
   void enqueueSeqList(SeqType const& seq_id);
   SeqType getCurrentSeq() const;
-  bool scheduler();
+  bool progress();
   bool isLocalTerm();
 
   SeqNodePtrType getNode(SeqType const& id) const;

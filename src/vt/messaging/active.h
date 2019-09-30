@@ -510,8 +510,7 @@ struct ActiveMessenger {
   void performTriggeredActions();
   bool tryProcessIncomingActiveMsg();
   bool tryProcessDataMsgRecv();
-  bool scheduler();
-  bool isLocalTerm();
+  bool progress();
 
   HandlerType registerNewHandler(
     ActiveClosureFnType fn, TagType const& tag = no_tag
@@ -535,7 +534,11 @@ struct ActiveMessenger {
     trace::TraceEventIDType getCurrentTraceEvent() const;
   #endif
 
-  bool handleActiveMsg(
+  void scheduleActiveMsg(
+    MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
+    MsgSizeType const& size, bool insert
+  );
+  bool processActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
     MsgSizeType const& size, bool insert
   );

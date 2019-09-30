@@ -178,7 +178,7 @@ void AsyncEvent::cleanup() {
   event_container_.clear();
 }
 
-bool AsyncEvent::scheduler() {
+bool AsyncEvent::progress() {
   theEvent()->testEventsTrigger();
   return false;
 }

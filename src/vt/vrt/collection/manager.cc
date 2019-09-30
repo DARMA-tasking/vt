@@ -138,4 +138,12 @@ void CollectionManager::setCurrentContext(
   cur_context_temp_elm_id_ = temp;
 }
 
+void CollectionManager::schedule(ActionType action) {
+  theSched()->enqueue(action);
+}
+
+bool CollectionManager::progress() {
+  return false;
+}
+
 }}} /* end namespace vt::vrt::collection */
