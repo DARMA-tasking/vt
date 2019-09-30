@@ -61,6 +61,8 @@ public:
   static bool vt_auto_color;
   static bool vt_quiet;
 
+  static int32_t vt_sched_num_progress;
+
   static bool vt_no_sigint;
   static bool vt_no_sigsegv;
   static bool vt_no_terminate;

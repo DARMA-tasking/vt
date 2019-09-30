@@ -57,6 +57,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_auto_color         = false;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
 
+/*static*/ int32_t     ArgConfig::vt_sched_num_progress = 2;
+
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
@@ -435,6 +437,14 @@ namespace vt { namespace arguments {
   us2->group(userOpts);
   us3->group(userOpts);
 
+  /*
+   * Options for configuring the VT scheduler
+   */
+
+  auto nsched = "Number of times to run the progress function in scheduler";
+  auto sca = app.add_option("--vt_sched_num_progress", vt_sched_num_progress, nsched, 2);
+  auto schedulerGroup = "Scheduler Configuration";
+  sca->group(schedulerGroup);
 
   /*
    * Run the parser!

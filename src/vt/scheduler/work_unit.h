@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                manager.fwd.h
+//                                 work_unit.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,33 +42,33 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
-#define INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
+#if !defined INCLUDED_VT_SCHEDULER_WORK_UNIT_H
+#define INCLUDED_VT_SCHEDULER_WORK_UNIT_H
 
 #include "vt/config.h"
-#include "vt/messaging/message/smart_ptr.h"
-#include "vt/messaging/message/smart_ptr_virtual.h"
 
-namespace vt { namespace objgroup {
+#include <functional>
 
-struct ObjGroupManager;
+namespace vt { namespace sched {
 
-void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han);
+struct Unit {
+  using UnitActionType = ActionType;
 
-template <typename MsgT>
-void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
-template <typename MsgT>
-void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch);
+  explicit Unit(UnitActionType in_work)
+    : work_(in_work)
+  { }
 
-}} /* end namespace vt::objgroup */
+  void operator()() { execute(); }
 
-namespace vt {
+  void execute() {
+    vtAssertExpr(work_ != nullptr);
+    work_();
+  }
 
-extern objgroup::ObjGroupManager* theObjGroup();
+private:
+  UnitActionType work_ = nullptr;
+};
 
-} // end namespace vt
+}} /* end namespace vt::sched */
 
-#include "vt/objgroup/manager.static.h"
-
-#endif /*INCLUDED_VT_OBJGROUP_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_SCHEDULER_WORK_UNIT_H*/

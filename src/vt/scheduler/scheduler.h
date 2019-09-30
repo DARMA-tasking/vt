@@ -46,6 +46,8 @@
 #define INCLUDED_SCHEDULER_SCHEDULER_H
 
 #include "vt/config.h"
+#include "vt/scheduler/queue.h"
+#include "vt/scheduler/work_unit.h"
 
 #include <cassert>
 #include <vector>
@@ -71,8 +73,10 @@ struct Scheduler {
 
   static void checkTermSingleNode();
 
-  void scheduler();
-  bool schedulerImpl();
+  bool runNextUnit();
+  bool progressMsgOnlyImpl();
+  void scheduler(bool msg_only = false);
+  bool progressImpl();
   void schedulerForever();
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(
@@ -81,7 +85,13 @@ struct Scheduler {
   void triggerEvent(SchedulerEventType const& event);
   bool hasSchedRun() const { return has_executed_; }
 
+  void enqueue(ActionType action);
+  std::size_t workQueueSize() const { return work_queue_.size(); }
+  bool workQueueEmpty() const { return work_queue_.empty(); }
+
 private:
+  Queue<Unit> work_queue_;
+
   bool has_executed_ = false;
   bool is_idle = false;
 

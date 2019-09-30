@@ -52,6 +52,7 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/objgroup/manager.fwd.h"
+#include "vt/configs/arguments/args.h"
 
 namespace vt { namespace sched {
 
@@ -67,15 +68,28 @@ Scheduler::Scheduler() {
   event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
 }
 
-bool Scheduler::schedulerImpl() {
-  bool scheduled_work = false;
+void Scheduler::enqueue(ActionType action) {
+  work_queue_.push(Unit(action));
+}
 
-  bool const msg_sch = theMsg()->scheduler();
-  bool const event_sch = theEvent()->scheduler();
-  bool const seq_sch = theSeq()->scheduler();
-  bool const vrt_seq_sch = theVirtualSeq()->scheduler();
-  bool const collection_sch = theCollection()->scheduler<>();
-  bool const objgroup_sch = objgroup::scheduler();
+bool Scheduler::runNextUnit() {
+  if (not work_queue_.empty()) {
+    auto elm = work_queue_.pop();
+    elm();
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool Scheduler::progressImpl() {
+  bool const msg_sch = theMsg()->progress();
+  bool const evt_sch = theEvent()->progress();
+  bool const seq_sch = theSeq()->progress();
+  bool const vrt_sch = theVirtualSeq()->progress();
+  bool const col_sch = theCollection()->progress();
+  bool const obj_sch = theObjGroup()->progress();
+
   bool const worker_sch =
     theContext()->hasWorkers() ? theWorkerGrp()->progress(),false : false;
   bool const worker_comm_sch =
@@ -83,9 +97,9 @@ bool Scheduler::schedulerImpl() {
 
   checkTermSingleNode();
 
-  scheduled_work =
-    msg_sch or event_sch or seq_sch or vrt_seq_sch or
-    worker_sch or worker_comm_sch or collection_sch or objgroup_sch;
+  bool scheduled_work =
+    msg_sch or evt_sch or seq_sch or vrt_sch or
+    col_sch or obj_sch or worker_sch or worker_comm_sch;
 
   if (scheduled_work) {
     is_idle = false;
@@ -94,14 +108,26 @@ bool Scheduler::schedulerImpl() {
   return scheduled_work;
 }
 
-void Scheduler::scheduler() {
-  bool const scheduled_work1 = schedulerImpl();
-  bool const scheduled_work2 = schedulerImpl();
+bool Scheduler::progressMsgOnlyImpl() {
+  return theMsg()->progress() or theEvent()->progress();
+}
 
-  if (not scheduled_work1 and not scheduled_work2 and not is_idle) {
+void Scheduler::scheduler(bool msg_only) {
+  auto const num_iter = std::max(1, arguments::ArgConfig::vt_sched_num_progress);
+  for (int i = 0; i < num_iter; i++) {
+    if (msg_only) {
+      progressMsgOnlyImpl();
+    } else {
+      progressImpl();
+    }
+  }
+
+  if (work_queue_.empty() and not is_idle) {
     is_idle = true;
     // idle
     triggerEvent(SchedulerEventType::BeginIdle);
+  } else {
+    runNextUnit();
   }
 
   has_executed_ = true;

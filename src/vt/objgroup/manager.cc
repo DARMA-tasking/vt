@@ -109,19 +109,8 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
   return proxy;
 }
 
-bool ObjGroupManager::scheduler() {
-  if (work_units_.size() == 0) {
-    return false;
-  } else {
-    auto unit = work_units_.back();
-    work_units_.pop_back();
-    unit();
-    return true;
-  }
-}
-
-bool scheduler() {
-  return theObjGroup()->scheduler();
+bool ObjGroupManager::progress() {
+  return false;
 }
 
 void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han) {
@@ -137,7 +126,7 @@ void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch) {
   // delayed
   theTerm()->produce(epoch);
   // Schedule the work of dispatching the message handler for later
-  theObjGroup()->work_units_.push_back([msg,han,epoch]{
+  theSched()->enqueue([msg,han,epoch]{
     theObjGroup()->dispatch(msg,han);
     theTerm()->consume(epoch);
   });
