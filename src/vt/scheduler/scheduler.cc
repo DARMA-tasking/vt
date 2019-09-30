@@ -130,7 +130,9 @@ void Scheduler::scheduler(bool msg_only) {
     runNextUnit();
   }
 
-  has_executed_ = true;
+  if (not msg_only) {
+    has_executed_ = true;
+  }
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
