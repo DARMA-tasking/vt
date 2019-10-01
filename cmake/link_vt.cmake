@@ -30,6 +30,7 @@ function(link_target_with_vt)
     LINK_CHECKPOINT
     LINK_DETECTOR
     LINK_CLI11
+    LINK_DL
   )
   set(
     multiValueArg
@@ -74,6 +75,16 @@ function(link_target_with_vt)
         ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${ATOMIC_LIB}
       )
     endif()
+  endif()
+
+  if (NOT DEFINED ARG_LINK_DL AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_DL)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: dl=${ARG_LINK_DL}")
+    endif()
+
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CMAKE_DL_LIBS}
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_MPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MPI)
