@@ -45,6 +45,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/configs/arguments/args.h"
 
 #include <memory>
 
@@ -57,13 +58,18 @@ void RotateLB::init(objgroup::proxy::Proxy<RotateLB> in_proxy) {
 void RotateLB::runLB() {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
+  NodeType const next_node = uninitialized_destination;
+  if (arguments::ArgConfig::vt_lb_rotate_same_node) {
+    next_node = this_node;
+  } else {
+    next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
+  }
 
   if (this_node == 0) {
     vt_print(
       lb,
-      "RotateLB: runLB: next_node={}\n",
-      next_node
+      "RotateLB: runLB: next_node={}, rotate to same={}\n",
+      next_node, arguments::ArgConfig::vt_lb_rotate_same_node
     );
     fflush(stdout);
   }

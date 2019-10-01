@@ -85,6 +85,7 @@ public:
   static std::string vt_lb_name;
   static int32_t vt_lb_interval;
   static bool vt_lb_stats;
+  static bool vt_lb_rotate_same_node;
   static std::string vt_lb_stats_dir;
   static std::string vt_lb_stats_file;
 
