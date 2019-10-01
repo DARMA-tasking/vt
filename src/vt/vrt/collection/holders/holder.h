@@ -82,6 +82,7 @@ struct Holder {
   InnerHolder& lookup(IndexT const& idx);
   void insert(IndexT const& idx, InnerHolder&& inner);
   VirtualPtrType remove(IndexT const& idx);
+  void replace(IndexT const& idx, VirtualPtrType ptr);
   void destroyAll();
   bool isDestroyed() const;
   void cleanupExists();

@@ -109,6 +109,17 @@ typename Holder<ColT, IndexT>::InnerHolder& Holder<ColT, IndexT>::lookup(
 }
 
 template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::replace(IndexT const& idx, VirtualPtrType ptr) {
+  auto const& lookup = idx;
+  auto& container = vc_container_;
+  auto iter = container.find(lookup);
+  vtAssert(
+    iter != container.end(), "Entry must exist in holder when removing entry"
+  );
+  iter->second.vc_ptr_ = std::move(ptr);
+}
+
+template <typename ColT, typename IndexT>
 typename Holder<ColT, IndexT>::VirtualPtrType Holder<ColT, IndexT>::remove(
   IndexT const& idx
 ) {
