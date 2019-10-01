@@ -216,8 +216,10 @@ protected:
 
    /// \brief Constructor
    ///
-   /// \param name Label for the anchor
-   /// \param desc Description of the anchor
+   /// \param[in] name Label for the anchor
+   /// \param[in] desc Description of the anchor
+   ///
+   /// \note The anchor will be assigned to a default group, named 'Default'.
    ///
    AnchorBase(std::string name, std::string desc) :
       name_(std::move(name)),
@@ -365,19 +367,35 @@ public:
 
    /// \brief Set the printing message for the banner as a warning
    ///
-   /// \param[in] String to display for the anchor
+   /// \param[in] msg_on String to display for the anchor when it is active
+   /// \param[in] fun  Additional condition to print or not the message
+   ///
+   /// \note The ON message will be of the form
+   /// "Option: flag 'NAME' on: 'MSG_ON'"
+   ///
    void setBannerMsg_On(std::string msg_on, std::function<bool()> fun = nullptr);
 
    /// \brief Set the printing message for the banner as a warning
    ///
-   /// \param[in] String to display when the anchor is active
-   /// \param[in] String to display when the anchor is off
+   /// \param[in] msg_on String to display when the anchor is active
+   /// \param[in] msg_off String to display when the anchor is off
+   /// \param[in] fun Additional condition to print or not the message
+   ///
+   /// \note The ON message will be of the form
+   /// "Option: flag 'NAME' on: 'MSG_ON'"
+   /// \note The OFF message will be of the form
+   /// "Default: 'MSG_OFF', use 'NAME' to disable"
+   ///
    void setBannerMsg_OnOff(std::string msg_on, std::string msg_off,
 		   std::function<bool()> fun = nullptr);
 
    /// \brief Set the printing message for the banner as a warning
    ///
    /// \param[in] String to display for the anchor
+   ///
+   /// \note The message will be of the form
+   /// "Warning: 'NAME' has no effect: compile-time feature 'MSG' is disabled"
+   ///
    void setBannerMsg_Warning(std::string msg, std::function<bool()> fun = nullptr);
 
 protected:
@@ -408,7 +426,7 @@ protected:
 
       /// \brief Constructor
       ///
-      /// \param[in] ref
+      /// \param[in] ref Value of the anchor for this instance
       /// \param[in] parent Pointer for the parent anchor
       explicit Instance(const U &ref, AnchorBase *parent)
          : value_(ref), parent_(parent)
@@ -441,12 +459,8 @@ protected:
    Instance<T> resolved_instance_ = {};
    bool resolved_to_default_ = false;
 
-   //--- Parameters related to printing
-   bool always_print_ = false;
-   bool always_print_startup_ = false;
-   std::function<std::string(T const& value)> print_value_ = nullptr;
-   std::function<bool(T const& value)> print_condition_    = nullptr;
-
+   //--- Pointer to 'Printer' object for displaying
+   //--- message on the startup banner.
    std::unique_ptr<Printer> azerty;
 
 };

@@ -800,10 +800,6 @@ Anchor<T>::Anchor(
     resolved_ctxt_(context::dFault),
     resolved_instance_(),
     resolved_to_default_(false),
-    always_print_(false),
-    always_print_startup_(false),
-    print_value_(nullptr),
-    print_condition_(nullptr),
     azerty()
 {
    auto myCase = Instance<T>(var, this);
