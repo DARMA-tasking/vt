@@ -58,7 +58,7 @@ void RotateLB::init(objgroup::proxy::Proxy<RotateLB> in_proxy) {
 void RotateLB::runLB() {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  NodeType const next_node = uninitialized_destination;
+  NodeType next_node = uninitialized_destination;
   if (arguments::ArgConfig::vt_lb_rotate_same_node) {
     next_node = this_node;
   } else {
