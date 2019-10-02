@@ -47,6 +47,7 @@
 
 #include <map>
 #include <memory>
+#include <unordered_map>
 
 #include "vt/config.h"
 
@@ -149,12 +150,39 @@ enum class context : std::uint8_t {dFault, commandLine, thirdParty};
 /// \brief Virtual class for storing an option/flag
 struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
 
-   ~AnchorBase() = default;
-
    /// \brief Count how many instances of the parameter 'name'
    /// have been specified.
    /// \param[in] name Parameter to specify
    virtual int count() const = 0;
+
+  /// \brief Virtual function determining whether precedence rules
+  /// have been resolved
+  virtual bool isResolved() const = 0;
+
+  /// \brief Virtual function to print information
+  virtual void print() = 0;
+
+   /// \brief Virtual function to resolve precedence rules
+   virtual void resolve() = 0;
+
+   /// \brief Virtual function returning resolved value
+   /// \returns Resolved value
+   virtual std::string valueToString() const = 0;
+
+   /// \brief Virtual function returning context for resolved value
+   /// \returns Context
+   virtual std::string resolved_Context() const = 0;
+
+   /// \brief Virtual function returning context for resolved value
+   /// \returns Default value
+   virtual std::string anchorDefault() const = 0;
+
+   /// \brief Default destructor
+   virtual ~AnchorBase() = default;
+
+   //--------------------------------------------//
+   // Non-virtual member functions
+   //--------------------------------------------//
 
    /// \brief Sets excluded option
    ///
@@ -185,32 +213,10 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
 //         needs_.insert(opt);
 //      }
 
-  /// \brief Virtual function determining whether precedence rules
-  /// have been resolved
-  virtual bool isResolved() const = 0;
-
-  /// \brief Virtual function to print information
-  virtual void print() = 0;
-
-   /// \brief Virtual function to resolve precedence rules
-   virtual void resolve() = 0;
-
    /// \brief Set the group name for the option
    ///
    /// \param[in] grp_ String for the name of the group
    void setGroup(const std::string &grp_) { group_ = grp_; }
-
-   /// \brief Virtual function returning resolved value
-   /// \returns Resolved value
-   virtual std::string valueToString() const = 0;
-
-   /// \brief Virtual function returning context for resolved value
-   /// \returns Context
-   virtual std::string resolved_Context() const = 0;
-
-   /// \brief Virtual function returning context for resolved value
-   /// \returns Default value
-   virtual std::string anchorDefault() const = 0;
 
 protected:
 
@@ -240,17 +246,17 @@ protected:
       MAX = 255};
 
    //--- Map from 'context' flag to an ordered flag.
-   static std::map<const context, const orderCtxt> emap_;
+   static std::map< context, orderCtxt> emap_;
 
    //--- Map from 'context' flag to a descriptive string.
-   static std::map<const context, const std::string> smap_;
+   static std::map< context, std::string> smap_;
 
-   std::string name_ = {};
-   std::string group_ = {};
-   std::string description_ = {};
+   std::string name_;
+   std::string group_;
+   std::string description_;
 
    /// \brief Map ordering the different instances of an 'anchor'
-   std::map< const context, orderCtxt > ordering_;
+   std::map< context, orderCtxt > ordering_;
 
    /// \brief List of options that are required with this option
    std::set< std::shared_ptr<AnchorBase> > needs_;
@@ -290,17 +296,7 @@ public:
    void addInstance(
       const T &value,
       bool highestPrecedence = false
-   )
-   {
-      try {
-         addGeneralInstance(context::thirdParty, value);
-      }
-      catch (const std::exception &e) {
-         throw;
-      }
-      if (highestPrecedence)
-         setHighestPrecedence(context::thirdParty);
-   }
+   );
 
    /// \brief Counts the current number of instances for the option
    ///
@@ -310,14 +306,7 @@ public:
    /// \brief Sets a new default value.
    ///
    /// \param ref Value to assign as default
-   void setNewDefaultValue(const T &ref)
-   {
-      //--- Context dFault always has one instance
-      //--- So the find is always successful.
-      auto iter = specifications_.find(context::dFault);
-      (iter->second).setNewValue(ref);
-      hasNewDefault_ = true;
-   }
+   void setNewDefaultValue(const T &ref);
 
    /// \brief Sets highest priority (precedence) for a context
    ///
@@ -326,15 +315,7 @@ public:
    /// \note If a different context had already the highest priority,
    /// this context priority will be reset to its original value.
    ///
-   void setHighestPrecedence(const context &origin)
-   {
-      // Reset the 'current' highest precedence
-      for (auto &entry : ordering_) {
-         if (entry.second == orderCtxt::MAX)
-            entry.second = emap_[entry.first];
-      }
-      ordering_[origin] = orderCtxt::MAX;
-   }
+   void setHighestPrecedence(const context &origin);
 
    /// \brief Returns the value for the current instance
    ///
@@ -428,12 +409,24 @@ protected:
       ///
       /// \param[in] ref Value of the anchor for this instance
       /// \param[in] parent Pointer for the parent anchor
-      explicit Instance(const U &ref, AnchorBase *parent)
-         : value_(ref), parent_(parent)
+      explicit Instance(const U &rval, AnchorBase *parent)
+         : value_(rval), parent_(parent)
       { }
 
       /// \brief Dummy Constructor
       Instance() : value_(), parent_(nullptr) { }
+
+      /// \brief Copy Constructor
+      Instance(const Instance<U> &ref) : value_(ref.value_), parent_(ref.parent_) { }
+
+	  /// \brief Destructor
+	  ~Instance() { }
+
+	  /// \brief Assignment operator
+	  Instance<U>& operator=(const Instance<U> &ref) {
+        value_ = ref.value_; parent_ = ref.parent_;
+		return *this;
+      }
 
       /// \brief Sets new value for the instance
       ///
@@ -446,22 +439,22 @@ protected:
       const U& getValue() const { return value_; }
 
    protected:
-      U value_ = {};
+      U value_;
       AnchorBase *parent_ = nullptr;
    };
    //---
 
    T& value_ = {};
-   std::map< context, Instance<T> > specifications_ = {};
+   std::unordered_map< context, Instance<T> > specifications_;
    bool hasNewDefault_ = false;
    bool isResolved_ = false;
    context resolved_ctxt_ = context::dFault;
-   Instance<T> resolved_instance_ = {};
+   Instance<T> resolved_instance_;
    bool resolved_to_default_ = false;
 
    //--- Pointer to 'Printer' object for displaying
    //--- message on the startup banner.
-   std::unique_ptr<Printer> azerty;
+   std::unique_ptr<Printer> azerty = nullptr;
 
 };
 
@@ -529,12 +522,13 @@ public:
 		  // @todo: Ask JL about this comment
           auto anchor = std::make_shared< Anchor<T> >(anchor_value, sname, desc);
           options_[sname] = anchor;
+		  auto aptr = anchor.get();
           //
           // Insert the flag into CLI app
           //
-          CLI::callback_t fun = [&anchor,&anchor_value](const CLI::results_t &res) {
+          CLI::callback_t fun = [aptr,&anchor_value](const CLI::results_t &res) {
              anchor_value = static_cast<T>(res.size());
-             anchor->addGeneralInstance(context::commandLine, anchor_value);
+             aptr->addGeneralInstance(context::commandLine, anchor_value);
              return true;
           };
           std::string cli_name = std::string("--") + sname;
@@ -595,12 +589,13 @@ public:
 		  // @todo: Ask JL about this comment
           auto anchor = std::make_shared< Anchor<T> >(anchor_value, sname, desc);
           options_[sname] = anchor;
+		  auto aptr = anchor.get();
           //
           // Insert the flag into CLI app
           //
-          CLI::callback_t fun = [&anchor,&anchor_value](const CLI::results_t &res) {
+          CLI::callback_t fun = [aptr,&anchor_value](const CLI::results_t &res) {
              anchor_value = true;
-             anchor->addGeneralInstance(context::commandLine, anchor_value);
+             aptr->addGeneralInstance(context::commandLine, anchor_value);
              return (res.size() == 1);
           };
           std::string cli_name = std::string("--") + sname;
@@ -613,7 +608,6 @@ public:
           std::stringstream out;
           out << anchor_value;
           opt->default_str(out.str());
-          //
           return anchor;
        } else {
           auto base = iter->second;

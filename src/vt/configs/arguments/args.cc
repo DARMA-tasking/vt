@@ -57,13 +57,13 @@ namespace vt { namespace arguments {
 
 
 //--- Initialization of static variables for vt::AnchorBase
-/* static */ std::map<const context, const AnchorBase::orderCtxt> AnchorBase::emap_ =
+/* static */ std::map< context, AnchorBase::orderCtxt> AnchorBase::emap_ =
          {{std::make_pair(context::dFault, AnchorBase::orderCtxt::dFault),
             std::make_pair(context::commandLine, AnchorBase::orderCtxt::commandLine),
             std::make_pair(context::thirdParty, AnchorBase::orderCtxt::thirdParty)
          }};
 
-/* static */ std::map<const context, const std::string> AnchorBase::smap_ =
+/* static */ std::map< context, std::string> AnchorBase::smap_ =
    {{std::make_pair(context::dFault, "Default Value"),
        std::make_pair(context::commandLine, "Command Line"),
        std::make_pair(context::thirdParty, "Third-Party Context")
@@ -802,9 +802,49 @@ Anchor<T>::Anchor(
     resolved_to_default_(false),
     azerty()
 {
-   auto myCase = Instance<T>(var, this);
+   Instance<T> myCase(var, static_cast<AnchorBase*>(this));
    specifications_.insert(std::make_pair(context::dFault, myCase));
    ordering_[context::dFault] = orderCtxt::dFault;
+}
+
+//-----
+
+template< typename T >
+void Anchor<T>::addInstance(
+   const T &value, bool highestPrecedence
+)
+{
+   try {
+      addGeneralInstance(context::thirdParty, value);
+   }
+   catch (const std::exception &e) {
+      throw;
+   }
+   if (highestPrecedence)
+      setHighestPrecedence(context::thirdParty);
+}
+
+//-----
+
+template< typename T >
+void Anchor<T>::setNewDefaultValue(const T &ref) {
+   //--- Context dFault always has one instance
+   //--- So the find is always successful.
+   auto iter = specifications_.find(context::dFault);
+   (iter->second).setNewValue(ref);
+   hasNewDefault_ = true;
+}
+
+//-----
+
+template< typename T >
+void Anchor<T>::setHighestPrecedence(const context &origin) {
+   // Reset the 'current' highest precedence
+   for (auto &entry : ordering_) {
+     if (entry.second == orderCtxt::MAX)
+       entry.second = emap_[entry.first];
+   }
+   ordering_[origin] = orderCtxt::MAX;
 }
 
 //-----
@@ -859,10 +899,9 @@ void Anchor<T>::addGeneralInstance(
       context ctxt,
       const T &value)
 {
-   //---
    // Does not allow to specify a 'dFault' instance
    if (ctxt == context::dFault) {
-      std::string code = std::string(__func__)
+      std::string code = std::string("Anchor<T>::addGeneralInstance")
                          + std::string("::")
                          + std::string(" Default for ") + smap_[ctxt]
                          + std::string(" Can Not Be Added ");
@@ -870,13 +909,13 @@ void Anchor<T>::addGeneralInstance(
    }
    //---
    if (specifications_.count(ctxt) > 0) {
-      std::string code = std::string(__func__)
-                         + std::string(" Context ") + smap_[ctxt]
-                         + std::string(" Already Inserted ");
-      throw std::runtime_error(code);
+     std::string code = std::string("Anchor<T>::addGeneralInstance")
+                        + std::string(" Context ") + smap_[ctxt]
+                        + std::string(" Already Inserted ");
+     throw std::runtime_error(code);
+     return;
    }
-   //----
-   auto myCase = Instance<T>(value, this);
+   Instance<T> myCase(value, static_cast<AnchorBase*>(this));
    specifications_.insert(std::make_pair(ctxt, myCase));
    if ((ordering_.count(ctxt) == 0) || (ordering_[ctxt] != orderCtxt::MAX))
       ordering_[ctxt] = emap_[ctxt];
@@ -890,7 +929,7 @@ void Anchor<T>::checkExcludes() const {
       // Check whether the 'excluded' options have specifications
       // in addition to their default ones.
       if ((opt_ex->count() > 1) && (this->count() > 1)) {
-         std::string code = std::string(__func__)
+         std::string code = std::string("checkExcludes")
                             + std::string("::") + name_
                             + std::string(" excludes ")
                             + opt_ex->getName();
@@ -997,7 +1036,7 @@ std::shared_ptr<Anchor<T> > ArgSetup::getOption(const std::string &name) const
    }
    auto iter = options_.find(sname);
    if (iter == options_.end()) {
-     std::string code = std::string(__func__)
+     std::string code = std::string("ArgSetup::getOption")
 		 + std::string("::") + std::string(" Name ")
 		 + sname + std::string(" Does Not Exist ");
      throw std::runtime_error(code);
@@ -1029,12 +1068,13 @@ std::shared_ptr<Anchor<T>> ArgSetup::addOption(
 	  // @todo: Ask JL
       auto anchor = std::make_shared<Anchor<T> >(anchor_value, sname, desc);
       options_[sname] = anchor;
+	  auto aptr = anchor.get();
       //
       // Insert the option into CLI app
       //
-      CLI::callback_t fun = [&anchor,&anchor_value](CLI::results_t res) {
+      CLI::callback_t fun = [aptr,&anchor_value](CLI::results_t res) {
          bool myFlag = CLI::detail::lexical_cast(res[0], anchor_value);
-         anchor->addGeneralInstance(context::commandLine, anchor_value);
+         aptr->addGeneralInstance(context::commandLine, anchor_value);
          return myFlag;
       };
       std::string cli_name = std::string("--") + sname;
@@ -1167,7 +1207,7 @@ std::shared_ptr<Anchor<T>> ArgSetup::setNewDefaultValue(
 ) {
    auto optPtr = this->getOption<T>(name);
    if (optPtr == nullptr) {
-      std::string code = std::string(__func__)
+      std::string code = std::string("ArgSetup::setNewDefaultValue")
       + std::string(" Name ") + name
       + std::string(" Can Not Be Found ");
       throw std::runtime_error(code);
@@ -1198,9 +1238,11 @@ int ArgSetup::parse(int& argc, char**& argv)
   try {
     app_.parse(args);
   } catch (CLI::Error &ex) {
-    return app_.exit(ex);
+     return app_.exit(ex);
+  } catch (const std::exception &e) {
+	 std::string code = std::string(" Fault: ") + std::string(e.what());
+     throw std::runtime_error(code);
   }
-
   /*
    * Put the arguments back into argc, argv, but properly order them based on
    * the input order by comparing between the current args
