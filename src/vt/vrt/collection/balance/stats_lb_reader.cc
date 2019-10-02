@@ -68,7 +68,7 @@ std::vector<std::unordered_map<ElementIDType,TimeType>>
   StatsLBReader::user_specified_map_changed_ = {};
 
 /*static*/
-std::vector<bool>
+StatsLBReader::VectorDiffPhase
 StatsLBReader::phase_changed_map_ = {};
 
 /*static*/ FILE* StatsLBReader::stats_file_ = nullptr;
@@ -167,7 +167,8 @@ StatsLBReader::phase_changed_map_ = {};
 
 /*static*/ void StatsLBReader::loadPhaseChangedMap() {
   auto const num_iters = StatsLBReader::user_specified_map_changed_.size() - 1;
-  StatsLBReader::phase_changed_map_.resize(num_iters);
+  vt_print(lb, "StatsLBReader::loadPhaseChangedMap size : {}\n", num_iters);
+  StatsLBReader::phase_changed_map_.vec_.resize(num_iters);
 
   for (size_t i = 0; i < num_iters; i++) {
     auto elms = StatsLBReader::user_specified_map_changed_.at(i);
@@ -175,7 +176,7 @@ StatsLBReader::phase_changed_map_ = {};
 
     // elmsNext is different from elms if at least one of its element is different
     if (elmsNext.size() != elms.size()) {
-      StatsLBReader::phase_changed_map_[i] = true;
+      StatsLBReader::phase_changed_map_.vec_[i] = true;
     }
 
     auto elmsIte = elms.begin();
@@ -194,22 +195,20 @@ StatsLBReader::phase_changed_map_ = {};
      elmsNextIte++;
     }
 
-   StatsLBReader::phase_changed_map_[i] = currentPhaseChanged;
+   StatsLBReader::phase_changed_map_.vec_[i] = currentPhaseChanged;
   }
 }
 
-void StatsLBReader::doneReduce(collective::ReduceVecMsg<bool> *msg) {
-    vt_print(lb, "StatsLBReader::doneReduce\n");
+void StatsLBReader::doneReduce(VecPhaseMsg *msg) {
+    vt_print(lb, "StatsLBReader::doneReduce with msg of size {}\n", msg->getConstVal().vec_.size());
 }
 
 void StatsLBReader::doReduce() {
-    vt_print(lb, "StatsLBReader::doReduce\n");
+    vt_print(lb, "StatsLBReader::doReduce {} \n", StatsLBReader::phase_changed_map_.vec_.size());
 
-    using ReduceMsgType = collective::ReduceVecMsg<bool>;
-
-    auto cb = theCB()->makeBcast<StatsLBReader,ReduceMsgType, &StatsLBReader::doneReduce>(this->getProxy());
-    auto msg = makeMessage<ReduceMsgType>(this->getProxy().get()->phase_changed_map_);
-    this->getProxy().reduce<collective::OrOp<std::vector<bool>>>(msg.get(),cb);
+    auto cb = theCB()->makeBcast<StatsLBReader,VecPhaseMsg, &StatsLBReader::doneReduce>(this->getProxy());
+    auto msg = makeMessage<VecPhaseMsg>(StatsLBReader::phase_changed_map_);
+    this->getProxy().reduce<collective::OrOp<VectorDiffPhase>>(msg.get(),cb);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
