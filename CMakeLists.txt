@@ -12,6 +12,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-mo
 # Try to find ccache to speed up compilation
 find_program(ccache_binary ccache)
 if (ccache_binary)
+  message(
+    STATUS
+    "VT: Found ccache binary: ${ccache_binary}; adding launch rule"
+  )
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${ccache_binary}")
 endif()
 
