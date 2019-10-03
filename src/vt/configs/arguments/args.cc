@@ -470,7 +470,7 @@ namespace vt { namespace arguments {
   char** new_argv = new char*[new_argc + 1];
   new_argv[0] = argv[0];
   for (auto ii = 1; ii < new_argc; ii++) {
-    new_argv[ii] = argv[ret_idx[ii]];
+    new_argv[ii] = argv[ret_idx[ii - 1]];
   }
 
   // Set them back with all vt arguments elided
