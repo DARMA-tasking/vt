@@ -44,6 +44,7 @@ set(
    CatEnum::hierlb       | \
    CatEnum::scatter      | \
    CatEnum::serial_msg   | \
+   CatEnum::sequence     | \
    CatEnum::trace        | \
    CatEnum::objgroup     | \
    CatEnum::location     | \
