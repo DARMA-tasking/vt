@@ -93,10 +93,12 @@ struct SeqMatcher {
   static SeqActionType getMatchingAction(TagType const& tag);
 
   static bool hasMatchingMsg(TagType const& tag);
-  static MessageT* getMatchingMsg(TagType const& tag);
+  static MsgSharedPtr<MessageT> getMatchingMsg(TagType const& tag);
 
   // Buffer messages and actions that do not match
-  static void bufferUnmatchedMessage(MessageT* msg, TagType const& tag);
+  static void bufferUnmatchedMessage(
+    MsgSharedPtr<MessageT> msg, TagType const& tag
+  );
   template <typename FnT>
   static void bufferUnmatchedAction(
     FnT action, SeqType const& seq_id, TagType const& tag
