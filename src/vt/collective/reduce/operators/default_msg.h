@@ -129,7 +129,7 @@ struct ReduceVecMsg : ReduceDataMsg<std::vector<T>> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | ReduceDataMsg<DataType>::val_;
+    ReduceDataMsg<std::vector<T>>::invokeSerialize(s);
   }
 };
 
