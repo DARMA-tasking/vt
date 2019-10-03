@@ -194,7 +194,7 @@ private:
 
   SeqIDContainerType<SeqListType> seq_lookup_;
 
-  util::container::ConcurrentDeque<ActionType> work_deque_;
+  //util::container::ConcurrentDeque<ActionType> work_deque_;
 };
 
 template <typename Fn>
