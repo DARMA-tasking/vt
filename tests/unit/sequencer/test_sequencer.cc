@@ -162,11 +162,13 @@ TEST_F(TestSequencer, test_single_wait) {
     fmt::print("test_seq_handler: node={}\n", my_node);
   #endif
 
+  if (my_node == 1) {
+    theMsg()->sendMsg<TestMsg, testSeqHan>(0, makeSharedMessage<TestMsg>());
+  }
+
   if (my_node == 0) {
     SeqType const& seq_id = theSeq()->nextSeq();
     theSeq()->sequenced(seq_id, testSingleWaitFn);
-
-    theMsg()->sendMsg<TestMsg, testSeqHan>(my_node, makeSharedMessage<TestMsg>());
 
     theTerm()->addAction([=]{
       testSingleWaitFn(-1);
@@ -181,13 +183,13 @@ TEST_F(TestSequencer, test_single_wait_tagged) {
     SeqType const& seq_id = theSeq()->nextSeq();
     theSeq()->sequenced(seq_id, testSingleTaggedWaitFn);
 
-    theMsg()->sendMsg<TestMsg, testSeqTaggedHan>(
-      my_node, makeSharedMessage<TestMsg>(), single_tag
-    );
-
     theTerm()->addAction([=]{
       testSingleTaggedWaitFn(-1);
     });
+  } else if (my_node == 1) {
+    theMsg()->sendMsg<TestMsg, testSeqTaggedHan>(
+      0, makeSharedMessage<TestMsg>(), single_tag
+    );
   }
 }
 
@@ -198,16 +200,16 @@ TEST_F(TestSequencer, test_multi_wait) {
     SeqType const& seq_id = theSeq()->nextSeq();
     theSeq()->sequenced(seq_id, testMultiWaitFn);
 
-    theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
-      my_node, makeSharedMessage<TestMsg>()
-    );
-    theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
-      my_node, makeSharedMessage<TestMsg>()
-    );
-
     theTerm()->addAction([=]{
       testMultiWaitFn(-1);
     });
+  } else if (my_node == 1) {
+    theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
+      0, makeSharedMessage<TestMsg>()
+    );
+    theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
+      0, makeSharedMessage<TestMsg>()
+    );
   }
 }
 
@@ -218,16 +220,16 @@ TEST_F(TestSequencer, test_multi_wait_tagged) {
     SeqType const& seq_id = theSeq()->nextSeq();
     theSeq()->sequenced(seq_id, testMultiTaggedWaitFn);
 
-    theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
-      my_node, makeSharedMessage<TestMsg>(), single_tag
-    );
-    theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
-      my_node, makeSharedMessage<TestMsg>(), single_tag_2
-    );
-
     theTerm()->addAction([=]{
       testMultiTaggedWaitFn(-1);
     });
+  } else if (my_node == 1) {
+    theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
+      0, makeSharedMessage<TestMsg>(), single_tag
+    );
+    theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
+      0, makeSharedMessage<TestMsg>(), single_tag_2
+    );
   }
 }
 
