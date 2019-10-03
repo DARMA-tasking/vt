@@ -67,8 +67,8 @@ struct SeqMsgState {
   using ActionContainerType = ContainerType<ActionType>;
   using TaggedActionContainerType = TagContainerType<ActionContainerType>;
 
-  using MsgContainerType = ContainerType<MessageT*>;
-  using TaggedMsgContainerType = TagContainerType<std::list<MessageT*>>;
+  using MsgContainerType = ContainerType<MsgSharedPtr<MessageT>>;
+  using TaggedMsgContainerType = TagContainerType<std::list<MsgSharedPtr<MessageT>>>;
 
   // waiting actions on matching message arrival
   static ActionContainerType seq_action;
