@@ -75,6 +75,12 @@ struct SysMsg : ReduceTMsg<int> {
   {}
 };
 
+struct ReduceVecBoolType : ReduceVecMsg<bool> {
+  explicit ReduceVecBoolType(std::vector<bool> vec)
+    : ReduceVecMsg<bool>(vec)
+  {}
+};
+
 
 struct TestReduce : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
@@ -130,6 +136,13 @@ struct Verify {
       default: vtAbort("Failure: should not be reached"); break;
     }
   }
+  void operator()(ReduceVecMsg<bool>* msg) {
+    auto value = msg->getConstVal();
+
+    EXPECT_EQ(value.size(), 2);
+    EXPECT_EQ(value[0], false);
+    EXPECT_EQ(value[1], true);
+  }
 };
 
 TEST_F(TestReduce, test_reduce_op) {
@@ -174,6 +187,22 @@ TEST_F(TestReduce, test_reduce_min_default_op) {
   theCollective()->reduce<
     SysMsg,
     SysMsg::msgHandler<SysMsg, MinOp<int>, Verify<ReduceOP::Min> >
+  >(root, msg);
+}
+
+TEST_F(TestReduce, test_reduce_vec_msg) {
+
+  std::vector<bool> vecOfBool;
+  vecOfBool.push_back(false);
+  vecOfBool.push_back(true);
+
+  auto const root = 0;
+
+  auto msg = makeSharedMessage<ReduceVecMsg<bool>>(vecOfBool);
+
+  theCollective()->reduce<
+    ReduceVecMsg<bool>,
+    ReduceVecMsg<bool>::msgHandler<ReduceVecMsg<bool>, PlusOp<std::vector<bool>>, Verify<ReduceOP::Plus> >
   >(root, msg);
 }
 
