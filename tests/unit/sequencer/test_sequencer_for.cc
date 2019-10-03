@@ -97,16 +97,21 @@ TEST_F(TestSequencerFor, test_for) {
     fmt::print("test_seq_handler: node={}\n", my_node);
   #endif
 
-  if (my_node == 0) {
-    SeqType const& seq_id = theSeq()->nextSeq();
-    theSeq()->sequenced(seq_id, testSeqForFn);
+  SeqType const& seq_id = theSeq()->nextSeq();
 
-    for (int i = 0; i < end_range; i++) {
+  if (my_node == 0) {
+    theSeq()->sequenced(seq_id, testSeqForFn);
+  }
+
+  for (int i = 0; i < end_range; i++) {
+    if (my_node == 1) {
       theMsg()->sendMsg<TestMsg, testSeqForHan>(
-        my_node, makeSharedMessage<TestMsg>()
+        0, makeSharedMessage<TestMsg>()
       );
     }
+  }
 
+  if (my_node == 0) {
     theTerm()->addAction([=]{
       testSeqForFn(-1);
     });
