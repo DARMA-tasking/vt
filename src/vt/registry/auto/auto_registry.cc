@@ -118,6 +118,7 @@ trace::TraceEntryIDType theTraceID(
   }
   default:
     assert(0 && "Should not be reachable");
+    return trace::TraceEntryIDType{};
     break;
   }
 }
