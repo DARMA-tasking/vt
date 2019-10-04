@@ -294,7 +294,7 @@ namespace vt { namespace arguments {
   {
 	wx->setBannerMsg_On("LB stats directory \"{}\"", 
 			[&]() { return (config.vt_lb_stats); });
-    wy->setBannerMsg_On("LB stats file name \"{}.0.out\""
+    wy->setBannerMsg_On("LB stats file name \"{}.0.out\"",
 			[&]() { return (config.vt_lb_stats); });
   }
 #endif
