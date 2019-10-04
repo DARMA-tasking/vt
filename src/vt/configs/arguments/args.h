@@ -208,10 +208,22 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
    /// \return Name of the option
    std::string getName() const { return name_; }
 
-// Function to add if 'needed'
-//      void needs(std::shared_ptr<AnchorBase> const &opt) {
-//         needs_.insert(opt);
-//      }
+   /// \brief Sets dependence on a specific flag being turned off
+   ///
+   /// \param[in] opt  Pointer to the flag to depend on
+   void needsOptionOff(std::shared_ptr<AnchorBase> const &opt) {
+      needsOptOff_.insert(opt);
+   }
+
+   /// \brief Sets dependence on a specific flag being turned on
+   ///
+   /// \param[in] opt  Pointer to the flag to depend on
+   void needsOptionOn(std::shared_ptr<AnchorBase> const &opt) {
+      needsOptOn_.insert(opt);
+   }
+
+   /// \brief Resets to the default value
+   virtual void resetToDefault() = 0;
 
    /// \brief Set the group name for the option
    ///
@@ -232,7 +244,8 @@ protected:
       group_("Default"),
       description_(std::move(desc)),
       ordering_(),
-      needs_(),
+      needsOptOff_(),
+      needsOptOn_(),
       excludes_()
    { }
 
@@ -258,8 +271,11 @@ protected:
    /// \brief Map ordering the different instances of an 'anchor'
    std::map< context, orderCtxt > ordering_;
 
-   /// \brief List of options that are required with this option
-   std::set< std::shared_ptr<AnchorBase> > needs_;
+   /// \brief List of options that are needed to be OFF for this option
+   std::set< std::shared_ptr<AnchorBase> > needsOptOff_;
+
+   /// \brief List of options that are needed to be ON for this option
+   std::set< std::shared_ptr<AnchorBase> > needsOptOn_;
 
    /// \brief List of options that are excluded with this option
    std::set< std::shared_ptr<AnchorBase> > excludes_;
@@ -332,12 +348,15 @@ public:
    std::string valueToString() const override;
 
    /// \brief Virtual function returning context for resolved value
-   /// \returns Context
+   /// \returns String for resolved context
    std::string resolved_Context() const override;
 
    /// \brief Virtual function returning default value
-   /// \returns Default value
+   /// \returns String for default value
    std::string anchorDefault() const override;
+
+   /// \brief Resets to the default value
+   void resetToDefault() override;
 
    //
    //--- Printing routines
@@ -460,6 +479,22 @@ protected:
 
 
 /// \brief Structure to store all the different configuration parameters
+///
+/// \note This class provides the interface between VT configuration parameters
+/// and an external code (like a third-party code linking with VT).
+///
+/// \note When an external code wants to specify a VT configuration parameter
+/// (for example, after reading its own input file), the developer should write
+///
+///   auto ptr = Args::setup.getOption(NAME);
+///   if (ptr)
+///     ptr->addInstance(VALUE);
+///
+///  When the external code wants to specify a new default value, we write
+///
+///   auto ptr = Args::setup.getOption(NAME);
+///   if (ptr)
+///     ptr->setNewDefaultValue(VALUE);
 ///
 struct ArgSetup {
 
@@ -691,6 +726,8 @@ public:
       bool write_description, std::string prefix
    ) const;
 
+protected:
+
    /// \brief Gather the list of all group names
    ///
    /// \returns List of group names
@@ -702,8 +739,6 @@ public:
    /// \returns List of options in the group
    std::map< std::string, std::shared_ptr<AnchorBase> >
         getGroupOptions(const std::string &gname) const;
-
-private:
 
    /// \brief Parse the command line arguments
    ///
@@ -733,7 +768,7 @@ private:
    ///
    std::string verifyName(const std::string &name) const;
 
-private:
+protected:
 
   CLI::App app_;
   std::map<std::string, std::shared_ptr<AnchorBase> > options_ = {};

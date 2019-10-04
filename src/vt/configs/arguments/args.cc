@@ -97,9 +97,14 @@ namespace vt { namespace arguments {
   b->excludes(a);
   b->excludes(c);
 
+  // TODO Ask JL whether vt_color should be a flag at all
+  //a-> ?
+  //
+
   b->setBannerMsg_OnOff("Disabling color output", "Color output enabled by default");
   c->setBannerMsg_On("Automatic TTY detection for color output",
 		  [&]() { return (config.vt_no_color == false); });
+  a1->setBannerMsg_On(quiet);
 
   /*
    * Flags for controlling the signals that VT tries to catch
@@ -139,7 +144,7 @@ namespace vt { namespace arguments {
   auto k = setup_.addOption("vt_stack_file",    config.vt_stack_file,      file);
   auto l = setup_.addOption("vt_stack_dir",     config.vt_stack_dir,       dir);
   auto m = setup_.addOption("vt_stack_mod",     config.vt_stack_mod,       mod);
-  auto stackGroup = "Dump Stack Backtrace";
+  auto stackGroup = "Stack Dump Backtrace";
   g->setGroup(stackGroup);
   h->setGroup(stackGroup);
   i->setGroup(stackGroup);
@@ -148,13 +153,34 @@ namespace vt { namespace arguments {
   l->setGroup(stackGroup);
   m->setGroup(stackGroup);
 
-  j->setBannerMsg_OnOff("Disabling all stack dumps", "Stack dumps enabled by default");
-  g->setBannerMsg_On("Disabling all stack dumps on vtWarn(..)");
-  h->setBannerMsg_On("Disabling all stack dumps on vtAssert(..)");
-  i->setBannerMsg_On("Disabling all stack dumps on vtAbort(..)");
-  k->setBannerMsg_On("Output stack dumps with file name {}");
-  l->setBannerMsg_On("Output stack dumps to {}");
-  m->setBannerMsg_On("Output stack dumps every {} files ");
+  //--- Indicates that true 'j' skips the options g, h, i
+  g->needsOptionOff(j);
+  h->needsOptionOff(j);
+  i->needsOptionOff(j);
+
+  g->setBannerMsg_OnOff("Disabling all stack dumps on vtWarn(..)", 
+		  "Stack dumps on vtWarn(..) enabled by default",
+		  [&]() { return (config.vt_no_stack == false); });
+  h->setBannerMsg_OnOff("Disabling all stack dumps on vtAssert(..)",
+		  "Stack dumps on vtAssert(..) enabled by default",
+		  [&]() { return (config.vt_no_stack == false); });
+  i->setBannerMsg_OnOff("Disabling all stack dumps on vtAbort(..)",
+		  "Stack dumps on vtAbort(..) enabled by default",
+		  [&]() { return (config.vt_no_stack == false); });
+  j->setBannerMsg_OnOff("Disabling all stack dumps", 
+		  "Stack dumps enabled by default");
+
+  //--- Indicates that options k, l, m are used when j is 'false'
+  k->needsOptionOff(j);
+  l->needsOptionOff(j);
+  m->needsOptionOff(j);
+
+  k->setBannerMsg_On("Output stack dumps with file name {}",
+		  [&]() { return (config.vt_no_stack == false); });
+  l->setBannerMsg_On("Output stack dumps to {}",
+		  [&]() { return (config.vt_no_stack == false); });
+  m->setBannerMsg_On("Output stack dumps every {} files ",
+		  [&]() { return (config.vt_no_stack == false); });
   
   /*
    * Flags to control tracing output
@@ -173,6 +199,10 @@ namespace vt { namespace arguments {
   p->setGroup(traceGroup);
   q->setGroup(traceGroup);
 
+  o->needsOptionOn(n);
+  p->needsOptionOn(n);
+  q->needsOptionOn(n);
+
 #if !backend_check_enabled(trace_enabled)
   n->setBannerMsg_Warning("trace_enabled");
 #else
@@ -181,13 +211,13 @@ namespace vt { namespace arguments {
     std::string msg_off = "";
     if (theTrace)
       msg_off = fmt::format("Trace file \"{}\"", theTrace->getTraceName());
-    o->setBannerMsg_OnOff("Trace file name \"{}\"", msg_off,
+    o->setBannerMsg_OnOff("Trace File Name \"{}\"", msg_off,
 		  [&]() { return (config.vt_trace == true); });
 	//---
 	msg_off = "";
     if (theTrace)
       msg_off = fmt::format("Trace directory \"{}\"", theTrace->getDirectory());
-    p->setBannerMsg_OnOff("Directory \"{}\"", msg_off,
+    p->setBannerMsg_OnOff("Trace Directory \"{}\"", msg_off,
 		  [&]() { return (config.vt_trace == true); });
 	//---
 	q->setBannerMsg_On("Output every {} files ", 
@@ -224,9 +254,23 @@ namespace vt { namespace arguments {
   u->setGroup(lbGroup);
   v->setGroup(lbGroup);
   w->setGroup(lbGroup);
+
+  t1->needsOptionOn(s);
+
+  t->needsOptionOn(s);
+  u->needsOptionOn(s);
+
+  v->needsOptionOn(s);
+  v->needsOptionOff(t);
+  w->needsOptionOn(s);
+  w->needsOptionOff(t);
+
   ww->setGroup(lbGroup);
   wx->setGroup(lbGroup);
   wy->setGroup(lbGroup);
+
+  wx->needsOptionOn(w);
+  wy->needsOptionOn(w);
 
 #if !backend_check_enabled(lblite)
   s->setBannerMsg_Warning("lblite");
@@ -234,8 +278,10 @@ namespace vt { namespace arguments {
 #else
   s->setBannerMsg_On("Load balancing enabled");
   {
+	t1->setBannerMsg_On(lb_quiet,
+            [&]() { return (config.vt_lb); } );
     t->setBannerMsg_On("Reading LB config from file",
-			[&]() { return ((config.vt_lb) && (config.vt_lb_file)); });
+			[&]() { return (config.vt_lb); });
 	u->setBannerMsg_On("Reading file \"{}\"", 
 			[&]() { return ((config.vt_lb) && (config.vt_lb_file)); });
 	v->setBannerMsg_On("Load balancer name: \"{}\"",
@@ -245,9 +291,9 @@ namespace vt { namespace arguments {
   }
   ww->setBannerMsg_On("Load balancing statistics collection");
   {
-    wy->setBannerMsg_On("LB stats file name \"{}.0.out\""
-			[&]() { return (config.vt_lb_stats); });
 	wx->setBannerMsg_On("LB stats directory \"{}\"", 
+			[&]() { return (config.vt_lb_stats); });
+    wy->setBannerMsg_On("LB stats file name \"{}.0.out\""
 			[&]() { return (config.vt_lb_stats); });
   }
 #endif
@@ -274,10 +320,12 @@ namespace vt { namespace arguments {
   x1->setBannerMsg_On(ds);
   x2->setBannerMsg_On(wave);
 
+  y->needsOptionOff(x);
+
   auto hang_dfault = "Termination hang detection enabled by default";
   x->setBannerMsg_OnOff(hang, hang_dfault);
   y->setBannerMsg_On("Detecting hang every {} tree traversals ", 
-		  [&]() { return (!config.vt_no_detect_hang); });
+		  [&]() { return (config.vt_no_detect_hang == false); });
 
   /*
    * Flag for pausing
@@ -611,9 +659,6 @@ Print_On<T>::Print_On(
 template< typename T>
 void Print_On<T>::output() {
 
-  if (!option_->isResolved())
-    return;
-
   T setValue = option_->getValue();
   if (setValue == t_zero<T>())
     return;
@@ -685,9 +730,6 @@ Print_OnOff<T>::Print_OnOff(
 template< typename T>
 void Print_OnOff<T>::output() {
 
-  if (!option_->isResolved())
-    return;
-
   auto green    = debug::green();
   auto red      = debug::red();
   auto reset    = debug::reset();
@@ -752,9 +794,6 @@ Warning::Warning(
 
 void Warning::output() {
 
-  if (!option_->isResolved())
-    return;
-
   if (!option_->getValue())
     return;
 
@@ -805,6 +844,7 @@ Anchor<T>::Anchor(
    Instance<T> myCase(var, static_cast<AnchorBase*>(this));
    specifications_.insert(std::make_pair(context::dFault, myCase));
    ordering_[context::dFault] = orderCtxt::dFault;
+//   ordering_[context::dFault] = orderCtxt::MIN;
 }
 
 //-----
@@ -864,6 +904,47 @@ std::string Anchor<T>::valueToString() const {
 
 template< typename T>
 void Anchor<T>::print() {
+  if (!isResolved()) {
+	std::string code = std::string(" Option ") + name_
+		+ std::string(" should be resolved before printing.");
+	throw std::runtime_error(code);
+  }
+  //---
+  auto green    = debug::green();
+  auto red      = debug::red();
+  auto reset    = debug::reset();
+  auto bd_green = debug::bd_green();
+  auto magenta  = debug::magenta();
+  auto vt_pre   = debug::vtPre();
+  //---
+  // Check whether the value should be skipped/overriden
+  for (auto opt : needsOptOn_) {
+    if ((count() > 1) && (opt->count() == 1)) {
+	   auto cli_name1 = std::string("--") + name_;
+	   auto cli_name2 = std::string("--") + opt->getName();
+       auto f9 = fmt::format(
+         "{}Option:{} {}{}{} skipped; it requires {}{}{} to be active\n",
+         green, reset, magenta, cli_name1, reset, magenta, cli_name2, reset
+       );
+       fmt::print("{}\t{}{}", vt_pre, f9, reset);
+	   resetToDefault();
+	}
+  }
+  //---
+  // Check whether the value should be skipped/overriden
+  for (auto opt : needsOptOff_) {
+    if ((count() > 1) && (opt->count() > 1)) {
+	   auto cli_name1 = std::string("--") + name_;
+	   auto cli_name2 = std::string("--") + opt->getName();
+       auto f9 = fmt::format(
+         "{}Option:{} {}{}{} skipped; it requires {}{}{} to be deactivated\n",
+         green, reset, magenta, cli_name1, reset, magenta, cli_name2, reset
+       );
+       fmt::print("{}\t{}{}", vt_pre, f9, reset);
+	   resetToDefault();
+	}
+  }
+  //---
   if (azerty.get())
     azerty->output();
 }
@@ -890,6 +971,18 @@ std::string Anchor<T>::anchorDefault() const {
       }
    }
    return val;
+}
+
+//-----
+
+template< typename T>
+void Anchor<T>::resetToDefault() {
+   for (auto item : specifications_) {
+      if (item.first == context::dFault) {
+         value_ = item.second.getValue();
+         break;
+      }
+   }
 }
 
 //-----
@@ -1224,8 +1317,9 @@ int ArgSetup::parse(int& argc, char**& argv)
   if (parsed)
     return 0;
 
+  // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
-  for (auto i = 0; i < argc; i++) {
+  for (auto i = argc-1; i > 0; i--) {
     args.push_back(std::string(argv[i]));
   }
 
