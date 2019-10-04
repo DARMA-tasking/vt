@@ -44,6 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/trace/trace.h"
 
 #include <string>
 #include <tuple>
@@ -209,14 +210,14 @@ namespace vt { namespace arguments {
   n->setBannerMsg_On("Tracing enabled");
   {
     std::string msg_off = "";
-    if (theTrace)
-      msg_off = fmt::format("Trace file \"{}\"", theTrace->getTraceName());
+    if (theTrace())
+      msg_off = fmt::format("Trace file \"{}\"", theTrace()->getTraceName());
     o->setBannerMsg_OnOff("Trace File Name \"{}\"", msg_off,
 		  [&]() { return (config.vt_trace == true); });
 	//---
 	msg_off = "";
-    if (theTrace)
-      msg_off = fmt::format("Trace directory \"{}\"", theTrace->getDirectory());
+    if (theTrace())
+      msg_off = fmt::format("Trace directory \"{}\"", theTrace()->getDirectory());
     p->setBannerMsg_OnOff("Trace Directory \"{}\"", msg_off,
 		  [&]() { return (config.vt_trace == true); });
 	//---
