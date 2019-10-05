@@ -690,7 +690,7 @@ public:
 
     /// \brief Print the list of options and instances
     ///
-    void printBanner() const;
+    void printBanner();
 
    /// \brief Set new default value for a specified name
    ///
@@ -756,6 +756,10 @@ protected:
          opt.second->resolve();
       }
    }
+
+   /// \brief Setup printing banner messages
+   ///
+   void setup_Printing();
 
    /// \brief Function to verify that a string is acceptable
    ///

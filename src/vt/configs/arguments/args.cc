@@ -102,11 +102,6 @@ namespace vt { namespace arguments {
   //a-> ?
   //
 
-  b->setBannerMsg_OnOff("Disabling color output", "Color output enabled by default");
-  c->setBannerMsg_On("Automatic TTY detection for color output",
-		  [&]() { return (config.vt_no_color == false); });
-  a1->setBannerMsg_On(quiet);
-
   /*
    * Flags for controlling the signals that VT tries to catch
    */
@@ -120,13 +115,6 @@ namespace vt { namespace arguments {
   d->setGroup(signalGroup);
   e->setGroup(signalGroup);
   f->setGroup(signalGroup);
-
-  d->setBannerMsg_OnOff("Disabling SIGINT signal handling", 
-		  "SIGINT signal handling enabled by default");
-  e->setBannerMsg_OnOff("Disabling SIGSEGV signal handling",
-		  "SIGSEGV signal handling enabled by default");
-  f->setBannerMsg_OnOff("Disabling std::terminate signal handling",
-		  "std::terminate signal handling enabled by default");
 
   /*
    * Flags to control stack dumping
@@ -159,30 +147,11 @@ namespace vt { namespace arguments {
   h->needsOptionOff(j);
   i->needsOptionOff(j);
 
-  g->setBannerMsg_OnOff("Disabling all stack dumps on vtWarn(..)", 
-		  "Stack dumps on vtWarn(..) enabled by default",
-		  [&]() { return (config.vt_no_stack == false); });
-  h->setBannerMsg_OnOff("Disabling all stack dumps on vtAssert(..)",
-		  "Stack dumps on vtAssert(..) enabled by default",
-		  [&]() { return (config.vt_no_stack == false); });
-  i->setBannerMsg_OnOff("Disabling all stack dumps on vtAbort(..)",
-		  "Stack dumps on vtAbort(..) enabled by default",
-		  [&]() { return (config.vt_no_stack == false); });
-  j->setBannerMsg_OnOff("Disabling all stack dumps", 
-		  "Stack dumps enabled by default");
-
   //--- Indicates that options k, l, m are used when j is 'false'
   k->needsOptionOff(j);
   l->needsOptionOff(j);
   m->needsOptionOff(j);
 
-  k->setBannerMsg_On("Output stack dumps with file name {}",
-		  [&]() { return (config.vt_no_stack == false); });
-  l->setBannerMsg_On("Output stack dumps to {}",
-		  [&]() { return (config.vt_no_stack == false); });
-  m->setBannerMsg_On("Output stack dumps every {} files ",
-		  [&]() { return (config.vt_no_stack == false); });
-  
   /*
    * Flags to control tracing output
    */
@@ -203,28 +172,6 @@ namespace vt { namespace arguments {
   o->needsOptionOn(n);
   p->needsOptionOn(n);
   q->needsOptionOn(n);
-
-#if !backend_check_enabled(trace_enabled)
-  n->setBannerMsg_Warning("trace_enabled");
-#else
-  n->setBannerMsg_On("Tracing enabled");
-  {
-    std::string msg_off = "";
-    if (theTrace())
-      msg_off = fmt::format("Trace file \"{}\"", theTrace()->getTraceName());
-    o->setBannerMsg_OnOff("Trace File Name \"{}\"", msg_off,
-		  [&]() { return (config.vt_trace == true); });
-	//---
-	msg_off = "";
-    if (theTrace())
-      msg_off = fmt::format("Trace directory \"{}\"", theTrace()->getDirectory());
-    p->setBannerMsg_OnOff("Trace Directory \"{}\"", msg_off,
-		  [&]() { return (config.vt_trace == true); });
-	//---
-	q->setBannerMsg_On("Output every {} files ", 
-			[&]() { return (config.vt_trace == true); });
-  }
-#endif
 
   /*
    * Flags for enabling load balancing and configuring it
@@ -273,32 +220,6 @@ namespace vt { namespace arguments {
   wx->needsOptionOn(w);
   wy->needsOptionOn(w);
 
-#if !backend_check_enabled(lblite)
-  s->setBannerMsg_Warning("lblite");
-  ww->setBannerMsg_Warning("lblite");
-#else
-  s->setBannerMsg_On("Load balancing enabled");
-  {
-	t1->setBannerMsg_On(lb_quiet,
-            [&]() { return (config.vt_lb); } );
-    t->setBannerMsg_On("Reading LB config from file",
-			[&]() { return (config.vt_lb); });
-	u->setBannerMsg_On("Reading file \"{}\"", 
-			[&]() { return ((config.vt_lb) && (config.vt_lb_file)); });
-	v->setBannerMsg_On("Load balancer name: \"{}\"",
-            [&]() { return ((config.vt_lb) && (!config.vt_lb_file)); });
-	w->setBannerMsg_On("Load balancing interval ={}",
-            [&]() { return ((config.vt_lb) && (!config.vt_lb_file)); });
-  }
-  ww->setBannerMsg_On("Load balancing statistics collection");
-  {
-	wx->setBannerMsg_On("LB stats directory \"{}\"", 
-			[&]() { return (config.vt_lb_stats); });
-    wy->setBannerMsg_On("LB stats file name \"{}.0.out\"",
-			[&]() { return (config.vt_lb_stats); });
-  }
-#endif
-
   /*
    * Flags for controlling termination
    */
@@ -317,16 +238,7 @@ namespace vt { namespace arguments {
   x2->setGroup(termGroup);
   y->setGroup(termGroup);
 
-  //--- Set information for printing the startup banner
-  x1->setBannerMsg_On(ds);
-  x2->setBannerMsg_On(wave);
-
   y->needsOptionOff(x);
-
-  auto hang_dfault = "Termination hang detection enabled by default";
-  x->setBannerMsg_OnOff(hang, hang_dfault);
-  y->setBannerMsg_On("Detecting hang every {} tree traversals ", 
-		  [&]() { return (config.vt_no_detect_hang == false); });
 
   /*
    * Flag for pausing
@@ -336,8 +248,6 @@ namespace vt { namespace arguments {
   auto z = setup_.addFlag("vt_pause", config.vt_pause, pause);
   auto launchTerm = "Debugging/Launch";
   z->setGroup(launchTerm);
-  auto pause_msg = "Enabled debug pause at startup";
-  z->setBannerMsg_On(pause_msg);
 
   /*
    * User option flags for convenience; VT will parse these and the app can use
@@ -1232,8 +1142,10 @@ void ArgSetup::parseResolve(int &argc, char** &argv) {
 
 //-----
 
-void ArgSetup::printBanner() const
+void ArgSetup::printBanner()
 {
+  setup_Printing();
+  //---
   auto groupList = getGroupList();
   for (auto gname : groupList) {
     auto goptions = getGroupOptions(gname);
@@ -1241,6 +1153,153 @@ void ArgSetup::printBanner() const
       opt.second->print();
     }
   }
+}
+
+//-----
+
+void ArgSetup::setup_Printing()
+{
+
+  auto a1 = getOption<bool>("vt_quiet");
+
+  auto b = getOption<bool>("vt_no_color");
+  auto c = getOption<bool>("vt_auto_color");
+
+  b->setBannerMsg_OnOff("Disabling color output", "Color output enabled by default");
+  c->setBannerMsg_On("Automatic TTY detection for color output",
+        [&]() { return (Args::config.vt_no_color == false); });
+
+  auto quiet  = "Quiet the output from vt (only errors, warnings)";
+  a1->setBannerMsg_On(quiet);
+
+  //----
+
+  auto d = getOption<bool>("vt_no_SIGINT");
+  auto e = getOption<bool>("vt_no_SIGSEGV");
+  auto f = getOption<bool>("vt_no_terminate");
+
+  d->setBannerMsg_OnOff("Disabling SIGINT signal handling", 
+          "SIGINT signal handling enabled by default");
+  e->setBannerMsg_OnOff("Disabling SIGSEGV signal handling",
+          "SIGSEGV signal handling enabled by default");
+  f->setBannerMsg_OnOff("Disabling std::terminate signal handling",
+          "std::terminate signal handling enabled by default");
+
+  //---
+
+  auto g = getOption<bool>("vt_no_warn_stack");
+  auto h = getOption<bool>("vt_no_assert_stack");
+  auto i = getOption<bool>("vt_no_abort_stack");
+  auto j = getOption<bool>("vt_no_stack");
+
+  g->setBannerMsg_OnOff("Disabling all stack dumps on vtWarn(..)", 
+        "Stack dumps on vtWarn(..) enabled by default",
+        [&]() { return (Args::config.vt_no_stack == false); });
+  h->setBannerMsg_OnOff("Disabling all stack dumps on vtAssert(..)",
+        "Stack dumps on vtAssert(..) enabled by default",
+        [&]() { return (Args::config.vt_no_stack == false); });
+  i->setBannerMsg_OnOff("Disabling all stack dumps on vtAbort(..)",
+        "Stack dumps on vtAbort(..) enabled by default",
+        [&]() { return (Args::config.vt_no_stack == false); });
+  j->setBannerMsg_OnOff("Disabling all stack dumps", 
+        "Stack dumps enabled by default");
+
+  auto k = getOption<std::string>("vt_stack_file");
+  auto l = getOption<std::string>("vt_stack_dir");
+  auto m = getOption<int>("vt_stack_mod");
+
+  k->setBannerMsg_On("Output stack dumps with file name {}",
+        [&]() { return (Args::config.vt_no_stack == false); });
+  l->setBannerMsg_On("Output stack dumps to {}",
+	    [&]() { return (Args::config.vt_no_stack == false); });
+  m->setBannerMsg_On("Output stack dumps every {} files ",
+        [&]() { return (Args::config.vt_no_stack == false); });
+
+  //---
+
+  auto n = getOption<bool>("vt_trace");
+  auto o = getOption<std::string>("vt_trace_file");
+  auto p = getOption<std::string>("vt_trace_dir");
+  auto q = getOption<int>("vt_trace_mod");
+
+#if !backend_check_enabled(trace_enabled)
+  n->setBannerMsg_Warning("trace_enabled");
+#else
+  n->setBannerMsg_On("Tracing enabled");
+  {
+    std::string msg_off = "";
+    if (theTrace()) 
+       msg_off = fmt::format("Trace Name \"{}\"", theTrace()->getTraceName());
+    o->setBannerMsg_OnOff("Trace File Name \"{}\"", msg_off,
+       [&]() { return (Args::config.vt_trace == true); });
+    msg_off = "";
+    if (theTrace())
+       msg_off = fmt::format("Trace Directory \"{}\"", theTrace()->getDirectory());
+    p->setBannerMsg_OnOff("Trace Directory \"{}\"", msg_off,
+       [&]() { return (Args::config.vt_trace == true); });
+	q->setBannerMsg_On("Output every {} files ", 
+       [&]() { return (Args::config.vt_trace == true); });
+  }
+#endif
+
+  auto s  = getOption<bool>("vt_lb");
+  auto t  = getOption<bool>("vt_lb_file");
+  auto t1 = getOption<bool>("vt_lb_quiet");
+  auto u  = getOption<std::string>("vt_lb_file_name");
+  auto v  = getOption<std::string>("vt_lb_name");
+  auto w  = getOption<int>("vt_lb_interval");
+  auto ww = getOption<bool>("vt_lb_stats");
+  auto wx = getOption<std::string>("vt_lb_stats_dir");
+  auto wy = getOption<std::string>("vt_lb_stats_file");
+
+#if !backend_check_enabled(lblite)
+  s->setBannerMsg_Warning("lblite");
+  ww->setBannerMsg_Warning("lblite");
+#else
+  s->setBannerMsg_On("Load balancing enabled");
+  {
+	auto lb_quiet      = "Silence load balancing output";
+	t1->setBannerMsg_On(lb_quiet,
+            [&]() { return (Args::config.vt_lb); } );
+    t->setBannerMsg_On("Reading LB config from file",
+			[&]() { return (Args::config.vt_lb); });
+	u->setBannerMsg_On("Reading file \"{}\"", 
+			[&]() { return ((Args::config.vt_lb) && (Args::config.vt_lb_file)); });
+	v->setBannerMsg_On("Load balancer name: \"{}\"",
+            [&]() { return ((Args::config.vt_lb) && (!Args::config.vt_lb_file)); });
+	w->setBannerMsg_On("Load balancing interval ={}",
+            [&]() { return ((Args::config.vt_lb) && (!Args::config.vt_lb_file)); });
+  }
+  ww->setBannerMsg_On("Load balancing statistics collection");
+  {
+	wx->setBannerMsg_On("LB stats directory \"{}\"", 
+			[&]() { return (Args::config.vt_lb_stats); });
+    wy->setBannerMsg_On("LB stats file name \"{}.0.out\"",
+			[&]() { return (Args::config.vt_lb_stats); });
+  }
+#endif
+
+  auto x = getOption<bool>("vt_no_detect_hang");
+  auto x1 = getOption<bool>("vt_term_rooted_use_ds");
+  auto x2 = getOption<bool>("vt_term_rooted_use_wave");
+  auto y = getOption<int>("vt_hang_freq");
+
+  //--- Set information for printing the startup banner
+  auto ds = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
+  auto wave = "Force use of 4-counter algorithm for rooted epoch termination detection";
+  x1->setBannerMsg_On(ds);
+  x2->setBannerMsg_On(wave);
+
+  auto hang = "Disable termination hang detection";
+  auto hang_dfault = "Termination hang detection enabled by default";
+  x->setBannerMsg_OnOff(hang, hang_dfault);
+  y->setBannerMsg_On("Detecting hang every {} tree traversals ", 
+	  [&]() { return (Args::config.vt_no_detect_hang == false); });
+
+  auto z = getOption<bool>("vt_pause");
+  auto pause_msg = "Enabled debug pause at startup";
+  z->setBannerMsg_On(pause_msg);
+
 }
 
 //-----
