@@ -65,6 +65,15 @@ struct PlusOp< std::vector<T> > {
   }
 };
 
+template <>
+struct PlusOp< std::vector<bool> > {
+  void operator()(std::vector<bool>& v1, std::vector<bool> const& v2) {
+    vtAssert(v1.size() == v2.size(), "Sizes of vectors in reduce must be equal");
+    for (size_t ii = 0; ii < v1.size(); ++ii)
+      v1[ii] = v1[ii] + v2[ii];
+  }
+};
+
 template <typename T, std::size_t N>
 struct PlusOp< std::array<T,N> > {
   void operator()(std::array<T,N>& v1, std::array<T,N> const& v2) {
