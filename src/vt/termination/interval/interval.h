@@ -74,10 +74,11 @@ public:
   bool    valid() const { return lb_ <= ub_; }
 
   DomainT get(std::size_t i) const {
+    auto const val = lb_ + static_cast<DomainT>(i);
     vtAssert(lb_ not_eq sentinel, "Lower bound must be valid");
     vtAssert(ub_ not_eq sentinel, "Upper bound must be valid");
-    vtAssert(lb_ + i <= ub_,      "Must be in interval range");
-    return lb_ + i;
+    vtAssert(val <= ub_,          "Must be in interval range");
+    return val;
   }
 
   void setUpper(DomainT const& val) {

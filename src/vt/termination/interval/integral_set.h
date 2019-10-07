@@ -392,7 +392,7 @@ public:
     { }
 
     Iter& operator++() {
-      if (impl_->lower() + cur_ < impl_->upper()) {
+      if (impl_->lower() + static_cast<DomainT>(cur_) < impl_->upper()) {
         cur_++;
       } else {
         cur_ = 0;
