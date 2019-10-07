@@ -130,4 +130,5 @@ script:
 #- travis_wait 50 ninja -GNinja
 - make -j2
 - make test
-- ctest --rerun-failed -V
+- EXIT_CODE=$?
+- test $EXIT_CODE -eq 0 || ctest --rerun-failed -V
