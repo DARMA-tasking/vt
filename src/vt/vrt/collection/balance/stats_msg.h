@@ -54,6 +54,8 @@
 #include "vt/timing/timing.h"
 
 #include <algorithm>
+#include <limits>
+#include <type_traits>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -110,22 +112,36 @@ struct LoadData {
   TimeType avg() const { return avg_; }
   TimeType var() const { return M2_ * (1.0f / N_); }
   TimeType skew() const {
-    double nm1 = N_ - 1;
-    double inv_n = 1. / N_;
-    double var_inv = nm1 / M2_;
-    double nvar_inv = var_inv * inv_n;
-    return nvar_inv * std::sqrt( var_inv ) * M3_;
+    static const double min_sqrt = std::sqrt(std::numeric_limits<double>::min());
+    if (N_ == 1 or M2_ < min_sqrt) { // 1.e-150
+      return 0.0;
+    } else {
+      double nm1 = N_ - 1;
+      double inv_n = 1. / N_;
+      double var_inv = nm1 / M2_;
+      double nvar_inv = var_inv * inv_n;
+      return nvar_inv * std::sqrt( var_inv ) * M3_;
+    }
   }
   TimeType krte() const {
-    double nm1 = N_ - 1;
-    double inv_n = 1. / N_;
-    double var_inv = nm1 / M2_;
-    double nvar_inv = var_inv * inv_n;
-    return nvar_inv * var_inv * M4_ - 3.;
+    if (N_ == 1 or M2_ < 1.e-150) {
+      return 0.0;
+    } else {
+      double nm1 = N_ - 1;
+      double inv_n = 1. / N_;
+      double var_inv = nm1 / M2_;
+      double nvar_inv = var_inv * inv_n;
+      return nvar_inv * var_inv * M4_ - 3.;
+    }
   }
   TimeType I() const { return (max() / avg()) - 1.0f; }
   TimeType stdv() const { return std::sqrt(var()); }
   int32_t  npr() const { return P_; }
+
+  static_assert(
+    std::is_same<TimeType, double>::value == true,
+    "TimeType must be a double"
+  );
 
   TimeType max_ = 0.0;
   TimeType sum_ = 0.0;
