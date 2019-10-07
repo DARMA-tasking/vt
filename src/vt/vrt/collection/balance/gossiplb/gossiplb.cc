@@ -45,10 +45,13 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
+#include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
 #include "vt/context/context.h"
 
 #include <cstdint>
 #include <random>
+#include <algorithm>
+#include <unordered_set>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -61,22 +64,117 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
 
 void GossipLB::runLB() {
   this->inform();
+
+  for (auto&& elm : load_info_) {
+    vt_print(lb, "inform info: node={}, load={}\n", elm.first, elm.second);
+  }
+
 }
 
 void GossipLB::inform() {
-  for (int i = 0; i < f; i++) {
-    propagateInfo();
+  debug_print(
+    lb, node,
+    "GossipLB::inform: starting inform phase: k_max={}, k_cur={}\n",
+    k_max, k_cur
+  );
+
+  vtAssert(k_max > 0, "Number of rounds (k) must be greater than zero");
+
+  bool epoch_terminated = false;
+
+  propagate_epoch_ = theTerm()->makeEpochCollective();
+  theTerm()->addAction([&epoch_terminated] { epoch_terminated = true; });
+
+  // Start the round
+  propagateRound();
+
+  theTerm()->finishedEpoch(propagate_epoch_);
+
+  while (not epoch_terminated) {
+    vt::runScheduler();
+  }
+
+  debug_print(
+    lb, node,
+    "GossipLB::inform: finished inform phase: k_max={}, k_cur={}\n",
+    k_max, k_cur
+  );
+
+  auto epoch = startMigrationCollective();
+  finishMigrationCollective();
+}
+
+void GossipLB::propagateRound() {
+  debug_print(
+    lb, node,
+    "GossipLB::propagateRound: k_max={}, k_cur={}\n",
+    k_max, k_cur
+  );
+
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  std::uniform_int_distribution<NodeType> dist(0, num_nodes - 1);
+  std::mt19937 gen(seed());
+  std::unordered_set<NodeType> selected = {};
+
+  // Insert this node to inhibit self-send
+  selected.insert(this_node);
+
+  auto const fanout = std::min(f, static_cast<decltype(f)>(num_nodes - 1));
+
+  for (int i = 0; i < fanout; i++) {
+    // First, randomly select a node
+    NodeType random_node = uninitialized_destination;
+
+    // Keep generating until we have a unique node for this round
+    do {
+      random_node = dist(gen);
+
+      debug_print(
+        lb, node,
+        "GossipLB::propagateRound: k_max={}, k_cur={}, try picking={}\n",
+        k_max, k_cur, random_node
+      );
+    } while (selected.find(random_node) != selected.end());
+
+    // Add to selected set
+    selected.insert(random_node);
+
+    debug_print(
+      lb, node,
+      "GossipLB::propagateRound: k_max={}, k_cur={}, sending={}\n",
+      k_max, k_cur, random_node
+    );
+
+    // Send message with load
+    auto msg = makeMessage<GossipMsg>(this_node, this->load_info_);
+    envelopeSetEpoch(msg, propagate_epoch_);
+    msg->addNodeLoad(this_node, this->this_load);
+    proxy[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
   }
 }
 
-void GossipLB::propagateInfo() {
-  // First, randomly select a node
+void GossipLB::propagateIncoming(GossipMsg* msg) {
+  auto const from_node = msg->getFromNode();
 
-  auto const num_nodes = theContext()->getNumNodes();
-  std::uniform_int_distribution<NodeType> dist(0, num_nodes - 2);
-  std::mt19937 gen(seed());
+  debug_print(
+    lb, node,
+    "GossipLB::propagateIncoming: k_max={}, k_cur={}, from_node={}\n",
+    k_max, k_cur, from_node
+  );
 
-  dist(gen);
+  for (auto&& elm : msg->getNodeLoad()) {
+    this->load_info_[elm.first] = elm.second;
+  }
+
+  if (this->k_cur == this->k_max - 1) {
+    // nothing to do but wait for termination to be detected
+  } else {
+    // send out another round
+    this->propagateRound();
+    this->k_cur++;
+  }
+
 }
 
 void GossipLB::decide() {

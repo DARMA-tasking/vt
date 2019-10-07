@@ -47,16 +47,16 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
 
 #include <random>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct GossipLB : BaseLB {
+  using GossipMsg = balance::GossipMsg;
 
-public: // ctors
   GossipLB() = default;
-
   GossipLB(GossipLB const&) = delete;
 
   virtual ~GossipLB() {}
@@ -71,14 +71,17 @@ protected:
   void decide();
   void migrate();
 
-  void propagateInfo();
+  void propagateRound();
+  void propagateIncoming(GossipMsg* msg);
 
 private:
-  uint8_t f               = 0;
-  // uint8_t k               = 0;
-  // uint8_t k_cur           = 0;
+  uint8_t f                                         = 2;
+  uint8_t k_max                                     = 1;
+  uint8_t k_cur                                     = 0;
   std::random_device seed;
-  objgroup::proxy::Proxy<GossipLB> proxy = {};
+  std::unordered_map<NodeType, LoadType> load_info_ = {};
+  EpochType propagate_epoch_                        = no_epoch;
+  objgroup::proxy::Proxy<GossipLB> proxy            = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
