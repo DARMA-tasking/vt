@@ -653,7 +653,7 @@ protected:
    ///
    /// \note On exit, argc and argv will be modified in presence of redundancy.
    ///
-   int parse(int& argc, char**& argv);
+   void parse(int& argc, char**& argv);
 
    /// \brief Resolve the different options by applying all precedence rules
    ///

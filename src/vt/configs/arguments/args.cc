@@ -143,12 +143,12 @@ namespace vt { namespace arguments {
   l->setGroup(stackGroup);
   m->setGroup(stackGroup);
 
-  //--- Indicates that true 'j' skips the options g, h, i
+  //--- Indicates that true value for 'j' skips the options g, h, i
   g->needsOptionOff(j);
   h->needsOptionOff(j);
   i->needsOptionOff(j);
 
-  //--- Indicates that options k, l, m are used when j is 'false'
+  //--- Indicates that true value for 'j' skips the options k, l, m
   k->needsOptionOff(j);
   l->needsOptionOff(j);
   m->needsOptionOff(j);
@@ -177,7 +177,6 @@ namespace vt { namespace arguments {
   /*
    * Flags for enabling load balancing and configuring it
    */
-
   auto lb            = "Enable load balancing";
   auto lb_file       = "Enable reading LB configuration from file";
   auto lb_quiet      = "Silence load balancing output";
@@ -224,7 +223,6 @@ namespace vt { namespace arguments {
   /*
    * Flags for controlling termination
    */
-
   auto hang         = "Disable termination hang detection";
   auto hang_freq    = "The number of tree traversals before a hang is detected";
   auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
@@ -244,7 +242,6 @@ namespace vt { namespace arguments {
   /*
    * Flag for pausing
    */
-
   auto pause        = "Pause at startup so GDB/LLDB can be attached";
   auto z = setup_.addFlag("vt_pause", config.vt_pause, pause);
   auto launchTerm = "Debugging/Launch";
@@ -254,7 +251,6 @@ namespace vt { namespace arguments {
    * User option flags for convenience; VT will parse these and the app can use
    * them however the apps requires
    */
-
   auto user1    = "User Option 1a (boolean)";
   auto user2    = "User Option 2a (boolean)";
   auto user3    = "User Option 3a (boolean)";
@@ -284,13 +280,10 @@ namespace vt { namespace arguments {
   us2->setGroup(userOpts);
   us3->setGroup(userOpts);
 
-  //---
-
   initialize_debug();
 
 }
 
-//---
 
 /*static*/ void Args::initialize_debug()
 {
@@ -298,7 +291,6 @@ namespace vt { namespace arguments {
   /*
    * Flags for controlling debug print output at runtime
    */
-
   std::unordered_map<config::CatEnum, std::tuple<bool*, std::string, std::string> > debug_flag;
 
   debug_flag[config::none] = std::make_tuple<bool*, std::string, std::string>(
@@ -484,25 +476,23 @@ namespace vt { namespace arguments {
 /* ------------------------------------------------- */
 
 template< typename T>
-std::string display(const T &val) { std::string res; return res; }
+std::string getDisplayValue(const T &val) { std::string res; return res; }
 
 template<>
-std::string display<bool>(const bool &val) {
+std::string getDisplayValue<bool>(const bool &val) {
    return val ? std::string("ON") : std::string("OFF");
 }
 
 template<>
-std::string display<int>(const int &val) {
+std::string getDisplayValue<int>(const int &val) {
    return std::to_string(val);
 }
 
 template<>
-std::string display<std::string>(const std::string &val) {
+std::string getDisplayValue<std::string>(const std::string &val) {
    std::string res = std::string("\"") + val + std::string("\"");
    return res;
 }
-
-//---
 
 template< typename T>
 T t_zero() { return {}; }
@@ -527,8 +517,6 @@ class Printer {
 public:
   virtual void output() = 0;
 };
-
-//---
 
 template < typename T >
 class Print_On : public Printer {
@@ -676,8 +664,6 @@ void Print_OnOff<T>::output() {
 
 }
 
-//---
-
 class Warning : public Printer {
 public:
   Warning(Anchor<bool> *opt, const std::string &compile);
@@ -759,7 +745,6 @@ Anchor<T>::Anchor(
 //   ordering_[context::dFault] = orderCtxt::MIN;
 }
 
-//-----
 
 template< typename T >
 void Anchor<T>::addInstance(
@@ -776,7 +761,6 @@ void Anchor<T>::addInstance(
       setHighestPrecedence(context::thirdParty);
 }
 
-//-----
 
 template< typename T >
 void Anchor<T>::setNewDefaultValue(const T &ref) {
@@ -787,7 +771,6 @@ void Anchor<T>::setNewDefaultValue(const T &ref) {
    hasNewDefault_ = true;
 }
 
-//-----
 
 template< typename T >
 void Anchor<T>::setHighestPrecedence(const context &origin) {
@@ -799,7 +782,6 @@ void Anchor<T>::setHighestPrecedence(const context &origin) {
    ordering_[origin] = orderCtxt::MAX;
 }
 
-//-----
 
 template< typename T >
 std::string Anchor<T>::valueToString() const {
@@ -807,12 +789,11 @@ std::string Anchor<T>::valueToString() const {
    if (!isResolved_)
       return val;
    //
-   val = display<T>(value_);
+   val = getDisplayValue<T>(value_);
    //
    return val;
 }
 
-//-----
 
 template< typename T>
 void Anchor<T>::print() {
@@ -861,7 +842,6 @@ void Anchor<T>::print() {
     azerty->output();
 }
 
-//-----
 
 template< typename T>
 std::string Anchor<T>::resolved_Context() const {
@@ -871,21 +851,19 @@ std::string Anchor<T>::resolved_Context() const {
    return smap_[resolved_ctxt_];
 }
 
-//-----
 
 template< typename T>
 std::string Anchor<T>::anchorDefault() const {
    std::string val;
    for (auto item : specifications_) {
       if (item.first == context::dFault) {
-         val = display<T>(item.second.getValue());
+         val = getDisplayValue<T>(item.second.getValue());
          break;
       }
    }
    return val;
 }
 
-//-----
 
 template< typename T>
 void Anchor<T>::resetToDefault() {
@@ -897,7 +875,6 @@ void Anchor<T>::resetToDefault() {
    }
 }
 
-//-----
 
 template< typename T>
 void Anchor<T>::addGeneralInstance(
@@ -926,7 +903,6 @@ void Anchor<T>::addGeneralInstance(
       ordering_[ctxt] = emap_[ctxt];
 }
 
-//-----
 
 template< typename T>
 void Anchor<T>::checkExcludes() const {
@@ -943,7 +919,6 @@ void Anchor<T>::checkExcludes() const {
    }
 }
 
-//-----
 
 template< typename T>
 void Anchor<T>::resolve() {
@@ -976,7 +951,6 @@ void Anchor<T>::resolve() {
    isResolved_ = true;
 }
 
-//---
 
 template< typename T>
 void Anchor<T>::setBannerMsg_On(
@@ -986,7 +960,6 @@ void Anchor<T>::setBannerMsg_On(
   azerty = std::make_unique<Print_On<T>>(this, msg_on, fun);
 }
 
-//---
 
 template< typename T>
 void Anchor<T>::setBannerMsg_OnOff(
@@ -998,7 +971,6 @@ void Anchor<T>::setBannerMsg_OnOff(
   azerty = std::make_unique<Print_OnOff<T>>(this, msg_on, msg_off, fun);
 }
 
-//---
 
 template< typename T>
 void Anchor<T>::setBannerMsg_Warning(
@@ -1017,7 +989,6 @@ ArgSetup::ArgSetup(std::string description) :
    app_(std::make_unique<CLI::App>(description)), options_(), parsed(false)
 { }
 
-//---
 
 std::string ArgSetup::verifyName(const std::string &name) const
 {
@@ -1033,7 +1004,6 @@ std::string ArgSetup::verifyName(const std::string &name) const
   return tmpName;
 }
 
-//------
 
 template<typename T>
 std::shared_ptr<Anchor<T> > ArgSetup::getOption(const std::string &name) const
@@ -1057,7 +1027,6 @@ std::shared_ptr<Anchor<T> > ArgSetup::getOption(const std::string &name) const
    return anchor;
 }
 
-//------
 
 template< typename T, typename _unused >
 std::shared_ptr< Anchor<T>> ArgSetup::addFlag(
@@ -1095,7 +1064,6 @@ std::shared_ptr< Anchor<T>> ArgSetup::addFlag(
 
 }
 
-//------
 
 template <typename T>
 std::shared_ptr<Anchor<T>> ArgSetup::addOption(
@@ -1142,7 +1110,6 @@ std::shared_ptr<Anchor<T>> ArgSetup::addOption(
    }
 }
 
-//-----
 
 template<>
 void ArgSetup::addFlagToCLI<bool>(
@@ -1168,7 +1135,6 @@ void ArgSetup::addFlagToCLI<bool>(
    opt->default_str(out.str());
 }
 
-//-----
 
 template<>
 void ArgSetup::addFlagToCLI<int>(
@@ -1193,7 +1159,6 @@ void ArgSetup::addFlagToCLI<int>(
    opt->default_str(out.str());
 }
 
-//-----
 
 std::vector<std::string> ArgSetup::getGroupList() const {
    std::vector<std::string> groups;
@@ -1208,7 +1173,6 @@ std::vector<std::string> ArgSetup::getGroupList() const {
    return groups;
 }
 
-//-----
 
 std::map< std::string, std::shared_ptr<AnchorBase> > ArgSetup::getGroupOptions(
    const std::string &gname
@@ -1224,7 +1188,6 @@ std::map< std::string, std::shared_ptr<AnchorBase> > ArgSetup::getGroupOptions(
    return options;
 }
 
-//-----
 
 void ArgSetup::parseResolve(int &argc, char** &argv) {
   try {
@@ -1236,7 +1199,6 @@ void ArgSetup::parseResolve(int &argc, char** &argv) {
   }
 }
 
-//-----
 
 void ArgSetup::printBanner()
 {
@@ -1251,7 +1213,6 @@ void ArgSetup::printBanner()
   }
 }
 
-//-----
 
 void ArgSetup::setup_Printing()
 {
@@ -1268,8 +1229,6 @@ void ArgSetup::setup_Printing()
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   a1->setBannerMsg_On(quiet);
 
-  //----
-
   auto d = getOption<bool>("vt_no_SIGINT");
   auto e = getOption<bool>("vt_no_SIGSEGV");
   auto f = getOption<bool>("vt_no_terminate");
@@ -1280,8 +1239,6 @@ void ArgSetup::setup_Printing()
           "SIGSEGV signal handling enabled by default");
   f->setBannerMsg_OnOff("Disabling std::terminate signal handling",
           "std::terminate signal handling enabled by default");
-
-  //---
 
   auto g = getOption<bool>("vt_no_warn_stack");
   auto h = getOption<bool>("vt_no_assert_stack");
@@ -1310,8 +1267,6 @@ void ArgSetup::setup_Printing()
 	    [&]() { return (Args::config.vt_no_stack == false); });
   m->setBannerMsg_On("Output stack dumps every {} files ",
         [&]() { return (Args::config.vt_no_stack == false); });
-
-  //---
 
   auto n = getOption<bool>("vt_trace");
   auto o = getOption<std::string>("vt_trace_file");
@@ -1398,8 +1353,6 @@ void ArgSetup::setup_Printing()
 
 }
 
-//-----
-
 std::string ArgSetup::to_config(
   bool default_also,
   bool write_description,
@@ -1447,7 +1400,6 @@ std::string ArgSetup::to_config(
   return out.str();
 }
 
-//-----
 
 template <typename T>
 std::shared_ptr<Anchor<T>> ArgSetup::setNewDefaultValue(
@@ -1467,7 +1419,7 @@ std::shared_ptr<Anchor<T>> ArgSetup::setNewDefaultValue(
 
 //-----
 
-int ArgSetup::parse(int& argc, char**& argv)
+void ArgSetup::parse(int& argc, char**& argv)
 {
 
   if (parsed)
@@ -1475,7 +1427,7 @@ int ArgSetup::parse(int& argc, char**& argv)
 
   // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
-  for (auto i = argc-1; i > 0; i--) {
+  for (int i = argc-1; i > 0; i--) {
     args.push_back(std::string(argv[i]));
   }
 
@@ -1506,7 +1458,7 @@ int ArgSetup::parse(int& argc, char**& argv)
 
   // Iterate forward (CLI11 reverses the order when it modifies the args)
   for (auto&& skipped : args) {
-    for (auto ii = item; ii < argc; ii++) {
+    for (int ii = item; ii < argc; ii++) {
       if (std::string(argv[ii]) == skipped) {
         ret_idx.push_back(ii);
         item++;
@@ -1520,7 +1472,7 @@ int ArgSetup::parse(int& argc, char**& argv)
   int new_argc = ret_args.size() + 1;
   char** new_argv = new char*[new_argc + 1];
   new_argv[0] = argv[0];
-  for (auto ii = 1; ii < new_argc; ii++) {
+  for (int ii = 1; ii < new_argc; ii++) {
     new_argv[ii] = argv[ret_idx[ii-1]];
   }
 
@@ -1529,8 +1481,6 @@ int ArgSetup::parse(int& argc, char**& argv)
   argv = new_argv;
 
   parsed = true;
-
-  return 0;
 
 }
 

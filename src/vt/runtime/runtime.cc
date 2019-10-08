@@ -92,7 +92,7 @@ Runtime::Runtime(
   bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
-     user_argv_(argv), parsed_arg(false)
+     user_argv_(argv), parsed_arg_(false)
 {
   ArgVT::initialize();
   parseAndSetup(argc, argv);
@@ -104,7 +104,7 @@ Runtime::Runtime(
   RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(no_workers), communicator_(nullptr), user_argc_(0),
-     user_argv_(nullptr), parsed_arg(false)
+     user_argv_(nullptr), parsed_arg_(false)
 {
   sig_user_1_ = false;
 }
@@ -118,7 +118,7 @@ void Runtime::parseAndSetup(
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
-  parsed_arg = true;
+  parsed_arg_ = true;
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
@@ -431,7 +431,7 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
 bool Runtime::initialize(bool const force_now) {
   //--- Test whether (command-line, input file) arguments
   //--- have been parsed.
-  if (!parsed_arg)
+  if (!parsed_arg_)
     return false;
   //
   if (force_now) {

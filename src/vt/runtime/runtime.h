@@ -184,7 +184,10 @@ protected:
   MPI_Comm* communicator_ = nullptr;
   int user_argc_ = 0;
   char** user_argv_ = nullptr;
-  bool parsed_arg = false;
+
+private:
+  // True if argument parsing (from CLI or input file) has been performed
+  bool parsed_arg_ = false;
 };
 
 }} /* end namespace vt::runtime */
