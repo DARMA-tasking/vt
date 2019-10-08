@@ -353,7 +353,7 @@ private:
   IteratorType joinRight(IteratorType it) {
     vtAssertExpr(it not_eq set_.end());
     auto next = std::next(it);
-    if (it not_eq set_.end()) {
+    if (next not_eq set_.end()) {
       if (it->tangent(*next) == PositionType::TangentRight) {
         auto tmp = *next;
         set_.erase(next);
@@ -392,7 +392,7 @@ public:
     { }
 
     Iter& operator++() {
-      if (impl_->lower() + cur_ < impl_->upper()) {
+      if (impl_->lower() + static_cast<DomainT>(cur_) < impl_->upper()) {
         cur_++;
       } else {
         cur_ = 0;
