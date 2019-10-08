@@ -81,12 +81,6 @@ private:
 
 }}} /* end namespace vt::vrt::collection */
 
-namespace vt {
-
-using CollectionProxy = vrt::collection::CollectionUntypedProxy;
-
-} /* end namespace vt */
-
 #include "vt/vrt/proxy/collection_proxy_untyped.impl.h"
 
 #endif /*INCLUDED_VRT_PROXY_COLLECTION_PROXY_UNTYPED_H*/
