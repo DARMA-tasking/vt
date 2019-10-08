@@ -57,7 +57,6 @@
 
 namespace vt { namespace arguments {
 
-
 //--- Initialization of static variables for vt::AnchorBase
 /* static */ std::map< context, AnchorBase::orderCtxt> AnchorBase::emap_ =
          {{std::make_pair(context::dFault, AnchorBase::orderCtxt::dFault),

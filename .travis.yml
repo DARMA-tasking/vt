@@ -7,23 +7,23 @@ cache:
 cache: ccache
 matrix:
   include:
-  - os: linux
-    addons:
-      apt:
-        sources:
-          - llvm-toolchain-3.9
-        packages:
-          - clang-3.9
-          - libomp-dev
-          - libc++-dev
-          - libc++abi-dev
-          - ninja-build
-          - libmpich-dev
-          - mpich
-    env:
-      - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
-      - CPP_LINKER_FLAGS="-stdlib=libc++ -lc++abi"
-      - CPP_CXX_FLAGS="-stdlib=libc++"
+# - os: linux
+#   addons:
+#     apt:
+#       sources:
+#         - llvm-toolchain-3.9
+#       packages:
+#         - clang-3.9
+#         - libomp-dev
+#         - libc++-dev
+#         - libc++abi-dev
+#         - ninja-build
+#         - libmpich-dev
+#         - mpich
+#   env:
+#     - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+#     - CPP_LINKER_FLAGS="-stdlib=libc++ -lc++abi"
+#     - CPP_CXX_FLAGS="-stdlib=libc++"
 #  - os: linux
 #    addons:
 #      apt:
@@ -36,6 +36,7 @@ matrix:
 #          - libc++abi-dev
 #          - ninja-build
 #          - libmpich-dev
+#          - mpich
 #    env:
 #      - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 #      - CPP_LINKER_FLAGS="-stdlib=libc++ -lc++abi"
@@ -130,4 +131,3 @@ script:
 #- travis_wait 50 ninja -GNinja
 - make -j2
 - make test
-- ctest --rerun-failed -V

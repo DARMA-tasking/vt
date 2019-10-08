@@ -52,6 +52,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <iostream>
+#include <fstream>
 
 namespace vt { namespace trace {
 
@@ -96,8 +98,9 @@ void Trace::setupNames(
 
   prog_name_ = in_prog_name;
   trace_name_ = in_trace_name;
-  dir_name_ = in_dir_name;
   start_time_ = getCurrentTime();
+
+  std::string dir_name = (in_dir_name.empty()) ? prog_name_ + "_trace" : in_dir_name;
 
   char cur_dir[1024];
   if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
@@ -105,12 +108,20 @@ void Trace::setupNames(
   }
 
   if (ArgVT::config.vt_trace_dir != "") {
-    full_dir_name = std::string(cur_dir) + "/" + ArgVT::config.vt_trace_dir + "/";
+    full_dir_name = ArgVT::config.vt_trace_dir;
+  }
+  else {
+    full_dir_name = std::string(cur_dir) + "/" + dir_name;
   }
 
+  if (full_dir_name[full_dir_name.size()-1] != '/')
+    full_dir_name = full_dir_name + "/";
+
   if (theContext()->getNode() == 0) {
-    mkdir(full_dir_name.c_str(), S_IRWXU);
-    //vtAssert(dir_ret != -1, "Must be able to make directory");
+    int flag = mkdir(full_dir_name.c_str(), S_IRWXU);
+	if ((flag < 0) && (errno != EEXIST)) {
+      vtAssert(flag >= 0, "Must be able to make directory");
+	}
   }
 
   auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
@@ -120,11 +131,11 @@ void Trace::setupNames(
 
   auto const node_str = "." + std::to_string(node) + ".log.gz";
   if (ArgVT::config.vt_trace_file != "") {
-    full_trace_name = full_dir_name + "/" + ArgVT::config.vt_trace_file + node_str;
-    full_sts_name   = full_dir_name + "/" + ArgVT::config.vt_trace_file + ".sts";
+    full_trace_name = full_dir_name + ArgVT::config.vt_trace_file + node_str;
+    full_sts_name   = full_dir_name + ArgVT::config.vt_trace_file + ".sts";
   } else {
-    full_trace_name = full_dir_name + "/" + trace_name;
-    full_sts_name   = full_dir_name + "/" + prog_name + ".sts";
+    full_trace_name = full_dir_name + trace_name;
+    full_sts_name   = full_dir_name + prog_name + ".sts";
   }
 }
 

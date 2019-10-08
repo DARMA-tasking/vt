@@ -402,7 +402,6 @@ void Runtime::printStartupBanner() {
   /* ---------------------------------------------------- */
   /* Print Banner Information about Simulation Parameters */
   /* ---------------------------------------------------- */
-
   arguments::Args::setup_.printBanner();
 
   //fmt::print("{}\n", reset);

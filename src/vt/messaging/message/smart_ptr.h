@@ -50,9 +50,7 @@
 #include "vt/messaging/message/refs.h"
 #include "vt/messaging/message/smart_ptr_virtual.h"
 
-#include <iostream>
-
-#include "fmt/ostream.h"
+#include <iosfwd>
 
 namespace vt { namespace messaging {
 

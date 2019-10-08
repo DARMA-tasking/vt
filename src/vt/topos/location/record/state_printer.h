@@ -51,7 +51,7 @@
 
 #include <cstdlib>
 #include <cstdint>
-#include <iostream>
+#include <iosfwd>
 
 namespace vt { namespace location {
 

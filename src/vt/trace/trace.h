@@ -64,8 +64,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
-#include <iostream>
-#include <fstream>
+#include <iosfwd>
 
 #include <mpi.h>
 #include <zlib.h>
@@ -180,7 +179,6 @@ private:
   TraceContainerType traces_;
   TraceStackType open_events_;
   TraceEventIDType cur_event_   = 1;
-  std::string dir_name_         = "";
   std::string prog_name_        = "";
   std::string trace_name_       = "";
   bool enabled_                 = true;

@@ -48,10 +48,8 @@
 #include "vt/config.h"
 
 #include "fmt/format.h"
-#include "fmt/ostream.h"
 
-#include <ostream>
-#include <type_traits>
+#include <iosfwd>
 
 namespace vt { namespace debug {
 

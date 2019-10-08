@@ -2261,6 +2261,10 @@ void CollectionManager::finishedInsertEpoch(
     untyped_proxy, epoch
   );
 
+  if (not findColHolder<ColT>(untyped_proxy)) {
+    return;
+  }
+
   /*
    *  Add trigger for the next insertion phase/epoch finishing
    */

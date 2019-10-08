@@ -49,7 +49,6 @@
 #include "vt/rdma/rdma_common.h"
 
 #include <sstream>
-#include <iostream>
 
 namespace vt { namespace rdma {
 
