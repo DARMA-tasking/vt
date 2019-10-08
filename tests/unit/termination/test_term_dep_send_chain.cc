@@ -277,7 +277,6 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
       migrating = false;
     }
     s | op6_counter_;
-    op6_msgs_ = {};
   }
 
 private:
@@ -462,6 +461,9 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
   local->startup();
   local->makeVT();
   local->makeColl(num_nodes,k);
+
+  // Must have barrier here so op4Impl does not bounce early (invalid proxy)!
+  vt::theCollective()->barrier();
 
   for (int t = 0; t < iter; t++) {
     if (this_node == 0 && t % 5 == 0) {
