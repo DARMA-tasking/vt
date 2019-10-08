@@ -36,6 +36,7 @@ matrix:
           - libc++abi-dev
           - ninja-build
           - libmpich-dev
+          - mpich
     env:
       - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
       - CPP_LINKER_FLAGS="-stdlib=libc++ -lc++abi"
