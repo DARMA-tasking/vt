@@ -1422,7 +1422,7 @@ void ArgSetup::parse(int& argc, char**& argv)
 {
 
   if (parsed)
-    return 0;
+    return;
 
   // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
