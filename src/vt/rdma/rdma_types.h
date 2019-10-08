@@ -47,9 +47,6 @@
 
 #include "vt/config.h"
 
-#include <sstream>
-#include <iostream>
-
 namespace vt { namespace rdma {
 
 using UnderlyingNodeType = NodeType;

@@ -52,6 +52,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <iostream>
+#include <fstream>
 
 namespace vt { namespace trace {
 

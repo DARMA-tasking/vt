@@ -64,8 +64,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
-#include <iostream>
-#include <fstream>
+#include <iosfwd>
 
 #include <mpi.h>
 #include <zlib.h>

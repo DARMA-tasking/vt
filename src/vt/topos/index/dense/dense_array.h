@@ -59,7 +59,7 @@
 #include <functional>
 #include <utility>
 #include <initializer_list>
-#include <ostream>
+#include <iosfwd>
 
 #if backend_check_enabled(detector)
   #include "vt/topos/index/traits/traits.h"

@@ -56,7 +56,7 @@
 #include <cassert>
 #include <cstring>
 #include <iterator>
-#include <iostream>
+#include <iosfwd>
 #include <regex>
 #include <cstdlib>
 #include <assert.h>

@@ -48,9 +48,6 @@
 #include "vt/config.h"
 #include "vt/rdma/rdma_common.h"
 
-#include <sstream>
-#include <iostream>
-
 namespace vt { namespace rdma {
 
 struct Action {
