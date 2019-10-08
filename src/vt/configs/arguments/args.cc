@@ -52,6 +52,7 @@
 #include <vector>
 
 #include "fmt/format.h"
+#include "CLI/CLI11.hpp"
 
 
 namespace vt { namespace arguments {
@@ -72,7 +73,7 @@ namespace vt { namespace arguments {
 
 
 //--- Initialization of static variables for vt::AnchorBase
-/*static*/ ArgSetup Args::setup_ = {"vt"};
+/*static*/ ArgSetup Args::setup_("vt");
 /*static*/ Configs Args::config = {};
 
 
@@ -1012,6 +1013,12 @@ void Anchor<T>::setBannerMsg_Warning(
 // --- Member functions for class ArgSetup
 /* ------------------------------------------------- */
 
+ArgSetup::ArgSetup(std::string description) :
+   app_(std::make_unique<CLI::App>(description)), options_(), parsed(false)
+{ }
+
+//---
+
 std::string ArgSetup::verifyName(const std::string &name) const
 {
   int ipos = 0;
@@ -1052,6 +1059,44 @@ std::shared_ptr<Anchor<T> > ArgSetup::getOption(const std::string &name) const
 
 //------
 
+template< typename T, typename _unused >
+std::shared_ptr< Anchor<T>> ArgSetup::addFlag(
+   const std::string &name,
+   T& anchor_value,
+   const std::string &desc
+)
+{
+
+   std::string sname;
+   try {
+      sname = verifyName(name);
+   }
+   catch (const std::exception &e) {
+      throw;
+   }
+   //
+   auto iter = options_.find(sname);
+   if (iter == options_.end()) {
+      // @todo: stop using default for warn_override and get this from runtime?
+	  // @todo: Ask JL about this comment
+	  auto anchor = std::make_shared< Anchor<T> >(anchor_value, sname, desc);
+      options_[sname] = anchor;
+      auto aptr = anchor.get();
+      // Insert the flag into CLI app
+	  addFlagToCLI<T>(aptr, sname, anchor_value, desc);
+	  //
+	  return anchor;
+   }
+   else {
+     auto base = iter->second;
+     auto anchor = std::static_pointer_cast<Anchor<T>>(base);
+     return anchor;
+   }
+
+}
+
+//------
+
 template <typename T>
 std::shared_ptr<Anchor<T>> ArgSetup::addOption(
     const std::string &name,
@@ -1082,7 +1127,7 @@ std::shared_ptr<Anchor<T>> ArgSetup::addOption(
          return myFlag;
       };
       std::string cli_name = std::string("--") + sname;
-      auto opt = app_.add_option(cli_name, fun, desc, true);
+      auto opt = app_->add_option(cli_name, fun, desc, true);
       opt->type_name(CLI::detail::type_name<T>());
       //
       std::stringstream out;
@@ -1095,6 +1140,57 @@ std::shared_ptr<Anchor<T>> ArgSetup::addOption(
       auto anchor = std::static_pointer_cast<Anchor<T>>(base);
       return anchor;
    }
+}
+
+//-----
+
+template<>
+void ArgSetup::addFlagToCLI<bool>(
+   Anchor<bool>* aptr,
+   const std::string &sname,
+   bool &anchor_value,
+   const std::string &desc
+)
+{
+   CLI::callback_t fun = [aptr,&anchor_value](const CLI::results_t &res) {
+      anchor_value = true;
+	  aptr->addGeneralInstance(context::commandLine, anchor_value);
+	  return (res.size() == 1);
+   };
+   std::string cli_name = std::string("--") + sname;
+   auto opt = app_->add_option(cli_name, fun, desc);
+   opt->type_size(0);
+   opt->multi_option_policy(CLI::MultiOptionPolicy::TakeLast);
+   opt->type_name(CLI::detail::type_name<bool>());
+   //
+   std::stringstream out;
+   out << anchor_value;
+   opt->default_str(out.str());
+}
+
+//-----
+
+template<>
+void ArgSetup::addFlagToCLI<int>(
+   Anchor<int>* aptr,
+   const std::string &sname,
+   int &anchor_value,
+   const std::string &desc
+)
+{
+   CLI::callback_t fun = [aptr,&anchor_value](const CLI::results_t &res) {
+      anchor_value = static_cast<int>(res.size());
+	  aptr->addGeneralInstance(context::commandLine, anchor_value);
+	  return true;
+   };
+   std::string cli_name = std::string("--") + sname;
+   auto opt = app_->add_option(cli_name, fun, desc);
+   opt->type_size(0);
+   opt->type_name(CLI::detail::type_name<int>());
+   //
+   std::stringstream out;
+   out << anchor_value;
+   opt->default_str(out.str());
 }
 
 //-----
@@ -1388,11 +1484,14 @@ int ArgSetup::parse(int& argc, char**& argv)
   /*
    * Run the parser!
    */
-  app_.allow_extras(true);
+  app_->allow_extras(true);
   try {
-    app_.parse(args);
+    app_->parse(args);
   } catch (CLI::Error &ex) {
-     return app_.exit(ex);
+    std::ostringstream sout, serr;
+    app_->exit(ex, sout, serr);
+    std::string code = sout.str() + serr.str();
+    throw std::runtime_error(code);
   } catch (const std::exception &e) {
 	 std::string code = std::string(" Fault: ") + std::string(e.what());
      throw std::runtime_error(code);
@@ -1422,7 +1521,7 @@ int ArgSetup::parse(int& argc, char**& argv)
   char** new_argv = new char*[new_argc + 1];
   new_argv[0] = argv[0];
   for (auto ii = 1; ii < new_argc; ii++) {
-    new_argv[ii] = argv[ret_idx[ii]];
+    new_argv[ii] = argv[ret_idx[ii-1]];
   }
 
   // Set them back with all vt arguments elided

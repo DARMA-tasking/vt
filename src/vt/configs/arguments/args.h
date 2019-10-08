@@ -47,11 +47,14 @@
 
 #include <map>
 #include <memory>
+#include <set>
+#include <string>
+#include <type_traits>
 #include <unordered_map>
 
-#include "vt/config.h"
-
-#include "CLI/CLI11.hpp"
+namespace CLI {
+class App;
+}
 
 namespace vt { namespace arguments {
 
@@ -502,9 +505,7 @@ public:
 
    /// \brief Constructor
    /// \param[in] Description of the application as a string
-   ArgSetup(std::string description = "") :
-     app_(description), options_(), parsed(false)
-   { }
+   ArgSetup(std::string description = "");
 
    /// \brief Returns pointer to the option object for specific name.
    ///
@@ -514,7 +515,7 @@ public:
    template<typename T>
    std::shared_ptr<Anchor<T> > getOption(const std::string &name) const;
 
-    /// \brief Add flag for integer parameter
+    /// \brief Add flag for boolean or integral flag
     ///
     /// \tparam T  Template type for the value of the parameter
     /// \param[in] name Label for the parameter of interest
@@ -531,125 +532,14 @@ public:
     /// \note Matches the argument interface as CLI::App
     ///
     template<typename T,
-       typename std::enable_if<
-          !CLI::is_bool<T>::value && std::is_integral<T>::value,
-          CLI::detail::enabler
-       >::type = CLI::detail::dummy
+       typename = typename std::enable_if<
+          std::is_same<T, bool>::value || std::is_same<T, int>::value, T
+	   >
     >
     std::shared_ptr< Anchor<T>> addFlag(const std::string &name,
                                         T& anchor_value,
                                         const std::string &desc = {}
-    )
-    {
-       std::string sname;
-       try {
-          sname = verifyName(name);
-       }
-       catch (const std::exception &e) {
-          throw;
-       }
-       //
-       // Implementation for an integral flag
-       //
-       auto iter = options_.find(sname);
-       if (iter == options_.end()) {
-          // @todo: stop using default for warn_override and get this from runtime?
-		  // @todo: Ask JL about this comment
-          auto anchor = std::make_shared< Anchor<T> >(anchor_value, sname, desc);
-          options_[sname] = anchor;
-		  auto aptr = anchor.get();
-          //
-          // Insert the flag into CLI app
-          //
-          CLI::callback_t fun = [aptr,&anchor_value](const CLI::results_t &res) {
-             anchor_value = static_cast<T>(res.size());
-             aptr->addGeneralInstance(context::commandLine, anchor_value);
-             return true;
-          };
-          std::string cli_name = std::string("--") + sname;
-          auto opt = app_.add_option(cli_name, fun, desc, true);
-          opt->type_size(0);
-          opt->type_name(CLI::detail::type_name<T>());
-          //
-          std::stringstream out;
-          out << anchor_value;
-          opt->default_str(out.str());
-          //
-          return anchor;
-       } else {
-          auto base = iter->second;
-          auto anchor = std::static_pointer_cast<Anchor<T>>(base);
-          return anchor;
-       }
-    }
-
-    /// \brief Add flag for boolean parameter
-    ///
-    /// \tparam T  Template type for the value of the parameter
-    /// \param[in] name Label for the parameter of interest
-    /// \param[in] anchor_value Variable to specify and whose initial value
-    ///                         defines the default value
-    /// \param[in] desc String describing the option
-    ///
-    /// \return Pointer to the anchor with the specified label
-    ///
-    /// \note Creates two instances one for the default value
-    /// (with the current value in 'anchor_value') and
-    /// one for the command line.
-    ///
-    /// \note Matches the argument interface as CLI::App
-    ///
-    template<typename T,
-       typename std::enable_if< CLI::is_bool<T>::value, CLI::detail::enabler
-       >::type = CLI::detail::dummy
-    >
-    std::shared_ptr<Anchor<T>> addFlag(const std::string &name,
-                                       T& anchor_value,
-                                       const std::string &desc = {}
-    )
-    {
-       std::string sname;
-       try {
-          sname = verifyName(name);
-       }
-       catch (const std::exception &e) {
-          throw;
-       }
-       //
-       // Implementation for a boolean flag
-       //
-       auto iter = options_.find(sname);
-       if (iter == options_.end()) {
-          // @todo: stop using default for warn_override and get this from runtime?
-		  // @todo: Ask JL about this comment
-          auto anchor = std::make_shared< Anchor<T> >(anchor_value, sname, desc);
-          options_[sname] = anchor;
-		  auto aptr = anchor.get();
-          //
-          // Insert the flag into CLI app
-          //
-          CLI::callback_t fun = [aptr,&anchor_value](const CLI::results_t &res) {
-             anchor_value = true;
-             aptr->addGeneralInstance(context::commandLine, anchor_value);
-             return (res.size() == 1);
-          };
-          std::string cli_name = std::string("--") + sname;
-          auto opt = app_.add_option(cli_name, fun, desc);
-          opt->type_size(0);
-          opt->multi_option_policy(CLI::MultiOptionPolicy::TakeLast);
-          //
-          opt->type_name(CLI::detail::type_name<T>());
-          //
-          std::stringstream out;
-          out << anchor_value;
-          opt->default_str(out.str());
-          return anchor;
-       } else {
-          auto base = iter->second;
-          auto anchor = std::static_pointer_cast<Anchor<T>>(base);
-          return anchor;
-       }
-    }
+    );
 
     /// \brief Add option for a specified name
     ///
@@ -728,6 +618,22 @@ public:
 
 protected:
 
+   /// \brief Add a flag to CLI setup
+   ///
+   /// \param[in] Pointer to the specific anchor
+   /// \param[in] sname String labelling the option
+   /// \param[in] anchor_value Variable to specify and whose initial value
+   ///                         defines the default value
+   /// \param[in] desc String describing the option
+   ///
+   template< typename T >
+   void addFlagToCLI(
+      Anchor<T>* aptr,
+	  const std::string &sname,
+      T& anchor_value,
+      const std::string &desc
+   ) { }
+
    /// \brief Gather the list of all group names
    ///
    /// \returns List of group names
@@ -774,7 +680,7 @@ protected:
 
 protected:
 
-  CLI::App app_;
+  std::unique_ptr<CLI::App> app_;
   std::map<std::string, std::shared_ptr<AnchorBase> > options_ = {};
 
 public:
