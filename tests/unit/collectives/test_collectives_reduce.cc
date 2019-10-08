@@ -132,7 +132,7 @@ struct Verify {
   void operator()(ReduceVecMsg<bool>* msg) {
     auto value = msg->getConstVal();
 
-    EXPECT_EQ(value.size(), 2);
+    EXPECT_EQ(value.size(), static_cast<std::size_t>(2));
     EXPECT_EQ(value[0], false);
     EXPECT_EQ(value[1], true);
   }
@@ -142,8 +142,8 @@ struct Verify {
 
     auto n = vt::theContext()->getNumNodes();
 
-    for(auto  i = 0; i < value.size(); ++i) {
-      EXPECT_EQ(value[i], i * n);
+    for (std::size_t i = 0; i < value.size(); ++i) {
+      EXPECT_EQ(value[i], static_cast<int>(i * n));
     }
   }
 };
