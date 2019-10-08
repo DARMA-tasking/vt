@@ -455,16 +455,17 @@ namespace vt { namespace arguments {
   r1->setGroup(debugGroup);
 
   for (const auto dcase : debug_flag) {
-    auto f3 = dcase.second;
-	auto ff = std::string("Enable ") + std::get<1>(f3) 
-		+ std::string(" = \"") + std::get<2>(f3) + std::string("\"");
-	auto &fbool = *(std::get<0>(f3));
-	auto fname = std::string("vt_") + std::get<1>(f3);
-	auto fr = setup_.addFlag(fname, fbool, ff);
-	fr->setGroup(debugGroup);
+    auto my_flag = dcase.second;
+	auto my_name = std::get<1>(my_flag);
+	auto my_desc = std::string("Enable ") + my_name
+		+ std::string(" = \"") + std::get<2>(my_flag) + std::string("\"");
+	auto &my_status = *(std::get<0>(my_flag));
+	auto my_vt_name = std::string("vt_") + my_name;
+	auto my_ptr = setup_.addFlag(my_vt_name, my_status, my_desc);
+	my_ptr->setGroup(debugGroup);
 	if (!((vt::config::DefaultConfig::category & dcase.first) != 0)) {
-      if (fbool)
-	    fr->setBannerMsg_Warning(std::get<1>(f3));
+      if (my_status)
+	    my_ptr->setBannerMsg_Warning(my_name);
 	}
   }
 
@@ -1201,8 +1202,8 @@ void ArgSetup::parseResolve(int &argc, char** &argv) {
 
 void ArgSetup::printBanner()
 {
-  setup_Printing();
-  //---
+  prepareOptionsPrinting();
+  //
   auto groupList = getGroupList();
   for (auto gname : groupList) {
     auto goptions = getGroupOptions(gname);
@@ -1213,7 +1214,7 @@ void ArgSetup::printBanner()
 }
 
 
-void ArgSetup::setup_Printing()
+void ArgSetup::prepareOptionsPrinting()
 {
 
   auto a1 = getOption<bool>("vt_quiet");
@@ -1352,7 +1353,7 @@ void ArgSetup::setup_Printing()
 
 }
 
-std::string ArgSetup::to_config(
+std::string ArgSetup::outputConfig(
   bool default_also,
   bool write_description,
   std::string prefix

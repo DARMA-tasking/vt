@@ -45,7 +45,6 @@
 #if !defined INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H
 #define INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H
 
-#include "vt/config.h"
 #include "vt/termination/term_common.h"
 #include "vt/sequence/sequencer_fwd.h"
 

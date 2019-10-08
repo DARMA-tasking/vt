@@ -45,18 +45,17 @@
 #if !defined INCLUDED_RUNTIME_H
 #define INCLUDED_RUNTIME_H
 
-#include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
-#include "vt/trace/trace.h"
 #include "vt/worker/worker_headers.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/trace/trace.h"
 
 #include <memory>
 #include <functional>
 #include <string>
 
 #include <mpi.h>
+
 
 namespace vt { namespace runtime {
 

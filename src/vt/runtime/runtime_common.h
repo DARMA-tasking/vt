@@ -45,8 +45,6 @@
 #if !defined INCLUDED_RUNTIME_RUNTIME_COMMON_H
 #define INCLUDED_RUNTIME_RUNTIME_COMMON_H
 
-#include "vt/config.h"
-
 namespace vt { namespace runtime {
 
 enum eRuntimeInstance {

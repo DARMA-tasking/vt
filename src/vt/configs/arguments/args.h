@@ -613,7 +613,7 @@ public:
    ///
    /// \note Creates a string in the ".INI" formatted
    /// (INI format: https://cliutils.gitlab.io/CLI11Tutorial/chapters/config.html )
-   std::string to_config(bool default_also,
+   std::string outputConfig(bool default_also,
       bool write_description, std::string prefix
    ) const;
 
@@ -666,7 +666,7 @@ protected:
 
    /// \brief Setup printing banner messages
    ///
-   void setup_Printing();
+   void prepareOptionsPrinting();
 
    /// \brief Function to verify that a string is acceptable
    ///
