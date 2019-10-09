@@ -44,6 +44,7 @@
 
 #include "vt/configs/arguments/args.h"
 #include "vt/config.h"
+#include "vt/configs/arguments/args_utils.h"
 #include "vt/trace/trace.h"
 
 #include <string>
@@ -418,82 +419,6 @@ namespace vt { namespace arguments {
   }
 }
 
-/* ------------------------------------------------- */
-//--- Utility functions
-/* ------------------------------------------------- */
-
-template <typename T>
-std::string getDisplayValue(const T& val) {
-  std::string res;
-  return res;
-}
-
-template <>
-std::string getDisplayValue<bool>(const bool& val) {
-  return val ? std::string("ON") : std::string("OFF");
-}
-
-template <>
-std::string getDisplayValue<int>(const int& val) {
-  return std::to_string(val);
-}
-
-template <>
-std::string getDisplayValue<std::string>(const std::string& val) {
-  std::string res = std::string("\"") + val + std::string("\"");
-  return res;
-}
-
-template <typename T>
-T t_zero() {
-  return {};
-}
-
-template <>
-bool t_zero<bool>() {
-  return false;
-}
-
-template <>
-int t_zero<int>() {
-  return 0;
-}
-
-template <>
-long long t_zero<long long>() {
-  return 0;
-}
-
-template <>
-std::string t_zero<std::string>() {
-  return std::string("");
-}
-
-/* ------------------------------------------------- */
-//--- Utility printing classes
-/* ------------------------------------------------- */
-
-class Printer {
-  public:
-  virtual void output() = 0;
-};
-
-template <typename T>
-class PrintOn : public Printer {
-  public:
-  PrintOn(Anchor<T>* opt, const std::string& msg_str);
-
-  PrintOn(
-    Anchor<T>* opt, const std::string& msg_str, std::function<bool()> fun);
-
-  void output() override;
-
-  protected:
-  Anchor<T>* option_ = nullptr;
-  std::string msg_str_;
-  std::function<bool()> condition_ = nullptr;
-};
-
 template <typename T>
 PrintOn<T>::PrintOn(Anchor<T>* opt, const std::string& msg_str)
   : option_(opt), msg_str_(msg_str), condition_(nullptr) {}
@@ -507,7 +432,7 @@ template <typename T>
 void PrintOn<T>::output() {
 
   T setValue = option_->getValue();
-  if (setValue == t_zero<T>())
+  if (setValue == getNull<T>())
     return;
 
   if ((condition_) && (!condition_()))
@@ -531,25 +456,6 @@ void PrintOn<T>::output() {
     reset, f8, reset);
   fmt::print("{}\t{}{}", vt_pre, f9, reset);
 }
-
-//---
-
-template <typename T>
-class PrintOnOff : public Printer {
-  public:
-  PrintOnOff(
-    Anchor<T>* opt, const std::string& msg_on, const std::string& msg_off);
-  PrintOnOff(
-    Anchor<T>* opt, const std::string& msg_on, const std::string& msg_off,
-    std::function<bool()> fun);
-  void output() override;
-
-  protected:
-  Anchor<T>* option_;
-  std::string msg_on_;
-  std::string msg_off_;
-  std::function<bool()> condition_ = nullptr;
-};
 
 template <typename T>
 PrintOnOff<T>::PrintOnOff(
@@ -581,7 +487,7 @@ void PrintOnOff<T>::output() {
   if ((condition_) && (!condition_()))
     return;
 
-  if (setValue != t_zero<T>()) {
+  if (setValue != getNull<T>()) {
     auto f_on = fmt::format(msg_on_, setValue);
     auto f9 = fmt::format(
       "{}Option:{} flag {}{}{} on: {}{}\n", green, reset, magenta, cli_name,
@@ -595,19 +501,6 @@ void PrintOnOff<T>::output() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 }
-
-class Warning : public Printer {
-  public:
-  Warning(Anchor<bool>* opt, const std::string& compile);
-  Warning(
-    Anchor<bool>* opt, const std::string& compile, std::function<bool()> fun);
-  void output() override;
-
-  protected:
-  Anchor<bool>* option_;
-  std::string compile_;
-  std::function<bool()> condition_ = nullptr;
-};
 
 Warning::Warning(Anchor<bool>* opt, const std::string& compile)
   : option_(opt), compile_(compile), condition_(nullptr) {}
