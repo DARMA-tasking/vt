@@ -277,6 +277,12 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
       migrating = false;
     }
     s | op6_counter_;
+
+    // Skip the stack op6_msgs_ because migration only occurs after all op-steps
+    // are complete. Thus, the stack must be empty.
+    if (not s.isUnpacking()) {
+      vtAssert(op6_msgs_.size() == 0, "Stack should be empty during serialize");
+    }
   }
 
 private:
