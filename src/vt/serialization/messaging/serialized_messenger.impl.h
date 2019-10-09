@@ -128,7 +128,8 @@ template <typename UserMsgT>
   auto node = sys_msg->from_node;
   theMsg()->recvDataMsg(
     recv_tag, sys_msg->from_node,
-    [handler,recv_tag,node,epoch](RDMA_GetType ptr, ActionType action){
+    [handler,recv_tag,node,epoch,is_valid_epoch]
+    (RDMA_GetType ptr, ActionType action){
       // be careful here not to use "msg", it is no longer valid
       auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
       auto ptr_size = std::get<1>(ptr);
