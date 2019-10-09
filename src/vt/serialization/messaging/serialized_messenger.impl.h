@@ -152,9 +152,6 @@ template <typename UserMsgT>
 
       if (is_valid_epoch) {
         theMsg()->popEpoch(epoch);
-      }
-
-      if (is_valid_epoch) {
         theTerm()->consume(epoch);
       }
     }
