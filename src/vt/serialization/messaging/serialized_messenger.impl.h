@@ -119,7 +119,11 @@ template <typename UserMsgT>
     print_ptr(sys_msg), handler, recv_tag, epoch
   );
 
-  theTerm()->produce(epoch);
+  bool const is_valid_epoch = epoch != no_epoch;
+
+  if (is_valid_epoch) {
+    theTerm()->produce(epoch);
+  }
 
   auto node = sys_msg->from_node;
   theMsg()->recvDataMsg(
@@ -139,12 +143,19 @@ template <typename UserMsgT>
         handler, recv_tag, envelopeGetEpoch(msg->env)
       );
 
-      theMsg()->pushEpoch(epoch);
+      if (is_valid_epoch) {
+        theMsg()->pushEpoch(epoch);
+      }
       runnable::Runnable<UserMsgT>::run(handler, nullptr, msg.get(), node);
       action();
-      theMsg()->popEpoch(epoch);
 
-      theTerm()->consume(epoch);
+      if (is_valid_epoch) {
+        theMsg()->popEpoch(epoch);
+      }
+
+      if (is_valid_epoch) {
+        theTerm()->consume(epoch);
+      }
     }
   );
 }
