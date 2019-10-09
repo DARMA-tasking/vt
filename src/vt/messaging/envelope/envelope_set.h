@@ -86,8 +86,10 @@ inline void envelopeSetRef(Env& env, RefType const& ref = 0);
 template <typename Env>
 inline void envelopeSetGroup(Env& env, GroupType const& group = default_group);
 
+#if backend_check_enabled(priorities)
 template <typename Env>
 inline void envelopeSetPriority(Env& env, PriorityType priority);
+#endif
 
 #if backend_check_enabled(trace_enabled)
 template <typename Env>

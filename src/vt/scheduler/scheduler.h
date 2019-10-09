@@ -100,7 +100,12 @@ struct Scheduler {
   bool workQueueEmpty() const { return work_queue_.empty(); }
 
 private:
+
+# if backend_check_enabled(priorities)
+  PriorityQueue<PriorityUnit> work_queue_;
+# else
   Queue<Unit> work_queue_;
+# endif
 
   bool has_executed_ = false;
   bool is_idle = false;
