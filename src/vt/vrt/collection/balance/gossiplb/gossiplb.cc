@@ -77,17 +77,16 @@ void GossipLB::inform() {
 
   vtAssert(k_max > 0, "Number of rounds (k) must be greater than zero");
 
-  bool epoch_terminated = false;
-
+  bool inform_done = false;
   propagate_epoch_ = theTerm()->makeEpochCollective();
-  theTerm()->addAction([&epoch_terminated] { epoch_terminated = true; });
 
   // Start the round
   propagateRound();
 
+  theTerm()->addAction(propagate_epoch_, [&inform_done] { inform_done = true; });
   theTerm()->finishedEpoch(propagate_epoch_);
 
-  while (not epoch_terminated) {
+  while (not inform_done) {
     vt::runScheduler();
   }
 
@@ -126,12 +125,6 @@ void GossipLB::propagateRound() {
     // Keep generating until we have a unique node for this round
     do {
       random_node = dist(gen);
-
-      debug_print(
-        lb, node,
-        "GossipLB::propagateRound: k_max={}, k_cur={}, try picking={}\n",
-        k_max, k_cur, random_node
-      );
     } while (selected.find(random_node) != selected.end());
 
     // Add to selected set
