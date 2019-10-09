@@ -50,6 +50,8 @@
 #include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
 
 #include <random>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -77,6 +79,8 @@ protected:
 
   void propagateRound();
   void propagateIncoming(GossipMsg* msg);
+  bool isUnderloaded(LoadType load) const;
+  bool isOverloaded(LoadType load) const;
 
 private:
   uint8_t f                                         = 2;
@@ -86,6 +90,11 @@ private:
   std::unordered_map<NodeType, LoadType> load_info_ = {};
   EpochType propagate_epoch_                        = no_epoch;
   objgroup::proxy::Proxy<GossipLB> proxy            = {};
+  bool is_overloaded_                               = false;
+  bool is_underloaded_                              = false;
+  std::unordered_set<NodeType> selected_            = {};
+  std::unordered_set<NodeType> underloaded_         = {};
+  std::unordered_set<NodeType> overloaded_          = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
