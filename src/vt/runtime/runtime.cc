@@ -42,43 +42,43 @@
 //@HEADER
 */
 
-#include "vt/config.h"
 #include "vt/runtime/runtime.h"
+#include "vt/config.h"
+#include "vt/configs/arguments/args.h"
+#include "vt/configs/debug/debug_colorize.h"
+#include "vt/configs/error/pretty_print_stack.h"
+#include "vt/configs/error/stack_out.h"
+#include "vt/configs/generated/vt_git_revision.h"
 #include "vt/context/context.h"
 #include "vt/context/context_attorney.h"
-#include "vt/registry/registry.h"
-#include "vt/messaging/active.h"
 #include "vt/event/event.h"
-#include "vt/termination/termination.h"
+#include "vt/messaging/active.h"
+#include "vt/objgroup/manager.h"
+#include "vt/parameterization/parameterization.h"
+#include "vt/pipe/pipe_manager.h"
 #include "vt/pool/pool.h"
 #include "vt/rdma/rdma_headers.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace.h"
-#include "vt/pipe/pipe_manager.h"
-#include "vt/objgroup/manager.h"
+#include "vt/registry/registry.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/sequence/sequencer_headers.h"
+#include "vt/termination/termination.h"
 #include "vt/topos/location/location_headers.h"
-#include "vt/vrt/context/context_vrtmanager.h"
+#include "vt/trace/trace.h"
 #include "vt/vrt/collection/collection_headers.h"
+#include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/worker/worker_headers.h"
-#include "vt/configs/generated/vt_git_revision.h"
-#include "vt/configs/debug/debug_colorize.h"
-#include "vt/configs/arguments/args.h"
-#include "vt/configs/error/stack_out.h"
-#include "vt/configs/error/pretty_print_stack.h"
 
-#include <memory>
-#include <iostream>
-#include <functional>
-#include <string>
-#include <vector>
-#include <cstdio>
-#include <cstdint>
-#include <cstdlib>
-#include <limits.h>
-#include <unistd.h>
 #include <csignal>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <limits.h>
+#include <memory>
+#include <string>
+#include <unistd.h>
+#include <vector>
 
 namespace vt { namespace runtime {
 
@@ -89,32 +89,24 @@ using ArgVT = vt::arguments::Args;
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
-)  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
-     num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
-     user_argv_(argv), parsed_arg_(false)
-{
+  bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance)
+  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
+    num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
+    user_argv_(argv), parsed_arg_(false) {
   ArgVT::initialize();
   parseAndSetup(argc, argv);
   sig_user_1_ = false;
 }
 
-Runtime::Runtime(
-  bool const interop_mode,
-  RuntimeInstType const in_instance
-)  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
-     num_workers_(no_workers), communicator_(nullptr), user_argc_(0),
-     user_argv_(nullptr), parsed_arg_(false)
-{
+Runtime::Runtime(bool const interop_mode, RuntimeInstType const in_instance)
+  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
+    num_workers_(no_workers), communicator_(nullptr), user_argc_(0),
+    user_argv_(nullptr), parsed_arg_(false) {
   sig_user_1_ = false;
 }
 
-void Runtime::parseAndSetup(
-  int &argc,
-  char**& argv
-)
-{
-  ArgVT::setup_.parseResolve(argc, argv);
+void Runtime::parseAndSetup(int& argc, char**& argv) {
+  ArgVT::setup.parseResolve(argc, argv);
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
@@ -137,15 +129,16 @@ void Runtime::pauseForDebugger() {
     FILE* f = fopen(node_str, "w+");
     fprintf(f, "%d", pid);
     fclose(f);
-    while (!sig_user_1_);
+    while (!sig_user_1_)
+      ;
   }
 }
 
 /*static*/ void Runtime::sigHandlerINT(int sig) {
-  auto node      = vt::theContext() ? vt::theContext()->getNode() : -1;
-  auto vt_pre    = debug::vtPre();
-  auto node_str  = ::vt::debug::proc(node);
-  auto prefix    = vt_pre + node_str + " ";
+  auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
+  auto vt_pre = debug::vtPre();
+  auto node_str = ::vt::debug::proc(node);
+  auto prefix = vt_pre + node_str + " ";
   if (node == 0 || node == -1) {
     ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
   }
@@ -167,8 +160,8 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::sigHandler(int sig) {
-  auto vt_pre    = debug::vtPre();
-  auto bred      = debug::bred();
+  auto vt_pre = debug::vtPre();
+  auto bred = debug::bred();
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
@@ -183,8 +176,8 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::termHandler() {
-  auto vt_pre    = debug::vtPre();
-  auto bred      = debug::bred();
+  auto vt_pre = debug::vtPre();
+  auto bred = debug::bred();
   ::fmt::print("{}Caught std::terminate \n", vt_pre);
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
@@ -213,10 +206,12 @@ void Runtime::pauseForDebugger() {
 
 /*static*/ void Runtime::writeToFile(std::string const& str) {
   std::string app_name = prog_name_ == "" ? "prog" : prog_name_;
-  std::string name = ArgVT::config.vt_stack_file == "" ? app_name : ArgVT::config.vt_stack_file;
+  std::string name =
+    ArgVT::config.vt_stack_file == "" ? app_name : ArgVT::config.vt_stack_file;
   auto const& node = debug::preNode();
   std::string file = name + "." + std::to_string(node) + ".stack.out";
-  std::string dir  = ArgVT::config.vt_stack_dir == "" ? "" : ArgVT::config.vt_stack_dir + "/";
+  std::string dir =
+    ArgVT::config.vt_stack_dir == "" ? "" : ArgVT::config.vt_stack_dir + "/";
   std::string path = dir + file;
   FILE* f = fopen(path.c_str(), "w+");
   fprintf(f, "%s", str.c_str());
@@ -257,8 +252,7 @@ bool Runtime::tryInitialize() {
   debug_print(
     runtime, unknown,
     "Runtime: tryInitialize: initialized_={}, finalized_={}, init_now={}\n",
-    print_bool(initialized_), print_bool(finalized_), print_bool(init_now)
-  );
+    print_bool(initialized_), print_bool(finalized_), print_bool(init_now));
 
   if (init_now) {
     initialize(true);
@@ -273,11 +267,11 @@ bool Runtime::tryFinalize() {
 
   debug_print(
     runtime, unknown,
-    "Runtime: tryFinalize: initialized_={}, finalized_={}, rt_live={}, sched={}, "
+    "Runtime: tryFinalize: initialized_={}, finalized_={}, rt_live={}, "
+    "sched={}, "
     "finalize_now={}\n",
     print_bool(initialized_), print_bool(finalized_), print_bool(rt_live),
-    print_bool(has_run_sched), print_bool(finalize_now)
-  );
+    print_bool(has_run_sched), print_bool(finalize_now));
 
   if (finalize_now) {
     finalize(true);
@@ -299,42 +293,43 @@ void Runtime::printStartupBanner() {
   WorkerCountType const workers = theContext->getNumWorkers();
   bool const has_workers = theContext->hasWorkers();
 
-  std::string is_interop_str =
-    is_interop_ ?
-      std::string(" interop=") + std::string(is_interop_ ? "true:" : "false:") :
-      std::string("");
+  std::string is_interop_str = is_interop_ ?
+    std::string(" interop=") + std::string(is_interop_ ? "true:" : "false:") :
+    std::string("");
   std::string init = "Runtime Initializing:" + is_interop_str;
   std::string mode = std::string("mode: ");
   std::string mode_type =
     std::string(num_workers_ == no_workers ? "single" : "multi") +
     std::string("-thread per rank");
   std::string thd = !has_workers ? std::string("") :
-    std::string(", worker threading: ") +
-    std::string(
-      #if backend_check_enabled(openmp)
-        "OpenMP"
-      #elif backend_check_enabled(stdthread)
-        "std::thread"
-      #else
-        ""
-      #endif
-   );
-  std::string cnt = !has_workers ? std::string("") :
-    (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
+                                   std::string(", worker threading: ") +
+      std::string(
+#if backend_check_enabled(openmp)
+                                     "OpenMP"
+#elif backend_check_enabled(stdthread)
+                                     "std::thread"
+#else
+                                     ""
+#endif
+      );
+  std::string cnt = !has_workers ?
+    std::string("") :
+    (std::string(", ") + std::to_string(workers) +
+     std::string(" workers/node"));
   std::string node_str = nodes == 1 ? "node" : "nodes";
   std::string all_node = std::to_string(nodes) + " " + node_str + cnt;
 
   char hostname[1024];
   gethostname(hostname, 1024);
 
-  auto green    = debug::green();
-  auto red      = debug::red();
-  auto reset    = debug::reset();
+  auto green = debug::green();
+  auto red = debug::red();
+  auto reset = debug::reset();
   auto bd_green = debug::bd_green();
-  auto magenta  = debug::magenta();
-  auto vt_pre   = debug::vtPre();
-  auto emph     = [=](std::string s) -> std::string { return debug::emph(s); };
-  auto reg      = [=](std::string s) -> std::string { return debug::reg(s);  };
+  auto magenta = debug::magenta();
+  auto vt_pre = debug::vtPre();
+  auto emph = [=](std::string s) -> std::string { return debug::emph(s); };
+  auto reg = [=](std::string s) -> std::string { return debug::reg(s); };
 
   std::vector<std::string> features;
 
@@ -380,12 +375,14 @@ void Runtime::printStartupBanner() {
     dirty = red + std::string("*dirty*") + reset;
   }
 
-  auto f1 = fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd));
+  auto f1 =
+    fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd));
   auto f2 = fmt::format("{}Running on: {}\n", green, emph(all_node));
   auto f3 = fmt::format("{}Machine Hostname: {}\n", green, emph(hostname));
   auto f4 = fmt::format("{}Build SHA: {}\n", green, emph(vt_git_sha1));
   auto f5 = fmt::format("{}Build Ref: {}\n", green, emph(vt_git_refspec));
-  auto f6 = fmt::format("{}Description: {} {}\n", green, emph(vt_git_description), dirty);
+  auto f6 = fmt::format(
+    "{}Description: {} {}\n", green, emph(vt_git_description), dirty);
   auto f7 = fmt::format("{}Compile-time Features Enabled:{}\n", green, reset);
 
   fmt::print("{}{}{}", vt_pre, f1, reset);
@@ -402,11 +399,10 @@ void Runtime::printStartupBanner() {
   /* ---------------------------------------------------- */
   /* Print Banner Information about Simulation Parameters */
   /* ---------------------------------------------------- */
-  arguments::Args::setup_.printBanner();
+  arguments::Args::setup.printBanner();
 
-  //fmt::print("{}\n", reset);
+  // fmt::print("{}\n", reset);
   fmt::print(reset);
-
 }
 
 void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
@@ -414,10 +410,10 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   if (ArgVT::config.vt_quiet) {
     return;
   }
-  auto green    = debug::green();
-  auto reset    = debug::reset();
+  auto green = debug::green();
+  auto reset = debug::reset();
   auto bd_green = debug::bd_green();
-  auto magenta  = debug::magenta();
+  auto magenta = debug::magenta();
   auto f1 = fmt::format("{}Runtime Finalizing{}", green, reset);
   auto f2 = fmt::format("{}Total work units processed:{} ", green, reset);
   auto vt_pre = bd_green + std::string("vt") + reset + ": ";
@@ -475,13 +471,9 @@ bool Runtime::finalize(bool const force_now) {
   }
 }
 
-void Runtime::sync() {
-  MPI_Barrier(theContext->getComm());
-}
+void Runtime::sync() { MPI_Barrier(theContext->getComm()); }
 
-void Runtime::runScheduler() {
-  theSched->scheduler();
-}
+void Runtime::runScheduler() { theSched->scheduler(); }
 
 void Runtime::reset() {
   MPI_Barrier(theContext->getComm());
@@ -502,33 +494,32 @@ void Runtime::reset() {
 
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   aborted_ = true;
-  output(abort_str,code,true,true,false);
-  std::raise( SIGTRAP );
+  output(abort_str, code, true, true, false);
+  std::raise(SIGTRAP);
   if (theContext) {
     auto const comm = theContext->getComm();
     MPI_Abort(comm, 129);
   } else {
-	std::_Exit(code);
+    std::_Exit(code);
     // @todo: why will this not compile with clang!!?
-    //quick_exit(code);
+    // quick_exit(code);
   }
 }
 
 void Runtime::output(
   std::string const abort_str, ErrorCodeType const code, bool error,
-  bool decorate, bool formatted
-) {
-  auto node      = theContext ? theContext->getNode() : -1;
-  auto green     = debug::green();
-  auto byellow   = debug::byellow();
-  auto red       = debug::red();
-  auto reset     = debug::reset();
-  auto vt_pre    = debug::vtPre();
-  auto bred      = debug::bred();
-  auto node_str  = ::vt::debug::proc(node);
-  auto prefix    = vt_pre + node_str + " ";
+  bool decorate, bool formatted) {
+  auto node = theContext ? theContext->getNode() : -1;
+  auto green = debug::green();
+  auto byellow = debug::byellow();
+  auto red = debug::red();
+  auto reset = debug::reset();
+  auto vt_pre = debug::vtPre();
+  auto bred = debug::bred();
+  auto node_str = ::vt::debug::proc(node);
+  auto prefix = vt_pre + node_str + " ";
   auto seperator = fmt::format("{}{}{:-^120}{}\n", prefix, bred, "", reset);
-  auto warn_sep  = fmt::format("{}{}{:-^120}{}\n", prefix, byellow, "", reset);
+  auto warn_sep = fmt::format("{}{}{:-^120}{}\n", prefix, byellow, "", reset);
   // auto space     = fmt::format("{}\n", prefix);
 
   if (decorate) {
@@ -545,7 +536,7 @@ void Runtime::output(
       auto const info = ::fmt::format(" Warning on Node {} ", node);
       // fmt::print(stderr, "{}", space);
       fmt::print(stderr, "{}", warn_sep);
-      fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, byellow, f1,   reset);
+      fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, byellow, f1, reset);
       fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, byellow, info, reset);
       fmt::print(stderr, "{}", warn_sep);
     }
@@ -555,7 +546,8 @@ void Runtime::output(
     fmt::print(stderr, "{}", abort_str);
   } else {
     fmt::print(stderr, "{}\n", prefix);
-    fmt::print(stderr, "{}Message: {}{}{}\n", prefix, byellow, abort_str, reset);
+    fmt::print(
+      stderr, "{}Message: {}{}{}\n", prefix, byellow, abort_str, reset);
     fmt::print(stderr, "{}\n", prefix);
   }
 
@@ -582,9 +574,7 @@ void Runtime::output(
 
 void Runtime::terminationHandler() {
   debug_print(
-    runtime, node,
-    "Runtime: executing registered termination handler\n"
-  );
+    runtime, node, "Runtime: executing registered termination handler\n");
 
   runtime_active_ = false;
 
@@ -604,9 +594,7 @@ void Runtime::setup() {
   MPI_Barrier(theContext->getComm());
 
   // wait for all nodes to start up to initialize the runtime
-  theCollective->barrierThen([this]{
-    MPI_Barrier(theContext->getComm());
-  });
+  theCollective->barrierThen([this] { MPI_Barrier(theContext->getComm()); });
 
   if (ArgVT::config.vt_pause) {
     pauseForDebugger();
@@ -660,43 +648,42 @@ void Runtime::initializeComponents() {
 }
 
 void Runtime::initializeTrace() {
-  #if backend_check_enabled(trace_enabled)
-    theTrace = std::make_unique<trace::Trace>();
+#if backend_check_enabled(trace_enabled)
+  theTrace = std::make_unique<trace::Trace>();
 
-    std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-    auto const& node = theContext->getNode();
-    theTrace->setupNames(
-      name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
-    );
-  #endif
+  std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
+  auto const& node = theContext->getNode();
+  theTrace->setupNames(
+    name, name + "." + std::to_string(node) + ".log.gz", name + "_trace");
+#endif
 }
 
 void Runtime::finalizeTrace() {
-  #if backend_check_enabled(trace_enabled)
-    theTrace = nullptr;
-  #endif
+#if backend_check_enabled(trace_enabled)
+  theTrace = nullptr;
+#endif
 }
 
 namespace {
-  /**
-   * Error handler for MPI.
-   * Called on any MPI error with the context's communicator. Aborts
-   * the application. MPI calls are not guaranteed to work after
-   * an error.
-   *
-   * \param comm    the MPI communicator
-   * \param errc    pointer to the error code
-   */
-  void mpiErrorHandler(MPI_Comm *comm, int *errc, ...) {
-    int len = MPI_MAX_ERROR_STRING;
-    char msg[MPI_MAX_ERROR_STRING];
-    MPI_Error_string(*errc, msg, &len);
-    std::string err_msg(msg, len);
+/**
+ * Error handler for MPI.
+ * Called on any MPI error with the context's communicator. Aborts
+ * the application. MPI calls are not guaranteed to work after
+ * an error.
+ *
+ * \param comm    the MPI communicator
+ * \param errc    pointer to the error code
+ */
+void mpiErrorHandler(MPI_Comm* comm, int* errc, ...) {
+  int len = MPI_MAX_ERROR_STRING;
+  char msg[MPI_MAX_ERROR_STRING];
+  MPI_Error_string(*errc, msg, &len);
+  std::string err_msg(msg, len);
 
-    fmt::print("{} (code: {})", err_msg, *errc);
-    vtAbort("MPI Error");
-  }
+  fmt::print("{} (code: {})", err_msg, *errc);
+  vtAbort("MPI Error");
 }
+} // namespace
 
 void Runtime::initializeErrorHandlers() {
   MPI_Errhandler err_handler = 0;
@@ -716,8 +703,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   using ::vt::ctx::ContextAttorney;
 
   debug_print(
-    runtime, node, "begin: initializeWorkers: workers={}\n", num_workers
-  );
+    runtime, node, "begin: initializeWorkers: workers={}\n", num_workers);
 
   bool const has_workers = num_workers != no_workers;
 
@@ -729,7 +715,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
 
     theWorkerGrp = std::make_unique<worker::WorkerGroupType>();
 
-    auto localTermFn = [](worker::eWorkerGroupEvent event){
+    auto localTermFn = [](worker::eWorkerGroupEvent event) {
       bool const no_local_workers = false;
       bool const is_idle = event == worker::eWorkerGroupEvent::WorkersIdle;
       bool const is_busy = event == worker::eWorkerGroupEvent::WorkersBusy;
@@ -774,7 +760,8 @@ void Runtime::finalizeComponents() {
   // Helper components: thePool the last to be destructed because it handles
   // memory allocations
   theRegistry = nullptr;
-  theEvent->cleanup(); theEvent = nullptr;
+  theEvent->cleanup();
+  theEvent = nullptr;
 
   // Initialize individual memory pool for each worker
   thePool->destroyWorkerPools();
@@ -791,4 +778,5 @@ void Runtime::finalizeOptionalComponents() {
   debug_print(runtime, node, "end: finalizeOptionalComponents\n");
 }
 
-}} //end namespace vt::runtime
+} } // end namespace vt::runtime
+

@@ -61,8 +61,7 @@ namespace vt { namespace arguments {
 
 struct Configs {
 
-public:
-
+  public:
   bool vt_color = true;
   bool vt_no_color = false;
   bool vt_auto_color = false;
@@ -144,20 +143,19 @@ public:
   std::string vt_user_str_1 = "";
   std::string vt_user_str_2 = "";
   std::string vt_user_str_3 = "";
-
 };
 
 
 //--- Build enum for the context
-enum class context : std::uint8_t {dFault, commandLine, thirdParty};
+enum class ContextEnum : std::uint8_t { dFault, commandLine, thirdParty };
 
 /// \brief Virtual class for storing an option/flag
 struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
 
-   /// \brief Count how many instances of the parameter 'name'
-   /// have been specified.
-   /// \param[in] name Parameter to specify
-   virtual int count() const = 0;
+  /// \brief Count how many instances of the parameter 'name'
+  /// have been specified.
+  /// \param[in] name Parameter to specify
+  virtual int count() const = 0;
 
   /// \brief Virtual function determining whether precedence rules
   /// have been resolved
@@ -166,319 +164,306 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
   /// \brief Virtual function to print information
   virtual void print() = 0;
 
-   /// \brief Virtual function to resolve precedence rules
-   virtual void resolve() = 0;
+  /// \brief Virtual function to resolve precedence rules
+  virtual void resolve() = 0;
 
-   /// \brief Virtual function returning resolved value
-   /// \returns Resolved value
-   virtual std::string valueToString() const = 0;
+  /// \brief Virtual function returning resolved value
+  /// \returns Resolved value
+  virtual std::string stringifyValue() const = 0;
 
-   /// \brief Virtual function returning context for resolved value
-   /// \returns Context
-   virtual std::string resolved_Context() const = 0;
+  /// \brief Virtual function returning context for resolved value
+  /// \returns Context
+  virtual std::string stringifyContext() const = 0;
 
-   /// \brief Virtual function returning context for resolved value
-   /// \returns Default value
-   virtual std::string anchorDefault() const = 0;
+  /// \brief Virtual function returning context for resolved value
+  /// \returns Default value
+  virtual std::string stringifyDefault() const = 0;
 
-   /// \brief Default destructor
-   virtual ~AnchorBase() = default;
+  /// \brief Default destructor
+  virtual ~AnchorBase() = default;
 
-   //--------------------------------------------//
-   // Non-virtual member functions
-   //--------------------------------------------//
+  //--------------------------------------------//
+  // Non-virtual member functions
+  //--------------------------------------------//
 
-   /// \brief Sets excluded option
-   ///
-   /// \param[in] opt  Pointer to the option to exclude
-   void excludes(const std::shared_ptr<AnchorBase> &opt) {
-      excludes_.insert(opt);
-      // Help text should be symmetric - excluding a should exclude b
-      opt->excludes_.insert(shared_from_this());
-      //
-      // Ignoring the insert return value, excluding twice (or more) is allowed.
-      //
-   }
+  /// \brief Sets excluded option
+  ///
+  /// \param[in] opt  Pointer to the option to exclude
+  void excludes(const std::shared_ptr<AnchorBase>& opt) {
+    excludes_.insert(opt);
+    // Help text should be symmetric - excluding a should exclude b
+    opt->excludes_.insert(shared_from_this());
+    //
+    // Ignoring the insert return value, excluding twice (or more) is allowed.
+    //
+  }
 
-   /// \brief Returns the description of the anchor
-   /// \return Description
-   std::string getDescription() const { return description_; }
+  /// \brief Returns the description of the anchor
+  /// \return Description
+  std::string getDescription() const { return description_; }
 
-   /// \brief Returns the group name of the anchor
-   /// \return Group
-   std::string getGroup() const { return group_; }
+  /// \brief Returns the group name of the anchor
+  /// \return Group
+  std::string getGroup() const { return group_; }
 
-   /// \brief Returns the name of the anchor
-   /// \return Name of the option
-   std::string getName() const { return name_; }
+  /// \brief Returns the name of the anchor
+  /// \return Name of the option
+  std::string getName() const { return name_; }
 
-   /// \brief Sets dependence on a specific flag being turned off
-   ///
-   /// \param[in] opt  Pointer to the flag to depend on
-   void needsOptionOff(std::shared_ptr<AnchorBase> const &opt) {
-      needsOptOff_.insert(opt);
-   }
+  /// \brief Sets dependence on a specific flag being turned off
+  ///
+  /// \param[in] opt  Pointer to the flag to depend on
+  void needsOptionOff(std::shared_ptr<AnchorBase> const& opt) {
+    needsOptOff_.insert(opt);
+  }
 
-   /// \brief Sets dependence on a specific flag being turned on
-   ///
-   /// \param[in] opt  Pointer to the flag to depend on
-   void needsOptionOn(std::shared_ptr<AnchorBase> const &opt) {
-      needsOptOn_.insert(opt);
-   }
+  /// \brief Sets dependence on a specific flag being turned on
+  ///
+  /// \param[in] opt  Pointer to the flag to depend on
+  void needsOptionOn(std::shared_ptr<AnchorBase> const& opt) {
+    needsOptOn_.insert(opt);
+  }
 
-   /// \brief Resets to the default value
-   virtual void resetToDefault() = 0;
+  /// \brief Resets to the default value
+  virtual void resetToDefault() = 0;
 
-   /// \brief Set the group name for the option
-   ///
-   /// \param[in] grp_ String for the name of the group
-   void setGroup(const std::string &grp_) { group_ = grp_; }
+  /// \brief Set the group name for the option
+  ///
+  /// \param[in] grp_ String for the name of the group
+  void setGroup(const std::string& grp_) { group_ = grp_; }
 
-protected:
+  protected:
+  /// \brief Constructor
+  ///
+  /// \param[in] name Label for the anchor
+  /// \param[in] desc Description of the anchor
+  ///
+  /// \note The anchor will be assigned to a default group, named 'Default'.
+  ///
+  AnchorBase(std::string name, std::string desc)
+    : name_(std::move(name)), group_("Default"), description_(std::move(desc)),
+      ordering_(), needsOptOff_(), needsOptOn_(), excludes_() {}
 
-   /// \brief Constructor
-   ///
-   /// \param[in] name Label for the anchor
-   /// \param[in] desc Description of the anchor
-   ///
-   /// \note The anchor will be assigned to a default group, named 'Default'.
-   ///
-   AnchorBase(std::string name, std::string desc) :
-      name_(std::move(name)),
-      group_("Default"),
-      description_(std::move(desc)),
-      ordering_(),
-      needsOptOff_(),
-      needsOptOn_(),
-      excludes_()
-   { }
+  protected:
+  //--- Build enum for ordering the context
+  //--- Order of the contexts can be specified
+  //--- independently of an instance for that context.
+  enum class OrderContextEnum : std::uint8_t {
+    MIN = 0,
+    dFault = 1,
+    commandLine = 2,
+    thirdParty = 3,
+    MAX = 255
+  };
 
-protected:
+  //--- Map from 'ContextEnum' flag to an ordered flag.
+  static std::map<ContextEnum, OrderContextEnum> emap_;
 
-   //--- Build enum for ordering the context
-   //--- Order of the contexts can be specified
-   //--- independently of an instance for that context.
-   enum class orderCtxt : std::uint8_t {MIN = 0,
-      dFault = 1, commandLine = 2, thirdParty = 3,
-      MAX = 255};
+  //--- Map from 'ContextEnum' flag to a descriptive string.
+  static std::map<ContextEnum, std::string> smap_;
 
-   //--- Map from 'context' flag to an ordered flag.
-   static std::map< context, orderCtxt> emap_;
+  std::string name_;
+  std::string group_;
+  std::string description_;
 
-   //--- Map from 'context' flag to a descriptive string.
-   static std::map< context, std::string> smap_;
+  /// \brief Map ordering the different instances of an 'anchor'
+  std::map<ContextEnum, OrderContextEnum> ordering_;
 
-   std::string name_;
-   std::string group_;
-   std::string description_;
+  /// \brief List of options that are needed to be OFF for this option
+  std::set<std::shared_ptr<AnchorBase>> needsOptOff_;
 
-   /// \brief Map ordering the different instances of an 'anchor'
-   std::map< context, orderCtxt > ordering_;
+  /// \brief List of options that are needed to be ON for this option
+  std::set<std::shared_ptr<AnchorBase>> needsOptOn_;
 
-   /// \brief List of options that are needed to be OFF for this option
-   std::set< std::shared_ptr<AnchorBase> > needsOptOff_;
-
-   /// \brief List of options that are needed to be ON for this option
-   std::set< std::shared_ptr<AnchorBase> > needsOptOn_;
-
-   /// \brief List of options that are excluded with this option
-   std::set< std::shared_ptr<AnchorBase> > excludes_;
-
+  /// \brief List of options that are excluded with this option
+  std::set<std::shared_ptr<AnchorBase>> excludes_;
 };
-
 
 class Printer;
 
 /// \brief Template class for storing an option/flag
-template< typename T>
+template <typename T>
 struct Anchor : public AnchorBase {
 
+  public:
+  /// \brief Constructor
+  ///
+  /// \param[in] var Variable to specify and whose initial value
+  ///                defines the default value
+  /// \param[in] name Label for the parameter of interest
+  /// \param[in] desc String describing the option
+  ///
+  explicit Anchor(T& var, const std::string& name, const std::string& desc);
+
+  /// \brief Add instance from a third party with a specific value
+  ///
+  /// \param[in] value Value to specify for the third party context
+  /// \param[in] highestPrecedence Boolean determining whether the instance
+  /// should have the highest priority (default = false)
+  void addInstance(const T& value, bool highestPrecedence = false);
+
+  /// \brief Counts the current number of instances for the option
+  ///
+  /// \returns Number of instances for the option
+  int count() const override {
+    return static_cast<int>(specifications_.size());
+  }
+
+  /// \brief Sets a new default value.
+  ///
+  /// \param ref Value to assign as default
+  void setNewDefaultValue(const T& ref);
+
+  /// \brief Sets highest priority (precedence) for a context
+  ///
+  /// \param[in] origin Context for the highest priority
+  ///
+  /// \note If a different context had already the highest priority,
+  /// this context priority will be reset to its original value.
+  ///
+  void setHighestPrecedence(const ContextEnum& origin);
+
+  /// \brief Returns the value for the current instance
+  ///
+  /// \returns Value of the current instance
+  const T& getValue() const { return value_; }
+
+  /// \brief Function to determine whether the precedence rules
+  /// have been applied or not.
+  /// \returns Boolean
+  bool isResolved() const override { return isResolved_; }
+
+  /// \brief Virtual function returning resolved value
+  /// \returns Resolved value
+  std::string stringifyValue() const override;
+
+  /// \brief Virtual function returning context for resolved value
+  /// \returns String for resolved context
+  std::string stringifyContext() const override;
+
+  /// \brief Virtual function returning default value
+  /// \returns String for default value
+  std::string stringifyDefault() const override;
+
+  /// \brief Resets to the default value
+  void resetToDefault() override;
+
+  //
+  //--- Printing routines
+  //
+
+  /// \brief Printing routine about the anchor
+  void print() override;
+
+  /// \brief Set the printing message for the banner as a warning
+  ///
+  /// \param[in] msg_on String to display for the anchor when it is active
+  /// \param[in] fun  Additional condition to print or not the message
+  ///
+  /// \note The ON message will be of the form
+  /// "Option: flag 'NAME' on: 'MSG_ON'"
+  ///
+  void setBannerMsgOn(std::string msg_on, std::function<bool()> fun = nullptr);
+
+  /// \brief Set the printing message for the banner as a warning
+  ///
+  /// \param[in] msg_on String to display when the anchor is active
+  /// \param[in] msg_off String to display when the anchor is off
+  /// \param[in] fun Additional condition to print or not the message
+  ///
+  /// \note The ON message will be of the form
+  /// "Option: flag 'NAME' on: 'MSG_ON'"
+  /// \note The OFF message will be of the form
+  /// "Default: 'MSG_OFF', use 'NAME' to disable"
+  ///
+  void setBannerMsgOnOff(
+    std::string msg_on, std::string msg_off,
+    std::function<bool()> fun = nullptr);
+
+  /// \brief Set the printing message for the banner as a warning
+  ///
+  /// \param[in] String to display for the anchor
+  ///
+  /// \note The message will be of the form
+  /// "Warning: 'NAME' has no effect: compile-time feature 'MSG' is disabled"
+  ///
+  void
+  setBannerMsgWarning(std::string msg, std::function<bool()> fun = nullptr);
+
+  protected:
+  /// \brief Add instance from a particular context
+  ///
+  /// \param[in] ctxt Context for the instance
+  /// \param[in] value Value specified by the instance
+  ///
+  void addGeneralInstance(ContextEnum ctxt, const T& value);
+
+  /// \brief Checks whether two 'excluded' options have specifications
+  ///         in addition to their default ones.
+  void checkExcludes() const;
+
+  /// \brief Resolves the precedence rules among the instances
+  void resolve() override;
+
+  friend struct ArgSetup;
+
+  protected:
+  //--- Class for storing each instance of one anchor
+  template <typename U = T>
+  struct Instance {
+
 public:
+    /// \brief Constructor
+    ///
+    /// \param[in] ref Value of the anchor for this instance
+    /// \param[in] parent Pointer for the parent anchor
+    explicit Instance(const U& rval, AnchorBase* parent)
+      : value_(rval), parent_(parent) {}
 
-   /// \brief Constructor
-   ///
-   /// \param[in] var Variable to specify and whose initial value
-   ///                defines the default value
-   /// \param[in] name Label for the parameter of interest
-   /// \param[in] desc String describing the option
-   ///
-   explicit Anchor(
-      T& var,
-      const std::string &name,
-      const std::string &desc
-   );
+    /// \brief Dummy Constructor
+    Instance() : value_(), parent_(nullptr) {}
 
-   /// \brief Add instance from a third party with a specific value
-   ///
-   /// \param[in] value Value to specify for the third party context
-   /// \param[in] highestPrecedence Boolean determining whether the instance
-   /// should have the highest priority (default = false)
-   void addInstance(
-      const T &value,
-      bool highestPrecedence = false
-   );
+    /// \brief Copy Constructor
+    Instance(const Instance<U>& ref)
+      : value_(ref.value_), parent_(ref.parent_) {}
 
-   /// \brief Counts the current number of instances for the option
-   ///
-   /// \returns Number of instances for the option
-   int count() const override { return static_cast<int>(specifications_.size()); }
+    /// \brief Destructor
+    ~Instance() {}
 
-   /// \brief Sets a new default value.
-   ///
-   /// \param ref Value to assign as default
-   void setNewDefaultValue(const T &ref);
+    /// \brief Assignment operator
+    Instance<U>& operator=(const Instance<U>& ref) {
+      value_ = ref.value_;
+      parent_ = ref.parent_;
+      return *this;
+    }
 
-   /// \brief Sets highest priority (precedence) for a context
-   ///
-   /// \param[in] origin Context for the highest priority
-   ///
-   /// \note If a different context had already the highest priority,
-   /// this context priority will be reset to its original value.
-   ///
-   void setHighestPrecedence(const context &origin);
+    /// \brief Sets new value for the instance
+    ///
+    /// \param ref New value to insert for the instance
+    void setNewValue(const U& ref) { value_ = ref; }
 
-   /// \brief Returns the value for the current instance
-   ///
-   /// \returns Value of the current instance
-   const T& getValue() const { return value_; }
-
-   /// \brief Function to determine whether the precedence rules
-   /// have been applied or not.
-   /// \returns Boolean
-   bool isResolved() const override { return isResolved_; }
-
-   /// \brief Virtual function returning resolved value
-   /// \returns Resolved value
-   std::string valueToString() const override;
-
-   /// \brief Virtual function returning context for resolved value
-   /// \returns String for resolved context
-   std::string resolved_Context() const override;
-
-   /// \brief Virtual function returning default value
-   /// \returns String for default value
-   std::string anchorDefault() const override;
-
-   /// \brief Resets to the default value
-   void resetToDefault() override;
-
-   //
-   //--- Printing routines
-   //
-
-   /// \brief Printing routine about the anchor
-   void print() override;
-
-   /// \brief Set the printing message for the banner as a warning
-   ///
-   /// \param[in] msg_on String to display for the anchor when it is active
-   /// \param[in] fun  Additional condition to print or not the message
-   ///
-   /// \note The ON message will be of the form
-   /// "Option: flag 'NAME' on: 'MSG_ON'"
-   ///
-   void setBannerMsg_On(std::string msg_on, std::function<bool()> fun = nullptr);
-
-   /// \brief Set the printing message for the banner as a warning
-   ///
-   /// \param[in] msg_on String to display when the anchor is active
-   /// \param[in] msg_off String to display when the anchor is off
-   /// \param[in] fun Additional condition to print or not the message
-   ///
-   /// \note The ON message will be of the form
-   /// "Option: flag 'NAME' on: 'MSG_ON'"
-   /// \note The OFF message will be of the form
-   /// "Default: 'MSG_OFF', use 'NAME' to disable"
-   ///
-   void setBannerMsg_OnOff(std::string msg_on, std::string msg_off,
-		   std::function<bool()> fun = nullptr);
-
-   /// \brief Set the printing message for the banner as a warning
-   ///
-   /// \param[in] String to display for the anchor
-   ///
-   /// \note The message will be of the form
-   /// "Warning: 'NAME' has no effect: compile-time feature 'MSG' is disabled"
-   ///
-   void setBannerMsg_Warning(std::string msg, std::function<bool()> fun = nullptr);
+    /// \brief Returns the value for the current instance
+    ///
+    /// \returns Value of the current instance
+    const U& getValue() const { return value_; }
 
 protected:
+    U value_;
+    AnchorBase* parent_ = nullptr;
+  };
+  //---
 
-   /// \brief Add instance from a particular context
-   ///
-   /// \param[in] ctxt Context for the instance
-   /// \param[in] value Value specified by the instance
-   ///
-   void addGeneralInstance(context ctxt, const T &value);
+  T& value_ = {};
+  std::unordered_map<ContextEnum, Instance<T>> specifications_;
+  bool hasNewDefault_ = false;
+  bool isResolved_ = false;
+  ContextEnum resolvedContext_ = ContextEnum::dFault;
+  Instance<T> resolvedInstance_;
+  bool resolvedToDefault_ = false;
 
-   /// \brief Checks whether two 'excluded' options have specifications
-   ///         in addition to their default ones.
-   void checkExcludes() const;
-
-   /// \brief Resolves the precedence rules among the instances
-   void resolve() override;
-
-   friend struct ArgSetup;
-
-protected:
-
-   //--- Class for storing each instance of one anchor
-   template< typename U = T>
-   struct Instance {
-
-   public:
-
-      /// \brief Constructor
-      ///
-      /// \param[in] ref Value of the anchor for this instance
-      /// \param[in] parent Pointer for the parent anchor
-      explicit Instance(const U &rval, AnchorBase *parent)
-         : value_(rval), parent_(parent)
-      { }
-
-      /// \brief Dummy Constructor
-      Instance() : value_(), parent_(nullptr) { }
-
-      /// \brief Copy Constructor
-      Instance(const Instance<U> &ref) : value_(ref.value_), parent_(ref.parent_) { }
-
-	  /// \brief Destructor
-	  ~Instance() { }
-
-	  /// \brief Assignment operator
-	  Instance<U>& operator=(const Instance<U> &ref) {
-        value_ = ref.value_; parent_ = ref.parent_;
-		return *this;
-      }
-
-      /// \brief Sets new value for the instance
-      ///
-      /// \param ref New value to insert for the instance
-      void setNewValue(const U &ref) { value_ = ref; }
-
-      /// \brief Returns the value for the current instance
-      ///
-      /// \returns Value of the current instance
-      const U& getValue() const { return value_; }
-
-   protected:
-      U value_;
-      AnchorBase *parent_ = nullptr;
-   };
-   //---
-
-   T& value_ = {};
-   std::unordered_map< context, Instance<T> > specifications_;
-   bool hasNewDefault_ = false;
-   bool isResolved_ = false;
-   context resolved_ctxt_ = context::dFault;
-   Instance<T> resolved_instance_;
-   bool resolved_to_default_ = false;
-
-   //--- Pointer to 'Printer' object for displaying
-   //--- message on the startup banner.
-   std::unique_ptr<Printer> azerty = nullptr;
-
+  //--- Pointer to 'Printer' object for displaying
+  //--- message on the startup banner.
+  std::unique_ptr<Printer> azerty_ = nullptr;
 };
 
 
@@ -502,214 +487,196 @@ protected:
 ///
 struct ArgSetup {
 
-public:
+  public:
+  /// \brief Constructor
+  /// \param[in] Description of the application as a string
+  ArgSetup(std::string description = "");
 
-   /// \brief Constructor
-   /// \param[in] Description of the application as a string
-   ArgSetup(std::string description = "");
+  /// \brief Returns pointer to the option object for specific name.
+  ///
+  /// \tparam T  Template type for the value of the parameter
+  /// \param[in] name Label for the parameter of interest
+  /// \return Pointer to the anchor with the specified label
+  template <typename T>
+  std::shared_ptr<Anchor<T>> getOption(const std::string& name) const;
 
-   /// \brief Returns pointer to the option object for specific name.
-   ///
-   /// \tparam T  Template type for the value of the parameter
-   /// \param[in] name Label for the parameter of interest
-   /// \return Pointer to the anchor with the specified label
-   template<typename T>
-   std::shared_ptr<Anchor<T> > getOption(const std::string &name) const;
+  /// \brief Add flag for boolean or integral flag
+  ///
+  /// \tparam T  Template type for the value of the parameter
+  /// \param[in] name Label for the parameter of interest
+  /// \param[in] anchor_value Variable to specify and whose initial value
+  ///                         defines the default value
+  /// \param[in] desc String describing the option
+  ///
+  /// \return Pointer to the anchor with the specified label
+  ///
+  /// \note Creates two instances one for the default value
+  /// (with the current value in 'anchor_value') and
+  /// one for the command line.
+  ///
+  /// \note Matches the argument interface as CLI::App
+  ///
+  template <
+    typename T,
+    typename = typename std::enable_if<
+      std::is_same<T, bool>::value || std::is_same<T, int>::value, T>>
+  std::shared_ptr<Anchor<T>> addFlag(
+    const std::string& name, T& anchor_value, const std::string& desc = {});
 
-    /// \brief Add flag for boolean or integral flag
-    ///
-    /// \tparam T  Template type for the value of the parameter
-    /// \param[in] name Label for the parameter of interest
-    /// \param[in] anchor_value Variable to specify and whose initial value
-    ///                         defines the default value
-    /// \param[in] desc String describing the option
-    ///
-    /// \return Pointer to the anchor with the specified label
-    ///
-    /// \note Creates two instances one for the default value
-    /// (with the current value in 'anchor_value') and
-    /// one for the command line.
-    ///
-    /// \note Matches the argument interface as CLI::App
-    ///
-    template<typename T,
-       typename = typename std::enable_if<
-          std::is_same<T, bool>::value || std::is_same<T, int>::value, T
-	   >
-    >
-    std::shared_ptr< Anchor<T>> addFlag(const std::string &name,
-                                        T& anchor_value,
-                                        const std::string &desc = {}
-    );
+  /// \brief Add option for a specified name
+  ///
+  /// \tparam T  Template type for the value of the parameter
+  /// \param[in] name String labelling the option
+  /// \param[in] anchor_value Variable to specify and whose initial value
+  ///                         defines the default value
+  /// \param[in] desc String describing the option
+  ///
+  /// \return Pointer to the anchor with the specified label
+  ///
+  /// \note Creates two instances one for the default value
+  /// (with the current value in 'anchor_value') and
+  /// one for the command line.
+  ///
+  /// \note Matches the argument interface as CLI::App
+  ///
+  template <typename T>
+  std::shared_ptr<Anchor<T>> addOption(
+    const std::string& name, T& anchor_value, const std::string& desc = "");
 
-    /// \brief Add option for a specified name
-    ///
-    /// \tparam T  Template type for the value of the parameter
-    /// \param[in] name String labelling the option
-    /// \param[in] anchor_value Variable to specify and whose initial value
-    ///                         defines the default value
-    /// \param[in] desc String describing the option
-    ///
-    /// \return Pointer to the anchor with the specified label
-    ///
-    /// \note Creates two instances one for the default value
-    /// (with the current value in 'anchor_value') and
-    /// one for the command line.
-    ///
-    /// \note Matches the argument interface as CLI::App
-    ///
-    template <typename T>
-    std::shared_ptr<Anchor<T>> addOption(const std::string &name,
-                                         T& anchor_value,
-                                         const std::string &desc = ""
-    );
+  /// \brief Parse the command line inputs and resolve the precedence rules
+  ///
+  /// \param[in,out] argc Number of arguments
+  /// \param[in,out] argv Array of arguments
+  ///
+  /// \note When exiting, argc and argv will be modified in presence of
+  /// redundancy.
+  ///
+  /// \note At exit, the configuration parameters will be set.
+  ///
+  void parseResolve(int& argc, char**& argv);
 
-   /// \brief Parse the command line inputs and resolve the precedence rules
-   ///
-   /// \param[in,out] argc Number of arguments
-   /// \param[in,out] argv Array of arguments
-   ///
-   /// \note When exiting, argc and argv will be modified in presence of redundancy.
-   ///
-   /// \note At exit, the configuration parameters will be set.
-   ///
-   void parseResolve(int &argc, char** &argv);
+  //
+  // --- Printing routines
+  //
 
-    //
-    // --- Printing routines
-    //
+  /// \brief Print the list of options and instances
+  ///
+  void printBanner();
 
-    /// \brief Print the list of options and instances
-    ///
-    void printBanner();
+  /// \brief Set new default value for a specified name
+  ///
+  /// \tparam T  Template type for the value of the parameter
+  /// \param[in] name String labelling the option
+  /// \param[in] anchor_value Variable to specify and whose initial value
+  ///                         defines the default value
+  /// \param[in] desc String describing the option
+  ///
+  /// \return Pointer to the anchor with the specified label
+  ///
+  template <typename T>
+  std::shared_ptr<Anchor<T>>
+  setNewDefaultValue(const std::string& name, const T& anchor_value);
 
-   /// \brief Set new default value for a specified name
-   ///
-   /// \tparam T  Template type for the value of the parameter
-   /// \param[in] name String labelling the option
-   /// \param[in] anchor_value Variable to specify and whose initial value
-   ///                         defines the default value
-   /// \param[in] desc String describing the option
-   ///
-   /// \return Pointer to the anchor with the specified label
-   ///
-   template <typename T>
-   std::shared_ptr<Anchor<T>> setNewDefaultValue(
-      const std::string &name,
-      const T& anchor_value
-   );
+  /// \brief Create string to output the configuration, i.e.
+  /// the values of all the options.
+  ///
+  /// \param[in] default_also Boolean to identify whether or not to print
+  /// default value
+  /// \param[in] write_description Boolean to turn on/off the printing
+  /// of the parameter description
+  /// \param[in] prefix String containing a prefix to add before each
+  /// option name
+  ///
+  /// \return String describing all the options
+  ///
+  /// \note Creates a string in the ".INI" formatted
+  /// (INI format: https://cliutils.gitlab.io/CLI11Tutorial/chapters/config.html
+  /// )
+  std::string outputConfig(
+    bool default_also, bool write_description, std::string prefix) const;
 
-   /// \brief Create string to output the configuration, i.e.
-   /// the values of all the options.
-   ///
-   /// \param[in] default_also Boolean to identify whether or not to print
-   /// default value
-   /// \param[in] write_description Boolean to turn on/off the printing
-   /// of the parameter description
-   /// \param[in] prefix String containing a prefix to add before each
-   /// option name
-   ///
-   /// \return String describing all the options
-   ///
-   /// \note Creates a string in the ".INI" formatted
-   /// (INI format: https://cliutils.gitlab.io/CLI11Tutorial/chapters/config.html )
-   std::string outputConfig(bool default_also,
-      bool write_description, std::string prefix
-   ) const;
+  protected:
+  /// \brief Add a flag to CLI setup
+  ///
+  /// \param[in] Pointer to the specific anchor
+  /// \param[in] sname String labelling the option
+  /// \param[in] anchor_value Variable to specify and whose initial value
+  ///                         defines the default value
+  /// \param[in] desc String describing the option
+  ///
+  template <typename T>
+  void addFlagToCLI(
+    Anchor<T>* aptr, const std::string& sname, T& anchor_value,
+    const std::string& desc) {}
 
-protected:
+  /// \brief Gather the list of all group names
+  ///
+  /// \returns List of group names
+  std::vector<std::string> getGroupList() const;
 
-   /// \brief Add a flag to CLI setup
-   ///
-   /// \param[in] Pointer to the specific anchor
-   /// \param[in] sname String labelling the option
-   /// \param[in] anchor_value Variable to specify and whose initial value
-   ///                         defines the default value
-   /// \param[in] desc String describing the option
-   ///
-   template< typename T >
-   void addFlagToCLI(
-      Anchor<T>* aptr,
-	  const std::string &sname,
-      T& anchor_value,
-      const std::string &desc
-   ) { }
+  /// \brief Get the list of options for a given group name
+  ///
+  /// \param[in] gname Name of group to study
+  /// \returns List of options in the group
+  std::map<std::string, std::shared_ptr<AnchorBase>>
+  getGroupOptions(const std::string& gname) const;
 
-   /// \brief Gather the list of all group names
-   ///
-   /// \returns List of group names
-   std::vector<std::string> getGroupList() const;
+  /// \brief Parse the command line arguments
+  ///
+  /// \param[in,out] argc Number of arguments
+  /// \param[in,out] argv Array of arguments
+  ///
+  /// \note On exit, argc and argv will be modified in presence of redundancy.
+  ///
+  void parse(int& argc, char**& argv);
 
-   /// \brief Get the list of options for a given group name
-   ///
-   /// \param[in] gname Name of group to study
-   /// \returns List of options in the group
-   std::map< std::string, std::shared_ptr<AnchorBase> >
-        getGroupOptions(const std::string &gname) const;
+  /// \brief Resolve the different options by applying all precedence rules
+  ///
+  void resolveOptions() {
+    for (const auto& opt : options_) {
+      opt.second->resolve();
+    }
+  }
 
-   /// \brief Parse the command line arguments
-   ///
-   /// \param[in,out] argc Number of arguments
-   /// \param[in,out] argv Array of arguments
-   ///
-   /// \note On exit, argc and argv will be modified in presence of redundancy.
-   ///
-   void parse(int& argc, char**& argv);
+  /// \brief Setup printing banner messages
+  ///
+  void prepareOptionsPrinting();
 
-   /// \brief Resolve the different options by applying all precedence rules
-   ///
-   void resolveOptions() {
-      for (const auto &opt : options_) {
-         opt.second->resolve();
-      }
-   }
+  /// \brief Function to verify that a string is acceptable
+  ///
+  /// \param[in] name String to verifyName
+  ///
+  /// \return 'Cleaned-up' string
+  ///
+  /// \note This function removes any '-' characters at the start
+  /// and verify that the remaining characters are acceptable.
+  ///
+  std::string verifyName(const std::string& name) const;
 
-   /// \brief Setup printing banner messages
-   ///
-   void prepareOptionsPrinting();
-
-   /// \brief Function to verify that a string is acceptable
-   ///
-   /// \param[in] name String to verifyName
-   ///
-   /// \return 'Cleaned-up' string
-   ///
-   /// \note This function removes any '-' characters at the start
-   /// and verify that the remaining characters are acceptable.
-   ///
-   std::string verifyName(const std::string &name) const;
-
-protected:
-
+  private:
   std::unique_ptr<CLI::App> app_;
-  std::map<std::string, std::shared_ptr<AnchorBase> > options_ = {};
+  std::map<std::string, std::shared_ptr<AnchorBase>> options_ = {};
 
-public:
-
+  public:
   bool parsed;
-
 };
 
 
 struct Args {
 
-public:
-
-  static ArgSetup setup_;
+  public:
+  static ArgSetup setup;
   static Configs config;
 
-public:
-
+  public:
   /// \brief Routine to initialize the configuration parameters
   /// and to set their default values.
   static void initialize();
 
-private:
-
+  private:
   /// \brief Routine to initialize the debug parameters
   /// and to set their default values.
-  static void initialize_debug();
-
+  static void initializeDebug();
 };
 
 
@@ -718,6 +685,6 @@ inline bool user2() { return Args::config.vt_user_2; }
 inline bool user3() { return Args::config.vt_user_3; }
 
 
-}} /* end namespace vt::arguments */
+}} // end namespace vt::arguments
 
 #endif /*INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H*/

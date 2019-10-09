@@ -47,11 +47,11 @@
 
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/trace/trace.h"
+#include "vt/worker/worker_headers.h"
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <string>
 
 #include <mpi.h>
@@ -64,16 +64,13 @@ struct Runtime {
   using ComponentPtrType = std::unique_ptr<ComponentT>;
 
   Runtime(
-    int& argc, char**& argv,
-    WorkerCountType in_num_workers = no_workers, bool const interop_mode = false,
-    MPI_Comm* in_comm = nullptr,
-    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
-  );
+    int& argc, char**& argv, WorkerCountType in_num_workers = no_workers,
+    bool const interop_mode = false, MPI_Comm* in_comm = nullptr,
+    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance);
 
   Runtime(
     bool const interop_mode = false,
-    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
-  );
+    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance);
 
   Runtime(Runtime const&) = delete;
   Runtime(Runtime&&) = delete;
@@ -82,7 +79,9 @@ struct Runtime {
   virtual ~Runtime();
 
   void setMPIComm(MPI_Comm* in_comm) { communicator_ = in_comm; }
-  void setNumWorkers(WorkerCountType in_num_workers) { num_workers_ = in_num_workers; }
+  void setNumWorkers(WorkerCountType in_num_workers) {
+    num_workers_ = in_num_workers;
+  }
 
   bool isTerminated() const { return not runtime_active_; }
   bool isFinializeble() const { return initialized_ and not finalized_; }
@@ -97,21 +96,20 @@ struct Runtime {
   void abort(std::string const abort_str, ErrorCodeType const code);
   void output(
     std::string const abort_str, ErrorCodeType const code, bool error = false,
-    bool decorate = true, bool formatted = true
-  );
+    bool decorate = true, bool formatted = true);
 
   RuntimeInstType getInstanceID() const { return instance_; }
 
   void systemSync() { sync(); }
 
-private:
+  private:
   RuntimeInstType const instance_;
 
   static bool nodeStackWrite();
   static void writeToFile(std::string const& str);
   static std::string prog_name_;
 
-protected:
+  protected:
   bool tryInitialize();
   bool tryFinalize();
 
@@ -144,7 +142,7 @@ protected:
   static void sigHandlerINT(int sig);
   static void termHandler();
 
-public:
+  public:
   ComponentPtrType<registry::Registry> theRegistry;
   ComponentPtrType<messaging::ActiveMessenger> theMsg;
   ComponentPtrType<ctx::Context> theContext;
@@ -167,14 +165,14 @@ public:
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;
 
-  // Optional components
-  #if backend_check_enabled(trace_enabled)
-    ComponentPtrType<trace::Trace> theTrace = nullptr;
-  #endif
+// Optional components
+#if backend_check_enabled(trace_enabled)
+  ComponentPtrType<trace::Trace> theTrace = nullptr;
+#endif
 
   static bool volatile sig_user_1_;
 
-protected:
+  protected:
   bool finalize_on_term_ = false;
   bool initialized_ = false, finalized_ = false, aborted_ = false;
   bool runtime_active_ = false;
@@ -184,11 +182,11 @@ protected:
   int user_argc_ = 0;
   char** user_argv_ = nullptr;
 
-private:
+  private:
   // True if argument parsing (from CLI or input file) has been performed
   bool parsed_arg_ = false;
 };
 
-}} /* end namespace vt::runtime */
+} } // end namespace vt::runtime
 
 #endif /*INCLUDED_RUNTIME_H*/

@@ -46,20 +46,20 @@
 #define INCLUDED_TRACE_TRACE_H
 
 #include "vt/trace/trace_common.h"
-#include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_containers.h"
 #include "vt/trace/trace_log.h"
+#include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_user_event.h"
 
-#include <cstdint>
 #include <cassert>
-#include <unordered_map>
-#include <stack>
-#include <string>
-#include <vector>
-#include <memory>
+#include <cstdint>
 #include <functional>
 #include <iosfwd>
+#include <memory>
+#include <stack>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include <mpi.h>
 #include <zlib.h>
@@ -67,13 +67,13 @@
 namespace vt { namespace trace {
 
 struct Trace {
-  using LogType             = Log;
-  using TraceConstantsType  = eTraceConstants;
+  using LogType = Log;
+  using TraceConstantsType = eTraceConstants;
   using TraceContainersType = TraceContainers<void>;
-  using TimeIntegerType     = int64_t;
-  using LogPtrType          = LogType*;
-  using TraceContainerType  = std::vector<LogPtrType>;
-  using TraceStackType      = std::stack<LogPtrType>;
+  using TimeIntegerType = int64_t;
+  using LogPtrType = LogType*;
+  using TraceContainerType = std::vector<LogPtrType>;
+  using TraceStackType = std::stack<LogPtrType>;
 
   Trace();
   Trace(std::string const& in_prog_name, std::string const& in_trace_name);
@@ -83,29 +83,24 @@ struct Trace {
   friend struct Log;
 
   std::string getTraceName() const { return full_trace_name; }
-  std::string getSTSName()   const { return full_sts_name;   }
-  std::string getDirectory() const { return full_dir_name;   }
+  std::string getSTSName() const { return full_sts_name; }
+  std::string getDirectory() const { return full_dir_name; }
 
   void initialize();
   void setupNames(
     std::string const& in_prog_name, std::string const& in_trace_name,
-    std::string const& in_dir_name = ""
-  );
+    std::string const& in_dir_name = "");
 
   void beginProcessing(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     TraceEventIDType const event, NodeType const from_node,
-    double const time = getCurrentTime(),
-    uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
-    uint64_t const idx4 = 0
-  );
+    double const time = getCurrentTime(), uint64_t const idx1 = 0,
+    uint64_t const idx2 = 0, uint64_t const idx3 = 0, uint64_t const idx4 = 0);
   void endProcessing(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     TraceEventIDType const event, NodeType const from_node,
-    double const time = getCurrentTime(),
-    uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
-    uint64_t const idx4 = 0
-  );
+    double const time = getCurrentTime(), uint64_t const idx1 = 0,
+    uint64_t const idx2 = 0, uint64_t const idx3 = 0, uint64_t const idx4 = 0);
 
   void beginIdle(double const time = getCurrentTime());
   void endIdle(double const time = getCurrentTime());
@@ -119,8 +114,7 @@ struct Trace {
   void addUserEventManual(UserSpecEventIDType event);
   void addUserEventBracketed(UserEventIDType event, double begin, double end);
   void addUserEventBracketedManual(
-    UserSpecEventIDType event, double begin, double end
-  );
+    UserSpecEventIDType event, double begin, double end);
   void addUserEventBracketedBegin(UserEventIDType event);
   void addUserEventBracketedEnd(UserEventIDType event);
   void addUserEventBracketedManualBegin(UserSpecEventIDType event);
@@ -129,21 +123,17 @@ struct Trace {
   void addUserData(int32_t data);
   void addUserBracketedNote(
     double const begin, double const end, std::string const& note,
-    TraceEventIDType const event = no_trace_event
-  );
+    TraceEventIDType const event = no_trace_event);
 
   TraceEventIDType messageCreation(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    double const time = getCurrentTime()
-  );
+    double const time = getCurrentTime());
   TraceEventIDType messageCreationBcast(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    double const time = getCurrentTime()
-  );
+    double const time = getCurrentTime());
   TraceEventIDType messageRecv(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    NodeType const from_node, double const time = getCurrentTime()
-  );
+    NodeType const from_node, double const time = getCurrentTime());
   TraceEventIDType logEvent(LogPtrType log);
 
   void enableTracing();
@@ -158,41 +148,40 @@ struct Trace {
   void outputControlFile(std::ofstream& file);
   static TimeIntegerType timeToInt(double const time);
   static void traceBeginIdleTrigger();
-  static void outputHeader(
-    NodeType const node, double const start, gzFile file
-  );
-  static void outputFooter(
-    NodeType const node, double const start, gzFile file
-  );
+  static void
+  outputHeader(NodeType const node, double const start, gzFile file);
+  static void
+  outputFooter(NodeType const node, double const start, gzFile file);
 
-  friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
+  friend void
+  insertNewUserEvent(UserEventIDType event, std::string const& name);
 
-private:
+  private:
   void editLastEntry(std::function<void(LogPtrType)> fn);
 
-private:
+  private:
   TraceContainerType traces_;
   TraceStackType open_events_;
-  TraceEventIDType cur_event_   = 1;
-  std::string prog_name_        = "";
-  std::string trace_name_       = "";
-  bool enabled_                 = true;
-  bool idle_begun_              = false;
-  double start_time_            = 0.0;
-  std::string full_trace_name   = "";
-  std::string full_sts_name     = "";
-  std::string full_dir_name     = "";
-  UserEventRegistry user_event  = {};
+  TraceEventIDType cur_event_ = 1;
+  std::string prog_name_ = "";
+  std::string trace_name_ = "";
+  bool enabled_ = true;
+  bool idle_begun_ = false;
+  double start_time_ = 0.0;
+  std::string full_trace_name = "";
+  std::string full_sts_name = "";
+  std::string full_dir_name = "";
+  UserEventRegistry user_event = {};
 };
 
-}} //end namespace vt::trace
+} } // end namespace vt::trace
 
 namespace vt {
 
 #if backend_check_enabled(trace_enabled)
-  extern trace::Trace* theTrace();
+extern trace::Trace* theTrace();
 #endif
 
-}
+} // namespace vt
 
 #endif /*INCLUDED_TRACE_TRACE_H*/
