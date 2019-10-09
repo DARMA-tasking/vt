@@ -91,6 +91,7 @@ static constexpr PipeType const no_pipe                            = u64empty;
 static constexpr ObjGroupProxyType const no_obj_group              = u64empty;
 static constexpr SequentialIDType const no_seq_id                  = u64empty;
 static constexpr SequentialIDType const first_seq_id               = 1;
+static constexpr PriorityType const default_priority               = 0;
 
 }  // end namespace vt
 

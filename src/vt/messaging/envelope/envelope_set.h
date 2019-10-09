@@ -86,6 +86,9 @@ inline void envelopeSetRef(Env& env, RefType const& ref = 0);
 template <typename Env>
 inline void envelopeSetGroup(Env& env, GroupType const& group = default_group);
 
+template <typename Env>
+inline void envelopeSetPriority(Env& env, PriorityType priority);
+
 #if backend_check_enabled(trace_enabled)
 template <typename Env>
 inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt);

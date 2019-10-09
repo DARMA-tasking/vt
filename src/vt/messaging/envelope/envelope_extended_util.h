@@ -64,6 +64,12 @@ inline TagType envelopeGetTag(Env const& env);
 template <typename Env>
 inline void envelopeSetTag(Env& env, TagType const& tag);
 
+template <typename Env>
+inline PriorityType envelopeGetPriority(Env& env);
+
+template <typename Env>
+inline void envelopeSetPriority(Env& env, PriorityType priority);
+
 inline void envelopeInitEmpty(EpochEnvelope&    env);
 inline void envelopeInitEmpty(TagEnvelope&      env);
 inline void envelopeInitEmpty(EpochTagEnvelope& env);

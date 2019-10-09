@@ -60,6 +60,7 @@ struct ActiveEnvelope {
   HandlerType han       : handler_num_bits;
   RefType ref           : ref_num_bits;
   GroupType group       : group_num_bits;
+  PriorityType priority : priority_num_bits;
 
   #if backend_check_enabled(trace_enabled)
   trace::TraceEventIDType trace_event : trace::trace_event_num_bits;

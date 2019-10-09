@@ -63,6 +63,8 @@ static constexpr BitCountType const
     tag_num_bits = BitCounterType<TagType>::value;
 static constexpr BitCountType const
     group_num_bits = BitCounterType<GroupType>::value;
+static constexpr BitCountType const
+    priority_num_bits = BitCounterType<PriorityType>::value;
 
 }  // end namespace vt
 

@@ -70,6 +70,11 @@ inline RefType envelopeGetRef(Env& env) {
   return reinterpret_cast<Envelope*>(&env)->ref;
 }
 
+template <typename Env>
+inline PriorityType envelopeGetPriority(Env& env) {
+  return reinterpret_cast<Envelope*>(&env)->priority;
+}
+
 #if backend_check_enabled(trace_enabled)
 template <typename Env>
 inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env) {
