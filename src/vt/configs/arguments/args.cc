@@ -537,7 +537,7 @@ void Warning::output() {
 }
 
 /* ------------------------------------------------- */
-// --- Member functions for class Anchor<T>
+// --- Member functions for struct Anchor<T>
 /* ------------------------------------------------- */
 
 
@@ -768,7 +768,7 @@ void Anchor<T>::setBannerMsgWarning(
 }
 
 /* ------------------------------------------------- */
-// --- Member functions for class ArgSetup
+// --- Member functions for struct ArgSetup
 /* ------------------------------------------------- */
 
 ArgSetup::ArgSetup(std::string description)

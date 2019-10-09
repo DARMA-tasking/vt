@@ -147,9 +147,9 @@ struct Configs {
 
 
 //--- Build enum for the context
-enum class ContextEnum : std::uint8_t { dFault, commandLine, thirdParty };
+enum struct ContextEnum : std::uint8_t { dFault, commandLine, thirdParty };
 
-/// \brief Virtual class for storing an option/flag
+/// \brief Virtual struct for storing an option/flag
 struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
 
   /// \brief Count how many instances of the parameter 'name'
@@ -248,7 +248,7 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
   //--- Build enum for ordering the context
   //--- Order of the contexts can be specified
   //--- independently of an instance for that context.
-  enum class OrderContextEnum : std::uint8_t {
+  enum struct OrderContextEnum : std::uint8_t {
     MIN = 0,
     dFault = 1,
     commandLine = 2,
@@ -279,9 +279,9 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
   std::set<std::shared_ptr<AnchorBase>> excludes_;
 };
 
-class Printer;
+struct Printer;
 
-/// \brief Template class for storing an option/flag
+/// \brief Template struct for storing an option/flag
 template <typename T>
 struct Anchor : public AnchorBase {
 
@@ -408,7 +408,7 @@ struct Anchor : public AnchorBase {
   friend struct ArgSetup;
 
   protected:
-  //--- Class for storing each instance of one anchor
+  //--- Structure for storing each instance of one anchor
   template <typename U = T>
   struct Instance {
 
@@ -469,7 +469,7 @@ protected:
 
 /// \brief Structure to store all the different configuration parameters
 ///
-/// \note This class provides the interface between VT configuration parameters
+/// \note This struct provides the interface between VT configuration parameters
 /// and an external code (like a third-party code linking with VT).
 ///
 /// \note When an external code wants to specify a VT configuration parameter

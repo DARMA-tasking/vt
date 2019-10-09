@@ -96,7 +96,7 @@ std::string getNull<std::string>() {
 }
 
 
-class Printer {
+struct Printer {
   public:
   virtual void output() = 0;
 };
@@ -107,7 +107,7 @@ struct Anchor;
 
 
 template <typename T>
-class PrintOn : public Printer {
+struct PrintOn : public Printer {
   public:
   PrintOn(Anchor<T>* opt, const std::string& msg_str);
 
@@ -124,7 +124,7 @@ class PrintOn : public Printer {
 
 
 template <typename T>
-class PrintOnOff : public Printer {
+struct PrintOnOff : public Printer {
   public:
   PrintOnOff(
     Anchor<T>* opt, const std::string& msg_on, const std::string& msg_off);
@@ -141,7 +141,7 @@ class PrintOnOff : public Printer {
 };
 
 
-class Warning : public Printer {
+struct Warning : public Printer {
   public:
   Warning(Anchor<bool>* opt, const std::string& compile);
   Warning(
