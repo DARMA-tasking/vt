@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 scheduler.h
+//                               priority_queue.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,81 +42,38 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SCHEDULER_SCHEDULER_H
-#define INCLUDED_SCHEDULER_SCHEDULER_H
+#if !defined INCLUDED_VT_SCHEDULER_PRIORITY_QUEUE_H
+#define INCLUDED_VT_SCHEDULER_PRIORITY_QUEUE_H
 
 #include "vt/config.h"
-#include "vt/scheduler/queue.h"
-#include "vt/scheduler/priority_queue.h"
 #include "vt/scheduler/prioritized_work_unit.h"
-#include "vt/scheduler/work_unit.h"
-#include "vt/messaging/message/smart_ptr.h"
 
-#include <cassert>
-#include <vector>
-#include <list>
-#include <functional>
-#include <memory>
+#include <queue>
 
-namespace vt { namespace sched {
+namespace vt { namespace scheduler {
 
-enum SchedulerEvent {
-  BeginIdle = 0,
-  EndIdle = 1,
-  SchedulerEventSize = 2
-};
+template <typename T>
+struct PriorityQueue {
+  PriorityQueue() = default;
+  PriorityQueue(PriorityQueue const&) = default;
+  PriorityQueue(PriorityQueue&&) = default;
 
-struct Scheduler {
-  using SchedulerEventType = SchedulerEvent;
-  using TriggerType = std::function<void()>;
-  using TriggerContainerType = std::list<TriggerType>;
-  using EventTriggerContType = std::vector<TriggerContainerType>;
+  void push(T elm) { impl_.push(elm); }
 
-  Scheduler();
+  void emplace(T&& elm) { impl_.emplace(std::forward<T>(elm)); }
 
-  static void checkTermSingleNode();
+  T pop() { auto elm = impl_.top(); impl_.pop(); return elm; }
 
-  bool runNextUnit();
-  bool progressMsgOnlyImpl();
-  void scheduler(bool msg_only = false);
-  bool progressImpl();
-  void schedulerForever();
-  void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
-  void registerTriggerOnce(
-    SchedulerEventType const& event, TriggerType trigger
-  );
-  void triggerEvent(SchedulerEventType const& event);
-  bool hasSchedRun() const { return has_executed_; }
+  T const& top() { return impl_.top(); }
 
-  void enqueue(ActionType action);
-  void enqueue(PriorityType priority, ActionType action);
+  std::size_t size() const { return impl_.size(); }
 
-  template <typename MsgT>
-  void enqueue(MsgT* msg, ActionType action);
-  template <typename MsgT>
-  void enqueue(MsgSharedPtr<MsgT> msg, ActionType action);
-
-  std::size_t workQueueSize() const { return work_queue_.size(); }
-  bool workQueueEmpty() const { return work_queue_.empty(); }
+  bool empty() const { return impl_.empty(); }
 
 private:
-  Queue<Unit> work_queue_;
-
-  bool has_executed_ = false;
-  bool is_idle = false;
-
-  EventTriggerContType event_triggers;
-  EventTriggerContType event_triggers_once;
+  std::priority_queue<T, std::vector<T>> impl_;
 };
 
-}} //end namespace vt::scheduler
+}} /* end namespace vt::scheduler */
 
-namespace vt {
-
-void runScheduler();
-
-extern sched::Scheduler* theSched();
-
-}  //end namespace vt
-
-#endif /*INCLUDED_SCHEDULER_SCHEDULER_H*/
+#endif /*INCLUDED_VT_SCHEDULER_PRIORITY_QUEUE_H*/
