@@ -67,10 +67,16 @@ enum SchedulerEvent {
 };
 
 struct Scheduler {
-  using SchedulerEventType = SchedulerEvent;
-  using TriggerType = std::function<void()>;
+  using SchedulerEventType   = SchedulerEvent;
+  using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
+
+# if backend_check_enabled(priorities)
+  using UnitType             = PriorityUnit;
+# else
+  using UnitType             = Unit;
+# endif
 
   Scheduler();
 
@@ -102,9 +108,9 @@ struct Scheduler {
 private:
 
 # if backend_check_enabled(priorities)
-  PriorityQueue<PriorityUnit> work_queue_;
+  PriorityQueue<UnitType> work_queue_;
 # else
-  Queue<Unit> work_queue_;
+  Queue<UnitType> work_queue_;
 # endif
 
   bool has_executed_ = false;

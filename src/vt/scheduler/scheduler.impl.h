@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           prioritized_work_unit.h
+//                               scheduler.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,38 +42,34 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_SCHEDULER_PRIORITIZED_WORK_UNIT_H
-#define INCLUDED_VT_SCHEDULER_PRIORITIZED_WORK_UNIT_H
+#if !defined INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
+#define INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
 
 #include "vt/config.h"
 
 namespace vt { namespace scheduler {
 
-struct PriorityUnit {
-  using UnitActionType = ActionType;
+template <typename MsgT>
+void Scheduler::enqueue(MsgT* msg, ActionType action) {
+# if backend_check_enabled(priorities)
+  auto priority = envelopeGetPriority(msg->env);
+  work_queue_.emplace(UnitType(priority, action));
+# else
+  work_queue_.emplace(UnitType(action));
+# endif
+}
 
-  PriorityUnit(PriorityType in_priority, UnitActionType in_work)
-    : work_(in_work), priority_(in_priority)
-  { }
-
-  void operator()() { execute(); }
-
-  void execute() {
-    vtAssertExpr(work_ != nullptr);
-    work_();
-  }
-
-  friend bool operator<(PriorityUnit const& lhs, PriorityUnit const& rhs) {
-    return lhs.priority_ < rhs.priority_;
-  }
-
-private:
-  UnitActionType work_  = nullptr;
-  PriorityType priority_ = default_priority;
-};
+template <typename MsgT>
+void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, ActionType action) {
+  //
+  // Assume that MsgSharedPtr<MsgT> is already captured in the action.
+  //
+  // To speed this up, in the future, we could have a pure message queue that
+  // could be dispatched directly based on type/state-bits
+  //
+  enqueue<MsgT>(msg.get(), action);
+}
 
 }} /* end namespace vt::scheduler */
 
-#include "vt/scheduler/scheduler.impl.h"
-
-#endif /*INCLUDED_VT_SCHEDULER_PRIORITIZED_WORK_UNIT_H*/
+#endif /*INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H*/
