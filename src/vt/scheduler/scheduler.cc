@@ -69,7 +69,19 @@ Scheduler::Scheduler() {
 }
 
 void Scheduler::enqueue(ActionType action) {
-  work_queue_.push(Unit(action));
+# if backend_check_enabled(priorities)
+  work_queue_.emplace(UnitType(default_priority, action));
+# else
+  work_queue_.emplace(UnitType(action));
+# endif
+}
+
+void Scheduler::enqueue(PriorityType priority, ActionType action) {
+# if backend_check_enabled(priorities)
+  work_queue_.emplace(UnitType(priority, action));
+# else
+  work_queue_.emplace(UnitType(action));
+# endif
 }
 
 bool Scheduler::runNextUnit() {
