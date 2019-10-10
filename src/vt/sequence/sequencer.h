@@ -98,6 +98,7 @@ struct TaggedSequencer {
   static std::unique_ptr<SeqManagerType> seq_manager;
 
   TaggedSequencer() = default;
+  virtual ~TaggedSequencer() {}
 
   // Get the correct ID based on the type
   virtual SeqType getNextID();
