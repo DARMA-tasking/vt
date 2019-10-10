@@ -47,6 +47,8 @@
 
 #include "vt/config.h"
 #include "vt/scheduler/priority_manip.h"
+#include "vt/utils/bits/bits_common.h"
+#include "vt/utils/bits/bits_packer.h"
 
 namespace vt { namespace sched {
 
