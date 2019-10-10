@@ -1,6 +1,6 @@
 # *vt* => virtual transport
 
-https://travis-ci.com/DARMA-tasking/vt.svg?branch=develop
+![Build Status](https://travis-ci.com/DARMA-tasking/vt.svg?branch=develop)
 
 ## Introduction : What is *vt*?
 
