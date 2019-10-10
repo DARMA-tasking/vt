@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 template <typename MsgT>
 void Scheduler::enqueue(MsgT* msg, ActionType action) {
@@ -70,6 +70,6 @@ void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, ActionType action) {
   enqueue<MsgT>(msg.get(), action);
 }
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H*/
