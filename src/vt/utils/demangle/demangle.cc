@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                 demangle.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 
 #include "vt/config.h"
@@ -20,8 +63,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   std::string clean_funcname  = {};
   std::string clean_params    = {};
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT before: adapt={}\n", str
   );
 
@@ -31,16 +74,17 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   CountType const start_sentinel = -1;
   CountType start                = start_sentinel;
 
+  CountType limit = str.size() - adapt_start_mem.size() - 1;
   bool found_member = false;
-  for (CountType i = 0; i < str.size() - adapt_start_mem.size() - 1; i++) {
+  for (CountType i = 0; i < limit; i++) {
     auto const substr = str.substr(i, adapt_start_mem.size());
-    debug_print(
-      verbose, gen, node,
+    debug_print_verbose(
+      gen, node,
       "ADAPT XX substr: substr={}\n", substr
     );
     if (substr == adapt_start_mem) {
-      debug_print(
-        verbose, gen, node,
+      debug_print_verbose(
+        gen, node,
         "ADAPT substr: substr={}\n", substr
       );
       start = i;
@@ -50,15 +94,15 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   }
 
   if (not found_member) {
-    for (CountType i = 0; i < str.size() - adapt_start.size() - 1; i++) {
+    for (CountType i = 0; i < limit; i++) {
       auto const substr = str.substr(i, adapt_start.size());
-      debug_print(
-        verbose, gen, node,
+      debug_print_verbose(
+        gen, node,
         "ADAPT XX substr: substr={}\n", substr
       );
       if (substr == adapt_start) {
-        debug_print(
-          verbose, gen, node,
+        debug_print_verbose(
+          gen, node,
           "ADAPT substr: substr={}\n", substr
         );
         start = i;
@@ -97,8 +141,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   func_adapt_params = str;
 # endif
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: adapt={}\n", func_adapt_params
   );
 
@@ -141,14 +185,14 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   }
 
   for (auto&& elm : pieces) {
-    debug_print(
-      verbose, gen, node,
+    debug_print_verbose(
+      gen, node,
       "ADAPT: split: adapt={}\n", elm
     );
   }
 
   vtAssertInfo(
-    pieces.size() == 2, "Must be two pieces", pieces[0]
+    pieces.size() >= 2, "Must be two pieces", pieces[0]
   );
 
   auto const func_args = pieces[0];
@@ -161,12 +205,12 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     auto const func_name = pieces[1];
 #   endif
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: func_args: adapt={}\n", func_args
   );
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: func_name: adapt={}\n", func_name
   );
 
@@ -174,7 +218,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 # elif defined(__GNUC__)
   std::string func_name_no_template = {};
   CountType temp_in = 0, temp_out = 0;
-  for (int i = 0; i < func_name.size(); i++) {
+  for (size_t i = 0; i < func_name.size(); i++) {
     if (func_name[i] == '<') { temp_in++;  };
     if (func_name[i] == '>') { temp_out++; };
     if (temp_in == temp_out && func_name[i] != '>') {
@@ -182,8 +226,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     }
   }
   func_name = DemanglerUtils::removeSpaces(func_name_no_template);
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: func_name_no_template: adapt={}\n", func_name_no_template
   );
 # endif
@@ -191,9 +235,9 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   std::string const delim_str = {"::"};
   CountType cur_func_piece = 0;
   std::vector<std::string> func_name_pieces(cur_func_piece + 1);
-  for (int i = 0; i < func_name.size(); i++) {
+  for (size_t i = 0; i < func_name.size(); i++) {
     if (
-      func_name.size() - 1   >    i + 1           &&
+      func_name.size() - 1   >    i + 1U          &&
       func_name[i    ]       ==   delim_str[0]    &&
       func_name[i + 1]       ==   delim_str[1]
     ) {
@@ -207,8 +251,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
   #if backend_check_enabled(verbose) && backend_check_enabled(gen)
     for (auto&& elm : func_name_pieces) {
-      debug_print(
-        verbose, gen, node,
+      debug_print_verbose(
+        gen, node,
         "ADAPT: func_name piece: adapt={}\n", elm
       );
     }
@@ -220,8 +264,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     fused_namespace = "::";
   } else {
     for (auto iter = func_name_pieces.begin(); iter != func_name_pieces.end() - 1; ++iter) {
-      debug_print(
-        verbose, gen, node,
+      debug_print_verbose(
+        gen, node,
         "ADAPT: NS piece: adapt={}\n", *iter
       );
       fused_namespace += *iter + "::";
@@ -254,8 +298,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
                           init_offset,
       func_args.size() - (init_offset) - 1
     );
-    debug_print(
-      verbose, gen, node,
+    debug_print_verbose(
+      gen, node,
       "ADAPT: args={}\n", args
     );
     clean_params = DemanglerUtils::removeSpaces(args);
@@ -265,7 +309,7 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 
   if (found_member) {
     CountType pstart = 0;
-    for (auto i = 0; i < clean_params.size(); i++) {
+    for (size_t i = 0; i < clean_params.size(); i++) {
       if (clean_params[i] == '*') {
         pstart = i+3;
         break;
@@ -274,8 +318,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
     clean_params = clean_params.substr(pstart,clean_params.size());
   }
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "ADAPT: \n"
     "\t CLEAN namespace = \"{}\" \n"
     "\t CLEAN  funcname = \"{}\" \n"
@@ -293,8 +337,8 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
 ActiveFunctorDemangler::parseActiveFunctorName(
   std::string const& name, std::string const& args
 ) {
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "parseActiveFunctorName: \n"
     "\t input name = \"{}\" \n"
     "\t input args = \"{}\" \n",
@@ -303,8 +347,8 @@ ActiveFunctorDemangler::parseActiveFunctorName(
 
   auto const ret = ActiveFunctionDemangler::parseActiveFunctionName(name);
 
-  debug_print(
-    verbose, gen, node,
+  debug_print_verbose(
+    gen, node,
     "parseActiveFunctorName: \n"
     "\t CLEAN namespace = \"{}\" \n"
     "\t CLEAN funcname = \"{}\" \n",

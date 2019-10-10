@@ -1,15 +1,21 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(vt)
 
-set(VIRTUAL_TRANSPORT_LIBRARY vt)
+include(cmake/turn_on_warnings.cmake)
+
+set(VIRTUAL_TRANSPORT_LIBRARY vt CACHE INTERNAL "" FORCE )
 set(FCONTEXT_LIBRARY fcontext)
 
 # Set the local module path so custom cmake scripts can be located automatically
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules/")
 
 # Try to find ccache to speed up compilation
 find_program(ccache_binary ccache)
 if (ccache_binary)
+  message(
+    STATUS
+    "VT: Found ccache binary: ${ccache_binary}; adding launch rule"
+  )
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${ccache_binary}")
 endif()
 
@@ -22,6 +28,12 @@ include(cmake/link_vt.cmake)
 # Load all the packages that are required for VT
 include(cmake/load_packages.cmake)
 
+# Code coverage option of VT
+OPTION(CODE_COVERAGE_ENABLED FALSE)
+if(CODE_COVERAGE_ENABLED)
+    include(cmake/code_coverage.cmake)
+endif(CODE_COVERAGE_ENABLED)
+
 set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)
@@ -31,6 +43,8 @@ include(cmake/build_git_info.cmake)
 
 # Add subdirectories for tests and examples
 add_subdirectory(${PROJECT_LIB_DIR}/context)
+add_subdirectory(${PROJECT_LIB_DIR}/CLI)
+add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 add_subdirectory(src)
 
 add_custom_target(examples)

@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                   args.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/config.h"
 #include "vt/configs/arguments/args.h"
@@ -5,11 +48,10 @@
 #include <string>
 #include <vector>
 
-#include <CLI/CLI.hpp>
+#include "CLI/CLI11.hpp"
 
 namespace vt { namespace arguments {
 
-/*static*/ CLI::App    ArgConfig::app{"vt"};
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
 /*static*/ bool        ArgConfig::vt_auto_color         = false;
@@ -34,16 +76,23 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
+/*static*/ bool        ArgConfig::vt_lb_quiet           = false;
 /*static*/ std::string ArgConfig::vt_lb_file_name       = "balance.in";
 /*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
 /*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
+/*static*/ bool        ArgConfig::vt_lb_stats           = false;
+/*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
+/*static*/ std::string ArgConfig::vt_lb_stats_file      = "stats";
 
+/*static*/ bool        ArgConfig::vt_term_rooted_use_ds = false;
+/*static*/ bool        ArgConfig::vt_term_rooted_use_wave = false;
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
 
 /*static*/ bool        ArgConfig::vt_pause              = false;
 
 /*static*/ bool        ArgConfig::vt_debug_all          = false;
+/*static*/ bool        ArgConfig::vt_debug_verbose      = false;
 /*static*/ bool        ArgConfig::vt_debug_none         = false;
 /*static*/ bool        ArgConfig::vt_debug_gen          = false;
 /*static*/ bool        ArgConfig::vt_debug_runtime      = false;
@@ -73,6 +122,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_worker       = false;
 /*static*/ bool        ArgConfig::vt_debug_group        = false;
 /*static*/ bool        ArgConfig::vt_debug_broadcast    = false;
+/*static*/ bool        ArgConfig::vt_debug_objgroup     = false;
 
 /*static*/ bool        ArgConfig::vt_user_1             = false;
 /*static*/ bool        ArgConfig::vt_user_2             = false;
@@ -87,12 +137,15 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::parsed                = false;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
+  static CLI::App app{"vt"};
+
   if (parsed || argc == 0 || argv == nullptr) {
     return 0;
   }
 
+  // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
-  for (auto i = 0; i < argc; i++) {
+  for (auto i = argc-1; i > 0; i--) {
     args.push_back(std::string(argv[i]));
   }
 
@@ -140,7 +193,6 @@ namespace vt { namespace arguments {
   auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
   auto abort  = "Do not dump stack traces when vtAabort(..) is invoked";
   auto file   = "Dump stack traces to file instead of stdout";
-  auto name   = "Name of file to dump stack backtrace";
   auto dir    = "Name of directory to write stack files";
   auto mod    = "Write stack dump if (node % vt_stack_mod) == 0";
   auto g = app.add_flag("--vt_no_warn_stack",   vt_no_warn_stack,   warn);
@@ -182,9 +234,10 @@ namespace vt { namespace arguments {
    * Flags for controlling debug print output at runtime
    */
 
-  #define debug_pp(opt) debug_pretty_print(opt)
+  #define debug_pp(opt) +std::string(vt::config::PrettyPrintCat<config::opt>::str)+
 
   auto rp  = "Enable all debug prints";
+  auto rq  = "Enable verbose debug prints";
   auto aap = "Enable debug_none         = \"" debug_pp(none)         "\"";
   auto bap = "Enable debug_gen          = \"" debug_pp(gen)          "\"";
   auto cap = "Enable debug_runtime      = \"" debug_pp(runtime)      "\"";
@@ -214,8 +267,10 @@ namespace vt { namespace arguments {
   auto abp = "Enable debug_worker       = \"" debug_pp(worker)       "\"";
   auto bbp = "Enable debug_group        = \"" debug_pp(group)        "\"";
   auto cbp = "Enable debug_broadcast    = \"" debug_pp(broadcast)    "\"";
+  auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
 
   auto r  = app.add_flag("--vt_debug_all",          vt_debug_all,          rp);
+  auto r1 = app.add_flag("--vt_debug_verbose",      vt_debug_verbose,      rq);
   auto aa = app.add_flag("--vt_debug_none",         vt_debug_none,         aap);
   auto ba = app.add_flag("--vt_debug_gen",          vt_debug_gen,          bap);
   auto ca = app.add_flag("--vt_debug_runtime",      vt_debug_runtime,      cap);
@@ -245,8 +300,10 @@ namespace vt { namespace arguments {
   auto ab = app.add_flag("--vt_debug_worker",       vt_debug_worker,       abp);
   auto bb = app.add_flag("--vt_debug_group",        vt_debug_group,        bbp);
   auto cb = app.add_flag("--vt_debug_broadcast",    vt_debug_broadcast,    cbp);
+  auto db = app.add_flag("--vt_debug_objgroup",     vt_debug_objgroup,     dbp);
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
   r->group(debugGroup);
+  r1->group(debugGroup);
   aa->group(debugGroup);
   ba->group(debugGroup);
   ca->group(debugGroup);
@@ -276,30 +333,45 @@ namespace vt { namespace arguments {
   ab->group(debugGroup);
   bb->group(debugGroup);
   cb->group(debugGroup);
+  db->group(debugGroup);
 
   /*
    * Flags for enabling load balancing and configuring it
    */
 
-  auto lb           = "Enable load balancing";
-  auto lb_file      = "Enable reading LB configuration from file";
-  auto lb_file_name = "LB configuration file to read";
-  auto lb_name      = "Name of the load balancer to use";
-  auto lb_interval  = "Load balancing interval";
+  auto lb            = "Enable load balancing";
+  auto lb_file       = "Enable reading LB configuration from file";
+  auto lb_quiet      = "Silence load balancing output";
+  auto lb_file_name  = "LB configuration file to read";
+  auto lb_name       = "Name of the load balancer to use";
+  auto lb_interval   = "Load balancing interval";
+  auto lb_stats      = "Enable load balancing statistics";
+  auto lb_stats_dir  = "Load balancing statistics output directory";
+  auto lb_stats_file = "Load balancing statistics output file name";
   auto lbn = "NoLB";
   auto lbi = 1;
   auto lbf = "balance.in";
-  auto s = app.add_flag("--vt_lb",             vt_lb,            lb);
-  auto t = app.add_flag("--vt_lb_file",        vt_lb_file,       lb_file);
-  auto u = app.add_option("--vt_lb_file_name", vt_lb_file_name,  lb_file_name, lbf);
-  auto v = app.add_option("--vt_lb_name",      vt_lb_name,       lb_name,      lbn);
-  auto w = app.add_option("--vt_lb_interval",  vt_lb_interval,   lb_interval,  lbi);
+  auto lbd = "vt_lb_stats";
+  auto lbs = "stats";
+  auto s  = app.add_flag("--vt_lb",              vt_lb,             lb);
+  auto t  = app.add_flag("--vt_lb_file",         vt_lb_file,        lb_file);
+  auto t1 = app.add_flag("--vt_lb_quiet",        vt_lb_quiet,       lb_quiet);
+  auto u  = app.add_option("--vt_lb_file_name",  vt_lb_file_name,   lb_file_name, lbf);
+  auto v  = app.add_option("--vt_lb_name",       vt_lb_name,        lb_name,      lbn);
+  auto w  = app.add_option("--vt_lb_interval",   vt_lb_interval,    lb_interval,  lbi);
+  auto ww = app.add_flag("--vt_lb_stats",        vt_lb_stats,       lb_stats);
+  auto wx = app.add_option("--vt_lb_stats_dir",  vt_lb_stats_dir,   lb_stats_dir, lbd);
+  auto wy = app.add_option("--vt_lb_stats_file", vt_lb_stats_file,  lb_stats_file,lbs);
   auto debugLB = "Load Balancing";
   s->group(debugLB);
   t->group(debugLB);
+  t1->group(debugLB);
   u->group(debugLB);
   v->group(debugLB);
   w->group(debugLB);
+  ww->group(debugLB);
+  wx->group(debugLB);
+  wy->group(debugLB);
 
   /*
    * Flags for controlling termination
@@ -307,11 +379,17 @@ namespace vt { namespace arguments {
 
   auto hang         = "Disable termination hang detection";
   auto hang_freq    = "The number of tree traversals before a hang is detected";
+  auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
+  auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
   auto hfd          = 1024;
-  auto x = app.add_flag("--vt_no_detect_hang", vt_no_detect_hang, hang);
-  auto y = app.add_option("--vt_hang_freq",    vt_hang_freq,      hang_freq, hfd);
+  auto x  = app.add_flag("--vt_no_detect_hang",       vt_no_detect_hang,       hang);
+  auto x1 = app.add_flag("--vt_term_rooted_use_ds",   vt_term_rooted_use_ds,   ds);
+  auto x2 = app.add_flag("--vt_term_rooted_use_wave", vt_term_rooted_use_wave, wave);
+  auto y = app.add_option("--vt_hang_freq",           vt_hang_freq,      hang_freq, hfd);
   auto debugTerm = "Termination";
   x->group(debugTerm);
+  x1->group(debugTerm);
+  x2->group(debugTerm);
   y->group(debugTerm);
 
   /*
@@ -364,8 +442,8 @@ namespace vt { namespace arguments {
   app.allow_extras(true);
   try {
     app.parse(args);
-  } catch (CLI::Error &e) {
-    return app.exit(e);
+  } catch (CLI::Error &ex) {
+    return app.exit(ex);
   }
 
   /*
@@ -374,22 +452,26 @@ namespace vt { namespace arguments {
    */
   std::vector<std::string> ret_args;
   std::vector<std::size_t> ret_idx;
+  int item = 0;
 
-  // Reverse iterate (CLI11 reverses the order when they modify the args)
-  for (auto iter = args.rbegin(); iter != args.rend(); ++iter) {
-    for (auto i = 0; i < argc; i++) {
-      if (std::string(argv[i]) == *iter) {
-        ret_idx.push_back(i);
+  // Iterate forward (CLI11 reverses the order when it modifies the args)
+  for (auto&& skipped : args) {
+    for (auto ii = item; ii < argc; ii++) {
+      if (std::string(argv[ii]) == skipped) {
+        ret_idx.push_back(ii);
+        item++;
+        break;
       }
     }
-    ret_args.push_back(*iter);
+    ret_args.push_back(skipped);
   }
 
   // Use the saved index to setup the new_argv and new_argc
-  int new_argc = ret_args.size();
-  char** new_argv = new char*[new_argc];
-  for (auto i = 0; i < new_argc; i++) {
-    new_argv[i] = argv[ret_idx[i]];
+  int new_argc = ret_args.size() + 1;
+  char** new_argv = new char*[new_argc + 1];
+  new_argv[0] = argv[0];
+  for (auto ii = 1; ii < new_argc; ii++) {
+    new_argv[ii] = argv[ret_idx[ii - 1]];
   }
 
   // Set them back with all vt arguments elided

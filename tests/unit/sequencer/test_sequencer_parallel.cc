@@ -1,6 +1,48 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                          test_sequencer_parallel.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include <atomic>
 #include <cstdint>
@@ -54,13 +96,18 @@ struct TestSequencerParallelParam : TestParallelHarnessParam<CountType> {
     std::atomic<OrderType>* order, int wait_n, int num_pars, int start_order
   ) {
     theSeq()->wait_closure<MessageT, f>(no_tag, [=](MessageT* msg){
+      #if DEBUG_TEST_HARNESS_PRINT
       std::stringstream str_build;
       str_build << "PAR-";
       str_build << wait_n;
       auto str = str_build.str().c_str();
       DEBUG_PRINT_SEQ_NESTED(*order, wait_n, str);
+      #endif
       OrderType const result = order->fetch_add(1);
-      EXPECT_TRUE(result >= start_order or result <= start_order + num_pars);
+      EXPECT_TRUE(
+        result >= static_cast<OrderType>(start_order) or
+        result <= static_cast<OrderType>(start_order + num_pars)
+      );
     });
   }
 
@@ -77,7 +124,7 @@ struct TestSequencerParallelParam : TestParallelHarnessParam<CountType> {
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     std::atomic<OrderType>* order_ptr = &seq_ordering_;
 
@@ -117,7 +164,7 @@ TEST_P(TestSequencerParallelParam, test_seq_parallel_param) {
 
 INSTANTIATE_TEST_CASE_P(
   test_seq_parallel_param, TestSequencerParallelParam,
-  ::testing::Range(static_cast<CountType>(0), static_cast<CountType>(16), 1)
+  ::testing::Range(static_cast<CountType>(0), static_cast<CountType>(16), 1),
 );
 
 struct TestSequencerParallel : TestParallelHarness {
@@ -133,13 +180,13 @@ struct TestSequencerParallel : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 3);
+      EXPECT_EQ(seq_ordering_++, 3U);
       return;
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->parallel(seq_id, []{
       theSeq()->wait<TestMsg, seqParHan1>([](TestMsg* msg){
@@ -161,13 +208,18 @@ struct TestSequencerParallel : TestParallelHarness {
     std::atomic<OrderType>* order, int wait_n, int num_pars, int start_order
   ) {
     theSeq()->wait_closure<MessageT, f>(no_tag, [=](MessageT* msg){
+      #if DEBUG_TEST_HARNESS_PRINT
       std::stringstream str_build;
       str_build << "PAR-";
       str_build << wait_n;
       auto str = str_build.str().c_str();
       DEBUG_PRINT_SEQ_NESTED(*order, wait_n, str);
+      #endif
       OrderType const result = order->fetch_add(1);
-      EXPECT_TRUE(result >= start_order or result <= start_order + num_pars);
+      EXPECT_TRUE(
+        result >= static_cast<OrderType>(start_order) or
+        result <= static_cast<OrderType>(start_order + num_pars)
+      );
     });
   }
 
@@ -175,16 +227,16 @@ struct TestSequencerParallel : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 4);
+      EXPECT_EQ(seq_ordering_++, 4U);
       return;
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, seqParHan2>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     std::atomic<OrderType>* order_ptr = &seq_ordering_;
@@ -199,16 +251,16 @@ struct TestSequencerParallel : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 5);
+      EXPECT_EQ(seq_ordering_++, 5U);
       return;
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, seqParHan3>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     std::atomic<OrderType>* order_ptr = &seq_ordering_;
@@ -219,7 +271,7 @@ struct TestSequencerParallel : TestParallelHarness {
     theSeq()->parallel(seq_id, fn1, fn2);
 
     theSeq()->wait<TestMsg, seqParHan3>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 4);
+      EXPECT_EQ(seq_ordering_++, 4U);
     });
   }
 
@@ -227,30 +279,30 @@ struct TestSequencerParallel : TestParallelHarness {
     static std::atomic<OrderType> seq_ordering_{};
 
     if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 5);
+      EXPECT_EQ(seq_ordering_++, 5U);
       return;
     }
 
     DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
 
-    EXPECT_EQ(seq_ordering_++, 0);
+    EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->wait<TestMsg, seqParHan4>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 1);
+      EXPECT_EQ(seq_ordering_++, 1U);
     });
 
     theSeq()->sequenced([]{
-      SeqType const seq_id = theSeq()->getCurrentSeq();
+      SeqType const my_seq_id = theSeq()->getCurrentSeq();
 
       std::atomic<OrderType>* order_ptr = &seq_ordering_;
       auto fn1 = std::bind(waitParNum<TestMsg, seqParHan4>, order_ptr, 1, 2, 2);
       auto fn2 = std::bind(waitParNum<TestMsg, seqParHan4>, order_ptr, 2, 2, 2);
 
-      theSeq()->parallel(seq_id, fn1, fn2);
+      theSeq()->parallel(my_seq_id, fn1, fn2);
     });
 
     theSeq()->wait<TestMsg, seqParHan4>([](TestMsg* msg){
-      EXPECT_EQ(seq_ordering_++, 4);
+      EXPECT_EQ(seq_ordering_++, 4U);
     });
   }
 };

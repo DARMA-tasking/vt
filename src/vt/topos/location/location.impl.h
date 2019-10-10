@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                               location.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H
 #define INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H
@@ -10,7 +53,6 @@
 #include "vt/topos/location/utility/entity.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/serialization/auto_dispatch/dispatch.h"
 #include "vt/runnable/general.h"
 
 #include <cstdint>
@@ -166,6 +208,12 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityMigrated(
   EntityID const& id, NodeType const& new_node
 ) {
+  debug_print(
+    location, node,
+    "EntityLocationCoord: entityMigrated: id={}, new_node={}\n",
+    id, new_node
+  );
+
   auto reg_iter = local_registered_.find(id);
 
   if (reg_iter != local_registered_.end()) {
@@ -182,6 +230,21 @@ void EntityLocationCoord<EntityID>::registerEntityMigrated(
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future
   return registerEntity(id, uninitialized_destination, msg_action, true);
+}
+
+template <typename EntityID>
+bool EntityLocationCoord<EntityID>::isCached(EntityID const& id) const {
+  return recs_.exists(id);
+}
+
+template <typename EntityID>
+template <typename MessageT>
+bool EntityLocationCoord<EntityID>::useEagerProtocol(MsgSharedPtr<MessageT> msg) const {
+
+  bool const is_small = sizeof(*msg) < small_msg_max_size;
+  bool const is_serialized = msg->getSerialize();
+  // could change according to entity type or another criterion
+  return is_small and not is_serialized;
 }
 
 template <typename EntityID>
@@ -211,7 +274,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
   bool const serialize, EntityID const& id, NodeType const& home_node,
-  MsgSharedPtr<MessageT> msg, ActionType action
+  MsgSharedPtr<MessageT> msg
 ) {
   auto const& this_node = theContext()->getNode();
   NodeType route_to_node = uninitialized_destination;
@@ -261,7 +324,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
     home_node, route_to_node, serialize, id
   );
 
-  return routeMsgNode<MessageT>(serialize,id,home_node,route_to_node,msg,action);
+  return routeMsgNode<MessageT>(serialize,id,home_node,route_to_node,msg);
 }
 
 template <typename EntityID>
@@ -278,8 +341,8 @@ void EntityLocationCoord<EntityID>::getLocation(
       "EntityLocationCoord: getLocation: entity is local\n"
     );
 
-    action(this_node);
     recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+    action(this_node);
     return;
   } else {
     bool const& rec_exists = recs_.exists(id);
@@ -330,41 +393,37 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
   bool const serialize, EntityID const& id, NodeType const& home_node,
-  NodeType const& to_node, MsgSharedPtr<MessageT> msg, ActionType action
+  NodeType const& to_node, MsgSharedPtr<MessageT> msg
 ) {
   auto const& this_node = theContext()->getNode();
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
     location, node,
     "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: inst={}, "
-    "serialize={}, home_node={}, id={}, ref={}, from={}, msg={}\n",
+    "serialize={}, home_node={}, id={}, ref={}, from={}, msg={}, epoch={:x}\n",
     to_node, this_node, this_inst, serialize, home_node, id,
-    envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg.get())
+    envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg.get()),
+    epoch
   );
 
   if (to_node != this_node) {
     // set the instance on the message to deliver to the correct manager
     msg->setLocInst(this_inst);
-
-    if (serialize) {
-      using ::vt::serialization::auto_dispatch::RequiredSerialization;
-      RequiredSerialization<MessageT,msgHandler>::sendMsg(
-        to_node,msg.get(),no_tag,action
-      );
-    } else {
-      // send to the node discovered by the location manager
-      theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg.get(), action);
-    }
+    // send to the node discovered by the location manager
+    theMsg()->sendMsgAuto<MessageT, msgHandler>(to_node, msg.get());
   } else {
     debug_print(
       location, node,
       "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: "
-      "home_node={}, ref={}, from={}: apply here\n",
+      "home_node={}, ref={}, from={}, epoch={:x}: apply here\n",
       to_node, this_node, home_node, envelopeGetRef(msg->env),
-      msg->getLocFromNode()
+      msg->getLocFromNode(), epoch
     );
 
-    auto trigger_msg_handler_action = [=](EntityID const& id) {
+    theTerm()->produce(epoch);
+
+    auto trigger_msg_handler_action = [=](EntityID const& hid) {
       bool const& has_handler = msg->hasHandler();
       auto const& from = msg->getLocFromNode();
       if (has_handler) {
@@ -374,18 +433,18 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           location, node,
           "EntityLocationCoord: apply direct handler action: "
           "id={}, from={}, handler={}, ref={}\n",
-          id, from, handler, envelopeGetRef(msg->env)
+          hid, from, handler, envelopeGetRef(msg->env)
         );
         runnable::Runnable<MessageT>::run(handler, active_fn, msg.get(), from);
       } else {
-        auto reg_han_iter = local_registered_msg_han_.find(id);
+        auto reg_han_iter = local_registered_msg_han_.find(hid);
         vtAssert(
           reg_han_iter != local_registered_msg_han_.end(),
           "Message handler must exist for location manager routed msg"
         );
         debug_print(
           location, node,
-          "EntityLocationCoord: no direct handler: id={}\n", id
+          "EntityLocationCoord: no direct handler: id={}\n", hid
         );
         reg_han_iter->second.applyRegisteredActionMsg(msg.get());
       }
@@ -402,13 +461,14 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     if (reg_iter != local_registered_.end()) {
       debug_print(
         location, node,
-        "EntityLocationCoord: routeMsgNode: running actions\n"
+        "EntityLocationCoord: routeMsgNode: epoch={:x} running actions\n",
+        epoch
       );
 
+      theMsg()->pushEpoch(epoch);
       trigger_msg_handler_action(id);
-      if (action) {
-        action();
-      }
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     } else {
       debug_print(
         location, node,
@@ -419,28 +479,28 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       EntityID id_ = id;
       // buffer the message here, the entity will be registered in the future
       insertPendingEntityAction(id_, [=](NodeType resolved) {
-        auto const& this_node = theContext()->getNode();
+        auto const& my_node = theContext()->getNode();
 
         debug_print(
           location, node,
           "EntityLocationCoord: routeMsgNode: trigger action: resolved={}, "
-          "this_node={}, id={}, ref={}\n",
-          resolved, this_node, id_, envelopeGetRef(msg->env)
+          "this_node={}, id={}, ref={}, epoch={:x}\n",
+          resolved, my_node, id_, envelopeGetRef(msg->env), epoch
         );
 
-        if (resolved == this_node) {
+        theMsg()->pushEpoch(epoch);
+        if (resolved == my_node) {
           trigger_msg_handler_action(id_);
-          if (action) {
-            action();
-          }
         } else {
           /*
            *  Recurse with the new updated node information. This occurs
            *  typically when an non-migrated registration occurs off the home
            *  node and messages are buffered, awaiting forwarding information.
            */
-          routeMsgNode<MessageT>(serialize,id_,home_node,resolved,msg,action);
+          routeMsgNode<MessageT>(serialize,id_,home_node,resolved,msg);
         }
+        theMsg()->popEpoch(epoch);
+        theTerm()->consume(epoch);
       });
     }
   }
@@ -458,41 +518,39 @@ void EntityLocationCoord<EntityID>::routeNonEagerAction(
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandler(
-  EntityID const& id, NodeType const& home_node, MessageT *m, ActionType action
+  EntityID const& id, NodeType const& home_node, MessageT *m
 ) {
   auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
   m->setHandler(handler);
   auto msg = promoteMsg(m);
-  return routeMsg<MessageT>(id,home_node,msg,action);
+  return routeMsg<MessageT>(id,home_node,msg);
 }
 
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgSerializeHandler(
-  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m,
-  ActionType action
+  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m
 ) {
   auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
   m->setHandler(handler);
-  return routeMsg<MessageT>(id,home_node,m,action,true);
+  return routeMsg<MessageT>(id,home_node,m,true);
 }
 
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgSerialize(
-  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m,
-  ActionType action
+  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m
 ) {
-  return routeMsg<MessageT>(id,home_node,m,action,true);
+  return routeMsg<MessageT>(id,home_node,m,true);
 }
 
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
   EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
-  ActionType act, bool const serialize, NodeType from_node
+  bool const serialize, NodeType from_node
 ) {
-  auto const& from =
+  auto const from =
     from_node == uninitialized_destination ? theContext()->getNode() :
     from_node;
 
@@ -502,26 +560,33 @@ void EntityLocationCoord<EntityID>::routeMsg(
   msg->setLocFromNode(from);
   msg->setSerialize(serialize);
 
-  auto const& msg_size = sizeof(*msg);
-  bool const& is_large_msg = msg_size > small_msg_max_size;
-  bool const& use_eager = not is_large_msg;
+  auto const msg_size = sizeof(*msg);
+  bool const use_eager = useEagerProtocol(msg);
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
     location, node,
     "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
-    "serialize={}, in_from={}, from={}, msg{}, msg from={}\n",
-    this_inst, home_node, msg_size, is_large_msg, use_eager, serialize,
-    from_node, from, print_ptr(msg.get()), msg->getLocFromNode()
+    "serialize={}, in_from={}, from={}, msg{}, msg from={}, epoch={:x}\n",
+    this_inst, home_node, msg_size, msg_size > small_msg_max_size, use_eager,
+    serialize, from_node, from, print_ptr(msg.get()), msg->getLocFromNode(),
+    epoch
   );
 
   msg->setLocInst(this_inst);
 
   if (use_eager) {
-    routeMsgEager<MessageT>(serialize, id, home_node, msg, act);
+    theMsg()->pushEpoch(epoch);
+    routeMsgEager<MessageT>(serialize, id, home_node, msg);
+    theMsg()->popEpoch(epoch);
   } else {
+    theTerm()->produce(epoch);
     // non-eager protocol: get location first then send message after resolution
     getLocation(id, home_node, [=](NodeType node) {
-      routeMsgNode<MessageT>(serialize, id, home_node, node, msg, act);
+      theMsg()->pushEpoch(epoch);
+      routeMsgNode<MessageT>(serialize, id, home_node, node, msg);
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     });
   }
 }
@@ -590,17 +655,23 @@ template <typename MessageT>
   auto const& inst = msg->getLocInst();
   auto const& serialize = msg->getSerialize();
   auto const& from_node = msg->getLocFromNode();
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
     location, node,
-    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}\n",
+    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}, "
+    "epoch={:x}\n",
     print_ptr(msg.get()), envelopeGetRef(msg->env), inst, serialize, entity_id,
-    from_node
+    from_node, epoch
   );
 
+  theTerm()->produce(epoch);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
-      loc->routeMsg(entity_id, home_node, msg, nullptr, serialize, from_node);
+      theMsg()->pushEpoch(epoch);
+      loc->routeMsg(entity_id, home_node, msg, serialize, from_node);
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     }
   );
 }
@@ -615,15 +686,40 @@ template <typename EntityID>
   auto const& entity = msg->entity;
   auto const& home_node = msg->home_node;
   auto const& ask_node = msg->ask_node;
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
+
+  debug_print(
+    location, node,
+    "getLocationHandler: event_id={}, home={}, ask={}, epoch={:x}\n",
+    event_id, home_node, ask_node, epoch
+  );
+
+  theTerm()->produce(epoch);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
+      theMsg()->pushEpoch(epoch);
+
+      debug_print(
+        location, node,
+        "getLocationHandler: calling getLocation event_id={}, epoch={:x}\n",
+        event_id, epoch
+      );
+
       loc->getLocation(entity, home_node, [=](NodeType node) {
-        auto msg = makeSharedMessage<LocMsgType>(
+        debug_print(
+          location, node,
+          "getLocation: (action) event_id={}, epoch={:x}\n",
+          event_id, epoch
+        );
+
+        auto msg2 = makeSharedMessage<LocMsgType>(
           inst, entity, event_id, ask_node, home_node
         );
-        msg->setResolvedNode(node);
-        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg);
+        msg2->setResolvedNode(node);
+        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2);
       });
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     }
   );
 }
@@ -636,21 +732,26 @@ template <typename EntityID>
   auto const& event_id = msg->loc_event;
   auto const& inst = msg->loc_man_inst;
   auto const& entity = msg->entity;
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
     location, node,
-    "updateLocation: event_id={}, resolved={}, id={}\n",
-    event_id, msg->resolved_node, entity
+    "updateLocation: event_id={}, resolved={}, id={}, epoch={:x}\n",
+    event_id, msg->resolved_node, entity, epoch
   );
 
+  theTerm()->produce(epoch);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
+      theMsg()->pushEpoch(epoch);
       debug_print(
         location, node,
         "updateLocation: event_id={}, running pending: resolved={}, id={}\n",
         event_id, msg->resolved_node, entity
       );
       loc->updatePendingRequest(event_id, entity, msg->resolved_node);
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
     }
   );
 }

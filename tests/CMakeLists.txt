@@ -14,18 +14,22 @@ set(
   collectives
   epoch
   pool
+  location
   sequencer
+  termination
   mapping
   group
   serialization
+  pipe
   tls
   atomic
   memory
+  objgroup
 )
 
-option(CMAKE_NO_BUILD_TESTS "Enable VT tests to be built" OFF)
+option(VT_NO_BUILD_TESTS "Disable building VT tests" OFF)
 
-if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
+if (${VT_HAS_GTEST} AND NOT ${VT_NO_BUILD_TESTS})
   set(
     TEST_HEADER_FILES
     ${PROJECT_TEST_UNIT_DIR}/test_harness.h
@@ -81,6 +85,7 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
           TARGET                 ${UNIT_TEST}
           WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
           TEST_SUFFIX            _proc_${PROC}
+          TEST_PREFIX            vt:
           TEST_LIST              ${CUR_TEST_LIST}
           EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
         )
@@ -89,26 +94,26 @@ if (${VT_HAS_GTEST} AND NOT ${CMAKE_NO_BUILD_TESTS})
       set_tests_properties(
         ${${CUR_TEST_LIST}}
         PROPERTIES TIMEOUT 60
-        FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;WARNING"
+        FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is"
         PASS_REGULAR_EXPRESSION "PASSED"
       )
     endforeach()
   endforeach()
 else()
-  if (${CMAKE_NO_BUILD_TESTS})
+  if (${VT_NO_BUILD_TESTS})
     message(
       STATUS
-      "VT: not building unit tests because CMAKE_NO_BUILD_TESTS is set"
+      "VT: not building unit tests because VT_NO_BUILD_TESTS is set"
     )
   else()
     message(STATUS "VT: not building unit tests because not VT_HAS_GTEST")
   endif()
 endif()
 
-if (${CMAKE_NO_BUILD_TESTS})
+if (${VT_NO_BUILD_TESTS})
   message(
     STATUS
-    "VT: not building performance tests because CMAKE_NO_BUILD_TESTS is set"
+    "VT: not building performance tests because VT_NO_BUILD_TESTS is set"
   )
 else()
   foreach(PERF_TEST ${PROJECT_PERF_TESTS})

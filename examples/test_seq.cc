@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                 test_seq.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/transport.h"
 #include <cstdlib>
@@ -14,19 +57,19 @@ struct EmptyMsg : vt::Message {
 #define PRINT_SEQUENCE_ON 1
 
 #if PRINT_SEQUENCE_ON
-#define PRINT_SEQUENCE(str, args...)                                    \
+#define PRINT_SEQUENCE(...)                                             \
   do {                                                                  \
-    fmt::print(                                                         \
-      "{}: seq_id={}: " str, theContext()->getNode(),                   \
-      theSeq()->getCurrentSeq(), ##args                                 \
+    vt_print(                                                           \
+      sequence, __VA_ARGS__                                             \
     );                                                                  \
   } while (0);
 #else
-#define PRINT_SEQUENCE(args...)
+#define PRINT_SEQUENCE(...)
 #endif
 
-SEQUENCE_REGISTER_HANDLER(EmptyMsg, action1);
+SEQUENCE_REGISTER_HANDLER(EmptyMsg, action1)
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeq(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeq: executing sequence\n");
 
@@ -36,9 +79,9 @@ static void mySeq(SeqType const& seq_id) {
 
   theSeq()->sequenced([]{
     PRINT_SEQUENCE("action1 sequenced_block triggered\n");
-    auto const& my_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNode();
     theMsg()->sendMsg<EmptyMsg, action1>(
-      my_node, makeSharedMessage<EmptyMsg>(), 20
+      this_node, makeSharedMessage<EmptyMsg>(), 20
     );
   });
 
@@ -70,6 +113,7 @@ static void mySeq(SeqType const& seq_id) {
   });
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeqParallel(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeqParallel: executing sequence\n");
 
@@ -109,6 +153,7 @@ static void mySeqFor(SeqType const& seq_id) {
   });
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void mySeqSingleNode(SeqType const& seq_id) {
   PRINT_SEQUENCE("mySeqSingleNode: executing sequence\n");
 
@@ -145,13 +190,14 @@ static void mySeqSingleNode(SeqType const& seq_id) {
   });
 }
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void simpleSeq(SeqType const& seq_id) {
   PRINT_SEQUENCE("simpleSeq: executing sequence: seq_id={}\n", seq_id);
 
   theSeq()->wait<EmptyMsg, action1>(10, [](EmptyMsg* msg){
-    auto const& seq_id = theSeq()->getCurrentSeq();
+    auto const& cur_seq_id = theSeq()->getCurrentSeq();
     PRINT_SEQUENCE(
-      "simpleSeq: seq={}: w1 triggered: msg={}\n", seq_id, print_ptr(msg)
+      "simpleSeq: seq={}: w1 triggered: msg={}\n", cur_seq_id, print_ptr(msg)
     );
   });
 
@@ -167,16 +213,16 @@ static void simpleSeq(SeqType const& seq_id) {
   });
 
   theSeq()->wait<EmptyMsg, action1>(20, [](EmptyMsg* msg){
-    auto const& seq_id = theSeq()->getCurrentSeq();
+    auto const& cur_seq_id = theSeq()->getCurrentSeq();
     PRINT_SEQUENCE(
-      "simpleSeq: seq={}: w2 triggered: msg={}\n", seq_id, print_ptr(msg)
+      "simpleSeq: seq={}: w2 triggered: msg={}\n", cur_seq_id, print_ptr(msg)
     );
     theMsg()->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>(), 30);
   });
 
   theSeq()->wait<EmptyMsg, action1>(30, [](EmptyMsg* msg){
-    auto const& seq_id = theSeq()->getCurrentSeq();
-    PRINT_SEQUENCE("simpleSeq: seq={}: w3 triggered\n", seq_id);
+    auto const& cur_seq_id = theSeq()->getCurrentSeq();
+    PRINT_SEQUENCE("simpleSeq: seq={}: w3 triggered\n", cur_seq_id);
   });
 
   theSeq()->sequenced([]{
@@ -204,8 +250,8 @@ static void simpleSeq(SeqType const& seq_id) {
   });
 
   theSeq()->wait<EmptyMsg, action1>(40, [](EmptyMsg* msg){
-    auto const& seq_id = theSeq()->getCurrentSeq();
-    PRINT_SEQUENCE("simpleSeq: seq={}: w4 triggered\n", seq_id);
+    auto const& cur_seq_id = theSeq()->getCurrentSeq();
+    PRINT_SEQUENCE("simpleSeq: seq={}: w4 triggered\n", cur_seq_id);
   });
 }
 

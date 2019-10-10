@@ -3,6 +3,7 @@ set(
   PROJECT_EXAMPLES_LIST
   hello_world
   ring
+  comm_func
   rdma_simple_get
   rdma_simple_get_direct
   rdma_simple_put
@@ -10,11 +11,7 @@ set(
   rdma_simple_channel
   rdma_channel_sync
   rdma_collective
-  callback
-  callback_new
   ctx_callback
-  reinstate
-  tagged_handler
   param
   hello_world_functor
   test_seq
@@ -32,12 +29,15 @@ set(
   hello_world_vc
   jacobi1d_recur_vc
   jacobi1d_node
+  jacobi1d_vt
+  jacobi2d_vt
   serialize_example
   hello_world_vc_remote
   hello_world_collection
   simple_collection
   simple_collection_collective
   simple_collection_insert
+  simple_collection_reduce
   collection_insert
   collection_group
   rdma_unsized_collection
@@ -46,11 +46,12 @@ set(
   reduce
   transpose
   tutorial
+  objgroup
 )
 
-if (CMAKE_NO_BUILD_EXAMPLES)
+if (VT_NO_BUILD_EXAMPLES)
   message(
-    STATUS "VT: not building examples because CMAKE_NO_BUILD_EXAMPLES is set"
+    STATUS "VT: not building examples because VT_NO_BUILD_EXAMPLES is set"
   )
 else()
   foreach(EXAMPLE_NAME ${PROJECT_EXAMPLES_LIST})

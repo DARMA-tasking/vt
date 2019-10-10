@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                               jacobi1d_node.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/transport.h"
 
@@ -114,7 +157,7 @@ static void boundaryFinished(bool const is_left) {
   if (wait_count == 0) {
     resid_val = kernel(cur_iter);
 
-    theRDMA()->putTypedData(jac_resid, &resid_val, 1, my_node, no_tag, no_action, []{
+    theRDMA()->putTypedData(jac_resid, &resid_val, 1, my_node, no_tag, []{
       theCollective()->barrierThen([]{
         if (cur_iter >= max_iterations) {
           finished();
@@ -141,8 +184,9 @@ static void doKernel(JacobiKernelMsg* msg) {
   auto const& iter = msg->iter;
 
   double* const c1 = msg->iter % 2 == 0 ? t1 : t2;
+  #if DEBUG_JACOBI
   double* const c2 = msg->iter % 2 != 0 ? t1 : t2;
-
+  #endif
   auto const& l_bound = (blk_size * my_node) - 1;
   auto const& r_bound = ((blk_size + 1) * my_node) + 1;
 
@@ -219,8 +263,8 @@ static void startJacobi1dHandler(StartWorkMsg* msg) {
         theMsg()->broadcastMsg<JacobiKernelMsg, doKernel>(
           makeSharedMessage<JacobiKernelMsg>(cur_iter)
         );
-        JacobiKernelMsg msg(cur_iter);
-        doKernel(&msg);
+        JacobiKernelMsg kmsg(cur_iter);
+        doKernel(&kmsg);
       }
     } else {
       finished();

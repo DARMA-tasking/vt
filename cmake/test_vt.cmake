@@ -51,6 +51,7 @@ function(run_executable_with_mpi)
   set_tests_properties(
     ${ARG_TARGET_NAME}
     PROPERTIES TIMEOUT 60
+    PROCESSORS ${ARG_TARGET_NPROC}
   )
 endfunction()
 
@@ -104,7 +105,7 @@ macro(add_test_for_example_vt test_target test_exec test_list)
       TARGET_EXECUTABLE            ${test_name}
       TARGET_ARGS                  ${ARGN}
       TARGET_NPROC                 ${PROC}
-      TARGET_NAME                  ${test_name}_${PROC}
+      TARGET_NAME                  vt:${test_name}_${PROC}
       TARGET_WORKING_DIRECTORY     ${CMAKE_CURRENT_BINARY_DIR}
     )
   endforeach()

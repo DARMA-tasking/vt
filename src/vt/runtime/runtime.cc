@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                  runtime.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/config.h"
 #include "vt/runtime/runtime.h"
@@ -12,6 +55,8 @@
 #include "vt/parameterization/parameterization.h"
 #include "vt/sequence/sequencer_headers.h"
 #include "vt/trace/trace.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
@@ -38,6 +83,7 @@
 namespace vt { namespace runtime {
 
 /*static*/ std::string Runtime::prog_name_ = "";
+/*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
@@ -50,9 +96,14 @@ Runtime::Runtime(
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
+  sig_user_1_ = false;
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
+}
+
+bool Runtime::hasSchedRun() const {
+  return theSched ? theSched->hasSchedRun() : false;
 }
 
 void Runtime::pauseForDebugger() {
@@ -64,12 +115,7 @@ void Runtime::pauseForDebugger() {
     FILE* f = fopen(node_str, "w+");
     fprintf(f, "%d", pid);
     fclose(f);
-
-    #if __APPLE__
-      system("read");
-    #else
-      system("pause");
-    #endif
+    while (!sig_user_1_);
   }
 }
 
@@ -91,7 +137,11 @@ void Runtime::pauseForDebugger() {
       ::fmt::print("\n");
     }
   }
-  std::exit(1);
+  std::_Exit(EXIT_FAILURE);
+}
+
+/*static*/ void Runtime::sigHandlerUsr1(int sig) {
+  Runtime::sig_user_1_ = true;
 }
 
 /*static*/ void Runtime::sigHandler(int sig) {
@@ -107,7 +157,7 @@ void Runtime::pauseForDebugger() {
       ::fmt::print("\n");
     }
   }
-  std::exit(1);
+  std::_Exit(EXIT_FAILURE);
 }
 
 /*static*/ void Runtime::termHandler() {
@@ -123,7 +173,7 @@ void Runtime::pauseForDebugger() {
       ::fmt::print("\n");
     }
   }
-  std::exit(1);
+  std::_Exit(EXIT_FAILURE);
 }
 
 /*static*/ bool Runtime::nodeStackWrite() {
@@ -155,6 +205,7 @@ void Runtime::setupSignalHandler() {
   if (!ArgType::vt_no_sigsegv) {
     signal(SIGSEGV, Runtime::sigHandler);
   }
+  signal(SIGUSR1, Runtime::sigHandlerUsr1);
 }
 
 void Runtime::setupSignalHandlerINT() {
@@ -237,9 +288,13 @@ void Runtime::printStartupBanner() {
   std::string thd = !has_workers ? std::string("") :
     std::string(", worker threading: ") +
     std::string(
-      backend_enable_if_else(
-        openmp, "OpenMP", backend_enable_if_else(stdthread, "std::thread", "")
-      )
+      #if backend_check_enabled(openmp)
+        "OpenMP"
+      #elif backend_check_enabled(stdthread)
+        "std::thread"
+      #else
+        ""
+      #endif
    );
   std::string cnt = !has_workers ? std::string("") :
     (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
@@ -258,7 +313,44 @@ void Runtime::printStartupBanner() {
   auto emph     = [=](std::string s) -> std::string { return debug::emph(s); };
   auto reg      = [=](std::string s) -> std::string { return debug::reg(s);  };
 
-  std::vector<std::string> features = {"" backend_print_all_features(0) };
+  std::vector<std::string> features;
+
+#if backend_check_enabled(bit_check_overflow)
+  features.push_back(vt_feature_str_bit_check_overflow);
+#endif
+#if backend_check_enabled(trace_enabled)
+  features.push_back(vt_feature_str_trace_enabled);
+#endif
+#if backend_check_enabled(detector)
+  features.push_back(vt_feature_str_detector);
+#endif
+#if backend_check_enabled(lblite)
+  features.push_back(vt_feature_str_lblite);
+#endif
+#if backend_check_enabled(openmp)
+  features.push_back(vt_feature_str_openmp);
+#endif
+#if backend_check_enabled(production)
+  features.push_back(vt_feature_str_production);
+#endif
+#if backend_check_enabled(stdthread)
+  features.push_back(vt_feature_str_stdthread);
+#endif
+#if backend_check_enabled(mpi_rdma)
+  features.push_back(vt_feature_str_mpi_rdma);
+#endif
+#if backend_check_enabled(parserdes)
+  features.push_back(vt_feature_str_parserdes);
+#endif
+#if backend_check_enabled(print_term_msgs)
+  features.push_back(vt_feature_str_print_term_msgs);
+#endif
+#if backend_check_enabled(no_pool_alloc_env)
+  features.push_back(vt_feature_str_no_pool_alloc_env);
+#endif
+#if backend_check_enabled(memory_pool)
+  features.push_back(vt_feature_str_memory_pool);
+#endif
 
   std::string dirty = "";
   if (strncmp(vt_git_clean_status.c_str(), "DIRTY", 5) == 0) {
@@ -280,7 +372,7 @@ void Runtime::printStartupBanner() {
   fmt::print("{}{}{}", vt_pre, f5, reset);
   fmt::print("{}{}{}", vt_pre, f6, reset);
   fmt::print("{}{}{}", vt_pre, f7, reset);
-  for (auto i = 1; i < features.size(); i++) {
+  for (size_t i = 0; i < features.size(); i++) {
     fmt::print("{}\t{}\n", vt_pre, emph(features.at(i)));
   }
 
@@ -318,6 +410,10 @@ void Runtime::printStartupBanner() {
       auto f9 = warn_cr("--vt_lb", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
+    if (ArgType::vt_lb_stats) {
+      auto f9 = warn_cr("--vt_lb_stats", "lblite");
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);
+    }
   #endif
 
   if (ArgType::vt_lb) {
@@ -340,6 +436,26 @@ void Runtime::printStartupBanner() {
     }
   }
 
+  if (ArgType::vt_lb_stats) {
+    auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
+
+    auto const fname = ArgType::vt_lb_stats_file;
+    if (fname != "") {
+      auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
+      auto f12 = opt_on("--vt_lb_stats_file", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+
+    auto const fdir = ArgType::vt_lb_stats_dir;
+    if (fdir != "") {
+      auto f11 = fmt::format("LB stats directory \"{}\"", fdir);
+      auto f12 = opt_on("--vt_lb_stats_dir", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+  }
+
+
   #if !backend_check_enabled(trace_enabled)
     if (ArgType::vt_trace) {
       auto f9 = warn_cr("--vt_trace", "trace_enabled");
@@ -352,7 +468,7 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_trace", "Tracing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
     if (ArgType::vt_trace_file != "") {
-      auto f11 = fmt::format("Trace file name \"{}\"", theTrace->getTraceName());
+      auto f11 = fmt::format("Trace file name \"{}\"", ArgType::vt_trace_file);
       auto f12 = opt_on("--vt_trace_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     } else {
@@ -382,6 +498,19 @@ void Runtime::printStartupBanner() {
     }
   }
   #endif
+
+
+  if (ArgType::vt_term_rooted_use_ds) {
+    auto f11 = fmt::format("Forcing the use of Dijkstra-Scholten for rooted TD");
+    auto f12 = opt_on("--vt_term_rooted_use_ds", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_term_rooted_use_wave) {
+    auto f11 = fmt::format("Forcing the use of 4-counter wave-based for rooted TD");
+    auto f12 = opt_on("--vt_term_rooted_use_wave", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
 
   if (ArgType::vt_no_detect_hang) {
     auto f11 = fmt::format("Disabling termination hang detection");
@@ -420,6 +549,16 @@ void Runtime::printStartupBanner() {
   } else {
     auto f11 = fmt::format("SIGSEGV signal handling enabled by default");
     auto f12 = opt_inverse("--vt_no_SIGSEGV", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_no_terminate) {
+    auto f11 = fmt::format("Disabling std::terminate signal handling");
+    auto f12 = opt_on("--vt_no_terminate", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("std::terminate signal handling enabled by default");
+    auto f12 = opt_inverse("--vt_no_terminate", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
@@ -501,105 +640,43 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-#define debug_warn_compile(opt)                               \
-  do {                                                        \
-    if (ArgType::vt_debug_ ## opt) {                          \
-      auto f9 = warn_cr("--vt_debug_" #opt, "debug_" #opt);   \
-      fmt::print("{}\t{}{}", vt_pre, f9, reset);              \
-    }                                                         \
+#define vt_runtime_debug_warn_compile(opt)                              \
+  do {                                                                  \
+    if (!vt_backend_debug_enabled(opt) and ArgType::vt_debug_ ## opt) { \
+      auto f9 = warn_cr("--vt_debug_" #opt, "debug_" #opt);             \
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);                        \
+    }                                                                   \
   } while (0);
 
-  // #define debug_print_force(feature, opt, arg...)         \
-  //   debug_print_context(backend_debug, feature, opt, arg)
-
-
-  #if !backend_debug_enabled(none)
-    debug_warn_compile(none)
-  #endif
-  #if !backend_debug_enabled(gen)
-    debug_warn_compile(gen)
-  #endif
-  #if !backend_debug_enabled(runtime)
-    debug_warn_compile(runtime)
-  #endif
-  #if !backend_debug_enabled(active)
-    debug_warn_compile(active)
-  #endif
-  #if !backend_debug_enabled(term)
-    debug_warn_compile(term)
-  #endif
-  #if !backend_debug_enabled(termds)
-    debug_warn_compile(termds)
-  #endif
-  #if !backend_debug_enabled(barrier)
-    debug_warn_compile(barrier)
-  #endif
-  #if !backend_debug_enabled(event)
-    debug_warn_compile(event)
-  #endif
-  #if !backend_debug_enabled(pipe)
-    debug_warn_compile(pipe)
-  #endif
-  #if !backend_debug_enabled(pool)
-    debug_warn_compile(pool)
-  #endif
-  #if !backend_debug_enabled(reduce)
-    debug_warn_compile(reduce)
-  #endif
-  #if !backend_debug_enabled(rdma)
-    debug_warn_compile(rdma)
-  #endif
-  #if !backend_debug_enabled(rdma_channel)
-    debug_warn_compile(rdma_channel)
-  #endif
-  #if !backend_debug_enabled(rdma_state)
-    debug_warn_compile(rdma_state)
-  #endif
-  #if !backend_debug_enabled(param)
-    debug_warn_compile(param)
-  #endif
-  #if !backend_debug_enabled(handler)
-    debug_warn_compile(handler)
-  #endif
-  #if !backend_debug_enabled(hierlb)
-    debug_warn_compile(hierlb)
-  #endif
-  #if !backend_debug_enabled(scatter)
-      debug_warn_compile(scatter)
-  #endif
-  #if !backend_debug_enabled(sequence)
-    debug_warn_compile(sequence)
-  #endif
-  #if !backend_debug_enabled(sequence_vrt)
-    debug_warn_compile(sequence_vrt)
-  #endif
-  #if !backend_debug_enabled(serial_msg)
-    debug_warn_compile(serial_msg)
-  #endif
-  #if !backend_debug_enabled(trace)
-    debug_warn_compile(trace)
-  #endif
-  #if !backend_debug_enabled(location)
-    debug_warn_compile(location)
-  #endif
-  #if !backend_debug_enabled(lb)
-    debug_warn_compile(lb)
-  #endif
-  #if !backend_debug_enabled(vrt)
-    debug_warn_compile(vrt)
-  #endif
-  #if !backend_debug_enabled(vrt_coll)
-    debug_warn_compile(vrt_coll)
-  #endif
-  #if !backend_debug_enabled(worker)
-    debug_warn_compile(worker)
-  #endif
-  #if !backend_debug_enabled(group)
-    debug_warn_compile(group)
-  #endif
-  #if !backend_debug_enabled(broadcast)
-    debug_warn_compile(broadcast)
-  #endif
+  vt_runtime_debug_warn_compile(none)
+  vt_runtime_debug_warn_compile(gen)
+  vt_runtime_debug_warn_compile(runtime)
+  vt_runtime_debug_warn_compile(active)
+  vt_runtime_debug_warn_compile(term)
+  vt_runtime_debug_warn_compile(termds)
+  vt_runtime_debug_warn_compile(barrier)
+  vt_runtime_debug_warn_compile(event)
+  vt_runtime_debug_warn_compile(pipe)
+  vt_runtime_debug_warn_compile(pool)
+  vt_runtime_debug_warn_compile(reduce)
+  vt_runtime_debug_warn_compile(rdma)
+  vt_runtime_debug_warn_compile(rdma_channel)
+  vt_runtime_debug_warn_compile(rdma_state)
+  vt_runtime_debug_warn_compile(param)
+  vt_runtime_debug_warn_compile(handler)
+  vt_runtime_debug_warn_compile(hierlb)
+  vt_runtime_debug_warn_compile(scatter)
+  vt_runtime_debug_warn_compile(sequence)
+  vt_runtime_debug_warn_compile(sequence_vrt)
+  vt_runtime_debug_warn_compile(serial_msg)
+  vt_runtime_debug_warn_compile(trace)
+  vt_runtime_debug_warn_compile(location)
+  vt_runtime_debug_warn_compile(vrt)
+  vt_runtime_debug_warn_compile(vrt_coll)
+  vt_runtime_debug_warn_compile(worker)
+  vt_runtime_debug_warn_compile(group)
+  vt_runtime_debug_warn_compile(broadcast)
+  vt_runtime_debug_warn_compile(objgroup)
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);
@@ -628,6 +705,7 @@ bool Runtime::initialize(bool const force_now) {
     initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();
     initializeOptionalComponents();
+    initializeErrorHandlers();
     sync();
     if (theContext->getNode() == 0) {
       printStartupBanner();
@@ -693,14 +771,15 @@ void Runtime::reset() {
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   aborted_ = true;
   output(abort_str,code,true,true,false);
+  std::raise( SIGTRAP );
   if (theContext) {
     auto const comm = theContext->getComm();
     MPI_Abort(comm, 129);
   } else {
-    _Exit(code);
+	std::_Exit(code);
+    // @todo: why will this not compile with clang!!?
+    //quick_exit(code);
   }
-  // @todo: why will this not compile with clang!!?
-  //quick_exit(code);
 }
 
 void Runtime::output(
@@ -772,7 +851,7 @@ void Runtime::output(
 void Runtime::terminationHandler() {
   debug_print(
     runtime, node,
-    "Runtime: executing registered termination handler\n",
+    "Runtime: executing registered termination handler\n"
   );
 
   runtime_active_ = false;
@@ -827,6 +906,7 @@ void Runtime::initializeComponents() {
   thePool = std::make_unique<pool::Pool>();
 
   // Core components: enables more complex subsequent initialization
+  theObjGroup = std::make_unique<objgroup::ObjGroupManager>();
   theMsg = std::make_unique<messaging::ActiveMessenger>();
   theSched = std::make_unique<sched::Scheduler>();
   initializeTrace();
@@ -848,29 +928,48 @@ void Runtime::initializeComponents() {
 }
 
 void Runtime::initializeTrace() {
-  backend_enable_if(
-    trace_enabled, {
-      theTrace = std::make_unique<trace::Trace>();
-    }
-  );
+  #if backend_check_enabled(trace_enabled)
+    theTrace = std::make_unique<trace::Trace>();
 
-  backend_enable_if(
-    trace_enabled, {
-      std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-      auto const& node = theContext->getNode();
-      theTrace->setupNames(
-        name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
-      );
-    }
-  );
+    std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
+    auto const& node = theContext->getNode();
+    theTrace->setupNames(
+      name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
+    );
+  #endif
 }
 
 void Runtime::finalizeTrace() {
-  backend_enable_if(
-    trace_enabled, {
-      theTrace = nullptr;
-    }
-  );
+  #if backend_check_enabled(trace_enabled)
+    theTrace = nullptr;
+  #endif
+}
+
+namespace {
+  /**
+   * Error handler for MPI.
+   * Called on any MPI error with the context's communicator. Aborts
+   * the application. MPI calls are not guaranteed to work after
+   * an error.
+   *
+   * \param comm    the MPI communicator
+   * \param errc    pointer to the error code
+   */
+  void mpiErrorHandler(MPI_Comm *comm, int *errc, ...) {
+    int len = MPI_MAX_ERROR_STRING;
+    char msg[MPI_MAX_ERROR_STRING];
+    MPI_Error_string(*errc, msg, &len);
+    std::string err_msg(msg, len);
+
+    fmt::print("{} (code: {})", err_msg, *errc);
+    vtAbort("MPI Error");
+  }
+}
+
+void Runtime::initializeErrorHandlers() {
+  MPI_Errhandler err_handler = 0;
+  MPI_Comm_create_errhandler(&mpiErrorHandler, &err_handler);
+  MPI_Comm_set_errhandler(theContext->getComm(), err_handler);
 }
 
 void Runtime::initializeOptionalComponents() {
@@ -938,6 +1037,7 @@ void Runtime::finalizeComponents() {
   theMsg = nullptr;
   theGroup = nullptr;
   theCB = nullptr;
+  theObjGroup = nullptr;
 
   // Helper components: thePool the last to be destructed because it handles
   // memory allocations

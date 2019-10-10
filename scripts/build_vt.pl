@@ -9,7 +9,7 @@ use lib dirname (__FILE__);
 require "args.pl";
 
 my ($build_mode,$compiler,$has_serial,$build_all_tests,$vt_install);
-my ($vt,$root,$detector,$meld,$checkpoint,$fmt,$gtest,$cli11);
+my ($vt,$root,$detector,$checkpoint,$gtest);
 my ($compiler_cxx,$compiler_c,$mpi_cc,$mpi_cxx,$mpi_exec);
 my $libroot = "";
 my $atomic = "";
@@ -44,10 +44,7 @@ $arg->add_optional_arg("mpi_cxx",     \$mpi_cxx,      "");
 $arg->add_optional_arg("mpi_exec",    \$mpi_exec,     "");
 
 $arg->add_optional_func("detector",   \$detector,   "detector-install",   \&mk);
-$arg->add_optional_func("meld",       \$meld,       "meld-install",       \&mk);
 $arg->add_optional_func("checkpoint", \$checkpoint, "checkpoint-install", \&mk);
-$arg->add_optional_func("fmt",        \$fmt,        "fmt-install",        \&mk);
-$arg->add_optional_func("cli11",      \$cli11,      "cli11-install",      \&mk);
 $arg->add_optional_func("gtest",      \$gtest,      "gtest-install",      \&mk);
 
 $arg->add_optional_arg("dry_run",     \$dry_run,     0);
@@ -95,7 +92,7 @@ my $build_all_str = "";
 if ($build_all_tests > 0) {
     $build_all_str = "";
 } else {
-    $build_all_str = "-DCMAKE_NO_BUILD_TESTS=1 -DCMAKE_NO_BUILD_EXAMPLES=1";
+    $build_all_str = "-DVT_NO_BUILD_TESTS=1 -DVT_NO_BUILD_EXAMPLES=1";
 }
 
 if ($atomic ne "") {
@@ -125,20 +122,33 @@ if ($detector_on == 0) {
     $detector_on_str = "-Dvt_detector_disabled:BOOL=true ";
 }
 
+my $coverage=0;
+my $CXX_FLAGS= "";
+my $C_FLAGS= "";
+if ($build_mode eq "coverage") {
+   $build_mode="debug";
+   $coverage=1;
+   $CXX_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
+   $C_FLAGS="\"-fprofile-arcs -ftest-coverage -fPIC\"";
+}
+my $cov_enabled = $coverage == 1 ? "enabled" : "disabled";
+
 print STDERR "=== Building vt ===\n";
+print STDERR  "\tCode coverage mode $cov_enabled\n";
 print STDERR "\tBuild mode:$build_mode\n";
 print STDERR "\tRoot=$root\n";
 print STDERR "\tLibroot=$libroot\n";
 print STDERR "\tVT dir name=$vt\n";
 print STDERR "\tCompiler suite=$compiler, cxx=$cxx, cc=$cc\n";
+if ($coverage == 1) {
+    print STDERR "\tCompiler flags=$compiler, cxx_flags=$CXX_FLAGS, c_flags=$C_FLAGS\n";
+}
 print STDERR "\tMPI Compiler suite=$compiler, mpicc=$mpi_cc, mpicxx=$mpi_cxx\n";
 print STDERR "\tAll tests/examples=$build_all_tests\n";
 print STDERR "\tVT installation directory=$vt_install\n";
 print STDERR "\tCheckpoint=$has_serial, path=$checkpoint\n";
-print STDERR "\tMeld path=$meld\n";
 print STDERR "\tDetector path=$detector\n";
 print STDERR "\tGoogle gtest path=$gtest\n";
-print STDERR "\tFMT lib path=$fmt\n";
 
 my $str =  <<CMAKESTR
 cmake $source_base_dir                                                       \\
@@ -147,16 +157,29 @@ cmake $source_base_dir                                                       \\
       -DCMAKE_VERBOSE_MAKEFILE:BOOL=$verbose                                 \\
       -DCMAKE_CXX_COMPILER=$cxx                                              \\
       -DCMAKE_C_COMPILER=$cc                                                 \\
-      ${mpi_str}                                                             \\
+      ${mpi_str}
+CMAKESTR
+;
+
+if ($coverage == 1) {
+chomp $str;
+$str = <<CMAKESTR
+    $str                                                                     \\
+    -DCMAKE_CXX_FLAGS=$CXX_FLAGS                                             \\
+    -DCMAKE_C_FLAGS=$C_FLAGS                                                 \\
+    -DCODE_COVERAGE_ENABLED=true
+CMAKESTR
+;
+}
+chomp $str;
+my $finalstr = <<CMAKESTR
+      $str                                                                   \\
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                   \\
       ${trace_str}                                                           \\
       ${lb_str}                                                              \\
       ${detector_on_str}                                                     \\
       -Dcheckpoint_DIR=$checkpoint                                           \\
-      -Dmeld_DIR=$meld                                                       \\
       -Ddetector_DIR=$detector                                               \\
-      -Dfmt_DIR=$fmt                                                         \\
-      -DCLI11_DIR=$cli11                                                     \\
       -Dgtest_DIR=$gtest                                                     \\
       -DGTEST_ROOT=$gtest                                                    \\
       $fast_str                                                              \\
@@ -164,11 +187,11 @@ cmake $source_base_dir                                                       \\
       ${build_all_str}
 CMAKESTR
 ;
-#print "$str\n";
+#print "$finalstr\n";
 if ($dry_run eq "true") {
-    print "$str\n";
+    print "$finalstr\n";
 } else {
-    system "$str 2>&1";
+    system "$finalstr 2>&1";
 }
 
 # Why is this needed in some cases?

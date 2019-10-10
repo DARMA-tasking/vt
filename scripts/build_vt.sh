@@ -4,13 +4,12 @@ if test $# -lt 1
 then
     echo                                                \
         "usage: $0 "                                    \
-       "<build-mode=debug|release> "                    \
+       "<build-mode=debug|release|relwithdebinfo> "     \
        "<compiler=clang|gnu> "                          \
        "[ <has-serialization=0|1> ] "                   \
        "[ <build-all-tests=0|1> ] "                     \
        "[ <vt-install-directory> ] "                    \
        "[ <detector-path> ] "                           \
-       "[ <meld-path> ] "                               \
        "[ <checkpoint-path> ] "
     exit 29
 fi
@@ -43,15 +42,13 @@ fi
 if test ${has_serial} -gt 0
 then
     serialization_dir=/Users/jliffla/codes/vt/checkpoint-install/
-    if test $# -gt 7
+    if test $# -gt 6
     then
-        serialization_dir=$8
+        serialization_dir=$7
     fi
 fi
 
-meld_dir=/Users/jliffla/codes/vt/meld-install
 detector_dir=/Users/jliffla/codes/vt/detector-install
-fmt_dir=/Users/jliffla/codes/vt/fmt-install
 
 if test $# -gt 4
 then
@@ -63,11 +60,6 @@ fi
 if test $# -gt 5
 then
     detector_dir=$6
-fi
-
-if test $# -gt 6
-then
-    meld_dir=$7
 fi
 
 gtest_dir=/Users/jliffla/codes/gtest/gtest-install/
@@ -93,7 +85,7 @@ then
     build_all=""
 else
     #echo "Setting no build all for ${has_all}"
-    build_all="-DCMAKE_NO_BUILD_TESTS=1 -DCMAKE_NO_BUILD_EXAMPLES=1"
+    build_all="-DVT_NO_BUILD_TESTS=1 -DVT_NO_BUILD_EXAMPLES=1"
 fi
 
 (>&2 echo "=== Building vt ===")
@@ -102,7 +94,6 @@ fi
 (>&2 echo -e "\tAll tests/examples=${has_all}")
 (>&2 echo -e "\tVT installation directory=${vt_install_dir}")
 (>&2 echo -e "\tCheckpoint=${has_serial}, path=$serialization_dir")
-(>&2 echo -e "\tMeld path=${meld_dir}")
 (>&2 echo -e "\tDetector path=${detector_dir}")
 (>&2 echo -e "\tGoogle gtest path=${gtest_dir}")
 
@@ -115,7 +106,5 @@ cmake ${SOURCE_BASE_DIR}                                                    \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                  \
       ${build_all}                                                          \
       -Dcheckpoint_DIR=${serialization_dir}                                 \
-      -Dmeld_DIR=${meld_dir}                                                \
       -Ddetector_DIR=${detector_dir}                                        \
-      -Dfmt_DIR=${fmt_dir}                                                  \
       -Dgtest_DIR=${gtest_dir}

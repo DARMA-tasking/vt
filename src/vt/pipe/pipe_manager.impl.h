@@ -1,7 +1,51 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                             pipe_manager.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/pipe_manager.h"
+#include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/pipe/state/pipe_state.h"
 #include "vt/pipe/interface/remote_container_msg.h"
 #include "vt/pipe/interface/send_container.h"
@@ -31,6 +75,11 @@ void PipeManager::triggerSendBack(PipeType const& pipe, MsgT* data) {
     // Directly trigger the action because the pipe meta-data is located here
     vtAssertExpr(0);
   }
+}
+
+template <typename C>
+Callback<PipeManager::Void> PipeManager::makeFunc(C* ctx, FuncCtxType<C> fn) {
+  return makeCallbackSingleAnon<C,Callback<Void>>(ctx,fn);
 }
 
 template <typename MsgT, typename C>
@@ -63,6 +112,16 @@ Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
   return makeCallbackSingleProxySend<ColT,MsgT,f>(proxy);
 }
 
+template <typename ColT, typename MsgT, PipeManager::ColMemType<ColT,MsgT> f>
+Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
+  return makeCallbackSingleProxySend<ColT,MsgT,f>(proxy);
+}
+
+template <typename ObjT, typename MsgT, PipeManager::ObjMemType<ObjT,MsgT> f>
+Callback<MsgT> PipeManager::makeSend(objgroup::proxy::ProxyElm<ObjT> proxy) {
+  return makeCallbackObjGrpSend<ObjT,MsgT,f>(proxy);
+}
+
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 Callback<MsgT> PipeManager::makeBcast() {
   return makeCallbackSingleBcast<MsgT,f>(true);
@@ -80,7 +139,37 @@ Callback<PipeManager::Void> PipeManager::makeBcast() {
 
 template <typename ColT, typename MsgT, PipeManager::ColHanType<ColT,MsgT>* f>
 Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
-  return makeCallbackSingleProxyBcast<ColT,MsgT,f>(proxy);
+  return makeCallbackSingleProxyBcastDirect<ColT,MsgT,f>(proxy);
+}
+
+template <typename ColT, typename MsgT, PipeManager::ColMemType<ColT,MsgT> f>
+Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
+  return makeCallbackSingleProxyBcastDirect<ColT,MsgT,f>(proxy);
+}
+
+template <typename ObjT, typename MsgT, PipeManager::ObjMemType<ObjT,MsgT> f>
+Callback<MsgT> PipeManager::makeBcast(objgroup::proxy::Proxy<ObjT> proxy) {
+  return makeCallbackObjGrpBcast<ObjT,MsgT,f>(proxy);
+}
+
+template <typename MsgT>
+void triggerSendBack(PipeType const& pipe, MsgT* data) {
+  return theCB()->triggerSendBack(pipe,data);
+}
+
+template <typename MsgT>
+void triggerPipeTyped(PipeType const& pipe, MsgT* msg) {
+  return theCB()->triggerPipeTyped(pipe,msg);
+}
+
+template <typename MsgT>
+void triggerPipeUnknown(PipeType const& pipe, MsgT* msg) {
+  return theCB()->triggerPipeUnknown(pipe,msg);
+}
+
+template <typename MsgT>
+void triggerCallbackMsgHan(MsgT* msg) {
+  return PipeManager::triggerCallbackMsgHan(msg);
 }
 
 }} /* end namespace vt::pipe */

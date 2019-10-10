@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                holder.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H
 #define INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H
@@ -16,15 +59,24 @@ template <typename ColT, typename IndexT>
 bool Holder<ColT, IndexT>::exists(IndexT const& idx ) {
   auto& container = vc_container_;
   auto iter = container.find(idx);
-  return iter != container.end();
+  return iter != container.end() and not iter->second.erased_;
 }
 
 template <typename ColT, typename IndexT>
 void Holder<ColT, IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
   vtAssert(!is_destroyed_, "Must not be destroyed to insert a new element");
+  vtAssert(!exists(idx), "Should not exist to insert element");
 
   auto const& lookup = idx;
   auto& container = vc_container_;
+
+  auto iter = container.find(lookup);
+  if (iter != container.end()) {
+    vtAssert(iter->second.erased_, "Must be in erased state");
+    num_erased_not_removed_--;
+    container.erase(iter);
+  }
+
   /*
    * This assertion no longer valid due to delayed erasure. In fact, the inner
    * holder VC pointer may be nullptr but set to erased. The move should deal
@@ -87,6 +139,19 @@ bool Holder<ColT, IndexT>::isDestroyed() const {
 }
 
 template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::cleanupExists() {
+  auto& container = vc_container_;
+  for (auto iter = container.begin(); iter != container.end(); ) {
+    if (iter->second.erased_) {
+      num_erased_not_removed_--;
+      iter = container.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
+}
+
+template <typename ColT, typename IndexT>
 bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   static uint64_t num_reentrant = 0;
 
@@ -103,14 +168,7 @@ bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   num_reentrant--;
 
   if (num_reentrant == 0) {
-    for (auto iter = container.begin(); iter != container.end(); ) {
-      if (iter->second.erased_) {
-        num_erased_not_removed_--;
-        iter = container.erase(iter);
-      } else {
-        ++iter;
-      }
-    }
+    cleanupExists();
   }
   return true;
 }
@@ -129,6 +187,43 @@ Holder<ColT,IndexT>::numElementsExpr(FuncExprType fn) const {
     num_in += fn(elm.first);
   }
   return num_in;
+}
+
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::addLBCont(IndexT const& idx, LBContFnType fn) {
+  using MappedType = typename TypedLBContainer::mapped_type;
+  auto iter = vc_lb_continuation_.find(idx);
+  if (iter == vc_lb_continuation_.end()) {
+    vc_lb_continuation_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(idx),
+      std::forward_as_tuple(MappedType{})
+    );
+    iter = vc_lb_continuation_.find(idx);
+  }
+  vtAssert(iter != vc_lb_continuation_.end(), "Key must exist in map");
+  iter->second.push_back(fn);
+}
+
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::runLBCont(IndexT const& idx) {
+  auto iter = vc_lb_continuation_.find(idx);
+  if (iter != vc_lb_continuation_.end()) {
+    for (auto&& elm : iter->second) {
+      elm();
+    }
+    vc_lb_continuation_.erase(iter);
+  }
+}
+
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::runLBCont() {
+  for (auto&& idxc : vc_lb_continuation_) {
+    for (auto&& elm : idxc.second) {
+      elm();
+    }
+  }
+  vc_lb_continuation_.clear();
 }
 
 }}} /* end namespace vt::vrt::collection */
