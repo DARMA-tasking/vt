@@ -46,18 +46,16 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/objgroup/headers.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
-#include "vt/configs/arguments/args.h"
-#include "vt/objgroup/headers.h"
+#include "vt/vrt/collection/balance/lb_type.h"
 
 #include <functional>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LBManager {
-  using ArgType = vt::arguments::ArgConfig;
 
   LBManager() = default;
   LBManager(LBManager const&) = delete;
@@ -68,11 +66,9 @@ struct LBManager {
     LBManager::proxy_ = theObjGroup()->makeCollective<LBManager>();
   }
 
-  static void destroy() {
-    theObjGroup()->destroyCollective(LBManager::proxy_);
-  }
+  static void destroy() { theObjGroup()->destroyCollective(LBManager::proxy_); }
 
-public:
+  public:
   /*
    * Decide which LB to invoke given a certain phase
    */
@@ -96,18 +92,18 @@ public:
    */
   static void finishedRunningLB(PhaseType phase);
 
-protected:
+  protected:
   void collectiveImpl(
-    PhaseType phase, LBType lb, bool manual, std::size_t num_calls = 1
-  );
+    PhaseType phase, LBType lb, bool manual, std::size_t num_calls = 1);
   void releaseImpl(PhaseType phase, std::size_t num_calls = 0);
   void releaseNow(PhaseType phase);
 
-public:
+  public:
   template <typename MsgT>
   void sysLB(MsgT* msg) {
     debug_print(lb, node, "sysLB\n");
-    return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
+    return collectiveImpl(
+      msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
   }
   template <typename MsgT>
   void sysReleaseLB(MsgT* msg) {
@@ -115,17 +111,17 @@ public:
     return releaseImpl(msg->phase_, msg->num_collections_);
   }
 
-protected:
+  protected:
   template <typename LB>
   objgroup::proxy::Proxy<LB> makeLB(MsgSharedPtr<StartLBMsg> msg);
 
-private:
-  std::size_t num_invocations_             = 0;
-  std::size_t num_release_                 = 0;
-  PhaseType cached_phase_                  = no_lb_phase;
-  LBType cached_lb_                        = LBType::NoLB;
-  std::function<void()> destroy_lb_        = nullptr;
-  bool synced_in_lb_                       = true;
+  private:
+  std::size_t num_invocations_ = 0;
+  std::size_t num_release_ = 0;
+  PhaseType cached_phase_ = no_lb_phase;
+  LBType cached_lb_ = LBType::NoLB;
+  std::function<void()> destroy_lb_ = nullptr;
+  bool synced_in_lb_ = true;
 
   static objgroup::proxy::Proxy<LBManager> proxy_;
 };

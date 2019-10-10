@@ -42,29 +42,32 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/context/context.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
-#include "vt/vrt/collection/balance/read_lb.h"
-#include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
-#include "vt/vrt/collection/balance/greedylb/greedylb.h"
-#include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
+#include "vt/config.h"
+#include "vt/configs/arguments/args.h"
+#include "vt/context/context.h"
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
-#include "vt/vrt/collection/messages/system_create.h"
+#include "vt/vrt/collection/balance/greedylb/greedylb.h"
+#include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
+#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
+#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/read_lb.h"
+#include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/collection/messages/system_create.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
+
+using ArgType = vt::arguments::ArgConfig;
 
 /*static*/ objgroup::proxy::Proxy<LBManager> LBManager::proxy_;
 
 LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   debug_print(
     lb, node,
-    "LBManager::decideLBToRun: phase={}, try_file={}, cached_phase_={}, lb={}\n",
-    phase, try_file, cached_phase_, lb_names_[cached_lb_]
-  );
+    "LBManager::decideLBToRun: phase={}, try_file={}, cached_phase_={}, "
+    "lb={}\n",
+    phase, try_file, cached_phase_, lb_names_[cached_lb_]);
 
   if (phase == cached_phase_) {
     return cached_lb_;
@@ -100,35 +103,30 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   }
 
   debug_print(
-    lb, node,
-    "LBManager::decidedLBToRun: phase={}, return lb_={}\n",
-    phase, lb_names_[the_lb]
-  );
+    lb, node, "LBManager::decidedLBToRun: phase={}, return lb_={}\n", phase,
+    lb_names_[the_lb]);
 
   cached_lb_ = the_lb;
   return the_lb;
 }
 
 template <typename LB>
-objgroup::proxy::Proxy<LB>
-LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
+objgroup::proxy::Proxy<LB> LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto proxy = theObjGroup()->makeCollective<LB>();
   proxy.get()->init(proxy);
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   proxy.get()->startLBHandler(msg.get(), base_proxy);
-  destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
+  destroy_lb_ = [proxy] { proxy.destroyCollective(); };
   return proxy;
 }
 
 void LBManager::collectiveImpl(
-  PhaseType phase, LBType lb, bool manual, std::size_t num_calls
-) {
+  PhaseType phase, LBType lb, bool manual, std::size_t num_calls) {
   debug_print(
     lb, node,
     "collectiveImpl: phase={}, manual={}, num_invocations_={}, num_calls={}, "
     "num_release={}\n",
-    phase, manual, num_invocations_, num_calls, num_release_
-  );
+    phase, manual, num_invocations_, num_calls, num_release_);
 
   num_invocations_++;
 
@@ -137,20 +135,25 @@ void LBManager::collectiveImpl(
 
     if (this_node == 0 and not ArgType::vt_lb_quiet) {
       debug_print(
-        lb, node,
-        "LBManager::collectiveImpl: phase={}, balancer={}, name={}\n",
-        phase,
-        static_cast<typename std::underlying_type<LBType>::type>(lb),
-        lb_names_[lb]
-      );
+        lb, node, "LBManager::collectiveImpl: phase={}, balancer={}, name={}\n",
+        phase, static_cast<typename std::underlying_type<LBType>::type>(lb),
+        lb_names_[lb]);
     }
 
     auto msg = makeMessage<StartLBMsg>(phase);
     switch (lb) {
-    case LBType::HierarchicalLB: makeLB<lb::HierarchicalLB>(msg); break;
-    case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
-    case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
-    case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
+    case LBType::HierarchicalLB:
+      makeLB<lb::HierarchicalLB>(msg);
+      break;
+    case LBType::GreedyLB:
+      makeLB<lb::GreedyLB>(msg);
+      break;
+    case LBType::RotateLB:
+      makeLB<lb::RotateLB>(msg);
+      break;
+    case LBType::GossipLB:
+      makeLB<lb::GossipLB>(msg);
+      break;
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
       break;
@@ -162,10 +165,7 @@ void LBManager::collectiveImpl(
 }
 
 void LBManager::waitLBCollective() {
-  debug_print(
-    lb, node,
-    "waitLBCollective (begin)\n"
-  );
+  debug_print(lb, node, "waitLBCollective (begin)\n");
 
   //
   // The invocation should only happen collectively across the whole all nodes.
@@ -177,17 +177,11 @@ void LBManager::waitLBCollective() {
   synced_in_lb_ = true;
   theTerm()->consume();
 
-  debug_print(
-    lb, node,
-    "waitLBCollective (end)\n"
-  );
+  debug_print(lb, node, "waitLBCollective (end)\n");
 }
 
 /*static*/ void LBManager::finishedRunningLB(PhaseType phase) {
-  debug_print(
-    lb, node,
-    "finishedRunningLB\n"
-  );
+  debug_print(lb, node, "finishedRunningLB\n");
   auto proxy = getProxy();
   proxy.get()->releaseImpl(phase);
 }
@@ -195,14 +189,13 @@ void LBManager::waitLBCollective() {
 void LBManager::releaseImpl(PhaseType phase, std::size_t num_calls) {
   debug_print(
     lb, node,
-    "releaseImpl: phase={}, num_invocations_={}, num_calls={}, num_release={}\n",
-    phase, num_invocations_, num_calls, num_release_
-  );
+    "releaseImpl: phase={}, num_invocations_={}, num_calls={}, "
+    "num_release={}\n",
+    phase, num_invocations_, num_calls, num_release_);
 
   vtAssert(
-    num_calls != 0 or
-    num_invocations_ > 0, "Must be automatically invoked to releaseImpl"
-  );
+    num_calls != 0 or num_invocations_ > 0,
+    "Must be automatically invoked to releaseImpl");
   num_release_++;
   if (num_release_ == num_calls or num_release_ == num_invocations_) {
     releaseNow(phase);
@@ -216,10 +209,8 @@ void LBManager::releaseNow(PhaseType phase) {
 
   if (this_node == 0) {
     vt_print(
-      lb,
-      "LBManaager::releaseNow: finished LB, phase={}, invocations={}\n",
-      phase, num_invocations_
-    );
+      lb, "LBManager::releaseNow: finished LB, phase={}, invocations={}\n",
+      phase, num_invocations_);
   }
 
   auto msg = makeMessage<CollectionPhaseMsg>();
