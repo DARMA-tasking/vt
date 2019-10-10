@@ -1,23 +1,52 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                term_state.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/config.h"
 #include "vt/termination/term_state.h"
 #include "vt/termination/termination.h"
 
 namespace vt { namespace term {
-
-void TermState::addChildEpoch(EpochType const& epoch) {
-  // Produce a single work unit for the child epoch so it can not finish while
-  // this epoch is live
-  theTerm()->produce(epoch,1);
-  epoch_child_.push_back(epoch);
-}
-
-void TermState::clearChildren() {
-  for (auto&& cur_epoch : epoch_child_) {
-    theTerm()->consume(cur_epoch,1);
-  }
-  epoch_child_.clear();
-}
 
 TermWaveType TermState::getCurWave() const {
   return cur_wave_;
@@ -42,9 +71,9 @@ TermState::EventCountType TermState::getRecvChildCount() const {
 void TermState::notifyChildReceive() {
   recv_child_count_++;
 
-  debug_print(
+  debug_print_verbose(
     term, node,
-    "notifyChildReceive: epoch={}, active={}, local_ready={}, "
+    "notifyChildReceive: epoch={:x}, active={}, local_ready={}, "
     "submitted_wave={}, recv={}, children={}\n",
     epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
     submitted_wave_, recv_child_count_, num_children_
@@ -94,9 +123,9 @@ bool TermState::readySubmitParent(bool const needs_active) const {
     recv_child_count_ == num_children_ and local_terminated_ and
     submitted_wave_ == cur_wave_ - 1 and not term_detected_;
 
-  debug_print(
+  debug_print_verbose(
     term, node,
-    "readySubmitParent: epoch={}, active={}, local_ready={}, "
+    "readySubmitParent: epoch={:x}, active={}, local_ready={}, "
     "sub_wave={}, cur_wave_={}, recv_child={}, num_child={}, term={}:"
     " ret={}\n",
     epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
@@ -111,23 +140,24 @@ TermState::TermState(
   EpochType const& in_epoch, bool const in_local_terminated, bool const active,
   NodeType const& children
 )
-  : local_terminated_(in_local_terminated), epoch_active_(active),
-    num_children_(children), epoch_(in_epoch)
+  : EpochRelation(in_epoch, false),
+    local_terminated_(in_local_terminated), epoch_active_(active),
+    num_children_(children)
 {
   debug_print(
     term, node,
-    "TermState: constructor: epoch={}, num_children={}, active={}, "
+    "TermState: constructor: epoch={:x}, num_children={}, active={}, "
     "local_terminated={}\n",
     epoch_, num_children_, print_bool(epoch_active_), print_bool(local_terminated_)
   );
 }
 
 TermState::TermState(EpochType const& in_epoch, NodeType const& children)
-  : num_children_(children), epoch_(in_epoch)
+  : EpochRelation(in_epoch, false), num_children_(children)
 {
   debug_print(
     term, node,
-    "TermState: constructor: epoch={}, event={}\n", epoch_, recv_child_count_
+    "TermState: constructor: epoch={:x}, event={}\n", epoch_, recv_child_count_
   );
 }
 

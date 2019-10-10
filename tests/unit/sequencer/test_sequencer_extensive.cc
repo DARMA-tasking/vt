@@ -1,6 +1,48 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                         test_sequencer_extensive.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include <cstdint>
 
@@ -21,11 +63,11 @@ using namespace vt::tests::unit;
       (LABEL), seq_id, (ORDER).load(), (CUR)                            \
     );                                                                  \
   } while (false);
-#define DEBUG_PRINT(str, args...)                                       \
-  do { fmt::print(str, args); } while (false);
+#define DEBUG_PRINT(str, ...)                                           \
+  do { fmt::print(str, __VA_ARGS__); } while (false);
 #else
 #define DEBUG_PRINT_SEQ(ORDER, CUR, LABEL)
-#define DEBUG_PRINT(str, args...)
+#define DEBUG_PRINT(str, ...)
 #endif
 
 namespace vt { namespace tests { namespace unit {
@@ -72,7 +114,7 @@ static constexpr CountType const max_seq_depth = 8;
         (NODE), msg                                                     \
       );                                                                \
       auto const total = (wait_cnt * seg_cnt) + wait_pre + wait_post;   \
-      for (int i = 0; i < total; i++) {                                 \
+      for (CountType i = 0; i < total; i++) {                           \
         TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
         theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                           \
           (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
@@ -109,11 +151,11 @@ static constexpr CountType const max_seq_depth = 8;
       return;                                                           \
     }                                                                   \
                                                                         \
-    EXPECT_EQ(seq_ordering_++, 0);                                      \
+    EXPECT_EQ(seq_ordering_++, 0U);                                     \
                                                                         \
     theSeq()->wait_closure<NumWaitsMsg, numWaitHan>(                    \
       no_tag, [](NumWaitsMsg* m){                                       \
-        EXPECT_EQ(seq_ordering_++, 1);                                  \
+        EXPECT_EQ(seq_ordering_++, 1U);                                 \
         num_waits = m->info[0];                                         \
         nwaits_pre = m->info[1];                                        \
         nwaits_post = m->info[2];                                       \
@@ -123,7 +165,7 @@ static constexpr CountType const max_seq_depth = 8;
     );                                                                  \
                                                                         \
     theSeq()->sequenced([=]{                                            \
-      for (int wb = 0; wb < nwaits_pre; wb++) {                         \
+      for (uint32_t wb = 0; wb < nwaits_pre; wb++) {                    \
         theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                      \
           no_tag, [=](MSG_TYPE* msg){                                   \
             CountType const this_wait = wb + nwait_offset;              \
@@ -133,12 +175,12 @@ static constexpr CountType const max_seq_depth = 8;
         );                                                              \
       }                                                                 \
                                                                         \
-      for (int nseg = 0; nseg < num_segs; nseg++) {                     \
+      for (uint32_t nseg = 0; nseg < num_segs; nseg++) {                \
         theSeq()->sequenced([=]{                                        \
           DEBUG_PRINT("nseg={}:num_waits={}\n",nseg,num_waits);         \
           DEBUG_PRINT_SEQ(seq_ordering_, 0, "start-sequenced");         \
           seqDepth(depth, [=]{                                          \
-            for (int w = 0; w < num_waits; w++) {                       \
+            for (uint32_t w = 0; w < num_waits; w++) {                  \
               theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                \
                 no_tag, [=](MSG_TYPE* msg){                             \
                   CountType const this_wait =                           \
@@ -152,7 +194,7 @@ static constexpr CountType const max_seq_depth = 8;
         });                                                             \
       }                                                                 \
                                                                         \
-      for (int wa = 0; wa < nwaits_post; wa++) {                        \
+      for (uint32_t wa = 0; wa < nwaits_post; wa++) {                   \
         theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                      \
           no_tag, [=](MSG_TYPE* msg){                                   \
             CountType const this_wait =                                 \
@@ -216,7 +258,7 @@ TEST_P(TestSequencerExtensive, test_wait_1) {
 
 INSTANTIATE_TEST_CASE_P(
   test_sequencer_extensive, TestSequencerExtensive,
-  testing::ValuesIn(make_values())
+  testing::ValuesIn(make_values()),
 );
 
 }}} // end namespace vt::tests::unit

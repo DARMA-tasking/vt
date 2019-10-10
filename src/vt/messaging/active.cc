@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                  active.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 
 #include "vt/config.h"
@@ -45,13 +88,13 @@ void ActiveMessenger::packMsg(
     size, ptr_bytes, print_ptr(ptr)
   );
 
-  char* const msg_buffer = reinterpret_cast<char* const>(msg) + size;
+  char* const msg_buffer = reinterpret_cast<char*>(msg) + size;
   std::memcpy(msg_buffer, ptr, ptr_bytes);
 }
 
 EventType ActiveMessenger::sendMsgBytesWithPut(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size, TagType const& send_tag, ActionType next_action
+  MsgSizeType const& msg_size, TagType const& send_tag
 ) {
   auto msg = base.get();
   auto const& is_term = envelopeIsTerm(msg->env);
@@ -67,8 +110,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   }
 
   EventType new_event = theEvent()->createParentEvent(this_node_);
-  auto& holder = theEvent()->getEventHolder(new_event);
-  EventRecordType* parent = holder.get_event();
 
   MsgSizeType new_msg_size = msg_size;
 
@@ -100,7 +141,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
       );
     }
     if (direct_buf_pack) {
-      auto msg_size_ptr = static_cast<intptr_t>(msg_size);
       packMsg(msg, msg_size, put_ptr, put_size);
       new_msg_size += put_size;
       envelopeSetPutTag(msg->env, PutPackedTag);
@@ -108,15 +148,11 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     } else {
       auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
-        RDMA_GetType{put_ptr,put_size}, dest, env_tag, nullptr
+        RDMA_GetType{put_ptr,put_size}, dest, env_tag
       );
       auto const& ret_tag = std::get<1>(ret);
-      auto const& put_event_send = std::get<0>(ret);
       if (ret_tag != env_tag) {
         envelopeSetPutTag(msg->env, ret_tag);
-      }
-      if (next_action) {
-        parent->addEventToList(put_event_send);
       }
     }
   } else if (is_put && is_put_packed) {
@@ -125,28 +161,22 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     new_msg_size += put_size;
   }
 
-  auto const& send_event = sendMsgBytes(
-    dest, base, new_msg_size, send_tag, next_action
-  );
-
-  if (next_action) {
-    parent->addEventToList(send_event);
-  }
+  sendMsgBytes(dest, base, new_msg_size, send_tag);
 
   return new_event;
 }
 
 EventType ActiveMessenger::sendMsgBytes(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size, TagType const& send_tag, ActionType next_action
+  MsgSizeType const& msg_size, TagType const& send_tag
 ) {
   auto const& msg = base.get();
 
-  auto const& epoch = envelopeIsEpochType(msg->env) ?
+  auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const& is_shared = isSharedMessage(msg);
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
+  auto const is_shared = isSharedMessage(msg);
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_bcast = envelopeIsBcast(msg->env);
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
@@ -165,10 +195,10 @@ EventType ActiveMessenger::sendMsgBytes(
 
   vtWarnIf(
     !(dest != theContext()->getNode() || is_bcast),
-    "Destination {} should != this node", dest
+    "Destination {} should != this node"
   );
   vtAbortIf(
-    dest >= theContext()->getNumNodes(), "Invalid destination: {}", dest
+    dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}"
   );
 
   MPI_Isend(
@@ -177,8 +207,11 @@ EventType ActiveMessenger::sendMsgBytes(
   );
 
   if (not is_term) {
-    theTerm()->produce(epoch);
-    theTerm()->send(dest,epoch);
+    theTerm()->produce(epoch,1,dest);
+  }
+
+  for (auto&& l : send_listen_) {
+    l->send(dest, msg_size, is_bcast);
   }
 
   return event_id;
@@ -191,103 +224,63 @@ trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
 #endif
 
 EventType ActiveMessenger::sendMsgSized(
-  HandlerType const& han, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size, ActionType next_action
+  MsgSharedPtr<BaseMsgType> const& base, MsgSizeType const& msg_size
 ) {
   auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
   auto msg = base.get();
 
-  auto const& dest = envelopeGetDest(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_epoch = envelopeIsEpochType(msg->env);
-  auto const& is_shared = isSharedMessage(msg);
+  auto const dest = envelopeGetDest(msg->env);
+  auto const is_bcast = envelopeIsBcast(msg->env);
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_epoch = envelopeIsEpochType(msg->env);
 
-  backend_enable_if(
-    trace_enabled, {
-      auto const& handler = envelopeGetHandler(msg->env);
-      bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
-      if (is_auto) {
-        trace::TraceEntryIDType ep = auto_registry::theTraceID(
-          handler, auto_registry::RegistryTypeEnum::RegGeneral
+  #if backend_check_enabled(trace_enabled)
+    auto const handler = envelopeGetHandler(msg->env);
+    bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
+    if (is_auto) {
+      trace::TraceEntryIDType ep = auto_registry::theTraceID(
+        handler, auto_registry::RegistryTypeEnum::RegGeneral
+      );
+      if (not is_bcast) {
+        trace::TraceEventIDType event = theTrace()->messageCreation(ep, msg_size);
+        envelopeSetTraceEvent(msg->env, event);
+      } else if (is_bcast and dest == this_node_) {
+        trace::TraceEventIDType event = theTrace()->messageCreationBcast(
+          ep, msg_size
         );
-        if (not is_bcast) {
-          trace::TraceEventIDType event = theTrace()->messageCreation(ep, msg_size);
-          envelopeSetTraceEvent(msg->env, event);
-        } else if (is_bcast and dest == this_node_) {
-          trace::TraceEventIDType event = theTrace()->messageCreationBcast(
-            ep, msg_size
-          );
-          envelopeSetTraceEvent(msg->env, event);
-        }
+        envelopeSetTraceEvent(msg->env, event);
       }
     }
-  );
+  #endif
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "sendMsgSized: dest={}, handler={}, is_bcast={}, is_put={}\n",
+      "sendMsgSized: dest={}, handler={:x}, is_bcast={}, is_put={}\n",
       dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
       print_bool(envelopeIsPut(msg->env))
     );
   }
 
   if (is_epoch) {
-    // Propagate current epoch on the top of the epoch stack
-    auto epoch = envelopeGetEpoch(msg->env);
-
-    // Only propagate only if the epoch is not set already
-    if (epoch == no_epoch) {
-      auto const cur_epoch = getGlobalEpoch();
-      if (cur_epoch != term::any_epoch_sentinel && cur_epoch != no_epoch) {
-        setEpochMessage(msg, cur_epoch);
-      }
-    }
+    setupEpochMsg(msg);
   }
 
   bool deliver = false;
   EventType const ret_event = group::GroupActiveAttorney::groupHandler(
-    base, uninitialized_destination, msg_size, true, next_action, &deliver
+    base, uninitialized_destination, msg_size, true, &deliver
   );
 
   EventType ret = no_event;
 
   if (deliver) {
-    auto const& is_put = envelopeIsPut(msg->env);
-
-    EventRecordType* parent = nullptr;
     EventType event = no_event;
 
-    if (next_action) {
-      event = theEvent()->createParentEvent(this_node_);
-      auto& holder = theEvent()->getEventHolder(event);
-      parent = holder.get_event();
-    }
-
-    auto const send_put_event = sendMsgBytesWithPut(
-      dest, base, msg_size, send_tag, next_action
-    );
-
-    if (next_action) {
-      if (ret_event != no_event) {
-        parent->addEventToList(ret_event);
-      }
-      if (send_put_event != no_event) {
-        parent->addEventToList(send_put_event);
-      }
-      auto& holder = theEvent()->getEventHolder(event);
-      holder.attachAction(next_action);
-    }
+    sendMsgBytesWithPut(dest, base, msg_size, send_tag);
 
     ret = event;
   } else {
-    if (ret_event != no_event && next_action) {
-      auto& holder = theEvent()->getEventHolder(ret_event);
-      holder.attachAction(next_action);
-    }
-
     ret = ret_event;
   }
 
@@ -295,8 +288,7 @@ EventType ActiveMessenger::sendMsgSized(
 }
 
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
-  RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag,
-  ActionType next_action
+  RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
 ) {
   auto const& data_ptr = std::get<0>(ptr);
   auto const& num_bytes = std::get<1>(ptr);
@@ -304,10 +296,6 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
-
-  if (next_action != nullptr) {
-    holder.attachAction(next_action);
-  }
 
   auto mpi_event = holder.get_event();
 
@@ -319,11 +307,11 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   vtWarnIf(
     dest == theContext()->getNode(),
-    "Destination {} should != this node", dest
+    "Destination {} should != this node"
   );
   vtAbortIf(
-    dest >= theContext()->getNumNodes(),
-    "Invalid destination: {}", dest
+    dest >= theContext()->getNumNodes() || dest < 0,
+    "Invalid destination: {}"
   );
 
   MPI_Isend(
@@ -331,7 +319,13 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     mpi_event->getRequest()
   );
 
-  theTerm()->produce(term::any_epoch_sentinel);
+  // Assume that any raw data send/recv is paired with a message with an epoch
+  // if required to inhibit early termination of that epoch
+  theTerm()->produce(term::any_epoch_sentinel,1,dest);
+
+  for (auto&& l : send_listen_) {
+    l->send(dest, num_bytes, false);
+  }
 
   return SendDataRetType{event_id,send_tag};
 }
@@ -347,7 +341,7 @@ bool ActiveMessenger::processDataMsgRecv() {
   auto iter = pending_recvs_.begin();
 
   for (; iter != pending_recvs_.end(); ++iter) {
-    auto const& done = recvDataMsgBuffer(
+    auto const done = recvDataMsgBuffer(
       iter->second.user_buf, iter->first, iter->second.recv_node,
       false, iter->second.dealloc_user_buf, iter->second.cont
     );
@@ -425,7 +419,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
         dealloc_buf();
       }
 
-      theTerm()->consume(term::any_epoch_sentinel);
+      theTerm()->consume(term::any_epoch_sentinel,1,stat.MPI_SOURCE);
 
       return true;
     } else {
@@ -468,9 +462,9 @@ bool ActiveMessenger::handleActiveMsg(
 
   // Call group handler
   bool deliver = false;
-  GroupActiveAttorney::groupHandler(base, from, size, false, nullptr, &deliver);
+  GroupActiveAttorney::groupHandler(base, from, size, false, &deliver);
 
-  auto const& is_term = envelopeIsTerm(msg->env);
+  auto const is_term = envelopeIsTerm(msg->env);
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
@@ -487,26 +481,25 @@ bool ActiveMessenger::deliverActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& in_from_node,
   bool insert
 ) {
-  auto msg = base.to<ShortMessage>().get();
+  using MsgType = ShortMessage;
+  auto msg = base.to<MsgType>().get();
 
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
-  auto const& dest = envelopeGetDest(msg->env);
-  auto const& handler = envelopeGetHandler(msg->env);
-  auto const& epoch = envelopeIsEpochType(msg->env) ?
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_bcast = envelopeIsBcast(msg->env);
+  auto const dest = envelopeGetDest(msg->env);
+  auto const handler = envelopeGetHandler(msg->env);
+  auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const& is_tag = envelopeIsTagType(msg->env);
-  auto const& tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
-  auto const& callback =
-    envelopeIsCallbackType(msg->env) ?
-    CallbackMessage::getCallbackMessage(msg) : uninitialized_handler;
-  auto const& from_node = is_bcast ? dest : in_from_node;
+  auto const is_tag = envelopeIsTagType(msg->env);
+  auto const tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
+  auto const from_node = is_bcast ? dest : in_from_node;
 
   ActiveFnPtrType active_fun = nullptr;
 
   bool has_ex_handler = false;
-  bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
-  bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
+  bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
+  bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
+  bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
@@ -517,78 +510,70 @@ bool ActiveMessenger::deliverActiveMsg(
     );
   }
 
-  if (is_auto and is_functor) {
+  if (is_auto and is_functor and not is_obj) {
     active_fun = auto_registry::getAutoHandlerFunctor(handler);
-  } else if (is_auto) {
+  } else if (is_auto and not is_obj) {
     active_fun = auto_registry::getAutoHandler(handler);
-  } else {
+  } else if (not is_obj) {
     auto ret = theRegistry()->getHandler(handler, tag);
     if (ret != nullptr) {
       has_ex_handler = true;
     }
   }
 
-  bool const& has_action_handler = active_fun != no_action or has_ex_handler;
+  bool const has_handler = active_fun != no_action or has_ex_handler or is_obj;
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "deliverActiveMsg: msg={}, handler={}, tag={}, is_auto={}, "
-      "is_functor={}, has_action_handler={}, insert={}\n",
-      print_ptr(msg), handler, tag, print_bool(is_auto),
-      print_bool(is_functor), print_bool(has_action_handler),
-      print_bool(insert)
+      "deliverActiveMsg: msg={}, handler={:x}, tag={}, is_auto={}, "
+      "is_functor={}, is_obj_group={}, has_handler={}, insert={}\n",
+      print_ptr(msg), handler, tag, is_auto, is_functor, is_obj,
+      has_handler, insert
     );
   }
 
-  if (has_action_handler) {
+  if (has_handler) {
     // the epoch_stack_ size after the epoch on the active message, if included
     // in the envelope, is pushed.
     EpochStackSizeType ep_stack_size = 0;
 
-    auto const& env_epoch    = not (epoch == term::any_epoch_sentinel);
-    auto const& has_epoch    = env_epoch and epoch != no_epoch;
-    auto const& cur_epoch    = env_epoch ? epoch : no_epoch;
+    auto const env_epoch    = not (epoch == term::any_epoch_sentinel);
+    auto const has_epoch    = env_epoch and epoch != no_epoch;
+    auto const cur_epoch    = env_epoch ? epoch : no_epoch;
 
     // set the current handler so the user can request it in the context of an
     // active fun
     current_handler_context_  = handler;
-    current_callback_context_ = callback;
     current_node_context_     = from_node;
     current_epoch_context_    = cur_epoch;
 
-    backend_enable_if(
-      trace_enabled,
-      current_trace_context_  = from_node;
-    );
+    #if backend_check_enabled(trace_enabled)
+      current_trace_context_  = envelopeGetTraceEvent(msg->env);
+    #endif
 
     if (has_epoch) {
       ep_stack_size = epochPreludeHandler(cur_epoch);
     }
 
-    // run the active function
-    runnable::Runnable<ShortMessage>::run(handler,active_fun,msg,from_node,tag);
-
-    auto trigger = theRegistry()->getTrigger(handler);
-    if (trigger) {
-      trigger(msg);
-    }
+    runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
 
     // unset current handler
     current_handler_context_  = uninitialized_handler;
-    current_callback_context_ = uninitialized_handler;
     current_node_context_     = uninitialized_destination;
     current_epoch_context_    = no_epoch;
 
-    backend_enable_if(
-      trace_enabled,
+    #if backend_check_enabled(trace_enabled)
       current_trace_context_  = trace::no_trace_event;
-    );
+    #endif
 
     if (has_epoch) {
       epochEpilogHandler(cur_epoch,ep_stack_size);
     }
 
+    if (not is_term) {
+      theTerm()->consume(epoch,1,from_node);
+    }
   } else {
     if (insert) {
       auto iter = pending_handler_msgs_.find(handler);
@@ -601,36 +586,10 @@ bool ActiveMessenger::deliverActiveMsg(
       } else {
         iter->second.push_back(BufferedMsgType{base,from_node});
       }
-      if (!is_term || backend_check_enabled(print_term_msgs)) {
-        debug_print(
-          active, node,
-          "deliverActiveMsg: inserting han={}, msg={}, ref={}, list size={}\n",
-          handler, print_ptr(msg), envelopeGetRef(msg->env),
-          pending_handler_msgs_.find(handler)->second.size()
-        );
-      }
     }
   }
 
-  if (!is_term) {
-    theTerm()->recv(from_node,epoch);
-  }
-
-  if (has_action_handler) {
-    if (!is_term || backend_check_enabled(print_term_msgs)) {
-      debug_print(
-        active, node,
-        "deliverActiveMsg: deref msg={}, ref={}, is_bcast={}, dest={}\n",
-        print_ptr(msg), envelopeGetRef(msg->env), print_bool(is_bcast), dest
-      );
-    }
-
-    if (!is_term) {
-      theTerm()->consume(epoch);
-    }
-  }
-
-  return has_action_handler;
+  return has_handler;
 }
 
 bool ActiveMessenger::tryProcessIncomingMessage() {
@@ -652,7 +611,7 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
       char* buf = static_cast<char*>(std::malloc(num_probe_bytes));
     #endif
 
-    NodeType const& sender = stat.MPI_SOURCE;
+    NodeType const sender = stat.MPI_SOURCE;
 
     MPI_Recv(
       buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
@@ -663,8 +622,8 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
     messageConvertToShared(msg);
     auto base = promoteMsgOwner(msg);
 
-    auto const& is_term = envelopeIsTerm(msg->env);
-    auto const& is_put = envelopeIsPut(msg->env);
+    auto const is_term = envelopeIsTerm(msg->env);
+    auto const is_put = envelopeIsPut(msg->env);
     bool put_finished = false;
 
     if (!is_term || backend_check_enabled(print_term_msgs)) {
@@ -825,10 +784,6 @@ void ActiveMessenger::unregisterHandlerFn(
 
 HandlerType ActiveMessenger::getCurrentHandler() const {
   return current_handler_context_;
-}
-
-HandlerType ActiveMessenger::getCurrentCallback() const {
-  return current_callback_context_;
 }
 
 EpochType ActiveMessenger::getCurrentEpoch() const {

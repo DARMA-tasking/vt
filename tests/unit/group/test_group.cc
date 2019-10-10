@@ -1,6 +1,48 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                test_group.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
@@ -30,11 +72,11 @@ struct TestGroup : TestParallelHarness {
 TEST_F(TestGroup, test_group_range_construct_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const& lo = 0;
-  auto const& hi = num_nodes / 2;
+  NodeType const lo = 0;
+  NodeType const hi = num_nodes / 2;
   if (this_node == 0) {
     auto list = std::make_unique<region::Range>(lo,hi);
-    auto const& group_id = theGroup()->newGroup(
+    theGroup()->newGroup(
       std::move(list), [](GroupType group){
         fmt::print("Group is created: group={:x}\n", group);
         auto msg = makeSharedMessage<TestMsg>();
@@ -56,11 +98,12 @@ TEST_F(TestGroup, test_group_range_construct_1) {
 TEST_F(TestGroup, test_group_range_construct_2) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const& lo = 1;
-  auto const& hi = std::min(num_nodes,static_cast<NodeType>(5));
+  NodeType const lo = 1;
+  NodeType const max_val = 5;
+  NodeType const hi = std::min<NodeType>(num_nodes,max_val);
   if (this_node == 0) {
     auto list = std::make_unique<region::Range>(lo,hi);
-    auto const& group_id = theGroup()->newGroup(
+    theGroup()->newGroup(
       std::move(list), [](GroupType group){
         fmt::print("Group is created: group={:x}\n", group);
         auto msg = makeSharedMessage<TestMsg>();
@@ -82,11 +125,10 @@ TEST_F(TestGroup, test_group_range_construct_2) {
 TEST_F(TestGroup, test_group_collective_construct_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const& node_filter = this_node % 2 == 0;
+  bool const node_filter = this_node % 2 == 0;
   theGroup()->newGroupCollective(
     node_filter, [=](GroupType group) {
       auto const& in_group = theGroup()->inGroup(group);
-      auto const& root_node = theGroup()->groupRoot(group);
       auto const& is_default_group = theGroup()->groupDefault(group);
       EXPECT_EQ(in_group, node_filter);
       EXPECT_EQ(is_default_group, false);
@@ -112,7 +154,6 @@ TEST_F(TestGroup, test_group_collective_construct_1) {
 //   theGroup()->newGroupCollective(
 //     node_filter, [=](GroupType group) {
 //       auto const& in_group = theGroup()->inGroup(group);
-//       auto const& root_node = theGroup()->groupRoot(group);
 //       auto const& is_default_group = theGroup()->groupDefault(group);
 //       ::fmt::print("{}: new group collective lambda\n", this_node);
 //       EXPECT_EQ(in_group, node_filter);

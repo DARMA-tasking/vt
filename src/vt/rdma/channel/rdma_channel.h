@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                rdma_channel.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_RDMA_RDMA_CHANNEL_H
 #define INCLUDED_RDMA_RDMA_CHANNEL_H
@@ -53,12 +96,11 @@ private:
 private:
   bool is_target_ = false;
 
-  bool initialized_ = false, locked_ = false, flushed_ = true;
+  bool initialized_ = false, locked_ = false;
   RDMA_HandleType const rdma_handle_ = no_rdma_handle;
   RDMA_GroupPosType target_pos_ = no_group_pos;
   RDMA_GroupPosType non_target_pos_ = no_group_pos;
   NodeType target_ = uninitialized_destination;
-  NodeType my_node_ = uninitialized_destination;
   NodeType non_target_ = uninitialized_destination;
   ByteType num_bytes_ = no_byte;
   RDMA_PtrType ptr_ = no_rdma_ptr;

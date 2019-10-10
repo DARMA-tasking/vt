@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                  handler.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_HANDLER_HANDLER_H
 #define INCLUDED_HANDLER_HANDLER_H
@@ -13,22 +56,32 @@
 
 namespace vt {
 
-using HandlerIdentifierType = int16_t;
+using HandlerIdentifierType = uint64_t;
+
+// HandlerControlType: u32-bit field, limited to 20 bits in pattern
+using HandlerControlType = uint32_t;
 
 static constexpr HandlerIdentifierType const first_handle_identifier = 1;
-static constexpr HandlerIdentifierType const uninitialized_handle_identifier = -1;
+static constexpr HandlerIdentifierType const uninitialized_handle_identifier = u64empty;
 static constexpr HandlerType const blank_handler = 0;
 
 static constexpr BitCountType const auto_num_bits = 1;
 static constexpr BitCountType const functor_num_bits = 1;
+static constexpr BitCountType const objgroup_num_bits = 1;
+static constexpr BitCountType const control_num_bits = 20;
 static constexpr BitCountType const handler_id_num_bits =
-  BitCounterType<HandlerIdentifierType>::value;
+ BitCounterType<HandlerType>::value - (
+   auto_num_bits + functor_num_bits + objgroup_num_bits + control_num_bits
+ );
 
+// eHandlerBits::ObjGroup identifies the handler as targeting an objgroup; the
+// control bits are an extensible field used for module-specific sub-handlers
 enum eHandlerBits {
-  Auto       = 0,
+  ObjGroup   = 0,
+  Auto       = eHandlerBits::ObjGroup   + objgroup_num_bits,
   Functor    = eHandlerBits::Auto       + auto_num_bits,
-  Identifier = eHandlerBits::Functor    + functor_num_bits,
-  Node       = eHandlerBits::Identifier + handler_id_num_bits,
+  Control    = eHandlerBits::Functor    + functor_num_bits,
+  Identifier = eHandlerBits::Control    + control_num_bits
 };
 
 struct HandlerManager {
@@ -37,18 +90,20 @@ struct HandlerManager {
   HandlerManager() = default;
 
   static HandlerType makeHandler(
-    bool const& is_auto, bool const& is_functor, HandlerIdentifierType const& id
+    bool is_auto, bool is_functor, HandlerIdentifierType id,
+    bool is_objgroup = false, HandlerControlType control = 0
   );
-  static NodeType getHandlerNode(HandlerType const& han);
-  static void setHandlerNode(HandlerType& han, NodeType const& node);
-  static void setHandlerIdentifier(
-    HandlerType& han, HandlerIdentifierType const& ident
-  );
-  static HandlerIdentifierType getHandlerIdentifier(HandlerType const& han);
-  static void setHandlerAuto(HandlerType& han, bool const& is_auto);
-  static void setHandlerFunctor(HandlerType& han, bool const& is_functor);
-  static bool isHandlerAuto(HandlerType const& han);
-  static bool isHandlerFunctor(HandlerType const& han);
+  static void setHandlerIdentifier(HandlerType& han, HandlerIdentifierType id);
+  static void setHandlerControl(HandlerType& han, HandlerControlType control);
+
+  static HandlerIdentifierType getHandlerIdentifier(HandlerType han);
+  static HandlerControlType getHandlerControl(HandlerType han);
+  static void setHandlerAuto(HandlerType& han, bool is_auto);
+  static void setHandlerFunctor(HandlerType& han, bool is_functor);
+  static void setHandlerObjGroup(HandlerType& han, bool is_objgroup);
+  static bool isHandlerAuto(HandlerType han);
+  static bool isHandlerFunctor(HandlerType han);
+  static bool isHandlerObjGroup(HandlerType han);
 };
 
 } //end namespace vt

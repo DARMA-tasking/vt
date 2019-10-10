@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                          context_vrtmanager.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_CONTEXT_VRT_MANAGER_IMPL
 #define INCLUDED_CONTEXT_VRT_MANAGER_IMPL
@@ -93,8 +136,8 @@ template <typename MsgT>
 }
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-void VirtualContextManager::sendSerialMsg(
-  VirtualProxyType const& toProxy, MsgT *const msg, ActionType act
+messaging::PendingSend VirtualContextManager::sendSerialMsg(
+  VirtualProxyType const& toProxy, MsgT *const msg
 ) {
   if (theContext()->getWorker() == worker_id_comm_thread) {
     NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
@@ -113,28 +156,43 @@ void VirtualContextManager::sendSerialMsg(
     using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
 
     // route the message to the destination using the location manager
-    SerializedMessenger::sendSerialMsg<
-      MsgT, virtualTypedMsgHandler<MsgT>, VirtualMessage
-    >(
-      msg,
-      // custom send lambda to route the message
-      [=](MsgSharedPtr<SerialMsgT> msg){
-        msg->setProxy(toProxy);
-        theLocMan()->vrtContextLoc->routeMsgHandler<
-          SerialMsgT, SerializedMessenger::payloadMsgHandler
-        >(toProxy, home_node, msg.get(), act);
-      },
-      // custom data transfer lambda if above the eager threshold
-      [=](ActionNodeType action){
-        theLocMan()->vrtContextLoc->routeNonEagerAction(
-          toProxy, home_node, action
+    auto promoted_msg = promoteMsg(msg);
+    messaging::PendingSend pending(
+      promoted_msg, [=](MsgVirtualPtr<BaseMsgType> mymsg){
+        SerializedMessenger::sendSerialMsg<
+          MsgT, virtualTypedMsgHandler<MsgT>, VirtualMessage
+        >(
+          reinterpret_cast<MsgT*>(mymsg.get()),
+          // custom send lambda to route the message
+          [=](MsgSharedPtr<SerialMsgT> innermsg) -> messaging::PendingSend {
+            innermsg->setProxy(toProxy);
+            theLocMan()->vrtContextLoc->routeMsgHandler<
+              SerialMsgT, SerializedMessenger::payloadMsgHandler
+            >(toProxy, home_node, innermsg.get());
+            return messaging::PendingSend(nullptr);
+          },
+          // custom data transfer lambda if above the eager threshold
+          [=](ActionNodeSendType action) -> messaging::PendingSend {
+            auto captured_action = [=](NodeType node){ action(node); };
+            theLocMan()->vrtContextLoc->routeNonEagerAction(
+              toProxy, home_node, captured_action
+            );
+            return messaging::PendingSend(nullptr);
+          }
         );
       }
     );
+    return pending;
   } else {
-    theWorkerGrp()->enqueueCommThread([=]{
-      theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, msg, act);
-    });
+    auto promoted_msg = promoteMsg(msg);
+    return messaging::PendingSend(
+      promoted_msg, [=](MsgVirtualPtr<BaseMsgType> mymsg) {
+        theWorkerGrp()->enqueueCommThread([=]{
+          auto typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
+          theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, typed_msg);
+        });
+      }
+    );
   }
 }
 
@@ -250,11 +308,9 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
 }
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-void VirtualContextManager::sendMsg(
-  VirtualProxyType const& toProxy, MsgT *const raw_msg, ActionType act
+messaging::PendingSend VirtualContextManager::sendMsg(
+  VirtualProxyType const& toProxy, MsgT *const raw_msg
 ) {
-  // @todo: implement the action `act' after the routing is finished
-
   auto msg = promoteMsg(raw_msg);
 
   auto const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
@@ -270,8 +326,12 @@ void VirtualContextManager::sendMsg(
     print_ptr(msg.get()), han, home_node
   );
 
-  // route the message to the destination using the location manager
-  theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg, act);
+  return messaging::PendingSend(
+    msg, [=](MsgVirtualPtr<BaseMsgType> mymsg){
+    // route the message to the destination using the location manager
+      auto msg_shared = promoteMsg(reinterpret_cast<MsgT*>(mymsg.get()));
+      theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg_shared);
+  });
 }
 
 }}  // end namespace vt::vrt

@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                              rdma_collection.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/messaging/active.h"
 #include "vt/rdma/rdma.h"
@@ -77,14 +120,14 @@ namespace vt { namespace rdma {
     // Send msg to get data
     RDMA_OpType const new_op = rdma->cur_op_++;
 
-    GetMessage* msg = new GetMessage(
+    auto msg = makeMessage<GetMessage>(
       new_op, this_node, rdma_handle, bytes, elm
     );
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
     }
     theMsg()->sendMsg<GetMessage, RDMAManager::getRDMAMsg>(
-      default_node, msg, [=]{ delete msg; }
+      default_node, msg.get()
     );
 
     rdma->pending_ops_.emplace(
@@ -108,7 +151,6 @@ namespace vt { namespace rdma {
   RDMA_ElmType const& elm,
   RDMA_PtrType const& ptr,
   RDMA_PutSerialize on_demand_put_serialize,
-  ActionType cont,
   ActionType action_after_put,
   TagType const& tag
 ) {
@@ -147,18 +189,14 @@ namespace vt { namespace rdma {
 
     RDMA_OpType const new_op = rdma->cur_op_++;
 
-    PutMessage* msg = new PutMessage(
+    auto msg = makeMessage<PutMessage>(
       new_op, num_bytes, elm, tag, rdma_handle,
       action_after_put ? this_node : uninitialized_destination,
       this_node
     );
 
     auto send_payload = [&](Active::SendFnType send){
-      auto ret = send(put_ret, put_node, no_tag, [=]{
-        if (cont != nullptr) {
-          cont();
-        }
-      });
+      auto ret = send(put_ret, put_node, no_tag);
       msg->mpi_tag_to_recv = std::get<1>(ret);
     };
 
@@ -167,7 +205,7 @@ namespace vt { namespace rdma {
     }
 
     theMsg()->sendMsg<PutMessage, RDMAManager::putRecvMsg>(
-      put_node, msg, send_payload, [=]{ delete msg; }
+      put_node, msg.get(), send_payload
     );
 
     if (action_after_put != nullptr) {
@@ -180,13 +218,10 @@ namespace vt { namespace rdma {
   } else {
     // Local put
     theRDMA()->triggerPutRecvData(
-      rdma_handle, tag, ptr, local_rdma_op_tag, elm, [=](){
+      rdma_handle, tag, ptr, static_cast<ByteType>(local_rdma_op_tag), elm, [=](){
         debug_print(
           rdma, node, "putElement: local data is put\n"
         );
-        if (cont) {
-          cont();
-        }
         if (action_after_put) {
           action_after_put();
         }

@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                    rdma.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_RDMA_RDMA_H
 #define INCLUDED_RDMA_RDMA_H
@@ -58,35 +101,35 @@ struct RDMAManager {
   void putTypedData(
     RDMA_HandleType const& rdma_handle, T ptr,
     ByteType const& num_elems, ByteType const& offset, TagType const& tag,
-    ActionType cont = no_action, ActionType action_after_put = no_action
+    ActionType action_after_put = no_action
   ) {
     ByteType const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
     ByteType const byte_offset = offset == no_byte ? 0 : sizeof(T)*offset;
     return putData(
       rdma_handle, static_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
-      sizeof(T), cont, action_after_put
+      sizeof(T), action_after_put
     );
   }
 
   template <typename T>
   void putTypedData(
     RDMA_HandleType const& han, T ptr, ByteType const& num_elems = no_byte,
-    ByteType const& offset = no_byte, ActionType cont = no_action,
+    ByteType const& offset = no_byte,
     ActionType action_after_put = no_action
   ) {
     return putTypedData<T>(
-      han, ptr, num_elems, offset, no_tag, cont, action_after_put
+      han, ptr, num_elems, offset, no_tag, action_after_put
     );
   }
 
   void putData(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
-    ByteType const& num_bytes, ActionType cont = no_action,
+    ByteType const& num_bytes,
     ActionType action_after_put = no_action
   ) {
     return putData(
       rdma_handle, ptr, num_bytes, no_byte, no_tag, rdma_default_byte_size,
-      cont, action_after_put
+      action_after_put
     );
   }
 
@@ -94,7 +137,7 @@ struct RDMAManager {
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& offset, TagType const& tag,
     ByteType const& elm_size = rdma_default_byte_size,
-    ActionType cont = no_action, ActionType action_after_put = no_action,
+    ActionType action_after_put = no_action,
     NodeType const& collective_node = uninitialized_destination,
     bool const direct_message_send = false
   );
@@ -110,7 +153,7 @@ struct RDMAManager {
   void putDataIntoBufCollective(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& elm_size, ByteType const& offset,
-    ActionType cont = no_action, ActionType after_put_action = no_action
+    ActionType after_put_action = no_action
   );
 
   void getDataIntoBufCollective(
@@ -126,7 +169,7 @@ struct RDMAManager {
 
   void putRegionTypeless(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
-    RDMA_RegionType const& region, ActionType cont, ActionType after_put_action
+    RDMA_RegionType const& region, ActionType after_put_action
   );
 
   template <typename T>
@@ -384,7 +427,7 @@ private:
   void sendDataChannel(
     RDMA_TypeType const& type, RDMA_HandleType const& han, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& offset, NodeType const& target,
-    NodeType const& non_target, ActionType cont, ActionType action_after_put
+    NodeType const& non_target, ActionType action_after_put
   );
 
   void createDirectChannel(
@@ -435,6 +478,7 @@ private:
       return state.setRDMAGetFn<MsgT,FunctionT,f>(msg, fn, any_tag, tag);
     } else {
       vtAssert(0, "Should be unreachable");
+      return no_rdma_handle;
     }
   }
 
@@ -466,6 +510,7 @@ private:
       return state.setRDMAPutFn<MsgT,FunctionT,f>(msg, fn, any_tag, tag);
     } else {
       vtAssert(0, "Should be unreachable");
+      return no_rdma_handle;
     }
   }
 

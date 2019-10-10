@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                               group_default.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/config.h"
 #include "vt/group/group_common.h"
@@ -32,7 +75,7 @@ namespace vt { namespace group { namespace global {
 /*static*/ void DefaultGroup::newPhaseSendChildren(PhaseType const& phase) {
    // Initialize spanning tree for default group `default_group'
   vtAssert(
-    default_group_->spanning_tree_,
+    default_group_->spanning_tree_ != nullptr,
     "Must have valid tree when entering new phase"
   );
   if (default_group_->spanning_tree_->getNumChildren() > 0) {
@@ -106,7 +149,7 @@ namespace vt { namespace group { namespace global {
 
 /*static*/ EventType DefaultGroup::broadcast(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root, ActionType action
+  MsgSizeType const& size, bool const is_root
 ) {
   // By default use the default_group_->spanning_tree_
   auto const& msg = base.get();
@@ -125,17 +168,9 @@ namespace vt { namespace group { namespace global {
   );
 
   if (num_children > 0 || send_to_root) {
-    bool const& has_action = action != nullptr;
-    EventRecordType* parent = nullptr;
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
       messaging::MPITag::ActiveMsgTag
     );
-
-    if (has_action) {
-      event = theEvent()->createParentEvent(node);
-      auto& holder = theEvent()->getEventHolder(event);
-      parent = holder.get_event();
-    }
 
     // Send to child nodes in the spanning tree
     if (num_children > 0) {
@@ -150,12 +185,7 @@ namespace vt { namespace group { namespace global {
         );
 
         if (send) {
-          auto const put_event = theMsg()->sendMsgBytesWithPut(
-            child, base, size, send_tag, action
-          );
-          if (has_action) {
-            parent->addEventToList(put_event);
-          }
+          theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
         }
       });
     }
@@ -170,12 +200,7 @@ namespace vt { namespace group { namespace global {
         print_bool(is_root), root_node, dest, print_ptr(msg)
       );
 
-      auto const put_event = theMsg()->sendMsgBytesWithPut(
-        root_node, base, size, send_tag, action
-      );
-      if (has_action) {
-        parent->addEventToList(put_event);
-      }
+      theMsg()->sendMsgBytesWithPut(root_node, base, size, send_tag);
     }
   }
 

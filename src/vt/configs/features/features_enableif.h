@@ -1,134 +1,81 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                             features_enableif.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
-#if !defined INCLUDED_FEATURES_ENABLE_IF
-#define INCLUDED_FEATURES_ENABLE_IF
+#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_ENABLEIF_H
+#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_ENABLEIF_H
 
-#include "meld_headers.h"
 #include "vt/configs/features/features_featureswitch.h"
 #include "vt/configs/features/features_defines.h"
 
-#define backend_static_assert_unreachable       \
+#define backend_static_assert_unreachable                                  \
   static_assert(false, "Configuration error: This should be unreachable");
 
-#define debug_options_build(options...) options
-#define debug_local_options_on(options...) options
 
-// #define debug_resolve_op(option) debug_ ## option(option),
-// #define debug_resolve_options(options...)             \
-//   meld_meta_map(meld_map, debug_resolve_op, ##options)
+#define backend_check_enabled(test_option) (vt_feature_ ## test_option != 0)
 
-#define backend_options_on(arg...) arg
-#define backend_str_join(tok1,tok2) tok2 ## tok1
+#define vt_backend_debug_enabled(test_option)                                \
+  ((vt::config::DefaultConfig::category & vt::config::CatEnum::test_option) != 0)
 
-#define debug_options_on(options...)                              \
-  debug_options_build(options)                                    \
+#define vt_backend_context_enabled(test_option)                              \
+  ((vt::config::DefaultConfig::context & vt::config::CtxEnum::test_option) != 0)
 
-#define backend_configuration debug_options_on(                 \
-    backend_features,                                           \
-    backend_debug_contexts,                                     \
-    backend_debug_modes,                                        \
-    backend_defaults                                            \
-  )
-#define backend_feature_configuration debug_options_on(         \
-    backend_features,                                           \
-  )
-#define backend_debug_configuration debug_options_on(           \
-    backend_debug_modes,                                        \
-    backend_defaults                                            \
-  )
-#define backend(x) x
+#define vt_backend_mode_enabled(test_option)                                 \
+  ((vt::config::DefaultConfig::mode & vt::config::ModeEnum::test_option) != 0)
 
-/* Test functions toc check if options are enabled */
+#define backend_enable_if_impl(feature, eit, eif)         \
+  do {                                                    \
+    if (backend_check_enabled(feature)) {                 \
+      eit                                                 \
+    } else {                                              \
+      eif                                                 \
+    }                                                     \
+  } while (0);
 
-#define debug_test_option_or(option, to_test)   \
-  meld_token_compare(option, to_test),
-#define debug_test_option_shortcut(opt1, opt2)  \
-  meld_token_compare(opt1, opt2)
+#define backend_enable_if_else(feature, eit, eif)         \
+  backend_enable_if_impl(feature, eit, eif)
 
-// Use the meld's logical or to determine if any option is on
-#define check_enabled_or(test_option, options...)                       \
-  meld_fold_or(                                                         \
-    meld_eval(meld_map_with(debug_test_option, test_option, options))   \
-  )
+#define backend_enable_if(feature, eit)                   \
+  backend_enable_if_impl(feature, eit, )
 
-// Yield 1/0 and shortcut boolean check
-#define check_enabled_shortcut(test_option, options...)                 \
-  meld_eval(                                                            \
-    meld_check_enabled(                                                 \
-      debug_test_option_shortcut, test_option, options                  \
-    )                                                                   \
-  )
-
-#define debug_check_enabled_shortcut_impl(test_option, options...)  \
-  check_enabled_shortcut(test_option, options)
-#define debug_check_enabled_or_impl(test_option, options...)  \
-  check_enabled_shortcut(test_option, options)
-#define debug_check_enabled_shortcut(config, test_option)               \
-  debug_check_enabled_shortcut_impl(                                    \
-    test_option, backend_str_join(_configuration, config)               \
-  )
-#define debug_check_enabled_or(config, test_option)                    \
-  debug_check_enabled_or_impl(                                         \
-    test_option, backend_str_join(_configuration, config)              \
-  )
-
-#define debug_compare(opt1, opt2)                       \
-  check_enabled_shortcut(opt1, debug_local_options_on(opt2, none))
-#define debug_cond_clause(condition, if_true, if_false) \
-  meld_if_stmt(condition)(if_true)(if_false)
-#define debug_cond_enabled(config, feature, if_true)                    \
-  debug_cond_clause(                                                    \
-    debug_check_enabled_shortcut(config,feature),if_true,               \
-  )
-#define debug_cond_enabled_else(config, feature, if_true, if_false)     \
-  debug_cond_clause(                                                    \
-    debug_check_enabled_shortcut(unconfig,feature),if_true,if_false       \
-  )
-#define debug_cond(condition, if_true)                          \
-  debug_cond_clause(condition,if_true,)
-#define debug_cond_else(condition, if_true, if_false) \
-  debug_cond_clause(condition,if_true,if_false)
-#define debug_cond_force(condition, if_true) do { if_true; } while (0);
-#define debug_test(config, feature, if_true, if_false)                  \
-  meld_if_stmt(                                                         \
-    debug_check_enabled_shortcut(config, feature)                       \
-  )(if_true)(if_false)
-
-#define debug_cond_block(block, conds...)       \
-  debug_cond_block_recur(block, conds)
-
-#define debug_cond_block_recur(block, cond_fst, conds...)       \
-  debug_cond_clause(cond_fst,                                   \
-    meld_if_stmt(_meld_has_arguments(conds))(                   \
-      debug_cond_block_recur(block, conds)                      \
-    )(                                                          \
-      block                                                     \
-    )                                                           \
- ,)
-
-/* External Interface Functions */
-#define backend_check_enabled_options(config, test_option, options...)  \
-  debug_check_enabled_shortcut_impl(config, test_option, options)
-#define backend_check_enabled(test_option)                              \
-  backend_check_enabled_options(                                        \
-    test_option, backend_str_join(_configuration, backend)              \
-  )
-#define backend_debug_enabled(test_option)                              \
-  backend_check_enabled_options(                                        \
-    test_option, backend_str_join(_configuration, backend_debug)        \
-  )
-
-#define backend_enable_if_any(config, feature, eit) \
-  debug_cond_enabled(config, feature, eit)
-#define backend_enable_if_else_any(config, feature, eit, eif) \
-  debug_test(config, feature, eit, eif)
-#define backend_enable_if_not_any(feature, eif)  \
-  debug_test(config, feature, /*do nothing*/ , eif)
-
-#define backend_enable_if(feature, eit)         \
-  backend_enable_if_any(backend, feature, eit)
-#define backend_enable_if_else(feature, eit, eif) \
-  backend_enable_if_else_any(backend, feature, eit, eif)
-#define backend_enable_if_not(feature, eif)  \
-  backend_enable_if_not_any(backend, feature, eif)
-
-#endif  /*INCLUDED_FEATURES_ENABLE_IF*/
+#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_ENABLEIF_H*/

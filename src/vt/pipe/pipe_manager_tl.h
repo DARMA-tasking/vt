@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                              pipe_manager_tl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_PIPE_PIPE_MANAGER_TL_H
 #define INCLUDED_PIPE_PIPE_MANAGER_TL_H
@@ -8,13 +51,22 @@
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/collection/active/active_funcs.h"
-#include "vt/vrt/proxy/collection_proxy.h"
+#include "vt/vrt/collection/proxy.h"
+#include "vt/objgroup/active_func/active_func.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/objgroup/proxy/proxy_objgroup_elm.h"
 
 namespace vt { namespace pipe {
 
 struct PipeManagerTL : virtual PipeManagerBase {
   template <typename ColT, typename MsgT>
   using ColHanType = vrt::collection::ActiveColTypedFnType<MsgT,ColT>;
+
+  template <typename ColT, typename MsgT>
+  using ColMemType = vrt::collection::ActiveColMemberTypedFnType<MsgT,ColT>;
+
+  template <typename ObjT, typename MsgT>
+  using ObjMemType = objgroup::ActiveObjType<MsgT,ObjT>;
 
   template <typename ColT>
   using ColProxyType = CollectionProxy<ColT,typename ColT::IndexType>;
@@ -79,11 +131,32 @@ struct PipeManagerTL : virtual PipeManagerBase {
   template <typename T, typename U, typename CbkT = DefType<T>>
   CbkT makeCallbackSingleAnon(U* u, FuncMsgCtxType<T, U> fn);
 
+  template <typename U, typename CbkT = DefType<V>>
+  CbkT makeCallbackSingleAnon(U* u, FuncCtxType<U> fn);
+
   // Single active message collection proxy send
   template <
     typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
   >
   CbkT makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
+
+  template <
+    typename ColT, typename T, ColMemType<ColT,T> f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
+
+  // Obj group send callback
+  template <
+    typename ObjT, typename T, ObjMemType<ObjT,T> f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackObjGrpSend(objgroup::proxy::ProxyElm<ObjT> proxy);
+
+  // Obj group bcast callback
+  template <
+    typename ObjT, typename T, ObjMemType<ObjT,T> f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackObjGrpBcast(objgroup::proxy::Proxy<ObjT> proxy);
+
 
   // Single active message collection proxy bcast
   template <
@@ -94,6 +167,12 @@ struct PipeManagerTL : virtual PipeManagerBase {
   // Single active message collection proxy bcast direct
   template <
     typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
+  >
+  CbkT makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy);
+
+  // Single active message collection proxy bcast direct (member)
+  template <
+    typename ColT, typename T, ColMemType<ColT,T> f, typename CbkT = DefType<T>
   >
   CbkT makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy);
 

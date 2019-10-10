@@ -17,7 +17,7 @@ if (USE_STD_THREAD)
   config_for_std_thread()
 elseif(USE_OPENMP)
   config_for_openmp()
-  if (NOT OpenMP_Found)
+  if (NOT OpenMP_FOUND)
     message(
       FATAL_ERROR
       "requested OpenMP with -DUSE_OPENMP=On, but cannot find "

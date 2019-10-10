@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                              group_info.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_GROUP_GROUP_INFO_IMPL_H
 #define INCLUDED_GROUP_GROUP_INFO_IMPL_H
@@ -72,8 +115,8 @@ template <typename MsgT>
 
     if (op_id != no_op_id) {
       // Send back message
-      auto msg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
-      theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(parent, msg);
+      auto retmsg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
+      theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(parent, retmsg);
     }
   } else {
     debug_print(
@@ -86,7 +129,7 @@ template <typename MsgT>
 
     std::vector<RegionType::BoundType> local_nodes;
 
-    auto parent_cont = [parent,group,op_id]{
+    auto parent_cont = [parent,group,op_id,this_node]{
       auto iter = theGroup()->remote_group_info_.find(group);
       vtAssertExpr(iter != theGroup()->remote_group_info_.end());
       auto info = iter->second.get();
@@ -105,10 +148,14 @@ template <typename MsgT>
           parent, op_id
         );
 
-        auto msg = makeSharedMessage<GroupOnlyMsg>(group, op_id);
-        theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
-          parent, msg
-        );
+        auto contmsg = makeMessage<GroupOnlyMsg>(group, op_id);
+        if (parent != this_node) {
+          theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
+            parent, contmsg.get()
+          );
+        } else {
+          Info::groupTriggerHandler(contmsg.get());
+        }
       }
     };
 
@@ -125,10 +172,14 @@ template <typename MsgT>
 
       auto op1 = theGroup()->registerContinuation(parent_cont);
       auto l1 = static_cast<RangeType*>(region.get());
-      auto c_msg = makeSharedMessage<MsgT>(
+      auto c_msg = makeMessage<MsgT>(
         c, c_size, group, op1, group_total_size, this_node, l1
       );
-      theMsg()->sendMsg<MsgT, groupSetupHandler>(c, c_msg);
+      if (c != this_node) {
+        theMsg()->sendMsg<MsgT, groupSetupHandler>(c, c_msg.get());
+      } else {
+        groupSetupHandler(c_msg.get());
+      }
     });
 
     auto const& num_children = local_nodes.size();

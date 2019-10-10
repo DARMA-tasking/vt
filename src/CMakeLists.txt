@@ -5,6 +5,7 @@ set(TOP_LEVEL_SUBDIRS
   epoch
   group
   messaging
+  objgroup
   pool
   pipe
   rdma
@@ -25,10 +26,12 @@ set(
   # Add component along with sub-directories
     configs/debug configs/features configs/types configs/error configs/arguments
     configs/generated
-    collective/barrier collective/tree
-    collective/reduce/
-      collective/reduce/operators collective/reduce/functors
-    collective/scatter/
+    collective
+      collective/barrier
+      collective/tree
+      collective/scatter/
+      collective/reduce/
+        collective/reduce/operators collective/reduce/functors
     group/id group/region group/global group/msg group/collective group/rooted
     group/base
     pipe/id pipe/msg pipe/state pipe/signal pipe/interface pipe/callback
@@ -36,6 +39,8 @@ set(
       pipe/callback/handler_bcast
       pipe/callback/proxy_send
       pipe/callback/proxy_bcast
+      pipe/callback/objgroup_send
+      pipe/callback/objgroup_bcast
       pipe/callback/anon
       pipe/callback/cb_union
     termination/dijkstra-scholten
@@ -59,21 +64,30 @@ set(
       vrt/collection/dispatch vrt/collection/gettable
       vrt/collection/staged_token
       vrt/collection/balance
+        vrt/collection/balance/baselb
         vrt/collection/balance/hierarchicallb
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb
+        vrt/collection/balance/gossiplb
+        vrt/collection/balance/lb_invoke
+        vrt/collection/balance/proxy
     lb/instrumentation
       lb/instrumentation/centralized
     lb/balancers
       lb/balancers/centralized
         lb/balancers/centralized/impls
     lb/migration
-    serialization/messaging serialization/traits serialization/auto_dispatch
+    serialization
+      serialization/messaging serialization/traits serialization/auto_dispatch
+      serialization/sizing
     utils/demangle utils/container utils/bits utils/mutex
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
       registry/auto/vc registry/auto/rdma registry/auto/index
+    objgroup
+      objgroup/proxy objgroup/holder objgroup/active_func objgroup/dispatch
+      objgroup/type_registry
 
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
@@ -197,7 +211,7 @@ include(../cmake/define_build_types.cmake)
 
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/src>
   $<INSTALL_INTERFACE:${VT_EXTERNAL_DESTINATION}>
 )
 
@@ -226,3 +240,4 @@ export(
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
+

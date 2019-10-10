@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                   reduce.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_H
 #define INCLUDED_COLLECTIVE_REDUCE_REDUCE_H
@@ -5,10 +48,13 @@
 #include "vt/config.h"
 #include "vt/collective/reduce/reduce.fwd.h"
 #include "vt/collective/reduce/reduce_hash.h"
+#include "vt/collective/reduce/reduce_tags.h"
 #include "vt/collective/reduce/reduce_state.h"
+#include "vt/collective/reduce/reduce_state_holder.h"
 #include "vt/collective/reduce/reduce_msg.h"
 #include "vt/collective/reduce/operators/default_msg.h"
 #include "vt/collective/reduce/operators/default_op.h"
+#include "vt/collective/reduce/operators/callback_op.h"
 #include "vt/messaging/active.h"
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/message.h"
@@ -23,22 +69,50 @@
 namespace vt { namespace collective { namespace reduce {
 
 struct Reduce : virtual collective::tree::Tree {
-  using ReduceStateType = ReduceState;
-  using ReduceNumType = ReduceState::ReduceNumType;
+  template <typename T>
+  using ReduceStateType = ReduceState<T>;
+  using ReduceNumType   = typename ReduceState<void>::ReduceNumType;
 
   Reduce();
   Reduce(GroupType const& group, collective::tree::Tree* in_tree);
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  EpochType reduce(
-    NodeType const& root, MessageT* const msg, TagType const& tag = no_tag,
-    EpochType const& epoch = no_epoch, ReduceNumType const& num_contrib = 1,
+  SequentialIDType reduce(
+    NodeType root, MessageT* const msg, TagType tag = no_tag,
+    SequentialIDType seq = no_seq_id, ReduceNumType num_contrib = 1,
+    VirtualProxyType proxy = no_vrt_proxy,
+    ObjGroupProxyType obj_group = no_obj_group
+  );
+
+  template <
+    typename OpT,
+    typename MsgT,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
+      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >
+  SequentialIDType reduce(
+    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    TagType const& tag = no_tag, SequentialIDType const& seq = no_seq_id,
+    ReduceNumType const& num_contrib = 1,
+    VirtualProxyType const& proxy = no_vrt_proxy
+  );
+
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
+  >
+  SequentialIDType reduce(
+    NodeType const& root, MsgT* msg, TagType const& tag = no_tag,
+    SequentialIDType const& seq = no_seq_id, ReduceNumType const& num_contrib = 1,
     VirtualProxyType const& proxy = no_vrt_proxy
   );
 
   template <typename MessageT>
   void reduceAddMsg(
-    MessageT* msg, bool const local, ReduceNumType const& num_contrib = -1
+    MessageT* msg, bool const local, ReduceNumType num_contrib = -1
   );
 
   template <typename MessageT>
@@ -50,8 +124,8 @@ struct Reduce : virtual collective::tree::Tree {
    */
   template <typename MessageT>
   void startReduce(
-    TagType const& tag, EpochType const& epoch, VirtualProxyType const& proxy,
-    bool use_num_contrib = true
+    TagType tag, SequentialIDType seq, VirtualProxyType proxy,
+    ObjGroupProxyType objgroup, bool use_num_contrib = true
   );
 
   template <typename MessageT>
@@ -60,8 +134,7 @@ struct Reduce : virtual collective::tree::Tree {
   static void reduceUp(MessageT* msg);
 
 private:
-  std::unordered_map<ReduceEpochLookupType,EpochType> next_epoch_for_tag_;
-  std::unordered_map<ReduceIdentifierType,ReduceStateType> live_reductions_;
+  std::unordered_map<ReduceSeqLookupType,SequentialIDType> next_seq_for_tag_;
   GroupType group_ = default_group;
 };
 

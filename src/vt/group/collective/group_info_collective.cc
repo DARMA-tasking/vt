@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                           group_info_collective.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/config.h"
 #include "vt/group/group_common.h"
@@ -57,6 +100,13 @@ MPI_Comm InfoColl::getComm() const {
   return mpi_group_comm;
 }
 
+void InfoColl::freeComm() {
+  if (mpi_group_comm != MPI_COMM_WORLD) {
+    MPI_Comm_free(&mpi_group_comm);
+    mpi_group_comm = MPI_COMM_WORLD;
+  }
+}
+
 void InfoColl::setupCollective() {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
@@ -85,9 +135,11 @@ void InfoColl::setupCollective() {
     is_in_group, group_, parent, children, coll_wait_count_
   );
 
-  auto const cur_comm = theContext()->getComm();
-  int32_t const group_color = in_group;
-  MPI_Comm_split(cur_comm, group_color, this_node, &mpi_group_comm);
+  if (make_mpi_group_) {
+    auto const cur_comm = theContext()->getComm();
+    int32_t const group_color = in_group;
+    MPI_Comm_split(cur_comm, group_color, this_node, &mpi_group_comm);
+  }
 
   up_tree_cont_       = makeCollectiveContinuation(group_);
   down_tree_cont_     = theGroup()->nextCollectiveID();
@@ -96,7 +148,7 @@ void InfoColl::setupCollective() {
   new_tree_cont_      = theGroup()->nextCollectiveID();
   new_root_cont_      = theGroup()->nextCollectiveID();
 
-  theGroup()->registerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
+  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::registerContinuationT(
     down_tree_cont_,
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -104,7 +156,7 @@ void InfoColl::setupCollective() {
       iter->second->downTree(msg.get());
     }
   );
-  theGroup()->registerContinuationT<MsgSharedPtr<GroupOnlyMsg>>(
+  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::registerContinuationT(
     down_tree_fin_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -112,7 +164,7 @@ void InfoColl::setupCollective() {
       iter->second->downTreeFinished(msg.get());
     }
   );
-  theGroup()->registerContinuationT<MsgSharedPtr<GroupOnlyMsg>>(
+  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::registerContinuationT(
     finalize_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -120,7 +172,7 @@ void InfoColl::setupCollective() {
       iter->second->finalizeTree(msg.get());
     }
   );
-  theGroup()->registerContinuationT<MsgSharedPtr<GroupOnlyMsg>>(
+  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::registerContinuationT(
     new_tree_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -129,12 +181,11 @@ void InfoColl::setupCollective() {
       iter->second->newTree(from);
     }
   );
-  theGroup()->registerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
+  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::registerContinuationT(
     new_root_cont_,
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
-      auto const& from = theMsg()->getFromNodeCurrentHandler();
       iter->second->newRoot(msg.get());
     }
   );
@@ -167,7 +218,8 @@ void InfoColl::atRoot() {
 
 void InfoColl::upTree() {
   vtAssert(
-    msgs_.size() - extra_count_  == coll_wait_count_ - 1, "Must be equal"
+    msgs_.size() - extra_count_  == static_cast<size_t>(coll_wait_count_ - 1),
+    "Must be equal"
   );
   decltype(msgs_) msg_in_group = {};
   std::size_t subtree = 0;
@@ -208,7 +260,10 @@ void InfoColl::upTree() {
         "InfoColl::upTree: is_in_group={}, subtree={}, num_nodes={}\n",
         is_in_group, subtree, theContext()->getNumNodes()
       );
-      if (subtree + 1 == theContext()->getNumNodes() && is_in_group) {
+      if (
+        subtree + 1 == static_cast<std::size_t>(theContext()->getNumNodes()) &&
+        is_in_group
+      ) {
         /*
          *  This will allow bypassing using this spanning tree because it is
          *  equivalent in terms of functionality, although the spanning tree may
@@ -224,8 +279,7 @@ void InfoColl::upTree() {
       return;
     } else {
       if (msg_in_group.size() == 0) {
-        auto const& group_ = getGroupID();
-        vtAbort("A group must have at least a single node {}",group_);
+        vtAbort("A group must have at least a single node {}");
       }
       /*
        *  Sort nodes to find the largest node to make it the root of the whole
@@ -248,16 +302,16 @@ void InfoColl::upTree() {
         group, is_root, root_node, msg_list.size()
       );
 
-      auto const& subtree = static_cast<NodeType>(0);
+      auto const& subtree_zero = static_cast<NodeType>(0);
       auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
         msg_in_group.size()-1
       );
       auto msg = makeSharedMessage<GroupCollectiveMsg>(
-        group,new_root_cont_,true,subtree,root_node,0,extra
+        group,new_root_cont_,true,subtree_zero,root_node,0,extra
       );
       theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
 
-      for (int i = 1; i < msg_list.size(); i++) {
+      for (std::size_t i = 1; i < msg_list.size(); i++) {
         debug_print(
           group, node,
           "InfoColl::upTree: ROOT group={:x}, new_root={}, sending to={}\n",
@@ -286,10 +340,10 @@ void InfoColl::upTree() {
     auto const& total_subtree = static_cast<NodeType>(subtree + sub);
     auto const& level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
-    auto msg = makeSharedMessage<GroupCollectiveMsg>(
+    auto cmsg = makeSharedMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,level
     );
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
+    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, cmsg);
 
     for (auto&& msg : msg_in_group) {
       span_children_.push_back(msg->getChild());
@@ -384,7 +438,7 @@ RemoteOperationIDType InfoColl::makeCollectiveContinuation(
   GroupType const group_
 ) {
   auto const& id = theGroup()->nextCollectiveID();
-  theGroup()->registerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
+  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::registerContinuationT(
     id, [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
@@ -408,8 +462,8 @@ void InfoColl::newRoot(GroupCollectiveMsg* msg) {
 }
 
 NodeType InfoColl::getRoot() const {
-  debug_print(
-    verbose, group, node,
+  debug_print_verbose(
+    group, node,
     "InfoColl::getRoot: group={:x}, has_root_={}, known_root_node_={}\n",
     getGroupID(), has_root_, known_root_node_
   );
@@ -468,7 +522,7 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
   auto const& op_id = msg->getOpID();
   vtAssert(op_id != no_op_id, "Must have valid op");
   auto msg_ptr = promoteMsg(msg);
-  theGroup()->triggerContinuationT<MsgSharedPtr<GroupOnlyMsg>>(op_id,msg_ptr);
+  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::triggerContinuationT(op_id,msg_ptr);
 }
 
 /*static*/ void InfoColl::upHan(GroupCollectiveMsg* msg) {
@@ -480,7 +534,7 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
   auto const& op_id = msg->getOpID();
   vtAssert(op_id != no_op_id, "Must have valid op");
   auto msg_ptr = promoteMsg(msg);
-  theGroup()->triggerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
+  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::triggerContinuationT(
     op_id,msg_ptr
   );
 }
@@ -494,7 +548,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
     getGroupID(), msg->getChild(), from
   );
 
-  vtAssert(collective_, "Must be valid");
+  vtAssert(collective_ != nullptr, "Must be valid");
 
   if (collective_->span_children_.size() < 4) {
     collective_->span_children_.push_back(msg->getChild());
@@ -553,25 +607,25 @@ void InfoColl::finalize() {
 
   if (in_phase_two_ && send_down_finished_ == send_down_) {
 
-      #if backend_debug_enabled(group)
-        char buf[256];
-        buf[0] = '\0';
-        int cur = 0;
-        for (auto&& elm : collective_->span_children_) {
-          cur += sprintf(buf + cur, "%d,", elm);
-        }
+    if (vt_backend_debug_enabled(group)) {
+      char buf[256];
+      buf[0] = '\0';
+      int cur = 0;
+      for (auto&& elm : collective_->span_children_) {
+        cur += sprintf(buf + cur, "%d,", elm);
+      }
 
-        auto const& num_children = collective_->span_children_.size();
-        debug_print(
-          group, node,
-          "InfoColl::finalize: group={:x}, send_down_={}, "
-          "send_down_finished_={}, in_phase_two_={}, in_group={}, "
-          "has_root_={}, known_root_node_={}, is_new_root_={}, num={}, sub={},"
-          "children={}\n",
-          group_, send_down_, send_down_finished_, in_phase_two_, is_in_group,
-          has_root_, known_root_node_, is_new_root_, num_children, subtree_, buf
-        );
-     #endif
+      auto const& num_children = collective_->span_children_.size();
+      debug_print(
+        group, node,
+        "InfoColl::finalize: group={:x}, send_down_={}, "
+        "send_down_finished_={}, in_phase_two_={}, in_group={}, "
+        "has_root_={}, known_root_node_={}, is_new_root_={}, num={}, sub={},"
+        "children={}\n",
+        group_, send_down_, send_down_finished_, in_phase_two_, is_in_group,
+        has_root_, known_root_node_, is_new_root_, num_children, subtree_, buf
+      );
+    }
 
     auto const& children = collective_->getChildren();
     for (auto&& c : children) {
@@ -596,23 +650,24 @@ void InfoColl::finalize() {
     }
 
     auto const& root = 0;
+    // use a specific tag and epoch to isolate the involved reduction
+    // from possible interference with other reductions.
+    TagType const reduce_tag = collective::reduce::create_group_tag;
+    EpochType const step_epoch = static_cast<EpochType>(group_);
+
     auto msg = makeSharedMessage<FinishedReduceMsg>(group_);
-    theCollective()->reduce<
-      FinishedReduceMsg,
-      FinishedReduceMsg::msgHandler<
-        FinishedReduceMsg,
-        collective::PlusOp<collective::NoneType>,
-        CollSetupFinished
-      >
-    >(root,msg);
+    using OpType = collective::PlusOp<collective::NoneType>;
+    theCollective()->reduce<OpType,CollSetupFinished>(
+      root, msg, reduce_tag, step_epoch
+    );
   }
 }
 
 void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
   auto const& new_root = msg->getRoot();
   vtAssert(new_root != uninitialized_destination, "Must have root node");
-  debug_print(
-    verbose, group, node,
+  debug_print_verbose(
+    group, node,
     "InfoColl::finalizeTree: group={:x}, new_root={}\n",
     msg->getGroup(), new_root
   );
@@ -667,8 +722,8 @@ void InfoColl::readyAction(ActionType const action) {
 }
 
 InfoColl::TreeType* InfoColl::getTree() const {
-  vtAssert(collective_       , "Collective must exist");
-  vtAssert(collective_->span_, "Spanning tree must exist");
+  vtAssert(collective_ != nullptr, "Collective must exist");
+  vtAssert(collective_->span_ != nullptr, "Spanning tree must exist");
   vtAssert(in_phase_two_     , "Must be in phase two");
   vtAssert(has_root_         , "Root node must be known by this node");
   vtAssert(

@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                term_epoch.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/transport.h"
 
@@ -37,7 +80,7 @@ static void sendMsgEpoch(EpochType const& epoch, TTLType const& ttl = no_ttl);
 static void propagate_handler(PropagateMsg* msg) {
   EpochType const epoch = envelopeGetEpoch(msg->env);
   fmt::print(
-    "{}: propagate_handler: msg={}, epoch={}\n", my_node, print_ptr(msg), epoch
+    "{}: propagate_handler: msg={}, epoch={:x}\n", my_node, print_ptr(msg), epoch
   );
   if (msg->life_time > 0) {
     sendMsgEpoch(epoch, msg->life_time);
@@ -45,7 +88,11 @@ static void propagate_handler(PropagateMsg* msg) {
 }
 
 static void sendMsgEpoch(EpochType const& epoch, TTLType const& ttl) {
-  NodeType const random_node = drand48() * num_nodes;
+  NodeType random_node = drand48() * num_nodes;
+  while (random_node == my_node) {
+    random_node = drand48() * num_nodes;
+  }
+  vtAssertExpr(random_node != my_node);
   PropagateMsg* msg = nullptr;
 
   if (ttl == no_ttl) {
@@ -59,12 +106,12 @@ static void sendMsgEpoch(EpochType const& epoch, TTLType const& ttl) {
     theMsg()->setEpochMessage(msg, epoch);
   }
 
-  fmt::print("{}: sending msg: epoch={}, ttl={}\n", my_node, epoch, msg->life_time);
+  fmt::print("{}: sending msg: epoch={:x}, ttl={}\n", my_node, epoch, msg->life_time);
 
   theMsg()->sendMsg<PropagateMsg, propagate_handler>(random_node, msg);
 
   fmt::print(
-    "{}: sendMsgEpoch: epoch={}, node={}, ttl-{}\n",
+    "{}: sendMsgEpoch: epoch={:x}, node={}, ttl-{}\n",
     my_node, epoch, random_node, ttl
   );
 }
@@ -77,19 +124,19 @@ static void sendStartEpoch(EpochType const& epoch) {
 }
 
 static void next_epoch() {
-  fmt::print("{}: cur_epoch={}\n", my_node, cur_epoch);
+  fmt::print("{}: cur_epoch={:x}\n", my_node, cur_epoch);
 
   if (use_epoch) {
 
     if (cur_epoch + 1 < max_epochs) {
-      cur_epoch = theTerm()->newEpoch();
+      cur_epoch = theTerm()->makeEpochCollective();
 
-      fmt::print("{}: new cur_epoch={}\n", my_node, cur_epoch);
+      fmt::print("{}: new cur_epoch={:x}\n", my_node, cur_epoch);
 
       sendStartEpoch(cur_epoch);
 
       theTerm()->addAction(cur_epoch, []{
-        fmt::print("{}: running attached action: cur_epoch={}\n", my_node, cur_epoch);
+        fmt::print("{}: running attached action: cur_epoch={:x}\n", my_node, cur_epoch);
         next_epoch();
       });
       theTerm()->finishedEpoch(cur_epoch);

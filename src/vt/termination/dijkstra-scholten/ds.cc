@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                    ds.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_CC
 #define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_CC
@@ -11,55 +54,52 @@
 namespace vt { namespace term { namespace ds {
 
 template <typename CommType>
-void TermDS<CommType>::addChildEpoch(EpochType const& epoch) {
-  // Produce a single work unit for the child epoch so it can not finish while
-  // this epoch is live
-  theTerm()->genProd(epoch);
-  children_.push_back(epoch);
-}
-
-template <typename CommType>
-void TermDS<CommType>::clearChildren() {
-  for (auto&& cur_epoch : children_) {
-    theTerm()->genCons(cur_epoch);
-  }
-  children_.clear();
-}
-
-template <typename CommType>
 TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeType self_)
-  : parent(-1), self(self_), C(0), ackedArbitrary(0), ackedParent(0),
-    reqedParent(0), engagementMessageCount(0), D(0), processedSum(C),
-    epoch_(in_epoch)
+  : EpochRelation(in_epoch, true),
+    parent(-1), self(self_), C(0), ackedArbitrary(0), ackedParent(0),
+    reqedParent(0), engagementMessageCount(0), D(0), processedSum(C)
 {
   setRoot(isRoot_);
 }
 
 template <typename CommType>
 void TermDS<CommType>::terminated() {
+  debug_print(
+    termds, node,
+    "terminated: epoch={:x}\n", epoch_
+  );
+
   CommType::rootTerminated(epoch_);
 }
 
 template <typename CommType>
 void TermDS<CommType>::setRoot(bool isRoot) {
   if (isRoot) {
-    outstanding.push_back(AckRequest(NodeType(), 0));
+    outstanding.push_back(AckRequest(self, 0));
   }
 }
 
 template <typename CommType>
-void TermDS<CommType>::msgSent(NodeType successor) {
-  debug_print(
-    termds, node,
-    "{} sent message to {}\n", self, successor
-  );
+void TermDS<CommType>::msgSent(NodeType successor, CountType count) {
+  vtAssertExpr(successor >= 0);
   vtAssertInfo(
     1 && (C == processedSum - (ackedArbitrary + ackedParent)),
     "DS-invariant", C, D, processedSum, ackedArbitrary,
     ackedParent, reqedParent, outstanding.size(), engagementMessageCount,
     parent
   );
-  D++;
+  // Test for the self-send case that delays termination with local debt
+  if (successor == self) {
+    lD += count;
+  } else {
+    D += count;
+  }
+
+  debug_print(
+    termds, node,
+    "msgSent: epoch={:x}, to={}, count={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, successor, count, C, D, lC, lD
+  );
 }
 
 template <typename CommType>
@@ -73,7 +113,8 @@ void TermDS<CommType>::gotAck(CountType count) {
   D -= count;
   debug_print(
     termds, node,
-    "gotAck count={}, D={}\n", count, D
+    "gotAck: epoch={:x}, count={}, parent={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, count, parent, C, D, lC, lD
   );
   tryLast();
 }
@@ -89,7 +130,7 @@ void TermDS<CommType>::doneSending() {
 }
 
 template <typename CommType>
-void TermDS<CommType>::msgProcessed(NodeType const predecessor) {
+void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
   vtAssertInfo(
     4 && (C == processedSum - (ackedArbitrary + ackedParent)),
     "DS-invariant", C, D, processedSum, ackedArbitrary,
@@ -97,35 +138,64 @@ void TermDS<CommType>::msgProcessed(NodeType const predecessor) {
     parent
   );
 
-  C++;
-  processedSum++;
+  vtAssertExpr(predecessor >= 0);
 
-  if (outstanding.size() == 0) {
+  bool const self_pred = predecessor == self;
+
+  debug_print_verbose(
+    termds, node,
+    "msgProcessed: (pre) epoch={:x}, from={}, count={}, "
+    "parent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, predecessor, count, parent, outstanding.size(),
+    C, D, lC, lD
+  );
+
+  // Test for the self-process case that delays termination with local credit
+  if (self_pred) {
+    lC += count;
+    vtAssertExprInfo(lC <= lD, lC, lD, epoch_, predecessor, count, C, D, parent);
+    // May not be engaged if msgProcessed is not called before a local prod/cons
+    // occurs
+  } else {
+    C += count;
+    processedSum += count;
+  }
+
+  debug_print(
+    termds, node,
+    "msgProcessed: epoch={:x}, from={}, count={}, "
+    "parent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, predecessor, count, parent, outstanding.size(),
+    C, D, lC, lD
+  );
+
+  if (outstanding.size() == 0 and not self_pred) {
     debug_print(
       termds, node,
-      "got engagement message from new parent={}, count={}, D={}\n",
-      predecessor, 1, D
+      "msgProcessed: engagement with new parent={}, epoch={:x}, count={}, "
+      "C={}, D={}, lC={}, lD={}\n",
+      predecessor, epoch_, count, C, D, lC, lD
     );
 
     parent = predecessor;
-    engagementMessageCount = 1;
-    outstanding.push_front(AckRequest(predecessor, 1));
-  } else {
+    engagementMessageCount = count;
+    outstanding.push_front(AckRequest(predecessor, count));
+  } else if (not self_pred) {
     typename AckReqListType::iterator iter = outstanding.begin();
     ++iter;
     for (; iter != outstanding.end(); ++iter) {
       if (iter->pred == predecessor) {
-        iter->count++;
+        iter->count += count;
         break;
       }
     }
     if (iter == outstanding.end()) {
-      outstanding.push_back(AckRequest(predecessor, 1));
+      outstanding.push_back(AckRequest(predecessor, count));
     }
   }
 
   if (predecessor == parent) {
-    reqedParent += 1;
+    reqedParent += count;
   }
 
   tryAck();
@@ -150,6 +220,14 @@ void TermDS<CommType>::tryAck() {
     return;
   }
 
+  debug_print(
+    termds, node,
+    "tryAck: epoch={:x}, parent={}, emc={}, reqedParent={}, "
+    "ackedParent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, parent, engagementMessageCount, reqedParent, ackedParent,
+    outstanding.size(), C, D, lC, lD
+  );
+
   AckRequest a = outstanding.back();
   if (C >= a.count) {
     C -= a.count;
@@ -172,13 +250,13 @@ template <typename CommType>
 void TermDS<CommType>::tryLast() {
   debug_print(
     termds, node,
-    "tryLast: parent={}, D={}, C={}, emc={}, reqedParent={}, "
-    "ackedParent={}, outstanding.size()={}\n",
-    parent, D, C, engagementMessageCount, reqedParent, ackedParent,
-    outstanding.size()
+    "tryLast: epoch={:x}, parent={}, emc={}, reqedParent={}, "
+    "ackedParent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
+    epoch_, parent, engagementMessageCount, reqedParent, ackedParent,
+    outstanding.size(), C, D, lC, lD
   );
 
-  if (outstanding.size() != 1) {
+  if (outstanding.size() != 1 or lC not_eq lD) {
     return;
   }
 

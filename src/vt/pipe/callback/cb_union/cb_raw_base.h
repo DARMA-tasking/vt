@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                cb_raw_base.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
 #define INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
@@ -12,6 +55,8 @@
 
 namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct RawAnonTagType        { } RawAnonTag        { };
 static struct RawSendMsgTagType     { } RawSendMsgTag     { };
 static struct RawBcastMsgTagType    { } RawBcastMsgTag    { };
@@ -19,6 +64,9 @@ static struct RawSendColMsgTagType  { } RawSendColMsgTag  { };
 static struct RawBcastColMsgTagType { } RawBcastColMsgTag { };
 static struct RawSendColDirTagType  { } RawSendColDirTag  { };
 static struct RawBcastColDirTagType { } RawBcastColDirTag { };
+static struct RawSendObjGrpTagType  { } RawSendObjGrpTag  { };
+static struct RawBcastObjGrpTagType { } RawBcastObjGrpTag { };
+#pragma GCC diagnostic pop
 
 template <typename MsgT>
 struct CallbackTyped;
@@ -56,6 +104,14 @@ struct CallbackRawBaseSingle {
     RawSendColDirTagType, PipeType const& in_pipe,
     HandlerType const& in_handler, AutoHandlerType const& in_vrt_handler,
     void* index_bits
+  );
+  CallbackRawBaseSingle(
+    RawBcastObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+    ObjGroupProxyType in_proxy
+  );
+  CallbackRawBaseSingle(
+    RawSendObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+    ObjGroupProxyType in_proxy, NodeType in_node
   );
 
   template <typename MsgT>
@@ -137,6 +193,20 @@ struct CallbackTyped : CallbackRawBaseSingle {
     void* index_bits
   ) : CallbackRawBaseSingle(
         RawSendColDirTag,in_pipe,in_handler,in_vrt_handler,index_bits
+      )
+  { }
+  CallbackTyped(
+    RawBcastObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+    ObjGroupProxyType in_proxy
+  )  : CallbackRawBaseSingle(
+        RawBcastObjGrpTag,in_pipe,in_handler,in_proxy
+      )
+  { }
+  CallbackTyped(
+    RawSendObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
+    ObjGroupProxyType in_proxy, NodeType in_node
+  )  : CallbackRawBaseSingle(
+        RawSendObjGrpTag,in_pipe,in_handler,in_proxy,in_node
       )
   { }
 

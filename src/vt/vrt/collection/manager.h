@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                  manager.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_VRT_COLLECTION_MANAGER_H
 #define INCLUDED_VRT_COLLECTION_MANAGER_H
@@ -24,10 +67,14 @@
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/messaging/message.h"
+#include "vt/messaging/pending_send.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/reduce/reduce_msg.h"
 #include "vt/collective/reduce/reduce_hash.h"
+#include "vt/configs/arguments/args.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 
 #include <memory>
 #include <vector>
@@ -59,7 +106,7 @@ struct CollectionManager {
   >;
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using CollectionProxyWrapType = CollectionProxy<ColT,IndexT>;
-  using ReduceIDType = ::vt::collective::reduce::ReduceEpochLookupType;
+  using ReduceIDType = ::vt::collective::reduce::ReduceSeqLookupType;
   template <typename ColT>
   using EpochBcastType = std::unordered_map<EpochType,CollectionMessage<ColT>*>;
   template <typename ColT>
@@ -67,17 +114,18 @@ struct CollectionManager {
     VirtualProxyType, EpochBcastType<ColT>
   >;
   using CleanupFnType = std::function<void()>;
-  using CleanupListFnType = std::list<CleanupFnType>;
+  using CleanupListFnType = std::unordered_map<VirtualProxyType,std::list<CleanupFnType>>;
   using DispatchHandlerType = auto_registry::AutoHandlerType;
   using ActionVecType = std::vector<ActionType>;
+  using ArgType = vt::arguments::ArgConfig;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;
 
   template <typename T, typename U=void>
-  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
+  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg, messaging::PendingSend>;
   template <typename T, typename U=void>
-  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
+  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg, messaging::PendingSend>;
 
   template <typename ColT, typename UserMsgT, typename T, typename U=void>
   using IsWrapType = std::enable_if_t<
@@ -88,9 +136,9 @@ struct CollectionManager {
     !std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
   >;
 
-  CollectionManager() = default;
+  CollectionManager();
 
-  virtual ~CollectionManager() { cleanupAll<>(); }
+  virtual ~CollectionManager();
 
   template <typename=void>
   void cleanupAll();
@@ -212,12 +260,14 @@ public:
   template <typename SysMsgT>
   static void distConstruct(SysMsgT* msg);
 
-  // Query the current index: this function can only be called legally during
-  // the constructor of a virtual collection element
+  // Query the current index: this function can be called legally during
+  // the constructor of a virtual collection element and when it is running
   template <typename IndexT>
   static IndexT* queryIndexContext();
   template <typename IndexT>
   static VirtualProxyType queryProxyContext();
+  template <typename IndexT>
+  static bool hasContext();
 
   // Async reduce for new collection construction coordination wrt meta-datt
   template <typename ColT>
@@ -235,55 +285,53 @@ public:
     typename ColT = typename MsgT::CollectionType,
     typename IdxT = typename ColT::IndexType
   >
-  void sendMsgUntypedHandler(
+  messaging::PendingSend sendMsgUntypedHandler(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member, ActionType action,
+    HandlerType const& handler, bool const member,
     bool imm_context = true
   );
 
   template <typename MsgT, typename ColT>
   IsNotColMsgType<MsgT> sendMsgWithHan(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member, ActionType action
+    HandlerType const& handler, bool const member
   );
 
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> sendMsgWithHan(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member, ActionType action
+    HandlerType const& handler, bool const member
   );
 
   template <typename MsgT, typename ColT>
-  void sendNormalMsg(
+  messaging::PendingSend sendNormalMsg(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member, ActionType action
+    HandlerType const& handler, bool const member
   );
 
   template <
     typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
   >
-  void sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
-    ActionType act = nullptr
+  messaging::PendingSend sendMsg(
+    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
   );
 
   template <
     typename MsgT,
     ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
   >
-  void sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg,
-    ActionType act = nullptr
+  messaging::PendingSend sendMsg(
+    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   IsColMsgType<MsgT> sendMsg(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   IsNotColMsgType<MsgT> sendMsg(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <
@@ -292,7 +340,7 @@ public:
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
   IsColMsgType<MsgT> sendMsg(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <
@@ -301,12 +349,12 @@ public:
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
   IsNotColMsgType<MsgT> sendMsg(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  void sendMsgImpl(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+  messaging::PendingSend sendMsgImpl(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <
@@ -314,8 +362,8 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
   >
-  void sendMsgImpl(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg, ActionType act = nullptr
+  messaging::PendingSend sendMsgImpl(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
@@ -335,37 +383,39 @@ public:
   template <typename ColT, typename IndexT, typename MsgT>
   static void collectionMsgTypedHandler(MsgT* msg);
 
+  template <typename ColT, typename MsgT>
+  static void recordStats(ColT* col_ptr, MsgT* msg);
+
   /*
    *  Reduce all elements of a collection
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceMsg(
+  SequentialIDType reduceMsg(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-    MsgT *const msg, EpochType const& epoch = no_epoch,
-    TagType const& tag = no_tag,
-    NodeType const& root_node = uninitialized_destination
+    MsgT *const msg, SequentialIDType seq = no_seq_id,
+    TagType tag = no_tag, NodeType root_node = uninitialized_destination
   );
 
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceMsg(
+  SequentialIDType reduceMsg(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-    MsgT *const msg, EpochType const& epoch, TagType const& tag,
+    MsgT *const msg, SequentialIDType seq, TagType tag,
     typename ColT::IndexType const& idx
   );
 
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceMsgExpr(
+  SequentialIDType reduceMsgExpr(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-    EpochType const& epoch = no_epoch, TagType const& tag = no_tag,
-    NodeType const& root_node = uninitialized_destination
+    SequentialIDType seq = no_seq_id, TagType tag = no_tag,
+    NodeType root_node = uninitialized_destination
   );
 
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceMsgExpr(
+  SequentialIDType reduceMsgExpr(
     CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-    EpochType const& epoch, TagType const& tag,
+    SequentialIDType seq, TagType tag,
     typename ColT::IndexType const& idx
   );
 
@@ -376,28 +426,28 @@ public:
   IsNotColMsgType<MsgT> broadcastMsgWithHan(
     CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
-    ActionType act = nullptr, bool instrument = true
+    bool instrument = true
   );
 
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> broadcastMsgWithHan(
     CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
-    ActionType act = nullptr, bool instrument = true
+    bool instrument = true
   );
 
   template <typename MsgT, typename ColT>
-  void broadcastNormalMsg(
+  messaging::PendingSend broadcastNormalMsg(
     CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
-    ActionType act = nullptr, bool instrument = true
+    bool instrument = true
   );
 
   template <typename MsgT, typename ColT, typename IdxT>
-  void broadcastMsgUntypedHandler(
+  messaging::PendingSend broadcastMsgUntypedHandler(
     CollectionProxyWrapType<ColT,IdxT> const& proxy, MsgT *msg,
     HandlerType const& handler, bool const member,
-    ActionType act, bool instrument
+    bool instrument
   );
 
   // CollectionMessage non-detecting broadcast
@@ -405,30 +455,30 @@ public:
     typename MsgT,
     ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
   >
-  void broadcastMsg(
+  messaging::PendingSend broadcastMsg(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <
     typename MsgT,
     ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
   >
-  void broadcastMsg(
+  messaging::PendingSend broadcastMsg(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   IsColMsgType<MsgT> broadcastMsg(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
   IsNotColMsgType<MsgT> broadcastMsg(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <
@@ -438,7 +488,7 @@ public:
   >
   IsColMsgType<MsgT> broadcastMsg(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <
@@ -448,13 +498,13 @@ public:
   >
   IsNotColMsgType<MsgT> broadcastMsg(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  void broadcastMsgImpl(
+  messaging::PendingSend broadcastMsgImpl(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <
@@ -462,13 +512,13 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  void broadcastMsgImpl(
+  messaging::PendingSend broadcastMsgImpl(
     CollectionProxyWrapType<ColT> const& proxy,
-    MsgT *msg, ActionType act = nullptr, bool instrument = true
+    MsgT *msg, bool instrument = true
   );
 
   template <typename ColT, typename IndexT, typename MsgT>
-  void broadcastFromRoot(MsgT* msg);
+  messaging::PendingSend broadcastFromRoot(MsgT* msg);
 
 public:
   /*
@@ -563,7 +613,15 @@ public:
   );
 
   /*
-   *  LB-related operations on the collection
+   * ======================================================================
+   *              LB-related operations on the collection
+   * ======================================================================
+   */
+
+  /*
+   * The `nextPhase` function is called by a single node on the whole collection
+   * to indicate that LB is ready. This includes all collections and thus may
+   * require extra sync to invoke safely
    */
   template <typename ColT>
   void nextPhase(
@@ -571,11 +629,47 @@ public:
     PhaseType const& cur_phase, ActionFinishedLBType continuation = nullptr
   );
 
-  template <typename ColT>
-  void computeStats(
-    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
-    PhaseType const& cur_phase
+  /*
+   * The function 'startPhaseRooted' starts, in a rooted manner, the next phase
+   * of the LB without inquiring about the state of the collections. A single
+   * node calls it and the registered runLB funcs are invoked to collect up
+   * statistics and run appropriately. Continuation runs when LB is complete.
+   */
+  void startPhaseRooted(
+    ActionFinishedLBType fn, PhaseType lb_phase = no_lb_phase
   );
+
+  /*
+   * The function 'startPhaseCollective' starts, in a collective manner, the
+   * next phase of the LB without inquiring about the state of the
+   * collections. The LB starts immediately after collecting statistics and the
+   * continuation executes at completion
+   */
+  void startPhaseCollective(
+    ActionFinishedLBType fn, PhaseType lb_phase = no_lb_phase
+  );
+
+  /*
+   * The `elm Ready` function is called by every element of every collection at
+   * the phase boundary for each local element residing on a node. Once all
+   * elements have invoked it, LB will commence.
+   */
+  template <typename ColT>
+  void elmReadyLB(
+    VirtualElmProxyType<ColT> const& proxy, PhaseType phase,
+    bool do_sync, ActionFinishedLBType continuation
+  );
+
+  template <
+    typename MsgT, typename ColT, ActiveColMemberTypedFnType<MsgT,ColT> f
+  >
+  void elmReadyLB(
+    VirtualElmProxyType<ColT> const& proxy, PhaseType phase, MsgT* msg,
+    bool do_sync
+  );
+
+  template <typename ColT>
+  void elmFinishedLB(VirtualElmProxyType<ColT> const& proxy, PhaseType phase);
 
   template <typename=void>
   static void releaseLBPhase(CollectionPhaseMsg* msg);
@@ -602,10 +696,14 @@ public:
   void checkReduceNoElements();
 
 private:
-  template <typename ColT, typename IndexT>
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
   CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
-  template <typename ColT, typename IndexT>
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
   Holder<ColT, IndexT>* findElmHolder(VirtualProxyType const& proxy);
+
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  Holder<ColT, IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy);
 
 public:
   template <typename ColT, typename IndexT>
@@ -686,6 +784,9 @@ public:
     ActionType insert_action = nullptr
   );
 
+  template <typename ColT>
+  void addCleanupFn(VirtualProxyType proxy);
+
 private:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   void finishedInsertEpoch(
@@ -721,26 +822,51 @@ private:
   template <typename MsgT>
   static EpochType getCurrentEpoch(MsgT* msg);
 
-private:
   template <typename=void>
   static VirtualIDType curIdent_;
 
   template <typename ColT>
   static BcastBufferType<ColT> broadcasts_;
 
+  balance::ElementIDType getCurrentContextTemp() const;
+  balance::ElementIDType getCurrentContextPerm() const;
+  void setCurrentContext(
+    balance::ElementIDType elm_perm, balance::ElementIDType elm_temp
+  );
+
   CleanupListFnType cleanup_fns_;
   BufferedActionType buffered_sends_;
   BufferedActionType buffered_bcasts_;
   BufferedActionType buffered_group_;
   std::unordered_set<VirtualProxyType> constructed_;
-  std::unordered_map<ReduceIDType,EpochType> reduce_cur_epoch_;
+  std::unordered_map<ReduceIDType,SequentialIDType> reduce_cur_seq_;
   std::vector<ActionFinishedLBType> lb_continuations_ = {};
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::deque<ActionType> work_units_ = {};
+  std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
+  balance::ElementIDType cur_context_temp_elm_id_ = balance::no_element_id;
+  balance::ElementIDType cur_context_perm_elm_id_ = balance::no_element_id;
 };
+
+// These are static variables in class templates because Intel 18
+// dislikes static class member variable templates
+namespace details
+{
+  template <typename T>
+  struct CurIdent
+  {
+    static VirtualIDType m_;
+  };
+
+  template <typename ColT>
+  struct Broadcasts
+  {
+    static typename CollectionManager::BcastBufferType<ColT> m_;
+  };
+}
 
 }}} /* end namespace vt::vrt::collection */
 
@@ -767,5 +893,9 @@ extern vrt::collection::CollectionManager* theCollection();
 #include "vt/vrt/collection/dispatch/registry.impl.h"
 #include "vt/vrt/collection/staged_token/token.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
+#include "vt/vrt/collection/balance/proxy/lbable.impl.h"
+
+#include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
+#include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/

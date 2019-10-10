@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                               group_manager.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -32,10 +75,10 @@ GroupType GroupManager::newGroup(
 }
 
 GroupType GroupManager::newGroupCollective(
-  bool const in_group, ActionGroupType action
+  bool const in_group, ActionGroupType action, bool make_mpi_group
 ) {
   bool const is_static = true;
-  return newCollectiveGroup(in_group, is_static, action);
+  return newCollectiveGroup(in_group, is_static, action, make_mpi_group);
 }
 
 GroupType GroupManager::newGroupCollectiveLabel(GroupCollectiveLabelTagType) {
@@ -46,7 +89,8 @@ GroupType GroupManager::newGroupCollectiveLabel(GroupCollectiveLabelTagType) {
 }
 
 GroupType GroupManager::newCollectiveGroup(
-  bool const& is_in_group, bool const& is_static, ActionGroupType action
+  bool const& is_in_group, bool const& is_static, ActionGroupType action,
+  bool make_mpi_group
 ) {
   auto const& this_node = theContext()->getNode();
   auto new_id = next_collective_group_id_++;
@@ -55,7 +99,9 @@ GroupType GroupManager::newCollectiveGroup(
     new_id, this_node, is_collective, is_static
   );
   auto group_action = std::bind(action, group);
-  initializeLocalGroupCollective(group, is_static, group_action, is_in_group);
+  initializeLocalGroupCollective(
+    group, is_static, group_action, is_in_group, make_mpi_group
+  );
   return group;
 }
 
@@ -138,7 +184,6 @@ void GroupManager::initializeRemoteGroup(
   GroupType const& group, RegionPtrType in_region, bool const& is_static,
   RegionType::SizeType const& group_size
 ) {
-  bool const remote = true;
   auto group_info = std::make_unique<GroupInfoType>(
     info_rooted_remote_cons, std::move(in_region), group, group_size
   );
@@ -171,10 +216,10 @@ MPI_Comm GroupManager::getGroupComm(GroupType const& group_id) {
 
 void GroupManager::initializeLocalGroupCollective(
   GroupType const& group, bool const& is_static, ActionType action,
-  bool const in_group
+  bool const in_group, bool make_mpi_group
 ) {
   auto group_info = std::make_unique<GroupInfoType>(
-    info_collective_cons, action, group, in_group
+    info_collective_cons, action, group, in_group, make_mpi_group
   );
   auto group_ptr = group_info.get();
   local_collective_group_info_.emplace(
@@ -189,7 +234,6 @@ void GroupManager::initializeLocalGroup(
   GroupType const& group, RegionPtrType in_region, bool const& is_static,
   ActionType action, RegionType::SizeType const& group_size
 ) {
-  bool const remote = false;
   auto group_info = std::make_unique<GroupInfoType>(
     info_rooted_local_cons, std::move(in_region), action, group, group_size
   );
@@ -204,9 +248,9 @@ void GroupManager::initializeLocalGroup(
 
 /*static*/ EventType GroupManager::groupHandler(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const root, ActionType act, bool* const deliver
+  MsgSizeType const& size, bool const root, bool* const deliver
 ) {
-  auto const& msg = reinterpret_cast<ShortMessage* const>(base.get());
+  auto const& msg = reinterpret_cast<ShortMessage*>(base.get());
   auto const& is_pipe = envelopeIsPipe(msg->env);
 
   if (!is_pipe) {
@@ -225,13 +269,13 @@ void GroupManager::initializeLocalGroup(
       // Deliver the message normally if it's not a the root of a broadcast
       *deliver = !root;
       if (group == default_group) {
-        return global::DefaultGroup::broadcast(base,from,size,root,act);
+        return global::DefaultGroup::broadcast(base,from,size,root);
       } else {
         auto const& is_collective_group = GroupIDBuilder::isCollective(group);
         if (is_collective_group) {
-          return theGroup()->sendGroupCollective(base,from,size,root,act,deliver);
+          return theGroup()->sendGroupCollective(base,from,size,root,deliver);
         } else {
-          return theGroup()->sendGroup(base,from,size,root,act,deliver);
+          return theGroup()->sendGroup(base,from,size,root,deliver);
         }
       }
     } else {
@@ -251,7 +295,7 @@ void GroupManager::initializeLocalGroup(
 
 EventType GroupManager::sendGroupCollective(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root, ActionType action,
+  MsgSizeType const& size, bool const is_root,
   bool* const deliver
 ) {
   auto const& send_tag = static_cast<messaging::MPI_TagType>(
@@ -264,8 +308,6 @@ EventType GroupManager::sendGroupCollective(
   auto const& info = *iter->second;
   auto const& in_group = info.inGroup();
   auto const& group_ready = info.isReady();
-  auto const& has_action = action != nullptr;
-  EventRecordType* parent = nullptr;
 
   if (in_group && group_ready) {
     auto const& this_node = theContext()->getNode();
@@ -290,7 +332,6 @@ EventType GroupManager::sendGroupCollective(
     EventType event = no_event;
     auto const& tree = info.getTree();
     auto const& num_children = tree->getNumChildren();
-    auto const& node = theContext()->getNode();
 
     debug_print(
       group, node,
@@ -300,12 +341,6 @@ EventType GroupManager::sendGroupCollective(
     );
 
     if ((num_children > 0 || send_to_root) && (!this_node_dest || first_send)) {
-      if (has_action) {
-        event = theEvent()->createParentEvent(node);
-        auto& holder = theEvent()->getEventHolder(event);
-        parent = holder.get_event();
-      }
-
       info.getTree()->foreachChild([&](NodeType child){
         bool const& send = child != dest;
 
@@ -317,12 +352,7 @@ EventType GroupManager::sendGroupCollective(
         );
 
         if (send) {
-          auto const put_event = theMsg()->sendMsgBytesWithPut(
-            child, base, size, send_tag, action
-          );
-          if (has_action) {
-            parent->addEventToList(put_event);
-          }
+          theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
         }
       });
 
@@ -330,12 +360,7 @@ EventType GroupManager::sendGroupCollective(
        *  Send message to the root node of the group
        */
       if (send_to_root) {
-        auto const put_event = theMsg()->sendMsgBytesWithPut(
-          root_node, base, size, send_tag, action
-        );
-        if (has_action) {
-          parent->addEventToList(put_event);
-        }
+        theMsg()->sendMsgBytesWithPut(root_node, base, size, send_tag);
       }
 
       if (!first_send && this_node_dest) {
@@ -351,7 +376,7 @@ EventType GroupManager::sendGroupCollective(
     }
   } else if (in_group && !group_ready) {
     local_collective_group_info_.find(group)->second->readyAction([=]{
-      theGroup()->sendGroupCollective(base,from,size,is_root,action,deliver);
+      theGroup()->sendGroupCollective(base,from,size,is_root,deliver);
     });
     *deliver = true;
     return no_event;
@@ -364,11 +389,8 @@ EventType GroupManager::sendGroupCollective(
      *  must forward.
      */
     auto const put_event = theMsg()->sendMsgBytesWithPut(
-      root_node, base, size, send_tag, action
+      root_node, base, size, send_tag
     );
-    if (has_action) {
-      parent->addEventToList(put_event);
-    }
     /*
      *  Do not deliver on this node since it is not part of the group and will
      *  just forward to the root node.
@@ -380,7 +402,7 @@ EventType GroupManager::sendGroupCollective(
 
 EventType GroupManager::sendGroup(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root, ActionType action,
+  MsgSizeType const& size, bool const is_root,
   bool* const deliver
 ) {
   auto const& this_node = theContext()->getNode();
@@ -397,31 +419,18 @@ EventType GroupManager::sendGroup(
   );
 
   auto const& group_node = GroupIDBuilder::getNode(group);
-  auto const& group_static = GroupIDBuilder::isStatic(group);
   auto const& group_collective = GroupIDBuilder::isCollective(group);
-  auto const& send_tag = static_cast<messaging::MPI_TagType>(
-    messaging::MPITag::ActiveMsgTag
-  );
 
   vtAssert(
     !group_collective, "Collective groups are not supported"
   );
 
   auto send_to_node = [&](NodeType node) -> EventType {
-    EventType event = no_event;
-    bool const& has_action = action != nullptr;
-    EventRecordType* parent = nullptr;
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
       messaging::MPITag::ActiveMsgTag
     );
 
-    if (has_action) {
-      event = theEvent()->createParentEvent(this_node);
-      auto& holder = theEvent()->getEventHolder(event);
-      parent = holder.get_event();
-    }
-
-    return theMsg()->sendMsgBytesWithPut(node, base, size, send_tag, action);
+    return theMsg()->sendMsgBytesWithPut(node, base, size, send_tag);
   };
 
   EventType ret_event = no_event;
@@ -444,35 +453,27 @@ EventType GroupManager::sendGroup(
         return no_event;
       }
     } else {
-      auto iter = remote_group_info_.find(group);
+      auto remote_iter = remote_group_info_.find(group);
 
       debug_print(
         broadcast, node,
         "GroupManager::sendGroup: *send* remote size={}, from={}, found={}, "
         "dest={}, group={:x}, is_root={} \n",
-        size, from, iter != remote_group_info_.end(), dest, group,
+        size, from, remote_iter != remote_group_info_.end(), dest, group,
         is_root
       );
 
-      if (iter != remote_group_info_.end() && (!this_node_dest || first_send)) {
-        auto& info = *iter->second;
+      if (remote_iter != remote_group_info_.end() && (!this_node_dest || first_send)) {
+        auto& info = *remote_iter->second;
         vtAssert(!info.is_forward_, "Must not be a forward");
         vtAssert(
           info.default_spanning_tree_ != nullptr, "Must have spanning tree"
         );
 
-        bool const& has_action = action != nullptr;
-        EventRecordType* parent = nullptr;
         auto const& send_tag = static_cast<messaging::MPI_TagType>(
           messaging::MPITag::ActiveMsgTag
         );
         auto const& num_children = info.default_spanning_tree_->getNumChildren();
-
-        if (has_action) {
-          ret_event = theEvent()->createParentEvent(this_node);
-          auto& holder = theEvent()->getEventHolder(ret_event);
-          parent = holder.get_event();
-        }
 
         // Send to child nodes in the group's spanning tree
         if (num_children > 0) {
@@ -484,12 +485,7 @@ EventType GroupManager::sendGroup(
             );
 
             if (child != this_node) {
-              auto const put_event = theMsg()->sendMsgBytesWithPut(
-                child, base, size, send_tag, action
-              );
-              if (has_action) {
-                parent->addEventToList(put_event);
-              }
+              theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
             }
           });
         }
@@ -510,6 +506,14 @@ EventType GroupManager::sendGroup(
 
 GroupManager::GroupManager() {
   global::DefaultGroup::setupDefaultTree();
+}
+
+void GroupManager::addCleanupAction(ActionType action) {
+  cleanup_actions_.push_back(action);
+}
+
+RemoteOperationIDType GroupManager::getNextID(){
+  return cur_id_++;
 }
 
 }} /* end namespace vt::group */

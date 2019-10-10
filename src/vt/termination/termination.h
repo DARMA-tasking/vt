@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                                termination.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
 
 #if !defined INCLUDED_TERMINATION_TERMINATION_H
 #define INCLUDED_TERMINATION_TERMINATION_H
@@ -9,6 +52,7 @@
 #include "vt/termination/term_action.h"
 #include "vt/termination/term_interface.h"
 #include "vt/termination/term_window.h"
+#include "vt/termination/term_parent.h"
 #include "vt/termination/dijkstra-scholten/ds_headers.h"
 #include "vt/epoch/epoch.h"
 #include "vt/activefn/activefn.h"
@@ -35,8 +79,10 @@ struct TerminationDetector :
   using TermStateDSType    = term::ds::StateDS::TerminatorType;
   using WindowType         = std::unique_ptr<EpochWindow>;
   using ArgType            = vt::arguments::ArgConfig;
+  using ParentBagType      = EpochRelation::ParentBagType;
 
   TerminationDetector();
+  virtual ~TerminationDetector() {}
 
   /****************************************************************************
    *
@@ -45,29 +91,23 @@ struct TerminationDetector :
    *
    ***************************************************************************/
   void produce(
-    EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
+    EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
+    NodeType node = uninitialized_destination
   );
   void consume(
-    EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
+    EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
+    NodeType node = uninitialized_destination
   );
-  void send(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
-  void recv(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
-  void genProd(EpochType const& epoch);
-  void genCons(EpochType const& epoch);
   /***************************************************************************/
 
   friend struct ds::StateDS;
-  TermStateDSType* getDSTerm(EpochType const& epoch);
+
+  bool isRooted(EpochType epoch);
+  bool isDS(EpochType epoch);
+  TermStateDSType* getDSTerm(EpochType epoch, bool is_root = false);
 
   void resetGlobalTerm();
   void freeEpoch(EpochType const& epoch);
-
-public:
-  /*
-   * Deprecated interface for creating a new collective epoch for detecting
-   * termination
-   */
-  EpochType newEpoch(bool const child = false);
 
 public:
   /*
@@ -87,27 +127,36 @@ public:
 
 public:
   /*
-   * New interface for making epochs for termination detection
+   * Interface for making epochs for termination detection
    */
-  EpochType makeEpochRooted(bool const useDS = false);
-  EpochType makeEpochCollective();
-  EpochType makeEpoch(bool const is_collective, bool const useDS = false);
+  EpochType makeEpochRooted(
+    bool useDS = false, bool child = true, EpochType parent = no_epoch
+  );
+  EpochType makeEpochCollective(bool child = true, EpochType parent = no_epoch);
+  EpochType makeEpoch(
+    bool is_coll, bool useDS = false, bool child = true, EpochType parent = no_epoch
+  );
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
+  void finishNoActivateEpoch(EpochType const& epoch);
 
 public:
-  EpochType newEpochCollective(bool const child = false);
-  EpochType newEpochRooted(bool const useDS = false, bool const child = false);
+  /*
+   * Directly call into a specific type of rooted epoch, can not be overridden
+   */
+  EpochType makeEpochRootedWave(bool child, EpochType parent);
+  EpochType makeEpochRootedDS(bool child, EpochType parent);
 
 private:
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
   void cleanupEpoch(EpochType const& epoch);
   void produceConsumeState(
-    TermStateType& state, TermCounterType const& num_units, bool produce
+    TermStateType& state, TermCounterType const num_units, bool produce,
+    NodeType node
   );
   void produceConsume(
-    EpochType const& epoch = any_epoch_sentinel,
-    TermCounterType const& num_units = 1, bool produce = true
+    EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
+    bool produce = true, NodeType node = uninitialized_destination
   );
   void propagateEpochExternalState(
     TermStateType& state, TermCounterType const& prod, TermCounterType const& cons
@@ -121,9 +170,9 @@ private:
   EpochWindow* getWindow(EpochType const& epoch);
 
 private:
-  void updateResolvedEpochs(EpochType const& epoch, bool const rooted);
-  void inquireFinished(EpochType const& epoch, NodeType const& from_node);
-  void replyFinished(EpochType const& epoch, bool const& is_finished);
+  void updateResolvedEpochs(EpochType const& epoch);
+  void inquireTerminated(EpochType const& epoch, NodeType const& from_node);
+  void replyTerminated(EpochType const& epoch, bool const& is_terminated);
 
 public:
   void setLocalTerminated(bool const terminated, bool const no_local = true);
@@ -131,29 +180,23 @@ public:
   TermCounterType getNumUnits() const;
 
 public:
-  // TermFinished interface
-  TermStatusEnum testEpochFinished(
-    EpochType const& epoch, ActionType action
-  ) override;
+  // TermTerminated interface
+  TermStatusEnum testEpochTerminated(EpochType epoch) override;
 
 private:
   bool propagateEpoch(TermStateType& state);
-  void epochFinished(EpochType const& epoch, bool const cleanup);
+  void epochTerminated(EpochType const& epoch);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
-  void setupNewEpoch(EpochType const& new_epoch, bool const from_child);
-  void propagateNewEpoch(EpochType const& new_epoch, bool const from_child);
-  void readyNewEpoch(EpochType const& new_epoch);
-  void linkChildEpoch(EpochType const& epoch);
-  void rootMakeEpoch(EpochType const& epoch, bool const child = false);
-  void makeRootedEpoch(EpochType const& epoch, bool const is_root);
+  void setupNewEpoch(EpochType const& epoch);
+  void readyNewEpoch(EpochType const& epoch);
+  void linkChildEpoch(EpochType epoch, EpochType parent = no_epoch);
+  void makeRootedHan(EpochType const& epoch, bool is_root);
 
-  static void makeRootedEpoch(TermMsg* msg);
-  static void inquireEpochFinished(TermFinishedMsg* msg);
-  static void replyEpochFinished(TermFinishedReplyMsg* msg);
-  static void propagateNewEpochHandler(TermMsg* msg);
-  static void readyEpochHandler(TermMsg* msg);
+  static void makeRootedHandler(TermMsg* msg);
+  static void inquireEpochTerminated(TermTerminatedMsg* msg);
+  static void replyEpochTerminated(TermTerminatedReplyMsg* msg);
   static void propagateEpochHandler(TermCounterMsg* msg);
-  static void epochFinishedHandler(TermMsg* msg);
+  static void epochTerminatedHandler(TermMsg* msg);
   static void epochContinueHandler(TermMsg* msg);
 
 private:
@@ -167,6 +210,8 @@ private:
   std::unique_ptr<EpochWindow> epoch_coll_              = nullptr;
   // ready epoch list (misnomer: finishedEpoch was invoked)
   std::unordered_set<EpochType> epoch_ready_            = {};
+  // list of remote epochs pending status report of finished
+  std::unordered_set<EpochType> epoch_wait_status_      = {};
 };
 
 }} // end namespace vt::term

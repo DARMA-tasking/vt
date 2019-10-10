@@ -28,9 +28,9 @@ function(link_target_with_vt)
     LINK_ZLIB
     LINK_FCONTEXT
     LINK_CHECKPOINT
-    LINK_MELD
     LINK_DETECTOR
     LINK_CLI11
+    LINK_DL
   )
   set(
     multiValueArg
@@ -52,8 +52,8 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: gtest=${ARG_LINK_GTEST}")
     endif()
-    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} GTest::GTest)
-    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} GTest::Main)
+    target_include_directories(${ARG_TARGET} PRIVATE ${GTEST_INCLUDE_DIRS})
+    target_link_libraries(${ARG_TARGET} PRIVATE ${GTEST_BOTH_LIBRARIES})
   endif()
 
   if (NOT ARG_LINK_VT_LIB)
@@ -75,6 +75,16 @@ function(link_target_with_vt)
         ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${ATOMIC_LIB}
       )
     endif()
+  endif()
+
+  if (NOT DEFINED ARG_LINK_DL AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_DL)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: dl=${ARG_LINK_DL}")
+    endif()
+
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CMAKE_DL_LIBS}
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_MPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MPI)
@@ -109,8 +119,10 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: fmt=${ARG_LINK_FMT}")
     endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} fmt::fmt
+    target_compile_definitions(${ARG_TARGET} PUBLIC FMT_HEADER_ONLY=1)
+    target_include_directories(${ARG_TARGET} PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/fmt>
+      $<INSTALL_INTERFACE:include/fmt>
     )
   endif()
 
@@ -127,19 +139,6 @@ function(link_target_with_vt)
     endif()
   endif()
 
-  if (NOT DEFINED ARG_LINK_MELD AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MELD)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: meld=${ARG_LINK_MELD}")
-    endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} vt::lib::meld
-    )
-    # set_target_properties(
-    #   ${VIRTUAL_TRANSPORT_LIBRARY}
-    #   PROPERTIES INTERFACE_LINK_LIBRARIES vt::lib::meld
-    # )
-  endif()
-
   if (NOT DEFINED ARG_LINK_DETECTOR AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_DETECTOR)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: detector=${ARG_LINK_DETECTOR}")
@@ -153,8 +152,9 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: cli11=${ARG_LINK_CLI11}")
     endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} CLI11::CLI11
+    target_include_directories(${ARG_TARGET} PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/CLI>
+      $<INSTALL_INTERFACE:include/CLI>
     )
   endif()
 

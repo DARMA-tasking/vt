@@ -6,6 +6,21 @@ enable_language(CXX ASM)
 include (CTest)
 enable_testing()
 
+EXECUTE_PROCESS(COMMAND uname -p OUTPUT_VARIABLE CPU_ARCH )
+string(REGEX REPLACE "\n$" ""  CPU_ARCH "${CPU_ARCH}" )
+
+if (CPU_ARCH MATCHES "ppc")
+  set(CPU_ARCH "ppc64")
+endif()
+
+# this is cuz macs give the wrong arch
+if (CPU_ARCH MATCHES "i386" )
+  if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(CPU_ARCH "x86_64")
+  endif()
+endif()
+
+
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 set(PROJECT_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
@@ -21,12 +36,6 @@ file(
   SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/context/*.cc
 )
-
-if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(CPU_ARCH "x86_64")
-else()
-  set(CPU_ARCH "i386")
-endif()
 
 if (APPLE)
   set(ASM_EXT "sysv_macho_gas.S") # OSX
