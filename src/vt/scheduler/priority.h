@@ -72,12 +72,12 @@ namespace vt { namespace sched {
 
 static constexpr PriorityType const priority_level_bits = 3;
 static constexpr PriorityType const priority_num_levels =
-  priority_num_bits / priority_level_bits ;
+  priority_num_bits / priority_level_bits;
 
 enum PriorityLevel {
   SystemLevel  = 0,
   UserLevelMin = PriorityLevel::SystemLevel + 1,
-  UserLevelMax = priority_num_levels - 1;
+  UserLevelMax = priority_num_levels - 1
 };
 
 /*
