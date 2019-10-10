@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 /*
  * The priority field range: [0..2 << priority_num_bits)
@@ -96,6 +96,6 @@ enum Priority {
   Lowest     = 7
 };
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*INCLUDED_VT_SCHEDULER_PRIORITY_H*/

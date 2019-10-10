@@ -50,7 +50,7 @@
 
 #include <queue>
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 template <typename T>
 struct PriorityQueue {
@@ -74,6 +74,6 @@ private:
   std::priority_queue<T, std::vector<T>> impl_;
 };
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*INCLUDED_VT_SCHEDULER_PRIORITY_QUEUE_H*/

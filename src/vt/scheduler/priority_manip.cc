@@ -46,8 +46,9 @@
 #define INCLUDED_VT_SCHEDULER_PRIORITY_MANIP_CC
 
 #include "vt/config.h"
+#include "vt/scheduler/priority_manip.h"
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 /*static*/ void PriorityManip::setPriority(
   PriorityType& field, PriorityType level, PriorityType priority
@@ -63,6 +64,6 @@ namespace vt { namespace scheduler {
   return BitPackerType::getFieldDynamic(offset, priority_level_bits, field);
 }
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*INCLUDED_VT_SCHEDULER_PRIORITY_MANIP_CC*/

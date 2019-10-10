@@ -48,13 +48,13 @@
 #include "vt/config.h"
 #include "vt/scheduler/priority.h"
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 struct PriorityManip {
   static void setPriority(PriorityType& field, PriorityType lvl, PriorityType p);
   static PriorityType getPriority(PriorityType const& field, PriorityType lvl);
 };
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*INCLUDED_VT_SCHEDULER_PRIORITY_MANIP_H*/
