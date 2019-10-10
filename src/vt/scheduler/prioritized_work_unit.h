@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 struct PriorityUnit {
   using UnitActionType = ActionType;
@@ -72,6 +72,6 @@ private:
   PriorityType priority_ = default_priority;
 };
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*INCLUDED_VT_SCHEDULER_PRIORITIZED_WORK_UNIT_H*/
