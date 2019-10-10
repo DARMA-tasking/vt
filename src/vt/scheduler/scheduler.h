@@ -122,6 +122,8 @@ private:
 
 }} //end namespace vt::scheduler
 
+#include "vt/scheduler/scheduler.impl.h"
+
 namespace vt {
 
 void runScheduler();

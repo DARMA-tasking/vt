@@ -74,6 +74,4 @@ private:
 
 }} /* end namespace vt::scheduler */
 
-#include "vt/scheduler/scheduler.impl.h"
-
 #endif /*INCLUDED_VT_SCHEDULER_PRIORITIZED_WORK_UNIT_H*/
