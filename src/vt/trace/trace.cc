@@ -45,6 +45,7 @@
 #include "vt/trace/trace.h"
 #include "vt/config.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/runtime/runtime_inst.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/timing/timing.h"
 #include "vt/utils/demangle/demangle.h"
