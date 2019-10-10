@@ -52,11 +52,13 @@
 #include <random>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct GossipLB : BaseLB {
-  using GossipMsg = balance::GossipMsg;
+  using GossipMsg   = balance::GossipMsg;
+  using NodeSetType = std::vector<NodeType>;
 
   GossipLB() = default;
 
@@ -81,6 +83,11 @@ protected:
   void propagateIncoming(GossipMsg* msg);
   bool isUnderloaded(LoadType load) const;
   bool isOverloaded(LoadType load) const;
+
+  std::vector<double> createCMF(NodeSetType const& under);
+  NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
+  std::vector<NodeType> makeUnderloaded() const;
+  ElementLoadType::iterator selectObject(LoadType size, ElementLoadType& load);
 
 private:
   uint8_t f                                         = 2;

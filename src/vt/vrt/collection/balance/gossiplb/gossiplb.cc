@@ -247,69 +247,145 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
 
 }
 
+std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
+  double const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
+
+  // Build the CMF
+  double sum_p = 0.0;
+  double inv_l_avg = 1.0 / avg;
+  std::vector<double> cmf = {};
+
+  for (auto&& pe : under) {
+    auto iter = load_info_.find(pe);
+    vtAssert(iter != load_info_.end(), "Node must be in load_info_");
+
+    auto load = iter->second;
+    sum_p += 1. - inv_l_avg * load;
+    cmf.push_back(sum_p);
+  }
+
+  // Normalize the CMF
+  for (auto& elm : cmf) {
+    elm /= sum_p;
+  }
+
+  vtAssertExpr(cmf.size() == under.size());
+
+  return cmf;
+}
+
+NodeType GossipLB::sampleFromCMF(
+  NodeSetType const& under, std::vector<double> const& cmf
+) {
+  // Create the distribution
+  std::uniform_real_distribution<double> dist(0.0, 1.0);
+  std::mt19937 gen(seed());
+
+  NodeType selected_node = uninitialized_destination;
+
+  // Pick from the CMF
+  auto const u = dist(gen);
+  std::size_t i = 0;
+  for (auto&& x : cmf) {
+    if (x >= u) {
+      selected_node = under[i];
+      break;
+    }
+    i++;
+  }
+
+  return selected_node;
+}
+
+std::vector<NodeType> GossipLB::makeUnderloaded() const {
+  std::vector<NodeType> under = {};
+  for (auto&& elm : load_info_) {
+    if (isUnderloaded(elm.first)) {
+      under.push_back(elm.first);
+    }
+  }
+  return under;
+}
+
+// //////////////////////////////////////////////////////////////////
+// // DEBUGGING
+// ///////////////////////////////////////////////////////////////////
+// debug_print(
+//   lb, node,
+//   "GossipLB::decide: under.size()={}, selected_node={}\n",
+//   under.size(), selected_node
+// );
+// int i = 0;
+// for (auto&& elm : under) {
+//   debug_print(
+//     lb, node,
+//     "\t GossipLB::decide: under[{}]={}\n", i, under[i]
+//   );
+//   i++;
+// }
+// //////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////
+
+
+GossipLB::ElementLoadType::iterator
+GossipLB::selectObject(LoadType size, ElementLoadType& load) {
+  vtAssertExpr(load.size() > 0);
+  if (load.size() > 0) {
+    return load.begin();
+  } else {
+    return load.end();
+  }
+}
+
 void GossipLB::decide() {
   double const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
 
   if (is_overloaded_) {
-    std::vector<NodeType> under = {};
-    for (auto&& elm : load_info_) {
-      if (isUnderloaded(elm.first)) {
-        under.push_back(elm.first);
-      }
-    }
+    std::vector<NodeType> under = makeUnderloaded();
+    auto cmf = createCMF(under);
+    auto objs = *load_data;
+    double this_new_load = this_load;
+    std::unordered_map<NodeType, std::vector<ObjIDType>> selected_objects;
 
-    // Build the CMF
-    double sum_p = 0.0;
-    double inv_l_avg = 1.0 / avg;
-    std::vector<double> cmf = {};
+    do {
+      auto const selected_node = sampleFromCMF(under, cmf);
 
-    for (auto&& pe : under) {
-      auto iter = load_info_.find(pe);
-      vtAssert(iter != load_info_.end(), "Node must be in load_info_");
-
-      auto load = iter->second;
-      sum_p += 1. - inv_l_avg * load;
-      cmf.push_back(sum_p);
-    }
-
-    // Normalize the CMF
-    for (auto& elm : cmf) {
-      elm /= sum_p;
-    }
-
-    vtAssertExpr(cmf.size() == under.size());
-
-    // Create the distribution
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
-    std::mt19937 gen(seed());
-
-    NodeType selected_node = uninitialized_destination;
-
-    // Pick from the CMF
-    auto const u = dist(gen);
-    int i = 0;
-    for (auto&& x : cmf) {
-      if (x >= u) {
-        selected_node = under[i];
-        break;
-      }
-      i++;
-    }
-
-    // DEBUGGING
-    debug_print(
-      lb, node,
-      "GossipLB::decide: under.size()={}, selected_node={}\n",
-      under.size(), selected_node
-    );
-    i = 0;
-    for (auto&& elm : under) {
       debug_print(
         lb, node,
-        "\t GossipLB::decide: under[{}]={}\n", i, under[i]
+        "GossipLB::decide: under.size()={}, selected_node={}, load_info_.size()={}\n",
+        under.size(), selected_node, load_info_.size()
       );
-      i++;
+
+      vtAssertExpr(load_info_.find(selected_node) != load_info_.end());
+
+      auto& selected_load = load_info_[selected_node];
+      auto max_obj_size = avg - selected_load;
+      auto iter = selectObject(max_obj_size, objs);
+
+      vtAssert(iter != objs.end(), "Must have objects to select");
+
+      auto obj_id = iter->first;
+      auto obj_load = iter->second;
+
+      if (not (selected_load + obj_load > avg)) {
+        selected_objects[selected_node].push_back(obj_id);
+
+        this_new_load -= obj_load;
+        selected_load += obj_load;
+
+        objs.erase(iter);
+      }
+    } while (this_new_load > avg and objs.size() > 0);
+
+    // Send objects to nodes
+    for (auto&& migration : selected_objects) {
+      auto node = migration.first;
+      auto objs = migration.second;
+      if (objs.size() > 0) {
+        // send
+      }
     }
+
 
   } else {
     // do nothing (underloaded-based algorithm), waits to get work from
