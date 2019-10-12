@@ -51,7 +51,7 @@ using namespace vt;
 
 static constexpr int32_t const num_bcasts = 4;
 static NodeType my_node = uninitialized_destination;
-static int32_t count = 0;
+static int32_t bcast_count = 0;
 
 struct Msg : vt::Message {
   NodeType broot;
@@ -70,7 +70,7 @@ static void bcastTest(Msg* msg) {
     root != my_node, "Broadcast should deliver to all but this node"
   );
 
-  count++;
+  bcast_count++;
 }
 
 int main(int argc, char** argv) {
@@ -96,8 +96,8 @@ int main(int argc, char** argv) {
     ));
 
   theTerm()->addAction([=]{
-    fmt::print("[{}] verify: count={}, expected={}\n", my_node, count, expected);
-    vtAssertExpr(count == expected);
+    fmt::print("[{}] verify: bcast_count={}, expected={}\n", my_node, bcast_count, expected);
+    vtAssertExpr(bcast_count == expected);
   });
 
   if (from_node == uninitialized_destination or from_node == my_node) {
