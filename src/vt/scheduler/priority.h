@@ -47,6 +47,9 @@
 
 #include "vt/config.h"
 
+#include <array>
+#include <utility>
+
 namespace vt { namespace sched {
 
 /*
@@ -123,8 +126,8 @@ struct Mask<N, M, L, R, fill, typename std::enable_if<N == R>::type> {
 };
 
 template <
-  PriorityType N,
-  PriorityType M,
+  PriorityType N = priority_num_bits,
+  PriorityType M = 0x0,
   PriorityType L = priority_num_levels,
   PriorityType R = priority_remainder
 >
@@ -145,6 +148,35 @@ template <
   PriorityType R = priority_remainder
 >
 struct LevelFillMask : Mask<N, M, L, R, true> { };
+
+using PriorityArrayType = std::array<PriorityType, sched::priority_num_levels>;
+
+/*
+ * Build the medium-level priority array for each level
+ */
+template <PriorityType... i>
+constexpr PriorityArrayType mediumArray(std::integer_sequence<PriorityType, i...>) {
+  return PriorityArrayType{{LevelMask<priority_num_bits, 0x0, i+1>::value...}};
+}
+
+template <PriorityType L = priority_num_levels>
+constexpr PriorityArrayType mediumArray() {
+  return mediumArray(std::make_integer_sequence<PriorityType, L>{});
+}
+
+/*
+ * Build the breadth-first priority array for each level
+ */
+
+template <PriorityType... i>
+constexpr PriorityArrayType breadthArray(std::integer_sequence<PriorityType, i...>) {
+  return PriorityArrayType{{LevelFillMask<priority_num_bits, 0x0, i+1>::value...}};
+}
+
+template <PriorityType L = priority_num_levels>
+constexpr PriorityArrayType breadthArray() {
+  return breadthArray(std::make_integer_sequence<PriorityType, L>{});
+}
 
 /*
  * Some names for priorities that could possibly be used with a 1-,2-,3-bit
@@ -188,5 +220,14 @@ struct LevelFillMask : Mask<N, M, L, R, true> { };
 #endif
 
 }} /* end namespace vt::sched */
+
+namespace vt {
+
+static constexpr sched::PriorityArrayType breadth_priority = sched::breadthArray<>();
+static constexpr sched::PriorityArrayType medium_priority  = sched::mediumArray<>();
+static constexpr PriorityType const max_priority           = breadth_priority[0];
+static constexpr PriorityType const default_priority       = sched::DefaultMask<>::value;
+
+} /* end namespace vt */
 
 #endif /*INCLUDED_VT_SCHEDULER_PRIORITY_H*/
