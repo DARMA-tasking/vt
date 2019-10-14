@@ -65,6 +65,8 @@ static constexpr BitCountType const
     group_num_bits = BitCounterType<GroupType>::value;
 static constexpr BitCountType const
     priority_num_bits = BitCounterType<PriorityType>::value;
+static constexpr BitCountType const
+    priority_level_num_bits = BitCounterType<PriorityLevelType>::value;
 
 }  // end namespace vt
 
