@@ -73,6 +73,12 @@ namespace vt { namespace sched {
 static constexpr PriorityType const priority_level_bits = 3;
 static constexpr PriorityType const priority_num_levels =
   priority_num_bits / priority_level_bits;
+static constexpr PriorityType const priority_midpoint =
+  (((1 << (priority_level_bits + 1)) - 1) >> 2);
+static constexpr PriorityType const priority_remainder =
+  priority_num_bits - priority_level_bits * priority_num_levels;
+
+// 111 1000 111 0000000001000       1000 111
 
 enum PriorityLevel {
   SystemLevel  = 0,
@@ -81,19 +87,81 @@ enum PriorityLevel {
 };
 
 /*
+ * Recursively, at compile-time, build the proper mask for the default priority
+ * for depth-first expansion
+ *
+ */
+
+template <
+  PriorityType N, PriorityType M, PriorityType L, PriorityType R,
+  bool F, typename = void
+>
+struct Mask {
+  static constexpr PriorityType const offset = N - priority_level_bits;
+  static constexpr PriorityType const M_p    = M | (priority_midpoint << (offset-1));
+  static constexpr PriorityType const value  = Mask<offset, M_p, L-1, R, F>::value;
+};
+
+template <PriorityType N, PriorityType M, PriorityType R>
+struct Mask<N, M, 0, R, true, typename std::enable_if<N != R>::type> {
+  static constexpr PriorityType const offset = N - priority_level_bits;
+  static constexpr PriorityType const M_p    = M | (((1 << (priority_level_bits + 1)) - 1) << (offset-1));
+  static constexpr PriorityType const value  = Mask<offset, M_p, 0, R, true>::value;
+};
+
+template <PriorityType N, PriorityType M, PriorityType R>
+struct Mask<N, M, 0, R, false, typename std::enable_if<N != R>::type> {
+  static constexpr PriorityType const offset = N - priority_level_bits;
+  static constexpr PriorityType const value  = Mask<offset, M, 0, R, false>::value;
+};
+
+
+template <PriorityType N, PriorityType M, PriorityType L, PriorityType R, bool fill>
+struct Mask<N, M, L, R, fill, typename std::enable_if<N == R>::type> {
+  static constexpr PriorityType const value = M << R;
+};
+
+template <
+  PriorityType N,
+  PriorityType M,
+  PriorityType L = priority_num_levels,
+  PriorityType R = priority_remainder
+>
+struct DefaultMask : Mask<N, M, L, R, false> { };
+
+template <
+  PriorityType N,
+  PriorityType M,
+  PriorityType L,
+  PriorityType R = priority_remainder
+>
+struct LevelMask : Mask<N, M, L, R, false> { };
+
+template <
+  PriorityType N,
+  PriorityType M,
+  PriorityType L,
+  PriorityType R = priority_remainder
+>
+struct LevelFillMask : Mask<N, M, L, R, true> { };
+
+/*
  * Some names for priorities that could possibly be used with a 3-bit layout per
  * level
  */
 
 enum Priority {
-  Highest    = 0,
-  High       = 1,
-  MediumHigh = 2,
-  Medium     = 3,
-  MediumLow  = 4,
-  Low        = 5,
-  Lower      = 6,
-  Lowest     = 7
+  // Breadth-first execution is all bits set
+  BreadthFirst = 7,//111
+
+  // Depth-first execution priority hierarchy
+  Highest      = 6,//110
+  High         = 5,//101
+  MediumHigh   = 4,//100
+  Medium       = 3,//011
+  MediumLow    = 2,//010
+  Low          = 1,//001
+  Lowest       = 0 //000
 };
 
 }} /* end namespace vt::sched */
