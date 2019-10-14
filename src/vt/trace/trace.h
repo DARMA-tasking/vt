@@ -141,7 +141,7 @@ struct Trace {
   bool checkEnabled();
 
   void flushTracesFile();
-  void writeTracesFile();
+  void writeTracesFile(int flush = Z_FINISH);
   void cleanupTracesFile();
   void writeLogFile(gzFile file, TraceContainerType const& traces);
   bool inIdleEvent() const;

@@ -45,18 +45,15 @@
 #if !defined INCLUDED_TRACE_TRACE_LOG_H
 #define INCLUDED_TRACE_TRACE_LOG_H
 
-#include "vt/config.h"
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_constants.h"
 
 #include <cstdint>
 #include <vector>
-#include <memory>
 
 namespace vt { namespace trace {
 
 struct Log {
-  using LogPtrType         = std::shared_ptr<Log>;
   using TraceConstantsType = eTraceConstants;
   using UserDataType       = int32_t;
 
@@ -126,6 +123,9 @@ struct Log {
       msg_len(in_msg_len), node(in_node), idx1(in_idx1), idx2(in_idx2),
       idx3(in_idx3), idx4(in_idx4)
   { }
+
+  int getSizeBytes() const;
+
 };
 
 }} //end namespace vt::trace

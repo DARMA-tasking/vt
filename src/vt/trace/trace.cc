@@ -531,6 +531,9 @@ void Trace::enableTracing() { enabled_ = true; }
 void Trace::disableTracing() { enabled_ = false; }
 
 void Trace::cleanupTracesFile() {
+  //
+  // 2019/10: This function is only called from the destructor of Trace.
+  //
   if (checkEnabled()) {
     auto const& node = theContext()->getNode();
     writeTracesFile();
@@ -548,19 +551,37 @@ void Trace::flushTracesFile() {
   }
   else {
   	// Something is wrong
-  	vtAssert(false, "Trying to dump stats when VT runtime is deallocated?");
+  	vtAssert(false, "Trying to flush traces when VT runtime is deallocated?");
   }
   //
   // Non-synchronized call to output the trace files 
   //
-  writeTracesFile();
+  // TODO Ask JL whether he prefers Z_FINISH or Z_FULL_FLUSH
+  //
+  writeTracesFile(Z_FULL_FLUSH);
   //
   // traces_.size() - cur_ 
   // yields how many traces have been added since latest flush
   //
+  // https://www.zlib.net/manual.html
+  //
+  // gzflush: Flushes all pending output into the compressed file. 
+  // If the flush parameter is Z_FINISH, the remaining data is written and 
+  // the gzip stream is completed in the output.
+  // gzflush should be called only when strictly necessary because 
+  // it will degrade compression if called too often.
+  // https://refspecs.linuxbase.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/zlib-gzflush-1.html
+  //
+  // Z_SYNC_FLUSH is intended to ensure that the compressed data contains all
+  // the data compressed so far, and allows a decompressor to reconstruct all of
+  // the input data. 
+  // Z_FULL_FLUSH allows decompression to restart from this
+  // point if the previous compressed data has been lost or damaged. Flushing is
+  // likely to degrade the performance of the compression system, and should
+  // only be used where necessary.
 }
 
-void Trace::writeTracesFile() {
+void Trace::writeTracesFile(int flush) {
   auto const node = theContext()->getNode();
 
   debug_print(
@@ -578,7 +599,7 @@ void Trace::writeTracesFile() {
       file_is_open_ = true;
     }
     writeLogFile(log_file_, traces_);
-    gzflush(log_file_, Z_FINISH);
+    gzflush(log_file_, flush);
   }
 
   if (node == designated_root_node and not wrote_sts_file_) {
