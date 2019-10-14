@@ -60,6 +60,11 @@ option(vt_lb_enabled "Build VT with load balancing enabled" OFF)
 option(vt_trace_enabled "Build VT with trace enabled" OFF)
 option(vt_priorities_enabled "Build VT with message priorities enabled" ON)
 
+set(
+  vt_priority_bits_per_level 3 CACHE
+  STRING "Number of bits to use per VT priority level"
+)
+
 if (${vt_detector_disabled})
   message(STATUS "Building VT with detector disabled")
   set(vt_feature_cmake_detector "0")
@@ -86,11 +91,17 @@ endif()
 
 if (${vt_priorities_enabled})
   message(STATUS "Building VT with priorities enabled")
+  message(
+    STATUS
+    "Building VT with priority bits per level: ${vt_priority_bits_per_level}"
+  )
   set(vt_feature_cmake_priorities "1")
 else()
   message(STATUS "Building VT with priorities disabled")
   set(vt_feature_cmake_priorities "0")
 endif()
+
+set(vt_feature_cmake_priority_bits_level "${vt_priority_bits_per_level}")
 
 if (${vt_bit_check_overflow})
   message(STATUS "Building VT with bit check overflow")
