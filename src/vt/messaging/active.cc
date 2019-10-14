@@ -51,6 +51,7 @@
 #include "vt/group/group_manager_active_attorney.h"
 #include "vt/runnable/general.h"
 #include "vt/timing/timing.h"
+#include "vt/scheduler/priority.h"
 
 namespace vt { namespace messaging {
 
@@ -371,10 +372,17 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   return SendDataRetType{event_id,send_tag};
 }
 
+bool ActiveMessenger::recvDataMsgPriority(
+  PriorityType priority, TagType const& tag, NodeType const& node,
+  RDMA_ContinuationDeleteType next
+) {
+  return recvDataMsg(priority, tag, node, true, next);
+}
+
 bool ActiveMessenger::recvDataMsg(
   TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next
 ) {
-  return recvDataMsg(tag, node, true, next);
+  return recvDataMsg(default_priority, tag, node, true, next);
 }
 
 bool ActiveMessenger::tryProcessDataMsgRecv() {
@@ -383,8 +391,9 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 
   for (; iter != pending_recvs_.end(); ++iter) {
     auto const done = recvDataMsgBuffer(
-      iter->second.user_buf, iter->first, iter->second.recv_node,
-      false, iter->second.dealloc_user_buf, iter->second.cont
+      iter->second.user_buf, iter->second.priority, iter->first,
+      iter->second.recv_node, false, iter->second.dealloc_user_buf,
+      iter->second.cont
     );
     if (done) {
       erase = true;
@@ -401,8 +410,16 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
-  void* const user_buf, TagType const& tag, NodeType const& node,
-  bool const& enqueue, ActionType dealloc_user_buf,
+  void* const user_buf, TagType const& tag,
+  NodeType const& node, bool const& enqueue, ActionType dealloc,
+  RDMA_ContinuationDeleteType next
+) {
+  return recvDataMsgBuffer(user_buf, no_priority, tag, node, enqueue, dealloc, next);
+}
+
+bool ActiveMessenger::recvDataMsgBuffer(
+  void* const user_buf, PriorityType priority, TagType const& tag,
+  NodeType const& node, bool const& enqueue, ActionType dealloc_user_buf,
   RDMA_ContinuationDeleteType next
 ) {
   if (not enqueue) {
@@ -459,7 +476,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
       }
 
       InProgressDataIRecv recv_holder{
-        buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next
+        buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next,
+        priority
       };
       in_progress_data_irecv.emplace(std::move(recv_holder));
       return true;
@@ -469,14 +487,16 @@ bool ActiveMessenger::recvDataMsgBuffer(
   } else {
     debug_print(
       active, node,
-      "recvDataMsgBuffer: node={}, tag={}, enqueue={}\n",
-      node, tag, print_bool(enqueue)
+      "recvDataMsgBuffer: node={}, tag={}, enqueue={}, priority={:x}\n",
+      node, tag, print_bool(enqueue), priority
     );
 
     pending_recvs_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(tag),
-      std::forward_as_tuple(PendingRecvType{user_buf,next,dealloc_user_buf,node})
+      std::forward_as_tuple(
+        PendingRecvType{user_buf,next,dealloc_user_buf,node,priority}
+      )
     );
     return false;
   }
@@ -518,15 +538,17 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
       next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
       theTerm()->consume(term::any_epoch_sentinel,1,sender);
     };
-    theSched()->enqueue(run);
+    theSched()->enqueue(irecv.priority, run);
   }
 }
 
 bool ActiveMessenger::recvDataMsg(
-  TagType const& tag, NodeType const& recv_node, bool const& enqueue,
-  RDMA_ContinuationDeleteType next
+  PriorityType priority, TagType const& tag, NodeType const& recv_node,
+  bool const& enqueue, RDMA_ContinuationDeleteType next
 ) {
-  return recvDataMsgBuffer(nullptr, tag, recv_node, enqueue, nullptr, next);
+  return recvDataMsgBuffer(
+    nullptr, priority, tag, recv_node, enqueue, nullptr, next
+  );
 }
 
 NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
@@ -545,7 +567,7 @@ void ActiveMessenger::scheduleActiveMsg(
 
   // Enqueue the message for processing
   auto run = [=]{ processActiveMsg(base, from, size, insert); };
-  theSched()->enqueue(run);
+  theSched()->enqueue(base, run);
 }
 
 bool ActiveMessenger::processActiveMsg(
@@ -644,6 +666,11 @@ bool ActiveMessenger::deliverActiveMsg(
     current_node_context_     = from_node;
     current_epoch_context_    = cur_epoch;
 
+    #if backend_check_enabled(priorities)
+      current_priority_context_       = envelopeGetPriority(msg->env);
+      current_priority_level_context_ = envelopeGetPriorityLevel(msg->env);
+    #endif
+
     #if backend_check_enabled(trace_enabled)
       current_trace_context_  = envelopeGetTraceEvent(msg->env);
     #endif
@@ -661,6 +688,11 @@ bool ActiveMessenger::deliverActiveMsg(
 
     #if backend_check_enabled(trace_enabled)
       current_trace_context_  = trace::no_trace_event;
+    #endif
+
+    #if backend_check_enabled(priorities)
+      current_priority_context_       = no_priority;
+      current_priority_level_context_ = no_priority_level;
     #endif
 
     if (has_epoch) {
@@ -928,6 +960,14 @@ HandlerType ActiveMessenger::getCurrentHandler() const {
 
 EpochType ActiveMessenger::getCurrentEpoch() const {
   return current_epoch_context_;
+}
+
+PriorityType ActiveMessenger::getCurrentPriority() const {
+  return current_priority_context_;
+}
+
+PriorityLevelType ActiveMessenger::getCurrentPriorityLevel() const {
+  return current_priority_level_context_;
 }
 
 }} // end namespace vt::messaging
