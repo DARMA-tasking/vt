@@ -111,6 +111,11 @@ template <typename Env>
 inline void envelopeSetPriority(Env& env, PriorityType priority) {
   reinterpret_cast<Envelope*>(&env)->priority = priority;
 }
+
+template <typename Env>
+inline void envelopeSetPriorityLevel(Env& env, PriorityType priority_level) {
+  reinterpret_cast<Envelope*>(&env)->priority_level = priority_level;
+}
 #endif
 
 #if backend_check_enabled(trace_enabled)
