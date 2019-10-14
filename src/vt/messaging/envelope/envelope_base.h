@@ -62,7 +62,8 @@ struct ActiveEnvelope {
   GroupType group       : group_num_bits;
 
 # if backend_check_enabled(priorities)
-  PriorityType priority : priority_num_bits;
+  PriorityLevelType priority_level : priority_level_num_bits;
+  PriorityType      priority       : priority_num_bits;
 # endif
 
 # if backend_check_enabled(trace_enabled)

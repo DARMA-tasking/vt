@@ -68,6 +68,9 @@ inline RefType envelopeGetRef(Env& env);
 #if backend_check_enabled(priorities)
 template <typename Env>
 inline PriorityType envelopeGetPriority(Env& env);
+
+template <typename Env>
+inline PriorityType envelopeGetPriorityLevel(Env& env);
 #endif
 
 #if backend_check_enabled(trace_enabled)
