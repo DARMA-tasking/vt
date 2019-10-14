@@ -70,7 +70,8 @@ namespace vt { namespace sched {
  *
  */
 
-static constexpr PriorityType const priority_level_bits = 3;
+static constexpr PriorityType const priority_level_bits =
+  vt_feature_cmake_priority_bits_level;
 static constexpr PriorityType const priority_num_levels =
   priority_num_bits / priority_level_bits;
 static constexpr PriorityType const priority_midpoint =
