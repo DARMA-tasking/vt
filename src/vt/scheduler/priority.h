@@ -159,7 +159,7 @@ struct LevelFillMask : Mask<N, M, L, R, true> { };
     // Depth-first execution priority hierarchy
     DepthFirst   = 0,//0
   };
-#elsif vt_feature_cmake_priority_bits_level == 2
+#elif vt_feature_cmake_priority_bits_level == 2
   enum Priority {
     // Breadth-first execution is all bits set
     BreadthFirst = 3,//11
@@ -169,7 +169,7 @@ struct LevelFillMask : Mask<N, M, L, R, true> { };
     Medium       = 1,//01
     Low          = 0 //00
   };
-#elsif vt_feature_cmake_priority_bits_level == 3
+#elif vt_feature_cmake_priority_bits_level == 3
   enum Priority {
     // Breadth-first execution is all bits set
     BreadthFirst = 7,//111
