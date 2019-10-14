@@ -69,7 +69,7 @@ struct PriorityUnit {
 
 private:
   UnitActionType work_  = nullptr;
-  PriorityType priority_ = default_priority;
+  PriorityType priority_ = no_priority;
 };
 
 }} /* end namespace vt::sched */
