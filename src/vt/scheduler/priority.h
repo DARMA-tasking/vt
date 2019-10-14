@@ -225,7 +225,10 @@ namespace vt {
 
 static constexpr sched::PriorityArrayType breadth_priority = sched::breadthArray<>();
 static constexpr sched::PriorityArrayType medium_priority  = sched::mediumArray<>();
-static constexpr PriorityType const max_priority           = breadth_priority[0];
+static constexpr PriorityType const sys_max_priority       = breadth_priority[0];
+static constexpr PriorityType const sys_min_priority       = 0;
+static constexpr PriorityType const max_priority           = breadth_priority[1];
+static constexpr PriorityType const min_priority           = medium_priority[0];
 static constexpr PriorityType const default_priority       = sched::DefaultMask<>::value;
 
 } /* end namespace vt */
