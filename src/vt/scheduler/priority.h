@@ -147,8 +147,8 @@ template <
 struct LevelFillMask : Mask<N, M, L, R, true> { };
 
 /*
- * Some names for priorities that could possibly be used with a 3-bit layout per
- * level
+ * Some names for priorities that could possibly be used with a 1-,2-,3-bit
+ * layout per level
  */
 
 #if vt_feature_cmake_priority_bits_level == 1
