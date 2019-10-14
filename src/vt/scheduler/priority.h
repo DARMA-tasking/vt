@@ -151,19 +151,41 @@ struct LevelFillMask : Mask<N, M, L, R, true> { };
  * level
  */
 
-enum Priority {
-  // Breadth-first execution is all bits set
-  BreadthFirst = 7,//111
+#if vt_feature_cmake_priority_bits_level == 1
+  enum Priority {
+    // Breadth-first execution is all bits set
+    BreadthFirst = 1,//1
 
-  // Depth-first execution priority hierarchy
-  Highest      = 6,//110
-  High         = 5,//101
-  MediumHigh   = 4,//100
-  Medium       = 3,//011
-  MediumLow    = 2,//010
-  Low          = 1,//001
-  Lowest       = 0 //000
-};
+    // Depth-first execution priority hierarchy
+    DepthFirst   = 0,//0
+  };
+#elsif vt_feature_cmake_priority_bits_level == 2
+  enum Priority {
+    // Breadth-first execution is all bits set
+    BreadthFirst = 3,//11
+
+    // Depth-first execution priority hierarchy
+    High         = 2,//10
+    Medium       = 1,//01
+    Low          = 0 //00
+  };
+#elsif vt_feature_cmake_priority_bits_level == 3
+  enum Priority {
+    // Breadth-first execution is all bits set
+    BreadthFirst = 7,//111
+
+    // Depth-first execution priority hierarchy
+    Highest      = 6,//110
+    High         = 5,//101
+    MediumHigh   = 4,//100
+    Medium       = 3,//011
+    MediumLow    = 2,//010
+    Low          = 1,//001
+    Lowest       = 0 //000
+  };
+#else
+  // No enum, priority bits must be set without an alias from the system
+#endif
 
 }} /* end namespace vt::sched */
 
