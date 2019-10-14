@@ -154,6 +154,7 @@ using PriorityArrayType = std::array<PriorityType, sched::priority_num_levels>;
 /*
  * Build the medium-level priority array for each level
  */
+
 template <PriorityType... i>
 constexpr PriorityArrayType mediumArray(std::integer_sequence<PriorityType, i...>) {
   return PriorityArrayType{{LevelMask<priority_num_bits, 0x0, i+1>::value...}};
