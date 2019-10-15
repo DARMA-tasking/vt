@@ -63,7 +63,9 @@ namespace vt { namespace sched {
   PriorityType const& field, PriorityType level
 ) {
   auto const offset = level * priority_level_bits;
-  return BitPackerType::getFieldDynamic<PriorityType>(offset, priority_level_bits, field);
+  return BitPackerType::getFieldDynamic<PriorityType>(
+    offset, priority_level_bits, field
+  );
 }
 
 }} /* end namespace vt::sched */
