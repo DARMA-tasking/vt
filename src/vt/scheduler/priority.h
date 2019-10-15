@@ -81,6 +81,8 @@ static constexpr PriorityType const priority_midpoint =
   (((1 << (priority_level_bits + 1)) - 1) >> 2);
 static constexpr PriorityType const priority_remainder =
   priority_num_bits - priority_level_bits * priority_num_levels;
+static constexpr PriorityType const priority_all_set =
+  ((1 << (priority_level_bits + 1)) - 1) >> 1;
 
 // 111 1000 111 0000000001000       1000 111
 
