@@ -31,6 +31,8 @@ RUN \
  export DETECTOR=$PWD/detector && \
  git clone -b develop --depth 1 https://github.com/DARMA-tasking/vt.git && \
  export VT=$PWD/vt && \
+ echo $SOURCE_COMMIT && \
+ cd $VT && git checkout $SOURCE_COMMIT && \
  cd $GTEST && \
  mkdir build && \
  cd build && \
