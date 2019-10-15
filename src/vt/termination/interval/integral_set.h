@@ -66,7 +66,7 @@ template <
   typename DomainT,
   DomainT sentinel,
   template <class>                 class AllocatorT,
-  template <class T, T>            class IntervalT,
+  template <class U, U>            class IntervalT,
   template <class, class, class>   class OrderedSetT,
   template <class>                 class IntervalCompareT
 >
