@@ -43,6 +43,10 @@ else()
   set(ASM_EXT "sysv_elf_gas.S")  # Linux/Unix
 endif()
 
+if (CPU_ARCH MATCHES "unknown")
+  set(CPU_ARCH "i386")
+endif()
+
 set(
   ASM_SOURCES
   "${PROJECT_SOURCE_DIR}/context/asm/make_${CPU_ARCH}_${ASM_EXT}"
