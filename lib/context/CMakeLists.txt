@@ -45,6 +45,7 @@ endif()
 
 if (CPU_ARCH MATCHES "unknown")
   set(CPU_ARCH "i386")
+  set(ASM_EXT "sysv_macho_gas.S") # OSX
 endif()
 
 set(
