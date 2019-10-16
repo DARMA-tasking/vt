@@ -3,11 +3,17 @@ MAINTAINER Jonathan Lifflander <jliffla@sandia.gov>
 
 WORKDIR /usr/src
 
-RUN \
+RUN /bin/bash -c 'source $HOME/.bashrc && \
  source /usr/share/spack/share/spack/setup-env.sh && \
  spack env activate clang-mpich && \
  export CC=clang && \
  export CXX=clang++ && \
+ echo $HTTP_PROXY && \
+ echo $HTTPS_PROXY && \
+ echo $ALL_PROXY && \
+ echo $http_proxy && \
+ echo $https_proxy && \
+ echo $all_proxy && \
  if [ -d "detector" ]; then rm -Rf detector; fi && \
  if [ -d "checkpoint" ]; then rm -Rf checkpoint; fi && \
  if [ -d "vt" ]; then rm -Rf vt; fi && \
@@ -36,4 +42,4 @@ RUN \
  cd build && \
  cmake -DCMAKE_EXE_LINKER_FLAGS=-lexecinfo -DCMAKE_BUILD_TYPE=release -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -Ddetector_DIR=$DETECTOR/install -Dcheckpoint_DIR=$CHECKPOINT/install  ../ && \
  make -j1 && \
- make test
+ make test'
