@@ -102,6 +102,10 @@ void Trace::setupNames(
     vtAssert(false, "Must have current directory");
   }
 
+  //
+  //--- If vt_trace_dir is empty, it uses a "default" value.
+  //--- Nothing has been specified (nor CLI nor 3rd party).
+  //
   if (ArgType::vt_trace_dir != "") {
     full_dir_name_ = ArgType::vt_trace_dir;
   } else {
@@ -124,6 +128,11 @@ void Trace::setupNames(
   auto const prog_name = pc[pc.size() - 1];
 
   auto const node_str = "." + std::to_string(node) + ".log.gz";
+
+  //
+  //--- If vt_trace_file is empty, it uses a "default" value.
+  //--- Nothing has been specified (nor CLI nor 3rd party).
+  //
   if (ArgType::vt_trace_file != "") {
     full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
     full_sts_name_ = full_dir_name_ + ArgType::vt_trace_file + ".sts";
@@ -131,6 +140,7 @@ void Trace::setupNames(
     full_trace_name_ = full_dir_name_ + trace_name;
     full_sts_name_ = full_dir_name_ + prog_name + ".sts";
   }
+
 }
 
 /*virtual*/ Trace::~Trace() { cleanupTracesFile(); }
