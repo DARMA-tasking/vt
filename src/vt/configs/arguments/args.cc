@@ -432,7 +432,7 @@ template <typename T>
 void PrintOn<T>::output() {
 
   T setValue = option_->getValue();
-  if (setValue == getNull<T>())
+  if (setValue == option_->getDefaultValue())
     return;
 
   if ((condition_) && (!condition_()))
@@ -471,6 +471,9 @@ PrintOnOff<T>::PrintOnOff(
 template <typename T>
 void PrintOnOff<T>::output() {
 
+  if ((condition_) && (!condition_()))
+    return;
+
   auto green = debug::green();
   auto red = debug::red();
   auto reset = debug::reset();
@@ -483,11 +486,9 @@ void PrintOnOff<T>::output() {
 
   std::string cli_name = std::string("--") + option_->getName();
   T setValue = option_->getValue();
+  const T defaultValue = option_->getDefaultValue();
 
-  if ((condition_) && (!condition_()))
-    return;
-
-  if (setValue != getNull<T>()) {
+  if (setValue != defaultValue) {
     auto f_on = fmt::format(msg_on_, setValue);
     auto f9 = fmt::format(
       "{}Option:{} flag {}{}{} on: {}{}\n", green, reset, magenta, cli_name,
@@ -654,11 +655,11 @@ std::string Anchor<T>::stringifyContext() const {
 
 
 template <typename T>
-std::string Anchor<T>::stringifyDefault() const {
-  std::string val;
+const T Anchor<T>::getDefaultValue() const {
+  T val;
   for (auto item : specifications_) {
     if (item.first == ContextEnum::dFault) {
-      val = getDisplayValue<T>(item.second.getValue());
+      val = item.second.getValue();
       break;
     }
   }
@@ -667,13 +668,14 @@ std::string Anchor<T>::stringifyDefault() const {
 
 
 template <typename T>
+std::string Anchor<T>::stringifyDefault() const {
+  return getDisplayValue<T>( getDefaultValue() );
+}
+
+
+template <typename T>
 void Anchor<T>::resetToDefault() {
-  for (auto item : specifications_) {
-    if (item.first == ContextEnum::dFault) {
-      value_ = item.second.getValue();
-      break;
-    }
-  }
+  value_ = getDefaultValue();
 }
 
 

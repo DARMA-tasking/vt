@@ -70,31 +70,6 @@ std::string getDisplayValue<std::string>(const std::string& val) {
   return res;
 }
 
-template <typename T>
-T getNull() {
-  return {};
-}
-
-template <>
-bool getNull<bool>() {
-  return false;
-}
-
-template <>
-int getNull<int>() {
-  return 0;
-}
-
-template <>
-long long getNull<long long>() {
-  return 0;
-}
-
-template <>
-std::string getNull<std::string>() {
-  return std::string("");
-}
-
 
 struct Printer {
   public:

@@ -323,6 +323,11 @@ struct Anchor : public AnchorBase {
   ///
   void setHighestPrecedence(const ContextEnum& origin);
 
+  /// \brief Returns the default value for the anchor
+  ///
+  /// \returns Default value of the anchor
+  const T getDefaultValue() const;
+
   /// \brief Returns the value for the current instance
   ///
   /// \returns Value of the current instance
