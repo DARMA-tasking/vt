@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
   googletest \
   libmpich-dev \
   wget \
-  gcc-7 \
+  gcc-5 \
   zlib1g \
   zlib1g-dev \
   libopenmpi-dev
