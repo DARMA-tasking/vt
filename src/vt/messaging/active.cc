@@ -613,76 +613,102 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
     NodeType const sender = stat.MPI_SOURCE;
 
-    MPI_Recv(
+    MPI_Request req;
+    MPI_Irecv(
       buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
-      theContext()->getComm(), MPI_STATUS_IGNORE
+      theContext()->getComm(), &req
     );
 
-    auto msg = reinterpret_cast<MessageType>(buf);
-    messageConvertToShared(msg);
-    auto base = promoteMsgOwner(msg);
-
-    auto const is_term = envelopeIsTerm(msg->env);
-    auto const is_put = envelopeIsPut(msg->env);
-    bool put_finished = false;
-
-    if (!is_term || backend_check_enabled(print_term_msgs)) {
-      debug_print(
-        active, node,
-        "tryProcessIncoming: msg_size={}, sender={}, is_put={}, is_bcast={}, "
-        "handler={}\n",
-        num_probe_bytes, sender, print_bool(is_put),
-        print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
-      );
-    }
-
-    CountType msg_bytes = num_probe_bytes;
-
-    if (is_put) {
-      auto const put_tag = envelopeGetPutTag(msg->env);
-      if (put_tag == PutPackedTag) {
-        auto const put_size = envelopeGetPutSize(msg->env);
-        auto const msg_size = num_probe_bytes - put_size;
-        char* put_ptr = buf + msg_size;
-        msg_bytes = msg_size;
-
-        if (!is_term || backend_check_enabled(print_term_msgs)) {
-          debug_print(
-            active, node,
-            "tryProcessIncoming: packed put: ptr={}, msg_size={}, put_size={}\n",
-            put_ptr, msg_size, put_size
-          );
-        }
-
-        envelopeSetPutPtrOnly(msg->env, put_ptr);
-        put_finished = true;
-      } else {
-        /*bool const put_delivered = */recvDataMsg(
-          put_tag, sender,
-          [=](RDMA_GetType ptr, ActionType deleter){
-            envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-            handleActiveMsg(base, sender, num_probe_bytes, true);
-          }
-        );
-      }
-    }
-
-    if (!is_put || put_finished) {
-      handleActiveMsg(base, sender, msg_bytes, true);
-    }
-
+    InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
+    in_progress_irecv.emplace_back(std::move(recv_holder));
     return true;
   } else {
     return false;
   }
 }
 
+void ActiveMessenger::finishPendingAsyncRecv(InProgressIRecv irecv) {
+  auto buf = irecv.buf;
+  auto num_probe_bytes = irecv.probe_bytes;
+  auto sender = irecv.sender;
+
+  auto msg = reinterpret_cast<MessageType>(buf);
+  messageConvertToShared(msg);
+  auto base = promoteMsgOwner(msg);
+
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_put = envelopeIsPut(msg->env);
+  bool put_finished = false;
+
+  if (!is_term || backend_check_enabled(print_term_msgs)) {
+    debug_print(
+      active, node,
+      "tryProcessIncoming: msg_size={}, sender={}, is_put={}, is_bcast={}, "
+      "handler={}\n",
+      num_probe_bytes, sender, print_bool(is_put),
+      print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
+    );
+  }
+
+  CountType msg_bytes = num_probe_bytes;
+
+  if (is_put) {
+    auto const put_tag = envelopeGetPutTag(msg->env);
+    if (put_tag == PutPackedTag) {
+      auto const put_size = envelopeGetPutSize(msg->env);
+      auto const msg_size = num_probe_bytes - put_size;
+      char* put_ptr = buf + msg_size;
+      msg_bytes = msg_size;
+
+      if (!is_term || backend_check_enabled(print_term_msgs)) {
+	debug_print(
+	  active, node,
+          "tryProcessIncoming: packed put: ptr={}, msg_size={}, put_size={}\n",
+	  put_ptr, msg_size, put_size
+	);
+      }
+
+      envelopeSetPutPtrOnly(msg->env, put_ptr);
+      put_finished = true;
+    } else {
+      /*bool const put_delivered = */recvDataMsg(
+        put_tag, sender,
+        [=](RDMA_GetType ptr, ActionType deleter){
+          envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
+          handleActiveMsg(base, sender, num_probe_bytes, true);
+        }
+     );
+    }
+  }
+
+  if (!is_put || put_finished) {
+    handleActiveMsg(base, sender, msg_bytes, true);
+  }
+}
+
+bool ActiveMessenger::testPendingAsyncRecv() {
+  bool processed = false;
+  for (auto iter = in_progress_irecv.begin(); iter != in_progress_irecv.end(); ++iter) {
+    int flag = 0;
+    MPI_Status stat;
+    MPI_Test(&(iter->req), &flag, &stat);
+    if (flag == 1) {
+      auto elm = std::move(*iter);
+      finishPendingAsyncRecv(std::move(elm));
+      iter = in_progress_irecv.erase(iter);
+      processed = true;
+    }
+  }
+  return processed;
+}
+
 bool ActiveMessenger::scheduler() {
   bool const processed = tryProcessIncomingMessage();
   bool const processed_data_msg = processDataMsgRecv();
   processMaybeReadyHanTag();
+  bool const received_active_msg = testPendingAsyncRecv();
 
-  return processed or processed_data_msg;
+  return processed or processed_data_msg or received_active_msg;
 }
 
 bool ActiveMessenger::isLocalTerm() {
