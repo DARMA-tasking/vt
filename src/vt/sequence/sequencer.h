@@ -49,7 +49,6 @@
 #include "vt/messaging/message.h"
 #include "vt/messaging/active.h"
 #include "vt/termination/termination.h"
-#include "vt/utils/container/concurrent_deque.h"
 
 #include "vt/sequence/sequencer_manager.h"
 #include "vt/sequence/seq_common.h"
@@ -193,8 +192,6 @@ private:
   SeqContextContainerType node_lookup_;
 
   SeqIDContainerType<SeqListType> seq_lookup_;
-
-  //util::container::ConcurrentDeque<ActionType> work_deque_;
 };
 
 template <typename Fn>
