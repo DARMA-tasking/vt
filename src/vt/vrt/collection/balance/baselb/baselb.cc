@@ -299,7 +299,6 @@ NodeType BaseLB::objGetNode(ObjIDType const id) const {
 }
 
 void BaseLB::finishedStats() {
-  theCollective()->barrier();
   this->runLB();
 }
 
