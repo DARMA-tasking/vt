@@ -54,6 +54,7 @@
 #include "vt/termination/term_window.h"
 #include "vt/termination/term_parent.h"
 #include "vt/termination/dijkstra-scholten/ds_headers.h"
+#include "vt/termination/tree/epoch_tree.h"
 #include "vt/epoch/epoch.h"
 #include "vt/activefn/activefn.h"
 #include "vt/collective/tree/tree.h"
@@ -80,6 +81,7 @@ struct TerminationDetector :
   using WindowType         = std::unique_ptr<EpochWindow>;
   using ArgType            = vt::arguments::ArgConfig;
   using ParentBagType      = EpochRelation::ParentBagType;
+  using EpochTree          = termination::tree::EpochTree;
 
   TerminationDetector();
   virtual ~TerminationDetector() {}
@@ -182,6 +184,9 @@ public:
 public:
   // TermTerminated interface
   TermStatusEnum testEpochTerminated(EpochType epoch) override;
+
+public:
+  std::shared_ptr<EpochTree> makeTree();
 
 private:
   bool propagateEpoch(TermStateType& state);
