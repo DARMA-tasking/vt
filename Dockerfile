@@ -14,32 +14,46 @@ RUN /bin/bash -c 'source $HOME/.bashrc && \
  echo $http_proxy && \
  echo $https_proxy && \
  echo $all_proxy && \
+ unset https_proxy &&  \
+ unset http_proxy && \
+ unset all_proxy && \
+ unset HTTPS_PROXY && \
+ unset HTTP_PROXY && \
+ unset ALL_PROXY && \
  if [ -d "detector" ]; then rm -Rf detector; fi && \
  if [ -d "checkpoint" ]; then rm -Rf checkpoint; fi && \
  if [ -d "vt" ]; then rm -Rf vt; fi && \
  git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git && \
  export CHECKPOINT=$PWD/checkpoint && \
+ export CHECKPOINT_BUILD=/usr/build/checkpoint && \
  git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git && \
  export DETECTOR=$PWD/detector && \
+ export DETECTOR_BUILD=/usr/build/detector && \
  git clone -b develop https://github.com/DARMA-tasking/vt.git && \
  export VT=$PWD/vt && \
+ export VT_BUILD=/usr/build/vt && \
  echo $SOURCE_COMMIT && \
  cd $VT && git checkout $SOURCE_COMMIT && \
- cd $DETECTOR && \
+ cd $DETECTOR_BUILD && \
  mkdir build && \
  cd build && \
- cmake -DCMAKE_INSTALL_PREFIX=$DETECTOR/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC   .. && \
+ cmake -DCMAKE_INSTALL_PREFIX=$DETECTOR_BUILD/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC $DETECTOR && \
  make && \
  make install && \
- cd $CHECKPOINT && \
+ cd $CHECKPOINT_BUILD && \
  mkdir build && \
  cd build && \
- cmake -DCMAKE_INSTALL_PREFIX=$CHECKPOINT/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -Ddetector_DIR=$DETECTOR/install  .. && \
+ cmake -DCMAKE_INSTALL_PREFIX=$CHECKPOINT_BUILD/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -Ddetector_DIR=$DETECTOR_BUILD/install $CHECKPOINT && \
  make && \
  make install && \
- cd $VT && \
+ cd $VT_BUILD && \
  mkdir build && \
  cd build && \
- cmake -DCMAKE_EXE_LINKER_FLAGS=-lexecinfo -DCMAKE_BUILD_TYPE=release -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -Ddetector_DIR=$DETECTOR/install -Dcheckpoint_DIR=$CHECKPOINT/install  ../ && \
- make -j1 && \
- make test'
+ cmake -GNinja -DCMAKE_INSTALL_PREFIX=$VT_BUILD/install -DCMAKE_EXE_LINKER_FLAGS=-lexecinfo -DCMAKE_BUILD_TYPE=release -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -Ddetector_DIR=$DETECTOR_BUILD/install -Dcheckpoint_DIR=$CHECKPOINT_BUILD/install $VT && \
+ ninja && \
+ ninja install && \
+ ninja test'
+
+COPY $DETECTOR_BUILD/ $DETECTOR_BUILD
+COPY $CHECKPOINT_BUILD/ $CHECKPOINT_BUILD
+COPY $VT_BUILD/ $VT_BUILD
