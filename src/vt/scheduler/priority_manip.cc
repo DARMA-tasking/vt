@@ -53,14 +53,14 @@
 namespace vt { namespace sched {
 
 /*static*/ void PriorityManip::setPriority(
-  PriorityType& field, PriorityType level, PriorityType priority
+  PriorityType& field, PriorityLevelType level, PriorityType priority
 ) {
   auto const offset = level * priority_level_bits;
   BitPackerType::setFieldDynamic(offset, priority_level_bits, field, priority);
 }
 
 /*static*/ PriorityType PriorityManip::getPriority(
-  PriorityType const& field, PriorityType level
+  PriorityType const& field, PriorityLevelType level
 ) {
   auto const offset = level * priority_level_bits;
   return BitPackerType::getFieldDynamic<PriorityType>(

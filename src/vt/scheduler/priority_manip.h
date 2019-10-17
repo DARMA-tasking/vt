@@ -51,8 +51,8 @@
 namespace vt { namespace sched {
 
 struct PriorityManip {
-  static void setPriority(PriorityType& field, PriorityType lvl, PriorityType p);
-  static PriorityType getPriority(PriorityType const& field, PriorityType lvl);
+  static void setPriority(PriorityType& field, PriorityLevelType lvl, PriorityType p);
+  static PriorityType getPriority(PriorityType const& field, PriorityLevelType lvl);
 };
 
 }} /* end namespace vt::sched */
