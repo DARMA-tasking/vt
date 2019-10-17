@@ -355,16 +355,30 @@ std::shared_ptr<TerminationDetector::EpochTree> TerminationDetector::makeTree() 
     // tree recursively by joining epoch nodes with their parent in the tree
     // data structure
 
-    // Collect all live epochs, both collective and rooted
+    // Collect live epochs, both collective and rooted (excluding rooted ones
+    // that did not originate on this node)
     std::unordered_map<EpochType, std::shared_ptr<EpochTree>> live_epochs;
     auto root = std::make_shared<EpochTree>(any_epoch_state_.getEpoch());
+    // Collect non-rooted epochs, just collective, excluding DS or other rooted
+    // epochs (info about them is localized on the creation node)
+    auto const this_node = theContext()->getNode();
     for (auto const& elm : epoch_state_) {
       if (not elm.second.isTerminated()) {
-        live_epochs[elm.first] = std::make_shared<EpochTree>(elm.first);
+        auto const ep = elm.first;
+        bool const rooted = epoch::EpochManip::isRooted(ep);
+        if (not rooted or (rooted and epoch::EpochManip::node(ep) == this_node)) {
+          live_epochs[ep] = std::make_shared<EpochTree>(ep);
+        }
       }
     }
     for (auto const& elm : term_) {
-      live_epochs[elm.first] = std::make_shared<EpochTree>(elm.first);
+      // Only include DS epochs that are created here. Other nodes do not have
+      // parentage data about the rooted, DS epochs
+      if (epoch::EpochManip::node(elm.first) == this_node) {
+        if (not elm.second.is_terminated) {
+          live_epochs[elm.first] = std::make_shared<EpochTree>(elm.first);
+        }
+      }
     }
 
     for (auto& live : live_epochs) {
