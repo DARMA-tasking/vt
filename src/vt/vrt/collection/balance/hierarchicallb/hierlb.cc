@@ -693,6 +693,7 @@ std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
 
 void HierarchicalLB::runLB() {
   setupTree(min_threshold);
+  theCollective()->barrier();
   loadStats();
 }
 
