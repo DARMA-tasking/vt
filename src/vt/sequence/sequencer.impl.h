@@ -265,19 +265,6 @@ TaggedSequencer<SeqTag, SeqTrigger>::getCurrentSeq() const {
 
 template <typename SeqTag, template <typename> class SeqTrigger>
 bool TaggedSequencer<SeqTag, SeqTrigger>::progress() {
-  // bool found = false;
-  // if (work_deque_.size() > 0) {
-  //   debug_print(
-  //     sequence, node, "Sequencer: scheduler executing size={}\n",
-  //     work_deque_.size()
-  //   );
-
-  //   auto work_unit = work_deque_.front();
-  //   work_deque_.popFront();
-  //   work_unit();
-  //   found = true;
-  // }
-  // return found;
   return false;
 }
 
