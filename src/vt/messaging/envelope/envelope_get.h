@@ -70,7 +70,7 @@ template <typename Env>
 inline PriorityType envelopeGetPriority(Env& env);
 
 template <typename Env>
-inline PriorityType envelopeGetPriorityLevel(Env& env);
+inline PriorityLevelType envelopeGetPriorityLevel(Env& env);
 #endif
 
 #if backend_check_enabled(trace_enabled)

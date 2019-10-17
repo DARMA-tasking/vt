@@ -77,7 +77,7 @@ inline PriorityType envelopeGetPriority(Env& env) {
 }
 
 template <typename Env>
-inline PriorityType envelopeGetPriorityLevel(Env& env) {
+inline PriorityLevelType envelopeGetPriorityLevel(Env& env) {
   return reinterpret_cast<Envelope*>(&env)->priority_level;
 }
 #endif

@@ -113,7 +113,7 @@ inline void envelopeSetPriority(Env& env, PriorityType priority) {
 }
 
 template <typename Env>
-inline void envelopeSetPriorityLevel(Env& env, PriorityType priority_level) {
+inline void envelopeSetPriorityLevel(Env& env, PriorityLevelType priority_level) {
   reinterpret_cast<Envelope*>(&env)->priority_level = priority_level;
 }
 #endif
