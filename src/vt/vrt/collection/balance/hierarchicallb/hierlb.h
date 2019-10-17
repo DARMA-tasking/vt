@@ -74,6 +74,7 @@ struct HierarchicalLB : BaseLB {
   using LoadType = double;
 
   HierarchicalLB() = default;
+  virtual ~HierarchicalLB() {}
 
   void init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy);
   void runLB() override;

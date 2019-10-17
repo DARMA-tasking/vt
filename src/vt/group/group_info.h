@@ -108,6 +108,8 @@ public:
     bool const in_is_in_group, bool make_mpi_group
   );
 
+  virtual ~Info() {}
+
   friend struct GroupManager;
 
   template <typename MsgT>

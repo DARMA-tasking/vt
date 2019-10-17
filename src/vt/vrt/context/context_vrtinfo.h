@@ -73,8 +73,9 @@ struct VirtualInfo {
     VirtualPtrType in_vrt_ptr, VirtualProxyType const& proxy_in, bool needs_lock
   );
 
-  VirtualInfo(VirtualInfo&&) = default;
   VirtualInfo(VirtualInfo const&) = delete;
+
+  VirtualInfo& operator=(VirtualInfo const&) = delete;
 
   template <typename VrtContextT, typename... Args>
   friend struct VirtualMakeClosure;

@@ -468,7 +468,7 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_trace", "Tracing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
     if (ArgType::vt_trace_file != "") {
-      auto f11 = fmt::format("Trace file name \"{}\"", theTrace->getTraceName());
+      auto f11 = fmt::format("Trace file name \"{}\"", ArgType::vt_trace_file);
       auto f12 = opt_on("--vt_trace_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     } else {

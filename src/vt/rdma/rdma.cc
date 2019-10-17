@@ -66,7 +66,7 @@ namespace vt { namespace rdma {
   theRDMA()->requestGetData(
     msg, msg->is_user_msg, msg->rdma_handle, msg_tag, msg->num_bytes,
     msg->offset, false, nullptr, recv_node,
-    [msg_tag,op_id,recv_node,handle](RDMA_GetType data){
+    [op_id,recv_node,handle](RDMA_GetType data){
       auto const& my_node = theContext()->getNode();
       debug_print(
         rdma, node, "data is ready\n"
@@ -110,7 +110,6 @@ namespace vt { namespace rdma {
   auto get_ptr = std::get<0>(direct);
   auto get_ptr_action = std::get<1>(direct);
 
-  auto const& this_node = theContext()->getNode();
   debug_print(
     rdma, node,
     "getRecvMsg: op={}, tag={}, bytes={}, get_ptr={}, "
@@ -130,7 +129,7 @@ namespace vt { namespace rdma {
     );
   } else {
     theMsg()->recvDataMsgBuffer(
-      get_ptr, msg->mpi_tag_to_recv, msg->send_back, true, [this_node,get_ptr_action]{
+      get_ptr, msg->mpi_tag_to_recv, msg->send_back, true, [get_ptr_action]{
         debug_print(
           rdma, node,
           "recv_data_msg_buffer finished\n"

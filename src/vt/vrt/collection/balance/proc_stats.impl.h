@@ -94,7 +94,7 @@ template <typename ColT>
     proc_migrate_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(temp_id),
-      std::forward_as_tuple([elm_proxy,col_elm](NodeType node){
+      std::forward_as_tuple([col_elm](NodeType node){
         col_elm->migrate(node);
       })
     );

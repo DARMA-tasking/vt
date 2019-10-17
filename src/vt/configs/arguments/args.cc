@@ -52,7 +52,6 @@
 
 namespace vt { namespace arguments {
 
-/*static*/ CLI::App    ArgConfig::app{"vt"};
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
 /*static*/ bool        ArgConfig::vt_auto_color         = false;
@@ -138,12 +137,15 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::parsed                = false;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
+  static CLI::App app{"vt"};
+
   if (parsed || argc == 0 || argv == nullptr) {
     return 0;
   }
 
+  // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
-  for (auto i = 0; i < argc; i++) {
+  for (auto i = argc-1; i > 0; i--) {
     args.push_back(std::string(argv[i]));
   }
 
@@ -450,23 +452,26 @@ namespace vt { namespace arguments {
    */
   std::vector<std::string> ret_args;
   std::vector<std::size_t> ret_idx;
+  int item = 0;
 
-  // Reverse iterate (CLI11 reverses the order when they modify the args)
-  for (auto iter = args.rbegin(); iter != args.rend(); ++iter) {
-    for (auto ii = 0; ii < argc; ii++) {
-      if (std::string(argv[ii]) == *iter) {
+  // Iterate forward (CLI11 reverses the order when it modifies the args)
+  for (auto&& skipped : args) {
+    for (auto ii = item; ii < argc; ii++) {
+      if (std::string(argv[ii]) == skipped) {
         ret_idx.push_back(ii);
+        item++;
         break;
       }
     }
-    ret_args.push_back(*iter);
+    ret_args.push_back(skipped);
   }
 
   // Use the saved index to setup the new_argv and new_argc
-  int new_argc = ret_args.size();
-  char** new_argv = new char*[new_argc];
-  for (auto ii = 0; ii < new_argc; ii++) {
-    new_argv[ii] = argv[ret_idx[ii]];
+  int new_argc = ret_args.size() + 1;
+  char** new_argv = new char*[new_argc + 1];
+  new_argv[0] = argv[0];
+  for (auto ii = 1; ii < new_argc; ii++) {
+    new_argv[ii] = argv[ret_idx[ii - 1]];
   }
 
   // Set them back with all vt arguments elided

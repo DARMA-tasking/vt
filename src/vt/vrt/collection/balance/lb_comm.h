@@ -61,19 +61,6 @@ enum struct CommCategory : int8_t {
   NodeToCollectionBcast = 6,
 };
 
-template <typename SerializerT, typename E>
-void serializeEnum(SerializerT& s, E& e) {
-  using EnumDataType = typename std::underlying_type<E>::type;
-  auto val = static_cast<EnumDataType>(e);
-  s | val;
-  e = static_cast<CommCategory>(val);
-}
-
-template <typename SerializerT>
-void serializeCommCategory(SerializerT& s, CommCategory& cat) {
-  serializeEnum<SerializerT, CommCategory>(s, cat);
-}
-
 inline NodeType objGetNode(ElementIDType const id) {
   return id & 0x0000000FFFFFFFF;
 }
@@ -150,8 +137,7 @@ struct LBCommKey {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | from_ | to_ | from_temp_ | to_temp_ | nfrom_ | nto_;
-    serializeCommCategory(s, cat_);
+    s | from_ | to_ | from_temp_ | to_temp_ | nfrom_ | nto_ | cat_;
   }
 };
 
