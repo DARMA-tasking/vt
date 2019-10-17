@@ -344,6 +344,69 @@ void TerminationDetector::freeEpoch(EpochType const& epoch) {
   }
 }
 
+std::shared_ptr<TerminationDetector::EpochTree> TerminationDetector::makeTree() {
+  // Start at the global epoch root;
+  if (any_epoch_state_.isTerminated()) {
+    return nullptr;
+  } else {
+    // We can't traverse the tree from root to leaves naturally because the tree
+    // is stored inverted, with children only have pointers to their parents
+    // (not vice versa). Thus, we will extract all children and then build the
+    // tree recursively by joining epoch nodes with their parent in the tree
+    // data structure
+
+    // Collect all live epochs, both collective and rooted
+    std::unordered_map<EpochType, std::shared_ptr<EpochTree>> live_epochs;
+    auto root = std::make_shared<EpochTree>(any_epoch_state_.getEpoch());
+    for (auto const& elm : epoch_state_) {
+      if (not elm.second.isTerminated()) {
+        live_epochs[elm.first] = std::make_shared<EpochTree>(elm.first);
+      }
+    }
+    for (auto const& elm : term_) {
+      live_epochs[elm.first] = std::make_shared<EpochTree>(elm.first);
+    }
+
+    for (auto& live : live_epochs) {
+      auto const ep = live.first;
+      if (isDS(ep)) {
+        // DS-epoch case
+        auto parents = getDSTerm(ep)->getParents();
+        if (parents.size() == 0) {
+          root->addChild(live.second);
+        } else {
+          for (auto&& p : parents) {
+            auto pt = live_epochs.find(p);
+            if (pt != live_epochs.end()) {
+              pt->second->addChild(live.second);
+            } else {
+              vtAssert(false, "Parent epoch has terminated before its child!");
+            }
+          }
+        }
+      } else {
+        // Wave-based epoch case
+        auto parents = epoch_state_.find(ep)->second.getParents();
+        if (parents.size() == 0) {
+          root->addChild(live.second);
+        } else {
+          for (auto&& p : parents) {
+            auto pt = live_epochs.find(p);
+            if (pt != live_epochs.end()) {
+              pt->second->addChild(live.second);
+            } else {
+              vtAssert(false, "Parent epoch has terminated before its child!");
+            }
+          }
+        }
+      }
+    }
+
+    return root;
+  }
+}
+
+
 bool TerminationDetector::propagateEpoch(TermStateType& state) {
   bool const& is_ready = state.readySubmitParent();
   bool const& is_root = isRoot();
