@@ -97,6 +97,23 @@ struct PendingRecv {
   { }
 };
 
+struct InProgressIRecv {
+  using CountType = int32_t;
+
+  InProgressIRecv(
+    char* in_buf, CountType in_probe_bytes, NodeType in_sender,
+    MPI_Request in_req
+  ) : buf(in_buf), probe_bytes(in_probe_bytes), sender(in_sender),
+      req(in_req)
+  { }
+  InProgressIRecv(InProgressIRecv&&) = default;
+
+  char* buf = nullptr;
+  CountType probe_bytes = 0;
+  NodeType sender = uninitialized_destination;
+  MPI_Request req;
+};
+
 struct BufferedActiveMsg {
   using MessageType = MsgSharedPtr<BaseMsgType>;
 
@@ -575,6 +592,10 @@ struct ActiveMessenger {
   }
 
 private:
+  bool testPendingAsyncRecv();
+  void finishPendingAsyncRecv(InProgressIRecv irecv);
+
+private:
   using EpochStackSizeType = typename EpochStackType::size_type;
 
   inline EpochStackSizeType epochPreludeHandler(EpochType const& epoch);
@@ -589,16 +610,17 @@ private:
     trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
   #endif
 
-  HandlerType current_handler_context_   = uninitialized_handler;
-  NodeType current_node_context_         = uninitialized_destination;
-  EpochType current_epoch_context_       = no_epoch;
-  EpochType global_epoch_                = no_epoch;
-  MaybeReadyType maybe_ready_tag_han_    = {};
-  ContWaitType pending_handler_msgs_     = {};
-  ContainerPendingType pending_recvs_    = {};
-  TagType cur_direct_buffer_tag_         = starting_direct_buffer_tag;
+  HandlerType current_handler_context_           = uninitialized_handler;
+  NodeType current_node_context_                 = uninitialized_destination;
+  EpochType current_epoch_context_               = no_epoch;
+  EpochType global_epoch_                        = no_epoch;
+  MaybeReadyType maybe_ready_tag_han_            = {};
+  ContWaitType pending_handler_msgs_             = {};
+  ContainerPendingType pending_recvs_            = {};
+  TagType cur_direct_buffer_tag_                 = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
-  std::vector<ListenerType> send_listen_ = {};
+  std::vector<ListenerType> send_listen_         = {};
+  std::list<InProgressIRecv> in_progress_irecv   = {};
 };
 
 }} // end namespace vt::messaging
