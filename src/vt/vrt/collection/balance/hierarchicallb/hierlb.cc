@@ -693,7 +693,15 @@ std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
 
 void HierarchicalLB::runLB() {
   setupTree(min_threshold);
-  theCollective()->barrier();
+
+  auto cb = vt::theCB()->makeBcast<
+    HierarchicalLB, SetupDoneMsg, &HierarchicalLB::setupDone
+  >(proxy);
+  auto msg = makeMessage<SetupDoneMsg>();
+  proxy.reduce(msg.get(),cb);
+}
+
+void HierarchicalLB::setupDone(SetupDoneMsg* msg) {
   loadStats();
 }
 

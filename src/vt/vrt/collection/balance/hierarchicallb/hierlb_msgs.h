@@ -123,6 +123,8 @@ private:
   bool final_child_ = 0;
 };
 
+struct SetupDoneMsg : vt::collective::ReduceNoneMsg { };
+
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_MSGS_H*/
