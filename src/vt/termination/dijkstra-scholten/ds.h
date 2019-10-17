@@ -112,6 +112,8 @@ protected:
   CountType lC                      = 0;
   CountType lD                      = 0;
   AckReqListType outstanding        = {};
+public:
+  bool is_terminated                = false;
 };
 
 }}} /* end namespace vt::term::ds */

@@ -69,6 +69,7 @@ void TermDS<CommType>::terminated() {
     "terminated: epoch={:x}\n", epoch_
   );
 
+  is_terminated = true;
   CommType::rootTerminated(epoch_);
 }
 
