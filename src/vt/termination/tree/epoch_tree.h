@@ -56,6 +56,10 @@ namespace vt { namespace termination { namespace tree {
 
 struct EpochTree {
 
+  EpochTree() = default;
+  EpochTree(EpochTree&&) = default;
+  EpochTree(EpochTree const&) = default;
+
   explicit EpochTree(EpochType in_epoch)
     : epoch_(in_epoch)
   { }
@@ -108,6 +112,22 @@ public:
     std::string ctx     = "";
     printImpl(builder, ctx);
     return builder;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | epoch_;
+    std::size_t nc = children_.size();
+    s | nc;
+    for (std::size_t i = 0; i < nc; i++) {
+      if (s.isUnpacking()) {
+        EpochTree et;
+        s | et;
+        children_.push_back(std::make_shared<EpochTree>(std::move(et)));
+      } else {
+        s | *children_[i];
+      }
+    }
   }
 
 private:
