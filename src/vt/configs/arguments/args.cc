@@ -45,6 +45,7 @@
 #include "vt/configs/arguments/args.h"
 #include "vt/config.h"
 #include "vt/configs/arguments/args_utils.h"
+#include "vt/runtime/runtime.h"
 #include "vt/trace/trace.h"
 
 #include <string>
@@ -1172,6 +1173,7 @@ void ArgSetup::printBanner() {
 
 void ArgSetup::postParsingReview() {
 
+#if backend_check_enabled(trace_enabled) 
   //--- Overwrite the default trace file and directories
   //--- when they are the empty default values.
   auto ptr_trace_file = getOption<std::string>("vt_trace_file");
@@ -1189,6 +1191,7 @@ void ArgSetup::postParsingReview() {
       ptr_trace_dir->resetToDefault();
     }
   }
+#endif
 }
 
 
