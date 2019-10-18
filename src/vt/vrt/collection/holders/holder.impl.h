@@ -122,7 +122,7 @@ typename Holder<ColT, IndexT>::VirtualPtrType Holder<ColT, IndexT>::remove(
   vtAssert(iter->second.erased_ == false, "Must not be erased already");
   iter->second.erased_ = true;
   num_erased_not_removed_++;
-  return std::move(owned_ptr);
+  return owned_ptr;
 }
 
 template <typename ColT, typename IndexT>
