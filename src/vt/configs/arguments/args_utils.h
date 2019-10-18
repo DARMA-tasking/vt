@@ -74,6 +74,7 @@ std::string getDisplayValue<std::string>(const std::string& val) {
 struct Printer {
   public:
   virtual void output() = 0;
+  virtual ~Printer() {}
 };
 
 
@@ -90,6 +91,7 @@ struct PrintOn : public Printer {
     Anchor<T>* opt, const std::string& msg_str, std::function<bool()> fun);
 
   void output() override;
+  ~PrintOn() override {}
 
   protected:
   Anchor<T>* option_ = nullptr;
@@ -107,6 +109,7 @@ struct PrintOnOff : public Printer {
     Anchor<T>* opt, const std::string& msg_on, const std::string& msg_off,
     std::function<bool()> fun);
   void output() override;
+  ~PrintOnOff() override {}
 
   protected:
   Anchor<T>* option_;
@@ -122,6 +125,7 @@ struct Warning : public Printer {
   Warning(
     Anchor<bool>* opt, const std::string& compile, std::function<bool()> fun);
   void output() override;
+  ~Warning() override{};
 
   protected:
   Anchor<bool>* option_;
@@ -130,6 +134,6 @@ struct Warning : public Printer {
 };
 
 
-}} // end namespace vt::arguments
+}} // namespace vt::arguments
 
 #endif

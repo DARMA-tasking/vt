@@ -146,8 +146,11 @@ struct Configs {
 };
 
 
-//--- Build enum for the context
+/// \brief Enum for the Context where the Parameters is set
 enum struct ContextEnum : std::uint8_t { dFault, commandLine, thirdParty };
+
+/// \brief Enum for the Print Status
+enum struct PrintOption : std::uint8_t { never = 0, whenSet = 2, always = 255 };
 
 /// \brief Virtual struct for storing an option/flag
 struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
@@ -227,10 +230,18 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
   /// \brief Resets to the default value
   virtual void resetToDefault() = 0;
 
-  /// \brief Set the group name for the option
+  /// \brief Set the group name for the anchor
   ///
   /// \param[in] grp_ String for the name of the group
   void setGroup(const std::string& grp_) { group_ = grp_; }
+
+  /// \brief Set the printing option for the anchor
+  ///
+  /// \param[in] po Enum PrintOption for the anchor
+  /// \param[in] fun Function returning a boolean to constraint the printing
+  ///
+  virtual void
+  setPrintOption(PrintOption po, std::function<bool()> fun = nullptr) = 0;
 
   protected:
   /// \brief Constructor
@@ -240,9 +251,18 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
   ///
   /// \note The anchor will be assigned to a default group, named 'Default'.
   ///
-  AnchorBase(std::string name, std::string desc)
-    : name_(std::move(name)), group_("Default"), description_(std::move(desc)),
-      ordering_(), needsOptOff_(), needsOptOn_(), excludes_() {}
+  AnchorBase(std::string name, std::string desc, std::string grp)
+    : name_(std::move(name)), group_(std::move(grp)),
+      description_(std::move(desc)), ordering_(), needsOptOff_(), needsOptOn_(),
+      excludes_(), statusPrint_(PrintOption::never) {}
+
+  /// \brief Set the printing option for the anchor
+  ///
+  /// \param[in] po Enum PrintOption for the anchor
+  /// \param[in] fun Function returning a boolean to constraint the printing
+  ///
+  virtual void
+  setPrintOptionImpl(PrintOption po, std::function<bool()> fun = nullptr) = 0;
 
   protected:
   //--- Build enum for ordering the context
@@ -277,6 +297,9 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
 
   /// \brief List of options that are excluded with this option
   std::set<std::shared_ptr<AnchorBase>> excludes_;
+
+  /// \brief Printing options for the anchor
+  PrintOption statusPrint_ = PrintOption::never;
 };
 
 struct Printer;
@@ -291,9 +314,12 @@ struct Anchor : public AnchorBase {
   /// \param[in] var Variable to specify and whose initial value
   ///                defines the default value
   /// \param[in] name Label for the parameter of interest
-  /// \param[in] desc String describing the option
+  /// \param[in] desc String describing the anchor
+  /// \param[in] grp  String for the group owning the anchor
   ///
-  explicit Anchor(T& var, const std::string& name, const std::string& desc);
+  explicit Anchor(
+    T& var, const std::string& name, const std::string& desc,
+    const std::string& grp = "Default");
 
   /// \brief Add instance from a third party with a specific value
   ///
@@ -309,11 +335,6 @@ struct Anchor : public AnchorBase {
     return static_cast<int>(specifications_.size());
   }
 
-  /// \brief Sets a new default value.
-  ///
-  /// \param ref Value to assign as default
-  void setNewDefaultValue(const T& ref);
-
   /// \brief Sets highest priority (precedence) for a context
   ///
   /// \param[in] origin Context for the highest priority
@@ -322,6 +343,19 @@ struct Anchor : public AnchorBase {
   /// this context priority will be reset to its original value.
   ///
   void setHighestPrecedence(const ContextEnum& origin);
+
+  /// \brief Sets a new default value.
+  ///
+  /// \param ref Value to assign as default
+  void setNewDefaultValue(const T& ref);
+
+  /// \brief Set the printing option for the anchor
+  ///
+  /// \param[in] po Enum PrintOption for the anchor
+  /// \param[in] fun Function returning a boolean to constraint the printing
+  ///
+  void
+  setPrintOption(PrintOption po, std::function<bool()> fun = nullptr) override;
 
   /// \brief Returns the default value for the anchor
   ///
@@ -362,31 +396,6 @@ struct Anchor : public AnchorBase {
 
   /// \brief Set the printing message for the banner as a warning
   ///
-  /// \param[in] msg_on String to display for the anchor when it is active
-  /// \param[in] fun  Additional condition to print or not the message
-  ///
-  /// \note The ON message will be of the form
-  /// "Option: flag 'NAME' on: 'MSG_ON'"
-  ///
-  void setBannerMsgOn(std::string msg_on, std::function<bool()> fun = nullptr);
-
-  /// \brief Set the printing message for the banner as a warning
-  ///
-  /// \param[in] msg_on String to display when the anchor is active
-  /// \param[in] msg_off String to display when the anchor is off
-  /// \param[in] fun Additional condition to print or not the message
-  ///
-  /// \note The ON message will be of the form
-  /// "Option: flag 'NAME' on: 'MSG_ON'"
-  /// \note The OFF message will be of the form
-  /// "Default: 'MSG_OFF', use 'NAME' to disable"
-  ///
-  void setBannerMsgOnOff(
-    std::string msg_on, std::string msg_off,
-    std::function<bool()> fun = nullptr);
-
-  /// \brief Set the printing message for the banner as a warning
-  ///
   /// \param[in] String to display for the anchor
   ///
   /// \note The message will be of the form
@@ -409,6 +418,14 @@ struct Anchor : public AnchorBase {
 
   /// \brief Resolves the precedence rules among the instances
   void resolve() override;
+
+  /// \brief Set the printing option for the anchor
+  ///
+  /// \param[in] po Enum PrintOption for the anchor
+  /// \param[in] fun Function returning a boolean to constraint the printing
+  ///
+  void setPrintOptionImpl(
+    PrintOption po, std::function<bool()> fun = nullptr) override;
 
   friend struct ArgSetup;
 
@@ -526,7 +543,8 @@ struct ArgSetup {
     typename = typename std::enable_if<
       std::is_same<T, bool>::value || std::is_same<T, int>::value, T>>
   std::shared_ptr<Anchor<T>> addFlag(
-    const std::string& name, T& anchor_value, const std::string& desc = {});
+    const std::string& name, T& anchor_value, const std::string& desc = {},
+    const std::string& grp = "Default");
 
   /// \brief Add option for a specified name
   ///
@@ -535,6 +553,7 @@ struct ArgSetup {
   /// \param[in] anchor_value Variable to specify and whose initial value
   ///                         defines the default value
   /// \param[in] desc String describing the option
+  /// \param[in] grp  String for the group owning the anchor
   ///
   /// \return Pointer to the anchor with the specified label
   ///
@@ -546,7 +565,8 @@ struct ArgSetup {
   ///
   template <typename T>
   std::shared_ptr<Anchor<T>> addOption(
-    const std::string& name, T& anchor_value, const std::string& desc = "");
+    const std::string& name, T& anchor_value, const std::string& desc = "",
+    const std::string& grp = "Default");
 
   /// \brief Parse the command line inputs and resolve the precedence rules
   ///
@@ -643,9 +663,10 @@ struct ArgSetup {
     }
   }
 
-  /// \brief Setup printing banner messages
+  /// \brief Routine to review some default parameters
+  /// after parsing and before printing
   ///
-  void prepareOptionsPrinting();
+  void postParsingReview();
 
   /// \brief Function to verify that a string is acceptable
   ///
@@ -682,6 +703,34 @@ struct Args {
   /// \brief Routine to initialize the debug parameters
   /// and to set their default values.
   static void initializeDebug();
+
+  /// \brief Routine to initialize the 'Load Balancing' parameters
+  /// and to set their default values.
+  static void initializeLoadBalancing();
+
+  /// \brief Routine to initialize the 'Output Control' parameters
+  /// and to set their default values.
+  static void initializeOutputControl();
+
+  /// \brief Routine to initialize the 'Signal Handling' parameters
+  /// and to set their default values.
+  static void initializeSignalHandling();
+
+  /// \brief Routine to initialize the 'Stack Group' parameters
+  /// and to set their default values.
+  static void initializeStackGroup();
+
+  /// \brief Routine to initialize the 'Termination' parameters
+  /// and to set their default values.
+  static void initializeTermination();
+
+  /// \brief Routine to initialize the 'Tracing' parameters
+  /// and to set their default values.
+  static void initializeTracing();
+
+  /// \brief Routine to initialize the 'User Options' parameters
+  /// and to set their default values.
+  static void initializeUserOptions();
 };
 
 
@@ -690,6 +739,6 @@ inline bool user2() { return Args::config.vt_user_2; }
 inline bool user3() { return Args::config.vt_user_3; }
 
 
-}} // end namespace vt::arguments
+}} // namespace vt::arguments
 
 #endif /*INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H*/
