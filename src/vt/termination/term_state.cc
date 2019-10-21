@@ -139,8 +139,7 @@ bool TermState::readySubmitParent(bool const needs_active) const {
 TermState::TermState(
   EpochType const& in_epoch, bool const in_local_terminated, bool const active,
   NodeType const& children
-)
-  : EpochRelation(in_epoch, false),
+) : EpochDependency(in_epoch, false),
     local_terminated_(in_local_terminated), epoch_active_(active),
     num_children_(children)
 {
@@ -153,7 +152,7 @@ TermState::TermState(
 }
 
 TermState::TermState(EpochType const& in_epoch, NodeType const& children)
-  : EpochRelation(in_epoch, false), num_children_(children)
+  : EpochDependency(in_epoch, false), num_children_(children)
 {
   debug_print(
     term, node,

@@ -54,20 +54,18 @@
 namespace vt { namespace messaging {
 
 struct PendingClosure {
-  PendingClosure(PendingSend&& in_pending, EpochType in_epoch)
-    : pending_(std::move(in_pending)), epoch_(in_epoch)
+  explicit PendingClosure(PendingSend&& in_pending)
+    : pending_(std::move(in_pending))
   { }
   PendingClosure(PendingClosure const&) = delete;
   PendingClosure(PendingClosure&& in) = default;
 
   void operator()() {
     pending_.release();
-    theTerm()->consume(epoch_);
   }
 
 private:
   PendingSend pending_;
-  EpochType epoch_ = no_epoch;
 };
 
 class DependentSendChain final {
@@ -83,11 +81,9 @@ class DependentSendChain final {
     // Produce an event here, to be consumed when the send gets
     // released, so that new_epoch doesn't appear to have completed in
     // the interim
-    theTerm()->produce(new_epoch);
+    theTerm()->addDependency(last_epoch_, new_epoch);
+    theTerm()->addActionUnique(last_epoch_, PendingClosure(std::move(link)));
 
-    theTerm()->addActionUnique(last_epoch_,
-                               PendingClosure(std::move(link),
-                                              new_epoch));
     last_epoch_ = new_epoch;
   }
 

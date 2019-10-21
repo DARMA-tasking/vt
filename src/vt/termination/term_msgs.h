@@ -101,6 +101,8 @@ struct TermCounterMsg : vt::ShortMessage {
   { }
 };
 
+struct BuildGraphMsg : vt::ShortMessage { };
+
 }} //end namespace vt::term
 
 #endif /*INCLUDED_TERMINATION_TERM_MSGS_H*/

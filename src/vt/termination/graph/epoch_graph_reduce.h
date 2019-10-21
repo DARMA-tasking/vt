@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    tree.h
+//                             epoch_graph_reduce.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,99 +42,38 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_TREE_TREE_H
-#define INCLUDED_VT_TERMINATION_TREE_TREE_H
+#if !defined INCLUDED_VT_TERMINATION_GRAPH_EPOCH_GRAPH_REDUCE_H
+#define INCLUDED_VT_TERMINATION_GRAPH_EPOCH_GRAPH_REDUCE_H
 
 #include "vt/config.h"
 
-#include <vector>
-#include <memory>
-#include <functional>
-#include <string>
+namespace vt { namespace collective { namespace reduce { namespace operators {
 
-namespace vt { namespace termination { namespace tree {
+template <typename T>
+struct ReduceTMsg;
 
-struct EpochTree {
+}}}} /* end namespace vt::collective::reduce::operators */
 
-  EpochTree() = default;
-  EpochTree(EpochTree&&) = default;
-  EpochTree(EpochTree const&) = default;
+namespace vt { namespace termination { namespace graph {
 
-  explicit EpochTree(EpochType in_epoch)
-    : epoch_(in_epoch)
+// Must be templated (where T = tree::Epoch Tree) because of the circular
+// dependency between termination.h and reduce.h
+template <typename T>
+struct EpochGraphMsg : collective::reduce::operators::ReduceTMsg<T> {
+
+  EpochGraphMsg() = default;
+  explicit EpochGraphMsg(std::shared_ptr<T> const& graph)
+    : collective::reduce::operators::ReduceTMsg<T>(*graph)
   { }
-
-public:
-  bool hasChildren() const { return children_.size() != 0; }
-  void addChild(EpochTree&& t) {
-    children_.push_back(std::make_shared<EpochTree>(std::move(t)));
-  }
-  void addChild(std::shared_ptr<EpochTree> t) {
-    children_.push_back(t);
-  }
-
-  void traverse(std::function<void(EpochTree&)> fn) const {
-    for (auto& elm : children_) {
-      fn(*elm);
-    }
-  }
-
-private:
-  void pushContext(std::string& ctx, char c) const {
-    ctx.push_back(' ');
-    ctx.push_back(c);
-    ctx.push_back(' ');
-    ctx.push_back(' ');
-  }
-
-  void popContext(std::string& ctx) const {
-    for (int i = 0; i < 4; i++) {
-      ctx.pop_back();
-    }
-  }
-
-  void printImpl(std::string& builder, std::string& ctx) const {
-    builder += fmt::format("({:x})\n", epoch_);
-    std::size_t rem = children_.size();
-    for (auto const& child : children_) {
-      rem--;
-      bool const has_next = rem > 0;
-      builder += fmt::format("{} `--", ctx);
-      pushContext(ctx, has_next ? '|' : ' ');
-      child->printImpl(builder, ctx);
-      popContext(ctx);
-    }
-  }
-
-public:
-  std::string print() const {
-    std::string builder = "";
-    std::string ctx     = "";
-    printImpl(builder, ctx);
-    return builder;
-  }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | epoch_;
-    std::size_t nc = children_.size();
-    s | nc;
-    for (std::size_t i = 0; i < nc; i++) {
-      if (s.isUnpacking()) {
-        EpochTree et;
-        s | et;
-        children_.push_back(std::make_shared<EpochTree>(std::move(et)));
-      } else {
-        s | *children_[i];
-      }
-    }
+    collective::reduce::operators::ReduceTMsg<T>::invokeSerialize(s);
   }
 
-private:
-  EpochType epoch_ = no_epoch;
-  std::vector<std::shared_ptr<EpochTree>> children_ = {};
 };
 
-}}} /* end namespace vt::termination::tree */
 
-#endif /*INCLUDED_VT_TERMINATION_TREE_TREE_H*/
+}}} /* end namespace vt::termination::graph */
+
+#endif /*INCLUDED_VT_TERMINATION_GRAPH_EPOCH_GRAPH_REDUCE_H*/

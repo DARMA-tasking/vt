@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_parent.h
+//                              epoch_dependency.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,28 +42,30 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_TERM_PARENT_H
-#define INCLUDED_VT_TERMINATION_TERM_PARENT_H
+#if !defined INCLUDED_VT_TERMINATION_EPOCH_DEPENDENCY_H
+#define INCLUDED_VT_TERMINATION_EPOCH_DEPENDENCY_H
 
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
 
-#include <unordered_set>
+#include <set>
 
 namespace vt { namespace term {
 
-struct EpochRelation {
-  using ParentBagType = std::unordered_set<EpochType>;
+struct EpochDependency {
+  using SuccessorBagType = std::set<EpochType>;
 
-  EpochRelation(EpochType in_epoch, bool in_is_ds)
+  EpochDependency(EpochType in_epoch, bool in_is_ds)
     : epoch_(in_epoch), is_ds_(in_is_ds)
   { }
 
-  void addParentEpoch(EpochType const in_parent);
-  void clearParents();
-  bool hasParent() const;
-  std::size_t numParents() const;
-  ParentBagType const& getParents() const { return parents_; }
+  SuccessorBagType removeIntersection(SuccessorBagType successors);
+  void addIntersectingSuccessors(SuccessorBagType successors);
+  void addSuccessor(EpochType const in_successor);
+  void clearSuccessors();
+  bool hasSuccessor() const;
+  std::size_t numSuccessors() const;
+  SuccessorBagType const& getSuccessors() const { return successors_; }
 
 protected:
   // The epoch for the this relation
@@ -72,10 +74,10 @@ protected:
 private:
   // Is this a DS-epoch
   bool is_ds_ = false;
-  // The parent epochs for a given epoch
-  ParentBagType parents_ = {};
+  // The successor epochs for a given predecessor epoch
+  SuccessorBagType successors_ = {};
 };
 
 }} /* end namespace vt::term */
 
-#endif /*INCLUDED_VT_TERMINATION_TERM_PARENT_H*/
+#endif /*INCLUDED_VT_TERMINATION_EPOCH_DEPENDENCY_H*/

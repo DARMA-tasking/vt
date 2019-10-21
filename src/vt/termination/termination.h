@@ -52,13 +52,14 @@
 #include "vt/termination/term_action.h"
 #include "vt/termination/term_interface.h"
 #include "vt/termination/term_window.h"
-#include "vt/termination/term_parent.h"
+#include "vt/termination/epoch_dependency.h"
 #include "vt/termination/dijkstra-scholten/ds_headers.h"
-#include "vt/termination/tree/epoch_tree.h"
+#include "vt/termination/graph/epoch_graph.h"
 #include "vt/epoch/epoch.h"
 #include "vt/activefn/activefn.h"
 #include "vt/collective/tree/tree.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/termination/graph/epoch_graph_reduce.h"
 
 #include <cstdint>
 #include <unordered_map>
@@ -80,8 +81,9 @@ struct TerminationDetector :
   using TermStateDSType    = term::ds::StateDS::TerminatorType;
   using WindowType         = std::unique_ptr<EpochWindow>;
   using ArgType            = vt::arguments::ArgConfig;
-  using ParentBagType      = EpochRelation::ParentBagType;
-  using EpochTree          = termination::tree::EpochTree;
+  using SuccessorBagType   = EpochDependency::SuccessorBagType;
+  using EpochGraph         = termination::graph::EpochGraph;
+  using EpochGraphMsg      = termination::graph::EpochGraphMsg<EpochGraph>;
 
   TerminationDetector();
   virtual ~TerminationDetector() {}
@@ -184,9 +186,15 @@ public:
 public:
   // TermTerminated interface
   TermStatusEnum testEpochTerminated(EpochType epoch) override;
+  // Might return (conservatively) false if the epoch is non-local
+  bool isEpochTerminated(EpochType epoch);
 
 public:
-  std::shared_ptr<EpochTree> makeTree();
+  std::shared_ptr<EpochGraph> makeGraph();
+
+private:
+  static void buildLocalGraphHandler(BuildGraphMsg* msg);
+  static void epochGraphBuiltHandler(EpochGraphMsg* msg);
 
 private:
   bool propagateEpoch(TermStateType& state);
@@ -194,9 +202,15 @@ private:
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void setupNewEpoch(EpochType const& epoch);
   void readyNewEpoch(EpochType const& epoch);
-  void linkChildEpoch(EpochType epoch, EpochType parent = no_epoch);
   void makeRootedHan(EpochType const& epoch, bool is_root);
 
+public:
+  void addDependency(EpochType predecessor, EpochType successoor);
+
+private:
+  EpochDependency* getEpochDep(EpochType epoch);
+
+private:
   static void makeRootedHandler(TermMsg* msg);
   static void inquireEpochTerminated(TermTerminatedMsg* msg);
   static void replyEpochTerminated(TermTerminatedReplyMsg* msg);
