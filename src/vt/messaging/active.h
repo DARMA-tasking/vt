@@ -107,6 +107,7 @@ struct InProgressIRecv {
       req(in_req)
   { }
   InProgressIRecv(InProgressIRecv&&) = default;
+  InProgressIRecv(InProgressIRecv const&) = delete;
 
   char* buf = nullptr;
   CountType probe_bytes = 0;
@@ -125,6 +126,7 @@ struct InProgressDataIRecv : public InProgressIRecv {
       next(in_next)
   { }
   InProgressDataIRecv(InProgressDataIRecv&&) = default;
+  InProgressDataIRecv(InProgressDataIRecv const&) = delete;
 
   void* const user_buf;
   ActionType dealloc_user_buf;
