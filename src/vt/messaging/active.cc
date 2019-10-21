@@ -476,7 +476,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
       next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
       theTerm()->consume(term::any_epoch_sentinel,1,sender);
     };
-    theSched()->enqueue(irecv.priority, run);
+    theSched()->enqueue(irecv->priority, run);
   }
 }
 
