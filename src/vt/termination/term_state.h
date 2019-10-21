@@ -73,6 +73,8 @@ struct TermState : EpochDependency {
   void setCurWave(TermWaveType const& wave);
   NodeType getNumChildren() const;
   bool noLocalUnits() const;
+  void incrementDependency();
+  TermCounterType decrementDependency();
 
   TermState(
     EpochType const& in_epoch, bool const in_local_terminated, bool const active,
@@ -101,6 +103,7 @@ private:
   bool local_terminated_                      = true;
   bool epoch_active_                          = true;
   bool term_detected_                         = false;
+  TermCounterType deps_                       = 0;
 
   EventCountType recv_child_count_            = 0;
   NodeType num_children_                      = uninitialized_destination;

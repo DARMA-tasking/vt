@@ -114,6 +114,14 @@ void TermState::receiveContinueSignal(TermWaveType const& wave) {
   cur_wave_ = wave;
 }
 
+void TermState::incrementDependency() {
+  deps_++;
+}
+
+TermCounterType TermState::decrementDependency() {
+  return --deps_;
+}
+
 bool TermState::readySubmitParent(bool const needs_active) const {
   vtAssert(
     num_children_ != uninitialized_destination, "Children must be valid"
@@ -121,16 +129,17 @@ bool TermState::readySubmitParent(bool const needs_active) const {
 
   auto const ret = (epoch_active_ or not needs_active) and
     recv_child_count_ == num_children_ and local_terminated_ and
-    submitted_wave_ == cur_wave_ - 1 and not term_detected_;
+    submitted_wave_ == cur_wave_ - 1 and not term_detected_ and
+    deps_ == 0;
 
   debug_print_verbose(
     term, node,
     "readySubmitParent: epoch={:x}, active={}, local_ready={}, "
     "sub_wave={}, cur_wave_={}, recv_child={}, num_child={}, term={}:"
-    " ret={}\n",
+    " deps_={}, ret={}\n",
     epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
     submitted_wave_, cur_wave_, recv_child_count_, num_children_,
-    print_bool(term_detected_), print_bool(ret)
+    print_bool(term_detected_), deps_, print_bool(ret)
   );
 
   return ret;
