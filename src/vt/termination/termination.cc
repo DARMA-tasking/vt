@@ -797,6 +797,23 @@ void TerminationDetector::addDependency(EpochType predecessor, EpochType success
   }
 }
 
+void TerminationDetector::removeEpochStateDependency(EpochType ep) {
+  if (not isDS(ep)) {
+    if (findOrCreateState(ep, true).decrementDependency() == 0) {
+      // Call propagate because this might have activated an epoch begin further
+      // propagated
+      maybePropagate();
+    }
+  }
+}
+
+void TerminationDetector::addEpochStateDependency(EpochType ep) {
+  if (not isDS(ep)) {
+    // Increment a dependency so the epoch stops sending messages
+    findOrCreateState(ep, true).incrementDependency();
+  }
+}
+
 void TerminationDetector::finishNoActivateEpoch(EpochType const& epoch) {
   auto ready_iter = epoch_ready_.find(epoch);
   if (ready_iter == epoch_ready_.end()) {

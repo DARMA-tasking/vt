@@ -105,6 +105,8 @@ struct TerminationDetector :
   /***************************************************************************/
 
   friend struct ds::StateDS;
+  friend struct TermState;
+  friend struct EpochDependency;
 
   bool isRooted(EpochType epoch);
   bool isDS(EpochType epoch);
@@ -209,6 +211,8 @@ public:
 
 private:
   EpochDependency* getEpochDep(EpochType epoch);
+  void removeEpochStateDependency(EpochType ep);
+  void addEpochStateDependency(EpochType ep);
 
 private:
   static void makeRootedHandler(TermMsg* msg);
