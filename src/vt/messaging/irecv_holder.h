@@ -57,6 +57,12 @@ struct IRecvHolder {
 
   template <typename U>
   void emplace(U&& u) {
+    static constexpr std::size_t factor = 4;
+
+    if (holes_.size() * factor > holder_.size()) {
+      compress();
+    }
+
     if (holes_.size() > 0) {
       auto const slot = holes_.back();
       holes_.pop_back();
@@ -69,6 +75,12 @@ struct IRecvHolder {
   template <typename Callable>
   bool testAll(Callable c) {
     bool progress_made = false;
+
+    // No active elements, skip any tests
+    if (holes_.size() == holder_.size()) {
+      return progress_made;
+    }
+
     for (int i = 0; i < holder_.size(); i++) {
       auto& e = holder_[i];
       if (e.valid) {
@@ -84,6 +96,17 @@ struct IRecvHolder {
       }
     }
     return progress_made;
+  }
+
+  void compress() {
+    std::vector<T> new_holder;
+    for (int i = 0; i < holder_.size(); i++) {
+      if (holder_[i].valid) {
+        new_holder.emplace_back(std::move(holder_[i]));
+      }
+    }
+    holes_.clear();
+    holder_ = std::move(new_holder);
   }
 
 private:
