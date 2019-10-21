@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/context/context.h"
 #include "vt/termination/term_common.h"
-#include "vt/termination/term_parent.h"
+#include "vt/termination/epoch_dependency.h"
 
 #include <vector>
 #include <cstdlib>
@@ -56,7 +56,7 @@
 
 namespace vt { namespace term {
 
-struct TermState : EpochRelation {
+struct TermState : EpochDependency {
   using EventCountType = int32_t;
 
   void notifyChildReceive();
