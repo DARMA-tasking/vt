@@ -707,8 +707,7 @@ bool ActiveMessenger::testPendingActiveMsgAsyncRecv() {
     MPI_Status stat;
     MPI_Test(&(iter->req), &flag, &stat);
     if (flag == 1) {
-      auto elm = std::move(*iter);
-      finishPendingActiveMsgAsyncRecv(std::move(elm));
+      finishPendingActiveMsgAsyncRecv(std::move(*iter));
       iter = in_progress_active_msg_irecv.erase(iter);
       processed = true;
     }
@@ -723,8 +722,7 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
     MPI_Status stat;
     MPI_Test(&(iter->req), &flag, &stat);
     if (flag == 1) {
-      auto elm = std::move(*iter);
-      finishPendingDataMsgAsyncRecv(std::move(elm));
+      finishPendingDataMsgAsyncRecv(std::move(*iter));
       iter = in_progress_data_irecv.erase(iter);
       processed = true;
     }
