@@ -447,9 +447,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv irecv) {
   };
 
   if (next != nullptr) {
-    next(RDMA_GetType{buf,num_probe_bytes}, [=]{
-      dealloc_buf();
-    });
+    next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
   } else {
     dealloc_buf();
   }
