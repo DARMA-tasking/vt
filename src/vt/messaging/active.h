@@ -55,6 +55,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
 #include "vt/messaging/listener.h"
+#include "vt/messaging/irecv_holder.h"
 #include "vt/event/event.h"
 #include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
@@ -104,15 +105,14 @@ struct InProgressIRecv {
     char* in_buf, CountType in_probe_bytes, NodeType in_sender,
     MPI_Request in_req
   ) : buf(in_buf), probe_bytes(in_probe_bytes), sender(in_sender),
-      req(in_req)
+      req(in_req), valid(true)
   { }
-  InProgressIRecv(InProgressIRecv&&) = default;
-  InProgressIRecv(InProgressIRecv const&) = delete;
 
   char* buf = nullptr;
   CountType probe_bytes = 0;
   NodeType sender = uninitialized_destination;
   MPI_Request req;
+  bool valid = false;
 };
 
 struct InProgressDataIRecv : public InProgressIRecv {
@@ -125,12 +125,10 @@ struct InProgressDataIRecv : public InProgressIRecv {
       user_buf(in_user_buf), dealloc_user_buf(in_dealloc_user_buf),
       next(in_next)
   { }
-  InProgressDataIRecv(InProgressDataIRecv&&) = default;
-  InProgressDataIRecv(InProgressDataIRecv const&) = delete;
 
-  void* const user_buf;
-  ActionType dealloc_user_buf;
-  RDMA_ContinuationDeleteType next;
+  void* user_buf = nullptr;
+  ActionType dealloc_user_buf = nullptr;
+  RDMA_ContinuationDeleteType next = nullptr;
 };
 
 struct BufferedActiveMsg {
@@ -613,8 +611,8 @@ struct ActiveMessenger {
 private:
   bool testPendingActiveMsgAsyncRecv();
   bool testPendingDataMsgAsyncRecv();
-  void finishPendingActiveMsgAsyncRecv(InProgressIRecv irecv);
-  void finishPendingDataMsgAsyncRecv(InProgressDataIRecv irecv);
+  void finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv);
+  void finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv);
 
 private:
   using EpochStackSizeType = typename EpochStackType::size_type;
@@ -640,9 +638,9 @@ private:
   ContainerPendingType pending_recvs_            = {};
   TagType cur_direct_buffer_tag_                 = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
-  std::vector<ListenerType> send_listen_                  = {};
-  std::list<InProgressIRecv> in_progress_active_msg_irecv = {};
-  std::list<InProgressDataIRecv> in_progress_data_irecv   = {};
+  std::vector<ListenerType> send_listen_                    = {};
+  IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv = {};
+  IRecvHolder<InProgressDataIRecv> in_progress_data_irecv   = {};
 };
 
 }} // end namespace vt::messaging

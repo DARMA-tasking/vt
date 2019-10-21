@@ -399,7 +399,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       InProgressDataIRecv recv_holder{
         buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next
       };
-      in_progress_data_irecv.emplace_back(std::move(recv_holder));
+      in_progress_data_irecv.emplace(std::move(recv_holder));
       return true;
     } else {
       return false;
@@ -420,13 +420,13 @@ bool ActiveMessenger::recvDataMsgBuffer(
   }
 }
 
-void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv irecv) {
-  auto buf = irecv.buf;
-  auto num_probe_bytes = irecv.probe_bytes;
-  auto sender = irecv.sender;
-  auto user_buf = irecv.user_buf;
-  auto dealloc_user_buf = irecv.dealloc_user_buf;
-  auto next = irecv.next;
+void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) {
+  auto buf = irecv->buf;
+  auto num_probe_bytes = irecv->probe_bytes;
+  auto sender = irecv->sender;
+  auto user_buf = irecv->user_buf;
+  auto dealloc_user_buf = irecv->dealloc_user_buf;
+  auto next = irecv->next;
 
   auto dealloc_buf = [=]{
     debug_print(
@@ -634,17 +634,17 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     );
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
-    in_progress_active_msg_irecv.emplace_back(std::move(recv_holder));
+    in_progress_active_msg_irecv.emplace(std::move(recv_holder));
     return true;
   } else {
     return false;
   }
 }
 
-void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv irecv) {
-  auto buf = irecv.buf;
-  auto num_probe_bytes = irecv.probe_bytes;
-  auto sender = irecv.sender;
+void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
+  auto buf = irecv->buf;
+  auto num_probe_bytes = irecv->probe_bytes;
+  auto sender = irecv->sender;
 
   auto msg = reinterpret_cast<MessageType>(buf);
   messageConvertToShared(msg);
@@ -657,8 +657,8 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv irecv) {
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "finishPendingActiveMsgAsyncRecv: msg_size={}, sender={}, is_put={}, is_bcast={}, "
-      "handler={}\n",
+      "finishPendingActiveMsgAsyncRecv: msg_size={}, sender={}, is_put={}, "
+      "is_bcast={}, handler={}\n",
       num_probe_bytes, sender, print_bool(is_put),
       print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
     );
@@ -675,11 +675,12 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv irecv) {
       msg_bytes = msg_size;
 
       if (!is_term || backend_check_enabled(print_term_msgs)) {
-	debug_print(
-	  active, node,
-          "finishPendingActiveMsgAsyncRecv: packed put: ptr={}, msg_size={}, put_size={}\n",
-	  put_ptr, msg_size, put_size
-	);
+        debug_print(
+          active, node,
+          "finishPendingActiveMsgAsyncRecv: packed put: ptr={}, msg_size={}, "
+          "put_size={}\n",
+          put_ptr, msg_size, put_size
+        );
       }
 
       envelopeSetPutPtrOnly(msg->env, put_ptr);
@@ -701,33 +702,19 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv irecv) {
 }
 
 bool ActiveMessenger::testPendingActiveMsgAsyncRecv() {
-  bool processed = false;
-  for (auto iter = in_progress_active_msg_irecv.begin(); iter != in_progress_active_msg_irecv.end(); ++iter) {
-    int flag = 0;
-    MPI_Status stat;
-    MPI_Test(&(iter->req), &flag, &stat);
-    if (flag == 1) {
-      finishPendingActiveMsgAsyncRecv(std::move(*iter));
-      iter = in_progress_active_msg_irecv.erase(iter);
-      processed = true;
+  return in_progress_active_msg_irecv.testAll(
+    [](InProgressIRecv* e){
+      theMsg()->finishPendingActiveMsgAsyncRecv(e);
     }
-  }
-  return processed;
+  );
 }
 
 bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
-  bool processed = false;
-  for (auto iter = in_progress_data_irecv.begin(); iter != in_progress_data_irecv.end(); ++iter) {
-    int flag = 0;
-    MPI_Status stat;
-    MPI_Test(&(iter->req), &flag, &stat);
-    if (flag == 1) {
-      finishPendingDataMsgAsyncRecv(std::move(*iter));
-      iter = in_progress_data_irecv.erase(iter);
-      processed = true;
+  return in_progress_data_irecv.testAll(
+    [](InProgressDataIRecv* e){
+      theMsg()->finishPendingDataMsgAsyncRecv(e);
     }
-  }
-  return processed;
+  );
 }
 
 bool ActiveMessenger::scheduler() {
