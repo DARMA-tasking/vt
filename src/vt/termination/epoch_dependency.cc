@@ -67,6 +67,7 @@ void EpochDependency::addSuccessor(EpochType const in_successor) {
     // this epoch is live
     theTerm()->produce(in_successor,1);
     successors_.insert(in_successor);
+    theTerm()->addEpochStateDependency(in_successor);
   }
 }
 
@@ -86,6 +87,7 @@ EpochDependency::removeIntersection(SuccessorBagType successors) {
   );
   for (auto ep : intersection) {
     theTerm()->consume(ep,1);
+    theTerm()->removeEpochStateDependency(ep);
   }
   successors_ = remaining;
   return intersection;
@@ -129,6 +131,7 @@ void EpochDependency::clearSuccessors() {
     // Consume the successor epoch to release it so it can now possibly complete
     // since the child is terminated
     theTerm()->consume(successor,1);
+    theTerm()->removeEpochStateDependency(successor);
   }
 
   // Clear the successor list
