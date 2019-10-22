@@ -791,6 +791,29 @@ void TerminationDetector::addDependency(EpochType predecessor, EpochType success
 
   if (has_successor) {
     if (not isEpochTerminated(predecessor)) {
+      /*
+       * Dependency optimization:
+       *
+       * Say that the current dependency structure looks like this:
+       *   where
+       *     succ successors are {c1, c2}
+       *     pred successors are {c1, c3}
+       *
+       *                       succ    pred
+       *                       /  \    /  \
+       *                      c1  c2  c1  c3
+       *
+       * Now that we have added a new dependency, pred -> succ, pred's c1
+       * dependency is carried through the transitive dependency. Thus, we
+       * transform this graph (LHS) to a simpler graph (RHS):
+       *
+       *                pred                    pred
+       *                / | \                   /  \
+       *               c1 c2 succ      ====>   c2  succ
+       *                     /  \                  /  \
+       *                    c1  c3                c1  c3
+       *
+       */
       auto pred = getEpochDep(predecessor);
       auto succ_successors = getEpochDep(successor)->getSuccessors();
       pred->removeIntersection(succ_successors);
