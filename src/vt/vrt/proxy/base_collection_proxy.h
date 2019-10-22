@@ -50,20 +50,14 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-struct BaseCollectionProxy {
-  using CollectionType = ColT;
-  using IndexType = IndexT;
+struct TypelessCollectionProxy {
+  TypelessCollectionProxy() = default;
+  explicit TypelessCollectionProxy(VirtualProxyType in_proxy)
+    : proxy_(in_proxy)
+  { }
 
-  BaseCollectionProxy() = default;
-  BaseCollectionProxy(BaseCollectionProxy const&) = default;
-  BaseCollectionProxy(BaseCollectionProxy&&) = default;
-  explicit BaseCollectionProxy(VirtualProxyType const in_proxy);
-  BaseCollectionProxy& operator=(
-    BaseCollectionProxy const&
-  ) = default;
-
-  VirtualProxyType getProxy() const;
+public:
+  VirtualProxyType getProxy() const { return proxy_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -74,7 +68,75 @@ protected:
   VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
+template <typename IndexT>
+struct IndexOnlyTypedProxy : TypelessCollectionProxy {
+
+  IndexOnlyTypedProxy() = default;
+
+  template <typename T>
+  explicit IndexOnlyTypedProxy(T t)
+    : TypelessCollectionProxy(t.getCollectionProxy()),
+      idx_(t.getElementProxy().getIndex())
+  { }
+  IndexOnlyTypedProxy(VirtualProxyType proxy, IndexT const& idx)
+    : TypelessCollectionProxy(proxy), idx_(idx)
+  { }
+
+  bool operator==(IndexOnlyTypedProxy<IndexT> const& other) const {
+    return other.idx_ == idx_ and other.proxy_ == proxy_;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    TypelessCollectionProxy::serialize(s);
+    s | idx_;
+  }
+
+  friend std::ostream& operator<<(
+    std::ostream& os, IndexOnlyTypedProxy<IndexT> const& pr
+  ) {
+    os << "("
+       << "vrt=" << pr.getProxy() << ","
+       << "idx=" << pr.getIndex()
+       << ")";
+    return os;
+  }
+
+  IndexT getIndex() const { return idx_; }
+
+protected:
+  IndexT idx_;
+};
+
+template <typename ColT, typename IndexT>
+struct BaseCollectionProxy : TypelessCollectionProxy {
+  using CollectionType = ColT;
+  using IndexType = IndexT;
+
+  BaseCollectionProxy() = default;
+  BaseCollectionProxy(BaseCollectionProxy const&) = default;
+  BaseCollectionProxy(BaseCollectionProxy&&) = default;
+  explicit BaseCollectionProxy(VirtualProxyType const in_proxy);
+  BaseCollectionProxy& operator=(BaseCollectionProxy const&) = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    TypelessCollectionProxy::serialize(s);
+  }
+};
+
 }}} /* end namespace vt::vrt::collection */
+
+namespace std {
+  template <typename IndexT>
+  struct hash<vt::vrt::collection::IndexOnlyTypedProxy<IndexT>> {
+    size_t operator()(
+      vt::vrt::collection::IndexOnlyTypedProxy<IndexT> const& in
+    ) const {
+      return std::hash<IndexT>()(in.getIndex());
+    }
+  };
+}
 
 #include "vt/vrt/proxy/base_collection_proxy.impl.h"
 

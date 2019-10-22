@@ -60,7 +60,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename MessageT, typename ColT>
 using RoutedMessageType = LocationRoutedMsg<
-  ::vt::vrt::VirtualElmProxyType<ColT, typename ColT::IndexType>, MessageT
+  ::vt::vrt::collection::IndexOnlyTypedProxy<typename ColT::IndexType>, MessageT
 >;
 
 #pragma GCC diagnostic push

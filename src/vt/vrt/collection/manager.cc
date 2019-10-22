@@ -47,6 +47,7 @@
 #include "vt/vrt/base/base.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke.h"
+#include "vt/vrt/proxy/base_collection_proxy.impl.h"
 
 namespace vt { namespace vrt { namespace collection {
 

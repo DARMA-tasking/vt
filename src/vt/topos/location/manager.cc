@@ -77,3 +77,24 @@ namespace vt { namespace location {
 /*static*/ LocInstType LocationManager::cur_loc_inst = 0xFF00000000000000;
 
 }}  // end namespace vt::location
+
+#include "fmt/ostream.h"
+
+namespace vt { namespace location {
+
+template <typename T>
+using ColProxyType = typename LocationManager::CollectionProxyType<T>;
+
+template struct EntityLocationCoord<ColProxyType<vt::IdxType1D<std::size_t>>>;
+template struct EntityLocationCoord<ColProxyType<vt::IdxType2D<std::size_t>>>;
+template struct EntityLocationCoord<ColProxyType<vt::IdxType3D<std::size_t>>>;
+
+template struct EntityLocationCoord<ColProxyType<vt::IdxType1D<int32_t>>>;
+template struct EntityLocationCoord<ColProxyType<vt::IdxType2D<int32_t>>>;
+template struct EntityLocationCoord<ColProxyType<vt::IdxType3D<int32_t>>>;
+
+template struct EntityLocationCoord<ColProxyType<vt::IdxType1D<int16_t>>>;
+template struct EntityLocationCoord<ColProxyType<vt::IdxType2D<int16_t>>>;
+template struct EntityLocationCoord<ColProxyType<vt::IdxType3D<int16_t>>>;
+
+}} /* end namespace vt::location */

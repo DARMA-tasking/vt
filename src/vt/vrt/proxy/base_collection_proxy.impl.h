@@ -53,13 +53,8 @@ namespace vt { namespace vrt { namespace collection {
 template <typename ColT, typename IndexT>
 BaseCollectionProxy<ColT, IndexT>::BaseCollectionProxy(
   VirtualProxyType const in_proxy
-) : proxy_(in_proxy)
+) : TypelessCollectionProxy(in_proxy)
 { }
-
-template <typename ColT, typename IndexT>
-VirtualProxyType BaseCollectionProxy<ColT, IndexT>::getProxy() const {
-  return proxy_;
-}
 
 }}} /* end namespace vt::vrt::collection */
 

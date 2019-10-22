@@ -1484,11 +1484,12 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     );
 
     // route the message to the destination using the location manager
-    auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
+    auto lm = theLocMan()->getCollectionLM<IdxT>(col_proxy);
     vtAssert(lm != nullptr, "LM must exist");
+    IndexOnlyTypedProxy<IdxT> iproxy{toProxy};
     lm->template routeMsgSerializeHandler<
       MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
-    >(toProxy, home_node, msg);
+    >(iproxy, home_node, msg);
 
     theMsg()->popEpoch(cur_epoch);
   } else {
@@ -1599,13 +1600,13 @@ bool CollectionManager::insertCollectionElement(
     });
 
     if (is_migrated_in) {
-      theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntityMigrated(
-        VrtElmProxy<ColT, IndexT>{proxy,idx}, migrated_from,
+      theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntityMigrated(
+        IndexOnlyTypedProxy<IndexT>{proxy,idx}, migrated_from,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
     } else {
-      theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntity(
-        VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node,
+      theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
+        IndexOnlyTypedProxy<IndexT>{proxy,idx}, home_node,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
     }
@@ -1675,7 +1676,7 @@ CollectionManager::constructCollectiveMap(
 
   // Invoke getCollectionLM() to create a new location manager instance for this
   // collection
-  theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
+  theLocMan()->getCollectionLM<IndexT>(proxy);
 
   debug_print(
     vrt_coll, node,
@@ -1920,7 +1921,7 @@ InsertToken<ColT> CollectionManager::constructInsert(
 
   // Invoke getCollectionLM() to create a new location manager instance for this
   // collection
-  theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
+  theLocMan()->getCollectionLM<IndexT>(proxy);
 
   // Start the local collection initiation process, lcoal meta-info about the
   // collection. Insert epoch is `no_epoch` because dynamic insertions are not
@@ -2001,7 +2002,7 @@ template <typename ColT, typename... Args>
    *  This is to ensure that the collection LM instance gets created so that
    *  messages can be forwarded properly
    */
-  theLocMan()->getCollectionLM<ColT,IndexType>(proxy);
+  theLocMan()->getCollectionLM<IndexType>(proxy);
 }
 
 template <typename ColT>
@@ -2709,9 +2710,8 @@ MigrateStatus CollectionManager::migrateOut(
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
    >(dest, msg);
 
-   theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityMigrated(
-     proxy, dest
-   );
+   IndexOnlyTypedProxy<IndexT> iproxy{proxy};
+   theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityMigrated(iproxy, dest);
 
    /*
     * Invoke the virtual epilog migrate out function

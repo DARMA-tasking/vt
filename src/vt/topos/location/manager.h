@@ -51,7 +51,7 @@
 #include "vt/topos/location/manager.fwd.h"
 #include "vt/topos/location/utility/coord.h"
 #include "vt/vrt/vrt_common.h"
-#include "vt/vrt/collection/proxy.h"
+#include "vt/vrt/proxy/base_collection_proxy.h"
 
 #include <unordered_map>
 #include <functional>
@@ -66,12 +66,13 @@ struct LocationManager {
   using VrtLocType = EntityLocationCoord<int32_t>;
   using VrtLocProxyType = EntityLocationCoord<VirtualProxyType>;
 
-  template <typename ColT, typename IndexT>
-  using CollectionProxyType = ::vt::vrt::VirtualElmProxyType<ColT, IndexT>;
-  template <typename ColT, typename IndexT>
-  using VrtColl = EntityLocationCoord<CollectionProxyType<ColT, IndexT>>;
-  template <typename ColT, typename IndexT>
-  using CollectionLocType = PtrType<VrtColl<ColT, IndexT>>;
+  template <typename IndexT>
+  using CollectionProxyType = vt::vrt::collection::IndexOnlyTypedProxy<IndexT>;
+  template <typename IndexT>
+  using VrtColl = EntityLocationCoord<CollectionProxyType<IndexT>>;
+  template <typename IndexT>
+  using CollectionLocType = PtrType<VrtColl<IndexT>>;
+
   using LocErasureType = LocationCoord;
   using LocDeleterType = std::function<void(LocErasureType*)>;
   using CollectionLocErasedType = std::unique_ptr<
@@ -94,9 +95,9 @@ struct LocationManager {
   PtrType<VrtLocType> virtual_loc = std::make_unique<VrtLocType>();
   PtrType<VrtLocProxyType> vrtContextLoc = std::make_unique<VrtLocProxyType>();
 
-  template <typename ColT, typename IndexT>
-  VrtColl<ColT, IndexT>* getCollectionLM(VirtualProxyType const& proxy);
-  template <typename ColT, typename IndexT>
+  template <typename IndexT>
+  VrtColl<IndexT>* getCollectionLM(VirtualProxyType const& proxy);
+  template <typename IndexT>
   void insertCollectionLM(VirtualProxyType const& proxy);
 
 public:
