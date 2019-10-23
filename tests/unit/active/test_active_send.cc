@@ -141,6 +141,11 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
       EXPECT_EQ(handler_count, num_msg_sent);
     });
   }
+
+  // Spin here so test_vec does not go out of scope before the send completes
+  while (not vt::rt->isTerminated()) {
+    vt::runScheduler();
+  }
 }
 
 TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
@@ -164,6 +169,11 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
       );
     }
   }
+
+  // Spin here so test_vec does not go out of scope before the send completes
+  while (not vt::rt->isTerminated()) {
+    vt::runScheduler();
+  }
 }
 
 TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
@@ -186,6 +196,11 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
         1, msg
       );
     }
+  }
+
+  // Spin here so test_vec does not go out of scope before the send completes
+  while (not vt::rt->isTerminated()) {
+    vt::runScheduler();
   }
 }
 
