@@ -46,7 +46,7 @@ set(
     termination
       termination/dijkstra-scholten
       termination/interval
-      termination/tree
+      termination/graph
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
