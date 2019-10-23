@@ -112,6 +112,11 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
     #endif
     theMsg()->sendMsg<PutTestMessage, test_handler>(1, msg);
   }
+
+  // Spin here so test_vec does not go out of scope before the send completes
+  while (not vt::rt->isTerminated()) {
+    vt::runScheduler();
+  }
 }
 
 INSTANTIATE_TEST_CASE_P(
