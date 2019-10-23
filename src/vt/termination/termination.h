@@ -102,6 +102,8 @@ struct TerminationDetector :
     EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
     NodeType node = uninitialized_destination
   );
+  inline void hangDetectSend() { hang_.l_prod++; }
+  inline void hangDetectRecv() { hang_.l_cons++; }
   /***************************************************************************/
 
   friend struct ds::StateDS;
@@ -174,6 +176,10 @@ private:
 
   EpochType getArchetype(EpochType const& epoch) const;
   EpochWindow* getWindow(EpochType const& epoch);
+  void countsConstant(TermStateType& state);
+
+public:
+  void startEpochGraphBuild();
 
 private:
   void updateResolvedEpochs(EpochType const& epoch);
@@ -181,7 +187,7 @@ private:
   void replyTerminated(EpochType const& epoch, bool const& is_terminated);
 
 public:
-  void setLocalTerminated(bool const terminated, bool const no_local = true);
+  void setLocalTerminated(bool const terminated, bool const no_propagate = true);
   void maybePropagate();
   TermCounterType getNumUnits() const;
 
@@ -195,6 +201,7 @@ public:
   std::shared_ptr<EpochGraph> makeGraph();
 
 private:
+  static void hangCheckHandler(HangCheckMsg* msg);
   static void buildLocalGraphHandler(BuildGraphMsg* msg);
   static void epochGraphBuiltHandler(EpochGraphMsg* msg);
 
@@ -225,6 +232,8 @@ private:
 private:
   // global termination state
   TermStateType any_epoch_state_;
+  // hang detector termination state
+  TermStateType hang_;
   // epoch termination state
   EpochContainerType<TermStateType> epoch_state_        = {};
   // epoch window container for specific archetyped epochs
@@ -235,6 +244,8 @@ private:
   std::unordered_set<EpochType> epoch_ready_            = {};
   // list of remote epochs pending status report of finished
   std::unordered_set<EpochType> epoch_wait_status_      = {};
+  // has printed epoch graph during abort
+  bool has_printed_epoch_graph                          = false;
 };
 
 }} // end namespace vt::term

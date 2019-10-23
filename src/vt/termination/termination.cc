@@ -65,6 +65,7 @@ namespace vt { namespace term {
 TerminationDetector::TerminationDetector()
   : collective::tree::Tree(collective::tree::tree_cons_tag_t),
   any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
+  hang_(no_epoch, true, false, getNumChildren()),
   epoch_coll_(std::make_unique<EpochWindow>())
 { }
 
@@ -129,17 +130,17 @@ TermCounterType TerminationDetector::getNumUnits() const {
 }
 
 void TerminationDetector::setLocalTerminated(
-  bool const local_terminated, bool const no_local
+  bool const local_terminated, bool const no_propagate
 ) {
   debug_print(
     term, node,
-    "setLocalTerminated: is_term={}, no_local_workers={}\n",
-    print_bool(local_terminated), print_bool(no_local)
+    "setLocalTerminated: is_term={}, no_propagate={}\n",
+    local_terminated, no_propagate
   );
 
   any_epoch_state_.notifyLocalTerminated(local_terminated);
 
-  if (local_terminated && !no_local) {
+  if (local_terminated && !no_propagate) {
     theTerm()->maybePropagate();
   }
 }
@@ -249,10 +250,12 @@ void TerminationDetector::produceConsume(
 }
 
 void TerminationDetector::maybePropagate() {
-  bool const ready = any_epoch_state_.readySubmitParent();
-
-  if (ready) {
+  if (any_epoch_state_.readySubmitParent()) {
     propagateEpoch(any_epoch_state_);
+  }
+
+  if (hang_.readySubmitParent()) {
+    propagateEpoch(hang_);
   }
 
   for (auto&& iter = epoch_state_.begin(); iter != epoch_state_.end(); ) {
@@ -304,6 +307,9 @@ void TerminationDetector::propagateEpochExternal(
 
   if (epoch == any_epoch_sentinel) {
     propagateEpochExternalState(any_epoch_state_, prod, cons);
+  } else if (epoch == no_epoch) {
+    // Dispatch to special hang detection epoch, demarcated as "no_epoch"
+    propagateEpochExternalState(hang_, prod, cons);
   } else {
     auto& state = findOrCreateState(epoch, false);
     propagateEpochExternalState(state, prod, cons);
@@ -422,6 +428,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
   if (is_ready) {
     bool is_term = false;
 
+    // Update the global counters for a given epoch
     state.g_prod1 += state.l_prod;
     state.g_cons1 += state.l_cons;
 
@@ -460,6 +467,26 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         state.g_cons2, is_term
       );
 
+      if (not ArgType::vt_no_detect_hang) {
+        // Hang detection has confirmed a fatal hang---abort!
+        if (is_term and state.getEpoch() == no_epoch) {
+          vt_print(
+            term,
+            "Detected hang: write graph to file={}\n",
+            arguments::ArgConfig::vt_epoch_graph_on_hang
+          );
+          if (arguments::ArgConfig::vt_epoch_graph_on_hang) {
+            startEpochGraphBuild();
+            // After spawning the build, spin until the file gets written out so
+            // vtAbort does not exit too early
+            while (not has_printed_epoch_graph or not theSched()->isIdle()) {
+              vt::runScheduler();
+            }
+          }
+          vtAbort("Detected hang indicating no further progress is possible");
+        }
+      }
+
       if (is_term) {
         auto msg = makeSharedMessage<TermMsg>(state.getEpoch());
         theMsg()->setTermMessage(msg);
@@ -469,70 +496,14 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         epochTerminated(state.getEpoch());
       } else {
-        if (!ArgType::vt_no_detect_hang) {
-          // Counts are the same as previous iteration
-          if (state.g_prod2 == state.g_prod1 && state.g_cons2 == state.g_cons1) {
-            state.constant_count++;
-          } else {
-            state.constant_count = 0;
-          }
+        if (state.g_prod2 == state.g_prod1 and state.g_cons2 == state.g_cons1) {
+          state.constant_count++;
+        } else {
+          state.constant_count = 0;
+        }
 
-          if (
-            state.constant_count >= ArgType::vt_hang_freq and
-            state.constant_count %  ArgType::vt_hang_freq == 0
-          ) {
-            if (
-              state.num_print_constant == 0 or
-              std::log(static_cast<double>(state.constant_count)) >
-              state.num_print_constant
-            ) {
-              auto node            = ::vt::debug::preNode();
-              auto vt_pre          = ::vt::debug::vtPre();
-              auto node_str        = ::vt::debug::proc(node);
-              auto prefix          = vt_pre + node_str + " ";
-              auto reset           = ::vt::debug::reset();
-              auto bred            = ::vt::debug::bred();
-              auto magenta         = ::vt::debug::magenta();
-
-              // debug additional infos
-              auto const& current  = state.getEpoch();
-              bool const is_rooted = epoch::EpochManip::isRooted(current);
-              bool const has_categ = epoch::EpochManip::hasCategory(current);
-              bool const useDS = has_categ
-                and epoch::EpochManip::category(current) ==
-                    epoch::eEpochCategory::DijkstraScholtenEpoch;
-
-              auto f1 = fmt::format(
-                "{}Termination hang detected:{} {}traversals={} epoch={:x} "
-                "produced={}{} {}consumed={}{} rooted={}, ds={}\n",
-                bred, reset,
-                magenta, state.constant_count, state.getEpoch(), state.g_prod1,
-                reset, magenta, state.g_cons1, reset, is_rooted, useDS
-              );
-              vt_print(term, "{}", f1);
-              state.num_print_constant++;
-
-              #if !backend_check_enabled(production)
-                if (state.num_print_constant > 10) {
-                  static bool has_printed = false;
-                  if (not has_printed) {
-                    has_printed = true;
-                    // Broadcast to build local EpochGraph(s) and then merge them
-                    auto msg = makeMessage<BuildGraphMsg>();
-                    theMsg()->setTermMessage(msg.get());
-                    theMsg()->broadcastMsg<BuildGraphMsg, buildLocalGraphHandler>(msg.get());
-                    // Run build graph locally on root
-                    buildLocalGraphHandler(nullptr);
-                  }
-
-                  // vtAbort(
-                  //   "Hang detected (consumed != produced) for k tree "
-                  //   "traversals"
-                  // );
-                }
-              #endif
-            }
-          }
+        if (state.constant_count > 0) {
+          countsConstant(state);
         }
 
         state.g_prod2 = state.g_prod1;
@@ -568,24 +539,139 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
   return is_ready;
 }
 
+void TerminationDetector::countsConstant(TermStateType& state) {
+  bool enter = not ArgType::vt_no_detect_hang or ArgType::vt_print_no_progress;
+  if (enter) {
+    bool is_global_epoch = state.getEpoch() == any_epoch_sentinel;
+    bool is_hang_detector = state.getEpoch() == no_epoch;
+
+    auto reset           = ::vt::debug::reset();
+    auto bred            = ::vt::debug::bred();
+    auto magenta         = ::vt::debug::magenta();
+
+    if (is_hang_detector) {
+      auto f1 = fmt::format(
+        "{}Progress has stalled, but hang detection implies messages are in"
+        " flight!{}\n",
+        bred, reset
+      );
+      vt_print(term, "{}", f1);
+      return;
+    }
+
+    if (
+      state.constant_count >= ArgType::vt_hang_freq and
+      state.constant_count %  ArgType::vt_hang_freq == 0
+    ) {
+      if (
+        state.num_print_constant == 0 or
+        std::log(static_cast<double>(state.constant_count)) >
+        state.num_print_constant
+      ) {
+        debug_print(
+          term, node,
+          "countsConstant: epoch={:x}, state.constant_count={}\n",
+          state.getEpoch(), state.constant_count
+        );
+
+        if (ArgType::vt_print_no_progress) {
+          auto const current  = state.getEpoch();
+          bool const is_rooted = epoch::EpochManip::isRooted(current);
+          bool const has_categ = epoch::EpochManip::hasCategory(current);
+          bool const useDS = has_categ and
+            epoch::EpochManip::category(current) ==
+            epoch::eEpochCategory::DijkstraScholtenEpoch;
+
+          auto f1 = fmt::format(
+            "{}Termination counts constant (no progress) for:{} {}traversals={} "
+            "epoch={:x} produced={}{} {}consumed={}{} rooted={}, ds={}\n",
+            bred, reset,
+            magenta, state.constant_count, state.getEpoch(), state.g_prod1,
+            reset, magenta, state.g_cons1, reset, is_rooted, useDS
+          );
+          vt_print(term, "{}", f1);
+        }
+
+        state.num_print_constant++;
+
+        if (state.num_print_constant == 10) {
+          if (is_global_epoch) {
+            // Start running final check to see if we are hung for sure
+            if (not ArgType::vt_no_detect_hang) {
+              auto msg = makeMessage<HangCheckMsg>();
+              theMsg()->setTermMessage(msg.get());
+              theMsg()->broadcastMsg<HangCheckMsg, hangCheckHandler>(msg.get());
+              hangCheckHandler(nullptr);
+            }
+          }
+        }
+      }
+    }
+  }
+
+}
+
+void TerminationDetector::startEpochGraphBuild() {
+  // Broadcast to build local EpochGraph(s), merge the graphs, and output to
+  // file
+  if (arguments::ArgConfig::vt_epoch_graph_on_hang) {
+    auto msg = makeMessage<BuildGraphMsg>();
+    theMsg()->setTermMessage(msg.get());
+    theMsg()->broadcastMsg<BuildGraphMsg, buildLocalGraphHandler>(msg.get());
+    buildLocalGraphHandler(nullptr);
+  }
+}
+
+/*static*/ void TerminationDetector::hangCheckHandler(HangCheckMsg* msg) {
+  fmt::print("{}:hangCheckHandler\n",theContext()->getNode());
+  theTerm()->hang_.activateEpoch();
+}
+
 /*static*/ void TerminationDetector::buildLocalGraphHandler(BuildGraphMsg*) {
   using MsgType  = EpochGraphMsg;
   using ReduceOp = collective::PlusOp<EpochGraph>;
+
+  debug_print(
+    term, node,
+    "buildLocalGraphHandler: building local epoch graph\n"
+  );
+
+  /*
+   * Make the local epoch graph on this node
+   */
+  auto graph = theTerm()->makeGraph();
+
+  /*
+   * Check for any cycles in the graph. If cycles are detected (will always
+   * cause a hang) `detectCycles` will abort and print the cycle that was found.
+   */
+  graph->detectCycles();
+
+  /*
+   * Generate the DOT file to output to file, reduce to create a global view of
+   * the epoch graph
+   */
+  auto str = graph->outputDOT();
+  graph->writeToFile(str);
+  auto msg = makeMessage<MsgType>(graph);
   NodeType root = 0;
   auto cb = vt::theCB()->makeSend<MsgType, epochGraphBuiltHandler>(root);
-  auto graph = theTerm()->makeGraph();
-  graph->detectCycles();
-  auto str = graph->outputDOT();
-  fmt::print("{}::::::\n{}\n",theContext()->getNode(), str);
-  auto msg = makeMessage<MsgType>(graph);
   theCollective()->reduce<ReduceOp>(root, msg.get(), cb);
+  if (theContext()->getNode() != root) {
+    theTerm()->has_printed_epoch_graph = true;
+  }
 }
 
 /*static*/ void TerminationDetector::epochGraphBuiltHandler(EpochGraphMsg* msg) {
-  fmt::print("epochGraphBuiltHandler\n");
+  debug_print(
+    term, node,
+    "epochGraphBuiltHandler: collected global, merged graph\n"
+  );
+
   auto graph = msg->getVal();
   auto str = graph.outputDOT();
-  fmt::print("{}\n",str);
+  graph.writeToFile(str, true);
+  theTerm()->has_printed_epoch_graph = true;
 }
 
 void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
@@ -755,6 +841,8 @@ void TerminationDetector::epochContinue(
 
   if (epoch == any_epoch_sentinel) {
     any_epoch_state_.receiveContinueSignal(wave);
+  } else if (epoch == no_epoch) {
+    hang_.receiveContinueSignal(wave);
   } else {
     auto epoch_iter = epoch_state_.find(epoch);
     if (epoch_iter != epoch_state_.end()) {
