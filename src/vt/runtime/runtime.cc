@@ -58,6 +58,7 @@
 #include "vt/pipe/pipe_manager.h"
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/termination/termination.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/collection_headers.h"
@@ -1039,9 +1040,24 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     theWorkerGrp->registerIdleListener(localTermFn);
   } else {
     // Without workers running on the node, the termination detector should
-    // assume its locally ready to propagate instead of waiting for them to
-    // become idle.
-    theTerm->setLocalTerminated(true);
+    // enable/disable the global collective epoch based on the state of the
+    // scheduler; register listeners to activate/deactivate that epoch
+    theSched->registerTrigger(
+      sched::SchedulerEvent::BeginIdleMinusTerm, []{
+        vt_print(
+          runtime, "setLocalTerminated: BeginIdle: true\n"
+        );
+        vt::theTerm()->setLocalTerminated(true, false);
+      }
+    );
+    theSched->registerTrigger(
+      sched::SchedulerEvent::EndIdleMinusTerm, []{
+        vt_print(
+          runtime, "setLocalTerminated: EndIdle: false\n"
+        );
+        vt::theTerm()->setLocalTerminated(false, false);
+      }
+    );
   }
 
   debug_print(runtime, node, "end: initializeWorkers\n");

@@ -51,11 +51,17 @@ namespace vt { namespace sched {
 
 template <typename MsgT>
 void Scheduler::enqueue(MsgT* msg, ActionType action) {
+  bool const is_term = envelopeIsTerm(msg->env);
+
+  if (is_term) {
+    num_term_msgs_++;
+  }
+
 # if backend_check_enabled(priorities)
   auto priority = envelopeGetPriority(msg->env);
-  work_queue_.emplace(UnitType(priority, action));
+  work_queue_.emplace(UnitType(is_term, priority, action));
 # else
-  work_queue_.emplace(UnitType(action));
+  work_queue_.emplace(UnitType(is_term, action));
 # endif
 }
 

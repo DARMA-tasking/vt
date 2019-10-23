@@ -52,8 +52,8 @@ namespace vt { namespace sched {
 struct PriorityUnit {
   using UnitActionType = ActionType;
 
-  PriorityUnit(PriorityType in_priority, UnitActionType in_work)
-    : work_(in_work), priority_(in_priority)
+  PriorityUnit(bool in_is_term, PriorityType in_priority, UnitActionType in_work)
+    : work_(in_work), priority_(in_priority), is_term_(in_is_term)
   { }
 
   void operator()() { execute(); }
@@ -67,9 +67,12 @@ struct PriorityUnit {
     return lhs.priority_ < rhs.priority_;
   }
 
+  bool isTerm() const { return is_term_; }
+
 private:
-  UnitActionType work_  = nullptr;
+  UnitActionType work_   = nullptr;
   PriorityType priority_ = no_priority;
+  bool is_term_          = false;
 };
 
 }} /* end namespace vt::sched */
