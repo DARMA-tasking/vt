@@ -54,8 +54,8 @@ namespace vt { namespace sched {
 struct Unit {
   using UnitActionType = ActionType;
 
-  explicit Unit(UnitActionType in_work)
-    : work_(in_work)
+  Unit(bool in_is_term, UnitActionType in_work)
+    : work_(in_work), is_term_(in_is_term)
   { }
 
   void operator()() { execute(); }
@@ -65,8 +65,11 @@ struct Unit {
     work_();
   }
 
+  bool isTerm() const { return is_term_; }
+
 private:
   UnitActionType work_ = nullptr;
+  bool is_term_        = false;
 };
 
 }} /* end namespace vt::sched */
