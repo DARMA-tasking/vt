@@ -69,25 +69,31 @@ Scheduler::Scheduler() {
 }
 
 void Scheduler::enqueue(ActionType action) {
+  bool const is_term = false;
 # if backend_check_enabled(priorities)
-  work_queue_.emplace(UnitType(default_priority, action));
+  work_queue_.emplace(UnitType(is_term, default_priority, action));
 # else
-  work_queue_.emplace(UnitType(action));
+  work_queue_.emplace(UnitType(is_term, action));
 # endif
 }
 
 void Scheduler::enqueue(PriorityType priority, ActionType action) {
+  bool const is_term = false;
 # if backend_check_enabled(priorities)
-  work_queue_.emplace(UnitType(priority, action));
+  work_queue_.emplace(UnitType(is_term, priority, action));
 # else
-  work_queue_.emplace(UnitType(action));
+  work_queue_.emplace(UnitType(is_term, action));
 # endif
 }
 
 bool Scheduler::runNextUnit() {
   if (not work_queue_.empty()) {
     auto elm = work_queue_.pop();
+    bool const is_term = elm.isTerm();
     elm();
+    if (is_term) {
+      num_term_msgs_--;
+    }
     return true;
   } else {
     return false;
@@ -113,10 +119,6 @@ bool Scheduler::progressImpl() {
     msg_sch or evt_sch or seq_sch or vrt_sch or
     col_sch or obj_sch or worker_sch or worker_comm_sch;
 
-  if (scheduled_work) {
-    is_idle = false;
-  }
-
   return scheduled_work;
 }
 
@@ -125,20 +127,58 @@ bool Scheduler::progressMsgOnlyImpl() {
 }
 
 void Scheduler::scheduler(bool msg_only) {
+  /*
+   * Run through the progress functions `num_iter` times, making forward
+   * progress on MPI
+   */
   auto const num_iter = std::max(1, arguments::ArgConfig::vt_sched_num_progress);
   for (int i = 0; i < num_iter; i++) {
     if (msg_only) {
+      // This is a special case used only during startup when other components
+      // are not ready and progress should not be called on them.
       progressMsgOnlyImpl();
     } else {
       progressImpl();
     }
   }
 
-  if (work_queue_.empty() and not is_idle) {
-    is_idle = true;
-    // idle
-    triggerEvent(SchedulerEventType::BeginIdle);
+  /*
+   * Handle cases when the system goes from term-idle to non-term-idle; trigger
+   * user registered listeners
+   */
+  if (num_term_msgs_ == work_queue_.size()) {
+    if (not is_idle_minus_term) {
+      is_idle_minus_term = true;
+      triggerEvent(SchedulerEventType::BeginIdleMinusTerm);
+    }
   } else {
+    if (is_idle_minus_term) {
+      is_idle_minus_term = false;
+      triggerEvent(SchedulerEventType::EndIdleMinusTerm);
+    }
+  }
+
+  /*
+   * Handle cases when the system goes from completely idle or not; trigger user
+   * registered listeners
+   */
+  if (work_queue_.empty()) {
+    if (not is_idle) {
+      is_idle = true;
+      // Trigger any registered listeners on idle
+      triggerEvent(SchedulerEventType::BeginIdle);
+    }
+  } else {
+    if (is_idle) {
+      is_idle = false;
+      triggerEvent(SchedulerEventType::EndIdle);
+    }
+  }
+
+  /*
+   * Run a work unit!
+   */
+  if (not work_queue_.empty()) {
     runNextUnit();
   }
 
