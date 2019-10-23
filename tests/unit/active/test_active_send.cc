@@ -82,7 +82,9 @@ struct TestActiveSend : TestParallelHarness {
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
-      fmt::print("{}: test_handler_2: size={}, ptr={}\n", this_node, size, ptr);
+      fmt::print(
+        "{}: test_handler_2: size={}, ptr={}\n", this_node, size, print_ptr(ptr)
+      );
     #endif
     EXPECT_EQ(2 * sizeof(int), size);
     for (int i = 0; i < 2; i++) {
@@ -95,7 +97,9 @@ struct TestActiveSend : TestParallelHarness {
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
-      fmt::print("{}: test_handler_3: size={}, ptr={}\n", this_node, size, ptr);
+      fmt::print(
+        "{}: test_handler_3: size={}, ptr={}\n", this_node, size, print_ptr(ptr)
+      );
     #endif
     EXPECT_EQ(10 * sizeof(int), size);
     for (int i = 0; i < 10; i++) {
@@ -107,7 +111,7 @@ struct TestActiveSend : TestParallelHarness {
     auto const& this_node = theContext()->getNode();
 
     #if DEBUG_TEST_HARNESS_PRINT
-      fmt::print("{}: test_handler: cnt={}\n", this_node, ack_count);
+      fmt::print("{}: test_handler: cnt={}\n", this_node, handler_count);
     #endif
 
     handler_count++;
