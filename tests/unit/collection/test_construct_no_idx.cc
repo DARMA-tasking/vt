@@ -86,11 +86,11 @@ using CollectionTestTypes = testing::Types<
 >;
 
 INSTANTIATE_TYPED_TEST_CASE_P(
-  test_construct_no_idx, TestConstruct, CollectionTestTypes
+  test_construct_no_idx, TestConstruct, CollectionTestTypes,
 );
 
 INSTANTIATE_TYPED_TEST_CASE_P(
-  test_construct_no_idx_dist, TestConstructDist, CollectionTestTypes
+  test_construct_no_idx_dist, TestConstructDist, CollectionTestTypes,
 );
 
 }}} // end namespace vt::tests::unit
