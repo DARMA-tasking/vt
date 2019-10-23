@@ -209,6 +209,7 @@ EventType ActiveMessenger::sendMsgBytes(
 
   if (not is_term) {
     theTerm()->produce(epoch,1,dest);
+    theTerm()->hangDetectSend();
   }
 
   for (auto&& l : send_listen_) {
@@ -323,6 +324,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   // Assume that any raw data send/recv is paired with a message with an epoch
   // if required to inhibit early termination of that epoch
   theTerm()->produce(term::any_epoch_sentinel,1,dest);
+  theTerm()->hangDetectSend();
 
   for (auto&& l : send_listen_) {
     l->send(dest, num_bytes, false);
@@ -466,15 +468,16 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     }
   };
 
-
   if (next == nullptr) {
     dealloc_buf();
     theTerm()->consume(term::any_epoch_sentinel,1,sender);
+    theTerm()->hangDetectRecv();
   } else {
     // If we have a continuation, schedule to run later
     auto run = [=]{
       next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
       theTerm()->consume(term::any_epoch_sentinel,1,sender);
+      theTerm()->hangDetectRecv();
     };
     theSched()->enqueue(irecv->priority, run);
   }
@@ -639,6 +642,7 @@ bool ActiveMessenger::deliverActiveMsg(
 
     if (not is_term) {
       theTerm()->consume(epoch,1,from_node);
+      theTerm()->hangDetectRecv();
     }
   } else {
     if (insert) {
