@@ -56,7 +56,7 @@ struct ReduceTMsg;
 
 namespace vt { namespace termination { namespace graph {
 
-// Must be templated (where T = tree::Epoch Tree) because of the circular
+// Must be templated (where T = graph::EpochGraph) because of the circular
 // dependency between termination.h and reduce.h
 template <typename T>
 struct EpochGraphMsg : collective::reduce::operators::ReduceTMsg<T> {
