@@ -51,12 +51,16 @@
 #include "vt/serialization/auto_dispatch/dispatch.h"
 #include "vt/serialization/auto_dispatch/dispatch_handler.h"
 #include "vt/serialization/auto_dispatch/dispatch_functor.h"
+#include "vt/scheduler/priority.h"
 
 namespace vt { namespace messaging {
 
 template <typename MsgPtrT>
 void ActiveMessenger::setTermMessage(MsgPtrT const msg) {
   setTermType(msg->env);
+#if backend_check_enabled(priorities)
+  envelopeSetPriority(msg->env, sys_min_priority);
+#endif
 }
 
 template <typename MsgPtrT>
