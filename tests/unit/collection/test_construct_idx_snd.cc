@@ -90,7 +90,7 @@ using CollectionTestTypes = testing::Types<
 #if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
 
   INSTANTIATE_TYPED_TEST_CASE_P(
-    test_construct_idx_snd, TestConstruct, CollectionTestTypes
+    test_construct_idx_snd, TestConstruct, CollectionTestTypes,
   );
 
 #endif /*backend_check_enabled(detector)*/
