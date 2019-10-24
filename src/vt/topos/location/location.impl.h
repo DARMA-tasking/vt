@@ -63,7 +63,8 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord()
-  : EntityLocationCoord<EntityID>(theLocMan()->cur_loc_inst++)
+  : EntityLocationCoord<EntityID>( (theLocMan()) ?
+    theLocMan()->cur_loc_inst++ : 0)
 { }
 
 template <typename EntityID>
