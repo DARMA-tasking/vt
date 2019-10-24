@@ -158,12 +158,12 @@ struct Trace {
   friend void
   insertNewUserEvent(UserEventIDType event, std::string const& name);
 
-  private:
+private:
   void editLastEntry(const std::function<void(LogPtrType)> &fn);
 
-  private:
-  TraceContainerType traces_;
-  TraceStackType open_events_;
+private:
+  TraceContainerType traces_ = {};
+  TraceStackType open_events_ = {};
   TraceEventIDType cur_event_ = 1;
   std::string prog_name_ = "";
   std::string trace_name_ = "";

@@ -51,7 +51,7 @@
 #include "vt/utils/demangle/demangle.h"
 
 #include <fstream>
-#include <inttypes.h>
+#include <cinttypes>
 #include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -62,11 +62,13 @@ using ArgType = vt::arguments::ArgConfig;
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
-    start_time_(getCurrentTime()) {
+    start_time_(getCurrentTime()),
+    log_file_()
+{
   initialize();
 }
 
-Trace::Trace() { initialize(); }
+Trace::Trace() : log_file_() { initialize(); }
 
 /*static*/ void Trace::traceBeginIdleTrigger() {
 #if backend_check_enabled(trace_enabled)
@@ -330,12 +332,7 @@ void Trace::endProcessing(
 
   logEvent(log);
 
-  // @TODO Fix the test to use memory usage from traces_
-  if ((traces_.size() > static_cast<size_t>(100 + cur_))
-      and (open_events_.empty())) {
-    writeTracesFile();
-  }
-
+  flushTracesFile();
 }
 
 void Trace::beginIdle(double const time) {
@@ -559,39 +556,45 @@ void Trace::flushTracesFile() {
   //
   // Barrier: synchronize all the nodes before flushing the traces
   //
-  if (curRT) {
-    curRT->systemSync();
+//  if (curRT) {
+//    curRT->systemSync();
+//  }
+//  else {
+//    // Something is wrong
+//    vtAssert(false, "Trying to flush traces when VT runtime is deallocated?");
+//  }
+
+  //
+  // Compute an estimate of memory cost for the array "traces_"
+  //
+
+  size_t memCost = sizeof(std::vector<LogPtrType>);
+  memCost += traces_.size() * sizeof(LogPtrType);
+  memCost += (traces_.size() - cur_) * sizeof(Log);
+  for (auto jj = static_cast<size_t>(cur_); jj < traces_.size(); ++jj) {
+    memCost += traces_[jj]->user_supplied_note.length();
   }
-  else {
-    // Something is wrong
-    vtAssert(false, "Trying to flush traces when VT runtime is deallocated?");
+  // UH (2019/10/24) --- Remove the printing before merging
+  std::cout << " node " << theContext()->getNode()
+            << " traces_.size " << traces_.size()
+            << " memCost " << memCost
+            << " MB " << double(memCost) / (1024.0 * 1024.0)
+            << std::endl;
+  //----
+
+  if ((memCost > 1024 * 1024 * ArgType::vt_trace_flush_mod)
+      and (open_events_.empty())) {
+    // TODO Check with JL whether he prefers Z_FINISH or Z_FULL_FLUSH
+    // https://www.zlib.net/manual.html
+    // If the flush parameter is Z_FINISH, the remaining data is written and
+    // the gzip stream is completed in the output.
+    // Z_FULL_FLUSH allows decompression to restart from this
+    // point if the previous compressed data has been lost or damaged.
+    // Flushing is
+    // likely to degrade the performance of the compression system, and should
+    // only be used where necessary.
+    writeTracesFile(Z_FULL_FLUSH);
   }
-  //
-  // Non-synchronized call to output the trace files
-  //
-  // TODO Ask JL whether he prefers Z_FINISH or Z_FULL_FLUSH
-  //
-  writeTracesFile(Z_FULL_FLUSH);
-  //
-  // traces_.size() - cur_
-  // yields how many traces have been added since latest flush
-  //
-  // https://www.zlib.net/manual.html
-  //
-  // gzflush: Flushes all pending output into the compressed file.
-  // If the flush parameter is Z_FINISH, the remaining data is written and
-  // the gzip stream is completed in the output.
-  // gzflush should be called only when strictly necessary because
-  // it will degrade compression if called too often.
-  // https://refspecs.linuxbase.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/zlib-gzflush-1.html
-  //
-  // Z_SYNC_FLUSH is intended to ensure that the compressed data contains all
-  // the data compressed so far, and allows a decompressor to reconstruct all of
-  // the input data.
-  // Z_FULL_FLUSH allows decompression to restart from this
-  // point if the previous compressed data has been lost or damaged. Flushing is
-  // likely to degrade the performance of the compression system, and should
-  // only be used where necessary.
 }
 
 void Trace::writeTracesFile(int flush) {
@@ -627,7 +630,6 @@ void Trace::writeTracesFile(int flush) {
 }
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
-
   for (auto i = cur_; i < traces.size(); i++) {
     auto& log = traces[i];
     auto const& converted_time = timeToInt(log->time - start_time_);
@@ -715,8 +717,6 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     delete log;
   }
 
-  // UH (2019/10/21) -- Do not increment cur_
-  //cur_ += traces.size();
   cur_ = traces.size();
 }
 
