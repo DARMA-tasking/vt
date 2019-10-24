@@ -106,10 +106,10 @@ void Trace::setupNames(
   //--- If vt_trace_dir is empty, it uses a "default" value.
   //--- Nothing has been specified (nor CLI nor 3rd party).
   //
-  if (ArgType::vt_trace_dir != "") {
-    full_dir_name_ = ArgType::vt_trace_dir;
-  } else {
+  if (ArgType::vt_trace_dir.empty()) {
     full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
+  } else {
+    full_dir_name_ = ArgType::vt_trace_dir;
   }
 
   if (full_dir_name_[full_dir_name_.size() - 1] != '/')
@@ -133,12 +133,12 @@ void Trace::setupNames(
   //--- If vt_trace_file is empty, it uses a "default" value.
   //--- Nothing has been specified (nor CLI nor 3rd party).
   //
-  if (ArgType::vt_trace_file != "") {
-    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
-    full_sts_name_ = full_dir_name_ + ArgType::vt_trace_file + ".sts";
-  } else {
+  if (ArgType::vt_trace_file.empty()) {
     full_trace_name_ = full_dir_name_ + trace_name;
     full_sts_name_ = full_dir_name_ + prog_name + ".sts";
+  } else {
+    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
+    full_sts_name_ = full_dir_name_ + ArgType::vt_trace_file + ".sts";
   }
 
 }
@@ -151,7 +151,7 @@ void Trace::addUserNote(std::string const& note) {
   auto const type = TraceConstantsType::UserSuppliedNote;
   auto const time = getCurrentTime();
 
-  LogPtrType log = new LogType(time, type);
+  auto log = new LogType(time, type);
   logEvent(log);
 
   editLastEntry([note](LogPtrType entry) { entry->setUserNote(note); });
@@ -163,7 +163,7 @@ void Trace::addUserData(int32_t data) {
   auto const type = TraceConstantsType::UserSupplied;
   auto const time = getCurrentTime();
 
-  LogPtrType log = new LogType(time, type);
+  auto log = new LogType(time, type);
   logEvent(log);
 
   editLastEntry([data](LogPtrType entry) { entry->setUserData(data); });
@@ -178,7 +178,7 @@ void Trace::addUserBracketedNote(
     end, note, event);
 
   auto const type = TraceConstantsType::UserSuppliedBracketedNote;
-  LogPtrType log = new LogType(begin, end, type, note, event);
+  auto log = new LogType(begin, end, type, note, event);
   logEvent(log);
 }
 
@@ -211,7 +211,7 @@ void Trace::addUserEvent(UserEventIDType event) {
   auto const type = TraceConstantsType::UserEvent;
   auto const time = getCurrentTime();
 
-  LogPtrType log = new LogType(time, type, event, true);
+  auto log = new LogType(time, type, event, true);
   log->node = theContext()->getNode();
   logEvent(log);
 }
@@ -231,11 +231,11 @@ void Trace::addUserEventBracketed(
 
   auto const type = TraceConstantsType::UserEventPair;
 
-  LogPtrType log_b = new LogType(begin, type, event, true);
+  auto log_b = new LogType(begin, type, event, true);
   log_b->node = theContext()->getNode();
   logEvent(log_b);
 
-  LogPtrType log_e = new LogType(end, type, event, false);
+  auto log_e = new LogType(end, type, event, false);
   log_e->node = theContext()->getNode();
   logEvent(log_e);
 }
@@ -247,7 +247,7 @@ void Trace::addUserEventBracketedBegin(UserEventIDType event) {
   auto const type = TraceConstantsType::BeginUserEventPair;
   auto const time = getCurrentTime();
 
-  LogPtrType log = new LogType(time, type, event, true);
+  auto log = new LogType(time, type, event, true);
   log->node = theContext()->getNode();
   logEvent(log);
 }
@@ -259,7 +259,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
   auto const type = TraceConstantsType::EndUserEventPair;
   auto const time = getCurrentTime();
 
-  LogPtrType log = new LogType(time, type, event, false);
+  auto log = new LogType(time, type, event, false);
   log->node = theContext()->getNode();
   logEvent(log);
 }
@@ -291,7 +291,7 @@ void Trace::beginProcessing(
   uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
   uint64_t const idx4) {
   auto const type = TraceConstantsType::BeginProcessing;
-  LogPtrType log = new LogType(time, ep, type);
+  auto log = new LogType(time, ep, type);
 
   debug_print(
     trace, node, "event_start: ep={}, event={}, time={}, from={}\n", ep, event,
@@ -314,7 +314,7 @@ void Trace::endProcessing(
   uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
   uint64_t const idx4) {
   auto const type = TraceConstantsType::EndProcessing;
-  LogPtrType log = new LogType(time, ep, type);
+  auto log = new LogType(time, ep, type);
 
   debug_print(
     trace, node, "event_stop: ep={}, event={}, time={}, from_node={}\n", ep,
@@ -330,14 +330,17 @@ void Trace::endProcessing(
 
   logEvent(log);
 
-  if (traces_.size() > 100) {
+  // @TODO Fix the test to use memory usage from traces_
+  if ((traces_.size() > static_cast<size_t>(100 + cur_))
+      and (open_events_.empty())) {
     writeTracesFile();
   }
+
 }
 
 void Trace::beginIdle(double const time) {
   auto const type = TraceConstantsType::BeginIdle;
-  LogPtrType log = new LogType(time, no_trace_entry_id, type);
+  auto log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(trace, node, "begin_idle: time={}\n", time);
 
@@ -350,7 +353,7 @@ void Trace::beginIdle(double const time) {
 
 void Trace::endIdle(double const time) {
   auto const type = TraceConstantsType::EndIdle;
-  LogPtrType log = new LogType(time, no_trace_entry_id, type);
+  auto log = new LogType(time, no_trace_entry_id, type);
 
   debug_print(trace, node, "end_idle: time={}\n", time);
 
@@ -364,7 +367,7 @@ void Trace::endIdle(double const time) {
 TraceEventIDType Trace::messageCreation(
   TraceEntryIDType const ep, TraceMsgLenType const len, double const time) {
   auto const type = TraceConstantsType::Creation;
-  LogPtrType log = new LogType(time, ep, type);
+  auto log = new LogType(time, ep, type);
 
   log->node = theContext()->getNode();
   log->msg_len = len;
@@ -375,7 +378,7 @@ TraceEventIDType Trace::messageCreation(
 TraceEventIDType Trace::messageCreationBcast(
   TraceEntryIDType const ep, TraceMsgLenType const len, double const time) {
   auto const type = TraceConstantsType::CreationBcast;
-  LogPtrType log = new LogType(time, ep, type);
+  auto log = new LogType(time, ep, type);
 
   log->node = theContext()->getNode();
   log->msg_len = len;
@@ -387,14 +390,14 @@ TraceEventIDType Trace::messageRecv(
   TraceEntryIDType const ep, TraceMsgLenType const len,
   NodeType const from_node, double const time) {
   auto const type = TraceConstantsType::MessageRecv;
-  LogPtrType log = new LogType(time, ep, type);
+  auto log = new LogType(time, ep, type);
 
   log->node = from_node;
 
   return logEvent(log);
 }
 
-void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
+void Trace::editLastEntry(const std::function<void(LogPtrType)> &fn) {
   if (not enabled_ || not checkEnabled()) {
     return;
   }
@@ -439,7 +442,7 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
 
     vtAssert(
       open_events_.top()->ep == log->ep and
-        open_events_.top()->type == TraceConstantsType::BeginProcessing,
+      open_events_.top()->type == TraceConstantsType::BeginProcessing,
       "Top event should be correct type and event");
 
     // match event with the one that this ends
@@ -492,31 +495,31 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
   };
 
   switch (log->type) {
-  case TraceConstantsType::BeginProcessing:
-    return grouped_begin();
-  case TraceConstantsType::EndProcessing:
-    return grouped_end();
-  case TraceConstantsType::Creation:
-  case TraceConstantsType::CreationBcast:
-  case TraceConstantsType::MessageRecv:
-    return basic_new_event_create();
-  case TraceConstantsType::BeginIdle:
-  case TraceConstantsType::EndIdle:
-    return basic_no_event_create();
-  case TraceConstantsType::UserSupplied:
-  case TraceConstantsType::UserSuppliedNote:
-  case TraceConstantsType::UserSuppliedBracketedNote:
-    return basic_create();
-  case TraceConstantsType::UserEvent:
-  case TraceConstantsType::UserEventPair:
-    return log->user_start ? basic_cur_event() : basic_new_event_create();
-    break;
-  case TraceConstantsType::BeginUserEventPair:
-  case TraceConstantsType::EndUserEventPair:
-    return basic_new_event_create();
-  default:
-    vtAssert(0, "Not implemented");
-    return 0;
+    case TraceConstantsType::BeginProcessing:
+      return grouped_begin();
+    case TraceConstantsType::EndProcessing:
+      return grouped_end();
+    case TraceConstantsType::Creation:
+    case TraceConstantsType::CreationBcast:
+    case TraceConstantsType::MessageRecv:
+      return basic_new_event_create();
+    case TraceConstantsType::BeginIdle:
+    case TraceConstantsType::EndIdle:
+      return basic_no_event_create();
+    case TraceConstantsType::UserSupplied:
+    case TraceConstantsType::UserSuppliedNote:
+    case TraceConstantsType::UserSuppliedBracketedNote:
+      return basic_create();
+    case TraceConstantsType::UserEvent:
+    case TraceConstantsType::UserEventPair:
+      return log->user_start ? basic_cur_event() : basic_new_event_create();
+      break;
+    case TraceConstantsType::BeginUserEventPair:
+    case TraceConstantsType::EndUserEventPair:
+      return basic_new_event_create();
+    default:
+      vtAssert(0, "Not implemented");
+      return 0;
   }
 }
 
@@ -560,31 +563,31 @@ void Trace::flushTracesFile() {
     curRT->systemSync();
   }
   else {
-  	// Something is wrong
-  	vtAssert(false, "Trying to flush traces when VT runtime is deallocated?");
+    // Something is wrong
+    vtAssert(false, "Trying to flush traces when VT runtime is deallocated?");
   }
   //
-  // Non-synchronized call to output the trace files 
+  // Non-synchronized call to output the trace files
   //
   // TODO Ask JL whether he prefers Z_FINISH or Z_FULL_FLUSH
   //
   writeTracesFile(Z_FULL_FLUSH);
   //
-  // traces_.size() - cur_ 
+  // traces_.size() - cur_
   // yields how many traces have been added since latest flush
   //
   // https://www.zlib.net/manual.html
   //
-  // gzflush: Flushes all pending output into the compressed file. 
-  // If the flush parameter is Z_FINISH, the remaining data is written and 
+  // gzflush: Flushes all pending output into the compressed file.
+  // If the flush parameter is Z_FINISH, the remaining data is written and
   // the gzip stream is completed in the output.
-  // gzflush should be called only when strictly necessary because 
+  // gzflush should be called only when strictly necessary because
   // it will degrade compression if called too often.
   // https://refspecs.linuxbase.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/zlib-gzflush-1.html
   //
   // Z_SYNC_FLUSH is intended to ensure that the compressed data contains all
   // the data compressed so far, and allows a decompressor to reconstruct all of
-  // the input data. 
+  // the input data.
   // Z_FULL_FLUSH allows decompression to restart from this
   // point if the previous compressed data has been lost or damaged. Flushing is
   // likely to degrade the performance of the compression system, and should
@@ -624,6 +627,7 @@ void Trace::writeTracesFile(int flush) {
 }
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
+
   for (auto i = cur_; i < traces.size(); i++) {
     auto& log = traces[i];
     auto const& converted_time = timeToInt(log->time - start_time_);
@@ -635,7 +639,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
 
     vtAssert(
       log->ep == no_trace_entry_id or
-        event_iter != TraceContainersType::getEventContainer().end(),
+      event_iter != TraceContainersType::getEventContainer().end(),
       "Event must exist that was logged");
 
     TraceEntryIDType event_seq_id;
@@ -643,85 +647,77 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
       event_seq_id = 0;
     } else {
       event_seq_id = log->ep == no_trace_entry_id ?
-        no_trace_entry_id :
-        event_iter->second.theEventSeq();
+                     no_trace_entry_id :
+                     event_iter->second.theEventSeq();
     }
 
     auto const num_nodes = theContext()->getNumNodes();
 
     switch (log->type) {
-    case TraceConstantsType::BeginProcessing:
-      gzprintf(
-        file,
-        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64
-        " 0\n",
-        type, eTraceEnvelopeTypes::ForChareMsg, event_seq_id, converted_time,
-        log->event, log->node, log->msg_len, log->idx1, log->idx2, log->idx3,
-        log->idx4);
-      break;
-    case TraceConstantsType::EndProcessing:
-      gzprintf(
-        file,
-        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64
-        " 0\n",
-        type, eTraceEnvelopeTypes::ForChareMsg, event_seq_id, converted_time,
-        log->event, log->node, log->msg_len, log->idx1, log->idx2, log->idx3,
-        log->idx4);
-      break;
-    case TraceConstantsType::BeginIdle:
-      gzprintf(file, "%d %lld %d\n", type, converted_time, log->node);
-      break;
-    case TraceConstantsType::EndIdle:
-      gzprintf(file, "%d %lld %d\n", type, converted_time, log->node);
-      break;
-    case TraceConstantsType::CreationBcast:
-      gzprintf(
-        file, "%d %d %lu %lld %d %d %d %d %d\n", type,
-        eTraceEnvelopeTypes::ForChareMsg, event_seq_id, converted_time,
-        log->event, log->node, log->msg_len, 0, num_nodes);
-      break;
-    case TraceConstantsType::Creation:
-      gzprintf(
-        file, "%d %d %lu %lld %d %d %d 0\n", type,
-        eTraceEnvelopeTypes::ForChareMsg, event_seq_id, converted_time,
-        log->event, log->node, log->msg_len);
-      break;
-    case TraceConstantsType::UserEvent:
-    case TraceConstantsType::UserEventPair:
-    case TraceConstantsType::BeginUserEventPair:
-    case TraceConstantsType::EndUserEventPair:
-      gzprintf(
-        file, "%d %lld %lld %d %d %d\n", type, log->user_event, converted_time,
-        log->event, log->node, 0);
-      break;
-    case TraceConstantsType::UserSupplied:
-      gzprintf(
-        file, "%d %d %lld\n", type, log->user_supplied_data, converted_time);
-      break;
-    case TraceConstantsType::UserSuppliedNote:
-      gzprintf(
-        file, "%d %lld %zu %s\n", type, converted_time,
-        log->user_supplied_note.length(), log->user_supplied_note.c_str());
-      break;
-    case TraceConstantsType::UserSuppliedBracketedNote: {
-      auto const converted_end_time = timeToInt(log->end_time - start_time_);
-      gzprintf(
-        file, "%d %lld %lld %d %zu %s\n", type, converted_time,
-        converted_end_time, log->event, log->user_supplied_note.length(),
-        log->user_supplied_note.c_str());
-      break;
-    }
-    case TraceConstantsType::MessageRecv:
-      vtAssert(false, "Message receive log type unimplemented");
-      break;
-    default:
-      vtAssertInfo(false, "Unimplemented log type", converted_time, log->node);
+      case TraceConstantsType::BeginProcessing:
+      case TraceConstantsType::EndProcessing:
+        gzprintf(
+          file,
+          "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64
+          " 0\n",
+          type, eTraceEnvelopeTypes::ForChareMsg, event_seq_id, converted_time,
+          log->event, log->node, log->msg_len, log->idx1, log->idx2, log->idx3,
+          log->idx4);
+        break;
+      case TraceConstantsType::BeginIdle:
+      case TraceConstantsType::EndIdle:
+        gzprintf(file, "%d %lld %d\n", type, converted_time, log->node);
+        break;
+      case TraceConstantsType::CreationBcast:
+        gzprintf(
+          file, "%d %d %lu %lld %d %d %d %d %d\n", type,
+          eTraceEnvelopeTypes::ForChareMsg, event_seq_id, converted_time,
+          log->event, log->node, log->msg_len, 0, num_nodes);
+        break;
+      case TraceConstantsType::Creation:
+        gzprintf(
+          file, "%d %d %lu %lld %d %d %d 0\n", type,
+          eTraceEnvelopeTypes::ForChareMsg, event_seq_id, converted_time,
+          log->event, log->node, log->msg_len);
+        break;
+      case TraceConstantsType::UserEvent:
+      case TraceConstantsType::UserEventPair:
+      case TraceConstantsType::BeginUserEventPair:
+      case TraceConstantsType::EndUserEventPair:
+        gzprintf(
+          file, "%d %lld %lld %d %d %d\n", type, log->user_event, converted_time,
+          log->event, log->node, 0);
+        break;
+      case TraceConstantsType::UserSupplied:
+        gzprintf(
+          file, "%d %d %lld\n", type, log->user_supplied_data, converted_time);
+        break;
+      case TraceConstantsType::UserSuppliedNote:
+        gzprintf(
+          file, "%d %lld %zu %s\n", type, converted_time,
+          log->user_supplied_note.length(), log->user_supplied_note.c_str());
+        break;
+      case TraceConstantsType::UserSuppliedBracketedNote: {
+        auto const converted_end_time = timeToInt(log->end_time - start_time_);
+        gzprintf(
+          file, "%d %lld %lld %d %zu %s\n", type, converted_time,
+          converted_end_time, log->event, log->user_supplied_note.length(),
+          log->user_supplied_note.c_str());
+        break;
+      }
+      case TraceConstantsType::MessageRecv:
+        vtAssert(false, "Message receive log type unimplemented");
+        break;
+      default:
+        vtAssertInfo(false, "Unimplemented log type", converted_time, log->node);
     }
 
     delete log;
   }
 
-  cur_ += traces.size();
+  // UH (2019/10/21) -- Do not increment cur_
+  //cur_ += traces.size();
+  cur_ = traces.size();
 }
 
 /*static*/ double Trace::getCurrentTime() {
