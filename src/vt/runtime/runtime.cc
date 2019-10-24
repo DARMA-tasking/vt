@@ -278,26 +278,26 @@ void Runtime::printStartupBanner() {
 
   std::string is_interop_str =
     is_interop_ ?
-      std::string(" interop=") + std::string(is_interop_ ? "true:" : "false:") :
-      std::string("");
+    std::string(" interop=") + std::string(is_interop_ ? "true:" : "false:") :
+    std::string("");
   std::string init = "Runtime Initializing:" + is_interop_str;
   std::string mode = std::string("mode: ");
   std::string mode_type =
     std::string(num_workers_ == no_workers ? "single" : "multi") +
     std::string("-thread per rank");
   std::string thd = !has_workers ? std::string("") :
-    std::string(", worker threading: ") +
-    std::string(
-      #if backend_check_enabled(openmp)
-        "OpenMP"
-      #elif backend_check_enabled(stdthread)
-        "std::thread"
+                    std::string(", worker threading: ") +
+                    std::string(
+#if backend_check_enabled(openmp)
+                      "OpenMP"
+#elif backend_check_enabled(stdthread)
+                    "std::thread"
       #else
         ""
-      #endif
-   );
+#endif
+                    );
   std::string cnt = !has_workers ? std::string("") :
-    (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
+                    (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
   std::string node_str = nodes == 1 ? "node" : "nodes";
   std::string all_node = std::to_string(nodes) + " " + node_str + cnt;
 
@@ -405,16 +405,16 @@ void Runtime::printStartupBanner() {
   auto f8 = fmt::format("{}Runtime Configuration:{}\n", green, reset);
   fmt::print("{}{}{}", vt_pre, f8, reset);
 
-  #if !backend_check_enabled(lblite)
-    if (ArgType::vt_lb) {
-      auto f9 = warn_cr("--vt_lb", "lblite");
-      fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    }
-    if (ArgType::vt_lb_stats) {
-      auto f9 = warn_cr("--vt_lb_stats", "lblite");
-      fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    }
-  #endif
+#if !backend_check_enabled(lblite)
+  if (ArgType::vt_lb) {
+    auto f9 = warn_cr("--vt_lb", "lblite");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
+  }
+  if (ArgType::vt_lb_stats) {
+    auto f9 = warn_cr("--vt_lb_stats", "lblite");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
+  }
+#endif
 
   if (ArgType::vt_lb) {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
@@ -456,14 +456,14 @@ void Runtime::printStartupBanner() {
   }
 
 
-  #if !backend_check_enabled(trace_enabled)
-    if (ArgType::vt_trace) {
+#if !backend_check_enabled(trace_enabled)
+  if (ArgType::vt_trace) {
       auto f9 = warn_cr("--vt_trace", "trace_enabled");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
-  #endif
+#endif
 
-  #if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
   if (ArgType::vt_trace) {
     auto f9 = opt_on("--vt_trace", "Tracing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
@@ -496,8 +496,13 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_trace_mod", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+    if (ArgType::vt_trace_flush_mod != 0) {
+      auto f11 = fmt::format("Flush output every {} MB ", ArgType::vt_trace_flush_mod);
+      auto f12 = opt_on("--vt_trace_flush_mod", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
-  #endif
+#endif
 
 
   if (ArgType::vt_term_rooted_use_ds) {
@@ -776,7 +781,7 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
     auto const comm = theContext->getComm();
     MPI_Abort(comm, 129);
   } else {
-	std::_Exit(code);
+    std::_Exit(code);
     // @todo: why will this not compile with clang!!?
     //quick_exit(code);
   }
@@ -928,42 +933,42 @@ void Runtime::initializeComponents() {
 }
 
 void Runtime::initializeTrace() {
-  #if backend_check_enabled(trace_enabled)
-    theTrace = std::make_unique<trace::Trace>();
+#if backend_check_enabled(trace_enabled)
+  theTrace = std::make_unique<trace::Trace>();
 
-    std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-    auto const& node = theContext->getNode();
-    theTrace->setupNames(
-      name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
-    );
-  #endif
+  std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
+  auto const& node = theContext->getNode();
+  theTrace->setupNames(
+    name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
+  );
+#endif
 }
 
 void Runtime::finalizeTrace() {
-  #if backend_check_enabled(trace_enabled)
-    theTrace = nullptr;
-  #endif
+#if backend_check_enabled(trace_enabled)
+  theTrace = nullptr;
+#endif
 }
 
 namespace {
-  /**
-   * Error handler for MPI.
-   * Called on any MPI error with the context's communicator. Aborts
-   * the application. MPI calls are not guaranteed to work after
-   * an error.
-   *
-   * \param comm    the MPI communicator
-   * \param errc    pointer to the error code
-   */
-  void mpiErrorHandler(MPI_Comm *comm, int *errc, ...) {
-    int len = MPI_MAX_ERROR_STRING;
-    char msg[MPI_MAX_ERROR_STRING];
-    MPI_Error_string(*errc, msg, &len);
-    std::string err_msg(msg, len);
+/**
+ * Error handler for MPI.
+ * Called on any MPI error with the context's communicator. Aborts
+ * the application. MPI calls are not guaranteed to work after
+ * an error.
+ *
+ * \param comm    the MPI communicator
+ * \param errc    pointer to the error code
+ */
+void mpiErrorHandler(MPI_Comm *comm, int *errc, ...) {
+  int len = MPI_MAX_ERROR_STRING;
+  char msg[MPI_MAX_ERROR_STRING];
+  MPI_Error_string(*errc, msg, &len);
+  std::string err_msg(msg, len);
 
-    fmt::print("{} (code: {})", err_msg, *errc);
-    vtAbort("MPI Error");
-  }
+  fmt::print("{} (code: {})", err_msg, *errc);
+  vtAbort("MPI Error");
+}
 }
 
 void Runtime::initializeErrorHandlers() {
