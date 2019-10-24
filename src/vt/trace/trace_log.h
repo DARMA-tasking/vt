@@ -124,8 +124,6 @@ struct Log {
       idx3(in_idx3), idx4(in_idx4)
   { }
 
-  int getSizeBytes() const;
-
 };
 
 }} //end namespace vt::trace
