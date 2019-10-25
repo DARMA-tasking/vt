@@ -196,10 +196,10 @@ using CollectionTestTypes = testing::Types<
 >;
 
 INSTANTIATE_TYPED_TEST_CASE_P(
-  test_collection_send, TestCollectionSend, CollectionTestTypes,
+  test_collection_send, TestCollectionSend, CollectionTestTypes
 );
 INSTANTIATE_TYPED_TEST_CASE_P(
-  test_collection_send_mem, TestCollectionSendMem, CollectionTestTypes,
+  test_collection_send_mem, TestCollectionSendMem, CollectionTestTypes
 );
 
 }}} // end namespace vt::tests::unit
