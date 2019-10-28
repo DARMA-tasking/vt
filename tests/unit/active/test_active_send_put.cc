@@ -76,7 +76,9 @@ struct TestActiveSendPut : TestParameterHarnessNode {
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
-      fmt::print("{}: test_handler_2: size={}, ptr={}\n", this_node, size, ptr);
+      fmt::print(
+        "{}: test_handler_2: size={}, ptr={}\n", this_node, size, print_ptr(ptr)
+      );
     #endif
     EXPECT_EQ(msg->num_ints * sizeof(int), size);
     for (int i = 0; i < msg->num_ints; i++) {
@@ -111,6 +113,11 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
       fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
     #endif
     theMsg()->sendMsg<PutTestMessage, test_handler>(1, msg);
+  }
+
+  // Spin here so test_vec does not go out of scope before the send completes
+  while (not vt::rt->isTerminated()) {
+    vt::runScheduler();
   }
 }
 
