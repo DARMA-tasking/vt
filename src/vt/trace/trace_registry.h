@@ -71,7 +71,7 @@ struct TraceRegistry {
     #endif
 
     TraceEntryIDType event_type_seq = no_trace_entry_id;
-    EventClassType new_event_type(event_type_name);
+    EventClassType new_event_type(event_type_name, event_type_name);
 
     auto type_iter = TraceContainersType::getEventTypeContainer().find(
       new_event_type.theEventId()
@@ -91,7 +91,11 @@ struct TraceRegistry {
     }
 
     TraceEntryIDType event_seq = no_trace_entry_id;
-    TraceEventType new_event(event_name, new_event_type.theEventId());
+    TraceEventType new_event(
+      event_name,
+      event_type_name + std::string("::") + event_name,
+      new_event_type.theEventId()
+    );
 
     new_event.setEventTypeSeq(event_type_seq);
 

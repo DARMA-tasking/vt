@@ -49,10 +49,11 @@
 
 namespace vt { namespace trace {
 
-EventClass::EventClass(std::string const& in_event)
-  : event(in_event)
+EventClass::EventClass(
+  std::string const& in_event, std::string const& in_hash_event
+) : event(in_event), hash_event(in_hash_event)
 {
-  auto const& event_hash =  std::hash<std::string>{}(in_event);
+  auto const& event_hash =  std::hash<std::string>{}(in_hash_event);
   this_event_ = event_hash;
 }
 
@@ -80,8 +81,10 @@ TraceEntryIDType EventClass::theEventSeq() const {
   return this_event_seq_;
 }
 
-Event::Event(std::string const& in_event, TraceEntryIDType const& in_event_type)
-  : EventClass(in_event), this_event_type_(in_event_type)
+Event::Event(
+  std::string const& in_event, std::string const& in_hash_event,
+  TraceEntryIDType const& in_event_type
+) : EventClass(in_event, in_hash_event), this_event_type_(in_event_type)
 { }
 
 TraceEntryIDType Event::theEventTypeId() const {
