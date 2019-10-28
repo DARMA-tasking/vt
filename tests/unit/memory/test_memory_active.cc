@@ -160,8 +160,8 @@ using MsgSerial = testing::Types<
   TestMemoryActiveMsg<TestStaticBytesSerialMsg>::TestMsgC
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(test_mem_short,  TestMemoryActive, MsgShort, );
-INSTANTIATE_TYPED_TEST_CASE_P(test_mem_normal, TestMemoryActive, MsgNormal, );
-INSTANTIATE_TYPED_TEST_CASE_P(test_mem_serial, TestMemoryActive, MsgSerial, );
+INSTANTIATE_TYPED_TEST_CASE_P(test_mem_short,  TestMemoryActive, MsgShort );
+INSTANTIATE_TYPED_TEST_CASE_P(test_mem_normal, TestMemoryActive, MsgNormal );
+INSTANTIATE_TYPED_TEST_CASE_P(test_mem_serial, TestMemoryActive, MsgSerial );
 
 }}} // end namespace vt::tests::unit
