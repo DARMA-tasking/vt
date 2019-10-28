@@ -53,18 +53,23 @@ namespace vt { namespace messaging {
 template <typename T>
 struct MsgSharedPtr;
 
-template <typename T>
+struct PendingSend;
+
+/// Wrap a MsgSharedPtr such that a base type can be accessed.
+/// This is suitable for use with types with virtual destructors.
+/// The original message is owned by the resulting object.
+template <typename BaseMsgT>
 struct MsgVirtualPtr final {
 
-  template <typename U>
-  explicit MsgVirtualPtr(MsgSharedPtr<U> in_ptr)
-    : ptr_(MsgSharedPtr<T>(in_ptr)),
+  template <typename MsgT>
+  explicit MsgVirtualPtr(MsgSharedPtr<MsgT> in_ptr)
+    : ptr_(MsgSharedPtr<BaseMsgT>(in_ptr)),
       closure_([in_ptr]{ })
   { }
 
-  template <typename U>
-  explicit MsgVirtualPtr(MsgVirtualPtr<U> in_vrt)
-    : ptr_(MsgSharedPtr<T>(in_vrt.ptr_)),
+  template <typename MsgT>
+  explicit MsgVirtualPtr(MsgVirtualPtr<MsgT> in_vrt)
+    : ptr_(MsgSharedPtr<BaseMsgT>(in_vrt.ptr_)),
       closure_(in_vrt.closure_)
   { }
 
@@ -76,26 +81,26 @@ struct MsgVirtualPtr final {
     closure_ = nullptr;
   }
 
-  inline T* get() const { return ptr_.get(); }
-  inline T* operator->() const { return ptr_.get(); }
-  inline T& operator*() const { return *ptr_.get(); }
+  inline BaseMsgT* get() const { return ptr_.get(); }
+  inline BaseMsgT* operator->() const { return ptr_.get(); }
+  inline BaseMsgT& operator*() const { return *ptr_.get(); }
   inline bool operator==(std::nullptr_t) const { return ptr_ == nullptr; }
   inline bool operator!=(std::nullptr_t) const { return ptr_ != nullptr; }
 
 private:
-  MsgSharedPtr<T> ptr_ = nullptr;
+  MsgSharedPtr<BaseMsgT> ptr_ = nullptr;
   std::function<void()> closure_ = nullptr;
 
   friend struct PendingSend;
-  MsgSharedPtr<T>& getShared() { return ptr_; }
+  MsgSharedPtr<BaseMsgT>& getShared() { return ptr_; }
 };
 
 }} /* end namespace vt::messaging */
 
 namespace vt {
 
-template <typename U>
-using MsgVirtualPtr = messaging::MsgVirtualPtr<U>;
+template <typename MsgT>
+using MsgVirtualPtr = messaging::MsgVirtualPtr<MsgT>;
 
 using MsgVirtualPtrAny = messaging::MsgVirtualPtr<ShortMessage>;
 
