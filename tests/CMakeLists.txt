@@ -89,15 +89,16 @@ if (${VT_HAS_GTEST} AND NOT ${VT_NO_BUILD_TESTS})
           TEST_LIST              ${CUR_TEST_LIST}
           EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
         )
+
+        set_tests_properties(
+          ${${CUR_TEST_LIST}}
+          PROPERTIES TIMEOUT 60
+          FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
+          PASS_REGULAR_EXPRESSION "PASSED"
+        )
+    endforeach()
       endforeach()
 
-      set_tests_properties(
-        ${${CUR_TEST_LIST}}
-        PROPERTIES TIMEOUT 60
-        FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is"
-        PASS_REGULAR_EXPRESSION "PASSED"
-      )
-    endforeach()
   endforeach()
 else()
   if (${VT_NO_BUILD_TESTS})
