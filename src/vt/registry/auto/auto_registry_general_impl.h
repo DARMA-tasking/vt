@@ -51,17 +51,24 @@
 #include "vt/registry/auto/auto_registry_general.h"
 #include "vt/objgroup/type_registry/registry.h"
 
+#include <functional>
+
 namespace vt { namespace auto_registry {
+
+template <typename RegObjTypeT>
+struct RegistrarGenInfoImpl : RegistrarGenInfoBase {
+  virtual HandlerType getRegisteredIndex() {
+    return objgroup::registry::makeObjIdx<RegObjTypeT>();
+  }
+};
 
 template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
 RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
   RegT& reg = getAutoRegistryGen<RegT>();
   index = reg.size();
 
-  auto fn = ActFnT::getFunction();
-  auto gen_fn = []() -> AutoHandlerType {
-    return objgroup::registry::makeObjIdx<typename ActFnT::ObjType>();
-  };
+  FnT fn = reinterpret_cast<FnT>(ActFnT::getFunction());
+  RegistrarGenInfo indexAccessor{new RegistrarGenInfoImpl<typename ActFnT::ObjType>()};
 
   #if backend_check_enabled(trace_enabled)
   using Tn = typename ActFnT::ActFnType;
@@ -72,9 +79,9 @@ RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
     parsed_type_name.getNamespace(), parsed_type_name.getFuncParams()
   );
 
-  reg.emplace_back(InfoT{reinterpret_cast<FnT>(fn), gen_fn, trace_ep});
+  reg.emplace_back(InfoT{fn, std::move(indexAccessor), trace_ep});
   #else
-  reg.emplace_back(InfoT{reinterpret_cast<FnT>(fn), gen_fn});
+  reg.emplace_back(InfoT{fn, std::move(indexAccessor)});
   #endif
 }
 
