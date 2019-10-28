@@ -63,43 +63,34 @@ static struct MsgInitNonOwnerType { } MsgInitNonOwnerTag { };
 template <typename T>
 struct MsgSharedPtr final {
   using MsgType        = T;
-  using MsgPtrType     = MsgType*;
   using BaseMsgType    = BaseMessage;
-  using BaseMsgPtrType = BaseMsgType*;
 
-  MsgSharedPtr(MsgInitOwnerType, T* in)
-    : ptr_(in)
-  {
-    if (in) {
-      shared_ = isSharedMessage<T>(in);
-      if (shared_) {
-        vtAssertInfo(
-          envelopeGetRef(in->env) > 0, "owner: ref must be greater than 0",
-          shared_, envelopeGetRef(in->env)
-        );
-      }
-    }
+  MsgSharedPtr(MsgInitOwnerType, T* in) {
+    init(in, false);
   }
-  MsgSharedPtr(MsgInitNonOwnerType, T* in)
-    : ptr_(in)
-  {
-    if (in) {
-      shared_ = isSharedMessage<T>(in);
-      if (shared_) {
-        vtAssertInfo(
-          envelopeGetRef(in->env) > 0, "non-owner: ref must be greater than 0",
-          shared_, envelopeGetRef(in->env)
-        );
-        messageRef(in);
-      }
-    }
+
+  MsgSharedPtr(MsgInitNonOwnerType, T* in) {
+    init(in, true);
   }
-  MsgSharedPtr(std::nullptr_t) : ptr_(nullptr) { }
-  MsgSharedPtr(MsgSharedPtr<T> const& in) : ptr_(in.ptr_) { ref(); }
-  MsgSharedPtr(MsgSharedPtr<T>&& in)      : ptr_(in.ptr_) { ref(); }
+
+  MsgSharedPtr(std::nullptr_t) : ptr_(nullptr), shared_(false) { }
+
+  MsgSharedPtr(MsgSharedPtr<T> const& in) {
+    init(in.get(), true);
+  }
+
+  MsgSharedPtr(MsgSharedPtr<T>&& in) {
+    // Not really a move.. should take ownership and set/clear ptr directly.
+    init(in.get(), true);
+  }
 
   template <typename U>
-  explicit MsgSharedPtr(MsgSharedPtr<U> const& in) : ptr_(in.get()) { ref(); }
+  explicit MsgSharedPtr(MsgSharedPtr<U> const& in) {
+    // Only used by VirtualMsgPtr; little dance.. U* -> base -> T*
+    BaseMsgType* basePtr{in.get()};
+    T* msgPtr{reinterpret_cast<T*>(basePtr)};
+    init(msgPtr, true);
+  }
 
   ~MsgSharedPtr() {
     clear();
@@ -107,7 +98,8 @@ struct MsgSharedPtr final {
 
   template <typename U>
   explicit operator MsgSharedPtr<U>() const { return to<U>(); }
-  explicit operator MsgPtrType() const { return get(); }
+
+  explicit operator T*() const { return get(); }
 
   template <typename U>
   MsgSharedPtr<U> to() const {
@@ -131,48 +123,10 @@ struct MsgSharedPtr final {
   bool operator==(std::nullptr_t) const           { return ptr_ == nullptr; }
   bool operator!=(std::nullptr_t) const           { return ptr_ != nullptr; }
 
-  inline bool valid() const { return ptr_ != nullptr; }
-  inline void set(MsgSharedPtr<T> const& n) {
-    clear();
-    if (n.valid()) {
-      shared_ = isSharedMessage<T>(n.get());
-      if (shared_) {
-        vtAssertInfo(
-          envelopeGetRef(n.get()->env) > 0, "Bad Ref (before ref set)",
-          shared_, envelopeGetRef(n.get()->env)
-        );
-        debug_print(
-          pool, node,
-          "MsgSmartPtr: (auto) set(), ptr={}, ref={}, address={}\n",
-          print_ptr(n.get()), envelopeGetRef(n.get()->env), print_ptr(this)
-        );
-        messageRef(n.get());
-      }
-      ptr_ = n.get();
-    }
-  }
-  inline void ref() {
-    if (valid()) {
-      shared_ = isSharedMessage<T>(get());
-      if (shared_) {
-        vtAssertInfo(
-          envelopeGetRef(get()->env) > 0, "Bad Ref (before ref)",
-          shared_, envelopeGetRef(get()->env)
-        );
-        debug_print(
-          pool, node,
-          "MsgSmartPtr: (auto) ref(), ptr={}, ref={}, address={}\n",
-          print_ptr(get()), envelopeGetRef(get()->env), print_ptr(this)
-        );
-        messageRef(get());
-      }
-    }
-  }
-
   inline T* operator->() const { return get(); }
   inline T& operator*() const { return *ptr_; }
   inline T* get() const {
-    return ptr_ ? reinterpret_cast<MsgPtrType>(ptr_) : nullptr;
+    return ptr_ ? reinterpret_cast<T*>(ptr_) : nullptr;
   }
 
   friend std::ostream& operator<<(std::ostream&os, MsgSharedPtr<T> const& m) {
@@ -185,6 +139,46 @@ struct MsgSharedPtr final {
   }
 
 protected:
+
+  inline bool valid() const { return ptr_ != nullptr; }
+
+  // Assigns ptr_/shared_, optionally taking ownership.
+  // Should probably be called every constructor.
+  inline void init(T* in_ptr, bool takeOwnership) {
+    if (in_ptr) {
+      bool shared = isSharedMessage<T>(in_ptr);
+      if (shared) {
+        auto msgEnv = in_ptr->env;
+        vtAssertInfo(
+          envelopeGetRef(msgEnv) > 0, "Bad Ref (before ref); envelop ref already acquired",
+          shared, envelopeGetRef(msgEnv)
+        );
+        debug_print(
+          pool, node,
+          "MsgSmartPtr: (auto) init(), ptr={}, envRef={}, takeOwnership={} address={}\n",
+          print_ptr(in_ptr), envelopeGetRef(msgEnv), takeOwnership, print_ptr(this)
+        );
+
+        if (takeOwnership) {
+          messageRef(in_ptr);
+        }
+      }
+
+      ptr_ = in_ptr;
+      shared_ = shared;
+    } else {
+      ptr_ = nullptr;
+      shared_ = false;
+    }
+  }
+
+  inline void set(MsgSharedPtr<T> const& n) {
+    clear();
+    T* in_ptr = n.get();
+    init(in_ptr, true);
+  }
+
+  // NOTE: unlike other set, does not increment ref.
   inline void set(T* t) {
     clear();
     debug_print(
@@ -192,13 +186,11 @@ protected:
       "MsgSmartPtr: (auto) set() BARE, ptr={}, ref={}, address={}\n",
       print_ptr(t), envelopeGetRef(t->env), print_ptr(this)
     );
-    setPtr(t);
+
+    ptr_ = reinterpret_cast<BaseMsgType*>(t);
   }
 
-  inline void setPtr(T* t) {
-    ptr_ = reinterpret_cast<BaseMsgPtrType>(t);
-  }
-
+  // NOTE: can call messageDeref even if message ref NOT acquired.
   inline void clear() {
     if (valid()) {
       if (shared_) {
@@ -218,8 +210,8 @@ protected:
   }
 
 private:
-  BaseMsgPtrType ptr_ = nullptr;
-  bool shared_        = true;
+  BaseMsgType* ptr_ = nullptr;
+  bool shared_      = true;
 };
 
 }} /* end namespace vt::messaging */
