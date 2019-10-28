@@ -336,7 +336,7 @@ bool ActiveMessenger::recvDataMsg(
   return recvDataMsg(tag, node, true, next);
 }
 
-bool ActiveMessenger::processDataMsgRecv() {
+bool ActiveMessenger::tryProcessDataMsgRecv() {
   bool erase = false;
   auto iter = pending_recvs_.begin();
 
@@ -388,39 +388,18 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
         static_cast<char*>(user_buf);
 
-      MPI_Recv(
+      NodeType const sender = stat.MPI_SOURCE;
+
+      MPI_Request req;
+      MPI_Irecv(
         buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
-        theContext()->getComm(), MPI_STATUS_IGNORE
+        theContext()->getComm(), &req
       );
 
-      auto dealloc_buf = [=]{
-        debug_print(
-          active, node,
-          "recvDataMsgBuffer: continuation user_buf={}, buf={}, tag={}\n",
-          user_buf, buf, tag
-        );
-
-        if (user_buf == nullptr) {
-          #if backend_check_enabled(memory_pool)
-            thePool()->dealloc(buf);
-          #else
-            std::free(buf);
-          #endif
-        } else if (dealloc_user_buf != nullptr and user_buf != nullptr) {
-          dealloc_user_buf();
-        }
+      InProgressDataIRecv recv_holder{
+        buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next
       };
-
-      if (next != nullptr) {
-        next(RDMA_GetType{buf,num_probe_bytes}, [=]{
-          dealloc_buf();
-        });
-      } else {
-        dealloc_buf();
-      }
-
-      theTerm()->consume(term::any_epoch_sentinel,1,stat.MPI_SOURCE);
-
+      in_progress_data_irecv.emplace(std::move(recv_holder));
       return true;
     } else {
       return false;
@@ -439,6 +418,41 @@ bool ActiveMessenger::recvDataMsgBuffer(
     );
     return false;
   }
+}
+
+void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) {
+  auto buf = irecv->buf;
+  auto num_probe_bytes = irecv->probe_bytes;
+  auto sender = irecv->sender;
+  auto user_buf = irecv->user_buf;
+  auto dealloc_user_buf = irecv->dealloc_user_buf;
+  auto next = irecv->next;
+
+  auto dealloc_buf = [=]{
+    debug_print(
+      active, node,
+      "finishPendingDataMsgAsyncRecv: continuation user_buf={}, buf={}\n",
+      user_buf, buf
+    );
+
+    if (user_buf == nullptr) {
+      #if backend_check_enabled(memory_pool)
+        thePool()->dealloc(buf);
+      #else
+        std::free(buf);
+      #endif
+    } else if (dealloc_user_buf != nullptr and user_buf != nullptr) {
+      dealloc_user_buf();
+    }
+  };
+
+  if (next != nullptr) {
+    next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
+  } else {
+    dealloc_buf();
+  }
+
+  theTerm()->consume(term::any_epoch_sentinel,1,sender);
 }
 
 bool ActiveMessenger::recvDataMsg(
@@ -592,7 +606,7 @@ bool ActiveMessenger::deliverActiveMsg(
   return has_handler;
 }
 
-bool ActiveMessenger::tryProcessIncomingMessage() {
+bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   CountType num_probe_bytes;
   MPI_Status stat;
   int flag;
@@ -613,76 +627,105 @@ bool ActiveMessenger::tryProcessIncomingMessage() {
 
     NodeType const sender = stat.MPI_SOURCE;
 
-    MPI_Recv(
+    MPI_Request req;
+    MPI_Irecv(
       buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
-      theContext()->getComm(), MPI_STATUS_IGNORE
+      theContext()->getComm(), &req
     );
 
-    auto msg = reinterpret_cast<MessageType>(buf);
-    messageConvertToShared(msg);
-    auto base = promoteMsgOwner(msg);
-
-    auto const is_term = envelopeIsTerm(msg->env);
-    auto const is_put = envelopeIsPut(msg->env);
-    bool put_finished = false;
-
-    if (!is_term || backend_check_enabled(print_term_msgs)) {
-      debug_print(
-        active, node,
-        "tryProcessIncoming: msg_size={}, sender={}, is_put={}, is_bcast={}, "
-        "handler={}\n",
-        num_probe_bytes, sender, print_bool(is_put),
-        print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
-      );
-    }
-
-    CountType msg_bytes = num_probe_bytes;
-
-    if (is_put) {
-      auto const put_tag = envelopeGetPutTag(msg->env);
-      if (put_tag == PutPackedTag) {
-        auto const put_size = envelopeGetPutSize(msg->env);
-        auto const msg_size = num_probe_bytes - put_size;
-        char* put_ptr = buf + msg_size;
-        msg_bytes = msg_size;
-
-        if (!is_term || backend_check_enabled(print_term_msgs)) {
-          debug_print(
-            active, node,
-            "tryProcessIncoming: packed put: ptr={}, msg_size={}, put_size={}\n",
-            put_ptr, msg_size, put_size
-          );
-        }
-
-        envelopeSetPutPtrOnly(msg->env, put_ptr);
-        put_finished = true;
-      } else {
-        /*bool const put_delivered = */recvDataMsg(
-          put_tag, sender,
-          [=](RDMA_GetType ptr, ActionType deleter){
-            envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-            handleActiveMsg(base, sender, num_probe_bytes, true);
-          }
-        );
-      }
-    }
-
-    if (!is_put || put_finished) {
-      handleActiveMsg(base, sender, msg_bytes, true);
-    }
-
+    InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
+    in_progress_active_msg_irecv.emplace(std::move(recv_holder));
     return true;
   } else {
     return false;
   }
 }
 
-bool ActiveMessenger::scheduler() {
-  bool const processed = tryProcessIncomingMessage();
-  bool const processed_data_msg = processDataMsgRecv();
-  processMaybeReadyHanTag();
+void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
+  auto buf = irecv->buf;
+  auto num_probe_bytes = irecv->probe_bytes;
+  auto sender = irecv->sender;
 
-  return processed or processed_data_msg;
+  auto msg = reinterpret_cast<MessageType>(buf);
+  messageConvertToShared(msg);
+  auto base = promoteMsgOwner(msg);
+
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_put = envelopeIsPut(msg->env);
+  bool put_finished = false;
+
+  if (!is_term || backend_check_enabled(print_term_msgs)) {
+    debug_print(
+      active, node,
+      "finishPendingActiveMsgAsyncRecv: msg_size={}, sender={}, is_put={}, "
+      "is_bcast={}, handler={}\n",
+      num_probe_bytes, sender, print_bool(is_put),
+      print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
+    );
+  }
+
+  CountType msg_bytes = num_probe_bytes;
+
+  if (is_put) {
+    auto const put_tag = envelopeGetPutTag(msg->env);
+    if (put_tag == PutPackedTag) {
+      auto const put_size = envelopeGetPutSize(msg->env);
+      auto const msg_size = num_probe_bytes - put_size;
+      char* put_ptr = buf + msg_size;
+      msg_bytes = msg_size;
+
+      if (!is_term || backend_check_enabled(print_term_msgs)) {
+        debug_print(
+          active, node,
+          "finishPendingActiveMsgAsyncRecv: packed put: ptr={}, msg_size={}, "
+          "put_size={}\n",
+          put_ptr, msg_size, put_size
+        );
+      }
+
+      envelopeSetPutPtrOnly(msg->env, put_ptr);
+      put_finished = true;
+    } else {
+      /*bool const put_delivered = */recvDataMsg(
+        put_tag, sender,
+        [=](RDMA_GetType ptr, ActionType deleter){
+          envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
+          handleActiveMsg(base, sender, num_probe_bytes, true);
+        }
+     );
+    }
+  }
+
+  if (!is_put || put_finished) {
+    handleActiveMsg(base, sender, msg_bytes, true);
+  }
+}
+
+bool ActiveMessenger::testPendingActiveMsgAsyncRecv() {
+  return in_progress_active_msg_irecv.testAll(
+    [](InProgressIRecv* e){
+      theMsg()->finishPendingActiveMsgAsyncRecv(e);
+    }
+  );
+}
+
+bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
+  return in_progress_data_irecv.testAll(
+    [](InProgressDataIRecv* e){
+      theMsg()->finishPendingDataMsgAsyncRecv(e);
+    }
+  );
+}
+
+bool ActiveMessenger::scheduler() {
+  bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
+  bool const started_irecv_data_msg = tryProcessDataMsgRecv();
+  processMaybeReadyHanTag();
+  bool const received_active_msg = testPendingActiveMsgAsyncRecv();
+  bool const received_data_msg = testPendingDataMsgAsyncRecv();
+
+  return started_irecv_active_msg or started_irecv_data_msg or
+         received_active_msg or received_data_msg;
 }
 
 bool ActiveMessenger::isLocalTerm() {

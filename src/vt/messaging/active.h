@@ -55,6 +55,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
 #include "vt/messaging/listener.h"
+#include "vt/messaging/irecv_holder.h"
 #include "vt/event/event.h"
 #include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
@@ -95,6 +96,39 @@ struct PendingRecv {
   ) : user_buf(in_user_buf), cont(in_cont),
       dealloc_user_buf(in_dealloc_user_buf), recv_node(node)
   { }
+};
+
+struct InProgressIRecv {
+  using CountType = int32_t;
+
+  InProgressIRecv(
+    char* in_buf, CountType in_probe_bytes, NodeType in_sender,
+    MPI_Request in_req
+  ) : buf(in_buf), probe_bytes(in_probe_bytes), sender(in_sender),
+      req(in_req), valid(true)
+  { }
+
+  char* buf = nullptr;
+  CountType probe_bytes = 0;
+  NodeType sender = uninitialized_destination;
+  MPI_Request req;
+  bool valid = false;
+};
+
+struct InProgressDataIRecv : public InProgressIRecv {
+  InProgressDataIRecv(
+    char* in_buf, CountType in_probe_bytes, NodeType in_sender,
+    MPI_Request in_req, void* const in_user_buf,
+    ActionType in_dealloc_user_buf,
+    RDMA_ContinuationDeleteType in_next
+  ) : InProgressIRecv{in_buf, in_probe_bytes, in_sender, in_req},
+      user_buf(in_user_buf), dealloc_user_buf(in_dealloc_user_buf),
+      next(in_next)
+  { }
+
+  void* user_buf = nullptr;
+  ActionType dealloc_user_buf = nullptr;
+  RDMA_ContinuationDeleteType next = nullptr;
 };
 
 struct BufferedActiveMsg {
@@ -468,8 +502,8 @@ struct ActiveMessenger {
   );
 
   void performTriggeredActions();
-  bool tryProcessIncomingMessage();
-  bool processDataMsgRecv();
+  bool tryProcessIncomingActiveMsg();
+  bool tryProcessDataMsgRecv();
   bool scheduler();
   bool isLocalTerm();
 
@@ -575,6 +609,12 @@ struct ActiveMessenger {
   }
 
 private:
+  bool testPendingActiveMsgAsyncRecv();
+  bool testPendingDataMsgAsyncRecv();
+  void finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv);
+  void finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv);
+
+private:
   using EpochStackSizeType = typename EpochStackType::size_type;
 
   inline EpochStackSizeType epochPreludeHandler(EpochType const& epoch);
@@ -589,16 +629,18 @@ private:
     trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
   #endif
 
-  HandlerType current_handler_context_   = uninitialized_handler;
-  NodeType current_node_context_         = uninitialized_destination;
-  EpochType current_epoch_context_       = no_epoch;
-  EpochType global_epoch_                = no_epoch;
-  MaybeReadyType maybe_ready_tag_han_    = {};
-  ContWaitType pending_handler_msgs_     = {};
-  ContainerPendingType pending_recvs_    = {};
-  TagType cur_direct_buffer_tag_         = starting_direct_buffer_tag;
+  HandlerType current_handler_context_           = uninitialized_handler;
+  NodeType current_node_context_                 = uninitialized_destination;
+  EpochType current_epoch_context_               = no_epoch;
+  EpochType global_epoch_                        = no_epoch;
+  MaybeReadyType maybe_ready_tag_han_            = {};
+  ContWaitType pending_handler_msgs_             = {};
+  ContainerPendingType pending_recvs_            = {};
+  TagType cur_direct_buffer_tag_                 = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
-  std::vector<ListenerType> send_listen_ = {};
+  std::vector<ListenerType> send_listen_                    = {};
+  IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv = {};
+  IRecvHolder<InProgressDataIRecv> in_progress_data_irecv   = {};
 };
 
 }} // end namespace vt::messaging
