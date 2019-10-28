@@ -62,11 +62,6 @@ void messageRef(MessageT* msg) {
   );
 }
 
-template <template <typename> class MsgPtrT, typename MsgT>
-void messageRef(MsgPtrT<MsgT> msg) {
-  return messageRef(msg.get());
-}
-
 template <typename MessageT>
 void messageDeref(MessageT* msg) {
   envelopeDeref(msg->env);
@@ -91,11 +86,6 @@ void messageDeref(MessageT* msg) {
      */
     delete msg;
   }
-}
-
-template <template <typename> class MsgPtrT, typename MsgT>
-void messageDeref(MsgPtrT<MsgT> msg) {
-  return messageDeref(msg.get());
 }
 
 template <typename MessageT>

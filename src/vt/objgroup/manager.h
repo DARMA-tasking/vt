@@ -54,7 +54,7 @@
 #include "vt/objgroup/holder/holder_basic.h"
 #include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/messaging/message/message.h"
-#include "vt/messaging/message/smart_ptr_virtual.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 #include <memory>
 #include <functional>

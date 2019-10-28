@@ -48,7 +48,7 @@
 #include "vt/objgroup/proxy/proxy_bits.h"
 #include "vt/objgroup/type_registry/registry.h"
 #include "vt/context/context.h"
-#include "vt/messaging/message/smart_ptr_virtual.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 namespace vt { namespace objgroup {
 
