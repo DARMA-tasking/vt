@@ -148,7 +148,7 @@ using CollectionTestTypes = testing::Types<
 >;
 
 INSTANTIATE_TYPED_TEST_CASE_P(
-  test_bcast, TestBroadcast, CollectionTestTypes
+  test_bcast, TestBroadcast, CollectionTestTypes,
 );
 
 }}} // end namespace vt::tests::unit
