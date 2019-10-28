@@ -125,7 +125,7 @@ using CollectionTestTypes = testing::Types<
 >;
 
 INSTANTIATE_TYPED_TEST_CASE_P(
-  test_collection_index, TestCsollectionIndexTypes, CollectionTestTypes,
+  test_collection_index, TestCsollectionIndexTypes, CollectionTestTypes
 );
 
 }}} // end namespace vt::tests::unit

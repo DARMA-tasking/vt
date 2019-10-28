@@ -387,7 +387,7 @@ REGISTER_TYPED_TEST_CASE_P /* NOLINT */ (
   test_route_entity, test_entity_cache_hits, test_entity_cache_migrated_entity
 );
 INSTANTIATE_TYPED_TEST_CASE_P /* NOLINT */ (
-  Message, TestLocationRoute, location::MsgType,
+  Message, TestLocationRoute, location::MsgType
 );
 
 }}} // end namespace vt::tests::unit
