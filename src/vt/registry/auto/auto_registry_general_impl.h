@@ -51,7 +51,21 @@
 #include "vt/registry/auto/auto_registry_general.h"
 #include "vt/objgroup/type_registry/registry.h"
 
+#include <functional>
+
 namespace vt { namespace auto_registry {
+
+// Having this is in a function specialized only on ObjType results in many
+// fewer lambda instantiations in clang (and possibly others) even though
+// the lambda itself it not necessarily dependent on the outer type args.
+template <typename ActFnObjType>
+std::function<AutoHandlerType()> makeObjIdxFn() {
+  // If access to makeObjIdx does not need to be deferred, would be able
+  // to avoid lambda/function entirely.
+  return []() -> AutoHandlerType {
+    return objgroup::registry::makeObjIdx<ActFnObjType>();
+  };
+}
 
 template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
 RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
@@ -59,9 +73,7 @@ RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
   index = reg.size();
 
   auto fn = ActFnT::getFunction();
-  auto gen_fn = []() -> AutoHandlerType {
-    return objgroup::registry::makeObjIdx<typename ActFnT::ObjType>();
-  };
+  auto gen_fn = makeObjIdxFn<typename ActFnT::ObjType>();
 
   #if backend_check_enabled(trace_enabled)
   using Tn = typename ActFnT::ActFnType;
