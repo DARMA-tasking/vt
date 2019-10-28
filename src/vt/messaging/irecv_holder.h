@@ -81,7 +81,7 @@ struct IRecvHolder {
       return progress_made;
     }
 
-    for (int i = 0; i < holder_.size(); i++) {
+    for (std::size_t i = 0; i < holder_.size(); i++) {
       auto& e = holder_[i];
       if (e.valid) {
         int flag = 0;
@@ -100,7 +100,7 @@ struct IRecvHolder {
 
   void compress() {
     std::vector<T> new_holder;
-    for (int i = 0; i < holder_.size(); i++) {
+    for (std::size_t i = 0; i < holder_.size(); i++) {
       if (holder_[i].valid) {
         new_holder.emplace_back(std::move(holder_[i]));
       }
