@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              broadcast_test.cc
+//                                irecv_holder.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,76 +42,78 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
+#if !defined INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
+#define INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
 
-using namespace vt;
+#include "vt/config.h"
 
-#define BCAST_DEBUG 0
+#include <vector>
 
-static constexpr int32_t const num_bcasts = 4;
-static NodeType my_node = uninitialized_destination;
-static int32_t bcast_count = 0;
+namespace vt { namespace messaging {
 
-struct Msg : vt::Message {
-  NodeType broot;
+template <typename T>
+struct IRecvHolder {
+  IRecvHolder() = default;
 
-  Msg(NodeType const& in_broot) : Message(), broot(in_broot) { }
-};
+  template <typename U>
+  void emplace(U&& u) {
+    static constexpr std::size_t factor = 4;
 
-static void bcastTest(Msg* msg) {
-  auto const& root = msg->broot;
+    if (holes_.size() * factor > holder_.size()) {
+      compress();
+    }
 
-  #if BCAST_DEBUG
-  fmt::print("{}: bcastTestHandler root={}\n", theContext()->getNode(), msg->broot);
-  #endif
-
-  vtAssert(
-    root != my_node, "Broadcast should deliver to all but this node"
-  );
-
-  bcast_count++;
-}
-
-int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
-
-  my_node = theContext()->getNode();
-
-  if (theContext()->getNumNodes() == 1) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
-    return 0;
-  }
-
-  NodeType from_node = uninitialized_destination;
-
-  if (argc > 1) {
-    from_node = atoi(argv[1]);
-  }
-
-  int32_t const expected = num_bcasts *
-    (from_node == uninitialized_destination ? theContext()->getNumNodes() - 1 : (
-      from_node == my_node ? 0 : 1
-    ));
-
-  theTerm()->addAction([=]{
-    fmt::print("[{}] verify: bcast_count={}, expected={}\n", my_node, bcast_count, expected);
-    vtAssertExpr(bcast_count == expected);
-  });
-
-  if (from_node == uninitialized_destination or from_node == my_node) {
-    fmt::print("[{}] broadcast_test: broadcasting {} times\n", my_node, num_bcasts);
-    for (int i = 0; i < num_bcasts; i++) {
-      theMsg()->broadcastMsg<Msg, bcastTest>(makeSharedMessage<Msg>(my_node));
+    if (holes_.size() > 0) {
+      auto const slot = holes_.back();
+      holes_.pop_back();
+      holder_.emplace(holder_.begin() + slot, std::forward<U>(u));
+    } else {
+      holder_.emplace_back(std::forward<U>(u));
     }
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
+  template <typename Callable>
+  bool testAll(Callable c) {
+    bool progress_made = false;
+
+    // No active elements, skip any tests
+    if (holes_.size() == holder_.size()) {
+      return progress_made;
+    }
+
+    for (int i = 0; i < holder_.size(); i++) {
+      auto& e = holder_[i];
+      if (e.valid) {
+        int flag = 0;
+        MPI_Status stat;
+        MPI_Test(&e.req, &flag, &stat);
+        if (flag == 1) {
+          c(&e);
+          progress_made = true;
+          e.valid = false;
+          holes_.push_back(i);
+        }
+      }
+    }
+    return progress_made;
   }
 
-  CollectiveOps::finalize();
+  void compress() {
+    std::vector<T> new_holder;
+    for (int i = 0; i < holder_.size(); i++) {
+      if (holder_[i].valid) {
+        new_holder.emplace_back(std::move(holder_[i]));
+      }
+    }
+    holes_.clear();
+    holder_ = std::move(new_holder);
+  }
 
-  return 0;
-}
+private:
+  std::vector<T> holder_;
+  std::vector<int> holes_;
+};
+
+}} /* end namespace vt::messaging */
+
+#endif /*INCLUDED_VT_MESSAGING_IRECV_HOLDER_H*/

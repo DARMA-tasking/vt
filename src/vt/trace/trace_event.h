@@ -56,7 +56,7 @@
 namespace vt { namespace trace {
 
 struct EventClass {
-  EventClass(std::string const& in_event);
+  EventClass(std::string const& in_event, std::string const& in_hash_event);
   EventClass(EventClass const&) = default;
 
   TraceEntryIDType theEventId() const;
@@ -72,10 +72,14 @@ private:
   TraceEntryIDType this_event_seq_ = no_trace_entry_id;
 
   std::string event;
+  std::string hash_event;
 };
 
 struct Event : EventClass {
-  Event(std::string const& in_event, TraceEntryIDType const& in_event_type);
+  Event(
+    std::string const& in_event, std::string const& in_hash_event,
+    TraceEntryIDType const& in_event_type
+  );
   Event(Event const&) = default;
 
   TraceEntryIDType theEventTypeId() const;

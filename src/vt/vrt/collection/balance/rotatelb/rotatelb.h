@@ -64,7 +64,9 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 struct RotateObjMsg : ::vt::Message {};
 
 struct RotateLB : BaseLB {
+
   RotateLB() = default;
+  virtual ~RotateLB() {}
 
   void init(objgroup::proxy::Proxy<RotateLB> in_proxy);
   void runLB() override;

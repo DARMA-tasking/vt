@@ -651,10 +651,13 @@ void Runtime::initializeTrace() {
 #if backend_check_enabled(trace_enabled)
   theTrace = std::make_unique<trace::Trace>();
 
-  std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-  auto const& node = theContext->getNode();
-  theTrace->setupNames(
-    name, name + "." + std::to_string(node) + ".log.gz", name + "_trace");
+  if (ArgType::vt_trace) {
+    std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
+    auto const& node = theContext->getNode();
+    theTrace->setupNames(
+      name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
+    );
+  }
 #endif
 }
 

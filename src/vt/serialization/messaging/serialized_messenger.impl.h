@@ -110,18 +110,26 @@ template <typename UserMsgT>
 ) {
   auto const handler = sys_msg->handler;
   auto const& recv_tag = sys_msg->data_recv_tag;
+  auto const epoch = envelopeGetEpoch(sys_msg->env);
 
   debug_print(
     serial_msg, node,
     "serialMsgHandler: non-eager, recvDataMsg: msg={}, handler={}, "
     "recv_tag={}, epoch={}\n",
-    print_ptr(sys_msg), handler, recv_tag, envelopeGetEpoch(sys_msg->env)
+    print_ptr(sys_msg), handler, recv_tag, epoch
   );
+
+  bool const is_valid_epoch = epoch != no_epoch;
+
+  if (is_valid_epoch) {
+    theTerm()->produce(epoch);
+  }
 
   auto node = sys_msg->from_node;
   theMsg()->recvDataMsg(
     recv_tag, sys_msg->from_node,
-    [handler,recv_tag,node](RDMA_GetType ptr, ActionType action){
+    [handler,recv_tag,node,epoch,is_valid_epoch]
+    (RDMA_GetType ptr, ActionType action){
       // be careful here not to use "msg", it is no longer valid
       auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
       auto ptr_size = std::get<1>(ptr);
@@ -136,8 +144,16 @@ template <typename UserMsgT>
         handler, recv_tag, envelopeGetEpoch(msg->env)
       );
 
+      if (is_valid_epoch) {
+        theMsg()->pushEpoch(epoch);
+      }
       runnable::Runnable<UserMsgT>::run(handler, nullptr, msg.get(), node);
       action();
+
+      if (is_valid_epoch) {
+        theMsg()->popEpoch(epoch);
+        theTerm()->consume(epoch);
+      }
     }
   );
 }
@@ -483,8 +499,8 @@ template <typename MsgT, typename BaseT>
         auto sys_msg = makeMessage<SerialWrapperMsgType<MsgT>>();
         auto send_serialized = [=](Active::SendFnType send){
           auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag);
-	  EventType event = std::get<0>(ret);
-	  theEvent()->attachAction(event, [=]{ std::free(ptr); });
+          EventType event = std::get<0>(ret);
+          theEvent()->attachAction(event, [=]{ std::free(ptr); });
           sys_msg->data_recv_tag = std::get<1>(ret);
         };
         auto cur_ref = envelopeGetRef(sys_msg->env);

@@ -61,6 +61,7 @@ struct LBManager {
   LBManager() = default;
   LBManager(LBManager const&) = delete;
   LBManager(LBManager&&) = default;
+  virtual ~LBManager() {}
 
   static void init() {
     LBManager::proxy_ = theObjGroup()->makeCollective<LBManager>();

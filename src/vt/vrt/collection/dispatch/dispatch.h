@@ -59,8 +59,8 @@ struct DispatchCollectionBase {
   using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
 
   DispatchCollectionBase() = default;
+  virtual ~DispatchCollectionBase() {}
 
-public:
   virtual void broadcast(
     VirtualProxyType proxy, void* msg, HandlerType han, bool member
   ) = 0;

@@ -74,6 +74,7 @@ struct HierarchicalLB : BaseLB {
   using LoadType = double;
 
   HierarchicalLB() = default;
+  virtual ~HierarchicalLB() {}
 
   void init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy);
   void runLB() override;
@@ -100,6 +101,7 @@ private:
 
   void downTreeHandler(LBTreeDownMsg* msg);
   void lbTreeUpHandler(LBTreeUpMsg* msg);
+  void setupDone(SetupDoneMsg* msg);
 
   void downTreeSend(
     NodeType const node, NodeType const from, ObjSampleType const& excess,

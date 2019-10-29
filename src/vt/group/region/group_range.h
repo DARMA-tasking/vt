@@ -62,7 +62,9 @@ struct Range : Region {
 
   Range(Range const&) = default;
   Range(Range&&) = default;
-  Range& operator=(Range const&) = default;
+
+  // Cannot copy const members
+  Range& operator=(Range const&) = delete;
 
   virtual SizeType getSize() const override;
   virtual void sort() override;
