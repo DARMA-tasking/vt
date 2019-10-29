@@ -63,7 +63,7 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord()
-  : EntityLocationCoord<EntityID>(theLocMan()->cur_loc_inst++)
+  : EntityLocationCoord<EntityID>( LocationManager::cur_loc_inst++ )
 { }
 
 template <typename EntityID>
@@ -74,7 +74,7 @@ EntityLocationCoord<EntityID>::EntityLocationCoord(
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
-  : this_inst(identifier), recs_(default_max_cache_size)
+  : LocationCoord(), this_inst(identifier), recs_(default_max_cache_size)
 {
   debug_print(
     location, node,
@@ -88,8 +88,7 @@ EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
 }
 
 template <typename EntityID>
-/*virtual*/ EntityLocationCoord<EntityID>::~EntityLocationCoord() {
-}
+/*virtual*/ EntityLocationCoord<EntityID>::~EntityLocationCoord() = default;
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
