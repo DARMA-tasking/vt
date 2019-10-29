@@ -76,14 +76,6 @@ struct MsgSharedPtr final {
     in.shared_ = false;
   }
 
-  template <typename U>
-  explicit MsgSharedPtr(MsgSharedPtr<U> const& in) {
-    // Only used by VirtualMsgPtr; little dance.. U* -> base -> T*
-    BaseMsgType* basePtr{in.get()};
-    T* msgPtr{reinterpret_cast<T*>(basePtr)};
-    init(msgPtr, true);
-  }
-
   ~MsgSharedPtr() {
     clear();
   }
@@ -102,14 +94,19 @@ struct MsgSharedPtr final {
       "Message shall not be downcast unless trivially destructible"
     );
 
-    return MsgSharedPtr<U>{*this};
+    return MsgSharedPtr<U>(reinterpret_cast<U*>(ptr_), true);
   }
 
   /// Access as another (base) message type,
   /// even when such types are not trivially destructible.
   template <typename U>
   MsgVirtualPtr<U> toVirtual() const {
-    return MsgVirtualPtr<U>(*this);
+    // Type-erased shared_ptr capture to manage lifetime.
+    // Can probably (see other notes) change this MsgSharedPtr to not
+    // acquire a messageRef itself.
+    return MsgVirtualPtr<U>(
+      MsgSharedPtr<U>(reinterpret_cast<U*>(ptr_), true),
+      std::make_shared<MsgSharedPtr<T>>(*this));
   }
 
   MsgSharedPtr<T>& operator=(std::nullptr_t) {

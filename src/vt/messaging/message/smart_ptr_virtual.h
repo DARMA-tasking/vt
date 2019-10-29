@@ -61,38 +61,43 @@ struct PendingSend;
 template <typename BaseMsgT>
 struct MsgVirtualPtr final {
 
-  template <typename MsgT>
-  explicit MsgVirtualPtr(MsgSharedPtr<MsgT> in_ptr)
-    : ptr_(MsgSharedPtr<BaseMsgT>(in_ptr)),
-      closure_([in_ptr]{ })
-  { }
+  explicit MsgVirtualPtr(MsgSharedPtr<BaseMsgT> in_msg, std::shared_ptr<void> lifetime)
+    : msg_(in_msg), lifetime_(lifetime)
+  {}
 
-  template <typename MsgT>
-  explicit MsgVirtualPtr(MsgVirtualPtr<MsgT> in_vrt)
-    : ptr_(MsgSharedPtr<BaseMsgT>(in_vrt.ptr_)),
-      closure_(in_vrt.closure_)
-  { }
+  MsgVirtualPtr(std::nullptr_t)
+    : msg_(nullptr), lifetime_(nullptr)
+  {}
 
-  MsgVirtualPtr(std::nullptr_t) { }
+  inline ~MsgVirtualPtr() {
+    msg_ = nullptr;
+    lifetime_ = nullptr; // MUST be after
+  }
 
   inline void operator=(std::nullptr_t)
   {
-    ptr_ = nullptr;
-    closure_ = nullptr;
+    msg_ = nullptr;
+    lifetime_ = nullptr; // MUST be after
   }
 
-  inline BaseMsgT* get() const { return ptr_.get(); }
-  inline BaseMsgT* operator->() const { return ptr_.get(); }
-  inline BaseMsgT& operator*() const { return *ptr_.get(); }
-  inline bool operator==(std::nullptr_t) const { return ptr_ == nullptr; }
-  inline bool operator!=(std::nullptr_t) const { return ptr_ != nullptr; }
+  inline BaseMsgT* get() const { return msg_.get(); }
+  inline BaseMsgT* operator->() const { return msg_.get(); }
+  inline BaseMsgT& operator*() const { return *msg_.get(); }
+  inline bool operator==(std::nullptr_t) { return msg_ == nullptr; }
+  inline bool operator!=(std::nullptr_t) const { return msg_ != nullptr; }
 
 private:
-  MsgSharedPtr<BaseMsgT> ptr_ = nullptr;
-  std::function<void()> closure_ = nullptr;
+  MsgSharedPtr<BaseMsgT> msg_;
+  // Type-erased deref-ergo-delete trigger to original MsgSharedPtr<MsgT>
+  // This field must only be released AFTER msg_ to ensure proper
+  // destruction (messageDeref) of the correct message type.
+  std::shared_ptr<void> lifetime_;
 
+  // NOTE: This is slightly dangerous because the returned object may outlive
+  // the lifetime of ahem lifetime_ and trigger a delete on the wrong type.
+  // The caller is responsible to ensure this does not happen.
   friend struct PendingSend;
-  MsgSharedPtr<BaseMsgT>& getShared() { return ptr_; }
+  MsgSharedPtr<BaseMsgT>& getShared() { return msg_; }
 };
 
 }} /* end namespace vt::messaging */
@@ -106,4 +111,4 @@ using MsgVirtualPtrAny = messaging::MsgVirtualPtr<ShortMessage>;
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H*/
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_SMART_MSG_VIRTUAL_H*/
