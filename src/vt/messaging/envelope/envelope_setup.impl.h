@@ -66,6 +66,10 @@ inline void envelopeInit(Env& env) {
   envelopeSetHandler(env, uninitialized_handler);
   envelopeSetRef(env, not_shared_message);
   envelopeSetGroup(env);
+# if backend_check_enabled(priorities)
+  envelopeSetPriority(env, min_priority);
+  envelopeSetPriorityLevel(env, 0);
+# endif
 }
 
 inline void envelopeInitEmpty(Envelope& env) {
