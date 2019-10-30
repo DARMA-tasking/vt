@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/messaging/envelope/envelope_setup.h"
+#include "vt/scheduler/priority.h"
 
 namespace vt {
 

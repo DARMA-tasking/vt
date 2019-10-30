@@ -51,6 +51,7 @@
 #include "vt/serialization/auto_dispatch/dispatch.h"
 #include "vt/serialization/auto_dispatch/dispatch_handler.h"
 #include "vt/serialization/auto_dispatch/dispatch_functor.h"
+#include "vt/messaging/message/message_priority.impl.h"
 #include "vt/scheduler/priority.h"
 
 namespace vt { namespace messaging {
