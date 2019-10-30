@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              message_priority.h
+//                           message_priority.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,31 +42,67 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_PRIORITY_H
-#define INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_PRIORITY_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_PRIORITY_IMPL_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_PRIORITY_IMPL_H
 
 #include "vt/config.h"
-#include "vt/scheduler/priority.h"
-#include "vt/scheduler/priority_manip.h"
-#include "vt/messaging/envelope.h"
 
 namespace vt { namespace messaging {
 
 template <typename MsgPtrT>
-void msgSetPriorityLevel(MsgPtrT ptr, PriorityLevelType level);
+void msgSetPriorityLevel(MsgPtrT ptr, PriorityLevelType level) {
+# if backend_check_enabled(priorities)
+  envelopeSetPriorityLevel(ptr->env, level);
+# endif
+}
 
 template <typename MsgPtrT>
-void msgSetPriorityAllLevels(MsgPtrT ptr, PriorityType priority);
+void msgSetPriorityAllLevels(MsgPtrT ptr, PriorityType priority) {
+# if backend_check_enabled(priorities)
+  envelopeSetPriority(ptr->env, priority);
+# endif
+}
 
 template <typename MsgPtrT>
-void msgIncPriorityLevel(MsgPtrT ptr);
+void msgIncPriorityLevel(MsgPtrT ptr) {
+# if backend_check_enabled(priorities)
+  auto const level = theMsg()->getCurrentPriorityLevel();
+  envelopeSetPriorityLevel(ptr->env, level + 1);
+# endif
+}
 
 template <typename MsgPtrT>
-void msgSetPriority(MsgPtrT ptr, PriorityType priority, bool next_level = false);
+void msgSetPriority(MsgPtrT ptr, PriorityType priority, bool next_level) {
+# if backend_check_enabled(priorities)
+  auto level = theMsg()->getCurrentPriorityLevel();
+  if (next_level and level + 1 < sched::priority_num_levels) {
+    level += 1;
+  }
+  auto prior = theMsg()->getCurrentPriority();
+  bool const is_breadth_first = priority == sched::Priority::BreadthFirst;
+  for (PriorityType l = level + 1; l < sched::priority_num_levels; l++) {
+    if (is_breadth_first) {
+      sched::PriorityManip::setPriority(prior, l, sched::priority_all_set);
+    } else {
+      sched::PriorityManip::setPriority(prior, l, 0);
+    }
+  }
+  sched::PriorityManip::setPriority(prior, level, priority);
+  envelopeSetPriorityLevel(ptr->env, level);
+  envelopeSetPriority(ptr->env, prior);
+# endif
+}
 
 template <typename MsgPtrT>
-void msgSystemSetPriority(MsgPtrT ptr, PriorityType priority);
+void msgSystemSetPriority(MsgPtrT ptr, PriorityType priority) {
+# if backend_check_enabled(priorities)
+  PriorityType prior = no_priority;
+  envelopeSetPriorityLevel(ptr->env, 0);
+  sched::PriorityManip::setPriority(prior, 0, priority);
+  envelopeSetPriority(ptr->env, prior);
+# endif
+}
 
 }} /* end namespace vt::messaging */
 
-#endif /*INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_PRIORITY_H*/
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_PRIORITY_IMPL_H*/
