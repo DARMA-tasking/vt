@@ -53,10 +53,15 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct GossipLB : BaseLB {
-  GossipLB() = default;
-  GossipLB(GossipLB const&) = delete;
-  GossipLB(GossipLB&&) = default;
 
+public: // ctors
+  GossipLB() = default;
+
+  GossipLB(GossipLB const&) = delete;
+
+  virtual ~GossipLB() {}
+
+public:
   void init(objgroup::proxy::Proxy<GossipLB> in_proxy);
   void runLB() override;
 

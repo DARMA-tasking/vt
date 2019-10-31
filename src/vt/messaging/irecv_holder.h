@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 rdma_types.h
+//                                irecv_holder.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,66 +42,78 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_TYPES_H
-#define INCLUDED_RDMA_RDMA_TYPES_H
+#if !defined INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
+#define INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
 
 #include "vt/config.h"
 
-namespace vt { namespace rdma {
+#include <vector>
 
-using UnderlyingNodeType = NodeType;
+namespace vt { namespace messaging {
 
-struct Endpoint {
-  Endpoint(
-    bool const& in_is_target, UnderlyingNodeType const& in_node
-  ) : is_target(in_is_target), value(in_node)
-  { }
+template <typename T>
+struct IRecvHolder {
+  IRecvHolder() = default;
 
-  operator UnderlyingNodeType() const { return get(); }
+  template <typename U>
+  void emplace(U&& u) {
+    static constexpr std::size_t factor = 4;
 
-  UnderlyingNodeType get() const { return value; }
+    if (holes_.size() * factor > holder_.size()) {
+      compress();
+    }
 
-  bool target() const { return is_target; }
+    if (holes_.size() > 0) {
+      auto const slot = holes_.back();
+      holes_.pop_back();
+      holder_.emplace(holder_.begin() + slot, std::forward<U>(u));
+    } else {
+      holder_.emplace_back(std::forward<U>(u));
+    }
+  }
+
+  template <typename Callable>
+  bool testAll(Callable c) {
+    bool progress_made = false;
+
+    // No active elements, skip any tests
+    if (holes_.size() == holder_.size()) {
+      return progress_made;
+    }
+
+    for (std::size_t i = 0; i < holder_.size(); i++) {
+      auto& e = holder_[i];
+      if (e.valid) {
+        int flag = 0;
+        MPI_Status stat;
+        MPI_Test(&e.req, &flag, &stat);
+        if (flag == 1) {
+          c(&e);
+          progress_made = true;
+          e.valid = false;
+          holes_.push_back(i);
+        }
+      }
+    }
+    return progress_made;
+  }
+
+  void compress() {
+    std::vector<T> new_holder;
+    for (std::size_t i = 0; i < holder_.size(); i++) {
+      if (holder_[i].valid) {
+        new_holder.emplace_back(std::move(holder_[i]));
+      }
+    }
+    holes_.clear();
+    holder_ = std::move(new_holder);
+  }
 
 private:
-  bool is_target = false;
-  UnderlyingNodeType value = uninitialized_destination;
+  std::vector<T> holder_;
+  std::vector<int> holes_;
 };
 
-struct Target : Endpoint {
-  explicit Target(UnderlyingNodeType const& in_node)
-    : Endpoint(true, in_node)
-  { }
-};
+}} /* end namespace vt::messaging */
 
-struct NonTarget : Endpoint {
-  explicit NonTarget(UnderlyingNodeType const& in_node)
-    : Endpoint(false, in_node)
-  { }
-};
-
-}} //end namespace vt::rdma
-
-namespace vt {
-
-using RDMA_TargetType = rdma::Target;
-using RDMA_NonTargetType = rdma::NonTarget;
-
-struct from_s {
-  RDMA_TargetType operator=(rdma::UnderlyingNodeType val) {
-    return RDMA_TargetType(val);
-  }
-};
-
-struct to_s {
-  RDMA_NonTargetType operator=(rdma::UnderlyingNodeType val) {
-    return RDMA_NonTargetType(val);
-  }
-};
-
-extern from_s rdma_from;
-extern to_s rdma_to;
-
-} //end namespace vt
-
-#endif /*INCLUDED_RDMA_RDMA_TYPES_H*/
+#endif /*INCLUDED_VT_MESSAGING_IRECV_HOLDER_H*/

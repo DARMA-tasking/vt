@@ -52,7 +52,6 @@
 
 namespace vt { namespace arguments {
 
-/*static*/ CLI::App    ArgConfig::app{"vt"};
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
 /*static*/ bool        ArgConfig::vt_auto_color         = false;
@@ -140,6 +139,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::parsed                = false;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
+  static CLI::App app{"vt"};
+
   if (parsed || argc == 0 || argv == nullptr) {
     return 0;
   }
@@ -478,7 +479,7 @@ namespace vt { namespace arguments {
   char** new_argv = new char*[new_argc + 1];
   new_argv[0] = argv[0];
   for (auto ii = 1; ii < new_argc; ii++) {
-    new_argv[ii] = argv[ret_idx[ii]];
+    new_argv[ii] = argv[ret_idx[ii - 1]];
   }
 
   // Set them back with all vt arguments elided

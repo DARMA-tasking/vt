@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-#include "CLI/CLI11.hpp"
+#include <string>
 
 namespace vt { namespace arguments {
 
@@ -141,7 +141,6 @@ public:
   static std::string vt_user_str_3;
 
 private:
-  static CLI::App app;
   static bool parsed;
 };
 

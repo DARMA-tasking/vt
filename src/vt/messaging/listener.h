@@ -50,6 +50,8 @@
 namespace vt { namespace messaging {
 
 struct Listener {
+  virtual ~Listener() {}
+
   virtual void send(NodeType dest, MsgSizeType size, bool bcast) = 0;
 };
 

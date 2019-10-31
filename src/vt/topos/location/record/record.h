@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/topos/location/record/state.h"
 
-#include <iostream>
+#include <iosfwd>
 
 namespace vt { namespace location {
 

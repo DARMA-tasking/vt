@@ -45,6 +45,8 @@
 #include "vt/config.h"
 #include "vt/termination/term_window.h"
 
+#include <fmt/ostream.h>
+
 namespace vt { namespace term {
 
 EpochWindow::EpochWindow(EpochType const& epoch)

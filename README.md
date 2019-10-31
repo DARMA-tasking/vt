@@ -1,5 +1,7 @@
 # *vt* => virtual transport
 
+![Build Status](https://travis-ci.com/DARMA-tasking/vt.svg?branch=develop)
+
 ## Introduction : What is *vt*?
 
 *vt* is an active messaging layer that utilizes C++ object virtualization to

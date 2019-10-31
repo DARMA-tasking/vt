@@ -82,6 +82,7 @@ struct TerminationDetector :
   using ParentBagType      = EpochRelation::ParentBagType;
 
   TerminationDetector();
+  virtual ~TerminationDetector() {}
 
   /****************************************************************************
    *

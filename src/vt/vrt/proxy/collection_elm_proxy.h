@@ -52,7 +52,7 @@
 #include "vt/vrt/collection/insert/insertable.h"
 #include "vt/vrt/proxy/base_elm_proxy.h"
 
-#include <ostream>
+#include <iosfwd>
 
 namespace vt { namespace vrt { namespace collection {
 

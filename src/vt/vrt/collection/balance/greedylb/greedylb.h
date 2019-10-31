@@ -70,6 +70,7 @@ struct GreedyLB : BaseLB {
   using LoadProfileType  = std::unordered_map<NodeType,LoadType>;
 
   GreedyLB() = default;
+  virtual ~GreedyLB() {}
 
   void init(objgroup::proxy::Proxy<GreedyLB> in_proxy);
   void runLB() override;

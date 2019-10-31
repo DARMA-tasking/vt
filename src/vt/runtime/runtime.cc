@@ -483,7 +483,7 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_trace", "Tracing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
     if (ArgType::vt_trace_file != "") {
-      auto f11 = fmt::format("Trace file name \"{}\"", theTrace->getTraceName());
+      auto f11 = fmt::format("Trace file name \"{}\"", ArgType::vt_trace_file);
       auto f12 = opt_on("--vt_trace_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     } else {
@@ -950,11 +950,13 @@ void Runtime::initializeTrace() {
   #if backend_check_enabled(trace_enabled)
     theTrace = std::make_unique<trace::Trace>();
 
-    std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-    auto const& node = theContext->getNode();
-    theTrace->setupNames(
-      name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
-    );
+    if (ArgType::vt_trace) {
+      std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
+      auto const& node = theContext->getNode();
+      theTrace->setupNames(
+        name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
+      );
+    }
   #endif
 }
 

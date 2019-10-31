@@ -66,7 +66,7 @@ TEST_F(TestIntegralSet, test_interval_set) {
   for (auto&& e : elms) {
     i.insert(e);
     t.insert(e);
-    EXPECT_EQ(i.compressedSize(), comp[cur]);
+    EXPECT_EQ(static_cast<int>(i.compressedSize()), comp[cur]);
     cur++;
     fmt::print(
       "size={}, compressed size={}, ratio={}\n",
@@ -76,7 +76,7 @@ TEST_F(TestIntegralSet, test_interval_set) {
     //i.dumpState();
   }
 
-  EXPECT_EQ(i.size(), 9);
+  EXPECT_EQ(static_cast<int>(i.size()), 9);
 
   for (auto&& e : elms) {
     EXPECT_EQ(i.contains(e), true);
@@ -122,8 +122,8 @@ TEST_F(TestIntegralSet, test_interval_set_2) {
     num++;
   }
 
-  EXPECT_EQ(num, i.size());
-  EXPECT_EQ(num, i.compressedSize());
+  EXPECT_EQ(num, static_cast<int>(i.size()));
+  EXPECT_EQ(num, static_cast<int>(i.compressedSize()));
 
   fmt::print(
     "size={}, compressed size={}, ratio={}\n",
@@ -136,8 +136,8 @@ TEST_F(TestIntegralSet, test_interval_set_2) {
     num++;
   }
 
-  EXPECT_EQ(num, i.size());
-  EXPECT_EQ(1, i.compressedSize());
+  EXPECT_EQ(num, static_cast<int>(i.size()));
+  EXPECT_EQ(1, static_cast<int>(i.compressedSize()));
 
   fmt::print(
     "size={}, compressed size={}, ratio={}\n",
@@ -150,8 +150,8 @@ TEST_F(TestIntegralSet, test_interval_set_2) {
     num--;
   }
 
-  EXPECT_EQ(num, i.size());
-  EXPECT_EQ(num, i.compressedSize());
+  EXPECT_EQ(num, static_cast<int>(i.size()));
+  EXPECT_EQ(num, static_cast<int>(i.compressedSize()));
 
   fmt::print(
     "size={}, compressed size={}, ratio={}\n",
@@ -164,8 +164,8 @@ TEST_F(TestIntegralSet, test_interval_set_2) {
     num++;
   }
 
-  EXPECT_EQ(num, i.size());
-  EXPECT_EQ(1, i.compressedSize());
+  EXPECT_EQ(num, static_cast<int>(i.size()));
+  EXPECT_EQ(1, static_cast<int>(i.compressedSize()));
 
   fmt::print(
     "size={}, compressed size={}, ratio={}\n",

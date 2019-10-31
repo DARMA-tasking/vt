@@ -53,10 +53,10 @@ namespace vt { namespace util { namespace demangle {
 
 struct DemangledName {
   DemangledName(
-    std::string const& in_ns, std::string const& in_func,
+    std::string const& in_ns, std::string const& in_fun,
     std::string const& in_args
-  ) : namespace_(in_ns), funcname_(in_func), params_(in_args),
-      func_with_params_(in_func + "(" + in_args + ")")
+  ) : namespace_(in_ns), funcname_(in_fun), params_(in_args),
+      func_with_params_(in_fun + "(" + in_args + ")")
   { }
 
   std::string getNamespace()  const { return namespace_       ; }

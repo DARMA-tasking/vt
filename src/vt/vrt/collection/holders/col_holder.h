@@ -53,10 +53,14 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct CollectionHolder : BaseHolder {
+
+ public:
   CollectionHolder(
     HandlerType const& in_map_fn, IndexT const& idx, bool const in_is_static
   );
+  virtual ~CollectionHolder() {}
 
+ public:
   void destroy() override;
   void runLB(PhaseType phase) override;
 
