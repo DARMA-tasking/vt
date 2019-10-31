@@ -52,7 +52,6 @@
 
 #include <fstream>
 #include <cinttypes>
-#include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -332,7 +331,8 @@ void Trace::endProcessing(
 
   logEvent(log);
 
-  flushTracesFile();
+  if (open_events_.empty())
+    cur_stop_ = traces_.size();
 }
 
 void Trace::beginIdle(double const time) {
@@ -525,11 +525,7 @@ bool Trace::checkEnabled() {
     auto const node = theContext()->getNode();
     if (ArgType::vt_trace_mod == 0) {
       return true;
-    } else if (node % ArgType::vt_trace_mod == 1) {
-      return true;
-    } else {
-      return false;
-    }
+    } else return (node % ArgType::vt_trace_mod == 1);
   } else {
     return false;
   }
@@ -541,58 +537,35 @@ void Trace::enableTracing() { enabled_ = true; }
 void Trace::disableTracing() { enabled_ = false; }
 
 void Trace::cleanupTracesFile() {
-  //
-  // 2019/10: This function is only called from the destructor of Trace.
-  //
   if (checkEnabled()) {
     auto const& node = theContext()->getNode();
+    //--- Sanity check
+    if (open_events_.empty()) {
+      cur_stop_ = traces_.size();
+    }
+    else {
+      vtAssert(false, "Trying to dump traces with open events?");
+    }
+    //--- Dump everything into an output file
     writeTracesFile();
     outputFooter(node, start_time_, log_file_);
     gzclose(log_file_);
   }
 }
 
-void Trace::flushTracesFile() {
+void Trace::flushTracesFile(bool useGlobalSync) {
   //
-  // Barrier: synchronize all the nodes before flushing the traces
-  //
-//  if (curRT) {
-//    curRT->systemSync();
-//  }
-//  else {
-//    // Something is wrong
-//    vtAssert(false, "Trying to flush traces when VT runtime is deallocated?");
-//  }
-
-  //
-  // Compute an estimate of memory cost for the array "traces_"
-  //
-
-  size_t memCost = sizeof(std::vector<LogPtrType>);
-  memCost += traces_.size() * sizeof(LogPtrType);
-  memCost += (traces_.size() - cur_) * sizeof(Log);
-  for (auto jj = static_cast<size_t>(cur_); jj < traces_.size(); ++jj) {
-    memCost += traces_[jj]->user_supplied_note.length();
+  if (useGlobalSync) {
+    //--- Barrier: synchronize all the nodes before flushing the traces
+    if (curRT) {
+      curRT->systemSync();
+    }
+    else {
+      // Something is wrong
+      vtAssert(false, "Trying to flush traces when VT runtime is deallocated?");
+    }
   }
-  // UH (2019/10/24) --- Remove the printing before merging
-  std::cout << " node " << theContext()->getNode()
-            << " traces_.size " << traces_.size()
-            << " memCost " << memCost
-            << " MB " << double(memCost) / (1024.0 * 1024.0)
-            << std::endl;
-  //----
-
-  if ((memCost > 1024 * 1024 * ArgType::vt_trace_flush_mod)
-      and (open_events_.empty())) {
-    // TODO Check with JL whether he prefers Z_FINISH or Z_FULL_FLUSH
-    // https://www.zlib.net/manual.html
-    // If the flush parameter is Z_FINISH, the remaining data is written and
-    // the gzip stream is completed in the output.
-    // Z_FULL_FLUSH allows decompression to restart from this
-    // point if the previous compressed data has been lost or damaged.
-    // Flushing is
-    // likely to degrade the performance of the compression system, and should
-    // only be used where necessary.
+  if (traces_.size() > cur_ + ArgType::vt_trace_flush_mod) {
     writeTracesFile(Z_FULL_FLUSH);
   }
 }
@@ -630,7 +603,8 @@ void Trace::writeTracesFile(int flush) {
 }
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
-  for (auto i = cur_; i < traces.size(); i++) {
+  auto stop_point = cur_stop_;
+  for (auto i = cur_; i < stop_point; i++) {
     auto& log = traces[i];
     auto const& converted_time = timeToInt(log->time - start_time_);
 
@@ -717,7 +691,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     delete log;
   }
 
-  cur_ = traces.size();
+  cur_ = stop_point;
 }
 
 /*static*/ double Trace::getCurrentTime() {

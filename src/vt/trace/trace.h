@@ -140,7 +140,7 @@ struct Trace {
   void disableTracing();
   bool checkEnabled();
 
-  void flushTracesFile();
+  void flushTracesFile(bool useGlobalSync = false);
   void writeTracesFile(int flush = Z_FINISH);
   void cleanupTracesFile();
   void writeLogFile(gzFile file, TraceContainerType const& traces);
@@ -178,6 +178,7 @@ private:
   bool file_is_open_ = false;
   bool wrote_sts_file_ = false;
   int64_t cur_ = 0;
+  int64_t cur_stop_ = 0;
 };
 
 }} // end namespace vt::trace
