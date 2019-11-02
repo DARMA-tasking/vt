@@ -48,16 +48,19 @@
 #include <string>
 #include <vector>
 
+#include <unistd.h>
+
 #include "CLI/CLI11.hpp"
 
 namespace vt { namespace arguments {
 
-/*static*/ bool        ArgConfig::vt_color              = true;
+/*static*/ bool        ArgConfig::vt_color              = false;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
-/*static*/ bool        ArgConfig::vt_auto_color         = false;
+/*static*/ bool        ArgConfig::vt_auto_color         = true;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
 
 /*static*/ int32_t     ArgConfig::vt_sched_num_progress = 2;
+/*static*/ bool        ArgConfig::colorize_output       = false;
 
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
@@ -163,9 +166,9 @@ namespace vt { namespace arguments {
    * Flags for controlling the colorization of output from vt
    */
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
-  auto always = "Always colorize output";
-  auto never  = "Never colorize output";
-  auto maybe  = "Use isatty to determine colorization of output";
+  auto always = "Colorize output (overrides --vt_auto_color)";
+  auto never  = "Never colorize output (overrides --vt_color)";
+  auto maybe  = "Automatic colorization of output (default, unnecessary)";
   auto a  = app.add_flag("-c,--vt_color",      vt_color,      always);
   auto b  = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
   auto c  = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe);
@@ -480,6 +483,15 @@ namespace vt { namespace arguments {
     app.parse(args);
   } catch (CLI::Error &ex) {
     return app.exit(ex);
+  }
+
+  // Determine the final colorization setting.
+  if (vt_no_color) {
+    colorize_output = false;
+  } else if (vt_color) {
+    colorize_output = true;
+  } else { // assume auto-color
+    colorize_output = isatty(fileno(stdout));
   }
 
   /*
