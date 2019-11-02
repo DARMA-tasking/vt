@@ -61,6 +61,9 @@ public:
   static bool vt_auto_color;
   static bool vt_quiet;
 
+  // Derived from vt_*_color arguments after parsing.
+  static bool colorize_output;
+
   static bool vt_no_sigint;
   static bool vt_no_sigsegv;
   static bool vt_no_terminate;

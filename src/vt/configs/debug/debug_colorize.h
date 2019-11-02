@@ -49,44 +49,36 @@
 #include "vt/configs/types/types_type.h"
 
 #include <string>
-#include <unistd.h>
-// #include <sys/stat.h>
 
 namespace vt { namespace debug {
 
-inline auto istty() -> bool {
-  return isatty(fileno(stdout)) ? true : false;
+inline bool colorizeOutput() {
+  return arguments::ArgConfig::colorize_output;
 }
 
-inline auto ttyc() -> bool {
-  auto nocolor = arguments::ArgConfig::vt_no_color ? false : true;
-  auto tty = arguments::ArgConfig::vt_auto_color ? istty() : nocolor;
-  return tty;
-}
+inline std::string green()    { return colorizeOutput() ? "\033[32m"   : ""; }
+inline std::string bold()     { return colorizeOutput() ? "\033[1m"    : ""; }
+inline std::string magenta()  { return colorizeOutput() ? "\033[95m"   : ""; }
+inline std::string red()      { return colorizeOutput() ? "\033[31m"   : ""; }
+inline std::string bred()     { return colorizeOutput() ? "\033[31;1m" : ""; }
+inline std::string reset()    { return colorizeOutput() ? "\033[00m"   : ""; }
+inline std::string bd_green() { return colorizeOutput() ? "\033[32;1m" : ""; }
+inline std::string it_green() { return colorizeOutput() ? "\033[32;3m" : ""; }
+inline std::string un_green() { return colorizeOutput() ? "\033[32;4m" : ""; }
+inline std::string byellow()  { return colorizeOutput() ? "\033[33;1m" : ""; }
+inline std::string yellow()   { return colorizeOutput() ? "\033[33m"   : ""; }
+inline std::string blue()     { return colorizeOutput() ? "\033[34m"   : ""; }
 
-inline auto green()    -> std::string { return ttyc() ? "\033[32m"   : ""; }
-inline auto bold()     -> std::string { return ttyc() ? "\033[1m"   : ""; }
-inline auto magenta()  -> std::string { return ttyc() ? "\033[95m"   : ""; }
-inline auto red()      -> std::string { return ttyc() ? "\033[31m"  : ""; }
-inline auto bred()     -> std::string { return ttyc() ? "\033[31;1m" : ""; }
-inline auto reset()    -> std::string { return ttyc() ? "\033[00m"   : ""; }
-inline auto bd_green() -> std::string { return ttyc() ? "\033[32;1m" : ""; }
-inline auto it_green() -> std::string { return ttyc() ? "\033[32;3m" : ""; }
-inline auto un_green() -> std::string { return ttyc() ? "\033[32;4m" : ""; }
-inline auto byellow()  -> std::string { return ttyc() ? "\033[33;1m" : ""; }
-inline auto yellow()   -> std::string { return ttyc() ? "\033[33m"   : ""; }
-inline auto blue()     -> std::string { return ttyc() ? "\033[34m"   : ""; }
-
-inline auto emph(std::string str) -> std::string  {
+inline std::string emph(std::string str) {
   return magenta() + str + reset();
 }
-inline auto reg(std::string str) -> std::string  {
+inline std::string reg(std::string str) {
   return green() + str + reset();
 }
-inline auto vtPre() -> std::string  {
+inline std::string vtPre() {
   return bd_green() + std::string("vt") + reset() + ": ";
 }
-inline auto proc(vt::NodeType const& node) -> std::string  {
+inline std::string proc(vt::NodeType const& node)  {
   return blue() + "[" + std::to_string(node) + "]" + reset();
 }
 
