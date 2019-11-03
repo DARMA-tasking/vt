@@ -45,7 +45,7 @@
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
-#include "vt/config.h"
+// Do not pull in any VT dependencies here
 
 #include <string>
 

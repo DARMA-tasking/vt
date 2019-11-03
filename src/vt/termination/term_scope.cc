@@ -47,6 +47,7 @@
 #include "vt/termination/term_common.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/messaging/active.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace term {
 
