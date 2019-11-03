@@ -51,19 +51,14 @@
 #include "vt/utils/demangle/demangled_name.h"
 
 #include <string>
-#include <sstream>
 #include <vector>
 #include <cassert>
 #include <cstring>
-#include <iterator>
-#include <iostream>
-#include <regex>
+#include <iosfwd>
 #include <cstdlib>
 #include <assert.h>
 
 namespace vt { namespace util { namespace demangle {
-
-using StrContainerType = std::vector<std::string>;
 
 struct DemanglerUtils {
   template <typename T>
@@ -72,34 +67,11 @@ struct DemanglerUtils {
     return s;
   }
 
-  template <typename StringOut>
-  static inline void splitString(
-    std::string const& s, char delim, StringOut result
-  ) {
-    std::stringstream ss;
-    ss.str(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-      *(result++) = item;
-    }
-  }
+  static std::vector<std::string>
+  splitString(std::string const& str, char delim);
 
-  static inline StrContainerType splitString(
-    std::string const& str, char delim
-  ) {
-    StrContainerType elems;
-    splitString(str, delim, std::back_inserter(elems));
-    return elems;
-  }
-
-  static inline std::string removeSpaces(std::string const& str) {
-    StrContainerType const& str_split = splitString(str, ' ');
-    std::stringstream clean;
-    for (auto&& x : str_split) {
-      clean << x;
-    }
-    return clean.str();
-  }
+  static std::string
+  removeSpaces(std::string const& str);
 };
 
 /*
@@ -115,17 +87,11 @@ struct DemanglerUtils {
  *  >
  */
 struct ActiveFunctionDemangler {
-  using StrParsedOutType = DemangledName;
-  using UtilType = DemanglerUtils;
-
-  static StrParsedOutType parseActiveFunctionName(std::string const& str);
+  static DemangledName parseActiveFunctionName(std::string const& str);
 };
 
 struct ActiveFunctorDemangler {
-  using StrParsedOutType = DemangledName;
-  using UtilType = DemanglerUtils;
-
-  static StrParsedOutType parseActiveFunctorName(
+  static DemangledName parseActiveFunctorName(
       std::string const& name, std::string const& args
   );
 };
