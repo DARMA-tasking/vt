@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                trace_event.cc
+//                                irecv_holder.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,61 +42,78 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
+#define INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
 
-#include "vt/trace/trace_event.h"
+#include "vt/config.h"
 
-#include <string>
+#include <vector>
 
-namespace vt { namespace trace {
+namespace vt { namespace messaging {
 
-EventClass::EventClass(
-  std::string const& in_event, std::string const& in_hash_event
-) : event(in_event), hash_event(in_hash_event)
-{
-  auto const& event_hash =  std::hash<std::string>{}(in_hash_event);
-  this_event_ = event_hash;
-}
+template <typename T>
+struct IRecvHolder {
+  IRecvHolder() = default;
 
-TraceEntryIDType EventClass::theEventId() const {
-  return this_event_;
-}
+  template <typename U>
+  void emplace(U&& u) {
+    static constexpr std::size_t factor = 4;
 
-TraceEntryIDType EventClass::theEventSeqId() const {
-  return this_event_seq_;
-}
+    if (holes_.size() * factor > holder_.size()) {
+      compress();
+    }
 
-std::string EventClass::theEventName() const {
-  return event;
-}
+    if (holes_.size() > 0) {
+      auto const slot = holes_.back();
+      holes_.pop_back();
+      holder_.emplace(holder_.begin() + slot, std::forward<U>(u));
+    } else {
+      holder_.emplace_back(std::forward<U>(u));
+    }
+  }
 
-void EventClass::setEventName(std::string const& in_str) {
-  event = in_str;
-}
+  template <typename Callable>
+  bool testAll(Callable c) {
+    bool progress_made = false;
 
-void EventClass::setEventSeq(TraceEntryIDType const& seq) {
-  this_event_seq_ = seq;
-}
+    // No active elements, skip any tests
+    if (holes_.size() == holder_.size()) {
+      return progress_made;
+    }
 
-TraceEntryIDType EventClass::theEventSeq() const {
-  return this_event_seq_;
-}
+    for (std::size_t i = 0; i < holder_.size(); i++) {
+      auto& e = holder_[i];
+      if (e.valid) {
+        int flag = 0;
+        MPI_Status stat;
+        MPI_Test(&e.req, &flag, &stat);
+        if (flag == 1) {
+          c(&e);
+          progress_made = true;
+          e.valid = false;
+          holes_.push_back(i);
+        }
+      }
+    }
+    return progress_made;
+  }
 
-Event::Event(
-  std::string const& in_event, std::string const& in_hash_event,
-  TraceEntryIDType const& in_event_type
-) : EventClass(in_event, in_hash_event), this_event_type_(in_event_type)
-{ }
+  void compress() {
+    std::vector<T> new_holder;
+    for (std::size_t i = 0; i < holder_.size(); i++) {
+      if (holder_[i].valid) {
+        new_holder.emplace_back(std::move(holder_[i]));
+      }
+    }
+    holes_.clear();
+    holder_ = std::move(new_holder);
+  }
 
-TraceEntryIDType Event::theEventTypeId() const {
-  return this_event_type_;
-}
+private:
+  std::vector<T> holder_;
+  std::vector<int> holes_;
+};
 
-void Event::setEventTypeSeq(TraceEntryIDType const& seq) {
-  this_event_type_seq_ = seq;
-}
+}} /* end namespace vt::messaging */
 
-TraceEntryIDType Event::theEventTypeSeq() const {
-  return this_event_type_seq_;
-}
-
-}} //end namespace vt::trace
+#endif /*INCLUDED_VT_MESSAGING_IRECV_HOLDER_H*/
