@@ -52,20 +52,31 @@
 
 namespace vt { namespace messaging {
 
-template <typename MsgPtrT>
-void msgSetPriorityLevel(MsgPtrT ptr, PriorityLevelType level);
+template <typename MsgT>
+void msgSetPriorityLevel(MsgT ptr, PriorityLevelType level);
 
-template <typename MsgPtrT>
-void msgSetPriorityAllLevels(MsgPtrT ptr, PriorityType priority);
+template <typename MsgT>
+void msgSetPriorityAllLevels(MsgT ptr, PriorityType priority);
 
-template <typename MsgPtrT>
-void msgIncPriorityLevel(MsgPtrT ptr);
+template <typename MsgT, typename MsgU>
+bool msgIncPriorityLevel(MsgT old_msg, MsgU new_msg);
 
-template <typename MsgPtrT>
-void msgSetPriority(MsgPtrT ptr, PriorityType priority, bool next_level = false);
+template <typename MsgU>
+void msgSetPriority(MsgU new_msg, PriorityType priority, bool increment_level = false);
 
-template <typename MsgPtrT>
-void msgSystemSetPriority(MsgPtrT ptr, PriorityType priority);
+template <typename MsgU>
+void msgSetPriorityImpl(
+  MsgU new_msg, PriorityType new_priority, PriorityType old_priority,
+  PriorityLevelType level
+);
+
+template <typename MsgT, typename MsgU>
+void msgSetPriorityFrom(
+  MsgT old_msg, MsgU new_msg, PriorityType priority, bool increment_level = false
+);
+
+template <typename MsgT>
+void msgSystemSetPriority(MsgT ptr, PriorityType priority);
 
 }} /* end namespace vt::messaging */
 
