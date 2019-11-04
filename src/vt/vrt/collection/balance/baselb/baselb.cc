@@ -253,11 +253,10 @@ void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
     obj_id, from, to, iter != migrator.end()
   );
 
-  local_migration_count_++;
-
   if (iter == migrator.end()) {
     off_node_migrate_[from].push_back(std::make_tuple(obj_id,to));
   } else {
+    local_migration_count_++;
     iter->second(to);
   }
 }
