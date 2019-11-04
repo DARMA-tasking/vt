@@ -88,7 +88,8 @@ EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
 }
 
 template <typename EntityID>
-/*virtual*/ EntityLocationCoord<EntityID>::~EntityLocationCoord() = default;
+/*virtual*/ EntityLocationCoord<EntityID>::~EntityLocationCoord() {
+}
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
