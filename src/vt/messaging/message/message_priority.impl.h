@@ -49,52 +49,87 @@
 
 namespace vt { namespace messaging {
 
-template <typename MsgPtrT>
-void msgSetPriorityLevel(MsgPtrT ptr, PriorityLevelType level) {
+template <typename MsgT>
+void msgSetPriorityLevel(MsgT ptr, PriorityLevelType level) {
 # if backend_check_enabled(priorities)
   envelopeSetPriorityLevel(ptr->env, level);
 # endif
 }
 
-template <typename MsgPtrT>
-void msgSetPriorityAllLevels(MsgPtrT ptr, PriorityType priority) {
+template <typename MsgT>
+void msgSetPriorityAllLevels(MsgT ptr, PriorityType priority) {
 # if backend_check_enabled(priorities)
   envelopeSetPriority(ptr->env, priority);
 # endif
 }
 
-template <typename MsgPtrT>
-void msgIncPriorityLevel(MsgPtrT ptr) {
+template <typename MsgT, typename MsgU>
+bool msgIncPriorityLevel(MsgT old_msg, MsgU new_msg) {
 # if backend_check_enabled(priorities)
-  auto const level = theMsg()->getCurrentPriorityLevel();
-  envelopeSetPriorityLevel(ptr->env, level + 1);
+  auto const level = envelopeGetPriorityLevel(old_msg->env);
+  if (level + 1 < sched::priority_num_levels) {
+    envelopeSetPriorityLevel(new_msg->env, level + 1);
+    return true;
+  } else {
+    return false;
+  }
 # endif
 }
 
-template <typename MsgPtrT>
-void msgSetPriority(MsgPtrT ptr, PriorityType priority, bool next_level) {
+template <typename MsgU>
+void msgSetPriority(MsgU new_msg, PriorityType priority, bool increment_level) {
 # if backend_check_enabled(priorities)
-  auto level = theMsg()->getCurrentPriorityLevel();
-  if (next_level and level + 1 < sched::priority_num_levels) {
-    level += 1;
-  }
-  auto prior = theMsg()->getCurrentPriority();
-  bool const is_breadth_first = priority == sched::Priority::BreadthFirst;
+  PriorityLevelType const level = increment_level ? 1 : 0;
+  PriorityType old_priority = vt::min_priority;
+  return msgSetPriorityImpl<MsgU>(new_msg, priority, old_priority, level);
+# endif
+}
+
+template <typename MsgU>
+void msgSetPriorityImpl(
+  MsgU new_msg, PriorityType new_priority, PriorityType old_priority,
+  PriorityLevelType level
+) {
+# if backend_check_enabled(priorities)
+
+  bool const is_breadth_first = new_priority == sched::Priority::BreadthFirst;
+  debug_print(
+    gen, node,
+    "msgSetPriorityImpl: new_priority={:x}, old_priority={:x}, level={}, "
+    "is_breadth_first={}\n",
+    new_priority, old_priority, level, is_breadth_first
+  );
   for (PriorityType l = level + 1; l < sched::priority_num_levels; l++) {
     if (is_breadth_first) {
-      sched::PriorityManip::setPriority(prior, l, sched::priority_all_set);
+      sched::PriorityManip::setPriority(old_priority, l, sched::priority_all_set);
     } else {
-      sched::PriorityManip::setPriority(prior, l, 0);
+      sched::PriorityManip::setPriority(old_priority, l, 0);
     }
   }
-  sched::PriorityManip::setPriority(prior, level, priority);
-  envelopeSetPriorityLevel(ptr->env, level);
-  envelopeSetPriority(ptr->env, prior);
+  sched::PriorityManip::setPriority(old_priority, level, new_priority);
+  envelopeSetPriorityLevel(new_msg->env, level);
+  envelopeSetPriority(new_msg->env, old_priority);
 # endif
 }
 
-template <typename MsgPtrT>
-void msgSystemSetPriority(MsgPtrT ptr, PriorityType priority) {
+template <typename MsgT, typename MsgU>
+void msgSetPriorityFrom(
+  MsgT old_msg, MsgU new_msg, PriorityType priority, bool increment_level
+) {
+# if backend_check_enabled(priorities)
+  vtAssert(old_msg != nullptr, "Must have a valid message");
+  vtAssert(new_msg != nullptr, "Must have a valid message");
+  PriorityLevelType level = envelopeGetPriorityLevel(old_msg->env);
+  if (increment_level and level + 1 < sched::priority_num_levels) {
+    level += 1;
+  }
+  PriorityType old_priority = envelopeGetPriority(old_msg->env);
+  return msgSetPriorityImpl<MsgU>(new_msg, priority, old_priority, level);
+# endif
+}
+
+template <typename MsgT>
+void msgSystemSetPriority(MsgT ptr, PriorityType priority) {
 # if backend_check_enabled(priorities)
   PriorityType prior = no_priority;
   envelopeSetPriorityLevel(ptr->env, 0);

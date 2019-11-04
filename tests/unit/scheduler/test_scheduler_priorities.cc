@@ -58,7 +58,11 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_1) {
   int order = 0, total = 0;
 
   auto ordering_fn = [&](int expected) {
-    fmt::print("term: order={}, expected={}, total={}\n", order, expected, total);
+    debug_print(
+      gen, node,
+      "term: order={}, expected={}, total={}\n",
+      order, expected, total
+    );
     EXPECT_EQ(order++, expected);
     total--;
   };
@@ -87,7 +91,11 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_2) {
   int order = 0, total = 0;
 
   auto ordering_fn = [&](int expected) {
-    fmt::print("term: order={}, expected={}, total={}\n", order, expected, total);
+    debug_print(
+      gen, node,
+      "term: order={}, expected={}, total={}\n",
+      order, expected, total
+    );
     EXPECT_EQ(order++, expected);
     total--;
   };
@@ -125,7 +133,11 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_3) {
   int order = 0, total = 0;
 
   auto ordering_fn = [&](int expected) {
-    fmt::print("term: order={}, expected={}, total={}\n", order, expected, total);
+    debug_print(
+      gen, node,
+      "term: order={}, expected={}, total={}\n",
+      order, expected, total
+    );
     EXPECT_EQ(order++, expected);
     total--;
   };
@@ -161,5 +173,76 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_3) {
 # endif
 }
 
+struct ObjGroup;
+
+struct TestMsg : vt::Message {
+  TestMsg(
+    vt::objgroup::proxy::Proxy<ObjGroup> in_proxy,
+    PriorityType in_priority,
+    PriorityLevelType in_priority_level
+  ) : priority(in_priority), priority_level(in_priority_level), proxy(in_proxy)
+  { }
+
+  PriorityType priority = no_priority;
+  PriorityLevelType priority_level = no_priority_level;
+  vt::objgroup::proxy::Proxy<ObjGroup> proxy;
+};
+
+struct ObjGroup {
+
+  ObjGroup() : testSched(std::make_unique<vt::sched::Scheduler>()) { }
+
+  void enqueue(TestMsg* msg) {
+
+    auto const priority = envelopeGetPriority(msg->env);
+    auto const level    = envelopeGetPriorityLevel(msg->env);
+
+    debug_print(
+      gen, node,
+      "enqueue: priority={:x} vs {:x}, level={:x} vs {:x}, num={}\n",
+      msg->priority, priority, msg->priority_level, level,
+      vt::sched::priority_num_levels
+    );
+
+    EXPECT_EQ(level,    msg->priority_level);
+    EXPECT_EQ(priority, msg->priority);
+
+    if (msg->priority_level < vt::sched::priority_num_levels - 1) {
+      auto proxy = msg->proxy;
+      PriorityType new_priority = msg->priority;
+      PriorityLevelType new_level = msg->priority_level + 1;
+      sched::PriorityManip::setPriority(
+        new_priority, new_level, vt::sched::Priority::MediumLow
+      );
+      auto new_msg = vt::makeMessage<TestMsg>(proxy, new_priority, new_level);
+      vt::messaging::msgSetPriorityFrom(msg, new_msg, vt::sched::Priority::MediumLow, true);
+
+      auto np = vt::envelopeGetPriority(new_msg->env);
+      auto npl = vt::envelopeGetPriorityLevel(new_msg->env);
+
+      debug_print(
+        gen, node,
+        "NEW enqueue: priority={:x}, level={:x}\n", np, npl
+      );
+
+      proxy[0].send<TestMsg,&ObjGroup::enqueue>(new_msg);
+    }
+  }
+
+private:
+  std::unique_ptr<vt::sched::Scheduler> testSched = nullptr;
+};
+
+TEST_F(TestSchedPriorities, test_scheduler_priorities_4) {
+# if backend_check_enabled(priorities)
+
+  auto proxy = vt::theObjGroup()->makeCollective<ObjGroup>();
+
+  PriorityType p = vt::min_priority;
+  PriorityLevelType l = 0;
+  proxy[0].send<TestMsg,&ObjGroup::enqueue>(proxy, p, l);
+
+# endif
+}
 
 }}} /* end namespace vt::tests::unit */
