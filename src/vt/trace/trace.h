@@ -56,15 +56,15 @@
 #include "vt/trace/trace_log.h"
 #include "vt/trace/trace_user_event.h"
 
-#include <cstdint>
 #include <cassert>
-#include <unordered_map>
-#include <stack>
-#include <string>
-#include <vector>
-#include <memory>
+#include <cstdint>
 #include <functional>
 #include <iosfwd>
+#include <memory>
+#include <stack>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include <mpi.h>
 #include <zlib.h>
@@ -180,21 +180,21 @@ private:
 private:
   TraceContainerType traces_;
   TraceStackType open_events_;
-  TraceEventIDType cur_event_ = 1;
-  std::string dir_name_       = "";
-  std::string prog_name_      = "";
-  std::string trace_name_     = "";
-  bool enabled_               = true;
-  bool idle_begun_            = false;
-  bool use_directory_         = false;
-  double start_time_          = 0.0;
-  std::string full_trace_name = "";
-  std::string full_sts_name   = "";
-  std::string full_dir_name   = "";
+  TraceEventIDType cur_event_   = 1;
+  std::string prog_name_        = "";
+  std::string trace_name_       = "";
+  bool enabled_                 = true;
+  bool idle_begun_              = false;
+  double start_time_            = 0.0;
+  std::string full_trace_name   = "";
+  std::string full_sts_name     = "";
+  std::string full_dir_name     = "";
+  UserEventRegistry user_event_ = {};
   gzFile log_file;
-  bool file_is_open = false;
-  bool wrote_sts_file = false;
-  int64_t cur = 0;
+  bool file_is_open             = false;
+  bool wrote_sts_file           = false;
+  int64_t cur_                  = 0;
+  int64_t cur_stop_             = 0;
 };
 
 }} //end namespace vt::trace

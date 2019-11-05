@@ -193,26 +193,26 @@ void Trace::addUserBracketedNote(
 }
 
 UserEventIDType Trace::registerUserEventColl(std::string const& name) {
-  return user_event.collective(name);
+  return user_event_.collective(name);
 }
 
 UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
-  return user_event.rooted(name);
+  return user_event_.rooted(name);
 }
 
 UserEventIDType Trace::registerUserEventHash(std::string const& name) {
-  return user_event.hash(name);
+  return user_event_.hash(name);
 }
 
 void Trace::registerUserEventManual(
   std::string const& name, UserSpecEventIDType id
 ) {
-  user_event.user(name, id);
+  user_event_.user(name, id);
 }
 
 void insertNewUserEvent(UserEventIDType event, std::string const& name) {
   #if backend_check_enabled(trace_enabled)
-    theTrace()->user_event.insertEvent(event, name);
+    theTrace()->user_event_.insertEvent(event, name);
   #endif
 }
 
@@ -238,7 +238,7 @@ void Trace::addUserEventManual(UserSpecEventIDType event) {
     event
   );
 
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEvent(id);
 }
 
@@ -291,12 +291,12 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
 }
 
 void Trace::addUserEventBracketedManualBegin(UserSpecEventIDType event) {
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEventBracketedBegin(id);
 }
 
 void Trace::addUserEventBracketedManualEnd(UserSpecEventIDType event) {
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEventBracketedEnd(id);
 }
 
@@ -309,7 +309,7 @@ void Trace::addUserEventBracketedManual(
     event, begin, end
   );
 
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEventBracketed(id, begin, end);
 }
 
@@ -613,15 +613,6 @@ void Trace::cleanupTracesFile() {
   }
 }
 
-void Trace::cleanupTracesFile() {
-  if (checkEnabled()) {
-    auto const& node = theContext()->getNode();
-    writeTracesFile();
-    outputFooter(node, start_time_, log_file);
-    gzclose(log_file);
-  }
-}
-
 void Trace::writeTracesFile() {
   auto const node = theContext()->getNode();
 
@@ -657,7 +648,7 @@ void Trace::writeTracesFile() {
 }
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
-  for (auto i = cur; i < traces.size(); i++) {
+  for (auto i = cur_; i < traces.size(); i++) {
     auto& log = traces[i];
     auto const& converted_time = timeToInt(log->time - start_time_);
 
@@ -822,7 +813,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     delete log;
   }
 
-  cur += traces.size();
+  cur_ += traces.size();
 }
 
 /*static*/ double Trace::getCurrentTime() {
@@ -835,7 +826,7 @@ void Trace::outputControlFile(std::ofstream& file) {
   auto const num_event_types =
     TraceContainersType::getEventTypeContainer().size();
   auto const num_events = TraceContainersType::getEventContainer().size();
-  auto const num_user_events = user_event.getEvents().size();
+  auto const num_user_events = user_event_.getEvents().size();
 
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
@@ -896,7 +887,7 @@ void Trace::outputControlFile(std::ofstream& file) {
   file << "MESSAGE 0 0\n"
        << "TOTAL_STATS 0\n";
 
-  for (auto&& elm : user_event.getEvents()) {
+  for (auto&& elm : user_event_.getEvents()) {
     auto const id = elm.first;
     auto const name = elm.second;
 
