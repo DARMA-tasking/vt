@@ -50,16 +50,29 @@
 #include "vt/messaging/message/refs.h"
 
 #include <iostream>
-
 #include "fmt/ostream.h"
+#include <iosfwd>
+#include <cassert>
+
+namespace vt { namespace messaging {
+  // Fwd decl for statics
+  template <typename T>
+  struct MsgDerefTyped;
+}} // end namespace vt::messaging
+
+namespace vt { namespace messaging { namespace statics {
+  /// Static message derefs for global lifetime and elimination
+  /// of allocation as they are stateless objects with expected
+  /// high reuse through the program.
+  template <typename T>
+  static MsgDerefTyped<T> StaticMsgDerefs;
+}}} // end namespace vt::messaging::statics
 
 namespace vt { namespace messaging {
 
 struct MsgDerefBase {
   // Invoke messageDeref on the appropriate type.
   virtual void messageDeref(void* msg_ptr) = 0;
-  // Create an independent clone (that must also be deleted).
-  virtual MsgDerefBase* clone() = 0;
   virtual ~MsgDerefBase() {}
 };
 
@@ -68,10 +81,8 @@ struct MsgDerefTyped : MsgDerefBase {
   virtual void messageDeref(void* msg_ptr) {
     vt::messageDeref(static_cast<MsgT*>(msg_ptr));
   }
-  virtual MsgDerefBase* clone() {
-    return new MsgDerefTyped<MsgT>();
-  }
 };
+
 
 template <typename T>
 struct MsgSharedPtr final {
@@ -89,7 +100,7 @@ struct MsgSharedPtr final {
   }
 
   MsgSharedPtr(MsgSharedPtr<T> const& in) {
-    init(in.get(), true, in.deref_ ? in.deref_->clone() : nullptr);
+    init(in.get(), true, in.deref_);
   }
 
   MsgSharedPtr(MsgSharedPtr<T>&& in) {
@@ -112,14 +123,14 @@ struct MsgSharedPtr final {
     // Non-shared message are not deref'ed and trivially destructible types
     // do not really care on which type the delete-expr is invoked.
     if (std::is_trivially_destructible<T>() or not shared_) {
-      vtAssert(not deref_, "Invalid state: cannot have typed deref");
+      assert("should not have deref" && not deref_);
       return MsgSharedPtr<U>(
         reinterpret_cast<U*>(ptr_), true);
     }
 
     return MsgSharedPtr<U>(
       reinterpret_cast<U*>(ptr_), true,
-      deref_ ? deref_->clone() : new MsgDerefTyped<T>());
+      deref_ ? deref_ : &statics::StaticMsgDerefs<T>);
   }
 
   // Obsolete. Use to() as MsgVirtualPtr <-> MsgSharedPtr.
@@ -135,7 +146,7 @@ struct MsgSharedPtr final {
 
   MsgSharedPtr<T>& operator=(MsgSharedPtr<T> const& in) {
     clear();
-    init(in.get(), true, in.deref_ ? in.deref_->clone() : nullptr);
+    init(in.get(), true, in.deref_);
     return *this;
   }
 
@@ -169,16 +180,16 @@ private:
 
   // Performs state-ownership, optionally taking an additional message ref.
   // Should probably be called every constructor; must ONLY be
-  // called from fresh/clear state. The deref object is fully owned.
+  // called from fresh/clear state.
   void init(T* msgPtr, bool takeRef, MsgDerefBase* deref) {
-    vtAssert(msgPtr, "Invalid args: null msgPtr");
-    vtAssert(not ptr_, "Invalid state: already assigned");
+    assert("given message" && msgPtr);
+    assert("not initialized" && not ptr_);
 
     ptr_ = msgPtr;
     deref_ = deref;
     bool shared = (shared_ = isSharedMessage<T>(msgPtr));
 
-    vtAssert(not deref_ or (deref_ and shared), "Invalid state: deref requires shared message");
+    assert("deref -> shared" && (not deref_ or (deref_ and shared)));
 
     if (shared) {
       vtAssertInfo(
@@ -200,10 +211,12 @@ private:
   void clear() {
     bool shared = shared_;
 
-    vtAssert(not deref_ or (deref_ and shared), "Invalid state: deref requires shared message");
+    assert("deref -> shared" && (not deref_ or (deref_ and shared)));
 
     if (shared) {
+      assert("shared -> message ptr" && ptr_);
       T* msgPtr = get();
+
       vtAssertInfo(
         envelopeGetRef(msgPtr->env) > 0, "Bad Ref (before deref)",
         shared, envelopeGetRef(msgPtr->env)
@@ -217,7 +230,6 @@ private:
       MsgDerefBase* deref = deref_;
       if (deref) {
         deref->messageDeref(msgPtr);
-        delete deref;
       } else {
         messageDeref<T>(msgPtr);
       }
@@ -246,8 +258,9 @@ private:
   // Is this a shared message?
   // If so, then it will have a deref done on delete.
   bool shared_      = false;
-  // Type-erased type to invoke messageDeref on correct type.
-  // If set, use. Otherwise invoke messageDeref directly.
+  // Type-erased to invoke messageDeref on correct type for delete-expr.
+  // If set, use. Otherwise invoke messageDeref<T> directly.
+  // Object has a STATIC LIFETIME and should not be deleted.
   MsgDerefBase* deref_ = nullptr;
 };
 
