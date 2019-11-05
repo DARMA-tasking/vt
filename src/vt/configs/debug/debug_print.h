@@ -62,31 +62,28 @@
   debug_test(backend,line_file, "{}:{} ", )
 
 #define vt_type_print_colorize(debug_type)
-  vt_print_colorize_impl("\033[32m", debug_pretty_print(debug_type), ":")
+  vt_print_colorize_impl(::vt::debug::green(), debug_pretty_print(debug_type), ":")
 
 */
 
+/// Colorize the first string followed by the second in normal color.
+/// Honors colorization checks.
 #define vt_print_colorize_impl(color, str, str2)                        \
-  ((::vt::debug::ttyc()) ?                                              \
-   (std::string(color) + std::string(str) + std::string("\033[00m") +   \
+  (::vt::debug::colorizeOutput() ?                                      \
+   (color + std::string(str) + ::vt::debug::reset() +                   \
     std::string(str2)) :                                                \
    std::string(str) + std::string(str2))
 
-#define vt_print_colorize vt_print_colorize_impl("\033[32;1m", "vt", ":")
+#define vt_print_colorize                                               \
+  vt_print_colorize_impl(::vt::debug::bd_green(), "vt", ":")
 
-#define vt_proc_print_colorize(proc)                                     \
-  vt_print_colorize_impl("\033[34m", "[" + std::to_string(proc) + "]", "")
+#define vt_proc_print_colorize(proc)                                    \
+  vt_print_colorize_impl(::vt::debug::blue(), "[" + std::to_string(proc) + "]", "")
 
 #define debug_argument_option(opt)                                      \
   ::vt::arguments::ArgConfig::vt_debug_ ## opt
 
 #define debug_all_option ::vt::arguments::ArgConfig::vt_debug_all
-
-namespace vt { namespace runtime {
-struct Runtime;
-} /* end namespace runtime */
-extern runtime::Runtime* curRT;
-} /* end namespace vt */
 
 #define debug_print_impl(force, inconfig, inmode, cat, ctx, ...)        \
   vt::config::ApplyOp<                                                  \
@@ -150,11 +147,17 @@ extern runtime::Runtime* curRT;
 
 #define vt_option_check_enabled(mode, bit) ((mode & bit) not_eq 0)
 
+namespace vt { namespace runtime {
+struct Runtime;
+}} /* end namespace vt::runtime */
+
+namespace vt {
+extern runtime::Runtime* curRT;
+} /* end namespace vt */
+
 namespace vt { namespace debug {
-
 NodeType preNode();
-
-}} /* end naamespace vt::ctx */
+}} /* end namespace vt::debug */
 
 namespace vt { namespace config {
 
@@ -170,7 +173,7 @@ static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
       "{} {} {} {}",
       vt_print_colorize,
       vt_proc_print_colorize(node),
-      vt_print_colorize_impl("\033[32m",  PrettyPrintCat<cat>::print(), ":"),
+      vt_print_colorize_impl(::vt::debug::green(), PrettyPrintCat<cat>::print(), ":"),
       user
     );
     if (vt_option_check_enabled(mod, ModeEnum::flush)) {
