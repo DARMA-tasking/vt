@@ -73,6 +73,7 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_trace_file         = "";
 /*static*/ std::string ArgConfig::vt_trace_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_trace_mod          = 0;
+/*static*/ int32_t     ArgConfig::vt_trace_flush_mod    = 128;
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
@@ -218,16 +219,20 @@ namespace vt { namespace arguments {
   auto trace  = "Enable tracing (must be compiled with trace_enabled)";
   auto tfile  = "Name of trace files";
   auto tdir   = "Name of directory for trace files";
-  auto tmod   = "Output trace file if (node % vt_stack_mod) == 0";
+  auto tmod   = "Output trace file if (node % vt_trace_mod) == 0";
+  auto tflushmod = "Flush output trace file every (vt_trace_flush_mod) trace records";
   auto n = app.add_flag("--vt_trace",           vt_trace,           trace);
   auto o = app.add_option("--vt_trace_file",    vt_trace_file,      tfile, "");
   auto p = app.add_option("--vt_trace_dir",     vt_trace_dir,       tdir,  "");
   auto q = app.add_option("--vt_trace_mod",     vt_trace_mod,       tmod,  1);
+  auto qf = app.add_option("--vt_trace_flush_mod", vt_trace_flush_mod,
+                           tflushmod,  1);
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   o->group(traceGroup);
   p->group(traceGroup);
   q->group(traceGroup);
+  qf->group(traceGroup);
 
 
   /*
