@@ -613,6 +613,15 @@ void Trace::cleanupTracesFile() {
   }
 }
 
+void Trace::cleanupTracesFile() {
+  if (checkEnabled()) {
+    auto const& node = theContext()->getNode();
+    writeTracesFile();
+    outputFooter(node, start_time_, log_file);
+    gzclose(log_file);
+  }
+}
+
 void Trace::writeTracesFile() {
   auto const node = theContext()->getNode();
 
