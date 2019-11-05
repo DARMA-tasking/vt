@@ -69,7 +69,15 @@ void messageTypeChecks() {
 template <typename MsgT, typename... Args>
 MsgT* makeSharedMessage(Args&&... args) {
   messageTypeChecks<MsgT>();
-  auto msg = new MsgT{std::forward<Args>(args)...};
+  MsgT* msg = new MsgT{std::forward<Args>(args)...};
+  envelopeSetRef(msg->env, 1);
+  msg->has_owner_ = false;
+  return msg;
+}
+
+template <typename MsgT, typename... Args>
+MsgT* makeSharedMessageSz(std::size_t size, Args&&... args) {
+  MsgT* msg = new (size) MsgT{std::forward<Args>(args)...};
   envelopeSetRef(msg->env, 1);
   msg->has_owner_ = false;
   return msg;
@@ -78,41 +86,34 @@ MsgT* makeSharedMessage(Args&&... args) {
 template <typename MsgT, typename... Args>
 MsgSharedPtr<MsgT> makeMessage(Args&&... args) {
   messageTypeChecks<MsgT>();
-  auto msg = makeSharedMessage<MsgT>(std::forward<Args>(args)...);
+  MsgT* msg = makeSharedMessage<MsgT>(std::forward<Args>(args)...);
   return promoteMsgOwner<MsgT>(msg);
 }
 
+template <typename MsgT, typename... Args>
+MsgSharedPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args) {
+  MsgT* msg = makeSharedMessageSz<MsgT>(size,std::forward<Args>(args)...);
+  return promoteMsgOwner<MsgT>(msg);
+}
+
+///[obsolete] Use makeMessage instead.
 template <typename MsgT, typename... Args>
 MsgSharedPtr<MsgT> makeMsg(Args&&... args) {
   return makeMessage<MsgT>(std::forward<Args>(args)...);
 }
 
-template <typename MessageT, typename... Args>
-MessageT* makeSharedMessageSz(std::size_t size, Args&&... args) {
-  MessageT* msg = new (size) MessageT{std::forward<Args>(args)...};
-  envelopeSetRef(msg->env, 1);
-  msg->has_owner_ = false;
-  return msg;
-}
-
-template <typename MsgT, typename... Args>
-MsgSharedPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args) {
-  auto msg = makeSharedMessageSz<MsgT>(size,std::forward<Args>(args)...);
-  return promoteMsgOwner<MsgT>(msg);
-}
-
-template <typename MessageT>
-void messageConvertToShared(MessageT* msg) {
+template <typename MsgT>
+void messageConvertToShared(MsgT* msg) {
   envelopeSetRef(msg->env, 1);
 }
 
-template <typename MessageT>
-void messageSetUnmanaged(MessageT* msg) {
+template <typename MsgT>
+void messageSetUnmanaged(MsgT* msg) {
   envelopeSetRef(msg->env, not_shared_message);
 }
 
-template <typename MsgPtrT>
-void messageResetDeserdes(MsgPtrT const& msg) {
+template <typename MsgT>
+void messageResetDeserdes(MsgSharedPtr<MsgT> const& msg) {
   envelopeSetRef(msg->env, 1);
   msg->has_owner_ = true;
 }

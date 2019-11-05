@@ -51,14 +51,14 @@
 
 namespace vt {
 
-template <typename MessageT>
-void messageRef(MessageT* msg);
+template <typename MsgT>
+void messageRef(MsgT* msg);
 
-template <typename MessageT>
-void messageDeref(MessageT* msg);
+template <typename MsgT>
+void messageDeref(MsgT* msg);
 
-template <typename MessageT>
-bool isSharedMessage(MessageT* msg);
+template <typename MsgT>
+bool isSharedMessage(MsgT* msg);
 
 } /* end namespace vt */
 

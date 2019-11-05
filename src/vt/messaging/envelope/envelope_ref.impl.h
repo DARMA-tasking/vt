@@ -52,12 +52,12 @@ namespace vt {
 
 template <typename Env>
 inline void envelopeRef(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->ref++;
+  (reinterpret_cast<Envelope*>(&env))->ref++;
 }
 
 template <typename Env>
-inline void envelopeDeref(Env& env) {
-  reinterpret_cast<Envelope*>(&env)->ref--;
+inline RefType envelopeDeref(Env& env) {
+  return --(reinterpret_cast<Envelope*>(&env))->ref;
 }
 
 } /* end namespace vt */
