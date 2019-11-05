@@ -134,6 +134,4 @@ private:
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#include "vt/vrt/collection/balance/proc_stats.impl.h"
-
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_STATS_LB_READER_H*/
