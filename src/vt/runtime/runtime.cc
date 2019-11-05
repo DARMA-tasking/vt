@@ -1046,16 +1046,18 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     // scheduler; register listeners to activate/deactivate that epoch
     theSched->registerTrigger(
       sched::SchedulerEvent::BeginIdleMinusTerm, []{
-        vt_print(
-          runtime, "setLocalTerminated: BeginIdle: true\n"
+        debug_print(
+          runtime, node,
+          "setLocalTerminated: BeginIdle: true\n"
         );
         vt::theTerm()->setLocalTerminated(true, false);
       }
     );
     theSched->registerTrigger(
       sched::SchedulerEvent::EndIdleMinusTerm, []{
-        vt_print(
-          runtime, "setLocalTerminated: EndIdle: false\n"
+        debug_print(
+          runtime, node,
+          "setLocalTerminated: EndIdle: false\n"
         );
         vt::theTerm()->setLocalTerminated(false, false);
       }
