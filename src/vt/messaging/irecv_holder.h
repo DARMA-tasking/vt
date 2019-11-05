@@ -46,6 +46,11 @@
 #define INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
 
 #include "vt/config.h"
+#include "vt/configs/arguments/args.h"
+
+#if backend_check_enabled(trace_enabled)
+  #include "vt/trace/trace_headers.h"
+#endif
 
 #include <vector>
 
@@ -53,6 +58,8 @@ namespace vt { namespace messaging {
 
 template <typename T>
 struct IRecvHolder {
+  using ArgType = vt::arguments::ArgConfig;
+
   IRecvHolder() = default;
 
   template <typename U>
@@ -88,6 +95,15 @@ struct IRecvHolder {
         MPI_Status stat;
         MPI_Test(&e.req, &flag, &stat);
         if (flag == 1) {
+          #if backend_check_enabled(trace_enabled)
+            if (ArgType::vt_trace_mpi) {
+              auto tr_note = fmt::format(
+                "Irecv completed: from={}", stat.MPI_SOURCE
+              );
+              trace::addUserNote(tr_note);
+            }
+          #endif
+
           c(&e);
           progress_made = true;
           e.valid = false;
