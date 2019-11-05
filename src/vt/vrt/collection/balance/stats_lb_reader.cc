@@ -61,8 +61,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/*static*/ objgroup::proxy::Proxy<StatsLBReader> StatsLBReader::proxy_;
-
 /*static*/
 std::vector<std::unordered_map<ElementIDType,TimeType>>
   StatsLBReader::user_specified_map_changed_ = {};
@@ -75,13 +73,14 @@ StatsLBReader::phase_changed_map_ = {};
 
 /*static*/ bool StatsLBReader::created_dir_ = false;
 
+/*static*/ objgroup::proxy::Proxy<StatsLBReader> StatsLBReader::proxy_ = {};
+
 /*static*/ void StatsLBReader::init() {
   // Create the new class dedicated to the input reader
   StatsLBReader::proxy_ = theObjGroup()->makeCollective<StatsLBReader>();
-  proxy_.get()->inputStatsFile();
-  proxy_.get()->loadPhaseChangedMap();
+  StatsLBReader::inputStatsFile();
+  StatsLBReader::loadPhaseChangedMap();
   proxy_.get()->doReduce();
-
 }
 
 /*static*/ void StatsLBReader::destroy() {
@@ -112,7 +111,8 @@ StatsLBReader::phase_changed_map_ = {};
   vt_print(lb, "inputStatFile: file={}, iter={}\n", file_name, 0);
 
   // TODO verify fopen sucess
-  FILE * pFile = std::fopen (file_name.c_str(), "r");
+  FILE *pFile = std::fopen (file_name.c_str(), "r");
+  vtAssert(pFile, "File opening failed");
 
   // TODO loop on num_iters
   // Create a map for each different value of the first column
