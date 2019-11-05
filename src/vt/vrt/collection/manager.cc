@@ -120,7 +120,7 @@ getDispatcher(auto_registry::AutoHandlerType const& han) {
 }
 
 void releaseLBPhase(CollectionPhaseMsg* msg) {
-  theCollection()->releaseLBPhase<>(msg);
+  CollectionManager::releaseLBPhase<>(msg);
 }
 
 balance::ElementIDType CollectionManager::getCurrentContextPerm() const {
