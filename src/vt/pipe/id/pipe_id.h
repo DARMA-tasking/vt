@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace pipe {
 

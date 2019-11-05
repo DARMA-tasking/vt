@@ -44,6 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace vrt { namespace collection {
 

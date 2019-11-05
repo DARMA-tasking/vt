@@ -45,6 +45,7 @@
 #if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINT_H
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINT_H
 
+#include "vt/configs/types/types_headers.h"
 #include "vt/configs/debug/debug_config.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/debug/debug_var_unused.h"

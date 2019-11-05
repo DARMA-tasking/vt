@@ -45,8 +45,8 @@
 #if !defined INCLUDED_CONFIGS_ERROR_ERROR_H
 #define INCLUDED_CONFIGS_ERROR_ERROR_H
 
+#include "vt/configs/types/types_headers.h"
 #include "vt/configs/debug/debug_config.h"
-#include "vt/configs/types/types_type.h"
 #include "vt/configs/error/common.h"
 
 #include <string>

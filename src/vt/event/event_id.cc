@@ -43,6 +43,7 @@
 */
 
 #include "vt/event/event_id.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace event {
 

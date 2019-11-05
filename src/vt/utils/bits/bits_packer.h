@@ -88,6 +88,10 @@ private:
 
 }}  // end namespace vt::utils
 
+namespace vt {
+  using BitPackerType = utils::BitPacker;
+}  // end namespace vt
+
 #include "vt/utils/bits/bits_packer.impl.h"
 
 #endif  /*INCLUDED_BITS_PACKER*/

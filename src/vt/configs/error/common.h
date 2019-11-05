@@ -45,7 +45,7 @@
 #if !defined INCLUDED_CONFIGS_ERROR_COMMON_H
 #define INCLUDED_CONFIGS_ERROR_COMMON_H
 
-#include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_headers.h"
 #include "vt/collective/basic.h"
 
 #include <tuple>
