@@ -43,6 +43,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/configs/arguments/args.h"
 #include "vt/context/context.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
@@ -56,6 +57,8 @@
 #include "vt/vrt/collection/manager.fwd.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
+
+using ArgType = vt::arguments::ArgConfig;
 
 /*static*/ objgroup::proxy::Proxy<LBManager> LBManager::proxy_;
 
