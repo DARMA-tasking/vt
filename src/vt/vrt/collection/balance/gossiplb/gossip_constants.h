@@ -52,15 +52,6 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 static constexpr double const gossip_tolerance = 0.05f;
 static constexpr double const gossip_threshold = 1.0f;
 
-enum struct GossipInformPrune : int8_t {
-  NO_PRUNE,
-  PRUNE_ALL,
-  PRUNE_UNDER,
-  PRUNE_OVER
-};
-
-static constexpr GossipInformPrune const gossip_prune = GossipInformPrune::NO_PRUNE;
-
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_CONSTANTS_H*/
