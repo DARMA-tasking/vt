@@ -74,6 +74,7 @@ public:
   static int32_t vt_stack_mod;
 
   static bool vt_trace;
+  static bool vt_trace_mpi;
   static std::string vt_trace_file;
   static std::string vt_trace_dir;
   static int32_t vt_trace_mod;
