@@ -49,7 +49,6 @@
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
-#include "vt/configs/arguments/args.h"
 #include "vt/objgroup/headers.h"
 
 #include <functional>
@@ -57,7 +56,6 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LBManager {
-  using ArgType = vt::arguments::ArgConfig;
 
   LBManager() = default;
   LBManager(LBManager const&) = delete;
