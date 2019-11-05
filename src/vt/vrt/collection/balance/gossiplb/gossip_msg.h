@@ -81,6 +81,31 @@ private:
   NodeLoadType node_load_ = {};
 };
 
+struct LazyMigrationMsg : vt::Message {
+  using ObjSetType = std::vector<lb::BaseLB::ObjIDType>;
+
+  LazyMigrationMsg() = default;
+  LazyMigrationMsg(NodeType in_to_node, ObjSetType const& in_objs)
+    : to_node_(in_to_node), objs_(in_objs)
+  { }
+
+  ObjSetType const& getObjSet() const {
+    return objs_;
+  }
+
+  NodeType getToNode() const { return to_node_; }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | to_node_;
+    s | objs_;
+  }
+
+private:
+  NodeType to_node_ = uninitialized_destination;
+  ObjSetType objs_  = {};
+};
+
 }}}} /* end namespace vt::vrt::collection::balance */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H*/

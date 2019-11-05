@@ -59,6 +59,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 struct GossipLB : BaseLB {
   using GossipMsg   = balance::GossipMsg;
   using NodeSetType = std::vector<NodeType>;
+  using ObjSetType  = std::vector<ObjIDType>;
 
   GossipLB() = default;
 
@@ -87,7 +88,16 @@ protected:
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
   std::vector<NodeType> makeUnderloaded() const;
-  ElementLoadType::iterator selectObject(LoadType size, ElementLoadType& load);
+  ElementLoadType::iterator selectObject(
+    LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
+  );
+
+  void lazyMigrateObjectTo(ObjIDType const obj_id, NodeType const node);
+  void informLazyMigrations();
+  void inLazyMigrations(balance::LazyMigrationMsg* msg);
+
+private:
+  std::unordered_map<NodeType, ObjSetType> lazy_migrations_;
 
 private:
   uint8_t f                                         = 2;
@@ -96,12 +106,12 @@ private:
   std::random_device seed;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
   EpochType propagate_epoch_                        = no_epoch;
+  EpochType lazy_epoch_                             = no_epoch;
   objgroup::proxy::Proxy<GossipLB> proxy            = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
   std::unordered_set<NodeType> selected_            = {};
   std::unordered_set<NodeType> underloaded_         = {};
-  std::unordered_set<NodeType> overloaded_          = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

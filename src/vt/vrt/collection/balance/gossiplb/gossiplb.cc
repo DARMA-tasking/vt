@@ -125,9 +125,6 @@ void GossipLB::inform() {
   if (is_underloaded_) {
     underloaded_.insert(this_node);
   }
-  if (is_overloaded_) {
-    underloaded_.insert(this_node);
-  }
 
   bool inform_done = false;
   propagate_epoch_ = theTerm()->makeEpochCollective();
@@ -135,7 +132,7 @@ void GossipLB::inform() {
   // Underloaded start the round
   if (is_underloaded_) {
     // Start the round
-    propagateRound();
+    this->propagateRound();
   }
 
   theTerm()->addAction(propagate_epoch_, [&inform_done] { inform_done = true; });
@@ -165,22 +162,22 @@ void GossipLB::propagateRound() {
   std::mt19937 gen(seed());
 
   auto& selected = selected_;
-
-  if (gossip_prune == GossipInformPrune::PRUNE_UNDER) {
-    selected = underloaded_;
-  }
-  if (gossip_prune == GossipInformPrune::PRUNE_OVER) {
-    selected = overloaded_;
-  }
+  selected = underloaded_;
 
   auto const fanout = std::min(f, static_cast<decltype(f)>(num_nodes - 1));
 
-  // This implies full knowledge of all processors
-  if (selected.size() >= num_nodes - 1) {
-    return;
-  }
+  debug_print(
+    lb, node,
+    "GossipLB::propagateRound: k_max={}, k_cur={}, selected.size()={}, fanout={}\n",
+    k_max, k_cur, selected.size(), fanout
+  );
 
   for (int i = 0; i < fanout; i++) {
+    // This implies full knowledge of all processors
+    if (selected.size() == num_nodes) {
+      return;
+    }
+
     // First, randomly select a node
     NodeType random_node = uninitialized_destination;
 
@@ -188,8 +185,8 @@ void GossipLB::propagateRound() {
     do {
       random_node = dist(gen);
     } while (
-      selected.find(random_node) != selected.end() and
-      random_node != this_node
+      selected.find(random_node) != selected.end() or
+      random_node == this_node
     );
 
     // Add to selected set
@@ -223,16 +220,8 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
     if (load_info_.find(elm.first) == load_info_.end()) {
       load_info_[elm.first] = elm.second;
 
-      if (gossip_prune == GossipInformPrune::PRUNE_ALL) {
-        selected_.insert(elm.first);
-      } else if (gossip_prune == GossipInformPrune::PRUNE_UNDER) {
-        if (isUnderloaded(elm.first)) {
-          underloaded_.insert(elm.first);
-        }
-      } else if (gossip_prune == GossipInformPrune::PRUNE_OVER) {
-        if (isOverloaded(elm.first)) {
-          overloaded_.insert(elm.first);
-        }
+      if (isUnderloaded(elm.first)) {
+        underloaded_.insert(elm.first);
       }
     }
   }
@@ -328,69 +317,148 @@ std::vector<NodeType> GossipLB::makeUnderloaded() const {
 
 
 GossipLB::ElementLoadType::iterator
-GossipLB::selectObject(LoadType size, ElementLoadType& load) {
-  vtAssertExpr(load.size() > 0);
-  if (load.size() > 0) {
-    return load.begin();
-  } else {
+GossipLB::selectObject(
+  LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
+) {
+  if (available.size() == 0) {
     return load.end();
+  } else {
+    auto obj_id = *available.begin();
+    auto iter = load.find(obj_id);
+    if (iter != load.end()) {
+      return iter;
+    } else {
+      vtAssert(false, "Could not find object in load info");
+      return load.end();
+    }
   }
 }
 
 void GossipLB::decide() {
   double const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
 
+  bool decide_done = false;
+  lazy_epoch_ = theTerm()->makeEpochCollective();
+  theTerm()->addAction(lazy_epoch_, [&decide_done] { decide_done = true; });
+
   if (is_overloaded_) {
     std::vector<NodeType> under = makeUnderloaded();
     auto cmf = createCMF(under);
-    auto objs = *load_data;
     double this_new_load = this_load;
+    std::unordered_map<ObjIDType, TimeType> cur_objs = *load_data;
+    std::set<ObjIDType> objs_to_select;
+    std::set<ObjIDType> objs_prev_selected;
     std::unordered_map<NodeType, std::vector<ObjIDType>> selected_objects;
 
     do {
       auto const selected_node = sampleFromCMF(under, cmf);
-
-      debug_print(
-        lb, node,
-        "GossipLB::decide: under.size()={}, selected_node={}, load_info_.size()={}\n",
-        under.size(), selected_node, load_info_.size()
-      );
-
       vtAssertExpr(load_info_.find(selected_node) != load_info_.end());
-
       auto& selected_load = load_info_[selected_node];
-      auto max_obj_size = avg - selected_load;
-      auto iter = selectObject(max_obj_size, objs);
 
-      vtAssert(iter != objs.end(), "Must have objects to select");
-
-      auto obj_id = iter->first;
-      auto obj_load = iter->second;
-
-      if (not (selected_load + obj_load > avg)) {
-        selected_objects[selected_node].push_back(obj_id);
-
-        this_new_load -= obj_load;
-        selected_load += obj_load;
-
-        objs.erase(iter);
+      objs_to_select.clear();
+      objs_prev_selected.clear();
+      for (auto&& elm : cur_objs) {
+        objs_to_select.insert(elm.first);
       }
-    } while (this_new_load > avg and objs.size() > 0);
+
+      do {
+
+        std::set<ObjIDType> available_objs;
+        std::set_difference(
+          objs_to_select.begin(), objs_to_select.end(),
+          objs_prev_selected.begin(), objs_prev_selected.end(),
+          std::inserter(available_objs, available_objs.end())
+        );
+
+        if (available_objs.size() == 0) {
+          break;
+        }
+
+        debug_print(
+          lb, node,
+          "GossipLB::decide: available.size()={}, objs_to_select={}, "
+          "objs_prev_selected={}\n",
+          available_objs.size(), objs_to_select.size(), objs_prev_selected.size()
+        );
+
+        auto max_obj_size = avg - selected_load;
+        auto iter = selectObject(max_obj_size, cur_objs, available_objs);
+
+        vtAssert(iter != cur_objs.end(), "Must have objects to select");
+
+        auto obj_id = iter->first;
+
+        // @todo: for now, convert to milliseconds due to the stats framework all
+        // computing in milliseconds; should be converted to seconds along with
+        // the rest of the stats framework
+        auto obj_load = loadMilli(iter->second);
+
+        objs_prev_selected.insert(obj_id);
+
+        debug_print(
+          lb, node,
+          "GossipLB::decide: under.size()={}, selected_node={}, selected_load={},"
+          "load_info_.size()={}, obj_id={:x}, obj_load={}, avg={}, "
+          "!(selected_load + obj_load > avg)=!({} + {} > {})={}\n",
+          under.size(), selected_node, selected_load, load_info_.size(),
+          obj_id, obj_load, avg, selected_load, obj_load, avg,
+          not (selected_load + obj_load > avg)
+        );
+
+        if (not (selected_load + obj_load > avg)) {
+          selected_objects[selected_node].push_back(obj_id);
+
+          this_new_load -= obj_load;
+          selected_load += obj_load;
+
+          cur_objs.erase(iter);
+        }
+
+      } while (not (selected_load > avg));
+
+    } while (this_new_load > avg and cur_objs.size() > 0);
 
     // Send objects to nodes
     for (auto&& migration : selected_objects) {
       auto node = migration.first;
-      auto objs = migration.second;
-      if (objs.size() > 0) {
-        // send
+      for (auto&& obj_id : migration.second) {
+        this->lazyMigrateObjectTo(obj_id, node);
       }
     }
+
+    this->informLazyMigrations();
 
 
   } else {
     // do nothing (underloaded-based algorithm), waits to get work from
     // overloaded nodes
   }
+
+  theTerm()->finishedEpoch(lazy_epoch_);
+
+  while (not decide_done) {
+    vt::runScheduler();
+  }
+}
+
+void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
+
+}
+
+void GossipLB::informLazyMigrations() {
+  for (auto&& elm : lazy_migrations_) {
+    auto const& node = elm.first;
+    auto const& objs = elm.second;
+
+    using LazyMsg = balance::LazyMigrationMsg;
+    auto msg = makeMessage<LazyMsg>(node, objs);
+    envelopeSetEpoch(msg, lazy_epoch_);
+    proxy[node].send<LazyMsg, &GossipLB::inLazyMigrations>(msg);
+  }
+}
+
+void GossipLB::lazyMigrateObjectTo(ObjIDType const obj_id, NodeType const node) {
+  lazy_migrations_[node].push_back(obj_id);
 }
 
 void GossipLB::migrate() {
