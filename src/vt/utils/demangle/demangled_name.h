@@ -45,8 +45,6 @@
 #if !defined INCLUDED_UTILS_DEMANGLE_DEMANGLED_NAME_H
 #define INCLUDED_UTILS_DEMANGLE_DEMANGLED_NAME_H
 
-#include "vt/config.h"
-
 #include <string>
 
 namespace vt { namespace util { namespace demangle {
