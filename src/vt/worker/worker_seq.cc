@@ -51,6 +51,7 @@
 #include "vt/collective/collective_ops.h"
 #include "vt/worker/worker_common.h"
 #include "vt/worker/worker_seq.h"
+#include "vt/utils/bits/bits_common.h"
 
 #include <memory>
 #include <functional>

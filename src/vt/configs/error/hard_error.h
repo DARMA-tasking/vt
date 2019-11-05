@@ -51,7 +51,6 @@
  */
 
 #include "vt/configs/debug/debug_config.h"
-#include "vt/configs/types/types_type.h"
 #include "vt/configs/error/common.h"
 #include "vt/configs/error/error.h"
 

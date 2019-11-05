@@ -47,6 +47,7 @@
 #include "vt/sequence/seq_closure.h"
 #include "vt/sequence/seq_helpers.h"
 #include "vt/sequence/seq_node.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace seq {
 

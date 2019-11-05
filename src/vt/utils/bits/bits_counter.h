@@ -45,7 +45,7 @@
 #if !defined INCLUDED_BITS_COUNTER
 #define INCLUDED_BITS_COUNTER
 
-#include "vt/config.h"
+// Do not pull in other VT dependencies here
 
 namespace vt { namespace utils {
 
@@ -54,6 +54,6 @@ struct BitCounter {
   static constexpr BitCountType const value = sizeof(BitField) * 8;
 };
 
-}}  // end namespace vt::utils
+}} // end namespace vt::utils
 
 #endif  /*INCLUDED_BITS_COUNTER*/

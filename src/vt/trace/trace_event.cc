@@ -44,6 +44,7 @@
 
 
 #include "vt/trace/trace_event.h"
+#include "vt/utils/bits/bits_common.h"
 
 #include <string>
 
