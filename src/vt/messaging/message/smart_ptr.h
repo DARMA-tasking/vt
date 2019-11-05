@@ -53,7 +53,7 @@
 #include <cassert>
 
 namespace vt { namespace messaging {
-  // Fwd decl for statics
+  // Fwd decl for statics.
   template <typename T>
   struct MsgDerefTyped;
 }} // end namespace vt::messaging
@@ -106,6 +106,23 @@ struct MsgSharedPtr final {
     moveFrom(std::move(in));
   }
 
+  MsgSharedPtr<T>& operator=(std::nullptr_t) {
+    clear();
+    return *this;
+  }
+
+  MsgSharedPtr<T>& operator=(MsgSharedPtr<T> const& in) {
+    clear();
+    init(in.get(), true, in.deref_);
+    return *this;
+  }
+
+  MsgSharedPtr<T>& operator=(MsgSharedPtr<T>&& in) {
+    clear();
+    moveFrom(std::move(in));
+    return *this;
+  }
+
   ~MsgSharedPtr() {
     clear();
   }
@@ -136,23 +153,6 @@ struct MsgSharedPtr final {
   template <typename U>
   MsgSharedPtr<U> toVirtual() const {
     return to<U>();
-  }
-
-  MsgSharedPtr<T>& operator=(std::nullptr_t) {
-    clear();
-    return *this;
-  }
-
-  MsgSharedPtr<T>& operator=(MsgSharedPtr<T> const& in) {
-    clear();
-    init(in.get(), true, in.deref_);
-    return *this;
-  }
-
-  MsgSharedPtr<T>& operator=(MsgSharedPtr<T>&& in) {
-    clear();
-    moveFrom(std::move(in));
-    return *this;
   }
 
   bool operator==(MsgSharedPtr<T> const& n) const { return ptr_ == n.ptr_; }
@@ -279,20 +279,27 @@ using MsgVirtualPtrAny = messaging::MsgSharedPtr<ShortMessage>;
 template <typename T>
 using MsgSharedPtr = messaging::MsgSharedPtr<T>;
 
+/// Steal ownership of the message (no ref-increase).
 template <typename T>
-inline messaging::MsgSharedPtr<T> promoteMsgOwner(T* const msg) {
+inline MsgSharedPtr<T> promoteMsgOwner(T* const msg) {
   msg->has_owner_ = true;
   return MsgSharedPtr<T>{msg,false};
 }
 
+/// Take additional ownership of the message (increase message ref).
+/// The message must already have an owner.
+// TODO: eliminate if possible as it has confusing semantics
+// with overload and is duplicated by copy/move ctors.
 template <typename T>
-inline messaging::MsgSharedPtr<T> promoteMsg(MsgSharedPtr<T> msg) {
+inline MsgSharedPtr<T> promoteMsg(MsgSharedPtr<T> msg) {
   vtAssert(msg->has_owner_, "promoteMsg shared ptr must have owner");
   return MsgSharedPtr<T>{msg.get(),true};
 }
 
+/// If the message does not have an owner, steal ownership (no ref-increase).
+/// Otherwise, take additional ownership (increate message ref).
 template <typename T>
-inline messaging::MsgSharedPtr<T> promoteMsg(T* msg) {
+inline MsgSharedPtr<T> promoteMsg(T* msg) {
   if (!msg->has_owner_) {
     return promoteMsgOwner(msg);
   } else {
