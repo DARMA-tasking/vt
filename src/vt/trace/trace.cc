@@ -58,13 +58,9 @@ namespace vt { namespace trace {
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
     start_time_(getCurrentTime())
-{
-  initialize();
-}
+{ }
 
-Trace::Trace() {
-  initialize();
-}
+Trace::Trace() { }
 
 /*static*/ void Trace::traceBeginIdleTrigger() {
   #if backend_check_enabled(trace_enabled)
