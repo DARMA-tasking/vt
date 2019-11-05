@@ -42,29 +42,32 @@
 //@HEADER
 */
 
-#include "vt/config.h"
 #include "vt/trace/trace.h"
-#include "vt/timing/timing.h"
+#include "vt/config.h"
+#include "vt/configs/arguments/args.h"
+#include "vt/runtime/runtime_inst.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/timing/timing.h"
 #include "vt/utils/demangle/demangle.h"
 
-#include <zlib.h>
+#include <fstream>
+#include <cinttypes>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <inttypes.h>
-#include <iostream>
-#include <fstream>
 
 namespace vt { namespace trace {
 
+using ArgType = vt::arguments::ArgConfig;
+
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
-    start_time_(getCurrentTime())
+    start_time_(getCurrentTime()),
+    log_file_()
 {
   initialize();
 }
 
-Trace::Trace() {
+Trace::Trace() : log_file_() {
   initialize();
 }
 
@@ -106,20 +109,20 @@ void Trace::setupNames(
   }
 
   if (ArgType::vt_trace_dir != "") {
-    full_dir_name = ArgType::vt_trace_dir;
+    full_dir_name_ = ArgType::vt_trace_dir;
   }
   else {
-    full_dir_name = std::string(cur_dir) + "/" + dir_name;
+    full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
   }
 
-  if (full_dir_name[full_dir_name.size()-1] != '/')
-    full_dir_name = full_dir_name + "/";
+  if (full_dir_name_[full_dir_name_.size() - 1] != '/')
+    full_dir_name_ = full_dir_name_ + "/";
 
   if (theContext()->getNode() == 0) {
-    int flag = mkdir(full_dir_name.c_str(), S_IRWXU);
-	if ((flag < 0) && (errno != EEXIST)) {
+    int flag = mkdir(full_dir_name_.c_str(), S_IRWXU);
+    if ((flag < 0) && (errno != EEXIST)) {
       vtAssert(flag >= 0, "Must be able to make directory");
-	}
+    }
   }
 
   auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
@@ -129,11 +132,11 @@ void Trace::setupNames(
 
   auto const node_str = "." + std::to_string(node) + ".log.gz";
   if (ArgType::vt_trace_file != "") {
-    full_trace_name = full_dir_name + ArgType::vt_trace_file + node_str;
-    full_sts_name   = full_dir_name + ArgType::vt_trace_file + ".sts";
+    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
+    full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
   } else {
-    full_trace_name = full_dir_name + trace_name;
-    full_sts_name   = full_dir_name + prog_name + ".sts";
+    full_trace_name_ = full_dir_name_ + trace_name;
+    full_sts_name_   = full_dir_name_ + prog_name + ".sts";
   }
 }
 
@@ -364,9 +367,8 @@ void Trace::endProcessing(
 
   logEvent(log);
 
-  if (traces_.size() > 100) {
-    writeTracesFile();
-  }
+  if (open_events_.empty())
+    cur_stop_ = traces_.size();
 }
 
 void Trace::beginIdle(double const time) {
@@ -585,11 +587,7 @@ bool Trace::checkEnabled() {
     auto const node = theContext()->getNode();
     if (ArgType::vt_trace_mod == 0) {
       return true;
-    } else if (node % ArgType::vt_trace_mod == 1) {
-      return true;
-    } else {
-      return false;
-    }
+    } else return (node % ArgType::vt_trace_mod == 1);
   } else {
     return false;
   }
@@ -607,13 +605,37 @@ void Trace::disableTracing() {
 void Trace::cleanupTracesFile() {
   if (checkEnabled()) {
     auto const& node = theContext()->getNode();
+    //--- Sanity check
+    if (open_events_.empty()) {
+      cur_stop_ = traces_.size();
+    }
+    else {
+      vtAssert(false, "Trying to dump traces with open events?");
+    }
+    //--- Dump everything into an output file
     writeTracesFile();
-    outputFooter(node, start_time_, log_file);
-    gzclose(log_file);
+    outputFooter(node, start_time_, log_file_);
+    gzclose(log_file_);
   }
 }
 
-void Trace::writeTracesFile() {
+void Trace::flushTracesFile(bool useGlobalSync) {
+  if (useGlobalSync) {
+    //--- Barrier: synchronize all the nodes before flushing the traces
+    if (curRT) {
+      curRT->systemSync();
+    }
+    else {
+      // Something is wrong
+      vtAssert(false, "Trying to flush traces when VT runtime is deallocated?");
+    }
+  }
+  if (traces_.size() > cur_ + ArgType::vt_trace_flush_mod) {
+    writeTracesFile(Z_FULL_FLUSH);
+  }
+}
+
+void Trace::writeTracesFile(int flush) {
   auto const node = theContext()->getNode();
 
   debug_print(
@@ -626,29 +648,30 @@ void Trace::writeTracesFile() {
   );
 
   if (checkEnabled()) {
-    auto path = full_trace_name;
-    if (not file_is_open) {
-      log_file = gzopen(path.c_str(), "wb");
-      outputHeader(node, start_time_, log_file);
-      file_is_open = true;
+    auto path = full_trace_name_;
+    if (not file_is_open_) {
+      log_file_ = gzopen(path.c_str(), "wb");
+      outputHeader(node, start_time_, log_file_);
+      file_is_open_ = true;
     }
-    writeLogFile(log_file, traces_);
-    gzflush(log_file, Z_FINISH);
+    writeLogFile(log_file_, traces_);
+    gzflush(log_file_, flush);
   }
 
-  if (node == designated_root_node and not wrote_sts_file) {
+  if (node == designated_root_node and not wrote_sts_file_) {
     std::ofstream file;
-    auto name = full_sts_name;
+    auto name = full_sts_name_;
     file.open(name);
     outputControlFile(file);
     file.flush();
     file.close();
-    wrote_sts_file = true;
+    wrote_sts_file_ = true;
   }
 }
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
-  for (auto i = cur_; i < traces.size(); i++) {
+  auto stop_point = cur_stop_;
+  for (auto i = cur_; i < stop_point; i++) {
     auto& log = traces[i];
     auto const& converted_time = timeToInt(log->time - start_time_);
 
@@ -813,7 +836,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     delete log;
   }
 
-  cur_ += traces.size();
+  cur_ = stop_point;
 }
 
 /*static*/ double Trace::getCurrentTime() {

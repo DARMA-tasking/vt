@@ -43,6 +43,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/runtime/runtime.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/base/base.h"
 #include "vt/vrt/collection/manager.h"
@@ -110,6 +111,11 @@ void CollectionManager::startPhaseCollective(
 #else
   if (fn != nullptr) {
     fn();
+  }
+#endif
+#if backend_check_enabled(trace_enabled)
+  if (curRT->theTrace) {
+    curRT->theTrace->flushTracesFile(true);
   }
 #endif
 }
