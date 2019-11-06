@@ -50,6 +50,7 @@
 #include <mpi.h>
 
 #include "vt/config.h"
+#include "vt/configs/arguments/args.h"
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/active.fwd.h"
 #include "vt/messaging/message/smart_ptr.h"
@@ -61,6 +62,10 @@
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/trace/trace_common.h"
 #include "vt/utils/static_checks/functor.h"
+
+#if backend_check_enabled(trace_enabled)
+  #include "vt/trace/trace_headers.h"
+#endif
 
 #include <type_traits>
 #include <tuple>
@@ -163,6 +168,7 @@ struct ActiveMessenger {
   using EpochStackType       = std::stack<EpochType>;
   using PendingSendType      = PendingSend;
   using ListenerType         = std::unique_ptr<Listener>;
+  using ArgType              = vt::arguments::ArgConfig;
 
   ActiveMessenger();
 
@@ -627,6 +633,8 @@ private:
 
   #if backend_check_enabled(trace_enabled)
     trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
+    trace::UserEventIDType trace_irecv     = 0;
+    trace::UserEventIDType trace_isend     = 0;
   #endif
 
   HandlerType current_handler_context_           = uninitialized_handler;

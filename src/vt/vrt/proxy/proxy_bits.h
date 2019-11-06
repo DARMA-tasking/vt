@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/context/context_vrt_fwd.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace vrt {
 

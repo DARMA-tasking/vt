@@ -45,7 +45,7 @@
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
-#include "vt/config.h"
+// Do not pull in any VT dependencies here
 
 #include <string>
 
@@ -77,6 +77,7 @@ public:
   static int32_t vt_stack_mod;
 
   static bool vt_trace;
+  static bool vt_trace_mpi;
   static std::string vt_trace_file;
   static std::string vt_trace_dir;
   static int32_t vt_trace_mod;

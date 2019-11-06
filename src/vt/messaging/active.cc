@@ -50,12 +50,19 @@
 #include "vt/termination/term_headers.h"
 #include "vt/group/group_manager_active_attorney.h"
 #include "vt/runnable/general.h"
+#include "vt/timing/timing.h"
 
 namespace vt { namespace messaging {
 
 ActiveMessenger::ActiveMessenger()
   : this_node_(theContext()->getNode())
 {
+  #if backend_check_enabled(trace_enabled)
+    if (ArgType::vt_trace_mpi) {
+      trace_irecv     = trace::registerEventCollective("MPI_Irecv");
+      trace_isend     = trace::registerEventCollective("MPI_Isend");
+    }
+  #endif
   /*
    * Push the default epoch into the stack so it is always at the bottom of the
    * stack during execution until the AM's destructor is invoked
@@ -201,10 +208,27 @@ EventType ActiveMessenger::sendMsgBytes(
     dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}"
   );
 
-  MPI_Isend(
-    msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-    mpi_event->getRequest()
-  );
+  {
+    #if backend_check_enabled(trace_enabled)
+      double tr_begin;
+      if (ArgType::vt_trace_mpi) {
+        tr_begin = vt::timing::Timing::getCurrentTime();
+      }
+    #endif
+
+    MPI_Isend(
+      msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
+      mpi_event->getRequest()
+    );
+
+    #if backend_check_enabled(trace_enabled)
+      if (ArgType::vt_trace_mpi) {
+        auto tr_end = vt::timing::Timing::getCurrentTime();
+        auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
+        trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
+      }
+    #endif
+  }
 
   if (not is_term) {
     theTerm()->produce(epoch,1,dest);
@@ -314,10 +338,27 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     "Invalid destination: {}"
   );
 
-  MPI_Isend(
-    data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-    mpi_event->getRequest()
-  );
+  {
+    #if backend_check_enabled(trace_enabled)
+      double tr_begin;
+      if (ArgType::vt_trace_mpi) {
+        tr_begin = vt::timing::Timing::getCurrentTime();
+      }
+    #endif
+
+    MPI_Isend(
+      data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
+      mpi_event->getRequest()
+    );
+
+    #if backend_check_enabled(trace_enabled)
+      if (ArgType::vt_trace_mpi) {
+        auto tr_end = vt::timing::Timing::getCurrentTime();
+        auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, num_bytes);
+        trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
+      }
+    #endif
+  }
 
   // Assume that any raw data send/recv is paired with a message with an epoch
   // if required to inhibit early termination of that epoch
@@ -391,10 +432,31 @@ bool ActiveMessenger::recvDataMsgBuffer(
       NodeType const sender = stat.MPI_SOURCE;
 
       MPI_Request req;
-      MPI_Irecv(
-        buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
-        theContext()->getComm(), &req
-      );
+
+      {
+        #if backend_check_enabled(trace_enabled)
+          double tr_begin;
+          if (ArgType::vt_trace_mpi) {
+            tr_begin = vt::timing::Timing::getCurrentTime();
+          }
+        #endif
+
+        MPI_Irecv(
+          buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
+          theContext()->getComm(), &req
+        );
+
+        #if backend_check_enabled(trace_enabled)
+          if (ArgType::vt_trace_mpi) {
+            auto tr_end = vt::timing::Timing::getCurrentTime();
+            auto tr_note = fmt::format(
+              "Irecv(Data): from={}, bytes={}",
+              stat.MPI_SOURCE, num_probe_bytes
+            );
+            trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_irecv);
+          }
+        #endif
+      }
 
       InProgressDataIRecv recv_holder{
         buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next
@@ -628,10 +690,31 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     NodeType const sender = stat.MPI_SOURCE;
 
     MPI_Request req;
-    MPI_Irecv(
-      buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
-      theContext()->getComm(), &req
-    );
+
+    {
+      #if backend_check_enabled(trace_enabled)
+        double tr_begin;
+        if (ArgType::vt_trace_mpi) {
+          tr_begin = vt::timing::Timing::getCurrentTime();
+        }
+      #endif
+
+      MPI_Irecv(
+        buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
+        theContext()->getComm(), &req
+      );
+
+      #if backend_check_enabled(trace_enabled)
+        if (ArgType::vt_trace_mpi) {
+          auto tr_end = vt::timing::Timing::getCurrentTime();
+          auto tr_note = fmt::format(
+            "Irecv(AM): from={}, bytes={}",
+            stat.MPI_SOURCE, num_probe_bytes
+          );
+          trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_irecv);
+        }
+      #endif
+    }
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
     in_progress_active_msg_irecv.emplace(std::move(recv_holder));
