@@ -63,13 +63,9 @@ Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
     start_time_(getCurrentTime()),
     log_file_()
-{
-  initialize();
-}
+{ }
 
-Trace::Trace() : log_file_() {
-  initialize();
-}
+Trace::Trace() : log_file_() { }
 
 /*static*/ void Trace::traceBeginIdleTrigger() {
   #if backend_check_enabled(trace_enabled)
