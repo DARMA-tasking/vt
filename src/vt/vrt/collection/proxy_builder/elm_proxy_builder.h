@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_PROXY_BUILDER_ELM_PROXY_BUILDER_H
 
 #include "vt/config.h"
+#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace vrt { namespace collection {
 

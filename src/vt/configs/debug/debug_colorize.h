@@ -46,7 +46,6 @@
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_COLORIZE_H
 
 #include "vt/configs/arguments/args.h"
-#include "vt/configs/types/types_type.h"
 
 #include <string>
 

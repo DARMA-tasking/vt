@@ -908,11 +908,13 @@ void Runtime::initializeComponents() {
   theEvent = std::make_unique<event::AsyncEvent>();
   thePool = std::make_unique<pool::Pool>();
 
+  // Initialize tracing, when it is enabled; used in the AM constructor
+  initializeTrace();
+
   // Core components: enables more complex subsequent initialization
   theObjGroup = std::make_unique<objgroup::ObjGroupManager>();
   theMsg = std::make_unique<messaging::ActiveMessenger>();
   theSched = std::make_unique<sched::Scheduler>();
-  initializeTrace();
   theTerm = std::make_unique<term::TerminationDetector>();
   theCollective = std::make_unique<collective::CollectiveAlg>();
   theGroup = std::make_unique<group::GroupManager>();
@@ -926,6 +928,10 @@ void Runtime::initializeComponents() {
   theLocMan = std::make_unique<location::LocationManager>();
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theCollection = std::make_unique<vrt::collection::CollectionManager>();
+
+  #if backend_check_enabled(trace_enabled)
+    theTrace->initialize();
+  #endif
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }
