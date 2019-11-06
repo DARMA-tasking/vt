@@ -484,7 +484,7 @@ namespace vt { namespace arguments {
     if (vt_auto_color) {
       colorize_output = isatty(fileno(stdout));
     } else {
-      colorize_output = not vt_no_color;
+      colorize_output = true;
     }
   }
 
