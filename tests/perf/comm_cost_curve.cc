@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 comm_func.cc
+//                              comm_cost_curve.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
