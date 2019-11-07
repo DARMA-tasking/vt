@@ -77,7 +77,7 @@ protected:
   void decide();
   void migrate();
 
-  void propagateRound();
+  void propagateRound(EpochType epoch = no_epoch);
   void propagateIncoming(GossipMsg* msg);
   bool isUnderloaded(LoadType load) const;
   bool isOverloaded(LoadType load) const;
@@ -101,7 +101,6 @@ private:
   uint16_t num_iters_                               = 3;
   std::random_device seed;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
-  EpochType propagate_epoch_                        = no_epoch;
   EpochType lazy_epoch_                             = no_epoch;
   objgroup::proxy::Proxy<GossipLB> proxy            = {};
   bool is_overloaded_                               = false;
