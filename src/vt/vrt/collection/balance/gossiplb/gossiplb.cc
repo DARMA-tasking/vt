@@ -90,7 +90,7 @@ void GossipLB::runLB() {
   }
 
   debug_print(
-    lb, node,
+    gossiplb, node,
     "GossipLB::runLB: avg={}, max={}, load={},"
     " overloaded_={}, underloaded_={}, should_lb={}\n",
     avg, max, load, is_overloaded_, is_underloaded_, should_lb
@@ -114,7 +114,7 @@ void GossipLB::runLB() {
 
 void GossipLB::inform() {
   debug_print(
-    lb, node,
+    gossiplb, node,
     "GossipLB::inform: starting inform phase: k_max={}, k_cur={}\n",
     k_max, k_cur
   );
@@ -143,7 +143,7 @@ void GossipLB::inform() {
   }
 
   debug_print(
-    lb, node,
+    gossiplb, node,
     "GossipLB::inform: finished inform phase: k_max={}, k_cur={}\n",
     k_max, k_cur
   );
@@ -151,7 +151,7 @@ void GossipLB::inform() {
 
 void GossipLB::propagateRound() {
   debug_print(
-    lb, node,
+    gossiplb, node,
     "GossipLB::propagateRound: k_max={}, k_cur={}\n",
     k_max, k_cur
   );
@@ -167,7 +167,7 @@ void GossipLB::propagateRound() {
   auto const fanout = std::min(f, static_cast<decltype(f)>(num_nodes - 1));
 
   debug_print(
-    lb, node,
+    gossiplb, node,
     "GossipLB::propagateRound: k_max={}, k_cur={}, selected.size()={}, fanout={}\n",
     k_max, k_cur, selected.size(), fanout
   );
@@ -193,7 +193,7 @@ void GossipLB::propagateRound() {
     selected.insert(random_node);
 
     debug_print(
-      lb, node,
+      gossiplb, node,
       "GossipLB::propagateRound: k_max={}, k_cur={}, sending={}\n",
       k_max, k_cur, random_node
     );
@@ -210,7 +210,7 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
   auto const from_node = msg->getFromNode();
 
   debug_print(
-    lb, node,
+    gossiplb, node,
     "GossipLB::propagateIncoming: k_max={}, k_cur={}, from_node={}, "
     "load info size={}\n",
     k_max, k_cur, from_node, msg->getNodeLoad().size()
@@ -300,14 +300,14 @@ std::vector<NodeType> GossipLB::makeUnderloaded() const {
 // // DEBUGGING
 // ///////////////////////////////////////////////////////////////////
 // debug_print(
-//   lb, node,
+//   gossiplb, node,
 //   "GossipLB::decide: under.size()={}, selected_node={}\n",
 //   under.size(), selected_node
 // );
 // int i = 0;
 // for (auto&& elm : under) {
 //   debug_print(
-//     lb, node,
+//     gossiplb, node,
 //     "\t GossipLB::decide: under[{}]={}\n", i, under[i]
 //   );
 //   i++;
