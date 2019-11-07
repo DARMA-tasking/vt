@@ -82,14 +82,14 @@ private:
 };
 
 struct LazyMigrationMsg : vt::Message {
-  using ObjSetType = std::vector<lb::BaseLB::ObjIDType>;
+  using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, lb::BaseLB::LoadType>;
 
   LazyMigrationMsg() = default;
-  LazyMigrationMsg(NodeType in_to_node, ObjSetType const& in_objs)
+  LazyMigrationMsg(NodeType in_to_node, ObjsType const& in_objs)
     : to_node_(in_to_node), objs_(in_objs)
   { }
 
-  ObjSetType const& getObjSet() const {
+  ObjsType const& getObjSet() const {
     return objs_;
   }
 
@@ -103,7 +103,7 @@ struct LazyMigrationMsg : vt::Message {
 
 private:
   NodeType to_node_ = uninitialized_destination;
-  ObjSetType objs_  = {};
+  ObjsType objs_  = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
