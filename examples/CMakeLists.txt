@@ -3,7 +3,6 @@ set(
   PROJECT_EXAMPLES_LIST
   hello_world
   ring
-  comm_func
   rdma_simple_get
   rdma_simple_get_direct
   rdma_simple_put
