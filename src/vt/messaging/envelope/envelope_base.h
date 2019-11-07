@@ -61,9 +61,14 @@ struct ActiveEnvelope {
   RefType ref           : ref_num_bits;
   GroupType group       : group_num_bits;
 
-  #if backend_check_enabled(trace_enabled)
+# if backend_check_enabled(priorities)
+  PriorityLevelType priority_level : priority_level_num_bits;
+  PriorityType      priority       : priority_num_bits;
+# endif
+
+# if backend_check_enabled(trace_enabled)
   trace::TraceEventIDType trace_event : trace::trace_event_num_bits;
-  #endif
+# endif
 };
 
 }} /* end namespace vt::messaging */

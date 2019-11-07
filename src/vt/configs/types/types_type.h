@@ -81,6 +81,8 @@ using MsgSizeType             = int32_t;
 using PhaseType               = uint64_t;
 using PipeType                = uint64_t;
 using ObjGroupProxyType       = uint64_t;
+using PriorityType            = uint16_t;
+using PriorityLevelType       = uint8_t;
 
 // Action types for attaching a closure to a runtime function
 using ActionType              = std::function<void()>;

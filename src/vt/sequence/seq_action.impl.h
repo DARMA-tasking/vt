@@ -57,12 +57,12 @@ Action<MessageT>::Action(SeqType const& in_seq_id, ActionType const& in_action)
 { }
 
 template <typename MessageT>
-void Action<MessageT>::runAction(MessageT* msg, bool consume) const {
+void Action<MessageT>::runAction(MsgSharedPtr<MessageT> msg, bool consume) const {
   auto const callable = [this, consume, msg]() -> bool {
     if (consume) {
       theTerm()->consume();
     }
-    action(msg);
+    action(msg.get());
     return false;
   };
 
@@ -71,7 +71,7 @@ void Action<MessageT>::runAction(MessageT* msg, bool consume) const {
 
 template <typename MessageT>
 typename Action<MessageT>::CallableType
-Action<MessageT>::generateCallable(MessageT* msg) const {
+Action<MessageT>::generateCallable(MsgSharedPtr<MessageT> msg) const {
   return [msg,this](){
     runAction(msg);
     return false;
