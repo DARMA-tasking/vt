@@ -83,32 +83,56 @@ void GossipLB::runLB() {
     should_lb = max > gossip_tolerance * avg;
   }
 
-  if (isOverloaded(load)) {
-    is_overloaded_ = true;
-  } else if (isUnderloaded(load)) {
-    is_underloaded_ = true;
+  if (theContext()->getNode() == 0) {
+    vt_print(
+      gossiplb,
+      "GossipLB::runLB: avg={}, max={}, load={},"
+      " overloaded_={}, underloaded_={}, should_lb={}\n",
+      avg, max, load, is_overloaded_, is_underloaded_, should_lb
+    );
   }
+
+  if (should_lb) {
+    doLBStages();
+  } else {
+    migrationDone();
+  }
+}
+
+void GossipLB::doLBStages() {
+  bool first_iter = iter_ == 0;
 
   debug_print(
     gossiplb, node,
-    "GossipLB::runLB: avg={}, max={}, load={},"
-    " overloaded_={}, underloaded_={}, should_lb={}\n",
-    avg, max, load, is_overloaded_, is_underloaded_, should_lb
+    "GossipLB::doLBStages: running iter_={}, num_iters_={}\n",
+    iter_, num_iters_
   );
 
-  if (should_lb) {
-    this->inform();
-
-    for (auto&& elm : load_info_) {
-      vt_print(lb, "inform info: node={}, load={}\n", elm.first, elm.second);
-    }
-
-    this->decide();
-
-    startMigrationCollective();
-    finishMigrationCollective();
+  if (first_iter) {
+    // Copy this node's object assignments to a local, mutable copy
+    cur_objs = *load_data;
+    this_new_load = this_load;
   } else {
-    migrationDone();
+    selected_.clear();
+    underloaded_.clear();
+  }
+
+  if (isOverloaded(this_new_load)) {
+    is_overloaded_ = true;
+  } else if (isUnderloaded(this_new_load)) {
+    is_underloaded_ = true;
+  }
+
+  inform();
+  decide();
+
+  if (++iter_ == num_iters_) {
+    // Concretize lazy migrations by invoking the BaseLB object migration on new
+    // object node assignments
+    thunkMigrations();
+  } else {
+    // Recurse and do another iteration
+    doLBStages();
   }
 }
 
@@ -132,7 +156,7 @@ void GossipLB::inform() {
   // Underloaded start the round
   if (is_underloaded_) {
     // Start the round
-    this->propagateRound();
+    propagateRound();
   }
 
   theTerm()->addAction(propagate_epoch_, [&inform_done] { inform_done = true; });
@@ -199,9 +223,9 @@ void GossipLB::propagateRound() {
     );
 
     // Send message with load
-    auto msg = makeMessage<GossipMsg>(this_node, this->load_info_);
+    auto msg = makeMessage<GossipMsg>(this_node, load_info_);
     envelopeSetEpoch(msg, propagate_epoch_);
-    msg->addNodeLoad(this_node, this->this_load);
+    msg->addNodeLoad(this_node, this_load);
     proxy[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
   }
 }
@@ -226,12 +250,12 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
     }
   }
 
-  if (this->k_cur == this->k_max - 1) {
+  if (k_cur == k_max - 1) {
     // nothing to do but wait for termination to be detected
   } else {
     // send out another round
-    this->propagateRound();
-    this->k_cur++;
+    propagateRound();
+    k_cur++;
   }
 
 }
@@ -296,26 +320,6 @@ std::vector<NodeType> GossipLB::makeUnderloaded() const {
   return under;
 }
 
-// //////////////////////////////////////////////////////////////////
-// // DEBUGGING
-// ///////////////////////////////////////////////////////////////////
-// debug_print(
-//   gossiplb, node,
-//   "GossipLB::decide: under.size()={}, selected_node={}\n",
-//   under.size(), selected_node
-// );
-// int i = 0;
-// for (auto&& elm : under) {
-//   debug_print(
-//     gossiplb, node,
-//     "\t GossipLB::decide: under[{}]={}\n", i, under[i]
-//   );
-//   i++;
-// }
-// //////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////
-
-
 GossipLB::ElementLoadType::iterator
 GossipLB::selectObject(
   LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
@@ -344,48 +348,21 @@ void GossipLB::decide() {
   if (is_overloaded_) {
     std::vector<NodeType> under = makeUnderloaded();
     auto cmf = createCMF(under);
-    double this_new_load = this_load;
-    std::unordered_map<ObjIDType, TimeType> cur_objs = *load_data;
-    std::set<ObjIDType> objs_to_select;
-    std::set<ObjIDType> objs_prev_selected;
-    std::unordered_map<NodeType, std::vector<ObjIDType>> selected_objects;
+    std::unordered_map<NodeType, ObjsType> migrate_objs;
 
-    do {
-      auto const selected_node = sampleFromCMF(under, cmf);
-      vtAssertExpr(load_info_.find(selected_node) != load_info_.end());
-      auto& selected_load = load_info_[selected_node];
+    if (under.size() > 0) {
+      // Iterate through all the objects
+      for (auto iter = cur_objs.begin(); iter != cur_objs.end(); ) {
+        // Select a node using the CMF
+        auto const selected_node = sampleFromCMF(under, cmf);
 
-      objs_to_select.clear();
-      objs_prev_selected.clear();
-      for (auto&& elm : cur_objs) {
-        objs_to_select.insert(elm.first);
-      }
+        auto load_iter = load_info_.find(selected_node);
+        vtAssert(load_iter != load_info_.end(), "Selected node not found");
 
-      do {
+        // The load of the node selected
+        auto& selected_load = load_iter->second;
 
-        std::set<ObjIDType> available_objs;
-        std::set_difference(
-          objs_to_select.begin(), objs_to_select.end(),
-          objs_prev_selected.begin(), objs_prev_selected.end(),
-          std::inserter(available_objs, available_objs.end())
-        );
-
-        if (available_objs.size() == 0) {
-          break;
-        }
-
-        debug_print(
-          lb, node,
-          "GossipLB::decide: available.size()={}, objs_to_select={}, "
-          "objs_prev_selected={}\n",
-          available_objs.size(), objs_to_select.size(), objs_prev_selected.size()
-        );
-
-        auto max_obj_size = avg - selected_load;
-        auto iter = selectObject(max_obj_size, cur_objs, available_objs);
-
-        vtAssert(iter != cur_objs.end(), "Must have objects to select");
-
+        //auto max_obj_size = avg - selected_load;
         auto obj_id = iter->first;
 
         // @todo: for now, convert to milliseconds due to the stats framework all
@@ -393,10 +370,8 @@ void GossipLB::decide() {
         // the rest of the stats framework
         auto obj_load = loadMilli(iter->second);
 
-        objs_prev_selected.insert(obj_id);
-
         debug_print(
-          lb, node,
+          gossiplb, node,
           "GossipLB::decide: under.size()={}, selected_node={}, selected_load={},"
           "load_info_.size()={}, obj_id={:x}, obj_load={}, avg={}, "
           "!(selected_load + obj_load > avg)=!({} + {} > {})={}\n",
@@ -406,28 +381,27 @@ void GossipLB::decide() {
         );
 
         if (not (selected_load + obj_load > avg)) {
-          selected_objects[selected_node].push_back(obj_id);
+          migrate_objs[selected_node].emplace(std::make_tuple(obj_id, obj_load));
 
           this_new_load -= obj_load;
           selected_load += obj_load;
 
-          cur_objs.erase(iter);
+          iter = cur_objs.erase(iter);
+        } else {
+          iter++;
         }
 
-      } while (not (selected_load > avg));
-
-    } while (this_new_load > avg and cur_objs.size() > 0);
-
-    // Send objects to nodes
-    for (auto&& migration : selected_objects) {
-      auto node = migration.first;
-      for (auto&& obj_id : migration.second) {
-        this->lazyMigrateObjectTo(obj_id, node);
+        if (not (this_new_load > avg)) {
+          break;
+        }
       }
     }
 
-    this->informLazyMigrations();
-
+    // Send objects to nodes
+    for (auto&& migration : migrate_objs) {
+      auto node = migration.first;
+      lazyMigrateObjsTo(node, migration.second);
+    }
 
   } else {
     // do nothing (underloaded-based algorithm), waits to get work from
@@ -441,24 +415,38 @@ void GossipLB::decide() {
   }
 }
 
-void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
+void GossipLB::thunkMigrations() {
+  debug_print(
+    gossiplb, node,
+    "thunkMigrations, total num_objs={}\n",
+    cur_objs.size()
+  );
 
+  startMigrationCollective();
+
+  auto this_node = theContext()->getNode();
+  for (auto elm : cur_objs) {
+    auto obj = elm.first;
+    migrateObjectTo(obj, this_node);
+  }
+
+  finishMigrationCollective();
 }
 
-void GossipLB::informLazyMigrations() {
-  for (auto&& elm : lazy_migrations_) {
-    auto const& node = elm.first;
-    auto const& objs = elm.second;
-
-    using LazyMsg = balance::LazyMigrationMsg;
-    auto msg = makeMessage<LazyMsg>(node, objs);
-    envelopeSetEpoch(msg, lazy_epoch_);
-    proxy[node].send<LazyMsg, &GossipLB::inLazyMigrations>(msg);
+void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
+  auto const& incoming_objs = msg->getObjSet();
+  for (auto& obj : incoming_objs) {
+    auto iter = cur_objs.find(obj.first);
+    vtAssert(iter == cur_objs.end(), "Incoming object should not exist");
+    cur_objs.insert(obj);
   }
 }
 
-void GossipLB::lazyMigrateObjectTo(ObjIDType const obj_id, NodeType const node) {
-  lazy_migrations_[node].push_back(obj_id);
+void GossipLB::lazyMigrateObjsTo(NodeType node, ObjsType const& objs) {
+  using LazyMsg = balance::LazyMigrationMsg;
+  auto msg = makeMessage<LazyMsg>(node, objs);
+  envelopeSetEpoch(msg, lazy_epoch_);
+  proxy[node].send<LazyMsg, &GossipLB::inLazyMigrations>(msg);
 }
 
 void GossipLB::migrate() {
