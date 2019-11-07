@@ -116,8 +116,11 @@ void GossipLB::doLBStages() {
     cur_objs = *load_data;
     this_new_load = this_load;
   } else {
+    // Clear out data structures from previous iteration
     selected_.clear();
     underloaded_.clear();
+    load_info_.clear();
+    k_cur = 0;
   }
 
   if (isOverloaded(this_new_load)) {
@@ -155,6 +158,7 @@ void GossipLB::inform() {
 
   bool inform_done = false;
   propagate_epoch_ = theTerm()->makeEpochCollective();
+  theTerm()->addAction(propagate_epoch_, [&inform_done] { inform_done = true; });
 
   // Underloaded start the round
   if (is_underloaded_) {
@@ -162,7 +166,6 @@ void GossipLB::inform() {
     propagateRound();
   }
 
-  theTerm()->addAction(propagate_epoch_, [&inform_done] { inform_done = true; });
   theTerm()->finishedEpoch(propagate_epoch_);
 
   while (not inform_done) {
@@ -358,6 +361,12 @@ void GossipLB::decide() {
       for (auto iter = cur_objs.begin(); iter != cur_objs.end(); ) {
         // Select a node using the CMF
         auto const selected_node = sampleFromCMF(under, cmf);
+
+        debug_print(
+          gossiplb, node,
+          "GossipLB::decide: selected_node={}, load_info_.size()\n",
+          selected_node, load_info_.size()
+        );
 
         auto load_iter = load_info_.find(selected_node);
         vtAssert(load_iter != load_info_.end(), "Selected node not found");

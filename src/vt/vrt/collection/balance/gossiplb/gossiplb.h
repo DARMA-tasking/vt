@@ -95,7 +95,7 @@ protected:
 
 private:
   uint8_t f                                         = 2;
-  uint8_t k_max                                     = 1;
+  uint8_t k_max                                     = 2;
   uint8_t k_cur                                     = 0;
   uint16_t iter_                                    = 0;
   uint16_t num_iters_                               = 3;
