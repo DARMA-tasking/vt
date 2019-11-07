@@ -122,6 +122,7 @@ public:
   static bool vt_debug_param;
   static bool vt_debug_handler;
   static bool vt_debug_hierlb;
+  static bool vt_debug_gossiplb;
   static bool vt_debug_scatter;
   static bool vt_debug_sequence;
   static bool vt_debug_sequence_vrt;

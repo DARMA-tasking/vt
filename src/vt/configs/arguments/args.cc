@@ -261,6 +261,7 @@ namespace vt { namespace arguments {
   auto oap = "Enable debug_param        = \"" debug_pp(param)        "\"";
   auto pap = "Enable debug_handler      = \"" debug_pp(handler)      "\"";
   auto qap = "Enable debug_hierlb       = \"" debug_pp(hierlb)       "\"";
+  auto qbp = "Enable debug_gossiplb     = \"" debug_pp(gossiplb)     "\"";
   auto rap = "Enable debug_scatter      = \"" debug_pp(scatter)      "\"";
   auto sap = "Enable debug_sequence     = \"" debug_pp(sequence)     "\"";
   auto tap = "Enable debug_sequence_vrt = \"" debug_pp(sequence_vrt) "\"";
@@ -294,6 +295,7 @@ namespace vt { namespace arguments {
   auto oa = app.add_flag("--vt_debug_param",        vt_debug_param,        oap);
   auto pa = app.add_flag("--vt_debug_handler",      vt_debug_handler,      pap);
   auto qa = app.add_flag("--vt_debug_hierlb",       vt_debug_hierlb,       qap);
+  auto qb = app.add_flag("--vt_debug_gossiplb",     vt_debug_gossiplb,     qbp);
   auto ra = app.add_flag("--vt_debug_scatter",      vt_debug_scatter,      rap);
   auto sa = app.add_flag("--vt_debug_sequence",     vt_debug_sequence,     sap);
   auto ta = app.add_flag("--vt_debug_sequence_vrt", vt_debug_sequence_vrt, tap);
@@ -327,6 +329,7 @@ namespace vt { namespace arguments {
   oa->group(debugGroup);
   pa->group(debugGroup);
   qa->group(debugGroup);
+  qb->group(debugGroup);
   ra->group(debugGroup);
   sa->group(debugGroup);
   ta->group(debugGroup);
