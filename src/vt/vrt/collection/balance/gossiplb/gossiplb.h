@@ -93,7 +93,7 @@ protected:
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
 
-  void lazyMigrateObjsTo(NodeType node, ObjsType const& objs);
+  void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
   void thunkMigrations();
 
@@ -105,7 +105,6 @@ private:
   uint16_t num_iters_                               = 3;
   std::random_device seed;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
-  EpochType lazy_epoch_                             = no_epoch;
   objgroup::proxy::Proxy<GossipLB> proxy            = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;

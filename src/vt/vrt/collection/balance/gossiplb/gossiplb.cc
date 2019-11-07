@@ -152,15 +152,15 @@ void GossipLB::inform() {
   }
 
   bool inform_done = false;
-  auto propagate_epoch_ = theTerm()->makeEpochCollective();
-  theTerm()->addAction(propagate_epoch_, [&inform_done] { inform_done = true; });
+  auto propagate_epoch = theTerm()->makeEpochCollective();
+  theTerm()->addAction(propagate_epoch, [&inform_done] { inform_done = true; });
 
   // Underloaded start the round
   if (is_underloaded_) {
-    propagateRound(propagate_epoch_);
+    propagateRound(propagate_epoch);
   }
 
-  theTerm()->finishedEpoch(propagate_epoch_);
+  theTerm()->finishedEpoch(propagate_epoch);
 
   while (not inform_done) {
     vt::runScheduler();
@@ -343,8 +343,8 @@ void GossipLB::decide() {
   double const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
 
   bool decide_done = false;
-  lazy_epoch_ = theTerm()->makeEpochCollective();
-  theTerm()->addAction(lazy_epoch_, [&decide_done] { decide_done = true; });
+  auto lazy_epoch = theTerm()->makeEpochCollective();
+  theTerm()->addAction(lazy_epoch, [&decide_done] { decide_done = true; });
 
   if (is_overloaded_) {
     std::vector<NodeType> under = makeUnderloaded();
@@ -407,7 +407,7 @@ void GossipLB::decide() {
     // Send objects to nodes
     for (auto&& migration : migrate_objs) {
       auto node = migration.first;
-      lazyMigrateObjsTo(node, migration.second);
+      lazyMigrateObjsTo(lazy_epoch, node, migration.second);
     }
 
   } else {
@@ -415,7 +415,7 @@ void GossipLB::decide() {
     // overloaded nodes
   }
 
-  theTerm()->finishedEpoch(lazy_epoch_);
+  theTerm()->finishedEpoch(lazy_epoch);
 
   while (not decide_done) {
     vt::runScheduler();
@@ -449,10 +449,12 @@ void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
   }
 }
 
-void GossipLB::lazyMigrateObjsTo(NodeType node, ObjsType const& objs) {
+void GossipLB::lazyMigrateObjsTo(
+  EpochType epoch, NodeType node, ObjsType const& objs
+) {
   using LazyMsg = balance::LazyMigrationMsg;
   auto msg = makeMessage<LazyMsg>(node, objs);
-  envelopeSetEpoch(msg, lazy_epoch_);
+  envelopeSetEpoch(msg, epoch);
   proxy[node].send<LazyMsg, &GossipLB::inLazyMigrations>(msg);
 }
 
