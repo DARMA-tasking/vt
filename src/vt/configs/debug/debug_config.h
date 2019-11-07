@@ -79,7 +79,8 @@ enum CatEnum : uint64_t {
   worker       = 1ull<<26,
   group        = 1ull<<27,
   broadcast    = 1ull<<28,
-  objgroup     = 1ull<<29
+  objgroup     = 1ull<<29,
+  gossiplb     = 1ull<<30
 };
 
 enum CtxEnum : uint64_t {
