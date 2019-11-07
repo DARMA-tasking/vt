@@ -116,6 +116,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_param        = false;
 /*static*/ bool        ArgConfig::vt_debug_handler      = false;
 /*static*/ bool        ArgConfig::vt_debug_hierlb       = false;
+/*static*/ bool        ArgConfig::vt_debug_gossiplb     = false;
 /*static*/ bool        ArgConfig::vt_debug_scatter      = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence     = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence_vrt = false;
