@@ -100,43 +100,41 @@ void GossipLB::runLB() {
 }
 
 void GossipLB::doLBStages() {
-  bool first_iter = iter_ == 0;
+  for (iter_ = 0; iter_ < num_iters_; iter_++) {
+    bool first_iter = iter_ == 0;
 
-  debug_print(
-    gossiplb, node,
-    "GossipLB::doLBStages: running iter_={}, num_iters_={}\n",
-    iter_, num_iters_
-  );
+    debug_print(
+      gossiplb, node,
+      "GossipLB::doLBStages: running iter_={}, num_iters_={}\n",
+      iter_, num_iters_
+    );
 
-  if (first_iter) {
-    // Copy this node's object assignments to a local, mutable copy
-    cur_objs = *load_data;
-    this_new_load = this_load;
-  } else {
-    // Clear out data structures from previous iteration
-    selected_.clear();
-    underloaded_.clear();
-    load_info_.clear();
-    k_cur = 0;
+    if (first_iter) {
+      // Copy this node's object assignments to a local, mutable copy
+      cur_objs = *load_data;
+      this_new_load = this_load;
+    } else {
+      // Clear out data structures from previous iteration
+      selected_.clear();
+      underloaded_.clear();
+      load_info_.clear();
+      k_cur = 0;
+      is_overloaded_ = is_underloaded_ = false;
+    }
+
+    if (isOverloaded(this_new_load)) {
+      is_overloaded_ = true;
+    } else if (isUnderloaded(this_new_load)) {
+      is_underloaded_ = true;
+    }
+
+    inform();
+    decide();
   }
 
-  if (isOverloaded(this_new_load)) {
-    is_overloaded_ = true;
-  } else if (isUnderloaded(this_new_load)) {
-    is_underloaded_ = true;
-  }
-
-  inform();
-  decide();
-
-  if (++iter_ == num_iters_) {
-    // Concretize lazy migrations by invoking the BaseLB object migration on new
-    // object node assignments
-    thunkMigrations();
-  } else {
-    // Recurse and do another iteration
-    doLBStages();
-  }
+  // Concretize lazy migrations by invoking the BaseLB object migration on new
+  // object node assignments
+  thunkMigrations();
 }
 
 void GossipLB::inform() {
@@ -154,13 +152,12 @@ void GossipLB::inform() {
   }
 
   bool inform_done = false;
-  propagate_epoch_ = theTerm()->makeEpochCollective();
+  auto propagate_epoch_ = theTerm()->makeEpochCollective();
   theTerm()->addAction(propagate_epoch_, [&inform_done] { inform_done = true; });
 
   // Underloaded start the round
   if (is_underloaded_) {
-    // Start the round
-    propagateRound();
+    propagateRound(propagate_epoch_);
   }
 
   theTerm()->finishedEpoch(propagate_epoch_);
@@ -176,7 +173,7 @@ void GossipLB::inform() {
   );
 }
 
-void GossipLB::propagateRound() {
+void GossipLB::propagateRound(EpochType epoch) {
   debug_print(
     gossiplb, node,
     "GossipLB::propagateRound: k_max={}, k_cur={}\n",
@@ -201,7 +198,7 @@ void GossipLB::propagateRound() {
 
   for (int i = 0; i < fanout; i++) {
     // This implies full knowledge of all processors
-    if (selected.size() == num_nodes) {
+    if (selected.size() == num_nodes - 1) {
       return;
     }
 
@@ -227,7 +224,9 @@ void GossipLB::propagateRound() {
 
     // Send message with load
     auto msg = makeMessage<GossipMsg>(this_node, load_info_);
-    envelopeSetEpoch(msg, propagate_epoch_);
+    if (epoch != no_epoch) {
+      envelopeSetEpoch(msg->env, epoch);
+    }
     msg->addNodeLoad(this_node, this_load);
     proxy[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
   }
@@ -260,7 +259,6 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
     propagateRound();
     k_cur++;
   }
-
 }
 
 std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
