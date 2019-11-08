@@ -60,7 +60,16 @@ class CollectionChainSet final {
   CollectionChainSet(CollectionChainSet&&) = delete;
 
   void addIndex(Index idx) {
+    vtAssert(chains_.find(idx) == chains_.end(), "Cannot add an already-present chain");
     chains_[idx] = DependentSendChain();
+  }
+
+  void removeIndex(Index idx) {
+    auto iter = chains_.find(idx);
+    vtAssert(iter != chains_.end(), "Cannot remove a non-present chain");
+    vtAssert(iter->second.isTerminated(), "Cannot remove a chain with pending work");
+
+    chains_.erase(iter);
   }
 
   void nextStep(std::function<PendingSend(Index)> step_action) {
