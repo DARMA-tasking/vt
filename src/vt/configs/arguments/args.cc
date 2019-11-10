@@ -52,9 +52,8 @@
 
 namespace vt { namespace arguments {
 
-/*static*/ bool        ArgConfig::vt_color              = false;
+/*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
-/*static*/ bool        ArgConfig::vt_auto_color         = true;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
 
 /*static*/ bool        ArgConfig::colorize_output       = false;
@@ -161,20 +160,16 @@ namespace vt { namespace arguments {
    * Flags for controlling the colorization of output from vt
    */
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
-  auto always = "Colorize output (overrides --vt_auto_color)";
-  auto never  = "Never colorize output (overrides --vt_color)";
-  auto maybe  = "Automatic colorization of output";
+  auto always = "Colorize output (default)";
+  auto never  = "Do not colorize output (overrides --vt_color)";
   auto a  = app.add_flag("-c,--vt_color",      vt_color,      always);
   auto b  = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
-  auto c  = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe);
   auto a1 = app.add_flag("-q,--vt_quiet",      vt_quiet,      quiet);
   auto outputGroup = "Output Control";
   a->group(outputGroup);
   b->group(outputGroup);
-  c->group(outputGroup);
   a1->group(outputGroup);
   b->excludes(a);
-  b->excludes(c);
 
   /*
    * Flags for controlling the signals that VT tries to catch
@@ -476,11 +471,9 @@ namespace vt { namespace arguments {
   // Determine the final colorization setting.
   if (vt_no_color) {
     colorize_output = false;
-  } else if (vt_color) {
-    colorize_output = true;
   } else {
-    // Otherwise, currently assume to colorize as VT runs within MPI.
-    // isatty in MPI is always false; mpc_isatty is a vendor extension.
+    // Otherwise, colorize.
+    // (Within MPI there is no good method to auto-detect.)
     colorize_output = true;
   }
 
