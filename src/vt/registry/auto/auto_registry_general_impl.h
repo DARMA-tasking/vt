@@ -57,7 +57,7 @@ namespace vt { namespace auto_registry {
 
 template <typename RegObjTypeT>
 struct RegistrarGenInfoImpl : RegistrarGenInfoBase {
-  virtual HandlerType getRegisteredIndex() {
+  virtual HandlerType getRegisteredIndex() override {
     return objgroup::registry::makeObjIdx<RegObjTypeT>();
   }
 };

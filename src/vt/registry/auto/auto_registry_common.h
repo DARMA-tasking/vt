@@ -119,7 +119,7 @@ struct RegistrarGenInfo : RegistrarGenInfoBase {
     proxy_.swap(in.proxy_);
   }
 
-  virtual HandlerType getRegisteredIndex() {
+  virtual HandlerType getRegisteredIndex() override {
     return proxy_->getRegisteredIndex();
   }
 private:
