@@ -68,7 +68,8 @@ RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
   index = reg.size();
 
   FnT fn = reinterpret_cast<FnT>(ActFnT::getFunction());
-  RegistrarGenInfo indexAccessor{new RegistrarGenInfoImpl<typename ActFnT::ObjType>()};
+  RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
+    new RegistrarGenInfoImpl<typename ActFnT::ObjType>());
 
   #if backend_check_enabled(trace_enabled)
   using Tn = typename ActFnT::ActFnType;

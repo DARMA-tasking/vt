@@ -104,12 +104,14 @@ struct RegistrarGenInfoBase {
 };
 
 struct RegistrarGenInfo : RegistrarGenInfoBase {
-  RegistrarGenInfo() {
+
+  /// Create a new object.
+  /// Takes complete ownership of the supplied object (pointer).
+  static RegistrarGenInfo takeOwnership(RegistrarGenInfoBase *owned_proxy) {
+    return RegistrarGenInfo(owned_proxy);
   }
 
-  explicit RegistrarGenInfo(RegistrarGenInfoBase* owned_proxy)
-    : proxy_(owned_proxy)
-  {
+  RegistrarGenInfo() {
   }
 
   // Using unique_ptr; can expand later.
@@ -122,6 +124,12 @@ struct RegistrarGenInfo : RegistrarGenInfoBase {
   virtual HandlerType getRegisteredIndex() override {
     return proxy_->getRegisteredIndex();
   }
+
+private:
+  explicit RegistrarGenInfo(RegistrarGenInfoBase* owned_proxy)
+    : proxy_(owned_proxy)  {
+  }
+
 private:
   std::unique_ptr<RegistrarGenInfoBase> proxy_ = nullptr;
 };
