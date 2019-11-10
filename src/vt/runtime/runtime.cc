@@ -589,17 +589,23 @@ void Runtime::printStartupBanner() {
   }
 
   if (ArgType::vt_no_color) {
-    auto f11 = fmt::format("Disabling color output");
+    auto f11 = fmt::format("Color output Disabled");
     auto f12 = opt_on("--vt_no_color", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   } else if (ArgType::vt_color) {
-    auto f11 = fmt::format("Color output enabled");
+    auto f11 = fmt::format("Color output Enabled");
     auto f12 = opt_on("--vt_color", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   } else {
-    auto f11 = fmt::format("Automatically color output (if terminal)");
-    auto f12 = opt_inverse("--vt_no_color", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    if (ArgType::colorize_output) {
+      auto f11 = fmt::format("Automatically color output (colors Enabled)");
+      auto f12 = opt_inverse("--vt_no_color", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    } else {
+      auto f11 = fmt::format("Automatically color output (colors Disabled)");
+      auto f12 = opt_inverse("--vt_color", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
 
   if (ArgType::vt_no_stack) {
