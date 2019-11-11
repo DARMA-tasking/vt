@@ -99,7 +99,7 @@ private:
   uint8_t k_max                                     = 2;
   uint8_t k_cur                                     = 0;
   uint16_t iter_                                    = 0;
-  uint16_t num_iters_                               = 3;
+  uint16_t num_iters_                               = 8;
   std::random_device seed;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
   objgroup::proxy::Proxy<GossipLB> proxy            = {};
