@@ -152,7 +152,7 @@ void GossipLB::inform() {
   }
 
   debug_print(
-    gossiplb,
+    gossiplb, node,
     "GossipLB::inform: starting inform phase: k_max={}, k_cur={}, "
     "is_underloaded={}, is_overloaded={}\n",
     k_max, k_cur, is_underloaded_, is_overloaded_
