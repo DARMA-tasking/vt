@@ -95,6 +95,10 @@ class DependentSendChain final {
     reset();
   }
 
+  bool isTerminated() {
+    return theTerm()->testEpochTerminated(last_epoch_) == vt::term::TermStatusEnum::Terminated;
+  }
+
   DependentSendChain            (const DependentSendChain&) = delete;
   DependentSendChain            (DependentSendChain&&)      = default;
   DependentSendChain& operator= (const DependentSendChain&) = delete;
