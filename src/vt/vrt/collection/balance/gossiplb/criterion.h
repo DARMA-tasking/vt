@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  criteria.h
+//                                 criterion.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,57 +42,58 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERIA_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERIA_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H
 
 #include "vt/config.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-enum struct CriteriaEnum : int8_t {
-  Original = 0,
-  Modified = 1
+enum struct CriterionEnum : int8_t {
+  Grapevine         = 0,
+  ModifiedGrapevine = 1
 };
 
-struct CriteriaBase {
+struct CriterionBase {
   using LoadType = double;
 };
 
-struct OriginalCriteria : CriteriaBase {
+struct GrapevineCriterion : CriterionBase {
   bool operator()(LoadType, LoadType under, LoadType obj, LoadType avg) const {
     return not (under + obj > avg);
   }
 };
 
-struct ModifiedCriteria : CriteriaBase {
+struct ModifiedGrapevineCriterion : CriterionBase {
   bool operator()(LoadType over, LoadType under, LoadType obj, LoadType) const {
     return obj < over - under;
   }
 };
 
-struct Criteria : CriteriaBase {
-  explicit Criteria(CriteriaEnum const criteria)
-    : criteria_(criteria)
+struct Criterion : CriterionBase {
+  explicit Criterion(CriterionEnum const criterion)
+    : criterion_(criterion)
   { }
 
   bool operator()(LoadType over, LoadType under, LoadType obj, LoadType avg) const {
-    switch (criteria_) {
-    case CriteriaEnum::Original:
-      return OriginalCriteria()(over, under, obj, avg);
+    switch (criterion_) {
+    case CriterionEnum::Grapevine:
+      return GrapevineCriterion()(over, under, obj, avg);
       break;
-    case CriteriaEnum::Modified:
-      return ModifiedCriteria()(over, under, obj, avg);
+    case CriterionEnum::ModifiedGrapevine:
+      return ModifiedGrapevineCriterion()(over, under, obj, avg);
       break;
     default:
-      vtAssert(false, "Incorrect criteria value");
+      vtAssert(false, "Incorrect criterion value");
+      return false;
       break;
     };
   }
 
 protected:
-  CriteriaEnum const criteria_;
+  CriterionEnum const criterion_;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERIA_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H*/

@@ -47,7 +47,7 @@
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
 #include "vt/vrt/collection/balance/gossiplb/gossip_constants.h"
-#include "vt/vrt/collection/balance/gossiplb/criteria.h"
+#include "vt/vrt/collection/balance/gossiplb/criterion.h"
 #include "vt/context/context.h"
 
 #include <cstdint>
@@ -395,7 +395,7 @@ void GossipLB::decide() {
           not (selected_load + obj_load > avg)
         );
 
-        bool eval = Criteria(criteria_)(this_new_load, selected_load, obj_load, avg);
+        bool eval = Criterion(criterion_)(this_new_load, selected_load, obj_load, avg);
         if (eval) {
           migrate_objs[selected_node].emplace(std::make_tuple(obj_id, obj_load));
 
