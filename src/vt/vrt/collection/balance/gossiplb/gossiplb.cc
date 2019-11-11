@@ -223,9 +223,6 @@ void GossipLB::propagateRound(EpochType epoch) {
       random_node == this_node
     );
 
-    // Add to selected set
-    selected.insert(random_node);
-
     debug_print(
       gossiplb, node,
       "GossipLB::propagateRound: k_max={}, k_cur={}, sending={}\n",
