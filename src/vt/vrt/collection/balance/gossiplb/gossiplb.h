@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
+#include "vt/vrt/collection/balance/gossiplb/criteria.h"
 
 #include <random>
 #include <unordered_map>
@@ -108,6 +109,7 @@ private:
   std::unordered_set<NodeType> underloaded_         = {};
   std::unordered_map<ObjIDType, TimeType> cur_objs  = {};
   LoadType this_new_load                            = 0.0;
+  CriteriaEnum criteria_                            = CriteriaEnum::Original;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
