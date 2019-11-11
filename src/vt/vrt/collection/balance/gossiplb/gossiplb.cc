@@ -151,6 +151,13 @@ void GossipLB::inform() {
     underloaded_.insert(this_node);
   }
 
+  debug_print(
+    gossiplb,
+    "GossipLB::inform: starting inform phase: k_max={}, k_cur={}, "
+    "is_underloaded={}, is_overloaded={}\n",
+    k_max, k_cur, is_underloaded_, is_overloaded_
+  );
+
   bool inform_done = false;
   auto propagate_epoch = theTerm()->makeEpochCollective();
   theTerm()->addAction(propagate_epoch, [&inform_done] { inform_done = true; });
