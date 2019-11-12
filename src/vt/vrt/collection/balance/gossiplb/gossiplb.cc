@@ -73,6 +73,9 @@ bool GossipLB::isOverloaded(LoadType load) const {
   return load > avg * gossip_threshold;
 }
 
+void GossipLB::inputParams(balance::SpecEntry* spec) {
+}
+
 void GossipLB::runLB() {
   bool should_lb = false;
 
