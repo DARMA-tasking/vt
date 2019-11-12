@@ -54,6 +54,8 @@ void RotateLB::init(objgroup::proxy::Proxy<RotateLB> in_proxy) {
   proxy = in_proxy;
 }
 
+void RotateLB::inputParams(balance::SpecEntry* spec) { }
+
 void RotateLB::runLB() {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();

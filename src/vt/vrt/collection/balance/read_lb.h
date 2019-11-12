@@ -57,19 +57,56 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 using SpecIndex = int64_t;
 
+template <typename T>
+struct Converter {
+  static T convert(std::string val, T default_);
+};
+
+template <>
+struct Converter<double> {
+  static double convert(std::string val, double default_) {
+    try {
+      return std::stod(val);
+    } catch (...) {
+      return default_;
+    }
+  }
+};
+
+template <>
+struct Converter<bool> {
+  static bool convert(std::string val, bool default_) {
+    fmt::print("convert bool: val=\"{}\"\n", val);
+    if (val == "1" or val == "true" or val == "t") {
+      return true;
+    }
+    if (val == "0" or val == "false" or val == "f") {
+      return false;
+    }
+    return default_;
+  }
+};
+
+template <>
+struct Converter<int32_t> {
+  static int32_t convert(std::string val, int32_t default_) {
+    try {
+      return std::stoi(val);
+    } catch (...) {
+      return default_;
+    }
+  }
+};
+
 struct SpecEntry {
   SpecEntry(
     SpecIndex const in_idx, std::string const in_name,
-    double const in_lb_min, double const in_lb_max
-  ) : idx_(in_idx), lb_name_(in_name), lb_min_(in_lb_min), lb_max_(in_lb_max)
+    std::unordered_map<std::string, std::string> in_params
+  ) : idx_(in_idx), lb_name_(in_name), params_(in_params)
   {}
 
   SpecIndex getIdx() const { return idx_; }
   std::string getName() const { return lb_name_; }
-  bool hasMin() const { return lb_min_ != 0.0f; }
-  bool hasMax() const { return lb_max_ != 0.0f; }
-  double min() const { return lb_min_; }
-  double max() const { return lb_max_; }
   LBType getLB() const {
     for (auto&& elm : lb_names_) {
       if (lb_name_ == elm.second) {
@@ -79,30 +116,55 @@ struct SpecEntry {
     return LBType::NoLB;
   }
 
+  template <typename T>
+  T getOrDefault(std::string const& key, T default_) const {
+    auto iter = params_.find(key);
+    if (iter == params_.end()) {
+      return default_;
+    } else {
+      auto val = iter->second;
+      return Converter<T>::convert(val, default_);
+    }
+  }
+
 private:
   SpecIndex idx_;
   std::string lb_name_;
-  double lb_min_ = 0.0f, lb_max_ = 0.0f;
+  std::unordered_map<std::string, std::string> params_;
 };
 
+/*
+ * Reads the following file format for LB spec---example:
+ *
+ *     %10 GossipLB c=1 k=5 f=2 i=10
+ *     0 HierarchicalLB min=0.9 max=1.1 auto=false
+ *     % 5 GreedyLB min=1.0
+ *     120 GreedyLB c=0 k=2 f=3 i=3
+ *
+ */
+
 struct ReadLBSpec {
-  using SpecMapType = std::unordered_map<SpecIndex,SpecEntry>;
+  using ArgType      = vt::arguments::ArgConfig;
+  using SpecMapType  = std::unordered_map<SpecIndex,SpecEntry>;
+  using ParamMapType = std::unordered_map<std::string, std::string>;
 
   static bool openFile(std::string const name = "balance.in");
   static void readFile();
 
-  static bool hasSpec() { return has_spec_; }
-  static SpecMapType const& entries() { return spec_; }
+  static bool hasSpec();
   static SpecIndex numEntries() { return num_entries_; }
-  static SpecEntry const* entry(SpecIndex const& idx);
+  static SpecEntry* entry(SpecIndex const& idx);
   static LBType getLB(SpecIndex const& idx);
+  static ParamMapType parseParams(std::vector<std::string> params);
+  static SpecEntry makeSpecFromParams(std::string params);
 
 private:
-  static bool has_spec_;
   static bool read_complete_;
   static std::string filename;
   static SpecIndex num_entries_;
-  static SpecMapType spec_;
+  static SpecMapType spec_mod_;
+  static SpecMapType spec_exact_;
+  static std::vector<SpecIndex> spec_prec_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

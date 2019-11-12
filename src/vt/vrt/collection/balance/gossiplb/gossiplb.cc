@@ -56,6 +56,9 @@ void GossipLB::init(objgroup::proxy::Proxy<GossipLB> in_proxy) {
   proxy = in_proxy;
 }
 
+void GossipLB::inputParams(balance::SpecEntry* spec) {
+}
+
 void GossipLB::runLB() {
   this->inform();
 }

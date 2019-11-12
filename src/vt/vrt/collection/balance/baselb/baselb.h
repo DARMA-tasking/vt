@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/objgroup/headers.h"
 
 #include <set>
@@ -106,38 +107,32 @@ struct BaseLB {
   void transferMigrations(TransferMsg<TransferVecType>* msg);
   void finalize(CountMsg* msg);
 
+  virtual void inputParams(balance::SpecEntry* spec) = 0;
   virtual void runLB() = 0;
 
 private:
   balance::LoadData reduceVec(std::vector<balance::LoadData>&& vec) const;
   bool isCollectiveComm(balance::CommCategory cat) const;
   void computeStatisticsOver(Statistic stats);
-  void readLB(PhaseType phase);
+  void getArgs(PhaseType phase);
 
 protected:
-  virtual double getDefaultMinThreshold()  const = 0;
-  virtual double getDefaultMaxThreshold()  const = 0;
-  virtual bool   getDefaultAutoThreshold() const = 0;
-
-protected:
-  double max_threshold                  = 0.0f;
-  double min_threshold                  = 0.0f;
-  bool auto_threshold                   = true;
-  double start_time_                    = 0.0f;
-  int32_t bin_size_                     = 10;
-  ObjSampleType obj_sample              = {};
-  LoadType this_load                    = 0.0f;
-  ElementLoadType const* load_data      = nullptr;
-  ElementCommType const* comm_data      = nullptr;
-  StatisticMapType stats                = {};
-  EpochType migration_epoch_            = no_epoch;
-  TransferType off_node_migrate_        = {};
-  objgroup::proxy::Proxy<BaseLB> proxy_ = {};
-  int32_t local_migration_count_        = 0;
-  PhaseType phase_                      = 0;
-  int32_t num_reduce_stats_             = 0;
-  bool comm_aware_                      = false;
-  bool comm_collectives_                = false;
+  double start_time_                              = 0.0f;
+  int32_t bin_size_                               = 10;
+  ObjSampleType obj_sample                        = {};
+  LoadType this_load                              = 0.0f;
+  ElementLoadType const* load_data                = nullptr;
+  ElementCommType const* comm_data                = nullptr;
+  StatisticMapType stats                          = {};
+  EpochType migration_epoch_                      = no_epoch;
+  TransferType off_node_migrate_                  = {};
+  objgroup::proxy::Proxy<BaseLB> proxy_           = {};
+  int32_t local_migration_count_                  = 0;
+  PhaseType phase_                                = 0;
+  int32_t num_reduce_stats_                       = 0;
+  bool comm_aware_                                = false;
+  bool comm_collectives_                          = false;
+  std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance::lb */
