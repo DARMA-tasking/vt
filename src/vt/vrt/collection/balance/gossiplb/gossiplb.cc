@@ -394,7 +394,7 @@ void GossipLB::decide() {
 
         bool eval = Criterion(criterion_)(this_new_load, selected_load, obj_load, avg);
         if (eval) {
-          migrate_objs[selected_node].emplace(std::make_tuple(obj_id, obj_load));
+          migrate_objs[selected_node][obj_id] = obj_load;
 
           this_new_load -= obj_load;
           selected_load += obj_load;
