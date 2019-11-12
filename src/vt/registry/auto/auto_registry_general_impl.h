@@ -46,7 +46,6 @@
 #define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H
 
 #include "vt/config.h"
-#include "vt/utils/demangle/demangle.h"
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/registry/auto/auto_registry_general.h"
 #include "vt/objgroup/type_registry/registry.h"
@@ -65,17 +64,16 @@ struct RegistrarGenInfoImpl : RegistrarGenInfoBase {
 template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
 RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
   RegT& reg = getAutoRegistryGen<RegT>();
-  index = reg.size();
+  index = reg.size(); // capture current index
 
   FnT fn = reinterpret_cast<FnT>(ActFnT::getFunction());
   RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
     new RegistrarGenInfoImpl<typename ActFnT::ObjType>());
 
   #if backend_check_enabled(trace_enabled)
-  using Tn = typename ActFnT::ActFnType;
-  auto const& type_name = util::demangle::DemanglerUtils::getTypeName<Tn>();
-  auto const& parsed_type_name =
-    util::demangle::ActiveFunctionDemangler::parseActiveFunctionName(type_name);
+  // trace
+  std::string event_type_name = AdapterType::traceGetEventType();
+  std::string event_name = AdapterType::traceGetEventName();
   auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
     parsed_type_name.getNamespace(), parsed_type_name.getFuncParams()
   );
@@ -86,21 +84,21 @@ RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
   #endif
 }
 
-template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
 AutoHandlerType registerActiveGen() {
-  return RegistrarWrapperGen<ActFnT, RegT, InfoT, FnT>().registrar.index;
+  return RegistrarWrapperGen<RunnableT, RegT, InfoT, FnT>().registrar.index;
 }
 
-template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
 /*static*/ constexpr typename
-RunnableGen<ActFnT, RegT, InfoT, FnT>::FunctionPtrType
-RunnableGen<ActFnT, RegT, InfoT, FnT>::getFunction() {
-  return ActFnT::getFunction();
+RunnableGen<RunnableT, RegT, InfoT, FnT>::FunctionPtrType
+RunnableGen<RunnableT, RegT, InfoT, FnT>::getFunction() {
+  return RunnableT::AdapterType::getFunction();
 }
 
-template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
-AutoHandlerType const RunnableGen<ActFnT, RegT, InfoT, FnT>::idx =
-  registerActiveGen<RunnableGen<ActFnT, RegT, InfoT, FnT>, RegT, InfoT, FnT>();
+template <typename AdapterT, typename RegT, typename InfoT, typename FnT>
+AutoHandlerType const RunnableGen<AdapterT, RegT, InfoT, FnT>::idx =
+  registerActiveGen<RunnableGen<AdapterT, RegT, InfoT, FnT>, RegT, InfoT, FnT>();
 
 }} /* end namespace vt::auto_registry */
 
