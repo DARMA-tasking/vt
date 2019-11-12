@@ -76,7 +76,6 @@ struct Converter<double> {
 template <>
 struct Converter<bool> {
   static bool convert(std::string val, bool default_) {
-    fmt::print("convert bool: val=\"{}\"\n", val);
     if (val == "1" or val == "true" or val == "t") {
       return true;
     }
