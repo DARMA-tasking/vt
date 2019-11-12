@@ -72,6 +72,8 @@ struct Tree {
     NodeListType const& in_children
   );
 
+  virtual ~Tree() { }
+
   void setupTree();
   NodeType getParent() const;
   NodeType getNumChildren() const;
