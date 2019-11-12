@@ -67,12 +67,15 @@ public:
 
   static void erase(GroupType group, ReduceIDType const& id);
 
-  static void insert(
+  static bool insert(
     GroupType group, ReduceIDType const& id, ReduceStateType&& state
   );
 
+  static void cleanup();
+
 private:
   static GroupLookupType state_lookup_;
+  static bool created_;
 };
 
 }}} /* end namespace vt::collective::reduce */

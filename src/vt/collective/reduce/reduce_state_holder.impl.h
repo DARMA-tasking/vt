@@ -95,19 +95,30 @@ template <typename T>
 }
 
 template <typename T>
-/*static*/ void ReduceStateHolder<T>::insert(
+/*static*/ bool ReduceStateHolder<T>::insert(
   GroupType group, ReduceIDType const& id, ReduceStateType&& state
 ) {
+  bool const created = created_;
   state_lookup_[group].emplace(
     std::piecewise_construct,
     std::forward_as_tuple(id),
     std::forward_as_tuple(std::move(state))
   );
+  created_ = true;
+  return created;
+}
+
+template <typename T>
+/*static*/ void ReduceStateHolder<T>::cleanup() {
+  state_lookup_.clear();
 }
 
 template <typename T>
 /*static*/ typename ReduceStateHolder<T>::GroupLookupType
 ReduceStateHolder<T>::state_lookup_ = {};
+
+template <typename T>
+/*static*/ bool ReduceStateHolder<T>::created_ = false;
 
 }}} /* end namespace vt::collective::reduce */
 

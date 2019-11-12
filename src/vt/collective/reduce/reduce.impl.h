@@ -163,7 +163,15 @@ void Reduce::reduceAddMsg(
     ReduceState<MessageT> state(
       msg->reduce_tag_,msg->reduce_seq_,num_contrib_state
     );
-    ReduceStateHolder<MessageT>::insert(group_,lookup,std::move(state));
+    bool new_ = ReduceStateHolder<MessageT>::insert(group_,lookup,std::move(state));
+    // For the first time of type MessageT, add a cleanup function to clear out
+    // messages. They must be cleaned up early so message destructors do not run
+    // after VT is shutdown.
+    if (new_) {
+      cleanup_.emplace_back([]{
+        ReduceStateHolder<MessageT>::cleanup();
+      });
+    }
   }
 
   auto& state = ReduceStateHolder<MessageT>::find(group_,lookup);

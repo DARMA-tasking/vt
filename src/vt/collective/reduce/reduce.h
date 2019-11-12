@@ -84,6 +84,13 @@ struct Reduce : virtual collective::tree::Tree {
     ObjGroupProxyType obj_group = no_obj_group
   );
 
+  virtual ~Reduce() {
+    for (auto fn : cleanup_) {
+      fn();
+    }
+    cleanup_.clear();
+  }
+
   template <
     typename OpT,
     typename MsgT,
@@ -136,6 +143,7 @@ struct Reduce : virtual collective::tree::Tree {
 private:
   std::unordered_map<ReduceSeqLookupType,SequentialIDType> next_seq_for_tag_;
   GroupType group_ = default_group;
+  std::vector<std::function<void()>> cleanup_;
 };
 
 }}} /* end namespace vt::collective::reduce */
