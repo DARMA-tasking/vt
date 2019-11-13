@@ -499,8 +499,11 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
     extra_arrived_count_++;
   }
 
-  auto const& ready =
-    coll_wait_count_ + extra_count_ == arrived_count_ + extra_arrived_count_ + 1;
+  // Make sure that the early "extra" messages do not make the counts seem equal
+  // when extras have yet to be discovered
+  auto const ready =
+    (coll_wait_count_ + extra_count_ == arrived_count_ + extra_arrived_count_ + 1) and
+    (coll_wait_count_ == static_cast<WaitCountType>(arrived_count_) + 1);
 
   debug_print(
     group, node,
