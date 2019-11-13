@@ -370,7 +370,7 @@ void InfoColl::upTree() {
 
     debug_print(
       group, node,
-      "InfoColl::upTree: case 2: sub={}\n",
+      "InfoColl::upTree: case 2: sub={} (total is same)\n",
       subtree_
     );
 
@@ -400,8 +400,8 @@ void InfoColl::upTree() {
 
     debug_print(
       group, node,
-      "InfoColl::upTree: case 3: sub={}\n",
-      subtree_
+      "InfoColl::upTree: case 3: sub={}, total={}\n",
+      subtree_, total_subtree
     );
 
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
