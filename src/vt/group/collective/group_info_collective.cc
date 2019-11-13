@@ -222,14 +222,13 @@ void InfoColl::upTree() {
     "Must be equal"
   );
   decltype(msgs_) msg_in_group = {};
-  std::size_t subtree = 0;
+  subtree_ = 0;
   for (auto&& msg : msgs_) {
     if (msg->isInGroup()) {
       msg_in_group.push_back(msg);
-      subtree += msg->getSubtreeSize();
+      subtree_ += msg->getSubtreeSize();
     }
   }
-  subtree_ = subtree;
 
   auto& span_children_ = collective_->span_children_;
   auto const& is_root = collective_->isInitialRoot();
@@ -242,7 +241,7 @@ void InfoColl::upTree() {
     "InfoColl::upTree: is_in_group={}, msgs.size()={}, msg_in_group.size()={}, "
     "extra={}, wait={}, group={:x}, op={:x}, is_root={}, subtree={}\n",
     is_in_group, msgs_.size(), msg_in_group.size(), extra_count_,
-    coll_wait_count_, group, op, is_root, subtree
+    coll_wait_count_, group, op, is_root, subtree_
   );
 
   if (is_root) {
@@ -257,11 +256,11 @@ void InfoColl::upTree() {
        */
       debug_print(
         group, node,
-        "InfoColl::upTree: is_in_group={}, subtree={}, num_nodes={}\n",
-        is_in_group, subtree, theContext()->getNumNodes()
+        "InfoColl::upTree: is_in_group={}, subtree_={}, num_nodes={}\n",
+        is_in_group, subtree_, theContext()->getNumNodes()
       );
       if (
-        subtree + 1 == static_cast<std::size_t>(theContext()->getNumNodes()) &&
+        subtree_ + 1 == static_cast<std::size_t>(theContext()->getNumNodes()) &&
         is_in_group
       ) {
         /*
@@ -328,18 +327,24 @@ void InfoColl::upTree() {
     }
   }
 
-  auto const& subtree_this = is_in_group ? 1 : 0;
-  auto const& sub = static_cast<NodeType>(subtree_this);
+  auto const subtree_this = is_in_group ? 1 : 0;
 
   if (is_in_group && (msg_in_group.size() == 2 || msg_in_group.size() == 0)) {
     /*
      *  Case where we have an approx. a balanced tree: send up the tree like
      *  usual
      */
-    auto const& child = theContext()->getNode();
-    auto const& total_subtree = static_cast<NodeType>(subtree + sub);
-    auto const& level =
+    auto const child = theContext()->getNode();
+    auto const total_subtree = static_cast<NodeType>(subtree_ + subtree_this);
+    auto const level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
+
+    debug_print(
+      group, node,
+      "InfoColl::upTree: case 1: sub={}, total={}\n",
+      subtree_, total_subtree
+    );
+
     auto cmsg = makeSharedMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,level
     );
@@ -354,12 +359,23 @@ void InfoColl::upTree() {
      * bypassing this node that is null: thus, forward the non-null's child's
      * message up the initial spanning tree
      */
-    auto const& child = theContext()->getNode();
-    auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
+    auto const child = theContext()->getNode();
+    auto const extra = static_cast<GroupCollectiveMsg::CountType>(
       msg_in_group.size()
     );
+
+    for (std::size_t i = 0; i < msg_in_group.size(); i++) {
+      subtree_ -= msg_in_group[i]->getSubtreeSize();
+    }
+
+    debug_print(
+      group, node,
+      "InfoColl::upTree: case 2: sub={}\n",
+      subtree_
+    );
+
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,sub,child,0,extra
+      group,op,is_in_group,subtree_,child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     /*
@@ -375,10 +391,21 @@ void InfoColl::upTree() {
      * child in the spanning tree because that will create a stick-like graph,
      * loosing efficiency!
      */
-    auto const& child = theContext()->getNode();
-    auto const& extra = 1;
+    auto const child = theContext()->getNode();
+    auto const extra = 1;
+
+    subtree_ -= msg_in_group[0]->getSubtreeSize();
+
+    auto const total_subtree = static_cast<NodeType>(subtree_ + subtree_this);
+
+    debug_print(
+      group, node,
+      "InfoColl::upTree: case 3: sub={}\n",
+      subtree_
+    );
+
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,sub,child,0,extra
+      group,op,is_in_group,total_subtree,child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[0].get());
@@ -395,10 +422,26 @@ void InfoColl::upTree() {
       msg_list.emplace_back(msg);
     }
 
-    auto const& extra =
+    std::sort(msg_list.begin(), msg_list.end(), GroupCollSort());
+
+    auto const extra =
       static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size() / 2);
-    auto const& child = theContext()->getNode();
-    auto const& total_subtree = static_cast<NodeType>(sub + subtree);
+    auto const child = theContext()->getNode();
+
+    auto tree_iter = msg_list.rbegin();
+    for (int i = 0; i < extra; i++) {
+      subtree_ -= (*tree_iter)->getSubtreeSize();
+      tree_iter++;
+    }
+
+    auto const total_subtree = static_cast<NodeType>(subtree_this + subtree_);
+
+    debug_print(
+      group, node,
+      "InfoColl::upTree: case 4: sub={}, total={}\n",
+      subtree_, total_subtree
+    );
+
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,0,extra
     );
@@ -410,7 +453,6 @@ void InfoColl::upTree() {
       msg_in_group.size(), msg_list.size()
     );
 
-    std::sort(msg_list.begin(), msg_list.end(), GroupCollSort());
 
     auto iter = msg_list.rbegin();
     auto iter_end = msg_list.rend();
