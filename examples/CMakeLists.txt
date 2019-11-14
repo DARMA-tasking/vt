@@ -17,7 +17,6 @@ set(
   term_epoch
   term_epoch_advanced
   term_ds
-  epoch_example
   trace_ring
   location_test
   location_test_msg
