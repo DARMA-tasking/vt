@@ -21,7 +21,6 @@ set(
   location_test
   location_test_msg
   lb_iter
-  index_test
   hello_world_vrtContext
   hello_world_vc
   jacobi1d_recur_vc
