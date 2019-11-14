@@ -42,8 +42,7 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
+#include <vt/transport.h>
 
 struct HelloMsg : vt::Message {
   HelloMsg(vt::NodeType in_from) : from(in_from) { }
