@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#include <vt/transport.h>
 
 struct MyMsg : vt::Message {
   MyMsg(int in_a, int in_b) : a(in_a), b(in_b) { }
@@ -59,8 +59,8 @@ struct MyObjGroup {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv, nullptr);
 
-  auto const& this_node = vt::theContext()->getNode();
-  auto const& num_nodes = vt::theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes < 2) {
     return 0;
