@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                manager.fwd.h
+//                                   queue.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,33 +42,37 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
-#define INCLUDED_VT_OBJGROUP_MANAGER_FWD_H
+#if !defined INCLUDED_VT_SCHEDULER_QUEUE_H
+#define INCLUDED_VT_SCHEDULER_QUEUE_H
 
 #include "vt/config.h"
-#include "vt/messaging/message/smart_ptr.h"
-#include "vt/messaging/message/smart_ptr_virtual.h"
 
-namespace vt { namespace objgroup {
+#include <queue>
 
-struct ObjGroupManager;
+namespace vt { namespace sched {
 
-void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han);
+template <typename T>
+struct Queue {
+  Queue() = default;
+  Queue(Queue const&) = default;
+  Queue(Queue&&) = default;
 
-template <typename MsgT>
-void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
-template <typename MsgT>
-void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch);
+  void push(T elm) { impl_.push(elm); }
 
-}} /* end namespace vt::objgroup */
+  void emplace(T&& elm) { impl_.emplace(std::forward<T>(elm)); }
 
-namespace vt {
+  T pop() { auto elm = impl_.front(); impl_.pop(); return elm; }
 
-extern objgroup::ObjGroupManager* theObjGroup();
+  T const& top() { return impl_.front(); }
 
-} // end namespace vt
+  std::size_t size() const { return impl_.size(); }
 
-#include "vt/objgroup/manager.static.h"
+  bool empty() const { return impl_.empty(); }
 
-#endif /*INCLUDED_VT_OBJGROUP_MANAGER_FWD_H*/
+private:
+  std::queue<T, std::deque<T>> impl_;
+};
+
+}} /* end namespace vt::sched */
+
+#endif /*INCLUDED_VT_SCHEDULER_QUEUE_H*/

@@ -1440,7 +1440,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   if (imm_context) {
     theTerm()->produce(cur_epoch);
     return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
-      schedule<>([=]{
+      schedule([=]{
         theMsg()->pushEpoch(cur_epoch);
         theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
           toProxy, reinterpret_cast<MsgT*>(inner_msg.get()), handler, member, false
@@ -2621,7 +2621,7 @@ MigrateStatus CollectionManager::migrate(
 
   auto const epoch = theMsg()->getEpoch();
   theTerm()->produce(epoch);
-  schedule<>([=]{
+  schedule([=]{
     theMsg()->pushEpoch(epoch);
     migrateOut<ColT,IndexT>(col_proxy, idx, dest);
     theMsg()->popEpoch(epoch);
@@ -3157,23 +3157,6 @@ template <typename always_void>
 DispatchBasePtrType
 CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
-}
-
-template <typename always_void>
-void CollectionManager::schedule(ActionType action) {
-  work_units_.push_back(action);
-}
-
-template <typename always_void>
-bool CollectionManager::scheduler() {
-  if (work_units_.size() == 0) {
-    return false;
-  } else {
-    auto unit = work_units_.back();
-    work_units_.pop_back();
-    unit();
-    return true;
-  }
 }
 
 }}} /* end namespace vt::vrt::collection */

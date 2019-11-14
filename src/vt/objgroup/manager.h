@@ -168,9 +168,9 @@ struct ObjGroupManager {
   void dispatch(MsgVirtualPtrAny msg, HandlerType han);
 
   /*
-   * Run the scheduler to push along postponed events (such as self sends)
+   * Run the progress function to push along postponed events (such as self sends)
    */
-  bool scheduler();
+  bool progress();
 
   /*
    * Untyped calls for broadcasting or sending msgs to an obj group
@@ -213,8 +213,6 @@ private:
   std::unordered_map<ObjGroupProxyType,HolderBasePtrType> objs_;
   // Reverse lookup map from an object pointer to the proxy
   std::unordered_map<void*,ObjGroupProxyType> obj_to_proxy_;
-  // Work units to be scheduled
-  std::deque<ActionType> work_units_;
   // Messages that are pending creation for delivery
   std::unordered_map<ObjGroupProxyType,MsgContainerType> pending_;
   // Map from base class type proxies to registered derived proxy

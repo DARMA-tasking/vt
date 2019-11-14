@@ -68,7 +68,7 @@ namespace vt { namespace group { namespace global {
   // Wait for startup to complete all phases before initializing other
   // components, which may broadcast, requiring the spanning tree to be setup
   while (default_group_->cur_phase_ < num_phases) {
-    theMsg()->scheduler();
+    theSched()->scheduler(true);
   }
 }
 
