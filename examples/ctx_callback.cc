@@ -42,19 +42,18 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#include <vt/transport.h>
 
-#include <cstdlib>
-#include <cassert>
+#include <vector>
 
-using namespace ::vt;
-
+// Define a context class
 struct MyContext {
   int x = 29;
 };
 
-struct DataMsg : Message {
-  using MessageParentType = Message;
+// DataMsg that will be sent from the callback
+struct DataMsg : vt::Message {
+  using MessageParentType = vt::Message;
   vt_msg_serialize_required(); // by vec_
 
   DataMsg() = default;
@@ -68,49 +67,54 @@ struct DataMsg : Message {
   std::vector<int> vec_;
 };
 
-struct Msg : Message {
-  Msg() = default;
-  explicit Msg(Callback<DataMsg> in_cb) : cb(in_cb) { }
+// Message that contains the callback
+struct CallbackMsg : vt::Message {
+  CallbackMsg() = default;
+  explicit CallbackMsg(vt::Callback<DataMsg> in_cb) : cb(in_cb) { }
 
-  Callback<DataMsg> cb;
+  vt::Callback<DataMsg> cb;
 };
 
-static void callback_fn(DataMsg* msg, MyContext* ctx) {
-  ::fmt::print("callback_fn: msg={}, ctx={}\n", print_ptr(msg), print_ptr(ctx));
-  ::fmt::print("callback_fn: x={}, vec.size={}\n", ctx->x, msg->vec_.size());
+// Special handler that takes a data message and a context
+static void callbackFn(DataMsg* msg, MyContext* ctx) {
+  fmt::print("callbackFn: msg={}, ctx={}\n", print_ptr(msg), print_ptr(ctx));
+  fmt::print("callbackFn: x={}, vec.size={}\n", ctx->x, msg->vec_.size());
   for (auto&& elm : msg->vec_) {
-    ::fmt::print("\t elm={}\n", elm);
+    fmt::print("\t elm={}\n", elm);
   }
 }
 
-static void handler(Msg* msg) {
+// Handler that triggers the callback
+static void handler(CallbackMsg* msg) {
   auto cb = msg->cb;
-  auto data_msg = makeSharedMessage<DataMsg>();
+  auto data_msg = vt::makeMessage<DataMsg>();
   data_msg->vec_ = std::vector<int>{18,45,28,-1,344};
-  ::fmt::print("handler: vec.size={}\n", data_msg->vec_.size());
-  cb.send(data_msg);
+  fmt::print("handler: vec.size={}\n", data_msg->vec_.size());
+  cb.send(data_msg.get());
 }
 
+// Some instance of the context
 static MyContext my_global_ctx = {};
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& this_node = theContext()->getNode();
+  vt::NodeType this_node = vt::theContext()->getNode();
 
   if (this_node == 0) {
     my_global_ctx.x = 1283;
 
-    auto cb = theCB()->makeFunc<DataMsg,MyContext>(&my_global_ctx, callback_fn);
-    auto msg = makeSharedMessage<Msg>(cb);
-    theMsg()->sendMsg<Msg,handler>(1, msg);
+    // Make a callback that triggers the callback with a context
+    auto cb = vt::theCB()->makeFunc<DataMsg,MyContext>(&my_global_ctx, callbackFn);
+    auto msg = vt::makeMessage<CallbackMsg>(cb);
+    vt::theMsg()->sendMsg<CallbackMsg,handler>(1, msg.get());
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
+  while (!vt::rt->isTerminated()) {
+    vt::runScheduler();
   }
 
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
