@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           features_featureswitch.h
+//                              message_priority.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
-#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_PRIORITY_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_PRIORITY_H
 
-#include "vt/configs/features/features_defines.h"
+#include "vt/config.h"
+#include "vt/scheduler/priority.h"
+#include "vt/scheduler/priority_manip.h"
+#include "vt/messaging/envelope.h"
 
-/*
- * Strings for various vt features
- */
+namespace vt { namespace messaging {
 
-#define vt_feature_str_bit_check_overflow "Check bitfield overflow"
-#define vt_feature_str_detector           "C++ Trait Detector"
-#define vt_feature_str_lblite             "Load Balancing for Collections"
-#define vt_feature_str_memory_pool        "Memory Pooling"
-#define vt_feature_str_mpi_rdma           "Native RDMA with MPI"
-#define vt_feature_str_no_feature         "No feature"
-#define vt_feature_str_no_pool_alloc_env  "No memory pool envelope"
-#define vt_feature_str_openmp             "OpenMP Threading"
-#define vt_feature_str_parserdes          "Partial Inline Serialization"
-#define vt_feature_str_print_term_msgs    "Print Termination Control Messages"
-#define vt_feature_str_production         "Production Build"
-#define vt_feature_str_stdthread          "std::thread Threading"
-#define vt_feature_str_trace_enabled      "Tracing Projections"
-#define vt_feature_str_cons_multi_idx     "Collection Constructor Positional"
-#define vt_feature_str_priorities         "Message priorities"
+template <typename MsgT>
+void msgSetPriorityLevel(MsgT ptr, PriorityLevelType level);
 
-#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/
+template <typename MsgT>
+void msgSetPriorityAllLevels(MsgT ptr, PriorityType priority);
+
+template <typename MsgT, typename MsgU>
+bool msgIncPriorityLevel(MsgT old_msg, MsgU new_msg);
+
+template <typename MsgU>
+void msgSetPriority(MsgU new_msg, PriorityType priority, bool increment_level = false);
+
+template <typename MsgU>
+void msgSetPriorityImpl(
+  MsgU new_msg, PriorityType new_priority, PriorityType old_priority,
+  PriorityLevelType level
+);
+
+template <typename MsgT, typename MsgU>
+void msgSetPriorityFrom(
+  MsgT old_msg, MsgU new_msg, PriorityType priority, bool increment_level = false
+);
+
+template <typename MsgT>
+void msgSystemSetPriority(MsgT ptr, PriorityType priority);
+
+}} /* end namespace vt::messaging */
+
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_PRIORITY_H*/

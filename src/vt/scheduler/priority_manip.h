@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           features_featureswitch.h
+//                               priority_manip.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,19 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
-#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
+#if !defined INCLUDED_VT_SCHEDULER_PRIORITY_MANIP_H
+#define INCLUDED_VT_SCHEDULER_PRIORITY_MANIP_H
 
-#include "vt/configs/features/features_defines.h"
+#include "vt/config.h"
+#include "vt/scheduler/priority.h"
 
-/*
- * Strings for various vt features
- */
+namespace vt { namespace sched {
 
-#define vt_feature_str_bit_check_overflow "Check bitfield overflow"
-#define vt_feature_str_detector           "C++ Trait Detector"
-#define vt_feature_str_lblite             "Load Balancing for Collections"
-#define vt_feature_str_memory_pool        "Memory Pooling"
-#define vt_feature_str_mpi_rdma           "Native RDMA with MPI"
-#define vt_feature_str_no_feature         "No feature"
-#define vt_feature_str_no_pool_alloc_env  "No memory pool envelope"
-#define vt_feature_str_openmp             "OpenMP Threading"
-#define vt_feature_str_parserdes          "Partial Inline Serialization"
-#define vt_feature_str_print_term_msgs    "Print Termination Control Messages"
-#define vt_feature_str_production         "Production Build"
-#define vt_feature_str_stdthread          "std::thread Threading"
-#define vt_feature_str_trace_enabled      "Tracing Projections"
-#define vt_feature_str_cons_multi_idx     "Collection Constructor Positional"
-#define vt_feature_str_priorities         "Message priorities"
+struct PriorityManip {
+  static void setPriority(PriorityType& field, PriorityLevelType lvl, PriorityType p);
+  static PriorityType getPriority(PriorityType const& field, PriorityLevelType lvl);
+};
 
-#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/
+}} /* end namespace vt::sched */
+
+#endif /*INCLUDED_VT_SCHEDULER_PRIORITY_MANIP_H*/

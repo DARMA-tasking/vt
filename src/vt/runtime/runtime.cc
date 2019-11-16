@@ -333,6 +333,9 @@ void Runtime::printStartupBanner() {
 #if backend_check_enabled(production)
   features.push_back(vt_feature_str_production);
 #endif
+#if backend_check_enabled(priorities)
+  features.push_back(vt_feature_str_priorities);
+#endif
 #if backend_check_enabled(stdthread)
   features.push_back(vt_feature_str_stdthread);
 #endif

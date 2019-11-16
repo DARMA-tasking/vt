@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           features_featureswitch.h
+//                            test_priority_bits.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,28 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
-#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
+#include <gtest/gtest.h>
 
-#include "vt/configs/features/features_defines.h"
+#include "vt/transport.h"
+#include "test_parallel_harness.h"
 
-/*
- * Strings for various vt features
- */
+namespace vt { namespace tests { namespace unit {
 
-#define vt_feature_str_bit_check_overflow "Check bitfield overflow"
-#define vt_feature_str_detector           "C++ Trait Detector"
-#define vt_feature_str_lblite             "Load Balancing for Collections"
-#define vt_feature_str_memory_pool        "Memory Pooling"
-#define vt_feature_str_mpi_rdma           "Native RDMA with MPI"
-#define vt_feature_str_no_feature         "No feature"
-#define vt_feature_str_no_pool_alloc_env  "No memory pool envelope"
-#define vt_feature_str_openmp             "OpenMP Threading"
-#define vt_feature_str_parserdes          "Partial Inline Serialization"
-#define vt_feature_str_print_term_msgs    "Print Termination Control Messages"
-#define vt_feature_str_production         "Production Build"
-#define vt_feature_str_stdthread          "std::thread Threading"
-#define vt_feature_str_trace_enabled      "Tracing Projections"
-#define vt_feature_str_cons_multi_idx     "Collection Constructor Positional"
-#define vt_feature_str_priorities         "Message priorities"
+struct TestPriorityBits : TestParallelHarness { };
 
-#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/
+TEST_F(TestPriorityBits, test_priority_bits_1) {
+  using namespace vt::sched;
+
+#if vt_feature_cmake_priority_bits_level == 3
+  if (sizeof(PriorityType) == 2) {
+    auto default_mask = DefaultMask<vt::priority_num_bits, 0x0>::value;
+    EXPECT_EQ(0x6db6, default_mask);
+    auto level_mask = LevelMask<vt::priority_num_bits, 0x0, 2>::value;
+    EXPECT_EQ(0x6c00, level_mask);
+    EXPECT_EQ(0x3, priority_midpoint);
+    EXPECT_EQ(0x5, priority_num_levels);
+  }
+#endif
+}
+
+}}} /* end namespace vt::tests::unit */

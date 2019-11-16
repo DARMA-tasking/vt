@@ -61,8 +61,8 @@ struct Action {
 
   Action(SeqType const& in_seq_id, ActionType const& in_action);
 
-  void runAction(MessageT* msg, bool const consume = true) const;
-  CallableType generateCallable(MessageT* msg) const;
+  void runAction(MsgSharedPtr<MessageT> msg, bool const consume = true) const;
+  CallableType generateCallable(MsgSharedPtr<MessageT> msg) const;
 };
 
 }} //end namespace vt::seq

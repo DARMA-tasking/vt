@@ -46,6 +46,11 @@
 #define INCLUDED_SCHEDULER_SCHEDULER_H
 
 #include "vt/config.h"
+#include "vt/scheduler/queue.h"
+#include "vt/scheduler/priority_queue.h"
+#include "vt/scheduler/prioritized_work_unit.h"
+#include "vt/scheduler/work_unit.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 #include <cassert>
 #include <vector>
@@ -62,17 +67,25 @@ enum SchedulerEvent {
 };
 
 struct Scheduler {
-  using SchedulerEventType = SchedulerEvent;
-  using TriggerType = std::function<void()>;
+  using SchedulerEventType   = SchedulerEvent;
+  using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
+
+# if backend_check_enabled(priorities)
+  using UnitType             = PriorityUnit;
+# else
+  using UnitType             = Unit;
+# endif
 
   Scheduler();
 
   static void checkTermSingleNode();
 
-  void scheduler();
-  bool schedulerImpl();
+  bool runNextUnit();
+  bool progressMsgOnlyImpl();
+  void scheduler(bool msg_only = false);
+  bool progressImpl();
   void schedulerForever();
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(
@@ -81,7 +94,25 @@ struct Scheduler {
   void triggerEvent(SchedulerEventType const& event);
   bool hasSchedRun() const { return has_executed_; }
 
+  void enqueue(ActionType action);
+  void enqueue(PriorityType priority, ActionType action);
+
+  template <typename MsgT>
+  void enqueue(MsgT* msg, ActionType action);
+  template <typename MsgT>
+  void enqueue(MsgSharedPtr<MsgT> msg, ActionType action);
+
+  std::size_t workQueueSize() const { return work_queue_.size(); }
+  bool workQueueEmpty() const { return work_queue_.empty(); }
+
 private:
+
+# if backend_check_enabled(priorities)
+  PriorityQueue<UnitType> work_queue_;
+# else
+  Queue<UnitType> work_queue_;
+# endif
+
   bool has_executed_ = false;
   bool is_idle = false;
 
@@ -90,6 +121,8 @@ private:
 };
 
 }} //end namespace vt::scheduler
+
+#include "vt/scheduler/scheduler.impl.h"
 
 namespace vt {
 

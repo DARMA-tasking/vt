@@ -54,7 +54,6 @@ namespace vt { namespace objgroup {
 struct ObjGroupManager;
 
 void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han);
-bool scheduler();
 
 template <typename MsgT>
 void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);

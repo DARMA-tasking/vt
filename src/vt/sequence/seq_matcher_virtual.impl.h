@@ -129,7 +129,8 @@ template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 }
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
-/*static*/ MsgT* SeqMatcherVirtual<VcT, MsgT, f>::getMatchingMsg(TagType const& tag) {
+/*static*/ MsgSharedPtr<MsgT>
+SeqMatcherVirtual<VcT, MsgT, f>::getMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
 #pragma sst global seq_msg
     auto& lst = SeqStateVirtualType<VcT, MsgT, f>::seq_msg;
@@ -172,7 +173,7 @@ SeqMatcherVirtual<VcT, MsgT, f>::getMatchingAction(TagType const& tag) {
 
 template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 /*static*/ void SeqMatcherVirtual<VcT, MsgT, f>::bufferUnmatchedMessage(
-  MsgT* msg, TagType const& tag
+  MsgSharedPtr<MsgT> msg, TagType const& tag
 ) {
   if (tag == no_tag) {
 #pragma sst global seq_msg
