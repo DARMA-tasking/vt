@@ -79,13 +79,13 @@ struct EpochTagActiveEnvelope {
 
 namespace vt {
 
-using EpochEnvelope            = messaging::EpochActiveEnvelope;
-using TagEnvelope              = messaging::TagActiveEnvelope;
-using EpochTagEnvelope         = messaging::EpochTagActiveEnvelope;
+using EpochEnvelope    = messaging::EpochActiveEnvelope;
+using TagEnvelope      = messaging::TagActiveEnvelope;
+using EpochTagEnvelope = messaging::EpochTagActiveEnvelope;
 
-static_assert(std::is_pod<EpochEnvelope>(),            "EpochEnvelope must be POD");
-static_assert(std::is_pod<TagEnvelope>(),              "TagEnvelope must be POD");
-static_assert(std::is_pod<EpochTagEnvelope>(),         "EpochTagEnvelope must be POD");
+static_assert(std::is_pod<EpochEnvelope>(),    "EpochEnvelope must be POD");
+static_assert(std::is_pod<TagEnvelope>(),      "TagEnvelope must be POD");
+static_assert(std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD");
 static_assert(
   std::is_trivially_destructible<EpochEnvelope>(),
   "EpochEnvelope must be trivial"
