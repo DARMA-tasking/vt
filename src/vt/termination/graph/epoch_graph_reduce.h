@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_parent.h
+//                             epoch_graph_reduce.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,40 +42,38 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_TERM_PARENT_H
-#define INCLUDED_VT_TERMINATION_TERM_PARENT_H
+#if !defined INCLUDED_VT_TERMINATION_GRAPH_EPOCH_GRAPH_REDUCE_H
+#define INCLUDED_VT_TERMINATION_GRAPH_EPOCH_GRAPH_REDUCE_H
 
 #include "vt/config.h"
-#include "vt/epoch/epoch.h"
 
-#include <unordered_set>
+namespace vt { namespace collective { namespace reduce { namespace operators {
 
-namespace vt { namespace term {
+template <typename T>
+struct ReduceTMsg;
 
-struct EpochRelation {
-  using ParentBagType = std::unordered_set<EpochType>;
+}}}} /* end namespace vt::collective::reduce::operators */
 
-  EpochRelation(EpochType in_epoch, bool in_is_ds)
-    : epoch_(in_epoch), is_ds_(in_is_ds)
+namespace vt { namespace termination { namespace graph {
+
+// Must be templated (where T = graph::EpochGraph) because of the circular
+// dependency between termination.h and reduce.h
+template <typename T>
+struct EpochGraphMsg : collective::reduce::operators::ReduceTMsg<T> {
+
+  EpochGraphMsg() = default;
+  explicit EpochGraphMsg(std::shared_ptr<T> const& graph)
+    : collective::reduce::operators::ReduceTMsg<T>(*graph)
   { }
 
-  void addParentEpoch(EpochType const in_parent);
-  void clearParents();
-  bool hasParent() const;
-  std::size_t numParents() const;
-  ParentBagType const& getParents() const { return parents_; }
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    collective::reduce::operators::ReduceTMsg<T>::invokeSerialize(s);
+  }
 
-protected:
-  // The epoch for the this relation
-  EpochType epoch_ = no_epoch;
-
-private:
-  // Is this a DS-epoch
-  bool is_ds_ = false;
-  // The parent epochs for a given epoch
-  ParentBagType parents_ = {};
 };
 
-}} /* end namespace vt::term */
 
-#endif /*INCLUDED_VT_TERMINATION_TERM_PARENT_H*/
+}}} /* end namespace vt::termination::graph */
+
+#endif /*INCLUDED_VT_TERMINATION_GRAPH_EPOCH_GRAPH_REDUCE_H*/

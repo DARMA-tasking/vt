@@ -61,9 +61,11 @@
 namespace vt { namespace sched {
 
 enum SchedulerEvent {
-  BeginIdle = 0,
-  EndIdle = 1,
-  SchedulerEventSize = 2
+  BeginIdle          = 0,
+  EndIdle            = 1,
+  BeginIdleMinusTerm = 2,
+  EndIdleMinusTerm   = 3,
+  SchedulerEventSize = 4
 };
 
 struct Scheduler {
@@ -105,6 +107,9 @@ struct Scheduler {
   std::size_t workQueueSize() const { return work_queue_.size(); }
   bool workQueueEmpty() const { return work_queue_.empty(); }
 
+  bool isIdle() const { return work_queue_.empty(); }
+  bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
+
 private:
 
 # if backend_check_enabled(priorities)
@@ -113,8 +118,13 @@ private:
   Queue<UnitType> work_queue_;
 # endif
 
-  bool has_executed_ = false;
-  bool is_idle = false;
+  bool has_executed_      = false;
+  bool is_idle            = true;
+  bool is_idle_minus_term = true;
+
+  // The number of termination messages currently in the queue---they weakly
+  // imply idleness for the stake of termination
+  std::size_t num_term_msgs_ = 0;
 
   EventTriggerContType event_triggers;
   EventTriggerContType event_triggers_once;

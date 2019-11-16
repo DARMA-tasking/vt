@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_parent.cc
+//                             epoch_dependency.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -45,71 +45,105 @@
 #include "vt/config.h"
 #include "vt/termination/termination.h"
 
+#include <algorithm>
+
 namespace vt { namespace term {
 
-void EpochRelation::addParentEpoch(EpochType const in_parent) {
+void EpochDependency::addSuccessor(EpochType const in_successor) {
   if (is_ds_) {
     debug_print(
       termds, node,
-      "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
+      "addSuccessor: epoch_={:x}, successor={:x}\n", epoch_, in_successor
     );
   } else {
     debug_print(
       term, node,
-      "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
+      "addSuccessor: epoch_={:x}, successor={:x}\n", epoch_, in_successor
     );
   }
 
-  // Produce a single work unit for the parent epoch so it can not finish while
-  // this epoch is live
-  theTerm()->produce(in_parent,1);
-  parents_.insert(in_parent);
+  if (successors_.find(in_successor) == successors_.end()) {
+    // Produce a single work unit for the successor epoch so it can not finish while
+    // this epoch is live
+    theTerm()->produce(in_successor,1);
+    successors_.insert(in_successor);
+    theTerm()->addEpochStateDependency(in_successor);
+  }
 }
 
-void EpochRelation::clearParents() {
+EpochDependency::SuccessorBagType
+EpochDependency::removeIntersection(SuccessorBagType successors) {
+  SuccessorBagType intersection = {};
+  std::set_intersection(
+    successors.begin(), successors.end(),
+    successors_.begin(), successors_.end(),
+    std::inserter(intersection,intersection.begin())
+  );
+  SuccessorBagType remaining = {};
+  std::set_difference(
+    successors_.begin(), successors_.end(),
+    intersection.begin(), intersection.end(),
+    std::inserter(remaining,remaining.begin())
+  );
+  for (auto ep : intersection) {
+    theTerm()->consume(ep,1);
+    theTerm()->removeEpochStateDependency(ep);
+  }
+  successors_ = remaining;
+  return intersection;
+}
+
+void EpochDependency::addIntersectingSuccessors(SuccessorBagType successors) {
+  for (auto&& ep : successors) {
+    successors_.insert(ep);
+  }
+}
+
+void EpochDependency::clearSuccessors() {
   if (is_ds_) {
     debug_print(
       termds, node,
-      "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-      parents_.size()
+      "clearSuccessors: epoch={:x}, successors_.size()={}\n", epoch_,
+      successors_.size()
     );
   } else {
     debug_print(
       term, node,
-      "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-      parents_.size()
+      "clearSuccessors: epoch={:x}, successors_.size()={}\n", epoch_,
+
+      successors_.size()
     );
   }
 
-  for (auto&& parent : parents_) {
+  for (auto&& successor : successors_) {
     if (is_ds_) {
       debug_print(
         termds, node,
-        "clearParents: epoch={:x}, parent={:x}\n", epoch_, parent
+        "clearSuccessors: epoch={:x}, successor={:x}\n", epoch_, successor
       );
     } else {
       debug_print(
         term, node,
-        "clearParents: epoch={:x}, parent={:x}\n", epoch_,parent
+        "clearSuccessors: epoch={:x}, successor={:x}\n", epoch_,successor
       );
     }
 
-    // Consume the parent epoch to release it so it can now possibly complete
+    // Consume the successor epoch to release it so it can now possibly complete
     // since the child is terminated
-    theTerm()->consume(parent,1);
+    theTerm()->consume(successor,1);
+    theTerm()->removeEpochStateDependency(successor);
   }
 
-  // Clear the parent list
-  parents_.clear();
+  // Clear the successor list
+  successors_.clear();
 }
 
-bool EpochRelation::hasParent() const {
-  return parents_.size() > 0;
+bool EpochDependency::hasSuccessor() const {
+  return successors_.size() > 0;
 }
 
-std::size_t EpochRelation::numParents() const {
-  return parents_.size();
+std::size_t EpochDependency::numSuccessors() const {
+  return successors_.size();
 }
-
 
 }} /* end namespace vt::term */

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               scheduler.impl.h
+//                              epoch_dependency.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,40 +42,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
-#define INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
+#if !defined INCLUDED_VT_TERMINATION_EPOCH_DEPENDENCY_H
+#define INCLUDED_VT_TERMINATION_EPOCH_DEPENDENCY_H
 
 #include "vt/config.h"
+#include "vt/epoch/epoch.h"
 
-namespace vt { namespace sched {
+#include <set>
 
-template <typename MsgT>
-void Scheduler::enqueue(MsgT* msg, ActionType action) {
-  bool const is_term = envelopeIsTerm(msg->env);
+namespace vt { namespace term {
 
-  if (is_term) {
-    num_term_msgs_++;
-  }
+struct EpochDependency {
+  using SuccessorBagType = std::set<EpochType>;
 
-# if backend_check_enabled(priorities)
-  auto priority = envelopeGetPriority(msg->env);
-  work_queue_.emplace(UnitType(is_term, priority, action));
-# else
-  work_queue_.emplace(UnitType(is_term, action));
-# endif
-}
+  EpochDependency(EpochType in_epoch, bool in_is_ds)
+    : epoch_(in_epoch), is_ds_(in_is_ds)
+  { }
 
-template <typename MsgT>
-void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, ActionType action) {
-  //
-  // Assume that MsgSharedPtr<MsgT> is already captured in the action.
-  //
-  // To speed this up, in the future, we could have a pure message queue that
-  // could be dispatched directly based on type/state-bits
-  //
-  enqueue<MsgT>(msg.get(), action);
-}
+  SuccessorBagType removeIntersection(SuccessorBagType successors);
+  void addIntersectingSuccessors(SuccessorBagType successors);
+  void addSuccessor(EpochType const in_successor);
+  void clearSuccessors();
+  bool hasSuccessor() const;
+  std::size_t numSuccessors() const;
+  SuccessorBagType const& getSuccessors() const { return successors_; }
 
-}} /* end namespace vt::sched */
+protected:
+  // The epoch for the this relation
+  EpochType epoch_ = no_epoch;
 
-#endif /*INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H*/
+private:
+  // Is this a DS-epoch
+  bool is_ds_ = false;
+  // The successor epochs for a given predecessor epoch
+  SuccessorBagType successors_ = {};
+};
+
+}} /* end namespace vt::term */
+
+#endif /*INCLUDED_VT_TERMINATION_EPOCH_DEPENDENCY_H*/

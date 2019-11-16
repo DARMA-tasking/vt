@@ -58,6 +58,7 @@
 #include "vt/pipe/pipe_manager.h"
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/termination/termination.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/collection_headers.h"
@@ -515,6 +516,28 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_print_no_progress) {
+    auto f11 = fmt::format("Printing warnings when progress is stalls");
+    auto f12 = opt_on("--vt_print_no_progress", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_epoch_graph_terse) {
+    auto f11 = fmt::format("Printing terse epoch graphs when hang detected");
+    auto f12 = opt_on("--vt_epoch_graph_terse", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("Printing verbose epoch graphs when hang detected");
+    auto f12 = opt_inverse("--vt_epoch_graph_terse", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_epoch_graph_on_hang) {
+    auto f11 = fmt::format("Epoch graph output enabled if hang detected");
+    auto f12 = opt_on("--vt_epoch_graph_on_hang", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_no_detect_hang) {
     auto f11 = fmt::format("Disabling termination hang detection");
     auto f12 = opt_on("--vt_no_detect_hang", f11);
@@ -528,7 +551,7 @@ void Runtime::printStartupBanner() {
   if (!ArgType::vt_no_detect_hang) {
     if (ArgType::vt_hang_freq != 0) {
       auto f11 = fmt::format(
-        "Detecting hang every {} tree traversals ", ArgType::vt_hang_freq
+        "Printing stall warning every {} tree traversals ", ArgType::vt_hang_freq
       );
       auto f12 = opt_on("--vt_hang_detect", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -1017,9 +1040,26 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     theWorkerGrp->registerIdleListener(localTermFn);
   } else {
     // Without workers running on the node, the termination detector should
-    // assume its locally ready to propagate instead of waiting for them to
-    // become idle.
-    theTerm->setLocalTerminated(true);
+    // enable/disable the global collective epoch based on the state of the
+    // scheduler; register listeners to activate/deactivate that epoch
+    theSched->registerTrigger(
+      sched::SchedulerEvent::BeginIdleMinusTerm, []{
+        debug_print(
+          runtime, node,
+          "setLocalTerminated: BeginIdle: true\n"
+        );
+        vt::theTerm()->setLocalTerminated(true, false);
+      }
+    );
+    theSched->registerTrigger(
+      sched::SchedulerEvent::EndIdleMinusTerm, []{
+        debug_print(
+          runtime, node,
+          "setLocalTerminated: EndIdle: false\n"
+        );
+        vt::theTerm()->setLocalTerminated(false, false);
+      }
+    );
   }
 
   debug_print(runtime, node, "end: initializeWorkers\n");
