@@ -47,7 +47,7 @@
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
 
-#include "vt/utils/demangle.h"
+#include "vt/utils/demangle/demangle.h"
 
 namespace vt { namespace auto_registry {
 
@@ -88,11 +88,12 @@ struct FunctorAdapterArgs {
   }
 
   static std::string traceGetEventType() {
-    return "event_type";
+    using TE = vt::util::demangle::TemplateExtract;
+    return TE::getTypeName<ObjTypeT>();
   }
 
   static std::string traceGetEventName() {
-    return "event_name";
+    return "operator";
   }
 
   static size_t getNumArgs() {
@@ -108,11 +109,13 @@ struct FunctorAdapter {
   static constexpr FunctionPtrType getFunction() { return f; }
 
   static std::string traceGetEventType() {
-    return "event_type";
+    using TE = vt::util::demangle::TemplateExtract;
+    return TE::getNamespace(TE::getValueName<F,f>());
   }
 
   static std::string traceGetEventName() {
-    return "event_name";
+    using TE = vt::util::demangle::TemplateExtract;
+    return TE::getBarename(TE::getValueName<F,f>());
   }
 
   static size_t getNumArgs() {
@@ -128,11 +131,13 @@ struct FunctorAdapterMember {
   static constexpr FunctionPtrType getFunction() { return f; }
 
   static std::string traceGetEventType() {
-    return "event_type";
+    using TE = vt::util::demangle::TemplateExtract;
+    return TE::getNamespace(TE::getValueName<F,f>());
   }
 
   static std::string traceGetEventName() {
-    return "event_name";
+    using TE = vt::util::demangle::TemplateExtract;
+    return TE::getBarename(TE::getValueName<F,f>());
   }
 
   static size_t getNumArgs() {
