@@ -438,10 +438,20 @@ void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
   }
 }
 
+bool hasTraceEntry(TraceEntryIDType ep) {
+  auto& events = TraceRegistry::TraceContainersType::getEventContainer();
+  return events.find(ep) != events.end();
+}
+
 TraceEventIDType Trace::logEvent(LogPtrType log) {
   if (not enabled_ || not checkEnabled()) {
     return 0;
   }
+
+  vtAssert(
+    log->ep == no_trace_entry_id or hasTraceEntry(log->ep),
+    "Event must exist that was logged"
+  );
 
   // close any idle event as soon as we encounter any other type of event
   if (idle_begun_ and
@@ -629,6 +639,12 @@ void Trace::writeTracesFile() {
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   for (auto&& log : traces) {
+
+    vtAssert(
+      log->ep == no_trace_entry_id or hasTraceEntry(log->ep),
+      "Event must exist that was logged"
+    );
+
     auto const converted_time = timeToInt(log->time - start_time_);
 
     auto const type = static_cast<
@@ -636,12 +652,6 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     >(log->type);
 
     auto event_iter = TraceContainersType::getEventContainer().find(log->ep);
-
-    vtAssert(
-      log->ep == no_trace_entry_id or
-      event_iter != TraceContainersType::getEventContainer().end(),
-      "Event must exist that was logged"
-    );
 
     auto const event_seq_id = log->ep == no_trace_entry_id ?
       no_trace_entry_id : event_iter->second.theEventSeq();
