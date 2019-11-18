@@ -61,15 +61,17 @@ struct Log {
   using UserDataType       = int32_t;
 
   double time = 0.0;
+  double end_time = 0.0;
+
   TraceEntryIDType ep = no_trace_entry_id;
   TraceConstantsType type = TraceConstantsType::InvalidTraceType;
   TraceEventIDType event = no_trace_event;
   TraceMsgLenType msg_len = 0;
   NodeType node = uninitialized_destination;
   uint64_t idx1 = 0, idx2 = 0, idx3 = 0, idx4 = 0;
+
   std::string user_supplied_note = "";
   UserDataType user_supplied_data = 0;
-  double end_time = 0.0;
   UserEventIDType user_event = 0;
   bool user_start = false;
 
@@ -85,8 +87,8 @@ struct Log {
     double const in_begin_time, double const in_end_time,
     TraceConstantsType const in_type, std::string const& in_note,
     TraceEventIDType const in_event
-  ) : time(in_begin_time), type(in_type), event(in_event),
-      user_supplied_note(in_note), end_time(in_end_time)
+  ) : time(in_begin_time), end_time(in_end_time),
+      type(in_type), event(in_event), user_supplied_note(in_note)
   { }
 
   Log(
