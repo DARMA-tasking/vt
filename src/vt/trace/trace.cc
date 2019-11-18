@@ -460,18 +460,19 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
 
   auto grouped_begin = [&]() -> TraceEventIDType {
     if (not open_events_.empty()) {
+      LogType* top_event = open_events_.top();
       traces_.push_back(
         new LogType(
           log->time,
-          open_events_.top()->ep,
+          top_event->ep,
           TraceConstantsType::EndProcessing,
-          open_events_.top()->event,
-          open_events_.top()->msg_len,
-          open_events_.top()->node,
-          open_events_.top()->idx1,
-          open_events_.top()->idx2,
-          open_events_.top()->idx3,
-          open_events_.top()->idx4
+          top_event->event,
+          top_event->msg_len,
+          top_event->node,
+          top_event->idx1,
+          top_event->idx2,
+          top_event->idx3,
+          top_event->idx4
         )
       );
     }
@@ -503,18 +504,19 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     traces_.push_back(log);
 
     if (not open_events_.empty()) {
+      LogType* top_event = open_events_.top();
       traces_.push_back(
         new LogType(
           log->time,
-          open_events_.top()->ep,
+          top_event->ep,
           TraceConstantsType::BeginProcessing,
-          open_events_.top()->event,
-          open_events_.top()->msg_len,
-          open_events_.top()->node,
-          open_events_.top()->idx1,
-          open_events_.top()->idx2,
-          open_events_.top()->idx3,
-          open_events_.top()->idx4
+          top_event->event,
+          top_event->msg_len,
+          top_event->node,
+          top_event->idx1,
+          top_event->idx2,
+          top_event->idx3,
+          top_event->idx4
         )
       );
     }
@@ -581,20 +583,10 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
 }
 
 bool Trace::checkEnabled() {
-  if (ArgType::vt_trace) {
-    auto const node = theContext()->getNode();
-    if (ArgType::vt_trace_mod == 0) {
-      return true;
-    } else if (node % ArgType::vt_trace_mod == 1) {
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    return false;
-  }
+  return ArgType::vt_trace
+    and (ArgType::vt_trace_mod == 0
+         or theContext()->getNode() % ArgType::vt_trace_mod == 1);
 }
-
 
 void Trace::enableTracing() {
   enabled_ = true;
