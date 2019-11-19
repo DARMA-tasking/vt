@@ -55,7 +55,7 @@ EventClass::EventClass(
 ) : event(in_event), hash_event(in_hash_event)
 {
   auto const& event_hash =  std::hash<std::string>{}(in_hash_event);
-  this_event_ = event_hash;
+  this_event_ = event_hash == 0 ? 1 : event_hash;
 }
 
 TraceEntryIDType EventClass::theEventId() const {
