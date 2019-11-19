@@ -52,6 +52,7 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/objgroup/manager.fwd.h"
+#include "vt/configs/arguments/args.h"
 
 namespace vt { namespace sched {
 
@@ -67,15 +68,46 @@ Scheduler::Scheduler() {
   event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
 }
 
-bool Scheduler::schedulerImpl() {
-  bool scheduled_work = false;
+void Scheduler::enqueue(ActionType action) {
+  bool const is_term = false;
+# if backend_check_enabled(priorities)
+  work_queue_.emplace(UnitType(is_term, default_priority, action));
+# else
+  work_queue_.emplace(UnitType(is_term, action));
+# endif
+}
 
-  bool const msg_sch = theMsg()->scheduler();
-  bool const event_sch = theEvent()->scheduler();
-  bool const seq_sch = theSeq()->scheduler();
-  bool const vrt_seq_sch = theVirtualSeq()->scheduler();
-  bool const collection_sch = theCollection()->scheduler<>();
-  bool const objgroup_sch = objgroup::scheduler();
+void Scheduler::enqueue(PriorityType priority, ActionType action) {
+  bool const is_term = false;
+# if backend_check_enabled(priorities)
+  work_queue_.emplace(UnitType(is_term, priority, action));
+# else
+  work_queue_.emplace(UnitType(is_term, action));
+# endif
+}
+
+bool Scheduler::runNextUnit() {
+  if (not work_queue_.empty()) {
+    auto elm = work_queue_.pop();
+    bool const is_term = elm.isTerm();
+    elm();
+    if (is_term) {
+      num_term_msgs_--;
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool Scheduler::progressImpl() {
+  bool const msg_sch = theMsg()->progress();
+  bool const evt_sch = theEvent()->progress();
+  bool const seq_sch = theSeq()->progress();
+  bool const vrt_sch = theVirtualSeq()->progress();
+  bool const col_sch = theCollection()->progress();
+  bool const obj_sch = theObjGroup()->progress();
+
   bool const worker_sch =
     theContext()->hasWorkers() ? theWorkerGrp()->progress(),false : false;
   bool const worker_comm_sch =
@@ -83,28 +115,76 @@ bool Scheduler::schedulerImpl() {
 
   checkTermSingleNode();
 
-  scheduled_work =
-    msg_sch or event_sch or seq_sch or vrt_seq_sch or
-    worker_sch or worker_comm_sch or collection_sch or objgroup_sch;
-
-  if (scheduled_work) {
-    is_idle = false;
-  }
+  bool scheduled_work =
+    msg_sch or evt_sch or seq_sch or vrt_sch or
+    col_sch or obj_sch or worker_sch or worker_comm_sch;
 
   return scheduled_work;
 }
 
-void Scheduler::scheduler() {
-  bool const scheduled_work1 = schedulerImpl();
-  bool const scheduled_work2 = schedulerImpl();
+bool Scheduler::progressMsgOnlyImpl() {
+  return theMsg()->progress() or theEvent()->progress();
+}
 
-  if (not scheduled_work1 and not scheduled_work2 and not is_idle) {
-    is_idle = true;
-    // idle
-    triggerEvent(SchedulerEventType::BeginIdle);
+void Scheduler::scheduler(bool msg_only) {
+  /*
+   * Run through the progress functions `num_iter` times, making forward
+   * progress on MPI
+   */
+  auto const num_iter = std::max(1, arguments::ArgConfig::vt_sched_num_progress);
+  for (int i = 0; i < num_iter; i++) {
+    if (msg_only) {
+      // This is a special case used only during startup when other components
+      // are not ready and progress should not be called on them.
+      progressMsgOnlyImpl();
+    } else {
+      progressImpl();
+    }
   }
 
-  has_executed_ = true;
+  /*
+   * Handle cases when the system goes from term-idle to non-term-idle; trigger
+   * user registered listeners
+   */
+  if (num_term_msgs_ == work_queue_.size()) {
+    if (not is_idle_minus_term) {
+      is_idle_minus_term = true;
+      triggerEvent(SchedulerEventType::BeginIdleMinusTerm);
+    }
+  } else {
+    if (is_idle_minus_term) {
+      is_idle_minus_term = false;
+      triggerEvent(SchedulerEventType::EndIdleMinusTerm);
+    }
+  }
+
+  /*
+   * Handle cases when the system goes from completely idle or not; trigger user
+   * registered listeners
+   */
+  if (work_queue_.empty()) {
+    if (not is_idle) {
+      is_idle = true;
+      // Trigger any registered listeners on idle
+      triggerEvent(SchedulerEventType::BeginIdle);
+    }
+  } else {
+    if (is_idle) {
+      is_idle = false;
+      triggerEvent(SchedulerEventType::EndIdle);
+    }
+  }
+
+  /*
+   * Run a work unit!
+   */
+  if (not work_queue_.empty()) {
+    runNextUnit();
+  }
+
+  if (not msg_only) {
+    has_executed_ = true;
+  }
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {

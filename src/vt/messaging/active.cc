@@ -51,6 +51,7 @@
 #include "vt/group/group_manager_active_attorney.h"
 #include "vt/runnable/general.h"
 #include "vt/timing/timing.h"
+#include "vt/scheduler/priority.h"
 
 namespace vt { namespace messaging {
 
@@ -232,6 +233,7 @@ EventType ActiveMessenger::sendMsgBytes(
 
   if (not is_term) {
     theTerm()->produce(epoch,1,dest);
+    theTerm()->hangDetectSend();
   }
 
   for (auto&& l : send_listen_) {
@@ -363,6 +365,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   // Assume that any raw data send/recv is paired with a message with an epoch
   // if required to inhibit early termination of that epoch
   theTerm()->produce(term::any_epoch_sentinel,1,dest);
+  theTerm()->hangDetectSend();
 
   for (auto&& l : send_listen_) {
     l->send(dest, num_bytes, false);
@@ -371,10 +374,17 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   return SendDataRetType{event_id,send_tag};
 }
 
+bool ActiveMessenger::recvDataMsgPriority(
+  PriorityType priority, TagType const& tag, NodeType const& node,
+  RDMA_ContinuationDeleteType next
+) {
+  return recvDataMsg(priority, tag, node, true, next);
+}
+
 bool ActiveMessenger::recvDataMsg(
   TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next
 ) {
-  return recvDataMsg(tag, node, true, next);
+  return recvDataMsg(default_priority, tag, node, true, next);
 }
 
 bool ActiveMessenger::tryProcessDataMsgRecv() {
@@ -383,8 +393,9 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 
   for (; iter != pending_recvs_.end(); ++iter) {
     auto const done = recvDataMsgBuffer(
-      iter->second.user_buf, iter->first, iter->second.recv_node,
-      false, iter->second.dealloc_user_buf, iter->second.cont
+      iter->second.user_buf, iter->second.priority, iter->first,
+      iter->second.recv_node, false, iter->second.dealloc_user_buf,
+      iter->second.cont
     );
     if (done) {
       erase = true;
@@ -401,8 +412,16 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
-  void* const user_buf, TagType const& tag, NodeType const& node,
-  bool const& enqueue, ActionType dealloc_user_buf,
+  void* const user_buf, TagType const& tag,
+  NodeType const& node, bool const& enqueue, ActionType dealloc,
+  RDMA_ContinuationDeleteType next
+) {
+  return recvDataMsgBuffer(user_buf, no_priority, tag, node, enqueue, dealloc, next);
+}
+
+bool ActiveMessenger::recvDataMsgBuffer(
+  void* const user_buf, PriorityType priority, TagType const& tag,
+  NodeType const& node, bool const& enqueue, ActionType dealloc_user_buf,
   RDMA_ContinuationDeleteType next
 ) {
   if (not enqueue) {
@@ -459,7 +478,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
       }
 
       InProgressDataIRecv recv_holder{
-        buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next
+        buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next,
+        priority
       };
       in_progress_data_irecv.emplace(std::move(recv_holder));
       return true;
@@ -469,14 +489,16 @@ bool ActiveMessenger::recvDataMsgBuffer(
   } else {
     debug_print(
       active, node,
-      "recvDataMsgBuffer: node={}, tag={}, enqueue={}\n",
-      node, tag, print_bool(enqueue)
+      "recvDataMsgBuffer: node={}, tag={}, enqueue={}, priority={:x}\n",
+      node, tag, print_bool(enqueue), priority
     );
 
     pending_recvs_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(tag),
-      std::forward_as_tuple(PendingRecvType{user_buf,next,dealloc_user_buf,node})
+      std::forward_as_tuple(
+        PendingRecvType{user_buf,next,dealloc_user_buf,node,priority}
+      )
     );
     return false;
   }
@@ -508,27 +530,50 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     }
   };
 
-  if (next != nullptr) {
-    next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
-  } else {
+  if (next == nullptr) {
     dealloc_buf();
+    theTerm()->consume(term::any_epoch_sentinel,1,sender);
+    theTerm()->hangDetectRecv();
+  } else {
+    // If we have a continuation, schedule to run later
+    auto run = [=]{
+      next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
+      theTerm()->consume(term::any_epoch_sentinel,1,sender);
+      theTerm()->hangDetectRecv();
+    };
+    theSched()->enqueue(irecv->priority, run);
   }
-
-  theTerm()->consume(term::any_epoch_sentinel,1,sender);
 }
 
 bool ActiveMessenger::recvDataMsg(
-  TagType const& tag, NodeType const& recv_node, bool const& enqueue,
-  RDMA_ContinuationDeleteType next
+  PriorityType priority, TagType const& tag, NodeType const& recv_node,
+  bool const& enqueue, RDMA_ContinuationDeleteType next
 ) {
-  return recvDataMsgBuffer(nullptr, tag, recv_node, enqueue, nullptr, next);
+  return recvDataMsgBuffer(
+    nullptr, priority, tag, recv_node, enqueue, nullptr, next
+  );
 }
 
 NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
   return current_node_context_;
 }
 
-bool ActiveMessenger::handleActiveMsg(
+void ActiveMessenger::scheduleActiveMsg(
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSizeType const& size, bool insert
+) {
+  debug_print_verbose(
+    active, node,
+    "scheduleActiveMsg: msg={}, from={}, size={}, insert={}\n",
+    print_ptr(base.get()), from, size, insert
+  );
+
+  // Enqueue the message for processing
+  auto run = [=]{ processActiveMsg(base, from, size, insert); };
+  theSched()->enqueue(base, run);
+}
+
+bool ActiveMessenger::processActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
   MsgSizeType const& size, bool insert
 ) {
@@ -545,7 +590,7 @@ bool ActiveMessenger::handleActiveMsg(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "handleActiveMsg: msg={}, ref={}, deliver={}\n",
+      "processActiveMsg: msg={}, ref={}, deliver={}\n",
       print_ptr(msg), envelopeGetRef(msg->env), print_bool(deliver)
     );
   }
@@ -624,6 +669,11 @@ bool ActiveMessenger::deliverActiveMsg(
     current_node_context_     = from_node;
     current_epoch_context_    = cur_epoch;
 
+    #if backend_check_enabled(priorities)
+      current_priority_context_       = envelopeGetPriority(msg->env);
+      current_priority_level_context_ = envelopeGetPriorityLevel(msg->env);
+    #endif
+
     #if backend_check_enabled(trace_enabled)
       current_trace_context_  = envelopeGetTraceEvent(msg->env);
     #endif
@@ -643,12 +693,18 @@ bool ActiveMessenger::deliverActiveMsg(
       current_trace_context_  = trace::no_trace_event;
     #endif
 
+    #if backend_check_enabled(priorities)
+      current_priority_context_       = no_priority;
+      current_priority_level_context_ = no_priority_level;
+    #endif
+
     if (has_epoch) {
       epochEpilogHandler(cur_epoch,ep_stack_size);
     }
 
     if (not is_term) {
       theTerm()->consume(epoch,1,from_node);
+      theTerm()->hangDetectRecv();
     }
   } else {
     if (insert) {
@@ -773,14 +829,14 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
         put_tag, sender,
         [=](RDMA_GetType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-          handleActiveMsg(base, sender, num_probe_bytes, true);
+          scheduleActiveMsg(base, sender, num_probe_bytes, true);
         }
      );
     }
   }
 
   if (!is_put || put_finished) {
-    handleActiveMsg(base, sender, msg_bytes, true);
+    scheduleActiveMsg(base, sender, msg_bytes, true);
   }
 }
 
@@ -800,7 +856,7 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
   );
 }
 
-bool ActiveMessenger::scheduler() {
+bool ActiveMessenger::progress() {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   processMaybeReadyHanTag();
@@ -809,12 +865,6 @@ bool ActiveMessenger::scheduler() {
 
   return started_irecv_active_msg or started_irecv_data_msg or
          received_active_msg or received_data_msg;
-}
-
-bool ActiveMessenger::isLocalTerm() {
-  bool const no_pending_msgs = pending_handler_msgs_.size() == 0;
-  bool const no_pending_recvs = pending_recvs_.size() == 0;
-  return no_pending_msgs and no_pending_recvs;
 }
 
 void ActiveMessenger::processMaybeReadyHanTag() {
@@ -914,6 +964,14 @@ HandlerType ActiveMessenger::getCurrentHandler() const {
 
 EpochType ActiveMessenger::getCurrentEpoch() const {
   return current_epoch_context_;
+}
+
+PriorityType ActiveMessenger::getCurrentPriority() const {
+  return current_priority_context_;
+}
+
+PriorityLevelType ActiveMessenger::getCurrentPriorityLevel() const {
+  return current_priority_level_context_;
 }
 
 }} // end namespace vt::messaging

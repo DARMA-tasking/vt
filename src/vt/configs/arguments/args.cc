@@ -48,19 +48,16 @@
 #include <string>
 #include <vector>
 
-#include <unistd.h>
-
 #include "CLI/CLI11.hpp"
 
 namespace vt { namespace arguments {
 
-/*static*/ bool        ArgConfig::vt_color              = false;
+/*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
-/*static*/ bool        ArgConfig::vt_auto_color         = true;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
 
 /*static*/ bool        ArgConfig::colorize_output       = false;
-
+/*static*/ int32_t     ArgConfig::vt_sched_num_progress = 2;
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
@@ -78,7 +75,7 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_trace_file         = "";
 /*static*/ std::string ArgConfig::vt_trace_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_trace_mod          = 0;
-/*static*/ int32_t     ArgConfig::vt_trace_flush_mod    = 128;
+/*static*/ int32_t     ArgConfig::vt_trace_flush_mod    = 0;
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
@@ -94,6 +91,9 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_term_rooted_use_wave = false;
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
+/*static*/ bool        ArgConfig::vt_epoch_graph_on_hang= true;
+/*static*/ bool        ArgConfig::vt_epoch_graph_terse  = false;
+/*static*/ bool        ArgConfig::vt_print_no_progress  = true;
 
 /*static*/ bool        ArgConfig::vt_pause              = false;
 
@@ -161,20 +161,16 @@ namespace vt { namespace arguments {
    * Flags for controlling the colorization of output from vt
    */
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
-  auto always = "Colorize output (overrides --vt_auto_color)";
-  auto never  = "Never colorize output (overrides --vt_color)";
-  auto maybe  = "Automatic colorization of output (default, unnecessary)";
+  auto always = "Colorize output (default)";
+  auto never  = "Do not colorize output (overrides --vt_color)";
   auto a  = app.add_flag("-c,--vt_color",      vt_color,      always);
   auto b  = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
-  auto c  = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe);
   auto a1 = app.add_flag("-q,--vt_quiet",      vt_quiet,      quiet);
   auto outputGroup = "Output Control";
   a->group(outputGroup);
   b->group(outputGroup);
-  c->group(outputGroup);
   a1->group(outputGroup);
   b->excludes(a);
-  b->excludes(c);
 
   /*
    * Flags for controlling the signals that VT tries to catch
@@ -222,25 +218,17 @@ namespace vt { namespace arguments {
    * Flags to control tracing output
    */
   auto trace     = "Enable tracing (must be compiled with trace_enabled)";
-  auto trace_mpi = "Enable tracing of MPI calls (must be compiled with "
-                   "trace_enabled)";
+  auto trace_mpi = "Enable tracing of MPI calls (must be compiled with trace_enabled)";
   auto tfile     = "Name of trace files";
   auto tdir      = "Name of directory for trace files";
   auto tmod      = "Output trace file if (node % vt_trace_mod) == 0";
-  auto tflushmod = "Flush output trace file every (vt_trace_flush_mod) "
-                   "trace records";
-  auto n = app.add_flag("--vt_trace",              vt_trace,
-                        trace);
-  auto nm = app.add_flag("--vt_trace_mpi",         vt_trace_mpi,
-                        trace_mpi);
-  auto o = app.add_option("--vt_trace_file",       vt_trace_file,
-                        tfile, "");
-  auto p = app.add_option("--vt_trace_dir",        vt_trace_dir,
-                        tdir,  "");
-  auto q = app.add_option("--vt_trace_mod",        vt_trace_mod, 
-                        tmod,  1);
-  auto qf = app.add_option("--vt_trace_flush_mod", vt_trace_flush_mod,
-                        tflushmod,  1);
+  auto tflushmod = "Flush output trace file every (vt_trace_flush_mod) trace records";
+  auto n = app.add_flag("--vt_trace",              vt_trace,           trace);
+  auto nm = app.add_flag("--vt_trace_mpi",         vt_trace_mpi,       trace_mpi);
+  auto o = app.add_option("--vt_trace_file",       vt_trace_file,      tfile, "");
+  auto p = app.add_option("--vt_trace_dir",        vt_trace_dir,       tdir,  "");
+  auto q = app.add_option("--vt_trace_mod",        vt_trace_mod,       tmod,  1);
+  auto qf = app.add_option("--vt_trace_flush_mod", vt_trace_flush_mod, tflushmod, 0);
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);
@@ -401,15 +389,24 @@ namespace vt { namespace arguments {
   auto hang_freq    = "The number of tree traversals before a hang is detected";
   auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
   auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
+  auto graph_on     = "Output epoch graph to file (DOT) when hang is detected";
+  auto terse        = "Output epoch graph to file in terse mode";
+  auto progress     = "Print termination counts when progress is stalled";
   auto hfd          = 1024;
-  auto x  = app.add_flag("--vt_no_detect_hang",       vt_no_detect_hang,       hang);
-  auto x1 = app.add_flag("--vt_term_rooted_use_ds",   vt_term_rooted_use_ds,   ds);
-  auto x2 = app.add_flag("--vt_term_rooted_use_wave", vt_term_rooted_use_wave, wave);
-  auto y = app.add_option("--vt_hang_freq",           vt_hang_freq,      hang_freq, hfd);
+  auto x  = app.add_flag("--vt_no_detect_hang",        vt_no_detect_hang,       hang);
+  auto x1 = app.add_flag("--vt_term_rooted_use_ds",    vt_term_rooted_use_ds,   ds);
+  auto x2 = app.add_flag("--vt_term_rooted_use_wave",  vt_term_rooted_use_wave, wave);
+  auto x3 = app.add_option("--vt_epoch_graph_on_hang", vt_epoch_graph_on_hang,  graph_on, true);
+  auto x4 = app.add_flag("--vt_epoch_graph_terse",     vt_epoch_graph_terse,    terse);
+  auto x5 = app.add_option("--vt_print_no_progress",   vt_print_no_progress,    progress, true);
+  auto y = app.add_option("--vt_hang_freq",            vt_hang_freq,      hang_freq, hfd);
   auto debugTerm = "Termination";
   x->group(debugTerm);
   x1->group(debugTerm);
   x2->group(debugTerm);
+  x3->group(debugTerm);
+  x4->group(debugTerm);
+  x5->group(debugTerm);
   y->group(debugTerm);
 
   /*
@@ -455,6 +452,14 @@ namespace vt { namespace arguments {
   us2->group(userOpts);
   us3->group(userOpts);
 
+  /*
+   * Options for configuring the VT scheduler
+   */
+
+  auto nsched = "Number of times to run the progress function in scheduler";
+  auto sca = app.add_option("--vt_sched_num_progress", vt_sched_num_progress, nsched, 2);
+  auto schedulerGroup = "Scheduler Configuration";
+  sca->group(schedulerGroup);
 
   /*
    * Run the parser!
@@ -469,10 +474,10 @@ namespace vt { namespace arguments {
   // Determine the final colorization setting.
   if (vt_no_color) {
     colorize_output = false;
-  } else if (vt_color) {
+  } else {
+    // Otherwise, colorize.
+    // (Within MPI there is no good method to auto-detect.)
     colorize_output = true;
-  } else { // assume auto-color
-    colorize_output = isatty(fileno(stdout));
   }
 
   /*

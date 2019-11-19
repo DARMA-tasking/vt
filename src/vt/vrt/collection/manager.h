@@ -86,7 +86,6 @@
 #include <vector>
 #include <list>
 #include <cstdlib>
-#include <deque>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -725,11 +724,10 @@ protected:
   );
 
 private:
-  template <typename=void>
   void schedule(ActionType action);
+
 public:
-  template <typename=void>
-  bool scheduler();
+  bool progress();
 
 public:
   template <typename ColT, typename IndexT>
@@ -845,7 +843,6 @@ private:
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
-  std::deque<ActionType> work_units_ = {};
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
   balance::ElementIDType cur_context_temp_elm_id_ = balance::no_element_id;
   balance::ElementIDType cur_context_perm_elm_id_ = balance::no_element_id;

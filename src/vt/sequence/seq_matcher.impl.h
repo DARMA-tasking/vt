@@ -127,7 +127,8 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-/*static*/ MessageT* SeqMatcher<MessageT, f>::getMatchingMsg(TagType const& tag) {
+/*static*/ MsgSharedPtr<MessageT>
+SeqMatcher<MessageT, f>::getMatchingMsg(TagType const& tag) {
   if (tag == no_tag) {
 #pragma sst global seq_msg
     auto& lst = SeqStateType<MessageT, f>::seq_msg;
@@ -170,7 +171,7 @@ SeqMatcher<MessageT, f>::getMatchingAction(TagType const& tag) {
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 /*static*/ void SeqMatcher<MessageT, f>::bufferUnmatchedMessage(
-  MessageT* msg, TagType const& tag
+  MsgSharedPtr<MessageT> msg, TagType const& tag
 ) {
   if (tag == no_tag) {
 #pragma sst global seq_msg

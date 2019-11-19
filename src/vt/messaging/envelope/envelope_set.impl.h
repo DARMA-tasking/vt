@@ -106,6 +106,18 @@ inline void envelopeSetGroup(Env& env, GroupType const& group) {
   reinterpret_cast<Envelope*>(&env)->group = group;
 }
 
+#if backend_check_enabled(priorities)
+template <typename Env>
+inline void envelopeSetPriority(Env& env, PriorityType priority) {
+  reinterpret_cast<Envelope*>(&env)->priority = priority;
+}
+
+template <typename Env>
+inline void envelopeSetPriorityLevel(Env& env, PriorityLevelType priority_level) {
+  reinterpret_cast<Envelope*>(&env)->priority_level = priority_level;
+}
+#endif
+
 #if backend_check_enabled(trace_enabled)
 template <typename Env>
 inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt) {

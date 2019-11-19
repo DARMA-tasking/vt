@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_parent.h
+//                               scheduler.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,40 +42,40 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_TERM_PARENT_H
-#define INCLUDED_VT_TERMINATION_TERM_PARENT_H
+#if !defined INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
+#define INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
 
 #include "vt/config.h"
-#include "vt/epoch/epoch.h"
 
-#include <unordered_set>
+namespace vt { namespace sched {
 
-namespace vt { namespace term {
+template <typename MsgT>
+void Scheduler::enqueue(MsgT* msg, ActionType action) {
+  bool const is_term = envelopeIsTerm(msg->env);
 
-struct EpochRelation {
-  using ParentBagType = std::unordered_set<EpochType>;
+  if (is_term) {
+    num_term_msgs_++;
+  }
 
-  EpochRelation(EpochType in_epoch, bool in_is_ds)
-    : epoch_(in_epoch), is_ds_(in_is_ds)
-  { }
+# if backend_check_enabled(priorities)
+  auto priority = envelopeGetPriority(msg->env);
+  work_queue_.emplace(UnitType(is_term, priority, action));
+# else
+  work_queue_.emplace(UnitType(is_term, action));
+# endif
+}
 
-  void addParentEpoch(EpochType const in_parent);
-  void clearParents();
-  bool hasParent() const;
-  std::size_t numParents() const;
-  ParentBagType const& getParents() const { return parents_; }
+template <typename MsgT>
+void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, ActionType action) {
+  //
+  // Assume that MsgSharedPtr<MsgT> is already captured in the action.
+  //
+  // To speed this up, in the future, we could have a pure message queue that
+  // could be dispatched directly based on type/state-bits
+  //
+  enqueue<MsgT>(msg.get(), action);
+}
 
-protected:
-  // The epoch for the this relation
-  EpochType epoch_ = no_epoch;
+}} /* end namespace vt::sched */
 
-private:
-  // Is this a DS-epoch
-  bool is_ds_ = false;
-  // The parent epochs for a given epoch
-  ParentBagType parents_ = {};
-};
-
-}} /* end namespace vt::term */
-
-#endif /*INCLUDED_VT_TERMINATION_TERM_PARENT_H*/
+#endif /*INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H*/

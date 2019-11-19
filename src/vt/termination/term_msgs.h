@@ -90,16 +90,20 @@ private:
   bool finished_   = false;
 };
 
+struct HangCheckMsg : vt::ShortMessage { };
+
 struct TermCounterMsg : vt::ShortMessage {
   EpochType epoch = no_epoch;
   TermCounterType prod = 0, cons = 0;
 
   TermCounterMsg(
-    EpochType const& in_epoch, TermCounterType const& in_prod,
-    TermCounterType const& in_cons
+    EpochType const in_epoch,
+    TermCounterType const in_prod, TermCounterType const in_cons
   ) : ShortMessage(), epoch(in_epoch), prod(in_prod), cons(in_cons)
   { }
 };
+
+struct BuildGraphMsg : vt::ShortMessage { };
 
 }} //end namespace vt::term
 

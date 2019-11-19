@@ -43,7 +43,10 @@ set(
       pipe/callback/objgroup_bcast
       pipe/callback/anon
       pipe/callback/cb_union
-    termination/dijkstra-scholten
+    termination
+      termination/dijkstra-scholten
+      termination/interval
+      termination/graph
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state

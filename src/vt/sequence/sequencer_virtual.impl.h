@@ -148,11 +148,15 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::sequenceVrtMsg(
     print_ptr(msg), print_bool(has_match), msg_tag
   );
 
+  // reference the arrival message to keep it alive past normal lifetime, in
+  // case it's buffered or put into the scheduler
+  auto pmsg = promoteMsg(msg);
+
   if (has_match) {
     auto action = SeqStateMatcherType<VcT, MsgT, f>::getMatchingAction(msg_tag);
-    auto handle_msg_action = [this,action,msg,vrt]{
+    auto handle_msg_action = [this,action,pmsg,vrt]{
       this->lookupContextExecute(
-        action.seq_id, action.generateCallable(msg, vrt)
+        action.seq_id, action.generateCallable(pmsg.get(), vrt)
       );
     };
 
@@ -166,12 +170,9 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::sequenceVrtMsg(
     // nothing was found so the message must be buffered and wait an action
     // being posted
 
-    // reference the arrival message to keep it alive past normal lifetime
-    messageRef(msg);
-
     // buffer the unmatched messaged until a trigger is posted for it that
     // matches
-    SeqStateMatcherType<VcT, MsgT, f>::bufferUnmatchedMessage(msg, msg_tag);
+    SeqStateMatcherType<VcT, MsgT, f>::bufferUnmatchedMessage(pmsg, msg_tag);
   }
 }
 
@@ -226,8 +227,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
 
       auto const& cur_proxy = theVirtualSeq()->getCurrentVirtualProxy();
       auto vrt_context = theVirtualManager()->getVirtualByProxy(cur_proxy);
-      action.runAction(static_cast<VcT*>(vrt_context), msg);
-      messageDeref(msg);
+      action.runAction(static_cast<VcT*>(vrt_context), msg.get());
     }
 
     debug_print(

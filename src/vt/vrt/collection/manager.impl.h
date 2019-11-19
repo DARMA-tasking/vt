@@ -445,68 +445,65 @@ template <typename ColT, typename IndexT, typename MsgT>
         "broadcast: apply to element: epoch={}, bcast_epoch={}\n",
         msg->bcast_epoch_, base->cur_bcast_epoch_
       );
-      if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
-        vtAssert(base != nullptr, "Must be valid pointer");
-        base->cur_bcast_epoch_++;
+      vtAssert(base != nullptr, "Must be valid pointer");
+      base->cur_bcast_epoch_++;
 
-        #if backend_check_enabled(lblite)
-          debug_print(
-            vrt_coll, node,
-            "broadcast: apply to element: instrument={}\n",
-            msg->lbLiteInstrument()
-          );
-          if (msg->lbLiteInstrument()) {
-            recordStats(base, msg);
-            auto& stats = base->getStats();
-            stats.startTime();
-          }
+      #if backend_check_enabled(lblite)
+        debug_print(
+          vrt_coll, node,
+          "broadcast: apply to element: instrument={}\n",
+          msg->lbLiteInstrument()
+        );
+        if (msg->lbLiteInstrument()) {
+          recordStats(base, msg);
+          auto& stats = base->getStats();
+          stats.startTime();
+        }
 
-          // Set the current context (element ID) that is executing (having a message
-          // delivered). This is used for load balancing to build the communication
-          // graph
-          auto const perm_elm_id = base->getElmID();
-          auto const temp_elm_id = base->getTempID();
-          auto const perm_prev_elm = theCollection()->getCurrentContextPerm();
-          auto const temp_prev_elm = theCollection()->getCurrentContextTemp();
+        // Set the current context (element ID) that is executing (having a message
+        // delivered). This is used for load balancing to build the communication
+        // graph
+        auto const perm_elm_id = base->getElmID();
+        auto const temp_elm_id = base->getTempID();
+        auto const perm_prev_elm = theCollection()->getCurrentContextPerm();
+        auto const temp_prev_elm = theCollection()->getCurrentContextTemp();
 
-          theCollection()->setCurrentContext(perm_elm_id, temp_elm_id);
+        theCollection()->setCurrentContext(perm_elm_id, temp_elm_id);
 
-          debug_print(
-            vrt_coll, node,
-            "collectionBcastHandler: current context: perm={}, temp={}\n",
-            perm_elm_id, temp_elm_id
-          );
-
-          std::unique_ptr<messaging::Listener> listener =
-            std::make_unique<balance::LBListener>(
-              [&](NodeType dest, MsgSizeType size, bool bcast){
-                auto& stats = base->getStats();
-                stats.recvToNode(dest, perm_elm_id, temp_elm_id, size, bcast);
-              }
-            );
-          theMsg()->addSendListener(std::move(listener));
-
-        #endif
-
-        // be very careful here, do not touch `base' after running the active
-        // message because it might have migrated out and be invalid
-        auto const from = col_msg->getFromNode();
-        collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
-          msg,base,handler,member,from
+        debug_print(
+          vrt_coll, node,
+          "collectionBcastHandler: current context: perm={}, temp={}\n",
+          perm_elm_id, temp_elm_id
         );
 
-        #if backend_check_enabled(lblite)
-          theMsg()->clearListeners();
+        std::unique_ptr<messaging::Listener> listener =
+          std::make_unique<balance::LBListener>(
+            [&](NodeType dest, MsgSizeType size, bool bcast){
+              auto& stats = base->getStats();
+              stats.recvToNode(dest, perm_elm_id, temp_elm_id, size, bcast);
+            }
+          );
+        theMsg()->addSendListener(std::move(listener));
+      #endif
 
-          // Unset the element ID context
-          theCollection()->setCurrentContext(perm_prev_elm, temp_prev_elm);
+      // be very careful here, do not touch `base' after running the active
+      // message because it might have migrated out and be invalid
+      auto const from = col_msg->getFromNode();
+      collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
+        msg,base,handler,member,from
+      );
 
-          if (msg->lbLiteInstrument()) {
-            auto& stats = base->getStats();
-            stats.stopTime();
-          }
-        #endif
-      }
+      #if backend_check_enabled(lblite)
+        theMsg()->clearListeners();
+
+        // Unset the element ID context
+        theCollection()->setCurrentContext(perm_prev_elm, temp_prev_elm);
+
+        if (msg->lbLiteInstrument()) {
+          auto& stats = base->getStats();
+          stats.stopTime();
+        }
+      #endif
     });
   }
   /*
@@ -1443,7 +1440,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   if (imm_context) {
     theTerm()->produce(cur_epoch);
     return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
-      schedule<>([=]{
+      schedule([=]{
         theMsg()->pushEpoch(cur_epoch);
         theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
           toProxy, reinterpret_cast<MsgT*>(inner_msg.get()), handler, member, false
@@ -2624,7 +2621,7 @@ MigrateStatus CollectionManager::migrate(
 
   auto const epoch = theMsg()->getEpoch();
   theTerm()->produce(epoch);
-  schedule<>([=]{
+  schedule([=]{
     theMsg()->pushEpoch(epoch);
     migrateOut<ColT,IndexT>(col_proxy, idx, dest);
     theMsg()->popEpoch(epoch);
@@ -3160,23 +3157,6 @@ template <typename always_void>
 DispatchBasePtrType
 CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
-}
-
-template <typename always_void>
-void CollectionManager::schedule(ActionType action) {
-  work_units_.push_back(action);
-}
-
-template <typename always_void>
-bool CollectionManager::scheduler() {
-  if (work_units_.size() == 0) {
-    return false;
-  } else {
-    auto unit = work_units_.back();
-    work_units_.pop_back();
-    unit();
-    return true;
-  }
 }
 
 }}} /* end namespace vt::vrt::collection */

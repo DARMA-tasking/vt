@@ -69,8 +69,8 @@ struct SeqMsgStateVirtual {
   using ActionContainerType = ContainerType<ActionType>;
   using TaggedActionContainerType = TagContainerType<ActionContainerType>;
 
-  using MsgContainerType = ContainerType<MsgT*>;
-  using TaggedMsgContainerType = TagContainerType<std::list<MsgT*>>;
+  using MsgContainerType = ContainerType<MsgSharedPtr<MsgT>>;
+  using TaggedMsgContainerType = TagContainerType<std::list<MsgSharedPtr<MsgT>>>;
 
   // waiting actions on matching message arrival
   static ActionContainerType seq_action;

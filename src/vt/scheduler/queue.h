@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_parent.cc
+//                                   queue.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,74 +42,37 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_SCHEDULER_QUEUE_H
+#define INCLUDED_VT_SCHEDULER_QUEUE_H
+
 #include "vt/config.h"
-#include "vt/termination/termination.h"
 
-namespace vt { namespace term {
+#include <queue>
 
-void EpochRelation::addParentEpoch(EpochType const in_parent) {
-  if (is_ds_) {
-    debug_print(
-      termds, node,
-      "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
-    );
-  } else {
-    debug_print(
-      term, node,
-      "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
-    );
-  }
+namespace vt { namespace sched {
 
-  // Produce a single work unit for the parent epoch so it can not finish while
-  // this epoch is live
-  theTerm()->produce(in_parent,1);
-  parents_.insert(in_parent);
-}
+template <typename T>
+struct Queue {
+  Queue() = default;
+  Queue(Queue const&) = default;
+  Queue(Queue&&) = default;
 
-void EpochRelation::clearParents() {
-  if (is_ds_) {
-    debug_print(
-      termds, node,
-      "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-      parents_.size()
-    );
-  } else {
-    debug_print(
-      term, node,
-      "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-      parents_.size()
-    );
-  }
+  void push(T elm) { impl_.push(elm); }
 
-  for (auto&& parent : parents_) {
-    if (is_ds_) {
-      debug_print(
-        termds, node,
-        "clearParents: epoch={:x}, parent={:x}\n", epoch_, parent
-      );
-    } else {
-      debug_print(
-        term, node,
-        "clearParents: epoch={:x}, parent={:x}\n", epoch_,parent
-      );
-    }
+  void emplace(T&& elm) { impl_.emplace(std::forward<T>(elm)); }
 
-    // Consume the parent epoch to release it so it can now possibly complete
-    // since the child is terminated
-    theTerm()->consume(parent,1);
-  }
+  T pop() { auto elm = impl_.front(); impl_.pop(); return elm; }
 
-  // Clear the parent list
-  parents_.clear();
-}
+  T const& top() { return impl_.front(); }
 
-bool EpochRelation::hasParent() const {
-  return parents_.size() > 0;
-}
+  std::size_t size() const { return impl_.size(); }
 
-std::size_t EpochRelation::numParents() const {
-  return parents_.size();
-}
+  bool empty() const { return impl_.empty(); }
 
+private:
+  std::queue<T, std::deque<T>> impl_;
+};
 
-}} /* end namespace vt::term */
+}} /* end namespace vt::sched */
+
+#endif /*INCLUDED_VT_SCHEDULER_QUEUE_H*/

@@ -146,20 +146,26 @@ TEST_P(TestSequencerParallelParam, test_seq_parallel_param) {
 
   CountType const& par_count = GetParam();
 
+  SeqType const& seq_id = theSeq()->nextSeq();
+  auto seq_par_cnt_fn = std::bind(seqParFnN, _1, par_count);
+
   if (node == 0) {
-    SeqType const& seq_id = theSeq()->nextSeq();
-
-    auto seq_par_cnt_fn = std::bind(seqParFnN, _1, par_count);
     seq_par_cnt_fn(SeqParResetAtomicValue);
-
     theSeq()->sequenced(seq_id, seq_par_cnt_fn);
-    for (CountType i = 0; i < par_count; i++) {
-      theMsg()->sendMsg<TestMsg, seqParHanN>(node, makeSharedMessage<TestMsg>());
+  }
+
+  for (CountType i = 0; i < par_count; i++) {
+    if (node == 1) {
+      theMsg()->sendMsg<TestMsg, seqParHanN>(0, makeSharedMessage<TestMsg>());
     }
+  }
+
+  if (node == 0) {
     theTerm()->addAction([=]{
       seq_par_cnt_fn(SeqParFinalizeAtomicValue);
     });
   }
+
 }
 
 INSTANTIATE_TEST_CASE_P(
@@ -310,47 +316,43 @@ struct TestSequencerParallel : TestParallelHarness {
 #define PAR_EXPAND(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, NUM_MSGS, IS_TAG) \
   do {                                                                \
     SeqType const& seq_id = theSeq()->nextSeq();                      \
-    theSeq()->sequenced(seq_id, (SEQ_FN));                            \
+    if ((NODE) == 0) {                                                \
+      theSeq()->sequenced(seq_id, (SEQ_FN));                          \
+    }                                                                 \
     for (int i = 0; i < (NUM_MSGS); i++) {                            \
       TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
-      theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                           \
-        (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
-      );                                                              \
+      if ((NODE) == 1) {                                              \
+        theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                         \
+          0, makeSharedMessage<MSG_TYPE>(), tag                       \
+        );                                                            \
+      }                                                               \
     }                                                                 \
-    theTerm()->addAction([=]{                                         \
-      SEQ_FN(-1);                                                     \
-    });                                                               \
+    if ((NODE) == 0) {                                                \
+      theTerm()->addAction([=]{                                       \
+        SEQ_FN(-1);                                                   \
+      });                                                             \
+    }                                                                 \
   } while (false);
 
 
 TEST_F(TestSequencerParallel, test_parallel_1) {
   auto const& node = theContext()->getNode();
-
-  if (node == 0) {
-    PAR_EXPAND(seqParHan1, seqParFn1, node, TestMsg, 2, false);
-  }
+  PAR_EXPAND(seqParHan1, seqParFn1, node, TestMsg, 2, false);
 }
 
 TEST_F(TestSequencerParallel, test_parallel_2) {
   auto const& node = theContext()->getNode();
-
-  if (node == 0) {
-    PAR_EXPAND(seqParHan2, seqParFn2, node, TestMsg, 3, false);
-  }
+  PAR_EXPAND(seqParHan2, seqParFn2, node, TestMsg, 3, false);
 }
 
 TEST_F(TestSequencerParallel, test_parallel_3) {
   auto const& node = theContext()->getNode();
-  if (node == 0) {
-    PAR_EXPAND(seqParHan3, seqParFn3, node, TestMsg, 4, false);
-  }
+  PAR_EXPAND(seqParHan3, seqParFn3, node, TestMsg, 4, false);
 }
 
 TEST_F(TestSequencerParallel, test_parallel_4) {
   auto const& node = theContext()->getNode();
-  if (node == 0) {
-    PAR_EXPAND(seqParHan4, seqParFn4, node, TestMsg, 4, false);
-  }
+  PAR_EXPAND(seqParHan4, seqParFn4, node, TestMsg, 4, false);
 }
 
 }}} // end namespace vt::tests::unit
