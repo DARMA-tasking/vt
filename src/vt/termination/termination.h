@@ -52,12 +52,14 @@
 #include "vt/termination/term_action.h"
 #include "vt/termination/term_interface.h"
 #include "vt/termination/term_window.h"
-#include "vt/termination/term_parent.h"
+#include "vt/termination/epoch_dependency.h"
 #include "vt/termination/dijkstra-scholten/ds_headers.h"
+#include "vt/termination/graph/epoch_graph.h"
 #include "vt/epoch/epoch.h"
 #include "vt/activefn/activefn.h"
 #include "vt/collective/tree/tree.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/termination/graph/epoch_graph_reduce.h"
 
 #include <cstdint>
 #include <unordered_map>
@@ -79,7 +81,9 @@ struct TerminationDetector :
   using TermStateDSType    = term::ds::StateDS::TerminatorType;
   using WindowType         = std::unique_ptr<EpochWindow>;
   using ArgType            = vt::arguments::ArgConfig;
-  using ParentBagType      = EpochRelation::ParentBagType;
+  using SuccessorBagType   = EpochDependency::SuccessorBagType;
+  using EpochGraph         = termination::graph::EpochGraph;
+  using EpochGraphMsg      = termination::graph::EpochGraphMsg<EpochGraph>;
 
   TerminationDetector();
   virtual ~TerminationDetector() {}
@@ -98,9 +102,13 @@ struct TerminationDetector :
     EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
     NodeType node = uninitialized_destination
   );
+  inline void hangDetectSend() { hang_.l_prod++; }
+  inline void hangDetectRecv() { hang_.l_cons++; }
   /***************************************************************************/
 
   friend struct ds::StateDS;
+  friend struct TermState;
+  friend struct EpochDependency;
 
   bool isRooted(EpochType epoch);
   bool isDS(EpochType epoch);
@@ -168,6 +176,10 @@ private:
 
   EpochType getArchetype(EpochType const& epoch) const;
   EpochWindow* getWindow(EpochType const& epoch);
+  void countsConstant(TermStateType& state);
+
+public:
+  void startEpochGraphBuild();
 
 private:
   void updateResolvedEpochs(EpochType const& epoch);
@@ -175,13 +187,23 @@ private:
   void replyTerminated(EpochType const& epoch, bool const& is_terminated);
 
 public:
-  void setLocalTerminated(bool const terminated, bool const no_local = true);
+  void setLocalTerminated(bool const terminated, bool const no_propagate = true);
   void maybePropagate();
   TermCounterType getNumUnits() const;
 
 public:
   // TermTerminated interface
   TermStatusEnum testEpochTerminated(EpochType epoch) override;
+  // Might return (conservatively) false if the epoch is non-local
+  bool isEpochTerminated(EpochType epoch);
+
+public:
+  std::shared_ptr<EpochGraph> makeGraph();
+
+private:
+  static void hangCheckHandler(HangCheckMsg* msg);
+  static void buildLocalGraphHandler(BuildGraphMsg* msg);
+  static void epochGraphBuiltHandler(EpochGraphMsg* msg);
 
 private:
   bool propagateEpoch(TermStateType& state);
@@ -189,9 +211,17 @@ private:
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void setupNewEpoch(EpochType const& epoch);
   void readyNewEpoch(EpochType const& epoch);
-  void linkChildEpoch(EpochType epoch, EpochType parent = no_epoch);
   void makeRootedHan(EpochType const& epoch, bool is_root);
 
+public:
+  void addDependency(EpochType predecessor, EpochType successoor);
+
+private:
+  EpochDependency* getEpochDep(EpochType epoch);
+  void removeEpochStateDependency(EpochType ep);
+  void addEpochStateDependency(EpochType ep);
+
+private:
   static void makeRootedHandler(TermMsg* msg);
   static void inquireEpochTerminated(TermTerminatedMsg* msg);
   static void replyEpochTerminated(TermTerminatedReplyMsg* msg);
@@ -202,6 +232,8 @@ private:
 private:
   // global termination state
   TermStateType any_epoch_state_;
+  // hang detector termination state
+  TermStateType hang_;
   // epoch termination state
   EpochContainerType<TermStateType> epoch_state_        = {};
   // epoch window container for specific archetyped epochs
@@ -212,6 +244,8 @@ private:
   std::unordered_set<EpochType> epoch_ready_            = {};
   // list of remote epochs pending status report of finished
   std::unordered_set<EpochType> epoch_wait_status_      = {};
+  // has printed epoch graph during abort
+  bool has_printed_epoch_graph                          = false;
 };
 
 }} // end namespace vt::term

@@ -79,5 +79,6 @@
 #include "vt/epoch/epoch_headers.h"
 #include "vt/pipe/pipe_headers.h"
 #include "vt/objgroup/headers.h"
+#include "vt/scheduler/priority.h"
 
 #endif /*INCLUDED_VT_TRANSPORT_H*/

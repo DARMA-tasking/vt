@@ -46,6 +46,11 @@
 #define INCLUDED_SCHEDULER_SCHEDULER_H
 
 #include "vt/config.h"
+#include "vt/scheduler/queue.h"
+#include "vt/scheduler/priority_queue.h"
+#include "vt/scheduler/prioritized_work_unit.h"
+#include "vt/scheduler/work_unit.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 #include <cassert>
 #include <vector>
@@ -56,23 +61,33 @@
 namespace vt { namespace sched {
 
 enum SchedulerEvent {
-  BeginIdle = 0,
-  EndIdle = 1,
-  SchedulerEventSize = 2
+  BeginIdle          = 0,
+  EndIdle            = 1,
+  BeginIdleMinusTerm = 2,
+  EndIdleMinusTerm   = 3,
+  SchedulerEventSize = 4
 };
 
 struct Scheduler {
-  using SchedulerEventType = SchedulerEvent;
-  using TriggerType = std::function<void()>;
+  using SchedulerEventType   = SchedulerEvent;
+  using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
+
+# if backend_check_enabled(priorities)
+  using UnitType             = PriorityUnit;
+# else
+  using UnitType             = Unit;
+# endif
 
   Scheduler();
 
   static void checkTermSingleNode();
 
-  void scheduler();
-  bool schedulerImpl();
+  bool runNextUnit();
+  bool progressMsgOnlyImpl();
+  void scheduler(bool msg_only = false);
+  bool progressImpl();
   void schedulerForever();
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(
@@ -81,15 +96,43 @@ struct Scheduler {
   void triggerEvent(SchedulerEventType const& event);
   bool hasSchedRun() const { return has_executed_; }
 
+  void enqueue(ActionType action);
+  void enqueue(PriorityType priority, ActionType action);
+
+  template <typename MsgT>
+  void enqueue(MsgT* msg, ActionType action);
+  template <typename MsgT>
+  void enqueue(MsgSharedPtr<MsgT> msg, ActionType action);
+
+  std::size_t workQueueSize() const { return work_queue_.size(); }
+  bool workQueueEmpty() const { return work_queue_.empty(); }
+
+  bool isIdle() const { return work_queue_.empty(); }
+  bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
+
 private:
-  bool has_executed_ = false;
-  bool is_idle = false;
+
+# if backend_check_enabled(priorities)
+  PriorityQueue<UnitType> work_queue_;
+# else
+  Queue<UnitType> work_queue_;
+# endif
+
+  bool has_executed_      = false;
+  bool is_idle            = true;
+  bool is_idle_minus_term = true;
+
+  // The number of termination messages currently in the queue---they weakly
+  // imply idleness for the stake of termination
+  std::size_t num_term_msgs_ = 0;
 
   EventTriggerContType event_triggers;
   EventTriggerContType event_triggers_once;
 };
 
 }} //end namespace vt::scheduler
+
+#include "vt/scheduler/scheduler.impl.h"
 
 namespace vt {
 

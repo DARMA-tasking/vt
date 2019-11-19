@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_parent.cc
+//                                 gossip_msg.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,74 +42,70 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H
+
 #include "vt/config.h"
-#include "vt/termination/termination.h"
 
-namespace vt { namespace term {
+#include <vector>
+#include <unordered_map>
 
-void EpochRelation::addParentEpoch(EpochType const in_parent) {
-  if (is_ds_) {
-    debug_print(
-      termds, node,
-      "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
-    );
-  } else {
-    debug_print(
-      term, node,
-      "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
-    );
+namespace vt { namespace vrt { namespace collection { namespace balance {
+
+struct GossipMsg : vt::Message {
+  using NodeLoadType = std::unordered_map<NodeType, lb::BaseLB::LoadType>;
+
+  GossipMsg() = default;
+  GossipMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
+    : from_node_(in_from_node), node_load_(in_node_load)
+  { }
+
+  NodeLoadType const& getNodeLoad() const {
+    return node_load_;
   }
 
-  // Produce a single work unit for the parent epoch so it can not finish while
-  // this epoch is live
-  theTerm()->produce(in_parent,1);
-  parents_.insert(in_parent);
-}
-
-void EpochRelation::clearParents() {
-  if (is_ds_) {
-    debug_print(
-      termds, node,
-      "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-      parents_.size()
-    );
-  } else {
-    debug_print(
-      term, node,
-      "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-      parents_.size()
-    );
+  void addNodeLoad(NodeType node, lb::BaseLB::LoadType load) {
+    node_load_[node] = load;
   }
 
-  for (auto&& parent : parents_) {
-    if (is_ds_) {
-      debug_print(
-        termds, node,
-        "clearParents: epoch={:x}, parent={:x}\n", epoch_, parent
-      );
-    } else {
-      debug_print(
-        term, node,
-        "clearParents: epoch={:x}, parent={:x}\n", epoch_,parent
-      );
-    }
+  NodeType getFromNode() const { return from_node_; }
 
-    // Consume the parent epoch to release it so it can now possibly complete
-    // since the child is terminated
-    theTerm()->consume(parent,1);
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | from_node_;
+    s | node_load_;
   }
 
-  // Clear the parent list
-  parents_.clear();
-}
+private:
+  NodeType from_node_     = uninitialized_destination;
+  NodeLoadType node_load_ = {};
+};
 
-bool EpochRelation::hasParent() const {
-  return parents_.size() > 0;
-}
+struct LazyMigrationMsg : vt::Message {
+  using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, lb::BaseLB::LoadType>;
 
-std::size_t EpochRelation::numParents() const {
-  return parents_.size();
-}
+  LazyMigrationMsg() = default;
+  LazyMigrationMsg(NodeType in_to_node, ObjsType const& in_objs)
+    : to_node_(in_to_node), objs_(in_objs)
+  { }
 
+  ObjsType const& getObjSet() const {
+    return objs_;
+  }
 
-}} /* end namespace vt::term */
+  NodeType getToNode() const { return to_node_; }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | to_node_;
+    s | objs_;
+  }
+
+private:
+  NodeType to_node_ = uninitialized_destination;
+  ObjsType objs_  = {};
+};
+
+}}}} /* end namespace vt::vrt::collection::balance */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H*/

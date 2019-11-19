@@ -61,6 +61,8 @@ public:
   static bool vt_auto_color;
   static bool vt_quiet;
 
+  static int32_t vt_sched_num_progress;
+
   static bool vt_no_sigint;
   static bool vt_no_sigsegv;
   static bool vt_no_terminate;
@@ -90,6 +92,9 @@ public:
   static std::string vt_lb_stats_file;
 
   static bool vt_no_detect_hang;
+  static bool vt_print_no_progress;
+  static bool vt_epoch_graph_on_hang;
+  static bool vt_epoch_graph_terse;
   static bool vt_term_rooted_use_ds;
   static bool vt_term_rooted_use_wave;
   static int64_t vt_hang_freq;
@@ -115,6 +120,7 @@ public:
   static bool vt_debug_param;
   static bool vt_debug_handler;
   static bool vt_debug_hierlb;
+  static bool vt_debug_gossiplb;
   static bool vt_debug_scatter;
   static bool vt_debug_sequence;
   static bool vt_debug_sequence_vrt;

@@ -55,7 +55,7 @@ namespace vt { namespace term { namespace ds {
 
 template <typename CommType>
 TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeType self_)
-  : EpochRelation(in_epoch, true),
+  : EpochDependency(in_epoch, true),
     parent(-1), self(self_), C(0), ackedArbitrary(0), ackedParent(0),
     reqedParent(0), engagementMessageCount(0), D(0), processedSum(C)
 {
@@ -69,6 +69,7 @@ void TermDS<CommType>::terminated() {
     "terminated: epoch={:x}\n", epoch_
   );
 
+  is_terminated = true;
   CommType::rootTerminated(epoch_);
 }
 

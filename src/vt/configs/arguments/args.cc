@@ -57,6 +57,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_auto_color         = false;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
 
+/*static*/ int32_t     ArgConfig::vt_sched_num_progress = 2;
+
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
@@ -89,6 +91,9 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_term_rooted_use_wave = false;
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
+/*static*/ bool        ArgConfig::vt_epoch_graph_on_hang= true;
+/*static*/ bool        ArgConfig::vt_epoch_graph_terse  = false;
+/*static*/ bool        ArgConfig::vt_print_no_progress  = true;
 
 /*static*/ bool        ArgConfig::vt_pause              = false;
 
@@ -111,6 +116,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_param        = false;
 /*static*/ bool        ArgConfig::vt_debug_handler      = false;
 /*static*/ bool        ArgConfig::vt_debug_hierlb       = false;
+/*static*/ bool        ArgConfig::vt_debug_gossiplb     = false;
 /*static*/ bool        ArgConfig::vt_debug_scatter      = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence     = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence_vrt = false;
@@ -260,6 +266,7 @@ namespace vt { namespace arguments {
   auto oap = "Enable debug_param        = \"" debug_pp(param)        "\"";
   auto pap = "Enable debug_handler      = \"" debug_pp(handler)      "\"";
   auto qap = "Enable debug_hierlb       = \"" debug_pp(hierlb)       "\"";
+  auto qbp = "Enable debug_gossiplb     = \"" debug_pp(gossiplb)     "\"";
   auto rap = "Enable debug_scatter      = \"" debug_pp(scatter)      "\"";
   auto sap = "Enable debug_sequence     = \"" debug_pp(sequence)     "\"";
   auto tap = "Enable debug_sequence_vrt = \"" debug_pp(sequence_vrt) "\"";
@@ -293,6 +300,7 @@ namespace vt { namespace arguments {
   auto oa = app.add_flag("--vt_debug_param",        vt_debug_param,        oap);
   auto pa = app.add_flag("--vt_debug_handler",      vt_debug_handler,      pap);
   auto qa = app.add_flag("--vt_debug_hierlb",       vt_debug_hierlb,       qap);
+  auto qb = app.add_flag("--vt_debug_gossiplb",     vt_debug_gossiplb,     qbp);
   auto ra = app.add_flag("--vt_debug_scatter",      vt_debug_scatter,      rap);
   auto sa = app.add_flag("--vt_debug_sequence",     vt_debug_sequence,     sap);
   auto ta = app.add_flag("--vt_debug_sequence_vrt", vt_debug_sequence_vrt, tap);
@@ -326,6 +334,7 @@ namespace vt { namespace arguments {
   oa->group(debugGroup);
   pa->group(debugGroup);
   qa->group(debugGroup);
+  qb->group(debugGroup);
   ra->group(debugGroup);
   sa->group(debugGroup);
   ta->group(debugGroup);
@@ -386,15 +395,24 @@ namespace vt { namespace arguments {
   auto hang_freq    = "The number of tree traversals before a hang is detected";
   auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
   auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
+  auto graph_on     = "Output epoch graph to file (DOT) when hang is detected";
+  auto terse        = "Output epoch graph to file in terse mode";
+  auto progress     = "Print termination counts when progress is stalled";
   auto hfd          = 1024;
-  auto x  = app.add_flag("--vt_no_detect_hang",       vt_no_detect_hang,       hang);
-  auto x1 = app.add_flag("--vt_term_rooted_use_ds",   vt_term_rooted_use_ds,   ds);
-  auto x2 = app.add_flag("--vt_term_rooted_use_wave", vt_term_rooted_use_wave, wave);
-  auto y = app.add_option("--vt_hang_freq",           vt_hang_freq,      hang_freq, hfd);
+  auto x  = app.add_flag("--vt_no_detect_hang",        vt_no_detect_hang,       hang);
+  auto x1 = app.add_flag("--vt_term_rooted_use_ds",    vt_term_rooted_use_ds,   ds);
+  auto x2 = app.add_flag("--vt_term_rooted_use_wave",  vt_term_rooted_use_wave, wave);
+  auto x3 = app.add_option("--vt_epoch_graph_on_hang", vt_epoch_graph_on_hang,  graph_on, true);
+  auto x4 = app.add_flag("--vt_epoch_graph_terse",     vt_epoch_graph_terse,    terse);
+  auto x5 = app.add_option("--vt_print_no_progress",   vt_print_no_progress,    progress, true);
+  auto y = app.add_option("--vt_hang_freq",            vt_hang_freq,      hang_freq, hfd);
   auto debugTerm = "Termination";
   x->group(debugTerm);
   x1->group(debugTerm);
   x2->group(debugTerm);
+  x3->group(debugTerm);
+  x4->group(debugTerm);
+  x5->group(debugTerm);
   y->group(debugTerm);
 
   /*
@@ -440,6 +458,14 @@ namespace vt { namespace arguments {
   us2->group(userOpts);
   us3->group(userOpts);
 
+  /*
+   * Options for configuring the VT scheduler
+   */
+
+  auto nsched = "Number of times to run the progress function in scheduler";
+  auto sca = app.add_option("--vt_sched_num_progress", vt_sched_num_progress, nsched, 2);
+  auto schedulerGroup = "Scheduler Configuration";
+  sca->group(schedulerGroup);
 
   /*
    * Run the parser!

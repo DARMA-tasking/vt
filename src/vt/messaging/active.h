@@ -94,12 +94,15 @@ struct PendingRecv {
   RDMA_ContinuationDeleteType cont = nullptr;
   ActionType dealloc_user_buf = nullptr;
   NodeType recv_node = uninitialized_destination;
+  PriorityType priority = no_priority;
 
   PendingRecv(
     void* in_user_buf, RDMA_ContinuationDeleteType in_cont,
-    ActionType in_dealloc_user_buf, NodeType node
+    ActionType in_dealloc_user_buf, NodeType node,
+    PriorityType in_priority
   ) : user_buf(in_user_buf), cont(in_cont),
-      dealloc_user_buf(in_dealloc_user_buf), recv_node(node)
+      dealloc_user_buf(in_dealloc_user_buf), recv_node(node),
+      priority(in_priority)
   { }
 };
 
@@ -125,15 +128,17 @@ struct InProgressDataIRecv : public InProgressIRecv {
     char* in_buf, CountType in_probe_bytes, NodeType in_sender,
     MPI_Request in_req, void* const in_user_buf,
     ActionType in_dealloc_user_buf,
-    RDMA_ContinuationDeleteType in_next
+    RDMA_ContinuationDeleteType in_next,
+    PriorityType in_priority
   ) : InProgressIRecv{in_buf, in_probe_bytes, in_sender, in_req},
       user_buf(in_user_buf), dealloc_user_buf(in_dealloc_user_buf),
-      next(in_next)
+      next(in_next), priority(in_priority)
   { }
 
   void* user_buf = nullptr;
   ActionType dealloc_user_buf = nullptr;
   RDMA_ContinuationDeleteType next = nullptr;
+  PriorityType priority = no_priority;
 };
 
 struct BufferedActiveMsg {
@@ -486,13 +491,25 @@ struct ActiveMessenger {
     RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
   );
 
+  bool recvDataMsgPriority(
+    PriorityType priority, TagType const& tag, NodeType const& node,
+    RDMA_ContinuationDeleteType next = nullptr
+  );
+
   bool recvDataMsg(
     TagType const& tag, NodeType const& node,
     RDMA_ContinuationDeleteType next = nullptr
   );
 
   bool recvDataMsg(
-    TagType const& tag, NodeType const& recv_node, bool const& enqueue,
+    PriorityType priority, TagType const& tag, NodeType const& recv_node,
+    bool const& enqueue, RDMA_ContinuationDeleteType next = nullptr
+  );
+
+  bool recvDataMsgBuffer(
+    void* const user_buf, PriorityType priority, TagType const& tag,
+    NodeType const& node = uninitialized_destination, bool const& enqueue = true,
+    ActionType dealloc_user_buf = nullptr,
     RDMA_ContinuationDeleteType next = nullptr
   );
 
@@ -510,8 +527,7 @@ struct ActiveMessenger {
   void performTriggeredActions();
   bool tryProcessIncomingActiveMsg();
   bool tryProcessDataMsgRecv();
-  bool scheduler();
-  bool isLocalTerm();
+  bool progress();
 
   HandlerType registerNewHandler(
     ActiveClosureFnType fn, TagType const& tag = no_tag
@@ -535,7 +551,14 @@ struct ActiveMessenger {
     trace::TraceEventIDType getCurrentTraceEvent() const;
   #endif
 
-  bool handleActiveMsg(
+  PriorityType getCurrentPriority() const;
+  PriorityLevelType getCurrentPriorityLevel() const;
+
+  void scheduleActiveMsg(
+    MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
+    MsgSizeType const& size, bool insert
+  );
+  bool processActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
     MsgSizeType const& size, bool insert
   );
@@ -637,14 +660,16 @@ private:
     trace::UserEventIDType trace_isend     = 0;
   #endif
 
-  HandlerType current_handler_context_           = uninitialized_handler;
-  NodeType current_node_context_                 = uninitialized_destination;
-  EpochType current_epoch_context_               = no_epoch;
-  EpochType global_epoch_                        = no_epoch;
-  MaybeReadyType maybe_ready_tag_han_            = {};
-  ContWaitType pending_handler_msgs_             = {};
-  ContainerPendingType pending_recvs_            = {};
-  TagType cur_direct_buffer_tag_                 = starting_direct_buffer_tag;
+  HandlerType current_handler_context_                    = uninitialized_handler;
+  NodeType current_node_context_                          = uninitialized_destination;
+  EpochType current_epoch_context_                        = no_epoch;
+  PriorityType current_priority_context_                  = no_priority;
+  PriorityLevelType current_priority_level_context_       = no_priority_level;
+  EpochType global_epoch_                                 = no_epoch;
+  MaybeReadyType maybe_ready_tag_han_                     = {};
+  ContWaitType pending_handler_msgs_                      = {};
+  ContainerPendingType pending_recvs_                     = {};
+  TagType cur_direct_buffer_tag_                          = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
   std::vector<ListenerType> send_listen_                    = {};
   IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv = {};
