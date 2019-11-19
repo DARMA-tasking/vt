@@ -155,28 +155,7 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 inline void setTraceName(
   trace::TraceEntryIDType id, std::string const& name, std::string const& parent
 ) {
-#if backend_check_enabled(trace_enabled)
-  using TraceContainersType = trace::TraceRegistry::TraceContainersType;
-  auto event_iter = TraceContainersType::getEventContainer().find(id);
-  vtAssertExpr(event_iter != TraceContainersType::getEventContainer().end());
-  if (event_iter != TraceContainersType::getEventContainer().end()) {
-    if (name != "") {
-      event_iter->second.setEventName(name);
-    }
-    if (parent != "") {
-      auto type_id = event_iter->second.theEventTypeId();
-      auto iter = TraceContainersType::getEventTypeContainer().find(type_id);
-      vtAssertInfo(
-        iter != TraceContainersType::getEventTypeContainer().end(),
-        "Event type must exist",
-        name, parent, id, type_id
-      );
-      if (iter != TraceContainersType::getEventTypeContainer().end()) {
-        iter->second.setEventName(parent);
-      }
-    }
-  }
-#endif
+  trace::TraceRegistry::setTraceName(id, name, parent);
 }
 
 }} // end namespace vt::auto_registry
