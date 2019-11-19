@@ -52,9 +52,21 @@
 
 namespace vt { namespace debug {
 
+template <typename T>
+int useVarsDummy(T t) {
+  return (void)(t), 0;
+}
+
+/// Attempt to ensure the argument (pack) is used.
+/// This may be optimized away by compilers. C++17 has cleaner methods.
+/// ref. https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion/25683817
 template <typename... Args>
 void useVars(Args&&... args) {
-  (void)(std::make_tuple(std::forward<Args>(args)...));
+  using expander = int[];
+  (void)(expander {
+    0,
+    useVarsDummy(std::forward<Args>(args)) ...
+  });
 }
 
 }} /* end namespace vt::debug */
