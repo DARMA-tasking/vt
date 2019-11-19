@@ -51,14 +51,19 @@
 namespace vt { namespace trace {
 
 struct TraceRegistry {
-  using TraceContainersType = TraceContainers;
-
+  /// Registers an event, if it does not already exist.
+  /// Creates the event type (aka parent) as needed.
+  /// Returns a non-0 value.
   static TraceEntryIDType registerEventHashed(
     std::string const& event_type_name, std::string const& event_name
   );
 
+  /// Changes the name of an event and/or event type name.
+  /// Empty string values are ignored, which can be used for partial updates.
+  /// Changing the type name will affect ALL events that share the type.
+  /// Event trace IDs are not affected.
   static void setTraceName(
-    TraceEntryIDType id, std::string const& name, std::string const& parent
+    TraceEntryIDType id, std::string const& name, std::string const& type_name
   );
 
   /// Returns true assigns seq if the for the corresponding ID.
