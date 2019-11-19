@@ -49,7 +49,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-enum struct CriterionEnum : int8_t {
+enum struct CriterionEnum : uint8_t {
   Grapevine         = 0,
   ModifiedGrapevine = 1
 };
