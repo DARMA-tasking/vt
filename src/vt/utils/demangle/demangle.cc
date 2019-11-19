@@ -100,6 +100,28 @@ TemplateExtract::getBarename(std::string const& typestr) {
   return typestr;
 }
 
+/*static*/ std::string
+TemplateExtract::getVoidFuncStrArgs(std::string const& typestr) {
+  size_t s = 0;
+  // eat leading "void ("
+  if (typestr.find("void") == 0) {
+    s += 4;
+  }
+  if (s < typestr.length() and typestr[s] == ' ') {
+    s += 1;
+  }
+  if (s < typestr.length() and typestr[s] == '(') {
+    s += 1;
+  }
+  // eat trailing ")"
+  size_t e = typestr.length() - 1;
+  if (e >= 0 && typestr[e] == ')') {
+    e -= 1;
+  }
+
+  return typestr.substr(s, e - s);
+}
+
 //
 // DemanglerUtils
 //
@@ -126,6 +148,20 @@ DemanglerUtils::removeSpaces(std::string const& str) {
     clean.end());
 
   return clean;
+}
+
+/*static*/ std::string
+DemanglerUtils::join(
+  std::string const& delim, std::vector<std::string> const& strs
+) {
+  std::string s;
+  for (std::string const& i : strs) {
+    if (&i != &strs[0]) {
+      s += delim;
+    }
+    s += i;
+  }
+  return s;
 }
 
 }}} // end namespace vt::util::demangle

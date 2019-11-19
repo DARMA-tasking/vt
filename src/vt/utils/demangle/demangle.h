@@ -85,6 +85,17 @@ struct TemplateExtract {
   #endif
   }
 
+  // T,T* 'overload' for GCC
+  template <class T, T* PF_VALUE_NAME>
+  static constexpr char const* prettyFunctionForValuePtr() {
+  #if backend_check_enabled(trace_enabled)
+    return __PRETTY_FUNCTION__;
+  #else
+    assert(false && "Can only be used for a trace_enabled build.");
+    return "";
+  #endif
+  }
+
   /// Given a GCC/Clang-like __PRETTY_FUNCTION__ output,
   /// extract the template instantiation information as a string,
   /// assuming a SINGLE template parameter.
@@ -110,6 +121,12 @@ struct TemplateExtract {
   template <typename T, T value>
   static std::string getValueName() {
     return lastNamedPfType(prettyFunctionForValue<T,value>(), "PF_VALUE_NAME");
+  }
+
+  // T,T* 'overload' for GCC
+  template <typename T, T* value>
+  static std::string getValueNamePtr() {
+    return lastNamedPfType(prettyFunctionForValuePtr<T,value>(), "PF_VALUE_NAME");
   }
 
   // 1 arg
@@ -141,6 +158,11 @@ struct TemplateExtract {
 
   /// Given a string like 'a::b::c', return the barename of 'c'.
   static std::string getBarename(std::string const& typestr);
+
+  /// Given a string like 'void (...)' (that is, the string representation of
+  /// a function type.. return the argument section. As the name indicates
+  /// this is somewhat limited.
+  static std::string getVoidFuncStrArgs(std::string const& typestr);
 };
 
 struct DemanglerUtils {
@@ -149,6 +171,9 @@ struct DemanglerUtils {
 
   static std::string
   removeSpaces(std::string const& str);
+
+  static std::string
+  join(std::string const& delim, std::vector<std::string> const& strs);
 };
 
 }}} // end namespace vt::util::demangle
