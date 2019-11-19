@@ -75,7 +75,7 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_trace_file         = "";
 /*static*/ std::string ArgConfig::vt_trace_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_trace_mod          = 0;
-/*static*/ int32_t     ArgConfig::vt_trace_flush_mod    = 128;
+/*static*/ int32_t     ArgConfig::vt_trace_flush_mod    = 0;
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
@@ -228,7 +228,7 @@ namespace vt { namespace arguments {
   auto o = app.add_option("--vt_trace_file",       vt_trace_file,      tfile, "");
   auto p = app.add_option("--vt_trace_dir",        vt_trace_dir,       tdir,  "");
   auto q = app.add_option("--vt_trace_mod",        vt_trace_mod,       tmod,  1);
-  auto qf = app.add_option("--vt_trace_flush_mod", vt_trace_flush_mod, tflushmod,  1);
+  auto qf = app.add_option("--vt_trace_flush_mod", vt_trace_flush_mod, tflushmod, 0);
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);
