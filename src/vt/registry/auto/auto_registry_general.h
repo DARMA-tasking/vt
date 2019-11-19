@@ -89,11 +89,18 @@ struct FunctorAdapterArgs {
 
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
-    return TE::getTypeName<ObjTypeT>();
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto ns = TE::getTypeName<ObjTypeT>();
+    return DU::removeSpaces(ns);
   }
 
   static std::string traceGetEventName() {
-    return "operator";
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    //auto args = DU::join(",", TE::getTypeNames<Args...>());
+    //TODO: recursive template fun
+    std::string args = "..";
+    return "operator(" + DU::removeSpaces(args) + ")";
   }
 
   static size_t getNumArgs() {
@@ -110,12 +117,18 @@ struct FunctorAdapter {
 
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
-    return TE::getNamespace(TE::getValueName<F,f>());
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto q = TE::getTypeNames<F>();
+    auto ns = TE::getNamespace(TE::getValueNamePtr<F,f>());
+    return DU::removeSpaces(ns);
   }
 
   static std::string traceGetEventName() {
     using TE = vt::util::demangle::TemplateExtract;
-    return TE::getBarename(TE::getValueName<F,f>());
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto barename = TE::getBarename(TE::getValueNamePtr<F,f>());
+    auto args = TE::getVoidFuncStrArgs(TE::getTypeName<F>());
+    return barename + "(" + DU::removeSpaces(args) + ")";
   }
 
   static size_t getNumArgs() {
@@ -132,12 +145,17 @@ struct FunctorAdapterMember {
 
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
-    return TE::getNamespace(TE::getValueName<F,f>());
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto ns = TE::getNamespace(TE::getValueName<F,f>());
+    return DU::removeSpaces(ns);
   }
 
   static std::string traceGetEventName() {
     using TE = vt::util::demangle::TemplateExtract;
-    return TE::getBarename(TE::getValueName<F,f>());
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto barename = TE::getBarename(TE::getValueName<F,f>());
+    auto args = TE::getVoidFuncStrArgs(TE::getTypeName<F>());
+    return barename + "(" + DU::removeSpaces(args) + ")";
   }
 
   static size_t getNumArgs() {
