@@ -643,11 +643,8 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
       std::underlying_type<decltype(log->type)>::type
     >(log->type);
 
-    auto* events = TraceContainersType::getEventContainer();
-    auto event_iter = events->find(log->ep);
-
-    auto const event_seq_id = log->ep == no_trace_entry_id ?
-      no_trace_entry_id : event_iter->second.theEventSeq();
+    TraceEntryIDType event_seq_id;
+    TraceRegistry::getEventSequence(log->ep, /*out*/ event_seq_id);
 
     auto const num_nodes = theContext()->getNumNodes();
 
