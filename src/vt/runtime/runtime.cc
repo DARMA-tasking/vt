@@ -594,7 +594,7 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   } else {
     auto f11 = fmt::format("Color output enabled");
-    auto f12 = opt_inverse("--vt_color", f11);
+    auto f12 = opt_inverse("--vt_no_color", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
