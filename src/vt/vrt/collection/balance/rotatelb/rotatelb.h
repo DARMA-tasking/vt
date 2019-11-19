@@ -70,10 +70,7 @@ struct RotateLB : BaseLB {
 
   void init(objgroup::proxy::Proxy<RotateLB> in_proxy);
   void runLB() override;
-
-  double getDefaultMinThreshold()  const override { return 0.0;  }
-  double getDefaultMaxThreshold()  const override { return 0.0;  }
-  bool   getDefaultAutoThreshold() const override { return true; }
+  void inputParams(balance::SpecEntry* spec) override;
 
 private:
   objgroup::proxy::Proxy<RotateLB> proxy = {};

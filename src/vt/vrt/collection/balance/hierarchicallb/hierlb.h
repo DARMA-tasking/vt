@@ -78,16 +78,7 @@ struct HierarchicalLB : BaseLB {
 
   void init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy);
   void runLB() override;
-
-  double getDefaultMinThreshold()  const override {
-    return hierlb_threshold_p;
-  }
-  double getDefaultMaxThreshold()  const override {
-    return hierlb_max_threshold_p;
-  }
-  bool   getDefaultAutoThreshold() const override {
-    return hierlb_auto_threshold_p;
-  }
+  void inputParams(balance::SpecEntry* spec) override;
 
   void setupTree(double const threshold);
   void calcLoadOver(HeapExtractEnum const extract);
@@ -145,6 +136,9 @@ private:
   int64_t migrates_expected = 0, transfer_count = 0;
   TransferType transfers;
   objgroup::proxy::Proxy<HierarchicalLB> proxy = {};
+  double max_threshold = 0.0f;
+  double min_threshold = 0.0f;
+  bool auto_threshold = true;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
