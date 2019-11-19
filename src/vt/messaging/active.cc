@@ -298,19 +298,12 @@ EventType ActiveMessenger::sendMsgSized(
     base, uninitialized_destination, msg_size, true, &deliver
   );
 
-  EventType ret = no_event;
-
   if (deliver) {
-    EventType event = no_event;
-
     sendMsgBytesWithPut(dest, base, msg_size, send_tag);
-
-    ret = event;
-  } else {
-    ret = ret_event;
+    return no_event;
   }
 
-  return ret;
+  return ret_event;
 }
 
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(

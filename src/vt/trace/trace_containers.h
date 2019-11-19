@@ -70,31 +70,28 @@ using TraceContainerEventClassType = EventLookupType<TraceEntryIDType, EventClas
 
 struct Trace;
 
-// Use static template initialization pattern to deal with ordering issues with
-// auto-registry
-template <typename = void>
+// Container types are created-as-needed, which occurs during
+// intialization to avoid intiailization ordering issues.
 class TraceContainers {
  public:
-  static TraceContainerEventClassType& getEventTypeContainer(){
-    return event_type_container;
+  static TraceContainerEventClassType* getEventTypeContainer(){
+    if (not event_type_container_)
+      event_type_container_ = new TraceContainerEventClassType();
+    return event_type_container_;
   }
 
-  static TraceContainerEventType& getEventContainer(){
-    return event_container;
+  static TraceContainerEventType* getEventContainer(){
+    if (not event_container_)
+      event_container_ = new TraceContainerEventType();
+    return event_container_;
   }
 
   friend struct Trace;
 
  private:
-  static TraceContainerEventClassType event_type_container;
-  static TraceContainerEventType event_container;
+  static TraceContainerEventClassType* event_type_container_;
+  static TraceContainerEventType* event_container_;
 };
-
-template <typename T>
-TraceContainerEventClassType TraceContainers<T>::event_type_container = {};
-
-template <typename T>
-TraceContainerEventType TraceContainers<T>::event_container = {};
 
 template <typename EventT>
 struct TraceEventSeqCompare {

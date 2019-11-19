@@ -49,10 +49,10 @@
 #include "vt/context/context.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/trace/trace_common.h"
+#include "vt/trace/trace_containers.h"
 #include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_constants.h"
 #include "vt/trace/trace_event.h"
-#include "vt/trace/trace_containers.h"
 #include "vt/trace/trace_log.h"
 #include "vt/trace/trace_user_event.h"
 
@@ -74,7 +74,7 @@ namespace vt { namespace trace {
 struct Trace {
   using LogType             = Log;
   using TraceConstantsType  = eTraceConstants;
-  using TraceContainersType = TraceContainers<void>;
+  using TraceContainersType = TraceContainers;
   using TimeIntegerType     = int64_t;
   using LogPtrType          = LogType*;
   using TraceContainerType  = std::vector<LogPtrType>;
