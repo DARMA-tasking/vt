@@ -63,9 +63,6 @@ void GossipLB::init(objgroup::proxy::Proxy<GossipLB> in_proxy) {
   proxy_ = in_proxy;
 }
 
-void GossipLB::inputParams(balance::SpecEntry* spec) {
-}
-
 bool GossipLB::isUnderloaded(LoadType load) const {
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
   return load < avg * gossip_threshold;
@@ -74,6 +71,16 @@ bool GossipLB::isUnderloaded(LoadType load) const {
 bool GossipLB::isOverloaded(LoadType load) const {
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
   return load > avg * gossip_threshold;
+}
+
+void GossipLB::inputParams(balance::SpecEntry* spec) {
+  using CriterionEnumUnder = typename std::underlying_type<CriterionEnum>::type;
+  auto default_c = static_cast<CriterionEnumUnder>(criterion_);
+  f          = spec->getOrDefault<int32_t>("f", f);
+  k_max      = spec->getOrDefault<int32_t>("k", k_max);
+  num_iters_ = spec->getOrDefault<int32_t>("i", num_iters_);
+  int32_t c  = spec->getOrDefault<int32_t>("c", default_c);
+  criterion_ = static_cast<CriterionEnum>(c);
 }
 
 void GossipLB::runLB() {
