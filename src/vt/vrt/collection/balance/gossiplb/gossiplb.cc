@@ -60,7 +60,7 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void GossipLB::init(objgroup::proxy::Proxy<GossipLB> in_proxy) {
-  proxy = in_proxy;
+  proxy_ = in_proxy;
 }
 
 bool GossipLB::isUnderloaded(LoadType load) const {
@@ -122,20 +122,20 @@ void GossipLB::doLBStages() {
 
     if (first_iter) {
       // Copy this node's object assignments to a local, mutable copy
-      cur_objs = *load_data;
-      this_new_load = this_load;
+      cur_objs_ = *load_data;
+      this_new_load_ = this_load;
     } else {
       // Clear out data structures from previous iteration
       selected_.clear();
       underloaded_.clear();
       load_info_.clear();
-      k_cur = 0;
+      k_cur_ = 0;
       is_overloaded_ = is_underloaded_ = false;
     }
 
-    if (isOverloaded(this_new_load)) {
+    if (isOverloaded(this_new_load_)) {
       is_overloaded_ = true;
-    } else if (isUnderloaded(this_new_load)) {
+    } else if (isUnderloaded(this_new_load_)) {
       is_underloaded_ = true;
     }
 
@@ -151,11 +151,11 @@ void GossipLB::doLBStages() {
 void GossipLB::inform() {
   debug_print(
     gossiplb, node,
-    "GossipLB::inform: starting inform phase: k_max={}, k_cur={}\n",
-    k_max, k_cur
+    "GossipLB::inform: starting inform phase: k_max_={}, k_cur_={}\n",
+    k_max_, k_cur_
   );
 
-  vtAssert(k_max > 0, "Number of rounds (k) must be greater than zero");
+  vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
 
   auto const this_node = theContext()->getNode();
   if (is_underloaded_) {
@@ -164,9 +164,9 @@ void GossipLB::inform() {
 
   debug_print(
     gossiplb, node,
-    "GossipLB::inform: starting inform phase: k_max={}, k_cur={}, "
+    "GossipLB::inform: starting inform phase: k_max_={}, k_cur_={}, "
     "is_underloaded={}, is_overloaded={}\n",
-    k_max, k_cur, is_underloaded_, is_overloaded_
+    k_max_, k_cur_, is_underloaded_, is_overloaded_
   );
 
   bool inform_done = false;
@@ -186,32 +186,32 @@ void GossipLB::inform() {
 
   debug_print(
     gossiplb, node,
-    "GossipLB::inform: finished inform phase: k_max={}, k_cur={}\n",
-    k_max, k_cur
+    "GossipLB::inform: finished inform phase: k_max_={}, k_cur_={}\n",
+    k_max_, k_cur_
   );
 }
 
 void GossipLB::propagateRound(EpochType epoch) {
   debug_print(
     gossiplb, node,
-    "GossipLB::propagateRound: k_max={}, k_cur={}\n",
-    k_max, k_cur
+    "GossipLB::propagateRound: k_max_={}, k_cur_={}\n",
+    k_max_, k_cur_
   );
 
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
   std::uniform_int_distribution<NodeType> dist(0, num_nodes - 1);
-  std::mt19937 gen(seed());
+  std::mt19937 gen(seed_());
 
   auto& selected = selected_;
   selected = underloaded_;
 
-  auto const fanout = std::min(f, static_cast<decltype(f)>(num_nodes - 1));
+  auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes - 1));
 
   debug_print(
     gossiplb, node,
-    "GossipLB::propagateRound: k_max={}, k_cur={}, selected.size()={}, fanout={}\n",
-    k_max, k_cur, selected.size(), fanout
+    "GossipLB::propagateRound: k_max_={}, k_cur_={}, selected.size()={}, fanout={}\n",
+    k_max_, k_cur_, selected.size(), fanout
   );
 
   for (int i = 0; i < fanout; i++) {
@@ -233,8 +233,8 @@ void GossipLB::propagateRound(EpochType epoch) {
 
     debug_print(
       gossiplb, node,
-      "GossipLB::propagateRound: k_max={}, k_cur={}, sending={}\n",
-      k_max, k_cur, random_node
+      "GossipLB::propagateRound: k_max_={}, k_cur_={}, sending={}\n",
+      k_max_, k_cur_, random_node
     );
 
     // Send message with load
@@ -243,7 +243,7 @@ void GossipLB::propagateRound(EpochType epoch) {
       envelopeSetEpoch(msg->env, epoch);
     }
     msg->addNodeLoad(this_node, this_load);
-    proxy[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
+    proxy_[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
   }
 }
 
@@ -252,9 +252,9 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
 
   debug_print(
     gossiplb, node,
-    "GossipLB::propagateIncoming: k_max={}, k_cur={}, from_node={}, "
+    "GossipLB::propagateIncoming: k_max_={}, k_cur_={}, from_node={}, "
     "load info size={}\n",
-    k_max, k_cur, from_node, msg->getNodeLoad().size()
+    k_max_, k_cur_, from_node, msg->getNodeLoad().size()
   );
 
   for (auto&& elm : msg->getNodeLoad()) {
@@ -267,12 +267,12 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
     }
   }
 
-  if (k_cur == k_max - 1) {
+  if (k_cur_ == k_max_ - 1) {
     // nothing to do but wait for termination to be detected
   } else {
     // send out another round
     propagateRound();
-    k_cur++;
+    k_cur_++;
   }
 }
 
@@ -308,7 +308,7 @@ NodeType GossipLB::sampleFromCMF(
 ) {
   // Create the distribution
   std::uniform_real_distribution<double> dist(0.0, 1.0);
-  std::mt19937 gen(seed());
+  std::mt19937 gen(seed_());
 
   NodeType selected_node = uninitialized_destination;
 
@@ -368,7 +368,7 @@ void GossipLB::decide() {
 
     if (under.size() > 0) {
       // Iterate through all the objects
-      for (auto iter = cur_objs.begin(); iter != cur_objs.end(); ) {
+      for (auto iter = cur_objs_.begin(); iter != cur_objs_.end(); ) {
         // Select a node using the CMF
         auto const selected_node = sampleFromCMF(under, cmf);
 
@@ -402,19 +402,19 @@ void GossipLB::decide() {
           not (selected_load + obj_load > avg)
         );
 
-        bool eval = Criterion(criterion_)(this_new_load, selected_load, obj_load, avg);
+        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load, avg);
         if (eval) {
           migrate_objs[selected_node][obj_id] = obj_load;
 
-          this_new_load -= obj_load;
+          this_new_load_ -= obj_load;
           selected_load += obj_load;
 
-          iter = cur_objs.erase(iter);
+          iter = cur_objs_.erase(iter);
         } else {
           iter++;
         }
 
-        if (not (this_new_load > avg)) {
+        if (not (this_new_load_ > avg)) {
           break;
         }
       }
@@ -442,13 +442,13 @@ void GossipLB::thunkMigrations() {
   debug_print(
     gossiplb, node,
     "thunkMigrations, total num_objs={}\n",
-    cur_objs.size()
+    cur_objs_.size()
   );
 
   startMigrationCollective();
 
   auto this_node = theContext()->getNode();
-  for (auto elm : cur_objs) {
+  for (auto elm : cur_objs_) {
     auto obj = elm.first;
     migrateObjectTo(obj, this_node);
   }
@@ -459,9 +459,9 @@ void GossipLB::thunkMigrations() {
 void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
   auto const& incoming_objs = msg->getObjSet();
   for (auto& obj : incoming_objs) {
-    auto iter = cur_objs.find(obj.first);
-    vtAssert(iter == cur_objs.end(), "Incoming object should not exist");
-    cur_objs.insert(obj);
+    auto iter = cur_objs_.find(obj.first);
+    vtAssert(iter == cur_objs_.end(), "Incoming object should not exist");
+    cur_objs_.insert(obj);
   }
 }
 
@@ -471,7 +471,7 @@ void GossipLB::lazyMigrateObjsTo(
   using LazyMsg = balance::LazyMigrationMsg;
   auto msg = makeMessage<LazyMsg>(node, objs);
   envelopeSetEpoch(msg, epoch);
-  proxy[node].send<LazyMsg, &GossipLB::inLazyMigrations>(msg);
+  proxy_[node].send<LazyMsg, &GossipLB::inLazyMigrations>(msg);
 }
 
 void GossipLB::migrate() {

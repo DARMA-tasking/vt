@@ -96,20 +96,20 @@ protected:
   void thunkMigrations();
 
 private:
-  uint8_t f                                         = 2;
-  uint8_t k_max                                     = 4;
-  uint8_t k_cur                                     = 0;
+  uint8_t f_                                        = 2;
+  uint8_t k_max_                                    = 4;
+  uint8_t k_cur_                                    = 0;
   uint16_t iter_                                    = 0;
   uint16_t num_iters_                               = 4;
-  std::random_device seed;
+  std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
-  objgroup::proxy::Proxy<GossipLB> proxy            = {};
+  objgroup::proxy::Proxy<GossipLB> proxy_           = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
   std::unordered_set<NodeType> selected_            = {};
   std::unordered_set<NodeType> underloaded_         = {};
-  std::unordered_map<ObjIDType, TimeType> cur_objs  = {};
-  LoadType this_new_load                            = 0.0;
+  std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
+  LoadType this_new_load_                           = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
 };
 
