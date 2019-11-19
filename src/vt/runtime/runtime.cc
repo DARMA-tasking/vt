@@ -504,6 +504,10 @@ void Runtime::printStartupBanner() {
       auto f11 = fmt::format("Flush output every {} records ", ArgType::vt_trace_flush_mod);
       auto f12 = opt_on("--vt_trace_flush_mod", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    } else {
+      auto f11 = fmt::format("Flushing traces at end of run");
+      auto f12 = opt_inverse("--vt_trace_flush_mod", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
   }
   #endif
