@@ -11,10 +11,9 @@ namespace vt { namespace trace {
 /*static*/ TraceEntryIDType
 TraceRegistry::registerEventHashed(
     std::string const& event_type_name, std::string const& event_name
-  ) {
-
-  auto* event_types = TraceContainersType::getEventTypeContainer();
-  auto* events = TraceContainersType::getEventContainer();
+) {
+  auto* event_types = TraceContainers::getEventTypeContainer();
+  auto* events = TraceContainers::getEventContainer();
 
   // Trace registration (mostly) happens during initialization
   // of templates from the auto-registy.
@@ -80,34 +79,43 @@ TraceRegistry::registerEventHashed(
 
 /*static*/ void
 TraceRegistry::setTraceName(
-  TraceEntryIDType id, std::string const& name, std::string const& parent) {
+  TraceEntryIDType id, std::string const& name, std::string const& type_name
+) {
 #if backend_check_enabled(trace_enabled)
   auto* events = TraceContainers::getEventContainer();
   auto event_iter = events->find(id);
-  vtAssertExpr(event_iter != events->end());
+  // TODO, increase guard here perhaps:
+  // vtAssertInfo(
+  //   iter != event_types->end(),
+  //   "Event must exist",
+  //   name, parent, id, type_id
+  // );
+
   if (event_iter != events->end()) {
+    auto type_id = event_iter->second.theEventTypeId();
     if (name != "") {
       event_iter->second.setEventName(name);
     }
-    if (parent != "") {
-      auto type_id = event_iter->second.theEventTypeId();
+
+    if (type_name != "") {
       auto* event_types = TraceContainers::getEventTypeContainer();
       auto iter = event_types->find(type_id);
       vtAssertInfo(
         iter != event_types->end(),
         "Event type must exist",
-        name, parent, id, type_id
+        name, type_name, id, type_id
       );
       if (iter != event_types->end()) {
-        iter->second.setEventName(parent);
+        iter->second.setEventName(type_name);
       }
     }
   }
 #endif
 }
 
-/*static*/ bool TraceRegistry::getEventSequence(TraceEntryIDType id, TraceEntryIDType &seq) {
-  auto* events = TraceContainersType::getEventContainer();
+/*static*/ bool
+TraceRegistry::getEventSequence(TraceEntryIDType id, TraceEntryIDType &seq) {
+  auto* events = TraceContainers::getEventContainer();
   auto iter = events->find(id);
   if (iter != events->end()) {
     seq = iter->second.theEventSeqId();
