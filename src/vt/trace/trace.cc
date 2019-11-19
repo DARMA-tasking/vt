@@ -437,8 +437,8 @@ void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
 }
 
 bool hasTraceEntry(TraceEntryIDType ep) {
-  auto& events = TraceRegistry::TraceContainersType::getEventContainer();
-  return events.find(ep) != events.end();
+  TraceEntryIDType seq;
+  return TraceRegistry::getEventSequence(ep, seq);
 }
 
 TraceEventIDType Trace::logEvent(LogPtrType log) {
@@ -604,8 +604,8 @@ void Trace::writeTracesFile() {
     "write_traces_file: traces.size={}, "
     "event_type_container.size={}, event_container.size={}\n",
     traces_.size(),
-    TraceContainersType::event_type_container.size(),
-    TraceContainersType::event_container.size()
+    TraceContainersType::getEventTypeContainer()->size(),
+    TraceContainersType::getEventContainer()->size()
   );
 
   if (checkEnabled()) {
@@ -641,7 +641,8 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
       std::underlying_type<decltype(log->type)>::type
     >(log->type);
 
-    auto event_iter = TraceContainersType::getEventContainer().find(log->ep);
+    auto* events = TraceContainersType::getEventContainer();
+    auto event_iter = events->find(log->ep);
 
     auto const event_seq_id = log->ep == no_trace_entry_id ?
       no_trace_entry_id : event_iter->second.theEventSeq();
@@ -797,9 +798,11 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
 void Trace::outputControlFile(std::ofstream& file) {
   auto const num_nodes = theContext()->getNumNodes();
 
-  auto const num_event_types =
-    TraceContainersType::getEventTypeContainer().size();
-  auto const num_events = TraceContainersType::getEventContainer().size();
+  auto* event_types = TraceContainersType::getEventTypeContainer();
+  auto* events = TraceContainersType::getEventContainer();
+
+  auto const num_event_types = event_types->size();
+  auto const num_events = events->size();
   auto const num_user_events = user_event.getEvents().size();
 
   file << "PROJECTIONS_ID\n"
@@ -817,7 +820,7 @@ void Trace::outputControlFile(std::ofstream& file) {
   ContainerEventSortedType sorted_event;
   ContainerEventTypeSortedType sorted_event_type;
 
-  for (auto&& elem : TraceContainersType::getEventContainer()) {
+  for (auto&& elem : *TraceContainersType::getEventContainer()) {
     sorted_event.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),
@@ -825,7 +828,7 @@ void Trace::outputControlFile(std::ofstream& file) {
     );
   }
 
-  for (auto&& elem : TraceContainersType::getEventTypeContainer()) {
+  for (auto&& elem : *TraceContainersType::getEventTypeContainer()) {
     sorted_event_type.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),
