@@ -49,6 +49,7 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/timing/timing.h"
 #include "vt/utils/demangle/demangle.h"
+#include "vt/collective/collective_alg.h"
 
 #include <fstream>
 #include <cinttypes>
@@ -618,14 +619,8 @@ void Trace::cleanupTracesFile() {
 
 void Trace::flushTracesFile(bool useGlobalSync) {
   if (useGlobalSync) {
-    //--- Barrier: synchronize all the nodes before flushing the traces
-    if (curRT) {
-      curRT->systemSync();
-    }
-    else {
-      // Something is wrong
-      vtAssert(false, "Trying to flush traces when VT runtime is deallocated?");
-    }
+    // Synchronize all the nodes before flushing the traces
+    theCollective()->barrier();
   }
   if (traces_.size() > cur_ + ArgType::vt_trace_flush_mod) {
     writeTracesFile(Z_FULL_FLUSH);
