@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               trace_registry.h
+//                              trace_containers.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,30 +42,13 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRACE_TRACE_REGISTRY_H
-#define INCLUDED_TRACE_TRACE_REGISTRY_H
-
+#include "vt/config.h"
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_containers.h"
 
 namespace vt { namespace trace {
 
-struct TraceRegistry {
-  using TraceContainersType = TraceContainers;
-
-  static TraceEntryIDType registerEventHashed(
-    std::string const& event_type_name, std::string const& event_name
-  );
-
-  static void setTraceName(
-    TraceEntryIDType id, std::string const& name, std::string const& parent
-  );
-
-  /// Returns true assigns seq if the for the corresponding ID.
-  /// Returns false if the event does not exist.
-  static bool getEventSequence(TraceEntryIDType id, TraceEntryIDType& seq);
-};
+/*static*/ TraceContainerEventClassType* TraceContainers::event_type_container_ = nullptr;
+/*static*/ TraceContainerEventType* TraceContainers::event_container_ = nullptr;
 
 }} //end namespace vt::trace
-
-#endif /*INCLUDED_TRACE_TRACE_REGISTRY_H*/
