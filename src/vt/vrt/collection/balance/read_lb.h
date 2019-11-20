@@ -147,7 +147,7 @@ struct ReadLBSpec {
   using SpecMapType  = std::unordered_map<SpecIndex,SpecEntry>;
   using ParamMapType = std::unordered_map<std::string, std::string>;
 
-  static bool openFile(std::string const name = "balance.in");
+  static bool openFile(std::string const name = "");
   static void readFile();
 
   static bool hasSpec();

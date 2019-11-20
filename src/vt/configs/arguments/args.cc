@@ -79,7 +79,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
 /*static*/ bool        ArgConfig::vt_lb_quiet           = false;
-/*static*/ std::string ArgConfig::vt_lb_file_name       = "balance.in";
+/*static*/ std::string ArgConfig::vt_lb_file_name       = "";
 /*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
 /*static*/ std::string ArgConfig::vt_lb_args            = "";
 /*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
@@ -357,7 +357,7 @@ namespace vt { namespace arguments {
   auto lb_stats_file = "Load balancing statistics output file name";
   auto lbn = "NoLB";
   auto lbi = 1;
-  auto lbf = "balance.in";
+  auto lbf = "";
   auto lbd = "vt_lb_stats";
   auto lbs = "stats";
   auto lba = "";
