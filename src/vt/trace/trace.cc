@@ -445,18 +445,14 @@ void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
   }
 }
 
-bool hasTraceEntry(TraceEntryIDType ep) {
-  TraceEntryIDType seq;
-  return TraceRegistry::getEventSequence(ep, seq);
-}
-
 TraceEventIDType Trace::logEvent(LogPtrType log) {
   if (not enabled_ || not checkEnabled()) {
     return 0;
   }
 
   vtAssert(
-    log->ep == no_trace_entry_id or hasTraceEntry(log->ep),
+   log->ep == no_trace_entry_id
+   or TraceRegistry::getEvent(log->ep).theEventId() not_eq no_trace_entry_id,
     "Event must exist that was logged"
   );
 
@@ -640,7 +636,8 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
   for (auto&& log : traces) {
 
     vtAssert(
-      log->ep == no_trace_entry_id or hasTraceEntry(log->ep),
+      log->ep == no_trace_entry_id
+      or TraceRegistry::getEvent(log->ep).theEventId() not_eq no_trace_entry_id,
       "Event must exist that was logged"
     );
 
@@ -650,8 +647,8 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
       std::underlying_type<decltype(log->type)>::type
     >(log->type);
 
-    TraceEntryIDType event_seq_id;
-    TraceRegistry::getEventSequence(log->ep, /*out*/ event_seq_id);
+    // force guaranteed type (used in format specifiers)
+    size_t event_seq_id = TraceRegistry::getEvent(log->ep).theEventSeq();
 
     auto const num_nodes = theContext()->getNumNodes();
 
