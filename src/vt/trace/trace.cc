@@ -52,8 +52,18 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <iostream>
+#include <fstream>
+#include <map>
 
 namespace vt { namespace trace {
+
+template <typename EventT>
+struct TraceEventSeqCompare {
+  bool operator()(EventT* const a, EventT* const b) const {
+    return a->theEventSeq() < b->theEventSeq();
+  }
+};
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
@@ -101,8 +111,7 @@ void Trace::setupNames(
 
   if (ArgType::vt_trace_dir != "") {
     full_dir_name = ArgType::vt_trace_dir;
-  }
-  else {
+  } else {
     full_dir_name = std::string(cur_dir) + "/" + dir_name;
   }
 
@@ -111,9 +120,9 @@ void Trace::setupNames(
 
   if (theContext()->getNode() == 0) {
     int flag = mkdir(full_dir_name.c_str(), S_IRWXU);
-	if ((flag < 0) && (errno != EEXIST)) {
+    if ((flag < 0) && (errno != EEXIST)) {
       vtAssert(flag >= 0, "Must be able to make directory");
-	}
+    }
   }
 
   auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
@@ -793,6 +802,15 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
 }
 
 void Trace::outputControlFile(std::ofstream& file) {
+
+  using ContainerEventSortedType = std::map<
+    TraceContainerEventType::mapped_type*, bool, TraceEventSeqCompare<TraceEventType>
+  >;
+
+  using ContainerEventTypeSortedType = std::map<
+    TraceContainerEventClassType::mapped_type*, bool, TraceEventSeqCompare<EventClassType>
+  >;
+
   auto const num_nodes = theContext()->getNumNodes();
 
   auto* event_types = TraceContainersType::getEventTypeContainer();
