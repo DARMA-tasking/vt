@@ -72,9 +72,18 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   } else {
     auto const file_name = ArgType::vt_lb_file_name;
     if (file_name == "") {
+      vtAbort(
+        "--vt_lb_file enabled but no file name is specified: --vt_lb_file_name"
+      );
       return false;
     } else {
-      return openFile(file_name);
+      bool good = openFile(file_name);
+      if (not good) {
+        auto str =
+          fmt::format("--vt_lb_file_name={} is not a valid file", file_name);
+        vtAbort(str);
+      }
+      return good;
     }
   }
 }
