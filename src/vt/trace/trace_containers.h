@@ -50,25 +50,14 @@
 #include "vt/trace/trace_event.h"
 
 #include <cstdint>
-#include <string>
-#include <functional>
 #include <unordered_map>
-#include <map>
 
 namespace vt { namespace trace {
 
-template <typename T, typename U>
-using EventLookupType = std::unordered_map<T, U>;
-
-template <typename T, typename U, typename Comp>
-using EventSortedType = std::map<T, U, Comp>;
-
 using TraceEventType = Event;
 using EventClassType = EventClass;
-using TraceContainerEventType = EventLookupType<TraceEntryIDType, TraceEventType>;
-using TraceContainerEventClassType = EventLookupType<TraceEntryIDType, EventClassType>;
-
-struct Trace;
+using TraceContainerEventType = std::unordered_map<TraceEntryIDType, TraceEventType>;
+using TraceContainerEventClassType = std::unordered_map<TraceEntryIDType, EventClassType>;
 
 // Container types are created-as-needed, which occurs during
 // intialization to avoid intiailization ordering issues.
@@ -86,30 +75,10 @@ class TraceContainers {
     return event_container_;
   }
 
-  friend struct Trace;
-
  private:
   static TraceContainerEventClassType* event_type_container_;
   static TraceContainerEventType* event_container_;
 };
-
-template <typename EventT>
-struct TraceEventSeqCompare {
-  bool operator()(EventT* const a, EventT* const b) const {
-    return a->theEventSeq() < b->theEventSeq();
-  }
-};
-
-template <typename T>
-using EventCompareType = TraceEventSeqCompare<T>;
-
-using ContainerEventSortedType = EventSortedType<
-  TraceContainerEventType::mapped_type*, bool, EventCompareType<TraceEventType>
->;
-
-using ContainerEventTypeSortedType = EventSortedType<
-  TraceContainerEventClassType::mapped_type*, bool, EventCompareType<EventClassType>
->;
 
 }} //end namespace vt::trace
 
