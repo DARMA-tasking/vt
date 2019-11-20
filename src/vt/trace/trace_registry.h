@@ -66,9 +66,9 @@ struct TraceRegistry {
     TraceEntryIDType id, std::string const& name, std::string const& type_name
   );
 
-  /// Returns true assigns seq if the for the corresponding ID.
-  /// Returns false if the event does not exist.
-  static bool getEventSequence(TraceEntryIDType id, TraceEntryIDType& seq);
+  /// Returns the event that corresponds with tie ID.
+  /// If not found the returned event has no_trace_entry_id for an ID.
+  static EventClassType getEvent(TraceEntryIDType id);
 };
 
 }} //end namespace vt::trace
