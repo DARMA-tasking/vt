@@ -249,6 +249,15 @@ int eatWhitespace(std::ifstream& file) {
   read_complete_ = true;
 }
 
+/*static*/ void ReadLBSpec::clear() {
+  read_complete_ = false;
+  filename = "";
+  num_entries_ = 0;
+  spec_mod_.clear();
+  spec_exact_.clear();
+  spec_prec_.clear();
+}
+
 /*static*/ typename ReadLBSpec::ParamMapType
 ReadLBSpec::parseParams(std::vector<std::string> params) {
   ParamMapType param_map;

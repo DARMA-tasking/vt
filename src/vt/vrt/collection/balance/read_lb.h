@@ -156,6 +156,7 @@ struct ReadLBSpec {
   static LBType getLB(SpecIndex const& idx);
   static ParamMapType parseParams(std::vector<std::string> params);
   static SpecEntry makeSpecFromParams(std::string params);
+  static void clear();
 
 private:
   static bool read_complete_;
