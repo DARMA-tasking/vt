@@ -239,10 +239,13 @@ install(
 )
 
 if (${vt_fcontext_enabled})
-  export(
-    TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY}
-    FILE                      "vtTargets.cmake"
-    NAMESPACE                 vt::runtime::
-  )
+  set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
+else()
+  set(FCONTEXT_LIBRARY_EXPORT "")
 endif()
 
+export(
+  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY_EXPORT}
+  FILE                      "vtTargets.cmake"
+  NAMESPACE                 vt::runtime::
+)
