@@ -124,7 +124,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 }
 
 int eatWhitespace(std::ifstream& file) {
-  while (not file.eof() and std::isspace(file.peek())) {
+  while (not file.eof() and std::isspace(file.peek()) and file.peek() != '\n') {
     file.get();
   }
   return file.eof() ? 0 : file.peek();
@@ -184,6 +184,10 @@ int eatWhitespace(std::ifstream& file) {
     }
 
     eatWhitespace(file);
+
+    while (file.peek() == '\n') {
+      file.get();
+    }
 
     /*
      * Split params into 'key=value'
