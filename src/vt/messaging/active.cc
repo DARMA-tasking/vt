@@ -265,7 +265,7 @@ EventType ActiveMessenger::sendMsgSized(
     auto const handler = envelopeGetHandler(msg->env);
     bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
     if (is_auto) {
-      trace::TraceEntryIDType ep = auto_registry::theTraceID(
+      trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
         handler, auto_registry::RegistryTypeEnum::RegGeneral
       );
       if (not is_bcast) {

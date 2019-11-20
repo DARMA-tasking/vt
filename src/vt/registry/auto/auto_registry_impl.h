@@ -129,7 +129,7 @@ void setHandlerTraceNameObjGroup(
 ) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerObjGroup<ObjT,MsgT,f>(ctrl);
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegObjGroup);
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegObjGroup);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
@@ -138,7 +138,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandler<MsgT,f>(nullptr);
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegGeneral);
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
@@ -147,7 +147,7 @@ template <typename T, T value>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandler<T,value>();
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegGeneral);
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }

@@ -66,7 +66,7 @@ template <typename MsgT, typename ElementT>
     auto reg_enum = member ?
       auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
       auto_registry::RegistryTypeEnum::RegVrtCollection;
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
+    trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, reg_enum
     );
     trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
