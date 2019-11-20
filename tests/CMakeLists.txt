@@ -26,6 +26,7 @@ set(
   memory
   objgroup
   scheduler
+  lb
 )
 
 option(VT_NO_BUILD_TESTS "Disable building VT tests" OFF)
