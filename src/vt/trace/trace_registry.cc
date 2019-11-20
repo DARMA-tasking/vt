@@ -6,15 +6,14 @@
 #include "vt/trace/trace_containers.h"
 #include "vt/trace/trace_registry.h"
 
+#include <functional> // std::hash
+
 namespace vt { namespace trace {
 
 /*static*/ TraceEntryIDType
 TraceRegistry::registerEventHashed(
     std::string const& event_type_name, std::string const& event_name
 ) {
-  auto* event_types = TraceContainers::getEventTypeContainer();
-  auto* events = TraceContainers::getEventContainer();
-
   // Trace registration (mostly) happens during initialization
   // of templates from the auto-registy.
   // This occurs BEFORE the underling 'go' flags are enabled in VT.
@@ -28,53 +27,48 @@ TraceRegistry::registerEventHashed(
   //   events->size()
   // );
 
-  TraceEntryIDType event_type_seq = no_trace_entry_id;
-  EventClassType new_event_type(event_type_name, event_type_name);
-
-  auto type_iter = event_types->find(
-    new_event_type.theEventId()
+  TraceEntryIDType event_type_id = std::hash<std::string>{}(
+    event_type_name
   );
+  TraceEntrySeqType event_type_seq = no_trace_entry_seq;
 
-  if (type_iter == event_types->end()) {
-    event_type_seq = event_types->size();
-    new_event_type.setEventSeq(event_type_seq);
+  { // ensure event type / category
+    auto* event_types = TraceContainers::getEventTypeContainer();
 
-    event_types->emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(new_event_type.theEventId()),
-      std::forward_as_tuple(new_event_type)
-    );
-  } else {
-    event_type_seq = type_iter->second.theEventSeq();
+    auto type_iter = event_types->find(event_type_id);
+    if (type_iter == event_types->end()) {
+      event_type_seq = event_types->size();
+
+      event_types->insert({
+        event_type_id,
+        EventClassType{event_type_id, event_type_seq, event_type_name}
+      });
+    } else {
+      event_type_seq = type_iter->second.theEventSeq();
+    }
   }
 
-  TraceEntryIDType event_seq = no_trace_entry_id;
-  TraceEventType new_event(
-    event_name,
-    event_type_name + std::string("::") + event_name,
-    new_event_type.theEventId()
-  );
+  { // ensure event
+    auto* events = TraceContainers::getEventContainer();
 
-  new_event.setEventTypeSeq(event_type_seq);
-
-  auto event_iter = events->find(
-    new_event.theEventId()
-  );
-
-  if (event_iter == events->end()) {
-    event_seq = events->size();
-    new_event.setEventSeq(event_seq);
-
-    events->emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(new_event.theEventId()),
-      std::forward_as_tuple(new_event)
+    TraceEntryIDType event_id = std::hash<std::string>{}(
+      event_type_name + std::string("::") + event_name
     );
-  } else {
-    event_seq = event_iter->second.theEventSeq();
-  }
 
-  return new_event.theEventId();
+    auto event_iter = events->find(event_id);
+
+    if (event_iter == events->end()) {
+      TraceEntrySeqType event_seq = events->size();
+
+      events->insert({
+        event_id,
+        TraceEventType{event_id, event_seq, event_name, event_type_id, event_type_seq}
+      });
+    }
+
+    // found or newly added
+    return event_id;
+  }
 }
 
 /*static*/ void
@@ -113,15 +107,14 @@ TraceRegistry::setTraceName(
 #endif
 }
 
-/*static*/ bool
-TraceRegistry::getEventSequence(TraceEntryIDType id, TraceEntryIDType &seq) {
+/*static*/ EventClassType
+TraceRegistry::getEvent(TraceEntryIDType id) {
   auto* events = TraceContainers::getEventContainer();
   auto iter = events->find(id);
   if (iter != events->end()) {
-    seq = iter->second.theEventSeqId();
-    return true;
+    return iter->second;
   }
-  return false;
+  return EventClassType{no_trace_entry_id, no_trace_entry_seq, std::string{}};
 }
 
 }} //end namespace vt::trace
