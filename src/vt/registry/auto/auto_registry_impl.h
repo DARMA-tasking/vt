@@ -130,7 +130,7 @@ void setHandlerTraceNameObjGroup(
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerObjGroup<ObjT,MsgT,f>(ctrl);
   auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegObjGroup);
-  setTraceName(trace_id, name, parent);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
 
@@ -139,7 +139,7 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandler<MsgT,f>(nullptr);
   auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegGeneral);
-  setTraceName(trace_id, name, parent);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
 
@@ -148,14 +148,8 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandler<T,value>();
   auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegGeneral);
-  setTraceName(trace_id, name, parent);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
-}
-
-inline void setTraceName(
-  trace::TraceEntryIDType id, std::string const& name, std::string const& parent
-) {
-  trace::TraceRegistry::setTraceName(id, name, parent);
 }
 
 }} // end namespace vt::auto_registry
