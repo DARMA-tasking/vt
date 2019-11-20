@@ -424,11 +424,20 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
     if (ArgType::vt_lb_file) {
-      auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
-      fmt::print("{}\t{}{}", vt_pre, f10, reset);
-      auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
-      auto f11 = opt_on("--vt_lb_file_name", f12);
-      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+      if (ArgType::vt_lb_file_name == "") {
+        auto warn_lb_file = fmt::format(
+          "{}Warning:{} {}{}{} has no effect: compile-time"
+          " option {}{}{} is empty{}\n", red, reset, magenta, "--vt_lb_file",
+          reset, magenta, "--vt_lb_file_name", reset, reset
+        );
+        fmt::print("{}\t{}{}", vt_pre, warn_lb_file, reset);
+      } else {
+        auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
+        fmt::print("{}\t{}{}", vt_pre, f10, reset);
+        auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
+        auto f11 = opt_on("--vt_lb_file_name", f12);
+        fmt::print("{}\t{}{}", vt_pre, f11, reset);
+      }
     } else {
       auto a3 = fmt::format("Load balancer name: \"{}\"", ArgType::vt_lb_name);
       auto a4 = opt_on("--vt_lb_name", a3);
