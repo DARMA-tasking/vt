@@ -66,5 +66,6 @@
 #define vt_feature_memory_pool        0 || vt_feature_cmake_memory_pool
 #define vt_feature_priorities         0 || vt_feature_cmake_priorities
 #define vt_feature_cons_multi_idx     0 || vt_feature_cmake_cons_multi_idx
+#define vt_feature_fcontext           0 || vt_feature_cmake_fcontext
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H*/
