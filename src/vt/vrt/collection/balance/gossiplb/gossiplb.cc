@@ -216,7 +216,7 @@ void GossipLB::propagateRound(EpochType epoch) {
 
   for (int i = 0; i < fanout; i++) {
     // This implies full knowledge of all processors
-    if (selected.size() >= num_nodes - 1) {
+    if (selected.size() >= static_cast<size_t>(num_nodes - 1)) {
       return;
     }
 
