@@ -78,6 +78,8 @@ bool GossipLB::isOverloaded(LoadType load) const {
 }
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
+  std::vector<std::string> allowed{"f", "k", "i", "c"};
+  spec->checkAllowedKeys(allowed);
   using CriterionEnumUnder = typename std::underlying_type<CriterionEnum>::type;
   auto default_c = static_cast<CriterionEnumUnder>(criterion_);
   f_         = spec->getOrDefault<int32_t>("f", f_);

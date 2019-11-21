@@ -126,6 +126,27 @@ struct SpecEntry {
     }
   }
 
+  void checkAllowedKeys(std::vector<std::string> const& allowed) {
+    for (auto&& p : params_) {
+      bool found = false;
+      for (auto&& key : allowed) {
+        if (key == p.first) {
+          found = true;
+        }
+      }
+      if (not found) {
+        std::string allowed_str;
+        for (auto&& key : allowed) {
+          allowed_str += fmt::format("\"{}\"; ", key);
+        }
+        auto err = fmt::format(
+          "LB does not support key={}, allowed keys: {}", p.first, allowed_str
+        );
+        vtAbort(err);
+      }
+    }
+  }
+
 private:
   SpecIndex idx_;
   std::string lb_name_;
