@@ -276,6 +276,10 @@ ReadLBSpec::parseParams(std::vector<std::string> params) {
         found = true;
       }
     }
+    if (not found) {
+      auto err = fmt::format("LB file reader: could not parse param: \"{}\"", p);
+      vtAbort(err);
+    }
   }
 
   return param_map;
