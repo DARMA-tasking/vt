@@ -268,7 +268,7 @@ ReadLBSpec::parseParams(std::vector<std::string> params) {
   for (auto&& p : params) {
     std::string key, value;
     bool found = false;
-    for (int i = 0; i < p.size(); i++) {
+    for (std::size_t i = 0; i < p.size(); i++) {
       if (p[i] == '=') {
         key = p.substr(0, i);
         value = p.substr(i + 1, p.length() - 1);
