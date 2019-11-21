@@ -618,6 +618,10 @@ void Trace::cleanupTracesFile() {
 }
 
 void Trace::flushTracesFile(bool useGlobalSync) {
+  if (ArgType::vt_trace_flush_mod == 0) {
+    // Flush the traces at the end only
+    return;
+  }
   if (useGlobalSync) {
     // Synchronize all the nodes before flushing the traces
     theCollective()->barrier();
