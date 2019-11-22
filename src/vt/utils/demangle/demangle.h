@@ -129,32 +129,6 @@ struct TemplateExtract {
     return lastNamedPfType(prettyFunctionForValuePtr<T,value>(), "PF_VALUE_NAME");
   }
 
-  // 2+ args
-  template <typename T, typename Tx, typename... Ts>
-  static void getTypeNamesHelper(std::vector<std::string> & target) {
-    target.push_back(getTypeName<T>());
-    getTypeNamesHelper<Tx, Ts...>(target);
-  }
-
-  // 1 args (shouldnt be needed.. avoids Clang 9 compiler crash)
-  template <typename T>
-  static void getTypeNamesHelper(std::vector<std::string> & target) {
-    target.push_back(getTypeName<T>());
-  }
-
-  // 0 args
-  void getTypeNamesHelper(std::vector<std::string> & target) {
-  }
-
-  /// Return the type names of T..., as a sequence of strings.
-  /// Requires compiler extension support.
-  template <typename... T>
-  static std::vector<std::string> getTypeNames() {
-    std::vector<std::string> result;
-    getTypeNamesHelper<T...>(result);
-    return result;
-  }
-
   /// Given a string like 'a::b::c', return the namespace of 'a::b'.
   /// Removes leading '&', if present (as it appears for 'values representing types').
   /// Does not strip out extra template parameterization artifacts.
