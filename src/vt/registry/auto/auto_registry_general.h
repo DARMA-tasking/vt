@@ -78,13 +78,13 @@ static inline auto proxyOperatorToNewInstanceReg(Args... args) {
 /// MULTIPLE INSTANCES of the type will be created and discarded.
 /// This cannot be used for a stateful instance.
 /// This is an implementation detail that could be reconsidered.
-template <typename ObjTypeT, typename... Args>
+template <typename ObjTypeT, typename... ArgsT>
 struct FunctorAdapterArgs {
-  using FunctionPtrType = void (*)(Args...);
+  using FunctionPtrType = void (*)(ArgsT...);
   using ObjType = ObjTypeT;
 
   static constexpr FunctionPtrType getFunction() {
-    return &proxyOperatorToNewInstanceReg<ObjType, Args...>;
+    return &proxyOperatorToNewInstanceReg<ObjType, ArgsT...>;
   }
 
   static std::string traceGetEventType() {
@@ -97,12 +97,15 @@ struct FunctorAdapterArgs {
   static std::string traceGetEventName() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
-    auto args = DU::join(",", TE::getTypeNames<Args...>());
+    std::vector<std::string> arg_types = {
+      TE::getTypeName<ArgsT>()...
+    };
+    auto args = DU::join(",", arg_types);
     return DU::removeSpaces("operator(" + args + ")");
   }
 
   static NumArgsType getNumArgs() {
-    return sizeof...(Args);
+    return sizeof...(ArgsT);
   }
 };
 
