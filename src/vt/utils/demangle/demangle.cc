@@ -80,24 +80,65 @@ TemplateExtract::lastNamedPfType(std::string const& pf, std::string const& tpara
   return pf.substr(i, pf.length() - i - 1);
 }
 
+// Given a::b or a::b<c::d> or a<>::b<c>, eg. determines the
+// starting position at which it can be a namespace vs class.
+// That is, the starting position of the rightmost "::" that
+// is not located inside angle brackets
+size_t getNameDivide(
+ std::string const& str,
+ size_t best, size_t start, size_t depth
+) {
+  size_t s = str.find("::", start);
+  if (s == std::string::npos) {
+    return best;
+  }
+
+  size_t o = str.find_first_of("<>", start);
+  if (o < s) {
+    if (str[o] == '<') {
+      return getNameDivide(str, best, o + 1, depth + 1);
+    } else {
+      // no guarantee positive depth on ><> (fishy) input.
+      return getNameDivide(str, best, o + 1, depth - 1);
+    }
+  }
+
+  if (depth == 0)
+    best = s;
+  return getNameDivide(str, best, s + 2, depth);
+}
+
+// A wee bit of a lie.. eat through some characters.
+// these can come from __PRETTY_PRINT__, eg. although
+// not so useful to include in this use case.
+int skipTypePrefix(std::string const& str) {
+  size_t s = 0;
+  while (s < str.length()
+         and (str[s] == '&' or str[s] == ':')) {
+    s += 1;
+  }
+  return s;
+}
+
 /*static*/ std::string
 TemplateExtract::getNamespace(std::string const& typestr) {
-  size_t s = typestr.find("&") == 0 ? 1 : 0;
-  size_t e = typestr.rfind("::");
-  if (e != std::string::npos) {
-    return typestr.substr(s, e - s);
-  }
-  return typestr.substr(s, typestr.length() - s);
+  size_t s = skipTypePrefix(typestr);
+  size_t d = getNameDivide(typestr, s, s, 0);
+
+  return typestr.substr(s, d - s);
 }
 
 /*static*/ std::string
 TemplateExtract::getBarename(std::string const& typestr) {
-  size_t s = typestr.rfind("::");
-  if (s != std::string::npos) {
-    s += 2;
-    return typestr.substr(s, typestr.length() - s);
-  }
-  return typestr;
+  size_t s = skipTypePrefix(typestr);
+  size_t d = getNameDivide(typestr, s, s, 0);
+
+  // skip "::" divider
+  d += 2;
+  if (d >= typestr.length())
+    return typestr;
+
+  return typestr.substr(d, std::string::npos);
 }
 
 /*static*/ std::string
