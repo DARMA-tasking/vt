@@ -98,10 +98,10 @@ struct FunctorAdapterArgs {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
     auto args = DU::join(",", TE::getTypeNames<Args...>());
-    return "operator(" + DU::removeSpaces(args) + ")";
+    return DU::removeSpaces("operator(" + args + ")");
   }
 
-  static size_t getNumArgs() {
+  static NumArgsType getNumArgs() {
     return sizeof...(Args);
   }
 };
@@ -116,7 +116,6 @@ struct FunctorAdapter {
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
-    auto q = TE::getTypeNames<F>();
     auto ns = TE::getNamespace(TE::getValueNamePtr<F,f>());
     return DU::removeSpaces(ns);
   }
@@ -126,10 +125,10 @@ struct FunctorAdapter {
     using DU = vt::util::demangle::DemanglerUtils;
     auto barename = TE::getBarename(TE::getValueNamePtr<F,f>());
     auto args = TE::getVoidFuncStrArgs(TE::getTypeName<F>());
-    return barename + "(" + DU::removeSpaces(args) + ")";
+    return DU::removeSpaces(barename + "(" + args + ")");
   }
 
-  static size_t getNumArgs() {
+  static NumArgsType getNumArgs() {
     return 0; // lies - see NumArgsTag, perhaps
   }
 };
@@ -153,10 +152,10 @@ struct FunctorAdapterMember {
     using DU = vt::util::demangle::DemanglerUtils;
     auto barename = TE::getBarename(TE::getValueName<F,f>());
     auto args = TE::getVoidFuncStrArgs(TE::getTypeName<F>());
-    return barename + "(" + DU::removeSpaces(args) + ")";
+    return DU::removeSpaces(barename + "(" + args + ")");
   }
 
-  static size_t getNumArgs() {
+  static NumArgsType getNumArgs() {
     return 0; // lies - see NumArgsTag, perhaps
   }
 };

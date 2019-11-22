@@ -76,7 +76,7 @@ RegistrarFunctor<RunnableT, RegT, InfoT, FnT>::RegistrarFunctor() {
   index = reg.size(); // capture current index
 
   FnT fn = reinterpret_cast<FnT>(AdapterType::getFunction());
-  size_t num_args = AdapterType::getNumArgs();
+  NumArgsType num_args = AdapterType::getNumArgs();
 
   #if backend_check_enabled(trace_enabled)
   // trace
