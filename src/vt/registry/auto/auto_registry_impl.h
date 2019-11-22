@@ -146,7 +146,7 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 template <typename T, T value>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
-  auto const handler = makeAutoHandlerParam<T,value>();
+  auto const handler = makeAutoHandler<T,value>();
   auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
