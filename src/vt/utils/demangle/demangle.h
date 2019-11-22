@@ -129,17 +129,21 @@ struct TemplateExtract {
     return lastNamedPfType(prettyFunctionForValuePtr<T,value>(), "PF_VALUE_NAME");
   }
 
-  // 1 arg
-  template <typename T>
-  static void getTypeNamesHelper(std::vector<std::string> & target) {
-    target.push_back(getTypeName<T>());
-  }
-
   // 2+ args
   template <typename T, typename Tx, typename... Ts>
   static void getTypeNamesHelper(std::vector<std::string> & target) {
     target.push_back(getTypeName<T>());
     getTypeNamesHelper<Tx, Ts...>(target);
+  }
+
+  // 1 args (shouldnt be needed.. avoids Clang 9 compiler crash)
+  template <typename T>
+  static void getTypeNamesHelper(std::vector<std::string> & target) {
+    target.push_back(getTypeName<T>());
+  }
+
+  // 0 args
+  void getTypeNamesHelper(std::vector<std::string> & target) {
   }
 
   /// Return the type names of T..., as a sequence of strings.
