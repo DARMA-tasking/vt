@@ -75,7 +75,7 @@ template <typename MsgT>
   }
 
   #if backend_check_enabled(trace_enabled)
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
+    trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, auto_registry::RegistryTypeEnum::RegGeneral
     );
     trace::TraceEventIDType trace_event = trace::no_trace_event;
@@ -132,7 +132,7 @@ template <typename MsgT>
   using HandlerManagerType = HandlerManager;
 
   #if backend_check_enabled(trace_enabled)
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
+    trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, auto_registry::RegistryTypeEnum::RegObjGroup
     );
     trace::TraceEventIDType trace_event = trace::no_trace_event;

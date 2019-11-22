@@ -45,50 +45,51 @@
 #if !defined INCLUDED_TRACE_TRACE_EVENT_H
 #define INCLUDED_TRACE_TRACE_EVENT_H
 
-#include "vt/config.h"
 #include "vt/trace/trace_common.h"
 
-#include <cstdint>
-#include <unordered_map>
 #include <string>
-#include <functional>
 
 namespace vt { namespace trace {
 
 struct EventClass {
-  EventClass(std::string const& in_event, std::string const& in_hash_event);
+  EventClass(
+    TraceEntryIDType id,
+    TraceEntrySeqType seq,
+    std::string const& in_event
+  );
   EventClass(EventClass const&) = default;
+  EventClass(EventClass&&) = default;
 
   TraceEntryIDType theEventId() const;
-  TraceEntryIDType theEventSeqId() const;
+  TraceEntrySeqType theEventSeq() const;
 
   std::string theEventName() const;
   void setEventName(std::string const& in_str);
-  void setEventSeq(TraceEntryIDType const& seq);
-  TraceEntryIDType theEventSeq() const;
 
 private:
   TraceEntryIDType this_event_ = no_trace_entry_id;
-  TraceEntryIDType this_event_seq_ = no_trace_entry_id;
+  TraceEntrySeqType this_event_seq_ = no_trace_entry_seq;
 
-  std::string event;
-  std::string hash_event;
+  std::string event_;
 };
 
 struct Event : EventClass {
   Event(
-    std::string const& in_event, std::string const& in_hash_event,
-    TraceEntryIDType const& in_event_type
+    TraceEntryIDType id,
+    TraceEntrySeqType seq,
+    std::string const& in_event,
+    TraceEntryIDType in_event_type,
+    TraceEntrySeqType in_event_seq
   );
   Event(Event const&) = default;
+  Event(Event&&) = default;
 
   TraceEntryIDType theEventTypeId() const;
-  void setEventTypeSeq(TraceEntryIDType const& seq);
-  TraceEntryIDType theEventTypeSeq() const;
+  TraceEntrySeqType theEventTypeSeq() const;
 
 private:
   TraceEntryIDType this_event_type_ = no_trace_entry_id;
-  TraceEntryIDType this_event_type_seq_ = no_trace_entry_id;
+  TraceEntrySeqType this_event_type_seq_ = no_trace_entry_seq;
 };
 
 }} //end namespace vt::trace

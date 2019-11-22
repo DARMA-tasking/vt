@@ -129,8 +129,8 @@ void setHandlerTraceNameObjGroup(
 ) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerObjGroup<ObjT,MsgT,f>(ctrl);
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegObjGroup);
-  setTraceName(trace_id, name, parent);
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegObjGroup);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
 
@@ -138,44 +138,17 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandler<MsgT,f>(nullptr);
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegGeneral);
-  setTraceName(trace_id, name, parent);
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
 
 template <typename T, T value>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
-  auto const handler = makeAutoHandler<T,value>();
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegGeneral);
-  setTraceName(trace_id, name, parent);
-#endif
-}
-
-inline void setTraceName(
-  trace::TraceEntryIDType id, std::string const& name, std::string const& parent
-) {
-#if backend_check_enabled(trace_enabled)
-  using TraceContainersType = trace::TraceRegistry::TraceContainersType;
-  auto event_iter = TraceContainersType::getEventContainer().find(id);
-  vtAssertExpr(event_iter != TraceContainersType::getEventContainer().end());
-  if (event_iter != TraceContainersType::getEventContainer().end()) {
-    if (name != "") {
-      event_iter->second.setEventName(name);
-    }
-    if (parent != "") {
-      auto type_id = event_iter->second.theEventTypeId();
-      auto iter = TraceContainersType::getEventTypeContainer().find(type_id);
-      vtAssertInfo(
-        iter != TraceContainersType::getEventTypeContainer().end(),
-        "Event type must exist",
-        name, parent, id, type_id
-      );
-      if (iter != TraceContainersType::getEventTypeContainer().end()) {
-        iter->second.setEventName(parent);
-      }
-    }
-  }
+  auto const handler = makeAutoHandlerParam<T,value>();
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
 
