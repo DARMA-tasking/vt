@@ -97,9 +97,7 @@ struct FunctorAdapterArgs {
   static std::string traceGetEventName() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
-    //auto args = DU::join(",", TE::getTypeNames<Args...>());
-    //TODO: recursive template fun
-    std::string args = "..";
+    auto args = DU::join(",", TE::getTypeNames<Args...>());
     return "operator(" + DU::removeSpaces(args) + ")";
   }
 
