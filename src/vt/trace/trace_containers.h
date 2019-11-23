@@ -49,7 +49,6 @@
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_event.h"
 
-#include <cstdint>
 #include <unordered_map>
 
 namespace vt { namespace trace {
@@ -59,25 +58,14 @@ using EventClassType = EventClass;
 using TraceContainerEventType = std::unordered_map<TraceEntryIDType, TraceEventType>;
 using TraceContainerEventClassType = std::unordered_map<TraceEntryIDType, EventClassType>;
 
-// Container types are created-as-needed, which occurs during
-// intialization to avoid intiailization ordering issues.
 class TraceContainers {
  public:
-  static TraceContainerEventClassType* getEventTypeContainer(){
-    if (not event_type_container_)
-      event_type_container_ = new TraceContainerEventClassType();
-    return event_type_container_;
-  }
-
-  static TraceContainerEventType* getEventContainer(){
-    if (not event_container_)
-      event_container_ = new TraceContainerEventType();
-    return event_container_;
-  }
-
- private:
-  static TraceContainerEventClassType* event_type_container_;
-  static TraceContainerEventType* event_container_;
+  /// Returns container of all registered event types (aka parents).
+  /// The returned pointer is only valid for the current scope.
+  static TraceContainerEventClassType* getEventTypeContainer();
+  /// Returns container of all registered event.
+  /// The returned pointer is only valid for the current scope.
+  static TraceContainerEventType* getEventContainer();
 };
 
 }} //end namespace vt::trace
