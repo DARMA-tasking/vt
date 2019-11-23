@@ -70,7 +70,7 @@ RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
   RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
     new RegistrarGenInfoImpl<typename ActFnT::ObjType>());
 
-  #if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
   // trace
   std::string event_type_name = AdapterType::traceGetEventType();
   std::string event_name = AdapterType::traceGetEventName();
