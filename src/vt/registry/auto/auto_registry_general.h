@@ -87,6 +87,11 @@ struct FunctorAdapterArgs {
     return &proxyOperatorToNewInstanceReg<ObjType, ArgsT...>;
   }
 
+  static NumArgsType getNumArgs() {
+    return sizeof...(ArgsT);
+  }
+
+#if backend_check_enabled(trace_enabled)
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
@@ -103,10 +108,7 @@ struct FunctorAdapterArgs {
     auto args = DU::join(",", arg_types);
     return DU::removeSpaces("operator(" + args + ")");
   }
-
-  static NumArgsType getNumArgs() {
-    return sizeof...(ArgsT);
-  }
+#endif // end trace_enabled
 };
 
 template <typename F, F* f>
@@ -116,6 +118,11 @@ struct FunctorAdapter {
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
+  static NumArgsType getNumArgs() {
+    return 0; // lies - see NumArgsTag, perhaps
+  }
+
+#if backend_check_enabled(trace_enabled)
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
@@ -130,10 +137,7 @@ struct FunctorAdapter {
     auto args = TE::getVoidFuncStrArgs(TE::getTypeName<F>());
     return DU::removeSpaces(barename + "(" + args + ")");
   }
-
-  static NumArgsType getNumArgs() {
-    return 0; // lies - see NumArgsTag, perhaps
-  }
+#endif // end trace_enabled
 };
 
 template <typename F, F f, typename ObjT = void>
@@ -143,6 +147,11 @@ struct FunctorAdapterMember {
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
+  static NumArgsType getNumArgs() {
+    return 0; // lies - see NumArgsTag, perhaps
+  }
+
+#if backend_check_enabled(trace_enabled)
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
@@ -157,19 +166,16 @@ struct FunctorAdapterMember {
     auto args = TE::getVoidFuncStrArgs(TE::getTypeName<F>());
     return DU::removeSpaces(barename + "(" + args + ")");
   }
-
-  static NumArgsType getNumArgs() {
-    return 0; // lies - see NumArgsTag, perhaps
-  }
+#endif // end trace_enabled
 };
 
-template <typename RegistryT, typename = void>
-RegistryT& getAutoRegistryGen();
+template <typename RegT, typename = void>
+RegT& getAutoRegistryGen();
 
-template <typename RegistryT, typename>
-inline RegistryT& getAutoRegistryGen() {
+template <typename RegT, typename>
+inline RegT& getAutoRegistryGen() {
 #pragma sst keep
-  static RegistryT reg;
+  static RegT reg;
   return reg;
 }
 
