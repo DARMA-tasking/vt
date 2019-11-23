@@ -55,29 +55,31 @@
 namespace vt { namespace messaging {
   // Fwd decl for statics.
   template <typename T>
-  struct MsgDerefTyped;
+  struct MsgPtrImplTyped;
 }} // end namespace vt::messaging
 
 namespace vt { namespace messaging { namespace statics {
-  /// Static message derefs for global lifetime and elimination
-  /// of allocation as they are stateless objects with expected
-  /// high reuse through the program.
+  /// Static objects with global lifetime and elimination of allocation.
+  /// They are stateless and have a very high/constant reuse pattern.
   template <typename T>
-  static MsgDerefTyped<T> StaticMsgDerefs;
+  static MsgPtrImplTyped<T> TypedMsgPtrImpls;
 }}} // end namespace vt::messaging::statics
 
 
 namespace vt { namespace messaging {
 
-struct MsgDerefBase {
-  // Invoke messageDeref on the appropriate type.
+/// Message-type agnostic virtual base class.
+struct MsgPtrImplBase {
+  /// Invoke messageDeref on the appropriate type.
+  /// (Ensure a valid delete-expression on virtual message types.)
   virtual void messageDeref(void* msg_ptr) = 0;
-  virtual ~MsgDerefBase() {}
+  virtual ~MsgPtrImplBase() {}
 };
 
 template <typename MsgT>
-struct MsgDerefTyped : MsgDerefBase {
+struct MsgPtrImplTyped : MsgPtrImplBase {
   virtual void messageDeref(void* msg_ptr) {
+    // N.B. messageDeref<T> invokes delete-expr T.
     vt::messageDeref(static_cast<MsgT*>(msg_ptr));
   }
 };
@@ -91,15 +93,16 @@ struct MsgSharedPtr final {
   MsgSharedPtr(std::nullptr_t) {}
 
   MsgSharedPtr(T* in, bool takeRef) {
-    init(in, takeRef, nullptr);
+    init(in, takeRef, &statics::TypedMsgPtrImpls<T>);
   }
 
-  MsgSharedPtr(T* in, bool takeRef, MsgDerefBase* deref) {
-    init(in, takeRef, deref);
+  // Overload to retain ORIGINAL type-erased implementation.
+  MsgSharedPtr(T* in, bool takeRef, MsgPtrImplBase* impl) {
+    init(in, takeRef, impl);
   }
 
   MsgSharedPtr(MsgSharedPtr<T> const& in) {
-    init(in.get(), true, in.deref_);
+    init(in.get(), true, in.impl_);
   }
 
   MsgSharedPtr(MsgSharedPtr<T>&& in) {
@@ -113,7 +116,7 @@ struct MsgSharedPtr final {
 
   MsgSharedPtr<T>& operator=(MsgSharedPtr<T> const& in) {
     clear();
-    init(in.get(), true, in.deref_);
+    init(in.get(), true, in.impl_);
     return *this;
   }
 
@@ -135,21 +138,13 @@ struct MsgSharedPtr final {
   /// Access as another (usually base) message type.
   template <typename U>
   MsgSharedPtr<U> to() const {
-    // Establish type-erased deref if needed.
-    // Non-shared message are not deref'ed and trivially destructible types
-    // do not really care on which type the delete-expr is invoked.
-    if (std::is_trivially_destructible<T>() or not shared_) {
-      assert("should not have deref" && not deref_);
-      return MsgSharedPtr<U>(
-        reinterpret_cast<U*>(ptr_), true);
-    }
-
     return MsgSharedPtr<U>(
       reinterpret_cast<U*>(ptr_), true,
-      deref_ ? deref_ : &statics::StaticMsgDerefs<T>);
+      /*N.B. retain ORIGINAL-type implementation*/ impl_);
   }
 
-  // Obsolete. Use to() as MsgVirtualPtr <-> MsgSharedPtr.
+  /// [obsolete] Use to() as MsgVirtualPtr <-> MsgSharedPtr.
+  /// Both methods are equivalent in funciton.
   template <typename U>
   MsgSharedPtr<U> toVirtual() const {
     return to<U>();
@@ -177,18 +172,17 @@ struct MsgSharedPtr final {
 
 private:
 
-  // Performs state-ownership, optionally taking an additional message ref.
-  // Should probably be called every constructor; must ONLY be
-  // called from fresh/clear state.
-  void init(T* msgPtr, bool takeRef, MsgDerefBase* deref) {
+  /// Performs state-ownership, optionally taking an additional message ref.
+  /// Should probably be called every constructor; must ONLY be
+  /// called from fresh (zero-init member) or clear() state.
+  void init(T* msgPtr, bool takeRef, MsgPtrImplBase* impl) {
     assert("given message" && msgPtr);
     assert("not initialized" && not ptr_);
+    assert("given impl" && impl);
 
     ptr_ = msgPtr;
-    deref_ = deref;
+    impl_ = impl;
     bool shared = (shared_ = isSharedMessage<T>(msgPtr));
-
-    assert("deref -> shared" && (not deref_ or (deref_ and shared)));
 
     if (shared) {
       vtAssertInfo(
@@ -202,15 +196,16 @@ private:
       );
 
       if (takeRef) {
+        // Could be moved to type-erased impl..
         messageRef(msgPtr);
       }
     }
   }
 
+  /// Clear all internal state. Effectively destructor in operation,
+  /// with guarantee that init() can be used again after.
   void clear() {
     bool shared = shared_;
-
-    assert("deref -> shared" && (not deref_ or (deref_ and shared)));
 
     if (shared) {
       assert("shared -> message ptr" && ptr_);
@@ -226,15 +221,9 @@ private:
         print_ptr(msgPtr), envelopeGetRef(msgPtr->env), print_ptr(this)
       );
 
-      MsgDerefBase* deref = deref_;
-      if (deref) {
-        deref->messageDeref(msgPtr);
-      } else {
-        messageDeref<T>(msgPtr);
-      }
+      impl_->messageDeref(msgPtr);
 
       shared_ = false;
-      deref_ = nullptr;
     }
 
     ptr_ = nullptr;
@@ -244,11 +233,10 @@ private:
   void moveFrom(MsgSharedPtr<T>&& in) {
     ptr_ = in.ptr_;
     shared_ = in.shared_;
-    deref_ = in.deref_;
-    // clean take - nullify other cleanup
+    impl_ = in.impl_;
+    // clean take - nullify/prevent other cleanup
     in.ptr_ = nullptr;
     in.shared_ = false;
-    in.deref_ = nullptr;
   }
 
 private:
@@ -257,10 +245,9 @@ private:
   // Is this a shared message?
   // If so, then it will have a deref done on delete.
   bool shared_      = false;
-  // Type-erased to invoke messageDeref on correct type for delete-expr.
-  // If set, use. Otherwise invoke messageDeref<T> directly.
-  // Object has a STATIC LIFETIME and should not be deleted.
-  MsgDerefBase* deref_ = nullptr;
+  // Type-erased implementation support.
+  // Object has a STATIC LIFETIME / is not owned / should not be deleted.
+  MsgPtrImplBase* impl_ = nullptr;
 };
 
 }} /* end namespace vt::messaging */
