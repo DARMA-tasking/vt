@@ -87,6 +87,7 @@ public:
   static bool vt_lb_quiet;
   static std::string vt_lb_file_name;
   static std::string vt_lb_name;
+  static std::string vt_lb_args;
   static int32_t vt_lb_interval;
   static bool vt_lb_stats;
   static std::string vt_lb_stats_dir;

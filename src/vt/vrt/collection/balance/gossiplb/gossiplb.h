@@ -64,10 +64,7 @@ public: // ctors
 public:
   void init(objgroup::proxy::Proxy<GossipLB> in_proxy);
   void runLB() override;
-
-  double getDefaultMinThreshold()  const override { return 0.0;  }
-  double getDefaultMaxThreshold()  const override { return 0.0;  }
-  bool   getDefaultAutoThreshold() const override { return true; }
+  void inputParams(balance::SpecEntry* spec) override;
 
 protected:
   void inform();

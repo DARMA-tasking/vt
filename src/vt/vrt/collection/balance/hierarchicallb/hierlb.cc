@@ -72,6 +72,12 @@ void HierarchicalLB::init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy) {
   proxy = in_proxy;
 }
 
+void HierarchicalLB::inputParams(balance::SpecEntry* spec) {
+  min_threshold = spec->getOrDefault<double>("min", hierlb_threshold_p);
+  max_threshold = spec->getOrDefault<double>("max", hierlb_max_threshold_p);
+  auto_threshold = spec->getOrDefault<bool>("auto", hierlb_auto_threshold_p);
+}
+
 void HierarchicalLB::setupTree(double const threshold) {
   vtAssert(
     tree_setup == false,

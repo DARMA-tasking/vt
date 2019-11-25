@@ -67,8 +67,6 @@ void BaseLB::startLBHandler(
   phase_ = msg->getPhase();
   proxy_ = proxy;
 
-  readLB(phase_);
-
   vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase_);
 
   auto const& in_load_stats = balance::ProcStats::proc_data_[phase_];
@@ -119,36 +117,23 @@ void BaseLB::importProcessorData(
   comm_data = &comm_in;
 }
 
-void BaseLB::readLB(PhaseType phase) {
+void BaseLB::getArgs(PhaseType phase) {
+  using ArgType = vt::arguments::ArgConfig;
   using namespace balance;
-  ReadLBSpec::openFile();
-  ReadLBSpec::readFile();
 
-  bool fallback = true;
   bool has_spec = ReadLBSpec::hasSpec();
   if (has_spec) {
     auto spec = ReadLBSpec::entry(phase);
     if (spec) {
-      bool has_min_only = false;
-      if (spec->hasMin()) {
-        min_threshold = spec->min();
-        has_min_only = true;
-      }
-      if (spec->hasMax()) {
-        max_threshold = spec->max();
-        has_min_only = false;
-      }
-      if (has_min_only) {
-        auto_threshold = false;
-      }
-      fallback = false;
+      spec_entry_ = std::make_unique<SpecEntry>(*spec);
+    } else {
+      vtAssert(false, "Error no spec found, which must exist");
     }
-  }
-
-  if (fallback) {
-    max_threshold  = this->getDefaultMaxThreshold();
-    min_threshold  = this->getDefaultMinThreshold();
-    auto_threshold = this->getDefaultAutoThreshold();
+  } else {
+    auto const args = ArgType::vt_lb_args;
+    spec_entry_ = std::make_unique<SpecEntry>(
+      ReadLBSpec::makeSpecFromParams(args)
+    );
   }
 }
 
@@ -298,6 +283,8 @@ NodeType BaseLB::objGetNode(ObjIDType const id) const {
 }
 
 void BaseLB::finishedStats() {
+  getArgs(phase_);
+  this->inputParams(spec_entry_.get());
   this->runLB();
 }
 
