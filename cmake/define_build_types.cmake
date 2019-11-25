@@ -36,12 +36,13 @@ set(
    CatEnum::termds       | \
    CatEnum::barrier      | \
    CatEnum::pipe         | \
-   CatEnum:: pool        | \
+   CatEnum::pool         | \
    CatEnum::reduce       | \
    CatEnum::rdma         | \
    CatEnum::rdma_channel | \
    CatEnum::handler      | \
    CatEnum::hierlb       | \
+   CatEnum::gossiplb     | \
    CatEnum::scatter      | \
    CatEnum::serial_msg   | \
    CatEnum::sequence     | \

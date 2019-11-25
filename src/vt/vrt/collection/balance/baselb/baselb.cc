@@ -228,21 +228,23 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
-  auto& migrator = balance::ProcStats::proc_migrate_;
-  auto iter = migrator.find(obj_id);
   auto from = objGetNode(obj_id);
+  if (from != to) {
+    auto& migrator = balance::ProcStats::proc_migrate_;
+    auto iter = migrator.find(obj_id);
 
-  debug_print(
-    lb, node,
-    "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
-    obj_id, from, to, iter != migrator.end()
-  );
+    debug_print(
+      lb, node,
+      "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
+      obj_id, from, to, iter != migrator.end()
+    );
 
-  if (iter == migrator.end()) {
-    off_node_migrate_[from].push_back(std::make_tuple(obj_id,to));
-  } else {
-    local_migration_count_++;
-    iter->second(to);
+    if (iter == migrator.end()) {
+      off_node_migrate_[from].push_back(std::make_tuple(obj_id,to));
+    } else {
+      local_migration_count_++;
+      iter->second(to);
+    }
   }
 }
 

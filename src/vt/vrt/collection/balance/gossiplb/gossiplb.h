@@ -47,16 +47,22 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
+#include "vt/vrt/collection/balance/gossiplb/criterion.h"
 
 #include <random>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct GossipLB : BaseLB {
+  using GossipMsg   = balance::GossipMsg;
+  using NodeSetType = std::vector<NodeType>;
+  using ObjsType    = std::unordered_map<ObjIDType, LoadType>;
 
-public: // ctors
   GossipLB() = default;
-
   GossipLB(GossipLB const&) = delete;
 
   virtual ~GossipLB() {}
@@ -67,18 +73,43 @@ public:
   void inputParams(balance::SpecEntry* spec) override;
 
 protected:
+  void doLBStages();
   void inform();
   void decide();
   void migrate();
 
-  void propagateInfo();
+  void propagateRound(EpochType epoch = no_epoch);
+  void propagateIncoming(GossipMsg* msg);
+  bool isUnderloaded(LoadType load) const;
+  bool isOverloaded(LoadType load) const;
+
+  std::vector<double> createCMF(NodeSetType const& under);
+  NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
+  std::vector<NodeType> makeUnderloaded() const;
+  ElementLoadType::iterator selectObject(
+    LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
+  );
+
+  void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
+  void inLazyMigrations(balance::LazyMigrationMsg* msg);
+  void thunkMigrations();
 
 private:
-  uint8_t f               = 0;
-  // uint8_t k               = 0;
-  // uint8_t k_cur           = 0;
-  std::random_device seed;
-  objgroup::proxy::Proxy<GossipLB> proxy = {};
+  uint8_t f_                                        = 2;
+  uint8_t k_max_                                    = 4;
+  uint8_t k_cur_                                    = 0;
+  uint16_t iter_                                    = 0;
+  uint16_t num_iters_                               = 4;
+  std::random_device seed_;
+  std::unordered_map<NodeType, LoadType> load_info_ = {};
+  objgroup::proxy::Proxy<GossipLB> proxy_           = {};
+  bool is_overloaded_                               = false;
+  bool is_underloaded_                              = false;
+  std::unordered_set<NodeType> selected_            = {};
+  std::unordered_set<NodeType> underloaded_         = {};
+  std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
+  LoadType this_new_load_                           = 0.0;
+  CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
