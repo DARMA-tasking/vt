@@ -375,7 +375,7 @@ void InfoColl::upTree() {
     );
 
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,subtree_,child,0,extra
+      group,op,is_in_group,static_cast<NodeType>(subtree_),child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     /*
