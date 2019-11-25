@@ -52,7 +52,7 @@
 namespace vt { namespace auto_registry {
 
 #if backend_check_enabled(trace_enabled)
-trace::TraceEntryIDType theTraceID(
+trace::TraceEntryIDType handlerTraceID(
   HandlerType const& handler, RegistryTypeEnum reg_type
 ) {
   switch (reg_type) {
