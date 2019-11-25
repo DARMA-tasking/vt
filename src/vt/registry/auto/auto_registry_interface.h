@@ -65,7 +65,7 @@ AutoActiveType getAutoHandler(HandlerType const& handler);
 AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
 
 #if backend_check_enabled(trace_enabled)
-  trace::TraceEntryIDType theTraceID(
+  trace::TraceEntryIDType handlerTraceID(
     HandlerType const& handler, RegistryTypeEnum reg_type
   );
 #endif

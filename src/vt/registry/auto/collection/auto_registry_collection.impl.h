@@ -88,8 +88,8 @@ template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 void setHandlerTraceNameColl(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerCollection<ColT,MsgT,f>(nullptr);
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegVrtCollection);
-  setTraceName(trace_id, name, parent);
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegVrtCollection);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
 
@@ -97,11 +97,10 @@ template <typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
 void setHandlerTraceNameCollMem(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerCollectionMem<ColT,MsgT,f>(nullptr);
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegVrtCollectionMember);
-  setTraceName(trace_id, name, parent);
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegVrtCollectionMember);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
-
 
 }} /* end namespace vt::auto_registry */
 
