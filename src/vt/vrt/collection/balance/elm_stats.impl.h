@@ -108,8 +108,9 @@ template <typename ColT>
 
   auto lb_man = LBManager::getProxy();
 
+  auto const single_node = theContext()->getNumNodes() == 1;
   auto const lb = lb_man.get()->decideLBToRun(cur_phase);
-  bool const must_run_lb = lb != LBType::NoLB;
+  bool const must_run_lb = lb != LBType::NoLB and not single_node;
   auto const num_collections = theCollection()->numCollections<>();
   auto const do_sync = msg->doSync();
   auto nmsg = makeMessage<MsgType>(cur_phase,lb,msg->manual(),num_collections);
