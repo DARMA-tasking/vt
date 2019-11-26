@@ -42,14 +42,12 @@
 //@HEADER
 */
 
-#include "vt/trace/trace.h"
+#include "vt/collective/collective_alg.h"
 #include "vt/config.h"
-#include "vt/configs/arguments/args.h"
-#include "vt/runtime/runtime_inst.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/timing/timing.h"
+#include "vt/trace/trace.h"
 #include "vt/utils/demangle/demangle.h"
-#include "vt/collective/collective_alg.h"
 
 #include <fstream>
 #include <cinttypes>
@@ -66,7 +64,7 @@ Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
     log_file_()
 { }
 
-Trace::Trace() : log_file_() { }
+Trace::Trace() { }
 
 /*static*/ void Trace::traceBeginIdleTrigger() {
   #if backend_check_enabled(trace_enabled)
@@ -105,11 +103,11 @@ void Trace::setupNames(
     vtAssert(false, "Must have current directory");
   }
 
-  if (ArgType::vt_trace_dir != "") {
-    full_dir_name_ = ArgType::vt_trace_dir;
+  if (ArgType::vt_trace_dir.empty()) {
+    full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
   }
   else {
-    full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
+    full_dir_name_ = ArgType::vt_trace_dir;
   }
 
   if (full_dir_name_[full_dir_name_.size() - 1] != '/')
@@ -436,7 +434,7 @@ TraceEventIDType Trace::messageRecv(
 }
 
 void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
-  if (not enabled_ || not checkEnabled()) {
+  if (not enabled_ || not traceWritingEnabled(theContext()->getNode())) {
     return;
   }
 
@@ -447,7 +445,7 @@ void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
 }
 
 TraceEventIDType Trace::logEvent(LogPtrType log) {
-  if (not enabled_ || not checkEnabled()) {
+  if (not enabled_ || not traceWritingEnabled(theContext()->getNode())) {
     return 0;
   }
 
@@ -580,13 +578,12 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
   }
 }
 
-bool Trace::checkEnabled() {
+bool Trace::traceWritingEnabled(const NodeType node) {
   if (ArgType::vt_trace) {
-    auto const node = theContext()->getNode();
-    if (ArgType::vt_trace_mod == 0) {
-      return true;
-    } else return (node % ArgType::vt_trace_mod == 1);
-  } else {
+    return ((ArgType::vt_trace_mod == 0)
+            or (node % ArgType::vt_trace_mod == 1));
+  }
+  else {
     return false;
   }
 }
@@ -601,15 +598,11 @@ void Trace::disableTracing() {
 }
 
 void Trace::cleanupTracesFile() {
-  if (checkEnabled()) {
-    auto const& node = theContext()->getNode();
+  auto const& node = theContext()->getNode();
+  if (traceWritingEnabled(node)) {
     //--- Sanity check
-    if (open_events_.empty()) {
-      cur_stop_ = traces_.size();
-    }
-    else {
-      vtAssert(false, "Trying to dump traces with open events?");
-    }
+    vtAssert(open_events_.empty(), "Trying to dump traces with open events?");
+    cur_stop_ = traces_.size();
     //--- Dump everything into an output file
     writeTracesFile();
     outputFooter(node, start_time_, log_file_);
@@ -643,7 +636,7 @@ void Trace::writeTracesFile(int flush) {
     TraceContainersType::event_container.size()
   );
 
-  if (checkEnabled()) {
+  if (traceWritingEnabled(theContext()->getNode())) {
     auto path = full_trace_name_;
     if (not file_is_open_) {
       log_file_ = gzopen(path.c_str(), "wb");
@@ -659,15 +652,14 @@ void Trace::writeTracesFile(int flush) {
     auto name = full_sts_name_;
     file.open(name);
     outputControlFile(file);
-    file.flush();
     file.close();
     wrote_sts_file_ = true;
   }
 }
 
 void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
-  auto stop_point = cur_stop_;
-  for (auto i = cur_; i < stop_point; i++) {
+  size_t stop_point = cur_stop_;
+  for (size_t i = cur_; i < stop_point; i++) {
     auto& log = traces[i];
     auto const& converted_time = timeToInt(log->time - start_time_);
 
