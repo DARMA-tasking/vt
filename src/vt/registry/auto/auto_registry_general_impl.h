@@ -89,13 +89,6 @@ AutoHandlerType registerActiveGen() {
   return RegistrarWrapperGen<RunnableT, RegT, InfoT, FnT>().registrar.index;
 }
 
-template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
-/*static*/ constexpr typename
-RunnableGen<RunnableT, RegT, InfoT, FnT>::FunctionPtrType
-RunnableGen<RunnableT, RegT, InfoT, FnT>::getFunction() {
-  return RunnableT::AdapterType::getFunction();
-}
-
 template <typename AdapterT, typename RegT, typename InfoT, typename FnT>
 AutoHandlerType const RunnableGen<AdapterT, RegT, InfoT, FnT>::idx =
   registerActiveGen<RunnableGen<AdapterT, RegT, InfoT, FnT>, RegT, InfoT, FnT>();
