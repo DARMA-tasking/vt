@@ -711,6 +711,12 @@ void Runtime::printStartupBanner() {
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);
+
+  // Enqueue a check for later in case arguments are modified before work
+  // actually executes
+  theSched->enqueue([this]{
+    this->checkForArgumentErrors();
+  });
 }
 
 void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
@@ -729,6 +735,14 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   std::string units = std::to_string(num_units);
   fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);
   fmt::print("{}{}{}\n", vt_pre, f1, reset);
+}
+
+void Runtime::checkForArgumentErrors() {
+  #if !backend_check_enabled(lblite)
+    if (ArgType::vt_lb) {
+      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
+    }
+  #endif
 }
 
 bool Runtime::initialize(bool const force_now) {
