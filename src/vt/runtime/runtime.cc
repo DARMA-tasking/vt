@@ -413,6 +413,7 @@ void Runtime::printStartupBanner() {
     if (ArgType::vt_lb) {
       auto f9 = warn_cr("--vt_lb", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
+      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
     }
     if (ArgType::vt_lb_stats) {
       auto f9 = warn_cr("--vt_lb_stats", "lblite");
