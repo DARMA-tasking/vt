@@ -517,8 +517,12 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
   SeqContextType new_context(id, node, suspendable);
   context_ = &new_context;
   if (suspendable) {
+#if backend_check_enabled(fcontext)
     new_context.seq_ult->initialize(c);
     new_context.seq_ult->start();
+#else
+    vtAbort("Trying to use suspendable context without fcontext enabled!");
+#endif
   } else {
     c();
   }
