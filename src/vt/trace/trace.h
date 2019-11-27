@@ -149,7 +149,6 @@ struct Trace {
 
   void enableTracing();
   void disableTracing();
-  bool checkEnabled();
 
   void flushTracesFile(bool useGlobalSync = false);
   void writeTracesFile(int flush = Z_FINISH);
@@ -173,6 +172,8 @@ struct Trace {
 private:
   void editLastEntry(std::function<void(LogPtrType)> fn);
 
+  bool traceWritingEnabled(const NodeType node);
+
 private:
   TraceContainerType traces_;
   TraceStackType open_events_;
@@ -189,8 +190,8 @@ private:
   gzFile log_file_;
   bool file_is_open_            = false;
   bool wrote_sts_file_          = false;
-  int64_t cur_                  = 0;
-  int64_t cur_stop_             = 0;
+  size_t cur_                  = 0;
+  size_t cur_stop_             = 0;
 };
 
 }} //end namespace vt::trace
