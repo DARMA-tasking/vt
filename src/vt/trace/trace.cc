@@ -126,12 +126,12 @@ void Trace::setupNames(
   auto const prog_name = pc[pc.size()-1];
 
   auto const node_str = "." + std::to_string(node) + ".log.gz";
-  if (ArgType::vt_trace_file != "") {
-    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
-    full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
-  } else {
+  if (ArgType::vt_trace_file.empty()) {
     full_trace_name_ = full_dir_name_ + trace_name;
     full_sts_name_   = full_dir_name_ + prog_name + ".sts";
+  } else {
+    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
+    full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
   }
 }
 
@@ -437,11 +437,12 @@ void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
   if (not enabled_ || not traceWritingEnabled(theContext()->getNode())) {
     return;
   }
-
-  auto const trace_cont_size = traces_.size();
-  if (trace_cont_size > 0) {
-    fn(traces_.at(trace_cont_size - 1));
+  if (traces_.empty()) {
+    return;
   }
+  //---
+  auto const trace_cont_size = traces_.size();
+  fn(traces_.at(trace_cont_size - 1));
 }
 
 TraceEventIDType Trace::logEvent(LogPtrType log) {
@@ -578,7 +579,7 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
   }
 }
 
-bool Trace::traceWritingEnabled(const NodeType node) {
+/*static*/ bool Trace::traceWritingEnabled(NodeType node) {
   if (ArgType::vt_trace) {
     return ((ArgType::vt_trace_mod == 0)
             or (node % ArgType::vt_trace_mod == 1));
@@ -587,7 +588,6 @@ bool Trace::traceWritingEnabled(const NodeType node) {
     return false;
   }
 }
-
 
 void Trace::enableTracing() {
   enabled_ = true;
@@ -599,15 +599,16 @@ void Trace::disableTracing() {
 
 void Trace::cleanupTracesFile() {
   auto const& node = theContext()->getNode();
-  if (traceWritingEnabled(node)) {
-    //--- Sanity check
-    vtAssert(open_events_.empty(), "Trying to dump traces with open events?");
-    cur_stop_ = traces_.size();
-    //--- Dump everything into an output file
-    writeTracesFile();
-    outputFooter(node, start_time_, log_file_);
-    gzclose(log_file_);
+  if (!traceWritingEnabled(node)) {
+    return;
   }
+  //--- Sanity check
+  vtAssert(open_events_.empty(), "Trying to dump traces with open events?");
+  cur_stop_ = traces_.size();
+  //--- Dump everything into an output file
+  writeTracesFile();
+  outputFooter(node, start_time_, log_file_);
+  gzclose(log_file_);
 }
 
 void Trace::flushTracesFile(bool useGlobalSync) {

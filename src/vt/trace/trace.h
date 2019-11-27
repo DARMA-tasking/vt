@@ -150,7 +150,7 @@ struct Trace {
   void enableTracing();
   void disableTracing();
 
-  void flushTracesFile(bool useGlobalSync = false);
+  void flushTracesFile(bool useGlobalSync);
   void writeTracesFile(int flush = Z_FINISH);
   void cleanupTracesFile();
   void writeLogFile(gzFile file, TraceContainerType const& traces);
@@ -170,9 +170,9 @@ struct Trace {
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 private:
-  void editLastEntry(std::function<void(LogPtrType)> fn);
 
-  bool traceWritingEnabled(const NodeType node);
+  void editLastEntry(std::function<void(LogPtrType)> fn);
+  static bool traceWritingEnabled(NodeType node);
 
 private:
   TraceContainerType traces_;

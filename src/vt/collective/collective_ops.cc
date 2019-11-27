@@ -137,6 +137,8 @@ void CollectiveAnyOps<instance>::abort(
   auto tls_rt = curRT;
   auto myrt = tls_rt ? tls_rt : ::vt::rt;
   if (myrt) {
+    //--- Try to flush most of the traces before aborting
+    myrt->theTrace->writeTracesFile(Z_FINISH);
     myrt->abort(str, code);
   } else {
     std::_Exit(code);
@@ -151,6 +153,8 @@ void CollectiveAnyOps<instance>::output(
   auto tls_rt = curRT;
   auto myrt = tls_rt ? tls_rt : ::vt::rt;
   if (myrt) {
+    //--- Try to flush most of the traces
+    myrt->theTrace->writeTracesFile(Z_FULL_FLUSH);
     myrt->output(str,code,error,decorate,formatted);
   } else {
     ::fmt::print(str.c_str());
