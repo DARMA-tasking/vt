@@ -128,11 +128,11 @@ using CollectionTestDistTypes = testing::Types<
   default_                       ::TestCol
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(
+INSTANTIATE_TYPED_TEST_SUITE_P(
   test_construct_simple, TestConstruct, CollectionTestTypes
 );
 
-INSTANTIATE_TYPED_TEST_CASE_P(
+INSTANTIATE_TYPED_TEST_SUITE_P(
   test_construct_distributed_simple, TestConstructDist, CollectionTestDistTypes
 );
 
