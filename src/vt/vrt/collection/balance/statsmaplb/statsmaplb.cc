@@ -58,7 +58,8 @@ void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
 }
 
 void StatsMapLB::runLB() {
-  vtAssertExpr(balance::StatsLBReader::user_specified_map_changed_.size() >= phase_);
+
+  vtAssertExpr(balance::StatsLBReader::user_specified_map_changed_.size() > phase_);
 
   auto const& in_load_stats = balance::StatsLBReader::user_specified_map_changed_[phase_];
   auto const& in_comm_stats = balance::ProcStats::proc_comm_[phase_];

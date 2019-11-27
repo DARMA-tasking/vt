@@ -53,6 +53,7 @@
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
+#include "vt/vrt/collection/balance/stats_lb_reader.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 
@@ -78,6 +79,12 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   // --vt_lb is not enabled, thus do not run the load balancer
   if (not ArgType::vt_lb) {
     return the_lb;
+  }
+
+  //--- User-specified map without any change, thus do not run
+  if ((ArgType::vt_lb_name == lb_names_[LBType::StatsMapLB]) and
+      !balance::StatsLBReader::phase_changed_map_.vec_[phase]) {
+    return LBType::NoLB;
   }
 
   if (ArgType::vt_lb_file and try_file) {
