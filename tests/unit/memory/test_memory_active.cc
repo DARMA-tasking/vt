@@ -70,7 +70,7 @@ struct TestMemoryActive : TestParallelHarness {
 
 static constexpr int32_t const num_msg_sent = 5;
 
-TYPED_TEST_CASE_P(TestMemoryActive);
+TYPED_TEST_SUITE_P(TestMemoryActive);
 
 TYPED_TEST_P(TestMemoryActive, test_memory_remote_send) {
   using MsgType = TypeParam;
@@ -138,7 +138,7 @@ TYPED_TEST_P(TestMemoryActive, test_memory_remote_broadcast) {
   });
 }
 
-REGISTER_TYPED_TEST_CASE_P(
+REGISTER_TYPED_TEST_SUITE_P(
   TestMemoryActive, test_memory_remote_send, test_memory_remote_broadcast
 );
 
@@ -160,8 +160,8 @@ using MsgSerial = testing::Types<
   TestMemoryActiveMsg<TestStaticBytesSerialMsg>::TestMsgC
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(test_mem_short,  TestMemoryActive, MsgShort );
-INSTANTIATE_TYPED_TEST_CASE_P(test_mem_normal, TestMemoryActive, MsgNormal );
-INSTANTIATE_TYPED_TEST_CASE_P(test_mem_serial, TestMemoryActive, MsgSerial );
+INSTANTIATE_TYPED_TEST_SUITE_P(test_mem_short,  TestMemoryActive, MsgShort);
+INSTANTIATE_TYPED_TEST_SUITE_P(test_mem_normal, TestMemoryActive, MsgNormal);
+INSTANTIATE_TYPED_TEST_SUITE_P(test_mem_serial, TestMemoryActive, MsgSerial);
 
 }}} // end namespace vt::tests::unit

@@ -190,7 +190,7 @@ private:
 template <typename T>
 struct TestRDMAHandleCollection : TestParallelHarness { };
 
-TYPED_TEST_CASE_P(TestRDMAHandleCollection);
+TYPED_TEST_SUITE_P(TestRDMAHandleCollection);
 
 TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
   using T = TypeParam;
@@ -225,12 +225,12 @@ using RDMACollectionTestTypes = testing::Types<
   double
 >;
 
-REGISTER_TYPED_TEST_CASE_P(
+REGISTER_TYPED_TEST_SUITE_P(
   TestRDMAHandleCollection,
   test_rdma_handle_collection_1
 );
 
-INSTANTIATE_TYPED_TEST_CASE_P(
+INSTANTIATE_TYPED_TEST_SUITE_P(
   test_rdma_handle_collection, TestRDMAHandleCollection, RDMACollectionTestTypes
 );
 

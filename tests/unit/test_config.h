@@ -47,4 +47,6 @@
 
 #define DEBUG_TEST_HARNESS_PRINT 0
 
+#define NO_VARARG
+
 #endif /* __VIRTUAL_TRANSPORT_TEST_CONFIG__ */

@@ -142,9 +142,9 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   InstantiationName, TestActiveBroadcastPut,
-  ::testing::Range(static_cast<NodeType>(0), static_cast<NodeType>(16), 1),
+  ::testing::Range(static_cast<NodeType>(0), static_cast<NodeType>(16), 1)
 );
 
 }}} // end namespace vt::tests::unit

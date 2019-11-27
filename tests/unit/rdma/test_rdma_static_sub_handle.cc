@@ -90,7 +90,7 @@ private:
 template <typename T>
 struct TestRDMAHandleSet : TestParallelHarness { };
 
-TYPED_TEST_CASE_P(TestRDMAHandleSet);
+TYPED_TEST_SUITE_P(TestRDMAHandleSet);
 
 TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_1) {
   using T = TypeParam;
@@ -377,7 +377,7 @@ using RDMASetTestTypes = testing::Types<
   uint16_t
 >;
 
-REGISTER_TYPED_TEST_CASE_P(
+REGISTER_TYPED_TEST_SUITE_P(
   TestRDMAHandleSet,
   test_rdma_handle_set_1,
   test_rdma_handle_set_2,
@@ -386,8 +386,7 @@ REGISTER_TYPED_TEST_CASE_P(
   test_rdma_handle_set_5
 );
 
-INSTANTIATE_TYPED_TEST_CASE_P(
-  test_rdma_handle_set, TestRDMAHandleSet, RDMASetTestTypes
+INSTANTIATE_TYPED_TEST_SUITE_P(
 );
 
 }}} /* end namespace vt::tests::unit */

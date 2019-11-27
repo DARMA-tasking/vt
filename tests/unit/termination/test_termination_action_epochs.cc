@@ -83,22 +83,22 @@ TEST_P(TestTermRooted, test_term_detect_rooted_epoch) /* NOLINT */{
   }
 }
 
-INSTANTIATE_TEST_CASE_P /* NOLINT */(
+INSTANTIATE_TEST_SUITE_P(
   InstantiationName, TestTermCollect,
   ::testing::Combine(
     ::testing::Range(0, 4),
     ::testing::Values(false),
     ::testing::Values(1)
-  ),
+  )
 );
 
-INSTANTIATE_TEST_CASE_P /* NOLINT */(
+INSTANTIATE_TEST_SUITE_P(
   InstantiationName, TestTermRooted,
   ::testing::Combine(
     ::testing::Range(0, 3),
     ::testing::Bool(),
     ::testing::Values(1)
-  ),
+  )
 );
 
 }}} // end namespace vt::tests::unit

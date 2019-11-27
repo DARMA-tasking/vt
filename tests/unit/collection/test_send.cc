@@ -128,8 +128,8 @@ struct TestCollectionSend : TestParallelHarness {};
 template <typename CollectionT>
 struct TestCollectionSendMem : TestParallelHarness {};
 
-TYPED_TEST_CASE_P(TestCollectionSend);
-TYPED_TEST_CASE_P(TestCollectionSendMem);
+TYPED_TEST_SUITE_P(TestCollectionSend);
+TYPED_TEST_SUITE_P(TestCollectionSendMem);
 
 TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
   using ColType = TypeParam;
@@ -181,8 +181,8 @@ TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
   }
 }
 
-REGISTER_TYPED_TEST_CASE_P(TestCollectionSend, test_collection_send_1);
-REGISTER_TYPED_TEST_CASE_P(TestCollectionSendMem, test_collection_send_ptm_1);
+REGISTER_TYPED_TEST_SUITE_P(TestCollectionSend, test_collection_send_1);
+REGISTER_TYPED_TEST_SUITE_P(TestCollectionSendMem, test_collection_send_ptm_1);
 
 using CollectionTestTypes = testing::Types<
   send_col_            ::TestCol<int32_t>,
@@ -195,10 +195,10 @@ using CollectionTestTypes = testing::Types<
   send_col_            ::TestCol<int64_t,int64_t>
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(
+INSTANTIATE_TYPED_TEST_SUITE_P(
   test_collection_send, TestCollectionSend, CollectionTestTypes
 );
-INSTANTIATE_TYPED_TEST_CASE_P(
+INSTANTIATE_TYPED_TEST_SUITE_P(
   test_collection_send_mem, TestCollectionSendMem, CollectionTestTypes
 );
 
