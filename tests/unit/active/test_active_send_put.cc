@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#include "vt_gtest.h"
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
@@ -121,9 +121,9 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P_VT(
   InstantiationName, TestActiveSendPut,
-  ::testing::Range(static_cast<NodeType>(2), static_cast<NodeType>(512), 4),
+  ::testing::Range(static_cast<NodeType>(2), static_cast<NodeType>(512), 4)
 );
 
 }}} // end namespace vt::tests::unit

@@ -45,7 +45,7 @@
 #include <vector>
 #include <memory>
 
-#include <gtest/gtest.h>
+#include "vt_gtest.h"
 
 #include "test_harness.h"
 #include "test_parallel_harness.h"

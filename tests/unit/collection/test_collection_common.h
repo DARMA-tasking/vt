@@ -50,7 +50,7 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include <gtest/gtest.h>
+#include "vt_gtest.h"
 
 #include <cstdint>
 #include <tuple>

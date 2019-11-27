@@ -44,7 +44,7 @@
 #if ! defined __VIRTUAL_TRANSPORT_TEST_HARNESS__
 #define __VIRTUAL_TRANSPORT_TEST_HARNESS__
 
-#include <gtest/gtest.h>
+#include "vt_gtest.h"
 
 #include <vector>
 #include <string>

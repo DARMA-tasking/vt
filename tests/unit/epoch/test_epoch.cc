@@ -45,7 +45,7 @@
 #include <cstring>
 #include <memory>
 
-#include <gtest/gtest.h>
+#include "vt_gtest.h"
 
 #include "test_harness.h"
 #include "test_parallel_harness.h"
@@ -184,9 +184,9 @@ TEST_P(TestEpochParam, basic_test_epoch_all_1) {
   EXPECT_EQ(cat, epoch::eEpochCategory::InsertEpoch);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P_VT(
   InstantiationName, TestEpochParam,
-  ::testing::Range(static_cast<EpochType>(1), static_cast<EpochType>(100), 10),
+  ::testing::Range(static_cast<EpochType>(1), static_cast<EpochType>(100), 10)
 );
 
 }}} // end namespace vt::tests::unit

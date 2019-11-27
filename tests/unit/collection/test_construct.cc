@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#include "vt_gtest.h"
 
 #include "test_collection_common.h"
 #include "test_collection_construct_common.h"
@@ -128,11 +128,11 @@ using CollectionTestDistTypes = testing::Types<
   default_                       ::TestCol
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(
+INSTANTIATE_TYPED_TEST_SUITE_P_VT(
   test_construct_simple, TestConstruct, CollectionTestTypes
 );
 
-INSTANTIATE_TYPED_TEST_CASE_P(
+INSTANTIATE_TYPED_TEST_SUITE_P_VT(
   test_construct_distributed_simple, TestConstructDist, CollectionTestDistTypes
 );
 

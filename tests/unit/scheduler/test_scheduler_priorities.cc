@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#include "vt_gtest.h"
 
 #include "vt/transport.h"
 #include "test_parallel_harness.h"

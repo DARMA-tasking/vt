@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#include "vt_gtest.h"
 
 #include <atomic>
 #include <cstdint>
@@ -168,9 +168,9 @@ TEST_P(TestSequencerParallelParam, test_seq_parallel_param) {
 
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P_VT(
   test_seq_parallel_param, TestSequencerParallelParam,
-  ::testing::Range(static_cast<CountType>(0), static_cast<CountType>(16), 1),
+  ::testing::Range(static_cast<CountType>(0), static_cast<CountType>(16), 1)
 );
 
 struct TestSequencerParallel : TestParallelHarness {

@@ -45,8 +45,6 @@
 #if ! defined __VIRTUAL_TRANSPORT_TEST_PARALLEL_HARNESS__
 #define __VIRTUAL_TRANSPORT_TEST_PARALLEL_HARNESS__
 
-#include <gtest/gtest.h>
-
 #include <vector>
 #include <string>
 #include <memory>

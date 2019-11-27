@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#include "vt_gtest.h"
 
 #include "test_collection_common.h"
 #include "test_collection_construct_common.h"
@@ -85,11 +85,11 @@ using CollectionTestTypes = testing::Types<
   multi_param_no_idx_            ::TestCol<int64_t,int64_t>
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(
+INSTANTIATE_TYPED_TEST_SUITE_P_VT(
   test_construct_no_idx, TestConstruct, CollectionTestTypes
 );
 
-INSTANTIATE_TYPED_TEST_CASE_P(
+INSTANTIATE_TYPED_TEST_SUITE_P_VT(
   test_construct_no_idx_dist, TestConstructDist, CollectionTestTypes
 );
 
