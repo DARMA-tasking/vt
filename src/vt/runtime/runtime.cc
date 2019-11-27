@@ -500,13 +500,14 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_trace_mod", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
-    if (ArgType::vt_trace_flush_mod != 0) {
-      auto f11 = fmt::format("Flush output every {} records ", ArgType::vt_trace_flush_mod);
-      auto f12 = opt_on("--vt_trace_flush_mod", f11);
+    if (ArgType::vt_trace_flush_size != 0) {
+      auto f11 = fmt::format("Flush output incrementally with a buffer of,"
+                             " at least, {} record(s)", ArgType::vt_trace_flush_size);
+      auto f12 = opt_on("--vt_trace_flush_size", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     } else {
       auto f11 = fmt::format("Flushing traces at end of run");
-      auto f12 = opt_inverse("--vt_trace_flush_mod", f11);
+      auto f12 = opt_inverse("--vt_trace_flush_size", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
   }

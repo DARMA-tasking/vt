@@ -612,7 +612,7 @@ void Trace::cleanupTracesFile() {
 }
 
 void Trace::flushTracesFile(bool useGlobalSync) {
-  if (ArgType::vt_trace_flush_mod == 0) {
+  if (ArgType::vt_trace_flush_size == 0) {
     // Flush the traces at the end only
     return;
   }
@@ -620,7 +620,7 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     // Synchronize all the nodes before flushing the traces
     theCollective()->barrier();
   }
-  if (traces_.size() > cur_ + ArgType::vt_trace_flush_mod) {
+  if (traces_.size() > cur_ + ArgType::vt_trace_flush_size) {
     writeTracesFile(Z_FULL_FLUSH);
   }
 }
