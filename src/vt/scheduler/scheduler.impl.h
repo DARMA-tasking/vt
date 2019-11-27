@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_parent.cc
+//                               scheduler.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,74 +42,40 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
+#define INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
+
 #include "vt/config.h"
-#include "vt/termination/termination.h"
 
-namespace vt { namespace term {
+namespace vt { namespace sched {
 
-void EpochRelation::addParentEpoch(EpochType const in_parent) {
-  if (is_ds_) {
-    debug_print(
-      termds, node,
-      "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
-    );
-  } else {
-    debug_print(
-      term, node,
-      "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
-    );
+template <typename MsgT>
+void Scheduler::enqueue(MsgT* msg, ActionType action) {
+  bool const is_term = envelopeIsTerm(msg->env);
+
+  if (is_term) {
+    num_term_msgs_++;
   }
 
-  // Produce a single work unit for the parent epoch so it can not finish while
-  // this epoch is live
-  theTerm()->produce(in_parent,1);
-  parents_.insert(in_parent);
+# if backend_check_enabled(priorities)
+  auto priority = envelopeGetPriority(msg->env);
+  work_queue_.emplace(UnitType(is_term, priority, action));
+# else
+  work_queue_.emplace(UnitType(is_term, action));
+# endif
 }
 
-void EpochRelation::clearParents() {
-  if (is_ds_) {
-    debug_print(
-      termds, node,
-      "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-      parents_.size()
-    );
-  } else {
-    debug_print(
-      term, node,
-      "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-      parents_.size()
-    );
-  }
-
-  for (auto&& parent : parents_) {
-    if (is_ds_) {
-      debug_print(
-        termds, node,
-        "clearParents: epoch={:x}, parent={:x}\n", epoch_, parent
-      );
-    } else {
-      debug_print(
-        term, node,
-        "clearParents: epoch={:x}, parent={:x}\n", epoch_,parent
-      );
-    }
-
-    // Consume the parent epoch to release it so it can now possibly complete
-    // since the child is terminated
-    theTerm()->consume(parent,1);
-  }
-
-  // Clear the parent list
-  parents_.clear();
+template <typename MsgT>
+void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, ActionType action) {
+  //
+  // Assume that MsgSharedPtr<MsgT> is already captured in the action.
+  //
+  // To speed this up, in the future, we could have a pure message queue that
+  // could be dispatched directly based on type/state-bits
+  //
+  enqueue<MsgT>(msg.get(), action);
 }
 
-bool EpochRelation::hasParent() const {
-  return parents_.size() > 0;
-}
+}} /* end namespace vt::sched */
 
-std::size_t EpochRelation::numParents() const {
-  return parents_.size();
-}
-
-
-}} /* end namespace vt::term */
+#endif /*INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H*/

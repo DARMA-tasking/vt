@@ -45,7 +45,7 @@
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
-#include "vt/config.h"
+// Do not pull in any VT dependencies here
 
 #include <string>
 
@@ -61,6 +61,10 @@ public:
   static bool vt_auto_color;
   static bool vt_quiet;
 
+  static int32_t vt_sched_num_progress;
+  // Derived from vt_*_color arguments after parsing.
+  static bool colorize_output;
+
   static bool vt_no_sigint;
   static bool vt_no_sigsegv;
   static bool vt_no_terminate;
@@ -74,6 +78,7 @@ public:
   static int32_t vt_stack_mod;
 
   static bool vt_trace;
+  static bool vt_trace_mpi;
   static std::string vt_trace_file;
   static std::string vt_trace_dir;
   static int32_t vt_trace_mod;
@@ -83,12 +88,16 @@ public:
   static bool vt_lb_quiet;
   static std::string vt_lb_file_name;
   static std::string vt_lb_name;
+  static std::string vt_lb_args;
   static int32_t vt_lb_interval;
   static bool vt_lb_stats;
   static std::string vt_lb_stats_dir;
   static std::string vt_lb_stats_file;
 
   static bool vt_no_detect_hang;
+  static bool vt_print_no_progress;
+  static bool vt_epoch_graph_on_hang;
+  static bool vt_epoch_graph_terse;
   static bool vt_term_rooted_use_ds;
   static bool vt_term_rooted_use_wave;
   static int64_t vt_hang_freq;
@@ -114,6 +123,7 @@ public:
   static bool vt_debug_param;
   static bool vt_debug_handler;
   static bool vt_debug_hierlb;
+  static bool vt_debug_gossiplb;
   static bool vt_debug_scatter;
   static bool vt_debug_sequence;
   static bool vt_debug_sequence_vrt;

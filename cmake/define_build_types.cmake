@@ -36,14 +36,16 @@ set(
    CatEnum::termds       | \
    CatEnum::barrier      | \
    CatEnum::pipe         | \
-   CatEnum:: pool        | \
+   CatEnum::pool         | \
    CatEnum::reduce       | \
    CatEnum::rdma         | \
    CatEnum::rdma_channel | \
    CatEnum::handler      | \
    CatEnum::hierlb       | \
+   CatEnum::gossiplb     | \
    CatEnum::scatter      | \
    CatEnum::serial_msg   | \
+   CatEnum::sequence     | \
    CatEnum::trace        | \
    CatEnum::objgroup     | \
    CatEnum::location     | \
@@ -54,10 +56,21 @@ set(
    "
 )
 
+option(vt_detector_disabled "Build VT with detector disabled" OFF)
+option(vt_lb_enabled "Build VT with load balancing enabled" OFF)
+option(vt_trace_enabled "Build VT with trace enabled" OFF)
+option(vt_priorities_enabled "Build VT with message priorities enabled" ON)
+
+set(
+  vt_priority_bits_per_level 3 CACHE
+  STRING "Number of bits to use per VT priority level"
+)
+
 if (${vt_detector_disabled})
   message(STATUS "Building VT with detector disabled")
   set(vt_feature_cmake_detector "0")
 else()
+  message(STATUS "Building VT with detector enabled")
   set(vt_feature_cmake_detector "1")
 endif()
 
@@ -65,6 +78,7 @@ if (${vt_lb_enabled})
   message(STATUS "Building VT with load balancing enabled")
   set(vt_feature_cmake_lblite "1")
 else()
+  message(STATUS "Building VT with load balancing disabled")
   set(vt_feature_cmake_lblite "0")
 endif()
 
@@ -72,8 +86,23 @@ if (${vt_trace_enabled})
   message(STATUS "Building VT with tracing enabled")
   set(vt_feature_cmake_trace_enabled "1")
 else()
+  message(STATUS "Building VT with tracing disabled")
   set(vt_feature_cmake_trace_enabled "0")
 endif()
+
+if (${vt_priorities_enabled})
+  message(STATUS "Building VT with priorities enabled")
+  message(
+    STATUS
+    "Building VT with priority bits per level: ${vt_priority_bits_per_level}"
+  )
+  set(vt_feature_cmake_priorities "1")
+else()
+  message(STATUS "Building VT with priorities disabled")
+  set(vt_feature_cmake_priorities "0")
+endif()
+
+set(vt_feature_cmake_priority_bits_level "${vt_priority_bits_per_level}")
 
 if (${vt_bit_check_overflow})
   message(STATUS "Building VT with bit check overflow")

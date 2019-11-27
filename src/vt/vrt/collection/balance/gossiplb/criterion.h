@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_parent.h
+//                                 criterion.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,40 +42,58 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_TERM_PARENT_H
-#define INCLUDED_VT_TERMINATION_TERM_PARENT_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H
 
 #include "vt/config.h"
-#include "vt/epoch/epoch.h"
 
-#include <unordered_set>
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-namespace vt { namespace term {
-
-struct EpochRelation {
-  using ParentBagType = std::unordered_set<EpochType>;
-
-  EpochRelation(EpochType in_epoch, bool in_is_ds)
-    : epoch_(in_epoch), is_ds_(in_is_ds)
-  { }
-
-  void addParentEpoch(EpochType const in_parent);
-  void clearParents();
-  bool hasParent() const;
-  std::size_t numParents() const;
-  ParentBagType const& getParents() const { return parents_; }
-
-protected:
-  // The epoch for the this relation
-  EpochType epoch_ = no_epoch;
-
-private:
-  // Is this a DS-epoch
-  bool is_ds_ = false;
-  // The parent epochs for a given epoch
-  ParentBagType parents_ = {};
+enum struct CriterionEnum : uint8_t {
+  Grapevine         = 0,
+  ModifiedGrapevine = 1
 };
 
-}} /* end namespace vt::term */
+struct CriterionBase {
+  using LoadType = double;
+};
 
-#endif /*INCLUDED_VT_TERMINATION_TERM_PARENT_H*/
+struct GrapevineCriterion : CriterionBase {
+  bool operator()(LoadType, LoadType under, LoadType obj, LoadType avg) const {
+    return not (under + obj > avg);
+  }
+};
+
+struct ModifiedGrapevineCriterion : CriterionBase {
+  bool operator()(LoadType over, LoadType under, LoadType obj, LoadType) const {
+    return obj < over - under;
+  }
+};
+
+struct Criterion : CriterionBase {
+  explicit Criterion(CriterionEnum const criterion)
+    : criterion_(criterion)
+  { }
+
+  bool operator()(LoadType over, LoadType under, LoadType obj, LoadType avg) const {
+    switch (criterion_) {
+    case CriterionEnum::Grapevine:
+      return GrapevineCriterion()(over, under, obj, avg);
+      break;
+    case CriterionEnum::ModifiedGrapevine:
+      return ModifiedGrapevineCriterion()(over, under, obj, avg);
+      break;
+    default:
+      vtAssert(false, "Incorrect criterion value");
+      return false;
+      break;
+    };
+  }
+
+protected:
+  CriterionEnum const criterion_;
+};
+
+}}}} /* end namespace vt::vrt::collection::lb */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H*/

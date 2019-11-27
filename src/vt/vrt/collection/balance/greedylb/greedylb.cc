@@ -72,6 +72,14 @@ void GreedyLB::init(objgroup::proxy::Proxy<GreedyLB> in_proxy) {
   proxy = scatter_proxy = in_proxy;
 }
 
+void GreedyLB::inputParams(balance::SpecEntry* spec) {
+  std::vector<std::string> allowed{"min", "max", "auto"};
+  spec->checkAllowedKeys(allowed);
+  min_threshold = spec->getOrDefault<double>("min", greedy_threshold_p);
+  max_threshold = spec->getOrDefault<double>("max", greedy_max_threshold_p);
+  auto_threshold = spec->getOrDefault<bool>("auto", greedy_auto_threshold_p);
+}
+
 void GreedyLB::runLB() {
   loadStats();
 }

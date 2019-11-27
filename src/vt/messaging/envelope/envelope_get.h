@@ -65,6 +65,14 @@ inline GroupType envelopeGetGroup(Env& env);
 template <typename Env>
 inline RefType envelopeGetRef(Env& env);
 
+#if backend_check_enabled(priorities)
+template <typename Env>
+inline PriorityType envelopeGetPriority(Env& env);
+
+template <typename Env>
+inline PriorityLevelType envelopeGetPriorityLevel(Env& env);
+#endif
+
 #if backend_check_enabled(trace_enabled)
 template <typename Env>
 inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env);

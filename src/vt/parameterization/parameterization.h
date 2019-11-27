@@ -87,7 +87,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   );
 
 #if backend_check_enabled(trace_enabled)
-  trace::TraceEntryIDType ep = auto_registry::theTraceID(
+  trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
     msg->sub_han, auto_registry::RegistryTypeEnum::RegGeneral
   );
   trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);

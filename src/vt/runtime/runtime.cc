@@ -58,6 +58,7 @@
 #include "vt/pipe/pipe_manager.h"
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/termination/termination.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/collection_headers.h"
@@ -333,6 +334,9 @@ void Runtime::printStartupBanner() {
 #if backend_check_enabled(production)
   features.push_back(vt_feature_str_production);
 #endif
+#if backend_check_enabled(priorities)
+  features.push_back(vt_feature_str_priorities);
+#endif
 #if backend_check_enabled(stdthread)
   features.push_back(vt_feature_str_stdthread);
 #endif
@@ -409,6 +413,7 @@ void Runtime::printStartupBanner() {
     if (ArgType::vt_lb) {
       auto f9 = warn_cr("--vt_lb", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
+      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
     }
     if (ArgType::vt_lb_stats) {
       auto f9 = warn_cr("--vt_lb_stats", "lblite");
@@ -420,11 +425,20 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
     if (ArgType::vt_lb_file) {
-      auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
-      fmt::print("{}\t{}{}", vt_pre, f10, reset);
-      auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
-      auto f11 = opt_on("--vt_lb_file_name", f12);
-      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+      if (ArgType::vt_lb_file_name == "") {
+        auto warn_lb_file = fmt::format(
+          "{}Warning:{} {}{}{} has no effect: compile-time"
+          " option {}{}{} is empty{}\n", red, reset, magenta, "--vt_lb_file",
+          reset, magenta, "--vt_lb_file_name", reset, reset
+        );
+        fmt::print("{}\t{}{}", vt_pre, warn_lb_file, reset);
+      } else {
+        auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
+        fmt::print("{}\t{}{}", vt_pre, f10, reset);
+        auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
+        auto f11 = opt_on("--vt_lb_file_name", f12);
+        fmt::print("{}\t{}{}", vt_pre, f11, reset);
+      }
     } else {
       auto a3 = fmt::format("Load balancer name: \"{}\"", ArgType::vt_lb_name);
       auto a4 = opt_on("--vt_lb_name", a3);
@@ -512,6 +526,28 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_print_no_progress) {
+    auto f11 = fmt::format("Printing warnings when progress is stalls");
+    auto f12 = opt_on("--vt_print_no_progress", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_epoch_graph_terse) {
+    auto f11 = fmt::format("Printing terse epoch graphs when hang detected");
+    auto f12 = opt_on("--vt_epoch_graph_terse", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("Printing verbose epoch graphs when hang detected");
+    auto f12 = opt_inverse("--vt_epoch_graph_terse", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_epoch_graph_on_hang) {
+    auto f11 = fmt::format("Epoch graph output enabled if hang detected");
+    auto f12 = opt_on("--vt_epoch_graph_on_hang", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_no_detect_hang) {
     auto f11 = fmt::format("Disabling termination hang detection");
     auto f12 = opt_on("--vt_no_detect_hang", f11);
@@ -525,7 +561,7 @@ void Runtime::printStartupBanner() {
   if (!ArgType::vt_no_detect_hang) {
     if (ArgType::vt_hang_freq != 0) {
       auto f11 = fmt::format(
-        "Detecting hang every {} tree traversals ", ArgType::vt_hang_freq
+        "Printing stall warning every {} tree traversals ", ArgType::vt_hang_freq
       );
       auto f12 = opt_on("--vt_hang_detect", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -563,19 +599,13 @@ void Runtime::printStartupBanner() {
   }
 
   if (ArgType::vt_no_color) {
-    auto f11 = fmt::format("Disabling color output");
+    auto f11 = fmt::format("Color output disabled");
     auto f12 = opt_on("--vt_no_color", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   } else {
-    if (ArgType::vt_auto_color) {
-      auto f11 = fmt::format("Automatic TTY detection for color output");
-      auto f12 = opt_on("--vt_auto_color", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    } else {
-      auto f11 = fmt::format("Color output enabled by default");
-      auto f12 = opt_inverse("--vt_no_color", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
+    auto f11 = fmt::format("Color output enabled");
+    auto f12 = opt_inverse("--vt_no_color", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
   if (ArgType::vt_no_stack) {
@@ -665,6 +695,7 @@ void Runtime::printStartupBanner() {
   vt_runtime_debug_warn_compile(param)
   vt_runtime_debug_warn_compile(handler)
   vt_runtime_debug_warn_compile(hierlb)
+  vt_runtime_debug_warn_compile(gossiplb)
   vt_runtime_debug_warn_compile(scatter)
   vt_runtime_debug_warn_compile(sequence)
   vt_runtime_debug_warn_compile(sequence_vrt)
@@ -680,6 +711,12 @@ void Runtime::printStartupBanner() {
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);
+
+  // Enqueue a check for later in case arguments are modified before work
+  // actually executes
+  theSched->enqueue([this]{
+    this->checkForArgumentErrors();
+  });
 }
 
 void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
@@ -698,6 +735,14 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   std::string units = std::to_string(num_units);
   fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);
   fmt::print("{}{}{}\n", vt_pre, f1, reset);
+}
+
+void Runtime::checkForArgumentErrors() {
+  #if !backend_check_enabled(lblite)
+    if (ArgType::vt_lb) {
+      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
+    }
+  #endif
 }
 
 bool Runtime::initialize(bool const force_now) {
@@ -905,11 +950,13 @@ void Runtime::initializeComponents() {
   theEvent = std::make_unique<event::AsyncEvent>();
   thePool = std::make_unique<pool::Pool>();
 
+  // Initialize tracing, when it is enabled; used in the AM constructor
+  initializeTrace();
+
   // Core components: enables more complex subsequent initialization
   theObjGroup = std::make_unique<objgroup::ObjGroupManager>();
   theMsg = std::make_unique<messaging::ActiveMessenger>();
   theSched = std::make_unique<sched::Scheduler>();
-  initializeTrace();
   theTerm = std::make_unique<term::TerminationDetector>();
   theCollective = std::make_unique<collective::CollectiveAlg>();
   theGroup = std::make_unique<group::GroupManager>();
@@ -923,6 +970,10 @@ void Runtime::initializeComponents() {
   theLocMan = std::make_unique<location::LocationManager>();
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theCollection = std::make_unique<vrt::collection::CollectionManager>();
+
+  #if backend_check_enabled(trace_enabled)
+    theTrace->initialize();
+  #endif
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }
@@ -1010,9 +1061,26 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     theWorkerGrp->registerIdleListener(localTermFn);
   } else {
     // Without workers running on the node, the termination detector should
-    // assume its locally ready to propagate instead of waiting for them to
-    // become idle.
-    theTerm->setLocalTerminated(true);
+    // enable/disable the global collective epoch based on the state of the
+    // scheduler; register listeners to activate/deactivate that epoch
+    theSched->registerTrigger(
+      sched::SchedulerEvent::BeginIdleMinusTerm, []{
+        debug_print(
+          runtime, node,
+          "setLocalTerminated: BeginIdle: true\n"
+        );
+        vt::theTerm()->setLocalTerminated(true, false);
+      }
+    );
+    theSched->registerTrigger(
+      sched::SchedulerEvent::EndIdleMinusTerm, []{
+        debug_print(
+          runtime, node,
+          "setLocalTerminated: EndIdle: false\n"
+        );
+        vt::theTerm()->setLocalTerminated(false, false);
+      }
+    );
   }
 
   debug_print(runtime, node, "end: initializeWorkers\n");

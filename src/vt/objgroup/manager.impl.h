@@ -174,7 +174,7 @@ void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
   auto pending_iter = pending_.find(proxy);
   if (pending_iter != pending_.end()) {
     for (auto&& msg : pending_iter->second) {
-      work_units_.push_back([msg]{
+      theSched()->enqueue([msg]{
         auto const handler = envelopeGetHandler(msg->env);
         auto const epoch = envelopeGetEpoch(msg->env);
         theObjGroup()->dispatch(msg,handler);

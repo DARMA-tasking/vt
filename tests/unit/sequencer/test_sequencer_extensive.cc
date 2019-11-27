@@ -163,6 +163,7 @@ static constexpr CountType const max_seq_depth = 8;
         depth = m->info[4];                                             \
       }                                                                 \
     );                                                                  \
+    DEBUG_PRINT("before pre sequence {}\n", seq_ordering_);             \
                                                                         \
     theSeq()->sequenced([=]{                                            \
       for (uint32_t wb = 0; wb < nwaits_pre; wb++) {                    \
@@ -174,9 +175,12 @@ static constexpr CountType const max_seq_depth = 8;
           }                                                             \
         );                                                              \
       }                                                                 \
+      DEBUG_PRINT("after pre sequence {}\n", seq_ordering_);            \
+      DEBUG_PRINT("before mid sequence {}\n", seq_ordering_);           \
                                                                         \
       for (uint32_t nseg = 0; nseg < num_segs; nseg++) {                \
         theSeq()->sequenced([=]{                                        \
+          DEBUG_PRINT("inside mid sequence:nseg={},depth={}\n",nseg,depth); \
           DEBUG_PRINT("nseg={}:num_waits={}\n",nseg,num_waits);         \
           DEBUG_PRINT_SEQ(seq_ordering_, 0, "start-sequenced");         \
           seqDepth(depth, [=]{                                          \
@@ -185,6 +189,7 @@ static constexpr CountType const max_seq_depth = 8;
                 no_tag, [=](MSG_TYPE* msg){                             \
                   CountType const this_wait =                           \
                     (nseg * num_waits) + w + nwaits_pre + nwait_offset; \
+                  DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "bexpect seq-main"); \
                   EXPECT_EQ(seq_ordering_++, this_wait);                \
                   DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-main"); \
                 }                                                       \
@@ -194,24 +199,28 @@ static constexpr CountType const max_seq_depth = 8;
         });                                                             \
       }                                                                 \
                                                                         \
+      DEBUG_PRINT("after mid sequence {}\n", seq_ordering_);            \
+      DEBUG_PRINT("before post sequence {}\n", seq_ordering_);          \
+                                                                        \
       for (uint32_t wa = 0; wa < nwaits_post; wa++) {                   \
         theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                      \
           no_tag, [=](MSG_TYPE* msg){                                   \
             CountType const this_wait =                                 \
               (num_segs * num_waits) + nwaits_pre + wa + nwait_offset;  \
-            EXPECT_EQ(seq_ordering_++, this_wait);                      \
             DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-post");      \
+            EXPECT_EQ(seq_ordering_++, this_wait);                      \
           }                                                             \
         );                                                              \
       }                                                                 \
     });                                                                 \
+    DEBUG_PRINT("after post sequence {}\n", seq_ordering_);             \
   }                                                                     \
 
 
 static inline ParamContainerType make_values() {
   ParamContainerType testing_values;
-  for (CountType nwaits = 0; nwaits < max_num_waits; nwaits++) {
-    for (CountType nsegs = 0; nsegs < max_num_segs; nsegs++) {
+  for (CountType nwaits = 1; nwaits < max_num_waits; nwaits++) {
+    for (CountType nsegs = 1; nsegs < max_num_segs; nsegs++) {
       for (CountType d = 0; d < max_seq_depth; d++) {
         for (CountType wb = 0; wb < max_num_waits_before; wb++) {
           for (CountType wa = 0; wa < max_num_waits_after; wa++) {

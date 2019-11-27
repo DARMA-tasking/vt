@@ -127,6 +127,8 @@ struct SeqNode : std::enable_shared_from_this<SeqNode> {
   bool isBlockedNode() const;
   SeqType getSeqID() const;
 
+  bool isParallel() const { return type_ == TypeEnum::ParallelNode; }
+
 private:
   ExpandedClosureContainerType sequenced_closures_;
 

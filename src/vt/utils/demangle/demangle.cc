@@ -42,19 +42,52 @@
 //@HEADER
 */
 
-
-#include "vt/config.h"
 #include "vt/utils/demangle/demangle.h"
-#include "vt/context/context.h"
 
 #include <vector>
 #include <string>
 #include <list>
 #include <cstring>
 
+#include <sstream>
+#include <iterator>
+#include <algorithm>
+
 namespace vt { namespace util { namespace demangle {
 
-/*static*/ ActiveFunctionDemangler::StrParsedOutType
+//
+// DemanglerUtils
+//
+
+/*static*/ std::vector<std::string>
+DemanglerUtils::splitString(std::string const& str, char delim) {
+  std::stringstream ss;
+  ss.str(str);
+
+  std::string item;
+  std::vector<std::string> elems;
+  while (std::getline(ss, item, delim)) {
+    elems.push_back(item);
+  }
+  return elems;
+}
+
+/*static*/ std::string
+DemanglerUtils::removeSpaces(std::string const& str) {
+  std::string clean{str};
+
+  clean.erase(
+    std::remove(clean.begin(), clean.end(), ' '),
+    clean.end());
+
+  return clean;
+}
+
+//
+// ActiveFunctionDemangler
+//
+
+/*static*/ DemangledName
 ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   using CountType = int32_t;
   using CharType = char;
@@ -333,7 +366,11 @@ ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
   return demangled;
 }
 
-/*static*/ ActiveFunctorDemangler::StrParsedOutType
+//
+// ActiveFunctorDemangler
+//
+
+/*static*/ DemangledName
 ActiveFunctorDemangler::parseActiveFunctorName(
   std::string const& name, std::string const& args
 ) {

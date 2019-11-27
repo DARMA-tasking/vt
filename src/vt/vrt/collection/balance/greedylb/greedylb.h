@@ -74,16 +74,7 @@ struct GreedyLB : BaseLB {
 
   void init(objgroup::proxy::Proxy<GreedyLB> in_proxy);
   void runLB() override;
-
-  double getDefaultMinThreshold()  const override {
-    return greedy_threshold_p;
-  }
-  double getDefaultMaxThreshold()  const override {
-    return greedy_max_threshold_p;
-  }
-  bool   getDefaultAutoThreshold() const override {
-    return greedy_auto_threshold_p;
-  }
+  void inputParams(balance::SpecEntry* spec) override;
 
 private:
   double getAvgLoad() const;
@@ -116,6 +107,9 @@ private:
   ObjSampleType load_over;
   std::size_t load_over_size = 0;
   objgroup::proxy::Proxy<GreedyLB> proxy = {};
+  double max_threshold = 0.0f;
+  double min_threshold = 0.0f;
+  bool auto_threshold = true;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

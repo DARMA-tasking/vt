@@ -54,8 +54,10 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
-/*static*/ bool        ArgConfig::vt_auto_color         = false;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
+
+/*static*/ int32_t     ArgConfig::vt_sched_num_progress = 2;
+/*static*/ bool        ArgConfig::colorize_output       = false;
 
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
@@ -70,6 +72,7 @@ namespace vt { namespace arguments {
 /*static*/ int32_t     ArgConfig::vt_stack_mod          = 0;
 
 /*static*/ bool        ArgConfig::vt_trace              = false;
+/*static*/ bool        ArgConfig::vt_trace_mpi          = false;
 /*static*/ std::string ArgConfig::vt_trace_file         = "";
 /*static*/ std::string ArgConfig::vt_trace_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_trace_mod          = 0;
@@ -77,8 +80,9 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
 /*static*/ bool        ArgConfig::vt_lb_quiet           = false;
-/*static*/ std::string ArgConfig::vt_lb_file_name       = "balance.in";
+/*static*/ std::string ArgConfig::vt_lb_file_name       = "";
 /*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
+/*static*/ std::string ArgConfig::vt_lb_args            = "";
 /*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
 /*static*/ bool        ArgConfig::vt_lb_stats           = false;
 /*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
@@ -88,6 +92,9 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_term_rooted_use_wave = false;
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
+/*static*/ bool        ArgConfig::vt_epoch_graph_on_hang= true;
+/*static*/ bool        ArgConfig::vt_epoch_graph_terse  = false;
+/*static*/ bool        ArgConfig::vt_print_no_progress  = true;
 
 /*static*/ bool        ArgConfig::vt_pause              = false;
 
@@ -110,6 +117,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_param        = false;
 /*static*/ bool        ArgConfig::vt_debug_handler      = false;
 /*static*/ bool        ArgConfig::vt_debug_hierlb       = false;
+/*static*/ bool        ArgConfig::vt_debug_gossiplb     = false;
 /*static*/ bool        ArgConfig::vt_debug_scatter      = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence     = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence_vrt = false;
@@ -155,20 +163,16 @@ namespace vt { namespace arguments {
    * Flags for controlling the colorization of output from vt
    */
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
-  auto always = "Always colorize output";
-  auto never  = "Never colorize output";
-  auto maybe  = "Use isatty to determine colorization of output";
+  auto always = "Colorize output (default)";
+  auto never  = "Do not colorize output (overrides --vt_color)";
   auto a  = app.add_flag("-c,--vt_color",      vt_color,      always);
   auto b  = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
-  auto c  = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe);
   auto a1 = app.add_flag("-q,--vt_quiet",      vt_quiet,      quiet);
   auto outputGroup = "Output Control";
   a->group(outputGroup);
   b->group(outputGroup);
-  c->group(outputGroup);
   a1->group(outputGroup);
   b->excludes(a);
-  b->excludes(c);
 
   /*
    * Flags for controlling the signals that VT tries to catch
@@ -215,16 +219,20 @@ namespace vt { namespace arguments {
   /*
    * Flags to control tracing output
    */
-  auto trace  = "Enable tracing (must be compiled with trace_enabled)";
-  auto tfile  = "Name of trace files";
-  auto tdir   = "Name of directory for trace files";
-  auto tmod   = "Output trace file if (node % vt_stack_mod) == 0";
-  auto n = app.add_flag("--vt_trace",           vt_trace,           trace);
-  auto o = app.add_option("--vt_trace_file",    vt_trace_file,      tfile, "");
-  auto p = app.add_option("--vt_trace_dir",     vt_trace_dir,       tdir,  "");
-  auto q = app.add_option("--vt_trace_mod",     vt_trace_mod,       tmod,  1);
+  auto trace     = "Enable tracing (must be compiled with trace_enabled)";
+  auto trace_mpi = "Enable tracing of MPI calls (must be compiled with "
+                   "trace_enabled)";
+  auto tfile     = "Name of trace files";
+  auto tdir      = "Name of directory for trace files";
+  auto tmod      = "Output trace file if (node % vt_stack_mod) == 0";
+  auto n  = app.add_flag("--vt_trace",           vt_trace,           trace);
+  auto nm = app.add_flag("--vt_trace_mpi",       vt_trace_mpi,       trace_mpi);
+  auto o  = app.add_option("--vt_trace_file",    vt_trace_file,      tfile, "");
+  auto p  = app.add_option("--vt_trace_dir",     vt_trace_dir,       tdir,  "");
+  auto q  = app.add_option("--vt_trace_mod",     vt_trace_mod,       tmod,  1);
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
+  nm->group(traceGroup);
   o->group(traceGroup);
   p->group(traceGroup);
   q->group(traceGroup);
@@ -255,6 +263,7 @@ namespace vt { namespace arguments {
   auto oap = "Enable debug_param        = \"" debug_pp(param)        "\"";
   auto pap = "Enable debug_handler      = \"" debug_pp(handler)      "\"";
   auto qap = "Enable debug_hierlb       = \"" debug_pp(hierlb)       "\"";
+  auto qbp = "Enable debug_gossiplb     = \"" debug_pp(gossiplb)     "\"";
   auto rap = "Enable debug_scatter      = \"" debug_pp(scatter)      "\"";
   auto sap = "Enable debug_sequence     = \"" debug_pp(sequence)     "\"";
   auto tap = "Enable debug_sequence_vrt = \"" debug_pp(sequence_vrt) "\"";
@@ -288,6 +297,7 @@ namespace vt { namespace arguments {
   auto oa = app.add_flag("--vt_debug_param",        vt_debug_param,        oap);
   auto pa = app.add_flag("--vt_debug_handler",      vt_debug_handler,      pap);
   auto qa = app.add_flag("--vt_debug_hierlb",       vt_debug_hierlb,       qap);
+  auto qb = app.add_flag("--vt_debug_gossiplb",     vt_debug_gossiplb,     qbp);
   auto ra = app.add_flag("--vt_debug_scatter",      vt_debug_scatter,      rap);
   auto sa = app.add_flag("--vt_debug_sequence",     vt_debug_sequence,     sap);
   auto ta = app.add_flag("--vt_debug_sequence_vrt", vt_debug_sequence_vrt, tap);
@@ -321,6 +331,7 @@ namespace vt { namespace arguments {
   oa->group(debugGroup);
   pa->group(debugGroup);
   qa->group(debugGroup);
+  qb->group(debugGroup);
   ra->group(debugGroup);
   sa->group(debugGroup);
   ta->group(debugGroup);
@@ -341,6 +352,7 @@ namespace vt { namespace arguments {
 
   auto lb            = "Enable load balancing";
   auto lb_file       = "Enable reading LB configuration from file";
+  auto lb_args       = "Arguments pass to LB: \"x=0 y=1 test=2\"";
   auto lb_quiet      = "Silence load balancing output";
   auto lb_file_name  = "LB configuration file to read";
   auto lb_name       = "Name of the load balancer to use";
@@ -350,14 +362,16 @@ namespace vt { namespace arguments {
   auto lb_stats_file = "Load balancing statistics output file name";
   auto lbn = "NoLB";
   auto lbi = 1;
-  auto lbf = "balance.in";
+  auto lbf = "";
   auto lbd = "vt_lb_stats";
   auto lbs = "stats";
+  auto lba = "";
   auto s  = app.add_flag("--vt_lb",              vt_lb,             lb);
   auto t  = app.add_flag("--vt_lb_file",         vt_lb_file,        lb_file);
   auto t1 = app.add_flag("--vt_lb_quiet",        vt_lb_quiet,       lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name",  vt_lb_file_name,   lb_file_name, lbf);
   auto v  = app.add_option("--vt_lb_name",       vt_lb_name,        lb_name,      lbn);
+  auto v1 = app.add_option("--vt_lb_args",       vt_lb_args,        lb_args,      lba);
   auto w  = app.add_option("--vt_lb_interval",   vt_lb_interval,    lb_interval,  lbi);
   auto ww = app.add_flag("--vt_lb_stats",        vt_lb_stats,       lb_stats);
   auto wx = app.add_option("--vt_lb_stats_dir",  vt_lb_stats_dir,   lb_stats_dir, lbd);
@@ -368,6 +382,7 @@ namespace vt { namespace arguments {
   t1->group(debugLB);
   u->group(debugLB);
   v->group(debugLB);
+  v1->group(debugLB);
   w->group(debugLB);
   ww->group(debugLB);
   wx->group(debugLB);
@@ -381,15 +396,24 @@ namespace vt { namespace arguments {
   auto hang_freq    = "The number of tree traversals before a hang is detected";
   auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
   auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
+  auto graph_on     = "Output epoch graph to file (DOT) when hang is detected";
+  auto terse        = "Output epoch graph to file in terse mode";
+  auto progress     = "Print termination counts when progress is stalled";
   auto hfd          = 1024;
-  auto x  = app.add_flag("--vt_no_detect_hang",       vt_no_detect_hang,       hang);
-  auto x1 = app.add_flag("--vt_term_rooted_use_ds",   vt_term_rooted_use_ds,   ds);
-  auto x2 = app.add_flag("--vt_term_rooted_use_wave", vt_term_rooted_use_wave, wave);
-  auto y = app.add_option("--vt_hang_freq",           vt_hang_freq,      hang_freq, hfd);
+  auto x  = app.add_flag("--vt_no_detect_hang",        vt_no_detect_hang,       hang);
+  auto x1 = app.add_flag("--vt_term_rooted_use_ds",    vt_term_rooted_use_ds,   ds);
+  auto x2 = app.add_flag("--vt_term_rooted_use_wave",  vt_term_rooted_use_wave, wave);
+  auto x3 = app.add_option("--vt_epoch_graph_on_hang", vt_epoch_graph_on_hang,  graph_on, true);
+  auto x4 = app.add_flag("--vt_epoch_graph_terse",     vt_epoch_graph_terse,    terse);
+  auto x5 = app.add_option("--vt_print_no_progress",   vt_print_no_progress,    progress, true);
+  auto y = app.add_option("--vt_hang_freq",            vt_hang_freq,      hang_freq, hfd);
   auto debugTerm = "Termination";
   x->group(debugTerm);
   x1->group(debugTerm);
   x2->group(debugTerm);
+  x3->group(debugTerm);
+  x4->group(debugTerm);
+  x5->group(debugTerm);
   y->group(debugTerm);
 
   /*
@@ -435,6 +459,14 @@ namespace vt { namespace arguments {
   us2->group(userOpts);
   us3->group(userOpts);
 
+  /*
+   * Options for configuring the VT scheduler
+   */
+
+  auto nsched = "Number of times to run the progress function in scheduler";
+  auto sca = app.add_option("--vt_sched_num_progress", vt_sched_num_progress, nsched, 2);
+  auto schedulerGroup = "Scheduler Configuration";
+  sca->group(schedulerGroup);
 
   /*
    * Run the parser!
@@ -444,6 +476,15 @@ namespace vt { namespace arguments {
     app.parse(args);
   } catch (CLI::Error &ex) {
     return app.exit(ex);
+  }
+
+  // Determine the final colorization setting.
+  if (vt_no_color) {
+    colorize_output = false;
+  } else {
+    // Otherwise, colorize.
+    // (Within MPI there is no good method to auto-detect.)
+    colorize_output = true;
   }
 
   /*

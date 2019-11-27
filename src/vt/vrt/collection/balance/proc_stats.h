@@ -54,10 +54,6 @@
 
 #include <vector>
 #include <unordered_map>
-#include <tuple>
-#include <functional>
-#include <cstdio>
-#include <cstdlib>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

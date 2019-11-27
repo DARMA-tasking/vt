@@ -375,9 +375,13 @@ EventType GroupManager::sendGroupCollective(
       return no_event;
     }
   } else if (in_group && !group_ready) {
-    local_collective_group_info_.find(group)->second->readyAction([=]{
-      theGroup()->sendGroupCollective(base,from,size,is_root,deliver);
-    });
+    local_collective_group_info_.find(group)->second->readyAction(
+      [base,from,size,is_root]{
+        // Do not capture deliver, it's a pointer to stack memory
+        bool dummy;
+        theGroup()->sendGroupCollective(base,from,size,is_root,&dummy);
+      }
+    );
     *deliver = true;
     return no_event;
   } else {

@@ -148,7 +148,6 @@ static void mySeqFor(SeqType const& seq_id) {
     PRINT_SEQUENCE("for loop: i={}\n", i);
     theSeq()->wait<EmptyMsg, action1>([](EmptyMsg* msg){
       PRINT_SEQUENCE("action1 triggered\n");
-      theMsg()->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>());
     });
   });
 }
@@ -329,7 +328,10 @@ int main(int argc, char** argv) {
   if (my_node == 0) {
     SeqType const& seq_id = theSeq()->nextSeq();
     theSeq()->sequenced(seq_id, mySeqFor);
-    theMsg()->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>());
+  } else if (my_node == 1) {
+    for (int i = 0; i < 10; i++) {
+      theMsg()->sendMsg<EmptyMsg, action1>(0, makeSharedMessage<EmptyMsg>());
+    }
   }
   #endif
 

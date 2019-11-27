@@ -65,5 +65,6 @@
 #define vt_feature_str_stdthread          "std::thread Threading"
 #define vt_feature_str_trace_enabled      "Tracing Projections"
 #define vt_feature_str_cons_multi_idx     "Collection Constructor Positional"
+#define vt_feature_str_priorities         "Message priorities"
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/

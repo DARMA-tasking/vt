@@ -67,8 +67,6 @@ void BaseLB::startLBHandler(
   phase_ = msg->getPhase();
   proxy_ = proxy;
 
-  readLB(phase_);
-
   vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase_);
 
   auto const& in_load_stats = balance::ProcStats::proc_data_[phase_];
@@ -119,36 +117,23 @@ void BaseLB::importProcessorData(
   comm_data = &comm_in;
 }
 
-void BaseLB::readLB(PhaseType phase) {
+void BaseLB::getArgs(PhaseType phase) {
+  using ArgType = vt::arguments::ArgConfig;
   using namespace balance;
-  ReadLBSpec::openFile();
-  ReadLBSpec::readFile();
 
-  bool fallback = true;
   bool has_spec = ReadLBSpec::hasSpec();
   if (has_spec) {
     auto spec = ReadLBSpec::entry(phase);
     if (spec) {
-      bool has_min_only = false;
-      if (spec->hasMin()) {
-        min_threshold = spec->min();
-        has_min_only = true;
-      }
-      if (spec->hasMax()) {
-        max_threshold = spec->max();
-        has_min_only = false;
-      }
-      if (has_min_only) {
-        auto_threshold = false;
-      }
-      fallback = false;
+      spec_entry_ = std::make_unique<SpecEntry>(*spec);
+    } else {
+      vtAssert(false, "Error no spec found, which must exist");
     }
-  }
-
-  if (fallback) {
-    max_threshold  = this->getDefaultMaxThreshold();
-    min_threshold  = this->getDefaultMinThreshold();
-    auto_threshold = this->getDefaultAutoThreshold();
+  } else {
+    auto const args = ArgType::vt_lb_args;
+    spec_entry_ = std::make_unique<SpecEntry>(
+      ReadLBSpec::makeSpecFromParams(args)
+    );
   }
 }
 
@@ -243,22 +228,23 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
-  auto& migrator = balance::ProcStats::proc_migrate_;
-  auto iter = migrator.find(obj_id);
   auto from = objGetNode(obj_id);
+  if (from != to) {
+    auto& migrator = balance::ProcStats::proc_migrate_;
+    auto iter = migrator.find(obj_id);
 
-  debug_print(
-    lb, node,
-    "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
-    obj_id, from, to, iter != migrator.end()
-  );
+    debug_print(
+      lb, node,
+      "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
+      obj_id, from, to, iter != migrator.end()
+    );
 
-  local_migration_count_++;
-
-  if (iter == migrator.end()) {
-    off_node_migrate_[from].push_back(std::make_tuple(obj_id,to));
-  } else {
-    iter->second(to);
+    if (iter == migrator.end()) {
+      off_node_migrate_[from].push_back(std::make_tuple(obj_id,to));
+    } else {
+      local_migration_count_++;
+      iter->second(to);
+    }
   }
 }
 
@@ -299,6 +285,8 @@ NodeType BaseLB::objGetNode(ObjIDType const id) const {
 }
 
 void BaseLB::finishedStats() {
+  getArgs(phase_);
+  this->inputParams(spec_entry_.get());
   this->runLB();
 }
 

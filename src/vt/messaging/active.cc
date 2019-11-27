@@ -50,12 +50,20 @@
 #include "vt/termination/term_headers.h"
 #include "vt/group/group_manager_active_attorney.h"
 #include "vt/runnable/general.h"
+#include "vt/timing/timing.h"
+#include "vt/scheduler/priority.h"
 
 namespace vt { namespace messaging {
 
 ActiveMessenger::ActiveMessenger()
   : this_node_(theContext()->getNode())
 {
+  #if backend_check_enabled(trace_enabled)
+    if (ArgType::vt_trace_mpi) {
+      trace_irecv     = trace::registerEventCollective("MPI_Irecv");
+      trace_isend     = trace::registerEventCollective("MPI_Isend");
+    }
+  #endif
   /*
    * Push the default epoch into the stack so it is always at the bottom of the
    * stack during execution until the AM's destructor is invoked
@@ -201,13 +209,31 @@ EventType ActiveMessenger::sendMsgBytes(
     dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}"
   );
 
-  MPI_Isend(
-    msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-    mpi_event->getRequest()
-  );
+  {
+    #if backend_check_enabled(trace_enabled)
+      double tr_begin;
+      if (ArgType::vt_trace_mpi) {
+        tr_begin = vt::timing::Timing::getCurrentTime();
+      }
+    #endif
+
+    MPI_Isend(
+      msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
+      mpi_event->getRequest()
+    );
+
+    #if backend_check_enabled(trace_enabled)
+      if (ArgType::vt_trace_mpi) {
+        auto tr_end = vt::timing::Timing::getCurrentTime();
+        auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
+        trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
+      }
+    #endif
+  }
 
   if (not is_term) {
     theTerm()->produce(epoch,1,dest);
+    theTerm()->hangDetectSend();
   }
 
   for (auto&& l : send_listen_) {
@@ -239,7 +265,7 @@ EventType ActiveMessenger::sendMsgSized(
     auto const handler = envelopeGetHandler(msg->env);
     bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
     if (is_auto) {
-      trace::TraceEntryIDType ep = auto_registry::theTraceID(
+      trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
         handler, auto_registry::RegistryTypeEnum::RegGeneral
       );
       if (not is_bcast) {
@@ -272,19 +298,12 @@ EventType ActiveMessenger::sendMsgSized(
     base, uninitialized_destination, msg_size, true, &deliver
   );
 
-  EventType ret = no_event;
-
   if (deliver) {
-    EventType event = no_event;
-
     sendMsgBytesWithPut(dest, base, msg_size, send_tag);
-
-    ret = event;
-  } else {
-    ret = ret_event;
+    return no_event;
   }
 
-  return ret;
+  return ret_event;
 }
 
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
@@ -314,14 +333,32 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     "Invalid destination: {}"
   );
 
-  MPI_Isend(
-    data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-    mpi_event->getRequest()
-  );
+  {
+    #if backend_check_enabled(trace_enabled)
+      double tr_begin;
+      if (ArgType::vt_trace_mpi) {
+        tr_begin = vt::timing::Timing::getCurrentTime();
+      }
+    #endif
+
+    MPI_Isend(
+      data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
+      mpi_event->getRequest()
+    );
+
+    #if backend_check_enabled(trace_enabled)
+      if (ArgType::vt_trace_mpi) {
+        auto tr_end = vt::timing::Timing::getCurrentTime();
+        auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, num_bytes);
+        trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
+      }
+    #endif
+  }
 
   // Assume that any raw data send/recv is paired with a message with an epoch
   // if required to inhibit early termination of that epoch
   theTerm()->produce(term::any_epoch_sentinel,1,dest);
+  theTerm()->hangDetectSend();
 
   for (auto&& l : send_listen_) {
     l->send(dest, num_bytes, false);
@@ -330,10 +367,17 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   return SendDataRetType{event_id,send_tag};
 }
 
+bool ActiveMessenger::recvDataMsgPriority(
+  PriorityType priority, TagType const& tag, NodeType const& node,
+  RDMA_ContinuationDeleteType next
+) {
+  return recvDataMsg(priority, tag, node, true, next);
+}
+
 bool ActiveMessenger::recvDataMsg(
   TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next
 ) {
-  return recvDataMsg(tag, node, true, next);
+  return recvDataMsg(default_priority, tag, node, true, next);
 }
 
 bool ActiveMessenger::tryProcessDataMsgRecv() {
@@ -342,8 +386,9 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 
   for (; iter != pending_recvs_.end(); ++iter) {
     auto const done = recvDataMsgBuffer(
-      iter->second.user_buf, iter->first, iter->second.recv_node,
-      false, iter->second.dealloc_user_buf, iter->second.cont
+      iter->second.user_buf, iter->second.priority, iter->first,
+      iter->second.recv_node, false, iter->second.dealloc_user_buf,
+      iter->second.cont
     );
     if (done) {
       erase = true;
@@ -360,8 +405,16 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
-  void* const user_buf, TagType const& tag, NodeType const& node,
-  bool const& enqueue, ActionType dealloc_user_buf,
+  void* const user_buf, TagType const& tag,
+  NodeType const& node, bool const& enqueue, ActionType dealloc,
+  RDMA_ContinuationDeleteType next
+) {
+  return recvDataMsgBuffer(user_buf, no_priority, tag, node, enqueue, dealloc, next);
+}
+
+bool ActiveMessenger::recvDataMsgBuffer(
+  void* const user_buf, PriorityType priority, TagType const& tag,
+  NodeType const& node, bool const& enqueue, ActionType dealloc_user_buf,
   RDMA_ContinuationDeleteType next
 ) {
   if (not enqueue) {
@@ -391,13 +444,35 @@ bool ActiveMessenger::recvDataMsgBuffer(
       NodeType const sender = stat.MPI_SOURCE;
 
       MPI_Request req;
-      MPI_Irecv(
-        buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
-        theContext()->getComm(), &req
-      );
+
+      {
+        #if backend_check_enabled(trace_enabled)
+          double tr_begin;
+          if (ArgType::vt_trace_mpi) {
+            tr_begin = vt::timing::Timing::getCurrentTime();
+          }
+        #endif
+
+        MPI_Irecv(
+          buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
+          theContext()->getComm(), &req
+        );
+
+        #if backend_check_enabled(trace_enabled)
+          if (ArgType::vt_trace_mpi) {
+            auto tr_end = vt::timing::Timing::getCurrentTime();
+            auto tr_note = fmt::format(
+              "Irecv(Data): from={}, bytes={}",
+              stat.MPI_SOURCE, num_probe_bytes
+            );
+            trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_irecv);
+          }
+        #endif
+      }
 
       InProgressDataIRecv recv_holder{
-        buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next
+        buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next,
+        priority
       };
       in_progress_data_irecv.emplace(std::move(recv_holder));
       return true;
@@ -407,14 +482,16 @@ bool ActiveMessenger::recvDataMsgBuffer(
   } else {
     debug_print(
       active, node,
-      "recvDataMsgBuffer: node={}, tag={}, enqueue={}\n",
-      node, tag, print_bool(enqueue)
+      "recvDataMsgBuffer: node={}, tag={}, enqueue={}, priority={:x}\n",
+      node, tag, print_bool(enqueue), priority
     );
 
     pending_recvs_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(tag),
-      std::forward_as_tuple(PendingRecvType{user_buf,next,dealloc_user_buf,node})
+      std::forward_as_tuple(
+        PendingRecvType{user_buf,next,dealloc_user_buf,node,priority}
+      )
     );
     return false;
   }
@@ -446,27 +523,50 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     }
   };
 
-  if (next != nullptr) {
-    next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
-  } else {
+  if (next == nullptr) {
     dealloc_buf();
+    theTerm()->consume(term::any_epoch_sentinel,1,sender);
+    theTerm()->hangDetectRecv();
+  } else {
+    // If we have a continuation, schedule to run later
+    auto run = [=]{
+      next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
+      theTerm()->consume(term::any_epoch_sentinel,1,sender);
+      theTerm()->hangDetectRecv();
+    };
+    theSched()->enqueue(irecv->priority, run);
   }
-
-  theTerm()->consume(term::any_epoch_sentinel,1,sender);
 }
 
 bool ActiveMessenger::recvDataMsg(
-  TagType const& tag, NodeType const& recv_node, bool const& enqueue,
-  RDMA_ContinuationDeleteType next
+  PriorityType priority, TagType const& tag, NodeType const& recv_node,
+  bool const& enqueue, RDMA_ContinuationDeleteType next
 ) {
-  return recvDataMsgBuffer(nullptr, tag, recv_node, enqueue, nullptr, next);
+  return recvDataMsgBuffer(
+    nullptr, priority, tag, recv_node, enqueue, nullptr, next
+  );
 }
 
 NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
   return current_node_context_;
 }
 
-bool ActiveMessenger::handleActiveMsg(
+void ActiveMessenger::scheduleActiveMsg(
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSizeType const& size, bool insert
+) {
+  debug_print_verbose(
+    active, node,
+    "scheduleActiveMsg: msg={}, from={}, size={}, insert={}\n",
+    print_ptr(base.get()), from, size, insert
+  );
+
+  // Enqueue the message for processing
+  auto run = [=]{ processActiveMsg(base, from, size, insert); };
+  theSched()->enqueue(base, run);
+}
+
+bool ActiveMessenger::processActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
   MsgSizeType const& size, bool insert
 ) {
@@ -483,7 +583,7 @@ bool ActiveMessenger::handleActiveMsg(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "handleActiveMsg: msg={}, ref={}, deliver={}\n",
+      "processActiveMsg: msg={}, ref={}, deliver={}\n",
       print_ptr(msg), envelopeGetRef(msg->env), print_bool(deliver)
     );
   }
@@ -562,6 +662,11 @@ bool ActiveMessenger::deliverActiveMsg(
     current_node_context_     = from_node;
     current_epoch_context_    = cur_epoch;
 
+    #if backend_check_enabled(priorities)
+      current_priority_context_       = envelopeGetPriority(msg->env);
+      current_priority_level_context_ = envelopeGetPriorityLevel(msg->env);
+    #endif
+
     #if backend_check_enabled(trace_enabled)
       current_trace_context_  = envelopeGetTraceEvent(msg->env);
     #endif
@@ -581,12 +686,18 @@ bool ActiveMessenger::deliverActiveMsg(
       current_trace_context_  = trace::no_trace_event;
     #endif
 
+    #if backend_check_enabled(priorities)
+      current_priority_context_       = no_priority;
+      current_priority_level_context_ = no_priority_level;
+    #endif
+
     if (has_epoch) {
       epochEpilogHandler(cur_epoch,ep_stack_size);
     }
 
     if (not is_term) {
       theTerm()->consume(epoch,1,from_node);
+      theTerm()->hangDetectRecv();
     }
   } else {
     if (insert) {
@@ -628,10 +739,31 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     NodeType const sender = stat.MPI_SOURCE;
 
     MPI_Request req;
-    MPI_Irecv(
-      buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
-      theContext()->getComm(), &req
-    );
+
+    {
+      #if backend_check_enabled(trace_enabled)
+        double tr_begin;
+        if (ArgType::vt_trace_mpi) {
+          tr_begin = vt::timing::Timing::getCurrentTime();
+        }
+      #endif
+
+      MPI_Irecv(
+        buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
+        theContext()->getComm(), &req
+      );
+
+      #if backend_check_enabled(trace_enabled)
+        if (ArgType::vt_trace_mpi) {
+          auto tr_end = vt::timing::Timing::getCurrentTime();
+          auto tr_note = fmt::format(
+            "Irecv(AM): from={}, bytes={}",
+            stat.MPI_SOURCE, num_probe_bytes
+          );
+          trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_irecv);
+        }
+      #endif
+    }
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
     in_progress_active_msg_irecv.emplace(std::move(recv_holder));
@@ -690,14 +822,14 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
         put_tag, sender,
         [=](RDMA_GetType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-          handleActiveMsg(base, sender, num_probe_bytes, true);
+          scheduleActiveMsg(base, sender, num_probe_bytes, true);
         }
      );
     }
   }
 
   if (!is_put || put_finished) {
-    handleActiveMsg(base, sender, msg_bytes, true);
+    scheduleActiveMsg(base, sender, msg_bytes, true);
   }
 }
 
@@ -717,7 +849,7 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
   );
 }
 
-bool ActiveMessenger::scheduler() {
+bool ActiveMessenger::progress() {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   processMaybeReadyHanTag();
@@ -726,12 +858,6 @@ bool ActiveMessenger::scheduler() {
 
   return started_irecv_active_msg or started_irecv_data_msg or
          received_active_msg or received_data_msg;
-}
-
-bool ActiveMessenger::isLocalTerm() {
-  bool const no_pending_msgs = pending_handler_msgs_.size() == 0;
-  bool const no_pending_recvs = pending_recvs_.size() == 0;
-  return no_pending_msgs and no_pending_recvs;
 }
 
 void ActiveMessenger::processMaybeReadyHanTag() {
@@ -831,6 +957,14 @@ HandlerType ActiveMessenger::getCurrentHandler() const {
 
 EpochType ActiveMessenger::getCurrentEpoch() const {
   return current_epoch_context_;
+}
+
+PriorityType ActiveMessenger::getCurrentPriority() const {
+  return current_priority_context_;
+}
+
+PriorityLevelType ActiveMessenger::getCurrentPriorityLevel() const {
+  return current_priority_level_context_;
 }
 
 }} // end namespace vt::messaging

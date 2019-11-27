@@ -98,6 +98,9 @@ struct Runtime {
 
   void systemSync() { sync(); }
 
+public:
+  void checkForArgumentErrors();
+
 private:
   RuntimeInstType const instance_;
 
