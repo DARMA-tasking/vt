@@ -61,27 +61,28 @@ struct RegistrarGenInfoImpl : RegistrarGenInfoBase {
   }
 };
 
-template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
-RegistrarGen<ActFnT, RegT, InfoT, FnT>::RegistrarGen() {
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+RegistrarGen<RunnableT, RegT, InfoT, FnT>::RegistrarGen() {
+  using AdapterType = typename RunnableT::AdapterType;
+
   RegT& reg = getAutoRegistryGen<RegT>();
   index = reg.size(); // capture current index
 
-  FnT fn = reinterpret_cast<FnT>(ActFnT::getFunction());
+  FnT fn = reinterpret_cast<FnT>(AdapterType::getFunction());
   RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
-    new RegistrarGenInfoImpl<typename ActFnT::ObjType>());
+    new RegistrarGenInfoImpl<typename RunnableT::ObjType>());
 
 #if backend_check_enabled(trace_enabled)
   // trace
   std::string event_type_name = AdapterType::traceGetEventType();
   std::string event_name = AdapterType::traceGetEventName();
-  auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
-    parsed_type_name.getNamespace(), parsed_type_name.getFuncParams()
-  );
-
+  trace::TraceEntryIDType trace_ep = trace::TraceRegistry::registerEventHashed(
+    event_type_name, event_name);
   reg.emplace_back(InfoT{fn, std::move(indexAccessor), trace_ep});
-  #else
+#else
+  // non-trace
   reg.emplace_back(InfoT{fn, std::move(indexAccessor)});
-  #endif
+#endif
 }
 
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
