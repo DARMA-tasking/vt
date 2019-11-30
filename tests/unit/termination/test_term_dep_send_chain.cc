@@ -129,6 +129,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
   void op1(OpMsg* msg) {
+    migrating = false;
     checkIncExpectedStep(0);
     EXPECT_EQ(msg->a, calcVal(1,idx));
     EXPECT_EQ(msg->b, calcVal(2,idx));
@@ -273,9 +274,6 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     vt::Collection<MyCol,vt::Index2D>::serialize(s);
     s | iter | step | idx | final_check | max_x | max_y | started_op6_;
     s | migrating;
-    if (s.isUnpacking()) {
-      migrating = false;
-    }
     s | op6_counter_;
 
     // Skip the stack op6_msgs_ because migration only occurs after all op-steps
