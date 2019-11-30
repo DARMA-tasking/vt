@@ -61,8 +61,13 @@ namespace vt { namespace messaging {
 namespace vt { namespace messaging { namespace statics {
   /// Static objects with global lifetime and elimination of allocation.
   /// They are stateless and have a very high/constant reuse pattern.
+  struct Holder {
+    template <typename T>
+    static MsgPtrImplTyped<T> TypedMsgPtrImpls;
+  };
+
   template <typename T>
-  static MsgPtrImplTyped<T> TypedMsgPtrImpls;
+  /*static*/ MsgPtrImplTyped<T> Holder::TypedMsgPtrImpls;
 }}} // end namespace vt::messaging::statics
 
 
@@ -93,7 +98,7 @@ struct MsgSharedPtr final {
   MsgSharedPtr(std::nullptr_t) {}
 
   MsgSharedPtr(T* in, bool takeRef) {
-    init(in, takeRef, &statics::TypedMsgPtrImpls<T>);
+    init(in, takeRef, &statics::Holder::TypedMsgPtrImpls<T>);
   }
 
   // Overload to retain ORIGINAL type-erased implementation.
