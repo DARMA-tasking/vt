@@ -51,8 +51,8 @@
 
 namespace vt {
 
-template <typename MessageT>
-void messageRef(MessageT* msg) {
+template <typename MsgT>
+void messageRef(MsgT* msg) {
   envelopeRef(msg->env);
 
   debug_print(
@@ -62,22 +62,17 @@ void messageRef(MessageT* msg) {
   );
 }
 
-template <template <typename> class MsgPtrT, typename MsgT>
-void messageRef(MsgPtrT<MsgT> msg) {
-  return messageRef(msg.get());
-}
-
-template <typename MessageT>
-void messageDeref(MessageT* msg) {
-  envelopeDeref(msg->env);
+template <typename MsgT>
+void messageDeref(MsgT* msg) {
+  RefType refcount = envelopeDeref(msg->env);
 
   debug_print(
     pool, node,
     "messageDeref msg={}, refs={}\n",
-    print_ptr(msg), envelopeGetRef(msg->env)
+    print_ptr(msg), refcount
   );
 
-  if (envelopeGetRef(msg->env) == 0) {
+  if (refcount == 0) {
     /* @todo: what is the correct strategy here? invoking dealloc does not
      * invoke the destructor
      *
@@ -93,13 +88,8 @@ void messageDeref(MessageT* msg) {
   }
 }
 
-template <template <typename> class MsgPtrT, typename MsgT>
-void messageDeref(MsgPtrT<MsgT> msg) {
-  return messageDeref(msg.get());
-}
-
-template <typename MessageT>
-bool isSharedMessage(MessageT* msg) {
+template <typename MsgT>
+bool isSharedMessage(MsgT* msg) {
   return envelopeGetRef(msg->env) != not_shared_message;
 }
 

@@ -52,29 +52,30 @@
 
 namespace vt {
 
-template <typename MessageT, typename... Args>
-MessageT* makeSharedMessage(Args&&... args);
+template <typename MsgT, typename... Args>
+MsgT* makeSharedMessage(Args&&... args);
+
+template <typename MsgT, typename... Args>
+MsgT* makeSharedMessageSz(std::size_t size, Args&&... args);
 
 template <typename MsgT, typename... Args>
 MsgSharedPtr<MsgT> makeMessage(Args&&... args);
 
 template <typename MsgT, typename... Args>
-MsgSharedPtr<MsgT> makeMsg(Args&&... args);
-
-template <typename MessageT, typename... Args>
-MessageT* makeSharedMessageSz(std::size_t size, Args&&... args);
-
-template <typename MsgT, typename... Args>
 MsgSharedPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args);
 
-template <typename MessageT>
-void messageConvertToShared(MessageT* msg);
+///[obsolete] Use makeMessage instead.
+template <typename MsgT, typename... Args>
+MsgSharedPtr<MsgT> makeMsg(Args&&... args);
 
-template <typename MessageT>
-void messageSetUnmanaged(MessageT* msg);
+template <typename MsgT>
+void messageConvertToShared(MsgT* msg);
 
-template <typename MsgPtrT>
-void messageResetDeserdes(MsgPtrT const& msg);
+template <typename MsgT>
+void messageSetUnmanaged(MsgT* msg);
+
+template <typename MsgT>
+void messageResetDeserdes(MsgSharedPtr<MsgT> const& msg);
 
 } //end namespace vt
 
