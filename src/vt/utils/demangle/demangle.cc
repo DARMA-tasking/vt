@@ -156,7 +156,7 @@ TemplateExtract::getVoidFuncStrArgs(std::string const& typestr) {
   }
   // eat trailing ")"
   size_t e = typestr.length() - 1;
-  if (e >= 0 && typestr[e] == ')') {
+  if (e != std::string::npos && typestr[e] == ')') {
     e -= 1;
   }
 
