@@ -56,7 +56,6 @@
 namespace vt { namespace trace {
 
 struct Log {
-  using LogPtrType         = std::shared_ptr<Log>;
   using TraceConstantsType = eTraceConstants;
   using UserDataType       = int32_t;
 
@@ -66,8 +65,8 @@ struct Log {
   TraceEntryIDType ep = no_trace_entry_id;
   TraceConstantsType type = TraceConstantsType::InvalidTraceType;
   TraceEventIDType event = no_trace_event;
-  TraceMsgLenType msg_len = 0;
   NodeType node = uninitialized_destination;
+  TraceMsgLenType msg_len = 0;
   uint64_t idx1 = 0, idx2 = 0, idx3 = 0, idx4 = 0;
 
   std::string user_supplied_note = "";
@@ -75,14 +74,17 @@ struct Log {
   UserEventIDType user_event = 0;
   bool user_start = false;
 
+  // [obsolete] - use appropriate ctor
   void setUserNote(std::string const& note) {
     user_supplied_note = note;
   }
 
+  // [obsolete] - use appropriate ctor
   void setUserData(UserDataType data) {
     user_supplied_data = data;
   }
 
+  // User event
   Log(
     double const in_begin_time, double const in_end_time,
     TraceConstantsType const in_type, std::string const& in_note,
@@ -91,33 +93,39 @@ struct Log {
       type(in_type), event(in_event), user_supplied_note(in_note)
   { }
 
+  // User event
   Log(
-    double const in_time, TraceConstantsType const in_type,
-    std::string const& in_note
-  ) : time(in_time), type(in_type), user_supplied_note(in_note)
+      double const in_time, TraceConstantsType const in_type,
+      std::string const& in_note, UserDataType in_data
+  ) : time(in_time), type(in_type),
+      user_supplied_note(in_note), user_supplied_data(in_data)
   { }
 
-  Log(double const in_time, TraceConstantsType const in_type)
-    : time(in_time), type(in_type)
-  { }
-
+  // User event
   Log(
     double const in_time, TraceConstantsType const in_type,
+    NodeType in_node,
     UserEventIDType in_user_event, bool in_user_start
-  ) : time(in_time), type(in_type), user_event(in_user_event),
-      user_start(in_user_start)
+  ) : time(in_time), type(in_type),
+      node(in_node),
+      user_event(in_user_event), user_start(in_user_start)
   { }
 
-  Log(
-    double const in_time, TraceConstantsType const in_type,
-    UserDataType const in_data
-  ) : time(in_time), type(in_type), user_supplied_data(in_data)
+  // Used for idle
+  Log(double const in_time, TraceConstantsType const in_type,
+      NodeType in_node)
+    : time(in_time), type(in_type),
+      node(in_node)
   { }
 
+  // Used for messages
   Log(
-    double const in_time, TraceEntryIDType const in_ep,
-    TraceConstantsType const in_type, TraceMsgLenType const in_msg_len = 0
-  ) : time(in_time), ep(in_ep), type(in_type), msg_len(in_msg_len)
+    double const in_time, TraceEntryIDType const in_ep, TraceConstantsType const in_type,
+    NodeType in_node,
+    TraceMsgLenType const in_msg_len
+  ) : time(in_time), ep(in_ep), type(in_type),
+      node(in_node),
+      msg_len(in_msg_len)
   { }
 
   Log(
@@ -125,7 +133,7 @@ struct Log {
     TraceEventIDType in_event, TraceMsgLenType in_msg_len, NodeType in_node,
     uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
   ) : time(in_time), ep(in_ep), type(in_type), event(in_event),
-      msg_len(in_msg_len), node(in_node), idx1(in_idx1), idx2(in_idx2),
+      node(in_node), msg_len(in_msg_len), idx1(in_idx1), idx2(in_idx2),
       idx3(in_idx3), idx4(in_idx4)
   { }
 };
