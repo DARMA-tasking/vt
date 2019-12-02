@@ -54,6 +54,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <zlib.h>
+
 namespace vt { namespace trace {
 
 using ArgType = vt::arguments::ArgConfig;
@@ -143,7 +145,7 @@ void Trace::setupNames(
 }
 
 /*virtual*/ Trace::~Trace() {
-  cleanupTracesFile();
+  writeTracesFile(true);
 }
 
 void Trace::addUserNote(std::string const& note) {
@@ -604,20 +606,6 @@ void Trace::disableTracing() {
   enabled_ = false;
 }
 
-void Trace::cleanupTracesFile() {
-  auto const& node = theContext()->getNode();
-  if (!traceWritingEnabled(node)) {
-    return;
-  }
-  //--- Sanity check
-  vtAssert(open_events_.empty(), "Trying to dump traces with open events?");
-  cur_stop_ = traces_.size();
-  //--- Dump everything into an output file
-  writeTracesFile();
-  outputFooter(node, start_time_, log_file_);
-  gzclose(log_file_);
-}
-
 void Trace::flushTracesFile(bool useGlobalSync) {
   if (ArgType::vt_trace_flush_size == 0) {
     // Flush the traces at the end only
@@ -628,12 +616,16 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     theCollective()->barrier();
   }
   if (traces_.size() > cur_ + ArgType::vt_trace_flush_size) {
-    writeTracesFile(Z_FULL_FLUSH);
+    writeTracesFile(false);
   }
 }
 
-void Trace::writeTracesFile(int flush) {
+void Trace::writeTracesFile(bool finalizeTracing) {
   auto const node = theContext()->getNode();
+
+  if (tracing_closed_) {
+    return;
+  }
 
   debug_print(
     trace, node,
@@ -644,18 +636,55 @@ void Trace::writeTracesFile(int flush) {
     TraceContainersType::event_container.size()
   );
 
-  if (traceWritingEnabled(theContext()->getNode())) {
-    auto path = full_trace_name_;
-    if (not file_is_open_) {
-      log_file_ = gzopen(path.c_str(), "wb");
-      outputHeader(node, start_time_, log_file_);
-      file_is_open_ = true;
+  if (finalizeTracing) {
+    disableTracing(); // Accept no more traces.
+
+    if (not open_events_.empty()) {
+      // During an abort there might be open events.
+      // This is not ideal; maybe a different footer can be written?
+      debug_print(
+        trace, node,
+        "Trying to dump traces with open events - abnormal termination?"
+      );
     }
-    writeLogFile(log_file_, traces_);
-    gzflush(log_file_, flush);
+
+    //--- Dump everything into an output file
+    cur_stop_ = traces_.size();
   }
 
-  if (node == designated_root_node and not wrote_sts_file_) {
+  if (traceWritingEnabled(theContext()->getNode())) {
+    auto path = full_trace_name_;
+
+    gzFile file = static_cast<gzFile>(log_file_);
+    if (not file) {
+      file = gzopen(path.c_str(), "wb");
+      log_file_ = static_cast<void*>(file);
+
+      outputHeader(node, start_time_, file);
+    }
+
+    writeTracesToLogFile(file);
+
+    if (finalizeTracing) {
+      // Closing zip stream/file permantently.
+      outputFooter(node, start_time_, file);
+
+      gzclose(file);
+      log_file_ = nullptr;
+      tracing_closed_ = true;
+    } else {
+      // Z_FULL_FLUSH is used/useful if previous data is corruptable;
+      // however, it comes with severe compression penalities when used often.
+      // Z_SYNC_FLUSH is sufficient to ensure data-until-here can be decompressed.
+      gzflush(file, Z_SYNC_FLUSH);
+    }
+  }
+
+  // STS file is written on first write request, and then (possibly again)
+  // during finalization to ensure at least partial data and ultimately
+  // full summary data: eg. new event counts, new event types, renames..
+  if (node == designated_root_node
+      and (not wrote_sts_file_ or finalizeTracing)) {
     std::ofstream file;
     auto name = full_sts_name_;
     file.open(name);
@@ -665,7 +694,10 @@ void Trace::writeTracesFile(int flush) {
   }
 }
 
-void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
+void Trace::writeTracesToLogFile(void* fileVP) {
+  gzFile file = static_cast<gzFile>(fileVP);
+  TraceContainerType const& traces = traces_;
+
   size_t stop_point = cur_stop_;
   for (size_t i = cur_; i < stop_point; i++) {
     auto& log = traces[i];
@@ -922,8 +954,9 @@ void Trace::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void Trace::outputHeader(
-  NodeType const node, double const start, gzFile file
+  NodeType const node, double const start, void* fileVP
 ) {
+  gzFile file = static_cast<gzFile>(fileVP);
   // Output header for projections file
   gzprintf(file, "PROJECTIONS-RECORD 0\n");
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
@@ -931,10 +964,11 @@ void Trace::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void Trace::outputFooter(
-  NodeType const node, double const start, gzFile file
+  NodeType const node, double const start, void* fileVP
 ) {
-  // Output footer for projections file, '7' means COMPUTATION_END to
-  // Projections
+  gzFile file = static_cast<gzFile>(fileVP);
+  // Output footer for projections file,
+  // '7' means COMPUTATION_END to Projections
   gzprintf(file, "7 %lld\n", timeToInt(getCurrentTime() - start));
 }
 

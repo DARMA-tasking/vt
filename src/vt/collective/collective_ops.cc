@@ -139,7 +139,8 @@ void CollectiveAnyOps<instance>::abort(
   if (myrt) {
 #if backend_check_enabled(trace_enabled)
     //--- Try to flush most of the traces before aborting
-    myrt->theTrace->writeTracesFile(Z_FINISH);
+    bool finalizeTracing = true;
+    myrt->theTrace->writeTracesFile(finalizeTracing);
 #endif
     myrt->abort(str, code);
   } else {
@@ -157,7 +158,8 @@ void CollectiveAnyOps<instance>::output(
   if (myrt) {
 #if backend_check_enabled(trace_enabled)
     //--- Try to flush most of the traces
-    myrt->theTrace->writeTracesFile(Z_FULL_FLUSH);
+    bool finalizeTracing = error and abort_out;
+    myrt->theTrace->writeTracesFile(finalizeTracing);
 #endif
     myrt->output(str,code,error,decorate,formatted);
   } else {

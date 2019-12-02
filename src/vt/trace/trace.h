@@ -61,9 +61,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <mpi.h>
-#include <zlib.h>
-
 namespace vt { namespace trace {
 
 struct Trace {
@@ -150,10 +147,24 @@ struct Trace {
   void enableTracing();
   void disableTracing();
 
+  /// Flush traces, IF needed.
+  /// Flushing only occurs if other constraints are met;
+  /// it might be good to rename this method to reflect.
   void flushTracesFile(bool useGlobalSync);
-  void writeTracesFile(int flush = Z_FINISH);
-  void cleanupTracesFile();
-  void writeLogFile(gzFile file, TraceContainerType const& traces);
+
+  /// Ensure that events are written to the trace file.
+  ///
+  /// Normally, when tracing is not finalized:
+  /// - All 'closed' events are written.
+  /// - The file stream is flushed, such that it is in a valid state.
+  ///
+  /// If tracing is finalized:
+  /// - All events are written, even non-closed events.
+  /// - The file is CLOSED and all future trace collection is disabled.
+  /// - Should only be done/requested on termination as tracing
+  ///   as tracign cannot be resumed afterward.
+  void writeTracesFile(bool finalizeTracing);
+
   bool inIdleEvent() const;
 
   static double getCurrentTime();
@@ -161,10 +172,10 @@ struct Trace {
   static TimeIntegerType timeToInt(double const time);
   static void traceBeginIdleTrigger();
   static void outputHeader(
-    NodeType const node, double const start, gzFile file
+    NodeType const node, double const start, /*gzFile*/ void* file
   );
   static void outputFooter(
-    NodeType const node, double const start, gzFile file
+    NodeType const node, double const start, /*gzFile*/ void* file
   );
 
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
@@ -180,6 +191,8 @@ private:
   void editLastEntry(std::function<void(LogPtrType)> fn);
   static bool traceWritingEnabled(NodeType node);
 
+  void writeTracesToLogFile(/*gzFile*/ void* file);
+
 private:
   TraceContainerType traces_;
   TraceStackType open_events_;
@@ -193,11 +206,13 @@ private:
   std::string full_sts_name_    = "";
   std::string full_dir_name_    = "";
   UserEventRegistry user_event_ = {};
-  gzFile log_file_;
-  bool file_is_open_            = false;
+
+  /*gzFile*/ void* log_file_;
+  bool tracing_closed_          = false;
+
   bool wrote_sts_file_          = false;
-  size_t cur_                  = 0;
-  size_t cur_stop_             = 0;
+  size_t cur_                   = 0;
+  size_t cur_stop_              = 0;
 };
 
 }} //end namespace vt::trace
