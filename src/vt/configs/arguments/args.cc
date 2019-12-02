@@ -55,9 +55,9 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
+/*static*/ bool        ArgConfig::colorize_output       = false;
 
 /*static*/ int32_t     ArgConfig::vt_sched_num_progress = 2;
-/*static*/ bool        ArgConfig::colorize_output       = false;
 
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
@@ -153,7 +153,7 @@ namespace vt { namespace arguments {
 
   // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
-  for (auto i = argc-1; i > 0; i--) {
+  for (int i = argc-1; i > 0; i--) {
     args.push_back(std::string(argv[i]));
   }
 
@@ -162,6 +162,7 @@ namespace vt { namespace arguments {
   /*
    * Flags for controlling the colorization of output from vt
    */
+
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Colorize output (default)";
   auto never  = "Do not colorize output (overrides --vt_color)";
@@ -177,6 +178,7 @@ namespace vt { namespace arguments {
   /*
    * Flags for controlling the signals that VT tries to catch
    */
+
   auto no_sigint      = "Do not register signal handler for SIGINT";
   auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
   auto no_terminate   = "Do not register handler for std::terminate";
@@ -188,10 +190,10 @@ namespace vt { namespace arguments {
   e->group(signalGroup);
   f->group(signalGroup);
 
-
   /*
    * Flags to control stack dumping
    */
+
   auto stack  = "Do not dump stack traces";
   auto warn   = "Do not dump stack traces when vtWarn(..) is invoked";
   auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
@@ -215,10 +217,10 @@ namespace vt { namespace arguments {
   l->group(stackGroup);
   m->group(stackGroup);
 
-
   /*
    * Flags to control tracing output
    */
+
   auto trace     = "Enable tracing (must be compiled with trace_enabled)";
   auto trace_mpi = "Enable tracing of MPI calls (must be compiled with "
                    "trace_enabled)";
@@ -236,7 +238,6 @@ namespace vt { namespace arguments {
   o->group(traceGroup);
   p->group(traceGroup);
   q->group(traceGroup);
-
 
   /*
    * Flags for controlling debug print output at runtime
