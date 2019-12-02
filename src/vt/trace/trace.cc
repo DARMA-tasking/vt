@@ -74,8 +74,14 @@ Trace::Trace() { }
   #endif
 }
 
-void Trace::initialize() {
+void Trace::initializeTracing(
+  std::string const& in_prog_name,
+  std::string const& in_trace_name,
+  std::string const& in_dir_name
+) {
   traces_.reserve(trace_reserve_count);
+
+  setupNames(in_prog_name, in_trace_name, in_dir_name);
 
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
@@ -87,7 +93,8 @@ bool Trace::inIdleEvent() const {
 }
 
 void Trace::setupNames(
-  std::string const& in_prog_name, std::string const& in_trace_name,
+  std::string const& in_prog_name,
+  std::string const& in_trace_name,
   std::string const& in_dir_name
 ) {
   auto const node = theContext()->getNode();

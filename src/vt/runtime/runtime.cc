@@ -935,13 +935,15 @@ void Runtime::initializeComponents() {
   theEvent = std::make_unique<event::AsyncEvent>();
   thePool = std::make_unique<pool::Pool>();
 
-  // Initialize tracing, when it is enabled; used in the AM constructor
+  theSched = std::make_unique<sched::Scheduler>();
+
+  // Initialize tracing, when it is enabled;
+  // used in the AM constructor, depends on the scheduler.
   initializeTrace();
 
   // Core components: enables more complex subsequent initialization
   theObjGroup = std::make_unique<objgroup::ObjGroupManager>();
   theMsg = std::make_unique<messaging::ActiveMessenger>();
-  theSched = std::make_unique<sched::Scheduler>();
   theTerm = std::make_unique<term::TerminationDetector>();
   theCollective = std::make_unique<collective::CollectiveAlg>();
   theGroup = std::make_unique<group::GroupManager>();
@@ -956,10 +958,6 @@ void Runtime::initializeComponents() {
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theCollection = std::make_unique<vrt::collection::CollectionManager>();
 
-  #if backend_check_enabled(trace_enabled)
-    theTrace->initialize();
-  #endif
-
   debug_print(runtime, node, "end: initializeComponents\n");
 }
 
@@ -970,8 +968,10 @@ void Runtime::initializeTrace() {
     if (ArgType::vt_trace) {
       std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
       auto const& node = theContext->getNode();
-      theTrace->setupNames(
-        name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
+      theTrace->initializeTracing(
+        name,
+        name + "." + std::to_string(node) + ".log.gz",
+        name + "_trace"
       );
     }
   #endif

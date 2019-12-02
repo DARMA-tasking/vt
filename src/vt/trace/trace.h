@@ -87,10 +87,10 @@ struct Trace {
   std::string getSTSName()   const { return full_sts_name_;   }
   std::string getDirectory() const { return full_dir_name_;   }
 
-  void initialize();
-  void setupNames(
-    std::string const& in_prog_name, std::string const& in_trace_name,
-    std::string const& in_dir_name = ""
+  void initializeTracing(
+    std::string const& in_prog_name,
+    std::string const& in_trace_name,
+    std::string const& in_dir_name
   );
 
   void beginProcessing(
@@ -170,6 +170,12 @@ struct Trace {
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 private:
+
+  void setupNames(
+    std::string const& in_prog_name,
+    std::string const& in_trace_name,
+    std::string const& in_dir_name
+  );
 
   void editLastEntry(std::function<void(LogPtrType)> fn);
   static bool traceWritingEnabled(NodeType node);
