@@ -599,6 +599,9 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
 }
 
 void Trace::enableTracing() {
+  if (tracing_closed_)
+    return;
+
   enabled_ = true;
 }
 
@@ -627,6 +630,7 @@ void Trace::writeTracesFile(bool finalizeTracing) {
     return;
   }
 
+  // TODO: ensure correct with actual operation
   debug_print(
     trace, node,
     "write_traces_file: traces.size={}, "
@@ -644,7 +648,7 @@ void Trace::writeTracesFile(bool finalizeTracing) {
       // This is not ideal; maybe a different footer can be written?
       debug_print(
         trace, node,
-        "Trying to dump traces with open events - abnormal termination?"
+        "Writing traces with open events - abnormal termination?"
       );
     }
 
@@ -652,17 +656,21 @@ void Trace::writeTracesFile(bool finalizeTracing) {
     cur_stop_ = traces_.size();
   }
 
-  if (traceWritingEnabled(theContext()->getNode())) {
-    auto path = full_trace_name_;
+  if (traceWritingEnabled(node)) {
 
+    // Open trace file if not already open (and emit header).
+    // The file will be kept open until tracing is finalized.
     gzFile file = static_cast<gzFile>(log_file_);
-    if (not file) {
+    if (file == nullptr) {
+      auto path = full_trace_name_;
+
       file = gzopen(path.c_str(), "wb");
-      log_file_ = static_cast<void*>(file);
+      log_file_ = file;
 
       outputHeader(node, start_time_, file);
     }
 
+    // TODO: check gz stream/file status
     writeTracesToLogFile(file);
 
     if (finalizeTracing) {
@@ -673,24 +681,34 @@ void Trace::writeTracesFile(bool finalizeTracing) {
       log_file_ = nullptr;
       tracing_closed_ = true;
     } else {
-      // Z_FULL_FLUSH is used/useful if previous data is corruptable;
-      // however, it comes with severe compression penalities when used often.
-      // Z_SYNC_FLUSH is sufficient to ensure data-until-here can be decompressed.
+      // Z_FULL_FLUSH is useful if previous data is corrupted or random access;
+      // Z_SYNC_FLUSH is sufficient to ensure data-until-here is written.
+      // while imposing less of a compression penalty.
       gzflush(file, Z_SYNC_FLUSH);
     }
   }
 
-  // STS file is written on first write request, and then (possibly again)
+  // STS file is written on first write request and (possibly again)
   // during finalization to ensure at least partial data and ultimately
   // full summary data: eg. new event counts, new event types, renames..
   if (node == designated_root_node
-      and (not wrote_sts_file_ or finalizeTracing)) {
-    std::ofstream file;
+      and (finalizeTracing or not wrote_sts_file_)) {
     auto name = full_sts_name_;
-    file.open(name);
+
+    std::ofstream file(name, std::ios_base::out | std::ios_base::trunc);
+
     outputControlFile(file);
-    file.close();
     wrote_sts_file_ = true;
+
+    file.close();
+
+    if (file.failbit) { // manually close file to check
+      debug_print(
+        trace, node,
+        "Error writing STS file: path={}",
+        name
+      );
+    }
   }
 }
 
@@ -864,6 +882,9 @@ void Trace::writeTracesToLogFile(void* fileVP) {
     delete log;
   }
 
+  // TODO: Ensure that traces are removed from collection;
+  //       it might require change of collection or other strategy.
+  //       The objects are already deallocated (see `delete log` above).
   cur_ = stop_point;
 }
 
