@@ -589,13 +589,11 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
 }
 
 /*static*/ bool Trace::traceWritingEnabled(NodeType node) {
-  if (ArgType::vt_trace) {
-    return ((ArgType::vt_trace_mod == 0)
-            or (node % ArgType::vt_trace_mod == 1));
-  }
-  else {
+  if (!ArgType::vt_trace) {
     return false;
   }
+  return ((ArgType::vt_trace_mod == 0)
+            or (node % ArgType::vt_trace_mod == 0));
 }
 
 void Trace::enableTracing() {
