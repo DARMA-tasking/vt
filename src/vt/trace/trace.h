@@ -61,10 +61,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include <mpi.h>
-#include <zlib.h>
 
 namespace vt { namespace trace {
+
+struct vt_gzFile;
 
 struct Trace {
   using LogType             = Log;
@@ -151,9 +151,9 @@ struct Trace {
   void disableTracing();
 
   void flushTracesFile(bool useGlobalSync);
-  void writeTracesFile(int flush = Z_FINISH);
+  void writeTracesFile(int flush);
   void cleanupTracesFile();
-  void writeLogFile(gzFile file, TraceContainerType const& traces);
+  void writeLogFile(vt_gzFile *file, TraceContainerType const& traces);
   bool inIdleEvent() const;
 
   static double getCurrentTime();
@@ -161,10 +161,10 @@ struct Trace {
   static TimeIntegerType timeToInt(double const time);
   static void traceBeginIdleTrigger();
   static void outputHeader(
-    NodeType const node, double const start, gzFile file
+    NodeType const node, double const start, vt_gzFile *file
   );
   static void outputFooter(
-    NodeType const node, double const start, gzFile file
+    NodeType const node, double const start, vt_gzFile *file
   );
 
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
@@ -187,11 +187,11 @@ private:
   std::string full_sts_name_    = "";
   std::string full_dir_name_    = "";
   UserEventRegistry user_event_ = {};
-  gzFile log_file_;
+  std::unique_ptr<vt_gzFile> log_file_;
   bool file_is_open_            = false;
   bool wrote_sts_file_          = false;
-  size_t cur_                  = 0;
-  size_t cur_stop_             = 0;
+  size_t cur_                   = 0;
+  size_t cur_stop_              = 0;
 };
 
 }} //end namespace vt::trace

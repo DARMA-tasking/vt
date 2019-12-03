@@ -51,6 +51,7 @@
 #include <memory>
 #include <cstdlib>
 #include <mpi.h>
+#include <zlib.h>
 
 namespace vt {
 

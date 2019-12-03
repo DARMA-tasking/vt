@@ -54,14 +54,23 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <mpi.h>
+#include <zlib.h>
+
+
 namespace vt { namespace trace {
+
+struct vt_gzFile {
+  gzFile file_type;
+  //---
+  vt_gzFile(gzFile_s *pS) : file_type(pS) { }
+};
 
 using ArgType = vt::arguments::ArgConfig;
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
-    start_time_(getCurrentTime()),
-    log_file_()
+    start_time_(getCurrentTime()), log_file_(nullptr)
 { }
 
 Trace::Trace() { }
@@ -606,9 +615,9 @@ void Trace::cleanupTracesFile() {
   vtAssert(open_events_.empty(), "Trying to dump traces with open events?");
   cur_stop_ = traces_.size();
   //--- Dump everything into an output file
-  writeTracesFile();
-  outputFooter(node, start_time_, log_file_);
-  gzclose(log_file_);
+  writeTracesFile(Z_FINISH);
+  outputFooter(node, start_time_, log_file_.get());
+  gzclose(log_file_->file_type);
 }
 
 void Trace::flushTracesFile(bool useGlobalSync) {
@@ -640,12 +649,12 @@ void Trace::writeTracesFile(int flush) {
   if (traceWritingEnabled(theContext()->getNode())) {
     auto path = full_trace_name_;
     if (not file_is_open_) {
-      log_file_ = gzopen(path.c_str(), "wb");
-      outputHeader(node, start_time_, log_file_);
+      log_file_ = std::make_unique<vt_gzFile>(gzopen(path.c_str(), "wb"));
+      outputHeader(node, start_time_, log_file_.get());
       file_is_open_ = true;
     }
-    writeLogFile(log_file_, traces_);
-    gzflush(log_file_, flush);
+    writeLogFile(log_file_.get(), traces_);
+    gzflush(log_file_->file_type, flush);
   }
 
   if (node == designated_root_node and not wrote_sts_file_) {
@@ -658,7 +667,7 @@ void Trace::writeTracesFile(int flush) {
   }
 }
 
-void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
+void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType const& traces) {
   size_t stop_point = cur_stop_;
   for (size_t i = cur_; i < stop_point; i++) {
     auto& log = traces[i];
@@ -669,12 +678,12 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     >(log->type);
 
     auto event_iter = TraceContainersType::getEventContainer().find(log->ep);
+    auto file = file_->file_type;
 
-    vtAssert(
-      log->ep == no_trace_entry_id or
-      event_iter != TraceContainersType::getEventContainer().end(),
-      "Event must exist that was logged"
-    );
+    if ((log->ep != no_trace_entry_id) and
+      (event_iter == TraceContainersType::getEventContainer().end())) {
+      vtAssert(false, "Event must exist that was logged");
+    }
 
     TraceEntryIDType event_seq_id;
     if (event_iter == TraceContainersType::getEventContainer().end()) {
@@ -915,20 +924,20 @@ void Trace::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void Trace::outputHeader(
-  NodeType const node, double const start, gzFile file
+  NodeType const node, double const start, vt_gzFile *file
 ) {
   // Output header for projections file
-  gzprintf(file, "PROJECTIONS-RECORD 0\n");
+  gzprintf(file->file_type, "PROJECTIONS-RECORD 0\n");
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
-  gzprintf(file, "6 0\n");
+  gzprintf(file->file_type, "6 0\n");
 }
 
 /*static*/ void Trace::outputFooter(
-  NodeType const node, double const start, gzFile file
+  NodeType const node, double const start, vt_gzFile *file
 ) {
   // Output footer for projections file, '7' means COMPUTATION_END to
   // Projections
-  gzprintf(file, "7 %lld\n", timeToInt(getCurrentTime() - start));
+  gzprintf(file->file_type, "7 %lld\n", timeToInt(getCurrentTime() - start));
 }
 
 /*static*/ Trace::TimeIntegerType Trace::timeToInt(double const time) {
