@@ -75,7 +75,7 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_trace_file         = "";
 /*static*/ std::string ArgConfig::vt_trace_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_trace_mod          = 0;
-/*static*/ int32_t     ArgConfig::vt_trace_flush_size    = 0;
+/*static*/ int32_t     ArgConfig::vt_trace_flush_size   = 0;
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
