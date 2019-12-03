@@ -655,7 +655,11 @@ void Trace::writeTracesFile(int flush) {
     gzflush(log_file_->file_type, flush);
   }
 
-  if (node == designated_root_node and not wrote_sts_file_) {
+  if (node != designated_root_node) {
+    return;
+  }
+
+  if ((flush == Z_FINISH) or (not wrote_sts_file_)) {
     std::ofstream file;
     auto name = full_sts_name_;
     file.open(name);
